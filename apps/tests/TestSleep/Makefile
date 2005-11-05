@@ -1,3 +1,0 @@
-COMPONENT=TestSleepC
-include $(MAKERULES)
-
