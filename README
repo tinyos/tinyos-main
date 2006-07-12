@@ -1,2 +1,44 @@
-This is a placeholder for TinyOS 2.0.  When it is released you will find the source for 
-it here.
+This contains the TinyOS 2.0 source code as of
+
+$Date: 2006-07-12 20:59:19 $
+
+This tree includes the TinyOS 2.0 documentation in tinyos-2.x/doc; 
+you can also find the documentation online at:
+http://www.tinyos.net/tinyos-2.x/doc/
+
+The basic directory structure is as follows:
+
+apps: Sample TinyOS applications.
+  tests: Sample TinyOS applications which test a part of the system.
+
+doc: Documentation
+  index.html: Index file to all documentation
+  txt: Text files (TEPs)
+  html: HTML files (TEPs, installation)
+  html/tutorial: Tutorials
+
+support: Non-nesC code for using TinyOS nodes
+  make: TinyOS make system
+  sdk: Standard developers kit: serial communication, etc.
+    c: C SDK (fully supported, but not exhaustively tested yet)
+    java: Java SDK (fully supported, heavily tested and used)
+    python: Python SDK (limited, not fully supported)
+
+tools: TinyOS-specific tools and scripts
+  platforms: Platform-specific tools
+  release: Scripts and configurations for packaging release RPMs
+  tinyos: TinyOS scripts
+    java: Native support for TinyOS JNI libraries (serial and env)
+    misc: Assorted utility scripts, begininning with tos-
+    ncc: The scripts that invoke the nesC compiler: ncc, mig, ncg
+    
+tos: TinyOS source code (nesC, C)
+  chips: Chip-specific code
+  interfaces: Core system interfaces
+  lib: Extensions and larger common subsystems
+  platforms: Platform-specific code
+  sensorboards: Sensorboard drivers
+  system: Core system components
+  types: Core system data types (header files)
+
+
