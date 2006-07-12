@@ -1,0 +1,7 @@
+
+all:
+	make micaz sim
+	g++ -g -c -o Driver.o Driver.c -I../../../tos/lib/tossim/ -Lbuild/micaz -L. 
+	g++ -o Driver Driver.o build/micaz/sim.o build/micaz/tossim.o
+
+

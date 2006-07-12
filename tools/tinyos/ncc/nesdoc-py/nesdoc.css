@@ -1,0 +1,33 @@
+/* @author Joe Polastre <info@moteiv.com> */
+
+body { background-color: #FFFFFF }
+
+#heading {
+  background-color: #CCCCFF;
+  font-size: 13pt;
+  font-weight: bold;
+  color: #000000;
+  border: 1px;
+  border-style: solid;
+  border-color: #000000;
+  padding: 3px;
+  width: 100%-8px;
+}
+
+#funcsig { 
+  background-color: #FFFFFF;
+  border: 1px;
+  border-style: solid;
+  border-color: #bbbbbb;
+  padding: 1px;
+  width: 100%-8px;
+}
+
+#funcnameshort { 
+  font-size: 11pt;
+  color: #000000;
+}
+
+#imgwiring { 
+  border: 0px;
+}

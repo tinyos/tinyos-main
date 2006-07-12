@@ -1,0 +1,5 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: debug.extra,v 1.2 2006-07-12 16:59:49 scipio Exp $
+
+OPTFLAGS += -O1 -g -fnesc-no-inline
+

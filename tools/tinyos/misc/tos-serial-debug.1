@@ -1,0 +1,39 @@
+.TH tos-serial-debug 1 "Feb 2, 2006"
+.LO 1
+.SH NAME
+
+tos-serial-debug - print the raw bytes read from a serial port
+.SH SYNOPSIS
+
+\fBtos-serial-debug\fR [\fIserial port\fR] [\fIbaud rate\fR]
+.SH DESCRIPTION
+
+\fBtos-serial-debug\fR is a tool that reads raw bytes from a
+serial port and prints them to stdout in hexidecimal format.
+It is typically used to determine whether failure to communicate
+with a node over the serial port is due to an inability to receive
+anything or whether it is due to disagreement on the packet format.
+
+\fBtos-serial-debug\fR takes optional \fIserial port\fR and
+\fIbaud rate\fR arguments. The latter cannot be specified unless
+the former is as well. The \fIserial port\fR argument names a serial 
+port device and defaults to /dev/ttyS0. The \fIbaud rate\fR argument
+is an ASCII string describing a baud rate, and must be one of
+50, 75, 110, 134, 150, 200, 600, 1200, 2400, 4800, 9600, 19200,
+38400, 57600, 115200, 230400, 460800k, 500000, 576000, 921600,
+1000000, 1152000, 1500000, 2000000, 2500000, 3000000, 3500000, 
+or 4000000. It defaults to 19200. Particular software distributions
+may vary, but the default speeds for current motes platforms
+are as follows:
+
+\fBeyesIFXv2\fR, \fBintelmote2\fR, \fBtelosb\fR, \fBtmote\fR: 115200
+.br
+\fBmica2\fR, \fBmicaz\fR: 57600
+
+.SH EXAMPLE
+  tos-serial-debug 
+  tos-serial-debug /dev/ttyS1 
+  tos-serial-debug /dev/ttyS1 57600
+.SH SEE ALSO
+
+.IR tos-serial-configure (1)

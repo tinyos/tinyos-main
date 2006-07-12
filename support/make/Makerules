@@ -1,0 +1,188 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: Makerules,v 1.2 2006-07-12 16:59:43 scipio Exp $
+
+# @author Cory Sharp <cssharp@eecs.berkeley.edu>
+
+### --- This makefile requires GNU Make version 3.80 or newer.
+
+
+### ---
+### --- Prepare variables
+### ---
+
+#  Get TOSDIR from ncc if it isn't set already.
+ifndef TOSDIR
+TOSDIR := $(shell ncc -print-tosdir)
+endif
+
+#  Mung MAKERULES for Cygwin; see the warning below for more details.
+ifneq ($(findstring \,$(MAKERULES)),)
+MAKERULES := $(subst \,/,$(MAKERULES))
+define BACKSLASH_WARNING
+warning, MAKERULES contains backslashes.
+
+    The environment variable MAKERULES contains backslashes \'s.  This can
+    cause shell scripts including ones in this make system to fail in
+    strange ways.  I've changed those to forward slashes for you for this
+    build.  However, you are strongly encouraged to respecify MAKERULES as
+    either a standard unix-style path or as a mixed-style path where the
+    backslashes are replaced with forward slashes /'s.
+
+endef
+$(warning $(BACKSLASH_WARNING))
+endif
+
+#  Deduce TINYOS_MAKE_PATH, the path to this file, if it's not defined already.
+ifndef TINYOS_MAKE_PATH
+  ifdef MAKERULES
+    TINYOS_MAKE_PATH := $(dir $(MAKERULES))
+    TINYOS_MAKE_PATH := $(TINYOS_MAKE_PATH:%/=%)
+  else
+    TINYOS_MAKE_PATH := $(TOSDIR)/../support/make
+  endif
+endif
+
+#  Use a default Makelocal if it's not defined already.
+TINYOS_MAKELOCAL ?= $(TINYOS_MAKE_PATH)/Makelocal
+
+#  Use a default Makedefaults if it's not defined already.
+TINYOS_MAKEDEFAULTS ?= $(TINYOS_MAKE_PATH)/Makedefaults
+
+#  Allow users to specify additional directories to find TOSMake files.
+TOSMAKE_PATH += $(TINYOS_MAKE_PATH)
+
+#  Save makecmdgoals (a read only var) to goals so that we can modify it.
+GOALS += $(MAKECMDGOALS)
+
+#  Extract user options from goals of the form opt,arg, transform to opt=arg,
+#  and evaluate.  Then, reduce GOALS to have the args removed.
+OptRE := [,.]
+GoalOpts := $(shell perl -e 'print join " ", map {s{^(.*?)$(OptRE)}{\U$$1=};$$_} grep /$(OptRE)/, split /\s+/, "$(GOALS)";')
+GOALS := $(shell perl -e '$$_="$(GOALS)"; s{$(OptRE)\S*}{}g; print;')
+$(foreach opt,$(GoalOpts),$(eval $(opt)))
+
+
+### ---
+### --- Define make functions.
+### --- (Lord, this is ugly. I want a real scripting language so bad.)
+### ---
+### --- The functions a user will generally be interested in are
+### ---   TOSMake_include(file)
+### ---   TOSMake_include_platform(dir)
+### ---
+
+#  names(words)
+#    Produce option names, like junk from /path/to/junk.target.
+names = $(sort $(basename $(notdir $(1))))
+
+#  TOSMake_find(file_or_dir)
+#    Search for file_or_dir within TOSMAKE_PATH.  For the special case of
+#    initializing TOSMAKE_PATH itself, this function does not search 
+#    TOSMAKE_PATH if file_or_dir begins with +.
+sh_search = for a in $(TOSMAKE_PATH); do [ -e "$$a/$$n" ] && echo "$$a/$$n" && break; done
+TOSMake_find = $(if $(filter +%,$(1)),$(1:+%=%),$(shell n="$(1)"; $(sh_search)))
+
+#  TOSMake_makelist(dir,extension)
+#    Get a list of files with the given extension from a directory which MUST
+#    be a subdir under TOSMAKE_PATH.
+TOSMake_makelist = $(wildcard $(call TOSMake_find,$(1))/*.$(2))
+
+#  TOSMake_include(file)
+#    Include a makefile which MUST be in a dir or subdir under TOSMAKE_PATH.
+TOSMake_include = $(eval include $(call TOSMake_find,$(1)))
+
+#  TOSMake_extra_targets(name)
+#    Create a default make targets for a TOSMake extra full with its possible
+#    options afterward.
+define TOSMake_extra_targets
+$(subst :,%,$(1)): FORCE
+	@:
+endef
+
+#  TOSMake_include_dir(dir)
+#    Pull in .extras and .targets from a directory which MUST be a subdir
+#    under TOSMAKE_PATH.  Create default extra rules as necessary, etc.
+TOSMake_include_dir = $(eval $(call TOSMake_include_dir_define,$(1)))
+define TOSMake_include_dir_define
+$(eval NEW_EXTRAS := $(call TOSMake_makelist,$(1),extra))
+$(eval NEW_TARGETS := $(call TOSMake_makelist,$(1),target))
+$(eval VALID_EXTRAS += $(NEW_EXTRAS))
+$(eval VALID_TARGETS += $(NEW_TARGETS))
+$(eval EXTRAS = $(filter $(call names,$(VALID_EXTRAS)),$(GOALS)))
+$(eval TARGETS = $(filter $(call names,$(VALID_TARGETS)),$(GOALS)))
+$(eval OTHERS = $(filter-out $(EXTRAS) $(TARGETS),$(GOALS)))
+$(foreach file,$(NEW_EXTRAS) $(NEW_TARGETS),$(if $(filter $(call names,$(file)),$(GOALS)),$(eval include $(file))))
+endef
+
+#  TOSMake_include_platform(dir)
+#    Pull in a directory as a new TOSMake platform, which MUST be a subdir of
+#    TOSMAKE_PATH.  A platform directory must also have a .rules file, which
+#    is automatically evaluated.
+TOSMake_include_platform=$(eval $(call TOSMake_include_platform_define,$(1)))
+define TOSMake_include_platform_define
+$(call TOSMake_include_dir,$(1))
+$(call TOSMake_include,$(1)/$(1).rules)
+endef
+
+
+### ---
+### --- Include Makelocal and Makedefaults
+### ---
+
+#  Makelocal comes first to allow overriding Makedefaults.
+-include $(TINYOS_MAKELOCAL)
+-include $(TINYOS_MAKEDEFAULTS)
+
+#  Mark TOSMAKE_PATH with a + so that they're not searched for by TOSMake_find.
+$(foreach incdir,$(addprefix +,$(TOSMAKE_PATH)),$(call TOSMake_include_dir,$(incdir)))
+
+#  Make default rules for each extra with full argument
+$(foreach goal,$(MAKECMDGOALS),$(if $(filter-out $(TARGETS) help,$(goal)),$(eval $(call TOSMake_extra_targets,$(goal)))))
+
+
+### ---
+### --- Define USAGE, print help if necessary or requested, etc.
+### ---
+
+#  USAGE is printed out when help is requested.  Files other than this should
+#  add text to HELP, not USAGE.
+define USAGE
+
+
+Usage:  make <target> <extras>
+        make <target> help
+
+        Valid targets: $(call names,$(VALID_TARGETS))
+        Valid extras: $(call names,$(VALID_EXTRAS))
+$(HELP)
+
+endef
+
+#  If no target or an invalid target is specified, print usage.
+ifeq ($(TARGETS),)
+  ifeq ($(GOALS),)
+    $(error $(USAGE)Please specify a valid target)
+  else
+    $(error $(USAGE)ERROR, "$(GOALS)" does not specify a valid target)
+  endif
+endif
+
+#  If the user specifically had help on the command line, don't build any
+#  targets, instead display help information and exit with a nice error.
+ifeq ($(filter help,$(GOALS)),help)
+define USAGE
+
+
+Usage:  make $(TARGETS) <extras>
+
+	Valid targets: $(call names,$(VALID_TARGETS))
+        Valid extras: $(call names,$(VALID_EXTRAS))
+$(HELP)
+
+endef
+$(error $(USAGE)Thank you)
+endif
+
+
+.PHONY: FORCE
+

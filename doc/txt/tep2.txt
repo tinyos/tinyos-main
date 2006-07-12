@@ -1,0 +1,571 @@
+=================================
+Hardware Abstraction Architecture
+=================================
+
+:TEP: 2
+:Group: Core Working Group 
+:Type: Best Current Practice
+:Status: Draft
+:TinyOS-Version: 2.0
+:Author: Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer, Cory Sharp, Adam Wolisz and David Culler
+
+:Draft-Created: 14-Sep-2004
+:Draft-Version: $revision$
+:Draft-Modified: $date$
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This document specifies a Best Current Practices for the TinyOS
+   Community, and requests discussion and suggestions for
+   improvements.  The distribution of the memo is unlimited, provided
+   that the header information and this note are preserved. Parts of
+   this document are taken verbatim from the [HAA2005]_ paper that is
+   under IEEE copyright. This memo is in full compliance with [TEP1]_.
+
+
+Abstract
+========
+
+
+This TEP documents the *Hardware Abstraction Architecture (HAA)* for TinyOS
+2.0 that balances conflicting requirements of WSN applications and the
+desire for increased portability and streamlined development of
+applications. The three-layer design gradually adapts the capabilities
+of the underlying hardware platforms to the selected
+platform-independent hardware interface between the operating system
+core and the application code. At the same time, it allows the
+applications to utilize a platform's full capabilities -- exported at
+the second layer, when the performance requirements outweigh the need
+for cross-platform compatibility.
+
+..  
+    We demonstrate the practical value of the approach by presenting
+    how it can be applied to the most important hardware modules that
+    are found in a typical WSN platform. We support the claims using
+    concrete examples from existing hardware abstractions in TinyOS
+    and the implementation of the MSP430 platform that follows the
+    architecture proposed in this paper.
+
+
+Table of Contents
+=================
+
+.. contents:: 
+.. sectnum::
+
+
+Introduction
+============
+
+
+The introduction of hardware abstraction in modern operating systems
+has proved valuable for increasing portability and simplifying
+application development by hiding the hardware intricacies from the
+rest of the system. Although enabling portability, hardware
+abstractions come into conflict with the performance and
+energy-efficiency requirements of WSN applications. 
+
+We need a *Hardware Abstraction Architecture (HAA)* that can strike a
+balance between the above conflicting goals. The component-based model
+of TinyOS has the functionality required for resolving this
+tension. The main challenge is to select an appropriate organization
+of abstraction functionality in form of components to support
+reusability while maintaining energy-efficiency through access to the
+full hardware capabilities when it is needed.
+
+Based on the experience in porting TinyOS to new platforms we believe
+that an effective organization is possible when the strengths of the
+component-based approach are combined with a flexible, three-tier
+organization of the hardware abstraction architecture.
+
+
+Architecture
+============
+
+In the proposed architecture (Fig.1_), the hardware abstraction
+functionality is organized in three distinct layers of components.
+Each layer has clearly defined responsibilities and is dependent on
+interfaces provided by lower layers.  The capabilities of the
+underlying hardware are gradually adapted to the established
+platform-independent interface between the operating system and the
+applications. As we move from the hardware towards this top interface,
+the components become less and less hardware dependent, giving the
+developer more freedom in the design and the implementation of
+reusable applications.
+
+.. _Fig.1:
+
+::
+
+                                 +-----------------------------+
+                                 |                             |
+                                 | Cross-platform applications |
+                                 |                             |
+                                 +--------------+--------------+
+ +-----------------+                            |                            +-----------------+
+ |Platform-specific|                            |                            |Platform-specific|
+ |  applications   |                            |                            |  applications   |
+ +--------+--------+       Platform-independent |  hardware interface        +--------+--------+
+          |          +-----------------+--------+--------+-----------------+          |
+          |          |                 |                 |                 |          |
+          |  +-------+-------+ +-------+-------+ +-------+-------+ +-------+-------+  |
+          |  |.------+------.| |.------+------.| |.------+------.| |.------+------.|  |
+          |  ||             || ||             || ||             || ||    HIL 4    ||  |
+          |  ||    HIL 1    || ||    HIL 2    || ||    HIL 3    || |`------+------'|  |
+          |  ||             || |`------+------'| |`------+------'| |       |       |  |
+          |  |`------+------'| |       |       | |       |       | |       |  +----+--+
+          +--+----+  |       | |.------+------.| |       |       | |       |  |    |
+             |    |  |       | ||             || |.------+------.| |.------+--+---.|
+             |.---+--+------.| ||             || ||             || ||             ||
+             ||             || ||    HAL 2    || ||             || ||             ||
+             ||             || ||             || ||    HAL 3    || ||    HAL 4    ||
+             ||    HAL 1    || |`------+------'| ||             || ||             ||
+             ||             || |       |       | ||             || ||             ||
+             ||             || |       |       | |`------+------'| |`------+------'|
+             |`------+------'| |.------+------.| |       |       | |       |       |
+             |       |       | ||             || |.------+------.| |       |       |
+             |.------+------.| ||    HPL 2    || ||             || |.------+------.|
+             ||    HPL 1    || ||             || ||    HPL 3    || ||    HPL 4    ||
+             |`------+------'| |`------+------'| |`------+------'| |`------+------'|
+             +-------+-------+ +-------+-------+ +-------+-------+ +-------+-------+  HW/SW
+                     |                 |                 |                 |          boundary
+        ************************************************************************************
+              +------+------+   +------+------+   +------+------+   +------+------+
+              |HW Platform 1|   |HW Platform 2|   |HW Platform 3|   |HW Platform 4|
+              +-------------+   +-------------+   +-------------+   +-------------+
+
+                    
+                       Fig.1: The proposed Hardware Abstraction Architecture
+
+
+
+Hardware Presentation Layer (HPL)
+---------------------------------
+
+The components belonging to the *HPL* are positioned directly over
+the HW/SW interface. As the name suggests, their major task is to
+"present" the capabilities of the hardware using the native concepts
+of the operating system.  They access the hardware in the usual way,
+either by memory or by port mapped I/O. In the reverse direction, the
+hardware can request servicing by signaling an interrupt. Using these
+communication channels internally, the *HPL* hides the hardware
+intricacies and exports a more usable interface (simple function
+calls) for the rest of the system.
+
+The *HPL* components SHOULD be stateless and expose an interface
+that is fully determined by the capabilities of the hardware module
+that is abstracted. This tight coupling with the hardware leaves
+little freedom in the design and the implementation of the components.
+Even though each *HPL* component will be as unique as the underlying
+hardware, all of them will have a similar general structure. For
+optimal integration with the rest of the architecture, each *HPL*
+component SHOULD have:
+
+- commands for initialization, starting, and stopping of the
+  hardware module that are necessary for effective power management
+  policy
+- "get" and "set" commands for the register(s) that control
+  the operation of the hardware
+- separate commands with descriptive names for the most
+  frequently used flag-setting/testing operations
+- commands for enabling and disabling of the interrupts generated by
+  the hardware module
+- service routines for the interrupts that are generated by the
+  hardware module
+
+The interrupt service routines in the *HPL* components perform only
+the most time critical operations (like copying a single value,
+clearing some flags, etc.), and delegate the rest of the processing to
+the higher level components that possess extended knowledge about the
+state of the system.
+
+The above *HPL* structure eases manipulation of the hardware.
+Instead of using cryptic macros and register names whose definitions
+are hidden deep in the header files of compiler libraries, the
+programmer can now access hardware through a familiar interface.
+
+This *HPL* does not provide any substantial abstraction over the
+hardware beyond automating frequently used command
+sequences. Nonetheless, it hides the most hardware-dependent code and
+opens the way for developing higher-level abstraction components.
+These higher abstractions can be used with different *HPL*
+hardware-modules of the same class.  For example, many of the
+microcontrollers used on the existing WSN platforms have two USART
+modules for serial communication.  They have the same functionality
+but are accessed using slightly different register names and generate
+different interrupt vectors. The *HPL* components can hide these
+small differences behind a consistent interface, making the
+higher-level abstractions resource independent.  The programmer can
+then switch between the different USART modules by simple rewiring
+(*not* rewriting) the *HPL* components, without any changes to the
+implementation code.
+
+  
+Hardware Adaptation Layer (HAL)
+-------------------------------
+
+The adaptation layer components represent the core of the
+architecture. They use the raw interfaces provided by the *HPL*
+components to build useful abstractions hiding the complexity
+naturally associated with the use of hardware resources. In contrast
+to the *HPL* components, they are allowed to maintain state that can
+be used for performing arbitration and resource control.
+
+Due to the efficiency requirements of WSN, abstractions at the *HAL*
+level are tailored to the concrete device class and platform. Instead
+of hiding the individual features of the hardware class behind generic
+models, *HAL* interfaces expose specific features and provide the
+"best" possible abstraction that streamlines application development
+while maintaining effective use of resources.
+
+For example, rather than using a single "file-like" abstraction for
+all devices, we propose domain specific models like *Alarm*, *ADC
+channel*, *EEPROM*. According to the model, *HAL* components SHOULD
+provide access to these abstractions via rich, customized interfaces,
+and not via standard narrow ones that hide all the functionality
+behind few overloaded commands.
+
+Hardware Interface Layer (HIL)
+------------------------------
+
+The final tier in the architecture is formed by the *HIL* components
+that take the platform-specific abstractions provided by the *HAL* and
+convert them to hardware-independent interfaces used by cross-platform
+applications.  These interfaces provide a platform independent
+abstraction over the hardware that simplifies the development of the
+application software by hiding the hardware differences.  To be
+successful, this API "contract" SHOULD reflect the *typical*
+hardware services that are required in a WSN application.
+
+The complexity of the *HIL* components mainly depends on how advanced
+the capabilities of the abstracted hardware are with respect to the
+platform-independent interface. When the capabilities of the hardware
+exceed the current API contract, the *HIL* "downgrades" the
+platform-specific abstractions provided by the *HAL* until they are
+leveled-off with the chosen standard interface. Consequently, when the
+underlying hardware is inferior, the *HIL* might have to resort to
+software simulation of the missing hardware capabilities.  As newer
+and more capable platforms are introduced in the system, the pressure
+to break the current API contract will increase. When the performance
+requirements outweigh the benefits of the stable interface, a discrete
+jump will be made that realigns the API with the abstractions provided
+in the newer *HAL*.  The evolution of the platform-independent interface
+will force a reimplementation of the affected *HIL* components. For
+newer platforms, the *HIL* will be much simpler because the API contract
+and their *HAL* abstractions are tightly related. On the other extreme,
+the cost of boosting up (in software) the capabilities of the old
+platforms will rise.
+
+Since we expect *HIL* interfaces to evolve as new platforms are
+designed, we must determine when the overhead of software emulation of
+hardware features can no longer be sustained.  At this point, we
+introduce *versioning* of *HIL* interfaces.  By assigning a version
+number to each iteration of an *HIL* interface, we can design
+applications using a legacy interface to be compatible with previously
+deployed devices.  This is important for WSNs since they execute
+long-running applications and may be deployed for years.  An *HIL* MAY
+also branch, providing multiple different *HIL* interfaces with
+increasing levels of functionality.
+
+
+Selecting the level of abstraction
+----------------------------------
+
+The platform-dependence of the *HAL* in the architecture leads to the
+more general question about why we have opted for a three-layered
+design. In other words, why we do not expose the platform-independent
+hardware interface directly from the *HAL* components. The main reason
+behind this decision is the increased *flexibility* that arises from
+separating the platform-specific abstractions and the adaptation
+wrappers that upgrade or downgrade them to the current
+platform-independent interface.  In this way, for maximum performance,
+the platform specific applications can circumvent the *HIL* components
+and directly tap to the *HAL* interfaces that provide access to the full
+capabilities of the hardware module.
+
+Selecting the "right" level--whether an application should use the *HIL*
+or directly access the *HAL*--can sometimes cause one hardware asset to
+be accessed using two levels of abstraction from different parts of
+the application or the OS libraries.
+
+Let us take an application similar to the standard OscilloscopeRF
+application in TinyOS as an example.  The application uses the ADC to
+sample several values from a temperature sensor and sends them in the
+form of a message over the radio.  If the observed phenomenon does not
+have a large signal bandwidth and the time between subsequent
+conversions is long, for the sake of cross-platform compatibility, the
+programmer might decide to use the standard ``ADCSingle``
+interface. This interface is exported by the *HIL* sensor wrapper
+(Fig.2_) using the services of the platform-specific *HAL*
+component. When enough samples are collected in the message buffer,
+the application passes the message to the networking stack.  The MAC
+protocol used for message exchange over the radio uses clear channel
+assessment to determine when it is safe to send the message. This
+usually requires taking several samples of the RSSI signal provided by
+the radio hardware. Since this is a very time critical operation in
+which the correlation between the consecutive samples has a
+significant influence, the programmer of the MAC might directly use
+the ``MSP430ADC12Multiple`` interface of the *HAL* component as it
+provides much finer control over the conversion process.
+
+.. _Fig.2:
+
+::
+
+
+     StdControl                        
+            | ADCSingle            
+            |    |  ADCMultiple                 
+            |    |    |                             
+     +------|----|----|------------------------------------------+
+     |      |    |    |                            Temperature   |
+     |      v    v    v                                          |  
+     | +--------------------+ MSP430ADC12Single   +------------+ |
+     | |   TemperatureM     |-------------------->|MSP430ADC12C| |
+     | |                    | MSP430ADC12Multiple |            | |
+     | |                    |-------------------->|            | |
+     | +--------------------+                     +------------+ |
+     +-----------------------------------------------------------+
+ 
+                Fig.2: The ADC HIL sensor wrapper
+
+
+As a result of this chain of decisions, we end up with a concurrent
+use of the ADC hardware module using two different levels of
+abstraction. To support this type of "vertical" flexibility we include
+more complex arbitration and resource control functionality in the *HAL*
+components so that a safe shared access to the *HPL* exported resources
+can be guaranteed.
+
+
+Reference
+=========
+
+The proposed HAA was applied for the first time during the
+implementation of the `MSP430 platform`_ that abstracts the
+capabilities of the TI MSP430 microcontroller in `TinyOS 1.1.7`_. The
+implementation is currently being used by four hardware platforms
+(TelosA, TelosB, eyesIFX and eyesIFXv2) and has quite successfully
+satisfied the requirements of a large range of applications.
+
+In the following we illustrate the properties of the proposed
+architecture using real-world examples from the planned hardware
+abstraction functionality in TinyOS 2.0.
+
+
+Processing unit
+---------------
+
+In TinyOS most of the variability between the processing units is
+hidden from the OS simply by using a nesC/C based programming language
+with a common compiler suite (GCC). For example, the standard library
+distributed with the compiler creates the necessary start-up code for
+initializing the global variables, the stack pointer and the interrupt
+vector table, shielding the OS from these MCU-specific tasks.
+
+To unify things further, TinyOS provides mechanisms for declaring
+reentrant and non-reentrant interrupt service routines and critical
+code-sections.  For the MCU's external pins, it provides macros that
+permit setting and clearing the pin, as well as changing its direction
+and function.  For example, the TI~MSP430's ADC pins may be used as
+either general I/O or as an analog input to the ADC hardware module.
+Macros are also provided for timed spin loops at microsecond
+resolution, independent of the microcontroller. These macros are
+defined in each platform's ``hardware.h`` descriptor file. Finally,
+the *HPL* components deal with the different ways of accessing
+registers (memory-mapped or port-mapped I/O) using the definitions in
+the standard library header files.
+
+The three-layer architecture is not intended to abstract the features
+of the different MCU cores. For the currently supported MCUs, the
+combination of the compiler suite support with the thin abstraction in
+the ``hardware.h`` files is sufficient. Nevertheless, if new cores
+with radically different architectures need to be supported by TinyOS
+in the future, this part of the hardware abstraction functionality
+will have to be explicitly addressed.
+
+
+Power management
+----------------
+
+On both the MSP430 and the Atmel, before entering a sleep mode, a
+component checks if any hardware modules require that the MCU core is
+active.  Additionally, all services including *HPL* and *HAL*
+components have a start and stop function.  When a service is no
+longer using a hardware module, it may call the stop function of the
+*HPL* or *HAL* component.  Doing so disables the module for power
+savings, but also removes the MCU's dependence on that hardware module
+to enter sleep mode.  For example, the ADC module may be clocked from
+a high speed oscillator.  When a sample is not in progress, the ADC
+module may be shut down and it will no longer use the high speed
+oscillator.  As a result, when the MCU is idle, it may enter low power
+mode.
+
+This rather efficient way of implementing the power management
+functionality is made possible by the fact that most of the hardware
+modules are on-chip, attached directly to the MCU system bus, and that
+there is no hardware memory protection hindering the access to their
+status registers. As TinyOS platforms add more external devices
+connected via the peripheral buses, this task will get increasingly
+complicated.  Ultimately, keeping some state in the form of device
+enumeration or reference counting mechanisms might be needed for
+proper power management.
+
+
+Clocks and timers
+-----------------
+
+The application of the HAA for abstracting the clock and timer
+modules is documented in [TEP102]_.
+
+
+Analog-to-digital converters
+----------------------------
+
+The application of the HAA for abstracting the analog-to-digital
+converter modules is documented in [TEP101]_.
+
+Data busses
+-----------
+
+The *HPL* functionality for the data busses includes two paths--one
+for data and a second for control. The control path allows the clock
+source, prescaler, and baud rate to be set. Interrupts may be enabled
+or disabled and various hardware flags may be read, set, or cleared,
+useful for polling or blocking implementations. Through the control
+path, the entire module may be started or stopped for power control.
+The data interface simply consists of sending and receiving a byte
+through the hardware's data registers, as well as interrupt based
+reporting of received data. Here is an example of the interfaces used
+in the MSP430 platform::
+
+  interface HPLUSARTControl {
+    async command void enableUART();
+    async command void disableUART();
+    async command void enableUARTTx();
+    async command void disableUARTTx();
+    async command void enableUARTRx();
+    async command void disableUARTRx();
+    async command void enableSPI();
+    async command void disableSPI();
+    async command void setModeSPI();
+    async command void setModeUART_TX();
+    async command void setModeUART_RX();
+    async command void setModeUART();
+    async command void setClockSource(
+          uint8_t source);
+    async command void setClockRate(
+          uint16_t baudrate, uint8_t mctl);
+    async command result_t disableRxIntr();
+    async command result_t disableTxIntr();
+    async command result_t enableRxIntr();
+    async command result_t enableTxIntr();
+    async command result_t isTxIntrPending();
+    async command result_t isRxIntrPending();
+    async command result_t isTxEmpty();
+    async command result_t tx(uint8_t data);
+    async command uint8_t rx();
+  }
+
+  interface HPLUSARTFeedback {
+    async event result_t txDone();
+    async event result_t rxDone(uint8_t data);
+  }
+
+Sometimes functionality for more than one bus protocol are supported
+through a single hardware module. In these cases, wrappers for each
+bus provide standard application interfaces for using the bus.
+Sharing the bus amongst different hardware devices or protocols may be
+done through a bus arbitration component. Bus arbitration allows
+higher level services to attain exclusive use of the bus, complete its
+operations, and then release the bus to the next service::
+
+  interface BusArbitration {
+    async command result_t getBus();
+    async command result_t releaseBus();
+    event result_t busFree();
+  }
+
+
+External storage
+----------------
+
+The application of the HAA for abstracting the external storage
+modules is documented in [TEP103]_.
+
+
+Radios
+------
+
+The application of the HAA for abstracting the radio modules is
+documented in [TEP104]_ and [TEP105]_.
+
+
+Conclusion
+==========
+
+The referenced TEPs in the previous section show that the three-layer
+design can be successfully used for exposing to the applications the
+functionality of the main hardware modules. The proposed architecture
+provides a set of core services that eliminate duplicated code and
+provide a coherent view of the system across different architectures
+and platforms. It supports the concurrent use of platform-independent
+and the platform-dependent interfaces in the same application. In this
+way, applications can localize their platform dependence to only the
+places where performance matters, while using standard cross-platform
+hardware interfaces for the remainder of the application.
+
+
+Author's Address
+================
+
+| Vlado Handziski (handzisk at tkn.tu-berlin.de) [1]_ 
+| Joseph Polastre (polastre at cs.berkeley.edu) [2]_ 
+| Jan-Hinrich Hauer (hauer at tkn.tu-berlin.de) [1]_
+| Cory Sharp (cssharp at eecs.berkeley.edu) [2]_
+| Adam Wolisz (awo at ieee.org) [1]_
+| David Culler (culler at eecs.berkeley.edu) [2]_
+
+
+.. [1] Technische Universitaet Berlin   
+       Telecommunication Networks Group                    
+       Sekr. FT 5, Einsteinufer 25                        
+       10587 Berlin, Germany           
+
+.. [2] University of California, Berkeley
+       Computer Science Department                
+       Berkeley, CA 94720 USA
+
+Citations
+=========
+
+.. [HAA2005] V. Handziski, J.Polastre, J.H.Hauer, C.Sharp,
+   A.Wolisz and D.Culler, "Flexible Hardware Abstraction for Wireless
+   Sensor Networks", in *Proceedings of the 2nd European Workshop on
+   Wireless Sensor Networks (EWSN 2005)*, Istanbul, Turkey, 2005.
+
+.. _MSP430 platform: http://cvs.sourceforge.net/viewcvs.py/tinyos/tinyos-1.x/tos/platform/msp430/
+
+.. _TinyOS 1.1.7: http://www.tinyos.net/scoop/section/Releases
+
+.. [TEP1] P. Levis, "TEP structure and key words" 
+   
+.. [TEP101] J.H. Hauer, V. Handziski, J. Polastre, L. Nachman, 
+   "Analog-to-digital Converter Abstraction"
+
+.. [TEP102] C. Sharp, "Clock and Timers Abstraction"
+
+.. [TEP103] D. Gay, J. Hui, "Non-volatile Storage Abstraction"
+
+.. [TEP104] K. Klues, "Radio Hardware Abstraction"
+
+.. [TEP105] J. Polastre, "Link Layer Primitives in TinyOS"
+
+..
+   Local Variables:
+   mode: indented-text
+   indent-tabs-mode: nil
+   sentence-end-double-space: t
+   fill-column: 70
+   End:

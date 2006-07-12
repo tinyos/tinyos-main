@@ -1,0 +1,30 @@
+.TH motelist 1 "Feb 3, 2006"
+.LO 1
+.SH NAME
+
+motelist - Locate connected USB devices
+.SH SYNOPSIS
+
+\fBmotelist\fR [\fB-c\fR]
+.SH DESCRIPTION
+
+\fBmotelist\fR lists all devices conntected to a PC through an FTDI
+USB-to-serial converter (see www.ftdichip.com).  This includes the
+Telos A, Telos B, and Tmote modules. 
+
+Options for All Platforms:
+  \fB-h\fR display a help message
+  \fB-c\fR compact format for automated parsing
+
+Options for Windows:
+  \fB-l\fR long format, also display disconnected devices
+
+Options for Linux:
+  \fB-f\fR specify the usb-serial file (if not in /proc/tty/driver/usbserial)
+  \fB-k\fR kernel version: 2.4, 2.6, auto (default)
+  \fB-m\fR method to scan usb: procfs, sysfs, auto (default)
+  \fB-dev_prefix\fR force the device prefix for the serial device
+  \fB-usb\fR display extra usb information
+.SH SEE ALSO
+
+.IR tos-bsl (1)

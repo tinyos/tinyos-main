@@ -1,0 +1,17 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: eprb.extra,v 1.2 2006-07-12 16:59:49 scipio Exp $
+
+ifeq ($(EPRB),)
+$(error EPRB must be defined, try "make $(TARGETS) help")
+endif
+
+PROGRAM = eprb
+PROGRAMMER_FLAGS = -dprog=stk500 -dhost=$(EPRB) --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS_STK)
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using eprb"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --erase --upload if=$(INSTALL_SREC)
+
+program_bl: FORCE
+	@echo "    installing $(PLATFORM) bootloader using eprb"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --upload if=$(BOOTLOADER)

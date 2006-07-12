@@ -1,0 +1,51 @@
+Mini C-SDK for TinyOS
+=====================
+
+This directory contains a mini-SDK for C, for communicating with motes
+running TinyOS 2.0. To build this SDK, run 
+  ./bootstrap
+  ./configure --prefix=<somewhere>
+  make
+in the current directory and, if you wish, "make install" to install the
+C-based serial forwarder in <somewhere>/bin.
+
+This directory contains one utility:
+- sf: a C-based serial forwarder:
+    sf <port> <device> <baudrate>
+  Starts a serial forwarder listening for TCP connections on port <port>, and
+  sending and receiving packets on serial port <device> at the specified
+  <baudrate>.
+
+  This serial forwarder implements the standard TinyOS 2.0 serial forwarder
+  protocol (see comments in support/sdk/java/net/tinyos/packet/SFProtocol.java
+  for a brief overview).
+
+a library (libmote.a) supporting mote communication:
+- serialsource.h: send and receive packets over a serial port (supports
+  non-blocking I/O)
+- sfsource.h: send and receive packets using the serial forwarder
+  protocol
+- message.h: support functions for mig, to encode and decode bitfields of
+  arbitrary size and endianness
+- serialpacket.h: mig-generated code to encode and decode the header of
+  TinyOS serial active-message packets (the packets sent and received by the
+  BaseStation application)
+- serialprotocol.h: ncg-generated code containing the constants describing
+  TinyOS serial packets (from tos/lib/serial/Serial.h)
+
+and four example programs that use that library:
+- seriallisten: print packets received from a serial port
+- sflisten: print packets received from a serial forwarder
+- prettylisten: print packets received from a serial forwarder, using
+  mig-generated code to decode the standard serial-active-message header
+- sfsend: send a packet (specified on the command line) to a serial forwarder
+
+Note that sflisten prints, and sfsend sends, raw packets. In particular,
+the first byte indicates the packet type (e.g., 00 for the AM-over-serial
+packets). For more information on serial communication to and from motes,
+see TEP113.
+
+For more information on using ncg and mig with C, see the nescc-mig and
+nescc-ncg man pages.
+
+

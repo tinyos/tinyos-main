@@ -1,0 +1,681 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<title>Collection</title>
+<meta name="author" content="Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis" />
+<style type="text/css">
+
+/*
+:Author: David Goodger
+:Contact: goodger@users.sourceforge.net
+:date: $Date: 2006-07-12 16:59:36 $
+:version: $Revision: 1.2 $
+:copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+*/
+body {
+  font-family: Times;
+  font-size: 16px;
+}
+
+.first {
+  margin-top: 0 ! important }
+
+.last {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dd {
+  margin-bottom: 0.5em }
+
+/* Uncomment (& remove this text!) to get bold-faced definition list terms
+dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning, div.admonition {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.hint p.admonition-title, div.important p.admonition-title,
+div.note p.admonition-title, div.tip p.admonition-title,
+div.admonition p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em }
+
+div.footer, div.header {
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin-left: 1em ;
+  border: medium outset ;
+  padding: 0em 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
+
+h1.title {
+ text-align: center;
+ font-size: 32px;
+}
+
+h2 {
+ font-size: 16px;
+ font-family: Arial, sans-serif;
+}
+
+h2.subtitle {
+  text-align: center }
+
+h3 {
+ font-size: 12px;
+ font-family: Arial, sans-serif;
+}
+
+hr {
+  width: 75% }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font-family: serif ;
+  font-size: 100% }
+
+pre.line-block {
+  font-family: serif ;
+  font-size: 100% }
+
+pre.literal-block, pre.doctest-block {
+  margin-left: 2em ;
+  margin-right: 2em ;
+  background-color: #eeeeee;
+  border-color: #000000;
+  border-width: thin; 
+  font-size: 14px
+}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.option-argument {
+  font-style: italic }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+table {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.citation {
+  border-left: solid thin gray ;
+  padding-left: 0.5ex }
+
+table.docinfo {
+  margin: 2em 4em;
+}
+
+table.footnote {
+  border-left: solid thin black ;
+  padding-left: 0.5ex }
+
+td, th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+th.docinfo-name, th.field-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap;
+  }
+
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+  font-size: 100% }
+
+tt {}
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="collection">
+<h1 class="title">Collection</h1>
+<table class="docinfo" frame="void" rules="none">
+<col class="docinfo-name" />
+<col class="docinfo-content" />
+<tbody valign="top">
+<tr class="field"><th class="docinfo-name">TEP:</th><td class="field-body">119</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Group:</th><td class="field-body">Net2 Working Group</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
+</tr>
+<tr><th class="docinfo-name">Status:</th>
+<td>Draft</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
+</tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis</td></tr>
+<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">09-Feb-2006</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p class="first admonition-title">Note</p>
+<p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
+requests discussion and suggestions for improvements.  Distribution
+of this memo is unlimited. This memo is in full compliance with
+TEP 1.</p>
+</div>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<p>The memo documents the interfaces, components, and semantics used by
+collection protocol in TinyOS 2.x. Collection provides a best-effort,
+multihop delivery of packets to the root of a tree.</p>
+</div>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<p>Collecting data at a base station is a common requirement of sensor
+network applications. The general approach used is to build one
+or more collection <em>trees</em>, each of which is rooted at a base
+station. When a node has data which needs to be collected, it
+sends the data up the tree, and it forwards collection data that
+other nodes send to it. Sometimes, depending on the form of data
+collection, systems need to be able to inspect packets as they go
+by, either to gather statistics, compute aggregates, or suppress
+redundant transmissions.</p>
+<p>When a network has multiple base stations that act as <em>root</em> nodes,
+rather than one tree, it has a <em>forest</em> of trees. By picking a
+parent node, a collection protocol implicitly joins one of these
+trees. Collection provides a best-effort,
+multihop delivery of packets to one of a network's tree roots:
+it is an <em>anycast</em> protocol.</p>
+<p>Given the limited state that nodes can store and a general need
+for distributed tree building algorithms, simple collection protocols
+encounter several challenges. These challenges are not unique to
+collection protocols. Instead, they represent a subset of common
+networking algorithmic edge cases that occur in this protocol
+family:</p>
+<blockquote>
+<ul class="simple">
+<li>Loop detection, detecting when a node selects one of its
+descendants as a new parent.</li>
+<li>Duplicate suppression, detecting and dealing with when lost
+acknowledgments are causing packets to replicate in the
+network, wasting bandwidth.</li>
+<li>Link estimation, evaluating the link quality to single-hop
+neighbors.</li>
+<li>Self-interference, preventing forwarding packets along the route
+from introducing interference for subsequent packets.</li>
+</ul>
+</blockquote>
+<p>The rest of this document describes a set of components and interfaces
+for a collection service outlined above.</p>
+</div>
+<div class="section">
+<h1><a id="collection-interfaces" name="collection-interfaces">2. Collection interfaces</a></h1>
+<p>A node can perform four different roles in collection: producer,
+consumer, snooper, and in-network processor. Depending on their role,
+the nodes use different interfaces to interact with the collection
+component.</p>
+<p>The nodes that generate data to be sent to the root are
+<em>producers</em>. The producers use the Send interface [<a class="reference" href="#id1">1</a>] to send
+data to the root of the collection tree. The collection tree
+identifier is be specified as a parameter to Send during
+instantiation.</p>
+<p>Root nodes that receive data from the network are <em>consumers</em>. The
+consumers use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a message
+delivered by collection. The collection tree identifier is be
+specified as a parameter to Receive during instantiation.</p>
+<p>The nodes that overhear messages in transit are <em>snoopers</em>. The snoopers
+use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a snooped message. The
+collection tree identifier is be specified as a parameter to Receive
+during instantiation.</p>
+<p>The nodes can process a packet that are in transit. These in-network
+<em>processors</em> use the Intercept interface [<a class="reference" href="#id1">1</a>] to receive and
+update a packet. The collection tree identifier is be specified as a
+parameter to Intercept during instantiation.</p>
+<p>A node is configured to become a root by using the RootControl
+interface. RootControl.setRoot() MUST make the current node a root of
+the tree specified during instantiation. RootControl.unsetRoot() MUST
+make the current root no longer a root in the tree specified during
+instantiation. RootControl.unsetRoot() MAY be called on a node that is
+not a root:</p>
+<pre class="literal-block">
+interface RootControl {
+  command error_t setRoot();
+  command error_t unsetRoot();
+  command bool isRoot();
+}
+</pre>
+</div>
+<div class="section">
+<h1><a id="collection-services" name="collection-services">3 Collection Services</a></h1>
+<p>A collection service MUST provide one component, TreeCollectionC,
+which has the following signature:</p>
+<pre class="literal-block">
+configuration TreeCollectionC {
+  provides {
+    interface StdControl;
+    interface Send[uint8_t client];
+    interface Receive[collection_id_t id];
+    interface Receive as Snoop[collection_id_t];
+    interface Intercept[collection_id_t id];
+    interface RootControl;
+    interface Packet;
+    interface CollectionPacket;
+    interface TreeRoutingInspect;
+  }
+  uses {
+    interface CollectionId[uint8_t client];
+  }
+}
+</pre>
+<p>TreeCollectionC MAY have additional interfaces, but they MUST have
+default functions on all outgoing invocations (commands for uses,
+events for provides) of those interfaces so that it can operate
+properly if they are not wired.</p>
+<p>Components SHOULD NOT wire to TreeCollectionC.Send. The generic
+component CollectionSenderC (described in section 3.1) provides
+a virtualized sending interface.</p>
+<p>Receive, Snoop, and Intercept are all parameterized by
+collection_id_t. Each collection_id_t corresponds to a different
+protocol operating on top of collection, in the same way that
+different am_id_t values represent different protocols operating on
+top of active messages. All packets sent with a particular
+collection_id_t generally have the same payload format, so that
+snoopers, intercepters, and receivers can parse it properly.</p>
+<p>Receive.receive MUST NOT be signaled on non-root
+nodes. TreeCollectionC MAY signal Receive.receive on a root node when
+a data packet successfully arrives at that node. If a root node calls
+Send, TreeCollectionC MUST treat it as it if were a received packet.
+Note that the buffer swapping semantics of Receive.receive, when
+combined with the pass semantics of Send, require that TreeCollectionC
+make a copy of the buffer if it signals Receive.receive.</p>
+<p>If TreeCollectionC receives a data packet to forward and it is not a
+root node, it MAY signal Intercept.forward.</p>
+<p>If TreeCollectionC receives a data packet that a different node
+is supposed to forward, it MAY signal Snoop.receive.</p>
+<p>RootControl allows a node to be made a collection tree root.
+TreeCollectionC SHOULD NOT configure a node as a root by default.</p>
+<p>Packet and CollectionPacket allow components to access collection
+data packet fields [<a class="reference" href="#id1">1</a>].</p>
+<p>TreeRoutingInspect provides information on the current position of
+the node in a routing tree:</p>
+<pre class="literal-block">
+interface TreeRoutingInspect {
+  command error_t getParent(am_addr_t* parent);
+  command error_t getHopcount(uint8_t* hopcount);
+  command error_t getMetric(uint16_t* metric);
+}
+</pre>
+<p>In each of these commands, if the return value is not SUCCESS, the
+value stored in the pointer argument is undefined. The getMetric
+command provides a measure of the quality of a node's route to the
+base station. This routing metric MUST be monotonically increasing
+across hops. In a collection tree, if node A is the parent of node B,
+then node B's metric value MUST be greater than node A's.</p>
+<div class="section">
+<h2><a id="collectionsenderc" name="collectionsenderc">3.1 CollectionSenderC</a></h2>
+<p>Collection has a virtualized sending abstraction, the generic
+component CollectionSenderC:</p>
+<div class="system-message">
+<p class="system-message-title">System Message: WARNING/2 (<tt class="docutils">txt/tep119.txt</tt>, line 198)</p>
+Literal block expected; none found.</div>
+<dl class="docutils">
+<dt>generic configuration CollectionSenderC(collection_id_t collectid) {</dt>
+<dd><dl class="first docutils">
+<dt>provides {</dt>
+<dd>interface Send;
+interface Packet;</dd>
+</dl>
+<div class="system-message">
+<p class="system-message-title">System Message: WARNING/2 (<tt class="docutils">txt/tep119.txt</tt>, line 202)</p>
+Definition list ends without a blank line; unexpected unindent.</div>
+<p class="last">}</p>
+</dd>
+</dl>
+<div class="system-message">
+<p class="system-message-title">System Message: WARNING/2 (<tt class="docutils">txt/tep119.txt</tt>, line 203)</p>
+Definition list ends without a blank line; unexpected unindent.</div>
+<p>}</p>
+<p>This abstraction follows a similar virtualization approach to
+AMSenderC [<a class="reference" href="#id1">1</a>], except that it is parameterized by a collection_id_t
+rather than an am_id_t. As with am_id_t, every collection_id_t SHOULD
+have a single packet format, so that receivers can parse a packet
+based on its collection ID and contents.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="implementation" name="implementation">4 Implementation</a></h1>
+<p>An implementation of this TEP can be found in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/collection</span></tt>. The implementation consists of
+three major components, which are wired together to form a
+CollectionC: LinkEstimatorP, TreeRoutingEngineP, and ForwardingEngineP.</p>
+<p>This decomposition tries to encourage evolution of components and ease
+of use through modularization. Neighbor management and link estimation
+are are decoupled from the routing protocol. Furthermore, the routing
+protocol and route selection are decoupled from the forwarding policies,
+such as queueing and timing.</p>
+<div class="section">
+<h2><a id="linkestimatorp" name="linkestimatorp">4.1 LinkEstimatorP</a></h2>
+<p>LinkEstimatorP estimates the quality of link to or from each
+neighbor. Link estimation can be done in a variety of ways, and we do
+not impose one here. It is decoupled from the establishment of
+routes. There is a narrow interface (LinkEstimator) between the link
+estimator and the routing engine. The one requirement is that the
+quality returned is standardized. A larger return value from
+LinkEstimator.getQuality(), LinkEstimator.getforwardQuality(),
+LinkEstimator.getreserveQuality() MUST imply that the link to the
+neighbor is estimated to be of a higher quality than the one that
+results in a smaller return value. The range of value SHOULD be
+[0,255] and the variation in link quality in that range SHOULD be
+linear. Radio provided values such as LQI or RSI, beacon based link
+estimation to compute ETX, or their combination are some possible
+approaches to estimating link qualities. LinkEstimatorP MAY have its
+own control messages to compute bi-directional link qualities:</p>
+<pre class="literal-block">
+typedef uint16_t neighbor_t
+
+LinkEstimatorP {
+  provides {
+    interface LinkEstimator;
+    interface NeighborTable;
+  }
+}
+
+interface LinkEstimator {
+  command uint8_t getLinkQuality(neighbot_t neighbor);
+  command uint8_t getReverseQuality(neighbot_t neighbor);
+  command uint8_t getForwardQuality(neighbot_t neighbor);
+}
+
+interface NeighborTable {
+  event void evicted(neighbot_t neighbor)
+}
+</pre>
+</div>
+<div class="section">
+<h2><a id="treeroutingenginep" name="treeroutingenginep">4.2 TreeRoutingEngineP</a></h2>
+<p>TreeRoutingEngineP is responsible for computing routes to the roots of a
+tree. It uses NeighborTable and LinkEstimator interfaces to learn
+about the nodes in the neighbor table maintained by LinkEstimatorP and
+the quality of links to and from the neighbors. The routing protocol
+on which collection is implemented MUST be a tree-based routing
+protocol with a single or multiple roots. TreeRoutingEngineP
+allows a node to be configured as a root or a non-root node
+dynamically. TreeRoutingEngineP maintains multiple candidate next hops:</p>
+<pre class="literal-block">
+generic module TreeRoutingEngineP(uint8_t routingTableSize) {
+  provides {
+      interface UnicastNameFreeRouting as Routing;
+      interface RootControl;
+      interface TreeRoutingInspect;
+      interface StdControl;
+      interface Init;
+  }
+  uses {
+      interface AMSend as BeaconSend;
+      interface Receive as BeaconReceive;
+      interface LinkEstimator;
+      interface AMPacket;
+      interface LinkSrcPacket;
+      interface SplitControl as RadioControl;
+      interface Timer&lt;TMilli&gt; as BeaconTimer;
+      interface Random;
+      interface CollectionDebug;
+  }
+}
+</pre>
+</div>
+<div class="section">
+<h2><a id="forwardingenginep" name="forwardingenginep">4.3 ForwardingEngineP</a></h2>
+<p>The ForwardingEngineP component provides all the top level interfaces
+(except RootControl) which TreeCollectionC provides and an application
+uses:</p>
+<pre class="literal-block">
+generic module ForwardingEngineP() {
+  provides {
+    interface Init;
+    interface StdControl;
+    interface Send[uint8_t client];
+    interface Receive[collection_id_t id];
+    interface Receive as Snoop[collection_id_t id];
+    interface Intercept[collection_id_t id];
+    interface Packet;
+    interface CollectionPacket;
+  }
+  uses {
+    interface AMSend as SubSend;
+    interface Receive as SubReceive;
+    interface Receive as SubSnoop;
+    interface Packet as SubPacket;
+    interface UnicastNameFreeRouting;
+    interface SplitControl as RadioControl;
+    interface Queue&lt;fe_queue_entry_t*&gt; as SendQueue;
+    interface Pool&lt;fe_queue_entry_t&gt; as QEntryPool;
+    interface Pool&lt;message_t&gt; as MessagePool;
+    interface Timer&lt;TMilli&gt; as RetxmitTimer;
+    interface Cache&lt;uint32_t&gt; as SentCache;
+    interface TreeRoutingInspect;
+    interface PacketAcknowledgements;
+    interface Random;
+    interface RootControl;
+    interface CollectionId[uint8_t client];
+    interface AMPacket;
+    interface CollectionDebug;
+  }
+}
+</pre>
+<p>ForwardingEngineP uses a large number of interfaces, which can be
+broken up into a few groups of functionality:</p>
+<blockquote>
+<ul class="simple">
+<li>Single hop communication: SubSend, SubReceive, SubSnoop,
+SubPacket, PacketAcknowledgments, AMPacket</li>
+<li>Routing: UnicastNameFreeRouting, TreeRoutingInspect,
+RootControl, CollectionId, SentCache</li>
+<li>Queue and buffer management: SendQueue, MessagePool,
+QEntryPool</li>
+<li>Packet timing: Random, RetxmitTimer</li>
+</ul>
+</blockquote>
+</div>
+</div>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
+<div class="line-block">
+<div class="line">Rodrigo Fonseca</div>
+<div class="line">473 Soda Hall</div>
+<div class="line">Berkeley, CA 94720-1776</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 510 642-8919</div>
+<div class="line">email - <a class="reference" href="mailto:rfonseca&#64;cs.berkeley.edu">rfonseca&#64;cs.berkeley.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Omprakash Gnawali</div>
+<div class="line">Ronald Tutor Hall (RTH) 418</div>
+<div class="line">3710 S. McClintock Avenue</div>
+<div class="line">Los Angeles, CA 90089</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 213 821-5627</div>
+<div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Kyle Jamieson</div>
+<div class="line">The Stata Center</div>
+<div class="line">32 Vassar St.</div>
+<div class="line">Cambridge, MA 02139</div>
+<div class="line"><br /></div>
+<div class="line">email - <a class="reference" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Philip Levis</div>
+<div class="line">358 Gates Hall</div>
+<div class="line">Computer Science Laboratory</div>
+<div class="line">Stanford University</div>
+<div class="line">Stanford, CA 94305</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 650 725 9046</div>
+<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+</div>
+</div>
+<div class="section">
+<h1><a id="citations" name="citations">6. Citations</a></h1>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id1">[1]</a></td><td>TEP 116: Packet Protocols</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</body>
+</html>

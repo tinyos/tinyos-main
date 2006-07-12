@@ -1,0 +1,18 @@
+.TH tos-bsl 1 "Feb 3, 2006"
+.LO 1
+.SH NAME
+
+tos-bsl - Program a telos or telos B mote
+.SH SYNOPSIS
+
+\fBtos-bsl\fR [\fIoptions-and-files\fR]
+.SH DESCRIPTION
+
+\fBtos-bsl\fR is a version of \fBmsp430-bsl\fR modifies to support the
+telos and telos B motes. See 
+  @prefix@/share/doc/tinyos-tools-@PACKAGE_VERSION@/tos-bsl.txt
+.br
+for full documentation.
+.SH SEE ALSO
+
+.IR motelist (1)

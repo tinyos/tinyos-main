@@ -1,0 +1,5 @@
+mkdir config-aux
+aclocal
+autoheader
+autoconf
+automake -a -c

@@ -1,0 +1,200 @@
+.TH UISP "1" "@DATE@" "uisp version @VERSION@" "User Commands"
+.SH NAME
+uisp \- manual page for uisp
+.SH SYNOPSIS
+.B uisp
+[\fIOPTION\fR].. \fI-dprog=TYPE\fR \fI-dpart=AT90XXX\fR \fI--FUNCTION\fR.. [\fIif=SOURCE\fR] [\fIof=DEST\fR]
+.SH DESCRIPTION
+.IP
+.SS "Programming Methods:"
+\fB\-dprog\fR=avr910|pavr|stk500
+.RS
+.TP
+avr910
+Standard Atmel Serial Programmer/Atmel Low Cost Programmer
+.TP
+pavr
+http://www.avr1.org/pavr/pavr.html
+.TP
+stk500
+Atmel STK500
+.RE
+.HP
+\fB\-dprog\fR=dapa|stk200|abb|avrisp|bsd|fbprg|dt006|maxi|dasa|dasa2
+.RS
+.TP
+dapa
+Direct AVR Parallel Access
+.TP
+stk200
+Parallel Starter Kit STK200, STK300
+.TP
+abb
+Altera ByteBlasterMV Parallel Port Download Cable
+.TP
+avrisp
+Atmel AVR ISP (?)
+.TP
+bsd
+http://www.bsdhome.com/avrdude/ (parallel)
+.TP
+fbprg
+http://ln.com.ua/~real/avreal/adapters.html (parallel)
+.TP
+dt006
+http://www.dontronics.com/dt006.html (parallel)
+.TP
+maxi
+Investment Technologies Maxi (parallel)
+.TP
+dasa
+serial (RESET=RTS SCK=DTR MOSI=TXD MISO=CTS)
+.TP
+dasa2
+serial (RESET=!TXD SCK=RTS MOSI=DTR MISO=CTS)
+.RE
+.SS "Target Device Selection:"
+.TP
+\fB\-dpart\fR=part
+Set target abbreviated name or number. For some programmers, if
+\fB\-dpart\fR is not given programmer's supported devices are listed. Set
+\fB\-dpart\fR=\fIauto\fR for auto-select. Auto-select does not work with
+all programmers, so it is recommended to always specify a target device
+explicitly.
+.SS "Parallel Device Settings:"
+.TP
+\fB\-dlpt\fR=address|device name
+specify device name (Linux ppdev, FreeBSD ppi, serial)
+or direct I/O parallel port address (0x378, 0x278, 0x3BC)
+.TP
+\fB\-dno\-poll\fR
+Program without data polling (a little slower)
+.TP
+\fB\-dno\-retry\fR
+Disable retries of program enable command
+.TP
+\fB\-dvoltage\fR=value
+Set timing specs according to the power supply voltage in [V]
+(default 3.0)
+.TP
+\fB\-dt_sck\fR=time
+Set minimum SCK high/low time in micro-seconds (default 5)
+.TP
+\fB\-dt_wd_flash\fR=time
+Set FLASH maximum write delay time in micro-seconds
+.TP
+\fB\-dt_wd_eeprom\fR=time
+Set EEPROM maximum write delay time in micro-seconds
+.TP
+\fB\-dt_reset\fR=time
+Set reset inactive (high) time in micro-seconds
+.TP
+\fB\-dinvert\fR=[sck[,mosi[,miso[,reset]]]]]
+Invert specified lines
+Use \fB\-v\fR=\fI3\fR option to see current settings.
+.SS "Atmel Low Cost Programmer Serial Device Settings:"
+.TP
+\fB\-dserial\fR=device name
+Set serial interface as /dev/ttyS* (default /dev/avr)
+.TP
+\fB\-dspeed\fR=1200|2400|4800|9600|19200|38400|57600|115200
+Set speed of the serial interface (default 19200)
+.SS "Stk500 specific options:"
+.TP
+\fB\-dparallel\fR
+Use Hi-V parallel programming instead of serial (default is serial)
+.TP
+\fB\-\-rd_aref\fR
+Read the ARef Voltage. Note that due to a bug in the stk500 firmware, the read
+value is sometimes off by 0.1 from the actual value measured with a volt meter.
+.TP
+\fB\-\-rd_vtg\fR
+Read the Vtarget Voltage. Note that due to a bug in the stk500 firmware, the
+read value is sometimes off by 0.1 from the actual value measured with a volt
+meter.
+.TP
+\fB\-\-wr_aref\fR=value
+Set the ARef Voltage. Valid values are 0.0 to 6.0 volts in 0.1 volt increments.
+Value can not be larger than the VTarget value.
+.TP
+\fB\-\-wr_vtg\fR=value
+Set the VTarget Voltage. Valid values are 0.0 to 6.0 volts in 0.1 volt
+increments.  Value can not be smaller than the ARef value.
+.SS "Functions:"
+.TP
+\fB\-\-upload\fR
+Upload "input_file" to the AVR memory.
+.TP
+\fB\-\-verify\fR
+Verify "input_file" (processed after the \fB\-\-upload\fR opt.)
+.TP
+\fB\-\-download\fR
+Download AVR memory to "output_file" or stdout.
+.TP
+\fB\-\-erase\fR
+Erase device.
+.TP
+\fB\-\-segment\fR=flash|eeprom|fuse
+Set active segment (auto-select for AVA Motorola output)
+.SS "Fuse/Lock Bit Operations:"
+.TP
+\fB\-\-rd_fuses\fR
+Read all fuses and print values to stdout
+.TP
+\fB\-\-wr_fuse_l\fR=byte
+Write fuse low byte
+.TP
+\fB\-\-wr_fuse_h\fR=byte
+Write fuse high byte
+.TP
+\fB\-\-wr_fuse_e\fR=byte
+Write fuse extended byte
+.TP
+\fB\-\-wr_lock\fR=byte
+Write lock bits. Argument is a byte where each bit is:
+ Bit5 -> blb12
+ Bit4 -> blb11
+ Bit3 -> blb02
+ Bit2 -> blb01
+ Bit1 -> lb2
+ Bit0 -> lb1
+.TP
+\fB\-\-lock\fR
+Write lock bits [old method; deprecated].
+.SS "Files:"
+.TP
+\fBif\fR=filename
+Input file for the \fB\-\-upload\fR and \fB\-\-verify\fR functions in
+Motorola S-records (S1 or S2) or 16 bit Intel format
+.TP
+\fBof\fR=filename
+Output file for the \fB\-\-download\fR function in
+Motorola S-records format, default is standard output
+.SS "Other Options:"
+.TP
+\fB\-v\fR=level
+Set verbose level (-v equals \fB\-v\fR=\fI2\fR, min/max: 0/4, default 1)
+.TP
+\fB\-\-hash\fR=perbytes
+Print hash (default is 32 bytes)
+.TP
+\fB\-\-help\fR \fB\-h\fR
+Help
+.TP
+\fB\-\-version\fR
+Print version information
+.TP
+\fB\-\-terminal\fR
+Invoke shell-like terminal
+.SH "AUTHOR"
+Written by Uros Platise.
+.SH "REPORTING BUGS"
+Report bugs to <uisp-dev@nongnu.org>
+.SH "SEE ALSO"
+http://savannah.nongnu.org/download/uisp/
+.SH "COPYRIGHT"
+(c) 1997-1999 Uros Platise, 2000-2003 Marek Michalkiewicz
+.PP
+uisp is free software, covered by the GNU General Public License.  You are
+welcome to change it and/or distribute copies of it under the conditions of
+the GNU General Public License.

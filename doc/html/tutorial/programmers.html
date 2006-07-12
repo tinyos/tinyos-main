@@ -1,0 +1,110 @@
+<html>
+<head>
+    <title>Mica-family Programming</title>
+  <link href="../../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body>
+
+<div class="title">Device Programming</div>
+<div class="subtitle">Last updated 03 Sep 2003</div>
+
+    <p>
+    The TinyOS development environment includes features to ease programming 
+    devices. The mica family of motes has a diverse set of boards
+    which connect a mote to a PC for programming.  TinyOS 2.0 supports
+    the following mica family programming boards
+    </p>
+
+
+
+    <center>
+      <table cellpadding=10>
+        <tr><td>Name</td><td width=10></td><td>Picture</td></tr>
+        <tr>
+          <td>Parallel port programming board (e.g., Crossbow MIB500)</td>
+          <td></td>
+          <td><IMG SRC="img/MIB500CA_Sm.jpg"></td>
+        </tr>
+        <tr>
+          <td>Serial port programming board (e.g., Crossbow MIB510)</td>
+          <td></td>
+          <td><IMG SRC="img/MIB510CA_Sm.jpg"></td>
+        </tr>
+        <tr>
+          <td>USB serial programming board (e.g., Crossbow MIB520)</td> 
+          <td></td>
+          <td><IMG SRC="img/MIB520CA_Sm.jpg"></td>
+        </tr>
+        <tr>
+          <td>Ethernet programming board (e.g., Crossbow MIB600) </td>
+          <td></td>
+          <td><IMG SRC="img/MIB600CA_Sm.jpg"></td>
+      </tr>
+     </table>
+    </center>
+    <p>
+    The second key feature permits programming each device with a unique address 
+    attribute without having to compile the application each time. </p>
+
+    <p>
+    This document describes how to use these features in TinyOS 2.0.</p>
+
+    <p>
+
+<h1>Using Programmers</h1>
+
+    <p>
+    The standard programming software used in TinyOS is the
+    <font face="Times New Roman">µ In-System Programmer or '<tt>uisp</tt>'.&nbsp; This 
+    program, which comes as a part of the TinyOS release, takes various 
+    arguments according to the programmer hardware and the particular 
+    programming action desired (erase, verify, program, etc..).&nbsp; To 
+    simplify using this tool, the TinyOS environment invokes uisp for you with 
+    the correct arguments whenever you issue an 'install' or 'reinstall'.&nbsp; 
+    You only need specify the type of device you are using and how to 
+    communicate with it.&nbsp; This is done using environment variables.</font></p>
+
+    <h2>MIB500/Parallel Port Programmers</h2>
+
+    <blockquote>
+
+    <p>
+    This is the default programmer device.&nbsp; No additional command line 
+    parameters need to be specified when using this programmer.</p>
+
+    </blockquote>
+
+    <h2>Serial Programming (MIB510 and MIB520)</h2>
+
+    <blockquote>
+
+    <p>
+    Add <tt>mib510,&lt;dev&gt; </tt> where &lt;dev&gt; is the name of the serial port where the device is attached (i.e. /dev/ttyS0).</p>
+
+    <p>
+    example: <br>
+<tt>make micaz install mib510,/dev/ttyS1</tt></p>
+
+    </blockquote>
+
+ <h2>Ethernet Programming (MIB600)</h2>
+    <blockquote>
+
+    <p>Add <tt>eprb,&lt;addr&gt;</tt> where &lt;addr&gt; is the IP address of the ethernet device (e.g., 10.0.0.12).</p>
+
+    <p>
+    example:<br>
+<tt>make micaz install eprb,192.168.2.23</tt></p>
+
+    </blockquote>
+
+    <p>
+    &nbsp;</p>
+
+
+
+<hr>
+<b><a href="index.html"> Tutorial Index </a></b></body>
+</html>

@@ -1,0 +1,51 @@
+Owners by directory
+===================
+[For stuff which cleanly fits in a directory]
+
+tos/chips
+---------
+ad5200: Kevin Klues  [eyes?]
+at45db: David Gay [mica family storage]
+atm128: Martin Turon (Xbow), David Gay [mica family microcontroller]
+cc1000: David Gay [mica2 radio]
+cc2420: Phil Levis, Jonathan Hui [802.15.4 radio]
+msp430: Arched Rock, TU Berlin [microcontroller]
+pxa27x: Phil Buonadonna [imote2 microcontroller]
+stm25p: Jonathan Hui [telosb storage]
+tda5250: TU Berlin (who?) [eyes radio]
+
+tos/lib
+-------
+adc: Jan Hauer, David Gay [adc support components]
+gpio: Martin Turon [polling-based interrupt emulation]
+oski: Phil Levis [a service distribution]
+serial: Ben Greenstein, Phil Levis [serial port protocol]
+timer: Cory Sharp [timer support components]
+tossim: Phil Levis [simulation environment]
+
+tos/oski [is it tos/oski or tos/lib/oski??]
+
+tos/platforms
+-------------
+eyesIFX: TU Berlin
+intelmote2: Phil Buonadonna
+mica: Martin Turon, David Gay [mica family support]
+mica2: Martin Turon, David Gay
+micaz: Martin Turon, Phil Levis
+telosa: Arched Rock
+telosb: Arched Rock
+
+tos/sensorboards
+----------------
+mts300: Martin Turon [mica family sensor board]
+
+Owners by subsystem
+===================
+[For things without their own well-defined directory, or which don't
+have a directory yet]
+
+Arbiters: Kevin Klues
+Power management: Phil Levis, Vlado Handziski, Kevin Klues
+Security: Phil Levis, David Gay
+Scheduler, booting: Phil Levis
+Random numbers: Phil Levis

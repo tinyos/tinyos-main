@@ -1,0 +1,60 @@
+.TH tos-set-symbols 1 "Feb 2, 2006"
+.LO 1
+.SH NAME
+
+tos-set-symbols - set initialized variable values in a binary
+.SH SYNOPSIS
+
+\fBtos-set-symbols\fR [\fB--objcopy=\fR\fIOBJCOPY\fR] [\fB--objdump=\fR\fIOBJDUMP\fR] 
+                [\fB--target=\fR\fITARGET\fR] 
+                \fIINPUTFILE\fR \fIOUTPUTFILE\fR [\fISYMBOL\fR=]VALUE...
+
+\fBtos-set-symbols\fR --srec [\fB--objcopy=\fR\fIOBJCOPY\fR] [\fB--objdump=\fR\fIOBJDUMP\fR] 
+                [\fB--target=\fR\fITARGET\fR] 
+                \fIINPUTFILE\fR \fIOUTPUTFILE\fR [\fISYMBOL\fR=]VALUE...
+
+\fBtos-set-symbols\fR --exe [\fB--objcopy=\fR\fIOBJCOPY\fR] [\fB--objdump=\fR\fIOBJDUMP\fR] 
+                \fIINPUTFILE\fR \fIOUTPUTFILE\fR [\fISYMBOL\fR=]VALUE...
+
+\fBtos-set-symbols\fR --read [\fB--objdump=\fR...] \fIINPUTFILE\fR \fISYMBOL\fR...
+
+.SH DESCRIPTION
+
+\fBtos-set-symbols\fR is a tool to inspect and modify the initial values
+of variables in a binary. It is used by the TinyOS build system to set
+a node's ID and AM address, for example, when using \fBinstall.X\fR or
+\fBreinstall.X\fR. 
+
+\fBtos-set-symbols\fI takes an optional first argument that specifies
+the format of the binary being modified or whether it is only being read.
+By default, it acts as if \fB--srec\fR was passed. Instead of passing
+\fB--srec\fR, \fB--exe\fR, the \fB--target\fR option can be used to
+specify a target format. This option is passed to objcopy. The \fB--objdump\fR
+and \fB--objcopy\fR options allow you to specify which binary tools
+to use. By default, \fBtos-set-symbols\fR uses \fBavr-objcopy\fR and
+\fBavr-objdump\fR.
+
+The \fISYMBOL\fR parameter refers to a variable in the image to 
+modify or print. If the variable is in a component, its name is of
+the form \fIcomponent\fR$\fIvariable\fR. If the \fISYMBOL\fR is
+omitted, it defaults to \fBTOS_LOCAL_ADDRESS\fR, for compatibility
+with the TinyOS 1.x \fBset-mode-id\fR tool.
+
+.SH EXAMPLE
+. 
+This reads in a micaZ .srec file, changes the value of TOS_NODE_ID 
+to 4, and writes out a new binary to main.srec.out-4.
+
+  tos-set-symbols build/micaz/main.srec build/micaz/main.srec.out-4 \\
+  TOS_NODE_ID=4
+  
+This reads in a Telos .srec file, changes the value of TOS_NODE_ID and
+ActiveMessageAddressC$addr to 3, and writes out a new binary to 
+main.srec.out-3. It uses the msp430, rather than the avr, binary tools,
+and outputs an ihex format executable.
+
+  tos-set-symbols --objcopy=msp430-objcopy --objdump=msp430-objdump \\
+  --target=ihex build/telosa/main.ihex build/telosa/main.ihex.out-3 \\
+  TOS_NODE_ID=3 ActiveMessageAddressC\$addr=3 
+
+

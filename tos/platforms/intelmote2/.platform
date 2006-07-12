@@ -1,0 +1,46 @@
+#
+# FILE: intelmote2/.platform
+# 
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.  
+#
+# $Id: .platform,v 1.2 2006-07-12 17:02:46 scipio Exp $
+#
+
+push ( @includes, qw(
+
+  %T/platforms/intelmote2
+  %T/platforms/intelmote2/chips/cc2420
+  %T/platforms/intelmote2/chips/da9030
+  %T/platforms/intelmote2/chips/pxa271
+  %T/chips/cc2420
+  %T/chips/pxa27x
+  %T/chips/pxa27x/lib
+  %T/chips/pxa27x/timer
+  %T/chips/pxa27x/gpio
+  %T/chips/pxa27x/dma
+  %T/chips/pxa27x/ssp
+  %T/chips/pxa27x/i2c
+  %T/chips/pxa27x/uart
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/gpio
+) );
+
+@opts = qw(
+
+  -gcc=xscale-elf-gcc
+  -nostartfiles
+  -fnesc-target=env
+  -fnesc-no-debug
+  -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+
+);
+
+push @opts, "-mingw-gcc" if $cygwin;
+
+$ENV{NESC_MACHINE} = "pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true";
+
+

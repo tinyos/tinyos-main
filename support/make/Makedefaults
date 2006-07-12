@@ -1,0 +1,24 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: Makedefaults,v 1.2 2006-07-12 16:59:43 scipio Exp $
+
+DEFAULT_LOCAL_GROUP ?= 0x7d
+OPTFLAGS ?= -Os
+NESC_FLAGS ?= -Wnesc-all
+GOALS += tos-ident-flags tos_image
+
+define DEFAULT_HELP
+
+ Welcome to the TinyOS make system!
+
+ You must specify one of the valid targets and possibly some combination of
+ the extra options.  Many targets have custom extras and extended help, so be
+ sure to try "make <target> help" to learn of all the available features.
+
+ Global extras:
+
+   docs    : compile additional nescdoc documentation
+   tinysec : compile with TinySec secure communication
+
+endef
+HELP += $(DEFAULT_HELP)
+

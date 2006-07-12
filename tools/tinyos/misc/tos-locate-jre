@@ -1,0 +1,127 @@
+#!/bin/sh
+# This script attempts to locate the jre directory of the current
+# Java installation, even when java is not in the path
+# It works with  the following rpm files:
+#       Sun's Java Software Development Kit (Linux/Windows)
+#       Sun's Java Runtime Environment (Linux)
+#       IBM's Java Software Development Kit (linux)
+
+# We require an option to specify which directory is desired:
+# --java: directory with java executable
+# --javac: directory with javac executable
+# --jni: directory where JNI code is placed
+
+if [ "$1" = "--jni" ]; then
+    jni=yes
+elif [ "$1" = "--java" ]; then
+    java=yes
+elif [ "$1" = "--javac" ]; then
+    javac=yes
+else
+    echo "Usage: tos-locate-jre --java|--javac|--jni" >&2
+    exit 2
+fi
+
+rpmlocate () {
+    javarpm=$1
+    javapath=`rpm -ql $1 2>/dev/null | grep "bin/$2$"`
+}
+
+pathlocate () {
+    javapath=`which $1 2>/dev/null`
+    while [ -n "$javapath" -a -h "$javapath" ]; do
+	javapath=`readlink -q $javapath`
+    done
+    test -n "$javapath"
+}
+
+case `uname` in
+    CYGWIN*)
+    # Hopefully this will always work on cygwin with Sun's Java
+    jversion=`regtool -q get '\HKLM\SOFTWARE\JavaSoft\Java Development Kit\CurrentVersion'`
+    if [ $? != 0 ]; then
+	exit 1
+    fi
+    jhome=`regtool -q get '\HKLM\SOFTWARE\JavaSoft\Java Development Kit\'$jversion'\JavaHome'`
+    if [ $? != 0 ]; then
+	exit 1
+    fi
+    jhome=`cygpath -u "$jhome"`
+    ;;
+
+    Linux)
+    # We check the path first, on the assumption that that's the preferred
+    # version.
+    pathlocate javac || { test -z "$javac" && pathlocate java; }
+    if [ -z "$javapath" ]; then
+	# We try a bunch of standard names, before resorting to rpm -qa
+	rpmlocate IBMJava2-SDK javac || \
+	    rpmlocate IBMJava2-142-ia32-SDK javac || \
+	    rpmlocate j2sdk javac || \
+	    rpmlocate jdk javac || \
+	    { test -z "$javac" && rpmlocate j2re java; } || \
+	    { test -z "$javac" && rpmlocate jre java; }
+
+	if [ -z "$javapath" ]; then
+	    # lastly, check for a weirdly named IBMJava2
+	    name=`rpm -qa | grep IBMJava2 | head -1`
+	    if [ -n "$name" ]; then
+		rpmlocate $name javac
+	    fi
+	fi
+    fi
+    if [ -z "$javapath" ]; then
+	exit 1
+    fi
+    jbin=`dirname "$javapath"`
+    jhome=`dirname "$jbin"`
+    ;;
+
+    FreeBSD)
+    # We check the path first, on the assumption that that's the preferred
+    # version.
+    pathlocate javac || { test -z "$javac" && pathlocate java; }
+    if [ -n "$javapath" ]; then
+	jbin=`dirname "$javapath"`
+    else
+	if [ -f /usr/local/jdk1.4*/bin/java ]; then
+	    jbin=/usr/local/jdk1.4*/bin
+	else
+	    exit 1
+	fi
+    fi
+    jhome=`dirname $jbin`
+    ;;
+esac
+
+# These are correct for Sun and IBM's x86 Java versions
+if [ "$jni" = "yes" ]; then
+    jnilocate () {
+	dir="$1"
+	test -d "$1"
+    }
+
+    # Look for a likely JNI directory
+    # Windows, and IBM Java: in jre/bin
+    # Sun Java on Linux: in jre/lib/i386
+    if "$jhome/bin/java" -version 2>&1 | grep -q IBM || cygpath -w / >/dev/null 2>/dev/null; then
+	jnilocate "$jhome/jre/bin" || jnilocate "$jhome/bin"
+    else
+	arch=`uname -m`
+	jnilocate "$jhome/jre/lib/$arch" || \
+	    jnilocate "$jhome/jre/lib/i386" || \
+	    jnilocate "$jhome/lib/$arch" || \
+	    jnilocate "$jhome/lib/i386"
+    fi
+elif [ "$javac" = "yes" ]; then
+ dir="$jhome/bin"
+elif [ "$java" = "yes" ]; then
+ dir="$jhome/bin"
+fi
+
+# Check that what we found actually exists
+if [ -d "$dir" ]; then
+ echo $dir
+else
+ exit 1
+fi

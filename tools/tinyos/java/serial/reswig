@@ -1,0 +1,5 @@
+#!/bin/sh
+swig -java -package net.tinyos.comm -c++ TOSComm.i
+perl -pe 's{^}{//} if /For gcc on Windows/; s/\b(JNICALL) (Java_)/$1 _$2/' TOSComm_wrap.cxx >TOSComm_wrap_win32.cxx
+rm TOSComm.java
+mv *.java ../../../../support/sdk/java/net/tinyos/comm

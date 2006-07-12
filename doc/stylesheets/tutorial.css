@@ -1,0 +1,149 @@
+/* 
+ * $Id: tutorial.css,v 1.2 2006-07-12 16:59:40 scipio Exp $ 
+ */
+body {	
+	background: #FFFFFF; 
+	color: #000000; 
+	font-family: Times, serif; 
+	font-weight: normal;
+	font-size: 14px;
+	list-style: outside;
+}
+table {
+	font-family: Times, serif; 
+        font-size: 14px;
+}
+a:link { 
+	color: #d3595e;
+	text-decoration: none;
+	font-weight: bold; 
+} 
+a:visited { 
+	color: #404040; 
+	text-decoration: none;
+	font-weight: bold; 
+}
+a:hover {
+	text-decoration: underline;
+	font-weight: bold; 
+}
+
+b { 
+	font-weight: bold; 
+}
+
+em {
+	font-style: oblique;
+}
+
+h1 {    
+	font-size: large;
+	font-weight: bold;
+        background-color: #c0c0f0;
+        padding: 1px 1px 1px 2px;
+}
+h2 {
+	font-size: large; 
+	font-weight: normal;
+	font-style: oblique;
+}
+h3 { 
+	font-size: medium;
+	font-weight: normal; 
+}
+h4 { 
+	font-size: medium;
+	font-weight: normal;
+	font-style:oblique;
+}
+sup {
+	font-size: x-small;
+} 
+sub {
+	font-size: x-small;
+} 
+
+
+ul.links {
+	border: 0;
+	margin-left: 1.5em;
+	padding: 0;
+	text-decoration: none;
+	text-align: left; 
+	font-size: small; 
+}
+
+.menu {
+	width: 100%;
+	background-color: #c00000;
+	padding: .2em 1em .2em 1em;
+	border: 0;
+	margin: 0;
+}
+
+.paperlinks {
+	background-color: #d0d0d0; 
+	font-size: small;
+	text-align: right; 
+	padding: 0.2em; 
+	margin-right: .4em;
+}
+.docinfo { 
+	width: 100%;
+ 	margin: 0 0 0 0;
+	border-width: 0 0 0 0;
+	padding: .2em .2em .2em .2em;
+	font-size: small;
+	text-align: right; 
+	background-color: #800000; 
+	padding-bottom : 0.2em; 
+}
+
+.headline { 
+	width: 100%;
+	margin: 0 0 0 0;
+	border: 0 0 0 0;
+        background-color: #a0a0a0;
+        color: #000000;
+}
+
+.subheadline { 
+	width: 100%;
+	margin: 0 0 0 0;
+	border: 0 0 0 0;
+	padding: .2em .2em .2em .2em;
+	text-align: left; 
+	background-color: #e0e0c0;
+}
+
+.title {
+        background-color: #b0b0b0;
+        font-family: Helvetica, sans-serif;
+        font-size: x-large;
+	font-weight: bold; 
+	padding: 4px 4px 4px 4px;
+}
+.subtitle {
+        background-color: #b0b0b0;
+        font-family: Helvetica, sans-serif;
+	font-weight: normal;
+        font-size: small;
+	padding: 4px 4px 4px 4px;
+}
+
+code { 
+	font-family: monospace; 
+	font-size: medium;
+}
+pre { 
+	font-family: monospace; 
+	margin-left: 2em; 
+        background-color: lightblue;
+}
+dt, dd, ul { 
+	margin-top: 0; 
+	margin-bottom: 0; 
+}
+dt { 
+	font-weight: bold; 
+}

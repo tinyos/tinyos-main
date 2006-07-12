@@ -1,0 +1,11 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: reinstall.extra,v 1.2 2006-07-12 16:59:49 scipio Exp $
+
+NODEID = $(REINSTALL)
+BUILD_DEPS = setid program delsetid
+
+ifdef TINYOS_NP
+  ifeq ($(TINYOS_NP),BNP)
+    BUILD_DEPS += program_bl
+  endif
+endif

@@ -1,0 +1,189 @@
+#!@pathperl@
+# -*- perl -*-
+
+# Copyright (c) 2002-2005 Intel Corporation
+# All rights reserved.
+#
+# This file is distributed under the terms in the attached INTEL-LICENSE     
+# file. If you do not find these files, copies can be found by writing to
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# 94704.  Attention:  Intel License Inquiry.
+
+# The new nesdoc implementation. When run with a TinyOS 1.x setup, just runs
+# the old nesdoc except if the -new option is given.
+#
+# The new nesdoc implementation is based on the XML dump facilities in nesC
+# 1.2 (version 1.2.1 of the nesC compiler is required). Documenation
+# generation is broken into two phases:
+# - nesdoc data collection: nesdoc information for all interfaces and 
+#   components is saved to a nesdoc repository, which is just a collection
+#   of XML files. See archive.py for more details.
+# - HTML generation from the XML files: once a repository is complete,
+#   you run nesdoc with the -html option to generate HTML files for
+#   each interface and component, along with an index. See genhtml.py
+#   for details.
+#
+# Differences between the old and new nesdocs (summary):
+# - the new nesdoc is currently only targeted at generating API documentation;
+#   it doesn't generate HTML files describing applications
+# - the old nesdoc does not support generic components or interfaces
+# - the per-component HTML files, the index and wiring graphs are hopefully
+#   more readable
+# - information on module implementations is not included (it should not
+#   be part of an API documentation)
+
+
+$prefix = "@prefix@";
+$exec_prefix = "@exec_prefix@";
+$libprogs = "@libdir@/tinyos";
+$python = "@pathpython@";
+
+$tosdir = `ncc -print-tosdir`;
+chomp($tosdir);
+
+# If using a TinyOS 1.x tree, assume old-style nesdoc except if there is a
+# -new argument somewhere.
+if (-d "$tosdir/platform" && !grep /^-new$/, @ARGV) {
+    # nesdoc for TinyOS 1.x, support old style docs
+    if ($#ARGV < 1) {
+	&fail("Usage: nesdoc <documentation directory> <options and nesC files>");
+    }
+
+    $docdir = shift @ARGV;
+
+    unshift @ARGV, "-docdir=$docdir";
+    unshift @ARGV, "-fsyntax-only";
+    unshift @ARGV, "$exec_prefix/bin/ncc";
+
+    exec @ARGV;
+    fail("Couldn't execute $ARGV[0]");
+}
+
+# nesdoc for TinyOS 2.x 
+# parse arguments
+$target = `ncc -print-target`;
+chomp $target;
+for ($i = 0; $i <= $#ARGV; $i++) {
+    $strip = 0;
+    $_ = $ARGV[$i];
+    if (/^-/) {
+	if (/^-topdir=(.*)/) {
+            push @archive_args, $1;
+	    $strip = 1;
+	}
+	elsif (/^--version$/) {
+	    $print_version = 1;
+	    $strip = 1;
+	}
+	elsif (/^-v$/) {
+	    $verbose = 1;
+	}
+	elsif (/^-target=(.*)/) {
+	    $target = $1;
+	}
+	elsif (/^-o/) {
+	    ($i, $docdir) = extractarg($i);
+	    $strip = 1;
+	}
+	elsif (/^-html$/) {
+	    $genhtml = 1;
+	    $strip = 1;
+	}
+	elsif (/^-preserve$/) {
+	    $preserve = 1;
+	    $strip = 1;
+	}
+    }
+    push @ncc_args, $_ if !$strip;
+}
+
+if ($print_version) {
+    print "nesdoc: @PACKAGE_VERSION@\n";
+    exit 0;
+}
+
+fail("No documentation directory specified") if !defined $docdir;
+$docdir = "$docdir/$target";
+
+if (defined $ENV{PYTHONPATH}) {
+    $ENV{PYTHONPATH} = "$libprogs:$PYTHONPATH";
+}
+else {
+    $ENV{PYTHONPATH} = "$libprogs";
+}
+
+if ($genhtml) {
+    execorfail($python, "$libprogs/nesdoc/genhtml.py", $docdir)
+}
+
+# Collecting nesdoc data. Run ncc, then process the results with
+# nesdoc-archive
+
+unshift @ncc_args, "-fsyntax-only";
+unshift @ncc_args, "-fnesc-dump=interfacedefs";
+unshift @ncc_args, "-fnesc-dump=components(wiring)";
+unshift @ncc_args, "-fnesc-dump=interfaces";
+unshift @ncc_args, "-fnesc-dump=functions(!global())";
+unshift @ncc_args, "-fnesc-dump=referenced(interfaces,components)";
+unshift @ncc_args, "$exec_prefix/bin/ncc";
+
+print STDERR join(' ', @ncc_args), "\n" if $verbose;
+
+pipe FORARCHIVE, FORNCC;
+
+if (!($pid = fork())) {
+    close STDOUT;
+    open STDOUT, ">&FORNCC";
+    execorfail(@ncc_args);
+}
+fail("fork failed") if $pid < 0;
+close STDIN;
+open STDIN, "<&FORARCHIVE";
+# Top of TinyOS tree is a default "topdir" (for package emulation)
+$toscontainer = `dirname $tosdir`;
+chomp $toscontainer;
+push @archive_args, "--topdir=$toscontainer";
+push @archive_args, "--preserve" if $preserve;
+push @archive_args, "$docdir";
+unshift @archive_args, "$libprogs/nesdoc/archive.py";
+unshift @archive_args, $python;
+
+print STDERR join(' ', @archive_args), "\n" if $verbose;
+
+fail("Couldn't create directory $docdir") if system("mkdir -p \"$docdir\"");
+execorfail(@archive_args);
+
+sub fail {
+    print STDERR "$_[0]\n";
+    exit 2;
+}
+
+sub execorfail {
+    exec @_;
+    fail("Couldn't execute $_[0]");
+}
+
+sub usage {
+    fail(<<EOM
+Usage: nesdoc -o <documentation directory> <ncc options and nesC files>
+         Compile specified files and archive the resulting nesdoc
+	 information in <documentation directory>
+         Note: This does not generate the nesdoc html pages.
+
+       nesdoc -o <documentation directory> -html
+	 Generate nesdoc html pages from archived nesdoc information.
+EOM
+)
+}
+
+sub extractarg {
+    local ($i) = @_;
+
+    if (length($ARGV[$i]) == 2) {
+	$arg = $ARGV[++$i];
+    }
+    else {
+	$arg = substr($ARGV[$i], 2);
+    }
+    return ($i, $arg);
+}

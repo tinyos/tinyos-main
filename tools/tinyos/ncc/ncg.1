@@ -1,0 +1,30 @@
+.TH ncg 1 "April 27, 2004"
+.LO 1
+.SH NAME
+
+ncg - extract constants from TinyOS files
+.SH SYNOPSIS
+
+\fBncg\fR [any ncc option] [tool-specific options]
+    [\fB-o\fR \fIoutput-file\fR]
+    \fItool\fR \fInesC-file\fR \fIfilenames-or-constant-names...\fR
+.SH DESCRIPTION
+
+\fBnescc-ncg\fR is a tool to extract constants from TinyOS files for use with
+other applications. It is typically used in conjunction with
+\fBmig\fR (which generates code to process TinyOS messages) to extract
+constants that are used in particular messages (e.g., constants
+representing various commands).
+
+\fBncg \fIoptions\fR is equivalent to \fBnescc-ncg -nescc=ncc
+\fIoptions\fR. For details on \fBncg\fR's output and options, please read
+see the \fBnescc-ncg\fR man page.
+.SH EXAMPLE
+    APPDIR=`ncc -print-tosdir`/lib/FS<br>
+    ncg -I%T/lib/FS -java-classname=net.tinyos.matchbox.FS \\
+      java $APPDIR/Remote.nc Matchbox.h Remote.h -oFS.java
+.SH SEE ALSO
+
+.IR ncc (1),
+.IR nescc-ncg (1),
+.IR mig (1)

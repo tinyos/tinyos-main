@@ -1,0 +1,17 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: jflashmm.extra,v 1.2 2006-07-12 16:59:51 scipio Exp $
+
+PROGRAM = jflashmm
+
+PROGRAMMER ?= jflashmm.exe
+PROGRAMMER_FLAGS = ""
+PXA27X_JTAG_DEV ?= "JTAG CPU"
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using $(PROGRAM)"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(INSTALL_BIN)
+
+
+program_input: bin
+	@:
+

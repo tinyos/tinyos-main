@@ -1,0 +1,228 @@
+============================
+Pins and Buses
+============================
+
+:TEP: 117
+:Group: Core Working Group 
+:Type: Documentary
+:Status: Draft
+:TinyOS-Version: 2.x
+:Author: Phil Buonadonna
+
+:Draft-Created: 23-Jan-2006
+:Draft-Version: $Revision: 1.2 $
+:Draft-Modified: $Date: 2006-07-12 16:59:42 $
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This memo documents a part of TinyOS for the TinyOS Community, and
+   requests discussion and suggestions for improvements.  Distribution
+   of this memo is unlimited. This memo is in full compliance with
+   TEP 1.
+
+Abstract
+====================================================================
+
+The memo documents the TinyOS 2.x interfaces used for controlling
+digital IO functionality and digital interfaces other than serial
+communication covered in [tep113].
+
+
+1. Introduction
+====================================================================
+
+The canonical TinyOS device is likely to have a variety of digital
+interfaces. These interfaces may be divided into two broad
+categories. The first are general purpose digital I/O lines (pins)
+for individual digital signals at physical pins on a chip or
+platform. The second are digital I/O interfaces that have predefined
+communication protocol formats. The two buses covered in this
+document are the Serial Peripheral Interface (SPI) and the
+Inter-Integrated Circuit (I2c) or Two-Wire interface. While there are
+likely other bus formats, we presume SPI and I2C to have the largest
+coverage. While the UART interface is also in this category, it is
+covered separately in [tep113].
+
+This memo documents the interfaces used for pins and the two buses.
+
+2. Pins
+====================================================================
+
+General Purpose I/O (GPIO) pins are single, versatile digital I/O signals
+individually controllable on a particular chip or platform. Each GPIO
+can be placed into either an input mode or an output mode. On
+some platforms a third 'tri-state' mode may exist, but this
+functionality is platform specific and will not be covered in this
+document.  
+
+On many platforms, a physical pin may function as either a digital GPIO
+or another special function I/O such. Examples include ADC I/O or a bus
+I/O. Interfaces to configure the specific function of a pin are
+platform specific.  
+
+The objective of the interfaces described here is not to attempt to
+cover all possibilities of GPIO functionality and features, but to
+distill down to a basis that may be expected on most platforms.
+
+In input mode, we assume the following capabilities:
+ * The ability to arbitrarily sample the pin
+ * The ability to generate an interrupt/event from either a rising edge or falling edge digital signal.
+ 
+In output mode, we assume the following capabilities:
+ * An I/O may be individually cleared (low) or set (hi)
+ 
+Platform that provide GPIO capabilities MUST provide the following HIL
+interfaces:
+
+ * GeneralIO
+ * GpioInterrupt
+
+Platforms MAY provide the following capture interface.
+
+ * GpioCapture
+
+2.1 GeneralIO 
+--------------------------------------------------------------------
+
+The GeneralIO HIL interface is the fundamental mechanism for controlling a
+GPIO pin. The interface provides a mechanism for setting the pin mode
+and reading/setting the pin value. The toggle function switches the
+output state to the opposite of what it currently is.
+ 
+Platforms with GPIO functionality MUST provide this interface. It
+SHOULD be provided in a component named GeneralIOC, but MAY be
+provided in other components as needed. ::
+
+ interface GeneralIO
+ {
+   async command void set();
+   async command void clr();
+   async command void toggle();
+   async command bool get();
+   async command void makeInput();
+   async command void makeOutput();
+ }
+
+
+
+2.2 GpioInterrupt
+--------------------------------------------------------------------
+
+The GPIO Interrupt HIL interface provides baseline event control for a 
+GPIO pin. It provides a mechanism to detect a rising edge OR a falling
+edge. Note that calls to enableRisingEdge and enableFallingEdge are
+NOT cumulative and only one edge may be detected at a time. There may
+be other edge events supported by the platform which MAY be exported
+through a platform specific HAL interface. ::
+ 
+ interface GpioInterrupt {
+ 
+   async command error_t enableRisingEdge();
+   async command error_t enableFallingEdge();
+   async command error_t disable();
+   async event void fired();
+ 
+ }
+
+
+2.3 GpioCapture
+--------------------------------------------------------------------
+
+The GpioCapture interface provides a means of associating a timestamp
+with a GPIO event. Platforms MAY provide this interface.
+
+Some platforms may have hardware support for such a feature. Other
+platforms may emulate this capability using the SoftCaptureC
+component. The interface makes not declaration of the precision or
+accuracy of the timestamp with respect to the associated GPIO event. ::
+
+ interface GpioCapture {
+ 
+   async command error_t captureRisingEdge();
+   async command error_t captureFallingEdge();
+   async event void captured(uint16_t time);
+   async command void disable();
+ 
+ }
+
+
+3. Buses
+====================================================================
+
+Bus operations may be divided into two categories: data and
+control. The control operations of a particular bus controller are
+platform specific and not covered here. Instead, we focus on the data
+interfaces at the HIL level that are expected to be provided.
+
+3.1 Serial Peripheral Interface
+--------------------------------------------------------------------
+
+The Serial Peripheral Interface (SPI) is part of a larger class of
+Synchronous Serial Protocols.  The term SPI typically refers to the
+Motorola SPI protocols. Other protocols include the National
+Semiconductor Microwire, the TI Synchronous Serial Protocol and the
+Programmable Serial Protocol. The dataside interfaces here were
+developed for the Motorola SPI format, but may work for others.
+
+Platforms supporting SPI MUST provide these interfaces.
+
+Of note, the interfaces DO NOT define the behavior of any chip select
+or framing signals. These SHOULD determined by platform specific HAL
+interfaces and implementations.
+
+
+The interface is split into a synchronous byte level and an
+asynchronous packet level interface. The byte level interface is
+intended for short transactions (3-4 bytes) on the SPI bus. ::
+
+ interface SPIByte {
+   async command error_t write( uint8_t tx, uint8_t* rx );
+ }
+
+The packet level interface is for larger bus transactions. The
+pointer/length interface permits use of hardware assist such as DMA. ::
+
+ interface SPIPacket {
+ 
+   async command error_t send( uint8_t* txBuf, uint8_t* rxBuf, uint16_t len );
+   async event void sendDone( uint8_t* txBuf, uint8_t* rxBuf, uint16_t len, 
+ 			     error_t error );
+ }
+
+3.2 I2C
+--------------------------------------------------------------------
+
+The Inter-Integrated Circuit (I2C) interface is another type of
+digital bus that is often used for chip-to-chip communication. It is
+also known as a two-wire interface. 
+
+The I2CPacket interface provides for asynchronous Master mode communication on an
+I2C with application framed packets.  It supports only single
+transfers with a start-stop condition around each transfer.
+
+Platforms providing I2C capability MUST provide this interface. ::
+
+ interface I2CPacket {
+   async command result_t readPacket(uint16_t _addr, uint8_t _length, uint8_t* _data);
+   async command result_t writePacket(uint16_t _addr, uint8_t _length, uint8_t* _data);
+   async event void readPacketDone(uint16_t addr, uint8_t length, uint8_t* data, result_t success);
+   async event void writePacketDone(uint16_t addr, uint8_t length, uint8_t* data, result_t success);
+ }
+
+
+
+4. Author's Address
+====================================================================
+
+| Phil Buonadonna
+| Arched Rock Corporation
+| 657 Mission St. Ste 600
+| San Francisco, CA 94105-4120
+|
+| phone - +1 415 692-0828 x2833
+
+5. Citations
+====================================================================
+
+.. [tep113] TEP 113: Serial Communication.

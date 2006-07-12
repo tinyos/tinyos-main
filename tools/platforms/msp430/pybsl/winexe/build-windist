@@ -1,0 +1,5 @@
+rm -rf bin
+cd ..
+python winexe/setup.py py2exe
+mv bin winexe/bin
+rm -rf build

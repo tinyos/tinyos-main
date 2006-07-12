@@ -1,0 +1,64 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: sim.extra,v 1.2 2006-07-12 16:59:48 scipio Exp $
+
+GCC=gcc
+GPP=g++
+OPTFLAGS = -g -O0
+LIBS = -lm -lstdc++ 
+PFLAGS += -tossim -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber=sim_node\(\)  
+WFLAGS = -Wno-nesc-data-race
+PYTHON_VERSION=2.3
+
+BUILDDIR   = simbuild/$(PLATFORM)
+CFILE    = $(BUILDDIR)/sim.c
+OBJFILE    = $(BUILDDIR)/sim.o
+CXXFILE    = $(TOSDIR)/lib/tossim/tossim.c
+CXXOBJFILE = $(BUILDDIR)/tossim.o
+PYFILE     = $(TOSDIR)/lib/tossim/tossim_wrap.cxx
+PYOBJFILE  = $(BUILDDIR)/pytossim.o
+PYDIR      =/usr/include/python$(PYTHON_VERSION)
+SIMDIR     =$(TOSDIR)/lib/tossim
+XML        = app.xml
+DUMPTYPES = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags
+
+ifeq ($(OSTYPE), cygwin)
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
+  PLATFORM_LIB_FLAGS = -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else 
+ifeq ($(OSTYPE), darwin) 
+  PLATFORM_FLAGS=-fPIC
+  PLATFORM_CC_FLAGS=-bundle
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_BUILD_FLAGS=-flat_namespace -undefined supress 
+  PLATFORM_LIB_FLAGS = -lstdc++ 
+else # linux
+  PLATFORM_FLAGS=-shared -fPIC
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_LIB_FLAGS = -lstdc++ 
+  PLATFORM_BUILD_FLAGS= -shared -fPIC
+endif
+endif
+ 
+BUILD_DEPS = sim-exe
+
+# lib/tossim has to come at the end in order to ensure basic TOSSIM
+# implementations are the last resort, so put it directly in the call
+
+sim-exe: builddir $(BUILD_EXTRA_DEPS) FORCE
+	@echo "  placing object files in $(BUILDDIR)"
+	@echo "  writing XML schema to $(XML)"
+	@echo "  compiling $(COMPONENT) to object file sim.o"
+	$(NCC) -c $(PLATFORM_FLAGS) -o $(OBJFILE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WFLAGS) $(COMPONENT).nc $(LDFLAGS)  $(DUMPTYPES) -fnesc-dumpfile=$(XML)
+
+	@echo "  compiling Python support into pytossim.o and tossim.o"
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(PYOBJFILE) $(OPTFLAGS) $(CFLAGS) $(PYFILE) -I$(PYDIR) -I$(SIMDIR) -DHAVE_CONFIG_H 
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(CXXOBJFILE) $(OPTFLAGS) $(CFLAGS) $(CXXFILE) -I$(PYDIR) -I$(SIMDIR)
+	@echo "  linking into shared object ./$(SHARED_OBJECT)"
+	$(GPP) $(PLATFORM_BUILD_FLAGS) $(PLATFORM_CC_FLAGS) $(PYOBJFILE) $(OBJFILE) $(CXXOBJFILE) $(PLATFORM_LIB_FLAGS) -o $(SHARED_OBJECT)
+	@echo "  copying Python script interface TOSSIM.py from lib/tossim to local directory"
+	@cp $(TOSDIR)/lib/tossim/TOSSIM.py .
+	@echo " "
+	@echo "*** Successfully built $(PLATFORM) TOSSIM library. "
+

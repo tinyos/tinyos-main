@@ -1,0 +1,27 @@
+TestAMOnOff
+
+This application has two different versions, slave and master. The
+version compiled is determined by a compile-time flag (SERVICE_MASTER
+or SERVICE_SLAVE). 
+
+To compile a master:
+  CFLAGS=-DSERVICE_MASTER make <platform> <other options>
+
+To compile a slave:
+  CFLAGS=-DSERVICE_SLAVE make <platform> <other options>
+
+A master is always on. A master broadcasts a packet every second. Four of
+the five packets are data packets; every fifth packet is a control packet.
+It toggles Led0 when it sends a data packet and Led1 when it sends a
+control packet.
+
+When a slave hears a data packet, it toggles Led0. When a slave
+hears a control packet, it turns off its radio for a short
+period of time. Led1 indicates whether the slave's radio is on.
+
+If you install a slave and a master, you should see the slave blink
+Led0 a few times, then when the master blinks Led1, the slave stops
+for a little while, then resumes blinking Led0.
+
+Philip Levis, 8/7/2005
+

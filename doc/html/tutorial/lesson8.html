@@ -1,0 +1,28 @@
+
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <title>TinyOS Tutorial Lesson 8: Concurrency in TinyOS</title>
+  <link href="../../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div class="title">Lesson 2: </div>
+<div class="subtitle">Last updated 29 January 2006</div>
+
+<p>Commands and events that are executed as part
+of a hardware event handler must be declared with the <b>async</b>
+keyword (more about the async keyword in Lesson 8). </p>
+
+<p>Because tasks and hardware event handlers may be preempted by other
+asynchronous code, nesC programs are susceptible to certain race
+conditions. Races are avoided either by accessing shared data
+exclusively  within tasks, or by having all accesses within <b>atomic</b>
+statements. The nesC compiler reports potential <b>data races</b> to the
+programmer at compile-time. It is possible the compiler may report a
+false positive. In this case a variable can be declared with the <b>norace</b>
+keyword. The norace keyword should be used with extreme caution. </p>
+
+<p>Please see the <a href="../../doc/nesc/ref.pdf">nesC Language
+Reference Manual</a> for more information on programming in nesC. <br>
+&nbsp;

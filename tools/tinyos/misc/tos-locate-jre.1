@@ -1,0 +1,37 @@
+.TH tos-locate-jre 1 "Feb 3, 2006"
+.LO 1
+.SH NAME
+
+tos-locate-jre - Locate a Java installation
+.SH SYNOPSIS
+
+\fBtos-locate-jre\fR \fB--jni\fR
+\fBtos-locate-jre\fR \fB--java\fR
+\fBtos-locate-jre\fR \fB--javac\fR
+.SH DESCRIPTION
+
+\fBtos-locate-jre\fR locates your Java installation. It is used by other tools
+to decide where to install files, and is useful for setting up your shell
+path.
+
+Under cygwin, \fBtos-locate-jre\fR checks the registry for the installation
+point of Sun's JVM. It will not find any other versions of Java.
+
+Under Linux, \fBtos-locate-jre\fR looks for an executable named javac or
+java in the path. If none is found, it looks for IBM's and Sun's Java RPMs
+(in that order).
+
+Once \fBtos-locate-jre\fR has located your Java directory, it can return 
+the directory containing the \fBjava\fR executable (\fB--java\fR option),
+the directory containing the \fBjavac\fR executable (\fB--javac\fR option),
+or the directory where JNI libraries should be installed (\fB--jni\fR option).
+
+\fBtos-locate-jre\fR has only been tested with recent IBM and Sun JVMs. If
+you use something else, it will likely fail.
+.SH EXAMPLES
+
+Add java and javac to your path:
+  PATH=`/usr/local/bin/locate-jre --java`:$PATH
+  PATH=`/usr/local/bin/locate-jre --javac`:$PATH
+.SH SEE ALSO
+.IR tos-install-jni (1)

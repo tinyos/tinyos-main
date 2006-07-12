@@ -1,0 +1,136 @@
+#!@pathpython@
+# Copyright (c) 2006 Intel Corporation
+# All rights reserved.
+#
+# This file is distributed under the terms in the attached INTEL-LICENSE     
+# file. If you do not find these files, copies can be found by writing to
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# 94704.  Attention:  Intel License Inquiry.
+
+from xml.dom import *
+from xml.dom.minidom import *
+from re import match
+from sys import *
+
+sector_size = 256
+flash_size = 2048 # in sectors
+
+volumes = {}
+volmap = []
+
+# print an error message and exit
+def nfail(s):
+  stderr.write(s + "\n")
+  exit(2)
+
+def check_volume(name, base, size):
+  if base == "":
+    base = None
+  else:
+    try:
+      base = int(base)
+    except ValueError:
+      nfail("invalid base for volume %s" % name)
+    if (base & (sector_size - 1)) != 0:
+      nfail("base of volume %s is not a multiple of %d" % (name, sector_size))
+    base /= sector_size
+
+  try:
+    size = int(size)
+  except ValueError:
+    nfail("invalid size for volume %s" % name)
+  if (size & (sector_size - 1)) != 0:
+    nfail("size of volume %s is not a multiple of %d" % (name, sector_size))
+  size /= sector_size
+
+  name = name.upper()
+  if volumes.has_key(name):
+    nfail("duplicate definition of volume %s" % name)
+  if not match("^[a-zA-Z0-9_]+$", name):
+    nfail("invalid volume name %s" % name)
+  volumes[name] = (base, size)
+
+def allocate_at(name, base, size):
+  # check for overlap of existing allocations
+  for (vname, vbase, vsize) in volmap:
+    if base in range(vbase, vbase + vsize) or base + size - 1 in range(vbase, vbase + vsize) or vbase in range(base, base + size) or vbase + vsize - 1 in range(base, base + size):
+      nfail("volume %s overlaps volume %s" % (name, vname))
+
+  # insert at correct position
+  for i in range(len(volmap)):
+    if base < volmap[i][1]:
+      volmap.insert(i, (name, base, size))
+      return
+
+  # it's the last volume...
+  volmap.append((name, base, size))
+
+def allocate(name, size):
+  # We just do first fit. We could spend endless effort doing better.
+  base = 0
+  for i in range(len(volmap)):
+    (vname, vbase, vsize) = volmap[i]
+    if base < vbase and size <= vbase - base:
+      volmap.insert(i, (name, base, size))
+      return
+    base = vbase + vsize
+  volmap.append((name, base, size))
+
+try:
+  dom = parse(stdin)
+except xml.parsers.expat.ExpatError:
+  nfail("no valid input")
+
+for volume in dom.documentElement.getElementsByTagName("volume"):
+  name = volume.getAttribute("name")
+  size = volume.getAttribute("size")
+  base = volume.getAttribute("base")
+  if name == None:
+    nfail("name omitted in volume")
+  if size == None:
+    nfail("size omitted in volume %s" % name)
+  check_volume(name, base, size)
+
+# allocate fixed-address volumes
+for name in volumes.keys():
+  (base, size) = volumes[name]
+  if base != None:
+    allocate_at(name, base, size)
+
+# allocate movable volumes
+for name in volumes.keys():
+  (base, size) = volumes[name]
+  if base == None:
+    allocate(name, size)
+
+if len(volmap) == 0:
+  nfail("no volumes")
+
+(lastname, lastbase, lastsize) = volmap[len(volmap) - 1]
+if lastbase + lastsize > flash_size:
+  nfail("out of space (using %d bytes, have only %d)" %
+        ((lastbase + lastsize) * sector_size, flash_size * sector_size))
+
+# print some code
+print "#ifndef STORAGE_VOLUMES_H"
+print "#define STORAGE_VOLUMES_H"
+print
+print "enum {"
+for (vname, vbase, vsize) in volmap:
+  print "  VOLUME_%s, " % vname
+print "};"
+print
+print "#endif"
+
+print "#if defined(VS)"
+for (vname, vbase, vsize) in volmap:
+  print "VS(VOLUME_%s, %d)" % (vname, vsize)
+print "#undef VS"
+print "#endif"
+
+print "#if defined(VB)"
+for (vname, vbase, vsize) in volmap:
+  print "VB(VOLUME_%s, %d)" % (vname, vbase)
+print "#undef VB"
+print "#endif"
+

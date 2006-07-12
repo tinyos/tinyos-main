@@ -1,0 +1,31 @@
+.TH tos-serial-configure 1 "Feb 2, 2006"
+.LO 1
+.SH NAME
+
+tos-serial-configure - reset serial port settings for raw data
+.SH SYNOPSIS
+
+\fBtos-serial-configure\fR \fInumber\fR
+.SH DESCRIPTION
+
+\fBtos-serial-configure\fR is a tool that resets a serial port
+to read raw bytes. Some devices, such as terminals, require
+serial ports to interpret bytes in some fashion or another.
+For example, in "cooked" mode, a read on a serial port
+returns only after a newline character.
+
+\fBtos-serial-debug\fR takes a required \fInumber\fR argument,
+an integer which refers to which serial port to configure.
+This is appended to "/dev/ttyS" to determine the terminal
+device name. 
+
+.SH EXAMPLE
+Executing
+  
+  tos-serial-configure 0
+
+configures /dev/ttyS0.
+
+.SH SEE ALSO
+
+.IR tos-serial-debug (1),

@@ -1,0 +1,473 @@
+2003-06-20  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in: Bump version (back to cvs track).
+	* src/DAPA.C: There's some bug in recent linux kernels which makes
+	ioperm I/O port permission changes be delayed (you get a segmentation
+	fault at the instruction accessing the I/O port). May be related to
+	this: http://www.securitytracker.com/alerts/2003/May/1006778.html.
+	Known to affect RedHat's 2.4.20-13.9 kernel.
+	[Thanks to David Gay <dgay@intel-research.net> for finding and fixing
+	this and for the link.]
+
+2003-06-18: Theodore A. Roth  <troth@openavr.org>
+
+	* Release 20030618.
+
+2003-06-18  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Cut 20030618 release.
+	* NEWS: Minor update to note release.
+
+2003-05-27  Theodore A. Roth  <troth@openavr.org>
+
+	* Makefile.am (EXTRA_DIST): Add doc/uisp-parport-connect.txt.
+	* doc/uisp-parport-connect.txt: Add note about mega128 PDI/PDO pins.
+
+2003-05-27  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* TODO: Add note about fuse and lock bits.
+	* doc/uisp-parport-connect.txt: New file (found on net).
+
+2003-05-18  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* NEWS: Fix spelling mistake.
+
+2003-05-13  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in: Update copyright year.
+	* src/Avr.C: Ditto.
+	* src/Avr.h: Ditto.
+	* src/DAPA.C: Ditto.
+	* src/DAPA.h: Ditto.
+	* src/Error.h: Ditto.
+	* src/MotIntl.C: Ditto.
+	* src/Serial.C: Ditto.
+
+2003-05-12  Theodore A. Roth  <troth@openavr.org>
+
+	* uisp.1.in: Added new options.
+	If an option takes an argument, show what it should be.
+	* src/Main.C: Make a few usage notes more verbose to clarify some
+	of the options.
+
+2003-05-12  Theodore A. Roth  <troth@openavr.org>
+
+	* uisp.1.in: Update pavr URL.
+	Update bsd URL.
+	Update bug report email address.
+	Update download URL.
+
+2003-05-12  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* src/DAPA.C: Fix a bug in which setting -dlpt=<port_number> for
+	direct IO tries to open the default port name instead of the direct
+	port. [Thanks to Pavel Celeda for reporting the problem and isolating
+	a fix.]
+
+2003-05-10  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Main.C: Update URLs for pavr and bsd programmers.
+	s/Futurtec/Futurlec/ for ett programmer.
+	* TODO: Update pavr URL.
+
+2003-05-10  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* src/Serial.C: Fix select() failure on cygwin due to use of 
+	getdtablesize() function. [Thanks to Marc Wetzel for the fix and
+	Jason Kyle for reporting.]
+
+2003-05-08  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* NEWS: Add note about pagesize fix.
+	* src/Stk500.C: Fix num fuse bytes for mega162/mega169/mega103.
+	When writing a page to the stk500, set the pagesize based on the
+	pagesize parameter or if the parameter is zero, to 128 (this was
+	causing programming of a 1200 to hang since the pagesize was
+	fixed at 256 which was too long).
+
+2003-05-08  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Avr.C: Mega162 has 3 fuse bytes, so set flags to AVR_M128
+	instead of AVR_M163. [Thanks to John Norgaard for reporting this.]
+
+2003-05-05  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Stk500.C: Add a unique string to some "Device is not responding
+	correctly." error messages.
+
+2003-05-04  Theodore A. Roth  <troth@openavr.org>
+
+	* NEWS: New file.
+
+2003-04-18  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* TODO: Updated.
+	* src/DAPA.C: Handle TIOCMGET #ifdef's so that enum values are still
+	valid in switch statements.
+	Also, add check to see if TIOCCBRK is defined before using it. (This
+	was causing the build to fail on cygwin.
+
+2003-04-16  Theodore A. Roth  <troth@openavr.org>
+
+	* src/DAPA.C:
+	* src/Error.h:
+	* src/Main.C:
+	* src/MotIntl.C:
+	* src/Serial.C:
+	When throwing an Error_C, pass an argument so that the user has a
+	clue as to the cause of the failure. (Maybe the user won't then have
+	to spend two hours looking for what went wrong. *cough*)
+
+2003-03-24  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in: Add check for strtod function.
+	* src/MotIntl.C: Calculate ihex checksum even on ignored records.
+	[submitted by Pavel Celeda <ceba@vabo.cz>] [patch #1322]
+	* src/Stk500.C: Use strtod() instead of strtof() [strtof isn't
+	available when using gcc-2.95.x (debian)]
+
+2003-03-11  Theodore A. Roth  <troth@openavr.org>
+
+	* CHANGES:
+	* ChangeLog:
+	* uisp.spec.in:
+	* doc/HOWTO.windows:
+	Update all occurences of my email address.
+
+2003-03-02  Theodore A. Roth  <troth@openavr.org>
+[Thanks to Richard Barrington <richard@freedomwigs.com>]
+
+	* src/DAPA.C: Add support for Futurlec ETT parallel port programmer.
+	* src/DAPA.h: Ditto.
+	* src/Main.C: Add note about ETT programmer to Usage().
+
+2003-03-02  Theodore A. Roth  <troth@openavr.org>
+[Thanks to Klaus Rudolph <lts-rudolph@gmx.de> as this is based on his patch]
+
+	* src/Main.C: Add --{rd,wr}_{aref,vtg} options to Usage().
+	* src/Stk500.C: Add read/write of aref and vtg voltages.
+	* src/Stk500.h: Add ReadParam() and WriteParam() prototypes.
+
+2003-02-21  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Main.C: Update copyright year.
+
+2003-02-20  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* uisp.1.in: Fix -v option so max is 4.
+
+2003-02-19  Theodore A. Roth  <troth@openavr.org>
+
+	* AUTHORS: Update email addresses.
+	* src/Avr.C: Remove const from parts array so we can change some values
+		at runtime.
+	* src/Avr.h: Ditto.
+	* src/Main.C: Add command switch '-dparallel' for stk500.
+	Fix -v option when printing help to note max is 4 instead of 3.
+	Update email and URL addresses.
+	* src/Stk500.C: Rename VerifyPresense() to Initialize().
+	Remove const from prg_part[] array so we can change some values
+	    at runtime.
+	Before calling Initialize() process the -dparallel option.
+	* src/Stk500.h: Rename VerifyPresense() to Initialize().
+	Remove const from prg_part[] array so we can change some values
+	        at runtime.
+
+2003-02-19  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Stk500.C: Add support for firmware version 1.14.
+	Add support for at90s8534, mega8515, mega8535, mega32.
+	* src/Stk500.h: Remove cmd, len and sync from SPrgExtDevParams struct
+	since its len varies depending on the firmware version.
+
+2003-02-18  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* src/Avr.C: Add support for mega169.
+	* src/Stk500.C: Add support for mega162 and mega169.
+
+2003-02-17  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Stk500.C: Change MagicNumber to ExtDevParams (see appnote AVR061).
+	Add ext dev params initialization to prg_part structure init.
+	Wrap a few line strings.
+	Change the "Device is not responding correctly." error messages so we
+		can tell where they originated in the code.
+	Add VerifyPresense() method: does most of what was in 
+		EnterProgrammingMode().
+	Simplify EnterProgrammingMode(): doesn't really need to set the params
+		every time it's called.
+	* src/Stk500.h: Add struct SPrgExtDevParams.
+	Remove MagicNumber.
+	Add VerifyPresense() method prototype.
+
+2003-02-17  Theodore A. Roth  <troth@openavr.org>
+
+	* src/timeradd.h: Fix some typos in timeradd & timersub macros.
+
+2003-02-17  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Terminal.C: Remove C++ iostream usage since this was the only
+	file to use it and it was not consistently used.
+
+2003-02-15  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Stk500.C: Add support for mega16.
+
+2003-02-15  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* pavr/Makefile: Create .lst file.
+	Change default lpt port to parport0.
+	* pavr/pavr.c: Use latest avr-libc headers.
+	* src/Stk500.C: Print out the version of the stk500 firmware.
+
+2002-12-19  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* src/Stk500.C: Add struct entry for mega8.
+
+2002-12-01  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Reset version to 20021201cvs.
+
+2002-12-01  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Cut 20021201 release.
+
+2002-11-22  Theodore A. Roth  <troth@openavr.org>
+  (Thanks to Jake McGuire <jake@boom.net> for the patch and porting to
+  Mac OS X for use with a USB-to-RS232 dongle.)
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* src/DAPA.C: Make sure the ioport_*() functions are defined in all
+	cases.
+	If par_release() isn't available, define it to nothing instead of (0).
+
+2002-11-15  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* src/DAPA.C: Use /dev/parport0 as the default interface instead of
+	direct port access via ioperm(). Using uisp at root or setuid root is
+	frowned upon so it should not be the default.
+
+2002-11-15  Theodore A. Roth  <troth@openavr.org>
+  (Thanks to Christopher X. Candreva <chris@westnet.com> for reporting this.)
+
+	* src/Serial.h: Increase serial timeout. Programming 8535 parts with
+	the stk500 was timing out to early and caused failures. This also seems
+	to affect the at90s1200 devices (also reported by Klaus Rudolph 
+	<lts-rudolph@gmx.de>).
+
+2002-10-30  Theodore A. Roth  <troth@openavr.org>
+  (Thanks to Seth LaForge <sethml@ofb.net> for pointing out the buffer overflow
+   problems.)
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* src/Main.C: Add comment about dropping setuid privies.
+	* src/AvrAtmel.C: Remove unused variables.
+	* src/Makefile.am: Add -Wall and -Werror compile flags.
+	* src/MotIntl.C (Htoi): Make sure hex digit is valid.
+	(UploadMotorola): Increase size of seg_name[] to avoid buffer overflow.
+	(UploadMotorola): Check for possible read past end of line_buf.
+	(UploadMotorola): Add case for "S3" records.
+	(UploadIntel): Check for possible read past end of line_buf.
+
+2002-10-29  Theodore A. Roth  <troth@openavr.org>
+
+	* doc/srecord.htm: New file (from Marek's site).
+
+2002-10-28  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Stk500.C: Allow firmware version >= 1.7.
+
+2002-10-28  Theodore A. Roth  <troth@openavr.org>
+
+	* bootstrap: Check for proper autotools.
+	* configure.in: Check for autoconf version 2.13.
+	* config/check_autoconf213.m4: New file.
+
+2002-10-28  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	Make cvs version rpm compatible.
+	* src/AvrAtmel.C: Make -dpart more compatible with gcc device names.
+
+2002-10-05  Theodore A. Roth  <troth@openavr.org>
+
+	* Makefile.am: Add man page.
+	* configure.in: Ditto.
+	(AM_INIT_AUTOMAKE): Bump version.
+	* uisp.1.in: New file. [Thanks to Shaun Jackman <sjackman@shaw.ca>]
+
+2002-10-02  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Stk500.C: Use struct for programming parameters instead of just
+	a byte array.
+	Add tiny26 support.
+	* src/Stk500.h: Define SPrgParams structure.
+
+2002-10-02  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* doc/README.stk500: Add note about specs available from Atmel.
+
+2002-08-19  Theodore A. Roth  <troth@openavr.org>
+	[Patch from Tetsuya Okada <okayan@c-creators.co.jp>]
+
+	* configure.in (AM_INIT_AUTOMAKE): Bump version.
+	* src/DAPA.C: Added Xilinx cable support.
+	* src/DAPA.h: Added Xilinx cable support.
+	* src/Main.C: Added Xilinx cable support.
+	* doc/README.xilinx: New file.
+
+2002-07-04  Marek Michalkiewicz  <marekm@amelek.gda.pl>
+
+	* src/DAPA.C (OutReset, Init): Fix PAT_BSD bug.
+
+2002-06-26  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Update version for release.
+
+2002-06-24  Theodore A. Roth  <troth@openavr.org>
+
+	* doc/HOWTO.windows: New file. Thanks to Marc Wetzel <mwse@gmx.de>.
+	* Makefile.am (EXTRA_DIST): Added doc files.
+
+2002-06-24  Marek Michalkiewicz  <marekm@amelek.gda.pl>
+
+	* configure.in (AM_INIT_AUTOMAKE): Update version.
+	* pavr/pavr.c: Add ATmega323 support.
+
+	* src/AvrAtmel.C (ChipErase): Wait up to 5 seconds for chip erase.
+	* src/Serial.C (Tx, Rx): Use Info() instead of fprintf() to log
+	sent and received characters (now enabled at run time with -v=4).
+	(Send): Accept optional timeout argument, default is 1 second.
+	* src/Serial.h (DEBUG_LOG_TX, DEBUG_LOG_RX): Remove.
+	(Send): Update for optional timeout argument.
+	Thanks to Bryce Denney <bryce@tlw.com> for suggestions.
+
+2002-06-13  Marek Michalkiewicz  <marekm@amelek.gda.pl>
+
+	* src/DAPA.C (SendRecv): Read MISO just before SCK falling edge,
+	leaving more room for propagation delays.
+
+2002-06-13  Marek Michalkiewicz  <marekm@amelek.gda.pl>
+
+	* configure.in (AM_INIT_AUTOMAKE): Update version.
+	* src/MotIntl.C (UploadIntel): Handle hex record types 3, 4, 5.
+
+2002-06-09  Marek Michalkiewicz  <marekm@amelek.gda.pl>
+
+	* pavr/pavr.c: Fix to build with latest avr-libc.
+
+2002-06-08  Marek Michalkiewicz  <marekm@amelek.gda.pl>
+
+	* configure.in (AM_INIT_AUTOMAKE): Update version.
+	* src/Avr.C (parts): Add ATmega8535 signature bytes.
+	* src/AvrAtmel.C (prg_part): Update list to match AvrProg 1.37
+	distributed with AVR Studio 3.54.  Sort by device code.
+
+2002-06-03  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in (AM_INIT_AUTOMAKE): Update version.
+
+	* src/Avr.h, src/AvrAtmel.C, src/AvrDummy.C, src/Main.C,
+	  src/Stk500.h:
+	Implemented the new '--wr_lock' command line option.
+
+	* src/Stk500.C:
+	Implemented WriteLockBits.
+	Simplified usage of UniversalCmd.
+
+	* src/Avr.C, src/AvrAtmel.C, src/AvrDummy.C, src/DAPA.C,
+	  src/MotIntl.C, src/Serial.C, src/Stk500.C, src/Terminal.C,
+	  src/cygwinp.C:
+	Add include for config.h.
+
+2002-06-02  Marek Michalkiewicz  <marekm@amelek.gda.pl>
+
+	* configure.in (AM_INIT_AUTOMAKE): Update version.
+	* src/Avr.C, src/DAPA.C, src/Main.C, src/Terminal.C:
+	Fixes for g++ 3.1 errors.  Please test with older compilers.
+
+2002-06-02  Marek Michalkiewicz  <marekm@amelek.gda.pl>
+
+	* src/Main.C (main): Fix typo (missing %) in 4 format strings.
+
+2002-06-01  Theodore A. Roth  <troth@openavr.org>
+
+	* src/Avr.h, src/AvrAtmel.C, src/AvrDummy.C, src/Main.C,
+	  src/Stk500.C:
+	Added new command lines options for reading/writing fuses.
+	Stubbed out code for new lock bit writing implementation.
+
+2002-05-30  Theodore A. Roth  <troth@openavr.org>
+
+	* configure.in:
+	Changed version to <date>-cvs.
+
+	* src/Stk500.C, src/Stk500.h:
+	Added functionality to write lock/fuse bits.
+
+	* src/Stk500.C, src/Stk500.h:
+	Added functionality to read lock/fuse/calibration bits.
+
+	* src/Terminal.C:
+	Added space to prompt.
+
+	* src/Stk500.C, src/Stk500.h:
+	Fix write_buffer (separate buffers for flash and eeprom segments).
+
+	* src/Stk500.C, src/Stk500.h:
+	Fix read_buffer (separate buffers for flash and eeprom segments).
+
+2002-05-27  Theodore A. Roth  <troth@openavr.org>
+
+	* doc/README.stk500:
+	New file from Jason Kyle.
+
+	* TODO:
+	Remove note about autoconf/automake.
+
+	* CHANGES:
+	Added note about new ChangeLog file.
+
+	* AUTHORS:
+	Added Hamish Moffatt.
+
+	* Makefile.am, acconfig.h, bootstrap, config/README, configure.in,
+	  src/Main.C, src/Makefile, src/Makefile.am:
+	Conversion to use autoconf/automake for build system.
+
+	* uisp.spec.in:
+	New file.
+
+	* AUTHORS:
+	New file.
+
+2002-05-25  marekm  <marekm@amelek.gda.pl>
+
+	* CHANGES:
+	Added notice that uisp is now on savannah, mainly to test CVS
+	write access.
+
+2002-05-25  Theodore A. Roth  <troth@openavr.org>
+
+	* CHANGES, CHANGES.old, COPYING, INSTALL, TODO,
+	  kernel/patch-2.2.17-ppdev1.gz, pavr/Makefile, pavr/pavr.c,
+	  src/Avr.C, src/Avr.h, src/AvrAtmel.C, src/AvrAtmel.h,
+	  src/AvrDummy.C, src/AvrDummy.h, src/DAPA.C, src/DAPA.h,
+	  src/Error.h, src/Global.h, src/Main.C, src/Makefile,
+	  src/MotIntl.C, src/MotIntl.h, src/Serial.C, src/Serial.h,
+	  src/Stk500.C, src/Stk500.h, src/Terminal.C, src/Terminal.h,
+	  src/cygwinp.C, src/cygwinp.h, src/parport.h, src/ppdev.h,
+	  src/timeradd.h:
+	Import sources from uisp-20020524.

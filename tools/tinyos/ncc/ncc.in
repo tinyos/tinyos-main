@@ -1,0 +1,306 @@
+#!@pathperl@
+# -*- perl -*-
+
+# Copyright (c) 2002-2005 Intel Corporation
+# All rights reserved.
+#
+# This file is distributed under the terms in the attached INTEL-LICENSE     
+# file. If you do not find these files, copies can be found by writing to
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# 94704.  Attention:  Intel License Inquiry.
+
+# Configuration
+$TOSDIR = "@TOSDIR@";
+$TOSDIR = $ENV{"TOSDIR"} if defined($ENV{"TOSDIR"});
+$nescc = "@nescc_prefix@/bin/nescc";
+$tossim = 0;
+
+# Support platform directory renaming for 2.x
+if (-d "$TOSDIR/platform") {
+    $platform = "platform";
+}
+else {
+    $platform = "platforms";
+}
+
+# Have fun with the arguments
+
+for ($i = 0; $i <= $#ARGV; $i++) {
+    $strip = 0;
+    $_ = $ARGV[$i];
+    if (/^-/) {
+	if (/^-target=(.*)/) {
+	    &fail("multiple targets specified") if defined($target);
+	    $target = $1;
+	    $strip = 1;
+	}
+	elsif (/^-tosdir=(.*)/) {
+	    $TOSDIR = $1;
+	    $strip = 1;
+	}
+	elsif (/^-nostdinc$/) {
+	    $nostdinc = 1;
+	}
+	elsif (/^-board=(.*)/) {
+	    push @boards, $1;
+	    $strip = 1;
+	}
+	elsif (/^-print-tosdir$/) {
+	    $print_tosdir = 1;
+	    $strip = 1;
+	}
+	elsif (/^-print-target$/) {
+	    $print_target = 1;
+	    $strip = 1;
+	}
+	elsif (/^-print-platforms$/) {
+	    $print_platforms = 1;
+	    $strip = 1;
+	}
+	elsif (/^-g$/) {
+	    $debugging = 1;
+	}
+	elsif (/^-v$/) {
+	    $verbose = 1;
+	}
+	elsif (/^-tossim$/) {
+	    $tossim = 1;
+            $strip = 1;
+	}
+	elsif (/^-I/) {
+	    ($i, $file) = &extractarg($i);
+	    $strip = 1;
+	    push @includes, $file;
+	}
+	elsif (/^--version$/) {
+	    $print_version = 1;
+	}
+    } 
+
+    push @new_args, $_ if !$strip;
+}
+
+if ($print_version) {
+    print "ncc: @PACKAGE_VERSION@\n";
+}
+
+# Remove trailing / from TOSDIR, if any (it confuses the topdir stuff)
+chop $TOSDIR if $TOSDIR =~ m!./$!;
+
+if ($print_tosdir)
+{
+    print $TOSDIR, "\n";
+    exit 0;
+}
+
+if ($print_platforms)
+{
+    print join(" ", all_platforms()), "\n";
+    exit 0;
+}
+
+if ($tossim) {
+  push @new_args, "-DTOSSIM";
+}
+
+if (!defined $target) {
+    if (open DEFTARGET, "$TOSDIR/.default-platform") {
+	$target = <DEFTARGET>;
+	chomp $target;
+    }
+    else {
+	$target = "@default_target@";
+    }
+}
+
+if ($print_target) {
+    print $target, "\n";
+    exit 0;
+}
+
+# First see if the directory for this platform was explicitly specified
+foreach $dir (@includes) {
+    if ($dir =~ m!/$target/?$! && -f "$dir/.platform") {
+	$platform_def = "$dir/.platform";
+	last;
+    }
+}
+
+if (!-f $platform_def) {
+    # Next, check if it's a "plain" platform
+    if (-f "$TOSDIR/$platform/$target/.platform") {
+	$platform_def = "$TOSDIR/$platform/$target/.platform";
+    }
+    else {
+	# Finally, see if it's in a platform family
+	opendir PLATFORMS, "$TOSDIR/$platform";
+	foreach $dir (readdir PLATFORMS) {
+	    if (-f "$TOSDIR/$platform/$dir/.family") {
+		if (-f "$TOSDIR/$platform/$dir/$target/.platform") {
+		    $platform_def = "$TOSDIR/$platform/$dir/$target/.platform";
+		    $family_def = "$TOSDIR/$platform/$dir/.family";
+		    last;
+		}
+	    }
+	}
+	closedir PLATFORMS;
+    }
+}
+
+# Use sim directory with tossim
+$platform_def =~ s!\.platform$!sim/.platform! if $tossim;
+$family_def =~ s!\.family$!sim/.family! if $tossim && $family_def;
+
+if (!-f $platform_def) {
+    print STDERR "Unknown target $target\n";
+    print STDERR "Known targets for TinyOS directory $TOSDIR\n";
+    print STDERR "and the specified include directories are:\n";
+
+    @platforms = all_platforms();
+    if (@platforms) {
+	print STDERR "  ", join(" ", @platforms);
+    }
+    else {
+	print STDERR "none.";
+    }
+    print STDERR "\n";
+    exit 2;
+}
+
+# Setup sensor boards
+push @includes, map "%T/sensorboards/$_", @boards unless $nostdinc;
+unshift @new_args, map "-DBOARD_\U$_", @boards;
+# Execute .sensor file in selected sensor board directories if it exists
+$i = 0;
+BOARD: while ($i <= $#boards) {
+    $board = $boards[$i];
+
+    # First check include path for a .sensor file for this board
+    foreach $dir (@includes) {
+	if ($dir =~ m!/$board/?$! && -f "$dir/.sensor") {
+	    # Remove from @boards so that we don't add sensorboards/$board
+	    # to the search path
+	    splice @boards, $i, 1;
+	    do "$dir/.sensor";
+	    next BOARD;
+	}
+    }
+
+    # If none found, check the standard sensorboards directory
+    $bspec = &idir_subst("%T/sensorboards/$board/.sensor");
+    do $bspec if -f $bspec;
+
+    $i++;
+}
+
+# Setup platform
+$platform_dir = $platform_def;
+$platform_dir =~ s!/\.platform$!!;
+push @includes, $platform_dir unless $nostdinc;
+do $platform_def;
+do $family_def if -f $family_def;
+unshift @new_args, "-DPLATFORM_\U$target";
+
+push @new_args, @opts;
+
+# old nesdoc: set the default topdir based on TOSDIR
+my ($tosparent) = ($TOSDIR =~ m!^(.*)/.*?$!);
+unshift @new_args, "-topdir=$tosparent";
+
+unshift @new_args, "-fnesc-include=tos";
+unshift @new_args, "$nescc";
+
+if (!$nostdinc) {
+    push @includes, map "%T/$platform/$_", @commonplatforms;
+    push @includes, "%T/interfaces";
+    push @includes, "%T/types";
+    push @includes, "%T/system";
+}
+
+
+if ($tossim) {
+  foreach $idir (@includes) {
+    $idir = &idir_subst($idir);
+    push @new_args, "-I$idir/sim";
+  }
+  $tossim_dir = &idir_subst("-I%T/lib/tossim");
+  push @new_args, $tossim_dir;
+}
+foreach $idir (@includes) {
+    $idir = &idir_subst($idir);
+    push @new_args, "-I$idir";
+}
+
+
+
+
+print STDERR join(' ', @new_args), "\n" if $verbose;
+
+exec @new_args;
+print STDERR "Couldn't execute nescc\n";
+exit 2;
+
+sub extractarg {
+    local ($i) = @_;
+
+    if (length($ARGV[$i]) == 2) {
+	$arg = $ARGV[++$i];
+    }
+    else {
+	$arg = substr($ARGV[$i], 2);
+    }
+    return ($i, $arg);
+}
+
+sub idir_subst {
+    local ($idir) = @_;
+    local $idx = 0;
+
+    while (($idx = index $idir, "%", $idx) >= 0) {
+	$char = substr $idir, $idx + 1, 1;
+	$rep = 0;
+	$rep = "%" if $char eq "%";
+	$rep = $TOSDIR if $char eq "T";
+	$rep = $target if $char eq "p";
+	&fail("unknown include-path substitution %" . $char) if !$rep;
+	substr($idir, $idx, 2) = $rep;
+	$idx += length $rep;
+    }
+    return $idir;
+}
+
+sub fail {
+    print STDERR "$_[0]\n";
+    exit 2;
+}
+
+sub push_platform {
+    my ($p) = @_;
+
+    push @platforms, $p unless grep $_ eq $p, @platforms;
+}
+
+sub all_platforms() {
+  local(@platforms);
+
+  foreach $dir (@includes) {
+    push_platform($1) if -f "$dir/.platform" && $dir =~ m!/([^/]*)/?$!;
+  }
+
+  if (opendir PLATFORMS, "$TOSDIR/$platform") {
+      foreach $d (readdir PLATFORMS) {
+	  push_platform($d) if (-f "$TOSDIR/$platform/$d/.platform");
+	  if (-f "$TOSDIR/$platform/$d/.family") {
+	      if (opendir SUBPLATFORMS, "$TOSDIR/$platform/$d") {
+		  foreach $subdir (readdir SUBPLATFORMS) {
+		      push_platform($subdir) if (-f "$TOSDIR/$platform/$d/$subdir/.platform");
+		  }
+	      }
+	      closedir SUBPLATFORMS;
+	  }
+      }
+      closedir PLATFORMS;
+  }
+
+  return @platforms;
+}

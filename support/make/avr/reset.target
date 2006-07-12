@@ -1,0 +1,10 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: reset.target,v 1.2 2006-07-12 16:59:49 scipio Exp $
+
+BUILD_DEPS = harmless
+
+reset: FORCE
+	@echo "    resetting $(PLATFORM)"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS)
+
+harmless:

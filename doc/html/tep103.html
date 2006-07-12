@@ -1,0 +1,807 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<title>Permanent Data Storage (Flash)</title>
+<meta name="author" content="David Gay, Jonathan Hui" />
+<style type="text/css">
+
+/*
+:Author: David Goodger
+:Contact: goodger@users.sourceforge.net
+:date: $Date: 2006-07-12 16:59:34 $
+:version: $Revision: 1.2 $
+:copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+*/
+body {
+  font-family: Times;
+  font-size: 16px;
+}
+
+.first {
+  margin-top: 0 ! important }
+
+.last {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dd {
+  margin-bottom: 0.5em }
+
+/* Uncomment (& remove this text!) to get bold-faced definition list terms
+dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning, div.admonition {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.hint p.admonition-title, div.important p.admonition-title,
+div.note p.admonition-title, div.tip p.admonition-title,
+div.admonition p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em }
+
+div.footer, div.header {
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin-left: 1em ;
+  border: medium outset ;
+  padding: 0em 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
+
+h1.title {
+ text-align: center;
+ font-size: 32px;
+}
+
+h2 {
+ font-size: 16px;
+ font-family: Arial, sans-serif;
+}
+
+h2.subtitle {
+  text-align: center }
+
+h3 {
+ font-size: 12px;
+ font-family: Arial, sans-serif;
+}
+
+hr {
+  width: 75% }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font-family: serif ;
+  font-size: 100% }
+
+pre.line-block {
+  font-family: serif ;
+  font-size: 100% }
+
+pre.literal-block, pre.doctest-block {
+  margin-left: 2em ;
+  margin-right: 2em ;
+  background-color: #eeeeee;
+  border-color: #000000;
+  border-width: thin; 
+  font-size: 14px
+}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.option-argument {
+  font-style: italic }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+table {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.citation {
+  border-left: solid thin gray ;
+  padding-left: 0.5ex }
+
+table.docinfo {
+  margin: 2em 4em;
+}
+
+table.footnote {
+  border-left: solid thin black ;
+  padding-left: 0.5ex }
+
+td, th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+th.docinfo-name, th.field-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap;
+  }
+
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+  font-size: 100% }
+
+tt {}
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="permanent-data-storage-flash">
+<h1 class="title">Permanent Data Storage (Flash)</h1>
+<table class="docinfo" frame="void" rules="none">
+<col class="docinfo-name" />
+<col class="docinfo-content" />
+<tbody valign="top">
+<tr class="field"><th class="docinfo-name">TEP:</th><td class="field-body">103</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Group:</th><td class="field-body">Core Working Group</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
+</tr>
+<tr><th class="docinfo-name">Status:</th>
+<td>Draft</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
+</tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>David Gay, Jonathan Hui</td></tr>
+<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">27-Sep-2004</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.12</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-06-21</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p class="first admonition-title">Note</p>
+<p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
+requests discussion and suggestions for improvements.  Distribution
+of this memo is unlimited. This memo is in full compliance with
+TEP 1.</p>
+</div>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<p>This memo documents a set of hardware-independent interfaces to non-volatile
+storage for TinyOS 2.x. It describes some design principles for the HPL and
+HAL layers of various flash chips.</p>
+</div>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<p>Flash chips are a form of EEPROM (electrically-eraseable, programmable
+read-only memory), distinguished by a fast erase capability. However,
+erases can only be done in large units (from 256B to 128kB depending on the
+flash chip). Erases are the only way to switch bits from 0 to 1, and
+programming operations can only switch 1's to 0's. Additionally, some
+chips require that programming only happen once between each erase,
+or that it be in relatively large units (e.g., 256B).</p>
+<p>In the table below, we summarise these differences by categorising
+flash chips by their underlying technology (NOR vs NAND). We also
+include a column for Atmel's AT45DB flash chip family, as it has
+significantly different tradeoffs than other flash chips:</p>
+<pre class="literal-block">
+                 NOR                AT45DB         NAND
+
+Erase        :  Slow (seconds)      Fast (ms)      Fast (ms)
+Erase unit   :  Large (64KB-128KB)  Small (256B)   Medium (8K-32KB)
+Writes       :  Slow (100s kB/s)    Slow (60kB/s)  Fast (MBs/s)
+Write unit   :  1 bit               256B           100's of bytes
+Bit-errors   :  Low                 Low            High (requires ECC,
+                                                   bad-block mapping)
+Read         :  Fast*               Slow+I/O bus   Fast (but limited by
+                                                   I/O bus)
+Erase cycles :  10^4 - 10^5         10^4 **        10^5 - 10^7
+Intended use :  Code storage        Data storage   Data storage
+Energy/byte  :  1uJ                 1uJ            .01uJ
+
+*  Intel Mote2 NOR flash is memory mapped (reads are very fast and can
+   directly execute code)
+** Or infinite? Data sheet just says that every page within a sector
+   must be written every 10^4 writes within that sector
+</pre>
+<p>The energy/byte is the per-byte cost of erasing plus programming. It is
+derived from the timing and power consumption of erase and write operations
+(for NOR flash, values are for the STMicroelectronics M25P family, for NAND
+flash, values are from a Samsung datasheet). Energy/byte for reads appears
+to depend mostly on how long the read takes (the power consumptions are
+comparable), i.e., on the efficiency of the bus + processor.</p>
+<p>Early TinyOS platforms all used a flash chip from the AT45DB
+family. In TinyOS 1.x, this chip could be accessed through three
+different components:</p>
+<ul class="simple">
+<li>Using a low-level interface (<tt class="docutils literal"><span class="pre">PageEEPROMC</span></tt>) which gave direct
+access to per-page read, write and erase operations.</li>
+<li>Using a high-level memory-like interface (<tt class="docutils literal"><span class="pre">ByteEEPROMC</span></tt>) with
+read, write and logging operations.</li>
+<li>Using a simple file system (<tt class="docutils literal"><span class="pre">Matchbox</span></tt>) with sequential-only
+files [<a class="reference" href="#id1">1</a>].</li>
+</ul>
+<p>Some more recent platforms use different flash chips: the ST M25P family (Telos
+rev. B, eyes) and the Intel Strataflash (Intel Mote2). None of the
+three components listed above are supported on these chips:</p>
+<ul class="simple">
+<li>The <tt class="docutils literal"><span class="pre">PageEEPROMC</span></tt> component is (and was intended to be) AT45DB-specific</li>
+<li><tt class="docutils literal"><span class="pre">ByteEEPROMC</span></tt> allows arbitrary rewrites of sections of the flash.
+This is not readily implementable on a flash chip with large erase units.</li>
+<li>The <tt class="docutils literal"><span class="pre">Matchbox</span></tt> implementation was AT45DB-specific. It was not
+reimplemented for these other chips, in part because it does not
+support some applications (e.g., network reprogramming) very well.</li>
+</ul>
+<p>One approach to hiding the differences between different flash chips is to
+provide a disk-like, block interface (with, e.g., 512B blocks). This is the
+approach taken by compact flash cards. However, in the context of TinyOS,
+this approach has several drawbacks:</p>
+<ul class="simple">
+<li>This approach is protected by patents, making it difficult to provide
+in a free, open-source operating system.</li>
+<li>To support arbitrary block writes where blocks are smaller than the
+erase unit, and to deal with the limited number of erase cycles/block
+requires remapping blocks. We believe that maintaining this remapping
+table is too expensive on many mote-class devices.</li>
+</ul>
+<p>Another approach to supporting multiple flash chips is to build a
+file system (like Matchbox) which can be implemented for multiple
+flash chips. However, TinyOS is currently targeted at running a
+single application, and many applications know their storage needs
+in advance: for instance, a little space for configuration data, and
+everything else for a log of all sampled data. In such cases, the
+flexibility offered by a filing system (e.g., arbitrary numbers of
+files) is overkill, and may come at the expense of implementation
+and runtime complexity.</p>
+<p>Instead, TinyOS 2.x, divides flash chips into separate volumes (with
+sizes fixed at compile-time). Each volume provides a single storage
+abstraction (the abstraction defines the format). So far there are three
+such abstractions: large objects written in a single session,
+small objects with arbitrary reads and writes, and logs. This approach
+has two advantages:</p>
+<ul class="simple">
+<li>Each abstraction is relatively easy to implement on a new flash chip, and
+has relatively little overhead.</li>
+<li>The problem of dealing with the limited number of erase cycles/block
+is simplified: it is unlikely that user applications will need to
+rewrite the same small object 100'000 times, or cycle 100'000 times
+through their log. Thus the abstractions can mostly ignore the need for
+&quot;wear levelling&quot; (ensuring that each block of the flash is erased
+the same number of time, to maximise flash chip lifetime).</li>
+</ul>
+<p>New abstractions (including a filing system) can easily be added to this
+framework, or can be built on top of these abstractions.</p>
+<p>The rest of this TEP covers some principles for the organisation of
+flash chips (Section 2), then describes the flash volumes and
+storage abstractions in detail (Section 3).</p>
+</div>
+<div class="section">
+<h1><a id="hpl-hal-hil-architecture" name="hpl-hal-hil-architecture">2. HPL/HAL/HIL Architecture</a></h1>
+<p>The flash chip architecture dollows the three-layer Hardware
+Abstraction Architecture (HAA), with each chip providing a presentation
+layer (HPL, Section 2.1), adaptation layer (HAL, Section 2.2) and
+platform-independent interface layer (the storage abstractions described in
+Section 3) [<a class="reference" href="#id2">2</a>]. The implementation of these layers SHOULD be found in the
+<tt class="docutils literal"><span class="pre">tos/chips/CHIPNAME</span></tt> directory. If a flash chip is part of a larger
+family with a similar interface, the HAA SHOULD support all family members
+by relying, e.g., on platform-provided configuration information.</p>
+<p>Appendix A shows example HPL and HAL specifications for the AT45DB
+and ST M25P chip families.</p>
+<div class="section">
+<h2><a id="hardware-presentation-layer-hpl" name="hardware-presentation-layer-hpl">2.1 Hardware Presentation Layer (HPL)</a></h2>
+<p>The flash HPL has a chip-dependent, system-independent interface. The
+implementation of this HPL is system-dependent. The flash HPL SHOULD be
+stateless.</p>
+<p>To remain platform independent, a flash chip's HPL SHOULD connect to
+platform-specific components
+providing access to the flash chip; these components
+SHOULD be placed in the <tt class="docutils literal"><span class="pre">tos/platforms/PLATFORM/chips/CHIPNAME</span></tt>
+directory. If the flash chip implementation supports a family of
+flash chips, this directory MAY also contain a file describing the
+particular flash chip found on the platform.</p>
+</div>
+<div class="section">
+<h2><a id="hardware-adaptation-layer-hal" name="hardware-adaptation-layer-hal">2.2 Hardware Adaptation Layer (HAL)</a></h2>
+<p>The flash HAL has a chip-dependent, system-independent interface and
+implementation. Flash families with a common HPL SHOULD have a common
+HAL. Flash HAL's SHOULD expose a <tt class="docutils literal"><span class="pre">Resource</span></tt> interface and automatically
+power-manage the underlying flash chip. Finally, the flash HAL MUST
+provide a way to access the volume information specified by the
+programmer (see Section 3). This allows users to build new flash
+abstractions that interact cleanly with the rest of the flash system.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="non-volatile-storage-abstracitons-in-tinyos-2-x" name="non-volatile-storage-abstracitons-in-tinyos-2-x">3. Non-Volatile Storage Abstracitons in TinyOS 2.x</a></h1>
+<p>The HIL implementations are system-independent, but chip (family)
+dependent. They implement the three storage abstractions and
+volume structure discussed in the introduction.</p>
+<div class="section">
+<h2><a id="volumes" name="volumes">3.1. Volumes</a></h2>
+<p>The division of the flash chip into fixed-size volumes is specified by
+an XML file that is placed in the application's directory (where one
+types 'make'). The XML file specifies the allocation as follows:</p>
+<pre class="literal-block">
+&lt;volume_table&gt;
+  &lt;volume name=&quot;DELUGE0&quot; size=&quot;65536&quot; /&gt;
+  &lt;volume name=&quot;CONFIGLOG&quot; size=&quot;65536&quot; /&gt;
+  &lt;volume name=&quot;DATALOG&quot; size=&quot;131072&quot; /&gt;
+  &lt;volume name=&quot;GOLDENIMAGE&quot; size=&quot;65536&quot; base=&quot;983040&quot; /&gt;
+&lt;/volume_table&gt;
+</pre>
+<p>The name and size parameters are required, while base is optional. The name
+is a string containing one or more characters in [a-zA-Z0-9_], while size
+and base are in bytes. Each storage chip MUST provide a compile-time tool
+that translates the allocation specification to chip-specific nesC
+code. There is no constraint on how this is done or what code is produced,
+except that the specification to physical allocation MUST be one-to-one
+(i.e. a given specification should always have the same resulting physical
+allocation on a given chip) and the result MUST be placed in the build
+directory. When not specified, the tool may give any suitable physical
+location to a volume. If there is any reason that the physical allocation
+cannot be satisfied, an error should be given at compile time. The tool
+SHOULD be named <tt class="docutils literal"><span class="pre">tos-storage-CHIPNAME</span></tt> and be distributed with the other
+tools supporting a platform.</p>
+<p>The compile-time tool MUST prepend 'VOLUME_' to each volume name in
+the XML file and '#define' each resulting name to map to a unique
+integer.</p>
+<p>The storage abstractions are accessed by instantiating generic
+components that take the volume macro as argument:</p>
+<pre class="literal-block">
+components new BlockStorageC(VOLUME_DELUGE0);
+</pre>
+<p>If the named volume is not in the specification, nesC will give a
+compile-time error since the symbol will be undefined.</p>
+<p>A volume MUST NOT be used with more than one storage abstraction instance.</p>
+</div>
+<div class="section">
+<h2><a id="large-objects" name="large-objects">3.2 Large objects</a></h2>
+<p>The motivating example for large objects is the transmission or long-term
+storage of large pieces of data. For instance, programs in a network-reprogramming
+system, or large data-packets in a reliable data-transmission system. Such
+objects have two interesting characteristics: each byte in the object is
+written at most once, and a full object is written in a single &quot;session&quot;
+(i.e., without the mote rebooting).</p>
+<p>This leads to the definition of the <tt class="docutils literal"><span class="pre">BlockStorageC</span></tt> abstraction for storing
+large objects:</p>
+<ul class="simple">
+<li>A large object ranges from a few kilobytes upwards.</li>
+<li>A large object must be erased before use.</li>
+<li>A large object must be committed to ensure it survives a reboot or crash;
+after a commit no more writes may be performed.</li>
+<li>Random reads are allowed.</li>
+<li>Random writes are allowed are allowed between erase and commit; data
+cannot be overwritten.</li>
+</ul>
+<p>Large objects are accessed by instantiating a BlockStorageC component
+which takes a volume id argument:</p>
+<pre class="literal-block">
+generic configuration BlockStorageC(volume_id_t volid) {
+  provides {
+      interface BlockWrite;
+      interface BlockRead;
+  }
+} ...
+</pre>
+<p>The <tt class="docutils literal"><span class="pre">BlockRead</span></tt> and <tt class="docutils literal"><span class="pre">BlockWrite</span></tt> interfaces contain the following
+operations (all split-phase, except <tt class="docutils literal"><span class="pre">BlockRead.getSize</span></tt>):</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">BlockWrite.erase</span></tt>: erase the volume. After a reboot or a commit, a
+volume must be erased before it can be written to.</li>
+<li><tt class="docutils literal"><span class="pre">BlockWrite.write</span></tt>: write some bytes starting at a given offset. Each
+byte can only be written once between an erase and the subsequent commit.</li>
+<li><tt class="docutils literal"><span class="pre">BlockWrite.commit</span></tt>: commit all writes to a given volume. No writes can
+be performed after a commit until a subsequent erase.</li>
+<li><tt class="docutils literal"><span class="pre">BlockRead.verify</span></tt>: verify that the volume contains the results of a
+successful commit.</li>
+<li><tt class="docutils literal"><span class="pre">BlockRead.read</span></tt>: read some bytes starting at a given offset.</li>
+<li><tt class="docutils literal"><span class="pre">BlockRead.computeCrc</span></tt>: compute the CRC of some bytes starting at a
+given offset.</li>
+<li><tt class="docutils literal"><span class="pre">BlockRead.getSize</span></tt>: return bytes available for large object storage in
+volume.</li>
+</ul>
+<p>For full details on arguments and other considerations, see the comments in
+the interface definitions.</p>
+</div>
+<div class="section">
+<h2><a id="logging" name="logging">3.3 Logging</a></h2>
+<p>Event and reuslt logging is a common requirement in sensor
+networks. Such logging should be reliable (a mote crash should not
+lose data). It should also be easy to extract data from the log,
+either partially or fully. Some logs are <em>linear</em> (stop logging when
+the volume is full), others are <em>circular</em> (the oldest data is
+overwritten when the volume is full).</p>
+<p>The <tt class="docutils literal"><span class="pre">LogStorageC</span></tt> abstraction supports these requirements.  The log is record
+based: each call to <tt class="docutils literal"><span class="pre">LogWrite.append</span></tt> (see below) creates a new
+record. On failure (crash or reboot), the log is guaranteed to only lose
+whole records from the end of the log. Additionally, once a circular log
+wraps around, calls to <tt class="docutils literal"><span class="pre">LogWrite.append</span></tt> only lose whole records from the
+beginning of the log. These guarantees mean that applications do not to
+have worry about incomplete or inconsistent log entries.</p>
+<p>Logs are accessed by instantiating a LogStorageC component which takes a
+volume id and a boolean argument:</p>
+<pre class="literal-block">
+generic configuration LogStorageC(volume_id_t volid, bool circular) {
+  provides {
+      interface LogWrite;
+      interface LogRead;
+  }
+} ...
+</pre>
+<p>If the <tt class="docutils literal"><span class="pre">circular</span></tt> argument is TRUE, the log is circular; otherwise
+it is linear.</p>
+<p>The <tt class="docutils literal"><span class="pre">LogRead</span></tt> and <tt class="docutils literal"><span class="pre">LogWrite</span></tt> interfaces contain the following
+operations (all split-phase except <tt class="docutils literal"><span class="pre">LogWrite.currentOffset</span></tt>,
+<tt class="docutils literal"><span class="pre">LogRead.currentOffset</span></tt> and <tt class="docutils literal"><span class="pre">LogRead.getSize</span></tt>):</p>
+<ul>
+<li><p class="first"><tt class="docutils literal"><span class="pre">LogWrite.erase</span></tt>: erase the log.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">LogWrite.append</span></tt>: append some bytes to the log. In a circular log,
+this may overwrite the current read position. In this case, the
+read position is implicitly advanced to the log's current beginning
+(i.e., as if <tt class="docutils literal"><span class="pre">LogRead.seek</span></tt> had been called with <tt class="docutils literal"><span class="pre">SEEK_BEGINNING</span></tt>).</p>
+<p>Each append creates a separate record. Log implementations may have a
+maximum record size; all implementations MUST support records of up
+to 255 bytes.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">LogWrite.sync</span></tt>: guarantee that data written so far will not be lost to
+a crash or reboot (it can still be overwritten when a circular log wraps
+around). Using <tt class="docutils literal"><span class="pre">sync</span></tt> may waste some space in the log.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">LogWrite.currentOffset</span></tt>: return cookie representing current
+append position (for use with <tt class="docutils literal"><span class="pre">LogRead.seek</span></tt>).</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">LogRead.read</span></tt>: read some bytes from the current read position in
+the log and advance the read position.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">LogRead.currentOffset</span></tt>: return cookie representing current
+read position (for use with <tt class="docutils literal"><span class="pre">LogRead.seek</span></tt>).</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">LogRead.seek</span></tt>: set the read position to a value returned by
+a prior call to <tt class="docutils literal"><span class="pre">LogWrite.currentOffset</span></tt> or <tt class="docutils literal"><span class="pre">LogRead.currentOffset</span></tt>,
+or to the special <tt class="docutils literal"><span class="pre">SEEK_BEGINNING</span></tt> value. In a circular log, if
+the specified position has been overwritten, behave as if
+<tt class="docutils literal"><span class="pre">SEEK_BEGINNING</span></tt> was requested.</p>
+<p><tt class="docutils literal"><span class="pre">SEEK_BEGINNING</span></tt> positions the read position at the beginning of
+the oldest record still present in the log.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">LogRead.getSize</span></tt>: return an approximation of the log's capacity.
+Uses of <tt class="docutils literal"><span class="pre">sync</span></tt> and other overhead may reduce this number.</p>
+</li>
+</ul>
+<p>For full details on arguments, etc, see the comments in the interface
+definitions.</p>
+</div>
+<div class="section">
+<h2><a id="small-objects" name="small-objects">3.4 Small objects:</a></h2>
+<p>Sensor network applications may need to store configuration data, e.g.,
+mote id, radio frequency, sample rates, etc. Such data is not large, but
+losing it may lead to a mote misbehaving or losing contact with the
+network.</p>
+<p>The <tt class="docutils literal"><span class="pre">ConfigStorageC</span></tt> abstraction stores a single small object in a volume. It:</p>
+<ul class="simple">
+<li>Assumes that configuration data is relatively small (a few
+hundred bytes).</li>
+<li>Allows random reads and writes.</li>
+<li>Has simple transactional behaviour: each read is a separate transaction,
+all writes up to a commit form a single transaction.</li>
+<li>At reboot, the volume contains the data as of the most recent successful
+commit.</li>
+</ul>
+<p>Small objects are accessed by instantiating a ConfigStorageC component
+which takes a volume id argument:</p>
+<pre class="literal-block">
+generic configuration ConfigStorageC(volume_id_t volid) {
+  provides {
+      interface Mount;
+      interface ConfigStorage;
+  }
+} ...
+</pre>
+<p>A small object MUST be mounted (via the <tt class="docutils literal"><span class="pre">Mount</span></tt> interface) before
+the first use.</p>
+<p>The <tt class="docutils literal"><span class="pre">Mount</span></tt> and <tt class="docutils literal"><span class="pre">ConfigStorage</span></tt> interfaces contain the following
+operations (all split-phase except <tt class="docutils literal"><span class="pre">ConfigStorage.getSize</span></tt> and
+<tt class="docutils literal"><span class="pre">ConfigStorage.valid</span></tt>):</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">Mount.mount</span></tt>: mount the volume.</li>
+<li><tt class="docutils literal"><span class="pre">ConfigStorage.valid</span></tt>: return TRUE if the volume contains a
+valid small object.</li>
+<li><tt class="docutils literal"><span class="pre">ConfigStorage.read</span></tt>: read some bytes starting at a given offset.
+Fails if the small object is not valid. Note that this reads the
+data as of the last successful commit.</li>
+<li><tt class="docutils literal"><span class="pre">ConfigStorage.write</span></tt>: write some bytes to a given offset.</li>
+<li><tt class="docutils literal"><span class="pre">ConfigStorage.commit</span></tt>: make the small object contents reflect all the
+writes since the last commit.</li>
+<li><tt class="docutils literal"><span class="pre">ConfigStorage.getSize</span></tt>: return the number of bytes that can be stored
+in the small object.</li>
+</ul>
+<p>For full details on arguments, etc, see the comments in the interface
+definitions.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="implementations" name="implementations">4. Implementations</a></h1>
+<p>An AT45DB implementation can be found in tinyos-2.x/tos/chips/at45db.</p>
+<p>An ST M25P implementation can be found in tinyos-2.x/tos/chips/stm25p.</p>
+</div>
+<div class="section">
+<h1><a id="authors-addresses" name="authors-addresses">5. Authors' Addresses</a></h1>
+<div class="line-block">
+<div class="line">David Gay</div>
+<div class="line">2150 Shattuck Ave, Suite 1300</div>
+<div class="line">Intel Research</div>
+<div class="line">Berkeley, CA 94704</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 510 495 3055</div>
+<div class="line">email - <a class="reference" href="mailto:david.e.gay&#64;intel.com">david.e.gay&#64;intel.com</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Jonathan Hui</div>
+<div class="line">657 Mission St. Ste. 600</div>
+<div class="line">Arched Rock Corporation</div>
+<div class="line">San Francisco, CA 94105-4120</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 415 692 0828</div>
+<div class="line">email - <a class="reference" href="mailto:jhui&#64;archedrock.com">jhui&#64;archedrock.com</a></div>
+</div>
+</div>
+<div class="section">
+<h1><a id="citations" name="citations">6. Citations</a></h1>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id1">[1]</a></td><td>David Gay. &quot;Design of Matchbox, the simple filing system for
+motes. (version 1.0).&quot;</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id2">[2]</a></td><td>TEP 2: Hardware Abstraction Architecture.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section">
+<h1><a id="appendix-a-haa-for-some-existing-flash-chips" name="appendix-a-haa-for-some-existing-flash-chips">Appendix A. HAA for some existing flash chips</a></h1>
+<div class="section">
+<h2><a id="a-1-at45db" name="a-1-at45db">A.1 AT45DB</a></h2>
+<p>The Atmel AT45DB family HPL is:</p>
+<pre class="literal-block">
+configuration HplAt45dbC {
+  provides interface HplAt45db;
+} ...
+</pre>
+<p>The <tt class="docutils literal"><span class="pre">HplAt45db</span></tt> interface has flash-&gt;buffer, buffer-&gt;flash, compare
+buffer to flash, erase page, read, compute CRC, and write operations.  Most
+of these operations are asynchronous, i.e., their completion is signaled
+before the flash chip has completed the operation. The HPL also includes
+operations to wait for asynchronous operations to complete.</p>
+<p>A generic, system-independent implementation of the HPL
+(<tt class="docutils literal"><span class="pre">HplAt45dbByteC</span></tt>) is included allowing platforms to just provide SPI and
+chip selection interfaces.</p>
+<p>Different members of the AT45DB family are supported by specifying a few
+constants (number of pages, page size).</p>
+<p>The AT45DB HAL has two components, one for chip access and the other
+providing volume information:</p>
+<pre class="literal-block">
+component At45dbC
+{
+  provides {
+    interface At45db;
+    interface Resource[uint8_t client];
+    interface ResourceController;
+    interface ArbiterInfo;
+  }
+} ...
+
+configuration At45dbStorageManagerC {
+  provides interface At45dbVolume[volume_id_t volid];
+} ...
+</pre>
+<p>Note that the AT45DB HAL resource management is independent of the
+underlying HPL's power management. The motivation for this is that
+individual flash operations may take a long time, so it may be desirable to
+release the flash's bus during long-running operations.</p>
+<p>The <tt class="docutils literal"><span class="pre">At45db</span></tt> interface abstracts from the low-level HPL operations by:</p>
+<ul class="simple">
+<li>using the flash's 2 RAM buffers as a cache to allow faster reads and
+writes</li>
+<li>hiding the asynchronous nature of the HPL operations</li>
+<li>verifying that all writes were successful</li>
+</ul>
+<p>It provides cached read, write and CRC computation, and page erase and
+copy. It also includes flush and sync operations to manage the cache.</p>
+<p>The <tt class="docutils literal"><span class="pre">At45dbVolume</span></tt> interface has operations to report volume size and
+map volume-relative pages to absolute pages.</p>
+</div>
+<div class="section">
+<h2><a id="a-2-st-m25p" name="a-2-st-m25p">A.2 ST M25P</a></h2>
+<p>The ST M25P family HPL is:</p>
+<pre class="literal-block">
+configuration Stm25pSpiC {
+  provides interface Init;
+  provides interface Resource;
+  provides interface Stm25pSpi;
+}
+</pre>
+<p>The <tt class="docutils literal"><span class="pre">Stm25pSpi</span></tt> interface has read, write, compute CRC, sector erase
+and block erase operations. The implementation of this HPL is
+system-independent, built over a few system-dependent components
+providing SPI and chip selection interfaces.</p>
+<p>Note that these two examples have different resource management policies:
+the AT45DB encapsulates resource acquisition and release within each
+operation, while the M25P family requires that HPL users acquire and
+release the resource itself.</p>
+<p>The ST M25P HAL is:</p>
+<pre class="literal-block">
+configuration Stm25pSectorC {
+  provides interface Resource as ClientResource[storage_volume_t volume];
+  provides interface Stm25pSector as Sector[storage_volume_t volume];
+  provides interface Stm25pVolume as Volume[storage_volume_t volume];
+}
+</pre>
+<p>The <tt class="docutils literal"><span class="pre">Stm25pSector</span></tt> interface provides volume-relative operations similar
+to those from the HPL interface: read, write, compute CRC and
+erase. Additionally, it has operations to report volume size and remap
+volume-relative addresses. Clients of the ST M25P HAL must implement the
+<tt class="docutils literal"><span class="pre">getVolumeId</span></tt> event of the <tt class="docutils literal"><span class="pre">Stm25pVolume</span></tt> interface so that the HAL can
+obtain the volume id of each of its clients.</p>
+</div>
+</div>
+</div>
+</body>
+</html>

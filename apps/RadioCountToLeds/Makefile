@@ -1,0 +1,15 @@
+COMPONENT=RadioCountToLedsAppC
+BUILD_EXTRA_DEPS = RadioCountMsg.py RadioCountMsg.class
+
+RadioCountMsg.py: RadioCountToLeds.h
+	mig python -target=$(PLATFORM) $(CFLAGS) -python-classname=RadioCountMsg RadioCountToLeds.h RadioCountMsg -o $@
+
+RadioCountMsg.class: RadioCountMsg.java
+	javac RadioCountMsg.java
+
+RadioCountMsg.java: RadioCountToLeds.h
+	mig java -target=$(PLATFORM) $(CFLAGS) -java-classname=RadioCountMsg RadioCountToLeds.h RadioCountMsg -o $@
+
+
+include $(MAKERULES)
+

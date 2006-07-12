@@ -1,0 +1,16 @@
+#!/bin/sh
+# Copyright (c) 2005 Intel Corporation
+# All rights reserved.
+#
+# This file is distributed under the terms in the attached INTEL-LICENSE     
+# file. If you do not find these files, copies can be found by writing to
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# 94704.  Attention:  Intel License Inquiry.
+
+
+prefix="@prefix@";
+exec_prefix="@exec_prefix@";
+exec "@nescc_prefix@/bin/nescc-mig" "-nescc=$exec_prefix/bin/ncc" "$@"
+err=$?
+echo "Couldn't execute @nescc_prefix@/bin/nescc-mig" >&2
+exit $err

@@ -1,0 +1,24 @@
+This directory contains hardware platforms that TinyOS runs on. A hardware
+platform is a collection of "chips," such as microcontrollers, radios,
+and non-volatile storage, whose implementations can be found in tos/chips.
+
+A platform includes code for the hardware resources that chip functionality 
+depend on. For example, the CC1000 chip has a software networking stack (in
+chips/cc1000), which depends on being able to send bytes to the CC1000
+chip over an SPI bus. How the SPI bus works is platform dependent (e.g.,
+it could be shared between several chips and require software arbitration).
+Therefore, the mica2 platform, which has a CC1000 radio, connects the
+CC1000 code to an SPI bus that its microcontroller, an ATmega128, provides.
+
+Every platform directory has a ".platform" file, which specifies 
+flags and options to the nesC compiler. For example, the native compiler
+ncc uses to compile a binary depends on what microcontroller a platform
+has, so a .platform file generally specifies the compiler with the 
+"-gcc" option. Also, as platforms depend on a collection of chips, the
+.platform file specifies those chips with "-I" options.
+
+The standard TinyOS boot sequence depends on a platform providing
+a few components; details can be found in TEP 107.
+
+Phil Levis, last updated: 7/7/2005
+

@@ -1,0 +1,279 @@
+tos-bsl
+-------
+
+BootStrapLoader software for the flash devices MSP430F1xx 
+(maybe F4xx too, but its not tested).
+Based on the example provided by TI but with more features.
+
+This version is a modification of Chris Liechti's original
+pybsl, with support for the telos, telosb and tmote devices
+from Moteiv (www.moteiv.com).
+
+It is released under a free software license,
+see tos-bsl-license.txt for more details.
+
+(C) 2001-2003 Chris Liechti <cliechti@gmx.net>
+
+Features
+--------
+
+- understands TI-Text and Intel-hex
+- download to Flash and/or RAM, erase, verify
+- reset and wait for keypress (to run a device directly from the port
+  power)
+- load addres into R0/PC and run
+- password file can be any data file, e.g. the one used to program the
+  device in an earlier session
+- upload a memory block MSP->PC (output as binary data or hex dump)
+- written in Python, runs on Win32, Linux, BSD (other unices have other
+  device names but should be faisible), Jython (Python in Java)
+- use per command line, or in a Python script
+- download a program, execute it, resynchronize and upload results.
+  (for testing and callibration)
+- downladable BSL for larger devices
+- baudrate change for newer MSP430-BSLs
+- test and reset lines can be inverted for non standard BSL hardware
+
+Requirements
+------------
+- Linux, BSD, Un*x or Windows PC
+- Python 2.0 or newer (1.5.2 untested), 2.2 recomeded
+- win32all extensions to Python on Windows
+- BSL hardware with an MSP430 device connected to a serial port 
+
+Installation
+------------
+Python installations are available from www.python.org. On Windows simply
+use the installer. The win32all package has an installer too. These
+installations should run fine with the deafults.
+
+On Linux just Python is needed. On many distributions is Python 1.5.2
+incuded. I suggest that an upgrade to 2.2 or newer. There are rpm and deb
+binary packages and a source tarball availabe through the Python homepage.
+
+The pybsl archive can simply be unpacked to a directory, Windows users
+can use WinZip or WinRar among others to extract the gzipped tar file.
+If you want to run it from everywhere the directory where the file bsl.py
+is, should be added to the PATH.
+Look at "/etc/profile" on Linux, "autoexec.bat" on Win9x/ME,
+System Properties/Environment in Win2000/NT/XP.
+
+For Jython you need to have installed the "Java Communications API"
+(JavaComm).
+
+Short introduction
+------------------
+First the MSP430 BSL hardware is needed. An example schematics can be found
+in the application note "slaa96b" from TI (see references). Then this
+programm can be used to communicate between the PC and the MSP430 device.
+
+The program can be started by typing "python bsl.py" in a console. Often
+it works also with just "bsl.py" or "./bsl.py".
+
+USAGE: bsl.py [options] [file]
+
+If "-" is specified as file the data is read from the stdinput.
+A file ending with ".txt" is considered to be in TIText format,
+'.a43' and '.hex' as IntelHex and all other filenames are
+considered as ELF files.
+
+General options:
+  -h, --help            Show this help screen.
+  -c, --comport=port    Specify the communication port to be used.
+                        (Default is 0)
+                                0->COM1 / ttyS0
+                                1->COM2 / ttyS1
+                                etc.
+  -P, --password=file   Specify a file with the interrupt vectors that
+                        are used as password. This can be any file that
+                        has previously been used to program the device.
+                        (e.g. -P INT_VECT.TXT).
+  -f, --framesize=num   Max. number of data bytes within one transmitted
+                        frame (16 to 240 in steps of 16) (e.g. -f 240).
+  -m, --erasecycles=num Number of mass erase cycles (default is 1). Some
+                        old F149 devices need additional erase cycles.
+                        On newer devices it is no longer needed. (e.g. for
+                        an old F149: -m20)
+  -U, --unpatched       Do not download the BSL patch, even when it is
+                        needed. This is used when a program is downloaded
+                        into RAM and executed from there (and where flash
+                        programming is not needed.)
+  -D, --debug           Increase level of debug messages. This won't be
+                        very useful for the average user...
+  -I, --intelhex        Force fileformat to IntelHex
+  -T, --titext          Force fileformat to be TIText
+  -N, --notimeout       Don't use timeout on serial port (use with care)
+  -B, --bsl=bsl.txt     Load and use new BSL from the TI Text file
+  -S, --speed=baud      Reconfigure speed, only possible with newer
+                        MSP403-BSL versions (>1.5, read slaa089a.pdf for
+                        details). If the --bsl option is not used, an
+                        internal BSL replacement will be loaded.
+                        Needs a target with at least 2kB RAM!
+                        Possible values are 9600, 19200, 38400
+                        (default 9600)
+  -1, --f1x             Specify CPU family, in case autodetect fails
+  -4, --f4x             Specify CPU family, in case autodetect fails
+                        --F1x and --f2x are only needed when the "change
+                        baudrate" feature is used and the autodetect feature
+                        fails. If the device ID that is uploaded is known, it
+                        has precedence to the command line option.
+  --invert-reset        Invert signal on RST pin (used for some BSL hardware)
+  --invert-test         Invert signal on TEST/TCK pin (used for some BSL
+                        hardware)
+  --slow                Add delays when operating the conrol pins. Useful if
+                        the pins/circuit has high capacitance.
+
+Program Flow Specifiers:
+  -e, --masserase       Mass Erase (clear all flash memory)
+  -E, --erasecheck      Erase Check by file
+  -p, --program         Program file
+  -v, --verify          Verify by file
+
+The order of the above options matters! The table is ordered by normal
+execution order. For the options "Epv" a file must be specified.
+Program flow specifiers default to "pvr" if a file is given.
+Don't forget to specify "e" or "eE" when programming flash!
+
+Data retreiving:
+  -u, --upload=addr     Upload a datablock (see also: -s).
+  -s, --size=num        Size of the data block do upload. (Default is 2)
+  -x, --hex             Show a hexadecimal display of the uploaded data.
+                        (Default)
+  -b, --bin             Get binary uploaded data. This can be used
+                        to redirect the output into a file.
+
+Do before exit:
+  -g, --go=address      Start programm execution at specified address.
+                        This implies option --wait.
+  -r, --reset           Reset connected MSP430. Starts application.
+                        This is a normal device reset and will start
+                        the programm that is specified in the reset
+                        vector. (see also -g)
+  -w, --wait            Wait for <ENTER> before closing serial port.
+
+If it says "NAK received" it's probably because you specified no or a
+wrong password.
+
+
+Examples
+--------
+These exaples assume that you have added the installation directory to
+the PATH. type the full path to bsl.py otherwise and maybe use
+"python bsl.py".
+
+bsl.py -e
+        Only erase flash.
+
+bsl.py -eErw 6port.a43
+        Erase flash, erase check, download an executable, run it (reset)
+        and wait.
+        
+        Old F149 devices need addidional erase cycles! Use the -m
+        option in this case (-m20 will be OK is most cases):
+        "python bsl.py -eErwm20 6port.a43"
+
+bsl.py 6port.a43
+        Download of an executable to en empty (new or erased) device.
+        (Note that in new devices some of the first bytes in the
+        information memory are random data. If data should be
+        downloaded there, specify -eE.)
+
+bsl.py -erwB BL_150S_14x.txt -S 38400 6port.a43
+        Erase device, change baudrate and download a new BSL, then
+        download the specified file. After that, reset the device and
+        wait for user input.
+
+bsl.py --go=0x220 ramtest.a43
+        Download a program into RAM and run it (on an erased device)
+
+bsl.py --go=0x200 -P 6port.a43 ramtest.a43
+        Download a program into RAM and run it (on a device that was
+        previously programmed with 6port.a43 and therefore needs a
+        specific password).
+
+        For old devices that use the patch the above command gives a
+        conflict with the patch. But as the patch is only needed to
+        programm flash, it can be left out when running a program solely
+        from RAM:
+        "python bsl.py --go=0x200 -u -P 6port.a43 ramtest.a43"
+
+bsl.py -u 0x0c00 -s 1024 -P 6port.a43
+        Get a memory dump in HEX, from the bootstrap loader (on a device
+        that was previously programmed with 6port.a43 and therefore needs
+        a specific password):
+
+        or on unix with the use of "hexdump":
+        "python bsl.py -u 0x0c00 -s 1024 -P 6port.a43 -b | hexdump"
+
+        or save the binary in a file:
+        "python bsl.py -u 0x0c00 -s 1024 -P 6port.a43 -b >dump.bin"
+
+bsl.py --go=0x220 --upload=0x200 --size=256 ramtest.a43
+        Download the file ramtest.a43 to an empty device, execute its
+        main function at 0x0220. The BSL then tries to reconnect to the
+        device. This does only work when the program on the MSP430
+        does enter the BSL by jumping at address 0x0c00. It is not
+        forced to enter the BSL by a reset as this would stop the
+        program excution.
+        When the reconnection was successful, the data, specified with
+        the --upload and --size parameters, is loaded and printed.
+        
+        This configuration can be useful for software tests, getting
+        callibration data, etc.
+        
+        PS: dont specify -r when using -g. A reset starts the user
+        program which possibly destroys a program that was downloaded
+        to RAM.
+
+bsl.py -rw
+        Just start the user program (with a reset) and wait.
+
+bsl.py -rwc1
+        Reset the device on the second serial/COM port and wait.
+
+cat 6port.a43|bsl.py -eE -
+        Pipe the data from "cat" to the BSL to erase and program the
+        flash. (un*x example, don't forget the dash at the end of the
+        line)
+
+bsl.py -e -S 38400 6port.a43
+        First download the internal replacement BSL and then use it
+        to program at 38400 baud. Only works with targets with more
+        than 1kB of RAM.
+
+bsl.py -e -B BL_150S_14x.txt -S 38400 6port.a43
+        First download the given replacement BSL and then use it to
+        program at 38400 baud. Only works with targets with more
+        than 1kB of RAM.
+
+History
+-------
+  V1.4
+        uses improved serial library
+        support for BSL download to MSP
+        support for higher baudrates (up to 38400)
+
+  V1.5
+        ELF file support
+        replacement BSLs are now internal
+
+References
+----------
+- Python: http://www.python.org
+
+- Jython: http://www.jython.org
+
+- Serial Extension for Python: http://pyserial.sourceforge.net
+
+- win32all: http://starship.python.net/crew/mhammond/
+  and http://www.activestate.com/Products/ActivePython/win32all.html
+
+- slaa89.pdf: "Features of the MSP430 Bootstrap Loader in the
+  MSP430F1121", TI
+
+- slaa96b.pdf: "Application of Bootstrap Loader in MSP430 With Flash
+  Hardware and Software Proposal", TI
+
+- Texas Instruments MSP430 Homepage, links to Datasheets and Application
+  Notes: http://www.ti.com/sc/docs/products/micro/msp430/msp430.htm
+

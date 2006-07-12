@@ -1,0 +1,24 @@
+.TH tos-storage-at45db 1 "Feb 3, 2006"
+.LO 1
+.SH NAME
+
+tos-storage-at45db - Generate storage volume description code
+.SH SYNOPSIS
+
+\fBtos-storage-at45db\fR
+.SH DESCRIPTION
+
+\fBtos-storage-at45db\fR reads a user specification describing the layout
+of storage volumes on an Atmel AT45DB-family flash chip, and generates code
+describing that layout for use by the TinyOS 2.0 storage subsystem.  The
+user specification is in XML and is read from standard input. The code is
+written to standard output.
+
+This program is normally invoked automatically by the TinyOS build system
+when your application directory contains a \fBvolumes-at45db.xml\fR file.
+.SH EXAMPLES
+
+  tos-storage-at45db <volumes-at45db.xml >build/mica2/StorageVolumes.h
+.SH SEE ALSO
+
+.IR tos-storage-stm25p (1)

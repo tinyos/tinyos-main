@@ -1,0 +1,30 @@
+.TH mig 1 "April 27, 2004"
+.LO 1
+.SH NAME
+
+mig - message interface generator for TinyOS
+.SH SYNOPSIS
+
+\fBmig\fR [any ncc option] [tool-specific options]
+    [\fB-o\fR \fIoutput-file\fR]
+    \fItool\fR \fImsg-format-file\fR \fImessage-type\fR
+.SH DESCRIPTION
+
+\fBmig\fR is a tool to generate code to process TinyOS messages (which
+are specified by C types). 
+
+\fBmig \fIoptions\fR is equivalent to \fBnescc-mig -nescc=ncc
+\fIoptions\fR. For details on \fBmig\fR's output and options, please read
+see the \fBnescc-mig\fR man page.
+
+.SH EXAMPLE
+
+    APPDIR=`ncc -print-tosdir`/../apps/Ident
+    mig java -I $APPDIR -target=mica2 \\
+      -java-classname=net.tinyos.ident.IdentMsg \\
+      $APPDIR/App.nc IdentMsg -o IdentMsg.java
+.SH SEE ALSO
+
+.IR ncc (1),
+.IR nescc-mig (1),
+.IR ncg (1)

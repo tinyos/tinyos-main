@@ -1,0 +1,14 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: reinstall.extra,v 1.2 2006-07-12 16:59:50 scipio Exp $
+
+NODEID = $(REINSTALL)
+BUILD_DEPS = setid program
+
+ifdef TINYOS_NP
+  ifeq ($(TINYOS_NP),BNP)
+    BUILD_DEPS = setid program_bl program_no_e
+  endif
+endif
+
+check_bnp: FORCE
+	@perl -e 'exit 0 if (<> =~ /^\:103000/); print "\nERROR: Trying to install with BNP support.\n       main.ihex was not built properly, please recompile.\n\n"; exit 1;' $(INSTALL_IHEX)

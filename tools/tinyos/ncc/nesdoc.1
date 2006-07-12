@@ -1,0 +1,79 @@
+.TH nesdoc 1 "April 27, 2004"
+.LO 1
+.SH NAME
+
+nesdoc - generate TinyOS documentation
+.SH SYNOPSIS
+
+TinyOS 1.x usage:
+.br
+\fBnesdoc\fR [\fIdocumentation-directory\fR] [\fIncc-options\fR] \fIfiles...\fR
+
+TinyOS 2.x: collect documentation from a program:
+.br
+\fBnesdoc\fR -o \fIdocumentation-directory\fR [\fB-preserve\fR]
+        [\fB-new\fR] [\fB-target=\fIplatform\fR] [\fB-topdir=\fIdirectory\fR]
+        [\fIncc-options\fR] \fIfiles...\fR
+
+TinyOS 2.x: generate nesdoc HTML pages:
+.br
+\fBnesdoc\fR -o \fIdocumentation-directory\fR  [\fB-new\fR] [\fB-target=\fIplatform\fR] \fB-html\fR
+
+.SH DESCRIPTION
+
+\fBnesdoc\fR is a tool to automatically extract documentation from nesC
+files and applications. There are two implementations of nesdoc: an old
+one that is used by default with TinyOS 1.x trees, and a new used with
+TinyOS 2.x trees or when the \fB-new\fR option is specified. It is not
+possible to use the old implementation with TinyOS 2.x.
+
+Documentation directories have a subdirectory for each platform, and
+contain HTML files describing the components and interfaces in TinyOS.
+nesdoc generates these files by compiling nesC programs and extracting the
+documentation information.
+
+When invoked, \fBnesdoc\fR generates documentation for the program that
+would be compiled with
+    \fBncc\fR \fIncc-options\fR \fIfiles...\fR
+
+The old nesdoc adds an HTML file for each component, interface in the
+compiled application to the documentation directory, and updates several
+indices. The old nesdoc does not support generic components or interfaces.
+
+The new nesdoc separates HTML generation into two phases. First, an
+application is compiled and XML descriptions of its components and 
+interfaces are added to the documentation directory. Once XML descriptions
+have been extracted for all components of interest, HTML pages are
+generated from this repository by running \fBnesdoc\fR with the \fB-html\fR
+option.
+
+For more details, see the separate \fBnesdoc\fR documentation.
+
+.SH OPTIONS
+
+.TP
+\fB-target=\fIplatform\fR
+Specify the platform for which documentation is generated.
+.TP
+\fB-preserve\fR
+By default, when collecting information, nesdoc overwrites existing XML
+descriptions of interfaces and components to ensure that they are up to 
+date. However, this is slow when generating documentation on a large 
+number of applications. If you pass the \fB-preserve\fR option, existing
+XML descriptions are not replaced.
+.TP
+\fB-html\fR
+Generate HTML pages for all the nesdoc information collected in 
+\fIdocumentation-directory\fR.
+\fB-new\fR
+Force the use of the new nesdoc even when using a TinyOS 1.x source tree.
+.TP
+\fB-topdir=\fIdir\fR 
+Specify directory paths that should be stripped from the source file names
+when generating "package names" for the documentation files.  The directory
+above \fBTOSDIR\fR is automatically added, so this option is only needed for
+directories outside the main TinyOS distribution.
+
+.SH SEE ALSO
+
+.IR ncc (1)

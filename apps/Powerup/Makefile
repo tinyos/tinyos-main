@@ -1,0 +1,3 @@
+COMPONENT=PowerupAppC
+include $(MAKERULES)
+

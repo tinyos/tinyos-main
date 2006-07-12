@@ -1,0 +1,108 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: avr.rules,v 1.2 2006-07-12 16:59:49 scipio Exp $
+
+define AVR_HELP
+
+ AVR extras:
+
+   debug    : compile with minimal optimization and debug symbols
+   debugopt : compile with debug symbols
+   xnp      : compile for network programming
+
+ Programmer options:
+
+   dapa         : (default) use parallel port programmer
+   mib510,<dev> : use MIB510 serial port programming board at port <dev>
+   eprb,<host>	: use EPRB at hostname <host>
+   avrisp,<dev> : use AVRISP serial programmer at port <dev>
+
+   The dev or host parameter for the programmer option need not be specified,
+   in which case it is expected to be defined as in an environment variable of
+   the same name in all caps (such as MIB510, EPRB, or AVRISP).
+
+endef
+HELP += $(AVR_HELP)
+
+OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
+SET_ID = tos-set-symbols
+PROGRAMMER = uisp
+NCC = ncc
+LIBS = -lm
+
+AMADDR = ActiveMessageAddressC\$$addr
+BUILDDIR = build/$(PLATFORM)
+MAIN_EXE = $(BUILDDIR)/main.exe
+MAIN_SREC = $(BUILDDIR)/main.srec
+MAIN_IHEX = $(BUILDDIR)/main.ihex
+INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
+VOLUMEFILE = volumes-at45db.xml
+
+PFLAGS += -Wall -Wshadow -DDEF_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP) $(NESC_FLAGS)
+PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
+ifdef MSG_SIZE
+PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+
+ifndef DEFAULT_PROGRAM
+DEFAULT_PROGRAM = dapa
+endif
+
+BUILDLESS_DEPS += bytes
+
+ifndef NOWIRING
+include $(TINYOS_MAKE_PATH)/wiring.extra
+endif
+
+# Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
+# out with call in there.  I don't know why.
+$(if $(PROGRAM),,$(call TOSMake_include,avr/$(DEFAULT_PROGRAM).extra))
+
+# Build storage file if volumes.xml present
+ifneq ($(wildcard $(VOLUMEFILE)), )
+exe0: $(BUILDDIR)/StorageVolumes.h
+
+$(BUILDDIR)/StorageVolumes.h: $(VOLUMEFILE)
+	tos-storage-at45db <$(VOLUMEFILE) >$@
+
+PFLAGS += -I$(BUILDDIR)
+endif
+
+ifndef BUILD_DEPS
+  ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
+    BUILD_DEPS = srec tosimage bytes $(POST_BUILD_EXTRA_DEPS)
+  endif
+endif
+
+setid: FORCE
+	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd cp $(MAIN_SREC) $(INSTALL_SREC); else cmd $(SET_ID) $(MAIN_SREC) $(INSTALL_SREC) TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID) ; fi
+
+delsetid: FORCE
+	rm -f $(subst .srec.,.exe.,$(INSTALL_SREC)) $(INSTALL_SREC) 
+
+srec: exe FORCE
+	$(OBJCOPY) --output-target=srec $(MAIN_EXE) $(MAIN_SREC)
+
+tosimage: ihex build_tosimage FORCE
+	@:
+
+ihex: exe FORCE
+	$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
+
+exe: exe0 bytes FORCE
+	@:
+
+exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
+	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
+	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+ifdef WIRING_CHECK_FILE
+	@nescc-wiring $(WIRING_CHECK_FILE)
+endif
+	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
+
+builddir: FORCE
+	mkdir -p $(BUILDDIR)
+
+bytes: FORCE
+	@objdump -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+

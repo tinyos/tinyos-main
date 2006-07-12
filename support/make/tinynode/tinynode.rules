@@ -1,0 +1,3 @@
+ifndef NOWIRING
+include $(TINYOS_MAKE_PATH)/wiring.extra
+endif

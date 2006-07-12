@@ -1,0 +1,17 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: xflash.extra,v 1.2 2006-07-12 16:59:51 scipio Exp $
+
+PROGRAM = xflash
+
+PROGRAMMER ?= c:/nordheim/xflash/xflash.exe
+PROGRAMMER_FLAGS = -p imote2
+
+PXA27X_JTAG_DEV ?= "JTAG CPU"
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using $(PROGRAM) with the $(PXA27X_JTAG_DEV)"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) -tt $(PXA27X_JTAG_DEV) $(INSTALL_BIN)
+
+program_input: bin
+	@:
+

@@ -1,0 +1,97 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: msp.rules,v 1.2 2006-07-12 16:59:50 scipio Exp $
+
+define MSP_HELP
+
+ MSP extras:
+
+   debug    : compile with minimal optimization and debug symbols
+   debugopt : compile with debug symbols
+   xnp      : compile for network programming
+
+ Programmer options:
+
+   bsl,auto      : (default) use BSL programmer on the first mote found
+   bsl,<port>    : use BSL programmer on <port> serial port
+   bsl,ref,<ref> : use BSL programmer on the mote with reference <ref>
+
+   The dev or host parameter for the programmer option need not be specified,
+   in which case it is expected to be defined as in an environment variable of
+   the same name in all caps (such as BSL).
+
+endef
+HELP += $(MSP_HELP)
+
+#MSP_NESC_TARGET ?= msp430
+#MSP_GCC ?= msp430-gcc
+#MSP_MCU ?= msp430x149
+#PFLAGS += -fnesc-target=$(MSP_NESC_TARGET) -gcc=$(MSP_GCC) -mmcu=$(MSP_MCU)
+
+OBJCOPY = msp430-objcopy
+OBJDUMP = msp430-objdump
+SET_ID = tos-set-symbols
+NCC = ncc
+LIBS = -lm
+
+AMADDR = ActiveMessageAddressC\$$addr
+BUILDDIR = build/$(PLATFORM)
+MAIN_EXE = $(BUILDDIR)/main.exe
+MAIN_IHEX = $(BUILDDIR)/main.ihex
+INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
+
+PFLAGS += -Wall -Wshadow -DDEF_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP) $(NESC_FLAGS)
+PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
+ifdef MSG_SIZE
+PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+
+DEFAULT_PROGRAM ?= bsl
+
+BUILDLESS_DEPS += bytes
+
+# Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
+# out with call in there.  I don't know why.
+$(if $(PROGRAM),,$(call TOSMake_include,msp/$(DEFAULT_PROGRAM).extra))
+
+# Build storage file if volumes.xml present
+ifneq ($(wildcard $(VOLUME_FILE)), )
+exe0: $(BUILDDIR)/StorageVolumes.h
+
+$(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
+	$(VOLUME_ALLOCATOR) <$(VOLUME_FILE) >$@
+
+PFLAGS += -I$(BUILDDIR)
+endif
+
+ifndef BUILD_DEPS
+  ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
+    BUILD_DEPS = tosimage $(POST_BUILD_EXTRA_DEPS)
+  endif
+endif
+
+setid: FORCE
+	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd cp $(MAIN_IHEX) $(INSTALL_IHEX); else cmd $(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target ihex $(MAIN_IHEX) $(INSTALL_IHEX) TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID); fi
+
+tosimage: ihex build_tosimage FORCE
+	@:
+
+ihex: exe FORCE
+	$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
+
+exe: exe0 bytes FORCE
+	@:
+
+exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
+	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
+	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+ifdef WIRING_CHECK_FILE
+	@nescc-wiring $(WIRING_CHECK_FILE)
+endif
+	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
+
+builddir: FORCE
+	mkdir -p $(BUILDDIR)
+
+bytes: FORCE
+	@objdump -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+

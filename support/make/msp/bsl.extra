@@ -1,0 +1,58 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: bsl.extra,v 1.2 2006-07-12 16:59:50 scipio Exp $
+
+# BSL arguments:
+#
+#   bsl,<port>
+#     install onto the given port name
+#
+#   bsl,auto
+#     uses motelist to install onto the first listed mote
+#
+#   bsl,ref,<reference>
+#      uses motelist to install onto the mote with the given reference number
+
+PROGRAM = bsl
+
+MSP_BSL ?= msp430-bsl
+# BSL is the comm port, can be specified as "bsl,2" when making
+BSL ?= auto
+MSP_BSL_FLAGS ?= --telos
+
+ifeq ($(BSL),auto)
+BSLTEST = $(shell motelist -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+))/; print $$1;' )
+BSLTEST_COMMENT = "using bsl,auto"
+BSL = $(shell motelist -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+))/; ($$s,$$n)=($$1,$$2); if($$s=~/^com/i) { print $$n-1 } else { print $$s; };' )
+BSL_TARGETS += bsltest
+else
+ifeq ($(BSL:ref,%=ref),ref)
+BSLREF := $(BSL:ref,%=%)
+BSLTEST_COMMENT = "using bsl,ref,$(BSLREF)"
+BSLTEST := $(shell motelist -c | perl -e '$$r=shift; while(<>) { if(/^$$r,([^,]+)/) { print $$1; exit; } }' $(BSLREF))
+BSL = $(BSLTEST)
+BSL_TARGETS += bsltest
+endif
+endif
+
+# bsltest is a separate rule so that make doesn't resolve BSL along with
+# BSLTEST, which saves an invocation of motelist.  It also avoids the test
+# all together if bsl,auto was not specified (whew).
+bsltest: FORCE
+	@N=$(BSLTEST); [ x$$N = x ] && echo "    found no motes ($(BSLTEST_COMMENT))" && exit 1 || echo "    found mote on $$N ($(BSLTEST_COMMENT))"
+
+program: $(BSL_TARGETS) $(TELOS_PROGRAM_DEPS) FORCE
+	@echo "    installing $(PLATFORM) binary using bsl"
+	$(MSP_BSL) $(MSP_BSL_FLAGS) -c $(BSL) -r -e -I -p $(INSTALL_IHEX)
+	rm -f $(subst .ihex.,.exe.,$(INSTALL_IHEX)) $(INSTALL_IHEX) 
+
+program_no_e: $(BSL_TARGETS) $(TELOS_PROGRAM_DEPS) FORCE
+	@echo "    installing $(PLATFORM) binary using bsl (without mass erase)"
+	$(MSP_BSL) $(MSP_BSL_FLAGS) -c $(BSL) -r -I -p $(INSTALL_IHEX)
+	rm -f $(subst .ihex.,.exe.,$(INSTALL_IHEX)) $(INSTALL_IHEX) 
+
+program_bl: $(BSL_TARGETS) $(TELOS_PROGRAM_DEPS) FORCE
+	@echo "    installing $(PLATFORM) bootloader using bsl"
+	$(MSP_BSL) $(MSP_BSL_FLAGS) -c $(BSL) -r -e -I -p $(BOOTLOADER)
+
+program_input: ihex
+	@:

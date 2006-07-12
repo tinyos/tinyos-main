@@ -1,0 +1,7 @@
+# Erase and program flash.
+monitor erase all
+load @EXE@
+
+# Reset the chip to get to a known state.
+monitor reset
+flushregs

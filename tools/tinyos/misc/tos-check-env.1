@@ -1,0 +1,30 @@
+.TH tos-check-env 1 "Feb 3, 2006"
+.LO 1
+.SH NAME
+
+tos-check-env - Check that your environment is properly configured for TinyOS development
+.SH SYNOPSIS
+
+\fBtos-check-env\fR [\fB-avr\fR] [\fB-msp\fR]
+.SH DESCRIPTION
+
+\fBtos-check-env\fR checks that your environment is properly configured for
+TinyOS development. The script checks for the existence of compilers, 
+java, environment variables, graphics tools for nesdoc, 
+and more, and then check that the versions and settings are adequate for
+TinyOS development. Information is printed to STDOUT for each check 
+as the checks are made. 
+
+After \fBtos-check-env\fR checks the environment, any descrepances found will 
+be printed to STDOUT along with hints on how to fix the descrepencies.
+
+\fBtos-check-env\fR takes an optional argument that specifies a specific compiler
+chain (avr or msp) to check. \fB-avr\fR will check for only the avr toolchain and
+exclude msp checks; \fB-msp\fR will check for only the msp toolchain and exclude
+avr checks. 
+
+
+
+
+
+

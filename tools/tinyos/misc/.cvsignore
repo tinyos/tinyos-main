@@ -1,0 +1,10 @@
+Makefile
+Makefile.in
+.deps
+tos-ident-flags
+tos-install-jni
+tos-serial-debug
+tos-set-symbols
+tos-write-image
+tos-storage-at45db
+tos-storage-stm25p

@@ -1,0 +1,31 @@
+#-*-Makefile-*- 
+#$Id: tinynode.target,v 1.2 2006-07-12 16:59:48 scipio Exp $
+
+PLATFORM = tinynode
+
+ifndef TOSDIR
+TOSDIR := $(shell ncc -print-tosdir)
+endif
+
+ifndef TOS_BETADIR
+TOS_BETADIR := $(TOSDIR)/../beta/tos
+endif
+
+MSP_BSL ?= tos-bsl
+
+OPTFLAGS += -Os
+#OPTFLAGS = 
+
+# Disable MSP430 hardware multiply because it makes MSPGCC die
+PFLAGS += -mdisable-hwmul
+PFLAGS += -mstrict-align
+
+PFLAGS += \
+-I$(TOS_BETADIR)/platforms/tinynode
+
+$(call TOSMake_include_platform,tinynode)
+$(call TOSMake_include_platform,msp)
+
+tinynode: $(BUILD_DEPS)
+	@:
+

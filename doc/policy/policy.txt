@@ -1,0 +1,51 @@
+TinyOS 2.x collaboration policy
+-------------------------------
+
+In the interest of furthering effective collaboration on the TinyOS 2.x
+project, we will manage development of TinyOS using the following policies.
+
+1) TinyOS 2.x is composed of a number of independent subsystems (radios,
+sensors, booting, etc) whose design is reflected in TEPs (see TEP 1 for
+more details on TEP structure). Individual TEPs are generally written by a
+subset of the TinyOS 2.x working group members, based on a consensus of the
+whole working group and more detailed discussions by the subset.
+
+2) Changes to TEPs should be proposed to the group as a whole, for
+discussion. If consensus is reached, the TEP can be changed.
+
+3) Code development is divided into a number of subsystems, which often,
+but not always, reflect TEP and platform boundaries (e.g., "storage for the
+mica2", "the scheduler", etc). A subsystem has an owner (one or more
+members or company represented in the working group) and a target
+completion date.
+
+4) To avoid the introduction of bugs, and except as discussed below, a
+subsystem's code should only be committed to the TinyOS 2.x CVS repository
+by its owners. [Thought for discussion: allow people to create arbitrary
+branches and commit on those?]
+
+5) If you find a trivial bug (e.g., an extra character that prevents
+compilation) you can commit a change to any subsystem. Please email
+me the subsystem's owner or the mailing list when you do this.
+
+6) If you find the need to make a substantial change, fix a non-trivial
+bug, or make a trivial API change to a subsystem (e.g., it's missing an
+Init interface that is present on another platform), email the TinyOS 2.x
+mailing list with your proposed change (diffs are helpful). You can commit
+this change on agreement from the subsystem's owner, or after 48 hours if
+no response is received. Disagreements about the change should be resolved
+with the subsystem's owner or the mailing list as a whole.
+
+7) If you find that a subsystem needs API changes, you should present these
+to the TinyOS 2.x mailing list. Once consensus is reached, the code can
+be changed and any related TEPs updated.
+
+8) If progress on a subsystem has stalled, its completion target date has
+passed, or its completion target date is holding up progress of the
+rest of TinyOS 2.x (and dependent projects), you can propose reassigning
+the subsystem to a new owner. You should have a new owner lined up who
+can meet the necessary target dates. This reassignment proposal must
+be made to the TinyOS 2.x list. Once consensus is reached, or if no
+response is received from the subsystem's owners after a week, the
+subsystem will be reassigned.
+

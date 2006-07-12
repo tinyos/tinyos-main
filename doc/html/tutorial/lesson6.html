@@ -1,0 +1,186 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <title>TinyOS Tutorial Lesson 6: TinyOS Boot and System Initialization</title>
+  <link href="../../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div class="title">Lesson 6: TinyOS Boot and System Initialization</div>
+<div class="subtitle">Last updated 18 May 2006</div>
+
+One of the frequently asked questions regarding TinyOS is, "Where is
+<code>main()</code>?".  In previous lessons, we deferred detailed discussion of the
+TinyOS boot sequence in favor of grasping the general idea. We will
+now revisit the boot sequence indetail. Understanding how TinyOS
+initializes will help solidify understanding of the execution model
+and answer the question "Where is <code>main()</code>?".
+ 
+The TinyOS boot sequence is comprised of three steps:
+<ul> 
+<li> Scheduler initialization
+<li> Component initialization
+<li> Signal that the boot process has completed 
+</ul>
+
+<p><b>Scheduler initialization.</b> The scheduler is initialized
+before any components are initialized. If the scheduler were not
+initialized before the components, component initialization
+routines would not be able to post tasks. While not all components
+require tasks to be posted, this gives the flexibility required for those compoenents that do. 
+
+<p>The <code>Scheduler</code> interface defines a scheduling
+component's signature in
+<code>tos/interfaces/Scheduler.nc</code>.  TinyOS developers can
+define their own scheduler to meet their application's needs.</p> An
+implementation of the <code>Scheduler</code> interface is provided in
+<code>tos/system/TinySchedulerC.nc</code>.</p>
+
+<p><b>Component initialization.</b> After the scheduler is initialized, 
+components are initialized. The <code>Init</code> interface implements only
+the single command <code>init()</code>. </p>
+
+<pre></pre>
+<prehead>tos/interfaces/Init.nc:</prehead>
+<pre>
+
+interface Init {
+  command error_t init();
+}
+</pre>
+
+<p>To provide the initialization flexibility required by sensor
+network components, the TinyOS's boot sequence breaks down the component
+initialization into a <i>platform initialization phase</i> (run first) and a <i>software 
+initialization phase</i>. This is accomplished by making the TinyOS component that
+executes the boot sequence use two <code>Init</code> interfaces:
+one called <code>PlatformInit</code> and one called <code>SoftwareInit</code>:
+
+<pre></pre>
+<prehead>tos/system/RealMainP.nc:</prehead>
+<pre>
+module RealMainP {
+  provides interface Boot;
+  uses interface Scheduler;
+  uses interface Init as PlatformInit;
+  uses interface Init as SoftwareInit;
+}
+implementation {
+  // implementation covered below
+}
+</pre>
+
+<p>The platform initialization phase is the responsability of the platform
+implementer. Thus, <code>PlatformInit</code> is wired to the
+platform-specific initialization component, <code>PlatformC</code>. No
+other component should be wired to <code>PlatformInit</code>.  Any
+component that requires initialization can implement the <code>Init</code>
+interface and wire itself to <code>MainC</code>'s <code>SoftwareInit</code>
+interface:
+
+<pre></pre>
+<prehead>tos/system/MainC.nc:</prehead>
+<pre>
+configuration MainC {
+  provides interface Boot;
+  uses interface Init as SoftwareInit;
+}
+implementation {
+  components PlatformC, RealMainP, TinySchedulerC;
+
+  RealMainP.Scheduler -> TinySchedulerC;
+  RealMainP.PlatformInit -> PlatformC;
+
+  // Export the SoftwareInit and Booted for applications
+  SoftwareInit = RealMainP.SoftwareInit;
+  Boot = RealMainP;
+}
+</pre>
+
+A common issue in initialization code is dependencies between different
+parts of the system. These are handled in three ways in TinyOS:
+<ul>
+<li> Hardware-specific initialization issues are handled directly by
+each platform's <code>PlatformC</code> component.
+
+<li> System services (e.g., the timer, the radio) are typically written to
+be independently initialisable. For instance, a radio that uses a timer
+does not setup the timer at radio initialisation time, rather it defers
+that action until the radio is started. In other words, initialisation
+is used to setup software state, and hardware state wholly owned by
+the service.
+
+<li> When a service is split into several components, the <code>Init</code>
+interface for one of these components may well call <code>Init</code>
+(and other) interfaces of the other components forming the service.
+</ul>
+
+<p><b>Signal that the boot process has completed.</b> Once all
+initialization has completed, <code>MainC</code>'s
+<code>Boot.booted()</code> event is signaled. Components are now free to
+call <code>start()</code> and other commands on any components they are
+using. Recall that in the <code>Blink</code> application, the timers were
+started from the <code>booted()</code> event. This <code>booted</code>
+event is TinyOS's analogue of <code>main</code> in a Unix application.
+
+<p>But if you're curious, <code>main</code> is actually found inside
+<code>RealMainP</code>. It executes the steps outlined above, i.e.,
+initialises the scheduler, calls the initialization interfaces, signals the
+<code>booted</code> event and then starts the main TinyOS scheduling loop:
+
+<pre></pre>
+<prehead>tos/system/RealMainP.nc:</prehead>
+<pre>
+module RealMainP {
+  // signature
+}
+implementation {
+  int main() __attribute__ ((C, spontaneous)) {
+    atomic 
+      {    
+	call Scheduler.init(); 
+    
+	call PlatformInit.init();    
+	while (call Scheduler.runNextTask());
+
+	call SoftwareInit.init(); 
+	while (call Scheduler.runNextTask());
+      }
+
+    /* Enable interrupts now that system is ready. */
+    __nesc_enable_interrupt();
+
+    signal Boot.booted();
+
+    /* Spin in the Scheduler */       
+    call Scheduler.taskLoop();
+  }
+
+</pre>
+
+<p>
+<a name=#related_docs>
+<h1>Related Documentation</h1>
+</a>
+<ul>
+<li> <a href="../tep106.html">TEP 106: Schedulers and Tasks</a>
+<li> <a href="../tep107.html">TEP 107: Boot Sequence</a>
+</ul>
+
+<p><b>Programming Hint 8:</b> In the top-level 
+configuration of a software abstraction, auto-wire Init to MainC. This removes the
+burden of wiring Init from the programmer, which removes unnecessary work from the
+boot sequence and removes the possibility of bugs from forgetting to wire.
+From Phil Levis' <a href="http://csl.stanford.edu/~pal/pubs/tinyos-programming-1-0.pdf">
+<i>TinyOS Programming</i></a>
+
+<!-- Begin footer -->
+<br>
+<hr>
+<center>
+<p>&lt;&nbsp;<b><a href="lesson5.html">Previous Lesson</a></b> |&nbsp; <b><a
+ href="index.html">Top</a></b> &nbsp;|&nbsp; <b><a href="lesson11.html">Next Lesson </a>&nbsp;&gt;</b>
+</center>
+
+</body>
+</html>

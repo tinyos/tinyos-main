@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -e
+
+srcdir=src
+
+ACLOCAL="aclocal"
+AUTOMAKE="automake"
+AUTOCONF="autoconf"
+AUTOHEADER="autoheader"
+
+set -x
+(
+    $ACLOCAL
+    $AUTOCONF
+    [ -d config-aux ] || mkdir config-aux
+    $AUTOMAKE -a -c
+)
+
+set -x
+(
+    # If you include this above, errors regarding $(EXEEXT) in 
+    # tinyos/java/env/Makefile.am cause the block to be exited
+    # before running this command below. I was able to address
+    # the $(EXEEXT) errors for windows, but it still died in
+    # redhat 9 so I'm moving this call to below.
+    (cd platforms/mica/uisp; ./bootstrap)
+)
+
+rm -f config.cache $srcdir/config.cache

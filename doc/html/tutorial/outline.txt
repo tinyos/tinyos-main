@@ -1,0 +1,70 @@
+On Mon, 2005-12-05 at 12:18 -0700, Kristin Wright wrote:
+> On 11/30/05, Philip Levis <pal at cs.stanford.edu> wrote:
+> > I am on the hook for writing a short book on nesC programming for
+> > xbow, focusing on wiring. I think I could come up with a basic
+> > tutorial outline, but can't do more than that.
+> 
+> Is the tutorial outline something you can commit to? If so, what
+> timeframe are you thinking?
+> -kw
+
+but it's a high level one. Each bullet point should have an exercise to
+demonstate it. This is pretty exhaustive. We could do something
+simpler/shorter. I'm sure I must have missed something, so everyone feel
+free to chip in.
+
+Tutorial I: Interfaces and Configurations (Kristin)
+  - Components interact through well-defined interfaces.
+  - Component signatures, provides and uses
+  - Interface descriptions
+  - Wiring two components together
+  - Exporting a wiring
+
+Tutorial II: Modules (Kristin)
+  - Executable logic.
+  - Events vs. commands.
+  - Defaults.
+  - Storage and ownership.
+   
+Tutorial III: An Application (Kristin)
+  - Boot.booted()
+  - Init()
+  - Twiddling the LEDs.
+  - Starting services/components
+  - Timers.
+  - Tasks to defer processing.
+
+Tutorial IV: Acquiring Data (Kristin)
+  - Sampling a sensor.
+  - Periodically sampling the sensors and twiddling the LEDs.
+  - Handling error conditions.
+
+Tutorial V: Communication (Prabal)
+  - Message buffers.
+  - Sending a buffer.
+  - Receiving a buffer: swapping vs. copying.
+  - Making a send queue.
+  - Getting packet metadata (Packet, AMPacket interfaces).
+
+Tutorial VI: Storage (Kristin)
+  - Storing small things: nodeID.
+  - Storing a big chunk of things: data from another node (generated,
+e.g., with Random), reliable protocol.xa
+  - Storing a stream: logging.
+
+Tutorial VII: Power management (Vlado)
+  - Turning components on/off.
+  - Resource managers and power policies.
+
+Tutorial VIII: Concurrency (Kristin)
+  - Tasks, revisited.
+  - Async code vs. sync code (until now all has been sync)
+  - Scheduler.
+
+Tutorial IX: Platforms (PhilB)
+  - chips vs. platforms
+  - Telescoping abstractions
+  - Sensorboards
+
+Tutorial X: TOSSIM (PhilL)
+

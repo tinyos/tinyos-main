@@ -1,0 +1,17 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: tmote.target,v 1.2 2006-07-12 16:59:48 scipio Exp $
+
+TMOTE_REV ?= SKY
+
+# tmote sky == telosb
+ifeq ($(TMOTE_REV),SKY)
+  TMOTE_TARGET = telosb.target
+endif
+
+# if tmote rev is unknown, use telosb
+TMOTE_TARGET ?= telosb.target
+
+$(call TOSMake_include,$(TMOTE_TARGET))
+
+tmote: $(BUILD_DEPS)
+	@:

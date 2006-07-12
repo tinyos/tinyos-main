@@ -1,0 +1,1 @@
+FLASH_GDB = $(call TOSMake_find,tinynode/noflash.gdb.in)

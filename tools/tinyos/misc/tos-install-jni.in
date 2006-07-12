@@ -1,0 +1,16 @@
+#!/bin/sh
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+tinyoslibdir=$libdir/tinyos
+
+jni=`tos-locate-jre --jni`
+if [ $? -ne 0 ]; then
+  echo "Java not found, not installing JNI code"
+  exit 1
+fi
+echo "Installing Java JNI code in $jni ... "
+for lib in $tinyoslibdir/*.@JNISUFFIX@; do 
+  @INSTALLJNI@ $lib "$jni" || exit 1
+done
+echo "done."

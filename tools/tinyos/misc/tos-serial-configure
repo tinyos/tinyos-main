@@ -1,0 +1,3 @@
+#!/bin/sh
+num=$((`echo $1 | sed -e s/COM//` - 1))
+stty -F /dev/ttyS$num raw

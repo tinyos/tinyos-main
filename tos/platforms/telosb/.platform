@@ -1,0 +1,42 @@
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.
+
+push( @includes, qw(
+
+  %T/platforms/telosb
+  %T/platforms/telosb/chips/stm25p
+  %T/platforms/telosa
+  %T/platforms/telosa/chips/cc2420
+  %T/platforms/telosa/chips/s1087
+  %T/platforms/telosa/chips/s10871
+  %T/platforms/telosa/chips/sht11
+  %T/chips/cc2420
+  %T/chips/msp430
+  %T/chips/msp430/adc12
+  %T/chips/msp430/dma
+  %T/chips/msp430/pins
+  %T/chips/msp430/timer
+  %T/chips/msp430/usart
+  %T/chips/msp430/sensors
+  %T/chips/stm25p
+  %T/chips/sht11
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/adc
+  %T/lib/power
+) );
+
+@opts = qw(
+
+  -gcc=msp430-gcc
+  -mmcu=msp430x1611
+  -fnesc-target=msp430
+  -fnesc-no-debug
+  -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+
+);
+
+push @opts, "-mingw-gcc" if $cygwin;
+

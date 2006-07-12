@@ -1,0 +1,29 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: eyesIFXv2.target,v 1.2 2006-07-12 16:59:45 scipio Exp $
+
+PLATFORM = eyesIFXv2
+
+MSP_MCU = msp430x1611
+
+# Disable MSP430 hardware multiply because it makes MSPGCC die
+PFLAGS += -mdisable-hwmul
+OPTFLAGS += -O
+
+ifndef DEFAULT_PROGRAM
+DEFAULT_PROGRAM = bsl
+endif
+
+MSP_BSL_FLAGS ?= --invert-test --invert-reset --f1x
+BSL?=/dev/ttyUSB1
+ifeq (,$(findstring /dev/ttyUSB,$(BSL)))
+  ifneq (,$(findstring USB,$(BSL)))
+    BSL:=/dev/tty$(BSL)
+  endif
+endif
+
+NESC_FLAGS:=-Wnesc-all -mdisable-hwmul
+
+$(call TOSMake_include_platform,msp)
+
+eyesIFXv2: $(BUILD_DEPS)
+    @:

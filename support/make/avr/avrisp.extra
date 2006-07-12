@@ -1,0 +1,17 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: avrisp.extra,v 1.2 2006-07-12 16:59:49 scipio Exp $
+
+ifeq ($(AVRISP),)
+$(error AVRISP must be defined, try "make $(TARGETS) help")
+endif
+
+PROGRAM = avrisp
+PROGRAMMER_FLAGS=-dprog=stk500 -dserial=$(AVRISP) --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS_AVRISP)
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using avrisp"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --erase --upload if=$(INSTALL_SREC)
+
+program_bl: FORCE
+	@echo "    installing $(PLATFORM) bootloader using avrisp"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --upload if=$(BOOTLOADER)

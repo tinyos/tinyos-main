@@ -1,0 +1,113 @@
+#!/usr/bin/perl
+
+# "Copyright (c) 2000-2002 The Regents of the University  of California.  
+# All rights reserved.
+#
+# Permission to use, copy, modify, and distribute this software and its
+# documentation for any purpose, without fee, and without written agreement is
+# hereby granted, provided that the above copyright notice, the following
+# two paragraphs and the athor appear in all copies of this software.
+# 
+# IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
+# DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+# OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
+# CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+# ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
+# PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
+#
+# Authors: Naveen Sastry
+# Date:    11/11/02
+#
+#
+# Script to manage the tinysec keyfile
+
+
+# default keyfile and default key name (\w+ matches first valid key)
+$KEYFILE=".keyfile";
+$KEYNAME="\\w+";
+
+# if no keyfile is found, we'll need to create it and populate it with data
+# from /dev/random. This function returns the text taht should go into the 
+# new keyfile. We store the key in a hex-form.
+sub generateKey {
+    print STDERR "Generating default TinySec Key...\n";
+    
+    $a = "\n# TinySec Keyfile. By default, the first key will be used.\n";
+    $a = $a . "# You can import other keys by appending them to the file.\n";
+    $a = $a . "\ndefault ";
+
+    open RND, "</dev/urandom" or open "</dev/urandom" or 
+        die("Couldn't open random file.");
+    read RND, $r, 16;
+    @chars = split //, $r;
+    while (@chars) {
+        $a = $a . sprintf("%02lX", (ord shift @chars));
+    }
+    return $a;
+};
+
+# Returns the binary version of the key (passed as the first arg)
+sub recoverKey {
+    $s = "";
+    @chars = split /(..)/g, shift(@_);
+    while (@chars) {
+        $a = hex shift @chars;
+        if ($a != 0 ) {
+            $s = $s . chr ($a);
+        }
+    }
+    return $s;
+}
+
+# Returns a text version of the key (passed as the key) suitable for use in c
+# programs (ie returns "0x32,0xAB, ..." when given 32AB...)
+sub splitKey {
+    $s = "";
+    $delim = "";
+    @chars = split /(..)/g, shift(@_);
+    while (@chars) {
+        $a = shift @chars;
+        if (! $a eq "" ) {
+            $s = $s . $delim . "0x" . $a ;
+            $delim = ",";
+        }
+    }
+    return $s;
+}
+
+# prints the usage string and exits
+sub usage {
+    print "usage: TinySecKey [-kf keyfile] [-kn keyname]\n";
+    print "       where \n";
+    print "         [-kf keyfile] specifies an optional keyfile (default /home/$USER/.keyfile)\n";
+    print "         [-kn keyname] specifies an optional keyname (default uses first) \n";
+    exit 1;
+}
+
+# parse the args
+while ($_ = $ARGV[0], /^-/) {
+    shift;
+    if (/^-kf/) { $KEYFILE = $ARGV[0]; shift; next;  }
+    if (/^-kn/) { $KEYNAME = $ARGV[0] ; shift; next;  }
+    usage();
+}
+
+# open the keyfile. if new, generate key data and reposition file pointer
+open KEYFILE, '+<', $KEYFILE or
+    (open KEYFILE, '+>', $KEYFILE and print KEYFILE generateKey() and
+     seek KEYFILE, 0, 0) or
+      die ("couldn't open file " . $KEYFILE);
+
+# find the matching key and print.
+while ( <KEYFILE> )  {
+    if ($_ =~ /^$KEYNAME\s+([a-fA-F0-9]+)/) {
+        $KEY = $1;
+        last;
+    }
+}
+
+print splitKey($KEY) . "\n";

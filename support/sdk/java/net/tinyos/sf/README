@@ -1,0 +1,11 @@
+Package: net.tinyos.sf
+Description: provides serial port multiplexing
+Author: Bret Hull <bwhull@uclink4.berkeley.edu>
+	David Gay <dgay@intel-research.net>
+
+This application instantiates a server which provides
+a bi-directional packet stream between a mote connected
+to the host PC and clients anywhere on the network.  For 
+more information, see "serialforwarder.pdf" in the "doc"
+directory.  
+

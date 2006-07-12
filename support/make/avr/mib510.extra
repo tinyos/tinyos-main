@@ -1,0 +1,17 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: mib510.extra,v 1.2 2006-07-12 16:59:49 scipio Exp $
+
+ifeq ($(MIB510),)
+$(error MIB510 must be defined, try "make $(TARGETS) help")
+endif
+
+PROGRAM = mib510
+PROGRAMMER_FLAGS = -dprog=mib510 -dserial=$(MIB510) --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS_MIB)
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using mib510"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --erase --upload if=$(INSTALL_SREC)
+
+program_bl: FORCE
+	@echo "    installing $(PLATFORM) bootloader using mib510"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --upload if=$(BOOTLOADER)

@@ -1,0 +1,21 @@
+README for tinyos-2.x/tos/lib/tossim
+
+This directory contains the core code for the TOSSIM TinyOS simulator.
+One characteristic of TOSSIM is that it can controlled through a
+Python script. Building simple yet efficient support for this requires 
+presenting most TOSSIM abstractions in a C++ interface, which is then
+transformed into a Python interface with the SWIG tool.
+
+This leads most TOSSIM abstractions to have three levels: C, nesC, 
+and C++. Because nesC cannot call C++ and vice versa, TOSSIM exports
+its important call points as C functions. It links simple C++ wrapper
+classes against the simulation binary. Python can then call through
+the C++ interface.
+
+The files tossim.h and tossim.c, for example, are the basic TOSSIM
+C++ classes of Mote, Tossim, and Variable. These call functions 
+in sim_tossim.c, which other parts of TOSSIM also call.
+
+The examples/ directory contains some sample Python scripts. 
+
+

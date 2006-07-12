@@ -1,0 +1,426 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.78 [en] (X11; U; Linux 2.4.7-10 i686) [Netscape]">
+   <link href="../../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
+   <title>Building a Network Topology for TOSSIM</title>
+</head>
+<body bgcolor="#F8F8FF" link="#005BB7" vlink="#005BB7">
+<div class="title">Building a Network Topology for TOSSIM</div>
+<div class="subtitle">Marco Zuniga, &lt;mzunigaz@gmail.com&gt;</div>
+
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=2 CELLPADDING=3 WIDTH="100%" hspace="4" >
+<tr BGCOLOR="#E0E0FF">
+<td WIDTH="100%"><b><nobr><font face="arial,helvetica">Introduction</font></nobr></b></td>
+</tr>
+</table>
+
+<p>The specific behavior of the wireless link depends on two 
+elements: the radio, and the environment (channel) where they are placed.
+Hence, in order to obtain better simulations, the characteristics of
+both elements should be provided. The model presented in this tutorial is part of a more 
+general link-layer model proposed by the 
+<a href="http://ceng.usc.edu/%7Eanrg/downloads.html">ANRG</a> group at USC, 
+and it is valid for static and low-dynamic environments. 
+
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=2 CELLPADDING=3 WIDTH="100%" hspace="4" >
+<tr BGCOLOR="#E0E0FF">
+<td WIDTH="100%"><b><nobr><font face="arial,helvetica">Configuration File</font></nobr></b></td>
+</tr>
+</table>
+
+<p>The configuration file contains various channel, radio and topology 
+parameters that can be modified. Any line starting with the percentage 
+symbol (%) is treated as a comment. The format of the configuration file is as follows: 
+
+<p>
+<table border="0" cellspacing="2" cellpadding="3" width="80%" hspace="4">
+  <tbody>
+    <tr bgcolor="#e0e0e0">
+		%%%%%%%%%%%%%%%%%%%%%%
+		<br>% Channel Parameters 			     
+		<br>%%%%%%%%%%%%%%%%%%%%%%
+		<br>
+		<br>PATH_LOSS_EXPONENT = 3.0;
+		<br>SHADOWING_STANDARD_DEVIATION = 4.0;
+		<br>D0 = 1.0;
+		<br>PL_D0 = 55.0;
+		<br>
+		<br>%%%%%%%%%%%%%%%%%%%%%%
+		<br>% Radio Parameters 			     
+		<br>%%%%%%%%%%%%%%%%%%%%%%
+		<br>
+		<br>NOISE_FLOOR = -105.0;
+		<br>
+		<br>S11 = 3.7;
+		<br>S12 = -3.3;
+		<br>S21 = -3.3;
+		<br>S22 = 6.0;
+		<br>
+		<br>WHITE_GAUSSIAN_NOISE = 4;
+		<br>
+		<br>%%%%%%%%%%%%%%%%%%%%%%
+		<br>% Topology Parameters 			     
+		<br>%%%%%%%%%%%%%%%%%%%%%%
+		<br>% available topologies :
+		<br>%	- GRID		(1)
+		<br>%	- UNIFORM	(2)
+		<br>%	- RANDOM	(3)
+		<br>%	- FILE		(4)
+		<br>
+		<br>TOPOLOGY = 1;
+		<br>GRID_UNIT = 1.0;
+		<br>TOPOLOGY_FILE = topologyFile;
+		<br>
+		<br>NUMBER_OF_NODES = 9;
+		<br>
+		<br>TERRAIN_DIMENSIONS_X = 20.0;
+		<br>TERRAIN_DIMENSIONS_Y = 20.0;
+    </tr>
+  </tbody>
+</table>
+
+<p> A sample file (<tt>configurationFile</tt>) is provided as the default configuration file. 
+The next sections explain the different channel, radio and deployment parameters.
+
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=2 CELLPADDING=3 WIDTH="100%" hspace="4" >
+<tr BGCOLOR="#E0E0FF">
+<td WIDTH="100%"><b><nobr><font face="arial,helvetica">
+Channel Parameters</font></nobr></b></td>
+</tr>
+</table>
+
+<p>When a radio signal propagates it may be diffracted, reflected and scattered. These 
+events have two important consequences on 
+the signal strength. First, the signal strength decays exponentially with respect to 
+distance. And second, for a given distance the signal strength is random and 
+log-normally distributed.
+
+<p>The channel is modeled using the log-normal path loss model. This model has the 
+following parameters:
+<p>
+<li>
+PATH_LOSS_EXPONENT : rate at which signal decays.
+<li>
+SHADOWING_STANDARD_DEVIATION : randomness of received signal due to multipath.
+<li>
+D0 : reference distance (usually 1 meter). D0 also determines the minimum distance
+allowed between any pair of nodes.
+<li>
+PL_D0 : power decay in dB for the reference distance D0. 
+
+
+<p>
+Channel parameters for some scenarios with D0 = 1m are presented in the following table:
+
+<p>
+<center>
+<table border="0" cellspacing="2" cellpadding="3" width="80%" hspace="4">
+  <tbody>
+    <tr bgcolor="#e0e0e0"><th><th>PL_D0 (dB) <th>PATH_LOSS_EXPONENT<th>SHADOWING_STANDARD_DEVIATION (dB)</tr>
+	<tr bgcolor="#e0e0e0"><th>Football Field<th> 55.4 <th> 4.7 <th> 3.2 </tr>
+    <tr bgcolor="#e0e0e0"><th>Aisle of Building<th> 52.1 <th> 3.3 <th> 5.5 </tr>
+  </tbody>
+</table>
+</center>
+
+<p> In <a href="http://ieeexplore.ieee.org/iel5/6314/16884/00778120.pdf?arnumber=778120">
+"Near-ground wideband channel measurements"</a>, the authors present channel parameters for several scenarios.
+Usually, the PATH_LOSS_EXPONENT and the SHADOWING_STANDARD_DEVIATION take values between 2 and 6 for scenarios
+with LOS (line-of-sight) conditions.
+
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=2 CELLPADDING=3 WIDTH="100%" hspace="4" >
+<tr BGCOLOR="#E0E0FF">
+<td WIDTH="100%"><b><nobr><font face="arial,helvetica">
+Radio Parameters</font></nobr></b></td>
+</tr>
+</table>
+
+<p>Another important effect to be considered is link asymmetry. Link
+asymmetry have a static and a dynamic component. The dynamic component
+is due to thermal noise, which leads to a dynamic variation of a 
+node's noise floor readings at runtime.  This dynamic variation 
+is usually modeled as a gaussian random variable with mean 0 and 
+a standard deviation given by the parameter:
+
+<p>
+<li>
+WHITE_GAUSSIAN_NOISE : standard deviation of additive white gaussian noise.
+
+<p>The static component is caused by hardware variance (variance in the 
+output power and baseline noise floor across nodes). 
+When a user sets the output power of a node to a value P, the actual output 
+power can be below or above P; similarly, the baseline noise floor of the radio
+is not fixed and has some variance around its mean value. Also, there
+might be some correlation between the variances of the output power and noise 
+floor, for example, mica2 motes show that nodes with an output power higher than
+the set value ("better transmitters") usually have a lower noise floor ("better
+receivers"), and viceversa.
+
+<p>Hardware variance can be modeled as a multidimensional Gaussian process, where
+a covariance matrix captures the variances of the output power, the noise floor,
+and their correlation. In this process, the baseline (average) noise floor in dBm is given by:
+
+<p>
+<li>
+NOISE_FLOOR : radio noise floor in dBm.
+
+
+<p>And the variances of the output power and noise floor on a per node basis are given by
+the covariance matrix S = [S11 S12; S21 S22] :
+
+<p>
+<li>
+S11 : variance of noise floor
+<li>
+S12 : covariance between noise floor and output power (captures correlation)
+<li>
+S21 : equal to S12
+<li>
+S22 : variance of output power
+
+<p>
+All the variances (elements of S) should be in dB. The values of the covariance 
+matrix are hardware dependent (default values are given for MICA2 motes), but 
+in general the smaller S11 and S22, the lower the impact on link asymmetry. 
+S12 and S21 are usually negative, and it is important to recall the properties
+of a covariance matrix (linear algebra), where the absolute values of S21 
+(and S12) should be less than sqrt(S11xS22), 
+i.e. |S21| < sqrt(S11xS22). In case symmetric links are desired, the user 
+should set S11 and S22 to 0.
+
+<p>
+Finally, it is important to mention that hardware measurements are required to obtain the
+radio parameters described above. 
+However, the user can modify some of these parameters to study their impact on different protocols. As 
+a general guideline we suggest not to increase the hardware variance too much (mica2 motes have been 
+observed to have the highest levels of asymmetry). The next table presents some suggested 
+values for radio parameters:
+
+<p>
+<center>
+<table border="0" cellspacing="2" cellpadding="3" width="60%" hspace="4">
+  <tbody>
+    <tr bgcolor="#e0e0e0"><th><th>SUGGESTED VALUES</tr>
+    <tr bgcolor="#e0e0e0"><th>NOISE_FLOOR<th> between -110 dBm and -104 dBm </tr>
+    <tr bgcolor="#e0e0e0"><th>S = [S11 S12; S21 S22]<th> [3.7 -3.3; -3.3 6.0] for high asymmetry levels
+														<br>[0.9 -0.7; -0.7 1.2] for low asymmetry levels</tr>
+														<br>[0 x; x 0] for symmetric links (x represents any number)</tr>
+    <tr bgcolor="#e0e0e0"><th>WHITE_GAUSSIAN_NOISE<th> between 4 dB and 5 dB </tr>
+  </tbody>
+</table>
+</center>
+
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=2 CELLPADDING=3 WIDTH="100%" hspace="4" >
+<tr BGCOLOR="#E0E0FF">
+<td WIDTH="100%"><b><nobr><font face="arial,helvetica">
+Topology Parameters</font></nobr></b></td>
+</tr>
+</table>
+
+<p>
+The TOPOLOGY parameter allows to test different deployments (described below). Each 
+one of these deployments have a number identifying it, which should be assigned to the
+variable TOPOLOGY. The available type of deployments are:
+
+<p>
+<li>
+GRID (1): nodes are placed on a square grid topology. The number of nodes has to be a square of an integer.
+<li>  
+UNIFORM (2): based on the number of nodes (square of an integer), the physical 
+terrain is divided into a number of cells. Within each cell, a node is placed randomly. This topology
+can be observed as a GRID with variations.
+<li>
+RANDOM (3): nodes are placed randomly within the physical terrain.
+<li> 
+FILE (4): position of nodes is read from a user-defined topology file. 
+
+<p> For example, if a RANDOM deployment is desired, the parameter TOPOLOGY should be set to 3 
+(TOPOLOGY = 3;). When a user desires to specify the topology, TOPOLOGY should be set to 4, and
+the format of the deployment file provided by the user should be:
+
+<p>
+<tt>
+nodeid Xcoordinate Ycoordinate
+</tt>
+
+<p>
+Where the X and Y coordinates should be in meters, and the <tt>nodeid</tt> should start with 0.
+A topology file looks like:
+
+<p>
+<center>
+<table border="0" cellspacing="2" cellpadding="3" width="80%" hspace="4">
+  <tbody>
+    <tr bgcolor="#e0e0e0">
+	0  1.0 2.7
+	<br> 1  3.0 5.6
+	<br> 2  5.2 7.8
+    </tr>
+  </tbody>
+</table>
+</center>
+
+
+<p>
+A sample topology file is provided in <tt>topologyFile</tt>. Other topology parameters are:
+
+<p>
+<li>
+NUMBER_OF_NODES : for grid and uniform topologies should be a perfect square, 
+and it is not required when the topology is given by user (TOPOLOGY = 4;).
+<li>
+TERRAIN_DIMENSIONS_X : required only for uniform and random topologies.
+<li>
+TERRAIN_DIMENSIONS_Y : required only for uniform and random topologies. Also, for uniform topologies 
+TERRAIN_DIMENSIONS_Y should be equal to TERRAIN_DIMENSIONS_X.
+<li>
+GRID_UNIT : internode distance of the grid, required only for grid topologies.
+<li>
+TOPOLOGY_FILE : name of topology file provided by user, required only for FILE topologies (TOPOLOGY = 4;).
+
+<p>
+Please recall that no pair of nodes can be closer than D0. Hence,
+GRID_UNIT should be greater equal than D0 when GRID topologies are chosen (TOPOLOGY = 1;)
+, and the TOPOLOGY_FILE provided 
+by the user should not violate this constraint either. For UNIFORM and RANDOM
+topologies the node density (NUMBER_OF_NODES / area) is not allowed 
+to be higher than 0.5 nodes / D0^2.
+
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=2 CELLPADDING=3 WIDTH="100%" hspace="4" >
+<tr BGCOLOR="#E0E0FF">
+<td WIDTH="100%"><b><nobr><font face="arial,helvetica">
+Sample Configuration Files</font></nobr></b></td>
+</tr>
+</table>
+
+Now, we provide some sample configuration files.
+
+<p>Example 1: A chain topology defined by the user on file <tt>chainTopo</tt>, placed in
+the aisle of a building (channel parameters), with nodes having an average noise floor
+of -106 dBm, a standard deviation of 4.5 dB for the white gaussian noise and a high level
+of asymmetry. The resulting configuration file is:
+
+<p>
+<table border="0" cellspacing="2" cellpadding="3" width="80%" hspace="4">
+  <tbody>
+    <tr bgcolor="#e0e0e0">
+		PATH_LOSS_EXPONENT = 3.3;
+		<br>SHADOWING_STANDARD_DEVIATION = 5.5;
+		<br>D0 = 1.0;
+		<br>PL_D0 = 52.1;
+		<br>
+		<br>NOISE_FLOOR = -106.0;
+		<br>S11 = 3.7;
+		<br>S12 = -3.3;
+		<br>S21 = -3.3;
+		<br>S22 = 6.0;
+		<br>WHITE_GAUSSIAN_NOISE = 4;
+		<br>
+		<br>TOPOLOGY = 4;
+		<br>TOPOLOGY_FILE = chainTopo;
+    </tr>
+  </tbody>
+</table>
+
+<p>Example 2: A uniform topology with 49 nodes in a 100m by 100m terrain, placed in
+a football field (channel parameters), with nodes having an average noise floor
+of -105 dBm, a standard deviation of 4.0 dB for the white gaussian noise and a low level
+of asymmetry. The resulting configuration file is:
+
+<p>
+<table border="0" cellspacing="2" cellpadding="3" width="80%" hspace="4">
+  <tbody>
+    <tr bgcolor="#e0e0e0">
+		PATH_LOSS_EXPONENT = 4.7;
+		<br>SHADOWING_STANDARD_DEVIATION = 3.2;
+		<br>D0 = 1.0;
+		<br>PL_D0 = 55.4;
+		<br>
+		<br>NOISE_FLOOR = -105.0;
+		<br>S11 = 0.9;
+		<br>S12 = -0.7;
+		<br>S21 = -0.7;
+		<br>S22 = 1.2;
+		<br>WHITE_GAUSSIAN_NOISE = 4;
+		<br>
+		<br>TOPOLOGY = 2;
+		<br>NUMBER_OF_NODES = 49;
+		<br>TERRAIN_DIMENSIONS_X = 100.0;
+		<br>TERRAIN_DIMENSIONS_Y = 100.0;
+    </tr>
+  </tbody>
+</table>
+
+<p>Example 3: similar to example 2, however in this case a 64 node grid topology is deployed
+with an internode distance of 2m and symmetric links are assumed. The resulting configuration file is:
+
+<p>
+<table border="0" cellspacing="2" cellpadding="3" width="80%" hspace="4">
+  <tbody>
+    <tr bgcolor="#e0e0e0">
+		PATH_LOSS_EXPONENT = 4.7;
+		<br>SHADOWING_STANDARD_DEVIATION = 3.2;
+		<br>D0 = 1.0;
+		<br>PL_D0 = 55.4;
+		<br>
+		<br>NOISE_FLOOR = -105.0;
+		<br>S11 = 0;
+		<br>S22 = 0;
+		<br>WHITE_GAUSSIAN_NOISE = 4;
+		<br>
+		<br>TOPOLOGY = 1;
+		<br>GRID_UNIT = 2.0;
+		<br>NUMBER_OF_NODES = 64;
+    </tr>
+  </tbody>
+</table>
+
+<br>&nbsp;
+<table BORDER=0 CELLSPACING=2 CELLPADDING=3 WIDTH="100%" hspace="4" >
+<tr BGCOLOR="#E0E0FF">
+<td WIDTH="100%"><b><nobr><font face="arial,helvetica">
+Usage</font></nobr></b></td>
+</tr>
+</table>
+
+
+<p>To use the model just provide the following commands
+<p><tt>$ javac LinkLayerModel.java</tt>
+<p><tt>$ java LinkLayerModel configurationFileName</tt>
+<p>The link gains will be written in a file called <tt>linkgain.out</tt>, which contains
+the gain for each link and the noise floor for each node 
+(format: &nbsp "gain" &nbsp src &nbsp dest &nbsp linkgain | &nbsp "noise" &nbsp nid &nbsp nf &nbsp awgn), for example:
+
+<p>
+<center>
+<table border="0" cellspacing="2" cellpadding="3" width="80%" hspace="4">
+  <tbody>
+    <tr bgcolor="#e0e0e0">
+	gain 1  2 -58.3
+	<br>gain 2  1 -60.5
+	<br>gain 1  3 -72.8
+	<br>gain 3  1 -75.3
+	<br>gain 2  3 -77.9
+	<br>gain 3  2 -75.4
+	<br>noise 1 -107.3 5
+	<br>noise 2 -105.2 5
+	<br>noise 3 -103.1 5
+    </tr>
+  </tbody>
+</table>
+</center>
+
+
+and the topology will be written in the file <tt>topology.out</tt> (format: &nbsp nodeid &nbsp xcoor &nbsp ycoor).
+
+</body>
+</html>
+

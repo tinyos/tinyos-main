@@ -1,0 +1,18 @@
+.TH tos-channelgen 1 "Feb 3, 2006"
+.LO 1
+.SH NAME
+
+tos-channelgen - Calculate valid CC1000 radio channels
+.SH SYNOPSIS
+
+\fBtos-channelgen\fR [\fB-p\fR] \fIfrequency\fR
+.SH DESCRIPTION
+
+\fBtos-channelgen\fR computes the CC1000 channel which is closest to the
+requested \fIfrequency\fR. With the \fB-p\fR option, \fBtos-channelgen\fR
+prints a table (suitable for use in a C initialiser) containing all the
+CC1000 settings for the channel.
+.SH EXAMPLES
+
+  tos-channelgen 916000000
+  tos-channelgen -p 433000000

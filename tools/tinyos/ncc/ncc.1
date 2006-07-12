@@ -1,0 +1,154 @@
+.TH ncc 1 "April 27, 2004"
+.LO 1
+.SH NAME
+ncc - nesC compiler for TinyOS
+.SH SYNOPSIS
+
+\fBncc\fR [\fB-target=\fIpc|mica|mica2|mica2dot|...\fR] [\fB-tossim\fR]
+    [\fB-board=\fImicasb|basicsb|micawb|...\fR]
+    [\fB-tosdir=\fIdir\fR] [\fB-nostdinc\fR] 
+    [\fB--version\fR] [\fB-print-tosdir\fR] [\fB-print-platforms\fR] [\fB-print-target\fR]
+    [any nescc option] [any gcc option] \fIfiles\fR...
+.SH DESCRIPTION
+
+\fBncc\fR is an extension to \fBnescc\fR that knows how to compile nesC
+applications for a TinyOS environment. If invoked on regular C files, it
+behaves like \fBgcc\fR. When invoked on a nesC component or
+interface (\fB.nc\fR extension) file it compiles and links (except if the
+usual \fB-c\fR, \fB-S\fR, \fB-E\fR or \fB-fsyntax-only\fR options are used)
+that component with the other files specified on the command line.
+
+\fBncc\fR just invokes \fBnescc\fR with extra options based on the 
+selected platform and sensorboard(s). And \fBnescc\fR itself just
+invokes \fBgcc\fR. Thus, for a full understanding of possible \fBncc\fR
+options you should read the \fBnescc\fR and \fBgcc\fR man pages.
+.SH OPTIONS
+
+\fBncc\fR accepts all \fBgcc\fR and \fBnescc\fR options, and some additional 
+TinyOS specific options:
+.TP
+\fB-target=\fIX\fR 
+Specify the target architecture for this compilation. If \fB-tossim\fR is
+also specified, the compilation uses the tossim environment and produces a
+locally executable file. The default target is specified in the
+\fB.default-platform\fR file in your TinyOS directory (see \fB-tosdir\fR
+option), and defaults to \fBmica\fR if that file is absent. A platform that 
+is not in the TinyOS distribution can be used
+if its directory is specified with an explicit -I directive (the platform
+name is taken from the directory's name, platform directories are
+recognised by the presence of a \fB.platform\fR file).
+.TP
+\fB-tosdir=\fIdir\fR 
+Specify the location of TinyOS. This location can also be specified with
+the \fBTOSDIR\fR environment variable. If the variable and the option are both
+given, \fBncc\fR uses the value specified with the option. If neither the
+environment variable or option are specified, ncc uses its compiled-in
+TinyOS directory.
+.TP
+\fB-tossim\fR
+Compile for the TOSSIM environment rather than a native platform. Every
+directory in the search path will be duplicated, with the first copy having
+\fB/sim\fR appended to it.
+.TP
+\fB-print-tosdir\fR
+Print the TinyOS directory to be used and exit, taking into account the
+\fB-tosdir\fR option and \fBTOSDIR\fR environment variable. No compilation
+occurs when \fB-print-tosdir\fR is used.
+.TP
+\fB-print-platforms\fR
+Print the valid TinyOS platforms, including those made available by
+explicit \fB-I\fR directives (see \fB-target\fR option).
+.TP
+\fB-print-target\fR
+Print the name of the selected target. Most useful when \fB-target\fR is not
+specified.
+.TP
+\fB-nostdinc\fR
+Do not automatically include the TinyOS directories in the search path. See
+the discussion of search paths below for more details.
+.TP
+\fB-board=\fIY\fR
+Specify one (or more) sensor boards. This effects the search path and
+preprocessor symbols. The set of boards is set by the TinyOS distribution
+(see the \fBtos/sensorboards\fR directory). As with targets, a sensorboard
+directory can be made available via an explicit \fB-I\fR directive
+(sensorboard directories are recognised by the presence of a \fB.sensor\fR
+file).
+.TP
+\fB--version\fR
+Print the version of \fBncc\fR, \fBnescc\fR and of the gcc compiler
+used for the selected target.
+.SH EXAMPLES
+
+If you wish to compile a component Bar.nc to a C file, you can do:
+.IP
+ncc -c -o /dev/null -fnesc-cfile=Bar.c Bar.nc
+.SH SEARCH PATH
+
+\fBncc\fR performs the following substitutions on the directories specified
+with the \fB-I\fR option: \fB%T\fR is replaced by the TinyOS directory,
+\fB%p\fR is replaced by the selected target, \fB%%\fR is replaced by
+\fB%\fR.
+
+Except when \fB-nostdinc\fR is specified, the search path for nesC
+components is as follows, where \fItosdir\fR is the TinyOS directory
+requested and \fItarget\fR is the selected target:
+.IP *
+The current directory
+.IP *
+\fB-I\fR directives (in option order)
+.IP *
+%T/sensorboards/\fIboardname\fR, for each
+\fB-board=\fIboardname\fR option specified (in option order) -
+except if the sensorboard was found via an explicit -I directive
+.IP *
+%T/platform/%p  - except if the platform was found via an
+explicit -I directive
+.IP *
+Additional directories requested by the selected target (e.g.,
+%T/platform/avrmote for the mica target)
+.IP *
+%T/interfaces
+.IP *
+%T/system
+.IP *
+%T/lib
+.IP *
+\fBNESCPATH\fR environment variable directories (note that %T and %p
+subsitution is not performed on these directories).
+.PP
+When \fB-nostdinc\fR is specified, the search path is simply:
+.IP *
+The current directory
+.IP *
+\fB-I\fR directives
+.IP *
+\fBNESCPATH\fR environment variable directories
+.SH PREPROCESSOR SYMBOLS
+
+In addition to the preprocessor symbols defined by \fBgcc\fR and
+\fBnescc\fR, \fBncc\fR defines:
+.TP
+\fBPLATFORM_\fItarget\fR 
+where \fItarget\fR is the selected target name, converted to upper case
+.TP
+\fBBOARD_\fIboardname\fR 
+for each \fB-board=\fIboardname\fR option (the
+boardname is converted to upper case)
+.SH ENVIRONMENT VARIABLES
+
+.TP
+.B TOSDIR
+If the \fB-tosdir=\fIdir\fR option is not used, the \fBTOSDIR\fR
+environment variable specifies the location of TinyOS.
+.SH SEE ALSO
+
+.IR gcc (1),
+platform-specific gcc,
+.IR nescc (1)
+.SH NOTES
+
+\fBncc\fR is built over \fBnescc\fR, which handles the non-TinyOS-specific
+functionality of \fBncc\fR. Users of nesC in a non-TinyOS context may
+prefer to use \fBnescc\fR (see the source code of ncc and nescc for
+details).

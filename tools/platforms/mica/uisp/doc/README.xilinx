@@ -1,0 +1,12 @@
+I've made a quick hack to support Xilinx HW-JTAG-PC cable.
+Connection is as follows:
+
+TCK --> SCK
+TDO --> MISO
+TDI --> MOSI
+TMS --> RESET#
+
+--
+Tetsuya Okada  <okayan@c-creators.co.jp>
+Computer Creators, Inc.
+

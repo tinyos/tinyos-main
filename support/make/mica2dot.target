@@ -1,0 +1,14 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: mica2dot.target,v 1.2 2006-07-12 16:59:47 scipio Exp $
+
+PLATFORM = mica2dot
+PROGRAMMER_PART ?= -dpart=ATmega128 --wr_fuse_e=ff
+PFLAGS += -finline-limit=100000
+
+AVR_FUSE_H ?= 0xd9
+
+$(call TOSMake_include_platform,avr)
+
+mica2dot: $(BUILD_DEPS)
+	@:
+
