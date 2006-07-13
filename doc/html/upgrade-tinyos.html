@@ -161,6 +161,16 @@ Also, if you plan on maintaining a tinyos-1.x tree
 simultaneously with a tinyos-2.x tree, the tinyos-tools installed for the
 1.x versions must remain installed so use <code>rpm -ivh</code>. If you are 
 only installing a 2.x tree, you can use <code>rpm -Uvh</code>.
+If you using the Cygwin version recommended
+in these install
+instructions, you should install the "Recommended" Windows/Cygwin
+nesC RPM. If you t
+to a Cygwin version incompatibility: try the "Other" Windows/Cygwin 
+RPM (1.2.7b). Try installing it and it does not work (e.g., you
+get strange errors when you try to execute it), this may be due
+to a Cygwin version incompatibility: try the "Other" Windows/Cygwin 
+RPM (1.2.7a). 
+
 <p>
 
 <!----- tinyos-2.x/tinyos rpms  -------->
@@ -168,13 +178,15 @@ only installing a 2.x tree, you can use <code>rpm -Uvh</code>.
 <table border="0">
 <tbody><tr>
   <td bgcolor="#dddddd"><b>Tool</b></td>
-  <td bgcolor="#dddddd"><b>Windows/Cygwin</b></td>
+  <td bgcolor="#dddddd"><b>Recommended Windows/Cygwin</b></td>
+  <td bgcolor="#dddddd"><b>Other Windows/Cygwin</b></td>
   <td bgcolor="#dddddd"><b>Linux</b></td>
   <td bgcolor="#dddddd"><b>Command</b></td>
 </tr>
 
 <tr>
   <td>NesC</td>
+  <td><a href="http://csl.stanford.edu/~pal/tinyos/nesc-1.2.7b-1.cygwin.i386.rpm">nesc-1.2.7b-1.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/windows/nesc-1.2.7a-1.cygwin.i386.rpm">nesc-1.2.7a-1.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/linux/nesc-1.2.7a-1.i386.rpm">nesc-1.2.7a-1.i386.rpm </a></td>
   <td><a href=""></a><code>rpm -Uvh</code></td>
@@ -182,6 +194,7 @@ only installing a 2.x tree, you can use <code>rpm -Uvh</code>.
 
 <tr>
   <td bgcolor="#dddddd">tinyos-tools</td>
+  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.2-1.cygwin.i386.rpm">tinyos-tools-1.2.2-1.cygwin.i386.rpm</a></td>
   <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.2-1.cygwin.i386.rpm">tinyos-tools-1.2.2-1.cygwin.i386.rpm</a></td>
   <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.2-1.i386.rpm">tinyos-tools-1.2.2-1.i386.rpm</a></td>
   <td bgcolor="#dddddd"><a href=""></a><code>rpm -ivh --force</code>&nbsp;(1.x tree)<br><code>rpm -Uvh</code>&nbsp;(no 1.x tree)<br></td>
