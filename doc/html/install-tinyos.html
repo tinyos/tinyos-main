@@ -221,19 +221,30 @@ but they have not yet been extensively tested by a large community.)
 
 The TinyOS-specific tools are the NesC compiler and a set of tools
 developed in the tinyos-2.x/tools source code repository. They are
-also installed using rpms. 
+also installed using rpms. If you using the Cygwin version recommended
+in these install
+instructions, you should install the "Recommended" Windows/Cygwin
+nesC RPM. If you t
+to a Cygwin version incompatibility: try the "Other" Windows/Cygwin 
+RPM (1.2.7b). Try installing it and it does not work (e.g., you
+get strange errors when you try to execute it), this may be due
+to a Cygwin version incompatibility: try the "Other" Windows/Cygwin 
+RPM (1.2.7a). 
+
 <!----- tinyos-2.x/tinyos rpms  -------->
 </p><p><b><em>TinyOS-specific Tools</em></b>
 <table border="0">
 <tbody><tr>
   <td bgcolor="#dddddd"><b>Tool</b></td>
-  <td bgcolor="#dddddd"><b>Windows/Cygwin</b></td>
+  <td bgcolor="#dddddd"><b>Recommended Windows/Cygwin</b></td>
+  <td bgcolor="#dddddd"><b>Other Windows/Cygwin</b></td>
   <td bgcolor="#dddddd"><b>Linux</b></td>
   <td bgcolor="#dddddd"><b>Command</b></td>
 </tr>
 
 <tr>
   <td>NesC</td>
+  <td><a href="http://csl.stanford.edu/~pal/tinyos/nesc-1.2.7b-1.cygwin.i386.rpm">nesc-1.2.7b-1.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/windows/nesc-1.2.7a-1.cygwin.i386.rpm">nesc-1.2.7a-1.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/linux/nesc-1.2.7a-1.i386.rpm">nesc-1.2.7a-1.i386.rpm </a></td>
   <td><a href=""></a><code>rpm -Uvh</code></td>
@@ -241,6 +252,7 @@ also installed using rpms.
 
 <tr>
   <td bgcolor="#dddddd">tinyos-tools</td>
+  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.2-1.cygwin.i386.rpm">tinyos-tools-1.2.2-1.cygwin.i386.rpm</a></td>
   <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.2-1.cygwin.i386.rpm">tinyos-tools-1.2.2-1.cygwin.i386.rpm</a></td>
   <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.2-1.i386.rpm">tinyos-tools-1.2.2-1.i386.rpm</a></td>
   <td bgcolor="#dddddd"><a href=""></a><code>rpm -ivh --force</code>&nbsp;(1.x tree)<br><code>rpm -Uvh</code>&nbsp;(no 1.x tree)<br></td>
