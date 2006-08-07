@@ -1,4 +1,4 @@
-/// $Id: Atm128AlarmC.nc,v 1.2 2006-07-12 17:01:28 scipio Exp $
+/// $Id: Atm128AlarmC.nc,v 1.3 2006-08-07 22:57:37 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -96,24 +96,27 @@ implementation
        Note also that casting compared quantities to timer_size produces
        predictable comparisons (the C integer promotion rules would make it
        hard to write correct code for the possible timer_size size's) */
+    /* Note: all HplAtm128Compare.set values have one subtracted, because
+       the comparisons are continuous, but the actual interrupt is signalled
+       at the next timer clock cycle. */
     if (t0 <= now)
       {
 	/* if it's in the past or the near future, fire now (i.e., test
 	   guardedExpires <= now in wrap-around arithmetic). */
 	if (guardedExpires >= t0 && // if it wraps, it's > now
 	    guardedExpires <= now) 
-	  call HplAtm128Compare.set(call HplAtm128Timer.get() + mindt);
+	  call HplAtm128Compare.set(call HplAtm128Timer.get() + mindt - 1);
 	else
-	  call HplAtm128Compare.set(expires);
+	  call HplAtm128Compare.set(expires - 1);
       }
     else
       {
 	/* again, guardedExpires <= now in wrap-around arithmetic */
 	if (guardedExpires >= t0 || // didn't wrap so < now
 	    guardedExpires <= now)
-	  call HplAtm128Compare.set(call HplAtm128Timer.get() + mindt);
+	  call HplAtm128Compare.set(call HplAtm128Timer.get() + mindt - 1);
 	else
-	  call HplAtm128Compare.set(expires);
+	  call HplAtm128Compare.set(expires - 1);
       }
     call HplAtm128Compare.reset();
     call HplAtm128Compare.start();
