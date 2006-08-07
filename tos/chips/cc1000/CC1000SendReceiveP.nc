@@ -1,4 +1,4 @@
-// $Id: CC1000SendReceiveP.nc,v 1.2 2006-07-12 17:01:33 scipio Exp $
+// $Id: CC1000SendReceiveP.nc,v 1.3 2006-08-07 21:52:53 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -484,14 +484,10 @@ implementation
   void rxData(uint8_t in) {
     uint8_t nextByte;
     cc1000_header_t *rxHeader = getHeader(rxBufPtr);
-
-    // rxLength is the offset into a message_t at which the packet
-    // data ends: it is NOT equal to the number of bytes received,
-    // as there may be padding in the message_t before the packet.
-    uint8_t rxLength = rxHeader->length + offsetof(message_t, data);
+    uint8_t rxLength = rxHeader->length;
 
     // Reject invalid length packets
-    if (rxLength > TOSH_DATA_LENGTH + offsetof(message_t, data))
+    if (rxLength > TOSH_DATA_LENGTH)
       {
 	// The packet's screwed up, so just dump it
 	enterListenState();
@@ -503,6 +499,8 @@ implementation
     nextByte = rxShiftBuf >> f.rxBitOffset;
     ((uint8_t *)rxBufPtr)[count++] = nextByte;
 
+    // Adjust rxLength to correspond to the corresponding offset in message_t
+    rxLength += offsetof(message_t, data);
     if (count <= rxLength)
       runningCrc = crcByte(runningCrc, nextByte);
 
