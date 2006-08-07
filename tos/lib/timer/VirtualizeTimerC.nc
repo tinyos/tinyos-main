@@ -1,4 +1,4 @@
-//$Id: VirtualizeTimerC.nc,v 1.2 2006-07-12 17:02:31 scipio Exp $
+//$Id: VirtualizeTimerC.nc,v 1.3 2006-08-07 22:18:21 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -60,7 +60,7 @@ implementation
 
   void executeTimers(uint32_t then)
   {
-    uint32_t min_remaining = ~(uint32_t)0;
+    int32_t min_remaining = (1UL<<31)-1; //max signed int32_t
     bool min_remaining_isset = FALSE;
     int num;
 
@@ -77,7 +77,7 @@ implementation
 	// recomputed later, anyway.
 
 	int32_t elapsed = then - timer->t0;
-	uint32_t remaining = timer->dt - elapsed;
+	int32_t remaining = timer->dt - elapsed;
 	bool compute_min_remaining = TRUE;
 
 	// If the elapsed time is negative, then t0 is in the future, so
@@ -107,7 +107,9 @@ implementation
 
 	if (compute_min_remaining && timer->isrunning)
 	{
-	  if (remaining < min_remaining)
+          if (remaining < 0)
+            min_remaining = 0;
+	  else if (remaining < min_remaining)
 	    min_remaining = remaining;
 	  min_remaining_isset = TRUE;
 	}

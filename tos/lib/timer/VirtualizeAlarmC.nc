@@ -1,4 +1,4 @@
-//$Id: VirtualizeAlarmC.nc,v 1.2 2006-07-12 17:02:31 scipio Exp $
+//$Id: VirtualizeAlarmC.nc,v 1.3 2006-08-07 22:18:21 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -44,113 +44,146 @@ implementation
     NUM_ALARMS = num_alarms,
   };
 
-  size_type m_t0[NUM_ALARMS];
-  size_type m_dt[NUM_ALARMS];
-  bool m_isset[NUM_ALARMS];
+  typedef struct {
+    size_type t0;
+    size_type dt;
+  } alarm_t;
 
-  command error_t Init.init()
-  {
+  // css 26 jul 2006: All computations with respect to the current time ("now")
+  // require that "now" is (non-strictly) monotonically increasing.  Calling
+  // setNextAlarm within Alarm.start within Alarm.fired within signalAlarms
+  // breaks this monotonicity requirements when "now" is cached at the start of
+  // the function.  Two ways around this: 1) refresh "now" each time it is
+  // used, or 2) use the is_signaling flag to prevent setNextAlarm from being
+  // called inside signalAlarms.  The latter is generally more efficient by
+  // preventing redundant calls to setNextAlarm at the expense of an extra byte
+  // of RAM, so that's what the code does now.  Update: option 2 is
+  // unacceptable because an Alarm.start could be called within some other
+  // Alarm.fired, which can break monotonicity in now.
+
+  // A struct of member variables so only one memset is called for init.
+  struct {
+    alarm_t alarm[NUM_ALARMS];
+    bool isset[NUM_ALARMS];
+    bool is_signaling;
+  } m;
+
+  command error_t Init.init() {
+    memset( &m, 0, sizeof(m) );
     return SUCCESS;
   }
 
-  void setAlarm(size_type now)
-  {
-    size_type t0 = 0;
-    size_type dt = 0;
-    bool isNotSet = TRUE;
-    uint8_t id;
+  void setNextAlarm() {
+    if( !m.is_signaling ) {
+      // css 25 jul 2006: To help prevent various problems with overflow, the
+      // elapsed time from t0 for a particular alarm is calculated as
+      // elapsed=now-t0 then dt-=elapsed and t0=now.  However, this means that
+      // now must be a monotonically increasing value with each call to
+      // setNextAlarm -- overflow in now is okay, but passing in older values of
+      // now=t0 for some arbitrary t0 is not okay, which is what the previous
+      // version of setAlarm did.
 
-    for(id=0; id<NUM_ALARMS; id++)
-    {
-      if (m_isset[id])
-      {
-        size_type elapse = now - m_t0[id];
-        if (m_dt[id] <= elapse)
-        {
-          m_t0[id] += m_dt[id];
-          m_dt[id] = 0;
-        }
-        else
-        {
-          m_t0[id] = now;
-          m_dt[id] -= elapse;
-        }
+      const size_type now = call AlarmFrom.getNow();
+      const alarm_t* pEnd = m.alarm+NUM_ALARMS;
+      bool isset = FALSE;
+      alarm_t* p = m.alarm;
+      bool* pset = m.isset;
+      size_type dt = ((size_type)0)-((size_type)1);
 
-        if (isNotSet || (m_dt[id] < dt))
-        {
-          t0 = m_t0[id];
-          dt = m_dt[id];
-          isNotSet = FALSE;
+      for( ; p!=pEnd; p++,pset++ ) {
+        if( *pset ) {
+          size_type elapsed = now - p->t0;
+          if( p->dt <= elapsed ) {
+            p->t0 += p->dt;
+            p->dt = 0;
+          }
+          else {
+            p->t0 = now;
+            p->dt -= elapsed;
+          }
+
+          if( p->dt <= dt ) {
+            dt = p->dt;
+            isset = TRUE;
+          }
         }
       }
-    }
 
-    if (isNotSet)
-      call AlarmFrom.stop();
-    else
-      call AlarmFrom.startAt(t0, dt);
+      if( isset ) {
+        // css 25 jul 2006: If dt is big, then wait half of dt.  This helps
+        // significantly reduce the chance of overflow in the elapsed calculation
+        // for the alarm.  "big" is if the most signficant bit in dt is set.
+
+        if( dt & (((size_type)1) << (8*sizeof(size_type)-1)) )
+          dt >>= 1;
+
+        call AlarmFrom.startAt( now, dt );
+      }
+      else {
+        call AlarmFrom.stop();
+      }
+    }
   }
   
-  // basic interface
-  async command void Alarm.start[uint8_t id](size_type dt)
-  {
-    call Alarm.startAt[id](call AlarmFrom.getNow(), dt);
-  }
+  void signalAlarms() {
+    uint8_t id;
 
-  async command void Alarm.stop[uint8_t id]()
-  {
-    atomic
-    {
-      m_isset[id] = FALSE;
-      setAlarm(call AlarmFrom.getNow());
-    }
-  }
+    m.is_signaling = TRUE;
 
-  async event void AlarmFrom.fired()
-  {
-    atomic
-    {
-      uint8_t id;
-      for(id=0; id<NUM_ALARMS; id++)
-      {
-        if (m_isset[id] && (m_dt[id] == 0))
-        {
-          m_isset[id] = FALSE;
+    for( id=0; id<NUM_ALARMS; id++ ) {
+      if( m.isset[id] ) {
+        size_type elapsed = call AlarmFrom.getNow() - m.alarm[id].t0;
+        if( m.alarm[id].dt <= elapsed ) {
+          m.isset[id] = FALSE;
           signal Alarm.fired[id]();
         }
       }
-      setAlarm(call AlarmFrom.getNow());
+    }
+
+    m.is_signaling = FALSE;
+  }
+
+
+  // basic interface
+  async command void Alarm.start[uint8_t id]( size_type dt ) {
+    call Alarm.startAt[id]( call AlarmFrom.getNow(), dt );
+  }
+
+  async command void Alarm.stop[uint8_t id]() {
+    atomic m.isset[id] = FALSE;
+  }
+
+  async event void AlarmFrom.fired() {
+    atomic {
+      signalAlarms();
+      setNextAlarm();
     }
   }
+
 
   // extended interface
-  async command bool Alarm.isRunning[uint8_t id]()
-  {
-    return m_isset[id];
+  async command bool Alarm.isRunning[uint8_t id]() {
+    return m.isset[id];
   }
 
-  async command void Alarm.startAt[uint8_t id](size_type t0, size_type dt)
-  {
-    atomic
-    {
-      m_t0[id] = t0;
-      m_dt[id] = dt;
-      m_isset[id] = TRUE;
-      setAlarm(t0);
+  async command void Alarm.startAt[uint8_t id]( size_type t0, size_type dt ) {
+    atomic {
+      m.alarm[id].t0 = t0;
+      m.alarm[id].dt = dt;
+      m.isset[id] = TRUE;
+      setNextAlarm();
     }
   }
 
-  async command size_type Alarm.getNow[uint8_t id]()
-  {
+  async command size_type Alarm.getNow[uint8_t id]() {
     return call AlarmFrom.getNow();
   }
 
-  async command size_type Alarm.getAlarm[uint8_t id]()
-  {
-    atomic return m_t0[id]+m_dt[id];
+  async command size_type Alarm.getAlarm[uint8_t id]() {
+    atomic return m.alarm[id].t0 + m.alarm[id].dt;
   }
 
-  default async event void Alarm.fired[uint8_t id]() { }
-
+  default async event void Alarm.fired[uint8_t id]() {
+  }
 }
 
