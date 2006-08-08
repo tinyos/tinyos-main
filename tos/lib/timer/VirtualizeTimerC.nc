@@ -1,4 +1,4 @@
-//$Id: VirtualizeTimerC.nc,v 1.4 2006-08-08 22:46:29 idgay Exp $
+//$Id: VirtualizeTimerC.nc,v 1.5 2006-08-08 23:14:34 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -124,8 +124,6 @@ implementation
       else
 	call TimerFrom.startOneShotAt(now, min_remaining - elapsed);
     }
-    if (dosleep)
-      t3 = TCNT3 - tt0;
   }
   
 
