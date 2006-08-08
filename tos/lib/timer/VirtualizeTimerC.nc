@@ -1,4 +1,4 @@
-//$Id: VirtualizeTimerC.nc,v 1.3 2006-08-07 22:18:21 idgay Exp $
+//$Id: VirtualizeTimerC.nc,v 1.4 2006-08-08 22:46:29 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -78,7 +78,6 @@ implementation
 
 	int32_t elapsed = then - timer->t0;
 	int32_t remaining = timer->dt - elapsed;
-	bool compute_min_remaining = TRUE;
 
 	// If the elapsed time is negative, then t0 is in the future, so
 	// don't process it.  This implies:
@@ -90,7 +89,6 @@ implementation
 	  if (timer->isoneshot)
 	  {
 	    timer->isrunning = FALSE;
-	    compute_min_remaining = FALSE;
 	  }
 	  else
 	  {
@@ -103,13 +101,14 @@ implementation
 	  signal Timer.fired[num]();
 	}
 
-	// check isrunning in case the timer was stopped in the fired event
-
-	if (compute_min_remaining && timer->isrunning)
+	// check isrunning in case the timer was stopped in the fired
+	// event or this was a one shot timer; note that a one shot
+	// timer that was restarted in its fired event will push us
+	// through here with remaining < 0, but we've already scheduled
+	// an executeTimers in that case
+	if (timer->isrunning)
 	{
-          if (remaining < 0)
-            min_remaining = 0;
-	  else if (remaining < min_remaining)
+	  if (remaining < min_remaining)
 	    min_remaining = remaining;
 	  min_remaining_isset = TRUE;
 	}
@@ -120,11 +119,13 @@ implementation
     {
       uint32_t now = call TimerFrom.getNow();
       uint32_t elapsed = now - then;
-      if (min_remaining <= elapsed)
+      if (min_remaining < 0 || (uint32_t)min_remaining <= elapsed)
 	post executeTimersNow();
       else
 	call TimerFrom.startOneShotAt(now, min_remaining - elapsed);
     }
+    if (dosleep)
+      t3 = TCNT3 - tt0;
   }
   
 
