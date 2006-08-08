@@ -1,4 +1,4 @@
-/* $Id: CC1000RssiP.nc,v 1.2 2006-07-12 17:01:32 scipio Exp $
+/* $Id: CC1000RssiP.nc,v 1.3 2006-08-08 20:04:07 idgay Exp $
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -47,7 +47,10 @@ module CC1000RssiP
     interface ReadNow<uint16_t> as Rssi[uint8_t reason];
     async command void cancel();
   }
-  uses interface Read<uint16_t> as ActualRssi;
+  uses {
+    interface Resource;
+    interface ReadNow<uint16_t> as ActualRssi;
+  }
 }
 implementation
 {
@@ -65,43 +68,42 @@ implementation
       currentOp = CANCELLED;
   }
 
-  void startNextOp() {
-    if (nextOp != IDLE)
-      {
-	currentOp = nextOp;
-	nextOp = IDLE;
-	call ActualRssi.read();
-      }
-    else
-      currentOp = IDLE;
-  }
-
-  task void startOpTask() {
-    atomic startNextOp();
+  event void Resource.granted() {
+    call ActualRssi.read();
   }
 
   async command error_t Rssi.read[uint8_t reason]() {
     if (currentOp == IDLE)
       {
-	nextOp = reason;
-	post startOpTask();
+	currentOp = reason;
+	if (call Resource.immediateRequest() == SUCCESS)
+	  call ActualRssi.read();
+	else
+	  call Resource.request();
       }
-    else // We should only come here with currentOp = CANCELLED
+    else
       nextOp = reason;
     return SUCCESS;
   }
 
-  event void ActualRssi.readDone(error_t result, uint16_t data) {
+  void startNextOp() {
+    currentOp = nextOp;
+    if (nextOp != IDLE)
+      {
+	nextOp = IDLE;
+	call ActualRssi.read();
+      }
+    else
+      call Resource.release();
+  }
+
+  async event void ActualRssi.readDone(error_t result, uint16_t data) {
     atomic
       {
-	uint8_t op = currentOp;
-
 	/* The code assumes that RSSI measurements are 10-bits 
 	   (legacy effect) */
-	data >>= 6;
+	signal Rssi.readDone[currentOp](result, data >> 6);
 	startNextOp();
-
-	signal Rssi.readDone[op](result, data);
       }
   }
 

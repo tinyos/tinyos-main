@@ -1,4 +1,4 @@
-// $Id: CC1000CsmaP.nc,v 1.2 2006-07-12 17:01:32 scipio Exp $
+// $Id: CC1000CsmaP.nc,v 1.3 2006-08-08 20:04:07 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -153,8 +153,8 @@ implementation
   }
 
   void radioOff() {
-    call ByteRadio.off();
     call CC1000Control.off();
+    call ByteRadio.off();
   }
 
   /* LPL preamble length and sleep time computation */
@@ -234,11 +234,13 @@ implementation
       {
       case IDLE_STATE:
 	/* Timer already running means that we have a noise floor
-	   measurement scheduled. */
+	   measurement scheduled. If we just set a new alarm here, we
+	   might indefinitely delay noise floor measurements if we're,
+	   e,g, transmitting frequently. */
 	if (!call WakeupTimer.isRunning())
 	  if (call CC1000Squelch.settled())
 	    {
-	      if (lplRxPower == 0 || f.txPending)
+	      if (lplRxPower == 0)
 		call WakeupTimer.startOneShot(CC1K_SquelchIntervalSlow);
 	      else
 		// timeout for receiving a message after an lpl check
@@ -341,6 +343,7 @@ implementation
     */
     if (data > call CC1000Squelch.get() - (call CC1000Squelch.get() >> 2))
       {
+	post sleepCheck();
 	// don't be too agressive (ignore really quiet thresholds).
 	if (data < call CC1000Squelch.get() + (call CC1000Squelch.get() >> 3))
 	  {
@@ -348,7 +351,6 @@ implementation
 	    rssiForSquelch = data;
 	    post adjustSquelch();
 	  }
-	post sleepCheck();
       }
     else if (count++ > 5)
       {
