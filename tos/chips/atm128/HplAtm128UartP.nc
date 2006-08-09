@@ -1,4 +1,4 @@
-/// $Id: HplAtm128UartP.nc,v 1.2 2006-07-12 17:01:12 scipio Exp $
+/// $Id: HplAtm128UartP.nc,v 1.3 2006-08-09 22:43:20 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -44,7 +44,10 @@ module HplAtm128UartP
     interface StdControl as Uart1RxControl;
     interface SerialByteComm as Uart1;
   }
-  uses interface Atm128Calibrate;
+  uses {
+    interface Atm128Calibrate;
+    interface McuPowerState;
+  }
 }
 implementation
 {
@@ -75,6 +78,7 @@ implementation
     ctrl.bits.txcie = 1;
     ctrl.bits.txen  = 1;
     UCSR0B = ctrl.flat;
+    call McuPowerState.update();
     return SUCCESS;
   }
 
@@ -84,6 +88,7 @@ implementation
     ctrl.bits.txcie = 0;
     ctrl.bits.txen  = 0;
     UCSR0B = ctrl.flat;
+    call McuPowerState.update();
     return SUCCESS;
   }
 
@@ -93,6 +98,7 @@ implementation
     ctrl.bits.rxcie = 1;
     ctrl.bits.rxen  = 1;
     UCSR0B = ctrl.flat;
+    call McuPowerState.update();
     return SUCCESS;
   }
 
@@ -102,6 +108,7 @@ implementation
     ctrl.bits.rxcie = 0;
     ctrl.bits.rxen  = 0;
     UCSR0B = ctrl.flat;
+    call McuPowerState.update();
     return SUCCESS;
   }
 
@@ -132,6 +139,7 @@ implementation
     ctrl.bits.txcie = 1;
     ctrl.bits.txen  = 1;
     UCSR1B = ctrl.flat;
+    call McuPowerState.update();
     return SUCCESS;
   }
 
@@ -141,6 +149,7 @@ implementation
     ctrl.bits.txcie = 0;
     ctrl.bits.txen  = 0;
     UCSR1B = ctrl.flat;
+    call McuPowerState.update();
     return SUCCESS;
   }
 
@@ -150,6 +159,7 @@ implementation
     ctrl.bits.rxcie = 1;
     ctrl.bits.rxen  = 1;
     UCSR1B = ctrl.flat;
+    call McuPowerState.update();
     return SUCCESS;
   }
 
@@ -159,6 +169,7 @@ implementation
     ctrl.bits.rxcie = 0;
     ctrl.bits.rxen  = 0;
     UCSR1B = ctrl.flat;
+    call McuPowerState.update();
     return SUCCESS;
   }
 

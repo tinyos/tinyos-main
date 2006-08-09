@@ -1,4 +1,4 @@
-/// $Id: HplAtm128UartC.nc,v 1.2 2006-07-12 17:01:12 scipio Exp $
+/// $Id: HplAtm128UartC.nc,v 1.3 2006-08-09 22:43:20 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -48,7 +48,7 @@ configuration HplAtm128UartC
 }
 implementation
 {
-  components HplAtm128UartP, PlatformC;
+  components HplAtm128UartP, PlatformC, McuSleepC;
 
   Uart0Init = HplAtm128UartP.Uart0Init;
   Uart0TxControl = HplAtm128UartP.Uart0TxControl;
@@ -61,4 +61,5 @@ implementation
   Uart1 = HplAtm128UartP.Uart1;
 
   HplAtm128UartP.Atm128Calibrate -> PlatformC;
+  HplAtm128UartP.McuPowerState -> McuSleepC;
 }
