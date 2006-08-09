@@ -1,4 +1,4 @@
-// $Id: Atm128Power.h,v 1.2 2006-07-12 17:01:12 scipio Exp $
+// $Id: Atm128Power.h,v 1.3 2006-08-09 22:43:00 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -28,16 +28,6 @@
 #define _H_Atm128Power_h
 
 //================== ATmega128 Power Management ==========================
-
-/* Sleep modes */
-enum {
-  ATM128_SLEEP_IDLE = 0, 
-  ATM128_SLEEP_ADC,
-  ATM128_SLEEP_POWER_DOWN,
-  ATM128_SLEEP_POWER_SAVE,
-  ATM128_SLEEP_STANDBY = 3,             //!< enable standby bit (sm2)
-  ATM128_SLEEP_EXTENDED_STANDBY = 4,    //!< enable standby bit (sm2)
-};
 
 /* MCU Control Register */
 typedef struct
