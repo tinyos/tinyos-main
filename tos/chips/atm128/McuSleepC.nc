@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.2 2006-07-12 17:01:13 scipio Exp $
+/// $Id: McuSleepC.nc,v 1.3 2006-08-09 22:43:38 idgay Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -29,7 +29,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.2 2006-07-12 17:01:13 scipio Exp $
+ *  $Id: McuSleepC.nc,v 1.3 2006-08-09 22:43:38 idgay Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -53,15 +53,15 @@ implementation {
   /* Note that the power values are maintained in an order
    * based on their active components, NOT on their values.
    * Look at atm128hardware.h and page 42 of the ATmeg128
-   * manual (figure 17).*/
+   * manual (table 17).*/
   const_uint8_t atm128PowerBits[ATM128_POWER_DOWN + 1] = {
-    0,
-    (1 << SM0),
-    (1 << SM2) | (1 << SM1) | (1 << SM0),
-    (1 << SM1) | (1 << SM0),
-    (1 << SM2) | (1 << SM1),
-    (1 << SM1)};
-    
+    0,				/* idle */
+    (1 << SM0),			/* adc */
+    (1 << SM2) | (1 << SM1) | (1 << SM0), /* ext standby */
+    (1 << SM1) | (1 << SM0),	/* power save */
+    (1 << SM2) | (1 << SM1),	/* standby */
+    (1 << SM1)};		/* power down */
+
   mcu_power_t getPowerState() {
     uint8_t diff;
     // Note: we go to sleep even if timer 1, 2, or 3's overflow interrupt
