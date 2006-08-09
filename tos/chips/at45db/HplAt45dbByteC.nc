@@ -204,11 +204,13 @@ implementation
       {
 	bool cstatus = call HplAt45dbByte.getCompareStatus();
 	call HplAt45dbByte.deselect();
+	call Resource.release();
 	signal HplAt45db.waitCompareDone(cstatus);
       }
     else
       {
 	call HplAt45dbByte.deselect();
+	call Resource.release();
 	signal HplAt45db.waitIdleDone();
       }
   }
