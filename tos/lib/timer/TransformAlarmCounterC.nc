@@ -1,4 +1,4 @@
-//$Id: TransformAlarmCounterC.nc,v 1.2 2006-07-12 17:02:31 scipio Exp $
+//$Id: TransformAlarmCounterC.nc,v 1.3 2006-08-10 00:05:25 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -168,7 +168,7 @@ implementation
 
   async command bool Alarm.isRunning()
   {
-    return call AlarmFrom.isRunning();
+    atomic return call AlarmFrom.isRunning() || m_skip_overflows;
   }
 
   async command void Alarm.stop()
@@ -261,6 +261,7 @@ implementation
   default async event void Alarm.fired()
   {
   }
+
   default async event void Counter.overflow()
   {
   }
