@@ -1,4 +1,4 @@
-/// $Id: HplAtm128Timer0AsyncC.nc,v 1.2 2006-07-12 17:01:30 scipio Exp $
+/// $Id: HplAtm128Timer0AsyncC.nc,v 1.3 2006-08-10 00:00:59 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -46,8 +46,6 @@ module HplAtm128Timer0AsyncC
 }
 implementation
 {
-  bool inOverflow;
-
   command error_t Init.init() {
     SET_BIT(ASSR, AS0);  // set Timer/Counter0 to asynchronous mode
     return SUCCESS;
@@ -162,15 +160,12 @@ implementation
   default async event void Compare.fired() { }
   AVR_ATOMIC_HANDLER(SIG_OUTPUT_COMPARE0) {
     stabiliseTimer0();
-    __nesc_enable_interrupt();
     signal Compare.fired();
   }
 
   default async event void Timer.overflow() { }
   AVR_ATOMIC_HANDLER(SIG_OVERFLOW0) {
     stabiliseTimer0();
-    inOverflow = TRUE;
     signal Timer.overflow();
-    inOverflow = FALSE;
   }
 }
