@@ -1,4 +1,4 @@
-//$Id: VirtualizeTimerC.nc,v 1.5 2006-08-08 23:14:34 idgay Exp $
+//$Id: VirtualizeTimerC.nc,v 1.6 2006-08-10 00:11:41 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -56,6 +56,13 @@ implementation
 
   Timer_t m_timers[NUM_TIMERS];
 
+  enum {
+    /* bitmask */
+    S_TIMER_RUNNING = 1,
+    S_TIMER_CHANGED = 2
+  };
+  bool state;
+
   task void executeTimersNow();
 
   void executeTimers(uint32_t then)
@@ -63,6 +70,9 @@ implementation
     int32_t min_remaining = (1UL<<31)-1; //max signed int32_t
     bool min_remaining_isset = FALSE;
     int num;
+
+    /* We always come here with the timer stopped */
+    state = 0;
 
     for(num=0; num<NUM_TIMERS; num++)
     {
@@ -76,15 +86,10 @@ implementation
 	// start commands post executeTimersNow, so the timer will be
 	// recomputed later, anyway.
 
-	int32_t elapsed = then - timer->t0;
+	uint32_t elapsed = then - timer->t0;
 	int32_t remaining = timer->dt - elapsed;
 
-	// If the elapsed time is negative, then t0 is in the future, so
-	// don't process it.  This implies:
-	//   1) t0 in the future is okay
-	//   2) dt can be at most maxval(uint32_t)/2
-
-	if ((elapsed >= 0) && (timer->dt <= (uint32_t)elapsed))
+	if (remaining <= 0)
 	{
 	  if (timer->isoneshot)
 	  {
@@ -104,8 +109,9 @@ implementation
 	// check isrunning in case the timer was stopped in the fired
 	// event or this was a one shot timer; note that a one shot
 	// timer that was restarted in its fired event will push us
-	// through here with remaining < 0, but we've already scheduled
-	// an executeTimers in that case
+	// through here with remaining <= 0, but we're already scheduled
+	// an executeTimersTask in that case (and suppressed setting
+	// TimerFrom)
 	if (timer->isrunning)
 	{
 	  if (remaining < min_remaining)
@@ -115,14 +121,15 @@ implementation
       }
     }
 
-    if (min_remaining_isset)
+    if (!(state & S_TIMER_CHANGED) && min_remaining_isset)
     {
-      uint32_t now = call TimerFrom.getNow();
-      uint32_t elapsed = now - then;
-      if (min_remaining < 0 || (uint32_t)min_remaining <= elapsed)
+      if (min_remaining <= 0)
 	post executeTimersNow();
       else
-	call TimerFrom.startOneShotAt(now, min_remaining - elapsed);
+	{
+	  call TimerFrom.startOneShotAt(then, min_remaining);
+	  state |= S_TIMER_RUNNING;
+	}
     }
   }
   
@@ -134,7 +141,25 @@ implementation
 
   task void executeTimersNow()
   {
-    call TimerFrom.stop();
+    /* If we set a timer, try and stop it. But if it believes it's
+       not running, that means that the execution of its fired event
+       is pending, so we:
+       - don't need to call executeTimers (it will happen soon)
+       - we must not call executeTimers, because that would change the
+         timer's setting, confusing the pending call to TimerFrom.fired
+	 (it would call executeTimers with an incorrect "then"
+	 parameter)
+       We need to use an atomic section even though it's a "timer",
+       because it's based on an underlying alarm, whose transitions
+       are asynchronous (yuck?)
+    */
+    if (state & S_TIMER_RUNNING)
+      atomic
+	{
+	  if (!call TimerFrom.isRunning())
+	    return;
+	  call TimerFrom.stop();
+	}
     executeTimers(call TimerFrom.getNow());
   }
 
@@ -145,6 +170,7 @@ implementation
     timer->dt = dt;
     timer->isoneshot = isoneshot;
     timer->isrunning = TRUE;
+    state |= S_TIMER_CHANGED;
     post executeTimersNow();
   }
 
