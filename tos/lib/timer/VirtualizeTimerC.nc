@@ -1,4 +1,4 @@
-//$Id: VirtualizeTimerC.nc,v 1.7 2006-08-11 21:07:37 idgay Exp $
+//$Id: VirtualizeTimerC.nc,v 1.8 2006-08-11 21:27:59 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -40,10 +40,10 @@ generic module VirtualizeTimerC(typedef precision_tag, int max_timers)
 implementation
 {
   enum
-  {
-    NUM_TIMERS = max_timers,
-    END_OF_LIST = 255,
-  };
+    {
+      NUM_TIMERS = max_timers,
+      END_OF_LIST = 255,
+    };
 
   typedef struct
   {
@@ -57,9 +57,35 @@ implementation
   Timer_t m_timers[NUM_TIMERS];
   bool m_timers_changed;
 
-  task void executeTimersNow();
+  task void updateFromTimer();
 
-  void executeTimers()
+  void fireTimers(uint32_t now)
+  {
+    uint8_t num;
+
+    for (num=0; num<NUM_TIMERS; num++)
+      {
+	Timer_t* timer = &m_timers[num];
+
+	if (timer->isrunning)
+	  {
+	    uint32_t elapsed = now - timer->t0;
+
+	    if (elapsed >= timer->dt)
+	      {
+		if (timer->isoneshot)
+		  timer->isrunning = FALSE;
+		else // Update timer for next event
+		  timer->t0 += timer->dt;
+
+		signal Timer.fired[num]();
+	      }
+	  }
+      }
+    post updateFromTimer();
+  }
+  
+  task void updateFromTimer()
   {
     /* This code supports a maximum dt of MAXINT. If min_remaining and
        remaining were switched to uint32_t, and the logic changed a
@@ -71,70 +97,36 @@ implementation
     uint8_t num;
 
     call TimerFrom.stop();
-    m_timers_changed = FALSE;
 
     for (num=0; num<NUM_TIMERS; num++)
-    {
-      Timer_t* timer = &m_timers[num];
-
-      if (timer->isrunning)
       {
-	uint32_t elapsed = now - timer->t0;
+	Timer_t* timer = &m_timers[num];
 
-	if (elapsed >= timer->dt)
-	{
-	  if (timer->isoneshot)
-	  {
-	    timer->isrunning = FALSE;
-	  }
-	  else
-	  {
-	    // Update timer for next event
-	    timer->t0 += timer->dt;
-	    // Update elapsed so we compute the time of the next event
-	    elapsed -= timer->dt;
-	  }
-
-	  signal Timer.fired[num]();
-	}
-
-	// Check isrunning in case the timer was stopped in the fired
-	// event or this was a one shot timer; note that a one shot
-	// timer that was restarted in its fired event will push us
-	// through here with a value of remaining <= 0. But we're
-	// already scheduled an executeTimersNow in that case (and
-	// suppressed setting TimerFrom)
 	if (timer->isrunning)
-	{
-	  int32_t remaining = timer->dt - elapsed;
+	  {
+	    uint32_t elapsed = now - timer->t0;
+	    int32_t remaining = timer->dt - elapsed;
 
-	  if (remaining < min_remaining)
-	    {
-	      min_remaining = remaining;
-	      min_remaining_isset = TRUE;
-	    }
-	}
+	    if (remaining < min_remaining)
+	      {
+		min_remaining = remaining;
+		min_remaining_isset = TRUE;
+	      }
+	  }
       }
-    }
 
-    if (!m_timers_changed && min_remaining_isset)
-    {
-      if (min_remaining <= 0)
-	post executeTimersNow();
-      else
-	call TimerFrom.startOneShotAt(now, min_remaining);
-    }
+    if (min_remaining_isset)
+      {
+	if (min_remaining <= 0)
+	  fireTimers(now);
+	else
+	  call TimerFrom.startOneShotAt(now, min_remaining);
+      }
   }
   
-
   event void TimerFrom.fired()
   {
-    executeTimers();
-  }
-
-  task void executeTimersNow()
-  {
-    executeTimers();
+    fireTimers(call TimerFrom.getNow());
   }
 
   void startTimer(uint8_t num, uint32_t t0, uint32_t dt, bool isoneshot)
@@ -144,8 +136,7 @@ implementation
     timer->dt = dt;
     timer->isoneshot = isoneshot;
     timer->isrunning = TRUE;
-    m_timers_changed = TRUE;
-    post executeTimersNow();
+    post updateFromTimer();
   }
 
   command void Timer.startPeriodic[uint8_t num](uint32_t dt)
