@@ -1,4 +1,4 @@
-// $Id: MicaTimer.h,v 1.2 2006-07-12 17:02:51 scipio Exp $
+// $Id: MicaTimer.h,v 1.3 2006-08-11 20:48:19 idgay Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -29,10 +29,17 @@
    the platform's MHZ rate.
 
    Note that the timers thus obtained will not be exactly at 32768Hz or
-   1MHz, because the clock doesn't divide by a power of two to those frequencies,
-   and/or the clock frequency is not accurate. If you need more accurate timing,
-   you should use the calibration functions offered by the Atm128Calibrate interface
-   provided by PlatformC.
+   1MHz, because the clock doesn't divide by a power of two to those
+   frequencies, and/or the clock frequency is not accurate. If you need
+   more accurate timing, you should use the calibration functions
+   offered by the Atm128Calibrate interface provided by PlatformC.
+
+   This file also defines EXT_STANDBY_T0_THRESHOLD, a threshold on
+   remaining time till the next timer 0 interrupt under which the mote
+   should sleep in ext standby rather than power save. This is only
+   important when not using the internal oscillator.  Wake up from power
+   save takes 65536 cycles (6 cycles for ext standby), which is, e.g.,
+   ~9.4ms at 7Mhz.
 */
 
 #include <Timer.h>
@@ -64,7 +71,8 @@ enum {
   MICA_PRESCALER_ONE = ATM128_CLK16_DIVIDE_8,
   MICA_DIVIDE_ONE_FOR_32KHZ_LOG2 = 2,
   MICA_PRESCALER_THREE = ATM128_CLK16_NORMAL,
-  MICA_DIVIDE_THREE_FOR_MICRO_LOG2 = 0
+  MICA_DIVIDE_THREE_FOR_MICRO_LOG2 = 0,
+  EXT_STANDBY_T0_THRESHOLD = 80,
 };
 
 #elif MHZ == 2
@@ -77,7 +85,8 @@ enum {
   MICA_PRESCALER_ONE = ATM128_CLK16_DIVIDE_64,
   MICA_DIVIDE_ONE_FOR_32KHZ_LOG2 = 0,
   MICA_PRESCALER_THREE = ATM128_CLK16_NORMAL,
-  MICA_DIVIDE_THREE_FOR_MICRO_LOG2 = 1
+  MICA_DIVIDE_THREE_FOR_MICRO_LOG2 = 1,
+  EXT_STANDBY_T0_THRESHOLD = 40
 };
 
 #elif MHZ == 4
@@ -90,7 +99,8 @@ enum {
   MICA_PRESCALER_ONE = ATM128_CLK16_DIVIDE_64,
   MICA_DIVIDE_ONE_FOR_32KHZ_LOG2 = 1,
   MICA_PRESCALER_THREE = ATM128_CLK16_NORMAL,
-  MICA_DIVIDE_THREE_FOR_MICRO_LOG2 = 2
+  MICA_DIVIDE_THREE_FOR_MICRO_LOG2 = 2,
+  EXT_STANDBY_T0_THRESHOLD = 24
 };
 
 #elif MHZ == 8
@@ -103,7 +113,8 @@ enum {
   MICA_PRESCALER_ONE = ATM128_CLK16_DIVIDE_256,
   MICA_DIVIDE_ONE_FOR_32KHZ_LOG2 = 0,
   MICA_PRESCALER_THREE = ATM128_CLK16_DIVIDE_8,
-  MICA_DIVIDE_THREE_FOR_MICRO_LOG2 = 0
+  MICA_DIVIDE_THREE_FOR_MICRO_LOG2 = 0,
+  EXT_STANDBY_T0_THRESHOLD = 12
 };
 
 #else
