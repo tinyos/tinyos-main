@@ -1,4 +1,4 @@
-//$Id: TransformAlarmCounterC.nc,v 1.3 2006-08-10 00:05:25 idgay Exp $
+//$Id: TransformAlarmCounterC.nc,v 1.4 2006-08-11 21:03:52 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -146,7 +146,6 @@ implementation
   {
     atomic
     {
-
       m_upper++;
       if ((m_upper & OVERFLOW_MASK) == 0)
 	signal Counter.overflow();
@@ -178,31 +177,23 @@ implementation
 
   void set_alarm()
   {
-    to_size_type now = call Counter.get(), expires, remaining;
+    to_size_type now = call Counter.get(), elapsed = now - m_t0, remaining;
 
-    /* m_t0 is assumed to be in the past. If it's > now, we assume
-       that time has wrapped around */
-
-    expires = m_t0 + m_dt;
-
-    /* The cast is necessary to get correct wrap-around arithmetic */
-    remaining = (to_size_type)(expires - now);
-
-    /* if (expires <= now) remaining = 0; in wrap-around arithmetic */
-    if (m_t0 <= now)
-      {
-	if (expires >= m_t0 && // if it wraps, it's > now
-	    expires <= now)
-	  remaining = 0;
-      }
+    m_skip_overflows = 0;
+    if (elapsed >= m_dt)
+    {
+      remaining = 0;
+      m_t0 += m_dt;
+      m_dt = 0;
+    }
     else
-      {
-	if (expires >= m_t0 || // didn't wrap so < now
-	    expires <= now)
-	  remaining = 0;
-      }
+    {
+      remaining = m_dt - elapsed;
 
-    if (remaining > MAX_DELAY * 2)
+      /* MAX_DELAY is 1/2 an underlying counter overflow time. Just count
+	 overflows if the timer is far in the future, and we'll set an
+	 alarm once we're close to the deadline. */
+      if (remaining > MAX_DELAY * 2)
       {
 	if (remaining >= MAX_DELAY * 2 * (to_size_type)256)
 	  m_skip_overflows = 255;
@@ -210,20 +201,19 @@ implementation
 	  m_skip_overflows = remaining / (MAX_DELAY * 2);
 	return;
       }
-    else
-      m_skip_overflows = 0;
 
-    if (remaining > MAX_DELAY)
+      if (remaining > MAX_DELAY)
       {
 	m_t0 = now + MAX_DELAY;
 	m_dt = remaining - MAX_DELAY;
 	remaining = MAX_DELAY;
       }
-    else
+      else
       {
 	m_t0 += m_dt;
 	m_dt = 0;
       }
+    }
     call AlarmFrom.startAt((from_size_type)now << bit_shift_right,
 			   (from_size_type)remaining << bit_shift_right);
   }
