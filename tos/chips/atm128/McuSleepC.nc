@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.3 2006-08-09 22:43:38 idgay Exp $
+/// $Id: McuSleepC.nc,v 1.4 2006-08-11 20:49:00 idgay Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -29,7 +29,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.3 2006-08-09 22:43:38 idgay Exp $
+ *  $Id: McuSleepC.nc,v 1.4 2006-08-11 20:49:00 idgay Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -48,7 +48,8 @@ module McuSleepC {
 }
 implementation {
   /* There is no dirty bit management because the sleep mode depends on
-     the amount of time remaining in timer0. */
+     the amount of time remaining in timer0. Note also that the
+     sleep cost depends typically depends on waiting for ASSR to clear. */
 
   /* Note that the power values are maintained in an order
    * based on their active components, NOT on their values.
@@ -90,12 +91,15 @@ implementation {
     }
     // How soon for the timer to go off?
     else if (TIMSK & (1 << OCIE0 | 1 << TOIE0)) {
-      // force waiting for timer0 update (overflow glitches otherwise)
-      TCCR0 = TCCR0;
+      // need to wait for timer 0 updates propagate before sleeping
+      // (we don't need to worry about reentering sleep mode too early,
+      // as the wake ups from timer0 wait at least one TOSC1 cycle
+      // anyway - see the stabiliseTimer0 function in HplAtm128Timer0AsyncC)
       while (ASSR & (1 << TCN0UB | 1 << OCR0UB | 1 << TCR0UB))
 	;
       diff = OCR0 - TCNT0;
-      if (diff < 16 || TCNT0 > 240) 
+      if (diff < EXT_STANDBY_T0_THRESHOLD ||
+	  TCNT0 > 256 - EXT_STANDBY_T0_THRESHOLD) 
 	return ATM128_POWER_EXT_STANDBY;
       return ATM128_POWER_SAVE;
     }
