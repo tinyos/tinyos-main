@@ -1,4 +1,4 @@
-//$Id: AlarmToTimerC.nc,v 1.2 2006-07-12 17:02:30 scipio Exp $
+//$Id: AlarmToTimerC.nc,v 1.3 2006-08-11 21:02:29 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -41,13 +41,11 @@ implementation
 {
   // there might be ways to save bytes here, but I'll do it in the obviously
   // right way for now
-  uint32_t m_t0;
   uint32_t m_dt;
   bool m_oneshot;
 
   void start(uint32_t t0, uint32_t dt, bool oneshot)
   {
-    m_t0 = t0;
     m_dt = dt;
     m_oneshot = oneshot;
     call Alarm.startAt(t0, dt);
@@ -88,7 +86,7 @@ implementation
   { return call Alarm.getNow(); }
 
   command uint32_t Timer.gett0()
-  { return m_t0; }
+  { return call Alarm.getAlarm() - m_dt; }
 
   command uint32_t Timer.getdt()
   { return m_dt; }
