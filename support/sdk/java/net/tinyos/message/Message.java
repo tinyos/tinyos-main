@@ -1,4 +1,4 @@
-// $Id: Message.java,v 1.2 2006-07-12 16:59:55 scipio Exp $
+// $Id: Message.java,v 1.3 2006-08-18 21:05:57 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -213,7 +213,7 @@ public class Message implements Cloneable {
      * data[0..getData().length - 1] are invalid
      */
     public void dataSet(byte[] data) {
-	dataSet(data, 0, this.base_offset, Math.min(this.data_length, data.length));
+	dataSet(data, 0, 0, Math.min(this.data_length, data.length));
     }
 
     /**
