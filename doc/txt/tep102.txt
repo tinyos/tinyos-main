@@ -10,8 +10,8 @@ Timers
 :Author: Cory Sharp, Martin Turon, David Gay
 
 :Draft-Created: 22-Sep-2004
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2006-07-12 16:59:41 $
+:Draft-Version: $Revision: 1.3 $
+:Draft-Modified: $Date: 2006-09-06 23:03:44 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -542,6 +542,33 @@ timers.  ::
     provides interface Timer<precision_tag> as Timer[ uint8_t num ];
     uses interface Timer<precision_tag> as TimerFrom;
   }
+
+6. Author's Address
+====================================================================
+| Cory Sharp
+| Moteiv Corporation
+| 55 Hawthorne St, Suite 550
+| San Francisco, CA 94105
+|
+| email - cory@moteiv.com
+|
+|
+| Martin Turon
+| P.O. Box 8525
+| Berkeley, CA 94707
+|
+| phone - +1 408 965 3355
+| email - mturon@xbow.com
+|
+|
+| David Gay
+| 2150 Shattuck Ave, Suite 1300
+| Intel Research
+| Berkeley, CA 94704
+|
+| phone - +1 510 495 3055
+| email - david.e.gay@intel.com
+
 
 Appendix A: Timer hardware on various microcontrollers
 ====================================================================
