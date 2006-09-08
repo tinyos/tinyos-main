@@ -1,0 +1,187 @@
+==============================================================================
+The Collection Tree Protocol (CTP) 
+==============================================================================
+
+:TEP: 123
+:Group: Network Working Group 
+:Type: Documentary
+:Status: Draft
+:TinyOS-Version: 2.x
+:Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
+
+:Draft-Created: 3-Aug-2006
+:Draft-Version: $Revision: 1.2 $
+:Draft-Modified: $Date: 2006-09-08 22:53:18 $
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This memo documents a part of TinyOS for the TinyOS Community, and
+   requests discussion and suggestions for improvements.  Distribution
+   of this memo is unlimited. This memo is in full compliance with
+   TEP 1.
+
+Abstract
+==============================================================================
+
+This memo documents the Collection Tree Protocol (CTP), which 
+provides best-effort anycast datagram communication to one of the 
+collection roots in a network.
+
+1. Introduction
+==============================================================================
+
+2. Assumptions and Limitations
+==============================================================================
+
+CTP is a tree-based collection protocol. Some number of nodes in a
+network advertise themselves as tree roots. Nodes form a set of routing
+trees to these roots. CTP is **address-free** in that a node does not
+send a packet to a particular root; instead, it implicitly chooses a
+root by choosing a next hop. Nodes generate routes to roots using
+a routing gradient.
+
+The CTP protocol assumes that the data link layer provides four things:
+
+ 1) Provides an efficient local broadcast address.
+ 2) Provides synchronous acknowledgments for unicast packets.
+ 3) Provides a protocol dispatch field to support multiple higher-level
+    protocols.
+ 4) Has single-hop source and destination fields.
+
+CTP assumes that it has link quality estimates of some number of nearby 
+neighbors. These provide an estimate of the number of transmissions it 
+takes for the node to send a unicast packet whose acknowledgment is
+successfully received.
+
+CTP has several mechanisms in order to improve delivery reliability,
+but it does not promise 100\% reliable delivery. It is best effort, but
+a best effort that *tries very hard.*
+
+CTP is designed for relatively low traffic rates. Bandwidth-limited systems
+might benefit from a different protocol, which can, for example, pack
+multiple small frames into a single data-link packet.
+
+
+3. Collection and CTP
+==============================================================================
+
+CTP uses expected transmissions (ETX) as its routing gradient. A root has an
+ETX of 0.  The ETX of a node is the ETX of its parent plus the ETX of its
+link to its parent. This additive measure assumes that nodes use link-level
+retransmissions.  Given a choice of valid routes, CTP SHOULD choose the one with the 
+lowest ETX value. CTP represents ETX values as 16-bit fixed-point real numbers
+with a precision of hundredths. An ETX value of 451, for example, represents
+an ETX of 4.51, while an ETX value of 109 represents an ETX of 1.09. 
+
+Routing loops are a problem that can emerge in a CTP network. Routing loops
+generally occur when a node choose a new route that has a significantly higher
+ETX than its old one, perhaps in response to losing connectivity with a candidate
+parent. If the new route includes a node which was a descendant, then a loop
+occurs.
+
+CTP addresses loops through two mechanisms. First, every CTP packet
+contains a node's current gradient value. If CTP receives a data frame with
+a gradient value lower than its own, then this indicates that there
+is an inconsistency in the tree. CTP tries to resolve the inconsistency
+by broadcasting a beacon frame, with the hope that the node which sent
+the data frame will hear it and adjust its routes accordingly. If a
+collection of nodes is separated from the rest of the network, then they
+will form a loop whose ETX increases forever. CTP's second mechanism
+is to not consider routes with an ETX higher than a reasonable constant.
+The value of this constant is implementation dependent.
+
+Packet duplication is an additional problem that can occur in CTP.
+Packet duplication occurs when a node receives a data frame successfully
+and transmits an ACK, but the ACK is not received. The sender retransmits
+the packet, and the receiver receives it a second time. This can have
+disasterous effects over multiple hops, as the duplication is exponential.
+For example, if each hop on average produces one duplicate, then on the
+first hop there will be two packets, on the second there will be four,
+on the third there will be eight, etc.
+
+Routing loops complicate duplicate suppression, as a routing loop may
+cause a node to legitimately receive a packet more than once. Therefore,
+if a node suppresses duplicates based solely on originating address and
+sequence number, packets in routing loops may be dropped. CTP data frames
+therefore have an additional time has lived (THL) field, which the
+routing layer increments on each hop. A link-level retransmission has
+the same THL value, while a looped version of the packet is unlikely
+to do so.
+
+4. CTP Data Frame 
+==============================================================================
+
+The CTP data frame format is as follows::
+
+                           1            
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |C|P| reserved  |      THL        |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |              ETX                |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |             origin              |                 
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |     seqno     |   collect_id    |    
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |    data ... 
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Field definitions are as follows:
+
+  * C: Congestion notification. If a node is receiving packets faster than it can forward them, it MAY set the C field to notify other nodes. If a node hears a packet from node N with the C bit set, it MUST NOT transmit CTP data frames to N until it hears a packet from N with the C bit cleared.
+  * P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future if it has a valid route.
+  * THL: Time Has Lived. When a node generates a CTP data frame, it MUST set THL to 0. When a node receives a CTP data frame, it MUST increment the THL. If a node receives a THL of 255, it increments it to 0.
+  * ETX: The ETX routing metric of the single-hop sender. When a node transmits a CTP data frame, it MUST put the ETX value of its route through the single-hop destination in the ETX field.  If a node receives a packet with a lower gradient than its own, then it MUST schedule a routing frame in the near future.
+  * origin: The originating address of the packet. A node forwarding a data frame MUST NOT modify the origin field.
+  * seqno: Origin sequence number. The originating node sets this field, and a node forwarding a data frame MUST NOT modify it. 
+  * collect_id: Higher-level protocol identifier. The origin sets this field, and a node forwarding a data frame MUST NOT modify it.
+  * data: the data payload, of zero or more bytes.
+
+Together, the origin, seqno and collect_id fields denote a unique 
+***origin packet.*** Together, the origin, seqno, collect_id, and
+THL denote a unique ***packet instance*** within the network. The
+distinction is important for duplicate suppression in the presence
+of routing loops. If a node suppresses origin packets, then if
+asked to forward the same packet twice due to a routing loop, it will
+drop the packet. However, if it suppresses packet instances, then 
+unless the THL has wrapped around to the identical value it had 
+on previous times around.
+
+A node MUST send CTP data frames as unicast messages with link-layer 
+acknowledgments enabled. 
+
+5. CTP Routing Frame
+==============================================================================
+
+The CTP routing frame format is as follows::
+
+                           1            
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |C|P| reserved  |      parent     |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |     parent    |       ETX       |    
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |      ETX      |          
+      +-+-+-+-+-+-+-+-+
+
+The fields are as follows:
+  
+  * C: Same as data frame.
+  * P: Same as data frame.
+  * parent: The node's current parent.
+  * metric: The node's current routing metric value.
+
+When a node hears a routing frame, it MUST update its routing table to
+reflect the address' new metric. If a node's ETX value changes
+significantly, then CTP SHOULD transmit a broadcast frame soon thereafter
+to notify other nodes, which might change their routes. The parent
+field acts as a surrogate for the single-hop destination field of
+a data packet: a parent can detect when a child's ETX is significantly
+below its own. When a parent hears a child advertise an ETX below its
+own, it MUST schedule a routing frame for transmission in the near
+future.
+
+
