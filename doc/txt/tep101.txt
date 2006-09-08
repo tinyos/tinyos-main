@@ -10,8 +10,8 @@ Analog-to-Digital Converters (ADCs)
 :Author: Jan-Hinrich Hauer, Philip Levis, Vlado Handziski, David Gay
 
 :Draft-Created: 20-Dec-2004
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2006-07-12 16:59:41 $
+:Draft-Version: $Revision: 1.3 $
+:Draft-Modified: $Date: 2006-09-08 23:10:41 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -35,7 +35,7 @@ ADC is platform-dependent.
 ====================================================================
 
 Analog-to-digital converters (ADCs) are devices that convert analog input
-signals to discrete digital output signals, typically voltage to a digital
+signals to discrete digital output signals, typically voltage to a binary
 number.  The interested reader can refer to Appendix A for a brief overview of
 the ADC hardware on some current TinyOS platforms.  In earlier versions of
 TinyOS, the distinction between a sensor and an ADC were blurred: this led
@@ -87,10 +87,12 @@ The rest of this TEP specifies:
 
 * the set of platform-independent interfaces for the collection of ADC
   conversion results (`2. Interfaces`_)
-* guidelines on how an ADC's HAL SHOULD should be split into HAL1 and HAL2 and
-  how the HAL1 SHOULD expose chip-specific interfaces (`3. HAL1 guidelines`_)
+* guidelines on how an ADC's HAL should be split into HAL1 and HAL2 and
+  how the HAL1 should expose chip-specific interfaces (`3. HAL1 guidelines`_)
 * what components an ADC's HAL2 MUST implement (`4. HAL2 requirements`_)
 * guidelines on how the HAL2 may be structured (`5. HAL2 implementation guidelines`_)
+* a section pointing to the current implementation (`6. Implementation`_)
+
 
 This TEP ends with appendices documenting, as an example, the ADC
 implementation for the TI MSP430 MCU.
@@ -131,9 +133,9 @@ The ReadNow interface provides more precise control over the time of the
 sampling: If a call to ReadNow.read() succeeds, the ADC starts to sample the
 channel immediately (the request is not buffered). Due to its timing
 constraints the ReadNow interface is always provided in conjunction with an
-instance of the Resource interface. A client MUST request access to the ADC
-via the Resource interface before it can call ReadNow.read() and it MUST
-release access via the Resource interface when it is finished (see [TEP108]_).
+instance of the Resource interface. Refer to [TEP108]_ on how the 'Resource'
+interface should be used by a client component.
+
 
 ReadStream
 --------------------------------------------------------------------
@@ -153,7 +155,7 @@ below HAL2 and above the HPL. It exposes the full capabilities of the ADC in a
 chip-specific way and has the same function as the 'traditional' HAL in the
 HAA [TEP2]_. Therefore only chip- and platform-dependent clients MAY wire to
 the HAL1. Although the HAL1 is chip-specific, both, in terms of implementation
-and representation, its design SHOULD follow the guidelines described below to
+and representation, its design should follow the guidelines described below to
 facilitate the mapping to platform-independent interfaces on the level of
 HAL2. Appendix B shows the HAL1 specification for the TI MSP430 MCU.
 
@@ -162,33 +164,29 @@ Resource reservation
 
 As the ADC hardware is a shared resource that is multiplexed between several
 clients, it requires access arbitration. Therefore the HAL1 configuration
-component SHOULD provide a parameterized 'Resource' interface, instantiate a
+component should provide a parameterized 'Resource' interface, instantiate a
 generic arbiter component and connect the 'Resource' interface to the arbiter
-as described in [TEP108]_. To provide a uniform arbitration service for all
-platforms on the level of HAL2 (see `4. HAL2 requirements`_), all ADCs should
-be arbitrated in round robin fashion, i.e. the HAL1 SHOULD instantiate the
-standard round robin arbiter. On the level of HAL1 a client MUST have
-successfully requested access to the ADC via the 'Resource' interface before
-it can configure / sample a channel. After use it MUST release the ADC via the
-'Resource' interface (see [TEP108]_).
+as described in [TEP108]_. To ensure fair and uniform arbitration on all
+platforms the standard round robin arbiter is recommended. Refer to [TEP108]_
+on how the 'Resource' interface is to be used by a client wiring to HAL1.
 
 Configuration and sampling
 --------------------------------------------------------------------
 
-As the ADC hardware is a shared resource the HAL1 SHOULD support hardware
+As the ADC hardware is a shared resource the HAL1 should support hardware
 configuration and sampling on a per-client basis (although per-port
 configuration is possible, it is not recommended, because it forces all
-clients to use the same settings for a given port). Therefore an HAL1 SHOULD
-provide "sampling interfaces" parameterized by a client identifier. An HAL1
+clients to use the same settings for a given port). Therefore an HAL1 should
+provide sampling interfaces parameterized by a client identifier. An HAL1
 client can use its instance of the sampling interface to configure the ADC
 hardware, start the sampling process and get conversion results. It wires to a
 sampling interface using a unique client identifier. All commands and events
-in the sampling interface SHOULD be 'async' to reflect the potential timing
-requirements of clients. An HAL1 MAY provide multiple different parameterized
+in the sampling interface should be 'async' to reflect the potential timing
+requirements of clients. An HAL1 may provide multiple different parameterized
 sampling interfaces, depending on the hardware capabilities.  This allows to
 differentiate/group ADC functionality, for example single vs.  repeated
 sampling, single channel vs. multiple channels or low-frequency vs.
-high-frequency sampling.  Every sampling interface SHOULD allow the client to
+high-frequency sampling.  Every sampling interface should allow the client to
 individually configure the ADC hardware, for example by including the
 configuration data as parameters in the sampling commands.  However, if
 configuration data is passed as a pointer, the HAL1 component MUST NOT
@@ -199,7 +197,7 @@ HAL1 virtualization
 --------------------------------------------------------------------
 
 In order to hide wiring complexities and/or export only a subset of all ADC
-functions generic ADC wrapper components MAY be provided on the level of HAL1
+functions generic ADC wrapper components may be provided on the level of HAL1
 to be instantiated by chip- and platform-dependent clients.
 
 

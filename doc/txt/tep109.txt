@@ -1,17 +1,15 @@
-============================
-Sensor Boards
-============================
+=========================
+Sensors and Sensor Boards
+=========================
 
 :TEP: 109
 :Group: Core Working Group 
 :Type: Documentary
 :Status: Draft
 :TinyOS-Version: 2.x
-:Author: David Gay, Phil Levis, Wei Hong, and Joe Polastre
+:Author: David Gay, Phil Levis, Wei Hong, Joe Polastre, and Gilman Tolle
 
-:Draft-Created: 19-Apr-2005
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2006-07-12 16:59:41 $
+:Draft-Created: 10-Jun-2006
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -24,250 +22,309 @@ Sensor Boards
 Abstract
 ====================================================================
 
-This memo documents how sensor boards are organized in TinyOS, and the
-general principles followed by the components that provide access to
-its sensors.
+This memo documents how sensor drivers are organized in TinyOS and how
+sets of sensor drivers are combined into sensor boards and sensor
+platforms, along with general principles followed by the components
+that provide access to sensors.
 
-1. Introduction
+1. Principles
 ====================================================================
 
-This document defines the default organization of a sensor board in
-TinyOS. There likely will be sensor boards that cannot conform 
-to this specification, but following as closely to its spirit as possible 
-will simplify generic applications that use a range of sensor boards.
+This section describes the basic organization principles for sensor
+drivers in TinyOS.
 
-This document assumes that sensors return uninterpreted 16-bit values, and,
-optionally uninterpreted, arbitrary-size calibration data. Conversion of
-sensor values to something with actual physical meaning is beyond the
-scope of this document.
+For background, a sensor may be attached to the microcontroller on a
+TinyOS platform through a few different types of connections:
 
-2. Directory Organization
+ * Included within the microcontroller itself
+ * Connected to general-purpose IO pins for level/edge detection
+ * Connected to an ADC in the microcontroller for voltage sampling
+ * Connected to general-purpose IO pins for digital communication
+ * Connected through a standard digital bus protocol (1-Wire, I2C, SPI)
+
+Physically, these connections may also be decoupled by attaching the
+sensors to a `sensor board`, which can be removed from the TinyOS
+platform, and may fit multiple different TinyOS platforms.
+
+The capabilities of a physical sensor are made available to a TinyOS
+application through a `sensor driver`. 
+
+According to the HAA [TEP2]_, TinyOS devices should provide both
+simple hardware-independent interfaces for common-case use (HIL) and
+rich hardware-dependent interfaces for special-case use (HAL). Sensor
+drivers should follow this spirit as well.
+
+TinyOS 2.x represents each sensor as an individual component. This
+allows the compilation process to minimize the amount of code
+included. A sensor board containing multiple sensors should be
+represented as a collection of components, one for each sensor,
+contained within a sensor board directory.
+
+Sensors, being physical devices that may be shared, can benefit from
+virtualization and arbitration. This document describes a design
+pattern for sensor virtualization that may be followed by sensor
+drivers.
+
+The same physical sensor may be attached to multiple different TinyOS
+platforms, through platform-dependent interconnections. The common
+logic of sensor driver should be factored into chip-dependent,
+platform-independent components, and those components should be bound
+to the hardware resources on a platform by platform-dependent
+components, and to the hardware resources on a sensor board by
+sensorboard-dependent components.
+
+A physical sensor has a general class and a specific set of
+performance characteristics, captured by the make and model of the
+sensor itself. The naming of the sensor driver components should
+reflect the specifc name of the sensor, and optionally provide a
+component with a generic name for application authors who only care
+about the general class of the sensor.
+
+This document assumes that sensors return uninterpreted values of
+arbitrary size or datatype. Conversion of sensor values to something
+with actual physical meaning is beyond the scope of this document.
+
+2. Sensor HIL Components
 ====================================================================
 
-- A sensor board MUST have a unique name, composed of letters, numbers
-  and underscores. Case is significant, but two sensor boards MUST
-  differ in more than case. This is necessary to support platforms where
-  filename case differences are not significant. We will use SBOARD to
-  denote the sensor board name in the rest of this document.
+A sensor HIL component MUST provide:
 
-- Each sensor board MUST have its own directory named SBOARD; default TinyOS
-  sensor boards are placed in tinyos-2.x/tos/sensorboards, but
-  sensor board directories can be placed anywhere as long as the nesC compiler
-  receives a `-I` directive pointing to the sensor board's directory.
+- One or more SID interfaces [TEP114]_, for reading data.
 
-- Each sensor board directory MUST contain a `.sensor` file. This file
-  is a perl script which contains any additional compiler settings needed for
-  this sensor board (this file will be empty in many cases). 
+A sensor HIL component MAY provide:
 
-- If the sensor board wishes to define any C types or constants, it SHOULD
-  place these in a file named SBOARD.h in the sensor board's directory.
+- One or more SID interfaces [TEP114]_, for reading or
+  writing calibration coefficients or control registers.
 
-- The sensor board directory SHOULD contain sensor board components
-  for accessing each sensor on the sensor board. The conventions for these
-  components are detailed in Section 3.
+A sensor device driver SHOULD be a generic component that virtualizes
+access to the sensor. A sensor device driver can provide such
+virtualization for itself by defining a nesC generic client
+component. When a client component is being used, a call to a
+top-level SID interface should be delayed when the device is busy,
+rather than failing. This virtualization may be easier to accomplish
+by using one of the arbiters provided by the system.
 
-- A sensor board MAY include additional components providing alternative or
-  higher-level interfaces to the sensors (e.g., for TinyDB). These components
-  are beyond the scope of this document. 
+For example::
 
-- Finally, the sensor board MAY contain any number of components,
-  interfaces, C files, etc for internal use. To avoid name collisions, all
-  externally visible names (interface types, components, C constants and
-  types) used for internal purposes SHOULD be prefixed with SBOARD. All such
-  components should end in P.
+  generic configuration SensirionSht11C() {
+    provides interface Read<uint16_t> as Temperature;
+    provides interface ReadStream<uint16_t> as TemperatureStream;
+    provides interface Read<uint16_t> as Humidity;
+    provides interface ReadStream<uint16_t> as HumidityStream;
+  }
+  implementation {
+    // connect to the ADC HIL, GPIO HAL, or sensor's HAL
+  }
 
-A simple example: the basic sensor board is named `basicsb`, it's directory
-is `tinyos-2.x/tos/sensorboards/basicsb`. It has no `basicsb.h` file and
-its `.sensor` file is empty. It has two components, `PhotoC` and `TempC`
-representing its light and temperature sensors.
+When a HIL component is being used, the sensor MUST initialize itself,
+either by including the `MainC` component and wiring to the
+`SoftwareInit` interface, or by allowing a lower-level component (like
+an ADC) to initialize itself.
 
+In addition, the HIL sensor driver MUST start the physical sensor
+automatically. For sensors without a constant power draw, the sensor
+MAY be started once at boot time by wiring to the `MainC.Boot`
+interface. Sensors that draw appreciable power MUST be started in
+response to a call to one of the top-level SID interfaces, and stopped
+some time after that call completes. One of the power-management
+components described in [TEP115]_ may be useful for this purpose.
 
+Generally, simple types are made up of octets. However, sensor values
+often have levels of precision besides a multiple of 8. A device MAY
+specify the precision of one of its interfaces with the DeviceMetadata
+interface::
 
-3. Sensor Board Components
+  interface DeviceMetadata {
+    command uint8_t getSignificantBits();
+  }
+
+The name of the instance of DeviceMetadata SHOULD clearly indicate
+which interface it corresponds to.
+
+A value contained returned from the device through a SID interface
+MAY be left shifted so that it covers as much of the type's range as
+possible. For example, if a 12-bit ADC reading is presented as a
+16-bit Read interface::
+
+  component DemoSensorC {
+    provides interface Read<uint16_t>;
+  }
+
+then the driver MAY shift the 12-bit value left so that its range is
+0x0000 - 0xfff0, rather than 0x0000 - 0x0fff. 
+
+Sensor driver components SHOULD be named according to the make and
+model of the sensing device being presented. Using specific names
+gives the developer the option to bind to a particular sensor, which
+provides compile-time detection of missing sensors. However, wrapper
+components using "common" names MAY also be provided by the driver
+author, to support application developers who are only concerned with
+the particular type of the sensor and not its make, model, or detailed
+performance characteristics.
+
+A "common" naming layer atop a HIL may look like this::
+
+  generic configuration TemperatureC() {
+    provides interface Read<uint16_t>;
+    provides interface ReadStream<uint16_t>;
+  }
+  implementation {
+    components new SensirionSht11C();
+    Read = SensirionSht11C.Temperature;
+    ReadStream = SensirionSht11C.TemperatureStream;
+  }
+
+  generic configuration HumidityC() {
+    provides interface Read<uint16_t>;
+    provides interface ReadStream<uint16_t>;
+  }
+  implementation {
+    components new SensirionSht11C();
+    Read = SensirionSht11C.Humidity;
+    ReadStream = SensirionSht11C.HumidityStream;
+  }
+
+3. Sensor HAL Components
 ====================================================================
 
-We have not yet selected any naming conventions for sensor board
-components. Please select reasonable names\ldots
+Sensors with a richer interface than would be supported by the SID
+interfaces MAY provide a HAL component in addition to a HIL
+component.
 
-A sensor board component MUST provide:
+A sensor HAL component MUST provide:
 
-- An `Init` interface.
+- A SID-based interface or a specific hardware-dependent interface
+  with commands for sampling and controlling the sensor device.
 
-- A `StdControl` or `SplitControl` interface for power management.
+A sensor HAL component MAY need to provide:
 
-- A non-empty set of `AcquireData` interfaces for sampling.
+- A `StdControl` or `SplitControl` interface for manual power
+  management by the user, following the conventions described in
+  [TEP115]_.
 
-A sensor board component MAY provide:
+- A Resource[] interface for requesting access to the device and
+  possibly performing automated power management.
 
-- Some `CalibrationData` interfaces for obtaining calibration data.
-  A calibration interface for a sensor accessed via interface X should
-  be called XCalibration.
+- Any other interfaces needed to control the device.
 
-- Some `AcquireDataNow` and `AcquireDataBuffered` interfaces, for high-speed 
-  or low-latency data acquisition.
+For example::
 
-- Any other appropriate interface.
+  configuration SensirionSht11DeviceC {
+    provides interface Resource[ uint8_t client ];
+    provides interface SensirionSht11[ uint8_t client ];
+  }
+  implementation {
+    // connect to the sensor's platform-dependent HPL here
+  }
 
-The `CalibrationData` interface is shown below, while `AcquireData`,
-`AcquireDataNow` and `AcquireDataBuffered` are in TEP 101. The
-`AcquireData` interface returns uinterpreted 16-bit data. This might
-represent an A/D conversion result, a counter, etc. The optional
-calibration interface returns uninterpreted, arbitrary-size data.
-
-A sensor board component SHOULD be as lightweight as possible - it should
-just provide basic access to the physical sensors and SHOULD NOT attempt to do
-calibration, signal processing, etc. If such functionality is desired, it
-SHOULD be provided in separate components.
-
-|  ``interface CalibrationData {``
-|    ``/* Collect uninterpreted calibration data from a sensor */``
-|
-|    ``/** Request calibration data``
-|     ``*  @return SUCCESS if request accepted, FAIL if it is refused``
-|     ``*    data error will be signaled if SUCCESS is returned``
-|     ``*/``
-|    ``command result_t get();``
-|
-|   ``/** Returns calibration data``
-|    ``* @param x Pointer to (uinterpreted) calibration data. This data``
-|    ``*   must not be modified.``
-|    ``* @param len Length of calibration data``
-|    ``* @return Ignored.``
-|    ``*/``
-|   ``event result_t data(const void *x, uint8_t len);``
-| ``}``
-
-Some common setups for sensor board components are:
-
-- A single `AcquireData` interface. This is probably the most common case,
-  where a single component corresponds to a single physical sensor, e.g., for
-  light, temperature, pressure and there is no expectation of high sample
-  rates.
-
-- Multiple `AcquireData` interfaces. Some sensors might be strongly
-  related, e.g., the axes of an accelerometer.  A single component could then
-  provide a sensor interface for each axis. For instance, a 2-axis
-  accelerometer which can be sampled at high speed, and which has some
-  calibration data might be declared with:
-
-|  ``configuration Accelerometer2D {``
-|    ``provides {``
-|      ``interface StdControl``
-|      ``interface AcquireData as AccelX;``
-|      ``interface AcquireDataNow as AccelXSingle;``
-|      ``interface AcquireDataBuffered as AccelXMultiple;``
-|      ``interface CalibrationData as AccelXCalibration;``
-|
-|      ``interface AcquireData as AccelY;``
-|      ``interface AcquireDataNow as AccelYSingle;``
-|      ``interface AcquireDataBuffered as AccelYMultiple;``
-|      ``interface CalibrationData as AccelYCalibration;``
-|    ``}``
-|  ``}``
-
-- A parameterised `AcquireData` interface. If a sensor board has multiple
-  similar sensors, it may make sense to provide a single component to access
-  all of these, using a parameterised `AcquireData` interface. For instance,
-  a general purpose sensor board with multiple A/D channels might provide an
-  `AcquireData` interface parameterised by the A/D channel id.
-
-- In all of these examples, if high-speed sampling makes sensor for the
-  sensor (e.g., a microphone), and the sensor is connected in a way that
-  supports high-frequency and/or low-latency access (e.g., via an 
-  on-microcontroller A/D converter), the component should offer 
-  `AcquireDataNow` and `AcquireDataBuffered` interfaces.
-
-Sensor board components MUST respect the following conventions
-on the use of the `Init`, `StdControl`,  and `SplitControl` 
-interfaces.  These are given assuming `StdControl` is used, but the
-behaviour with `SplitControl` is identical except that `start` and `stop`
-are not considered complete until the `startDone` and `stopDone` events are
-signaled. The conventions are:
-
-1) `Init.init`: must be called at mote boot time.
-
-2) `StdControl.start`: ensure the sensor corresponding to this component is
-    ready for use. For instance, this should power-up the sensor if
-    necessary. The application can call `getData` once `StdControl.start`
-    completes.
-
-    If a sensor takes a while to power-up, the sensor board implementer can
-    either use a `SplitControl` interface and signal `startDone`
-    when the sensor is ready for use, or delay `dataReady` events
-    until the sensor is ready. The former choice is preferable.
-
-3) `StdControl.stop`: put the sensor in a low-power mode. 
-   `StdControl.start` must be called before any further readings 
-   are taken. The behaviour of calls to `StdControl.stop` during
-   sampling (i.e., when an `dataReady` event is going to be
-   signaled) is undefined.
-
-`.sensor` File
+4. Sensor HPL Components
 ====================================================================
 
-This file is a perl script which gets executed as part of the `ncc`
-nesC compiler frontend. It can add or modify any compile-time options 
-necessary for a particular sensor board. It MAY modify the following perl
-variables, and MUST NOT modify any others:
+A sensor HPL is necessarily platform-dependent or
+sensorboard-dependent. These components should provide access to the
+physical resources needed by the sensor, in a platform-independent
+manner that can be used by the shared logic of the sensor HAL
+components. In the case of bus-based sensors, this HPL may be nothing
+more than wiring to the appropriate bus interface for use by the HAL
+component.
 
-- @new_args: This is the array of arguments which will be
-  passed to nescc. For instance, you might add an include directive
-  to @new_args with push @new_args, `-Isomedir`
+For example::
+
+  configuration HplSensirionSht11C {
+    provides interface Init;
+    provides interface Resource[ uint8_t id ];
+    provides interface GeneralIO as DATA;
+    provides interface GeneralIO as SCK;
+    provides interface GpioInterrupt as InterruptDATA;
+  }
+  implementation {
+    // connect to platform or sensorboard-dependent resources
+    // power-manage the sensor through platform-specific means
+  }
+
+5. Directory Organization Guidelines
+====================================================================
+
+Because the same physical sensor may be attached to TinyOS platforms
+in many different ways, the organization of sensor drivers should
+reflect the distinction between sensor and sensor interconnect.
+
+Sensor components commonly exist at three levels:
+platform-independent, sensorboard-dependent, and
+platform-dependent. Factoring a sensor driver into these three pieces
+allows for greater code reuse when the same sensor is attached to
+different sensorboards or platforms.
+
+Platform-independent sensor driver components for a particular sensor,
+like protocol logic, when in the core TinyOS 2.x source tree, SHOULD
+be placed into "tos/chips/<sensor>", where <sensor> reflects the make
+and model of the sensor device being supported. When not a part of the
+core source tree, this directory can be placed anywhere as long as the
+nesC compiler recieves a `-I` directive pointing to the sensor's
+directory. However, not all sensors have a sufficiently large amount
+of platform-independent logic to justify a separate "chips"
+directory. Sensor chips are more likely to be digital sensors than
+analog sensors, for example.
+
+A sensor board is a collection of sensor components with a fixed name,
+intended for attachment to multiple platforms. Each sensor board MUST
+have its own directory named <sensorboard>. Default TinyOS 2.x sensor
+boards are placed in "tos/sensorboards/<sensorboard>", but sensor
+board directories can be placed anywhere as long as the nesC compiler
+receives a `-I` directive pointing to the sensor board's directory.
+
+Both sensors and sensor boards MUST have unique names. Case is
+significant, but two sensor boards MUST differ in more than case. This
+is necessary to support platforms where filename case differences are
+not significant.
+
+Each sensor board directory MUST contain a `.sensor` file.  This file
+is a perl script which gets executed as part of the `ncc` nesC
+compiler frontend. It can add or modify any compile-time options
+necessary for a particular sensor board. It MAY modify the following
+perl variables, and MUST NOT modify any others:
+
+- @new_args: This is the array of arguments which will be passed to
+  nescc. For instance, you might add an include directive to @new_args
+  with push @new_args, `-Isomedir`. This could be used to include
+  subdirectories.
 
 - @commonboards: This can be set to a list of sensor board names which
   should be added to the include path list. These sensor boards must be
   in tinyos-2.x/tos/sensorboards.
 
-Example: mts3x0
-====================================================================
+If the sensor board wishes to define any C types or constants, it
+SHOULD place these in a file named <sensorboard>.h in the sensor
+board's directory.
 
-The mica sensor board (mts300/mts310) has five sensors (and one actuator,
-the sounder) -- the accelerometer and magnetometer are only present on 
-the mts310:
+A sensor board directory MAY contain a "chips" directory, with
+subdirectories for each of the sensors connected to the sensor board.
+If a "chips" subdirectory is used, sensorboard-dependent driver
+components needed to connect platform-independent logic to a
+particular attachment for that sensor should be placed in
+"<sensorboard>/chips/<sensor>".
 
-+------------------------------------------------------------------+
+Components needed to connect the platform-independent sensor driver
+components or sensorboard-dependent components to the hardware
+resources available on a particular platform SHOULD be placed in
+"tos/<platform>/chips/<sensor>". In addition, components for a sensor
+that only exists on a particular platform should be placed in a such a
+directory.
 
-| Name          | Component | Sensor Interfaces | Other Interfaces |
+Sensors that exist as part of a larger chip, like a MCU internal
+voltage sensor, SHOULD be placed in a subdirectory of the chip's
+directory. "tos/<chip>/sensors/<sensor>".
 
-+===============+===========+===================+==================+
+The `.platform` and `.sensor` files need to include enough `-I`
+directives to locate all of the necessary components needed to support
+the sensors on a platform and/or sensorboard.
 
-| Accelerometer | AccelC    | AccelX            |                  |
+All of these directory organization guidelines are only intended for
+code that will enter the core source tree. In general, sensor
+components may be placed anywhere as long as the nesC compiler
+receives enough `-I` directives to locate all of the necessary pieces.
 
-|               |           | AccelY            |                  |
-
-| Magnetometer  | MagC      | MagX              | MagSetting       |
-
-|               |           | MagY              |                  |
-
-| Microphone    | MicC      | MicADC            | Mic              |
-
-|               |           |                   | MicInterrupt     |
-
-| Light         | PhotoC    | PhotoADC          |                  |
-
-| Temperature   | TempC     | TempADC           |                  |
-
-+------------------------------------------------------------------+
-
-Each physical sensor is represented by a separate component. Specific
-sensors that have more than one axis of measurement (AccelC and MagC)
-provide more than one `AcquireData` interface on a single component. Some
-sensors, such as the magnetometer and microphone, have additional
-functionality provided through sensor-specific interfaces.
-
-Although light and temperature are represented by separate components, in
-reality they share a single microcontroller pin. The two components PhotoC
-and TempC sit on top of the PhotoTempP component, which controls access to
-the shared pin, and orchestrates which sensor is currently connected to
-it. From a programmer's perspective, they appear as individual sensors,
-even though their underlying implementation is a bit more complex.
-
-The board's mts3x0.h file contains private configuration data
-(pin usage, ADC ports, etc).
-
-The mica sensor board has an empty .sensor file.
-
-6. Author's Address
+6. Authors' Addresses
 ====================================================================
 
 | David Gay
@@ -280,8 +337,9 @@ The mica sensor board has an empty .sensor file.
 | email - david.e.gay@intel.com
 |
 | Wei Hong
-| Arched Rock
-| Berkeley, CA 94704
+| Arch Rock
+| 657 Mission St. Suite 600
+| San Francisco, CA 94105
 |
 | email - wei.hong@gmail.com
 |
@@ -301,5 +359,18 @@ The mica sensor board has an empty .sensor file.
 | Berkeley, CA 94720
 |
 | email - polastre@cs.berkeley.edu
+|
+| Gilman Tolle
+| Arch Rock
+| 657 Mission St. Suite 600
+| San Francisco, CA 94105
+|
+| email - gtolle@archrock.com
 
+7. Citations
+====================================================================
+
+.. [TEP2] TEP 2: Hardware Abstraction Architecture
+.. [TEP114] TEP 114: SIDs: Source and Sink Indepedent Drivers
+.. [TEP115] TEP 115: Power Management of Non-Virtualized Devices
 

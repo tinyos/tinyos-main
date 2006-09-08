@@ -10,8 +10,8 @@ Schedulers and Tasks
 :Author: Philip Levis and Cory Sharp
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2006-07-12 16:59:41 $
+:Draft-Version: $Revision: 1.3 $
+:Draft-Modified: $Date: 2006-09-08 23:10:41 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -241,7 +241,8 @@ For example, the standard TinyOS scheduler has this signature::
 
 A scheduler MUST provide a parameterized TaskBasic interface.
 If a call to TaskBasic.postTask() returns SUCCESS, the scheduler MUST run it
-eventually. The scheduler MUST return SUCCESS to a TaskBasic.postTask()
+eventually, so that starvation is not a concern. The scheduler MUST 
+return SUCCESS to a TaskBasic.postTask()
 operation unless it is not the first call to TaskBasic.postTask() since
 that task's TaskBasic.runTask() event has been signaled. The 
 McuSleep interface is used for microcontroller power management;
@@ -277,7 +278,7 @@ This is the TaskBasic interface::
     void event runTask();  
   }  
 
-When a component declares a task with the   task   keyword in nesC, it
+When a component declares a task with the ``task`` keyword in nesC, it
 is implicitly declaring that it uses an instance of the TaskBasic
 interface: the task body is the runTask event. When a component uses the
 ``post`` keyword, it calls the postTask command. Each TaskBasic MUST be
@@ -305,11 +306,11 @@ To replace the scheduler for a particular application, a developer
 SHOULD put a configuration named TinySchedulerC in the application
 directory: this will replace the default. The scheduler component
 provides a wire-through of the desired scheduler implementation. All
-scheduler implementations SHOULD provide a parameterize TaskBasic
+scheduler implementations MUST provide a parameterize TaskBasic
 interface, as SchedulerBasicP does; this supports nesC post statements
-and task declarations. If a scheduler does not provide the TaskBasic
-interface, compiling applications requires modifying the standard
-ncc scheduler parameters (as described in Appendix A). All scheduler 
+and task declarations and enables TinyOS core systems to operate
+properly. Generally, TinyOS core code needs to be able to run unchanged
+with new scheduler implementations.  All scheduler 
 implementations MUST provide the Scheduler interface.
 
 For example, imagine a hypothetical scheduler that provides earliest
@@ -387,11 +388,16 @@ implementation of SomethingP that uses keywords for basic tasks::
     }  
   }  
 
+The requirement that basic tasks not be subject to starvation
+requires that a scheduler supporting EDF tasks must ensure that
+basic tasks run eventually even if there is an unending stream of
+short deadline tasks to run.
+
 If the scheduler provides two instances of the same task interface,
 their unique keys are based on the name of the interface as the 
 scheduler presents it (the "as" keyword). For example, imagine
 a scheduler which provides two instances of TaskBasic: standard
-tasks and high-priority tasks. The scheduler always selects a task
+tasks and high-priority tasks. The scheduler usually selects a task
 for the high priority queue before the standard queue::
 
   configuration TinySchedulerC {  
@@ -400,8 +406,9 @@ for the high priority queue before the standard queue::
     provides interface TaskBasic[uint8_t taskID] as TaskHighPriority;  
   }  
 
-A component that uses a high priority task would then wire to
-TaskHighPriority with the key "TinySchedulerC.TaskHighPriority"::
+It cannot always select a high priority task because that could
+starve basic tasks.  A component that uses a high priority task would 
+wire to TaskHighPriority with the key "TinySchedulerC.TaskHighPriority"::
 
   configuration SomethingElseC {}  
   implementation {  
