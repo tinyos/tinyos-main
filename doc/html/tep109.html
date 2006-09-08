@@ -4,15 +4,15 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
-<title>Sensor Boards</title>
-<meta name="author" content="David Gay, Phil Levis, Wei Hong, and Joe Polastre" />
+<title>Sensors and Sensor Boards</title>
+<meta name="author" content="David Gay, Phil Levis, Wei Hong, Joe Polastre, and Gilman Tolle" />
 <style type="text/css">
 
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-07-12 16:59:34 $
-:version: $Revision: 1.2 $
+:date: $Date: 2006-09-08 23:15:07 $
+:version: $Revision: 1.3 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,8 +283,8 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="sensor-boards">
-<h1 class="title">Sensor Boards</h1>
+<div class="document" id="sensors-and-sensor-boards">
+<h1 class="title">Sensors and Sensor Boards</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
 <col class="docinfo-content" />
@@ -300,12 +300,8 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
-<td>David Gay, Phil Levis, Wei Hong, and Joe Polastre</td></tr>
-<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-Apr-2005</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.1</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2005-10-31</td>
+<td>David Gay, Phil Levis, Wei Hong, Joe Polastre, and Gilman Tolle</td></tr>
+<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Jun-2006</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -320,262 +316,281 @@ TEP 1.</p>
 </div>
 <div class="section">
 <h1><a id="abstract" name="abstract">Abstract</a></h1>
-<p>This memo documents how sensor boards are organized in TinyOS, and the
-general principles followed by the components that provide access to
-its sensors.</p>
+<p>This memo documents how sensor drivers are organized in TinyOS and how
+sets of sensor drivers are combined into sensor boards and sensor
+platforms, along with general principles followed by the components
+that provide access to sensors.</p>
 </div>
 <div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
-<p>This document defines the default organization of a sensor board in
-TinyOS. There likely will be sensor boards that cannot conform
-to this specification, but following as closely to its spirit as possible
-will simplify generic applications that use a range of sensor boards.</p>
-<p>This document assumes that sensors return uninterpreted 16-bit values, and,
-optionally uninterpreted, arbitrary-size calibration data. Conversion of
-sensor values to something with actual physical meaning is beyond the
-scope of this document.</p>
+<h1><a id="principles" name="principles">1. Principles</a></h1>
+<p>This section describes the basic organization principles for sensor
+drivers in TinyOS.</p>
+<p>For background, a sensor may be attached to the microcontroller on a
+TinyOS platform through a few different types of connections:</p>
+<blockquote>
+<ul class="simple">
+<li>Included within the microcontroller itself</li>
+<li>Connected to general-purpose IO pins for level/edge detection</li>
+<li>Connected to an ADC in the microcontroller for voltage sampling</li>
+<li>Connected to general-purpose IO pins for digital communication</li>
+<li>Connected through a standard digital bus protocol (1-Wire, I2C, SPI)</li>
+</ul>
+</blockquote>
+<p>Physically, these connections may also be decoupled by attaching the
+sensors to a <cite>sensor board</cite>, which can be removed from the TinyOS
+platform, and may fit multiple different TinyOS platforms.</p>
+<p>The capabilities of a physical sensor are made available to a TinyOS
+application through a <cite>sensor driver</cite>.</p>
+<p>According to the HAA <a class="citation-reference" href="#tep2" id="id1" name="id1">[TEP2]</a>, TinyOS devices should provide both
+simple hardware-independent interfaces for common-case use (HIL) and
+rich hardware-dependent interfaces for special-case use (HAL). Sensor
+drivers should follow this spirit as well.</p>
+<p>TinyOS 2.x represents each sensor as an individual component. This
+allows the compilation process to minimize the amount of code
+included. A sensor board containing multiple sensors should be
+represented as a collection of components, one for each sensor,
+contained within a sensor board directory.</p>
+<p>Sensors, being physical devices that may be shared, can benefit from
+virtualization and arbitration. This document describes a design
+pattern for sensor virtualization that may be followed by sensor
+drivers.</p>
+<p>The same physical sensor may be attached to multiple different TinyOS
+platforms, through platform-dependent interconnections. The common
+logic of sensor driver should be factored into chip-dependent,
+platform-independent components, and those components should be bound
+to the hardware resources on a platform by platform-dependent
+components, and to the hardware resources on a sensor board by
+sensorboard-dependent components.</p>
+<p>A physical sensor has a general class and a specific set of
+performance characteristics, captured by the make and model of the
+sensor itself. The naming of the sensor driver components should
+reflect the specifc name of the sensor, and optionally provide a
+component with a generic name for application authors who only care
+about the general class of the sensor.</p>
+<p>This document assumes that sensors return uninterpreted values of
+arbitrary size or datatype. Conversion of sensor values to something
+with actual physical meaning is beyond the scope of this document.</p>
 </div>
 <div class="section">
-<h1><a id="directory-organization" name="directory-organization">2. Directory Organization</a></h1>
+<h1><a id="sensor-hil-components" name="sensor-hil-components">2. Sensor HIL Components</a></h1>
+<p>A sensor HIL component MUST provide:</p>
 <ul class="simple">
-<li>A sensor board MUST have a unique name, composed of letters, numbers
-and underscores. Case is significant, but two sensor boards MUST
-differ in more than case. This is necessary to support platforms where
-filename case differences are not significant. We will use SBOARD to
-denote the sensor board name in the rest of this document.</li>
-<li>Each sensor board MUST have its own directory named SBOARD; default TinyOS
-sensor boards are placed in tinyos-2.x/tos/sensorboards, but
-sensor board directories can be placed anywhere as long as the nesC compiler
-receives a <cite>-I</cite> directive pointing to the sensor board's directory.</li>
-<li>Each sensor board directory MUST contain a <cite>.sensor</cite> file. This file
-is a perl script which contains any additional compiler settings needed for
-this sensor board (this file will be empty in many cases).</li>
-<li>If the sensor board wishes to define any C types or constants, it SHOULD
-place these in a file named SBOARD.h in the sensor board's directory.</li>
-<li>The sensor board directory SHOULD contain sensor board components
-for accessing each sensor on the sensor board. The conventions for these
-components are detailed in Section 3.</li>
-<li>A sensor board MAY include additional components providing alternative or
-higher-level interfaces to the sensors (e.g., for TinyDB). These components
-are beyond the scope of this document.</li>
-<li>Finally, the sensor board MAY contain any number of components,
-interfaces, C files, etc for internal use. To avoid name collisions, all
-externally visible names (interface types, components, C constants and
-types) used for internal purposes SHOULD be prefixed with SBOARD. All such
-components should end in P.</li>
+<li>One or more SID interfaces <a class="citation-reference" href="#tep114" id="id2" name="id2">[TEP114]</a>, for reading data.</li>
 </ul>
-<p>A simple example: the basic sensor board is named <cite>basicsb</cite>, it's directory
-is <cite>tinyos-2.x/tos/sensorboards/basicsb</cite>. It has no <cite>basicsb.h</cite> file and
-its <cite>.sensor</cite> file is empty. It has two components, <cite>PhotoC</cite> and <cite>TempC</cite>
-representing its light and temperature sensors.</p>
+<p>A sensor HIL component MAY provide:</p>
+<ul class="simple">
+<li>One or more SID interfaces <a class="citation-reference" href="#tep114" id="id3" name="id3">[TEP114]</a>, for reading or
+writing calibration coefficients or control registers.</li>
+</ul>
+<p>A sensor device driver SHOULD be a generic component that virtualizes
+access to the sensor. A sensor device driver can provide such
+virtualization for itself by defining a nesC generic client
+component. When a client component is being used, a call to a
+top-level SID interface should be delayed when the device is busy,
+rather than failing. This virtualization may be easier to accomplish
+by using one of the arbiters provided by the system.</p>
+<p>For example:</p>
+<pre class="literal-block">
+generic configuration SensirionSht11C() {
+  provides interface Read&lt;uint16_t&gt; as Temperature;
+  provides interface ReadStream&lt;uint16_t&gt; as TemperatureStream;
+  provides interface Read&lt;uint16_t&gt; as Humidity;
+  provides interface ReadStream&lt;uint16_t&gt; as HumidityStream;
+}
+implementation {
+  // connect to the ADC HIL, GPIO HAL, or sensor's HAL
+}
+</pre>
+<p>When a HIL component is being used, the sensor MUST initialize itself,
+either by including the <cite>MainC</cite> component and wiring to the
+<cite>SoftwareInit</cite> interface, or by allowing a lower-level component (like
+an ADC) to initialize itself.</p>
+<p>In addition, the HIL sensor driver MUST start the physical sensor
+automatically. For sensors without a constant power draw, the sensor
+MAY be started once at boot time by wiring to the <cite>MainC.Boot</cite>
+interface. Sensors that draw appreciable power MUST be started in
+response to a call to one of the top-level SID interfaces, and stopped
+some time after that call completes. One of the power-management
+components described in <a class="citation-reference" href="#tep115" id="id4" name="id4">[TEP115]</a> may be useful for this purpose.</p>
+<p>Generally, simple types are made up of octets. However, sensor values
+often have levels of precision besides a multiple of 8. A device MAY
+specify the precision of one of its interfaces with the DeviceMetadata
+interface:</p>
+<pre class="literal-block">
+interface DeviceMetadata {
+  command uint8_t getSignificantBits();
+}
+</pre>
+<p>The name of the instance of DeviceMetadata SHOULD clearly indicate
+which interface it corresponds to.</p>
+<p>A value contained returned from the device through a SID interface
+MAY be left shifted so that it covers as much of the type's range as
+possible. For example, if a 12-bit ADC reading is presented as a
+16-bit Read interface:</p>
+<pre class="literal-block">
+component DemoSensorC {
+  provides interface Read&lt;uint16_t&gt;;
+}
+</pre>
+<p>then the driver MAY shift the 12-bit value left so that its range is
+0x0000 - 0xfff0, rather than 0x0000 - 0x0fff.</p>
+<p>Sensor driver components SHOULD be named according to the make and
+model of the sensing device being presented. Using specific names
+gives the developer the option to bind to a particular sensor, which
+provides compile-time detection of missing sensors. However, wrapper
+components using &quot;common&quot; names MAY also be provided by the driver
+author, to support application developers who are only concerned with
+the particular type of the sensor and not its make, model, or detailed
+performance characteristics.</p>
+<p>A &quot;common&quot; naming layer atop a HIL may look like this:</p>
+<pre class="literal-block">
+generic configuration TemperatureC() {
+  provides interface Read&lt;uint16_t&gt;;
+  provides interface ReadStream&lt;uint16_t&gt;;
+}
+implementation {
+  components new SensirionSht11C();
+  Read = SensirionSht11C.Temperature;
+  ReadStream = SensirionSht11C.TemperatureStream;
+}
+
+generic configuration HumidityC() {
+  provides interface Read&lt;uint16_t&gt;;
+  provides interface ReadStream&lt;uint16_t&gt;;
+}
+implementation {
+  components new SensirionSht11C();
+  Read = SensirionSht11C.Humidity;
+  ReadStream = SensirionSht11C.HumidityStream;
+}
+</pre>
 </div>
 <div class="section">
-<h1><a id="sensor-board-components" name="sensor-board-components">3. Sensor Board Components</a></h1>
-<p>We have not yet selected any naming conventions for sensor board
-components. Please select reasonable namesldots</p>
-<p>A sensor board component MUST provide:</p>
+<h1><a id="sensor-hal-components" name="sensor-hal-components">3. Sensor HAL Components</a></h1>
+<p>Sensors with a richer interface than would be supported by the SID
+interfaces MAY provide a HAL component in addition to a HIL
+component.</p>
+<p>A sensor HAL component MUST provide:</p>
 <ul class="simple">
-<li>An <cite>Init</cite> interface.</li>
-<li>A <cite>StdControl</cite> or <cite>SplitControl</cite> interface for power management.</li>
-<li>A non-empty set of <cite>AcquireData</cite> interfaces for sampling.</li>
+<li>A SID-based interface or a specific hardware-dependent interface
+with commands for sampling and controlling the sensor device.</li>
 </ul>
-<p>A sensor board component MAY provide:</p>
+<p>A sensor HAL component MAY need to provide:</p>
 <ul class="simple">
-<li>Some <cite>CalibrationData</cite> interfaces for obtaining calibration data.
-A calibration interface for a sensor accessed via interface X should
-be called XCalibration.</li>
-<li>Some <cite>AcquireDataNow</cite> and <cite>AcquireDataBuffered</cite> interfaces, for high-speed
-or low-latency data acquisition.</li>
-<li>Any other appropriate interface.</li>
+<li>A <cite>StdControl</cite> or <cite>SplitControl</cite> interface for manual power
+management by the user, following the conventions described in
+<a class="citation-reference" href="#tep115" id="id5" name="id5">[TEP115]</a>.</li>
+<li>A Resource[] interface for requesting access to the device and
+possibly performing automated power management.</li>
+<li>Any other interfaces needed to control the device.</li>
 </ul>
-<p>The <cite>CalibrationData</cite> interface is shown below, while <cite>AcquireData</cite>,
-<cite>AcquireDataNow</cite> and <cite>AcquireDataBuffered</cite> are in TEP 101. The
-<cite>AcquireData</cite> interface returns uinterpreted 16-bit data. This might
-represent an A/D conversion result, a counter, etc. The optional
-calibration interface returns uninterpreted, arbitrary-size data.</p>
-<p>A sensor board component SHOULD be as lightweight as possible - it should
-just provide basic access to the physical sensors and SHOULD NOT attempt to do
-calibration, signal processing, etc. If such functionality is desired, it
-SHOULD be provided in separate components.</p>
-<div class="line-block">
-<div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">CalibrationData</span> <span class="pre">{</span></tt></div>
-<div class="line-block">
-<div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">/*</span> <span class="pre">Collect</span> <span class="pre">uninterpreted</span> <span class="pre">calibration</span> <span class="pre">data</span> <span class="pre">from</span> <span class="pre">a</span> <span class="pre">sensor</span> <span class="pre">*/</span></tt></div>
-<div class="line"><br /></div>
-<div class="line"><tt class="docutils literal"><span class="pre">/**</span> <span class="pre">Request</span> <span class="pre">calibration</span> <span class="pre">data</span></tt></div>
-<div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">*</span>&nbsp; <span class="pre">&#64;return</span> <span class="pre">SUCCESS</span> <span class="pre">if</span> <span class="pre">request</span> <span class="pre">accepted,</span> <span class="pre">FAIL</span> <span class="pre">if</span> <span class="pre">it</span> <span class="pre">is</span> <span class="pre">refused</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">*</span>&nbsp;&nbsp;&nbsp; <span class="pre">data</span> <span class="pre">error</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">signaled</span> <span class="pre">if</span> <span class="pre">SUCCESS</span> <span class="pre">is</span> <span class="pre">returned</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">*/</span></tt></div>
-</div>
-<div class="line"><tt class="docutils literal"><span class="pre">command</span> <span class="pre">result_t</span> <span class="pre">get();</span></tt></div>
-<div class="line"><br /></div>
-</div>
-<div class="line"><tt class="docutils literal"><span class="pre">/**</span> <span class="pre">Returns</span> <span class="pre">calibration</span> <span class="pre">data</span></tt></div>
-<div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">*</span> <span class="pre">&#64;param</span> <span class="pre">x</span> <span class="pre">Pointer</span> <span class="pre">to</span> <span class="pre">(uinterpreted)</span> <span class="pre">calibration</span> <span class="pre">data.</span> <span class="pre">This</span> <span class="pre">data</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">*</span>&nbsp;&nbsp; <span class="pre">must</span> <span class="pre">not</span> <span class="pre">be</span> <span class="pre">modified.</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">*</span> <span class="pre">&#64;param</span> <span class="pre">len</span> <span class="pre">Length</span> <span class="pre">of</span> <span class="pre">calibration</span> <span class="pre">data</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">*</span> <span class="pre">&#64;return</span> <span class="pre">Ignored.</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">*/</span></tt></div>
-</div>
-<div class="line"><tt class="docutils literal"><span class="pre">event</span> <span class="pre">result_t</span> <span class="pre">data(const</span> <span class="pre">void</span> <span class="pre">*x,</span> <span class="pre">uint8_t</span> <span class="pre">len);</span></tt></div>
-</div>
-</div>
-<div class="line"><tt class="docutils literal"><span class="pre">}</span></tt></div>
-</div>
-<p>Some common setups for sensor board components are:</p>
-<ul class="simple">
-<li>A single <cite>AcquireData</cite> interface. This is probably the most common case,
-where a single component corresponds to a single physical sensor, e.g., for
-light, temperature, pressure and there is no expectation of high sample
-rates.</li>
-<li>Multiple <cite>AcquireData</cite> interfaces. Some sensors might be strongly
-related, e.g., the axes of an accelerometer.  A single component could then
-provide a sensor interface for each axis. For instance, a 2-axis
-accelerometer which can be sampled at high speed, and which has some
-calibration data might be declared with:</li>
-</ul>
-<div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">configuration</span> <span class="pre">Accelerometer2D</span> <span class="pre">{</span></tt></div>
-<div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">provides</span> <span class="pre">{</span></tt></div>
-<div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">StdControl</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">AcquireData</span> <span class="pre">as</span> <span class="pre">AccelX;</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">AcquireDataNow</span> <span class="pre">as</span> <span class="pre">AccelXSingle;</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">AcquireDataBuffered</span> <span class="pre">as</span> <span class="pre">AccelXMultiple;</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">CalibrationData</span> <span class="pre">as</span> <span class="pre">AccelXCalibration;</span></tt></div>
-<div class="line"><br /></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">AcquireData</span> <span class="pre">as</span> <span class="pre">AccelY;</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">AcquireDataNow</span> <span class="pre">as</span> <span class="pre">AccelYSingle;</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">AcquireDataBuffered</span> <span class="pre">as</span> <span class="pre">AccelYMultiple;</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">CalibrationData</span> <span class="pre">as</span> <span class="pre">AccelYCalibration;</span></tt></div>
-</div>
-<div class="line"><tt class="docutils literal"><span class="pre">}</span></tt></div>
-</div>
-<div class="line"><tt class="docutils literal"><span class="pre">}</span></tt></div>
-</div>
-<ul class="simple">
-<li>A parameterised <cite>AcquireData</cite> interface. If a sensor board has multiple
-similar sensors, it may make sense to provide a single component to access
-all of these, using a parameterised <cite>AcquireData</cite> interface. For instance,
-a general purpose sensor board with multiple A/D channels might provide an
-<cite>AcquireData</cite> interface parameterised by the A/D channel id.</li>
-<li>In all of these examples, if high-speed sampling makes sensor for the
-sensor (e.g., a microphone), and the sensor is connected in a way that
-supports high-frequency and/or low-latency access (e.g., via an
-on-microcontroller A/D converter), the component should offer
-<cite>AcquireDataNow</cite> and <cite>AcquireDataBuffered</cite> interfaces.</li>
-</ul>
-<p>Sensor board components MUST respect the following conventions
-on the use of the <cite>Init</cite>, <cite>StdControl</cite>,  and <cite>SplitControl</cite>
-interfaces.  These are given assuming <cite>StdControl</cite> is used, but the
-behaviour with <cite>SplitControl</cite> is identical except that <cite>start</cite> and <cite>stop</cite>
-are not considered complete until the <cite>startDone</cite> and <cite>stopDone</cite> events are
-signaled. The conventions are:</p>
-<ol class="arabic">
-<li><p class="first"><cite>Init.init</cite>: must be called at mote boot time.</p>
-</li>
-<li><dl class="first docutils">
-<dt><cite>StdControl.start</cite>: ensure the sensor corresponding to this component is</dt>
-<dd><p class="first">ready for use. For instance, this should power-up the sensor if
-necessary. The application can call <cite>getData</cite> once <cite>StdControl.start</cite>
-completes.</p>
-<p class="last">If a sensor takes a while to power-up, the sensor board implementer can
-either use a <cite>SplitControl</cite> interface and signal <cite>startDone</cite>
-when the sensor is ready for use, or delay <cite>dataReady</cite> events
-until the sensor is ready. The former choice is preferable.</p>
-</dd>
-</dl>
-</li>
-<li><p class="first"><cite>StdControl.stop</cite>: put the sensor in a low-power mode.
-<cite>StdControl.start</cite> must be called before any further readings
-are taken. The behaviour of calls to <cite>StdControl.stop</cite> during
-sampling (i.e., when an <cite>dataReady</cite> event is going to be
-signaled) is undefined.</p>
-</li>
-</ol>
+<p>For example:</p>
+<pre class="literal-block">
+configuration SensirionSht11DeviceC {
+  provides interface Resource[ uint8_t client ];
+  provides interface SensirionSht11[ uint8_t client ];
+}
+implementation {
+  // connect to the sensor's platform-dependent HPL here
+}
+</pre>
 </div>
 <div class="section">
-<h1><a id="sensor-file" name="sensor-file"><cite>.sensor</cite> File</a></h1>
-<p>This file is a perl script which gets executed as part of the <cite>ncc</cite>
-nesC compiler frontend. It can add or modify any compile-time options
-necessary for a particular sensor board. It MAY modify the following perl
-variables, and MUST NOT modify any others:</p>
+<h1><a id="sensor-hpl-components" name="sensor-hpl-components">4. Sensor HPL Components</a></h1>
+<p>A sensor HPL is necessarily platform-dependent or
+sensorboard-dependent. These components should provide access to the
+physical resources needed by the sensor, in a platform-independent
+manner that can be used by the shared logic of the sensor HAL
+components. In the case of bus-based sensors, this HPL may be nothing
+more than wiring to the appropriate bus interface for use by the HAL
+component.</p>
+<p>For example:</p>
+<pre class="literal-block">
+configuration HplSensirionSht11C {
+  provides interface Init;
+  provides interface Resource[ uint8_t id ];
+  provides interface GeneralIO as DATA;
+  provides interface GeneralIO as SCK;
+  provides interface GpioInterrupt as InterruptDATA;
+}
+implementation {
+  // connect to platform or sensorboard-dependent resources
+  // power-manage the sensor through platform-specific means
+}
+</pre>
+</div>
+<div class="section">
+<h1><a id="directory-organization-guidelines" name="directory-organization-guidelines">5. Directory Organization Guidelines</a></h1>
+<p>Because the same physical sensor may be attached to TinyOS platforms
+in many different ways, the organization of sensor drivers should
+reflect the distinction between sensor and sensor interconnect.</p>
+<p>Sensor components commonly exist at three levels:
+platform-independent, sensorboard-dependent, and
+platform-dependent. Factoring a sensor driver into these three pieces
+allows for greater code reuse when the same sensor is attached to
+different sensorboards or platforms.</p>
+<p>Platform-independent sensor driver components for a particular sensor,
+like protocol logic, when in the core TinyOS 2.x source tree, SHOULD
+be placed into &quot;tos/chips/&lt;sensor&gt;&quot;, where &lt;sensor&gt; reflects the make
+and model of the sensor device being supported. When not a part of the
+core source tree, this directory can be placed anywhere as long as the
+nesC compiler recieves a <cite>-I</cite> directive pointing to the sensor's
+directory. However, not all sensors have a sufficiently large amount
+of platform-independent logic to justify a separate &quot;chips&quot;
+directory. Sensor chips are more likely to be digital sensors than
+analog sensors, for example.</p>
+<p>A sensor board is a collection of sensor components with a fixed name,
+intended for attachment to multiple platforms. Each sensor board MUST
+have its own directory named &lt;sensorboard&gt;. Default TinyOS 2.x sensor
+boards are placed in &quot;tos/sensorboards/&lt;sensorboard&gt;&quot;, but sensor
+board directories can be placed anywhere as long as the nesC compiler
+receives a <cite>-I</cite> directive pointing to the sensor board's directory.</p>
+<p>Both sensors and sensor boards MUST have unique names. Case is
+significant, but two sensor boards MUST differ in more than case. This
+is necessary to support platforms where filename case differences are
+not significant.</p>
+<p>Each sensor board directory MUST contain a <cite>.sensor</cite> file.  This file
+is a perl script which gets executed as part of the <cite>ncc</cite> nesC
+compiler frontend. It can add or modify any compile-time options
+necessary for a particular sensor board. It MAY modify the following
+perl variables, and MUST NOT modify any others:</p>
 <ul class="simple">
-<li>&#64;new_args: This is the array of arguments which will be
-passed to nescc. For instance, you might add an include directive
-to &#64;new_args with push &#64;new_args, <cite>-Isomedir</cite></li>
+<li>&#64;new_args: This is the array of arguments which will be passed to
+nescc. For instance, you might add an include directive to &#64;new_args
+with push &#64;new_args, <cite>-Isomedir</cite>. This could be used to include
+subdirectories.</li>
 <li>&#64;commonboards: This can be set to a list of sensor board names which
 should be added to the include path list. These sensor boards must be
 in tinyos-2.x/tos/sensorboards.</li>
 </ul>
+<p>If the sensor board wishes to define any C types or constants, it
+SHOULD place these in a file named &lt;sensorboard&gt;.h in the sensor
+board's directory.</p>
+<p>A sensor board directory MAY contain a &quot;chips&quot; directory, with
+subdirectories for each of the sensors connected to the sensor board.
+If a &quot;chips&quot; subdirectory is used, sensorboard-dependent driver
+components needed to connect platform-independent logic to a
+particular attachment for that sensor should be placed in
+&quot;&lt;sensorboard&gt;/chips/&lt;sensor&gt;&quot;.</p>
+<p>Components needed to connect the platform-independent sensor driver
+components or sensorboard-dependent components to the hardware
+resources available on a particular platform SHOULD be placed in
+&quot;tos/&lt;platform&gt;/chips/&lt;sensor&gt;&quot;. In addition, components for a sensor
+that only exists on a particular platform should be placed in a such a
+directory.</p>
+<p>Sensors that exist as part of a larger chip, like a MCU internal
+voltage sensor, SHOULD be placed in a subdirectory of the chip's
+directory. &quot;tos/&lt;chip&gt;/sensors/&lt;sensor&gt;&quot;.</p>
+<p>The <cite>.platform</cite> and <cite>.sensor</cite> files need to include enough <cite>-I</cite>
+directives to locate all of the necessary components needed to support
+the sensors on a platform and/or sensorboard.</p>
+<p>All of these directory organization guidelines are only intended for
+code that will enter the core source tree. In general, sensor
+components may be placed anywhere as long as the nesC compiler
+receives enough <cite>-I</cite> directives to locate all of the necessary pieces.</p>
 </div>
 <div class="section">
-<h1><a id="example-mts3x0" name="example-mts3x0">Example: mts3x0</a></h1>
-<p>The mica sensor board (mts300/mts310) has five sensors (and one actuator,
-the sounder) -- the accelerometer and magnetometer are only present on
-the mts310:</p>
-<table border="1" class="docutils">
-<colgroup>
-</colgroup>
-<tbody valign="top">
-</tbody>
-</table>
-<div class="line-block">
-<div class="line">Name          | Component | Sensor Interfaces | Other Interfaces |</div>
-</div>
-<p>+===============+===========+===================+==================+</p>
-<div class="line-block">
-<div class="line">Accelerometer | AccelC    | AccelX            |                  |</div>
-</div>
-<div class="line-block">
-<div class="line">|           | AccelY            |                  |</div>
-</div>
-<div class="line-block">
-<div class="line">Magnetometer  | MagC      | MagX              | MagSetting       |</div>
-</div>
-<div class="line-block">
-<div class="line">|           | MagY              |                  |</div>
-</div>
-<div class="line-block">
-<div class="line">Microphone    | MicC      | MicADC            | Mic              |</div>
-</div>
-<div class="line-block">
-<div class="line">|           |                   | MicInterrupt     |</div>
-</div>
-<div class="line-block">
-<div class="line">Light         | PhotoC    | PhotoADC          |                  |</div>
-</div>
-<div class="line-block">
-<div class="line">Temperature   | TempC     | TempADC           |                  |</div>
-</div>
-<table border="1" class="docutils">
-<colgroup>
-</colgroup>
-<tbody valign="top">
-</tbody>
-</table>
-<p>Each physical sensor is represented by a separate component. Specific
-sensors that have more than one axis of measurement (AccelC and MagC)
-provide more than one <cite>AcquireData</cite> interface on a single component. Some
-sensors, such as the magnetometer and microphone, have additional
-functionality provided through sensor-specific interfaces.</p>
-<p>Although light and temperature are represented by separate components, in
-reality they share a single microcontroller pin. The two components PhotoC
-and TempC sit on top of the PhotoTempP component, which controls access to
-the shared pin, and orchestrates which sensor is currently connected to
-it. From a programmer's perspective, they appear as individual sensors,
-even though their underlying implementation is a bit more complex.</p>
-<p>The board's mts3x0.h file contains private configuration data
-(pin usage, ADC ports, etc).</p>
-<p>The mica sensor board has an empty .sensor file.</p>
-</div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<h1><a id="authors-addresses" name="authors-addresses">6. Authors' Addresses</a></h1>
 <div class="line-block">
 <div class="line">David Gay</div>
 <div class="line">2150 Shattuck Ave, Suite 1300</div>
@@ -587,8 +602,9 @@ even though their underlying implementation is a bit more complex.</p>
 <div class="line">email - <a class="reference" href="mailto:david.e.gay&#64;intel.com">david.e.gay&#64;intel.com</a></div>
 <div class="line"><br /></div>
 <div class="line">Wei Hong</div>
-<div class="line">Arched Rock</div>
-<div class="line">Berkeley, CA 94704</div>
+<div class="line">Arch Rock</div>
+<div class="line">657 Mission St. Suite 600</div>
+<div class="line">San Francisco, CA 94105</div>
 <div class="line"><br /></div>
 <div class="line">email - <a class="reference" href="mailto:wei.hong&#64;gmail.com">wei.hong&#64;gmail.com</a></div>
 <div class="line"><br /></div>
@@ -608,7 +624,35 @@ even though their underlying implementation is a bit more complex.</p>
 <div class="line">Berkeley, CA 94720</div>
 <div class="line"><br /></div>
 <div class="line">email - <a class="reference" href="mailto:polastre&#64;cs.berkeley.edu">polastre&#64;cs.berkeley.edu</a></div>
+<div class="line"><br /></div>
+<div class="line">Gilman Tolle</div>
+<div class="line">Arch Rock</div>
+<div class="line">657 Mission St. Suite 600</div>
+<div class="line">San Francisco, CA 94105</div>
+<div class="line"><br /></div>
+<div class="line">email - <a class="reference" href="mailto:gtolle&#64;archrock.com">gtolle&#64;archrock.com</a></div>
 </div>
+</div>
+<div class="section">
+<h1><a id="citations" name="citations">7. Citations</a></h1>
+<table class="docutils citation" frame="void" id="tep2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1" name="tep2">[TEP2]</a></td><td>TEP 2: Hardware Abstraction Architecture</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep114" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep114">[TEP114]</a></td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> TEP 114: SIDs: Source and Sink Indepedent Drivers</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep115" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep115">[TEP115]</a></td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> TEP 115: Power Management of Non-Virtualized Devices</td></tr>
+</tbody>
+</table>
 </div>
 </div>
 </body>

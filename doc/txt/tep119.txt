@@ -195,12 +195,12 @@ then node B's metric value MUST be greater than node A's.
 Collection has a virtualized sending abstraction, the generic
 component CollectionSenderC::
 
-generic configuration CollectionSenderC(collection_id_t collectid) {
-  provides {
-    interface Send;
-    interface Packet;
+  generic configuration CollectionSenderC(collection_id_t collectid) {
+    provides {
+      interface Send;
+      interface Packet;
+    }
   }
-}
 
 This abstraction follows a similar virtualization approach to
 AMSenderC [1_], except that it is parameterized by a collection_id_t

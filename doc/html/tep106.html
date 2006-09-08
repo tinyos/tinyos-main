@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-07-12 16:59:34 $
-:version: $Revision: 1.2 $
+:date: $Date: 2006-09-08 23:15:07 $
+:version: $Revision: 1.3 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis and Cory Sharp</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.9</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.3</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-06-13</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-09-08</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -524,7 +524,8 @@ module SchedulerBasicP {
 </pre>
 <p>A scheduler MUST provide a parameterized TaskBasic interface.
 If a call to TaskBasic.postTask() returns SUCCESS, the scheduler MUST run it
-eventually. The scheduler MUST return SUCCESS to a TaskBasic.postTask()
+eventually, so that starvation is not a concern. The scheduler MUST
+return SUCCESS to a TaskBasic.postTask()
 operation unless it is not the first call to TaskBasic.postTask() since
 that task's TaskBasic.runTask() event has been signaled. The
 McuSleep interface is used for microcontroller power management;
@@ -558,7 +559,7 @@ interface TaskBasic {
   void event runTask();
 }
 </pre>
-<p>When a component declares a task with the   task   keyword in nesC, it
+<p>When a component declares a task with the <tt class="docutils literal"><span class="pre">task</span></tt> keyword in nesC, it
 is implicitly declaring that it uses an instance of the TaskBasic
 interface: the task body is the runTask event. When a component uses the
 <tt class="docutils literal"><span class="pre">post</span></tt> keyword, it calls the postTask command. Each TaskBasic MUST be
@@ -582,11 +583,11 @@ that provides wire-through of SchedulerBasicP.</p>
 SHOULD put a configuration named TinySchedulerC in the application
 directory: this will replace the default. The scheduler component
 provides a wire-through of the desired scheduler implementation. All
-scheduler implementations SHOULD provide a parameterize TaskBasic
+scheduler implementations MUST provide a parameterize TaskBasic
 interface, as SchedulerBasicP does; this supports nesC post statements
-and task declarations. If a scheduler does not provide the TaskBasic
-interface, compiling applications requires modifying the standard
-ncc scheduler parameters (as described in Appendix A). All scheduler
+and task declarations and enables TinyOS core systems to operate
+properly. Generally, TinyOS core code needs to be able to run unchanged
+with new scheduler implementations.  All scheduler
 implementations MUST provide the Scheduler interface.</p>
 <p>For example, imagine a hypothetical scheduler that provides earliest
 deadline first tasks, which are provided through the TaskEdf
@@ -663,11 +664,15 @@ implementation {
   }
 }
 </pre>
+<p>The requirement that basic tasks not be subject to starvation
+requires that a scheduler supporting EDF tasks must ensure that
+basic tasks run eventually even if there is an unending stream of
+short deadline tasks to run.</p>
 <p>If the scheduler provides two instances of the same task interface,
 their unique keys are based on the name of the interface as the
 scheduler presents it (the &quot;as&quot; keyword). For example, imagine
 a scheduler which provides two instances of TaskBasic: standard
-tasks and high-priority tasks. The scheduler always selects a task
+tasks and high-priority tasks. The scheduler usually selects a task
 for the high priority queue before the standard queue:</p>
 <pre class="literal-block">
 configuration TinySchedulerC {
@@ -676,8 +681,9 @@ configuration TinySchedulerC {
   provides interface TaskBasic[uint8_t taskID] as TaskHighPriority;
 }
 </pre>
-<p>A component that uses a high priority task would then wire to
-TaskHighPriority with the key &quot;TinySchedulerC.TaskHighPriority&quot;:</p>
+<p>It cannot always select a high priority task because that could
+starve basic tasks.  A component that uses a high priority task would
+wire to TaskHighPriority with the key &quot;TinySchedulerC.TaskHighPriority&quot;:</p>
 <pre class="literal-block">
 configuration SomethingElseC {}
 implementation {

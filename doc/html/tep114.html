@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-07-12 16:59:35 $
-:version: $Revision: 1.2 $
+:date: $Date: 2006-09-08 23:15:07 $
+:version: $Revision: 1.3 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Gilman Tolle, Philip Levis, and David Gay</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">30-Oct-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.3</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.3</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-06-09</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-09-08</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -470,29 +470,6 @@ ReadWriteRef.</p>
 those that generate multiple simultaneous readings for which
 passing by value is inefficient, such as a two-axis digital
 accelerometer.</p>
-</div>
-<div class="section">
-<h2><a id="metadata-and-shifting" name="metadata-and-shifting">3.3 Metadata and Shifting</a></h2>
-<p>Generally, simple types are made up of octets. However, sensor values
-often have levels of precision besides a multiple of 8. Any value
-contained in a simple type MUST be left shifted so that it covers as
-much of the type's range as possible. For example, if a 12-bit ADC
-reading is presented as a 16-bit Read interface:</p>
-<pre class="literal-block">
-component DemoSensorC {
-  provides interface Read&lt;uint16_t&gt;;
-}
-</pre>
-<p>then the 12-bit value MUST be shifted left so that its range is 0x0000
-- 0xfff0, rather than 0x0000 - 0x0fff. A device MAY specify the
-precision of one of its interfaces with the DeviceMetadata interface:</p>
-<pre class="literal-block">
-interface DeviceMetadata {
-  command uint8_t getSignificantBits();
-}
-</pre>
-<p>The name of the instance of DeviceMetadata SHOULD clearly indicate
-which interface it corresponds to.</p>
 </div>
 <div class="section">
 <h2><a id="single-phase-scalar-i-o" name="single-phase-scalar-i-o">3.4 Single-Phase Scalar I/O</a></h2>
