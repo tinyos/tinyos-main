@@ -10,8 +10,8 @@ Permanent Data Storage (Flash)
 :Author: David Gay, Jonathan Hui
 
 :Draft-Created: 27-Sep-2004
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2006-07-12 16:59:41 $
+:Draft-Version: $Revision: 1.3 $
+:Draft-Modified: $Date: 2006-09-13 16:51:09 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 
@@ -46,22 +46,23 @@ include a column for Atmel's AT45DB flash chip family, as it has
 significantly different tradeoffs than other flash chips: ::
 
 
-		   NOR                AT45DB         NAND
+		   NOR                AT45DB             NAND
+		   (ex: ST M25P40,			 (ex: Samsung
+		   Intel PXA27x)			 K9K1G08R0B)
 
-  Erase	       :  Slow (seconds)      Fast (ms)	     Fast (ms)
-  Erase unit   :  Large (64KB-128KB)  Small (256B)   Medium (8K-32KB)
-  Writes       :  Slow (100s kB/s)    Slow (60kB/s)  Fast (MBs/s)
-  Write unit   :  1 bit               256B           100's of bytes
-  Bit-errors   :  Low                 Low            High (requires ECC, 
-                                                     bad-block mapping)
-  Read	       :  Fast*               Slow+I/O bus   Fast (but limited by 
-                                                     I/O bus)
-  Erase cycles :  10^4 - 10^5         10^4 **        10^5 - 10^7
-  Intended use :  Code storage        Data storage   Data storage
-  Energy/byte  :  1uJ                 1uJ            .01uJ
+  Erase	       :  Slow (seconds)      Fast (ms)	         Fast (ms)
+  Erase unit   :  Large (64KB-128KB)  Small (256B)       Medium (8KB-32KB)
+  Writes       :  Slow (100s kB/s)    Slow (60kB/s)      Fast (MBs/s)
+  Write unit   :  1 bit               256B               100's of bytes
+  Bit-errors   :  Low                 Low                High (requires ECC, 
+                                                         bad-block mapping)
+  Read	       :  Bus limited*        Slow+Bus limited   Bus limited
+  Erase cycles :  10^4 - 10^5         10^4 **            10^5 - 10^7
+  Intended use :  Code storage        Data storage       Data storage
+  Energy/byte  :  1uJ                 1uJ                .01uJ
 
-  *  Intel Mote2 NOR flash is memory mapped (reads are very fast and can
-     directly execute code)
+  *  M25P40 reads are limited by the use of a 25MHz SPI bus. The PXA27x flash is
+     memory mapped (reads are very fast and can directly execute code).
   ** Or infinite? Data sheet just says that every page within a sector
      must be written every 10^4 writes within that sector
 
@@ -143,7 +144,7 @@ storage abstractions in detail (Section 3).
 2. HPL/HAL/HIL Architecture
 ====================================================================
 
-The flash chip architecture dollows the three-layer Hardware
+The flash chip architecture follows the three-layer Hardware
 Abstraction Architecture (HAA), with each chip providing a presentation
 layer (HPL, Section 2.1), adaptation layer (HAL, Section 2.2) and
 platform-independent interface layer (the storage abstractions described in
@@ -159,8 +160,8 @@ and ST M25P chip families.
 2.1 Hardware Presentation Layer (HPL)
 --------------------------------------------------------------------
 
-The flash HPL has a chip-dependent, system-independent interface. The
-implementation of this HPL is system-dependent. The flash HPL SHOULD be
+The flash HPL has a chip-dependent, platform-independent interface. The
+implementation of this HPL is platform-dependent. The flash HPL SHOULD be
 stateless. 
 
 To remain platform independent, a flash chip's HPL SHOULD connect to
@@ -174,7 +175,7 @@ particular flash chip found on the platform.
 2.2 Hardware Adaptation Layer (HAL)
 --------------------------------------------------------------------
 
-The flash HAL has a chip-dependent, system-independent interface and
+The flash HAL has a chip-dependent, platform-independent interface and
 implementation. Flash families with a common HPL SHOULD have a common
 HAL. Flash HAL's SHOULD expose a ``Resource`` interface and automatically
 power-manage the underlying flash chip. Finally, the flash HAL MUST
@@ -186,7 +187,7 @@ abstractions that interact cleanly with the rest of the flash system.
 3. Non-Volatile Storage Abstracitons in TinyOS 2.x 
 ===================================================================
 
-The HIL implementations are system-independent, but chip (family)
+The HIL implementations are platform-independent, but chip (family)
 dependent. They implement the three storage abstractions and
 volume structure discussed in the introduction.
 
@@ -212,8 +213,8 @@ code. There is no constraint on how this is done or what code is produced,
 except that the specification to physical allocation MUST be one-to-one
 (i.e. a given specification should always have the same resulting physical
 allocation on a given chip) and the result MUST be placed in the build
-directory. When not specified, the tool may give any suitable physical
-location to a volume. If there is any reason that the physical allocation
+directory. When not specified, the tool picks a suitable physical
+location for a volume. If there is any reason that the physical allocation
 cannot be satisfied, an error should be given at compile time. The tool
 SHOULD be named ``tos-storage-CHIPNAME`` and be distributed with the other
 tools supporting a platform.
@@ -247,12 +248,11 @@ This leads to the definition of the ``BlockStorageC`` abstraction for storing
 large objects:
 
 - A large object ranges from a few kilobytes upwards.
-- A large object must be erased before use.
-- A large object must be committed to ensure it survives a reboot or crash;
-  after a commit no more writes may be performed.
-- Random reads are allowed.
-- Random writes are allowed are allowed between erase and commit; data
-  cannot be overwritten.
+- A large object is erased before the first write.
+- A commit ensures that a large object survives a reboot or crash
+- Reads are unrestricted
+- Writes can only be performed between an erase and a commit
+- Each byte can only be written once between an erase and a commit
 
 Large objects are accessed by instantiating a BlockStorageC component
 which takes a volume id argument: ::
@@ -268,13 +268,16 @@ The ``BlockRead`` and ``BlockWrite`` interfaces contain the following
 operations (all split-phase, except ``BlockRead.getSize``):
 
 - ``BlockWrite.erase``: erase the volume. After a reboot or a commit, a
-  volume must be erased before it can be written to.
+  volume MUST be erased before it can be written to.
 
-- ``BlockWrite.write``: write some bytes starting at a given offset. Each
-  byte can only be written once between an erase and the subsequent commit.
+- ``BlockWrite.write``: write some bytes starting at a given
+  offset. Each byte MUST NOT be written more than once between an erase
+  and the subsequent commit. Writes MUST NOT be performed between a
+  commit and the subsequent erase.
 
-- ``BlockWrite.commit``: commit all writes to a given volume. No writes can
-  be performed after a commit until a subsequent erase.
+- ``BlockWrite.commit``: commit all writes to a given volume. Writes
+  MUST NOT be performed after a commit until a subsequent erase. Commit
+  MUST be called to ensure written data survives a reboot or crash.
 
 - ``BlockRead.verify``: verify that the volume contains the results of a
   successful commit.
@@ -294,20 +297,19 @@ the interface definitions.
 3.3 Logging
 ------------------------------------------------------------------
 
-Event and reuslt logging is a common requirement in sensor
+Event and result logging is a common requirement in sensor
 networks. Such logging should be reliable (a mote crash should not
 lose data). It should also be easy to extract data from the log,
 either partially or fully. Some logs are *linear* (stop logging when
 the volume is full), others are *circular* (the oldest data is
 overwritten when the volume is full).
 
-The ``LogStorageC`` abstraction supports these requirements.  The log is record
-based: each call to ``LogWrite.append`` (see below) creates a new
-record. On failure (crash or reboot), the log is guaranteed to only lose
-whole records from the end of the log. Additionally, once a circular log
-wraps around, calls to ``LogWrite.append`` only lose whole records from the
-beginning of the log. These guarantees mean that applications do not to
-have worry about incomplete or inconsistent log entries.
+The ``LogStorageC`` abstraction supports these requirements.  The log is
+record based: each call to ``LogWrite.append`` (see below) creates a new
+record. On failure (crash or reboot), the log MUST only lose whole
+records from the end of the log. Additionally, once a circular log wraps
+around, calls to ``LogWrite.append`` MUST only lose whole records from
+the beginning of the log. 
 
 Logs are accessed by instantiating a LogStorageC component which takes a
 volume id and a boolean argument: ::
@@ -326,12 +328,15 @@ The ``LogRead`` and ``LogWrite`` interfaces contain the following
 operations (all split-phase except ``LogWrite.currentOffset``,
 ``LogRead.currentOffset`` and ``LogRead.getSize``):
 
-- ``LogWrite.erase``: erase the log.
+- ``LogWrite.erase``: erase the log. A log MUST be erased (possibly in
+  some previous session) before any other operation can be used.
 
 - ``LogWrite.append``: append some bytes to the log. In a circular log,
   this may overwrite the current read position. In this case, the 
-  read position is implicitly advanced to the log's current beginning
+  read position MUST be advanced to the log's current beginning
   (i.e., as if ``LogRead.seek`` had been called with ``SEEK_BEGINNING``).
+  Additionally, the ``LogWrite.appendDone`` event reports whenever, in a
+  circular log, an append erases old records.
 
   Each append creates a separate record. Log implementations may have a
   maximum record size; all implementations MUST support records of up
@@ -339,13 +344,20 @@ operations (all split-phase except ``LogWrite.currentOffset``,
 
 - ``LogWrite.sync``: guarantee that data written so far will not be lost to
   a crash or reboot (it can still be overwritten when a circular log wraps
-  around). Using ``sync`` may waste some space in the log.
+  around). Using ``sync`` MAY waste some space in the log.
 
 - ``LogWrite.currentOffset``: return cookie representing current
   append position (for use with ``LogRead.seek``).
 
 - ``LogRead.read``: read some bytes from the current read position in
   the log and advance the read position.
+
+  ``LogStorageC`` implementations MUST include error detection codes
+  to increase the likelihood of detection of corrupted or invalid log
+  data. Data returned by a successful read MUST have passed this
+  error detection check. The behaviour on failure of this check is
+  unspecified (e.g., the at45db believes as if the end of the log has
+  been reached; other implementations may behave differently).
 
 - ``LogRead.currentOffset``: return cookie representing current
   read position (for use with ``LogRead.seek``).
@@ -359,19 +371,30 @@ operations (all split-phase except ``LogWrite.currentOffset``,
   ``SEEK_BEGINNING`` positions the read position at the beginning of
   the oldest record still present in the log.
 
-- ``LogRead.getSize``: return an approximation of the log's capacity.
-  Uses of ``sync`` and other overhead may reduce this number.
+  After reboot, the current read position is ``SEEK_BEGINNING``.
+
+- ``LogRead.getSize``: return an approximation of the log's capacity
+  in bytes. Uses of ``sync`` and other overhead may reduce this number.
 
 For full details on arguments, etc, see the comments in the interface
 definitions.
 
+Note that while each call to ``append`` logically creates a separate
+record, the ``LogStorageC`` API does not report record
+boundaries. Additionally, crashes, reboots, and appends after
+wrap-around in a circular log can cause the loss of multiple consecutive
+records. Taken together, these restrictions mean that a ``LogStorageC``
+implementation MAY internally aggregate several consecutive appends into
+a single record. However, the guarantee that only whole records are lost
+is sufficient to ensure that applications do not to have worry about
+incomplete or inconsistent log entries.
 
 
 3.4 Small objects:
 ------------------------------------------------------------------
 
-Sensor network applications may need to store configuration data, e.g.,
-mote id, radio frequency, sample rates, etc. Such data is not large, but
+Sensor network applications need to store configuration data, e.g.,
+mote identity, radio frequency, sample rates, etc. Such data is not large, but
 losing it may lead to a mote misbehaving or losing contact with the
 network.
 
