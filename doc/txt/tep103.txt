@@ -10,8 +10,8 @@ Permanent Data Storage (Flash)
 :Author: David Gay, Jonathan Hui
 
 :Draft-Created: 27-Sep-2004
-:Draft-Version: $Revision: 1.3 $
-:Draft-Modified: $Date: 2006-09-13 16:51:09 $
+:Draft-Version: $Revision: 1.4 $
+:Draft-Modified: $Date: 2006-09-13 17:45:08 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 
@@ -69,7 +69,7 @@ significantly different tradeoffs than other flash chips: ::
 The energy/byte is the per-byte cost of erasing plus programming. It is
 derived from the timing and power consumption of erase and write operations
 (for NOR flash, values are for the STMicroelectronics M25P family, for NAND
-flash, values are from a Samsung datasheet). Energy/byte for reads appears
+flash, values are from the Samsung datasheet). Energy/byte for reads appears
 to depend mostly on how long the read takes (the power consumptions are
 comparable), i.e., on the efficiency of the bus + processor.
 
@@ -94,7 +94,10 @@ three components listed above are supported on these chips:
 - The ``Matchbox`` implementation was AT45DB-specific. It was not
   reimplemented for these other chips, in part because it does not 
   support some applications (e.g., network reprogramming) very well.
-  
+
+2. Storage in TinyOS 2.x
+====================================================================
+
 One approach to hiding the differences between different flash chips is to
 provide a disk-like, block interface (with, e.g., 512B blocks). This is the
 approach taken by compact flash cards. However, in the context of TinyOS,
@@ -107,23 +110,39 @@ this approach has several drawbacks:
   requires remapping blocks. We believe that maintaining this remapping 
   table is too expensive on many mote-class devices.
 
-Another approach to supporting multiple flash chips is to build a
-file system (like Matchbox) which can be implemented for multiple
-flash chips. However, TinyOS is currently targeted at running a 
-single application, and many applications know their storage needs
-in advance: for instance, a little space for configuration data, and
-everything else for a log of all sampled data. In such cases, the
-flexibility offered by a filing system (e.g., arbitrary numbers of
-files) is overkill, and may come at the expense of implementation
-and runtime complexity.
+A second approach is to provide a generic low-level interface providing
+operations (read, write, erase) corresponding to the basic flash
+operations, along with information describing the flash chip's layout
+(minimum write and erase unit, timing information, etc). However,
+we believe that the large differences between NAND and NOR flash (see the
+table above), in particular the differences in reliability, write and
+erase units, make the design of a useful generic low-level interface
+tricky at best. 
 
-Instead, TinyOS 2.x, divides flash chips into separate volumes (with
-sizes fixed at compile-time). Each volume provides a single storage
-abstraction (the abstraction defines the format). So far there are three
-such abstractions: large objects written in a single session,
-small objects with arbitrary reads and writes, and logs. This approach
-has two advantages:
+We thus believe it is best, for now at least, to define high-level
+storage abstractions that are useful for sensor network applications,
+and leave their implementation up to each flash chip - such abstractions
+will be necessary anyway. We leave open the possibility that a future
+TEP may define portable lower-level flash interfaces (either for all
+flash chips, or, e.g., for NOR-family flashes). Such low-level
+interfaces would allow implementations of the storage abstractions
+defined in this TEP to be used for multiple flash chips.
 
+This TEP describes three high-level storage abstractions: large objects
+written in a single session, small objects with arbitrary reads and
+writes, and logs. TinyOS 2.x, divides flash chips into separate volumes
+(with sizes fixed at compile-time). Each volume provides a single
+storage abstraction (the abstraction defines the format).
+
+We prefer the use of single abstractions over fixed-size volumes over
+the use of a more general filing system (like Matchbox) for several
+reasons:
+     
+- TinyOS is currently targeted at running a single application, and many
+  applications know their storage needs in advance: for instance, a
+  little space for configuration data, and everything else for a log of
+  all sampled data. In such cases, the flexibility offered by a filing
+  system (e.g., arbitrary numbers of files) is overkill,
 - Each abstraction is relatively easy to implement on a new flash chip, and
   has relatively little overhead.
 - The problem of dealing with the limited number of erase cycles/block
@@ -133,22 +152,22 @@ has two advantages:
   "wear levelling" (ensuring that each block of the flash is erased
   the same number of time, to maximise flash chip lifetime).
 
-New abstractions (including a filing system) can easily be added to this
-framework, or can be built on top of these abstractions.
+New abstractions (including a filing system...) can easily be added to
+this framework.
 
 The rest of this TEP covers some principles for the organisation of
-flash chips (Section 2), then describes the flash volumes and
-storage abstractions in detail (Section 3).
+flash chips (Section 3), then describes the flash volumes and
+storage abstractions in detail (Section 4).
 
 
-2. HPL/HAL/HIL Architecture
+3. HPL/HAL/HIL Architecture
 ====================================================================
 
 The flash chip architecture follows the three-layer Hardware
 Abstraction Architecture (HAA), with each chip providing a presentation
-layer (HPL, Section 2.1), adaptation layer (HAL, Section 2.2) and
-platform-independent interface layer (the storage abstractions described in
-Section 3) [2_]. The implementation of these layers SHOULD be found in the
+layer (HPL, Section 3.1), adaptation layer (HAL, Section 3.2) and
+platform-independent interface layer (HIL, Section 3.3) [2_]. 
+The implementation of these layers SHOULD be found in the
 ``tos/chips/CHIPNAME`` directory. If a flash chip is part of a larger
 family with a similar interface, the HAA SHOULD support all family members
 by relying, e.g., on platform-provided configuration information.
@@ -157,7 +176,7 @@ Appendix A shows example HPL and HAL specifications for the AT45DB
 and ST M25P chip families.
 
 
-2.1 Hardware Presentation Layer (HPL)
+3.1 Hardware Presentation Layer (HPL)
 --------------------------------------------------------------------
 
 The flash HPL has a chip-dependent, platform-independent interface. The
@@ -172,7 +191,7 @@ directory. If the flash chip implementation supports a family of
 flash chips, this directory MAY also contain a file describing the
 particular flash chip found on the platform.
 
-2.2 Hardware Adaptation Layer (HAL)
+3.2 Hardware Adaptation Layer (HAL)
 --------------------------------------------------------------------
 
 The flash HAL has a chip-dependent, platform-independent interface and
@@ -183,15 +202,28 @@ provide a way to access the volume information specified by the
 programmer (see Section 3). This allows users to build new flash
 abstractions that interact cleanly with the rest of the flash system.
 
+3.3 Hardware Interface Layer (HIL)
+--------------------------------------------------------------------
 
-3. Non-Volatile Storage Abstracitons in TinyOS 2.x 
+Each flash chip MUST provide implementations of the storage abstractions
+described in Section 4. These abstractions MUST be presented in
+components named ``ChipAbstractionC``, e.g., ``At45dbLogStorageC``.
+
+Each platform MUST have ``AbstractionC`` components (e.g., ``LogStorageC``)
+implementing the storage abstractions of Section 4. Platforms with a single
+storage chip SHOULD simply make ``AbstractionC`` be a simple configuration
+wrapping the appropriate ``ChipAbstractionC`` component. Platforms with
+multiple storage chips SHOULD redirect uses of ``AbstractionC`` to the 
+appropriate storage chip, based on the requested volume.
+
+4. Non-Volatile Storage Abstractions
 ===================================================================
 
 The HIL implementations are platform-independent, but chip (family)
 dependent. They implement the three storage abstractions and
 volume structure discussed in the introduction.
 
-3.1. Volumes
+4.1. Volumes
 -------------------------------------------------------------------
 
 The division of the flash chip into fixed-size volumes is specified by
@@ -234,7 +266,7 @@ compile-time error since the symbol will be undefined.
 A volume MUST NOT be used with more than one storage abstraction instance.
 
 
-3.2 Large objects
+4.2 Large objects
 ------------------------------------------------------------------
 
 The motivating example for large objects is the transmission or long-term
@@ -294,7 +326,7 @@ For full details on arguments and other considerations, see the comments in
 the interface definitions.
 
 
-3.3 Logging
+4.3 Logging
 ------------------------------------------------------------------
 
 Event and result logging is a common requirement in sensor
@@ -390,7 +422,7 @@ is sufficient to ensure that applications do not to have worry about
 incomplete or inconsistent log entries.
 
 
-3.4 Small objects:
+4.4 Small objects:
 ------------------------------------------------------------------
 
 Sensor network applications need to store configuration data, e.g.,
@@ -445,7 +477,7 @@ operations (all split-phase except ``ConfigStorage.getSize`` and
 For full details on arguments, etc, see the comments in the interface
 definitions.
 
-4. Implementations
+5. Implementations
 ====================================================================
 
 An AT45DB implementation can be found in tinyos-2.x/tos/chips/at45db.
@@ -453,7 +485,7 @@ An AT45DB implementation can be found in tinyos-2.x/tos/chips/at45db.
 An ST M25P implementation can be found in tinyos-2.x/tos/chips/stm25p.
 
 
-5. Authors' Addresses
+6. Authors' Addresses
 ====================================================================
 
 | David Gay
@@ -473,7 +505,7 @@ An ST M25P implementation can be found in tinyos-2.x/tos/chips/stm25p.
 | phone - +1 415 692 0828
 | email - jhui@archedrock.com
 
-6. Citations
+7. Citations
 ====================================================================
 
 .. [1] David Gay. "Design of Matchbox, the simple filing system for
