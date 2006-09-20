@@ -10,8 +10,8 @@ Timers
 :Author: Cory Sharp, Martin Turon, David Gay
 
 :Draft-Created: 22-Sep-2004
-:Draft-Version: $Revision: 1.3 $
-:Draft-Modified: $Date: 2006-09-06 23:03:44 $
+:Draft-Version: $Revision: 1.4 $
+:Draft-Modified: $Date: 2006-09-20 23:46:09 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -341,7 +341,7 @@ frequences in the same program SHOULD produce compile-time
 errors.
 
 
-A hardware timer with precision *P* and width *W* SHOULD be exposed as a
+A hardware timer with precision *P* and width *W* SHOULD be exposed as
 several components::
 
   configuration CounterPWC {
@@ -407,7 +407,7 @@ BusyWaitMicroC
   }
 
 BusyWaitMicroC allows applications to busy-wait for a number of
-microseconds. It's use should be restricted to situations where the
+microseconds. Its use should be restricted to situations where the
 delay is small and setting a timer or alarm would be impractical,
 inefficient or insufficiently precise.
 
