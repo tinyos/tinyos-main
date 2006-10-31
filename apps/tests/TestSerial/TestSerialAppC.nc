@@ -1,4 +1,4 @@
-// $Id: TestSerialAppC.nc,v 1.2 2006-07-12 16:59:26 scipio Exp $
+// $Id: TestSerialAppC.nc,v 1.3 2006-10-31 00:46:47 bengreenstein Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -57,8 +57,8 @@ implementation {
 
   App.Boot -> MainC.Boot;
   App.Control -> AM;
-  App.Receive -> AM.Receive[AM_TESTSERIALMSG];
-  App.AMSend -> AM.AMSend[AM_TESTSERIALMSG];
+  App.Receive -> AM.Receive[AM_TEST_SERIAL_MSG];
+  App.AMSend -> AM.AMSend[AM_TEST_SERIAL_MSG];
   App.Leds -> LedsC;
   App.MilliTimer -> TimerMilliC;
   App.Packet -> AM;
