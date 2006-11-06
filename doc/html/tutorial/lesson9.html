@@ -1,0 +1,93 @@
+  <html>
+    <head>
+      <title>TinyOS Tutorial Lesson 9: Concurrency in TinyOS</title>
+      <link href="../../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
+    </head>
+    <body>
+      
+      <div class="title">Lesson 9: Concurrency</div>
+      <div class="subtitle">Last updated 30 October 2006</div>
+
+      <h1>Introduction</h1>
+
+      <p>This tutorial introduces the concept of <tt>async</tt> code,
+	which represents interrupt handlers and other time-critical functionality.
+	It describes the relationship between async code and tasks</p>
+
+      
+      <h1>Sync vs. Async</h1>
+      <p><A HREF="lesson2.html">Lesson 2</A> introduced tasks as a
+	mechanism to defer processing until later. Because tasks are
+	run-to-completion (a new task does not start until the previous one
+	finished), well-written components keep keep them short and spread
+	complex processing across several tasks. Not all TinyOS code is
+	run from a task, however: when a processor has an interrupt,
+	it immediately jumps to the interrupt handler code.</p>
+
+      <p>Because interrupt handler code can theoretically run at almost any
+	time, it has to be much more careful than task code. The interrupt
+	might start executing in the middle of a task, and it needs to make sure
+	that it does not corrupt variables that the task is using. The complexities
+	this introduces motivate most service-level TinyOS code to be in tasks.
+	Interrupt handlers therefore usually post tasks to defer their processing
+	as soon as they can, simplifying the code.</p>
+
+      <p>Some code, however, such as the interrupt handlers themselves cannot 
+	be in a task. Only a small subset of TinyOS code has been written to safely
+      run in preemptive context: these functions have the <tt>async</tt> keyword.
+	If an async function needs to call a command or signal an event that is not
+	async, then it must post a task to do so. Code that does not have the
+      async keyword is <i>synchronous</i>, as synchronous functions do not preempt
+      one another. However, as most TinyOS functions are synchronous, there is no
+      keyword (it is the default). This restriction is in one direction only.
+	Synchronous (task) code can call
+	async functions, but async code cannot call synchronous functions.</p>
+
+      <h1>An Example Async Function</h1>
+
+      <p><tt>Leds</tt> is a very common interface whose commands are all async.
+	It is often the case that low-level code needs to control the LEDs (e.g.,
+	when testing), and so these functions can be safely called from interrupts.
+	If the Leds commands were not async, then an interrupt handler would have
+	to post a task to toggle them, possibly introducing enough delay to make
+	debugging difficult.</p>
+
+      <pre>
+interface Leds {
+  async command void led0On();
+  async command void led0Off();
+  async command void led0Toggle();
+  async command void led1On();
+  async command void led1Off();
+  async command void led1Toggle();
+  async command void led2On();
+  async command void led2Off();
+  async command void led2Toggle();
+  async command uint8_t get();
+  async command void set(uint8_t val);
+}
+      </pre>
+
+
+      <p>Calling async functions is easy; a caller doesn't need to do anything special:
+	a component can just call Leds commands. The challenging part is implementing
+	async functions.</p>
+
+      
+	
+      <p>Commands and events that are executed as part
+	of a hardware event handler must be declared with the <b>async</b>
+	keyword (more about the async keyword in Lesson 8). </p>
+      
+      <p>Because tasks and hardware event handlers may be preempted by other
+	asynchronous code, nesC programs are susceptible to certain race
+	conditions. Races are avoided either by accessing shared data
+	exclusively  within tasks, or by having all accesses within <b>atomic</b>
+	statements. The nesC compiler reports potential <b>data races</b> to the
+	programmer at compile-time. It is possible the compiler may report a
+	false positive. In this case a variable can be declared with the <b>norace</b>
+	keyword. The norace keyword should be used with extreme caution. </p>
+      
+      <p>Please see the <a href="../../doc/nesc/ref.pdf">nesC Language
+	  Reference Manual</a> for more information on programming in nesC. <br>
+	  &nbsp;

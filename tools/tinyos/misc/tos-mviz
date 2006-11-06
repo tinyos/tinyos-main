@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# $Id: tos-mviz,v 1.2 2006-11-06 11:57:03 scipio Exp $ 
+#
+
+printenv CLASSPATH
+java net.tinyos.mviz.DDocument $*
+

@@ -1,0 +1,152 @@
+#!/usr/bin/python
+# -*- python -*-
+# Copyright (c) 2005-2006 Arch Rock Corporation
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# - Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# - Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the
+#   distribution.
+# - Neither the name of the Arch Rock Corporation nor the names of
+#   its contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+# ARCHED ROCK OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGE
+#
+# @author Jonathan Hui <jhui@archedrock.com>
+# @author Kaisen Lin
+#
+# $Revision: 1.2 $
+# $Date: 2006-11-06 11:57:03 $
+#
+                                  
+from re import match
+from sys import *
+from xml.dom import minidom
+
+NUM_SECTORS = 16
+SECTOR_SIZE = 2097152
+
+volumes = {}
+
+volumeNames = []
+volumeSizes = []
+volumeOffsets = []
+freeSectors = NUM_SECTORS*[ True ]
+
+def error_exit( s ):
+    stderr.write( "ERROR: " + s + "\n" )
+    exit( 2 )
+
+try:
+    dom = minidom.parse( stdin )
+except xml.parsers.expat.ExpatError:
+    error_exit( "input invalid" )
+
+# initialize reserved piece
+volumes [ "PXARESERVED" ] = "blah"
+volumeNames.append( "VOLUME_PXARESERVED" )
+volumeSizes.append( 1 )
+volumeOffsets.append( 0 )
+freeSectors[ 0 ] = False
+
+# extract information
+for volume in dom.documentElement.getElementsByTagName( "volume" ):
+    name = volume.getAttribute( "name" )
+    size = volume.getAttribute( "size" )
+    base = volume.getAttribute( "base" )
+    if name == "":
+        error_exit( "volume has no name" )
+    elif not match( "^[a-zA-Z0-9_]+$", name ):
+        error_exit( "volume has invalid name '%s'" % name )
+    elif volumes.has_key( name ):
+        error_exit( "duplicate volume definition '%s'" % name )
+    else:
+        volumes[ name ] = "blah"
+    
+    if size == "":
+        error_exit( "volume '%s' has no size" % name )
+    try:
+        size = int( size )
+    except ValueError:
+        error_exit( "volume '%s' has invalid size" % name )
+    if base != "":
+        try:
+            base = int( base )
+        except ValueError:
+            error_exit( "volume '%s' has invalid base" % name )
+
+    if ( size & ( SECTOR_SIZE - 1 ) ) != 0:
+        error_exit( "size of volume '%s' is not a multiple of %d" % \
+                    ( name, SECTOR_SIZE ) )
+    if base != "" and ( base & ( SECTOR_SIZE - 1 ) ) != 0:
+        error_exit( "base of volume '%s' is not a multiple of %d" % \
+                    ( name, SECTOR_SIZE ) )
+
+    volumeNames.append( "VOLUME_" + name )
+    volumeSizes.append( size / SECTOR_SIZE )
+    if base == "":
+        volumeOffsets.append( -1 )
+    else:
+        base = base / SECTOR_SIZE
+        volumeOffsets.append( base )
+        for i in range( size / SECTOR_SIZE ):
+            freeSectors[ i + base ] = False
+
+# allocate with first fit policy
+for i in range( len( volumeOffsets ) ):
+    size = volumeSizes[ i ]
+    if volumeOffsets[ i ] == -1:
+        for j in range( NUM_SECTORS ):
+            if freeSectors[ j ]:
+                size -= 1
+                if size == 0:
+                    volumeOffsets[ i ] = j - ( volumeSizes[ i ] - 1 )
+                    break
+            else:
+                size = volumeSizes[ i ]
+        if volumeOffsets[ i ] == -1:
+            raise "Unable to satisfy allocation request."
+        else:
+            for j in range( volumeSizes[ i ] ):
+                freeSectors[ volumeOffsets[ i ] + j ] = False
+
+# output C file
+
+print "#ifndef __STORAGE_VOLUME_H__"
+print "#define __STORAGE_VOLUME_H__"
+print ""
+print "#include \"P30.h\""
+print ""
+
+for i in range( len( volumeNames ) ):
+    print "#define %s %d" % ( volumeNames[ i ], i )
+    print "#define %s %s" % ( volumeNames[ i ] + "_UQ", "unique(\"pxa27xp30.Volume\")" )
+print "#define _V_NUMVOLS_ %d" % ( len( volumeNames ))
+print ""
+        
+print "static const p30_volume_info_t P30_VMAP[ %d ] = {" % \
+      len( volumeNames )
+for i in range( len( volumeNames ) ):
+    print "    { base : %d, size : %d }," % \
+          ( volumeOffsets[ i ], volumeSizes[ i ] )
+print "};"
+
+print ""
+print "#endif"

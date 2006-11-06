@@ -1,0 +1,25 @@
+.TH tos-storage-pxa27xp30 1 "July 26, 2006"
+.LO 1
+.SH NAME
+
+tos-storage-pxa27xp30 - Generate storage volume description code
+.SH SYNOPSIS
+
+\fBtos-storage-pxa27xp30\fR
+.SH DESCRIPTION
+
+\fBtos-storage-pxa27xp30\fR reads a user specification describing the
+layout of storage volumes on an embedded P30 flash in the Intel Xscale
+PXA27X series processor, and generates code describing that layout for
+use by the TinyOS 2.0 storage subsystem.  The user specification is in
+XML and is read from standard input. The code is written to standard
+output.
+
+This program is normally invoked automatically by the TinyOS build system
+when your application directory contains a \fBvolumes-pxa27xp30.xml\fR file.
+.SH EXAMPLES
+
+  tos-storage-pxa27xp30 <volumes-pxa27xp30.xml >build/telosb/StorageVolumes.h
+.SH SEE ALSO
+
+.IR tos-storage-pxa27xp30 (1)

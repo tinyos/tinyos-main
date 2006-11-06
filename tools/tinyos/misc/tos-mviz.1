@@ -1,0 +1,18 @@
+.TH tos-mviz 1 "Oct 24, 2006"
+.LO 1
+.SH NAME
+
+tos-mviz - Launch MViz, the TinyOS network visualizer 
+.SH SYNOPSIS
+
+\fBtos-mviz\fR [\fB-comm\fR \fIserial-source\fR] \fImig-class\fR [\fImig-class]...
+.SH DESCRIPTION
+
+\fBtos-mviz\fR launches MViz, the TinyOS network visualizer. MViz is a replacement
+for the Surge application of earlier TinyOS versions. MViz reads packets from
+a packet source and displays their data in a GUI. MViz takes the class names of
+mig-generated Java classes as parameters; it parses these packets and displays their
+fields. For MViz to be able to understand a mig packet, it must have an \fIorigin\fR
+field which denotes which node the data is from. Please see TinyOS tutorial 12: MViz,
+for more detail.
+

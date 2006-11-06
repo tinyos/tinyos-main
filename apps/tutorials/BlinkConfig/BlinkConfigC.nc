@@ -1,4 +1,4 @@
-// $Id: BlinkConfigC.nc,v 1.1 2006-11-05 08:01:02 prabal Exp $
+// $Id: BlinkConfigC.nc,v 1.2 2006-11-06 11:56:54 scipio Exp $
 
 /*
  * "Copyright (c) 2000-2006 The Regents of the University of
@@ -24,6 +24,14 @@
  * UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  */
 
+/**
+ * Application to demonstrate the ConfigStorageC abstraction.  A value
+ * is written to, and read from, the flash storage. A successful test
+ * will turn on both the green and blue (yellow) LEDs.  A failed test
+ * is any other LED combination..
+ *
+ * @author Prabal Dutta
+ */
 module BlinkConfigC {
   uses {
     interface Boot;

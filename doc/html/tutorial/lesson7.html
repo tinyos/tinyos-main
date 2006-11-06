@@ -1,0 +1,380 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <title>Lesson 7: Permanent Data Storage</title>
+  <link href="../../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div class="title">Lesson 7: Permanent Data Storage</div>
+<div class="subtitle">Last Modified: November 5, 2006</div>
+
+<p>This lesson introduces permanent (non-volatile) data storage in
+TinyOS.  Permanent storage allows a node to persist data even if power
+is disconnected or the node is reprogrammed with a new image.  You
+will become familar with different kinds of data storage including
+small objects, logs, and large objects.  You will be exposed to the
+TinyOS interfaces and components that support permanent data storage
+on motes and you will learn how to:
+
+<p>
+
+<ul>
+
+<li>Divide the flash chip into volumes, which allows multiple and/or
+different type of data to be stored.
+
+<li>Store configuration data that survives a power cycle.
+
+<li>Provide a link to example code using the logging abstraction.
+
+<li>Provide a link to example code use large objects storage in
+non-volatile flash.
+
+</ul>
+
+
+<h1>Introduction</h1>
+
+TinyOS 2.x provides three basic storage abstractions: small objects,
+circular logs, and large objects.  TinyOS 2.x also provides
+<i>interfaces</i> to abstract the underlying storage services and
+<i>components</i> that <i>provide</i> (implement) these interfaces.
+
+<h2>Interfaces</h2>
+
+Let's take a look at some of the interfaces that are in the
+<code>tos/interfaces</code> directory to familiarize ourselves with
+the general functionality of the storage system:
+
+
+<p>
+<ul>
+
+<li><code>
+<a href="../../../tos/interfaces/BlockRead.nc">BlockRead</a></code> 
+
+<li><code>
+<a href="../../../tos/interfaces/BlockWrite.nc">BlockWrite</a></code>
+
+<li><code>
+<a href="../../../tos/interfaces/Mount.nc">Mount</a></code>
+
+<li><code>
+<a href="../../../tos/interfaces/ConfigStorage.nc">ConfigStorage</a></code>
+
+<li><code>
+<a href="../../../tos/interfaces/LogRead.nc">LogRead</a></code>
+
+<li><code>
+<a href="../../../tos/interfaces/LogWrite.nc">LogWrite</a></code>
+
+
+</ul>
+
+<h2>Components</h2>
+
+<p>Components provide concrete implementations of the interfaces.  You
+should be familiar with these components because your code needs to
+specify both the <i>interfaces</i> your application
+<i>uses</i> as well as the <i>components</i> which <i>provide</i>
+(implement) these interfaces:
+
+<p>
+<ul>
+
+<li><code><a href="../../../tos/chips/stm25p/ConfigStorageC.nc">ConfigStorageC</a></code>
+
+<li><code><a href="../../../tos/chips/stm25p/LogStorageC.nc">LogStorageC</a></code>
+
+<li><code><a href="../../../tos/chips/stm25p/BlockStorageC.nc">BlockStorageC</a></code>
+
+</ul>
+
+<p>
+
+<h2>Naming Wrappers</h2>
+
+<p>The preceding components are actually <em>naming wrappers</em>.
+Since TinyOS supports multiple platforms, each of which might have its
+own implementation of the storage drivers, platform-specific naming
+wrappers are used to bridge the general storage interfaces to their
+underlying, platform-specific implementations.
+
+<p>For example, the preceding links are all specific to the ST
+Microelectronics M25Pxx family of flash memories used in the Telos and
+Tmote Sky motes.  You <em>do not</em> need to worry about the details
+of where these files reside because TinyOS's make system includes the
+correct drivers automatically.  However, you <em>do</em> need to know
+what these components are called because your code must list them in a
+<code>components</code> declaration.
+
+<p>If you are curious, the following links will let you browse the
+naming wrappers for the Atmel AT45DB family of flash memories used in
+the Mica2/MicaZ motes:
+
+<p>
+<ul>
+
+<li><code><a href="../../../tos/chips/at45db/ConfigStorageC.nc">ConfigStorageC</a></code>
+
+<li><code><a href="../../../tos/chips/at45db/LogStorageC.nc">LogStorageC</a></code>
+
+<li><code><a href="../../../tos/chips/at45db/BlockStorageC.nc">BlockStorageC</a></code>
+
+</ul>
+
+<p>Finally, the following links will let you browse the naming
+wrappers for the Intel imote2 flash memory:
+
+<p>
+<ul>
+
+<li><code><a href="../../../tos/platforms/intelmote2/ConfigStorageC.nc">ConfigStorageC</a></code>
+
+<li><code><a href="../../../tos/platforms/intelmote2/LogStorageC.nc">LogStorageC</a></code>
+
+<li><code><a href="../../../tos/platforms/intelmote2/BlockStorageC.nc">BlockStorageC</a></code>
+
+</ul>
+
+
+<h1>Volumes</h1>
+
+<p>TinyOS 2.x divides a flash chip into one or more fixed-sized
+<em>volume</em>s that are specified at compile-time using an XML file.
+This file, called the volume table, allows the application developer
+to specify the name, size, and (optionally) the base address of each
+volume in the flash.  Each volume provides a single type of storage
+abstraction (e.g. configuration, log, or block storage).  The
+abstraction type defines the physical layout of data on the flash
+memory.  A volume table might look like:
+
+<pre>
+&lt;volume_table&gt;
+  &lt;volume name="CONFIGLOG" size="65536"/&gt;
+  &lt;volume name="PACKETLOG" size="65536"/&gt;
+  &lt;volume name="SENSORLOG" size="131072"/&gt;
+  &lt;volume name="CAMERALOG" size="524288"/&gt;
+&lt;/volume_table&gt;
+</pre>
+
+<p>The volume table for a particular application must be placed in the
+application's directory (where one types 'make') and must be named
+<code>volumes-CHIPNAME.xml</code> where CHIPNAME is replaced with the
+platform-specific flash chip's name.  For example, the Telos mote uses
+the ST Microelectronics M25P family of flash memories.  The drivers
+for these chips can be found in the <code>tos/chips/stm25p</code>
+directory.  Therefore, a Telos-based application that uses the storage
+abstractions needs a file named <code>volumes-stm25p.xml</code>.
+
+<p>Note that the size parameter is a multiple of the erase unit for a
+particular flash chip.  See Section 4.1 in <a href="#fn1">TEP 103</a>
+for more details.
+
+<h1>Storing Configuration Data</h1>
+
+<p>In <a name="fn2"><a href="lesson3.html">Lesson 3</a></a>, we
+implemented a simple application called BlinkToRadio that used a
+single timer, set to fire at a fixed rate, to toggle the LEDs.
+
+<p>See <a href="../../../apps/tutorials/BlinkConfig/">
+<code>tinyos-2.x/apps/tutorials/BlinkConfig/</code></a> for the
+accompanying code.
+
+<p>This lesson shows how parameters, like the timer period, can be
+configured at runtime and persisted across node power cycles.  The
+ability to store configuration data is useful in many applications.
+For example, it may be necessary to store a node's coordinates which
+are only known after the node is deployed.  Let's walk through the
+steps to use the <code>ConfigStorage</code> abstraction:
+
+<ol>
+
+<li>Create a <code>volumes-CHIPNAME.xml</code> file, enter the volume
+table in this file, and place the file in the application directory.
+Note that <code>CHIPNAME</code> is the flash chip used on your target
+plaform.  For example, <code>CHIPNAME</code> will be
+<code>stm25p</code> for the Telos platform and <code>at45db</code> for
+the MicaZ platform.  Our file will have the following contents:
+
+<pre>
+&lt;volume_table&gt;
+  &lt;volume name="LOGTEST" size="262144"/&gt;
+  &lt;volume name="CONFIGTEST" size="131072"/&gt;
+&lt;/volume_table&gt;
+</pre>
+
+This volume information is used by the toolchain to create an include
+file.  The auto-generated file, however, has to be included manually.
+Place the following line in the configuration file which declares the
+ConfigStorageC component (e.g. <code>BlinkConfigAppC.nc</code>):
+
+<pre>
+#include "StorageVolumes.h"
+</pre>
+
+<li>Config storage <em>uses</em> the <code>Mount</code> and
+<code>ConfigStorage</code> interfaces (note that we rename
+<code>ConfigStorage</code> to <code>Config</code>).
+
+<pre>
+module BlinkConfigC {
+  uses {
+    ...
+    interface Mount;
+    interface ConfigStorage as Config;
+    ...
+  }
+}
+</pre>
+
+<li>Each interface must be wired to an <em>implementation</em> that
+will provide it:
+
+<pre>
+configuration BlinkConfigAppC {
+}
+implementation {
+  components BlinkConfigC as App;
+  components new ConfigStorageC(VOLUME_CONFIGTEST); 
+  ...
+
+  App.Mount      -> ConfigStorageC.Mount;
+  App.Config     -> ConfigStorageC.ConfigStorage;
+  ...
+}
+</pre>
+
+<li>Before the flash chip can be used, it must be mounted using the
+two-phase mount/mountDone command.  Here we show chaining how this
+might be chained into the boot sequence:
+
+<pre>
+  event void Boot.booted() {
+    call AMControl.start();
+  }
+
+  event void AMControl.startDone(error_t error) {
+    if (error != SUCCESS) {
+      call AMControl.start();
+    }
+    if (call Mount.mount() != SUCCESS) {
+      // Handle failure
+    }
+  }
+</pre>
+
+<li>If the Mount.mount succeeds, then the <code>Mount.mountDone</code>
+event will be signaled.  In this case, we call the
+<code>ConfigStore.mount</code> command from with the event handler:
+
+<pre>
+  event void Mount.mountDone(error_t error) {
+    if (error != SUCCESS) {
+      // Handle failure
+    }
+    else{
+      call Config.write(CONFIG_ADDR, &period, sizeof(period));
+    }
+  }
+</pre>
+
+<li>Once mounted, the flash can be written:
+
+<pre>
+  event void Mount.mountDone(error_t error) {
+    if (error != SUCCESS) {
+      // Handle failure
+    }
+    else{
+      call Config.write(CONFIG_ADDR, &period, sizeof(period));
+    }
+  }
+</pre>
+
+<li>Data is not necessarily "written" to flash when
+<code>ConfigStore.write</code> is called.  To ensure data is persisted
+to flash, a <code>ConfigStore.commit</code> call is required:
+
+<pre>
+  event void Config.writeDone(storage_addr_t addr, void *buf, 
+    storage_len_t len, error_t result) {
+    // Verify addr and len
+
+    if (result == SUCCESS) {
+      // Note success
+    }
+    else {
+      // Handle failure
+    }
+    if (call Config.commit() != SUCCESS) {
+      // Handle failure
+    }
+  }
+</pre>
+
+<li>Finally, when the commit is complete, data can be read back from
+the flash:
+
+<pre>
+  event void Config.commitDone(error_t error) {
+    if (call Config.read(CONFIG_ADDR, &period2, sizeof(period2)) != SUCCESS) {
+      // Handle failure
+    }
+  }
+
+  event void Config.readDone(storage_addr_t addr, void* buf, 
+    storage_len_t len, error_t result) __attribute__((noinline)) {
+    memcpy(&period2, buf, len);
+
+    if (period == period2) {
+      call Leds.led2On();
+    }
+
+    if (len == 2 && addr == CONFIG_ADDR) {
+      call Leds.led1On();
+    }
+  }
+</pre>
+
+</ol>
+
+<h1>Logging Data</h1>
+
+See <a href="../../../apps/tests/storage/Log/">
+<code>tinyos-2.x/apps/tests/storage/Log/</code></a> for an example of
+code that uses the Log storage abstraction. Log is generally used for
+append-based data streams consisting of relatively small data items.
+It provides atomicity guarantees for data writes.
+
+<h1>Storing Large Objects</h1>
+
+See <a href="../../../apps/tests/storage/Block/">
+<code>tinyos-2.x/apps/tests/storage/Block/</code></a> for an example
+of code that uses the Block storage abstraction. Block is generally
+used for storing large objects that cannot easily fit in RAM.
+
+<h1>Conclusions</h1>
+
+This lesson introduced the basic storage abstractions in Tiny 2.x.
+
+<a name=#related_docs>
+<h1>Related Documentation</h1>
+
+<ul>
+<li> (1) <a name="fn1"><a href="../tep103.html">TEP 103: Permanent Data Storage</a></a>
+<li> (2) <a name="fn2"><a href="lesson1.html">Lesson 1: Getting Started with TinyOS and nesC</a></a>
+<i>TinyOS Programming</i></a>
+</ul>
+
+<!-- Begin footer -->
+<br>
+<hr>
+<center>
+<p>&lt;&nbsp;<b><a href="lesson6.html">Previous Lesson</a></b> |&nbsp; <b><a
+ href="index.html">Top</a></b> &nbsp;|&nbsp; <b><a href="lesson8.html">Next Lesson </a>&nbsp;&gt;</b>
+</center>
+
+</body>
+</html>

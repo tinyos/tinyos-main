@@ -1,6 +1,6 @@
 This contains the TinyOS 2.0 source code as of
 
-$Date: 2006-07-12 20:59:19 $
+$Date: 2006-11-06 11:56:45 $
 
 This tree includes the TinyOS 2.0 documentation in tinyos-2.x/doc; 
 you can also find the documentation online at:
@@ -41,4 +41,6 @@ tos: TinyOS source code (nesC, C)
   system: Core system components
   types: Core system data types (header files)
 
+You can find documentation for the 2.0.0 release online at:
+http://www.tinyos.net/tinyos-2.x/doc/
 

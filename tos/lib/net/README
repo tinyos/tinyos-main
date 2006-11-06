@@ -1,0 +1,7 @@
+This directory contains network protocols that are part of
+the TinyOS core distribution. They are:
+
+ctp: Collection Tree Protocol (TEP 123)
+dip: DIssemination Protocol (TEP 1xx)
+rstp: Root Sequenced Tree Protocol (TEP 124)
+
