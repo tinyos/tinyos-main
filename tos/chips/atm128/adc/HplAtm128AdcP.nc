@@ -1,5 +1,4 @@
-/// $Id: HplAtm128AdcP.nc,v 1.2 2006-11-06 11:57:04 scipio Exp $
-
+/// $Id: HplAtm128AdcP.nc,v 1.3 2006-11-07 00:33:30 scipio Exp $
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
