@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-09-08 23:15:07 $
-:version: $Revision: 1.3 $
+:date: $Date: 2006-11-07 00:43:43 $
+:version: $Revision: 1.4 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Cory Sharp, Martin Turon, David Gay</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">22-Sep-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.3</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.9</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-09-06</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-10-18</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -367,11 +367,11 @@ timer interfaces (2.1).</p>
 <p>Three fundamental properties of timers are <em>precision</em>, <em>width</em> and
 <em>accuracy</em>.</p>
 <p>Examples of precision are millisecond, a cycle of a 32kHz clock, and
-microseconds.  All precisions are in &quot;binary&quot; units with respect to
-one second.  That is, one second contains 1024 binary milliseconds,
-32768 32kHz ticks, or 1048576 microseconds.  This TEP emphasizes
-millisecond and 32kHz tick precisions while reasonably accommodating
-other precisions.</p>
+microseconds.  All precisions presented in this TEP are in &quot;binary&quot;
+units with respect to one second.  That is, one second contains 1024
+binary milliseconds, 32768 32kHz ticks, or 1048576 microseconds.
+This TEP emphasizes millisecond and 32kHz tick precisions while
+reasonably accommodating other precisions.</p>
 <p>Examples of widths are 8-bit, 16-bit, 32-bit, and 64-bit.  The width
 for timer interfaces and components SHOULD be 32-bits.  That is, for
 lack of a good reason, timer interfaces should expose a 32-bit
@@ -397,9 +397,9 @@ reflected in the interface type.</p>
 <p>Precision is expressed as an empty type -- TMilli, T32khz, and
 TMicro -- written in the standard Timer.h header like this:</p>
 <pre class="literal-block">
-typedef struct { } TMilli;
-typedef struct { } T32khz;
-typedef struct { } TMicro;
+typedef struct { } TMilli; // 1024 ticks per second
+typedef struct { } T32khz; // 32768 ticks per second
+typedef struct { } TMicro; // 1048576 ticks per second
 </pre>
 <p>Note that the precision names are expressed as either frequency or
 period, whichever is convenient.</p>
@@ -442,10 +442,14 @@ interface Counter&lt;precision_tag,size_type&gt;
 <dt>get()</dt>
 <dd>return the current time.</dd>
 <dt>isOverflowPending()</dt>
-<dd>return TRUE if an overflow interrupt will occur after the outermost
-atomic block is exits.  FALSE otherwise.</dd>
+<dd>return TRUE if the overflow flag is set for this counter, i.e., if and
+only if an overflow interrupt will occur after the outermost atomic
+block exits.  Return FALSE otherwise.  This command only returns the
+state of the overflow flag and causes no side effect.  It is expected
+that the underlying hardware platform sets the overflow flag when
+appropriate.</dd>
 <dt>clearOverflow()</dt>
-<dd>cancel the pending overflow interrupt.</dd>
+<dd>cancel the pending overflow interrupt clearing the overflow flag.</dd>
 <dt>overflow()</dt>
 <dd>signals that an overflow in the current time.  That is, the current
 time has wrapped around from its maximum value to zero.</dd>
@@ -454,7 +458,7 @@ time has wrapped around from its maximum value to zero.</dd>
 <div class="section">
 <h2><a id="alarm" name="alarm">Alarm</a></h2>
 <p>Alarm components are extensions of Counters that signal an event
-when their Compare register detects the alarm time has been hit.
+when their compare register detects the alarm time has been hit.
 All commands and events of the Alarm interface are asynchronous (or
 in &quot;interrupt context&quot;).  The Alarm interface provides a set of
 &quot;basic&quot; commands for common usage and provides a set of &quot;extended&quot;
@@ -486,24 +490,35 @@ stop.</dd>
 <dt>isRunning()</dt>
 <dd>return TRUE if the alarm has been started and has not been cancelled
 or has not yet fired.  FALSE is returned otherwise.</dd>
-<dt>startAt(t0,dt)</dt>
-<dd>cancel any previously running alarm and set to fire at time t1 =
-t0+dt.  This form allows a delay to be anchored to some time t0
-taken before the invocation of start.  This is also the form used
-internally in the timer subsystem to allow the use of the full width
-of an alarm while being able to detect if the alarm time for a short
-alarm prematurely elapsed.</dd>
+</dl>
+<p>startAt(t0,dt)</p>
+<blockquote>
+cancel any previously running alarm and set to fire at time t1 =
+t0+dt.  This form allows a delay to be anchored to some time t0 taken
+before the invocation of startAt.  The timer subsystem uses this form
+internally, to be able to use of the full width of an alarm while also
+detecting when a short alarm elapses prematurely.</blockquote>
+<dl class="docutils">
 <dt>getNow()</dt>
 <dd>return the current time in the precision and width of the alarm.</dd>
 <dt>getAlarm()</dt>
 <dd>return the time the currently running alarm will fire or the time
-that the previously running alarm was set to fire.</dd>
+that the previously running alarm was set to fire.  getAlarm can
+be used with startAt to set an alarm from the previous alarm time,
+as in startAt(getAlarm(),dt).  This pattern is used within the
+fired() event to construct periodic alarms.</dd>
 </dl>
 </div>
 <div class="section">
 <h2><a id="busywait" name="busywait">BusyWait</a></h2>
-<p>The BusyWait interface replaces the TOSH_uwait macro from TinyOS
-1.x.</p>
+<p>The BusyWait interface allows for very short synchronous delays.
+BusyWait should be used sparingly and when an Alarm would not be
+reasonably efficient or accurate.  The BusyWait interface replaces
+the TOSH_uwait macro from TinyOS 1.x.</p>
+<p>BusyWait blocks for no less than the specified amount of time.  No
+explicit upper bound is imposed on the enacted delay, though it is
+expected the underlying implementation spins in a busy loop until
+the specified amount of time has elapsed.</p>
 <pre class="literal-block">
 interface BusyWait&lt;precision_tag,size_type&gt;
 {
@@ -512,7 +527,7 @@ interface BusyWait&lt;precision_tag,size_type&gt;
 </pre>
 <dl class="docutils">
 <dt>wait(dt)</dt>
-<dd>block for no less than the specified amount of time.</dd>
+<dd>block until at least dt time units have elapsed</dd>
 </dl>
 </div>
 <div class="section">
@@ -595,66 +610,71 @@ of the previous event for periodic timers.</dd>
 </div>
 <div class="section">
 <h1><a id="hal-guidelines" name="hal-guidelines">3. HAL guidelines</a></h1>
-<p>Platforms typically select a clocking option for each of their
-hardware counters, based on their hardware design (e.g., the mica
-family of motes all run their hardware timer 0 at 32kHz, and the micaz
-mote runs its timer 1 at cpu frequency/256). Platforms SHOULD expose
-the timing functionality of these timers using the Alarm and Counter
-interfaces, in the fashion described below. Platforms MAY expose the
-same hardware timer with different frequencies - use of conflicting
-frequences in the same program SHOULD produce compile-time
-errors.</p>
-<p>A hardware timer with precision <em>P</em> and width <em>W</em> SHOULD be exposed as a
-several components:</p>
+<p>Platforms SHOULD expose their relevant timing capabilities using
+standard Alarm and Counter interfaces.  The design pattern presented
+here defines a component naming convention to allow platform
+independent access to particular Alarms and Counters if they exist
+and to cause compile errors if they do not.</p>
+<p>A platform specific hardware timer with precision ${P} and width
+${W} SHOULD be exposed as these two conventional Counter and Alarm
+components:</p>
 <pre class="literal-block">
-configuration CounterPWC {
-  provides interface Counter&lt;TP, uintW_t&gt;;
-} ...
-generic configuration AlarmPWC {
-  provides interface Alarm&lt;TP,uintW_t&gt;;
-} ...
+configuration Counter${P}${W}C
+{
+  provides interface Counter&lt; T${P}, uint${W}_t &gt;;
+}
+
+generic configuration Alarm${P}${W}C()
+{
+  provides interface Alarm&lt; T${P}, uint${W}_t &gt;;
+}
 </pre>
-<p>and, except if <em>W</em> is 32:</p>
+<p>Instantiating an Alarm${P}${W}C component provides a new and
+independent Alarm.  If the platform presents a limited number of
+Alarm resources, then allocating more Alarms in an application than
+are available for the platform SHOULD produce a compile-time error.
+See Appendix B for an example of how to make allocatable Alarms that
+are each implemented on independent hardware timers.</p>
+<p>For example, if a platform has an 8-bit 32kHz counter and three
+8-bit 32kHz alarms, then the Counter and Alarm interfaces for
+${P}=32khz and ${W}=16 are:</p>
 <pre class="literal-block">
-configuration CounterP32C {
-  provides interface Counter&lt;TP, uint32_t&gt;;
-} ...
-generic configuration AlarmP32C {
-  provides interface Alarm&lt;TP,uint32_t&gt;;
-} ...
+configuration Counter32khz8C
+{
+  provides interface Counter&lt; T32khz, uint8_t &gt;;
+}
+
+generic configuration Alarm32khz8C()
+{
+  provides interface Alarm&lt; T32khz, uint8_t &gt;;
+}
 </pre>
-<p>Instantiating the Alarm... components provides a new Alarm independent
-of all prior instantiations. Instantiating such a component &quot;consumes&quot;
-a compare register from the corresponding hardware timer; when no more
-compare registers are available, instantiation SHOULD produce a
-compile-time error (see Appendix B for an example of how to achieve
-this).</p>
-<p>For example, the micaz platform includes an AlarmMilli8C and
-AlarmMilli32C components for timer 0 (one instantiation allowed), and
-Alarm32kHz16C and Alarm32kHz32C for timer 1 (three instantiations
-allowed).</p>
+<p>This pattern MAY be used to defined components for the platform that
+are mutually incompatible in single application.  Incompatible
+components SHOULD produce compile-time errors when compiled
+together.</p>
 </div>
 <div class="section">
 <h1><a id="hil-requirements" name="hil-requirements">4. HIL requirements</a></h1>
 <dl class="docutils">
 <dt>The following component MUST be provided on all platforms::</dt>
-<dd>TimerMilliC
+<dd>HilTimerMilliC
 BusyWaitMicroC</dd>
 </dl>
 <div class="section">
-<h2><a id="timermillic" name="timermillic">TimerMilliC</a></h2>
+<h2><a id="hiltimermillic" name="hiltimermillic">HilTimerMilliC</a></h2>
 <pre class="literal-block">
-#define TIMERMILLIC_SERVICE ...
-configuration TimerMilliC
+configuration HilTimerMilliC
 {
   provides interface Init;
-  provides interface Timer&lt;TMilli&gt;[uint8_t num];
-  provides interface LocalTime&lt;TMilli&gt;;
+  provides interface Timer&lt;TMilli&gt; as TimerMilli[ uint8_t num ];
 }
 </pre>
-<p>A timer is allocated using unique(TIMERMILLIC_SERVICE) to obtain a new
-unique timer number. This timer number is used to index the TimerMilli
-parameterised interface.</p>
+<p>A new timer is allocated using unique(UQ_TIMER_MILLI) to obtain a
+new unique timer number.  This timer number is used to index the
+TimerMilli parameterised interface.  UQ_TIMER_MILLI is defined in
+Timer.h.  HilTimerMilliC is used by the generic component
+TimerMilliC found in <tt class="docutils literal"><span class="pre">tos/system/</span></tt>.</p>
 </div>
 <div class="section">
 <h2><a id="busywaitmicroc" name="busywaitmicroc">BusyWaitMicroC</a></h2>
@@ -665,7 +685,7 @@ configuration BusyWaitMicroC
 }
 </pre>
 <p>BusyWaitMicroC allows applications to busy-wait for a number of
-microseconds. It's use should be restricted to situations where the
+microseconds. Its use should be restricted to situations where the
 delay is small and setting a timer or alarm would be impractical,
 inefficient or insufficiently precise.</p>
 </div>
@@ -747,6 +767,10 @@ created:</p>
 <pre class="literal-block">
 new TransformAlarmC( TMilli, uint32_t, T32khz, uint16_t, 5 )
 </pre>
+<p>It is the exclusive responsibility of the developer using
+TransformAlarmC to ensure that all five of its arguments are self
+consistent.  No compile errors are generated if the parameters
+passed to TransformAlarmC are inconsistent.</p>
 </div>
 <div class="section">
 <h2><a id="transformcounterc" name="transformcounterc">TransformCounterC</a></h2>
@@ -795,13 +819,85 @@ generic component VirtualizeTimerC( typedef precision_tag, int max_timers )
 </div>
 </div>
 <div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<h1><a id="implementation" name="implementation">6. Implementation</a></h1>
+<p>The definition of the HIL interfaces are found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/timer</span></tt>:</p>
+<blockquote>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">Alarm.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">BusyWait.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">Counter.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">LocalTime.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">Timer.h</span></tt> defines precision tags and strings for unique()</li>
+<li><tt class="docutils literal"><span class="pre">Timer.nc</span></tt></li>
+</ul>
+</blockquote>
+<p>The implementation of the utility components are also found in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/timer</span></tt>:</p>
+<blockquote>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">AlarmToTimerC.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">BusyWaitCounterC.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">CounterToLocalTimeC.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">TransformAlarmC.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">TransformAlarmCounterC.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">TransformCounterC.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">VirtualizeAlarmC.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">VirtualizeTimerC.nc</span></tt></li>
+</ul>
+</blockquote>
+<p>The implementation of Timers for the MSP430 is in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/msp430/timer</span></tt>:</p>
+<blockquote>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">Alarm32khz16C.nc</span></tt> is generic and provides a new <tt class="docutils literal"><span class="pre">Alarm&lt;T32khz,uint16_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">Alarm32khz32C.nc</span></tt> is generic and provides a new <tt class="docutils literal"><span class="pre">Alarm&lt;T32khz,uint32_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">AlarmMilli16C.nc</span></tt> is generic and provides a new <tt class="docutils literal"><span class="pre">Alarm&lt;TMilli,uint16_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">AlarmMilli32C.nc</span></tt> is generic and provides a new <tt class="docutils literal"><span class="pre">Alarm&lt;TMilli,uint32_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">BusyWait32khzC.nc</span></tt> provides <tt class="docutils literal"><span class="pre">BusyWait&lt;T32khz,uint16_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">BusyWaitMicroC.nc</span></tt> provides <tt class="docutils literal"><span class="pre">BusyWait&lt;TMicro,uint16_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">Counter32khz16C.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Counter&lt;T32khz,uint16_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">Counter32khz32C.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Counter&lt;T32khz,uint32_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">CounterMilli16C.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Counter&lt;TMilli,uint16_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">CounterMilli32C.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Counter&lt;TMilli,uint32_t&gt;</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">GpioCaptureC.nc</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">HilTimerMilliC.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Timer&lt;TMilli&gt;</span> <span class="pre">as</span> <span class="pre">TimerMilli[uint8_t</span> <span class="pre">num]</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">Msp430AlarmC.nc</span></tt> is generic and converts an MSP430 timer to a 16-bit Alarm</li>
+<li><tt class="docutils literal"><span class="pre">Msp430Capture.nc</span></tt> HPL interface definition for MSP430 timer captures</li>
+<li><tt class="docutils literal"><span class="pre">Msp430ClockC.nc</span></tt> exposes MSP430 hardware clock initialization</li>
+<li><tt class="docutils literal"><span class="pre">Msp430ClockInit.nc</span></tt> HPL interface definition for hardware clock initialization</li>
+<li><tt class="docutils literal"><span class="pre">Msp430ClockP.nc</span></tt> implements MSP430 hardware clock initialization and
+calibration and startup</li>
+<li><tt class="docutils literal"><span class="pre">Msp430Compare.nc</span></tt> HPL interface definition for MSP430 timer compares</li>
+<li><tt class="docutils literal"><span class="pre">Msp430Counter32khzC.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Counter&lt;T32khz,uint16_t&gt;</span></tt> based on
+MSP430 TimerB</li>
+<li><tt class="docutils literal"><span class="pre">Msp430CounterC.nc</span></tt> is generic and converts an Msp430Timer to a Counter</li>
+<li><tt class="docutils literal"><span class="pre">Msp430CounterMicroC.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Counter&lt;TMicro,uint16_t&gt;</span></tt> based on
+MSP430 TimerA</li>
+<li><tt class="docutils literal"><span class="pre">Msp430Timer.h</span></tt> defines additional MSP430 timer bitmasks and structs</li>
+<li><tt class="docutils literal"><span class="pre">Msp430Timer.nc</span></tt> HPL interface definition</li>
+<li><tt class="docutils literal"><span class="pre">Msp430Timer32khzC.nc</span></tt> is generic and allocates a new 32khz hardware timer</li>
+<li><tt class="docutils literal"><span class="pre">Msp430Timer32khzMapC.nc</span></tt> exposes the MSP430 hardware timers as a
+parameterized interface allocatable using Msp430Timer32khzC</li>
+<li><tt class="docutils literal"><span class="pre">Msp430TimerC.nc</span></tt> exposes the MSP430 hardware timers</li>
+<li><tt class="docutils literal"><span class="pre">Msp430TimerCapComP.nc</span></tt> is generic and implements the HPL for MSP430
+capture/compare special function registers</li>
+<li><tt class="docutils literal"><span class="pre">Msp430TimerCommonP.nc</span></tt> maps the MSP430 timer interrupts to Msp430TimerEvents</li>
+<li><tt class="docutils literal"><span class="pre">Msp430TimerControl.nc</span></tt> HPL interface definition</li>
+<li><tt class="docutils literal"><span class="pre">Msp430TimerEvent.nc</span></tt> HPL interface definition</li>
+<li><tt class="docutils literal"><span class="pre">Msp430TimerP.nc</span></tt> is generic and implements the HPL for MSP430 timer
+special function registers</li>
+</ul>
+</blockquote>
+</div>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">7. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Cory Sharp</div>
 <div class="line">Moteiv Corporation</div>
 <div class="line">55 Hawthorne St, Suite 550</div>
 <div class="line">San Francisco, CA 94105</div>
 <div class="line"><br /></div>
+<div class="line">phone - +1 415 692 0963</div>
 <div class="line">email - <a class="reference" href="mailto:cory&#64;moteiv.com">cory&#64;moteiv.com</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>

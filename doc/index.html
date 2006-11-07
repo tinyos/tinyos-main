@@ -11,7 +11,7 @@
 	<TR>
 	  <TD CLASS="title">
 	    TinyOS 2.0 Documentation<br>
-	    <DIV CLASS="subtitle">Last Modified: Oct 31 2005</DIV>
+	    <DIV CLASS="subtitle">Last Modified: October 27 2006</DIV>
 	  </TD>
 	</TR>
 	<TR>
@@ -36,25 +36,30 @@
 	      <li><A HREF="html/overview.html">TinyOS 2.0 overview</A></li>
 	      <li><A HREF="html/install-tinyos.html">TinyOS 2.0 install instructions </A></li>
 	      <li><A HREF="html/upgrade-tinyos.html">TinyOS 2.0 upgrade instructions (includes instructions for how to upgrade your tools for 2.0)</A></li>
+              <li><A HREF="html/porting.html">A brief set of notes on porting code from TinyOS 1.x to 2.0.</A></li>
 	    </ul>
 	  </TD>
 	</TR>
 
 
 	<TR>
-	  <TD CLASS="subtitle">Tutorials</TD>
+	  <TD CLASS="subtitle"><A HREF="html/tutorial/index.html">Tutorials</A></TD>
 	</TR>
 	<TR>
-	  <TD><p>TinyOS 2.0 has a few tutorials to get a new user started with programming
+	  <TD><p>TinyOS 2.0 has a few <A HREF="html/tutorial/index.html">tutorials</A> to get a new user started with programming
               the system. These tutorials introduce nesC programming and some major
               TinyOS abstractions, such as timers and communication.</p>
 
-              <p><A HREF="html/tutorial/index.html"><DIV class=sublink>TinyOS 2.0 Tutorials</div></a></p></TD>
+              <p>Additionally, for more advanced programming, there is a
+                 <A HREF="pdf/tinyos-programming.pdf">TinyOS Programming Manual</A>.
+                 The book describes nesC's features in greater detail,
+                 including generic components, concurrency, and common
+                 component design patterns.</p>
 	</TR>
 
 
 	<TR>
-	  <TD CLASS="subtitle">TEPs and Source Code Documentation</TD>
+	  <TD CLASS="subtitle">TEPs</TD>
 	</TR>
 	<TR>
 	  <TD>
@@ -64,7 +69,7 @@
 	    different kinds of TEPs and their roles. TEPs 1-100 are
 	    BCP (Best Current Practice) TEPs, while TEPS 101+ are
 	    Informational, Documentary, or Experimental. Currently,
-	    all TEPs are still Drafts: comments and feedback to the
+	    many TEPs are Drafts: comments and feedback to the
 	    authors or the associated working group is welcome.
 
 	    <BR><BR>
@@ -80,31 +85,41 @@
 	      <li>TEP 107: Boot Sequence                    [<A HREF="html/tep107.html">HTML</A>] [<A HREF="txt/tep107.txt">TXT</A>]</li>
 	      <li>TEP 108: Resource Arbitration             [<A HREF="html/tep108.html">HTML</A>] [<A HREF="txt/tep108.txt">TXT</A>]</li>
 	      <li>TEP 109: Sensorboards                     [<A HREF="html/tep109.html">HTML</A>] [<A HREF="txt/tep109.txt">TXT</A>]</li>
-	      <li>TEP 110: Service Distributions            [<A HREF="html/tep110.html">HTML</A>] [<A HREF="txt/tep110.txt">TXT</A>]</li>
 	      <li>TEP 111: message_t                        [<A HREF="html/tep111.html">HTML</A>] [<A HREF="txt/tep111.txt">TXT</A>]</li>
 	      <li>TEP 112: Microcontroller Power Management [<A HREF="html/tep112.html">HTML</A>] [<A HREF="txt/tep112.txt">TXT</A>]</li>
 	      <li>TEP 113: Serial Communication             [<A HREF="html/tep113.html">HTML</A>] [<A HREF="txt/tep113.txt">TXT</A>]</li>
 	      <li>TEP 114: SIDs: Source and Sink Independent Drivers [<A HREF="html/tep114.html">HTML</A>] [<A HREF="txt/tep114.txt">TXT</A>]</li>
 	      <li>TEP 115: Power Management of Non-Virtualized Devices [<A HREF="html/tep115.html">HTML</A>] [<A HREF="txt/tep115.txt">TXT</A>]</li>
 	      <li>TEP 116: Packet Protocols                 [<A HREF="html/tep116.html">HTML</A>] [<A HREF="txt/tep116.txt">TXT</A>]</li>
+	      <li>TEP 117: Low-Level I/O                  [<A HREF="html/tep117.html">HTML</A>] [<A HREF="txt/tep117.txt">TXT</A>]</li>
+	      <li>TEP 118: Dissemination                 [<A HREF="html/tep118.html">HTML</A>] [<A HREF="txt/tep118.txt">TXT</A>]</li>
+	      <li>TEP 119: Collection                  [<A HREF="html/tep119.html">HTML</A>] [<A HREF="txt/tep119.txt">TXT</A>]</li>
 	    </ul>
 
+	    <BR><BR>
+          </TD>
+        </TR>
+	<TR>
+	  <TD CLASS="subtitle"><A HREF="html/nesdoc/">TinyOS Source Code Documentation</A></TD>
+	</TR>
+        <TR>
+          <TD>
           <p>In addition to TEPs, which document the organization and design
-             behind important parts of TinyOS, there is also source code
-             documentation. TinyOS (nesC) code has nesdoc annotations,
-             which can be found here (note that this link is external):<br><br>
+             behind important parts of TinyOS, there is also <A HREF="html/nesdoc/">source code
+             documentation</A>.<br><br>
+          </TD>
+        </TR>
+	<TR>
+	  <TD CLASS="subtitle"><A HREF="html/tos-javasdk-javadoc/index.html">TinyOS Java toolchain Code Documentation</A></TD>
+	</TR>
+        <TR>
+          <TD>
 
-             <A HREF="http://www.tinyos.net/dist-2.0.0/tinyos-2.x/doc/html/nesdoc/">
-             <div class=sublink>TinyOS 2.0 nesdoc documentation</div></a>
-             
-          </p>
 
-          <p>There is similar javadoc documentation for the Java toolchain, 
-             which can be found here:<br><br>
- 
-             <A HREF="http://www.tinyos.net/dist-2.0.0/tinyos-2.x/doc/html/tos-javasdk-javadoc/">
-             <div class=sublink>TinyOS 2.0 javadoc documentation</div></a>
-
+          <p>There is similar 
+	  <A HREF="html/tos-javasdk-javadoc/index.html">javadoc documentation</A> for the Java toolchain, 
+             which describes the Java classes and their functionality. This documentation
+             is incomplete. 
           </p>
               
 </p>

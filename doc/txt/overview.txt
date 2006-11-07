@@ -3,7 +3,7 @@ TinyOS 2.0 Overview
 ============================
 
 :Author: Philip Levis
-:Date: Feb 8 2006
+:Date: Oct 30 2006
 
 .. Note::
  
@@ -81,7 +81,7 @@ a full active message communication layer.
 
 The HAA is described in TEP 2: Hardware Abstraction Architecture[TEP2_].
 
-Currently (as of the 2.0 beta2 release in July 2006), TinyOS 2.0 supports
+Currently (as of the 2.0 release in November 2006), TinyOS 2.0 supports
 the following platforms:
 
  * eyesIFXv2
@@ -94,7 +94,7 @@ the following platforms:
  * btnode3
 
 
-The btnode3 platform is not included in the beta2 RPM.
+The btnode3 platform is not included in the RPM.
 
 3. Scheduler
 ====================================================================
@@ -241,7 +241,12 @@ each one will receive its fair share of transmission opportunities.
 
 Further information on message_t can be found in TEP 111:
 message_t[TEP111_], while further information on AM can be
-found in TEP 116: Packet Protocoks[TEP116_].
+found in TEP 116: Packet Protocols[TEP116_].
+
+The current TinyOS release has a low-power stack for the CC1000
+radio (mica2 platform) and an experimental low-power stack for
+the CC2420 radio (micaz, telosb, and intelmote2 platforms). 
+
 
 8. Sensors
 ====================================================================
@@ -326,6 +331,17 @@ TEP 115: Power Management of Non-Virtualised Devices{TEP115_], is handled
 through resource abiters. Fully virtualized services have their
 own, individual power management policies.
 
+TinyOS 2.0 provides low-power stacks for the CC1000 (mica2)
+and CC2420 (micaz, telosb, imote2) radios. Both use a low-power
+listening apporach, where transmitters send long preambles or
+repeatedly send packets and receivers wake up periodically to 
+sense the channel to hear if there is a packet being 
+transmitted. The low-power stack CC1000 is standard, while
+the CC2420 stack is experimental. That is, the default CC1000
+stack (chips/cc1000) has low-power-listening, while the default 
+CC2420 stack (chips/cc2420) does not. To use the low-power CC2420
+stack, you must include chips/cc2420_lpl in your application Makefile.
+
 12. Network Protocols
 ====================================================================
 
@@ -335,9 +351,12 @@ and collection. Dissemination reliably delivers small (fewer
 than 20 byte) data items to every node in a network, while
 collection builds a routing tree rooted at a sink node. Together,
 these two protocols enable a wide range of data collection
-applications. 
+applications. Collection has advanced significantly since the
+most recent beta release; experimental tests in multiple 
+network conditions have seen very high (>98%) deliver rates
+as long as the network is not saturated.
 
-12. Conclusion
+13. Conclusion
 ====================================================================
 
 TinyOS 2.0 represents the next step of TinyOS development. Building on
@@ -348,7 +367,7 @@ still under active development: future prereleases will include
 non-volatile storage, basic multihop protocols (collection routing,
 dissemination), and further power management abstractions.
 
-13. Acknowledgments
+14. Acknowledgments
 ====================================================================
 
 TinyOS 2.0 is the result of a lot of hard work from a lot of people,
@@ -358,10 +377,10 @@ Prabal Dutta,
 Gilman Tolle, Martin Turon, Phil Buonodonna, Ben Greenstein, David Culler, 
 Kristin Wright, Ion Yannopoulos, Henri Dubois-Ferriere, Jan Beutel, 
 Robert Szewczyk, Rodrigo Fonseca, Kyle Jamieson, Omprakash Gnawali,
-and Kristin Wright.
+David Moss, and Kristin Wright.
 
 
-14. Author's Address
+15. Author's Address
 ====================================================================
 
 | Philip Levis
@@ -374,7 +393,7 @@ and Kristin Wright.
 |
 | email - pal@cs.stanford.edu
 
-15. Citations
+16. Citations
 ====================================================================
 
 .. [TEP1] TEP 1: TEP Structure and Keywords. http://tinyos.cvs.sourceforge.net/*checkout*/tinyos/tinyos-2.x/doc/html/tep1.html?pathrev=tinyos-2_0_devel-BRANCH

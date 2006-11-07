@@ -1,20 +1,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html><head><style type="text/css">
-<!--
+<html>
+  <head>
 
-BODY { font-size: 10pt; font-family: Arial, Helvetica, sans-serif; }
-TD { font-size: 10pt; font-family: Arial, Helvetica, sans-serif; }
+  <title>Installing TinyOS 2.0</title>
+  <link href="../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
+</head>
+  <body>
 
-P { font-size: 10pt; font-family: Arial, Helvetica, sans-serif; }
-P.headline { font-size = 14pt; font-weight=bold; }
-
--->
-</style></head><body>
+    <div class="title">Upgrading from TinyOS 1.x to TinyOS 2.x</div>
+    <div class="subtitle">Last updated 5 November 2006</div>
 <p>
-<table border="0" cellpadding="0" cellspacing="0" width="100%">
-<tbody><tr><td bgcolor="#eeeeee"><font face="verdana, arial, helvetica, sans-serif" size="3"><b>Upgrading from TinyOS 1.x to TinyOS 2.x</b></font></td>
-</tr></tbody></table>
-</p><p>
 This document describes how to upgrade your TinyOS 1.x environment to
 a TinyOS 2.x environment. This requires that you not only install the 
 TinyOS 2.x rpm, but also that you upgrade your tools from the toolset
@@ -37,9 +32,7 @@ There are 3 steps to upgrading from 1.x to 2.x:
   </li><li> <a href="#tinyos2">Install the Tinyos 2.x source tree. </a>
 </li></ol>
 
-<hr>
-
-<a name="external-tools"><h3> 1. Upgrade your external tools. </h3></a>
+<a name="external-tools"><h1> Step 1: Upgrade your external tools. </h1></a>
 The 1.2 toolset uses the same Java JDK and ATT Graphviz versions, so 
 those do not need to be upgraded. What does need to be upgraded are
 your compiler tools. Install the appropriate version of the following 
@@ -149,8 +142,8 @@ distribution trees, but are linked below for convenience.
 
 </tbody></table>
 
-</p><hr>
-<a name="tinyos-tools"><h3> 2. Upgrade your TInyOS-specific tools. </h3></a>
+</p>
+<a name="tinyos-tools"><h1> Step 2: Upgrade your TinyOS-specific tools. </h1></a>
 
 The TinyOS-specific tools are the NesC compiler and a set of tools
 developed in the tinyos-2.x/tools source code repository. They are
@@ -161,13 +154,14 @@ Also, if you plan on maintaining a tinyos-1.x tree
 simultaneously with a tinyos-2.x tree, the tinyos-tools installed for the
 1.x versions must remain installed so use <code>rpm -ivh</code>. If you are 
 only installing a 2.x tree, you can use <code>rpm -Uvh</code>.
-If you using the Cygwin version recommendedin these install
+If you using the Cygwin version recommended
+in these install
 instructions, you should install the "Recommended" Windows/Cygwin
-nesC RPM (1.2.7b). If you install it and it does not work (e.g., you
+nesC RPM. 
+Try installing it and if it does not work (e.g., you
 get strange errors when you try to execute it), this may be due
-to a Cygwin version incompatibility: try the "Other" Windows/Cygwin
+to a Cygwin version incompatibility: try the "Other" Windows/Cygwin 
 RPM (1.2.7a). 
-
 
 <p>
 
@@ -184,24 +178,24 @@ RPM (1.2.7a).
 
 <tr>
   <td>NesC</td>
-  <td><a href="http://csl.stanford.edu/~pal/tinyos/nesc-1.2.7b-1.cygwin.i386.rpm">nesc-1.2.7b-1.cygwin.i386.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/windows/nesc-1.2.7b-1.cygwin.i386.rpm">nesc-1.2.7b-1.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/windows/nesc-1.2.7a-1.cygwin.i386.rpm">nesc-1.2.7a-1.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/linux/nesc-1.2.7a-1.i386.rpm">nesc-1.2.7a-1.i386.rpm </a></td>
-  <td><a href=""></a><code>rpm -Uvh</code></td>
+  <td><a href=""></a><code>rpm -Uvh</code><br><code>rpm -Uvh --ignoreos</code> (if Cygwin complains)</td>
 </tr>
 
 <tr>
   <td bgcolor="#dddddd">tinyos-tools</td>
-  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.2-1.cygwin.i386.rpm">tinyos-tools-1.2.2-1.cygwin.i386.rpm</a></td>
-  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.2-1.cygwin.i386.rpm">tinyos-tools-1.2.2-1.cygwin.i386.rpm</a></td>
-  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.2-1.i386.rpm">tinyos-tools-1.2.2-1.i386.rpm</a></td>
+  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.3-1.cygwin.i386.rpm">tinyos-tools-1.2.2-1.cygwin.i386.rpm</a></td>
+  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.3-1.cygwin.i386.rpm">tinyos-tools-1.2.2-1.cygwin.i386.rpm</a></td>
+  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.3-1.i386.rpm">tinyos-tools-1.2.2-1.i386.rpm</a></td>
   <td bgcolor="#dddddd"><a href=""></a><code>rpm -ivh --force</code>&nbsp;(1.x tree)<br><code>rpm -Uvh</code>&nbsp;(no 1.x tree)<br></td>
 </tr>
 
 </tbody></table>
 
-</p><hr>
-<a name="tinyos2"><h3> 3. Install the TinyOS 2.x source tree. </h3></a>
+</p>
+<a name="tinyos2"><h1> Step 3: Install the TinyOS 2.x source tree. </h1></a>
 
 Now that the tools are installed, you need only install the tinyos 2.x 
 source tree and then set your environment variables.
@@ -210,11 +204,21 @@ source tree and then set your environment variables.
 <li> Install tinyos-2.x
 <p>
 <!----- TinyOS  -------->
-To preserve your old tinyos-1.x tree, we strongly recommend that you use
+
+<p>If you have an existing 1.x tree, we strongly recommend that you use
 the install (<code>-i</code>) rpm argument when installing the tinyos-2.x rpm rather 
 than the upgrade (<code>-U</code>) argument. The difference is that the <code>-U</code> will 
 first remove the tinyos-1.x tree while <code>-i</code> will not remove previously installed
-files. Said another way, we recommend using <code>rpm -ivh</code>.
+files. Said another way, we recommend using <code>rpm -ivh</code>.</p>
+
+<p>If you have an existing 2.x tree which you want to keep unchanged, then
+you will need to move it to make space for the new one. For example, if you
+have an existing tree in <tt>/opt/tinyos-2.x/</tt>, then you can move it
+to <tt>/opt/tinyos-2.x-old</tt>. Once you have moved it, we recommend
+performing a forced installation of the 2.0 tree.</p>
+
+<p>If you have an existing 2.x tree which you do not care about, then we
+recommend removing it before installing the new one with a forced install.</p>
 
 </p><p><b><em>TinyOS 2.x</em></b>
 <table border="0">
@@ -222,12 +226,17 @@ files. Said another way, we recommend using <code>rpm -ivh</code>.
   <td bgcolor="#dddddd"><b></b></td>
   <td bgcolor="#dddddd"><b>Windows/Cygwin</b></td>
   <td bgcolor="#dddddd"><b>Linux</b></td>
+  <td bgcolor="#dddddd"><b>Command</b></td>
 </tr>
 
 <tr>
   <td>TinyOS</td>
-  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-2.0.0beta2-3.cygwin.noarch.rpm">tinyos-2.0.0beta2-3.cygwin.noarch.rpm</a></td>
-  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-2.0.0beta2-3.noarch.rpm">tinyos-2.0.0beta2-3.noarch.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-2.0.0-1.cygwin.noarch.rpm">tinyos-2.0.0-1.cygwin.noarch.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-2.0.0-1.noarch.rpm">tinyos-2.0.0-1.noarch.rpm</a></td>
+  <td><tt>rpm -Uvh</tt> (to upgrade)<br>
+      <tt>rpm -ivh</tt> (to install)<br>
+      <tt>rpm -ivh --force</tt> (to force install)<br>
+  </td>      
 </tr>
 
 </tbody></table>
@@ -308,8 +317,7 @@ groups: </li>
 </code></code></li></ol>
 
 </li></ul>
-<hr>
-<a name="tinyos1"><h3>Switching back to a TinyOS 1.x tree</h3></a>
+<a name="tinyos1"><h1>Switching back to a TinyOS 1.x tree</h1></a>
 Since the tools are backwardly compatible, you need only change
 your environment variables to point to the 1.x settings. Assuming 
 that your old tree was in /opt/tinyos-1.x, you would use the following 
@@ -347,4 +355,8 @@ values:
 <td>
 
 </td></tr></tbody></table>
-</p></body></html>
+</p>
+
+<p>Switching between the two should require switching only these environment
+variables.</p>
+</body></html>

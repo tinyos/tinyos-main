@@ -80,9 +80,11 @@ reflect the specifc name of the sensor, and optionally provide a
 component with a generic name for application authors who only care
 about the general class of the sensor.
 
-This document assumes that sensors return uninterpreted values of
-arbitrary size or datatype. Conversion of sensor values to something
-with actual physical meaning is beyond the scope of this document.
+This document takes no position on the meaning of the values returned
+by sensor drivers. They may be raw uninterpreted values or they may
+have some physical meaning. If a driver returns uninterpreted values,
+the driver may provide additional interfaces that would allow
+higher-level clients to interpret the value properly.
 
 2. Sensor HIL Components
 ====================================================================
@@ -217,32 +219,7 @@ For example::
     // connect to the sensor's platform-dependent HPL here
   }
 
-4. Sensor HPL Components
-====================================================================
-
-A sensor HPL is necessarily platform-dependent or
-sensorboard-dependent. These components should provide access to the
-physical resources needed by the sensor, in a platform-independent
-manner that can be used by the shared logic of the sensor HAL
-components. In the case of bus-based sensors, this HPL may be nothing
-more than wiring to the appropriate bus interface for use by the HAL
-component.
-
-For example::
-
-  configuration HplSensirionSht11C {
-    provides interface Init;
-    provides interface Resource[ uint8_t id ];
-    provides interface GeneralIO as DATA;
-    provides interface GeneralIO as SCK;
-    provides interface GpioInterrupt as InterruptDATA;
-  }
-  implementation {
-    // connect to platform or sensorboard-dependent resources
-    // power-manage the sensor through platform-specific means
-  }
-
-5. Directory Organization Guidelines
+4. Directory Organization Guidelines
 ====================================================================
 
 Because the same physical sensor may be attached to TinyOS platforms
@@ -324,7 +301,7 @@ code that will enter the core source tree. In general, sensor
 components may be placed anywhere as long as the nesC compiler
 receives enough `-I` directives to locate all of the necessary pieces.
 
-6. Authors' Addresses
+5. Authors' Addresses
 ====================================================================
 
 | David Gay
@@ -367,10 +344,438 @@ receives enough `-I` directives to locate all of the necessary pieces.
 |
 | email - gtolle@archrock.com
 
-7. Citations
+6. Citations
 ====================================================================
 
 .. [TEP2] TEP 2: Hardware Abstraction Architecture
 .. [TEP114] TEP 114: SIDs: Source and Sink Indepedent Drivers
 .. [TEP115] TEP 115: Power Management of Non-Virtualized Devices
 
+Appendix A: Sensor Driver Examples
+====================================================================
+
+1. Analog ADC-Connected Sensor
+------------------------------
+
+The Analog sensor requires two components
+
+* a component to present the sensor itself (HamamatsuS1087ParC)
+
+* a component to select the appropriate hardware resources, such as
+  ADC port 4, reference voltage 1.5V, and a slow sample and hold time
+  (HamamatsuS1087ParP).
+
+The AdcReadClientC component and underlying machinery handles all of
+the arbitration and access to the ADC.
+
+::
+
+  tos/platforms/telosa/chips/s1087/HamamatsuS1087ParC.nc
+
+  generic configuration HamamatsuS1087ParC() {
+    provides interface Read<uint16_t>;
+    provides interface ReadStream<uint16_t>;
+  }
+  implementation {
+    components new AdcReadClientC();
+    Read = AdcReadClientC;
+
+    components new AdcReadStreamClientC();
+    ReadStream = AdcReadStreamClientC;
+
+    components HamamatsuS1087ParP;
+    AdcReadClientC.Msp430Adc12Config -> HamamatsuS1087ParP;
+    AdcReadStreamClientC.Msp430Adc12Config -> HamamatsuS1087ParP;
+  }
+  
+::
+
+  tos/platforms/telosa/chips/s1087/HamamatsuS1087ParP.nc
+
+  module HamamatsuS1087ParP {
+    provides interface Msp430Adc12Config;
+  }
+  implementation {
+
+    async command msp430adc12_channel_config_t 
+      Msp430Adc12Config.getChannelSettings() {
+ 
+      msp430adc12_channel_config_t config = {
+        inch: INPUT_CHANNEL_A4,
+        sref: REFERENCE_VREFplus_AVss,
+        ref2_5v: REFVOLT_LEVEL_1_5,
+        adc12ssel: SHT_SOURCE_ACLK,
+        adc12div: SHT_CLOCK_DIV_1,
+        sht: SAMPLE_HOLD_4_CYCLES,
+        sampcon_ssel: SAMPCON_SOURCE_SMCLK,
+        sampcon_id: SAMPCON_CLOCK_DIV_1
+      };
+      
+      return config;
+    }
+  }
+
+2. Binary Pin-Connected Sensor
+------------------------------
+
+The Binary sensor gets a bit more complex, because it has three
+components: 
+
+* one to present the sensor (UserButtonC)
+
+* one to execute the driver logic (UserButtonLogicP)
+
+* one to select the appropriate hardware resources, such as MSP430
+  Port 27 (HplUserButtonC).
+
+Note that the presentation of this sensor is not arbitrated because
+none of the operations are split-phase. 
+
+::
+
+  tos/platforms/telosa/UserButtonC.nc
+
+  configuration UserButtonC {
+    provides interface Get<bool>;
+    provides interface Notify<bool>;
+  }
+  implementation {
+
+    components UserButtonLogicP;
+
+    components HplUserButtonC;
+    UserButtonLogicP.GpioInterrupt -> HplUserButtonC.GpioInterrupt;
+    UserButtonLogicP.GeneralIO -> HplUserButtonC.GeneralIO;
+
+    Get = UserButtonLogicP;
+    Notify = UserButtonLogicP;
+  }
+
+::
+
+  tos/platforms/telosa/UserButtonLogicP.nc
+ 
+  module UserButtonLogicP {
+    provides interface Get<bool>;
+    provides interface Notify<bool>;
+
+    uses interface GeneralIO;
+    uses interface GpioInterrupt; 
+  }
+  implementation {
+    norace bool m_pinHigh;
+
+    task void sendEvent();
+ 
+    command bool Get.get() { return call GeneralIO.get(); }
+
+    command error_t Notify.enable() {
+      call GeneralIO.makeInput();
+
+      if ( call GeneralIO.get() ) {
+        m_pinHigh = TRUE;
+        return call GpioInterrupt.enableFallingEdge();
+      } else {
+        m_pinHigh = FALSE;
+        return call GpioInterrupt.enableRisingEdge();
+      }
+    }
+
+    command error_t Notify.disable() {
+      return call GpioInterrupt.disable();
+    }
+
+    async event void GpioInterrupt.fired() {
+      call GpioInterrupt.disable();
+
+      m_pinHigh = !m_pinHigh;
+
+      post sendEvent();
+    }
+
+    task void sendEvent() {
+      bool pinHigh;
+      pinHigh = m_pinHigh;
+    
+      signal Notify.notify( pinHigh );
+    
+      if ( pinHigh ) {
+        call GpioInterrupt.enableFallingEdge();
+      } else {
+        call GpioInterrupt.enableRisingEdge();
+      }
+    }
+  }
+
+::
+
+  tos/platforms/telosa/HplUserButtonC.nc
+
+  configuration HplUserButtonC {
+    provides interface GeneralIO;
+    provides interface GpioInterrupt;
+  }
+  implementation {
+
+    components HplMsp430GeneralIOC as GeneralIOC;
+
+    components new Msp430GpioC() as UserButtonC;
+    UserButtonC -> GeneralIOC.Port27;
+    GeneralIO = UserButtonC;
+
+    components HplMsp430InterruptC as InterruptC;
+
+    components new Msp430InterruptC() as InterruptUserButtonC;
+    InterruptUserButtonC.HplInterrupt -> InterruptC.Port27;
+    GpioInterrupt = InterruptUserButtonC.Interrupt;
+  }
+
+3. Digital Bus-Connected Sensor
+-------------------------------
+
+The Digital sensor is the most complex out of the set, and includes
+six components:
+
+* one to present the sensor (SensirionSht11C)
+
+* one to request arbitrated access and to transform the sensor HAL
+  into the sensor HIL (SensirionSht11P)
+
+* one to present the sensor HAL (HalSensirionSht11C)
+
+* one to perform the driver logic needed to support the HAL, which
+  twiddles pins according to a sensor-specific protocol
+  (SensirionSht11LogicP).
+
+* one to select the appropriate hardware resources, such as the clock,
+  data, and power pins, and to provide an arbiter for the sensor
+  (HplSensirionSht11C).
+
+* one to perform the power control logic needed to support the power
+  manager associated with the arbiter (HplSensirionSht11P).
+
+This bus-connected sensor is overly complex because it does not rely
+on a shared framework of bus manipulation components. A sensor built
+on top of the I2C or SPI bus would likely require fewer components.
+
+::
+
+  tos/platforms/telosa/chips/sht11/SensirionSht11C.nc
+  
+  generic configuration SensirionSht11C() {  
+    provides interface Read<uint16_t> as Temperature;
+    provides interface Read<uint16_t> as Humidity;
+  }
+  implementation {
+    components new SensirionSht11ReaderP();
+  
+    Temperature = SensirionSht11ReaderP.Temperature;
+    Humidity = SensirionSht11ReaderP.Humidity;
+  
+    components HalSensirionSht11C;
+  
+    enum { TEMP_KEY = unique("Sht11.Resource") };
+    enum { HUM_KEY = unique("Sht11.Resource") };
+  
+    SensirionSht11ReaderP.TempResource -> HalSensirionSht11C.Resource[ TEMP_KEY ];
+    SensirionSht11ReaderP.Sht11Temp -> HalSensirionSht11C.SensirionSht11[ TEMP_KEY ];
+    SensirionSht11ReaderP.HumResource -> HalSensirionSht11C.Resource[ HUM_KEY ];
+    SensirionSht11ReaderP.Sht11Hum -> HalSensirionSht11C.SensirionSht11[ HUM_KEY ];
+  }
+  
+::
+  
+  tos/chips/sht11/SensirionSht11ReaderP.nc
+  
+  generic module SensirionSht11ReaderP() {
+    provides interface Read<uint16_t> as Temperature;
+    provides interface Read<uint16_t> as Humidity;
+    
+    uses interface Resource as TempResource;
+    uses interface Resource as HumResource;
+    uses interface SensirionSht11 as Sht11Temp;
+    uses interface SensirionSht11 as Sht11Hum;
+  }
+  implementation {
+    command error_t Temperature.read() {
+      call TempResource.request();
+      return SUCCESS;
+    }
+  
+    event void TempResource.granted() {
+      error_t result;
+      if ((result = call Sht11Temp.measureTemperature()) != SUCCESS) {
+        call TempResource.release();
+        signal Temperature.readDone( result, 0 );
+      }
+    }
+  
+    event void Sht11Temp.measureTemperatureDone( error_t result, uint16_t val ) {
+      call TempResource.release();
+      signal Temperature.readDone( result, val );
+    }
+  
+    command error_t Humidity.read() {
+      call HumResource.request();
+      return SUCCESS;
+    }
+  
+    event void HumResource.granted() {
+      error_t result;
+      if ((result = call Sht11Hum.measureHumidity()) != SUCCESS) {
+        call HumResource.release();
+        signal Humidity.readDone( result, 0 );
+      }
+    }
+  
+    event void Sht11Hum.measureHumidityDone( error_t result, uint16_t val ) {
+      call HumResource.release();
+      signal Humidity.readDone( result, val );
+    }
+  
+    event void Sht11Temp.resetDone( error_t result ) { }
+    event void Sht11Temp.measureHumidityDone( error_t result, uint16_t val ) { }
+    event void Sht11Temp.readStatusRegDone( error_t result, uint8_t val ) { }
+    event void Sht11Temp.writeStatusRegDone( error_t result ) { }
+  
+    event void Sht11Hum.resetDone( error_t result ) { }
+    event void Sht11Hum.measureTemperatureDone( error_t result, uint16_t val ) { }
+    event void Sht11Hum.readStatusRegDone( error_t result, uint8_t val ) { }
+    event void Sht11Hum.writeStatusRegDone( error_t result ) { }
+  
+    default event void Temperature.readDone( error_t result, uint16_t val ) { }
+    default event void Humidity.readDone( error_t result, uint16_t val ) { }
+  }
+  
+::
+  
+  tos/platforms/telosa/chips/sht11/HalSensirionSht11C.nc
+  
+  configuration HalSensirionSht11C {
+    provides interface Resource[ uint8_t client ];
+    provides interface SensirionSht11[ uint8_t client ];
+  }
+  implementation {
+    components new SensirionSht11LogicP();
+    SensirionSht11 = SensirionSht11LogicP;
+  
+    components HplSensirionSht11C;
+    Resource = HplSensirionSht11C.Resource;
+    SensirionSht11LogicP.DATA -> HplSensirionSht11C.DATA;
+    SensirionSht11LogicP.CLOCK -> HplSensirionSht11C.SCK;
+    SensirionSht11LogicP.InterruptDATA -> HplSensirionSht11C.InterruptDATA;
+    
+    components new TimerMilliC();
+    SensirionSht11LogicP.Timer -> TimerMilliC;
+  
+    components LedsC;
+    SensirionSht11LogicP.Leds -> LedsC;
+  }
+  
+::
+  
+  tos/chips/sht11/SensirionSht11LogicP.nc
+  
+  generic module SensirionSht11LogicP() {
+    provides interface SensirionSht11[ uint8_t client ];
+  
+    uses interface GeneralIO as DATA;
+    uses interface GeneralIO as CLOCK;
+    uses interface GpioInterrupt as InterruptDATA;
+  
+    uses interface Timer<TMilli>;
+  
+    uses interface Leds;
+  }
+  implementation {
+  
+    ... bus protocol details omitted for brevity ...
+  
+  }
+  
+::
+  
+  tos/platforms/telosa/chips/sht11/HplSensirionSht11C.nc
+  
+  configuration HplSensirionSht11C {
+    provides interface Resource[ uint8_t id ];
+    provides interface GeneralIO as DATA;
+    provides interface GeneralIO as SCK;
+    provides interface GpioInterrupt as InterruptDATA;
+  }
+  implementation {
+    components HplMsp430GeneralIOC;
+    
+    components new Msp430GpioC() as DATAM;
+    DATAM -> HplMsp430GeneralIOC.Port15;
+    DATA = DATAM;
+  
+    components new Msp430GpioC() as SCKM;
+    SCKM -> HplMsp430GeneralIOC.Port16;
+    SCK = SCKM;
+  
+    components new Msp430GpioC() as PWRM;
+    PWRM -> HplMsp430GeneralIOC.Port17;
+  
+    components HplSensirionSht11P;
+    HplSensirionSht11P.PWR -> PWRM;
+    HplSensirionSht11P.DATA -> DATAM;
+    HplSensirionSht11P.SCK -> SCKM;
+  
+    components new TimerMilliC();
+    HplSensirionSht11P.Timer -> TimerMilliC;
+  
+    components HplMsp430InterruptC;
+    components new Msp430InterruptC() as InterruptDATAC;
+    InterruptDATAC.HplInterrupt -> HplMsp430InterruptC.Port15;
+    InterruptDATA = InterruptDATAC.Interrupt;
+  
+    components new FcfsArbiterC( "Sht11.Resource" ) as Arbiter;
+    Resource = Arbiter;
+    
+    components new SplitControlPowerManagerC();
+    SplitControlPowerManagerC.SplitControl -> HplSensirionSht11P;
+    SplitControlPowerManagerC.ArbiterInit -> Arbiter.Init;
+    SplitControlPowerManagerC.ArbiterInfo -> Arbiter.ArbiterInfo;
+    SplitControlPowerManagerC.ResourceController -> Arbiter.ResourceController;
+  }
+  
+::
+  
+  tos/platforms/telosa/chips/sht11/HplSensirionSht11P.nc
+  
+  module HplSensirionSht11P {
+    provides interface SplitControl;
+    uses interface Timer<TMilli>;
+    uses interface GeneralIO as PWR;
+    uses interface GeneralIO as DATA;
+    uses interface GeneralIO as SCK;
+  }
+  implementation {
+    task void stopTask();
+  
+    command error_t SplitControl.start() {
+      call PWR.makeOutput();
+      call PWR.set();
+      call Timer.startOneShot( 11 );
+      return SUCCESS;
+    }
+    
+    event void Timer.fired() {
+      signal SplitControl.startDone( SUCCESS );
+    }
+  
+    command error_t SplitControl.stop() {
+      call SCK.makeInput();
+      call SCK.clr();
+      call DATA.makeInput();
+      call DATA.clr();
+      call PWR.clr();
+      post stopTask();
+      return SUCCESS;
+    }
+  
+    task void stopTask() {
+      signal SplitControl.stopDone( SUCCESS );
+    }
+  }

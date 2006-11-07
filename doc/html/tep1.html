@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-09-08 23:15:07 $
-:version: $Revision: 1.3 $
+:date: $Date: 2006-11-07 00:43:43 $
+:version: $Revision: 1.4 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">18-Oct-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.2</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.5</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-07-12</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-10-19</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -434,18 +434,37 @@ become part of it.  Unlike Documentary TEPs, Experimental TEPs may
 describe systems that do not have a reference implementation.</p>
 <p>The fourth field is &quot;Status,&quot; which specifies the status of the TEP.
 A TEP status can either be &quot;Draft,&quot; which means it is a work in
-progress, &quot;Final,&quot; which means it is complete and will not change, or
-&quot;Obsolete,&quot; which means it should no longer be considered. If a TEP is
-&quot;Obsolete&quot; because it has been replaced by another TEP, then the new
-TEP number should follow &quot;Obsolete,&quot; such as &quot;Obsolete by TEP 1231.&quot;</p>
+progress, &quot;Final,&quot; which means it is complete and will not change.
+Once a TEP has the status &quot;Final,&quot; its body MUST NOT change.
+The values of its header fields MUST NOT change. The header of a
+Final TEP MAY have an &quot;Obsoleted By&quot; field added.</p>
+<p>The &quot;Obsoletes&quot; field is a backward pointer to an earlier TEP which
+the current TEP renders obsolete. An Obsoletes field MAY have multiple
+TEPs listed.  For example, if TEP 191 were to replace TEPs 111 and 116, it
+would have the field &quot;Obsoletes: 111, 116&quot;.</p>
+<p>The &quot;Obsoleted By&quot; field is added to a Final TEP when another TEP has
+rendered it obsolete. The field contains the number of the obsoleting
+TEP. For example, if TEP 111 were obsoleted by TEP 191, it would have
+the field &quot;Obsoleted By: 191&quot;.</p>
+<p>&quot;Obsoletes&quot; and &quot;Obsoleted By&quot; fields MUST agree. For a TEP to list another
+TEP in its Obsoletes field, then that TEP MUST list it in the Obsoleted By
+field.</p>
+<p>The obsoletion fields are used to keep track of evolutions and modifications
+of a single abstraction. They are not intended to force a single approach or
+mechanism over alternative possibilities.</p>
 <p>If a TEP is Best Current Practices or Documentary, then it MUST
 include an additional field, &quot;TinyOS-Version:,&quot; which states what
 version(s) of TinyOS the document pertains to. This document pertains
 to all versions of TinyOS, until made obsolete by a future TEP. This
 field MUST appear after the Status field and before the Author field.</p>
-<p>The final required field is Author, which states the names of the
+<p>The final required field is &quot;Author,&quot; which states the names of the
 authors of the document. Full contact information should not be listed
 here (see Section 3.2).</p>
+<p>There is an optional field, &quot;Extends.&quot; The &quot;Extends&quot; field refers to
+another TEP. The purpose of this field is to denote when a TEP represents
+an addition to an existing TEP. Meeting the requirements of a TEP with an
+Extends field requires also meeting the requirements of all TEPs listed
+in the Extends field.</p>
 <p>If a TEP is a Draft, then four additional fields MUST be included:
 Draft-Created, Draft-Modified, Draft-Version, and Draft-Discuss.
 Draft-Created states the date the document was created, Draft-Modified

@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-09-08 23:15:08 $
-:version: $Revision: 1.3 $
+:date: $Date: 2006-11-07 00:43:44 $
+:version: $Revision: 1.4 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">3-Aug-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.2</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.3</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-09-08</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-10-25</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -418,14 +418,14 @@ to do so.</p>
 <p>Field definitions are as follows:</p>
 <blockquote>
 <ul class="simple">
-<li>C: Congestion notification. If a node is receiving packets faster than it can forward them, it MAY set the C field to notify other nodes. If a node hears a packet from node N with the C bit set, it MUST NOT transmit CTP data frames to N until it hears a packet from N with the C bit cleared.</li>
-<li>P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future if it has a valid route.</li>
+<li>C: Congestion notification. If a node is receiving packets faster than it can forward them, it MAY set the C field to notify other nodes. If a node hears a packet from node <em>N</em> with the C bit set, it MUST NOT transmit CTP data frames to <em>N</em> until it hears a packet from N with the C bit cleared.</li>
+<li>P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future.</li>
 <li>THL: Time Has Lived. When a node generates a CTP data frame, it MUST set THL to 0. When a node receives a CTP data frame, it MUST increment the THL. If a node receives a THL of 255, it increments it to 0.</li>
 <li>ETX: The ETX routing metric of the single-hop sender. When a node transmits a CTP data frame, it MUST put the ETX value of its route through the single-hop destination in the ETX field.  If a node receives a packet with a lower gradient than its own, then it MUST schedule a routing frame in the near future.</li>
 <li>origin: The originating address of the packet. A node forwarding a data frame MUST NOT modify the origin field.</li>
 <li>seqno: Origin sequence number. The originating node sets this field, and a node forwarding a data frame MUST NOT modify it.</li>
 <li>collect_id: Higher-level protocol identifier. The origin sets this field, and a node forwarding a data frame MUST NOT modify it.</li>
-<li>data: the data payload, of zero or more bytes.</li>
+<li>data: the data payload, of zero or more bytes. A node forwarding a data frame MUST NOT modify the data payload.</li>
 </ul>
 </blockquote>
 <p>Together, the origin, seqno and collect_id fields denote a unique
@@ -434,9 +434,9 @@ THL denote a unique <strong>*packet instance*</strong> within the network. The
 distinction is important for duplicate suppression in the presence
 of routing loops. If a node suppresses origin packets, then if
 asked to forward the same packet twice due to a routing loop, it will
-drop the packet. However, if it suppresses packet instances, then
-unless the THL has wrapped around to the identical value it had
-on previous times around.</p>
+drop the packet. However, if it suppresses packet instances, then it
+will route succesfully in the presence of transient loops unless the
+THL happens to wrap around to a forwarded packet instance.</p>
 <p>A node MUST send CTP data frames as unicast messages with link-layer
 acknowledgments enabled.</p>
 </div>
@@ -472,6 +472,79 @@ a data packet: a parent can detect when a child's ETX is significantly
 below its own. When a parent hears a child advertise an ETX below its
 own, it MUST schedule a routing frame for transmission in the near
 future.</p>
+</div>
+<div class="section">
+<h1><a id="implementation" name="implementation">6. Implementation</a></h1>
+<p>An implementation of CTP can be found in the tos/lib/net/ctp directory
+of TinyOS 2.0. This section describes the structure of that implementation
+and is not in any way part of the specification of CTP.</p>
+<p>This implementation has three major subcomponents:</p>
+<p>1) A <strong>link estimator</strong>, which is responsible for estimating the
+single-hop ETX of communication with single-hop neighbors.</p>
+<p>2) A <strong>routing engine</strong>, which uses link estimates as well as
+network-level information to decide which neighbor is the next
+routing hop.</p>
+<p>3) A <strong>forwarding engine</strong>, which maintains a queue of packets
+to send. It decides when and if to send them. The name is a little
+misleading: the forwarding engine is responsible for forwarded traffic
+as well as traffic generated on the node.</p>
+<div class="section">
+<h2><a id="link-estimation" name="link-estimation">6.1 Link Estimation</a></h2>
+<p>The link estimator estimates the ETX to single-hop neighbors.
+The implementation uses two mechanisms to estimate the quality of a link:
+periodic broadcast packets and data packets. The estimator itself
+only generates broadcast packets. For data traffic, it depends on
+other components telling it about acknowledged and unacknowledged
+transmissions.</p>
+<p>The periodic broadcast packets have sequence numbers, which the
+estimator uses to estimate the sender-to-receiver packet reception
+rate (PRR). The data payload of periodic broadcast packets contain
+these estimates. Therefore, when node A receives a link estimation
+broadcast message from node B, it can use the packet header to
+estimate the B-to-A PRR and the packet payload to update B's
+estimate of the A-to-B PRR.</p>
+<p>Multiplying these two values gives a <em>bidirectional</em> PRR, or
+an estimate of the probability that if A transmits a packet to B,
+B will successfully hear and acknowledge the packet and A will
+hear the acknowledgment. The inverse of the bidirecitonal PRR
+is the ETX.</p>
+<p>CTP link estimation adapts its beaconing rate to be slow when
+its routing table is stable and faster when changes occur.
+It adjusts the beaconing interval using an algorithm similar
+to the trickle dissemination protocol[<a href="#id1" name="id2"><span class="problematic" id="id2">2_</span></a>]. CTP sends beacons
+more often when one of three conditions occurs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>The routing table is empty (this also sets the P bit)</li>
+<li>The node's routing ETX increases by &gt;= 1 trasmission</li>
+<li>The node hears a packet with the P bit set</li>
+</ol>
+</blockquote>
+<p>CTP also estimates link quality using data transmissions. This
+is a direct measure of ETX. Whenever the data path transmits a
+packet, it tells the link estimator the destimation and whether
+it was successfully acknowledged. The estimator produces an ETX
+estimate every 5 such transmissions, where 0 successes has an
+ETX of 6.</p>
+<p>The estimator combines the beacon and data estimates by incorporating
+them into an exponentially weighted moving average. Beacon-based
+estimates seed the neighbor table. The expectation is that the low
+beacon rate in a stable network means that for a selected route,
+data estimates will outweigh beacon estimates. Additionally, as
+the rate at which CTP collects data estimates is proportional to
+the transmission rate, then it can quickly detect a broken link and
+switch to another candidate neighbor.</p>
+</div>
+<div class="section">
+<h2><a id="routing-engine" name="routing-engine">6.2 Routing Engine</a></h2>
+<p>The</p>
+</div>
+</div>
+<div class="system-messages section">
+<h1>Docutils System Messages</h1>
+<div class="system-message" id="id1">
+<p class="system-message-title">System Message: <a name="id1">ERROR/3</a> (<tt class="docutils">txt/tep123.txt</tt>, line 232); <em><a href="#id2">backlink</a></em></p>
+Unknown target name: &quot;2&quot;.</div>
 </div>
 </div>
 </body>

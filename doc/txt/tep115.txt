@@ -7,11 +7,11 @@ Power Management of Non-Virtualised Devices
 :Type: Documentary
 :Status: Draft
 :TinyOS-Version: 2.x
-:Author: Vlado Handziski, Kevin Klues, Jan-Hinrich Hauer, Phil Levis
+:Author: Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Phil Levis
 
 :Draft-Created: 11-Jan-2006
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2006-07-12 16:59:42 $
+:Draft-Version: $Revision: 1.3 $
+:Draft-Modified: $Date: 2006-11-07 00:43:44 $
 :Draft-Discuss: TinyOS Developer List 
                 <tinyos-devel at mail.millennium.berkeley.edu>
 

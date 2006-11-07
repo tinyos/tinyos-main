@@ -10,8 +10,8 @@ TEP Structure and Keywords
 :Author: Philip Levis
 
 :Draft-Created: 18-Oct-2004
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2006-07-12 16:59:41 $
+:Draft-Version: $Revision: 1.3 $
+:Draft-Modified: $Date: 2006-11-07 00:43:44 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -160,10 +160,28 @@ describe systems that do not have a reference implementation.
 
 The fourth field is "Status," which specifies the status of the TEP.
 A TEP status can either be "Draft," which means it is a work in
-progress, "Final," which means it is complete and will not change, or
-"Obsolete," which means it should no longer be considered. If a TEP is
-"Obsolete" because it has been replaced by another TEP, then the new
-TEP number should follow "Obsolete," such as "Obsolete by TEP 1231."
+progress, "Final," which means it is complete and will not change. 
+Once a TEP has the status "Final," its body MUST NOT change. 
+The values of its header fields MUST NOT change. The header of a
+Final TEP MAY have an "Obsoleted By" field added.
+
+The "Obsoletes" field is a backward pointer to an earlier TEP which
+the current TEP renders obsolete. An Obsoletes field MAY have multiple
+TEPs listed.  For example, if TEP 191 were to replace TEPs 111 and 116, it
+would have the field "Obsoletes: 111, 116".
+
+The "Obsoleted By" field is added to a Final TEP when another TEP has
+rendered it obsolete. The field contains the number of the obsoleting
+TEP. For example, if TEP 111 were obsoleted by TEP 191, it would have
+the field "Obsoleted By: 191".
+
+"Obsoletes" and "Obsoleted By" fields MUST agree. For a TEP to list another
+TEP in its Obsoletes field, then that TEP MUST list it in the Obsoleted By
+field.
+
+The obsoletion fields are used to keep track of evolutions and modifications
+of a single abstraction. They are not intended to force a single approach or
+mechanism over alternative possibilities.
 
 If a TEP is Best Current Practices or Documentary, then it MUST
 include an additional field, "TinyOS-Version:," which states what
@@ -171,9 +189,15 @@ version(s) of TinyOS the document pertains to. This document pertains
 to all versions of TinyOS, until made obsolete by a future TEP. This
 field MUST appear after the Status field and before the Author field.
 
-The final required field is Author, which states the names of the
+The final required field is "Author," which states the names of the
 authors of the document. Full contact information should not be listed
 here (see Section 3.2).
+
+There is an optional field, "Extends." The "Extends" field refers to
+another TEP. The purpose of this field is to denote when a TEP represents
+an addition to an existing TEP. Meeting the requirements of a TEP with an
+Extends field requires also meeting the requirements of all TEPs listed 
+in the Extends field.
 
 If a TEP is a Draft, then four additional fields MUST be included:
 Draft-Created, Draft-Modified, Draft-Version, and Draft-Discuss.

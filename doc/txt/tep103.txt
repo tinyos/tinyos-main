@@ -3,17 +3,11 @@ Permanent Data Storage (Flash)
 ==============================================
 
 :TEP: 103
-:Group: Core Working Group 
+:Group: Core Working Group
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Author: David Gay, Jonathan Hui
-
-:Draft-Created: 27-Sep-2004
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2006-09-13 17:45:08 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
-
 
 .. Note::
 
@@ -32,39 +26,41 @@ HAL layers of various flash chips.
 1. Introduction
 ====================================================================
 
-Flash chips are a form of EEPROM (electrically-eraseable, programmable
+Flash chips are a form of EEPROM (electrically-erasable, programmable
 read-only memory), distinguished by a fast erase capability. However,
 erases can only be done in large units (from 256B to 128kB depending on the
 flash chip). Erases are the only way to switch bits from 0 to 1, and
 programming operations can only switch 1's to 0's. Additionally, some
 chips require that programming only happen once between each erase,
-or that it be in relatively large units (e.g., 256B). 
+or that it be in relatively large units (e.g., 256B).
 
 In the table below, we summarise these differences by categorising
 flash chips by their underlying technology (NOR vs NAND). We also
 include a column for Atmel's AT45DB flash chip family, as it has
-significantly different tradeoffs than other flash chips: ::
+significantly different tradeoffs than other flash chips:
 
 
-		   NOR                AT45DB             NAND
-		   (ex: ST M25P40,			 (ex: Samsung
-		   Intel PXA27x)			 K9K1G08R0B)
+  =============  ==================  =================  ===================
+       	X        NOR                 AT45DB             NAND
+  	         (ex: ST M25P40,   		         (ex: Samsung
+  	         Intel PXA27x)     		         K9K1G08R0B)
+  =============  ==================  =================  ===================
+  Erase	         Slow (seconds)      Fast (ms)	        Fast (ms)
+  Erase unit     Large (64KB-128KB)  Small (256B)       Medium (8KB-32KB)
+  Writes         Slow (100s kB/s)    Slow (60kB/s)      Fast (MBs/s)
+  Write unit     1 bit               256B               100's of bytes
+  Bit-errors     Low                 Low                High (requires ECC,
+                                                        bad-block mapping)
+  Read	         Bus limited [*]_    Slow+Bus limited   Bus limited
+  Erase cycles   10^4 - 10^5         10^4 [*]_          10^5 - 10^7
+  Intended use   Code storage        Data storage       Data storage
+  Energy/byte    1uJ                 1uJ                .01uJ
+  =============  ==================  =================  ===================
 
-  Erase	       :  Slow (seconds)      Fast (ms)	         Fast (ms)
-  Erase unit   :  Large (64KB-128KB)  Small (256B)       Medium (8KB-32KB)
-  Writes       :  Slow (100s kB/s)    Slow (60kB/s)      Fast (MBs/s)
-  Write unit   :  1 bit               256B               100's of bytes
-  Bit-errors   :  Low                 Low                High (requires ECC, 
-                                                         bad-block mapping)
-  Read	       :  Bus limited*        Slow+Bus limited   Bus limited
-  Erase cycles :  10^4 - 10^5         10^4 **            10^5 - 10^7
-  Intended use :  Code storage        Data storage       Data storage
-  Energy/byte  :  1uJ                 1uJ                .01uJ
-
-  *  M25P40 reads are limited by the use of a 25MHz SPI bus. The PXA27x flash is
-     memory mapped (reads are very fast and can directly execute code).
-  ** Or infinite? Data sheet just says that every page within a sector
-     must be written every 10^4 writes within that sector
+.. [*] M25P40 reads are limited by the use of a 25MHz SPI bus. The PXA27x flash
+       is memory mapped (reads are very fast and can directly execute code).
+.. [*] Or infinite? Data sheet just says that every page within a sector
+       must be written every 10^4 writes within that sector
 
 The energy/byte is the per-byte cost of erasing plus programming. It is
 derived from the timing and power consumption of erase and write operations
@@ -92,7 +88,7 @@ three components listed above are supported on these chips:
 - ``ByteEEPROMC`` allows arbitrary rewrites of sections of the flash.
   This is not readily implementable on a flash chip with large erase units.
 - The ``Matchbox`` implementation was AT45DB-specific. It was not
-  reimplemented for these other chips, in part because it does not 
+  reimplemented for these other chips, in part because it does not
   support some applications (e.g., network reprogramming) very well.
 
 2. Storage in TinyOS 2.x
@@ -107,7 +103,7 @@ this approach has several drawbacks:
   in a free, open-source operating system.
 - To support arbitrary block writes where blocks are smaller than the
   erase unit, and to deal with the limited number of erase cycles/block
-  requires remapping blocks. We believe that maintaining this remapping 
+  requires remapping blocks. We believe that maintaining this remapping
   table is too expensive on many mote-class devices.
 
 A second approach is to provide a generic low-level interface providing
@@ -117,7 +113,7 @@ operations, along with information describing the flash chip's layout
 we believe that the large differences between NAND and NOR flash (see the
 table above), in particular the differences in reliability, write and
 erase units, make the design of a useful generic low-level interface
-tricky at best. 
+tricky at best.
 
 We thus believe it is best, for now at least, to define high-level
 storage abstractions that are useful for sensor network applications,
@@ -137,7 +133,7 @@ storage abstraction (the abstraction defines the format).
 We prefer the use of single abstractions over fixed-size volumes over
 the use of a more general filing system (like Matchbox) for several
 reasons:
-     
+
 - TinyOS is currently targeted at running a single application, and many
   applications know their storage needs in advance: for instance, a
   little space for configuration data, and everything else for a log of
@@ -152,7 +148,7 @@ reasons:
   "wear levelling" (ensuring that each block of the flash is erased
   the same number of time, to maximise flash chip lifetime).
 
-New abstractions (including a filing system...) can easily be added to
+New abstractions (including a filing system) can easily be added to
 this framework.
 
 The rest of this TEP covers some principles for the organisation of
@@ -166,7 +162,7 @@ storage abstractions in detail (Section 4).
 The flash chip architecture follows the three-layer Hardware
 Abstraction Architecture (HAA), with each chip providing a presentation
 layer (HPL, Section 3.1), adaptation layer (HAL, Section 3.2) and
-platform-independent interface layer (HIL, Section 3.3) [2_]. 
+platform-independent interface layer (HIL, Section 3.3) [2_].
 The implementation of these layers SHOULD be found in the
 ``tos/chips/CHIPNAME`` directory. If a flash chip is part of a larger
 family with a similar interface, the HAA SHOULD support all family members
@@ -181,13 +177,13 @@ and ST M25P chip families.
 
 The flash HPL has a chip-dependent, platform-independent interface. The
 implementation of this HPL is platform-dependent. The flash HPL SHOULD be
-stateless. 
+stateless.
 
 To remain platform independent, a flash chip's HPL SHOULD connect to
 platform-specific components
 providing access to the flash chip; these components
 SHOULD be placed in the ``tos/platforms/PLATFORM/chips/CHIPNAME``
-directory. If the flash chip implementation supports a family of 
+directory. If the flash chip implementation supports a family of
 flash chips, this directory MAY also contain a file describing the
 particular flash chip found on the platform.
 
@@ -205,16 +201,18 @@ abstractions that interact cleanly with the rest of the flash system.
 3.3 Hardware Interface Layer (HIL)
 --------------------------------------------------------------------
 
-Each flash chip MUST provide implementations of the storage abstractions
-described in Section 4. These abstractions MUST be presented in
+Each flash chip MUST support at least one of the storage abstractions
+described in Section 4. These abstractions SHOULD be presented in
 components named ``ChipAbstractionC``, e.g., ``At45dbLogStorageC``.
+Additionally, a flash chip implementation MAY support platforms
+with multiple instances of the same storage chip. The way in which
+this is achieved is not specified further in this TEP.
 
-Each platform MUST have ``AbstractionC`` components (e.g., ``LogStorageC``)
-implementing the storage abstractions of Section 4. Platforms with a single
-storage chip SHOULD simply make ``AbstractionC`` be a simple configuration
-wrapping the appropriate ``ChipAbstractionC`` component. Platforms with
-multiple storage chips SHOULD redirect uses of ``AbstractionC`` to the 
-appropriate storage chip, based on the requested volume.
+Each platform MUST have ``AbstractionC`` components (e.g.,
+``LogStorageC``) implementing the storage abstractions of Section 4
+supported by its flash chip(s). On platforms with multiple storage chips
+SHOULD redirect uses of ``AbstractionC`` to the appropriate storage
+chip, based on the requested volume.
 
 4. Non-Volatile Storage Abstractions
 ===================================================================
@@ -249,11 +247,12 @@ directory. When not specified, the tool picks a suitable physical
 location for a volume. If there is any reason that the physical allocation
 cannot be satisfied, an error should be given at compile time. The tool
 SHOULD be named ``tos-storage-CHIPNAME`` and be distributed with the other
-tools supporting a platform.
+tools supporting a platform. The XML file SHOULD be named
+``volumes-CHIPNAME.xml``.
 
 The compile-time tool MUST prepend 'VOLUME\_' to each volume name in
 the XML file and '#define' each resulting name to map to a unique
-integer. 
+integer.
 
 The storage abstractions are accessed by instantiating generic
 components that take the volume macro as argument: ::
@@ -269,22 +268,20 @@ A volume MUST NOT be used with more than one storage abstraction instance.
 4.2 Large objects
 ------------------------------------------------------------------
 
-The motivating example for large objects is the transmission or long-term
-storage of large pieces of data. For instance, programs in a network-reprogramming
-system, or large data-packets in a reliable data-transmission system. Such
-objects have two interesting characteristics: each byte in the object is
-written at most once, and a full object is written in a single "session"
-(i.e., without the mote rebooting).
+The motivating example for large objects is the transmission or
+long-term storage of large pieces of data. For instance, programs in a
+network-reprogramming system, or large data-packets in a reliable
+data-transmission system. Such objects have an interesting
+characteristic: each byte in the object is written at most once.
 
 This leads to the definition of the ``BlockStorageC`` abstraction for storing
-large objects:
+large objects or other "write-once" objects:
 
 - A large object ranges from a few kilobytes upwards.
 - A large object is erased before the first write.
-- A commit ensures that a large object survives a reboot or crash
+- A sync ensures that a large object survives a reboot or crash
 - Reads are unrestricted
-- Writes can only be performed between an erase and a commit
-- Each byte can only be written once between an erase and a commit
+- Each byte can only be written once between two erases
 
 Large objects are accessed by instantiating a BlockStorageC component
 which takes a volume id argument: ::
@@ -296,23 +293,20 @@ which takes a volume id argument: ::
     }
   } ...
 
-The ``BlockRead`` and ``BlockWrite`` interfaces contain the following
-operations (all split-phase, except ``BlockRead.getSize``):
+The ``BlockRead`` and ``BlockWrite`` interfaces (briefly presented in
+Appendix B) contain the following operations (all split-phase, except
+``BlockRead.getSize``):
 
 - ``BlockWrite.erase``: erase the volume. After a reboot or a commit, a
   volume MUST be erased before it can be written to.
 
 - ``BlockWrite.write``: write some bytes starting at a given
-  offset. Each byte MUST NOT be written more than once between an erase
-  and the subsequent commit. Writes MUST NOT be performed between a
-  commit and the subsequent erase.
+  offset. Each byte MUST NOT be written more than once between two erases.
 
-- ``BlockWrite.commit``: commit all writes to a given volume. Writes
-  MUST NOT be performed after a commit until a subsequent erase. Commit
-  MUST be called to ensure written data survives a reboot or crash.
 
-- ``BlockRead.verify``: verify that the volume contains the results of a
-  successful commit.
+- ``BlockWrite.sync``: ensure all previous writes are present on a given
+  volume. Sync MUST be called to ensure written data survives a reboot
+  or crash.
 
 - ``BlockRead.read``: read some bytes starting at a given offset.
 
@@ -324,6 +318,11 @@ operations (all split-phase, except ``BlockRead.getSize``):
 
 For full details on arguments and other considerations, see the comments in
 the interface definitions.
+
+Note that these interfaces contain no direct support for verifying the
+integrity of the BlockStorage data, but such support can easily be built
+by using the ``computeCrc`` command and storing the result in a
+well-defined location, and checking this CRC when desired.
 
 
 4.3 Logging
@@ -341,7 +340,7 @@ record based: each call to ``LogWrite.append`` (see below) creates a new
 record. On failure (crash or reboot), the log MUST only lose whole
 records from the end of the log. Additionally, once a circular log wraps
 around, calls to ``LogWrite.append`` MUST only lose whole records from
-the beginning of the log. 
+the beginning of the log.
 
 Logs are accessed by instantiating a LogStorageC component which takes a
 volume id and a boolean argument: ::
@@ -356,19 +355,20 @@ volume id and a boolean argument: ::
 If the ``circular`` argument is TRUE, the log is circular; otherwise
 it is linear.
 
-The ``LogRead`` and ``LogWrite`` interfaces contain the following
-operations (all split-phase except ``LogWrite.currentOffset``,
-``LogRead.currentOffset`` and ``LogRead.getSize``):
+The ``LogRead`` and ``LogWrite`` interfaces (briefly presented in
+Appendix B) contain the following operations (all split-phase except
+``LogWrite.currentOffset``, ``LogRead.currentOffset`` and
+``LogRead.getSize``):
 
 - ``LogWrite.erase``: erase the log. A log MUST be erased (possibly in
   some previous session) before any other operation can be used.
 
 - ``LogWrite.append``: append some bytes to the log. In a circular log,
-  this may overwrite the current read position. In this case, the 
+  this may overwrite the current read position. In this case, the
   read position MUST be advanced to the log's current beginning
   (i.e., as if ``LogRead.seek`` had been called with ``SEEK_BEGINNING``).
   Additionally, the ``LogWrite.appendDone`` event reports whenever, in a
-  circular log, an append erases old records.
+  circular log, an append MAY have erased old records.
 
   Each append creates a separate record. Log implementations may have a
   maximum record size; all implementations MUST support records of up
@@ -397,7 +397,7 @@ operations (all split-phase except ``LogWrite.currentOffset``,
 - ``LogRead.seek``: set the read position to a value returned by
   a prior call to ``LogWrite.currentOffset`` or ``LogRead.currentOffset``,
   or to the special ``SEEK_BEGINNING`` value. In a circular log, if
-  the specified position has been overwritten, behave as if 
+  the specified position has been overwritten, behave as if
   ``SEEK_BEGINNING`` was requested.
 
   ``SEEK_BEGINNING`` positions the read position at the beginning of
@@ -450,12 +450,12 @@ which takes a volume id argument: ::
     }
   } ...
 
-A small object MUST be mounted (via the ``Mount`` interface) before 
+A small object MUST be mounted (via the ``Mount`` interface) before
 the first use.
 
-The ``Mount`` and ``ConfigStorage`` interfaces contain the following
-operations (all split-phase except ``ConfigStorage.getSize`` and
-``ConfigStorage.valid``):
+The ``Mount`` and ``ConfigStorage`` interfaces (briefly presented in
+Appendix B) contain the following operations (all split-phase except
+``ConfigStorage.getSize`` and ``ConfigStorage.valid``):
 
 - ``Mount.mount``: mount the volume.
 
@@ -519,7 +519,7 @@ Appendix A. HAA for some existing flash chips
 
 A.1 AT45DB
 ------------------------------------------------------------------
- 
+
 The Atmel AT45DB family HPL is: ::
 
   configuration HplAt45dbC {
@@ -529,7 +529,7 @@ The Atmel AT45DB family HPL is: ::
 The ``HplAt45db`` interface has flash->buffer, buffer->flash, compare
 buffer to flash, erase page, read, compute CRC, and write operations.  Most
 of these operations are asynchronous, i.e., their completion is signaled
-before the flash chip has completed the operation. The HPL also includes 
+before the flash chip has completed the operation. The HPL also includes
 operations to wait for asynchronous operations to complete.
 
 A generic, system-independent implementation of the HPL
@@ -560,7 +560,7 @@ providing volume information: ::
 Note that the AT45DB HAL resource management is independent of the
 underlying HPL's power management. The motivation for this is that
 individual flash operations may take a long time, so it may be desirable to
-release the flash's bus during long-running operations. 
+release the flash's bus during long-running operations.
 
 The ``At45db`` interface abstracts from the low-level HPL operations by:
 
@@ -577,7 +577,7 @@ map volume-relative pages to absolute pages.
 
 A.2 ST M25P
 ------------------------------------------------------------------
- 
+
 The ST M25P family HPL is: ::
 
   configuration Stm25pSpiC {
@@ -610,3 +610,97 @@ erase. Additionally, it has operations to report volume size and remap
 volume-relative addresses. Clients of the ST M25P HAL must implement the
 ``getVolumeId`` event of the ``Stm25pVolume`` interface so that the HAL can
 obtain the volume id of each of its clients.
+
+Appendix B. Storage interfaces
+====================================================================
+
+These interfaces are presented briefly here for reference; please refer
+to the TinyOS documentation for a full description of the commands,
+events and their parameters.
+
+B.1 BlockStorage interfaces
+------------------------------------------------------------------
+
+The BlockStorage interfaces are: ::
+
+  interface BlockRead {
+    command error_t read(storage_addr_t addr, void* buf, storage_len_t len);
+    event void readDone(storage_addr_t addr, void* buf, storage_len_t len,
+			error_t error);
+
+    command error_t computeCrc(storage_addr_t addr, storage_len_t len,
+			       uint16_t crc);
+    event void computeCrcDone(storage_addr_t addr, storage_len_t len,
+			      uint16_t crc, error_t error);
+
+    command storage_len_t getSize();
+  }
+
+  interface BlockWrite {
+    command error_t write(storage_addr_t addr, void* buf, storage_len_t len);
+    event void writeDone(storage_addr_t addr, void* buf, storage_len_t len,
+			 error_t error);
+
+    command error_t erase();
+    event void eraseDone(error_t error);
+
+    command error_t sync();
+    event void syncDone(error_t error);
+  }
+
+B.2 ConfigStorage interfaces
+------------------------------------------------------------------
+
+The ConfigStorage interfaces are: ::
+
+  interface Mount {
+    command error_t mount();
+    event void mountDone(error_t error);
+  }
+
+  interface ConfigStorage {
+    command error_t read(storage_addr_t addr, void* buf, storage_len_t len);
+    event void readDone(storage_addr_t addr, void* buf, storage_len_t len,
+			error_t error);
+
+    command error_t write(storage_addr_t addr, void* buf, storage_len_t len);
+    event void writeDone(storage_addr_t addr, void* buf, storage_len_t len,
+			 error_t error);
+
+    command error_t commit();
+    event void commitDone(error_t error);
+
+    command storage_len_t getSize();
+    command bool valid();
+  }
+
+B.3 LogStorage interfaces
+------------------------------------------------------------------
+
+The LogStorage interfaces are: ::
+
+  interface LogRead {
+    command error_t read(void* buf, storage_len_t len);
+    event void readDone(void* buf, storage_len_t len, error_t error);
+
+    command storage_cookie_t currentOffset();
+
+    command error_t seek(storage_cookie_t offset);
+    event void seekDone(error_t error);
+
+    command storage_len_t getSize();
+  }
+
+  interface LogWrite {
+    command error_t append(void* buf, storage_len_t len);
+    event void appendDone(void* buf, storage_len_t len, bool recordsLost,
+			  error_t error);
+
+    command storage_cookie_t currentOffset();
+
+    command error_t erase();
+    event void eraseDone(error_t error);
+
+    command error_t sync();
+    event void syncDone(error_t error);
+  }

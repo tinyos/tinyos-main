@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-09-08 23:15:07 $
-:version: $Revision: 1.3 $
+:date: $Date: 2006-11-07 00:43:44 $
+:version: $Revision: 1.4 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -497,36 +497,54 @@ such as queueing and timing.</p>
 <p>LinkEstimatorP estimates the quality of link to or from each
 neighbor. Link estimation can be done in a variety of ways, and we do
 not impose one here. It is decoupled from the establishment of
-routes. There is a narrow interface (LinkEstimator) between the link
-estimator and the routing engine. The one requirement is that the
-quality returned is standardized. A larger return value from
-LinkEstimator.getQuality(), LinkEstimator.getforwardQuality(),
-LinkEstimator.getreserveQuality() MUST imply that the link to the
-neighbor is estimated to be of a higher quality than the one that
-results in a smaller return value. The range of value SHOULD be
-[0,255] and the variation in link quality in that range SHOULD be
-linear. Radio provided values such as LQI or RSI, beacon based link
-estimation to compute ETX, or their combination are some possible
-approaches to estimating link qualities. LinkEstimatorP MAY have its
-own control messages to compute bi-directional link qualities:</p>
+routes. There is a narrow interface (LinkEstimator and
+NeighborTableEviction) between the link estimator and the routing
+engine. The one requirement is that the quality returned is
+standardized. A smaller return value from LinkEstimator.getQuality(),
+LinkEstimator.getforwardQuality(), LinkEstimator.getreserveQuality()
+MUST imply that the link to the neighbor is estimated to be of a
+higher quality than the one that results in a smaller return
+value. The range of value SHOULD be [0,255] and the variation in link
+quality in that range SHOULD be linear. Radio provided values such as
+LQI or RSI, beacon based link estimation to compute ETX, or their
+combination are some possible approaches to estimating link
+qualities. LinkEstimatorP MAY have its own control messages to compute
+bi-directional link qualities. LinkEstimatorP provides calls (txAck(),
+txNoAck(), and clearDLQ()) to update the link estimates based on
+successful or unsuccessful data transmission to the neighbors. The
+user of LinkEstimatorP can call insertNeighbor() to manually insert a
+node in the neighbor table, pinNeighbor() to prevent a neighbor from
+being evicted, and unpinNeighbor() to restore eviction policy:</p>
 <pre class="literal-block">
-typedef uint16_t neighbor_t
+typedef uint16_t neighbor_table_entry_t
 
 LinkEstimatorP {
   provides {
+    interface StdControl;
+    interface AMSend as Send;
+    interface Receive;
     interface LinkEstimator;
-    interface NeighborTable;
+    interface Init;
+    interface Packet;
+    interface LinkSrcPacket;
   }
 }
 
 interface LinkEstimator {
-  command uint8_t getLinkQuality(neighbot_t neighbor);
-  command uint8_t getReverseQuality(neighbot_t neighbor);
-  command uint8_t getForwardQuality(neighbot_t neighbor);
+  command uint8_t getLinkQuality(uint16_t neighbor);
+  command uint8_t getReverseQuality(uint16_t neighbor);
+  command uint8_t getForwardQuality(uint16_t neighbor);
+  command error_t insertNeighbor(am_addr_t neighbor);
+  command error_t pinNeighbor(am_addr_t neighbor);
+  command error_t unpinNeighbor(am_addr_t neighbor);
+  command error_t txAck(am_addr_t neighbor);
+  command error_t txNoAck(am_addr_t neighbor);
+  command error_t clearDLQ(am_addr_t neighbor);
+  event void evicted(am_addr_t neighbor);
 }
 
-interface NeighborTable {
-  event void evicted(neighbot_t neighbor)
+interface NeighborTableEviction {
+  event void evicted(uint16_t neighbor)
 }
 </pre>
 </div>

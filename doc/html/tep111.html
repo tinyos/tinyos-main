@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-09-08 23:15:07 $
-:version: $Revision: 1.3 $
+:date: $Date: 2006-11-07 00:43:43 $
+:version: $Revision: 1.4 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">11-Jul-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.2</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.15</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-07-12</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-10-04</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -416,6 +416,10 @@ Depending on the underlying link layer, the header fields
 preceding it might have different lengths, and packet-level radios
 often require packets to be contiguous memory regions. Overall, these
 complexities make specifying the format of <tt class="docutils literal"><span class="pre">TOS_Msg</span></tt> very difficult.</p>
+<p>TinyOS has traditionally used statically sized packet buffers,
+rather than more dynamic approaches, such as scatter-gather I/O
+in UNIX sockets (see the man page for <tt class="docutils literal"><span class="pre">recv(2)</span></tt> for details).
+TinyOS 2.x continues this approach.</p>
 </div>
 <div class="section">
 <h1><a id="id1" name="id1">2. message_t</a></h1>
@@ -433,7 +437,11 @@ typedef nx_struct message_t {
 passing a message buffer between two different link layers. If the
 data payload were at different offsets for different link layers, then
 passing a packet between two link layers would require a <tt class="docutils literal"><span class="pre">memmove(3)</span></tt>
-operation (essentially, a copy).</p>
+operation (essentially, a copy). Unlike in TinyOS 1.x, where TOS_Msg
+as explicitly an active messaging packet, message_t is a more general
+data-link buffer. In practice, most data-link layers in TinyOS 2.x
+provide active messaging, but it is possible for a non-AM stack to
+share message_t with AM stacks.</p>
 <p>The header, footer, and metadata formats are all opaque. Source code
 cannot access fields directly. Instead, data-link layers provide access
 to fields through nesC interfaces.  Section 3 discusses this in
@@ -542,9 +550,10 @@ for other components.</p>
 <h2><a id="headers" name="headers">3.1 Headers</a></h2>
 <p>The message_t header field is an array of bytes whose size is
 the size of a platform's union of data-link headers.
-Because packets are stored contiguously, the layout of a packet
-in memory is not the same as the layout of its nesC structure.</p>
-<p>A packet header does not necessarily start at the beginning of
+Because radio stacks often prefer packets to be stored contiguously,
+the layout of a packet in memory does not necessarily reflect the
+layout of its nesC structure.</p>
+<p>A packet header MAY start somewhere besides the beginning of
 the message_t. For example, consider the Telos platform:</p>
 <pre class="literal-block">
 typedef union message_header {
@@ -654,22 +663,52 @@ typedef nx_struct cc2420_metadata_t {
 } cc2420_metadata_t;
 </pre>
 </div>
+<div class="section">
+<h2><a id="variable-sized-structures" name="variable-sized-structures">3.5 Variable Sized Structures</a></h2>
+<p>The message_t structure is optimized for packets with fixed-size
+headers and footers. Variable-sized footers are generally easy
+to implement. Variable-sized headers are a bit more difficult.
+There are three general approaches that can be used.</p>
+<p>If the underlying link hardware is byte-based, the header can
+just be stored at the beginning of the message_t, giving it
+a known offset. There may be padding between the header and
+the data region, but assuming a byte-based send path this merely
+requires adjusting the index.</p>
+<p>If the underlying link hardware is packet-based, then the
+protocol stack can either include metadata (e.g., in the
+metadata structure) stating where the header begins or it
+can place the header at a fixed position and use <tt class="docutils literal"><span class="pre">memmove(3)</span></tt>
+on reception and transmit. In this latter case, on
+reception the packet is continguously read into the message_t
+beginning at the offset of the header structure. Once the
+packet is completely received, the header can be decoded,
+its length calculated, and the data region of the packet
+can be moved to the <tt class="docutils literal"><span class="pre">data</span></tt> field. On transmission,
+the opposite occurs: the data region (and footer if need
+be) are moved to be contiguous with the header. Note that
+on completion of transmission, they need to be moved back.
+Alternatively, the radio stack can institute a single
+copy at the botttom layer.</p>
+</div>
 </div>
 <div class="section">
-<h1><a id="implementation" name="implementation">5. Implementation</a></h1>
+<h1><a id="implementation" name="implementation">4. Implementation</a></h1>
 <p>The definition of message_t can be found in
-<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/types/message.h</span></tt>. The definition of the CC2420
-message format can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/cc2420/CC2420.h</span></tt>.
-The defintion of the CC1000 message format can be found in
-<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/cc1000/CC1000Msg.h</span></tt>. The definition
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/types/message.h</span></tt>.</p>
+<p>The definition of the CC2420
+message format can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/cc2420/CC2420.h</span></tt>.</p>
+<p>The defintion of the CC1000 message format can be found in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/cc1000/CC1000Msg.h</span></tt>.</p>
+<p>The definition
 of the standard serial stack packet format can be found in
-<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/serial/Serial.h''.</span> <span class="pre">The</span> <span class="pre">definition</span> <span class="pre">of</span>
-<span class="pre">the</span> <span class="pre">telosb</span> <span class="pre">packet</span> <span class="pre">format</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">found</span> <span class="pre">in</span>
-<span class="pre">``tinyos-2.x/tos/platform/telosa/platform_message.h</span></tt> and the micaz format can be found in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/serial/Serial.h</span></tt></p>
+<p>The definition of
+the telos family packet format can be found in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/platform/telosa/platform_message.h</span></tt> and the micaz format can be found in
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/platforms/micaz/platform_message.h</span></tt>.</p>
 </div>
 <div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
