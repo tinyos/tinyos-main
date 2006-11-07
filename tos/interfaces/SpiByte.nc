@@ -1,4 +1,4 @@
-// $Id: SpiByte.nc,v 1.2 2006-07-12 17:02:19 scipio Exp $
+// $Id: SpiByte.nc,v 1.3 2006-11-07 19:31:17 scipio Exp $
 
 /*                                                                      tab:2
  * "Copyright (c) 2000-2005 The Regents of the University  of California.
@@ -31,5 +31,5 @@ interface SpiByte
    * @param tx Byte to transmit
    * @param rx Received byte is stored here.
    */
-  async command void write( uint8_t tx, uint8_t* rx );
+  async command uint8_t write( uint8_t tx );
 }

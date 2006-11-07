@@ -1,4 +1,4 @@
-/* $Id: RandRWC.nc,v 1.2 2006-07-12 16:59:30 scipio Exp $
+/* $Id: RandRWC.nc,v 1.3 2006-11-07 19:30:37 scipio Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -13,12 +13,6 @@
  *
  * @author David Gay
  */
-/*
-  address & 3:
-  0, 2: r
-  1: w
-  3: r&w
-*/
 module RandRWC {
   uses {
     interface Boot;
@@ -151,7 +145,7 @@ implementation {
     if (++count == NWRITES)
       {
 	call Leds.led2Toggle();
-	scheck(call BlockWrite.commit());
+	scheck(call BlockWrite.sync());
       }
     else
       {
@@ -173,7 +167,7 @@ implementation {
       }
   }
 
-  event void BlockWrite.commitDone(error_t result) {
+  event void BlockWrite.syncDone(error_t result) {
     if (scheck(result))
       done();
   }
@@ -182,14 +176,6 @@ implementation {
     if (scheck(result) && bcheck(x == addr && rlen == len && buf == rdata &&
 				 memcmp(data + offset, rdata, rlen) == 0))
       nextRead();
-  }
-
-  event void BlockRead.verifyDone(error_t result) {
-    if (scheck(result))
-      {
-	call Leds.led2Toggle();
-	nextRead();
-      }
   }
 
   event void BlockRead.computeCrcDone(storage_addr_t x, storage_len_t y, uint16_t z, error_t result) {
@@ -207,7 +193,7 @@ implementation {
 	scheck(call BlockWrite.erase());
 	break;
       case A_READ:
-	scheck(call BlockRead.verify());
+	nextRead();
 	break;
       }
   }

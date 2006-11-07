@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:59 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:31:15 $
  * ========================================================================
  */
 
@@ -76,6 +76,7 @@ implementation {
   HplTda5250ConfigP.STATUS -> Tda5250RegistersC.STATUS;
   HplTda5250ConfigP.ADC -> Tda5250RegistersC.ADC;
 
+  HplTda5250ConfigP.ASKNFSK -> Tda5250RadioIOC.Tda5250RadioPASKNFSK;
   HplTda5250ConfigP.PWDDD -> Tda5250RadioIOC.Tda5250RadioPWDDD;
   HplTda5250ConfigP.TXRX -> Tda5250RadioIOC.Tda5250RadioTXRX;
   HplTda5250ConfigP.PWDDDInterrupt -> Tda5250RadioInterruptC;

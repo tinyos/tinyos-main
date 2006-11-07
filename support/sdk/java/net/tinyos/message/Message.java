@@ -1,4 +1,4 @@
-// $Id: Message.java,v 1.3 2006-08-18 21:05:57 idgay Exp $
+// $Id: Message.java,v 1.4 2006-11-07 19:30:41 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -89,10 +89,10 @@ public class Message implements Cloneable {
      * Construct a new message of the given size.
      * @param data_length The size of the message to create.
      */
-    protected Message(int data_length) {
+    public Message(int data_length) {
 	init(data_length);
     }
-    protected void init(int data_length) {
+    public void init(int data_length) {
 	init(new byte[data_length]);
     }
 
@@ -102,7 +102,7 @@ public class Message implements Cloneable {
      * @param data_length The size of the message to create.
      * @param base_offset The base offset into the newly created message.
      */
-    protected Message(int data_length, int base_offset) {
+    public Message(int data_length, int base_offset) {
       init(data_length, base_offset);
     }
     protected void init(int data_length, int base_offset) {
@@ -114,7 +114,7 @@ public class Message implements Cloneable {
      * The length of data determines the length of this message.
      * @param data the storage for this message
      */
-    protected Message(byte[] data) {
+    public Message(byte[] data) {
 	init(data);
     }
     protected void init(byte[] data) {
@@ -128,7 +128,7 @@ public class Message implements Cloneable {
      * @param data the storage for this message
      * @param base_offset the base offset into the data array
      */
-    protected Message(byte[] data, int base_offset) {
+    public Message(byte[] data, int base_offset) {
 	init(data, base_offset);
     }
     protected void init(byte[] data, int base_offset) {
@@ -143,7 +143,7 @@ public class Message implements Cloneable {
      * @param base_offset the base offset into the data array
      * @param data_length the length of the message data
      */
-    protected Message(byte[] data, int base_offset, int data_length) {
+    public Message(byte[] data, int base_offset, int data_length) {
 	init(data, base_offset, data_length);
     }
     protected void init(byte[] data, int base_offset, int data_length) {
@@ -161,7 +161,7 @@ public class Message implements Cloneable {
      * @param base_offset the base offset into the data array
      * @param data_length the length of the message data
      */
-    protected Message(Message msg, int base_offset, int data_length) {
+    public Message(Message msg, int base_offset, int data_length) {
 	init(msg, base_offset, data_length);
     }
     protected void init(Message msg, int base_offset, int data_length) {
@@ -213,7 +213,7 @@ public class Message implements Cloneable {
      * data[0..getData().length - 1] are invalid
      */
     public void dataSet(byte[] data) {
-	dataSet(data, 0, 0, Math.min(this.data_length, data.length));
+	dataSet(data, 0, this.base_offset, Math.min(this.data_length, data.length));
     }
 
     /**

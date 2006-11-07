@@ -20,19 +20,14 @@
  */
 
 /**
- * TimerMilliC is the TinyOS TimerMilli component.  OSKI will expect
- * TimerMilliC to exist.  It's in the platform directory so that the platform
- * can directly manage how it chooses to implement the timer.  It is fully
- * expected that the standard TinyOS MultiplexTimerM component will be used for
- * all platforms, and that this configuration only specifies (implicitly or
- * explicitly) how precisely to use the hardware resources.
+ * HilTimerMilliC provides a parameterized interface to a virtualized
+ * millisecond timer.  TimerMilliC in tos/system/ uses this component to
+ * allocate new timers.
  *
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
  * @see  Please refer to TEP 102 for more information about this component and its
  *          intended use.
  */
-
-#include "Timer.h"
 
 configuration HilTimerMilliC
 {
@@ -41,12 +36,13 @@ configuration HilTimerMilliC
 }
 implementation
 {
-  components new AlarmMilliC(), new AlarmToTimerC(TMilli),
-             new VirtualizeTimerC(TMilli,uniqueCount(UQ_TIMER_MILLI));
+  components new AlarmMilli32C();
+  components new AlarmToTimerC(TMilli);
+  components new VirtualizeTimerC(TMilli,uniqueCount(UQ_TIMER_MILLI));
 
-  Init = AlarmMilliC;
+  Init = AlarmMilli32C;
   TimerMilli = VirtualizeTimerC;
 
   VirtualizeTimerC.TimerFrom -> AlarmToTimerC;
-  AlarmToTimerC.Alarm -> AlarmMilliC;
+  AlarmToTimerC.Alarm -> AlarmMilli32C;
 }

@@ -1,24 +1,36 @@
-# This file was created automatically by SWIG.
+# This file was created automatically by SWIG 1.3.29.
 # Don't modify this file, modify the SWIG interface instead.
 # This file is compatible with both classic and new-style classes.
 
 import _TOSSIM
-
-def _swig_setattr(self,class_type,name,value):
+import new
+new_instancemethod = new.instancemethod
+def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
+    if (name == "thisown"): return self.this.own(value)
     if (name == "this"):
-        if isinstance(value, class_type):
-            self.__dict__[name] = value.this
-            if hasattr(value,"thisown"): self.__dict__["thisown"] = value.thisown
-            del value.thisown
+        if type(value).__name__ == 'PySwigObject':
+            self.__dict__[name] = value
             return
     method = class_type.__swig_setmethods__.get(name,None)
     if method: return method(self,value)
-    self.__dict__[name] = value
+    if (not static) or hasattr(self,name):
+        self.__dict__[name] = value
+    else:
+        raise AttributeError("You cannot add attributes to %s" % self)
+
+def _swig_setattr(self,class_type,name,value):
+    return _swig_setattr_nondynamic(self,class_type,name,value,0)
 
 def _swig_getattr(self,class_type,name):
+    if (name == "thisown"): return self.this.own()
     method = class_type.__swig_getmethods__.get(name,None)
     if method: return method(self)
     raise AttributeError,name
+
+def _swig_repr(self):
+    try: strthis = "proxy of " + self.this.__repr__()
+    except: strthis = ""
+    return "<%s.%s; %s >" % (self.__class__.__module__, self.__class__.__name__, strthis,)
 
 import types
 try:
@@ -35,15 +47,13 @@ class MAC(_object):
     __setattr__ = lambda self, name, value: _swig_setattr(self, MAC, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, MAC, name)
-    def __repr__(self):
-        return "<C MAC instance at %s>" % (self.this,)
-    def __init__(self, *args):
-        _swig_setattr(self, MAC, 'this', _TOSSIM.new_MAC(*args))
-        _swig_setattr(self, MAC, 'thisown', 1)
-    def __del__(self, destroy=_TOSSIM.delete_MAC):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _TOSSIM.new_MAC(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _TOSSIM.delete_MAC
+    __del__ = lambda self : None;
     def initHigh(*args): return _TOSSIM.MAC_initHigh(*args)
     def initLow(*args): return _TOSSIM.MAC_initLow(*args)
     def high(*args): return _TOSSIM.MAC_high(*args)
@@ -68,56 +78,42 @@ class MAC(_object):
     def setMinFreeSamples(*args): return _TOSSIM.MAC_setMinFreeSamples(*args)
     def setRxtxDelay(*args): return _TOSSIM.MAC_setRxtxDelay(*args)
     def setAckTime(*args): return _TOSSIM.MAC_setAckTime(*args)
-
-class MACPtr(MAC):
-    def __init__(self, this):
-        _swig_setattr(self, MAC, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, MAC, 'thisown', 0)
-        _swig_setattr(self, MAC,self.__class__,MAC)
-_TOSSIM.MAC_swigregister(MACPtr)
+MAC_swigregister = _TOSSIM.MAC_swigregister
+MAC_swigregister(MAC)
 
 class Radio(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Radio, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Radio, name)
-    def __repr__(self):
-        return "<C Radio instance at %s>" % (self.this,)
-    def __init__(self, *args):
-        _swig_setattr(self, Radio, 'this', _TOSSIM.new_Radio(*args))
-        _swig_setattr(self, Radio, 'thisown', 1)
-    def __del__(self, destroy=_TOSSIM.delete_Radio):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _TOSSIM.new_Radio(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _TOSSIM.delete_Radio
+    __del__ = lambda self : None;
     def add(*args): return _TOSSIM.Radio_add(*args)
     def gain(*args): return _TOSSIM.Radio_gain(*args)
     def connected(*args): return _TOSSIM.Radio_connected(*args)
     def remove(*args): return _TOSSIM.Radio_remove(*args)
     def setNoise(*args): return _TOSSIM.Radio_setNoise(*args)
     def setSensitivity(*args): return _TOSSIM.Radio_setSensitivity(*args)
-
-class RadioPtr(Radio):
-    def __init__(self, this):
-        _swig_setattr(self, Radio, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Radio, 'thisown', 0)
-        _swig_setattr(self, Radio,self.__class__,Radio)
-_TOSSIM.Radio_swigregister(RadioPtr)
+Radio_swigregister = _TOSSIM.Radio_swigregister
+Radio_swigregister(Radio)
 
 class Packet(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Packet, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Packet, name)
-    def __repr__(self):
-        return "<C Packet instance at %s>" % (self.this,)
-    def __init__(self, *args):
-        _swig_setattr(self, Packet, 'this', _TOSSIM.new_Packet(*args))
-        _swig_setattr(self, Packet, 'thisown', 1)
-    def __del__(self, destroy=_TOSSIM.delete_Packet):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _TOSSIM.new_Packet(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _TOSSIM.delete_Packet
+    __del__ = lambda self : None;
     def setDestination(*args): return _TOSSIM.Packet_setDestination(*args)
     def destination(*args): return _TOSSIM.Packet_destination(*args)
     def setLength(*args): return _TOSSIM.Packet_setLength(*args)
@@ -130,21 +126,15 @@ class Packet(_object):
     def setStrength(*args): return _TOSSIM.Packet_setStrength(*args)
     def deliver(*args): return _TOSSIM.Packet_deliver(*args)
     def deliverNow(*args): return _TOSSIM.Packet_deliverNow(*args)
-
-class PacketPtr(Packet):
-    def __init__(self, this):
-        _swig_setattr(self, Packet, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Packet, 'thisown', 0)
-        _swig_setattr(self, Packet,self.__class__,Packet)
-_TOSSIM.Packet_swigregister(PacketPtr)
+Packet_swigregister = _TOSSIM.Packet_swigregister
+Packet_swigregister(Packet)
 
 class variable_string_t(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, variable_string_t, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, variable_string_t, name)
-    def __repr__(self):
-        return "<C variable_string_t instance at %s>" % (self.this,)
+    __repr__ = _swig_repr
     __swig_setmethods__["type"] = _TOSSIM.variable_string_t_type_set
     __swig_getmethods__["type"] = _TOSSIM.variable_string_t_type_get
     if _newclass:type = property(_TOSSIM.variable_string_t_type_get, _TOSSIM.variable_string_t_type_set)
@@ -157,28 +147,21 @@ class variable_string_t(_object):
     __swig_setmethods__["isArray"] = _TOSSIM.variable_string_t_isArray_set
     __swig_getmethods__["isArray"] = _TOSSIM.variable_string_t_isArray_get
     if _newclass:isArray = property(_TOSSIM.variable_string_t_isArray_get, _TOSSIM.variable_string_t_isArray_set)
-    def __init__(self, *args):
-        _swig_setattr(self, variable_string_t, 'this', _TOSSIM.new_variable_string_t(*args))
-        _swig_setattr(self, variable_string_t, 'thisown', 1)
-    def __del__(self, destroy=_TOSSIM.delete_variable_string_t):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-
-class variable_string_tPtr(variable_string_t):
-    def __init__(self, this):
-        _swig_setattr(self, variable_string_t, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, variable_string_t, 'thisown', 0)
-        _swig_setattr(self, variable_string_t,self.__class__,variable_string_t)
-_TOSSIM.variable_string_t_swigregister(variable_string_tPtr)
+    def __init__(self, *args): 
+        this = _TOSSIM.new_variable_string_t(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _TOSSIM.delete_variable_string_t
+    __del__ = lambda self : None;
+variable_string_t_swigregister = _TOSSIM.variable_string_t_swigregister
+variable_string_t_swigregister(variable_string_t)
 
 class nesc_app_t(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, nesc_app_t, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, nesc_app_t, name)
-    def __repr__(self):
-        return "<C nesc_app_t instance at %s>" % (self.this,)
+    __repr__ = _swig_repr
     __swig_setmethods__["numVariables"] = _TOSSIM.nesc_app_t_numVariables_set
     __swig_getmethods__["numVariables"] = _TOSSIM.nesc_app_t_numVariables_get
     if _newclass:numVariables = property(_TOSSIM.nesc_app_t_numVariables_get, _TOSSIM.nesc_app_t_numVariables_set)
@@ -191,58 +174,43 @@ class nesc_app_t(_object):
     __swig_setmethods__["variableArray"] = _TOSSIM.nesc_app_t_variableArray_set
     __swig_getmethods__["variableArray"] = _TOSSIM.nesc_app_t_variableArray_get
     if _newclass:variableArray = property(_TOSSIM.nesc_app_t_variableArray_get, _TOSSIM.nesc_app_t_variableArray_set)
-    def __init__(self, *args):
-        _swig_setattr(self, nesc_app_t, 'this', _TOSSIM.new_nesc_app_t(*args))
-        _swig_setattr(self, nesc_app_t, 'thisown', 1)
-    def __del__(self, destroy=_TOSSIM.delete_nesc_app_t):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
-
-class nesc_app_tPtr(nesc_app_t):
-    def __init__(self, this):
-        _swig_setattr(self, nesc_app_t, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, nesc_app_t, 'thisown', 0)
-        _swig_setattr(self, nesc_app_t,self.__class__,nesc_app_t)
-_TOSSIM.nesc_app_t_swigregister(nesc_app_tPtr)
+    def __init__(self, *args): 
+        this = _TOSSIM.new_nesc_app_t(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _TOSSIM.delete_nesc_app_t
+    __del__ = lambda self : None;
+nesc_app_t_swigregister = _TOSSIM.nesc_app_t_swigregister
+nesc_app_t_swigregister(nesc_app_t)
 
 class Variable(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Variable, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Variable, name)
-    def __repr__(self):
-        return "<C Variable instance at %s>" % (self.this,)
-    def __init__(self, *args):
-        _swig_setattr(self, Variable, 'this', _TOSSIM.new_Variable(*args))
-        _swig_setattr(self, Variable, 'thisown', 1)
-    def __del__(self, destroy=_TOSSIM.delete_Variable):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _TOSSIM.new_Variable(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _TOSSIM.delete_Variable
+    __del__ = lambda self : None;
     def getData(*args): return _TOSSIM.Variable_getData(*args)
-
-class VariablePtr(Variable):
-    def __init__(self, this):
-        _swig_setattr(self, Variable, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Variable, 'thisown', 0)
-        _swig_setattr(self, Variable,self.__class__,Variable)
-_TOSSIM.Variable_swigregister(VariablePtr)
+Variable_swigregister = _TOSSIM.Variable_swigregister
+Variable_swigregister(Variable)
 
 class Mote(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Mote, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Mote, name)
-    def __repr__(self):
-        return "<C Mote instance at %s>" % (self.this,)
-    def __init__(self, *args):
-        _swig_setattr(self, Mote, 'this', _TOSSIM.new_Mote(*args))
-        _swig_setattr(self, Mote, 'thisown', 1)
-    def __del__(self, destroy=_TOSSIM.delete_Mote):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _TOSSIM.new_Mote(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _TOSSIM.delete_Mote
+    __del__ = lambda self : None;
     def id(*args): return _TOSSIM.Mote_id(*args)
     def euid(*args): return _TOSSIM.Mote_euid(*args)
     def setEuid(*args): return _TOSSIM.Mote_setEuid(*args)
@@ -252,28 +220,21 @@ class Mote(_object):
     def turnOff(*args): return _TOSSIM.Mote_turnOff(*args)
     def turnOn(*args): return _TOSSIM.Mote_turnOn(*args)
     def getVariable(*args): return _TOSSIM.Mote_getVariable(*args)
-
-class MotePtr(Mote):
-    def __init__(self, this):
-        _swig_setattr(self, Mote, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Mote, 'thisown', 0)
-        _swig_setattr(self, Mote,self.__class__,Mote)
-_TOSSIM.Mote_swigregister(MotePtr)
+Mote_swigregister = _TOSSIM.Mote_swigregister
+Mote_swigregister(Mote)
 
 class Tossim(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Tossim, name, value)
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, Tossim, name)
-    def __repr__(self):
-        return "<C Tossim instance at %s>" % (self.this,)
-    def __init__(self, *args):
-        _swig_setattr(self, Tossim, 'this', _TOSSIM.new_Tossim(*args))
-        _swig_setattr(self, Tossim, 'thisown', 1)
-    def __del__(self, destroy=_TOSSIM.delete_Tossim):
-        try:
-            if self.thisown: destroy(self)
-        except: pass
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _TOSSIM.new_Tossim(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _TOSSIM.delete_Tossim
+    __del__ = lambda self : None;
     def init(*args): return _TOSSIM.Tossim_init(*args)
     def time(*args): return _TOSSIM.Tossim_time(*args)
     def ticksPerSecond(*args): return _TOSSIM.Tossim_ticksPerSecond(*args)
@@ -284,16 +245,13 @@ class Tossim(_object):
     def setCurrentNode(*args): return _TOSSIM.Tossim_setCurrentNode(*args)
     def addChannel(*args): return _TOSSIM.Tossim_addChannel(*args)
     def removeChannel(*args): return _TOSSIM.Tossim_removeChannel(*args)
+    def randomSeed(*args): return _TOSSIM.Tossim_randomSeed(*args)
     def runNextEvent(*args): return _TOSSIM.Tossim_runNextEvent(*args)
     def mac(*args): return _TOSSIM.Tossim_mac(*args)
     def radio(*args): return _TOSSIM.Tossim_radio(*args)
     def newPacket(*args): return _TOSSIM.Tossim_newPacket(*args)
+Tossim_swigregister = _TOSSIM.Tossim_swigregister
+Tossim_swigregister(Tossim)
 
-class TossimPtr(Tossim):
-    def __init__(self, this):
-        _swig_setattr(self, Tossim, 'this', this)
-        if not hasattr(self,"thisown"): _swig_setattr(self, Tossim, 'thisown', 0)
-        _swig_setattr(self, Tossim,self.__class__,Tossim)
-_TOSSIM.Tossim_swigregister(TossimPtr)
 
 

@@ -32,8 +32,8 @@
 # @author Jonathan Hui <jhui@archedrock.com>
 # @author Kaisen Lin
 #
-# $Revision: 1.2 $
-# $Date: 2006-11-06 11:57:03 $
+# $Revision: 1.3 $
+# $Date: 2006-11-07 19:30:43 $
 #
                                   
 from re import match

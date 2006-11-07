@@ -63,19 +63,27 @@ interface HplMsp430GeneralIO
    */
   async command void makeInput();
 
+  async command bool isInput();
+  
   /**
    * Set pin direction to output.
    */
   async command void makeOutput();
-
+  
+  async command bool isOutput();
+  
   /**
    * Set pin for module specific functionality.
    */
   async command void selectModuleFunc();
-
+  
+  async command bool isModuleFunc();
+  
   /**
    * Set pin for I/O functionality.
    */
   async command void selectIOFunc();
+  
+  async command bool isIOFunc();
 }
 

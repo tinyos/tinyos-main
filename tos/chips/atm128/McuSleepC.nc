@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.4 2006-08-11 20:49:00 idgay Exp $
+/// $Id: McuSleepC.nc,v 1.5 2006-11-07 19:30:43 scipio Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -29,7 +29,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.4 2006-08-11 20:49:00 idgay Exp $
+ *  $Id: McuSleepC.nc,v 1.5 2006-11-07 19:30:43 scipio Exp $
  * </pre>
  *
  * @author Philip Levis

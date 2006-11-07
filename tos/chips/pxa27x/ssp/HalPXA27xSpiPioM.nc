@@ -1,4 +1,4 @@
-/* $Id: HalPXA27xSpiPioM.nc,v 1.2 2006-07-12 17:01:54 scipio Exp $ */
+/* $Id: HalPXA27xSpiPioM.nc,v 1.3 2006-11-07 19:31:14 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arched Rock Corporation 
  * All rights reserved. 
@@ -65,9 +65,9 @@ implementation
 {
   // The BitBuckets need to be 8 bytes. 
   norace unsigned long long txBitBucket, rxBitBucket;
-  uint8_t *txCurrentBuf, *rxCurrentBuf;
+  uint8_t *txCurrentBuf, *rxCurrentBuf, *txPtr, *rxPtr;
   uint8_t instanceCurrent;
-  uint32_t lenCurrent;
+  uint32_t lenCurrent, lenRemain, txInc, rxInc;
   norace uint32_t flagsSSCR0, flagsSSCR1;
 
   task void SpiPacketDone() {
@@ -93,20 +93,20 @@ implementation
     txCurrentBuf = rxCurrentBuf = NULL;
     lenCurrent = 0 ;
     instanceCurrent = 0;
+    lenRemain = 0;
 
     flagsSSCR1 = 0;
     flagsSSCR0 = (SSCR0_SCR(valSCR) | SSCR0_FRF(/*0*/valFRF) | SSCR0_DSS(valDSS) );
-    //call SSP.setSSCR1(0 /*(SSCR1_TRAIL | SSCR1_RFT(8) | SSCR1_TFT(8))*/ );
+
     call SSP.setSSCR1(flagsSSCR1);
-    call SSP.setSSTO(96*8);
-    //call SSP.setSSCR0(SSCR0_SCR(valSCR) | SSCR0_SSE | SSCR0_FRF(/*0*/valFRF) | SSCR0_DSS(valDSS) );
+    call SSP.setSSTO(3500 /*96*8*/);
     call SSP.setSSCR0(flagsSSCR0);
     call SSP.setSSCR0(flagsSSCR0 | SSCR0_SSE);
 
     return SUCCESS;
   }
 
-  async command void SpiByte.write(uint8_t tx, uint8_t* rx) {
+  async command uint8_t SpiByte.write(uint8_t tx) {
     volatile uint32_t tmp;
     volatile uint8_t val;
 #if 1
@@ -119,14 +119,14 @@ implementation
     while ((call SSP.getSSSR()) & SSSR_BSY);
 
     val = call SSP.getSSDR();
-
-    if (rx != NULL) *rx = val;
+    
+    return val;
   }
 
   async command error_t SpiPacket.send[uint8_t instance](uint8_t* txBuf, uint8_t* rxBuf, uint16_t len) {
     uint32_t tmp,i;
-    uint8_t *txPtr,*rxPtr;
-    uint32_t txInc = 1,rxInc = 1;
+    //uint8_t *txPtr,*rxPtr;
+    //uint32_t txInc = 1,rxInc = 1;
     error_t error = FAIL;
 
 #if 1
@@ -138,66 +138,78 @@ implementation
     atomic {
       txCurrentBuf = txBuf;
       rxCurrentBuf = rxBuf;
-      lenCurrent = len;
+      lenCurrent = lenRemain = len;
       instanceCurrent = instance;
-    }
-
-    if (rxBuf == NULL) { 
-      rxPtr = (uint8_t *)&rxBitBucket; 
-      rxInc = 0;
-    }
-    else {
-      rxPtr = rxBuf; 
-    }
-
-    if (txBuf == NULL) {
-      txPtr = (uint8_t *)&txBitBucket; 
-      txInc = 0;
-    }
-    else {
-      txPtr = txBuf;
-    }
-
-    if ((txBuf == NULL) && (enableRWOT == TRUE)) {
-
-      call SSP.setSSCR0(flagsSSCR0);
-      call SSP.setSSCR1(flagsSSCR1 | SSCR1_RWOT);
-      call SSP.setSSCR0(flagsSSCR0 | SSCR0_SSE);
-      while (len > 0) {
-	while (!(call SSP.getSSSR() & SSSR_RNE));
-	*rxPtr = call SSP.getSSDR();
-	rxPtr += rxInc;
-	len--;
+    
+      if (rxBuf == NULL) { 
+	rxPtr = (uint8_t *)&rxBitBucket; 
+	rxInc = 0;
       }
-      call SSP.setSSCR0(flagsSSCR0);
-      call SSP.setSSCR1(flagsSSCR1);
-      call SSP.setSSCR0(flagsSSCR0 | SSCR0_SSE);
+      else {
+	rxPtr = rxBuf; 
+	rxInc = 1;
+      }
+      
+      if (txBuf == NULL) {
+	txPtr = (uint8_t *)&txBitBucket; 
+	txInc = 0;
+      }
+      else {
+	txPtr = txBuf;
+	txInc = 1;
+      }
     }
-    else {
-      while (len > 16) {
-	for (i = 0;i < 16; i++) {
+
+    atomic {
+      if ((txBuf == NULL) && (enableRWOT == TRUE)) {
+	
+	call SSP.setSSCR0(flagsSSCR0);
+	call SSP.setSSCR1(flagsSSCR1 | SSCR1_RWOT);
+	call SSP.setSSCR0(flagsSSCR0 | SSCR0_SSE);
+	while (len > 0) {
+	  while (!(call SSP.getSSSR() & SSSR_RNE));
+	  *rxPtr = call SSP.getSSDR();
+	  rxPtr += rxInc;
+	  len--;
+	}
+	call SSP.setSSCR0(flagsSSCR0);
+	call SSP.setSSCR1(flagsSSCR1);
+	call SSP.setSSCR0(flagsSSCR0 | SSCR0_SSE);
+      }
+      else {
+	uint8_t burst = (len < 16) ? len : 16;
+	for (i = 0;i < burst; i++) {
 	  call SSP.setSSDR(*txPtr);
 	  txPtr += txInc;
 	}
-	while (call SSP.getSSSR() & SSSR_BSY);
-      for (i = 0;i < 16;i++) {
-	*rxPtr = call SSP.getSSDR();
-	rxPtr += rxInc;
-      }
-      len -= 16;
-      }
-      for (i = 0;i < len; i++) {
-	call SSP.setSSDR(*txPtr);
-	txPtr += txInc;
-      }
-      while (call SSP.getSSSR() & SSSR_BSY);
-      for (i = 0;i < len;i++) {
-	*rxPtr = call SSP.getSSDR();
-	rxPtr += rxInc;
+	call SSP.setSSCR1(flagsSSCR1 | SSCR1_TINTE | SSCR1_RIE);
+	/*
+	  while (len > 16) {
+	  for (i = 0;i < 16; i++) {
+	  call SSP.setSSDR(*txPtr);
+	  txPtr += txInc;
+	  }
+	  while (call SSP.getSSSR() & SSSR_BSY);
+	  for (i = 0;i < 16;i++) {
+	  *rxPtr = call SSP.getSSDR();
+	  rxPtr += rxInc;
+	  }
+	  len -= 16;
+	  }
+	  for (i = 0;i < len; i++) {
+	  call SSP.setSSDR(*txPtr);
+	  txPtr += txInc;
+	  }
+	  while (call SSP.getSSSR() & SSSR_BSY);
+	  for (i = 0;i < len;i++) {
+	  *rxPtr = call SSP.getSSDR();
+	  rxPtr += rxInc;
+	  }
+	*/
       }
     }
-    post SpiPacketDone();
-
+    //post SpiPacketDone();
+    
     error = SUCCESS;
     
     return error;
@@ -206,8 +218,39 @@ implementation
   async event void SSP.interruptSSP() {
     // For this Hal, we should never get here normally
     // Perhaps we should signal any weird errors? For now, just clear the interrupts
-    call SSP.setSSSR(SSSR_BCE | SSSR_TUR | SSSR_EOC | SSSR_TINT | 
-			       SSSR_PINT | SSSR_ROR );
+    uint32_t i, uiStatus, uiFifoLevel;
+    uint32_t burst;
+
+    uiStatus = call SSP.getSSSR();
+    call SSP.setSSSR(SSSR_TINT);
+
+    uiFifoLevel = ((uiStatus & SSSR_RFL) >> 12) | 0xFUL;
+
+    if ((uiFifoLevel < 0xF) || (uiStatus & SSSR_RNE)) {
+      //uiFifoLevel = (uiFifoLevel == 0) ? 16 : uiFifoLevel;
+      uiFifoLevel = (uiFifoLevel > lenRemain) ? lenRemain : uiFifoLevel;
+      for (i = 0;i < uiFifoLevel;i++) {
+	*rxPtr = call SSP.getSSDR();
+	rxPtr += rxInc;
+      }
+      lenRemain -= uiFifoLevel;
+    }
+    if (lenRemain > 0) {
+      burst = (lenRemain < uiFifoLevel) ? lenRemain : uiFifoLevel;
+      for (i = 0;i < burst;i++) {
+	call SSP.setSSDR(*txPtr);
+	txPtr += txInc;
+      }
+    }
+    else {
+      uint32_t len = lenCurrent;
+      call SSP.setSSCR1(flagsSSCR1);
+      lenCurrent = 0;
+      signal SpiPacket.sendDone[instanceCurrent](txCurrentBuf, rxCurrentBuf,len,SUCCESS);
+    }
+
+    /*call SSP.setSSSR(SSSR_BCE | SSSR_TUR | SSSR_EOC | SSSR_TINT | 
+      SSSR_PINT | SSSR_ROR ); */
     return;
   }
 

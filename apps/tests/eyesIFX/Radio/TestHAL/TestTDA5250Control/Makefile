@@ -1,0 +1,3 @@
+COMPONENT=TestTDA5250ControlC
+include $(MAKERULES)
+

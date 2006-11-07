@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: clean.target,v 1.2 2006-07-12 16:59:44 scipio Exp $
+#$Id: clean.target,v 1.3 2006-11-07 19:30:39 scipio Exp $
 
 clean: FORCE
 	rm -rf build $(CLEAN_EXTRA)

@@ -31,8 +31,8 @@
  * Management policies.
  *
  * @author Kevin Klues <klueska@cs.wustl.edu>
- * @version  $Revision: 1.2 $
- * @date $Date: 2006-07-12 16:59:25 $ 
+ * @version  $Revision: 1.3 $
+ * @date $Date: 2006-11-07 19:30:35 $ 
  */
  
 configuration TestPowerManagerAppC{
@@ -41,8 +41,6 @@ implementation {
   components MainC, TestPowerManagerC, MyComponentC, LedsC, new TimerMilliC();
 
   TestPowerManagerC -> MainC.Boot;
-  
-  MainC.SoftwareInit -> MyComponentC;
   
   TestPowerManagerC.TimerMilli -> TimerMilliC;
   TestPowerManagerC.Resource0 -> MyComponentC.Resource[unique("MyComponent.Resource")];

@@ -10,8 +10,8 @@ Dissemination
 :Author: Philip Levis and Gilman Tolle
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2006-11-07 00:43:44 $
+:Draft-Version: $Revision: 1.5 $
+:Draft-Modified: $Date: 2006-11-07 19:30:39 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -113,7 +113,7 @@ which has the following signature::
     provides interface DisseminationUpdate <t>;
   }
 
-The t argument MUST be able to fit in a single message_t[1_]  after
+The t argument MUST be able to fit in a single message_t[tep111_]  after
 considering the headers that the dissemination protocol introduces.
 A dissemination implementation SHOULD have a compile error if a larger
 type than this is used.

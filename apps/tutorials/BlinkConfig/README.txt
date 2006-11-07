@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.3 2006-11-07 01:29:52 scipio Exp $
+$Id: README.txt,v 1.4 2006-11-07 19:30:37 scipio Exp $
 
 README for Config
 Author/Contact: tinyos-help@millennium.berkeley.edu

@@ -32,12 +32,11 @@
 #include "Msp430Adc12.h"
 
 module Msp430InternalTemperatureP {
-  provides interface Msp430Adc12Config;
+  provides interface AdcConfigure<const msp430adc12_channel_config_t*>;
 }
 implementation {
 
-  async command msp430adc12_channel_config_t Msp430Adc12Config.getChannelSettings() {
-    msp430adc12_channel_config_t config = {
+  const msp430adc12_channel_config_t config = {
       inch: TEMPERATURE_DIODE_CHANNEL,
       sref: REFERENCE_VREFplus_AVss,
       ref2_5v: REFVOLT_LEVEL_1_5,
@@ -46,8 +45,10 @@ implementation {
       sht: SAMPLE_HOLD_4_CYCLES,
       sampcon_ssel: SAMPCON_SOURCE_SMCLK,
       sampcon_id: SAMPCON_CLOCK_DIV_1
-    };
-
-    return config;
+  };
+  
+  async command const msp430adc12_channel_config_t* AdcConfigure.getConfiguration()
+  {
+    return &config;
   }
 }

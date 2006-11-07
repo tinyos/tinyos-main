@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:39 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:30:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -106,12 +106,6 @@ interface HplAdc12
   async command void resetIFGs(); 
 
   /** 
-   * Returns the ADC12 interrupt flag register, ADC12IFG.
-   * @return ADC12IFG
-   */  
-  async command uint16_t getIFGs(); 
-
-  /** 
    * Signals an ADC12MEMx overflow.
    */ 
   async event void memOverflow();
@@ -133,90 +127,15 @@ interface HplAdc12
    */ 
   async command bool isBusy();
 
-  /** 
-   * Sets the Sample-and-hold time flags, SHT0x and SHT1x.
-   * Requires ENC-flag to be reset (disableConversion) !
-   * @param sht Sample-and-hold, top 4 bits = SHT1x, lower 4 bits = SHT0x
-   */
-  async command void setSHT(uint8_t sht);
-
-  /** 
-   * Sets the multiple sample and conversion flag, MSC in ADC12CTL0. 
-   * Requires ENC-flag to be reset (disableConversion) !
-   */
-  async command void setMSC();
- 
-  /** 
-   * Resets the multiple sample and conversion flag, MSC in ADC12CTL0.
-   * Requires ENC-flag to be reset (disableConversion) !
-   */
-  async command void resetMSC();
-
-  /** 
-   * Sets the REFON in ADC12CTL0. 
-   * Requires ENC-flag to be reset (disableConversion) !
-   */
-  async command void setRefOn();
-
-  /** 
-   * Resets the REFON in ADC12CTL0. 
-   * Requires ENC-flag to be reset (disableConversion) !
-   */
-  async command void resetRefOn();
-
-  /** 
-   * Returns the REFON flag in ADC12CTL0. 
-   * @return REFON
-   */
-  async command uint8_t getRefon();     
-
-  /** 
-   * Sets the reference generator voltage to 1.5V. 
-   * Requires ENC-flag to be reset (disableConversion) !
-   */
-  async command void setRef1_5V();
-
-  /** 
-   * Sets the reference generator voltage to 2.5V. 
-   * Requires ENC-flag to be reset (disableConversion) !
-   */
-  async command void setRef2_5V();
-
-  /** 
-   * Returns reference voltage level (REF2_5V flag). 
-   * @return 0 if reference generator voltage is 1.5V, 
-   * 1 if  reference generator voltage is 2.5V
-   */
-  async command uint8_t isRef2_5V(); 
-   
   /**
-   * Enables a conversion (sets the ENC flag).
+   * Stops a conversion.
    */
-  async command void enableConversion();
-
-  /**
-   * Disables a conversion (resets the ENC flag).
-   */
-  async command void disableConversion();
+  async command void stopConversion();
 
   /**
    * Starts a conversion.
    */
   async command void startConversion();
 
-  /**
-   * Stops a conversion.
-   */  
-  async command void stopConversion();
-  
-  /**
-   * Switches the ADC12 off (ADC12ON flag).
-   */  
-  async command void adcOff();
-
-  /**
-   * Switches the ADC12 off (ADC12ON flag).
-   */    
-  async command void adcOn();
 }
 

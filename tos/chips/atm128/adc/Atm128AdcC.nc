@@ -1,4 +1,4 @@
-/// $Id: Atm128AdcC.nc,v 1.3 2006-08-09 22:42:20 idgay Exp $
+/// $Id: Atm128AdcC.nc,v 1.4 2006-11-07 19:30:44 scipio Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -64,8 +64,6 @@ implementation
   Atm128AdcP.HplAtm128Adc -> HplAtm128AdcC;
   Atm128AdcP.Atm128Calibrate -> PlatformC;
 
-  PM.Init <- MainC;
   PM.AsyncStdControl -> Atm128AdcP;
-  PM.ArbiterInit -> AdcArbiter;
   PM.ResourceController -> AdcArbiter;
 }

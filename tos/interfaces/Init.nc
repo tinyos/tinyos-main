@@ -1,4 +1,4 @@
-// $Id: Init.nc,v 1.2 2006-07-12 17:02:16 scipio Exp $
+// $Id: Init.nc,v 1.3 2006-11-07 19:31:17 scipio Exp $
 /*									tab:4
  * "Copyright (c) 2004-5 The Regents of the University  of California.  
  * All rights reserved.

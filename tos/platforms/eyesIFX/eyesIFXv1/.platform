@@ -6,7 +6,7 @@
 push( @includes, qw(
 
   %T/platforms/eyesIFX/eyesIFXv1
-  %T/platforms/eyesIFX/chips/stm25p
+  %T/platforms/eyesIFX/eyesIFXv1/chips/stm25p
   %T/chips/stm25p
 ) );
 

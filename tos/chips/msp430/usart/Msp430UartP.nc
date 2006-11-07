@@ -1,93 +1,210 @@
-/*
- * Copyright (c) 2004, Technische Universitat Berlin
+/**
+ * Copyright (c) 2005-2006 Arch Rock Corporation
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
- * - Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright 
- *   notice, this list of conditions and the following disclaimer in the 
- *   documentation and/or other materials provided with the distribution.
- * - Neither the name of the Technische Universitat Berlin nor the names 
- *   of its contributors may be used to endorse or promote products derived
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ * - Neither the name of the Arch Rock Corporation nor the names of
+ *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * - Description ----------------------------------------------------------
- * Implementation of UART0 lowlevel functionality - stateless.
- * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:47 $
- * @author Jan Hauer 
- * @author Vlado Handziski
- * @author Joe Polastre
- * ========================================================================
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * ARCH ROCK OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
-#include "msp430baudrates.h"
+/**
+ * @author Jonathan Hui <jhui@archrock.com>
+ * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
+ */
 
-generic module Msp430UartP(uint32_t default_baudrate) {
+#include<Timer.h>
 
-  provides interface Init;
-  provides interface StdControl;
-  provides interface SerialByteComm;
+generic module Msp430UartP() {
+
+  provides interface Resource[ uint8_t id ];
+  provides interface ResourceConfigure[ uint8_t id ];
+  provides interface Msp430UartControl as UartControl[ uint8_t id ];
+  provides interface UartStream;
+  provides interface UartByte;
   
-  uses interface HplMsp430Usart as HplUsart;
-  uses interface HplMsp430UsartInterrupts as HplUsartInterrupts;
+  uses interface Resource as UsartResource[ uint8_t id ];
+  uses interface Msp430UartConfigure[ uint8_t id ];
+  uses interface HplMsp430Usart as Usart;
+  uses interface HplMsp430UsartInterrupts as UsartInterrupts;
+  uses interface Counter<T32khz,uint16_t>;
+  uses interface Leds;
+
 }
 
 implementation {
+  
+  norace uint8_t *m_tx_buf, *m_rx_buf;
+  norace uint16_t m_tx_len, m_rx_len;
+  norace uint16_t m_tx_pos, m_rx_pos;
+  norace uint8_t m_byte_time;
+  
+  async command error_t Resource.immediateRequest[ uint8_t id ]() {
+    return call UsartResource.immediateRequest[ id ]();
+  }
 
-  command error_t Init.init() {
+  async command error_t Resource.request[ uint8_t id ]() {
+    return call UsartResource.request[ id ]();
+  }
+
+  async command uint8_t Resource.isOwner[ uint8_t id ]() {
+    return call UsartResource.isOwner[ id ]();
+  }
+
+  async command error_t Resource.release[ uint8_t id ]() {
+    if ( m_rx_buf || m_tx_buf )
+      return EBUSY;
+    return call UsartResource.release[ id ]();
+  }
+
+  async command void ResourceConfigure.configure[ uint8_t id ]() {
+    call UartControl.setModeDuplex[id]();
+  }
+
+  async command void ResourceConfigure.unconfigure[ uint8_t id ]() {
+    call Usart.disableIntr();
+    call Usart.disableUart();
+  }
+
+  event void UsartResource.granted[ uint8_t id ]() {
+    signal Resource.granted[ id ]();
+  }
+
+  async command void UartControl.setModeRx[ uint8_t id ]() {
+    msp430_uart_config_t* config = call Msp430UartConfigure.getConfig[id]();
+    m_byte_time = config->ubr / 2;
+    call Usart.setModeUartRx(config);
+    call Usart.clrIntr();
+    call Usart.enableRxIntr();
+  }
+  
+  async command void UartControl.setModeTx[ uint8_t id ]() {
+    call Usart.setModeUartTx(call Msp430UartConfigure.getConfig[id]());
+    call Usart.clrIntr();
+    call Usart.enableTxIntr();
+  }
+  
+  async command void UartControl.setModeDuplex[ uint8_t id ]() {
+    msp430_uart_config_t* config = call Msp430UartConfigure.getConfig[id]();
+    m_byte_time = config->ubr / 2;
+    call Usart.setModeUart(config);
+    call Usart.clrIntr();
+    call Usart.enableIntr();
+  }
+  
+  async command error_t UartStream.enableReceiveInterrupt() {
+    call Usart.enableRxIntr();
+    return SUCCESS;
+  }
+  
+  async command error_t UartStream.disableReceiveInterrupt() {
+    call Usart.disableRxIntr();
     return SUCCESS;
   }
 
-  command error_t StdControl.start() {
-    call HplUsart.setModeUART();
-    call HplUsart.setClockSource(SSEL_SMCLK);
-    if (default_baudrate == 57600UL){
-      call HplUsart.setClockRate(UBR_SMCLK_57600, UMCTL_SMCLK_57600);
-    } else if (default_baudrate == 115200UL){
-      call HplUsart.setClockRate(UBR_SMCLK_115200, UMCTL_SMCLK_115200);
-    } else if (default_baudrate == 230400UL){
-      call HplUsart.setClockRate(UBR_SMCLK_230400, UMCTL_SMCLK_230400);
+  async command error_t UartStream.receive( uint8_t* buf, uint16_t len ) {
+    if ( len == 0 )
+      return FAIL;
+    atomic {
+      if ( m_rx_buf )
+	return EBUSY;
+      m_rx_buf = buf;
+      m_rx_len = len;
+      m_rx_pos = 0;
     }
-    call HplUsart.enableRxIntr();
-    call HplUsart.enableTxIntr();
     return SUCCESS;
   }
-
-  command error_t StdControl.stop() {
-    call HplUsart.disableRxIntr();
-    call HplUsart.disableTxIntr();
-
-    call HplUsart.disableUART();
+  
+  async event void UsartInterrupts.rxDone( uint8_t data ) {
+    if ( m_rx_buf ) {
+      m_rx_buf[ m_rx_pos++ ] = data;
+      if ( m_rx_pos >= m_rx_len ) {
+	uint8_t* buf = m_rx_buf;
+	m_rx_buf = NULL;
+	signal UartStream.receiveDone( buf, m_rx_len, SUCCESS );
+      }
+    }
+    else {
+      signal UartStream.receivedByte( data );
+    }
+  }
+  
+  async command error_t UartStream.send( uint8_t* buf, uint16_t len ) {
+    if ( len == 0 )
+      return FAIL;
+    else if ( m_tx_buf )
+      return EBUSY;
+    m_tx_buf = buf;
+    m_tx_len = len;
+    m_tx_pos = 0;
+    call Usart.tx( buf[ m_tx_pos++ ] );
     return SUCCESS;
   }
-
-  async command error_t SerialByteComm.put( uint8_t data ) {
-    call HplUsart.tx( data );
+  
+  async event void UsartInterrupts.txDone() {
+    if ( m_tx_pos < m_tx_len ) {
+      call Usart.tx( m_tx_buf[ m_tx_pos++ ] );
+    }
+    else {
+      uint8_t* buf = m_tx_buf;
+      m_tx_buf = NULL;
+      signal UartStream.sendDone( buf, m_tx_len, SUCCESS );
+    }
+  }
+  
+  async command error_t UartByte.send( uint8_t data ) {
+    call Usart.tx( data );
+    while( !call Usart.isTxIntrPending() );
     return SUCCESS;
   }
+  
+  async command error_t UartByte.receive( uint8_t* byte, uint8_t timeout ) {
+    
+    uint16_t timeout_micro = m_byte_time * timeout + 1;
+    uint16_t start;
+    
+    start = call Counter.get();
+    while( !call Usart.isRxIntrPending() ) {
+      if ( ( call Counter.get() - start ) >= timeout_micro )
+	return FAIL;
+    }
+    *byte = call Usart.rx();
+    
+    return SUCCESS;
 
-  async event void HplUsartInterrupts.txDone() {
-    signal SerialByteComm.putDone();
+  }
+  
+  async event void Counter.overflow() {}
+  
+  default async command error_t UsartResource.isOwner[ uint8_t id ]() { return FAIL; }
+  default async command error_t UsartResource.request[ uint8_t id ]() { return FAIL; }
+  default async command error_t UsartResource.immediateRequest[ uint8_t id ]() { return FAIL; }
+  default async command error_t UsartResource.release[ uint8_t id ]() { return FAIL; }
+  default async command msp430_uart_config_t* Msp430UartConfigure.getConfig[uint8_t id]() {
+    return &msp430_uart_default_config;
   }
 
-  async event void HplUsartInterrupts.rxDone( uint8_t data ) {
-    signal SerialByteComm.get( data );
-  }
+  default event void Resource.granted[ uint8_t id ]() {}
 }

@@ -53,7 +53,7 @@
 /**
  * @author Ben Greenstein <ben@cs.ucla.edu>
  * @author Jonathan Hui <jhui@archrock.com>
- * $Revision: 1.2 $ $Date: 2006-07-12 17:01:41 $
+ * $Revision: 1.3 $ $Date: 2006-11-07 19:31:01 $
  */
 
 #ifndef MSP430DMA_H

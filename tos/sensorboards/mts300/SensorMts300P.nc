@@ -23,8 +23,9 @@
  *  THE POSSIBILITY OF SUCH DAMAGE.
  *
  *  @author Martin Turon <mturon@xbow.com>
+ *  @author Miguel Freitas
  *
- *  $Id: SensorMts300P.nc,v 1.2 2006-07-12 17:03:17 scipio Exp $
+ *  $Id: SensorMts300P.nc,v 1.3 2006-11-07 19:31:27 scipio Exp $
  */
 
 #include "Timer.h"
@@ -47,14 +48,14 @@ module SensorMts300P
     provides {
 	interface Init;                 //!< Standard Initialization
 	interface StdControl;           //!< Start/Stop for Power Management
-	interface AcquireData as Temp;  //!< Thermister
-	interface AcquireData as Light; //!< Photo sensor
+	interface Read<uint16_t> as Temp;  //!< Thermister
+	interface Read<uint16_t> as Light; //!< Photo sensor
     }
 
     uses {
 	interface GeneralIO as TempPower;
 	interface GeneralIO as LightPower;
-	interface AcquireData as SensorADC;
+	interface Read<uint16_t> as SensorADC;
 	interface Timer<TMilli> as WarmUpTimer;
     }
 }
@@ -87,6 +88,7 @@ implementation
     */
     command error_t Init.init() {
 	g_flags.flat = STATE_IDLE;
+	return SUCCESS;
     }
 
     /**
@@ -95,6 +97,7 @@ implementation
      * @return SUCCESS if the component was successfully started.
      */
     command error_t StdControl.start() {
+        return SUCCESS;
     }
     
     /**
@@ -109,6 +112,7 @@ implementation
 	call TempPower.makeInput();
 	call LightPower.makeInput();
 	atomic g_flags.bits.state = STATE_IDLE;
+	return SUCCESS;
     }
 
     /** Turns on the light sensor and turns the thermistor off. */
@@ -153,7 +157,7 @@ implementation
 	    case STATE_LIGHT_READY:
 		// Start the sample.
 		atomic { g_flags.bits.state = STATE_LIGHT_SAMPLING; }
-		call SensorADC.getData();
+		call SensorADC.read();
 		return;
 
 	    case STATE_LIGHT_SAMPLING:
@@ -169,7 +173,7 @@ implementation
 	    case STATE_LIGHT_SAMPLING:
 		// If Temperature is busy, repost and try again later.
 		// This will not let the CPU sleep.  Add delay timer.
-		post getLightSample();
+		post getTempSample();
 		return;
 
 	    case STATE_IDLE: 
@@ -184,7 +188,7 @@ implementation
 	    case STATE_TEMP_READY:
 		// Start the sample.
 		atomic { g_flags.bits.state = STATE_TEMP_SAMPLING; }
-		call SensorADC.getData();
+		call SensorADC.read();
 		return;
 
 	    case STATE_TEMP_SAMPLING:
@@ -203,7 +207,7 @@ implementation
      * @return SUCCESS if request accepted, EBUSY if it is refused
      *    'dataReady' or 'error' will be signaled if SUCCESS is returned
      */
-    command error_t Temp.getData() {
+    command error_t Temp.read() {
 	post getTempSample();	
 	return SUCCESS;
     }
@@ -218,7 +222,7 @@ implementation
      *  @return SUCCESS if request accepted, EBUSY if it is refused
      *    'dataReady' or 'error' will be signaled if SUCCESS is returned
      */
-    command error_t Light.getData() {
+    command error_t Light.read() {
 	post getLightSample();	
 	return SUCCESS;
     }
@@ -240,8 +244,8 @@ implementation
 
 	    default:
 		//ERROR!!!
-		signal Light.error(-1);
-		signal Temp.error(-1);
+		signal Light.readDone( FAIL, 0 );
+		signal Temp.readDone( FAIL, 0 );
       	}
 	// Worst case -- return to the IDLE state so next task can progress !!
 	atomic { g_flags.bits.state = STATE_IDLE; }
@@ -254,51 +258,26 @@ implementation
      *   the data is acquired with n bits of precision, each value is 
      *   shifted left by 16-n bits.
      */
-    event void SensorADC.dataReady(uint16_t data) {
+    event void SensorADC.readDone( error_t result, uint16_t data ) {
 	switch (g_flags.bits.state) {
 	    case STATE_LIGHT_SAMPLING:
-		signal Light.dataReady(data);
+		signal Light.readDone(result, data);
 		break;
 
 	    case STATE_TEMP_SAMPLING:
-		signal Temp.dataReady(data);
+		signal Temp.readDone(result, data);
 		break;
 
 	    default:
 		//ERROR!!!
-		signal Light.error(data);
-		signal Temp.error(data);
+		signal Light.readDone( FAIL, 0 );
+		signal Temp.readDone( FAIL, 0 );
       	}
 	// ADC.dataReady must return to IDLE state so next task can progress !!
 	atomic { g_flags.bits.state = STATE_IDLE; }
     }
 
-
-    /** 
-     * Signal that the data acquisition failed
-     * @param info error information
-     */
-    event void SensorADC.error(uint16_t info) {
-	switch (g_flags.bits.state) {
-	    case STATE_LIGHT_SAMPLING:
-		signal Light.error(info);
-		break;
-
-	    case STATE_TEMP_SAMPLING:
-		signal Temp.error(info);
-		break;
-
-	    default:
-		//ERROR!!!
-		signal Light.error(info);
-		signal Temp.error(info);
-      	}
-	// ADC.dataReady must return to IDLE state so next task can progress !!
-	atomic { g_flags.bits.state = STATE_IDLE; }
-    }
 }
-
-
 
 
 

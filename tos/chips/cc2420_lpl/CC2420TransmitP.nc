@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-11-06 11:57:09 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:53 $
  */
  
 #include "IEEE802154.h"

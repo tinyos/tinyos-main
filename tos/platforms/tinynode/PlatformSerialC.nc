@@ -1,14 +1,15 @@
 configuration PlatformSerialC {
-  provides interface Init;
   provides interface StdControl;
-  provides interface SerialByteComm;
+  provides interface UartStream;
 }
-implementation {
-  components new Uart1C() as UartC, TinyNodeSerialP;
 
-  Init = UartC;
-  StdControl = UartC;
+implementation {
+  components new Msp430Uart1C() as UartC;
+  UartStream = UartC;
+
+  components TinyNodeSerialP;
   StdControl = TinyNodeSerialP;
-  SerialByteComm = UartC;
+  TinyNodeSerialP.Msp430UartConfigure <- UartC.Msp430UartConfigure;
   TinyNodeSerialP.Resource -> UartC.Resource;
 }
+

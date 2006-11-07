@@ -1,4 +1,39 @@
-/// $Id: HplAtm128UartP.nc,v 1.3 2006-08-09 22:43:20 idgay Exp $
+/*
+ * Copyright (c) 2006 Arch Rock Corporation
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ * - Neither the name of the Arch Rock Corporation nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * ARCH ROCK OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE
+ */
+
+/**
+ * @author Alec Woo <awoo@archrock.com>
+ * @author Jonathan Hui <jhui@archrock.com>
+ * @version $Revision: 1.4 $ $Date: 2006-11-07 19:30:43 $
+ */
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -22,8 +57,6 @@
  * MODIFICATIONS.
  */
 
-#include <Atm128Uart.h>
-
 /** 
  * Private component of the Atmega128 serial port HPL.
  *
@@ -31,26 +64,25 @@
  * @author David Gay
  */
 
-module HplAtm128UartP
-{
-  provides {
-    interface Init as Uart0Init;
-    interface StdControl as Uart0TxControl;
-    interface StdControl as Uart0RxControl;
-    interface SerialByteComm as Uart0;
+#include <Atm128Uart.h>
+
+module HplAtm128UartP {
+  
+  provides interface Init as Uart0Init;
+  provides interface StdControl as Uart0TxControl;
+  provides interface StdControl as Uart0RxControl;
+  provides interface HplAtm128Uart as HplUart0;
     
-    interface Init as Uart1Init;
-    interface StdControl as Uart1TxControl;
-    interface StdControl as Uart1RxControl;
-    interface SerialByteComm as Uart1;
-  }
-  uses {
-    interface Atm128Calibrate;
-    interface McuPowerState;
-  }
+  provides interface Init as Uart1Init;
+  provides interface StdControl as Uart1TxControl;
+  provides interface StdControl as Uart1RxControl;
+  provides interface HplAtm128Uart as HplUart1;
+  
+  uses interface Atm128Calibrate;
+  uses interface McuPowerState;
 }
-implementation
-{
+implementation {
+  
   //=== Uart Init Commands. ====================================
   command error_t Uart0Init.init() {
     Atm128UartMode_t    mode;
@@ -73,52 +105,88 @@ implementation
   }
 
   command error_t Uart0TxControl.start() {
-    Atm128UartControl_t ctrl;
-    ctrl.flat = UCSR0B;
-    ctrl.bits.txcie = 1;
-    ctrl.bits.txen  = 1;
-    UCSR0B = ctrl.flat;
+    SET_BIT(UCSR0B, TXCIE);
+    SET_BIT(UCSR0B, TXEN);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart0TxControl.stop() {
-    Atm128UartControl_t ctrl;
-    ctrl.flat = UCSR0B;
-    ctrl.bits.txcie = 0;
-    ctrl.bits.txen  = 0;
-    UCSR0B = ctrl.flat;
+    CLR_BIT(UCSR0B, TXCIE);
+    CLR_BIT(UCSR0B, TXEN);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart0RxControl.start() {
-    Atm128UartControl_t ctrl;
-    ctrl.flat = UCSR0B;
-    ctrl.bits.rxcie = 1;
-    ctrl.bits.rxen  = 1;
-    UCSR0B = ctrl.flat;
+    SET_BIT(UCSR0B, RXCIE);
+    SET_BIT(UCSR0B, RXEN);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart0RxControl.stop() {
-    Atm128UartControl_t ctrl;
-    ctrl.flat = UCSR0B;
-    ctrl.bits.rxcie = 0;
-    ctrl.bits.rxen  = 0;
-    UCSR0B = ctrl.flat;
+    CLR_BIT(UCSR0B, RXCIE);
+    CLR_BIT(UCSR0B, RXEN);
     call McuPowerState.update();
     return SUCCESS;
   }
+  
+  async command error_t HplUart0.enableTxIntr() {
+    SET_BIT(UCSR0B, TXEN);
+    return SUCCESS;
+  }
+  
+  async command error_t HplUart0.disableTxIntr(){
+    CLR_BIT(UCSR0B, TXEN);
+    return SUCCESS;
+  }
+  
+  async command error_t HplUart0.enableRxIntr(){
+    SET_BIT(UCSR0B, RXEN);
+    return SUCCESS;
+  }
 
+  async command error_t HplUart0.disableRxIntr(){
+    CLR_BIT(UCSR0B, RXEN);
+    return SUCCESS;
+  }
+  
+  async command bool HplUart0.isTxEmpty(){
+    return READ_BIT(UCSR0A, TXC);
+  }
+
+  async command bool HplUart0.isRxEmpty(){
+    return !READ_BIT(UCSR0A, RXC);
+  }
+  
+  async command uint8_t HplUart0.rx(){
+    return UDR0;
+  }
+
+  async command void HplUart0.tx(uint8_t data) {
+    atomic{
+      UDR0 = data; 
+      SET_BIT(UCSR0A, TXC);
+    }
+  }
+  
+  AVR_ATOMIC_HANDLER(SIG_UART0_RECV) {
+    if (READ_BIT(UCSR0A, RXC)) {
+      signal HplUart0.rxDone(UDR0);
+    }
+  }
+  
+  AVR_NONATOMIC_HANDLER(SIG_UART0_TRANS) {
+    signal HplUart0.txDone();
+  }
   
   command error_t Uart1Init.init() {
     Atm128UartMode_t    mode;
     Atm128UartStatus_t  stts;
     Atm128UartControl_t ctrl;
     uint16_t ubrr1;
-
+    
     ctrl.bits = (struct Atm128_UCSRB_t) {rxcie:0, txcie:0, rxen:0, txen:0};
     stts.bits = (struct Atm128_UCSRA_t) {u2x:1};
     mode.bits = (struct Atm128_UCSRC_t) {ucsz:ATM128_UART_DATA_SIZE_8_BITS};
@@ -134,95 +202,84 @@ implementation
   }
 
   command error_t Uart1TxControl.start() {
-    Atm128UartControl_t ctrl;
-    ctrl.flat = UCSR1B;
-    ctrl.bits.txcie = 1;
-    ctrl.bits.txen  = 1;
-    UCSR1B = ctrl.flat;
+    SET_BIT(UCSR1B, TXCIE);
+    SET_BIT(UCSR1B, TXEN);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart1TxControl.stop() {
-    Atm128UartControl_t ctrl;
-    ctrl.flat = UCSR1B;
-    ctrl.bits.txcie = 0;
-    ctrl.bits.txen  = 0;
-    UCSR1B = ctrl.flat;
+    CLR_BIT(UCSR1B, TXCIE);
+    CLR_BIT(UCSR1B, TXEN);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart1RxControl.start() {
-    Atm128UartControl_t ctrl;
-    ctrl.flat = UCSR1B;
-    ctrl.bits.rxcie = 1;
-    ctrl.bits.rxen  = 1;
-    UCSR1B = ctrl.flat;
+    SET_BIT(UCSR1B, RXCIE);
+    SET_BIT(UCSR1B, RXEN);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart1RxControl.stop() {
-    Atm128UartControl_t ctrl;
-    ctrl.flat = UCSR1B;
-    ctrl.bits.rxcie = 0;
-    ctrl.bits.rxen  = 0;
-    UCSR1B = ctrl.flat;
+    CLR_BIT(UCSR1B, RXCIE);
+    CLR_BIT(UCSR1B, RXEN);
     call McuPowerState.update();
     return SUCCESS;
   }
-
-  /*   //=== Uart Stop Commands. ==================================== */
-  /*   async command error_t Uart0.stop() { */
-  /*       UCSR0A = 0; */
-  /*       UCSR0B = 0; */
-  /*       UCSR0C = 0; */
-  /*       return SUCCESS; */
-  /*   } */
-  /*   async command error_t Uart1.stop() { */
-  /*       UCSR0A = 0; */
-  /*       UCSR0B = 0; */
-  /*       UCSR0C = 0; */
-  /*       return SUCCESS; */
-  /*   } */
-
-  //=== Uart Put Commands. ====================================
-  async command error_t Uart0.put(uint8_t data) {
-    atomic{
-      UDR0 = data; 
-      SET_BIT(UCSR0A, TXC);
-    }
+  
+  async command error_t HplUart1.enableTxIntr() {
+    SET_BIT(UCSR1B, TXEN);
     return SUCCESS;
   }
-  async command error_t Uart1.put(uint8_t data) {
+  
+  async command error_t HplUart1.disableTxIntr(){
+    CLR_BIT(UCSR1B, TXEN);
+    return SUCCESS;
+  }
+  
+  async command error_t HplUart1.enableRxIntr(){
+    SET_BIT(UCSR1B, RXEN);
+    return SUCCESS;
+  }
+
+  async command error_t HplUart1.disableRxIntr(){
+    CLR_BIT(UCSR1B, RXEN);
+    return SUCCESS;
+  }
+  
+  async command bool HplUart1.isTxEmpty() {
+    return READ_BIT(UCSR1A, TXC);
+  }
+
+  async command bool HplUart1.isRxEmpty() {
+    return !READ_BIT(UCSR1A, RXC);
+  }
+  
+  async command uint8_t HplUart1.rx(){
+    return UDR1;
+  }
+
+  async command void HplUart1.tx(uint8_t data) {
     atomic{
       UDR1 = data; 
       SET_BIT(UCSR1A, TXC);
     }
-    return SUCCESS;
   }
   
-  //=== Uart Get Events. ======================================
-  default async event void Uart0.get(uint8_t data) { return; }
-  AVR_ATOMIC_HANDLER(SIG_UART0_RECV) {
-    if (READ_BIT(UCSR0A, RXC))
-      signal Uart0.get(UDR0);
-  }
-  default async event void Uart1.get(uint8_t data) { return; }
   AVR_ATOMIC_HANDLER(SIG_UART1_RECV) {
     if (READ_BIT(UCSR1A, RXC))
-      signal Uart1.get(UDR1);
+      signal HplUart1.rxDone(UDR1);
   }
-
-  //=== Uart Put Done Events. =================================
-  default async event void Uart0.putDone() { return; }
-  AVR_NONATOMIC_HANDLER(SIG_UART0_TRANS) {
-    signal Uart0.putDone();
-  }
-  default async event void Uart1.putDone() { return; }
+  
   AVR_NONATOMIC_HANDLER(SIG_UART1_TRANS) {
-    signal Uart1.putDone();
+    signal HplUart1.txDone();
   }
-
+  
+  default async event void HplUart0.txDone() {} 
+  default async event void HplUart0.rxDone(uint8_t data) {}
+  default async event void HplUart1.txDone() {}
+  default async event void HplUart1.rxDone(uint8_t data) {}
+  
 }

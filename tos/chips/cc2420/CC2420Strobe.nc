@@ -28,7 +28,7 @@
  * such as power-up, transmission, or clear a FIFO.
  *
  * @author Philip Levis
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:36 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:51 $
  */
 
 #include "CC2420.h"

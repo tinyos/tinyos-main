@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:41 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:30:57 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -61,12 +61,15 @@ module Msp430RefVoltGeneratorP
       if (call HplAdc12.isBusy())
         return FAIL;
       else {
-        call HplAdc12.disableConversion();
-        call HplAdc12.setRefOn();
+        adc12ctl0_t ctl0 = call HplAdc12.getCtl0();
+        ctl0.enc = 0;
+        call HplAdc12.setCtl0(ctl0);
+        ctl0.refon = 1;
         if (level == REFERENCE_1_5V_PENDING)
-          call HplAdc12.setRef1_5V();
+          ctl0.r2_5v = 0;
         else
-          call HplAdc12.setRef2_5V();
+          ctl0.r2_5v = 1;
+        call HplAdc12.setCtl0(ctl0);
         return SUCCESS;
       }
     }
@@ -78,8 +81,11 @@ module Msp430RefVoltGeneratorP
       if (call HplAdc12.isBusy())
         return FAIL;
       else {
-        call HplAdc12.disableConversion();
-        call HplAdc12.resetRefOn();
+        adc12ctl0_t ctl0 = call HplAdc12.getCtl0();
+        ctl0.enc = 0;
+        call HplAdc12.setCtl0(ctl0);
+        ctl0.refon = 0;
+        call HplAdc12.setCtl0(ctl0);
         return SUCCESS;
       }
     }

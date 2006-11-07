@@ -34,7 +34,7 @@
  * TEP103.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:15 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:17 $
  */
 
 #include "Storage.h"
@@ -44,6 +44,8 @@ interface BlockWrite {
    * Initiate a write operation within a given volume. On SUCCESS, the
    * <code>writeDone</code> event will signal completion of the
    * operation.
+   * <p>
+   * Between two erases, no byte may be written more than once.
    * 
    * @param addr starting address to begin write.
    * @param buf buffer to write data from.
@@ -57,7 +59,7 @@ interface BlockWrite {
 
   /**
    * Signals the completion of a write operation. However, data is not
-   * guaranteed to survive a power-cycle unless a commit operation has
+   * guaranteed to survive a power-cycle unless a sync operation has
    * been completed.
    *
    * @param addr starting address of write.
@@ -89,25 +91,24 @@ interface BlockWrite {
   event void eraseDone(error_t error);
 
   /**
-   * Initiate a commit operation and finialize any additional writes
-   * to the volume. A verify operation from <code>BlockRead</code> can
-   * be done to check if the data has been modified since. A commit
-   * operation must be issued to ensure that data is stored in
-   * non-volatile storage. On SUCCES, the <code>commitDone</code>
-   * event will signal completion of the operation.
+   * Initiate a sync operation and finialize any additional writes to
+   * the volume. A sync operation must be issued to ensure that data is
+   * stored in non-volatile storage. On SUCCES, the
+   * <code>syncDone</code> event will signal completion of the
+   * operation.
    *
    * @return 
    *   <li>SUCCESS if the request was accepted, 
    *   <li>EBUSY if a request is already being processed.
    */
-  command error_t commit();
+  command error_t sync();
 
   /**
-   * Signals the completion of a commit operation. All written data is
+   * Signals the completion of a sync operation. All written data is
    * flushed to non-volatile storage after this event.
    *
    * @param error SUCCESS if the operation was successful, FAIL if
    *   it failed
    */
-  event void commitDone(error_t error);
+  event void syncDone(error_t error);
 }

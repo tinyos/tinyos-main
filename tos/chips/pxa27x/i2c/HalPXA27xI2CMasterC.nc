@@ -1,4 +1,4 @@
-/* $Id: HalPXA27xI2CMasterC.nc,v 1.2 2006-07-12 17:01:53 scipio Exp $ */
+/* $Id: HalPXA27xI2CMasterC.nc,v 1.3 2006-11-07 19:31:11 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -37,7 +37,7 @@
 
 #include <I2C.h>
 
-configuration HalPXA27xI2CMasterC
+generic configuration HalPXA27xI2CMasterC(bool fast_mode)
 {
   provides interface I2CPacket<TI2CBasicAddr>;
 
@@ -47,7 +47,7 @@ configuration HalPXA27xI2CMasterC
 
 implementation
 {
-  components HalPXA27xI2CMasterP;
+  components new HalPXA27xI2CMasterP(fast_mode);
   components HplPXA27xI2CC;
   components PlatformP;
 

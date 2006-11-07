@@ -1,4 +1,4 @@
-/* $Id: HalMAX136xReaderP.nc,v 1.2 2006-07-12 17:01:38 scipio Exp $ */
+/* $Id: HalMAX136xReaderP.nc,v 1.3 2006-11-07 19:30:54 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -83,5 +83,5 @@ implementation {
   }
 
   async event void HplMAX136x.alertThreshold() {}
-
+  async event void HplMAX136x.readStatusDone(error_t error, uint8_t* buf) { }
 }

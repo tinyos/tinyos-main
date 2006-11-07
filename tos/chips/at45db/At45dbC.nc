@@ -39,7 +39,6 @@ implementation
   ArbiterInfo = Arbiter;
 
   MainC.SoftwareInit -> At45dbP;
-  MainC.SoftwareInit -> Arbiter;
   At45dbP.HplAt45db -> HplAt45dbC;
   At45dbP.BusyWait -> BusyWaitMicroC;
 }

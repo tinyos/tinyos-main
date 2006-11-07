@@ -27,34 +27,33 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:39 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:30:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 /** 
- * This component allows a client to access the MSP430 ADC12
- * (12-bit analog-to-digital converter) via the <code>Read</code> interface. A
- * client must wire the <code>Msp430Adc12Config</code> interface to a component
- * that returns its ADC12 configuration data. Depending on the
- * REF_VOLT_AUTO_CONFIGURE switch (defined in Msp430Adc12.h) the internal
- * reference voltage generator is automatically enabled if and only if the
- * configuration data includes VREF as reference voltage.
+ * This component virtualizes the HIL of ADC12 on MSP430. A client must wire
+ * <code>AdcConfigure</code> to a component that returns the client's adc
+ * configuration data.
  *
- * @author Jan Hauer
- * @see  Please refer to TEP 101 for more information about this component and its
- *          intended use.
+ * @author Jan Hauer 
+ * @see  Please refer to the README.txt and TEP 101 for more information about 
+ * this component and its intended use.
  */
 
 #include <Msp430Adc12.h>
 generic configuration AdcReadClientC() {
   provides interface Read<uint16_t>;
-  uses interface Msp430Adc12Config;
+  uses interface AdcConfigure<const msp430adc12_channel_config_t*>;
 } implementation {
-  components AdcC,
+  components AdcP,
 #ifdef REF_VOLT_AUTO_CONFIGURE     
-             new Msp430Adc12RefVoltAutoClientC() as Msp430AdcClient;
+             // if the client configuration requires a stable 
+             // reference voltage, the reference voltage generator 
+             // is automatically enabled
+             new Msp430Adc12ClientAutoRVGC() as Msp430AdcClient;
 #else
              new Msp430Adc12ClientC() as Msp430AdcClient;
 #endif
@@ -63,12 +62,12 @@ generic configuration AdcReadClientC() {
     CLIENT = unique(ADCC_SERVICE),
   };
 
-  Read = AdcC.Read[CLIENT];
-  Msp430Adc12Config = AdcC.Config[CLIENT];
-  AdcC.SingleChannel[CLIENT] -> Msp430AdcClient.Msp430Adc12SingleChannel;
-  AdcC.Resource[CLIENT] -> Msp430AdcClient.Resource;
+  Read = AdcP.Read[CLIENT];
+  AdcConfigure = AdcP.Config[CLIENT];
+  AdcP.SingleChannel[CLIENT] -> Msp430AdcClient.Msp430Adc12SingleChannel;
+  AdcP.ResourceRead[CLIENT] -> Msp430AdcClient.Resource;
 #ifdef REF_VOLT_AUTO_CONFIGURE
-  Msp430Adc12Config = Msp430AdcClient.Msp430Adc12Config;
+  AdcConfigure = Msp430AdcClient.AdcConfigure;
 #endif 
 }
   

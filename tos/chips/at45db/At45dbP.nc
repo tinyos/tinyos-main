@@ -1,4 +1,4 @@
-// $Id: At45dbP.nc,v 1.2 2006-07-12 17:01:01 scipio Exp $
+// $Id: At45dbP.nc,v 1.3 2006-11-07 19:30:43 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  

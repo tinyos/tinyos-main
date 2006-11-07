@@ -1,5 +1,4 @@
-COMPONENT=TestArbiterAppC
-CFLAGS += -I%T/lib/oski
+COMPONENT=TestFcfsArbiterAppC
 OPTFLAGS = -O0
 include $(MAKERULES)
 

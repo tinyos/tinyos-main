@@ -32,10 +32,12 @@
 /**
  * This module is the driver components for the ST LIS3L02DQ 3-axis 
  * accelerometer in the 4 wire SPI mode. It requires the SPI packet
- * interface and provides the HplLIS3L02DQ HPL interface.
+ * interface and assumes the ability to manually toggle the chip select
+ * via a GPIO. It provides the HplLIS3L02DQ HPL interface.
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:37 $
+ * @author Kaisen Lin <klin@archrock.com>
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:54 $
  */
 
 module HplLIS3L02DQLogicSPIP
@@ -46,11 +48,7 @@ module HplLIS3L02DQLogicSPIP
 
   uses interface SpiPacket;
   uses interface GpioInterrupt as InterruptAlert;
-
-  uses interface HplPXA27xGPIOPin as SPIRxD;
-  uses interface HplPXA27xGPIOPin as SPITxD;
-  uses interface HplPXA27xGPIOPin as SPICLK;
-  uses interface HplPXA27xGPIOPin as SPIFRM;
+  uses interface GeneralIO as SPIFRM;
 }
 
 implementation {
@@ -78,7 +76,6 @@ implementation {
   }
 
   task void StopDone() {
-    atomic mState = STATE_STOPPED;
     signal SplitControl.stopDone(mSSError);
     return;
   }
@@ -89,19 +86,11 @@ implementation {
 	misInited = TRUE;
 	mState = STATE_STOPPED;
       }
-      call SPICLK.setGAFRpin(SSP1_SCLK_ALTFN);
-      call SPICLK.setGPDRbit(TRUE);
-
       // Control CS pin manually
-      call SPIFRM.setGPSRbit(); // CS HIGH
-      call SPIFRM.setGPDRbit(TRUE);
-      //call SPIFRM.setGAFRpin(SSP1_SFRM_ALTFN);
-
-      call SPIRxD.setGAFRpin(SSP1_RXD_ALTFN);
-      call SPIRxD.setGPDRbit(FALSE);
-      call SPITxD.setGAFRpin(SSP1_TXD_ALTFN);
-      call SPITxD.setGPDRbit(TRUE);
+      call SPIFRM.makeOutput();
+      call SPIFRM.set();
     }
+    return SUCCESS;
   }
 
   command error_t SplitControl.start() {
@@ -119,8 +108,8 @@ implementation {
 
     mSPITxBuf[0] = LIS3L02DQ_CTRL_REG1;
     mSPITxBuf[1] = 0;
-    mSPITxBuf[1] = (LIS3L01DQ_CTRL_REG1_PD(1) | /*LIS3L01DQ_CTRL_REG1_ST |*/ LIS3L01DQ_CTRL_REG1_XEN | LIS3L01DQ_CTRL_REG1_YEN | LIS3L01DQ_CTRL_REG1_ZEN);
-    call SPIFRM.setGPCRbit(); // CS LOW
+    mSPITxBuf[1] = (LIS3L01DQ_CTRL_REG1_PD(1) | LIS3L01DQ_CTRL_REG1_XEN | LIS3L01DQ_CTRL_REG1_YEN | LIS3L01DQ_CTRL_REG1_ZEN);
+    call SPIFRM.clr(); // CS LOW
     error = call SpiPacket.send(mSPITxBuf,mSPIRxBuf,2);
     return error;
   }
@@ -139,7 +128,12 @@ implementation {
     if (error)
       return error;
 
-    return post StopDone();
+    mSPITxBuf[0] = LIS3L02DQ_CTRL_REG1;
+    mSPITxBuf[1] = 0;
+    mSPITxBuf[1] = (LIS3L01DQ_CTRL_REG1_PD(0));
+    call SPIFRM.clr(); // CS LOW
+    error = call SpiPacket.send(mSPITxBuf,mSPIRxBuf,2);
+    return error;
   }
   
   command error_t HplLIS3L02DQ.getReg(uint8_t regAddr) {
@@ -152,7 +146,7 @@ implementation {
     mSPITxBuf[0] = regAddr | (1 << 7); // Set the READ bit
     mSPIRxBuf[1] = 0;
     mState = STATE_GETREG;
-    call SPIFRM.setGPCRbit(); // CS LOW
+    call SPIFRM.clr(); // CS LOW
     error = call SpiPacket.send(mSPITxBuf,mSPIRxBuf,2);
 
     return error;
@@ -180,7 +174,7 @@ implementation {
     switch (mState) {
     case STATE_GETREG:
       mState = STATE_IDLE;
-      call SPIFRM.setGPSRbit(); // CS HIGH
+      call SPIFRM.set(); // CS HIGH
       signal HplLIS3L02DQ.getRegDone(error, (txBuf[0] & 0x7F) , rxBuf[1]);
       break;
     case STATE_SETREG:
@@ -189,9 +183,12 @@ implementation {
       break;
     case STATE_STARTING:
       mState = STATE_IDLE;
-      call SPIFRM.setGPSRbit();
+      call SPIFRM.set();
       post StartDone();
       break;
+    case STATE_STOPPING:
+      mState = STATE_STOPPED;
+      post StopDone();
     default:
       mState = STATE_IDLE;
       break;
@@ -205,11 +202,6 @@ implementation {
     signal HplLIS3L02DQ.alertThreshold();
     return;
   }
-
-  async event void SPITxD.interruptGPIOPin() {}
-  async event void SPIRxD.interruptGPIOPin() {}
-  async event void SPICLK.interruptGPIOPin() {}
-  async event void SPIFRM.interruptGPIOPin() {}
 
   default event void SplitControl.startDone( error_t error ) { return; }
   default event void SplitControl.stopDone( error_t error ) { return; }

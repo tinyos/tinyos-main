@@ -33,7 +33,7 @@
  * Provides an interface for USART0 on the MSP430.
  *
  * @author Jonathan Hui <jhui@archedrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-11-06 11:57:18 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:22 $
  */
 
 generic configuration Msp430Usart0C() {

@@ -31,13 +31,15 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:50 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
  */
 
 generic module Msp430UsartShareP() {
   
   provides interface HplMsp430UsartInterrupts as Interrupts[ uint8_t id ];
+  provides interface HplMsp430I2CInterrupts as I2CInterrupts[ uint8_t id ];
   uses interface HplMsp430UsartInterrupts as RawInterrupts;
+  uses interface HplMsp430I2CInterrupts as RawI2CInterrupts;
   uses interface ArbiterInfo;
   
 }
@@ -53,8 +55,14 @@ implementation {
     if ( call ArbiterInfo.inUse() )
       signal Interrupts.rxDone[ call ArbiterInfo.userId() ]( data );
   }
-
+  
+  async event void RawI2CInterrupts.fired() {
+    if ( call ArbiterInfo.inUse() )
+      signal I2CInterrupts.fired[ call ArbiterInfo.userId() ]();
+  }
+  
   default async event void Interrupts.txDone[ uint8_t id ]() {}
   default async event void Interrupts.rxDone[ uint8_t id ]( uint8_t data ) {}
-  
+  default async event void I2CInterrupts.fired[ uint8_t id ]() {}
+
 }

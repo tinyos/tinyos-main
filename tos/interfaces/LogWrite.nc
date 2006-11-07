@@ -34,7 +34,7 @@
  * TEP103.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:17 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:17 $
  */
 
 #include "Storage.h"
@@ -60,10 +60,13 @@ interface LogWrite {
    *
    * @param buf buffer that written data was read from.
    * @param len number of bytes actually written (valid even in case of error)
+   * @param records_lost TRUE if this append destroyed some old records from
+   *   the beginning of the log (only possible for circular logs).
    * @param error SUCCESS if append was possible, ESIZE if the (linear) log
    *    is full and FAIL for other errors.
    */
-  event void appendDone(void* buf, storage_len_t len, error_t error);
+  event void appendDone(void* buf, storage_len_t len, bool recordsLost,
+			error_t error);
   
   /**
    * Return a "cookie" representing the current append offset within the

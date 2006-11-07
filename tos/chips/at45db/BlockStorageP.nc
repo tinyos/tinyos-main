@@ -1,4 +1,4 @@
-// $Id: BlockStorageP.nc,v 1.2 2006-07-12 17:01:02 scipio Exp $
+// $Id: BlockStorageP.nc,v 1.3 2006-11-07 19:30:43 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2004 The Regents of the University  of California.  
@@ -59,11 +59,11 @@ implementation
      erased/programmed many times (there is a 2 page cache, but
      random writes are unlikely to hit in it).
 
-     The cache is only flushed on commit.
+     The cache is only flushed on sync.
 
      The first page of a block storage volume stores the maximum address
      written in the block and a CRC of the block's contents (up to that
-     maximum address). This CRC is written at commit time and verified at
+     maximum address). This CRC is written at sync time and verified at
      validate time.
 
      This BlockStorage code is reused in the implementation of
@@ -77,16 +77,9 @@ implementation
     R_IDLE,
     R_WRITE,
     R_ERASE,
-    R_COMMIT,
+    R_SYNC,
     R_READ,
-    R_VERIFY, 
     R_CRC,
-  };
-
-  enum {
-    META_IDLE,
-    META_COMMIT,
-    META_VERIFY
   };
 
   enum {
@@ -95,12 +88,7 @@ implementation
   };
 
   uint8_t client = NO_CLIENT;
-  uint8_t metaState;
   storage_addr_t bytesRemaining;
-  nx_struct {
-    nx_uint16_t crc;
-    nx_uint32_t maxAddr;
-  } sig;
 
   struct {
     /* The latest request made for this client, and it's arguments */
@@ -108,9 +96,6 @@ implementation
     uint8_t *buf;
     storage_addr_t addr;
     storage_len_t len;
-
-    /* Maximum address written in this block */
-    storage_addr_t maxAddr;
   } s[N];
 
 
@@ -145,7 +130,7 @@ implementation
   /* ------------------------------------------------------------------ */
 
   void eraseStart();
-  void verifyStart();
+  void syncStart();
   void multipageStart(storage_len_t len, uint16_t crc);
 
   void startRequest() {
@@ -154,8 +139,8 @@ implementation
       case R_ERASE:
 	eraseStart();
 	break;
-      case R_VERIFY:
-	verifyStart();
+      case R_SYNC:
+	syncStart();
 	break;
       default:
 	multipageStart(s[client].len, (uint16_t)s[client].buf);
@@ -187,11 +172,8 @@ implementation
       case R_CRC:
 	signal BlockRead.computeCrcDone[c](addr, actualLength, crc, result);
 	break;
-      case R_COMMIT:
-	signal BlockWrite.commitDone[c](result);
-	break;
-      case R_VERIFY: 
-	signal BlockRead.verifyDone[c](result);
+      case R_SYNC:
+	signal BlockWrite.syncDone[c](result);
 	break;
       }
   }
@@ -220,18 +202,13 @@ implementation
   event void Resource.granted[uint8_t blockId]() {
     client = blockId;
 
-    if (s[blockId].request == R_WRITE)
+    if (s[blockId].request == R_WRITE &&
+	call BConfig.writeHook[blockId]())
       {
-	if (s[blockId].addr + s[blockId].len > s[blockId].maxAddr)
-	  s[blockId].maxAddr = s[blockId].addr + s[blockId].len;
-
-	if (call BConfig.writeHook[blockId]())
-	  {
-	    /* Config write intercept. We'll get a writeContinue when it's
-	       time to resume. */
-	    client = NO_CLIENT;
-	    return;
-	  }
+	/* Config write intercept. We'll get a writeContinue when it's
+	   time to resume. */
+	client = NO_CLIENT;
+	return;
       }
     startRequest();
   }
@@ -253,18 +230,6 @@ implementation
   /* Multipage operations            					*/
   /* ------------------------------------------------------------------ */
 
-  void commitCrcDone(uint16_t crc);
-  void verifyCrcDone(uint16_t crc);
-
-  void multipageDone(uint16_t crc) {
-    switch (s[client].request)
-      {
-      default: endRequest(SUCCESS, crc); break;
-      case R_COMMIT: commitCrcDone(crc); break;
-      case R_VERIFY: verifyCrcDone(crc); break;
-      }
-  }
-
   void calcRequest(storage_addr_t addr, at45page_t *page,
 		   at45pageoffset_t *offset, at45pageoffset_t *count) {
     *page = pageRemap(addr >> AT45_PAGE_SIZE_LOG2);
@@ -283,7 +248,7 @@ implementation
 
     if (bytesRemaining == 0)
       {
-	multipageDone(crc);
+	endRequest(SUCCESS, crc);
 	return;
       }
 
@@ -300,14 +265,13 @@ implementation
       case R_READ:
 	call At45db.read(page, offset, buf, count);
 	break;
-      default:
+      case R_CRC:
 	call At45db.computeCrc(page, offset, count, crc);
 	break;
       }
   }
 
   void multipageStart(storage_len_t len, uint16_t crc) {
-    metaState = META_IDLE;
     bytesRemaining = len;
     multipageContinue(crc);
   }
@@ -344,71 +308,19 @@ implementation
   }
 
   /* ------------------------------------------------------------------ */
-  /* Commit								*/
+  /* Sync								*/
   /* ------------------------------------------------------------------ */
 
-  command error_t BlockWrite.commit[uint8_t id]() {
-    return newRequest(R_COMMIT, id, 0, NULL, s[id].maxAddr);
+  command error_t BlockWrite.sync[uint8_t id]() {
+    return newRequest(R_SYNC, id, 0, NULL, 0);
   }
 
-  /* Called once crc computed. Write crc + signature in block 0. */
-  void commitCrcDone(uint16_t crc) {
-    sig.crc = crc;
-    sig.maxAddr = s[client].maxAddr;
-    metaState = META_COMMIT;
-    call At45db.write(pageRemap(0), 1 << AT45_PAGE_SIZE_LOG2, &sig, sizeof sig);
+  void syncStart() {
+    call At45db.syncAll();
   }
 
-  void commitWriteDone(error_t error) {
-    if (error == SUCCESS)
-      call At45db.syncAll();
-    else
-      endRequest(error, 0);
-  }
-
-  void commitSyncDone(error_t error) {
+  void syncSyncDone(error_t error) {
     endRequest(error, 0);
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Verify								*/
-  /* ------------------------------------------------------------------ */
-
-  command error_t BlockRead.verify[uint8_t id]() {
-    return newRequest(R_VERIFY, id, 0, NULL, 0);
-  }
-
-  void verifyStart() {
-    metaState = META_VERIFY;
-    call At45db.read(pageRemap(0), 1 << AT45_PAGE_SIZE_LOG2, &sig, sizeof sig);
-  }
-
-  /* See signature written in commit */
-  void verifyReadDone(error_t error) {
-    if (error == SUCCESS)
-      {
-	storage_addr_t max = sig.maxAddr;
-
-	/* Ignore maxAddress values that are too large */
-	if (max <= call BlockRead.getSize[client]())
-	  {
-	    s[client].addr = 0;
-	    s[client].maxAddr = max;
-	    multipageStart(max, 0);
-	    return;
-	  }
-      }
-    endRequest(FAIL, 0);
-  }
-
-  void verifyCrcDone(uint16_t crc) {
-    if (crc == sig.crc)
-      endRequest(SUCCESS, 0);
-    else
-      {
-	s[client].maxAddr = 0;
-	endRequest(FAIL, 0);
-      }
   }
 
   /* ------------------------------------------------------------------ */
@@ -448,18 +360,12 @@ implementation
 
   event void At45db.writeDone(error_t result) {
     if (client != NO_CLIENT)
-      if (metaState == META_IDLE)
-	multipageOpDone(result, 0);
-      else
-	commitWriteDone(result);
+      multipageOpDone(result, 0);
   }
 
   event void At45db.readDone(error_t result) {
     if (client != NO_CLIENT)
-      if (metaState == META_IDLE)
-	multipageOpDone(result, 0);
-      else
-	verifyReadDone(result);
+      multipageOpDone(result, 0);
   }
 
   event void At45db.computeCrcDone(error_t result, uint16_t newCrc) {
@@ -474,20 +380,19 @@ implementation
 
   event void At45db.syncDone(error_t result) {
     if (client != NO_CLIENT)
-      commitSyncDone(result);
+      syncSyncDone(result);
   }
 
   event void At45db.flushDone(error_t result) { }
   event void At45db.copyPageDone(error_t error) { }
   default event void BlockWrite.writeDone[uint8_t id](storage_addr_t addr, void* buf, storage_len_t len, error_t result) { }
   default event void BlockWrite.eraseDone[uint8_t id](error_t result) { }
-  default event void BlockWrite.commitDone[uint8_t id](error_t result) { }
+  default event void BlockWrite.syncDone[uint8_t id](error_t result) { }
   default event void BlockRead.readDone[uint8_t id](storage_addr_t addr, void* buf, storage_len_t len, error_t result) { }
-  default event void BlockRead.verifyDone[uint8_t id](error_t result) { }
   default event void BlockRead.computeCrcDone[uint8_t id](storage_addr_t addr, storage_len_t len, uint16_t x, error_t result) { }
   
   default command at45page_t At45dbVolume.remap[uint8_t id](at45page_t volumePage) { return 0; }
   default command at45page_t At45dbVolume.volumeSize[uint8_t id]() { return 0; }
   default async command error_t Resource.request[uint8_t id]() { return FAIL; }
-  default async command void Resource.release[uint8_t id]() { }
+  default async command error_t Resource.release[uint8_t id]() { return FAIL; }
 }

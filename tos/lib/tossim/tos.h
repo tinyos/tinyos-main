@@ -29,7 +29,7 @@
  * @date   Nov 22 2005
  */
 
-// $Id: tos.h,v 1.2 2006-07-12 17:02:37 scipio Exp $
+// $Id: tos.h,v 1.3 2006-11-07 19:31:22 scipio Exp $
 
 #ifndef TOS_H_INCLUDED
 #define TOS_H_INCLUDED
@@ -86,7 +86,6 @@ struct @exactlyonce { };
 #include <heap.c>
 #include <sim_event_queue.c>
 #include <sim_tossim.c>
-#include <hashtable.c>
 #include <sim_mac.c>
 #include <sim_packet.c>
 #endif

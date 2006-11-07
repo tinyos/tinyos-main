@@ -40,12 +40,13 @@
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
  * @author Gilman Tolles <gtolle@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:03:16 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:27 $
  */
 
 generic configuration SensirionSht11C() {
   provides interface Read<uint16_t> as Temperature;
   provides interface Read<uint16_t> as Humidity;
+  //provides interface HalSht11Advanced;
 }
 implementation {
   components new SensirionSht11ReaderP();
@@ -62,4 +63,10 @@ implementation {
   SensirionSht11ReaderP.Sht11Temp -> HalSensirionSht11C.SensirionSht11[ TEMP_KEY ];
   SensirionSht11ReaderP.HumResource -> HalSensirionSht11C.Resource[ HUM_KEY ];
   SensirionSht11ReaderP.Sht11Hum -> HalSensirionSht11C.SensirionSht11[ HUM_KEY ];
+
+  //enum { ADV_KEY = unique("Sht11.Resource") };
+  //components HalSht11ControlP;
+  //HalSht11Advanced = HalSht11ControlP;
+  //HalSht11ControlP.Resource -> HalSensirionSht11C.Resource[ ADV_KEY ];
+  //HalSht11ControlP.SensirionSht11 -> HalSensirionSht11C.SensirionSht11[ ADV_KEY ];
 }

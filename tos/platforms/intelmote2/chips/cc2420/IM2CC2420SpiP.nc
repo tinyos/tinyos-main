@@ -1,4 +1,4 @@
-/* $Id: IM2CC2420SpiP.nc,v 1.2 2006-07-12 17:02:48 scipio Exp $ */
+/* $Id: IM2CC2420SpiP.nc,v 1.3 2006-11-07 19:31:24 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arched Rock Corporation 
  * All rights reserved. 
@@ -45,9 +45,9 @@ configuration IM2CC2420SpiP
 implementation 
 {
 
-  components new FcfsArbiterC("CC2420SpiClient");
-  components new HalPXA27xSpiDMAM(0,1,0x7,FALSE) as HalPXA27xSpiM; // 6.5 Mbps, 8bit width
-  //components new HalPXA27xSpiPioM(0,1,0x7,FALSE) as HalPXA27xSpiM; // SPI, 6.5 Mbps, 8bit width, noRWOT
+  components new SimpleFcfsArbiterC("CC2420SpiClient") as FcfsArbiterC;
+  components new HalPXA27xSpiDMAC(1,0x7,FALSE) as HalPXA27xSpiM; // 6.5 Mbps, 8bit width
+  //components new HalPXA27xSpiPioC(1,0x7,FALSE) as HalPXA27xSpiM; // 6.5 Mbps, 8bit width
   components IM2CC2420InitSpiP;
   components HplPXA27xSSP3C;
   components HplPXA27xDMAC;
@@ -55,7 +55,6 @@ implementation
   components PlatformP;
 
   Init = IM2CC2420InitSpiP;
-  Init = FcfsArbiterC.Init;
   Init = HalPXA27xSpiM.Init;
 
   SpiByte = HalPXA27xSpiM;

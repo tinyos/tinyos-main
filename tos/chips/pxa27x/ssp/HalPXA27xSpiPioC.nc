@@ -34,8 +34,7 @@
  * @author Phil Buonadonna
  */
 
-generic configuration HalPXA27xSpiPioC(uint8_t valFRF,
-				       uint8_t valSCR,
+generic configuration HalPXA27xSpiPioC(uint8_t valSCR,
 				       uint8_t valDSS,
 				       bool enableRWOT)
 {
@@ -48,7 +47,7 @@ generic configuration HalPXA27xSpiPioC(uint8_t valFRF,
 }
 
 implementation {
-  components new HalPXA27xSpiPioM(valFRF, valSCR, valDSS, enableRWOT);
+  components new HalPXA27xSpiPioM(0, valSCR, valDSS, enableRWOT);
   components HalPXA27xSSPControlP;
 
   Init = HalPXA27xSpiPioM;

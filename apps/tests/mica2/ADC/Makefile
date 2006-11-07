@@ -1,0 +1,3 @@
+COMPONENT=TestADCC
+include $(MAKERULES)
+

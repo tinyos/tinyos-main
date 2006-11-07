@@ -1,4 +1,4 @@
-// $Id: Tda5250ActiveMessageP.nc,v 1.2 2006-07-12 17:01:59 scipio Exp $
+// $Id: Tda5250ActiveMessageP.nc,v 1.3 2006-11-07 19:31:15 scipio Exp $
 
 /*                                                                      tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:             Philip Levis
- * Date last modified:  $Id: Tda5250ActiveMessageP.nc,v 1.2 2006-07-12 17:01:59 scipio Exp $
+ * Date last modified:  $Id: Tda5250ActiveMessageP.nc,v 1.3 2006-11-07 19:31:15 scipio Exp $
  *
  */
 
@@ -66,8 +66,8 @@ implementation {
                                           uint8_t len) {
     tda5250_header_t* header = getHeader(msg);
     header->type = id;
-    header->addr = addr;
-    header->group = TOS_AM_GROUP;
+    header->dest = addr;
+    header->src = call amAddress();
     return call SubSend.send(msg, len);
   }
 
@@ -120,14 +120,24 @@ implementation {
 
   command am_addr_t AMPacket.destination(message_t* amsg) {
     tda5250_header_t* header = getHeader(amsg);
-    return header->addr;
+    return header->dest;
   }
 
   command void AMPacket.setDestination(message_t* amsg, am_addr_t addr) {
     tda5250_header_t* header = getHeader(amsg);
-    header->addr = addr;
+    header->dest = addr;
   }
 
+  command am_addr_t AMPacket.source(message_t* amsg) {
+    tda5250_header_t* header = getHeader(amsg);
+    return header->src;
+  }
+  
+  command void AMPacket.setSource(message_t* amsg, am_addr_t addr) {
+    tda5250_header_t* header = getHeader(amsg);
+    header->src = addr;
+  }
+  
   command bool AMPacket.isForMe(message_t* amsg) {
     return (call AMPacket.destination(amsg) == call AMPacket.address() ||
             call AMPacket.destination(amsg) == AM_BROADCAST_ADDR);

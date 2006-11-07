@@ -25,37 +25,44 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
-*/
+ */
 
 /**
- * Confuguration for the CsmaMac.
+ * Configuration for the CsmaMac.
  *
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * @author: Andreas Koepke (koepke@tkn.tu-berlin.de)
  * @author: Philipp Huppertz (huppertz@tkn.tu-berlin.de)
  */
+
+// #define MAC_DEBUG
 configuration CsmaMacC {
   provides {
     interface SplitControl;
     interface MacSend;
     interface MacReceive;
+    interface Packet;
   }
   uses {
     interface PhySend as PacketSend;
     interface PhyReceive as PacketReceive;
-        
+    interface Packet as SubPacket;
     interface Tda5250Control;  
     interface UartPhyControl;
+    interface RadioTimeStamping;
   }
 }
 implementation {
   components  MainC,
+      Tda5250RadioC,    
       CsmaMacP,
       RssiFixedThresholdCMC as Cca,
-      new Alarm32khzC() as Timer,
-      RandomLfsrC,
-      PlatformLedsC;
+      new Alarm32khz16C() as Timer,
+      RandomLfsrC
+#ifdef MAC_DEBUG
+      ,PlatformLedsC
+#endif
+      ;
               
     MainC.SoftwareInit -> CsmaMacP;
               
@@ -65,7 +72,10 @@ implementation {
     MacReceive = CsmaMacP;
     Tda5250Control = CsmaMacP;
     UartPhyControl = CsmaMacP;
+    RadioTimeStamping = CsmaMacP;
     
+    CsmaMacP = Packet;
+    CsmaMacP = SubPacket;
     CsmaMacP = PacketSend;
     CsmaMacP = PacketReceive;
     
@@ -73,12 +83,21 @@ implementation {
     CsmaMacP.ChannelMonitor -> Cca.ChannelMonitor;
     CsmaMacP.ChannelMonitorData -> Cca.ChannelMonitorData;
     CsmaMacP.ChannelMonitorControl -> Cca.ChannelMonitorControl;
+    CsmaMacP.RssiAdcResource -> Cca.RssiAdcResource;
+
+    components ActiveMessageAddressC;
+    CsmaMacP.amAddress -> ActiveMessageAddressC;
+
     CsmaMacP.Random -> RandomLfsrC;
 
+    CsmaMacP.RadioResourceRequested -> Tda5250RadioC.ResourceRequested;
+
     CsmaMacP.Timer -> Timer;
+#ifdef MAC_DEBUG
     CsmaMacP.Led0 -> PlatformLedsC.Led0;
     CsmaMacP.Led1 -> PlatformLedsC.Led1;
     CsmaMacP.Led2 -> PlatformLedsC.Led2;
     CsmaMacP.Led3 -> PlatformLedsC.Led3;
+#endif    
 }
 

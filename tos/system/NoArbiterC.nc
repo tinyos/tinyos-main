@@ -14,6 +14,7 @@
  * checking. Does still call ResourceConfigure at the right time.
  *
  * @author David Gay
+ * @author Kevin Klues
  */
 
 generic module NoArbiterC() {
@@ -36,8 +37,9 @@ implementation {
     return SUCCESS;
   }  
 
-  async command void Resource.release() {
+  async command error_t Resource.release() {
     call ResourceConfigure.unconfigure();
+    return SUCCESS;
   } 
 
   async command uint8_t Resource.isOwner() {

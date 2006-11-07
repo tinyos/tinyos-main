@@ -1,13 +1,13 @@
 #ifndef RADIO_SENSE_TO_LEDS_H
 #define RADIO_SENSE_TO_LEDS_H
 
-typedef nx_struct RadioSenseMsg {
+typedef nx_struct radio_sense_msg {
   nx_uint16_t error;
   nx_uint16_t data;
-} RadioSenseMsg;
+} radio_sense_msg_t;
 
 enum {
-  AM_RADIOSENSEMSG = 7,
+  AM_RADIO_SENSE_MSG = 7,
 };
 
 #endif

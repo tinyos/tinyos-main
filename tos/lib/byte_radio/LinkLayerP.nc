@@ -30,6 +30,7 @@
 
 #include "radiopacketfunctions.h"
 #include "message.h"
+#include "PacketAck.h"
 
 /**
  * This is the implementation of a really simple link layer. 
@@ -179,7 +180,6 @@ implementation
     async event void SendDown.sendDone(message_t* msg, error_t error) { 
         atomic {
           txBufPtr = msg;
-          getMetadata(msg)->ack = 1; // this is rather stupid
         }
         if (error == SUCCESS) {
           post SendDoneSuccessTask();
@@ -244,15 +244,19 @@ implementation
     /* PacketAcknowledgements interface */
 
     async command error_t PacketAcknowledgements.requestAck(message_t* msg) {
-      return FAIL;
+        getMetadata(msg)->ack = ACK_REQUESTED;
+        return SUCCESS;
     }
 
     async command error_t PacketAcknowledgements.noAck(message_t* msg) {
-      return SUCCESS;
+        getMetadata(msg)->ack = NO_ACK_REQUESTED;
+        return SUCCESS;
     }
 
     async command bool PacketAcknowledgements.wasAcked(message_t* msg) {
-      return FALSE;
+        bool rVal = FALSE;
+        if(getMetadata(msg)->ack == WAS_ACKED) rVal = TRUE;
+        return rVal;
     }
 }
 

@@ -1,4 +1,4 @@
-// $Id: RadioSenseToLedsC.nc,v 1.2 2006-07-12 16:59:10 scipio Exp $
+// $Id: RadioSenseToLedsC.nc,v 1.3 2006-11-07 19:30:34 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -28,21 +28,20 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  */
-
-/**
- *  Implementation of the OSKI RadioSenseToLeds application. This
- *  application periodically broadcasts a reading from its platform's
- *  demo sensor, and displays broadcasts it hears on its LEDs. It displays
- *  the two most signficant bits of the value on LEDs 1 and 2; if there is
- *  an error, it lights LED 0.
- *
- *  @author Philip Levis
- *  @date   June 12 2005
- *
- **/
-
+ 
 #include "Timer.h"
 #include "RadioSenseToLeds.h"
+
+/**
+ * Implementation of the RadioSenseToLeds application.  RadioSenseToLeds samples 
+ * a platform's default sensor at 4Hz and broadcasts this value in an AM packet. 
+ * A RadioSenseToLeds node that hears a broadcast displays the bottom three bits 
+ * of the value it has received. This application is a useful test to show that 
+ * basic AM communication, timers, and the default sensor work.
+ * 
+ * @author Philip Levis
+ * @date   June 6 2005
+ */
 
 module RadioSenseToLedsC {
   uses {
@@ -67,7 +66,7 @@ implementation {
 
   event void RadioControl.startDone(error_t err) {
     if (err == SUCCESS) {
-      call MilliTimer.startPeriodic(1000);
+      call MilliTimer.startPeriodic(250);
     }
   }
   event void RadioControl.stopDone(error_t err) {}
@@ -81,15 +80,15 @@ implementation {
       return;
     }
     else {
-      RadioSenseMsg* rsm;
+      radio_sense_msg_t* rsm;
 
-      rsm = (RadioSenseMsg*)call Packet.getPayload(&packet, NULL);
-      if (call Packet.maxPayloadLength() < sizeof(RadioSenseMsg)) {
+      rsm = (radio_sense_msg_t*)call Packet.getPayload(&packet, NULL);
+      if (call Packet.maxPayloadLength() < sizeof(radio_sense_msg_t)) {
 	return;
       }
       rsm->error = result;
       rsm->data = data;
-      if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(RadioSenseMsg)) == SUCCESS) {
+      if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(radio_sense_msg_t)) == SUCCESS) {
 	locked = TRUE;
       }
     }
@@ -98,9 +97,9 @@ implementation {
   event message_t* Receive.receive(message_t* bufPtr, 
 				   void* payload, uint8_t len) {
     call Leds.led1Toggle();
-    if (len != sizeof(RadioSenseMsg)) {return bufPtr;}
+    if (len != sizeof(radio_sense_msg_t)) {return bufPtr;}
     else {
-      RadioSenseMsg* rsm = (RadioSenseMsg*)payload;
+      radio_sense_msg_t* rsm = (radio_sense_msg_t*)payload;
       uint16_t val = rsm->data;
       call Leds.led0Toggle();
       if (val & 0x8000) {

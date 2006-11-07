@@ -1,4 +1,4 @@
-// $Id: SerialActiveMessageC.nc,v 1.2 2006-07-12 17:02:32 scipio Exp $
+// $Id: SerialActiveMessageC.nc,v 1.3 2006-11-07 19:31:21 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -109,12 +109,22 @@ implementation {
  
   command am_addr_t AMPacket.destination(message_t* amsg) {
     serial_header_t* header = getHeader(amsg);
-    return header->addr;
+    return header->dest;
   }
 
   command void AMPacket.setDestination(message_t* amsg, am_addr_t addr) {
     serial_header_t* header = getHeader(amsg);
-    header->addr = addr;
+    header->dest = addr;
+  }
+
+  command am_addr_t AMPacket.source(message_t* amsg) {
+    serial_header_t* header = getHeader(amsg);
+    return header->src;
+  }
+
+  command void AMPacket.setSource(message_t* amsg, am_addr_t addr) {
+    serial_header_t* header = getHeader(amsg);
+    header->src = addr;
   }
 
   command bool AMPacket.isForMe(message_t* amsg) {

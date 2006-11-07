@@ -1,4 +1,4 @@
-/* $Id: RandRWC.nc,v 1.2 2006-07-12 16:59:31 scipio Exp $
+/* $Id: RandRWC.nc,v 1.3 2006-11-07 19:30:37 scipio Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -13,12 +13,6 @@
  *
  * @author David Gay
  */
-/*
-  address & 3:
-  1: erase, write
-  2: read
-  3: write some more
-*/
 module RandRWC {
   uses {
     interface Boot;
@@ -141,7 +135,7 @@ implementation {
       }
   }
 
-  event void LogWrite.appendDone(void *buf, storage_len_t y, error_t result) {
+  event void LogWrite.appendDone(void *buf, storage_len_t y, bool recordsLost, error_t result) {
     if (scheck(result))
       nextWrite();
   }

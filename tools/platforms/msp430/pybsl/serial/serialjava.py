@@ -8,7 +8,7 @@
 import sys, os, string, javax.comm
 import serialutil
 
-VERSION = string.split("$Revision: 1.2 $")[1]     #extract CVS version
+VERSION = string.split("$Revision: 1.3 $")[1]     #extract CVS version
 
 PARITY_NONE, PARITY_EVEN, PARITY_ODD, PARITY_MARK, PARITY_SPACE = (0,1,2,3,4)
 STOPBITS_ONE, STOPBITS_TWO, STOPBITS_ONE_HALVE = (1, 2, 3)

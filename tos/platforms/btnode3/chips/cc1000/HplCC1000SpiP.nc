@@ -1,4 +1,4 @@
-// $Id: HplCC1000SpiP.nc,v 1.2 2006-07-12 17:02:42 scipio Exp $
+// $Id: HplCC1000SpiP.nc,v 1.3 2006-11-07 19:31:22 scipio Exp $
 
 /*									tab:4
  * Copyright (c) 2006 ETH Zurich.  

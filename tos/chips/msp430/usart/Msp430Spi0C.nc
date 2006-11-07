@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2005-2006 Arch Rock Corporation
+/**
+ * Copyright (c) 2005-2006 Arched Rock Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the Arch Rock Corporation nor the names of
+ * - Neither the name of the Arched Rock Corporation nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -35,33 +35,36 @@
  * transfers in software. To utilize the DMA, use Msp430SpiDma0P in
  * place of Msp430SpiNoDma0P.
  *
- * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:46 $
+ * @author Jonathan Hui <jhui@archedrock.com>
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
  */
 
-#include "msp430UsartResource.h"
+#include "msp430usart.h"
 
 generic configuration Msp430Spi0C() {
-  
+
   provides interface Resource;
   provides interface SpiByte;
   provides interface SpiPacket;
-  
+
+  uses interface Msp430SpiConfigure;
 }
 
 implementation {
-  
+
   enum {
     CLIENT_ID = unique( MSP430_SPIO_BUS ),
   };
-  
+
   components Msp430SpiNoDma0P as SpiP;
   Resource = SpiP.Resource[ CLIENT_ID ];
   SpiByte = SpiP.SpiByte;
   SpiPacket = SpiP.SpiPacket[ CLIENT_ID ];
+  Msp430SpiConfigure = SpiP.Msp430SpiConfigure[ CLIENT_ID ];
 
   components new Msp430Usart0C() as UsartC;
+  SpiP.ResourceConfigure[ CLIENT_ID ] <- UsartC.ResourceConfigure;
   SpiP.UsartResource[ CLIENT_ID ] -> UsartC.Resource;
   SpiP.UsartInterrupts -> UsartC.HplMsp430UsartInterrupts;
-  
+
 }

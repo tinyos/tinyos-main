@@ -39,7 +39,7 @@ configuration XE1205SendReceiveC {
     provides interface Send;
     provides interface Packet;
     provides interface PacketAcknowledgements;
-    provides interface SplitControl;
+    provides interface SplitControl @atleastonce();
     provides interface Receive;
 }
 implementation {
@@ -49,9 +49,10 @@ implementation {
   Receive = XE1205SendReceiveP;
   Packet = XE1205SendReceiveP;
   PacketAcknowledgements = XE1205SendReceiveP;
+  SplitControl = XE1205SendReceiveP;
 
   components XE1205PhyC;
   XE1205SendReceiveP.XE1205PhyRxTx -> XE1205PhyC;
-  SplitControl = XE1205PhyC;
+  XE1205SendReceiveP.PhySplitControl -> XE1205PhyC;
 }
 

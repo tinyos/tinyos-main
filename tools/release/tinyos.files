@@ -1,20 +1,23 @@
 NAME=tinyos
-VERSION=2.0.0beta2
+VERSION=2.0.0
 
 cd ../..
 rm -rf $NAME-$VERSION
 tools/release/extractor $NAME-$VERSION <<'EOF' | gzip >../$NAME-$VERSION.tar.gz
-!^./apps/tests/(eyesIFX|mica2|msp430|RadioStress|TestAlarm|TestAMService|TestBroadcast|TestCollection|TestNetwork|TestPowerManager|TestPowerup|TestSerialBandwidth|TestSleep|TestTimerSync|TestTreeRouting|TestTrickleTimer)
+!^./apps/tests/(eyesIFX|mica2|msp430|RadioStress|TestAlarm|TestAMOnOff|TestAMService|TestBroadcast|TestCollection|TestPowerManager|TestPowerup|TestPrintf|TestRadioPM|TestScheduler|TestSerialBandwidth|TestSleep|TestTimerSync|TestTreeRouting|TestTrickleTimer)
+!^/apps/(BlinkAlarm|BlinkMSP430|BlinkTask|BlinkToRadio|Test|TestADC|TestArbiter|TestCC2420|TestRadio|TestSPI|TestScheduler|TestSchedulerTemp|TestSerial)
 !^./doc
 !^./overall-todo.txt
 !^./support/make/Makelocal
 !^./support/make/btnode3.target
 !^./support/make/telosa.target
 !^./tools
-!^./tos/chips/sht11
-!^./tos/sensorboards/mts300
-!^./tos/sensorboards/im2sb
+!^./tos/chips/cc1000_pm
+!^./tos/chips/cc2420_pm
+!^./tos/lib/deluge
+!^./tos/lib/printf
 !^./tos/platforms/btnode3
+!^./tos/sensorboards/mts300
 !/.cvsignore
 !/CVS/
 !/CVS$

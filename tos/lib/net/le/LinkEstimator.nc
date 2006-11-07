@@ -1,4 +1,4 @@
-/* $Id: LinkEstimator.nc,v 1.2 2006-11-06 11:57:17 scipio Exp $ */
+/* $Id: LinkEstimator.nc,v 1.3 2006-11-07 19:31:19 scipio Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -25,7 +25,7 @@
  * provided quality increases when the true link quality increases.
  *  @author Rodrigo Fonseca
  *  @author Omprakash Gnawali
- *  @date   $Date: 2006-11-06 11:57:17 $
+ *  @date   $Date: 2006-11-07 19:31:19 $
  */
 
 /* Quality of a link is defined by the implementor of this interface.

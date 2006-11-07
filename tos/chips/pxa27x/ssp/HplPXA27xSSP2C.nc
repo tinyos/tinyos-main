@@ -48,8 +48,10 @@ implementation
   components PlatformP;
 
   HplPXA27xSSP = HplPXA27xSSPP.HplPXA27xSSP[2];
-  SSPRxDMAReg = HplPXA27xSSPP.SSPRxDMAReg[2];
-  SSPTxDMAReg = HplPXA27xSSPP.SSPTxDMAReg[2];
+  components new HplPXA27xDMAInfoC(15, (uint32_t)&SSDR_2) as SSPRxDMA;
+  components new HplPXA27xDMAInfoC(16, (uint32_t)&SSDR_2) as SSPTxDMA;
+  SSPRxDMAReg = SSPRxDMA;
+  SSPTxDMAReg = SSPTxDMA;
 
   HplPXA27xSSPP.Init[2] <- PlatformP.InitL1;
 

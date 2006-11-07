@@ -34,7 +34,7 @@
  * available on the telosb platform.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:03:09 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:26 $
  */
 
 generic configuration HamamatsuS10871TsrC() {
@@ -49,6 +49,6 @@ implementation {
   ReadStream = AdcReadStreamClientC;
 
   components HamamatsuS10871TsrP;
-  AdcReadClientC.Msp430Adc12Config -> HamamatsuS10871TsrP;
-  AdcReadStreamClientC.Msp430Adc12Config -> HamamatsuS10871TsrP;
+  AdcReadClientC.AdcConfigure -> HamamatsuS10871TsrP;
+  AdcReadStreamClientC.AdcConfigure -> HamamatsuS10871TsrP;
 }

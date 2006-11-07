@@ -1,4 +1,4 @@
-// $Id: CounterMicro32C.nc,v 1.2 2006-07-12 17:02:50 scipio Exp $
+// $Id: CounterMicro32C.nc,v 1.3 2006-11-07 19:31:24 scipio Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -26,7 +26,7 @@ configuration CounterMicro32C
 implementation
 {
   components CounterThree16C as Counter16, 
-    new TransformCounterC(TMicro, uint32_t, TMicro, uint16_t,
+    new TransformCounterC(TMicro, uint32_t, TThree, uint16_t,
 			  MICA_DIVIDE_THREE_FOR_MICRO_LOG2,
 			  counter_three_overflow_t) as Transform32;
 

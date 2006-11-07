@@ -1,4 +1,4 @@
-/* $Id: LIS3L02DQInternalP.nc,v 1.2 2006-07-12 17:03:16 scipio Exp $ */
+/* $Id: LIS3L02DQInternalP.nc,v 1.3 2006-11-07 19:31:27 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -37,12 +37,47 @@
  */
 
 module LIS3L02DQInternalP {
+  provides interface Init;
+  provides interface SplitControl;
   provides interface HplLIS3L02DQ[uint8_t id];
+  
+  uses interface SplitControl as SubControl;
   uses interface HplLIS3L02DQ as ToHPLC;
+  uses interface HplPXA27xGPIOPin as SPIRxD;
+  uses interface HplPXA27xGPIOPin as SPITxD;
+  uses interface HplPXA27xGPIOPin as SPICLK;
+  uses interface HplPXA27xGPIOPin as HPWRCntl;
 }
 
 implementation {
   uint8_t currentId;
+
+
+  command error_t Init.init() {
+    // Initialize Pin Directions
+    call SPICLK.setGAFRpin(SSP1_SCLK_ALTFN);
+    call SPICLK.setGPDRbit(TRUE);
+    call SPIRxD.setGAFRpin(SSP1_RXD_ALTFN);
+    call SPIRxD.setGPDRbit(FALSE);
+    call SPITxD.setGAFRpin(SSP1_TXD_ALTFN);
+    call SPITxD.setGPDRbit(TRUE);
+
+    call HPWRCntl.setGPDRbit(TRUE);
+    call HPWRCntl.setGPSRbit();
+    return SUCCESS;
+  }
+
+  command error_t SplitControl.start() {
+    error_t error = SUCCESS;
+    error = call SubControl.start();
+    return error;
+  }
+
+  command error_t SplitControl.stop() {
+    error_t error = SUCCESS;
+    error = call SubControl.stop();
+    return error;
+  }
 
   command error_t HplLIS3L02DQ.getReg[uint8_t id](uint8_t regAddr) {
     currentId = id;
@@ -52,6 +87,16 @@ implementation {
     currentId = id;
     return call ToHPLC.setReg(regAddr, val);
   }
+
+  event void SubControl.startDone(error_t error) {
+    signal SplitControl.startDone(error);
+    return;
+  }
+  event void SubControl.stopDone(error_t error) {
+    signal SplitControl.stopDone(error);
+    return;
+  }
+
   async event void ToHPLC.getRegDone(error_t error, uint8_t regAddr, uint8_t val) {
     signal HplLIS3L02DQ.getRegDone[currentId](error, regAddr, val);
   }
@@ -61,7 +106,16 @@ implementation {
   async event void ToHPLC.alertThreshold() {
     signal HplLIS3L02DQ.alertThreshold[currentId]();
   }
+  
+  async event void SPITxD.interruptGPIOPin() {}
+  async event void SPIRxD.interruptGPIOPin() {}
+  async event void SPICLK.interruptGPIOPin() {}
+  async event void HPWRCntl.interruptGPIOPin() {}
+
+  default event void SplitControl.startDone(error_t error) { return; }
+  default event void SplitControl.stopDone(error_t error) { return; }
 
   default async event void HplLIS3L02DQ.getRegDone[uint8_t id](error_t error, uint8_t regAddr, uint8_t val) { }
   default async event void HplLIS3L02DQ.setRegDone[uint8_t id](error_t error, uint8_t regAddr, uint8_t val) { }
+  default async event void HplLIS3L02DQ.alertThreshold[uint8_t id]() { }
 }

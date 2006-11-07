@@ -23,12 +23,14 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:02:27 $ 
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:31:19 $ 
  * ======================================================================== 
  */
  
 /**
+ * Please refer to TEP 115 for more information about this interface and its
+ * intended use.<br><br>
  *
  * This interface exists to allow a Resource user to cleanup any state
  * information before a shared Resource is shutdown.  It should be provided
@@ -38,8 +40,6 @@
  * the shared resource.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @see  Please refer to TEP 115 for more information about this component and its
- *          intended use. 
  */
 
 interface PowerDownCleanup {

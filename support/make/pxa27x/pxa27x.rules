@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: pxa27x.rules,v 1.2 2006-07-12 16:59:51 scipio Exp $
+#$Id: pxa27x.rules,v 1.3 2006-11-07 19:30:40 scipio Exp $
 
 define PXA27X_HELP
 
@@ -49,6 +49,16 @@ BUILDLESS_DEPS += bytes
 # out with call in there.  I don't know why.
 $(if $(PROGRAM),,$(call TOSMake_include,pxa27x/$(DEFAULT_PROGRAM).extra))
 
+# Build storage file if volumes.xml present
+ifneq ($(wildcard $(VOLUME_FILE)), )
+exe0: $(BUILDDIR)/StorageVolumes.h
+
+$(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
+	$(VOLUME_ALLOCATOR) <$(VOLUME_FILE) >$@
+
+PFLAGS += -I$(BUILDDIR)
+endif
+
 ifndef BUILD_DEPS
   ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
     BUILD_DEPS = bin bytes $(POST_BUILD_EXTRA_DEPS)
@@ -77,7 +87,7 @@ builddir: FORCE
 	mkdir -p $(BUILDDIR)
 
 bytes: FORCE
-	@objdump -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
 
 asms: 
 	$(GAS) $(ASSEMBLY_FILES) -o $(BUILDDIR)/asms.o 

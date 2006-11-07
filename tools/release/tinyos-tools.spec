@@ -2,7 +2,7 @@
 
 Summary: TinyOS tools 
 Name: tinyos-tools
-Version: 1.2.2
+Version: 1.2.3
 Release: 1
 License: Please see source
 Group: Development/System

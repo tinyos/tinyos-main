@@ -119,7 +119,7 @@ enum {
  *    Table is indexed by the Peripheral ID (PPID). Priorities are 0 - 39
  *    where 0 is the highest.  Priorities MUST be unique. 0XFF = invalid/unassigned
  */
-const uint8_t TOSH_IRP_TABLE[] = { 0xFF, // PPID  0 SSP_3 Service Req
+const uint8_t TOSH_IRP_TABLE[] = { 0x05, // PPID  0 SSP_3 Service Req
 				   0xFF, // PPID  1 MSL
 				   0xFF, // PPID  2 USBH2
 				   0xFF, // PPID  3 USBH1
@@ -143,7 +143,7 @@ const uint8_t TOSH_IRP_TABLE[] = { 0xFF, // PPID  0 SSP_3 Service Req
 				   0xFF, // PPID 21 TX/RX ERROR BTUART
 				   0x06, // PPID 22 TX/RX ERROR FFUART
 				   0xFF, // PPID 23 Flash Card status/Error Detect
-				   0x05, // PPID 24 SSP_1 Service Req
+				   0x0A, // PPID 24 SSP_1 Service Req
 				   0x00, // PPID 25 DMA Channel Service Req
 				   0xFF, // PPID 26 OST equals Match Register 0
 				   0xFF, // PPID 27 OST equals Match Register 1
@@ -228,6 +228,7 @@ const uint8_t TOSH_IRP_TABLE[] = { 0xFF, // PPID  0 SSP_3 Service Req
 #define I2C_SDA (118)
 #define I2C_SDA_ALTFN (1)
 
+#define DS2745_SLAVE_ADDR (0x48)
 
 #if 0
 TOSH_ASSIGN_PIN(CC_VREN,A,CC_VREN_PIN); 

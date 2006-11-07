@@ -2,12 +2,12 @@
 #ifndef TEST_SERIAL_H
 #define TEST_SERIAL_H
 
-typedef nx_struct TestSerialMsg {
+typedef nx_struct test_serial_msg {
   nx_uint16_t counter;
-} TestSerialMsg;
+} test_serial_msg_t;
 
 enum {
-  AM_TESTSERIALMSG = 9,
+  AM_TEST_SERIAL_MSG = 9,
 };
 
 #endif

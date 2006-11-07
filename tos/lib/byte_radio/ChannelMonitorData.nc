@@ -73,6 +73,12 @@ interface ChannelMonitorData
     */
     async event void getSnrDone(int16_t snr);
 
+    /**
+     * try to be lucky: read anything stored as the rssi and
+     * make a crude and fast conversion to an snr value
+     */
+    async command uint16_t readSnr();
+
     /** 
      * Get the noisefloor in mV.
      *

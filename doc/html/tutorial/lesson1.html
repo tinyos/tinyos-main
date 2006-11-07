@@ -229,7 +229,7 @@ $ which nescc
       </center>
 
 <p>Type: 
-<pre>make mica2 reinstall mib510 MIB510=<i>serialport</i></pre>
+<pre>make mica2 reinstall mib510,<i>serialport</i></pre>
 where <i>serialport</i> is the serial port device name. Under Windows, if
 your serial port is <tt>COM<i>n</i>:</tt>, you must use
 <tt>/dev/ttyS<i>n-1</i></tt> as the device name. On Linux, the device name
@@ -453,6 +453,9 @@ identifier of 1. To give a node a different identifier, you can specify
 it at installation. For example, if you type <tt>make telosb install.5</tt>
 or <tt>make telosb reinstall.5</tt>, you will install the application
 on a node and give it 5 as its identifier.</b></p>
+
+<p>For more information on the build system, please see <a
+href="lesson13.html">Lesson 13</a>.
 	
 <h1>Components and Interfaces</h1>
 

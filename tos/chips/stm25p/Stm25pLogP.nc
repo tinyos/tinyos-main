@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:58 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:15 $
  */
 
 #include <Stm25p.h>
@@ -87,8 +87,8 @@ implementation {
   stm25p_log_state_t m_req;
   stm25p_log_info_t m_log_info[ NUM_LOGS ];
   stm25p_addr_t m_addr;
+  bool m_records_lost;
   uint8_t m_header;
-  uint8_t m_remaining;
   uint8_t m_len;
 
   typedef enum {
@@ -162,7 +162,7 @@ implementation {
     // don't allow appends larger than maximum record size
     if ( len > MAX_RECORD_SIZE )
       return ESIZE;
-
+    
     // move to next block if current block doesn't have enough space
     if ( sizeof( m_header ) + len > bytes_left )
       m_log_info[ id ].write_addr += bytes_left;
@@ -172,7 +172,8 @@ implementation {
 	 ( (uint8_t)(m_log_info[ id ].write_addr >> STM25P_SECTOR_SIZE_LOG2) >=
 	   call Sector.getNumSectors[ id ]() ) )
       return ESIZE;
-
+    
+    m_records_lost = FALSE;
     m_req.req = S_APPEND;
     m_req.buf = buf;
     m_req.len = len;
@@ -279,7 +280,7 @@ implementation {
     }
     
     buf = &m_header;
-    len = sizeof( len );
+    len = sizeof( m_header );
 
     if ( m_rw_state == S_DATA ) {
       // if header is invalid, move to next block
@@ -291,15 +292,16 @@ implementation {
       else {
 	buf = m_log_state[ client ].buf;
 	// truncate if record is shorter than requested length
-	if ( m_remaining < m_len )
-	  m_log_state[ client ].len = m_remaining;
-	len = m_len;
+	if ( m_log_info[ client ].remaining < m_len )
+	  len = m_log_info[ client ].remaining;
+	else
+	  len = m_len;
       }
     }
     
     // if on block boundary
     if ( !((uint16_t)read_addr & BLOCK_MASK ) )
-      read_addr += sizeof( storage_addr_t );
+      read_addr += sizeof( m_addr );
     
     m_log_info[ client ].read_addr = read_addr;
     call Sector.read[ client ]( calcAddr( client, read_addr ), buf, len );
@@ -415,14 +417,19 @@ implementation {
   void continueAppendOp( uint8_t client ) {
     
     stm25p_addr_t write_addr = m_log_info[ client ].write_addr;
-    uint8_t* buf;
+    void* buf;
     uint8_t len;
     
     if ( !(uint16_t)write_addr ) {
+      m_records_lost = TRUE;
       call Sector.erase[ client ]( calcSector( client, write_addr ), 1 );
     }
     else {
-      if ( m_rw_state == S_HEADER ) {
+      if ( !((uint16_t)write_addr & BLOCK_MASK) ) {
+	buf = &m_log_info[ client ].write_addr;
+	len = sizeof( m_addr );
+      }
+      else if ( m_rw_state == S_HEADER ) {
 	buf = &m_log_state[ client ].len;
 	len = sizeof( m_log_state[ client ].len );
       }
@@ -495,7 +502,7 @@ implementation {
       signal Write.eraseDone[ id ]( error );
       break;
     case S_APPEND:
-      signal Write.appendDone[ id ]( buf, len, error );
+      signal Write.appendDone[ id ]( buf, len, m_records_lost, error );
       break;
     case S_SYNC:
       signal Write.syncDone[ id ]( error );
@@ -508,7 +515,7 @@ implementation {
   default event void Read.readDone[ uint8_t id ]( void* data, storage_len_t len, error_t error ) {}
   default event void Read.seekDone[ uint8_t id ]( error_t error ) {}
   default event void Write.eraseDone[ uint8_t id ]( error_t error ) {}
-  default event void Write.appendDone[ uint8_t id ]( void* data, storage_len_t len, error_t error ) {}
+  default event void Write.appendDone[ uint8_t id ]( void* data, storage_len_t len, bool recordsLost, error_t error ) {}
   default event void Write.syncDone[ uint8_t id ]( error_t error ) {}
 
   default command storage_addr_t Sector.getPhysicalAddress[ uint8_t id ]( storage_addr_t addr ) { return 0xffffffff; }
@@ -518,7 +525,7 @@ implementation {
   default command error_t Sector.erase[ uint8_t id ]( uint8_t sector, uint8_t num_sectors ) { return FAIL; }
   default command error_t Sector.computeCrc[ uint8_t id ]( uint16_t crc, storage_addr_t addr, storage_len_t len ) { return FAIL; }
   default async command error_t ClientResource.request[ uint8_t id ]() { return FAIL; }
-  default async command void ClientResource.release[ uint8_t id ]() {}
+  default async command error_t ClientResource.release[ uint8_t id ]() { return FAIL; }
   default command bool Circular.get[ uint8_t id ]() { return FALSE; }
   
 }

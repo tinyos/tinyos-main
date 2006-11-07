@@ -1,4 +1,4 @@
-// $Id: TossimPacketModelC.nc,v 1.2 2006-07-12 17:02:33 scipio Exp $
+// $Id: TossimPacketModelC.nc,v 1.3 2006-11-07 19:31:21 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -64,6 +64,7 @@ implementation {
   uint8_t backoffCount;
   uint8_t neededFreeSamples;
   message_t* sending = NULL;
+  bool transmitting = FALSE;
   uint8_t sendingLength = 0;
   int destNode;
   
@@ -208,7 +209,7 @@ implementation {
       delay = sim_csma_rxtx_delay();
       delay *= (sim_ticks_per_sec() / sim_csma_symbols_per_sec());
       evt->time += delay;
-      
+      transmitting = TRUE;
       evt->handle = send_transmit;
       sim_queue_insert(evt);
     }
@@ -266,12 +267,13 @@ implementation {
   void send_transmit_done(sim_event_t* evt) {
     message_t* rval = sending;
     sending = NULL;
+    transmitting = FALSE;
     dbg("TossimPacketModelC", "PACKET: Signaling send done at %llu.\n", sim_time());
     signal Packet.sendDone(rval, SUCCESS);
   }
 
   event void GainRadioModel.receive(message_t* msg) {
-    if (running) {
+    if (running && !transmitting) {
       signal Packet.receive(msg);
     }
   }

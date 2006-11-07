@@ -50,13 +50,6 @@
  *
  */
  
-/*
- * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:02:18 $ 
- * ======================================================================== 
- */
- 
 /**
  * Please refer to TEP 108 for more information about this interface and its
  * intended use.<br><br>
@@ -67,6 +60,8 @@
  * predefined arbitration policy.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
+ * @version $Revision: 1.3 $
+ * @date $Date: 2006-11-07 19:31:17 $
  */
 
 interface Resource {
@@ -81,32 +76,35 @@ interface Resource {
    *               granted event is pending
    */
   async command error_t request();
-   
+
   /**
-   * Request immediate access to a shared resource. You must call 
-   * release() when you are done with it.
-   *
-   * @return SUCCESS You now have cotnrol of the resource.<br>
-   *         EBUSY The resource is busy.  You must try again later
-   */
+  * Request immediate access to a shared resource. You must call release()
+  * when you are done with it.
+  *
+  * @return SUCCESS When a request has been accepted. <br>
+  *            FAIL The request cannot be fulfilled
+  */
   async command error_t immediateRequest();
 
   /**
-   * You are now in control of the resource. Note that this event
-   * is NOT signaled when immediateRequest() succeeds.
+   * You are now in control of the resource.
    */
   event void granted();
    
   /**
-   * Release a shared resource you previously acquired.
-   */
-  async command void release();
+  * Release a shared resource you previously acquired.
+  *
+  * @return SUCCESS The resource has been released <br>
+  *         FAIL You tried to release but you are not the
+  *              owner of the resource 
+  */
+  async command error_t release();
 
   /**
    *  Check if the user of this interface is the current
    *  owner of the Resource
    *  @return TRUE  It is the owner <br>
-   *          FALSE It is not the owner
+   *             FALSE It is not the owner
    */
   async command bool isOwner();
 }

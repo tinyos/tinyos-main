@@ -1,4 +1,4 @@
-// $Id: Storage_chip.h,v 1.2 2006-07-12 17:01:07 scipio Exp $
+// $Id: Storage_chip.h,v 1.3 2006-11-07 19:30:43 scipio Exp $
 
 #ifndef STORAGE_CHIP_H
 #define STORAGE_CHIP_H

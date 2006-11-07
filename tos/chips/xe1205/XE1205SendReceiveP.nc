@@ -40,7 +40,10 @@ module XE1205SendReceiveP {
     provides interface Packet;
     provides interface PacketAcknowledgements;
     provides interface Receive;
+    provides interface SplitControl @atleastonce();;
+
     uses interface XE1205PhyRxTx;
+    uses interface SplitControl as PhySplitControl;
 }
 implementation {
 
@@ -69,9 +72,6 @@ implementation {
   norace uint16_t txRunningCRC;      // Crc for outgoing pkts is computed incrementally
 
   norace uint8_t txWhiteByte;
-
-
-
 
   uint8_t const pktPreamble[] = {
     0x55, 0x55, 0x55,
@@ -108,6 +108,37 @@ implementation {
     return call Packet.payloadLength(m);
   }
 
+
+  command error_t SplitControl.start() {
+    error_t err;
+    err = call PhySplitControl.start();
+
+    return err;
+  }
+
+  command error_t SplitControl.stop() {
+    error_t err;
+
+    // One could also argue that this is split phase so should cope and do the right thing.
+    // Or one could argue that whatever the phy is doing underneath just gets interrupted.
+    if (call XE1205PhyRxTx.busy()) return EBUSY;
+
+    err = call PhySplitControl.stop();
+
+    return err;
+
+  }
+
+  event void PhySplitControl.startDone(error_t error) {
+    signal SplitControl.startDone(error);
+  }
+
+  event void PhySplitControl.stopDone(error_t error) { 
+    signal SplitControl.stopDone(error);
+  }
+
+
+
   command error_t Send.cancel(message_t* msg) {
     /* Cancel is unsupported for now. */
     return FAIL;
@@ -139,7 +170,10 @@ implementation {
     error_t err;
 
     if (txMsgPtr) return EBUSY;
+
     if (call XE1205PhyRxTx.busy()) return EBUSY;
+    if (call XE1205PhyRxTx.off()) return EOFF;
+
 
     txWhiteByte++;
     txPhyHdr.whitening = txWhiteByte;

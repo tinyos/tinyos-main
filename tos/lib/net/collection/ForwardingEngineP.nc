@@ -1,4 +1,4 @@
-/* $Id: ForwardingEngineP.nc,v 1.2 2006-07-12 17:02:25 scipio Exp $ */
+/* $Id: ForwardingEngineP.nc,v 1.3 2006-11-07 19:31:18 scipio Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2006-07-12 17:02:25 $
+ *  @date   $Date: 2006-11-07 19:31:18 $
  */
 
 #include <ForwardingEngine.h>
@@ -156,6 +156,8 @@ generic module ForwardingEngineP() {
     interface CollectionId[uint8_t client];
     interface AMPacket;
     interface CollectionDebug;
+    interface LinkEstimator;
+    interface Leds;
   }
 }
 implementation {
@@ -500,6 +502,9 @@ implementation {
       startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
     }
     else if (ackPending && !call PacketAcknowledgements.wasAcked(msg)) {
+
+      call LinkEstimator.txNoAck(AMPacket.destination(msg));
+
       // AckPending is for case when DL cannot support acks.
       if (--qe->retries) { 
         dbg("Forwarder", "%s: not acked\n", __FUNCTION__);
@@ -541,6 +546,7 @@ implementation {
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
+      call LinkEstimator.txAck(AMPacket.destination(msg));
       clientPtrs[client] = qe;
       hdr = getHeader(qe->msg);
       call SendQueue.dequeue();
@@ -551,6 +557,9 @@ implementation {
     else if (call MessagePool.size() < call MessagePool.maxSize()) {
       // A successfully forwarded packet.
       dbg("Forwarder,Route", "%s: successfully forwarded packet (client: %hhu), message pool is %hhu/%hhu.\n", __FUNCTION__, qe->client, call MessagePool.size(), call MessagePool.maxSize());
+
+      call LinkEstimator.txAck(AMPacket.destination(msg));
+
       call CollectionDebug.logEventMsg(NET_C_FE_FWD_MSG, 
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
@@ -563,6 +572,7 @@ implementation {
         call CollectionDebug.logEvent(NET_C_FE_PUT_QEPOOL_ERR);
       sending = FALSE;
       startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
+      call Leds.led2Toggle();
     }
     else {
       dbg("Forwarder", "%s: BUG: we have a pool entry, but the pool is full, client is %hhu.\n", __FUNCTION__, qe->client);
@@ -696,15 +706,16 @@ implementation {
         return msg;
     }
     //... and in the queue for duplicates
-    atomic {
-    	for (i = call SendQueue.size(); --i ;) {
-        	qe = call SendQueue.element(i);
-	        if (call CollectionPacket.getPacketID(qe->msg) == msg_uid) {
-        	    duplicate = TRUE;
-	            break;
-        	}
-	    }
+    if (call SendQueue.size() > 0) {
+      for (i = call SendQueue.size(); --i;) {
+	qe = call SendQueue.element(i);
+	if (call CollectionPacket.getPacketID(qe->msg) == msg_uid) {
+	  duplicate = TRUE;
+	  break;
+	}
+      }
     }
+    
     if (duplicate) {
         call CollectionDebug.logEvent(NET_C_FE_DUPLICATE_QUEUE);
         return msg;
@@ -859,6 +870,9 @@ implementation {
     r += offset;
     call RetxmitTimer.startOneShot(r);
     dbg("Forwarder", "started rexmit timer in %hu ms\n", r);
+  }
+
+  event void LinkEstimator.evicted(am_addr_t neighbor) {
   }
 
   /* Default implementations for CollectionDebug calls.

@@ -38,8 +38,7 @@ See doc/serialcomm/index.html for more information using these tools.
 Known bugs/limitations:
 
 On CC2420 platforms, BaseStation can only overhear packets transmitted
-to it or to the broadcast address. This is due to how the CC2420 hardware
-filters packets based on address and how the CC2420 stack uses that
-functionality; future versions will not have this limitation.
+to it or to the broadcast address. For these platforms (e.g., micaz,
+telos, intel mote 2), you should use BaseStationCC2420.
 
 

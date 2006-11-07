@@ -26,7 +26,7 @@
  * the platform-specific implementation of the device end point.
  *
  * <pre>
- *  $Id: Atm128SpiC.nc,v 1.2 2006-07-12 17:01:28 scipio Exp $
+ *  $Id: Atm128SpiC.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $
  * </pre>
  *
  *
@@ -42,11 +42,10 @@ configuration Atm128SpiC {
 }
 implementation {
   components SimAtm128SpiDeviceC as Device;
-  components new FcfsArbiterC("Atm128SpiC.Resource") as Arbiter;
+  components new SimpleFcfsArbiterC("Atm128SpiC.Resource") as Arbiter;
   components McuSleepC;
   
   Init         = Device;
-  Init         = Arbiter;
   
   SPIByte      = Device;
   SPIPacket    = Device;

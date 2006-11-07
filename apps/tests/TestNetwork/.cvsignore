@@ -5,4 +5,3 @@ set_rate_msg.c
 set_rate_msg.h
 test_network_msg.c
 test_network_msg.h
-tn-injector

@@ -1,4 +1,4 @@
-/* $Id: LIS3L02DQC.nc,v 1.2 2006-07-12 17:03:16 scipio Exp $ */
+/* $Id: LIS3L02DQC.nc,v 1.3 2006-11-07 19:31:27 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 

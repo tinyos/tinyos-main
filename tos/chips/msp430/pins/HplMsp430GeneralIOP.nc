@@ -48,7 +48,11 @@ implementation
   async command uint8_t IO.getRaw() { return PORTxIN & (0x01 << pin); }
   async command bool IO.get() { return (call IO.getRaw() != 0); }
   async command void IO.makeInput() { atomic PORTxDIR &= ~(0x01 << pin); }
+  async command bool IO.isInput() { return (PORTxDIR & (0x01 << pin)) == 0; }
   async command void IO.makeOutput() { atomic PORTxDIR |= (0x01 << pin); }
+  async command bool IO.isOutput() { return (PORTxDIR & (0x01 << pin)) != 0; }
   async command void IO.selectModuleFunc() { atomic PORTxSEL |= (0x01 << pin); }
+  async command bool IO.isModuleFunc() { return (PORTxSEL & (0x01<<pin)) != 0; }
   async command void IO.selectIOFunc() { atomic PORTxSEL &= ~(0x01 << pin); }
+  async command bool IO.isIOFunc() { return (PORTxSEL & (0x01<<pin)) == 0; }
 }

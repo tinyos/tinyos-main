@@ -6,7 +6,7 @@
 # @includes instead of -I's to @opts, otherwise the %T won't be processed
 # by ncc.  
 #
-# $Id: .platform,v 1.2 2006-07-12 17:02:56 scipio Exp $
+# $Id: .platform,v 1.3 2006-11-07 19:31:26 scipio Exp $
 #
 push( @includes, qw(
 

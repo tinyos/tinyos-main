@@ -1,4 +1,4 @@
-// $Id: CC1000ActiveMessageP.nc,v 1.2 2006-07-12 17:01:31 scipio Exp $
+// $Id: CC1000ActiveMessageP.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -32,7 +32,7 @@
  * Implementation component for CC1000ActiveMessageC.
  *
  * @author Philip Levis
- * @date June 19 2005
+ * @date June 19 2006
  */
 
 module CC1000ActiveMessageP {
@@ -60,7 +60,8 @@ implementation {
 					  uint8_t len) {
     cc1000_header_t* header = getHeader(amsg);
     header->type = id;
-    header->addr = addr;
+    header->dest = addr;
+    header->source = call AMPacket.address();
     header->group = TOS_AM_GROUP;
     return call SubSend.send(amsg, len);
   }
@@ -114,12 +115,22 @@ implementation {
  
   command am_addr_t AMPacket.destination(message_t* amsg) {
     cc1000_header_t* header = getHeader(amsg);
-    return header->addr;
+    return header->dest;
+  }
+
+  command am_addr_t AMPacket.source(message_t* amsg) {
+    cc1000_header_t* header = getHeader(amsg);
+    return header->source;
   }
 
   command void AMPacket.setDestination(message_t* amsg, am_addr_t addr) {
     cc1000_header_t* header = getHeader(amsg);
-    header->addr = addr;
+    header->dest = addr;
+  }
+
+  command void AMPacket.setSource(message_t* amsg, am_addr_t addr) {
+    cc1000_header_t* header = getHeader(amsg);
+    header->source = addr;
   }
   
   command bool AMPacket.isForMe(message_t* amsg) {

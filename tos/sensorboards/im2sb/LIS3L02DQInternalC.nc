@@ -1,4 +1,4 @@
-/* $Id: LIS3L02DQInternalC.nc,v 1.2 2006-07-12 17:03:16 scipio Exp $ */
+/* $Id: LIS3L02DQInternalC.nc,v 1.3 2006-11-07 19:31:27 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -43,37 +43,38 @@ configuration LIS3L02DQInternalC {
 }
 
 implementation {
-  components new FcfsArbiterC( "LIS3L02DQ.Resource" ) as Arbiter;
+  components LIS3L02DQInternalP as InternalP;
+  components new SimpleFcfsArbiterC( "LIS3L02DQ.Resource" ) as Arbiter;
   components MainC;
+
   Resource = Arbiter;
-  MainC.SoftwareInit -> Arbiter;
+  HplLIS3L02DQ = InternalP;
+  SplitControl = InternalP;
+  MainC.SoftwareInit -> InternalP;
 
-  components HplLIS3L02DQLogicSPIP as Logic;
-  MainC.SoftwareInit -> Logic;
-
+  components HplLIS3L02DQLogicSPIP as LogicSPIP;
+  components HalLIS3L02DQControlP as ControlP;
+  components new HalPXA27xSpiPioC(128, 7, FALSE) as HalSpi;
   components HplPXA27xSSP1C;
-  // 0: Motorola SPI
-  // 3: random guess what SSP Clock Rate should be
-  // 7: 8 bit data size OR 15: 16 bit data size?
-  // FALSE: No "Receive without transmit"
-  components new HalPXA27xSpiPioM(0, 128, 7, FALSE) as HalSpi;
-  HalSpi.SSP -> HplPXA27xSSP1C;
-  MainC.SoftwareInit -> HalSpi;
-  Logic.SpiPacket -> HalSpi.SpiPacket[unique("SPIInstance")];
-
-  components LIS3L02DQInternalP as Internal;
-  HplLIS3L02DQ = Internal;
-  Internal.ToHPLC -> Logic.HplLIS3L02DQ;
-  
-  SplitControl = Logic;
-
+  components GeneralIOC;
   components HplPXA27xGPIOC;
-  Logic.SPICLK -> HplPXA27xGPIOC.HplPXA27xGPIOPin[SSP1_SCLK];
-  Logic.SPIFRM -> HplPXA27xGPIOC.HplPXA27xGPIOPin[SSP1_SFRM];
-  Logic.SPIRxD -> HplPXA27xGPIOC.HplPXA27xGPIOPin[SSP1_RXD];
-  Logic.SPITxD -> HplPXA27xGPIOC.HplPXA27xGPIOPin[SSP1_TXD];
 
-  components HalLIS3L02DQControlP as Control;
-  Control.Hpl -> Logic;
+  InternalP.ToHPLC -> LogicSPIP.HplLIS3L02DQ;
+  InternalP.SubControl -> LogicSPIP.SplitControl;
+  InternalP.SPICLK -> HplPXA27xGPIOC.HplPXA27xGPIOPin[SSP1_SCLK];
+  InternalP.SPIRxD -> HplPXA27xGPIOC.HplPXA27xGPIOPin[SSP1_RXD];
+  InternalP.SPITxD -> HplPXA27xGPIOC.HplPXA27xGPIOPin[SSP1_TXD];
+  InternalP.HPWRCntl -> HplPXA27xGPIOC.HplPXA27xGPIOPin[GPIO_PWR_ADC_NSHDWN];
+
+  LogicSPIP.SpiPacket -> HalSpi.SpiPacket[unique("SPIInstance")];
+  LogicSPIP.SPIFRM -> GeneralIOC.GeneralIO[SSP1_SFRM];
+  LogicSPIP.InterruptAlert -> GeneralIOC.GpioInterrupt[GPIO_LIS3L02DQ_RDY_INT];
+
+  ControlP.Hpl -> LogicSPIP;
+
+  MainC.SoftwareInit -> HalSpi;
+  MainC.SoftwareInit -> LogicSPIP;
+
+  HalSpi.SSP -> HplPXA27xSSP1C;
   
 }

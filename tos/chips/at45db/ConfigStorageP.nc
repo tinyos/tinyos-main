@@ -1,4 +1,4 @@
-// $Id: ConfigStorageP.nc,v 1.2 2006-07-12 17:01:03 scipio Exp $
+// $Id: ConfigStorageP.nc,v 1.3 2006-11-07 19:30:43 scipio Exp $
 
 /*									tab:4
  * Copyright (c) 2002-2006 Intel Corporation
@@ -18,6 +18,7 @@
  */
 
 #include "Storage.h"
+#include "crc.h"
 
 module ConfigStorageP {
   provides {
@@ -53,6 +54,7 @@ implementation
   enum {
     S_STOPPED,
     S_MOUNT,
+    S_COMMIT,
     S_CLEAN,
     S_DIRTY,
     S_INVALID
@@ -63,11 +65,19 @@ implementation
     NO_CLIENT = 0xff,
   };
 
-  /* Per-client state */
-  uint8_t state[N];
+  /* Per-client state. We could keep just the state and current version
+     in an array, but this requires more complex arbitration (don't
+     release block storage during mount or commit). As I don't expect
+     many config volumes, this doesn't seem worth the trouble. */
+  struct {
+    uint8_t state : 3;
+    uint8_t committing : 1;
+  } s[N];
+  nx_struct {
+    nx_uint16_t crc;
+    nx_uint32_t version;
+  } low[N], high[N];
 
-  /* Version numbers for lower and upper half */
-  uint32_t lowVersion[N], highVersion[N];
 
   /* Bit n is true if client n is using upper block */
   uint8_t flipState[(N + 7) / 8]; 
@@ -90,6 +100,10 @@ implementation
     setFlip(id, !flipped(id));
   }
 
+  storage_len_t volumeSize(uint8_t id) {
+    return call BlockRead.getSize[id]();
+  }
+
   /* ------------------------------------------------------------------ */
   /* Mounting								*/
   /* ------------------------------------------------------------------ */
@@ -97,55 +111,67 @@ implementation
   command error_t Mount.mount[uint8_t id]() {
     /* Read version on both halves. Validate higher. Validate lower if
        higher invalid. Use lower if both invalid. */
-    if (state[id] != S_STOPPED)
+    if (s[id].state != S_STOPPED)
       return FAIL;
 
-    state[id] = S_MOUNT;
+    s[id].state = S_MOUNT;
     setFlip(id, FALSE);
-    call BlockRead.read[id](0, &lowVersion[id], sizeof lowVersion[id]);
+    call BlockRead.read[id](0, &low[id], sizeof low[id]);
 
     return SUCCESS;
+  }
+
+  void computeCrc(uint8_t id) {
+    call BlockRead.computeCrc[id](sizeof(nx_uint16_t),
+				  volumeSize(id) - sizeof(nx_uint16_t),
+				  0);
   }
 
   void mountReadDone(uint8_t id, error_t error) {
     if (error != SUCCESS)
       {
-	state[id] = S_STOPPED;
+	s[id].state = S_STOPPED;
 	signal Mount.mountDone[id](FAIL);
       }
     else if (!call BConfig.flipped[id]())
       {
 	/* Just read low-half version. Read high-half version */
 	setFlip(id, TRUE);
-	call BlockRead.read[id](0, &highVersion[id], sizeof highVersion[id]);
+	call BlockRead.read[id](0, &high[id], sizeof high[id]);
       }
     else
       {
 	/* Verify the half with the largest version */
-	setFlip(id, highVersion[id] > lowVersion[id]);
-	call BlockRead.verify[id]();
+	setFlip(id, high[id].version > low[id].version);
+	computeCrc(id);
       }
   }
 
-  void mountVerifyDone(uint8_t id, error_t error) {
-    if (error == SUCCESS) 
-      state[id] = S_CLEAN;
+  void mountCrcDone(uint8_t id, uint16_t crc, error_t error) {
+    bool isflipped = call BConfig.flipped[id]();
+
+    if (error == SUCCESS &&
+	crc == (isflipped ? high[id].crc : low[id].crc))
+      {
+	/* We just use the low data once mounted */
+	if (isflipped)
+	  low[id].version = high[id].version;
+	s[id].state = S_CLEAN;
+      }
     else
       {
 	// try the other half?
-	bool isflipped = call BConfig.flipped[id]();
-
-	if ((highVersion[id] > lowVersion[id]) == isflipped)
+	if ((high[id].version > low[id].version) == isflipped)
 	  {
 	    /* Verification of the half with the highest version failed. Try
 	       the other half. */
 	    setFlip(id, !isflipped);
-	    call BlockRead.verify[id]();
+	    computeCrc(id);
 	    return;
 	  }
-	/* both halves bad, just declare success and use the current half... */
-	state[id] = S_INVALID;
-	lowVersion[id] = highVersion[id] = 0;
+	/* Both halves bad, terminate. Reads will fail. */
+	s[id].state = S_INVALID;
+	low[id].version = 0;
       }
     signal Mount.mountDone[id](SUCCESS);
   }
@@ -156,16 +182,16 @@ implementation
 
   command error_t ConfigStorage.read[uint8_t id](storage_addr_t addr, void* buf, storage_len_t len) {
     /* Read from current half using BlockRead */
-    if (state[id] < S_CLEAN)
+    if (s[id].state < S_CLEAN)
       return EOFF;
-    if (state[id] == S_INVALID) // nothing to read
+    if (s[id].state == S_INVALID) // nothing to read
       return FAIL;
 
-    return call BlockRead.read[id](addr + sizeof(uint32_t), buf, len);
+    return call BlockRead.read[id](addr + sizeof low[0], buf, len);
   }
 
   void readReadDone(uint8_t id, storage_addr_t addr, void* buf, storage_len_t len, error_t error) {
-    signal ConfigStorage.readDone[id](addr - sizeof(uint32_t), buf, len, error);
+    signal ConfigStorage.readDone[id](addr - sizeof low[0], buf, len, error);
   }
 
   /* ------------------------------------------------------------------ */
@@ -177,20 +203,23 @@ implementation
          copy to other half with incremented version number
        2: Write to other half using BlockWrite */
 
-    if (state[id] < S_CLEAN)
+    if (s[id].state < S_CLEAN)
       return EOFF;
-    return call BlockWrite.write[id](addr + sizeof(uint32_t), buf, len);
+    return call BlockWrite.write[id](addr + sizeof low[0], buf, len);
   }
 
   void copyCopyPageDone(error_t error);
   void writeContinue(error_t error);
 
   command int BConfig.writeHook[uint8_t id]() {
-    flip(id); /* We write to the non-current half... */
-    if (state[id] != S_CLEAN) // no copy if dirty or invalid
+    if (s[id].committing)
       return FALSE;
 
-    /* Time to do the copy, version update dance */
+    flip(id); /* We write to the non-current half... */
+    if (s[id].state != S_CLEAN) // no copy if dirty or invalid
+      return FALSE;
+
+    /* Time to do the copy dance */
     client = id;
     nextPage = signal BConfig.npages[id]();
     copyCopyPageDone(SUCCESS);
@@ -203,21 +232,8 @@ implementation
       writeContinue(error);
     else if (nextPage == 0) // copy done
       {
-	uint32_t *version;
-
-	// Update the version number of the half indicated by flipped()
-	if (!flipped(client))
-	  {
-	    lowVersion[client] = highVersion[client] + 1;
-	    version = &lowVersion[client];
-	  }
-	else
-	  {
-	    highVersion[client] = lowVersion[client] + 1;
-	    version = &highVersion[client];
-	  }
-	call At45db.write(signal BConfig.remap[client](0), 0,
-			  version, sizeof *version);
+	s[client].state = S_DIRTY;
+	writeContinue(SUCCESS);
       }
     else
       {
@@ -234,12 +250,6 @@ implementation
       }
   }
 
-  void copyWriteDone(error_t error) {
-    if (error == SUCCESS)
-      state[client] = S_DIRTY;
-    writeContinue(error);
-  }
-
   void writeContinue(error_t error) {
     uint8_t id = client;
 
@@ -249,29 +259,69 @@ implementation
 
   void writeWriteDone(uint8_t id, storage_addr_t addr, void* buf, storage_len_t len, error_t error) {
     flip(id); // flip back to current half
-    signal ConfigStorage.writeDone[id](addr - sizeof(uint32_t), buf, len, error);
+    signal ConfigStorage.writeDone[id](addr - sizeof low[0], buf, len, error);
   }
 
   /* ------------------------------------------------------------------ */
   /* Commit								*/
   /* ------------------------------------------------------------------ */
 
-  command error_t ConfigStorage.commit[uint8_t id]() {
-    /* Call BlockWrite.commit */
-    /* Could special-case attempt to commit clean block */
-    error_t ok;
+  void commitSyncDone(uint8_t id, error_t error);
 
-    if (state[id] < S_CLEAN)
+  command error_t ConfigStorage.commit[uint8_t id]() {
+    error_t ok;
+    uint16_t crc;
+    uint8_t i;
+
+    if (s[id].state < S_CLEAN)
       return EOFF;
-    ok = call BlockWrite.commit[id]();
+
+    if (s[id].state == S_CLEAN)
+      /* A dummy CRC call to avoid signaling a completion event from here */
+      return call BlockRead.computeCrc[id](0, 1, 0);
+
+    /* Compute CRC for new version and current contents */
+    flip(id);
+    low[id].version++;
+    for (crc = 0, i = 0; i < sizeof low[id].version; i++)
+      crc = crcByte(crc, ((uint8_t *)&low[id] + sizeof(nx_uint16_t))[i]);
+    ok = call BlockRead.computeCrc[id](sizeof low[id],
+				       volumeSize(id) - sizeof low[id],
+				       crc);
     if (ok == SUCCESS)
-      flip(id); // switch to new block for commit
+      s[id].committing = TRUE;
+
     return ok;
   }
 
-  void commitDone(uint8_t id, error_t error) {
+  void commitCrcDone(uint8_t id, uint16_t crc, error_t error) {
+    /* Weird commit of clean volume hack: we just complete now, w/o
+       really doing anything. Ideally we should short-circuit out in the
+       commit call, but that would break the "no-signal-from-command"
+       rule. So we just waste the CRC computation effort instead - the
+       assumption is people don't regularly commit clean volumes. */
+    if (s[id].state == S_CLEAN)
+      signal ConfigStorage.commitDone[id](error);
+    else if (error != SUCCESS)
+      commitSyncDone(id, error);
+    else
+      {
+	low[id].crc = crc;
+	call BlockWrite.write[id](0, &low[id], sizeof low[id]);
+      }
+  }
+
+  void commitWriteDone(uint8_t id, error_t error) {
+    if (error != SUCCESS)
+      commitSyncDone(id, error);
+    else
+      call BlockWrite.sync[id]();
+  }
+
+  void commitSyncDone(uint8_t id, error_t error) {
+    s[id].committing = FALSE;
     if (error == SUCCESS)
-      state[id] = S_CLEAN;
+      s[id].state = S_CLEAN;
     else
       flip(id); // revert to old block
     signal ConfigStorage.commitDone[id](error);
@@ -282,7 +332,7 @@ implementation
   /* ------------------------------------------------------------------ */
 
   command storage_len_t ConfigStorage.getSize[uint8_t id]() {
-    return call BlockRead.getSize[id]();
+    return volumeSize(id) - sizeof low[0];
   }
 
   /* ------------------------------------------------------------------ */
@@ -290,7 +340,7 @@ implementation
   /* ------------------------------------------------------------------ */
 
   command bool ConfigStorage.valid[uint8_t id]() {
-    return state[id] != S_INVALID;
+    return s[id].state != S_INVALID;
   }
 
   /* ------------------------------------------------------------------ */
@@ -310,30 +360,31 @@ implementation
 
   event void BlockRead.readDone[uint8_t id](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {
     if (id < N)
-      if (state[id] == S_MOUNT)
+      if (s[id].state == S_MOUNT)
 	mountReadDone(id, error);
       else
 	readReadDone(id, addr, buf, len, error);
   }
 
-  event void BlockRead.verifyDone[uint8_t id]( error_t error ) {
-    if (id < N)
-      mountVerifyDone(id, error);
-  }
-
   event void BlockWrite.writeDone[uint8_t id]( storage_addr_t addr, void* buf, storage_len_t len, error_t error ) {
     if (id < N)
-      writeWriteDone(id, addr, buf, len, error);
+      if (s[id].committing)
+	commitWriteDone(id, error);
+      else
+	writeWriteDone(id, addr, buf, len, error);
   }
 
-  event void BlockWrite.commitDone[uint8_t id]( error_t error ) {
+  event void BlockWrite.syncDone[uint8_t id]( error_t error ) {
     if (id < N)
-      commitDone(id, error);
+      commitSyncDone(id, error);
   }
 
-  event void At45db.writeDone(error_t error) {
-    if (client != NO_CLIENT)
-      copyWriteDone(error);
+  event void BlockRead.computeCrcDone[uint8_t id]( storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error ) {
+    if (id < N)
+      if (s[id].state == S_MOUNT)
+	mountCrcDone(id, crc, error);
+      else
+	commitCrcDone(id, crc, error);
   }
 
   event void At45db.copyPageDone(error_t error) {
@@ -341,13 +392,13 @@ implementation
       copyCopyPageDone(error);
   }
 
-  event void BlockRead.computeCrcDone[uint8_t id]( storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error ) {}
-  event void BlockWrite.eraseDone[uint8_t id]( error_t error ) {}
+  event void BlockWrite.eraseDone[uint8_t id](error_t error) {}
   event void At45db.eraseDone(error_t error) {}
   event void At45db.syncDone(error_t error) {}
   event void At45db.flushDone(error_t error) {}
   event void At45db.readDone(error_t error) {}
   event void At45db.computeCrcDone(error_t error, uint16_t crc) {}
+  event void At45db.writeDone(error_t error) {}
 
   default event void Mount.mountDone[uint8_t id](error_t error) { }
   default event void ConfigStorage.readDone[uint8_t id](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {}

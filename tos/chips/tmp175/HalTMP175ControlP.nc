@@ -35,7 +35,7 @@
  * Note that only the data path uses split phase resource arbitration
  * 
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:03 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:16 $
  */
 
 module HalTMP175ControlP
@@ -63,10 +63,12 @@ implementation {
   uint8_t mConfigRegVal = 0;
   error_t mHplError;
 
+  task void complete_Alert() {
+    signal HalTMP175Advanced.alertThreshold();
+  }
 
   static error_t setCfg(uint8_t nextState, uint32_t val) {
     error_t error;
-
 
     mState = nextState;
 
@@ -80,12 +82,10 @@ implementation {
     }
 
     return error;
-
   }
 
   static error_t setThresh(uint8_t nextState, uint32_t val) {
     error_t error;
-
 
     mState = nextState;
 
@@ -97,12 +97,8 @@ implementation {
     if (error) {
       call TMP175Resource.release();
     }
-    else {
-      mConfigRegVal = val;
-    }
 
     return error;
-
   }
 
   command error_t HalTMP175Advanced.setThermostatMode(bool useInt) {
@@ -131,7 +127,7 @@ implementation {
     }
 
     newRegVal = (polarity) ? (mConfigRegVal | TMP175_CFG_POL) : (mConfigRegVal & ~TMP175_CFG_POL);
-    error = setCfg(STATE_SET_MODE, newRegVal);
+    error = setCfg(STATE_SET_POLARITY, newRegVal);
 
     return error;
   }
@@ -183,8 +179,7 @@ implementation {
     if (error) {
       return error;
     }
-    
-    //error = call HplTMP175.setTLowReg(val << 4);
+
     error = setThresh(STATE_SET_TLOW, val);
 
     if (error) {
@@ -202,7 +197,6 @@ implementation {
       return error;
     }
 
-    //error = call HplTMP175.setTHighReg(val << 4);
     error = setThresh(STATE_SET_THIGH, val);
 
     if (error) {
@@ -218,21 +212,25 @@ implementation {
     call TMP175Resource.release();
     switch (mState) {
     case STATE_SET_MODE:
+      mState = STATE_NONE;
       signal HalTMP175Advanced.setThermostatModeDone(lasterror);
       break;
     case STATE_SET_POLARITY:
+      mState = STATE_NONE;
       signal HalTMP175Advanced.setPolarityDone(lasterror);
       break;
     case STATE_SET_FQ:
+      mState = STATE_NONE;
       signal HalTMP175Advanced.setFaultQueueDone(lasterror);
       break;
     case STATE_SET_RES:
+      mState = STATE_NONE;
       signal HalTMP175Advanced.setResolutionDone(lasterror);
       break;
     default:
       break;
     }
-    mState = STATE_NONE;
+    //mState = STATE_NONE;
     return;
   }
 
@@ -242,15 +240,18 @@ implementation {
     call TMP175Resource.release();
     switch (mState) {
     case STATE_SET_TLOW:
+      mState = STATE_NONE;
       signal HalTMP175Advanced.setTLowDone(lasterror);
       break;
     case STATE_SET_THIGH:
+      mState = STATE_NONE;
       signal HalTMP175Advanced.setTHighDone(lasterror);
       break;
     default:
+      mState = STATE_NONE;
       break;
     }
-    mState = STATE_NONE;
+    //mState = STATE_NONE;
   }
 
   event void TMP175Resource.granted() {
@@ -275,11 +276,7 @@ implementation {
   }
 
   async event void HplTMP175.alertThreshold() {
-    // if in interrupt mode, need to clear interrupt, otherwise, just signal
-    if(mConfigRegVal & TMP175_CFG_POL) {
-      // this will clear the interrupt, just ignore the result
-      call HplTMP175.measureTemperature();
-    }
+    post complete_Alert();
   }
 
   async event void HplTMP175.measureTemperatureDone(error_t error, uint16_t val) {

@@ -42,8 +42,8 @@ module NullC
 }
 implementation
 {
-  event void Boot.booted()
-  {
+  event void Boot.booted() {
+    // Do nothing.
   }
 }
 

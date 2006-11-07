@@ -1,4 +1,4 @@
-// $Id: Atm128Power.h,v 1.3 2006-08-09 22:43:00 idgay Exp $
+// $Id: Atm128Power.h,v 1.4 2006-11-07 19:30:43 scipio Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.

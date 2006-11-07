@@ -1,4 +1,4 @@
-// $Id: CC1000ActiveMessageC.nc,v 1.2 2006-07-12 17:01:31 scipio Exp $
+// $Id: CC1000ActiveMessageC.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  

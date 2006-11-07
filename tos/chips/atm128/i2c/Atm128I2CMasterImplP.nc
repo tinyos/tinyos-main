@@ -69,9 +69,9 @@ implementation {
     signal Resource.granted[id]();
   }
 
-  async command void Resource.release[uint8_t id]() {
+  async command error_t Resource.release[uint8_t id]() {
     call Atm128I2C.stop(); // Always stop if someone has released.
-    call SubResource.release[id]();
+    return call SubResource.release[id]();
   }
 
   async command bool Resource.isOwner[uint8_t id]() {

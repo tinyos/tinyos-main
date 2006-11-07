@@ -36,7 +36,7 @@
  * Note that only the data path uses split phase resource arbitration
  * 
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:03 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:16 $
  */
 
 generic module HalTMP175ReaderP()
@@ -78,7 +78,7 @@ implementation {
 
   async event void HplTMP175.measureTemperatureDone(error_t tmp175_error, uint16_t val) {
     call TMP175Resource.release();
-    signal Temperature.readDone(tmp175_error,val);
+    signal Temperature.readDone(tmp175_error,(val >> 4));
     return;
   }
 

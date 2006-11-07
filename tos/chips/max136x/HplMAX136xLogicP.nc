@@ -35,7 +35,7 @@
  * interface.
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:38 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:55 $
  */
 
 #include "I2C.h"
@@ -59,7 +59,8 @@ implementation {
     STATE_STOPPED,
     STATE_READCH,
     STATE_SETCONFIG,
-    STATE_ERROR
+    STATE_READSTATUS,
+    STATE_ERROR,
   };
 
   uint8_t mState;
@@ -163,6 +164,9 @@ implementation {
     return post StopDone();
   }
 
+  command error_t HplMAX136x.readStatus(uint8_t *buf, uint8_t len) {
+    return doRead(STATE_READSTATUS,buf,len);
+  }
   
   command error_t HplMAX136x.measureChannels(uint8_t *buf, uint8_t len) { 
     return doRead(STATE_READCH,buf,len);
@@ -180,6 +184,10 @@ implementation {
     case STATE_READCH:
       mState = STATE_IDLE;
       signal HplMAX136x.measureChannelsDone(error, buf, len);
+      break;
+    case STATE_READSTATUS:
+      mState = STATE_IDLE;
+      signal HplMAX136x.readStatusDone(error, buf);
       break;
     default:
       mState = STATE_IDLE;

@@ -119,6 +119,13 @@ interface XE1205PhyRxTx {
    */
   async command bool busy();
 
+  /** 
+   * Check on/off state of phy.
+   *
+   * @return TRUE if phy is idle, standby, starting, or stopping, FALSE otherwise.
+   *
+   */
+  async command bool off();
 
 
 

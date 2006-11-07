@@ -1,4 +1,4 @@
-/* $Id: MAX136xInternalP.nc,v 1.2 2006-07-12 17:03:16 scipio Exp $ */
+/* $Id: MAX136xInternalP.nc,v 1.3 2006-11-07 19:31:27 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -49,6 +49,10 @@ implementation {
     currentId = id;
     return call ToHPLC.setConfig(cfgbuf, len);
   }
+  command error_t HplMAX136x.readStatus[uint8_t id](uint8_t *buf, uint8_t len) {
+    currentId = id;
+    return call ToHPLC.readStatus(buf, len);
+  }
   async event void ToHPLC.measureChannelsDone(error_t error, uint8_t *buf, uint8_t len) {
     signal HplMAX136x.measureChannelsDone[currentId](error, buf, len);
   }
@@ -58,9 +62,12 @@ implementation {
   async event void ToHPLC.alertThreshold() {
     signal HplMAX136x.alertThreshold[currentId]();
   }
-
+  async event void ToHPLC.readStatusDone(error_t error, uint8_t * buf) {
+    signal HplMAX136x.readStatusDone[currentId](error, buf);
+  }
 
   default async event void HplMAX136x.measureChannelsDone[uint8_t id]( error_t error, uint8_t *buf, uint8_t len ) {}
   default async event void HplMAX136x.setConfigDone[uint8_t id]( error_t error , uint8_t *cfgbuf, uint8_t len) {}
   default async event void HplMAX136x.alertThreshold[uint8_t id]() {}
+  default async event void HplMAX136x.readStatusDone[uint8_t id](error_t error, uint8_t *buf) { }
 }

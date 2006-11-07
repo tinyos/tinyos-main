@@ -26,8 +26,8 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * - Revision -------------------------------------------------------------
-* $Revision: 1.2 $
-* $Date: 2006-07-12 17:01:59 $
+* $Revision: 1.3 $
+* $Date: 2006-11-07 19:31:15 $
 * ========================================================================
 */
 
@@ -60,6 +60,7 @@ module HplTda5250ConfigP {
     interface Tda5250ReadReg<TDA5250_REG_TYPE_STATUS>       as STATUS;
     interface Tda5250ReadReg<TDA5250_REG_TYPE_ADC>          as ADC;
 
+    interface GeneralIO as ASKNFSK;
     interface GeneralIO as TXRX;
     interface GeneralIO as PWDDD;
     interface GpioInterrupt as PWDDDInterrupt;
@@ -176,24 +177,22 @@ implementation {
   /* << tested >> */
   async command void HplTda5250Config.UseFSK(tda5250_cap_vals_t pos_shift, tda5250_cap_vals_t neg_shift) {
     currentConfig = CONFIG_ASK_NFSK_FSK(currentConfig);
-    if(currentConfig | MASK_CONFIG_CONTROL_TXRX_REGISTER) {
+    if(currentConfig & MASK_CONFIG_CONTROL_TXRX_REGISTER) {
       call CONFIG.set(currentConfig);
     }
     else {
-      // ***** For Platforms that have a connection to the FSK pin *******
-      //call FSK.set(); 
+      call ASKNFSK.clr(); 
     }
     call FSK.set(((uint16_t)((((uint16_t)pos_shift) << 8) + neg_shift)));
   }
   /* << tested >> */
   async command void HplTda5250Config.UseASK(tda5250_cap_vals_t value) {
     currentConfig = CONFIG_ASK_NFSK_ASK(currentConfig);
-    if((currentConfig | MASK_CONFIG_CONTROL_TXRX_REGISTER)) {
+    if(currentConfig & MASK_CONFIG_CONTROL_TXRX_REGISTER) {
       call CONFIG.set(currentConfig);
     } 
     else {
-      // ***** For Platforms that have a connection to the FSK pin *******
-      //call FSK.set(); 
+      call ASKNFSK.set(); 
     }
     call FSK.set((((uint16_t)value) << 8));
   }
@@ -465,7 +464,7 @@ implementation {
   async command void HplTda5250Config.SetTxMode() {
     currentConfig = CONFIG_RX_NTX_TX(currentConfig);
     currentConfig = CONFIG_ALL_PD_NORMAL(currentConfig);
-    if (currentConfig | MASK_CONFIG_CONTROL_TXRX_REGISTER) {
+    if (currentConfig & MASK_CONFIG_CONTROL_TXRX_REGISTER) {
       call CONFIG.set(currentConfig);
     }
     else {
@@ -473,12 +472,12 @@ implementation {
       call PWDDD.clr();
     }
   }
-
+ 
   /* << tested >> */
   async command void HplTda5250Config.SetRxMode() {
     currentConfig = CONFIG_RX_NTX_RX(currentConfig);
     currentConfig = CONFIG_ALL_PD_NORMAL(currentConfig);
-    if (currentConfig | MASK_CONFIG_CONTROL_TXRX_REGISTER) {
+    if (currentConfig & MASK_CONFIG_CONTROL_TXRX_REGISTER) {
       call CONFIG.set(currentConfig);
     }
     else {
@@ -490,13 +489,17 @@ implementation {
   /* << tested >> */
   async command void HplTda5250Config.SetSleepMode() {
     currentConfig = CONFIG_ALL_PD_POWER_DOWN(currentConfig);
-    if (currentConfig | MASK_CONFIG_CONTROL_TXRX_REGISTER) {
+    if (currentConfig & MASK_CONFIG_CONTROL_TXRX_REGISTER) {
       call CONFIG.set(currentConfig);
     }
     else {
       call PWDDD.makeOutput();
       call PWDDD.set();
     }
+  }
+  
+  async command bool HplTda5250Config.IsTxRxPinControlled() {
+    return (currentConfig & MASK_CONFIG_CONTROL_TXRX_REGISTER);
   }
 
   /****************************************************************

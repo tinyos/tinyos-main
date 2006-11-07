@@ -6,7 +6,7 @@
 # @includes instead of -I's to @opts, otherwise the %T won't be processed
 # by ncc.  
 #
-# $Id: .platform,v 1.2 2006-07-12 17:02:46 scipio Exp $
+# $Id: .platform,v 1.3 2006-11-07 19:31:23 scipio Exp $
 #
 
 push ( @includes, qw(
@@ -14,7 +14,7 @@ push ( @includes, qw(
   %T/platforms/intelmote2
   %T/platforms/intelmote2/chips/cc2420
   %T/platforms/intelmote2/chips/da9030
-  %T/platforms/intelmote2/chips/pxa271
+  %T/platforms/intelmote2/chips/ds2745
   %T/chips/cc2420
   %T/chips/pxa27x
   %T/chips/pxa27x/lib
@@ -24,6 +24,8 @@ push ( @includes, qw(
   %T/chips/pxa27x/ssp
   %T/chips/pxa27x/i2c
   %T/chips/pxa27x/uart
+  %T/chips/pxa27x/p30
+  %T/chips/pxa27x/ds2745
   %T/lib/timer
   %T/lib/serial
   %T/lib/gpio

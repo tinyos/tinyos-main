@@ -1,4 +1,4 @@
-// $Id: heap.c,v 1.2 2006-07-12 17:02:34 scipio Exp $
+// $Id: heap.c,v 1.3 2006-11-07 19:31:21 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  

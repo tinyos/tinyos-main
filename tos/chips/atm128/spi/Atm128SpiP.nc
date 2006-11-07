@@ -1,4 +1,4 @@
-/// $Id: Atm128SpiP.nc,v 1.2 2006-07-12 17:01:28 scipio Exp $
+/// $Id: Atm128SpiP.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -63,7 +63,7 @@
  *
  *
  * <pre>
- *  $Id: Atm128SpiP.nc,v 1.2 2006-07-12 17:01:28 scipio Exp $
+ *  $Id: Atm128SpiP.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -126,10 +126,10 @@ implementation {
     call McuPowerState.update();
   }
   
-  async command void SpiByte.write( uint8_t tx, uint8_t* rx ) {
+  async command uint8_t SpiByte.write( uint8_t tx ) {
     call Spi.write( tx );
     while ( !( SPSR & 0x80 ) );
-    *rx = call Spi.read();
+    return call Spi.read();
   }
 
 
@@ -176,9 +176,9 @@ implementation {
     for (;tmpPos < (end - 1) ; tmpPos++) {
       uint8_t val;
       if (tx != NULL) 
-	call SpiByte.write( tx[tmpPos], &val );
+	val = call SpiByte.write( tx[tmpPos] );
       else
-	call SpiByte.write( 0, &val );
+	val = call SpiByte.write( 0 );
     
       if (rx != NULL) {
 	rx[tmpPos] = val;
@@ -291,13 +291,14 @@ implementation {
    return call ResourceArbiter.request[ id ]();
  }
 
- async command void Resource.release[ uint8_t id ]() {
-   call ResourceArbiter.release[ id ]();
+ async command error_t Resource.release[ uint8_t id ]() {
+   error_t error = call ResourceArbiter.release[ id ]();
    atomic {
      if (!call ArbiterInfo.inUse()) {
        stopSpi();
      }
    }
+   return error;
  }
 
  async command uint8_t Resource.isOwner[uint8_t id]() {

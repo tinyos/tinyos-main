@@ -1,9 +1,13 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: eyesIFXv2.target,v 1.2 2006-07-12 16:59:45 scipio Exp $
+#$Id: eyesIFXv2.target,v 1.3 2006-11-07 19:30:39 scipio Exp $
 
 PLATFORM = eyesIFXv2
 
 MSP_MCU = msp430x1611
+
+#Flash Config
+VOLUME_FILE = volumes-at45db.xml
+VOLUME_ALLOCATOR = tos-storage-at45db
 
 # Disable MSP430 hardware multiply because it makes MSPGCC die
 PFLAGS += -mdisable-hwmul
@@ -22,6 +26,9 @@ ifeq (,$(findstring /dev/ttyUSB,$(BSL)))
 endif
 
 NESC_FLAGS:=-Wnesc-all -mdisable-hwmul
+
+VOLUME_FILE = volumes-at45db.xml
+VOLUME_ALLOCATOR = tos-storage-at45db
 
 $(call TOSMake_include_platform,msp)
 

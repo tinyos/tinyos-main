@@ -1,4 +1,4 @@
-/* $Id: HalMAX136xControlP.nc,v 1.2 2006-07-12 17:01:38 scipio Exp $ */
+/* $Id: HalMAX136xControlP.nc,v 1.3 2006-11-07 19:30:54 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -51,6 +51,8 @@ implementation {
     S_SETCONVMODE,
     S_SETCLK,
     S_SETREF,
+    S_ENALERT,
+    S_GETSTATUS,
   };
   uint8_t state = S_IDLE;
 
@@ -60,6 +62,10 @@ implementation {
   uint8_t monitorByteShadow = 0x0;
 
   error_t clientResult;
+
+  task void alert_Task() {
+    signal HalMAX136xAdvanced.alertThreshold();
+  }
 
   task void signalDone_Task() {
     switch(state) {
@@ -87,6 +93,16 @@ implementation {
       state = S_IDLE;
       call Resource.release();
       signal HalMAX136xAdvanced.setRefDone(clientResult);
+      break;
+    case S_ENALERT:
+      state = S_IDLE;
+      call Resource.release();
+      signal HalMAX136xAdvanced.enableAlertDone(clientResult);
+      break;
+    case S_GETSTATUS:
+      state = S_IDLE;
+      call Resource.release();
+      signal HalMAX136xAdvanced.getStatusDone(clientResult, mI2CBuffer[0], 0);
       break;
     default:
       break;
@@ -201,18 +217,53 @@ implementation {
 
     setupByteShadow &=  ~MAX136X_SETUP_REFAIN3SEL(3);
     setupByteShadow |= MAX136X_SETUP_REFAIN3SEL(sel);
+
+    mI2CBuffer[0] = setupByteShadow;
+    call HplMAX136x.setConfig(mI2CBuffer, 1);
+    return SUCCESS;
   }
 
   command error_t HalMAX136xAdvanced.getStatus() {
-    // STUB
+    error_t status;
+    if(state != S_IDLE)
+      return FAIL;
+    status = call Resource.immediateRequest();
+    if(status != SUCCESS)
+      return status;
+    state = S_GETSTATUS;
+    
+    return call HplMAX136x.readStatus(mI2CBuffer, 2);
   }
 
   command error_t HalMAX136xAdvanced.enableAlert(bool bEnable) {
-    // STUB
+    uint8_t i;
+    error_t status;
+    if(state != S_IDLE)
+      return FAIL;
+    status = call Resource.immediateRequest();
+    if(status != SUCCESS)
+      return status;
+    state = S_ENALERT;
+
+    if(bEnable)
+      monitorByteShadow |= MAX136X_MONITOR_INTEN;
+    else
+      monitorByteShadow &= ~MAX136X_MONITOR_INTEN;
+
+    mI2CBuffer[1] = setupByteShadow;
+    mI2CBuffer[2] = monitorByteShadow;
+    
+    call HplMAX136x.setConfig(mI2CBuffer, 2);
+    return SUCCESS;
   }
 
   event void Resource.granted() {
     // intentionally left blank
+  }
+
+  async event void HplMAX136x.readStatusDone(error_t error, uint8_t* buf) {
+    clientResult = error;
+    post signalDone_Task();
   }
 
   async event void HplMAX136x.measureChannelsDone( error_t error, uint8_t *buf, uint8_t len ) { /* intentionally left blank */ }
@@ -220,5 +271,7 @@ implementation {
     clientResult = error;
     post signalDone_Task();
   }
-  async event void HplMAX136x.alertThreshold() {}
+  async event void HplMAX136x.alertThreshold() {
+    post alert_Task();
+  }
 }

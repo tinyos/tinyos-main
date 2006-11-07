@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makerules,v 1.2 2006-07-12 16:59:43 scipio Exp $
+#$Id: Makerules,v 1.3 2006-11-07 19:30:39 scipio Exp $
 
 # @author Cory Sharp <cssharp@eecs.berkeley.edu>
 

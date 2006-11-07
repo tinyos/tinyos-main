@@ -39,7 +39,7 @@
  * See TEP118 - Dissemination for details.
  * 
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:22 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:18 $
  */
 
 module DisseminationEngineImplP {
@@ -120,10 +120,10 @@ implementation {
 
     if ( dMsg->seqno != DISSEMINATION_SEQNO_UNKNOWN ) {
       object = call DisseminationCache.requestData[ key ]( &objectSize );
-      objectSize = 
-	objectSize < call AMSend.maxPayloadLength() ?
-	objectSize : call AMSend.maxPayloadLength();
-
+      if ((objectSize + sizeof(dissemination_message_t)) > 
+           call AMSend.maxPayloadLength()) {
+        objectSize = call AMSend.maxPayloadLength() - sizeof(dissemination_message_t);
+      }
       memcpy( dMsg->data, object, objectSize );
     }      
     call AMSend.send( AM_BROADCAST_ADDR,

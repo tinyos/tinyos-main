@@ -1,4 +1,4 @@
-//$Id: SerialActiveMessageP.nc,v 1.2 2006-07-12 17:02:29 scipio Exp $
+//$Id: SerialActiveMessageP.nc,v 1.3 2006-11-07 19:31:20 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -54,10 +54,15 @@ implementation {
 					  message_t* msg,
 					  uint8_t len) {
     serial_header_t* header = getHeader(msg);
-    header->addr = dest;
+    header->dest = dest;
+    // Do not set the source address or group, as doing so
+    // prevents transparent bridging. Need a better long-term
+    // solution for this.
+    //header->src = call AMPacket.address();
+    //header->group = TOS_AM_GROUP;
     header->type = id;
     header->length = len;
-    header->group = TOS_AM_GROUP;
+
     return call SubSend.send(msg, len);
   }
 
@@ -128,12 +133,22 @@ implementation {
 
   command am_addr_t AMPacket.destination(message_t* amsg) {
     serial_header_t* header = getHeader(amsg);
-    return header->addr;
+    return header->dest;
+  }
+
+  command am_addr_t AMPacket.source(message_t* amsg) {
+    serial_header_t* header = getHeader(amsg);
+    return header->src;
   }
 
   command void AMPacket.setDestination(message_t* amsg, am_addr_t addr) {
     serial_header_t* header = getHeader(amsg);
-    header->addr = addr;
+    header->dest = addr;
+  }
+
+  command void AMPacket.setSource(message_t* amsg, am_addr_t addr) {
+    serial_header_t* header = getHeader(amsg);
+    header->src = addr;
   }
   
   command bool AMPacket.isForMe(message_t* amsg) {

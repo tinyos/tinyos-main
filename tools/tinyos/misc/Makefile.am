@@ -5,6 +5,7 @@ dist_man_MANS = tos-check-env.1 	\
                 tos-install-jni.1	\
                 tos-locate-jre.1	\
                 tos-mote-key.1		\
+                tos-mviz.1              \
                 tos-serial-configure.1	\
                 tos-serial-debug.1	\
                 tos-set-symbols.1	\
@@ -17,6 +18,7 @@ bin_SCRIPTS = tos-ident-flags \
 	      tos-install-jni \
 	      tos-locate-jre \
 	      tos-mote-key \
+              tos-mviz    \
 	      tos-serial-configure \
 	      tos-set-symbols \
 	      tos-write-image \

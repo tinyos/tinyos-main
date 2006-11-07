@@ -1,4 +1,4 @@
-// $Id: CC1000SendReceiveP.nc,v 1.3 2006-08-07 21:52:53 idgay Exp $
+// $Id: CC1000SendReceiveP.nc,v 1.4 2006-11-07 19:30:45 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -262,7 +262,7 @@ implementation
 	  txBufPtr = msg;
 	}
       }
-    signal ByteRadio.rts();
+    signal ByteRadio.rts(msg);
 
     return SUCCESS;
   }
@@ -476,9 +476,9 @@ implementation
     cc1000_metadata_t *rxMetadata = getMetadata(rxBufPtr);
 
     if (result != SUCCESS)
-      rxMetadata->strength = 0;
+      rxMetadata->strength_or_preamble = 0;
     else
-      rxMetadata->strength = data;
+      rxMetadata->strength_or_preamble = data;
   }
 
   void rxData(uint8_t in) {
@@ -522,7 +522,7 @@ implementation
 
     if (f.ack &&
 	rxFooter->crc &&
-	rxHeader->addr == call amAddress())
+	rxHeader->dest == call amAddress())
       {
 	enterAckState();
 	call CC1000Control.txMode();

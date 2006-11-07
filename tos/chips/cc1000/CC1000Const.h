@@ -1,4 +1,4 @@
-// $Id: CC1000Const.h,v 1.2 2006-07-12 17:01:32 scipio Exp $
+// $Id: CC1000Const.h,v 1.3 2006-11-07 19:30:45 scipio Exp $
 
 /* -*- Mode: C; c-basic-indent: 2; indent-tabs-mode: nil -*- */ 
 /*									tab:4
@@ -218,7 +218,20 @@ enum {
 
   CC1K_LPL_STATES =         9,
 
-  CC1K_LPL_PACKET_TIME =    16
+  CC1K_LPL_PACKET_TIME =    16,
+
+  CC1K_LPL_CHECK_TIME =     16, /* In tenth's of milliseconds, this should
+				  be an approximation of the on-time for
+			          a LPL check rather than the total check
+			          time. */
+  CC1K_LPL_MIN_INTERVAL =    5, /* In milliseconds, the minimum interval
+				   between low-power-listening checks */
+  CC1K_LPL_MAX_INTERVAL =    10000  /* In milliseconds, the maximum interval
+				       between low-power-listening checks.
+				       Arbitrary value, but must be at
+				       most 32767 because of the way
+				       sleep interval is stored in outgoing
+				       messages */
 };
 
 #ifdef CC1K_DEFAULT_FREQ
@@ -231,42 +244,6 @@ enum {
 #ifndef CC1K_DEF_PRESET
 #define CC1K_DEF_PRESET	(CC1K_434_845_MHZ)
 #endif 
-
-
-static const_uint8_t CC1K_LPL_PreambleLength[CC1K_LPL_STATES*2] = {
-    0, 6,       // Always on, 6 byte preamble
-    0x0, 48,    // 10ms check interval
-    0x0, 60,    // 25ms 
-    0x0, 144,   // 50ms 
-    0x1, 0x0f,  // 100ms
-    0x1, 0xf8,  // 200ms
-    0x3, 0xd9,  // 400ms
-    0x7, 0x9b,  // 800ms
-    0xf, 0x06,  // 1600ms
-};
-
-static const_uint8_t CC1K_LPL_SleepTime[CC1K_LPL_STATES*2] = {
-    0, 0,       //0
-    0x0, 10,    // 10ms
-    0x0, 25,    // 25ms
-    0x0, 50,    // 50ms
-    0x0, 100,   // 100ms
-    0x0, 200,   // 200ms
-    0x1, 0x90,  // 400ms
-    0x3, 0x20,  // 800ms
-    0x6, 0x40,  // 1600ms
-};
-
-static const_uint8_t CC1K_LPL_SleepPreamble[CC1K_LPL_STATES] = {
-    0, 
-    8,
-    8,
-    8, 
-    8,
-    8,
-    8,
-    8
-};
 
 static const_uint8_t CC1K_Params[6][20] = {
   // (0) 433.002 MHz channel, 19.2 Kbps data, Manchester Encoding, High Side LO

@@ -1,4 +1,4 @@
-/* $Id: SineSensorC.nc,v 1.2 2006-11-06 11:57:20 scipio Exp $
+/* $Id: SineSensorC.nc,v 1.3 2006-11-07 19:31:28 scipio Exp $
  * Copyright (c) 2006 Intel Corporation
  * All rights reserved.
  *

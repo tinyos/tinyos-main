@@ -1,13 +1,11 @@
+#!/bin/bash
 ## NOTE: This is for MY rpm setup. Don't expect it to work for you...
 
 # For linux, change to /usr/src/redhat
 # For my cygwin: /cygdrive/c/rpmsrc
-RPMS=/cygdrive/c/rpmsrc
-TINYOS_VERSION=2.0.0beta2
-TINYOS_TOOLS_VERSION=1.2.2
-VM_VERSION=1.1.1Mar2004cvs
-TINYDB_VERSION=1.1.3July2004cvs
-CONTRIB_VERSION=1.1.4Apr2005cvs
+RPMS=/usr/src/redhat
+TINYOS_VERSION=2.0.0
+TINYOS_TOOLS_VERSION=1.2.3
 
 echo "*** Building tarballs"
 #rm ../../../*.tar.gz

@@ -37,11 +37,10 @@
  * Sensirion SHT11 driver.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:03:10 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:27 $
  */
 
 configuration HplSensirionSht11C {
-  provides interface Init;
   provides interface Resource[ uint8_t id ];
   provides interface GeneralIO as DATA;
   provides interface GeneralIO as SCK;
@@ -75,11 +74,9 @@ implementation {
   InterruptDATA = InterruptDATAC.Interrupt;
 
   components new FcfsArbiterC( "Sht11.Resource" ) as Arbiter;
-  Init = Arbiter;
   Resource = Arbiter;
   
   components new SplitControlPowerManagerC();
-  Init = SplitControlPowerManagerC;
   SplitControlPowerManagerC.SplitControl -> HplSensirionSht11P;
   SplitControlPowerManagerC.ArbiterInit -> Arbiter.Init;
   SplitControlPowerManagerC.ArbiterInfo -> Arbiter.ArbiterInfo;

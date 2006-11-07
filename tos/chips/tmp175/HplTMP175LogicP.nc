@@ -37,7 +37,7 @@
  * outside configuration/module according to the host platform.
  * 
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:04 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:16 $
  */
 
 #include "TMP175.h"
@@ -73,7 +73,7 @@ implementation {
   uint8_t mConfigRegVal;
   norace error_t mSSError;
 
-  static error_t doSetReg(uint8_t nextState, uint8_t reg, uint16_t val) {
+  static error_t doSetReg(uint8_t nextState, uint8_t reg, uint8_t val) {
     error_t error = SUCCESS;
 
     atomic {
@@ -139,7 +139,7 @@ implementation {
   command error_t Init.init() {
     // careful! this can be changed via polarity I believe
     call InterruptPin.makeInput();
-    call AlertInterrupt.enableFallingEdge();
+    call AlertInterrupt.enableRisingEdge();
     mfPtrReset = FALSE;
     mConfigRegVal = 0;
     mState = STATE_STOPPED;

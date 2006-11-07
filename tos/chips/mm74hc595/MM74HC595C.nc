@@ -60,9 +60,9 @@ configuration MM74HC595C {
 implementation {
 
   components MM74HC595ImplP, HplMM74HC595PinsC;
-  MM74HC595ImplP.Ser -> HplMM74HC595C.Ser;
-  MM74HC595ImplP.Sck -> HplMM74HC595C.Sck;
-  MM74HC595ImplP.Rck -> HplMM74HC595C.Rck;
+  MM74HC595ImplP.Ser -> HplMM74HC595PinsC.Ser;
+  MM74HC595ImplP.Sck -> HplMM74HC595PinsC.Sck;
+  MM74HC595ImplP.Rck -> HplMM74HC595PinsC.Rck;
 
   components MainC;
   MainC.SoftwareInit -> MM74HC595ImplP.Init;

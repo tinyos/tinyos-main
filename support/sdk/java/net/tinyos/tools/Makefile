@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2006-07-12 16:59:59 scipio Exp $
+# $Id: Makefile,v 1.3 2006-11-07 19:30:41 scipio Exp $
 #
 # TinyOS Tools Makefile
 #

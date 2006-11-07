@@ -36,7 +36,7 @@
  * TSL256x HPL interface.
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:04 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:16 $
  */
 
 #include "TSL256x.h"
@@ -51,6 +51,7 @@ generic module HplTSL2561LogicP(uint16_t devAddr)
   uses interface I2CPacket<TI2CBasicAddr>;
   uses interface GpioInterrupt as InterruptAlert;
 
+  uses interface Leds;
   uses interface GeneralIO as InterruptPin;
 }
 
@@ -79,11 +80,11 @@ implementation {
   uint8_t mState;
   norace error_t mSSError;
 
-  static error_t doWriteReg(uint8_t nextState, uint8_t reg, uint8_t val) {
+  static error_t doWriteReg(uint8_t nextState, uint8_t reg, uint16_t val, uint8_t size) {
     error_t error = SUCCESS;
 
     atomic {
-      if (mState == STATE_IDLE) {
+      if ((mState == STATE_IDLE) || (mState == STATE_STARTING)) {
 	mState = nextState;
       }
       else {
@@ -93,10 +94,11 @@ implementation {
     if (error)
       return error;
 
-    mI2CBuffer[0] = (TSL256X_COMMAND_CMD | TSL256X_COMMAND_ADDRESS(reg));
-    mI2CBuffer[1] = val;
+    mI2CBuffer[0] = (TSL256X_COMMAND_CMD | reg);
+    mI2CBuffer[1] = (uint8_t)(val & 0xFF);
+    mI2CBuffer[2] = (uint8_t)((val >> 8) & 0xFF);
 
-    error = call I2CPacket.write(I2C_START | I2C_STOP,devAddr,2,mI2CBuffer);
+    error = call I2CPacket.write(I2C_START | I2C_STOP,devAddr,(size + 1),mI2CBuffer);
     
     if (error) 
       atomic mState = STATE_IDLE;
@@ -118,7 +120,7 @@ implementation {
     if (error)
       return error;
 
-    mI2CBuffer[0] = (TSL256X_COMMAND_CMD | TSL256X_COMMAND_ADDRESS(reg));
+    mI2CBuffer[0] = (TSL256X_COMMAND_CMD | reg );
 
     error = call I2CPacket.write(I2C_START,devAddr,1,mI2CBuffer);
 
@@ -140,13 +142,11 @@ implementation {
   }
 
   task void StartDone() {
-    atomic mState = STATE_IDLE;
     signal SplitControl.startDone(mSSError);
     return;
   }
 
   task void StopDone() {
-    atomic mState = STATE_STOPPED;
     signal SplitControl.stopDone(mSSError);
     return;
   }
@@ -163,7 +163,7 @@ implementation {
     error_t error = SUCCESS;
     atomic {
       if (mState == STATE_STOPPED) { 
-	mState = STATE_IDLE; 
+	mState = STATE_STARTING; 
       }
       else {
 	error = EBUSY;
@@ -173,13 +173,14 @@ implementation {
     if (error)
       return error;
 
-    return doWriteReg(STATE_STARTING,TSL256X_PTR_CONTROL,(TSL256X_CONTROL_POWER_ON));
+    return doWriteReg(STATE_STARTING,(TSL256X_COMMAND_CLEAR | TSL256X_PTR_CONTROL),
+		      (TSL256X_CONTROL_POWER_ON),1);
   }
 
   command error_t SplitControl.stop() {
-    return doWriteReg(STATE_STOPPING,TSL256X_PTR_CONTROL,(TSL256X_CONTROL_POWER_OFF));
+    return doWriteReg(STATE_STOPPING,(TSL256X_COMMAND_CLEAR | TSL256X_PTR_CONTROL),
+		      (TSL256X_CONTROL_POWER_OFF),1);
   }
-
   
   command error_t HplTSL256x.measureCh0() { 
     return doReadPrep(STATE_READCH0,TSL256X_PTR_DATA0LOW);
@@ -190,23 +191,25 @@ implementation {
   }
 
   command error_t HplTSL256x.setCONTROL(uint8_t val) {
-    return doWriteReg(STATE_SETCONTROL,TSL256X_PTR_CONTROL,val);
+    return doWriteReg(STATE_SETCONTROL,TSL256X_PTR_CONTROL,val,1);
   }
   
   command error_t HplTSL256x.setTIMING(uint8_t val) {
-    return doWriteReg(STATE_SETTIMING,TSL256X_PTR_TIMING,val);
+    return doWriteReg(STATE_SETTIMING,TSL256X_PTR_TIMING,val,1);
   }
 
   command error_t HplTSL256x.setTHRESHLOW(uint16_t val) {
-    return doWriteReg(STATE_SETLOW,TSL256X_PTR_THRESHLOWLOW,val);  
+    // As it turns out, you have to use the SMB Write Word flag to use this command
+    return doWriteReg(STATE_SETLOW,(TSL256X_COMMAND_WORD | TSL256X_PTR_THRESHLOWLOW),val,2);  
   }
 
   command error_t HplTSL256x.setTHRESHHIGH(uint16_t val) {
-    return doWriteReg(STATE_SETHIGH,TSL256X_PTR_THRESHHIGHLOW,val); 
+    // As it turns out, you have to use the SMB Write Word flag to use this command
+    return doWriteReg(STATE_SETHIGH,(TSL256X_COMMAND_WORD | TSL256X_PTR_THRESHHIGHLOW),val,2); 
   }
 
   command error_t HplTSL256x.setINTERRUPT(uint8_t val) {
-    return doWriteReg(STATE_SETINTERRUPT,TSL256X_PTR_INTERRUPT,val);
+    return doWriteReg(STATE_SETINTERRUPT,(TSL256X_COMMAND_CLEAR | TSL256X_PTR_INTERRUPT),val,1);
   }
   
   command error_t HplTSL256x.getID() {
@@ -243,25 +246,10 @@ implementation {
 
   async event void I2CPacket.writeDone(error_t i2c_error, uint16_t chipAddr, uint8_t len, uint8_t *buf) {
     error_t error = i2c_error;
-    /*
-    if(interruptBit) {
-      interruptBit = FALSE;
-      return;
-    }
-    */
+
     switch (mState) {
     case STATE_STARTING:
       mSSError = error;
-      //---
-      /* 
-      mState = STATE_CLRINTERRUPTS;
-      interruptBit = TRUE;
-      clearInterrupt();
-      break;
-    case STATE_CLRINTERRUPTS:
-      mSSError = error;
-      */
-      //---
       mState = STATE_IDLE;
       post StartDone();
       break;
@@ -309,13 +297,12 @@ implementation {
   async event void InterruptAlert.fired() {
     // This alert is decoupled from whatever state the TSL2561 is in. 
     // Upper layers must handle dealing with this alert appropriately.
-    
     signal HplTSL256x.alertThreshold();
 
     // need to clear interrupt, this is dangerous...
     // if you get interrupted while someone is reading...
     // ... the I2C bus may become inconsistent?
-    clearInterrupt();
+    //clearInterrupt();
     
     return;
   }

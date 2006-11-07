@@ -1,4 +1,4 @@
-// $Id: TestSerialC.nc,v 1.3 2006-10-30 23:49:50 bengreenstein Exp $
+// $Id: TestSerialC.nc,v 1.4 2006-11-07 19:30:35 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -20,7 +20,7 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2002-2005 Intel Corporation
+ * Copyright (c) 2002-2003 Intel Corporation
  * All rights reserved.
  *
  * This file is distributed under the terms in the attached INTEL-LICENSE     
@@ -31,14 +31,7 @@
 
 /**
  * Application to test that the TinyOS java toolchain can communicate
- * with motes over the serial port. The application sends packets to
- * the serial port at 1Hz: the packet contains an incrementing
- * counter. When the application receives a counter packet, it
- * displays the bottom three bits on its LEDs. This application is
- * very similar to RadioCountToLeds, except that it operates over the
- * serial port. There is Java application for testing the mote
- * application: run TestSerial to print out the received packets and
- * send packets to the mote.
+ * with motes over the serial port. 
  *
  *  @author Gilman Tolle
  *  @author Philip Levis
@@ -47,21 +40,90 @@
  *
  **/
 
+#include "Timer.h"
 #include "TestSerial.h"
 
-configuration TestSerialC {}
-implementation {
-  components TestSerialP, LedsC, MainC;
-  components SerialActiveMessageC as AM;
-  components new TimerMilliC();
-
-  TestSerialP.Boot -> MainC.Boot;
-  TestSerialP.Control -> AM;
-  TestSerialP.Receive -> AM.Receive[AM_TESTSERIALMSG];
-  TestSerialP.AMSend -> AM.AMSend[AM_TESTSERIALMSG];
-  TestSerialP.Leds -> LedsC;
-  TestSerialP.MilliTimer -> TimerMilliC;
-  TestSerialP.Packet -> AM;
+module TestSerialC {
+  uses {
+    interface SplitControl as Control;
+    interface Leds;
+    interface Boot;
+    interface Receive;
+    interface AMSend;
+    interface Timer<TMilli> as MilliTimer;
+    interface Packet;
+  }
 }
+implementation {
+
+  message_t packet;
+
+  bool locked = FALSE;
+  uint16_t counter = 0;
+  
+  event void Boot.booted() {
+    call Control.start();
+  }
+  
+  event void MilliTimer.fired() {
+    counter++;
+    if (locked) {
+      return;
+    }
+    else {
+      test_serial_msg_t* rcm = (test_serial_msg_t*)call Packet.getPayload(&packet, NULL);
+      if (call Packet.maxPayloadLength() < sizeof(test_serial_msg_t)) {
+	return;
+      }
+
+      rcm->counter = counter;
+      if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(test_serial_msg_t)) == SUCCESS) {
+	locked = TRUE;
+      }
+    }
+  }
+
+  event message_t* Receive.receive(message_t* bufPtr, 
+				   void* payload, uint8_t len) {
+    if (len != sizeof(test_serial_msg_t)) {return bufPtr;}
+    else {
+      test_serial_msg_t* rcm = (test_serial_msg_t*)payload;
+      if (rcm->counter & 0x1) {
+	call Leds.led0On();
+      }
+      else {
+	call Leds.led0Off();
+      }
+      if (rcm->counter & 0x2) {
+	call Leds.led1On();
+      }
+      else {
+	call Leds.led1Off();
+      }
+      if (rcm->counter & 0x4) {
+	call Leds.led2On();
+      }
+      else {
+	call Leds.led2Off();
+      }
+      return bufPtr;
+    }
+  }
+
+  event void AMSend.sendDone(message_t* bufPtr, error_t error) {
+    if (&packet == bufPtr) {
+      locked = FALSE;
+    }
+  }
+
+  event void Control.startDone(error_t err) {
+    if (err == SUCCESS) {
+      call MilliTimer.startPeriodic(1000);
+    }
+  }
+  event void Control.stopDone(error_t err) {}
+}
+
+
 
 

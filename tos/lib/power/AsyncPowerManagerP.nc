@@ -23,12 +23,14 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:02:27 $ 
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:31:19 $ 
  * ======================================================================== 
  */
  
 /**
+ * Please refer to TEP 115 for more information about this component and its
+ * intended use.<br><br>
  *
  * This is the internal implementation of the standard power management
  * policy for managing the power states of non-virtualized devices.
@@ -41,60 +43,32 @@
  * power up, so it can be powered on and off as often as possible.
  * 
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @see  Please refer to TEP 115 for more information about this component and its
- *          intended use.
  */
  
 generic module AsyncPowerManagerP() {
-  provides {
-    interface Init;
-  }
   uses {
     interface AsyncStdControl;
 
     interface PowerDownCleanup;
-    interface Init as ArbiterInit;
     interface ResourceController;
+    interface ArbiterInfo;
   }
 }
 implementation {
 
-  norace struct {
-    uint8_t stopping :1;
-    uint8_t requested :1;
-  } f; //for flags
-  
-  command error_t Init.init() {
-    call ArbiterInit.init();
-    call ResourceController.immediateRequest();
-    return SUCCESS;
-  }
-
   async event void ResourceController.requested() {
-    if(f.stopping == FALSE) {
-      call AsyncStdControl.start();
-      call ResourceController.release();
-    }
-    else atomic f.requested = TRUE;    
+    call AsyncStdControl.start();
+    call ResourceController.release(); 
   }
 
-  async event void ResourceController.idle() {
-    if(call ResourceController.immediateRequest() == SUCCESS) {
-      atomic f.stopping = TRUE;
-      call PowerDownCleanup.cleanup();
-      call AsyncStdControl.stop();
-    }
-    if(f.requested == TRUE) {
-      call AsyncStdControl.start();
-      call ResourceController.release();
-    }
-    atomic {
-      f.stopping = FALSE;
-      f.requested = FALSE;
-    }
-  }
+  async event void ResourceController.immediateRequested() {
+    call AsyncStdControl.start();
+    call ResourceController.release();
+  } 
 
-  event void ResourceController.granted() {
+  async event void ResourceController.granted() {
+    call PowerDownCleanup.cleanup();
+    call AsyncStdControl.stop();
   }
 
   default async command void PowerDownCleanup.cleanup() {

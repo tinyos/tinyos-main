@@ -1,4 +1,4 @@
-/// $Id: Atm128SpiC.nc,v 1.2 2006-07-12 17:01:28 scipio Exp $
+/// $Id: Atm128SpiC.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -52,7 +52,7 @@
  * The HAL of the SPI bus on the atm128.
  *
  * <pre>
- *  $Id: Atm128SpiC.nc,v 1.2 2006-07-12 17:01:28 scipio Exp $
+ *  $Id: Atm128SpiC.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $
  * </pre>
  *
  *
@@ -71,11 +71,10 @@ configuration Atm128SpiC {
 implementation {
   components Atm128SpiP as SpiMaster, HplAtm128SpiC as HplSpi;
   components HplAtm128GeneralIOC as IO;
-  components new FcfsArbiterC("Atm128SpiC.Resource") as Arbiter;
+  components new SimpleFcfsArbiterC("Atm128SpiC.Resource") as Arbiter;
   components McuSleepC;
   
   Init         = SpiMaster;
-  Init         = Arbiter;
   
   SpiByte      = SpiMaster;
   SpiPacket    = SpiMaster;

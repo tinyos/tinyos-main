@@ -1,4 +1,4 @@
-// $Id: CC1000CsmaP.nc,v 1.3 2006-08-08 20:04:07 idgay Exp $
+// $Id: CC1000CsmaP.nc,v 1.4 2006-11-07 19:30:45 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -101,13 +101,16 @@ implementation
 
   int16_t macDelay;
 
-  uint8_t lplTxPower, lplRxPower;
   uint16_t sleepTime;
 
   uint16_t rssiForSquelch;
 
   task void setWakeupTask();
 
+  cc1000_metadata_t *getMetadata(message_t *amsg) {
+    return (cc1000_metadata_t *)((uint8_t *)amsg->footer + sizeof(cc1000_footer_t));
+  }
+  
   void enterIdleState() {
     call cancelRssi();
     radioState = IDLE_STATE;
@@ -157,20 +160,7 @@ implementation
     call ByteRadio.off();
   }
 
-  /* LPL preamble length and sleep time computation */
-
-  void setPreambleLength() {
-    uint16_t len =
-      (uint16_t)read_uint8_t(&CC1K_LPL_PreambleLength[lplTxPower * 2]) << 8
-      | read_uint8_t(&CC1K_LPL_PreambleLength[lplTxPower * 2 + 1]);
-    call ByteRadio.setPreambleLength(len);
-  }
-
-  void setSleepTime() {
-    sleepTime =
-      (uint16_t)read_uint8_t(&CC1K_LPL_SleepTime[lplRxPower *2 ]) << 8 |
-      read_uint8_t(&CC1K_LPL_SleepTime[lplRxPower * 2 + 1]);
-  }
+  void setPreambleLength(message_t *msg);
 
   /* Initialisation, startup and stopping */
   /*--------------------------------------*/
@@ -200,8 +190,6 @@ implementation
 	  call ByteRadioControl.start();
 	  enterIdleStateSetWakeup();
 	  f.txPending = FALSE;
-	  setPreambleLength();
-	  setSleepTime();
 	}
       else
 	return SUCCESS;
@@ -240,7 +228,7 @@ implementation
 	if (!call WakeupTimer.isRunning())
 	  if (call CC1000Squelch.settled())
 	    {
-	      if (lplRxPower == 0)
+	      if (sleepTime == 0)
 		call WakeupTimer.startOneShot(CC1K_SquelchIntervalSlow);
 	      else
 		// timeout for receiving a message after an lpl check
@@ -306,7 +294,7 @@ implementation
     bool turnOn = FALSE;
 
     atomic
-      if (f.txPending)
+      if (f.txPending || !sleepTime)
 	{
 	  if (radioState == PULSECHECK_STATE || radioState == POWERDOWN_STATE)
 	    {
@@ -314,8 +302,7 @@ implementation
 	      turnOn = TRUE;
 	    }
 	}
-      else if (lplRxPower > 0 && call CC1000Squelch.settled() &&
-	       !call ByteRadio.syncing())
+      else if (call CC1000Squelch.settled() && !call ByteRadio.syncing())
 	{
 	  radioOff();
 	  enterPowerDownState();
@@ -368,7 +355,7 @@ implementation
   /* CSMA */
   /*------*/
 
-  event void ByteRadio.rts() {
+  event void ByteRadio.rts(message_t *msg) {
     atomic
       {
 	f.txPending = TRUE;
@@ -379,6 +366,8 @@ implementation
 	  macDelay = signal CsmaBackoff.initial(call ByteRadio.getTxMessage());
 	else
 	  macDelay = 1;
+
+	setPreambleLength(msg);
       }
   }
 
@@ -479,64 +468,6 @@ implementation
     return SUCCESS;
   }
 
-  async command error_t LowPowerListening.setListeningMode(uint8_t power) {
-    if (power >= CC1K_LPL_STATES)
-      return FAIL;
-
-    atomic
-      {
-	if (radioState != DISABLED_STATE)
-	  return FAIL;
-	lplTxPower = power;
-	lplRxPower = power;
-      }
-    return SUCCESS;
-  }
-
-  async command uint8_t LowPowerListening.getListeningMode() {
-    atomic return lplRxPower;
-  }
-
-  async command error_t LowPowerListening.setTransmitMode(uint8_t power) {
-    if (power >= CC1K_LPL_STATES)
-      return FAIL;
-
-    atomic
-      {
-	lplTxPower = power;
-	setPreambleLength();
-      }
-    return SUCCESS;
-  }
-
-  async command uint8_t LowPowerListening.getTransmitMode() {
-    atomic return lplTxPower;
-  }
-
-  async command error_t LowPowerListening.setPreambleLength(uint16_t bytes) {
-    call ByteRadio.setPreambleLength(bytes);
-    return SUCCESS;
-  }
-
-  async command uint16_t LowPowerListening.getPreambleLength() {
-    return call ByteRadio.getPreambleLength();
-  }
-
-  async command error_t LowPowerListening.setCheckInterval(uint16_t ms) {
-    atomic 
-      {
-	if (lplRxPower == 0)
-	  return FAIL;
-
-	sleepTime = ms;
-      }
-    return SUCCESS;
-  }
-
-  async command uint16_t LowPowerListening.getCheckInterval() {
-    atomic return sleepTime;
-  }
-
   /* Default MAC backoff parameters */
   /*--------------------------------*/
 
@@ -547,5 +478,97 @@ implementation
 
   default async event uint16_t CsmaBackoff.congestion(message_t *m) { 
     return (call Random.rand16() & 0xF) + 1;
+  }
+
+  /* LowPowerListening setup */
+  /* ----------------------- */
+
+  uint16_t validateSleepInterval(uint16_t sleepIntervalMs) {
+    if (sleepIntervalMs < CC1K_LPL_MIN_INTERVAL)
+      return 0;
+    else if (sleepIntervalMs > CC1K_LPL_MAX_INTERVAL)
+      return CC1K_LPL_MAX_INTERVAL;
+    else
+      return sleepIntervalMs;
+  }
+
+  uint16_t dutyToSleep(uint16_t dutyCycle) {
+    /* Scaling factors on CC1K_LPL_CHECK_TIME and dutyCycle are identical */
+    uint16_t interval = (1000 * CC1K_LPL_CHECK_TIME) / dutyCycle;
+
+    return interval < CC1K_LPL_MIN_INTERVAL ? 0 : interval;
+  }
+
+  uint16_t sleepToDuty(uint16_t sleepInterval) {
+    if (sleepInterval < CC1K_LPL_MIN_INTERVAL)
+      return 10000;
+
+    /* Scaling factors on CC1K_LPL_CHECK_TIME and dutyCycle are identical */
+    return (1000 * CC1K_LPL_CHECK_TIME) / sleepInterval;
+  }
+
+  command void LowPowerListening.setLocalSleepInterval(uint16_t s) {
+    sleepTime = validateSleepInterval(s);
+  }
+
+  command uint16_t LowPowerListening.getLocalSleepInterval() {
+    return sleepTime;
+  }
+
+  command void LowPowerListening.setLocalDutyCycle(uint16_t d) {
+    return call LowPowerListening.setLocalSleepInterval(dutyToSleep(d));
+  }
+
+  command uint16_t LowPowerListening.getLocalDutyCycle() {
+    return sleepToDuty(call LowPowerListening.getLocalSleepInterval());
+  }
+
+  command void LowPowerListening.setRxSleepInterval(message_t *msg, uint16_t sleepIntervalMs) {
+    cc1000_metadata_t *meta = getMetadata(msg);
+
+    meta->strength_or_preamble = -(int16_t)validateSleepInterval(sleepIntervalMs) - 1;
+  }
+
+  command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg) {
+    cc1000_metadata_t *meta = getMetadata(msg);
+
+    if (meta->strength_or_preamble >= 0)
+      return sleepTime;
+    else
+      return -(meta->strength_or_preamble + 1);
+  }
+
+  command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t d) {
+    return call LowPowerListening.setRxSleepInterval(msg, dutyToSleep(d));
+  }
+
+  command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg) {
+    return sleepToDuty(call LowPowerListening.getRxSleepInterval(msg));
+  }
+
+  command uint16_t LowPowerListening.dutyCycleToSleepInterval(uint16_t d) {
+    return dutyToSleep(d);
+  }
+
+  command uint16_t LowPowerListening.sleepIntervalToDutyCycle(uint16_t s) {
+    return sleepToDuty(s);
+  }
+
+  void setPreambleLength(message_t *msg) {
+    cc1000_metadata_t *meta = getMetadata(msg);
+    uint16_t s;
+    uint32_t plen;
+
+    if (meta->strength_or_preamble >= 0)
+      s = sleepTime;
+    else
+      s = -(meta->strength_or_preamble + 1);
+    meta->strength_or_preamble = 0; /* Destroy setting */
+
+    if (s == 0)
+      plen = 6;
+    else
+      plen = ((s * 614UL) >> 8) + 22; /* ~ s * 2.4 + 22 */
+    call ByteRadio.setPreambleLength(plen);
   }
 }

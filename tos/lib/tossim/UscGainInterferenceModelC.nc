@@ -1,4 +1,4 @@
-// $Id: UscGainInterferenceModelC.nc,v 1.2 2006-07-12 17:02:33 scipio Exp $
+// $Id: UscGainInterferenceModelC.nc,v 1.3 2006-11-07 19:31:21 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -140,7 +140,7 @@ implementation {
       }
       if (list != mine) {
 	if ((list->power - sim_gain_sensitivity()) < heardSignal()) {
-	  dbg("Gain", "Lost packet from %i as power %lf was too low\n", list->source, list->power);
+	  dbg("Gain", "Lost packet from %i as I concurrently received a packet stronger than %lf\n", list->source, list->power);
 	  list->lost = 1;
 	}
       }
@@ -157,7 +157,7 @@ implementation {
     }
 
     if ((mine->power - sim_gain_sensitivity()) < heardSignal()) {
-      dbg("Gain", "Lost packet as power %lf was too low\n", mine->power);
+      dbg("Gain", "Lost packet from %i as its power %lf was below sensitivity threshold\n", mine->source, mine->power);
       mine->lost = 1;
     }
     
@@ -190,6 +190,7 @@ implementation {
   // enqueue a receive event to figure out what happens.
   void enqueue_receive_event(int source, sim_time_t endTime, message_t* msg, bool receive, double power) {
     sim_event_t* evt;
+    receive_message_t* list;
     receive_message_t* rcv = allocate_receive_message();
     double sigStr = heardSignal();
     rcv->source = source;
@@ -208,19 +209,27 @@ implementation {
       dbg("Gain", "Lost packet from %i due to %i being off\n", source, sim_node());
       rcv->lost = 1;
     }
-    else {
-      if ((sigStr + sim_gain_sensitivity()) >= power) {
-	dbg("Gain", "Lost packet from %i due to power being too low (%f >= %f)\n", source, sigStr, power);
-	rcv->lost = 1;
-      }
-      else if (receiving) {
-	dbg("Gain", "Lost packet from %i due to being in the midst of a reception.\n", source);
-	rcv->lost = 1;
-      }
-      if (power >= sim_gain_noise_mean(sim_node()) + sim_gain_noise_range(sim_node())) {
-	receiving = 1;
-      }
+    else if ((sigStr + sim_gain_sensitivity()) >= power) {
+      dbg("Gain", "Lost packet from %i due to power being below reception threshold (%f >= %f)\n", source, sigStr, power);
+      rcv->lost = 1;
     }
+    else if (receiving) {
+      dbg("Gain", "Lost packet from %i due to being in the midst of a reception.\n", source);
+      rcv->lost = 1;
+    }
+    else { // We are on, are not receiving a packet, and the packet is above the noise floor
+      receiving = 1;
+    }
+
+    list = outstandingReceptionHead;
+    while (list != NULL) {
+      if ((list->power - sim_gain_sensitivity()) < power) {
+	dbg("Gain", "Lost packet from %i as I concurrently received a packet from %i stronger than %lf\n", list->source, source, list->power);
+	list->lost = 1;
+      }
+      list = list->next;
+    }
+    
     rcv->next = outstandingReceptionHead;
     
     outstandingReceptionHead = rcv;

@@ -23,12 +23,14 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:02:28 $ 
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:31:19 $ 
  * ======================================================================== 
  */
  
 /**
+ * Please refer to TEP 115 for more information about this component and its
+ * intended use.<br><br>
  *
  * This component povides a power management policy for managing the power
  * states of non-virtualized devices.  Non-virtualized devices are shared
@@ -50,32 +52,25 @@
  * <code>StdControlPowerManagerC</code> component respectively.
  * 
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @see  Please refer to TEP 115 for more information about this component and its
- *          intended use.
  */
  
 generic configuration SplitControlPowerManagerC() {
-  provides {
-    interface Init;
-  }
   uses {
     interface SplitControl;
 
     interface PowerDownCleanup;
-    interface Init as ArbiterInit;
     interface ResourceController;
+    interface ArbiterInfo;
   }
 }
 implementation {
   components  new PowerManagerP() as PowerManager;
-
-  Init = PowerManager;
  
   PowerManager.SplitControl = SplitControl;
 
   PowerManager.PowerDownCleanup = PowerDownCleanup;
  
-  PowerManager.ArbiterInit  = ArbiterInit;
   PowerManager.ResourceController = ResourceController;
+  PowerManager.ArbiterInfo = ArbiterInfo;
 }
 

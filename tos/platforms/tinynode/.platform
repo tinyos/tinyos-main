@@ -8,13 +8,14 @@ push( @includes, qw(
 
   %T/platforms/tinynode/chips/xe1205
   %T/platforms/tinynode/chips/mm74hc595
+  %T/platforms/tinynode/chips/at45db
 
   %T/chips/xe1205/conf
   %T/chips/xe1205/phy
   %T/chips/xe1205/mac
   %T/chips/xe1205
 
-  %T/../beta/tos/chips/mm74hc595
+  %T/chips/mm74hc595
 
   %T/chips/msp430
   %T/chips/msp430/adc12
@@ -23,7 +24,7 @@ push( @includes, qw(
   %T/chips/msp430/timer
   %T/chips/msp430/usart
   %T/chips/msp430/sensors
-  %T/chips/stm25p
+  %T/chips/at45db
   %T/lib/timer
   %T/lib/serial
   %T/lib/adc

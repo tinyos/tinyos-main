@@ -1,5 +1,5 @@
 #-*-Makefile-*- 
-#$Id: tinynode.target,v 1.2 2006-07-12 16:59:48 scipio Exp $
+#$Id: tinynode.target,v 1.3 2006-11-07 19:30:40 scipio Exp $
 
 PLATFORM = tinynode
 
@@ -7,11 +7,11 @@ ifndef TOSDIR
 TOSDIR := $(shell ncc -print-tosdir)
 endif
 
-ifndef TOS_BETADIR
-TOS_BETADIR := $(TOSDIR)/../beta/tos
-endif
-
 MSP_BSL ?= tos-bsl
+
+#Flash Config
+VOLUME_FILE = volumes-at45db.xml
+VOLUME_ALLOCATOR = tos-storage-at45db
 
 OPTFLAGS += -Os
 #OPTFLAGS = 
@@ -19,9 +19,6 @@ OPTFLAGS += -Os
 # Disable MSP430 hardware multiply because it makes MSPGCC die
 PFLAGS += -mdisable-hwmul
 PFLAGS += -mstrict-align
-
-PFLAGS += \
--I$(TOS_BETADIR)/platforms/tinynode
 
 $(call TOSMake_include_platform,tinynode)
 $(call TOSMake_include_platform,msp)

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:59 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:31:15 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * ========================================================================
  */
@@ -468,7 +468,15 @@ interface HplTda5250Config {
    */
    async command bool IsRSSIGreaterThanThreshold();
 
-  
+   /**
+   * Checks if the Tx Rx and Sleep radiomodes can be set via pin.
+   * This only concerns SetTxMode(), SetRxMode() and SetSleepMode().
+   *
+   * @return TRUE if radiomodes can be set via pin
+   *         FALSE otherwise.
+   */
+   async command bool IsTxRxPinControlled();
+   
    /**
    * Switches the radio to TxMode when in SLAVE_MODE
    */

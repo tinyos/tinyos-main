@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:35 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:50 $
  */
 
 module CC2420PacketC {

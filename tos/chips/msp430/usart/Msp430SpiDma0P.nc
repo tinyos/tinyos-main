@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2005-2006 Arch Rock Corporation
+/**
+ * Copyright (c) 2005-2006 Arched Rock Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the Arch Rock Corporation nor the names of
+ * - Neither the name of the Arched Rock Corporation nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -30,38 +30,42 @@
  */
 
 /**
- * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:46 $
+ * @author Jonathan Hui <jhui@archedrock.com>
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
  */
 
 configuration Msp430SpiDma0P {
-  
+
   provides interface Resource[ uint8_t id ];
+  provides interface ResourceConfigure[ uint8_t id ];
   provides interface SpiByte;
   provides interface SpiPacket[ uint8_t id ];
-  
+
   uses interface Resource as UsartResource[ uint8_t id ];
+  uses interface Msp430SpiConfigure[ uint8_t id ];
   uses interface HplMsp430UsartInterrupts as UsartInterrupts;
-  
+
 }
 
 implementation {
-  
+
   components new Msp430SpiDmaP() as SpiP;
   Resource = SpiP.Resource;
+  ResourceConfigure = SpiP.ResourceConfigure;
+  Msp430SpiConfigure = SpiP.Msp430SpiConfigure;
   SpiByte = SpiP.SpiByte;
   SpiPacket = SpiP.SpiPacket;
   UsartResource = SpiP.UsartResource;
   UsartInterrupts = SpiP.UsartInterrupts;
-  
+
   components HplMsp430Usart0C as UsartC;
   SpiP.Usart -> UsartC;
-  
+
   components Msp430DmaC as DmaC;
   SpiP.DmaChannel1 -> DmaC.Channel1;
   SpiP.DmaChannel2 -> DmaC.Channel2;
-  
+
   components LedsC as Leds;
   SpiP.Leds -> Leds;
-  
+
 }

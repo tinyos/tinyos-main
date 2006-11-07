@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:36 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:51 $
  */
 
 module CC2420SpiImplP {
@@ -91,11 +91,11 @@ implementation {
     return error;
   }
 
-  async command void Resource.release[ uint8_t id ]() {
+  async command error_t Resource.release[ uint8_t id ]() {
     uint8_t i;
     atomic {
       if ( m_holder != id )
-	return;
+	return FAIL;
       m_holder = NO_HOLDER;
       call SpiResource.release();
       if ( !m_requests ) {
@@ -109,10 +109,11 @@ implementation {
 	    m_holder = i;
 	    m_requests &= ~( 1 << i );
 	    call SpiResource.request();
-	    return;
+	    return SUCCESS;
 	  }
 	}
       }
+      return SUCCESS;
     }
   }
   
@@ -133,7 +134,7 @@ implementation {
     
     m_addr = addr | 0x40;
     
-    call SpiByte.write( m_addr, &status );
+    status = call SpiByte.write( m_addr );
     call Fifo.continueRead[ addr ]( data, len );
     
     return status;
@@ -153,7 +154,7 @@ implementation {
 
     m_addr = addr;
 
-    call SpiByte.write( m_addr, &status );
+    status = call SpiByte.write( m_addr );
     call SpiPacket.send( data, NULL, len );
 
     return status;
@@ -168,10 +169,10 @@ implementation {
 
     addr += offset;
 
-    call SpiByte.write( addr | 0x80, &status );
-    call SpiByte.write( ( ( addr >> 1 ) & 0xc0 ) | 0x20, &status );
+    call SpiByte.write( addr | 0x80 );
+    status = call SpiByte.write( ( ( addr >> 1 ) & 0xc0 ) | 0x20 );
     for ( ; len; len-- )
-      call SpiByte.write( 0, data++ );
+      *data++ = call SpiByte.write( 0 );
 
     return status;
 
@@ -189,14 +190,14 @@ implementation {
 							    uint8_t* data, 
 							    uint8_t len ) {
 
-    cc2420_status_t status;
+    cc2420_status_t status = 0;
 
     addr += offset;
 
-    call SpiByte.write( addr | 0x80, &status );
-    call SpiByte.write( ( addr >> 1 ) & 0xc0, &status );
+    call SpiByte.write( addr | 0x80 );
+    call SpiByte.write( ( addr >> 1 ) & 0xc0 );
     for ( ; len; len-- )
-      call SpiByte.write( *data++, &status );
+      status = call SpiByte.write( *data++ );
 
     return status;
 
@@ -205,38 +206,25 @@ implementation {
   async command cc2420_status_t Reg.read[ uint8_t addr ]( uint16_t* data ) {
 
     cc2420_status_t status;
-    uint8_t tmp;
-
-    call SpiByte.write( addr | 0x40, &status );
-    call SpiByte.write( 0, &tmp );
-    *data = (uint16_t)tmp << 8;
-    call SpiByte.write( 0, &tmp );
-    *data |= tmp;
-
+    
+    status = call SpiByte.write( addr | 0x40 );
+    *data = (uint16_t)call SpiByte.write( 0 ) << 8;
+    *data |= call SpiByte.write( 0 );
+    
     return status;
 
   }
 
   async command cc2420_status_t Reg.write[ uint8_t addr ]( uint16_t data ) {
 
-    cc2420_status_t status;
-
-    call SpiByte.write( addr, &status );
-    call SpiByte.write( data >> 8, &status );
-    call SpiByte.write( data & 0xff, &status );
-
-    return status;
+    call SpiByte.write( addr );
+    call SpiByte.write( data >> 8 );
+    return call SpiByte.write( data & 0xff );
 
   }
 
   async command cc2420_status_t Strobe.strobe[ uint8_t addr ]() {
-
-    cc2420_status_t status;
-
-    call SpiByte.write( addr, &status );
-
-    return status;
-
+    return call SpiByte.write( addr );
   }
 
   default async event void Fifo.readDone[ uint8_t addr ]( uint8_t* rx_buf, uint8_t rx_len, error_t error ) {}

@@ -72,9 +72,9 @@ implementation
   async command void OF.clear() { atomic IFG1 &= ~OFIFG; }
   async command void ACCV.clear() { atomic FCTL3 &= ~ACCVIFG; }
 
-  async command bool NMI.getValue() { bool b; atomic b=(IFG1 >> NMIIFG) & 0x01; return b; }
-  async command bool OF.getValue() { bool b; atomic b=(IFG1 >> OFIFG) & 0x01; return b; }
-  async command bool ACCV.getValue() { bool b; atomic b=(FCTL3 >> ACCVIFG) & 0x01; return b; }
+  async command bool NMI.getValue() { bool b; atomic b=(IFG1 & NMIIFG) & 0x01; return b; }
+  async command bool OF.getValue() { bool b; atomic b=(IFG1 & OFIFG) & 0x01; return b; }
+  async command bool ACCV.getValue() { bool b; atomic b=(FCTL3 & ACCVIFG) & 0x01; return b; }
 
   async command void NMI.edge(bool l2h) { 
     volatile uint16_t _watchdog;

@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<!--- $Id: lesson11.html,v 1.2 2006-07-12 16:59:37 scipio Exp $ --->
+<!--- $Id: lesson11.html,v 1.3 2006-11-07 19:30:38 scipio Exp $ --->
 
 <div class="title">Lesson 11: Simulation with TOSSIM</div>
 <div class="subtitle">Last Modified: 18 May 2006</div>
@@ -760,13 +760,8 @@ while (time + 50000000000 > t.time()):
         topology. There are two approaches you can take. The first is
         to take data from a real world network and input this into
         TOSSIM. The second is to generate it from applying a
-        theoretical propagation model to a physical layout. TOSSIM has
-        an example of the first from the <A
-        HREF="https://mirage.berkeley.intel-research.net/">Mirage
-        testbed</A> at Intel Research Berkeley. The network topology
-        is from data gathered from one hundred micaZ nodes over an
-        eight hour period in February 2006. It can be found in <code><A
-        HREF="../../../tos/lib/tossim/topologies/mirage-1.txt">tos/lib/tossim/topologies/mirage-1.txt</A></code>, and has the following format:
+        theoretical propagation model to a physical layout.  The standard
+        file format is
 
           <pre>
 noise n avg std
@@ -807,7 +802,7 @@ java net.tinyos.sim.PropagationModel config.txt
 
         <p>The format of a configuration file is beyond the scope of
         this document: the tool has its own <A
-        HREF="">documentation</A>. TOSSIM has two sample configuration
+        HREF="usc-topologies.html">documentation</A>. TOSSIM has two sample configuration
         files generated from the tool in
         <code>tos/lib/tossim/topologies</code>. The first is <code><A
         HREF="">grid.txt</A></code>, which is a 10x10 grid of nodes
@@ -1357,7 +1352,10 @@ you how to configure a network, how to run a simulation, how to
 inspect variables, how to inject packets, and how to compile with C++.
 
 
-<p><b><a href="lesson5.html">&lt; Previous Lesson</a></b> &nbsp;|&nbsp; <b><a
+<p><b><a href="lesson5.html">&lt; Previous Lesson</a></b> 
+&nbsp;|&nbsp; 
+<b><a href="lesson13.html">Next Lesson </a>&nbsp;&gt;</b>
+<b><a
  href="index.html">Top</a></b>
 
 </body>

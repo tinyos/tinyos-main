@@ -39,6 +39,8 @@ implementation {
   async command void GeneralIO.toggle() { call HplGeneralIO.toggle(); }
   async command bool GeneralIO.get() { return call HplGeneralIO.get(); }
   async command void GeneralIO.makeInput() { call HplGeneralIO.makeInput(); }
+  async command bool GeneralIO.isInput() { return call HplGeneralIO.isInput(); }
   async command void GeneralIO.makeOutput() { call HplGeneralIO.makeOutput(); }
+  async command bool GeneralIO.isOutput() { return call HplGeneralIO.isOutput(); }
 
 }

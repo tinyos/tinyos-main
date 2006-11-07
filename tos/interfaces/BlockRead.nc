@@ -34,7 +34,7 @@
  * TEP103.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:15 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:17 $
  */
 
 #include "Storage.h"
@@ -66,27 +66,6 @@ interface BlockRead {
    */
   event void readDone(storage_addr_t addr, void* buf, storage_len_t len, 
 		      error_t error);
-  
-  /**
-   * Initiate a verify operation to verify the integrity of the
-   * data. This operation is only valid after a commit operation from
-   * <code>BlockWrite</code> has been completed. On SUCCESS, the
-   * <code>verifyDone</code> event will signal completion of the
-   * operation.
-   *
-   * @return 
-   *   <li>SUCCESS if the request was accepted, 
-   *   <li>EBUSY if a request is already being processed.
-   */
-  command error_t verify();
-  
-  /**
-   * Signals the completion of a verify operation.
-   *
-   * @param error SUCCESS if the operation was successful, FAIL if
-   *   it failed
-   */
-  event void verifyDone(error_t error);
   
   /**
    * Initiate a crc computation. On SUCCESS, the

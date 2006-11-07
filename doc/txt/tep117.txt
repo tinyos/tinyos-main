@@ -10,8 +10,8 @@ Low-Level I/O
 :Author: Phil Buonadonna, Jonathan Hui
 
 :Draft-Created: 23-Jan-2006
-:Draft-Version: $Revision: 1.3 $
-:Draft-Modified: $Date: 2006-11-07 00:43:44 $
+:Draft-Version: $Revision: 1.4 $
+:Draft-Modified: $Date: 2006-11-07 19:30:39 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::

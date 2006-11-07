@@ -5,10 +5,11 @@
 # must be specified, otherwise its search order is last instead of first.
 
 push( @includes, qw(
-
+# normal platform includes
   %T/platforms/eyesIFX
   %T/platforms/eyesIFX/chips/tda5250
   %T/platforms/eyesIFX/chips/ad5200
+  %T/platforms/eyesIFX/chips/msp430
   %T/platforms/eyesIFX/sensors
   %T/platforms/eyesIFX/byte_radio
   %T/chips/tda5250

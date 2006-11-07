@@ -1,4 +1,4 @@
-/* $Id: CC1000Squelch.nc,v 1.2 2006-07-12 17:01:33 scipio Exp $
+/* $Id: CC1000Squelch.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *

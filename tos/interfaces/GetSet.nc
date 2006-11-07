@@ -44,7 +44,7 @@
  * @param val_t the type of the object that will be stored
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:16 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:17 $
  */
 
 interface GetSet<val_t> {

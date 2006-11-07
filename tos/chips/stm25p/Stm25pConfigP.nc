@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:58 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:15 $
  */
 
 #include <Stm25p.h>
@@ -469,6 +469,6 @@ implementation {
   default command error_t Sector.erase[ uint8_t id ]( uint8_t sector, uint8_t num_sectors ) { return FAIL; }
   default command error_t Sector.computeCrc[ uint8_t id ]( uint16_t crc, storage_addr_t addr, storage_len_t len ) { return FAIL; }
   default async command error_t ClientResource.request[ uint8_t id ]() { return FAIL; }
-  default async command void ClientResource.release[ uint8_t id ]() {}
+  default async command error_t ClientResource.release[ uint8_t id ]() { return FAIL; }
   
 }

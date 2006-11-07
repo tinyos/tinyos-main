@@ -1,4 +1,4 @@
-// $Id: crc.h,v 1.2 2006-07-12 17:02:08 scipio Exp $
+// $Id: crc.h,v 1.3 2006-11-07 19:31:16 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -28,6 +28,8 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  */
+#ifndef CRC_H
+#define CRC_H
 uint16_t const ccitt_crc16_table[256] = {
   0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
   0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
@@ -68,3 +70,4 @@ uint16_t crcByte(uint16_t fcs, uint8_t c)
   fcs = ccitt_crc16_table[(fcs >> 8 ^ c) & 0xffU] ^ (fcs << 8);
   return fcs;
 }
+#endif

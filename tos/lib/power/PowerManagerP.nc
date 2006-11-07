@@ -23,12 +23,14 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:02:27 $ 
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:31:19 $ 
  * ======================================================================== 
  */
  
 /**
+ * Please refer to TEP 115 for more information about this component and its
+ * intended use.<br><br>
  *
  * This is the internal implementation of the standard power management
  * policy for managing the power states of non-virtualized devices.
@@ -41,51 +43,42 @@
  * power up, so it can be powered on and off as often as possible.
  * 
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @see  Please refer to TEP 115 for more information about this component and its
- *          intended use.
  */
  
 generic module PowerManagerP() {
-  provides {
-    interface Init;
-  }
   uses {
     interface StdControl;
     interface SplitControl;
 
     interface PowerDownCleanup;
-    interface Init as ArbiterInit;
     interface ResourceController;
+    interface ArbiterInfo;
   }
 }
 implementation {
 
-  norace struct {
-   uint8_t stopping :1;
-   uint8_t requested :1;
-  } f; //for flags
+  norace bool stopping = FALSE;
+  norace bool requested  = FALSE;
 
-  task void startTask() { 
+  task void startTask() {
     call StdControl.start();
     call SplitControl.start();
   }
-  task void stopTask() { 
-    call StdControl.stop(); 
-    call SplitControl.stop(); 
-  }
 
-  command error_t Init.init() {
-    f.stopping = FALSE;
-    f.requested = FALSE;
-    call ArbiterInit.init();
-    call ResourceController.immediateRequest();
-    return SUCCESS;
+  task void stopTask() {
+    call PowerDownCleanup.cleanup();
+    call StdControl.stop();
+    call SplitControl.stop();    
   }
 
   async event void ResourceController.requested() {
-    if(f.stopping == FALSE)
+    if(stopping == FALSE) {
       post startTask();
-    else atomic f.requested = TRUE;
+    }
+    else requested = TRUE;
+  }
+
+  async event void ResourceController.immediateRequested() {
   }
   
   default command error_t StdControl.start() {
@@ -100,26 +93,20 @@ implementation {
     call ResourceController.release();
   }
   
-  async event void ResourceController.idle() {
-    if(call ResourceController.immediateRequest() == SUCCESS) {
-      f.stopping = TRUE;
-      call PowerDownCleanup.cleanup();
-      post stopTask();
-    }
+  async event void ResourceController.granted() {
+    atomic stopping = TRUE;
+    post stopTask();
   }
 
   event void SplitControl.stopDone(error_t error) {
-    if(f.requested == TRUE) {
+    if(requested == TRUE) {
       call StdControl.start();
       call SplitControl.start();
     }
     atomic {
-      f.requested = FALSE;
-      f.stopping = FALSE;
+      requested = FALSE;
+      stopping = FALSE;
     }
-  }
-
-  event void ResourceController.granted() {
   }
 
   default command error_t StdControl.stop() {

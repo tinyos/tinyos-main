@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.2 2006-07-12 16:59:06 scipio Exp $
+$Id: README.txt,v 1.3 2006-11-07 19:30:34 scipio Exp $
 
 README for Powerup
 Author/Contact: tinyos-help@millennium.berkeley.edu

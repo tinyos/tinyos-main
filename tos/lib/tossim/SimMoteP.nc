@@ -32,7 +32,7 @@
  * @date   August 19 2005
  */
 
-// $Id: SimMoteP.nc,v 1.2 2006-07-12 17:02:32 scipio Exp $
+// $Id: SimMoteP.nc,v 1.3 2006-11-07 19:31:21 scipio Exp $
 
 module SimMoteP {
   provides interface SimMote;

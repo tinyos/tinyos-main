@@ -27,8 +27,8 @@
  * provided by an Arbiter to accomplish this.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.2 $
- * @date $Date: 2006-11-06 11:56:52 $
+ * @version $Revision: 1.3 $
+ * @date $Date: 2006-11-07 19:30:35 $
  */
 
 module SharedResourceImplP {

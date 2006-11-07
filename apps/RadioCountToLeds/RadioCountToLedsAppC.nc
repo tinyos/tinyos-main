@@ -1,4 +1,4 @@
-// $Id: RadioCountToLedsAppC.nc,v 1.2 2006-07-12 16:59:08 scipio Exp $
+// $Id: RadioCountToLedsAppC.nc,v 1.3 2006-11-07 19:30:34 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -20,7 +20,7 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2002-2005 Intel Corporation
+ * Copyright (c) 2002-2003 Intel Corporation
  * All rights reserved.
  *
  * This file is distributed under the terms in the attached INTEL-LICENSE     
@@ -28,26 +28,27 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  */
+ 
+#include "RadioCountToLeds.h"
 
 /**
- * This application sends OSKI broadcasts at 1Hz and blinks LED 0 when
- * it receives a broadcast.
+ * Configuration for the RadioCountToLeds application. RadioCountToLeds 
+ * maintains a 4Hz counter, broadcasting its value in an AM packet 
+ * every time it gets updated. A RadioCountToLeds node that hears a counter 
+ * displays the bottom three bits on its LEDs. This application is a useful 
+ * test to show that basic AM communication and timers work.
  *
  * @author Philip Levis
  * @date   June 6 2005
  */
 
-#include "RadioCountToLeds.h"
-
 configuration RadioCountToLedsAppC {}
 implementation {
   components MainC, RadioCountToLedsC as App, LedsC;
-  components new AMSenderC(AM_RADIOCOUNTMSG);
-  components new AMReceiverC(AM_RADIOCOUNTMSG);
+  components new AMSenderC(AM_RADIO_COUNT_MSG);
+  components new AMReceiverC(AM_RADIO_COUNT_MSG);
   components new TimerMilliC();
   components ActiveMessageC;
-  
-  
   
   App.Boot -> MainC.Boot;
   

@@ -32,6 +32,7 @@
  * Configuration for the fixed Rssi Threshold module.
  *
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
+ * @author: Andreas Koepke (koepke@tkn.tu-berlin.de)
  */
 configuration RssiFixedThresholdCMC
 {
@@ -41,29 +42,33 @@ configuration RssiFixedThresholdCMC
         interface ChannelMonitorControl;
         interface ChannelMonitorData;
         interface BatteryLevel;
+        interface Resource as RssiAdcResource;
     }    
 }
 implementation
 {
     components RssiFixedThresholdCMP,
-        new RssiSensorVccC() as Rssi,
+    		//  RssiSensorVccC as Rssi, FIXME: has no arbitration!?
+        new RssiSensorC() as Rssi,
         new BatteryLevelSensorC() as Voltage,
-        // PlatformLedsC,
         new TimerMilliC() as Timer,
         MainC;
 
     MainC.SoftwareInit -> RssiFixedThresholdCMP;
     StdControl = RssiFixedThresholdCMP;
-
+    RssiAdcResource = Rssi;
+    
     RssiFixedThresholdCMP.Rssi -> Rssi;
-    // RssiFixedThresholdCMP.RssiAdcResource -> Rssi;
-
     RssiFixedThresholdCMP.Voltage -> Voltage;
 
     ChannelMonitor = RssiFixedThresholdCMP;
     ChannelMonitorControl = RssiFixedThresholdCMP;
     ChannelMonitorData = RssiFixedThresholdCMP;
     BatteryLevel = RssiFixedThresholdCMP;
-    // RssiFixedThresholdCMP.Led3 -> PlatformLedsC.Led3;
+
+/*    components PlatformLedsC;
+    RssiFixedThresholdCMP.Led3 -> PlatformLedsC.Led3;
+    RssiFixedThresholdCMP.Led2 -> PlatformLedsC.Led2;
+*/
     RssiFixedThresholdCMP.Timer -> Timer;    
 }

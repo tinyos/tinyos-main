@@ -1,4 +1,4 @@
-// $Id: AMPacket.nc,v 1.2 2006-07-12 17:02:12 scipio Exp $
+// $Id: AMPacket.nc,v 1.3 2006-11-07 19:31:16 scipio Exp $
 /*									tab:4
  * "Copyright (c) 2004-5 The Regents of the University  of California.  
  * All rights reserved.
@@ -30,7 +30,11 @@
 
 /**
   * The Active Message accessors, which provide the AM local address and
-  * functionality for querying packets. Also see the Packet interface.
+  * functionality for querying packets. Active Messages are a single-hop
+  * communication protocol. Therefore, fields such as source and destination
+  * represent the single-hop source and destination. Multihop sources and
+  * destinations are defined by the corresponding multihop protocol (if any).
+  * Also see the Packet interface.
   *
   * @author Philip Levis 
   * @date   January 18 2005
@@ -53,7 +57,7 @@ interface AMPacket {
   command am_addr_t address();
 
   /**
-   * Return the AM address of the destination field of an AM packet.
+   * Return the AM address of the destination of the AM packet.
    * If <tt>amsg</tt> is not an AM packet, the results of this command
    * are undefined.
    * @param amsg    the packet
@@ -62,6 +66,16 @@ interface AMPacket {
   
   command am_addr_t destination(message_t* amsg);
 
+  /**
+   * Return the AM address of the source of the AM packet.
+   * If <tt>amsg</tt> is not an AM packet, the results of this command
+   * are undefined.
+   * @param amsg  the packet
+   * @return      the source address of the packet.
+   */
+   
+  command am_addr_t source(message_t* amsg);
+  
   /**
    * Set the AM address of the destination field of the AM packet.  As
    * the AM address is set as part of sending with the AMSend
@@ -76,6 +90,24 @@ interface AMPacket {
    */
 
   command void setDestination(message_t* amsg, am_addr_t addr);
+
+  /**
+   * Set the AM address of the source field of the AM packet.  As
+   * the AM address is set as part of sending with the AMSend
+   * interface, this command is not used for sending packets.  Rather,
+   * it is used when a component, such as a queue, needs to buffer a
+   * request to send. The component can save the source address
+   * and then recover it when actually sending. As an AM layer generally
+   * sets the source address to be the local address, this interface
+   * is not commonly used except when a system is bypassing the AM
+   * layer (e.g., a protocol bridge). If <tt>amsg</tt> is
+   * not an AM packet, the results of this command are undefined.
+   *
+   * @param  amsg   the packet
+   * @param  addr   the address
+   */
+
+  command void setSource(message_t* amsg, am_addr_t addr);
 
   /**
    * Return whether <tt>amsg</tt> is destined for this mote. This is

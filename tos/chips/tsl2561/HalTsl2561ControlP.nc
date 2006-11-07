@@ -1,4 +1,4 @@
-/* $Id: HalTsl2561ControlP.nc,v 1.2 2006-07-12 17:02:04 scipio Exp $ */
+/* $Id: HalTsl2561ControlP.nc,v 1.3 2006-11-07 19:31:16 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -140,6 +140,7 @@ implementation {
     if(status != SUCCESS)
       return status;
     state = S_PERSIST;
+    iControlRegisterShadow &= ~TSL256X_INTERRUPT_PERSIST(0xF);
     iControlRegisterShadow |= TSL256X_INTERRUPT_PERSIST(val);
 
     call HplTSL256x.setINTERRUPT(iControlRegisterShadow);
@@ -176,20 +177,29 @@ implementation {
     error_t status;
     if(state != S_IDLE)
       return FAIL;
-    status = call Resource.immediateRequest();
-    if(status != SUCCESS)
-      return status;
+    
     state = S_ENALERT;
     iControlRegisterShadow &= ~TSL256X_INTERRUPT_INTR(3); // strip off interrupt select
     if(enable)
       iControlRegisterShadow |= TSL256X_INTERRUPT_INTR(1);
-
-    call HplTSL256x.setINTERRUPT(iControlRegisterShadow);
+    
+    status = call Resource.immediateRequest();
+    if(status != SUCCESS) {
+      status = call Resource.request();
+      return status;
+    }
+    else {
+      call HplTSL256x.setINTERRUPT(iControlRegisterShadow);
+    }
     return SUCCESS;
   }
 
   event void Resource.granted() {
-    // using immediate requests only
+    // Only use Queued requests for alertEnable
+    if (state == S_ENALERT) {
+      call HplTSL256x.setINTERRUPT(iControlRegisterShadow);
+    }
+    return;
   }
 
   async event void HplTSL256x.setTIMINGDone(error_t error) {

@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: mib510.extra,v 1.2 2006-07-12 16:59:49 scipio Exp $
+#$Id: mib510.extra,v 1.3 2006-11-07 19:30:40 scipio Exp $
 
 ifeq ($(MIB510),)
 $(error MIB510 must be defined, try "make $(TARGETS) help")

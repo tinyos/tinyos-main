@@ -2,6 +2,9 @@
 
 #ifndef __HASHTABLE_CWC22_H__
 #define __HASHTABLE_CWC22_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct hashtable;
 
@@ -163,6 +166,11 @@ hashtable_count(struct hashtable *h);
 void
 hashtable_destroy(struct hashtable *h, int free_values);
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* __HASHTABLE_CWC22_H__ */
 
 /*
@@ -197,3 +205,4 @@ hashtable_destroy(struct hashtable *h, int free_values);
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+

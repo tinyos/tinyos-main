@@ -66,4 +66,10 @@ implementation
   }
   async command void GeneralIO.makeOutput() {
   }
+
+  async command bool GeneralIO.isInput() {
+  }
+  async command bool GeneralIO.isOutput() {
+  }
+
 }  

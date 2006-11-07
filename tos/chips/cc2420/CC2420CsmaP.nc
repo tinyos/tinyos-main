@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:34 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:50 $
  */
 
 module CC2420CsmaP {
@@ -162,12 +162,11 @@ implementation {
     }
 
     header->length = len;
-    header->fcf = ( ( IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE ) |
-                    ( 1 << IEEE154_FCF_INTRAPAN ) |
-                    ( IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE ) |
-                    ( IEEE154_ADDR_SHORT << IEEE154_FCF_SRC_ADDR_MODE ) );
-    if ( header->dest != AM_BROADCAST_ADDR )
-      header->fcf |= 1 << IEEE154_FCF_ACK_REQ;
+    header->fcf &= 1 << IEEE154_FCF_ACK_REQ;
+    header->fcf |= ( ( IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE ) |
+		     ( 1 << IEEE154_FCF_INTRAPAN ) |
+		     ( IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE ) |
+		     ( IEEE154_ADDR_SHORT << IEEE154_FCF_SRC_ADDR_MODE ) );
     header->src = call AMPacket.address();
     metadata->ack = FALSE;
     metadata->rssi = 0;

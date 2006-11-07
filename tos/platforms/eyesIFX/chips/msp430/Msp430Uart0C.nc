@@ -33,7 +33,7 @@
  * An implementation of the UART on USART0 for the MSP430.
  * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
  * @author Jonathan Hui <jhui@archedrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-11-06 11:57:18 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:22 $
  */
 
 #include "msp430usart.h"

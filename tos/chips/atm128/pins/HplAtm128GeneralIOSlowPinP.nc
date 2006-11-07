@@ -1,4 +1,4 @@
-/// $Id: HplAtm128GeneralIOSlowPinP.nc,v 1.2 2006-07-12 17:01:26 scipio Exp $
+/// $Id: HplAtm128GeneralIOSlowPinP.nc,v 1.3 2006-11-07 19:30:44 scipio Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -49,5 +49,7 @@ implementation
   inline async command void IO.toggle()     { atomic FLIP_BIT (port, bit); }
     
   inline async command void IO.makeInput()  { atomic CLR_BIT  (ddr, bit);  }
+  inline async command bool IO.isInput() { return !READ_BIT(ddr, bit); }
   inline async command void IO.makeOutput() { atomic SET_BIT  (ddr, bit);  }
+  inline async command bool IO.isOutput() { return READ_BIT(ddr, bit); }
 }

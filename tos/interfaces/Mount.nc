@@ -11,7 +11,7 @@
  * Mount a volume.
  *
  * @author David Gay
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:17 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:17 $
  */
 
 interface Mount {

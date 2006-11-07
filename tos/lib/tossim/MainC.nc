@@ -32,7 +32,7 @@
  * @date   August 6 2005
  */
 
-// $Id: MainC.nc,v 1.2 2006-07-12 17:02:32 scipio Exp $
+// $Id: MainC.nc,v 1.3 2006-11-07 19:31:21 scipio Exp $
 
 #include "hardware.h"
 

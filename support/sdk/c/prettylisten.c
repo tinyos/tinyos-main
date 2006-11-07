@@ -45,8 +45,9 @@ int main(int argc, char **argv)
 	  if (!msg)
 	    exit(0);
 
-	  printf("addr %u, length %u, group %u, type %u\n  ",
-		 spacket_header_addr_get(msg),
+	  printf("dest %u, src %u, length %u, group %u, type %u\n  ",
+		 spacket_header_dest_get(msg),
+		 spacket_header_src_get(msg),
 		 spacket_header_length_get(msg),
 		 spacket_header_group_get(msg),
 		 spacket_header_type_get(msg));

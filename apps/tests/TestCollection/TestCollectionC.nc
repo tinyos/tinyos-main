@@ -1,6 +1,6 @@
 /**
  * @author Kyle Jamieson
- * @version $Id: TestCollectionC.nc,v 1.2 2006-07-12 16:59:19 scipio Exp $
+ * @version $Id: TestCollectionC.nc,v 1.3 2006-11-07 19:30:35 scipio Exp $
  */
 
 #include <message.h>

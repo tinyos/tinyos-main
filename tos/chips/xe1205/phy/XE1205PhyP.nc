@@ -74,19 +74,31 @@ implementation {
 
   uint16_t stats_rxOverruns;
 
-  typedef enum {
+  typedef enum { // remember to update busy() and off(), start(), stop() if states are added
     RADIO_LISTEN=0, 
     RADIO_RX_HEADER=1, 
     RADIO_RX_PACKET=2, 
     RADIO_RX_PACKET_LAST=3, 
     RADIO_TX=4,
     RADIO_SLEEP=5, 
-    RADIO_STARTING=6
+    RADIO_STARTING=6 
   } phy_state_t;
 
   phy_state_t state = RADIO_SLEEP;
 
   void armPatternDetect();
+
+  ////////////////////////////////////////////////////////////////////////////////////
+  //
+  // jiffy/microseconds/bytetime conversion functions.
+  //
+  ////////////////////////////////////////////////////////////////////////////////////
+
+  // 1 jiffie = 1/32768 = 30.52us; 
+  // we approximate to 32us for quicker computation and also to account for interrupt/processing overhead.
+  inline uint32_t usecs_to_jiffies(uint32_t usecs) {
+    return usecs >> 5;
+  }
 
   command error_t Init.init() 
   { 
@@ -98,21 +110,23 @@ implementation {
     return SUCCESS;
   }
 
+  task void startDone() {
+    signal SplitControl.startDone(SUCCESS);
+  }
+
   event void SpiResourceTX.granted() {  }
   event void SpiResourceRX.granted() {  }
   event void SpiResourceConfig.granted() { 
     armPatternDetect();
     call SpiResourceConfig.release();
+
     atomic {
+      if (state == RADIO_STARTING) post startDone();
       call Interrupt0.enableRisingEdge();
       state = RADIO_LISTEN;
     }
   }
 
-
-  task void startDone() {
-    signal SplitControl.startDone(SUCCESS);
-  }
 
   task void stopDone() {
     signal SplitControl.stopDone(SUCCESS);
@@ -120,19 +134,27 @@ implementation {
 
   command error_t SplitControl.start() 
   {
-    atomic state = RADIO_STARTING;
+    atomic {
+      if (state != RADIO_SLEEP) return EBUSY;
+      state = RADIO_STARTING;
+    }
+
     call XE1205PhySwitch.rxMode();
     call XE1205PhySwitch.antennaRx();
-    call SpiResourceConfig.request();
-    post startDone();
+
+    call Alarm32khz16.start(usecs_to_jiffies(XE1205_Sleep_to_RX_Time));
     return SUCCESS;
   }
 
   command error_t SplitControl.stop() 
   {
-    call XE1205PhySwitch.sleepMode();
-    call XE1205PhySwitch.antennaOff();
-    atomic state = RADIO_SLEEP;
+    atomic {
+      call XE1205PhySwitch.sleepMode();
+      call XE1205PhySwitch.antennaOff();
+      state = RADIO_SLEEP;
+      call Interrupt0.disable();
+      call Interrupt1.disable();
+    }
     post stopDone();
     return SUCCESS;
   }
@@ -141,7 +163,14 @@ implementation {
   default event void SplitControl.stopDone(error_t error) { }
 
   async command bool XE1205PhyRxTx.busy() {
-    atomic return state != RADIO_LISTEN; // xxx need to deal with sleep state
+    atomic return (state != RADIO_LISTEN &&
+		   state != RADIO_SLEEP &&
+		   state != RADIO_STARTING);
+  }
+
+  async command bool XE1205PhyRxTx.off() {
+    atomic return (state == RADIO_SLEEP ||
+		   state == RADIO_STARTING);
   }
 
   void armPatternDetect() 
@@ -277,7 +306,6 @@ implementation {
     }
   }
 
-  bool reading=FALSE;
 
 
   /**
@@ -289,7 +317,6 @@ implementation {
     switch (state) {
 
     case RADIO_RX_PACKET:
-      reading = TRUE;
       xe1205check(9, call XE1205Fifo.read(&rxFrame[rxFrameIndex], nextRxLen));
       call Interrupt1.disable(); // in case it briefly goes back to full just after we read first byte
       rxFrameIndex += nextRxLen;
@@ -367,7 +394,6 @@ implementation {
       return;
 
     case RADIO_RX_PACKET:
-      reading = FALSE;
       call Interrupt1.enableRisingEdge();
       return;
 
@@ -395,15 +421,29 @@ implementation {
   }
 
   async event void Alarm32khz16.fired() {
-    stats_rxOverruns++;
-    signal XE1205PhyRxTx.rxFrameEnd(NULL, 0, FAIL);
-    armPatternDetect(); 
-    call SpiResourceRX.release();
-    atomic {
-      call Interrupt0.enableRisingEdge();
-      state = RADIO_LISTEN;
+
+    switch(state) {
+
+    case RADIO_STARTING:
+      call SpiResourceConfig.request();
+      return;
+
+    case RADIO_RX_HEADER:
+    case RADIO_RX_PACKET:
+      stats_rxOverruns++;
+      signal XE1205PhyRxTx.rxFrameEnd(NULL, 0, FAIL);
+      armPatternDetect(); 
+      call SpiResourceRX.release();
+      atomic {
+	call Interrupt0.enableRisingEdge();
+	state = RADIO_LISTEN;
+      }
+      return;
+    default:
     }
+
   }
+
 
 }
 

@@ -1,7 +1,7 @@
-// $Id: AvrStargate.C,v 1.2 2006-07-12 17:00:29 scipio Exp $
+// $Id: AvrStargate.C,v 1.3 2006-11-07 19:30:42 scipio Exp $
 
 /*
- * $Id: AvrStargate.C,v 1.2 2006-07-12 17:00:29 scipio Exp $
+ * $Id: AvrStargate.C,v 1.3 2006-11-07 19:30:42 scipio Exp $
  *
  ****************************************************************************
  *

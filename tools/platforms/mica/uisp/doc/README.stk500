@@ -1,4 +1,4 @@
-$Id: README.stk500,v 1.2 2006-07-12 17:00:22 scipio Exp $
+$Id: README.stk500,v 1.3 2006-11-07 19:30:41 scipio Exp $
 
 NOTE: Atmel has finally released the specs for the protocol for talking to the
 stk500 over a serial line. Here's where to get the files:

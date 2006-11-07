@@ -1,4 +1,4 @@
-/* $Id: DemoSensorC.nc,v 1.2 2006-07-12 17:02:56 scipio Exp $
+/* $Id: DemoSensorC.nc,v 1.3 2006-11-07 19:31:26 scipio Exp $
  * Copyright (c) 2006 Intel Corporation
  * All rights reserved.
  *
@@ -22,7 +22,7 @@ generic configuration DemoSensorC()
 }
 implementation
 {
-  components new ConstantSensorC(uint16_t, 0xbeef) as DemoChannel;
+  components new SineSensorC() as DemoChannel;
 
   Read = DemoChannel;
 }

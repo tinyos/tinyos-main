@@ -36,26 +36,26 @@
  * radiation sensor available on the telosb platform. 
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:03:09 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:27 $
  */
 
 module HamamatsuS10871TsrP {
-  provides interface Msp430Adc12Config;
+  provides interface AdcConfigure<const msp430adc12_channel_config_t*>;
 }
 implementation {
 
-  async command msp430adc12_channel_config_t Msp430Adc12Config.getChannelSettings() {
-    msp430adc12_channel_config_t config = {
-      inch: INPUT_CHANNEL_A5,
-      sref: REFERENCE_VREFplus_AVss,
-      ref2_5v: REFVOLT_LEVEL_1_5,
-      adc12ssel: SHT_SOURCE_ACLK,
-      adc12div: SHT_CLOCK_DIV_1,
-      sht: SAMPLE_HOLD_4_CYCLES,
-      sampcon_ssel: SAMPCON_SOURCE_SMCLK,
-      sampcon_id: SAMPCON_CLOCK_DIV_1
-    };
-
-    return config;
+  msp430adc12_channel_config_t config = {
+    inch: INPUT_CHANNEL_A5,
+    sref: REFERENCE_VREFplus_AVss,
+    ref2_5v: REFVOLT_LEVEL_1_5,
+    adc12ssel: SHT_SOURCE_ACLK,
+    adc12div: SHT_CLOCK_DIV_1,
+    sht: SAMPLE_HOLD_4_CYCLES,
+    sampcon_ssel: SAMPCON_SOURCE_SMCLK,
+    sampcon_id: SAMPCON_CLOCK_DIV_1
+  };
+  
+  async command const msp430adc12_channel_config_t* AdcConfigure.getConfiguration() {
+    return &config;
   }
 }

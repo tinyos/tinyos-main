@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:39 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:30:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -103,39 +103,17 @@ implementation
     }
   } 
   
-  async command uint16_t HplAdc12.getIFGs(){ return (uint16_t) ADC12IFG; } 
-
-  async command bool HplAdc12.isBusy(){ return ADC12CTL1 & ADC12BUSY; }
+  async command void HplAdc12.startConversion(){ 
+    ADC12CTL0 |= ADC12ON; 
+    ADC12CTL0 |= (ADC12SC + ENC); 
+  }
   
-  async command void HplAdc12.enableConversion(){ ADC12CTL0 |= ENC;}
-  async command void HplAdc12.disableConversion(){ ADC12CTL0 &= ~ENC; }
-  async command void HplAdc12.startConversion(){ ADC12CTL0 |= ADC12SC + ENC; }
   async command void HplAdc12.stopConversion(){ 
-    ADC12CTL1 &= ~(CONSEQ_1 | CONSEQ_3); 
-    ADC12CTL0 &= ~ENC; 
+    ADC12CTL0 &= ~(ADC12SC + ENC); 
+    ADC12CTL0 &= ~(ADC12ON); 
   }
   
-  async command void HplAdc12.setMSC(){ ADC12CTL0 |= MSC; }
-  async command void HplAdc12.resetMSC(){ ADC12CTL0 &= ~MSC; }
-  
-  async command void HplAdc12.setRefOn(){ ADC12CTL0 |= REFON;}
-  async command void HplAdc12.resetRefOn(){ ADC12CTL0 &= ~REFON;}
-  async command uint8_t HplAdc12.getRefon(){ return (ADC12CTL0 & REFON) >> 5;}
-  async command void HplAdc12.setRef1_5V(){ ADC12CTL0 &= ~REF2_5V;}
-  async command void HplAdc12.setRef2_5V(){ ADC12CTL0 |= REF2_5V;}
-  async command uint8_t HplAdc12.isRef2_5V(){ return (ADC12CTL0 & REF2_5V) >> 6;}
-  
-  async command void HplAdc12.setSHT(uint8_t sht){
-    uint16_t ctl0 = ADC12CTL0;
-    uint16_t shttemp = sht & 0x0F;    
-    ctl0 &= 0x00FF;
-    ctl0 |= (shttemp << 8);
-    ctl0 |= (shttemp << 12);
-    ADC12CTL0 = ctl0; 
-  }
-  
-  async command void HplAdc12.adcOff(){ ADC12CTL0 &= ~ADC12ON; }
-  async command void HplAdc12.adcOn(){ ADC12CTL0 |= ADC12ON; }
+  async command bool HplAdc12.isBusy(){ return ADC12CTL1 & ADC12BUSY; }
 
   TOSH_SIGNAL(ADC_VECTOR) {
     uint16_t iv = ADC12IV;

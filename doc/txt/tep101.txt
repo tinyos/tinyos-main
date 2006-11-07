@@ -10,8 +10,8 @@ Analog-to-Digital Converters (ADCs)
 :Author: Jan-Hinrich Hauer, Philip Levis, Vlado Handziski, David Gay
 
 :Draft-Created: 20-Dec-2004
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2006-11-07 00:43:44 $
+:Draft-Version: $Revision: 1.5 $
+:Draft-Modified: $Date: 2006-11-07 19:30:39 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::

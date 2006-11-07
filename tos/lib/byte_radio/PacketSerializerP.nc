@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:02:20 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:31:18 $
  * ========================================================================
  */
 
@@ -100,7 +100,6 @@ implementation {
   }
   
   async event void PhyPacketTx.sendHeaderDone() {
-    signal RadioTimeStamping.transmittedSFD(0, (message_t*)txBufPtr); 
     TransmitNextByte();
   }
 
@@ -115,6 +114,7 @@ implementation {
   void TransmitNextByte() {
     message_radio_header_t* header = getHeader((message_t*) txBufPtr);
     if (byteCnt < header->length + sizeof(message_header_t) ) {  // send (data + header), compute crc
+        if(byteCnt == sizeof(message_header_t)) signal RadioTimeStamping.transmittedSFD(0, (message_t*)txBufPtr); 
         crc = crcByte(crc, ((uint8_t *)(txBufPtr))[byteCnt]);
         call RadioByteComm.txByte(((uint8_t *)(txBufPtr))[byteCnt++]);
     } else if (byteCnt == (header->length + sizeof(message_header_t))) {
@@ -139,7 +139,6 @@ implementation {
       crc = 0;
       getHeader(rxBufPtr)->length = sizeof(message_radio_header_t); 
       signal PhyReceive.receiveDetected();
-      signal RadioTimeStamping.receivedSFD(0);
     }
   }
 
@@ -160,6 +159,7 @@ implementation {
     message_radio_footer_t* footer = getFooter((message_t*)rxBufPtr);
     ((uint8_t *)(rxBufPtr))[byteCnt++] = data;
     if ( byteCnt < getHeader(rxBufPtr)->length + sizeof(message_radio_header_t) ) {
+      if(byteCnt == sizeof(message_radio_header_t)) signal RadioTimeStamping.receivedSFD(0);
       crc = crcByte(crc, data);
       if (getHeader(rxBufPtr)->length > TOSH_DATA_LENGTH) { 
         // this packet is surely corrupt, so whatever...

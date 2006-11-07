@@ -36,7 +36,7 @@
  * the Sensirion SHT11 sensor on the telosb platform.
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:03:16 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:27 $
  */
 
 module HplSensirionSht11P {

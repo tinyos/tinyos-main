@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: mica2.target,v 1.2 2006-07-12 16:59:47 scipio Exp $
+#$Id: mica2.target,v 1.3 2006-11-07 19:30:40 scipio Exp $
 
 PLATFORM = mica2
 SENSORBOARD ?= micasb

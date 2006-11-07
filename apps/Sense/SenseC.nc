@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 16:59:10 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:30:34 $
  * @author: Jan Hauer
  * ========================================================================
  */
@@ -55,7 +55,7 @@ module SenseC
 }
 implementation
 {
-  // sampling frequency in milliseconds
+  // sampling frequency in binary milliseconds
   #define SAMPLING_FREQUENCY 100
   
   event void Boot.booted() {
@@ -70,15 +70,15 @@ implementation
   event void Read.readDone(error_t result, uint16_t data) 
   {
     if (result == SUCCESS){
-      if (data & 0x8000)
+      if (data & 0x0004)
         call Leds.led2On();
       else
         call Leds.led2Off();
-      if (data & 0x4000)
+      if (data & 0x0002)
         call Leds.led1On();
       else
         call Leds.led1Off();
-      if (data & 0x2000)
+      if (data & 0x0001)
         call Leds.led0On();
       else
         call Leds.led0Off();

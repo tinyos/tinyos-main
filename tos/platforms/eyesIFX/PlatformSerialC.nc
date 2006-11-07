@@ -1,14 +1,12 @@
 configuration PlatformSerialC {
-  provides interface Init;
   provides interface StdControl;
-  provides interface SerialByteComm;
+  provides interface UartStream;
 }
 implementation {
-  components new Uart1C() as UartC, eyesIFXSerialP;
+  components new Msp430Uart1C() as UartC, eyesIFXSerialP;
 
-  Init = UartC;
-  StdControl = UartC;
-  SerialByteComm = UartC;
+  UartStream = UartC;
   StdControl = eyesIFXSerialP;
+  eyesIFXSerialP.Msp430UartConfigure <- UartC.Msp430UartConfigure;
   eyesIFXSerialP.Resource -> UartC.Resource;
 }

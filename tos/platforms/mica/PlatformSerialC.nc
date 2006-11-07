@@ -1,46 +1,55 @@
-/// $Id: PlatformSerialC.nc,v 1.2 2006-07-12 17:02:51 scipio Exp $
-
 /*
- * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
+ * Copyright (c) 2006 Arch Rock Corporation
+ * All rights reserved.
  *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose, without fee, and without written agreement is
- * hereby granted, provided that the above copyright notice, the following
- * two paragraphs and the author appear in all copies of this software.
- * 
- * IN NO EVENT SHALL CROSSBOW TECHNOLOGY OR ANY OF ITS LICENSORS BE LIABLE TO 
- * ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL 
- * DAMAGES ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
- * IF CROSSBOW OR ITS LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
- * DAMAGE. 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ * - Neither the name of the Arch Rock Corporation nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
  *
- * CROSSBOW TECHNOLOGY AND ITS LICENSORS SPECIFICALLY DISCLAIM ALL WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS 
- * ON AN "AS IS" BASIS, AND NEITHER CROSSBOW NOR ANY LICENSOR HAS ANY 
- * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR 
- * MODIFICATIONS.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * ARCH ROCK OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
 /**
- * A platform's basic UART abstraction. On a mica mote, this is UART0 of
- * the HPL.
- *
- * @author Martin Turon <mturon@xbow.com>
- * @author Philip Levis
- * @date August 7 2005
+ * @author Alec Woo <awoo@archrock.com>
+ * @author Jonathan Hui <jhui@archrock.com>
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:24 $
  */
 
 configuration PlatformSerialC {
-  provides interface Init;
+  
   provides interface StdControl;
-  provides interface SerialByteComm;
+  provides interface UartStream;
+  provides interface UartByte;
+  
 }
 implementation {
-  components HplAtm128UartC as UART, PlatformC;
 
-  SerialByteComm = UART.Uart0;
-  Init = UART.Uart0Init;
-  StdControl = UART.Uart0RxControl;
-  StdControl = UART.Uart0TxControl;
+  components Atm128Uart0C as Uart0;
+  StdControl = Uart0;
+  UartStream = Uart0;
+  UartByte = Uart0;
+  
+  components CounterMicro32C;
+  Uart0.Counter -> CounterMicro32C;
+  
 }

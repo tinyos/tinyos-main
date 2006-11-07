@@ -84,10 +84,8 @@ implementation
   }
 
   void requestFlashStatus() {
-    uint8_t dummy;
-
     call HplAt45dbByte.select();
-    call FlashSpi.write(AT45_C_REQ_STATUS, &dummy);
+    call FlashSpi.write(AT45_C_REQ_STATUS);
     call HplAt45dbByte.waitIdle();
   }
 
@@ -151,7 +149,7 @@ implementation
 	    else /* P_COMMAND */
 	      break;
 	
-	    call FlashSpi.write(out, &in);
+	    in = call FlashSpi.write(out);
 	  }
 	call HplAt45dbByte.deselect();
       }

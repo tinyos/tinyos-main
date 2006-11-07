@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2005-2006 Arch Rock Corporation
+/**
+ * Copyright (c) 2005-2006 Arched Rock Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the Arch Rock Corporation nor the names of
+ * - Neither the name of the Arched Rock Corporation nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -30,20 +30,22 @@
  */
 
 /**
- * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:47 $
+ * @author Jonathan Hui <jhui@archedrock.com>
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
  */
 
 
 generic module Msp430SpiDmaP() {
 
   provides interface Resource[ uint8_t id ];
+  provides interface ResourceConfigure[ uint8_t id ];
   provides interface SpiByte;
   provides interface SpiPacket[ uint8_t id ];
-  
+
   uses interface Msp430DmaChannel as DmaChannel1;
   uses interface Msp430DmaChannel as DmaChannel2;
   uses interface Resource as UsartResource[ uint8_t id ];
+  uses interface Msp430SpiConfigure[uint8_t id ];
   uses interface HplMsp430Usart as Usart;
   uses interface HplMsp430UsartInterrupts as UsartInterrupts;
   uses interface Leds;
@@ -64,22 +66,25 @@ implementation {
   task void signalDone_task();
 
   async command error_t Resource.immediateRequest[ uint8_t id ]() {
-    error_t error = call UsartResource.immediateRequest[ id ]();
-    if ( error == SUCCESS )
-      call Usart.setModeSPI();
-    return error;
+    return call UsartResource.immediateRequest[ id ]();
   }
 
   async command error_t Resource.request[ uint8_t id ]() {
     return call UsartResource.request[ id ]();
   }
 
-  async command void Resource.release[ uint8_t id ]() {
-    call UsartResource.release[ id ]();
+  async command error_t Resource.release[ uint8_t id ]() {
+    return call UsartResource.release[ id ]();
+  }
+
+  async command void ResourceConfigure.configure[ uint8_t id ]() {
+    call Usart.setModeSpi(call Msp430SpiConfigure.getConfig[id]());
+  }
+
+  async command void ResourceConfigure.unconfigure[ uint8_t id ]() {
   }
 
   event void UsartResource.granted[ uint8_t id ]() {
-    call Usart.setModeSPI();
     signal Resource.granted[ id ]();
   }
 
@@ -87,21 +92,26 @@ implementation {
     return call UsartResource.isOwner[ id ]();
   }
 
+  default async command error_t UsartResource.isOwner[ uint8_t id ]() { return FAIL; }
   default async command error_t UsartResource.request[ uint8_t id ]() { return FAIL; }
   default async command error_t UsartResource.immediateRequest[ uint8_t id ]() { return FAIL; }
-  default async command void UsartResource.release[ uint8_t id ]() {}
+  default async command error_t UsartResource.release[ uint8_t id ]() { return FAIL; }
+  default async command msp430_spi_config_t* Msp430SpiConfigure.getConfig[uint8_t id]() {
+    return &msp430_spi_default_config;
+  }
+
   default event void Resource.granted[ uint8_t id ]() {}
 
-  async command void SpiByte.write( uint8_t tx, uint8_t* rx ) {
-    
+  async command uint8_t SpiByte.write( uint8_t tx ) {
+
     call Usart.tx( tx );
     while( !call Usart.isRxIntrPending() );
-    *rx = call Usart.rx();
+    return call Usart.rx();
 
   }
-  
-  async command error_t SpiPacket.send[ uint8_t id ]( uint8_t* tx_buf, 
-						      uint8_t* rx_buf, 
+
+  async command error_t SpiPacket.send[ uint8_t id ]( uint8_t* tx_buf,
+						      uint8_t* rx_buf,
 						      uint16_t len ) {
 
     uint16_t ctrl;
@@ -146,11 +156,11 @@ implementation {
   }
 
   async event void DmaChannel2.transferDone( error_t error ) {}
- 
+
   void signalDone( error_t error ) {
     signal SpiPacket.sendDone[ m_client ]( m_tx_buf, m_rx_buf, m_len, error );
   }
-  
+
   async event void UsartInterrupts.txDone() {}
   async event void UsartInterrupts.rxDone( uint8_t data ) {}
 

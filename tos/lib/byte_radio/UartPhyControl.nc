@@ -45,7 +45,7 @@ interface UartPhyControl {
   * @return SUCCESS if it could be set (no current receiving/transmitting)
             FALSE otherwise.
   */
-  command error_t setNumPreambles(uint16_t numPreambleBytes);
+  async command error_t setNumPreambles(uint16_t numPreambleBytes);
     
   /**
   * Sets the timeout after the byte-stream is considered dead if no more

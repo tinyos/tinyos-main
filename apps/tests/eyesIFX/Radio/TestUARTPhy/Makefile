@@ -1,0 +1,3 @@
+COMPONENT=TestUARTPhyC
+include $(MAKERULES)
+

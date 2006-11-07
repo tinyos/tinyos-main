@@ -1,4 +1,4 @@
-/* $Id: Tsl2561InternalP.nc,v 1.2 2006-07-12 17:03:17 scipio Exp $ */
+/* $Id: Tsl2561InternalP.nc,v 1.3 2006-11-07 19:31:27 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -34,13 +34,24 @@
  * @author Phil Buonadonna
  */
 module Tsl2561InternalP {
+  provides interface Init;
   provides interface HplTSL256x[uint8_t id];
+  uses interface Init as SubInit;
   uses interface HplTSL256x as ToHPLC;
+  uses interface GpioInterrupt as InterruptAlert;
 }
 
 implementation {
   uint8_t currentId;
   
+  command error_t Init.init() {
+    call SubInit.init();
+    // The Intel Mote 2 Sensorboard multiplexes the TSL interrupt through a NAND
+    // gate.  Need to overrid the edge trigger from the driver default
+    call InterruptAlert.enableRisingEdge();
+    return SUCCESS;
+  }
+
   command error_t HplTSL256x.measureCh0[uint8_t id]() {
     currentId = id;
     return call ToHPLC.measureCh0();
@@ -101,6 +112,8 @@ implementation {
   async event void ToHPLC.alertThreshold() {
     signal HplTSL256x.alertThreshold[currentId]();
   }
+
+  async event InterruptAlert.fired() {}
 
   default async event void HplTSL256x.measureCh0Done[uint8_t id]( error_t error, uint16_t val ){ return; }
   default async event void HplTSL256x.measureCh1Done[uint8_t id]( error_t error, uint16_t val ){ return; }

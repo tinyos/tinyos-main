@@ -1,4 +1,4 @@
-/* $Id: im2sb.h,v 1.2 2006-07-12 17:03:17 scipio Exp $ */
+/* $Id: im2sb.h,v 1.3 2006-11-07 19:31:27 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -31,7 +31,7 @@
 /**
  * 
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * Revision: $Revision: 1.2 $
+ * Revision: $Revision: 1.3 $
  *
  */
 
@@ -46,6 +46,8 @@
 
 #define GPIO_LIS3L02DQ_RDY_INT		(96)
 #define GPIO_TMP175_TEMP_ALERT		(96)
+
+#define GPIO_PWR_ADC_NSHDWN		(93)
 
 #define TSL2561_SLAVE_ADDR (0x49)
 #define TMP175_SLAVE_ADDR (0x48)

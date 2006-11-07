@@ -4,27 +4,32 @@
  * and sends packets up a collection tree. The rate is configurable
  * through dissemination.
  *
- * See TEP118: Dissemination and TEP 119: Collection for details.
+ * See TEP118: Dissemination, TEP 119: Collection, and TEP 123: The
+ * Collection Tree Protocol for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.2 $ $Date: 2006-07-12 16:59:23 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:35 $
  */
 #include "TestNetwork.h"
-#include "Collection.h"
+#include "Ctp.h"
 
 configuration TestNetworkAppC {}
 implementation {
   components TestNetworkC, MainC, LedsC, ActiveMessageC;
   components new DisseminatorC(uint16_t, SAMPLE_RATE_KEY) as Object16C;
+  components CollectionC as Collector;
   components new CollectionSenderC(CL_TEST);
-  components TreeCollectionC as Collector;
   components new TimerMilliC();
   components new DemoSensorC();
   components new SerialAMSenderC(CL_TEST);
   components SerialActiveMessageC;
+#ifndef NO_DEBUG
   components new SerialAMSenderC(AM_COLLECTION_DEBUG) as UARTSender;
   components UARTDebugSenderP as DebugSender;
+#endif
   components RandomC;
+  components new QueueC(message_t*, 12);
+  components new PoolC(message_t, 12);
 
   TestNetworkC.Boot -> MainC;
   TestNetworkC.RadioControl -> ActiveMessageC;
@@ -39,9 +44,13 @@ implementation {
   TestNetworkC.Receive -> Collector.Receive[CL_TEST];
   TestNetworkC.UARTSend -> SerialAMSenderC.AMSend;
   TestNetworkC.CollectionPacket -> Collector;
-  TestNetworkC.TreeRoutingInspect -> Collector;
+  TestNetworkC.CtpInfo -> Collector;
+  TestNetworkC.CtpCongestion -> Collector;
   TestNetworkC.Random -> RandomC;
+  TestNetworkC.Pool -> PoolC;
+  TestNetworkC.Queue -> QueueC;
 
+#ifndef NO_DEBUG
   components new PoolC(message_t, 10) as DebugMessagePool;
   components new QueueC(message_t*, 10) as DebugSendQueue;
   DebugSender.Boot -> MainC;
@@ -49,4 +58,7 @@ implementation {
   DebugSender.MessagePool -> DebugMessagePool;
   DebugSender.SendQueue -> DebugSendQueue;
   Collector.CollectionDebug -> DebugSender;
+  TestNetworkC.CollectionDebug -> DebugSender;
+#endif
+  TestNetworkC.AMPacket -> ActiveMessageC;
 }

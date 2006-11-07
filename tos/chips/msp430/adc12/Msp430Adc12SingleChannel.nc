@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2004, Technische Universitaet Berlin
+ * Copyright (c) 2006, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,143 +27,205 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:40 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:30:57 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 /** 
- * This interface exports access to the ADC12 on the level of
- * HAL1 on a per-channel basis. It allows to sample a channel once or
- * repeatedly (and signal an event per conversion result) or perform multiple
- * conversions for the same channel once or repeatedly (and signal an event per
- * multiple conversion results). It does not allow to sample different channels
- * with the same command.
+ * 
+ * This interface provides access to the ADC12 on the level of HAL. It can be
+ * used to sample an adc channel once or repeatedly (one event is signalled per
+ * conversion result) or perform multiple conversions for a channel once or
+ * repeatedly (one event is signalled per multiple conversion results). It
+ * cannot be used to sample different adc channels with a single command.
+ * Sampling a channel requires calling a sequence of two commands, configureX()
+ * and getData(), where X is either 'Single', 'SingleRepeat', 'Multiple' or
+ * 'MultipleRepeat'. Conversion results will be signalled by the
+ * dataReadySingle() or dataReadyMultiple() event, depending on the previous
+ * configuration, i.e. there are four possible sequences:
+ * 
+ *    configureSingle()          -> [ getData() -> singleDataReady() ]*
+ * or configureSingleRepeat()    -> [ getData() -> singleDataReady() ]*
+ * or configureMultiple()        -> [ getData() -> multipleDataReady() ]*
+ * or configureMultipleRepeat()  -> getData() -> multipleDataReady()
  *
- * @author Jan Hauer
- * @see  Please refer to TEP 101 for more information about this component and its
- *          intended use.
+ * where configureX() and getData() are commands called by the client and
+ * singleDataReady() and multipleDataReady() are events signalled back to the
+ * client by the adc subsystem. Note that a configuration is valid until
+ * the client reconfigures or releases the ADC (using the Resource 
+ * interface), except for configureMultipleRepeat(), which is only valid 
+ * for a single call to getData(). This means that after a successful 
+ * configuration with, for example, configureSingle() the client may call 
+ * getData() more than once without reconfiguring the ADC in between 
+ * (if the client has not released the ADC via the Resource interface).
+ *
+ * @author Jan Hauer 
  */
 
-#include <Msp430Adc12.h> 
+#include "Msp430Adc12.h" 
 interface Msp430Adc12SingleChannel 
 {   
+
   /** 
-   * Samples an ADC channel once. If SUCCESS is returned, an event
-   * <code>singleDataReady()</code> will be signalled with the conversion
-   * result. Otherwise <code>singleDataReady()</code> will not be signalled.
+   * Configures the ADC to perform a single conversion. Any previous
+   * configuration will be overwritten.  If SUCCESS is returned calling
+   * <code>getData()</code> will start the conversion immediately and a
+   * <code>singleDataReady()</code> event will be signalled with the conversion
+   * result when the conversion has finished.
    *
    * @param config ADC12 configuration data.  
-   * @return SUCCESS means conversion data will be signalled in
-   * <code>singleDataReady()</code>.
+   *
+   * @return SUCCESS means that the ADC was configured successfully and
+   * <code>getData()</code> can be called to start the conversion.
    */
-  async command error_t getSingleData(const msp430adc12_channel_config_t *config);
-
-  /** Samples an ADC channel repeatedly and signals an event
-   * <code>singleDataReady()</code> after every single conversion.  Conversion
-   * result are signalled, until the client returns <code>FAIL</code> in the
-   * <code>singleDataReady()</code> event handler.  If this command does not
-   * return SUCCESS then <code>singleDataReady()</code> will not be
-   * signalled.<br><br> Successive conversions are performed as quickly as
-   * possible if <code>jiffies</code> equals zero. Otherwise
-   * <code>jiffies</code> define the time between successive conversions in
-   * terms of clock ticks of "sampcon_ssel" and input divider "sampcon_id" as
-   * specified in the <code>config</code> parameter.
-   * 
-   * @param config ADC12 configuration data.  
-   * @param jiffies Sampling rate in terms of clock ticks of
-   * "sampcon_ssel" and input divider "sampcon_id".
-   * @return SUCCESS means conversion data will be signalled in
-   * <code>singleDataReady()</code> until the client returns <code>FAIL</code>.
-   */
-  async command error_t getSingleDataRepeat(const msp430adc12_channel_config_t *config, 
-      uint16_t jiffies);
-
- /** 
-  *
-  * Samples an ADC channel multiple times and signals one event
-  * <code>multipleDataReady()</code> with all conversion results.  If SUCCESS
-  * is returned, the event <code>multipleDataReady</code> is signalled after
-  * the buffer is filled with conversion results, otherwise
-  * <code>multipleDataReady()</code> will not be signalled.  <br><br>
-  * Successive conversions are performed as quickly as possible if
-  * <code>jiffies</code> equals zero. Otherwise <code>jiffies</code> define the
-  * time between successive conversions in terms of clock ticks of
-  * "sampcon_ssel" and input divider "sampcon_id" as specified in the
-  * <code>config</code> parameter.
-  *
-  * @param config ADC12 configuration data.  
-  * @param jiffies Sampling rate in terms of clock ticks of
-  * "sampcon_ssel" and input divider "sampcon_id".
-  * @param buffer The buffer to store the conversion results. It must have a
-  * minimum size of <code>numSamples * 2</code> byte !  
-  * @param numSamples Number of samples to take, buffer size must be greater or
-  * equal than <code>numSamples * 2</code> byte !  
-  * @return SUCCESS means conversion data will be signalled in
-  * <code>singleDataReady()</code>.
-  */ 
-  async command error_t getMultipleData( const msp430adc12_channel_config_t *config,
-      uint16_t *buffer, uint16_t numSamples, uint16_t jiffies);
-
- /** 
-  *
-  * Samples an ADC channel up to 16 times and signals an event
-  * <code>multipleDataReady()</code> with all conversion results repeatedly.
-  * If SUCCESS is returned, the event <code>multipleDataReady</code> is
-  * signalled after the buffer is filled with the first (up to 16) conversion
-  * results, otherwise <code>multipleDataReady()</code> will not be signalled.
-  * The conversion result are signalled repeatedly, until the client returns
-  * <code>FAIL</code> in the <code>multipleDataReady()</code> event handler.
-  * <br><br> Successive conversions are performed as quickly as possible if
-  * <code>jiffies</code> equals zero. Otherwise <code>jiffies</code> define the
-  * time between successive conversions in terms of clock ticks of
-  * "sampcon_ssel" and input divider "sampcon_id" as specified in the
-  * <code>config</code> parameter.
-  *
-  * @param config ADC12 configuration data.  @param jiffies Jiffies in terms of
-  * clock ticks of "sampcon_ssel" and input divider "sampcon_id".  @param
-  * buffer The buffer to store the conversion results. It must have a minimum
-  * size of <code>numSamples * 2</code> byte !  
-  * @param jiffies Sampling rate in terms of clock ticks of
-  * "sampcon_ssel" and input divider "sampcon_id".
-  * @param numSamples Number of samples to take, 1 <= numSamples <= 16, buffer
-  * size must be greater or equal than <code>numSamples * 2</code> byte !  
-  * @return SUCCESS means conversion data will be signalled in
-  * <code>singleDataReady()</code> until the client returns <code>FAIL</code>.
-  */
-  async command error_t getMultipleDataRepeat(const msp430adc12_channel_config_t *config, 
-      uint16_t *buffer, uint8_t numSamples, uint16_t jiffies);
+  async command error_t configureSingle(const msp430adc12_channel_config_t *config);
 
   /** 
-   * Data from a call to <code>getSingleData()</code> or
-   * <code>getSingleDataRepeat()</code> is ready. In the first case the return
-   * value is ignored, in the second it defines whether another conversion
-   * takes place (<code>SUCCESS()</code>) or not (<code>FAIL</code>).
+   * Configures the ADC for repeated single channel conversion mode. Any
+   * previous configuration will be overwritten. If SUCCESS is returned calling
+   * <code>getData()</code> will start sampling the adc channel periodically
+   * (the first conversion is started immediately).  The sampling period is
+   * specified by the <code>jiffies</code> parameter, which defines the time
+   * between successive conversions in terms of clock ticks of clock source
+   * "sampcon_ssel" and clock input divider "sampcon_id" as specified in the
+   * <code>config</code> parameter. If jiffies is zero successive conversions
+   * are performed as quickly as possible.  Conversion result are signalled
+   * until the client returns <code>FAIL</code> in the
+   * <code>singleDataReady()</code> event handler.
+   * 
+   * @param config ADC12 configuration data.  
+   * @param jiffies Sampling period in terms of clock ticks of "sampcon_ssel" and
+   * input divider "sampcon_id".
+   *
+   * @return SUCCESS means that the ADC was configured successfully and
+   * <code>getData()</code> can be called to start with the first conversion.
+   */
+  async command error_t configureSingleRepeat(const msp430adc12_channel_config_t *config, uint16_t jiffies);
+
+  
+  /** 
+   * Configures the ADC for sampling a channel <code>numSamples</code> times
+   * with a given sampling period. Any previous configuration will be
+   * overwritten.  In contrast to the <code>configureSingleRepeat()</code>
+   * command, this configuration means that only one event will be signalled
+   * after all samples have been taken (which is useful for high-frequency
+   * sampling). If SUCCESS is returned calling <code>getData()</code> will
+   * start sampling the adc channel <code>numSamples</code> times and the first
+   * conversion is started immediately. Conversion results are stored in a
+   * buffer allocated by the client (the <code>buffer</code>
+   * parameter). The sampling period is specified by the <code>jiffies</code>
+   * parameter, which defines the time between successive conversions in terms
+   * of clock ticks of clock source "sampcon_ssel" and clock input divider
+   * "sampcon_id" as specified in the <code>config</code> parameter. If jiffies
+   * is zero successive conversions are performed as quickly as possible. After
+   * <code>numSamples</code> conversions an event
+   * <code>multipleDataReady()</code> is signalled with the conversion results.
+   *
+   * @param config ADC12 configuration data.  
+   * @param jiffies Sampling period in terms of clock ticks of "sampcon_ssel"
+   * and input divider "sampcon_id".
+   * @param buffer The user-allocated buffer in which the conversion results
+   * will be stored. It must have at least <code>numSamples</code> entries,
+   * i.e. it must have a size of at least <code>numSamples</code> * 2 byte.
+   * @param numSamples Number of adc samples
+   *
+   * @return SUCCESS means that the ADC was configured successfully and
+   * <code>getData()</code> can be called to start with the first conversion.
+   */ 
+  async command error_t configureMultiple( const msp430adc12_channel_config_t *config, uint16_t buffer[], uint16_t numSamples, uint16_t jiffies);
+
+  /** 
+   *
+   * Configures the ADC for sampling a channel multiple times repeatedly.  Any
+   * previous configuration will be overwritten. In contrast to the
+   * <code>configureSingleRepeat()</code> command this configuration means that
+   * an event with <code>numSamples</code> conversion results will be
+   * signalled, where 0 < <code>numSamples</code> <= 16. In contrast to the
+   * <code>configureMultiple()</code> command, this configuration means that
+   * <code>numSamples</code> conversion results will be signalled repeatedly
+   * until the client returns <code>FAIL</code> in the
+   * <code>multipleDataReady()</code> event handler. 
+   *
+   * If <code>configureMultipleRepeat()</code> returns SUCCESS calling
+   * <code>getData()</code> will start the the first conversion immediately.
+   * The sampling period is specified by the <code>jiffies</code> parameter,
+   * which defines the time between successive conversions in terms of clock
+   * ticks of clock source "sampcon_ssel" and clock input divider "sampcon_id"
+   * as specified in the <code>config</code> parameter. If jiffies is zero
+   * successive conversions are performed as quickly as possible. After
+   * <code>numSamples</code> conversions an event
+   * <code>multipleDataReady()</code> is signalled with <code>numSamples</code>
+   * conversion results. If the client returns <code>SUCCESS</code> in the
+   * <code>multipleDataReady()</code> event handler, <code>numSamples</code>
+   * new conversions will be performed, otherwise not.
+   *
+   * @param config ADC12 configuration data.  
+   * @param jiffies Sampling period in terms of clock ticks of "sampcon_ssel"
+   * and input divider "sampcon_id".
+   * @param buffer The user-allocated buffer in which the conversion results
+   * will be stored. It must have at least <code>numSamples</code> entries,
+   * i.e. it must have a size of at least <code>numSamples</code> * 2 byte.
+   * @param numSamples Number of adc samples to take, 0 <
+   * <code>numSamples</code> <= 16
+   *
+   * @return SUCCESS means that the ADC was configured successfully and
+   * <code>getData()</code> can be called to start with the first conversion.
+   */ 
+  async command error_t configureMultipleRepeat(const msp430adc12_channel_config_t *config, uint16_t buffer[], uint8_t numSamples, uint16_t jiffies);
+
+
+  /** 
+   * Starts sampling an adc channel using the configuration as specified by
+   * the last call to any of the four available configuration commands.
+   *
+   * @return SUCCESS means that the conversion was started successfully and an
+   * event singleDataReady() or multipleDataReady() will be signalled
+   * (depending on the previous configuration). Otherwise no such event will be
+   * signalled.
+   */ 
+  async command error_t getData();
+  
+  /** 
+   * A single ADC conversion result is ready. If the ADC was configured with
+   * the <code>configureSingle()</code> command, then the return value is
+   * ignored. If the ADC was configured with the
+   * <code>configureSingleRepeat()</code> command then the return value tells
+   * whether another conversion should be performed (<code>SUCCESS()</code>) or
+   * not (<code>FAIL</code>). If <code>SUCCESS()</code> is returned then the
+   * sampling period will be as specified in the
+   * <code>configureSingleRepeat()</code> command.
    * 
    * @param data Conversion result (lower 12 bit).  
+   *
    * @return If this event is signalled as response to a call to
-   * <code>getSingleDataRepeat()</code> then <code>SUCCESS</code> results in
+   * <code>configureSingleRepeat()</code> then <code>SUCCESS</code> results in
    * another sampling and <code>FAIL</code> stops the repeated sampling.
    * Otherwise the return value is ignored.
    */  
   async event error_t singleDataReady(uint16_t data);
 
   /** 
-   * Data from a call to <code>getMultipleData()</code> or
-   * <code>getMultipleDataRepeat()</code> is ready. In the first case the
-   * return value is ignored, in the second a non-zero pointer defines where to
-   * store the next <code>numSamples</code> conversion results and a null
-   * pointer stops the repeated conversion mode. 
+   * Multiple ADC conversion results are ready.  If the ADC was configured
+   * with the <code>configureMultiple()</code> command, then the return value
+   * is ignored. If the ADC was configured with the
+   * <code>configureMultipleRepeat()</code> command then the returned pointer
+   * defines where to store the next <code>numSamples</code>
+   * conversion results (the client must make sure that the buffer is big
+   * enough!).  Returning a null pointer means that the repeated conversion
+   * mode will be stopped.
    * 
-   * @param buffer Conversion results (lower 12 bit are valid).  
+   * @param buffer Conversion results (lower 12 bit are valid, respectively).
    * @param numSamples Number of samples stored in <code>buffer</code> 
-   * @return A null pointer stops a repeated conversion mode. Any non-zero
-   * value is interpreted as the next buffer, which must have size
-   * <code>numSamples 2</code> byte!). Ignored if this event is a response to
-   * <code>getMultipleData()</code>.
+   *
+   * @return
+   * A null pointer stops a repeated conversion mode. Any non-zero value is
+   * interpreted as the next buffer, which must have at least
+   * <code>numSamples</code> entries. The return value us ignored if the ADC
+   * was configured with <code>configureMultiple()</code>.
    */    
-  async event uint16_t* multipleDataReady(uint16_t *buffer, uint16_t
-      numSamples); 
+  async event uint16_t* multipleDataReady(uint16_t buffer[], uint16_t numSamples); 
+
 }
 

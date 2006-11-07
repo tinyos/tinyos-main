@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: TreeRoutingEngineP.nc,v 1.2 2006-07-12 17:02:26 scipio Exp $ */
+/* $Id: TreeRoutingEngineP.nc,v 1.3 2006-11-07 19:31:19 scipio Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -90,7 +90,7 @@
  *  @author Rodrigo Fonseca
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2006-07-12 17:02:26 $
+ *  @date   $Date: 2006-11-07 19:31:19 $
  *  @see Net2-WG
  */
 
@@ -250,7 +250,9 @@ implementation {
                   i, entry->neighbor, entry->info.parent, entry->info.hopcount);
               continue;
             }
-            
+	    if (TOS_NODE_ID > 10 && entry->neighbor == 0) {
+	      continue;
+	    }
             /* Compute this neighbor's path metric */
             linkMetric = evaluateMetric(call LinkEstimator.getLinkQuality(entry->neighbor));
             dbg("TreeRouting", 
@@ -293,6 +295,7 @@ implementation {
                 call CollectionDebug.logEventRoute(NET_C_TREE_NEW_PARENT, best->neighbor, best->info.hopcount + 1, best->info.metric); 
                 call LinkEstimator.unpinNeighbor(routeInfo.parent);
                 call LinkEstimator.pinNeighbor(best->neighbor);
+		call LinkEstimator.clearDLQ(best->neighbor);
                 atomic {
                     routeInfo.parent = best->neighbor;
                     routeInfo.metric = best->info.metric;

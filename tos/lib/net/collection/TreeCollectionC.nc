@@ -95,7 +95,7 @@ implementation {
 
   components ActiveMessageC;
   components new ForwardingEngineP() as Forwarder;
-  components MainC;
+  components MainC, LedsC;
   
   Send = Forwarder;
   StdControl = Forwarder;
@@ -158,7 +158,8 @@ implementation {
   Forwarder.RadioControl -> ActiveMessageC;
   Forwarder.PacketAcknowledgements -> AMSenderC.Acks;
   Forwarder.AMPacket -> AMSenderC;
-
+  Forwarder.Leds -> LedsC;
+  
   components new AMSenderC(AM_COLLECTION_CONTROL) as SendControl;
   components new AMReceiverC(AM_COLLECTION_CONTROL) as ReceiveControl;
   components new AMSenderC(AM_LINKEST) as SendLinkEst;

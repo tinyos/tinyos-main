@@ -7,7 +7,7 @@
 # by ncc.  And because of that, the current platform's include directory
 # must be specified, otherwise its search order is last instead of first.
 #
-# $Id: .platform,v 1.2 2006-07-12 17:02:58 scipio Exp $
+# $Id: .platform,v 1.3 2006-11-07 19:31:26 scipio Exp $
 #
 push( @includes, qw(
 

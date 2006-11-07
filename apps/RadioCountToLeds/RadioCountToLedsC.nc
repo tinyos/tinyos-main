@@ -1,4 +1,4 @@
-// $Id: RadioCountToLedsC.nc,v 1.2 2006-07-12 16:59:08 scipio Exp $
+// $Id: RadioCountToLedsC.nc,v 1.3 2006-11-07 19:30:34 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -28,19 +28,20 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  */
-
-/**
- *  Implementation of the OSKI RadioCountToLeds application. This
- *  application periodically broadcasts a 16-bit counter, and displays
- *  broadcasts it hears on its LEDs.
- *
- *  @author Philip Levis
- *  @date   June 6 2005
- *
- **/
-
+ 
 #include "Timer.h"
 #include "RadioCountToLeds.h"
+ 
+/**
+ * Implementation of the RadioCountToLeds application. RadioCountToLeds 
+ * maintains a 4Hz counter, broadcasting its value in an AM packet 
+ * every time it gets updated. A RadioCountToLeds node that hears a counter 
+ * displays the bottom three bits on its LEDs. This application is a useful 
+ * test to show that basic AM communication and timers work.
+ *
+ * @author Philip Levis
+ * @date   June 6 2005
+ */
 
 module RadioCountToLedsC {
   uses {
@@ -66,7 +67,7 @@ implementation {
 
   event void AMControl.startDone(error_t err) {
     if (err == SUCCESS) {
-      call MilliTimer.startPeriodic(1000);
+      call MilliTimer.startPeriodic(250);
     }
     else {
       call AMControl.start();
@@ -84,13 +85,13 @@ implementation {
       return;
     }
     else {
-      RadioCountMsg* rcm = (RadioCountMsg*)call Packet.getPayload(&packet, NULL);
-      if (call Packet.maxPayloadLength() < sizeof(RadioCountMsg)) {
+      radio_count_msg_t* rcm = (radio_count_msg_t*)call Packet.getPayload(&packet, NULL);
+      if (call Packet.maxPayloadLength() < sizeof(radio_count_msg_t)) {
 	return;
       }
 
       rcm->counter = counter;
-      if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(RadioCountMsg)) == SUCCESS) {
+      if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(radio_count_msg_t)) == SUCCESS) {
 	dbg("RadioCountToLedsC", "RadioCountToLedsC: packet sent.\n", counter);	
 	locked = TRUE;
       }
@@ -100,9 +101,9 @@ implementation {
   event message_t* Receive.receive(message_t* bufPtr, 
 				   void* payload, uint8_t len) {
     dbg("RadioCountToLedsC", "Received packet of length %hhu.\n", len);
-    if (len != sizeof(RadioCountMsg)) {return bufPtr;}
+    if (len != sizeof(radio_count_msg_t)) {return bufPtr;}
     else {
-      RadioCountMsg* rcm = (RadioCountMsg*)payload;
+      radio_count_msg_t* rcm = (radio_count_msg_t*)payload;
       if (rcm->counter & 0x1) {
 	call Leds.led0On();
       }

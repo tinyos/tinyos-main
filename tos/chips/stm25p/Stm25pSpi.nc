@@ -33,7 +33,7 @@
  * SPI abstraction for the ST M25P family of serial code flash chips.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:58 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:15 $
  */
 
 interface Stm25pSpi {

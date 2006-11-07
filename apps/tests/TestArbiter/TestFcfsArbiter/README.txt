@@ -21,7 +21,7 @@ following order.
   -- Resource 0
   -- Resource 2
   -- Resource 1
-It is expected then that using a round robin policy, control of the
+It is expected then that using a first-come-first-serve policy, control of the
 resource will be granted in the order of 0,2,1 and the Leds
 corresponding to each resource will flash whenever this occurs.
   -- Led 0 -> Resource 0

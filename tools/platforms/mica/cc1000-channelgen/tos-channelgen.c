@@ -1,4 +1,4 @@
-// $Id: tos-channelgen.c,v 1.2 2006-07-12 17:00:17 scipio Exp $
+// $Id: tos-channelgen.c,v 1.3 2006-11-07 19:30:41 scipio Exp $
 
 /* -*- Mode: C; c-basic-indent: 2; indent-tabs-mode: nil -*- */
 /*									
@@ -37,7 +37,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  * Author:	Phil Buonadonna
- * Revision:	$Id: tos-channelgen.c,v 1.2 2006-07-12 17:00:17 scipio Exp $
+ * Revision:	$Id: tos-channelgen.c,v 1.3 2006-11-07 19:30:41 scipio Exp $
  * 
  */
 

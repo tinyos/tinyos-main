@@ -1,4 +1,4 @@
-//$Id: HdlcTranslateC.nc,v 1.2 2006-07-12 17:02:28 scipio Exp $
+//$Id: HdlcTranslateC.nc,v 1.3 2006-11-07 19:31:20 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -35,7 +35,7 @@
 module HdlcTranslateC {
   provides interface SerialFrameComm;
   uses {
-    interface SerialByteComm;
+    interface UartStream;
     interface Leds;
   }
 }
@@ -49,7 +49,7 @@ implementation {
   //norace uint8_t debugCnt = 0;
   norace HdlcState state = {0,0};
   norace uint8_t txTemp;
-
+  norace uint8_t m_data;
   
   // TODO: add reset for when SerialM goes no-sync.
   async command void SerialFrameComm.resetReceive(){
@@ -58,7 +58,7 @@ implementation {
   async command void SerialFrameComm.resetSend(){
     state.sendEscape = 0;
   }
-  async event void SerialByteComm.get(uint8_t data) {
+  async event void UartStream.receivedByte(uint8_t data) {
     //debugCnt++;
     // 7E 41 0E 05 04 03 02 01 00 01 8F 7E
 /*     if (debugCnt == 1 && data == 0x7E) call Leds.led0On(); */
@@ -85,27 +85,33 @@ implementation {
 
   async command error_t SerialFrameComm.putDelimiter() {
     state.sendEscape = 0;
-    return call SerialByteComm.put(HDLC_FLAG_BYTE);
+    m_data = HDLC_FLAG_BYTE;
+    return call UartStream.send(&m_data, 1);
   }
   
   async command error_t SerialFrameComm.putData(uint8_t data) {
     if (data == HDLC_CTLESC_BYTE || data == HDLC_FLAG_BYTE) {
       state.sendEscape = 1;
       txTemp = data ^ 0x20;
-      return call SerialByteComm.put(HDLC_CTLESC_BYTE);
+      m_data = HDLC_CTLESC_BYTE;
     }
     else {
-      return call SerialByteComm.put(data);
+      m_data = data;
     }
+    return call UartStream.send(&m_data, 1);
   }
 
-  async event void SerialByteComm.putDone() {
+  async event void UartStream.sendDone( uint8_t* buf, uint16_t len, 
+					error_t error ) {
     if (state.sendEscape) {
       state.sendEscape = 0;
-      call SerialByteComm.put(txTemp);
+      m_data = txTemp;
+      call UartStream.send(&m_data, 1);
     }
     else {
       signal SerialFrameComm.putDone();
     }
   }
+
+  async event void UartStream.receiveDone( uint8_t* buf, uint16_t len, error_t error ) {}
 }

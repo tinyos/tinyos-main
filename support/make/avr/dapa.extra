@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: dapa.extra,v 1.2 2006-07-12 16:59:49 scipio Exp $
+#$Id: dapa.extra,v 1.3 2006-11-07 19:30:40 scipio Exp $
 
 PROGRAM = dapa
 PROGRAMMER_FLAGS = -dprog=dapa --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)

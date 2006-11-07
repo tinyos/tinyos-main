@@ -64,7 +64,7 @@
 /**
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Henri Dubois-Ferriere
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:02:08 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:16 $
  */
 
 module XE1205SpiImplP {
@@ -133,12 +133,12 @@ implementation {
     return error;
   }
 
-  async command void Resource.release[ uint8_t id ]() {
+  async command error_t Resource.release[ uint8_t id ]() {
     uint8_t i;
     atomic {
       if ( m_holder != id ) {
 	xe1205check(11, 1);
-	return;
+	return FAIL;
       }
 
       m_holder = NO_HOLDER;
@@ -154,10 +154,11 @@ implementation {
 	    m_holder = i;
 	    m_requests &= ~( 1 << i );
 	    call SpiResource.request();
-	    return;
+	    return SUCCESS;
 	  }
 	}
       }
+      return SUCCESS;
     }
   }
   
@@ -232,8 +233,6 @@ implementation {
 
   async command void Reg.read[uint8_t addr](uint8_t* data) 
   {
-    error_t status;
-
 #if 1
     if (call NssDataPin.get() != TRUE || call NssConfigPin.get() != TRUE)
       xe1205check(6, 1);
@@ -241,15 +240,13 @@ implementation {
 
     call NssDataPin.set();
     call NssConfigPin.clr();
-    call SpiByte.write(XE1205_READ(addr), &status);
-    call SpiByte.write(0, data);
+    call SpiByte.write(XE1205_READ(addr));
+    *data = call SpiByte.write(0);
     call NssConfigPin.set();
   }
 
   async command void Reg.write[uint8_t addr](uint8_t data) 
   {
-    error_t status;
-
 #if 1
     if (call NssDataPin.get() != TRUE || call NssConfigPin.get() != TRUE)
       xe1205check(7, 1);
@@ -257,8 +254,8 @@ implementation {
 
     call NssDataPin.set();
     call NssConfigPin.clr();
-    call SpiByte.write(XE1205_WRITE(addr), &status);
-    call SpiByte.write(data, &status);
+    call SpiByte.write(XE1205_WRITE(addr));
+    call SpiByte.write(data);
     call NssConfigPin.set();
   }
 

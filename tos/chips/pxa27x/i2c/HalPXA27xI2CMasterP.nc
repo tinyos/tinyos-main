@@ -1,4 +1,4 @@
-/* $Id: HalPXA27xI2CMasterP.nc,v 1.2 2006-07-12 17:01:53 scipio Exp $ */
+/* $Id: HalPXA27xI2CMasterP.nc,v 1.3 2006-11-07 19:31:14 scipio Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -37,7 +37,7 @@
 
 #include <I2C.h>
 
-module HalPXA27xI2CMasterP
+generic module HalPXA27xI2CMasterP(bool fast_mode)
 {
   provides interface Init;
   provides interface I2CPacket<TI2CBasicAddr>;
@@ -68,7 +68,7 @@ implementation
   uint16_t mCurTargetAddr;
   uint8_t *mCurBuf, mCurBufLen, mCurBufIndex;
   i2c_flags_t mCurFlags;
-  const uint32_t mBaseICRFlags = (ICR_FM | ICR_BEIE | ICR_IUE | ICR_SCLE);
+  uint32_t mBaseICRFlags;
 
   static void readNextByte() {
     if (mCurBufIndex >= (mCurBufLen - 1)) {
@@ -161,8 +161,8 @@ implementation
     call I2C.setICR(mBaseICRFlags | ICR_MA);
     call I2C.setICR(ICR_UR);
     call I2C.setICR(mBaseICRFlags);
-    mI2CState = I2C_STATE_IDLE;
     atomic {
+      mI2CState = I2C_STATE_IDLE;
       signal I2CPacket.readDone(FAIL,mCurTargetAddr,mCurBufLen,mCurBuf);
     }
     return;
@@ -173,15 +173,17 @@ implementation
     call I2C.setICR(mBaseICRFlags | ICR_MA);
     call I2C.setICR(ICR_UR);
     call I2C.setICR(mBaseICRFlags);
-    mI2CState = I2C_STATE_IDLE;
     atomic {
-      signal I2CPacket.readDone(FAIL,mCurTargetAddr,mCurBufLen,mCurBuf);
+      mI2CState = I2C_STATE_IDLE;
+      signal I2CPacket.writeDone(FAIL,mCurTargetAddr,mCurBufLen,mCurBuf);
     }
     return;
   }
 
   command error_t Init.init() {
     atomic {
+      mBaseICRFlags = (fast_mode) ? (ICR_FM | ICR_BEIE | ICR_IUE | ICR_SCLE) : (ICR_BEIE | ICR_IUE | ICR_SCLE);
+
       call I2CSCL.setGAFRpin(I2C_SCL_ALTFN);
       call I2CSCL.setGPDRbit(TRUE);
       call I2CSDA.setGAFRpin(I2C_SDA_ALTFN);
@@ -196,7 +198,6 @@ implementation
 
   async command error_t I2CPacket.read(i2c_flags_t flags, uint16_t addr, uint8_t length, uint8_t* data) {
     error_t error = SUCCESS;
-    uint8_t tmpAddr;
 
     if ((flags & I2C_ACK_END) && (flags & I2C_STOP)) {
       error = EINVAL;
@@ -215,7 +216,6 @@ implementation
 
   async command error_t I2CPacket.write(i2c_flags_t flags, uint16_t addr, uint8_t length, uint8_t* data) {
     error_t error = SUCCESS;
-    uint8_t tmpAddr;
 
     error = startI2CTransact(I2C_STATE_WRITE,addr,length,data,flags,FALSE);
 

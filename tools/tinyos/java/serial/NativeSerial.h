@@ -1,4 +1,4 @@
-//$Id: NativeSerial.h,v 1.2 2006-07-12 17:00:46 scipio Exp $
+//$Id: NativeSerial.h,v 1.3 2006-11-07 19:30:43 scipio Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.

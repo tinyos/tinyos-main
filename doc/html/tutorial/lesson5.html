@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<!-- $Id: lesson5.html,v 1.2 2006-07-12 16:59:37 scipio Exp $ -->
+<!-- $Id: lesson5.html,v 1.3 2006-11-07 19:30:38 scipio Exp $ -->
 
 <div class="title">Lesson 5: Sensing</div>
 <div class="subtitle">Last Modified: 16 June 2006</div>
@@ -28,20 +28,20 @@ sensing was syntactically connected with analog-to-digital converters (ADCs):
 TinyOS 1.x applications such as <code>Oscilloscope</code> or <code>Sense</code>
 used the <code>ADC</code> and <code>ADCControl</code> interfaces to collect
 sensor data. When new platforms appeared with sensors that were read out via
-the serial interface, not only additional interfaces like <code>ADCError</code>
-had to be introduced, but it became clear that equating a sensor with an ADC is
-difficult.
+the serial interface, not only did additional interfaces like <code>ADCError</code>
+have to be introduced, but it became clear that equating a sensor with an ADC was
+not always the appropriate thing to do.
 
 <p> Usually sensing involves two tasks: configuring a sensor (and/or the
 hardware module it is attached to, for example an ADC or SPI) and reading the
 sensor data.  The first task is tricky, because a sensing application like, for
 example, <code>Sense</code> is meant to run on any TinyOS platform. How can
 <code>Sense</code> know the configuration details (e.g. input channel, the
-required reference voltage, etc.) of an attached sensor ? It can't, because the
-configuration details of, for example, the light sensor on the <i>tmote</i>
-platform will be different from the <i>eyes</i> platform.  Unless
-<code>Sense</code> knows about all sensors on all platforms it can't perform
-the configuration task, since the interfaces for the configuration of a sensor
+required reference voltage, etc.) of an attached sensor? It can't, because the
+configuration details of sensors will be different from platform to platform, 
+i.e. (the light sensor on the <i>tmote</i> and the one on the <i>eyes</i> platform.  
+Unless <code>Sense</code> knows about all sensors on all platforms it will be unable to
+perform the configuration task since the interfaces for the configuration of a sensor
 will differ from platform to platform (and potentially from sensor to sensor).
 However, the second task - reading the sensor data - can be solved so that the
 <code>Sense</code> application can collect sensor data even though it is
@@ -49,8 +49,8 @@ agnostic to the platform it is running on.
 
 <p> In TinyOS 2.0 <i>platform independent</i> sensing applications such as
 <code>Oscilloscope</code>, <code>Sense</code> or <code>RadioSenseToLeds</code>
-are not using configuration interfaces like <code>ADCControl</code> anymore;
-instead they are only using the standard data acquisition interfaces
+do not use configuration interfaces like <code>ADCControl</code> anymore;
+instead they use the standard data acquisition interfaces
 <code>Read</code>, <code>ReadStream</code> or <code>ReadNow</code> for
 collecting sensor data. All configuration details are hidden from the
 application and this is why you can compile <code>Sense</code> and display
@@ -63,19 +63,19 @@ different.
 <ul>
 
 <li> Since the <code>Sense</code> application component only uses standard
-data acquisition interfaces who defines what sensor it samples ?
+data acquisition interfaces who is in charge of defining which sensor it samples?
 
 <li> If the <code>Sense</code> application component is not configuring the
-sensor, who is responsible for that ?
+sensor, then who is responsible for that?
 
-<li> How can an application like <code>Sense</code> display sensor data when it
-does not know the details about sensor configuration ? This includes questions
+<li> How can an applications like <code>Sense</code> display sensor data when they
+do not know the details about sensor configuration? This includes questions
 like "what is the value range of the sensor data" or "is a temperature reading
-to be interpreted in degree Celsius or Fahrenheit" ?
+to be interpreted in degrees Celsius or Fahrenheit"?
 
 <li> Let's assume there are several sensors on a platform: what steps have to
-be done to let the <code>Sense</code> or <code>Oscilloscope</code> application
-display data of a different sensor ?
+be taken to let the <code>Sense</code> or <code>Oscilloscope</code> application
+display data from a different sensor?
 
 </ul> 
 
@@ -83,7 +83,7 @@ display data of a different sensor ?
 Using the <code>Sense</code> and <code>Oscilloscope</code> application as an
 example, the following sections explain how the data acquisition interfaces are
 used, how the configuration procedure works and, as an example, how
-<code>Sense</code> can be hooked up to a different than the default sensor on
+<code>Sense</code> can be hooked up to sensors other than the default one on
 the <i>telosb</i> platform.
 
 <a name="sense"><h1>The Sense application</h1></a>
@@ -172,7 +172,7 @@ signature of <code>SenseC.nc</code> is using <code>Read&lt;uint16_t&gt;</code>.
 What you see above is a <i>generic interface definition</i>, because the
 <code>Read</code> interface takes a type parameter. Generic interfaces are
 explained in the nesC Language Reference Manual (version 1.2 and above).
-Here it is enough to know that generic interfaces have at least one type
+For now it is enough to know that generic interfaces have at least one type
 parameter and two components can be wired together only if they provide/use the
 interface with the same types (note that the <code>readDone</code> event passes
 a parameter of the <code>&lt;val_t&gt;</code> parameter, which is a placeholder
@@ -186,8 +186,8 @@ expects to read 16 bit unsigned integer sensor data.  If you tried to wire
 nesC compiler. 
 
 <p>Recall that the wiring is defined in the <code>SenseAppC.nc</code>
-configuration. Let's again take a look, which component <code>SenseC.nc</code>
-is wired to with the <code>Read&lt;uint16_t&gt;</code> interface in the
+configuration. Let's again take a look at which component <code>SenseC.nc</code>
+is wired to using the <code>Read&lt;uint16_t&gt;</code> interface in the
 <code>SenseAppC</code> configuration. The interesting lines are
 
 <pre>
@@ -199,10 +199,7 @@ and
 </pre>
 
 This means that the <i>generic</i> <code>DemoSensorC</code> component provides
-the <code>Read&lt;uint16_t&gt;</code> interface to <code>SenseC.nc</code> (a
-<i>generic component</i> is a component that can be instantiated more than once
-and can take constant and type arguments; each instantiation is a
-different component).
+the <code>Read&lt;uint16_t&gt;</code> interface to <code>SenseC.nc</code>
 
 <p> It is important to understand that the <code>SenseC.nc</code> module has no
 way of telling which sensor it is connected to; in fact it cannot even tell
@@ -212,20 +209,20 @@ platform without any built-in sensors (like <i>micaz</i>) and no attached
 sensorboard the <code>DemoSensorC</code> component could simply return constant
 values. The last sentence hints that the <code>DemoSensorC</code> component is
 different for every platform: therefore you will not find
-<code>DemoSensorC.nc</code> in the TinyOS libraries. Instead
-<code>DemoSensorC.nc</code> has to be written for every platform, because, for
-example, on the <i>telosb</i> platform <code>DemoSensorC</code> needs to be
-implemented differently than on the the <i>micaz</i> platform. This is the
+<code>DemoSensorC.nc</code> in the TinyOS libraries. Instead, a different
+<code>DemoSensorC.nc</code> has to be written for every platform, i.e. the
+<code>DemoSensorC.nc</code> implementation for telosb will be different than
+the <code>DemoSensorC.nc</code> implementation for micaz.  This is the
 answer to the first question asked in the <a
-href="#introduction">introduction</a>: the <i>platform dependent</i>
+href="#introduction">introduction</a> section: the <i>platform dependent</i>
 <code>DemoSensorC</code> component defines which sensor the <code>Sense</code>
 or <code>Oscilloscope</code> application is sampling and every platform that
 wants to run sensing applications such as <code>Oscilloscope</code>,
 <code>Sense</code> or <code>RadioSenseToLeds</code> has to provide its own
 version of <code>DemoSensorC</code>. Additionally, sensor boards may come
 with their own version of <code>DemoSensorC</code> (e.g., the 
-<code>basicsb</code> sensorboard for the mica-family of motes is defined to
-be that board's light sensor).
+<code>basicsb</code> sensorboard for the mica-family of motes define 
+<code>DemoSensorC.nc</code> to be that board's light sensor).
 
 <a name="demosensorc"><h2>The DemoSensorC component</h2></a>
 
@@ -252,12 +249,12 @@ platform-independent applications like <code>Sense</code> or
 <code>Oscilloscope</code>. Usually the configuration of a sensor is done in the
 component that <code>DemoSensorC</code> instantiates.
 
-<p> How can <code>Sense</code> be changed to sample another than the platform's
+<p> How can <code>Sense</code> be changed to sample a sensor other than the platform's
 default sensor? Usually this requires changing only a single line of code in
 <code>DemoSensorC</code>; for example, if you wanted to replace the
 <code>VoltageC</code> component on <i>telosb</i> by the constant sensor
-component <code>ConstantSensorC</code> you could change (in
-<code>DemoSensorC</code>)
+component <code>ConstantSensorC</code> you could change the follwoing line in
+<code>DemoSensorC</code> from:
 
 <pre>
 components new VoltageC() as DemoSensor;
@@ -280,8 +277,8 @@ in <code>tinyos-2.x/tos/system</code>.
 
 To compile the <code>Sense</code> application, go to the
 <code>apps/Sense</code> directory and depending on which hardware you have,
-type e.g. <code>make telosb install</code>.  If you get errors like the
-following
+type something similar to <code>make telosb install</code>.  If you get errors such as 
+the following,
 
 <pre>
 SenseAppC.nc:50: component DemoSensorC not found
@@ -289,7 +286,7 @@ SenseAppC.nc:50: component `DemoSensorC' is not generic
 SenseAppC.nc:55: no match
 </pre>
 
-your platform has not implemented the <code>DemoSensorC</code> component. For a
+your platform has not yet implemented the <code>DemoSensorC</code> component. For a
 quick solution you can copy <code>DemoSensorC.nc</code> from
 <code>tinyos-2.x/tos/platforms/micaz</code> to your platform directory; then
 you will see constant "sensor" readings (a good starting point on how to create
@@ -306,8 +303,8 @@ to run <code>Sense</code> using the mda100's light sensor.
 <p> Once you have installed the application the three most significant bits of
 the sensor readings are displayed on the node's LEDs (0 = off, 1 = on). If your
 <code>DemoSensorC</code> represents a sensor whose readings are fluctuating
-greatly you may see the LEDs toggle, otherwise <code>Sense</code> is not so
-impressive.  Let's have a look at a more interesting application:
+greatly you may see the LEDs toggle, otherwise <code>Sense</code> does not seem to
+be very impressive.  Let's take a look at a more interesting application:
 <code>Oscilloscope</code>.
 
 <a name="oscilloscope"><h1>The Oscilloscope application</h1></a>
@@ -370,10 +367,10 @@ module OscilloscopeC
 
 <code>Oscilloscope</code> is a combination of different building blocks
 introduced in previous parts of the tutorial. Like <a
-href="#sense"><code>Sense</code></a> <code>Oscilloscope</code> uses
+href="#sense"><code>Sense</code></a>,  <code>Oscilloscope</code> uses
 <code>DemoSensorC</code> and a timer to periodically sample the default sensor
 of a platform. When it has gathered 10 sensor readings
-<code>OscilloscopeC</code> puts them into a message and broadcasts the message
+<code>OscilloscopeC</code> puts them into a message and broadcasts that message
 via the <code>AMSend</code> interface.  <code>OscilloscopeC</code> uses the
 <code>Receive</code> interface for synchronization purposes (see below) and the
 <code>RadioControl</code> interface, which is a actually a
@@ -385,7 +382,7 @@ href="lesson3.html">lesson 3</a>.
 
 To install the <code>Oscilloscope</code> application go to
 <code>tinyos-2.x/apps/Oscilloscope</code> and depending on which hardware you
-have, type e.g. <code>make telosb install,1</code>. Note the "<code>,1</code>"
+have, type something similar to <code>make telosb install,1</code>. Note the "<code>,1</code>"
 after the <code>install</code> option, which assigns ID 1 to the node.
 Assigning IDs to nodes is helpful to differentiate them later on in the GUI, so
 make sure you assign different IDs to all nodes on which
@@ -439,7 +436,7 @@ received data on the graphical display by clicking on the "clear data" button.
 <p> The <code>Oscilloscope</code> (or <code>Sense</code>) application displays
 the raw data as signalled by the <code>Read.readDone()</code> event. They do
 not perform semantic processing and cannot decide questions like "is a reading
-to be interpreted in degree Celsius or Fahrenheit". This decision is forwarded
+to be interpreted in degrees Celsius or Fahrenheit". This decision is forwarded
 to the user and therefore the GUI let's you adapt the visible portion of the
 y-axis to a plausible range (at the bottom right).
 

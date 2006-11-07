@@ -367,6 +367,7 @@ class Tossim {
 
   void addChannel(char* channel, FILE* file);
   bool removeChannel(char* channel, FILE* file);
+  void randomSeed(int seed);
 
   bool runNextEvent();
   MAC* mac();

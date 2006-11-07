@@ -48,7 +48,8 @@
 #include "AM.h"
 
 typedef nx_struct xe1205_header_t {
-  nx_am_addr_t addr;
+  nx_am_addr_t dest;
+  nx_am_addr_t source;
   nx_am_id_t type;
   nx_am_group_t group;
 } xe1205_header_t;

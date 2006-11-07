@@ -30,7 +30,7 @@
 /**
  * Interface used by Msp430I2C clients to reconfigure the I2C before use
  * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
- * @version $Revision: 1.2 $ $Date: 2006-11-06 11:57:10 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
  */
 
 #include "msp430usart.h"

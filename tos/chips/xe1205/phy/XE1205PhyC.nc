@@ -71,8 +71,8 @@ implementation {
   components XE1205IrqConfC;
   XE1205PhyP.XE1205IrqConf -> XE1205IrqConfC;
 
-  components new Alarm32khzC();
-  XE1205PhyP.Alarm32khz16 -> Alarm32khzC.Alarm32khz16;
+  components new Alarm32khz16C();
+  XE1205PhyP.Alarm32khz16 -> Alarm32khz16C.Alarm;
 #if 0
   components new Msp430GpioC() as DpinM, HplMsp430GeneralIOC;
   DpinM -> HplMsp430GeneralIOC.Port41;

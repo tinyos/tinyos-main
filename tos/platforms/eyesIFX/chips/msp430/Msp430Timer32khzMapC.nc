@@ -1,4 +1,4 @@
-//$Id: Msp430Timer32khzMapC.nc,v 1.2 2006-11-06 11:57:18 scipio Exp $
+//$Id: Msp430Timer32khzMapC.nc,v 1.3 2006-11-07 19:31:22 scipio Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.
  * All rights reserved.

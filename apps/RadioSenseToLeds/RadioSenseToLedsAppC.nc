@@ -1,4 +1,4 @@
-// $Id: RadioSenseToLedsAppC.nc,v 1.2 2006-07-12 16:59:09 scipio Exp $
+// $Id: RadioSenseToLedsAppC.nc,v 1.3 2006-11-07 19:30:34 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -28,24 +28,27 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  */
+ 
+#include "RadioSenseToLeds.h"
 
 /**
- *
+ * Configuration for the RadioSenseToLeds application.  RadioSenseToLeds samples 
+ * a platform's default sensor at 4Hz and broadcasts this value in an AM packet. 
+ * A RadioSenseToLeds node that hears a broadcast displays the bottom three bits 
+ * of the value it has received. This application is a useful test to show that 
+ * basic AM communication, timers, and the default sensor work.
+ * 
  * @author Philip Levis
  * @date   June 6 2005
  */
-
-#include "RadioSenseToLeds.h"
 
 configuration RadioSenseToLedsAppC {}
 implementation {
   components MainC, RadioSenseToLedsC as App, LedsC, new DemoSensorC();
   components ActiveMessageC;
-  components new AMSenderC(AM_RADIOSENSEMSG);
-  components new AMReceiverC(AM_RADIOSENSEMSG);
+  components new AMSenderC(AM_RADIO_SENSE_MSG);
+  components new AMReceiverC(AM_RADIO_SENSE_MSG);
   components new TimerMilliC();
-
-  
   
   App.Boot -> MainC.Boot;
   

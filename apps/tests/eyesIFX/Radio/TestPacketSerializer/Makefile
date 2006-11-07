@@ -1,0 +1,3 @@
+COMPONENT=TestPacketSerializerC
+include $(MAKERULES)
+

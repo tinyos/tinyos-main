@@ -1,4 +1,4 @@
-// $Id: TestSerialAppC.nc,v 1.2 2006-07-12 16:59:27 scipio Exp $
+// $Id: TestSerialAppC.nc,v 1.3 2006-11-07 19:30:35 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -55,10 +55,6 @@ implementation {
   components SerialActiveMessageC as AM;
   components new TimerMilliC();
 
-  
-  
-  MainC.SoftwareInit -> AM;
-  
   App.Boot -> MainC.Boot;
   App.Control -> AM;
   App.Receive -> AM.Receive[AM_TESTSERIALMSG];

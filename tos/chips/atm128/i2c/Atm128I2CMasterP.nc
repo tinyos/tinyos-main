@@ -55,11 +55,10 @@ implementation {
   components new Atm128I2CMasterImplP() as I2C;
   components new Atm128I2CMasterPacketP() as Master;
   components HplAtm128I2CBusC;
-  components LedsC, NoLedsC, MainC;
+  components LedsC, NoLedsC;
     
   Resource  = I2C;
   I2CPacket = I2C;
-  MainC.SoftwareInit -> Power;
   
   I2C.SubResource -> Arbiter;
   I2C.SubPacket   -> Master;
@@ -67,7 +66,6 @@ implementation {
   
   Power.AsyncStdControl -> Master;
   Power.ResourceController -> Arbiter;
-  Power.ArbiterInit -> Arbiter;
 
   Master.I2C -> HplAtm128I2CBusC;
   Master.ReadDebugLeds -> NoLedsC;

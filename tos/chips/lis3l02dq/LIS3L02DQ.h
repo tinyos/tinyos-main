@@ -33,7 +33,7 @@
  * Types and definitions for the ST LIS3L02DQ 3-axis Accelerometer
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2006-07-12 17:01:37 $
+ * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:54 $
  */
 
 #ifndef _LIS3L02DQ_H
@@ -70,7 +70,7 @@
 #define LIS3L01DQ_CTRL_REG1_ST		(1 << 3)
 #define LIS3L01DQ_CTRL_REG1_ZEN		(1 << 2)
 #define LIS3L01DQ_CTRL_REG1_YEN		(1 << 1)
-#define LIS3L01DQ_CTRL_REG1_XEN		(1 << 1)
+#define LIS3L01DQ_CTRL_REG1_XEN		(1 << 0)
 
 #define LIS3L01DQ_CTRL_REG2_RES		(1 << 7)
 #define LIS3L01DQ_CTRL_REG2_BDU		(1 << 6)

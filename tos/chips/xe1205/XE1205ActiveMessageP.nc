@@ -59,12 +59,22 @@ implementation {
  
   command am_addr_t AMPacket.destination(message_t* msg) {
     xe1205_header_t* header = getHeader(msg);
-    return header->addr;
+    return header->dest;
   }
 
   command void AMPacket.setDestination(message_t* msg, am_addr_t addr) {
     xe1205_header_t* header = getHeader(msg);
-    header->addr = addr;
+    header->dest = addr;
+  }
+  
+  command am_addr_t AMPacket.source(message_t* msg) {
+    xe1205_header_t* header = getHeader(msg);
+    return header->source;
+  }
+
+  command void AMPacket.setSource(message_t* msg, am_addr_t addr) {
+    xe1205_header_t* header = getHeader(msg);
+    header->source = addr;
   }
   
   command bool AMPacket.isForMe(message_t* msg) {
@@ -95,7 +105,8 @@ implementation {
 					  uint8_t len) {
     xe1205_header_t* header = getHeader(msg);
     header->type = id;
-    header->addr = addr;
+    header->dest = addr;
+    header->source = call AMPacket.address();
     header->group = TOS_AM_GROUP;
     return call SubSend.send(msg, len);
   }

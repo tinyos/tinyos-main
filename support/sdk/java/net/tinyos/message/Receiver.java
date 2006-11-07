@@ -1,4 +1,4 @@
-// $Id: Receiver.java,v 1.2 2006-07-12 16:59:56 scipio Exp $
+// $Id: Receiver.java,v 1.3 2006-11-07 19:30:41 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -183,7 +183,7 @@ public class Receiver implements PacketListenerIF {
 		error(temp, "invalid length message received (too short)");
 		continue;
 	    }
-	    temp.listener.messageReceived(msg.get_header_addr(), received);
+	    temp.listener.messageReceived(msg.get_header_dest(), received);
 	}
     }
 }

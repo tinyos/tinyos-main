@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2004, Technische Universitaet Berlin
+ * Copyright (c) 2006, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,38 +27,33 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-07-12 17:01:40 $
+ * $Revision: 1.3 $
+ * $Date: 2006-11-07 19:30:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 /** 
- * This component realizes the HAL1 representation and allows an
- * MSP430-specific client to access the MSP430 ADC12 (12-bit analog-to-digital
- * converter) via the <code>Msp430Adc12SingleChannel</code> and
- * <code>Resource</code> interface.  According to TEP 108 a client must reserve
- * the ADC before using it via the <code>Resource</code> interface (otherwise
- * the request will fail). In contrast to the
- * <code>Msp430Adc12RefVoltAutoClientC</code> the
- * <code>Msp430Adc12ClientC</code> does not enable internal reference voltage
- * generator.  
+ * This component virtualizes access to the HAL of the MSP430 ADC12.  
  * 
- * @author Jan Hauer
- * @see  Please refer to TEP 101 for more information about this component and its
- *          intended use.
+ * @author Jan Hauer 
+ *
+ * @see  Please refer to the README.txt and TEP 101 for more information about
+ * this component and its intended use.
  */
 
 generic configuration Msp430Adc12ClientC()
 {
-  provides interface Resource;
-  provides interface Msp430Adc12SingleChannel;
+  provides {
+    interface Resource;
+    interface Msp430Adc12SingleChannel;
+  }
 } implementation {
-  components Msp430Adc12C;
+  components Msp430Adc12P;
    
   enum {
     ID = unique(MSP430ADC12_RESOURCE),
   };
-  Resource = Msp430Adc12C.Resource[ID];
-  Msp430Adc12SingleChannel = Msp430Adc12C.SingleChannel[ID];
+  Resource = Msp430Adc12P.Resource[ID];
+  Msp430Adc12SingleChannel = Msp430Adc12P.SingleChannel[ID];
 }
