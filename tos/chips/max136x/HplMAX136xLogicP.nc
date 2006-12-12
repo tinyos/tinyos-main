@@ -35,7 +35,7 @@
  * interface.
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:55 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:06 $
  */
 
 #include "I2C.h"
@@ -48,6 +48,7 @@ generic module HplMAX136xLogicP(uint16_t devAddr)
 
   uses interface I2CPacket<TI2CBasicAddr>;
   uses interface GpioInterrupt as InterruptAlert;
+  uses interface GeneralIO as InterruptPin;
 }
 
 implementation {
@@ -124,6 +125,8 @@ implementation {
   }
 
   command error_t Init.init() {
+    call InterruptPin.makeInput();
+    call InterruptAlert.enableFallingEdge();
     atomic {
       mStopRequested = FALSE;
       mState = STATE_STOPPED;
@@ -177,7 +180,6 @@ implementation {
   }
 
   async event void I2CPacket.readDone(error_t i2c_error, uint16_t chipAddr, uint8_t len, uint8_t *buf) {
-    uint16_t tempVal;
     error_t error = i2c_error;
 
     switch (mState) {

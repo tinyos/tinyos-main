@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2006-11-07 19:30:56 $
+ * $Revision: 1.4 $
+ * $Date: 2006-12-12 18:23:07 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -40,90 +40,9 @@
 #define P6PIN_AUTO_CONFIGURE
 #define REF_VOLT_AUTO_CONFIGURE
 #define CHECK_ARGS
-
-/*
- * The msp430adc12_channel_config_t includes all relevant flags to configure
- * the ADC12 for single channel conversions. They are contained in the following
- * MSP430 registers: ADC12CTL0, ADC12CTL1, ADC12MCTLx and TACTL of TimerA (if
- * applicable) and named according to section "17.3 ADC12 Registers" of the
- * "MSP430x1xx Family User's Guide".
- * 
- *                   **********************************
- *                    
- * .inch: ADC12 input channel (ADC12MCTLx register). An (external) input
- * channel maps to one of msp430's A0-A7 pins (see device specific data sheet).
- *
- * .sref: reference voltage (ADC12MCTLx register). If REFERENCE_VREFplus_AVss
- * or REFERENCE_VREFplus_VREFnegterm is chosen AND the client wires to the
- * Msp430Adc12ClientAutoRVGC or Msp430Adc12ClientAutoDMA_RVGC component then
- * the reference voltage generator has automatically been enabled to the
- * voltage level defined by the "ref2_5v" flag (see below) when the
- * Resource.granted() event is signalled to the client. Otherwise this flag is
- * ignored.
- * 
- * .ref2_5v: Reference generator voltage level (ADC12CTL0 register). See "sref"
- * flag.
- * 
- * .adc12ssel: ADC12 clock source select for the sample-hold-time (ADC12CTL1
- * register). In combination the "adc12ssel", "adc12div" and "sht" define the
- * sample-hold-time: "adc12ssel" defines the clock source, "adc12div" defines
- * the ADC12 clock divider and "sht" define the time expressed in jiffies.
- * (the sample-hold-time depends on the resistence of the attached sensor, and
- * is calculated using to the formula in section 17.2.4 of the user guide)
- *
- * .adc12div: ADC12 clock divider (ADC12CTL1 register). See "adc12ssel".
- *
- * .sht: Sample-and-hold time (ADC12CTL1 register). See "adc12ssel".
- * 
- * .sampcon_ssel: Clock source for the sampling period (TASSEL for TimerA).
- * When an ADC client specifies a non-zero "jiffies" parameter (passed in the
- * relevant Msp430Adc12SingleChannel interface commands), the ADC
- * implementation will automatically configure TimerA to be sourced from
- * "sampcon_ssel" with an input divider of "sampcon_id". During the sampling
- * process TimerA will then be used to trigger a conversion every "jiffies"
- * clock ticks.
- * 
- * .sampcon_id: Input divider for "sampcon_ssel"  (IDx in TACTL register,
- * TimerA). See "sampcon_ssel".
- *
- * 
- *                   **********************************
- *                    
- * EXAMPLE: Assuming that SMCLK runs at 1 MHz the following code snippet
- * performs 2000 ADC conversions on channel A2 with a sampling period of 4000 Hz.
- * The sampling period is defined by the combination of SAMPCON_SOURCE_SMCLK,
- * SAMPCON_CLOCK_DIV_1 and a "jiffies" parameter of (1000000 / 4000) = 250. 
- 
-   #define NUM_SAMPLES 2000
-   uint16_t buffer[NUM_SAMPLES];
-   
-   msp430adc12_channel_config_t config = {
-    INPUT_CHANNEL_A2, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_NONE,
-    SHT_SOURCE_SMCLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_64_CYCLES,
-    SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1 
-   };
-  
-  event void Boot.booted()
-  {
-    call Resource.request();
-  }
-  
-  event void Resource.granted()
-  {
-    error_t result;
-    result = call SingleChannel.configureMultiple(&config, buffer, BUFFER_SIZE, 250);
-    if (result == SUCCESS)
-      call SingleChannel.getData();
-  }
-
-  async event uint16_t* SingleChannel.multipleDataReady(uint16_t *buf, uint16_t length)
-  {
-    // buffer contains conversion results
-  }
- */
-
  
 typedef struct { 
+  // see README.txt for a more detailed explanation
   unsigned int inch: 4;            // input channel 
   unsigned int sref: 3;            // reference voltage 
   unsigned int ref2_5v: 1;         // reference voltage level 
@@ -134,6 +53,15 @@ typedef struct {
   unsigned int sampcon_id: 2;      // clock divider sampcon 
   unsigned int : 0;                // align to a word boundary 
 } msp430adc12_channel_config_t;
+
+typedef struct 
+{
+  // see README.txt for a more detailed explanation
+  volatile unsigned
+  inch: 4,                                     // input channel
+  sref: 3,                                     // reference voltage
+  eos: 1;                                      // end of sequence flag
+} __attribute__ ((packed)) adc12memctl_t;
 
 enum inch_enum
 {  
@@ -232,16 +160,8 @@ enum sampcon_id_enum
 // The unique string for accessing HAL2 via ReadStream
 #define ADCC_READ_STREAM_SERVICE "AdcC.ReadStream.Client"
 
-typedef struct 
-{
-  volatile unsigned
-  inch: 4,                                     // input channel
-  sref: 3,                                     // reference voltage
-  eos: 1;                                      // end of sequence flag
-} __attribute__ ((packed)) adc12memctl_t;
-
 /* Test for GCC bug (bitfield access) - only version 3.2.3 is known to be stable */
-// check: is this relevant anymore ?
+// TODO: check whether this is still relevant...
 #define GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__)
 #if GCC_VERSION == 332
 #error "The msp430-gcc version (3.3.2) contains a bug which results in false accessing \
@@ -250,5 +170,9 @@ of bitfields in structs and makes MSP430ADC12M.nc fail ! Use version 3.2.3 inste
 #warning "This version of msp430-gcc might contain a bug which results in false accessing \
 of bitfields in structs (MSP430ADC12M.nc would fail). Use version 3.2.3 instead."
 #endif  
+
+#ifndef __msp430_have_adc12
+#error MSP430ADC12C: Target msp430 device does not have ADC12 module
+#endif
 
 #endif

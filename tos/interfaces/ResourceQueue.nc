@@ -27,7 +27,7 @@
  *  of the interface.
  *
  *  @author Kevin Klues <klueska@cs.wustl.edu>
- *  @date   $Date: 2006-11-07 19:31:17 $
+ *  @date   $Date: 2006-12-12 18:23:15 $
  */
  
 #include "Resource.h"

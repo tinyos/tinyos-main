@@ -52,9 +52,7 @@ implementation {
   mcu_power_t powerState = MSP430_POWER_ACTIVE;
 
   /* Note that the power values are maintained in an order
-   * based on their active components, NOT on their values.
-   * Look at atm128hardware.h and page 42 of the ATmeg128
-   * manual (figure 17).*/
+   * based on their active components, NOT on their values.*/
   // NOTE: This table should be in progmem.
   const uint16_t msp430PowerBits[MSP430_POWER_LPM4 + 1] = {
     0,                                       // ACTIVE
@@ -81,20 +79,25 @@ implementation {
 #endif
 	)
       pState = MSP430_POWER_LPM1;
-    // ADC12 check
-    if (ADC12CTL1 & ADC12BUSY){
-      if (!(ADC12CTL0 & MSC) && ((TACTL & TASSEL_3) == TASSEL_2))
-	pState = MSP430_POWER_LPM1;
-      else
-        switch (ADC12CTL1 & ADC12SSEL_3) {
-	case ADC12SSEL_2:
-	  pState = MSP430_POWER_ACTIVE;
-	  break;
-	case ADC12SSEL_3:
-	  pState = MSP430_POWER_LPM1;
-	  break;
-        }
+    
+#ifdef __msp430_have_adc12
+    // ADC12 check, pre-condition: pState != MSP430_POWER_ACTIVE
+    if (ADC12CTL0 & ADC12ON){
+      if (ADC12CTL1 & ADC12SSEL_2){
+        // sample or conversion operation with MCLK or SMCLK
+        if (ADC12CTL1 & ADC12SSEL_1)
+          pState = MSP430_POWER_LPM1;
+        else
+          pState = MSP430_POWER_ACTIVE;
+      } else if ((ADC12CTL1 & SHS0) && ((TACTL & TASSEL_3) == TASSEL_2)){
+        // Timer A is used as sample-and-hold source and SMCLK sources Timer A
+        // (Timer A interrupts are always disabled when it is used by the 
+        // ADC subsystem, that's why the Timer check above is not enough)
+	      pState = MSP430_POWER_LPM1;
+      }
     }
+#endif
+    
     return pState;
   }
   

@@ -34,7 +34,7 @@
  * ST M25P serial code flash.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:14 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:12 $
  */
 
 #include "Stm25p.h"

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2006-11-07 19:30:56 $
+ * $Revision: 1.4 $
+ * $Date: 2006-12-12 18:23:07 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -39,6 +39,8 @@ module Msp430Adc12ImplP
   provides {
     interface Init;
     interface Msp430Adc12SingleChannel as SingleChannel[uint8_t id];
+    interface Msp430Adc12MultiChannel as MultiChannel[uint8_t id];
+    interface Msp430Adc12Overflow as Overflow[uint8_t id];
     interface AsyncStdControl as DMAExtension[uint8_t id];
 	}
 	uses {
@@ -66,17 +68,20 @@ implementation
     SINGLE_DATA_REPEAT = 2,
     MULTIPLE_DATA = 4,
     MULTIPLE_DATA_REPEAT = 8,
-    CONVERSION_MODE_MASK = 0x0F,
+    MULTI_CHANNEL = 16,
+    CONVERSION_MODE_MASK = 0x1F,
 
-    ADC_BUSY = 16,                /* request pending */
-    USE_TIMERA = 32,              /* TimerA used for SAMPCON signal */
+    ADC_BUSY = 32,                /* request pending */
+    USE_TIMERA = 64,              /* TimerA used for SAMPCON signal */
+    ADC_OVERFLOW = 128,
   };
 
   uint8_t state;                  /* see enum above */
   
-  uint16_t *resultBuffer;  /* conversion results */
+  uint16_t *resultBuffer;         /* conversion results */
   uint16_t resultBufferLength;    /* length of buffer */
   uint16_t resultBufferIndex;     /* offset into buffer */
+  uint8_t numChannels;            /* number of channels (multi-channel conversion) */
   uint8_t clientID;               /* ID of client that called getData() */
 
   command error_t Init.init()
@@ -378,12 +383,102 @@ implementation
     return FAIL;
   }
 
+  async command error_t MultiChannel.configure[uint8_t id](
+      const msp430adc12_channel_config_t *config,
+      adc12memctl_t *memctl, uint8_t numMemctl, uint16_t *buf, 
+      uint16_t numSamples, uint16_t jiffies)
+  {
+    error_t result = ERESERVE;
+#ifdef CHECK_ARGS
+    if (!config || !memctl || !numMemctl || numMemctl > 15 || !numSamples || 
+        !buf || jiffies == 1 || jiffies == 2 || numSamples % (numMemctl+1) != 0)
+      return EINVAL;
+#endif
+    atomic {
+      if (state & ADC_BUSY)
+        return EBUSY;
+      if (call ADCArbiterInfo.userId() == id){
+        adc12ctl1_t ctl1 = {
+          adc12busy: 0,
+          // use seq. of channels (rep.seq. channel does not work with TimerA + MSC ?)
+          conseq: (jiffies == 0) ? 3 : 1, 
+          adc12ssel: config->adc12ssel,
+          adc12div: config->adc12div,
+          issh: 0,
+          shp: 1,
+          shs: (jiffies == 0) ? 0 : 1,
+          cstartadd: 0
+        };
+        adc12memctl_t firstMemctl = {
+          inch: config->inch,
+          sref: config->sref,
+          eos: 0
+        };     
+        uint16_t i, mask = 1;
+        adc12ctl0_t ctl0 = call HplAdc12.getCtl0();
+        ctl0.msc = 1;
+        ctl0.sht0 = config->sht;
+        ctl0.sht1 = config->sht;
+
+        state = MULTI_CHANNEL;
+        resultBuffer = buf;
+        resultBufferLength = numSamples;
+        resultBufferIndex = 0;
+        numChannels = numMemctl+1;
+        call HplAdc12.setCtl0(ctl0);
+        call HplAdc12.setCtl1(ctl1);
+        call HplAdc12.setMCtl(0, firstMemctl);
+        for (i=0; i<(numMemctl-1) && i < 14; i++){
+          memctl[i].eos = 0;
+          call HplAdc12.setMCtl(i+1, memctl[i]);
+        }
+        memctl[i].eos = 1;
+        call HplAdc12.setMCtl(i+1, memctl[i]);
+        call HplAdc12.setIEFlags(mask << (i+1));        
+        
+        if (jiffies){
+          state |= USE_TIMERA;
+          prepareTimerA(jiffies, config->sampcon_ssel, config->sampcon_id);
+        }
+        result = SUCCESS;
+      }      
+    }
+    return result;
+  }
+
+  async command error_t MultiChannel.getData[uint8_t id]()
+  {
+    uint8_t i;
+    atomic {
+      if (call ADCArbiterInfo.userId() == id){
+        if (!resultBuffer)
+          return EINVAL;
+        if (state & ADC_BUSY)
+          return EBUSY;
+        state |= ADC_BUSY;
+        clientID = id;
+        for (i=0; i<numChannels; i++)
+          configureAdcPin((call HplAdc12.getMCtl(i)).inch);
+        call HplAdc12.startConversion();
+        if (state & USE_TIMERA)
+          startTimerA(); 
+        return SUCCESS;
+      }
+    }
+    return FAIL;
+  }
+  
   void stopConversion()
   {
-    adc12memctl_t memctl = call HplAdc12.getMCtl(0);
+    uint8_t i;
     if (state & USE_TIMERA)
       call TimerA.setMode(MSP430TIMER_STOP_MODE);
-    resetAdcPin( memctl.inch );
+    resetAdcPin( (call HplAdc12.getMCtl(0)).inch );
+    if (state & MULTI_CHANNEL){
+      ADC12IV = 0; // clear any pending overflow
+      for (i=1; i<numChannels; i++)
+        resetAdcPin( (call HplAdc12.getMCtl(i)).inch );
+    }
     call HplAdc12.stopConversion();
     call HplAdc12.resetIFGs(); 
     state &= ~ADC_BUSY;
@@ -418,6 +513,13 @@ implementation
 
   async event void HplAdc12.conversionDone(uint16_t iv)
   {
+    if (iv <= 4){ // check for overflow
+      if (iv == 2)
+        signal Overflow.memOverflow[clientID]();
+      else
+        signal Overflow.conversionTimeOverflow[clientID]();
+    }
+#ifndef MSP430ADC12_ONLY_DMA
     switch (state & CONVERSION_MODE_MASK) 
     { 
       case SINGLE_DATA:
@@ -433,6 +535,21 @@ implementation
             stopConversion();
           break;
         }
+      case MULTI_CHANNEL:
+        {
+          uint16_t i = 0;
+          do {
+            *resultBuffer++ = call HplAdc12.getMem(i);
+          } while (++i < numChannels);
+          resultBufferIndex += numChannels;
+          if (resultBufferLength == resultBufferIndex){
+            stopConversion();
+            resultBuffer -= resultBufferLength;
+            resultBufferIndex = 0;
+            signal MultiChannel.dataReady[clientID](resultBuffer, resultBufferLength);
+          } else call HplAdc12.enableConversion();
+        }
+        break;
       case MULTIPLE_DATA:
         {
           uint16_t i = 0, length;
@@ -474,6 +591,7 @@ implementation
           break;
         }
       } // switch
+#endif
   }
 
   default async event error_t SingleChannel.singleDataReady[uint8_t id](uint16_t data)
@@ -486,9 +604,11 @@ implementation
   {
     return 0;
   }
+   
+  default async event void MultiChannel.dataReady[uint8_t id](uint16_t *buffer, uint16_t numSamples) {};
   
-  async event void HplAdc12.memOverflow(){}
-  async event void HplAdc12.conversionTimeOverflow(){}
+  default async event void Overflow.memOverflow[uint8_t id](){}
+  default async event void Overflow.conversionTimeOverflow[uint8_t id](){}
 
 }
 

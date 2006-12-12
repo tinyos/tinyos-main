@@ -43,7 +43,7 @@ module HalPXA27xSleepM {
 
 implementation {
 
-  void doSleep(uint32_t swRegVal) {
+  void doSleep(uint32_t swRegVal, bool useDeepSleep) {
     int i;
     call HplPXA27xPower.setPWER(PWER_WERTC);
     // let it wrap around itself if necessary
@@ -54,8 +54,14 @@ implementation {
     call HplPXA27xRTC.setRTSR(RTSR_SWCE);
     for(i = 0; i < 5000; i++); // spin for a bit
 
-    call HplPXA27xPower.setPWRMode(PWRMODE_M_SLEEP);
+    if (useDeepSleep) {
+      call HplPXA27xPower.setPWRMode(PWRMODE_M_DEEPSLEEP);
+      // this call never returns
+    }
+    else {
+      call HplPXA27xPower.setPWRMode(PWRMODE_M_SLEEP);
     // this call never returns
+    }
   }
 
    

@@ -37,7 +37,7 @@
  * @author Vlado Handziski (handzisk@tkn.tu-berlin.de)
  * @author Jan Hauer (hauer@tkn.tu-berlin.de)
  * @author Joe Polastre
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
  */
 
 #include "msp430usart.h"
@@ -165,25 +165,13 @@ interface HplMsp430Usart {
   /**
    * Switches USART to Spi mode.
    */
-  async command void setModeSpi(msp430_spi_config_t* config);
-  
-  /**
-   * Switches USART to Uart TX mode (RX pins disabled).
-   * Interrupts disabled by default.
-   */
-  async command void setModeUartTx(msp430_uart_config_t* config);
-  
-  /**
-   * Switches USART to Uart RX mode (TX pins disabled)..
-   * Interrupts disabled by default.
-   */
-  async command void setModeUartRx(msp430_uart_config_t* config);
+  async command void setModeSpi(msp430_spi_union_config_t* config);
   
   /**
    * Switches USART to Uart mode (RX and TX enabled)
    * Interrupts disabled by default.
    */
-  async command void setModeUart(msp430_uart_config_t* config);
+  async command void setModeUart(msp430_uart_union_config_t* config);
   
   /* Dis/enabling of UTXIFG / URXIFG */
   async command void disableRxIntr();

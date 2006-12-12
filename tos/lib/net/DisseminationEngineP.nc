@@ -41,7 +41,7 @@
  * See TEP118 - Dissemination for details.
  * 
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:18 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:28 $
  */
 
 configuration DisseminationEngineP {

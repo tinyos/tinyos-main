@@ -38,9 +38,10 @@
 
 interface HalPXA27xSleep {
   /**
-   * Sleep for a given number of milliseconds. This function supports
-   * sleep times up to 65534ms.  Larger sleep durations must
-   * use one of the other methods.
+   * Sleep for a given number of milliseconds. Only standard 
+   * sleep mode is used. This function supports
+   * sleep times up to 65534ms. Larger sleep durations must
+   * use one of the other methods. 
    *
    * @param time Sleep duration in milliseconds up to 65534.
    * 
@@ -50,7 +51,9 @@ interface HalPXA27xSleep {
   /**
    * Sleep for a given number of seconds up to 62859 sec.
    * If the function is passed a value greater than 62859, it
-   * will default to the maximum.
+   * will default to the maximum. For sleep durations greater
+   * than 30 secs, the processor will be placed into deep sleep
+   * mode. Otherwise standard sleep mode is used.
    *
    * @param time Sleep duration in seconds.
    *
@@ -58,18 +61,18 @@ interface HalPXA27xSleep {
   async command void sleepSeconds(uint32_t time);
 
   /**
-   * Sleep for a given number of minutes up to 1439 min.
-   * If the function is passed a value greater than 1439, it
-   * will default to the maximum.
+   * Sleep for a given number of minutes up to 1439 min. Deep
+   * sleep mode is used. If the function is passed a value 
+   * greater than 1439, it will default to the maximum. 
    *
    * @param time Sleep duration in minutes.
    */
   async command void sleepMinutes(uint32_t time);
 
   /**
-   * Sleep for a given number of hours up to 23 hours
-   * If the function is passed a value greater than 23, it
-   * will default to the maximum.
+   * Sleep for a given number of hours up to 23 hours. Deep
+   * sleep mode is used. If the function is passed a value 
+   * greater than 23, it will default to the maximum. 
    *
    * @param time Sleep duration in hours
    */

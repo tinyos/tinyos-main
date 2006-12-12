@@ -35,7 +35,7 @@
  *  @author Matt Miller <mmiller@xbow.com>
  *  @author Martin Turon <mturon@xbow.com>
  *
- *  $Id: platform_hardware.h,v 1.3 2006-11-07 19:31:26 scipio Exp $
+ *  $Id: platform_hardware.h,v 1.4 2006-12-12 18:23:44 vlahan Exp $
  */
 
 #ifndef HARDWARE_H

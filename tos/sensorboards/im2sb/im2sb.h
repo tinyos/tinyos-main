@@ -1,4 +1,4 @@
-/* $Id: im2sb.h,v 1.3 2006-11-07 19:31:27 scipio Exp $ */
+/* $Id: im2sb.h,v 1.4 2006-12-12 18:23:45 vlahan Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -31,7 +31,7 @@
 /**
  * 
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * Revision: $Revision: 1.3 $
+ * Revision: $Revision: 1.4 $
  *
  */
 
@@ -51,6 +51,6 @@
 
 #define TSL2561_SLAVE_ADDR (0x49)
 #define TMP175_SLAVE_ADDR (0x48)
-#define MAX136_SLAVE_ADDR (0x35)
+#define MAX136_SLAVE_ADDR (0x34)
 
 #endif /* _IM2SB_H */

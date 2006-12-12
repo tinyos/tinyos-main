@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2006-11-07 19:30:57 $
+ * $Revision: 1.4 $
+ * $Date: 2006-12-12 18:23:07 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -36,30 +36,31 @@
 /** 
  * 
  * This interface provides access to the ADC12 on the level of HAL. It can be
- * used to sample an adc channel once or repeatedly (one event is signalled per
- * conversion result) or perform multiple conversions for a channel once or
- * repeatedly (one event is signalled per multiple conversion results). It
- * cannot be used to sample different adc channels with a single command.
+ * used to sample a single adc channel once or repeatedly (one event is
+ * signalled per conversion result) or perform multiple conversions for a
+ * single channel once or repeatedly (one event is signalled per multiple
+ * conversion results). It cannot be used to sample different adc channels with
+ * a single command (use the Msp430Adc12MultiChannel interface instead).
  * Sampling a channel requires calling a sequence of two commands, configureX()
  * and getData(), where X is either 'Single', 'SingleRepeat', 'Multiple' or
  * 'MultipleRepeat'. Conversion results will be signalled by the
  * dataReadySingle() or dataReadyMultiple() event, depending on the previous
  * configuration, i.e. there are four possible sequences:
  * 
- *    configureSingle()          -> [ getData() -> singleDataReady() ]*
- * or configureSingleRepeat()    -> [ getData() -> singleDataReady() ]*
- * or configureMultiple()        -> [ getData() -> multipleDataReady() ]*
- * or configureMultipleRepeat()  -> getData() -> multipleDataReady()
+ * <p> configureSingle()          -> ( getData() -> singleDataReady() )*
+ * <p> configureSingleRepeat()    -> ( getData() -> singleDataReady() )*
+ * <p> configureMultiple()        -> ( getData() -> multipleDataReady() )*
+ * <p> configureMultipleRepeat()  -> getData() -> multipleDataReady()
  *
- * where configureX() and getData() are commands called by the client and
+ * <p> where configureX() and getData() are commands called by the client and
  * singleDataReady() and multipleDataReady() are events signalled back to the
- * client by the adc subsystem. Note that a configuration is valid until
- * the client reconfigures or releases the ADC (using the Resource 
- * interface), except for configureMultipleRepeat(), which is only valid 
- * for a single call to getData(). This means that after a successful 
- * configuration with, for example, configureSingle() the client may call 
- * getData() more than once without reconfiguring the ADC in between 
- * (if the client has not released the ADC via the Resource interface).
+ * client by the adc subsystem. Note that a configuration is valid until the
+ * client reconfigures or releases the ADC (using the Resource interface),
+ * except for configureMultipleRepeat(), which is only valid for a single call
+ * to getData(). This means that after a successful configuration with, for
+ * example, configureSingle() the client may call getData() more than once
+ * without reconfiguring the ADC in between (if the client has not released the
+ * ADC via the Resource interface).
  *
  * @author Jan Hauer 
  */
@@ -193,9 +194,7 @@ interface Msp430Adc12SingleChannel
    * ignored. If the ADC was configured with the
    * <code>configureSingleRepeat()</code> command then the return value tells
    * whether another conversion should be performed (<code>SUCCESS()</code>) or
-   * not (<code>FAIL</code>). If <code>SUCCESS()</code> is returned then the
-   * sampling period will be as specified in the
-   * <code>configureSingleRepeat()</code> command.
+   * not (<code>FAIL</code>).
    * 
    * @param data Conversion result (lower 12 bit).  
    *
@@ -222,7 +221,7 @@ interface Msp430Adc12SingleChannel
    * @return
    * A null pointer stops a repeated conversion mode. Any non-zero value is
    * interpreted as the next buffer, which must have at least
-   * <code>numSamples</code> entries. The return value us ignored if the ADC
+   * <code>numSamples</code> entries. The return value is ignored if the ADC
    * was configured with <code>configureMultiple()</code>.
    */    
   async event uint16_t* multipleDataReady(uint16_t buffer[], uint16_t numSamples); 

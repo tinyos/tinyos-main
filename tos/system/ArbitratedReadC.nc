@@ -1,4 +1,4 @@
-/* $Id: ArbitratedReadC.nc,v 1.4 2006-11-07 19:31:28 scipio Exp $
+/* $Id: ArbitratedReadC.nc,v 1.5 2006-12-12 18:23:47 vlahan Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *

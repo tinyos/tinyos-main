@@ -40,13 +40,14 @@
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
  * @author Gilman Tolles <gtolle@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:27 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:45 $
  */
 
 generic configuration SensirionSht11C() {
+  provides interface SplitControl;
   provides interface Read<uint16_t> as Temperature;
   provides interface Read<uint16_t> as Humidity;
-  //provides interface HalSht11Advanced;
+  provides interface HalSht11Advanced;
 }
 implementation {
   components new SensirionSht11ReaderP();
@@ -59,14 +60,15 @@ implementation {
   enum { TEMP_KEY = unique("Sht11.Resource") };
   enum { HUM_KEY = unique("Sht11.Resource") };
 
+  SplitControl = HalSensirionSht11C;
   SensirionSht11ReaderP.TempResource -> HalSensirionSht11C.Resource[ TEMP_KEY ];
   SensirionSht11ReaderP.Sht11Temp -> HalSensirionSht11C.SensirionSht11[ TEMP_KEY ];
   SensirionSht11ReaderP.HumResource -> HalSensirionSht11C.Resource[ HUM_KEY ];
   SensirionSht11ReaderP.Sht11Hum -> HalSensirionSht11C.SensirionSht11[ HUM_KEY ];
 
-  //enum { ADV_KEY = unique("Sht11.Resource") };
-  //components HalSht11ControlP;
-  //HalSht11Advanced = HalSht11ControlP;
-  //HalSht11ControlP.Resource -> HalSensirionSht11C.Resource[ ADV_KEY ];
-  //HalSht11ControlP.SensirionSht11 -> HalSensirionSht11C.SensirionSht11[ ADV_KEY ];
+  enum { ADV_KEY = unique("Sht11.Resource") };
+  components HalSht11ControlP;
+  HalSht11Advanced = HalSht11ControlP;
+  HalSht11ControlP.Resource -> HalSensirionSht11C.Resource[ ADV_KEY ];
+  HalSht11ControlP.SensirionSht11 -> HalSensirionSht11C.SensirionSht11[ ADV_KEY ];
 }

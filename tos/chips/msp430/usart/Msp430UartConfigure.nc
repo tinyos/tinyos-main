@@ -30,11 +30,11 @@
 /**
  * Interface used by Msp430Uart clients to reconfigure the UART before use
  * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
  */
 
 #include "msp430usart.h"
 
 interface Msp430UartConfigure {
-  async command msp430_uart_config_t* getConfig();
+  async command msp430_uart_union_config_t* getConfig();
 }

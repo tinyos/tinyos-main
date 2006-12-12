@@ -1,4 +1,4 @@
-// $Id: HplCC1000Spi.nc,v 1.3 2006-11-07 19:30:50 scipio Exp $
+// $Id: HplCC1000Spi.nc,v 1.4 2006-12-12 18:23:05 vlahan Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  

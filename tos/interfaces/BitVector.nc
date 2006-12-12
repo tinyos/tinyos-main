@@ -1,4 +1,4 @@
-//$Id: BitVector.nc,v 1.3 2006-11-07 19:31:17 scipio Exp $
+//$Id: BitVector.nc,v 1.4 2006-12-12 18:23:14 vlahan Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.

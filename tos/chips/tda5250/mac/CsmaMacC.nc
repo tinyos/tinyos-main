@@ -58,6 +58,8 @@ implementation {
       CsmaMacP,
       RssiFixedThresholdCMC as Cca,
       new Alarm32khz16C() as Timer,
+      new TimerMilliC() as ReRxTimer,
+      McuSleepC,
       RandomLfsrC
 #ifdef MAC_DEBUG
       ,PlatformLedsC
@@ -65,7 +67,9 @@ implementation {
       ;
               
     MainC.SoftwareInit -> CsmaMacP;
-              
+
+    McuSleepC.McuPowerOverride -> CsmaMacP;
+    
     SplitControl = CsmaMacP;
     
     MacSend = CsmaMacP;
@@ -93,6 +97,9 @@ implementation {
     CsmaMacP.RadioResourceRequested -> Tda5250RadioC.ResourceRequested;
 
     CsmaMacP.Timer -> Timer;
+
+    CsmaMacP.ReRxTimer -> ReRxTimer;
+    
 #ifdef MAC_DEBUG
     CsmaMacP.Led0 -> PlatformLedsC.Led0;
     CsmaMacP.Led1 -> PlatformLedsC.Led1;

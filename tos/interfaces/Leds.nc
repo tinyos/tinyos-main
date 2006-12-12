@@ -1,4 +1,4 @@
-// $Id: Leds.nc,v 1.3 2006-11-07 19:31:17 scipio Exp $
+// $Id: Leds.nc,v 1.4 2006-12-12 18:23:14 vlahan Exp $
 
 /*									tab:4
  * "Copyright (c) 2005-2005 The Regents of the University  of California.  
@@ -92,7 +92,7 @@ interface Leds {
   /**
    * Get the current LED settings as a bitmask. Each bit corresponds to
    * whether an LED is on; bit 0 is LED 0, bit 1 is LED 1, etc. You can
-   * also use the enums LED_LED0, LED_LED1. For example, this expression
+   * also use the enums LEDS_LED0, LEDS_LED1. For example, this expression
    * will determine whether LED 2 is on:
    *
    * <pre> (call Leds.get() & LEDS_LED2) </pre>

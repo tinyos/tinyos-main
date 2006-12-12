@@ -50,6 +50,7 @@ module CsmaMacP {
         interface MacSend;
         interface MacReceive;
         interface Packet;
+        interface McuPowerOverride;
     }
     uses {
         interface StdControl as CcaStdControl;
@@ -69,6 +70,8 @@ module CsmaMacP {
         interface Resource as RssiAdcResource;
 
         interface Random;
+
+        interface Timer<TMilli> as ReRxTimer;
         
         interface Alarm<T32khz, uint16_t> as Timer;
         async command am_addr_t amAddress();
@@ -87,7 +90,7 @@ implementation
     enum {
         BYTE_TIME=13,                // byte at 38400 kBit/s, 4b6b encoded
         PREAMBLE_BYTE_TIME=9,        // byte at 38400 kBit/s, no coding
-        PHY_HEADER_TIME=35,          // 4 Phy Preamble at 38400
+        PHY_HEADER_TIME=51,          // 6 Phy Preamble at 38400
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(tda5250_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 38400 kBit/s with 4b6b encoding
         MAXTIMERVALUE=0xFFFF,        // helps to compute backoff
@@ -95,16 +98,16 @@ implementation
         RX_SETUP_TIME=111,    // time to set up receiver
         TX_SETUP_TIME=69,     // time to set up transmitter
         ADDED_DELAY = 30,
-        RX_ACK_TIMEOUT=RX_SETUP_TIME + PHY_HEADER_TIME + 4 + 3*ADDED_DELAY,
+        RX_ACK_TIMEOUT=RX_SETUP_TIME + PHY_HEADER_TIME + 19 + 2*ADDED_DELAY,
         TX_GAP_TIME=RX_ACK_TIMEOUT + TX_SETUP_TIME + 11,
-        MIN_BACKOFF_MASK=0x3F,   // about txrx_turnaround time
         MAX_SHORT_RETRY=7,
         MAX_LONG_RETRY=4,
+        BACKOFF_MASK=0xFFF,  // minimum time around one packet time
         MIN_PREAMBLE_BYTES=2,
         TOKEN_ACK_FLAG = 64,
         TOKEN_ACK_MASK = 0x3f,
         INVALID_SNR = 0xffff,
-        MSG_TABLE_ENTRIES=5,
+        MSG_TABLE_ENTRIES=20,
         MAX_AGE=2*MAX_LONG_RETRY*MAX_SHORT_RETRY,
     };
     
@@ -149,7 +152,6 @@ implementation
     uint8_t flags;
     uint8_t seqNo;
     
-    uint16_t slotMask;
     uint16_t restLaufzeit;
 
     /* duplicate suppression */
@@ -306,12 +308,13 @@ implementation
     }
 
     /**************** Helper functions ********/
+
+    task void postponeReRx() {
+        call ReRxTimer.startOneShot(5000);
+    }
+    
     uint16_t backoff(uint8_t counter) {
-        uint16_t mask = MIN_BACKOFF_MASK;
-        unsigned i;
-        for(i = 0; i < counter; i++) {
-            mask = (mask << 1) + 1;
-        }
+        uint16_t mask = BACKOFF_MASK >> (MAX_LONG_RETRY - counter);
         return (call Random.rand16() & mask);
     }
 
@@ -326,6 +329,9 @@ implementation
             }
             else {
                 restLaufzeit +=  MAXTIMERVALUE - now;
+            }
+            if(restLaufzeit > BACKOFF_MASK) {
+                restLaufzeit = backoff(0);
             }
             setFlag(&flags, RESUME_BACKOFF);
         }
@@ -485,7 +491,6 @@ implementation
             shortRetryCounter = 0;
             longRetryCounter = 0;
             flags = 0;
-            slotMask = MIN_BACKOFF_MASK;
             for(i = 0; i < MSG_TABLE_ENTRIES; i++) {
                 knownMsgTable[i].age = MAX_AGE;
             }
@@ -578,6 +583,7 @@ implementation
     }
 
     async event void RadioModes.RxModeDone() {
+        post postponeReRx();
         atomic {
             if(macState == SW_RX) {
                 storeOldState(21);
@@ -606,6 +612,7 @@ implementation
     }
 
     async event void RadioModes.TxModeDone() {
+        post postponeReRx();
         atomic {
             if(macState == SW_TX) {
                 storeOldState(30);
@@ -680,7 +687,7 @@ implementation
     
     /****** PacketSerializer events **********************/
     async event void PacketReceive.receiveDetected() {
-      if(macState <= RX_ACK) {
+        if(macState <= RX_ACK) {
             storeOldState(60);
             interruptBackoffTimer();
             if(macState == CCA) computeBackoff();
@@ -950,15 +957,29 @@ implementation
     
     async event void ChannelMonitorData.getSnrDone(int16_t data) {
     }
-
     
     /***** unused Radio Modes events **************************/
     
     async event void RadioModes.TimerModeDone() {}
-    async event void RadioModes.SleepModeDone() {}
+
+    async event void RadioModes.SleepModeDone() {
+        atomic setRxMode();
+    }
+    
     async event void RadioModes.SelfPollingModeDone() {}
     async event void RadioModes.PWDDDInterrupt() {}
 
+    event void ReRxTimer.fired() {
+        atomic {
+            if((macState == RX) && (call RadioModes.SleepMode() == SUCCESS)) {
+                // ok 
+            }
+            else {
+                post postponeReRx();
+            }
+        }
+    }
+    
     /***** abused TimeStamping events **************************/
     async event void RadioTimeStamping.receivedSFD( uint16_t time ) {
         if(macState == RX_P) call ChannelMonitor.rxSuccess();
@@ -991,6 +1012,11 @@ implementation
     
     // we don't care about urgent Resource requestes
     async event void RadioResourceRequested.immediateRequested() {}
+
+    /** prevent MCU from going into a too low power mode */
+    async command mcu_power_t McuPowerOverride.lowestState() {
+        return MSP430_POWER_LPM1;
+    }
 }
 
 

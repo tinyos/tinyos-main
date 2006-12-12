@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:15 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:13 $
  */
 
 #include <Stm25p.h>
@@ -326,8 +326,7 @@ implementation {
 	    log_info->write_addr = m_addr;
 	}
 	// move on to next log block
-	if ( (uint16_t)m_addr == 0 &&
-	     ++block < (call Sector.getNumSectors[ id ]()*BLOCKS_PER_SECTOR)) {
+	if (++block < (call Sector.getNumSectors[ id ]()*BLOCKS_PER_SECTOR)) {
 	  addr += BLOCK_SIZE;
 	  call Sector.read[ id ]( addr, (uint8_t*)&m_addr, sizeof( m_addr ) );
 	}

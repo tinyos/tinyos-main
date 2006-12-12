@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2004-2006, Technische Universitaet Berlin
+/* -*- mode:c++; indent-tabs-mode: nil -*-
+ * Copyright (c) 2006, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -20,33 +20,34 @@
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES {} LOSS OF USE, DATA,
+ * OR PROFITS {} OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
- * Interface used by Msp430Uart clients to control/configure the Uart.
  *
- * @author Philipp Huppertz (huppertz@tkn.tu-berlin.de)
+ * - Description ---------------------------------------------------------
+ * packet headers for RedMac primitive messages
+ * - Author --------------------------------------------------------------
+ * @author: Andreas Koepke (koepke@tkn.tu-berlin.de)
+ * ========================================================================
  */
-interface Msp430UartControl {
 
-  /**
-  * Sets the Uart to Rx mode.
-  */
-  async command void setModeRx();
-  
-  /**
-  * Sets the Uart to Tx mode.
-  */
-  async command void setModeTx();
-  
-  /**
-  * Sets the Uart to duplex mode.
-  */
-  async command void setModeDuplex();
-  
-}
+#ifndef RED_MAC_H
+#define RED_MAC_H
+
+/*
+ * highest bit of token set: this message is ACK and not intended for the
+ * upper layers. Token is used for alternating bit like duplicate detection,
+ * and set by the sender in [0,127] intervall. The receiver reflects the
+ * token in the Ack, with the highest bit set. 
+ */
+
+typedef nx_struct red_mac_header_t {
+    nx_uint8_t    repetitionCounter;
+    nx_uint32_t   time; // processing delay of message
+} red_mac_header_t;
+
+#define RELIABLE_MCAST_MIN_ADDR 0xE000
+
+#endif

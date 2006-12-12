@@ -35,7 +35,7 @@
  *
  * @author Philip Buonadonna
  * @author Kaisen Lin
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:23 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:42 $
  */
 
 generic configuration BlockStorageC( volume_id_t volume_id ) {

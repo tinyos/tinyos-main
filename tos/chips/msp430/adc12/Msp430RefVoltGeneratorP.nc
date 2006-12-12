@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2006-11-07 19:30:57 $
+ * $Revision: 1.4 $
+ * $Date: 2006-12-12 18:23:07 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -271,8 +271,6 @@ module Msp430RefVoltGeneratorP
     }
   }
 
-  async event void HplAdc12.memOverflow(){}
-  async event void HplAdc12.conversionTimeOverflow(){}
   async event void HplAdc12.conversionDone(uint16_t iv){}
 
   default event void RefVolt_1_5V.startDone(error_t error){}

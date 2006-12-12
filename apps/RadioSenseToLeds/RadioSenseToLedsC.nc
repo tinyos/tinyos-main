@@ -1,4 +1,4 @@
-// $Id: RadioSenseToLedsC.nc,v 1.3 2006-11-07 19:30:34 scipio Exp $
+// $Id: RadioSenseToLedsC.nc,v 1.4 2006-12-12 18:22:49 vlahan Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -101,19 +101,18 @@ implementation {
     else {
       radio_sense_msg_t* rsm = (radio_sense_msg_t*)payload;
       uint16_t val = rsm->data;
-      call Leds.led0Toggle();
-      if (val & 0x8000) {
-	call Leds.led1On();
-      }
-      else {
-	call Leds.led1Off();
-      }
-      if (val & 0x4000) {
-	call Leds.led2On();
-      }
-      else {
-	call Leds.led2Off();
-      }
+      if (val & 0x0004)
+        call Leds.led2On();
+      else
+        call Leds.led2Off();
+      if (val & 0x0002)
+        call Leds.led1On();
+      else
+        call Leds.led1Off();
+      if (val & 0x0001)
+        call Leds.led0On();
+      else
+        call Leds.led0Off();
       return bufPtr;
     }
   }

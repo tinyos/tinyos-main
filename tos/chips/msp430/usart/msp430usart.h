@@ -30,7 +30,7 @@
 
 /**
  * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
- * $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
+ * @author Philipp Huppertz <huppertz@tkn.tu-berlin.de>
  */
 
 #ifndef _H_Msp430Usart_h
@@ -97,51 +97,64 @@ DEFINE_UNION_CAST(urctl2int,uint8_t,msp430_urctl_t)
 DEFINE_UNION_CAST(int2urctl,msp430_urctl_t,uint8_t)
 
 typedef struct {
-  unsigned int ubr: 16;        //Clock division factor (>=0x0002)
-  unsigned int ssel: 2;     //Clock source (00=external UCLK [slave]; 01=ACLK [master]; 10=SMCLK [master]; 11=SMCLK [master])
-  unsigned int clen: 1;     //Character length (0=7-bit data; 1=8-bit data)
-  unsigned int listen: 1;   //Listen enable (0=disabled; 1=enabled, feed tx back to receiver)
+  unsigned int ubr: 16;     //Clock division factor (>=0x0002)
+  
+  unsigned int :1;
   unsigned int mm: 1;       //Master mode (0=slave; 1=master)
-  unsigned int ckph: 1;     //Clock phase (0=normal; 1=half-cycle delayed)
-  unsigned int ckpl: 1;     //Clock polarity (0=inactive is low && data at rising edge; 1=inverted)
+  unsigned int :1;
+  unsigned int listen: 1;   //Listen enable (0=disabled; 1=enabled, feed tx back to receiver)
+  unsigned int clen: 1;     //Character length (0=7-bit data; 1=8-bit data)
+  unsigned int: 3;
+  
+  unsigned int:1;
   unsigned int stc: 1;      //Slave transmit (0=4-pin SPI && STE enabled; 1=3-pin SPI && STE disabled)
+  unsigned int:2;
+  unsigned int ssel: 2;     //Clock source (00=external UCLK [slave]; 01=ACLK [master]; 10=SMCLK [master] 11=SMCLK [master]); 
+  unsigned int ckpl: 1;     //Clock polarity (0=inactive is low && data at rising edge; 1=inverted)
+  unsigned int ckph: 1;     //Clock phase (0=normal; 1=half-cycle delayed)
   unsigned int :0;
 } msp430_spi_config_t;
 
-msp430_spi_config_t msp430_spi_default_config = {ubr: 0x0002, ssel: 0x02, clen: 1, listen: 0, mm: 1, ckph: 1, ckpl: 0, stc:1};
-
 typedef struct {
-  unsigned int ubr:16;      //Baud rate (use enum msp430_uart_rate_t for predefined rates)
-  unsigned int umctl: 8;    //Modulation (use enum msp430_uart_rate_t for predefined rates)
-  unsigned int ssel: 2;     //Clock source (00=UCLKI; 01=ACLK; 10=SMCLK; 11=SMCLK)
-  unsigned int pena: 1;     //Parity enable (0=disabled; 1=enabled)
-  unsigned int pev: 1;      //Parity select (0=odd; 1=even)
-  unsigned int spb: 1;      //Stop bits (0=one stop bit; 1=two stop bits)
-  unsigned int clen: 1;     //Character length (0=7-bit data; 1=8-bit data)
-  unsigned int listen: 1;   //Listen enable (0=disabled; 1=enabled, feed tx back to receiver)
-  unsigned int mm: 1;       //Multiprocessor mode (0=idle-line protocol; 1=address-bit protocol)
-  unsigned int :0;
-  unsigned int ckpl: 1;     //Clock polarity (0=normal; 1=inverted)
-  unsigned int urxse: 1;    //Receive start-edge detection (0=disabled; 1=enabled)
-  unsigned int urxeie: 1;   //Erroneous-character receive (0=rejected; 1=recieved and URXIFGx set)
-  unsigned int urxwie: 1;   //Wake-up interrupt-enable (0=all characters set URXIFGx; 1=only address sets URXIFGx)
-} msp430_uart_config_t;
+  uint16_t ubr;
+  uint8_t uctl;
+  uint8_t utctl;
+} msp430_spi_registers_t;
 
+typedef union {
+  msp430_spi_config_t spiConfig;
+  msp430_spi_registers_t spiRegisters;
+} msp430_spi_union_config_t;
+
+msp430_spi_union_config_t msp430_spi_default_config = { 
+  {
+    ubr : 0x0002, 
+    ssel : 0x02, 
+    clen : 1, 
+    listen : 0, 
+    mm : 1, 
+    ckph : 1, 
+    ckpl : 0, 
+    stc : 1
+  } 
+};
+    
+    
+    
+/**
+  The calculations were performed using the msp-uart.pl script:
+  msp-uart.pl -- calculates the uart registers for MSP430
+
+  Copyright (C) 2002 - Pedro Zorzenon Neto - pzn dot debian dot org
+ **/
 typedef enum {
-  /**
-     The calculations were performed using the msp-uart.pl script:
-     # msp-uart.pl -- calculates the uart registers for MSP430
-     #
-     # Copyright (C) 2002 - Pedro Zorzenon Neto - pzn dot debian dot org
-  **/
-  
   //32KHZ = 32,768 Hz, 1MHZ = 1,048,576 Hz
   UBR_32KHZ_1200=0x001B,    UMCTL_32KHZ_1200=0x94,
   UBR_32KHZ_1800=0x0012,    UMCTL_32KHZ_1800=0x84,
   UBR_32KHZ_2400=0x000D,    UMCTL_32KHZ_2400=0x6D,
   UBR_32KHZ_4800=0x0006,    UMCTL_32KHZ_4800=0x77,
   UBR_32KHZ_9600=0x0003,    UMCTL_32KHZ_9600=0x29,  // (Warning: triggers MSP430 errata US14)
-  
+
   UBR_1MHZ_1200=0x0369,   UMCTL_1MHZ_1200=0x7B,
   UBR_1MHZ_1800=0x0246,   UMCTL_1MHZ_1800=0x55,
   UBR_1MHZ_2400=0x01B4,   UMCTL_1MHZ_2400=0xDF,
@@ -155,34 +168,142 @@ typedef enum {
   UBR_1MHZ_230400=0x0004, UMCTL_1MHZ_230400=0x55,
 } msp430_uart_rate_t;
 
-msp430_uart_config_t msp430_uart_default_config = {ubr: UBR_1MHZ_57600, umctl: UMCTL_1MHZ_57600, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie: 1, urxwie: 0};
+typedef struct {
+  unsigned int ubr:16;      //Baud rate (use enum msp430_uart_rate_t for predefined rates)
+  
+  unsigned int umctl: 8;    //Modulation (use enum msp430_uart_rate_t for predefined rates)
+  
+  unsigned int :1;
+  unsigned int mm: 1;       //Multiprocessor mode (0=idle-line protocol; 1=address-bit protocol)
+  unsigned int :1;
+  unsigned int listen: 1;   //Listen enable (0=disabled; 1=enabled, feed tx back to receiver)
+  unsigned int clen: 1;     //Character length (0=7-bit data; 1=8-bit data)
+  unsigned int spb: 1;      //Stop bits (0=one stop bit; 1=two stop bits)
+  unsigned int pev: 1;      //Parity select (0=odd; 1=even)
+  unsigned int pena: 1;     //Parity enable (0=disabled; 1=enabled)
+  unsigned int :0;
+  
+  unsigned int :3;
+  unsigned int urxse: 1;    //Receive start-edge detection (0=disabled; 1=enabled)
+  unsigned int ssel: 2;     //Clock source (00=UCLKI; 01=ACLK; 10=SMCLK; 11=SMCLK)
+  unsigned int ckpl: 1;     //Clock polarity (0=normal; 1=inverted)
+  unsigned int :1;
+  
+  unsigned int :2;
+  unsigned int urxwie: 1;   //Wake-up interrupt-enable (0=all characters set URXIFGx; 1=only address sets URXIFGx)
+  unsigned int urxeie: 1;   //Erroneous-character receive (0=rejected; 1=recieved and URXIFGx set)
+  unsigned int :4;
+  unsigned int :0;
+  
+  unsigned int utxe:1;			// 1:enable tx module
+  unsigned int urxe:1;			// 1:enable rx module
+} msp430_uart_config_t;
 
 typedef struct {
-  unsigned int rxdmaen: 1;  // Receive DMA enable. 0 = disabled.
-  unsigned int txdmaen: 1;  // Transmit DMA enable. 0 = disabled.
-  unsigned int xa: 1;       // Extended addressing. 0 = 7-bit addressing.
-  unsigned int listen: 1;   // Listen. 0 = disabled.
-  unsigned int i2cword : 1; // Word mode. 0 = byte mode.
-  unsigned int i2crm : 1;   // Repeat mode. 0 = I2CNDAT.
-  unsigned int i2cssel : 2; // Clock source select. 0=None, 1=ACLK, 2=SMCLK
-  unsigned int i2cpsc : 8;  // Clock prescaler.
-  unsigned int i2csclh : 8; // Shift clock high register.
-  unsigned int i2cscll : 8; // Shift clock low register.
-  unsigned int i2coa : 10;  // Own address register.
-} msp430_i2c_config_t;
+  uint16_t ubr;
+  uint8_t umctl;
+  uint8_t uctl;
+  uint8_t utctl;
+  uint8_t urctl;
+  uint8_t ume;
+} msp430_uart_registers_t;
 
-msp430_i2c_config_t msp430_i2c_default_config = { 
-  rxdmaen : 0,
-  txdmaen : 0,
-  xa : 0,
-  listen : 0,
-  i2cword : 0,
-  i2crm : 1,
-  i2cssel : 2,
-  i2cpsc : 0,
-  i2csclh : 3,
-  i2cscll : 3,
-  i2coa : 0,
+typedef union {
+  msp430_uart_config_t uartConfig;
+  msp430_uart_registers_t uartRegisters;
+} msp430_uart_union_config_t;
+    
+msp430_uart_union_config_t msp430_uart_default_config = { 
+  {
+    utxe : 1, 
+    urxe : 1, 
+    ubr : UBR_1MHZ_57600, 
+    umctl : UMCTL_1MHZ_57600, 
+    ssel : 0x02, 
+    pena : 0, 
+    pev : 0, 
+    spb : 0, 
+    clen : 1, 
+    listen : 0, 
+    mm : 0, 
+    ckpl : 0, 
+    urxse : 0, 
+    urxeie : 1, 
+    urxwie : 0,
+    utxe : 1,
+    urxe : 1
+  } 
+};
+
+
+
+typedef struct {
+  unsigned int i2cstt: 1; // I2CSTT Bit 0 START bit. (0=No action; 1=Send START condition)
+  unsigned int i2cstp: 1; // I2CSTP Bit 1 STOP bit. (0=No action; 1=Send STOP condition)
+  unsigned int i2cstb: 1; // I2CSTB Bit 2 Start byte. (0=No action; 1=Send START condition and start byte (01h))
+  unsigned int i2cctrx: 1; //I2CTRX Bit 3 I2C transmit. (0=Receive mode; 1=Transmit mode) pin.
+  unsigned int i2cssel: 2; // I2C clock source select. (00=No clock; 01=ACLK; 10=SMCLK; 11=SMCLK)
+  unsigned int i2ccrm: 1;  // I2C repeat mode 
+  unsigned int i2cword: 1; // I2C word mode. Selects byte(=0) or word(=1) mode for the I2C data register.
+} __attribute__ ((packed)) msp430_i2ctctl_t;
+
+DEFINE_UNION_CAST(i2ctctl2int,uint8_t,msp430_i2ctctl_t)
+DEFINE_UNION_CAST(int2i2ctctl,msp430_i2ctctl_t,uint8_t)
+
+typedef struct {
+  unsigned int :1;
+  unsigned int mst: 1;      //Master mode (0=slave; 1=master)
+  unsigned int :1;
+  unsigned int listen: 1;   //Listen enable (0=disabled; 1=enabled, feed tx back to receiver)
+  unsigned int xa: 1;       //Extended addressing (0=7-bit addressing; 1=8-bit addressing)
+  unsigned int :1;
+  unsigned int txdmaen: 1;  //DMA to TX (0=disabled; 1=enabled)
+  unsigned int rxdmaen: 1;  //RX to DMA (0=disabled; 1=enabled)
+    
+  unsigned int :4;
+  unsigned int i2cssel: 2;  //Clock source (00=disabled; 01=ACLK; 10=SMCLK; 11=SMCLK)
+  unsigned int i2crm: 1;    //Repeat mode (0=use I2CNDAT; 1=count in software)
+  unsigned int i2cword: 1;  //Word mode (0=byte mode; 1=word mode)
+  
+  unsigned int i2cpsc: 8;   //Clock prescaler (values >0x04 not recomended)
+  
+  unsigned int i2csclh: 8;  //High period (high period=[value+2]*i2cpsc; can not be lower than 5*i2cpsc)
+  
+  unsigned int i2cscll: 8;  //Low period (low period=[value+2]*i2cpsc; can not be lower than 5*i2cpsc)
+  
+  unsigned int i2coa : 10;  // Own address register.
+  unsigned int :6;
+} msp430_i2c_config_t;
+    
+typedef struct {
+  uint8_t uctl;
+  uint8_t i2ctctl;
+  uint8_t i2cpsc;
+  uint8_t i2csclh;
+  uint8_t i2cscll;
+  uint16_t i2coa;
+} msp430_i2c_registers_t;
+
+typedef union {
+  msp430_i2c_config_t i2cConfig;
+  msp430_i2c_registers_t i2cRegisters;
+} msp430_i2c_union_config_t;
+
+msp430_i2c_union_config_t msp430_i2c_default_config = { 
+  {
+    rxdmaen : 0, 
+    txdmaen : 0, 
+    xa : 0, 
+    listen : 0, 
+    mst : 1,
+    i2cword : 0, 
+    i2crm : 0, 
+    i2cssel : 0x2, 
+    i2cpsc : 0, 
+    i2csclh : 0x3, 
+    i2cscll : 0x3,
+    i2coa : 0,
+  } 
 };
 
 

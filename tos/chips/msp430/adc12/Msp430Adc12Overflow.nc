@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2006, Technische Universitat Berlin
+/* 
+ * Copyright (c) 2006, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,7 @@
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the distribution.
- * - Neither the name of the Technische Universitat Berlin nor the names
+ * - Neither the name of the Technische Universitaet Berlin nor the names
  *   of its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -25,19 +25,32 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.2 $
- * $Date: 2006-07-12 17:02:44 $
+ * $Date: 2006-12-12 18:23:07 $
+ * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
-#include "msp430UsartResource.h"
+/** 
+ * Signals an ADC12MEMx overflow or conversion time overflow condition to the
+ * client.
+ *
+ * @author Jan Hauer 
+ */
 
-#ifndef TDA5250BUSRESOURCEID_H
-#define TDA5250BUSRESOURCEID_H
+#include "Msp430Adc12.h" 
+interface Msp430Adc12Overflow 
+{   
+  /** 
+   * An ADC12MEMx overflow condition has occured.
+   */ 
+  async event void memOverflow();
 
-enum {
-    TDA5250_UART_BUS_ID = unique(MSP430_UARTO_BUS)
-};
+  /** 
+   * A conversion time overflow condition has occured.
+   */ 
+  async event void conversionTimeOverflow();
+}
 
-#endif

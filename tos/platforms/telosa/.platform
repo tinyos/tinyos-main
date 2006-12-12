@@ -7,15 +7,21 @@ push( @includes, qw(
 
   %T/platforms/telosa
   %T/platforms/telosa/chips/cc2420
+  %T/platforms/telosa/chips/s1087
+  %T/platforms/telosa/chips/s10871
+  %T/platforms/telosa/chips/sht11
   %T/chips/cc2420
   %T/chips/msp430
   %T/chips/msp430/adc12
-  %T/chips/msp430/bus
   %T/chips/msp430/pins
   %T/chips/msp430/timer
+  %T/chips/msp430/usart
+  %T/chips/msp430/sensors
+  %T/chips/sht11  
   %T/lib/timer
   %T/lib/serial
   %T/lib/adc
+  %T/lib/power
 
 ) );
 

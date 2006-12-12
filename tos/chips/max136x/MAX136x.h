@@ -33,7 +33,7 @@
  * Types and definitions for the Maxim 136x general purpose ADC chip
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:55 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:06 $
  */
 
 #ifndef _MAX136X_H

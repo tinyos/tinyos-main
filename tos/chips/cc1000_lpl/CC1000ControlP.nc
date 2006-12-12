@@ -1,4 +1,4 @@
-/* $Id: CC1000ControlP.nc,v 1.3 2006-11-07 19:30:49 scipio Exp $
+/* $Id: CC1000ControlP.nc,v 1.4 2006-12-12 18:23:05 vlahan Exp $
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -120,6 +120,8 @@ implementation
     call CC.write(CC1K_PA_POW, 0);
 
     calibrateNow();
+    
+    call CC1000Control.rxMode();
   }
 
   /*

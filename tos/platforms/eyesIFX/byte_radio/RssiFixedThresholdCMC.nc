@@ -48,8 +48,7 @@ configuration RssiFixedThresholdCMC
 implementation
 {
     components RssiFixedThresholdCMP,
-    		//  RssiSensorVccC as Rssi, FIXME: has no arbitration!?
-        new RssiSensorC() as Rssi,
+        new RssiSensorVccC() as Rssi,
         new BatteryLevelSensorC() as Voltage,
         new TimerMilliC() as Timer,
         MainC;

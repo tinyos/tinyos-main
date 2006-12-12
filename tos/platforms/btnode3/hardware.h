@@ -37,7 +37,7 @@
  *  @author Martin Turon <mturon@xbow.com>
  *  @author Jan Beutel <j.beutel@ieee.org>
  * 
- *  $Id: hardware.h,v 1.3 2006-11-07 19:31:22 scipio Exp $
+ *  $Id: hardware.h,v 1.4 2006-12-12 18:23:40 vlahan Exp $
  */
 
 #ifndef HARDWARE_H

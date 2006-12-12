@@ -6,7 +6,7 @@
 # this is distributed under a free software license, see license.txt
 
 import sys, os, string
-VERSION = string.split("$Revision: 1.3 $")[1]     #extract CVS version
+VERSION = string.split("$Revision: 1.4 $")[1]     #extract CVS version
 
 #chose an implementation, depending on os
 if os.name == 'nt': #sys.platform == 'win32':

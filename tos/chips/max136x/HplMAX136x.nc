@@ -33,7 +33,7 @@
  * Hpl interface for the MAXIM 136x series ADC chips.
  *
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:55 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:06 $
  */
 
 interface HplMAX136x {

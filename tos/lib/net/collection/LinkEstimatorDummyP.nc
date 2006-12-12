@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorDummyP.nc,v 1.2 2006-07-12 17:02:25 scipio Exp $ */
+/* $Id: LinkEstimatorDummyP.nc,v 1.3 2006-12-12 18:23:29 vlahan Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.

@@ -32,14 +32,13 @@
 /**
  * @author Jonathan Hui <jhui@archedrock.com>
  * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
  */
 
 configuration Msp430Uart1P {
 
   provides interface Resource[ uint8_t id ];
   provides interface ResourceConfigure[uint8_t id ];
-  provides interface Msp430UartControl as UartControl[ uint8_t id ];
   provides interface UartStream;
   provides interface UartByte;
   
@@ -55,7 +54,6 @@ implementation {
   Resource = UartP.Resource;
   ResourceConfigure = UartP.ResourceConfigure;
   Msp430UartConfigure = UartP.Msp430UartConfigure;
-  UartControl = UartP.UartControl;
   UartStream = UartP.UartStream;
   UartByte = UartP.UartByte;
   UsartResource = UartP.UsartResource;

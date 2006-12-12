@@ -1,4 +1,4 @@
-// $Id: TinyError.h,v 1.3 2006-11-07 19:31:29 scipio Exp $
+// $Id: TinyError.h,v 1.4 2006-12-12 18:23:47 vlahan Exp $
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -23,7 +23,7 @@
 /**
  * @author Phil Levis
  * @author David Gay
- * Revision:  $Revision: 1.3 $
+ * Revision:  $Revision: 1.4 $
  *
  * Defines global error codes for error_t in TinyOS.
  */

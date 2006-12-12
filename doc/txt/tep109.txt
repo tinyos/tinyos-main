@@ -33,7 +33,7 @@ that provide access to sensors.
 This section describes the basic organization principles for sensor
 drivers in TinyOS.
 
-For background, a sensor may be attached to the microcontroller on a
+For background, a sensor can be attached to the microcontroller on a
 TinyOS platform through a few different types of connections:
 
  * Included within the microcontroller itself
@@ -42,49 +42,50 @@ TinyOS platform through a few different types of connections:
  * Connected to general-purpose IO pins for digital communication
  * Connected through a standard digital bus protocol (1-Wire, I2C, SPI)
 
-Physically, these connections may also be decoupled by attaching the
+Physically, these connections can also be decoupled by attaching the
 sensors to a `sensor board`, which can be removed from the TinyOS
-platform, and may fit multiple different TinyOS platforms.
+platform, and could attach to multiple different TinyOS platforms.
 
 The capabilities of a physical sensor are made available to a TinyOS
 application through a `sensor driver`. 
 
-According to the HAA [TEP2]_, TinyOS devices should provide both
+According to the HAA [TEP2]_, TinyOS devices SHOULD provide both
 simple hardware-independent interfaces for common-case use (HIL) and
 rich hardware-dependent interfaces for special-case use (HAL). Sensor
-drivers should follow this spirit as well.
+drivers SHOULD follow this spirit as well.
 
 TinyOS 2.x represents each sensor as an individual component. This
 allows the compilation process to minimize the amount of code
-included. A sensor board containing multiple sensors should be
+included. A sensor board containing multiple sensors SHOULD be
 represented as a collection of components, one for each sensor,
 contained within a sensor board directory.
 
-Sensors, being physical devices that may be shared, can benefit from
+Sensors, being physical devices that can be shared, can benefit from
 virtualization and arbitration. This document describes a design
-pattern for sensor virtualization that may be followed by sensor
+pattern for sensor virtualization that SHOULD be followed by sensor
 drivers.
 
-The same physical sensor may be attached to multiple different TinyOS
+The same physical sensor can be attached to multiple different TinyOS
 platforms, through platform-dependent interconnections. The common
-logic of sensor driver should be factored into chip-dependent,
-platform-independent components, and those components should be bound
+logic of sensor driver SHOULD be factored into chip-dependent,
+platform-independent components, and those components SHOULD be bound
 to the hardware resources on a platform by platform-dependent
 components, and to the hardware resources on a sensor board by
 sensorboard-dependent components.
 
 A physical sensor has a general class and a specific set of
 performance characteristics, captured by the make and model of the
-sensor itself. The naming of the sensor driver components should
-reflect the specifc name of the sensor, and optionally provide a
-component with a generic name for application authors who only care
-about the general class of the sensor.
+sensor itself. The naming of the sensor driver components SHOULD
+reflect the specifc name of the sensor, and MAY provide a component
+with a generic name for application authors who only care about the
+general class of the sensor.
 
 This document takes no position on the meaning of the values returned
-by sensor drivers. They may be raw uninterpreted values or they may
+by sensor drivers. They MAY be raw uninterpreted values or they MAY
 have some physical meaning. If a driver returns uninterpreted values,
-the driver may provide additional interfaces that would allow
-higher-level clients to interpret the value properly.
+the driver MAY provide additional interfaces that would allow
+higher-level clients to obtain information needed to properly
+interpret the value.
 
 2. Sensor HIL Components
 ====================================================================
@@ -102,17 +103,20 @@ A sensor device driver SHOULD be a generic component that virtualizes
 access to the sensor. A sensor device driver can provide such
 virtualization for itself by defining a nesC generic client
 component. When a client component is being used, a call to a
-top-level SID interface should be delayed when the device is busy,
-rather than failing. This virtualization may be easier to accomplish
-by using one of the arbiters provided by the system.
+top-level SID interface SHOULD be delayed when the device is busy,
+rather than failing. Using one of the system arbiters can make the
+implementation of this requirement easier to accomplish.
 
 For example::
 
   generic configuration SensirionSht11C() {
     provides interface Read<uint16_t> as Temperature;
     provides interface ReadStream<uint16_t> as TemperatureStream;
+    provides interface DeviceMetadata as TemperatureDeviceMetadata;
+
     provides interface Read<uint16_t> as Humidity;
     provides interface ReadStream<uint16_t> as HumidityStream;
+    provides interface DeviceMetadata as HumidityDeviceMetadata;
   }
   implementation {
     // connect to the ADC HIL, GPIO HAL, or sensor's HAL
@@ -128,32 +132,24 @@ automatically. For sensors without a constant power draw, the sensor
 MAY be started once at boot time by wiring to the `MainC.Boot`
 interface. Sensors that draw appreciable power MUST be started in
 response to a call to one of the top-level SID interfaces, and stopped
-some time after that call completes. One of the power-management
-components described in [TEP115]_ may be useful for this purpose.
+some time after that call completes. Using one of the power-management
+components described in [TEP115]_ can make this implementation easier.
 
 Generally, simple types are made up of octets. However, sensor values
-often have levels of precision besides a multiple of 8. A device MAY
-specify the precision of one of its interfaces with the DeviceMetadata
-interface::
+often have levels of precision besides a multiple of 8. To account for
+such cases, each device MUST specify the precision of each one of its
+interfaces by providing the DeviceMetadata interface::
 
   interface DeviceMetadata {
     command uint8_t getSignificantBits();
   }
 
-The name of the instance of DeviceMetadata SHOULD clearly indicate
-which interface it corresponds to.
+The name of the instance of DeviceMetadata MUST clearly indicate which
+interface it corresponds to.
 
-A value contained returned from the device through a SID interface
-MAY be left shifted so that it covers as much of the type's range as
-possible. For example, if a 12-bit ADC reading is presented as a
-16-bit Read interface::
-
-  component DemoSensorC {
-    provides interface Read<uint16_t>;
-  }
-
-then the driver MAY shift the 12-bit value left so that its range is
-0x0000 - 0xfff0, rather than 0x0000 - 0x0fff. 
+The getSignificantBits() call MUST return the number of significant
+bits in the reading. For example, a sensor reading taken from a 12-bit
+ADC MUST return the value "12". 
 
 Sensor driver components SHOULD be named according to the make and
 model of the sensing device being presented. Using specific names
@@ -164,26 +160,30 @@ author, to support application developers who are only concerned with
 the particular type of the sensor and not its make, model, or detailed
 performance characteristics.
 
-A "common" naming layer atop a HIL may look like this::
+A "common" naming layer atop a HIL might look like this::
 
   generic configuration TemperatureC() {
     provides interface Read<uint16_t>;
     provides interface ReadStream<uint16_t>;
+    provides interface DeviceMetadata;
   }
   implementation {
     components new SensirionSht11C();
     Read = SensirionSht11C.Temperature;
     ReadStream = SensirionSht11C.TemperatureStream;
+    DeviceMetadata = SensirionSht11C.TemperatureDeviceMetadata;
   }
 
   generic configuration HumidityC() {
     provides interface Read<uint16_t>;
     provides interface ReadStream<uint16_t>;
+    provides interface DeviceMetadata;
   }
   implementation {
     components new SensirionSht11C();
     Read = SensirionSht11C.Humidity;
     ReadStream = SensirionSht11C.HumidityStream;
+    DeviceMetadata = SensirionSht11C.HumidityDeviceMetadata;
   }
 
 3. Sensor HAL Components
@@ -222,8 +222,8 @@ For example::
 4. Directory Organization Guidelines
 ====================================================================
 
-Because the same physical sensor may be attached to TinyOS platforms
-in many different ways, the organization of sensor drivers should
+Because the same physical sensor can be attached to TinyOS platforms
+in many different ways, the organization of sensor drivers SHOULD
 reflect the distinction between sensor and sensor interconnect.
 
 Sensor components commonly exist at three levels:
@@ -267,7 +267,7 @@ perl variables, and MUST NOT modify any others:
   subdirectories.
 
 - @commonboards: This can be set to a list of sensor board names which
-  should be added to the include path list. These sensor boards must be
+  will be added to the include path list. These sensor boards MUST be
   in tinyos-2.x/tos/sensorboards.
 
 If the sensor board wishes to define any C types or constants, it
@@ -278,14 +278,14 @@ A sensor board directory MAY contain a "chips" directory, with
 subdirectories for each of the sensors connected to the sensor board.
 If a "chips" subdirectory is used, sensorboard-dependent driver
 components needed to connect platform-independent logic to a
-particular attachment for that sensor should be placed in
+particular attachment for that sensor SHOULD be placed in
 "<sensorboard>/chips/<sensor>".
 
 Components needed to connect the platform-independent sensor driver
 components or sensorboard-dependent components to the hardware
 resources available on a particular platform SHOULD be placed in
 "tos/<platform>/chips/<sensor>". In addition, components for a sensor
-that only exists on a particular platform should be placed in a such a
+that only exists on a particular platform SHOULD be placed in a such a
 directory.
 
 Sensors that exist as part of a larger chip, like a MCU internal
@@ -298,7 +298,7 @@ the sensors on a platform and/or sensorboard.
 
 All of these directory organization guidelines are only intended for
 code that will enter the core source tree. In general, sensor
-components may be placed anywhere as long as the nesC compiler
+components can be placed anywhere as long as the nesC compiler
 receives enough `-I` directives to locate all of the necessary pieces.
 
 5. Authors' Addresses
@@ -375,6 +375,7 @@ the arbitration and access to the ADC.
   generic configuration HamamatsuS1087ParC() {
     provides interface Read<uint16_t>;
     provides interface ReadStream<uint16_t>;
+    provides interface DeviceMetadata;
   }
   implementation {
     components new AdcReadClientC();
@@ -384,35 +385,39 @@ the arbitration and access to the ADC.
     ReadStream = AdcReadStreamClientC;
 
     components HamamatsuS1087ParP;
-    AdcReadClientC.Msp430Adc12Config -> HamamatsuS1087ParP;
-    AdcReadStreamClientC.Msp430Adc12Config -> HamamatsuS1087ParP;
+    DeviceMetadata = HamamatsuS1087ParP;
+    AdcReadClientC.AdcConfigure -> HamamatsuS1087ParP;
+    AdcReadStreamClientC.AdcConfigure -> HamamatsuS1087ParP;
   }
   
 ::
 
   tos/platforms/telosa/chips/s1087/HamamatsuS1087ParP.nc
 
+  #include "Msp430Adc12.h"
+
   module HamamatsuS1087ParP {
-    provides interface Msp430Adc12Config;
+    provides interface AdcConfigure<const msp430adc12_channel_config_t*>;
+    provides interface DeviceMetadata;
   }
   implementation {
 
-    async command msp430adc12_channel_config_t 
-      Msp430Adc12Config.getChannelSettings() {
+    msp430adc12_channel_config_t config = {
+      inch: INPUT_CHANNEL_A4,
+      sref: REFERENCE_VREFplus_AVss,
+      ref2_5v: REFVOLT_LEVEL_1_5,
+      adc12ssel: SHT_SOURCE_ACLK,
+      adc12div: SHT_CLOCK_DIV_1,
+      sht: SAMPLE_HOLD_4_CYCLES,
+      sampcon_ssel: SAMPCON_SOURCE_SMCLK,
+      sampcon_id: SAMPCON_CLOCK_DIV_1
+    };
  
-      msp430adc12_channel_config_t config = {
-        inch: INPUT_CHANNEL_A4,
-        sref: REFERENCE_VREFplus_AVss,
-        ref2_5v: REFVOLT_LEVEL_1_5,
-        adc12ssel: SHT_SOURCE_ACLK,
-        adc12div: SHT_CLOCK_DIV_1,
-        sht: SAMPLE_HOLD_4_CYCLES,
-        sampcon_ssel: SAMPCON_SOURCE_SMCLK,
-        sampcon_id: SAMPCON_CLOCK_DIV_1
-      };
-      
-      return config;
+    async command const msp430adc12_channel_config_t* AdcConfigure.getConfiguration() {
+      return &config;
     }
+
+    command uint8_t DeviceMetadata.getSignificantBits() { return 12; }
   }
 
 2. Binary Pin-Connected Sensor
@@ -438,17 +443,18 @@ none of the operations are split-phase.
   configuration UserButtonC {
     provides interface Get<bool>;
     provides interface Notify<bool>;
+    provides interface DeviceMetadata;
   }
   implementation {
 
     components UserButtonLogicP;
+    Get = UserButtonLogicP;
+    Notify = UserButtonLogicP;
+    DeviceMetadata = UserButtonLogicP;
 
     components HplUserButtonC;
     UserButtonLogicP.GpioInterrupt -> HplUserButtonC.GpioInterrupt;
     UserButtonLogicP.GeneralIO -> HplUserButtonC.GeneralIO;
-
-    Get = UserButtonLogicP;
-    Notify = UserButtonLogicP;
   }
 
 ::
@@ -458,6 +464,7 @@ none of the operations are split-phase.
   module UserButtonLogicP {
     provides interface Get<bool>;
     provides interface Notify<bool>;
+    provides interface DeviceMetadata;
 
     uses interface GeneralIO;
     uses interface GpioInterrupt; 
@@ -505,6 +512,8 @@ none of the operations are split-phase.
         call GpioInterrupt.enableRisingEdge();
       }
     }
+
+    command uint8_t DeviceMetadata.getSignificantBits() { return 1; }
   }
 
 ::
@@ -564,14 +573,18 @@ on top of the I2C or SPI bus would likely require fewer components.
   
   generic configuration SensirionSht11C() {  
     provides interface Read<uint16_t> as Temperature;
+    provides interface DeviceMetadata as TemperatureDeviceMetadata;
     provides interface Read<uint16_t> as Humidity;
+    provides interface DeviceMetadata as HumidityDeviceMetadata;
   }
   implementation {
     components new SensirionSht11ReaderP();
   
     Temperature = SensirionSht11ReaderP.Temperature;
+    TemperatureDeviceMetadata = SensirionSht11ReaderP.TemperatureDeviceMetadata;
     Humidity = SensirionSht11ReaderP.Humidity;
-  
+    HumidityDeviceMetadata = SensirionSht11ReaderP.HumidityDeviceMetadata;
+
     components HalSensirionSht11C;
   
     enum { TEMP_KEY = unique("Sht11.Resource") };
@@ -589,7 +602,9 @@ on top of the I2C or SPI bus would likely require fewer components.
   
   generic module SensirionSht11ReaderP() {
     provides interface Read<uint16_t> as Temperature;
+    provides interface DeviceMetadata as TemperatureDeviceMetadata;
     provides interface Read<uint16_t> as Humidity;
+    provides interface DeviceMetadata as HumidityDeviceMetadata;
     
     uses interface Resource as TempResource;
     uses interface Resource as HumResource;
@@ -614,7 +629,9 @@ on top of the I2C or SPI bus would likely require fewer components.
       call TempResource.release();
       signal Temperature.readDone( result, val );
     }
-  
+
+    command uint8_t TemperatureDeviceMetadata.getSignificantBits() { return 14; }
+
     command error_t Humidity.read() {
       call HumResource.request();
       return SUCCESS;
@@ -633,6 +650,8 @@ on top of the I2C or SPI bus would likely require fewer components.
       signal Humidity.readDone( result, val );
     }
   
+    command uint8_t HumidityDeviceMetadata.getSignificantBits() { return 12; }
+
     event void Sht11Temp.resetDone( error_t result ) { }
     event void Sht11Temp.measureHumidityDone( error_t result, uint16_t val ) { }
     event void Sht11Temp.readStatusRegDone( error_t result, uint8_t val ) { }

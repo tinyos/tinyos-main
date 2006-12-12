@@ -5,7 +5,7 @@ interface HplMsp430I2C {
   
   async command bool isI2C();
   async command void clearModeI2C();
-  async command void setModeI2C( msp430_i2c_config_t* config );
+  async command void setModeI2C( msp430_i2c_union_config_t* config );
   
   // U0CTL
   async command void setMasterMode();

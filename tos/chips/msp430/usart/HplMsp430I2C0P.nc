@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:08 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
  */
 
 module HplMsp430I2C0P {
@@ -63,8 +63,9 @@ implementation {
     }
   }
   
-  async command void HplI2C.setModeI2C( msp430_i2c_config_t* config ) {
+  async command void HplI2C.setModeI2C( msp430_i2c_union_config_t* config ) {
     
+    call HplUsart.resetUsart(TRUE);
     call HplUsart.disableUart();
     call HplUsart.disableSpi();
     call SIMO.makeInput();
@@ -79,18 +80,13 @@ implementation {
       U0CTL |= SYNC | I2C;
       U0CTL &= ~I2CEN;
       
-      U0CTL |= ( ( config->rxdmaen << 7 ) |
-                 ( config->txdmaen << 6 ) |
-                 ( config->xa << 4 ) |
-                 ( config->listen << 3 ) );
-      I2CTCTL = 0;
-      I2CTCTL = ( ( config->i2cword << 7 ) |
-		  ( config->i2crm << 6 ) |
-		  ( config->i2cssel << 4 ) );
-      I2CPSC = config->i2cpsc;
-      I2CSCLH = config->i2csclh;
-      I2CSCLL = config->i2cscll;
-      I2COA = config->i2coa;
+      U0CTL = (config->i2cRegisters.uctl | (I2C | SYNC)) & ~I2CEN;
+      I2CTCTL = config->i2cRegisters.i2ctctl;
+            
+      I2CPSC = config->i2cRegisters.i2cpsc;
+      I2CSCLH = config->i2cRegisters.i2csclh;
+      I2CSCLL = config->i2cRegisters.i2cscll;
+      I2COA = config->i2cRegisters.i2coa;
       U0CTL |= I2CEN;
       
     }

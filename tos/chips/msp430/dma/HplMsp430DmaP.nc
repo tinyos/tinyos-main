@@ -54,7 +54,7 @@
  * @author Ben Greenstein <ben@cs.ucla.edu>
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Joe Polastre <info@moteiv.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:01 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:07 $
  */
 
 module HplMsp430DmaP {

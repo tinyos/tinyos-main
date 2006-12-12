@@ -7,7 +7,7 @@
  * See TEP118: Dissemination and TEP 119: Collection for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:30:35 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:22:50 $
  */
 
 #include <Timer.h>

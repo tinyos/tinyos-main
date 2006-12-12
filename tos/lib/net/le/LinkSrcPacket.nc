@@ -1,4 +1,4 @@
-/* $Id: LinkSrcPacket.nc,v 1.3 2006-11-07 19:31:19 scipio Exp $ */
+/* $Id: LinkSrcPacket.nc,v 1.4 2006-12-12 18:23:29 vlahan Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -24,7 +24,7 @@
 /*
  *  @author Rodrigo Fonseca
  *  Based on MintRoute, by Philip Buonadonna, Alec Woo, Terence Tong, Crossbow
- *  @date   $Date: 2006-11-07 19:31:19 $
+ *  @date   $Date: 2006-12-12 18:23:29 $
  */
 
 // Om: added the keyword "command"

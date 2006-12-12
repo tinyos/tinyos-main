@@ -9,8 +9,8 @@ TinyOS Alliance Structure
 :TinyOS-Version: All
 :Authors: Philippe Bonnet, David Culler, Deborah Estrin, Ramesh Govindan, Mike Horton, Jeonghoon Kang, Philip Levis, Lama Nachman, Jack Stankovic, Rob Szewczyk, Matt Welsh, Adam Wolisz 
 :Draft-Created: 17-April-2006
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2006-11-07 19:30:39 $
+:Draft-Version: $Revision: 1.5 $
+:Draft-Modified: $Date: 2006-12-12 18:22:54 $
 :Draft-Discuss: TinyOS Alliance <tinyos-alliance at mail.millennium.berkeley.edu>
 
 

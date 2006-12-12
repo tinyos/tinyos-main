@@ -1,4 +1,4 @@
-/* $Id: MAX136xInternalC.nc,v 1.3 2006-11-07 19:31:27 scipio Exp $ */
+/* $Id: MAX136xInternalC.nc,v 1.4 2006-12-12 18:23:45 vlahan Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -47,7 +47,11 @@ implementation {
   Resource = Arbiter;
 
   components new HplMAX136xLogicP(MAX136_SLAVE_ADDR) as Logic;
-  MainC.SoftwareInit -> Logic;
+  //MainC.SoftwareInit -> Logic;
+
+ components GeneralIOC;
+  Logic.InterruptAlert -> GeneralIOC.GpioInterrupt[GPIO_MAX1363_ANALOG_INT];
+  Logic.InterruptPin -> GeneralIOC.GeneralIO[GPIO_MAX1363_ANALOG_INT];
 
   components new HalPXA27xI2CMasterC(TRUE) as I2CC;
   Logic.I2CPacket -> I2CC;
@@ -55,9 +59,12 @@ implementation {
   components MAX136xInternalP as Internal;
   HplMAX136x = Internal.HplMAX136x;
   Internal.ToHPLC -> Logic.HplMAX136x;
-
+  Internal.SubInit -> Logic.Init;
+  Internal.InterruptAlert -> GeneralIOC.GpioInterrupt[GPIO_MAX1363_ANALOG_INT];
+  MainC.SoftwareInit -> Internal.Init;
   SplitControl = Logic;
 
+ 
   components HplPXA27xGPIOC;
   I2CC.I2CSCL -> HplPXA27xGPIOC.HplPXA27xGPIOPin[I2C_SCL];
   I2CC.I2CSDA -> HplPXA27xGPIOC.HplPXA27xGPIOPin[I2C_SDA];

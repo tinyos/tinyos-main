@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.10: http://docutils.sourceforge.net/" />
 <title>Sensors and Sensor Boards</title>
 <meta name="author" content="David Gay, Phil Levis, Wei Hong, Joe Polastre, and Gilman Tolle" />
 <style type="text/css">
@@ -11,21 +11,23 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-11-07 19:30:38 $
-:version: $Revision: 1.5 $
-:copyright: This stylesheet has been placed in the public domain.
+:Date: $Date: 2006-12-12 18:22:53 $
+:Revision: $Revision: 1.6 $
+:Copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
-*/
-body {
-  font-family: Times;
-  font-size: 16px;
-}
 
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* "! important" is used here to override other ``margin-top`` and
+   ``margin-bottom`` styles that are later in the stylesheet or 
+   more specific.  See http://www.w3.org/TR/CSS1#the-cascade */
 .first {
   margin-top: 0 ! important }
 
-.last {
+.last, .with-subtitle {
   margin-bottom: 0 ! important }
 
 .hidden {
@@ -38,11 +40,11 @@ a.toc-backref {
 blockquote.epigraph {
   margin: 2em 5em ; }
 
-dd {
+dl.docutils dd {
   margin-bottom: 0.5em }
 
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
   font-weight: bold }
 */
 
@@ -53,11 +55,17 @@ div.abstract p.topic-title {
   font-weight: bold ;
   text-align: center }
 
-div.attention, div.caution, div.danger, div.error, div.hint,
-div.important, div.note, div.tip, div.warning, div.admonition {
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
   margin: 2em ;
   border: medium outset ;
   padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
 
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
@@ -66,11 +74,14 @@ div.warning p.admonition-title {
   font-weight: bold ;
   font-family: sans-serif }
 
-div.hint p.admonition-title, div.important p.admonition-title,
-div.note p.admonition-title, div.tip p.admonition-title,
-div.admonition p.admonition-title {
-  font-weight: bold ;
-  font-family: sans-serif }
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
 
 div.dedication {
   margin: 2em 5em ;
@@ -85,6 +96,7 @@ div.figure {
   margin-left: 2em }
 
 div.footer, div.header {
+  clear: both;
   font-size: smaller }
 
 div.line-block {
@@ -100,7 +112,7 @@ div.line-block div.line-block {
 div.sidebar {
   margin-left: 1em ;
   border: medium outset ;
-  padding: 0em 1em ;
+  padding: 1em ;
   background-color: #ffffee ;
   width: 40% ;
   float: right ;
@@ -127,31 +139,27 @@ div.system-message p.system-message-title {
 div.topic {
   margin: 2em }
 
-h1 {
-  font-family: Arial, sans-serif;
-  font-size: 20px;
-}
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
 
 h1.title {
- text-align: center;
- font-size: 32px;
-}
-
-h2 {
- font-size: 16px;
- font-family: Arial, sans-serif;
-}
+  text-align: center }
 
 h2.subtitle {
   text-align: center }
 
-h3 {
- font-size: 12px;
- font-family: Arial, sans-serif;
-}
-
-hr {
+hr.docutils {
   width: 75% }
+
+img.align-left {
+  clear: left }
+
+img.align-right {
+  clear: right }
+
+img.borderless {
+  border: 0 }
 
 ol.simple, ul.simple {
   margin-bottom: 1em }
@@ -216,11 +224,7 @@ pre.line-block {
 pre.literal-block, pre.doctest-block {
   margin-left: 2em ;
   margin-right: 2em ;
-  background-color: #eeeeee;
-  border-color: #000000;
-  border-width: thin; 
-  font-size: 14px
-}
+  background-color: #eeeeee }
 
 span.classifier {
   font-family: sans-serif ;
@@ -236,46 +240,47 @@ span.interpreted {
 span.option {
   white-space: nowrap }
 
-span.option-argument {
-  font-style: italic }
-
 span.pre {
   white-space: pre }
 
 span.problematic {
   color: red }
 
-table {
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid thin gray }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
   margin-top: 0.5em ;
   margin-bottom: 0.5em }
 
-table.citation {
-  border-left: solid thin gray ;
-  padding-left: 0.5ex }
-
-table.docinfo {
-  margin: 2em 4em;
-}
-
 table.footnote {
-  border-left: solid thin black ;
-  padding-left: 0.5ex }
+  border-left: solid thin black }
 
-td, th {
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
   padding-left: 0.5em ;
   padding-right: 0.5em ;
   vertical-align: top }
 
-th.docinfo-name, th.field-name {
+table.docutils th.field-name, table.docinfo th.docinfo-name {
   font-weight: bold ;
   text-align: left ;
-  white-space: nowrap;
-  }
+  white-space: nowrap ;
+  padding-left: 0 }
 
-h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
   font-size: 100% }
 
-tt {}
+tt.docutils {
+  background-color: #eeeeee }
 
 ul.auto-toc {
   list-style-type: none }
@@ -325,7 +330,7 @@ that provide access to sensors.</p>
 <h1><a id="principles" name="principles">1. Principles</a></h1>
 <p>This section describes the basic organization principles for sensor
 drivers in TinyOS.</p>
-<p>For background, a sensor may be attached to the microcontroller on a
+<p>For background, a sensor can be attached to the microcontroller on a
 TinyOS platform through a few different types of connections:</p>
 <blockquote>
 <ul class="simple">
@@ -336,42 +341,43 @@ TinyOS platform through a few different types of connections:</p>
 <li>Connected through a standard digital bus protocol (1-Wire, I2C, SPI)</li>
 </ul>
 </blockquote>
-<p>Physically, these connections may also be decoupled by attaching the
+<p>Physically, these connections can also be decoupled by attaching the
 sensors to a <cite>sensor board</cite>, which can be removed from the TinyOS
-platform, and may fit multiple different TinyOS platforms.</p>
+platform, and could attach to multiple different TinyOS platforms.</p>
 <p>The capabilities of a physical sensor are made available to a TinyOS
 application through a <cite>sensor driver</cite>.</p>
-<p>According to the HAA <a class="citation-reference" href="#tep2" id="id1" name="id1">[TEP2]</a>, TinyOS devices should provide both
+<p>According to the HAA <a class="citation-reference" href="#tep2" id="id1" name="id1">[TEP2]</a>, TinyOS devices SHOULD provide both
 simple hardware-independent interfaces for common-case use (HIL) and
 rich hardware-dependent interfaces for special-case use (HAL). Sensor
-drivers should follow this spirit as well.</p>
+drivers SHOULD follow this spirit as well.</p>
 <p>TinyOS 2.x represents each sensor as an individual component. This
 allows the compilation process to minimize the amount of code
-included. A sensor board containing multiple sensors should be
+included. A sensor board containing multiple sensors SHOULD be
 represented as a collection of components, one for each sensor,
 contained within a sensor board directory.</p>
-<p>Sensors, being physical devices that may be shared, can benefit from
+<p>Sensors, being physical devices that can be shared, can benefit from
 virtualization and arbitration. This document describes a design
-pattern for sensor virtualization that may be followed by sensor
+pattern for sensor virtualization that SHOULD be followed by sensor
 drivers.</p>
-<p>The same physical sensor may be attached to multiple different TinyOS
+<p>The same physical sensor can be attached to multiple different TinyOS
 platforms, through platform-dependent interconnections. The common
-logic of sensor driver should be factored into chip-dependent,
-platform-independent components, and those components should be bound
+logic of sensor driver SHOULD be factored into chip-dependent,
+platform-independent components, and those components SHOULD be bound
 to the hardware resources on a platform by platform-dependent
 components, and to the hardware resources on a sensor board by
 sensorboard-dependent components.</p>
 <p>A physical sensor has a general class and a specific set of
 performance characteristics, captured by the make and model of the
-sensor itself. The naming of the sensor driver components should
-reflect the specifc name of the sensor, and optionally provide a
-component with a generic name for application authors who only care
-about the general class of the sensor.</p>
+sensor itself. The naming of the sensor driver components SHOULD
+reflect the specifc name of the sensor, and MAY provide a component
+with a generic name for application authors who only care about the
+general class of the sensor.</p>
 <p>This document takes no position on the meaning of the values returned
-by sensor drivers. They may be raw uninterpreted values or they may
+by sensor drivers. They MAY be raw uninterpreted values or they MAY
 have some physical meaning. If a driver returns uninterpreted values,
-the driver may provide additional interfaces that would allow
-higher-level clients to interpret the value properly.</p>
+the driver MAY provide additional interfaces that would allow
+higher-level clients to obtain information needed to properly
+interpret the value.</p>
 </div>
 <div class="section">
 <h1><a id="sensor-hil-components" name="sensor-hil-components">2. Sensor HIL Components</a></h1>
@@ -388,16 +394,19 @@ writing calibration coefficients or control registers.</li>
 access to the sensor. A sensor device driver can provide such
 virtualization for itself by defining a nesC generic client
 component. When a client component is being used, a call to a
-top-level SID interface should be delayed when the device is busy,
-rather than failing. This virtualization may be easier to accomplish
-by using one of the arbiters provided by the system.</p>
+top-level SID interface SHOULD be delayed when the device is busy,
+rather than failing. Using one of the system arbiters can make the
+implementation of this requirement easier to accomplish.</p>
 <p>For example:</p>
 <pre class="literal-block">
 generic configuration SensirionSht11C() {
   provides interface Read&lt;uint16_t&gt; as Temperature;
   provides interface ReadStream&lt;uint16_t&gt; as TemperatureStream;
+  provides interface DeviceMetadata as TemperatureDeviceMetadata;
+
   provides interface Read&lt;uint16_t&gt; as Humidity;
   provides interface ReadStream&lt;uint16_t&gt; as HumidityStream;
+  provides interface DeviceMetadata as HumidityDeviceMetadata;
 }
 implementation {
   // connect to the ADC HIL, GPIO HAL, or sensor's HAL
@@ -412,30 +421,22 @@ automatically. For sensors without a constant power draw, the sensor
 MAY be started once at boot time by wiring to the <cite>MainC.Boot</cite>
 interface. Sensors that draw appreciable power MUST be started in
 response to a call to one of the top-level SID interfaces, and stopped
-some time after that call completes. One of the power-management
-components described in <a class="citation-reference" href="#tep115" id="id4" name="id4">[TEP115]</a> may be useful for this purpose.</p>
+some time after that call completes. Using one of the power-management
+components described in <a class="citation-reference" href="#tep115" id="id4" name="id4">[TEP115]</a> can make this implementation easier.</p>
 <p>Generally, simple types are made up of octets. However, sensor values
-often have levels of precision besides a multiple of 8. A device MAY
-specify the precision of one of its interfaces with the DeviceMetadata
-interface:</p>
+often have levels of precision besides a multiple of 8. To account for
+such cases, each device MUST specify the precision of each one of its
+interfaces by providing the DeviceMetadata interface:</p>
 <pre class="literal-block">
 interface DeviceMetadata {
   command uint8_t getSignificantBits();
 }
 </pre>
-<p>The name of the instance of DeviceMetadata SHOULD clearly indicate
-which interface it corresponds to.</p>
-<p>A value contained returned from the device through a SID interface
-MAY be left shifted so that it covers as much of the type's range as
-possible. For example, if a 12-bit ADC reading is presented as a
-16-bit Read interface:</p>
-<pre class="literal-block">
-component DemoSensorC {
-  provides interface Read&lt;uint16_t&gt;;
-}
-</pre>
-<p>then the driver MAY shift the 12-bit value left so that its range is
-0x0000 - 0xfff0, rather than 0x0000 - 0x0fff.</p>
+<p>The name of the instance of DeviceMetadata MUST clearly indicate which
+interface it corresponds to.</p>
+<p>The getSignificantBits() call MUST return the number of significant
+bits in the reading. For example, a sensor reading taken from a 12-bit
+ADC MUST return the value &quot;12&quot;.</p>
 <p>Sensor driver components SHOULD be named according to the make and
 model of the sensing device being presented. Using specific names
 gives the developer the option to bind to a particular sensor, which
@@ -444,26 +445,30 @@ components using &quot;common&quot; names MAY also be provided by the driver
 author, to support application developers who are only concerned with
 the particular type of the sensor and not its make, model, or detailed
 performance characteristics.</p>
-<p>A &quot;common&quot; naming layer atop a HIL may look like this:</p>
+<p>A &quot;common&quot; naming layer atop a HIL might look like this:</p>
 <pre class="literal-block">
 generic configuration TemperatureC() {
   provides interface Read&lt;uint16_t&gt;;
   provides interface ReadStream&lt;uint16_t&gt;;
+  provides interface DeviceMetadata;
 }
 implementation {
   components new SensirionSht11C();
   Read = SensirionSht11C.Temperature;
   ReadStream = SensirionSht11C.TemperatureStream;
+  DeviceMetadata = SensirionSht11C.TemperatureDeviceMetadata;
 }
 
 generic configuration HumidityC() {
   provides interface Read&lt;uint16_t&gt;;
   provides interface ReadStream&lt;uint16_t&gt;;
+  provides interface DeviceMetadata;
 }
 implementation {
   components new SensirionSht11C();
   Read = SensirionSht11C.Humidity;
   ReadStream = SensirionSht11C.HumidityStream;
+  DeviceMetadata = SensirionSht11C.HumidityDeviceMetadata;
 }
 </pre>
 </div>
@@ -499,8 +504,8 @@ implementation {
 </div>
 <div class="section">
 <h1><a id="directory-organization-guidelines" name="directory-organization-guidelines">4. Directory Organization Guidelines</a></h1>
-<p>Because the same physical sensor may be attached to TinyOS platforms
-in many different ways, the organization of sensor drivers should
+<p>Because the same physical sensor can be attached to TinyOS platforms
+in many different ways, the organization of sensor drivers SHOULD
 reflect the distinction between sensor and sensor interconnect.</p>
 <p>Sensor components commonly exist at three levels:
 platform-independent, sensorboard-dependent, and
@@ -538,7 +543,7 @@ nescc. For instance, you might add an include directive to &#64;new_args
 with push &#64;new_args, <cite>-Isomedir</cite>. This could be used to include
 subdirectories.</li>
 <li>&#64;commonboards: This can be set to a list of sensor board names which
-should be added to the include path list. These sensor boards must be
+will be added to the include path list. These sensor boards MUST be
 in tinyos-2.x/tos/sensorboards.</li>
 </ul>
 <p>If the sensor board wishes to define any C types or constants, it
@@ -548,13 +553,13 @@ board's directory.</p>
 subdirectories for each of the sensors connected to the sensor board.
 If a &quot;chips&quot; subdirectory is used, sensorboard-dependent driver
 components needed to connect platform-independent logic to a
-particular attachment for that sensor should be placed in
+particular attachment for that sensor SHOULD be placed in
 &quot;&lt;sensorboard&gt;/chips/&lt;sensor&gt;&quot;.</p>
 <p>Components needed to connect the platform-independent sensor driver
 components or sensorboard-dependent components to the hardware
 resources available on a particular platform SHOULD be placed in
 &quot;tos/&lt;platform&gt;/chips/&lt;sensor&gt;&quot;. In addition, components for a sensor
-that only exists on a particular platform should be placed in a such a
+that only exists on a particular platform SHOULD be placed in a such a
 directory.</p>
 <p>Sensors that exist as part of a larger chip, like a MCU internal
 voltage sensor, SHOULD be placed in a subdirectory of the chip's
@@ -564,7 +569,7 @@ directives to locate all of the necessary components needed to support
 the sensors on a platform and/or sensorboard.</p>
 <p>All of these directory organization guidelines are only intended for
 code that will enter the core source tree. In general, sensor
-components may be placed anywhere as long as the nesC compiler
+components can be placed anywhere as long as the nesC compiler
 receives enough <cite>-I</cite> directives to locate all of the necessary pieces.</p>
 </div>
 <div class="section">
@@ -651,6 +656,7 @@ tos/platforms/telosa/chips/s1087/HamamatsuS1087ParC.nc
 generic configuration HamamatsuS1087ParC() {
   provides interface Read&lt;uint16_t&gt;;
   provides interface ReadStream&lt;uint16_t&gt;;
+  provides interface DeviceMetadata;
 }
 implementation {
   components new AdcReadClientC();
@@ -660,34 +666,38 @@ implementation {
   ReadStream = AdcReadStreamClientC;
 
   components HamamatsuS1087ParP;
-  AdcReadClientC.Msp430Adc12Config -&gt; HamamatsuS1087ParP;
-  AdcReadStreamClientC.Msp430Adc12Config -&gt; HamamatsuS1087ParP;
+  DeviceMetadata = HamamatsuS1087ParP;
+  AdcReadClientC.AdcConfigure -&gt; HamamatsuS1087ParP;
+  AdcReadStreamClientC.AdcConfigure -&gt; HamamatsuS1087ParP;
 }
 </pre>
 <pre class="literal-block">
 tos/platforms/telosa/chips/s1087/HamamatsuS1087ParP.nc
 
+#include &quot;Msp430Adc12.h&quot;
+
 module HamamatsuS1087ParP {
-  provides interface Msp430Adc12Config;
+  provides interface AdcConfigure&lt;const msp430adc12_channel_config_t*&gt;;
+  provides interface DeviceMetadata;
 }
 implementation {
 
-  async command msp430adc12_channel_config_t
-    Msp430Adc12Config.getChannelSettings() {
+  msp430adc12_channel_config_t config = {
+    inch: INPUT_CHANNEL_A4,
+    sref: REFERENCE_VREFplus_AVss,
+    ref2_5v: REFVOLT_LEVEL_1_5,
+    adc12ssel: SHT_SOURCE_ACLK,
+    adc12div: SHT_CLOCK_DIV_1,
+    sht: SAMPLE_HOLD_4_CYCLES,
+    sampcon_ssel: SAMPCON_SOURCE_SMCLK,
+    sampcon_id: SAMPCON_CLOCK_DIV_1
+  };
 
-    msp430adc12_channel_config_t config = {
-      inch: INPUT_CHANNEL_A4,
-      sref: REFERENCE_VREFplus_AVss,
-      ref2_5v: REFVOLT_LEVEL_1_5,
-      adc12ssel: SHT_SOURCE_ACLK,
-      adc12div: SHT_CLOCK_DIV_1,
-      sht: SAMPLE_HOLD_4_CYCLES,
-      sampcon_ssel: SAMPCON_SOURCE_SMCLK,
-      sampcon_id: SAMPCON_CLOCK_DIV_1
-    };
-
-    return config;
+  async command const msp430adc12_channel_config_t* AdcConfigure.getConfiguration() {
+    return &amp;config;
   }
+
+  command uint8_t DeviceMetadata.getSignificantBits() { return 12; }
 }
 </pre>
 </div>
@@ -709,17 +719,18 @@ tos/platforms/telosa/UserButtonC.nc
 configuration UserButtonC {
   provides interface Get&lt;bool&gt;;
   provides interface Notify&lt;bool&gt;;
+  provides interface DeviceMetadata;
 }
 implementation {
 
   components UserButtonLogicP;
+  Get = UserButtonLogicP;
+  Notify = UserButtonLogicP;
+  DeviceMetadata = UserButtonLogicP;
 
   components HplUserButtonC;
   UserButtonLogicP.GpioInterrupt -&gt; HplUserButtonC.GpioInterrupt;
   UserButtonLogicP.GeneralIO -&gt; HplUserButtonC.GeneralIO;
-
-  Get = UserButtonLogicP;
-  Notify = UserButtonLogicP;
 }
 </pre>
 <pre class="literal-block">
@@ -728,9 +739,10 @@ tos/platforms/telosa/UserButtonLogicP.nc
 module UserButtonLogicP {
   provides interface Get&lt;bool&gt;;
   provides interface Notify&lt;bool&gt;;
+  provides interface DeviceMetadata;
 
   uses interface GeneralIO;
-  uses interface GpioInterrupt;
+  uses interface GpioInterrupt; 
 }
 implementation {
   norace bool m_pinHigh;
@@ -766,15 +778,17 @@ implementation {
   task void sendEvent() {
     bool pinHigh;
     pinHigh = m_pinHigh;
-
+  
     signal Notify.notify( pinHigh );
-
+  
     if ( pinHigh ) {
       call GpioInterrupt.enableFallingEdge();
     } else {
       call GpioInterrupt.enableRisingEdge();
     }
   }
+
+  command uint8_t DeviceMetadata.getSignificantBits() { return 1; }
 }
 </pre>
 <pre class="literal-block">
@@ -824,15 +838,19 @@ on top of the I2C or SPI bus would likely require fewer components.</p>
 <pre class="literal-block">
 tos/platforms/telosa/chips/sht11/SensirionSht11C.nc
 
-generic configuration SensirionSht11C() {
+generic configuration SensirionSht11C() {  
   provides interface Read&lt;uint16_t&gt; as Temperature;
+  provides interface DeviceMetadata as TemperatureDeviceMetadata;
   provides interface Read&lt;uint16_t&gt; as Humidity;
+  provides interface DeviceMetadata as HumidityDeviceMetadata;
 }
 implementation {
   components new SensirionSht11ReaderP();
 
   Temperature = SensirionSht11ReaderP.Temperature;
+  TemperatureDeviceMetadata = SensirionSht11ReaderP.TemperatureDeviceMetadata;
   Humidity = SensirionSht11ReaderP.Humidity;
+  HumidityDeviceMetadata = SensirionSht11ReaderP.HumidityDeviceMetadata;
 
   components HalSensirionSht11C;
 
@@ -850,8 +868,10 @@ tos/chips/sht11/SensirionSht11ReaderP.nc
 
 generic module SensirionSht11ReaderP() {
   provides interface Read&lt;uint16_t&gt; as Temperature;
+  provides interface DeviceMetadata as TemperatureDeviceMetadata;
   provides interface Read&lt;uint16_t&gt; as Humidity;
-
+  provides interface DeviceMetadata as HumidityDeviceMetadata;
+  
   uses interface Resource as TempResource;
   uses interface Resource as HumResource;
   uses interface SensirionSht11 as Sht11Temp;
@@ -876,6 +896,8 @@ implementation {
     signal Temperature.readDone( result, val );
   }
 
+  command uint8_t TemperatureDeviceMetadata.getSignificantBits() { return 14; }
+
   command error_t Humidity.read() {
     call HumResource.request();
     return SUCCESS;
@@ -893,6 +915,8 @@ implementation {
     call HumResource.release();
     signal Humidity.readDone( result, val );
   }
+
+  command uint8_t HumidityDeviceMetadata.getSignificantBits() { return 12; }
 
   event void Sht11Temp.resetDone( error_t result ) { }
   event void Sht11Temp.measureHumidityDone( error_t result, uint16_t val ) { }
@@ -924,7 +948,7 @@ implementation {
   SensirionSht11LogicP.DATA -&gt; HplSensirionSht11C.DATA;
   SensirionSht11LogicP.CLOCK -&gt; HplSensirionSht11C.SCK;
   SensirionSht11LogicP.InterruptDATA -&gt; HplSensirionSht11C.InterruptDATA;
-
+  
   components new TimerMilliC();
   SensirionSht11LogicP.Timer -&gt; TimerMilliC;
 
@@ -963,7 +987,7 @@ configuration HplSensirionSht11C {
 }
 implementation {
   components HplMsp430GeneralIOC;
-
+  
   components new Msp430GpioC() as DATAM;
   DATAM -&gt; HplMsp430GeneralIOC.Port15;
   DATA = DATAM;
@@ -990,7 +1014,7 @@ implementation {
 
   components new FcfsArbiterC( &quot;Sht11.Resource&quot; ) as Arbiter;
   Resource = Arbiter;
-
+  
   components new SplitControlPowerManagerC();
   SplitControlPowerManagerC.SplitControl -&gt; HplSensirionSht11P;
   SplitControlPowerManagerC.ArbiterInit -&gt; Arbiter.Init;
@@ -1017,7 +1041,7 @@ implementation {
     call Timer.startOneShot( 11 );
     return SUCCESS;
   }
-
+  
   event void Timer.fired() {
     signal SplitControl.startDone( SUCCESS );
   }

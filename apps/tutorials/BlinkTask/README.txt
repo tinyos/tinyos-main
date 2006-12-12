@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.3 2006-11-07 19:30:37 scipio Exp $
+$Id: README.txt,v 1.4 2006-12-12 18:22:52 vlahan Exp $
 
 README for BlinkTask
 

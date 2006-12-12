@@ -1,4 +1,4 @@
-// $Id: MicaBusC.nc,v 1.3 2006-11-07 19:31:24 scipio Exp $
+// $Id: MicaBusC.nc,v 1.4 2006-12-12 18:23:42 vlahan Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.

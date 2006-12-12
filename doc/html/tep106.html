@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-11-07 19:30:38 $
-:version: $Revision: 1.5 $
+:date: $Date: 2006-12-12 18:22:53 $
+:version: $Revision: 1.6 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis and Cory Sharp</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.10</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.11</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-08-17</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-11-07</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -627,7 +627,12 @@ implementation {
 TaskEdf interface. Its configuration SHOULD wire it to TinySchedulerC.
 The key used for task unique identifiers MUST be &quot;TinySchedulerC.TaskInterface&quot;,
 where <em>TaskInterface</em> is the name of the new task interface as presented
-by the scheduler.  For example, the module SomethingP requires two EDF
+by the scheduler.  A common way to make sure a consistent string is used
+is to #define it. For example, TaskEdf.nc might include:</p>
+<pre class="literal-block">
+#define UQ_TASK_EDF &quot;TinySchedulerC.TaskEdf&quot;
+</pre>
+<p>In this example, the module SomethingP requires two EDF
 tasks:</p>
 <pre class="literal-block">
 configuration SomethingC {
@@ -635,8 +640,8 @@ configuration SomethingC {
 }
 implementation {
   components SomethingP, TinySchedulerC;
-  SomethingP.SendTask -&gt; TinySchedulerC.TaskEdf[&quot;TinySchedulerC.TaskEdf&quot;];
-  SomethingP.SenseTask -&gt; TinySchedulerC.TaskEdf[&quot;TinySchedulerC.TaskEdf&quot;];
+  SomethingP.SendTask -&gt; TinySchedulerC.TaskEdf[unique(UQ_TASK_EDF)];
+  SomethingP.SenseTask -&gt; TinySchedulerC.TaskEdf[unique(UQ_TASK_EDF)];
 }
 </pre>
 <p>The module SomethingP also has a basic task. The nesC compiler

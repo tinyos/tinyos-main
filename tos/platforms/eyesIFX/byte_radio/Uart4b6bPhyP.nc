@@ -47,7 +47,6 @@ module Uart4b6bPhyP {
     uses {
         interface RadioByteComm;
         interface Alarm<T32khz, uint16_t> as RxByteTimer;
-        // interface GeneralIO as Led3;
     }
 }
 implementation
@@ -76,7 +75,8 @@ implementation
         BYTE_TIME=11,
         PREAMBLE_BYTE=0x55,
         SYNC_BYTE=0xFF,
-        SFD_BYTE=0x83
+        SFD_BYTE=0x83,
+        SFD_BYTE2=0x7c
     };
     
     /** Module Global Variables  */
@@ -121,18 +121,12 @@ implementation
     
     void resetState() {
         call RxByteTimer.stop();
-        switch(phyState) {
-		        case STATE_PREAMBLE:
-            case STATE_PREAMBLE_CODE:
-    	      case STATE_SFD2:
-                break;
-            default:
-                signal PhyPacketRx.recvFooterDone(FAIL);
-                break;
+        if(phyState >= STATE_DATA_HIGH) {
+            signal PhyPacketRx.recvFooterDone(FAIL);
         }
         phyState = STATE_PREAMBLE; 
     }
-    
+
     async event void RxByteTimer.fired() {
         // no bytes have arrived, so...
         resetState();
@@ -219,10 +213,10 @@ implementation
                 phyState = STATE_SFD2;
                 call RadioByteComm.txByte(SFD_BYTE);
                 break;
-          	case STATE_SFD2:
-            	phyState = STATE_SFD3;
-            	call RadioByteComm.txByte(SFD_BYTE);
-            	break;
+            case STATE_SFD2:
+                phyState = STATE_SFD3;
+                call RadioByteComm.txByte(SFD_BYTE);
+                break;
             case STATE_SFD3:
                 phyState = STATE_HEADER_DONE;
                 call RadioByteComm.txByte(SFD_BYTE);
@@ -267,113 +261,119 @@ implementation
 
     /* Rx Done */
     async event void RadioByteComm.rxByteReady(uint8_t data) {
-      call RxByteTimer.start(byteTime);
-        ReceiveNextByte(data);
-    }
-
-    /* Receive the next Byte from the USART */
-    void ReceiveNextByte(uint8_t data) {
         uint8_t decodedByte;
         uint8_t low;
         uint8_t high;
         if((data == SFD_BYTE) && (phyState != STATE_SFD2) && (phyState != STATE_DATA_HIGH_OR_SFD)) {
             resetState();
-            phyState = STATE_SFD1;
+            phyState = STATE_SFD2;
             call RxByteTimer.start(byteTime<<1);
         }
-        switch(phyState) {
-            case STATE_PREAMBLE:
-                low = data & 0xf;
-                high = data >> 4;
-                if((low > 0) && (low < 0xf) && (high > 0) && (high < 0xf))
-                    phyState = STATE_PREAMBLE_CODE;
-                break;
-            case STATE_PREAMBLE_CODE:
-                low = data & 0xf;
-                high = data >> 4;
-                if((low == 0) || (low == 0xf) || (high == 0) || (high == 0xf))
-                    phyState = STATE_PREAMBLE;
-                break;
-          	case STATE_SFD1:
-            	phyState = STATE_SFD2;
-            break;
-            case STATE_SFD2:
-              if(data == SFD_BYTE) {
-                	call RxByteTimer.start(byteTime<<1);
-                	signal PhyPacketRx.recvHeaderDone(SUCCESS);
-                  phyState = STATE_DATA_HIGH_OR_SFD;
-              }
-              else {
-                resetState();
-              }
-            break;
-            case STATE_DATA_HIGH_OR_SFD:
-                if(data != SFD_BYTE) {
+        else {
+            switch(phyState) {
+                case STATE_SFD2:
+                    if(data == SFD_BYTE) {
+                        phyState = STATE_DATA_HIGH_OR_SFD;
+                        call RxByteTimer.start(byteTime << 1);
+                    }
+                    else {
+                        resetState();
+                    }
+                    break;
+                case STATE_DATA_HIGH_OR_SFD:    
+                    if(data != SFD_BYTE) {
+                        decodedByte = sixBitToNibble[data >> 2];
+                        if(decodedByte != ILLEGAL_CODE) {
+                            bufByte = decodedByte << 2;
+                            bufByte |= data & 0x03;
+                            bufByte <<= 2;
+                            phyState = STATE_DATA_MIDDLE;
+                            signal PhyPacketRx.recvHeaderDone(SUCCESS);
+                            call RxByteTimer.start(byteTime);
+                        }
+                        else {
+                            resetState();
+                        }
+                    }
+                    else {
+                        phyState = STATE_DATA_HIGH;
+                        signal PhyPacketRx.recvHeaderDone(SUCCESS);
+                        call RxByteTimer.start(byteTime);
+                    }
+                    break;
+                case STATE_DATA_HIGH:
                     decodedByte = sixBitToNibble[data >> 2];
                     if(decodedByte != ILLEGAL_CODE) {
                         bufByte = decodedByte << 2;
                         bufByte |= data & 0x03;
                         bufByte <<= 2;
                         phyState = STATE_DATA_MIDDLE;
+                        call RxByteTimer.start(byteTime);
                     }
                     else {
                         resetState();
                     }
-                }
-                else {
-                    phyState = STATE_DATA_HIGH;
-                }
-                break;
-            case STATE_DATA_HIGH:
-                decodedByte = sixBitToNibble[data >> 2];
-                if(decodedByte != ILLEGAL_CODE) {
-                    bufByte = decodedByte << 2;
-                    bufByte |= data & 0x03;
-                    bufByte <<= 2;
-                    phyState = STATE_DATA_MIDDLE;
-                }
-                else {
-                    resetState();
-                }
-                break;
-            case STATE_DATA_MIDDLE:
-                decodedByte = sixBitToNibble[((bufByte & 0x0f)<<2) | (data >> 4)];
-                if(decodedByte != ILLEGAL_CODE) {
-                    phyState = STATE_DATA_LOW;
-                    signal SerializerRadioByteComm.rxByteReady((bufByte & 0xf0) | decodedByte);
-                    bufByte = (data & 0x0f) << 2;
-                }
-                else {
-                    resetState();
-                }
-                break;
-            case STATE_DATA_LOW:
-                decodedByte = sixBitToNibble[bufByte | (data >> 6)];
-                if(decodedByte != ILLEGAL_CODE) {
-                    bufByte = (decodedByte << 4);
-                    decodedByte = sixBitToNibble[data & 0x3f];
+                    break;
+                case STATE_DATA_MIDDLE:
+                    decodedByte = sixBitToNibble[((bufByte & 0x0f)<<2) | (data >> 4)];
                     if(decodedByte != ILLEGAL_CODE) {
-                        phyState = STATE_DATA_HIGH;
-                        signal SerializerRadioByteComm.rxByteReady(bufByte | decodedByte);
+                        phyState = STATE_DATA_LOW;
+                        signal SerializerRadioByteComm.rxByteReady((bufByte & 0xf0) | decodedByte);
+                        bufByte = (data & 0x0f) << 2;
+                        call RxByteTimer.start(byteTime);
                     }
                     else {
                         resetState();
                     }
-                }
-                else {
-                    resetState();
-                }
-                break;
-                // maybe there will be a time.... we will need this. but for now there is no footer
-                //case STATE_FOOTER_START:
-                //phyState = STATE_FOOTER_DONE;
-                //break;
-                //case STATE_FOOTER_DONE:
-                //phyState = STATE_NULL;
-                //signal PhyPacketRx.recvFooterDone(TRUE);
-                //break;
-            default:
-                break;
+                    break;
+                case STATE_DATA_LOW:
+                    decodedByte = sixBitToNibble[bufByte | (data >> 6)];
+                    if(decodedByte != ILLEGAL_CODE) {
+                        bufByte = (decodedByte << 4);
+                        decodedByte = sixBitToNibble[data & 0x3f];
+                        if(decodedByte != ILLEGAL_CODE) {
+                            phyState = STATE_DATA_HIGH;
+                            signal SerializerRadioByteComm.rxByteReady(bufByte | decodedByte);
+                            call RxByteTimer.start(byteTime);
+                        }
+                        else {
+                            resetState();
+                        }
+                    }
+                    else {
+                        resetState();
+                    }
+                    break;
+                case STATE_PREAMBLE:
+                    low = data & 0xf;
+                    high = data >> 4;
+                    if((low > 0) && (low < 0xf) && (high > 0) && (high < 0xf)) {
+                        phyState = STATE_PREAMBLE_CODE;
+                        call RxByteTimer.start(byteTime);
+                    }
+                    break;
+                case STATE_PREAMBLE_CODE:
+                    low = data & 0xf;
+                    high = data >> 4;
+                    if((low == 0) || (low == 0xf) || (high == 0) || (high == 0xf)) {
+                        phyState = STATE_PREAMBLE;
+                    }
+                    else {
+                        call RxByteTimer.start(byteTime);
+                    }
+                    break;
+                    // maybe there will be a time.... we will need this. but for now there is no footer
+                    //case STATE_FOOTER_START:
+                    //phyState = STATE_FOOTER_DONE;
+                    //break;
+                    //case STATE_FOOTER_DONE:
+                    //phyState = STATE_NULL;
+                    //signal PhyPacketRx.recvFooterDone(TRUE);
+                    //break;
+                default:
+                    break;
+            }
         }
+        
     }
 }

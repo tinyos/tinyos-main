@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archedrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
  */
 
 
@@ -86,7 +86,9 @@ implementation {
   }
 
   async command void ResourceConfigure.unconfigure[ uint8_t id ]() {
+    call Usart.resetUsart(TRUE);
     call Usart.disableSpi();
+    call Usart.resetUsart(FALSE);
   }
 
   event void UsartResource.granted[ uint8_t id ]() {
@@ -95,11 +97,13 @@ implementation {
 
   async command uint8_t SpiByte.write( uint8_t tx ) {
     uint8_t byte;
-    call Usart.disableRxIntr();
+    // we are in spi mode which is configured to have turned off interrupts
+    //call Usart.disableRxIntr();
     call Usart.tx( tx );
     while( !call Usart.isRxIntrPending() );
+    call Usart.clrRxIntr();
     byte = call Usart.rx();
-    call Usart.enableRxIntr();
+    //call Usart.enableRxIntr();
     return byte;
   }
 
@@ -107,7 +111,7 @@ implementation {
   default async command error_t UsartResource.request[ uint8_t id ]() { return FAIL; }
   default async command error_t UsartResource.immediateRequest[ uint8_t id ]() { return FAIL; }
   default async command error_t UsartResource.release[ uint8_t id ]() { return FAIL; }
-  default async command msp430_spi_config_t* Msp430SpiConfigure.getConfig[uint8_t id]() {
+  default async command msp430_spi_union_config_t* Msp430SpiConfigure.getConfig[uint8_t id]() {
     return &msp430_spi_default_config;
   }
 
@@ -127,8 +131,10 @@ implementation {
 
       while ( ++m_pos < end ) {
         while( !call Usart.isTxIntrPending() );
+        call Usart.clrTxIntr();
         call Usart.tx( m_tx_buf ? m_tx_buf[ m_pos ] : 0 );
         while( !call Usart.isRxIntrPending() );
+        call Usart.clrRxIntr();
         tmp = call Usart.rx();
         if ( m_rx_buf )
           m_rx_buf[ m_pos - 1 ] = tmp;

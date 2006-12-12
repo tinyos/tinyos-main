@@ -6,14 +6,17 @@ typedef struct sim_gain_noise {
 } sim_gain_noise_t;
 
 
-gain_entry_t* connectivity[TOSSIM_MAX_NODES];
-sim_gain_noise_t noise[TOSSIM_MAX_NODES];
+gain_entry_t* connectivity[TOSSIM_MAX_NODES + 1];
+sim_gain_noise_t noise[TOSSIM_MAX_NODES + 1];
 double sensitivity = 4.0;
 
 gain_entry_t* sim_gain_allocate_link(int mote);
 void sim_gain_deallocate_link(gain_entry_t* link);
 
 gain_entry_t* sim_gain_first(int src) __attribute__ ((C, spontaneous)) {
+  if (src > TOSSIM_MAX_NODES) {
+    return connectivity[TOSSIM_MAX_NODES];
+  } 
   return connectivity[src];
 }
 
@@ -24,9 +27,12 @@ gain_entry_t* sim_gain_next(gain_entry_t* link) __attribute__ ((C, spontaneous))
 void sim_gain_add(int src, int dest, double gain) __attribute__ ((C, spontaneous))  {
   gain_entry_t* current;
   int temp = sim_node();
+  if (src > TOSSIM_MAX_NODES) {
+    src = TOSSIM_MAX_NODES;
+  }
   sim_set_node(src);
 
-  current = connectivity[src];
+  current = sim_gain_first(src);
   while (current != NULL) {
     if (current->mote == dest) {
       sim_set_node(temp);
@@ -50,7 +56,7 @@ double sim_gain_value(int src, int dest) __attribute__ ((C, spontaneous))  {
   gain_entry_t* current;
   int temp = sim_node();
   sim_set_node(src);
-  current = connectivity[src];
+  current = sim_gain_first(src);
   while (current != NULL) {
     if (current->mote == dest) {
       sim_set_node(temp);
@@ -66,7 +72,7 @@ bool sim_gain_connected(int src, int dest) __attribute__ ((C, spontaneous)) {
   gain_entry_t* current;
   int temp = sim_node();
   sim_set_node(src);
-  current = connectivity[src];
+  current = sim_gain_first(src);
   while (current != NULL) {
     if (current->mote == dest) {
       sim_set_node(temp);
@@ -82,9 +88,14 @@ void sim_gain_remove(int src, int dest) __attribute__ ((C, spontaneous))  {
   gain_entry_t* current;
   gain_entry_t* prevLink;
   int temp = sim_node();
+  
+  if (src > TOSSIM_MAX_NODES) {
+    src = TOSSIM_MAX_NODES;
+  }
+
   sim_set_node(src);
     
-  current = connectivity[src];
+  current = sim_gain_first(src);
   prevLink = NULL;
     
   while (current != NULL) {
@@ -107,23 +118,36 @@ void sim_gain_remove(int src, int dest) __attribute__ ((C, spontaneous))  {
 }
 
 void sim_gain_set_noise_floor(int node, double mean, double range) __attribute__ ((C, spontaneous))  {
+  if (node > TOSSIM_MAX_NODES) {
+    node = TOSSIM_MAX_NODES;
+  }
   noise[node].mean = mean;
   noise[node].range = range;
 }
 
 double sim_gain_noise_mean(int node) {
+  if (node > TOSSIM_MAX_NODES) {
+    node = TOSSIM_MAX_NODES;
+  }
   return noise[node].mean;
 }
 
 double sim_gain_noise_range(int node) {
+  if (node > TOSSIM_MAX_NODES) {
+    node = TOSSIM_MAX_NODES;
+  }
   return noise[node].range;
 }
 
 // Pick a number a number from the uniform distribution of
 // [mean-range, mean+range].
 double sim_gain_sample_noise(int node)  __attribute__ ((C, spontaneous)) {
-  double val = noise[node].mean;
-  double adjust = (sim_random() % 2000000);
+  double val, adjust;
+  if (node > TOSSIM_MAX_NODES) {
+    node = TOSSIM_MAX_NODES;
+  } 
+  val = noise[node].mean;
+  adjust = (sim_random() % 2000000);
   adjust /= 1000000.0;
   adjust -= 1.0;
   adjust *= noise[node].range;

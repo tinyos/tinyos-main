@@ -123,6 +123,17 @@ to_type func_name(from_type x) { union {from_type f; to_type t;} c = {f:x}; retu
 #undef signal
 #endif
 
+// define platform constants that can be changed for different compilers
+// these are all msp430-gcc specific (add as necessary)
+
+#ifdef __msp430_headers_adc10_h
+#define __msp430_have_adc10
+#endif
+
+#ifdef __msp430_headers_adc12_h
+#define __msp430_have_adc12
+#endif
+
 // I2CBusy flag is not defined by current MSP430-GCC
 #ifdef __msp430_have_usart0_with_i2c
 #ifndef I2CBUSY

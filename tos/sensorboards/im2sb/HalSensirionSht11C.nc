@@ -38,10 +38,11 @@
  *
  * @author Gilman Tolle <gtolle@archrock.com>
  * @author Phil Buonadonna <pbuonadonna@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:27 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:45 $
  */
 
 configuration HalSensirionSht11C {
+  provides interface SplitControl;
   provides interface Resource[ uint8_t client ];
   provides interface SensirionSht11[ uint8_t client ];
 }
@@ -50,10 +51,12 @@ implementation {
   SensirionSht11 = SensirionSht11LogicP;
 
   components HplSensirionSht11C;
+  SplitControl = HplSensirionSht11C;
   Resource = HplSensirionSht11C.Resource;
   SensirionSht11LogicP.DATA -> HplSensirionSht11C.DATA;
   SensirionSht11LogicP.CLOCK -> HplSensirionSht11C.SCK;
   SensirionSht11LogicP.InterruptDATA -> HplSensirionSht11C.InterruptDATA;
+
   
   components new TimerMilliC();
   SensirionSht11LogicP.Timer -> TimerMilliC;

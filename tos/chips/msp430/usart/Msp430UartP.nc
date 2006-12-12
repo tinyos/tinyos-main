@@ -32,7 +32,7 @@
 /**
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:09 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
  */
 
 #include<Timer.h>
@@ -41,7 +41,7 @@ generic module Msp430UartP() {
 
   provides interface Resource[ uint8_t id ];
   provides interface ResourceConfigure[ uint8_t id ];
-  provides interface Msp430UartControl as UartControl[ uint8_t id ];
+  //provides interface Msp430UartControl as UartControl[ uint8_t id ];
   provides interface UartStream;
   provides interface UartByte;
   
@@ -80,38 +80,21 @@ implementation {
   }
 
   async command void ResourceConfigure.configure[ uint8_t id ]() {
-    call UartControl.setModeDuplex[id]();
+    msp430_uart_union_config_t* config = call Msp430UartConfigure.getConfig[id]();
+    m_byte_time = config->uartConfig.ubr / 2;
+    call Usart.setModeUart(config);
+    call Usart.enableIntr();
   }
 
   async command void ResourceConfigure.unconfigure[ uint8_t id ]() {
+    call Usart.resetUsart(TRUE);
     call Usart.disableIntr();
     call Usart.disableUart();
+    call Usart.resetUsart(FALSE);
   }
 
   event void UsartResource.granted[ uint8_t id ]() {
     signal Resource.granted[ id ]();
-  }
-
-  async command void UartControl.setModeRx[ uint8_t id ]() {
-    msp430_uart_config_t* config = call Msp430UartConfigure.getConfig[id]();
-    m_byte_time = config->ubr / 2;
-    call Usart.setModeUartRx(config);
-    call Usart.clrIntr();
-    call Usart.enableRxIntr();
-  }
-  
-  async command void UartControl.setModeTx[ uint8_t id ]() {
-    call Usart.setModeUartTx(call Msp430UartConfigure.getConfig[id]());
-    call Usart.clrIntr();
-    call Usart.enableTxIntr();
-  }
-  
-  async command void UartControl.setModeDuplex[ uint8_t id ]() {
-    msp430_uart_config_t* config = call Msp430UartConfigure.getConfig[id]();
-    m_byte_time = config->ubr / 2;
-    call Usart.setModeUart(config);
-    call Usart.clrIntr();
-    call Usart.enableIntr();
   }
   
   async command error_t UartStream.enableReceiveInterrupt() {
@@ -177,6 +160,7 @@ implementation {
   async command error_t UartByte.send( uint8_t data ) {
     call Usart.tx( data );
     while( !call Usart.isTxIntrPending() );
+    call Usart.clrTxIntr();
     return SUCCESS;
   }
   
@@ -188,7 +172,7 @@ implementation {
     start = call Counter.get();
     while( !call Usart.isRxIntrPending() ) {
       if ( ( call Counter.get() - start ) >= timeout_micro )
-	return FAIL;
+				return FAIL;
     }
     *byte = call Usart.rx();
     
@@ -202,7 +186,7 @@ implementation {
   default async command error_t UsartResource.request[ uint8_t id ]() { return FAIL; }
   default async command error_t UsartResource.immediateRequest[ uint8_t id ]() { return FAIL; }
   default async command error_t UsartResource.release[ uint8_t id ]() { return FAIL; }
-  default async command msp430_uart_config_t* Msp430UartConfigure.getConfig[uint8_t id]() {
+  default async command msp430_uart_union_config_t* Msp430UartConfigure.getConfig[uint8_t id]() {
     return &msp430_uart_default_config;
   }
 

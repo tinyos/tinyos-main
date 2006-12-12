@@ -1,11 +1,15 @@
-The implementation of the 12-bit ADC stack on the MSP430 is in compliance with
-TEP 101 (tinyos-2.x/doc/txt/tep101.txt) and provides virtualized access to the
-ADC12 by seven different components: AdcReadClientC, AdcReadNowClientC,
+The implementation of the 12-bit ADC stack on the MSP430 is in compliance
+with TEP 101 (tinyos-2.x/doc/txt/tep101.txt) and provides virtualized access
+to the ADC12 by seven different components: AdcReadClientC, AdcReadNowClientC,
 AdcReadStreamClientC, Msp430Adc12ClientC, Msp430Adc12ClientAutoDMAC,
 Msp430Adc12ClientAutoRVGC and Msp430Adc12ClientAutoDMA_RVGC. A client
 component may wire to any of these components and it SHOULD NOT wire to any
 other components in 'tinyos-2.x/tos/chips/msp430/adc12'. This document
 explains the difference between the seven components.
+
+
+1. HIL
+====================================================================
 
 
 A platform-independent application (an application like 'Oscilloscope' that is
@@ -23,6 +27,9 @@ These components are less efficient than the MSP430-specific ADC components
 values. Thus, if a client component does not care so much about efficiency but
 rather about portability it should wire to any of these components.
 
+
+2. HAL
+====================================================================
 
 An application that is written for an MSP430-based platform like 'eyesIFX' or
 'telosb' can access the ADC12 in a more efficient way to, for example, do
@@ -52,6 +59,10 @@ application may wire to:
   * Msp430Adc12ClientAutoDMAC: DMA, but no automatic reference voltage
   * Msp430Adc12ClientAutoDMA_RVGC: DMA and automatic reference voltage
 
+
+PINs
+--------------------------------------------------------------------
+
 During a conversion the respective ADC port pin (ports 6.0 - 6.7) must be
 configured such that the peripheral module function is selected and the port
 pin is switched to input direction. By default, for every client this is done
@@ -61,8 +72,89 @@ and input direction and immediately after the conversion has finished it is
 switched to I/O function mode. To disable this feature please comment out the
 "P6PIN_AUTO_CONFIGURE" macro in Msp430Adc12.h.
 
+
+Configuration for single channel conversions
+--------------------------------------------------------------------
+
+The msp430adc12_channel_config_t struct holds all information needed to
+configure the ADC12 for single channel conversions. The flags come from the
+following MSP430 registers: ADC12CTL0, ADC12CTL1, ADC12MCTLx and TACTL and are
+named according to the "MSP430x1xx Family User's Guide". Their meaning is as
+follows:
+
+  .inch: ADC12 input channel (ADC12MCTLx register). An (external) input
+  channel maps to one of msp430's A0-A7 pins (see device specific data sheet).
+
+  .sref: reference voltage (ADC12MCTLx register). If REFERENCE_VREFplus_AVss
+  or REFERENCE_VREFplus_VREFnegterm is chosen AND the client wires to the
+  Msp430Adc12ClientAutoRVGC or Msp430Adc12ClientAutoDMA_RVGC component then
+  the reference voltage generator has automatically been enabled to the
+  voltage level defined by the "ref2_5v" flag (see below) when the
+  Resource.granted() event is signalled to the client. Otherwise this flag is
+  ignored.
+  
+  .ref2_5v: Reference generator voltage level (ADC12CTL0 register). See
+  "sref".
+  
+  .adc12ssel: ADC12 clock source select for the sample-hold-time (ADC12CTL1
+  register). In combination the "adc12ssel", "adc12div" and "sht" define the
+  sample-hold-time: "adc12ssel" defines the clock source, "adc12div" defines
+  the ADC12 clock divider and "sht" define the time expressed in jiffies.
+  (the sample-hold-time depends on the resistence of the attached sensor, and
+  is calculated using to the formula in section 17.2.4 of the user guide)
+  
+  .adc12div: ADC12 clock divider (ADC12CTL1 register). See "adc12ssel".
+  
+  .sht: Sample-and-hold time (ADC12CTL1 register). See "adc12ssel".
+  
+  .sampcon_ssel: Clock source for the sampling period (TASSEL for TimerA).
+  When an ADC client specifies a non-zero "jiffies" parameter (using the
+  Msp430Adc12SingleChannel.configureX commands), the ADC
+  implementation will automatically configure TimerA to be sourced from
+  "sampcon_ssel" with an input divider of "sampcon_id". During the sampling
+  process TimerA will be used to trigger a single
+  (Msp430Adc12SingleChannel interface) or a sequence of (Msp430Adc12MultiChannel 
+  interface) conversions every "jiffies" clock ticks.
+  
+  .sampcon_id: Input divider for "sampcon_ssel"  (IDx in TACTL register,
+  TimerA). See "sampcon_ssel".
+
+
+Example: Assuming that SMCLK runs at 1 MHz the following code snippet
+performs 2000 ADC conversions on channel A2 with a sampling period of 4000 Hz.
+The sampling period is defined by the combination of SAMPCON_SOURCE_SMCLK,
+SAMPCON_CLOCK_DIV_1 and a "jiffies" parameter of (1000000 / 4000) = 250. 
+
+ 
+   #define NUM_SAMPLES 2000
+   uint16_t buffer[NUM_SAMPLES];
+   
+   const msp430adc12_channel_config_t config = {
+    INPUT_CHANNEL_A2, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_NONE,
+    SHT_SOURCE_SMCLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_64_CYCLES,
+    SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1 
+   };
+  
+  event void Boot.booted()
+  {
+    call Resource.request();
+  }
+  
+  event void Resource.granted()
+  {
+    error_t result;
+    result = call SingleChannel.configureMultiple(&config, buffer, BUFFER_SIZE, 250);
+    if (result == SUCCESS)
+      call SingleChannel.getData();
+  }
+
+  async event uint16_t* SingleChannel.multipleDataReady(uint16_t *buf, uint16_t length)
+  {
+    // buffer contains conversion results
+  }
+
 -----
 
-$Date: 2006-11-07 19:30:57 $
+$Date: 2006-12-12 18:23:07 $
 @author: Jan Hauer <hauer@tkn.tu-berlin.de>
 

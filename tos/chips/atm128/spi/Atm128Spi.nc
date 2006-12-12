@@ -1,4 +1,4 @@
-/// $Id: Atm128Spi.nc,v 1.3 2006-11-07 19:30:44 scipio Exp $ 
+/// $Id: Atm128Spi.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $ 
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -48,7 +48,7 @@
  * of the Atmega128 datasheet (rev. 2467M-AVR-11/04) for details.
  *
  * <pre>
- *  $Id: Atm128Spi.nc,v 1.3 2006-11-07 19:30:44 scipio Exp $
+ *  $Id: Atm128Spi.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $
  * </pre>
  *
  * @author Philip Levis

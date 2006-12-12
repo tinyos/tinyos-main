@@ -32,7 +32,7 @@
  * @author David Gay <dgay@intel-research.net>
  */
 
-// $Id: HplAtm128Counter0C.nc,v 1.3 2006-11-07 19:30:45 scipio Exp $/// $Id: HplAtm128Timer2C.nc,
+// $Id: HplAtm128Counter0C.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $/// $Id: HplAtm128Timer2C.nc,
 
 #include <Atm128Timer.h>
 #include <hardware.h>

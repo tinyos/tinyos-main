@@ -10,8 +10,8 @@ TinyOS 2.x Boot Sequence
 :Author: Philip Levis 
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2006-11-07 19:30:39 $
+:Draft-Version: $Revision: 1.5 $
+:Draft-Modified: $Date: 2006-12-12 18:22:54 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::

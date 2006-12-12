@@ -34,7 +34,7 @@
  * CC2420 radio connected to a TI MSP430 processor.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:26 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:44 $
  */
 
 configuration HplCC2420InterruptsC {

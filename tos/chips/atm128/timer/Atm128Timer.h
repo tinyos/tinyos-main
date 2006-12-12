@@ -1,4 +1,4 @@
-// $Id: Atm128Timer.h,v 1.3 2006-11-07 19:30:45 scipio Exp $
+// $Id: Atm128Timer.h,v 1.4 2006-12-12 18:23:04 vlahan Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.

@@ -54,11 +54,11 @@
  * 14-15 of the CC2420 datasheet (rev 1.2).
  *
  * <pre>
- * $Id: HplCC2420PinsC.nc,v 1.3 2006-11-07 19:31:26 scipio Exp $
+ * $Id: HplCC2420PinsC.nc,v 1.4 2006-12-12 18:23:44 vlahan Exp $
  * </pre>
  *
  * @author Philip Levis
- * @version $Revision: 1.3 $ $Date: 2006-11-07 19:31:26 $
+ * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:44 $
  */
 
 configuration HplCC2420PinsC {
