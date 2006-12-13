@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.4 2006-12-12 18:23:29 vlahan Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.5 2006-12-13 01:56:41 vlahan Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2006-12-12 18:23:29 $
+ *  @date   $Date: 2006-12-13 01:56:41 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -619,7 +619,6 @@ implementation {
         call CollectionDebug.logEvent(NET_C_FE_PUT_QEPOOL_ERR);
       sending = FALSE;
       startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
-      call Leds.led2Toggle();
     }
     else {
       dbg("Forwarder", "%s: BUG: we have a pool entry, but the pool is full, client is %hhu.\n", __FUNCTION__, qe->client);
