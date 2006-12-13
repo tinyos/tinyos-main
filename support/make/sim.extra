@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: sim.extra,v 1.4 2006-12-12 18:22:55 vlahan Exp $
+#$Id: sim.extra,v 1.5 2006-12-13 01:50:41 vlahan Exp $
 
 GCC=gcc
 GPP=g++
@@ -7,7 +7,7 @@ OPTFLAGS = -g -O0
 LIBS = -lm -lstdc++ 
 PFLAGS += -tossim -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber=sim_node\(\)  
 WFLAGS = -Wno-nesc-data-race
-PYTHON_VERSION=2.4
+PYTHON_VERSION=2.3
 
 BUILDDIR   = simbuild/$(PLATFORM)
 CFILE    = $(BUILDDIR)/sim.c
