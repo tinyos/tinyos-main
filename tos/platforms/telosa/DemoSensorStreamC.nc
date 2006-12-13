@@ -30,28 +30,28 @@
  */
 
 /** 
- * DemoSensorC is a generic sensor device that provides a 16-bit
+ * DemoSensorStreamC is a generic sensor device that provides a 16-bit
  * value. The platform author chooses which sensor actually sits
- * behind DemoSensorC, and though it's probably Voltage, Light, or
+ * behind DemoSensorStreamC, and though it's probably Voltage, Light, or
  * Temperature, there are no guarantees.
  *
- * This particular DemoSensorC on the telosb platform provides a
- * voltage reading, using VoltageC. 
+ * This particular DemoSensorStreamC on the telosb platform provides a
+ * voltage reading, using VoltageStreamC. 
  *
  * To convert from ADC counts to actual voltage, divide this reading
  * by 4096 and multiply by 3.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2006-12-13 01:22:36 $
+ * @version $Revision: 1.2 $ $Date: 2006-12-13 01:22:36 $
  * 
  */
 
-generic configuration DemoSensorC()
+generic configuration DemoSensorStreamC()
 {
-  provides interface Read<uint16_t>;
+  provides interface ReadStream<uint16_t>;
 }
 implementation
 {
-  components new VoltageC() as DemoSensor;
-  Read = DemoSensor;
+  components new VoltageStreamC() as DemoSensor;
+  ReadStream = DemoSensor;
 }
