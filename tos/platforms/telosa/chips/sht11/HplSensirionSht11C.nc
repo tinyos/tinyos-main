@@ -37,7 +37,7 @@
  * Sensirion SHT11 driver.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:45 $
+ * @version $Revision: 1.5 $ $Date: 2006-12-13 01:24:23 $
  */
 
 configuration HplSensirionSht11C {
@@ -78,7 +78,6 @@ implementation {
   
   components new SplitControlPowerManagerC();
   SplitControlPowerManagerC.SplitControl -> HplSensirionSht11P;
-  SplitControlPowerManagerC.ArbiterInit -> Arbiter.Init;
   SplitControlPowerManagerC.ArbiterInfo -> Arbiter.ArbiterInfo;
   SplitControlPowerManagerC.ResourceController -> Arbiter.ResourceController;
 }
