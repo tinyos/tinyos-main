@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.6 2006-12-12 18:23:03 vlahan Exp $
+/// $Id: McuSleepC.nc,v 1.7 2006-12-14 01:24:48 scipio Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -29,7 +29,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.6 2006-12-12 18:23:03 vlahan Exp $
+ *  $Id: McuSleepC.nc,v 1.7 2006-12-14 01:24:48 scipio Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -64,7 +64,6 @@ implementation {
     (1 << SM1)};		/* power down */
 
   mcu_power_t getPowerState() {
-    uint8_t diff;
     // Note: we go to sleep even if timer 1, 2, or 3's overflow interrupt
     // is enabled - this allows using these timers as TinyOS "Alarm"s
     // while still having power management.
@@ -88,20 +87,6 @@ implementation {
     // ADC is enabled
     else if (bit_is_set(ADCSR, ADEN)) { 
       return ATM128_POWER_ADC_NR;
-    }
-    // How soon for the timer to go off?
-    else if (TIMSK & (1 << OCIE0 | 1 << TOIE0)) {
-      // need to wait for timer 0 updates propagate before sleeping
-      // (we don't need to worry about reentering sleep mode too early,
-      // as the wake ups from timer0 wait at least one TOSC1 cycle
-      // anyway - see the stabiliseTimer0 function in HplAtm128Timer0AsyncC)
-      while (ASSR & (1 << TCN0UB | 1 << OCR0UB | 1 << TCR0UB))
-	;
-      diff = OCR0 - TCNT0;
-      if (diff < EXT_STANDBY_T0_THRESHOLD ||
-	  TCNT0 > 256 - EXT_STANDBY_T0_THRESHOLD) 
-	return ATM128_POWER_EXT_STANDBY;
-      return ATM128_POWER_SAVE;
     }
     else {
       return ATM128_POWER_DOWN;
