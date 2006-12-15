@@ -109,7 +109,7 @@ implementation
 
   async command void Timer.setInputDivider( uint16_t inputDivider )
   {
-    TxCTL = (TxCTL & ~(ID_1|ID_3)) | ((inputDivider << 8) & (ID_1|ID_3));
+    TxCTL = (TxCTL & ~(ID0|ID1)) | ((inputDivider << 6) & (ID0|ID1));
   }
 
   async event void VectorTimerX0.fired()
