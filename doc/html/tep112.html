@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2006-12-20 03:02:39 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-Sep-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.2</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2005-10-31</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -342,7 +342,7 @@ management.</p>
 </div>
 <div class="section">
 <h1><a id="background" name="background">2. Background</a></h1>
-<p>The TinyOS scheduler[_tep106] puts a processor into a sleep state when
+<p>The TinyOS scheduler[<a class="reference" href="#id3">2</a>] puts a processor into a sleep state when
 the task queue is empty. However, processors can have a spectrum of
 power states. For example, the MSP430 has one active mode (issuing
 instructions) and five low-power modes. The low power modes range from
@@ -403,11 +403,10 @@ state, the function performs the calculation, and the override allows
 higher level components to introduce additional requirements, if
 needed.</p>
 <p>These three mechanisms all operate in the TinyOS core scheduling loop,
-described in TEP 106: Schedulers and Tasks[_tep106]. This loop is
+described in TEP 106: Schedulers and Tasks[<a class="reference" href="#id3">2</a>]. This loop is
 called from the boot sequence, which is described in TEP 107: Boot
-Sequence[_tep107]. The command in question is
-<tt class="docutils literal"><span class="pre">Scheduler.runNextTask()</span></tt>, when its sleep parameter is TRUE (i.e.,
-<tt class="docutils literal"><span class="pre">call</span> <span class="pre">Scheduler.runNextTask(TRUE)</span></tt>).</p>
+Sequence[<a class="reference" href="#id4">3</a>]. The command in question is
+<tt class="docutils literal"><span class="pre">Scheduler.taskLoop()</span></tt>, when microcontroller sleeping is enabled.</p>
 <p>If this command is called when the task queue is empty, the TinyOS
 scheduler puts the microcontroller to sleep. It does so through
 the <tt class="docutils literal"><span class="pre">McuSleep</span></tt> interface:</p>
@@ -461,7 +460,7 @@ whose signature MUST include the following interfaces:</p>
 <div class="section">
 <h1><a id="the-dirty-bit" name="the-dirty-bit">3.1 The Dirty Bit</a></h1>
 <p>Whenever a Hardware Presentation Layer (HPL, see TEP 2: Hardware
-Abstraction Architecture[_tep2]) component changes an aspect of
+Abstraction Architecture[<a class="reference" href="#id2">1</a>]) component changes an aspect of
 hardware configuration that might change the possible low power state
 of the microcontroller, it MUST call McuPowerState.update(). This is
 the first power management mechanism, a <em>dirty bit</em>. If
@@ -571,6 +570,8 @@ thirty cycles; implementations SHOULD be a simple return of a cached
 variable. Wiring arbitrarily to this command is an easy way to cause
 TinyOS to behave badly. The presence of a combine function for
 mcu_power_t means that this command can have fan-out calls.</p>
+<p>Section 5 describes one example use of McuPowerOverride, in the
+timer stack for the Atmega128 microcontroller family.</p>
 </div>
 <div class="section">
 <h1><a id="peripherals-and-subsystems" name="peripherals-and-subsystems">4. Peripherals and Subsystems</a></h1>
@@ -584,24 +585,25 @@ component represents to enter an inactive, low-power state.</p>
 change in status and control registers (e.g., a clock is
 disabled). Following the requirements in 3.1, the MCU power management
 subsystem will be notified of a significant change and act
-appropriately when the system next goes to sleep.</p>
-<p>These imperative appraoches are flexible and powerful, but are also
-very error prone, partially due to their deep semantics. For example,
-depending on the circumstances, an application calling StdControl.stop
-on a routing layer may or may not also want to turn off the underlying
-radio. StdControl and SplitControl provide a <em>mechanism</em> to control
-subsystem power states, but no real <em>policy</em> for arbitrating
-conflicting requirements from components built on top of them.</p>
-<p>Service distributions (described in TEP 110[_tep110]) are responsible
-for providing policies on top of these low-level mechanisms. OSKI, for
-example, the sample distribution described in TEP 110, uses an
-OR-policy: a subsystem is active if any of its clients want it active,
-and inactive iff all of its clients want it inactive. Other
-distributions can provide alternative power management policies in top
-of the basic HIL mechanisms.</p>
+appropriately when the system next goes to sleep. TEP 115[<a class="reference" href="#id6">5</a>]
+describes the power management of non-virtualized devices in
+greater detail, and TEP 108[<a class="reference" href="#id5">4</a>] describes how TinyOS can automatically
+include power management into shared non-virtualized devices.</p>
 </div>
 <div class="section">
-<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
+<h1><a id="implementation" name="implementation">5. Implementation</a></h1>
+<p>An implementation of McuSleepC can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128</span></tt>,
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/msp430</span></tt>, and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/px27ax</span></tt>.</p>
+<p>An example of a use of McuPowerOverride can be found in the atmega128 timer
+system. Because some low-power states have much longer wakeup latencies than
+others, the timer system does not allow long latencies if it has a timer
+that is going to fire soon.  The implementation can be found in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128/timer/HplAtm128Timer0AsyncP.nc</span></tt>, and
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128/timer/HplAtm128Timer0AsyncC.nc</span></tt> automatically
+wires it to McuSleepC if it is included.</p>
+</div>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Robert Szewczyk</div>
 <div class="line">Moteiv Corporation</div>
@@ -658,28 +660,34 @@ of the basic HIL mechanisms.</p>
 </div>
 <div class="section">
 <h1><a id="citations" name="citations">6. Citations</a></h1>
-<table class="docutils citation" frame="void" id="tep106" rules="none">
+<table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep106">[tep106]</a></td><td>TEP 106: Schedulers and Tasks.</td></tr>
+<tr><td class="label"><a name="id2">[1]</a></td><td>TEP 2: Hardware Abstraction Architecture</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="tep107" rules="none">
+<table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep107">[tep107]</a></td><td>TEP 107: TinyOS 2.x Boot Sequence.</td></tr>
+<tr><td class="label"><a name="id3">[2]</a></td><td>TEP 106: Schedulers and Tasks.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="tep110" rules="none">
+<table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep110">[tep110]</a></td><td>TEP 110: Service Distributions.</td></tr>
+<tr><td class="label"><a name="id4">[3]</a></td><td>TEP 107: TinyOS 2.x Boot Sequence.</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="tep2" rules="none">
+<table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="tep2">[tep2]</a></td><td>TEP 2: Hardware Abstraction Architecture.</td></tr>
+<tr><td class="label"><a name="id5">[4]</a></td><td>TEP 108: Resource Arbitration</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id6">[5]</a></td><td>TEP 115: Power Management of Non-Virtualised Devices</td></tr>
 </tbody>
 </table>
 </div>
