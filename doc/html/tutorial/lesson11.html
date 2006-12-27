@@ -6,8 +6,6 @@
 </head>
 <body>
 
-<!--- $Id: lesson11.html,v 1.4 2006-12-12 18:22:53 vlahan Exp $ --->
-
 <div class="title">Lesson 11: Simulation with TOSSIM</div>
 <div class="subtitle">Last Modified: 18 May 2006</div>
 
@@ -86,9 +84,9 @@
 
         
         
-        <p>Currently, the only platform TOSSIM supports is the
+      <p>Currently, the only platform TOSSIM supports is the
         micaz. You should see output similar to this:</p>
-        <pre>
+      <pre>
           mkdir -p build/micaz
             placing object files in build/micaz
             writing XML schema to app.xml
@@ -100,8 +98,15 @@
             linking into shared object ./_TOSSIMmodule.so
           g++ -shared build/micaz/pytossim.o build/micaz/sim.o build/micaz/tossim.o -lstdc++ -o _TOSSIMmodule.so
           copying Python script interface TOSSIM.py from lib/tossim to local directory
-         </pre>
+      </pre>
 
+      <p>Depending on what OS you are using and what packages are installed, TOSSIM may
+	not properly compile on the first try. <A HREF="#appendix">Appendix A</A>
+	addresses some of the common causes and gives possible solutions.</p>
+
+      <A name="#compiling"></A>
+
+	
         <p>Compiling TOSSIM has five basic steps. Let's go through
         them one by one.</p>
 
@@ -1355,7 +1360,217 @@ inspect variables, how to inject packets, and how to compile with C++.
 <p>&lt;&nbsp;<b><a href="lesson10.html">Previous Lesson</a></b> |&nbsp; <b><a
  href="index.html">Top</a></b> &nbsp;|&nbsp; <b><a href="lesson12.html">Next
 Lesson </a>&nbsp;&gt;</b>
+	      </center>
 </p>
+
+
+	    <A name="appendix"><H1>Appendix A: Troubleshooting TOSSIM compilation</H1></A>
+
+	    <p>TOSSIM is a C/C++ shared library with an optional
+	    Python translation layer. Almost all of the problems
+	    encountered in compiling TOSSIM are due to C linking
+	    issues. If you don't know what a linker is (or have never
+	    linked a C program), then chances are the rest of this
+	    appendix is going to be cryptic and
+	    incomprehensible. You're best off starting with learning
+	    about <A
+	    HREF="http://en.wikipedia.org/wiki/Linker">linkers</A>, <A
+	    HREF="http://www.iecc.com/linker/linker01.html">why they
+	    are needed</A>, and how you <A
+	    HREF="http://www.linuxjournal.com/article/6463">use the
+	    gcc/g++ compilers</A> to link code.</p>
+		
+
+	    <p>Generally, when compiling TOSSIM using <tt>make micaz sim</tt>,
+	      one of four things can go wrong:</p>
+
+	    <ol>
+	      <li>You are using Cygwin but the <tt>sim</tt> compilation option
+		can't figure this out.</li>
+
+	      <li>You do not have the needed Python support installed.</li>
+
+	      <li>You have Python support installed, but the make
+	      system can't find it.</li>
+
+	      <li>You have Python support installed, but it turns out to
+		be incompatible with TOSSIM.</li>
+
+	    </ol>
+
+	    <p>We'll visit each in turn.</p>
+
+	    <h2>You are using Cygwin but the <tt>sim</tt> compilation option
+	      can't figure this out</h2>
+
+	    <p>It turns out that the Cygwin and Linux versions of gcc/g++
+	      have different command-line flags and require different options
+	      to compile TOSSIM properly. For example, telling the Linux
+	      compiler to build a library requires <tt>-fPIC</tt> while
+	      the Cygwin is <tt>-fpic</tt>. If you're using Cygwin and
+	      you see the output look like this:
+
+	      <pre>
+  ncc -c -shared -fPIC -o build/micaz/sim.o ...
+	      </pre>
+
+	      rather than
+
+	      <pre>
+  ncc -c -DUSE_DL_IMPORT -fpic -o build/micaz/sim.o ...
+	      </pre>
+
+	      then you have encountered this problem. The problem
+	      occurs because Cygwin installations do not have a
+	      consistent naming scheme, and so it's difficult for the
+	      compilation toolchain to always figure out whether it's
+	      under Linux or Cygwin.</p>
+
+	    <p><b>Symptom:</b> You're running cygwin but you see the
+	      <tt>-fPIC</tt> rather than <tt>-fpic</tt> option being
+	      passed to the compiler.</b></p>
+	    
+	    <p><b>Solution:</b> Explicitly set the OSTYPE environment
+	      variable to be <tt>cygwin</tt> either in your <tt>.bashrc</tt>
+	      or when you compile. For example, in bash:</p>
+
+	    <pre>
+$ OSTYPE=cygwin make micaz sim
+	    </pre>
+
+	    or in tcsh
+
+	    <pre>
+$ setenv OSTYPE cygwin
+$ make micaz sim
+	    </pre>
+
+	    <p>Note that often this problem occurs in addition to
+	    other ones, due to using a nonstandard Cygwin
+	    installation. So you might have more problems to track
+	    down.</p>
+	    
+	    <h2>You do not have the needed Python support installed</h2>
+
+	    <p>If when you compile you see lots of errors such as
+	    "undefined reference to" or "Python.h: No such file or
+	    directory" then this might be your problem. It is a
+	    subcase of the more general problem of TOSSIM not being
+	    able to find needed libraries and files.</p>
+	    
+	    <p>Compiling Python scripting support requires that you
+	      have certain Python development libraries installed. First, check
+	      that you have Python installed:</p>
+
+	    <pre>
+$ python -V
+Python 2.4.2
+	    </pre>
+
+	    <p>In the above example, the system has Python 2.4.2. If
+	    you see "command not found" then you do not have Python
+	    installed. You'll need to track down an RPM and install
+	    it.  TOSSIM has been tested with Python versions 2.3 and
+	    2.4. You can install other versions, but there's no
+	    assurance things will work.</p>
+
+	    <p>In addition to the Python interpreter itself, you need
+	    the libraries and files for Python development. This is
+	    essentially a set of header files and shared libraries. If
+	    you have the <tt>locate</tt> command, you can type
+	    <tt>locate libpython</tt>, or if you don't, you can look
+	    in <tt>/lib</tt>, <tt>/usr/lib</tt> and
+	    <tt>/usr/local/lib</tt>. You're looking for a file with a
+	    name such as <tt>libpython2.4.so</tt> and a file named
+	    <tt>Python.h</tt>. If you can't find these files, then you
+	    need to install a <tt>python-devel</tt> package.</p>
+
+
+	    <p><b>Symptom:</b> Compilation can't find critical files
+	    such as the Python interpreter, <tt>Python.h</tt> or a
+	    Python shared library, and searching your filesystem shows
+	    that you don't have them.</p>
+
+	    <p><b>Solution:</b> Installed the needed files from Python
+	    and/or Python development RPMS.</p>
+
+	    <p>If you have all of the needed files, but are still
+	    getting errors such as "undefined reference" or "Python.h:
+	    No such file or directory", then you have the next
+	    problem: they're on your filesystem, but TOSSIM can't find
+	    them.</p>
+	      
+	    <h2>You have Python support installed, but the make
+	      system can't find it</h2>
+
+	    <p>You've found libpython and Python.h, but when TOSSIM compiles
+	    it says that it can't find one or both of them. If it can't
+	    find Python.h then compilation will fail pretty early, as g++ won't
+	    be able to compile the Python glue code. If it can't find the python
+	    library, then compilation will fail at linking, and you'll see
+	    errors along the lines of "undefined reference to __Py...". You
+	    need to point the make system at the right place.</p>
+
+	    <p>Open up <tt>support/make/sim.extra</tt>. If the make
+	      system can't find Python.h, then chances are it isn't in
+	      one of the standard places (e.g., /usr/include). You need to tell
+	      the make system to look in the directory where Python.h is with
+	      a <tt>-I</tt> option. At the top of sim.extra, under the PFLAGS entry,
+	      add
+
+	    <pre>
+CFLAGS += -I/path
+	    </pre>
+
+	      where <tt>/path</tt> is the path of the directory where Python.h
+	      lives. For example, if it is in <tt>/opt/python/include</tt>,
+	      then add <tt>CFLAGS += -I/opt/python/include</tt>.</p>
+	    
+	    <p>If the make system can't find the python library for
+	    linking (causing "undefined reference") error messages,
+	    then you need to make sure the make system can find
+	    it. The sim.extra file uses two variables to find the
+	    library: <tt>PYDIR</tt> and <tt>PYTHON_VERSION</tt>.  It
+	    looks for a file named libpython$(PYTHON_VERSION).so. So
+	    if you have Python 2.4 installed, make sure that
+	    PYTHON_VERSION is 2.4 (be sure to use no spaces!) and if
+	    2.3, make sure it is 2.3.</p>
+
+	    <p>Usually the Python library is found in
+	    <tt>/usr/lib</tt>. If it isn't there, then you will need
+	    to modify the <tt>PLATFORM_LIB_FLAGS</tt> variable.  The
+	    -L flag tells gcc in what directories to look for
+	    libraries. So if libpython2.4.so is in
+	    <tt>/opt/python/lib</tt>, then add
+	    <tt>-L/opt/python/lib</tt> to the
+	    <tt>PLATFORM_LIB_FLAGS</tt>. Note that there are three
+	    different versions of this variable, depending on what OS
+	    you're using. Be sure to modify the correct one (or be
+	    paranoid and modify all three).
+
+	      
+	    <p><b>Symptom:</b> You've verified that you have the
+	    needed Python files and libraries, but compilation is
+	    still saying that it can't link to them ("undefined
+	    reference") or can't find them.</p>
+
+	    <p><b>Solution:</b> Change the sim.extra file to point to
+	    the correct directories.</p>
+
+	    <h2>You have Python support installed, but it turns out to
+	      be incompatible with TOSSIM.</h2>
+
+	    <p><b>Symptom:</b> You get a "This python version requires
+	      to use swig with the -classic option" error message.</p>
+
+	    <p><b>Solution:</b> Install SWIG and regenerate Python
+	    support with the sing-generate script in
+	    <tt>tos/lib/tossim</tt>, or install a different version of
+	    Python.</p>
+	    
+	    <p>Hopefully, these solutions worked and you can get back
+	    to <A HREF="#compiling">compiling</A>, If not, then you
+		should email tinyos-help.</p>
 </center>
 
 </body>
