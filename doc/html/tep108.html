@@ -3,29 +3,38 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.5: http://docutils.sourceforge.net/" />
 <title>Resource Arbitration</title>
 <meta name="authors" content="Kevin Klues  Philip Levis  David Gay  David Culler  Vlado Handziski" />
 <style type="text/css">
 
 /*
 :Author: David Goodger
-:Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
-:copyright: This stylesheet has been placed in the public domain.
+:Contact: goodger@python.org
+:Date: $Date: 2007-01-05 18:53:43 $
+:Revision: $Revision: 1.7 $
+:Copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
 */
-body {
-  font-family: Times;
-  font-size: 16px;
-}
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
 
 .first {
+  /* Override more specific margin styles with "! important". */
   margin-top: 0 ! important }
 
-.last {
+.last, .with-subtitle {
   margin-bottom: 0 ! important }
 
 .hidden {
@@ -38,11 +47,11 @@ a.toc-backref {
 blockquote.epigraph {
   margin: 2em 5em ; }
 
-dd {
+dl.docutils dd {
   margin-bottom: 0.5em }
 
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
   font-weight: bold }
 */
 
@@ -53,11 +62,17 @@ div.abstract p.topic-title {
   font-weight: bold ;
   text-align: center }
 
-div.attention, div.caution, div.danger, div.error, div.hint,
-div.important, div.note, div.tip, div.warning, div.admonition {
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
   margin: 2em ;
   border: medium outset ;
   padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
 
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
@@ -66,11 +81,14 @@ div.warning p.admonition-title {
   font-weight: bold ;
   font-family: sans-serif }
 
-div.hint p.admonition-title, div.important p.admonition-title,
-div.note p.admonition-title, div.tip p.admonition-title,
-div.admonition p.admonition-title {
-  font-weight: bold ;
-  font-family: sans-serif }
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
 
 div.dedication {
   margin: 2em 5em ;
@@ -82,9 +100,11 @@ div.dedication p.topic-title {
   font-style: normal }
 
 div.figure {
-  margin-left: 2em }
+  margin-left: 2em ;
+  margin-right: 2em }
 
 div.footer, div.header {
+  clear: both;
   font-size: smaller }
 
 div.line-block {
@@ -100,7 +120,7 @@ div.line-block div.line-block {
 div.sidebar {
   margin-left: 1em ;
   border: medium outset ;
-  padding: 0em 1em ;
+  padding: 1em ;
   background-color: #ffffee ;
   width: 40% ;
   float: right ;
@@ -127,31 +147,24 @@ div.system-message p.system-message-title {
 div.topic {
   margin: 2em }
 
-h1 {
-  font-family: Arial, sans-serif;
-  font-size: 20px;
-}
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
 
 h1.title {
- text-align: center;
- font-size: 32px;
-}
-
-h2 {
- font-size: 16px;
- font-family: Arial, sans-serif;
-}
+  text-align: center }
 
 h2.subtitle {
   text-align: center }
 
-h3 {
- font-size: 12px;
- font-family: Arial, sans-serif;
-}
-
-hr {
+hr.docutils {
   width: 75% }
+
+img.align-left {
+  clear: left }
+
+img.align-right {
+  clear: right }
 
 ol.simple, ul.simple {
   margin-bottom: 1em }
@@ -209,18 +222,9 @@ pre.address {
   font-family: serif ;
   font-size: 100% }
 
-pre.line-block {
-  font-family: serif ;
-  font-size: 100% }
-
 pre.literal-block, pre.doctest-block {
   margin-left: 2em ;
-  margin-right: 2em ;
-  background-color: #eeeeee;
-  border-color: #000000;
-  border-width: thin; 
-  font-size: 14px
-}
+  margin-right: 2em }
 
 span.classifier {
   font-family: sans-serif ;
@@ -236,46 +240,46 @@ span.interpreted {
 span.option {
   white-space: nowrap }
 
-span.option-argument {
-  font-style: italic }
-
 span.pre {
   white-space: pre }
 
 span.problematic {
   color: red }
 
-table {
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
   margin-top: 0.5em ;
   margin-bottom: 0.5em }
 
-table.citation {
-  border-left: solid thin gray ;
-  padding-left: 0.5ex }
-
-table.docinfo {
-  margin: 2em 4em;
-}
-
 table.footnote {
-  border-left: solid thin black ;
-  padding-left: 0.5ex }
+  border-left: solid 1px black;
+  margin-left: 1px }
 
-td, th {
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
   padding-left: 0.5em ;
   padding-right: 0.5em ;
   vertical-align: top }
 
-th.docinfo-name, th.field-name {
+table.docutils th.field-name, table.docinfo th.docinfo-name {
   font-weight: bold ;
   text-align: left ;
-  white-space: nowrap;
-  }
+  white-space: nowrap ;
+  padding-left: 0 }
 
-h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
   font-size: 100% }
-
-tt {}
 
 ul.auto-toc {
   list-style-type: none }
@@ -307,9 +311,9 @@ ul.auto-toc {
 <br />Vlado Handziski</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">28-Mar-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.11</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-09-08</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -354,7 +358,8 @@ possibility of a request returning FAIL at any point. This complicates
 implementations by adding internal states.</li>
 <li>You have no control over the timing of a sequence of operations. One
 example of when this can be a problem is timing-sensitive use of an
-A/D converter.</li>
+A/D converter.  You need a way to pre-reserve the use of the ADC so
+that its operations can be run at the exact moment they are desired.</li>
 <li>If a hardware resource supports reservation, you cannot express this
 via this software interface. For instance, I2C buses have a
 concept of &quot;repeated start&quot; when doing multiple bus transactions,
@@ -462,16 +467,32 @@ can use the resource at any given time. Because an arbiter is a
 centralized place that knows whether the resource is in use, it can also
 provide information useful for a variety of other services, such as
 power management. An arbiter MUST provide a parameterized Resource
-interface as well as an instance of the ArbiterInfo interface. An
-arbiter SHOULD also provide a parameterized ResourceRequested interface
-and use a parameterized ResourceConfigure interface.  It MAY also provide
-an instance of the ResourceController interface or any additional
-interfaces specific to the particular arbitration policy being
-implemented.</p>
+interface as well as an instance of the ArbiterInfo interface. The Resource
+interface is instantiated by different clients wanting to gain access to a
+resource.  The ArbiterInfo interface is used by components that wish to
+retrieve global information about the status of a resource (i.e. if it is in
+use, who is using it, etc.).  An arbiter SHOULD also provide a parameterized
+ResourceRequested interface and use a parameterized ResourceConfigure interface.
+It MAY also provide an instance of the ResourceDefaultOwner interface or
+any additional interfaces specific to the particular arbitration policy
+being implemented.  Each of these interfaces is explained in greater detail below:</p>
+<pre class="literal-block">
+Resource     ArbiterInfo ResourceRequested     ResourceDefaultOwner
+   |                |         |                        |
+   |                |         |                        |
+   |               \|/       \|/                       |
+   |             \---------------/                     |
+   |--------------|   Arbiter   |----------------------|
+                 /---------------\
+                         |
+                         |
+                        \|/
+                  ResourceConfigure
+</pre>
 <div class="section">
 <h2><a id="resource" name="resource">3.1 Resource</a></h2>
-<p>Clients of a shared resource arbiter request access
-using the Resource interface:</p>
+<p>Clients of an arbiter request access
+to a shared resource using the Resource interface:</p>
 <pre class="literal-block">
 interface Resource {
   async command error_t request();
@@ -480,6 +501,25 @@ interface Resource {
   async command error_t release();
   async command bool isOwner();
 }
+</pre>
+<p>The diagram below shows how a simple shared resource can be
+built from a dedicated resource by using the Resource interface
+provided by an arbiter:</p>
+<pre class="literal-block">
+         /|\                    /|\
+          |                      |
+          | Data Interface       | Resource
+          |                      |
+--------------------------------------------
+|               Shared Resource            |
+--------------------------------------------
+         /|\                    /|\
+          |                      |
+          | Data Interface       | Resource
+          |                      |
+----------------------      -----------
+| Dedicated Resource |      | Arbiter |
+----------------------      -----------
 </pre>
 <p>A client lets an arbiter know it needs access to a resource by
 making a call to request(). If the resource is free,
@@ -492,8 +532,9 @@ client in the request queue is given access to the resource and
 is signaled its granted() event. If a client ever makes multiple
 requests before receiving a granted event, an EBUSY value is returned,
 and the request is not queued.  Using this policy, clients are not able to
-hog the resource queue by making multiple requests, but they may still be
-able to hog the resource if they do not release it in a timely manner.</p>
+monolopize the resource queue by making multiple requests, but they may still be
+able to monopolize the use of the resource if they do not release it in a
+timely manner.</p>
 <p>Clients can also request the use of a resource through the
 immediateRequest() command.  A call to immediateRequest() can either
 return SUCCESS or FAIL, with requests made through this command never being
@@ -515,15 +556,14 @@ to obtain a client id.  This #define must be placed in a separate file
 because of the way nesC files are preprocessed: including the
 SomeNameP component isn't enough to ensure that macros #define'd in
 SomeNameP are visible in the referring component.</p>
-<p>Please refer to Appendix B for an example of how to wrap this component
+<p>Please refer to Appendix B for an example of how to wrap a component of this type
 inside a generic configuration. Wrapping the component in this way ensures that
 each Resource client is given a unique client ID, with the added
 benefit of properly coupling multiple components that all need to
 refer to the same client ID.</p>
-<p>For a complete example of how the I2C resource might be abstracted
-according to this pattern, please refer to Appendix B.  For further
-examples please refer to the various chip implementations in the
-tinyos-2.x source tree under tinyos-2.x/chips/</p>
+<p>Appendix B also provides a complete example of how an I2C resource might be
+abstracted according to this pattern.  For further examples see the various
+chip implementations in the tinyos-2.x source tree under tinyos-2.x/chips/</p>
 </div>
 <div class="section">
 <h2><a id="arbiterinfo" name="arbiterinfo">3.2 ArbiterInfo</a></h2>
@@ -533,13 +573,38 @@ status of an arbiter:</p>
 <pre class="literal-block">
 interface ArbiterInfo {
   async command bool inUse();
-  async command uint8_t userId();
+  async command uint8_t clientId();
 }
 </pre>
-<p>The ArbiterInfo interface has a variety of uses. For example, the resource
-implementation can use it to refuse requests from clients that do not
-currently have access.  For an example of how this interface is used
-in this fashion please refer to Appendix B.</p>
+<p>In contrast to the parameterized Resource interface provided by an arbiter,
+only a single ArbiterInfo interface is provided. †Its purpose is
+to allow one to find out:</p>
+<ul class="simple">
+<li>Whether the resource for which it is arbitrating use is currently in use or not</li>
+<li>Which client is using it. †</li>
+</ul>
+<p>One can view ArbiterInfo as an interface for obtaining global information about
+the use of a resource, while Resource can be viewed as an interface for obtaining
+local access to that resource.</p>
+<p>The primary use of the ArbiterInfo interface is to allow a shared resource to reject
+any calls made through its data interface by clients that do not currently have access to
+it.  For an example of how this interface is used in this fashion refer to Appendix B.:</p>
+<pre class="literal-block">
+         /|\                        /|\
+          |                          |
+          | Data Interface           | Resource
+          |                          |
+-----------------------------------------------------------
+|                     Shared Resource                     |
+-----------------------------------------------------------
+         /|\                    /|\         /|\
+          |                      |           |
+          | Data Interface       | Resource  | ArbiterInfo
+          |                      |           |
+----------------------      -------------------------------
+| Dedicated Resource |      |           Arbiter           |
+----------------------      -------------------------------
+</pre>
 </div>
 <div class="section">
 <h2><a id="resourcerequested" name="resourcerequested">3.3 ResourceRequested</a></h2>
@@ -561,21 +626,55 @@ command, then the immediateRequested() event is signaled.</p>
 clients, but is not required to.  The client id of the parameterized
 ResourceRequested interface should be coupled with the client id of the Resource
 interface to ensure that all events are signaled to the proper clients.  Please
-refer to Appendix B for an example of how this interface might be used.</p>
+refer to Appendix B for an example of how this interface might be used.:</p>
+<pre class="literal-block">
+         /|\                        /|\                   /|\
+          |                          |                     |
+          | Data Interface           | Resource            | ResourceRequested
+          |                          |                     |
+--------------------------------------------------------------------------------
+|                              Shared Resource                                 |
+--------------------------------------------------------------------------------
+         /|\                    /|\         /|\            /|\
+          |                      |           |              |
+          | Data Interface       | Resource  | ArbiterInfo  | ResourceRequested
+          |                      |           |              |
+----------------------      ----------------------------------------------------
+| Dedicated Resource |      |                     Arbiter                      |
+----------------------      ----------------------------------------------------
+</pre>
 </div>
 <div class="section">
 <h2><a id="resourceconfigure" name="resourceconfigure">3.4 ResourceConfigure</a></h2>
-<p>The ResourceConfigure interface provides a mechanism for clients
-that need to use a resource with different configurations to do so.
-Rather than forcing a client to reconfigure the resource itself, the
-component representing a client can wire to an arbiter's
-ResourceConfigure interface, which is called just before granting the
-client the resource:</p>
+<p>The existence of the ResourceConfigure interface allows a resource to be
+automatically configured just before a client is granted access to it.
+Components providing the ResourceConfigure interface use the interfaces
+provided by an underlying dedicated resource to configure it into one
+of its desired modes of operation.  A cleint then wires its shared resource
+abstraction to the component implementing the desired configuration.  The
+configure command is called immediataely before the client is granted access
+to the resource, and the unconfigure command is called just before fully
+releasing it.:</p>
 <pre class="literal-block">
 interface ResourceConfigure {
   async command void configure();
   async command void unconfigure();
 }
+</pre>
+<pre class="literal-block">
+  ResourceConfigure       ResourceConfigure      ResourceConfigure
+         |                       |                     /|\
+         |                       |                      |
+        \|/                     \|/                     |
+-------------------     -------------------    -------------------
+| Configuration 1 |     | Configuration 2 |    | Shared Resource |
+-------------------     -------------------    -------------------
+         |                       |                     /|\
+         |   Control Interface   |                      | ResourceConfigure
+        \|/                     \|/                     |
+      ------------------------------               -----------
+      |     Dedicated Resource     |               | Arbiter |
+      ------------------------------               -----------
 </pre>
 <p>The arbiter SHOULD use a parameterized ResourceConfigure interface, with
 its client ID parameter coupled with the client id of its parameterized
@@ -588,27 +687,26 @@ before granting a client access to a resource and calling
 ResourceConfigure.unconfigure() just before fully releasing it, it is guaranteed
 that a resource is always unconfigured before an attempt to configure it can be
 made again.</p>
-<p>Using the parameterized ResourceConfigure interface that calls out rather than
-additional commands being put into the Resource interface
-simplifies code reuse. Introducing these new commands into the
-Resource interface could lead to a large number of clients all
-including redundant configuration code, while using the call out
-approach provided by the parameterized interface will only have one
-instance of the code.</p>
-<p>For an example of how the three different modes of the Msp430 Usart
-component can take advantage of this ResourceConfigure interface
-please refer to Appendix B as well as section 4 on the use of
+<p>The commands included in this interface could have been made part of the standard
+Resource interface (and changed into callback events), but at a higher cost than
+keeping them separate. Introducing these new commands into the Resource interface
+would have lead to a large number of clients all including redundant configuration
+code, while using the call out approach to a separate component ensures that we
+only have a single instance of the code.</p>
+<p>For an example of how configurations for the three different modes of the
+Msp430 Usart component can take advantage of the ResourceConfigure
+interface refer to Appendix B as well as section 4 on the use of
 cross-component reservation.</p>
 </div>
 <div class="section">
-<h2><a id="resourcecontroller" name="resourcecontroller">3.5 ResourceController</a></h2>
+<h2><a id="resourcedefaultowner" name="resourcedefaultowner">3.5 ResourceDefaultOwner</a></h2>
 <p>The normal Resource interface is for use by clients that all share the resource
-in an equal fashion. The ResourceController interface is for use by a single
+in an equal fashion. The ResourceDefaultOwner interface is for use by a single
 client that needs to be given control of the resource whenever no one else is
-using it. An arbiter MAY provide a single instance of the ResourceController
-interface.:</p>
+using it. An arbiter MAY provide a single instance of the ResourceDefaultOwner
+interface. It MUST NOT provide more than one.:</p>
 <pre class="literal-block">
-interface ResourceController {
+interface ResourceDefaultOwner {
   async event void granted();
   async command error_t release();
   async command bool isOwner();
@@ -616,46 +714,39 @@ interface ResourceController {
   async event void immediateRequested();
 }
 </pre>
-<p>The Arbiter MUST guarantee that the user of the ResourceController interface is
+<p>The Arbiter MUST guarantee that the client of the ResourceDefaulrClient interface is
 made the owner of the resource before the boot initialization sequence is
 completed.  When a normal resource client makes a request for the resource, the
-ResourceController will receive either a requested() or an immediateRequested()
+ResourceDefaultOwner will receive either a requested() or an immediateRequested()
 event depending on how the request was made.  It must then decide if and when to
 release it.  Once released, all clients that have pending requests will be
 granted access to the resource in the order determined by the queuing policy of
 the arbiter in use.  Once all pending requests have been granted (including
 those that came in while other clients had access to the resource), the
-ResourceController is automatically given control of the resource, receiving its
-granted() event in the process.  The ResourceController interface also contains
+ResourceDefaultOwner is automatically given control of the resource, receiving its
+granted() event in the process.  The ResourceDefaultOwner interface also contains
 the same isOwner() command as the normal Resource interface, and the semantics
 of its use are exactly the same.</p>
-<p>Although the ResourceController interface looks similar to a combination of the
+<p>Although the ResourceDefaultOwner interface looks similar to a combination of the
 normal Resource interface and the ResourceRequested interface, its intended use
-is quite different.  The ResourceController interface should only be used by
+is quite different.  The ResourceDefaultOwner interface should only be used by
 clients that wish to have access to a resource only when no other clients are
-using it.  They do not actively seek out access to the resource, but rather use
+using it.  They do not actively seek access to the resource, but rather use
 it to perform operations when it would otherwise simply be idle.</p>
-<p>Combining the use of the Resource and ResourceRequested interfaces could be made
-to operate in a similar manner as the ResourceController interface, except that
-there is no way to tell a client with these interfaces that a resource has gone
-completely idle.  Each client must actively request the use of the resource and
-be granted that resource in the order determined by the queuing policy of its
-arbiter.  With the ResourceController interface, there is no active request of
-the resource.  The arbiter simply signals the granted event to the
-ResourceController whenever there are no more pending requests and the last
-client that owned the resource releases it.</p>
-<p>The primary motivation behind the definition of the ResourceController
-interface was to allow for an easy integration of the power management
-policy used by the resource with the arbitration of the resource
-itself.  Arbiters that want to allow a resource to be controlled by a particular power management policy can provide the ResourceController interface
-for use by a component that implements that policy. The power management component will receive the granted() event whenever the resource has gone idle,
-and will then proceed in powering it down.  When another
-client requests the resource, the power manager will be notified through
-either the requested() or immediateRequested() events as appropriate.  It
-can then power up the resource and release it once the power up has completed.
-Note that if power up is a split-phase operation (takes a while), then calls
-by clients to immediateRequest() when in the powered down state will not return
-SUCCESS. Please see the TEP on the Power Management of Non-Virtualized devices
+<p>The primary motivation behind the definition of the ResourceDefaultOwner
+interface is to allow for an easy integration of power management
+for a resource with its arbitration policy.  Arbiters that want to allow
+a resource to be controlled by a particular power management policy can
+provide the ResourceDefaultOwner interface for use by a component that
+implements that policy. The power management component will receive the
+granted() event whenever the resource has gone idle, and will proceed in
+powering it down.  When another client requests the resource, the power
+manager will be notified through either the requested() or
+immediateRequested() events as appropriate.  It can then power up the resource
+and release it once the power up has completed.  Note that if power up is
+a split-phase operation (takes a while), then calls by clients to
+immediateRequest() when in the powered down state will return
+FAIL. Please see the TEP on the Power Management of Non-Virtualized devices
 (<a class="footnote-reference" href="#id7" id="id3" name="id3">[4]</a>) for more details.</p>
 </div>
 </div>
@@ -712,16 +803,16 @@ new Msp430Spi0C component is instantiated.  This id is used as a
 parameter to the parameterized Resource interface provided by the
 Msp430Spi0P component.  This is where the mapping of the two
 different ids begins.  As well as <em>providing</em> a parameterized
-Resource interface, the Msp430Spi0P component also <em>uses</em> a
-parameterized Resource interface. Whenever a client makes a call
-through the provided Resource interface with id CLIENT_ID, an
-underlying call to the used Resource interface with the same id is
-implicitly made.  By wiring the used Resource interface with id
-CLIENT_ID to the instance of the Resource interface provided by the
-instantiation of the Msp430Usart0C component, the mapping is complete.
-Any calls to the Resource interface provided by a new instantiation of
-the Msp430Spi0C component will now be made through a unique Resource
-interface on the underlying  Msp430Usart0C component.</p>
+Resource interface (Msp430Spi0P.Resource), the Msp430Spi0P component
+also <em>uses</em> a parameterized Resource interface (Msp430Spi0P.UsartResource).
+Whenever a client makes a call through the provided Resource interface
+with id CLIENT_ID, an underlying call to the Msp430Spi0P.Resource interface
+with the same id is implicitly made.  By then wiring the Msp430Spi0P.UsartResource
+interface with id CLIENT_ID to an instance of the Resource interface
+provided by the instantiation of the Msp430Usart0C component, the mapping
+is complete. Any calls to the Resource interface provided by a new
+instantiation of the Msp430Spi0C component will now be made through a
+unique Resource interface on the underlying  Msp430Usart0C component.</p>
 <p>This level of indirection is necessary because it may not always be
 desirable to directly wire the service level Resource interface to
 the underlying shared Resource interface.  Sometimes we may want to
@@ -759,14 +850,14 @@ generic module SimpleArbiter {
 generic module Arbiter {
   provides interface Resource[uint8_t id];
   provides interface ResourceRequested[uint8_t id];
-  provides interface ResourceController;
+  provides interface ResourceDefaultOwner;
   provides interface ArbiterInfo;
   uses interface ResourceConfigure[uint8_t id];
 }
 </pre>
 <p>The &quot;Simple&quot; arbiters are intended for use by resources that
 do not require the additional overhead incurred by providing the
-ResourceController interface.</p>
+ResourceDefaultOwner interface.</p>
 <p>For many situations, changing an arbitration policy requires nothing
 more than changing the queuing policy it uses to decide the order in
 which incoming requests should be granted. In this way, separating
@@ -811,7 +902,7 @@ implementation {
   Arbiter.Queue -&gt; Queue;
 }
 </pre>
-<p>This generic configuration can instantiated by a resource in order
+<p>This generic configuration can be instantiated by a resource in order
 to grant requests made by its clients in an FCFS fashion.</p>
 <p>All of the default queuing policies provided in tinyos-2.x along with the
 respective arbitration components that have been built using them are
@@ -826,6 +917,16 @@ given below:</p>
 - SimpleRoundRobinArbiterC
 - RoundRobinArbiterC</p>
 </blockquote>
+<p>Keep in mind that neither the implementation of an arbiter nor its
+queuing policy can be used to explicitly restrict access to an
+underlying shared resource.  The arbiter simply provides a standardized
+way of managing client ids so that shared resources don't have to duplicate
+this functionality themselves every time they are implemented.  In order to
+actually restrict clients from using a resource without first requesting it,
+a shared resource must use the functionality provided by the ArbiterInfo interface
+to perform runtime checks on the current owner of a resource.  Please refer
+to the section on the ArbiterInfo interface in Appendix B for more information
+on how such runtime checks can be performed.</p>
 </div>
 <div class="section">
 <h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
@@ -1012,7 +1113,7 @@ name of the resource required by the arbiter:</p>
 #define I2CPACKET_RESOURCE &quot;I2CPacket.Resource&quot;
 #endif
 </pre>
-<p>This service would then be made available to a user through
+<p>This service would then be made available to a client through
 the generic configuration seen below:</p>
 <pre class="literal-block">
 #include I2CPacket.h
@@ -1083,7 +1184,7 @@ only the client that currently has access to the ADC resource is able to
 use it:</p>
 <pre class="literal-block">
 async command error_t Msp430Adc12SingleChannel.getSingleData[uint8_t id]() {
-  if (call ADCArbiterInfo.userId() == id){
+  if (call ADCArbiterInfo.clientId() == id){
     configureChannel()
     // Start getting data
   }
@@ -1091,7 +1192,7 @@ async command error_t Msp430Adc12SingleChannel.getSingleData[uint8_t id]() {
 }
 
 async command error_t Msp430Adc12FastSingleChannel.configure[uint8_t id]() {
-  if (call ADCArbiterInfo.userId() == id){
+  if (call ADCArbiterInfo.clientId() == id){
     clientID = id
     configureChannel()
   }
@@ -1135,7 +1236,7 @@ implementation {
   Msp430Adc12FastSingleChannel = Msp430Adc12C.SingleChannel[ID];
 }
 </pre>
-<p>Since these are generic components, users simply need to instantiate them
+<p>Since these are generic components, clients simply need to instantiate them
 in order to get access to a single Resource interface that is already
 properly coupled with a Msp430Adc12SingleChannel or Msp430Adc12FastSingleChannel
 interface.</p>
