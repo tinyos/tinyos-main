@@ -5,14 +5,9 @@ Resource Arbitration
 :TEP: 108
 :Group: Core Working Group
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Authors: Kevin Klues, Philip Levis, David Gay, David Culler, Vlado Handziski
-
-:Draft-Created: 28-Mar-2005
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2007-01-05 18:53:43 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
