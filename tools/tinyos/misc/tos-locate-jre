@@ -50,9 +50,13 @@ case `uname` in
     ;;
 
     Linux)
+    # Check gentoo java configuration
+    javapath=`java-config -c 2>/dev/null`
     # We check the path first, on the assumption that that's the preferred
     # version.
-    pathlocate javac || { test -z "$javac" && pathlocate java; }
+    if [ -z "$javapath" ]; then
+        pathlocate javac || { test -z "$javac" && pathlocate java; }
+    fi
     if [ -z "$javapath" ]; then
 	# We try a bunch of standard names, before resorting to rpm -qa
 	rpmlocate IBMJava2-SDK javac || \
