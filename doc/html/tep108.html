@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@python.org
-:Date: $Date: 2007-01-05 18:53:43 $
-:Revision: $Revision: 1.7 $
+:Date: $Date: 2007-01-10 08:46:52 $
+:Revision: $Revision: 1.8 $
 :Copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -311,9 +311,9 @@ ul.auto-toc {
 <br />Vlado Handziski</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">28-Mar-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-01-05</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -502,25 +502,6 @@ interface Resource {
   async command bool isOwner();
 }
 </pre>
-<p>The diagram below shows how a simple shared resource can be
-built from a dedicated resource by using the Resource interface
-provided by an arbiter:</p>
-<pre class="literal-block">
-         /|\                    /|\
-          |                      |
-          | Data Interface       | Resource
-          |                      |
---------------------------------------------
-|               Shared Resource            |
---------------------------------------------
-         /|\                    /|\
-          |                      |
-          | Data Interface       | Resource
-          |                      |
-----------------------      -----------
-| Dedicated Resource |      | Arbiter |
-----------------------      -----------
-</pre>
 <p>A client lets an arbiter know it needs access to a resource by
 making a call to request(). If the resource is free,
 SUCCESS is returned, and a granted event is signaled
@@ -548,6 +529,25 @@ check if it is the current owner of the resource.  This command is mostly
 used to perform runtime checks to make sure that clients not owning a resource
 are not able to use it.  If a call to isOwner fails, then no call
 should be made to commands provided by that resource.</p>
+<p>The diagram below shows how a simple shared resource can be
+built from a dedicated resource by using just the Resource interface
+provided by an arbiter.:</p>
+<pre class="literal-block">
+         /|\                    /|\
+          |                      |
+          | Data Interface       | Resource
+          |                      |
+--------------------------------------------
+|               Shared Resource            |
+--------------------------------------------
+         /|\                    /|\
+          |                      |
+          | Data Interface       | Resource
+          |                      |
+----------------------      ----------------
+| Dedicated Resource |      |    Arbiter   |
+----------------------      ----------------
+</pre>
 <p>An arbiter MUST provide exactly one parameterized Resource interface,
 where the parameter is a client ID, following the Service
 Instance pattern[3]_.  An arbitrated component SomeNameP MUST
@@ -577,11 +577,11 @@ interface ArbiterInfo {
 }
 </pre>
 <p>In contrast to the parameterized Resource interface provided by an arbiter,
-only a single ArbiterInfo interface is provided. †Its purpose is
+only a single ArbiterInfo interface is provided.  Its purpose is
 to allow one to find out:</p>
 <ul class="simple">
 <li>Whether the resource for which it is arbitrating use is currently in use or not</li>
-<li>Which client is using it. †</li>
+<li>Which client is using it.</li>
 </ul>
 <p>One can view ArbiterInfo as an interface for obtaining global information about
 the use of a resource, while Resource can be viewed as an interface for obtaining
@@ -907,16 +907,18 @@ to grant requests made by its clients in an FCFS fashion.</p>
 <p>All of the default queuing policies provided in tinyos-2.x along with the
 respective arbitration components that have been built using them are
 given below:</p>
-<blockquote>
-<p>Queuing Policies:
-- FcfsResourceQueueC
-- RoundRobinResourceQueueC</p>
-<p>Arbiters:
-- SimpleFcfsArbiterC
-- FcfsArbiterC
-- SimpleRoundRobinArbiterC
-- RoundRobinArbiterC</p>
-</blockquote>
+<p>Queuing Policies:</p>
+<ul class="simple">
+<li>FcfsResourceQueueC</li>
+<li>RoundRobinResourceQueueC</li>
+</ul>
+<p>Arbiters:</p>
+<ul class="simple">
+<li>SimpleFcfsArbiterC</li>
+<li>FcfsArbiterC</li>
+<li>SimpleRoundRobinArbiterC</li>
+<li>RoundRobinArbiterC</li>
+</ul>
 <p>Keep in mind that neither the implementation of an arbiter nor its
 queuing policy can be used to explicitly restrict access to an
 underlying shared resource.  The arbiter simply provides a standardized

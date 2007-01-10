@@ -241,7 +241,7 @@ should be made to commands provided by that resource.
 
 The diagram below shows how a simple shared resource can be 
 built from a dedicated resource by using just the Resource interface 
-provided by an arbiter.
+provided by an arbiter.::
 
            /|\                    /|\
             |                      |
@@ -290,11 +290,11 @@ status of an arbiter::
   }
   
 In contrast to the parameterized Resource interface provided by an arbiter, 
-only a single ArbiterInfo interface is provided.  Its purpose is 
+only a single ArbiterInfo interface is provided.  Its purpose is 
 to allow one to find out:
 
 - Whether the resource for which it is arbitrating use is currently in use or not
-- Which client is using it.  
+- Which client is using it.
 
 One can view ArbiterInfo as an interface for obtaining global information about  
 the use of a resource, while Resource can be viewed as an interface for obtaining 
@@ -634,15 +634,17 @@ All of the default queuing policies provided in tinyos-2.x along with the
 respective arbitration components that have been built using them are 
 given below:
 
-  Queuing Policies:
-  - FcfsResourceQueueC
-  - RoundRobinResourceQueueC
+Queuing Policies:
+
+- FcfsResourceQueueC
+- RoundRobinResourceQueueC
     
-  Arbiters:
-  - SimpleFcfsArbiterC
-  - FcfsArbiterC
-  - SimpleRoundRobinArbiterC
-  - RoundRobinArbiterC 
+Arbiters:
+
+- SimpleFcfsArbiterC
+- FcfsArbiterC
+- SimpleRoundRobinArbiterC
+- RoundRobinArbiterC 
   
 Keep in mind that neither the implementation of an arbiter nor its 
 queuing policy can be used to explicitly restrict access to an 
