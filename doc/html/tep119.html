@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Collection</title>
 <meta name="author" content="Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-13 02:09:59 $
-:version: $Revision: 1.8 $
+:date: $Date: 2007-01-10 18:33:38 $
+:version: $Revision: 1.9 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,6 +283,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="collection">
 <h1 class="title">Collection</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -306,7 +307,6 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
-<div class="document" id="collection">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -314,29 +314,36 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>The memo documents the interfaces, components, and semantics used by
 collection protocol in TinyOS 2.x. Collection provides a best-effort,
-multihop delivery of packets to the root of a tree.</p>
+multihop delivery of packets to the root of <em>a</em> tree. There may be
+multiple roots in a network, and in this case the semantics implemented
+are of <em>anycast</em> delivery to at least one of the roots. A node sending
+a packet does not specify which root the packet is destined to.</p>
 </div>
-<div class="section" id="introduction">
-<h1><a name="introduction">1. Introduction</a></h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>Collecting data at a base station is a common requirement of sensor
 network applications. The general approach used is to build one
 or more collection <em>trees</em>, each of which is rooted at a base
-station. When a node has data which needs to be collected, it 
+station. When a node has data which needs to be collected, it
 sends the data up the tree, and it forwards collection data that
 other nodes send to it. Sometimes, depending on the form of data
 collection, systems need to be able to inspect packets as they go
 by, either to gather statistics, compute aggregates, or suppress
 redundant transmissions.</p>
 <p>When a network has multiple base stations that act as <em>root</em> nodes,
-rather than one tree, it has a <em>forest</em> of trees. By picking a 
+rather than one tree, it has a <em>forest</em> of trees. By picking a
 parent node, a collection protocol implicitly joins one of these
 trees. Collection provides a best-effort,
 multihop delivery of packets to one of a network's tree roots:
-it is an <em>anycast</em> protocol.</p>
+it is an <em>anycast</em> protocol. The semantics is that the protocol
+will make a reasonable effort to deliver the message to at least
+one of the roots in the network. There are however no guarantees of
+delivery, and there can be duplicates delivered to one or more
+roots. There is also no ordering guarantees.</p>
 <p>Given the limited state that nodes can store and a general need
 for distributed tree building algorithms, simple collection protocols
 encounter several challenges. These challenges are not unique to
@@ -347,8 +354,8 @@ family:</p>
 <ul class="simple">
 <li>Loop detection, detecting when a node selects one of its
 descendants as a new parent.</li>
-<li>Duplicate suppression, detecting and dealing with when lost 
-acknowledgments are causing packets to replicate in the 
+<li>Duplicate suppression, detecting and dealing with when lost
+acknowledgments are causing packets to replicate in the
 network, wasting bandwidth.</li>
 <li>Link estimation, evaluating the link quality to single-hop
 neighbors.</li>
@@ -359,34 +366,24 @@ from introducing interference for subsequent packets.</li>
 <p>The rest of this document describes a set of components and interfaces
 for a collection service outlined above.</p>
 </div>
-<div class="section" id="collection-interfaces">
-<h1><a name="collection-interfaces">2. Collection interfaces</a></h1>
+<div class="section">
+<h1><a id="collection-interfaces" name="collection-interfaces">2. Collection interfaces</a></h1>
 <p>A node can perform four different roles in collection: producer,
 consumer, snooper, and in-network processor. Depending on their role,
 the nodes use different interfaces to interact with the collection
 component.</p>
-<p>The nodes that generate data to be sent to the root are
-<em>producers</em>. The producers use the Send interface [<a class="reference" href="#id1">1</a>] to send
-data to the root of the collection tree. The collection tree
-identifier is be specified as a parameter to Send during
-instantiation.</p>
-<p>Root nodes that receive data from the network are <em>consumers</em>. The
-consumers use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a message
-delivered by collection. The collection tree identifier is be
-specified as a parameter to Receive during instantiation.</p>
-<p>The nodes that overhear messages in transit are <em>snoopers</em>. The snoopers
-use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a snooped message. The
-collection tree identifier is be specified as a parameter to Receive
-during instantiation.</p>
-<p>The nodes can process a packet that are in transit. These in-network
-<em>processors</em> use the Intercept interface [<a class="reference" href="#id1">1</a>] to receive and
-update a packet. The collection tree identifier is be specified as a
-parameter to Intercept during instantiation.</p>
+<p>A consumer is a root of a tree. The set of all roots and the paths that
+lead to them form the collection routing infrastructure in the network.
+For any connected set of nodes implementing the collection protocol
+there is only one collection infrastructure, <em>i.e.</em>, all roots in this
+set active at the same time are part of the same infrastructure.</p>
 <p>A node is configured to become a root by using the RootControl
 interface. RootControl.setRoot() MUST make the current node a root of
-the tree specified during instantiation. RootControl.unsetRoot() MUST
-make the current root no longer a root in the tree specified during
-instantiation. RootControl.unsetRoot() MAY be called on a node that is
+the the collection infrastructure. RootControl.unsetRoot() MUST
+make the current root no longer a root in the collection infrastructure.
+Both calls are idempotent.
+RootControl.setRoot() MAY be called on a node that is already a root, to
+no effect. RootControl.unsetRoot() MAY be called on a node that is
 not a root:</p>
 <pre class="literal-block">
 interface RootControl {
@@ -395,13 +392,33 @@ interface RootControl {
   command bool isRoot();
 }
 </pre>
+<p>The collection infrastructure can be multiplexed among independent
+applications, by means of a <em>collection identifier</em>. It is important
+to note that the <em>data</em> traffic in the protocol is multiplexed,
+while the <em>control</em> traffic is not.</p>
+<p>The nodes that generate data to be sent to the root are <em>producers</em>.
+The producers use the Send interface [<a class="reference" href="#id1">1</a>] to send data to the root
+of the collection tree.  The collection identifier is specified as a
+parameter to Send during instantiation.</p>
+<p>Root nodes that receive data from the network are <em>consumers</em>. The
+consumers use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a message
+delivered by collection. The collection identifier is specified
+as a parameter to Receive during instantiation.</p>
+<p>The nodes that overhear messages in transit are <em>snoopers</em>. The
+snoopers use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a snooped
+message. The collection identifier is specified as a parameter
+to Receive during instantiation.</p>
+<p>The nodes can process a packet that are in transit. These in-network
+<em>processors</em> use the Intercept interface [<a class="reference" href="#id1">1</a>] to receive and update
+a packet. The collection identifier is specified as a parameter
+to Intercept during instantiation.</p>
 </div>
-<div class="section" id="collection-services">
-<h1><a name="collection-services">3 Collection Services</a></h1>
-<p>A collection service MUST provide one component, TreeCollectionC,
+<div class="section">
+<h1><a id="collection-services" name="collection-services">3 Collection Services</a></h1>
+<p>A collection service MUST provide one component, CollectionC,
 which has the following signature:</p>
 <pre class="literal-block">
-configuration TreeCollectionC {
+configuration CollectionC {
   provides {
     interface StdControl;
     interface Send[uint8_t client];
@@ -411,18 +428,17 @@ configuration TreeCollectionC {
     interface RootControl;
     interface Packet;
     interface CollectionPacket;
-    interface TreeRoutingInspect;
   }
   uses {
     interface CollectionId[uint8_t client];
   }
 }
 </pre>
-<p>TreeCollectionC MAY have additional interfaces, but they MUST have
+<p>CollectionC MAY have additional interfaces, but they MUST have
 default functions on all outgoing invocations (commands for uses,
 events for provides) of those interfaces so that it can operate
 properly if they are not wired.</p>
-<p>Components SHOULD NOT wire to TreeCollectionC.Send. The generic
+<p>Components SHOULD NOT wire to CollectionC.Send. The generic
 component CollectionSenderC (described in section 3.1) provides
 a virtualized sending interface.</p>
 <p>Receive, Snoop, and Intercept are all parameterized by
@@ -433,37 +449,22 @@ top of active messages. All packets sent with a particular
 collection_id_t generally have the same payload format, so that
 snoopers, intercepters, and receivers can parse it properly.</p>
 <p>Receive.receive MUST NOT be signaled on non-root
-nodes. TreeCollectionC MAY signal Receive.receive on a root node when
+nodes. CollectionC MAY signal Receive.receive on a root node when
 a data packet successfully arrives at that node. If a root node calls
-Send, TreeCollectionC MUST treat it as it if were a received packet.
+Send, CollectionC MUST treat it as it if were a received packet.
 Note that the buffer swapping semantics of Receive.receive, when
-combined with the pass semantics of Send, require that TreeCollectionC
+combined with the pass semantics of Send, require that CollectionC
 make a copy of the buffer if it signals Receive.receive.</p>
-<p>If TreeCollectionC receives a data packet to forward and it is not a
+<p>If CollectionC receives a data packet to forward and it is not a
 root node, it MAY signal Intercept.forward.</p>
-<p>If TreeCollectionC receives a data packet that a different node
+<p>If CollectionC receives a data packet that a different node
 is supposed to forward, it MAY signal Snoop.receive.</p>
 <p>RootControl allows a node to be made a collection tree root.
-TreeCollectionC SHOULD NOT configure a node as a root by default.</p>
+CollectionC SHOULD NOT configure a node as a root by default.</p>
 <p>Packet and CollectionPacket allow components to access collection
 data packet fields [<a class="reference" href="#id1">1</a>].</p>
-<p>TreeRoutingInspect provides information on the current position of
-the node in a routing tree:</p>
-<pre class="literal-block">
-interface TreeRoutingInspect {
-  command error_t getParent(am_addr_t* parent);
-  command error_t getHopcount(uint8_t* hopcount);
-  command error_t getMetric(uint16_t* metric);
-}
-</pre>
-<p>In each of these commands, if the return value is not SUCCESS, the
-value stored in the pointer argument is undefined. The getMetric
-command provides a measure of the quality of a node's route to the
-base station. This routing metric MUST be monotonically increasing
-across hops. In a collection tree, if node A is the parent of node B,
-then node B's metric value MUST be greater than node A's.</p>
-<div class="section" id="collectionsenderc">
-<h2><a name="collectionsenderc">3.1 CollectionSenderC</a></h2>
+<div class="section">
+<h2><a id="collectionsenderc" name="collectionsenderc">3.1 CollectionSenderC</a></h2>
 <p>Collection has a virtualized sending abstraction, the generic
 component CollectionSenderC:</p>
 <pre class="literal-block">
@@ -481,40 +482,47 @@ have a single packet format, so that receivers can parse a packet
 based on its collection ID and contents.</p>
 </div>
 </div>
-<div class="section" id="implementation">
-<h1><a name="implementation">4 Implementation</a></h1>
+<div class="section">
+<h1><a id="implementation" name="implementation">4 Implementation</a></h1>
 <p>An implementation of this TEP can be found in
-<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/collection</span></tt>. The implementation consists of
-three major components, which are wired together to form a
-CollectionC: LinkEstimatorP, TreeRoutingEngineP, and ForwardingEngineP.</p>
-<p>This decomposition tries to encourage evolution of components and ease
-of use through modularization. Neighbor management and link estimation
-are are decoupled from the routing protocol. Furthermore, the routing
-protocol and route selection are decoupled from the forwarding policies,
-such as queueing and timing.</p>
-<div class="section" id="linkestimatorp">
-<h2><a name="linkestimatorp">4.1 LinkEstimatorP</a></h2>
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/ctp</span></tt> and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/le</span></tt>, in
+the CTP protocol. It is beyond the scope of this document to fully
+describe CTP, but we outline its main components. CTP will be
+described in an upcoming TEP [<a class="reference" href="#id2">2</a>].  This implementation is a
+reference implementation, and is not the only possibility.  It
+consists of three major components, which are wired together to form
+a CollectionC: LinkEstimatorP, CtpTreeRoutingEngineP, and
+CtpForwardingEngineP.</p>
+<p>This decomposition tries to encourage evolution of components and
+ease of use through modularization. Neighbor management and link
+estimation are decoupled from the routing protocol. Furthermore, the
+routing protocol and route selection are decoupled from the
+forwarding policies, such as queueing and timing.</p>
+<div class="section">
+<h2><a id="linkestimatorp" name="linkestimatorp">4.1 LinkEstimatorP</a></h2>
 <p>LinkEstimatorP estimates the quality of link to or from each
-neighbor. Link estimation can be done in a variety of ways, and we do
-not impose one here. It is decoupled from the establishment of
-routes. There is a narrow interface (LinkEstimator and
-NeighborTableEviction) between the link estimator and the routing
-engine. The one requirement is that the quality returned is
-standardized. A smaller return value from LinkEstimator.getQuality(),
-LinkEstimator.getforwardQuality(), LinkEstimator.getreserveQuality()
-MUST imply that the link to the neighbor is estimated to be of a
-higher quality than the one that results in a smaller return
-value. The range of value SHOULD be [0,255] and the variation in link
-quality in that range SHOULD be linear. Radio provided values such as
-LQI or RSI, beacon based link estimation to compute ETX, or their
-combination are some possible approaches to estimating link
-qualities. LinkEstimatorP MAY have its own control messages to compute
-bi-directional link qualities. LinkEstimatorP provides calls (txAck(),
-txNoAck(), and clearDLQ()) to update the link estimates based on
-successful or unsuccessful data transmission to the neighbors. The
-user of LinkEstimatorP can call insertNeighbor() to manually insert a
-node in the neighbor table, pinNeighbor() to prevent a neighbor from
-being evicted, and unpinNeighbor() to restore eviction policy:</p>
+neighbor. Link estimation can be done in a variety of ways, and we
+do not impose one here. It is decoupled from the establishment of
+routes. There is a narrow interface -- LinkEstimator -- between the
+link estimator and the routing engine. The one requirement is that
+the quality returned is standardized. A smaller return value from
+LinkEstimator.getQuality(), LinkEstimator.getforwardQuality(),
+LinkEstimator.getReverseQuality() MUST imply that the link to the
+neighbor is estimated to be of a higher quality than the one that
+results in a larger return value. The range of value SHOULD be
+[0,255] and the variation in link quality in that range SHOULD be
+linear. Radio provided values such as LQI or RSI, beacon based link
+estimation to compute ETX, or their combination are some possible
+approaches to estimating link qualities.</p>
+<p>LinkEstimatorP MAY have its own control messages to compute
+bi-directional link qualities. LinkEstimatorP provides calls
+(txAck(), txNoAck(), and clearDLQ()) to update the link estimates
+based on successful or unsuccessful data transmission to the
+neighbors.</p>
+<p>The user of LinkEstimatorP can call insertNeighbor() to manually
+insert a node in the neighbor table, pinNeighbor() to prevent a
+neighbor from being evicted, and unpinNeighbor() to restore eviction
+policy:</p>
 <pre class="literal-block">
 typedef uint16_t neighbor_table_entry_t
 
@@ -542,52 +550,68 @@ interface LinkEstimator {
   command error_t clearDLQ(am_addr_t neighbor);
   event void evicted(am_addr_t neighbor);
 }
-
-interface NeighborTableEviction {
-  event void evicted(uint16_t neighbor)
-}
 </pre>
 </div>
-<div class="section" id="treeroutingenginep">
-<h2><a name="treeroutingenginep">4.2 TreeRoutingEngineP</a></h2>
-<p>TreeRoutingEngineP is responsible for computing routes to the roots of a
-tree. It uses NeighborTable and LinkEstimator interfaces to learn
+<div class="section">
+<h2><a id="ctproutingenginep" name="ctproutingenginep">4.2 CtpRoutingEngineP</a></h2>
+<p>CtpRoutingEngineP is responsible for computing routes to the roots of a
+tree. In traditional networking terminology, this is part of the
+control plane of the network, and is does not directly forward any
+data packets, which is the responsibility of CtpForwardingEngine.
+The main interface between the two is UnicastNameFreeRouting.</p>
+<p>CtpRoutingEngineP uses the LinkEstimator interface to learn
 about the nodes in the neighbor table maintained by LinkEstimatorP and
 the quality of links to and from the neighbors. The routing protocol
 on which collection is implemented MUST be a tree-based routing
-protocol with a single or multiple roots. TreeRoutingEngineP 
+protocol with a single or multiple roots. CtpRoutingEngineP
 allows a node to be configured as a root or a non-root node
-dynamically. TreeRoutingEngineP maintains multiple candidate next hops:</p>
+dynamically. CtpRoutingEngineP maintains multiple candidate next hops:</p>
 <pre class="literal-block">
-generic module TreeRoutingEngineP(uint8_t routingTableSize) {
-  provides {
-      interface UnicastNameFreeRouting as Routing;
-      interface RootControl;
-      interface TreeRoutingInspect;
-      interface StdControl;
-      interface Init;
-  } 
-  uses {
-      interface AMSend as BeaconSend;
-      interface Receive as BeaconReceive;
-      interface LinkEstimator;
-      interface AMPacket;
-      interface LinkSrcPacket;
-      interface SplitControl as RadioControl;
-      interface Timer&lt;TMilli&gt; as BeaconTimer;
-      interface Random;
-      interface CollectionDebug;
-  }
+generic module CtpRoutingEngineP(uint8_t routingTableSize,
+                                 uint16_t minInterval,
+                                 uint16_t maxInterval) {
+    provides {
+        interface UnicastNameFreeRouting as Routing;
+        interface RootControl;
+        interface CtpInfo;
+        interface StdControl;
+        interface CtpRoutingPacket;
+        interface Init;
+    }
+    uses {
+        interface AMSend as BeaconSend;
+        interface Receive as BeaconReceive;
+        interface LinkEstimator;
+        interface AMPacket;
+        interface LinkSrcPacket;
+        interface SplitControl as RadioControl;
+        interface Timer&lt;TMilli&gt; as BeaconTimer;
+        interface Timer&lt;TMilli&gt; as RouteTimer;
+        interface Random;
+        interface CollectionDebug;
+        interface CtpCongestion;
+    }
+}
+</pre>
+<pre class="literal-block">
+interface UnicastNameFreeRouting {
+  command am_addr_t nextHop();
+
+  command bool hasRoute();
+  event void routeFound();
+  event void noRoute();
 }
 </pre>
 </div>
-<div class="section" id="forwardingenginep">
-<h2><a name="forwardingenginep">4.3 ForwardingEngineP</a></h2>
-<p>The ForwardingEngineP component provides all the top level interfaces
-(except RootControl) which TreeCollectionC provides and an application 
-uses:</p>
+<div class="section">
+<h2><a id="ctpforwardingenginep" name="ctpforwardingenginep">4.3 CtpForwardingEngineP</a></h2>
+<p>The CtpForwardingEngineP component provides all the top level interfaces
+(except RootControl) which CollectionC provides and an application
+uses. It deals with retransmissions, duplicate suppression, packet
+timing, loop detection, and also informs the LinkEstimator of the
+outcome of attempted transmissions.:</p>
 <pre class="literal-block">
-generic module ForwardingEngineP() {
+generic module CtpForwardingEngineP() {
   provides {
     interface Init;
     interface StdControl;
@@ -597,20 +621,24 @@ generic module ForwardingEngineP() {
     interface Intercept[collection_id_t id];
     interface Packet;
     interface CollectionPacket;
+    interface CtpPacket;
+    interface CtpCongestion;
   }
   uses {
+    interface SplitControl as RadioControl;
     interface AMSend as SubSend;
     interface Receive as SubReceive;
     interface Receive as SubSnoop;
     interface Packet as SubPacket;
     interface UnicastNameFreeRouting;
-    interface SplitControl as RadioControl;
     interface Queue&lt;fe_queue_entry_t*&gt; as SendQueue;
     interface Pool&lt;fe_queue_entry_t&gt; as QEntryPool;
     interface Pool&lt;message_t&gt; as MessagePool;
     interface Timer&lt;TMilli&gt; as RetxmitTimer;
-    interface Cache&lt;uint32_t&gt; as SentCache;
-    interface TreeRoutingInspect;
+    interface LinkEstimator;
+    interface Timer&lt;TMilli&gt; as CongestionTimer;
+    interface Cache&lt;message_t*&gt; as SentCache;
+    interface CtpInfo;
     interface PacketAcknowledgements;
     interface Random;
     interface RootControl;
@@ -620,14 +648,14 @@ generic module ForwardingEngineP() {
   }
 }
 </pre>
-<p>ForwardingEngineP uses a large number of interfaces, which can be
+<p>CtpForwardingEngineP uses a large number of interfaces, which can be
 broken up into a few groups of functionality:</p>
 <blockquote>
 <ul class="simple">
 <li>Single hop communication: SubSend, SubReceive, SubSnoop,
 SubPacket, PacketAcknowledgments, AMPacket</li>
-<li>Routing: UnicastNameFreeRouting, TreeRoutingInspect, 
-RootControl, CollectionId, SentCache</li>
+<li>Routing: UnicastNameFreeRouting, RootControl, CtpInfo,
+CollectionId, SentCache</li>
 <li>Queue and buffer management: SendQueue, MessagePool,
 QEntryPool</li>
 <li>Packet timing: Random, RetxmitTimer</li>
@@ -635,10 +663,10 @@ QEntryPool</li>
 </blockquote>
 </div>
 </div>
-<div class="section" id="author-s-address">
-<h1><a name="author-s-address">5. Author's Address</a></h1>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
 <div class="line-block">
-<div class="line">Rodrigo Fonseca </div>
+<div class="line">Rodrigo Fonseca</div>
 <div class="line">473 Soda Hall</div>
 <div class="line">Berkeley, CA 94720-1776</div>
 <div class="line"><br /></div>
@@ -647,9 +675,9 @@ QEntryPool</li>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Omprakash Gnawali</div>
-<div class="line">Ronald Tutor Hall (RTH) 418 </div>
+<div class="line">Ronald Tutor Hall (RTH) 418</div>
 <div class="line">3710 S. McClintock Avenue</div>
-<div class="line">Los Angeles, CA 90089 </div>
+<div class="line">Los Angeles, CA 90089</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 213 821-5627</div>
 <div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
@@ -658,7 +686,7 @@ QEntryPool</li>
 <div class="line">Kyle Jamieson</div>
 <div class="line">The Stata Center</div>
 <div class="line">32 Vassar St.</div>
-<div class="line">Cambridge, MA 02139 </div>
+<div class="line">Cambridge, MA 02139</div>
 <div class="line"><br /></div>
 <div class="line">email - <a class="reference" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
 <div class="line"><br /></div>
@@ -673,12 +701,18 @@ QEntryPool</li>
 <div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">6. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">6. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a name="id1">[1]</a></td><td>TEP 116: Packet Protocols</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id2">[2]</a></td><td>TEP 124: The Collection Tree Protocol (CTP) - (upcoming)</td></tr>
 </tbody>
 </table>
 </div>

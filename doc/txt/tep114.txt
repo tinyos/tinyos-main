@@ -10,8 +10,8 @@ SIDs: Source and Sink Independent Drivers
 :Author: Gilman Tolle, Philip Levis, and David Gay
 
 :Draft-Created: 30-Oct-2005
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2006-12-12 18:22:54 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-01-10 18:33:38 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -62,13 +62,13 @@ Additionally, not all sensors require ADC conversions from the MCU.
 Many sensors today are digital. To sample these sensors, the MCU sends
 a sample command and receives the corresponding data over a bus (e.g.,
 SPI, I2C). The latency involved, combined with possible Resource
-arbitration [_tep108], means that these bus operations are often
+arbitration [1]_, means that these bus operations are often
 synchronous code. In the command direction, this can force a task
 allocation to convert async to sync; in the event direction, the
 application has to deal with async code even though the event is, in
 practice, in a task.
 
-Finallly, the simplicity of the ADC interface has led many sensors to
+Finally, the simplicity of the ADC interface has led many sensors to
 introduce several new ones for calibration and control, such as
 ``Mic`` and ``MagSetting``. Because ADCs generally do not have error
 conditions, the ADC interface has no way to signal that a sample
@@ -373,4 +373,9 @@ connect a sensor into a more general system.
 | phone - +1 510 495 3055
 | email - david.e.gay@intel.com
 |
+
+6. Citations
+============================================================================
+
+.. [1] TEP 108: Resource Arbitration.
 

@@ -204,8 +204,6 @@ component CollectionSenderC::
     }
   }
 
-
-
 This abstraction follows a similar virtualization approach to
 AMSenderC [1_], except that it is parameterized by a collection_id_t
 rather than an am_id_t. As with am_id_t, every collection_id_t SHOULD

@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-01-10 18:33:38 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Gilman Tolle, Philip Levis, and David Gay</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">30-Oct-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.4</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-08-30</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -354,12 +354,12 @@ and so could be easily placed in a task.</p>
 Many sensors today are digital. To sample these sensors, the MCU sends
 a sample command and receives the corresponding data over a bus (e.g.,
 SPI, I2C). The latency involved, combined with possible Resource
-arbitration [_tep108], means that these bus operations are often
+arbitration <a class="footnote-reference" href="#id2" id="id1" name="id1">[1]</a>, means that these bus operations are often
 synchronous code. In the command direction, this can force a task
 allocation to convert async to sync; in the event direction, the
 application has to deal with async code even though the event is, in
 practice, in a task.</p>
-<p>Finallly, the simplicity of the ADC interface has led many sensors to
+<p>Finally, the simplicity of the ADC interface has led many sensors to
 introduce several new ones for calibration and control, such as
 <tt class="docutils literal"><span class="pre">Mic</span></tt> and <tt class="docutils literal"><span class="pre">MagSetting</span></tt>. Because ADCs generally do not have error
 conditions, the ADC interface has no way to signal that a sample
@@ -422,6 +422,12 @@ fail while a read is pending MUST provide a ReadWrite interface.</p>
 <p>If the <tt class="docutils literal"><span class="pre">result</span></tt> parameter of the <tt class="docutils literal"><span class="pre">Read.readDone</span></tt> and
 <tt class="docutils literal"><span class="pre">ReadWrite.readDone</span></tt> events is not SUCCESS, then the memory of the
 <tt class="docutils literal"><span class="pre">val</span></tt> parameter MUST be filled with zeroes.</p>
+<p>If the call to <tt class="docutils literal"><span class="pre">Read.read</span></tt> has returned SUCCESS, but the
+<tt class="docutils literal"><span class="pre">Read.readDone</span></tt> event has not yet been signalled, then a subsequent
+call to <tt class="docutils literal"><span class="pre">Read.read</span></tt> MUST not return SUCCESS. This simple locking
+technique, as opposed to a more complex system in which multiple
+read/readDone pairs may be outstanding, is intended to reduce the
+complexity of code that is a client of a SID interface.</p>
 <p>Examples of sensors that would be suited to this class of interface
 include many basic sensors, such as photo, temp, voltage, and ADC
 readings.</p>
@@ -640,6 +646,15 @@ connect a sensor into a more general system.</p>
 <div class="line">email - <a class="reference" href="mailto:david.e.gay&#64;intel.com">david.e.gay&#64;intel.com</a></div>
 <div class="line"><br /></div>
 </div>
+</div>
+<div class="section">
+<h1><a id="citations" name="citations">6. Citations</a></h1>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1" name="id2">[1]</a></td><td>TEP 108: Resource Arbitration.</td></tr>
+</tbody>
+</table>
 </div>
 </div>
 </body>

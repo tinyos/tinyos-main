@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-20 03:02:39 $
-:version: $Revision: 1.7 $
+:date: $Date: 2007-01-10 18:33:38 $
+:version: $Revision: 1.8 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-Sep-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-20</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -386,7 +386,7 @@ introduce wakeup latency, a factor which could be of interest to
 higher-level components. While wakeup latency is not a significant
 issue on very low power microcontrollers, such as the Atmega128 and
 MSP430, more powerful processors, such as the Xscale family (the basis
-of platforms such as the imote2) can power states with wakeup
+of platforms such as the imote2) can have power states with wakeup
 latencies as large as 5ms. For some application domains, this latency
 could be a serious issue. Higher level components therefore need a way
 to give the TinyOS microcontroller power manager information on their
@@ -577,9 +577,10 @@ timer stack for the Atmega128 microcontroller family.</p>
 <h1><a id="peripherals-and-subsystems" name="peripherals-and-subsystems">4. Peripherals and Subsystems</a></h1>
 <p>At the HIL level, TinyOS subsystems generally have a simple,
 imperative power management interface. Depending on the latencies
-involved, this interface is either <tt class="docutils literal"><span class="pre">StdControl</span></tt> or <tt class="docutils literal"><span class="pre">SplitControl</span></tt>.
+involved, this interface is either <tt class="docutils literal"><span class="pre">StdControl</span></tt>, <tt class="docutils literal"><span class="pre">SplitControl</span></tt>,
+or <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt>.
 These interfaces are imperative in that when any component calls
-<tt class="docutils literal"><span class="pre">StdControl.stop</span></tt> on another component, it causes the subsystem that
+<tt class="docutils literal"><span class="pre">stop</span></tt> on another component, it causes the subsystem that
 component represents to enter an inactive, low-power state.</p>
 <p>From the perspective of MCU power management, this transition causes a
 change in status and control registers (e.g., a clock is

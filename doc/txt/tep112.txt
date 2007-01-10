@@ -10,8 +10,8 @@ Microcontroller Power Management
 :Author: Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski
 
 :Draft-Created: 19-Sep-2005
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2006-12-20 03:02:38 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-01-10 18:33:38 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -97,7 +97,7 @@ introduce wakeup latency, a factor which could be of interest to
 higher-level components. While wakeup latency is not a significant
 issue on very low power microcontrollers, such as the Atmega128 and
 MSP430, more powerful processors, such as the Xscale family (the basis
-of platforms such as the imote2) can power states with wakeup
+of platforms such as the imote2) can have power states with wakeup
 latencies as large as 5ms. For some application domains, this latency
 could be a serious issue. Higher level components therefore need a way
 to give the TinyOS microcontroller power manager information on their
@@ -256,9 +256,10 @@ timer stack for the Atmega128 microcontroller family.
 
 At the HIL level, TinyOS subsystems generally have a simple,
 imperative power management interface. Depending on the latencies
-involved, this interface is either ``StdControl`` or ``SplitControl``.
+involved, this interface is either ``StdControl``, ``SplitControl``,
+or ``AsyncStdControl``.
 These interfaces are imperative in that when any component calls
-``StdControl.stop`` on another component, it causes the subsystem that
+``stop`` on another component, it causes the subsystem that
 component represents to enter an inactive, low-power state.
 
 From the perspective of MCU power management, this transition causes a
