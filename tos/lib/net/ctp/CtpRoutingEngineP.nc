@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.4 2006-12-12 18:23:29 vlahan Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.5 2007-01-16 04:39:20 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2006-12-12 18:23:29 $
+ *  @date   $Date: 2007-01-16 04:39:20 $
  *  @see Net2-WG
  */
 
@@ -200,7 +200,7 @@ implementation {
 
     command error_t Init.init() {
         uint8_t maxLength;
-	routeUpdateTimerCount = 0;
+        routeUpdateTimerCount = 0;
         radioOn = FALSE;
         running = FALSE;
         parentChanges = 0;
@@ -265,7 +265,6 @@ implementation {
     /* updates the routing information, using the info that has been received
      * from neighbor beacons. Two things can cause this info to change: 
      * neighbor beacons, changes in link estimates, including neighbor eviction */
-    /* TODO: take into account congested state to select parents */ 
     task void updateRouteTask() {
         uint8_t i;
         routing_table_entry* entry;
@@ -313,6 +312,9 @@ implementation {
                 }
                 continue;
             }
+            /* Ignore links that are congested */
+            if (entry->info.congested)
+                continue;
             /* Ignore links that are bad */
             if (!passLinkEtxThreshold(linkEtx)) {
               dbg("TreeRouting", "   did not pass threshold.\n");
@@ -328,8 +330,19 @@ implementation {
         //call CollectionDebug.logEventDbg(NET_C_DBG_3, routeInfo.parent, currentEtx, minEtx);  
 
         /* Now choose between the current parent and the best neighbor */
+        /* Requires that: 
+            1. at least another neighbor was found with ok quality and not congested
+            2. the current parent is congested and the other best route is at least as good
+            3. or the current parent is not congested and the neighbor quality is better by 
+               the PARENT_SWITCH_THRESHOLD.
+          Note: if our parent is congested, in order to avoid forming loops, we try to select
+                a node which is not a descendent of our parent. routeInfo.ext is our parent's
+                etx. Any descendent will be at least that + 10 (1 hop), so we restrict the 
+                selection to be less than that.
+        */
         if (minEtx != MAX_METRIC) {
             if (currentEtx == MAX_METRIC ||
+                (routeInfo.congested && (minEtx < (routeInfo.etx + 10))) ||
                 minEtx + PARENT_SWITCH_THRESHOLD < currentEtx) {
                 // routeInfo.metric will not store the composed metric.
                 // since the linkMetric may change, we will compose whenever
@@ -466,6 +479,7 @@ implementation {
         //need to get the am_addr_t of the source
         from = call LinkSrcPacket.getSrc(msg);
         rcvBeacon = (ctp_routing_header_t*)payload;
+
         congested = call CtpRoutingPacket.getOption(msg, CTP_OPT_ECN);
 
         dbg("TreeRouting","%s from: %d  [ parent: %d etx: %d]\n",
@@ -563,18 +577,16 @@ implementation {
 
     command void CtpInfo.setNeighborCongested(am_addr_t n, bool congested) {
         uint8_t idx;    
+        if (ECNOff)
+            return;
         idx = routingTableFind(n);
         if (idx < routingTableActive) {
             routingTable[idx].info.congested = congested;
         }
-        /* TODO:  (this only makes sense if routeUpdateTask takes congestion into
-         *         account for selecting routes.)
-         *   if (routeInfo.congested && !congested) 
-         *       post routeUpdateTask() 
-         *   else if (routeInfo.parent == n && congested) {
-         *       post routeUpdateTask()
-         *
-         */
+        if (routeInfo.congested && !congested) 
+            post updateRouteTask();
+        else if (routeInfo.parent == n && congested) 
+            post updateRouteTask();
     }
 
     command bool CtpInfo.isNeighborCongested(am_addr_t n) {
@@ -679,7 +691,8 @@ implementation {
                     routingTable[idx].neighbor = from;
                     routingTable[idx].info.parent = parent;
                     routingTable[idx].info.etx = etx;
-		    routingTable[idx].info.haveHeard = 1;
+                    routingTable[idx].info.haveHeard = 1;
+                    routingTable[idx].info.congested = FALSE;
                     routingTableActive++;
                 }
                 dbg("TreeRouting", "%s OK, new entry\n", __FUNCTION__);
@@ -692,7 +705,7 @@ implementation {
                 routingTable[idx].neighbor = from;
                 routingTable[idx].info.parent = parent;
                 routingTable[idx].info.etx = etx;
-		routingTable[idx].info.haveHeard = 1;
+		        routingTable[idx].info.haveHeard = 1;
             }
             dbg("TreeRouting", "%s OK, updated entry\n", __FUNCTION__);
         }

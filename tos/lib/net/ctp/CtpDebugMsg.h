@@ -23,6 +23,7 @@ enum {
     NET_C_FE_PUT_QEPOOL_ERR = 0x52,
     NET_C_FE_GET_MSGPOOL_ERR = 0x53,
     NET_C_FE_GET_QEPOOL_ERR = 0x54,
+    NET_C_FE_QUEUE_SIZE=0x55,
 
     NET_C_FE_SENT_MSG = 0x20,  //:app. send       :msg uid, origin, next_hop
     NET_C_FE_RCV_MSG =  0x21,  //:next hop receive:msg uid, origin, last_hop
@@ -41,6 +42,8 @@ enum {
                                     //  arg=1 => overheard parent's
                                     //           ECN cleared.
                                     //  arg=0 => timeout.
+    NET_C_FE_CONGESTED = 0x2E,
+
     NET_C_TREE_NO_ROUTE   = 0x30,   //:        :no args
     NET_C_TREE_NEW_PARENT = 0x31,   //:        :parent_id, hopcount, metric
     NET_C_TREE_ROUTE_INFO = 0x32,   //:periodic:parent_id, hopcount, metric
