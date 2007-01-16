@@ -31,8 +31,10 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @version $Revision: 1.5 $ $Date: 2007-01-16 16:16:51 $
  */
+
+#include "IEEE802154.h"
 
 module CC2420PacketC {
 
