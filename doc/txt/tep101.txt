@@ -5,14 +5,9 @@ Analog-to-Digital Converters (ADCs)
 :TEP: 101
 :Group: Core Working Group 
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Author: Jan-Hinrich Hauer, Philip Levis, Vlado Handziski, David Gay
-
-:Draft-Created: 20-Dec-2004
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2006-12-29 15:48:52 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
