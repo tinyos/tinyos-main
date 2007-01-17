@@ -33,7 +33,7 @@
  * Implementation of basic SPI primitives for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @version $Revision: 1.5 $ $Date: 2007-01-17 05:24:52 $
  */
 
 generic configuration CC2420SpiC() {
@@ -57,6 +57,7 @@ generic configuration CC2420SpiC() {
   provides interface CC2420Register as IOCFG1;
   provides interface CC2420Register as MDMCTRL0;
   provides interface CC2420Register as MDMCTRL1;
+  provides interface CC2420Register as RXCTRL1;
   provides interface CC2420Register as TXCTRL;
 
   // ram
@@ -99,6 +100,7 @@ implementation {
   IOCFG1 = Spi.Reg[ CC2420_IOCFG1 ];
   MDMCTRL0 = Spi.Reg[ CC2420_MDMCTRL0 ];
   MDMCTRL1 = Spi.Reg[ CC2420_MDMCTRL1 ];
+  RXCTRL1 = Spi.Reg[ CC2420_RXCTRL1 ];
   TXCTRL = Spi.Reg[ CC2420_TXCTRL ];
 
   // ram

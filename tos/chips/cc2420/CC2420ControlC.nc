@@ -33,7 +33,7 @@
  * Implementation for configuring a ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @version $Revision: 1.5 $ $Date: 2007-01-17 05:24:52 $
  */
 
 #include "CC2420.h"
@@ -81,6 +81,7 @@ implementation {
   CC2420ControlP.IOCFG1 -> Spi.IOCFG1;
   CC2420ControlP.MDMCTRL0 -> Spi.MDMCTRL0;
   CC2420ControlP.MDMCTRL1 -> Spi.MDMCTRL1;
+  CC2420ControlP.RXCTRL1 -> Spi.RXCTRL1;
   CC2420ControlP.PANID -> Spi.PANID;
 
   components new CC2420SpiC() as SyncSpiC;
