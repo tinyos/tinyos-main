@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @version $Revision: 1.5 $ $Date: 2007-01-17 05:14:18 $
  */
 
 #include "Timer.h"
@@ -266,9 +266,13 @@ implementation {
     }
 
     call CSN.clr();
+    call SRFOFF.strobe();
     call FSCTRL.write( ( 1 << CC2420_FSCTRL_LOCK_THR ) |
 		       ( ( (channel - 11)*5+357 ) << CC2420_FSCTRL_FREQ ) );
     call PANID.write( 0, (uint8_t*)id, sizeof( id ) );
+    call CSN.set();
+    call CSN.clr();
+    call SRXON.strobe();
     call CSN.set();
     call SyncResource.release();
     
