@@ -408,31 +408,34 @@ structures, this syntax should look familar but the <code>nx_</code>
 prefix on the keywords <code>struct</code> and <code>uint16_t</code> should
 stand out.  The <code>nx_</code> prefix is specific to the nesC language
 and signifies that the <code>struct</code> and <code>uint16_t</code> are
-<i>external types</i><a href="#hint15">(3)</a><a href="#hint16">(4)</a>.
-External types have the same representation on all platforms.
- The nesC compiler generates code that transparently reorders access to 
- <code>nx_</code> data types and eliminates the need to manually address 
-endianness and alignment (extra padding in structs present on some
-platforms) issues. So what is endianness?  Read on...
+<i>external types</i><a href="#hint15">(3)</a><a
+href="#hint16">(4)</a>.  External types have the same representation
+on all platforms.  The nesC compiler generates code that transparently
+reorders access to <code>nx_</code> data types and eliminates the need
+to manually address endianness and alignment (extra padding in structs
+present on some platforms) issues.  So what is endianness?  Read on...
 
 <p>Different processors represent numbers in different ways in their
-memory: some processors use a "big endian" representation which
-means that the most significant byte of a multi-byte (e.g. 16- or
-32-bit) number is located at a lower memory address than the least
-significant byte, while "little endian" stores data in exactly the
-opposite order.  A problem arises when data is serialized and sent
-over the network because different processors will decode the same set
-of bytes in different ways, depending on their "endianness."  The
-main difficulty endiannes presents is that it requires operations to
-rearrange byte orders to match the network protocol specification or
-the processor architecture -- an annoying and error-prone process.
-The <code>htons</code>, <code>htonl</code>, <code>ntohs</code>, and <code>ntohl</code>
-calls used with the sockets API are an example of platform-specific
-calls that convert between network and host byte orders, but you have
-to remember to use them.  The nesC programming language takes a
-different approach to the problem and defines
-<i>external types</i> which allow the programmer to avoid dealing with byte
-reordering.
+memory: some processors use a "big endian" representation which means
+that the most significant byte of a multi-byte (e.g. 16- or 32-bit)
+number is located at a lower memory address than the least significant
+byte, while "little endian" stores data in exactly the opposite order.
+A problem arises when data is serialized and sent over the network
+because different processors will decode the same set of bytes in
+different ways, depending on their "endianness."  The main difficulty
+endianness presents is that it requires operations to rearrange byte
+orders to match the network protocol specification or the processor
+architecture -- an annoying and error-prone process.  The
+<code>htons</code>, <code>htonl</code>, <code>ntohs</code>, and
+<code>ntohl</code> calls used with the sockets API are an example of
+platform-specific calls that convert between network and host byte
+orders, but you have to remember to use them.  The nesC programming
+language takes a different approach to the problem and defines
+<i>external types</i> which allow the programmer to avoid dealing with
+byte reordering.  In particular, the <code>nx_</code> prefix on a type
+(e.g. <code>nx_uint16_t</code>) indicates the field is to serialized
+in big endian format.  In contrast, the <code>nxle_</code> prefix
+signifies that the field is serialized in little endian format.
 
 
 <h2>Sending a Message</h2>
@@ -531,7 +534,7 @@ declarations need to be added in the <code>implementation</code> block of
 <pre>
 implementation {
   bool busy = FALSE;
-  message_t packet;
+  message_t pkt;
   ...
 }
 </pre>
@@ -557,8 +560,9 @@ the following body:
   }
 </pre>
 
-<p>We also need to implement the <code>AMControl.startDone</code> event
-handler, which has the following body:
+<p>We also need to implement the <code>AMControl.startDone</code> and
+<code>AMControl.stopDone</code> event handlers, which have the
+following bodies:
 
 <pre>
   event void AMControl.startDone(error_t err) {
@@ -568,6 +572,9 @@ handler, which has the following body:
     else {
       call AMControl.start();
     }
+  }
+
+  event void AMControl.stopDone(error_t err) {
   }
 </pre>
 
@@ -782,7 +789,7 @@ interfaces we plan on using.</b> <p>We need to implement the
 <pre>
 event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len) {
   if (len == sizeof(BlinkToRadioMsg)) {
-    BlinkToRadioMsg* btrmsg = (BlinkToRadioMsg*)payload;
+    BlinkToRadioMsg* btrpkt = (BlinkToRadioMsg*)payload;
     call Leds.set(btrpkt->counter);
   }
   return msg;
