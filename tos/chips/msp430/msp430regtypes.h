@@ -102,6 +102,8 @@
 #define TYPE_CCTL0 uint16_t
 #define TYPE_CCTL1 uint16_t
 #define TYPE_CCTL2 uint16_t
+#define TYPE_DAC12CTL0 uint16_t
+#define TYPE_DAC12IFG uint16_t
 #define TYPE_DAC12_0CTL uint16_t
 #define TYPE_DAC12_0DAT uint16_t
 #define TYPE_DAC12_1CTL uint16_t
@@ -189,6 +191,10 @@
 #define TYPE_OA2CTL0 uint8_t
 #define TYPE_OA2CTL1 uint8_t
 #define TYPE_OP2 uint16_t
+#define TYPE_PORT_OUT uint8_t
+#define TYPE_PORT_IN uint8_t
+#define TYPE_PORT_DIR uint8_t
+#define TYPE_PORT_SEL uint8_t
 #define TYPE_P0DIR uint8_t
 #define TYPE_P0IE uint8_t
 #define TYPE_P0IES uint8_t
