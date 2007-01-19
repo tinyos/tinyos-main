@@ -1,4 +1,4 @@
-// $Id: TossimPacketModelC.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: TossimPacketModelC.nc,v 1.5 2007-01-19 19:15:18 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -292,7 +292,7 @@ implementation {
   }
 
   event bool GainRadioModel.shouldAck(message_t* msg) {
-    if (running) {
+    if (running && !transmitting) {
       return signal Packet.shouldAck(msg);
     }
     else {
