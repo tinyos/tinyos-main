@@ -30,9 +30,7 @@ configuration Msp430ClockC
 }
 implementation
 {
-  components Msp430ClockP
-           , Msp430DcoCalibC  //perpetual recalibration with each ACLK overflow
-           ;
+  components Msp430ClockP;
 
   Init = Msp430ClockP;
   Msp430ClockInit = Msp430ClockP;

@@ -23,6 +23,8 @@
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
  */
 
+#error "Msp430DcoCalibP is broken and will incorrectly adjust TimerA because it does not take into account MCU sleep."
+
 module Msp430DcoCalibP
 {
   uses interface Msp430Timer as TimerMicro;
