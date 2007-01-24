@@ -57,11 +57,10 @@ implementation {
     components  MainC,
         RedMacP,
         RssiFixedThresholdCMC as Cca,
-        new Alarm32khzC() as Timer,
-        new Alarm32khzC() as SampleTimer,
+        new Alarm32khz16C() as Timer,
+        new Alarm32khz16C() as SampleTimer,
         RandomLfsrC,
-        McuSleepC,
-        Counter32khzC;
+        Counter32khz16C as Counter;
     
     components ActiveMessageAddressC;
     RedMacP.amAddress -> ActiveMessageAddressC;
@@ -69,7 +68,6 @@ implementation {
     MainC.SoftwareInit -> RedMacP;
               
     SplitControl = RedMacP;
-    McuSleepC.McuPowerOverride -> RedMacP;
     MacSend = RedMacP;
     MacReceive = RedMacP;
     Tda5250Control = RedMacP;
@@ -95,7 +93,7 @@ implementation {
 
     RedMacP.Timer -> Timer;
     RedMacP.SampleTimer -> SampleTimer;
-    RedMacP.Counter32khz16 -> Counter32khzC.Counter32khz16;
+    RedMacP.Counter32khz16 -> Counter;
 /*    
     components PlatformLedsC;
     RedMacP.Led0 -> PlatformLedsC.Led0;

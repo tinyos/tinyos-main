@@ -59,7 +59,6 @@ implementation {
       RssiFixedThresholdCMC as Cca,
       new Alarm32khz16C() as Timer,
       new TimerMilliC() as ReRxTimer,
-      McuSleepC,
       RandomLfsrC
 #ifdef MAC_DEBUG
       ,PlatformLedsC
@@ -67,8 +66,6 @@ implementation {
       ;
               
     MainC.SoftwareInit -> CsmaMacP;
-
-    McuSleepC.McuPowerOverride -> CsmaMacP;
     
     SplitControl = CsmaMacP;
     

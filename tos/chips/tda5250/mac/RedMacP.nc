@@ -51,7 +51,6 @@ module RedMacP {
         interface SleepTime;
         interface Teamgeist;
         interface ChannelCongestion;
-        interface McuPowerOverride;
     }
     uses {
         interface StdControl as CcaStdControl;
@@ -194,8 +193,8 @@ implementation
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 38400 kBit/s with 4b6b encoding
         MAX_TIME_VALUE=0xFFFFFFFF,
         MAXTIMERVALUE=0xFFFF,        // helps to compute backoff
-        //DEFAULT_SLEEP_TIME=3250,
-        DEFAULT_SLEEP_TIME=6500,
+        DEFAULT_SLEEP_TIME=3250,
+        // DEFAULT_SLEEP_TIME=6500,
         // DEFAULT_SLEEP_TIME=9750,
         DATA_DETECT_TIME=17,
         RX_SETUP_TIME=111,    // time to set up receiver
@@ -1313,17 +1312,5 @@ implementation
     async event void RadioModes.TimerModeDone() {}
     async event void RadioModes.SelfPollingModeDone() {}
     async event void RadioModes.PWDDDInterrupt() {}
-
-    /** prevent MCU from going into a too low power mode */
-    async command mcu_power_t McuPowerOverride.lowestState() {
-        mcu_power_t mp;
-        if(macState != SLEEP) {
-            mp = MSP430_POWER_LPM1;
-        }
-        else {
-            mp = MSP430_POWER_LPM3;
-        }
-        return mp;
-    }
 }
 

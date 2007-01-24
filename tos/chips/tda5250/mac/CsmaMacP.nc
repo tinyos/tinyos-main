@@ -50,7 +50,6 @@ module CsmaMacP {
         interface MacSend;
         interface MacReceive;
         interface Packet;
-        interface McuPowerOverride;
     }
     uses {
         interface StdControl as CcaStdControl;
@@ -1012,11 +1011,6 @@ implementation
     
     // we don't care about urgent Resource requestes
     async event void RadioResourceRequested.immediateRequested() {}
-
-    /** prevent MCU from going into a too low power mode */
-    async command mcu_power_t McuPowerOverride.lowestState() {
-        return MSP430_POWER_LPM1;
-    }
 }
 
 
