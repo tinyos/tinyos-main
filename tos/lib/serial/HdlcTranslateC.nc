@@ -1,4 +1,4 @@
-//$Id: HdlcTranslateC.nc,v 1.4 2006-12-12 18:23:31 vlahan Exp $
+//$Id: HdlcTranslateC.nc,v 1.5 2007-01-24 17:17:01 bengreenstein Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -114,4 +114,5 @@ implementation {
   }
 
   async event void UartStream.receiveDone( uint8_t* buf, uint16_t len, error_t error ) {}
+
 }

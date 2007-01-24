@@ -33,7 +33,7 @@
  *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
- * Revision: $Revision: 1.4 $
+ * Revision: $Revision: 1.5 $
  * 
  */
 
@@ -70,6 +70,7 @@ module SerialP {
     interface SerialFrameComm;
     interface Leds;
     interface StdControl as SerialControl;
+    interface SerialFlush;
   }
 }
 implementation {
@@ -321,11 +322,23 @@ implementation {
     signal SplitControl.startDone(SUCCESS);
   }
 
+
   task void stopDoneTask() {
+    call SerialFlush.flush();
+  }
+
+  event void SerialFlush.flushDone(){
     call SerialControl.stop();
     signal SplitControl.stopDone(SUCCESS);
   }
-  
+
+  task void defaultSerialFlushTask(){
+    signal SerialFlush.flushDone();
+  }
+  default command void SerialFlush.flush(){
+    post defaultSerialFlushTask();
+  }
+
   command error_t SplitControl.start() {
     post startDoneTask();
     return SUCCESS;
