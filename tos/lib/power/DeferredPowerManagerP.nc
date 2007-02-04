@@ -23,8 +23,8 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:29 $ 
+ * $Revision: 1.5 $
+ * $Date: 2007-02-04 19:55:48 $ 
  * ======================================================================== 
  */
  
@@ -55,7 +55,7 @@ generic module DeferredPowerManagerP(uint32_t delay) {
     interface SplitControl;
 
     interface PowerDownCleanup;
-    interface ResourceController;
+    interface ResourceDefaultOwner;
     interface ArbiterInfo;
     interface Timer<TMilli> as TimerMilli;
   }
@@ -77,7 +77,7 @@ implementation {
     call TimerMilli.startOneShot(delay); 
   }
 
-  async event void ResourceController.requested() {
+  async event void ResourceDefaultOwner.requested() {
     if(stopping == FALSE) {
       stopTimer = TRUE;
       post startTask();
@@ -85,7 +85,7 @@ implementation {
     else atomic requested = TRUE;
   }
 
-  async event void ResourceController.immediateRequested() {
+  async event void ResourceDefaultOwner.immediateRequested() {
   }
 
   default command error_t StdControl.start() {
@@ -97,10 +97,10 @@ implementation {
   }
 
   event void SplitControl.startDone(error_t error) {
-    call ResourceController.release();
+    call ResourceDefaultOwner.release();
   }
 
-  async event void ResourceController.granted() {
+  async event void ResourceDefaultOwner.granted() {
     post timerTask();
   }
 

@@ -79,7 +79,7 @@ and holding on to it no longer than necessary. Clients explicitly release resour
 </p>
 
 <p>
-Shared resources are essentially built on top of dedicated resources, with access to them being controlled by an arbiter component.  In this way, <b>power managers</b> can be used to automatically control the power state of these resources through their <tt>AsyncStdControl</tt>, <tt>StdControl</tt>, or <tt>SplitControl</tt> interfaces.  They communicate with the arbiter (through the use of a <tt>ResourceController</tt> interface), monitoring whether the resource is being used by any of its clients and powering it on/off accordingly.  The figure below shows how an arbiter component and a power manager can be wired together to provide arbitration and automatic power management for a shared resource.
+Shared resources are essentially built on top of dedicated resources, with access to them being controlled by an arbiter component.  In this way, <b>power managers</b> can be used to automatically control the power state of these resources through their <tt>AsyncStdControl</tt>, <tt>StdControl</tt>, or <tt>SplitControl</tt> interfaces.  They communicate with the arbiter (through the use of a <tt>ResourceDefaultOwner</tt> interface), monitoring whether the resource is being used by any of its clients and powering it on/off accordingly.  The figure below shows how an arbiter component and a power manager can be wired together to provide arbitration and automatic power management for a shared resource.
 </p>
 
 <center>
@@ -92,7 +92,7 @@ Figure 1: Arbiters and Power Managers
 </center>
 
 <p>
-The arbiter component provides the <tt>Resource</tt>, <tt>ArbiterInfo</tt>, <tt>ResourceRequested</tt>, and <tt>ResourceController</tt> interfaces and uses the <tt>ResourceConfigure</tt> interface.  The power manager doesn't provide any interfaces, but uses one of either the <tt>AsyncStdControl</tt>, <tt>StdControl</tt>, or <tt>SplitControl</tt> interfaces from the underlying resource, as well as the <tt>ResourceController</tt> interface provided by the arbiter.  The figure below shows how these interface are then wired together with the implementation of a shared resource.  Please refer to TEP 108 for more information on arbiters and TEP 115 for more information on Power Managers.
+The arbiter component provides the <tt>Resource</tt>, <tt>ArbiterInfo</tt>, <tt>ResourceRequested</tt>, and <tt>ResourceDefaultOwner</tt> interfaces and uses the <tt>ResourceConfigure</tt> interface.  The power manager doesn't provide any interfaces, but uses one of either the <tt>AsyncStdControl</tt>, <tt>StdControl</tt>, or <tt>SplitControl</tt> interfaces from the underlying resource, as well as the <tt>ResourceDefaultOwner</tt> interface provided by the arbiter.  The figure below shows how these interface are then wired together with the implementation of a shared resource.  Please refer to TEP 108 for more information on arbiters and TEP 115 for more information on Power Managers.
 </p>
 
 <center>
@@ -307,7 +307,7 @@ implementation {
   ResourceRequested = Arbiter;
   ResourceConfigure = Arbiter;
   SharedResourceImplP.ArbiterInfo -> Arbiter;
-  PowerManager.ResourceController -> Arbiter;
+  PowerManager.ResourceDefaultOwner -> Arbiter;
   
   PowerManager.SplitControl -> ResourceP;
   SharedResourceImplP.ResourceOperations -> ResourceP;

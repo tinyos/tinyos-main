@@ -65,7 +65,7 @@ implementation {
   I2C.Atm128I2C -> Master;
   
   Power.AsyncStdControl -> Master;
-  Power.ResourceController -> Arbiter;
+  Power.ResourceDefaultOwner -> Arbiter;
 
   Master.I2C -> HplAtm128I2CBusC;
   Master.ReadDebugLeds -> NoLedsC;

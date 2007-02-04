@@ -30,8 +30,8 @@
  * of the AsyncStdControl, StdControl, and SplitControl interfaces.
  *
  * @author Kevin Klues <klueska@cs.wustl.edu>
- * @version  $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:50 $ 
+ * @version  $Revision: 1.5 $
+ * @date $Date: 2007-02-04 19:54:25 $ 
  */
  
 #define MYCOMPONENT_RESOURCE   "MyComponent.Resource"
@@ -56,7 +56,7 @@ implementation {
   PowerManager.AsyncStdControl -> MyComponentP.AsyncStdControl;
 //   PowerManager.StdControl -> MyComponentP.StdControl;
 //   PowerManager.SplitControl -> MyComponentP.SplitControl;
-  PowerManager.ResourceController -> Arbiter.ResourceController;
+  PowerManager.ResourceDefaultOwner -> Arbiter.ResourceDefaultOwner;
   PowerManager.ArbiterInfo -> Arbiter.ArbiterInfo;
 
   MyComponentP.Leds -> LedsC;

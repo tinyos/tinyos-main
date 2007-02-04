@@ -24,7 +24,7 @@ configuration At45dbC
   provides {
     interface At45db;
     interface Resource[uint8_t client];
-    interface ResourceController;
+    interface ResourceDefaultOwner;
     interface ArbiterInfo;
   }
 }
@@ -35,7 +35,7 @@ implementation
 
   At45db = At45dbP;
   Resource = Arbiter;
-  ResourceController = Arbiter;
+  ResourceDefaultOwner = Arbiter;
   ArbiterInfo = Arbiter;
 
   MainC.SoftwareInit -> At45dbP;

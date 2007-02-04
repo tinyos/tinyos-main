@@ -756,7 +756,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     SplitControlPowerManagerC.SplitControl -> HplSensirionSht11P;
     SplitControlPowerManagerC.ArbiterInit -> Arbiter.Init;
     SplitControlPowerManagerC.ArbiterInfo -> Arbiter.ArbiterInfo;
-    SplitControlPowerManagerC.ResourceController -> Arbiter.ResourceController;
+    SplitControlPowerManagerC.ResourceDefaultOwner -> Arbiter.ResourceDefaultOwner;
   }
   
 ::

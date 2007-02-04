@@ -25,8 +25,8 @@
  * out of a dedicated one.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:51 $
+ * @version $Revision: 1.5 $
+ * @date $Date: 2007-02-04 19:54:32 $
  */
  
 #define TEST_SHARED_RESOURCE   "Test.Shared.Resource"
@@ -47,7 +47,7 @@ implementation {
   ResourceRequested = Arbiter;
   ResourceConfigure = Arbiter;
   SharedResourceImplP.ArbiterInfo -> Arbiter;
-  PowerManager.ResourceController -> Arbiter;
+  PowerManager.ResourceDefaultOwner -> Arbiter;
   
   PowerManager.SplitControl -> ResourceP;
   SharedResourceImplP.ResourceOperations -> ResourceP;

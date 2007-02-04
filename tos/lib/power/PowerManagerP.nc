@@ -23,8 +23,8 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:29 $ 
+ * $Revision: 1.5 $
+ * $Date: 2007-02-04 19:55:53 $ 
  * ======================================================================== 
  */
  
@@ -51,7 +51,7 @@ generic module PowerManagerP() {
     interface SplitControl;
 
     interface PowerDownCleanup;
-    interface ResourceController;
+    interface ResourceDefaultOwner;
     interface ArbiterInfo;
   }
 }
@@ -71,14 +71,14 @@ implementation {
     call SplitControl.stop();    
   }
 
-  async event void ResourceController.requested() {
+  async event void ResourceDefaultOwner.requested() {
     if(stopping == FALSE) {
       post startTask();
     }
     else requested = TRUE;
   }
 
-  async event void ResourceController.immediateRequested() {
+  async event void ResourceDefaultOwner.immediateRequested() {
   }
   
   default command error_t StdControl.start() {
@@ -90,10 +90,10 @@ implementation {
   }
 
   event void SplitControl.startDone(error_t error) {
-    call ResourceController.release();
+    call ResourceDefaultOwner.release();
   }
   
-  async event void ResourceController.granted() {
+  async event void ResourceDefaultOwner.granted() {
     atomic stopping = TRUE;
     post stopTask();
   }

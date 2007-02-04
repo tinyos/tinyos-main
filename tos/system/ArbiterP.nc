@@ -32,13 +32,13 @@
  * intended use.<br><br>
  *
  * This component provides the Resource, ResourceRequested, ArbiterInfo, 
- * and ResourceController interfaces and uses the ResourceConfigure interface as
+ * and ResourceDefaultOwner interfaces and uses the ResourceConfigure interface as
  * described in TEP 108.  It provides arbitration to a shared resource.
  * An Queue is used to keep track of which users have put
  * in requests for the resource.  Upon the release of the resource by one
  * of these users, the queue is checked and the next user
  * that has a pending request will ge granted control of the resource.  If
- * there are no pending requests, then the user of the ResourceController
+ * there are no pending requests, then the user of the ResourceDefaultOwner
  * interface gains access to the resource, and holds onto it until
  * another user makes a request.
  *
@@ -52,7 +52,7 @@ generic module ArbiterP(uint8_t controller_id) {
   provides {
     interface Resource[uint8_t id];
     interface ResourceRequested[uint8_t id];
-    interface ResourceController;
+    interface ResourceDefaultOwner;
     interface ArbiterInfo;
   }
   uses {
@@ -81,7 +81,7 @@ implementation {
       }
       else return call Queue.enqueue(id);
     }
-    signal ResourceController.requested();
+    signal ResourceDefaultOwner.requested();
     return SUCCESS;
   }
 
@@ -94,7 +94,7 @@ implementation {
       }
       else return FAIL;
     }
-    signal ResourceController.immediateRequested();
+    signal ResourceDefaultOwner.immediateRequested();
     if(resId == id) {
       call ResourceConfigure.configure[resId]();
       return SUCCESS;
@@ -114,7 +114,7 @@ implementation {
         else {
           resId = CONTROLLER_ID;
           state = RES_CONTROLLED;
-          signal ResourceController.granted();
+          signal ResourceDefaultOwner.granted();
         }
         call ResourceConfigure.unconfigure[id]();
       }
@@ -122,7 +122,7 @@ implementation {
     return FAIL;
   }
 
-  async command error_t ResourceController.release() {
+  async command error_t ResourceDefaultOwner.release() {
     atomic {
       if(resId == CONTROLLER_ID) {
         if(state == RES_GRANTING) {
@@ -165,7 +165,7 @@ implementation {
     }
   }
 
-  async command uint8_t ResourceController.isOwner() {
+  async command uint8_t ResourceDefaultOwner.isOwner() {
     return call Resource.isOwner[CONTROLLER_ID]();
   }
   
@@ -187,13 +187,13 @@ implementation {
   }
   default async event void ResourceRequested.immediateRequested[uint8_t id]() {
   }
-  default async event void ResourceController.granted() {
+  default async event void ResourceDefaultOwner.granted() {
   }
-  default async event void ResourceController.requested() {
-    call ResourceController.release();
+  default async event void ResourceDefaultOwner.requested() {
+    call ResourceDefaultOwner.release();
   }
-  default async event void ResourceController.immediateRequested() {
-  	call ResourceController.release();
+  default async event void ResourceDefaultOwner.immediateRequested() {
+  	call ResourceDefaultOwner.release();
   }
   default async command void ResourceConfigure.configure[uint8_t id]() {
   }
