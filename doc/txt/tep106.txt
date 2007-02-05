@@ -5,14 +5,9 @@ Schedulers and Tasks
 :TEP: 106
 :Group: Core Working Group 
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Author: Philip Levis and Cory Sharp
-
-:Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2007-01-20 00:39:14 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
