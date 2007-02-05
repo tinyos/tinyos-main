@@ -297,7 +297,7 @@ msp430_i2c_union_config_t msp430_i2c_default_config = {
     listen : 0, 
     mst : 1,
     i2cword : 0, 
-    i2crm : 0, 
+    i2crm : 1, 
     i2cssel : 0x2, 
     i2cpsc : 0, 
     i2csclh : 0x3, 
