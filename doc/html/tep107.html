@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-02-05 19:11:25 $
-:version: $Revision: 1.7 $
+:date: $Date: 2007-02-05 19:59:12 $
+:version: $Revision: 1.8 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -420,7 +420,7 @@ events, then it must explicitly wait for them (e.g.,
 with a spin loop), MUST NOT return until complete. Otherwise the system
 may start before initialization is complete.</p>
 <p>The Scheduler interface is for initializing and controlling task
-execution. It is detailed in TEP 106 <a class="footnote-reference" href="#id5" id="id1" name="id1">[1]</a>.</p>
+execution. It is detailed in TEP 106 <a class="footnote-reference" href="#id7" id="id1" name="id1">[1]</a>.</p>
 <p>The Boot interface has a single event, booted(), which the boot
 sequence signals when it has completed:</p>
 <pre class="literal-block">
@@ -533,7 +533,7 @@ configuration, clock calibration, and LED configuration. I/O pin
 configuration meets the first two criteria. It should always be performed
 (regardless of what components the OS uses) for low-power reasons:
 incorrectly configured pins can draw current and prevent the MCU from
-entering its lowest power sleep state[<a class="reference" href="#id6">2</a>]. Clock calibration meets
+entering its lowest power sleep state <a class="footnote-reference" href="#id8" id="id3" name="id3">[2]</a>. Clock calibration meets
 all three criteria. LED configuration is a special case: while it
 nominally meets all three criteria, the most important one is the third:
 as LEDs are often needed during SoftwareInit initialization, they must
@@ -546,10 +546,10 @@ usually quite rare; a component SHOULD NOT introduce initialization
 dependencies unless they are required.</p>
 <p>One common approach is for a configuration to &quot;auto-wire&quot; the
 initialization routines of its internal components. The configuration
-does not provide an Init interface. Virtualized services (TEP 108)
+does not provide an Init interface. Virtualized services
 often take this approach, as the service, rather than the clients, is
 what needs to be initialized. For example, the standard Timer
-virtualization (TEP 102), TimerMilliC, wires to TimerMilliP, which is
+virtualization <a class="footnote-reference" href="#id9" id="id4" name="id4">[3]</a>, TimerMilliC, wires to TimerMilliP, which is
 a very simple configuration that takes the underlying implementation
 (HilTimerMilliC) and wires it to MainC:</p>
 <pre class="literal-block">
@@ -604,7 +604,7 @@ SplitControl. A second possibility is to redirect the interrupt table,
 if the MCU supports doing so. Whichever mechanism is chosen, extreme
 care needs to be used in order to not disrupt the operation of other
 components.</p>
-<p>Unless part of a hardware abstraction architecture (HAA) <a class="footnote-reference" href="#id6" id="id3" name="id3">[2]</a>, the
+<p>Unless part of a hardware abstraction architecture (HAA) <a class="footnote-reference" href="#id10" id="id5" name="id5">[4]</a>, the
 Init.init() command MUST NOT assume that other components have been
 initialized unless it has initialized them, and MUST NOT call any
 functional interfaces on any components that might be shared or
@@ -632,7 +632,7 @@ implementations of the TinyOS boot sequence:</p>
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">RealMainP.nc</span></tt> is the module containing the function <tt class="docutils literal"><span class="pre">main</span></tt>.</li>
 <li><tt class="docutils literal"><span class="pre">MainC.nc</span></tt> is the configuration that wires RealMainP to
-PlatformC and TinySchedulerC <a class="footnote-reference" href="#id5" id="id4" name="id4">[1]</a>.</li>
+PlatformC and TinySchedulerC <a class="footnote-reference" href="#id7" id="id6" name="id6">[1]</a>.</li>
 </ul>
 </blockquote>
 </div>
@@ -651,16 +651,28 @@ PlatformC and TinySchedulerC <a class="footnote-reference" href="#id5" id="id4" 
 </div>
 <div class="section">
 <h1><a id="citations" name="citations">7. Citations</a></h1>
-<table class="docutils footnote" frame="void" id="id5" rules="none">
+<table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id5">[1]</a></td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> TEP 106: Schedulers and Tasks.</td></tr>
+<tr><td class="label"><a name="id7">[1]</a></td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> TEP 106: Schedulers and Tasks.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id6" rules="none">
+<table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="id6">[2]</a></td><td>TEP 2: Hardware Abstraction Architecture.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3" name="id8">[2]</a></td><td>TEP 112: Microcontroller Power Management.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4" name="id9">[3]</a></td><td>TEP 102: Timers.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5" name="id10">[4]</a></td><td>TEP 2: Hardware Abstraction Architecture.</td></tr>
 </tbody>
 </table>
 </div>

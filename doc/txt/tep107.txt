@@ -10,8 +10,8 @@ TinyOS 2.x Boot Sequence
 :Author: Philip Levis 
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2007-02-05 19:06:56 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-02-05 19:59:12 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -254,7 +254,7 @@ configuration, clock calibration, and LED configuration. I/O pin
 configuration meets the first two criteria. It should always be performed
 (regardless of what components the OS uses) for low-power reasons:
 incorrectly configured pins can draw current and prevent the MCU from
-entering its lowest power sleep state[2_]. Clock calibration meets
+entering its lowest power sleep state [2]_. Clock calibration meets
 all three criteria. LED configuration is a special case: while it
 nominally meets all three criteria, the most important one is the third:
 as LEDs are often needed during SoftwareInit initialization, they must
@@ -269,10 +269,10 @@ dependencies unless they are required.
 
 One common approach is for a configuration to "auto-wire" the
 initialization routines of its internal components. The configuration
-does not provide an Init interface. Virtualized services (TEP 108)
+does not provide an Init interface. Virtualized services
 often take this approach, as the service, rather than the clients, is
 what needs to be initialized. For example, the standard Timer
-virtualization (TEP 102), TimerMilliC, wires to TimerMilliP, which is
+virtualization [3]_, TimerMilliC, wires to TimerMilliP, which is
 a very simple configuration that takes the underlying implementation
 (HilTimerMilliC) and wires it to MainC::
 
@@ -329,7 +329,7 @@ if the MCU supports doing so. Whichever mechanism is chosen, extreme
 care needs to be used in order to not disrupt the operation of other
 components.
 
-Unless part of a hardware abstraction architecture (HAA) [2]_, the
+Unless part of a hardware abstraction architecture (HAA) [4]_, the
 Init.init() command MUST NOT assume that other components have been
 initialized unless it has initialized them, and MUST NOT call any
 functional interfaces on any components that might be shared or
@@ -377,5 +377,10 @@ implementations of the TinyOS boot sequence:
 
 .. [1] TEP 106: Schedulers and Tasks.
 
-.. [2] TEP 2: Hardware Abstraction Architecture. 
+.. [2] TEP 112: Microcontroller Power Management.
+
+.. [3] TEP 102: Timers.
+
+.. [4] TEP 2: Hardware Abstraction Architecture. 
+
  
