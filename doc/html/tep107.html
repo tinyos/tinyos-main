@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-02-05 19:11:25 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.11</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-06-13</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-05</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -469,6 +469,7 @@ implementation {
 <p>The first step in the boot sequence is initializing the system:</p>
 <pre class="literal-block">
 atomic {
+  platform_bootstrap();
   call Scheduler.init();
   call PlatformInit.init();
   while (call Scheduler.runNextTask());
@@ -476,6 +477,14 @@ atomic {
   while (call Scheduler.runNextTask());
 }
 </pre>
+<p>The first call, platform_bootstrap(), is a minimalist function that
+places the system into an executable state. This function MUST NOT include
+operations besides those which are absolutely necessary for further code,
+such as scheduler initialization, to execute.
+Examples of platform_bootstrap() operations are configuring the memory
+system and setting the processor mode. Generally, platform_bootstrap()
+is an empty function. The platform_bootstrap() function SHOULD be
+specified in a platform's <tt class="docutils literal"><span class="pre">hardware.h</span></tt> file.</p>
 <p>The boot sequence has three separate initializations: Scheduler,
 PlatformInit, and SoftwareInit. The boot configuration (MainC) wires
 the first two automatically, to TinySchedulerC (discussed in TEP 106)
@@ -510,6 +519,25 @@ initialization order. As these hidden dependencies must be due to
 hardware, the sequence is platform-specific. A port of TinyOS to a
 new plaform MUST include a component PlatformC which provides
 one and only one instance of the Init interface.</p>
+<p>Generally, component intialization occurs through SoftwareInit.
+PlatformInit is for a small subset of initializations whose properties
+requires that they be performed separately. Initializations invoked
+through PlatformC meet some or all of the following criteria:</p>
+<ol class="arabic simple">
+<li>The initialization requires configuring hardware resources. This implies that the code is platform-specific.</li>
+<li>The initialization should always be performed.</li>
+<li>The initialization is a prerequisite for common services in the system.</li>
+</ol>
+<p>Three example operations that often belong in PlatformInit are I/O pin
+configuration, clock calibration, and LED configuration. I/O pin
+configuration meets the first two criteria. It should always be performed
+(regardless of what components the OS uses) for low-power reasons:
+incorrectly configured pins can draw current and prevent the MCU from
+entering its lowest power sleep state[<a class="reference" href="#id6">2</a>]. Clock calibration meets
+all three criteria. LED configuration is a special case: while it
+nominally meets all three criteria, the most important one is the third:
+as LEDs are often needed during SoftwareInit initialization, they must
+be set up before it is invoked.</p>
 <p>Components whose initialization does not directly depend on hardware
 resources SHOULD wire to MainC.SoftwareInit. If a component requires a
 specific initialization ordering, then it is responsible for
@@ -526,7 +554,7 @@ a very simple configuration that takes the underlying implementation
 (HilTimerMilliC) and wires it to MainC:</p>
 <pre class="literal-block">
 configuration TimerMilliP {
-  provides interface Timer&lt;TMilli&gt; as TimerMilli[uint8_t id];
+  provides interface Timer&lt;TMilli&gt; as Timinitialization in ordererMilli[uint8_t id];
 }
 implementation {
   components HilTimerMilliC, MainC;
@@ -579,7 +607,12 @@ components.</p>
 <p>Unless part of a hardware abstraction architecture (HAA) <a class="footnote-reference" href="#id6" id="id3" name="id3">[2]</a>, the
 Init.init() command MUST NOT assume that other components have been
 initialized unless it has initialized them, and MUST NOT call any
-functional interfaces on any components that might be shared. An HAA
+functional interfaces on any components that might be shared or
+interact with shared resources.  Components MAY call functions
+on other components that are completely internal to the subsystem.
+For example, a networking layer can  call queue operations to
+initialize its queue, but a link layer must not send commands
+over an SPI bus.  An HAA
 component MAY make other calls to initialize hardware state. A
 component that is not part of an HAA SHOULD NOT call Init.init() on
 other components unless it needs to enforce a temporal ordering on
