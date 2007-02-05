@@ -10,8 +10,8 @@ message_t
 :Author: Philip Levis
 
 :Draft-Created: 11-Jul-2005
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2007-01-10 18:33:38 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-02-05 20:23:35 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -26,7 +26,9 @@ Abstract
 
 This memo covers the TinyOS 2.x message buffer abstraction, ``message_t``.
 It describes the message buffer design considerations, how and where 
-``message_t`` is specified, and how data link layers should access it. 
+``message_t`` is specified, and how data link layers should access it.
+The major goal of ``message_t`` is to allow datagrams to be passed between
+different link layers as a contiguous region of memory with zero copies.
 
 1. Introduction
 ====================================================================
@@ -120,7 +122,8 @@ of their headers while allowing implementations to directly access
 header fields. This is very difficult to do in C.
 
 The ``data`` payload is especially problematic. Many
-components refer to this field, so it must be at a fixed offset.
+components refer to this field, so it must be at a fixed offset
+from the beginning of the structure.
 Depending on the underlying link layer, the header fields 
 preceding it might have different lengths, and packet-level radios
 often require packets to be contiguous memory regions. Overall, these 
@@ -144,7 +147,7 @@ message_t structure is defined in ``tos/types/message.h``::
     nx_uint8_t metadata[sizeof(message_metadata_t)];
   } message_t;
 
-This format keeps data at a fixed but platform dependent offset, which 
+This format keeps data at a fixed offset on a platform, which 
 is important when
 passing a message buffer between two different link layers. If the
 data payload were at different offsets for different link layers, then
@@ -163,10 +166,12 @@ greater depth.
 Every link layer defines its header, footer, and metadata
 structures. These structures MUST be external structs (``nx_struct``), 
 and all of their fields MUST be external types (``nx_*``), for two 
-reasons. First, external types ensure cross-platform compatibility. 
+reasons. First, external types ensure cross-platform compatibility [1]_.
 Second, it forces structures to be aligned on byte boundaries, 
 circumventing issues with the 
-alignment of packet buffers and field offsets within them.
+alignment of packet buffers and field offsets within them. Metadata fields
+must be nx_structs for when complete packets are forwarded to the serial
+port in order to log traffic.
 For example, the CC1000 radio implementation defines
 its structures in ``CC1000Msg.h``::
 
@@ -196,7 +201,7 @@ multiple link layers, and so only it can resolve which structures are
 needed. These definitions MUST be in a file in a platform directory
 named ``platform_message.h``. The mica2 platform, for example, has
 two data link layers: the CC1000 radio and the TinyOS serial
-stack [1]_. The serial packet format does not have a footer
+stack [2]_. The serial packet format does not have a footer
 or metadata section. The ``platform_message.h`` of the mica2
 looks like this::
 
@@ -250,19 +255,23 @@ optimizations.
 Components above the basic data-link layer MUST always access 
 packet fields through interfaces.  A component that introduces 
 new packet fields SHOULD provide an interface to those that 
-are of interest to other components.  
+are of interest to other components. These interfaces SHOULD take
+the form of get/set operations that take and return values, rather
+than offsts into the structure.
+
 For example, active messages have an interface named ``AMPacket`` 
 which provides access commands to AM fields. In TinyOS 1.x, a 
 component would directly access ``TOS_Msg.addr``; in TinyOS 2.x, 
 a component calls ``AMPacket.getAddress(msg)``.
 The most basic of these interfaces is Packet, which provides
 access to a packet payload. TEP 116 describes common TinyOS 
-packet ADT interfaces [2]_. 
+packet ADT interfaces [3]_. 
 
 Link layer components MAY access packet fields differently than other 
 components, as they are aware of the actual packet format. They can
 therefore implement the interfaces that provide access to the fields
-for other components. 
+for other components.
+
 
 3.1 Headers
 ----------------------------------------------------------------
@@ -299,6 +308,7 @@ a 12-byte serial packet on the Telos platform::
                   +-----+------------+                   
   Serial          | hdr |   data     |   
                   +-----+------------+                 
+
 
 Neither the CC2420 nor the serial stack has packet footers, and
 the serial stack does not have any metadata. 
@@ -456,8 +466,10 @@ the telos family packet format can be found in
 6. Citations
 ====================================================================
 
-.. [1] TEP 113: Serial Communication.
+.. [1] `nesC: A Programming Language for Deeply Embedded Networks. <http://nescc.sourceforge.net>`_
 
-.. [2] TEP 116: Packet Protocols.
+.. [2] TEP 113: Serial Communication.
+
+.. [3] TEP 116: Packet Protocols.
 
 

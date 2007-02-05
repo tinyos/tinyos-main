@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-01-10 18:33:38 $
-:version: $Revision: 1.7 $
+:date: $Date: 2007-02-05 20:23:35 $
+:version: $Revision: 1.8 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">11-Jul-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-01-10</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -322,7 +322,9 @@ TEP 1.</p>
 <h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>This memo covers the TinyOS 2.x message buffer abstraction, <tt class="docutils literal"><span class="pre">message_t</span></tt>.
 It describes the message buffer design considerations, how and where
-<tt class="docutils literal"><span class="pre">message_t</span></tt> is specified, and how data link layers should access it.</p>
+<tt class="docutils literal"><span class="pre">message_t</span></tt> is specified, and how data link layers should access it.
+The major goal of <tt class="docutils literal"><span class="pre">message_t</span></tt> is to allow datagrams to be passed between
+different link layers as a contiguous region of memory with zero copies.</p>
 </div>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
@@ -411,7 +413,8 @@ then a <tt class="docutils literal"><span class="pre">TOS_Msg</span></tt> needs 
 of their headers while allowing implementations to directly access
 header fields. This is very difficult to do in C.</p>
 <p>The <tt class="docutils literal"><span class="pre">data</span></tt> payload is especially problematic. Many
-components refer to this field, so it must be at a fixed offset.
+components refer to this field, so it must be at a fixed offset
+from the beginning of the structure.
 Depending on the underlying link layer, the header fields
 preceding it might have different lengths, and packet-level radios
 often require packets to be contiguous memory regions. Overall, these
@@ -433,7 +436,7 @@ typedef nx_struct message_t {
   nx_uint8_t metadata[sizeof(message_metadata_t)];
 } message_t;
 </pre>
-<p>This format keeps data at a fixed but platform dependent offset, which
+<p>This format keeps data at a fixed offset on a platform, which
 is important when
 passing a message buffer between two different link layers. If the
 data payload were at different offsets for different link layers, then
@@ -450,10 +453,12 @@ greater depth.</p>
 <p>Every link layer defines its header, footer, and metadata
 structures. These structures MUST be external structs (<tt class="docutils literal"><span class="pre">nx_struct</span></tt>),
 and all of their fields MUST be external types (<tt class="docutils literal"><span class="pre">nx_*</span></tt>), for two
-reasons. First, external types ensure cross-platform compatibility.
+reasons. First, external types ensure cross-platform compatibility <a class="footnote-reference" href="#id5" id="id2" name="id2">[1]</a>.
 Second, it forces structures to be aligned on byte boundaries,
 circumventing issues with the
-alignment of packet buffers and field offsets within them.
+alignment of packet buffers and field offsets within them. Metadata fields
+must be nx_structs for when complete packets are forwarded to the serial
+port in order to log traffic.
 For example, the CC1000 radio implementation defines
 its structures in <tt class="docutils literal"><span class="pre">CC1000Msg.h</span></tt>:</p>
 <pre class="literal-block">
@@ -483,7 +488,7 @@ multiple link layers, and so only it can resolve which structures are
 needed. These definitions MUST be in a file in a platform directory
 named <tt class="docutils literal"><span class="pre">platform_message.h</span></tt>. The mica2 platform, for example, has
 two data link layers: the CC1000 radio and the TinyOS serial
-stack <a class="footnote-reference" href="#id4" id="id2" name="id2">[1]</a>. The serial packet format does not have a footer
+stack <a class="footnote-reference" href="#id6" id="id3" name="id3">[2]</a>. The serial packet format does not have a footer
 or metadata section. The <tt class="docutils literal"><span class="pre">platform_message.h</span></tt> of the mica2
 looks like this:</p>
 <pre class="literal-block">
@@ -535,14 +540,16 @@ optimizations.</p>
 <p>Components above the basic data-link layer MUST always access
 packet fields through interfaces.  A component that introduces
 new packet fields SHOULD provide an interface to those that
-are of interest to other components.
-For example, active messages have an interface named <tt class="docutils literal"><span class="pre">AMPacket</span></tt>
+are of interest to other components. These interfaces SHOULD take
+the form of get/set operations that take and return values, rather
+than offsts into the structure.</p>
+<p>For example, active messages have an interface named <tt class="docutils literal"><span class="pre">AMPacket</span></tt>
 which provides access commands to AM fields. In TinyOS 1.x, a
 component would directly access <tt class="docutils literal"><span class="pre">TOS_Msg.addr</span></tt>; in TinyOS 2.x,
 a component calls <tt class="docutils literal"><span class="pre">AMPacket.getAddress(msg)</span></tt>.
 The most basic of these interfaces is Packet, which provides
 access to a packet payload. TEP 116 describes common TinyOS
-packet ADT interfaces <a class="footnote-reference" href="#id5" id="id3" name="id3">[2]</a>.</p>
+packet ADT interfaces <a class="footnote-reference" href="#id7" id="id4" name="id4">[3]</a>.</p>
 <p>Link layer components MAY access packet fields differently than other
 components, as they are aware of the actual packet format. They can
 therefore implement the interfaces that provide access to the fields
@@ -723,16 +730,22 @@ the telos family packet format can be found in
 </div>
 <div class="section">
 <h1><a id="citations" name="citations">6. Citations</a></h1>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="id4">[1]</a></td><td>TEP 113: Serial Communication.</td></tr>
-</tbody>
-</table>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="id5">[2]</a></td><td>TEP 116: Packet Protocols.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2" name="id5">[1]</a></td><td><a class="reference" href="http://nescc.sourceforge.net">nesC: A Programming Language for Deeply Embedded Networks.</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3" name="id6">[2]</a></td><td>TEP 113: Serial Communication.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4" name="id7">[3]</a></td><td>TEP 116: Packet Protocols.</td></tr>
 </tbody>
 </table>
 </div>
