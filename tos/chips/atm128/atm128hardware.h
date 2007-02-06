@@ -1,4 +1,4 @@
-//  $Id: atm128hardware.h,v 1.4 2006-12-12 18:23:03 vlahan Exp $
+//  $Id: atm128hardware.h,v 1.5 2007-02-06 18:12:05 beutel Exp $
 
 /*                                                                     tab:4
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
@@ -42,8 +42,12 @@
 #define _H_atmega128hardware_H
 
 #include <avr/io.h>
-#include <avr/signal.h>
+#if __AVR_LIBC_VERSION__ >= 10400UL
 #include <avr/interrupt.h>
+#else
+#include <avr/interrupt.h>
+#include <avr/signal.h>
+#endif
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
 #include "atm128const.h"
