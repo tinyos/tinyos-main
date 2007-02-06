@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-02-05 20:10:19 $
-:version: $Revision: 1.9 $
+:date: $Date: 2007-02-06 00:16:15 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -538,6 +538,14 @@ all three criteria. LED configuration is a special case: while it
 nominally meets all three criteria, the most important one is the third:
 as LEDs are often needed during SoftwareInit initialization, they must
 be set up before it is invoked.</p>
+<p>Note that not all code which meets some of these criteria is wired through
+PlatformC. In particular, criterion 1 is typically necessary but not
+sufficient to require PlatformC. For example, a timer system that
+configures overflow and capture settings or  a UART stack that sets the
+baud rate and transmission options can often be wired to SoftwareInit.
+They are encapsulated abstractions which will not be invoked or
+started until the boot event, and only need to be configured if the
+system includes their functionality.</p>
 <p>Components whose initialization does not directly depend on hardware
 resources SHOULD wire to MainC.SoftwareInit. If a component requires a
 specific initialization ordering, then it is responsible for
