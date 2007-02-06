@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-02-06 03:45:27 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">3-Aug-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.3</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-10-25</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-01-16</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -358,18 +358,19 @@ multiple small frames into a single data-link packet.</p>
 </div>
 <div class="section">
 <h1><a id="collection-and-ctp" name="collection-and-ctp">3. Collection and CTP</a></h1>
-<p>CTP uses expected transmissions (ETX) as its routing gradient. A root has an
-ETX of 0.  The ETX of a node is the ETX of its parent plus the ETX of its
-link to its parent. This additive measure assumes that nodes use link-level
-retransmissions.  Given a choice of valid routes, CTP SHOULD choose the one with the
-lowest ETX value. CTP represents ETX values as 16-bit fixed-point real numbers
-with a precision of hundredths. An ETX value of 451, for example, represents
-an ETX of 4.51, while an ETX value of 109 represents an ETX of 1.09.</p>
-<p>Routing loops are a problem that can emerge in a CTP network. Routing loops
-generally occur when a node choose a new route that has a significantly higher
-ETX than its old one, perhaps in response to losing connectivity with a candidate
-parent. If the new route includes a node which was a descendant, then a loop
-occurs.</p>
+<p>CTP uses expected transmissions (ETX) as its routing gradient. A root
+has an ETX of 0.  The ETX of a node is the ETX of its parent plus the
+ETX of its link to its parent. This additive measure assumes that
+nodes use link-level retransmissions.  Given a choice of valid routes,
+CTP SHOULD choose the one with the lowest ETX value. CTP represents
+ETX values as 16-bit fixed-point real numbers with a precision of
+hundredths. An ETX value of 451, for example, represents an ETX of
+4.51, while an ETX value of 109 represents an ETX of 1.09.</p>
+<p>Routing loops are a problem that can emerge in a CTP network. Routing
+loops generally occur when a node choose a new route that has a
+significantly higher ETX than its old one, perhaps in response to
+losing connectivity with a candidate parent. If the new route includes
+a node which was a descendant, then a loop occurs.</p>
 <p>CTP addresses loops through two mechanisms. First, every CTP packet
 contains a node's current gradient value. If CTP receives a data frame with
 a gradient value lower than its own, then this indicates that there
@@ -418,7 +419,7 @@ to do so.</p>
 <p>Field definitions are as follows:</p>
 <blockquote>
 <ul class="simple">
-<li>C: Congestion notification. If a node is receiving packets faster than it can forward them, it MAY set the C field to notify other nodes. If a node hears a packet from node <em>N</em> with the C bit set, it MUST NOT transmit CTP data frames to <em>N</em> until it hears a packet from N with the C bit cleared.</li>
+<li>C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next data frame it transmits.</li>
 <li>P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future.</li>
 <li>THL: Time Has Lived. When a node generates a CTP data frame, it MUST set THL to 0. When a node receives a CTP data frame, it MUST increment the THL. If a node receives a THL of 255, it increments it to 0.</li>
 <li>ETX: The ETX routing metric of the single-hop sender. When a node transmits a CTP data frame, it MUST put the ETX value of its route through the single-hop destination in the ETX field.  If a node receives a packet with a lower gradient than its own, then it MUST schedule a routing frame in the near future.</li>
@@ -457,7 +458,7 @@ acknowledgments enabled.</p>
 <p>The fields are as follows:</p>
 <blockquote>
 <ul class="simple">
-<li>C: Same as data frame.</li>
+<li>C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.</li>
 <li>P: Same as data frame.</li>
 <li>parent: The node's current parent.</li>
 <li>metric: The node's current routing metric value.</li>
@@ -490,29 +491,14 @@ misleading: the forwarding engine is responsible for forwarded traffic
 as well as traffic generated on the node.</p>
 <div class="section">
 <h2><a id="link-estimation" name="link-estimation">6.1 Link Estimation</a></h2>
-<p>The link estimator estimates the ETX to single-hop neighbors.
-The implementation uses two mechanisms to estimate the quality of a link:
-periodic broadcast packets and data packets. The estimator itself
-only generates broadcast packets. For data traffic, it depends on
-other components telling it about acknowledged and unacknowledged
-transmissions.</p>
-<p>The periodic broadcast packets have sequence numbers, which the
-estimator uses to estimate the sender-to-receiver packet reception
-rate (PRR). The data payload of periodic broadcast packets contain
-these estimates. Therefore, when node A receives a link estimation
-broadcast message from node B, it can use the packet header to
-estimate the B-to-A PRR and the packet payload to update B's
-estimate of the A-to-B PRR.</p>
-<p>Multiplying these two values gives a <em>bidirectional</em> PRR, or
-an estimate of the probability that if A transmits a packet to B,
-B will successfully hear and acknowledge the packet and A will
-hear the acknowledgment. The inverse of the bidirecitonal PRR
-is the ETX.</p>
-<p>CTP link estimation adapts its beaconing rate to be slow when
-its routing table is stable and faster when changes occur.
-It adjusts the beaconing interval using an algorithm similar
-to the trickle dissemination protocol[<a href="#id1" name="id2"><span class="problematic" id="id2">2_</span></a>]. CTP sends beacons
-more often when one of three conditions occurs:</p>
+<p>The implementation uses two mechanisms to estimate the quality of a link:
+periodic LEEP <a class="footnote-reference" href="#id4" id="id1" name="id1">[1]</a> packets and data packets. The implementation sends
+routing beacons as LEEP packets. These packets seed the neighbor table
+with bidirectional ETX values. The implementation adapts its beaconing
+rate based on network dynamics using an algorithm similar to the
+trickle dissemination protocol <a class="footnote-reference" href="#id5" id="id2" name="id2">[2]</a>. Beacons are sent on an exponentially
+increasing randomized timer. The implementation resets the timer to a
+small value when one or more of the following conditions are met:</p>
 <blockquote>
 <ol class="arabic simple">
 <li>The routing table is empty (this also sets the P bit)</li>
@@ -520,12 +506,12 @@ more often when one of three conditions occurs:</p>
 <li>The node hears a packet with the P bit set</li>
 </ol>
 </blockquote>
-<p>CTP also estimates link quality using data transmissions. This
-is a direct measure of ETX. Whenever the data path transmits a
-packet, it tells the link estimator the destimation and whether
-it was successfully acknowledged. The estimator produces an ETX
-estimate every 5 such transmissions, where 0 successes has an
-ETX of 6.</p>
+<p>The implementation augments the LEEP link estimates with data
+transmissions. This is a direct measure of ETX. Whenever the data path
+transmits a packet, it tells the link estimator the destimation and
+whether it was successfully acknowledged. The estimator produces an
+ETX estimate every 5 such transmissions, where 0 successes has an ETX
+of 6.</p>
 <p>The estimator combines the beacon and data estimates by incorporating
 them into an exponentially weighted moving average. Beacon-based
 estimates seed the neighbor table. The expectation is that the low
@@ -534,17 +520,116 @@ data estimates will outweigh beacon estimates. Additionally, as
 the rate at which CTP collects data estimates is proportional to
 the transmission rate, then it can quickly detect a broken link and
 switch to another candidate neighbor.</p>
+<p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/le/LinkEstimatorP</span></tt> implements the
+link estimator. It couples LEEP-based and data-based estimates.</p>
 </div>
 <div class="section">
 <h2><a id="routing-engine" name="routing-engine">6.2 Routing Engine</a></h2>
-<p>The</p>
+<p>The implementation's routing engine is responsible for picking the next
+hop for a data transmission. It keeps track of the path ETX values of
+a subset of the nodes maintained by the link estimation table. The minimum
+cost route has the smallest sum the path ETX from that node and the link
+ETX of that node. The path ETX is therefore the sum of link ETX values
+along the entire route. The component <tt class="docutils literal"><span class="pre">tos/lib/net/ctp/CtpRoutingEngineP</span></tt>
+implements the routing engine.</p>
+</div>
+<div class="section">
+<h2><a id="forwarding-engine" name="forwarding-engine">6.3 Forwarding Engine</a></h2>
+<p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/ctp/CtpForwardingEngineP</span></tt> implements the
+forwarding engine. It has five repsonsibilities:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Transmitting packets to the next hop, retransmitting when necessary, and
+passing acknowledgment based information to the link estimator</li>
+<li>Deciding <em>when</em> to transmit packets to the next hop</li>
+<li>Detecting routing inconsistencies and informing the routing engine</li>
+<li>Maintaining a queue of packets to transmit, which are a mix of locally
+generated and forwarded packets</li>
+<li>Detecting single-hop transmission duplicates caused by lost acknowledgments</li>
+</ol>
+</blockquote>
+<p>The four key functions of the forwading engine are packet reception
+(<tt class="docutils literal"><span class="pre">SubReceive.receive()</span></tt>), packet forwarding (<tt class="docutils literal"><span class="pre">forward()</span></tt>), packet
+transmission (<tt class="docutils literal"><span class="pre">sendTask()</span></tt>) and deciding what to do after a packet
+transmission (<tt class="docutils literal"><span class="pre">SubSend.sendDone()</span></tt>).</p>
+<p>The receive function decides whether or not the node should forward a
+packet. It checks for duplicates using a small cache of recently received
+packets. If it decides a packet is not a duplicate, it calls the
+forwading function.</p>
+<p>The forwarding function formats the packet for forwarding. It checks the
+received packet to see if there is possibly a loop in the network.
+It checks if there is space in the transmission queue.
+If there is no space, it drops the packet and sets the C bit. If the
+transmission queue was empty, then it posts the send task.</p>
+<p>The send task examines the packet at the head of the transmission
+queue, formats it for the next hop (requests the route from the
+routing layer, etc.), and submits it to the AM layer.</p>
+<p>When the send completes, sendDone examines the packet to see the result.
+If the packet was acknowledged, it pulls the packet off the transmission
+queue. If the packet was locally generated, it signals sendDone() to the
+client above. If it was forwarded, it returns the packet to the forwarding
+message pool. If there are packets remaining in the queue (e.g., the
+packet was not acknowledged), it starts a randomized timer that reposts
+this task. This timer essentially rate limits CTP so that it does not
+stream packets as quickly as possible, in order to prevent self-collisions
+along the path.</p>
 </div>
 </div>
-<div class="system-messages section">
-<h1>Docutils System Messages</h1>
-<div class="system-message" id="id1">
-<p class="system-message-title">System Message: <a name="id1">ERROR/3</a> (<tt class="docutils">txt/tep123.txt</tt>, line 232); <em><a href="#id2">backlink</a></em></p>
-Unknown target name: &quot;2&quot;.</div>
+<div class="section">
+<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="line-block">
+<div class="line">Rodrigo Fonseca</div>
+<div class="line">473 Soda Hall</div>
+<div class="line">Berkeley, CA 94720-1776</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 510 642-8919</div>
+<div class="line">email - <a class="reference" href="mailto:rfonseca&#64;cs.berkeley.edu">rfonseca&#64;cs.berkeley.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Omprakash Gnawali</div>
+<div class="line">Ronald Tutor Hall (RTH) 418</div>
+<div class="line">3710 S. McClintock Avenue</div>
+<div class="line">Los Angeles, CA 90089</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 213 821-5627</div>
+<div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Kyle Jamieson</div>
+<div class="line">The Stata Center</div>
+<div class="line">32 Vassar St.</div>
+<div class="line">Cambridge, MA 02139</div>
+<div class="line"><br /></div>
+<div class="line">email - <a class="reference" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Philip Levis</div>
+<div class="line">358 Gates Hall</div>
+<div class="line">Computer Science Laboratory</div>
+<div class="line">Stanford University</div>
+<div class="line">Stanford, CA 94305</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 650 725 9046</div>
+<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+</div>
+</div>
+<div class="section">
+<h1><a id="id3" name="id3">8. Citations</a></h1>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1" name="id4">[1]</a></td><td>TEP 124: Link Estimation Extension Protocol</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2" name="id5">[2]</a></td><td>Philip Levis, Neil Patel, David Culler and Scott Shenker. &quot;A
+Self-Regulating Algorithm for Code Maintenance and Propagation
+in Wireless Sensor Networks.&quot; In Proceedings of the First USENIX
+Conference on Networked Systems Design and Implementation (NSDI), 2004.</td></tr>
+</tbody>
+</table>
 </div>
 </div>
 </body>

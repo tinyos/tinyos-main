@@ -10,8 +10,8 @@ The Collection Tree Protocol (CTP)
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2007-01-16 01:08:26 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-02-06 03:45:27 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -66,19 +66,20 @@ multiple small frames into a single data-link packet.
 3. Collection and CTP
 ==============================================================================
 
-CTP uses expected transmissions (ETX) as its routing gradient. A root has an
-ETX of 0.  The ETX of a node is the ETX of its parent plus the ETX of its
-link to its parent. This additive measure assumes that nodes use link-level
-retransmissions.  Given a choice of valid routes, CTP SHOULD choose the one with the 
-lowest ETX value. CTP represents ETX values as 16-bit fixed-point real numbers
-with a precision of hundredths. An ETX value of 451, for example, represents
-an ETX of 4.51, while an ETX value of 109 represents an ETX of 1.09. 
+CTP uses expected transmissions (ETX) as its routing gradient. A root
+has an ETX of 0.  The ETX of a node is the ETX of its parent plus the
+ETX of its link to its parent. This additive measure assumes that
+nodes use link-level retransmissions.  Given a choice of valid routes,
+CTP SHOULD choose the one with the lowest ETX value. CTP represents
+ETX values as 16-bit fixed-point real numbers with a precision of
+hundredths. An ETX value of 451, for example, represents an ETX of
+4.51, while an ETX value of 109 represents an ETX of 1.09.
 
-Routing loops are a problem that can emerge in a CTP network. Routing loops
-generally occur when a node choose a new route that has a significantly higher
-ETX than its old one, perhaps in response to losing connectivity with a candidate
-parent. If the new route includes a node which was a descendant, then a loop
-occurs.
+Routing loops are a problem that can emerge in a CTP network. Routing
+loops generally occur when a node choose a new route that has a
+significantly higher ETX than its old one, perhaps in response to
+losing connectivity with a candidate parent. If the new route includes
+a node which was a descendant, then a loop occurs.
 
 CTP addresses loops through two mechanisms. First, every CTP packet
 contains a node's current gradient value. If CTP receives a data frame with
@@ -208,43 +209,25 @@ as well as traffic generated on the node.
 6.1 Link Estimation
 ------------------------------------------------------------------------------
 
-The link estimator estimates the ETX to single-hop neighbors.
 The implementation uses two mechanisms to estimate the quality of a link:
-periodic broadcast packets and data packets. The estimator itself
-only generates broadcast packets. For data traffic, it depends on
-other components telling it about acknowledged and unacknowledged
-transmissions.
-
-The periodic broadcast packets have sequence numbers, which the
-estimator uses to estimate the sender-to-receiver packet reception
-rate (PRR). The data payload of periodic broadcast packets contain
-these estimates. Therefore, when node A receives a link estimation
-broadcast message from node B, it can use the packet header to
-estimate the B-to-A PRR and the packet payload to update B's
-estimate of the A-to-B PRR.
-
-Multiplying these two values gives a *bidirectional* PRR, or
-an estimate of the probability that if A transmits a packet to B,
-B will successfully hear and acknowledge the packet and A will
-hear the acknowledgment. The inverse of the bidirecitonal PRR
-is the ETX.
-
-CTP link estimation adapts its beaconing rate to be slow when
-its routing table is stable and faster when changes occur. 
-It adjusts the beaconing interval using an algorithm similar 
-to the trickle dissemination protocol[2_]. CTP sends beacons
-more often when one of three conditions occurs:
+periodic LEEP [1]_ packets and data packets. The implementation sends
+routing beacons as LEEP packets. These packets seed the neighbor table
+with bidirectional ETX values. The implementation adapts its beaconing
+rate based on network dynamics using an algorithm similar to the
+trickle dissemination protocol [2]_. Beacons are sent on an exponentially
+increasing randomized timer. The implementation resets the timer to a
+small value when one or more of the following conditions are met:
 
  1) The routing table is empty (this also sets the P bit)
  2) The node's routing ETX increases by >= 1 trasmission
  3) The node hears a packet with the P bit set
 
-CTP also estimates link quality using data transmissions. This
-is a direct measure of ETX. Whenever the data path transmits a
-packet, it tells the link estimator the destimation and whether
-it was successfully acknowledged. The estimator produces an ETX
-estimate every 5 such transmissions, where 0 successes has an
-ETX of 6.  
+The implementation augments the LEEP link estimates with data
+transmissions. This is a direct measure of ETX. Whenever the data path
+transmits a packet, it tells the link estimator the destimation and
+whether it was successfully acknowledged. The estimator produces an
+ETX estimate every 5 such transmissions, where 0 successes has an ETX
+of 6.
 
 The estimator combines the beacon and data estimates by incorporating
 them into an exponentially weighted moving average. Beacon-based
@@ -255,11 +238,110 @@ the rate at which CTP collects data estimates is proportional to
 the transmission rate, then it can quickly detect a broken link and
 switch to another candidate neighbor.
 
+The component ``tos/lib/net/le/LinkEstimatorP`` implements the
+link estimator. It couples LEEP-based and data-based estimates.
+
 6.2 Routing Engine
 ------------------------------------------------------------------------------
 
-The 
+The implementation's routing engine is responsible for picking the next
+hop for a data transmission. It keeps track of the path ETX values of
+a subset of the nodes maintained by the link estimation table. The minimum
+cost route has the smallest sum the path ETX from that node and the link
+ETX of that node. The path ETX is therefore the sum of link ETX values
+along the entire route. The component ``tos/lib/net/ctp/CtpRoutingEngineP``
+implements the routing engine.
 
+6.3 Forwarding Engine
+------------------------------------------------------------------------------
 
+The component ``tos/lib/net/ctp/CtpForwardingEngineP`` implements the
+forwarding engine. It has five repsonsibilities:
+
+ 1) Transmitting packets to the next hop, retransmitting when necessary, and
+    passing acknowledgment based information to the link estimator
+ 2) Deciding *when* to transmit packets to the next hop
+ 3) Detecting routing inconsistencies and informing the routing engine
+ 4) Maintaining a queue of packets to transmit, which are a mix of locally
+    generated and forwarded packets
+ 5) Detecting single-hop transmission duplicates caused by lost acknowledgments
+
+The four key functions of the forwading engine are packet reception
+(``SubReceive.receive()``), packet forwarding (``forward()``), packet
+transmission (``sendTask()``) and deciding what to do after a packet
+transmission (``SubSend.sendDone()``).
+
+The receive function decides whether or not the node should forward a
+packet. It checks for duplicates using a small cache of recently received
+packets. If it decides a packet is not a duplicate, it calls the
+forwading function.
+
+The forwarding function formats the packet for forwarding. It checks the
+received packet to see if there is possibly a loop in the network.
+It checks if there is space in the transmission queue.
+If there is no space, it drops the packet and sets the C bit. If the
+transmission queue was empty, then it posts the send task.
+
+The send task examines the packet at the head of the transmission
+queue, formats it for the next hop (requests the route from the
+routing layer, etc.), and submits it to the AM layer.
+
+When the send completes, sendDone examines the packet to see the result.
+If the packet was acknowledged, it pulls the packet off the transmission
+queue. If the packet was locally generated, it signals sendDone() to the
+client above. If it was forwarded, it returns the packet to the forwarding
+message pool. If there are packets remaining in the queue (e.g., the
+packet was not acknowledged), it starts a randomized timer that reposts
+this task. This timer essentially rate limits CTP so that it does not
+stream packets as quickly as possible, in order to prevent self-collisions
+along the path.
+
+7. Citations
+====================================================================
+
+| Rodrigo Fonseca 
+| 473 Soda Hall
+| Berkeley, CA 94720-1776
+|
+| phone - +1 510 642-8919
+| email - rfonseca@cs.berkeley.edu
+|
+|
+| Omprakash Gnawali
+| Ronald Tutor Hall (RTH) 418 
+| 3710 S. McClintock Avenue
+| Los Angeles, CA 90089 
+|
+| phone - +1 213 821-5627
+| email - gnawali@usc.edu
+|
+|
+| Kyle Jamieson
+| The Stata Center
+| 32 Vassar St.
+| Cambridge, MA 02139 
+|
+| email - jamieson@csail.mit.edu
+|
+|
+| Philip Levis
+| 358 Gates Hall
+| Computer Science Laboratory
+| Stanford University
+| Stanford, CA 94305
+|
+| phone - +1 650 725 9046
+| email - pal@cs.stanford.edu
+
+8. Citations
+====================================================================
+
+.. [1] TEP 124: Link Estimation Extension Protocol
+.. [2] Philip Levis, Neil Patel, David Culler and Scott Shenker. "A
+       Self-Regulating Algorithm for Code Maintenance and Propagation
+       in Wireless Sensor Networks." In Proceedings of the First USENIX
+       Conference on Networked Systems Design and Implementation (NSDI), 2004.
+       
+ 
 
 
