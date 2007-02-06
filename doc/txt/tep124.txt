@@ -1,0 +1,177 @@
+============================
+Link Quality Exchange Protocol (LQEP)
+============================
+
+:TEP: 114 
+:Group: Network Protocol Working Group 
+:Type: Documentary
+:Status: Draft
+:TinyOS-Version: 2.x
+:Author: Omprakash Gnawali
+
+:Draft-Created: 05-Feb-2006
+:Draft-Version: $Revision: 1.1 $
+:Draft-Modified: $Date: 2007-02-06 15:32:29 $
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This memo documents a part of TinyOS for the TinyOS Community, and
+   requests discussion and suggestions for improvements.  Distribution
+   of this memo is unlimited. This memo is in full compliance with
+   TEP 1.
+
+Abstract
+============================================================================
+
+The memo documents the Link Quality Exchange Protocol (LQEP). Nodes
+use LQEP to exchange information about the quality of links to the
+neighbors.
+
+1. Introduction
+============================================================================
+
+Routing protocols often require bi-directional link qualities to
+compute the routes. Nodes can estimate the quality of the in-bound
+link from a neighbor by estimating the ratio of successfully received
+messages and the total transmitted messages. These in-bound link
+qualities are exchanged among the neighbors using LQEP to determine
+the out-bound link qualities. Bi-directional link quality is computed
+using thus learned in-bound and out-bound link qualities.
+
+2. Definitions
+============================================================================
+
+2.1 Link Quality
+--------------------------------------------------------------------
+
+Quality of the link between any two nodes describes the probability
+with which data link layer packets can be received without any
+error. The link between the nodes A and B may have different quality
+in A to B and B to A directions.
+
+2.2 In-bound Link Quality
+--------------------------------------------------------------------
+
+In a node pair (A,B), with B as the node of reference, in-bound link
+quality is defined as a value ranging from 0 to 255 that describes the
+quality of the link from A to B estimated by B by counting the
+successfully received packets from A among all the transmitted packets
+or using link quality indicators (LQI,RSSI) provided by the radio on
+the node B, or some other methods.
+
+2.3 Out-bound Link Quality
+--------------------------------------------------------------------
+
+In a node pair (A,B), with B as the node of reference, out-bound link
+quality is defined as the quality of the link from B to A. B can
+determine the out-bound link quality if A advertises its in-bound link
+qualities. LQEP is the protocol that is used to exchange the in-bound
+link qualities.
+
+2.4 Link Information Entry
+--------------------------------------------------------------------
+
+Link Information Entry is a tuple (n,q) where q is the in-bound link
+quality from the node n.
+
+2. Link Quality Exchange Protocol (LQEP)
+============================================================================
+
+2.1 Assumptions
+--------------------------------------------------------------------
+
+Following are the assumptions made by LQEP:
+
+2.1.1. The data link frame has a single-hop source field.
+2.1.2. The data link layer provides a broadcast address.
+2.1.3. The data link layer provides the length of the LQEP frame.
+
+2.2 The Protocol
+--------------------------------------------------------------------
+
+To compute the bi-directional link quality, in-bound link quality must
+be exchanged among the neighbors. LQEP maintains a sequence number
+that is incremented by one for each outgoing LQEP frame. LQEP frame
+transmits this sequence number and Link Information entries describing
+the in-bound link qualities for a subset of its neighbors. When a node
+receives the LQEP frame and finds its node id in one of the Link
+Information entries, the node MUST use the second element of that
+tuple as its out-bound link quality to the neighbor identified by the
+data link source address. The LQEP sequence number SHOULD be used to
+estimate the in-bound link quality.
+
+2.3 LQEP Frame
+--------------------------------------------------------------------
+
+A LQEP frame has a header, the payload, and a footer with the Link
+Information (LI) entries as shown in this diagram:
+
+  -------------------------------------------------------------
+  |   LQEP   | Payload | LI Entry | LI Entry | ... | LI Entry |
+  |  Header  |         |     1    |     2    |     |     n    |
+  -------------------------------------------------------------
+
+
+2.3.1 LQEP header
+
+The following diagram shows the LQEP header format:
+                           1
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |nentry | rsrvd |      seqno      |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+Field definitions:
+
+nentry - Number of Link Information entries in the footer
+seqno - LQEP sequence number.
+rsrvd - Reserved
+
+
+2.3.2 Link Information Entry
+
+The following diagram shows the Link Information Entry format:
+                           1
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |             node id             |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      | link quality  |
+      +-+-+-+-+-+-+-+-+
+
+Field definitions:
+
+node id: the link layer address of the neighbor
+link quality: The in-bound link quality from the node identified by node id
+
+
+7. Implementation
+============================================================================
+
+The following files in ``tinyos-2.x/tos/lib/net/le`` provide a reference 
+implementation of LQEP described in this TEP.
+
+  * ``LinkEstimator.h`` and ``LinkEstimatorP``
+
+The reference implementation uses the LQEP sequence number to estimate
+the in-bound link quality. The implementation tries to append Link
+Information entry for all the neighbors in its neighbor table by
+sending the largest possible data link frame. If there is still not
+enough room to fit all the Link Information entries, it uses a
+round-robin policy to select the entries to be exchanged that could
+not fit in the previous LQEP frame.
+
+8. Author's Address
+============================================================================
+
+| Omprakash Gnawali
+| Ronald Tutor Hall (RTH) 418 
+| 3710 S. McClintock Avenue
+| Los Angeles, CA 90089 
+|
+| phone - +1 213 821-5627
+| email - gnawali@usc.edu
+|
+
