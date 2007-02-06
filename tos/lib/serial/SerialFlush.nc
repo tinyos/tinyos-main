@@ -1,4 +1,4 @@
-//$Id: SerialFlush.nc,v 1.1 2007-01-24 18:14:39 bengreenstein Exp $
+//$Id: SerialFlush.nc,v 1.1 2007-02-06 02:39:43 bengreenstein Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.

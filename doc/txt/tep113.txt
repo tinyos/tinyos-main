@@ -10,8 +10,8 @@ Serial Communication
 :Author: Ben Greenstein and Philip Levis
 
 :Draft-Created: 11-Jul-2005
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2007-01-24 17:18:20 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-02-06 02:39:43 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -38,7 +38,7 @@ applications can communicate with arbitrary motes.
 ====================================================================
 
 Users need to read data out of a TinyOS network. The most common
-approach is to attach a mote to a PC or latop with a wired
+approach is to attach a mote to a PC or laptop with a wired
 connection. While the interface on the PC side can vary from a serial
 cable to a USB device to IP, the mote generally talks to a serial port
 (UART). In TinyOS 1.x, the UART packet format is platform-specific,
@@ -47,9 +47,9 @@ in order to discover and properly handle platform diversity. TinyOS
 2.0 introduces the notion of packet format dispatch, so a mote can
 support multiple UART packet formats simultaneously.  This allows
 transparent bridging (e.g., an 802.15.4 base station) to exist in
-parallel with platform-independent communication, which allows
-simplifies the PC toolchain. This memo documents the protocols and
-structure of the TinyOS 2.x serial communication stack.
+parallel with platform-independent communication, which simplifies the
+PC toolchain. This memo documents the protocols and structure of the
+TinyOS 2.x serial communication stack.
 
 2. Serial Stack Structure
 ====================================================================
@@ -93,7 +93,7 @@ platform-independent: only the UART is platform-specific code.
 
 The lowest level of the stack is the raw UART. This HIL component
 provides functionality for configuring the UART (speed, stop bytes,
-etc.) as well as sending/receiving bytes.
+etc.), sending/receiving bytes, and flushing the UART.
 
 The Encoder/Framer sits above the raw UART. This component translates
 raw data bytes into packet bytes using a serial protocol's
@@ -123,7 +123,7 @@ particular packet format begins (based on its header size). Section
 ====================================================================
 
 Section 2 describes the basic structure of the TinyOS 2.x serial
-stack structure. This section describes its actual implementation,
+stack. This section describes its actual implementation,
 including SerialActiveMessageC, which sits on top of the Dispatcher.
 All of the components except for UartC are part of the serial
 library that lives in ``tos/lib/serial``.
@@ -158,8 +158,8 @@ but NOT that the UART is idle.
 ::
 
   interface SerialFlush {
-    async command void flush();
-    async event void flushDone();
+    command void flush();
+    event void flushDone();
   }
 
 It also provides interfaces for configuring the serial port. *NOTE:
@@ -215,9 +215,7 @@ The SerialP component implements the serial protocol using PPP/HDLC-
 like framing (See RFC 1662[RFC1662_]). Type dispatch and buffer
 management are left to higher layers in the serial stack. The protocol
 is currently stop-and-wait in the host-to-mote direction and best
-effort in the mote-to-host direction. The first performance upgrade of
-this module will be to implement sliding window reliability in both
-directions.
+effort in the mote-to-host direction. 
 
 SerialP provides two byte-level interfaces to the upper layer for
 sending and receiving packets, respectively called SendBytePacket and
@@ -225,12 +223,12 @@ ReceiveBytePacket.
 
 On the sending side, SerialP is responsible for encapsulation of upper
 layer packets. An upper layer component such as SerialDispatcherC
-initiates the sending of a packet by calling startSend, passing the
+initiates the sending of a packet by calling startSend(), passing the
 first byte to send. SerialP collects subsequent bytes by signalling
-nextByte. Within the nextByte handler or between calls to nextByte,
+nextByte(). Within the nextByte handler or between calls to nextByte(),
 the upper layer should indicate the end-of-packet by calling
-completeSend. If completeSend is called from within a nextByte
-handler, SerialP will ignore the return of the call to nextByte.
+completeSend(). If completeSend is called from within a nextByte()
+handler, SerialP will ignore the return of the call to nextByte().
 
 ::
 
@@ -244,16 +242,16 @@ handler, SerialP will ignore the return of the call to nextByte.
 SerialP maintains a small window of bytes that have been received by
 the upper layer and not yet sent to the UART. Depending on the timing
 requirements of the underlying UART, the size of this window can be
-changed.  SerialP uses repeated calls to nextByte to keep this window
+changed.  SerialP uses repeated calls to nextByte() to keep this window
 filled.
 
-SerialP uses SerialFrameComm to send a delimiter between frames, 
-a serial-level type field, the bytes of the packet, and a two-byte
-frame CRC. For mote-to-host gap detection and link reliability, a
-sequence number may also be sent (not currently activated).
+SerialP uses SerialFrameComm to send a delimiter between frames, a
+serial-level type field, the bytes of the packet, and a two-byte frame
+CRC. For mote-to-host gap detection and link reliability, a sequence
+number may also be sent (not activated in the default implementation).
 
-After sending an entire frame and receiving the last putDone event
-from below, SerialP signals sendCompleted to indicate the success or
+After sending an entire frame and receiving the last putDone() event
+from below, SerialP signals sendCompleted() to indicate the success or
 failure of a requested transmission.
 
 Packet reception is also managed by SerialP and the interface
@@ -269,7 +267,7 @@ provided to the upper layer is ReceiveBytePacket:
 
 Upon receiving an interframe delimiter and a new frame's header,
 SerialP signals the upper layer indicating that a packet is
-arriving. For each byte received, SerialP signals byteReceived. (Note:
+arriving. For each byte received, SerialP signals byteReceived(). (Note:
 SerialP signals on byte k-2 when byte k arrives, because the
 implementation precludes it from knowing when it has encountered the
 2-byte CRC in the frame footer until after it has received it. Lagging
@@ -310,12 +308,12 @@ be able to handle various packet formats:
 
 When SerialDispatcherC receives the first data byte of a packet from
 SerialP, it stores it as the packet type and calls
-SerialPacketInfo.offset() to determine where in a message_t that
+offset() to determine where in a message_t that
 packet format begins. It then spools data bytes in, filling them into
 its message_t buffer. Similarly, on the send side, it first sends the
 type byte and spools out data bytes starting from the index denoted by
 the call to offset(). SerialDispatcherC uses the two length commands,
-dataLinkLength and upperLength, to translate between the two notions
+dataLinkLength() and upperLength(), to translate between the two notions
 of packet length: above, length refers to the payload excluding
 header, while below it refers to the payload plus header.
 
@@ -437,7 +435,7 @@ depth one. Therefore, it does not have to contend with other
 SerialAMSender instantiations for queue space. The underlying
 implementation schedulers the packets in these queues using some form
 of fair-share queueing. SerialAMReceiverC provides the virtualized
-abstraction for reception. These abstraction are very similar to
+abstraction for reception. These abstractions are very similar to
 TinyOS's radio abstractions, namely, AMSenderC and AMReceiverC. See
 Section 4 of TEP 116[TEP116_] for more information. Unlike the
 services in the TEP 116, the serial component virtualizations provide
