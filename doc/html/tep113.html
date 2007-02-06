@@ -11,21 +11,30 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
-:copyright: This stylesheet has been placed in the public domain.
+:Date: $Date: 2007-02-06 05:54:27 $
+:Revision: $Revision: 1.7 $
+:Copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
 */
-body {
-  font-family: Times;
-  font-size: 16px;
-}
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
 
 .first {
+  /* Override more specific margin styles with "! important". */
   margin-top: 0 ! important }
 
-.last {
+.last, .with-subtitle {
   margin-bottom: 0 ! important }
 
 .hidden {
@@ -38,11 +47,11 @@ a.toc-backref {
 blockquote.epigraph {
   margin: 2em 5em ; }
 
-dd {
+dl.docutils dd {
   margin-bottom: 0.5em }
 
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
   font-weight: bold }
 */
 
@@ -53,11 +62,17 @@ div.abstract p.topic-title {
   font-weight: bold ;
   text-align: center }
 
-div.attention, div.caution, div.danger, div.error, div.hint,
-div.important, div.note, div.tip, div.warning, div.admonition {
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
   margin: 2em ;
   border: medium outset ;
   padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
 
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
@@ -66,11 +81,14 @@ div.warning p.admonition-title {
   font-weight: bold ;
   font-family: sans-serif }
 
-div.hint p.admonition-title, div.important p.admonition-title,
-div.note p.admonition-title, div.tip p.admonition-title,
-div.admonition p.admonition-title {
-  font-weight: bold ;
-  font-family: sans-serif }
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
 
 div.dedication {
   margin: 2em 5em ;
@@ -82,9 +100,11 @@ div.dedication p.topic-title {
   font-style: normal }
 
 div.figure {
-  margin-left: 2em }
+  margin-left: 2em ;
+  margin-right: 2em }
 
 div.footer, div.header {
+  clear: both;
   font-size: smaller }
 
 div.line-block {
@@ -100,7 +120,7 @@ div.line-block div.line-block {
 div.sidebar {
   margin-left: 1em ;
   border: medium outset ;
-  padding: 0em 1em ;
+  padding: 1em ;
   background-color: #ffffee ;
   width: 40% ;
   float: right ;
@@ -127,31 +147,24 @@ div.system-message p.system-message-title {
 div.topic {
   margin: 2em }
 
-h1 {
-  font-family: Arial, sans-serif;
-  font-size: 20px;
-}
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
 
 h1.title {
- text-align: center;
- font-size: 32px;
-}
-
-h2 {
- font-size: 16px;
- font-family: Arial, sans-serif;
-}
+  text-align: center }
 
 h2.subtitle {
   text-align: center }
 
-h3 {
- font-size: 12px;
- font-family: Arial, sans-serif;
-}
-
-hr {
+hr.docutils {
   width: 75% }
+
+img.align-left {
+  clear: left }
+
+img.align-right {
+  clear: right }
 
 ol.simple, ul.simple {
   margin-bottom: 1em }
@@ -209,18 +222,10 @@ pre.address {
   font-family: serif ;
   font-size: 100% }
 
-pre.line-block {
-  font-family: serif ;
-  font-size: 100% }
-
 pre.literal-block, pre.doctest-block {
   margin-left: 2em ;
   margin-right: 2em ;
-  background-color: #eeeeee;
-  border-color: #000000;
-  border-width: thin; 
-  font-size: 14px
-}
+  background-color: #eeeeee }
 
 span.classifier {
   font-family: sans-serif ;
@@ -236,46 +241,49 @@ span.interpreted {
 span.option {
   white-space: nowrap }
 
-span.option-argument {
-  font-style: italic }
-
 span.pre {
   white-space: pre }
 
 span.problematic {
   color: red }
 
-table {
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
   margin-top: 0.5em ;
   margin-bottom: 0.5em }
 
-table.citation {
-  border-left: solid thin gray ;
-  padding-left: 0.5ex }
-
-table.docinfo {
-  margin: 2em 4em;
-}
-
 table.footnote {
-  border-left: solid thin black ;
-  padding-left: 0.5ex }
+  border-left: solid 1px black;
+  margin-left: 1px }
 
-td, th {
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
   padding-left: 0.5em ;
   padding-right: 0.5em ;
   vertical-align: top }
 
-th.docinfo-name, th.field-name {
+table.docutils th.field-name, table.docinfo th.docinfo-name {
   font-weight: bold ;
   text-align: left ;
-  white-space: nowrap;
-  }
+  white-space: nowrap ;
+  padding-left: 0 }
 
-h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
   font-size: 100% }
 
-tt {}
+tt.docutils {
+  background-color: #eeeeee }
 
 ul.auto-toc {
   list-style-type: none }
@@ -303,9 +311,9 @@ ul.auto-toc {
 <td>Ben Greenstein and Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">11-Jul-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.4</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-06-14</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-06</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -332,7 +340,7 @@ applications can communicate with arbitrary motes.</p>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>Users need to read data out of a TinyOS network. The most common
-approach is to attach a mote to a PC or latop with a wired
+approach is to attach a mote to a PC or laptop with a wired
 connection. While the interface on the PC side can vary from a serial
 cable to a USB device to IP, the mote generally talks to a serial port
 (UART). In TinyOS 1.x, the UART packet format is platform-specific,
@@ -341,9 +349,9 @@ in order to discover and properly handle platform diversity. TinyOS
 2.0 introduces the notion of packet format dispatch, so a mote can
 support multiple UART packet formats simultaneously.  This allows
 transparent bridging (e.g., an 802.15.4 base station) to exist in
-parallel with platform-independent communication, which allows
-simplifies the PC toolchain. This memo documents the protocols and
-structure of the TinyOS 2.x serial communication stack.</p>
+parallel with platform-independent communication, which simplifies the
+PC toolchain. This memo documents the protocols and structure of the
+TinyOS 2.x serial communication stack.</p>
 </div>
 <div class="section">
 <h1><a id="serial-stack-structure" name="serial-stack-structure">2. Serial Stack Structure</a></h1>
@@ -379,7 +387,7 @@ provides a packet-level interface. The top three are all
 platform-independent: only the UART is platform-specific code.</p>
 <p>The lowest level of the stack is the raw UART. This HIL component
 provides functionality for configuring the UART (speed, stop bytes,
-etc.) as well as sending/receiving bytes.</p>
+etc.), sending/receiving bytes, and flushing the UART.</p>
 <p>The Encoder/Framer sits above the raw UART. This component translates
 raw data bytes into packet bytes using a serial protocol's
 encoding. The Encoder/Framer assumes that a protocol's encoding has
@@ -404,7 +412,7 @@ particular packet format begins (based on its header size). Section
 <div class="section">
 <h1><a id="the-2-x-serial-stack-implementation" name="the-2-x-serial-stack-implementation">3. The 2.x Serial Stack Implementation</a></h1>
 <p>Section 2 describes the basic structure of the TinyOS 2.x serial
-stack structure. This section describes its actual implementation,
+stack. This section describes its actual implementation,
 including SerialActiveMessageC, which sits on top of the Dispatcher.
 All of the components except for UartC are part of the serial
 library that lives in <tt class="docutils literal"><span class="pre">tos/lib/serial</span></tt>.</p>
@@ -420,9 +428,24 @@ interface SerialByteComm {
   async event void putDone();
 }
 </pre>
-<p>It also provides interfaces for configuring the serial port. <em>NOTE:
-These are not codified yet, and so working out the UART HIL seems like
-a good idea.</em></p>
+<p>Alternatively, <tt class="docutils literal"><span class="pre">UartC</span></tt> may provide the UartStream multi-byte level
+interface. See the Low-Level I/O TEP [<a class="reference" href="#tep117">TEP117</a>] for details.</p>
+<p>Additionally, UartC provides a split-phase interface to signal when
+the UART is idle. There are situations (such as when powering down the
+usart, when switching from TX to RX on a radio with a UART data line,
+etc.) when we need explicit information that the data sent over the
+UART has actually been transmitted in full. The problem is that on
+MCUs that double-buffer UART communication (such as the msp430), a
+putDone event signifies that the UART is ready to accept another byte,
+but NOT that the UART is idle.</p>
+<pre class="literal-block">
+interface SerialFlush {
+  command void flush();
+  event void flushDone();
+}
+</pre>
+<p>It may provide additional interfaces for configuring the serial
+port. This TEP does not consider this topic.</p>
 </div>
 <div class="section">
 <h2><a id="encoder-framer-hdlctranslatec" name="encoder-framer-hdlctranslatec">3.2 Encoder/Framer: HdlcTranslateC</a></h2>
@@ -466,20 +489,18 @@ stored data byte.</p>
 like framing (See RFC 1662[<a class="reference" href="#rfc1662">RFC1662</a>]). Type dispatch and buffer
 management are left to higher layers in the serial stack. The protocol
 is currently stop-and-wait in the host-to-mote direction and best
-effort in the mote-to-host direction. The first performance upgrade of
-this module will be to implement sliding window reliability in both
-directions.</p>
+effort in the mote-to-host direction.</p>
 <p>SerialP provides two byte-level interfaces to the upper layer for
 sending and receiving packets, respectively called SendBytePacket and
 ReceiveBytePacket.</p>
 <p>On the sending side, SerialP is responsible for encapsulation of upper
 layer packets. An upper layer component such as SerialDispatcherC
-initiates the sending of a packet by calling startSend, passing the
+initiates the sending of a packet by calling startSend(), passing the
 first byte to send. SerialP collects subsequent bytes by signalling
-nextByte. Within the nextByte handler or between calls to nextByte,
+nextByte(). Within the nextByte handler or between calls to nextByte(),
 the upper layer should indicate the end-of-packet by calling
-completeSend. If completeSend is called from within a nextByte
-handler, SerialP will ignore the return of the call to nextByte.</p>
+completeSend(). If completeSend is called from within a nextByte()
+handler, SerialP will ignore the return of the call to nextByte().</p>
 <pre class="literal-block">
 interface SendBytePacket {
   async command error_t startSend(uint8_t first_byte);
@@ -491,14 +512,14 @@ interface SendBytePacket {
 <p>SerialP maintains a small window of bytes that have been received by
 the upper layer and not yet sent to the UART. Depending on the timing
 requirements of the underlying UART, the size of this window can be
-changed.  SerialP uses repeated calls to nextByte to keep this window
+changed.  SerialP uses repeated calls to nextByte() to keep this window
 filled.</p>
-<p>SerialP uses SerialFrameComm to send a delimiter between frames,
-a serial-level type field, the bytes of the packet, and a two-byte
-frame CRC. For mote-to-host gap detection and link reliability, a
-sequence number may also be sent (not currently activated).</p>
-<p>After sending an entire frame and receiving the last putDone event
-from below, SerialP signals sendCompleted to indicate the success or
+<p>SerialP uses SerialFrameComm to send a delimiter between frames, a
+serial-level type field, the bytes of the packet, and a two-byte frame
+CRC. For mote-to-host gap detection and link reliability, a sequence
+number may also be sent (not activated in the default implementation).</p>
+<p>After sending an entire frame and receiving the last putDone() event
+from below, SerialP signals sendCompleted() to indicate the success or
 failure of a requested transmission.</p>
 <p>Packet reception is also managed by SerialP and the interface
 provided to the upper layer is ReceiveBytePacket:</p>
@@ -511,14 +532,10 @@ interface ReceiveBytePacket {
 </pre>
 <p>Upon receiving an interframe delimiter and a new frame's header,
 SerialP signals the upper layer indicating that a packet is
-arriving. For each byte received, SerialP signals byteReceived. (Note:
-SerialP signals on byte k-2 when byte k arrives, because the
-implementation precludes it from knowing when it has encountered the
-2-byte CRC in the frame footer until after it has received it. Lagging
-behind by two bytes makes it possible to hide all frame details from
-the upper layer.) Once SerialP receives the complete frame it signals
-endPacket with a value of SUCCESS. If instead it loses sync during
-reception it signals endPacket with FAIL.</p>
+arriving. For each byte received, SerialP signals byteReceived().
+Once SerialP receives the complete frame it signals endPacket with a
+value of SUCCESS. If instead it loses sync during reception it signals
+endPacket with FAIL.</p>
 <p>SerialP acknowledges frames it receives. Acknowledgements have a
 higher priority than data transmissions and consequently, data frames
 may be slightly delayed. However, acknowledgement information is
@@ -546,12 +563,12 @@ interface SerialPacketInfo {
 </pre>
 <p>When SerialDispatcherC receives the first data byte of a packet from
 SerialP, it stores it as the packet type and calls
-SerialPacketInfo.offset() to determine where in a message_t that
+offset() to determine where in a message_t that
 packet format begins. It then spools data bytes in, filling them into
 its message_t buffer. Similarly, on the send side, it first sends the
 type byte and spools out data bytes starting from the index denoted by
 the call to offset(). SerialDispatcherC uses the two length commands,
-dataLinkLength and upperLength, to translate between the two notions
+dataLinkLength() and upperLength(), to translate between the two notions
 of packet length: above, length refers to the payload excluding
 header, while below it refers to the payload plus header.</p>
 <p>A component that provides communication over the serial port with
@@ -658,7 +675,7 @@ depth one. Therefore, it does not have to contend with other
 SerialAMSender instantiations for queue space. The underlying
 implementation schedulers the packets in these queues using some form
 of fair-share queueing. SerialAMReceiverC provides the virtualized
-abstraction for reception. These abstraction are very similar to
+abstraction for reception. These abstractions are very similar to
 TinyOS's radio abstractions, namely, AMSenderC and AMReceiverC. See
 Section 4 of TEP 116[<a class="reference" href="#tep116">TEP116</a>] for more information. Unlike the
 services in the TEP 116, the serial component virtualizations provide
@@ -678,12 +695,12 @@ no snooping capabilities.</p>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Ben Greenstein</div>
-<div class="line">Center for Embedded Networked Sensing</div>
-<div class="line">UCLA 3563 Boelter Hall</div>
-<div class="line">Los Angeles, CA 90095-1596</div>
+<div class="line">Intel Research Seattle</div>
+<div class="line">1100 NE 45th Street, 6th Floor</div>
+<div class="line">Seattle, WA 98105</div>
 <div class="line"><br /></div>
-<div class="line">phone -  +1 310 206 3925</div>
-<div class="line">email - <a class="reference" href="mailto:ben&#64;cs.ucla.edu">ben&#64;cs.ucla.edu</a></div>
+<div class="line">phone -  +1 206 206 545 2501</div>
+<div class="line">email - <a class="reference" href="mailto:benjamin.m.greenstein&#64;intel.com">benjamin.m.greenstein&#64;intel.com</a></div>
 </div>
 </div>
 <div class="section">
@@ -704,6 +721,12 @@ no snooping capabilities.</p>
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a name="tep116">[TEP116]</a></td><td>TEP 116: Packet Protocols. tinyos-2.x/doc/txt/tep116.txt</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep117" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep117">[TEP117]</a></td><td>TEP 117: Low-Level I/O. tinyos-2.x/doc/txt/tep117.txt</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="hdlc" rules="none">
