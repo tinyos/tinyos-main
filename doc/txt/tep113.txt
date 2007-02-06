@@ -10,8 +10,8 @@ Serial Communication
 :Author: Ben Greenstein and Philip Levis
 
 :Draft-Created: 11-Jul-2005
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2007-02-06 02:39:43 $
+:Draft-Version: $Revision: 1.8 $
+:Draft-Modified: $Date: 2007-02-06 05:30:57 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -162,9 +162,8 @@ but NOT that the UART is idle.
     event void flushDone();
   }
 
-It also provides interfaces for configuring the serial port. *NOTE:
-These are not codified yet, and so working out the UART HIL seems like
-a good idea.*
+It may provide additional interfaces for configuring the serial
+port. This TEP does not consider this topic.
 
 
 3.2 Encoder/Framer: HdlcTranslateC
@@ -267,14 +266,10 @@ provided to the upper layer is ReceiveBytePacket:
 
 Upon receiving an interframe delimiter and a new frame's header,
 SerialP signals the upper layer indicating that a packet is
-arriving. For each byte received, SerialP signals byteReceived(). (Note:
-SerialP signals on byte k-2 when byte k arrives, because the
-implementation precludes it from knowing when it has encountered the
-2-byte CRC in the frame footer until after it has received it. Lagging
-behind by two bytes makes it possible to hide all frame details from
-the upper layer.) Once SerialP receives the complete frame it signals
-endPacket with a value of SUCCESS. If instead it loses sync during
-reception it signals endPacket with FAIL.
+arriving. For each byte received, SerialP signals byteReceived().
+Once SerialP receives the complete frame it signals endPacket with a
+value of SUCCESS. If instead it loses sync during reception it signals
+endPacket with FAIL.
 
 SerialP acknowledges frames it receives. Acknowledgements have a
 higher priority than data transmissions and consequently, data frames
