@@ -1,4 +1,4 @@
-// $Id: BaseStationP.nc,v 1.5 2006-12-19 17:55:22 scipio Exp $
+// $Id: BaseStationP.nc,v 1.6 2007-02-08 00:56:35 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -33,7 +33,7 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.5 2006-12-19 17:55:22 scipio Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.6 2007-02-08 00:56:35 scipio Exp $
  */
   
 /* 
@@ -59,6 +59,7 @@ module BaseStationP {
     
     interface AMSend as RadioSend[am_id_t id];
     interface Receive as RadioReceive[am_id_t id];
+    interface Receive as RadioSnoop[am_id_t id];
     interface Packet as RadioPacket;
     interface AMPacket as RadioAMPacket;
 
@@ -128,10 +129,22 @@ implementation
   event void SerialControl.stopDone(error_t error) {}
   event void RadioControl.stopDone(error_t error) {}
 
+  message_t* receive(message_t* msg, void* payload, uint8_t len);
+  
   uint8_t count = 0;
-  event message_t *RadioReceive.receive[am_id_t id](message_t *msg,
+  event message_t* RadioReceive.receive[am_id_t id](message_t *msg,
 						    void *payload,
 						    uint8_t len) {
+    return receive(msg, payload, len);
+  }
+
+  event message_t* RadioSnoop.receive[am_id_t id](message_t* msg,
+						  void* payload,
+						  uint8_t len) {
+    return receive(msg, payload, len);
+  }
+
+  message_t* receive(message_t* msg, void* payload, uint8_t len) {
     message_t *ret = msg;
 
     atomic {
