@@ -1,4 +1,4 @@
-// $Id: BaseStationC.nc,v 1.4 2006-12-12 18:22:48 vlahan Exp $
+// $Id: BaseStationC.nc,v 1.5 2007-02-08 01:00:25 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -82,6 +82,7 @@ implementation {
   
   BaseStationP.RadioSend -> Radio;
   BaseStationP.RadioReceive -> Radio.Receive;
+  BaseStationP.RadioSnoop -> Radio.Snoop;
   BaseStationP.RadioPacket -> Radio;
   BaseStationP.RadioAMPacket -> Radio;
   
