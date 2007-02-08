@@ -23,8 +23,8 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:23:47 $
+ * @version $Revision: 1.5 $
+ * @date $Date: 2007-02-08 17:49:22 $
  */
  
 #include "Resource.h"
@@ -36,9 +36,12 @@ generic module RoundRobinResourceQueueC(uint8_t size) {
   }
 }
 implementation {
-  enum {NO_ENTRY = 0xFF};
+  enum {
+    NO_ENTRY = 0xFF,
+    SIZE = size ? (size - 1) / 8 + 1 : 0
+  };
 
-  uint8_t resQ[(size-1)/8 + 1];
+  uint8_t resQ[SIZE];
   uint8_t last = 0;
 
   void clearEntry(uint8_t id) {
