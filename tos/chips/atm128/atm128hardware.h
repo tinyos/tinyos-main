@@ -1,4 +1,4 @@
-//  $Id: atm128hardware.h,v 1.5 2007-02-06 18:12:05 beutel Exp $
+//  $Id: atm128hardware.h,v 1.6 2007-02-08 00:59:38 scipio Exp $
 
 /*                                                                     tab:4
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
@@ -134,3 +134,5 @@ mcu_power_t mcombine(mcu_power_t m1, mcu_power_t m2) {
 }
 
 #endif //_H_atmega128hardware_H
+
+
