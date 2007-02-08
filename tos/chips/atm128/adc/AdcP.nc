@@ -1,4 +1,4 @@
-/* $Id: AdcP.nc,v 1.4 2006-12-12 18:23:03 vlahan Exp $
+/* $Id: AdcP.nc,v 1.5 2007-02-08 17:52:32 idgay Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -80,7 +80,7 @@ implementation {
   }
 
   void sample() {
-    call Atm128AdcSingle.getData(channel(), refVoltage(), TRUE, prescaler());
+    call Atm128AdcSingle.getData(channel(), refVoltage(), FALSE, prescaler());
   }
 
   error_t startGet(uint8_t newState, uint8_t newClient) {

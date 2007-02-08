@@ -1,4 +1,4 @@
-/* $Id: CC1000RssiP.nc,v 1.5 2006-12-12 18:23:05 vlahan Exp $
+/* $Id: CC1000RssiP.nc,v 1.6 2007-02-08 17:52:33 idgay Exp $
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -100,9 +100,8 @@ implementation
   async event void ActualRssi.readDone(error_t result, uint16_t data) {
     atomic
       {
-	/* The code assumes that RSSI measurements are 10-bits 
-	   (legacy effect) */
-	signal Rssi.readDone[currentOp](result, data >> 6);
+	/* The RSSI measurements are assumed to be 10-bits */
+	signal Rssi.readDone[currentOp](result, data);
 	startNextOp();
       }
   }
