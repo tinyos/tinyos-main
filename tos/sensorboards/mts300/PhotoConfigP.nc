@@ -1,0 +1,6 @@
+configuration PhotoConfigP
+{
+}
+implementation
+{
+}
