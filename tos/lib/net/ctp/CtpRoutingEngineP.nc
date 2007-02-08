@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.5 2007-01-16 04:39:20 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.6 2007-02-08 00:23:56 scipio Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2007-01-16 04:39:20 $
+ *  @date   $Date: 2007-02-08 00:23:56 $
  *  @see Net2-WG
  */
 
@@ -107,7 +107,6 @@ generic module CtpRoutingEngineP(uint8_t routingTableSize, uint16_t minInterval,
         interface Receive as BeaconReceive;
         interface LinkEstimator;
         interface AMPacket;
-        interface LinkSrcPacket;
         interface SplitControl as RadioControl;
         interface Timer<TMilli> as BeaconTimer;
         interface Timer<TMilli> as RouteTimer;
@@ -477,7 +476,7 @@ implementation {
         }
         
         //need to get the am_addr_t of the source
-        from = call LinkSrcPacket.getSrc(msg);
+        from = call AMPacket.source(msg);
         rcvBeacon = (ctp_routing_header_t*)payload;
 
         congested = call CtpRoutingPacket.getOption(msg, CTP_OPT_ECN);
