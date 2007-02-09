@@ -1,8 +1,8 @@
 ============================
-Link Quality Exchange Protocol (LQEP)
+The Link Estimation Exchange Protocol (LEEP)
 ============================
 
-:TEP: 114 
+:TEP: 124 
 :Group: Network Protocol Working Group 
 :Type: Documentary
 :Status: Draft
@@ -10,8 +10,8 @@ Link Quality Exchange Protocol (LQEP)
 :Author: Omprakash Gnawali
 
 :Draft-Created: 05-Feb-2006
-:Draft-Version: $Revision: 1.1 $
-:Draft-Modified: $Date: 2007-02-06 15:32:29 $
+:Draft-Version: $Revision: 1.2 $
+:Draft-Modified: $Date: 2007-02-09 03:03:57 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -24,9 +24,9 @@ Link Quality Exchange Protocol (LQEP)
 Abstract
 ============================================================================
 
-The memo documents the Link Quality Exchange Protocol (LQEP). Nodes
-use LQEP to exchange information about the quality of links to the
-neighbors.
+The memo documents the Link Estimation Exchange Protocol (LEEP). Nodes
+use LEEP to estimate and exchange information about the quality of
+links to the neighbors.
 
 1. Introduction
 ============================================================================
@@ -35,7 +35,7 @@ Routing protocols often require bi-directional link qualities to
 compute the routes. Nodes can estimate the quality of the in-bound
 link from a neighbor by estimating the ratio of successfully received
 messages and the total transmitted messages. These in-bound link
-qualities are exchanged among the neighbors using LQEP to determine
+qualities are exchanged among the neighbors using LEEP to determine
 the out-bound link qualities. Bi-directional link quality is computed
 using thus learned in-bound and out-bound link qualities.
 
@@ -47,17 +47,18 @@ using thus learned in-bound and out-bound link qualities.
 
 Quality of the link between any two nodes describes the probability
 with which data link layer packets can be received without any
-error. The link between the nodes A and B may have different quality
-in A to B and B to A directions.
+error. This definition assumes uncorrelated link losses. The link
+between the nodes A and B may have different quality in A to B and B
+to A directions.
 
 2.2 In-bound Link Quality
 --------------------------------------------------------------------
 
 In a node pair (A,B), with B as the node of reference, in-bound link
-quality is defined as a value ranging from 0 to 255 that describes the
-quality of the link from A to B estimated by B by counting the
-successfully received packets from A among all the transmitted packets
-or using link quality indicators (LQI,RSSI) provided by the radio on
+quality is a value in the range of 0 to 255 that describes the quality
+of the link from A to B estimated by B by counting the successfully
+received packets from A among all the transmitted packets or using
+link quality indicators such as LQI and RSSI provided by the radio on
 the node B, or some other methods.
 
 2.3 Out-bound Link Quality
@@ -66,56 +67,62 @@ the node B, or some other methods.
 In a node pair (A,B), with B as the node of reference, out-bound link
 quality is defined as the quality of the link from B to A. B can
 determine the out-bound link quality if A advertises its in-bound link
-qualities. LQEP is the protocol that is used to exchange the in-bound
+qualities. LEEP is the protocol that is used to exchange the in-bound
 link qualities.
 
 2.4 Link Information Entry
 --------------------------------------------------------------------
 
-Link Information Entry is a tuple (n,q) where q is the in-bound link
-quality from the node n.
+Link Information Entry created by node k is a tuple (n,q) where q is
+the in-bound link quality from node n to k.
 
-2. Link Quality Exchange Protocol (LQEP)
+3. The Link Estimation Exchange Protocol (LEEP)
 ============================================================================
 
-2.1 Assumptions
+3.1 Assumptions
 --------------------------------------------------------------------
 
-Following are the assumptions made by LQEP:
+Following are the assumptions made by LEEP:
 
-2.1.1. The data link frame has a single-hop source field.
-2.1.2. The data link layer provides a broadcast address.
-2.1.3. The data link layer provides the length of the LQEP frame.
+3.1.1. The data link frame has a single-hop source field.
+3.1.2. The data link layer provides a broadcast address.
+3.1.3. The data link layer provides the length of the LEEP frame.
 
-2.2 The Protocol
+3.2 The Protocol
 --------------------------------------------------------------------
 
 To compute the bi-directional link quality, in-bound link quality must
-be exchanged among the neighbors. LQEP maintains a sequence number
-that is incremented by one for each outgoing LQEP frame. LQEP frame
-transmits this sequence number and Link Information entries describing
-the in-bound link qualities for a subset of its neighbors. When a node
-receives the LQEP frame and finds its node id in one of the Link
-Information entries, the node MUST use the second element of that
-tuple as its out-bound link quality to the neighbor identified by the
-data link source address. The LQEP sequence number SHOULD be used to
-estimate the in-bound link quality.
+be exchanged among the neighbors. LEEP maintains a sequence number
+that is incremented by one for each outgoing LEEP frame. The sequence
+number in the LEEP frame MUST be incremented by one even if the data
+link layer retransmits the LEEP frame. The LEEP sequence number MAY be
+used to count the number of missing packets to estimate the in-bound
+link quality from the transmitter. LEEP MUST transmit Link Information
+entries describing the in-bound link qualities for a subset of its
+neighbors. The Link Information entry on the LEEP frame allows the
+receiver node to find the out-bound link quality to the transmitter
+node identified by the data link source address.
 
-2.3 LQEP Frame
+3.3 LEEP Frame
 --------------------------------------------------------------------
 
-A LQEP frame has a header, the payload, and a footer with the Link
+A LEEP frame has a header, the payload, and a footer with the Link
 Information (LI) entries as shown in this diagram:
 
   -------------------------------------------------------------
-  |   LQEP   | Payload | LI Entry | LI Entry | ... | LI Entry |
+  |   LEEP   | Payload | LI Entry | LI Entry | ... | LI Entry |
   |  Header  |         |     1    |     2    |     |     n    |
   -------------------------------------------------------------
 
+The number of Link Information entries can be different in each
+outgoing LEEP frame. The number of Link Information entries MUST not
+increase the size of the LEEP frame beyond the maximum payload length
+allowed by the data link layer. A LEEP frame can have 0 Link
+Information entry.
 
-2.3.1 LQEP header
+3.3.1 LEEP header
 
-The following diagram shows the LQEP header format:
+The following diagram shows the LEEP header format:
                            1
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -126,11 +133,11 @@ The following diagram shows the LQEP header format:
 Field definitions:
 
 nentry - Number of Link Information entries in the footer
-seqno - LQEP sequence number.
-rsrvd - Reserved
+seqno - LEEP sequence number.
+rsrvd - Reserved and must be set to 0.
 
 
-2.3.2 Link Information Entry
+3.3.2 Link Information Entry
 
 The following diagram shows the Link Information Entry format:
                            1
@@ -145,25 +152,28 @@ Field definitions:
 
 node id: the link layer address of the neighbor
 link quality: The in-bound link quality from the node identified by node id
+   to the node that transmits this Link Information entry
 
 
-7. Implementation
+4. Implementation
 ============================================================================
 
-The following files in ``tinyos-2.x/tos/lib/net/le`` provide a reference 
-implementation of LQEP described in this TEP.
+The following files in ``tinyos-2.x/tos/lib/net/le`` provide a
+reference implementation of LEEP described in this TEP.
 
-  * ``LinkEstimator.h`` and ``LinkEstimatorP``
+  * ``LinkEstimator.h`` and ``LinkEstimatorP.nc``
 
-The reference implementation uses the LQEP sequence number to estimate
-the in-bound link quality. The implementation tries to append Link
-Information entry for all the neighbors in its neighbor table by
-sending the largest possible data link frame. If there is still not
-enough room to fit all the Link Information entries, it uses a
-round-robin policy to select the entries to be exchanged that could
-not fit in the previous LQEP frame.
+The reference implementation uses the LEEP sequence number to count
+the number of missing packets to estimate the in-bound link
+quality. The implementation tries to append Link Information entry for
+all the neighbors in its neighbor table by sending the largest
+possible data link frame. If there is still not enough room to fit all
+the Link Information entries, it uses a round-robin policy to select
+the entries to be exchanged that could not fit in the previous LEEP
+frame. The LEEP frames are transmitted whenever the CTP [1]_ beacons,
+sent as a LEEP payload, are sent.
 
-8. Author's Address
+5. Author's Address
 ============================================================================
 
 | Omprakash Gnawali
@@ -175,3 +185,7 @@ not fit in the previous LQEP frame.
 | email - gnawali@usc.edu
 |
 
+6. Citations
+============================================================================
+
+.. [1] TEP 123: The Collection Tree Protocol.
