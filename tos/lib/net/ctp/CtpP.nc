@@ -139,7 +139,6 @@ implementation {
   Router.BeaconSend -> Estimator.Send;
   Router.BeaconReceive -> Estimator.Receive;
   Router.LinkEstimator -> Estimator.LinkEstimator;
-  Router.LinkSrcPacket -> Estimator.LinkSrcPacket;
   Router.AMPacket -> ActiveMessageC;
   Router.RadioControl -> ActiveMessageC;
   Router.BeaconTimer -> RoutingBeaconTimer;
