@@ -7,7 +7,7 @@
  * @see TinyOS Net2-WG
  */
 
-#include <Collection.h>
+#include <Ctp.h>
 
 generic configuration CollectionSenderC(collection_id_t collectid) {
   provides {
