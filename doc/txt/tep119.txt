@@ -402,7 +402,7 @@ broken up into a few groups of functionality:
   * Packet timing: Random, RetxmitTimer
 
 
-5. Author's Address
+5. Author Addresses
 ====================================================================
 
 | Rodrigo Fonseca 
@@ -444,5 +444,5 @@ broken up into a few groups of functionality:
 ====================================================================
 
 .. [1] TEP 116: Packet Protocols
-.. [2] TEP 124: The Collection Tree Protocol (CTP) - (upcoming)
+.. [2] TEP 123: The Collection Tree Protocol (CTP) 
  

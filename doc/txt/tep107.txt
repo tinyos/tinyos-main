@@ -10,8 +10,8 @@ TinyOS 2.x Boot Sequence
 :Author: Philip Levis 
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2007-02-06 00:16:15 $
+:Draft-Version: $Revision: 1.9 $
+:Draft-Modified: $Date: 2007-02-10 23:28:49 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -237,9 +237,7 @@ hardware, the sequence is platform-specific. A port of TinyOS to a
 new plaform MUST include a component PlatformC which provides
 one and only one instance of the Init interface.
 
-Generally, component intialization occurs through SoftwareInit.
-PlatformInit is for a small subset of initializations whose properties
-requires that they be performed separately. Initializations invoked
+Initializations invoked
 through PlatformC meet some or all of the following criteria:
 
 1. The initialization requires configuring hardware resources. This implies that the code is platform-specific. 
