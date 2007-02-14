@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-02-14 16:39:56 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer, Cory Sharp, Adam Wolisz and David Culler</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">14-Sep-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">$revision$</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">$Revision: 1.7 $</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">$date$</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">$Date: 2007-02-14 16:39:56 $</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -318,80 +318,65 @@ Community, and requests discussion and suggestions for
 improvements.  The distribution of the memo is unlimited, provided
 that the header information and this note are preserved. Parts of
 this document are taken verbatim from the <a class="citation-reference" href="#haa2005" id="id1" name="id1">[HAA2005]</a> paper that is
-under IEEE copyright. This memo is in full compliance with <a class="citation-reference" href="#tep1" id="id2" name="id2">[TEP1]</a>.</p>
+under IEEE copyright and from the <a class="citation-reference" href="#t2-tr" id="id2" name="id2">[T2_TR]</a> technical report.  This
+memo is in full compliance with <a class="citation-reference" href="#tep1" id="id3" name="id3">[TEP1]</a>.</p>
 </div>
 <div class="section">
-<h1><a class="toc-backref" href="#id16" id="abstract" name="abstract">1&nbsp;&nbsp;&nbsp;Abstract</a></h1>
-<p>This TEP documents the <em>Hardware Abstraction Architecture (HAA)</em> for TinyOS
-2.0 that balances conflicting requirements of WSN applications and the
-desire for increased portability and streamlined development of
-applications. The three-layer design gradually adapts the capabilities
-of the underlying hardware platforms to the selected
-platform-independent hardware interface between the operating system
-core and the application code. At the same time, it allows the
-applications to utilize a platform's full capabilities -- exported at
-the second layer, when the performance requirements outweigh the need
-for cross-platform compatibility.</p>
-<!-- We demonstrate the practical value of the approach by presenting
-how it can be applied to the most important hardware modules that
-are found in a typical WSN platform. We support the claims using
-concrete examples from existing hardware abstractions in TinyOS
-and the implementation of the MSP430 platform that follows the
-architecture proposed in this paper. -->
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<p>This TEP documents a <em>Hardware Abstraction Architecture (HAA)</em> for
+TinyOS 2.0 that balances the conflicting requirements of code
+reusability and portability on the one hand and efficiency and
+performance optimization on the other. Its three-layer design
+gradually adapts the capabilities of the underlying hardware platforms
+to the selected platform-independent hardware interface between the
+operating system core and the application code. At the same time, it
+allows the applications to utilize a platform's full capabilities --
+exported at the second layer, when the performance requirements
+outweigh the need for cross-platform compatibility.</p>
 </div>
 <div class="section">
-<h1><a class="toc-backref" href="#id17" id="table-of-contents" name="table-of-contents">2&nbsp;&nbsp;&nbsp;Table of Contents</a></h1>
-<div class="contents topic">
-<p class="topic-title first"><a id="contents" name="contents">Contents</a></p>
-<ul class="auto-toc simple">
-<li><a class="reference" href="#abstract" id="id16" name="id16">1&nbsp;&nbsp;&nbsp;Abstract</a></li>
-<li><a class="reference" href="#table-of-contents" id="id17" name="id17">2&nbsp;&nbsp;&nbsp;Table of Contents</a></li>
-<li><a class="reference" href="#introduction" id="id18" name="id18">3&nbsp;&nbsp;&nbsp;Introduction</a></li>
-<li><a class="reference" href="#architecture" id="id19" name="id19">4&nbsp;&nbsp;&nbsp;Architecture</a><ul class="auto-toc">
-<li><a class="reference" href="#hardware-presentation-layer-hpl" id="id20" name="id20">4.1&nbsp;&nbsp;&nbsp;Hardware Presentation Layer (HPL)</a></li>
-<li><a class="reference" href="#hardware-adaptation-layer-hal" id="id21" name="id21">4.2&nbsp;&nbsp;&nbsp;Hardware Adaptation Layer (HAL)</a></li>
-<li><a class="reference" href="#hardware-interface-layer-hil" id="id22" name="id22">4.3&nbsp;&nbsp;&nbsp;Hardware Interface Layer (HIL)</a></li>
-<li><a class="reference" href="#selecting-the-level-of-abstraction" id="id23" name="id23">4.4&nbsp;&nbsp;&nbsp;Selecting the level of abstraction</a></li>
-</ul>
-</li>
-<li><a class="reference" href="#reference" id="id24" name="id24">5&nbsp;&nbsp;&nbsp;Reference</a><ul class="auto-toc">
-<li><a class="reference" href="#processing-unit" id="id25" name="id25">5.1&nbsp;&nbsp;&nbsp;Processing unit</a></li>
-<li><a class="reference" href="#power-management" id="id26" name="id26">5.2&nbsp;&nbsp;&nbsp;Power management</a></li>
-<li><a class="reference" href="#clocks-and-timers" id="id27" name="id27">5.3&nbsp;&nbsp;&nbsp;Clocks and timers</a></li>
-<li><a class="reference" href="#analog-to-digital-converters" id="id28" name="id28">5.4&nbsp;&nbsp;&nbsp;Analog-to-digital converters</a></li>
-<li><a class="reference" href="#data-busses" id="id29" name="id29">5.5&nbsp;&nbsp;&nbsp;Data busses</a></li>
-<li><a class="reference" href="#external-storage" id="id30" name="id30">5.6&nbsp;&nbsp;&nbsp;External storage</a></li>
-<li><a class="reference" href="#radios" id="id31" name="id31">5.7&nbsp;&nbsp;&nbsp;Radios</a></li>
-</ul>
-</li>
-<li><a class="reference" href="#conclusion" id="id32" name="id32">6&nbsp;&nbsp;&nbsp;Conclusion</a></li>
-<li><a class="reference" href="#author-s-address" id="id33" name="id33">7&nbsp;&nbsp;&nbsp;Author's Address</a></li>
-<li><a class="reference" href="#citations" id="id34" name="id34">8&nbsp;&nbsp;&nbsp;Citations</a></li>
-</ul>
-</div>
-</div>
-<div class="section">
-<h1><a class="toc-backref" href="#id18" id="introduction" name="introduction">3&nbsp;&nbsp;&nbsp;Introduction</a></h1>
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>The introduction of hardware abstraction in modern operating systems
 has proved valuable for increasing portability and simplifying
 application development by hiding the hardware intricacies from the
-rest of the system. Although enabling portability, hardware
-abstractions come into conflict with the performance and
-energy-efficiency requirements of WSN applications.</p>
-<p>We need a <em>Hardware Abstraction Architecture (HAA)</em> that can strike a
-balance between the above conflicting goals. The component-based model
-of TinyOS has the functionality required for resolving this
-tension. The main challenge is to select an appropriate organization
-of abstraction functionality in form of components to support
-reusability while maintaining energy-efficiency through access to the
-full hardware capabilities when it is needed.</p>
-<p>Based on the experience in porting TinyOS to new platforms we believe
-that an effective organization is possible when the strengths of the
-component-based approach are combined with a flexible, three-tier
-organization of the hardware abstraction architecture.</p>
+rest of the system. However, hardware abstractions come into conflict
+with the performance and energy-efficiency requirements of sensor
+network applications.</p>
+<p>This drives the need for a well-defined architecture of hardware
+abstractions that can strike a balance between the conflicting goals.
+The main challenge is to select appropriate levels of abstraction and
+to organize them in form of TinyOS components to support reusability
+while maintaining energy-efficiency through access to the full
+hardware capabilities when it is needed.</p>
+<p>This TEP proposes a three-tier <em>Hardware Abstraction Architecture
+(HAA)</em> for TinyOS 2.0 that combines the strengths of the component
+model with an effective organization in form of three different levels
+of abstraction. The top level of abstraction fosters portability by
+providing a platform-independent hardware interface, the middle layer
+promotes efficiency through rich hardware-specific interfaces and the
+lowest layer structures access to hardware registers and interrupts.</p>
+<p>The rest of this TEP specifies:</p>
+<ul class="simple">
+<li>the details of the HAA and its three distinct layers
+(<a class="reference" href="#architecture">2. Architecture</a>)</li>
+<li>guidelines on selecting the &quot;right&quot; level of abstraction
+(<a class="reference" href="#combining-different-levels-of-abstraction">3. Combining different levels of abstraction</a>)</li>
+<li>how hardware abstractions can be shared among different TinyOS
+platforms (<a class="reference" href="#horizontal-decomposition">4. Horizontal decomposition</a>)</li>
+<li>the level of hardware abstraction for the processing units
+(<a class="reference" href="#cpu-abstraction">5. CPU abstraction</a>)</li>
+<li>how some hardware abstractions may realize different degrees of
+alignment with the HAA top layer
+(<a class="reference" href="#hil-alignment">6. HIL alignment</a>)</li>
+</ul>
+<p>The HAA is the architectural basis for many TinyOS 2.0 documentary
+TEPs, e.g. <a class="citation-reference" href="#tep101" id="id4" name="id4">[TEP101]</a>, <a class="citation-reference" href="#tep102" id="id5" name="id5">[TEP102]</a>, <a class="citation-reference" href="#tep103" id="id6" name="id6">[TEP103]</a> and so forth. Those TEPs
+focus on the hardware abstraction for a particular hardware module,
+while <a class="citation-reference" href="#tep117" id="id7" name="id7">[TEP117]</a> and <a class="citation-reference" href="#tep115" id="id8" name="id8">[TEP115]</a> explain how power management is
+realized.</p>
 </div>
 <div class="section">
-<h1><a class="toc-backref" href="#id19" id="architecture" name="architecture">4&nbsp;&nbsp;&nbsp;Architecture</a></h1>
+<h1><a id="architecture" name="architecture">2. Architecture</a></h1>
 <p>In the proposed architecture (<a class="reference" href="#fig-1">Fig.1</a>), the hardware abstraction
 functionality is organized in three distinct layers of components.
 Each layer has clearly defined responsibilities and is dependent on
@@ -443,8 +428,19 @@ reusable applications.</p>
 
                       Fig.1: The proposed Hardware Abstraction Architecture
 </pre>
+<p>In contrast to the more traditional two step approach used in other
+embedded operating systems like <a class="citation-reference" href="#windowsce" id="id9" name="id9">[WindowsCE]</a>, the three-level design
+results in increased <em>flexibility</em> that arises from separating the
+platform-specific abstractions and the adaptation wrappers that
+upgrade or downgrade them to the current platform-independent
+interface.  In this way, for maximum performance, the platform
+specific applications can circumvent the <em>HIL</em> components and directly
+tap to the <em>HAL</em> interfaces that provide access to the full
+capabilities of the hardware module.</p>
+<p>The rest of the section discusses the specific roles of each component
+layer in more detail.</p>
 <div class="section">
-<h2><a class="toc-backref" href="#id20" id="hardware-presentation-layer-hpl" name="hardware-presentation-layer-hpl">4.1&nbsp;&nbsp;&nbsp;Hardware Presentation Layer (HPL)</a></h2>
+<h2><a id="hardware-presentation-layer-hpl" name="hardware-presentation-layer-hpl">Hardware Presentation Layer (HPL)</a></h2>
 <p>The components belonging to the <em>HPL</em> are positioned directly over
 the HW/SW interface. As the name suggests, their major task is to
 &quot;present&quot; the capabilities of the hardware using the native concepts
@@ -490,7 +486,7 @@ sequences. Nonetheless, it hides the most hardware-dependent code and
 opens the way for developing higher-level abstraction components.
 These higher abstractions can be used with different <em>HPL</em>
 hardware-modules of the same class.  For example, many of the
-microcontrollers used on the existing WSN platforms have two USART
+microcontrollers used on the existing sensornet platforms have two USART
 modules for serial communication.  They have the same functionality
 but are accessed using slightly different register names and generate
 different interrupt vectors. The <em>HPL</em> components can hide these
@@ -501,14 +497,14 @@ then switch between the different USART modules by simple rewiring
 implementation code.</p>
 </div>
 <div class="section">
-<h2><a class="toc-backref" href="#id21" id="hardware-adaptation-layer-hal" name="hardware-adaptation-layer-hal">4.2&nbsp;&nbsp;&nbsp;Hardware Adaptation Layer (HAL)</a></h2>
+<h2><a id="hardware-adaptation-layer-hal" name="hardware-adaptation-layer-hal">Hardware Adaptation Layer (HAL)</a></h2>
 <p>The adaptation layer components represent the core of the
 architecture. They use the raw interfaces provided by the <em>HPL</em>
 components to build useful abstractions hiding the complexity
 naturally associated with the use of hardware resources. In contrast
 to the <em>HPL</em> components, they are allowed to maintain state that can
 be used for performing arbitration and resource control.</p>
-<p>Due to the efficiency requirements of WSN, abstractions at the <em>HAL</em>
+<p>Due to the efficiency requirements of sensor networks, abstractions at the <em>HAL</em>
 level are tailored to the concrete device class and platform. Instead
 of hiding the individual features of the hardware class behind generic
 models, <em>HAL</em> interfaces expose specific features and provide the
@@ -519,10 +515,11 @@ all devices, we propose domain specific models like <em>Alarm</em>, <em>ADC
 channel</em>, <em>EEPROM</em>. According to the model, <em>HAL</em> components SHOULD
 provide access to these abstractions via rich, customized interfaces,
 and not via standard narrow ones that hide all the functionality
-behind few overloaded commands.</p>
+behind few overloaded commands. This also enables more efficient
+compile-time detection of abstraction interface usage errors.</p>
 </div>
 <div class="section">
-<h2><a class="toc-backref" href="#id22" id="hardware-interface-layer-hil" name="hardware-interface-layer-hil">4.3&nbsp;&nbsp;&nbsp;Hardware Interface Layer (HIL)</a></h2>
+<h2><a id="hardware-interface-layer-hil" name="hardware-interface-layer-hil">Hardware Interface Layer (HIL)</a></h2>
 <p>The final tier in the architecture is formed by the <em>HIL</em> components
 that take the platform-specific abstractions provided by the <em>HAL</em> and
 convert them to hardware-independent interfaces used by cross-platform
@@ -530,7 +527,7 @@ applications.  These interfaces provide a platform independent
 abstraction over the hardware that simplifies the development of the
 application software by hiding the hardware differences.  To be
 successful, this API &quot;contract&quot; SHOULD reflect the <em>typical</em>
-hardware services that are required in a WSN application.</p>
+hardware services that are required in a sensornet application.</p>
 <p>The complexity of the <em>HIL</em> components mainly depends on how advanced
 the capabilities of the abstracted hardware are with respect to the
 platform-independent interface. When the capabilities of the hardware
@@ -555,260 +552,291 @@ hardware features can no longer be sustained.  At this point, we
 introduce <em>versioning</em> of <em>HIL</em> interfaces.  By assigning a version
 number to each iteration of an <em>HIL</em> interface, we can design
 applications using a legacy interface to be compatible with previously
-deployed devices.  This is important for WSNs since they execute
+deployed devices.  This is important for sensor networks since they execute
 long-running applications and may be deployed for years.  An <em>HIL</em> MAY
 also branch, providing multiple different <em>HIL</em> interfaces with
 increasing levels of functionality.</p>
 </div>
+</div>
 <div class="section">
-<h2><a class="toc-backref" href="#id23" id="selecting-the-level-of-abstraction" name="selecting-the-level-of-abstraction">4.4&nbsp;&nbsp;&nbsp;Selecting the level of abstraction</a></h2>
-<p>The platform-dependence of the <em>HAL</em> in the architecture leads to the
-more general question about why we have opted for a three-layered
-design. In other words, why we do not expose the platform-independent
-hardware interface directly from the <em>HAL</em> components. The main reason
-behind this decision is the increased <em>flexibility</em> that arises from
-separating the platform-specific abstractions and the adaptation
-wrappers that upgrade or downgrade them to the current
-platform-independent interface.  In this way, for maximum performance,
-the platform specific applications can circumvent the <em>HIL</em> components
-and directly tap to the <em>HAL</em> interfaces that provide access to the full
-capabilities of the hardware module.</p>
-<p>Selecting the &quot;right&quot; level--whether an application should use the <em>HIL</em>
-or directly access the <em>HAL</em>--can sometimes cause one hardware asset to
-be accessed using two levels of abstraction from different parts of
-the application or the OS libraries.</p>
-<p>Let us take an application similar to the standard OscilloscopeRF
-application in TinyOS as an example.  The application uses the ADC to
-sample several values from a temperature sensor and sends them in the
-form of a message over the radio.  If the observed phenomenon does not
-have a large signal bandwidth and the time between subsequent
-conversions is long, for the sake of cross-platform compatibility, the
-programmer might decide to use the standard <tt class="docutils literal"><span class="pre">ADCSingle</span></tt>
-interface. This interface is exported by the <em>HIL</em> sensor wrapper
-(<a class="reference" href="#fig-2">Fig.2</a>) using the services of the platform-specific <em>HAL</em>
-component. When enough samples are collected in the message buffer,
-the application passes the message to the networking stack.  The MAC
-protocol used for message exchange over the radio uses clear channel
-assessment to determine when it is safe to send the message. This
-usually requires taking several samples of the RSSI signal provided by
-the radio hardware. Since this is a very time critical operation in
-which the correlation between the consecutive samples has a
-significant influence, the programmer of the MAC might directly use
-the <tt class="docutils literal"><span class="pre">MSP430ADC12Multiple</span></tt> interface of the <em>HAL</em> component as it
-provides much finer control over the conversion process.</p>
+<h1><a id="combining-different-levels-of-abstraction" name="combining-different-levels-of-abstraction">3. Combining different levels of abstraction</a></h1>
+<p>Providing two levels of abstraction to the application --the <em>HIL</em> and
+<em>HAL</em>-- means that a hardware asset may be accessed at two levels in
+parallel, e.g. from different parts of the application and the OS
+libraries.</p>
+<p>The standard Oscilloscope application in TinyOS 2.0, for example, may
+use the ADC to sample several values from a sensor, construct a
+message out of them and send it over the radio. For the sake of
+cross-platform compatibility, the application uses the standard
+<tt class="docutils literal"><span class="pre">Read</span></tt> interface provided by the ADC <em>HIL</em> and forwarded by the
+<tt class="docutils literal"><span class="pre">DemoSensorC</span></tt> component wired to, for example, the temperature
+sensor wrapper.  When enough samples are collected in the message
+buffer, the application passes the message to the networking stack.
+The MAC protocol might use clear channel assessment to determine when
+it is safe to send the message, which could involve taking several ADC
+samples of an analog RSSI signal provided by the radio hardware. Since
+this is a very time critical operation in which the correlation
+between the consecutive samples has a significant influence, the
+programmer of the MAC might directly use the hardware specific
+interface of the <em>HAL</em> component as it provides much finer control
+over the conversion process. (<a class="reference" href="#fig-2">Fig.2</a>) depicts how the ADC hardware
+stack on the MSP430 MCU on the level of <em>HIL</em> and <em>HAL</em> in
+parallel.</p>
 <pre class="literal-block" id="fig-2">
-StdControl
-       | ADCSingle
-       |    |  ADCMultiple
-       |    |    |
-+------|----|----|------------------------------------------+
-|      |    |    |                            Temperature   |
-|      v    v    v                                          |
-| +--------------------+ MSP430ADC12Single   +------------+ |
-| |   TemperatureM     |--------------------&gt;|MSP430ADC12C| |
-| |                    | MSP430ADC12Multiple |            | |
-| |                    |--------------------&gt;|            | |
-| +--------------------+                     +------------+ |
-+-----------------------------------------------------------+
+        +--------------------------------+
+        |               APP              |
+        +--------------------------------+
+          |                            |
+         Read                         Send
+          |                            |
+          v                            |
++--------------------+                 |
+|   DemoSensorC /    |                 |
+|   TemperatureC     |                 |
++--------------------+                 |
+          |                            |
+         Read                          |
+          |                            |
+          v                            v
++--------------------+        +--------------------+
+| HIL:   AdcC        |        |   Radio Stack      |
++--------------------+        +--------------------+
+          |                   |   MAC Protocol     |
+          |                   +--------------------+
+          |                             |
+          |                             |
+          |      -----------------------
+          |     |
+  Msp430Adc12SingleChannel
+          |     |
+          v     v
++--------------------+
+| HAL: Msp430Adc12C  |
++--------------------+
 
-           Fig.2: The ADC HIL sensor wrapper
+         Fig.2: Accessing the MSP430 ADC hardware abstraction
+                via HIL and HAL in parallel
 </pre>
-<p>As a result of this chain of decisions, we end up with a concurrent
-use of the ADC hardware module using two different levels of
-abstraction. To support this type of &quot;vertical&quot; flexibility we include
-more complex arbitration and resource control functionality in the <em>HAL</em>
-components so that a safe shared access to the <em>HPL</em> exported resources
-can be guaranteed.</p>
-</div>
+<p>To support this type of &quot;vertical&quot; flexibility the ADC <em>HAL</em> includes
+more complex arbitration and resource control functionality so that a
+safe shared access to the <em>HPL</em> exported resources can be guaranteed.</p>
 </div>
 <div class="section">
-<h1><a class="toc-backref" href="#id24" id="reference" name="reference">5&nbsp;&nbsp;&nbsp;Reference</a></h1>
-<p>The proposed HAA was applied for the first time during the
-implementation of the <a class="reference" href="http://cvs.sourceforge.net/viewcvs.py/tinyos/tinyos-1.x/tos/platform/msp430/">MSP430 platform</a> that abstracts the
-capabilities of the TI MSP430 microcontroller in <a class="reference" href="http://www.tinyos.net/scoop/section/Releases">TinyOS 1.1.7</a>. The
-implementation is currently being used by four hardware platforms
-(TelosA, TelosB, eyesIFX and eyesIFXv2) and has quite successfully
-satisfied the requirements of a large range of applications.</p>
-<p>In the following we illustrate the properties of the proposed
-architecture using real-world examples from the planned hardware
-abstraction functionality in TinyOS 2.0.</p>
+<h1><a id="horizontal-decomposition" name="horizontal-decomposition">4. Horizontal decomposition</a></h1>
+<p>In addition to the <em>vertical</em> decomposition of the HAA, a <em>horizontal</em>
+decomposition can promote reuse of the hardware resource abstractions
+that are common on different platforms.  To this aim, TinyOS 2.0
+introduces the concept of <em>chips</em>, the self-contained abstraction of a
+given hardware chip: microcontroller, radio-chip, flash-chip, etc.
+Each chip decomposition follows the HAA model, providing HIL
+implementation(s) as the topmost component(s).  Platforms are then
+built as compositions of different chip components with the help of
+&quot;glue&quot; components that perform the mapping (<a class="reference" href="#fig-3">Fig.3</a>)</p>
+<pre class="literal-block" id="fig-3">
+    +----------------------------------------------------+
+    | AppM                                               |
+    | /Application Component/                            |
+    +------+--------------------------------------+------+
+           |                                      |
+           |Millisecond Timer                     | Communication
+    +------+------+                     +---------+------+
+    | TimerMilliC |                     | ActiveMessageC |
+    |             |                     |                |
+    | /Platform   |                     | /Platform      |
+    |  Component/ |                     | Component/     |
+    +------+------+                     +---------+------+
+           |                                      |
+    +------+------+                        +------+------+
+    |             | 32kHz Timer            |             |
+    |             |    +--------------+    |             |
+    | Atmega128   |    | CC2420AlarmC |    | CC2420      |
+    |             +----+              +----+             |
+    | Timer Stack |    | /Platform    |    | Radio Stack |
+    |             |    |  Component/  |    |             |
+    | /Chip       |    +--------------+    | /Chip       |
+    |  Component/ |                        |  Component/ |
+    +-------------+                        +-------------+
+
+
+
+Fig.3: The CC2420 software depends on a physical and dedicated
+timer. The micaZ platform code maps this to a specific Atmega128
+timer.
+</pre>
+<p>Some of the shared hardware modules are connected to the
+microcontroller using one of the standard bus interfaces: SPI, I2C,
+UART. To share hardware drivers across different platforms the issue
+of the abstraction of the interconnect has to be solved. Clearly,
+greatest portability and reuse would be achieved using a generic bus
+abstraction like in NetBSD <a class="citation-reference" href="#netbsd" id="id10" name="id10">[netBSD]</a>. This model abstracts the
+different bus protocols under one generic bus access scheme.  In this
+way, it separates the abstraction of the chip from the abstraction of
+the interconnect, potentially allowing the same chip abstraction to be
+used with different connection protocols on different platforms.
+However, this generalization comes at high costs in performance. This
+may be affordable for desktop operating systems, but is highly
+sub-optimal for the application specific sensor network platforms.</p>
+<p>TinyOS 2.0 takes a less generic approach, providing HIL level,
+microcontroller-independent abstractions of the main bus protocols
+like I2C, SPI, UART and pin-I/O. This distinction enables
+protocol-specific optimizations, for example, the SPI abstraction does
+not have to deal with client addresses, where the I2C abstraction
+does. Furthermore, the programmer can choose to tap directly into the
+chip-specific HAL-level component, which could further improve the
+performance by allowing fine tuning using chip-specific configuration
+options.</p>
+<p>The TinyOS 2.0 bus abstractions, combined with the ones for low-level
+pin-I/O and pin-interrupts (see <a class="citation-reference" href="#tep117" id="id11" name="id11">[TEP117]</a>), enable a given chip
+abstraction to be reused on any platform that supports the required
+bus protocol.  The CC2420 radio, for example, can be used both on the
+Telos and on micaZ platforms, because the abstractions of the serial
+modules on the MSP430 and Atmega128 microcontrollers support the
+unified SPI bus abstraction, which is used by the same CC2420 radio
+stack implementation.</p>
+<p>Sharing chips across platforms raises the issue of resource contention
+on the bus when multiple chips are connected to it. For example, on
+the micaZ the CC2420 is connected to a dedicated SPI bus, while on the
+Telos platform one SPI bus is shared between the CC2420 radio and the
+flash chip. To dissolve conflicts the resource reservation mechanism
+proposed in [<a class="reference" href="#tep108">TEP108</a>] is applied: every chip abstraction that uses a
+bus protocol MUST use the <tt class="docutils literal"><span class="pre">Resource</span></tt> interface in order to gain
+access to the bus resource. In this way, the chip can be safely used
+both in dedicated scenarios, as well as in situations where multiple
+chips are connected to the same physical bus interconnect.</p>
+</div>
 <div class="section">
-<h2><a class="toc-backref" href="#id25" id="processing-unit" name="processing-unit">5.1&nbsp;&nbsp;&nbsp;Processing unit</a></h2>
+<h1><a id="cpu-abstraction" name="cpu-abstraction">5. CPU abstraction</a></h1>
 <p>In TinyOS most of the variability between the processing units is
 hidden from the OS simply by using a nesC/C based programming language
 with a common compiler suite (GCC). For example, the standard library
 distributed with the compiler creates the necessary start-up code for
 initializing the global variables, the stack pointer and the interrupt
-vector table, shielding the OS from these MCU-specific tasks.</p>
-<p>To unify things further, TinyOS provides mechanisms for declaring
-reentrant and non-reentrant interrupt service routines and critical
-code-sections.  For the MCU's external pins, it provides macros that
-permit setting and clearing the pin, as well as changing its direction
-and function.  For example, the TI~MSP430's ADC pins may be used as
-either general I/O or as an analog input to the ADC hardware module.
-Macros are also provided for timed spin loops at microsecond
-resolution, independent of the microcontroller. These macros are
-defined in each platform's <tt class="docutils literal"><span class="pre">hardware.h</span></tt> descriptor file. Finally,
-the <em>HPL</em> components deal with the different ways of accessing
-registers (memory-mapped or port-mapped I/O) using the definitions in
-the standard library header files.</p>
-<p>The three-layer architecture is not intended to abstract the features
-of the different MCU cores. For the currently supported MCUs, the
-combination of the compiler suite support with the thin abstraction in
-the <tt class="docutils literal"><span class="pre">hardware.h</span></tt> files is sufficient. Nevertheless, if new cores
-with radically different architectures need to be supported by TinyOS
-in the future, this part of the hardware abstraction functionality
-will have to be explicitly addressed.</p>
+vector table, shielding the OS from these tasks. To unify things
+further, TinyOS provides common constructs for declaring reentrant and
+non-reentrant interrupt service routines and critical code-sections.</p>
+<p>The <em>HAA</em> is not currently used to abstract the features of the
+different CPUs. For the currently supported MCUs, the combination of
+the compiler suite support and the low-level I/O is
+sufficient. Nevertheless, if new cores with radically different
+architectures need to be supported by TinyOS in the future, this part
+of the hardware abstraction functionality will have to be explicitly
+addressed.</p>
 </div>
 <div class="section">
-<h2><a class="toc-backref" href="#id26" id="power-management" name="power-management">5.2&nbsp;&nbsp;&nbsp;Power management</a></h2>
-<p>On both the MSP430 and the Atmel, before entering a sleep mode, a
-component checks if any hardware modules require that the MCU core is
-active.  Additionally, all services including <em>HPL</em> and <em>HAL</em>
-components have a start and stop function.  When a service is no
-longer using a hardware module, it may call the stop function of the
-<em>HPL</em> or <em>HAL</em> component.  Doing so disables the module for power
-savings, but also removes the MCU's dependence on that hardware module
-to enter sleep mode.  For example, the ADC module may be clocked from
-a high speed oscillator.  When a sample is not in progress, the ADC
-module may be shut down and it will no longer use the high speed
-oscillator.  As a result, when the MCU is idle, it may enter low power
-mode.</p>
-<p>This rather efficient way of implementing the power management
-functionality is made possible by the fact that most of the hardware
-modules are on-chip, attached directly to the MCU system bus, and that
-there is no hardware memory protection hindering the access to their
-status registers. As TinyOS platforms add more external devices
-connected via the peripheral buses, this task will get increasingly
-complicated.  Ultimately, keeping some state in the form of device
-enumeration or reference counting mechanisms might be needed for
-proper power management.</p>
+<h1><a id="hil-alignment" name="hil-alignment">6. HIL alignment</a></h1>
+<p>While the HAA requires that the HIL provides full hardware
+independence (<a class="reference" href="#strong-real-hils">Strong/Real HILs</a>), some abstractions might only
+partially meet this goal (<a class="reference" href="#weak-hils">Weak HILs</a>). This section introduces
+several terms describing different degrees of alignment with the
+concept of a HIL. It also uses the following differentiation:</p>
+<ul class="simple">
+<li><em>platform-defined X</em> X is defined on all platforms, but the
+definition may be different</li>
+<li><em>platform-specific X</em> X is defined on just one platform</li>
+</ul>
+<div class="section">
+<h2><a id="strong-real-hils" name="strong-real-hils">Strong/Real HILs</a></h2>
+<p><em>Strong/Real HILs</em> mean that &quot;code using these abstractions can
+reasonably be expected to behave the same on all implementations&quot;.
+This matches the original definition of the HIL level according to the
+HAA.  Examples include the HIL for the Timer (TimerMilliC, <a class="citation-reference" href="#tep102" id="id12" name="id12">[TEP102]</a>),
+for LEDs (LedsC), active messages (ActiveMessageC, if not using any
+radio metadata at least), sensor wrappers (DemoSensorC, <a class="citation-reference" href="#tep109" id="id13" name="id13">[TEP109]</a>) or
+storage (<a class="citation-reference" href="#tep103" id="id14" name="id14">[TEP103]</a>). Strong HILs may use platform-defined types if
+they also provide operations to manipulate them (i.e., they are
+platform-defined abstract data types), for example, the TinyOS 2.x
+message buffer abstraction, <tt class="docutils literal"><span class="pre">message_t</span></tt> (<a class="citation-reference" href="#tep111" id="id15" name="id15">[TEP111]</a>).</p>
 </div>
 <div class="section">
-<h2><a class="toc-backref" href="#id27" id="clocks-and-timers" name="clocks-and-timers">5.3&nbsp;&nbsp;&nbsp;Clocks and timers</a></h2>
-<p>The application of the HAA for abstracting the clock and timer
-modules is documented in <a class="citation-reference" href="#tep102" id="id3" name="id3">[TEP102]</a>.</p>
+<h2><a id="weak-hils" name="weak-hils">Weak HILs</a></h2>
+<p><em>Weak HILs</em> mean that one &quot;can write portable code over these
+abstractions, but any use of them involves platform-specific
+behavior&quot;. Although such platform-specific behavior can --at least at
+a rudimentary syntactical level-- be performed by a
+platform-independent application, the semantics require knowledge of
+the particular platform.  For example, the ADC abstraction requires
+platform-specific configuration and the returned data must be
+interpreted in light of this configuration. The ADC configuration is
+exposed on all platforms through the &quot;AdcConfigure&quot; interface that
+takes a platform-defined type (adc_config_t) as a parameter. However,
+the returned ADC data may be processed in a platform-independent way,
+for example, by calculating the max/min or mean of multiple ADC
+readings.</p>
+<p>The benefit from weak HILs are that one can write portable utility
+code, e.g., a repeated sampling for an ADC on top of the data path.
+While code using these abstractions may not be fully portable, it will
+still be easier to port than code built on top of HALs, because weak
+HILs involve some guidelines on how to expose some functionality,
+which should help programmers and provide guidance to platform
+developers.</p>
 </div>
 <div class="section">
-<h2><a class="toc-backref" href="#id28" id="analog-to-digital-converters" name="analog-to-digital-converters">5.4&nbsp;&nbsp;&nbsp;Analog-to-digital converters</a></h2>
-<p>The application of the HAA for abstracting the analog-to-digital
-converter modules is documented in <a class="citation-reference" href="#tep101" id="id4" name="id4">[TEP101]</a>.</p>
+<h2><a id="hardware-independent-interfaces-hii" name="hardware-independent-interfaces-hii">Hardware Independent Interfaces (HII)</a></h2>
+<ul class="simple">
+<li><em>Hardware Independent Interfaces (HII)</em>, which is just an interface
+definition intended for use across multiple platforms.</li>
+</ul>
+<p>Examples include the SID interfaces, the pin interfaces from <a class="citation-reference" href="#tep117" id="id16" name="id16">[TEP117]</a>,
+the Alarm/Counter/etc interfaces from <a class="citation-reference" href="#tep102" id="id17" name="id17">[TEP102]</a>.</p>
 </div>
 <div class="section">
-<h2><a class="toc-backref" href="#id29" id="data-busses" name="data-busses">5.5&nbsp;&nbsp;&nbsp;Data busses</a></h2>
-<p>The <em>HPL</em> functionality for the data busses includes two paths--one
-for data and a second for control. The control path allows the clock
-source, prescaler, and baud rate to be set. Interrupts may be enabled
-or disabled and various hardware flags may be read, set, or cleared,
-useful for polling or blocking implementations. Through the control
-path, the entire module may be started or stopped for power control.
-The data interface simply consists of sending and receiving a byte
-through the hardware's data registers, as well as interrupt based
-reporting of received data. Here is an example of the interfaces used
-in the MSP430 platform:</p>
-<pre class="literal-block">
-interface HPLUSARTControl {
-  async command void enableUART();
-  async command void disableUART();
-  async command void enableUARTTx();
-  async command void disableUARTTx();
-  async command void enableUARTRx();
-  async command void disableUARTRx();
-  async command void enableSPI();
-  async command void disableSPI();
-  async command void setModeSPI();
-  async command void setModeUART_TX();
-  async command void setModeUART_RX();
-  async command void setModeUART();
-  async command void setClockSource(
-        uint8_t source);
-  async command void setClockRate(
-        uint16_t baudrate, uint8_t mctl);
-  async command result_t disableRxIntr();
-  async command result_t disableTxIntr();
-  async command result_t enableRxIntr();
-  async command result_t enableTxIntr();
-  async command result_t isTxIntrPending();
-  async command result_t isRxIntrPending();
-  async command result_t isTxEmpty();
-  async command result_t tx(uint8_t data);
-  async command uint8_t rx();
-}
-
-interface HPLUSARTFeedback {
-  async event result_t txDone();
-  async event result_t rxDone(uint8_t data);
-}
-</pre>
-<p>Sometimes functionality for more than one bus protocol are supported
-through a single hardware module. In these cases, wrappers for each
-bus provide standard application interfaces for using the bus.
-Sharing the bus amongst different hardware devices or protocols may be
-done through a bus arbitration component. Bus arbitration allows
-higher level services to attain exclusive use of the bus, complete its
-operations, and then release the bus to the next service:</p>
-<pre class="literal-block">
-interface BusArbitration {
-  async command result_t getBus();
-  async command result_t releaseBus();
-  event result_t busFree();
-}
-</pre>
-</div>
-<div class="section">
-<h2><a class="toc-backref" href="#id30" id="external-storage" name="external-storage">5.6&nbsp;&nbsp;&nbsp;External storage</a></h2>
-<p>The application of the HAA for abstracting the external storage
-modules is documented in <a class="citation-reference" href="#tep103" id="id5" name="id5">[TEP103]</a>.</p>
-</div>
-<div class="section">
-<h2><a class="toc-backref" href="#id31" id="radios" name="radios">5.7&nbsp;&nbsp;&nbsp;Radios</a></h2>
-<p>The application of the HAA for abstracting the radio modules is
-documented in <a class="citation-reference" href="#tep104" id="id6" name="id6">[TEP104]</a> and <a class="citation-reference" href="#tep105" id="id7" name="id7">[TEP105]</a>.</p>
+<h2><a id="utility-components" name="utility-components">Utility components</a></h2>
+<p><em>Utility components</em> are pieces of clearly portable code (typically
+generic components), which aren't exposing a self-contained service.
+Examples include the components in tos/lib/timer and the
+ArbitratedRead* components. These provide and use HIIs.</p>
 </div>
 </div>
 <div class="section">
-<h1><a class="toc-backref" href="#id32" id="conclusion" name="conclusion">6&nbsp;&nbsp;&nbsp;Conclusion</a></h1>
-<p>The referenced TEPs in the previous section show that the three-layer
-design can be successfully used for exposing to the applications the
-functionality of the main hardware modules. The proposed architecture
-provides a set of core services that eliminate duplicated code and
-provide a coherent view of the system across different architectures
-and platforms. It supports the concurrent use of platform-independent
-and the platform-dependent interfaces in the same application. In this
-way, applications can localize their platform dependence to only the
-places where performance matters, while using standard cross-platform
-hardware interfaces for the remainder of the application.</p>
+<h1><a id="conclusion" name="conclusion">6. Conclusion</a></h1>
+<p>The proposed hardware abstraction architecture provides a set of core
+services that eliminate duplicated code and provide a coherent view of
+the system across different platforms. It supports the concurrent use
+of platform-independent and the platform-dependent interfaces in the
+same application. In this way, applications can localize their
+platform dependence to only the places where performance matters,
+while using standard cross-platform hardware interfaces for the
+remainder of the application.</p>
 </div>
 <div class="section">
-<h1><a class="toc-backref" href="#id33" id="author-s-address" name="author-s-address">7&nbsp;&nbsp;&nbsp;Author's Address</a></h1>
+<h1><a id="author-s-address" name="author-s-address">Author's Address</a></h1>
 <div class="line-block">
-<div class="line">Vlado Handziski (handzisk at tkn.tu-berlin.de) <a class="footnote-reference" href="#id14" id="id8" name="id8">[1]</a></div>
-<div class="line">Joseph Polastre (polastre at cs.berkeley.edu) <a class="footnote-reference" href="#id15" id="id9" name="id9">[2]</a></div>
-<div class="line">Jan-Hinrich Hauer (hauer at tkn.tu-berlin.de) <a class="footnote-reference" href="#id14" id="id10" name="id10">[1]</a></div>
-<div class="line">Cory Sharp (cssharp at eecs.berkeley.edu) <a class="footnote-reference" href="#id15" id="id11" name="id11">[2]</a></div>
-<div class="line">Adam Wolisz (awo at ieee.org) <a class="footnote-reference" href="#id14" id="id12" name="id12">[1]</a></div>
-<div class="line">David Culler (culler at eecs.berkeley.edu) <a class="footnote-reference" href="#id15" id="id13" name="id13">[2]</a></div>
+<div class="line">Vlado Handziski (handzisk at tkn.tu-berlin.de) <a class="footnote-reference" href="#id25" id="id18" name="id18">[1]</a></div>
+<div class="line">Joseph Polastre (polastre at cs.berkeley.edu) <a class="footnote-reference" href="#id26" id="id19" name="id19">[2]</a></div>
+<div class="line">Jan-Hinrich Hauer (hauer at tkn.tu-berlin.de) <a class="footnote-reference" href="#id25" id="id20" name="id20">[1]</a></div>
+<div class="line">Cory Sharp (cssharp at eecs.berkeley.edu) <a class="footnote-reference" href="#id26" id="id21" name="id21">[2]</a></div>
+<div class="line">Adam Wolisz (awo at ieee.org) <a class="footnote-reference" href="#id25" id="id22" name="id22">[1]</a></div>
+<div class="line">David Culler (culler at eecs.berkeley.edu) <a class="footnote-reference" href="#id26" id="id23" name="id23">[2]</a></div>
+<div class="line">David Gay (david.e.gay at intel.com) <a class="footnote-reference" href="#id27" id="id24" name="id24">[3]</a></div>
 </div>
-<table class="docutils footnote" frame="void" id="id14" rules="none">
+<table class="docutils footnote" frame="void" id="id25" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id14">[1]</a></td><td><em>(<a class="fn-backref" href="#id8">1</a>, <a class="fn-backref" href="#id10">2</a>, <a class="fn-backref" href="#id12">3</a>)</em> Technische Universitaet Berlin
+<tr><td class="label"><a name="id25">[1]</a></td><td><em>(<a class="fn-backref" href="#id18">1</a>, <a class="fn-backref" href="#id20">2</a>, <a class="fn-backref" href="#id22">3</a>)</em> Technische Universitaet Berlin
 Telecommunication Networks Group
 Sekr. FT 5, Einsteinufer 25
 10587 Berlin, Germany</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id15" rules="none">
+<table class="docutils footnote" frame="void" id="id26" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id15">[2]</a></td><td><em>(<a class="fn-backref" href="#id9">1</a>, <a class="fn-backref" href="#id11">2</a>, <a class="fn-backref" href="#id13">3</a>)</em> University of California, Berkeley
+<tr><td class="label"><a name="id26">[2]</a></td><td><em>(<a class="fn-backref" href="#id19">1</a>, <a class="fn-backref" href="#id21">2</a>, <a class="fn-backref" href="#id23">3</a>)</em> University of California, Berkeley
 Computer Science Department
 Berkeley, CA 94720 USA</td></tr>
 </tbody>
 </table>
+<table class="docutils footnote" frame="void" id="id27" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id24" name="id27">[3]</a></td><td>Intel Research Berkeley
+2150 Shattuck Ave, Suite 1300
+CA 94704</td></tr>
+</tbody>
+</table>
 </div>
 <div class="section">
-<h1><a class="toc-backref" href="#id34" id="citations" name="citations">8&nbsp;&nbsp;&nbsp;Citations</a></h1>
+<h1><a id="citations" name="citations">Citations</a></h1>
 <table class="docutils citation" frame="void" id="haa2005" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -818,56 +846,95 @@ Sensor Networks&quot;, in <em>Proceedings of the 2nd European Workshop on
 Wireless Sensor Networks (EWSN 2005)</em>, Istanbul, Turkey, 2005.</td></tr>
 </tbody>
 </table>
+<table class="docutils citation" frame="void" id="t2-tr" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2" name="t2-tr">[T2_TR]</a></td><td>P. Levis, D. Gay, V. Handziski, J.-H.Hauer, B.Greenstein,
+M.Turon, J.Hui, K.Klues, C.Sharp, R.Szewczyk, J.Polastre,
+P.Buonadonna, L.Nachman, G.Tolle, D.Culler, and A.Wolisz,
+&quot;T2: A Second Generation OS For Embedded Sensor Networks&quot;,
+<em>Technical Report TKN-05-007</em>, Telecommunication Networks Group,
+Technische Universität Berlin, November 2005.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="windowsce" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id9" name="windowsce">[WindowsCE]</a></td><td>&quot;The WindowsCE operating system home page&quot;, <em>Online</em>,
+<a class="reference" href="http://msdn.microsoft.com/embedded/windowsce">http://msdn.microsoft.com/embedded/windowsce</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="netbsd" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id10" name="netbsd">[NetBSD]</a></td><td>&quot;The NetBSD project home page&quot;, <em>Online</em>,
+<a class="reference" href="http://www.netbsd.org">http://www.netbsd.org</a></td></tr>
+</tbody>
+</table>
 <table class="docutils citation" frame="void" id="tep1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="tep1">[TEP1]</a></td><td><ol class="first last upperalpha simple" start="16">
-<li>Levis, &quot;TEP structure and key words&quot;</li>
-</ol>
-</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3" name="tep1">[TEP1]</a></td><td>Philip Levis, &quot;TEP structure and key words&quot;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep101" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4" name="tep101">[TEP101]</a></td><td>J.H. Hauer, V. Handziski, J. Polastre, L. Nachman,
-&quot;Analog-to-digital Converter Abstraction&quot;</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id4" name="tep101">[TEP101]</a></td><td>Jan-Hinrich Hauer, Philip Levis, Vlado Handziski, David Gay
+&quot;Analog-to-Digital Converters (ADCs)&quot;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep102" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="tep102">[TEP102]</a></td><td><ol class="first last upperalpha simple" start="3">
-<li>Sharp, &quot;Clock and Timers Abstraction&quot;</li>
-</ol>
-</td></tr>
+<tr><td class="label"><a name="tep102">[TEP102]</a></td><td><em>(<a class="fn-backref" href="#id5">1</a>, <a class="fn-backref" href="#id12">2</a>, <a class="fn-backref" href="#id17">3</a>)</em> Cory Sharp, Martin Turon, David Gay, &quot;Timers&quot;</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="tep103" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5" name="tep103">[TEP103]</a></td><td><ol class="first last upperalpha simple" start="4">
-<li>Gay, J. Hui, &quot;Non-volatile Storage Abstraction&quot;</li>
-</ol>
-</td></tr>
+<tr><td class="label"><a name="tep103">[TEP103]</a></td><td><em>(<a class="fn-backref" href="#id6">1</a>, <a class="fn-backref" href="#id14">2</a>)</em> David Gay, Jonathan Hui, &quot;Permanent Data Storage (Flash)&quot;</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="tep104" rules="none">
+<table class="docutils citation" frame="void" id="tep108" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id6" name="tep104">[TEP104]</a></td><td><ol class="first last upperalpha simple" start="11">
-<li>Klues, &quot;Radio Hardware Abstraction&quot;</li>
-</ol>
-</td></tr>
+<tr><td class="label"><a name="tep108">[TEP108]</a></td><td>Kevin Klues, Philip Levis, David Gay, David Culler, Vlado
+Handziski, &quot;Resource Arbitration&quot;</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="tep105" rules="none">
+<table class="docutils citation" frame="void" id="tep109" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id7" name="tep105">[TEP105]</a></td><td><ol class="first last upperalpha simple" start="10">
-<li>Polastre, &quot;Link Layer Primitives in TinyOS&quot;</li>
-</ol>
-</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id13" name="tep109">[TEP109]</a></td><td>David Gay, Philip Levis, Wei Hong, Joe Polastre, and Gilman
+Tolle &quot;Sensors and Sensor Boards&quot;</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep111" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id15" name="tep111">[TEP111]</a></td><td>Philip Levis, &quot;message_t&quot;</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep112" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep112">[TEP112]</a></td><td>Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman,
+Philip Buonadonna, Vlado Handziski, &quot;Microcontroller Power
+Management&quot;</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep115" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8" name="tep115">[TEP115]</a></td><td>Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Philip
+Levis, &quot;Power Management of Non-Virtualised Devices&quot;</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep117" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep117">[TEP117]</a></td><td><em>(<a class="fn-backref" href="#id7">1</a>, <a class="fn-backref" href="#id11">2</a>, <a class="fn-backref" href="#id16">3</a>)</em> Phil Buonadonna, Jonathan Hui, &quot;Low-Level I/O&quot;</td></tr>
 </tbody>
 </table>
 <!-- Local Variables:
