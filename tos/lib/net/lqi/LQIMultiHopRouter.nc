@@ -58,12 +58,13 @@ implementation {
     new AMSenderC(AM_DATAMSG) as DataSender,
     new AMReceiverC(AM_DATAMSG) as DataReceiver,
     new TimerMilliC(), 
-    NoLedsC as LedsC,
+    NoLedsC, LedsC,
     RandomC,
     ActiveMessageC,
     MainC;
 
   MainC.SoftwareInit -> MultiHopEngineM;
+  MainC.SoftwareInit -> MultiHopLQI;
   
   components CC2420ActiveMessageC as CC2420;
 
@@ -95,4 +96,5 @@ implementation {
   MultiHopLQI.CC2420Packet -> CC2420;
   MultiHopLQI.AMPacket -> ActiveMessageC;
   MultiHopLQI.Packet -> ActiveMessageC;
+  MultiHopLQI.Leds -> NoLedsC;
 }

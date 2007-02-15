@@ -1,4 +1,4 @@
-// $Id: MultiHopEngineM.nc,v 1.1 2007-02-15 01:27:26 scipio Exp $
+// $Id: MultiHopEngineM.nc,v 1.2 2007-02-15 18:53:26 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -119,15 +119,18 @@ implementation {
    ***********************************************************************/
   command error_t Send.send(message_t* pMsg, uint8_t len) {
     len += sizeof(lqi_header_t);
-    if (len > call Packet.maxPayloadLength()) {
+    if (len > call SubPacket.maxPayloadLength()) {
+      call Leds.led0On();
       return ESIZE;
     }
     if (call RootControl.isRoot()) {
+      call Leds.led1On();
       return FAIL;
     }
     call RouteSelect.initializeFields(pMsg);
     
     if (call RouteSelect.selectRoute(pMsg, 0) != SUCCESS) {
+      call Leds.led2On();
       return FAIL;
     }
     call PacketAcknowledgements.requestAck(pMsg);
@@ -168,7 +171,8 @@ implementation {
   static message_t* mForward(message_t* msg) {
     message_t* newMsg = msg;
     int8_t buf = get_buff();
-
+    call Leds.led2Toggle();
+    
     if (call RootControl.isRoot()) {
       return signal Receive.receive(msg, call Packet.getPayload(msg, NULL), call Packet.payloadLength(msg));
     }

@@ -1,4 +1,4 @@
-// $Id: MultiHop.h,v 1.1 2007-02-15 01:27:26 scipio Exp $
+// $Id: MultiHop.h,v 1.2 2007-02-15 18:53:26 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -83,7 +83,6 @@ typedef nx_struct beacon_msg {
   nx_uint16_t parent;
   nx_uint16_t cost;
   nx_uint16_t hopcount;
-  nx_uint32_t timestamp;
 } beacon_msg_t;
 
 typedef struct DBGEstEntry {

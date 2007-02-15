@@ -55,6 +55,7 @@ module MultiHopLQI {
     interface AMPacket;
     interface LqiRouteStats;
     interface CC2420Packet;
+    interface Leds;
   }
 }
 
@@ -190,6 +191,7 @@ implementation {
   }
 
   command error_t RootControl.setRoot() {
+    call Leds.led2On();
     isRoot = TRUE;
     return SUCCESS;
   }
