@@ -1,5 +1,12 @@
-/**
- *  Copyright (c) 2004-2005 Crossbow Technology, Inc.
+// $Id: TestMts300C.nc,v 1.5 2007-02-15 10:23:30 pipeng Exp $
+
+/*
+ *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
+ *  downloading, copying, installing or using the software you agree to
+ *  this license.  If you do not agree to this license, do not download,
+ *  install, copy or use the software.
+ *
+ *  Copyright (c) 2004-2006 Crossbow Technology, Inc.
  *  All rights reserved.
  *
  *  Permission to use, copy, modify, and distribute this software and its
@@ -11,45 +18,69 @@
  *  Permission is also granted to distribute this software under the
  *  standard BSD license as contained in the TinyOS distribution.
  *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
- *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- *  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS 
- *  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA, 
- *  OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
- *  THE POSSIBILITY OF SUCH DAMAGE.
- *
- *  @author Martin Turon <mturon@xbow.com>
- *
- *  $Id: TestMts300C.nc,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ *  PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE INTEL OR ITS
+ *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ *  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ *  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
- * This application tests the mts300 sensorboard.
- * Specifically, this handles the thermistor and light sensors.
- * 
- * @author  Martin Turon
- * @date    October 19, 2005
+ *  TinyOS 1.x to TinyOS 2.x translation layer.
+ *
+ *  @author Alif <rlchen@xbow.com.cn>  
  */
-configuration TestMts300C {
+
+#include "XMTS300.h"
+#include "mts300.h"
+
+configuration TestMts300C
+{
 }
 implementation
 {
-  components MainC, TestMts300P, LedsC, new OskiTimerMilliC(),
-      SensorMts300C;
+  components MainC, TestMts300P, LedsC, NoLedsC;
+  components new TimerMilliC() as MTS300Timer;
 
-  
-  MainC.SoftwareInit -> SensorMts300C;
+  components ActiveMessageC as Radio;
+  components SerialActiveMessageC as Serial;
+
+// sensorboard devices
+  components new SensorMts300C();
+  components SounderC;
 
   TestMts300P -> MainC.Boot;
-  TestMts300P.Leds -> LedsC;
-  TestMts300P.AppTimer -> OskiTimerMilliC;
 
-  TestMts300P.SensorControl -> SensorMts300C;
-  TestMts300P.Temp -> SensorMts300C.Temp;
+  TestMts300P.MTS300Timer -> MTS300Timer;
+  TestMts300P.Leds -> NoLedsC;
+
+  // communication
+  TestMts300P.RadioControl -> Radio;
+  TestMts300P.RadioSend -> Radio.AMSend[AM_MTS300MSG];
+  TestMts300P.RadioPacket -> Radio;
+
+  TestMts300P.UartControl -> Serial;
+  TestMts300P.UartSend -> Serial.AMSend[AM_MTS300MSG];
+  TestMts300P.UartPacket -> Serial;
+
+  // sensor components
+  MainC.SoftwareInit -> SensorMts300C;
+  TestMts300P.MTS300Control -> SensorMts300C.StdControl;
+  TestMts300P.Vref -> SensorMts300C.Vref;
   TestMts300P.Light -> SensorMts300C.Light;
-}
+  TestMts300P.Temp -> SensorMts300C.Temp;
+  TestMts300P.Microphone -> SensorMts300C.Microphone;
+  TestMts300P.AccelX -> SensorMts300C.AccelX;
+  TestMts300P.AccelY -> SensorMts300C.AccelY;
+  TestMts300P.MagX -> SensorMts300C.MagX;
+  TestMts300P.MagY -> SensorMts300C.MagY;
 
+  MainC.SoftwareInit -> SounderC;
+  TestMts300P.Sounder -> SounderC;
+}

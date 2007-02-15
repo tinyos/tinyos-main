@@ -1,5 +1,12 @@
-/**
- *  Copyright (c) 2004-2005 Crossbow Technology, Inc.
+// $Id: TestMts300P.nc,v 1.5 2007-02-15 10:23:30 pipeng Exp $
+
+/*
+ *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
+ *  downloading, copying, installing or using the software you agree to
+ *  this license.  If you do not agree to this license, do not download,
+ *  install, copy or use the software.
+ *
+ *  Copyright (c) 2004-2006 Crossbow Technology, Inc.
  *  All rights reserved.
  *
  *  Permission to use, copy, modify, and distribute this software and its
@@ -11,69 +18,413 @@
  *  Permission is also granted to distribute this software under the
  *  standard BSD license as contained in the TinyOS distribution.
  *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
- *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- *  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS 
- *  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA, 
- *  OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
- *  THE POSSIBILITY OF SUCH DAMAGE.
- *
- *  @author Martin Turon <mturon@xbow.com>
- *
- *  $Id: TestMts300P.nc,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ *  PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE INTEL OR ITS
+ *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ *  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ *  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include "Timer.h"
 
 /**
- * This application tests the mts300 sensorboard.
- * Specifically, this handles the thermistor and light sensors.
- * 
- * @author  Martin Turon
- * @date    October 19, 2005
+ *  TinyOS 1.x to TinyOS 2.x translation layer.
+ *
+ *  @author Alif <rlchen@xbow.com.cn>  
  */
+ 
+#include "Timer.h"
+#include "XMTS300.h"
+#include "mts300.h"
+
 module TestMts300P
 {
-    uses {
-	interface Boot;
-	interface Leds;
-	interface Timer<TMilli> as AppTimer;
+  uses
+  {
+    interface Leds;
+    interface Boot;
+    interface Timer<TMilli> as MTS300Timer;
+    // communication
+    interface SplitControl as RadioControl;
+    interface Packet as RadioPacket;
+    interface AMSend as RadioSend;
 
-	interface StdControl as SensorControl;
-	interface AcquireData as Temp;
-	interface AcquireData as Light;
-    }
+    interface SplitControl as UartControl;
+    interface Packet as UartPacket;
+    interface AMSend as UartSend;
+    // sensor components
+    interface StdControl as MTS300Control;
+    interface StdControl as Sounder;
+   	interface Read<uint16_t> as Vref; //!< voltage
+    interface Read<uint16_t> as Light;
+    interface Read<uint16_t> as Temp;
+   	interface Read<uint16_t> as Microphone; //!< Mic sensor
+   	interface Read<uint16_t> as AccelX; //!< Accelerometer sensor
+   	interface Read<uint16_t> as AccelY; //!< Accelerometer sensor
+   	interface Read<uint16_t> as MagX; //!< magnetometer sensor
+   	interface Read<uint16_t> as MagY; //!< magnetometer sensor
+
+  }
 }
 implementation
 {
-    event void Boot.booted() {
-	call Leds.led0On();
-	call Leds.led1On();        // power led
-	call SensorControl.start();
+
+  enum
+  {
+  	STATE_IDLE = 0,
+  	STATE_VREF_START,
+  	STATE_VREF_READY,      //!< smaple complete
+  	STATE_LIGHT_START,
+  	STATE_LIGHT_READY,     //!< smaple complete
+  	STATE_TEMP_START,
+  	STATE_TEMP_READY,      //!< smaple complete
+  	STATE_MIC_START,
+  	STATE_MIC_READY,      //!< smaple complete
+  	STATE_ACCELX_START,
+  	STATE_ACCELX_READY,      //!< smaple complete
+  	STATE_ACCELY_START,
+  	STATE_ACCELy_READY,      //!< smaple complete
+  	STATE_MAGX_START,
+  	STATE_MAGX_READY,      //!< smaple complete
+  	STATE_MAGY_START,
+  	STATE_MAGY_READY,      //!< smaple complete
+  };
+
+  bool sending_packet;
+  bool packet_ready;
+  uint8_t state;
+  uint16_t counter = 0;
+  message_t packet;
+  Mts300Msg* pMsg;
+
+  // Zero out the accelerometer, chrl@20070213
+  norace uint16_t accel_ave_x, accel_ave_y;
+  norace uint8_t accel_ave_points;
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  basic control routines
+//
+//////////////////////////////////////////////////////////////////////////////
+  event void Boot.booted()
+  {
+    sending_packet = FALSE;
+    packet_ready = FALSE;
+    state = STATE_IDLE;
+    pMsg = (Mts300Msg*)call RadioPacket.getPayload(&packet, NULL);
+
+    // Zero out the accelerometer, chrl@20070213
+    accel_ave_x = 0;
+    accel_ave_y = 0;
+    accel_ave_points = ACCEL_AVERAGE_POINTS;
+
+    call RadioControl.start();
+    call UartControl.start();
+  }
+
+  event void RadioControl.startDone(error_t err)
+  {
+    if (err != SUCCESS)
+    {
+      call RadioControl.start();
     }
-    
-    event void AppTimer.fired() {
-	call Leds.led0Toggle();    // heartbeat indicator 
-	call Light.getData();
-	call Temp.getData();
+  }
+
+  event void RadioControl.stopDone(error_t err)
+  {
+    // do nothing
+  }
+
+  event void UartControl.startDone(error_t err)
+  {
+    if (err == SUCCESS)
+    {
+      call MTS300Control.start();
+      call Sounder.start();
+      call MTS300Timer.startPeriodic( 300 );
+    }
+    else
+    {
+      call UartControl.start();
+    }
+  }
+
+  event void UartControl.stopDone(error_t err)
+  {
+    // do nothing
+  }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  timer control routines
+//
+//////////////////////////////////////////////////////////////////////////////
+  event void MTS300Timer.fired()
+  {
+    uint8_t l_state;
+    atomic l_state = state;
+
+    // Zero out the accelerometer, chrl@20070213
+    if (accel_ave_points >0)
+    {
+      if (accel_ave_points == 1)
+      {
+        call MTS300Timer.stop();
+        call MTS300Timer.startPeriodic(1000);
+      }
+      atomic state = STATE_ACCELX_START;
+      call AccelX.read();
+      return ;
     }
 
-    event void Light.dataReady(uint16_t data) {
-	call Leds.led1Toggle();
+    call Leds.led1Toggle();
+    counter++;
+
+    if(counter==1)
+    {
+      call Sounder.stop();
     }
 
-    event void Temp.dataReady(uint16_t data) {
-	call Leds.led2Toggle();
+    if (sending_packet) return ;
+
+    if (l_state == STATE_IDLE)
+    {
+      atomic state = STATE_VREF_START;
+      call Vref.read();
+      return ;
     }
 
-    event void Light.error(uint16_t info) {
+    if (packet_ready)
+    {
+      atomic packet_ready = FALSE;
+      // check length of the allocated buffer to see if it is enough for our packet
+      if (call RadioPacket.maxPayloadLength() < sizeof(Mts300Msg))
+      {
+        return ;
+      }
+      // OK, the buffer is large enough
+      //pMsg->vref = counter;
+      if (call UartSend.send(AM_BROADCAST_ADDR, &packet, sizeof(Mts300Msg)) == SUCCESS)
+      {
+        sending_packet = TRUE;
+        call Leds.led2On();
+      }
+    }
+  }
+
+  /**
+   * reference voltage data read
+   *
+   */
+  event void Vref.readDone(error_t result, uint16_t data)
+  {
+    if (result == SUCCESS)
+    {
+      pMsg->vref = data;
+    }
+    else
+    {
+      pMsg->vref = 0;
+    }
+//    atomic packet_ready = TRUE;
+      atomic state = STATE_LIGHT_START;
+      call Light.read();
+  }
+
+  /**
+   * Light data read
+   *
+   */
+  event void Light.readDone(error_t result, uint16_t data)
+  {
+    if (result == SUCCESS)
+    {
+      pMsg->light = data;
+    }
+    else
+    {
+      pMsg->light = 0;
+    }
+    atomic state = STATE_TEMP_START;
+    call Temp.read();
+  }
+
+
+  /**
+   * Temperature data read
+   *
+   */
+  event void Temp.readDone(error_t result, uint16_t data)
+  {
+    if (result == SUCCESS)
+    {
+      pMsg->thermistor = data;
+    }
+    else
+    {
+      pMsg->thermistor = 0;
+    }
+    atomic state = STATE_MIC_START;
+    call Microphone.read();
+  }
+
+  /**
+   * Microphone data read
+   *
+   */
+  event void Microphone.readDone(error_t result, uint16_t data)
+  {
+    if (result == SUCCESS)
+    {
+      pMsg->mic = data;
+    }
+    else
+    {
+      pMsg->mic = 0;
+    }
+//    atomic packet_ready = TRUE;
+    atomic state = STATE_ACCELX_START;
+    call AccelX.read();
+  }
+
+  /**
+   * AccelX data read
+   *
+   */
+  event void AccelX.readDone(error_t result, uint16_t data)
+  {
+    // Zero out the accelerometer, chrl@20061207
+    if (accel_ave_points>0)
+    {
+      accel_ave_x = accel_ave_x + data;
+      call AccelY.read();
+      return ;
+    }
+      
+    if (result == SUCCESS)
+    {
+      pMsg->accelX = data - accel_ave_x;
+    }
+    else
+    {
+      pMsg->accelX = 0;
+    }
+    atomic state = STATE_ACCELY_START;
+    call AccelY.read();
+  }
+
+  /**
+   * AccelY data read
+   *
+   */
+  event void AccelY.readDone(error_t result, uint16_t data)
+  {
+    // Zero out the accelerometer, chrl@20061207
+    if (accel_ave_points>0)
+    {
+      accel_ave_y = accel_ave_y + data;
+      accel_ave_points--;
+      if(accel_ave_points == 0)
+      {
+        accel_ave_x = accel_ave_x / ACCEL_AVERAGE_POINTS - 450;
+        accel_ave_y = accel_ave_y / ACCEL_AVERAGE_POINTS - 450;
+      }
+      atomic state = STATE_IDLE;
+      return ;
     }
 
-    event void Temp.error(uint16_t info) {
+    if (result == SUCCESS)
+    {
+      pMsg->accelY = data - accel_ave_y;
     }
+    else
+    {
+      pMsg->accelY = 0;
+    }
+//    atomic packet_ready = TRUE;
+    atomic state = STATE_MAGX_START;
+    call MagX.read();
+  }
+
+  /**
+   * MagX data read
+   *
+   */
+  event void MagX.readDone(error_t result, uint16_t data)
+  {
+    if (result == SUCCESS)
+    {
+      pMsg->magX = data;
+    }
+    else
+    {
+      pMsg->magX = 0;
+    }
+    atomic state = STATE_MAGY_START;
+    call MagY.read();
+  }
+
+  /**
+   * MagY data read
+   *
+   */
+  event void MagY.readDone(error_t result, uint16_t data)
+  {
+    if (result == SUCCESS)
+    {
+      pMsg->magY = data;
+    }
+    else
+    {
+      pMsg->magY = 0;
+    }
+    atomic packet_ready = TRUE;
+  }
+
+  /**
+   * Data packet sent to RADIO
+   *
+   */
+  event void RadioSend.sendDone(message_t* bufPtr, error_t error)
+  {
+    if (&packet == bufPtr)
+    {
+      call Leds.led2Off();
+    }
+    else
+    {
+      call Leds.led0On();
+    }
+    sending_packet = FALSE;
+    atomic state = STATE_IDLE;
+  }
+
+  /**
+   * Data packet sent to UART
+   *
+   */
+  event void UartSend.sendDone(message_t* bufPtr, error_t error)
+  {
+    if (&packet == bufPtr)
+    {
+      if (call RadioSend.send(AM_BROADCAST_ADDR, &packet, sizeof(Mts300Msg)) != SUCCESS)
+      {
+        call Leds.led0On();
+        sending_packet = FALSE;
+        atomic state = STATE_IDLE;
+      }
+    }
+    else
+    {
+      call Leds.led0On();
+      sending_packet = FALSE;
+      atomic state = STATE_IDLE;
+    }
+  }
+
+// end of the implementation
 }
-
