@@ -1,6 +1,0 @@
-configuration PhotoConfigP
-{
-}
-implementation
-{
-}
