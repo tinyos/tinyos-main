@@ -1,32 +1,45 @@
-/* $Id: AccelP.nc,v 1.1 2007-02-08 17:55:35 idgay Exp $
- * Copyright (c) 2006 Intel Corporation
- * All rights reserved.
- *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
- * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
- * 94704.  Attention:  Intel License Inquiry.
- */
-/**
- * ADXL202JE accelerometer ADC configuration and power management.
- * @author David Gay <david.e.gay@intel.com>
- */
+#include "mts300.h"
+#include "Timer.h"
+
 module AccelP
 {
-  provides {
-    interface SplitControl;
-    interface Atm128AdcConfig as ConfigX;
-    interface Atm128AdcConfig as ConfigY;
-  }
-  uses {
-    interface Timer<TMilli>;
-    interface GeneralIO as AccelPin;
-    interface MicaBusAdc as AccelAdcX;
-    interface MicaBusAdc as AccelAdcY;
-  }
+  provides interface Init;
+  provides interface StdControl;
+
+  provides interface Atm128AdcConfig as ConfigX;
+  provides interface Atm128AdcConfig as ConfigY;
+  provides interface ResourceConfigure as ResourceX;
+  provides interface ResourceConfigure as ResourceY;
+
+	uses interface GeneralIO as AccelPower;
+	uses interface MicaBusAdc as AccelAdcX;
+	uses interface MicaBusAdc as AccelAdcY;
 }
+
 implementation
 {
+  command error_t Init.init()
+  {
+    call AccelPower.makeOutput();
+		call AccelPower.clr();
+
+    return SUCCESS;
+	}
+
+  command error_t StdControl.start()
+  {
+    call AccelPower.set();
+    return SUCCESS;
+  }
+
+  command error_t StdControl.stop()
+  {
+    call AccelPower.clr();
+    call AccelPower.makeInput();
+
+    return SUCCESS;
+  }
+
   async command uint8_t ConfigX.getChannel() {
     return call AccelAdcX.getChannel();
   }
@@ -51,26 +64,8 @@ implementation
     return ATM128_ADC_PRESCALE;
   }
 
-  command error_t SplitControl.start() {
-    call AccelPin.makeOutput();
-    call AccelPin.set();
-    /* Startup time is 16.3ms for 0.1uF capacitors,
-       according to the ADXL202E data sheet */
-    call Timer.startOneShot(17); 
-    return SUCCESS;
-  }
-
-  event void Timer.fired() {
-    signal SplitControl.startDone(SUCCESS);
-  }
-
-  task void stopDone() {
-    call AccelPin.clr();
-    signal SplitControl.stopDone(SUCCESS);
-  }
-
-  command error_t SplitControl.stop() {
-    post stopDone();
-    return SUCCESS;
-  }
+  async command void ResourceX.configure() { }  
+  async command void ResourceX.unconfigure() { } 
+  async command void ResourceY.configure() { }  
+  async command void ResourceY.unconfigure() {}
 }
