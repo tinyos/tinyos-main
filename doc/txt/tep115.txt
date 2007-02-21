@@ -10,8 +10,8 @@ Power Management of Non-Virtualised Devices
 :Author: Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Phil Levis
 
 :Draft-Created: 11-Jan-2006
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2007-02-01 17:44:49 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-02-21 19:08:56 $
 :Draft-Discuss: TinyOS Developer List 
                 <tinyos-devel at mail.millennium.berkeley.edu>
 
@@ -30,71 +30,73 @@ This memo documents how TinyOS 2.x manages the power state of physical
 
 1. Introduction
 ======================================================================
-The energy resources on a typical TinyOS platform are limited, soevery effort should be made to put all devices on a given platforminto their lowest possible power state as often aspossible. Depending on the device type, selecting the correctpower state could be as simple as switching between on andoff states, or involve selecting the optimum state from amongseveral. Choosing the best possible power state requires makingtradeoffs between various factors such as power consumption, fidelity,performance, and wake-up latency.Unfortunately, it is not feasible do design a unified one size-fits-all powermanagement strategy for use by all types of devices. Some devices 
-(particularly microcontollers) have direct access to internal registers that 
-allow them to efficiently calculate their lowest possible power state
-very quickly.  Other devices do not have this information readily available and 
-would have to calculate it on the fly if other mechanisms were not in place to 
-prevent this.  Designing a general system wide power control algorithm to handle 
-all such devices would most likely be overly complex and in some cases even 
-suboptimal. TinyOS 2.x, therefore, takes the approach of defining two different
-classes of devices for which different power-management strategies have been 
-optimized: microcontrollers and peripheral devices. As opposed to microcontrollers, 
-which normally contain a number of different valid power states, peripheral devices 
-tend to have only two distinct states they can be switched to (*on* and *off*).  Even 
-in the rare case where a device of this type happens to contain multiple power 
-states, TinyOS has traditionally used just the two most useful power states and 
-designated them to mean either *on* or *off*.  This TEP is dedicated to 
-describing power management for peripheral devices of this type.  Details on the 
-mechanisms used to perform microcontroller power management can be found in [TEP112]_.
 
-The term "peripheral device" specifically refers to any hardware device for which 
-the mechanisms described in [TEP108]_ can be used to provide resource arbitration
-for them.  These devices are considered *non-virtualised* in the sense that 
-access to them must be explicitly requested and released by higher level
-components wishing to use them.  Various policies can be implemented on top of 
-this class of devices to decide exactly when they should be powered on or off.
-The simplest policy involves leaving it up to the programmer
-to ensure that a device is switched on or off whenever it should be. 
-Other policies involve automatically powering a device up or down
-by monitoring whether any clients are currently connected to it 
-or not.  Depending on the type of power management policy desired, 
-different models should be followed when designing drivers for devices
-of this class.
+TinyOS platforms have limited energy. A unified power management
+strategy for all devices and peripherpals is not feasible, as
+they vary significantly in warm-up times, power profiles, and
+operation latencies. While some devices, such as
+microcontrollers, can efficiently calculate their lowest possible
+power state very quickly, others, such as sensors with warm-up
+times, require external knowledge to do so.
+
+In TinyOS 1.x, an application is responsible for all power management.
+Low-level subsystems, such as an SPI bus, are explicitly powered on
+and off by higher level abstractions. This approach of deep calls
+to StdControl.start and StdControl.stop introduces strange behaviors
+and can get in the way of power conservation. Turning off the radio
+on the Telos platform, for example, turns off the SPI bus and therefore
+prevents the flash driver from working. Additionally, the microcontroller
+stays in a higher power state for the SPI bus even when it is
+inactive.
+
+TinyOS 2.x defines two classes of devices for power-management:
+microcontrollers and peripherals. TEP 112 documents how TinyOS 2.x
+manages the power state of a microcontroller [TEP112]_.
+Unlike microcontrollers, which typically have several power states,
+peripheral devices typically have two distinct states, *on* and *off*.
+This TEP is dedicated to documenting how TinyOS 2.x controls the power
+state of peripheral devices.
+
+The term "peripheral device" refers to any hardware device which
+arbitrates access with the mechanisms described in [TEP108]_ .  These
+devices are not  virtualised in the sense that access to
+them must be explicitly requested and released by their users.
+
 
 2. Power Management Models
 ======================================================================
 
-In order to support both manual and automatic power management of 
-non-virtualised devices in TinyOS, two different power management models have 
-been defined: *explicit power management* and *implicit power management*.  
+There are two different models to managing the power state of a
+peripheral in TinyOS: *explicit power management* and *implicit
+power management*.  
 
-The *explicit power management* model provides a means for a single 
-client to manually control the power state of a dedicated physical device 
-(as defined by [TEP108]_).  Whenever this client tells the device to
-power up or down it does so without delay.  This model can be
-particularly useful when the control information driving the selection
-of the proper power state of a device relies on external logic contained in 
-higher level components.  The following section discusses the ``StdControl``, 
-``SplitControl``, and ``AsyncStdControl`` interfaces used to perform power 
-management of this type.  
+The explicit model provides a means for a single client to manually
+control the power state of a dedicated physical device (as defined by
+[TEP108]_).  Whenever this client tells the device to power up or down
+it does so without delay (albeit that caused by hardware).  This model
+can be particularly useful when the control information driving the
+selection of the proper power state of a device relies on external
+logic contained in higher level components.  The following section
+discusses the ``StdControl``, ``SplitControl``, and
+``AsyncStdControl`` interfaces used to perform power management of
+this type.
 
-The *implicit power management* model, on the other hand, provides a
-means for allowing the power state of a device to be controlled from
-within the driver for that device itself.  Device drivers following 
-this model are never explicitly powered up or down by some external 
-client, but rather *require* some internal policy to be defined that 
-decides exactly when their power states should be changed.  This policy 
-could exist natively on the hardware of the physical device itself, or 
-be implemented on top of some lower level abstraction of a physical 
+The implicit model, on the other hand, provides a means for allowing
+the power state of a device to be controlled from within the driver
+for that device itself.  Device drivers following this model are never
+explicitly powered up or down by some external client, but rather
+*require* some internal policy to be defined that decides exactly when
+their power states should be changed.  This policy could exist
+natively on the hardware of the physical device itself, or be
+implemented on top of some lower level abstraction of a physical
 device adhering to the *explicit power management* model.
 
-For shared devices (as defined by [TEP108]_), the information required to
-determine if a device's clients require it to be powered on or not can
-be inferred through the set of interfaces they provide.
-Because of this fact, no StdControl-like interface needs to be provided 
-to any higher level components, and the *implicit power management* policy 
-in use can act accordingly whenever clients request or release the device.
+Shared devices (as defined by [TEP108]_) can infer whether they
+should be on or off based on the interfaces they provide to their
+clients. For example, when a client requests the ADC, this implies
+the ADC should be on; if there are no requests of the ADC, this implies
+it should be off. Therefore shared devices do not need to provide a
+power control interface. They can use an implicit power management policy. 
 Section 4.2 discusses this in more detail.::
 
 
@@ -125,7 +127,16 @@ Section 4.2 discusses this in more detail.::
 3. Explicit Power Management 
 ======================================================================
 
-Just as in TinyOS 1.x, ``StdControl`` and ``SplitControl`` interfaces havebeen defined for TinyOS 2.x in order to control the on and off powerstates of devices adhering to the *explicit power management* model.A third interface called ``AsyncStdControl`` has also been introducedfor components in which it is critical to have the ability to powerthem on or off while running in asynchronous context. One of thesethree interfaces MUST be provided by components wrapping a hardwaredevice that supports switching between the devices on and off powerstates. The selection of the right interface depends on the latenciesinvolved in changing between these two states as well as the nature ofthe code (sync or async) executing any of the interfaces commands.
+Just as in TinyOS 1.x, TinyOS 2.x has  ``StdControl`` and ``SplitControl``
+interfaces in order to control the on and off
+power states of explicitly managed peripherals. TinyOS 2.x also
+introduces a third interface, ``AsyncStdControl``. A component
+representing a hardware device that can be powered on and off MUST
+provide one of these three interfaces.
+The selection of the right interface depends on the
+latencies involved in changing between these two states as well as the
+nature of the code (sync or async) executing any of the interfaces
+commands.
 
 3.1 Power Management with ``StdControl``
 ----------------------------------------------------------------------
@@ -141,12 +152,15 @@ defined below::
    
 .. Note::
    
-  Powerup and powerdown times on the order of a few microseconds have 
-  traditionally been considered negligible, and can be waited on using one of the 
-  *BusyWait* interfaces described in [TEP102]_.  Powerup and powerdown
-  times on the order of a few milliseconds, however, should not be
-  ignored, and MUST be hidden behind the use of the ``SplitControl`` interface
-  described later on in this section. 
+  Powerup and powerdown times on the order of a few microseconds have
+  traditionally been considered negligible, and can be waited on using
+  one of the *BusyWait* interfaces described in [TEP102]_.  Powerup
+  and powerdown times on the order of a few milliseconds, however,
+  should not be ignored, and MUST be hidden behind the use of the
+  ``SplitControl`` interface described later on in this section.
+  A general rule of thumb is that if waiting for powerup takes
+  more than one hundred microseconds, SplitControl is probably more
+  suitable.
 
 An external component MUST call ``StdControl.start()`` to power a
 device on and ``StdControl.stop()`` to power a device off.  Calls to
@@ -205,7 +219,15 @@ interface.  The definition of this interface can be seen below::
 
 An external component MUST call ``SplitControl.start()`` to power a
 device on and ``SplitControl.stop()`` to power a device off.  Calls to
-either command return one of SUCCESS or FAIL.
+either command return one of SUCCESS, FAIL, EBUSY, or
+EALREADY. SUCCESS indicates that the device has now started chaning
+its power mode and it will signal a corresponding completion event in
+the future. EBUSY indicates that the device is in the midst of the
+other operation (e.g., it is starting when stop is called or stopping
+when start is called) and will not issue an event. EALREADY indicates
+that the device is already in that state; the call is erroneus and a
+completion event will not be signaled. FAIL indicates that the
+device's power state could not be changed. More explicitly:
 
 Successful calls to ``SplitControl.start()`` MUST signal one of
 ``SplitControl.startDone(SUCCESS)`` or ``SplitControl.startDone(FAIL)``.
@@ -232,21 +254,33 @@ powered down, and operation requests through calls to commands of other
 interfaces implemented by the device MUST return EOFF or FAIL.
 
 If a device is not able to complete the ``SplitControl.start()`` or
-``SplitControl.stop()`` requests for any reason, they MUST return
-FAIL.
+``SplitControl.stop()`` requests they MUST return FAIL.
 
-Calls to either ``StdControl.start()`` or ``StdControl.stop()`` while
-a start or stop operation is pending MUST return SUCCESS, with the 
-anticipation that a corresponding ``StdControl.startDone()`` or 
-``StdControl.stopDone()`` will be signaled in the future.
+Calls to either ``SplitControl.start()`` when the device is starting
+or ``SplitControl.stop()`` while the device is stopping MUST return
+SUCCESS, with the  anticipation that a corresponding
+``SplitControl.startDone()`` or ``SplitControl.stopDone()``
+will be signaled in the future.
+
+Calls to `SplitControl.start()`` when the device is started
+or ``SplitControl.stop()`` while the device is stopped MUST
+return EALREADY, indicating that the device is already in that
+state. The corresponding completion event (startDone for start
+or stopDone for stop) MUST NOT be signaled.
+
+Calls to `SplitControl.start()`` when the device is stopping or
+``SplitControl.stop()`` while the device is starting MUST return
+EBUSY, indicating that the device is busy performing a differnet
+operation. The correspodning completion event (startDone for start or
+stopDone for stop) MUST NOT be signaled.
 
 +----------------------+-----------+------------+----------+----------+ 
 | Call                 | Device On | Device Off | Starting | Stopping |
 +======================+===========+============+==========+==========+
-| SplitControl.start() |  SUCCESS  |  SUCCESS   | SUCCESS  | SUCCESS  |
+| SplitControl.start() |  EALREADY |  SUCCESS   | SUCCESS  | EBUSY    |
 |                      |           |  FAIL      |          |          |
 +----------------------+-----------+------------+----------+----------+
-| SplitControl.stop()  |  SUCCESS  |  SUCCESS   | SUCCESS  | SUCCESS  |
+| SplitControl.stop()  |  SUCCESS  |  EALREADY  | EBUSY    | SUCCESS  |
 |                      |  FAIL     |            |          |          |
 +----------------------+-----------+------------+----------+----------+
 | operation            |  depends  |  FAIL      | FAIL     | FAIL     |
@@ -312,9 +346,8 @@ Devices providing this interface would do so as shown below::
 4. Implicit Power Management
 ======================================================================
 
-While the *explicit power management* model provides the basic means
-for controlling the power state of a device, it is void of any
-policy about when, or how the power state of the device should be changed.
+While explicit power management provides the mechanism for changing
+power states, it does not specify a policy.
 This does not represent a large problem for the simple case
 of *dedicated* devices, but can become crucial for non-trivial cases 
 involving complex interdependencies between devices controlled by multiple 
@@ -353,18 +386,20 @@ solved on a case-by-case basis.
 4.1. Power Management Policies
 ----------------------------------------------------------------------------
 
-Just as generic arbiters are offered in TinyOS 2.x to provide the arbitration 
-functionality required by shared resources, generic power management policies are
-also offered to allow the power management of non-virtualised devices to 
-be automatically control.  
+Just as generic arbiters are offered in TinyOS 2.x to provide the
+arbitration functionality required by shared resources, generic power
+management policies are also offered to allow the power management of
+non-virtualised devices to be automatically control.
 
-Through the use of the arbiter components described in [TEP108]_, device
-drivers implemented as shared resources provide the type of restricted 
-resource interdependency where default power-management policies can be offered.The shared resource class defined in Section 2.3 of [TEP108]_, provides a 
-well defined component interdependency, where a single resource is shared 
-among multiple clients. This relationship enables the definition of 
-default power-management policies that can be used to automatically power
-the resource on and off.
+Through the use of the arbiter components described in [TEP108]_,
+device drivers implemented as shared resources provide the type of
+restricted resource interdependency where default power-management
+policies can be offered. The shared resource class defined in Section
+2.3 of [TEP108]_, provides a well defined component interdependency,
+where a single resource is shared among multiple clients. This
+relationship enables the definition of default power-management
+policies that can be used to automatically power the resource on and
+off.
 
 The *Power Manager* component implementing one of these polices acts as
 the *default owner* of the shared resource device and interacts with it
