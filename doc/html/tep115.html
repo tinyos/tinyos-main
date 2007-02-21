@@ -3,38 +3,29 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.5: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Power Management of Non-Virtualised Devices</title>
 <meta name="author" content="Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Phil Levis" />
 <style type="text/css">
 
 /*
 :Author: David Goodger
-:Contact: goodger@python.org
-:Date: $Date: 2007-02-01 17:44:49 $
-:Revision: $Revision: 1.7 $
-:Copyright: This stylesheet has been placed in the public domain.
+:Contact: goodger@users.sourceforge.net
+:date: $Date: 2007-02-21 19:09:25 $
+:version: $Revision: 1.8 $
+:copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
-
-See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
-customize this style sheet.
 */
-
-/* used to remove borders from tables and images */
-.borderless, table.borderless td, table.borderless th {
-  border: 0 }
-
-table.borderless td, table.borderless th {
-  /* Override padding for "table.docutils td" with "! important".
-     The right padding separates the table cells. */
-  padding: 0 0.5em 0 0 ! important }
+body {
+  font-family: Times;
+  font-size: 16px;
+}
 
 .first {
-  /* Override more specific margin styles with "! important". */
   margin-top: 0 ! important }
 
-.last, .with-subtitle {
+.last {
   margin-bottom: 0 ! important }
 
 .hidden {
@@ -47,11 +38,11 @@ a.toc-backref {
 blockquote.epigraph {
   margin: 2em 5em ; }
 
-dl.docutils dd {
+dd {
   margin-bottom: 0.5em }
 
-/* Uncomment (and remove this text!) to get bold-faced definition list terms
-dl.docutils dt {
+/* Uncomment (& remove this text!) to get bold-faced definition list terms
+dt {
   font-weight: bold }
 */
 
@@ -62,17 +53,11 @@ div.abstract p.topic-title {
   font-weight: bold ;
   text-align: center }
 
-div.admonition, div.attention, div.caution, div.danger, div.error,
-div.hint, div.important, div.note, div.tip, div.warning {
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning, div.admonition {
   margin: 2em ;
   border: medium outset ;
   padding: 1em }
-
-div.admonition p.admonition-title, div.hint p.admonition-title,
-div.important p.admonition-title, div.note p.admonition-title,
-div.tip p.admonition-title {
-  font-weight: bold ;
-  font-family: sans-serif }
 
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
@@ -81,14 +66,11 @@ div.warning p.admonition-title {
   font-weight: bold ;
   font-family: sans-serif }
 
-/* Uncomment (and remove this text!) to get reduced vertical space in
-   compound paragraphs.
-div.compound .compound-first, div.compound .compound-middle {
-  margin-bottom: 0.5em }
-
-div.compound .compound-last, div.compound .compound-middle {
-  margin-top: 0.5em }
-*/
+div.hint p.admonition-title, div.important p.admonition-title,
+div.note p.admonition-title, div.tip p.admonition-title,
+div.admonition p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
 
 div.dedication {
   margin: 2em 5em ;
@@ -100,11 +82,9 @@ div.dedication p.topic-title {
   font-style: normal }
 
 div.figure {
-  margin-left: 2em ;
-  margin-right: 2em }
+  margin-left: 2em }
 
 div.footer, div.header {
-  clear: both;
   font-size: smaller }
 
 div.line-block {
@@ -120,7 +100,7 @@ div.line-block div.line-block {
 div.sidebar {
   margin-left: 1em ;
   border: medium outset ;
-  padding: 1em ;
+  padding: 0em 1em ;
   background-color: #ffffee ;
   width: 40% ;
   float: right ;
@@ -147,24 +127,31 @@ div.system-message p.system-message-title {
 div.topic {
   margin: 2em }
 
-h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
-h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
-  margin-top: 0.4em }
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
 
 h1.title {
-  text-align: center }
+ text-align: center;
+ font-size: 32px;
+}
+
+h2 {
+ font-size: 16px;
+ font-family: Arial, sans-serif;
+}
 
 h2.subtitle {
   text-align: center }
 
-hr.docutils {
+h3 {
+ font-size: 12px;
+ font-family: Arial, sans-serif;
+}
+
+hr {
   width: 75% }
-
-img.align-left {
-  clear: left }
-
-img.align-right {
-  clear: right }
 
 ol.simple, ul.simple {
   margin-bottom: 1em }
@@ -222,9 +209,18 @@ pre.address {
   font-family: serif ;
   font-size: 100% }
 
+pre.line-block {
+  font-family: serif ;
+  font-size: 100% }
+
 pre.literal-block, pre.doctest-block {
   margin-left: 2em ;
-  margin-right: 2em }
+  margin-right: 2em ;
+  background-color: #eeeeee;
+  border-color: #000000;
+  border-width: thin; 
+  font-size: 14px
+}
 
 span.classifier {
   font-family: sans-serif ;
@@ -240,46 +236,46 @@ span.interpreted {
 span.option {
   white-space: nowrap }
 
+span.option-argument {
+  font-style: italic }
+
 span.pre {
   white-space: pre }
 
 span.problematic {
   color: red }
 
-span.section-subtitle {
-  /* font-size relative to parent (h1..h6 element) */
-  font-size: 80% }
-
-table.citation {
-  border-left: solid 1px gray;
-  margin-left: 1px }
-
-table.docinfo {
-  margin: 2em 4em }
-
-table.docutils {
+table {
   margin-top: 0.5em ;
   margin-bottom: 0.5em }
 
-table.footnote {
-  border-left: solid 1px black;
-  margin-left: 1px }
+table.citation {
+  border-left: solid thin gray ;
+  padding-left: 0.5ex }
 
-table.docutils td, table.docutils th,
-table.docinfo td, table.docinfo th {
+table.docinfo {
+  margin: 2em 4em;
+}
+
+table.footnote {
+  border-left: solid thin black ;
+  padding-left: 0.5ex }
+
+td, th {
   padding-left: 0.5em ;
   padding-right: 0.5em ;
   vertical-align: top }
 
-table.docutils th.field-name, table.docinfo th.docinfo-name {
+th.docinfo-name, th.field-name {
   font-weight: bold ;
   text-align: left ;
-  white-space: nowrap ;
-  padding-left: 0 }
+  white-space: nowrap;
+  }
 
-h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
-h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
   font-size: 100% }
+
+tt {}
 
 ul.auto-toc {
   list-style-type: none }
@@ -307,9 +303,9 @@ ul.auto-toc {
 <td>Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Phil Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">11-Jan-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-21</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List
 &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
@@ -330,76 +326,64 @@ of this memo is unlimited. This memo is in full compliance with TEP
 </div>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
-<p>The energy resources on a typical TinyOS platform are limited, so
-every effort should be made to put all devices on a given platform
-into their lowest possible power state as often as
-possible. Depending on the device type, selecting the correct
-power state could be as simple as switching between on and
-off states, or involve selecting the optimum state from among
-several. Choosing the best possible power state requires making
-tradeoffs between various factors such as power consumption, fidelity,
-performance, and wake-up latency.</p>
-<p>Unfortunately, it is not feasible do design a unified one size-fits-all power
-management strategy for use by all types of devices. Some devices
-(particularly microcontollers) have direct access to internal registers that
-allow them to efficiently calculate their lowest possible power state
-very quickly.  Other devices do not have this information readily available and
-would have to calculate it on the fly if other mechanisms were not in place to
-prevent this.  Designing a general system wide power control algorithm to handle
-all such devices would most likely be overly complex and in some cases even
-suboptimal. TinyOS 2.x, therefore, takes the approach of defining two different
-classes of devices for which different power-management strategies have been
-optimized: microcontrollers and peripheral devices. As opposed to microcontrollers,
-which normally contain a number of different valid power states, peripheral devices
-tend to have only two distinct states they can be switched to (<em>on</em> and <em>off</em>).  Even
-in the rare case where a device of this type happens to contain multiple power
-states, TinyOS has traditionally used just the two most useful power states and
-designated them to mean either <em>on</em> or <em>off</em>.  This TEP is dedicated to
-describing power management for peripheral devices of this type.  Details on the
-mechanisms used to perform microcontroller power management can be found in <a class="citation-reference" href="#tep112" id="id1" name="id1">[TEP112]</a>.</p>
-<p>The term &quot;peripheral device&quot; specifically refers to any hardware device for which
-the mechanisms described in <a class="citation-reference" href="#tep108" id="id2" name="id2">[TEP108]</a> can be used to provide resource arbitration
-for them.  These devices are considered <em>non-virtualised</em> in the sense that
-access to them must be explicitly requested and released by higher level
-components wishing to use them.  Various policies can be implemented on top of
-this class of devices to decide exactly when they should be powered on or off.
-The simplest policy involves leaving it up to the programmer
-to ensure that a device is switched on or off whenever it should be.
-Other policies involve automatically powering a device up or down
-by monitoring whether any clients are currently connected to it
-or not.  Depending on the type of power management policy desired,
-different models should be followed when designing drivers for devices
-of this class.</p>
+<p>TinyOS platforms have limited energy. A unified power management
+strategy for all devices and peripherpals is not feasible, as
+they vary significantly in warm-up times, power profiles, and
+operation latencies. While some devices, such as
+microcontrollers, can efficiently calculate their lowest possible
+power state very quickly, others, such as sensors with warm-up
+times, require external knowledge to do so.</p>
+<p>In TinyOS 1.x, an application is responsible for all power management.
+Low-level subsystems, such as an SPI bus, are explicitly powered on
+and off by higher level abstractions. This approach of deep calls
+to StdControl.start and StdControl.stop introduces strange behaviors
+and can get in the way of power conservation. Turning off the radio
+on the Telos platform, for example, turns off the SPI bus and therefore
+prevents the flash driver from working. Additionally, the microcontroller
+stays in a higher power state for the SPI bus even when it is
+inactive.</p>
+<p>TinyOS 2.x defines two classes of devices for power-management:
+microcontrollers and peripherals. TEP 112 documents how TinyOS 2.x
+manages the power state of a microcontroller <a class="citation-reference" href="#tep112" id="id1" name="id1">[TEP112]</a>.
+Unlike microcontrollers, which typically have several power states,
+peripheral devices typically have two distinct states, <em>on</em> and <em>off</em>.
+This TEP is dedicated to documenting how TinyOS 2.x controls the power
+state of peripheral devices.</p>
+<p>The term &quot;peripheral device&quot; refers to any hardware device which
+arbitrates access with the mechanisms described in <a class="citation-reference" href="#tep108" id="id2" name="id2">[TEP108]</a> .  These
+devices are not  virtualised in the sense that access to
+them must be explicitly requested and released by their users.</p>
 </div>
 <div class="section">
 <h1><a id="power-management-models" name="power-management-models">2. Power Management Models</a></h1>
-<p>In order to support both manual and automatic power management of
-non-virtualised devices in TinyOS, two different power management models have
-been defined: <em>explicit power management</em> and <em>implicit power management</em>.</p>
-<p>The <em>explicit power management</em> model provides a means for a single
-client to manually control the power state of a dedicated physical device
-(as defined by <a class="citation-reference" href="#tep108" id="id3" name="id3">[TEP108]</a>).  Whenever this client tells the device to
-power up or down it does so without delay.  This model can be
-particularly useful when the control information driving the selection
-of the proper power state of a device relies on external logic contained in
-higher level components.  The following section discusses the <tt class="docutils literal"><span class="pre">StdControl</span></tt>,
-<tt class="docutils literal"><span class="pre">SplitControl</span></tt>, and <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt> interfaces used to perform power
-management of this type.</p>
-<p>The <em>implicit power management</em> model, on the other hand, provides a
-means for allowing the power state of a device to be controlled from
-within the driver for that device itself.  Device drivers following
-this model are never explicitly powered up or down by some external
-client, but rather <em>require</em> some internal policy to be defined that
-decides exactly when their power states should be changed.  This policy
-could exist natively on the hardware of the physical device itself, or
-be implemented on top of some lower level abstraction of a physical
+<p>There are two different models to managing the power state of a
+peripheral in TinyOS: <em>explicit power management</em> and <em>implicit
+power management</em>.</p>
+<p>The explicit model provides a means for a single client to manually
+control the power state of a dedicated physical device (as defined by
+<a class="citation-reference" href="#tep108" id="id3" name="id3">[TEP108]</a>).  Whenever this client tells the device to power up or down
+it does so without delay (albeit that caused by hardware).  This model
+can be particularly useful when the control information driving the
+selection of the proper power state of a device relies on external
+logic contained in higher level components.  The following section
+discusses the <tt class="docutils literal"><span class="pre">StdControl</span></tt>, <tt class="docutils literal"><span class="pre">SplitControl</span></tt>, and
+<tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt> interfaces used to perform power management of
+this type.</p>
+<p>The implicit model, on the other hand, provides a means for allowing
+the power state of a device to be controlled from within the driver
+for that device itself.  Device drivers following this model are never
+explicitly powered up or down by some external client, but rather
+<em>require</em> some internal policy to be defined that decides exactly when
+their power states should be changed.  This policy could exist
+natively on the hardware of the physical device itself, or be
+implemented on top of some lower level abstraction of a physical
 device adhering to the <em>explicit power management</em> model.</p>
-<p>For shared devices (as defined by <a class="citation-reference" href="#tep108" id="id4" name="id4">[TEP108]</a>), the information required to
-determine if a device's clients require it to be powered on or not can
-be inferred through the set of interfaces they provide.
-Because of this fact, no StdControl-like interface needs to be provided
-to any higher level components, and the <em>implicit power management</em> policy
-in use can act accordingly whenever clients request or release the device.
+<p>Shared devices (as defined by <a class="citation-reference" href="#tep108" id="id4" name="id4">[TEP108]</a>) can infer whether they
+should be on or off based on the interfaces they provide to their
+clients. For example, when a client requests the ADC, this implies
+the ADC should be on; if there are no requests of the ADC, this implies
+it should be off. Therefore shared devices do not need to provide a
+power control interface. They can use an implicit power management policy.
 Section 4.2 discusses this in more detail.:</p>
 <pre class="literal-block">
                /|\                                    /|\
@@ -428,17 +412,16 @@ Section 4.2 discusses this in more detail.:</p>
 </div>
 <div class="section">
 <h1><a id="explicit-power-management" name="explicit-power-management">3. Explicit Power Management</a></h1>
-<p>Just as in TinyOS 1.x, <tt class="docutils literal"><span class="pre">StdControl</span></tt> and <tt class="docutils literal"><span class="pre">SplitControl</span></tt> interfaces have
-been defined for TinyOS 2.x in order to control the on and off power
-states of devices adhering to the <em>explicit power management</em> model.
-A third interface called <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt> has also been introduced
-for components in which it is critical to have the ability to power
-them on or off while running in asynchronous context. One of these
-three interfaces MUST be provided by components wrapping a hardware
-device that supports switching between the devices on and off power
-states. The selection of the right interface depends on the latencies
-involved in changing between these two states as well as the nature of
-the code (sync or async) executing any of the interfaces commands.</p>
+<p>Just as in TinyOS 1.x, TinyOS 2.x has  <tt class="docutils literal"><span class="pre">StdControl</span></tt> and <tt class="docutils literal"><span class="pre">SplitControl</span></tt>
+interfaces in order to control the on and off
+power states of explicitly managed peripherals. TinyOS 2.x also
+introduces a third interface, <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt>. A component
+representing a hardware device that can be powered on and off MUST
+provide one of these three interfaces.
+The selection of the right interface depends on the
+latencies involved in changing between these two states as well as the
+nature of the code (sync or async) executing any of the interfaces
+commands.</p>
 <div class="section">
 <h2><a id="power-management-with-stdcontrol" name="power-management-with-stdcontrol">3.1 Power Management with <tt class="docutils literal"><span class="pre">StdControl</span></tt></a></h2>
 <p>Whenever the powerup and powerdown times of a non-virtualised device
@@ -453,11 +436,14 @@ interface StdControl {
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">Powerup and powerdown times on the order of a few microseconds have
-traditionally been considered negligible, and can be waited on using one of the
-<em>BusyWait</em> interfaces described in <a class="citation-reference" href="#tep102" id="id5" name="id5">[TEP102]</a>.  Powerup and powerdown
-times on the order of a few milliseconds, however, should not be
-ignored, and MUST be hidden behind the use of the <tt class="docutils literal"><span class="pre">SplitControl</span></tt> interface
-described later on in this section.</p>
+traditionally been considered negligible, and can be waited on using
+one of the <em>BusyWait</em> interfaces described in <a class="citation-reference" href="#tep102" id="id5" name="id5">[TEP102]</a>.  Powerup
+and powerdown times on the order of a few milliseconds, however,
+should not be ignored, and MUST be hidden behind the use of the
+<tt class="docutils literal"><span class="pre">SplitControl</span></tt> interface described later on in this section.
+A general rule of thumb is that if waiting for powerup takes
+more than one hundred microseconds, SplitControl is probably more
+suitable.</p>
 </div>
 <p>An external component MUST call <tt class="docutils literal"><span class="pre">StdControl.start()</span></tt> to power a
 device on and <tt class="docutils literal"><span class="pre">StdControl.stop()</span></tt> to power a device off.  Calls to
@@ -526,7 +512,15 @@ interface SplitControl {
 </pre>
 <p>An external component MUST call <tt class="docutils literal"><span class="pre">SplitControl.start()</span></tt> to power a
 device on and <tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> to power a device off.  Calls to
-either command return one of SUCCESS or FAIL.</p>
+either command return one of SUCCESS, FAIL, EBUSY, or
+EALREADY. SUCCESS indicates that the device has now started chaning
+its power mode and it will signal a corresponding completion event in
+the future. EBUSY indicates that the device is in the midst of the
+other operation (e.g., it is starting when stop is called or stopping
+when start is called) and will not issue an event. EALREADY indicates
+that the device is already in that state; the call is erroneus and a
+completion event will not be signaled. FAIL indicates that the
+device's power state could not be changed. More explicitly:</p>
 <p>Successful calls to <tt class="docutils literal"><span class="pre">SplitControl.start()</span></tt> MUST signal one of
 <tt class="docutils literal"><span class="pre">SplitControl.startDone(SUCCESS)</span></tt> or <tt class="docutils literal"><span class="pre">SplitControl.startDone(FAIL)</span></tt>.</p>
 <p>Successful calls to <tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> MUST signal one of
@@ -546,12 +540,22 @@ signals a <tt class="docutils literal"><span class="pre">SplitControl.startDone(
 powered down, and operation requests through calls to commands of other
 interfaces implemented by the device MUST return EOFF or FAIL.</p>
 <p>If a device is not able to complete the <tt class="docutils literal"><span class="pre">SplitControl.start()</span></tt> or
-<tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> requests for any reason, they MUST return
-FAIL.</p>
-<p>Calls to either <tt class="docutils literal"><span class="pre">StdControl.start()</span></tt> or <tt class="docutils literal"><span class="pre">StdControl.stop()</span></tt> while
-a start or stop operation is pending MUST return SUCCESS, with the
-anticipation that a corresponding <tt class="docutils literal"><span class="pre">StdControl.startDone()</span></tt> or
-<tt class="docutils literal"><span class="pre">StdControl.stopDone()</span></tt> will be signaled in the future.</p>
+<tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> requests they MUST return FAIL.</p>
+<p>Calls to either <tt class="docutils literal"><span class="pre">SplitControl.start()</span></tt> when the device is starting
+or <tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> while the device is stopping MUST return
+SUCCESS, with the  anticipation that a corresponding
+<tt class="docutils literal"><span class="pre">SplitControl.startDone()</span></tt> or <tt class="docutils literal"><span class="pre">SplitControl.stopDone()</span></tt>
+will be signaled in the future.</p>
+<p>Calls to <cite>SplitControl.start()`</cite> when the device is started
+or <tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> while the device is stopped MUST
+return EALREADY, indicating that the device is already in that
+state. The corresponding completion event (startDone for start
+or stopDone for stop) MUST NOT be signaled.</p>
+<p>Calls to <cite>SplitControl.start()`</cite> when the device is stopping or
+<tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> while the device is starting MUST return
+EBUSY, indicating that the device is busy performing a differnet
+operation. The correspodning completion event (startDone for start or
+stopDone for stop) MUST NOT be signaled.</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="34%" />
@@ -570,17 +574,17 @@ anticipation that a corresponding <tt class="docutils literal"><span class="pre"
 </thead>
 <tbody valign="top">
 <tr><td>SplitControl.start()</td>
-<td>SUCCESS</td>
+<td>EALREADY</td>
 <td>SUCCESS
 FAIL</td>
 <td>SUCCESS</td>
-<td>SUCCESS</td>
+<td>EBUSY</td>
 </tr>
 <tr><td>SplitControl.stop()</td>
 <td>SUCCESS
 FAIL</td>
-<td>SUCCESS</td>
-<td>SUCCESS</td>
+<td>EALREADY</td>
+<td>EBUSY</td>
 <td>SUCCESS</td>
 </tr>
 <tr><td>operation</td>
@@ -651,9 +655,8 @@ resources.</p>
 </div>
 <div class="section">
 <h1><a id="implicit-power-management" name="implicit-power-management">4. Implicit Power Management</a></h1>
-<p>While the <em>explicit power management</em> model provides the basic means
-for controlling the power state of a device, it is void of any
-policy about when, or how the power state of the device should be changed.
+<p>While explicit power management provides the mechanism for changing
+power states, it does not specify a policy.
 This does not represent a large problem for the simple case
 of <em>dedicated</em> devices, but can become crucial for non-trivial cases
 involving complex interdependencies between devices controlled by multiple
@@ -686,18 +689,19 @@ policy instead of passing that task on to the application programmer to be
 solved on a case-by-case basis.</p>
 <div class="section">
 <h2><a id="power-management-policies" name="power-management-policies">4.1. Power Management Policies</a></h2>
-<p>Just as generic arbiters are offered in TinyOS 2.x to provide the arbitration
-functionality required by shared resources, generic power management policies are
-also offered to allow the power management of non-virtualised devices to
-be automatically control.</p>
-<p>Through the use of the arbiter components described in <a class="citation-reference" href="#tep108" id="id6" name="id6">[TEP108]</a>, device
-drivers implemented as shared resources provide the type of restricted
-resource interdependency where default power-management policies can be offered.
-The shared resource class defined in Section 2.3 of <a class="citation-reference" href="#tep108" id="id7" name="id7">[TEP108]</a>, provides a
-well defined component interdependency, where a single resource is shared
-among multiple clients. This relationship enables the definition of
-default power-management policies that can be used to automatically power
-the resource on and off.</p>
+<p>Just as generic arbiters are offered in TinyOS 2.x to provide the
+arbitration functionality required by shared resources, generic power
+management policies are also offered to allow the power management of
+non-virtualised devices to be automatically control.</p>
+<p>Through the use of the arbiter components described in <a class="citation-reference" href="#tep108" id="id6" name="id6">[TEP108]</a>,
+device drivers implemented as shared resources provide the type of
+restricted resource interdependency where default power-management
+policies can be offered. The shared resource class defined in Section
+2.3 of <a class="citation-reference" href="#tep108" id="id7" name="id7">[TEP108]</a>, provides a well defined component interdependency,
+where a single resource is shared among multiple clients. This
+relationship enables the definition of default power-management
+policies that can be used to automatically power the resource on and
+off.</p>
 <p>The <em>Power Manager</em> component implementing one of these polices acts as
 the <em>default owner</em> of the shared resource device and interacts with it
 through the use of the ResourceDefaultOwner interface:</p>
