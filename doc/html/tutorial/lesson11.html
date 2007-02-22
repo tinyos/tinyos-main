@@ -931,7 +931,7 @@ for line in lines:
     elif (s[0] == "noise"):
       r.setNoise(int(s[1]), float(s[2]), float(s[3]))
 
-for i in range (0, 9):
+for i in range (0, 4):
   m = t.getNode(i)
   m.bootAtTime(randint(1000, 2000) * 1000000)
 
