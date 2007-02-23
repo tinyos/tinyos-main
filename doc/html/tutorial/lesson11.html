@@ -1395,7 +1395,10 @@ Lesson </a>&nbsp;&gt;</b>
 
 	      <li>You have Python support installed, but it turns out to
 		be incompatible with TOSSIM.</li>
-
+              
+	       <li>You have a variant of gcc/g++ installed that 
+	        expects slightly different compilation options than the
+		normal installation.</li>
 	    </ol>
 
 	    <p>We'll visit each in turn.</p>
@@ -1552,10 +1555,10 @@ CFLAGS += -I/path
 	    <p><b>Symptom:</b> You've verified that you have the
 	    needed Python files and libraries, but compilation is
 	    still saying that it can't link to them ("undefined
-	    reference") or can't find them.</p>
+	    reference") or can't find them ("cannot find -lpython2.4").</p>
 
 	    <p><b>Solution:</b> Change the sim.extra file to point to
-	    the correct directories.</p>
+	    the correct directories using -L and -I flags.</p>
 
 	    <h2>You have Python support installed, but it turns out to
 	      be incompatible with TOSSIM.</h2>
@@ -1568,7 +1571,21 @@ CFLAGS += -I/path
 	    <tt>tos/lib/tossim</tt>, or install a different version of
 	    Python.</p>
 	    
-	    <p>Hopefully, these solutions worked and you can get back
+	       <h2>You have a variant of gcc/g++ installed that 
+	        expects slightly different compilation options than the
+		normal installation.</h2>
+
+		<p><b>Symptom:</b> g++ complains that it cannot find
+		 main() when you are compiling the shared library
+		 ("undefined reference to `_WinMain@16'").</p>
+
+		 <p><b>Solution:</b> There are two possible solutions.
+		 The first is to include a dummy main(), as described
+		  in this <A HREF="http://mail.millennium.berkeley.edu/pipermail/tinyos-help/2006-December/021719.html">tinyos-help posting.</A> The
+		  second is to add the -shared option, as described in
+		  this <A HREF="http://curl.haxx.se/mail/archive-2003-01/0056.html">web page</A>.
+		  
+		  <p>Hopefully, these solutions worked and you can get back
 	    to <A HREF="#compiling">compiling</A>, If not, then you
 		should email tinyos-help.</p>
 </center>
