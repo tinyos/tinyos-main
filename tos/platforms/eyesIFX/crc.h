@@ -38,6 +38,8 @@
  * @author Andreas Koepke <koepke@tkn.tu-berlin.de> 
  * @author Paul Curtis (pointed out this implementation, which is believed to be public domain)
  */
+#ifndef CRC_H
+#define CRC_H
 
 uint16_t crcByte(uint16_t crc, uint8_t b) {
   crc = (uint8_t)(crc >> 8) | (crc << 8);
@@ -47,3 +49,5 @@ uint16_t crcByte(uint16_t crc, uint8_t b) {
   crc ^= (crc & 0xff) << 5;
   return crc;
 }
+
+#endif
