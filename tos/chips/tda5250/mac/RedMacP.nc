@@ -186,21 +186,27 @@ implementation
 
     /**************** Module Global Constants  *****************/
     enum {
+/*
         BYTE_TIME=13,                // byte at 38400 kBit/s, 4b6b encoded
         PREAMBLE_BYTE_TIME=9,        // byte at 38400 kBit/s, no coding
         PHY_HEADER_TIME=51,          // 6 Phy Preamble at 38400
+*/
+        BYTE_TIME=10,                // byte at 49000 kBit/s, 4b6b encoded
+        PREAMBLE_BYTE_TIME=7,        // byte at 49000 kBit/s, no coding
+        PHY_HEADER_TIME=40,          // 6 Phy Preamble at 49000
+
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(tda5250_header_t)*BYTE_TIME,
-        SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 38400 kBit/s with 4b6b encoding
-        MAX_TIME_VALUE=0xFFFFFFFF,
-        MAXTIMERVALUE=0xFFFF,        // helps to compute backoff
+        SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
+        // DEFAULT_SLEEP_TIME=1625,
         DEFAULT_SLEEP_TIME=3250,
         // DEFAULT_SLEEP_TIME=6500,
         // DEFAULT_SLEEP_TIME=9750,
+        // DEFAULT_SLEEP_TIME=16384,
         DATA_DETECT_TIME=17,
         RX_SETUP_TIME=111,    // time to set up receiver
         TX_SETUP_TIME=69,     // time to set up transmitter
-        ADDED_DELAY = 40,
-        RX_ACK_TIMEOUT = RX_SETUP_TIME + PHY_HEADER_TIME + 29 + 2*ADDED_DELAY,
+        ADDED_DELAY = 20,
+        RX_ACK_TIMEOUT = RX_SETUP_TIME + PHY_HEADER_TIME + 14 + 2*ADDED_DELAY,
         TX_GAP_TIME=RX_ACK_TIMEOUT + TX_SETUP_TIME + 11,
         // the duration of a send ACK
         ACK_DURATION = SUB_HEADER_TIME + SUB_FOOTER_TIME,
@@ -218,9 +224,10 @@ implementation
         INVALID_SNR = 0xffff,
         PREAMBLE_LONG = 6,
         PREAMBLE_SHORT = 2,
+        // reduced minimal backoff
+        ZERO_BACKOFF_MASK = 0xff
     };
     
-
     /**************** Module Global Variables  *****************/
     typedef union 
     {
@@ -347,6 +354,8 @@ implementation
     }
 
     /**************** Helper functions ************************/
+    void computeBackoff();
+    
     void checkSend() {
         storeOldState(10);
         if((shortRetryCounter) && (txBufPtr != NULL) && (isFlagSet(&flags, MESSAGE_PREPARED)) && 
@@ -360,7 +369,7 @@ implementation
 
     uint32_t backoff(uint8_t counter) {
         uint32_t rVal = call Random.rand16() &  MIN_BACKOFF_MASK;
-        return rVal << counter;
+        return (rVal << counter) + ZERO_BACKOFF_MASK;
     }
     
     bool needsAckTx(message_t* msg) {
@@ -422,7 +431,13 @@ implementation
             txMacHdr = macHdr;
             setFlag(&flags, MESSAGE_PREPARED);
             if((macState == SLEEP) && (!call Timer.isRunning()) && (!isFlagSet(&flags, RESUME_BACKOFF))) {
-                call Timer.start(backoff(longRetryCounter));
+                if((longRetryCounter == 1) &&
+                   (getHeader(msg)->dest != AM_BROADCAST_ADDR)) {
+                    call Timer.start((call Random.rand16() >> 3) & ZERO_BACKOFF_MASK);
+                }
+                else {
+                    call Timer.start(backoff(longRetryCounter));
+                }
             }
         }
     }
@@ -504,10 +519,10 @@ implementation
                 restLaufzeit = restLaufzeit - now;
             }
             else {
-                restLaufzeit +=  MAXTIMERVALUE - now;
+                restLaufzeit =  (uint16_t)(-1) - restLaufzeit + now;
             }
             if(restLaufzeit > MIN_BACKOFF_MASK << MAX_LONG_RETRY) {
-                restLaufzeit = backoff(0);
+                restLaufzeit = call Random.rand16() & ZERO_BACKOFF_MASK;
             }
             setFlag(&flags, RESUME_BACKOFF);
         }
@@ -780,16 +795,18 @@ implementation
             } else {
                 if(congestionLevel > 0) congestionLevel--;
             }
-            if((macState == SLEEP) && (!call Timer.isRunning())) {
-                if(isFlagSet(&flags, RESUME_BACKOFF)) {
-                    storeOldState(61);
-                    clearFlag(&flags, RESUME_BACKOFF);
-                    call Timer.start(restLaufzeit);
-                    restLaufzeit = 0;
-                }
-                else {
-                    storeOldState(62);
-                    checkSend();
+            if(macState == SLEEP) {
+                if(!call Timer.isRunning()) {
+                    if(isFlagSet(&flags, RESUME_BACKOFF)) {
+                        storeOldState(61);
+                        clearFlag(&flags, RESUME_BACKOFF);
+                        call Timer.start(restLaufzeit);
+                        restLaufzeit = 0;
+                    }
+                    else {
+                        storeOldState(62);
+                        checkSend();
+                    }
                 }
             }
             else if(macState == INIT) {
@@ -1064,7 +1081,7 @@ implementation
             }
             else {
                 // assume a clock wrap here
-                txMacHdr->time = MAX_TIME_VALUE - mTime + now;
+                txMacHdr->time = (uint32_t)(-1) - mTime + now;
             }
         }
     }
@@ -1074,16 +1091,16 @@ implementation
         atomic {
             time.lo = call Counter32khz16.get();
             time.hi = counter2sec;
+            if(call Counter32khz16.isOverflowPending()) ++time.hi;
         }
         return time.op;
     }
     
     async event void Counter32khz16.overflow() {
-        counter2sec++;
+        ++counter2sec;
     }
 
-    
-    
+
     /****** Timer ******************************/
 
     void checkOnBusy() {
@@ -1110,7 +1127,7 @@ implementation
             }
             else {
                 storeOldState(154);
-                call Timer.start(TX_GAP_TIME>>1);
+                call Timer.start(TX_GAP_TIME >> 1);
                 requestAdc();
             }
         }
@@ -1118,7 +1135,7 @@ implementation
             checkCounter++;
             if(checkCounter < 3) {
                 storeOldState(158);                
-                call Timer.start((TX_GAP_TIME + backoff(0))>>1);
+                call Timer.start(TX_GAP_TIME >> 1);
                 requestAdc();
             }
             else {
@@ -1171,7 +1188,7 @@ implementation
         else if(macState == SLEEP) {
              if(isFlagSet(&flags, SWITCHING)) {
                  storeOldState(106);
-                 call Timer.start(backoff(0));
+                 call Timer.start(call Random.rand16() & 0x0f);
              }
              else {
                  storeOldState(107);

@@ -87,9 +87,16 @@ implementation
 {
 
     enum {
+        /*
         BYTE_TIME=13,                // byte at 38400 kBit/s, 4b6b encoded
         PREAMBLE_BYTE_TIME=9,        // byte at 38400 kBit/s, no coding
         PHY_HEADER_TIME=51,          // 6 Phy Preamble at 38400
+        */
+
+        BYTE_TIME=10,                // byte at 49000 kBit/s, 4b6b encoded
+        PREAMBLE_BYTE_TIME=7,        // byte at 49000 kBit/s, no coding
+        PHY_HEADER_TIME=40,          // 6 Phy Preamble at 49000
+
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(tda5250_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 38400 kBit/s with 4b6b encoding
         MAXTIMERVALUE=0xFFFF,        // helps to compute backoff

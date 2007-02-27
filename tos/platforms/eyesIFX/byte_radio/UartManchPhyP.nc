@@ -29,8 +29,8 @@
  * - Description ---------------------------------------------------------
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:41 $
+ * $Revision: 1.5 $
+ * $Date: 2007-02-27 19:18:24 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * @author: Philipp Huppertz <huppertz@tkn.tu-berlin.de>
  * ========================================================================
@@ -75,7 +75,7 @@ implementation
     } phyState_t;
 
 #define PREAMBLE_LENGTH   4
-#define BYTE_TIME         18
+#define BYTE_TIME         9
 #define PREAMBLE_BYTE     0x55
 #define SYNC_BYTE         0xFF
 #define SFD_BYTE          0x50

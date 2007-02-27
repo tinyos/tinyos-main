@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:41 $
+ * $Revision: 1.5 $
+ * $Date: 2007-02-27 19:18:24 $
  * ========================================================================
  */
 
@@ -39,8 +39,14 @@
 enum {
     TDA5250_UART_BUS_ID = unique(MSP430_UARTO_BUS)
 };
-
+/*
 msp430_uart_union_config_t tda5250_uart_config = { {ubr: UBR_1MHZ_38400, umctl: UMCTL_1MHZ_38400, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie: 1, urxwie: 0, urxe: 1, utxe: 0} };
+*/
 
+enum {
+    UBR_1MHZ_49000=0x0015,  UMCTL_1MHZ_49000=0x92
+};
+
+msp430_uart_union_config_t tda5250_uart_config = { {ubr: UBR_1MHZ_49000, umctl: UMCTL_1MHZ_49000, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie: 1, urxwie: 0, urxe: 1, utxe: 0} };
 
 #endif

@@ -72,7 +72,7 @@ implementation
     /* constants */
     enum {
         PREAMBLE_LENGTH=2,
-        BYTE_TIME=11,
+        BYTE_TIME=9,
         PREAMBLE_BYTE=0x55,
         SYNC_BYTE=0xFF,
         SFD_BYTE=0x83,
