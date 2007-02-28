@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-02-28 22:34:19 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.11</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-06-27</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-28</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -323,7 +323,7 @@ TEP 1.</p>
 <p>The memo documents the interfaces used by packet protocol components in
 TinyOS 2.x as well as the structure and implementation of ActiveMessageC,
 the basic data-link HIL component. It also documents the virtualized
-active message interfaces AMSender and AMReceiver.</p>
+active message interfaces AMSenderC and AMReceiverC.</p>
 </div>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
@@ -506,10 +506,8 @@ interface AMPacket {
 </pre>
 <p>The command address() returns the local AM address of the
 node. AMPacket provides accessors for its two fields, destination and
-type. It does not provide commands to set these fields, as they are
-set in the sending call path (see Section 2.3). The <tt class="docutils literal"><span class="pre">setDestination</span></tt>
-and <tt class="docutils literal"><span class="pre">setType</span></tt> commands fulfill a similar purpose to
-<tt class="docutils literal"><span class="pre">Packet.setLength</span></tt>.</p>
+type. It also provides commands to set these fields, for the same
+reason that Packet allows a caller to set the payload length.</p>
 </div>
 <div class="section">
 <h2><a id="sending-interfaces" name="sending-interfaces">2.2 Sending interfaces</a></h2>
@@ -608,7 +606,8 @@ message_t* Receive.receive(message_t* msg, void* payload, uint8_t len) {
 }
 
 //Case 3
-message_t* ptr;
+message_t buf;
+message_t* ptr = &amp;buf;
 message_t* Receive.receive(message_t* msg, void* payload, uint8_t len) {
   message_t* tmp = ptr;
   ptr = msg;
@@ -812,8 +811,8 @@ that an active message received from one data link layer (e.g., the radio)
 can be passed to another data link layer (e.g., the UART) without
 shifting the data payload. This means that the <tt class="docutils literal"><span class="pre">message_header_t</span></tt> must
 include all data needed for AM fields, which might introduce headers
-in addition to those of the data link. For example, this is the
-structure of the CC2420 header:</p>
+in addition to those of the data link. For example, this is an example
+structure for a CC2420 (802.15.4) header:</p>
 <pre class="literal-block">
 typedef nx_struct cc2420_header_t {
   nx_uint8_t length;

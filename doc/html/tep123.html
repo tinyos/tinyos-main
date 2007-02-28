@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-02-06 03:45:27 $
-:version: $Revision: 1.7 $
+:date: $Date: 2007-02-28 22:34:19 $
+:version: $Revision: 1.8 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">3-Aug-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-01-16</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-28</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -405,7 +405,7 @@ to do so.</p>
                      1
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|C|P| reserved  |      THL        |
+|P|C| reserved  |      THL        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |              ETX                |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -419,8 +419,8 @@ to do so.</p>
 <p>Field definitions are as follows:</p>
 <blockquote>
 <ul class="simple">
-<li>C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next data frame it transmits.</li>
 <li>P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future.</li>
+<li>C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next data frame it transmits.</li>
 <li>THL: Time Has Lived. When a node generates a CTP data frame, it MUST set THL to 0. When a node receives a CTP data frame, it MUST increment the THL. If a node receives a THL of 255, it increments it to 0.</li>
 <li>ETX: The ETX routing metric of the single-hop sender. When a node transmits a CTP data frame, it MUST put the ETX value of its route through the single-hop destination in the ETX field.  If a node receives a packet with a lower gradient than its own, then it MUST schedule a routing frame in the near future.</li>
 <li>origin: The originating address of the packet. A node forwarding a data frame MUST NOT modify the origin field.</li>
@@ -448,7 +448,7 @@ acknowledgments enabled.</p>
                      1
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|C|P| reserved  |      parent     |
+|P|C| reserved  |      parent     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |     parent    |       ETX       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -458,8 +458,8 @@ acknowledgments enabled.</p>
 <p>The fields are as follows:</p>
 <blockquote>
 <ul class="simple">
-<li>C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.</li>
 <li>P: Same as data frame.</li>
+<li>C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.</li>
 <li>parent: The node's current parent.</li>
 <li>metric: The node's current routing metric value.</li>
 </ul>

@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-02-09 21:01:07 $
-:version: $Revision: 1.1 $
+:date: $Date: 2007-02-28 22:34:19 $
+:version: $Revision: 1.2 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Omprakash Gnawali</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">05-Feb-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.2</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.4</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-09</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-28</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -329,20 +329,22 @@ links to the neighbors.</p>
 <p>Routing protocols often require bi-directional link qualities to
 compute the routes. Nodes can estimate the quality of the in-bound
 link from a neighbor by estimating the ratio of successfully received
-messages and the total transmitted messages. These in-bound link
-qualities are exchanged among the neighbors using LEEP to determine
-the out-bound link qualities. Bi-directional link quality is computed
-using thus learned in-bound and out-bound link qualities.</p>
+messages and the total transmitted messages. LEEP appends in-bound
+packet reception rate (PRR) estimates to packets. Other nodes hearing
+these packets can combine the in-bound PRR values with their own
+in-bound values to compute bi-directional link quality.</p>
 </div>
 <div class="section">
 <h1><a id="definitions" name="definitions">2. Definitions</a></h1>
 <div class="section">
 <h2><a id="link-quality" name="link-quality">2.1 Link Quality</a></h2>
-<p>Quality of the link between any two nodes describes the probability
-with which data link layer packets can be received without any
-error. This definition assumes uncorrelated link losses. The link
-between the nodes A and B may have different quality in A to B and B
-to A directions.</p>
+<p>The link quality between a directed node pair (A,B) is the probability
+that a packet transmitted by A will be successfully received by B. The
+bidirectional link quality of an undirected node pair (A,B) is the
+product of the link quality of (A,B) and (B,A). This definition
+assumes independent link losses. It also includes the case when
+the link quality of (A,B) and (B,A) are different; this can occur
+due to local interference or noise.</p>
 </div>
 <div class="section">
 <h2><a id="in-bound-link-quality" name="in-bound-link-quality">2.2 In-bound Link Quality</a></h2>
