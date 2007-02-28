@@ -11,8 +11,8 @@ Hardware Abstraction Architecture
          Cory Sharp, Adam Wolisz, David Culler, David Gay
 
 :Draft-Created: 14-Sep-2004
-:Draft-Version: $Revision: 1.5 $
-:Draft-Modified: $Date: 2007-02-28 18:06:49 $
+:Draft-Version: $Revision: 1.6 $
+:Draft-Modified: $Date: 2007-02-28 18:31:47 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -495,22 +495,22 @@ partially meet this goal (`Weak HILs`_). This section introduces
 several terms describing different degrees of alignment with the
 concept of a *HIL*. It also uses the following differentiation:
 
-- *platform-defined X* X is defined on all platforms, but the
+- *platform-defined X:* X is defined on all platforms, but the
   definition may be different
 
-- *platform-specific X* X is defined on just one platform
+- *platform-specific X:* X is defined on just one platform
 
 
 Strong/Real HILs 
 ----------------
 
-*Strong Real HILs* mean that "code using these abstractions can
+*Strong/Real HILs* mean that "code using these abstractions can
 reasonably be expected to behave the same on all implementations".
-This matches the original definition of the *HIL*-level according to
+This matches the original definition of the *HIL* level according to
 the *HAA*.  Examples include the *HIL* for the Timer (TimerMilliC,
-[TEP102]_), for LEDs (LedsC), active messages (ActiveMessageC, if not
-using any radio metadata at least), sensor wrappers (DemoSensorC,
-[TEP109]_) or storage ([TEP103]_). Strong *HIL*s may use
+[TEP102]_), for LEDs (LedsC), active messages (ActiveMessageC,
+[TEP116]_, if not using any radio metadata at least), sensor wrappers
+(DemoSensorC, [TEP109]_) or storage ([TEP103]_). Strong *HILs* may use
 platform-defined types if they also provide operations to manipulate
 them (i.e., they are platform-defined abstract data types), for
 example, the TinyOS 2.x message buffer abstraction, ``message_t``
@@ -533,11 +533,11 @@ the returned ADC data may be processed in a platform-independent way,
 for example, by calculating the max/min or mean of multiple ADC
 readings.
 
-The benefit from weak *HIL* are that one can write portable utility
+The benefit from weak *HILs* are that one can write portable utility
 code, e.g., a repeated sampling for an ADC on top of the data path.
 While code using these abstractions may not be fully portable, it will
-still be easier to port than code built on top of *HAL*s, because weak
-*HIL*s involve some guidelines on how to expose some functionality,
+still be easier to port than code built on top of *HALs*, because weak
+*HILs* involve some guidelines on how to expose some functionality,
 which should help programmers and provide guidance to platform
 developers.
 
@@ -644,6 +644,8 @@ Citations
 
 .. [TEP115] Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Philip
             Levis, "Power Management of Non-Virtualised Devices"
+
+.. [TEP116] Philip Levis, "Packet Protocols"
 
 .. [TEP117] Phil Buonadonna, Jonathan Hui, "Low-Level I/O"
 
