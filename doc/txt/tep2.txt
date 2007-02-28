@@ -7,11 +7,12 @@ Hardware Abstraction Architecture
 :Type: Best Current Practice
 :Status: Draft
 :TinyOS-Version: 2.0
-:Author: Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer, Cory Sharp, Adam Wolisz and David Culler
+:Author: Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer, 
+         Cory Sharp, Adam Wolisz, David Culler, David Gay
 
 :Draft-Created: 14-Sep-2004
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2007-02-21 17:09:46 $
+:Draft-Version: $Revision: 1.5 $
+:Draft-Modified: $Date: 2007-02-28 18:06:49 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -44,19 +45,19 @@ outweigh the need for cross-platform compatibility.
 1. Introduction
 ===============
 
-The introduction of hardware abstraction in modern operating systems
-has proved valuable for increasing portability and simplifying
-application development by hiding the hardware intricacies from the
-rest of the system. However, hardware abstractions come into conflict
-with the performance and energy-efficiency requirements of sensor
-network applications. 
+The introduction of hardware abstraction in operating systems has
+proved valuable for increasing portability and simplifying application
+development by hiding the hardware intricacies from the rest of the
+system. However, hardware abstractions come into conflict with the
+performance and energy-efficiency requirements of sensor network
+applications.
 
 This drives the need for a well-defined architecture of hardware
-abstractions that can strike a balance between the conflicting goals.
-The main challenge is to select appropriate levels of abstraction and
-to organize them in form of TinyOS components to support reusability
-while maintaining energy-efficiency through access to the full
-hardware capabilities when it is needed.
+abstractions that can strike a balance between these conflicting
+goals.  The main challenge is to select appropriate levels of
+abstraction and to organize them in form of TinyOS components to
+support reusability while maintaining energy-efficiency through access
+to the full hardware capabilities when it is needed.
 
 This TEP proposes a three-tier *Hardware Abstraction Architecture
 (HAA)* for TinyOS 2.0 that combines the strengths of the component
@@ -68,7 +69,7 @@ lowest layer structures access to hardware registers and interrupts.
 
 The rest of this TEP specifies:
 
-* the details of the HAA and its three distinct layers  
+* the details of the *HAA* and its three distinct layers  
   (`2. Architecture`_)
 * guidelines on selecting the "right" level of abstraction 
   (`3. Combining different levels of abstraction`_)
@@ -77,14 +78,13 @@ The rest of this TEP specifies:
 * the level of hardware abstraction for the processing units 
   (`5. CPU abstraction`_)
 * how some hardware abstractions may realize different degrees of
-  alignment with the HAA top layer 
+  alignment with the *HAA* top layer 
   (`6. HIL alignment`_)
 
-The HAA is the architectural basis for many TinyOS 2.0 documentary
+The *HAA* is the architectural basis for many TinyOS 2.0 documentary
 TEPs, e.g. [TEP101]_, [TEP102]_, [TEP103]_ and so forth. Those TEPs
 focus on the hardware abstraction for a particular hardware module,
-and [TEP112]_ and [TEP115]_ explain how power management is
-realized.
+and [TEP112]_ and [TEP115]_ explain how power management is realized.
 
 
 2. Architecture
@@ -167,21 +167,21 @@ layer in more detail.
 Hardware Presentation Layer (HPL)
 ---------------------------------
 
-The components belonging to the *HPL* are positioned directly over
-the HW/SW interface. As the name suggests, their major task is to
+The components belonging to the *HPL* are positioned directly over the
+HW/SW interface. As the name suggests, their major task is to
 "present" the capabilities of the hardware using the native concepts
 of the operating system.  They access the hardware in the usual way,
 either by memory or by port mapped I/O. In the reverse direction, the
 hardware can request servicing by signaling an interrupt. Using these
 communication channels internally, the *HPL* hides the hardware
-intricacies and exports a more usable interface (simple function
+intricacies and exports a more readable interface (simple function
 calls) for the rest of the system.
 
-The *HPL* components SHOULD be stateless and expose an interface
-that is fully determined by the capabilities of the hardware module
-that is abstracted. This tight coupling with the hardware leaves
-little freedom in the design and the implementation of the components.
-Even though each *HPL* component will be as unique as the underlying
+The *HPL* components SHOULD be stateless and expose an interface that
+is fully determined by the capabilities of the hardware module that is
+abstracted. This tight coupling with the hardware leaves little
+freedom in the design and the implementation of the components.  Even
+though each *HPL* component will be as unique as the underlying
 hardware, all of them will have a similar general structure. For
 optimal integration with the rest of the architecture, each *HPL*
 component SHOULD have:
@@ -204,10 +204,10 @@ clearing some flags, etc.), and delegate the rest of the processing to
 the higher level components that possess extended knowledge about the
 state of the system.
 
-The above *HPL* structure eases manipulation of the hardware.
-Instead of using cryptic macros and register names whose definitions
-are hidden deep in the header files of compiler libraries, the
-programmer can now access hardware through a familiar interface.
+The above *HPL* structure eases manipulation of the hardware.  Instead
+of using cryptic macros and register names whose definitions are
+hidden deep in the header files of compiler libraries, the programmer
+can now access hardware through a familiar interface.
 
 This *HPL* does not provide any substantial abstraction over the
 hardware beyond automating frequently used command
@@ -215,11 +215,11 @@ sequences. Nonetheless, it hides the most hardware-dependent code and
 opens the way for developing higher-level abstraction components.
 These higher abstractions can be used with different *HPL*
 hardware-modules of the same class.  For example, many of the
-microcontrollers used on the existing sensornet platforms have two USART
-modules for serial communication.  They have the same functionality
-but are accessed using slightly different register names and generate
-different interrupt vectors. The *HPL* components can hide these
-small differences behind a consistent interface, making the
+microcontrollers used on the existing sensornet platforms have two
+USART modules for serial communication.  They have the same
+functionality but are accessed using slightly different register names
+and generate different interrupt vectors. The *HPL* components can
+hide these small differences behind a consistent interface, making the
 higher-level abstractions resource independent.  The programmer can
 then switch between the different USART modules by simple rewiring
 (*not* rewriting) the *HPL* components, without any changes to the
@@ -236,12 +236,12 @@ naturally associated with the use of hardware resources. In contrast
 to the *HPL* components, they are allowed to maintain state that can
 be used for performing arbitration and resource control.
 
-Due to the efficiency requirements of sensor networks, abstractions at the *HAL*
-level are tailored to the concrete device class and platform. Instead
-of hiding the individual features of the hardware class behind generic
-models, *HAL* interfaces expose specific features and provide the
-"best" possible abstraction that streamlines application development
-while maintaining effective use of resources.
+Due to the efficiency requirements of sensor networks, abstractions at
+the *HAL* level are tailored to the concrete device class and
+platform. Instead of hiding the individual features of the hardware
+class behind generic models, *HAL* interfaces expose specific features
+and provide the "best" possible abstraction that streamlines
+application development while maintaining effective use of resources.
 
 For example, rather than using a single "file-like" abstraction for
 all devices, we propose domain specific models like *Alarm*, *ADC
@@ -262,8 +262,8 @@ convert them to hardware-independent interfaces used by cross-platform
 applications.  These interfaces provide a platform independent
 abstraction over the hardware that simplifies the development of the
 application software by hiding the hardware differences.  To be
-successful, this API "contract" SHOULD reflect the *typical*
-hardware services that are required in a sensornet application.
+successful, this API "contract" SHOULD reflect the *typical* hardware
+services that are required in a sensornet application.
 
 The complexity of the *HIL* components mainly depends on how advanced
 the capabilities of the abstracted hardware are with respect to the
@@ -277,12 +277,12 @@ and more capable platforms are introduced in the system, the pressure
 to break the current API contract will increase. When the performance
 requirements outweigh the benefits of the stable interface, a discrete
 jump will be made that realigns the API with the abstractions provided
-in the newer *HAL*.  The evolution of the platform-independent interface
-will force a reimplementation of the affected *HIL* components. For
-newer platforms, the *HIL* will be much simpler because the API contract
-and their *HAL* abstractions are tightly related. On the other extreme,
-the cost of boosting up (in software) the capabilities of the old
-platforms will rise.
+in the newer *HAL*.  The evolution of the platform-independent
+interface will force a reimplementation of the affected *HIL*
+components. For newer platforms, the *HIL* will be much simpler
+because the API contract and their *HAL* abstractions are tightly
+related. On the other extreme, the cost of boosting up (in software)
+the capabilities of the old platforms will rise.
 
 Since we expect *HIL* interfaces to evolve as new platforms are
 designed, we must determine when the overhead of software emulation of
@@ -320,65 +320,67 @@ between the consecutive samples has a significant influence, the
 programmer of the MAC might directly use the hardware specific
 interface of the *HAL* component as it provides much finer control
 over the conversion process. (Fig.2_) depicts how the ADC hardware
-stack on the MSP430 MCU on the level of *HIL* and *HAL* in
-parallel.
+stack on the MSP430 MCU on the level of *HIL* and *HAL* in parallel.
 
 .. _Fig.2:
 
 ::
 
-               +--------------------------------+ 
-               |               APP              |
                +--------------------------------+
+               |               APP              |
+               +-+----------------------------+-+
                  |                            |
                 Read                         Send
-                 |                            |       
-                 v                            | 
-       +--------------------+                 |
-       |   DemoSensorC /    |                 |
-       |   TemperatureC     |                 |
-       +--------------------+                 |
                  |                            |
+                 |                            |
+       +---------+----------+         +-------+--------+
+       |   DemoSensorC /    |         |                |
+       |   TemperatureC     |         | ActiveMessageC |
+       +---------+----------+         |                |
+                 |                    +-------+--------+
                 Read                          |
-                 |                            | 
-                 v                            v
-       +--------------------+        +--------------------+
-       | HIL:   AdcC        |        |   Radio Stack      | 
-       +--------------------+        +--------------------+ 
-                 |                   |   MAC Protocol     |
-                 |                   +--------------------+
-                 |                             |
-                 |                             |
-                 |      -----------------------               
-                 |     |              
+                 |                            |
+                 |                    +-------+--------+
+       +---------+----------+         |                |
+       | HIL:   AdcC        |         |                |
+       +---------+----------+         |  TDA5250       |
+                 |                    |                |
+                 |                    |  Radio Stack   |
+                 |                    |                |
+                 |                    +-------+--------+
+                 |                            |
+                 |     +----------------------+
+                 |     |
          Msp430Adc12SingleChannel
-                 |     |                                  
-                 v     v    
-       +--------------------+ 
+                 |     |
+                 |     |
+       +---------+-----+----+
        | HAL: Msp430Adc12C  |
-       +--------------------+ 
+       +--------------------+
+ 
  
                 Fig.2: Accessing the MSP430 ADC hardware abstraction
-                       via HIL and HAL in parallel
+                       via *HIL* and *HAL* in parallel
 
 
 To support this type of "vertical" flexibility the ADC *HAL* includes
-more complex arbitration and resource control functionality so that a
-safe shared access to the *HPL* exported resources can be guaranteed.
+more complex arbitration and resource control functionality [TEP108]_
+so that a safe shared access to the *HPL* exported resources can be
+guaranteed.
 
 
 4. Horizontal decomposition
 ===========================
 
-In addition to the *vertical* decomposition of the HAA, a *horizontal*
-decomposition can promote reuse of the hardware resource abstractions
-that are common on different platforms.  To this aim, TinyOS 2.0
-introduces the concept of *chips*, the self-contained abstraction of a
-given hardware chip: microcontroller, radio-chip, flash-chip, etc.
-Each chip decomposition follows the HAA model, providing HIL
-implementation(s) as the topmost component(s).  Platforms are then
-built as compositions of different chip components with the help of
-"glue" components that perform the mapping (Fig.3_)
+In addition to the *vertical* decomposition of the *HAA*, a
+*horizontal* decomposition can promote reuse of the hardware resource
+abstractions that are common on different platforms.  To this aim,
+TinyOS 2.0 introduces the concept of *chips*, the self-contained
+abstraction of a given hardware chip: microcontroller, radio-chip,
+flash-chip, etc.  Each chip decomposition follows the *HAA* model,
+providing *HIL* implementation(s) as the topmost component(s).
+Platforms are then built as compositions of different chip components
+with the help of "glue" components that perform the mapping (Fig.3_)
 
 
 .. _Fig.3:
@@ -388,7 +390,7 @@ built as compositions of different chip components with the help of
 
 
           +----------------------------------------------------+
-          | AppM                                               |
+          | AppC                                               |
           | /Application Component/                            |
           +------+--------------------------------------+------+
                  |                                      |
@@ -432,13 +434,13 @@ However, this generalization comes at high costs in performance. This
 may be affordable for desktop operating systems, but is highly
 sub-optimal for the application specific sensor network platforms.
 
-TinyOS 2.0 takes a less generic approach, providing HIL level,
+TinyOS 2.0 takes a less generic approach, providing *HIL*-level,
 microcontroller-independent abstractions of the main bus protocols
 like I2C, SPI, UART and pin-I/O. This distinction enables
 protocol-specific optimizations, for example, the SPI abstraction does
 not have to deal with client addresses, where the I2C abstraction
 does. Furthermore, the programmer can choose to tap directly into the
-chip-specific HAL-level component, which could further improve the
+chip-specific *HAL*-level component, which could further improve the
 performance by allowing fine tuning using chip-specific configuration
 options.
 
@@ -487,11 +489,11 @@ addressed.
 6. HIL alignment
 ================
 
-While the HAA requires that the HIL provides full hardware
+While the *HAA* requires that the *HIL* provides full hardware
 independence (`Strong/Real HILs`_), some abstractions might only
 partially meet this goal (`Weak HILs`_). This section introduces
 several terms describing different degrees of alignment with the
-concept of a HIL. It also uses the following differentiation:  
+concept of a *HIL*. It also uses the following differentiation:
 
 - *platform-defined X* X is defined on all platforms, but the
   definition may be different
@@ -502,16 +504,17 @@ concept of a HIL. It also uses the following differentiation:
 Strong/Real HILs 
 ----------------
 
-*Strong/Real HILs* mean that "code using these abstractions can
+*Strong Real HILs* mean that "code using these abstractions can
 reasonably be expected to behave the same on all implementations".
-This matches the original definition of the HIL level according to the
-HAA.  Examples include the HIL for the Timer (TimerMilliC, [TEP102]_),
-for LEDs (LedsC), active messages (ActiveMessageC, if not using any
-radio metadata at least), sensor wrappers (DemoSensorC, [TEP109]_) or
-storage ([TEP103]_). Strong HILs may use platform-defined types if
-they also provide operations to manipulate them (i.e., they are
-platform-defined abstract data types), for example, the TinyOS 2.x
-message buffer abstraction, ``message_t`` ([TEP111]_).
+This matches the original definition of the *HIL*-level according to
+the *HAA*.  Examples include the *HIL* for the Timer (TimerMilliC,
+[TEP102]_), for LEDs (LedsC), active messages (ActiveMessageC, if not
+using any radio metadata at least), sensor wrappers (DemoSensorC,
+[TEP109]_) or storage ([TEP103]_). Strong *HIL*s may use
+platform-defined types if they also provide operations to manipulate
+them (i.e., they are platform-defined abstract data types), for
+example, the TinyOS 2.x message buffer abstraction, ``message_t``
+([TEP111]_).
 
 Weak HILs
 ---------
@@ -530,11 +533,11 @@ the returned ADC data may be processed in a platform-independent way,
 for example, by calculating the max/min or mean of multiple ADC
 readings.
 
-The benefit from weak HILs are that one can write portable utility
+The benefit from weak *HIL* are that one can write portable utility
 code, e.g., a repeated sampling for an ADC on top of the data path.
 While code using these abstractions may not be fully portable, it will
-still be easier to port than code built on top of HALs, because weak
-HILs involve some guidelines on how to expose some functionality,
+still be easier to port than code built on top of *HAL*s, because weak
+*HIL*s involve some guidelines on how to expose some functionality,
 which should help programmers and provide guidance to platform
 developers.
 
@@ -542,8 +545,8 @@ developers.
 Hardware Independent Interfaces (HII)
 --------------------------------------
 
-- *Hardware Independent Interfaces (HII)*, which is just an interface
-  definition intended for use across multiple platforms.  
+*Hardware Independent Interfaces (HII)*, is just an interface
+definition intended for use across multiple platforms.
 
 Examples include the SID interfaces, the pin interfaces from [TEP117]_,
 the Alarm/Counter/etc interfaces from [TEP102]_.
