@@ -1,4 +1,4 @@
-/// $Id: Atm128SpiP.nc,v 1.5 2007-01-25 19:12:23 rincon Exp $
+/// $Id: Atm128SpiP.nc,v 1.6 2007-02-28 17:33:59 scipio Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -63,7 +63,7 @@
  *
  *
  * <pre>
- *  $Id: Atm128SpiP.nc,v 1.5 2007-01-25 19:12:23 rincon Exp $
+ *  $Id: Atm128SpiP.nc,v 1.6 2007-02-28 17:33:59 scipio Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -203,6 +203,23 @@ implementation {
     return SUCCESS;
   }
 
+
+  task void zeroTask() {
+     uint8_t* rx;
+     uint8_t* tx;
+     uint16_t  myLen;
+     atomic {
+       rx = rxBuffer;
+       tx = txBuffer;
+       myLen = len;
+       rxBuffer = NULL;
+       txBuffer = NULL;
+       len = 0;
+       pos = 0;
+       signal SpiPacket.sendDone(tx, rx, myLen, SUCCESS);
+     }
+  }
+
   /**
    * Send bufLen bytes in <tt>writeBuf</tt> and receive bufLen bytes
    * into <tt>readBuf</tt>. If <tt>readBuf</tt> is NULL, bytes will be
@@ -212,9 +229,13 @@ implementation {
    *
    * This command only sets up the state variables and clears the SPI:
    * <tt>sendNextPart()</tt> does the real work.
-   *
+   * 
+   * If there's a send of zero bytes, short-circuit and just post
+   * a task to signal the sendDone. This generally occurs due to an
+   * error in the caler, but signaling an event will hopefully let
+   * it recover better than returning FAIL.
    */
-  
+
   
   async command error_t SpiPacket.send(uint8_t* writeBuf, 
 				       uint8_t* readBuf, 
@@ -226,10 +247,14 @@ implementation {
       len = bufLen;
       pos = 0;
     }
-    
-    discard = call Spi.read();
-    
-    return sendNextPart();
+    if (bufLen > 0) {
+      discard = call Spi.read();
+      return sendNextPart();
+    }
+    else {
+      post zeroTask();
+      return SUCCESS;
+    }
   }
 
  default async event void SpiPacket.sendDone
