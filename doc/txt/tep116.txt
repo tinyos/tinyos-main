@@ -10,8 +10,8 @@ Packet Protocols
 :Author: Philip Levis
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.5 $
-:Draft-Modified: $Date: 2006-12-12 18:22:54 $
+:Draft-Version: $Revision: 1.6 $
+:Draft-Modified: $Date: 2007-02-28 22:33:28 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -27,7 +27,7 @@ Abstract
 The memo documents the interfaces used by packet protocol components in  
 TinyOS 2.x as well as the structure and implementation of ActiveMessageC, 
 the basic data-link HIL component. It also documents the virtualized
-active message interfaces AMSender and AMReceiver.
+active message interfaces AMSenderC and AMReceiverC.
 
 1. Introduction
 ============================================================================
@@ -227,10 +227,8 @@ has this signature::
 
 The command address() returns the local AM address of the
 node. AMPacket provides accessors for its two fields, destination and
-type. It does not provide commands to set these fields, as they are
-set in the sending call path (see Section 2.3). The ``setDestination``
-and ``setType`` commands fulfill a similar purpose to
-``Packet.setLength``.
+type. It also provides commands to set these fields, for the same
+reason that Packet allows a caller to set the payload length.
 
 2.2 Sending interfaces
 --------------------------------------------------------------------
@@ -333,7 +331,8 @@ These are simple code examples of the three cases::
   }
 
   //Case 3
-  message_t* ptr;
+  message_t buf;
+  message_t* ptr = &buf;
   message_t* Receive.receive(message_t* msg, void* payload, uint8_t len) {
     message_t* tmp = ptr;
     ptr = msg;
@@ -551,8 +550,8 @@ that an active message received from one data link layer (e.g., the radio)
 can be passed to another data link layer (e.g., the UART) without
 shifting the data payload. This means that the ``message_header_t`` must
 include all data needed for AM fields, which might introduce headers
-in addition to those of the data link. For example, this is the 
-structure of the CC2420 header::
+in addition to those of the data link. For example, this is an example 
+structure for a CC2420 (802.15.4) header::
 
   typedef nx_struct cc2420_header_t {
     nx_uint8_t length;

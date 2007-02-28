@@ -10,8 +10,8 @@ The Collection Tree Protocol (CTP)
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2007-02-06 03:45:27 $
+:Draft-Version: $Revision: 1.8 $
+:Draft-Modified: $Date: 2007-02-28 22:33:28 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -118,7 +118,7 @@ The CTP data frame format is as follows::
                            1            
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |C|P| reserved  |      THL        |
+      |P|C| reserved  |      THL        |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |              ETX                |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -131,8 +131,8 @@ The CTP data frame format is as follows::
 
 Field definitions are as follows:
 
-  * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next data frame it transmits.
   * P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future.
+  * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next data frame it transmits.
   * THL: Time Has Lived. When a node generates a CTP data frame, it MUST set THL to 0. When a node receives a CTP data frame, it MUST increment the THL. If a node receives a THL of 255, it increments it to 0.
   * ETX: The ETX routing metric of the single-hop sender. When a node transmits a CTP data frame, it MUST put the ETX value of its route through the single-hop destination in the ETX field.  If a node receives a packet with a lower gradient than its own, then it MUST schedule a routing frame in the near future.
   * origin: The originating address of the packet. A node forwarding a data frame MUST NOT modify the origin field.
@@ -161,7 +161,7 @@ The CTP routing frame format is as follows::
                            1            
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |C|P| reserved  |      parent     |
+      |P|C| reserved  |      parent     |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |     parent    |       ETX       |    
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -170,8 +170,8 @@ The CTP routing frame format is as follows::
 
 The fields are as follows:
   
-  * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.
   * P: Same as data frame.
+  * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.
   * parent: The node's current parent.
   * metric: The node's current routing metric value.
 
