@@ -1,4 +1,4 @@
-// $Id: RealMainP.nc,v 1.4 2006-12-12 18:23:47 vlahan Exp $
+// $Id: RealMainP.nc,v 1.5 2007-03-01 04:21:44 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: RealMainP.nc,v 1.4 2006-12-12 18:23:47 vlahan Exp $
+ * Date last modified:  $Id: RealMainP.nc,v 1.5 2007-03-01 04:21:44 scipio Exp $
  *
  */
 
@@ -57,7 +57,8 @@ implementation {
 	   as CPU settings, counters, etc. After the hardware is ready,
 	   initialize the requisite software components and start
 	   execution.*/
-    
+	platform_bootstrap();
+	
 	call Scheduler.init(); 
     
 	/* Initialize the platform. Then spin on the Scheduler, passing

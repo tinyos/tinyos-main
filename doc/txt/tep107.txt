@@ -10,8 +10,8 @@ TinyOS 2.x Boot Sequence
 :Author: Philip Levis 
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.9 $
-:Draft-Modified: $Date: 2007-02-10 23:28:49 $
+:Draft-Version: $Revision: 1.10 $
+:Draft-Modified: $Date: 2007-03-01 04:21:44 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -162,6 +162,7 @@ Layer (TEP 2) SHOULD wire to MainC and not RealMainP::
   implementation {
     int main() __attribute__ ((C, spontaneous)) {
       atomic {
+        platform_bootstrap();
         call Scheduler.init();
         call PlatformInit.init();
         while (call Scheduler.runNextTask());

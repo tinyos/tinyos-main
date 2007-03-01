@@ -16,6 +16,7 @@
 #include <stddef.h>
 #include <ctype.h>
 
+
 typedef uint8_t bool;
 enum { FALSE = 0, TRUE = 1 };
 
@@ -30,9 +31,17 @@ struct @atmostonce { };
 struct @atleastonce { };
 struct @exactlyonce { };
 
+/* This platform_bootstrap macro exists in accordance with TEP
+   107. A platform may override this through a platform.h file. */
+#include <platform.h>
+#ifndef platform_bootstrap
+#define platform_bootstrap() {}
+#endif
+
 #ifndef TOSSIM
 #define dbg(s, ...) 
 #define dbgerror(s, ...) 
 #define dbg_clear(s, ...) 
 #define dbgerror_clear(s, ...) 
 #endif
+
