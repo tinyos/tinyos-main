@@ -3,16 +3,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.10: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Hardware Abstraction Architecture</title>
-<meta name="author" content="Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer,  Cory Sharp, Adam Wolisz, David Culler, David Gay" />
+<meta name="author" content="Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer, Cory Sharp, Adam Wolisz, David Culler, David Gay" />
 <style type="text/css">
 
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-02-28 18:31:47 $
-:version: $Revision: 1.9 $
+:date: $Date: 2007-03-01 17:15:56 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -300,11 +300,11 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.0</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
-<td>Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer, 
+<td>Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer,
 Cory Sharp, Adam Wolisz, David Culler, David Gay</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">14-Sep-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-28</td>
 </tr>
@@ -358,16 +358,16 @@ promotes efficiency through rich hardware-specific interfaces and the
 lowest layer structures access to hardware registers and interrupts.</p>
 <p>The rest of this TEP specifies:</p>
 <ul class="simple">
-<li>the details of the <em>HAA</em> and its three distinct layers  
+<li>the details of the <em>HAA</em> and its three distinct layers
 (<a class="reference" href="#architecture">2. Architecture</a>)</li>
-<li>guidelines on selecting the &quot;right&quot; level of abstraction 
+<li>guidelines on selecting the &quot;right&quot; level of abstraction
 (<a class="reference" href="#combining-different-levels-of-abstraction">3. Combining different levels of abstraction</a>)</li>
 <li>how hardware abstractions can be shared among different TinyOS
 platforms (<a class="reference" href="#horizontal-decomposition">4. Horizontal decomposition</a>)</li>
-<li>the level of hardware abstraction for the processing units 
+<li>the level of hardware abstraction for the processing units
 (<a class="reference" href="#cpu-abstraction">5. CPU abstraction</a>)</li>
 <li>how some hardware abstractions may realize different degrees of
-alignment with the <em>HAA</em> top layer 
+alignment with the <em>HAA</em> top layer
 (<a class="reference" href="#hil-alignment">6. HIL alignment</a>)</li>
 </ul>
 <p>The <em>HAA</em> is the architectural basis for many TinyOS 2.0 documentary
@@ -425,7 +425,7 @@ reusable applications.</p>
              |HW Platform 1|   |HW Platform 2|   |HW Platform 3|   |HW Platform 4|
              +-------------+   +-------------+   +-------------+   +-------------+
 
-                   
+
                       Fig.1: The proposed Hardware Abstraction Architecture
 </pre>
 <p>In contrast to the more traditional two step approach used in other
@@ -802,8 +802,8 @@ remainder of the application.</p>
 <div class="section">
 <h1><a id="author-s-address" name="author-s-address">Author's Address</a></h1>
 <div class="line-block">
-<div class="line">Vlado Handziski (handzisk at tkn.tu-berlin.de) <a class="footnote-reference" href="#id27" id="id20" name="id20">[1]</a> </div>
-<div class="line">Joseph Polastre (polastre at cs.berkeley.edu) <a class="footnote-reference" href="#id28" id="id21" name="id21">[2]</a> </div>
+<div class="line">Vlado Handziski (handzisk at tkn.tu-berlin.de) <a class="footnote-reference" href="#id27" id="id20" name="id20">[1]</a></div>
+<div class="line">Joseph Polastre (polastre at cs.berkeley.edu) <a class="footnote-reference" href="#id28" id="id21" name="id21">[2]</a></div>
 <div class="line">Jan-Hinrich Hauer (hauer at tkn.tu-berlin.de) <a class="footnote-reference" href="#id27" id="id22" name="id22">[1]</a></div>
 <div class="line">Cory Sharp (cssharp at eecs.berkeley.edu) <a class="footnote-reference" href="#id28" id="id23" name="id23">[2]</a></div>
 <div class="line">Adam Wolisz (awo at ieee.org) <a class="footnote-reference" href="#id27" id="id24" name="id24">[1]</a></div>
@@ -813,9 +813,9 @@ remainder of the application.</p>
 <table class="docutils footnote" frame="void" id="id27" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id27">[1]</a></td><td><em>(<a class="fn-backref" href="#id20">1</a>, <a class="fn-backref" href="#id22">2</a>, <a class="fn-backref" href="#id24">3</a>)</em> Technische Universitaet Berlin   
-Telecommunication Networks Group                    
-Sekr. FT 5, Einsteinufer 25                        
+<tr><td class="label"><a name="id27">[1]</a></td><td><em>(<a class="fn-backref" href="#id20">1</a>, <a class="fn-backref" href="#id22">2</a>, <a class="fn-backref" href="#id24">3</a>)</em> Technische Universitaet Berlin
+Telecommunication Networks Group
+Sekr. FT 5, Einsteinufer 25
 10587 Berlin, Germany</td></tr>
 </tbody>
 </table>
@@ -823,7 +823,7 @@ Sekr. FT 5, Einsteinufer 25
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a name="id28">[2]</a></td><td><em>(<a class="fn-backref" href="#id21">1</a>, <a class="fn-backref" href="#id23">2</a>, <a class="fn-backref" href="#id25">3</a>)</em> University of California, Berkeley
-Computer Science Department                
+Computer Science Department
 Berkeley, CA 94720 USA</td></tr>
 </tbody>
 </table>
@@ -850,11 +850,11 @@ Wireless Sensor Networks (EWSN 2005)</em>, Istanbul, Turkey, 2005.</td></tr>
 <table class="docutils citation" frame="void" id="t2-tr" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="t2-tr">[T2_TR]</a></td><td>P. Levis, D. Gay, V. Handziski, J.-H.Hauer, B.Greenstein, 
-M.Turon, J.Hui, K.Klues, C.Sharp, R.Szewczyk, J.Polastre, 
-P.Buonadonna, L.Nachman, G.Tolle, D.Culler, and A.Wolisz, 
-&quot;T2: A Second Generation OS For Embedded Sensor Networks&quot;, 
-<em>Technical Report TKN-05-007</em>, Telecommunication Networks Group, 
+<tr><td class="label"><a class="fn-backref" href="#id2" name="t2-tr">[T2_TR]</a></td><td>P. Levis, D. Gay, V. Handziski, J.-H.Hauer, B.Greenstein,
+M.Turon, J.Hui, K.Klues, C.Sharp, R.Szewczyk, J.Polastre,
+P.Buonadonna, L.Nachman, G.Tolle, D.Culler, and A.Wolisz,
+&quot;T2: A Second Generation OS For Embedded Sensor Networks&quot;,
+<em>Technical Report TKN-05-007</em>, Telecommunication Networks Group,
 Technische Universität Berlin, November 2005.</td></tr>
 </tbody>
 </table>
@@ -868,7 +868,7 @@ Technische Universität Berlin, November 2005.</td></tr>
 <table class="docutils citation" frame="void" id="netbsd" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id11" name="netbsd">[NetBSD]</a></td><td>&quot;The NetBSD project home page&quot;, <em>Online</em>, 
+<tr><td class="label"><a class="fn-backref" href="#id11" name="netbsd">[NetBSD]</a></td><td>&quot;The NetBSD project home page&quot;, <em>Online</em>,
 <a class="reference" href="http://www.netbsd.org">http://www.netbsd.org</a></td></tr>
 </tbody>
 </table>

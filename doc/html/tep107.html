@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-02-06 00:16:15 $
-:version: $Revision: 1.10 $
+:date: $Date: 2007-03-01 17:15:56 $
+:version: $Revision: 1.11 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.9</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-05</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-10</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -483,8 +483,19 @@ operations besides those which are absolutely necessary for further code,
 such as scheduler initialization, to execute.
 Examples of platform_bootstrap() operations are configuring the memory
 system and setting the processor mode. Generally, platform_bootstrap()
-is an empty function. The platform_bootstrap() function SHOULD be
-specified in a platform's <tt class="docutils literal"><span class="pre">hardware.h</span></tt> file.</p>
+is an empty function. TinyOS's top-level include file, <tt class="docutils literal"><span class="pre">tos.h</span></tt>, includes
+a default implementation of this function which does nothing. If a platform
+needs to replace the default, it SHOULD put it in a platform's
+<tt class="docutils literal"><span class="pre">platform.h</span></tt> file as a #define. The implementation of <tt class="docutils literal"><span class="pre">tos.h</span></tt>
+supports this:</p>
+<pre class="literal-block">
+/* This platform_bootstrap macro exists in accordance with TEP
+   107. A platform may override this through a platform.h file. */
+#include &lt;platform.h&gt;
+#ifndef platform_bootstrap
+#define platform_bootstrap() {}
+#endif
+</pre>
 <p>The boot sequence has three separate initializations: Scheduler,
 PlatformInit, and SoftwareInit. The boot configuration (MainC) wires
 the first two automatically, to TinySchedulerC (discussed in TEP 106)
@@ -519,9 +530,7 @@ initialization order. As these hidden dependencies must be due to
 hardware, the sequence is platform-specific. A port of TinyOS to a
 new plaform MUST include a component PlatformC which provides
 one and only one instance of the Init interface.</p>
-<p>Generally, component intialization occurs through SoftwareInit.
-PlatformInit is for a small subset of initializations whose properties
-requires that they be performed separately. Initializations invoked
+<p>Initializations invoked
 through PlatformC meet some or all of the following criteria:</p>
 <ol class="arabic simple">
 <li>The initialization requires configuring hardware resources. This implies that the code is platform-specific.</li>

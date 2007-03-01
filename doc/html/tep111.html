@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-02-05 20:23:35 $
-:version: $Revision: 1.8 $
+:date: $Date: 2007-03-01 17:15:56 $
+:version: $Revision: 1.9 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -296,19 +296,11 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
-<td>Draft</td></tr>
+<td>Final</td></tr>
 <tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
 <td>Philip Levis</td></tr>
-<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">11-Jul-2005</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-01-10</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
-</tr>
 </tbody>
 </table>
 <div class="note">
@@ -370,7 +362,7 @@ typedef struct TOS_Msg {
   uint8_t receiveSecurityMode;
 } TOS_Msg;
 </pre>
-<p>while on a mote with a CC420 radio (e.g., micaZ), <tt class="docutils literal"><span class="pre">TOS_Msg</span></tt> is defined as:</p>
+<p>while on a mote with a CC2420 radio (e.g., micaZ), <tt class="docutils literal"><span class="pre">TOS_Msg</span></tt> is defined as:</p>
 <pre class="literal-block">
 typedef struct TOS_Msg {
   // The following fields are transmitted/received on the radio.
@@ -641,7 +633,10 @@ with a command-line option to ncc: <tt class="docutils literal"><span class="pre
 Because this value can be reconfigured, it is possible that two
 different versions of an application can have different MTU sizes.
 If a packet layer receives a packet whose payload size is
-longer than TOSH_DATA_LENGTH, it MUST discard the packet.</p>
+longer than TOSH_DATA_LENGTH, it MUST discard the packet. As
+headers are right justified to the beginning of the data payload,
+the data payloads of all link layers on a platform start
+at the same fixed offset from the beginning of the message buffer.</p>
 </div>
 <div class="section">
 <h2><a id="footer" name="footer">3.3 Footer</a></h2>

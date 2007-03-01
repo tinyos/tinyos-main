@@ -5,14 +5,9 @@ message_t
 :TEP: 111
 :Group: Core Working Group 
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Author: Philip Levis
-
-:Draft-Created: 11-Jul-2005
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2007-02-05 20:23:35 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
@@ -77,7 +72,7 @@ definition, which is::
     uint8_t receiveSecurityMode;
   } TOS_Msg;
 
-while on a mote with a CC420 radio (e.g., micaZ), ``TOS_Msg`` is defined as::
+while on a mote with a CC2420 radio (e.g., micaZ), ``TOS_Msg`` is defined as::
 
   typedef struct TOS_Msg {
     // The following fields are transmitted/received on the radio.
@@ -367,7 +362,10 @@ with a command-line option to ncc: ``-DTOSH_DATA_LENGTH=x``.
 Because this value can be reconfigured, it is possible that two
 different versions of an application can have different MTU sizes.
 If a packet layer receives a packet whose payload size is 
-longer than TOSH_DATA_LENGTH, it MUST discard the packet. 
+longer than TOSH_DATA_LENGTH, it MUST discard the packet. As
+headers are right justified to the beginning of the data payload,
+the data payloads of all link layers on a platform start
+at the same fixed offset from the beginning of the message buffer.
 
 3.3 Footer
 ----------------------------------------------------------------

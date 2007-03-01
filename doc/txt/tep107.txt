@@ -10,8 +10,8 @@ TinyOS 2.x Boot Sequence
 :Author: Philip Levis 
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.10 $
-:Draft-Modified: $Date: 2007-03-01 04:21:44 $
+:Draft-Version: $Revision: 1.11 $
+:Draft-Modified: $Date: 2007-03-01 17:15:57 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -199,8 +199,18 @@ operations besides those which are absolutely necessary for further code,
 such as scheduler initialization, to execute.
 Examples of platform_bootstrap() operations are configuring the memory
 system and setting the processor mode. Generally, platform_bootstrap() 
-is an empty function. The platform_bootstrap() function SHOULD be
-specified in a platform's ``hardware.h`` file. 
+is an empty function. TinyOS's top-level include file, ``tos.h``, includes
+a default implementation of this function which does nothing. If a platform
+needs to replace the default, it SHOULD put it in a platform's
+``platform.h`` file as a #define. The implementation of ``tos.h`` 
+supports this::
+
+  /* This platform_bootstrap macro exists in accordance with TEP
+     107. A platform may override this through a platform.h file. */
+  #include <platform.h>
+  #ifndef platform_bootstrap
+  #define platform_bootstrap() {}
+  #endif
 
 The boot sequence has three separate initializations: Scheduler,
 PlatformInit, and SoftwareInit. The boot configuration (MainC) wires
