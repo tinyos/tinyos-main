@@ -5,14 +5,9 @@ TinyOS 2.x Boot Sequence
 :TEP: 107
 :Group: Core Working Group 
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Author: Philip Levis 
-
-:Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.11 $
-:Draft-Modified: $Date: 2007-03-01 17:15:57 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
