@@ -7,6 +7,7 @@ extern "C" {
 #endif
 
 struct hashtable;
+typedef struct hashtable hashtable_t;
 
 /* Example of use:
  *

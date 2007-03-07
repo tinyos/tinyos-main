@@ -38,7 +38,7 @@
  */
 
 
-// $Id: sim_noise.c,v 1.1 2007-03-05 19:07:57 scipio Exp $
+// $Id: sim_noise.c,v 1.2 2007-03-07 01:07:10 scipio Exp $
 
 
 #include <tos.h>
@@ -59,10 +59,19 @@ sim_time_t sim_ticks_per_sec() {
 }
 #endif
 
+typedef struct noise_distribution {
+  int minValue;
+  int numBuckets;
+  int discretization;
+  int sum;
+  int* counts;
+} noise_distribution_t;
+
 typedef struct noise_model {
   uint32_t historyLength;        // The history "k" of the model
   uint32_t sampleRateHz;         // The rate at which samples change
   hashtable_t* table;            // A pointer to the distribution hashtable
+  noise_distribution_t* common;  // Most common distribution
   double* firstReadings;         // An array of the first k values of the trace
   double* lastReadings;          // An array of the last k values observed
   uint32_t lastReading;          // When was the last value observed
@@ -80,6 +89,14 @@ void add_data(uint32_t mote, double value);
 void generate_model(int mote);
 static unsigned int sim_noise_hash(void* key);
 static int sim_noise_equal(void* key1, void* key2);
+noise_distribution_t* create_noise_distribution(int mote);
+void add_val_to_distribution(noise_distribution_t* dist, int value);
+
+int make_discrete(double value, uint8_t discretization) {
+  int val = (int)value;
+  val /= discretization;
+  val *= discretization;
+}
 
 void create_model(uint32_t mote, uint32_t sampleRate, uint32_t historyLength, uint8_t discretization, uint16_t bins, double minNoise) {
   int i;
@@ -97,6 +114,7 @@ void create_model(uint32_t mote, uint32_t sampleRate, uint32_t historyLength, ui
     models[mote].bins = bins;
     models[mote].minNoise = minNoise;
     models[mote].increment = sim_ticks_per_sec() / models[mote].sampleRateHz;
+    clear_data(mote);
   }
 }
 
@@ -132,32 +150,73 @@ char* generateHashString(double* readings, int len, int discretization) {
   }
   ptr = hashString;
   for (i = 0; i < len; i++) {
-    int val = (int)readings[i];
-    val /= discretization;
-    val *= discretization;
+    int val = make_discrete(readings[i], discretization);
     ptr += snprintf(ptr, SAMPLE_STR_LEN, "%i ", val);
   }
+  return hashString;
+}
+static int sim_seed = 2342;
+
+int sim_random() {
+  uint32_t mlcg,p,q;
+  uint64_t tmpseed;
+  tmpseed =  (uint64_t)33614U * (uint64_t)sim_seed;
+  q = tmpseed;    /* low */
+  q = q >> 1;
+  p = tmpseed >> 32 ;             /* hi */
+  mlcg = p + q;
+  if (mlcg & 0x80000000) {
+    mlcg = mlcg & 0x7FFFFFFF;
+    mlcg++;
+  }
+  sim_seed = mlcg;
+  return mlcg;
 }
 
-typedef struct noise_distribution {
-  int dist;
-} noise_distribution_t;
-
-
 double sampleDistribution(noise_distribution_t* dist) {
-  return 0;
+  double rval = 0.0;
+  if (dist->sum == 0) {
+    return rval;
+  }
+  else {
+    int which = sim_random() % dist->sum;
+    int total = 0;
+    int i;
+    printf("%i of ", which);
+    for (i = 0; i < dist->numBuckets; i++) {
+      printf("[%i] ", dist->counts[i]);
+    }
+    printf("\n");
+    for (i = 0; i < dist->numBuckets; i++) {
+      total += dist->counts[i];
+      if (total > which) {
+	printf("Sampling %i\n", i);
+	rval = (i * dist->discretization) + dist->minValue;
+	break;
+      }
+    }
+  }
+  // Should never reach this
+  return rval;
 }
 
 void appendReading(int mote, double reading) {
-  memcpy(models[mote].lastReadings, models[mote].lastReadings + 1, models[mote].historyLength - 1 * sizeof(double));
+  int size = ((models[mote].historyLength - 1) * sizeof(double));
+  memcpy(models[mote].lastReadings, models[mote].lastReadings + 1, size);
   models[mote].lastReadings[models[mote].historyLength - 1] = reading;
   models[mote].lastReading++;
 }
 
 void generateReading(int mote) {
-  char* str = generateHashString(NULL, 0, 0);
+  char* str = generateHashString(models[mote].lastReadings, models[mote].historyLength, models[mote].discretization) ;
+  printf("%s : ", str);
   noise_distribution_t* noise = (noise_distribution_t*)hashtable_search(models[mote].table, hashString);
+  if (noise == NULL) {
+    printf("Using default distribution: ");
+    noise = models[mote].common;
+  }
   double reading = sampleDistribution(noise);
+  //printf("reading: %f\n", reading);
   appendReading(mote, reading);
 }
 
@@ -172,21 +231,22 @@ double getSample(int mote, sim_time_t time) {
   int64_t readingNo;
   int64_t readingCount;
   sim_time_t timePassed = time - sim_mote_start_time(mote);
+  noise_model_t* model = &models[mote];
   if (timePassed < 0) {
-    return models[mote].lastReadings[0];
+    return (double)make_discrete(model->firstReadings[0], model->discretization);
   }
-  if (models[mote].dirty) {
+  if (model->dirty) {
     generate_model(mote);
   }
-  readingNo = timePassed / (uint64_t)models[mote].increment;
+  readingNo = timePassed / (uint64_t)model->increment;
 
-  if (readingNo < models[mote].historyLength) {
-    return models[mote].lastReadings[readingNo];
+  if (readingNo < model->historyLength) {
+    return make_discrete(model->firstReadings[readingNo], model->discretization);
   }
   
-  readingCount = readingNo - models[mote].lastReading;
+  readingCount = readingNo - model->lastReading;
   generateReadings(mote, readingCount);
-  return models[mote].lastReadings[0];
+  return make_discrete(model->lastReadings[0], model->discretization);
 }
   
   
@@ -209,12 +269,11 @@ void init_data(uint32_t mote) {
  
 void clear_data(uint32_t mote) {
   if (mote < TOSSIM_MAX_NODE) {
-    data[mote].size = 0;
-    data[mote].maxSize = 0;
     if (data[mote].readings != NULL) {
       free(data[mote].readings);
       data[mote].readings = NULL;
     }
+    init_data(mote);
   }
 }
 
@@ -251,32 +310,70 @@ static int sim_noise_equal(void* key1, void* key2) {
 
 void generate_model(int mote) {
   uint64_t i;
-
+  noise_model_t* noiseModel = &models[mote];
+  noise_data_t* noiseData = &data[mote];
+  noise_distribution_t* maxDist = NULL;
   // Not enough data to generate a model
-  if (data[mote].size <= models[mote].historyLength) {
+  if (noiseData->size <= noiseModel->historyLength) {
     return;
   }
-  
-  for (i = 0; i < models[mote].historyLength; i++) {
-    models[mote].firstReadings[i] = data[mote].readings[i];
+  free(noiseModel->firstReadings);
+  noiseModel->firstReadings = (double*) malloc(sizeof(double) * noiseModel->historyLength);
+  for (i = 0; i < noiseModel->historyLength; i++) {
+    noiseModel->firstReadings[i] = noiseModel->lastReadings[i] = noiseData->readings[i];
   }
 
   for (;i < data[mote].size; i++) {
-    double* dataStart = data[mote].readings + (i - models[mote].historyLength);
-    int dataLen = models[mote].historyLength;
-    int discretize = models[mote].discretization;
+    double* dataStart = noiseData->readings + (i - noiseModel->historyLength);
+    int dataLen = noiseModel->historyLength;
+    int discretize = noiseModel->discretization;
     char* hashStr = generateHashString(dataStart, dataLen, discretize);
-    printf ("%s\n", hashStr);
+    int value = make_discrete(noiseData->readings[i], discretize);
+    noise_distribution_t* dist = (noise_distribution_t*)hashtable_search(noiseModel->table, hashStr);
+    if (dist == NULL) {
+      dist = create_noise_distribution(mote);
+      hashtable_insert(noiseModel->table, hashStr, dist);
+    }
+    add_val_to_distribution(dist, value);
+    if (maxDist == NULL || dist->sum > maxDist->sum) {
+      maxDist = dist;
+    }
+    //printf ("%llu: %s -> %i\n", i, hashStr, value);
   }
+  noiseModel->common = maxDist;
+  noiseModel->dirty = 0;
 }
 
 int main() {
   int i;
   char* hashStr;
-  create_model(0, 1024, 20, 4, 200, -120);
-  for (i = 0; i < 200; i++) {
-    models[0].lastReadings[i] = (drand48() * -60.0) - 40.0;
+  create_model(0, 1024, 10, 1, 10, 0);
+  for (i = 0; i < 2000000; i++) {
+    add_reading(0, (drand48() * 8.0));
   }
-  hashStr = generateHashString(models[0].lastReadings, 20, 3);
-  printf ("%s\n", hashStr);  
+  generate_model(0);
+  for (i = 0; i < 10000; i++) {
+    double sample = getSample(0, sim_mote_start_time(0) +  i * sim_ticks_per_sec() / 1024);
+    printf("%i: %f\n", i, sample);
+  }
+}
+
+noise_distribution_t* create_noise_distribution(int mote) {
+  noise_model_t* model = &models[mote];
+  noise_distribution_t* dist = (noise_distribution_t*)malloc(sizeof(noise_distribution_t));
+  dist->minValue = (int)model->minNoise;
+  dist->numBuckets = model->bins;
+  dist->sum = 0;
+  dist->discretization = model->discretization;
+  dist->counts = (int*)malloc(sizeof(int) * dist->numBuckets);
+  memset(dist->counts, 0, sizeof(int) * dist->numBuckets);
+  return dist;
+}
+
+void add_val_to_distribution(noise_distribution_t* dist, int value) {
+  int index = value - dist->minValue;
+  index /= dist->discretization;
+  dist->counts[index]++;
+  dist->sum++;
+  //printf("Adding %i (%i:%i)\n", value, dist->sum, dist->counts[index]);
 }
