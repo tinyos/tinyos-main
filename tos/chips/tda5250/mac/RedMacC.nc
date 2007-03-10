@@ -33,6 +33,7 @@
  * ========================================================================
  */
 
+// #define REDMAC_DEBUG
 
 configuration RedMacC {
   provides {
@@ -101,5 +102,9 @@ implementation {
     RedMacP.Led2 -> PlatformLedsC.Led2;
     RedMacP.Led3 -> PlatformLedsC.Led3;
 */
+#ifdef REDMAC_DEBUG
+    components new SerialDebugC() as SD;
+    RedMacP.SerialDebug -> SD;
+#endif
 }
 

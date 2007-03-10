@@ -39,7 +39,6 @@
 #include "PacketAck.h"
 #include "RedMac.h"
 
-// #define MACM_DEBUG                    // debug...
 module RedMacP {
     provides {
         interface Init;
@@ -75,11 +74,8 @@ module RedMacP {
         interface Alarm<T32khz, uint16_t> as SampleTimer;
         interface Counter<T32khz,uint16_t> as Counter32khz16;
         async command am_addr_t amAddress();
-#ifdef MACM_DEBUG
-        interface GeneralIO as Led0;
-        interface GeneralIO as Led1;
-        interface GeneralIO as Led2;
-        interface GeneralIO as Led3;
+#ifdef REDMAC_DEBUG
+        interface SerialDebug;
 #endif
     }
 }
@@ -103,87 +99,14 @@ implementation
     macState_t macState;
 
     /****** debug vars & defs & functions  ***********************/
-#ifdef MACM_DEBUG
-#define HISTORY_ENTRIES 60
-    typedef struct {
-        int index;
-        macState_t state;
-        int        place;
-    } history_t;
-    
-    history_t history[HISTORY_ENTRIES];
-    unsigned histIndex;
-    void storeOldState(int p) {
-        atomic {
-            history[histIndex].index = histIndex;
-            history[histIndex].state = macState;
-            history[histIndex].place = p;
-            histIndex++;
-            if(histIndex >= HISTORY_ENTRIES) histIndex = 0;
-        }
+#ifdef REDMAC_DEBUG
+    void sdDebug(uint16_t p) {
+        call SerialDebug.putPlace(p);
     }
 #else
-    void storeOldState(int p) {};
+    void sdDebug(uint16_t p) {};
 #endif
-
-    void signalFailure(uint8_t place) {
-#ifdef MACM_DEBUG
-        unsigned long i,j;
-        atomic {
-            for(;;) {
-                call Led0.clr();
-                call Led1.clr();
-                call Led2.clr();
-                call Led3.clr();
-                
-                for(i = 0; i < 100; i++) {
-                    for(j=0; j < 200; j++) {
-                        (i & 1) ? call Led0.set() : call Led0.clr();
-                    }
-                    for(j=0; j < 200; j++) {
-                        (i & 2) ? call Led1.set() : call Led1.clr();
-                    }
-                    for(j=0; j < 200; j++) {
-                        (i & 4) ? call Led2.set() : call Led2.clr();
-                    }
-                    for(j=0; j < 200; j++) {
-                        (i & 8) ? call Led3.set() : call Led3.clr();
-                    }
-                }
-
-                (place & 1) ? call Led0.set() : call Led0.clr();
-                (place & 2) ? call Led1.set() : call Led1.clr();
-                (place & 4) ? call Led2.set() : call Led2.clr();
-                (place & 8) ? call Led3.set() : call Led3.clr();
-
-                for(i = 0; i < 1000000; i++) {
-                    ;
-                }
-
-                (macState & 1) ? call Led0.set() : call Led0.clr();
-                (macState & 2) ? call Led1.set() : call Led1.clr();
-                (macState & 4) ? call Led2.set() : call Led2.clr();
-                (macState & 8) ? call Led3.set() : call Led3.clr();
-
-                for(i = 0; i < 1000000; i++) {
-                    ;
-                }
-            }
-        }
-#endif
-    }
-
-    void signalMacState() {
-#ifdef MACM_DEBUG
-/*         (macState & 1) ? call Led0.set() : call Led0.clr();
-         (macState & 2) ? call Led1.set() : call Led1.clr();
-         (macState & 4) ? call Led2.set() : call Led2.clr();
-         (macState & 8) ? call Led3.set() : call Led3.clr();
-*/
-#endif
-    }
-
-
+    
     /**************** Module Global Constants  *****************/
     enum {
 /*
@@ -195,18 +118,23 @@ implementation
         PREAMBLE_BYTE_TIME=7,        // byte at 49000 kBit/s, no coding
         PHY_HEADER_TIME=40,          // 6 Phy Preamble at 49000
 
+/*
+        BYTE_TIME=12,                // byte at 40960 kBit/s, 4b6b encoded
+        PREAMBLE_BYTE_TIME=8,        // byte at 40960 kBit/s, no coding
+        PHY_HEADER_TIME=48,          // 6 Phy Preamble at 40960
+*/
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(tda5250_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         // DEFAULT_SLEEP_TIME=1625,
-        DEFAULT_SLEEP_TIME=3250,
+        // DEFAULT_SLEEP_TIME=3250,
         // DEFAULT_SLEEP_TIME=6500,
         // DEFAULT_SLEEP_TIME=9750,
-        // DEFAULT_SLEEP_TIME=16384,
+        DEFAULT_SLEEP_TIME=16384,
         DATA_DETECT_TIME=17,
         RX_SETUP_TIME=111,    // time to set up receiver
         TX_SETUP_TIME=69,     // time to set up transmitter
-        ADDED_DELAY = 20,
-        RX_ACK_TIMEOUT = RX_SETUP_TIME + PHY_HEADER_TIME + 14 + 2*ADDED_DELAY,
+        ADDED_DELAY = PREAMBLE_BYTE_TIME,
+        RX_ACK_TIMEOUT = RX_SETUP_TIME + PHY_HEADER_TIME + 2*ADDED_DELAY + 19,
         TX_GAP_TIME=RX_ACK_TIMEOUT + TX_SETUP_TIME + 11,
         // the duration of a send ACK
         ACK_DURATION = SUB_HEADER_TIME + SUB_FOOTER_TIME,
@@ -222,8 +150,8 @@ implementation
         */
         TIME_CORRECTION = 10,
         INVALID_SNR = 0xffff,
-        PREAMBLE_LONG = 6,
-        PREAMBLE_SHORT = 2,
+        // PREAMBLE_LONG = 5,
+        // PREAMBLE_SHORT = 2,
         // reduced minimal backoff
         ZERO_BACKOFF_MASK = 0xff
     };
@@ -307,7 +235,7 @@ implementation
     void setRxMode() {
         setFlag(&flags, SWITCHING);
         clearFlag(&flags, RSSI_STABLE);
-        storeOldState(0);
+        // sdDebug(10);
         checkCounter = 0;
         rssiValue = INVALID_SNR;
         if(call RadioModes.RxMode() == FAIL) {
@@ -323,7 +251,7 @@ implementation
     }
 
     void setSleepMode() {
-        storeOldState(161);
+        // sdDebug(20);
         clearFlag(&flags, RSSI_STABLE);
         post ReleaseAdcTask();
         setFlag(&flags, SWITCHING);
@@ -339,7 +267,7 @@ implementation
 
     void setTxMode() {
         post ReleaseAdcTask();
-        storeOldState(2);
+        // sdDebug(30);
         clearFlag(&flags, RSSI_STABLE);
         setFlag(&flags, SWITCHING);
         if(call RadioModes.TxMode() == FAIL) {
@@ -357,13 +285,20 @@ implementation
     void computeBackoff();
     
     void checkSend() {
-        storeOldState(10);
         if((shortRetryCounter) && (txBufPtr != NULL) && (isFlagSet(&flags, MESSAGE_PREPARED)) && 
            (macState == SLEEP) && (!isFlagSet(&flags, RESUME_BACKOFF)) && (!call Timer.isRunning())) {
-            storeOldState(11);
+            sdDebug(40);
             macState = CCA;
             checkCounter = 0;
             setRxMode();
+        }
+        else {
+            if(txBufPtr) sdDebug(41);
+            if(shortRetryCounter) sdDebug(42);
+            if(isFlagSet(&flags, MESSAGE_PREPARED)) sdDebug(43);
+            if(!call Timer.isRunning()) sdDebug(44);
+            if(!isFlagSet(&flags, RESUME_BACKOFF)) sdDebug(45);
+            if(macState == SLEEP) sdDebug(46);
         }
     }
 
@@ -399,7 +334,7 @@ implementation
                    (getHeader(msg)->type == teamgeistType)) {
                     if(rssiValue != INVALID_SNR) snr = rssiValue;
                     rVal = signal Teamgeist.needsAck(msg, getHeader(msg)->src, getHeader(msg)->dest, snr);
-                    *level = 1;
+                    *level = 2;
                 }
             }
         }
@@ -455,7 +390,7 @@ implementation
     void signalSendDone(error_t error) {
         message_t *m;
         error_t e = error;
-        storeOldState(12);
+        // sdDebug(50);
         atomic {
             m = txBufPtr;
             txBufPtr = NULL;
@@ -471,8 +406,10 @@ implementation
             if(isFlagSet(&flags, CANCEL_SEND)) {
                 e = ECANCEL;
             }
+            clearFlag(&flags, MESSAGE_PREPARED);
             clearFlag(&flags, CANCEL_SEND);
         }
+        sdDebug(3000 + e);
         signal MacSend.sendDone(m, e);
     }
     
@@ -482,7 +419,7 @@ implementation
             longRetryCounter++;
             shortRetryCounter = 1;
             if(longRetryCounter > MAX_LONG_RETRY) {
-                storeOldState(13);
+                sdDebug(60);
                 signalSendDone(FAIL);
             }
         }
@@ -494,7 +431,7 @@ implementation
             longRetryCounter++;
             shortRetryCounter = 1;
             if(longRetryCounter > MAX_LONG_RETRY) {
-                storeOldState(13);
+                sdDebug(70);
                 signalSendDone(FAIL);
             } else {
                 post PrepareMsgTask();
@@ -524,6 +461,8 @@ implementation
             if(restLaufzeit > MIN_BACKOFF_MASK << MAX_LONG_RETRY) {
                 restLaufzeit = call Random.rand16() & ZERO_BACKOFF_MASK;
             }
+            sdDebug(1000);
+            sdDebug(restLaufzeit);
             setFlag(&flags, RESUME_BACKOFF);
         }
     }
@@ -533,7 +472,8 @@ implementation
             setFlag(&flags, RESUME_BACKOFF);
             restLaufzeit = backoff(longRetryCounter);
             updateRetryCounters();
-            storeOldState(92);
+            sdDebug(80);
+            sdDebug(restLaufzeit);
         }
     }
 
@@ -619,20 +559,22 @@ implementation
                 MIN_BACKOFF_MASK = (MIN_BACKOFF_MASK << 1) + 1;
             }
             MIN_BACKOFF_MASK >>= 2;
-            storeOldState(20);
             shortRetryCounter = 0;
             longRetryCounter = 0;
             counter2sec = 127;
             rxTime = 0;
             teamgeistType = 0;
         }
+#ifdef REDMAC_DEBUG
+        call SerialDebug.putShortDesc("RedMacP");
+#endif
         return SUCCESS;
     }
 
     /****************  SplitControl  *****************/
 
     task void StartDoneTask() {
-        storeOldState(14);
+        // sdDebug(90);
         atomic  {
             call SampleTimer.start(sleepTime);
             macState = SLEEP;
@@ -646,16 +588,15 @@ implementation
         call CcaStdControl.start();
         atomic {
             macState = INIT;
-            // signalMacState();
             setRxMode();
-            storeOldState(15);
+            // sdDebug(100);
         }
         return SUCCESS;
     }
     
     task void StopDoneTask() {
         call Init.init();
-        storeOldState(16);
+        // sdDebug(110);
         signal SplitControl.stopDone(SUCCESS);        
     }
     
@@ -666,12 +607,12 @@ implementation
         atomic {
             if((macState == SLEEP) && isFlagSet(&flags, SWITCHING)) {
                 macState = STOP;
-                storeOldState(17);
+                // sdDebug(120);
             }
             else {
                 macState = STOP;
                 setSleepMode();
-                storeOldState(18);
+                // sdDebug(121);
             }
         }
         return SUCCESS;
@@ -704,24 +645,23 @@ implementation
     
     /****** Radio(Mode) events *************************/
     async event void RadioModes.RssiStable() {
-        if(isFlagSet(&flags, RSSI_STABLE)) signalFailure(0);
         setFlag(&flags, RSSI_STABLE);
         if((macState == RX) || (macState == CCA)) {
             call Timer.start(DATA_DETECT_TIME);
-            storeOldState(30);
+            // sdDebug(130);
         }
         else if(macState == RX_P) {
-            storeOldState(31);
+            // sdDebug(131);
             if(call RssiAdcResource.isOwner()) call ChannelMonitorData.getSnr();
         }
         else if(macState == RX_ACK) {
             // if(call RssiAdcResource.isOwner()) call ChannelMonitor.start();
-            storeOldState(32);
+            // sdDebug(132);
         }
         else if(macState == RX_ACK_P) {
         }
         else if(macState == INIT) {
-            storeOldState(33);
+            // sdDebug(133);
             if(call RssiAdcResource.isOwner()) {
                 call ChannelMonitorControl.updateNoiseFloor();
             } else {
@@ -729,65 +669,55 @@ implementation
             }
         }
         else if(macState == STOP) {
-            storeOldState(34);
+            // sdDebug(134);
         }
         else {
-            storeOldState(35);
-            signalFailure(1);
+            // sdDebug(135);
         }
     }
     
     async event void RadioModes.RxModeDone() {
-        storeOldState(40);
-        if(!isFlagSet(&flags, SWITCHING)) signalFailure(2);
         atomic {
             clearFlag(&flags, SWITCHING);
             if((macState == RX) || (macState == RX_ACK) || (macState == CCA) ||
                (macState == INIT) || (macState == STOP)) {
-                storeOldState(41);
+                // sdDebug(140);
                 if(macState != RX_ACK) requestAdc();
             }
             else {
-                storeOldState(42);
-                signalFailure(3);
+                // sdDebug(141);
             }
         }
     }
     
     async event void RadioModes.TxModeDone() {
-        storeOldState(50);
-        if(!isFlagSet(&flags, SWITCHING)) signalFailure(4);
+        // sdDebug(150);
         atomic {
             clearFlag(&flags, SWITCHING);
             if(macState == TX) {
-                call UartPhyControl.setNumPreambles(PREAMBLE_SHORT);
                 setFlag(&flags, ACTION_DETECTED);
-                if(txBufPtr == NULL) signalFailure(5);
                 if(call PacketSend.send(txBufPtr, txLen) == SUCCESS) {
-                    storeOldState(51);
-                } else {
-                    storeOldState(52);
-                    signalFailure(6);
+                    sdDebug(151);
+                }
+                else {
+                    sdDebug(152);
                 }
             }
             else if(macState == TX_ACK) {
                 if(call PacketSend.send(&ackMsg, 0) == SUCCESS) {
-                    storeOldState(53);
+                    // sdDebug(153);
                 } else {
-                    storeOldState(54);
-                    signalFailure(6);
+                    // sdDebug(154);
                 }
             }
             else {
-                storeOldState(55);
-                signalFailure(7);
+                // sdDebug(155);
             }
         }
     }
 
     async event void RadioModes.SleepModeDone() {
-        storeOldState(60);
-        if(!isFlagSet(&flags, SWITCHING)) signalFailure(8);
+        // sdDebug(160);
         atomic {
             clearFlag(&flags, SWITCHING);
             if(isFlagSet(&flags, ACTION_DETECTED)) {
@@ -795,26 +725,29 @@ implementation
             } else {
                 if(congestionLevel > 0) congestionLevel--;
             }
+            if(congestionLevel > 3) sdDebug(2000 + congestionLevel);
             if(macState == SLEEP) {
+                // sdDebug(161);
                 if(!call Timer.isRunning()) {
+                    // sdDebug(162);
                     if(isFlagSet(&flags, RESUME_BACKOFF)) {
-                        storeOldState(61);
+                        sdDebug(164);
                         clearFlag(&flags, RESUME_BACKOFF);
                         call Timer.start(restLaufzeit);
                         restLaufzeit = 0;
                     }
                     else {
-                        storeOldState(62);
+                        sdDebug(165);
                         checkSend();
                     }
                 }
             }
             else if(macState == INIT) {
-                storeOldState(63);
+                // sdDebug(167);
                 post StartDoneTask();
             }
             else if(macState == STOP) {
-                storeOldState(64);
+                // sdDebug(168);
                 post StopDoneTask();
             }
             signal ChannelCongestion.congestionEvent(congestionLevel);
@@ -827,7 +760,7 @@ implementation
         atomic {
             if((shortRetryCounter == 0) && (txBufPtr == NULL)) {
                 clearFlag(&flags, MESSAGE_PREPARED);
-                storeOldState(65);
+                sdDebug(170);
                 shortRetryCounter = 1;
                 longRetryCounter = 1;
                 txBufPtr = msg;
@@ -836,7 +769,7 @@ implementation
                 if(seqNo >= TOKEN_ACK_FLAG) seqNo = 1;
             }
             else {
-                storeOldState(66);
+                // sdDebug(171);
                 err = EBUSY;
             }
         }
@@ -853,7 +786,10 @@ implementation
                 setFlag(&flags, CANCEL_SEND);
                 shortRetryCounter = MAX_SHORT_RETRY + 2;
                 longRetryCounter  = MAX_LONG_RETRY + 2;
-                if(macState == SLEEP) signalSendDone(ECANCEL);
+                if(macState == SLEEP) {
+                    sdDebug(320);
+                    signalSendDone(ECANCEL);
+                }
                 err = SUCCESS;
             }
         }
@@ -874,8 +810,7 @@ implementation
             }
         }
         else if(macState == INIT) {
-            storeOldState(72);
-            if(isFlagSet(&flags, UNHANDLED_PACKET)) signalFailure(9);
+            // sdDebug(180);
             setFlag(&flags, UNHANDLED_PACKET);
         }
     }
@@ -887,17 +822,17 @@ implementation
         uint8_t level = 0;
         bool isCnt;
         
-        storeOldState(80);
+        // sdDebug(190);
         if(macState == RX_P) {
-            storeOldState(81);
+            // sdDebug(191);
             if(error == SUCCESS) {
-                storeOldState(82);
+                // sdDebug(192);
                 isCnt = isControl(msg);
                 if(msgIsForMe(msg)) {
                     if(!isCnt) {
-                        storeOldState(83);
+                        // sdDebug(193);
                         if(isNewMsg(msg)) {
-                            storeOldState(84);
+                            // sdDebug(194);
                             if(rssiValue != INVALID_SNR) {
                                 (getMetadata(m))->strength = rssiValue;
                             }
@@ -914,19 +849,19 @@ implementation
                             // assume a buffer swap -- if buffer is not swapped, assume that the
                             // message was not successfully delivered to upper layers
                             if(m != msg) {
-                                storeOldState(85);
+                                // sdDebug(195);
                                 rememberMsg(msg);
                             } else {
-                                storeOldState(86);
+                                // sdDebug(196);
                                 action = RX;
                             }
                         }
                         if(needsAckRx(msg, &level) && (action != RX)) {
-                            storeOldState(87);
+                            // sdDebug(197);
                             action = CCA_ACK;
                         }
                         else {
-                            storeOldState(88);
+                            // sdDebug(198);
                             if(action != RX) {
                                 nav = ((red_mac_header_t*)payload)->repetitionCounter *
                                     (SUB_HEADER_TIME + getHeader(msg)->length*BYTE_TIME +
@@ -936,12 +871,12 @@ implementation
                         }
                     }
                     else {
-                        storeOldState(89);
+                        // sdDebug(199);
                         action = RX;
                     }
                 }
                 else {
-                    storeOldState(90);
+                    // sdDebug(200);
                     action = SLEEP;
                     if(!isCnt) {
                         nav = ((red_mac_header_t*)payload)->repetitionCounter *
@@ -952,14 +887,14 @@ implementation
                 }
             }
             else {
-                storeOldState(91);
+                // sdDebug(201);
                 action = RX;
             }
         }
         else if(macState == RX_ACK_P) {
             if(error == SUCCESS) {
                 if(ackIsForMe(msg)) {
-                    storeOldState(92);
+                    // sdDebug(202);
                     if(rssiValue != INVALID_SNR) {
                         (getMetadata(txBufPtr))->strength = rssiValue;
                     }
@@ -976,6 +911,7 @@ implementation
                         signal Teamgeist.gotAck(txBufPtr, getHeader(msg)->src,
                                                 getMetadata(txBufPtr)->strength);
                     }
+                    sdDebug(203);
                     signalSendDone(SUCCESS);
                     action = SLEEP;
                 }
@@ -986,30 +922,24 @@ implementation
             }
             else {
                 if(call Timer.isRunning()) {
-                    storeOldState(94);
+                    // sdDebug(204);
                     action = RX_ACK;
                 }
                 else {
+                    // sdDebug(205);
                     updateLongRetryCounters();
                     action = RX;
                 }
             }
         }
         else {
-            storeOldState(96);
+            // sdDebug(206);
             action = INIT;
         }
         if(action == CCA_ACK) {
             prepareAck(msg);
             macState = CCA_ACK;
-            if(call Random.rand16() & 4) {
-                call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME + (ADDED_DELAY>>level));
-                call UartPhyControl.setNumPreambles(PREAMBLE_SHORT);
-            }
-            else {
-                call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME);
-                call UartPhyControl.setNumPreambles(PREAMBLE_LONG);
-            }
+            call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME + (ADDED_DELAY>>level));
         }
         else if(action == RX_ACK) {
             macState = RX_ACK;
@@ -1021,7 +951,6 @@ implementation
         }
         else if(action == SLEEP) {
             macState = SLEEP;
-            setSleepMode();
             if(isFlagSet(&flags, RESUME_BACKOFF)) {
                 if(nav > restLaufzeit) restLaufzeit += nav;
             }
@@ -1029,23 +958,20 @@ implementation
                 setFlag(&flags, RESUME_BACKOFF);
                 restLaufzeit = nav + backoff(longRetryCounter);
             }
+            setSleepMode();
         }
         else if(action == INIT) {
-            if(!isFlagSet(&flags, UNHANDLED_PACKET)) signalFailure(11);
             clearFlag(&flags, UNHANDLED_PACKET);
         }
         else {
-            storeOldState(94);
-            signalFailure(11);
+            // sdDebug(207);
         }
         return m;
     }
 
     async event void PacketSend.sendDone(message_t* msg, error_t error) {
         if(macState == TX) {
-            storeOldState(97);
-            if(msg != txBufPtr) signalFailure(12);
-            storeOldState(99);
+            sdDebug(220);
             macState = RX_ACK;
             setRxMode();
             call Timer.start(RX_ACK_TIMEOUT);
@@ -1055,9 +981,6 @@ implementation
             checkCounter = 0;
             macState = RX;
             setRxMode();
-        }
-        else {
-            signalFailure(13);
         }
     }
     
@@ -1110,7 +1033,7 @@ implementation
                 computeBackoff();
             }
             requestAdc();
-            storeOldState(150);
+            // sdDebug(230);
             macState = RX;
             checkCounter = 0;
             call Timer.start(TX_GAP_TIME>>1);
@@ -1121,12 +1044,12 @@ implementation
         if(macState == RX) {
             checkCounter++;
             if(checkCounter >= 3) {
-                storeOldState(153);
+                // sdDebug(240);
                 macState = SLEEP;
                 setSleepMode();
             }
             else {
-                storeOldState(154);
+                // sdDebug(241);
                 call Timer.start(TX_GAP_TIME >> 1);
                 requestAdc();
             }
@@ -1134,51 +1057,50 @@ implementation
         else if(macState == CCA) {
             checkCounter++;
             if(checkCounter < 3) {
-                storeOldState(158);                
+                // sdDebug(242);                
                 call Timer.start(TX_GAP_TIME >> 1);
                 requestAdc();
             }
             else {
-                storeOldState(159);
+                // sdDebug(243);
                 macState = TX;
                 setTxMode();
             }
         }
         else if(macState == CCA_ACK) {
-            storeOldState(160);
+            // sdDebug(244);
             macState = TX_ACK;
             setTxMode();
         }
     }
     
     async event void Timer.fired() {
-        storeOldState(100);
+        // sdDebug(250);
         if((macState == RX) || (macState == CCA) || (macState == CCA_ACK)) {
-            if(isFlagSet(&flags, SWITCHING)) signalFailure(14);
             if((!call RssiAdcResource.isOwner()) || (call ChannelMonitor.start() != SUCCESS)) {
                 if(call UartPhyControl.isBusy()) {
-                    storeOldState(101);
+                    // sdDebug(251);
                     checkOnBusy();
                 }
                 else {
-                    storeOldState(102);
+                    // sdDebug(252);
                     checkOnIdle();
                 }
             }
         }
         else if(macState == RX_ACK) {
             if(prepareRepetition()) {
-                storeOldState(156);
+                // sdDebug(253);
                 macState = TX;
                 setTxMode();
             }
             else {
                 if(needsAckTx(txBufPtr)) {
-                    storeOldState(157);
+                    // sdDebug(254);
                     updateLongRetryCounters();
                 }
                 else {
-                    storeOldState(158);
+                    sdDebug(255);
                     signalSendDone(SUCCESS);
                 }
                 macState = SLEEP;
@@ -1187,24 +1109,23 @@ implementation
         }
         else if(macState == SLEEP) {
              if(isFlagSet(&flags, SWITCHING)) {
-                 storeOldState(106);
+                 // sdDebug(256);
                  call Timer.start(call Random.rand16() & 0x0f);
              }
              else {
-                 storeOldState(107);
+                 sdDebug(257);
                  checkSend();
              }
         }
         else if((macState == RX_ACK_P) || (macState == RX_P)) {
-            storeOldState(108);
+            // sdDebug(258);
         }
         else if(macState == INIT) {
-            storeOldState(109);
+            // sdDebug(259);
             post StartDoneTask();
         }
         else {
-            storeOldState(110);
-            signalFailure(15);
+            // sdDebug(260);
         }
     }
 
@@ -1221,12 +1142,12 @@ implementation
     
     async event void SampleTimer.fired() {
         call SampleTimer.start(sleepTime);
-        storeOldState(111);
+        // sdDebug(270);
         if((macState == SLEEP) && (!isFlagSet(&flags, SWITCHING))) {
             clearFlag(&flags, ACTION_DETECTED);
             interruptBackoffTimer();
             macState = RX;
-            storeOldState(112);
+            // sdDebug(271);
             setRxMode();
             call Timer.stop();
         }
@@ -1253,12 +1174,12 @@ implementation
     /****** ChannelMonitor events *********************/
 
     async event void ChannelMonitor.channelBusy() {
-        storeOldState(120);
+        // sdDebug(280);
         checkOnBusy();
     }
 
     async event void ChannelMonitor.channelIdle() {
-        storeOldState(121);
+        // sdDebug(281);
         checkOnIdle();
     }
 
@@ -1266,19 +1187,17 @@ implementation
     
     event void ChannelMonitorControl.updateNoiseFloorDone() {
         if(macState == INIT) {
-            storeOldState(130);
+            // sdDebug(290);
             call Timer.start(call Random.rand16() % DEFAULT_SLEEP_TIME);
             setSleepMode();
         } else {
-            storeOldState(131);
-            signalFailure(16);
+            // sdDebug(291);
         }
     }
 
     /***** ChannelMonitorData events ******************/
     
     async event void ChannelMonitorData.getSnrDone(int16_t data) {
-        storeOldState(140);
         atomic if((macState == RX_P) || (macState == RX_ACK_P)) rssiValue = data;
     }
     
@@ -1287,14 +1206,14 @@ implementation
         macState_t ms;
         atomic ms = macState;
         if(ms < SLEEP) {
-            storeOldState(144);
+            // sdDebug(300);
         }
         else if(ms == INIT) {
-            storeOldState(145);
+            // sdDebug(301);
             call ChannelMonitorControl.updateNoiseFloor();            
         }
         else {
-            storeOldState(146);
+            // sdDebug(302);
             post ReleaseAdcTask();
         }
     }
