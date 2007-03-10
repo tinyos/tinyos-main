@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:13 $
+ * $Revision: 1.5 $
+ * $Date: 2007-03-10 22:01:58 $
  * ========================================================================
  */
 
@@ -46,6 +46,7 @@ configuration Tda5250RadioC {
     interface Tda5250Control;
     interface ResourceRequested;
     interface RadioByteComm;
+    interface ClkDiv;
   }
 }
 implementation {
@@ -63,6 +64,7 @@ implementation {
   ResourceRequested = Tda5250RadioP;
   RadioByteComm = Tda5250RadioP;
   SplitControl = Tda5250RadioP;
+  ClkDiv = Tda5250RadioP;
 
   Tda5250RadioP.DelayTimer -> DelayTimer;
   

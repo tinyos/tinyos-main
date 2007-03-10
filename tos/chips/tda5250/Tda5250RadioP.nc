@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:13 $
+ * $Revision: 1.5 $
+ * $Date: 2007-03-10 22:01:58 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * ========================================================================
  */
@@ -54,6 +54,7 @@ module Tda5250RadioP {
         interface Tda5250Control;
         interface RadioByteComm;
         interface ResourceRequested;
+        interface ClkDiv;
     }
     uses {
         interface HplTda5250Config;
@@ -86,6 +87,7 @@ implementation {
 
     /**************** Radio Start  *****************/
     task void startDoneTask() {
+        signal ClkDiv.startDone();
         signal SplitControl.startDone(SUCCESS);
     }
       
@@ -135,18 +137,22 @@ implementation {
         switch(mode) {
             case RADIO_MODE_ON_TRANSITION:
                 call HplTda5250Config.reset();
+                // call HplTda5250Config.SetRFPower(240);
+                // call HplTda5250Config.SetClockOnDuringPowerDown();
                 call HplTda5250Config.SetRFPower(255);
                 call ConfigResource.release();
                 atomic radioMode = RADIO_MODE_ON;
                 post startDoneTask();
                 break;
             case RADIO_MODE_OFF_TRANSITION:
+                signal ClkDiv.stopping();
                 call HplTda5250Config.SetSleepMode();
                 call ConfigResource.release();
                 atomic radioMode = RADIO_MODE_OFF;
                 post stopDoneTask();
                 break;
             case RADIO_MODE_SLEEP_TRANSITION:
+                signal ClkDiv.stopping();
                 call HplTda5250Config.SetSlaveMode();
                 call HplTda5250Config.SetSleepMode();
                 atomic radioMode = RADIO_MODE_SLEEP;
@@ -405,6 +411,7 @@ implementation {
             signal Tda5250Control.RssiStable();
             break;
           case RECEIVER_DELAY :
+              signal ClkDiv.startDone();
             delayTimer = RSSISTABLE_DELAY;
             call DelayTimer.start(TDA5250_RSSI_STABLE_TIME-TDA5250_RECEIVER_SETUP_TIME);
             if (call DataResource.immediateRequest() == SUCCESS) {
@@ -414,6 +421,7 @@ implementation {
             }
             break;
           case TRANSMITTER_DELAY :
+              signal ClkDiv.startDone();
             if (call DataResource.immediateRequest() == SUCCESS) {
               switchDataResource();
             } else {
@@ -442,5 +450,9 @@ implementation {
       default async event void RadioByteComm.rxByteReady(uint8_t data) {
       }
       default async event void RadioByteComm.txByteReady(error_t error) {
+      }
+      default async event void ClkDiv.startDone() {
+      }
+      default async event void ClkDiv.stopping() {
       }
 }
