@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:41 $
+ * $Revision: 1.5 $
+ * $Date: 2007-03-10 21:58:37 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -53,8 +53,10 @@ enum {
   RSSI_SENSOR_DEFAULT,
 
   INTERNAL_VOLTAGE_REF_2_5V,
+  INTERNAL_VOLTAGE_REF_2_5V_LOW_FREQ,
+  
   INTERNAL_TEMP_HIGH_FREQ,
-
+  INTERNAL_TEMP_LOW_FREQ,
   // add more entries here
 
   // last entry
@@ -76,8 +78,8 @@ const msp430adc12_channel_config_t sensorconfigurations[] = {
     /* PHOTO_SENSOR_DEFAULT */
     {
         INPUT_CHANNEL_A2, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_1_5,
-        SHT_SOURCE_SMCLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_64_CYCLES,
-        SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1
+        SHT_SOURCE_ACLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_4_CYCLES,
+        SAMPCON_SOURCE_ACLK, SAMPCON_CLOCK_DIV_1
     },
     /* PHOTO_SENSOR_VCC */
     {
@@ -100,8 +102,8 @@ const msp430adc12_channel_config_t sensorconfigurations[] = {
     /* TEMP_SENSOR_DEFAULT */
     {
         INPUT_CHANNEL_A0, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_1_5,
-        SHT_SOURCE_SMCLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_16_CYCLES,
-        SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1
+        SHT_SOURCE_ACLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_4_CYCLES,
+        SAMPCON_SOURCE_ACLK, SAMPCON_CLOCK_DIV_1
     },
     /* RSSI_SENSOR_VCC */
     {
@@ -127,11 +129,23 @@ const msp430adc12_channel_config_t sensorconfigurations[] = {
         SHT_SOURCE_SMCLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_32_CYCLES,
         SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1
     },
+    /* INTERNAL_VOLTAGE_REF_2_5V_LOW_FREQ */
+    {
+        SUPPLY_VOLTAGE_HALF_CHANNEL, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_2_5,
+        SHT_SOURCE_ACLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_4_CYCLES,
+        SAMPCON_SOURCE_ACLK, SAMPCON_CLOCK_DIV_1
+    },
     /* INTERNAL_TEMP_HIGH_FREQ */
     {
         TEMPERATURE_DIODE_CHANNEL, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_1_5,
         SHT_SOURCE_SMCLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_32_CYCLES,
         SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1
+    },
+    /* INTERNAL_TEMP_LOW_FREQ */
+    {
+        TEMPERATURE_DIODE_CHANNEL, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_1_5,
+        SHT_SOURCE_ACLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_4_CYCLES,
+        SAMPCON_SOURCE_ACLK, SAMPCON_CLOCK_DIV_1
     },
     /* your stuff here */
     /* SENSOR_SENTINEL */
