@@ -1,4 +1,4 @@
-/* $Id: mts300.h,v 1.3 2007-03-14 03:25:06 pipeng Exp $ */
+/* $Id: mts300.h,v 1.4 2007-03-14 04:14:14 pipeng Exp $ */
 /*
  * Copyright (c) 2005-2006 Crossbow Technology, Inc.  All rights reserved.
  *
@@ -23,7 +23,7 @@
 /**
  * 
  * @author Hu Siquan <husq@xbow.com>
- * Revision: $Revision: 1.3 $
+ * Revision: $Revision: 1.4 $
  *
  */
 
