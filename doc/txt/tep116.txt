@@ -10,8 +10,8 @@ Packet Protocols
 :Author: Philip Levis
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2007-03-14 01:50:40 $
+:Draft-Version: $Revision: 1.8 $
+:Draft-Modified: $Date: 2007-03-14 01:56:33 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -138,7 +138,7 @@ parameter in their send call, this command is not required for
 sending, and so is never called in common use cases. Instead, 
 it is a way for queues and other packet buffering components
 to store the full state of a packet without requiring additional
-memory allocation.
+memory allocation. 
 
 The distinction between ``payloadLength`` and ``maxPayloadLength``
 comes from whether the packet is being received or sent. In the receive
@@ -232,6 +232,12 @@ The command address() returns the local AM address of the
 node. AMPacket provides accessors for its two fields, destination and
 type. It also provides commands to set these fields, for the same
 reason that Packet allows a caller to set the payload length.
+Packet interfaces SHOULD provide accessors
+and mutators for all of their fields to enable queues and other
+buffering to store values in a packet buffer. Typically, a component
+stores these values in the packet buffer itself (where the field is),
+but when necessary it may use the metadata region of message_t or other
+locations.
 
 2.2 Sending interfaces
 --------------------------------------------------------------------

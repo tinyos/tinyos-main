@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-03-14 01:50:40 $
-:version: $Revision: 1.8 $
+:date: $Date: 2007-03-14 01:56:33 $
+:version: $Revision: 1.9 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-28</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-03-14</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -510,7 +510,13 @@ interface AMPacket {
 <p>The command address() returns the local AM address of the
 node. AMPacket provides accessors for its two fields, destination and
 type. It also provides commands to set these fields, for the same
-reason that Packet allows a caller to set the payload length.</p>
+reason that Packet allows a caller to set the payload length.
+Packet interfaces SHOULD provide accessors
+and mutators for all of their fields to enable queues and other
+buffering to store values in a packet buffer. Typically, a component
+stores these values in the packet buffer itself (where the field is),
+but when necessary it may use the metadata region of message_t or other
+locations.</p>
 </div>
 <div class="section">
 <h2><a id="sending-interfaces" name="sending-interfaces">2.2 Sending interfaces</a></h2>
