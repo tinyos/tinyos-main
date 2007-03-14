@@ -287,7 +287,7 @@ implementation
     void checkSend() {
         if((shortRetryCounter) && (txBufPtr != NULL) && (isFlagSet(&flags, MESSAGE_PREPARED)) && 
            (macState == SLEEP) && (!isFlagSet(&flags, RESUME_BACKOFF)) && (!call Timer.isRunning())) {
-            sdDebug(40);
+            // sdDebug(40);
             macState = CCA;
             checkCounter = 0;
             setRxMode();
@@ -296,9 +296,11 @@ implementation
             if(txBufPtr) sdDebug(41);
             if(shortRetryCounter) sdDebug(42);
             if(isFlagSet(&flags, MESSAGE_PREPARED)) sdDebug(43);
-            if(!call Timer.isRunning()) sdDebug(44);
-            if(!isFlagSet(&flags, RESUME_BACKOFF)) sdDebug(45);
-            if(macState == SLEEP) sdDebug(46);
+            if(txBufPtr) {
+                if(macState == SLEEP) sdDebug(44);
+                if(!isFlagSet(&flags, RESUME_BACKOFF)) sdDebug(45);
+                if(!call Timer.isRunning()) sdDebug(46);
+            }
         }
     }
 
@@ -380,9 +382,13 @@ implementation
     bool prepareRepetition() {
         bool repeat;
         atomic {
-            if(isFlagSet(&flags, CANCEL_SEND)) txMacHdr->repetitionCounter = 0;
-            repeat = (txMacHdr->repetitionCounter >= 1);
-            txMacHdr->repetitionCounter--;
+            if(isFlagSet(&flags, CANCEL_SEND)) {
+                repeat = txMacHdr->repetitionCounter = 0;
+            }
+            else {
+                repeat = txMacHdr->repetitionCounter;
+                txMacHdr->repetitionCounter--;
+            }
         }
         return repeat;
     }
@@ -410,6 +416,7 @@ implementation
             clearFlag(&flags, CANCEL_SEND);
         }
         sdDebug(3000 + e);
+        sdDebug(4000 + getHeader(m)->type);
         signal MacSend.sendDone(m, e);
     }
     
@@ -461,8 +468,6 @@ implementation
             if(restLaufzeit > MIN_BACKOFF_MASK << MAX_LONG_RETRY) {
                 restLaufzeit = call Random.rand16() & ZERO_BACKOFF_MASK;
             }
-            sdDebug(1000);
-            sdDebug(restLaufzeit);
             setFlag(&flags, RESUME_BACKOFF);
         }
     }
@@ -472,8 +477,6 @@ implementation
             setFlag(&flags, RESUME_BACKOFF);
             restLaufzeit = backoff(longRetryCounter);
             updateRetryCounters();
-            sdDebug(80);
-            sdDebug(restLaufzeit);
         }
     }
 
@@ -697,10 +700,10 @@ implementation
             if(macState == TX) {
                 setFlag(&flags, ACTION_DETECTED);
                 if(call PacketSend.send(txBufPtr, txLen) == SUCCESS) {
-                    sdDebug(151);
+                    // sdDebug(151);
                 }
                 else {
-                    sdDebug(152);
+                    // sdDebug(152);
                 }
             }
             else if(macState == TX_ACK) {
@@ -717,7 +720,7 @@ implementation
     }
 
     async event void RadioModes.SleepModeDone() {
-        // sdDebug(160);
+        sdDebug(160);
         atomic {
             clearFlag(&flags, SWITCHING);
             if(isFlagSet(&flags, ACTION_DETECTED)) {
@@ -731,13 +734,13 @@ implementation
                 if(!call Timer.isRunning()) {
                     // sdDebug(162);
                     if(isFlagSet(&flags, RESUME_BACKOFF)) {
-                        sdDebug(164);
+                        // sdDebug(164);
                         clearFlag(&flags, RESUME_BACKOFF);
                         call Timer.start(restLaufzeit);
                         restLaufzeit = 0;
                     }
                     else {
-                        sdDebug(165);
+                        // sdDebug(165);
                         checkSend();
                     }
                 }
@@ -760,7 +763,7 @@ implementation
         atomic {
             if((shortRetryCounter == 0) && (txBufPtr == NULL)) {
                 clearFlag(&flags, MESSAGE_PREPARED);
-                sdDebug(170);
+                sdDebug(5000 + getHeader(msg)->type);
                 shortRetryCounter = 1;
                 longRetryCounter = 1;
                 txBufPtr = msg;
@@ -783,14 +786,23 @@ implementation
         error_t err = FAIL;
         atomic {
             if(msg == txBufPtr) {
+                sdDebug(320);
                 setFlag(&flags, CANCEL_SEND);
                 shortRetryCounter = MAX_SHORT_RETRY + 2;
                 longRetryCounter  = MAX_LONG_RETRY + 2;
                 if(macState == SLEEP) {
-                    sdDebug(320);
+                    sdDebug(321);
                     signalSendDone(ECANCEL);
                 }
+                else {
+                    sdDebug(322);
+                }
+                sdDebug(1000 + macState);
                 err = SUCCESS;
+            }
+            else {
+                sdDebug(323);
+                sdDebug(1100 + macState);
             }
         }
         return err;
@@ -801,6 +813,7 @@ implementation
     async event void PacketReceive.receiveDetected() {
         rssiValue = INVALID_SNR;
         setFlag(&flags, ACTION_DETECTED);
+        call ChannelMonitor.rxSuccess();
         if(macState <= CCA_ACK) {
             if(macState == CCA) computeBackoff();
             if(macState != RX_ACK) {
@@ -971,7 +984,7 @@ implementation
 
     async event void PacketSend.sendDone(message_t* msg, error_t error) {
         if(macState == TX) {
-            sdDebug(220);
+            // sdDebug(220);
             macState = RX_ACK;
             setRxMode();
             call Timer.start(RX_ACK_TIMEOUT);
@@ -1100,7 +1113,7 @@ implementation
                     updateLongRetryCounters();
                 }
                 else {
-                    sdDebug(255);
+                    // sdDebug(255);
                     signalSendDone(SUCCESS);
                 }
                 macState = SLEEP;
@@ -1113,8 +1126,16 @@ implementation
                  call Timer.start(call Random.rand16() & 0x0f);
              }
              else {
-                 sdDebug(257);
-                 checkSend();
+                 if(isFlagSet(&flags, RESUME_BACKOFF)) {
+                     // sdDebug(261);
+                     clearFlag(&flags, RESUME_BACKOFF);
+                     call Timer.start(restLaufzeit);
+                     restLaufzeit = 0;
+                 }
+                 else {
+                     // sdDebug(262);
+                     checkSend();
+                 }
              }
         }
         else if((macState == RX_ACK_P) || (macState == RX_P)) {
