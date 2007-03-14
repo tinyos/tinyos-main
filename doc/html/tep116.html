@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-02-28 22:34:19 $
-:version: $Revision: 1.7 $
+:date: $Date: 2007-03-14 01:50:40 $
+:version: $Revision: 1.8 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -384,7 +384,10 @@ HIL.</p>
 <em>Packet</em> interfaces are for accessing message fields and payloads.
 <em>Send</em> interfaces are for transmitting packets, and are
 distinguished by their addressing scheme.
-Finally, the <em>Receive</em> interface is for handling packet reception events.</p>
+The <em>Receive</em> interface is for handling packet reception events.
+Finally, depending on whether the protocol has a dispatch identifier
+field, the Receive and Send interfaces may be parameterized in order
+to support multiple higher-level clients.</p>
 <div class="section">
 <h2><a id="packet-interfaces" name="packet-interfaces">2.1 Packet interfaces</a></h2>
 <p>The basic TinyOS 2.x message buffer type is message_t, which is
@@ -546,6 +549,22 @@ with the exception that the latter has no length parameter (it should
 behave as if the length parameter of the <tt class="docutils literal"><span class="pre">Packet</span></tt> call were
 NULL). Their inclusion is so that components do not have to wire to
 both Packet and the sending interface for basic use cases.</p>
+<p>When called with a length that is too long for the underlying
+maximum transfer unit (MTU), the send command MUST return ESIZE.</p>
+<p>The <tt class="docutils literal"><span class="pre">Send</span></tt> and <tt class="docutils literal"><span class="pre">AMSend</span></tt> interfaces have an explicit queue of
+depth one. A call to <tt class="docutils literal"><span class="pre">send</span></tt> on either of these interfaces MUST
+return EBUSY if a prior call to <tt class="docutils literal"><span class="pre">send</span></tt> returned SUCCESS but no
+<tt class="docutils literal"><span class="pre">sendDone</span></tt> event has been signaled yet. More explicitly:</p>
+<pre class="literal-block">
+if (call Send.send(...) == SUCCESS &amp;&amp;
+    call Send.send(...) == SUCCESS) {
+   // This block is unreachable.
+}
+</pre>
+<p>Systems that need send queues have two options. They can
+use a QueueC (found in tos/system) to store pending packet pointers
+and serialize them onto sending interface, or they can introduce
+a new sending interface that supports multiple pending transmissions.</p>
 </div>
 <div class="section">
 <h2><a id="receive-interface" name="receive-interface">2.3 Receive interface</a></h2>
@@ -583,11 +602,13 @@ holding all of them, starving lower layers and possibly preventing
 packet reception.</p>
 <p>A <em>user</em> of the Receive interface has three basic options when it
 handles a receive event:</p>
+<blockquote>
 <ol class="arabic simple">
 <li>Return <tt class="docutils literal"><span class="pre">msg</span></tt> without touching it.</li>
 <li>Copy some data out of <tt class="docutils literal"><span class="pre">payload</span></tt> and return <tt class="docutils literal"><span class="pre">msg</span></tt>.</li>
 <li>Store <tt class="docutils literal"><span class="pre">msg</span></tt> in its local frame and return a different <tt class="docutils literal"><span class="pre">message_t*</span></tt> for the lower layer to use.</li>
 </ol>
+</blockquote>
 <p>These are simple code examples of the three cases:</p>
 <pre class="literal-block">
 // Case 1
@@ -623,8 +644,8 @@ the signaling of <tt class="docutils literal"><span class="pre">receive.</span><
 <div class="section">
 <h2><a id="dispatch" name="dispatch">2.4 Dispatch</a></h2>
 <p>A packet protocol MAY have a dispatch identifier. This generally manifests
-as the protocol component provided parameterized interfaces (rather than
-a single interface instances). A dispatch identifier allows multiple
+as the protocol component providing parameterized interfaces (rather than
+a single interface instance). A dispatch identifier allows multiple
 services to use a protocol independently. If a protocol provides a
 dispatch mechanism, then each dispatch identifier SHOULD correspond to
 a single packet format: if an identifier corresponds to multiple packet
@@ -753,7 +774,7 @@ a certain am_id_t MUST NOT instantiate another AMSnoopingReceiverC,
 AMSnooperC, or AMReceiverC with the same am_id_t.</p>
 </div>
 <div class="section">
-<h2><a id="amsender" name="amsender">4.5 AMSender</a></h2>
+<h2><a id="amsenderc" name="amsenderc">4.5 AMSenderC</a></h2>
 <p>AMSenderC has the following signature:</p>
 <pre class="literal-block">
 generic configuration AMSenderC(am_id_t AMId) {
@@ -773,8 +794,13 @@ but it MUST be fair, where fair means that each client with outstanding
 packets receives a reasonable approximation of an equal share of the
 available transmission bandwidth.</p>
 </div>
+</div>
 <div class="section">
-<h2><a id="power-management" name="power-management">4.6 Power Management</a></h2>
+<h1><a id="power-management-and-local-address" name="power-management-and-local-address">5. Power Management and Local Address</a></h1>
+<p>In addition to standard datapath interfaces for sending and
+receiving packets, an active message layer also has control interfaces.</p>
+<div class="section">
+<h2><a id="power-management" name="power-management">5.1 Power Management</a></h2>
 <p>The communication virtualizations do not support power management.
 ActiveMessageC provides SplitControl for explicit power control.
 For packet communication to operate properly, a component in an
@@ -782,6 +808,17 @@ application has to call ActiveMessageC.SplitControl.start().
 The HAL underneath ActiveMessageC  MAY employ power management
 techniques, such as TDMA scheduling or low power listening, when
 &quot;on.&quot;</p>
+</div>
+<div class="section">
+<h2><a id="local-active-message-address" name="local-active-message-address">5.2 Local Active Message Address</a></h2>
+<p>An application can change ActiveMessageC's local AM address
+at runtime. This will change which packets a node receives and
+the source address it embeds in packets. To change the local AM
+address at runtime, a component can wire to the component
+<tt class="docutils literal"><span class="pre">ActiveMessageAddressC</span></tt>. This component only changes the
+AM address of the default radio stack (AMSenderC, etc.); if
+a radio has multiple stacks those may have other components
+for changing their addresses in a stack-specific fashion.</p>
 </div>
 </div>
 <div class="section">

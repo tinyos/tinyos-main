@@ -10,8 +10,8 @@ Packet Protocols
 :Author: Philip Levis
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2007-02-28 22:33:28 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-03-14 01:50:40 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -94,7 +94,10 @@ Packet-level communication has three basic classes of interfaces.
 *Packet* interfaces are for accessing message fields and payloads. 
 *Send* interfaces are for transmitting packets, and are
 distinguished by their addressing scheme. 
-Finally, the *Receive* interface is for handling packet reception events.
+The *Receive* interface is for handling packet reception events.
+Finally, depending on whether the protocol has a dispatch identifier
+field, the Receive and Send interfaces may be parameterized in order
+to support multiple higher-level clients.
 
 2.1 Packet interfaces
 --------------------------------------------------------------------
@@ -269,6 +272,24 @@ behave as if the length parameter of the ``Packet`` call were
 NULL). Their inclusion is so that components do not have to wire to
 both Packet and the sending interface for basic use cases.
 
+When called with a length that is too long for the underlying
+maximum transfer unit (MTU), the send command MUST return ESIZE.
+
+The ``Send`` and ``AMSend`` interfaces have an explicit queue of
+depth one. A call to ``send`` on either of these interfaces MUST 
+return EBUSY if a prior call to ``send`` returned SUCCESS but no
+``sendDone`` event has been signaled yet. More explicitly::
+
+  if (call Send.send(...) == SUCCESS &&
+      call Send.send(...) == SUCCESS) {
+     // This block is unreachable.
+  }
+
+Systems that need send queues have two options. They can
+use a QueueC (found in tos/system) to store pending packet pointers
+and serialize them onto sending interface, or they can introduce
+a new sending interface that supports multiple pending transmissions.
+
 2.3 Receive interface
 --------------------------------------------------------------------
 
@@ -309,9 +330,9 @@ packet reception.
 A *user* of the Receive interface has three basic options when it
 handles a receive event:
 
-1) Return ``msg`` without touching it.
-2) Copy some data out of ``payload`` and return ``msg``.
-3) Store ``msg`` in its local frame and return a different ``message_t*`` for the lower layer to use.
+  1) Return ``msg`` without touching it.
+  2) Copy some data out of ``payload`` and return ``msg``.
+  3) Store ``msg`` in its local frame and return a different ``message_t*`` for the lower layer to use.
 
 These are simple code examples of the three cases::
 
@@ -350,8 +371,8 @@ the signaling of ``receive.``
 --------------------------------------------------------------------
 
 A packet protocol MAY have a dispatch identifier. This generally manifests
-as the protocol component provided parameterized interfaces (rather than
-a single interface instances). A dispatch identifier allows multiple 
+as the protocol component providing parameterized interfaces (rather than
+a single interface instance). A dispatch identifier allows multiple 
 services to use a protocol independently. If a protocol provides a
 dispatch mechanism, then each dispatch identifier SHOULD correspond to
 a single packet format: if an identifier corresponds to multiple packet
@@ -487,7 +508,7 @@ swaps buffers, a program that instantiates an AMSnoopingReceiverC with
 a certain am_id_t MUST NOT instantiate another AMSnoopingReceiverC,
 AMSnooperC, or AMReceiverC with the same am_id_t.
 
-4.5 AMSender 
+4.5 AMSenderC 
 --------------------------------------------------------------------
 
 AMSenderC has the following signature::
@@ -509,7 +530,14 @@ but it MUST be fair, where fair means that each client with outstanding
 packets receives a reasonable approximation of an equal share of the 
 available transmission bandwidth.
 
-4.6 Power Management
+5. Power Management and Local Address
+============================================================================
+
+In addition to standard datapath interfaces for sending and
+receiving packets, an active message layer also has control interfaces.
+
+
+5.1 Power Management
 --------------------------------------------------------------------
 
 The communication virtualizations do not support power management.
@@ -519,6 +547,18 @@ application has to call ActiveMessageC.SplitControl.start().
 The HAL underneath ActiveMessageC  MAY employ power management 
 techniques, such as TDMA scheduling or low power listening, when
 "on."
+
+5.2 Local Active Message Address
+--------------------------------------------------------------------
+
+An application can change ActiveMessageC's local AM address 
+at runtime. This will change which packets a node receives and
+the source address it embeds in packets. To change the local AM
+address at runtime, a component can wire to the component
+``ActiveMessageAddressC``. This component only changes the
+AM address of the default radio stack (AMSenderC, etc.); if
+a radio has multiple stacks those may have other components
+for changing their addresses in a stack-specific fashion.
 
 5. HAL Requirements
 ============================================================================
