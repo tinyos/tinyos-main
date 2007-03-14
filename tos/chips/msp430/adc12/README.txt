@@ -35,24 +35,32 @@ An application that is written for an MSP430-based platform like 'eyesIFX' or
 'telosb' can access the ADC12 in a more efficient way to, for example, do
 high-frequency sampling through the Msp430Adc12SingleChannel interface. On the
 MSP430 two additional hardware modules may become relevant when the ADC12 is
-used: the internal reference voltage generator and the DMA controller. The
-voltage generator outputs stabilized voltage of 1.5 V or 2.5 V, which may be
-used as reference voltage in the conversion process. Whether the internal
+used: the internal reference voltage generator and the DMA controller. 
+
+The voltage generator outputs stabilized voltage of 1.5 V or 2.5 V, which may
+be used as reference voltage in the conversion process. Whether the internal
 reference voltage generator should be enabled during the conversion is
 platform-specific (e.g. the light sensor on the 'eyesIFX' requires a stable
 reference voltage). When an application requires a stable reference voltage
 during the sampling process it should wire to the Msp430Adc12ClientAutoRVGC
 component. This assures that when the app is signalled the Resource.granted()
 event the reference voltage generator outputs a stable voltage (the level is
-defined in the configuration data supplied by the application). The DMA
-controller can be used to efficiently copy conversion data from ADC data
-registers to the application buffer. DMA is only present on MSP430x15x and
-MSP430x16x devices. When an application wants to use the DMA it can wire to
-the Msp430Adc12ClientAutoDMAC component and then conversion results are
-transferred using DMA. Both, enabling the reference generator and using the
-DMA, therefore happens transparent to the app. There are four possible
-combinations reflected by the following components that an MSP430-based
-application may wire to:
+defined in the configuration data supplied by the application). There are two
+more things to note: first, the generator is not switched off immediately, when
+the client calls Resource.release(), but only after some pre-defined interval
+(see Msp430RefVoltGenerator.h). This can avoid a power-up delay when multiple
+clients are present. Second, one must not forget to wire the AdcConfigure
+interface to the Msp430Adc12ClientAutoRVGC or Msp430Adc12ClientAutoDMA_RVGC
+component in addition to configuring the ADC through the
+Msp430Adc12SingleChannel interface (no nesC warning will be signalled).
+  
+The DMA controller can be used to copy conversion data from the ADC registers
+to the application buffer. DMA is only present on MSP430x15x and MSP430x16x
+devices. When an application wants to use the DMA it can wire to the
+Msp430Adc12ClientAutoDMAC component and then conversion results are transferred
+using DMA. Both, enabling the reference generator and using the DMA, therefore
+happens transparent to the app. There are four possible combinations reflected
+by the following components that an MSP430-based application may wire to:
 
   * Msp430Adc12ClientC: no DMA, no automatic reference voltage
   * Msp430Adc12ClientAutoRVGC: automatic reference voltage, but no DMA
@@ -60,7 +68,7 @@ application may wire to:
   * Msp430Adc12ClientAutoDMA_RVGC: DMA and automatic reference voltage
 
 
-PINs
+I/O PINs
 --------------------------------------------------------------------
 
 During a conversion the respective ADC port pin (ports 6.0 - 6.7) must be
@@ -155,6 +163,6 @@ SAMPCON_CLOCK_DIV_1 and a "jiffies" parameter of (1000000 / 4000) = 250.
 
 -----
 
-$Date: 2006-12-12 18:23:07 $
+$Date: 2007-03-14 18:14:06 $
 @author: Jan Hauer <hauer@tkn.tu-berlin.de>
 

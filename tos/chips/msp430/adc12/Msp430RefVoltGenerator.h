@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2007-03-14 18:14:06 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,6 +42,6 @@
 // Delay before generator is switched off after it has been stopped (in ms). 
 // This avoids having to wait the 17ms in case the generator is needed again
 // shortly after it has been stopped (value may be modified).
-#define SWITCHOFF_INTERVAL 100
+#define SWITCHOFF_INTERVAL 20
 
 #endif
