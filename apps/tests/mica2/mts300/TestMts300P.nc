@@ -1,42 +1,3 @@
-// $Id: TestMts300P.nc,v 1.5 2007-02-15 10:23:30 pipeng Exp $
-
-/*
- *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
- *  downloading, copying, installing or using the software you agree to
- *  this license.  If you do not agree to this license, do not download,
- *  install, copy or use the software.
- *
- *  Copyright (c) 2004-2006 Crossbow Technology, Inc.
- *  All rights reserved.
- *
- *  Permission to use, copy, modify, and distribute this software and its
- *  documentation for any purpose, without fee, and without written
- *  agreement is hereby granted, provided that the above copyright
- *  notice, the (updated) modification history and the author appear in
- *  all copies of this source code.
- *
- *  Permission is also granted to distribute this software under the
- *  standard BSD license as contained in the TinyOS distribution.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *  PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE INTEL OR ITS
- *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- *  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- *  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
- *  TinyOS 1.x to TinyOS 2.x translation layer.
- *
- *  @author Alif <rlchen@xbow.com.cn>  
- */
- 
 #include "Timer.h"
 #include "XMTS300.h"
 #include "mts300.h"
@@ -57,8 +18,7 @@ module TestMts300P
     interface Packet as UartPacket;
     interface AMSend as UartSend;
     // sensor components
-    interface StdControl as MTS300Control;
-    interface StdControl as Sounder;
+    interface Mts300Sounder as Sounder;
    	interface Read<uint16_t> as Vref; //!< voltage
     interface Read<uint16_t> as Light;
     interface Read<uint16_t> as Temp;
@@ -105,6 +65,29 @@ implementation
   norace uint16_t accel_ave_x, accel_ave_y;
   norace uint8_t accel_ave_points;
 
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//  packet sending
+//
+//////////////////////////////////////////////////////////////////////////////
+  task void send_msg()
+  {
+    atomic packet_ready = FALSE;
+    // check length of the allocated buffer to see if it is enough for our packet
+    if (call RadioPacket.maxPayloadLength() < sizeof(Mts300Msg))
+    {
+      return ;
+    }
+    // OK, the buffer is large enough
+    //pMsg->vref = counter;
+    if (call UartSend.send(AM_BROADCAST_ADDR, &packet, sizeof(Mts300Msg)) == SUCCESS)
+    {
+      sending_packet = TRUE;
+      call Leds.led2On();
+    }
+  }
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  basic control routines
@@ -143,9 +126,8 @@ implementation
   {
     if (err == SUCCESS)
     {
-      call MTS300Control.start();
-      call Sounder.start();
-      call MTS300Timer.startPeriodic( 300 );
+      call Sounder.beep(1000);
+      call MTS300Timer.startPeriodic( 1000 );
     }
     else
     {
@@ -182,12 +164,6 @@ implementation
     }
 
     call Leds.led1Toggle();
-    counter++;
-
-    if(counter==1)
-    {
-      call Sounder.stop();
-    }
 
     if (sending_packet) return ;
 
@@ -196,23 +172,6 @@ implementation
       atomic state = STATE_VREF_START;
       call Vref.read();
       return ;
-    }
-
-    if (packet_ready)
-    {
-      atomic packet_ready = FALSE;
-      // check length of the allocated buffer to see if it is enough for our packet
-      if (call RadioPacket.maxPayloadLength() < sizeof(Mts300Msg))
-      {
-        return ;
-      }
-      // OK, the buffer is large enough
-      //pMsg->vref = counter;
-      if (call UartSend.send(AM_BROADCAST_ADDR, &packet, sizeof(Mts300Msg)) == SUCCESS)
-      {
-        sending_packet = TRUE;
-        call Leds.led2On();
-      }
     }
   }
 
@@ -230,7 +189,6 @@ implementation
     {
       pMsg->vref = 0;
     }
-//    atomic packet_ready = TRUE;
       atomic state = STATE_LIGHT_START;
       call Light.read();
   }
@@ -251,8 +209,9 @@ implementation
     }
     atomic state = STATE_TEMP_START;
     call Temp.read();
+//    atomic state = STATE_MIC_START;
+//    call Microphone.read();
   }
-
 
   /**
    * Temperature data read
@@ -345,7 +304,6 @@ implementation
     {
       pMsg->accelY = 0;
     }
-//    atomic packet_ready = TRUE;
     atomic state = STATE_MAGX_START;
     call MagX.read();
   }
@@ -383,6 +341,7 @@ implementation
       pMsg->magY = 0;
     }
     atomic packet_ready = TRUE;
+    post send_msg();
   }
 
   /**
