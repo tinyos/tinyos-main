@@ -1,4 +1,4 @@
-/* $Id: MagConfigP.nc,v 1.1 2007-02-15 10:33:37 pipeng Exp $
+/* $Id: MagConfigP.nc,v 1.2 2007-03-14 03:25:05 pipeng Exp $
  * Copyright (c) 2006 Intel Corporation
  * All rights reserved.
  *
@@ -11,7 +11,7 @@
  * Internal component for basicsb photodiode. Arbitrates access to the photo
  * diode and automatically turns it on or off based on user requests.
  *
- * @author David Gay
+ * @author Alif Chen
  */
 
 #include "mts300.h"
@@ -19,31 +19,32 @@
 
 configuration MagConfigP {
   provides {
-    interface Init;
-    interface StdControl;
     interface Mag;
-
+    interface Resource[uint8_t client];
     interface Atm128AdcConfig as ConfigX;
     interface Atm128AdcConfig as ConfigY;
-    interface ResourceConfigure as ResourceX;
-    interface ResourceConfigure as ResourceY;
   }
 }
 implementation {
-  components MagP, MicaBusC, new Atm128I2CMasterC() as I2CPot;
+  components MagP, MicaBusC, new Atm128I2CMasterC() as I2CPot,
+		new TimerMilliC() as WarmupTimer,
+    new RoundRobinArbiterC(UQ_MAG_RESOURCE) as Arbiter,
+    new SplitControlPowerManagerC() as PowerManager;
 
-	Init = MagP;
-	StdControl = MagP;
 	Mag = MagP;
 
+  Resource = Arbiter;
   ConfigX = MagP.ConfigX;
   ConfigY = MagP.ConfigY;
-  ResourceX = MagP.ResourceX;
-  ResourceY = MagP.ResourceY;
+
+  PowerManager.ResourceDefaultOwner -> Arbiter;
+  PowerManager.ArbiterInfo -> Arbiter;
+  PowerManager.SplitControl -> MagP;
 
   MagP.I2CPacket -> I2CPot;
-  MagP.Resource -> I2CPot;
+  MagP.I2CResource -> I2CPot;
 
+  MagP.Timer -> WarmupTimer;
   MagP.MagPower -> MicaBusC.PW5;
   MagP.MagAdcX -> MicaBusC.Adc6;
   MagP.MagAdcY -> MicaBusC.Adc5;

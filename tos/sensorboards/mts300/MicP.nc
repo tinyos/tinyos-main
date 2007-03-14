@@ -24,7 +24,7 @@
  *
  *  @author Hu Siquan <husq@xbow.com> 
  *
- *  $Id: MicP.nc,v 1.1 2007-02-15 10:33:38 pipeng Exp $
+ *  $Id: MicP.nc,v 1.2 2007-03-14 03:25:05 pipeng Exp $
  */
 
 #include "Timer.h"
@@ -32,48 +32,49 @@
 
 module MicP
 {
-  provides interface Init;
-  provides interface StdControl;
-  provides interface Mic;
-  provides interface MicInterrupt;
-  provides interface ResourceConfigure as MicResourceConfigure;
+  provides interface SplitControl;
+  provides interface MicSetting;
   provides interface Atm128AdcConfig as MicAtm128AdcConfig;
 
-  uses interface Leds as DebugLeds;
+  uses interface Timer<TMilli>;
 	uses interface GeneralIO as MicPower;
 	uses interface GeneralIO as MicMuxSel;
 	uses interface MicaBusAdc as MicAdc;
   uses interface I2CPacket<TI2CBasicAddr>;
-  uses interface Resource;
+  uses interface Resource as I2CResource;
   uses interface HplAtm128Interrupt as AlertInterrupt;
 }
 implementation 
 {
   uint8_t gainData[2];
   
-  command error_t Init.init()
+  command error_t SplitControl.start()
   {
+    call AlertInterrupt.disable();
     call MicPower.makeOutput();
-		call MicPower.clr();
+    call MicPower.set();
 		call MicMuxSel.makeOutput();    
 		call MicMuxSel.clr();
-				
-    call AlertInterrupt.disable();
-    return SUCCESS;
-	}
+		
+    call MicSetting.muxSel(1);  // Set the mux so that raw microhpone output is selected
+    call MicSetting.gainAdjust(64);  // Set the gain of the microphone.
 
-  command error_t StdControl.start()
-  {
-    call MicPower.set();
+    call Timer.startOneShot(1200); 
+//    signal SplitControl.startDone(SUCCESS);
     return SUCCESS;
   }
+
+  event void Timer.fired() {
+    signal SplitControl.startDone(SUCCESS);
+  }
   
-  command error_t StdControl.stop()
+  command error_t SplitControl.stop()
   {
     call AlertInterrupt.disable();
     call MicPower.clr();
     call MicPower.makeInput();
 
+    signal SplitControl.stopDone(SUCCESS);
     return SUCCESS;
   }
   
@@ -81,12 +82,11 @@ implementation
   * Resource request
   * 
   */  
-  event void Resource.granted()
+  event void I2CResource.granted()
   {
-    call DebugLeds.led0Off();
     if ( call I2CPacket.write(0x3,TOS_MIC_POT_ADDR, 2, gainData) == SUCCESS)
     {
-      call DebugLeds.led1On();
+      return;
     };
   }
 
@@ -94,7 +94,7 @@ implementation
   * mic control
   * 
   */  
-  command error_t Mic.muxSel(uint8_t sel)
+  command error_t MicSetting.muxSel(uint8_t sel)
   {
     if (sel == 0)
     {
@@ -109,15 +109,14 @@ implementation
     return FAIL;
   }
   
-  command error_t Mic.gainAdjust(uint8_t val)
+  command error_t MicSetting.gainAdjust(uint8_t val)
   {
-    call DebugLeds.led0On();
     gainData[0] = 0;    // pot subaddr
     gainData[1] = val;  // value to write
-    return call Resource.request();
+    return call I2CResource.request();
   }
   
-  command uint8_t Mic.readToneDetector()
+  command uint8_t MicSetting.readToneDetector()
   {
     bool bVal = call AlertInterrupt.getValue();
     return bVal ? 1 : 0;
@@ -127,26 +126,26 @@ implementation
   * mic interrupt control
   * 
   */
-  async command error_t MicInterrupt.enable()
+  async command error_t MicSetting.enable()
   {
     call AlertInterrupt.enable();
     return SUCCESS;
   }
   
-  async command error_t MicInterrupt.disable()
+  async command error_t MicSetting.disable()
   {
     call AlertInterrupt.disable();
     return SUCCESS;
   }
 
-  default async event error_t MicInterrupt.toneDetected()
+  default async event error_t MicSetting.toneDetected()
   {
     return SUCCESS;
   }
   
   async event void AlertInterrupt.fired()
   {
-    signal MicInterrupt.toneDetected();
+    signal MicSetting.toneDetected();
   }
   
   /**
@@ -169,15 +168,6 @@ implementation
     return ATM128_ADC_PRESCALE;
   }
   
-  async command void MicResourceConfigure.configure() 
-  {
-  	call MicPower.set();
-  }
-  
-  async command void MicResourceConfigure.unconfigure() 
-  {
-//    call MicPower.clr();
-  }  
   /**
   * I2CPot2
   * 
@@ -189,8 +179,7 @@ implementation
   
   async event void I2CPacket.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data)
   {
-    call DebugLeds.led1Off();
-    call Resource.release();
+    call I2CResource.release();
     return ;
   }
 }

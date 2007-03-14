@@ -25,26 +25,23 @@
  /*
  *  @author Hu Siquan <husq@xbow.com>
  *
- *  $Id: MicC.nc,v 1.1 2007-02-15 10:33:38 pipeng Exp $
+ *  $Id: MicC.nc,v 1.2 2007-03-14 03:25:05 pipeng Exp $
  */
 
 #include "mts300.h"
 
 generic configuration MicC() {
-  provides interface Init;
-  provides interface StdControl;
   provides interface Read<uint16_t>;
-  provides interface Mic;
-  provides interface MicInterrupt;
+  provides interface MicSetting;
 }
 implementation {
-  components new AdcReadClientC(), MicDeviceP;
+  enum {
+    ID = unique(UQ_MIC_RESOURCE)
+  };
+  components MicReadP, MicDeviceP, new AdcReadClientC();
 
-  Init = MicDeviceP;
-	StdControl = MicDeviceP;
-  Read = AdcReadClientC;
-  Mic = MicDeviceP;
-  MicInterrupt = MicDeviceP;
-  AdcReadClientC.Atm128AdcConfig -> MicDeviceP;
-  AdcReadClientC.ResourceConfigure -> MicDeviceP;
+  Read = MicReadP.Read[ID];
+  MicReadP.ActualRead[ID] -> AdcReadClientC;
+  AdcReadClientC.Atm128AdcConfig -> MicDeviceP.Atm128AdcConfig;
+  MicSetting = MicDeviceP;
 }

@@ -1,49 +1,25 @@
-/**
- *  Copyright (c) 2005-2006 Crossbow Technology, Inc.
- *  All rights reserved.
+/* $Id: PhotoC.nc,v 1.3 2007-03-14 03:25:05 pipeng Exp $
+ * Copyright (c) 2006 Intel Corporation
+ * All rights reserved.
  *
- *  Permission to use, copy, modify, and distribute this software and its
- *  documentation for any purpose, without fee, and without written
- *  agreement is hereby granted, provided that the above copyright
- *  notice, the (updated) modification history and the author appear in
- *  all copies of this source code.
- *
- *  Permission is also granted to distribute this software under the
- *  standard BSD license as contained in the TinyOS distribution.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
- *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- *  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
- *  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
- *  OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- *  THE POSSIBILITY OF SUCH DAMAGE.
+ * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * file. If you do not find these files, copies can be found by writing to
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * 94704.  Attention:  Intel License Inquiry.
  */
- /*
- *  @author Hu Siquan <husq@xbow.com>
- *
- *  $Id: PhotoC.nc,v 1.2 2007-02-15 10:28:46 pipeng Exp $
+/**
+ * Photodiode of the mts300 sensor board.
+ * 
+ * @author David Gay
  */
 
 #include "mts300.h"
 
-generic configuration PhotoC()
-{
+generic configuration PhotoC() {
   provides interface Read<uint16_t>;
-  provides interface StdControl;
-  provides interface Init;
 }
-implementation
-{
-  components new AdcReadClientC(), PhotoTempDeviceP;
+implementation {
+  components ArbitratedPhotoDeviceP;
 
-  Init = PhotoTempDeviceP;
-  StdControl = PhotoTempDeviceP;
-
-  Read = AdcReadClientC;
-  AdcReadClientC.Atm128AdcConfig -> PhotoTempDeviceP.PhotoAtm128AdcConfig;
-  AdcReadClientC.ResourceConfigure -> PhotoTempDeviceP.PhotoResourceConfigure;
+  Read = ArbitratedPhotoDeviceP.Read[unique(UQ_PHOTO_RESOURCE)];
 }

@@ -1,65 +1,31 @@
-/**
- *  Copyright (c) 2005-2006 Crossbow Technology, Inc.
- *  All rights reserved.
- *
- *  Permission to use, copy, modify, and distribute this software and its
- *  documentation for any purpose, without fee, and without written
- *  agreement is hereby granted, provided that the above copyright
- *  notice, the (updated) modification history and the author appear in
- *  all copies of this source code.
- *
- *  Permission is also granted to distribute this software under the
- *  standard BSD license as contained in the TinyOS distribution.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
- *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- *  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS 
- *  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA, 
- *  OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
- *  THE POSSIBILITY OF SUCH DAMAGE.
- *
- *  @author Hu Siquan <husq@xbow.com> 
- *
- *  $Id: SounderP.nc,v 1.2 2007-02-15 10:28:46 pipeng Exp $
- */
-
-#include "mts300.h"
-
-module SounderP 
+module SounderP
 {
-  provides interface Init;
-  provides interface StdControl;
-  uses interface GeneralIO as SounderPin;  
+  provides interface Mts300Sounder;
+  uses {
+    interface Timer<TMilli>;
+    interface GeneralIO as SounderPin;
+  }
 }
-
-implementation 
+implementation
 {
-  command error_t Init.init() 
-  {
-#if SOUNDER
+  command void Mts300Sounder.beep(uint16_t length) {
+    if (call Timer.isRunning())
+      {
+	uint32_t remaining = call Timer.getdt(),
+	  elapsed = call Timer.getNow() - call Timer.gett0();
+
+	/* If more time left than we are requesting, just exit */
+	if (remaining > elapsed && (remaining - elapsed) > length)
+	  return;
+
+	/* Override timer with new duration */
+      }
+    call Timer.startOneShot(length);
     call SounderPin.makeOutput();
-    call SounderPin.clr();
-#endif
-    return SUCCESS;
-  }
-
-  command error_t StdControl.start() 
-  {
-#if SOUNDER
     call SounderPin.set();
-#endif
-    return SUCCESS;
   }
 
-  command error_t StdControl.stop() 
-  {
-#if SOUNDER
+  event void Timer.fired() {
     call SounderPin.clr();
-#endif
-    return SUCCESS;
   }
 }

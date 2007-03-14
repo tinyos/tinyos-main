@@ -1,4 +1,4 @@
-/* $Id: mts300.h,v 1.2 2007-02-15 10:28:46 pipeng Exp $ */
+/* $Id: mts300.h,v 1.3 2007-03-14 03:25:06 pipeng Exp $ */
 /*
  * Copyright (c) 2005-2006 Crossbow Technology, Inc.  All rights reserved.
  *
@@ -23,7 +23,7 @@
 /**
  * 
  * @author Hu Siquan <husq@xbow.com>
- * Revision: $Revision: 1.2 $
+ * Revision: $Revision: 1.3 $
  *
  */
 
@@ -35,8 +35,12 @@
 #define SOUNDER 1
 #endif
 
-#define MTS3X0_PHOTO_TEMP "mts300.photo.temp"
-#define MTS3X0_MAG_RESOURCE "mts300.mag"
+#define UQ_ACCEL_RESOURCE "mts300.accel"
+#define UQ_PHOTO_RESOURCE "mts300.photo"
+#define UQ_TEMP_RESOURCE "mts300.temp"
+#define UQ_PHOTOTEMP_RESOURCE "mts300.phototemp"
+#define UQ_MIC_RESOURCE "mts300.microphone"
+#define UQ_MAG_RESOURCE "mts300.mag"
 
 enum
 {

@@ -25,7 +25,7 @@
  *  @author Martin Turon <mturon@xbow.com>
  *  @author Hu Siquan <husq@xbow.com>
  *
- *  $Id: SensorMts300C.nc,v 1.5 2007-02-15 10:28:46 pipeng Exp $
+ *  $Id: SensorMts300C.nc,v 1.6 2007-03-14 03:25:05 pipeng Exp $
  */
 
 //configuration SensorMts300C
@@ -33,13 +33,12 @@ generic configuration SensorMts300C()
 {
   provides
   {
-   	interface Init;                 //!< Standard Initialization
-   	interface StdControl;           //!< Start/Stop for Power Management
+   	interface Mts300Sounder as Sounder; //!< sounder
    	interface Read<uint16_t> as Vref; //!< voltage
    	interface Read<uint16_t> as Temp; //!< Thermister
   	interface Read<uint16_t> as Light; //!< Photo sensor
    	interface Read<uint16_t> as Microphone; //!< Mic sensor
-   	interface Read<uint16_t> as AccelX; //!< Accelerometer sensor
+  	interface Read<uint16_t> as AccelX; //!< Accelerometer sensor
    	interface Read<uint16_t> as AccelY; //!< Accelerometer sensor
    	interface Read<uint16_t> as MagX; //!< magnetometer sensor
    	interface Read<uint16_t> as MagY; //!< magnetometer sensor
@@ -47,48 +46,23 @@ generic configuration SensorMts300C()
 }
 implementation
 {
-    components 	SensorMts300P,	HplAtm128GeneralIOC as IO,
+    components SounderC,
     new VoltageC(),
+    new AccelXC(),
+    new AccelYC(),
     new PhotoC(),
     new TempC(),
     new MicC(),
-    new MagC(),
-    new AccelC(),
-	  new TimerMilliC() as WarmUpTimer;
+    new MagXC(),
+    new MagYC();
 
-    Init       = SensorMts300P.Init;
-    Init       = PhotoC.Init;
-    Init       = MicC.Init;
-    StdControl = SensorMts300P.StdControl;
-    Vref       = SensorMts300P.Vref;
-    Temp       = SensorMts300P.Temp;
-    Light      = SensorMts300P.Light;
-    Microphone = SensorMts300P.Microphone;
-    AccelX     = SensorMts300P.AccelX;
-    AccelY     = SensorMts300P.AccelY;
-    MagX       = SensorMts300P.MagX;
-    MagY       = SensorMts300P.MagY;
-
-    SensorMts300P.WarmUpTimer -> WarmUpTimer;
-
-    SensorMts300P.VrefRead -> VoltageC.Read;
-    SensorMts300P.PhotoControl -> PhotoC.StdControl;
-    SensorMts300P.TempRead -> TempC.Read;
-    SensorMts300P.LightRead -> PhotoC.Read;
-    SensorMts300P.LightPower -> IO.PortE5;
-    SensorMts300P.TempPower -> IO.PortE6;
-
-    SensorMts300P.MicControl -> MicC.StdControl;
-    SensorMts300P.Mic -> MicC.Mic;
-    SensorMts300P.MicRead -> MicC.Read;
-
-    SensorMts300P.MagControl -> MagC.StdControl;
-    SensorMts300P.Mag -> MagC.Mag;
-    SensorMts300P.MagXRead -> MagC.MagX;
-    SensorMts300P.MagYRead -> MagC.MagY;
-
-    SensorMts300P.AccelControl -> AccelC.StdControl;
-    SensorMts300P.AccelXRead -> AccelC.AccelX;
-    SensorMts300P.AccelYRead -> AccelC.AccelY;
-    
+    Sounder    = SounderC;
+    Vref       = VoltageC;
+    Temp       = TempC;
+    Light      = PhotoC;
+    Microphone = MicC;
+    AccelX     = AccelXC;
+    AccelY     = AccelYC;
+    MagX       = MagXC;
+    MagY       = MagYC;
 }
