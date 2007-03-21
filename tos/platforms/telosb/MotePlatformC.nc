@@ -71,7 +71,7 @@ implementation {
 	P1OUT = 0x00;
  
 	P2DIR = 0x7b;
-	P2OUT = 0x10;
+	P2OUT = 0x30;
 
 	P3DIR = 0xf1;
 	P3OUT = 0x00;
