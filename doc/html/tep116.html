@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-03-14 01:56:33 $
-:version: $Revision: 1.9 $
+:date: $Date: 2007-03-21 06:47:18 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,7 +303,7 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-03-14</td>
 </tr>
@@ -571,6 +571,13 @@ if (call Send.send(...) == SUCCESS &amp;&amp;
 use a QueueC (found in tos/system) to store pending packet pointers
 and serialize them onto sending interface, or they can introduce
 a new sending interface that supports multiple pending transmissions.</p>
+<p>The cancel command allows a sender to cancel the current transmission.
+A call to cancel when there is no pending sendDone event MUST return FAIL.
+If there is a pending sendDone event and the cancel returns SUCCESS, then
+the packet layer MUST NOT transmit the packet and MUST signal sendDone
+with ECANCEL as its error code. If there is a pending sendDone event
+and cancel returns FAIL, then sendDone SHOULD occur as if the cancel
+was not called.</p>
 </div>
 <div class="section">
 <h2><a id="receive-interface" name="receive-interface">2.3 Receive interface</a></h2>
