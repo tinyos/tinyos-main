@@ -14,16 +14,10 @@ implementation
 {
   uint8_t set;
   uint32_t t0, dt;
-  uint32_t base, lastNow;
-
-  void oopsT0() {
-  }
-
-  void oopsNow() {
-  }
+  uint32_t base;
 
   enum {
-    MINDT = 10,
+    MINDT = 2,
     MAXT = 230
   };
 
@@ -50,12 +44,8 @@ implementation
 	else
 	  {
 	    uint32_t now = call Counter.get();
-	    if (now < t0) 
-	      {
-		oopsT0();
-		t0 = now;
-	      }
-	    if (now - t0 >= dt)
+
+	    if ((uint32_t)(now - t0) >= dt)
 	      {
 		set = FALSE;
 		fired = TRUE;
@@ -112,13 +102,6 @@ implementation
 	  now = base + call Counter.get() + call Timer.get();
 	else
 	  now = base + now8;
-
-	if (now < lastNow)
-	  {
-	    oopsNow();
-	    now = lastNow;
-	  }
-	lastNow = now;
       }
     return now;
   }
