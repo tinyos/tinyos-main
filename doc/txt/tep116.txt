@@ -10,8 +10,8 @@ Packet Protocols
 :Author: Philip Levis
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.9 $
-:Draft-Modified: $Date: 2007-03-21 06:47:18 $
+:Draft-Version: $Revision: 1.10 $
+:Draft-Modified: $Date: 2007-03-28 05:46:28 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -221,7 +221,9 @@ has this signature::
   interface AMPacket {
     command am_addr_t address();
     command am_addr_t destination(message_t* amsg);
+    command am_addr_t source(message_t* amsg);
     command void setDestination(message_t* amsg, am_addr_t addr);
+    command void setSource(message_t* amsg, am_addr_t addr);
     command bool isForMe(message_t* amsg);
     command am_id_t type(message_t* amsg);
     command void setType(message_t* amsg, am_id_t t);

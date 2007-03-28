@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-03-21 06:47:18 $
-:version: $Revision: 1.10 $
+:date: $Date: 2007-03-28 05:46:28 $
+:version: $Revision: 1.11 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -303,9 +303,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.9</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-03-14</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-03-21</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -501,7 +501,9 @@ has this signature:</p>
 interface AMPacket {
   command am_addr_t address();
   command am_addr_t destination(message_t* amsg);
+  command am_addr_t source(message_t* amsg);
   command void setDestination(message_t* amsg, am_addr_t addr);
+  command void setSource(message_t* amsg, am_addr_t addr);
   command bool isForMe(message_t* amsg);
   command am_id_t type(message_t* amsg);
   command void setType(message_t* amsg, am_id_t t);
