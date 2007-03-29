@@ -1,4 +1,4 @@
-// $Id: Atm128AlarmAsyncP.nc,v 1.3 2007-03-26 22:38:39 idgay Exp $
+// $Id: Atm128AlarmAsyncP.nc,v 1.4 2007-03-29 17:12:15 idgay Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -39,7 +39,7 @@ implementation
 				   for the full details. */
 
   enum {
-    MINDT = 3,			/* Minimum interval between interrupts */
+    MINDT = 2,			/* Minimum interval between interrupts */
     MAXT = 230			/* Maximum value to let timer 0 reach
 				   (from Joe Polastre and Robert Szewczyk's
 				   painful experiences with the 1.x timer ;-)) */
@@ -73,11 +73,13 @@ implementation
       ;
     if (n == TCNT0)
       n++;
+#if 1
     /* Support for overflow. Force interrupt at wrap around value. 
        This does not cause a backwards-in-time value as we do this
        every time we set OCR0. */
     if (base + n + 1 < base)
       n = -base - 1;
+#endif
     OCR0 = n; 
   }
 
@@ -147,8 +149,10 @@ implementation
     /* Compare register fired. Update time knowledge */
     base += call Compare.get() + 1; // interrupt is 1ms late
     setInterrupt();
+#if 1
     if (!base)
       overflow();
+#endif
   }  
 
   async command uint32_t Counter.get() {
@@ -163,7 +167,7 @@ implementation
 	if ((call TimerCtrl.getInterruptFlag()).bits.ocf0)
 	  /* We need to reread TCNT0 as it might've overflowed after we
 	     read TCNT0 the first time */
-	  now = base + call Counter.get() + 1 + call Timer.get();
+	  now = base + call Compare.get() + 1 + call Timer.get();
 	else
 	  /* We need to use the value of TCNT0 from before we check the
 	     interrupt flag, as it might wrap around after the check */
@@ -173,12 +177,17 @@ implementation
   }
 
   async command bool Counter.isOverflowPending() {
+#if 0
+    return FALSE;
+#else
     atomic
       return (call TimerCtrl.getInterruptFlag()).bits.ocf0 &&
-	!(base + call Counter.get() + 1);
+	!(base + call Compare.get() + 1);
+#endif
   }
 
   async command void Counter.clearOverflow() { 
+#if 1
     atomic
       if (call Counter.isOverflowPending())
 	{
@@ -186,6 +195,7 @@ implementation
 	  call Compare.reset();
 	  setInterrupt();
 	}
+#endif
   }
 
   async command void Alarm.start(uint32_t ndt) {
