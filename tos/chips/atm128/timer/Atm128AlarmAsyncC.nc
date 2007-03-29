@@ -11,11 +11,11 @@ implementation
     HplAtm128Timer0AsyncC;
 
   Init = Atm128AlarmAsyncP;
-  Init = HplAtm128Timer0AsyncC;
   Alarm = Atm128AlarmAsyncP;
   Counter = Atm128AlarmAsyncP;
 
   Atm128AlarmAsyncP.Timer -> HplAtm128Timer0AsyncC;
   Atm128AlarmAsyncP.TimerCtrl -> HplAtm128Timer0AsyncC;
   Atm128AlarmAsyncP.Compare -> HplAtm128Timer0AsyncC;
+  Atm128AlarmAsyncP.TimerAsync -> HplAtm128Timer0AsyncC;
 }

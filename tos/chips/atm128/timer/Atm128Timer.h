@@ -1,4 +1,4 @@
-// $Id: Atm128Timer.h,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+// $Id: Atm128Timer.h,v 1.5 2007-03-29 21:07:25 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -118,7 +118,7 @@ typedef union
     uint8_t as0    : 1;  //!< Asynchronous Timer/Counter (off=CPU,on=32KHz osc)
     uint8_t rsvd   : 4;  //!< Reserved
   } bits;
-} Atm128_ASSR_t;
+} Atm128Assr_t;
 
 /* Timer/Counter Interrupt Mask Register */
 typedef union

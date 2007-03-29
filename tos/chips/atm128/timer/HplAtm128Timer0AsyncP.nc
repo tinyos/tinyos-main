@@ -1,4 +1,4 @@
-/// $Id: HplAtm128Timer0AsyncP.nc,v 1.1 2006-12-14 01:24:48 scipio Exp $
+/// $Id: HplAtm128Timer0AsyncP.nc,v 1.2 2007-03-29 21:07:25 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -36,28 +36,21 @@
 
 module HplAtm128Timer0AsyncP {
   provides {
-    interface Init @atleastonce();
     // 8-bit Timers
     interface HplAtm128Timer<uint8_t>   as Timer;
     interface HplAtm128TimerCtrl8       as TimerCtrl;
     interface HplAtm128Compare<uint8_t> as Compare;
     interface McuPowerOverride;
+    interface HplAtm128TimerAsync       as TimerAsync;
   }
 }
 implementation
 {
-  command error_t Init.init() {
-    SET_BIT(ASSR, AS0);  // set Timer/Counter0 to asynchronous mode
-    return SUCCESS;
-  }
-
   //=== Read the current timer value. ===================================
   async command uint8_t  Timer.get() { return TCNT0; }
 
   //=== Set/clear the current timer value. ==============================
   async command void Timer.set(uint8_t t)  {
-    while (ASSR & 1 << TCN0UB)
-      ;
     TCNT0 = t;
   }
 
@@ -81,8 +74,6 @@ implementation
 
   //=== Write the control registers. ====================================
   async command void TimerCtrl.setControl( Atm128TimerControl_t x ) { 
-    while (ASSR & 1 << TCR0UB)
-      ;
     TCCR0 = x.flat; 
   }
 
@@ -142,16 +133,11 @@ implementation
 
   //=== Write the compare registers. ====================================
   async command void Compare.set(uint8_t t)   { 
-    atomic
-      {
-	while (ASSR & 1 << OCR0UB)
-	  ;
-	OCR0 = t; 
-      }
+    OCR0 = t; 
   }
 
   //=== Timer interrupts signals ========================================
-  void stabiliseTimer0() {
+  inline void stabiliseTimer0() {
     TCCR0 = TCCR0;
     while (ASSR & 1 << TCR0UB)
       ;
@@ -174,7 +160,7 @@ implementation
       // need to wait for timer 0 updates propagate before sleeping
       // (we don't need to worry about reentering sleep mode too early,
       // as the wake ups from timer0 wait at least one TOSC1 cycle
-      // anyway - see the stabiliseTimer0 function in HplAtm128Timer0AsyncC)
+      // anyway - see the stabiliseTimer0 function)
       while (ASSR & (1 << TCN0UB | 1 << OCR0UB | 1 << TCR0UB))
 	;
       diff = OCR0 - TCNT0;
@@ -198,5 +184,30 @@ implementation
   AVR_ATOMIC_HANDLER(SIG_OVERFLOW0) {
     stabiliseTimer0();
     signal Timer.overflow();
+  }
+
+  // Asynchronous status register support
+  async command Atm128Assr_t TimerAsync.getAssr() {
+    return *(Atm128Assr_t *)&ASSR;
+  }
+
+  async command void TimerAsync.setAssr(Atm128Assr_t x) {
+    ASSR = x.flat;
+  }
+
+  async command void TimerAsync.setTimer0Asynchronous() {
+    ASSR |= 1 << AS0;
+  }
+
+  async command bool TimerAsync.controlBusy() {
+    return (ASSR & (1 << TCR0UB)) != 0;
+  }
+
+  async command bool TimerAsync.compareBusy() {
+    return (ASSR & (1 << OCR0UB)) != 0;
+  }
+
+  async command bool TimerAsync.countBusy() {
+    return (ASSR & (1 << TCN0UB)) != 0;
   }
 }

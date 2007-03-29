@@ -1,4 +1,4 @@
-/// $Id: HplAtm128Timer0AsyncC.nc,v 1.6 2006-12-14 01:24:48 scipio Exp $
+/// $Id: HplAtm128Timer0AsyncC.nc,v 1.7 2007-03-29 21:07:25 idgay Exp $
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -35,6 +35,7 @@
  * wires it to McuSleepC for low-power calculations..
  *
  * @author Philip Levis
+ * @author David Gay
  */
 
 #include <Atm128Timer.h>
@@ -42,11 +43,11 @@
 configuration HplAtm128Timer0AsyncC
 {
   provides {
-    interface Init @atleastonce();
     // 8-bit Timers
     interface HplAtm128Timer<uint8_t>   as Timer;
     interface HplAtm128TimerCtrl8       as TimerCtrl;
     interface HplAtm128Compare<uint8_t> as Compare;
+    interface HplAtm128TimerAsync       as TimerAsync;
   }
 }
 implementation
@@ -56,9 +57,8 @@ implementation
 
   McuSleepC.McuPowerOverride -> HplAtm128Timer0AsyncP;
 
-  Init = HplAtm128Timer0AsyncP;
   Timer = HplAtm128Timer0AsyncP;
   TimerCtrl = HplAtm128Timer0AsyncP;
   Compare = HplAtm128Timer0AsyncP;
-  
+  TimerAsync = HplAtm128Timer0AsyncP;
 }

@@ -1,6 +1,6 @@
-// $Id: Atm128AlarmAsyncP.nc,v 1.4 2007-03-29 17:12:15 idgay Exp $
+// $Id: Atm128AlarmAsyncP.nc,v 1.5 2007-03-29 21:07:25 idgay Exp $
 /*
- * Copyright (c) 2005-2006 Intel Corporation
+ * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
  *
  * This file is distributed under the terms in the attached INTEL-LICENSE     
@@ -17,6 +17,8 @@
  * So, instead, this version (inspired by the 1.x code and a remark from
  * Martin Turon) directly builds a 32-bit alarm and counter on top of timer 0
  * and never lets timer 0 overflow.
+ *
+ * @author David Gay
  */
 generic module Atm128AlarmAsyncP(typedef precision, int divider) {
   provides {
@@ -28,6 +30,7 @@ generic module Atm128AlarmAsyncP(typedef precision, int divider) {
     interface HplAtm128Timer<uint8_t> as Timer;
     interface HplAtm128TimerCtrl8 as TimerCtrl;
     interface HplAtm128Compare<uint8_t> as Compare;
+    interface HplAtm128TimerAsync as TimerAsync;
   }
 }
 implementation
@@ -53,12 +56,13 @@ implementation
       {
 	Atm128TimerControl_t x;
 
-	call Compare.start();
+	call TimerAsync.setTimer0Asynchronous();
 	x.flat = 0;
 	x.bits.cs = divider;
 	x.bits.wgm1 = 1; /* We use the clear-on-compare mode */
 	call TimerCtrl.setControl(x);
-	call Compare.set(MAXT);
+	call Compare.set(MAXT); /* setInterrupt needs a valid value here */
+	call Compare.start();
 	setInterrupt();
       }
     return SUCCESS;
@@ -66,21 +70,18 @@ implementation
 
   /* Set compare register for timer 0 to n. But increment n by 1 if TCNT0 
      reaches this value before we can set the compare register.
-     Direct register access used because the HPL doesn't allow us to do this.
   */
   void setOcr0(uint8_t n) {
-    while (ASSR & 1 << OCR0UB)
+    while (call TimerAsync.compareBusy())
       ;
-    if (n == TCNT0)
+    if (n == call Timer.get())
       n++;
-#if 1
     /* Support for overflow. Force interrupt at wrap around value. 
        This does not cause a backwards-in-time value as we do this
        every time we set OCR0. */
     if (base + n + 1 < base)
       n = -base - 1;
-#endif
-    OCR0 = n; 
+    call Compare.set(n);
   }
 
   void fire() {
@@ -149,10 +150,8 @@ implementation
     /* Compare register fired. Update time knowledge */
     base += call Compare.get() + 1; // interrupt is 1ms late
     setInterrupt();
-#if 1
     if (!base)
       overflow();
-#endif
   }  
 
   async command uint32_t Counter.get() {
@@ -177,17 +176,12 @@ implementation
   }
 
   async command bool Counter.isOverflowPending() {
-#if 0
-    return FALSE;
-#else
     atomic
       return (call TimerCtrl.getInterruptFlag()).bits.ocf0 &&
 	!(base + call Compare.get() + 1);
-#endif
   }
 
   async command void Counter.clearOverflow() { 
-#if 1
     atomic
       if (call Counter.isOverflowPending())
 	{
@@ -195,7 +189,6 @@ implementation
 	  call Compare.reset();
 	  setInterrupt();
 	}
-#endif
   }
 
   async command void Alarm.start(uint32_t ndt) {
