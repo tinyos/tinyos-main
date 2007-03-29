@@ -1,4 +1,4 @@
-// $Id: HplAtm128TimerAsync.nc,v 1.1 2007-03-29 21:07:25 idgay Exp $
+// $Id: HplAtm128TimerAsync.nc,v 1.2 2007-03-29 21:29:33 idgay Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -35,18 +35,18 @@ interface HplAtm128TimerAsync
    * Check if control register TCCR0 is busy (should not be updated if true)
    * @return TRUE if TCCR0 is busy, FALSE otherwise (can be updated)
    */
-  async command bool controlBusy();
+  async command int controlBusy();
 
   /**
    * Check if compare register OCR0 is busy (should not be updated if true)
    * @return TRUE if OCR0 is busy, FALSE otherwise (can be updated)
    */
-  async command bool compareBusy();
+  async command int compareBusy();
 
   /**
    * Check if current timer value (TCNT0) is busy (should not be updated if true)
    * @return TRUE if TCNT0 is busy, FALSE otherwise (can be updated)
    */
-  async command bool countBusy();
+  async command int countBusy();
 
 }

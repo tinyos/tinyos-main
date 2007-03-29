@@ -1,4 +1,4 @@
-/// $Id: HplAtm128Timer0AsyncP.nc,v 1.2 2007-03-29 21:07:25 idgay Exp $
+/// $Id: HplAtm128Timer0AsyncP.nc,v 1.3 2007-03-29 21:29:33 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -199,15 +199,15 @@ implementation
     ASSR |= 1 << AS0;
   }
 
-  async command bool TimerAsync.controlBusy() {
+  async command int TimerAsync.controlBusy() {
     return (ASSR & (1 << TCR0UB)) != 0;
   }
 
-  async command bool TimerAsync.compareBusy() {
+  async command int TimerAsync.compareBusy() {
     return (ASSR & (1 << OCR0UB)) != 0;
   }
 
-  async command bool TimerAsync.countBusy() {
+  async command int TimerAsync.countBusy() {
     return (ASSR & (1 << TCN0UB)) != 0;
   }
 }

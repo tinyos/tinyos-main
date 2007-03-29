@@ -1,4 +1,4 @@
-// $Id: Atm128AlarmAsyncP.nc,v 1.5 2007-03-29 21:07:25 idgay Exp $
+// $Id: Atm128AlarmAsyncP.nc,v 1.6 2007-03-29 21:29:33 idgay Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -37,7 +37,7 @@ implementation
 {
   uint8_t set; 			/* Is the alarm set? */
   uint32_t t0, dt;		/* Time of the next alarm */
-  uint32_t base;		/* base+TCNT0 is the current time if no
+  norace uint32_t base;		/* base+TCNT0 is the current time if no
 				   interrupt is pending. See Counter.get()
 				   for the full details. */
 
@@ -63,8 +63,8 @@ implementation
 	call TimerCtrl.setControl(x);
 	call Compare.set(MAXT); /* setInterrupt needs a valid value here */
 	call Compare.start();
-	setInterrupt();
       }
+    setInterrupt();
     return SUCCESS;
   }
 
@@ -82,11 +82,6 @@ implementation
     if (base + n + 1 < base)
       n = -base - 1;
     call Compare.set(n);
-  }
-
-  void fire() {
-    __nesc_enable_interrupt();
-    signal Alarm.fired();
   }
 
   /* Update the compare register to trigger an interrupt at the
@@ -128,7 +123,7 @@ implementation
 
 		if (alarm_in > MAXT)
 		  newOcr0 = MAXT;
-		else if (alarm_in < MINDT)
+		else if ((uint8_t)alarm_in < MINDT) // alarm_in < MAXT ...
 		  newOcr0 = MINDT;
 		else
 		  newOcr0 = alarm_in;
@@ -138,20 +133,19 @@ implementation
 	setOcr0(newOcr0);
       }
     if (fired)
-      fire();
-  }
-
-  void overflow() {
-    __nesc_enable_interrupt();
-    signal Counter.overflow();
+      signal Alarm.fired();
   }
 
   async event void Compare.fired() {
+    int overflowed;
+
     /* Compare register fired. Update time knowledge */
-    base += call Compare.get() + 1; // interrupt is 1ms late
+    base += call Compare.get() + 1U; // interrupt is 1ms late
+    overflowed = !base;
+    __nesc_enable_interrupt();
     setInterrupt();
-    if (!base)
-      overflow();
+    if (overflowed)
+      signal Counter.overflow();
   }  
 
   async command uint32_t Counter.get() {
@@ -187,8 +181,10 @@ implementation
 	{
 	  base = 0;
 	  call Compare.reset();
-	  setInterrupt();
 	}
+      else
+	return;
+    setInterrupt();
   }
 
   async command void Alarm.start(uint32_t ndt) {
