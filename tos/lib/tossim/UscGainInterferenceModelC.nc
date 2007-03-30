@@ -1,4 +1,4 @@
-// $Id: UscGainInterferenceModelC.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: UscGainInterferenceModelC.nc,v 1.5 2007-03-30 00:27:59 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -134,18 +134,23 @@ implementation {
     receive_message_t* predecessor = NULL;
     receive_message_t* list = outstandingReceptionHead;
     dbg("Gain", "Handling reception event @ %s.\n", sim_time_string());
+    // Scan the list for the node which precedes the one pointing
+    // to the received packet.
     while (list != NULL) {
       if (list->next == mine) {
 	predecessor = list;
       }
       if (list != mine) {
-	if ((list->power - sim_gain_sensitivity()) < heardSignal()) {
+	if ((list->power - sim_gain_sensitivity()) < mine->power) {
 	  dbg("Gain", "Lost packet from %i as I concurrently received a packet stronger than %lf\n", list->source, list->power);
 	  list->lost = 1;
 	}
       }
       list = list->next;
     }
+    // Remove the received packet from the oustanding list by updating
+    // the list pointers: A->B->C becomes A->C. If the received packet
+    // is the head of the queue, then update the head pointer.
     if (predecessor) {
       predecessor->next = mine->next;
     }
@@ -155,7 +160,10 @@ implementation {
     else {
       dbgerror("Gain", "Incoming packet list structure is corrupted: entry is not the head and no entry points to it.\n");
     }
-
+    // Because the packet has been removed from the queue, it is not
+    // included in heardSignal(): this line tests if the Signal of the
+    // packet is above the threshold over the Noise of all other RF
+    // energy sources (local noise, other packets, etc.).
     if ((mine->power - sim_gain_sensitivity()) < heardSignal()) {
       dbg("Gain", "Lost packet from %i as its power %lf was below sensitivity threshold\n", mine->source, mine->power);
       mine->lost = 1;
