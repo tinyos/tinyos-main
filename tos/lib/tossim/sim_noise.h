@@ -29,7 +29,7 @@
  * @date   Oct 13 2006
  */
 
-// $Id: sim_noise.h,v 1.2 2007-04-01 00:29:34 scipio Exp $
+// $Id: sim_noise.h,v 1.3 2007-04-01 00:52:10 scipio Exp $
 
 #ifndef _SIM_NOISE_HASH_H_
 #define _SIM_NOISE_HASH_H_
@@ -41,8 +41,8 @@ extern "C" {
 #endif
 
 enum {
-  NOISE_MIN = -120,
-  NOISE_MAX = 10,
+  NOISE_MIN = -100,
+  NOISE_MAX = -30,
   NOISE_MIN_QUANTIZE = -100,
   NOISE_QUANTIZE_INTERVAL = 5,
   NOISE_BIN_SIZE = (NOISE_MAX - NOISE_MIN)/NOISE_QUANTIZE_INTERVAL,

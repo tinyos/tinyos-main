@@ -221,15 +221,9 @@ void sim_noise_dist(uint16_t node_id)__attribute__ ((C, spontaneous))
 
 void arrangeKey(uint16_t node_id)__attribute__ ((C, spontaneous))
 {
-  int i;
-  char key[NOISE_HISTORY];
   char *pKey = noiseData[node_id].key;
+  memcpy(pKey, pKey+1, NOISE_HISTORY-1);
 
-  for(i=0;i<NOISE_HISTORY-1; i++)
-    {
-      key[i] = pKey[i+1];
-    }
-  memcpy((void *)pKey, (void *)key, NOISE_HISTORY);
 }
 
 /*
