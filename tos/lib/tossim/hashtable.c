@@ -151,6 +151,9 @@ hashtable_insert(struct hashtable *h, void *k, void *v)
     if (NULL == e) { --(h->entrycount); return 0; } /*oom*/
     e->h = hash(h,k);
     tindex = indexFor(h->tablelength,e->h);
+    if (v == (void*)0x477fed00) {
+      printf("CORRUPT\n");
+    }
     e->k = k;
     e->v = v;
     e->next = h->table[tindex];
@@ -167,11 +170,19 @@ hashtable_search(struct hashtable *h, void *k)
     hashvalue = hash(h,k);
     tindex = indexFor(h->tablelength,hashvalue);
     e = h->table[tindex];
+    if (hashvalue == 1741511095) {
+      int i = 5;
+    }
     while (NULL != e)
     {
         /* Check hash value to short circuit heavier comparison */
-        if ((hashvalue == e->h) && (h->eqfn(k, e->k))) return e->v;
-        e = e->next;
+      if ((hashvalue == e->h) && (h->eqfn(k, e->k))) {
+	if ((int)e->v == 0x477fed00) {
+	  printf("ALARM\n");
+	}
+	return e->v;
+      }
+      e = e->next;
     }
     return NULL;
 }

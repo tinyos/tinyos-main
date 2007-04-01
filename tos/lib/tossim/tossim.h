@@ -29,7 +29,7 @@
  * @date   Nov 22 2005
  */
 
-// $Id: tossim.h,v 1.4 2006-12-12 18:23:35 vlahan Exp $
+// $Id: tossim.h,v 1.5 2007-04-01 00:29:34 scipio Exp $
 
 #ifndef TOSSIM_H_INCLUDED
 #define TOSSIM_H_INCLUDED
@@ -92,6 +92,10 @@ class Mote {
   void turnOn();
   void setID(unsigned long id);  
 
+  void addNoiseTraceReading(int val);
+  void createNoiseModel();
+  int generateNoise(int when);
+  
   Variable* getVariable(char* name);
   
  private:

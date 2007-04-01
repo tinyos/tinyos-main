@@ -347,6 +347,9 @@ class Mote {
   void turnOn();
   Variable* getVariable(char* name);
 
+  void addNoiseTraceReading(int val);
+  void createNoiseModel();
+  int generateNoise(int when);
 };
 
 class Tossim {

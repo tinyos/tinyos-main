@@ -7,7 +7,7 @@ typedef struct sim_gain_noise {
 
 
 gain_entry_t* connectivity[TOSSIM_MAX_NODES + 1];
-sim_gain_noise_t noise[TOSSIM_MAX_NODES + 1];
+sim_gain_noise_t localNoise[TOSSIM_MAX_NODES + 1];
 double sensitivity = 4.0;
 
 gain_entry_t* sim_gain_allocate_link(int mote);
@@ -121,22 +121,22 @@ void sim_gain_set_noise_floor(int node, double mean, double range) __attribute__
   if (node > TOSSIM_MAX_NODES) {
     node = TOSSIM_MAX_NODES;
   }
-  noise[node].mean = mean;
-  noise[node].range = range;
+  localNoise[node].mean = mean;
+  localNoise[node].range = range;
 }
 
 double sim_gain_noise_mean(int node) {
   if (node > TOSSIM_MAX_NODES) {
     node = TOSSIM_MAX_NODES;
   }
-  return noise[node].mean;
+  return localNoise[node].mean;
 }
 
 double sim_gain_noise_range(int node) {
   if (node > TOSSIM_MAX_NODES) {
     node = TOSSIM_MAX_NODES;
   }
-  return noise[node].range;
+  return localNoise[node].range;
 }
 
 // Pick a number a number from the uniform distribution of
@@ -146,11 +146,11 @@ double sim_gain_sample_noise(int node)  __attribute__ ((C, spontaneous)) {
   if (node > TOSSIM_MAX_NODES) {
     node = TOSSIM_MAX_NODES;
   } 
-  val = noise[node].mean;
+  val = localNoise[node].mean;
   adjust = (sim_random() % 2000000);
   adjust /= 1000000.0;
   adjust -= 1.0;
-  adjust *= noise[node].range;
+  adjust *= localNoise[node].range;
   return val + adjust;
 }
 

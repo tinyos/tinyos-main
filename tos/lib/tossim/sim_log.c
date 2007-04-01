@@ -1,4 +1,4 @@
-// $Id: sim_log.c,v 1.4 2006-12-12 18:23:35 vlahan Exp $
+// $Id: sim_log.c,v 1.5 2007-04-01 00:29:34 scipio Exp $
 
 /*									tab:4
 * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -298,10 +298,10 @@ void sim_log_error_clear(uint16_t id, char* string, const char* format, ...) {
 static unsigned int sim_log_hash(void* key) {
   char* str = (char*)key;
   unsigned int hashVal = 0;
-  int c;
+  int hashChar;
   
-  while ((c = *str++))
-    hashVal = c + (hashVal << 6) + (hashVal << 16) - hashVal;
+  while ((hashChar = *str++))
+    hashVal = hashChar + (hashVal << 6) + (hashVal << 16) - hashVal;
   
   return hashVal;
 }

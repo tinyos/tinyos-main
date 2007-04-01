@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: ActiveMessageC.nc,v 1.5 2007-04-01 00:29:34 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -47,7 +47,9 @@ configuration ActiveMessageC {
 implementation {
   components TossimActiveMessageP as AM;
   components TossimPacketModelC as Network;
-  components UscGainInterferenceModelC as Model;
+
+  components CpmModelC as Model;
+
   components ActiveMessageAddressC as Address;
   components MainC;
   

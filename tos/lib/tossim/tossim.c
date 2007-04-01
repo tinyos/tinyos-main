@@ -29,7 +29,7 @@
  * @date   Nov 22 2005
  */
 
-// $Id: tossim.c,v 1.4 2006-12-12 18:23:35 vlahan Exp $
+// $Id: tossim.c,v 1.5 2007-04-01 00:29:34 scipio Exp $
 
 
 #include <stdint.h>
@@ -44,6 +44,7 @@
 #include <mac.c>
 #include <radio.c>
 #include <packet.c>
+#include <sim_noise.h>
 
 uint16_t TOS_NODE_ID = 1;
 
@@ -188,6 +189,18 @@ Variable* Mote::getVariable(char* name) {
     hashtable_insert(varTable, name, var);
   }
   return var;
+}
+
+void Mote::addNoiseTraceReading(int val) {
+  sim_noise_trace_add(id(), (char)val);
+}
+
+void Mote::createNoiseModel() {
+  sim_noise_create_model(id());
+}
+
+int Mote::generateNoise(int when) {
+  return (int)sim_noise_generate(id(), when);
 }
 
 Tossim::Tossim(nesc_app_t* n) {

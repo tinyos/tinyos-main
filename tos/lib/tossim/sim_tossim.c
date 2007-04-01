@@ -29,7 +29,7 @@
  * @date   Nov 22 2005
  */
 
-// $Id: sim_tossim.c,v 1.4 2006-12-12 18:23:35 vlahan Exp $
+// $Id: sim_tossim.c,v 1.5 2007-04-01 00:29:34 scipio Exp $
 
 
 #include <sim_tossim.h>
@@ -37,6 +37,8 @@
 #include <sim_mote.h>
 #include <stdlib.h>
 #include <sys/time.h>
+
+#include <sim_noise.h> //added by HyungJune Lee
 
 static sim_time_t sim_ticks;
 static unsigned long current_node;
@@ -48,6 +50,7 @@ void sim_init() __attribute__ ((C, spontaneous)) {
   sim_queue_init();
   sim_log_init();
   sim_log_commit_change();
+  sim_noise_init(); //added by HyungJune Lee
 
   {
     struct timeval tv;

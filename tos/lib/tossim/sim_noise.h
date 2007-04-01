@@ -1,62 +1,86 @@
 /*
- * Copyright (c) 2006 Stanford University.
- * All rights reserved.
+ * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * - Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the
- *   distribution.
- * - Neither the name of the Stanford University nor the names of
- *   its contributors may be used to endorse or promote products derived
- *   from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL STANFORD
- * UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Permission to use, copy, modify, and distribute this software and
+ * its documentation for any purpose, without fee, and without written
+ * agreement is hereby granted, provided that the above copyright
+ * notice, the following two paragraphs and the author appear in all
+ * copies of this software.
+ * 
+ * IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF STANFORD UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * STANFORD UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE
+ * PROVIDED HEREUNDER IS ON AN "AS IS" BASIS, AND STANFORD UNIVERSITY
+ * HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
+ * ENHANCEMENTS, OR MODIFICATIONS."
  */
 
 /**
- * The C functions for accessing TOSSIM's noise simulation data
- * structures.
+ * Implementation of all of the SNIST primitives and utility
+ * functions.
  *
- * @author Philip Levis
- * @date   Mar 2 2007
+ * @author Hyungjune Lee
+ * @date   Oct 13 2006
  */
 
+// $Id: sim_noise.h,v 1.2 2007-04-01 00:29:34 scipio Exp $
 
-// $Id: sim_noise.h,v 1.1 2007-03-05 19:07:57 scipio Exp $
+#ifndef _SIM_NOISE_HASH_H_
+#define _SIM_NOISE_HASH_H_
 
-
-
-#ifndef SIM_GAIN_H_INCLUDED
-#define SIM_GAIN_H_INCLUDED
-
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void create_model(uint32_t mote, uint32_t sampleRate, uint32_t historyLength);
-void clear_model(uint32_t mote);
-void add_reading(uint32_t mote, double value);
-double getSample(uint32_t mote, sim_time_t time);
- 
+enum {
+  NOISE_MIN = -120,
+  NOISE_MAX = 10,
+  NOISE_MIN_QUANTIZE = -100,
+  NOISE_QUANTIZE_INTERVAL = 5,
+  NOISE_BIN_SIZE = (NOISE_MAX - NOISE_MIN)/NOISE_QUANTIZE_INTERVAL,
+  NOISE_HISTORY = 20,
+  NOISE_DEFAULT_ELEMENT_SIZE = 8,
+  NOISE_HASHTABLE_SIZE = 8192,
+  NOISE_MIN_TRACE = 1024, 
+};
+  
+typedef struct sim_noise_hash_t {
+  char key[NOISE_HISTORY];
+  int numElements;
+  int size;
+  char *elements;
+  char flag;
+  float dist[NOISE_BIN_SIZE];
+} sim_noise_hash_t;
+
+typedef struct sim_noise_node_t {
+  char key[NOISE_HISTORY];
+  char freqKey[NOISE_HISTORY];
+  char lastNoiseVal;
+  uint32_t noiseGenTime;
+  struct hashtable *noiseTable;
+  char* noiseTrace;
+  uint32_t noiseTraceLen;
+  uint32_t noiseTraceIndex;
+} sim_noise_node_t;
+
+void sim_noise_init();
+char sim_real_noise(uint16_t node_id, uint32_t cur_t);
+char sim_noise_generate(uint16_t node_id, uint32_t cur_t);
+void sim_noise_trace_add(uint16_t node_id, char val);
+void sim_noise_create_model(uint16_t node_id);
+  
 #ifdef __cplusplus
 }
 #endif
   
-#endif // SIM_GAIN_H_INCLUDED
+#endif // _SIM_NOISE_HASH_H_
+

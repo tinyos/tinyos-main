@@ -1,379 +1,395 @@
 /*
- * Copyright (c) 2006 Stanford University.
- * All rights reserved.
+ * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * - Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the
- *   distribution.
- * - Neither the name of the Stanford University nor the names of
- *   its contributors may be used to endorse or promote products derived
- *   from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL STANFORD
- * UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Permission to use, copy, modify, and distribute this software and
+ * its documentation for any purpose, without fee, and without written
+ * agreement is hereby granted, provided that the above copyright
+ * notice, the following two paragraphs and the author appear in all
+ * copies of this software.
+ * 
+ * IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF STANFORD UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * STANFORD UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE
+ * PROVIDED HEREUNDER IS ON AN "AS IS" BASIS, AND STANFORD UNIVERSITY
+ * HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
+ * ENHANCEMENTS, OR MODIFICATIONS."
  */
 
 /**
- * The C functions for accessing TOSSIM's noise simulation data
- * structures.
+ * Implementation of all of the Hash-Based Learning primitives and utility
+ * functions.
  *
- * @author Philip Levis
- * @date   Mar 2 2007
+ * @author Hyungjune Lee
+ * @date   Oct 13 2006
  */
 
-
-// $Id: sim_noise.c,v 1.2 2007-03-07 01:07:10 scipio Exp $
-
-
-#include <tos.h>
-
-#include <sim_noise.h>
-#include <hashtable.h>
-
-#ifdef TESTING 
-#include <hashtable.c>
 #include <stdio.h>
 #include <stdlib.h>
-#define TOSSIM_MAX_NODE 20
-sim_time_t sim_mote_start_time(int mote) {
-  return 37;
-}
-sim_time_t sim_ticks_per_sec() {
-  return 10000000;
-}
-#endif
+#include <string.h>
+#include <math.h>
+#include <sys/time.h>
+#include <time.h>
+#include "randomlib.h"
+#include "hashtable.h"
+#include "sim_noise.h"
 
-typedef struct noise_distribution {
-  int minValue;
-  int numBuckets;
-  int discretization;
-  int sum;
-  int* counts;
-} noise_distribution_t;
+uint32_t FreqKeyNum = 0;
 
-typedef struct noise_model {
-  uint32_t historyLength;        // The history "k" of the model
-  uint32_t sampleRateHz;         // The rate at which samples change
-  hashtable_t* table;            // A pointer to the distribution hashtable
-  noise_distribution_t* common;  // Most common distribution
-  double* firstReadings;         // An array of the first k values of the trace
-  double* lastReadings;          // An array of the last k values observed
-  uint32_t lastReading;          // When was the last value observed
-  uint8_t discretization;        // The discretization unit for readings
-  sim_time_t increment;          // The sim_time between samples (derived from sample rate)
-  uint16_t bins;                 // The number of noise value bins (range / discretization)
-  double minNoise;               // The minimum noise value
-  bool dirty;                    // Has data been added to the model so it needs to be recomputed?
-} noise_model_t;
+sim_noise_node_t noiseData[TOSSIM_MAX_NODES];
 
-noise_model_t models[TOSSIM_MAX_NODE];
+static unsigned int sim_noise_hash(void *key);
+static int sim_noise_eq(void *key1, void *key2);
 
-void clear_data(uint32_t mote);
-void add_data(uint32_t mote, double value);
-void generate_model(int mote);
-static unsigned int sim_noise_hash(void* key);
-static int sim_noise_equal(void* key1, void* key2);
-noise_distribution_t* create_noise_distribution(int mote);
-void add_val_to_distribution(noise_distribution_t* dist, int value);
+void makeNoiseModel(uint16_t node_id);
+void makePmfDistr(uint16_t node_id);
+uint8_t search_bin_num(char noise);
 
-int make_discrete(double value, uint8_t discretization) {
-  int val = (int)value;
-  val /= discretization;
-  val *= discretization;
-}
-
-void create_model(uint32_t mote, uint32_t sampleRate, uint32_t historyLength, uint8_t discretization, uint16_t bins, double minNoise) {
-  int i;
-  if (mote < TOSSIM_MAX_NODES) {
-    models[mote].historyLength = historyLength;
-    models[mote].sampleRateHz = sampleRate;
-    models[mote].table = create_hashtable(10240, sim_noise_hash, sim_noise_equal);
-    models[mote].lastReadings = (double*)(malloc(sizeof(double) * historyLength));
-    models[mote].discretization = discretization;
-    models[mote].lastReading = historyLength - 1;
-    for (i = 0; i < historyLength; i++) {
-      models[mote].lastReadings[i] = 0.0;
-    }
-    models[mote].dirty = FALSE;
-    models[mote].bins = bins;
-    models[mote].minNoise = minNoise;
-    models[mote].increment = sim_ticks_per_sec() / models[mote].sampleRateHz;
-    clear_data(mote);
-  }
-}
-
-void clear_model(uint32_t mote) {
-  clear_data(mote);
-  if (models[mote].table != NULL) {
-    hashtable_destroy(models[mote].table, 1);
-    models[mote].table = NULL;
-  }
-  if (models[mote].lastReadings != NULL) {
-    free(models[mote].lastReadings);
-    models[mote].lastReadings = NULL;
-  }
-}
-
-void add_reading(int mote, double value) {
-  add_data(mote, value);
-  models[mote].dirty = 1;
-}
-
-char* hashString = NULL;
-int hashStringLength = 0;
-
-#define SAMPLE_STR_LEN 10
-char* generateHashString(double* readings, int len, int discretization) {
-  char* ptr;
-  int i;
-  if (hashStringLength < len * SAMPLE_STR_LEN) {
-    int newLen = (len * SAMPLE_STR_LEN);
-    free(hashString);
-    hashString = (char*)malloc(sizeof(char) * newLen + 1);
-    hashStringLength = newLen;
-  }
-  ptr = hashString;
-  for (i = 0; i < len; i++) {
-    int val = make_discrete(readings[i], discretization);
-    ptr += snprintf(ptr, SAMPLE_STR_LEN, "%i ", val);
-  }
-  return hashString;
-}
-static int sim_seed = 2342;
-
-int sim_random() {
-  uint32_t mlcg,p,q;
-  uint64_t tmpseed;
-  tmpseed =  (uint64_t)33614U * (uint64_t)sim_seed;
-  q = tmpseed;    /* low */
-  q = q >> 1;
-  p = tmpseed >> 32 ;             /* hi */
-  mlcg = p + q;
-  if (mlcg & 0x80000000) {
-    mlcg = mlcg & 0x7FFFFFFF;
-    mlcg++;
-  }
-  sim_seed = mlcg;
-  return mlcg;
-}
-
-double sampleDistribution(noise_distribution_t* dist) {
-  double rval = 0.0;
-  if (dist->sum == 0) {
-    return rval;
-  }
-  else {
-    int which = sim_random() % dist->sum;
-    int total = 0;
-    int i;
-    printf("%i of ", which);
-    for (i = 0; i < dist->numBuckets; i++) {
-      printf("[%i] ", dist->counts[i]);
-    }
-    printf("\n");
-    for (i = 0; i < dist->numBuckets; i++) {
-      total += dist->counts[i];
-      if (total > which) {
-	printf("Sampling %i\n", i);
-	rval = (i * dist->discretization) + dist->minValue;
-	break;
-      }
-    }
-  }
-  // Should never reach this
-  return rval;
-}
-
-void appendReading(int mote, double reading) {
-  int size = ((models[mote].historyLength - 1) * sizeof(double));
-  memcpy(models[mote].lastReadings, models[mote].lastReadings + 1, size);
-  models[mote].lastReadings[models[mote].historyLength - 1] = reading;
-  models[mote].lastReading++;
-}
-
-void generateReading(int mote) {
-  char* str = generateHashString(models[mote].lastReadings, models[mote].historyLength, models[mote].discretization) ;
-  printf("%s : ", str);
-  noise_distribution_t* noise = (noise_distribution_t*)hashtable_search(models[mote].table, hashString);
-  if (noise == NULL) {
-    printf("Using default distribution: ");
-    noise = models[mote].common;
-  }
-  double reading = sampleDistribution(noise);
-  //printf("reading: %f\n", reading);
-  appendReading(mote, reading);
-}
-
-void generateReadings(int mote, uint64_t count) {
-  uint64_t i;
-  for (i = 0; i < count; i++) {
-    generateReading(mote);
-  }
-}
-
-double getSample(int mote, sim_time_t time) {
-  int64_t readingNo;
-  int64_t readingCount;
-  sim_time_t timePassed = time - sim_mote_start_time(mote);
-  noise_model_t* model = &models[mote];
-  if (timePassed < 0) {
-    return (double)make_discrete(model->firstReadings[0], model->discretization);
-  }
-  if (model->dirty) {
-    generate_model(mote);
-  }
-  readingNo = timePassed / (uint64_t)model->increment;
-
-  if (readingNo < model->historyLength) {
-    return make_discrete(model->firstReadings[readingNo], model->discretization);
-  }
+void sim_noise_init()__attribute__ ((C, spontaneous))
+{
+  int j;
   
-  readingCount = readingNo - model->lastReading;
-  generateReadings(mote, readingCount);
-  return make_discrete(model->lastReadings[0], model->discretization);
-}
+  //printf("Starting\n");
   
-  
-  
-typedef struct noise_data {
-  uint32_t size;
-  uint32_t maxSize;
-  double* readings;
-} noise_data_t;
+  for (j=0; j< TOSSIM_MAX_NODES; j++) {
+    noiseData[j].noiseTable = create_hashtable(NOISE_HASHTABLE_SIZE, sim_noise_hash, sim_noise_eq);
+    noiseData[j].noiseGenTime = 0;
+    noiseData[j].noiseTrace = (char*)(malloc(sizeof(char) * NOISE_MIN_TRACE));
+    noiseData[j].noiseTraceLen = NOISE_MIN_TRACE;
+    noiseData[j].noiseTraceIndex = 0;
 
-noise_data_t data[TOSSIM_MAX_NODE];
-
-void init_data(uint32_t mote) {
-  if (mote < TOSSIM_MAX_NODE) {
-    data[mote].size = 0;
-    data[mote].maxSize = 1024;
-    data[mote].readings = (double*)(malloc(sizeof(double) * 1024));
   }
-}
- 
-void clear_data(uint32_t mote) {
-  if (mote < TOSSIM_MAX_NODE) {
-    if (data[mote].readings != NULL) {
-      free(data[mote].readings);
-      data[mote].readings = NULL;
-    }
-    init_data(mote);
-  }
+  //printf("Done with sim_noise_init()\n");
 }
 
-void add_data(uint32_t mote, double value) {
-  if (mote < TOSSIM_MAX_NODE) {
-    if (data[mote].size == data[mote].maxSize) {
-      double* ndata = (double*)malloc(sizeof(double) * 2 * data[mote].maxSize);
-      memcpy(ndata, data[mote].readings, data[mote].size * sizeof(double));
-      free(data[mote].readings);
-      data[mote].readings = ndata;
-      data[mote].maxSize *= 2;
-    }
-    data[mote].readings[data[mote].size] = value;
-    data[mote].size++;
+void sim_noise_create_model(uint16_t node_id)__attribute__ ((C, spontaneous)) {
+  makeNoiseModel(node_id);
+  makePmfDistr(node_id);
+}
+
+char sim_real_noise(uint16_t node_id, uint32_t cur_t) {
+  if (cur_t > noiseData[node_id].noiseTraceLen) {
+    dbg("Noise", "Asked for noise element %u when there are only %u.\n", cur_t, noiseData[node_id].noiseTraceIndex);
+    return 0;
   }
+  return noiseData[node_id].noiseTrace[cur_t];
+}
+
+void sim_noise_trace_add(uint16_t node_id, char noiseVal)__attribute__ ((C, spontaneous)) {
+  // Need to double size of trace arra
+  if (noiseData[node_id].noiseTraceIndex ==
+      noiseData[node_id].noiseTraceLen) {
+    char* data = (char*)(malloc(sizeof(char) * noiseData[node_id].noiseTraceLen * 2));
+    memcpy(data, noiseData[node_id].noiseTrace, noiseData[node_id].noiseTraceLen);
+    free(noiseData[node_id].noiseTrace);
+    noiseData[node_id].noiseTraceLen *= 2;
+    noiseData[node_id].noiseTrace = data;
+  }
+  noiseData[node_id].noiseTrace[noiseData[node_id].noiseTraceIndex] = noiseVal;
+  noiseData[node_id].noiseTraceIndex++;
 }
 
 
+uint8_t search_bin_num(char noise)__attribute__ ((C, spontaneous))
+{
+  uint8_t bin;
+  bin = (noise-NOISE_MIN)/NOISE_QUANTIZE_INTERVAL + 1;
+  return bin;
+}
 
-static unsigned int sim_noise_hash(void* key) {
-  char* str = (char*)key;
+char search_noise_from_bin_num(int i)__attribute__ ((C, spontaneous))
+{
+  char noise;
+  noise = NOISE_MIN + (i-1)*NOISE_QUANTIZE_INTERVAL;
+  return noise;
+}
+
+static unsigned int sim_noise_hash(void *key) {
+  char *pt = (char *)key;
   unsigned int hashVal = 0;
-  int c;
-  
-  while ((c = *str++))
-    hashVal = c + (hashVal << 6) + (hashVal << 16) - hashVal;
-  
+  int i;
+  for (i=0; i< NOISE_HISTORY; i++) {
+    hashVal = pt[i] + (hashVal << 6) + (hashVal << 16) - hashVal;
+  }
   return hashVal;
 }
 
-static int sim_noise_equal(void* key1, void* key2) {
-  return (strcmp((char*)key1, (char*)key2) == 0);
+static int sim_noise_eq(void *key1, void *key2) {
+  return (memcmp((void *)key1, (void *)key2, NOISE_HISTORY) == 0);
 }
 
-void generate_model(int mote) {
-  uint64_t i;
-  noise_model_t* noiseModel = &models[mote];
-  noise_data_t* noiseData = &data[mote];
-  noise_distribution_t* maxDist = NULL;
-  // Not enough data to generate a model
-  if (noiseData->size <= noiseModel->historyLength) {
-    return;
-  }
-  free(noiseModel->firstReadings);
-  noiseModel->firstReadings = (double*) malloc(sizeof(double) * noiseModel->historyLength);
-  for (i = 0; i < noiseModel->historyLength; i++) {
-    noiseModel->firstReadings[i] = noiseModel->lastReadings[i] = noiseData->readings[i];
-  }
-
-  for (;i < data[mote].size; i++) {
-    double* dataStart = noiseData->readings + (i - noiseModel->historyLength);
-    int dataLen = noiseModel->historyLength;
-    int discretize = noiseModel->discretization;
-    char* hashStr = generateHashString(dataStart, dataLen, discretize);
-    int value = make_discrete(noiseData->readings[i], discretize);
-    noise_distribution_t* dist = (noise_distribution_t*)hashtable_search(noiseModel->table, hashStr);
-    if (dist == NULL) {
-      dist = create_noise_distribution(mote);
-      hashtable_insert(noiseModel->table, hashStr, dist);
-    }
-    add_val_to_distribution(dist, value);
-    if (maxDist == NULL || dist->sum > maxDist->sum) {
-      maxDist = dist;
-    }
-    //printf ("%llu: %s -> %i\n", i, hashStr, value);
-  }
-  noiseModel->common = maxDist;
-  noiseModel->dirty = 0;
-}
-
-int main() {
+void sim_noise_add(uint16_t node_id, char noise)__attribute__ ((C, spontaneous))
+{
   int i;
-  char* hashStr;
-  create_model(0, 1024, 10, 1, 10, 0);
-  for (i = 0; i < 2000000; i++) {
-    add_reading(0, (drand48() * 8.0));
+  struct hashtable *pnoiseTable = noiseData[node_id].noiseTable;
+  char *key = noiseData[node_id].key;
+  sim_noise_hash_t *noise_hash;
+  noise_hash = (sim_noise_hash_t *)hashtable_search(pnoiseTable, key);
+  dbg("Insert,HashZeroDebug", "Adding noise value %hhi\n", noise);
+  if (noise_hash == NULL)	{
+    noise_hash = (sim_noise_hash_t *)malloc(sizeof(sim_noise_hash_t));
+    memcpy((void *)(noise_hash->key), (void *)key, NOISE_HISTORY);
+    
+    noise_hash->numElements = 0;
+    noise_hash->size = NOISE_DEFAULT_ELEMENT_SIZE;
+    noise_hash->elements = (char *)malloc(sizeof(char)*noise_hash->size);
+    memset((void *)noise_hash->elements, 0, sizeof(char)*noise_hash->size);
+
+    noise_hash->flag = 0;
+    for(i=0; i<NOISE_BIN_SIZE; i++) {
+	noise_hash->dist[i] = 0;
+    }
+    hashtable_insert(pnoiseTable, key, noise_hash);
+    dbg("Insert", "Inserting %p into table %p with key ", noise_hash, pnoiseTable);
+    {
+      int ctr;
+      for(ctr = 0; ctr < NOISE_HISTORY; ctr++)
+	dbg_clear("Insert", "%0.3hhi ", key[ctr]);
+    }
+    dbg_clear("Insert", "\n");
   }
-  generate_model(0);
-  for (i = 0; i < 10000; i++) {
-    double sample = getSample(0, sim_mote_start_time(0) +  i * sim_ticks_per_sec() / 1024);
-    printf("%i: %f\n", i, sample);
+
+  if (noise_hash->numElements == noise_hash->size)
+    {
+      char *newElements;
+      int newSize = (noise_hash->size)*2;
+
+      newElements = (char *)malloc(sizeof(char)*newSize);
+      memcpy(newElements, noise_hash->elements, noise_hash->size);
+      free(noise_hash->elements);
+      noise_hash->elements = newElements;
+      noise_hash->size = newSize;
+    }
+
+  noise_hash->elements[noise_hash->numElements] = noise;
+  noise_hash->numElements++;
+}
+
+void sim_noise_dist(uint16_t node_id)__attribute__ ((C, spontaneous))
+{
+  int i;
+  uint8_t bin;
+  float cmf = 0;
+  struct hashtable *pnoiseTable = noiseData[node_id].noiseTable;
+  char *key = noiseData[node_id].key;
+  char *freqKey = noiseData[node_id].freqKey;
+  sim_noise_hash_t *noise_hash;
+  noise_hash = (sim_noise_hash_t *)hashtable_search(pnoiseTable, key);
+
+  if (noise_hash->flag == 1)
+    return;
+
+  for (i=0; i < NOISE_BIN_SIZE; i++) {
+    noise_hash->dist[i] = 0.0;
+  }
+  
+  for (i=0; i< noise_hash->numElements; i++)
+    {
+      float val;
+      bin = search_bin_num(noise_hash->elements[i]) - 1;
+      val = noise_hash->dist[bin];
+      val += (float)1.0;
+      noise_hash->dist[bin] = val;
+    }
+
+  for (i=0; i < NOISE_BIN_SIZE ; i++)
+    {
+      noise_hash->dist[i] = (noise_hash->dist[i])/(noise_hash->numElements);
+      cmf += noise_hash->dist[i];
+      noise_hash->dist[i] = cmf;
+    }
+  noise_hash->flag = 1;
+
+  //Find the most frequent key and store it in noiseData[node_id].freqKey[].
+  if (noise_hash->numElements > FreqKeyNum)
+    {
+      int j;
+      FreqKeyNum = noise_hash->numElements;
+      memcpy((void *)freqKey, (void *)key, NOISE_HISTORY);
+      dbg("HashZeroDebug", "Setting most frequent key (%i): ", (int) FreqKeyNum);
+      for (j = 0; j < NOISE_HISTORY; j++) {
+	dbg_clear("HashZeroDebug", "[%hhu] ", key[j]);
+      }
+      dbg_clear("HashZeroDebug", "\n");
+    }
+}
+
+void arrangeKey(uint16_t node_id)__attribute__ ((C, spontaneous))
+{
+  int i;
+  char key[NOISE_HISTORY];
+  char *pKey = noiseData[node_id].key;
+
+  for(i=0;i<NOISE_HISTORY-1; i++)
+    {
+      key[i] = pKey[i+1];
+    }
+  memcpy((void *)pKey, (void *)key, NOISE_HISTORY);
+}
+
+/*
+ * After makeNoiseModel() is done, make PMF distribution for each bin.
+ */
+void makePmfDistr(uint16_t node_id)__attribute__ ((C, spontaneous))
+{
+  int i;
+  char *pKey = noiseData[node_id].key;
+  char *fKey = noiseData[node_id].freqKey;
+
+  FreqKeyNum = 0;
+  for(i=0; i<NOISE_HISTORY; i++) {
+    pKey[i] = search_bin_num(noiseData[node_id].noiseTrace[i]);
+  }
+  sim_noise_dist(node_id);
+  arrangeKey(node_id);
+  for(i = NOISE_HISTORY; i < noiseData[node_id].noiseTraceIndex; i++) {
+    if (i == NOISE_HISTORY) {
+      printf("Inserting first element.\n");
+    }
+    pKey[NOISE_HISTORY-1] = search_bin_num(noiseData[node_id].noiseTrace[i]);
+    sim_noise_dist(node_id);
+    arrangeKey(node_id);
+  }
+
+  dbg_clear("HASH", "FreqKey = ");
+  for (i=0; i< NOISE_HISTORY ; i++)
+    {
+      dbg_clear("HASH", "%d,", fKey[i]);
+    }
+  dbg_clear("HASH", "\n");
+}
+
+int dummy;
+void sim_noise_alarm() {
+  dummy = 5;
+}
+
+char sim_noise_gen(uint16_t node_id)__attribute__ ((C, spontaneous))
+{
+  int i;
+  int noiseIndex = 0;
+  char noise;
+  struct hashtable *pnoiseTable = noiseData[node_id].noiseTable;
+  char *pKey = noiseData[node_id].key;
+  char *fKey = noiseData[node_id].freqKey;
+  double ranNum = RandomUniform();
+  sim_noise_hash_t *noise_hash;
+  noise_hash = (sim_noise_hash_t *)hashtable_search(pnoiseTable, pKey);
+
+  if (noise_hash == NULL) {
+    sim_noise_alarm();
+    noise = 0;
+    dbg_clear("HASH", "(N)Noise\n");
+    dbg("HashZeroDebug", "Defaulting to common hash.\n");
+    memcpy((void *)pKey, (void *)fKey, NOISE_HISTORY);
+    noise_hash = (sim_noise_hash_t *)hashtable_search(pnoiseTable, pKey);
+  }
+  
+  dbg_clear("HASH", "Key = ");
+  for (i=0; i< NOISE_HISTORY ; i++) {
+    dbg_clear("HASH", "%d,", pKey[i]);
+  }
+  dbg_clear("HASH", "\n");
+  
+  dbg("HASH", "Printing Key\n");
+  dbg("HASH", "noise_hash->numElements=%d\n", noise_hash->numElements);
+  if (noise_hash->numElements == 1) {
+    noise = noise_hash->elements[0];
+    dbg_clear("HASH", "(E)Noise = %d\n", noise);			
+    return noise;
+  }
+  
+  for (i = 0; i < NOISE_BIN_SIZE - 1; i++) {
+    dbg("HASH", "IN:for i=%d\n", i);
+    if (i == 0) {	
+      if (ranNum <= noise_hash->dist[i]) {
+	noiseIndex = i;
+	dbg_clear("HASH", "Selected Bin = %d -> ", i+1);
+	break;
+      }
+    }
+    else if ( (noise_hash->dist[i-1] < ranNum) && 
+	      (ranNum <= noise_hash->dist[i])   ) {
+      noiseIndex = i;
+      dbg_clear("HASH", "Selected Bin = %d -> ", i+1);
+      break;
+    }
+  }
+  dbg("HASH", "OUT:for i=%d\n", i);
+  
+  noise = search_noise_from_bin_num(i+1);
+  dbg_clear("HASH", "(B)Noise = %d\n", noise);
+  return noise;
+}
+
+char sim_noise_generate(uint16_t node_id, uint32_t cur_t)__attribute__ ((C, spontaneous)) {
+  uint32_t i;
+  uint32_t prev_t;
+  uint32_t delta_t;
+  char *noiseG;
+  char noise;
+
+  prev_t = noiseData[node_id].noiseGenTime;
+
+  if ( (0<= cur_t) && (cur_t < NOISE_HISTORY) ) {
+    noiseData[node_id].noiseGenTime = cur_t;
+    noiseData[node_id].key[cur_t] = search_bin_num(noiseData[node_id].noiseTrace[cur_t]);
+    noiseData[node_id].lastNoiseVal = noiseData[node_id].noiseTrace[cur_t];
+    return noiseData[node_id].noiseTrace[cur_t];
+  }
+
+  if (prev_t == 0)
+    delta_t = cur_t - (NOISE_HISTORY-1);
+  else
+    delta_t = cur_t - prev_t;
+  
+  dbg_clear("HASH", "delta_t = %d\n", delta_t);
+  
+  if (delta_t == 0)
+    noise = noiseData[node_id].lastNoiseVal;
+  else {
+    noiseG = (char *)malloc(sizeof(char)*delta_t);
+    
+    for(i=0; i< delta_t; i++) {
+      noiseG[i] = sim_noise_gen(node_id);
+      arrangeKey(node_id);
+      noiseData[node_id].key[NOISE_HISTORY-1] = search_bin_num(noiseG[i]);
+    }
+    noise = noiseG[delta_t-1];
+    noiseData[node_id].lastNoiseVal = noise;
+    
+    free(noiseG);
+  }
+  noiseData[node_id].noiseGenTime = cur_t;
+  if (noise == 0) {
+    dbg("HashZeroDebug", "Generated noise of zero.\n");
+  }
+  return noise;
+}
+
+/* 
+ * When initialization process is going on, make noise model by putting
+ * experimental noise values.
+ */
+void makeNoiseModel(uint16_t node_id)__attribute__ ((C, spontaneous)) {
+  int i;
+  for(i=0; i<NOISE_HISTORY; i++) {
+    noiseData[node_id].key[i] = search_bin_num(noiseData[node_id].noiseTrace[i]);
+  }
+  
+  sim_noise_add(node_id, noiseData[node_id].noiseTrace[NOISE_HISTORY]);
+  arrangeKey(node_id);
+  
+  for(i = NOISE_HISTORY; i < noiseData[node_id].noiseTraceIndex; i++) {
+    noiseData[node_id].key[NOISE_HISTORY-1] = search_bin_num(noiseData[node_id].noiseTrace[i]);
+    sim_noise_add(node_id, noiseData[node_id].noiseTrace[i+1]);
+    arrangeKey(node_id);
   }
 }
 
-noise_distribution_t* create_noise_distribution(int mote) {
-  noise_model_t* model = &models[mote];
-  noise_distribution_t* dist = (noise_distribution_t*)malloc(sizeof(noise_distribution_t));
-  dist->minValue = (int)model->minNoise;
-  dist->numBuckets = model->bins;
-  dist->sum = 0;
-  dist->discretization = model->discretization;
-  dist->counts = (int*)malloc(sizeof(int) * dist->numBuckets);
-  memset(dist->counts, 0, sizeof(int) * dist->numBuckets);
-  return dist;
-}
 
-void add_val_to_distribution(noise_distribution_t* dist, int value) {
-  int index = value - dist->minValue;
-  index /= dist->discretization;
-  dist->counts[index]++;
-  dist->sum++;
-  //printf("Adding %i (%i:%i)\n", value, dist->sum, dist->counts[index]);
-}

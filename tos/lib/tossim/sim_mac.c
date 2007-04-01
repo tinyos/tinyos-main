@@ -32,3 +32,8 @@
 
 #include <sim_csma.c>
 #include <sim_gain.c>
+
+//Added by HyungJune Lee
+#include <randomlib.c>
+#include <sim_noise.c>
+
