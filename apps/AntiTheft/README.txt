@@ -7,12 +7,12 @@ AntiTheft is a demo "antitheft" application. The accompanying
 tutorial-slides.ppt Powerpoint file is a tutorial for TinyOS that uses
 AntiTheft to introduce various aspects of TinyOS and its services.
 
-AntiTheft can be remotely configured to detect theft by:
+AntiTheft can detect theft by:
 - light level (a dark mote is a mote that has been stolen and placed in
   a concealed dark place, e.g., a pocket!)
 - acceleration (you have to move a mote to steal it...)
 
-It reports theft by:
+It can report theft by:
 - turning on an alert light (a red LED)
 - beeping a sounder
 - reporting the theft to nodes within broadcast radio range (nodes
@@ -44,4 +44,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.1 2007-04-02 20:38:05 idgay Exp $
+$Id: README.txt,v 1.2 2007-04-02 20:39:04 idgay Exp $
