@@ -1,0 +1,118 @@
+====================================================================
+TinyOS 802.15.4 Frames
+====================================================================
+
+:TEP: 125
+:Group: Core Working Group 
+:Type: Documentary
+:Status: Draft
+:TinyOS-Version: 2.x
+:Author: Jonathan Hui, Philip Levis, and David Moss
+
+:Draft-Created: 2-Feb-2007
+:Draft-Version: $Revision: 1.1 $
+:Draft-Modified: $Date: 2007-04-03 02:35:03 $
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This memo documents a part of TinyOS for the TinyOS Community, and
+   requests discussion and suggestions for improvements.  Distribution
+   of this memo is unlimited. This memo is in full compliance with
+   TEP 1.
+
+Abstract
+====================================================================
+
+This memo documents the frame format for 802.15.4 packets in TinyOS
+2.0.
+
+1. Introduction
+====================================================================
+
+802.15.4 is a data-link and physical packet format for
+low-power wireless networks that is used in many TinyOS platforms.
+The TinyOS 2.0 active message layer adds a packet field for higher-level
+protocol dispatch. This document describes the two TinyOS 2.0 frame format
+for 802.15.4 networks. The first format is for isolated TinyOS networks;
+the second format is for networks that share the spectrum with 6lowpan
+networks[1_].
+
+2. 802.15.4
+====================================================================
+
+802.15.4 supports several different source and destination addressing
+modes, and so has a variable sized packet header.[2_] A TinyOS device MUST
+support packet frames with 16-bit short source and destination addresses.
+A TinyOS device MAY support additional 802.15.4 frame formats. 
+
+3. Frame Format
+====================================================================
+
+TinyOS has two 802.15.4 frame formats. The first format, the T-Frame, is
+for TinyOS networks which do not share their channel with other wireless
+networking archtiectures. This frame format assumes that TinyOS can use
+every bit of the packet and does not need to state that it is a TinyOS packet.
+T-Frame stands for "TinyOS Frame."
+
+The TinyOS 802.15.4 T-frame format is as follows::
+
+  +-------------------+---------+------------------------------+--------------+
+  | 802.15.4 Header   | AM type |            data              | 802.15.4 CRC |
+  +-------------------+---------+------------------------------+--------------+
+
+AM type is a single byte field which indicates which active message type
+the payload contains.
+
+The second format, the I-Frame, is for TinyOS networks which share their
+channel with 6lowpan networks. 6lowpan reserves a series of codes for the
+first byte of the payload for non-6lowpan packets. In order to interoperate
+with 6lowpan networks, TinyOS I-Frames specify such a field. I-Frame stands
+for "Interoperable Frame."
+
+The TinyOS 802.15.4 I-frame format is as follows::
+
+  +-------------------+---------+---------+--------------------+--------------+
+  | 802.15.4 Header   | 6lowpan | AM type |        data        | 802.15.4 CRC |
+  +-------------------+---------+------------------------------+--------------+
+
+AM type is the same as in a T-frame. 6lowpan is the IANA-assigned code
+to identify this as a TinyOS packet. At this time, the exact value of
+this code has not been determined. To inform 6lowpan that this is not
+a 6lowpan packet, the code used MUST be in the range of 192-55.
+
+
+4. Implementation
+====================================================================
+
+An implementation of the T-Frame can be found in tinyos-2.x/tos/chips/cc2420.
+
+An implementation of the I-Frame will soon be found in 
+tinyos-2.x/tos/chips/cc2420.
+
+5. Author Addresses
+====================================================================
+
+
+|
+| Jonathan Hui
+| 657 Mission St. Ste. 600
+| Arched Rock Corporation
+| San Francisco, CA 94105-4120
+|
+| phone - +1 415 692 0828
+| email - jhui@archedrock.com
+|
+| Philip Levis
+| 358 Gates Hall
+| Stanford University
+| Stanford, CA 94305-9030
+|
+| phone - +1 650 725 9046
+| email - pal@cs.stanford.edu
+|
+| David Moss
+| Rincon Research
+|
+|
+|
