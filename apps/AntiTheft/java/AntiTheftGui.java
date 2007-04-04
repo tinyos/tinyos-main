@@ -1,4 +1,4 @@
-// $Id: AntiTheftGui.java,v 1.1 2007-04-04 21:01:11 idgay Exp $
+// $Id: AntiTheftGui.java,v 1.2 2007-04-04 22:06:22 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -41,9 +41,14 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
+import net.tinyos.message.*;
 import net.tinyos.packet.*;
+import net.tinyos.util.*;
 
-public class AntiTheftGui {
+public class AntiTheftGui implements MessageListener, Messenger {
+    MoteIF mote;
+    JFrame frame;
     JTextArea mssgArea;
     JTextField fieldInterval;
     JCheckBox detDarkCb, detAccelCb, repLedCb, repSirenCb, repServerCb,
@@ -52,6 +57,8 @@ public class AntiTheftGui {
     public AntiTheftGui() {
 	try {
 	    guiInit();
+	    mote = new MoteIF(this);
+	    mote.registerListener(new AlertMsg(), this);
 	}
 	catch(Exception e) {
 	    e.printStackTrace();
@@ -112,7 +119,7 @@ public class AntiTheftGui {
 	mainPanel.add(buttonPanel, BorderLayout.EAST);
 
 	// The frame part
-	JFrame frame = new JFrame("AntiTheft");
+	frame = new JFrame("AntiTheft");
 	frame.setSize(mainPanel.getPreferredSize());
 	frame.getContentPane().add(mainPanel);
 	frame.setVisible(true);
@@ -121,14 +128,80 @@ public class AntiTheftGui {
 	    });
     }
 
-    public synchronized void theft(String mssg) {
-	mssgArea.append(mssg + "\n");
-	mssgArea.setCaretPosition(mssgArea.getDocument().getLength());
+    void error(String msg) {
+	JOptionPane.showMessageDialog(frame, msg, "Error",
+				      JOptionPane.ERROR_MESSAGE);
     }
 
-    public void updateSettings() { }
+    public void updateSettings() { 
+	SettingsMsg smsg = new SettingsMsg();
+	short alert = 0;
+	short detect = 0;
+	int checkInterval = Constants.DEFAULT_CHECK_INTERVAL;
+
+	/* Extract current interval value, ignoring bad values */
+	String intervalS = fieldInterval.getText().trim();
+	try {
+	    int newInterval = Integer.parseInt(intervalS);
+	    if (newInterval < 10) throw new NumberFormatException();
+	    checkInterval = newInterval;
+	}
+	catch (NumberFormatException e) { 
+	    /* Reset field when value is bad */
+	    fieldInterval.setText("" + checkInterval);
+	}
+
+	if (repLedCb.isSelected())
+	    alert |= Constants.ALERT_LEDS;
+	if (repSirenCb.isSelected())
+	    alert |= Constants.ALERT_SOUND;
+	if (repNeighboursCb.isSelected())
+	    alert |= Constants.ALERT_RADIO;
+	if (repServerCb.isSelected())
+	    alert |= Constants.ALERT_ROOT;
+	if (alert == 0) {
+	    /* If nothing select, force-select LEDs */
+	    alert = Constants.ALERT_LEDS;
+	    repLedCb.setSelected(true);
+	}
+
+	if (detDarkCb.isSelected())
+	    detect |= Constants.DETECT_DARK;
+	if (detAccelCb.isSelected())
+	    detect |= Constants.DETECT_ACCEL;
+	if (detect == 0) {
+	    /* If no detection selected, force-select dark */
+	    detect = Constants.DETECT_DARK;
+	    detDarkCb.setSelected(true);
+	}
+
+	smsg.set_alert(alert);
+	smsg.set_detect(detect);
+	smsg.set_checkInterval(checkInterval);
+
+	try {
+	    mote.send(MoteIF.TOS_BCAST_ADDR, smsg);
+	}
+	catch (IOException e) {
+	    error("Cannot send message to mote");
+	}
+    }
 
     public static void main(String[] args) {
 	AntiTheftGui me = new AntiTheftGui();
+    }
+
+    synchronized public void messageReceived(int dest_addr, Message msg) {
+	if (msg instanceof AlertMsg) {
+	    AlertMsg alertMsg = (AlertMsg)msg;
+
+	    String warning = "Theft of " + alertMsg.get_stolenId() + "\n";
+	    mssgArea.append(warning);
+	    mssgArea.setCaretPosition(mssgArea.getDocument().getLength());
+	}
+    }
+
+    public void message(String s) {
+	error(s);
     }
 }

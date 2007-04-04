@@ -1,4 +1,4 @@
-// $Id: AntiTheftRootAppC.nc,v 1.2 2007-04-02 20:38:06 idgay Exp $
+// $Id: AntiTheftRootAppC.nc,v 1.3 2007-04-04 22:06:22 idgay Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -48,7 +48,7 @@ implementation
 
   /* Finally, instantiate and wire a collector (to receive theft alerts) and
      a serial sender (to send the alerts to the PC) */
-  components CollectionC, new SerialAMSenderC(AM_ALERTS) as AlertsForwarder;
+  components CollectionC, new SerialAMSenderC(AM_ALERT) as AlertsForwarder;
 
   AntiTheftRootC.CollectionControl -> CollectionC;
   AntiTheftRootC.RootControl -> CollectionC;

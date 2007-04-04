@@ -1,4 +1,4 @@
-// $Id: antitheft.h,v 1.2 2007-04-02 20:38:05 idgay Exp $
+// $Id: antitheft.h,v 1.3 2007-04-04 22:06:22 idgay Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -26,7 +26,7 @@ enum {
 
   AM_SETTINGS = 54,
   AM_THEFT = 99,
-  AM_ALERTS = 22,
+  AM_ALERT = 22,
   DIS_SETTINGS = 42,
   COL_ALERTS = 11,
 
@@ -35,12 +35,12 @@ enum {
   DEFAULT_CHECK_INTERVAL = 1000
 };
 
-typedef nx_struct {
+typedef nx_struct settings {
   nx_uint8_t alert, detect;
   nx_uint16_t checkInterval;
 } settings_t;
 
-typedef nx_struct {
+typedef nx_struct alert {
   nx_uint16_t stolenId;
 } alert_t;
 
