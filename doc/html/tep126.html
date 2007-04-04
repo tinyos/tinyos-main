@@ -1,0 +1,929 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<title>CC2420 Radio Stack</title>
+<meta name="author" content="David Moss, Jonathan Hui, Philip Levis, and Jung Il Choi" />
+<style type="text/css">
+
+/*
+:Author: David Goodger
+:Contact: goodger@users.sourceforge.net
+:date: $Date: 2007-04-04 03:14:21 $
+:version: $Revision: 1.1 $
+:copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+*/
+body {
+  font-family: Times;
+  font-size: 16px;
+}
+
+.first {
+  margin-top: 0 ! important }
+
+.last {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dd {
+  margin-bottom: 0.5em }
+
+/* Uncomment (& remove this text!) to get bold-faced definition list terms
+dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning, div.admonition {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.hint p.admonition-title, div.important p.admonition-title,
+div.note p.admonition-title, div.tip p.admonition-title,
+div.admonition p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em }
+
+div.footer, div.header {
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin-left: 1em ;
+  border: medium outset ;
+  padding: 0em 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
+
+h1.title {
+ text-align: center;
+ font-size: 32px;
+}
+
+h2 {
+ font-size: 16px;
+ font-family: Arial, sans-serif;
+}
+
+h2.subtitle {
+  text-align: center }
+
+h3 {
+ font-size: 12px;
+ font-family: Arial, sans-serif;
+}
+
+hr {
+  width: 75% }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font-family: serif ;
+  font-size: 100% }
+
+pre.line-block {
+  font-family: serif ;
+  font-size: 100% }
+
+pre.literal-block, pre.doctest-block {
+  margin-left: 2em ;
+  margin-right: 2em ;
+  background-color: #eeeeee;
+  border-color: #000000;
+  border-width: thin; 
+  font-size: 14px
+}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.option-argument {
+  font-style: italic }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+table {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.citation {
+  border-left: solid thin gray ;
+  padding-left: 0.5ex }
+
+table.docinfo {
+  margin: 2em 4em;
+}
+
+table.footnote {
+  border-left: solid thin black ;
+  padding-left: 0.5ex }
+
+td, th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+th.docinfo-name, th.field-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap;
+  }
+
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+  font-size: 100% }
+
+tt {}
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="cc2420-radio-stack">
+<h1 class="title">CC2420 Radio Stack</h1>
+<table class="docinfo" frame="void" rules="none">
+<col class="docinfo-name" />
+<col class="docinfo-content" />
+<tbody valign="top">
+<tr class="field"><th class="docinfo-name">TEP:</th><td class="field-body">126</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Group:</th><td class="field-body">Core Working Group</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
+</tr>
+<tr><th class="docinfo-name">Status:</th>
+<td>Draft</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
+</tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>David Moss, Jonathan Hui, Philip Levis, and Jung Il Choi</td></tr>
+<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">5-Mar-2007</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-03-23</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p class="first admonition-title">Note</p>
+<p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
+requests discussion and suggestions for improvements.  Distribution
+of this memo is unlimited. This memo is in full compliance with
+TEP 1.</p>
+</div>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<p>This TEP documents the architecture of the CC2420 low power listening
+radio stack found in TinyOS 2.x.  Radio stack layers and implementation
+details of the CC2420 stack will be discussed.  Readers will be better
+informed about existing features, possible improvements, and limitations
+of the CC2420 radio stack.  Furthermore, lessons learned from
+the construction of the CC2420 radio stack can help guide development
+of future TinyOS radio stacks.</p>
+</div>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<p>The TI/Chipcon CC2420 radio is a complex device, requiring a rather
+complex software radio stack implementation.  Although much of the
+functionality is available within the radio chip itself, there are
+still many factors to consider when implementing a flexible,
+general radio stack.</p>
+<p>The software radio stack that drives the CC2420 radio consists of
+many layers that sit between the application and hardware.  The highest
+levels of the radio stack modify data and headers in each packet, while
+the lowest levels determine the actual send and receive behavior.
+By understanding the functionality at each layer of the stack, as well
+as the architecture of a layer itself, it is possible to easily extend
+or condense the CC2420 radio stack to meet project requirements.</p>
+<p>Some details about the CC2420 are out of the scope of this document.
+These details can be found in the CC2420 datasheet <a class="footnote-reference" href="#id11" id="id1" name="id1">[1]</a>.</p>
+</div>
+<div class="section">
+<h1><a id="cc2420-radio-stack-layers" name="cc2420-radio-stack-layers">2. CC2420 Radio Stack Layers</a></h1>
+<div class="section">
+<h2><a id="layer-architecture" name="layer-architecture">2.1 Layer Architecture</a></h2>
+<p>The CC2420 radio stack consists of layers of functionality stacked
+on top of each other to provide a complete mechanism that
+modifies, filters, transmits, and controls inbound and outbound messages.
+Each layer is a distinct module that can provide and use three sets of
+interfaces in relation to the actual radio stack:  Send, Receive, and
+SplitControl.  If a general layer provides one of those interfaces, it
+also uses that interface from the layer below it in the stack.  This
+allows any given layer to be inserted anywhere in the stack through
+independant wiring. For example::</p>
+<pre class="literal-block">
+provides interface Send;
+uses interface Send as SubSend;
+
+provides interface Receive;
+uses interface Receive as SubReceive;
+
+provides interface SplitControl;
+uses interface SplitControl as subControl;
+</pre>
+<p>The actual wiring of the CC2420 radio stack is done at the highest level
+of the stack, inside CC2420ActiveMessageC.  This configuration defines
+three branches:  Send, Receive, and SplitControl. Note that not all
+layers need to provide and use all three Send, Receive, and SplitControl
+interfaces::</p>
+<pre class="literal-block">
+// SplitControl Layers
+SplitControl = LplC;
+LplC.SubControl -&gt; CsmaC;
+
+// Send Layers
+AM.SubSend -&gt; UniqueSendC;
+UniqueSendC.SubSend -&gt; TransportC;
+TransportC.SubSend -&gt; LplC.Send;
+LplC.SubSend -&gt; CC2420DispatchC.Send;
+CC2420DispatchC.SubSend -&gt; CsmaC;
+
+// Receive Layers
+AM.SubReceive -&gt; LplC;
+LplC.SubReceive -&gt; UniqueReceiveC;
+UniqueReceiveC.SubReceive -&gt; CC2420DispatchC.Receive;
+CC2420DispatchC.SubReceive -&gt; CsmaC;
+</pre>
+<p>If another layer were to be added, CC2420ActiveMessageC would need
+to be modified to wire it into the correct location.</p>
+</div>
+<div class="section">
+<h2><a id="layer-descriptions" name="layer-descriptions">2.1 Layer Descriptions</a></h2>
+<p>The main layers we see in this version of the stack are:</p>
+<ul class="simple">
+<li>ActiveMessageP:  This is the highest layer in the stack, responsible
+for filling in details in the packet header and providing information
+about the packet to the application level <a class="footnote-reference" href="#id12" id="id2" name="id2">[2]</a>.  Because the CC2420 radio
+chip itself uses 802.15.4 headers in hardware <a class="footnote-reference" href="#id11" id="id3" name="id3">[1]</a>, it is not possible
+for the layer to rearrange header bytes.</li>
+<li>UniqueSend:  This layer generates a unique data sequence
+number (DSN) byte for the packet header.  This byte is generated once
+per outgoing packet.  A receiver can detect duplicate packets by comparing
+the source and DSN byte of a received packet with previous packets.
+DSN is defined in the 802.15.4 specification <a class="footnote-reference" href="#id13" id="id4" name="id4">[3]</a>.</li>
+<li>MessageTransportP:  This layer provides the MessageTransport
+interface, and is responsible for retrying a packet transmission if no
+acknowledgement was heard from the receiver.  MessageTransport is
+activated on a per-message basis, meaning the outgoing packet will
+not use MessageTransport unless it is configured ahead of time to do so.
+MessageTransport is most reliable when software acknowledgements are enabled,
+as opposed to hardware auto acknowledgements.</li>
+<li>LowPowerListeningP <a class="footnote-reference" href="#id14" id="id5" name="id5">[4]</a>:  This layer provides the asynchronous low
+power listening functionality of the radio.  It is broken up into
+two parts:  CC2420LowPowerListeningP and CC2420DutyCycleP.  The
+DutyCycleP component is responsible for turning the radio on
+and off and performing detections.  After a detection occurs,
+DutyCycleP is hands off responsibility to LowPowerListeningP to turn
+the radio off and continue duty cycling when convenient.  Low power listening
+transmissions are activated on a per-message basis, and the layer
+will retransmit the full outbound packet over and over until either a
+response from the receiver is heard or the transmit time expires.</li>
+<li>UniqueReceive: This layer maintains a history of the source address
+and DSN byte of the past few packets it has received, and helps
+filter out duplicate received packets.</li>
+<li>DispatchC: This layer allows the TinyOS 2.x radio stack to interoperate
+with other non-TinyOS networks.  The 6LowPAN specifications include
+a network identifier byte after the standard 802.15.4 header <a class="footnote-reference" href="#id15" id="id6" name="id6">[5]</a>.
+If interoperability frames are used, the dispatch layer provides
+functionality for setting the network byte on outgoing packets
+and filtering non-TinyOS incoming packets.</li>
+<li>CsmaC:  This layer is responsible for defining 802.15.4 FCF
+byte information in the outbound packet, providing default
+backoff times when the radio detects a channel in use, and
+defining the power-up/power-down procedure for the radio.</li>
+<li>TransmitP/ReceiveP: These layers are responsible for interacting
+directly with the radio through the SPI bus, interrupts, and GPIO lines.</li>
+</ul>
+</div>
+</div>
+<div class="section">
+<h1><a id="cc2420-packet-format-and-specifications" name="cc2420-packet-format-and-specifications">3. CC2420 Packet Format and Specifications</a></h1>
+<p>The CC2420 Packet structure is defined in CC2420.h.  The default
+I-Frame CC2420 header takes on the following format::</p>
+<pre class="literal-block">
+typedef nx_struct cc2420_header_t {
+  nxle_uint8_t length;
+  nxle_uint16_t fcf;
+  nxle_uint8_t dsn;
+  nxle_uint16_t destpan;
+  nxle_uint16_t dest;
+  nxle_uint16_t src;
+  nxle_uint8_t network;
+  nxle_uint8_t type;
+} cc2420_header_t;
+</pre>
+<p>All fields up to 'network' are 802.15.4 specified fields, and are
+used in the CC2420 hardware itself. The 'network' field is a 6LowPAN
+interoperability specification <a class="footnote-reference" href="#id15" id="id7" name="id7">[5]</a>.  The 'type' field is a
+TinyOS specific field.</p>
+<p>The TinyOS T-Frame packet does not include the 'network' field, nor
+the functionality found in the Dispatch layer to set and check
+the 'network' field.</p>
+<p>No software footer is defined for the CC2420 radio.  A 2-byte
+CRC byte is auto-appended to each outbound packet by the CC2420 radio
+hardware itself.</p>
+<p>The CC2420 hardware has three RAM buffers: TXFIFO, RXFIFO, and a
+security RAM buffer.  The TXFIFO and RXFIFO are both 128 bytes,
+while the security RAM buffer is 112 bytes. Therefore, the maximum size
+of a packet is 128 bytes including its headers and CRC.  Increasing
+the packet size will increase data throughput and RAM consumption
+in the TinyOS application, but will also increase the probability
+that interference will cause the packet to be destroyed and need
+to be retransmitted, which wastes energy.  The TOSH_DATA_LENGTH
+preprocessor variable can be altered to increase the size
+of the message_t payload at compile time <a class="footnote-reference" href="#id12" id="id8" name="id8">[2]</a>.</p>
+</div>
+<div class="section">
+<h1><a id="csma-ca" name="csma-ca">4. CSMA/CA</a></h1>
+<div class="section">
+<h2><a id="clear-channel-assessment" name="clear-channel-assessment">4.1 Clear Channel Assessment</a></h2>
+<p>By default, the CC2420 radio stack performs a clear channel assessment
+(CCA) before transmitting.  If the channel is not clear, the radio backs
+off for some short, random period of time before attempting to transmit
+again.  The CC2420 chip itself provides a strobe command to transmit
+the packet if the channel is currently clear.</p>
+<p>To specify whether or not to transmit with clear channel assessment,
+the CC2420TransmitP component provides two commands:</p>
+<pre class="literal-block">
+async command error_t Send.sendCCA( message_t* p_msg )
+async command error_t Send.send( message_t* p_msg )
+</pre>
+<p>It is up to the CC2420CsmaP component to select the correct method of
+transmission.  Sending a packet without CCA will transmit it as quickly
+as possible, but interference from other transmitters will prevent
+it from being delivered in many cases.  Transmitting without CCA will
+also effectively jam other DSSS transmitters on the same channel.</p>
+<p>Future implementations should allow the application layer to specify
+the use of CCA on a per-packet basis, similar to how the application
+layer has the option to specify the backoff period for an outgoing
+message.</p>
+</div>
+<div class="section">
+<h2><a id="radio-backoff" name="radio-backoff">4.2 Radio Backoff</a></h2>
+<p>A backoff is a period of time where the radio pauses before attempting
+to transmit. When the radio needs to backoff, it can choose one of three
+backoff periods:  initialBackoff, congestionBackoff, and lplBackoff.
+These are implemented through the RadioBackoff interface, which signals
+out a request to specify the backoff period.  Unlike the CsmaBackoff
+interface, components that are interested in adjusting the backoff can
+call back using commands in the RadioBackoff interface.  This allows
+multiple components to adjust the backoff period for packets they are
+specifically listening to adjust.  The lower the backoff period, the
+faster the transmission, but the more likely the transmitter is to hog
+the channel.  Also, backoff periods should be as random as possible
+to prevent two transmitters from sampling the channel at the same
+moment.</p>
+<p>InitialBackoff is the shortest backoff period, requested on the first
+attempt to transmit a packet.</p>
+<p>CongestionBackoff is a longer backoff period used when the channel is
+found to be in use.  By using a longer backoff period in this case,
+the transmitter is less likely to unfairly tie up the channel.</p>
+<p>LplBackoff is the backoff period used for a packet being delivered
+with low power listening.  Because low power listening requires
+the channel to be modulated as continuously as possible while avoiding
+interference with other transmitters, the low power listening
+backoff period is intentionally short.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="acknowledgements" name="acknowledgements">5. Acknowledgements</a></h1>
+<div class="section">
+<h2><a id="hardware-vs-software-acknowledgements" name="hardware-vs-software-acknowledgements">5.1 Hardware vs. Software Acknowledgements</a></h2>
+<p>Originally, the CC2420 radio stack only used hardware generated
+auto-acknowledgements provided by the CC2420 chip itself.  This led
+to some issues, such as false acknowledgements where the radio chip
+would receive a packet and acknowledge its reception and the
+microcontroller would never actually receive the packet.</p>
+<p>The current CC2420 stack uses software acknowledgements, which
+have a higher drop percentage. When used with the UniqueSend
+and UniqueReceive interfaces, dropped acknowledgements are more desirable
+than false acknowledgements.  Received packets are always acknowledged
+before being filtered as a duplicate.</p>
+<p>Use the PacketAcknowledgements or MessageTransport interfaces
+to determine if a packet was successfully acknowledged.</p>
+</div>
+<div class="section">
+<h2><a id="data-sequence-numbers-uniquesend-and-uniquereceive" name="data-sequence-numbers-uniquesend-and-uniquereceive">5.2 Data Sequence Numbers - UniqueSend and UniqueReceive</a></h2>
+<p>The 802.15.4 specification identifies a Data Sequence Number (DSN)
+byte in the message header to filter out duplicate packets <a class="footnote-reference" href="#id13" id="id9" name="id9">[3]</a>.</p>
+<p>The UniqueSend interface at the top of the CC2420 radio stack is
+responsible for setting the DSN byte.  It is set exactly one time
+per outgoing message.  Even if lower levels such as MessageTransport
+or LowPowerListening retransmit the packet, the DSN byte stays the
+same.</p>
+<p>The UniqueReceive interface at the bottom of the CC2420 radio stack
+is responsible for filtering out duplicate messages based on
+source address and DSN.  The UniqueReceive interface is not meant
+to stop sophisticated replay attacks.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="message-transport-implementation" name="message-transport-implementation">6. Message Transport Implementation</a></h1>
+<p>Message transport is a layer added to the CC2420 radio stack to help unicast
+packets get delivered successfully.  In previous version of TinyOS radio
+stacks, it was left up to the application layer to retry a message
+transmission if the application determined the message was not properly
+received.  The Message Transport layer helps to remove the reliable delivery
+responsibility and functional baggage from application layers.</p>
+<div class="section">
+<h2><a id="compiling-in-the-message-transport-layer" name="compiling-in-the-message-transport-layer">6.1 Compiling in the Message Transport layer</a></h2>
+<p>Because the Message Transport layer uses up extra memory footprint,
+it is not compiled in by default.  Developers can simply define
+the preprocessor variable MESSAGE_TRANSPORT to compile the functionality
+of the Message Transport layer in with the CC2420 stack.</p>
+</div>
+<div class="section">
+<h2><a id="implementation-and-usage" name="implementation-and-usage">6.2 Implementation and Usage</a></h2>
+<p>To send a message using Message Transport, the MessageTransport
+interface must be called ahead of time to specify two fields in the outbound
+message's metadata::</p>
+<pre class="literal-block">
+command void setRetries(message_t *msg, uint16_t maxRetries);
+command void setRetryDelay(message_t *msg, uint16_t retryDelay);
+</pre>
+<p>The first command, setRetries(..), will specify the maximum number
+of times the message should be sent before the radio stack stops
+transmission.  The second command, setRetryDelay(..), specifies
+the amount of delay in milliseconds between each retry.  The combination
+of these two commands can set a packet to retry as many times as needed
+for as long as necessary.</p>
+<p>Because Message Transport relies on acknowledgements, false
+acknowledgements from the receiver will cause Message Transport to fail.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="asynchronous-low-power-listening-implementation" name="asynchronous-low-power-listening-implementation">7. Asynchronous Low Power Listening Implementation</a></h1>
+<p>Because the Low Power Listening layer uses up extra memory footprint,
+it is not compiled in by default.  Developers can simply define
+the preprocessor variable LOW_POWER_LISTENING to compile the functionality
+of the Low Power Listening layer in with the CC2420 stack.</p>
+<div class="section">
+<h2><a id="design-considerations" name="design-considerations">7.1 Design Considerations</a></h2>
+<p>The CC2420 radio stack low power listening implementation relies
+on clear channel assessments to determine if there is a transmitter
+nearby.  This allows the receiver to turn on and determine there are no
+transmitters in a shorter amount of time than leaving the radio on
+long enough to pick up a full packet.</p>
+<p>The transmitters perform a message delivery by transmitting
+the full packet over and over again for twice the duration of the receiver's
+duty cycle period.  Transmitting for twice as long increases the
+probability that the message will be detected by the receiver, and
+allows the receiver to shave off a small amount of time it needs to
+keep its radio on.</p>
+<p>Typically, the transmission of a single packet takes on the following
+form over time:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="62%" />
+<col width="16%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>LPL Backoff</td>
+<td>Packet Transmission</td>
+<td>Ack Wait</td>
+</tr>
+</tbody>
+</table>
+<p>To decrease the amount of time required for a receive check, the channel
+must be modulated by the transmitter as continuously as possible.
+The only period where the channel is modulated is during the
+Packet Transmission phase.  The receiver must continuosly sample the CCA pin
+a moment longer than the LPL Backoff period and Ack Wait period combined
+to overlap the Packet Transmission period.  By making the LPL backoff
+period as short as possible, we can decrease the amount of time a receiver's
+radio must be turned on when performing a receive check.</p>
+<p>If two transmitters attempt to transmit using low power listening,
+one transmitter may hog the channel if its LPL backoff period
+is set too short.  Both nodes transmitting at the same time
+will cause interference and prevent each other from
+successfully delivering their messages to the intended recipient.</p>
+<p>To allow multiple transmitters to transmit low power listening packets
+at the same time, the LPL backoff period needed to be increased
+greater than the desired minimum.  This increases the amount of time
+receiver radios need to be on to perform a receive check because
+the channel is no longer being modulated as continuously as possible.
+In other words, the channel is allowed to be shared amongst multiple
+transmitters at the expense of power consumption.</p>
+</div>
+<div class="section">
+<h2><a id="minimizing-power-consumption" name="minimizing-power-consumption">7.2 Minimizing Power Consumption</a></h2>
+<p>There are several methods the CC2420 radio stack uses to minimize
+power consumption:</p>
+<blockquote>
+<p>1. <em>Invalid Packet Shutdown:</em>
+Typically, packets are filtered out by address at the radio hardware
+level.  When a receiver wakes up and does not receive any
+packets into the low power listening layer of the radio stack, it
+will automatically go back to sleep after some period of time.  As a
+secondary backup, if address decoding on the radio chip is disabled,
+the low power listening implementation will shut down the radio if
+three packets are receive that do not belong to the node.  This helps
+prevent against denial of sleep attacks or the typical transmission
+behavior found in an ad-hoc network with many nodes.</p>
+<p>2. <em>Early Transmission Completion:</em>
+A transmitter typically sends a packet for twice the amount of time
+as the receiver's receive check period.  This increases the probability
+that the receiver will detect the packet.  However, if the transmitter receives
+an acknowledgement before the end of its transmission period, it
+will stop transmitting to save energy.  This is an improvement
+over previous low power listening implementations, which transmitted
+for the full period of time regardless of whether the receiver has
+already woken up and received the packet.</p>
+<p>3. <em>Auto Shutdown:</em>
+If the radio does not send or receive messages for some period of
+time while low power listening is enabled, the radio will automatically
+turn off and begin duty cycling at its specified duty cycle period.</p>
+<p>4. <em>CCA Sampling Strategy:</em>
+The actual receive check is performed in a loop inside a function,
+not a spinning task.  This allows the sampling to be performed
+continuously, with the goal of turning the radio off as quickly as
+possible without interruption.</p>
+</blockquote>
+</div>
+</div>
+<div class="section">
+<h1><a id="cc2420-settings-and-registers" name="cc2420-settings-and-registers">8. CC2420 Settings and Registers</a></h1>
+<p>To interact with registers on the CC2420 chip, the SPI bus must be
+acquired, the chip selecct (CSn) pin must be cleared, and then the
+interaction may occur.  After the interaction completes, the
+CSn pin must be set high.</p>
+<p>All registers and strobes are defined in the CC2420.h file, and most
+are accessible through the CC2420SpiC component.  If your application
+requires access to a specific register or strobe, the CC2420SpiC component
+is the place to add access to it.</p>
+<p>Configuring the CC2420 requires the developer to access the CC2420Config
+interface provided by CC2420ControlC.  First call the CC2420Config commands to
+change the desired settings of the radio.  Next, call CC2420Config.sync()
+to commit these changes to the radio chip.  If the radio is currently
+off, the changes will be committed at the time it is turned on.</p>
+<p>RSSI can be sampled directly by calling the ReadRssi interface provided
+by CC2420ControlC.  See page 50 of the CC2420 datasheet for information
+on how to convert RSSI to LQI and why it may not be such a good idea <a class="footnote-reference" href="#id11" id="id10" name="id10">[1]</a>.</p>
+</div>
+<div class="section">
+<h1><a id="cross-platform-portability" name="cross-platform-portability">9. Cross-platform Portability</a></h1>
+<p>To port the CC2420 radio to another platform, the following interfaces
+need to be implemented::</p>
+<pre class="literal-block">
+// GPIO Pins
+interface GeneralIO as CCA;
+interface GeneralIO as CSN;
+interface GeneralIO as FIFO;
+interface GeneralIO as FIFOP;
+interface GeneralIO as RSTN;
+interface GeneralIO as SFD;
+interface GeneralIO as VREN;
+
+// SPI Bus
+interface Resource;
+interface SpiByte;
+interface SpiPacket;
+
+// Interrupts
+interface GpioCapture as CaptureSFD;
+interface GpioInterrupt as InterruptCCA;
+interface GpioInterrupt as InterruptFIFOP;
+</pre>
+<p>The GpioCapture interface is tied through the Timer to provide a relative time
+at which the interrupt occurred.  This is useful for timestamping received
+packets for node synchronization.</p>
+<p>If the CC2420 is not connected to the proper interrupt lines,
+interrupts can be emulated through the use of a spinning task
+that polls the GPIO pin.  The MICAz implementation, for example, does this
+for the CCA interrupt.</p>
+</div>
+<div class="section">
+<h1><a id="future-improvement-recommendations" name="future-improvement-recommendations">10. Future Improvement Recommendations</a></h1>
+<p>Many improvements can be made to the CC2420 stack.  Below are some
+recommendations:</p>
+<div class="section">
+<h2><a id="aes-encryption" name="aes-encryption">10.1 AES Encryption</a></h2>
+<p>The CC2420 chip itself provides AES-128 encryption. The implementation
+involves loading the security RAM buffers on the CC2420 with the information
+to be encrypted - this would be the payload of a packet, without
+the header.  After the payload is encrypted, the microcontroller reads
+out of the security RAM buffer and concatenates the data with the
+unencrypted packet header.  This full packet would be uploaded again to the CC2420
+TXFIFO buffer and transmitted.</p>
+<p>Because the CC2420 cannot begin encryption at a particular offset
+and needs to be written, read, and re-written, use of the AES-128 may be
+inefficient and will certainly decrease throughput.</p>
+</div>
+<div class="section">
+<h2><a id="authentication" name="authentication">10.2 Authentication</a></h2>
+<p>In many cases, authentication is more desirable than encryption.
+Encryption significantly increases energy and decreases packet throughput,
+which does not meet some application requirements. A layer could be
+developed and added toward the bottom of the radio stack that validates
+neighbors, preventing packets from invalid neighbors from reaching the
+application layer.  Several proprietary authentication layers have
+been developed for the CC2420 stack, but so far none are available to
+the general public.</p>
+<p>A solid authentication layer would most likely involve the use of a
+neighbor table and 32-bit frame counts to prevent against replay attacks.
+Once a neighbor is verified and established, the node needs to ensure that
+future packets are still coming from the same trusted source.  Again,
+some high speed low energy proprietary methods to accomplish this exist, but
+encryption is typically the standard method used.</p>
+</div>
+<div class="section">
+<h2><a id="synchronous-low-power-listening" name="synchronous-low-power-listening">10.3 Synchronous Low Power Listening</a></h2>
+<p>A synchronous low power listening layer can be transparently built on
+top of the asynchronous low power listening layer.  One implementation
+of this has already been done on a version of the CC1000 radio stack.
+Moteiv's Boomerang radio stack also has a synchronous low power listening
+layer built as a standalone solution.</p>
+<p>In the case of building a synchronous layer on top of the asynchronous
+low power listening layer, a transmitter's radio stack can detect when
+a particular receiver is performing its receive checks by verifying the
+packet was acknowledged after a sendDone event.  The transmitter can then
+build a table to know when to begin transmission for that particular receiver.
+Each successful transmission would need to adjust the table with updated
+information to avoid clock skew problems.</p>
+<p>The asynchronous low power listening stack needs to be altered a bit
+to make this strategy successful.  Currently, duty cycling is started
+and stopped as packets are detected, received, and transmitted.  The
+stack would need to be altered to keep a constant clock running in the
+background that determines when to perform receive checks.  The
+clock should not be affected by normal radio stack Rx/Tx behavior.  This
+would allow the receiver to maintain a predictable receive check cycle
+for the transmitter to follow.</p>
+<p>If the synchronous low power listening layer loses synchronization,
+the radio stack can always fall back on the asynchronous low power listening
+layer for successful message delivery.</p>
+</div>
+<div class="section">
+<h2><a id="neighbor-tables" name="neighbor-tables">10.4 Neighbor Tables</a></h2>
+<p>Moteiv's Boomerange Sensornet Protocol (SP) implementation is a very
+good model to follow for radio stack architecture.  One of the nice features
+of SP is the design and implementation of the neighbor table.  By
+providing and sharing neighbor table information across the entire
+CC2420 radio stack, RAM can be conserved throughout the radio stack
+and TinyOS applications.</p>
+</div>
+<div class="section">
+<h2><a id="radio-independant-layers" name="radio-independant-layers">10.5 Radio Independant Layers</a></h2>
+<p>The best radio stack architecture is one that is completely radio independant.
+Many of the layers in the CC2420 stack can be implemented independant
+of the hardware underneath if the radio stack architecture was redesigned
+and reimplemented. The low power listening receive check strategy may need a
+hardware-dependant implementation, but other layers like MessageTransport,
+UniqueSend, UniqueReceive, ActiveMessage, Dispatch, etc. do not require
+a CC2420 underneath to operate properly.  The ultimate TinyOS radio
+stack would be one that forms an abstraction between radio-dependant
+layers and radio-independant layers, and operates with the same
+behavior across any radio chip.</p>
+</div>
+<div class="section">
+<h2><a id="extendable-metadata" name="extendable-metadata">10.6 Extendable Metadata</a></h2>
+<p>Layers added into the radio stack may require extra bytes of metadata.
+The MessageTransport layer, for example, requires two extra fields
+in each message's metadata to hold the message's max retries and
+delay between retries.  The low power listening layer requires
+an extra field to specify the destination's duty cycle period for
+a proper delivery.</p>
+<p>If layers are not included in the radio stack during compile time,
+their fields should not be included in the message_t's metadata.</p>
+<p>One version of extendable metadata was implementing using an array at the end
+of the metadata struct that would adjust its size based on which layers were
+compiled in and what size fields they required.  A combination of
+compiler support in the form of unique(..) and uniqueCount(..) functions
+made it possible for the array to adjust its size.</p>
+<p>Explicit compiler support would be the most desirable solution to add
+fields to a struct as they are needed.</p>
+</div>
+<div class="section">
+<h2><a id="error-correcting-codes-ecc" name="error-correcting-codes-ecc">10.7 Error Correcting Codes (ECC)</a></h2>
+<p>When two nodes are communicating near the edge of their RF range,
+it has been observed that interference may cause the packet to be
+corrupted enough that the CRC byte and payload actually passes
+the check, even though the payload is not valid.  There is a one
+in 65535 chance of a CRC byte passing the check for a corrupted
+packet.  Although this is slim, in many cases it is unacceptable.
+Some work arounds have implemented an extra byte of software generated
+CRC to add to the reliability, and tests have proven its effectiveness.
+Taking this a step further, an ECC layer in the radio stack would help
+correct corrupted payloads and increase the distance at which nodes
+can reliably communicate.</p>
+</div>
+</div>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">11. Author's Address</a></h1>
+<div class="line-block">
+<div class="line">David Moss</div>
+<div class="line">Rincon Research Corporation</div>
+<div class="line">101 N. Wilmot, Suite 101</div>
+<div class="line">Tucson, AZ  85750</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 520 519 3138</div>
+<div class="line">email ? <a class="reference" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Jonathan Hui</div>
+<div class="line">657 Mission St. Ste. 600</div>
+<div class="line">Arched Rock Corporation</div>
+<div class="line">San Francisco, CA 94105-4120</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 415 692 0828</div>
+<div class="line">email - <a class="reference" href="mailto:jhui&#64;archedrock.com">jhui&#64;archedrock.com</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Philip Levis</div>
+<div class="line">358 Gates Hall</div>
+<div class="line">Stanford University</div>
+<div class="line">Stanford, CA 94305-9030</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 650 725 9046</div>
+<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Jung Il Choi</div>
+<div class="line">&lt;contact&gt;</div>
+<div class="line">phone -</div>
+<div class="line">email -</div>
+</div>
+</div>
+<div class="section">
+<h1><a id="citations" name="citations">12. Citations</a></h1>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id11">[1]</a></td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>, <a class="fn-backref" href="#id10">3</a>)</em> TI/Chipcon CC2420 Datasheet.  <a class="reference" href="http://www.chipcon.com/files/CC2420_Data_Sheet_1_3.pdf">http://www.chipcon.com/files/CC2420_Data_Sheet_1_3.pdf</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id12">[2]</a></td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id8">2</a>)</em> TEP111: message_t</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id13" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id13">[3]</a></td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id9">2</a>)</em> IEEE 802.15.4 Specification: <a class="reference" href="http://standards.ieee.org/getieee802/802.15.html">http://standards.ieee.org/getieee802/802.15.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id14" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5" name="id14">[4]</a></td><td>TEP105: Low Power Listening</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id15" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id15">[5]</a></td><td><em>(<a class="fn-backref" href="#id6">1</a>, <a class="fn-backref" href="#id7">2</a>)</em> TEP125: TinyOS 802.15.4 Frames</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</body>
+</html>
