@@ -1,4 +1,4 @@
-// $Id: BagPanel.java,v 1.1 2007-04-04 21:01:11 idgay Exp $
+// $Id: BagPanel.java,v 1.2 2007-04-04 22:29:29 idgay Exp $
 
 /*									tab:4
  * Copyright (c) 2007 Intel Corporation
@@ -29,11 +29,18 @@ public class BagPanel extends JPanel {
     GridBagLayout bag;
     GridBagConstraints c;
 
+    /* Create a panel with a bag layout. Create some constraints are
+       users can modify prior to creating widgets - the current constraints
+       will be applied to all widgets created with makeXXX */
     public BagPanel() {
 	bag = new GridBagLayout();
 	setLayout(bag);
 	c = new GridBagConstraints();
     }
+
+    /* The makeXXX methods create XXX widgets, apply the current constraints
+       to them, and add them to this panel. The widget is returned in case
+       the creator needs to hang on to it. */
 
     public JButton makeButton(String label, ActionListener action) {
 	JButton button = new JButton();
@@ -71,10 +78,11 @@ public class BagPanel extends JPanel {
 	return tf;
     }
 
-    public void addSeparator(int axis) {
+    public JSeparator makeSeparator(int axis) {
 	JSeparator sep = new JSeparator(axis);
 	bag.setConstraints(sep, c);
 	add(sep);
+	return sep;
     }
 
 }

@@ -38,10 +38,29 @@ forwarding theft alerts from the sensor network to the PC.
 Tools:
 
 The java directory contains a control GUI for the antitheft demo app.
+To run it, change to the java subdirectory and type:
+  make # Unecessary if antitheft.jar exists
+  java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<mote>
+  # e.g., java net.tinyps.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
+  # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:telosb
+  ./run
+
+The buttons and text field on the right allow you to change the theft detection
+and reporting settings. The interval text box changes the interval at which
+motes check for theft (default is every second). Changes are only sent to the
+mote network when you press the Update button. Finally, if you've selected
+the Server theft report option, the message area will report received theft
+messages.
 
 Known bugs/limitations:
+
+- A newly turned on mote may not send theft reports (when the "Server"
+  theft report option is chosen), as:
+  o It takes a little while after motes turn on for them to join the multihop
+    collection network. 
+  o It can take a little while for motes to receive the current settings.
 
 None.
 
 
-$Id: README.txt,v 1.2 2007-04-02 20:39:04 idgay Exp $
+$Id: README.txt,v 1.3 2007-04-04 22:29:29 idgay Exp $

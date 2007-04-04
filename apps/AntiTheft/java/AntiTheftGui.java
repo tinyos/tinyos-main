@@ -1,4 +1,4 @@
-// $Id: AntiTheftGui.java,v 1.2 2007-04-04 22:06:22 idgay Exp $
+// $Id: AntiTheftGui.java,v 1.3 2007-04-04 22:29:29 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -47,16 +47,22 @@ import net.tinyos.packet.*;
 import net.tinyos.util.*;
 
 public class AntiTheftGui implements MessageListener, Messenger {
-    MoteIF mote;
-    JFrame frame;
-    JTextArea mssgArea;
-    JTextField fieldInterval;
+    MoteIF mote; 		// For talking to the antitheft root node
+
+    /* Various swing components we need to use after initialisation */
+    JFrame frame;		// The whole frame
+    JTextArea mssgArea;		// The message area
+    JTextField fieldInterval;	// The requested check interval
+
+    /* The checkboxes for the requested settings */
     JCheckBox detDarkCb, detAccelCb, repLedCb, repSirenCb, repServerCb,
 	repNeighboursCb;
 
     public AntiTheftGui() {
 	try {
 	    guiInit();
+	    /* Setup communication with the mote and request a messageReceived
+	       callback when an AlertMsg is received */
 	    mote = new MoteIF(this);
 	    mote.registerListener(new AlertMsg(), this);
 	}
@@ -66,11 +72,14 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	}
     }
 
+    /* Build up the GUI using Swing magic. Nothing very exciting here - the
+       BagPanel class makes the code a bit cleaner/easier to read. */
     private void guiInit() throws Exception {
 	JPanel mainPanel = new JPanel(new BorderLayout());
 	mainPanel.setMinimumSize(new Dimension(500, 250));
 	mainPanel.setPreferredSize(new Dimension(500, 300));
 
+	/* The message area */
 	JScrollPane mssgPanel = new JScrollPane();
 	mssgPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 	mssgPanel.setAutoscrolls(true);
@@ -79,6 +88,7 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	mainPanel.add(mssgPanel, BorderLayout.CENTER);
 	mssgPanel.getViewport().add(mssgArea, null);
 	
+	/* The button area */
 	BagPanel buttonPanel = new BagPanel();
 	GridBagConstraints c = buttonPanel.c;
 
@@ -108,7 +118,6 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	fieldInterval = buttonPanel.makeTextField(10, null);
 	fieldInterval.setText(Integer.toString(Constants.DEFAULT_CHECK_INTERVAL));
 
-	// Send settings button
 	ActionListener settingsAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 		    updateSettings();
@@ -118,7 +127,7 @@ public class AntiTheftGui implements MessageListener, Messenger {
 
 	mainPanel.add(buttonPanel, BorderLayout.EAST);
 
-	// The frame part
+	/* The frame part */
 	frame = new JFrame("AntiTheft");
 	frame.setSize(mainPanel.getPreferredSize());
 	frame.getContentPane().add(mainPanel);
@@ -128,18 +137,29 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	    });
     }
 
+    /* Add a message to the message area, auto-scroll to end */
+    public synchronized void message(String s) {
+	mssgArea.append(s + "\n");
+	mssgArea.setCaretPosition(mssgArea.getDocument().getLength());
+    }
+
+    /* Popup an error message */
     void error(String msg) {
 	JOptionPane.showMessageDialog(frame, msg, "Error",
 				      JOptionPane.ERROR_MESSAGE);
     }
 
+    /* User pressed the "Update" button. Read the GUI fields and
+       send a SettingsMsg with the requested values. When the
+       requested settings are bad, we silently update them to sane
+       values. */
     public void updateSettings() { 
 	SettingsMsg smsg = new SettingsMsg();
 	short alert = 0;
 	short detect = 0;
 	int checkInterval = Constants.DEFAULT_CHECK_INTERVAL;
 
-	/* Extract current interval value, ignoring bad values */
+	/* Extract current interval value, fixing bad values */
 	String intervalS = fieldInterval.getText().trim();
 	try {
 	    int newInterval = Integer.parseInt(intervalS);
@@ -151,6 +171,7 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	    fieldInterval.setText("" + checkInterval);
 	}
 
+	/* Extract alert settings */
 	if (repLedCb.isSelected())
 	    alert |= Constants.ALERT_LEDS;
 	if (repSirenCb.isSelected())
@@ -165,6 +186,7 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	    repLedCb.setSelected(true);
 	}
 
+	/* Extract detection settings */
 	if (detDarkCb.isSelected())
 	    detect |= Constants.DETECT_DARK;
 	if (detAccelCb.isSelected())
@@ -175,10 +197,10 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	    detDarkCb.setSelected(true);
 	}
 
+	/* Build and send settings message */
 	smsg.set_alert(alert);
 	smsg.set_detect(detect);
 	smsg.set_checkInterval(checkInterval);
-
 	try {
 	    mote.send(MoteIF.TOS_BCAST_ADDR, smsg);
 	}
@@ -187,21 +209,17 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	}
     }
 
-    public static void main(String[] args) {
-	AntiTheftGui me = new AntiTheftGui();
-    }
-
-    synchronized public void messageReceived(int dest_addr, Message msg) {
+    /* Message received from mote network. Update message area if it's
+       a theft message. */
+    public void messageReceived(int dest_addr, Message msg) {
 	if (msg instanceof AlertMsg) {
 	    AlertMsg alertMsg = (AlertMsg)msg;
-
-	    String warning = "Theft of " + alertMsg.get_stolenId() + "\n";
-	    mssgArea.append(warning);
-	    mssgArea.setCaretPosition(mssgArea.getDocument().getLength());
+	    message("Theft of " + alertMsg.get_stolenId());
 	}
     }
 
-    public void message(String s) {
-	error(s);
+    /* Just start the app... */
+    public static void main(String[] args) {
+	AntiTheftGui me = new AntiTheftGui();
     }
 }
