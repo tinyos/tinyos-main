@@ -1,4 +1,4 @@
-// $Id: AntiTheftGui.java,v 1.3 2007-04-04 22:29:29 idgay Exp $
+// $Id: AntiTheftGui.java,v 1.4 2007-04-04 22:30:22 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -100,7 +100,7 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	detDarkCb = buttonPanel.makeCheckBox("Dark", true);
 	c.gridwidth = GridBagConstraints.REMAINDER;
 	detAccelCb = buttonPanel.makeCheckBox("Movement", false);
-	buttonPanel.addSeparator(SwingConstants.HORIZONTAL);
+	buttonPanel.makeSeparator(SwingConstants.HORIZONTAL);
 
 
 	buttonPanel.makeLabel("Theft Reports", JLabel.CENTER);
@@ -112,7 +112,7 @@ public class AntiTheftGui implements MessageListener, Messenger {
 	repServerCb = buttonPanel.makeCheckBox("Server", false);
 	c.gridwidth = GridBagConstraints.REMAINDER;
 	repNeighboursCb = buttonPanel.makeCheckBox("Neighbours", false);
-	buttonPanel.addSeparator(SwingConstants.HORIZONTAL);
+	buttonPanel.makeSeparator(SwingConstants.HORIZONTAL);
 
 	buttonPanel.makeLabel("Interval", JLabel.CENTER);
 	fieldInterval = buttonPanel.makeTextField(10, null);
