@@ -6,6 +6,8 @@ Description:
 AntiTheft is a demo "antitheft" application. The accompanying
 tutorial-slides.ppt Powerpoint file is a tutorial for TinyOS that uses
 AntiTheft to introduce various aspects of TinyOS and its services.
+The slides are also available in PDF format in tutorial-slides.pdf
+(but with animation missing).
 
 AntiTheft can detect theft by:
 - light level (a dark mote is a mote that has been stolen and placed in
@@ -63,4 +65,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.3 2007-04-04 22:29:29 idgay Exp $
+$Id: README.txt,v 1.4 2007-04-04 22:36:34 idgay Exp $
