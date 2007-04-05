@@ -1,4 +1,4 @@
-//$Id: Msp430ClockP.nc,v 1.4 2006-12-12 18:23:11 vlahan Exp $
+//$Id: Msp430ClockP.nc,v 1.5 2007-04-05 05:53:52 andreaskoepke Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.
  * All rights reserved.
@@ -24,6 +24,8 @@
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
  */
 
+#include <Msp430DcoSpec.h>
+
 #include "Msp430Timer.h"
 
 module Msp430ClockP
@@ -42,9 +44,8 @@ implementation
   enum
   {
     ACLK_CALIB_PERIOD = 8,
-    ACLK_KHZ = 32,
-    TARGET_DCO_KHZ = 4096, // prescribe the cpu clock rate in kHz
-    TARGET_DCO_DELTA = (TARGET_DCO_KHZ / ACLK_KHZ) * ACLK_CALIB_PERIOD,
+    ACLK_HZ = 32768U,
+    TARGET_DCO_DELTA = (TARGET_DCO_HZ / ACLK_HZ) * ACLK_CALIB_PERIOD,
   };
 
   command void Msp430ClockInit.defaultInitClocks()
