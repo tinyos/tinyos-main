@@ -95,8 +95,8 @@ implementation {
     RedMacP.Timer -> Timer;
     RedMacP.SampleTimer -> SampleTimer;
     RedMacP.Counter32khz16 -> Counter;
-/*    
-    components PlatformLedsC;
+    
+/*    components PlatformLedsC;
     RedMacP.Led0 -> PlatformLedsC.Led0;
     RedMacP.Led1 -> PlatformLedsC.Led1;
     RedMacP.Led2 -> PlatformLedsC.Led2;

@@ -87,31 +87,19 @@ implementation
 {
 
     enum {
-        /*
-        BYTE_TIME=13,                // byte at 38400 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=9,        // byte at 38400 kBit/s, no coding
-        PHY_HEADER_TIME=51,          // 6 Phy Preamble at 38400
-        */
+        BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
+        PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
+        PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
 
-        BYTE_TIME=10,                // byte at 49000 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=7,        // byte at 49000 kBit/s, no coding
-        PHY_HEADER_TIME=40,          // 6 Phy Preamble at 49000
-        
-        /*
-        BYTE_TIME=12,                // byte at 40960 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=8,        // byte at 40960 kBit/s, no coding
-        PHY_HEADER_TIME=48,          // 6 Phy Preamble at 40960
-        */
-        
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(tda5250_header_t)*BYTE_TIME,
-        SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 38400 kBit/s with 4b6b encoding
+        SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         MAXTIMERVALUE=0xFFFF,        // helps to compute backoff
         DATA_DETECT_TIME=17,
-        RX_SETUP_TIME=111,    // time to set up receiver
-        TX_SETUP_TIME=69,     // time to set up transmitter
+        RX_SETUP_TIME=102,    // time to set up receiver
+        TX_SETUP_TIME=58,     // time to set up transmitter
         ADDED_DELAY = 30,
-        RX_ACK_TIMEOUT=RX_SETUP_TIME + PHY_HEADER_TIME + 19 + 2*ADDED_DELAY,
-        TX_GAP_TIME=RX_ACK_TIMEOUT + TX_SETUP_TIME + 11,
+        RX_ACK_TIMEOUT=RX_SETUP_TIME + PHY_HEADER_TIME + 2*ADDED_DELAY,
+        TX_GAP_TIME=RX_ACK_TIMEOUT + TX_SETUP_TIME + 33,
         MAX_SHORT_RETRY=7,
         MAX_LONG_RETRY=4,
         BACKOFF_MASK=0xFFF,  // minimum time around one packet time
@@ -340,10 +328,10 @@ implementation
                 restLaufzeit = restLaufzeit - now;
             }
             else {
-                restLaufzeit +=  MAXTIMERVALUE - now;
+                restLaufzeit =  (uint16_t)(-1) - restLaufzeit + now;
             }
             if(restLaufzeit > BACKOFF_MASK) {
-                restLaufzeit = backoff(0);
+                restLaufzeit = call Random.rand16() & 0xFF;
             }
             setFlag(&flags, RESUME_BACKOFF);
         }

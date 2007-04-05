@@ -29,8 +29,8 @@
  * - Description ---------------------------------------------------------
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-02-27 19:18:24 $
+ * $Revision: 1.6 $
+ * $Date: 2007-04-05 06:38:45 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * @author: Philipp Huppertz <huppertz@tkn.tu-berlin.de>
  * ========================================================================
@@ -74,8 +74,8 @@ implementation
         STATE_FOOTER_DONE
     } phyState_t;
 
-#define PREAMBLE_LENGTH   4
-#define BYTE_TIME         9
+#define PREAMBLE_LENGTH   2
+#define BYTE_TIME         21
 #define PREAMBLE_BYTE     0x55
 #define SYNC_BYTE         0xFF
 #define SFD_BYTE          0x50
@@ -198,7 +198,7 @@ implementation
         atomic {
             switch(phyState) {
                 case STATE_PREAMBLE:
-                    if(preambleCount > 0) {
+                    if(preambleCount > 1) {
                         preambleCount--;
                     } else {
                         phyState = STATE_SYNC;

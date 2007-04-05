@@ -74,6 +74,12 @@ module RedMacP {
         interface Alarm<T32khz, uint16_t> as SampleTimer;
         interface Counter<T32khz,uint16_t> as Counter32khz16;
         async command am_addr_t amAddress();
+/*
+        interface GeneralIO as Led0;
+        interface GeneralIO as Led1;
+        interface GeneralIO as Led2;
+        interface GeneralIO as Led3;        
+*/      
 #ifdef REDMAC_DEBUG
         interface SerialDebug;
 #endif
@@ -103,52 +109,41 @@ implementation
     void sdDebug(uint16_t p) {
         call SerialDebug.putPlace(p);
     }
+    uint8_t repCounter;
 #else
     void sdDebug(uint16_t p) {};
 #endif
     
     /**************** Module Global Constants  *****************/
     enum {
-/*
-        BYTE_TIME=13,                // byte at 38400 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=9,        // byte at 38400 kBit/s, no coding
-        PHY_HEADER_TIME=51,          // 6 Phy Preamble at 38400
-*/
-        BYTE_TIME=10,                // byte at 49000 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=7,        // byte at 49000 kBit/s, no coding
-        PHY_HEADER_TIME=40,          // 6 Phy Preamble at 49000
 
-/*
-        BYTE_TIME=12,                // byte at 40960 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=8,        // byte at 40960 kBit/s, no coding
-        PHY_HEADER_TIME=48,          // 6 Phy Preamble at 40960
-*/
-        SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(tda5250_header_t)*BYTE_TIME,
+        BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
+        PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
+        PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
+        TIME_CORRECTION=15,           // difference between sendSFD and rxSFD, to do: measure!
+                
+        SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         // DEFAULT_SLEEP_TIME=1625,
         // DEFAULT_SLEEP_TIME=3250,
         // DEFAULT_SLEEP_TIME=6500,
         // DEFAULT_SLEEP_TIME=9750,
         DEFAULT_SLEEP_TIME=16384,
+        // DEFAULT_SLEEP_TIME=32768U,
         DATA_DETECT_TIME=17,
-        RX_SETUP_TIME=111,    // time to set up receiver
-        TX_SETUP_TIME=69,     // time to set up transmitter
-        ADDED_DELAY = PREAMBLE_BYTE_TIME,
-        RX_ACK_TIMEOUT = RX_SETUP_TIME + PHY_HEADER_TIME + 2*ADDED_DELAY + 19,
-        TX_GAP_TIME=RX_ACK_TIMEOUT + TX_SETUP_TIME + 11,
+        RX_SETUP_TIME=102,    // time to set up receiver
+        TX_SETUP_TIME=58,     // time to set up transmitter
+        ADDED_DELAY = 30,
+        RX_ACK_TIMEOUT = RX_SETUP_TIME + PHY_HEADER_TIME + ADDED_DELAY + 30,
+        TX_GAP_TIME = RX_ACK_TIMEOUT + TX_SETUP_TIME + 33,
         // the duration of a send ACK
         ACK_DURATION = SUB_HEADER_TIME + SUB_FOOTER_TIME,
-        MAX_SHORT_RETRY=7,
-        MAX_LONG_RETRY=2,
+        MAX_SHORT_RETRY=9,
+        MAX_LONG_RETRY=1,
         MAX_AGE=2*MAX_LONG_RETRY*MAX_SHORT_RETRY,
         MSG_TABLE_ENTRIES=20,
         TOKEN_ACK_FLAG = 64,
         TOKEN_ACK_MASK = 0x3f,
-        /* correct the difference between the transmittedSFD and the receivedSFD
-           that appears due to buffering, measured value on an osci is 320us, so this
-           value is actually 10.48576
-        */
-        TIME_CORRECTION = 10,
         INVALID_SNR = 0xffff,
         // PREAMBLE_LONG = 5,
         // PREAMBLE_SHORT = 2,
@@ -292,16 +287,17 @@ implementation
             checkCounter = 0;
             setRxMode();
         }
-        else {
-            if(txBufPtr) sdDebug(41);
-            if(shortRetryCounter) sdDebug(42);
-            if(isFlagSet(&flags, MESSAGE_PREPARED)) sdDebug(43);
+/*        else {
+            if(txBufPtr) // sdDebug(41);
+            if(shortRetryCounter) // sdDebug(42);
+            if(isFlagSet(&flags, MESSAGE_PREPARED)) // sdDebug(43);
             if(txBufPtr) {
-                if(macState == SLEEP) sdDebug(44);
-                if(!isFlagSet(&flags, RESUME_BACKOFF)) sdDebug(45);
-                if(!call Timer.isRunning()) sdDebug(46);
+                if(macState == SLEEP) // sdDebug(44);
+                if(!isFlagSet(&flags, RESUME_BACKOFF)) // sdDebug(45);
+                if(!call Timer.isRunning()) // sdDebug(46);
             }
         }
+*/
     }
 
     uint32_t backoff(uint8_t counter) {
@@ -415,8 +411,8 @@ implementation
             clearFlag(&flags, MESSAGE_PREPARED);
             clearFlag(&flags, CANCEL_SEND);
         }
-        sdDebug(3000 + e);
-        sdDebug(4000 + getHeader(m)->type);
+        // sdDebug(3000 + e);
+        // sdDebug(4000 + getHeader(m)->type);
         signal MacSend.sendDone(m, e);
     }
     
@@ -426,7 +422,7 @@ implementation
             longRetryCounter++;
             shortRetryCounter = 1;
             if(longRetryCounter > MAX_LONG_RETRY) {
-                sdDebug(60);
+                // sdDebug(60);
                 signalSendDone(FAIL);
             }
         }
@@ -438,7 +434,7 @@ implementation
             longRetryCounter++;
             shortRetryCounter = 1;
             if(longRetryCounter > MAX_LONG_RETRY) {
-                sdDebug(70);
+                // sdDebug(70);
                 signalSendDone(FAIL);
             } else {
                 post PrepareMsgTask();
@@ -534,6 +530,9 @@ implementation
         getHeader(&ackMsg)->src = call amAddress();
         getHeader(&ackMsg)->dest = getHeader(msg)->src;
         getHeader(&ackMsg)->type = getHeader(msg)->type;
+#ifdef REDMAC_DEBUG
+        repCounter = ((red_mac_header_t *)call SubPacket.getPayload(msg, NULL))->repetitionCounter;
+#endif
     }
     
     uint32_t calcGeneratedTime(red_mac_header_t *m) {
@@ -720,7 +719,7 @@ implementation
     }
 
     async event void RadioModes.SleepModeDone() {
-        sdDebug(160);
+        // sdDebug(160);
         atomic {
             clearFlag(&flags, SWITCHING);
             if(isFlagSet(&flags, ACTION_DETECTED)) {
@@ -728,7 +727,7 @@ implementation
             } else {
                 if(congestionLevel > 0) congestionLevel--;
             }
-            if(congestionLevel > 3) sdDebug(2000 + congestionLevel);
+            // if(congestionLevel > 3) // sdDebug(2000 + congestionLevel);
             if(macState == SLEEP) {
                 // sdDebug(161);
                 if(!call Timer.isRunning()) {
@@ -763,7 +762,7 @@ implementation
         atomic {
             if((shortRetryCounter == 0) && (txBufPtr == NULL)) {
                 clearFlag(&flags, MESSAGE_PREPARED);
-                sdDebug(5000 + getHeader(msg)->type);
+                // sdDebug(5000 + getHeader(msg)->type);
                 shortRetryCounter = 1;
                 longRetryCounter = 1;
                 txBufPtr = msg;
@@ -786,23 +785,23 @@ implementation
         error_t err = FAIL;
         atomic {
             if(msg == txBufPtr) {
-                sdDebug(320);
+                // sdDebug(320);
                 setFlag(&flags, CANCEL_SEND);
                 shortRetryCounter = MAX_SHORT_RETRY + 2;
                 longRetryCounter  = MAX_LONG_RETRY + 2;
                 if(macState == SLEEP) {
-                    sdDebug(321);
+                    // sdDebug(321);
                     signalSendDone(ECANCEL);
                 }
                 else {
-                    sdDebug(322);
+                    // sdDebug(322);
                 }
-                sdDebug(1000 + macState);
+                // sdDebug(1000 + macState);
                 err = SUCCESS;
             }
             else {
-                sdDebug(323);
-                sdDebug(1100 + macState);
+                // sdDebug(323);
+                // sdDebug(1100 + macState);
             }
         }
         return err;
@@ -857,7 +856,8 @@ implementation
                                     (getMetadata(m))->strength = 1;
                                 }
                             }
-                            (getMetadata(msg))->time = calcGeneratedTime((red_mac_header_t*) payload);
+                            getMetadata(msg)->time = calcGeneratedTime((red_mac_header_t*) payload);
+                            getMetadata(msg)->ack = WAS_NOT_ACKED;
                             m = signal MacReceive.receiveDone(msg);
                             // assume a buffer swap -- if buffer is not swapped, assume that the
                             // message was not successfully delivered to upper layers
@@ -924,8 +924,9 @@ implementation
                         signal Teamgeist.gotAck(txBufPtr, getHeader(msg)->src,
                                                 getMetadata(txBufPtr)->strength);
                     }
-                    sdDebug(203);
+                    // sdDebug(203);
                     signalSendDone(SUCCESS);
+                    // sdDebug(30000 + getHeader(msg)->src);
                     action = SLEEP;
                 }
                 else {
@@ -935,7 +936,7 @@ implementation
             }
             else {
                 if(call Timer.isRunning()) {
-                    // sdDebug(204);
+                    sdDebug(204);
                     action = RX_ACK;
                 }
                 else {
@@ -950,9 +951,15 @@ implementation
             action = INIT;
         }
         if(action == CCA_ACK) {
-            prepareAck(msg);
             macState = CCA_ACK;
-            call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME + (ADDED_DELAY>>level));
+            if(call Random.rand16() & 2) {
+                call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME + 16 - level*8 + ADDED_DELAY);
+            }
+            else {
+                macState = TX_ACK;
+                call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME + 16);
+            }
+            prepareAck(msg);
         }
         else if(action == RX_ACK) {
             macState = RX_ACK;
@@ -969,7 +976,7 @@ implementation
             }
             else {
                 setFlag(&flags, RESUME_BACKOFF);
-                restLaufzeit = nav + backoff(longRetryCounter);
+                restLaufzeit = call Random.rand16() & ZERO_BACKOFF_MASK;
             }
             setSleepMode();
         }
@@ -984,16 +991,20 @@ implementation
 
     async event void PacketSend.sendDone(message_t* msg, error_t error) {
         if(macState == TX) {
-            // sdDebug(220);
             macState = RX_ACK;
             setRxMode();
             call Timer.start(RX_ACK_TIMEOUT);
+            sdDebug(220);
             checkCounter = 0;
         }
         else if(macState == TX_ACK) {
             checkCounter = 0;
             macState = RX;
             setRxMode();
+            sdDebug(221);
+#ifdef REDMAC_DEBUG            
+            // sdDebug(40000U + repCounter);
+#endif
         }
     }
     
@@ -1084,6 +1095,7 @@ implementation
             // sdDebug(244);
             macState = TX_ACK;
             setTxMode();
+            sdDebug(20000 + getHeader(&ackMsg)->dest);
         }
     }
     
@@ -1103,13 +1115,13 @@ implementation
         }
         else if(macState == RX_ACK) {
             if(prepareRepetition()) {
-                // sdDebug(253);
+                sdDebug(253);
                 macState = TX;
                 setTxMode();
             }
             else {
                 if(needsAckTx(txBufPtr)) {
-                    // sdDebug(254);
+                    sdDebug(254);
                     updateLongRetryCounters();
                 }
                 else {
@@ -1119,6 +1131,10 @@ implementation
                 macState = SLEEP;
                 setSleepMode();
             }
+        }
+        else if(macState == TX_ACK) {
+            setTxMode();
+            sdDebug(10000 + getHeader(&ackMsg)->dest);
         }
         else if(macState == SLEEP) {
              if(isFlagSet(&flags, SWITCHING)) {
@@ -1263,7 +1279,7 @@ implementation
     }
     
     default async event void ChannelCongestion.congestionEvent(uint8_t level) {}
-    
+
     /***** unused Radio Modes events **************************/
     
     async event void RadioModes.TimerModeDone() {}

@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:41 $
+ * $Revision: 1.5 $
+ * $Date: 2007-04-05 06:38:45 $
  * ========================================================================
  */
 
@@ -43,10 +43,29 @@
 
 // Default values of data registers
 
-#define TDA5250_REG_DEFAULT_SETTING_CONFIG           0x84F9 
+/** regulate distance by switching the amplifiers */
+// longest distance
+#define FULL_RANGE                                   0x84F9
+// shorter distance; low rx, high tx energy consumption (30m)
+#define MED_RANGE_LP                                 0x84E9
+// shorter distance; high rx, low tx energy consumption (25m)
+#define MED_RANGE_HP                                 0x84F8
+// shortest: low rx; low tx energy consumption (1m to 3m range)
+#define TABLE_TOP                                    0x84E8
+
+/** regulate distance using variable resistor */
+#define RF_DAMPING_0dB  255
+#define RF_DAMPING_5dB  248
+#define RF_DAMPING_10dB 245
+#define RF_DAMPING_15dB 241
+#define RF_DAMPING_20dB 239
+
+#define INITIAL_RF_POWER RF_DAMPING_0dB
+
+#define TDA5250_REG_DEFAULT_SETTING_CONFIG           FULL_RANGE
 #define TDA5250_REG_DEFAULT_SETTING_FSK              0x0A0C
 #define TDA5250_REG_DEFAULT_SETTING_XTAL_TUNING      0x0012
-#define TDA5250_REG_DEFAULT_SETTING_LPF              0x6A
+#define TDA5250_REG_DEFAULT_SETTING_LPF              0x68 
 #define TDA5250_REG_DEFAULT_SETTING_ON_TIME          0xFEC0
 #define TDA5250_REG_DEFAULT_SETTING_OFF_TIME         0xF380
 #define TDA5250_REG_DEFAULT_SETTING_COUNT_TH1        0x0000

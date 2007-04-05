@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:28 $
+ * $Revision: 1.5 $
+ * $Date: 2007-04-05 06:38:45 $
  * ========================================================================
  */
 
@@ -100,7 +100,7 @@ implementation {
   }
   
   async event void PhyPacketTx.sendHeaderDone() {
-    TransmitNextByte();
+      TransmitNextByte();
   }
 
   async event void RadioByteComm.txByteReady(error_t error) {
@@ -114,7 +114,9 @@ implementation {
   void TransmitNextByte() {
     message_radio_header_t* header = getHeader((message_t*) txBufPtr);
     if (byteCnt < header->length + sizeof(message_header_t) ) {  // send (data + header), compute crc
-        if(byteCnt == sizeof(message_header_t)) signal RadioTimeStamping.transmittedSFD(0, (message_t*)txBufPtr); 
+        if(byteCnt == sizeof(message_header_t)) {
+            signal RadioTimeStamping.transmittedSFD(0, (message_t*)txBufPtr);
+        }
         crc = crcByte(crc, ((uint8_t *)(txBufPtr))[byteCnt]);
         call RadioByteComm.txByte(((uint8_t *)(txBufPtr))[byteCnt++]);
     } else if (byteCnt == (header->length + sizeof(message_header_t))) {
@@ -124,7 +126,7 @@ implementation {
       ++byteCnt;
       call RadioByteComm.txByte((uint8_t)(crc >> 8));
     } else { /* (byteCnt > (header->length + sizeof(message_header_t)+1)) */
-        call PhyPacketTx.sendFooter();  
+        call PhyPacketTx.sendFooter();
     }
   }
 

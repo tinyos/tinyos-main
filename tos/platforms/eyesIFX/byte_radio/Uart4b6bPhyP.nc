@@ -72,7 +72,7 @@ implementation
     /* constants */
     enum {
         PREAMBLE_LENGTH=2,
-        BYTE_TIME=9,
+        BYTE_TIME=21,
         PREAMBLE_BYTE=0x55,
         SYNC_BYTE=0xFF,
         SFD_BYTE=0x83,
@@ -198,7 +198,7 @@ implementation
     void TransmitNextByte() {
         switch(phyState) {
             case STATE_PREAMBLE:
-                if(preambleCount > 0) {
+                if(preambleCount > 1) {
                     preambleCount--;
                 } else {
                     phyState = STATE_SYNC;

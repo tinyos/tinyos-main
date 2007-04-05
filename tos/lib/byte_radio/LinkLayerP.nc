@@ -60,9 +60,6 @@ implementation
   message_t* rxBufPtr;
   message_t  rxBuf;
 
-  /* packet vars */
-  uint8_t seqNo;              // for later use ...
-    
   /* state vars */
   error_t splitStateError;    // state of SplitControl interfaces
   bool rxBusy;                // blocks an incoming packet if the rxBuffer is in use
@@ -84,7 +81,6 @@ implementation
         atomic {
           rxBufPtr = &rxBuf;
           txBufPtr = 0;
-          seqNo = 0;
           splitStateError = EOFF;
           rxBusy = FALSE;
         }
@@ -161,8 +157,11 @@ implementation
     }
     
     command error_t Send.send(message_t *msg, uint8_t len) {
-      ++seqNo;  // where to put?
-      return call SendDown.send(msg, len);
+        if(getMetadata(msg)->ack != NO_ACK_REQUESTED) {
+            // ensure reasonable value
+            getMetadata(msg)->ack = ACK_REQUESTED;
+        }
+        return call SendDown.send(msg, len);
     }
 
     command error_t Send.cancel(message_t* msg) {
@@ -212,7 +211,8 @@ implementation
       atomic {
         if (rxBusy) {
           msgPtr = msg;
-        } else {
+        }
+        else {
           rxBusy = TRUE;
           msgPtr = rxBufPtr;
           rxBufPtr = msg;
@@ -221,7 +221,7 @@ implementation
       } 
       return msgPtr;
     }
-    
+
     command void* Receive.getPayload(message_t* msg, uint8_t* len) {
       return call Packet.getPayload(msg, len);
     }

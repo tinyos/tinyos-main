@@ -53,7 +53,6 @@ implementation
 {
   components LinkLayerP as Llc,
              MainC;
-  
     MainC.SoftwareInit -> Llc;
     SplitControl = Llc;
     MacSplitControl =  Llc.MacSplitControl;

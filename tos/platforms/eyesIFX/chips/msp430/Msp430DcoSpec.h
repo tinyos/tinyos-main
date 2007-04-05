@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2004, Technische Universitaet Berlin
+/* -*- mode:c++; indent-tabs-mode: nil -*-
+ * Copyright (c) 2007, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -20,47 +20,26 @@
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES {} LOSS OF USE, DATA,
+ * OR PROFITS {} OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#include <TinyError.h>
-#include <message.h>
-
 /**
- * This interface is similar to the Receive interface.
- *   
- * The interface provides one event in async context which indicates that
- * a packet was received. It Is provided by the MAC layer ofi
- * a byte radio.
+ * Override default dco clock spec.
+ * 
+ * SMCLK runs on 1MHz for this platform, its * source may be the radio -- a
+ * more reliable source.
  *
- * @see Receive
- *
- * @author Philipp Huppertz
- */ 
-interface MacReceive {
+ * @author: Andreas Koepke (koepke@tkn.tu-berlin.de)
+ */
 
-   /**
-   * Receive a packet buffer, returning a buffer for the signaling
-   * component to use for the next reception. The return value
-   * can be the same as <tt>msg</tt>, as long as the handling
-   * component copies out the data it needs.
-   *
-   * <b>Note</b> that misuse of this interface is one of the most
-   * common bugs in TinyOS code. For example, if a component both calls a
-   * send on the passed message and returns it, then it is possible
-   * the buffer will be reused before the send occurs, overwriting
-   * the component's data. This would cause the mote to possibly
-   * instead send a packet it most recently received.
-   *
-   * @param  msg      the received packet
-   * @return          a packet buffer for the stack to use for the next
-   *                  received packet.
-   */
-  async event message_t* receiveDone(message_t* msg);
 
-}
+#ifndef MS430DCOSPEC_H
+#define MS430DCOSPEC_H
+
+#define TARGET_DCO_HZ 4000000 // the cpu clock rate in Hz
+
+#endif

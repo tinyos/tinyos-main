@@ -29,8 +29,8 @@
  * - Description ---------------------------------------------------------
  * provides preamble sampling csma with timestamping
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:41 $
+ * $Revision: 1.5 $
+ * $Date: 2007-04-05 06:38:45 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * ========================================================================
  */
@@ -87,4 +87,6 @@ implementation
     PacketSerializer.PhyPacketRx -> UartPhy.PhyPacketRx;
     
     UartPhy.RadioByteComm -> Radio.RadioByteComm;
+
+    components SmclkManagerC;
 }
