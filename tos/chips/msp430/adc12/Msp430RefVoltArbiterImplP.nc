@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2007-04-05 13:42:36 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -46,7 +46,7 @@ module Msp430RefVoltArbiterImplP
   enum {
     NO_OWNER = 0xFF,
   };
-  norace uint8_t owner = NO_OWNER;
+  norace uint8_t syncOwner = NO_OWNER;
 
   task void switchOff();
   
@@ -63,26 +63,31 @@ module Msp430RefVoltArbiterImplP
       // always fails, because of the possible start-up delay (and async-sync transition)
       return FAIL;
     else {
-      error_t request = call AdcResource.immediateRequest[client]();
-      if (request == SUCCESS)
-        owner = client;
-      return request;
+      return call AdcResource.immediateRequest[client]();
     }
   }
 
   event void AdcResource.granted[uint8_t client]()
   {
     const msp430adc12_channel_config_t* settings  = call Config.getConfiguration[client]();
-    owner = client;
     if (settings->sref == REFERENCE_VREFplus_AVss ||
         settings->sref == REFERENCE_VREFplus_VREFnegterm){
       error_t started;
+      if (syncOwner != NO_OWNER){
+        // very rare case, which can only occur 
+        // if no FIFO task scheduler
+        // is used (see comment below)
+        call AdcResource.release[client]();
+        call AdcResource.request[client]();
+        return;
+      }
+      syncOwner = client;
       if (settings->ref2_5v == REFVOLT_LEVEL_1_5)
         started = call RefVolt_1_5V.start();
       else
         started = call RefVolt_2_5V.start();
       if (started != SUCCESS){
-        owner = NO_OWNER;
+        syncOwner = NO_OWNER;
         call AdcResource.release[client]();
         call AdcResource.request[client]();
       }
@@ -92,38 +97,51 @@ module Msp430RefVoltArbiterImplP
    
   event void RefVolt_1_5V.startDone(error_t error)
   {
-    if (owner != NO_OWNER){
-      // Note that it can still not be guaranteed that ClientResource.granted()
-      // is not signalled after ClientResource.release() has been called.
-      signal ClientResource.granted[owner]();
+    if (syncOwner != NO_OWNER){
+      // assumption: a client which has called request() must
+      // not call release() before it gets the granted()
+      signal ClientResource.granted[syncOwner]();
     }
   }
    
   event void RefVolt_2_5V.startDone(error_t error)
   {
-    if (owner != NO_OWNER){
-      // Note that it can still not be guaranteed that ClientResource.granted()
-      // is not signalled after ClientResource.release() has been called.
-      signal ClientResource.granted[owner]();
+    if (syncOwner != NO_OWNER){
+      // assumption: a client which has called request() must
+      // not call release() before it gets the granted()
+      signal ClientResource.granted[syncOwner]();
     }
   }
 
   async command error_t ClientResource.release[uint8_t client]()
   {
-    atomic {
-      if (owner == client){
-        owner = NO_OWNER;
-        post switchOff();
-      }
-    }
-    return call AdcResource.release[client]();
+    error_t error;
+    if (syncOwner == client)
+      post switchOff();  
+    error = call AdcResource.release[client]();
+    // If syncOwner == client then now there is an inconsistency between 
+    // the state of syncOwner and the actual owner of the Resource 
+    // (which is not owned by anyone, because it was just released). 
+    // The switchOff() task will resolve this incosistency, but a 
+    // client can call ClientResource.request() before this task is 
+    // posted. However, since Resource.granted is signalled in task context,
+    // with a FIFO task scheduler we can be sure that switchOff() will
+    // always be executed before the next Resource.granted event is 
+    // signalled. Unfortunately "TinyOS components MUST NOT assume a 
+    // FIFO policy" (TEP106), that's why there is some additional check
+    // in AdcResource.granted above.
+    return error;
   }
 
   task void switchOff()
   {
-    if (owner == NO_OWNER)
-      if (call RefVolt_1_5V.stop() != SUCCESS)
+    // update internal state
+    if (syncOwner != NO_OWNER){
+      if (call RefVolt_1_5V.stop() == SUCCESS){
+        syncOwner = NO_OWNER;
+      } else
         post switchOff();
+    }
   }
 
   event void RefVolt_1_5V.stopDone(error_t error)
