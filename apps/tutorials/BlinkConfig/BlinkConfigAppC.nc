@@ -1,4 +1,4 @@
-// $Id: BlinkConfigAppC.nc,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+// $Id: BlinkConfigAppC.nc,v 1.5 2007-04-06 01:13:59 prabal Exp $
 
 /*
  * "Copyright (c) 2000-2006 The Regents of the University of
@@ -24,14 +24,14 @@
  * UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  */
 #include "StorageVolumes.h"
+#include "Timer.h"
 
 /**
- * Application to demonstrate the ConfigStorageC abstraction.  A value
- * is written to, and read from, the flash storage. A successful test
- * will turn on both the green and blue (yellow) LEDs.  A failed test
- * is any other LED configuration.
+ * Application to demonstrate the ConfigStorageC abstraction.  A timer
+ * period is read from flash, divided by two, and written back to
+ * flash.  An LED is toggled each time the timer fires.
  *
- * @author Prabal Dutta
+ * @author Prabal Dutta <prabal@cs.berkeley.edu>
  */
 configuration BlinkConfigAppC {
 }
@@ -39,12 +39,11 @@ implementation {
   components BlinkConfigC as App;
   components new ConfigStorageC(VOLUME_CONFIGTEST);
   components MainC, LedsC, PlatformC, SerialActiveMessageC;
+  components new TimerMilliC() as Timer0;
 
-  App.Boot -> MainC.Boot;
-
-  App.AMControl -> SerialActiveMessageC;
-  App.AMSend    -> SerialActiveMessageC.AMSend[1];
-  App.Config    -> ConfigStorageC.ConfigStorage;
-  App.Mount     -> ConfigStorageC.Mount;
-  App.Leds      -> LedsC;
+  App.Boot   -> MainC.Boot;
+  App.Config -> ConfigStorageC.ConfigStorage;
+  App.Mount  -> ConfigStorageC.Mount;
+  App.Leds   -> LedsC;
+  App.Timer0 -> Timer0;
 }

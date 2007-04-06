@@ -1,4 +1,4 @@
-// $Id: BlinkConfigC.nc,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+// $Id: BlinkConfigC.nc,v 1.5 2007-04-06 01:13:59 prabal Exp $
 
 /*
  * "Copyright (c) 2000-2006 The Regents of the University of
@@ -25,39 +25,40 @@
  */
 
 /**
- * Application to demonstrate the ConfigStorageC abstraction.  A value
- * is written to, and read from, the flash storage. A successful test
- * will turn on both the green and blue (yellow) LEDs.  A failed test
- * is any other LED combination..
+ * Application to demonstrate the ConfigStorageC abstraction.  A timer
+ * period is read from flash, divided by two, and written back to
+ * flash.  An LED is toggled each time the timer fires.
  *
- * @author Prabal Dutta
+ * @author Prabal Dutta <prabal@cs.berkeley.edu>
  */
+#include <Timer.h>
+
 module BlinkConfigC {
   uses {
     interface Boot;
     interface Leds;
     interface ConfigStorage as Config;
-    interface AMSend;
-    interface SplitControl as AMControl;
     interface Mount as Mount;
+    interface Timer<TMilli> as Timer0;
   }
 }
 implementation {
-  uint16_t period = 2048;
-  uint16_t period2 = 1024;
+
+  typedef struct config_t {
+    uint16_t version;
+    uint16_t period;
+  } config_t;
 
   enum {
     CONFIG_ADDR = 0,
+    CONFIG_VERSION = 1,
+    DEFAULT_PERIOD = 1024
   };
 
-  event void Boot.booted() {
-    call AMControl.start();
-  }
+  uint8_t state;
+  config_t conf;
 
-  event void AMControl.startDone(error_t error) {
-    if (error != SUCCESS) {
-      call AMControl.start();
-    }
+  event void Boot.booted() {
     if (call Mount.mount() != SUCCESS) {
       // Handle failure
     }
@@ -68,50 +69,57 @@ implementation {
       // Handle failure
     }
     else{
-      call Config.write(CONFIG_ADDR, &period, sizeof(period));
-    }
-  }
-
-  event void Config.writeDone(storage_addr_t addr, void *buf, 
-    storage_len_t len, error_t result) {
-    // Verify addr and len
-
-    if (result == SUCCESS) {
-      // Note success
-    }
-    else {
-      // Handle failure
-    }
-    if (call Config.commit() != SUCCESS) {
-      // Handle failure
-    }
-  }
-
-  event void Config.commitDone(error_t error) {
-    if (call Config.read(CONFIG_ADDR, &period2, sizeof(period2)) != SUCCESS) {
-      // Handle failure
+      if (call Config.read(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
+	// Handle failure
+      }
     }
   }
 
   event void Config.readDone(storage_addr_t addr, void* buf, 
-    storage_len_t len, error_t result) __attribute__((noinline)) {
-    memcpy(&period2, buf, len);
+    storage_len_t len, error_t err) __attribute__((noinline)) {
 
-    if (period == period2) {
-      call Leds.led2On();
-    }
-
-    if (len == 2 && addr == CONFIG_ADDR) {
-      call Leds.led1On();
-    }
-  }
-
-  event void AMSend.sendDone(message_t* msg, error_t error) {
-    if (error != SUCCESS) {
+    if (err == SUCCESS) {
+      memcpy(&conf, buf, len);
+      if (conf.version == CONFIG_VERSION) {
+        conf.period = conf.period > 128 ? conf.period/2 : DEFAULT_PERIOD;
+      }
+      else {
+        // Version mismatch. Restore default.
+	call Leds.led1On();
+        conf.version = CONFIG_VERSION;
+        conf.period = DEFAULT_PERIOD;
+      }
       call Leds.led0On();
+      call Config.write(CONFIG_ADDR, &conf, sizeof(conf));
+    }
+    else {
+      // Handle failure.
     }
   }
 
-  event void AMControl.stopDone(error_t error) {
+  event void Config.writeDone(storage_addr_t addr, void *buf, 
+    storage_len_t len, error_t err) {
+    // Verify addr and len
+
+    if (err == SUCCESS) {
+      if (call Config.commit() != SUCCESS) {
+        // Handle failure
+      }
+    }
+    else {
+      // Handle failure
+    }
+  }
+
+  event void Config.commitDone(error_t err) {
+    call Leds.led0Off();
+    call Timer0.startPeriodic(conf.period);
+    if (err == SUCCESS) {
+      // Handle failure
+    }
+  }
+
+  event void Timer0.fired() {
+    call Leds.led2Toggle();
   }
 }
