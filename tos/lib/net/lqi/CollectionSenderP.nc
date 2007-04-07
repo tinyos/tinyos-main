@@ -28,27 +28,34 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * The virtualized collection sender abstraction.
- *
- * @author Kyle Jamieson
- * @author Philip Levis
- * @date April 25 2006
- * @see TinyOS Net2-WG
- */
 
-#include <MultiHopLqi.h>
+#include "Collection.h"
 
-generic configuration CollectionSenderC(collection_id_t collectid) {
-  provides {
-    interface Send;
-    interface Packet;
-  }
+generic module CollectionSenderP(collection_id_t collectid) {
+  provides interface Send;
+  uses interface Send as SubSend;
+  uses interface CollectionPacket;
 }
+
 implementation {
-  components new CollectionSenderP(collectid), CollectionC;
-  Send = CollectionSenderP;
-  Packet = CollectionC;
-  CollectionSenderP.SubSend -> CollectionC.Send[unique(UQ_LQI_CLIENT)];
-  CollectionSenderP.CollectionPacket -> CollectionC;
+  command error_t Send.send(message_t* msg, uint8_t len) {
+    call CollectionPacket.setType(msg, collectid);
+    return call SubSend.send(msg, len);
+  }
+
+  command error_t Send.cancel(message_t* msg) {
+    return call SubSend.cancel(msg);
+  }
+
+  command void* Send.getPayload(message_t* m) {
+    return call SubSend.getPayload(m);
+  }
+
+  command uint8_t Send.maxPayloadLength() {
+    return call SubSend.maxPayloadLength();
+  }
+  
+  event void SubSend.sendDone(message_t* m, error_t err) {
+    signal Send.sendDone(m, err);
+  }
 }

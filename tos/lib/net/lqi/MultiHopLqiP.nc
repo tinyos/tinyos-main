@@ -1,5 +1,3 @@
-// $Id: RouteControl.nc,v 1.2 2007-04-07 01:58:05 scipio Exp $
-
 /*
  * Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -30,20 +28,20 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*									tab:4
- * "Copyright (c) 2000-2003 The Regents of the University  of California.  
+/*                                                                      tab:4
+ * "Copyright (c) 2000-2003 The Regents of the University  of California.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
  * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -53,70 +51,83 @@
  * Copyright (c) 2002-2003 Intel Corporation
  * All rights reserved.
  *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * This file is distributed under the terms in the attached INTEL-LICENSE
  * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
  * 94704.  Attention:  Intel License Inquiry.
  */
 
-/*
- * Authors:	Phil Buonadonna
- * Rev:		$Id: RouteControl.nc,v 1.2 2007-04-07 01:58:05 scipio Exp $
+/**
+ * @author Joe Polastre
+ * @author Philip Levis (port to TinyOS 2.x)
  */
 
-/** 
- * Control/Monitor interface to a routing component 
- * @author Phil Buonadonna
- * @author Philip Levis (port from TinyOS 1.x)
- */
+#include "MultiHopLqi.h"
 
-interface RouteControl {
+configuration MultiHopLqiP {
+  provides {
+    interface StdControl;
+    interface Send;
+    interface Receive[collection_id_t id];
+    interface Receive as Snoop[collection_id_t];
+    interface Intercept[collection_id_t id];
+    interface RouteControl;
+    interface LqiRouteStats;
+    interface Packet;
+    interface RootControl;
+    interface CollectionPacket;
+  }
 
-  /**
-   * Get this node's present parent address.
-   * 
-   * @return The address of the parent
-   */
-  command uint16_t getParent();
+}
 
-  /** 
-   * Get this node's depth in the network
-   * 
-   * @return The network depth.
-   */
-  command uint8_t getDepth();
+implementation {
 
+  components LqiForwardingEngineP as Forwarder, LqiRoutingEngineP as Router;
+  components 
+    new AMSenderC(AM_LQI_BEACON_MSG) as BeaconSender,
+    new AMReceiverC(AM_LQI_BEACON_MSG) as BeaconReceiver,
+    new AMSenderC(AM_LQI_DATA_MSG) as DataSender,
+    new AMReceiverC(AM_LQI_DATA_MSG) as DataReceiver,
+    new TimerMilliC(), 
+    NoLedsC, LedsC,
+    RandomC,
+    ActiveMessageC,
+    MainC;
+
+  MainC.SoftwareInit -> Forwarder;
+  MainC.SoftwareInit -> Router;
+  
+  components CC2420ActiveMessageC as CC2420;
+
+  StdControl = Router.StdControl;
+  
+  Receive = Forwarder.Receive;
+  Send = Forwarder;
+  Intercept = Forwarder.Intercept;
+  Snoop = Forwarder.Snoop;
+  RouteControl = Forwarder;
+  LqiRouteStats = Forwarder;
+  Packet = Forwarder;
+  CollectionPacket = Forwarder;
+  RootControl = Router;
  
-  /**
-   * Return length of the routing forwarding queue 
-   *
-   * @return The number of outstanding entries in the queue.
-   */
-  command uint8_t getOccupancy();
-
-  /**
-   * Get a measure of goodness for the current parent 
-   * 
-   * @return A value between 0-256 where 256 represent the best
-   * goodness
-   */
-  command uint8_t getQuality();
-
-  /** 
-   * Set the routing componenets internal update interval.
-   *
-   * @param The duration, in seconds, of successive routing
-   * updates.
-   * 
-   * @return SUCCESS if the operation succeeded.
-   */
-  command error_t setUpdateInterval(uint16_t Interval);
-
-  /**
-   * Queue a manual update of the routing state.  This may or may
-   * not include the transmission of a message.
-   *
-   * @return SUCCESS if a route update was queued.
-   */
-  command error_t manualUpdate();
+  Forwarder.RouteSelectCntl -> Router.RouteControl;
+  Forwarder.RouteSelect -> Router;
+  Forwarder.SubSend -> DataSender;
+  Forwarder.SubReceive -> DataReceiver;
+  Forwarder.Leds -> LedsC;
+  Forwarder.AMPacket -> ActiveMessageC;
+  Forwarder.SubPacket -> ActiveMessageC;
+  Forwarder.PacketAcknowledgements -> ActiveMessageC;
+  Forwarder.RootControl -> Router;
+  
+  Router.AMSend -> BeaconSender;
+  Router.Receive -> BeaconReceiver;
+  Router.Random -> RandomC;
+  Router.Timer -> TimerMilliC; 
+  Router.LqiRouteStats -> Forwarder;
+  Router.CC2420Packet -> CC2420;
+  Router.AMPacket -> ActiveMessageC;
+  Router.Packet -> ActiveMessageC;
+  Router.Leds -> NoLedsC;
 }

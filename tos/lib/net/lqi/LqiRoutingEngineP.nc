@@ -29,14 +29,16 @@
 
 
 
-/*
- * Authors:          Gilman Tolle
+/**
+ *
+ * @author Gilman Tolle
+ * @author Philip Levis (port to TinyOS 2.x)
  */
 
 
-#include "MultiHop.h"
+#include "MultiHopLqi.h"
 
-module MultiHopLQI {
+module LqiRoutingEngineP {
 
   provides {
     interface Init;
@@ -105,13 +107,14 @@ implementation {
   lqi_header_t* getHeader(message_t* msg) {
     return (lqi_header_t*)call Packet.getPayload(msg, NULL);
   }
-  beacon_msg_t* getBeacon(message_t* msg) {
-    return (beacon_msg_t*)call Packet.getPayload(msg, NULL);
+  
+  lqi_beacon_msg_t* getBeacon(message_t* msg) {
+    return (lqi_beacon_msg_t*)call Packet.getPayload(msg, NULL);
   }
 
   task void SendRouteTask() {
-    beacon_msg_t* bMsg = getBeacon(&msgBuf);
-    uint8_t length = sizeof(beacon_msg_t);
+    lqi_beacon_msg_t* bMsg = getBeacon(&msgBuf);
+    uint8_t length = sizeof(lqi_beacon_msg_t);
     
     dbg("LQI","MultiHopRSSI Sending route update msg.\n");
 
@@ -324,7 +327,7 @@ implementation {
       return msg;
     }
     else {
-      beacon_msg_t* bMsg = (beacon_msg_t*)payload;
+      lqi_beacon_msg_t* bMsg = (lqi_beacon_msg_t*)payload;
       am_addr_t source = call AMPacket.source(msg);
       uint8_t lqi = call CC2420Packet.getLqi(msg);
       
