@@ -131,7 +131,7 @@ implementation {
       m_busy = TRUE;
       m_entry.len = len;
       m_entry.msg = *msg;
-      if (call LogWrite.append(&m_entry, sizeof(message_t)) != SUCCESS) {
+      if (call LogWrite.append(&m_entry, sizeof(logentry_t)) != SUCCESS) {
 	m_busy = FALSE;
       }
     }

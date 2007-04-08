@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.1 2007-04-07 21:53:25 prabal Exp $
+$Id: README.txt,v 1.2 2007-04-08 14:03:51 prabal Exp $
 
 README for PacketParrot
 
@@ -10,18 +10,18 @@ Description:
 
   PacketParrot demonstrates use of LogWrite and LogRead abstractions.
   A node writes received packets to a circular log and retransmits the
-  logged packets (or at least the part of the packets above the AM
+  logged packets (or at least the parts of the packets above the AM
   layer) when power cycled.
 
   The application logs packets it receives from the radio to flash.
-  On a subsequent power cycle, the application transmits logged
+  On a subsequent power cycle, the application transmits any logged
   packets, erases the log, and then continues to log packets again.
   The red LED is on when the log is being erased.  The blue (yellow)
-  LED turns on when a packets is received and turns off when a packet 
-  has been logged.  The blue (yellow) LED remains on when packets are 
-  being received but are not logged (because the log is being erased).  
-  The green LED flickers rapidly after a power cycle when logged 
-  packets are transmitted.
+  LED turns on when a packet is received and turns off when a packet
+  has been logged successfully.  The blue (yellow) LED remains on when
+  packets are being received but are not logged (because the log is
+  being erased).  The green LED flickers rapidly after a power cycle
+  when logged packets are transmitted.
 
   To use this application:
 
@@ -54,5 +54,7 @@ Tools:
 
 Known bugs/limitations:
 
-  Only works on motes with the CC2420 radio.  Known to work with
-  TelosB and Tmote nodes but currently flaky on the MicaZ nodes.
+  Only works on motes with the CC2420 radio.  Tested and verified with
+  TelosB and Tmote nodes.  Also works with MicaZ (as the BlinkToRadio
+  node) and TelosB/Tmote as the parrot node.  Currently, using a MicaZ
+  as the parrot does not work and needs to be debugged.
