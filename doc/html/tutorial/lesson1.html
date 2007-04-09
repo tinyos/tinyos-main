@@ -8,7 +8,7 @@
 <body>
 
 <div class="title">Lesson 1: Getting Started with TinyOS and nesC</div>
-<div class="subtitle">Last updated June 24 2006</div>
+<div class="subtitle">Last updated April 8 2007</div>
 
       <h1>Introduction</h1>
 
@@ -106,6 +106,8 @@ msp430-objcopy --output-target=ihex build/telosb/main.exe build/telosb/main.ihex
       <p>If you compile for TOSSIM, you will see a much longer message,
 	as building TOSSIM requires several steps, such as building shared
 	libraries and scripting support.</p>
+
+      <p>If you are running Cygwin and see the error message "The procedure entry point basename could not be located in the dynamic link library cygwin1.dll" then you need to install the other Cygwin nesC RPM (step 4 of the <A HREF="../install-tinyos.html">install instructions</A> or step 2 of the <A HREF="../upgrade-tinyos.html">upgrade instructions</A>)</p>
 
       <h2>Making sure you're invoking the right version of the nesC compiler</h2>
 

@@ -10,8 +10,8 @@ TinyOS 802.15.4 Frames
 :Author: Jonathan Hui, Philip Levis, and David Moss
 
 :Draft-Created: 2-Feb-2007
-:Draft-Version: $Revision: 1.1 $
-:Draft-Modified: $Date: 2007-04-03 02:35:03 $
+:Draft-Version: $Revision: 1.2 $
+:Draft-Modified: $Date: 2007-04-09 18:43:52 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -36,13 +36,13 @@ The TinyOS 2.0 active message layer adds a packet field for higher-level
 protocol dispatch. This document describes the two TinyOS 2.0 frame format
 for 802.15.4 networks. The first format is for isolated TinyOS networks;
 the second format is for networks that share the spectrum with 6lowpan
-networks[1_].
+networks[1]_.
 
 2. 802.15.4
 ====================================================================
 
 802.15.4 supports several different source and destination addressing
-modes, and so has a variable sized packet header.[2_] A TinyOS device MUST
+modes, and so has a variable sized packet header.[2]_ A TinyOS device MUST
 support packet frames with 16-bit short source and destination addresses.
 A TinyOS device MAY support additional 802.15.4 frame formats. 
 
@@ -81,6 +81,7 @@ to identify this as a TinyOS packet. At this time, the exact value of
 this code has not been determined. To inform 6lowpan that this is not
 a 6lowpan packet, the code used MUST be in the range of 192-55.
 
+The AM type 6lowpan is reserved. A TinyOS program MUST NOT use it.
 
 4. Implementation
 ====================================================================
