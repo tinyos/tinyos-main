@@ -1,0 +1,4 @@
+COMPONENT=TestTimerAppC
+
+include $(MAKERULES)
+

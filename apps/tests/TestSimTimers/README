@@ -1,0 +1,12 @@
+TestTimer, 4/9/07 
+
+This application tests TinyOS millisecond timers
+(TimerMilliC). It is intended for use with TOSSIM,
+to test whether the timer implementation is working
+correctly: its output consists of TOSSIM dbg() 
+statements.
+
+The relevant output channel is "TestTimer".
+
+Philip Levis
+
