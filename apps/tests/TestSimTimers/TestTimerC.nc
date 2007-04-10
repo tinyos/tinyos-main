@@ -1,4 +1,4 @@
-// $Id: TestTimerC.nc,v 1.1 2007-04-10 01:23:13 scipio Exp $
+// $Id: TestTimerC.nc,v 1.2 2007-04-10 01:27:10 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -96,7 +96,7 @@ implementation {
     aStart = sim_time();
     if (aTime & 0xff) {
       call A.stop();
-      aTime = call Random.rand32() & 0x3ff;
+      aTime = 1 + (call Random.rand32() & 0x3ff);
       call A.startPeriodic(aTime);
     }
   }
@@ -104,7 +104,7 @@ implementation {
   event void B.fired() {
     check('B', bStart, bTime);
     call B.stop();
-    bTime = call Random.rand32() & 0x3ff;
+    bTime = 1 + (call Random.rand32() & 0x3ff);
     call B.startPeriodic(bTime);
     bStart = sim_time();
   }
@@ -113,7 +113,7 @@ implementation {
     check('C', cStart, cTime);
     if (cTime & 0xff) {
       call C.stop();
-      cTime = call Random.rand32() & 0x3ff;
+      cTime = 1 + (call Random.rand32() & 0x3ff);
     }
     call C.startOneShot(cTime);
     cStart = sim_time();
@@ -121,7 +121,7 @@ implementation {
   
   event void D.fired() {
     check('D', dStart, dTime);
-    dTime = call Random.rand32() & 0x3ff;
+    dTime = 1 + (call Random.rand32() & 0x3ff);
     call D.startOneShot(dTime);
     dStart = sim_time();
   }
