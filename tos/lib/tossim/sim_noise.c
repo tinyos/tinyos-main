@@ -98,6 +98,9 @@ void sim_noise_trace_add(uint16_t node_id, char noiseVal)__attribute__ ((C, spon
 uint8_t search_bin_num(char noise)__attribute__ ((C, spontaneous))
 {
   uint8_t bin;
+  if (noise > NOISE_MAX || noise < NOISE_MIN) {
+    noise = NOISE_MIN;
+  }
   bin = (noise-NOISE_MIN)/NOISE_QUANTIZE_INTERVAL + 1;
   return bin;
 }
@@ -242,6 +245,9 @@ void makePmfDistr(uint16_t node_id)__attribute__ ((C, spontaneous))
   sim_noise_dist(node_id);
   arrangeKey(node_id);
   for(i = NOISE_HISTORY; i < noiseData[node_id].noiseTraceIndex; i++) {
+    if (i >= 196605) {
+      int foo = 7;
+    }
     if (i == NOISE_HISTORY) {
       printf("Inserting first element.\n");
     }
@@ -330,6 +336,11 @@ char sim_noise_generate(uint16_t node_id, uint32_t cur_t)__attribute__ ((C, spon
 
   prev_t = noiseData[node_id].noiseGenTime;
 
+  if (noiseData[node_id].generated == 0) {
+    dbgerror("TOSSIM", "Tried to generate noise from an uninitialized radio model of node %hu.\n", node_id);
+    return 127;
+  }
+  
   if ( (0<= cur_t) && (cur_t < NOISE_HISTORY) ) {
     noiseData[node_id].noiseGenTime = cur_t;
     noiseData[node_id].key[cur_t] = search_bin_num(noiseData[node_id].noiseTrace[cur_t]);
@@ -384,6 +395,7 @@ void makeNoiseModel(uint16_t node_id)__attribute__ ((C, spontaneous)) {
     sim_noise_add(node_id, noiseData[node_id].noiseTrace[i+1]);
     arrangeKey(node_id);
   }
+  noiseData[node_id].generated = 1;
 }
 
 

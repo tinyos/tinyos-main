@@ -36,7 +36,7 @@
 */
 
 /* Globals */
-static double u[97],c,cd,cm;
+static double randU[97], randC, randCD, randCM;
 static int i97,j97;
 static int test = FALSE;
 
@@ -85,12 +85,12 @@ void RandomInitialise(int ij,int kl)
             s += t;
          t *= 0.5;
       }
-      u[ii] = s;
+      randU[ii] = s;
    }
 
-   c    = 362436.0 / 16777216.0;
-   cd   = 7654321.0 / 16777216.0;
-   cm   = 16777213.0 / 16777216.0;
+   randC    = 362436.0 / 16777216.0;
+   randCD   = 7654321.0 / 16777216.0;
+   randCM   = 16777213.0 / 16777216.0;
    i97  = 97;
    j97  = 33;
    test = TRUE;
@@ -116,20 +116,20 @@ double RandomUniform(void)
    	RandomInitialise(seed1,seed2);
 #endif
 	}
-   uni = u[i97-1] - u[j97-1];
+   uni = randU[i97-1] - randU[j97-1];
    if (uni <= 0.0)
       uni++;
-   u[i97-1] = uni;
+   randU[i97-1] = uni;
    i97--;
    if (i97 == 0)
       i97 = 97;
    j97--;
    if (j97 == 0)
       j97 = 97;
-   c -= cd;
-   if (c < 0.0)
-      c += cm;
-   uni -= c;
+   randC -= randCD;
+   if (randC < 0.0)
+      randC += randCM;
+   uni -= randC;
    if (uni < 0.0)
       uni++;
 
