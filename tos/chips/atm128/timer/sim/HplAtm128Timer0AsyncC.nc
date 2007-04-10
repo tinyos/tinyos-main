@@ -35,35 +35,24 @@
  * @author David Gay <dgay@intel-research.net>
  */
 
-// $Id: HplAtm128Timer0AsyncC.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $/// $Id: HplAtm128Timer2C.nc,
+// $Id: HplAtm128Timer0AsyncC.nc,v 1.5 2007-04-10 01:21:22 scipio Exp $/// $Id: HplAtm128Timer2C.nc,
 
 #include <Atm128Timer.h>
 
 configuration HplAtm128Timer0AsyncC
 {
   provides {
-    interface Init @atleastonce();
     // 8-bit Timers
     interface HplAtm128Timer<uint8_t>   as Timer;
     interface HplAtm128TimerCtrl8       as TimerCtrl;
     interface HplAtm128Compare<uint8_t> as Compare;
+    interface HplAtm128TimerAsync       as TimerAsync;
   }
 }
 implementation {
-  components HplAtm128Counter0C, new HplAtm128CompareC(uint8_t,
-						 ATM128_OCR0,
-						 ATM128_TIMSK,
-						 OCIE0,
-						 ATM128_TIFR,
-						 OCF0);
-
-  Init = HplAtm128Counter0C;
-  Timer = HplAtm128Counter0C;
-  TimerCtrl = HplAtm128Counter0C;
-  Compare = HplAtm128CompareC;
-
-  HplAtm128CompareC.Timer -> HplAtm128Counter0C;
-  HplAtm128CompareC.TimerCtrl -> HplAtm128Counter0C;
-  HplAtm128CompareC.Notify -> HplAtm128Counter0C;
-  
+  components HplAtm128Timer0AsyncP;
+  Timer = HplAtm128Timer0AsyncP;
+  TimerCtrl = HplAtm128Timer0AsyncP;
+  Compare = HplAtm128Timer0AsyncP;
+  TimerAsync = HplAtm128Timer0AsyncP;
 }

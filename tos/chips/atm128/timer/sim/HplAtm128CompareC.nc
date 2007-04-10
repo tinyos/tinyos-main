@@ -1,4 +1,4 @@
-/// $Id: HplAtm128CompareC.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+/// $Id: HplAtm128CompareC.nc,v 1.5 2007-04-10 01:21:22 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -29,7 +29,7 @@
  * @date   Nov 22 2005
  */
 
-// $Id: HplAtm128CompareC.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+// $Id: HplAtm128CompareC.nc,v 1.5 2007-04-10 01:21:22 scipio Exp $
 
 #include <Atm128Timer.h>
 
@@ -192,13 +192,13 @@ implementation {
       return;
     }
     else {
-      char time[128];
-      sim_print_now(time, 128);
+      char timeStr[128];
+      sim_print_now(timeStr, 128);
       dbg("HplAtm128CompareC", "Handling compare at 0x%p @ %s\n", evt, sim_time_string());
 	    
       if (READ_BIT(interruptRegister, interruptBit)) {
 	CLR_BIT(flagRegister, flagBit);
-	dbg("HplAtm128CompareC", "Compare interrupt @ %s\n", time);
+	dbg("HplAtm128CompareC", "Compare interrupt @ %s\n", timeStr);
 	SIG_OUTPUT_COMPARE0();
       }
       else {
