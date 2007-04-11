@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makerules,v 1.4 2006-12-12 18:22:54 vlahan Exp $
+#$Id: Makerules,v 1.5 2007-04-11 21:07:56 idgay Exp $
 
 # @author Cory Sharp <cssharp@eecs.berkeley.edu>
 
@@ -132,6 +132,8 @@ endef
 #  Makelocal comes first to allow overriding Makedefaults.
 -include $(TINYOS_MAKELOCAL)
 -include $(TINYOS_MAKEDEFAULTS)
+
+PLATFORMDIR ?= $(TOSDIR)/platforms/$(PLATFORM)
 
 #  Mark TOSMAKE_PATH with a + so that they're not searched for by TOSMake_find.
 $(foreach incdir,$(addprefix +,$(TOSMAKE_PATH)),$(call TOSMake_include_dir,$(incdir)))

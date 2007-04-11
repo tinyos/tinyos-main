@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+#$Id: avr.rules,v 1.5 2007-04-11 21:07:56 idgay Exp $
 
 define AVR_HELP
 
@@ -63,7 +63,7 @@ ifneq ($(wildcard $(VOLUMEFILE)), )
 exe0: $(BUILDDIR)/StorageVolumes.h
 
 $(BUILDDIR)/StorageVolumes.h: $(VOLUMEFILE)
-	tos-storage-at45db <$(VOLUMEFILE) >$@
+	tos-storage-at45db $(PLATFORMDIR) <$(VOLUMEFILE) >$@ || rm -f $@
 
 PFLAGS += -I$(BUILDDIR)
 endif
