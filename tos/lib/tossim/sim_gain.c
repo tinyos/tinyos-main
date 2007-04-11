@@ -60,11 +60,13 @@ double sim_gain_value(int src, int dest) __attribute__ ((C, spontaneous))  {
   while (current != NULL) {
     if (current->mote == dest) {
       sim_set_node(temp);
+      dbg("Gain", "Getting link from %i to %i with gain %f\n", src, dest, current->gain);
       return current->gain;
     }
     current = current->next;
   }
   sim_set_node(temp);
+  dbg("Gain", "Getting default link from %i to %i with gain %f\n", src, dest, 1.0);
   return 1.0;
 }
 

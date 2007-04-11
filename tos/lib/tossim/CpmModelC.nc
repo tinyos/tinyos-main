@@ -113,14 +113,14 @@ implementation {
     double noise_val;
     uint16_t node_id = sim_node();
 
-    dbg("SNIST_1", "IN: noise_hash_generation()\n");
+    dbg("CpmModelC", "IN: noise_hash_generation()\n");
     if (5 <= remain && remain < 10) {
 	noise_val = (double)sim_noise_generate(node_id, quotient+1);
       }
     else {
       noise_val = (double)sim_noise_generate(node_id, quotient);
     }
-    dbg("SNIST_1", "OUT: noise_hash_generation()\n");
+    dbg("CpmModelC", "OUT: noise_hash_generation()\n");
 
     return noise_val;
   }
@@ -139,19 +139,19 @@ implementation {
 
   sim_event_t receiveEvent;
   // This clear threshold comes from the CC2420 data sheet
-  double clearThreshold = -95.0;
+  double clearThreshold = -72.0;
   bool collision = FALSE;
   message_t* incoming = NULL;
   int incomingSource;
 
   command void Model.setClearValue(double value) {
     clearThreshold = value;
-    dbg("SNIST_1", "Setting clear threshold to %f\n", clearThreshold);
+    dbg("CpmModelC", "Setting clear threshold to %f\n", clearThreshold);
 	
   }
   
   command bool Model.clearChannel() {
-    dbg("SNIST_1", "Checking clear channel @ %s: %f <= %f \n", sim_time_string(), (double)noise_hash_generation(), clearThreshold);
+    dbg("CpmModelC", "Checking clear channel @ %s: %f <= %f \n", sim_time_string(), (double)noise_hash_generation(), clearThreshold);
     return noise_hash_generation() < clearThreshold;
   }
 
@@ -173,7 +173,7 @@ implementation {
     double X = fabs(SNR_lin-beta2);
     double PSE = 0.5*erfc(beta1*sqrt(X/2));
     double prr_hat = pow(1-PSE, 23*2);
-
+    dbg("CpmModelC", "SNR is %lf, PRR is %lf\n", SNR, prr_hat);
     if (prr_hat > 1)
       prr_hat = 1;
     else if (prr_hat < 0)
@@ -204,7 +204,7 @@ implementation {
       }
     }
     noise = 10.0 * log(noise) / log(10.0);
-    return shouldReceive(msg->power / noise);
+    return shouldReceive(msg->power - noise);
   }
   
   double packetNoise(receive_message_t* msg) {
@@ -230,7 +230,7 @@ implementation {
     receive_message_t* predecessor = NULL;
     receive_message_t* list = outstandingReceptionHead;
 
-    dbg("SNIST_1", "Handling reception event @ %s.\n", sim_time_string());
+    dbg("CpmModelC", "Handling reception event @ %s.\n", sim_time_string());
     while (list != NULL) {
       if (list->next == mine) {
 	predecessor = list;
@@ -244,26 +244,26 @@ implementation {
       outstandingReceptionHead = mine->next;
     }
     else {
-      dbgerror("SNIST", "Incoming packet list structure is corrupted: entry is not the head and no entry points to it.\n");
+      dbgerror("CpmModelC", "Incoming packet list structure is corrupted: entry is not the head and no entry points to it.\n");
     }
     
     if (!checkReceive(mine)) {
-      dbg("SNIST", "Lost packet as SNR was too low.\n");
+      dbg("CpmModelC", "Lost packet as SNR was too low.\n");
       mine->lost = 1;
     }
     
     if (!mine->lost) {
-      dbg_clear("SNIST", "  -signaling reception, ");
+      dbg_clear("CpmModelC", "  -signaling reception, ");
       signal Model.receive(mine->msg);
       if (mine->ack) {
-        dbg_clear("SNIST", " acknowledgment requested, ");
+        dbg_clear("CpmModelC", " acknowledgment requested, ");
       }
       else {
-        dbg_clear("SNIST", " no acknowledgment requested.\n");
+        dbg_clear("CpmModelC", " no acknowledgment requested.\n");
       }
       // If we scheduled an ack, receiving = 0 when it completes
       if (mine->ack && signal Model.shouldAck(mine->msg)) {
-        dbg_clear("SNIST", " scheduling ack.\n");
+        dbg_clear("CpmModelC", " scheduling ack.\n");
 	sim_gain_schedule_ack(mine->source, sim_time() + 1); 
       }
       // We're searching for new packets again
@@ -271,11 +271,11 @@ implementation {
     } // If the packet was lost, then we're searching for new packets again
     else {
       receiving = 0;
-      dbg_clear("SNIST", "  -packet was lost.\n");
+      dbg_clear("CpmModelC", "  -packet was lost.\n");
     }
     free(mine);
   }
-  
+   
   // Create a record that a node is receiving a packet,
   // enqueue a receive event to figure out what happens.
   void enqueue_receive_event(int source, sim_time_t endTime, message_t* msg, bool receive, double power) {
@@ -296,7 +296,7 @@ implementation {
     // the signal strength.
 
     if (!sim_mote_is_on(sim_node())) { 
-      dbg("SNIST", "Lost packet from %i due to %i being off\n", source, sim_node());
+      dbg("CpmModelC", "Lost packet from %i due to %i being off\n", source, sim_node());
       rcv->lost = 1;
     }
     else if (!shouldReceive(power - noiseStr)) {
@@ -316,7 +316,7 @@ implementation {
   
   void sim_gain_put(int dest, message_t* msg, sim_time_t endTime, bool receive, double power) {
     int prevNode = sim_node();
-    dbg("SNIST_1", "Enqueing reception event for %i at %llu.\n", dest, endTime);
+    dbg("CpmModelC", "Enqueing reception event for %i at %llu with power %lf.\n", dest, endTime, power);
     sim_set_node(dest);
     enqueue_receive_event(prevNode, endTime, msg, receive, power);
     sim_set_node(prevNode);
@@ -326,11 +326,11 @@ implementation {
     gain_entry_t* link = sim_gain_first(sim_node());
     requestAck = ack;
     outgoing = msg;
-    dbg("SNIST", "Node %i transmitting to %i, finishes at %llu.\n", sim_node(), dest, endTime);
+    dbg("CpmModelC", "Node %i transmitting to %i, finishes at %llu.\n", sim_node(), dest, endTime);
 
     while (link != NULL) {
       int other = link->mote;
-      sim_gain_put(other, msg, endTime, ack && (other == dest), power);
+      sim_gain_put(other, msg, endTime, ack && (other == dest), power + sim_gain_value(sim_node(), other));
       link = sim_gain_next(link);
     }
   }

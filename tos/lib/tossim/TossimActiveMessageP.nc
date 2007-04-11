@@ -1,4 +1,4 @@
-// $Id: TossimActiveMessageP.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: TossimActiveMessageP.nc,v 1.5 2007-04-11 01:29:44 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -62,6 +62,7 @@ implementation {
 					  uint8_t len) {
     error_t err;
     tossim_header_t* header = getHeader(amsg);
+    dbg("AM", "AM: Sending packet (id=%hhu, len=%hhu) to %hu\n", id, len, addr);
     header->type = id;
     header->dest = addr;
     header->src = call AMPacket.address();
