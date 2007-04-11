@@ -24,7 +24,7 @@ static const unsigned int primes[] = {
 const unsigned int prime_table_length = sizeof(primes)/sizeof(primes[0]);
 const float max_load_factor = 0.65;
 
-#define BAD_RECORD (0xc693748)
+
 
 /*****************************************************************************/
 struct hashtable *
@@ -135,10 +135,7 @@ hashtable_count(struct hashtable *h)
 }
 
 /*****************************************************************************/
-int entered = 0;
-
-int
-hashtable_insert(struct hashtable *h, void *k, void *v)
+int hashtable_insert(struct hashtable *h, void *k, void *v)
 {
     /* This method allows duplicate keys - but they shouldn't be used */
     unsigned int tindex;
@@ -151,31 +148,11 @@ hashtable_insert(struct hashtable *h, void *k, void *v)
          * element may be ok. Next time we insert, we'll try expanding again.*/
         hashtable_expand(h);
     }
-    if (entered) {
-      struct entry* eTest = (struct entry*)BAD_RECORD;
-      if (eTest->v == (void*)0x3f800000) {
-	//printf("Insert CORRUPT\n");
-      }
-    }
     e = (struct entry *)malloc(sizeof(struct entry));
     if (NULL == e) { --(h->entrycount); return 0; } /*oom*/
-    if (e == (void*)BAD_RECORD) {
-      entered  = 1;
-      //printf("Allocated 0x%x\n", e);
-    }
+
     e->h = hash(h,k);
-    if (e->h == 4101970376) {
-      int i;
-      //printf("Inserting key with suspect hashvalue:\n  ");
-      for (i = 0; i < 20; i++) {
-	//printf("%hhi ", ((char*)k)[i]);
-      }
-      //printf("\n");
-    }
     tindex = indexFor(h->tablelength,e->h);
-    if (v == (void*)0x3f800000) {
-      //printf("Insert post CORRUPT\n");
-    }
     e->k = k;
     e->v = v;
     e->next = h->table[tindex];
@@ -192,22 +169,10 @@ hashtable_search(struct hashtable *h, void *k)
     hashvalue = hash(h,k);
     tindex = indexFor(h->tablelength,hashvalue);
     e = h->table[tindex];
-    if (entered) {
-      struct entry* eTest = (struct entry*)BAD_RECORD;
-      if (eTest->v == (void*)0x3f800000) {
-	//printf("Search CORRUPT\n");
-      }
-    }
     while (NULL != e)
     {
         /* Check hash value to short circuit heavier comparison */
       if ((hashvalue == e->h) && (h->eqfn(k, e->k))) {
-	if (hashvalue == 4101970376) {
-	  //printf("Retreiving key with suspect hhashvalue: 0x%x -> 0x%x\n", e, e->v);
-	}
-	if ((int)e->v == 0x3f800000) {
-	  //printf("ALARM: 0x%x has 0x%x\n", e, e->v);
-	}
 	return e->v;
       }
       e = e->next;
