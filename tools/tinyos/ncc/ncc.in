@@ -262,6 +262,7 @@ sub idir_subst {
 	$rep = "%" if $char eq "%";
 	$rep = $TOSDIR if $char eq "T";
 	$rep = $target if $char eq "p";
+	$rep = $platform_dir if $char eq "P";
 	&fail("unknown include-path substitution %" . $char) if !$rep;
 	substr($idir, $idx, 2) = $rep;
 	$idx += length $rep;

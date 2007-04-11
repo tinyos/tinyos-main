@@ -85,9 +85,10 @@ If you wish to compile a component Bar.nc to a C file, you can do:
 ncc -c -o /dev/null -fnesc-cfile=Bar.c Bar.nc
 .SH SEARCH PATH
 
-\fBncc\fR performs the following substitutions on the directories specified
-with the \fB-I\fR option: \fB%T\fR is replaced by the TinyOS directory,
-\fB%p\fR is replaced by the selected target, \fB%%\fR is replaced by
+\fBncc\fR performs the following substitutions on the directories
+specified with the \fB-I\fR option: \fB%T\fR is replaced by the TinyOS
+directory, \fB%p\fR is replaced by the selected target, \fB%P\fR is
+replaced by the target's platform directory, \fB%%\fR is replaced by
 \fB%\fR.
 
 Except when \fB-nostdinc\fR is specified, the search path for nesC
