@@ -1,5 +1,5 @@
 #!@pathpython@
-# Copyright (c) 2006 Intel Corporation
+# Copyright (c) 2006-2007 Intel Corporation
 # All rights reserved.
 #
 # This file is distributed under the terms in the attached INTEL-LICENSE     
@@ -11,17 +11,28 @@ from xml.dom import *
 from xml.dom.minidom import *
 from re import match
 from sys import *
+from subprocess import Popen, PIPE
+
+# print an error message and exit
+def nfail(s):
+  stderr.write(s + "\n")
+  exit(2)
+
+if len(argv) == 2:
+  platformdir = argv[1]
+  # This gives the whole string when there's no / in platformdir
+  platform = platformdir[platformdir.rfind("/") + 1:]
+elif len(argv) == 1:
+  platformdir = ""
+  platform = ""
+else:
+  nfail("Usage: tos-storage-at45db <platform directory>")
 
 sector_size = 256
 flash_size = 2048 # in sectors
 
 volumes = {}
 volmap = []
-
-# print an error message and exit
-def nfail(s):
-  stderr.write(s + "\n")
-  exit(2)
 
 def check_volume(name, base, size):
   if base == "":
@@ -76,20 +87,64 @@ def allocate(name, size):
     base = vbase + vsize
   volmap.append((name, base, size))
 
-try:
-  dom = parse(stdin)
-except xml.parsers.expat.ExpatError:
-  nfail("no valid input")
+def expand_path(path):
+  substrs = path.split("%")
+  path = substrs[0]
+  i = 1
+  while i < len(substrs):
+    if substrs[i] == "":
+      # There was a %%, leading to a blank substring, and the next string
+      # should just be appended
+      path += "%"
+      i = i + 1
+      if i < len(substrs):
+        path += substrs[i]
+    else:
+      # The first character of the string is the one that followed %
+      c = substrs[i][0]
+      if c == 'p':
+        sub = platform
+      elif c == 'P':
+        sub = platformdir
+      elif c == 'T':
+        sub = Popen(["ncc", "-print-tosdir"], stdout=PIPE).communicate()[0]
+        sub = sub[:-1] # remove newline
+      else:
+        nfail("unknown include-path substitution character " + c)
+      path += sub
+      path += substrs[i][1:]
+    i = i + 1
+  return path
 
-for volume in dom.documentElement.getElementsByTagName("volume"):
-  name = volume.getAttribute("name")
-  size = volume.getAttribute("size")
-  base = volume.getAttribute("base")
-  if name == None:
-    nfail("name omitted in volume")
-  if size == None:
-    nfail("size omitted in volume %s" % name)
-  check_volume(name, base, size)
+def volumeparse(file, fname, depth):
+  if depth > 10:
+    nfail("include nesting too deep - check for cycles")
+  try:
+    dom = parse(file)
+  except xml.parsers.expat.ExpatError:
+    nfail(fname + " is not a valid input file")
+  except IOError:
+    nfail("couldn't open file " + fname)
+
+  for volume in dom.documentElement.getElementsByTagName("volume"):
+    name = volume.getAttribute("name")
+    size = volume.getAttribute("size")
+    base = volume.getAttribute("base")
+    if name == None:
+      nfail("name omitted in volume " + fname)
+    if size == None:
+      nfail("size omitted in volume %s %s" % (name, fname))
+    check_volume(name, base, size)
+  for include in dom.documentElement.getElementsByTagName("include"):
+    included = include.firstChild
+    if included != None and included.nodeType == included.TEXT_NODE:
+      included = expand_path(included.data)
+      volumeparse(included, "(file %s)" % included, depth + 1)
+    else:
+      nfail("invalid include directive " + fname)
+  dom.unlink()
+
+volumeparse(stdin, "(standard input)", 0)
 
 # allocate fixed-address volumes
 for name in volumes.keys():

@@ -5,7 +5,7 @@
 tos-storage-at45db - Generate storage volume description code
 .SH SYNOPSIS
 
-\fBtos-storage-at45db\fR
+\fBtos-storage-at45db\fR \fIplatform-directory\fR
 .SH DESCRIPTION
 
 \fBtos-storage-at45db\fR reads a user specification describing the layout
@@ -13,6 +13,10 @@ of storage volumes on an Atmel AT45DB-family flash chip, and generates code
 describing that layout for use by the TinyOS 2.0 storage subsystem.  The
 user specification is in XML and is read from standard input. The code is
 written to standard output.
+
+The argument should specify the platform directory for the current
+compilation target; this is necessary for the correct handling of 
+file include statements in the XML input.
 
 This program is normally invoked automatically by the TinyOS build system
 when your application directory contains a \fBvolumes-at45db.xml\fR file.
