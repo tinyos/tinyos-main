@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+#$Id: msp.rules,v 1.5 2007-04-11 21:30:08 idgay Exp $
 
 define MSP_HELP
 
@@ -58,7 +58,7 @@ ifneq ($(wildcard $(VOLUME_FILE)), )
 exe0: $(BUILDDIR)/StorageVolumes.h
 
 $(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
-	$(VOLUME_ALLOCATOR) <$(VOLUME_FILE) >$@
+	$(VOLUME_ALLOCATOR) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
 
 PFLAGS += -I$(BUILDDIR)
 endif
