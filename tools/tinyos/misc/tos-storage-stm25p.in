@@ -29,15 +29,60 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE
 #
-# @author Jonathan Hui <jhui@archedrock.com>
+# Copyright (c) 2006-2007 Intel Corporation
+# All rights reserved.
 #
-# $Revision: 1.4 $
-# $Date: 2006-12-12 18:23:02 $
+# This file is distributed under the terms in the attached INTEL-LICENSE     
+# file. If you do not find these files, copies can be found by writing to
+# Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+# 94704.  Attention:  Intel License Inquiry.
+
+# @author Jonathan Hui <jhui@archedrock.com>
+# @author David Gay
+#
+# $Revision: 1.5 $
+# $Date: 2007-04-11 21:29:29 $
 #
                                   
 from re import match
 from sys import *
-from xml.dom import minidom
+from xml.dom import *
+from xml.dom.minidom import *
+from subprocess import Popen, PIPE
+
+def error_exit( s ):
+    stderr.write( "ERROR: " + s + "\n" )
+    exit( 2 )
+
+def expand_path( path ):
+  substrs = path.split( "%" )
+  path = substrs[0]
+  i = 1
+  while i < len( substrs ):
+    if substrs[i] == "":
+      # There was a %%, leading to a blank substring, and the next string
+      # should just be appended
+      path += "%"
+      i = i + 1
+      if i < len( substrs ):
+        path += substrs[i]
+    else:
+      # The first character of the string is the one that followed %
+      c = substrs[i][0]
+      if c == 'p':
+        sub = platform
+      elif c == 'P':
+        sub = platformdir
+      elif c == 'T':
+        sub = Popen( ["ncc", "-print-tosdir"], stdout=PIPE ).communicate( )[0]
+        sub = sub[:-1] # remove newline
+      else:
+        nfail( "unknown include-path substitution character " + c )
+      path += sub
+      path += substrs[i][1:]
+    i = i + 1
+  return path
+
 
 NUM_SECTORS = 16
 SECTOR_SIZE = 65536
@@ -49,56 +94,79 @@ volumeSizes = []
 volumeOffsets = []
 freeSectors = NUM_SECTORS*[ True ]
 
-def error_exit( s ):
-    stderr.write( "ERROR: " + s + "\n" )
-    exit( 2 )
+if len( argv ) == 2:
+  platformdir = argv[1]
+  # This gives the whole string when there's no / in platformdir
+  platform = platformdir[platformdir.rfind( "/" ) + 1:]
+elif len( argv ) == 1:
+  platformdir = ""
+  platform = ""
+else:
+  error_exit( "Usage: tos-storage-stm25p <platform directory>" )
 
-try:
-    dom = minidom.parse( stdin )
-except xml.parsers.expat.ExpatError:
-    error_exit( "input invalid" )
+def volumeparse( file, fname, depth ):
+  if depth > 10:
+    error_exit( "include nesting too deep - check for cycles" )
+  try:
+    dom = parse( file )
+  except xml.parsers.expat.ExpatError:
+    error_exit( fname + " is not a valid input file" )
+  except IOError:
+    error_exit( "couldn't open file " + fname )
 
-# extract information
-for volume in dom.documentElement.getElementsByTagName( "volume" ):
-    name = volume.getAttribute( "name" )
-    size = volume.getAttribute( "size" )
-    base = volume.getAttribute( "base" )
-    if name == "":
-        error_exit( "volume has no name" )
-    elif not match( "^[a-zA-Z0-9_]+$", name ):
-        error_exit( "volume has invalid name '%s'" % name )
-    elif volumes.has_key( name ):
-        error_exit( "duplicate volume definition '%s'" % name )
+  # extract information
+  for volume in dom.documentElement.getElementsByTagName( "volume" ):
+      name = volume.getAttribute( "name" )
+      size = volume.getAttribute( "size" )
+      base = volume.getAttribute( "base" )
+      if name == "":
+          error_exit( "volume has no name" )
+      elif not match( "^[a-zA-Z0-9_]+$", name ):
+          error_exit( "volume has invalid name '%s'" % name )
+      elif volumes.has_key( name ):
+          error_exit( "duplicate volume definition '%s'" % name )
+      else:
+          volumes[ name ] = "blah"
+
+      if size == "":
+          error_exit( "volume '%s' has no size" % name )
+      try:
+          size = int( size )
+      except ValueError:
+          error_exit( "volume '%s' has invalid size" % name )
+      if base != "":
+          try:
+              base = int( base )
+          except ValueError:
+              error_exit( "volume '%s' has invalid base" % name )
+      if ( size & ( SECTOR_SIZE - 1 ) ) != 0:
+          error_exit( "size of volume '%s' is not a multiple of %d" % \
+                      ( name, SECTOR_SIZE ) )
+      if base != "" and ( base & ( SECTOR_SIZE - 1 ) ) != 0:
+          error_exit( "base of volume '%s' is not a multiple of %d" % \
+                      ( name, SECTOR_SIZE ) )
+
+      volumeNames.append( "VOLUME_" + name )
+      volumeSizes.append( size / SECTOR_SIZE )
+      if base == "":
+          volumeOffsets.append( -1 )
+      else:
+          base = base / SECTOR_SIZE
+          size = size / SECTOR_SIZE
+          volumeOffsets.append( base )
+          for i in range( size ):
+              freeSectors[ i + base ] = False
+
+  for include in dom.documentElement.getElementsByTagName( "include" ):
+    included = include.firstChild
+    if included != None and included.nodeType == included.TEXT_NODE:
+      included = expand_path( included.data )
+      volumeparse( included, "(file %s)" % included, depth + 1 )
     else:
-        volumes[ name ] = "blah"
-    
-    if size == "":
-        error_exit( "volume '%s' has no size" % name )
-    try:
-        size = int( size )
-    except ValueError:
-        error_exit( "volume '%s' has invalid size" % name )
-    if base != "":
-        try:
-            base = int( base )
-        except ValueError:
-            error_exit( "volume '%s' has invalid base" % name )
-    if ( size & ( SECTOR_SIZE - 1 ) ) != 0:
-        error_exit( "size of volume '%s' is not a multiple of %d" % \
-                    ( name, SECTOR_SIZE ) )
-    if base != "" and ( base & ( SECTOR_SIZE - 1 ) ) != 0:
-        error_exit( "base of volume '%s' is not a multiple of %d" % \
-                    ( name, SECTOR_SIZE ) )
+      error_exit( "invalid include directive " + fname )
+  dom.unlink( )
 
-    volumeNames.append( "VOLUME_" + name )
-    volumeSizes.append( size / SECTOR_SIZE )
-    if base == "":
-        volumeOffsets.append( -1 )
-    else:
-        base = base / SECTOR_SIZE
-        volumeOffsets.append( base )
-        for i in range( size ):
-            freeSectors[ i + base ] = False
+volumeparse( stdin, "(standard input)", 0 )
 
 # allocate with first fit policy
 for i in range( len( volumeOffsets ) ):

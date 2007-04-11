@@ -5,7 +5,7 @@
 tos-storage-stm25p - Generate storage volume description code
 .SH SYNOPSIS
 
-\fBtos-storage-stm25p\fR
+\fBtos-storage-stm25p\fR \fIplatform-directory\fR
 .SH DESCRIPTION
 
 \fBtos-storage-stm25p\fR reads a user specification describing the layout
@@ -14,11 +14,16 @@ describing that layout for use by the TinyOS 2.0 storage subsystem.  The
 user specification is in XML and is read from standard input. The code is
 written to standard output.
 
+The argument should specify the platform directory for the current
+compilation target; this is necessary for the correct handling of 
+file include statements in the XML input.
+
 This program is normally invoked automatically by the TinyOS build system
 when your application directory contains a \fBvolumes-stm25p.xml\fR file.
 .SH EXAMPLES
 
-  tos-storage-stm25p <volumes-stm25p.xml >build/telosb/StorageVolumes.h
+  tos-storage-stm25p /opt/tinyos-2.x/tos/platforms/telosb \\
+      <volumes-stm25p.xml >build/telosb/StorageVolumes.h
 .SH SEE ALSO
 
 .IR tos-storage-stm25p (1)
