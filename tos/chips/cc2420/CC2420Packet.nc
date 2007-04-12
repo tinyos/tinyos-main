@@ -31,7 +31,8 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2007-01-16 16:16:51 $
+ * @author David Moss
+ * @author Chad Metcalf
  */
 
 #include "message.h"
@@ -70,4 +71,13 @@ interface CC2420Packet {
    */
   async command uint8_t getLqi( message_t* p_msg );
   
+  /**
+   * @return pointer to the cc2420_header_t of the given message
+   */
+  async command cc2420_header_t *getHeader(message_t *msg);
+  
+  /**
+   * @return pointer to the cc2420_metadata_t of the given message
+   */
+  async command cc2420_metadata_t *getMetadata(message_t *msg);
 }

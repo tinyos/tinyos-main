@@ -38,7 +38,7 @@
  * before calling sync().
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:11 $
  */
 
 interface CC2420Config {
@@ -53,7 +53,7 @@ interface CC2420Config {
   event void syncDone( error_t error );
 
   /**
-   * Change the channel of the radio.
+   * Change the channel of the radio, between 11 and 26
    */
   command uint8_t getChannel();
   command void setChannel( uint8_t channel );

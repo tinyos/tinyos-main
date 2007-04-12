@@ -33,7 +33,7 @@
  * Implementation of basic SPI primitives for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2007-01-17 05:24:52 $
+ * @version $Revision: 1.6 $ $Date: 2007-04-12 17:11:12 $
  */
 
 generic configuration CC2420SpiC() {
@@ -50,6 +50,8 @@ generic configuration CC2420SpiC() {
   provides interface CC2420Strobe as STXONCCA;
   provides interface CC2420Strobe as SXOSCON;
   provides interface CC2420Strobe as SXOSCOFF;
+  
+  provides interface CC2420Strobe as SACK;
 
   // registers
   provides interface CC2420Register as FSCTRL;
@@ -57,8 +59,9 @@ generic configuration CC2420SpiC() {
   provides interface CC2420Register as IOCFG1;
   provides interface CC2420Register as MDMCTRL0;
   provides interface CC2420Register as MDMCTRL1;
-  provides interface CC2420Register as RXCTRL1;
   provides interface CC2420Register as TXCTRL;
+  provides interface CC2420Register as RXCTRL1;
+  provides interface CC2420Register as RSSI;
 
   // ram
   provides interface CC2420Ram as IEEEADR;
@@ -93,6 +96,8 @@ implementation {
   STXONCCA = Spi.Strobe[ CC2420_STXONCCA ];
   SXOSCON = Spi.Strobe[ CC2420_SXOSCON ];
   SXOSCOFF = Spi.Strobe[ CC2420_SXOSCOFF ];
+  
+  SACK = Spi.Strobe[ CC2420_SACK ];
 
   // registers
   FSCTRL = Spi.Reg[ CC2420_FSCTRL ];
@@ -100,8 +105,9 @@ implementation {
   IOCFG1 = Spi.Reg[ CC2420_IOCFG1 ];
   MDMCTRL0 = Spi.Reg[ CC2420_MDMCTRL0 ];
   MDMCTRL1 = Spi.Reg[ CC2420_MDMCTRL1 ];
-  RXCTRL1 = Spi.Reg[ CC2420_RXCTRL1 ];
   TXCTRL = Spi.Reg[ CC2420_TXCTRL ];
+  RXCTRL1 = Spi.Reg[ CC2420_RXCTRL1 ];
+  RSSI = Spi.Reg[ CC2420_RSSI ];
 
   // ram
   IEEEADR = Spi.Ram[ CC2420_RAM_IEEEADR ];

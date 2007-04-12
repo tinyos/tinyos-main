@@ -24,13 +24,14 @@
 /**
  * The Active Message layer for the CC2420 radio. This configuration
  * just layers the AM dispatch (CC2420ActiveMessageM) on top of the
- * underlying CC2420 radio packet (CC2420CsmaRadioC), which is
+ * underlying CC2420 radio packet (CC2420CsmaCsmaCC), which is
  * inherently an AM packet (acknowledgements based on AM destination
  * addr and group). Note that snooping may not work, due to CC2420
  * early packet rejection if acknowledgements are enabled.
  *
  * @author Philip Levis
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @author David Moss
+ * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:11 $
  */
 
 #include "CC2420.h"
@@ -45,30 +46,66 @@ configuration CC2420ActiveMessageC {
     interface Packet;
     interface CC2420Packet;
     interface PacketAcknowledgements;
+    interface RadioBackoff[am_id_t amId];
+    interface LowPowerListening;
+    interface PacketLink;
   }
 }
 implementation {
 
   components CC2420ActiveMessageP as AM;
-  components CC2420CsmaC as Radio;
+  components CC2420CsmaC as CsmaC;
   components ActiveMessageAddressC as Address;
+  components UniqueSendC;
+  components UniqueReceiveC;
+  components CC2420TinyosNetworkC;
+  components CC2420PacketC;
   
-  SplitControl = Radio;
-  Packet       = AM;
+#if defined(LOW_POWER_LISTENING) || defined(ACK_LOW_POWER_LISTENING)
+  components CC2420AckLplC as LplC;
+#elif defined(NOACK_LOW_POWER_LISTENING)
+  components CC2420NoAckLplC as LplC;
+#else
+  components CC2420LplDummyC as LplC;
+#endif
 
+#if defined(PACKET_LINK)
+  components PacketLinkC as LinkC;
+#else
+  components PacketLinkDummyC as LinkC;
+#endif
+
+  
+  RadioBackoff = CsmaC;
+  Packet       = AM;
   AMSend   = AM;
   Receive  = AM.Receive;
   Snoop    = AM.Snoop;
   AMPacket = AM;
-  
-  AM.SubSend    -> Radio.Send;
-  AM.SubReceive -> Radio.Receive;
-  AM.amAddress -> Address;
-  Radio.AMPacket -> AM;
-
-  components CC2420PacketC;
+  PacketLink = LinkC;
+  LowPowerListening = LplC;
   CC2420Packet = CC2420PacketC;
   PacketAcknowledgements = CC2420PacketC;
+  
+  
+  // SplitControl Layers
+  SplitControl = LplC;
+  LplC.SubControl -> CsmaC;
+  
+  // Send Layers
+  AM.SubSend -> UniqueSendC;
+  UniqueSendC.SubSend -> LinkC;
+  LinkC.SubSend -> LplC.Send;
+  LplC.SubSend -> CC2420TinyosNetworkC.Send;
+  CC2420TinyosNetworkC.SubSend -> CsmaC;
+  
+  // Receive Layers
+  AM.SubReceive -> LplC;
+  LplC.SubReceive -> UniqueReceiveC.Receive;
+  UniqueReceiveC.SubReceive -> CC2420TinyosNetworkC.Receive;
+  CC2420TinyosNetworkC.SubReceive -> CsmaC;
 
-
+  AM.amAddress -> Address;
+  AM.CC2420Packet -> CC2420PacketC;
+  
 }

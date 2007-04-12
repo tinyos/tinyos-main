@@ -34,40 +34,26 @@
  * ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:12 $
  */
 
 interface CC2420Transmit {
 
   /**
-   * Send a message with CCA enabled.
+   * Send a message
    *
    * @param p_msg message to send.
+   * @param useCca TRUE if this Tx should use clear channel assessments
    * @return SUCCESS if the request was accepted, FAIL otherwise.
    */
-  async command error_t sendCCA( message_t* p_msg );
+  async command error_t send( message_t* p_msg, bool useCca );
 
   /**
-   * Send a message with CCA disabled.
-   *
-   * @param p_msg message to send.
+   * Send the previous message again
+   * @param useCca TRUE if this re-Tx should use clear channel assessments
    * @return SUCCESS if the request was accepted, FAIL otherwise.
    */
-  async command error_t send( message_t* p_msg );
-
-  /**
-   * Send the previous message again with CCA enabled.
-   *
-   * @return SUCCESS if the request was accepted, FAIL otherwise.
-   */
-  async command error_t resendCCA();
-
-  /**
-   * Send the previous message again with CCA disabled.
-   *
-   * @return SUCCESS if the request was accepted, FAIL otherwise.
-   */
-  async command error_t resend();
+  async command error_t resend(bool useCca);
 
   /**
    * Cancel sending of the message.

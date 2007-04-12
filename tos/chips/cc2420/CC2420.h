@@ -29,16 +29,19 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @author David Moss
+ * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:11 $
  */
 
 #ifndef __CC2420_H__
 #define __CC2420_H__
 
-//#include "message.h"
-
 typedef uint8_t cc2420_status_t;
 
+/**
+ * CC2420 header.  An I-frame (interoperability frame) header has an 
+ * extra network byte specified by 6LowPAN
+ */
 typedef nx_struct cc2420_header_t {
   nxle_uint8_t length;
   nxle_uint16_t fcf;
@@ -46,12 +49,25 @@ typedef nx_struct cc2420_header_t {
   nxle_uint16_t destpan;
   nxle_uint16_t dest;
   nxle_uint16_t src;
+  
+  /** I-Frame 6LowPAN interoperability byte */
+#ifdef CC2420_IFRAME_TYPE
+  nxle_uint8_t network;
+#endif
+
   nxle_uint8_t type;
 } cc2420_header_t;
-
+  
+/**
+ * CC2420 Packet Footer
+ */
 typedef nx_struct cc2420_footer_t {
 } cc2420_footer_t;
 
+/**
+ * CC2420 Packet metadata. Contains extra information about the message
+ * that will not be transmitted
+ */
 typedef nx_struct cc2420_metadata_t {
   nx_uint8_t tx_power;
   nx_uint8_t rssi;
@@ -59,12 +75,22 @@ typedef nx_struct cc2420_metadata_t {
   nx_bool crc;
   nx_bool ack;
   nx_uint16_t time;
+  nx_uint16_t rxInterval;
+
+  /** Packet Link Metadata */
+#ifdef PACKET_LINK
+  nx_uint16_t maxRetries;
+  nx_uint16_t retryDelay;
+#endif
+
 } cc2420_metadata_t;
+
 
 typedef nx_struct cc2420_packet_t {
   cc2420_header_t packet;
   nx_uint8_t data[];
 } cc2420_packet_t;
+
 
 #ifndef TOSH_DATA_LENGTH
 #define TOSH_DATA_LENGTH 28
@@ -77,6 +103,22 @@ typedef nx_struct cc2420_packet_t {
 #ifndef CC2420_DEF_RFPOWER
 #define CC2420_DEF_RFPOWER 31
 #endif
+
+/**
+ * Ideally, your receive history size should be equal to the number of
+ * RF neighbors your node will have
+ */
+#ifndef RECEIVE_HISTORY_SIZE
+#define RECEIVE_HISTORY_SIZE 4
+#endif
+
+/** 
+ * The 6LowPAN ID has yet to be defined for a TinyOS network.
+ */
+#ifndef TINYOS_6LOWPAN_NETWORK_ID
+#define TINYOS_6LOWPAN_NETWORK_ID 0x0
+#endif
+
 
 enum {
   // size of the header not including the length byte
@@ -92,6 +134,7 @@ enum cc2420_enums {
   CC2420_TIME_VREN = 20,          // jiffies
   CC2420_TIME_SYMBOL = 2,         // 2 symbols / jiffy
   CC2420_BACKOFF_PERIOD = ( 20 / CC2420_TIME_SYMBOL ), // symbols
+  CC2420_MIN_BACKOFF = ( 20 / CC2420_TIME_SYMBOL ),  // platform specific?
   CC2420_ACK_WAIT_DELAY = 128,    // jiffies
 };
 

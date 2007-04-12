@@ -33,29 +33,35 @@
  * Implementation of the transmit path for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:06 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:12 $
  */
+
+#include "IEEE802154.h"
 
 configuration CC2420TransmitC {
 
-  provides interface Init;
-  provides interface AsyncStdControl;
-  provides interface CC2420Transmit;
-  provides interface CsmaBackoff;
-  provides interface RadioTimeStamping;
-
+  provides {
+    interface StdControl;
+    interface CC2420Transmit;
+    interface RadioBackoff;
+    interface RadioTimeStamping;
+    interface CC2420Cca;
+  }
 }
 
 implementation {
 
   components CC2420TransmitP;
-  Init = Alarm;
-  Init = CC2420TransmitP;
-  AsyncStdControl = CC2420TransmitP;
+  StdControl = CC2420TransmitP;
   CC2420Transmit = CC2420TransmitP;
-  CsmaBackoff = CC2420TransmitP;
+  RadioBackoff = CC2420TransmitP;
   RadioTimeStamping = CC2420TransmitP;
+  CC2420Cca = CC2420TransmitP;
 
+  components MainC;
+  MainC.SoftwareInit -> CC2420TransmitP;
+  MainC.SoftwareInit -> Alarm;
+  
   components AlarmMultiplexC as Alarm;
   CC2420TransmitP.BackoffTimer -> Alarm;
 
@@ -76,11 +82,17 @@ implementation {
   CC2420TransmitP.TXCTRL      -> Spi.TXCTRL;
   CC2420TransmitP.TXFIFO      -> Spi.TXFIFO;
   CC2420TransmitP.TXFIFO_RAM  -> Spi.TXFIFO_RAM;
-
+  CC2420TransmitP.MDMCTRL1    -> Spi.MDMCTRL1;
+  
   components CC2420ReceiveC;
   CC2420TransmitP.CC2420Receive -> CC2420ReceiveC;
-
-  components LedsC as Leds;
-  CC2420TransmitP.Leds -> Leds;
-
+  
+  components new TimerMilliC() as LplDisableTimerC;
+  CC2420TransmitP.LplDisableTimer -> LplDisableTimerC;
+  
+  components CC2420PacketC;
+  CC2420TransmitP.CC2420Packet -> CC2420PacketC;
+  
+  components LedsC;
+  CC2420TransmitP.Leds -> LedsC;
 }

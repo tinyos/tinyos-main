@@ -29,8 +29,10 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:11 $
  */
+ 
+#include "CC2420.h"
 
 module CC2420ActiveMessageP {
   provides {
@@ -43,6 +45,7 @@ module CC2420ActiveMessageP {
   uses {
     interface Send as SubSend;
     interface Receive as SubReceive;
+    interface CC2420Packet;
     command am_addr_t amAddress();
   }
 }
@@ -52,14 +55,11 @@ implementation {
     CC2420_SIZE = MAC_HEADER_SIZE + MAC_FOOTER_SIZE,
   };
   
-  cc2420_header_t* getHeader( message_t* msg ) {
-    return (cc2420_header_t*)( msg->data - sizeof(cc2420_header_t) );
-  }
   
   command error_t AMSend.send[am_id_t id](am_addr_t addr,
 					  message_t* msg,
 					  uint8_t len) {
-    cc2420_header_t* header = getHeader( msg );
+    cc2420_header_t* header = call CC2420Packet.getHeader( msg );
     header->type = id;
     header->dest = addr;
     header->destpan = TOS_AM_GROUP;
@@ -115,22 +115,22 @@ implementation {
   }
  
   command am_addr_t AMPacket.destination(message_t* amsg) {
-    cc2420_header_t* header = getHeader(amsg);
+    cc2420_header_t* header = call CC2420Packet.getHeader(amsg);
     return header->dest;
   }
  
   command am_addr_t AMPacket.source(message_t* amsg) {
-    cc2420_header_t* header = getHeader(amsg);
+    cc2420_header_t* header = call CC2420Packet.getHeader(amsg);
     return header->src;
   }
 
   command void AMPacket.setDestination(message_t* amsg, am_addr_t addr) {
-    cc2420_header_t* header = getHeader(amsg);
+    cc2420_header_t* header = call CC2420Packet.getHeader(amsg);
     header->dest = addr;
   }
 
   command void AMPacket.setSource(message_t* amsg, am_addr_t addr) {
-    cc2420_header_t* header = getHeader(amsg);
+    cc2420_header_t* header = call CC2420Packet.getHeader(amsg);
     header->src = addr;
   }
 
@@ -140,12 +140,12 @@ implementation {
   }
 
   command am_id_t AMPacket.type(message_t* amsg) {
-    cc2420_header_t* header = getHeader(amsg);
+    cc2420_header_t* header = call CC2420Packet.getHeader(amsg);
     return header->type;
   }
 
   command void AMPacket.setType(message_t* amsg, am_id_t type) {
-    cc2420_header_t* header = getHeader(amsg);
+    cc2420_header_t* header = call CC2420Packet.getHeader(amsg);
     header->type = type;
   }
 
@@ -165,12 +165,12 @@ implementation {
  command void Packet.clear(message_t* msg) {}
  
  command uint8_t Packet.payloadLength(message_t* msg) {
-   return getHeader(msg)->length - CC2420_SIZE;
+   return (call CC2420Packet.getHeader(msg))->length - CC2420_SIZE;
  }
 
 
  command void Packet.setPayloadLength(message_t* msg, uint8_t len) {
-   getHeader(msg)->length  = len + CC2420_SIZE;
+   (call CC2420Packet.getHeader(msg))->length  = len + CC2420_SIZE;
  }
 
  command uint8_t Packet.maxPayloadLength() {

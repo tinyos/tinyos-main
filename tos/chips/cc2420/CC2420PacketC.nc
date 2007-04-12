@@ -31,10 +31,12 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2007-01-16 16:16:51 $
+ * @author David Moss
+ * @author Chad Metcalf
  */
 
 #include "IEEE802154.h"
+#include "message.h"
 
 module CC2420PacketC {
 
@@ -45,44 +47,44 @@ module CC2420PacketC {
 
 implementation {
 
-  cc2420_header_t* getHeader( message_t* msg ) {
+  async command cc2420_header_t *CC2420Packet.getHeader( message_t* msg ) {
     return (cc2420_header_t*)( msg->data - sizeof( cc2420_header_t ) );
   }
 
-  cc2420_metadata_t* getMetadata( message_t* msg ) {
+  async command cc2420_metadata_t *CC2420Packet.getMetadata( message_t* msg ) {
     return (cc2420_metadata_t*)msg->metadata;
   }
 
   async command error_t Acks.requestAck( message_t* p_msg ) {
-    getHeader( p_msg )->fcf |= 1 << IEEE154_FCF_ACK_REQ;
+    (call CC2420Packet.getHeader( p_msg ))->fcf |= 1 << IEEE154_FCF_ACK_REQ;
     return SUCCESS;
   }
 
   async command error_t Acks.noAck( message_t* p_msg ) {
-    getHeader( p_msg )->fcf &= ~(1 << IEEE154_FCF_ACK_REQ);
+    (call CC2420Packet.getHeader( p_msg ))->fcf &= ~(1 << IEEE154_FCF_ACK_REQ);
     return SUCCESS;
   }
 
   async command bool Acks.wasAcked( message_t* p_msg ) {
-    return getMetadata( p_msg )->ack;
+    return (call CC2420Packet.getMetadata( p_msg ))->ack;
   }
 
   async command void CC2420Packet.setPower( message_t* p_msg, uint8_t power ) {
     if ( power > 31 )
       power = 31;
-    getMetadata( p_msg )->tx_power = power;
+    (call CC2420Packet.getMetadata( p_msg ))->tx_power = power;
   }
 
   async command uint8_t CC2420Packet.getPower( message_t* p_msg ) {
-    return getMetadata( p_msg )->tx_power;
+    return (call CC2420Packet.getMetadata( p_msg ))->tx_power;
   }
    
   async command int8_t CC2420Packet.getRssi( message_t* p_msg ) {
-    return getMetadata( p_msg )->rssi;
+    return (call CC2420Packet.getMetadata( p_msg ))->rssi;
   }
 
   async command error_t CC2420Packet.getLqi( message_t* p_msg ) {
-    return getMetadata( p_msg )->lqi;
+    return (call CC2420Packet.getMetadata( p_msg ))->lqi;
   }
 
 }

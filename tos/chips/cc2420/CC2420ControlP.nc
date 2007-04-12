@@ -31,7 +31,8 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.6 $ $Date: 2007-01-17 05:24:52 $
+ * @author Urs Hunkeler (ReadRssi implementation)
+ * @version $Revision: 1.7 $ $Date: 2007-04-12 17:11:11 $
  */
 
 #include "Timer.h"
@@ -42,6 +43,7 @@ module CC2420ControlP {
   provides interface Resource;
   provides interface CC2420Config;
   provides interface CC2420Power;
+  provides interface Read<uint16_t> as ReadRssi;
 
   uses interface Alarm<T32khz,uint32_t> as StartupTimer;
   uses interface GeneralIO as CSN;
@@ -49,7 +51,6 @@ module CC2420ControlP {
   uses interface GeneralIO as VREN;
   uses interface GpioInterrupt as InterruptCCA;
 
-  uses interface Resource as SpiResource;
   uses interface CC2420Ram as PANID;
   uses interface CC2420Register as FSCTRL;
   uses interface CC2420Register as IOCFG0;
@@ -57,12 +58,15 @@ module CC2420ControlP {
   uses interface CC2420Register as MDMCTRL0;
   uses interface CC2420Register as MDMCTRL1;
   uses interface CC2420Register as RXCTRL1;
+  uses interface CC2420Register as RSSI;
   uses interface CC2420Strobe as SRXON;
   uses interface CC2420Strobe as SRFOFF;
   uses interface CC2420Strobe as SXOSCOFF;
   uses interface CC2420Strobe as SXOSCON;
   uses interface AMPacket;
-
+  
+  uses interface Resource as SpiResource;
+  uses interface Resource as RssiResource;
   uses interface Resource as SyncResource;
 
   uses interface Leds;
@@ -80,14 +84,21 @@ implementation {
   } cc2420_control_state_t;
 
   uint8_t m_channel = CC2420_DEF_CHANNEL;
+  
   uint8_t m_tx_power = CC2420_DEF_RFPOWER;
+  
   uint16_t m_pan = TOS_AM_GROUP;
+  
   uint16_t m_short_addr;
+  
   bool m_sync_busy;
+  
+  norace cc2420_control_state_t m_state = S_VREG_STOPPED;
+  
+  /***************** Prototypes ****************/
   task void syncDone_task();
 
-  norace cc2420_control_state_t m_state = S_VREG_STOPPED;
-
+  /***************** Init Commands ****************/
   command error_t Init.init() {
     call CSN.makeOutput();
     call RSTN.makeOutput();
@@ -96,10 +107,12 @@ implementation {
     return SUCCESS;
   }
 
+  /***************** Resource Commands ****************/
   async command error_t Resource.immediateRequest() {
     error_t error = call SpiResource.immediateRequest();
-    if ( error == SUCCESS )
+    if ( error == SUCCESS ) {
       call CSN.clr();
+    }
     return error;
   }
 
@@ -118,29 +131,17 @@ implementation {
     }
   }
 
-  event void SpiResource.granted() {
-    call CSN.clr();
-    signal Resource.granted();
-  }
-
+  /***************** CC2420Power Commands ****************/
   async command error_t CC2420Power.startVReg() {
     atomic {
-      if ( m_state != S_VREG_STOPPED )
-	return FAIL;
+      if ( m_state != S_VREG_STOPPED ) {
+        return FAIL;
+      }
       m_state = S_VREG_STARTING;
     }
     call VREN.set();
     call StartupTimer.start( CC2420_TIME_VREN );
     return SUCCESS;
-  }
-
-  async event void StartupTimer.fired() {
-    if ( m_state == S_VREG_STARTING ) {
-      m_state = S_VREG_STARTED;
-      call RSTN.clr();
-      call RSTN.set();
-      signal CC2420Power.startVRegDone();
-    }
   }
 
   async command error_t CC2420Power.stopVReg() {
@@ -153,26 +154,32 @@ implementation {
 
   async command error_t CC2420Power.startOscillator() {
     atomic {
-      if ( m_state != S_VREG_STARTED )
-	return FAIL;
-	
+      if ( m_state != S_VREG_STARTED ) {
+        return FAIL;
+      }
+        
       m_state = S_XOSC_STARTING;
       call IOCFG1.write( CC2420_SFDMUX_XOSC16M_STABLE << 
-			 CC2420_IOCFG1_CCAMUX );
+                         CC2420_IOCFG1_CCAMUX );
+                         
       call InterruptCCA.enableRisingEdge();
       call SXOSCON.strobe();
+      
       call IOCFG0.write( ( 1 << CC2420_IOCFG0_FIFOP_POLARITY ) |
-			 ( 127 << CC2420_IOCFG0_FIFOP_THR ) );
+                         ( 127 << CC2420_IOCFG0_FIFOP_THR ) );
+                         
       call FSCTRL.write( ( 1 << CC2420_FSCTRL_LOCK_THR ) |
-			 ( ( (m_channel - 11)*5+357 ) 
-			   << CC2420_FSCTRL_FREQ ) );
+                         ( ( (m_channel - 11)*5+357 ) 
+                           << CC2420_FSCTRL_FREQ ) );
+                           
       call MDMCTRL0.write( ( 1 << CC2420_MDMCTRL0_RESERVED_FRAME_MODE ) |
-			   ( 1 << CC2420_MDMCTRL0_ADR_DECODE ) |
-			   ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
-			   ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
-			   ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |
-			   ( 1 << CC2420_MDMCTRL0_AUTOACK ) |
-			   ( 2 << CC2420_MDMCTRL0_PREAMBLE_LENGTH ) );
+                           ( 1 << CC2420_MDMCTRL0_ADR_DECODE ) |
+                           ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
+                           ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
+                           ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |
+                           ( 0 << CC2420_MDMCTRL0_AUTOACK ) |  // we now SACK
+                           ( 2 << CC2420_MDMCTRL0_PREAMBLE_LENGTH ) );
+                           
       call RXCTRL1.write( ( 1 << CC2420_RXCTRL1_RXBPF_LOCUR ) |
                           ( 1 << CC2420_RXCTRL1_LOW_LOWGAIN ) |
                           ( 1 << CC2420_RXCTRL1_HIGH_HGM ) |
@@ -184,23 +191,12 @@ implementation {
     return SUCCESS;
   }
 
-  async event void InterruptCCA.fired() {
-    nxle_uint16_t id[ 2 ];
-    m_state = S_XOSC_STARTED;
-    id[ 0 ] = m_pan;
-    id[ 1 ] = m_short_addr;
-    call InterruptCCA.disable();
-    call IOCFG1.write( 0 );
-    call PANID.write( 0, (uint8_t*)&id, 4 );
-    call CSN.set();
-    call CSN.clr();
-    signal CC2420Power.startOscillatorDone();
-  }
 
   async command error_t CC2420Power.stopOscillator() {
     atomic {
-      if ( m_state != S_XOSC_STARTED )
-	return FAIL;
+      if ( m_state != S_XOSC_STARTED ) {
+        return FAIL;
+      }
       m_state = S_VREG_STARTED;
       call SXOSCOFF.strobe();
     }
@@ -209,8 +205,9 @@ implementation {
 
   async command error_t CC2420Power.rxOn() {
     atomic {
-      if ( m_state != S_XOSC_STARTED )
-	return FAIL;
+      if ( m_state != S_XOSC_STARTED ) {
+        return FAIL;
+      }
       call SRXON.strobe();
     }
     return SUCCESS;
@@ -218,13 +215,16 @@ implementation {
 
   async command error_t CC2420Power.rfOff() {
     atomic {  
-      if ( m_state != S_XOSC_STARTED )
-	return FAIL;
+      if ( m_state != S_XOSC_STARTED ) {
+        return FAIL;
+      }
       call SRFOFF.strobe();
     }
     return SUCCESS;
   }
 
+  
+  /***************** CC2420Config Commands ****************/
   command uint8_t CC2420Config.getChannel() {
     atomic return m_channel;
   }
@@ -251,17 +251,26 @@ implementation {
 
   command error_t CC2420Config.sync() {
     atomic {
-      if ( m_sync_busy )
+      if ( m_sync_busy ) {
         return FAIL;
+      }
+      
       m_sync_busy = TRUE;
-      if ( m_state == S_XOSC_STARTED )
+      if ( m_state == S_XOSC_STARTED ) {
         call SyncResource.request();
-      else
+      } else {
         post syncDone_task();
+      }
     }
     return SUCCESS;
   }
 
+  /***************** ReadRssi Commands ****************/
+  command error_t ReadRssi.read() { 
+    return call RssiResource.request();
+  }
+  
+  /***************** Spi Resources Events ****************/
   event void SyncResource.granted() {
 
     nxle_uint16_t id[ 2 ];
@@ -276,7 +285,7 @@ implementation {
     call CSN.clr();
     call SRFOFF.strobe();
     call FSCTRL.write( ( 1 << CC2420_FSCTRL_LOCK_THR ) |
-		       ( ( (channel - 11)*5+357 ) << CC2420_FSCTRL_FREQ ) );
+                       ( ( (channel - 11)*5+357 ) << CC2420_FSCTRL_FREQ ) );
     call PANID.write( 0, (uint8_t*)id, sizeof( id ) );
     call CSN.set();
     call CSN.clr();
@@ -288,11 +297,58 @@ implementation {
     
   }
 
+  event void SpiResource.granted() {
+    call CSN.clr();
+    signal Resource.granted();
+  }
+
+  event void RssiResource.granted() { 
+    uint16_t data;
+    call CSN.clr();
+    call RSSI.read(&data);
+    call CSN.set();
+    
+    call RssiResource.release();
+    data += 0x7f;
+    data &= 0x00ff;
+    signal ReadRssi.readDone(SUCCESS, data); 
+  }
+  
+  /***************** StartupTimer Events ****************/
+  async event void StartupTimer.fired() {
+    if ( m_state == S_VREG_STARTING ) {
+      m_state = S_VREG_STARTED;
+      call RSTN.clr();
+      call RSTN.set();
+      signal CC2420Power.startVRegDone();
+    }
+  }
+
+  /***************** InterruptCCA Events ****************/
+  async event void InterruptCCA.fired() {
+    nxle_uint16_t id[ 2 ];
+    m_state = S_XOSC_STARTED;
+    id[ 0 ] = m_pan;
+    id[ 1 ] = m_short_addr;
+    call InterruptCCA.disable();
+    call IOCFG1.write( 0 );
+    call PANID.write( 0, (uint8_t*)&id, 4 );
+    call CSN.set();
+    call CSN.clr();
+    signal CC2420Power.startOscillatorDone();
+  }
+  
+  /***************** Tasks ****************/
   task void syncDone_task() {
     atomic m_sync_busy = FALSE;
     signal CC2420Config.syncDone( SUCCESS );
   }
 
-  default event void CC2420Config.syncDone( error_t error ) {}
+  /***************** Defaults ****************/
+  default event void CC2420Config.syncDone( error_t error ) {
+  }
 
+  default event void ReadRssi.readDone(error_t error, uint16_t data) {
+  }
+  
 }

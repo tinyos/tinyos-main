@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:05 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:12 $
  */
 
 module CC2420SpiImplP {
@@ -67,11 +67,11 @@ implementation {
   async command error_t Resource.request[ uint8_t id ]() {
     atomic {
       if ( m_resource_busy )
-	m_requests |= 1 << id;
+        m_requests |= 1 << id;
       else {
-	m_holder = id;
-	m_resource_busy = TRUE;
-	call SpiResource.request();
+        m_holder = id;
+        m_resource_busy = TRUE;
+        call SpiResource.request();
       }
     }
     return SUCCESS;
@@ -81,11 +81,11 @@ implementation {
     error_t error;
     atomic {
       if ( m_resource_busy )
-	return EBUSY;
+        return EBUSY;
       error = call SpiResource.immediateRequest();
       if ( error == SUCCESS ) {
-	m_holder = id;
-	m_resource_busy = TRUE;
+        m_holder = id;
+        m_resource_busy = TRUE;
       }
     }
     return error;
@@ -94,24 +94,27 @@ implementation {
   async command error_t Resource.release[ uint8_t id ]() {
     uint8_t i;
     atomic {
-      if ( m_holder != id )
-	return FAIL;
+      if ( m_holder != id ) {
+        return FAIL;
+      }
+      
       m_holder = NO_HOLDER;
       call SpiResource.release();
       if ( !m_requests ) {
-	m_resource_busy = FALSE;
-      }
-      else {
-	for ( i = m_holder + 1; ; i++ ) {
-	  if ( i >= RESOURCE_COUNT )
-	    i = 0;
-	  if ( m_requests & ( 1 << i ) ) {
-	    m_holder = i;
-	    m_requests &= ~( 1 << i );
-	    call SpiResource.request();
-	    return SUCCESS;
-	  }
-	}
+        m_resource_busy = FALSE;
+      } else {
+        for ( i = m_holder + 1; ; i++ ) {
+          if ( i >= RESOURCE_COUNT ) {
+            i = 0;
+          }
+          
+          if ( m_requests & ( 1 << i ) ) {
+            m_holder = i;
+            m_requests &= ~( 1 << i );
+            call SpiResource.request();
+            return SUCCESS;
+          }
+        }
       }
       return SUCCESS;
     }
@@ -128,12 +131,18 @@ implementation {
   }
 
   async command cc2420_status_t Fifo.beginRead[ uint8_t addr ]( uint8_t* data, 
-								uint8_t len ) {
+                                                                uint8_t len ) {
     
-    cc2420_status_t status;
+    cc2420_status_t status = 0;
+
+    atomic {
+      if(!m_resource_busy) {
+        return status;
+      }
+    }
     
     m_addr = addr | 0x40;
-    
+        
     status = call SpiByte.write( m_addr );
     call Fifo.continueRead[ addr ]( data, len );
     
@@ -142,16 +151,22 @@ implementation {
   }
 
   async command error_t Fifo.continueRead[ uint8_t addr ]( uint8_t* data,
-							   uint8_t len ) {
+                                                           uint8_t len ) {
     call SpiPacket.send( NULL, data, len );
     return SUCCESS;
   }
 
   async command cc2420_status_t Fifo.write[ uint8_t addr ]( uint8_t* data, 
-							    uint8_t len ) {
+                                                            uint8_t len ) {
 
-    uint8_t status;
-
+    uint8_t status = 0;
+ 
+    atomic {
+      if(!m_resource_busy) {
+        return status;
+      }
+    }
+    
     m_addr = addr;
 
     status = call SpiByte.write( m_addr );
@@ -162,11 +177,17 @@ implementation {
   }
 
   async command cc2420_status_t Ram.read[ uint16_t addr ]( uint8_t offset,
-							   uint8_t* data, 
-							   uint8_t len ) {
+                                                           uint8_t* data, 
+                                                           uint8_t len ) {
 
-    cc2420_status_t status;
+    cc2420_status_t status = 0;
 
+    atomic {
+      if(!m_resource_busy) {
+        return status;
+      }
+    }
+    
     addr += offset;
 
     call SpiByte.write( addr | 0x80 );
@@ -179,7 +200,7 @@ implementation {
   }
 
   async event void SpiPacket.sendDone( uint8_t* tx_buf, uint8_t* rx_buf, 
-				       uint16_t len, error_t error ) {
+                                       uint16_t len, error_t error ) {
     if ( m_addr & 0x40 )
       signal Fifo.readDone[ m_addr & ~0x40 ]( rx_buf, len, error );
     else
@@ -187,11 +208,17 @@ implementation {
   }
 
   async command cc2420_status_t Ram.write[ uint16_t addr ]( uint8_t offset,
-							    uint8_t* data, 
-							    uint8_t len ) {
+                                                            uint8_t* data, 
+                                                            uint8_t len ) {
 
     cc2420_status_t status = 0;
 
+    atomic {
+      if(!m_resource_busy) {
+        return status;
+      }
+    }
+    
     addr += offset;
 
     call SpiByte.write( addr | 0x80 );
@@ -205,7 +232,13 @@ implementation {
 
   async command cc2420_status_t Reg.read[ uint8_t addr ]( uint16_t* data ) {
 
-    cc2420_status_t status;
+    cc2420_status_t status = 0;
+    
+    atomic {
+      if(!m_resource_busy) {
+        return status;
+      }
+    }
     
     status = call SpiByte.write( addr | 0x40 );
     *data = (uint16_t)call SpiByte.write( 0 ) << 8;
@@ -216,6 +249,11 @@ implementation {
   }
 
   async command cc2420_status_t Reg.write[ uint8_t addr ]( uint16_t data ) {
+    atomic {
+      if(!m_resource_busy) {
+        return 0;
+      }
+    }
 
     call SpiByte.write( addr );
     call SpiByte.write( data >> 8 );
@@ -224,6 +262,12 @@ implementation {
   }
 
   async command cc2420_status_t Strobe.strobe[ uint8_t addr ]() {
+    atomic {
+      if(!m_resource_busy) {
+        return 0;
+      }
+    }
+    
     return call SpiByte.write( addr );
   }
 
