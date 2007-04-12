@@ -31,10 +31,11 @@
  *
  * @author Philip Levis
  * @author David Moss
- * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:11 $
+ * @version $Revision: 1.6 $ $Date: 2007-04-12 18:45:12 $
  */
 
 #include "CC2420.h"
+#include "AM.h"
 
 configuration CC2420ActiveMessageC {
   provides {
