@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.1 2007-04-07 01:58:05 scipio Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.2 2007-04-12 22:42:02 scipio Exp $
 
 
 /* Copyright (c) 2007 Stanford University.
@@ -94,12 +94,14 @@ module LqiForwardingEngineP {
   uses {
     interface Receive as SubReceive;
     interface AMSend as SubSend;
+    interface AMSend as SubSendMine;
     interface RouteControl as RouteSelectCntl;
     interface RouteSelect;
     interface Leds;
     interface Packet as SubPacket;
     interface AMPacket;
     interface RootControl;
+    interface Random;
     interface PacketAcknowledgements;
   }
 }
@@ -118,7 +120,8 @@ implementation {
   uint8_t iFwdBufHead, iFwdBufTail;
   uint16_t sendFailures = 0;
   uint8_t fail_count = 0;
-
+  int fwdbusy = 0;
+  
   lqi_header_t* getHeader(message_t* msg) {
     return (lqi_header_t*) call SubPacket.getPayload(msg, NULL);
   }
@@ -166,7 +169,7 @@ implementation {
       return FAIL;
     }
     call PacketAcknowledgements.requestAck(pMsg);
-    if (call SubSend.send(call AMPacket.destination(pMsg), pMsg, len) != SUCCESS) {
+    if (call SubSendMine.send(call AMPacket.destination(pMsg), pMsg, len) != SUCCESS) {
       sendFailures++;
       return FAIL;
     }
@@ -199,36 +202,53 @@ implementation {
     } 
     return -1;
   }
+
+  static char* fields(message_t* msg) {
+    static char mbuf[1024];
+    lqi_header_t* hdr = getHeader(msg);
+    sprintf(mbuf, "origin = %hu, seqno = %hu, oseqno = %hu, hopcount =%hu", hdr->originaddr, hdr->seqno, hdr->originseqno, hdr->hopcount);
+    return mbuf;
+  }
+
+  static void forward(message_t* msg);
   
   static message_t* mForward(message_t* msg) {
-    message_t* newMsg = msg;
     int8_t buf = get_buff();
     call Leds.led2Toggle();
-    
+    dbg("LQI", " Asked to forward packet @%s:\t%s\n", sim_time_string(), fields(msg));
     if (buf == -1) {
-      dbg("LQI", "Dropped packet due to no space in queue.\n");
+      dbg("LQI", "%s Dropped packet due to no space in queue.\n", __FUNCTION__);
       return msg;
     }
-    
     if ((call RouteSelect.selectRoute(msg, 0)) != SUCCESS) {
       FwdBufBusy[(uint8_t)buf] = 0;
+      dbg("LQI", "%s Dropped packet due to no route.\n", __FUNCTION__);
       return msg;
     }
- 
+    else {
+      message_t* newMsg = FwdBufList[(uint8_t)buf];
+      FwdBufList[(uint8_t)buf] = msg;
+      forward(msg);
+      return newMsg;
+    }
+  }
+  
+  static void forward(message_t* msg) {
     // Failures at the send level do not cause the seq. number space to be 
     // rolled back properly.  This is somewhat broken.
-    call PacketAcknowledgements.requestAck(msg);
-    if (call SubSend.send(call AMPacket.destination(msg),
-			  msg,
-			  call SubPacket.payloadLength(msg) == SUCCESS)) {
-      newMsg = FwdBufList[(uint8_t)buf];
-      FwdBufList[(uint8_t)buf] = msg;
+    if (fwdbusy) {
+      dbg("LQI", "%s forwarding busy, wait for later.\n", __FUNCTION__);
+      return;
     }
-    else{
-      FwdBufBusy[(uint8_t)buf] = 0;
-      sendFailures++;
+    else {
+      call PacketAcknowledgements.requestAck(msg);
+      if (call SubSend.send(call AMPacket.destination(msg),
+			    msg,
+			    call SubPacket.payloadLength(msg)) == SUCCESS) {
+	dbg("LQI", "%s: Send to %hu success.\n", __FUNCTION__, call AMPacket.destination(msg));
+      }
+      fwdbusy = TRUE;
     }
-    return newMsg;    
   }
 
   event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
@@ -237,9 +257,11 @@ implementation {
     len -= sizeof(lqi_header_t);
 
     if (call RootControl.isRoot()) {
+      dbg("LQI", "LQI Root is receiving packet from node %hu @%s\n", getHeader(msg)->originaddr, sim_time_string());
       return signal Receive.receive[id](msg, payload, len);
     }
     else if (signal Intercept.forward[id](msg, payload, len)) {
+      dbg("LQI", "LQI fwd is forwarding packet from node %hu @%s\n", getHeader(msg)->originaddr, sim_time_string());
       return mForward(msg);
     }
     else {
@@ -247,31 +269,78 @@ implementation {
     }
   }
   
-
+  message_t* nextMsg() {
+    int i;
+    int inc = call Random.rand16();
+    for (i = 0; i < FWD_QUEUE_SIZE; i++) {
+      int pindex = (i + inc) % FWD_QUEUE_SIZE;
+      if (FwdBufBusy[pindex]) {
+	return FwdBufList[pindex];
+      }
+    }
+    return NULL;
+  }
+  
   event void SubSend.sendDone(message_t* msg, error_t success) {
     int8_t buf;
+    message_t* nextToSend;
     if (!call PacketAcknowledgements.wasAcked(msg) &&
 	call AMPacket.destination(msg) != TOS_BCAST_ADDR &&
 	fail_count < 5){
       call RouteSelect.selectRoute(msg, 1);
+      call PacketAcknowledgements.requestAck(msg);
       if (call SubSend.send(call AMPacket.destination(msg),
 			    msg,
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
+	dbg("LQI", "Packet not acked, retransmit:\t%s\n", fields(msg));
 	fail_count ++;
       } else {
+	dbg("LQI", "Packet not acked, retransmit fail:\t%s\n", fields(msg));
+	sendFailures++;
+      }
+    }
+    else if (fail_count >= 5) {
+      dbg("LQI", "Packet failed:\t%s\n", fields(msg));
+    }
+    else if (call PacketAcknowledgements.wasAcked(msg)) {
+      dbg("LQI", "Packet acked:\t%s\n", fields(msg));
+    }
+    
+    fail_count = 0;
+    buf = is_ours(msg);
+    if (buf != -1) {
+      FwdBufBusy[(uint8_t)buf] = 0;
+    }
+    
+    nextToSend = nextMsg();
+    fwdbusy = FALSE;
+	  
+    if (nextToSend != NULL) {
+      forward(nextToSend);
+    }
+    
+    dbg("LQI", "Packet not longer busy:\t%s\n", fields(msg));
+  }
+
+  event void SubSendMine.sendDone(message_t* msg, error_t success) {
+    if (!call PacketAcknowledgements.wasAcked(msg) &&
+	call AMPacket.destination(msg) != TOS_BCAST_ADDR &&
+	fail_count < 5){
+      call RouteSelect.selectRoute(msg, 1);
+      call PacketAcknowledgements.requestAck(msg);
+      if (call SubSendMine.send(call AMPacket.destination(msg),
+			    msg,
+			    call SubPacket.payloadLength(msg)) == SUCCESS) {
+	dbg("LQI", "Packet not acked, retransmit:\t%s\n", fields(msg));
+	fail_count ++;
+      } else {
+	dbg("LQI", "Packet not acked, retransmit fail:\t%s\n", fields(msg));
 	sendFailures++;
       }
     }
     
     fail_count = 0;
-
-    buf = is_ours(msg);
-
-    if (buf != -1) { // Msg was from forwarding queue
-      FwdBufBusy[(uint8_t)buf] = 0;
-    } else {
-      signal Send.sendDone(msg, success);
-    } 
+    signal Send.sendDone(msg, success);
   }
 
 
@@ -350,7 +419,9 @@ implementation {
   }
   command void* Packet.getPayload(message_t* msg, uint8_t* len) {
     void* rval = call SubPacket.getPayload(msg, len);
-    *len -= sizeof(lqi_header_t);
+    if (len != NULL) {
+      *len -= sizeof(lqi_header_t);
+    }
     rval += sizeof(lqi_header_t);
     return rval;
   }

@@ -119,7 +119,7 @@ implementation {
     dbg("LQI","MultiHopRSSI Sending route update msg.\n");
 
     if (gbCurrentParent != TOS_BCAST_ADDR) {
-      dbg("LQO","MultiHopRSSI: Parent = %d\n", gbCurrentParent);
+      dbg("LQI","MultiHopRSSI: Parent = %d\n", gbCurrentParent);
     }
     
     if (msgBufBusy) {
@@ -229,12 +229,13 @@ implementation {
     if (isRoot) {
       return FAIL;
     }
-    
+
     if (hdr->originaddr != TOS_NODE_ID && resend == 0) {
       // supress duplicate packets
       for (i = 0; i < MHOP_HISTORY_SIZE; i++) {
         if ((gRecentPacketSender[i] == call AMPacket.source(msg)) &&
             (gRecentPacketSeqNo[i] == hdr->seqno)) {
+	  dbg("LQI", "%s no route as this is a duplicate!\n", __FUNCTION__);
           return FAIL;
         }
       }
@@ -251,6 +252,7 @@ implementation {
           gbCurrentLinkEst = 0x7fff;
           gbCurrentParent = TOS_BCAST_ADDR;
           gbCurrentHopCount = ROUTE_INVALID;
+	  dbg("LQI", "%s no route as we are in a cycle!\n", __FUNCTION__);
           return FAIL;
         }
       }
@@ -258,11 +260,12 @@ implementation {
       gRecentOriginPacketSeqNo[gRecentOriginIndex] = hdr->originseqno;
       gRecentOriginIndex = (gRecentOriginIndex + 1) % MHOP_HISTORY_SIZE;
     }
-    
+
     if (resend == 0) {
       hdr->seqno = gCurrentSeqNo++;
     }
     
+    dbg("LQI", "LQI setting destination to %hu and link quality ?\n", gbCurrentParent);
     call AMPacket.setDestination(msg, gbCurrentParent);
 
     return SUCCESS;
@@ -273,7 +276,8 @@ implementation {
 
     header->originaddr = TOS_NODE_ID;
     header->originseqno = gCurrentSeqNo;
-
+    header->seqno = gCurrentSeqNo;
+    
     if (isRoot) {
       header->hopcount = 0;
     }
@@ -281,6 +285,7 @@ implementation {
       header->hopcount = gbCurrentHopCount;
     }
 
+    dbg("LQI", "LQI setting hopcount to %hhu\n", gbCurrentHopCount);
     return SUCCESS;
   }
 
@@ -330,7 +335,7 @@ implementation {
       lqi_beacon_msg_t* bMsg = (lqi_beacon_msg_t*)payload;
       am_addr_t source = call AMPacket.source(msg);
       uint8_t lqi = call CC2420Packet.getLqi(msg);
-      
+      dbg("LQI,LQIRoute", "LQI receiving routing beacon from %hu with LQI %hhu that advertises %hu.\n", source, lqi, bMsg->cost);
       if (source == gbCurrentParent) {
 	// try to prevent cycles
 	if (bMsg->parent != TOS_NODE_ID) {
@@ -338,6 +343,7 @@ implementation {
 	  gbCurrentParentCost = bMsg->cost;
 	  gbCurrentLinkEst = adjustLQI(lqi);
 	  gbCurrentHopCount = bMsg->hopcount + 1;
+	  dbg("LQI,LQIRoute", "  -- Not a loop\n");
 	}
 	else {
 	  gLastHeard = 0;
@@ -345,6 +351,7 @@ implementation {
 	  gbCurrentLinkEst = 0x7fff;
 	  gbCurrentParent = TOS_BCAST_ADDR;
 	  gbCurrentHopCount = ROUTE_INVALID;
+	  dbg("LQI,LQIRoute", "  -- Detected a loop\n");
 	}
 	
       } else {
@@ -365,9 +372,14 @@ implementation {
 	  gbCurrentParentCost = bMsg->cost;
 	  gbCurrentLinkEst = adjustLQI(lqi);	
 	  gbCurrentHopCount = bMsg->hopcount + 1;
+	  dbg("LQI,LQIRoute", "  -- Not a cycle.\n");
+	}
+	else {
+	  dbg("LQI,LQIRoute", "  -- CYCLE.\n");
 	}
       }
     }
+    dbg("LQI,LQIRoute", "Set my count to %hhu, my link to %hu and my cost to %hu.\n", gbCurrentHopCount, gbCurrentLinkEst, gbCurrentParentCost);
 
     return msg;
   }
@@ -377,4 +389,4 @@ implementation {
   }
   
 }
-
+  

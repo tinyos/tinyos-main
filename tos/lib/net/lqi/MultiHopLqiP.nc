@@ -87,6 +87,7 @@ implementation {
     new AMSenderC(AM_LQI_BEACON_MSG) as BeaconSender,
     new AMReceiverC(AM_LQI_BEACON_MSG) as BeaconReceiver,
     new AMSenderC(AM_LQI_DATA_MSG) as DataSender,
+    new AMSenderC(AM_LQI_DATA_MSG) as DataSenderMine,
     new AMReceiverC(AM_LQI_DATA_MSG) as DataReceiver,
     new TimerMilliC(), 
     NoLedsC, LedsC,
@@ -114,12 +115,14 @@ implementation {
   Forwarder.RouteSelectCntl -> Router.RouteControl;
   Forwarder.RouteSelect -> Router;
   Forwarder.SubSend -> DataSender;
+  Forwarder.SubSendMine -> DataSenderMine;
   Forwarder.SubReceive -> DataReceiver;
   Forwarder.Leds -> LedsC;
   Forwarder.AMPacket -> ActiveMessageC;
   Forwarder.SubPacket -> ActiveMessageC;
   Forwarder.PacketAcknowledgements -> ActiveMessageC;
   Forwarder.RootControl -> Router;
+  Forwarder.Random -> RandomC;
   
   Router.AMSend -> BeaconSender;
   Router.Receive -> BeaconReceiver;
