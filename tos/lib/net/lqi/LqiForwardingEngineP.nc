@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.3 2007-04-13 00:10:48 scipio Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.4 2007-04-13 19:38:11 scipio Exp $
 
 
 /* Copyright (c) 2007 Stanford University.
@@ -296,19 +296,21 @@ implementation {
       if (call SubSend.send(call AMPacket.destination(msg),
 			    msg,
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
-	dbg("LQI", "Packet not acked, retransmit:\t%s\n", fields(msg));
+	dbg("LQI", "Packet not acked, retransmit @%s:\n\t%s\n", sim_time_string(), fields(msg));
         call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	fail_count ++;
+	return;
       } else {
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
-	dbg("LQI", "Packet not acked, retransmit fail:\t%s\n", fields(msg));
+	dbg("LQI", "Packet not acked, retransmit fail @%s:\n\t%s\n", sim_time_string(), fields(msg));
 	sendFailures++;
+	return;
       }
     }
     else if (fail_count >= 5) {
@@ -351,19 +353,21 @@ implementation {
       if (call SubSendMine.send(call AMPacket.destination(msg),
 			    msg,
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
-	dbg("LQI", "Packet not acked, retransmit:\t%s\n", fields(msg));
+	dbg("LQI", "Packet not acked, retransmit (%hhu) @%s:\n\t%s\n", fail_count, sim_time_string(), fields(msg));
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	fail_count ++;
+	return;
       } else {
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
-	dbg("LQI", "Packet not acked, retransmit fail:\t%s\n", fields(msg));
+	dbg("LQI", "Packet not acked, retransmit fail @%s:\n\t%s\n", sim_time_string(), fields(msg));
 	sendFailures++;
+	return;
       }
     }
     else if (fail_count >= 5) {
