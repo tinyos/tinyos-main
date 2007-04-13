@@ -1,4 +1,4 @@
-// $Id: AMQueueImplP.nc,v 1.5 2007-03-15 13:03:06 andreaskoepke Exp $
+// $Id: AMQueueImplP.nc,v 1.6 2007-04-13 17:31:15 scipio Exp $
 /*
 * "Copyright (c) 2005 Stanford University. All rights reserved.
 *
@@ -179,13 +179,21 @@ implementation {
     }
   
     event void AMSend.sendDone[am_id_t id](message_t* msg, error_t err) {
-        if(queue[current].msg == msg) {
-            sendDone(current, msg, err);
-        }
-        else {
-            dbg("PointerBug", "%s received send done for %p, signaling for %p.\n",
-                __FUNCTION__, msg, queue[current].msg);
-        }
+      // Bug fix from John Regehr: if the underlying radio mixes things
+      // up, we don't want to read memory incorrectly. This can occur
+      // on the mica2.
+      // Note that since all AM packets go through this queue, this
+      // means that the radio has a problem. -pal
+      if (current >= numClients) {
+	return;
+      }
+      if(queue[current].msg == msg) {
+	sendDone(current, msg, err);
+      }
+      else {
+	dbg("PointerBug", "%s received send done for %p, signaling for %p.\n",
+	    __FUNCTION__, msg, queue[current].msg);
+      }
     }
     
     command uint8_t Send.maxPayloadLength[uint8_t id]() {
