@@ -18,7 +18,3 @@ Every 20 seconds:
 
 Thus, in a successful test, you should see all nodes toggling both
 led0 and led1 roughly in unison.
-
-
-
-
