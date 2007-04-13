@@ -78,6 +78,8 @@ configuration MultiHopLqiP {
     interface CollectionPacket;
   }
 
+  uses interface CollectionDebug;
+
 }
 
 implementation {
@@ -99,7 +101,7 @@ implementation {
   MainC.SoftwareInit -> Router;
   
   components CC2420ActiveMessageC as CC2420;
-
+  
   StdControl = Router.StdControl;
   
   Receive = Forwarder.Receive;
@@ -111,7 +113,9 @@ implementation {
   Packet = Forwarder;
   CollectionPacket = Forwarder;
   RootControl = Router;
- 
+
+  //CC2420.SubPacket -> DataSender;
+  
   Forwarder.RouteSelectCntl -> Router.RouteControl;
   Forwarder.RouteSelect -> Router;
   Forwarder.SubSend -> DataSender;
@@ -123,6 +127,7 @@ implementation {
   Forwarder.PacketAcknowledgements -> ActiveMessageC;
   Forwarder.RootControl -> Router;
   Forwarder.Random -> RandomC;
+  Forwarder.CollectionDebug = CollectionDebug;
   
   Router.AMSend -> BeaconSender;
   Router.Receive -> BeaconReceiver;
@@ -133,4 +138,5 @@ implementation {
   Router.AMPacket -> ActiveMessageC;
   Router.Packet -> ActiveMessageC;
   Router.Leds -> NoLedsC;
+  Router.CollectionDebug = CollectionDebug;
 }

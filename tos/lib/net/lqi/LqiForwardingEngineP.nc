@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.2 2007-04-12 22:42:02 scipio Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.3 2007-04-13 00:10:48 scipio Exp $
 
 
 /* Copyright (c) 2007 Stanford University.
@@ -78,6 +78,7 @@
 
 #include "AM.h"
 #include "MultiHopLqi.h"
+#include "CollectionDebugMsg.h"
 
 module LqiForwardingEngineP {
   provides {
@@ -103,6 +104,7 @@ module LqiForwardingEngineP {
     interface RootControl;
     interface Random;
     interface PacketAcknowledgements;
+    interface CollectionDebug;
   }
 }
 
@@ -155,17 +157,14 @@ implementation {
   command error_t Send.send(message_t* pMsg, uint8_t len) {
     len += sizeof(lqi_header_t);
     if (len > call SubPacket.maxPayloadLength()) {
-      call Leds.led0On();
       return ESIZE;
     }
     if (call RootControl.isRoot()) {
-      call Leds.led1On();
       return FAIL;
     }
     call RouteSelect.initializeFields(pMsg);
     
     if (call RouteSelect.selectRoute(pMsg, 0) != SUCCESS) {
-      call Leds.led2On();
       return FAIL;
     }
     call PacketAcknowledgements.requestAck(pMsg);
@@ -204,24 +203,29 @@ implementation {
   }
 
   static char* fields(message_t* msg) {
+#ifdef TOSSIM
     static char mbuf[1024];
     lqi_header_t* hdr = getHeader(msg);
     sprintf(mbuf, "origin = %hu, seqno = %hu, oseqno = %hu, hopcount =%hu", hdr->originaddr, hdr->seqno, hdr->originseqno, hdr->hopcount);
     return mbuf;
+#else
+    return NULL;
+#endif
   }
 
   static void forward(message_t* msg);
   
   static message_t* mForward(message_t* msg) {
     int8_t buf = get_buff();
-    call Leds.led2Toggle();
     dbg("LQI", " Asked to forward packet @%s:\t%s\n", sim_time_string(), fields(msg));
     if (buf == -1) {
       dbg("LQI", "%s Dropped packet due to no space in queue.\n", __FUNCTION__);
+      call CollectionDebug.logEvent(NET_C_FE_SEND_QUEUE_FULL);
       return msg;
     }
     if ((call RouteSelect.selectRoute(msg, 0)) != SUCCESS) {
       FwdBufBusy[(uint8_t)buf] = 0;
+      call CollectionDebug.logEvent(NET_C_FE_NO_ROUTE);
       dbg("LQI", "%s Dropped packet due to no route.\n", __FUNCTION__);
       return msg;
     }
@@ -257,11 +261,11 @@ implementation {
     len -= sizeof(lqi_header_t);
 
     if (call RootControl.isRoot()) {
-      dbg("LQI", "LQI Root is receiving packet from node %hu @%s\n", getHeader(msg)->originaddr, sim_time_string());
+      dbg("LQI,LQIDeliver", "LQI Root is receiving packet from node %hu @%s\n", getHeader(msg)->originaddr, sim_time_string());
       return signal Receive.receive[id](msg, payload, len);
     }
     else if (signal Intercept.forward[id](msg, payload, len)) {
-      dbg("LQI", "LQI fwd is forwarding packet from node %hu @%s\n", getHeader(msg)->originaddr, sim_time_string());
+      dbg("LQI,LQIDeliver", "LQI fwd is forwarding packet from node %hu @%s\n", getHeader(msg)->originaddr, sim_time_string());
       return mForward(msg);
     }
     else {
@@ -293,17 +297,33 @@ implementation {
 			    msg,
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
 	dbg("LQI", "Packet not acked, retransmit:\t%s\n", fields(msg));
+        call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+                                         call AMPacket.destination(msg));
 	fail_count ++;
       } else {
+	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+                                         call AMPacket.destination(msg));
 	dbg("LQI", "Packet not acked, retransmit fail:\t%s\n", fields(msg));
 	sendFailures++;
       }
     }
     else if (fail_count >= 5) {
+      call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_FWD, 
+				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getOrigin(msg), 
+				       call AMPacket.destination(msg));
       dbg("LQI", "Packet failed:\t%s\n", fields(msg));
     }
     else if (call PacketAcknowledgements.wasAcked(msg)) {
       dbg("LQI", "Packet acked:\t%s\n", fields(msg));
+      call CollectionDebug.logEventMsg(NET_C_FE_FWD_MSG, 
+				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getOrigin(msg), 
+				       call AMPacket.destination(msg));
     }
     
     fail_count = 0;
@@ -332,13 +352,35 @@ implementation {
 			    msg,
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
 	dbg("LQI", "Packet not acked, retransmit:\t%s\n", fields(msg));
+	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+                                         call AMPacket.destination(msg));
 	fail_count ++;
       } else {
+	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+                                         call AMPacket.destination(msg));
 	dbg("LQI", "Packet not acked, retransmit fail:\t%s\n", fields(msg));
 	sendFailures++;
       }
     }
-    
+    else if (fail_count >= 5) {
+      call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
+				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getOrigin(msg), 
+				       call AMPacket.destination(msg));
+      dbg("LQI", "Packet failed:\t%s\n", fields(msg));
+    }
+    else if (call PacketAcknowledgements.wasAcked(msg)) {
+      dbg("LQI", "Packet acked:\t%s\n", fields(msg));
+      call CollectionDebug.logEventMsg(NET_C_FE_SENT_MSG, 
+				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getOrigin(msg), 
+				       call AMPacket.destination(msg));
+    }
+
     fail_count = 0;
     signal Send.sendDone(msg, success);
   }

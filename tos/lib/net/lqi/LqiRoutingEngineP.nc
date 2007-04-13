@@ -37,6 +37,7 @@
 
 
 #include "MultiHopLqi.h"
+#include "CollectionDebugMsg.h"
 
 module LqiRoutingEngineP {
 
@@ -58,6 +59,7 @@ module LqiRoutingEngineP {
     interface LqiRouteStats;
     interface CC2420Packet;
     interface Leds;
+    interface CollectionDebug;
   }
 }
 
@@ -149,6 +151,7 @@ implementation {
     
     if (call AMSend.send(TOS_BCAST_ADDR, &msgBuf, length) == SUCCESS) {
       msgBufBusy = TRUE;
+      call CollectionDebug.logEventRoute(NET_C_TREE_SENT_BEACON, bMsg->parent, 0, bMsg->cost);
     }
   }
 
@@ -195,6 +198,7 @@ implementation {
 
   command error_t RootControl.setRoot() {
     call Leds.led2On();
+    call CollectionDebug.logEventRoute(NET_C_TREE_NEW_PARENT, TOS_NODE_ID, 0, 0);
     isRoot = TRUE;
     return SUCCESS;
   }
@@ -235,6 +239,7 @@ implementation {
       for (i = 0; i < MHOP_HISTORY_SIZE; i++) {
         if ((gRecentPacketSender[i] == call AMPacket.source(msg)) &&
             (gRecentPacketSeqNo[i] == hdr->seqno)) {
+	  call CollectionDebug.logEvent(NET_C_FE_DUPLICATE_CACHE_AT_SEND);
 	  dbg("LQI", "%s no route as this is a duplicate!\n", __FUNCTION__);
           return FAIL;
         }
@@ -323,18 +328,22 @@ implementation {
 
 
   event void Timer.fired() {
+    call Leds.led0Toggle();
     post TimerTask();
-    call Timer.startOneShot(1024 * gUpdateInterval + 1);
+    call Timer.startPeriodic(1024 * gUpdateInterval + 1);
   }
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len) {
+    lqi_beacon_msg_t* bMsg = (lqi_beacon_msg_t*)payload;
+    am_addr_t source = call AMPacket.source(msg);
+    uint8_t lqi = call CC2420Packet.getLqi(msg);
+    
+    call CollectionDebug.logEventRoute(NET_C_TREE_RCV_BEACON, source, 0, bMsg->cost);
+    
     if (isRoot) {
       return msg;
     }
     else {
-      lqi_beacon_msg_t* bMsg = (lqi_beacon_msg_t*)payload;
-      am_addr_t source = call AMPacket.source(msg);
-      uint8_t lqi = call CC2420Packet.getLqi(msg);
       dbg("LQI,LQIRoute", "LQI receiving routing beacon from %hu with LQI %hhu that advertises %hu.\n", source, lqi, bMsg->cost);
       if (source == gbCurrentParent) {
 	// try to prevent cycles
@@ -372,6 +381,7 @@ implementation {
 	  gbCurrentParentCost = bMsg->cost;
 	  gbCurrentLinkEst = adjustLQI(lqi);	
 	  gbCurrentHopCount = bMsg->hopcount + 1;
+	  call CollectionDebug.logEventRoute(NET_C_TREE_NEW_PARENT, gbCurrentParent, 0, gbCurrentParentCost + gbCurrentLinkEst);
 	  dbg("LQI,LQIRoute", "  -- Not a cycle.\n");
 	}
 	else {

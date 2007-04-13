@@ -1,4 +1,4 @@
-// $Id: MultiHopLqi.h,v 1.1 2007-04-07 01:58:05 scipio Exp $
+// $Id: MultiHopLqi.h,v 1.2 2007-04-13 00:10:48 scipio Exp $
 
 
 /* Copyright (c) 2007 Stanford University.
@@ -92,6 +92,7 @@
 enum {
   AM_LQI_BEACON_MSG = 250,
   AM_LQI_DATA_MSG = 251,
+  AM_LQI_DEBUG = 22,
   AM_LQI_DEBUG_PACKET = 3,
   NUM_LQI_CLIENTS = uniqueCount(UQ_LQI_CLIENT),
 };

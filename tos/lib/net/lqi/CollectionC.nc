@@ -48,6 +48,8 @@ configuration CollectionC {
     interface CollectionPacket;
     interface RootControl;
   }
+  uses interface CollectionDebug;
+  
 }
 
 implementation {
@@ -65,4 +67,6 @@ implementation {
   Snoop =       Router.Snoop;
   Intercept =   Router.Intercept;
   CollectionPacket = Router;
+
+  Router.CollectionDebug = CollectionDebug;
 }
