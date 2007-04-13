@@ -47,6 +47,7 @@ configuration CollectionC {
     interface Packet;
     interface CollectionPacket;
     interface RootControl;
+    interface RouteControl;
   }
   uses interface CollectionDebug;
   
@@ -56,6 +57,8 @@ implementation {
   components MultiHopLqiP as Router;
   components new SendVirtualizerP(NUM_LQI_CLIENTS);
   
+  RouteControl = Router;
+
   Send =        SendVirtualizerP;
   SendVirtualizerP.SubSend -> Router.Send;
   SendVirtualizerP.Packet -> Router;

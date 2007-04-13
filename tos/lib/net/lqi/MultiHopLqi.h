@@ -1,4 +1,4 @@
-// $Id: MultiHopLqi.h,v 1.2 2007-04-13 00:10:48 scipio Exp $
+// $Id: MultiHopLqi.h,v 1.3 2007-04-13 21:45:25 scipio Exp $
 
 
 /* Copyright (c) 2007 Stanford University.

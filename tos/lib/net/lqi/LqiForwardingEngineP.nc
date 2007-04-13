@@ -1,5 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.4 2007-04-13 19:38:11 scipio Exp $
-
+// $Id: LqiForwardingEngineP.nc,v 1.5 2007-04-13 21:45:25 scipio Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -260,6 +259,11 @@ implementation {
     payload += sizeof(lqi_header_t);
     len -= sizeof(lqi_header_t);
 
+    call CollectionDebug.logEventMsg(NET_C_FE_RCV_MSG, 
+				     call CollectionPacket.getTestNetworkSeq(msg), 
+				     call CollectionPacket.getOrigin(msg), 
+				     call AMPacket.destination(msg));
+
     if (call RootControl.isRoot()) {
       dbg("LQI,LQIDeliver", "LQI Root is receiving packet from node %hu @%s\n", getHeader(msg)->originaddr, sim_time_string());
       return signal Receive.receive[id](msg, payload, len);
@@ -298,14 +302,14 @@ implementation {
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
 	dbg("LQI", "Packet not acked, retransmit @%s:\n\t%s\n", sim_time_string(), fields(msg));
         call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
-					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getTestNetworkSeq(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	fail_count ++;
 	return;
       } else {
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
-					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getTestNetworkSeq(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	dbg("LQI", "Packet not acked, retransmit fail @%s:\n\t%s\n", sim_time_string(), fields(msg));
@@ -315,7 +319,7 @@ implementation {
     }
     else if (fail_count >= 5) {
       call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_FWD, 
-				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getTestNetworkSeq(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
       dbg("LQI", "Packet failed:\t%s\n", fields(msg));
@@ -323,7 +327,7 @@ implementation {
     else if (call PacketAcknowledgements.wasAcked(msg)) {
       dbg("LQI", "Packet acked:\t%s\n", fields(msg));
       call CollectionDebug.logEventMsg(NET_C_FE_FWD_MSG, 
-				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getTestNetworkSeq(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
     }
@@ -355,14 +359,14 @@ implementation {
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
 	dbg("LQI", "Packet not acked, retransmit (%hhu) @%s:\n\t%s\n", fail_count, sim_time_string(), fields(msg));
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
-					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getTestNetworkSeq(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	fail_count ++;
 	return;
       } else {
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
-					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getTestNetworkSeq(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	dbg("LQI", "Packet not acked, retransmit fail @%s:\n\t%s\n", sim_time_string(), fields(msg));
@@ -372,7 +376,7 @@ implementation {
     }
     else if (fail_count >= 5) {
       call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
-				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getTestNetworkSeq(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
       dbg("LQI", "Packet failed:\t%s\n", fields(msg));
@@ -380,7 +384,7 @@ implementation {
     else if (call PacketAcknowledgements.wasAcked(msg)) {
       dbg("LQI", "Packet acked:\t%s\n", fields(msg));
       call CollectionDebug.logEventMsg(NET_C_FE_SENT_MSG, 
-				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getTestNetworkSeq(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
     }
@@ -499,6 +503,13 @@ implementation {
     lqi_header_t* hdr = getHeader(msg);
     hdr->originseqno = seqno;
   }
+
+  command uint16_t CollectionPacket.getTestNetworkSeq(message_t* msg) {
+    TestNetworkMsg *tn;
+    tn = (TestNetworkMsg *)call Packet.getPayload(msg, NULL);
+    return tn->seqno;
+  }
+
   
  default event void Send.sendDone(message_t* pMsg, error_t success) {}
  default event message_t* Snoop.receive[collection_id_t id](message_t* pMsg, void* payload, uint8_t len) {return pMsg;}
