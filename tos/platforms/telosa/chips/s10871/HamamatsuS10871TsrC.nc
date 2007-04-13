@@ -34,10 +34,11 @@
  * available on the telosb platform.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:45 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-13 21:46:18 $
  */
 
 generic configuration HamamatsuS10871TsrC() {
+  provides interface DeviceMetadata;
   provides interface Read<uint16_t>;
   provides interface ReadStream<uint16_t>;
 }
@@ -49,6 +50,7 @@ implementation {
   ReadStream = AdcReadStreamClientC;
 
   components HamamatsuS10871TsrP;
+  DeviceMetadata = HamamatsuS10871TsrP;
   AdcReadClientC.AdcConfigure -> HamamatsuS10871TsrP;
   AdcReadStreamClientC.AdcConfigure -> HamamatsuS10871TsrP;
 }

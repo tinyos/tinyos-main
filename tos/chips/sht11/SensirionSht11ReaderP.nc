@@ -37,11 +37,15 @@
  * arbitrated access.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:12 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-13 21:46:18 $
  */
 
+#include <SensirionSht11.h>
+
 generic module SensirionSht11ReaderP() {
+  provides interface DeviceMetadata as TemperatureMetadata;
   provides interface Read<uint16_t> as Temperature;
+  provides interface DeviceMetadata as HumidityMetadata;
   provides interface Read<uint16_t> as Humidity;
   
   uses interface Resource as TempResource;
@@ -50,6 +54,9 @@ generic module SensirionSht11ReaderP() {
   uses interface SensirionSht11 as Sht11Hum;
 }
 implementation {
+
+  command uint8_t TemperatureMetadata.getSignificantBits() { return SHT11_TEMPERATURE_BITS; }
+
   command error_t Temperature.read() {
     call TempResource.request();
     return SUCCESS;
@@ -67,6 +74,8 @@ implementation {
     call TempResource.release();
     signal Temperature.readDone( result, val );
   }
+
+  command uint8_t HumidityMetadata.getSignificantBits() { return SHT11_HUMIDITY_BITS; }
 
   command error_t Humidity.read() {
     call HumResource.request();

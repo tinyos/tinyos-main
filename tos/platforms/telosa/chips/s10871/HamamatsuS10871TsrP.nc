@@ -36,10 +36,11 @@
  * radiation sensor available on the telosb platform. 
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:45 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-13 21:46:18 $
  */
 
 module HamamatsuS10871TsrP {
+  provides interface DeviceMetadata;
   provides interface AdcConfigure<const msp430adc12_channel_config_t*>;
 }
 implementation {
@@ -54,6 +55,8 @@ implementation {
     sampcon_ssel: SAMPCON_SOURCE_SMCLK,
     sampcon_id: SAMPCON_CLOCK_DIV_1
   };
+
+  command uint8_t DeviceMetadata.getSignificantBits() { return 12; }
   
   async command const msp430adc12_channel_config_t* AdcConfigure.getConfiguration() {
     return &config;
