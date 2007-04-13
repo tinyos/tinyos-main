@@ -202,6 +202,7 @@ implementation {
       if (list != msg) {
 	noise += pow(10.0, list->power / 10.0);
       }
+      list = list->next;
     }
     noise = 10.0 * log(noise) / log(10.0);
     return shouldReceive(msg->power - noise);
@@ -215,6 +216,7 @@ implementation {
       if (list != msg) {
 	noise += pow(10.0, list->power / 10.0);
       }
+      list = list->next;
     }
     noise = 10.0 * log(noise) / log(10.0);
     return noise;
