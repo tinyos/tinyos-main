@@ -1,4 +1,5 @@
 #include <Timer.h>
+#include <UserButton.h>
 
 /*
  * Copyright (c) 2006 Arched Rock Corporation
@@ -44,11 +45,18 @@
  * See TEP118 - Dissemination for details.
  * 
  * @author Gilman Tolle <gtolle@archedrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:22:50 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-14 00:34:20 $
  */
 
 module TestDisseminationC {
   uses interface Boot;
+
+  uses interface SplitControl as RadioControl;
+
+  uses interface StdControl as DisseminationControl;
+
+  uses interface Get<button_state_t>;
+  uses interface Notify<button_state_t>;
 
   uses interface DisseminationValue<uint32_t> as Value32;
   uses interface DisseminationUpdate<uint32_t> as Update32;
@@ -62,19 +70,51 @@ module TestDisseminationC {
 }
 implementation {
   event void Boot.booted() {
-    if ( TOS_NODE_ID % 4 == 1 ) {
-      call Timer.startPeriodic(20000);
+    uint32_t initialVal32 = 123456;
+    uint16_t initialVal16 = 1234;
+
+    call Value32.set( &initialVal32 ); 
+    call Value16.set( &initialVal16 ); 
+
+    call RadioControl.start();
+  }
+
+  event void RadioControl.startDone( error_t result ) {
+    
+    if ( result != SUCCESS ) {
+
+      call RadioControl.start();
+
+    } else {
+
+      call DisseminationControl.start();
+      
+      if ( TOS_NODE_ID % 4 == 1 ) {
+	call Timer.startPeriodic( 1024 * 20 );
+      } else {
+	call Timer.startPeriodic( 1024 );
+      }
     }
   }
+
+  event void RadioControl.stopDone( error_t result ) { }
 
   event void Timer.fired() {
     uint32_t newVal32 = 0xDEADBEEF;
     uint16_t newVal16 = 0xABCD;
-    call Leds.led0Toggle();
-    call Leds.led1Toggle();
-    call Update32.change( &newVal32 );
-    call Update16.change( &newVal16 );
-    dbg("TestDisseminationC", "TestDisseminationC: Timer fired.\n");
+
+    if ( TOS_NODE_ID % 4 == 1 ) {
+      call Leds.led0Toggle();
+      call Leds.led1Toggle();
+      call Update32.change( &newVal32 );
+      call Update16.change( &newVal16 );
+      dbg("TestDisseminationC", "TestDisseminationC: Timer fired.\n");
+    } else {
+      const uint32_t* newVal = call Value32.get();
+      if ( *newVal == 123456 ) {
+	call Leds.led2Toggle();
+      }
+    }
   }
 
   event void Value32.changed() {

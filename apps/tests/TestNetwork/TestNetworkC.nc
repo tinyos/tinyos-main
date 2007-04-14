@@ -7,7 +7,7 @@
  * See TEP118: Dissemination and TEP 119: Collection for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:22:50 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-14 00:34:20 $
  */
 
 #include <Timer.h>
@@ -19,6 +19,7 @@ module TestNetworkC {
   uses interface SplitControl as RadioControl;
   uses interface SplitControl as SerialControl;
   uses interface StdControl as RoutingControl;
+  uses interface StdControl as DisseminationControl;
   uses interface DisseminationValue<uint16_t> as DisseminationPeriod;
   uses interface Send;
   uses interface Leds;
@@ -63,6 +64,7 @@ implementation {
       call RadioControl.start();
     }
     else {
+      call DisseminationControl.start();
       call RoutingControl.start();
       if (TOS_NODE_ID % 500 == 0) {
 	call RootControl.setRoot();

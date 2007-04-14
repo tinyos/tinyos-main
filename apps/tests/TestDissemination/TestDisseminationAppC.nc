@@ -42,7 +42,7 @@
  * See TEP118 - Dissemination for details.
  * 
  * @author Gilman Tolle <gtolle@archedrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:22:50 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-14 00:34:20 $
  */
 
 configuration TestDisseminationAppC {}
@@ -51,6 +51,16 @@ implementation {
 
   components MainC;
   TestDisseminationC.Boot -> MainC;
+
+  components ActiveMessageC;
+  TestDisseminationC.RadioControl -> ActiveMessageC;
+
+  components DisseminationC;
+  TestDisseminationC.DisseminationControl -> DisseminationC;
+
+  components UserButtonC;
+  TestDisseminationC.Get -> UserButtonC;
+  TestDisseminationC.Notify -> UserButtonC;
 
   components new DisseminatorC(uint32_t, 0x1234) as Object32C;
   TestDisseminationC.Value32 -> Object32C;
