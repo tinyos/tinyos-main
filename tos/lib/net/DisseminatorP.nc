@@ -39,33 +39,48 @@
  * @param t the type of the object that will be disseminated
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:29 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-14 00:31:30 $
  */
 
 generic module DisseminatorP(typedef t) {
+  provides interface StdControl;
+
   provides interface DisseminationValue<t>;
   provides interface DisseminationUpdate<t>;
   provides interface DisseminationCache;
 
-  uses interface Boot;
   uses interface Leds;
 }
 implementation {
   t valueCache;
+  bool m_running;
 
   // A sequence number is 32 bits. The top 16 bits are an incrementing
   // counter, while the bottom 16 bits are a unique node identifier.
   uint32_t seqno = DISSEMINATION_SEQNO_UNKNOWN;
 
-  event void Boot.booted() {
-    signal DisseminationCache.init();
+  command error_t StdControl.start() {
+    error_t result = signal DisseminationCache.start();
+    if ( result == SUCCESS ) { m_running = TRUE; }
+    return result;
+  }
+
+  command error_t StdControl.stop() {
+    if ( !m_running ) { return EOFF; }
+    m_running = FALSE;
+    return signal DisseminationCache.stop();
   }
 
   command const t* DisseminationValue.get() {
     return &valueCache;
   }
 
+  command void DisseminationValue.set( const t* val ) {
+    valueCache = *val;
+  }
+
   command void DisseminationUpdate.change( t* newVal ) {
+    if ( !m_running ) { return; }
     memcpy( &valueCache, newVal, sizeof(t) );
     /* Increment the counter and append the local node ID. */
     seqno = seqno >> 16;

@@ -1,4 +1,4 @@
-// $Id: DisseminationValue.nc,v 1.4 2006-12-12 18:23:29 vlahan Exp $
+// $Id: DisseminationValue.nc,v 1.5 2007-04-14 00:31:29 gtolle Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -45,6 +45,15 @@ interface DisseminationValue<t> {
    * @return A const pointer to the variable.
    */
   command const t* get();
+
+  /**
+   * Set the variable to a new value. The provider of this interface
+   * will copy the value from the pointer. NOTE: This command does
+   * not cause the new value to begin disseminating. It is intended to
+   * be used for setting default values.
+   */
+
+  command void set( const t* );
 
   /**
    * Signalled whenever variable may have changed.

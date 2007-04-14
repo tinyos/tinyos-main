@@ -39,15 +39,16 @@
  * See TEP118 - Dissemination for details.
  * 
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2006-12-13 01:56:41 $
+ * @version $Revision: 1.6 $ $Date: 2007-04-14 00:31:29 $
  */
 
 module DisseminationEngineImplP {
+  provides interface StdControl;
+
   uses {
-    interface Boot;
-    interface SplitControl as RadioControl;
     interface DisseminationCache[uint16_t key];
     interface TrickleTimer[uint16_t key];
+    interface StdControl as DisseminatorControl[uint16_t id];
 
     interface AMSend;
     interface Receive;
@@ -60,35 +61,55 @@ module DisseminationEngineImplP {
 }
 implementation {
 
+  enum { NUM_DISSEMINATORS = uniqueCount("DisseminationTimerC.TrickleTimer") };
+
   message_t m_buf;
-  bool m_bufBusy = TRUE;
+  bool m_running;
+  bool m_bufBusy;
 
   void sendProbe( uint16_t key );
   void sendObject( uint16_t key );
 
-  event void Boot.booted() {
-    call RadioControl.start(); 
+  command error_t StdControl.start() {
+    uint8_t i;
+    for ( i = 0; i < NUM_DISSEMINATORS; i++ ) {
+      call DisseminatorControl.start[ i ]();
+    }
+    m_running = TRUE;
+    return SUCCESS;
   }
 
-  event void RadioControl.startDone( error_t err ) {
-    m_bufBusy = FALSE;
+  command error_t StdControl.stop() {
+    uint8_t i;
+    for ( i = 0; i < NUM_DISSEMINATORS; i++ ) {
+      call DisseminatorControl.stop[ i ]();
+    }
+    m_running = FALSE;
+    return SUCCESS;
   }
-  event void RadioControl.stopDone( error_t err ) {}
 
-  event void DisseminationCache.init[ uint16_t key ]() {
-    call TrickleTimer.start[ key ]();
+  event error_t DisseminationCache.start[ uint16_t key ]() {
+    error_t result = call TrickleTimer.start[ key ]();
     call TrickleTimer.reset[ key ]();
+    return result;
+  }
+
+  event error_t DisseminationCache.stop[ uint16_t key ]() {
+    call TrickleTimer.stop[ key ]();
+    return SUCCESS;
   }
 
   event void DisseminationCache.newData[ uint16_t key ]() {
+
+    if ( !m_running || m_bufBusy ) { return; }
+
     sendObject( key );
     call TrickleTimer.reset[ key ]();
   }
 
   event void TrickleTimer.fired[ uint16_t key ]() {
 
-
-    if ( m_bufBusy ) { return; }
+    if ( !m_running || m_bufBusy ) { return; }
 
     sendObject( key );
   }
@@ -148,6 +169,8 @@ implementation {
     uint32_t incomingSeqno = dMsg->seqno;
     uint32_t currentSeqno = call DisseminationCache.requestSeqno[ key ]();
 
+    if ( !m_running ) { return msg; }
+
     if ( currentSeqno == DISSEMINATION_SEQNO_UNKNOWN &&
 	 incomingSeqno != DISSEMINATION_SEQNO_UNKNOWN ) {
 
@@ -198,6 +221,8 @@ implementation {
     dissemination_probe_message_t* dpMsg = 
       (dissemination_probe_message_t*) payload;
 
+    if ( !m_running ) { return msg; }
+
     if ( call DisseminationCache.requestSeqno[ dpMsg->key ]() != 
 	 DISSEMINATION_SEQNO_UNKNOWN ) {    
       sendObject( dpMsg->key );
@@ -215,13 +240,16 @@ implementation {
 						uint32_t seqno ) {}
 
   default command uint32_t 
-    DisseminationCache.requestSeqno[uint16_t key]() { return 0; }
+    DisseminationCache.requestSeqno[uint16_t key]() { return DISSEMINATION_SEQNO_UNKNOWN; }
 
-  default command error_t TrickleTimer.start[uint16_t key]() { return SUCCESS; }
+  default command error_t TrickleTimer.start[uint16_t key]() { return FAIL; }
 
   default command void TrickleTimer.stop[uint16_t key]() { }
 
   default command void TrickleTimer.reset[uint16_t key]() { }
 
   default command void TrickleTimer.incrementCounter[uint16_t key]() { }
+
+  default command error_t DisseminatorControl.start[uint16_t id]() { return FAIL; }
+  default command error_t DisseminatorControl.stop[uint16_t id]() { return FAIL; }
 }

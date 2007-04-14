@@ -43,7 +43,7 @@
  * @param key the 16-bit identifier of the disseminated object
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:29 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-14 00:31:29 $
  */
 
 generic configuration DisseminatorC(typedef t, uint16_t key) {
@@ -59,11 +59,9 @@ implementation {
   DisseminationValue = DisseminatorP;
   DisseminationUpdate = DisseminatorP;
 
-  components MainC;
-  DisseminatorP.Boot -> MainC;
-
   components DisseminationEngineP;
   DisseminationEngineP.DisseminationCache[key] -> DisseminatorP;
+  DisseminationEngineP.DisseminatorControl[TIMER_ID] -> DisseminatorP;
 
   components DisseminationTimerP;
   DisseminationEngineP.TrickleTimer[key] -> 
