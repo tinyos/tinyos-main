@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.5 2007-04-13 21:45:25 scipio Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.6 2007-04-14 00:40:59 scipio Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -248,6 +248,10 @@ implementation {
       if (call SubSend.send(call AMPacket.destination(msg),
 			    msg,
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
+	call CollectionDebug.logEventMsg(NET_C_DBG_1, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+					 call AMPacket.destination(msg));
 	dbg("LQI", "%s: Send to %hu success.\n", __FUNCTION__, call AMPacket.destination(msg));
       }
       fwdbusy = TRUE;
@@ -260,7 +264,7 @@ implementation {
     len -= sizeof(lqi_header_t);
 
     call CollectionDebug.logEventMsg(NET_C_FE_RCV_MSG, 
-				     call CollectionPacket.getTestNetworkSeq(msg), 
+				     call CollectionPacket.getSequenceNumber(msg), 
 				     call CollectionPacket.getOrigin(msg), 
 				     call AMPacket.destination(msg));
 
@@ -279,7 +283,7 @@ implementation {
   
   message_t* nextMsg() {
     int i;
-    int inc = call Random.rand16();
+    uint16_t inc = call Random.rand16() & 0xfff;
     for (i = 0; i < FWD_QUEUE_SIZE; i++) {
       int pindex = (i + inc) % FWD_QUEUE_SIZE;
       if (FwdBufBusy[pindex]) {
@@ -302,14 +306,14 @@ implementation {
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
 	dbg("LQI", "Packet not acked, retransmit @%s:\n\t%s\n", sim_time_string(), fields(msg));
         call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
-					 call CollectionPacket.getTestNetworkSeq(msg), 
+					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	fail_count ++;
 	return;
       } else {
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
-					 call CollectionPacket.getTestNetworkSeq(msg), 
+					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	dbg("LQI", "Packet not acked, retransmit fail @%s:\n\t%s\n", sim_time_string(), fields(msg));
@@ -319,7 +323,7 @@ implementation {
     }
     else if (fail_count >= 5) {
       call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_FWD, 
-				       call CollectionPacket.getTestNetworkSeq(msg), 
+				       call CollectionPacket.getSequenceNumber(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
       dbg("LQI", "Packet failed:\t%s\n", fields(msg));
@@ -327,7 +331,7 @@ implementation {
     else if (call PacketAcknowledgements.wasAcked(msg)) {
       dbg("LQI", "Packet acked:\t%s\n", fields(msg));
       call CollectionDebug.logEventMsg(NET_C_FE_FWD_MSG, 
-				       call CollectionPacket.getTestNetworkSeq(msg), 
+				       call CollectionPacket.getSequenceNumber(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
     }
@@ -359,14 +363,14 @@ implementation {
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
 	dbg("LQI", "Packet not acked, retransmit (%hhu) @%s:\n\t%s\n", fail_count, sim_time_string(), fields(msg));
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
-					 call CollectionPacket.getTestNetworkSeq(msg), 
+					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	fail_count ++;
 	return;
       } else {
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
-					 call CollectionPacket.getTestNetworkSeq(msg), 
+					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
 	dbg("LQI", "Packet not acked, retransmit fail @%s:\n\t%s\n", sim_time_string(), fields(msg));
@@ -376,7 +380,7 @@ implementation {
     }
     else if (fail_count >= 5) {
       call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
-				       call CollectionPacket.getTestNetworkSeq(msg), 
+				       call CollectionPacket.getSequenceNumber(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
       dbg("LQI", "Packet failed:\t%s\n", fields(msg));
@@ -384,7 +388,7 @@ implementation {
     else if (call PacketAcknowledgements.wasAcked(msg)) {
       dbg("LQI", "Packet acked:\t%s\n", fields(msg));
       call CollectionDebug.logEventMsg(NET_C_FE_SENT_MSG, 
-				       call CollectionPacket.getTestNetworkSeq(msg), 
+				       call CollectionPacket.getSequenceNumber(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
     }
@@ -504,11 +508,6 @@ implementation {
     hdr->originseqno = seqno;
   }
 
-  command uint16_t CollectionPacket.getTestNetworkSeq(message_t* msg) {
-    TestNetworkMsg *tn;
-    tn = (TestNetworkMsg *)call Packet.getPayload(msg, NULL);
-    return tn->seqno;
-  }
 
   
  default event void Send.sendDone(message_t* pMsg, error_t success) {}

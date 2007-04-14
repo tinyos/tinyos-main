@@ -89,7 +89,8 @@ implementation {
   uint8_t gLastHeard;
 
   int16_t gCurrentSeqNo;
-
+  int16_t gOriginSeqNo;
+  
   uint16_t gUpdateInterval;
 
   uint8_t gRecentIndex;
@@ -137,7 +138,6 @@ implementation {
       bMsg->cost = 0;
       bMsg->originaddr = TOS_NODE_ID;
       bMsg->hopcount = 0;
-      bMsg->originseqno = gCurrentSeqNo;
       bMsg->seqno = gCurrentSeqNo++;
     }
     else {
@@ -145,7 +145,6 @@ implementation {
       bMsg->cost = gbCurrentParentCost + gbCurrentLinkEst;
       bMsg->originaddr = TOS_NODE_ID;
       bMsg->hopcount = gbCurrentHopCount;
-      bMsg->originseqno = gCurrentSeqNo;
       bMsg->seqno = gCurrentSeqNo++;
     }
     
@@ -189,6 +188,7 @@ implementation {
     gbCurrentHopCount = ROUTE_INVALID;
     gbCurrentCost = 0xfffe;
 
+    gOriginSeqNo = 0;
     gCurrentSeqNo = 0;
     gUpdateInterval = BEACON_PERIOD;
     msgBufBusy = FALSE;
@@ -280,7 +280,7 @@ implementation {
     lqi_header_t* header = (lqi_header_t*)call Packet.getPayload(msg, NULL);
 
     header->originaddr = TOS_NODE_ID;
-    header->originseqno = gCurrentSeqNo;
+    header->originseqno = gOriginSeqNo++;
     header->seqno = gCurrentSeqNo;
     
     if (isRoot) {
