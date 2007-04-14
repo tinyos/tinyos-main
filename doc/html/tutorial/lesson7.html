@@ -7,7 +7,7 @@
 <body>
 
 <div class="title">Lesson 7: Permanent Data Storage</div>
-<div class="subtitle">Last Modified: November 5, 2006</div>
+<div class="subtitle">Last Modified: April 13, 2007</div>
 
 <p>This lesson introduces permanent (non-volatile) data storage in
 TinyOS.  Permanent storage allows a node to persist data even if power
@@ -44,8 +44,9 @@ circular logs, and large objects.  TinyOS 2.x also provides
 <h2>Interfaces</h2>
 
 Let's take a look at some of the interfaces that are in the
-<code>tos/interfaces</code> directory to familiarize ourselves with
-the general functionality of the storage system:
+<code>tos/interfaces</code> directory and the types defined in the
+<code>tos/types</code> to familiarize ourselves with the general
+functionality of the storage system:
 
 
 <p>
@@ -68,6 +69,9 @@ the general functionality of the storage system:
 
 <li><code>
 <a href="../../../tos/interfaces/LogWrite.nc">LogWrite</a></code>
+
+<li><code>
+<a href="../../../tos/types/Storage.h">Storage.h</a></code>
 
 
 </ul>
@@ -174,20 +178,131 @@ for more details.
 
 <h1>Storing Configuration Data</h1>
 
-<p>In <a name="fn2"><a href="lesson3.html">Lesson 3</a></a>, we
-implemented a simple application called BlinkToRadio that used a
-single timer, set to fire at a fixed rate, to toggle the LEDs.
+<p>This lesson shows how configuration data can be written to and read
+from non-volatile storage.  Configuration data typically exhibit some
+subset of the following properties.  They are <b>limited in size</b>,
+ranging from a fews tens to a couple hundred bytes.  Their values may
+be <b>non-uniform</b> across nodes.  Sometimes, their values are
+<b>unknown</b> prior to deployment in the field and sometimes their
+values are <b>hardware-specific</b>, rather than being tied to the
+software running on a node.
 
-<p>See <a href="../../../apps/tutorials/BlinkConfig/">
+<p>Because configuration data can be non-uniform across nodes or
+unknown <em>a priori</em>, their values may be difficult to specify at
+compile-time and since the data are sometimes hardware-specific, their
+values must survive reprogramming, suggesting that encoding these
+values in the program image is not the simplest approach.  Storing
+configuration data in volatile memory is also problematic since this
+data would not survive a reset or power cycle.
+
+<p>In summary, configuration data must persist through node resets,
+power cycles, or reprogramming, and then be restored afterward.  The
+ability to persist and restore configuration data in this manner is
+useful in many scenarios.
+
+<p><ul>
+
+<li><b>Calibration.</b> Calibration coefficients for sensors might be
+factory-configured and persisted, so they are not lost when power is
+removed for shipping or the node is reprogrammed post-calibration.
+For example, a hypothetical temperature sensor might have an offset
+and gain that must be calibrated, because these parameters are
+hardware-specific, and stored because they are needed to convert the
+output voltage into the more useful units of degrees Celcius.  The
+calibration data for such a sensor might look like:
+
+<pre>
+typedef struct calibration_config_t {
+  int16_t temp_offset;
+  int16_t temp_gain;
+} calibration_config_t;
+</pre>
+
+<li><b>Identification.</b> Device identification information, like
+IEEE-compliant MAC addresses or the TinyOS TOS_NODE_ID parameters are
+non-uniform across nodes although they are not hardware-specific, once
+they are assigned to a node, these values should be <em>sticky</em> in
+that they are persisted across reset, power cycle, and reprogramming
+operations (and not lost or reassigned to another node).
+
+<pre>
+typedef struct radio_config_t {
+  ieee_mac_addr_t mac;
+  uint16_t tos_node_id;
+} radio_config_t;
+</pre>
+
+<li><b>Location.</b> Node location data may be unknown at compile-time
+and only become available during deployment.  An application might,
+for example, store node coordinates as follows and update these values
+in the field:
+
+<pre>
+typedef struct coord_config_t {
+  uint16_t x;
+  uint16_t y;
+  uint16_t z;
+} coord_config_t;
+</pre>
+
+<li><b>Sensing.</b> Sensing and signal processing parameters like
+sample period, filter coefficients, and detection thresholds might be
+adjusted in the field.  The configuration data for such an application
+might look like:
+
+<pre>
+typedef struct sense_config_t {
+  uint16_t temp_sample_period_milli;
+  uint16_t temp_ema_alpha_numerator;
+  uint16_t temp_ema_alpha_denominator;
+  uint16_t temp_high_threshold;
+  uint16_t temp_low_threshold;
+} sense_config_t;
+</pre>
+
+</ul>
+
+<p>
+
+
+Now that we have discussed <i>why</i> one might use this type of
+storage, let's see <i>how</i> to use it.  We will implement a simple
+demo application that illustrates how to use the <code>Mount</code>
+and <code>ConfigStorage</code> abstractions.  A timer period will be
+read from flash, divided by two, and written back to flash.  An LED is
+toggled each time the timer fires.  But, before diving into code,
+let's discuss some high-level design considerations.
+
+<p>
+See <a href="../../../apps/tutorials/BlinkConfig/">
 <code>tinyos-2.x/apps/tutorials/BlinkConfig/</code></a> for the
 accompanying code.
 
-<p>This lesson shows how parameters, like the timer period, can be
-configured at runtime and persisted across node power cycles.  The
-ability to store configuration data is useful in many applications.
-For example, it may be necessary to store a node's coordinates which
-are only known after the node is deployed.  Let's walk through the
-steps to use the <code>ConfigStorage</code> abstraction:
+<p>
+
+Prior to its first usage, a volume does not contain any valid data.
+So, our code should detect the first usage of a volume and take any
+appropriate actions (e.g. preload it with default values).  Similarly,
+when the data layout of the volume changes (for example, if the
+application requires new or different configuration variables), then
+application code should detect this and take appropriate actions
+(e.g. migrate the old data to the new layout or erase the volume and
+reload the defaults).  These requirements suggest that we should have
+a way of keeping track of the volume version.  We will use a version
+number for this purpose (and will need to maintain a discipline of
+updating the version number when the data layout changes
+incompatibly).  Our configuration struct might have the following
+fields for the version number and blink period:
+
+<pre>
+typedef struct config_t {
+  uint16_t version;
+  uint16_t period;
+} config_t;
+</pre>
+
+<p>
+
 
 <ol>
 
@@ -222,8 +337,8 @@ ConfigStorageC component (e.g. <code>BlinkConfigAppC.nc</code>):
 module BlinkConfigC {
   uses {
     ...
-    interface Mount;
     interface ConfigStorage as Config;
+    interface Mount;
     ...
   }
 }
@@ -240,25 +355,20 @@ implementation {
   components new ConfigStorageC(VOLUME_CONFIGTEST); 
   ...
 
-  App.Mount      -> ConfigStorageC.Mount;
   App.Config     -> ConfigStorageC.ConfigStorage;
+  App.Mount      -> ConfigStorageC.Mount;
   ...
 }
 </pre>
 
 <li>Before the flash chip can be used, it must be mounted using the
-two-phase mount/mountDone command.  Here we show chaining how this
-might be chained into the boot sequence:
+two-phase mount/mountDone command.  Here we show how this might be
+chained into the boot sequence:
 
 <pre>
   event void Boot.booted() {
-    call AMControl.start();
-  }
+    conf.period = DEFAULT_PERIOD;
 
-  event void AMControl.startDone(error_t error) {
-    if (error != SUCCESS) {
-      call AMControl.start();
-    }
     if (call Mount.mount() != SUCCESS) {
       // Handle failure
     }
@@ -266,74 +376,107 @@ might be chained into the boot sequence:
 </pre>
 
 <li>If the Mount.mount succeeds, then the <code>Mount.mountDone</code>
-event will be signaled.  In this case, we call the
-<code>ConfigStore.mount</code> command from with the event handler:
+event will be signaled.  The following code shows how to check if the
+volume is valid, and if it is, how to initiate a read from the volume
+using the <code>ConfigStore.read</code> command.  If the volume is
+invalid, calling <code>Config.commit</code> will make it valid (this
+call is also used to flush buffered data to flash much like the UNIX
+fsync system call is supposed to flush buffered writes to disk):
 
 <pre>
   event void Mount.mountDone(error_t error) {
-    if (error != SUCCESS) {
-      // Handle failure
+    if (error == SUCCESS) {
+      if (call Config.valid() == TRUE) {
+        if (call Config.read(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
+          // Handle failure
+        }
+      }
+      else {
+        // Invalid volume.  Commit to make valid.
+        call Leds.led1On();
+        if (call Config.commit() == SUCCESS) {
+          call Leds.led0On();
+        }
+        else {
+          // Handle failure
+        }
+      }
     }
     else{
-      call Config.write(CONFIG_ADDR, &period, sizeof(period));
+      // Handle failure
     }
   }
 </pre>
 
-<li>Once mounted, the flash can be written:
+
+<li>If the read is successful, then a <code>Config.readDone</code>
+event will occur.  In this case, we first check for a successful read,
+and if successful, we then check the version number.  If the version
+number matches what we expected, we copy of the configuration data to
+a local variable, and adjust its values.  If there is a version
+mismatch, we set the value of the configuration information to a
+default value.  Finally, we call the the <code>Config.write</code>
+function:
 
 <pre>
-  event void Mount.mountDone(error_t error) {
-    if (error != SUCCESS) {
-      // Handle failure
+  event void Config.readDone(storage_addr_t addr, void* buf, 
+    storage_len_t len, error_t err) __attribute__((noinline)) {
+
+    if (err == SUCCESS) {
+      memcpy(&conf, buf, len);
+      if (conf.version == CONFIG_VERSION) {
+        conf.period = conf.period/2;
+        conf.period = conf.period > MAX_PERIOD ? MAX_PERIOD : conf.period;
+        conf.period = conf.period < MIN_PERIOD ? MAX_PERIOD : conf.period;
+      }
+      else {
+        // Version mismatch. Restore default.
+        call Leds.led1On();
+        conf.version = CONFIG_VERSION;
+        conf.period = DEFAULT_PERIOD;
+      }
+      call Leds.led0On();
+      call Config.write(CONFIG_ADDR, &conf, sizeof(conf));
     }
-    else{
-      call Config.write(CONFIG_ADDR, &period, sizeof(period));
+    else {
+      // Handle failure.
     }
   }
+
 </pre>
 
 <li>Data is not necessarily "written" to flash when
-<code>ConfigStore.write</code> is called.  To ensure data is persisted
-to flash, a <code>ConfigStore.commit</code> call is required:
+<code>ConfigStore.write</code> is called and
+<code>Config.writeDone</code> is signaled.  To ensure data is
+persisted to flash, a <code>ConfigStore.commit</code> call is
+required:
 
 <pre>
   event void Config.writeDone(storage_addr_t addr, void *buf, 
-    storage_len_t len, error_t result) {
+    storage_len_t len, error_t err) {
     // Verify addr and len
 
-    if (result == SUCCESS) {
-      // Note success
+    if (err == SUCCESS) {
+      if (call Config.commit() != SUCCESS) {
+        // Handle failure
+      }
     }
     else {
       // Handle failure
     }
-    if (call Config.commit() != SUCCESS) {
-      // Handle failure
-    }
   }
 </pre>
 
-<li>Finally, when the commit is complete, data can be read back from
-the flash:
+<li>Finally, when the <code>Config.commitDone</code> event is
+signaled, data has been durably written to flash and will survive a
+node power cycle:
 
 <pre>
-  event void Config.commitDone(error_t error) {
-    if (call Config.read(CONFIG_ADDR, &period2, sizeof(period2)) != SUCCESS) {
+  event void Config.commitDone(error_t err) {
+    call Leds.led0Off();
+    call Timer0.startPeriodic(conf.period);
+    if (err == SUCCESS) {
       // Handle failure
-    }
-  }
-
-  event void Config.readDone(storage_addr_t addr, void* buf, 
-    storage_len_t len, error_t result) __attribute__((noinline)) {
-    memcpy(&period2, buf, len);
-
-    if (period == period2) {
-      call Leds.led2On();
-    }
-
-    if (len == 2 && addr == CONFIG_ADDR) {
-      call Leds.led1On();
     }
   }
 </pre>
@@ -342,18 +485,160 @@ the flash:
 
 <h1>Logging Data</h1>
 
-See <a href="../../../apps/tests/storage/Log/">
-<code>tinyos-2.x/apps/tests/storage/Log/</code></a> for an example of
-code that uses the Log storage abstraction. Log is generally used for
-append-based data streams consisting of relatively small data items.
-It provides atomicity guarantees for data writes.
+Reliable (atomic) logging of events and small data items is a common
+application requirement.  Logged data should not be lost if a system
+crashes.  Logs can be either linear (stop logging when the volume is
+full) or circular (overwrite the least recently written data when the
+volume is full).
+
+<p>
+
+The TinyOS LogStorage abstraction supports these requirements. The log
+is record based: each call to LogWrite.append (see below) creates a
+new record.  On failure (a crash or power cycle), the log only loses
+whole records from the end of the log.  Additionally, once a circular
+log wraps around, log writes only lose whole records from the
+beginning of the log.
+
+<p>
+
+A demo application called <code>PacketParrot</code> shows how to use
+the <code>LogWrite</code> and <code>LogRead</code> abstractions.  A
+node writes received packets to a circular log and retransmits the
+logged packets (or at least the parts of the packets above the AM
+layer) when power is cycled.
+
+<p>
+
+See <a href="../../../apps/tutorials/PacketParrot/">
+<code>tinyos-2.x/apps/tutorials/PacketParrot/</code></a> for the
+accompanying code.
+
+<p>
+
+The application logs packets it receives from the radio to flash.  On
+a subsequent power cycle, the application transmits any logged
+packets, erases the log, and then continues to log packets again.  The
+red LED is on when the log is being erased.  The blue (yellow) LED
+turns on when a packet is received and turns off when a packet has
+been logged successfully.  The blue (yellow) LED remains on when
+packets are being received but are not logged (because the log is
+being erased).  The green LED flickers rapidly after a power cycle
+when logged packets are transmitted.
+
+
+<ol>
+
+<li>The first step when using the log is to decide what kind of data
+you want to store in the log.  In this case, we will declare a struct
+of the type:
+
+<pre>
+  typedef nx_struct logentry_t {
+    nx_uint8_t len;
+    message_t msg;
+  } logentry_t;
+</pre>
+
+<li>Unlike Config storage, Log storage does not require the volume to
+be explicitly mounted by the application.  Instead, a simple read
+suffices in which a buffer and the number of bytes to read are passed
+to <code>LogRead.read</code>:
+
+<pre>
+  event void AMControl.startDone(error_t err) {
+    if (err == SUCCESS) {
+      error_t e;
+      do {
+        e = call LogRead.read(&m_entry, sizeof(logentry_t));
+      } while (e != SUCCESS);
+    }
+    else {
+      call AMControl.start();
+    }
+  }
+</pre>
+
+<li>If the call to <code>LogRead.read</code> returns SUCCESS, then a
+<code>LogRead.readDone</code> event will be signaled shortly
+thereafter.  When that happens, we check if the data that was returned
+is the same length as what we expected.  If it is, we use the data but
+if not, we assume that either the log is empty or that we have lost
+synchronization, so the log is erased:
+
+<pre>
+
+  event void LogRead.readDone(void* buf, storage_len_t len, error_t err) {
+    if ( (len == sizeof(logentry_t)) && (buf == &m_entry) ) {
+      call Send.send(&m_entry.msg, m_entry.len);
+      call Leds.led1On();
+    }
+    else {
+      error_t e;
+      do {
+        e = call LogWrite.erase();
+      } while (e != SUCCESS);
+      call Leds.led0On();
+    }
+  }
+
+</pre>
+
+<li>The <code>PacketParrot</code> application stores packets received
+over the radio to flash by first saving the <code>message_t</code> and
+its length to a <code>log_entry_t</code> struct and then calling
+<code>LogWrite.append</code>:
+
+<pre>
+  event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
+    call Leds.led2On();
+    if (!m_busy) {
+      m_busy = TRUE;
+      m_entry.len = len;
+      m_entry.msg = *msg;
+      if (call LogWrite.append(&m_entry, sizeof(logentry_t)) != SUCCESS) {
+        m_busy = FALSE;
+      }
+    }
+    return msg;
+  }
+</pre>
+
+<li>If the <code>LogWrite.write</code> returned SUCCESS, then a short
+time later, a <code>LogWrite.appendDone</code> will be signaled.  This
+event returns the details of the write including the source buffer,
+length of data written, whether any records were lost (if this is a
+circular buffer) and any error code.  If no errors occurred, then the
+data was written to flash with atomicity, consistency, and durability
+guarantees (and will survive node crashes and reboots):
+
+<pre>
+  event void LogWrite.appendDone(void* buf, storage_len_t len, 
+                                 bool recordsLost, error_t err) {
+    m_busy = FALSE;
+    call Leds.led2Off();
+  }
+
+</pre>
+
+</ol>
 
 <h1>Storing Large Objects</h1>
 
+Block storage is generally used for storing large objects that cannot
+easily fit in RAM.  Block is a low-level system interface that
+requires care when using since it is essentially a write-once model of
+storage.  Rewriting requires an erase which is time-consuming, occurs
+at large granularity (e.g. 256 B to 64 KB), and can only happen a
+limited number of times (e.g. 10,000 to 100,000 times is typical).
+The TinyOS network reprogramming system uses Block storage to store
+program images.
+
+<p>
+
 See <a href="../../../apps/tests/storage/Block/">
 <code>tinyos-2.x/apps/tests/storage/Block/</code></a> for an example
-of code that uses the Block storage abstraction. Block is generally
-used for storing large objects that cannot easily fit in RAM.
+of code that uses the Block storage abstraction.
 
 <h1>Conclusions</h1>
 
