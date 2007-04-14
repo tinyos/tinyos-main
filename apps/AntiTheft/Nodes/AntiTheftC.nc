@@ -1,4 +1,4 @@
-// $Id: AntiTheftC.nc,v 1.2 2007-04-02 20:38:05 idgay Exp $
+// $Id: AntiTheftC.nc,v 1.3 2007-04-14 00:35:07 gtolle Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -25,6 +25,7 @@ module AntiTheftC
     interface DisseminationValue<settings_t> as SettingsValue;
     interface Send as AlertRoot;
     interface StdControl as CollectionControl;
+    interface StdControl as DisseminationControl;
     interface SplitControl as RadioControl;
     interface LowPowerListening;
     interface AMSend as TheftSend;
@@ -138,6 +139,7 @@ implementation
   event void RadioControl.startDone(error_t ok) {
     if (ok == SUCCESS)
       {
+	call DisseminationControl.start();
 	call CollectionControl.start();
 	call LowPowerListening.setLocalDutyCycle(200);
       }

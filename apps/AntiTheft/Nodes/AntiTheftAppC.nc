@@ -1,4 +1,4 @@
-// $Id: AntiTheftAppC.nc,v 1.2 2007-04-02 20:38:05 idgay Exp $
+// $Id: AntiTheftAppC.nc,v 1.3 2007-04-14 00:35:07 gtolle Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -46,9 +46,11 @@ implementation
   AntiTheftC.ReadStream -> AccelXStreamC;
   AntiTheftC.Mts300Sounder -> SounderC;
 
-  /* Instantiate and wire our settings dissemination service */
-  components new DisseminatorC(settings_t, DIS_SETTINGS),
+  components DisseminationC;
+  AntiTheftC.DisseminationControl -> DisseminationC;
 
+  /* Instantiate and wire our settings dissemination service */
+  components new DisseminatorC(settings_t, DIS_SETTINGS);
   AntiTheftC.SettingsValue -> DisseminatorC;
 
   /* Instantiate and wire our collection service for theft alerts */

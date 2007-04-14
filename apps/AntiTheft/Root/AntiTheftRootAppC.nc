@@ -1,4 +1,4 @@
-// $Id: AntiTheftRootAppC.nc,v 1.3 2007-04-04 22:06:22 idgay Exp $
+// $Id: AntiTheftRootAppC.nc,v 1.4 2007-04-14 00:35:07 gtolle Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -38,6 +38,8 @@ implementation
   AntiTheftRootC.LowPowerListening -> Radio;
   AntiTheftRootC.Leds -> LedsC;
 
+  components DisseminationC;
+  AntiTheftRootC.DisseminationControl -> DisseminationC;
   /* Next, instantiate and wire a disseminator (to send settings) and a
      serial receiver (to receive settings from the PC) */
   components new DisseminatorC(settings_t, DIS_SETTINGS),
