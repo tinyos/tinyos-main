@@ -1,0 +1,3 @@
+COMPONENT=TestUserButtonAppC
+
+include $(MAKERULES)
