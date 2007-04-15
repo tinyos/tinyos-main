@@ -34,7 +34,7 @@
  * This component provides the Resource, ResourceRequested, ArbiterInfo, 
  * and ResourceDefaultOwner interfaces and uses the ResourceConfigure interface as
  * described in TEP 108.  It provides arbitration to a shared resource.
- * An Queue is used to keep track of which users have put
+ * A Queue is used to keep track of which users have put
  * in requests for the resource.  Upon the release of the resource by one
  * of these users, the queue is checked and the next user
  * that has a pending request will ge granted control of the resource.  If
@@ -42,13 +42,14 @@
  * interface gains access to the resource, and holds onto it until
  * another user makes a request.
  *
- * @param <b>controller_id</b> -- The unique id of the resource being arbitrated
+ * @param <b>default_owner_id</b> -- The id of the default owner of this 
+ *        resource
  * 
  * @author Kevin Klues (klues@tkn.tu-berlin.de)
  * @author Philip Levis
  */
  
-generic module ArbiterP(uint8_t controller_id) {
+generic module ArbiterP(uint8_t default_owner_id) {
   provides {
     interface Resource[uint8_t id];
     interface ResourceRequested[uint8_t id];
@@ -64,10 +65,10 @@ generic module ArbiterP(uint8_t controller_id) {
 implementation {
 
   enum {RES_CONTROLLED, RES_GRANTING, RES_IMM_GRANTING, RES_BUSY};
-  enum {CONTROLLER_ID = controller_id};
+  enum {default_owner_id = default_owner_id};
 
   uint8_t state = RES_CONTROLLED;
-  norace uint8_t resId = CONTROLLER_ID;
+  norace uint8_t resId = default_owner_id;
   norace uint8_t reqResId;
   
   task void grantedTask();
@@ -112,7 +113,7 @@ implementation {
           post grantedTask();
         }
         else {
-          resId = CONTROLLER_ID;
+          resId = default_owner_id;
           state = RES_CONTROLLED;
           signal ResourceDefaultOwner.granted();
         }
@@ -124,7 +125,7 @@ implementation {
 
   async command error_t ResourceDefaultOwner.release() {
     atomic {
-      if(resId == CONTROLLER_ID) {
+      if(resId == default_owner_id) {
         if(state == RES_GRANTING) {
           post grantedTask();
           return SUCCESS;
@@ -166,7 +167,7 @@ implementation {
   }
 
   async command uint8_t ResourceDefaultOwner.isOwner() {
-    return call Resource.isOwner[CONTROLLER_ID]();
+    return call Resource.isOwner[default_owner_id]();
   }
   
   task void grantedTask() {

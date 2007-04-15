@@ -41,8 +41,6 @@
  * there are no pending requests, then the resource becomes idle and any
  * user can put in a request and immediately receive access to the
  * Resource.
- *
- * @param <b>resourceName</b> -- The name of the Resource being shared
  * 
  * @author Kevin Klues (klues@tkn.tu-berlin.de)
  * @author Philip Levis
