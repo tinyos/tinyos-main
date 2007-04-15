@@ -51,8 +51,8 @@
 
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-02-04 19:56:51 $ 
+ * $Revision: 1.6 $
+ * $Date: 2007-04-15 20:39:48 $ 
  * ======================================================================== 
  */
  
@@ -60,16 +60,16 @@
  * Please refer to TEP 108 for more information about this component and its
  * intended use.<br><br>
  *
- * This component provides the Resource, ArbiterInfo, and Resource
- * Controller interfaces and uses the ResourceConfigure interface as
+ * This component provides the Resource, ArbiterInfo, and ResourceDefaultOwner
+ * interfaces and uses the ResourceConfigure interface as
  * described in TEP 108.  It provides arbitration to a shared resource in
- * an FCFS fashion.  An array is used to keep track of which users have put
- * in requests for the resource.  Upon the release of the resource by one
- * of these users, the array is checked and the next user (in FCFS order)
+ * a Round Robin fashion.  An array is used to keep track of which users have 
+ * put in requests for the resource.  Upon the release of the resource by one
+ * of these users, the array is checked and the next user (in Round Robin order)
  * that has a pending request will ge granted control of the resource.  If
- * there are no pending requests, then the resource becomes idle and any
- * user can put in a request and immediately receive access to the
- * Resource.
+ * there are no pending requests, then the resource is granted to the default 
+ * user.  If a new request is made, the default user will release the resource, 
+ * and it will be granted to the requesting cleint.
  *
  * @param <b>resourceName</b> -- The name of the Resource being shared
  * 
