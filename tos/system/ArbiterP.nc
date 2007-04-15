@@ -42,7 +42,7 @@
  * interface gains access to the resource, and holds onto it until
  * another user makes a request.
  *
- * @param <b>resourceName</b> -- The name of the Resource being shared
+ * @param <b>controller_id</b> -- The unique id of the resource being arbitrated
  * 
  * @author Kevin Klues (klues@tkn.tu-berlin.de)
  * @author Philip Levis
