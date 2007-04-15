@@ -60,8 +60,8 @@
  * predefined arbitration policy.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:23:15 $
+ * @version $Revision: 1.5 $
+ * @date $Date: 2007-04-15 20:05:03 $
  */
 
 interface Resource {
@@ -92,11 +92,20 @@ interface Resource {
   event void granted();
    
   /**
-  * Release a shared resource you previously acquired.
+  * Release a shared resource you previously acquired.  
   *
   * @return SUCCESS The resource has been released <br>
   *         FAIL You tried to release but you are not the
   *              owner of the resource 
+  *
+  * @note This command should never be called between putting in a request 	  
+  *       and waiting for a granted event.  Doing so will result in a
+  *       potential race condition.  There are ways to guarantee that no
+  *       race will occur, but they are clumsy and overly complicated.
+  *       Since it doesn't logically make since to be calling
+  *       <code>release</code> before receiving a <code>granted</code> event, 
+  *       we have opted to keep thing simple and warn you about the potential 
+  *       race.
   */
   async command error_t release();
 
