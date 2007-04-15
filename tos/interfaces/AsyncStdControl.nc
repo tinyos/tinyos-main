@@ -43,8 +43,8 @@
 
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:14 $ 
+ * $Revision: 1.5 $
+ * $Date: 2007-04-15 21:11:38 $ 
  * ======================================================================== 
  */ 
 
@@ -67,7 +67,8 @@ interface AsyncStdControl
   /**
    * Start this component and all of its subcomponents.
    *
-   * @return SUCCESS if the component was successfully turned on<br>
+   * @return SUCCESS if the component was either already on or was 
+   *         successfully turned on<br>
    *         FAIL otherwise
    */
   async command error_t start();
@@ -76,7 +77,8 @@ interface AsyncStdControl
    * Stop the component and any pertinent subcomponents (not all
    * subcomponents may be turned off due to wakeup timers, etc.).
    *
-   * @return SUCCESS if the component was successfully turned off<br>
+   * @return SUCCESS if the component was either already off or was 
+   *         successfully turned off<br>
    *         FAIL otherwise
    */
   async command error_t stop();

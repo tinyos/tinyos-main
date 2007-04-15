@@ -1,4 +1,4 @@
-// $Id: TinyError.h,v 1.4 2006-12-12 18:23:47 vlahan Exp $
+// $Id: TinyError.h,v 1.5 2007-04-15 21:11:38 klueska Exp $
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -23,7 +23,7 @@
 /**
  * @author Phil Levis
  * @author David Gay
- * Revision:  $Revision: 1.4 $
+ * Revision:  $Revision: 1.5 $
  *
  * Defines global error codes for error_t in TinyOS.
  */
@@ -41,6 +41,7 @@ enum {
   EINVAL         = 6,           // An invalid parameter was passed
   ERETRY         = 7,           // A rare and transient failure: can retry
   ERESERVE       = 8,           // Reservation required before usage
+  EALREADY       = 9,           // The device state you are requesting is already set
 };
 
 typedef uint8_t error_t __attribute__((combine(ecombine)));
