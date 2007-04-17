@@ -79,7 +79,7 @@ module RedMacP {
         interface GeneralIO as Led1;
         interface GeneralIO as Led2;
         interface GeneralIO as Led3;        
-*/      
+*/  
 #ifdef REDMAC_DEBUG
         interface SerialDebug;
 #endif
@@ -120,7 +120,7 @@ implementation
         BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
         PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
         PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
-        TIME_CORRECTION=15,           // difference between sendSFD and rxSFD, to do: measure!
+        TIME_CORRECTION=16,           // difference between txSFD and rxSFD: 475us
                 
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
