@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-04-05 06:38:45 $
+ * $Revision: 1.6 $
+ * $Date: 2007-04-17 12:57:59 $
  * ========================================================================
  */
 
@@ -73,6 +73,9 @@ implementation {
   void TransmitNextByte();
   void ReceiveNextByte(uint8_t data);
 
+  typedef enum {
+      SFD_OFFSET = sizeof(message_header_t) - sizeof(message_radio_header_t) + 2
+  } pserializer_constants_t;
   
   /* Radio Init  */
   command error_t Init.init(){
@@ -114,18 +117,21 @@ implementation {
   void TransmitNextByte() {
     message_radio_header_t* header = getHeader((message_t*) txBufPtr);
     if (byteCnt < header->length + sizeof(message_header_t) ) {  // send (data + header), compute crc
-        if(byteCnt == sizeof(message_header_t)) {
+        if(byteCnt == SFD_OFFSET) {
             signal RadioTimeStamping.transmittedSFD(0, (message_t*)txBufPtr);
         }
         crc = crcByte(crc, ((uint8_t *)(txBufPtr))[byteCnt]);
         call RadioByteComm.txByte(((uint8_t *)(txBufPtr))[byteCnt++]);
-    } else if (byteCnt == (header->length + sizeof(message_header_t))) {
+    }
+    else if (byteCnt == (header->length + sizeof(message_header_t))) {
       ++byteCnt;
       call RadioByteComm.txByte((uint8_t)crc);
-    } else if  (byteCnt == (header->length + sizeof(message_header_t)+1)) {
+    }
+    else if  (byteCnt == (header->length + sizeof(message_header_t)+1)) {
       ++byteCnt;
       call RadioByteComm.txByte((uint8_t)(crc >> 8));
-    } else { /* (byteCnt > (header->length + sizeof(message_header_t)+1)) */
+    }
+    else { /* (byteCnt > (header->length + sizeof(message_header_t)+1)) */
         call PhyPacketTx.sendFooter();
     }
   }
@@ -160,8 +166,10 @@ implementation {
   void ReceiveNextByte(uint8_t data) { 
     message_radio_footer_t* footer = getFooter((message_t*)rxBufPtr);
     ((uint8_t *)(rxBufPtr))[byteCnt++] = data;
-    if ( byteCnt < getHeader(rxBufPtr)->length + sizeof(message_radio_header_t) ) {
-      if(byteCnt == sizeof(message_radio_header_t)) signal RadioTimeStamping.receivedSFD(0);
+    if(byteCnt < getHeader(rxBufPtr)->length + sizeof(message_radio_header_t)) {
+      if(byteCnt == SFD_OFFSET) {
+          signal RadioTimeStamping.receivedSFD(0);
+      }
       crc = crcByte(crc, data);
       if (getHeader(rxBufPtr)->length > TOSH_DATA_LENGTH) { 
         // this packet is surely corrupt, so whatever...
