@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:13 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-18 15:12:45 $
  */
 
 #include <Stm25p.h>
@@ -290,7 +290,7 @@ implementation {
 	read_addr &= ~BLOCK_MASK;
       }
       else {
-	buf = m_log_state[ client ].buf;
+	buf = m_log_state[ client ].buf + m_log_state[ client ].len - m_len;
 	// truncate if record is shorter than requested length
 	if ( m_log_info[ client ].remaining < m_len )
 	  len = m_log_info[ client ].remaining;
