@@ -32,7 +32,7 @@
 /**
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.7 $ $Date: 2007-04-12 17:11:11 $
+ * @version $Revision: 1.8 $ $Date: 2007-04-18 23:12:36 $
  */
 
 #include "Timer.h"
@@ -177,7 +177,11 @@ implementation {
                            ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
                            ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
                            ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |
-                           ( 0 << CC2420_MDMCTRL0_AUTOACK ) |  // we now SACK
+#if defined(CC2420_HW_ACKNOWLEDGEMENTS) && !defined(CC2420_NO_ACKNOWLEDGEMENTS)
+                           ( 1 << CC2420_MDMCTRL0_AUTOACK ) |
+#else
+                           ( 0 << CC2420_MDMCTRL0_AUTOACK ) |
+#endif
                            ( 2 << CC2420_MDMCTRL0_PREAMBLE_LENGTH ) );
                            
       call RXCTRL1.write( ( 1 << CC2420_RXCTRL1_RXBPF_LOCUR ) |

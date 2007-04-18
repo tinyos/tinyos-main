@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:12 $
+ * @version $Revision: 1.6 $ $Date: 2007-04-18 23:12:36 $
  */
 
 module CC2420ReceiveP {
@@ -233,8 +233,8 @@ implementation {
     case S_RX_PAYLOAD:
       call CSN.set();
       
-#ifndef CC2420_NO_ACKNOWLEDGEMENTS
-      // Sorry about the preprocessing stuff. BaseStation depends on it.
+#if !defined(CC2420_NO_ACKNOWLEDGEMENTS) && !defined(CC2420_HW_ACKNOWLEDGEMENTS)
+      // Sorry about the preprocessing stuff. BaseStation and hw acks depends on it.
       if (((( header->fcf >> IEEE154_FCF_ACK_REQ ) & 0x01) == 1) 
           && (header->dest == call amAddress())
           && ((( header->fcf >> IEEE154_FCF_FRAME_TYPE ) & 7) == IEEE154_TYPE_DATA)) {
