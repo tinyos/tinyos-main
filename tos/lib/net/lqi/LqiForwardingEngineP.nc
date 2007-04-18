@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.7 2007-04-17 11:43:37 scipio Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.8 2007-04-18 17:11:29 scipio Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -271,7 +271,7 @@ implementation {
       dbg("LQI,LQIDeliver", "LQI Root is receiving packet from node %hu @%s\n", getHeader(msg)->originaddr, sim_time_string());
       return signal Receive.receive[id](msg, payload, len);
     }
-    else if (call AMPacket.destination(msg) != AMPacket.address()) {
+    else if (call AMPacket.destination(msg) != call AMPacket.address()) {
       return msg;
     }
     else if (signal Intercept.forward[id](msg, payload, len)) {
