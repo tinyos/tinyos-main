@@ -1,4 +1,4 @@
-// $Id: CC1000Const.h,v 1.4 2006-12-12 18:23:05 vlahan Exp $
+// $Id: CC1000Const.h,v 1.5 2007-04-18 21:49:06 idgay Exp $
 
 /* -*- Mode: C; c-basic-indent: 2; indent-tabs-mode: nil -*- */ 
 /*									tab:4
@@ -243,7 +243,7 @@ enum {
 #endif
 
 #ifndef CC1K_DEF_PRESET
-#define CC1K_DEF_PRESET	(CC1K_914_077_MHZ)
+#define CC1K_DEF_PRESET	(CC1K_434_845_MHZ)
 #endif 
 
 static const_uint8_t CC1K_Params[6][20] = {
