@@ -26,10 +26,9 @@ different type of data to be stored.
 
 <li>Store configuration data that survives a power cycle.
 
-<li>Provide a link to example code using the logging abstraction.
+<li>Store packets using the logging abstraction and retransmit the
+overheard packets after a power cycle.
 
-<li>Provide a link to example code use large objects storage in
-non-volatile flash.
 
 </ul>
 
@@ -97,13 +96,14 @@ specify both the <i>interfaces</i> your application
 
 <p>
 
-<h2>Naming Wrappers</h2>
+<h2>Implementations</h2>
 
-<p>The preceding components are actually <em>naming wrappers</em>.
-Since TinyOS supports multiple platforms, each of which might have its
-own implementation of the storage drivers, platform-specific naming
-wrappers are used to bridge the general storage interfaces to their
-underlying, platform-specific implementations.
+<p>The preceding components are actually <em>chip-specific
+implementations</em> of these abstractions.  Since TinyOS supports
+multiple platforms, each of which might have its own implementation of
+the storage drivers, you may need to be aware of platform-specific
+constants or other details (e.g. erase size) that can couple a storage
+client to the underlying chip-specific implementation.
 
 <p>For example, the preceding links are all specific to the ST
 Microelectronics M25Pxx family of flash memories used in the Telos and
@@ -114,7 +114,7 @@ what these components are called because your code must list them in a
 <code>components</code> declaration.
 
 <p>If you are curious, the following links will let you browse the
-naming wrappers for the Atmel AT45DB family of flash memories used in
+implementations of the Atmel AT45DB family of flash memories used in
 the Mica2/MicaZ motes:
 
 <p>
@@ -128,8 +128,8 @@ the Mica2/MicaZ motes:
 
 </ul>
 
-<p>Finally, the following links will let you browse the naming
-wrappers for the Intel imote2 flash memory:
+<p>Finally, the following links will let you browse the implementation
+for the Intel imote2 flash memory:
 
 <p>
 <ul>
@@ -329,9 +329,10 @@ ConfigStorageC component (e.g. <code>BlinkConfigAppC.nc</code>):
 #include "StorageVolumes.h"
 </pre>
 
-<li>Config storage <em>uses</em> the <code>Mount</code> and
-<code>ConfigStorage</code> interfaces (note that we rename
-<code>ConfigStorage</code> to <code>Config</code>).
+<li>BlinkConfigC, the application code for this simple demo,
+<em>uses</em> the <code>Mount</code> and <code>ConfigStorage</code>
+interfaces (note that we rename <code>ConfigStorage</code> to
+<code>Config</code>).
 
 <pre>
 module BlinkConfigC {
@@ -548,10 +549,9 @@ to <code>LogRead.read</code>:
 <pre>
   event void AMControl.startDone(error_t err) {
     if (err == SUCCESS) {
-      error_t e;
-      do {
-        e = call LogRead.read(&m_entry, sizeof(logentry_t));
-      } while (e != SUCCESS);
+      if (call LogRead.read(&m_entry, sizeof(logentry_t)) != SUCCESS) {
+        // Handle error
+      }
     }
     else {
       call AMControl.start();
