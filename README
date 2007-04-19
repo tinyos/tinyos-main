@@ -1,6 +1,6 @@
 This contains the TinyOS 2.0 source code as of
 
-$Date: 2006-12-12 18:22:48 $
+$Date: 2007-04-19 06:25:21 $
 
 This tree includes the TinyOS 2.0 documentation in tinyos-2.x/doc; 
 you can also find the documentation online at:
@@ -15,7 +15,8 @@ doc: Documentation
   index.html: Index file to all documentation
   txt: Text files (TEPs)
   html: HTML files (TEPs, installation)
-  html/tutorial: Tutorials
+    tutorial: Tutorials
+  pdf: PDFs of larger documents, such as the TinyOS Programming Manual
 
 support: Non-nesC code for using TinyOS nodes
   make: TinyOS make system
@@ -36,11 +37,21 @@ tos: TinyOS source code (nesC, C)
   chips: Chip-specific code
   interfaces: Core system interfaces
   lib: Extensions and larger common subsystems
+    byte_radio: General radio stack for byte-level radios
+    net: Network (multihop protocols)
+      ctp: Collection tree protocol
+      le: Link estimator
+      lqi: LQI-based collection for CC2420 platforms
+    power: Power management component library
+    printf: Printing small text messages to serial port
+    serial: Serial communication
+    timer: Timer component library
+    tossim: TOSSIM simulator
   platforms: Platform-specific code
   sensorboards: Sensorboard drivers
   system: Core system components
   types: Core system data types (header files)
 
-You can find documentation for the 2.0.0 release online at:
+You can find documentation for the 2.0.1 release online at:
 http://www.tinyos.net/tinyos-2.x/doc/
 

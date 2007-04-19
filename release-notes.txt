@@ -1,0 +1,19 @@
+These release notes are as of: $Date: 2007-04-19 06:25:21 $
+
+2.0.1:
+  Added low-power cc2420 stack as default on relevant platforms
+  Added lib/printf (simple serial messages)
+  Added lib/net/lqi (LQI-based collection layer for CC2420 plat forms)
+  Added sensorboards/mts300 (mica sensor board)
+  Added noise modeling to TOSSIM (captures temporal correlation)
+  Added TEPs
+  Added tutorials
+  Fixed lockup bug in atmega128 SPI stack (0-length writes)
+  Fixed lockup bug in atmega128 I2C stack (power management)
+  Fixed cancellation bug in active message layers (no sendDone)
+  Fixed errors in tutorial text
+  Fixed interface errors in dissemination
+  Numerous optimizations and performance improvements
+
+
+
