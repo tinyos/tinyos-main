@@ -1,19 +1,24 @@
-These release notes are as of: $Date: 2007-04-19 06:25:21 $
+These release notes are as of: $Date: 2007-04-19 23:08:12 $
 
 2.0.1:
   Added low-power cc2420 stack as default on relevant platforms
   Added lib/printf (simple serial messages)
-  Added lib/net/lqi (LQI-based collection layer for CC2420 plat forms)
+  Added lib/net/lqi (LQI-based collection layer for CC2420 platforms)
   Added sensorboards/mts300 (mica sensor board)
   Added noise modeling to TOSSIM (captures temporal correlation)
   Added TEPs
   Added tutorials
-  Fixed lockup bug in atmega128 SPI stack (0-length writes)
-  Fixed lockup bug in atmega128 I2C stack (power management)
+  Changes to Resource management interfaces and components
+  Change to atmega128 ADC: output is no longer left-justified
   Fixed cancellation bug in active message layers (no sendDone)
   Fixed errors in tutorial text
   Fixed interface errors in dissemination
+  Fixed lockup bug in atmega128 streaming reads
+  Fixed lockup bug in atmega128 SPI stack (0-length writes)
+  Fixed lockup bug in atmega128 I2C stack (power management)
+  Fixed memory access bugs in serial stack and AM queue (from John Regehr)
+  Fixed TMote sleep power consumption for newest RHoS nodes
+  New atmega128 timer stack fixes mica-family timer problems
   Numerous optimizations and performance improvements
-
-
+  Numerous additional bug fixes
 
