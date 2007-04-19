@@ -64,10 +64,9 @@ implementation {
 
   event void AMControl.startDone(error_t err) {
     if (err == SUCCESS) {
-      error_t e;
-      do {
-        e = call LogRead.read(&m_entry, sizeof(logentry_t));
-      } while (e != SUCCESS);
+      if (call LogRead.read(&m_entry, sizeof(logentry_t)) != SUCCESS) {
+	// Handle error.
+      }
     }
     else {
       call AMControl.start();
@@ -97,11 +96,10 @@ implementation {
   event void Send.sendDone(message_t* msg, error_t err) {
     call Leds.led1Off();
     if ( (err == SUCCESS) && (msg == &m_entry.msg) ) {
-      error_t e;
       call Packet.clear(&m_entry.msg);
-      do {
-        e = call LogRead.read(&m_entry, sizeof(logentry_t));
-      } while (e != SUCCESS);
+      if (call LogRead.read(&m_entry, sizeof(logentry_t)) != SUCCESS) {
+	// Handle error.
+      }
     }
     else {
       call Timer0.startOneShot(INTER_PACKET_INTERVAL);
