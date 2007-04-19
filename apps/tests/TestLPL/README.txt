@@ -11,9 +11,11 @@ radios. To compile for motes with CC2420 radios, you must do:
   env CFLAGS="-I%T/chips/cc2420_lpl -DLOW_POWER_LISTENING" make <platform>
 
 This application blinks LED 0 every time it sends a message, and toggles
-LED 1 every time it receives a message.
+LED 1 every time it receives a message. If this application is
+working correctly (see caveat about timing below), you should see 
+both nodes toggling LED 1.
 
-It's low-power-listening settings are as follows (repeating every 256s):
+Its low-power-listening settings are as follows (repeating every 256s):
 
 0-32s:     receive: fully on
            send: every second, to fully on listener
