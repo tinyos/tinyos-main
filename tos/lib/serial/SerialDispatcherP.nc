@@ -1,4 +1,4 @@
-//$Id: SerialDispatcherP.nc,v 1.4 2006-12-12 18:23:31 vlahan Exp $
+//$Id: SerialDispatcherP.nc,v 1.5 2007-04-19 22:45:47 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -102,13 +102,21 @@ implementation {
       return EBUSY;
     }
 
-    sendState = SEND_STATE_DATA;
-    sendId = id;
-    sendCancelled = FALSE;
     atomic {
+      sendIndex = call PacketInfo.offset[id]();
+      if (sendIndex > sizeof(message_header_t)) {
+	return ESIZE;
+      }
+      
       sendError = SUCCESS;
       sendBuffer = (uint8_t*)msg;
-      sendIndex = call PacketInfo.offset[id]();
+      sendState = SEND_STATE_DATA;
+      sendId = id;
+      sendCancelled = FALSE;
+      // If something we're starting past the header, something is wrong
+      // Bug fix from John Regehr
+
+
       // sendLen is where in the buffer the packet stops.
       // This is the length of the packet, plus its start point
       sendLen = call PacketInfo.dataLinkLength[id](msg, len) + sendIndex;
