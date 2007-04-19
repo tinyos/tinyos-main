@@ -31,28 +31,60 @@ This demo is written for mica2 or micaz motes using the mts300 sensor
 board.
 
 The code in the Nodes directory should be installed on the motes
-detecting theft. Each mote should have a separate id, and a mts300
-sensor board.  The code in the Root directory should be installed on a
-mote connected to the PC using a programming board. It talks to the java
-GUI, forwarding settings from the PC to the sensor network, and
-forwarding theft alerts from the sensor network to the PC.
+detecting theft. Each mote should have a separate id, and a mts31n0 or
+mts300 sensor board.  The code in the Root directory should be installed
+on a mote connected to the PC using a programming board. It talks to the
+java GUI, forwarding settings from the PC to the sensor network, and
+forwarding theft alerts from the sensor network to the PC. See below for
+detailed usage instructions.
 
 Tools:
 
 The java directory contains a control GUI for the antitheft demo app.
-To run it, change to the java subdirectory and type:
-  make # Unecessary if antitheft.jar exists
-  java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<mote>
-  # e.g., java net.tinyps.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
-  # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:telosb
-  ./run
 
-The buttons and text field on the right allow you to change the theft detection
-and reporting settings. The interval text box changes the interval at which
-motes check for theft (default is every second). Changes are only sent to the
-mote network when you press the Update button. Finally, if you've selected
-the Server theft report option, the message area will report received theft
-messages.
+Usage:
+
+The following instructions will get you started with the AntiTheft demo
+(the instructions are for mica2 motes, replace mica2 with micaz if using
+micaz motes)
+
+1. Compile the root and node code for the antitheft application for your
+   platform (mica2 or micaz):
+
+    $ (cd Nodes; make mica2)
+    $ (cd Root; make mica2)
+
+2. Install the root code on a mote with a distinct identifier (e.g., 0):
+
+    $ (cd Root; make mica2 reinstall.0 <your usual installation options>)
+    # For instance: (cd Root; make mica2 reinstall.0 mib510,/dev/ttyUSB0)
+
+3. Install the node code on some number of mica2 motes, giving each mote
+   a distinct id.
+
+    $ (cd Nodes; make mica2 reinstall.N <your usual installation options>)
+    # For instance: (cd Nodes; make mica2 reinstall.22 mib510,/dev/ttyUSB0)
+
+4. Put some mts310 sensor boards on the non-root mica2 motes. You can use
+   mts300 boards instead, but then the acceleration detection will not work.
+
+5. Connect the root mica2 mote to your PC and switch on all motes.
+
+6. Compile and run the java application. The text below assumes your 
+   serial port is /dev/ttyS0, replace with the actual port you are using
+   (e.g., COM3 on Windows or /dev/ttyUSB0 on Linux)
+
+   $ cd java
+   $ make # Unecessary if antitheft.jar exists
+   $ java net.tinyos.sf.SerialForwarder -comm serial@/dev/ttyS0:mica2
+   $ ./run # start the graphical user interface
+
+7. The buttons and text field on the right allow you to change the theft
+   detection and reporting settings. The interval text box changes the
+   interval at which motes check for theft (default is every
+   second). Changes are only sent to the mote network when you press the
+   Update button. Finally, if you've selected the Server theft report
+   option, the message area will report received theft messages.
 
 Known bugs/limitations:
 
@@ -65,4 +97,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.4 2007-04-04 22:36:34 idgay Exp $
+$Id: README.txt,v 1.5 2007-04-19 20:50:47 idgay Exp $
