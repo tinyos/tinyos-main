@@ -1,23 +1,25 @@
 NAME=tinyos
-VERSION=2.0.0
+VERSION=2.0.1
 
 cd ../..
 rm -rf $NAME-$VERSION
 tools/release/extractor $NAME-$VERSION <<'EOF' | gzip >../$NAME-$VERSION.tar.gz
-!^./apps/tests/(eyesIFX|mica2|msp430|RadioStress|TestAlarm|TestAMOnOff|TestAMService|TestBroadcast|TestCollection|TestPowerManager|TestPowerup|TestPrintf|TestRadioPM|TestScheduler|TestSerialBandwidth|TestSleep|TestTimerSync|TestTreeRouting|TestTrickleTimer)
+!^./apps/tests/(eyesIFX|mica2|msp430|RadioStress|TestAlarm|TestAMOnOff|TestAMService|TestBroadcast|TestCollection|TestMultihopLqi|TestOscilloscopeLQI|TestPowerManager|TestPowerup|TestPrintf|TestRadioPM|TestScheduler|TestSerialBandwidth|TestSharedResource|TestSimTimers|TestSleep|TestTimerSync|TestTreeRouting|TestTrickleTimer)
 !^/apps/(BlinkAlarm|BlinkMSP430|BlinkTask|BlinkToRadio|Test|TestADC|TestArbiter|TestCC2420|TestRadio|TestSPI|TestScheduler|TestSchedulerTemp|TestSerial)
 !^./doc
 !^./overall-todo.txt
 !^./support/make/Makelocal
 !^./support/make/btnode3.target
-!^./support/make/telosa.target
-!^./tools
-!^./tos/chips/cc1000_pm
+!^./tests
+!^./tos/chips/Atmega128
 !^./tos/chips/cc2420_pm
+!^./tos/chips/cc1000_pm
+!^./tos/lib/adc
+!^./tos/lib/ByteRadio
 !^./tos/lib/deluge
-!^./tos/lib/printf
+!^./tos/lib/net/collection
+!^./tos/lib/oski
 !^./tos/platforms/btnode3
-!^./tos/sensorboards/mts300
 !/.cvsignore
 !/CVS/
 !/CVS$
@@ -26,6 +28,5 @@ tools/release/extractor $NAME-$VERSION <<'EOF' | gzip >../$NAME-$VERSION.tar.gz
 !/build$
 !#
 !.class$
-!^./tos/platforms/telosa/.platform
 EOF
 rm -rf $NAME-$VERSION

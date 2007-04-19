@@ -4,7 +4,7 @@
 # For linux, change to /usr/src/redhat
 # For my cygwin: /cygdrive/c/rpmsrc
 RPMS=/usr/src/redhat
-TINYOS_VERSION=2.0.0
+TINYOS_VERSION=2.0.1
 TINYOS_TOOLS_VERSION=1.2.3
 
 echo "*** Building tarballs"
