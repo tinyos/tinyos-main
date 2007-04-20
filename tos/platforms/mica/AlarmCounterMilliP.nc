@@ -1,4 +1,4 @@
-// $Id: AlarmCounterMilliP.nc,v 1.5 2007-03-26 21:24:33 idgay Exp $
+// $Id: AlarmCounterMilliP.nc,v 1.6 2007-04-20 19:03:53 scipio Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -18,6 +18,8 @@
  * @author David Gay <dgay@intel-research.net>
  * @author Martin Turon <mturon@xbow.com>
  */
+
+#include <Atm128Timer.h>
 
 configuration AlarmCounterMilliP
 {
