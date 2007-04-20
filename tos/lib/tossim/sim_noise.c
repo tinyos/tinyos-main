@@ -246,7 +246,7 @@ void makePmfDistr(uint16_t node_id)__attribute__ ((C, spontaneous))
   arrangeKey(node_id);
   for(i = NOISE_HISTORY; i < noiseData[node_id].noiseTraceIndex; i++) {
     if (i == NOISE_HISTORY) {
-      printf("Inserting first element.\n");
+      //printf("Inserting first element.\n");
     }
     pKey[NOISE_HISTORY-1] = search_bin_num(noiseData[node_id].noiseTrace[i]);
     sim_noise_dist(node_id);

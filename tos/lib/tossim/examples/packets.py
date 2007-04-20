@@ -23,8 +23,15 @@ for line in lines:
   if (len(s) > 0):
     if (s[0] == "gain"):
       r.add(int(s[1]), int(s[2]), float(s[3]))
-    elif (s[0] == "noise"):
-      r.setNoise(int(s[1]), float(s[2]), float(s[3]))
+
+noise = open("meyer-heavy.txt", "r")
+lines = noise.readlines()
+for line in lines:
+  str = line.strip()
+  if (str != ""):
+    val = int(str)
+    for i in range(0, 2):
+      t.getNode(i).addNoiseTraceReading(val)
 
 for i in range(0, 60):
   t.runNextEvent();
@@ -36,7 +43,7 @@ pkt.setData(msg.data)
 pkt.setType(msg.get_amType())
 pkt.setDestination(0)
 
-print "Delivering " + msg.__str__() + " to 0 at " + str(t.time() + 3);
+print "Delivering ", msg, " to 0 at ", str(t.time() + 3);
 pkt.deliver(0, t.time() + 3)
 
 
