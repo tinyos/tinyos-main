@@ -7,7 +7,7 @@
 <body>
 
 <div class="title">Lesson 11: Simulation with TOSSIM</div>
-<div class="subtitle">Last Modified: 18 May 2006</div>
+<div class="subtitle">Last Modified: 20 April 2007</div>
 
       <p>This lesson introduces the TOSSIM simulator. You will become
         familiar with how to compile TOSSIM and use some of its
@@ -83,7 +83,6 @@
         </pre>
 
         
-        
       <p>Currently, the only platform TOSSIM supports is the
         micaz. You should see output similar to this:</p>
       <pre>
@@ -104,7 +103,8 @@
 	not properly compile on the first try. <A HREF="#appendix">Appendix A</A>
 	addresses some of the common causes and gives possible solutions.</p>
 
-      <A name="#compiling"></A>
+
+     <A name="#compiling"></A>
 
 	
         <p>Compiling TOSSIM has five basic steps. Let's go through
@@ -249,10 +249,17 @@ Type "help", "copyright", "credits" or "license" for more information.
         <pre>
 >>> m = t.getNode(32);
 >>> m.bootAtTime(45654);
->>> t.runNextEVent()
+>>> t.runNextEvent()
 1
         </pre>
 
+      <p><b>Segmentation faults:</b>If trying to do this causes TOSSIM
+      to throw a segmentation violation (segfault), then chances are
+      you are using a version of gcc that does not work well with the
+      dynamic linking that TOSSIM is doing. In particular, it has been
+      verified to work properly with 4.0.2 and 3.6, but some people
+      have encountered problems with gcc 4.1.1.</p>
+      
       <p>Instead of using raw simulation ticks, you can also use the
       call <code>ticksPerSecond()</code>. However, you want to be careful
       to add some random bits into this number: having every node
@@ -589,11 +596,14 @@ for i in range(0, 7):
     t.getNode(i).createNoiseModel()</pre>
 
 
-      <p>CPM can use a good deal of RAM: using the entire meyer-heavy trace as
-	input has a cost of approximately 10MB. You can reduce this overhead
-	by using a shorter trace; this will of course reduce simulation fidelity.</p>
-	
-        <p>The Radio object only deals with physical layer
+      <p>CPM can use a good deal of RAM: using the entire meyer-heavy
+      trace as input has a cost of approximately 10MB per node. You
+      can reduce this overhead by using a shorter trace; this will of
+      course reduce simulation fidelity. Future versions of TOSSIM
+      will reduce this greatly through optimization.</p>
+
+      <p>You can also use 
+      <p>The Radio object only deals with physical layer
         propagation. The MAC object deals with the data link layer,
         packet lengths, and radio bandwidth. The default TOSSIM MAC
         object is for a CSMA protocol. You get a reference to the MAC
@@ -718,6 +728,7 @@ for line in lines:
       t.getNode(i).addNoiseTraceReading(val)
 
 for i in range(1, 4):
+  print "Creating noise model for ",i;
   t.getNode(i).createNoiseModel()
 
 t.getNode(1).bootAtTime(100001);
@@ -830,7 +841,7 @@ gain src dest g
           format:
 
           <pre>
-f = open("mirage-1.txt", "r")
+f = open("15-15-tight-mica2-grid.txt", "r")
 
 lines = f.readlines()
 for line in lines:
@@ -864,7 +875,9 @@ java net.tinyos.sim.PropagationModel config.txt
         over a 360'x360' area. Note that the tool uses random numbers,
         these configuration files can generate multiple different
         network topologies. Network topology files generated from the
-        tool follow the same format as <code>mirage-1.txt</code>.</p>
+        tool follow the same format as <code>15-15-tight-mica2-grid.txt</code>.
+        If you have topologies measured from real networks, we would love
+        to include them in the TOSSIM distribution.</p>
 
         <h1>Variables</h1>
 
@@ -974,19 +987,29 @@ for line in lines:
   if (len(s) > 0):
     if (s[0] == "gain"):
       r.add(int(s[1]), int(s[2]), float(s[3]))
-    elif (s[0] == "noise"):
-      r.setNoise(int(s[1]), float(s[2]), float(s[3]))
+
+noise = open("meyer-heavy.txt", "r")
+lines = noise.readlines()
+for line in lines:
+  str = line.strip()
+  if (str != ""):
+    val = int(str)
+    for i in range(0, 4):
+      t.getNode(i).addNoiseTraceReading(val)
 
 for i in range (0, 4):
-  m = t.getNode(i)
-  m.bootAtTime(randint(1000, 2000) * 1000000)
+  t.getNode(i).createNoiseModel()
+  t.getNode(i).bootAtTime(i * 2351217 + 23542399)
 
 m = t.getNode(0)
 v = m.getVariable("RadioCountToLedsC.counter")
 
+
+
 while (v.getData() < 10):
   t.runNextEvent()
 
+print "Counter variable at node 0 reached 10."
         </pre>
 
       <p>The TOSSIM <A
@@ -1149,8 +1172,18 @@ for line in lines:
   if (len(s) > 0):
     if (s[0] == "gain"):
       r.add(int(s[1]), int(s[2]), float(s[3]))
-    elif (s[0] == "noise"):
-      r.setNoise(int(s[1]), float(s[2]), float(s[3]))
+
+noise = open("meyer-heavy.txt", "r")
+lines = noise.readlines()
+for line in lines:
+  str = line.strip()
+  if (str != ""):
+    val = int(str)
+    for i in range(0, 4):
+      t.getNode(i).addNoiseTraceReading(val)
+
+for i in range (0, 4):
+  t.getNode(i).createNoiseModel()
 
 for i in range(0, 60):
   t.runNextEvent();
@@ -1205,7 +1238,8 @@ for i in range(0, 20):
       want to deliver a packet through C++, you can do so.</p>
 
       <p>Usually, the C++ and Python versions of a program look pretty
-      similar. For example:</p>
+      similar. For example (note that this program will use a lot of RAM
+	  and take a long time to start due to its noise models):</p>
 
       <table WIDTH=800>
 
@@ -1216,6 +1250,7 @@ for i in range(0, 20):
             <PRE>
 import TOSSIM
 import sys
+import random
 
 from RadioCountMsg import *
 
@@ -1225,13 +1260,15 @@ r = t.radio();
 for i in range(0, 999):
   m = t.getNode(i);
   m.bootAtTime(5000003 * i + 1);
-  r.setNoise(i, -99.0, 3.0);
+  
   for j in range (0, 2):
     if (j != i):
       r.add(i, j, -50.0);
 
-
-
+  # Create random noise stream
+  for j in range (0, 500):
+    m.addNoiseTraceReading(int(random.random() * 20) - 70);
+  m.createNoiseModel()
 
 for i in range(0, 1000000):
   t.runNextEvent();
@@ -1240,7 +1277,7 @@ for i in range(0, 1000000):
           <TD VALIGN=TOP>
             <PRE>
 #include &lt;tossim.h&gt;
-
+#include &lt;stdlib.h&gt;
 
 
 int main() {
@@ -1250,13 +1287,17 @@ int main() {
   for (int i = 0; i &lt; 999; i++) {
     Mote* m = t->getNode(i);
     m->bootAtTime(5000003 * i + 1);
-    r->setNoise(i, -99.0, 3);
     for (int j = 0; j &lt; 2; j++) {
       if (i != j) {
         r->add(i, j, -50.0);
       }
     }
+    for (int j = 0; i &lt; 500; j++) {
+       m->addNoiseTraceReading((char)(drand48() * 20) - 70);
+    }
+    m->createNoiseModel();
   }
+
 
   for (int i = 0; i &lt; 1000000; i++) {
     t->runNextEvent();
@@ -1352,8 +1393,8 @@ $4 = 0
 <i>slow</i>:</p>
 
 <pre>
-(gdb) watch UscGainInterferenceModelC$receiving[23]
-Hardware watchpoint 2: UscGainInterferenceModelC$receiving[23]
+(gdb) watch CpmModelC$receiving[23]
+Hardware watchpoint 2: CpmModelC$receiving[23]
 </pre>
 
 <p>This variable happens to be an internal variable in the 
