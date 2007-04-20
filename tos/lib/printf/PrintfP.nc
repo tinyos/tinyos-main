@@ -7,24 +7,41 @@
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
  *
- * IN NO EVENT SHALL WASHINGTON UNIVERSITY IN ST. LOUIS BE LIABLE TO ANY PARTY 
- * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING 
- * OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF WASHINGTON 
+ * IN NO EVENT SHALL WASHINGTON UNIVERSITY IN ST. LOUIS BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING
+ * OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF WASHINGTON
  * UNIVERSITY IN ST. LOUIS HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * WASHINGTON UNIVERSITY IN ST. LOUIS SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
- * ON AN "AS IS" BASIS, AND WASHINGTON UNIVERSITY IN ST. LOUIS HAS NO 
+ * ON AN "AS IS" BASIS, AND WASHINGTON UNIVERSITY IN ST. LOUIS HAS NO
  * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
  * MODIFICATIONS."
  */
 
 /**
+ * This is the PrintfP component.  It provides the printf service for printing
+ * data over the serial interface using the standard c-style printf command.  
+ * It must be started via the SplitControl interface it provides.  Data
+ * printed using printf are buffered and only sent over the serial line after
+ * making a call to PrintfFlush.flush().  This buffer has a maximum size of 
+ * 250 bytes at present.  After calling start on this component, printf
+ * statements can be made anywhere throughout your code, so long as you include
+ * the "printf.h" header file in every file you wish to use it.  Standard
+ * practice is to start the printf service in the main application, and set up 
+ * a timer to periodically flush the printf buffer (500ms should do).  In future
+ * versions, user defined buffer sizes as well as well as automatic flushing at 
+ * user defined intervals will be supported.  
+ *
+ * The printf service is currently only available for msp430 based motes 
+ * (i.e. telos, eyes) and atmega128 based motes (i.e. mica2, micaz).  On the
+ * atmega platforms, avr-libc version 1.4 or above mus tbe used.
+ * 
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:23:31 $ 
+ * @version $Revision: 1.5 $
+ * @date $Date: 2007-04-20 00:55:32 $
  */
 
 #include "printf.h"
@@ -62,16 +79,16 @@ implementation {
   uint8_t length_to_send;
   
   task void retrySend() {
-    if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(PrintfMsg)) != SUCCESS)
+    if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg)) != SUCCESS)
       post retrySend();
   }
   
   void sendNext() {
-  	PrintfMsg* m = (PrintfMsg*)call Packet.getPayload(&printfMsg, NULL);
-  	length_to_send = (bytes_left_to_flush < sizeof(PrintfMsg)) ? bytes_left_to_flush : sizeof(PrintfMsg);
+  	printf_msg* m = (printf_msg*)call Packet.getPayload(&printfMsg, NULL);
+  	length_to_send = (bytes_left_to_flush < sizeof(printf_msg)) ? bytes_left_to_flush : sizeof(printf_msg);
   	memset(m->buffer, 0, sizeof(printfMsg));
   	memcpy(m->buffer, (uint8_t*)next_byte, length_to_send);
-    if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(PrintfMsg)) != SUCCESS)
+    if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg)) != SUCCESS)
       post retrySend();  
     else {
       bytes_left_to_flush -= length_to_send;
