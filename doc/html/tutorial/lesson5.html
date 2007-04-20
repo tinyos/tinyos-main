@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<!-- $Id: lesson5.html,v 1.4 2006-12-12 18:22:53 vlahan Exp $ -->
+<!-- $Id: lesson5.html,v 1.5 2007-04-20 12:23:35 janhauer Exp $ -->
 
 <div class="title">Lesson 5: Sensing</div>
 <div class="subtitle">Last Modified: 16 June 2006</div>
@@ -28,24 +28,22 @@ sensing was syntactically connected with analog-to-digital converters (ADCs):
 TinyOS 1.x applications such as <code>Oscilloscope</code> or <code>Sense</code>
 used the <code>ADC</code> and <code>ADCControl</code> interfaces to collect
 sensor data. When new platforms appeared with sensors that were read out via
-the serial interface, not only did additional interfaces like <code>ADCError</code>
-have to be introduced, but it became clear that equating a sensor with an ADC was
-not always the appropriate thing to do.
+the serial interface, not only did additional interfaces like
+<code>ADCError</code> have to be introduced, but it became clear that equating
+a sensor with an ADC was not always the appropriate thing to do.
 
 <p> Usually sensing involves two tasks: configuring a sensor (and/or the
-hardware module it is attached to, for example an ADC or SPI) and reading the
-sensor data.  The first task is tricky, because a sensing application like, for
-example, <code>Sense</code> is meant to run on any TinyOS platform. How can
-<code>Sense</code> know the configuration details (e.g. input channel, the
+hardware module it is attached to, for example the ADC or SPI bus) and reading
+the sensor data.  The first task is tricky, because a sensing application like,
+for example, <code>Sense</code> is meant to run on any TinyOS platform. How can
+<code>Sense</code> know the configuration details (like ADC input channel, the
 required reference voltage, etc.) of an attached sensor? It can't, because the
-configuration details of sensors will be different from platform to platform, 
-i.e. (the light sensor on the <i>tmote</i> and the one on the <i>eyes</i> platform.  
-Unless <code>Sense</code> knows about all sensors on all platforms it will be unable to
-perform the configuration task since the interfaces for the configuration of a sensor
-will differ from platform to platform (and potentially from sensor to sensor).
-However, the second task - reading the sensor data - can be solved so that the
-<code>Sense</code> application can collect sensor data even though it is
-agnostic to the platform it is running on. 
+configuration details of sensors will be different from platform to platform.
+Unless <code>Sense</code> knows about all sensors on all platforms it will be
+unable to perform the configuration task.  However, the second task - reading
+the sensor data - can be solved so that the <code>Sense</code> application can
+collect sensor data even though it is agnostic to the platform it is running
+on. 
 
 <p> In TinyOS 2.0 <i>platform independent</i> sensing applications such as
 <code>Oscilloscope</code>, <code>Sense</code> or <code>RadioSenseToLeds</code>
@@ -239,10 +237,10 @@ generic configuration DemoSensorC()
 In its implementation section, however, <code>DemoSensorC</code> may differ
 from platform to platform. For example, on the <i>telosb</i> platform
 <code>DemoSensorC</code> instantiates a component called <code>VoltageC</code>,
-which reads data from the internal voltage sensor. Because the <i>micaz</i>
-doesn't have any built-in sensors, on the <i>micaz</i> platform
-<code>DemoSensorC</code> instantiates a component called
-<code>ConstantSensorC</code>, which returns a constant. Thus
+which reads data from the MCU-internal voltage sensor. Because the <i>micaz</i>
+doesn't have any built-in sensors its <code>DemoSensorC</code> uses system
+library component like <code>ConstantSensorC</code> or
+<code>SineSensorC</code>, which return "fake" sensor data. Thus
 <code>DemoSensorC</code> is a means of indirecting sensor data acquisition from
 a platform-specific sensor component (like <code>VoltageC</code>) to
 platform-independent applications like <code>Sense</code> or
@@ -264,13 +262,13 @@ to something like
 components new ConstantSensorC(uint16_t, 0xbeef) as DemoSensor;
 </pre>
 
-Which sensors are available depends on the platform. Sensor components are
+What sensors are available depends on the platform. Sensor components are
 usually located in the respective platform subdirectory
 (<code>tinyos-2.x/tos/platforms</code>), in the respective sensorboard
 subdirectory (<code>tinyos-2.x/tos/sensorboards</code>) or, in case of
 microprocessor-internal sensors, in the respective chips subdirectory
-(<code>tinyos-2.x/tos/chips</code>). <code>ConstantSensorC</code> can be found
-in <code>tinyos-2.x/tos/system</code>.
+(<code>tinyos-2.x/tos/chips</code>). <code>ConstantSensorC</code> and
+<code>SineSensorC</code> can be found in <code>tinyos-2.x/tos/system</code>.
 
 
 <h2>Running the Sense application</h2>
@@ -286,12 +284,11 @@ SenseAppC.nc:50: component `DemoSensorC' is not generic
 SenseAppC.nc:55: no match
 </pre>
 
-your platform has not yet implemented the <code>DemoSensorC</code> component. For a
-quick solution you can copy <code>DemoSensorC.nc</code> from
-<code>tinyos-2.x/tos/platforms/micaz</code> to your platform directory; then
-you will see constant "sensor" readings (a good starting point on how to create
-sensor components is probably <a href="../tep101.html">TEP 101</a> and <a
-href="../tep114.html">TEP 114</a>). 
+your platform has not yet implemented the <code>DemoSensorC</code> component.
+For a quick solution you can copy <code>DemoSensorC.nc</code> from
+<code>tinyos-2.x/tos/platforms/micaz</code> to your platform directory (a good
+starting point on how to create sensor components is probably <a
+  href="../tep101.html">TEP 101</a> and <a href="../tep114.html">TEP 114</a>). 
 
 <p>If you have a mica-family mote and a "basic" (mda100) sensor board, you
 can get a more interesting test by compiling with
@@ -300,11 +297,15 @@ SENSORBOARD=basicsb make <i>platform</i> install
 </pre>
 to run <code>Sense</code> using the mda100's light sensor.
 
-<p> Once you have installed the application the three most significant bits of
-the sensor readings are displayed on the node's LEDs (0 = off, 1 = on). If your
-<code>DemoSensorC</code> represents a sensor whose readings are fluctuating
-greatly you may see the LEDs toggle, otherwise <code>Sense</code> does not seem to
-be very impressive.  Let's take a look at a more interesting application:
+<p> Once you have installed the application the three least significant bits of
+the sensor readings are displayed on the node's LEDs (0 = off, 1 = on). It is
+the least significant bits, because <code>Sense</code> cannot know the
+precision (value range) of the returned sensor readings and, for example, the
+three most significant bits in a <code>uint16_t</code> sensor reading sampled
+through a 12-bit ADC would be meaningless (unless the value was left-shifted).
+If your <code>DemoSensorC</code> represents a sensor whose readings are
+fluctuating you may see the LEDs toggle, otherwise <code>Sense</code> is not
+very impressive.  Let's take a look at a more interesting application:
 <code>Oscilloscope</code>.
 
 <a name="oscilloscope"><h1>The Oscilloscope application</h1></a>
@@ -367,16 +368,15 @@ module OscilloscopeC
 
 <code>Oscilloscope</code> is a combination of different building blocks
 introduced in previous parts of the tutorial. Like <a
-href="#sense"><code>Sense</code></a>,  <code>Oscilloscope</code> uses
+  href="#sense"><code>Sense</code></a>,  <code>Oscilloscope</code> uses
 <code>DemoSensorC</code> and a timer to periodically sample the default sensor
 of a platform. When it has gathered 10 sensor readings
 <code>OscilloscopeC</code> puts them into a message and broadcasts that message
 via the <code>AMSend</code> interface.  <code>OscilloscopeC</code> uses the
 <code>Receive</code> interface for synchronization purposes (see below) and the
-<code>RadioControl</code> interface, which is a actually a
 <code>SplitControl</code> interface, to switch the radio on. If you want to
 know more about mote-mote radio communication read <a
-href="lesson3.html">lesson 3</a>.
+  href="lesson3.html">lesson 3</a>.
 
 <h2>Running the Oscilloscope application</h2>
 
@@ -388,7 +388,7 @@ Assigning IDs to nodes is helpful to differentiate them later on in the GUI, so
 make sure you assign different IDs to all nodes on which
 <code>Oscilloscope</code> is installed (e.g. install <code>Oscilloscope</code>
 on a second node with <code>make telosb install,2</code> and so on). A node
-running <code>Oscilloscope</code> will togle its second LED for every message
+running <code>Oscilloscope</code> will toggle its second LED for every message
 it has sent and it will toggle its third LED when it has received an
 <code>Oscilloscope</code> message from another node: incoming messages are used
 for sequence number synchronization to let nodes catch up when they are
@@ -405,19 +405,17 @@ toggle for every message bridged from radio to serial.
 
 To visualize the sensor readings on your PC first go to
 <code>tinyos-2.x/apps/Oscilloscope/java</code> and type <code>make</code>. This
-compiles the necessary message classes and the <code>Oscilloscope</code> Java
-GUI. Now start a SerialForwarder and make sure it connects to the node on which
-you have installed the <code>BaseStation</code> application (how this is done
-is explained in the <a href="lesson4.html">previous lesson</a>). In case you
-have problems with the Java compilation or the serial connection work through
-the <a href="lesson4.html">previous lesson</a>. 
+creates/compiles the necessary message classes and the
+<code>Oscilloscope</code> Java GUI. Now start a SerialForwarder and make sure
+it connects to the node on which you have installed the
+<code>BaseStation</code> application (how this is done is explained in the <a
+  href="lesson4.html">previous lesson</a>). In case you have problems with the
+Java compilation or the serial connection work through the <a
+  href="lesson4.html">previous lesson</a>. 
 
-<p>When you have at least one node running <code>Oscilloscope</code> on it you
-should see SerialForwarder increasing the number of packets it has read from
-the <code>BaseStation</code> (once every 2.5 seconds, at least). Now start the
-GUI by typing <code>./run</code> (in
-<code>tinyos-2.x/apps/Oscilloscope/java</code>). You should see a window
-similar to the one below:
+<p>Once you have a SerialForwarder running you can start the GUI by typing
+<code>./run</code> (in <code>tinyos-2.x/apps/Oscilloscope/java</code>). You
+should see a window similar to the one below:
 
 <p>
 <CENTER>
@@ -425,20 +423,19 @@ similar to the one below:
 </CENTER>
 </p>
 
-Each node is represented by a graph of different color (you can change the
-color by clicking on it in the mote table). The x-axis is the packet counter
-number and the y-axis is the sensor reading. To change the sample rate, edit
-the number in the "sample rate" input box. When you press enter, a message
+Each node is represented by a line of different color (you can change the color
+by clicking on it in the mote table). The x-axis is the packet counter number
+and the y-axis is the sensor reading. To change the sample rate edit the
+number in the "sample rate" input box. When you press enter, a message
 containing the new rate is created and broadcast via the
 <code>BaseStation</code> node to all nodes in the network. You can clear all
 received data on the graphical display by clicking on the "clear data" button.
 
 <p> The <code>Oscilloscope</code> (or <code>Sense</code>) application displays
-the raw data as signalled by the <code>Read.readDone()</code> event. They do
-not perform semantic processing and cannot decide questions like "is a reading
-to be interpreted in degrees Celsius or Fahrenheit". This decision is forwarded
-to the user and therefore the GUI let's you adapt the visible portion of the
-y-axis to a plausible range (at the bottom right).
+the raw data as signalled by the <code>Read.readDone()</code> event. How the
+values are to be interpreted is out of scope of the application, but the GUI
+let's you adapt the visible portion of the y-axis to a plausible range (at the
+bottom right).
 
 <p>
 <a name="related_docs">
