@@ -35,8 +35,8 @@
  * user defined intervals will be supported.  
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.5 $
- * @date $Date: 2007-04-20 00:55:32 $
+ * @version $Revision: 1.6 $
+ * @date $Date: 2007-04-20 01:14:13 $
  */
 
 #include "printf.h"
@@ -49,7 +49,7 @@ configuration PrintfC {
 }
 implementation {
   components SerialActiveMessageC;
-  components new SerialAMSenderC(AM_PRINTFMSG);
+  components new SerialAMSenderC(AM_PRINTF_MSG);
   components PrintfP;
   components LedsC;
 

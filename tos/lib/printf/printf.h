@@ -23,8 +23,8 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.5 $
- * @date $Date: 2007-04-20 00:55:32 $
+ * @version $Revision: 1.6 $
+ * @date $Date: 2007-04-20 01:14:13 $
  */
 
 #ifndef PRINTF_H
@@ -37,10 +37,10 @@
 
 typedef nx_struct printf_msg {
   nx_uint8_t buffer[TOSH_DATA_LENGTH];
-} printf_msg;
+} printf_msg_t;
 
 enum {
-  AM_PRINTFMSG = 100,
+  AM_PRINTF_MSG = 100,
 };
 
 #endif //PRINTF_H
