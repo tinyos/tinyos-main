@@ -1,4 +1,4 @@
-README for TestFcfsArbiter
+README for TestSharedResource
 Author/Contact: tinyos-help@millennium.berkeley.edu
 @author Kevin Klues <klues@tkn.tu-berlin.de>
 

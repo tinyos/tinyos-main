@@ -21,10 +21,16 @@
  */
  
 /**
+ * This application is used to test the basic functionality of the printf service.  
+ * It is initiated by calling the start() command of the SplitControl interface 
+ * provided by the PrintfC component.  After starting the printf service, calls to 
+ * the standard c-style printf command are made to print various strings of text 
+ * over the serial line.  Only upon calling PrintfFlush.flush() does the data 
+ * actually get sent out over the serial line.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:50 $
+ * @version $Revision: 1.5 $
+ * @date $Date: 2007-04-20 00:41:40 $
  */
  
 #include "printf.h"
