@@ -1,4 +1,4 @@
-<HTML>
+1<HTML>
 
   <HEAD>
     <TITLE>TinyOS 2.0 Documentation</TITLE>
@@ -11,24 +11,30 @@
 	<TR>
 	  <TD CLASS="title">
 	    TinyOS 2.0 Documentation<br>
-	    <DIV CLASS="subtitle">Last Modified: October 27 2006</DIV>
+	    <DIV CLASS="subtitle">Last Modified: April 19 20067</DIV>
 	  </TD>
 	</TR>
 	<TR>
 	  <TD>
-	    <p>There are three classes of TinyOS 2.0 documentation. The
-	    first class includes release notes and high-level
-	    overviews of the system. The second is a series of
-	    tutorials. The third is a set of TEPs (TinyOS Enhancement
-	    Proposals), which document and describe major OS
-	    abstractions and subsystems and source code documentation
-            from the javadoc and nesdoc tools</p>
+	    <p>TinyOS 2.0 has four sets of documentation. The first
+	    set is the release notes and high-level overviews of the
+	    system. The second set is a series of tutorials and a
+	    TinyOS programming manual, which explore different parts
+	    of the system in order to help you get started.  The third
+	    set is detailed documentation of the system, including TEP
+	    (TinyOS Enhancement Proposals), which describe the
+	    structure, design goals, and implementation of parts of
+	    the system as well as nesC and Java source code
+	    documentation. </p>
+
+	    <p>If you're just getting started, the best place to start
+	      is with the tutorials.<.p>
 
 	  </TD>
 	</TR>
 
 	<TR>
-	  <TD CLASS="subtitle">Release Notes</TD>
+	  <TD CLASS="subtitle">1. Release Notes</TD>
 	</TR>
 	<TR>
 	  <TD>
@@ -43,34 +49,38 @@
 
 
 	<TR>
-	  <TD CLASS="subtitle"><A HREF="html/tutorial/index.html">Tutorials</A></TD>
+	  <TD CLASS="subtitle"><A HREF="html/tutorial/index.html">2. Tutorials</A></TD>
 	</TR>
 	<TR>
 	  <TD><p>TinyOS 2.0 has a few <A HREF="html/tutorial/index.html">tutorials</A> to get a new user started with programming
               the system. These tutorials introduce nesC programming and some major
               TinyOS abstractions, such as timers and communication.</p>
-
-              <p>Additionally, for more advanced programming, there is a
-                 <A HREF="pdf/tinyos-programming.pdf">TinyOS Programming Manual</A>.
-                 The book describes nesC's features in greater detail,
-                 including generic components, concurrency, and common
-                 component design patterns.</p>
+	    
+	    <p>Additionally, for more advanced programming, there is a
+	      <A HREF="pdf/tinyos-programming.pdf">TinyOS Programming Manual</A>.
+	      The book describes nesC's features in greater detail,
+	      including generic components, concurrency, and common
+	      component design patterns.</p>
 	</TR>
 
 
 	<TR>
-	  <TD CLASS="subtitle">TEPs</TD>
+	  <TD CLASS="subtitle">3A. TEPs and source code documentation</TD>
 	</TR>
 	<TR>
 	  <TD>
 
-	    TEPs are written in <A HREF="http://docutils.sourceforge.net/rst.html">ReStructured Text</A>, and so can be read
-	    either as HTML or as a text document. TEP 1 describes the
-	    different kinds of TEPs and their roles. TEPs 1-100 are
-	    BCP (Best Current Practice) TEPs, while TEPS 101+ are
-	    Informational, Documentary, or Experimental. Currently,
-	    many TEPs are Drafts: comments and feedback to the
-	    authors or the associated working group is welcome.
+	    TEPs are written in <A
+	    HREF="http://docutils.sourceforge.net/rst.html">ReStructured
+	    Text</A>, and so can be read either as HTML or as a text
+	    document. TEP 1 describes the different kinds of TEPs and
+	    their roles. TEPs 1-100 are BCP (Best Current Practice)
+	    TEPs, while TEPS 101+ are Informational, Documentary, or
+	    Experimental. Currently, many TEPs are Drafts: comments
+	    and feedback to the authors or the associated working
+	    group is welcome. The following TEPs are Documentary and
+	    BCP: they deal with TinyOS, its protocols, and its
+	    programming interfaces:
 
 	    <BR><BR>
 	    
@@ -94,18 +104,31 @@
 	      <li>TEP 117: Low-Level I/O                  [<A HREF="html/tep117.html">HTML</A>] [<A HREF="txt/tep117.txt">TXT</A>]</li>
 	      <li>TEP 118: Dissemination                 [<A HREF="html/tep118.html">HTML</A>] [<A HREF="txt/tep118.txt">TXT</A>]</li>
 	      <li>TEP 119: Collection                  [<A HREF="html/tep119.html">HTML</A>] [<A HREF="txt/tep119.txt">TXT</A>]</li>
+	      <li>TEP 123: Collection Tree Protocol (CTP) [<A HREF="html/tep123.html">HTML</A>] [<A HREF="txt/tep123.txt">TXT</A>]</li>
+	      <li>TEP 124: Link Estimation Exchange Protocol (LEEP)    [<A HREF="html/tep124.html">HTML</A>] [<A HREF="txt/tep124.txt">TXT</A>]</li>
+	      <li>TEP 125: TinyOS 802.15.4 Frames     [<A HREF="html/tep125.html">HTML</A>] [<A HREF="txt/tep125.txt">TXT</A>]</li>
+	      <li>TEP 126: CC2420 Radio Stack         [<A HREF="html/tep126.html">HTML</A>] [<A HREF="txt/tep126.txt">TXT</A>]</li>
 	    </ul>
 
 	    <BR><BR>
+
+	    <p>In addition, there are several TEPs which deal with issues besides TinyOS code, such
+	      as the structure of the TinyOS Alliance and design considerations:</p>
+
+	    <ul>
+	      <li>TEP 120: TinyOS Alliance Structure     [<A HREF="html/tep120.html">HTML</A>] [<A HREF="txt/tep120.txt">TXT</A>]</li>
+
+	      <li>TEP 121: Towards TinyOS for 8051     [<A HREF="html/tep121.html">HTML</A>] [<A HREF="txt/tep121.txt">TXT</A>]</li>
+	    </ul>
           </TD>
         </TR>
 	<TR>
-	  <TD CLASS="subtitle"><A HREF="html/nesdoc/">TinyOS Source Code Documentation</A></TD>
+	  <TD CLASS="subtitle"><A HREF="html/nesdoc/">3B. TinyOS Source Code Documentation</A></TD>
 	</TR>
         <TR>
           <TD>
-          <p>In addition to TEPs, which document the organization and design
-             behind important parts of TinyOS, there is also <A HREF="html/nesdoc/">source code
+	    <p>In addition to TEPs, which document the organization and design
+	      behind important parts of TinyOS, there is also <A HREF="html/nesdoc/">source code
              documentation</A>.<br><br>
           </TD>
         </TR>
@@ -124,9 +147,6 @@
               
 </p>
 	  </TD>
-	</TR>
-	<TR>
-	  <TD CLASS="subtitle"></TD>
 	</TR>
       </TABLE>
     </CENTER>
