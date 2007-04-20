@@ -1,4 +1,4 @@
-/* $Id: RandRWC.nc,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+/* $Id: RandRWC.nc,v 1.5 2007-04-20 17:39:37 idgay Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -99,6 +99,8 @@ implementation {
     return b;
   }
 
+  volatile int x;
+
   void setParameters() {
     len = rand() >> 8;
     offset = rand() >> 9;
@@ -138,7 +140,9 @@ implementation {
   }
 
   event void LogWrite.appendDone(void *buf, storage_len_t y, bool recordsLost, error_t result) {
-    if (scheck(result))
+    if (result == ESIZE)
+      scheck(call LogWrite.sync());
+    else if (scheck(result))
       nextWrite();
   }
 
