@@ -633,7 +633,7 @@ implementation
        would end on the last byte of the last page, as this would mean that
        we would not sync the last page, breaking the log volume
        invariant */
-    if (s[client].wpos % vlen >= vlen - len)
+    if ((s[client].wpos - PAGE_SIZE) % vlen >= vlen - len)
       sync();
     else
       {
