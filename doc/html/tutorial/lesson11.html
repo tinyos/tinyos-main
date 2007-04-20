@@ -523,32 +523,76 @@ DEBUG (32): Application booted a third time.
           <li><b><code>gain(src, dest)</code></b>: Return the gain value of the
           link from <i>src</i> to <i>dest</i>.</li>
           
-          <li><b><code>remove(src, dest)</code></b>: Remove the link from
-          <i>src</i> to <i>dest</i>.</li>
-
-
-          <li><b><code>setNoise(node, mean, variance)</code></b>: Set the noise
-          floor at <i>node</i> to be a gaussian distribution with
-          <i>mean</i> and <i>variance</i>.</li>
-
-          <li><b><code>sensitivity()</code></b>: Return the receive sensitivity of
-            the nodes.</li>
-
-          <li><b><code>setSensitivity(val)</code></b>: Set the receive sensitivity
-          of nodes to be <i>val</i>. The sensitivity is how much
-          stronger a signal must be for it to be received
-          uncorrupted. E.g., a sensitivity of 3.0 (the default value)
-          means that a packet must be 3dBm greater than the sum of
-          noise and concurrent transmissions for it to be received
-          uncorrupted.</li>
-
           <li><b><code>threshold()</code></b>: Return the CCA threshold.</li>
 
           <li><b><code>setThreshold(val)</code></b>: Set the CCA threshold value in
-            dBm.The default is -95.</li>
+            dBm. The default is -72dbM.</li>
           
         </ul>
 
+      <p>The default values for TOSSIM's radio model are based on the CC2420 radio,
+	used in the micaZ, telos family, and imote2. It uses an SNR curve derived
+	from experimental data collected using two micaZ nodes, RF shielding, and
+	a variable attenuator.</p>
+
+      <p>In addition to the radio propagation above, TOSSIM
+      also simulates the RF noise and interference a node hears, both from other
+      nodes as well as outside sources. It uses the Closest Pattern Matching (CPM)
+      algorithm. CPM takes a noise trace as input and generates a statistical model
+      from it. This model can capture bursts of interference and other correlated
+      phenomena, such that it greatly improves the quality of the RF simulation.
+	It is not perfect (there are several things it does not handle, such as
+	correlated interference at nodes that are close to one another), but
+	it is much better than traditional, independent packet loss models. For
+	more details, please refer to the paper "Improving Wireless Simulation through
+	Noise Modeling," by Lee et al.</p>
+      
+
+      <p>To configure CPM, you need to feed it a noise trace. You accomplish this
+	by calling <tt>addNoiseTraceReading</tt> on a Mote object. Once you
+	have fed the entire noise trace, you must call <tt>createNoiseModel</tt>
+	on the node. The directory <tt>tos/lib/tossim/noise</tt> contains
+	sample noise traces, which are a series of noise readings, one per line.
+	For example, these are the first 10 lines of meyer-heavy.txt,
+	which is a noise trace taken from Meyer Library at Stanford University:</p>
+
+      <pre>
+-97
+-98
+-98
+-86
+-90
+-91
+-87
+-87
+-98
+-98
+</pre>
+
+      <p>As you can see, the hardware noise floor is around -98 dBm,
+	but there are spikes of interference around -86dBm and -87dBm.</p>
+
+      <p>This piece of code will give a node a noise model from a noise trace
+	file. It works for nodes 0-7: you can change the range appropriately:</p>
+
+      <pre>
+noise = open("meyer-heavy.txt", "r")
+lines = noise.readlines()
+for line in lines:
+    str = line.strip()
+    if (str != ""):
+        val = int(str)
+        for i in range(0, 7):
+            t.getNode(i).addNoiseTraceReading(val)
+
+for i in range(0, 7):
+    t.getNode(i).createNoiseModel()</pre>
+
+
+      <p>CPM can use a good deal of RAM: using the entire meyer-heavy trace as
+	input has a cost of approximately 10MB. You can reduce this overhead
+	by using a shorter trace; this will of course reduce simulation fidelity.</p>
+	
         <p>The Radio object only deals with physical layer
         propagation. The MAC object deals with the data link layer,
         packet lengths, and radio bandwidth. The default TOSSIM MAC
@@ -664,13 +708,21 @@ for line in lines:
 t.addChannel("RadioCountToLedsC", sys.stdout)
 t.addChannel("Boot", sys.stdout)
 
+noise = open("meyer-heavy.txt", "r")
+lines = noise.readlines()
+for line in lines:
+  str = line.strip()
+  if (str != ""):
+    val = int(str)
+    for i in range(1, 4):
+      t.getNode(i).addNoiseTraceReading(val)
+
+for i in range(1, 4):
+  t.getNode(i).createNoiseModel()
+
 t.getNode(1).bootAtTime(100001);
 t.getNode(2).bootAtTime(800008);
 t.getNode(3).bootAtTime(1800009);
-
-r.setNoise(1, -100.0, 5.0)
-r.setNoise(2, -100.0, 5.0)
-r.setNoise(3, -100.0, 5.0)
 
 for i in range(0, 100):
   t.runNextEvent()
@@ -713,10 +765,9 @@ DEBUG (3): RadioCountToLedsC: packet sent.
 DEBUG (1): Received packet of length 2.
         </pre>
 
-        <p>If you set the noise to be 30 plus or minus 5 dBm instead
-        of 80 plus or minus 5 dBm, then nodes will never transmit, as
-        the default CCA threshold is -95 dBm. You'll see something
-        like this:</p>
+        <p>If you set node's clear channel assessment to be at -110dBm,
+	then nodes will never transmit, as noise and interference never
+	drop this low. You'll see something like this:</p>
              <pre>
 1  2 -54.0
 2  1 -55.0
@@ -769,14 +820,11 @@ while (time + 50000000000 > t.time()):
         file format is
 
           <pre>
-noise n avg std
 gain src dest g
           </pre>
 
-          where each statement is on a separate line. The <i>noise</i>
-          statement defines the noise observed at node <i>n</i> with
-          an average of <i>avg</i> and a standard deviation of
-          <i>std</i>.  The <i>gain</i> statement defines a propagation
+          where each statement is on a separate line.
+	The <i>gain</i> statement defines a propagation
           gain <i>g</i> when <i>src</i> transmits to <i>dest</i>. This
           is a snippet of python code that will parse this file
           format:
@@ -790,8 +838,6 @@ for line in lines:
   if (len(s) > 0):
     if (s[0] == "gain"):
       r.add(int(s[1]), int(s[2]), float(s[3]))
-    elif (s[0] == "noise"):
-      r.setNoise(int(s[1]), float(s[2]), float(s[3]))
           </pre></p>
 
         <p>TOSSIM has a tool for the second option of generating a
