@@ -11,7 +11,7 @@ sim_gain_noise_t localNoise[TOSSIM_MAX_NODES + 1];
 double sensitivity = 4.0;
 
 gain_entry_t* sim_gain_allocate_link(int mote);
-void sim_gain_deallocate_link(gain_entry_t* link);
+void sim_gain_deallocate_link(gain_entry_t* linkToDelete);
 
 gain_entry_t* sim_gain_first(int src) __attribute__ ((C, spontaneous)) {
   if (src > TOSSIM_MAX_NODES) {
@@ -20,8 +20,8 @@ gain_entry_t* sim_gain_first(int src) __attribute__ ((C, spontaneous)) {
   return connectivity[src];
 }
 
-gain_entry_t* sim_gain_next(gain_entry_t* link) __attribute__ ((C, spontaneous)) {
-  return link->next;
+gain_entry_t* sim_gain_next(gain_entry_t* currentLink) __attribute__ ((C, spontaneous)) {
+  return currentLink->next;
 }
 
 void sim_gain_add(int src, int dest, double gain) __attribute__ ((C, spontaneous))  {
@@ -157,15 +157,15 @@ double sim_gain_sample_noise(int node)  __attribute__ ((C, spontaneous)) {
 }
 
 gain_entry_t* sim_gain_allocate_link(int mote) {
-  gain_entry_t* link = (gain_entry_t*)malloc(sizeof(gain_entry_t));
-  link->next = NULL;
-  link->mote = mote;
-  link->gain = -10000000.0;
-  return link;
+  gain_entry_t* newLink = (gain_entry_t*)malloc(sizeof(gain_entry_t));
+  newLink->next = NULL;
+  newLink->mote = mote;
+  newLink->gain = -10000000.0;
+  return newLink;
 }
 
-void sim_gain_deallocate_link(gain_entry_t* link) __attribute__ ((C, spontaneous)) {
-  free(link);
+void sim_gain_deallocate_link(gain_entry_t* linkToDelete) __attribute__ ((C, spontaneous)) {
+  free(linkToDelete);
 }
 
 void sim_gain_set_sensitivity(double s) __attribute__ ((C, spontaneous)) {

@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.6 2007-02-08 00:23:56 scipio Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.7 2007-04-21 07:02:37 scipio Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2007-02-08 00:23:56 $
+ *  @date   $Date: 2007-04-21 07:02:37 $
  *  @see Net2-WG
  */
 
@@ -555,23 +555,23 @@ implementation {
 
     command void CtpInfo.triggerRouteUpdate() {
       // Random time in interval 64-127ms
-      uint16_t time = call Random.rand16();
-      time &= 0x3f; 
-      time += 64;
+      uint16_t beaconDelay = call Random.rand16();
+      beaconDelay &= 0x3f; 
+      beaconDelay += 64;
       if (call BeaconTimer.gett0() + call BeaconTimer.getdt() -
-                                     call BeaconTimer.getNow() >= time) {
+                                     call BeaconTimer.getNow() >= beaconDelay) {
          call BeaconTimer.stop();
-         call BeaconTimer.startOneShot(time);
+         call BeaconTimer.startOneShot(beaconDelay);
         }
      }
 
     command void CtpInfo.triggerImmediateRouteUpdate() {
       // Random time in interval 4-11ms
-      uint16_t time = call Random.rand16();
-      time &= 0x7; 
-      time += 4;
+      uint16_t beaconDelay = call Random.rand16();
+      beaconDelay &= 0x7; 
+      beaconDelay += 4;
       call BeaconTimer.stop();
-      call BeaconTimer.startOneShot(time);
+      call BeaconTimer.startOneShot(beaconDelay);
     }
 
     command void CtpInfo.setNeighborCongested(am_addr_t n, bool congested) {

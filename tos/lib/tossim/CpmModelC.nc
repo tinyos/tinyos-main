@@ -325,15 +325,15 @@ implementation {
   }
 
   command void Model.putOnAirTo(int dest, message_t* msg, bool ack, sim_time_t endTime, double power) {
-    gain_entry_t* link = sim_gain_first(sim_node());
+    gain_entry_t* neighborEntry = sim_gain_first(sim_node());
     requestAck = ack;
     outgoing = msg;
     dbg("CpmModelC", "Node %i transmitting to %i, finishes at %llu.\n", sim_node(), dest, endTime);
 
-    while (link != NULL) {
-      int other = link->mote;
+    while (neighborEntry != NULL) {
+      int other = neighborEntry->mote;
       sim_gain_put(other, msg, endTime, ack && (other == dest), power + sim_gain_value(sim_node(), other));
-      link = sim_gain_next(link);
+      neighborEntry = sim_gain_next(neighborEntry);
     }
   }
     
