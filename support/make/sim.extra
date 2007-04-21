@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: sim.extra,v 1.7 2007-04-21 03:28:17 scipio Exp $
+#$Id: sim.extra,v 1.8 2007-04-21 07:00:30 scipio Exp $
 
 GCC=gcc
 GPP=g++
@@ -7,7 +7,7 @@ OPTFLAGS = -g -O0
 LIBS = -lm -lstdc++ 
 PFLAGS += -tossim -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber=sim_node\(\)  
 WFLAGS = -Wno-nesc-data-race
-PYTHON_VERSION=2.3
+PYTHON_VERSION=2.5
 
 BUILDDIR   = simbuild/$(PLATFORM)
 CFILE    = $(BUILDDIR)/sim.c
@@ -30,10 +30,10 @@ ifeq ($(findstring cygwin, $(OSTYPE)),cygwin)
   PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
 else 
 ifeq ($(OS), Windows_NT) # Some TinyOS installs are like this
-  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic 
   SHARED_OBJECT=_TOSSIM.dll
   PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
-  PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+  PLATFORM_LIB_FLAGS =-shared -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
 else 
 ifeq ($(findstring darwin, $(OSTYPE)), darwin)
   PLATFORM_FLAGS=-fPIC
