@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: sim.extra,v 1.6 2007-02-06 05:46:47 scipio Exp $
+#$Id: sim.extra,v 1.7 2007-04-21 03:28:17 scipio Exp $
 
 GCC=gcc
 GPP=g++
@@ -23,13 +23,19 @@ SIMDIR     =$(TOSDIR)/lib/tossim
 XML        = app.xml
 DUMPTYPES = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags
 
-ifeq ($(OSTYPE), cygwin)
+ifeq ($(findstring cygwin, $(OSTYPE)),cygwin)
   PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
   SHARED_OBJECT=_TOSSIM.dll
   PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
-  PLATFORM_LIB_FLAGS = -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+  PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
 else 
-ifeq ($(OSTYPE), darwin) 
+ifeq ($(OS), Windows_NT) # Some TinyOS installs are like this
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
+  PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else 
+ifeq ($(findstring darwin, $(OSTYPE)), darwin)
   PLATFORM_FLAGS=-fPIC
   PLATFORM_CC_FLAGS=-bundle
   SHARED_OBJECT=_TOSSIMmodule.so
@@ -40,6 +46,7 @@ else # linux
   SHARED_OBJECT=_TOSSIMmodule.so
   PLATFORM_LIB_FLAGS = -lstdc++ 
   PLATFORM_BUILD_FLAGS= -shared -fPIC
+endif
 endif
 endif
  
