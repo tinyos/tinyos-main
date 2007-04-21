@@ -1,11 +1,11 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: sim-fast.extra,v 1.6 2007-04-01 00:25:07 scipio Exp $
+#$Id: sim-fast.extra,v 1.7 2007-04-21 04:53:11 scipio Exp $
 
 GCC=gcc
 GPP=g++
 OPTFLAGS = -g -O3
 LIBS = -lm -lstdc++ 
-PFLAGS += -tossim -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber=sim_node\(\)   -DTOSSIM_NO_DEBUG
+PFLAGS += -tossim -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber=sim_node\(\) -DTOSSIM_NO_DEBUG
 WFLAGS = -Wno-nesc-data-race
 PYTHON_VERSION=2.3
 
@@ -23,13 +23,19 @@ SIMDIR     =$(TOSDIR)/lib/tossim
 XML        = app.xml
 DUMPTYPES = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags
 
-ifeq ($(OSTYPE), cygwin)
+ifeq ($(findstring cygwin, $(OSTYPE)),cygwin)
   PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
   SHARED_OBJECT=_TOSSIM.dll
   PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
-  PLATFORM_LIB_FLAGS = -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+  PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
 else 
-ifeq ($(OSTYPE), darwin) 
+ifeq ($(OS),Windows_NT) # Some TinyOS installs are like this
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
+  PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else 
+ifeq ($(findstring darwin, $(OSTYPE)), darwin)
   PLATFORM_FLAGS=-fPIC
   PLATFORM_CC_FLAGS=-bundle
   SHARED_OBJECT=_TOSSIMmodule.so
@@ -40,6 +46,7 @@ else # linux
   SHARED_OBJECT=_TOSSIMmodule.so
   PLATFORM_LIB_FLAGS = -lstdc++ 
   PLATFORM_BUILD_FLAGS= -shared -fPIC
+endif
 endif
 endif
  
@@ -53,6 +60,7 @@ sim-exe: builddir $(BUILD_EXTRA_DEPS) FORCE
 	@echo "  writing XML schema to $(XML)"
 	@echo "  compiling $(COMPONENT) to object file sim.o"
 	$(NCC) -c $(PLATFORM_FLAGS) -o $(OBJFILE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WFLAGS) $(COMPONENT).nc $(LDFLAGS)  $(DUMPTYPES) -fnesc-dumpfile=$(XML)
+
 	@echo "  compiling Python support and C libraries into pytossim.o, tossim.o, and c-support.o"
 	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(PYOBJFILE) $(OPTFLAGS) $(CFLAGS) $(PYFILE) -I$(PYDIR) -I$(SIMDIR) -DHAVE_CONFIG_H 
 	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(CXXOBJFILE) $(OPTFLAGS) $(CFLAGS) $(CXXFILE) -I$(PYDIR) -I$(SIMDIR)
