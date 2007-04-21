@@ -84,10 +84,9 @@ implementation {
       call Leds.led1On();
     }
     else {
-      error_t e;
-      do {
-	e = call LogWrite.erase();
-      } while (e != SUCCESS);
+      if (call LogWrite.erase() != SUCCESS) {
+	// Handle error.
+      }
       call Leds.led0On();
     }
   }
