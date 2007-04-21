@@ -28,5 +28,15 @@ tools/release/extractor $NAME-$VERSION <<'EOF' | gzip >../$NAME-$VERSION.tar.gz
 !/build$
 !#
 !.class$
+./RadioSenseToLeds/RadioSenseMsg.class
+./MViz/MVizMsg.class
+./tests/cc2420/TestPacketLink/TestPacketLink.class
+./tests/cc2420/TestPacketLink/PacketLinkMsg.class
+./tests/cc2420/TxThroughput/ThroughputMsg.class
+./tests/cc2420/TxThroughput/TxThroughput.class
+./tests/cc2420/LplBroadcastCountToLeds/RadioCountMsg.class
+./tests/cc2420/RssiToSerial/SpecAnalyzer.class
+./tests/cc2420/RssiToSerial/RssiSerialMsg.class
+./RadioCountToLeds/RadioCountMsg.class
 EOF
 rm -rf $NAME-$VERSION
