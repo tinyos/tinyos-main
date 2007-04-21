@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.10: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
 <title>Sensors and Sensor Boards</title>
 <meta name="author" content="David Gay, Phil Levis, Wei Hong, Joe Polastre, and Gilman Tolle" />
 <style type="text/css">
@@ -11,23 +11,21 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:Date: $Date: 2007-02-04 19:54:37 $
-:Revision: $Revision: 1.7 $
-:Copyright: This stylesheet has been placed in the public domain.
+:date: $Date: 2007-04-21 07:04:39 $
+:version: $Revision: 1.8 $
+:copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
-
-See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
-customize this style sheet.
 */
+body {
+  font-family: Times;
+  font-size: 16px;
+}
 
-/* "! important" is used here to override other ``margin-top`` and
-   ``margin-bottom`` styles that are later in the stylesheet or 
-   more specific.  See http://www.w3.org/TR/CSS1#the-cascade */
 .first {
   margin-top: 0 ! important }
 
-.last, .with-subtitle {
+.last {
   margin-bottom: 0 ! important }
 
 .hidden {
@@ -40,11 +38,11 @@ a.toc-backref {
 blockquote.epigraph {
   margin: 2em 5em ; }
 
-dl.docutils dd {
+dd {
   margin-bottom: 0.5em }
 
-/* Uncomment (and remove this text!) to get bold-faced definition list terms
-dl.docutils dt {
+/* Uncomment (& remove this text!) to get bold-faced definition list terms
+dt {
   font-weight: bold }
 */
 
@@ -55,17 +53,11 @@ div.abstract p.topic-title {
   font-weight: bold ;
   text-align: center }
 
-div.admonition, div.attention, div.caution, div.danger, div.error,
-div.hint, div.important, div.note, div.tip, div.warning {
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning, div.admonition {
   margin: 2em ;
   border: medium outset ;
   padding: 1em }
-
-div.admonition p.admonition-title, div.hint p.admonition-title,
-div.important p.admonition-title, div.note p.admonition-title,
-div.tip p.admonition-title {
-  font-weight: bold ;
-  font-family: sans-serif }
 
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
@@ -74,14 +66,11 @@ div.warning p.admonition-title {
   font-weight: bold ;
   font-family: sans-serif }
 
-/* Uncomment (and remove this text!) to get reduced vertical space in
-   compound paragraphs.
-div.compound .compound-first, div.compound .compound-middle {
-  margin-bottom: 0.5em }
-
-div.compound .compound-last, div.compound .compound-middle {
-  margin-top: 0.5em }
-*/
+div.hint p.admonition-title, div.important p.admonition-title,
+div.note p.admonition-title, div.tip p.admonition-title,
+div.admonition p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
 
 div.dedication {
   margin: 2em 5em ;
@@ -96,7 +85,6 @@ div.figure {
   margin-left: 2em }
 
 div.footer, div.header {
-  clear: both;
   font-size: smaller }
 
 div.line-block {
@@ -112,7 +100,7 @@ div.line-block div.line-block {
 div.sidebar {
   margin-left: 1em ;
   border: medium outset ;
-  padding: 1em ;
+  padding: 0em 1em ;
   background-color: #ffffee ;
   width: 40% ;
   float: right ;
@@ -139,27 +127,31 @@ div.system-message p.system-message-title {
 div.topic {
   margin: 2em }
 
-h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
-h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
-  margin-top: 0.4em }
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
 
 h1.title {
-  text-align: center }
+ text-align: center;
+ font-size: 32px;
+}
+
+h2 {
+ font-size: 16px;
+ font-family: Arial, sans-serif;
+}
 
 h2.subtitle {
   text-align: center }
 
-hr.docutils {
+h3 {
+ font-size: 12px;
+ font-family: Arial, sans-serif;
+}
+
+hr {
   width: 75% }
-
-img.align-left {
-  clear: left }
-
-img.align-right {
-  clear: right }
-
-img.borderless {
-  border: 0 }
 
 ol.simple, ul.simple {
   margin-bottom: 1em }
@@ -224,7 +216,11 @@ pre.line-block {
 pre.literal-block, pre.doctest-block {
   margin-left: 2em ;
   margin-right: 2em ;
-  background-color: #eeeeee }
+  background-color: #eeeeee;
+  border-color: #000000;
+  border-width: thin; 
+  font-size: 14px
+}
 
 span.classifier {
   font-family: sans-serif ;
@@ -240,47 +236,46 @@ span.interpreted {
 span.option {
   white-space: nowrap }
 
+span.option-argument {
+  font-style: italic }
+
 span.pre {
   white-space: pre }
 
 span.problematic {
   color: red }
 
-span.section-subtitle {
-  /* font-size relative to parent (h1..h6 element) */
-  font-size: 80% }
-
-table.citation {
-  border-left: solid thin gray }
-
-table.docinfo {
-  margin: 2em 4em }
-
-table.docutils {
+table {
   margin-top: 0.5em ;
   margin-bottom: 0.5em }
 
-table.footnote {
-  border-left: solid thin black }
+table.citation {
+  border-left: solid thin gray ;
+  padding-left: 0.5ex }
 
-table.docutils td, table.docutils th,
-table.docinfo td, table.docinfo th {
+table.docinfo {
+  margin: 2em 4em;
+}
+
+table.footnote {
+  border-left: solid thin black ;
+  padding-left: 0.5ex }
+
+td, th {
   padding-left: 0.5em ;
   padding-right: 0.5em ;
   vertical-align: top }
 
-table.docutils th.field-name, table.docinfo th.docinfo-name {
+th.docinfo-name, th.field-name {
   font-weight: bold ;
   text-align: left ;
-  white-space: nowrap ;
-  padding-left: 0 }
+  white-space: nowrap;
+  }
 
-h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
-h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
   font-size: 100% }
 
-tt.docutils {
-  background-color: #eeeeee }
+tt {}
 
 ul.auto-toc {
   list-style-type: none }
@@ -288,7 +283,6 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="sensors-and-sensor-boards">
 <h1 class="title">Sensors and Sensor Boards</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -312,6 +306,7 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
+<div class="document" id="sensors-and-sensor-boards">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -319,15 +314,15 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1><a name="abstract">Abstract</a></h1>
 <p>This memo documents how sensor drivers are organized in TinyOS and how
 sets of sensor drivers are combined into sensor boards and sensor
 platforms, along with general principles followed by the components
 that provide access to sensors.</p>
 </div>
-<div class="section">
-<h1><a id="principles" name="principles">1. Principles</a></h1>
+<div class="section" id="principles">
+<h1><a name="principles">1. Principles</a></h1>
 <p>This section describes the basic organization principles for sensor
 drivers in TinyOS.</p>
 <p>For background, a sensor can be attached to the microcontroller on a
@@ -379,8 +374,8 @@ the driver MAY provide additional interfaces that would allow
 higher-level clients to obtain information needed to properly
 interpret the value.</p>
 </div>
-<div class="section">
-<h1><a id="sensor-hil-components" name="sensor-hil-components">2. Sensor HIL Components</a></h1>
+<div class="section" id="sensor-hil-components">
+<h1><a name="sensor-hil-components">2. Sensor HIL Components</a></h1>
 <p>A sensor HIL component MUST provide:</p>
 <ul class="simple">
 <li>One or more SID interfaces <a class="citation-reference" href="#tep114" id="id2" name="id2">[TEP114]</a>, for reading data.</li>
@@ -472,8 +467,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h1><a id="sensor-hal-components" name="sensor-hal-components">3. Sensor HAL Components</a></h1>
+<div class="section" id="sensor-hal-components">
+<h1><a name="sensor-hal-components">3. Sensor HAL Components</a></h1>
 <p>Sensors with a richer interface than would be supported by the SID
 interfaces MAY provide a HAL component in addition to a HIL
 component.</p>
@@ -502,8 +497,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h1><a id="directory-organization-guidelines" name="directory-organization-guidelines">4. Directory Organization Guidelines</a></h1>
+<div class="section" id="directory-organization-guidelines">
+<h1><a name="directory-organization-guidelines">4. Directory Organization Guidelines</a></h1>
 <p>Because the same physical sensor can be attached to TinyOS platforms
 in many different ways, the organization of sensor drivers SHOULD
 reflect the distinction between sensor and sensor interconnect.</p>
@@ -572,8 +567,8 @@ code that will enter the core source tree. In general, sensor
 components can be placed anywhere as long as the nesC compiler
 receives enough <cite>-I</cite> directives to locate all of the necessary pieces.</p>
 </div>
-<div class="section">
-<h1><a id="authors-addresses" name="authors-addresses">5. Authors' Addresses</a></h1>
+<div class="section" id="authors-addresses">
+<h1><a name="authors-addresses">5. Authors' Addresses</a></h1>
 <div class="line-block">
 <div class="line">David Gay</div>
 <div class="line">2150 Shattuck Ave, Suite 1300</div>
@@ -616,8 +611,8 @@ receives enough <cite>-I</cite> directives to locate all of the necessary pieces
 <div class="line">email - <a class="reference" href="mailto:gtolle&#64;archrock.com">gtolle&#64;archrock.com</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1><a name="citations">6. Citations</a></h1>
 <table class="docutils citation" frame="void" id="tep2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -637,10 +632,10 @@ receives enough <cite>-I</cite> directives to locate all of the necessary pieces
 </tbody>
 </table>
 </div>
-<div class="section">
-<h1><a id="appendix-a-sensor-driver-examples" name="appendix-a-sensor-driver-examples">Appendix A: Sensor Driver Examples</a></h1>
-<div class="section">
-<h2><a id="analog-adc-connected-sensor" name="analog-adc-connected-sensor">1. Analog ADC-Connected Sensor</a></h2>
+<div class="section" id="appendix-a-sensor-driver-examples">
+<h1><a name="appendix-a-sensor-driver-examples">Appendix A: Sensor Driver Examples</a></h1>
+<div class="section" id="analog-adc-connected-sensor">
+<h2><a name="analog-adc-connected-sensor">1. Analog ADC-Connected Sensor</a></h2>
 <p>The Analog sensor requires two components</p>
 <ul class="simple">
 <li>a component to present the sensor itself (HamamatsuS1087ParC)</li>
@@ -701,8 +696,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="binary-pin-connected-sensor" name="binary-pin-connected-sensor">2. Binary Pin-Connected Sensor</a></h2>
+<div class="section" id="binary-pin-connected-sensor">
+<h2><a name="binary-pin-connected-sensor">2. Binary Pin-Connected Sensor</a></h2>
 <p>The Binary sensor gets a bit more complex, because it has three
 components:</p>
 <ul class="simple">
@@ -814,8 +809,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="digital-bus-connected-sensor" name="digital-bus-connected-sensor">3. Digital Bus-Connected Sensor</a></h2>
+<div class="section" id="digital-bus-connected-sensor">
+<h2><a name="digital-bus-connected-sensor">3. Digital Bus-Connected Sensor</a></h2>
 <p>The Digital sensor is the most complex out of the set, and includes
 six components:</p>
 <ul class="simple">

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
 <title>Microcontroller Power Management</title>
 <meta name="author" content="Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-01-10 18:33:38 $
-:version: $Revision: 1.8 $
+:date: $Date: 2007-04-21 07:04:39 $
+:version: $Revision: 1.9 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,7 +283,6 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="microcontroller-power-management">
 <h1 class="title">Microcontroller Power Management</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -303,14 +302,15 @@ ul.auto-toc {
 <td>Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-Sep-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-20</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-01-10</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
 </tbody>
 </table>
+<div class="document" id="microcontroller-power-management">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -318,13 +318,13 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1><a name="abstract">Abstract</a></h1>
 <p>This memo documents how TinyOS manages the lower power state of a
 microcontroller.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1><a name="introduction">1. Introduction</a></h1>
 <p>Microcontrollers often have several power states, with varying power
 draws, wakeup latencies, and peripheral support. The microcontroller
 should always be in the lowest possible power state that can satisfy
@@ -340,8 +340,8 @@ bit, and a power state override. This memo documents these mechanisms
 and how they work, as well as the basics of subsystem power
 management.</p>
 </div>
-<div class="section">
-<h1><a id="background" name="background">2. Background</a></h1>
+<div class="section" id="background">
+<h1><a name="background">2. Background</a></h1>
 <p>The TinyOS scheduler[<a class="reference" href="#id3">2</a>] puts a processor into a sleep state when
 the task queue is empty. However, processors can have a spectrum of
 power states. For example, the MSP430 has one active mode (issuing
@@ -393,8 +393,8 @@ to give the TinyOS microcontroller power manager information on their
 requirements, which it considers when calculating the right low power
 state.</p>
 </div>
-<div class="section">
-<h1><a id="id1" name="id1">3. Microcontroller Power Management</a></h1>
+<div class="section" id="id1">
+<h1><a name="id1">3. Microcontroller Power Management</a></h1>
 <p>TinyOS 2.x uses three basic mechanisms to manage and control
 microcontroller power states: a dirty bit, a chip-specific low power
 state calculation function, and a power state override function.  The
@@ -457,8 +457,8 @@ whose signature MUST include the following interfaces:</p>
 </div>
 <p>McuSleepC MAY have additional interfaces.</p>
 </div>
-<div class="section">
-<h1><a id="the-dirty-bit" name="the-dirty-bit">3.1 The Dirty Bit</a></h1>
+<div class="section" id="the-dirty-bit">
+<h1><a name="the-dirty-bit">3.1 The Dirty Bit</a></h1>
 <p>Whenever a Hardware Presentation Layer (HPL, see TEP 2: Hardware
 Abstraction Architecture[<a class="reference" href="#id2">1</a>]) component changes an aspect of
 hardware configuration that might change the possible low power state
@@ -468,8 +468,8 @@ McuPowerState.update() is called, then McuSleepC MUST recompute the
 low power state before the next time it goes to sleep as a result of
 McuSleep.sleep() being called.</p>
 </div>
-<div class="section">
-<h1><a id="low-power-state-calculation" name="low-power-state-calculation">3.2 Low Power State Calculation</a></h1>
+<div class="section" id="low-power-state-calculation">
+<h1><a name="low-power-state-calculation">3.2 Low Power State Calculation</a></h1>
 <p>McuSleepC is responsible for calculating the lowest power state that
 it can safely put the microcontroller into without disrupting the
 operation of TinyOS subsystems. McuSleepC SHOULD minimize how often it
@@ -549,8 +549,8 @@ combine function would look like this:</p>
 </tbody>
 </table>
 </div>
-<div class="section">
-<h1><a id="power-state-override" name="power-state-override">3.3 Power State Override</a></h1>
+<div class="section" id="power-state-override">
+<h1><a name="power-state-override">3.3 Power State Override</a></h1>
 <p>When McuSleepC computes the best low power state, it MUST call
 <tt class="docutils literal"><span class="pre">PowerOverride.lowestState().</span></tt> McuSleepC SHOULD have a default
 implementation of this command, which returns the lowest power state
@@ -573,8 +573,8 @@ mcu_power_t means that this command can have fan-out calls.</p>
 <p>Section 5 describes one example use of McuPowerOverride, in the
 timer stack for the Atmega128 microcontroller family.</p>
 </div>
-<div class="section">
-<h1><a id="peripherals-and-subsystems" name="peripherals-and-subsystems">4. Peripherals and Subsystems</a></h1>
+<div class="section" id="peripherals-and-subsystems">
+<h1><a name="peripherals-and-subsystems">4. Peripherals and Subsystems</a></h1>
 <p>At the HIL level, TinyOS subsystems generally have a simple,
 imperative power management interface. Depending on the latencies
 involved, this interface is either <tt class="docutils literal"><span class="pre">StdControl</span></tt>, <tt class="docutils literal"><span class="pre">SplitControl</span></tt>,
@@ -587,24 +587,24 @@ change in status and control registers (e.g., a clock is
 disabled). Following the requirements in 3.1, the MCU power management
 subsystem will be notified of a significant change and act
 appropriately when the system next goes to sleep. TEP 115[<a class="reference" href="#id6">5</a>]
-describes the power management of non-virtualized devices in
+describes the power management of non-virtualized devices in 
 greater detail, and TEP 108[<a class="reference" href="#id5">4</a>] describes how TinyOS can automatically
 include power management into shared non-virtualized devices.</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">5. Implementation</a></h1>
-<p>An implementation of McuSleepC can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128</span></tt>,
+<div class="section" id="implementation">
+<h1><a name="implementation">5. Implementation</a></h1>
+<p>An implementation of McuSleepC can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128</span></tt>, 
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/msp430</span></tt>, and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/px27ax</span></tt>.</p>
 <p>An example of a use of McuPowerOverride can be found in the atmega128 timer
 system. Because some low-power states have much longer wakeup latencies than
 others, the timer system does not allow long latencies if it has a timer
-that is going to fire soon.  The implementation can be found in
+that is going to fire soon.  The implementation can be found in 
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128/timer/HplAtm128Timer0AsyncP.nc</span></tt>, and
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128/timer/HplAtm128Timer0AsyncC.nc</span></tt> automatically
 wires it to McuSleepC if it is included.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1><a name="author-s-address">6. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Robert Szewczyk</div>
 <div class="line">Moteiv Corporation</div>
@@ -659,8 +659,8 @@ wires it to McuSleepC if it is included.</p>
 <div class="line"><br /></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1><a name="citations">6. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

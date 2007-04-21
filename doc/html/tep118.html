@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
 <title>Dissemination</title>
 <meta name="author" content="Philip Levis and Gilman Tolle" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-04-21 07:04:39 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,7 +283,6 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="dissemination">
 <h1 class="title">Dissemination</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -303,14 +302,15 @@ ul.auto-toc {
 <td>Philip Levis and Gilman Tolle</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.3</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-06-20</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
 </tbody>
 </table>
+<div class="document" id="dissemination">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -318,15 +318,15 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1><a name="abstract">Abstract</a></h1>
 <p>The memo documents the interfaces, components, and semantics for
 disseminating small (smaller than a single packet payload) pieces of
 data in TinyOS 2.x.  Dissemination is reliably delivering a piece of
 data to every node in a network.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1><a name="introduction">1. Introduction</a></h1>
 <p>Dissemination is a basic sensor network protocol. The ability to
 reliably deliver a piece of data to every node allows administrators
 to reconfigure, query, and reprogram a network.  Reliability is
@@ -355,15 +355,15 @@ rejoins the network it will only see the most recent. The rest of this
 document describes a set of components and interfaces for a
 dissemination service of this kind.</p>
 </div>
-<div class="section">
-<h1><a id="dissemination-interfaces" name="dissemination-interfaces">2. Dissemination interfaces</a></h1>
+<div class="section" id="dissemination-interfaces">
+<h1><a name="dissemination-interfaces">2. Dissemination interfaces</a></h1>
 <p>Small-value dissemination has two interfaces: DisseminationValue and
 DisseminationUpdate. The former is for consumers of a disseminated
 value, the latter is for producers. They are as follows:</p>
 <pre class="literal-block">
 interface DisseminationValue&lt;t&gt; {
   command const t* get();
-  event void changed();
+  event void changed(); 
 }
 
 interface DisseminationUpdate&lt;t&gt; {
@@ -391,8 +391,8 @@ network might reach consensus when nodes have different values. The
 dissemination protocol therefore MUST have a tie-breaking mechanism,
 so that eventually every node has the same data value.</p>
 </div>
-<div class="section">
-<h1><a id="dissemination-service" name="dissemination-service">3 Dissemination Service</a></h1>
+<div class="section" id="dissemination-service">
+<h1><a name="dissemination-service">3 Dissemination Service</a></h1>
 <p>A dissemination service MUST provide one component, DisseminatorC,
 which has the following signature:</p>
 <pre class="literal-block">
@@ -421,8 +421,8 @@ implementation {
 <p>Two different instances of DisseminatorC MUST NOT share the same value
 for the <tt class="docutils literal"><span class="pre">key</span></tt> argument.</p>
 </div>
-<div class="section">
-<h1><a id="dissemination-keys" name="dissemination-keys">4 Dissemination Keys</a></h1>
+<div class="section" id="dissemination-keys">
+<h1><a name="dissemination-keys">4 Dissemination Keys</a></h1>
 <p>One issue that comes up when using this interfaces is the selection of
 a key for each value. On one hand, using unique() is easy, but this
 means that the keyspaces for two different compilations of the same
@@ -438,7 +438,7 @@ namespace are separated by their most significant bit. A component
 author might write something like this:</p>
 <pre class="literal-block">
 #include &lt;disseminate_keys.h&gt;
-configuration SomeComponentC {
+configuration SomeComponentC { 
   ...
 }
 implementation {
@@ -449,7 +449,7 @@ implementation {
 #endif
   components SomeComponentP;
   components new DisseminatorC(uint8_t, DIS_SOME_COMPONENT_KEY);
-  SomeComponentP.ConfigVal -&gt; DisseminatorC;
+  SomeComponentP.ConfigVal -&gt; DisseminatorC; 
 }
 </pre>
 <p>To override, you can then make a disseminate_keys.h in your app
@@ -464,8 +464,8 @@ protocol. The GUID enables nodes to detect versions from other
 binaries and not store them. This GUID won't be part of the external
 interface, but will be used internally.</p>
 </div>
-<div class="section">
-<h1><a id="more-complex-dissemination" name="more-complex-dissemination">5. More Complex Dissemination</a></h1>
+<div class="section" id="more-complex-dissemination">
+<h1><a name="more-complex-dissemination">5. More Complex Dissemination</a></h1>
 <p>An application can use this low-level networking primitive to build
 more complex dissemination systems. For example, if you want have a
 dissemination that only nodes which satisfy a predicate receive, you
@@ -473,15 +473,15 @@ can do that by making the &lt;t&gt; a struct that stores a predicate and
 data value in it, and layering the predicate evaluation on top of the
 above interfaces.</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">6. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1><a name="implementation">6. Implementation</a></h1>
 <p>An implementation of this TEP can be found in
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net</span></tt>. This dissemination implementation uses
 network trickles <a class="footnote-reference" href="#id3" id="id1" name="id1">[2]</a>. Each dissemination value has a separate
 trickle.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1><a name="author-s-address">6. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates Hall</div>
@@ -501,8 +501,8 @@ trickle.</p>
 <div class="line">email - <a class="reference" href="mailto:gtolle&#64;archedrock.com">gtolle&#64;archedrock.com</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">7. Citations</a></h1>
+<div class="section" id="citations">
+<h1><a name="citations">7. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -517,7 +517,7 @@ trickle.</p>
 </table>
 </div>
 <div class="system-messages section">
-<h1>Docutils System Messages</h1>
+<h1><a>Docutils System Messages</a></h1>
 <div class="system-message" id="id4">
 <p class="system-message-title">System Message: <a name="id4">ERROR/3</a> (<tt class="docutils">txt/tep118.txt</tt>, line 116); <em><a href="#id5">backlink</a></em></p>
 Unknown target name: &quot;tep111&quot;.</div>

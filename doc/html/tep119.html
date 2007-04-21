@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
 <title>Collection</title>
 <meta name="author" content="Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-01-10 18:33:38 $
-:version: $Revision: 1.9 $
+:date: $Date: 2007-04-21 07:04:39 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,7 +283,6 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="collection">
 <h1 class="title">Collection</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -307,6 +306,7 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
+<div class="document" id="collection">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -314,8 +314,8 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1><a name="abstract">Abstract</a></h1>
 <p>The memo documents the interfaces, components, and semantics used by
 collection protocol in TinyOS 2.x. Collection provides a best-effort,
 multihop delivery of packets to the root of <em>a</em> tree. There may be
@@ -323,25 +323,25 @@ multiple roots in a network, and in this case the semantics implemented
 are of <em>anycast</em> delivery to at least one of the roots. A node sending
 a packet does not specify which root the packet is destined to.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1><a name="introduction">1. Introduction</a></h1>
 <p>Collecting data at a base station is a common requirement of sensor
 network applications. The general approach used is to build one
 or more collection <em>trees</em>, each of which is rooted at a base
-station. When a node has data which needs to be collected, it
+station. When a node has data which needs to be collected, it 
 sends the data up the tree, and it forwards collection data that
 other nodes send to it. Sometimes, depending on the form of data
 collection, systems need to be able to inspect packets as they go
 by, either to gather statistics, compute aggregates, or suppress
 redundant transmissions.</p>
 <p>When a network has multiple base stations that act as <em>root</em> nodes,
-rather than one tree, it has a <em>forest</em> of trees. By picking a
+rather than one tree, it has a <em>forest</em> of trees. By picking a 
 parent node, a collection protocol implicitly joins one of these
 trees. Collection provides a best-effort,
 multihop delivery of packets to one of a network's tree roots:
 it is an <em>anycast</em> protocol. The semantics is that the protocol
 will make a reasonable effort to deliver the message to at least
-one of the roots in the network. There are however no guarantees of
+one of the roots in the network. There are however no guarantees of 
 delivery, and there can be duplicates delivered to one or more
 roots. There is also no ordering guarantees.</p>
 <p>Given the limited state that nodes can store and a general need
@@ -354,8 +354,8 @@ family:</p>
 <ul class="simple">
 <li>Loop detection, detecting when a node selects one of its
 descendants as a new parent.</li>
-<li>Duplicate suppression, detecting and dealing with when lost
-acknowledgments are causing packets to replicate in the
+<li>Duplicate suppression, detecting and dealing with when lost 
+acknowledgments are causing packets to replicate in the 
 network, wasting bandwidth.</li>
 <li>Link estimation, evaluating the link quality to single-hop
 neighbors.</li>
@@ -366,16 +366,16 @@ from introducing interference for subsequent packets.</li>
 <p>The rest of this document describes a set of components and interfaces
 for a collection service outlined above.</p>
 </div>
-<div class="section">
-<h1><a id="collection-interfaces" name="collection-interfaces">2. Collection interfaces</a></h1>
+<div class="section" id="collection-interfaces">
+<h1><a name="collection-interfaces">2. Collection interfaces</a></h1>
 <p>A node can perform four different roles in collection: producer,
 consumer, snooper, and in-network processor. Depending on their role,
 the nodes use different interfaces to interact with the collection
 component.</p>
 <p>A consumer is a root of a tree. The set of all roots and the paths that
 lead to them form the collection routing infrastructure in the network.
-For any connected set of nodes implementing the collection protocol
-there is only one collection infrastructure, <em>i.e.</em>, all roots in this
+For any connected set of nodes implementing the collection protocol 
+there is only one collection infrastructure, <em>i.e.</em>, all roots in this 
 set active at the same time are part of the same infrastructure.</p>
 <p>A node is configured to become a root by using the RootControl
 interface. RootControl.setRoot() MUST make the current node a root of
@@ -413,8 +413,8 @@ to Receive during instantiation.</p>
 a packet. The collection identifier is specified as a parameter
 to Intercept during instantiation.</p>
 </div>
-<div class="section">
-<h1><a id="collection-services" name="collection-services">3 Collection Services</a></h1>
+<div class="section" id="collection-services">
+<h1><a name="collection-services">3 Collection Services</a></h1>
 <p>A collection service MUST provide one component, CollectionC,
 which has the following signature:</p>
 <pre class="literal-block">
@@ -463,8 +463,8 @@ is supposed to forward, it MAY signal Snoop.receive.</p>
 CollectionC SHOULD NOT configure a node as a root by default.</p>
 <p>Packet and CollectionPacket allow components to access collection
 data packet fields [<a class="reference" href="#id1">1</a>].</p>
-<div class="section">
-<h2><a id="collectionsenderc" name="collectionsenderc">3.1 CollectionSenderC</a></h2>
+<div class="section" id="collectionsenderc">
+<h2><a name="collectionsenderc">3.1 CollectionSenderC</a></h2>
 <p>Collection has a virtualized sending abstraction, the generic
 component CollectionSenderC:</p>
 <pre class="literal-block">
@@ -482,8 +482,8 @@ have a single packet format, so that receivers can parse a packet
 based on its collection ID and contents.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">4 Implementation</a></h1>
+<div class="section" id="implementation">
+<h1><a name="implementation">4 Implementation</a></h1>
 <p>An implementation of this TEP can be found in
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/ctp</span></tt> and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/le</span></tt>, in
 the CTP protocol. It is beyond the scope of this document to fully
@@ -498,8 +498,8 @@ ease of use through modularization. Neighbor management and link
 estimation are decoupled from the routing protocol. Furthermore, the
 routing protocol and route selection are decoupled from the
 forwarding policies, such as queueing and timing.</p>
-<div class="section">
-<h2><a id="linkestimatorp" name="linkestimatorp">4.1 LinkEstimatorP</a></h2>
+<div class="section" id="linkestimatorp">
+<h2><a name="linkestimatorp">4.1 LinkEstimatorP</a></h2>
 <p>LinkEstimatorP estimates the quality of link to or from each
 neighbor. Link estimation can be done in a variety of ways, and we
 do not impose one here. It is decoupled from the establishment of
@@ -552,23 +552,23 @@ interface LinkEstimator {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="ctproutingenginep" name="ctproutingenginep">4.2 CtpRoutingEngineP</a></h2>
+<div class="section" id="ctproutingenginep">
+<h2><a name="ctproutingenginep">4.2 CtpRoutingEngineP</a></h2>
 <p>CtpRoutingEngineP is responsible for computing routes to the roots of a
 tree. In traditional networking terminology, this is part of the
 control plane of the network, and is does not directly forward any
-data packets, which is the responsibility of CtpForwardingEngine.
+data packets, which is the responsibility of CtpForwardingEngine. 
 The main interface between the two is UnicastNameFreeRouting.</p>
 <p>CtpRoutingEngineP uses the LinkEstimator interface to learn
 about the nodes in the neighbor table maintained by LinkEstimatorP and
 the quality of links to and from the neighbors. The routing protocol
 on which collection is implemented MUST be a tree-based routing
-protocol with a single or multiple roots. CtpRoutingEngineP
+protocol with a single or multiple roots. CtpRoutingEngineP 
 allows a node to be configured as a root or a non-root node
 dynamically. CtpRoutingEngineP maintains multiple candidate next hops:</p>
 <pre class="literal-block">
-generic module CtpRoutingEngineP(uint8_t routingTableSize,
-                                 uint16_t minInterval,
+generic module CtpRoutingEngineP(uint8_t routingTableSize, 
+                                 uint16_t minInterval, 
                                  uint16_t maxInterval) {
     provides {
         interface UnicastNameFreeRouting as Routing;
@@ -577,7 +577,7 @@ generic module CtpRoutingEngineP(uint8_t routingTableSize,
         interface StdControl;
         interface CtpRoutingPacket;
         interface Init;
-    }
+    } 
     uses {
         interface AMSend as BeaconSend;
         interface Receive as BeaconReceive;
@@ -603,10 +603,10 @@ interface UnicastNameFreeRouting {
 }
 </pre>
 </div>
-<div class="section">
-<h2><a id="ctpforwardingenginep" name="ctpforwardingenginep">4.3 CtpForwardingEngineP</a></h2>
+<div class="section" id="ctpforwardingenginep">
+<h2><a name="ctpforwardingenginep">4.3 CtpForwardingEngineP</a></h2>
 <p>The CtpForwardingEngineP component provides all the top level interfaces
-(except RootControl) which CollectionC provides and an application
+(except RootControl) which CollectionC provides and an application 
 uses. It deals with retransmissions, duplicate suppression, packet
 timing, loop detection, and also informs the LinkEstimator of the
 outcome of attempted transmissions.:</p>
@@ -663,10 +663,10 @@ QEntryPool</li>
 </blockquote>
 </div>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
+<div class="section" id="author-addresses">
+<h1><a name="author-addresses">5. Author Addresses</a></h1>
 <div class="line-block">
-<div class="line">Rodrigo Fonseca</div>
+<div class="line">Rodrigo Fonseca </div>
 <div class="line">473 Soda Hall</div>
 <div class="line">Berkeley, CA 94720-1776</div>
 <div class="line"><br /></div>
@@ -675,9 +675,9 @@ QEntryPool</li>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Omprakash Gnawali</div>
-<div class="line">Ronald Tutor Hall (RTH) 418</div>
+<div class="line">Ronald Tutor Hall (RTH) 418 </div>
 <div class="line">3710 S. McClintock Avenue</div>
-<div class="line">Los Angeles, CA 90089</div>
+<div class="line">Los Angeles, CA 90089 </div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 213 821-5627</div>
 <div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
@@ -686,7 +686,7 @@ QEntryPool</li>
 <div class="line">Kyle Jamieson</div>
 <div class="line">The Stata Center</div>
 <div class="line">32 Vassar St.</div>
-<div class="line">Cambridge, MA 02139</div>
+<div class="line">Cambridge, MA 02139 </div>
 <div class="line"><br /></div>
 <div class="line">email - <a class="reference" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
 <div class="line"><br /></div>
@@ -701,8 +701,8 @@ QEntryPool</li>
 <div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1><a name="citations">6. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -712,7 +712,7 @@ QEntryPool</li>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id2">[2]</a></td><td>TEP 124: The Collection Tree Protocol (CTP) - (upcoming)</td></tr>
+<tr><td class="label"><a name="id2">[2]</a></td><td>TEP 123: The Collection Tree Protocol (CTP)</td></tr>
 </tbody>
 </table>
 </div>

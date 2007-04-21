@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
 <title>TinyOS 802.15.4 Frames</title>
 <meta name="author" content="Jonathan Hui, Philip Levis, and David Moss" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-09 18:43:51 $
-:version: $Revision: 1.2 $
+:date: $Date: 2007-04-21 07:04:39 $
+:version: $Revision: 1.3 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,7 +283,6 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="tinyos-802-15-4-frames">
 <h1 class="title">TinyOS 802.15.4 Frames</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -303,14 +302,15 @@ ul.auto-toc {
 <td>Jonathan Hui, Philip Levis, and David Moss</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">2-Feb-2007</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.2</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-04-03</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-04-09</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
 </tbody>
 </table>
+<div class="document" id="tinyos-802-15-4-frames">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -318,13 +318,13 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1><a name="abstract">Abstract</a></h1>
 <p>This memo documents the frame format for 802.15.4 packets in TinyOS
 2.0.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1><a name="introduction">1. Introduction</a></h1>
 <p>802.15.4 is a data-link and physical packet format for
 low-power wireless networks that is used in many TinyOS platforms.
 The TinyOS 2.0 active message layer adds a packet field for higher-level
@@ -333,15 +333,15 @@ for 802.15.4 networks. The first format is for isolated TinyOS networks;
 the second format is for networks that share the spectrum with 6lowpan
 networks[1]_.</p>
 </div>
-<div class="section">
-<h1><a id="id1" name="id1">2. 802.15.4</a></h1>
+<div class="section" id="id1">
+<h1><a name="id1">2. 802.15.4</a></h1>
 <p>802.15.4 supports several different source and destination addressing
 modes, and so has a variable sized packet header.[2]_ A TinyOS device MUST
 support packet frames with 16-bit short source and destination addresses.
 A TinyOS device MAY support additional 802.15.4 frame formats.</p>
 </div>
-<div class="section">
-<h1><a id="frame-format" name="frame-format">3. Frame Format</a></h1>
+<div class="section" id="frame-format">
+<h1><a name="frame-format">3. Frame Format</a></h1>
 <p>TinyOS has two 802.15.4 frame formats. The first format, the T-Frame, is
 for TinyOS networks which do not share their channel with other wireless
 networking archtiectures. This frame format assumes that TinyOS can use
@@ -372,14 +372,14 @@ this code has not been determined. To inform 6lowpan that this is not
 a 6lowpan packet, the code used MUST be in the range of 192-55.</p>
 <p>The AM type 6lowpan is reserved. A TinyOS program MUST NOT use it.</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">4. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1><a name="implementation">4. Implementation</a></h1>
 <p>An implementation of the T-Frame can be found in tinyos-2.x/tos/chips/cc2420.</p>
-<p>An implementation of the I-Frame will soon be found in
+<p>An implementation of the I-Frame will soon be found in 
 tinyos-2.x/tos/chips/cc2420.</p>
 </div>
-<div class="section">
-<h1><a id="author-addresses" name="author-addresses">5. Author Addresses</a></h1>
+<div class="section" id="author-addresses">
+<h1><a name="author-addresses">5. Author Addresses</a></h1>
 <div class="line-block">
 <div class="line"><br /></div>
 <div class="line">Jonathan Hui</div>

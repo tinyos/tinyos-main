@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
 <title>TinyOS 2.0 Overview</title>
 <meta name="author" content="Philip Levis" />
 <meta name="date" content="Oct 30 2006" />
@@ -12,8 +12,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-04-21 07:04:39 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,7 +283,6 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="tinyos-2-0-overview">
 <h1 class="title">TinyOS 2.0 Overview</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -295,14 +294,15 @@ ul.auto-toc {
 <td>Oct 30 2006</td></tr>
 </tbody>
 </table>
+<div class="document" id="tinyos-2-0-overview">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This document gives a brief overview of TinyOS 2.0, highlighting how
 and where it departs from 1.1 and 1.0. Further detail on these changes
 is detailed in TEP (TinyOS Enhancement Proposal) documents.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1><a name="introduction">1. Introduction</a></h1>
 <p>TinyOS 2.0 is a clean slate redesign and re-implementation of TinyOS.
 Its development was motivated by our belief that many aspects of 1.x
 strain to meet requirements and uses that were not foreseen
@@ -323,8 +323,8 @@ the scheduler, booting and initialization. Further detail on each of
 these can be found in TEPs (TinyOS Enhancement Proposals), which
 document and describe these abstractions.</p>
 </div>
-<div class="section">
-<h1><a id="platforms-hardware-abstraction" name="platforms-hardware-abstraction">2. Platforms/Hardware Abstraction</a></h1>
+<div class="section" id="platforms-hardware-abstraction">
+<h1><a name="platforms-hardware-abstraction">2. Platforms/Hardware Abstraction</a></h1>
 <p>Platforms exist in the <tt class="docutils literal"><span class="pre">tos/platforms</span></tt> subdirectory. In TinyOS 2.0, a
 <em>platform</em> is a collection of <em>chips</em> and some glue code that connects
 them together. For example, the mica2 platform is the CC1000 radio
@@ -377,8 +377,8 @@ the following platforms:</p>
 </blockquote>
 <p>The btnode3 platform is not included in the RPM.</p>
 </div>
-<div class="section">
-<h1><a id="scheduler" name="scheduler">3. Scheduler</a></h1>
+<div class="section" id="scheduler">
+<h1><a name="scheduler">3. Scheduler</a></h1>
 <p>As with TinyOS 1.x, TinyOS 2.0 scheduler has a non-preemptive FIFO
 policy. However, tasks in 2.0 operate slightly differently than in
 1.x.</p>
@@ -406,8 +406,8 @@ however, or the scheduler will break all nesC's static concurrency
 analysis. Details on the new scheduler and how to extend it can be found
 in TEP 106: Schedulers and Tasks[<a class="reference" href="#tep106">TEP106</a>].</p>
 </div>
-<div class="section">
-<h1><a id="booting-initialization" name="booting-initialization">4. Booting/Initialization</a></h1>
+<div class="section" id="booting-initialization">
+<h1><a name="booting-initialization">4. Booting/Initialization</a></h1>
 <p>TinyOS 2.0 has a different boot sequence than 1.x. The 1.x interface
 <tt class="docutils literal"><span class="pre">StdControl</span></tt> has been split into two interfaces: <tt class="docutils literal"><span class="pre">Init</span></tt> and
 <tt class="docutils literal"><span class="pre">StdControl</span></tt>. The latter only has two commands: <tt class="docutils literal"><span class="pre">start</span></tt> and <tt class="docutils literal"><span class="pre">stop</span></tt>.
@@ -420,13 +420,13 @@ handles this event and start services accordingly. Details on
 the new boot sequence can be found in TEP 107: TinyOS 2.x Boot
 Sequence[<a class="reference" href="#tep107">TEP107</a>].</p>
 </div>
-<div class="section">
-<h1><a id="virtualization" name="virtualization">5. Virtualization</a></h1>
+<div class="section" id="virtualization">
+<h1><a name="virtualization">5. Virtualization</a></h1>
 <p>TinyOS 2.0 is written with nesC 1.2, which introduces the concept
 of a 'generic' or instantiable component. Generic modules allow
 TinyOS to have reusable data structures, such as bit vectors and
 queues, which simplify development. More importantly, generic
-configurations allow services to encapsulate complex wiring
+configurations allow services to encapsulate complex wiring 
 relationships for clients that need them.</p>
 <p>In practice, this means that many basic TinyOS services are now
 <em>virtualized.</em> Rather than wire to a component with a parameterized
@@ -436,8 +436,8 @@ service component does all of the wiring underneath (e.g., in the
 case of timers, to a unique) automatically, reducing wiring
 mistakes and simplifying use of the abstraction.</p>
 </div>
-<div class="section">
-<h1><a id="timers" name="timers">6. Timers</a></h1>
+<div class="section" id="timers">
+<h1><a name="timers">6. Timers</a></h1>
 <p>TinyOS 2.0 provides a much richer set of timer interfaces than
 1.x. Experience has shown that timers are one of the most critical
 abstractions a mote OS can provide, and so 2.0 expands the fidelity
@@ -447,7 +447,7 @@ timers, and the timer system may provide one or two high-precision
 timers that fire asynchronously (they have the async
 keyword). Components can query their timers for how much time
 remainins before they fire, and can start timers in the future (e.g.,
-'start firing a timer at 1Hz starting 31ms from now'). TEP 102:
+'start firing a timer at 1Hz starting 31ms from now'). TEP 102: 
 Timers[<a class="reference" href="#tep102">TEP102</a>] defines what HIL components a platform must provide
 in order to support standard TinyOS timers. Platforms are
 required to provide millisecond granularity timers, and can provide
@@ -464,8 +464,8 @@ components App, new TimerMilliC();
 App.Timer -&gt; TimerMilliC;
 </pre>
 </div>
-<div class="section">
-<h1><a id="communication" name="communication">7. Communication</a></h1>
+<div class="section" id="communication">
+<h1><a name="communication">7. Communication</a></h1>
 <p>In TinyOS 2.0, the message buffer type is <tt class="docutils literal"><span class="pre">message_t</span></tt>, and it is a
 buffer that is large enough to hold a packet from any of a node's
 communication interfaces. The structure itself is completely opaque:
@@ -486,8 +486,8 @@ active message layer as ActiveMessageC.</p>
 communication.  Instead, a component should wire to
 SerialActiveMessageC, which provides active message communication over
 the serial port.</p>
-<p>Active message communication is virtualized through four generic
-components, which take the AM type as a parameter: AMSenderC,
+<p>Active message communication is virtualized through four generic 
+components, which take the AM type as a parameter: AMSenderC, 
 AMReceiverC, AMSnooperC, and AMSnoopingReceiverC. AMSenderC is
 virtualized in that the call to send() does not fail if some
 other component is sending (as it does with GenericComm in 1.x). Instead,
@@ -495,9 +495,9 @@ it fails only if that particular AMSenderC already has a packet
 outstanding or if the radio is not in a sending state. Underneath,
 the active message system queues and sends these outstanding packets.
 This is different than the QueuedSendC approach of 1.x, in which there
-is an N-deep queue that is shared among all senders. With N AMSenderC
+is an N-deep queue that is shared among all senders. With N AMSenderC 
 components, there is an N-deep queue where each sender has a single
-reserved entry. This means that each AMSenderC receives
+reserved entry. This means that each AMSenderC receives 
 1/n of the available post-MAC transmission opportunities,  where
 n is the number of AMSenderC components with outstanding packets.
 In the worst case, n is the number of components; even when every
@@ -510,8 +510,8 @@ found in TEP 116: Packet Protocols[<a class="reference" href="#tep116">TEP116</a
 radio (mica2 platform) and an experimental low-power stack for
 the CC2420 radio (micaz, telosb, and intelmote2 platforms).</p>
 </div>
-<div class="section">
-<h1><a id="sensors" name="sensors">8. Sensors</a></h1>
+<div class="section" id="sensors">
+<h1><a name="sensors">8. Sensors</a></h1>
 <p>In TinyOS 2.0, named sensor components comprise the HIL of a
 platform's sensors. TEP 114 describes a set of HIL data acquisition
 interfaces, such as Read, ReadStream, and Get, which sensors
@@ -529,8 +529,8 @@ the organization of sensor boards can be found in TEP 109:
 Sensorboards[<a class="reference" href="#tep109">TEP109</a>], and the details of the HIL sensor interfaces
 can be found in TEP 114: Source and Sink Independent Drivers[<a class="reference" href="#tep114">TEP114</a>].</p>
 </div>
-<div class="section">
-<h1><a id="error-codes" name="error-codes">9. Error Codes</a></h1>
+<div class="section" id="error-codes">
+<h1><a name="error-codes">9. Error Codes</a></h1>
 <p>The standard TinyOS 1.x return code is <tt class="docutils literal"><span class="pre">result_t</span></tt>, whose value is
 either SUCCESS (a non-zero value) or FAIL (a zero value). While this
 makes conditionals on calls very easy to write (e.g., <tt class="docutils literal"><span class="pre">if</span> <span class="pre">(call</span>
@@ -542,7 +542,7 @@ commands and events define which error codes they may return and why.</p>
 different in 2.0. Calls that were once:</p>
 <pre class="literal-block">
 if (call X.y()) {
-  busy = TRUE;
+  busy = TRUE;  
 }
 </pre>
 <p>now have their meanings reversed. In 1.x, the busy statement will execute
@@ -554,30 +554,30 @@ if (call X.y() == SUCCESS) {
 }
 </pre>
 </div>
-<div class="section">
-<h1><a id="arbitration" name="arbitration">10. Arbitration</a></h1>
+<div class="section" id="arbitration">
+<h1><a name="arbitration">10. Arbitration</a></h1>
 <p>While basic abstractions, such as packet communication and timers,
-can be virtualized, experiences with 1.x showed that some cannot
+can be virtualized, experiences with 1.x showed that some cannot 
 without either adding significant complexity or limiting the system.
 The most pressing example of this is a shared bus on a microcontroller.
 Many different systems -- sensors, storage, the radio -- might need
 to use the bus at the same time, so some way of arbitrating access
 is needed.</p>
-<p>To support these kinds of abstractions, TinyOS 2.0 introduces
+<p>To support these kinds of abstractions, TinyOS 2.0 introduces 
 the Resource interface, which components use to request and
-acquire shared resources, and arbiters, which provide a policy for
+acquire shared resources, and arbiters, which provide a policy for 
 arbitrating access between multiple clients. For some abstractions,
 the arbiter also provides a power management policy, as it can tell
 when the system is no longer needed and can be safely turned off.</p>
 <p>TEP 108: Resource Arbitration[<a class="reference" href="#tep108">TEP108</a>] describes the Resource interface
 and how arbiters work.</p>
 </div>
-<div class="section">
-<h1><a id="power-management" name="power-management">11. Power Management</a></h1>
+<div class="section" id="power-management">
+<h1><a name="power-management">11. Power Management</a></h1>
 <p>Power management in 2.0 is divided into two parts: the power state
 of the microcontroller and the power state of devices. The former,
 discussed in TEP 112: Microcontroller Power Management[<a class="reference" href="#tep112">TEP112</a>],
-is computed in a chip-specific manner by examining which devices
+is computed in a chip-specific manner by examining which devices 
 and interrupt souces are active. The latter, discussed in
 TEP 115: Power Management of Non-Virtualised Devices{<a class="reference" href="#tep115">TEP115</a>], is handled
 through resource abiters. Fully virtualized services have their
@@ -585,29 +585,29 @@ own, individual power management policies.</p>
 <p>TinyOS 2.0 provides low-power stacks for the CC1000 (mica2)
 and CC2420 (micaz, telosb, imote2) radios. Both use a low-power
 listening apporach, where transmitters send long preambles or
-repeatedly send packets and receivers wake up periodically to
-sense the channel to hear if there is a packet being
+repeatedly send packets and receivers wake up periodically to 
+sense the channel to hear if there is a packet being 
 transmitted. The low-power stack CC1000 is standard, while
 the CC2420 stack is experimental. That is, the default CC1000
-stack (chips/cc1000) has low-power-listening, while the default
+stack (chips/cc1000) has low-power-listening, while the default 
 CC2420 stack (chips/cc2420) does not. To use the low-power CC2420
 stack, you must include chips/cc2420_lpl in your application Makefile.</p>
 </div>
-<div class="section">
-<h1><a id="network-protocols" name="network-protocols">12. Network Protocols</a></h1>
-<p>TinyOS 2.0 provides simple reference implementations of two of
+<div class="section" id="network-protocols">
+<h1><a name="network-protocols">12. Network Protocols</a></h1>
+<p>TinyOS 2.0 provides simple reference implementations of two of 
 the most basic protocols used in mote networks: dissemination
-and collection. Dissemination reliably delivers small (fewer
+and collection. Dissemination reliably delivers small (fewer 
 than 20 byte) data items to every node in a network, while
 collection builds a routing tree rooted at a sink node. Together,
 these two protocols enable a wide range of data collection
 applications. Collection has advanced significantly since the
-most recent beta release; experimental tests in multiple
+most recent beta release; experimental tests in multiple 
 network conditions have seen very high (&gt;98%) deliver rates
 as long as the network is not saturated.</p>
 </div>
-<div class="section">
-<h1><a id="conclusion" name="conclusion">13. Conclusion</a></h1>
+<div class="section" id="conclusion">
+<h1><a name="conclusion">13. Conclusion</a></h1>
 <p>TinyOS 2.0 represents the next step of TinyOS development. Building on
 user experiences over the past few years, it has taken the basic
 TinyOS architecture and pushed it forward in several directions,
@@ -616,19 +616,19 @@ still under active development: future prereleases will include
 non-volatile storage, basic multihop protocols (collection routing,
 dissemination), and further power management abstractions.</p>
 </div>
-<div class="section">
-<h1><a id="acknowledgments" name="acknowledgments">14. Acknowledgments</a></h1>
+<div class="section" id="acknowledgments">
+<h1><a name="acknowledgments">14. Acknowledgments</a></h1>
 <p>TinyOS 2.0 is the result of a lot of hard work from a lot of people,
-including (but not limited to) David Gay, Philip Levis, Cory Sharp,
-Vlado Handziski, Jan Hauer, Kevin Klues, Joe Polastre, Jonathan Hui,
-Prabal Dutta,
-Gilman Tolle, Martin Turon, Phil Buonodonna, Ben Greenstein, David Culler,
-Kristin Wright, Ion Yannopoulos, Henri Dubois-Ferriere, Jan Beutel,
+including (but not limited to) David Gay, Philip Levis, Cory Sharp, 
+Vlado Handziski, Jan Hauer, Kevin Klues, Joe Polastre, Jonathan Hui, 
+Prabal Dutta, 
+Gilman Tolle, Martin Turon, Phil Buonodonna, Ben Greenstein, David Culler, 
+Kristin Wright, Ion Yannopoulos, Henri Dubois-Ferriere, Jan Beutel, 
 Robert Szewczyk, Rodrigo Fonseca, Kyle Jamieson, Omprakash Gnawali,
 David Moss, and Kristin Wright.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">15. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1><a name="author-s-address">15. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates</div>
@@ -641,8 +641,8 @@ David Moss, and Kristin Wright.</p>
 <div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">16. Citations</a></h1>
+<div class="section" id="citations">
+<h1><a name="citations">16. Citations</a></h1>
 <table class="docutils citation" frame="void" id="tep1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
 <title>Towards TinyOS for 8051</title>
 <meta name="author" content="Anders Egeskov Petersen, Sidsel Jensen, Martin Leopold" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-04-21 07:04:39 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,7 +283,6 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="towards-tinyos-for-8051">
 <h1 class="title">Towards TinyOS for 8051</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -311,20 +310,21 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
+<div class="document" id="towards-tinyos-for-8051">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo is informational. It will hopefully be a basis for
 discussions and suggestions for improvements.  Distribution of this
 memo is unlimited.  This memo is in full compliance with TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1><a name="abstract">Abstract</a></h1>
 <p>This TEP covers our effort of porting <a class="reference" href="http://www.tinyos.net">TinyOS</a> to the nRF24E1
 platform. We ported the basic modules of TinyOS: Timer, UART, ADC and
 LEDS.</p>
 </div>
-<div class="section">
-<h1><a id="project-outline" name="project-outline">1. Project Outline</a></h1>
+<div class="section" id="project-outline">
+<h1><a name="project-outline">1. Project Outline</a></h1>
 <p>The original 8 bit 8051 chip is a member of the <a class="reference" href="http://www.intel.com/design/mcs51">mcs51 family</a> and
 was developed in 1980 by Intel. It is still to this date one of the most
 widely used microcontrollers. Porting TinyOS to the 8051 System on chip
@@ -355,8 +355,8 @@ the 8051 features.</p>
 <p>This work was done under the supervision of Martin Leopold at University
 of Copenhagen.</p>
 </div>
-<div class="section">
-<h1><a id="project-approach" name="project-approach">2. Project Approach</a></h1>
+<div class="section" id="project-approach">
+<h1><a name="project-approach">2. Project Approach</a></h1>
 <p>The approach to the porting project has been pragmatic. The focus has
 been on producing working code, so testing and debugging have been key
 elements of our work. The process has been to implement new
@@ -381,12 +381,12 @@ input from the ADC pins.</p>
 </dd>
 </dl>
 </div>
-<div class="section">
-<h1><a id="development-environment-and-tool-chain" name="development-environment-and-tool-chain">3. Development Environment and Tool Chain</a></h1>
+<div class="section" id="development-environment-and-tool-chain">
+<h1><a name="development-environment-and-tool-chain">3. Development Environment and Tool Chain</a></h1>
 <p>The following subsections describe the different development tools,
 their selection and interconnection.</p>
-<div class="section">
-<h2><a id="selection-of-development-tools-compilers" name="selection-of-development-tools-compilers">3.1 Selection of Development Tools/Compilers</a></h2>
+<div class="section" id="selection-of-development-tools-compilers">
+<h2><a name="selection-of-development-tools-compilers">3.1 Selection of Development Tools/Compilers</a></h2>
 <p>A large number of 8051 compilers exist primarily for the DOS and Windows
 platforms. We have focused on two popular and regularly updated
 compilers: <a class="reference" href="http://www.keil.com">KEIL</a> and the Small Device C Compiler (SDCC).</p>
@@ -417,8 +417,8 @@ the tool chain. We decided to substitute SDCC with the KEIL development
 kit. This gave us a working debug environment - with minimal change to
 the already produced code.</p>
 </div>
-<div class="section">
-<h2><a id="our-recommendation" name="our-recommendation">3.1.1 Our Recommendation</a></h2>
+<div class="section" id="our-recommendation">
+<h2><a name="our-recommendation">3.1.1 Our Recommendation</a></h2>
 <p>In our experience the SDCC compiler and associated tools are not yet
 mature enough to support our development. We recommend pursuing other
 alternatives such as KEIL or other compiler suites.</p>
@@ -426,8 +426,8 @@ alternatives such as KEIL or other compiler suites.</p>
 the use of open source software and cross-platform development. We hope
 SDCC will prove an reliable alternative in the future.</p>
 </div>
-<div class="section">
-<h2><a id="tool-chain-overview" name="tool-chain-overview">3.2 Tool Chain Overview</a></h2>
+<div class="section" id="tool-chain-overview">
+<h2><a name="tool-chain-overview">3.2 Tool Chain Overview</a></h2>
 <p>The following figure and sections are an overview of the current tool
 chain. The tool chain is based on TinyOS 1.x, NesC 1.1.3, avr-gcc 3.4.3,
 PERL v. 5.8.6 and SDCC 2.5.4 or KEIL C51 version 7.20.</p>
@@ -435,12 +435,12 @@ PERL v. 5.8.6 and SDCC 2.5.4 or KEIL C51 version 7.20.</p>
 <pre class="literal-block">
              Mangle-
 TinyOS       script
------&gt; app.c -----&gt; app_mangled.c --------&gt; app.hex ------&gt; nRF24E1
+-----&gt; app.c -----&gt; app_mangled.c --------&gt; app.hex ------&gt; nRF24E1 
  NesC         PERL                SDCC/KEIL         nRFPROG
 </pre>
 </div>
-<div class="section">
-<h2><a id="description-of-the-tool-chain" name="description-of-the-tool-chain">3.3 Description of the Tool Chain</a></h2>
+<div class="section" id="description-of-the-tool-chain">
+<h2><a name="description-of-the-tool-chain">3.3 Description of the Tool Chain</a></h2>
 <p>The compilation of the TinyOS test program outputs two files, a
 'main.exe' file and an 'app.c' file. The 'app.c' file contains all the
 needed code to run the TinyOS application. However the C code produced
@@ -456,8 +456,8 @@ as the rope, tying the output from NesC to the input of SDCC or KEIL.</p>
 produces a hex file that is transferred to the chip by the nRFPROG
 software.</p>
 </div>
-<div class="section">
-<h2><a id="description-of-the-mangling-script" name="description-of-the-mangling-script">3.4 Description of the Mangling Script</a></h2>
+<div class="section" id="description-of-the-mangling-script">
+<h2><a name="description-of-the-mangling-script">3.4 Description of the Mangling Script</a></h2>
 <p>The mangling script is written in PERL, a commonly used general purpose
 scripting language with powerful pattern matching capabilities and
 extensive handling of regular expressions. The mangle script handles all
@@ -470,7 +470,7 @@ additional alterations.</p>
 </dl>
 <p>or</p>
 <dl class="docutils">
-<dt>&quot;./sdccMangleAppC.pl -SDCC -file build/mcs51/app.c &gt;</dt>
+<dt>&quot;./sdccMangleAppC.pl -SDCC -file build/mcs51/app.c &gt; </dt>
 <dd>build/mcs51/app_mangled.c&quot;</dd>
 </dl>
 <p>The 'sdccMangleAppC.pl' script handles a number of needed alterations:</p>
@@ -488,8 +488,8 @@ respectively</li>
 </blockquote>
 <p>Each of these alterations will be explained in the sections below.</p>
 </div>
-<div class="section">
-<h2><a id="sfr-and-sbit-declarations" name="sfr-and-sbit-declarations">3.4.1 SFR and SBIT Declarations</a></h2>
+<div class="section" id="sfr-and-sbit-declarations">
+<h2><a name="sfr-and-sbit-declarations">3.4.1 SFR and SBIT Declarations</a></h2>
 <p>In order to make TinyOS accept the 8051 special function registers (SFR)
 and special bit variables (SBIT), we have included them into the TinyOS
 8051 platform folder as a 8051.h file.</p>
@@ -498,7 +498,7 @@ a specific bit within these SFR.</p>
 <p>In order to make TinyOS accept the SFRs we have type defined them in the
 NesC code as:</p>
 <blockquote>
-typedef int sfr;
+typedef int sfr; 
 sfr P0 __attribute((x80));</blockquote>
 <p>which is altered to</p>
 <blockquote>
@@ -513,8 +513,8 @@ updated June 2003) for translating SFR and SBIT declarations from KEIL
 to SDCC, but it produces code with illegal syntax, so either do not use
 it, or alter it to produce code with the right syntax.</p>
 </div>
-<div class="section">
-<h2><a id="sdcc-keil-data-types" name="sdcc-keil-data-types">3.4.2 SDCC/KEIL Data Types</a></h2>
+<div class="section" id="sdcc-keil-data-types">
+<h2><a name="sdcc-keil-data-types">3.4.2 SDCC/KEIL Data Types</a></h2>
 <p>TinyOS and SDCC/KEIL do not support the same data types, so some
 alterations were needed to compile the code with SDCC and KEIL.</p>
 <dl class="docutils">
@@ -533,8 +533,8 @@ we are working with software that does not support this data type, on a
 very small hardware memory model, we decided to change the NesC 64 bit
 data types to 32 bit. This is done in the mangling script.</p>
 </div>
-<div class="section">
-<h2><a id="reserved-keywords-in-sdcc" name="reserved-keywords-in-sdcc">3.4.3 Reserved Keywords in SDCC</a></h2>
+<div class="section" id="reserved-keywords-in-sdcc">
+<h2><a name="reserved-keywords-in-sdcc">3.4.3 Reserved Keywords in SDCC</a></h2>
 <p>A number of keywords are reserved in SDCC. Half of them represent a
 directive to the compiler, defining which memory segment on the nRF24E1
 the specific lines of code refer to. To ensure that the developer does
@@ -599,22 +599,22 @@ Lower 128 bytes | direct and          |
 KEIL it can be changed through selecting it in the options pane for the
 target.</p>
 </div>
-<div class="section">
-<h2><a id="removal-of-inlining" name="removal-of-inlining">3.4.4 Removal of inlining</a></h2>
+<div class="section" id="removal-of-inlining">
+<h2><a name="removal-of-inlining">3.4.4 Removal of inlining</a></h2>
 <p>NesC assumes that GCC is being used for the final compilation. GCC
 supports inline functions and can be made to optimize code quite
 aggressively, so the code generated by NesC does not need to be very
 efficient. Unfortunately SDCC does not support code inlining, so the
 inline statements have to be removed, when compiling for SDCC.</p>
 <p>Lines with the following format are affected:</p>
-<p>static inline void TOSH_sleep(void );
+<p>static inline void TOSH_sleep(void ); 
 static __inline void TOSH_SET_RED_LED_PIN(void);
 __inline void__nesc_enable_interrupt(void);</p>
-<p>Lines with the noinline attribute is substituted with the
+<p>Lines with the noinline attribute is substituted with the 
 #pragma NO_INLINE.</p>
 </div>
-<div class="section">
-<h2><a id="removal-of-preprocessor-line-numbering" name="removal-of-preprocessor-line-numbering">3.4.5 Removal of Preprocessor Line Numbering</a></h2>
+<div class="section" id="removal-of-preprocessor-line-numbering">
+<h2><a name="removal-of-preprocessor-line-numbering">3.4.5 Removal of Preprocessor Line Numbering</a></h2>
 <p>Also NesC produce preprocessor line number meta data, to allow the
 compiler to report error messages referring to the original code. We do
 not really need them for anything, so we filter them out to minimize the
@@ -622,26 +622,26 @@ code size. It also eases the code reading significantly. If needed for
 debug purposes the regular expression in the mangle script which remove
 them can be commented out.</p>
 </div>
-<div class="section">
-<h2><a id="change-in-identifiers" name="change-in-identifiers">3.4.6 Change $ in Identifiers</a></h2>
+<div class="section" id="change-in-identifiers">
+<h2><a name="change-in-identifiers">3.4.6 Change $ in Identifiers</a></h2>
 <p>The SDCC compiler is very strict when it comes to valid symbols in
 identifiers. NesC produce GCC-code which inserts $ as a separator
 character in identifiers. We mangle the $ to two underscores in order to
 enable SDCC/KEIL to compile.</p>
 </div>
-<div class="section">
-<h2><a id="interrupt-vectors" name="interrupt-vectors">3.4.7 Interrupt Vectors</a></h2>
+<div class="section" id="interrupt-vectors">
+<h2><a name="interrupt-vectors">3.4.7 Interrupt Vectors</a></h2>
 <p>The syntax for declaration of interrupt vectors are different in GCC and
 SDCC/KEIL. So we mangle the interrupt declaration:</p>
-<p>From: void __attribute((interrupt)) __vector_5(void)
+<p>From: void __attribute((interrupt)) __vector_5(void) 
 To:   void __vector_5(void) interrupt 5</p>
 <p>Additionally KEIL does not understand that the interrupt vector is
 defined previous to its use. So we remove the forward declaration of the
 vectors in the mangle script, when compiling for KEIL.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="tinyos-modifications" name="tinyos-modifications">4. TinyOS Modifications</a></h1>
+<div class="section" id="tinyos-modifications">
+<h1><a name="tinyos-modifications">4. TinyOS Modifications</a></h1>
 <p>TinyOS is based on modules with different levels of hardware
 abstraction. When porting TinyOS to a new platform, you change the
 underlying hardware dependencies in TinyOS, and you have to rebuild the
@@ -653,26 +653,26 @@ affected the higher abstractions, such as changes in interfaces and
 interrupt handling.</p>
 <p>Modified TinyOS modules overview:</p>
 <pre class="literal-block">
-+------------------------------------------------------------+
++------------------------------------------------------------+ 
 |                     TinyOS Application                     |  App
-+------------------------------------------------------------+
++------------------------------------------------------------+ 
   \/    /\            \/    /\           \/   /\      \/  /\   -----
-+----------+        +----------+       +---------+  +--------+
++----------+        +----------+       +---------+  +--------+ 
 |  Timer   |        |   UART   |       |   ADC   |  |  LEDs  |  HAL
 +----------+        +----------+       +---------+  +--------+
   \/    /\            \/    /\           \/   /\               -----
++----------+  +---------------------+  +---------+ 
+| HPLClock |  |       HPLUART       |  | HPLADC  |      \/      HPL 
 +----------+  +---------------------+  +---------+
-| HPLClock |  |       HPLUART       |  | HPLADC  |      \/      HPL
-+----------+  +---------------------+  +---------+
-  \/    /\        \/         \/  /\      \/   /\               -----
-+----------+  +--------+   +--------+  +---------+  +--------+
-|  Timer2  |  | Timer1 | &gt; | Serial |  | Sensors |  |  Port  |  HW
-+----------+  +--------+   |  Port  |  +---------+  +--------+
+  \/    /\        \/         \/  /\      \/   /\               ----- 
++----------+  +--------+   +--------+  +---------+  +--------+ 
+|  Timer2  |  | Timer1 | &gt; | Serial |  | Sensors |  |  Port  |  HW 
++----------+  +--------+   |  Port  |  +---------+  +--------+ 
                           +--------+
 </pre>
 <p>The following sections describe the changes to the four groups of modules.</p>
-<div class="section">
-<h2><a id="hplclock-and-related-modules" name="hplclock-and-related-modules">4.1 HPLClock and related modules</a></h2>
+<div class="section" id="hplclock-and-related-modules">
+<h2><a name="hplclock-and-related-modules">4.1 HPLClock and related modules</a></h2>
 <p>The 8051 chip has three independent timer/counter circuits: Timer0,
 Timer1 and Timer2, which can run in various modes. Each timer/counter
 consists of a 16-bit register that is accessible to software as three
@@ -687,8 +687,8 @@ Using a different timer circuit would limit the interval to 0.192 ms,
 which would result in a great deal of interrupts and consume processing
 power for administrational overhead.</p>
 </div>
-<div class="section">
-<h2><a id="timer" name="timer">4.1.1 Timer</a></h2>
+<div class="section" id="timer">
+<h2><a name="timer">4.1.1 Timer</a></h2>
 <p>The Timer module (HAL) uses the HPLClock module to handle the hardware
 timing.  These two modules communicate through the clock interface.
 However, the standard TinyOS clock interface is designed for an MCU with
@@ -700,26 +700,26 @@ options, and the possibility to use a 16 bit timer/counter to compensate
 for the reduced prescaler options, we decided to widen the clock
 interface from 8 to 16 bit. We are using the factor 1/4 for the
 prescaler.</p>
-<p>The interface change has affected the following methods:
-result_t setRate(uint16_t interval, char scale)
-void     setInterval(uint16_t value)
-void     setNextInterval(uint16_t value)
+<p>The interface change has affected the following methods: 
+result_t setRate(uint16_t interval, char scale) 
+void     setInterval(uint16_t value) 
+void     setNextInterval(uint16_t value) 
 uint16_t getInterval()
 result_t setIntervalAndScale(uint16_t interval, uint8_t scale)
-uint16_t readCounter()
+uint16_t readCounter() 
 void     setCounter(uint16_t n)</p>
 <dl class="docutils">
-<dt>See:</dt>
-<dd>Clock.h
-Clock.nc
-HPLClock.nc
-TimerM.nc
-TimerC.nc
+<dt>See: </dt>
+<dd>Clock.h 
+Clock.nc 
+HPLClock.nc 
+TimerM.nc 
+TimerC.nc 
 8051.h</dd>
 </dl>
 </div>
-<div class="section">
-<h2><a id="hpluart" name="hpluart">4.2 HPLUART</a></h2>
+<div class="section" id="hpluart">
+<h2><a name="hpluart">4.2 HPLUART</a></h2>
 <p>The UART is depending on a timer to generate a baud rate for the serial
 port. The architecture only allows two of the three timers (Timer1 or
 Timer2), to act as such. Since Timer2 is already used by the clock
@@ -735,15 +735,15 @@ as arguments. These pointers refer to the first and last bytes to be
 sent. The HPLUART interrupt handler was also modified to take the
 multiple byte data into account.</p>
 <dl class="docutils">
-<dt>See:</dt>
-<dd>8051.h
-HPLUART.nc
-HPLUARTC.nc
+<dt>See: </dt>
+<dd>8051.h 
+HPLUART.nc 
+HPLUARTC.nc 
 HPLUARTM.nc</dd>
 </dl>
 </div>
-<div class="section">
-<h2><a id="hpladc" name="hpladc">4.3 HPLADC</a></h2>
+<div class="section" id="hpladc">
+<h2><a name="hpladc">4.3 HPLADC</a></h2>
 <p>The TinyOS standard ADC interface was developed for the AVR which
 includes hardware functionality for repetitive sampling at a given
 interval.  Implementing this functionality on the 8051, which does not
@@ -751,15 +751,15 @@ support this in hardware, would require use of the last timer. We chose
 not to implement repetitive sampling, therefore the setSampleRate method
 currently has no use.</p>
 <dl class="docutils">
-<dt>See:</dt>
-<dd>8051.h
-ADCM.nc
-HPLADCC.nc
+<dt>See: </dt>
+<dd>8051.h 
+ADCM.nc 
+HPLADCC.nc 
 HPLADCM.nc</dd>
 </dl>
 </div>
-<div class="section">
-<h2><a id="leds" name="leds">4.4 LEDS</a></h2>
+<div class="section" id="leds">
+<h2><a name="leds">4.4 LEDS</a></h2>
 <p>TinyOS features three standard LEDs (Red, Green and Yellow), but the
 nRF24E1 evaluation board is not equipped with programmable LEDs so we
 used the general purpose ports (GPIO).</p>
@@ -774,19 +774,19 @@ Port0.</p>
 <p>To visualize the status of the GPIO, including the three standard LEDs,
 we built a LED expansion board.</p>
 <dl class="docutils">
-<dt>The three LEDs are currently wired to:</dt>
-<dd>Red -&gt; P1.0
+<dt>The three LEDs are currently wired to: </dt>
+<dd>Red -&gt; P1.0 
 Green -&gt; P1.1
 Yellow -&gt; P0.7.</dd>
-<dt>See:</dt>
-<dd>8051.h
-hardware.h
-mcs51hardware.h
+<dt>See: </dt>
+<dd>8051.h 
+hardware.h 
+mcs51hardware.h 
 LedsC.nc</dd>
 </dl>
 </div>
-<div class="section">
-<h2><a id="interrupts" name="interrupts">4.5 Interrupts</a></h2>
+<div class="section" id="interrupts">
+<h2><a name="interrupts">4.5 Interrupts</a></h2>
 <p>In TinyOS interrupts are not implemented as a single module, they are
 mainly facilitated in atomic blocks and in the init, start and stop
 methods of the various HPL modules. The init, start and stop methods
@@ -796,8 +796,8 @@ module. While the atomic block handle the enabling of global interrupts.
 This is used to avoid preempting code execution in critical blocks.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="conclusion" name="conclusion">5. Conclusion</a></h1>
+<div class="section" id="conclusion">
+<h1><a name="conclusion">5. Conclusion</a></h1>
 <p>The project have reached a plateau of development in porting TinyOS to
 the 8051 platform, on which future development can be based. The basic
 modules (Timer, UART, ADC and LEDS) have been implemented making 8051
@@ -806,8 +806,8 @@ field of sensor networks, the radio module, is still missing.</p>
 <p>The result of our work will be uploaded to the TinyOS 8051 Working Group
 website.</p>
 </div>
-<div class="section">
-<h1><a id="future-work" name="future-work">6. Future Work</a></h1>
+<div class="section" id="future-work">
+<h1><a name="future-work">6. Future Work</a></h1>
 <p>The work presented in this TEP is short of being a complete porting of
 TinyOS to the 8051 platform. Two obvious future tasks are implementing a
 Radio module involving the SPI interface and Power Management for duty
@@ -817,36 +817,36 @@ main hurdle is the three wire SPI interface.</p>
 should target TinyOS 2.0. This might be a challenge with the timer
 interface being so different from TinyOS 1.x.</p>
 </div>
-<div class="section">
-<h1><a id="authors" name="authors">7. Authors</a></h1>
+<div class="section" id="authors">
+<h1><a name="authors">7. Authors</a></h1>
 <div class="line-block">
-<div class="line">Anders Egeskov Petersen</div>
-<div class="line">University of Copenhagen, Dept. of Computer Science</div>
-<div class="line">Universitetsparken 1</div>
-<div class="line">DK-2100 K¯benhavn ÿ</div>
-<div class="line">Denmark</div>
+<div class="line">Anders Egeskov Petersen </div>
+<div class="line">University of Copenhagen, Dept. of Computer Science </div>
+<div class="line">Universitetsparken 1 </div>
+<div class="line">DK-2100 København Ø </div>
+<div class="line">Denmark </div>
 <div class="line"><br /></div>
-<div class="line">Sidsel Jensen</div>
-<div class="line">University of Copenhagen, Dept. of Computer Science</div>
-<div class="line">Universitetsparken 1</div>
-<div class="line">DK-2100 K¯benhavn ÿ</div>
-<div class="line">Denmark</div>
+<div class="line">Sidsel Jensen </div>
+<div class="line">University of Copenhagen, Dept. of Computer Science </div>
+<div class="line">Universitetsparken 1 </div>
+<div class="line">DK-2100 København Ø </div>
+<div class="line">Denmark </div>
 <div class="line"><br /></div>
 <div class="line">email - <a class="reference" href="mailto:purps&#64;diku.dk">purps&#64;diku.dk</a></div>
 <div class="line"><br /></div>
 <div class="line">Martin Leoold</div>
-<div class="line">University of Copenhagen, Dept. of Computer Science</div>
-<div class="line">Universitetsparken 1</div>
-<div class="line">DK-2100 K¯benhavn ÿ</div>
-<div class="line">Denmark</div>
+<div class="line">University of Copenhagen, Dept. of Computer Science </div>
+<div class="line">Universitetsparken 1 </div>
+<div class="line">DK-2100 København Ø</div>
+<div class="line">Denmark </div>
 <div class="line"><br /></div>
 <div class="line">Phone +45 3532 1464</div>
 <div class="line"><br /></div>
 <div class="line">email - <a class="reference" href="mailto:leopold&#64;diku.dk">leopold&#64;diku.dk</a></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">8. Citations</a></h1>
+<div class="section" id="citations">
+<h1><a name="citations">8. Citations</a></h1>
 <table class="docutils citation" frame="void" id="nsc" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -857,7 +857,7 @@ interface being so different from TinyOS 1.x.</p>
 <table class="docutils citation" frame="void" id="peh" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="peh">[PEH]</a></td><td>Martin Leopold. &quot;Power Estimation using the Hogthrob Prototype Platform&quot; <em>M.Sc.
+<tr><td class="label"><a name="peh">[PEH]</a></td><td>Martin Leopold. &quot;Power Estimation using the Hogthrob Prototype Platform&quot; <em>M.Sc. 
 Thesis, DIKU, Copenhagen University, Denmark, December 2004</em> .</td></tr>
 </tbody>
 </table>

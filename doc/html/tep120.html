@@ -3,16 +3,27 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
 <title>TinyOS Alliance Structure</title>
-<meta name="authors" content="Philippe Bonnet  David Culler  Deborah Estrin  Ramesh Govindan  Mike Horton  Jeonghoon Kang  Philip Levis  Lama Nachman  Jack Stankovic  Rob Szewczyk  Matt Welsh  Adam Wolisz" />
+<meta name="author" content="Philippe Bonnet" />
+<meta name="author" content="David Culler" />
+<meta name="author" content="Deborah Estrin" />
+<meta name="author" content="Ramesh Govindan" />
+<meta name="author" content="Mike Horton" />
+<meta name="author" content="Jeonghoon Kang" />
+<meta name="author" content="Philip Levis" />
+<meta name="author" content="Lama Nachman" />
+<meta name="author" content="Jack Stankovic" />
+<meta name="author" content="Rob Szewczyk" />
+<meta name="author" content="Matt Welsh" />
+<meta name="author" content="Adam Wolisz" />
 <style type="text/css">
 
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2006-12-12 18:22:53 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-04-21 07:04:39 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -283,7 +294,6 @@ ul.auto-toc {
 </style>
 </head>
 <body>
-<div class="document" id="tinyos-alliance-structure">
 <h1 class="title">TinyOS Alliance Structure</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -299,29 +309,41 @@ ul.auto-toc {
 <td>Draft</td></tr>
 <tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">All</td>
 </tr>
-<tr><th class="docinfo-name">Authors:</th>
-<td>Philippe Bonnet
-<br />David Culler
-<br />Deborah Estrin
-<br />Ramesh Govindan
-<br />Mike Horton
-<br />Jeonghoon Kang
-<br />Philip Levis
-<br />Lama Nachman
-<br />Jack Stankovic
-<br />Rob Szewczyk
-<br />Matt Welsh
-<br />Adam Wolisz</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Philippe Bonnet</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>David Culler</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Deborah Estrin</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Ramesh Govindan</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Mike Horton</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Jeonghoon Kang</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Philip Levis</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Lama Nachman</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Jack Stankovic</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Rob Szewczyk</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Matt Welsh</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Adam Wolisz</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">17-April-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1.2.5</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-10-25</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2006-12-12</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Alliance &lt;tinyos-alliance at mail.millennium.berkeley.edu&gt;</td>
 </tr>
 </tbody>
 </table>
+<div class="document" id="tinyos-alliance-structure">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a blueprint for an open alliance aroung
@@ -330,24 +352,24 @@ suggestions for improvement.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1><a name="abstract">Abstract</a></h1>
 <p>This memo describes the goals and organization structure of the TinyOS Alliance.
 It covers membership, the working group forums for contribution, intellectual
 property, source licensing, and the TinyOS Steering Committee (TSC).</p>
 </div>
-<div class="section">
-<h1><a id="charter" name="charter">1. Charter</a></h1>
+<div class="section" id="charter">
+<h1><a name="charter">1. Charter</a></h1>
 <!-- TinyOS Alliance Charter:: -->
 <p>Formulate a legal and organizational framework for an alliance that
 can facilitate the continued advancement of the open embedded network
 ecosystem around TinyOS and support the activities, interactions, and
 development of the worldwide academic and industrial TinyOS community.</p>
 </div>
-<div class="section">
-<h1><a id="overview" name="overview">2. Overview</a></h1>
-<p>This memo defines a blueprint and conceptual foundation for an open
-alliance that fulfills the above charter.
+<div class="section" id="overview">
+<h1><a name="overview">2. Overview</a></h1>
+<p>This memo defines a blueprint and conceptual foundation for an open 
+alliance that fulfills the above charter. 
 It defines the following ten aspects of the alliance:</p>
 <blockquote>
 <ul class="simple">
@@ -363,9 +385,9 @@ It defines the following ten aspects of the alliance:</p>
 <li>Work products</li>
 </ul>
 </blockquote>
-<p>We (the Alliance) recognize that each of these aspects contributes to the
-whole, is inter-related and needs to be consistent overall.  This document
-attempts to address them sequentially, recognizing that each depends on the
+<p>We (the Alliance) recognize that each of these aspects contributes to the 
+whole, is inter-related and needs to be consistent overall.  This document 
+attempts to address them sequentially, recognizing that each depends on the 
 others.  It draws on lessons from several related
 organizations, although each of these also has significantly
 different goals from those set out in the charter.</p>
@@ -377,7 +399,7 @@ different goals from those set out in the charter.</p>
 <li>OSGI - Service layer</li>
 <li>FSF - Foundational software</li>
 </ol>
-<p>We (the Alliance) draw most strongly upon the IETF, even though that
+<p>We (the Alliance) draw most strongly upon the IETF, even though that 
 organization was
 focused around creating and standardizing protocols, rather than
 developing a code base.  Its emphasis on rough consensus AND
@@ -439,8 +461,8 @@ from obtaining blocking IP.  It does discourage contributions that
 might pull IP into the pool.  We prefer a process of declaration and
 multiple implementation.</p>
 </div>
-<div class="section">
-<h1><a id="mission" name="mission">3. Mission</a></h1>
+<div class="section" id="mission">
+<h1><a name="mission">3. Mission</a></h1>
 <p>The mission of the TinyOS Alliance is to provide a forum to facilitate:</p>
 <blockquote>
 <ul class="simple">
@@ -451,20 +473,20 @@ TinyOS technology and surrounding tools through the creation of
 standard interfaces and protocols, vetted extensions, open reference
 implementations, technical documents, testing and verification suites,
 and educational materials,</li>
-<li>the contribution of innovative technology from a world-wide research
+<li>the contribution of innovative technology from a world-wide research 
 community and the maturation and dissemination of these
 contributions, and</li>
-<li>the promotion of the technology, the community, and the impact of networked
+<li>the promotion of the technology, the community, and the impact of networked 
 embedded systems.</li>
 </ul>
 </blockquote>
 </div>
-<div class="section">
-<h1><a id="organizational-structure" name="organizational-structure">4. Organizational Structure</a></h1>
+<div class="section" id="organizational-structure">
+<h1><a name="organizational-structure">4. Organizational Structure</a></h1>
 <p>The Alliance has a technical advisory function: guide the evolution of
 the TinyOS architecture, formulate and track progress of working
 groups, and provide an open and impartial process for technical
-documentation.  It also has an organizational advisory function: manage
+documentation.  It also has an organizational advisory function: manage 
 industry
 interaction, legal and IP issues, evolution of the organization
 itself, membership issues and so on.</p>
@@ -482,8 +504,8 @@ and built on consensus.</p>
 Directors, a small support staff (primarily volunteer or outsourced)
 and a Steering Committee. The Steering Committee oversees a collection
 of Working Groups, each with a Chair and Members.</p>
-<div class="section">
-<h2><a id="steering-committee" name="steering-committee">4.1 Steering Committee</a></h2>
+<div class="section" id="steering-committee">
+<h2><a name="steering-committee">4.1 Steering Committee</a></h2>
 <p>In the steady state the Steering Committee will consist of the chairs
 of working groups plus a handful of elected members at large. Tenure
 of a position on the Steering Committee will consist of two years with
@@ -517,26 +539,26 @@ procedures, membership criteria, selection of venues, oversight of
 access to code repositories and Alliance web sites, and regular
 Alliance meetings.</p>
 </div>
-<div class="section">
-<h2><a id="working-groups" name="working-groups">4.2 Working Groups</a></h2>
+<div class="section" id="working-groups">
+<h2><a name="working-groups">4.2 Working Groups</a></h2>
 <p>The working groups form the core of the alliance. Each working
 group will have a chair who will be responsible for WG processes,
 reporting, meetings, and membership. Working groups and their
 functions are discussed in more detail in a later section.</p>
 </div>
-<div class="section">
-<h2><a id="board-of-directors" name="board-of-directors">4.3 Board of Directors</a></h2>
+<div class="section" id="board-of-directors">
+<h2><a name="board-of-directors">4.3 Board of Directors</a></h2>
 <p>The non-profit will require a Board of Directors responsible for
 corporate matters.</p>
 </div>
 </div>
-<div class="section">
-<h1><a id="membership-and-participation" name="membership-and-participation">5. Membership and Participation</a></h1>
+<div class="section" id="membership-and-participation">
+<h1><a name="membership-and-participation">5. Membership and Participation</a></h1>
 <p>We desire to continue the TinyOS tradition of promoting broad
 membership.  This means that we want to keep barriers to entry low in
 all respects: legal, financial, and organizational.  As with IETF and
 Apache, we want to shape the organization as a meritocracy that
-encourages, promotes, and credits the contributions of its members.
+encourages, promotes, and credits the contributions of its members.  
 Companies have essential role, but merit, not finances should
 dictate direction.  Membership and influence should recognize the
 importance of adopters, not just developers.</p>
@@ -559,7 +581,7 @@ have voting rights.</p>
 </blockquote>
 <p>There is no individual membership fee, but members will be responsible for
 nominal registration fees at Alliance meetings.</p>
-<p>Corporations and organizational have institutional membership, which reflects
+<p>Corporations and organizational have institutional membership, which reflects 
 their degree of effort.</p>
 <blockquote>
 <ul class="simple">
@@ -589,11 +611,11 @@ be members of corporations, academic institutions, govermental
 institutions, or unaffiliated.  We will provide a fee structure that encourages
 the participation of small companies and start-ups.</p>
 </div>
-<div class="section">
-<h1><a id="id1" name="id1">6. Working Groups</a></h1>
+<div class="section" id="id1">
+<h1><a name="id1">6. Working Groups</a></h1>
 <p>There will be two forms of working groups. LONG-STANDING
 groups are chartered to develop important areas or subsystems.  For
-example, we expect longstanding groups on
+example, we expect longstanding groups on 
 routing, management, platforms, testing, programming tools, and
 education.  SHORT-TERM groups have a fixed mandate to tackle a
 particular topic.  For example, there may be groups to develop a
@@ -620,8 +642,8 @@ IP, but standards should not require the use of such IP and should
 allow for multiple, interoperable implementations.
 The Steering committee will be engaged in ratification of standards.</p>
 </div>
-<div class="section">
-<h1><a id="intellectual-property" name="intellectual-property">7. Intellectual Property</a></h1>
+<div class="section" id="intellectual-property">
+<h1><a name="intellectual-property">7. Intellectual Property</a></h1>
 <p>In general we want to promote the development, adoption and use of
 open technology.  We want to avoid having the advancement of embedded
 networks getting trapped into proprietary IP.  Accordingly, our IP
@@ -674,8 +696,8 @@ explicit, and not present in core software.  It will typically involve
 development tools, such as the compilers and peripheral Linux-based
 devices.</p>
 </div>
-<div class="section">
-<h1><a id="source-licensing" name="source-licensing">8. Source Licensing</a></h1>
+<div class="section" id="source-licensing">
+<h1><a name="source-licensing">8. Source Licensing</a></h1>
 <p>In general, we want to provide a mechanism where individuals and
 companies can easily contribute source, can utilize what is available,
 and can gain recognition for their efforts.  Following the TinyOS
@@ -750,14 +772,14 @@ those that do so, and provide a complaint mechanism to identify misuse.</p>
 of standardized interfaces and protocols.  Alliance is not the only
 vehicle for producing a hardened, tested, certified code base.
 To do so would require the Alliance host a large technical staff, as
-OSDL does.
+OSDL does.  
 Comapanies may do so, or produce implementations with enhanced
 performance, reliability, or efficiency using their own proprietary
 technology.  The Alliance encourages such innovation while promoting
 standardized interfaces that allows such technology to interoperate.</p>
 </div>
-<div class="section">
-<h1><a id="funding" name="funding">9. Funding</a></h1>
+<div class="section" id="funding">
+<h1><a name="funding">9. Funding</a></h1>
 <p>Initially, we expect that there are no full time employees in the
 Alliance and that funding needs are limited to such items as lawyer's
 fees, web site costs, and insurance. If the Alliance eventually
@@ -773,32 +795,32 @@ associated with adminstration of the meetings.</p>
 to avoid the heavy-handed quid-pro-quo seen in many industrial
 consortiums where funding determines influence.  The best use of funds
 and the best form of influence is direct contribution to the work
-products of the Alliance.
+products of the Alliance.  
 To keep the structure of the Alliance and its operations minimalist
 and lean, membership focuses on desired impact and recognition, rather
 than control. We want the best way to influence the direction of the Alliance
-to be to contribute technical work and demonstrate leadership, rather than
+to be to contribute technical work and demonstrate leadership, rather than 
 try to control what individuals can or cannot contribute.</p>
 <p>Companies and institutions are encouraged to contribute financial and
 in-kind support.  It will be essential that companies provide initial
 funding to create the legal structure and to establish basic IT
 capabilities to host the web site and working groups.
 Institutional members
-will pay an annual membership fee. In some cases, a
+will pay an annual membership fee. In some cases, a 
 contributing corporate member may provide in-kind services
 such as lawyers' time used to
-draw up or comment on by-laws.
+draw up or comment on by-laws.  
 Targeted contributions will be
-solicited and encouraged. In this case the donator need not
+solicited and encouraged. In this case the donator need not 
 become a contributing corporate member, e.g., in those cases
 where such a membership may be prohibited or unwanted.
 The costs of meetings, such as the TinyOS
 technology exchange, will be covered through registration fees and
 not by institutional membership fees.</p>
 </div>
-<div class="section">
-<h1><a id="work-products" name="work-products">10. Work Products</a></h1>
-<p>The broad mission of the Alliance calls for a broad range of
+<div class="section" id="work-products">
+<h1><a name="work-products">10. Work Products</a></h1>
+<p>The broad mission of the Alliance calls for a broad range of 
 work products.</p>
 <p>Foremost among these are a set of TEPs documenting
 systems and protocols as well as TEPs that provide guidance
@@ -807,10 +829,10 @@ robust and open reference implementations for the community to
 use, refine, improve, and discuss. These reference implementations
 will not preclude alternative, compatibile implementations which may
 have additional features or optimizations. The Alliance Working Groups
-will periodically produce periodic releases of these reference
+will periodically produce periodic releases of these reference 
 implementations for the community to use and improve.</p>
 <p>The Alliance will support community contributions
-of innovative extensions and systems by providing a CVS repository
+of innovative extensions and systems by providing a CVS repository 
 to store them.
 In order to keep these contributions organized for users, the
 Steering Committee may nominate one or more people to caretake
@@ -826,21 +848,21 @@ simple and complex example applications, and user guides.</p>
 is to teach new developers about the internals and workings of
 the technology, the Alliance will develop and make available
 several end-user applications and tools. The goal is to improve
-the accessibility of the technology to end-users while
+the accessibility of the technology to end-users while 
 demonstrating its effectiveness. Historical examples of such applications
 include Surge and TinyDB. An important part of this effort is
 good documentation for users who are not expert programmers, as well
 as tools and graphical environments.</p>
 </div>
-<div class="section">
-<h1><a id="conclusions" name="conclusions">11. Conclusions</a></h1>
-<p>By focusing on consensus building and technical excellence, the
+<div class="section" id="conclusions">
+<h1><a name="conclusions">11. Conclusions</a></h1>
+<p>By focusing on consensus building and technical excellence, the 
 Alliance seeks to avoid being a forum for political and economic
 positioning. It will achieve this by focusing on working groups
-and the contributions of individuals, while not taking strong
+and the contributions of individuals, while not taking strong 
 positions on the benefits or drawbacks of different approaches.
 The variety of application domains sensornets are used in and
-the huge differences in requirements mean that having a suite
+the huge differences in requirements mean that having a suite 
 of solutions, rather than a single one, is often not only
 desirable but essential.</p>
 <p>Over the past five years, low-power embedded sensor networks have
@@ -850,7 +872,7 @@ that actively works to deploy these systems and collaborate with
 industry, making advances quickly accessible and usable. A great
 catalyst to this growth has been the presence of a large community
 around a shared, free code base.</p>
-<p>The time has come to create an organizational structure to
+<p>The time has come to create an organizational structure to 
 allow the effort to grow further. As sensornets become more widespread,
 contributions and advancements will be from an increasingly broad
 demographic of users, and bringing them all together will speed
@@ -861,22 +883,22 @@ it depends on broad collaboration and participation, placing a minimalist
 set of expectations that will encourage the exchange of ideas and
 technology.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">12. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1><a name="author-s-address">12. Author's Address</a></h1>
 <div class="line-block">
-<div class="line">Philippe Bonnet &lt;<a class="reference" href="mailto:bonnet.p&#64;gmail.com">bonnet.p&#64;gmail.com</a>&gt;</div>
-<div class="line">David Culler    &lt;<a class="reference" href="mailto:culler&#64;cs.berkeley.edu">culler&#64;cs.berkeley.edu</a>&gt;</div>
+<div class="line">Philippe Bonnet &lt;<a class="reference" href="mailto:bonnet.p&#64;gmail.com">bonnet.p&#64;gmail.com</a>&gt; </div>
+<div class="line">David Culler    &lt;<a class="reference" href="mailto:culler&#64;cs.berkeley.edu">culler&#64;cs.berkeley.edu</a>&gt; </div>
 <div class="line">David Culler &lt;dculler at archrock.com&gt;,</div>
-<div class="line">Deborah Estrin        &lt;<a class="reference" href="mailto:destrin&#64;cs.ucla.edu">destrin&#64;cs.ucla.edu</a>&gt;</div>
-<div class="line">Ramesh Govindan &lt;<a class="reference" href="mailto:ramesh&#64;usc.edu">ramesh&#64;usc.edu</a>&gt;</div>
-<div class="line">Mike Horton   &lt;<a class="reference" href="mailto:mhorton&#64;xbow.com">mhorton&#64;xbow.com</a>&gt;</div>
-<div class="line">Jeonghoon Kang        &lt;<a class="reference" href="mailto:budge&#64;keti.re.kr">budge&#64;keti.re.kr</a>&gt;</div>
+<div class="line">Deborah Estrin        &lt;<a class="reference" href="mailto:destrin&#64;cs.ucla.edu">destrin&#64;cs.ucla.edu</a>&gt; </div>
+<div class="line">Ramesh Govindan &lt;<a class="reference" href="mailto:ramesh&#64;usc.edu">ramesh&#64;usc.edu</a>&gt; </div>
+<div class="line">Mike Horton   &lt;<a class="reference" href="mailto:mhorton&#64;xbow.com">mhorton&#64;xbow.com</a>&gt; </div>
+<div class="line">Jeonghoon Kang        &lt;<a class="reference" href="mailto:budge&#64;keti.re.kr">budge&#64;keti.re.kr</a>&gt; </div>
 <div class="line">Philip Levis    &lt;<a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a>&gt;</div>
 <div class="line">Lama Nachman  &lt;<a class="reference" href="mailto:lama.nachman&#64;intel.com">lama.nachman&#64;intel.com</a>&gt;</div>
 <div class="line">Jack Stankovic        &lt;<a class="reference" href="mailto:stankovic&#64;cs.virginia.edu">stankovic&#64;cs.virginia.edu</a>&gt;</div>
-<div class="line">Rob Szewczyk  &lt;<a class="reference" href="mailto:rob&#64;moteiv.com">rob&#64;moteiv.com</a>&gt;</div>
-<div class="line">Matt Welsh    &lt;<a class="reference" href="mailto:mdw&#64;cs.harvard.edu">mdw&#64;cs.harvard.edu</a>&gt;</div>
-<div class="line">Adam Wolisz   &lt;<a class="reference" href="mailto:awo&#64;ieee.org">awo&#64;ieee.org</a>&gt;</div>
+<div class="line">Rob Szewczyk  &lt;<a class="reference" href="mailto:rob&#64;moteiv.com">rob&#64;moteiv.com</a>&gt; </div>
+<div class="line">Matt Welsh    &lt;<a class="reference" href="mailto:mdw&#64;cs.harvard.edu">mdw&#64;cs.harvard.edu</a>&gt; </div>
+<div class="line">Adam Wolisz   &lt;<a class="reference" href="mailto:awo&#64;ieee.org">awo&#64;ieee.org</a>&gt; </div>
 </div>
 </div>
 </div>
