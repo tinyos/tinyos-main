@@ -4,7 +4,7 @@
 # from an srec binary image. These are used by the Deluge binary
 # image dissemination service.
 #
-#$Id: tos-write-image.in,v 1.4 2006-12-12 18:23:02 vlahan Exp $
+#$Id: tos-write-image.in,v 1.5 2007-04-27 05:01:25 prabal Exp $
 #@author Jonathan Hui <jwhui@cs.berkeley.edu>
 #
 use strict;
@@ -20,12 +20,13 @@ my %ident_flags = ();
 my $exe = "";
 my $ihex = "";
 my $objdump = "avr-objdump";
+my $platform = "";
 
 for my $arg (@ARGV) {
   if ($arg =~ /^-DIDENT_(.+)=0x(.+)$/) {
     $ident_flags{lc($1)} = uc($2);
   }
-  elsif ($arg =~ /^-DIDENT_(.+)=(.+)$/) {
+  elsif ($arg =~ /^-DIDENT_(.+)="(.+)"$/) {
     $ident_flags{lc($1)} = $2;
   }
   elsif ($arg =~ /^--ihex=(.+)$/) {
@@ -36,6 +37,9 @@ for my $arg (@ARGV) {
   }
   elsif ($arg =~ /^--objdump=(.+)$/) {
     $objdump = $1;
+  }
+  elsif ($arg =~ /^--platform=(.+)$/) {
+    $platform = $1;
   }
 }
 
@@ -49,6 +53,7 @@ while(<EXE>) {
 }
 close(EXE);
 $ident_flags{"deluge_support"} = $deluge_support;
+$ident_flags{"platform"} = $platform;
 
 open ( IHEX, $ihex ) or die "Cannot open ihex file: $!\n";
 
