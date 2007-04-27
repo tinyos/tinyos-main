@@ -13,14 +13,14 @@
 //uint8_t atm128RegFile[100][0xa0];
 
 #define _BV(bit) (1 << (bit))
-#define __SFR_OFFSET 0x20
+//#define __SFR_OFFSET 0x20
 
 #define _MMIO_BYTE(mem_addr) (*((volatile uint8_t *)(&atm128RegFile[sim_node()][mem_addr])))
 #define _MMIO_WORD(mem_addr) (*((volatile uint16_t *)(&atm128RegFile[sim_node()][mem_addr])))
 #define _SFR_MEM8(mem_addr) _MMIO_BYTE(mem_addr)
 #define _SFR_MEM16(mem_addr) _MMIO_WORD(mem_addr)
-#define _SFR_IO8(io_addr) _MMIO_BYTE((io_addr) + 0x20)
-#define _SFR_IO16(io_addr) _MMIO_WORD((io_addr) + 0x20)
+#define _SFR_IO8(io_addr) _MMIO_BYTE((io_addr) )
+#define _SFR_IO16(io_addr) _MMIO_WORD((io_addr) )
 
 enum {
 /* Input Pins, Port F */

@@ -33,7 +33,7 @@
  *  @author Jason Hill, Philip Levis, Nelson Lee, David Gay
  *  @author Martin Turon <mturon@xbow.com>
  *
- *  $Id: atm128hardware.h,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+ *  $Id: atm128hardware.h,v 1.5 2007-04-27 17:32:20 scipio Exp $
  */
 
 #ifndef _H_atmega128hardware_H
@@ -55,8 +55,8 @@ uint8_t atm128RegFile[TOSSIM_MAX_NODES][0xa0];
 
 /* Macro to create union casting functions. */
 #define DEFINE_UNION_CAST(func_name, from_type, to_type) \
-  to_type func_name(from_type x) { \
-  union {from_type f; to_type t;} c = {f:x}; return c.t; }
+  to_type func_name(from_type x_type) { \
+    union {from_type f_type; to_type t_type;} c_type = {f_type:x_type}; return c_type.t_type; }
 
 // Bit operators using bit number
 #define SET_BIT(port, bit)    ((REG_ACCESS(port)) |= _BV(bit))
