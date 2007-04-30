@@ -35,6 +35,10 @@
 
 // #define REDMAC_DEBUG
 
+#ifdef REDMAC_PERFORMANCE
+#include <Performance.h>
+#endif
+
 configuration RedMacC {
   provides {
     interface SplitControl;
@@ -42,7 +46,7 @@ configuration RedMacC {
     interface MacReceive;
     interface Packet;
     interface LocalTime<T32khz> as LocalTime;
-    interface SleepTime;
+    interface Sleeptime;
     interface ChannelCongestion;
   }
   uses {
@@ -81,7 +85,7 @@ implementation {
     RedMacP = PacketReceive;
     RedMacP = SubPacket;
     RedMacP = Packet;
-    RedMacP = SleepTime;
+    RedMacP = Sleeptime;
     
     RedMacP.CcaStdControl -> Cca.StdControl;
     RedMacP.ChannelMonitor -> Cca.ChannelMonitor;
@@ -105,6 +109,11 @@ implementation {
 #ifdef REDMAC_DEBUG
     components new SerialDebugC() as SD;
     RedMacP.SerialDebug -> SD;
+#endif
+
+#ifdef REDMAC_PERFORMANCE
+    components new PerformanceC() as Perf;
+    RedMacP.Performance -> Perf;
 #endif
 }
 

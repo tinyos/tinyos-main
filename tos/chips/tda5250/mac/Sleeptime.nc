@@ -32,17 +32,35 @@
  * Interface to control the duty cycle of the MAC
  * @author Andreas Koepke (koepke at tkn.tu-berlin.de)
  */ 
-interface SleepTime {
+interface Sleeptime {
   /**
    * set the sleep time of the MAC in units of a 32kHz clock, the setting
-   * takes effect on the next wakeup. To avoid synchroninization of the wake
-   * up times, some additional randomization can be necessary, esp. when
-   * switching from shorter to longer sleep times.
+   * takes effect on the next wakeup.
+   * 
+   * Caution 1: To avoid synchroninization of the wake up times, some
+   *             additional randomization can be necessary, esp. when
+   *             switching from shorter to longer sleep times.
+   * Caution 2: The local sleep time must be equal or shorter than the
+   *            network sleep time
    */
-  async command void setSleepTime(uint16_t sT);
+  async command void setLocalSleeptime(uint16_t sT);
   
   /**
    * which sleep time is in effect?
    */
-  async command uint16_t getSleepTime();
+  async command uint16_t getLocalSleeptime();
+
+  /**
+   * set the expected sleep time of the network -- this defines how long this
+   * node will attempt to wake up a remote node.
+   * Caution: The local sleep time must be equal or shorter than the
+   *          network sleep time
+   */
+  async command void setNetworkSleeptime(uint16_t sT);
+  
+  /**
+   * how long do we expect our neighbors to sleep?
+   */
+  async command uint16_t getNetworkSleeptime();
+  
 }

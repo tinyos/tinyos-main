@@ -47,7 +47,7 @@ module RedMacP {
         interface MacReceive;
         interface Packet;
         interface LocalTime<T32khz> as LocalTime32khz;
-        interface SleepTime;
+        interface Sleeptime;
         interface Teamgeist;
         interface ChannelCongestion;
     }
@@ -83,6 +83,10 @@ module RedMacP {
 #ifdef REDMAC_DEBUG
         interface SerialDebug;
 #endif
+#ifdef REDMAC_PERFORMANCE
+        interface Performance;
+#endif
+
     }
 }
 implementation
@@ -114,6 +118,11 @@ implementation
     void sdDebug(uint16_t p) {};
 #endif
     
+#ifdef REDMAC_PERFORMANCE
+    macTxStat_t txStat;
+    macRxStat_t rxStat;
+#endif
+
     /**************** Module Global Constants  *****************/
     enum {
 
@@ -181,27 +190,28 @@ implementation
     } knownMessage_t;
     
     knownMessage_t knownMsgTable[MSG_TABLE_ENTRIES];
-    uint8_t flags;
-    uint8_t checkCounter;
-    uint8_t shortRetryCounter;
-    uint8_t longRetryCounter;
-    uint16_t sleepTime;
-    uint16_t rssiValue;
-    uint32_t restLaufzeit;
-    
-    message_t *txBufPtr;
-    uint16_t txLen;
-    red_mac_header_t *txMacHdr;
+    uint8_t flags = 0;
+    uint8_t checkCounter = 0;
+    uint8_t shortRetryCounter = 0;
+    uint8_t longRetryCounter = 0;
+    uint16_t networkSleeptime = DEFAULT_SLEEP_TIME;
+    uint16_t localSleeptime = DEFAULT_SLEEP_TIME;
+    uint16_t rssiValue = 0;
+    uint32_t restLaufzeit = 0;
 
+    uint16_t counter2sec = 127;
+    uint32_t rxTime = 0;
+
+    am_id_t teamgeistType = 0;
+
+    uint8_t congestionLevel = 0;
+
+    message_t *txBufPtr = NULL;
+    uint16_t txLen = 0;
+    red_mac_header_t *txMacHdr = NULL;
     uint16_t seqNo;
     message_t ackMsg;
 
-    uint16_t counter2sec;
-    uint32_t rxTime;
-
-    am_id_t teamgeistType;
-
-    uint8_t congestionLevel;
     uint16_t MIN_BACKOFF_MASK;
     
     /****** Secure switching of radio modes ***/
@@ -236,6 +246,11 @@ implementation
         if(call RadioModes.RxMode() == FAIL) {
             post SetRxModeTask();
         }
+        else {
+#ifdef REDMAC_PERFORMANCE
+            call Performance.macRxMode();
+#endif
+        }
         requestAdc();
     }
     
@@ -253,6 +268,11 @@ implementation
         if(call RadioModes.SleepMode() == FAIL) {
             post SetSleepModeTask();
         }
+        else {
+#ifdef REDMAC_PERFORMANCE
+            call Performance.macSleepMode();
+#endif
+        }
     }
     
     task void SetSleepModeTask() {
@@ -267,6 +287,11 @@ implementation
         setFlag(&flags, SWITCHING);
         if(call RadioModes.TxMode() == FAIL) {
             post SetTxModeTask();
+        }
+        else {
+#ifdef REDMAC_PERFORMANCE
+            call Performance.macTxMode();
+#endif
         }
     }
 
@@ -347,7 +372,7 @@ implementation
         atomic {
             msg = txBufPtr;
             length = txLen;
-            sT = sleepTime;
+            sT = networkSleeptime;
         }
         if(msg == NULL) return;
         macHdr = (red_mac_header_t *)call SubPacket.getPayload(msg, NULL);
@@ -372,6 +397,13 @@ implementation
                     call Timer.start(backoff(longRetryCounter));
                 }
             }
+#ifdef REDMAC_PERFORMANCE
+            txStat.type = getHeader(msg)->type;
+            txStat.to = getHeader(msg)->dest;
+            txStat.token = getHeader(msg)->token;
+            txStat.maxRepCounter = macHdr->repetitionCounter;
+            txStat.creationTime =  getMetadata(msg)->time;
+#endif
         }
     }
 
@@ -397,6 +429,11 @@ implementation
             m = txBufPtr;
             txBufPtr = NULL;
             txLen  = 0;
+#ifdef REDMAC_PERFORMANCE
+            txStat.repCounter = txMacHdr->repetitionCounter;
+            txStat.longRetry = longRetryCounter;
+            txStat.shortRetry = shortRetryCounter;
+#endif
             longRetryCounter = 0;
             shortRetryCounter = 0;
             if(rssiValue != INVALID_SNR) {
@@ -414,6 +451,11 @@ implementation
         // sdDebug(3000 + e);
         // sdDebug(4000 + getHeader(m)->type);
         signal MacSend.sendDone(m, e);
+#ifdef REDMAC_PERFORMANCE
+        txStat.success = e;
+        txStat.strength = getMetadata(m)->strength;
+        call Performance.macTxMsgStats(&txStat);
+#endif
     }
     
     void updateRetryCounters() {
@@ -545,27 +587,14 @@ implementation
         uint8_t i;
         atomic {
             macState = INIT;
-            flags = 0;
-            checkCounter = 0;
-            rssiValue = 0;
-            restLaufzeit = 0;
             seqNo = call Random.rand16() % TOKEN_ACK_FLAG;
-            txBufPtr = NULL;
-            txLen = 0;
-            txMacHdr = NULL;
-            sleepTime = DEFAULT_SLEEP_TIME;
             for(i = 0; i < MSG_TABLE_ENTRIES; i++) {
                 knownMsgTable[i].age = MAX_AGE;
             }
-            for(MIN_BACKOFF_MASK = 1; MIN_BACKOFF_MASK < sleepTime; ) {
+            for(MIN_BACKOFF_MASK = 1; MIN_BACKOFF_MASK < networkSleeptime; ) {
                 MIN_BACKOFF_MASK = (MIN_BACKOFF_MASK << 1) + 1;
             }
             MIN_BACKOFF_MASK >>= 2;
-            shortRetryCounter = 0;
-            longRetryCounter = 0;
-            counter2sec = 127;
-            rxTime = 0;
-            teamgeistType = 0;
         }
 #ifdef REDMAC_DEBUG
         call SerialDebug.putShortDesc("RedMacP");
@@ -578,7 +607,7 @@ implementation
     task void StartDoneTask() {
         // sdDebug(90);
         atomic  {
-            call SampleTimer.start(sleepTime);
+            call SampleTimer.start(localSleeptime);
             macState = SLEEP;
             setFlag(&flags, TEAMGEIST_ACTIVE);
             teamgeistType = signal Teamgeist.observedAMType();
@@ -769,6 +798,10 @@ implementation
                 txLen = len + sizeof(red_mac_header_t);
                 seqNo++;
                 if(seqNo >= TOKEN_ACK_FLAG) seqNo = 1;
+#ifdef REDMAC_PERFORMANCE
+                txStat.payloadLength = txLen;
+                txStat.interfaceTime = call LocalTime32khz.get();
+#endif
             }
             else {
                 // sdDebug(171);
@@ -814,7 +847,12 @@ implementation
         setFlag(&flags, ACTION_DETECTED);
         call ChannelMonitor.rxSuccess();
         if(macState <= CCA_ACK) {
-            if(macState == CCA) computeBackoff();
+            if(macState == CCA) {
+                computeBackoff();
+#ifdef REDMAC_PERFORMANCE
+            call Performance.macDetectedOnCca();
+#endif
+            }
             if(macState != RX_ACK) {
                 macState = RX_P;
             } else {
@@ -833,7 +871,10 @@ implementation
         uint32_t nav = 0;
         uint8_t level = 0;
         bool isCnt;
-        
+#ifdef REDMAC_PERFORMANCE
+        rxStat.duplicate = PERF_UNKNOWN;
+        rxStat.repCounter = 0xff;
+#endif
         // sdDebug(190);
         if(macState == RX_P) {
             // sdDebug(191);
@@ -844,6 +885,9 @@ implementation
                     if(!isCnt) {
                         // sdDebug(193);
                         if(isNewMsg(msg)) {
+#ifdef REDMAC_PERFORMANCE
+                            rxStat.duplicate = PERF_NEW_MSG;
+#endif
                             // sdDebug(194);
                             if(rssiValue != INVALID_SNR) {
                                 (getMetadata(m))->strength = rssiValue;
@@ -867,6 +911,9 @@ implementation
                             } else {
                                 // sdDebug(196);
                                 action = RX;
+#ifdef REDMAC_PERFORMANCE
+                                call Performance.macQueueFull();
+#endif
                             }
                         }
                         if(needsAckRx(msg, &level) && (action != RX)) {
@@ -886,6 +933,9 @@ implementation
                     else {
                         // sdDebug(199);
                         action = RX;
+#ifdef REDMAC_PERFORMANCE
+                        rxStat.duplicate = PERF_REPEATED_MSG;
+#endif
                     }
                 }
                 else {
@@ -986,6 +1036,19 @@ implementation
         else {
             // sdDebug(207);
         }
+#ifdef REDMAC_PERFORMANCE
+        if(error == SUCCESS) {
+            rxStat.type = getHeader(msg)->type;
+            rxStat.from = getHeader(msg)->src;
+            rxStat.to = getHeader(msg)->dest;
+            rxStat.token = getHeader(msg)->token;
+            if(!isControl(msg)) rxStat.repCounter  = ((red_mac_header_t*)payload)->repetitionCounter;
+            rxStat.payloadLength = len;
+            rxStat.strength = rssiValue;
+            rxStat.creationTime = getMetadata(msg)->time;
+            call Performance.macRxStats(&rxStat);
+        }
+#endif
         return m;
     }
 
@@ -1055,6 +1118,9 @@ implementation
         if((macState == RX) || (macState == CCA) || (macState == CCA_ACK)) {
             if(macState == CCA) {
                 computeBackoff();
+#ifdef REDMAC_PERFORMANCE
+                call Performance.macBusyOnCca();
+#endif
             }
             requestAdc();
             // sdDebug(230);
@@ -1089,6 +1155,10 @@ implementation
                 // sdDebug(243);
                 macState = TX;
                 setTxMode();
+#ifdef REDMAC_PERFORMANCE
+                call Performance.macIdleOnCca();
+                txStat.txModeTime = call LocalTime32khz.get();
+#endif
             }
         }
         else if(macState == CCA_ACK) {
@@ -1096,6 +1166,11 @@ implementation
             macState = TX_ACK;
             setTxMode();
             sdDebug(20000 + getHeader(&ackMsg)->dest);
+#ifdef REDMAC_PERFORMANCE
+            call Performance.macTxAckStats(getHeader(&ackMsg)->type,
+                                          getHeader(&ackMsg)->dest,
+                                          getHeader(&ackMsg)->token);
+#endif
         }
     }
     
@@ -1122,6 +1197,9 @@ implementation
             else {
                 if(needsAckTx(txBufPtr)) {
                     sdDebug(254);
+#ifdef REDMAC_PERFORMANCE
+                    call Performance.macAckTimeout();
+#endif
                     updateLongRetryCounters();
                 }
                 else {
@@ -1178,7 +1256,7 @@ implementation
     }
     
     async event void SampleTimer.fired() {
-        call SampleTimer.start(sleepTime);
+        call SampleTimer.start(localSleeptime);
         // sdDebug(270);
         if((macState == SLEEP) && (!isFlagSet(&flags, SWITCHING))) {
             clearFlag(&flags, ACTION_DETECTED);
@@ -1191,10 +1269,20 @@ implementation
         post ageMsgsTask();
     }
 
-    /***** SleepTime **********************************/
-    async command void SleepTime.setSleepTime(uint16_t sT) {
+    /***** Sleeptime **********************************/
+    async command void Sleeptime.setLocalSleeptime(uint16_t sT) {
+        atomic localSleeptime = sT;
+    }
+
+    async command uint16_t Sleeptime.getLocalSleeptime() {
+        uint16_t st;
+        atomic st = localSleeptime;
+        return st;        
+    }
+
+    async command void Sleeptime.setNetworkSleeptime(uint16_t sT) {
         atomic {
-            sleepTime = sT;
+            networkSleeptime = sT;
             for(MIN_BACKOFF_MASK = 1; MIN_BACKOFF_MASK < sT; ) {
                 MIN_BACKOFF_MASK = (MIN_BACKOFF_MASK << 1) + 1;
             }
@@ -1202,9 +1290,9 @@ implementation
         }
     }
     
-    async command uint16_t SleepTime.getSleepTime() {
+    async command uint16_t Sleeptime.getNetworkSleeptime() {
         uint16_t st;
-        atomic st = sleepTime;
+        atomic st = networkSleeptime;
         return st;
     }
 
@@ -1225,7 +1313,7 @@ implementation
     event void ChannelMonitorControl.updateNoiseFloorDone() {
         if(macState == INIT) {
             // sdDebug(290);
-            call Timer.start(call Random.rand16() % DEFAULT_SLEEP_TIME);
+            call Timer.start(call Random.rand16() % localSleeptime);
             setSleepMode();
         } else {
             // sdDebug(291);
