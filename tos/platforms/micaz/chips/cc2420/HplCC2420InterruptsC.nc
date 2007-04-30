@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:44 $
+ * @version $Revision: 1.5 $ $Date: 2007-04-30 17:31:08 $
  */
 
 configuration HplCC2420InterruptsC {
@@ -54,9 +54,9 @@ implementation {
   InterruptFIFOP = InterruptFIFOPC;
   InterruptFIFOPC.Atm128Interrupt -> Interrupts.Int6;
 
-  components HplCC2420InterruptsP, HplCC2420PinsC, new TimerMilliC();
+  components HplCC2420InterruptsP;
+  components HplCC2420PinsC;
   InterruptCCA   = HplCC2420InterruptsP.CCA;
-  HplCC2420InterruptsP.CCATimer -> TimerMilliC;
   HplCC2420InterruptsP.CC_CCA -> HplCC2420PinsC.CCA;
   
 }
