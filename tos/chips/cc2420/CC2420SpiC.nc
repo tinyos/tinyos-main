@@ -33,11 +33,12 @@
  * Implementation of basic SPI primitives for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.6 $ $Date: 2007-04-12 17:11:12 $
+ * @version $Revision: 1.7 $ $Date: 2007-04-30 17:24:26 $
  */
 
 generic configuration CC2420SpiC() {
 
+  provides interface SplitControl;
   provides interface Resource;
 
   // commands
@@ -85,7 +86,8 @@ implementation {
   components CC2420SpiP as Spi;
   
   Resource = Spi.Resource[ CLIENT_ID ];
-
+  SplitControl = Spi.SplitControl;
+  
   // commands
   SFLUSHRX = Spi.Strobe[ CC2420_SFLUSHRX ];
   SFLUSHTX = Spi.Strobe[ CC2420_SFLUSHTX ];

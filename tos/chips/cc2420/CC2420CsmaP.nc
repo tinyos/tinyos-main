@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:12 $
+ * @version $Revision: 1.6 $ $Date: 2007-04-30 17:24:26 $
  */
 
 module CC2420CsmaP {
@@ -43,6 +43,7 @@ module CC2420CsmaP {
 
   uses interface Resource;
   uses interface CC2420Power;
+  uses interface SplitControl as SpiSplitControl;
   uses interface StdControl as SubControl;
   uses interface CC2420Transmit;
   uses interface RadioBackoff as SubBackoff;
@@ -95,7 +96,8 @@ implementation {
     }
 
     m_state = S_STARTING;
-    call CC2420Power.startVReg();
+    call SpiSplitControl.start();
+    // Wait for SpiSplitControl.startDone()
     return SUCCESS;
   }
 
@@ -105,12 +107,22 @@ implementation {
     }
 
     m_state = S_STOPPING;
-    call SubControl.stop();
-    call CC2420Power.stopVReg();
-    post stopDone_task();
+    call SpiSplitControl.stop();
+    // Wait for SpiSplitControl.stopDone()
     return SUCCESS;
   }
 
+  /***************** SpiSplitControl Events ****************/
+  event void SpiSplitControl.startDone(error_t error) {
+    call CC2420Power.startVReg();
+  }
+  
+  event void SpiSplitControl.stopDone(error_t error) {
+    call SubControl.stop();
+    call CC2420Power.stopVReg();
+    post stopDone_task();
+  }
+    
   /***************** Send Commands ****************/
   command error_t Send.cancel( message_t* p_msg ) {
     return call CC2420Transmit.cancel();
@@ -122,8 +134,9 @@ implementation {
     cc2420_metadata_t* metadata = call CC2420Packet.getMetadata( p_msg );
 
     atomic {
-      if ( m_state != S_STARTED )
+      if ( m_state != S_STARTED ) {
         return FAIL;
+      }
       m_state = S_TRANSMIT;
       m_msg = p_msg;
     }

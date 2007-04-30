@@ -31,11 +31,12 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:12 $
+ * @version $Revision: 1.6 $ $Date: 2007-04-30 17:24:26 $
  */
 
 configuration CC2420SpiP {
-
+  
+  provides interface SplitControl;
   provides interface Resource[ uint8_t id ];
   provides interface CC2420Fifo as Fifo[ uint8_t id ];
   provides interface CC2420Ram as Ram[ uint16_t id ];
@@ -47,6 +48,7 @@ configuration CC2420SpiP {
 implementation {
 
   components CC2420SpiImplP as SpiP;
+  SplitControl = SpiP;
   Resource = SpiP;
   Fifo = SpiP;
   Ram = SpiP;
