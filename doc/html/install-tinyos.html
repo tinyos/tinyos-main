@@ -12,12 +12,28 @@
 
 <p>If you already have a 1.x tree or an existing 2.x tree, you are better off 
 following the <i>upgrade</i> instructions at 
-<a href="upgrade-tinyos.html">upgrade-tinyos.html</a>.</p>
+<a href="upgrade-tinyos.html">upgrade-tinyos.html</a>. There are two ways to install
+      TinyOS. The first (and recommended) way is to install a live CD that gives
+      you a virtualized Linux with a complete TinyOS install. The second is to
+      install TinyOS on your host operating system.</p> 
 
+      <h1>One-step Install with a Live CD</h1>
+
+      <p><A
+      HREF="http://toilers.mines.edu/Public/XubunTOS/">Download a
+      Linux live CD that has a TinyOS installation on it</A>. All you
+      need to do is download the CD image, burn it onto a CD, and
+      install from there. This saves you all of the complexities of
+      installation, and it's the recommended way to install
+      TinyOS. The link above has complete instructions. The live CD is
+      provided by the Toilers group at the Colorado School of
+      Mines.</p>
+
+      <h1>Installing on your host operating system</h1>
 <p>Currently, the TinyOS Core Working Group supports TinyOS on two platforms: Cygwin (Windows)
 and Linux. There have been some <A HREF="">successful efforts</A> to getting TinyOS environments working
 on Mac OSX, but OSX is not supported by the Core WG.</p>
-
+      
 <p>Installing a TinyOS enviromnent has five basic steps; Windows requires an extra step,
 installing Cygwin, which is a UNIX-like environment. The steps are:</p>
 
@@ -47,7 +63,7 @@ installing Cygwin, which is a UNIX-like environment. The steps are:</p>
   that nesdoc uses to draw the diagrams.</li>
 </ol>
 
-<h1>Step 1: Install Java 1.5 JDK</h1>
+<h2>Step 1: Install Java 1.5 JDK</h2>
 
 <b>Windows</b><br>
 Download and install Sun's 1.5 JDK from <a href="http://java.sun.com">http://java.sun.com</a>.
@@ -56,7 +72,7 @@ Download and install Sun's 1.5 JDK from <a href="http://java.sun.com">http://jav
 <b>Linux</b><br>
 Download and install IBM's 1.5 JDK from <a href="http://www-128.ibm.com/developerworks/java/jdk/">http://www-128.ibm.com/developerworks/java/jdk/</a>.
 
-<h1>Step 2: Install Cygwin</h1>
+<h2>Step 2: Install Cygwin</h2>
 
 <font color=red> This step is required for Windows installations only. If you are installing
 on Linux, skip to step 3.</font>
@@ -110,7 +126,7 @@ This unzips the packages.
 </ol>
 </ol>
 
-<h1>Step 3: Install native compilers </h1>
+<h2>Step 3: Install native compilers </h2>
 
 Install the appropriate version of the following (Windows or Linux,
 avr or msp430 or both) with the rpm command 'rpm -ivh <rpm>'. 
@@ -220,7 +236,7 @@ but they have not yet been extensively tested by a large community.)
 
 </tbody></table>
 
-<h1>Step 4: Install TinyOS toolchain</h1>
+<h2>Step 4: Install TinyOS toolchain</h2>
 
 The TinyOS-specific tools are the NesC compiler and a set of tools
 developed in the tinyos-2.x/tools source code repository. They are
@@ -268,7 +284,7 @@ add the <code>--ignoreos</code> option.
 
 </tbody></table>
 
-<h1>Step 5: Install the TinyOS 2.x source tree </h1>
+<h2>Step 5: Install the TinyOS 2.x source tree </h2>
 
 Now that the tools are installed, you need only install the tinyos 2.x 
 source tree and then set your environment variables.
@@ -278,7 +294,7 @@ As with the previous rpms, if you get an error claiming that the rpm
 was build for an NT computer and you're on a windows NT computer,
 bypass the erroneous error by using 'rpm -ivh --ignoreos
 <i>rpmname</i>'.
-
+<p>
 <ul>
 <li> Install tinyos-2.x
 <p>
@@ -369,9 +385,29 @@ groups: </li>
 -->
 </code></code></li></ol>
 
+
+
+
+<li><p>Finally, if you have installed TinyOS 2.0.1, there is a bug in TOSSIM (which will be fixed in 2.0.2).
+The bug is in file <tt>tos/chips/atm128/sim/atm128_sim.h</tt>. Change these lines 22 and 23 from:
+
+<pre>
+#define _SFR_IO8(io_addr) _MMIO_BYTE((io_addr) + 0x20)
+#define _SFR_IO16(io_addr) _MMIO_WORD((io_addr) + 0x20)
+</pre>
+
+to
+
+<pre>
+#define _SFR_IO8(io_addr) _MMIO_BYTE((io_addr))
+#define _SFR_IO16(io_addr) _MMIO_WORD((io_addr))
+</pre>
+
+If you do not do this, then timers will not work correctly.
+
 </li></ul>
 
-<h1>Step 6: Installing Graphviz</h1>
+<h2>Step 6: Installing Graphviz</h2>
 
 <p>Go to <A HREF="http://www.graphviz.org/Download..php">download page</A> of the Graphviz project
 and download the appropriate RPM. You only need the basic graphviz RPM (<tt>graphviz-</tt>);

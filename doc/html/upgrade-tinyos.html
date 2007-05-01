@@ -317,6 +317,22 @@ are going to use: <code>chmod 666 /dev/&lt;devicename&gt;<code>
 groups: </li>
 -->
 </code></code></li></ol>
+<li><p>Finally, if you have installed TinyOS 2.0.1, there is a bug in TOSSIM (which will be fixed in 2.0.2).
+The bug is in file <tt>tos/chips/atm128/sim/atm128_sim.h</tt>. Change these lines 22 and 23 from:
+
+<pre>
+#define _SFR_IO8(io_addr) _MMIO_BYTE((io_addr) + 0x20)
+#define _SFR_IO16(io_addr) _MMIO_WORD((io_addr) + 0x20)
+</pre>
+
+to
+
+<pre>
+#define _SFR_IO8(io_addr) _MMIO_BYTE((io_addr))
+#define _SFR_IO16(io_addr) _MMIO_WORD((io_addr))
+</pre>
+
+If you do not do this, then timers will not work correctly.
 
 </li></ul>
 <a name="tinyos1"><h1>Switching back to a TinyOS 1.x tree</h1></a>
