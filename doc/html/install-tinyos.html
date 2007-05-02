@@ -8,7 +8,7 @@
 <body>
 
 <div class="title">Installing TinyOS 2.0</div>
-<div class="subtitle">Last updated 8 April 2007</div>
+<div class="subtitle">Last updated 1 May 2007</div>
 
 <p>If you already have a 1.x tree or an existing 2.x tree, you are better off 
 following the <i>upgrade</i> instructions at 
@@ -20,8 +20,9 @@ following the <i>upgrade</i> instructions at
       <h1>One-step Install with a Live CD</h1>
 
       <p><A
-      HREF="http://toilers.mines.edu/Public/XubunTOS/">Download a
-      Linux live CD that has a TinyOS installation on it</A>. All you
+      HREF="http://toilers.mines.edu/Public/XubunTOS">Download a
+      Linux live CD that has a TinyOS installation on it</A>. 
+      All you
       need to do is download the CD image, burn it onto a CD, and
       install from there. This saves you all of the complexities of
       installation, and it's the recommended way to install
@@ -33,7 +34,13 @@ following the <i>upgrade</i> instructions at
 <p>Currently, the TinyOS Core Working Group supports TinyOS on two platforms: Cygwin (Windows)
 and Linux. There have been some <A HREF="">successful efforts</A> to getting TinyOS environments working
 on Mac OSX, but OSX is not supported by the Core WG.</p>
-      
+
+<p>If you are running a version of Linux that supports Debian packages, then
+   you may want to use the TinyOS package repository. There is a <A HREF="http://www.tinyos.net/scoop/story/2007/3/1/142950/4912">story on www.tinyos.net</A> 
+   that describes how to use it. If you do this, then you do not have to
+   install the instructions here, except that you will need to check
+   that your environment is set up correctly (the final step)</p>
+
 <p>Installing a TinyOS enviromnent has five basic steps; Windows requires an extra step,
 installing Cygwin, which is a UNIX-like environment. The steps are:</p>
 
@@ -311,8 +318,8 @@ bypass the erroneous error by using 'rpm -ivh --ignoreos
 
 <tr>
   <td>TinyOS</td>
-  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-2.0.0-3.cygwin.noarch.rpm">tinyos-2.0.0-3.cygwin.noarch.rpm</a></td>
-  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-2.0.0-3.noarch.rpm">tinyos-2.0.0-3.noarch.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-2.0.1-5.cygwin.noarch.rpm">tinyos-2.0.1-5.cygwin.noarch.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-2.0.1-5.noarch.rpm">tinyos-2.0.1-5.noarch.rpm</a></td>
 </tr>
 
 </tbody></table>
