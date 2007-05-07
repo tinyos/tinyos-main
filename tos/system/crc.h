@@ -1,4 +1,4 @@
-// $Id: crc.h,v 1.4 2006-12-12 18:23:47 vlahan Exp $
+// $Id: crc.h,v 1.5 2007-05-07 15:43:59 andreaskoepke Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -48,7 +48,10 @@ uint16_t crcByte(uint16_t oldCrc, uint8_t byte);
  * @param b Byte to "add" to the CRC
  * @return New CRC value
  *
+ * To understand how the CRC works and how it relates to the polynomial, read through this
+ * loop based implementation.
  */
+/*
 uint16_t crcByte(uint16_t crc, uint8_t b)
 {
   uint8_t i;
@@ -62,6 +65,24 @@ uint16_t crcByte(uint16_t crc, uint8_t b)
       crc = crc << 1;
   while (--i);
 
+  return crc;
+}
+*/
+/**
+ * The following implementation computes the same polynomial.  It should be
+ * (much) faster on any processor architecture, as it does not involve
+ * loops. Unfortunately, I can not yet give a reference to a derivation.
+ * 
+ * @author Andreas Koepke <koepke@tkn.tu-berlin.de> (porting to tinyos)
+ * @author Paul Curtis (pointed out this implementation on the MSP430 yahoo mailing list)
+ */
+
+uint16_t crcByte(uint16_t crc, uint8_t b) {
+  crc = (uint8_t)(crc >> 8) | (crc << 8);
+  crc ^= b;
+  crc ^= (uint8_t)(crc & 0xff) >> 4;
+  crc ^= crc << 12;
+  crc ^= (crc & 0xff) << 5;
   return crc;
 }
 #endif
