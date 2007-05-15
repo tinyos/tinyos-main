@@ -9,8 +9,8 @@ TinyOS Alliance Structure
 :TinyOS-Version: All
 :Authors: Philippe Bonnet, David Culler, Deborah Estrin, Ramesh Govindan, Mike Horton, Jeonghoon Kang, Philip Levis, Lama Nachman, Jack Stankovic, Rob Szewczyk, Matt Welsh, Adam Wolisz 
 :Draft-Created: 17-April-2006
-:Draft-Version: $Revision: 1.5 $
-:Draft-Modified: $Date: 2006-12-12 18:22:54 $
+:Draft-Version: $Revision: 1.6 $
+:Draft-Modified: $Date: 2007-05-15 23:29:48 $
 :Draft-Discuss: TinyOS Alliance <tinyos-alliance at mail.millennium.berkeley.edu>
 
 
@@ -42,9 +42,9 @@ development of the worldwide academic and industrial TinyOS community.
 2. Overview
 ====================================================================
 
-This memo defines a blueprint and conceptual foundation for an open 
-alliance that fulfills the above charter. 
-It defines the following ten aspects of the alliance:
+This memo defines a blueprint and conceptual foundation for an open
+alliance that fulfills the above charter. It defines the following ten
+aspects of the alliance:
 
    * Mission
    * Legal structure
@@ -84,27 +84,26 @@ documents and protocols.  We share an emphasis on broad participation
 centered on the contributions of individual members.  
 
 We encourage industrial involvement, industrial development, and
-industrial support.  The organization is welcoming to
-companies, but it keeps financial support and marketing
-activities (while both important) at arms length from the technical
-process.  We share the concept that proper behavior of participants
-and member companies is most strongly shaped by code of ethics,
-captured in organization rules and social norms, rather than threats
-of legal reprocusions.  The broader marketplace is a more effective
-enforcement body than any technical organization.  Thus, we ask that
-participants declare relevant IP that they are aware of, rather than
-force a strict accounting of potentially relevant IP.  We encourage
-the development of open solutions that implemented without need
-particular proprietary IP.  In the IETF, this is addressed by the
-requirement of multiple interoperable implementations before
-standardization.  If such implementations can be developed without
-legal issues, it is likely that other non-infringing implementations
-are possible.  Like IETF, we seek a lean bureacracy adn mostly
-volunteer organization.
+industrial support.  The organization is welcoming to companies, but
+it keeps financial support and marketing activities (while both
+important) at arms length from the technical process.  We share the
+concept that proper behavior of participants and member companies is
+most strongly shaped by code of ethics, captured in organization rules
+and social norms, rather than threats of legal reprocusions.  The
+broader marketplace is a more effective enforcement body than any
+technical organization.  Thus, we ask that participants declare
+relevant IP that they are aware of, rather than force a strict
+accounting of potentially relevant IP.  We encourage the development
+of open solutions that are implemented without the need for particular
+proprietary IP.  In the IETF, this is addressed by the requirement of
+multiple interoperable implementations before standardization.  If
+such implementations can be developed without legal issues, it is
+likely that other non-infringing implementations are possible.  Like
+IETF, we seek a lean bureacracy and mostly volunteer organization.
 
 From OSDL, we share the goal of developing a stable, high quality
 version of an open source system.  This suggests that the alliance
-have strong role in developing test suites and broadly accessible
+have a strong role in developing test suites and broadly accessible
 testbeds, as well as structures for sharing development resources.
 However, we avoid the OSDL structure of the scale of monetary
 contributions dictating technical oversite.  We are not constrained by
@@ -115,19 +114,19 @@ centered on individual contributors.  We seek to permit a loose enough
 consortium that there can be a lot of individual innovation,
 especially in areas of tools, devices, and new platforms.  We also
 seek to retain the notion that credit should be given to authors.  In
-Apache the technical merit associated with the brand is exchanged to
-giving the copyright to the Apache organization.  For a broad alliance
+Apache, giving the copyright to the Apache organization exchanges the
+value of the brand for technical contributions.  For a broad alliance
 representing many universities and large companies, such a copyright
-scheme is likely to be an untennable barrier.  Instead, we seek to
+scheme is likely to be an untenable barrier.  Instead, we seek to
 provide a simple source license regime with technical tools for giving
 credit and strong social pressure to comply.
 
 From Zigbee, we share the goal of providing marketing support for the
-accomplishments of the alliance and that we should see to define
+accomplishments of the alliance and that we should seek to define
 standardized services, not just protocols.  We recognize that the
-alliance and serve a useful function in being a point of allocation
-for various namespaces, but that this important function should not be
-a tool for extracting financial contributions.  We see the value of an
+alliance serves a useful function in being a point of allocation for
+various namespaces, but that this important function should not be a
+tool for extracting financial contributions.  We see the value of an
 IP pool to give confidence that the standard can be adopted without
 becoming entrapped later by IP terms, however, we also see that such a
 pool presents a very significant barrier.  Moreover, it does not
@@ -162,10 +161,9 @@ The mission of the TinyOS Alliance is to provide a forum to facilitate:
 The Alliance has a technical advisory function: guide the evolution of
 the TinyOS architecture, formulate and track progress of working
 groups, and provide an open and impartial process for technical
-documentation.  It also has an organizational advisory function: manage 
-industry
-interaction, legal and IP issues, evolution of the organization
-itself, membership issues and so on.
+documentation.  It also has an organizational advisory function:
+manage industry interaction, legal and IP issues, evolution of the
+organization itself, membership issues and so on.
 
 We follow an approach that starts small and grows the structure as
 needed. The focus should be on the working groups. Working groups are
@@ -222,7 +220,7 @@ Finally, the Steering Commitee will be responsible for determining the
 procedural elements of the Alliance. This includes election
 procedures, membership criteria, selection of venues, oversight of
 access to code repositories and Alliance web sites, and regular
-Alliance meetings.
+Alliance meetings that occur at least once a year.
 
 4.2 Working Groups
 -------------------------------------------------------
@@ -245,8 +243,8 @@ We desire to continue the TinyOS tradition of promoting broad
 membership.  This means that we want to keep barriers to entry low in
 all respects: legal, financial, and organizational.  As with IETF and
 Apache, we want to shape the organization as a meritocracy that
-encourages, promotes, and credits the contributions of its members.  
-Companies have essential role, but merit, not finances should
+encourages, promotes, and credits the contributions of its members.
+Companies have an essential role, but merit, not finances should
 dictate direction.  Membership and influence should recognize the
 importance of adopters, not just developers.
 
@@ -256,7 +254,7 @@ serve on working groups and committees, and vote.  We have two forms:
   * Member: Individual who joins the Alliance and participates at a
      basic level, typically as consumer of technology.
 
-  * Contributing Member: Individual who aditionally joins working groups,
+  * Contributing Member: Individual who additionally joins working groups,
     attends meetings, or contributes code or other assets to the
     Alliance.   Contributing members are elected to various posts and
     have voting rights.
@@ -264,10 +262,10 @@ serve on working groups and committees, and vote.  We have two forms:
 There is no individual membership fee, but members will be responsible for
 nominal registration fees at Alliance meetings.
 
-Corporations and organizational have institutional membership, which reflects 
-their degree of effort.
+Corporations and organizations have institutional membership, which
+reflects their degree of effort.
 
-  * Institutional Member: Corporation or institutional organization
+  * Institutional Member: A corporation or organization
     that joins the Alliance, agrees to appear on the Alliance
     web site and documents, and pays a nominal administrative fee.
     (Min. Annual $500 for small companies and non-profits, $1000 for larger)
@@ -291,20 +289,18 @@ corporate participation while preserving focus on soundness, merit,
 and consensus building.  Ultimately, we seek to promote a meritocracy
 that recognizess the contributions of the individuals, whether they
 be members of corporations, academic institutions, govermental
-institutions, or unaffiliated.  We will provide a fee structure that encourages
-the participation of small companies and start-ups.
+institutions, or unaffiliated.
 
 6. Working Groups
 ====================================================================
 
-There will be two forms of working groups. LONG-STANDING
-groups are chartered to develop important areas or subsystems.  For
-example, we expect longstanding groups on 
-routing, management, platforms, testing, programming tools, and
-education.  SHORT-TERM groups have a fixed mandate to tackle a
-particular topic.  For example, there may be groups to develop a
-particular protocol, establish a policy or licensing format, or
-address a particular application capability.
+There will be two forms of working groups. LONG-STANDING groups are
+chartered to develop important areas or subsystems.  For example, we
+expect longstanding groups on routing, management, platforms, testing,
+programming tools, and education.  SHORT-TERM groups have a fixed
+mandate to tackle a particular topic.  For example, there may be
+groups to develop a particular protocol, establish a policy or
+licensing format, or address a particular application capability.
 
 There will be two means of Working Group formation: grass roots and
 charter. Grass roots groups are formed by individuals or groups
@@ -323,10 +319,11 @@ protocols, services, and tools with high quality, open reference
 implementations of each.  We seek to have these standards be
 implementable without relying on particular proprietary intellectual
 property.  We are not interested in discouraging development of
-implementations that have excel in various ways through proprietary
+implementations that have excelled in various ways through proprietary
 IP, but standards should not require the use of such IP and should
-allow for multiple, interoperable implementations.
-The Steering committee will be engaged in ratification of standards.
+allow for multiple, interoperable implementations.  The Steering
+committee will be engaged in ratification of standards by actively
+participating in the community review process and document evolution.
 
 7. Intellectual Property
 ====================================================================
@@ -373,9 +370,9 @@ work products that fundamentally depend on proprietary IP, i.e., where
 the proposal can only reasonably be implemented using such IP.
 Members recognize that in making proposals, they are required by
 Alliance rules to disclose what IP they know to be relevant.  In the
-rare cases where working group determine that IP dependent proposals
-are sufficiently critical that they be pursued, such IP must be
-available on reasonable and non-discriminatory (RAND) terms for the
+rare cases where a working group determines that IP dependent
+proposals are sufficiently critical that they be pursued, such IP must
+be available on reasonable and non-discriminatory (RAND) terms for the
 Steering Committee to be able to approve the action.
 
 Of course, Intellectual Property in the TinyOS alliance is closely
@@ -400,19 +397,19 @@ tensions and trade-offs in formulating the source license.
 
 We want to give credit where credit is due.  Fundamentally, the
 community moves forward by contributing valuable technology and
-standing open each other's shoulders, not on their feet.  Credit and
+standing upon each other's shoulders, not on their feet.  Credit and
 respect drive a virtuous cycle of technical advance.  We do have
 several examples where companies, or even resarch institutions, have
 gained substantial benefit from the work of others while presenting it
 as their own.  This concern is partially addressed by GPL, where if
-you build upon the work of others you are oblicated to put it back in
+you build upon the work of others you are obliged to put it back in
 the open.  Apache addresses this issue by requiring acreditation of
 the Apache foundation.  However, this is connected with a stiff
 membership requirement of signing the copyright to Apache.
-Participants make that sacrafice when they view the brand appeal
+Participants make that sacrifice when they view the brand appeal
 associated with the Apache meritocracy as of sufficient value to
 warrant the arrangement.  Apache is also a losely affiliated
-consortium of realtively localized projects, typically in very well
+consortium of relatively localized projects, typically in very well
 established technical areas.  Our situation is different because we
 have many contributors to a cohesive whole and many of these
 contributors are at leading research institutions where copyright must
@@ -422,7 +419,7 @@ leading edge of technology.
 We recognize that the TinyOS "brand" is of value and will be
 increasingly so as the Alliance becomes more formal.  We do not want
 it tainted with its use as a marketing tool on inferior technology.
-Thus, we want to connect the use of the term with membership,
+Thus, we want to connect the use of the TinyOS term with membership,
 contribution, and conformance to Alliance rules and guidelines.
 
 We have the additional wrinkle that we are dealing primarily with
@@ -439,20 +436,24 @@ however, want to have as few distinct licenses with a little variation
 as possible.  Fortunately, we are seeing convergence in licenses,
 after several years of proliferation.
 
-To address these matters, the Alliance will have a
-preferred source license based on the BSD framework and a
-small set of accepted licenses, some of which have been gradfathered
-in with the existing code base.
-Contributions can be made using one of those accepted licenses, with
-the member organization name changed appropriately.  Organizations can
-submit additional proposed licenses to the Steering Committee.
+To address these matters, the Alliance has a preferred source license
+based on the BSD framework and a small set of accepted licenses, some
+of which have been gradfathered in with the existing code
+base. Contributions can be made using one of those accepted licenses,
+with the member organization name changed appropriately.
+Organizations can submit additional proposed licenses to the Steering
+Committee.  In order to avoid the debate of what constitutes "open
+source," the Steering Committee will generally only consider
+OSL-approved licenses for inclusion in the core. If a contributor
+wishes to use a completely new license, it can submit the license to
+the OSL first.
 
 We will not require that the Alliance hold copyright of submitted
 source code, but that it conform to Alliance guidelines.  These
 include guidelines for adding copyrights to existing sources.
 
 We will utilize the available development tools to facilitate the
-generation of list of contributors associated with any particular
+generation of a list of contributors associated with any particular
 instantiation of TinyOS components into an overall system,
 application, or distribution.  We will provide tools for registering
 contributors, copyrights, and applicable source licenses on line, for
@@ -468,17 +469,18 @@ means of enforcement create a adversarial culture with little
 practical advantage.  Instead, the Alliance will utilize cultural
 norms and reputation as mechanisms for enforcing proper creditation.
 We will develop tools that make compliance relatively easy, reward
-those that do so, and provide a complaint mechanism to identify misuse.
+those that do so, and provide a complaint mechanism to identify
+misuse.
 
-In taking this approach, we focus on needs of reference implementation
-of standardized interfaces and protocols.  Alliance is not the only
-vehicle for producing a hardened, tested, certified code base.
+In taking this approach, we focus on needs of reference mplementations
+of standardized interfaces and protocols.  The Alliance is not the
+only vehicle for producing a hardened, tested, certified code base.
 To do so would require the Alliance host a large technical staff, as
-OSDL does.  
-Comapanies may do so, or produce implementations with enhanced
-performance, reliability, or efficiency using their own proprietary
-technology.  The Alliance encourages such innovation while promoting
-standardized interfaces that allows such technology to interoperate.
+OSDL does.  Comapanies may do so, or produce implementations with
+enhanced performance, reliability, or efficiency using their own
+proprietary technology.  The Alliance encourages such innovation while
+promoting standardized interfaces that allow such technology to
+interoperate.
 
 9. Funding
 ====================================================================
@@ -492,37 +494,34 @@ to be re-visited.
 As with the IETF, individuals are responsible for their own costs,
 which primarily involve meetings, travel, and generation of work
 products.  The Alliance is predominantly a volunteer organization.
-Membership participation will involve attendance at
-Alliance meetings.  Registration fees will be charged to cover costs
-associated with adminstration of the meetings.  
+Membership participation will involve attendance at Alliance meetings.
+Registration fees will be charged to cover costs associated with
+adminstration of the meetings.
 
 To maintain the focus on technical excellence and meritocracy, we want
 to avoid the heavy-handed quid-pro-quo seen in many industrial
 consortiums where funding determines influence.  The best use of funds
 and the best form of influence is direct contribution to the work
-products of the Alliance.  
-To keep the structure of the Alliance and its operations minimalist
-and lean, membership focuses on desired impact and recognition, rather
-than control. We want the best way to influence the direction of the Alliance
-to be to contribute technical work and demonstrate leadership, rather than 
-try to control what individuals can or cannot contribute.
+products of the Alliance.  To keep the structure of the Alliance and
+its operations minimalist and lean, membership focuses on desired
+impact and recognition, rather than control. We want the best way to
+influence the direction of the Alliance to be to contribute technical
+work and demonstrate leadership, rather than try to control what
+individuals can or cannot contribute.
 
 Companies and institutions are encouraged to contribute financial and
 in-kind support.  It will be essential that companies provide initial
 funding to create the legal structure and to establish basic IT
-capabilities to host the web site and working groups.
-Institutional members
-will pay an annual membership fee. In some cases, a 
-contributing corporate member may provide in-kind services
-such as lawyers' time used to
-draw up or comment on by-laws.  
-Targeted contributions will be
-solicited and encouraged. In this case the donator need not 
-become a contributing corporate member, e.g., in those cases
-where such a membership may be prohibited or unwanted.
-The costs of meetings, such as the TinyOS
-technology exchange, will be covered through registration fees and
-not by institutional membership fees.
+capabilities to host the web site and working groups.  Institutional
+members will pay an annual membership fee. In some cases, a
+contributing corporate member may provide in-kind services such as
+lawyers' time used to draw up or comment on by-laws.  Targeted
+contributions will be solicited and encouraged. In this case the
+donator need not become a contributing corporate member, e.g., in
+those cases where such a membership may be prohibited or unwanted.
+The costs of meetings, such as the TinyOS technology exchange, will be
+covered through registration fees and not by institutional membership
+fees.
 
 10. Work Products
 ====================================================================
@@ -530,24 +529,22 @@ not by institutional membership fees.
 The broad mission of the Alliance calls for a broad range of 
 work products. 
 
-Foremost among these are a set of TEPs documenting
-systems and protocols as well as TEPs that provide guidance
-and knowledge to the community. Technical documentation will have
-robust and open reference implementations for the community to
-use, refine, improve, and discuss. These reference implementations
-will not preclude alternative, compatibile implementations which may
-have additional features or optimizations. The Alliance Working Groups
-will periodically produce periodic releases of these reference 
+Foremost among these are a set of TEPs documenting systems and
+protocols as well as TEPs that provide guidance and knowledge to the
+community. Technical documentation will have robust and open reference
+implementations for the community to use, refine, improve, and
+discuss. These reference implementations will not preclude
+alternative, compatibile implementations which may have additional
+features or optimizations. The Alliance Working Groups will
+periodically produce periodic releases of these reference
 implementations for the community to use and improve.
 
-The Alliance will support community contributions
-of innovative extensions and systems by providing a CVS repository 
-to store them.
-In order to keep these contributions organized for users, the
-Steering Committee may nominate one or more people to caretake
-the repository by setting minimal guidelines for the use of
-the directory structure and migrating code as it joins the core
-or falls into disuse.
+The Alliance will support community contributions of innovative
+extensions and systems by providing a CVS repository to store them.
+In order to keep these contributions organized for users, the Steering
+Committee may nominate one or more people to caretake the repository
+by setting minimal guidelines for the use of the directory structure
+and migrating code as it joins the core or falls into disuse.
 
 To make these technological resources more accessible and useful
 to a broad embedded networks community, the Alliance will be
@@ -569,15 +566,14 @@ as tools and graphical environments.
 11. Conclusions
 ====================================================================
 
-By focusing on consensus building and technical excellence, the 
+By focusing on consensus building and technical excellence, the
 Alliance seeks to avoid being a forum for political and economic
-positioning. It will achieve this by focusing on working groups
-and the contributions of individuals, while not taking strong 
-positions on the benefits or drawbacks of different approaches.
-The variety of application domains sensornets are used in and
-the huge differences in requirements mean that having a suite 
-of solutions, rather than a single one, is often not only
-desirable but essential.
+positioning. It will achieve this by focusing on working groups and
+the contributions of individuals, while not taking strong positions on
+the benefits or drawbacks of different approaches.  The diverse
+requiremements of sensornet applications mean that having a suite of
+solutions, rather than a single one, is often not only desirable but
+essential.
 
 Over the past five years, low-power embedded sensor networks have
 grown from research prototypes to working systems that are being
@@ -603,8 +599,7 @@ technology.
 ====================================================================
 
 | Philippe Bonnet <bonnet.p@gmail.com> 
-| David Culler    <culler@cs.berkeley.edu> 
-| David Culler <dculler at archrock.com>,
+| David Culler <dculler at archrock.com>
 | Deborah Estrin 	<destrin@cs.ucla.edu> 
 | Ramesh Govindan <ramesh@usc.edu> 
 | Mike Horton 	<mhorton@xbow.com> 
