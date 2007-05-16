@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.8 2007-04-18 17:11:29 scipio Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.9 2007-05-16 19:07:19 razvanm Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -520,5 +520,25 @@ implementation {
  default event bool Intercept.forward[collection_id_t id](message_t* pMsg, void* payload, uint16_t len) {
    return 1;
  }
+
+  /* Default implementations for CollectionDebug calls.
+   * These allow CollectionDebug not to be wired to anything if debugging
+   * is not desired. */
+    
+  default command error_t CollectionDebug.logEvent(uint8_t type) {
+    return SUCCESS;
+  }
+  default command error_t CollectionDebug.logEventSimple(uint8_t type, uint16_t arg) {
+    return SUCCESS;
+  }
+  default command error_t CollectionDebug.logEventDbg(uint8_t type, uint16_t arg1, uint16_t arg2, uint16_t arg3) {
+    return SUCCESS;
+  }
+  default command error_t CollectionDebug.logEventMsg(uint8_t type, uint16_t msg, am_addr_t origin, am_addr_t node) {
+    return SUCCESS;
+  }
+  default command error_t CollectionDebug.logEventRoute(uint8_t type, am_addr_t parent, uint8_t hopcount, uint16_t metric) {
+    return SUCCESS;
+  }
 }
 
