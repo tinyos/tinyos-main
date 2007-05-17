@@ -1,4 +1,4 @@
-// $Id: TossimActiveMessageP.nc,v 1.5 2007-04-11 01:29:44 scipio Exp $
+// $Id: TossimActiveMessageP.nc,v 1.6 2007-05-17 22:03:59 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -125,7 +125,7 @@ implementation {
   event bool Model.shouldAck(message_t* msg) {
     tossim_header_t* header = getHeader(msg);
     if (header->dest == call amAddress()) {
-      dbg("Acks", "addressed to me so ack it,");
+      dbg("Acks", "Received packet addressed to me so ack it\n");
       return TRUE;
     }
     return FALSE;

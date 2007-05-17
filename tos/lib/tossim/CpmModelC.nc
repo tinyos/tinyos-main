@@ -248,14 +248,13 @@ implementation {
     else {
       dbgerror("CpmModelC", "Incoming packet list structure is corrupted: entry is not the head and no entry points to it.\n");
     }
-    
+    dbg("CpmModelC,SNRLoss", "Packet from %i to %i\n", (int)mine->source, (int)sim_node());
     if (!checkReceive(mine)) {
-      dbg("CpmModelC", "Lost packet as SNR was too low.\n");
+      dbg("CpmModelC,SNRLoss", " - lost packet from as SNR was too low.\n");
       mine->lost = 1;
     }
-    
     if (!mine->lost) {
-      dbg_clear("CpmModelC", "  -signaling reception, ");
+      dbg_clear("CpmModelC,SNRLoss", "  -signaling reception\n");
       signal Model.receive(mine->msg);
       if (mine->ack) {
         dbg_clear("CpmModelC", " acknowledgment requested, ");
@@ -273,7 +272,7 @@ implementation {
     } // If the packet was lost, then we're searching for new packets again
     else {
       receiving = 0;
-      dbg_clear("CpmModelC", "  -packet was lost.\n");
+      dbg_clear("CpmModelC,SNRLoss", "  -packet was lost.\n");
     }
     free(mine);
   }
@@ -282,6 +281,7 @@ implementation {
   // enqueue a receive event to figure out what happens.
   void enqueue_receive_event(int source, sim_time_t endTime, message_t* msg, bool receive, double power) {
     sim_event_t* evt;
+    receive_message_t* list;
     receive_message_t* rcv = allocate_receive_message();
     double noiseStr = packetNoise(rcv);
     rcv->source = source;
@@ -302,18 +302,31 @@ implementation {
       rcv->lost = 1;
     }
     else if (!shouldReceive(power - noiseStr)) {
+      dbg("CpmModelC,SNRLoss", "Lost packet from %i to %i due to SNR being too low (%i)\n", source, sim_node(), (int)(power - noiseStr));
       rcv->lost = 1;
     }
     else if (receiving) {
+      dbg("CpmModelC,SNRLoss", "Lost packet from %i due to %i being mid-reception\n", source, sim_node());
       rcv->lost = 1;
     }
     else {
       receiving = 1;
-      rcv->next = outstandingReceptionHead;
-      outstandingReceptionHead = rcv;
-      evt = allocate_receive_event(endTime, rcv);
-      sim_queue_insert(evt);
     }
+
+    list = outstandingReceptionHead;
+    while (list != NULL) {
+      if (!shouldReceive(list->power - rcv->power)) {
+	dbg("Gain,SNRLoss", "Going to lose packet from %i with signal %lf as am receiving a packet from %i with signal %lf\n", list->source, list->power, source, rcv->power);
+	list->lost = 1;
+      }
+      list = list->next;
+    }
+    
+    rcv->next = outstandingReceptionHead;
+    outstandingReceptionHead = rcv;
+    evt = allocate_receive_event(endTime, rcv);
+    sim_queue_insert(evt);
+
   }
   
   void sim_gain_put(int dest, message_t* msg, sim_time_t endTime, bool receive, double power) {
