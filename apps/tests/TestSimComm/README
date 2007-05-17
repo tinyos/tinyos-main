@@ -1,0 +1,25 @@
+TestTimer, 5/17/07 
+
+This application tests the TOSSIM radio model by setting up a simple
+hidden terminal case. It checks whether packets collide correctly and
+whether SNR thresholds work correctly..
+
+The relevant output channel is "TestComm".
+
+There are three test cases:
+
+test-equal.py: Tests whether two nodes that are hidden terminals
+cause collisions. The two nodes have equal signal strengths, so a
+collision should corrupt both packets. If one packet is lost,
+the other should be too.
+
+test-unequal.py: Tests whether two nodes that are hidden terminals
+cause collisions. The two nodes have signal strengths that differ
+by 10dB, and node 1 is stronger. This means that node 2 should hear
+node 1's packets if they start first, but not second. If a packet
+from node 1 is lost, the packet from node 3 should be as well. However,
+a loss from node 3 does not imply a loss from node 1, as it is
+stronger.
+
+Philip Levis
+
