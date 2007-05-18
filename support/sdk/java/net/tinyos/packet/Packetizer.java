@@ -1,4 +1,4 @@
-// $Id: Packetizer.java,v 1.5 2007-05-18 18:27:04 rincon Exp $
+// $Id: Packetizer.java,v 1.6 2007-05-18 18:53:24 rincon Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -31,6 +31,7 @@
 package net.tinyos.packet;
 
 import net.tinyos.util.*;
+
 import java.io.*;
 import java.util.*;
 import java.nio.*;
@@ -115,7 +116,7 @@ public class Packetizer extends AbstractSource implements Runnable {
 
   synchronized public void open(Messenger messages) throws IOException {
     super.open(messages);
-    if(!reader.isAlive()) {
+    if (!reader.isAlive()) {
       reader.start();
     }
   }
@@ -181,16 +182,17 @@ public class Packetizer extends AbstractSource implements Runnable {
 
   // Write an ack-ed packet
   protected boolean writeSourcePacket(byte[] packet) throws IOException {
-    writeFramedPacket(P_PACKET_ACK, ++seqNo, packet, packet.length);
+    for (int retries = 0; retries < 25; retries++) {
+      writeFramedPacket(P_PACKET_ACK, ++seqNo, packet, packet.length);
 
-    long deadline = System.currentTimeMillis() + ACK_TIMEOUT;
-    for (;;) {
+      long deadline = System.currentTimeMillis() + ACK_TIMEOUT;
+
       byte[] ack = readProtocolPacket(P_ACK, deadline);
       if (ack == null) {
         if (DEBUG) {
           message(name + ": ACK timed out");
         }
-        return false;
+        continue;
       }
       if (ack[0] == (byte) seqNo) {
         if (DEBUG) {
@@ -200,6 +202,7 @@ public class Packetizer extends AbstractSource implements Runnable {
       }
     }
 
+    return false;
   }
 
   static private byte ackPacket[] = new byte[0];
