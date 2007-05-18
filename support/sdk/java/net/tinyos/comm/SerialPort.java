@@ -1,4 +1,6 @@
-//$Id: SerialPort.java,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+//$Id: SerialPort.java,v 1.5 2007-05-18 18:27:03 rincon Exp $
+
+package net.tinyos.comm;
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -22,7 +24,6 @@
 
 //@author Cory Sharp <cssharp@eecs.berkeley.edu>
 
-package net.tinyos.comm;
 
 import java.io.*;
 
@@ -43,8 +44,10 @@ public interface SerialPort
   public InputStream getInputStream() throws IOException;
   public OutputStream getOutputStream() throws IOException;
 
+  public boolean open();
   public void close();
-
+  public void finalize();
+  
   public void setSerialPortParams( 
     int baudrate, int dataBits, int stopBits, boolean parity )
     throws UnsupportedCommOperationException;

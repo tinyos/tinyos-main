@@ -1,4 +1,6 @@
-// $Id: SerialByteSource.java,v 1.4 2006-12-12 18:23:00 vlahan Exp $
+// $Id: SerialByteSource.java,v 1.5 2007-05-18 18:27:04 rincon Exp $
+
+package net.tinyos.packet;
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -29,111 +31,104 @@
  * 94704.  Attention:  Intel License Inquiry.
  */
 
-
-package net.tinyos.packet;
-
-import java.util.*;
 import java.io.*;
 import net.tinyos.comm.*;
 
 /**
  * A serial port byte source using net.tinyos.comm
  */
-public class SerialByteSource extends StreamByteSource implements SerialPortListener
-{
-    private SerialPort serialPort;
-    private String portName;
-    private int baudRate;
+public class SerialByteSource extends StreamByteSource implements
+    SerialPortListener {
+  private SerialPort serialPort;
 
-    public SerialByteSource(String portName, int baudRate) {
-	this.portName = portName;
-	this.baudRate = baudRate;
-    }
+  private String portName;
 
-    public void openStreams() throws IOException {
-	try {
-            serialPort = new TOSSerial(portName);
-	}
-	catch (Exception e) {
-	    throw new IOException("Could not open " + portName + ": " + e.getMessage());
-	}
+  private int baudRate;
 
-	try {
-	    //serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
-	    serialPort.setSerialPortParams(baudRate,
-					   8,
-					   SerialPort.STOPBITS_1,
-					   false );
+  public SerialByteSource(String portName, int baudRate) {
+    this.portName = portName;
+    this.baudRate = baudRate;
+  }
 
-	    serialPort.addListener(this);
-	    serialPort.notifyOn( SerialPortEvent.DATA_AVAILABLE, true );
-	}
-	catch (Exception e) {
-	    serialPort.close();
-	    throw new IOException("Could not configure " + portName + ": " + e.getMessage() );
-	}
-
-	is = serialPort.getInputStream();
-	os = serialPort.getOutputStream();
-    }
-
-    public void closeStreams() throws IOException {
-	serialPort.close();
-    }
-
-    public String allPorts() {
+  public void openStreams() throws IOException {
+    //if (serialPort == null) {
+      try {
+        serialPort = new TOSSerial(portName);
+      } catch (Exception e) {
+        throw new IOException("Could not open " + portName + ": "
+            + e.getMessage());
+      }
       /*
-	Enumeration ports = CommPortIdentifier.getPortIdentifiers();
-	if (ports == null)
-	    return "No comm ports found!";
-
-	boolean  noPorts = true;
-	String portList = "Known serial ports:\n";
-	while (ports.hasMoreElements()) {
-	    CommPortIdentifier port = (CommPortIdentifier)ports.nextElement();
-
-	    if (port.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-		portList += "- " + port.getName() + "\n";
-		noPorts = false;
-	    }
-	}
-	if (noPorts)
-	    return "No comm ports found!";
-	else
-	    return portList;
-      */
-      return "Listing available comm ports is no longer supported.";
+    } else {
+      if (!serialPort.open()) {
+        throw new IOException("Could not re-open " + portName);
+      }
     }
+    */
 
-    Object sync = new Object();
+    try {
+      // serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+      serialPort.setSerialPortParams(baudRate, 8, SerialPort.STOPBITS_1, false);
 
-    public byte readByte() throws IOException {
-	// On Linux at least, javax.comm input streams are not interruptible.
-	// Make them so, relying on the DATA_AVAILABLE serial event.
-	synchronized (sync) {
-	    while (is.available() == 0) {
-		try {
-		    sync.wait();
-		}
-		catch (InterruptedException e) {
-		    close();
-		    throw new IOException("interrupted");
-		}
-	    }
-	}
-
-	return super.readByte();
-    }
-
-    public void serialEvent(SerialPortEvent ev) {
-	synchronized (sync) {
-	    sync.notify();
-	}
-    }
-
-    protected void finalize() {
-      System.out.println("SerialByteSource finalize");
+      serialPort.addListener(this);
+      serialPort.notifyOn(SerialPortEvent.DATA_AVAILABLE, true);
+    } catch (Exception e) {
       serialPort.close();
+      throw new IOException("Could not configure " + portName + ": "
+          + e.getMessage());
     }
+
+    is = serialPort.getInputStream();
+    os = serialPort.getOutputStream();
+  }
+
+  public void closeStreams() throws IOException {
+    serialPort.close();
+  }
+
+  public String allPorts() {
+    /*
+     * Enumeration ports = CommPortIdentifier.getPortIdentifiers(); if (ports ==
+     * null) return "No comm ports found!";
+     * 
+     * boolean noPorts = true; String portList = "Known serial ports:\n"; while
+     * (ports.hasMoreElements()) { CommPortIdentifier port =
+     * (CommPortIdentifier)ports.nextElement();
+     * 
+     * if (port.getPortType() == CommPortIdentifier.PORT_SERIAL) { portList += "- " +
+     * port.getName() + "\n"; noPorts = false; } } if (noPorts) return "No comm
+     * ports found!"; else return portList;
+     */
+    return "Listing available comm ports is no longer supported.";
+  }
+
+  Object sync = new Object();
+
+  public byte readByte() throws IOException {
+    // On Linux at least, javax.comm input streams are not interruptible.
+    // Make them so, relying on the DATA_AVAILABLE serial event.
+    synchronized (sync) {
+      while (is.available() == 0) {
+        try {
+          sync.wait();
+        } catch (InterruptedException e) {
+          close();
+          throw new IOException("interrupted");
+        }
+      }
+    }
+
+    return super.readByte();
+  }
+
+  public void serialEvent(SerialPortEvent ev) {
+    synchronized (sync) {
+      sync.notify();
+    }
+  }
+
+  protected void finalize() {
+    serialPort.finalize();
+  }
 
 }
