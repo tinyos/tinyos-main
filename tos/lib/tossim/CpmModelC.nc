@@ -59,6 +59,7 @@ implementation {
     sim_time_t start;
     sim_time_t end;
     double power;
+    double reversePower;
     bool lost;
     bool ack;
     message_t* msg;
@@ -68,8 +69,14 @@ implementation {
   receive_message_t* outstandingReceptionHead = NULL;
 
   receive_message_t* allocate_receive_message();
+  void free_receive_message(receive_message_t* msg);
   sim_event_t* allocate_receive_event(sim_time_t t, receive_message_t* m);
 
+  bool shouldReceive(double SNR);
+  bool checkReceive(receive_message_t* msg);
+  double packetNoise(receive_message_t* msg);
+  double checkPrr(receive_message_t* msg);
+  
   double timeInMs()   {
     sim_time_t ftime = sim_time();
     int hours, minutes, seconds;
@@ -131,10 +138,52 @@ implementation {
     return (signalStr - noise);
   }
   
-  void sim_gain_ack_handle(sim_event_t* evt)  {
-    if (outgoing != NULL && requestAck && sim_mote_is_on(sim_node())) {
-      signal Model.acked(outgoing);
+  double arr_estimate_from_snr(double SNR) {
+    double beta1 = 1.3687;
+    double beta2 = 0.9187;
+    double SNR_lin = pow(10.0, SNR/10.0);
+    double X = fabs(SNR_lin-beta2);
+    double PSE = 0.5*erfc(beta1*sqrt(X/2));
+    double prr_hat = pow(1-PSE, 23*2);
+    dbg("CpmModelC,SNRLoss", "SNR is %lf, ARR is %lf\n", SNR, prr_hat);
+    if (prr_hat > 1)
+      prr_hat = 1;
+    else if (prr_hat < 0)
+      prr_hat = 0;
+	
+    return prr_hat;
+  }
+  
+  int shouldAckReceive(double snr) {
+    double prr = arr_estimate_from_snr(snr);
+    double coin = RandomUniform();
+    if ( (prr != 0) && (prr != 1) ) {
+      if (coin < prr)
+	prr = 1.0;
+      else
+	prr = 0.0;
     }
+    return (int)prr;
+  }
+  
+  void sim_gain_ack_handle(sim_event_t* evt)  {
+    // Four conditions must hold for an ack to be issued:
+    // 1) Transmitter is still sending a packet (i.e., not cancelled)
+    // 2) The packet requested an acknowledgment
+    // 3) The transmitter is on
+    // 4) The packet passes the SNR/ARR curve
+    if (requestAck && // This 
+	outgoing != NULL &&
+	sim_mote_is_on(sim_node())) {
+      receive_message_t* rcv = (receive_message_t*)evt->data;
+      double power = rcv->reversePower;
+      double noise = packetNoise(rcv);
+      double snr = power - noise;
+      if (shouldAckReceive(snr)) {
+	signal Model.acked(outgoing);
+      }
+    }
+    free_receive_message((receive_message_t*)evt->data);
   }
 
   sim_event_t receiveEvent;
@@ -155,14 +204,17 @@ implementation {
     return noise_hash_generation() < clearThreshold;
   }
 
-  void sim_gain_schedule_ack(int source, sim_time_t t) {
+  void sim_gain_schedule_ack(int source, sim_time_t t, receive_message_t* r) {
     sim_event_t* ackEvent = (sim_event_t*)malloc(sizeof(sim_event_t));
+    
     ackEvent->mote = source;
     ackEvent->force = 1;
     ackEvent->cancelled = 0;
     ackEvent->time = t;
     ackEvent->handle = sim_gain_ack_handle;
     ackEvent->cleanup = sim_queue_cleanup_event;
+    ackEvent->data = r;
+    
     sim_queue_insert(ackEvent);
   }
 
@@ -173,7 +225,7 @@ implementation {
     double X = fabs(SNR_lin-beta2);
     double PSE = 0.5*erfc(beta1*sqrt(X/2));
     double prr_hat = pow(1-PSE, 23*2);
-    dbg("CpmModelC", "SNR is %lf, PRR is %lf\n", SNR, prr_hat);
+    dbg("CpmModelC,SNR", "SNR is %lf, PRR is %lf\n", SNR, prr_hat);
     if (prr_hat > 1)
       prr_hat = 1;
     else if (prr_hat < 0)
@@ -227,6 +279,9 @@ implementation {
   }
   
 
+  /* Handle a packet reception. If the packet is being acked,
+     pass the corresponding receive_message_t* to the ack handler,
+     otherwise free it. */
   void sim_gain_receive_handle(sim_event_t* evt) {
     receive_message_t* mine = (receive_message_t*)evt->data;
     receive_message_t* predecessor = NULL;
@@ -250,7 +305,7 @@ implementation {
     }
     dbg("CpmModelC,SNRLoss", "Packet from %i to %i\n", (int)mine->source, (int)sim_node());
     if (!checkReceive(mine)) {
-      dbg("CpmModelC,SNRLoss", " - lost packet from as SNR was too low.\n");
+      dbg("CpmModelC,SNRLoss", " - lost packet from %i as SNR was too low.\n", (int)mine->source);
       mine->lost = 1;
     }
     if (!mine->lost) {
@@ -265,7 +320,10 @@ implementation {
       // If we scheduled an ack, receiving = 0 when it completes
       if (mine->ack && signal Model.shouldAck(mine->msg)) {
         dbg_clear("CpmModelC", " scheduling ack.\n");
-	sim_gain_schedule_ack(mine->source, sim_time() + 1); 
+	sim_gain_schedule_ack(mine->source, sim_time() + 1, mine);
+      }
+      else { // Otherwise free the receive_message_t*
+	free_receive_message(mine);
       }
       // We're searching for new packets again
       receiving = 0;
@@ -274,12 +332,11 @@ implementation {
       receiving = 0;
       dbg_clear("CpmModelC,SNRLoss", "  -packet was lost.\n");
     }
-    free(mine);
   }
    
   // Create a record that a node is receiving a packet,
   // enqueue a receive event to figure out what happens.
-  void enqueue_receive_event(int source, sim_time_t endTime, message_t* msg, bool receive, double power) {
+  void enqueue_receive_event(int source, sim_time_t endTime, message_t* msg, bool receive, double power, double reversePower) {
     sim_event_t* evt;
     receive_message_t* list;
     receive_message_t* rcv = allocate_receive_message();
@@ -288,6 +345,7 @@ implementation {
     rcv->start = sim_time();
     rcv->end = endTime;
     rcv->power = power;
+    rcv->reversePower = reversePower;
     rcv->msg = msg;
     rcv->lost = 0;
     rcv->ack = receive;
@@ -329,15 +387,15 @@ implementation {
 
   }
   
-  void sim_gain_put(int dest, message_t* msg, sim_time_t endTime, bool receive, double power) {
+  void sim_gain_put(int dest, message_t* msg, sim_time_t endTime, bool receive, double power, double reversePower) {
     int prevNode = sim_node();
     dbg("CpmModelC", "Enqueing reception event for %i at %llu with power %lf.\n", dest, endTime, power);
     sim_set_node(dest);
-    enqueue_receive_event(prevNode, endTime, msg, receive, power);
+    enqueue_receive_event(prevNode, endTime, msg, receive, power, reversePower);
     sim_set_node(prevNode);
   }
 
-  command void Model.putOnAirTo(int dest, message_t* msg, bool ack, sim_time_t endTime, double power) {
+  command void Model.putOnAirTo(int dest, message_t* msg, bool ack, sim_time_t endTime, double power, double reversePower) {
     gain_entry_t* neighborEntry = sim_gain_first(sim_node());
     requestAck = ack;
     outgoing = msg;
@@ -345,7 +403,7 @@ implementation {
 
     while (neighborEntry != NULL) {
       int other = neighborEntry->mote;
-      sim_gain_put(other, msg, endTime, ack && (other == dest), power + sim_gain_value(sim_node(), other));
+      sim_gain_put(other, msg, endTime, ack && (other == dest), power + sim_gain_value(sim_node(), other), reversePower + sim_gain_value(other, sim_node()));
       neighborEntry = sim_gain_next(neighborEntry);
     }
   }
@@ -370,5 +428,8 @@ implementation {
  receive_message_t* allocate_receive_message() {
    return (receive_message_t*)malloc(sizeof(receive_message_t));
  }
- 
+
+ void free_receive_message(receive_message_t* msg) {
+   free(msg);
+ }
 }

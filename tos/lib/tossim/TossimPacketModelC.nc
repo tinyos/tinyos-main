@@ -1,4 +1,4 @@
-// $Id: TossimPacketModelC.nc,v 1.5 2007-01-19 19:15:18 scipio Exp $
+// $Id: TossimPacketModelC.nc,v 1.6 2007-05-21 21:35:54 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -254,7 +254,7 @@ implementation {
     evt->handle = send_transmit_done;
 
     dbg("TossimPacketModelC", "PACKET: Broadcasting packet to everyone.\n");
-    call GainRadioModel.putOnAirTo(destNode, sending, metadata->ack, evt->time, 0.0);
+    call GainRadioModel.putOnAirTo(destNode, sending, metadata->ack, evt->time, 0.0, 0.0);
     metadata->ack = 0;
 
     evt->time += (sim_csma_rxtx_delay() *  (sim_ticks_per_sec() / sim_csma_symbols_per_sec()));

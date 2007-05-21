@@ -1,4 +1,4 @@
-// $Id: GainRadioModel.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: GainRadioModel.nc,v 1.5 2007-05-21 21:35:54 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -41,7 +41,8 @@ interface GainRadioModel {
 			  message_t* msg,
 			  bool ack,
 			  sim_time_t endTime,
-			  double gain);
+			  double gain,
+			  double reverseGain);
 
   command void setClearValue(double value);
   command bool clearChannel();

@@ -1,4 +1,4 @@
-TestTimer, 5/17/07 
+TestTimer, 5/22/07 
 
 This application tests the TOSSIM radio model by setting up a simple
 hidden terminal case. It checks whether packets collide correctly and
@@ -10,8 +10,9 @@ There are three test cases:
 
 test-equal.py: Tests whether two nodes that are hidden terminals
 cause collisions. The two nodes have equal signal strengths, so a
-collision should corrupt both packets. If one packet is lost,
-the other should be too.
+collision should corrupt both packets. If one packet is lost due to
+a collision, the other should be too. Note that packets can be 
+lost in the absence of collisions due to external interference.
 
 test-unequal.py: Tests whether two nodes that are hidden terminals
 cause collisions. The two nodes have signal strengths that differ
@@ -20,6 +21,13 @@ node 1's packets if they start first, but not second. If a packet
 from node 1 is lost, the packet from node 3 should be as well. However,
 a loss from node 3 does not imply a loss from node 1, as it is
 stronger.
+
+test-asym.py: Tests whether asymmetric links can have high delivery
+rates but low acknowledgement rates. Checks that acknowledgements
+follow SNR curves properly. In this test, both 1 and 3 have high
+quality links (-60 dBm) to node 2, but the reverse links (2 to 1 and
+2 to 3) are much worse (-80 dBm). You should see packet deliveries
+like test-equal.py but few acknowledgements.
 
 Philip Levis
 
