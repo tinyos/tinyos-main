@@ -29,7 +29,7 @@
  * @date   Oct 13 2006
  */
 
-// $Id: sim_noise.h,v 1.4 2007-04-10 22:15:39 scipio Exp $
+// $Id: sim_noise.h,v 1.5 2007-05-21 22:08:29 scipio Exp $
 
 #ifndef _SIM_NOISE_HASH_H_
 #define _SIM_NOISE_HASH_H_
@@ -48,8 +48,8 @@ enum {
   NOISE_BIN_SIZE = (NOISE_MAX - NOISE_MIN)/NOISE_QUANTIZE_INTERVAL,
   NOISE_HISTORY = 20,
   NOISE_DEFAULT_ELEMENT_SIZE = 8,
-  NOISE_HASHTABLE_SIZE = 8192,
-  NOISE_MIN_TRACE = 1024, 
+  NOISE_HASHTABLE_SIZE = 128,
+  NOISE_MIN_TRACE = 128, 
 };
   
 typedef struct sim_noise_hash_t {

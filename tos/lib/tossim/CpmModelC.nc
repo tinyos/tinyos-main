@@ -329,6 +329,19 @@ implementation {
       receiving = 0;
     } // If the packet was lost, then we're searching for new packets again
     else {
+      if (RandomUniform() < 0.001) {
+	dbg("CpmModelC,SNRLoss", "Packet was technically lost, but TOSSIM introduces an ack false positive rate.\n");
+	if (mine->ack && signal Model.shouldAck(mine->msg)) {
+	  dbg_clear("CpmModelC", " scheduling ack.\n");
+	  sim_gain_schedule_ack(mine->source, sim_time() + 1, mine);
+	}
+	else { // Otherwise free the receive_message_t*
+	  free_receive_message(mine);
+	}
+      }
+      else {
+	free_receive_message(mine);
+      }
       receiving = 0;
       dbg_clear("CpmModelC,SNRLoss", "  -packet was lost.\n");
     }
