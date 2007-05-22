@@ -1,0 +1,188 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2007 Johns Hopkins University.
+# All rights reserved.
+#
+# Permission to use, copy, modify, and distribute this software and its
+# documentation for any purpose, without fee, and without written
+# agreement is hereby granted, provided that the above copyright
+# notice, the (updated) modification history and the author appear in
+# all copies of this source code.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
+# OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+
+# @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
+# @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+
+import sys, struct, operator
+from xml.dom.minidom import parse
+
+DELUGE_PKTS_PER_PAGE = 48
+DELUGE_PKT_PAYLOAD_SIZE = 23
+DELUGE_BYTES_PER_PAGE = DELUGE_PKTS_PER_PAGE * DELUGE_PKT_PAYLOAD_SIZE
+DELUGE_MAX_PAGES = 128
+
+DELUGE_METADATA_SIZE = 16
+DELUGE_IDENT_SIZE = 128
+
+def sencode(s, dim):
+  s = [ord(c) for c in s]
+  if len(s) > dim:
+    return s[:dim]
+  return s + [0] * (dim - len(s))
+
+def encode(val, dim):
+  output = []
+  for i in range(dim):
+      output.append(val & 0xFF)
+      val = val >> 8
+  return output
+
+def decode(v):
+  r = long(0)
+  for i in v[::-1]:
+      r = (r << 8) + i
+  return r
+
+def int2byte(v):
+    return "".join([struct.pack("B", i) for i in v])
+
+def crc16(data):
+  crc = 0
+  for b in data:
+      crc = crc ^ (b << 8)
+      for i in range(0, 8):
+          if crc & 0x8000 == 0x8000:
+              crc = (crc << 1) ^ 0x1021
+          else:
+              crc = crc << 1
+          crc = crc & 0xffff
+  return crc
+
+def pages(data):
+    return (len(data) / DELUGE_BYTES_PER_PAGE) + \
+               (len(data) % DELUGE_BYTES_PER_PAGE != 0)
+
+def align(data):
+  mod = len(data) % DELUGE_BYTES_PER_PAGE
+  if mod == 0:
+    return data
+  return data + [0] * (DELUGE_BYTES_PER_PAGE - mod)
+
+def deluge_metadata(data, img_num):
+  uid = ident['uid_hash']
+  num_pages = pages(data)
+  image_number = img_num
+  crc = crc16([image_number] + [num_pages])
+  completed_pages = num_pages
+  return encode(uid, 4) + \
+         encode(version, 2) + \
+         [image_number] + \
+         [num_pages] + \
+         encode(crc, 2) + \
+         [completed_pages] + \
+         [0] + \
+         encode(len(data) + 16, 2) + \
+         ([0] * 2)
+
+def deluge_ident():
+  tmp = sencode(ident['program_name'], 16) + \
+        sencode(ident['user_id'], 16) + \
+        sencode(ident['hostname'], 16) + \
+        sencode(ident['platform'], 16) + \
+        encode(ident['size'], 4) + \
+        encode(ident['unix_time'], 4) + \
+        encode(ident['user_hash'], 4) + \
+        encode(ident['uid_hash'], 4)
+  return tmp + [0] * (DELUGE_IDENT_SIZE - len(tmp))
+
+def deluge_crc(data):
+  crc = [0] * DELUGE_MAX_PAGES
+  crc[0] = crc16(data[2*DELUGE_MAX_PAGES:DELUGE_BYTES_PER_PAGE])
+  #sys.stderr.write("crc[0] = 0x%x\n" % (crc[0]))
+  j = 1
+  for i in range(DELUGE_BYTES_PER_PAGE, len(data)-1, DELUGE_BYTES_PER_PAGE):
+    crc[j] = crc16(data[i:i+DELUGE_BYTES_PER_PAGE])
+    #sys.stderr.write("crc[%d] = 0x%x\n" % (j, crc[j]))
+    j += 1
+  return reduce(operator.add, [encode(i, 2) for i in crc]) + data[2*DELUGE_MAX_PAGES:]
+
+version = 0
+
+for i in range(len(sys.argv)):
+  if sys.argv[i] == '-v':
+    version = int(sys.argv[i+1])
+  elif sys.argv[i] == '-i':
+    img_num = int(sys.argv[i+1])
+    
+dom = parse(sys.argv[-1])
+ident = {}
+ident_list = [(n.localName, n.firstChild.nodeValue)
+              for n in dom.getElementsByTagName('ident')[0].childNodes if n.localName != None]
+for (k, v) in ident_list:
+  ident[k] = v
+for p in ['unix_time', 'user_hash', 'uid_hash']:
+  ident[p] = int(ident[p][:-1], 16)
+image = dom.getElementsByTagName('image')[0].firstChild.nodeValue
+
+all = []
+section = []
+end_addr = None
+for line in image.split():
+    #print "DEBUG:", line
+    length = int(line[1:3], 16)
+    addr = int(line[3:7], 16)
+    rectype = int(line[7:9], 16)
+    data = []
+    if len(line) > 11:
+        data = [int(line[i:i+2], 16) for i in range(9, len(line)-2, 2)]
+    crc = int(line[-2:], 16)
+    if rectype in [0x00, 0x03]:
+        if not end_addr:
+            end_addr = addr
+            start_addr = addr
+        if end_addr != addr:
+            all.append((start_addr, section))
+            if rectype == 0x03:
+                # This last record updates the first 4 bytes which
+                # holds some some low level configuration. They are
+                # the same all the time so I guess that's why they are
+                # skipped.
+                break
+            section = []
+            start_addr = addr
+        section += data
+        end_addr = addr + length
+    elif rectype == 0x01:
+        all.append((start_addr, section))
+        section = []
+        start_addr = addr
+
+sys.stderr.write('Ihex read complete:\n')
+sys.stderr.write('  Total bytes = %d\n' % reduce(operator.add, [len(l) for (_, l) in all]))
+sys.stderr.write('  Sections = %d\n' % len(all))
+
+# Usually, there are two sections: one for the code and one for the
+# interrupt vector.
+
+all_data = []
+for (addr, data) in all:
+  all_data += encode(addr, 4) + \
+              encode(len(data), 4) + \
+              data
+ident['size'] = len(all_data)
+all_data = deluge_ident() + all_data
+all_data = align([0] * 2 * DELUGE_MAX_PAGES + all_data)
+all_data = deluge_crc(all_data)
+sys.stdout.write(int2byte(deluge_metadata(all_data, img_num)) + \
+      int2byte(all_data))
+

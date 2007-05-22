@@ -1,0 +1,24 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: bnp.extra,v 1.1 2007-05-22 20:34:20 razvanm Exp $
+
+DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
+DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
+TOSBOOT_DIR ?= $(TOSDIR)/lib/TOSBoot/build
+
+ifeq ($(TINYOS_NP),BNP)
+
+  CFLAGS += -DDELUGE
+  CFLAGS += -I$(TOSDIR)/lib/net -I$(DELUGE_DIR) -I$(DELUGE_DIR)/FlashVolumeManager
+
+  ifneq ($(filter telosb tmote,$(TARGETS)),)
+    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/telos -I$(DELUGE_EXTRA)/telosb
+    ifeq ($(filter docs,$(GOALS)),)
+      CFLAGS += -Wl,--section-start=.text=0x4a00,--defsym=_reset_vector__=0x4000
+    endif
+    BOOTLOADER ?= $(TOSBOOT_DIR)/telosb/main.ihex
+    ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+      BOOTLOADER := $(shell cygpath -m $(BOOTLOADER))
+    endif
+  endif
+
+endif

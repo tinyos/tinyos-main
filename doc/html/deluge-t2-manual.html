@@ -1,0 +1,256 @@
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>
+Deluge T2 - Programming Manual
+</title>
+<link rel="stylesheet" type="text/css" href="deluge-t2-manual.css" title=default>
+<meta name=robots content="index,follow">
+</head>
+<body>
+<p>
+
+</p>
+<p>
+</p>
+<p>
+
+
+
+</p>
+<h1 class=title align=center><br><br>Deluge T2 - Programming Manual</h1>
+<p></p>
+<div align=center>
+Chieh-Jan Mike Liang<br>
+Razvan Musaloiu-E.<p>May 18, 2007</p>
+</div>
+<p></p>
+<p>
+</p>
+<a name="node_sec_1"></a>
+<h1>1&nbsp;&nbsp;Introduction</h1>
+<p></p>
+<p>
+Deluge is a reliable data dissemination protocol for large objects, such 
+as program binaries. Together with a bootloader, Deluge provides a way 
+to reprogram sensor motes in a network. Deluge is maintained by Jonathan 
+Hui, and Deluge 2.0 is the most recent version. Documentations on Deluge 
+2.0 are available at 
+<a href="http://www.cs.berkeley.edu/~jwhui/research/deluge/">http://www.cs.berkeley.edu/~jwhui/research/deluge/</a>.</p>
+<p>
+Deluge T2 is an effort to port Deluge 2.0 from TinyOS 1 to TinyOS 2. 
+Since the code from Deluge 2.0 is reused as much as possible, the 
+behavior and the usage of Deluge T2 should be similar to Deluge 2.0. 
+Having said that, it would be helpful to read the Deluge 2.0 manual and 
+related documentations.</p>
+<p>
+Deluge T2 is still in experimental phase. One current limitation is 
+platform support. Deluge T2 has been developed and tested on tmote sky 
+(<i>telosb</i>) only. In addition, Deluge T2 comes with 2 flash volumes by 
+default. However, more volumes can be added, if necessary. There are 
+also minor details that will be improved in future releases.</p>
+<p>
+</p>
+<a name="node_sec_2"></a>
+<h1>2&nbsp;&nbsp;Quick Start</h1>
+<p></p>
+<p>
+This section introduces the basics of reprogramming with an example. In 
+addition, it provides a quick test for software prerequisite. The latest 
+TinyOS 2 CVS tree and Python 2.4 with pySerial support are recommended 
+for running Deluge T2.</p>
+<p>
+To start the example, we run a <code class=verbatim>burn</code> script provided in 
+<code class=verbatim>tinyos-2.x/apps/tests/deluge/Blink</code>. For example,
+</p>
+<pre class=verbatim>   % ./burn /dev/ttyUSB0
+</pre><p>
+This <code class=verbatim>burn</code> script programs the directly-connected mote with one 
+version of blink. Then, it injects and reprograms the mote with another 
+version of blink. At this point, you can try to retrieve program image 
+versioning information. The script to interface with the mote is 
+provided in <code class=verbatim>tinyos-2.x/tools/</code>. For example,
+</p>
+<pre class=verbatim>   % tos-deluge.py /dev/ttyUSB0 -p 0
+</pre><p>
+You should see something similar to the output below.</p>
+<p>
+</p>
+<pre class=verbatim>   Pinging node ...
+   Connected to Deluge node.
+   --------------------------------------------------
+   Stored image 0
+     Prog Name:   BlinkAppC     
+     Compiled On: Thu May 17 00:36:33 2007
+     Platform:    telosb          
+     User ID:     mike          
+     Host Name:   sprite        
+     User Hash:   0xC50D8DA4L
+     Num Pages:   24/24
+   
+     Size:        26512
+     UID:         2302157803
+     Version:     6
+   --------------------------------------------------
+</pre><p></p>
+<p>
+The usage of <code class=verbatim>delugy.py</code> is available by running the script without 
+any arguments, and it will be discussed in section <a href="#node_sec_4">4</a>.</p>
+<p>
+</p>
+<a name="node_sec_3"></a>
+<h1>3&nbsp;&nbsp;Reprogramming a Network</h1>
+<p></p>
+<p>
+This section illustrates the procedure to reprogram a network. 
+Specifically, we will see how program images are injected and how 
+versioning information is retrieved.</p>
+<p>
+</p>
+<a name="node_sec_3.1"></a>
+<h2>3.1&nbsp;&nbsp;Setting Up the Motes</h2>
+<p>We first install both TOSBoot and a program that runs Deluge T2. For 
+simplicity, we use the golden image as the program. The golden image is 
+provided in <code class=verbatim>tinyos-2.x/apps/tests/deluge/GoldenImage</code>, and it does 
+nothing except initializing Deluge T2. This step can be done by 
+compiling and programming the mote normally. For example,
+</p>
+<pre class=verbatim>   % make telosb install,0 bsl,/dev/ttyUSB0
+</pre><p>
+Deluge T2 makes sure the mote ID remain persistent over image 
+reprogramming. You can test the installation by interacting with the 
+mote through <code class=verbatim>deluge.py</code>.</p>
+<p>
+</p>
+<a name="node_sec_3.2"></a>
+<h2>3.2&nbsp;&nbsp;Preparing Your Application</h2>
+<p>In most cases, the only two files you need to modify are the top-level
+wiring file and the Make file. You need to make sure <code class=verbatim>DelugeC</code>
+component is included. In addition, the Make file should have the
+following lines:
+</p>
+<pre class=verbatim>   TINYOS_NP=BNP
+   CFLAGS += -DTOSH_DATA_LENGTH=100
+</pre><p>
+Finally, compile your application without installing it on the mote. For 
+example,
+</p>
+<pre class=verbatim>   % make telosb
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_3.3"></a>
+<h2>3.3&nbsp;&nbsp;Injecting Your Application</h2>
+<p>Before a program image is disseminated in the network, we need to first 
+inject it to the base station. For example,
+</p>
+<pre class=verbatim>   % tos-deluge.py /dev/ttyUSB0 -i 1 apps/Blink/build/telosb/tos_image.xml
+</pre><p>
+You should see something similar to the output below.</p>
+<p>
+</p>
+<pre class=verbatim>   Pinging node ...
+   Connected to Deluge nodes.
+   --------------------------------------------------
+   Stored image 1
+     No proper Deluge image found!
+   --------------------------------------------------
+   Ihex read complete:
+     Total bytes = 25526
+     Sections = 2
+   --------------------------------------------------
+   Replace image with:
+     Prog Name:   BlinkAppC     
+     Compiled On: Mon May 07 00:01:43 2007
+     Platform:    telosb          
+     User ID:     mike          
+     Host Name:   sprite        
+     User Hash:   0xC50D8DA4L
+     Num Pages:   24/24
+   
+     Size:        26512
+     UID:         507153792
+     Version:     0
+   --------------------------------------------------
+</pre><p></p>
+<p>
+</p>
+<a name="node_sec_3.4"></a>
+<h2>3.4&nbsp;&nbsp;Reprogramming with New Image</h2>
+<p>After you decide which program image you want to reprogram, you can 
+first test on the base station by issuing the reboot command. For 
+example,
+</p>
+<pre class=verbatim>   % tos-deluge.py /dev/ttyUSB0 -r 1
+</pre><p>
+After a few moments, the mote will begin quickly flashing the LEDs to 
+signify the reprogramming process.</p>
+<p>
+Now, you can have the base station disseminate a program image to the rest of 
+the network. For example,
+</p>
+<pre class=verbatim>   % tos-deluge.py /dev/ttyUSB0 -d 1
+</pre><p>
+This command instructs the base station to notify the whole network of 
+the availablility of a new program image. This notification is currently 
+done via TinyOS dissemination service, and it triggers all motes in the 
+network to get the new program image. Upon receiving the complete image 
+over-the-air, each node automatically reboots and reprograms itself.</p>
+<p>
+</p>
+<a name="node_sec_4"></a>
+<h1>4&nbsp;&nbsp;Deluge T2 Python Toolchain</h1>
+<p></p>
+<p>
+Different from Deluge 2.0, Deluge T2 toolchain is written in Python. 
+However, as demonstrated in the previous section, the usage is very 
+similar.</p>
+<p>
+</p>
+<a name="node_sec_4.1"></a>
+<h2>4.1&nbsp;&nbsp;-p -ping</h2>
+<p>This command is useful for checking the status of program images on a 
+mote. It provides information such as program name, compile time, size 
+of the image, and so on.</p>
+<p>
+</p>
+<a name="node_sec_4.2"></a>
+<h2>4.2&nbsp;&nbsp;-i -inject</h2>
+<p>This command creates a program image from the supplied 
+<code class=verbatim>tos_image.xml</code> file, and it injects the image into specified 
+volume on the mote. All versioning information is kept on the mote, so 
+no state is stored on the PC.</p>
+<p>
+</p>
+<a name="node_sec_4.3"></a>
+<h2>4.3&nbsp;&nbsp;-r -reboot</h2>
+<p>This command sets up the mote to reprogram itself after reboot, and then 
+it reboots the mote. This command is applicable only to the directly 
+connected mote.</p>
+<p>
+</p>
+<a name="node_sec_4.4"></a>
+<h2>4.4&nbsp;&nbsp;-d -dissemination</h2>
+<p>This command instructs the directly connected mote to disseminate an 
+image to the network. This image is specified by the volume ID. Upon 
+successfully receiving an image, motes in the network automatically 
+reprogram themselves.</p>
+<p>
+</p>
+<a name="node_sec_4.5"></a>
+<h2>4.5&nbsp;&nbsp;-e -erase</h2>
+<p>This command erases a flash volume on the directly connected mote.</p>
+<p>
+</p>
+<a name="node_sec_4.6"></a>
+<h2>4.6&nbsp;&nbsp;-s -reset</h2>
+<p>This command resets versioning information of a specific image on the 
+directly connected mote.</p>
+<p>
+</p>
+<div align=right class=colophon>
+<i>Last modified: Friday, May 18th, 2007<br>
+HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 2004-09-11</a></i>
+</div>
+</body>
+</html>

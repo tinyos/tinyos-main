@@ -1,0 +1,4 @@
+<volume_table>
+  <volume name="DELUGE0" size="65536"/>
+  <volume name="DELUGE1" size="65536"/>
+</volume_table>

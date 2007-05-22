@@ -1,0 +1,399 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2007 Johns Hopkins University.
+# All rights reserved.
+#
+# Permission to use, copy, modify, and distribute this software and its
+# documentation for any purpose, without fee, and without written
+# agreement is hereby granted, provided that the above copyright
+# notice, the (updated) modification history and the author appear in
+# all copies of this source code.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
+# OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+
+# @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
+# @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+
+###############################################################################
+# Deluge Python Toolchain
+#
+# A command line utility to interact with nodes via a direct serial connection.
+# For the usage menu, please run this tool without any arguments. For example, 
+# "./tos-deluge.py"
+###############################################################################
+
+import sys, os, stat, struct, subprocess
+import tinyos
+from datetime import datetime
+import os.path 
+
+# Script-specific parameters
+HEX_OUTPUT_LINE_SIZE = 16
+# Path to the python script that builds Deluge image from XML
+PY_PATH_BUILD_IMAGE  = os.path.join(os.path.dirname(sys.argv[0]), 'tos-build-deluge-image')
+
+# TinyOS serial communication parameters
+SERIAL_AMGROUP           = 0
+SERIAL_AMID              = 0xAB
+SERIAL_DATA_PAYLOAD_SIZE = 80
+
+# Serial message types
+MSG_ERASE    = 0
+MSG_WRITE    = 1
+MSG_READ     = 2
+MSG_REPROG   = 5
+MSG_DISS     = 6
+
+ERROR_SUCCESS = 0
+ERROR_FAIL    = 1
+
+# Deluge-specific parameters
+DELUGE_PKTS_PER_PAGE    = 48
+DELUGE_PKT_PAYLOAD_SIZE = 23
+DELUGE_MAX_PAGES        = 128
+DELUGE_METADATA_SIZE    = 16 + 16 + 16 + 16 + 4 + 4 + 4 + 4   # Metadata size in binary 
+                                                              # image
+
+class SerialReqPacket(tinyos.GenericPacket):
+    def __init__(self, packet = None):
+        tinyos.GenericPacket.__init__(self,
+                                      [('msg_type', 'int',  1),
+                                       ('img_num',  'int',  1),
+                                       ('offset',   'int',  2),
+                                       ('len',      'int',  2),
+                                       ('data',     'blob', None)],
+                                      packet)
+
+class SerialReplyPacket(tinyos.GenericPacket):
+   def __init__(self, packet = None):
+       tinyos.GenericPacket.__init__(self,
+                                     [('error', 'int',  1),
+                                      ('data',  'blob', None)],
+                                     packet)
+
+# Displays an integer representation of byte stream to hex representation
+def print_hex(start_addr, byte_stream):
+    num_iterations = int( (len(byte_stream) - 1) / HEX_OUTPUT_LINE_SIZE ) + 1
+  
+    for i in range(num_iterations):
+        line = "%07x" % start_addr + " "   # Prints memory address
+        for j in range(HEX_OUTPUT_LINE_SIZE):
+            if (i * HEX_OUTPUT_LINE_SIZE + j) < len(byte_stream):
+                line += "%02x" % byte_stream[i * HEX_OUTPUT_LINE_SIZE + j] + " "
+    print line
+    
+    start_addr += HEX_OUTPUT_LINE_SIZE
+
+# Computes 16-bit CRC
+def crc16(data):
+    crc = 0
+    for b in data:
+        crc = crc ^ (b << 8)
+        for i in range(0, 8):
+            if crc & 0x8000 == 0x8000:
+                crc = (crc << 1) ^ 0x1021
+            else:
+                crc = crc << 1
+            crc = crc & 0xffff
+    
+    return crc
+
+# Converts a byte-stream array to int representation
+def toInt(byte_stream):
+    r = long(0)
+    for i in byte_stream[::-1]:
+        r = (r << 8) + i
+    
+    return r
+
+# Converts a byte-stream array to string representation
+def toString(byte_stream):
+    r = ""
+    for i in range(len(byte_stream)):
+        if byte_stream[i] == 0:
+            r += " "
+        else:
+            r += struct.pack("B", byte_stream[i])
+    
+    return r
+
+# Converts a byte-stream array to image status string representation
+def toStatusStr(num_space, binary_stream):
+    r = "%sProg Name:   %s\n" % (" " * num_space, 
+                                 toString(binary_stream[16:32]))
+    r += "%sCompiled On: %s\n" % (" " * num_space, 
+                                  datetime.fromtimestamp(toInt(binary_stream[84:88])).strftime('%a %h %d %T %Y'))
+    r += "%sPlatform:    %s\n" % (" " * num_space, 
+                                  toString(binary_stream[64:80]))
+    r += "%sUser ID:     %s\n" % (" " * num_space, 
+                                  toString(binary_stream[32:48]))
+    r += "%sHost Name:   %s\n" % (" " * num_space, 
+                                  toString(binary_stream[48:64]))
+    r += "%sUser Hash:   %s\n" % (" " * num_space, 
+                                  hex(toInt(binary_stream[88:92])))
+    r += "%sNum Pages:   %d/%d" % (" " * num_space, 
+                                   toInt(binary_stream[7:8]), 
+                                   toInt(binary_stream[10:11]))
+    
+    r += "\n\n"
+    r += "%sSize:        %d\n" % (" " * num_space, 
+                                   toInt(binary_stream[12:14]))
+    r += "%sUID:         %d\n" % (" " * num_space, 
+                                   toInt(binary_stream[0:4]))
+    r += "%sVersion:     %d" % (" " * num_space, 
+                                   toInt(binary_stream[4:6]))
+    
+    return r
+
+# Returns the metadata (first 16 bytes of the image) plus the "ident" 
+# (DELUGE_METADATA_SIZE bytes after CRC)
+def getMetaData(s, img_num):
+    r = []
+    # Gets the metadata (first 16 bytes of the image)
+    sreqpkt = SerialReqPacket((MSG_READ, img_num, 0, 16, []))
+  
+    if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()):
+        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+        sreplypkt = SerialReplyPacket(packet[1])
+        if sreplypkt.error == ERROR_SUCCESS:
+            r.extend(sreplypkt.data)
+      
+            # Gets the "ident" portion of the image
+            sreqpkt["offset"] = 16 + (2 * DELUGE_MAX_PAGES)
+            sreqpkt["len"] = DELUGE_METADATA_SIZE
+            if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()):
+                packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+                sreplypkt = SerialReplyPacket(packet[1])
+                if sreplypkt.error == ERROR_SUCCESS:
+                    r.extend(sreplypkt.data)
+                    
+                    # Checks for valid CRC and timestamp
+                    if crc16(r[6:8]) == toInt(r[8:10]) and r[84:88] != [0xFF, 0xFF, 0xFF, 0xFF]:
+                        return r
+                else:
+                    print "ERROR: Unable to retrieve image information"
+        else:
+            print "ERROR: Unable to retrieve image information"
+
+    return None
+
+# Prints status of the image in the external flash
+def op_ping(s, img_num):
+    metadata = getMetaData(s, img_num)
+    if not metadata == None:
+        print "Connected to Deluge node."
+        # Prints out image status
+        print "--------------------------------------------------"
+        print "Stored image %d" % img_num
+        print toStatusStr(2, metadata)
+        print "--------------------------------------------------"
+        return True
+        
+    print "No proper Deluge image found!"
+    return False
+
+# Erases an image volume
+def op_erase(s, img_num):
+    sreqpkt = SerialReqPacket((MSG_ERASE, img_num, 0, 0, []))
+    success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
+    if success == True:
+        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+        sreplypkt = SerialReplyPacket(packet[1])
+        if sreplypkt.error == ERROR_SUCCESS:
+            return True
+        else:
+            print "ERROR: Unable to erase the flash volume"
+            return False
+        
+    print "ERROR: Unable to send the command"
+    return False
+
+# Writes to an image volume
+def op_write(s, img_num, binary_stream):
+    sreqpkt = SerialReqPacket((MSG_WRITE, img_num, 0, 0, []))
+    local_crc = 0   # Running CRC
+    length = len(binary_stream)
+    
+    sreqpkt.offset = 0
+    while length > 0:
+        # Calculates the payload size for the current packet
+        if length >= SERIAL_DATA_PAYLOAD_SIZE:
+            sreqpkt.len = SERIAL_DATA_PAYLOAD_SIZE
+        else:
+            sreqpkt.len = length
+        sreqpkt.data = []
+        
+        # Reads in the file we want to transmit
+        for i in range(sreqpkt.len):
+            sreqpkt.data.append(struct.unpack("B", binary_stream[sreqpkt.offset + i])[0])
+        
+        # Sends over serial to the mote
+        if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()) == False:
+            print "ERROR: Unable to send the last serial packet (file offset: %d)" % sreqpkt.offset
+            return False
+        
+        # Waiting for confirmation
+        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+        sreplypkt = SerialReplyPacket(packet[1])
+        if sreplypkt.error != ERROR_SUCCESS:
+            print "ERROR: Unable to write to the flash volume (file offset: %d)" % sreqpkt.offset
+            return False
+            
+        local_crc = s.crc16(local_crc, sreqpkt.data)   # Computes running CRC
+        length -= sreqpkt.len
+        sreqpkt.offset += sreqpkt.len
+        
+    return True
+
+# Injects an image (specified by tos_image_xml) to an image volume
+def op_inject(s, img_num, tos_image_xml):
+    # Gets status information of stored image
+    metadata = getMetaData(s, img_num)
+    print "Connected to Deluge nodes."
+    print "--------------------------------------------------"
+    print "Stored image %d" % img_num
+    version = 0
+    if not metadata == None:
+        version = toInt(metadata[4:6]) + 1   # Increments the version
+        print toStatusStr(2, metadata)
+    else:
+        print "  No proper Deluge image found!"
+    print "--------------------------------------------------"
+    
+    # Creates binary image from the TOS image XML
+    try:
+        os.stat(tos_image_xml)         # Checks whether tos_image_xml is a valid file
+        os.stat(PY_PATH_BUILD_IMAGE)   # Checks whether PY_PATH_BUILD_IMAGE is a valid file
+    except:
+        print "ERROR: Unable to create a binary image from the TOS image XML, \"%s\"" % tos_image_xml
+        return False
+    p = subprocess.Popen([PY_PATH_BUILD_IMAGE, "-v", str(version), "-i", str(img_num), tos_image_xml], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print p.stderr.read(),
+    print "--------------------------------------------------"
+    
+    # Writes the new binary image
+    if op_erase(s, img_num):
+        if op_write(s, img_num, p.stdout.read()):
+            metadata = getMetaData(s, img_num)
+            if not metadata == None:       
+                print "Replace image with:"
+                print toStatusStr(2, metadata)
+                print "--------------------------------------------------"
+        
+                return True
+    
+    return False
+
+# Requests the mote to reboot and reprogram itself
+def op_reprog(s, img_num):
+    if getMetaData(s, img_num) == None:
+        print "ERROR: No proper Deluge image found!"
+    else:
+        sreqpkt = SerialReqPacket((MSG_REPROG, img_num, 0, 0, []))
+        success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
+        if success == True:
+            packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+            sreplypkt = SerialReplyPacket(packet[1])
+            if sreplypkt.error == ERROR_SUCCESS:
+                return True
+            else:
+                print "ERROR: Unable to reboot the mote"
+                return False
+            
+        print "ERROR: Unable to send the command"
+    return False
+
+# Requests the mote to disseminate an image
+def op_diss(s, img_num):
+    if getMetaData(s, img_num) == None:
+        print "ERROR: No proper Deluge image found!"
+    else:
+        sreqpkt = SerialReqPacket((MSG_DISS, img_num, 0, 0, []))
+        success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
+        if success == True:
+            packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+            sreplypkt = SerialReplyPacket(packet[1])
+            if sreplypkt.error == ERROR_SUCCESS:
+                return True
+            else:
+                print "ERROR: Unable to start the command dissemination"
+                return False
+            
+        print "ERROR: Unable to send the command"
+    return False
+      
+# Resets image versioning information
+def op_reset(s, img_num):
+    sreqpkt = SerialReqPacket((MSG_WRITE, img_num, 4, 2, [0, 0]))
+    if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()) == False:
+        print "ERROR: Unable to send the last serial packet (file offset: %d)" % sreqpkt.offset
+        return False
+        
+    # Waiting for confirmation
+    packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+    sreplypkt = SerialReplyPacket(packet[1])
+    if sreplypkt.error != ERROR_SUCCESS:
+        print "ERROR: Unable to write new versioning information"
+        return False
+            
+    return True
+      
+def print_usage():
+    print "Usage: %s <device> <-p|-i|-r|-d|-e|-s> image_number [options]" % sys.argv[0]
+    print "  -p --ping\n     Provide status of the image in the external flash"
+    print "  -i --inject\n     Inject a compiled TinyOS application"
+    print "      [options]: <tos_image.xml file path>"
+    print "  -r --reboot\n     Reboot and reprogram the directly-connected mote"
+    print "  -d --dissemination\n     Disseminate the image in the external flash to the network"
+    print "  -e --erase\n     Erase an image in the external flash"
+    print "  -s --reset\n     Reset the versioning information for a given image"
+
+# ======== MAIN ======== #
+num_req_arg = 4   # Minimum number of required arguments for this script
+if len(sys.argv) >= num_req_arg:
+    try:
+        sys.argv[3] = int(sys.argv[3])
+    except:
+        print "ERROR: Volume ID is not valid"
+        os._exit(-1)
+    
+    # Initializes serial port communication
+    try:
+        s = tinyos.Serial(sys.argv[1], 115200)
+        s.set_debug(False)   # Disables debug msg
+    except:
+        print "ERROR: Unable to initialize serial port connection"
+        os._exit(-1)
+    
+    if sys.argv[2] in ["-p", "--ping"]:
+        print "Pinging node ..."
+        op_ping(s, sys.argv[3]) 
+    elif sys.argv[2] in ["-i", "--inject"] and len(sys.argv) == (num_req_arg + 1):
+        print "Pinging node ..."
+        op_inject(s, sys.argv[3], sys.argv[4])
+    elif sys.argv[2] in ["-r", "--reboot"]:
+        if op_reprog(s, sys.argv[3]):
+            print "Command sent"
+    elif sys.argv[2] in ["-d", "--dissemination"]:
+        if op_diss(s, sys.argv[3]):
+            print "Command sent"
+    elif sys.argv[2] in ["-e", "--erase"]:
+        if op_erase(s, sys.argv[3]):
+            print "Image number %d erased" % sys.argv[3]
+    elif sys.argv[2] in ["-s", "--reset"]:
+        if op_reset(s, sys.argv[3]):
+            print "Successfully reset image versioning information"
+    else:
+        print_usage()
+
+else:
+    print_usage()

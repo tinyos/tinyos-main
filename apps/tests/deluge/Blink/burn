@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 /dev/ttyUSB0"
+  exit 2
+fi
+
+PORT=$1
+make clean
+
+echo ==================== Compile and load Blink ====================
+make telosb install bsl,$PORT
+
+echo ==================== Compile a new Blink ====================
+CFLAGS=-DBLINK_REVERSE make telosb 
+
+echo ==================== Upload the image ====================
+../../../../tools/tinyos/misc/tos-deluge $PORT -i 0 build/telosb/tos_image.xml
+
+echo ==================== Reboot ====================
+../../../../tools/tinyos/misc/tos-deluge $PORT -r 0 
