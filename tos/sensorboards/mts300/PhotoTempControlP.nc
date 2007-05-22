@@ -13,9 +13,7 @@ generic module PhotoTempControlP()
 }
 implementation
 {
-	uint8_t	rflag=0;
-
-	command error_t SplitControl.start() {
+  command error_t SplitControl.start() {
     call PhotoTempResource.request();
     return SUCCESS;
   }
@@ -27,7 +25,8 @@ implementation
   }
 
   event void Timer.fired() {
-    signal SplitControl.startDone(SUCCESS);
+    if (call PhotoTempResource.isOwner())
+      signal SplitControl.startDone(SUCCESS);
   }
 
   task void stopDone() {
@@ -46,15 +45,12 @@ implementation
 
   command error_t Read.read[uint8_t client]() {
     id = client;
-    atomic rflag=1;
     return call ActualRead.read();
   }
 
   event void ActualRead.readDone(error_t result, uint16_t val) {
-    if(rflag != 1) return;
-  	atomic rflag=0;
-    call SplitControl.stop();
-    signal Read.readDone[id](result, val);
+    if (call PhotoTempResource.isOwner())
+      signal Read.readDone[id](result, val);
   }
 
   default event void Read.readDone[uint8_t x](error_t result, uint16_t val) { }
