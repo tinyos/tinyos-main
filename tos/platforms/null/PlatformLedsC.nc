@@ -1,4 +1,4 @@
-// $Id: PlatformLedsC.nc,v 1.4 2006-12-12 18:23:44 vlahan Exp $
+// $Id: PlatformLedsC.nc,v 1.5 2007-05-23 22:17:49 idgay Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -81,4 +81,29 @@ implementation
   async command void Led2.makeOutput() {
     call Init.init();
   }
+
+  async command bool Led0.isInput() { 
+    return FALSE;
+  }
+
+  async command bool Led0.isOutput() { 
+    return FALSE;
+  }
+
+  async command bool Led1.isInput() { 
+    return FALSE;
+  }
+
+  async command bool Led1.isOutput() { 
+    return FALSE;
+  }
+
+  async command bool Led2.isInput() { 
+    return FALSE;
+  }
+
+  async command bool Led2.isOutput() { 
+    return FALSE;
+  }
+
 }

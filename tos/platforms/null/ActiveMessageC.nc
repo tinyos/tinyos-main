@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.4 2006-12-12 18:23:44 vlahan Exp $
+// $Id: ActiveMessageC.nc,v 1.5 2007-05-23 22:17:49 idgay Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -91,6 +91,12 @@ implementation {
 
   command void AMPacket.setType(message_t* amsg, am_id_t t) {
   }
+
+  command am_addr_t AMPacket.source(message_t* amsg) {
+    return 0;
+  }
+
+  command void AMPacket.setSource(message_t* amsg, am_addr_t addr) { }
 
   command void* Receive.getPayload[uint8_t id](message_t* msg, uint8_t* len) {
     return NULL;
