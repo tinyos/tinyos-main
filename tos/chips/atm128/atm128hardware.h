@@ -1,4 +1,4 @@
-//  $Id: atm128hardware.h,v 1.6 2007-02-08 00:59:38 scipio Exp $
+//  $Id: atm128hardware.h,v 1.7 2007-05-23 22:49:31 idgay Exp $
 
 /*                                                                     tab:4
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
@@ -104,6 +104,7 @@ __nesc_atomic_start(void) @spontaneous()
 {
     __nesc_atomic_t result = SREG;
     __nesc_disable_interrupt();
+    asm volatile("" : : : "memory"); /* ensure atomic section effect visibility */
     return result;
 }
 
@@ -111,6 +112,7 @@ __nesc_atomic_start(void) @spontaneous()
 inline void 
 __nesc_atomic_end(__nesc_atomic_t original_SREG) @spontaneous()
 {
+  asm volatile("" : : : "memory"); /* ensure atomic section effect visibility */
   SREG = original_SREG;
 }
 #endif

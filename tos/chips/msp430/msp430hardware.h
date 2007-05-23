@@ -211,11 +211,13 @@ __nesc_atomic_t __nesc_atomic_start(void) @spontaneous()
 {
   __nesc_atomic_t result = ((READ_SR & SR_GIE) != 0);
   __nesc_disable_interrupt();
+  asm volatile("" : : : "memory"); /* ensure atomic section effect visibility */
   return result;
 }
 
 void __nesc_atomic_end(__nesc_atomic_t reenable_interrupts) @spontaneous()
 {
+  asm volatile("" : : : "memory"); /* ensure atomic section effect visibility */
   if( reenable_interrupts )
     __nesc_enable_interrupt();
 }

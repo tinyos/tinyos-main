@@ -1,4 +1,4 @@
-// $Id: pxa27xhardware.h,v 1.4 2006-12-12 18:23:12 vlahan Exp $
+// $Id: pxa27xhardware.h,v 1.5 2007-05-23 22:49:31 idgay Exp $
 
 /*									tab:4
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
@@ -104,6 +104,7 @@ inline __nesc_atomic_t __nesc_atomic_start(void) __attribute__((spontaneous))
 		: "=r" (result) , "=r" (temp)
 		: "0" (result) , "1" (temp) , "i" (ARM_CPSR_INT_MASK)
 		);
+  asm volatile("" : : : "memory"); /* ensure atomic section effect visibility */
   return result;
 }
 
@@ -111,6 +112,7 @@ inline void __nesc_atomic_end(__nesc_atomic_t oldState) __attribute__((spontaneo
 {
   uint32_t  statusReg = 0;
   //make sure that we only mess with the INT bit
+  asm volatile("" : : : "memory"); /* ensure atomic section effect visibility */
   oldState &= ARM_CPSR_INT_MASK;
   asm volatile (
 		"mrs %0,CPSR\n\t"
