@@ -10,8 +10,8 @@ Timers
 :Author: Cory Sharp, Martin Turon, David Gay
 
 :Draft-Created: 22-Sep-2004
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2006-12-12 18:22:54 $
+:Draft-Version: $Revision: 1.8 $
+:Draft-Modified: $Date: 2007-05-23 21:33:47 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -71,7 +71,7 @@ Before presenting the interfaces (2.2), we start with a general
 discussion of the issues of precision, width and accuracy in
 timer interfaces (2.1).
 
-2.1 Precision, Width and Accuracy.
+2.1 Precision, Width and Accuracy
 --------------------------------------------------------------------
 
 Three fundamental properties of timers are *precision*, *width* and
@@ -82,7 +82,9 @@ microseconds.  All precisions presented in this TEP are in "binary"
 units with respect to one second.  That is, one second contains 1024
 binary milliseconds, 32768 32kHz ticks, or 1048576 microseconds.
 This TEP emphasizes millisecond and 32kHz tick precisions while
-reasonably accommodating other precisions.
+reasonably accommodating other precisions. The use of "binary" units
+is motivated by the common availability of hardware clocks driven 
+by a 32768Hz crystal.
 
 Examples of widths are 8-bit, 16-bit, 32-bit, and 64-bit.  The width
 for timer interfaces and components SHOULD be 32-bits.  That is, for
@@ -95,7 +97,7 @@ Accuracy reflects how closely a component conforms to the precision it
 claims to provide. Accuracy is affected by issues such as clock drift (much
 higher for internal vs crystal oscillators) and hardware limitations. As an
 example of hardware limitations, a mica2 clocked at 7.37MHz cannot offer an
-exact microsecond timer -- the closest it can come is 7.37MHz/8. Rather
+exact binary microsecond timer -- the closest it can come is 7.37MHz/8. Rather
 than introduce a plethora of precisions, we believe it is often best to
 pick the existing precision closest to what can be provided, along with
 appropriate documentation. However, the accuracy MUST remain reasonable:
@@ -109,12 +111,12 @@ It also allows user code to clearly express and understand the
 precision and width for a given timer interface. Accuracy is not
 reflected in the interface type.
 
-Precision is expressed as an empty type -- TMilli, T32khz, and
+Precision is expressed as a dummy type -- TMilli, T32khz, and
 TMicro -- written in the standard Timer.h header like this::
 
-  typedef struct { } TMilli; // 1024 ticks per second
-  typedef struct { } T32khz; // 32768 ticks per second
-  typedef struct { } TMicro; // 1048576 ticks per second
+  typedef struct { int notUsed; } TMilli; // 1024 ticks per second
+  typedef struct { int notUsed; } T32khz; // 32768 ticks per second
+  typedef struct { int notUsed; } TMicro; // 1048576 ticks per second
 
 Note that the precision names are expressed as either frequency or
 period, whichever is convenient.
@@ -138,10 +140,6 @@ advanced user components.
 Counter
 --------------------------------------------------------------------
 
-A Counter component will increase the width of a low-level hardware timer 
-by wrapping the overflow event and incrementing its higher order bits.
-These higher order bits are considered extra state over the HPL register
-layer, and therefore qualify all Counters as HAL components.
 The Counter interface returns the current time and provides commands
 and an event for managing overflow conditions.  These overflow
 commands and events are necessary for properly deriving larger width
@@ -160,14 +158,12 @@ get()
 
 isOverflowPending() 
   return TRUE if the overflow flag is set for this counter, i.e., if and
-  only if an overflow interrupt will occur after the outermost atomic
+  only if an overflow event will occur after the outermost atomic
   block exits.  Return FALSE otherwise.  This command only returns the
-  state of the overflow flag and causes no side effect.  It is expected
-  that the underlying hardware platform sets the overflow flag when
-  appropriate.
+  state of the overflow flag and causes no side effect.  
 
 clearOverflow() 
-  cancel the pending overflow interrupt clearing the overflow flag.
+  cancel the pending overflow event clearing the overflow flag.
 
 overflow() 
   signals that an overflow in the current time.  That is, the current
@@ -220,6 +216,10 @@ startAt(t0,dt)
   before the invocation of startAt.  The timer subsystem uses this form
   internally, to be able to use of the full width of an alarm while also
   detecting when a short alarm elapses prematurely.
+
+  The time ``t0`` is always assumed to be in the past. A value of ``t0``
+  numerically greater than the current time (returned by ``getNow()``)
+  represents a time from before the last wraparound.
 
 getNow() 
   return the current time in the precision and width of the alarm.
@@ -327,9 +327,15 @@ startPeriodicAt(t0,dt)
   t0+dt.  The timer will fire periodically every dt time units until
   stopped.
 
+  As with alarms, the time ``t0`` is always assumed to be in the past. A
+  value of ``t0`` numerically greater than the current time (returned by
+  ``getNow()``) represents a time from before the last wraparound.
+
 startOneShotAt(t0,dt) 
   cancel any previously running timer and set to fire at time t1 =
   t0+dt.  The timer will fire once then stop.
+
+  ``t0`` is as in ``startPeriodicAt``.
 
 getNow() 
   return the current time in the precision and width of the timer.
@@ -365,12 +371,12 @@ components::
     provides interface Alarm< T${P}, uint${W}_t >;
   }
 
-Instantiating an Alarm${P}${W}C component provides a new and
-independent Alarm.  If the platform presents a limited number of
-Alarm resources, then allocating more Alarms in an application than
-are available for the platform SHOULD produce a compile-time error.
-See Appendix B for an example of how to make allocatable Alarms that
-are each implemented on independent hardware timers.
+Instantiating an Alarm${P}${W}C component provides a new and independent
+Alarm.  If the platform presents a limited number of Alarm resources,
+then allocating more Alarms in an application than are available for the
+platform SHOULD produce a compile-time error.  See Appendices B and C
+for an example of how to make allocatable Alarms that are each
+implemented on independent hardware timers.
 
 For example, if a platform has an 8-bit 32kHz counter and three
 8-bit 32kHz alarms, then the Counter and Alarm interfaces for
@@ -408,13 +414,14 @@ HilTimerMilliC
   {
     provides interface Init;
     provides interface Timer<TMilli> as TimerMilli[ uint8_t num ];
+    provides interface LocalTime<TMilli>;
   }
 
 A new timer is allocated using unique(UQ_TIMER_MILLI) to obtain a
 new unique timer number.  This timer number is used to index the
 TimerMilli parameterised interface.  UQ_TIMER_MILLI is defined in
-Timer.h.  HilTimerMilliC is used by the generic component
-TimerMilliC found in ``tos/system/``.
+Timer.h.  HilTimerMilliC is used by the LocalTimeMilliC component and the
+TimerMilliC generic component, both found in ``tos/system/``
 
 BusyWaitMicroC
 --------------------------------------------------------------------
@@ -541,7 +548,7 @@ TransformCounterC decreases precision and/or widens a Counter.  ::
 to_precision_tag and to_size_type describe the final precision and
 final width for the provided Counter.  from_precision_tag and
 from_size_type describe the precision and width for the source
-AlarmFrom.  bit_shift_right describes the bit-shift necessary to
+CounterFrom.  bit_shift_right describes the bit-shift necessary to
 convert from the used precision to the provided precision.
 upper_count_type describes the numeric type used to store the
 additional counter bits.  upper_count_type MUST be a type with width
@@ -553,7 +560,6 @@ Counter<TMilli,uint32_t>, the following TransformCounterC would be
 created::
 
   new TransformCounterC( TMilli, uint32_t, T32khz, uint16_t, 5, uint32_t )
-
 
 VirtualizeTimerC
 --------------------------------------------------------------------
@@ -587,7 +593,6 @@ The implementation of the utility components are also found in
   * ``BusyWaitCounterC.nc``
   * ``CounterToLocalTimeC.nc``
   * ``TransformAlarmC.nc``
-  * ``TransformAlarmCounterC.nc``
   * ``TransformCounterC.nc``
   * ``VirtualizeAlarmC.nc``
   * ``VirtualizeTimerC.nc``
@@ -779,8 +784,32 @@ components which are independent of timer width. ::
     async command void setEdge(bool up); //<! True = detect rising edge
   }
 
-These interfaces are provided by four components, corresponding to
-each hardware timer: HplAtm128Timer0C through HplAtm128Timer3C.
+These interfaces are provided by four components, corresponding to each
+hardware timer: HplAtm128Timer0AsyncC, and HplAtm128Timer0C through
+HplAtm128Timer3C. Timers 1 and 3 have three compare registers, so offer
+a parameterised HplAtm128Compare interface: ::
+
+  configuration HplAtm128Timer1C
+  {
+    provides {
+      // 16-bit Timers
+      interface HplAtm128Timer<uint16_t>   as Timer;
+      interface HplAtm128TimerCtrl16       as TimerCtrl;
+      interface HplAtm128Capture<uint16_t> as Capture;
+      interface HplAtm128Compare<uint16_t> as Compare[uint8_t id];
+    }
+  }
+  ...
+
+where the ``id`` corresponds to the compare register number. The parameterised
+interface is only connected for ``id`` equal to 0, 1 or 2. Attempts to use
+another value cause a compile-time error. This is achieved as follows (code
+from the implementation of ``HplAtm128Timer1C``) ::
+
+  Compare[0] = HplAtm128Timer1P.CompareA; 
+  Compare[1] = HplAtm128Timer1P.CompareB;
+  Compare[2] = HplAtm128Timer1P.CompareC;
+
 
 The Atmega128 chip components do not define a HAL, as the timer
 configuration choices (frequencies, use of input capture or compare output,
@@ -807,6 +836,22 @@ These generic components include appropriate configuration parameters
     uses interface HplTimer<timer_size> as Timer;
   } ...
 
+As a result of issues arising from using timer 0 in asynchronous mode,
+the HAL also offers the following component: ::
+
+  generic configuration Atm128AlarmAsyncC(typedef precision, int divider) {
+    provides {
+      interface Init @atleastonce();
+      interface Alarm<precision, uint32_t>;
+      interface Counter<precision, uint32_t>;
+    }
+  }
+  ...
+
+which builds a 32-bit alarm and timer over timer 0. divider is used
+to initialise the timer0 scaling factor.
+
+
 Appendix C: a mote: Mica family timer subsystem
 ====================================================================
 
@@ -825,9 +870,11 @@ If undefined, it defaults to a platform-dependent value (4 for mica2dot,
 The mica family configures its four timers in part based on the value
 of this MHZ symbol:
 
-* Timer 0: divides the external 32768Hz crystal by 32 to build AlarmMilli8C
-  and AlarmMilli32C (see Section 3). As timer 0 has a single compare
-  register, these can only be instantiated once.
+* Timer 0: uses Atm128AlarmAsyncC to divide the external 32768Hz crystal
+  by 32, creating a 32-bit alarm and counter. This alarm and counter is
+  used to build HilTimerMilliC, using the AlarmToTimerC,
+  VirtualizeTimerC and CounterToLocalTimeC utility components.
+
   Timing accuracy is as good as the external crystal.
 * Timer 1: the 16-bit hardware timer 1 is set to run at 1MHz if possible.
   However, the set of dividers for timer 1 is limited to 1, 8,
@@ -837,9 +884,10 @@ of this MHZ symbol:
   ``AlarmOne16C`` (rather than the ``CounterMicro16C`` ``AlarmMicro16C``
   as suggested in Section 3).
 
-  When building the 32-bit counter and 32-bit alarms, the rate of
-  timer 1 is adjusted in software to 1MHz. Thus the 32-bit HAL components
-  for timer *are* named ``CounterMicro32C`` and ``AlarmMicro32C``.
+  32-bit microsecond Counters and Alarms, named ``CounterMicro32C`` and
+  ``AlarmMicro32C``, are created from ``CounterOne16C`` and
+  ``AlarmOne16C`` using the TransformAlarmC and TransformCounterC 
+  utility components.
 
   Three compare registers are available on timer1, so up to three instances
   of ``AlarmOne16C`` and/or ``AlarmMicro32C`` can be created. The timing
@@ -854,8 +902,8 @@ of this MHZ symbol:
   32768Hz, if possible. As with timer 1, the limited set of dividers makes
   this impossible at some clock frequencies, so the 16-bit timer 3 HAL
   components are named ``CounterThree16C`` and ``AlarmThree16C``. As 
-  with timer 1, the rate of timer 3 is adjusted in software when
-  building the 32-bit counter and 32-bit alarms, giving components
+  with timer 1, the rate of timer 3 is adjusted in software to
+  build 32-bit counter and 32-bit alarms, giving components
   ``Counter32khz32C`` and ``Alarm32khz32C``. As with timer 1, three compare
   registers, hence up to three instances of ``Alarm32khz32C`` and/or
   ``AlarmThree16C`` are available.
@@ -863,6 +911,33 @@ of this MHZ symbol:
   At 1, 2, 4 and 8MHz, ``Counter32khz32C`` and ``Alarm32khz32C`` run
   at 31.25kHz (plus clock rate inaccuracy). At 7.37MHz, they run at
   ~28.8kHz.
+
+The automatic allocation of compare registers to alarms (and
+corresponding compile-time error when too many compare registers are
+used) is achieved as follows.  The implementations of ``AlarmOne16C``
+and ``AlarmThree16C`` use the ``Atm128AlarmC`` generic component and
+wire it, using ``unique``, to one of the compare registers offered by
+``HplAtm128Timer1C`` and ``HplAtm128Timer3C``::
+
+  generic configuration AlarmOne16C()
+  {
+    provides interface Alarm<TOne, uint16_t>;
+  }
+  implementation
+  {
+    components HplAtm128Timer1C, InitOneP,
+      new Atm128AlarmC(TOne, uint16_t, 3) as NAlarm;
+
+    Alarm = NAlarm;
+    NAlarm.HplAtm128Timer -> HplAtm128Timer1C.Timer;
+    NAlarm.HplAtm128Compare -> HplAtm128Timer1C.Compare[unique(UQ_TIMER1_COMPARE)];
+  }
+
+On the fourth creation of an ``AlarmOne16C``, ``unique(UQ_TIMER1_COMPARE)``
+will return 3, causing a compile-time error as discussed in Appendix B
+(``HplAtm128Timer1C``'s ``Compare`` interface is only defined for values
+from 0 to 2).
+
 
 When an Atmega128 is in any power-saving mode, hardware timers 1, 2 and 3
 stop counting. The default Atmega128 power management *will* enter these
@@ -873,8 +948,7 @@ will not enter power-saving modes.
 
 The mica family HIL components are built as follows:
 
-* TimerMilliC: built using AlarmMilli32C (consuming its single compare
-  register)
+* HilTimerMilliC: built as described above from hardware timer 0.
 * BusyWaitMicroC: implemented using a simple software busy-wait loop which
   waits for ``MHZ`` cycles per requested microsecond. Accuracy is the same as
   Timer 1.
