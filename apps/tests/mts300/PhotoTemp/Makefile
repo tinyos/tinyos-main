@@ -1,0 +1,4 @@
+SENSORBOARD=mts300
+COMPONENT=OscilloscopeAppC
+
+include $(MAKERULES)
