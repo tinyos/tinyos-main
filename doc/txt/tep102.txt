@@ -10,8 +10,8 @@ Timers
 :Author: Cory Sharp, Martin Turon, David Gay
 
 :Draft-Created: 22-Sep-2004
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2007-05-23 21:33:47 $
+:Draft-Version: $Revision: 1.9 $
+:Draft-Modified: $Date: 2007-05-23 21:41:58 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -611,7 +611,8 @@ The implementation of Timers for the MSP430 is in
   * ``CounterMilli16C.nc`` provides ``Counter<TMilli,uint16_t>``
   * ``CounterMilli32C.nc`` provides ``Counter<TMilli,uint32_t>``
   * ``GpioCaptureC.nc``
-  * ``HilTimerMilliC.nc`` provides ``Timer<TMilli> as TimerMilli[uint8_t num]``
+  * ``HilTimerMilliC.nc`` provides ``LocalTime<TMilli>`` and 
+    ``Timer<TMilli> as TimerMilli[uint8_t num]``
   * ``Msp430AlarmC.nc`` is generic and converts an MSP430 timer to a 16-bit Alarm
   * ``Msp430Capture.nc`` HPL interface definition for MSP430 timer captures
   * ``Msp430ClockC.nc`` exposes MSP430 hardware clock initialization
