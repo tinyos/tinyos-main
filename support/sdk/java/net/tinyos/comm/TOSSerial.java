@@ -1,4 +1,4 @@
-//$Id: TOSSerial.java,v 1.5 2007-05-18 18:27:03 rincon Exp $
+//$Id: TOSSerial.java,v 1.6 2007-05-24 19:55:12 rincon Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -29,25 +29,88 @@ import java.util.regex.*;
 
 public class TOSSerial extends NativeSerial implements SerialPort {
 
+  /**
+   * Inner Class to handle serial event dispatching
+   * 
+   */
   class EventDispatcher extends Thread {
-    boolean m_run;
+    private boolean m_run;
 
+    private boolean busy;
+
+    /**
+     * Constructor
+     * 
+     */
     public EventDispatcher() {
+      busy = false;
       m_run = true;
     }
 
+    /**
+     * Start waiting for events
+     * 
+     */
     public void open() {
       synchronized (this) {
-        this.notify();
         m_run = true;
+        this.notify();
       }
     }
 
+    /**
+     * Stop waiting for events
+     * Here's the deal: we're running a thread here that is calling
+     * a function waitForEvent() in the toscomm driver.  We're now waiting for 
+     * two events: DATA_AVAILABLE and OUTPUT_EMPTY.  If you call cancelWait(), 
+     * nothing happens until the waitForEvent() returns by getting an event 
+     * anyway, so if our node isn't generating bytes on its own, we need to
+     * force it to make an event so we can get out of that function to avoid
+     * a driver crash.
+     * 
+     * Previously, it never returned because there were no events.  Now we
+     * make an event by adding notifyOn(OUTPUT_EMPTY) and then writing a 
+     * standard 0x7E sync byte to the serial port and let it tell us that 
+     * an event occured.    
+     * 
+     * When the waitForEvent() function finally exits, we are then able to 
+     * tell it, "Oh yea, while you're at it, cancelWait()".  Finally, the
+     * EventDispatcher is in a state where the driver is not sitting around
+     * waiting for an event to occur. At that point, we can shut down the
+     * NativeSerial by calling super.close() elsewhere. 
+     * 
+     * As far as I can tell, this is the only way to make this work without
+     * modifying the actual toscomm driver.
+     * 
+     * The only other trick I can see to this is sometimes you can't connect
+     * immediately after you disconnect.. I added a wait(500) after a disconnect
+     * more toward my application layer to prevent my app from trying to
+     * reconnect immediately. My JUnit tests, for example, disconnect and
+     * reconnect very rapidly as you would expect. 
+     */
     public void close() {
       m_run = false;
-      cancelWait();
+      
+      synchronized (this) {
+        while (busy) {
+          write(0x7E);
+          cancelWait();
+          try {
+            // Wait for the waitForEvent() done event, if it doesn't work after
+            // 500 ms, then we try generating that OUTPUT_EMPTY event again.
+            wait(500);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+      }
     }
 
+    /**
+     * Dispatch the event if it really occured
+     * 
+     * @param event
+     */
     private void dispatch_event(int event) {
       if (didEventOccur(event)) {
         SerialPortEvent ev = new SerialPortEvent(TOSSerial.this, event);
@@ -63,32 +126,33 @@ public class TOSSerial extends NativeSerial implements SerialPort {
       while (true) {
 
         synchronized (this) {
-          if (!m_run) {
+          while (!m_run) {
             try {
+              busy = false;
+              synchronized (this) {
+                this.notify();
+              }
               this.wait();
             } catch (InterruptedException e) {
               e.printStackTrace();
             }
           }
         }
-        
+
+        busy = true;
         if (waitForEvent()) {
-          dispatch_event(SerialPortEvent.BREAK_INTERRUPT);
-          dispatch_event(SerialPortEvent.CARRIER_DETECT);
-          dispatch_event(SerialPortEvent.CTS);
           dispatch_event(SerialPortEvent.DATA_AVAILABLE);
-          dispatch_event(SerialPortEvent.DSR);
-          dispatch_event(SerialPortEvent.FRAMING_ERROR);
-          dispatch_event(SerialPortEvent.OVERRUN_ERROR);
           dispatch_event(SerialPortEvent.OUTPUT_EMPTY);
-          dispatch_event(SerialPortEvent.PARITY_ERROR);
-          dispatch_event(SerialPortEvent.RING_INDICATOR);
         }
       }
     }
 
   }
 
+  /**
+   * Inner Serial Input Stream Class
+   * 
+   */
   class SerialInputStream extends InputStream {
     ByteQueue bq = new ByteQueue(128);
 
@@ -121,6 +185,10 @@ public class TOSSerial extends NativeSerial implements SerialPort {
     }
   }
 
+  /**
+   * Inner Serial Output Stream Class
+   * 
+   */
   class SerialOutputStream extends OutputStream {
     public void write(int b) {
       TOSSerial.this.write(b);
@@ -205,6 +273,11 @@ public class TOSSerial extends NativeSerial implements SerialPort {
     return (str_port_to == null) ? portname : str_port_to;
   }
 
+  /**
+   * Real Constructor of TOSSerial
+   * 
+   * @param portname
+   */
   public TOSSerial(String portname) {
     super(map_portname(NativeSerial.getTOSCommMap(), portname));
     m_in = new SerialInputStream();
@@ -212,9 +285,9 @@ public class TOSSerial extends NativeSerial implements SerialPort {
     m_dispatch = new EventDispatcher();
     m_dispatch.start();
   }
-  
+
   /**
-   * Open the serial port connection 
+   * Open the serial port connection
    */
   public boolean open() {
     if (m_dispatch != null) {
@@ -222,12 +295,12 @@ public class TOSSerial extends NativeSerial implements SerialPort {
     }
     return super.open();
   }
-  
+
   /**
    * Close the serial port connection
    */
   public void close() {
-    if(m_dispatch != null) {
+    if (m_dispatch != null) {
       m_dispatch.close();
     }
     super.close();
@@ -255,8 +328,7 @@ public class TOSSerial extends NativeSerial implements SerialPort {
   }
 
   /**
-   * Finalize the serial port connection, do not expect to open it 
-   * again
+   * Finalize the serial port connection, do not expect to open it again
    */
   public void finalize() {
     // Be careful what you call here. The object may never have been
@@ -269,13 +341,9 @@ public class TOSSerial extends NativeSerial implements SerialPort {
     }
 
     /*
-    try {
-      if (m_dispatch != null) {
-        m_dispatch.join();
-      }
-    } catch (InterruptedException e) {
-    }
-    */
+     * try { if (m_dispatch != null) { m_dispatch.join(); } } catch
+     * (InterruptedException e) { }
+     */
 
     super.close();
 

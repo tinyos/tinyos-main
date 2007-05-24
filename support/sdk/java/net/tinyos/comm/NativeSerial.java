@@ -1,4 +1,3 @@
-
 package net.tinyos.comm;
 
 /* ----------------------------------------------------------------------------
@@ -10,32 +9,33 @@ package net.tinyos.comm;
  * ----------------------------------------------------------------------------- */
 
 /**
- * Updated to include the open() method, which allows us to keep this
- * object while being temporarily disconnected from the serial port
+ * Updated to include the open() method, which allows us to keep this object
+ * while being temporarily disconnected from the serial port
  */
 
 public class NativeSerial {
-  
+
   /** The handle to the serial port we're connected to */
-  private long swigCPtr;
-  
+  protected long swigCPtr;
+
   /** True if we have an open serial port connection */
-  private boolean swigCMemOwn;
-  
+  protected boolean swigCMemOwn;
+
   /** Name of the port */
   private String myPortname = "";
-  
 
   /**
    * Constructor
+   * 
    * @param portname
    */
   public NativeSerial(String portname) {
     this(TOSCommJNI.new_NativeSerial(portname), true);
   }
-  
+
   /**
    * Constructor
+   * 
    * @param cPtr
    * @param cMemoryOwn
    */
@@ -44,18 +44,18 @@ public class NativeSerial {
     swigCPtr = cPtr;
   }
 
-
   /**
-   * Reconnect to this serial port 
+   * Reconnect to this serial port
+   * 
    * @return true if the connection is made
    */
   public boolean open() {
-    if(!swigCMemOwn && !myPortname.matches("")) {
+    if (!swigCMemOwn && !myPortname.matches("")) {
       swigCPtr = TOSCommJNI.new_NativeSerial(myPortname);
       swigCMemOwn = true;
       return true;
     }
-    
+
     return false;
   }
 
@@ -63,11 +63,12 @@ public class NativeSerial {
     // We can come here with swigCptr == 0 from finalize if the C++
     // constructor throws an exception. Ideally, we should guard all
     // methods in the C++ code, but this is simpler.
+    
     if (swigCPtr != 0) {
       TOSCommJNI.NativeSerial_close(swigCPtr);
     }
   }
-  
+
   protected NativeSerial() {
     this(0, false);
   }
@@ -77,7 +78,7 @@ public class NativeSerial {
   }
 
   public void delete() {
-    if(swigCPtr != 0 && swigCMemOwn) {
+    if (swigCPtr != 0 && swigCMemOwn) {
       swigCMemOwn = false;
       TOSCommJNI.delete_NativeSerial(swigCPtr);
     }
@@ -88,8 +89,10 @@ public class NativeSerial {
     return (obj == null) ? 0 : obj.swigCPtr;
   }
 
-  public void setSerialPortParams(int baudrate, int databits, int stopbits, boolean parity) {
-    TOSCommJNI.NativeSerial_setSerialPortParams(swigCPtr, baudrate, databits, stopbits, parity);
+  public void setSerialPortParams(int baudrate, int databits, int stopbits,
+      boolean parity) {
+    TOSCommJNI.NativeSerial_setSerialPortParams(swigCPtr, baudrate, databits,
+        stopbits, parity);
   }
 
   public int getBaudRate() {
@@ -109,7 +112,9 @@ public class NativeSerial {
   }
 
   public void notifyOn(int event, boolean enable) {
-    TOSCommJNI.NativeSerial_notifyOn(swigCPtr, event, enable);
+    if (swigCPtr != 0) {
+      TOSCommJNI.NativeSerial_notifyOn(swigCPtr, event, enable);
+    }
   }
 
   public boolean isNotifyOn(int event) {
@@ -117,15 +122,21 @@ public class NativeSerial {
   }
 
   public boolean waitForEvent() {
-    try {
-      return TOSCommJNI.NativeSerial_waitForEvent(swigCPtr);
-    } catch (Exception e) {
-      return false;
+    if (swigCPtr != 0) {
+      try {
+        return TOSCommJNI.NativeSerial_waitForEvent(swigCPtr);
+      } catch (Exception e) {
+        return false;
+      }
     }
+    return false;
   }
 
   public boolean cancelWait() {
-    return TOSCommJNI.NativeSerial_cancelWait(swigCPtr);
+    if (swigCPtr != 0) {
+      return TOSCommJNI.NativeSerial_cancelWait(swigCPtr);
+    }
+    return false;
   }
 
   public boolean didEventOccur(int event) {
@@ -167,8 +178,6 @@ public class NativeSerial {
   public void sendBreak(int millis) {
     TOSCommJNI.NativeSerial_sendBreak(swigCPtr, millis);
   }
-
-
 
   public int available() {
     try {
