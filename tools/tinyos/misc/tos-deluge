@@ -39,29 +39,30 @@ import os.path
 # Script-specific parameters
 HEX_OUTPUT_LINE_SIZE = 16
 # Path to the python script that builds Deluge image from XML
-PY_PATH_BUILD_IMAGE  = os.path.join(os.path.dirname(sys.argv[0]), 'tos-build-deluge-image')
+PATH_PY_BUILD_IMAGE  = os.path.join(os.path.dirname(sys.argv[0]), 'tos-build-deluge-image')
 
 # TinyOS serial communication parameters
-SERIAL_AMGROUP           = 0
-SERIAL_AMID              = 0xAB
-SERIAL_DATA_PAYLOAD_SIZE = 80
+SERIAL_AMGROUP     = 0
+SERIAL_AMID        = 0xAB
+SERIAL_DATA_LENGTH = 28 - 1 - 1 - 2 - 2
 
 # Serial message types
-MSG_ERASE    = 0
-MSG_WRITE    = 1
-MSG_READ     = 2
-MSG_REPROG   = 5
-MSG_DISS     = 6
+MSG_ERASE  = 0
+MSG_WRITE  = 1
+MSG_READ   = 2
+MSG_REPROG = 5
+MSG_DISS   = 6
 
-ERROR_SUCCESS = 0
-ERROR_FAIL    = 1
+ERROR_SUCCESS = 0   # T2-compatible
+ERROR_FAIL    = 1   # T2-compatible
 
 # Deluge-specific parameters
-DELUGE_PKTS_PER_PAGE    = 48
-DELUGE_PKT_PAYLOAD_SIZE = 23
-DELUGE_MAX_PAGES        = 128
-DELUGE_METADATA_SIZE    = 16 + 16 + 16 + 16 + 4 + 4 + 4 + 4   # Metadata size in binary 
-                                                              # image
+DELUGE_MAX_PAGES       = 128
+DELUGE_METADATA_OFFSET = 0
+DELUGE_METADATA_SIZE   = 16
+DELUGE_IDENT_OFFSET    = 16 + (2 * DELUGE_MAX_PAGES)
+DELUGE_IDENT_SIZE      = 16 + 16 + 16 + 16 + 4 + 4 + 4 + 4   # Metadata size in binary 
+                                                             # image
 
 class SerialReqPacket(tinyos.GenericPacket):
     def __init__(self, packet = None):
@@ -154,36 +155,55 @@ def toStatusStr(num_space, binary_stream):
     
     return r
 
-# Returns the metadata (first 16 bytes of the image) plus the "ident" 
-# (DELUGE_METADATA_SIZE bytes after CRC)
-def getMetaData(s, img_num):
+# Reads a portion from the image in the external flash
+def op_read(s, img_num, offset, length):
     r = []
+    
     # Gets the metadata (first 16 bytes of the image)
-    sreqpkt = SerialReqPacket((MSG_READ, img_num, 0, 16, []))
-  
-    if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()):
-        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-        sreplypkt = SerialReplyPacket(packet[1])
-        if sreplypkt.error == ERROR_SUCCESS:
-            r.extend(sreplypkt.data)
-      
-            # Gets the "ident" portion of the image
-            sreqpkt["offset"] = 16 + (2 * DELUGE_MAX_PAGES)
-            sreqpkt["len"] = DELUGE_METADATA_SIZE
-            if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()):
-                packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-                sreplypkt = SerialReplyPacket(packet[1])
-                if sreplypkt.error == ERROR_SUCCESS:
-                    r.extend(sreplypkt.data)
-                    
-                    # Checks for valid CRC and timestamp
-                    if crc16(r[6:8]) == toInt(r[8:10]) and r[84:88] != [0xFF, 0xFF, 0xFF, 0xFF]:
-                        return r
-                else:
-                    print "ERROR: Unable to retrieve image information"
+    sreqpkt = SerialReqPacket((MSG_READ, img_num, offset, length, []))
+    while True:
+        if sreqpkt['len'] > SERIAL_DATA_LENGTH:
+            sreqpkt['len'] = SERIAL_DATA_LENGTH
+        
+        if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()):
+            packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+            sreplypkt = SerialReplyPacket(packet[1])
+            if sreplypkt.error == ERROR_SUCCESS:
+                r.extend(sreplypkt.data)
+            else:
+                r = None
+                break
         else:
-            print "ERROR: Unable to retrieve image information"
+            r = None
+            break
+        
+        sreqpkt['offset'] = sreqpkt['offset'] + sreqpkt['len']
+        if sreqpkt['offset'] >= (offset + length):
+            break
+        sreqpkt['len'] = (offset + length) - sreqpkt['offset']
+        
+    return r
+    
+# Returns the metadata (first 16 bytes of the image) plus the "ident" 
+# (DELUGE_IDENT_SIZE bytes after CRC)
+def getMetaData(s, img_num):
+    # Gets the metadata (first 16 bytes of the image)
+    r = op_read(s, img_num, DELUGE_METADATA_OFFSET, DELUGE_METADATA_SIZE)
 
+    # Gets the "ident" portion of the image
+    if r != None:
+        temp = op_read(s, img_num, DELUGE_IDENT_OFFSET, DELUGE_IDENT_SIZE)
+        if temp != None:
+            r.extend(temp)
+        else:
+            r = None
+        
+    # Checks for valid CRC and image timestamp
+    if r != None:
+        if crc16(r[6:8]) == toInt(r[8:10]) and r[84:88] != [0xFF, 0xFF, 0xFF, 0xFF]:
+            return r
+        
+    print "ERROR: Unable to retrieve image information"
     return None
 
 # Prints status of the image in the external flash
@@ -226,8 +246,8 @@ def op_write(s, img_num, binary_stream):
     sreqpkt.offset = 0
     while length > 0:
         # Calculates the payload size for the current packet
-        if length >= SERIAL_DATA_PAYLOAD_SIZE:
-            sreqpkt.len = SERIAL_DATA_PAYLOAD_SIZE
+        if length >= SERIAL_DATA_LENGTH:
+            sreqpkt.len = SERIAL_DATA_LENGTH
         else:
             sreqpkt.len = length
         sreqpkt.data = []
@@ -256,6 +276,18 @@ def op_write(s, img_num, binary_stream):
 
 # Injects an image (specified by tos_image_xml) to an image volume
 def op_inject(s, img_num, tos_image_xml):
+    # Checks for valid file path
+    try:
+        os.stat(tos_image_xml)         # Checks whether tos_image_xml is a valid file
+    except:
+        print "ERROR: Unable to find the TOS image XML, \"%s\"" % tos_image_xml
+        return False
+    try:
+        os.stat(PATH_PY_BUILD_IMAGE)   # Checks whether PATH_PY_BUILD_IMAGE is a valid file
+    except:
+        print "ERROR: Unable to find the image building utility, \"%s\"" % PATH_PY_BUILD_IMAGE
+        return False
+  
     # Gets status information of stored image
     metadata = getMetaData(s, img_num)
     print "Connected to Deluge nodes."
@@ -270,13 +302,7 @@ def op_inject(s, img_num, tos_image_xml):
     print "--------------------------------------------------"
     
     # Creates binary image from the TOS image XML
-    try:
-        os.stat(tos_image_xml)         # Checks whether tos_image_xml is a valid file
-        os.stat(PY_PATH_BUILD_IMAGE)   # Checks whether PY_PATH_BUILD_IMAGE is a valid file
-    except:
-        print "ERROR: Unable to create a binary image from the TOS image XML, \"%s\"" % tos_image_xml
-        return False
-    p = subprocess.Popen([PY_PATH_BUILD_IMAGE, "-v", str(version), "-i", str(img_num), tos_image_xml], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen([PATH_PY_BUILD_IMAGE, "-v", str(version), "-i", str(img_num), tos_image_xml], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print p.stderr.read(),
     print "--------------------------------------------------"
     
