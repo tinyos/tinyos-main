@@ -45,7 +45,6 @@ typedef nx_struct DelugeAdvMsg {
   nx_uint16_t       sourceAddr;
   nx_uint8_t        version;    // Deluge Version
   nx_uint8_t        type;
-  //DelugeNodeDesc nodeDesc;
   DelugeObjDesc  objDesc;
   nx_uint8_t        reserved;
 } DelugeAdvMsg;

@@ -32,6 +32,7 @@
 #define DELUGEPAGETRANSFER_H
 
 #include "extra/telosb/TOSBoot_platform.h"
+#include <message.h>
 
 #define AM_DELUGEADVMSG  161
 #define AM_DELUGEREQMSG  162
@@ -45,9 +46,6 @@ typedef uint8_t page_num_t;
 typedef nx_uint8_t nx_page_num_t;
 
 enum {
-//  DELUGE_PKTS_PER_PAGE    = 48,
-//  DELUGE_PKT_PAYLOAD_SIZE = 23,
-//  DELUGE_BYTES_PER_PAGE   = (DELUGE_PKTS_PER_PAGE * DELUGE_PKT_PAYLOAD_SIZE),
   DELUGE_PKT_PAYLOAD_SIZE  = TOSH_DATA_LENGTH - sizeof(nx_object_id_t) - sizeof(nx_page_num_t) - sizeof(nx_uint8_t),
   DELUGE_BYTES_PER_PAGE    = 1024,
   DELUGE_PKTS_PER_PAGE     = ((DELUGE_BYTES_PER_PAGE - 1) / DELUGE_PKT_PAYLOAD_SIZE) + 1,
@@ -74,8 +72,6 @@ enum {
   DELUGE_INVALID_OBJID              = 0xff,
   DELUGE_INVALID_PKTNUM             = 0xff,
   DELUGE_INVALID_PGNUM              = 0xff,
-  
-  // From "DelugeMetadata.h"
 };
 
 typedef struct DelugeAdvTimer {
