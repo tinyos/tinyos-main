@@ -10,8 +10,8 @@ TEP Structure and Keywords
 :Author: Philip Levis
 
 :Draft-Created: 18-Oct-2004
-:Draft-Version: $Revision: 1.5 $
-:Draft-Modified: $Date: 2006-12-12 18:22:53 $
+:Draft-Version: $Revision: 1.6 $
+:Draft-Modified: $Date: 2007-05-29 22:23:55 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -45,7 +45,10 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 document are to be interpreted as described in TEP 1.
 
 Note that the force of these words is modified by the requirement
-level of the document in which they are used.
+level of the document in which they are used. These words hold their
+special meanings only when capitalized, and documents SHOULD avoid using
+these words uncapitalized in order to minimize confusion.
+
 
 2.1 MUST
 --------------------------------------------------------------------
@@ -110,31 +113,32 @@ TEPs have two major parts, a header and a body. The header states
 document metadata, for management and status. The body contains the 
 content of the proposal.
 
-All TEPs MUST follow the TEP docutils template, and conform to 
-reStructuredText standards [1]_, to enable translation from 
-reStructuredText to HTML and Latex.
+All TEPs MUST conform to reStructuredText standards [1]_ and follow
+the docutils template, to enable translation from  reStructuredText
+to HTML and LaTeX.
 
 3.1 TEP Header
 --------------------------------------------------------------------
 
 The TEP header has several fields which MUST be included, as well as
-others which MAY be included. The first six header fields MUST be
+others which MAY be included. The TEP header MUST NOT include headers
+which are not specified in TEP 1 or supplementary Best Current
+Practice TEPs. The first six header fields MUST be
 included in all TEPs, in the order stated here.
 
 The first field is "TEP," and specifies the TEP number of the
 document. A TEP's number is unique.. This document is TEP 1. The 
-TEP type (discussed below)
-determines how a number is assigned to it. Generally, when a document
-is ready to be a TEP, it is assigned the smallest available number.
-BCP TEPs start at 1 and all other TEPs (Documentary, Experimental,
-and Informational) start at 101.
+TEP type (discussed below) determines TEP number assignment. Generally,
+when a document is ready to be a TEP, it is assigned the smallest
+available number. BCP TEPs start at 1 and all other TEPs
+(Documentary, Experimental, and Informational) start at 101.
 
 The second field states the name of the working group that produced
 the document. This document was produced by the Core Working Group.
 
 The third field is "Type," and specifies the type of TEP the document
 is. There are four types of TEP: Best Current Practice (BCP),
-Documentary, Informational, and Experimental. This document is Best
+Documentary, Informational, and Experimental. This document's type is Best
 Current Practice.
 
 Best Current Practice is the closest thing TEPs have to a standard: it
@@ -161,9 +165,8 @@ describe systems that do not have a reference implementation.
 The fourth field is "Status," which specifies the status of the TEP.
 A TEP status can either be "Draft," which means it is a work in
 progress, "Final," which means it is complete and will not change. 
-Once a TEP has the status "Final," its body MUST NOT change. 
-The values of its header fields MUST NOT change. The header of a
-Final TEP MAY have an "Obsoleted By" field added.
+Once a TEP has the status "Final," the only change allowed is the
+addition of an "Obsoleted By" field.
 
 The "Obsoletes" field is a backward pointer to an earlier TEP which
 the current TEP renders obsolete. An Obsoletes field MAY have multiple
@@ -222,13 +225,16 @@ If a TEP is Documentary, it MUST have a section entitled
 "Implementation," which instructs the reader how to obtain the
 implementation documented.
 
-If a TEP is Best Current Practices, it MUST have a section entitled
+If a TEP is Best Current Practic, it MUST have a section entitled
 "Reference," which points the reader to one or more reference uses of
 the practices.
 
-The last section of a TEP (but before citations, if there are any),
+The last numbered section of a TEP (but before citations, if there are any),
 entitled "Author's Address" or "Author's Addresses" MUST contain
 detailed author contact information.
+
+A TEP MAY have appendices after its Author section. Unlike regular sections,
+appendices are lettered. Please refer to Appendix A for details.
 
 4. Reference
 ====================================================================
@@ -258,3 +264,8 @@ definitions taken from IETF RFC 2119.
 
 .. [1] reStructuredText Markup Specification. <http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html>
  
+
+Appendix A. Example Appendix
+====================================================================
+
+This is an example appendix. Appendices begin with the letter A.
