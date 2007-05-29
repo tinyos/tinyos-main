@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2007-05-29 16:19:20 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,7 +42,7 @@
  * @see  Please refer to the README.txt and TEP 101 for more information about
  * this component and its intended use.
  */
-
+#include <Msp430Adc12.h>
 generic configuration Msp430Adc12ClientAutoDMAC()
 {
   provides {
