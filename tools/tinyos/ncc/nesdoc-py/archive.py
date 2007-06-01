@@ -40,6 +40,8 @@ from sys import *
 from getopt import getopt
 from string import *
 from nesdoc.utils import *
+from nesdoc.graph import generate_graph
+from nesdoc.html import *
 import os
 
 def check(x):
@@ -52,11 +54,13 @@ def get1(x, tag):
   return check(xml_tagfind(x, tag))
 
 def usage():
-  print "Usage: %s [-t dir] [--topdir dir] [--preserve] repository" % argv[0]
+  print "Usage: %s [-t dir] [--topdir dir] [--preserve] [--app] repository" % argv[0]
   print "  where -t/--topdir specify prefixes to remove from file names"
   print "  to create nice, package-like names for interface and components"
   print "  (based on their full filename)."
   print "  If --preserve is specified, existing XML files are preserved."
+  print "  If --app is specified, a page for this application is created in the"
+  print "  current directory."
   print "  The XML input is read from stdin."
 
 # Return package name for elem, or None if no valid name is found
@@ -99,9 +103,10 @@ def canonicalisedir(dirname):
     return dirname
 
 # option processing. See usage string for details.
-(opts, args) = getopt(argv[1:], "t:", [ "topdir=", "preserve" ])
-topopts = filter(lambda (x): x[0] != "--preserve", opts)
+(opts, args) = getopt(argv[1:], "t:", [ "topdir=", "preserve", "app" ])
+topopts = filter(lambda (x): x[0] != "--preserve" and x[0] != "--app", opts)
 preserve = filter(lambda(x): x[0] == "--preserve", opts) != []
+app = filter(lambda(x): x[0] == "--app", opts) != []
 topdirs = map(lambda (x): canonicalisedir(x[1]), topopts)
 if len(args) != 1:
   usage()
@@ -171,6 +176,30 @@ for x in dom.getElementsByTagName("interfacedef-ref"):
   set_nicename(x)
 for x in dom.getElementsByTagName("component-ref"):
   set_nicename(x)
+
+# Do the app stuff if requested
+if app:
+  # The firt component is the main application component.
+  toplevel = xml_idx(components, 0)
+  name = toplevel.getAttribute("qname")
+  nicename = toplevel.getAttribute("nicename")
+  wiring = xml_tag(xml_tag(dom, "nesc"), "wiring")
+  generate_graph(".", repository, dom, wiring, name, nicename)
+
+  ht = Html("%s.html" % nicename)
+  ht.title("Application: " + nicename)
+  ht.body()
+  ht.push("h2");
+  ht.p("Application: " + nicename)
+  ht.popln();
+  ht.pushln("map", 'name="comp"')
+  cmap = file("%s.cmap" % nicename)
+  for line in cmap.readlines():
+    ht.pln(line)
+  cmap.close()
+  ht.popln()
+  ht.tag("img", 'src="%s.png"' % nicename, 'usemap="#comp"', 'id=imgwiring')
+  ht.close()
 
 # save xml information per-interface and per-component in the specified
 # repository

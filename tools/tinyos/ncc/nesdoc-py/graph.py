@@ -14,13 +14,14 @@ from nesdoc.generators import *
 from sys import *
 from os import system
 
-def generate_graph(comp):
-  name = comp.getAttribute("qname")
-  nicename = comp.getAttribute("nicename")
-  wiring = xml_tag(comp, "wiring")
+def generate_component_graph(comp):
+  generate_graph("chtml", "..", comp, xml_tag(comp, "wiring"),
+                 comp.getAttribute("qname"), comp.getAttribute("nicename"))
+  
+def generate_graph(dir, repository, xml, wiring, name, nicename):
   if not wiring:
     return
-  
+
   # Return the element definition for a given wiring endpoint
   def lookup_elem(endpoint):
     elemref = xml_tagset(endpoint, [ "interface-ref", "function-ref" ])
@@ -79,10 +80,10 @@ def generate_graph(comp):
           styles.append('label="%s"' % instanceof_name)
         else:
           styles.append('label="%s\\n(%s)"' % (instanceof_name, iname))
-        styles.append('URL="%s.html"' % instanceof.getAttribute("nicename"))
+        styles.append('URL="%s/chtml/%s.html"' % (repository, instanceof.getAttribute("nicename")))
       else:
         # Just a regular component
-        styles.append('URL="%s.html"' % ncomp.getAttribute("nicename"))
+        styles.append('URL="%s/chtml/%s.html"' % (repository, ncomp.getAttribute("nicename")))
       if styles != []:
         gf.write("[%s]" % join(styles, ", "))
       gf.write(";\n")
@@ -116,7 +117,7 @@ def generate_graph(comp):
       styles = [ 'label="%s"' % sig ]
       if xml_tag(elem, "interface-parameters"):
         styles.append('style=bold')
-      styles.append('URL="../ihtml/%s.html"' % idef.getAttribute("nicename"))
+      styles.append('URL="%s/ihtml/%s.html"' % (repository, idef.getAttribute("nicename")))
     styles.append("fontsize=10")
     return styles
 
@@ -124,15 +125,15 @@ def generate_graph(comp):
   # build indices from ref attribute values to the corresponding elements
   refidx = {}
   compidx = {}
-  for intf in comp.getElementsByTagName("interface"):
+  for intf in xml.getElementsByTagName("interface"):
     refidx[intf.getAttribute("ref")] = intf
-  for fn in comp.getElementsByTagName("function"):
+  for fn in xml.getElementsByTagName("function"):
     refidx[fn.getAttribute("ref")] = fn
-  for ncomp in comp.getElementsByTagName("component"):
+  for ncomp in xml.getElementsByTagName("component"):
     compidx[ncomp.getAttribute("qname")] = ncomp
   
   # create the dot graph specification
-  gf = file("chtml/%s.dot" % nicename, "w")
+  gf = file("%s/%s.dot" % (dir, nicename), "w")
   gf.write('digraph "%s" {\n' % nicename)
   
   endpoints = {}
@@ -149,5 +150,5 @@ def generate_graph(comp):
   gf.close()
 
   # Run dot twice to get a picture and cmap
-  system("dot -Tgif -ochtml/%s.gif chtml/%s.dot" % (nicename, nicename))
-  system("dot -Tcmap -ochtml/%s.cmap chtml/%s.dot" % (nicename, nicename))
+  system("dot -Tpng -o%s/%s.png %s/%s.dot" % (dir, nicename, dir, nicename))
+  system("dot -Tcmap -o%s/%s.cmap %s/%s.dot" % (dir, nicename, dir, nicename))

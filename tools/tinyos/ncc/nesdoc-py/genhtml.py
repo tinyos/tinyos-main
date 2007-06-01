@@ -25,7 +25,7 @@
 from nesdoc.utils import *
 from nesdoc.interfaces import generate_interface
 from nesdoc.components import generate_component
-from nesdoc.graph import generate_graph
+from nesdoc.graph import generate_component_graph
 from nesdoc.index import generate_indices
 from sys import *
 from re import search, compile
@@ -84,7 +84,7 @@ for comp in compfiles:
   if search("\\.xml$", comp):
     stderr.write("component " + comp + "\n")
     ixml = parse("components/" + comp)
-    generate_graph(ixml.documentElement)
+    generate_component_graph(ixml.documentElement)
     generate_component(ixml.documentElement)
     ixml.unlink()
 

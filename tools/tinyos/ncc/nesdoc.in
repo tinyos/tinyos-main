@@ -93,6 +93,10 @@ for ($i = 0; $i <= $#ARGV; $i++) {
 	    $preserve = 1;
 	    $strip = 1;
 	}
+	elsif (/^-app$/) {
+	    $app = 1;
+	    $strip = 1;
+	}
     }
     push @ncc_args, $_ if !$strip;
 }
@@ -120,6 +124,7 @@ if ($genhtml) {
 # nesdoc-archive
 
 unshift @ncc_args, "-fsyntax-only";
+unshift @ncc_args, "-fnesc-dump=wiring" if $app;
 unshift @ncc_args, "-fnesc-dump=interfacedefs";
 unshift @ncc_args, "-fnesc-dump=components(wiring)";
 unshift @ncc_args, "-fnesc-dump=interfaces";
@@ -144,6 +149,7 @@ $toscontainer = `dirname $tosdir`;
 chomp $toscontainer;
 push @archive_args, "--topdir=$toscontainer";
 push @archive_args, "--preserve" if $preserve;
+push @archive_args, "--app" if $app;
 push @archive_args, "$docdir";
 unshift @archive_args, "$libprogs/nesdoc/archive.py";
 unshift @archive_args, $python;
@@ -172,6 +178,10 @@ Usage: nesdoc -o <documentation directory> <ncc options and nesC files>
 
        nesdoc -o <documentation directory> -html
 	 Generate nesdoc html pages from archived nesdoc information.
+
+       nesdoc -o <documentation directory> -app <ncc options and nesC file>
+         Compile specified nesC application and generate a wiring graph
+	 for the whole program in the current directory.
 EOM
 )
 }

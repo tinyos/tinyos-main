@@ -116,5 +116,5 @@ def generate_component(comp):
       ht.pln(line)
     cmap.close()
     ht.popln()
-    ht.tag("img", 'src="%s.gif"' % nicename, 'usemap="#comp"', 'id=imgwiring')
+    ht.tag("img", 'src="%s.png"' % nicename, 'usemap="#comp"', 'id=imgwiring')
   ht.close()
