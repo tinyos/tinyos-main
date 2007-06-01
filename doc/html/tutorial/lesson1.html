@@ -603,7 +603,6 @@ implementation {
   components new TimerMilliC() as Timer2;
 
   BlinkC -> MainC.Boot;
-  MainC.SoftwareInit -> LedsC;
   BlinkC.Timer0 -> Timer0;
   BlinkC.Timer1 -> Timer1;
   BlinkC.Timer2 -> Timer2;
@@ -721,7 +720,6 @@ implementation {
   components new TimerMilliC() as Timer2;
 
   BlinkC -> MainC.Boot;
-  MainC.SoftwareInit -> LedsC;
   BlinkC.Timer0 -> Timer0;
   BlinkC.Timer1 -> Timer1;
   BlinkC.Timer2 -> Timer2;
