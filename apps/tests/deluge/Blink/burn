@@ -1,21 +1,36 @@
 #!/bin/bash
 
-if [ $# -ne 1 ]; then
-  echo "Usage: $0 /dev/ttyUSB0"
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <port> <platform>"
+  echo "<port>       For example, /dev/ttyUSB0"
+  echo "<platform>   \"micaz\", \"telosb\""
+  exit 2
+fi
+
+if [ $2 != 'micaz' -a $2 != 'telosb' ]; then
+  echo "\"$2\" is not a supported platform"
   exit 2
 fi
 
 PORT=$1
+PLATFORM=$2
+
 make clean
 
 echo ==================== Compile and load Blink ====================
-make telosb install bsl,$PORT
+if [ $PLATFORM == 'micaz' ]
+then
+  CFLAGS=-DDELUGE_BASESTATION make $PLATFORM install mib510,$PORT
+elif [ $PLATFORM == 'telosb' ]
+then
+  CFLAGS=-DDELUGE_BASESTATION make $PLATFORM install bsl,$PORT
+fi
 
 echo ==================== Compile a new Blink ====================
-CFLAGS=-DBLINK_REVERSE make telosb 
+CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make $PLATFORM 
 
 echo ==================== Upload the image ====================
-../../../../tools/tinyos/misc/tos-deluge $PORT -i 0 build/telosb/tos_image.xml
+../../../../tools/tinyos/misc/tos-deluge $PORT $PLATFORM -i 0 build/$PLATFORM/tos_image.xml
 
 echo ==================== Reboot ====================
-../../../../tools/tinyos/misc/tos-deluge $PORT -r 0 
+../../../../tools/tinyos/misc/tos-deluge $PORT $PLATFORM -r 0 

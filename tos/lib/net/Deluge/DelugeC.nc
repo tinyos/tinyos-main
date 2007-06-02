@@ -39,10 +39,10 @@ implementation
   DelugeP.ReprogNotify -> FlashVolumeManagerC;
   FlashVolumeManagerC.BlockRead[0] -> DelugeStorageC.BlockRead[0];
   FlashVolumeManagerC.BlockWrite[0] -> DelugeStorageC.BlockWrite[0];
-  FlashVolumeManagerC.StorageMap[0] -> DelugeStorageC.StorageMap[0];
+  FlashVolumeManagerC.DelugeStorage[0] -> DelugeStorageC.DelugeStorage[0];
   FlashVolumeManagerC.BlockRead[1] -> DelugeStorageC.BlockRead[1];
   FlashVolumeManagerC.BlockWrite[1] -> DelugeStorageC.BlockWrite[1];
-  FlashVolumeManagerC.StorageMap[1] -> DelugeStorageC.StorageMap[1];
+  FlashVolumeManagerC.DelugeStorage[1] -> DelugeStorageC.DelugeStorage[1];
 #endif
   
   components ObjectTransferC;

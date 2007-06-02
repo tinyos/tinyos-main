@@ -34,7 +34,7 @@ generic configuration FlashVolumeManagerC(am_id_t AMId)
   uses {
     interface BlockRead[uint8_t img_num];
     interface BlockWrite[uint8_t img_num];
-    interface StorageMap[uint8_t img_num];
+    interface DelugeStorage[uint8_t img_num];
   }
 }
 
@@ -47,13 +47,13 @@ implementation
   
   FlashVolumeManagerP.BlockRead[0] = BlockRead[0];
   FlashVolumeManagerP.BlockWrite[0] = BlockWrite[0];
-  FlashVolumeManagerP.StorageMap[0] = StorageMap[0];
+  FlashVolumeManagerP.DelugeStorage[0] = DelugeStorage[0];
   FlashVolumeManagerP.BlockRead[1] = BlockRead[1];
   FlashVolumeManagerP.BlockWrite[1] = BlockWrite[1];
-  FlashVolumeManagerP.StorageMap[1] = StorageMap[1];
+  FlashVolumeManagerP.DelugeStorage[1] = DelugeStorage[1];
   FlashVolumeManagerP.SerialAMSender -> SerialAMSenderC;
   FlashVolumeManagerP.SerialAMReceiver -> SerialAMReceiverC;
-  FlashVolumeManagerP.Leds -> NoLedsC;
+  FlashVolumeManagerP.Leds -> LedsC;
 
 #ifdef DELUGE  
   components NetProgC, new TimerMilliC();

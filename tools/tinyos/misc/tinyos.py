@@ -23,6 +23,10 @@ import struct, time, serial, socket
 # @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
 # @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
 
+###############################################################################
+# TinyOS 2 Python Serial Module
+###############################################################################
+
 class Serial:
     HDLC_FLAG_BYTE = 0x7e
     HDLC_CTLESC_BYTE = 0x7d
@@ -36,12 +40,28 @@ class Serial:
     SERIAL_PROTO_PACKET_ACK = 68
     SERIAL_PROTO_PACKET_NOACK = 69
     SERIAL_PROTO_PACKET_UNKNOWN = 255
-  
-    __s = None       # An instance of serial.Serial object
+    
+    __s = None        # An instance of serial.Serial object
     __debug = False   # Debug mode
     
+    __baud_rate = {}
+    
     def __init__(self, port, baudrate):
-       self.__s = serial.Serial(port, baudrate, rtscts=0, timeout=0.5)
+        __baud_rate = {'telos': 115200, 'telosb': 115200, 
+                       'tmote': 115200, 'micaz': 57600, 
+                       'mica2': 57600, 'mica2dot': 19200, 
+                       'eyes': 115200, 'intelmote2': 115200}
+        
+        # Converts baud rate from platform name to value, if necessary
+        try:
+            int(baudrate)
+        except:
+            baudrate = __baud_rate.get(baudrate)
+        
+        if not baudrate == None:
+            self.__s = serial.Serial(port, baudrate, rtscts=0, timeout=0.5)
+        else:
+            raise ValueError, 'Invalid baud rate'
     
     def __format_packet(self, packet):
         return " ".join(["%02x" % p for p in packet]) + " | " + \
@@ -186,9 +206,10 @@ class Serial:
                     print "Failed to send the packet!" 
                 else:
                     print "Timeout waiting for ACK... Retry"
-                        
+                    
         return False
     
+    # Sets whether debugging message will in this module will be printed
     def set_debug(self, debug):
         self.__debug = debug
 

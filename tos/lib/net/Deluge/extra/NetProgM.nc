@@ -37,10 +37,11 @@ module NetProgM {
     interface Init;
   }
   uses {
-    interface StorageMap[uint8_t img_num];
+    interface DelugeStorage[uint8_t img_num];
     interface InternalFlash as IFlash;
     interface Crc;
     interface DelugeMetadata;
+    interface Leds;
   }
 }
 
@@ -103,7 +104,7 @@ implementation {
     atomic {
       writeTOSinfo();
       
-      args.imageAddr = call StorageMap.getPhysicalAddress[img_num](0);
+      args.imageAddr = call DelugeStorage.getPhysicalAddress[img_num](0);
       args.gestureCount = 0xff;
       args.noReprogram = FALSE;
       call IFlash.write((uint8_t*)TOSBOOT_ARGS_ADDR, &args, sizeof(args));
@@ -122,6 +123,6 @@ implementation {
     return FAIL;
   }
 
-  default command storage_addr_t StorageMap.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0xFFFFFFFF; }
+  default command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0xFFFFFFFF; }
 
 }

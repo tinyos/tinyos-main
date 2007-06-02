@@ -136,12 +136,19 @@ implementation {
     secLength = extFlashReadAddr();
     curAddr = curAddr + 8;
 
-    // check that the image starts on the correct boundary
+#if defined(PLATFORM_TELOSB)
     if (intAddr != TOSBOOT_END) {
+#elif defined(PLATFORM_MICAZ)
+    if (intAddr != 0) {
+#else
+  #error "Target platform is not currently supported by Deluge T2"
+#endif
       call ExtFlash.stopRead();
       return R_INVALID_IMAGE_ERROR;
     }
-
+    
+    call ExtFlash.stopRead();   // MIKE_LIANG
+    
     while ( secLength ) {
       
       pageAddr = newPageAddr = intAddr / TOSBOOT_INT_PAGE_SIZE;
@@ -151,8 +158,10 @@ implementation {
       do {
 
 	// check if secLength is all ones
-	if ( secLength == 0xffffffff )
+	if ( secLength == 0xffffffff ) {
+	  call ExtFlash.stopRead();   // MIKE_LIANG
 	  return FAIL;
+	}
 
 	buf[(uint16_t)intAddr % TOSBOOT_INT_PAGE_SIZE] = call ExtFlash.readByte();
 	intAddr++; curAddr++;
@@ -173,9 +182,9 @@ implementation {
 
       // write out page
       if (call ProgFlash.write(pageAddr*TOSBOOT_INT_PAGE_SIZE, buf,
-			       TOSBOOT_INT_PAGE_SIZE) == FAIL)
+			       TOSBOOT_INT_PAGE_SIZE) == FAIL) {
 	return R_PROGRAMMING_ERROR;
-
+      }
     }
 
     return R_SUCCESS;
@@ -200,7 +209,7 @@ implementation {
       startupLeds();
       runApp();
     }
-
+    
     // get current value of counter
     call IntFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &args, sizeof(args));
 
@@ -213,8 +222,9 @@ implementation {
       // if the golden image is invalid, forget about reprogramming
       // if an error happened during reprogramming, reboot and try again
       //   not much else we can do :-/
-      if (programImage(TOSBOOT_GOLDEN_IMG_ADDR) == R_PROGRAMMING_ERROR)
+      if (programImage(TOSBOOT_GOLDEN_IMG_ADDR) == R_PROGRAMMING_ERROR) {
 	call Hardware.reboot();
+      }
     }
     else {
       // update gesture counter

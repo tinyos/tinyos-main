@@ -24,7 +24,11 @@ bin_SCRIPTS = tos-ident-flags \
 	      tos-write-image \
 	      tos-check-env \
 	      tos-storage-stm25p \
-	      tos-storage-at45db
-	      
+	      tos-storage-at45db \
+	      tos-build-deluge-image \
+	      tos-deluge
 
 bin_PROGRAMS = tos-serial-debug
+
+pythondir = $(bindir)
+python_DATA = tinyos.py

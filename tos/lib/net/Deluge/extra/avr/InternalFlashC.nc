@@ -1,4 +1,8 @@
-/*
+// $Id: InternalFlashC.nc,v 1.1 2007-06-02 00:09:15 razvanm Exp $
+
+/*									tab:2
+ *
+ *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -18,40 +22,44 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2007 Johns Hopkins University.
- * All rights reserved.
- *
  */
 
 /**
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-includes NetProg;
-includes TOSBoot;
+#include "InternalFlash.h"
 
-configuration NetProgC {
-  provides {
-    interface NetProg;
-  }
+module InternalFlashC {
+  provides interface InternalFlash;
 }
 
 implementation {
 
-  components MainC, InternalFlashC as IFlash, CrcP, 
-    DelugeStorageC, NetProgM;
+  command error_t InternalFlash.write(void* addr, void* buf, uint16_t size) {
 
-  NetProg = NetProgM;
+    uint8_t *addrPtr = (uint8_t*)addr;
+    uint8_t *bufPtr = (uint8_t*)buf;
 
-  MainC.SoftwareInit -> NetProgM.Init;
-  NetProgM.DelugeStorage[VOLUME_DELUGE0] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE0];
-  NetProgM.DelugeStorage[VOLUME_DELUGE1] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE1];
-  NetProgM.DelugeMetadata -> DelugeStorageC;
-  NetProgM.IFlash -> IFlash;
-  NetProgM.Crc -> CrcP;
-  
-  components LedsC;
-  NetProgM.Leds -> LedsC;
+    for ( ; size; size-- )
+      eeprom_write_byte(addrPtr++, *bufPtr++);
+
+    while(!eeprom_is_ready());
+
+    return SUCCESS;
+
+  }
+
+  command error_t InternalFlash.read(void* addr, void* buf, uint16_t size) {
+
+    uint8_t *addrPtr = (uint8_t*)addr;
+    uint8_t *bufPtr = (uint8_t*)buf;
+
+    for ( ; size; size-- )
+      *bufPtr++ = eeprom_read_byte(addrPtr++);
+
+    return SUCCESS;
+
+  }
+
 }

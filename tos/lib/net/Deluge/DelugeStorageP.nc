@@ -33,10 +33,16 @@ module DelugeStorageP
     interface BlockWrite as SubBlockWrite[uint8_t img_num];
     interface Boot;
     interface Leds;
+#if defined(PLATFORM_TELOSB)
+    interface StorageMap[uint8_t img_num];
+#elif defined(PLATFORM_MICAZ)
+    interface At45dbVolume[volume_id_t img_num];
+#endif
   }
   provides {
     interface BlockRead[uint8_t img_num];
     interface BlockWrite[uint8_t img_num];
+    interface DelugeStorage[uint8_t img_num];
     interface DelugeMetadata;
     
     interface Notify<uint8_t>;
@@ -170,6 +176,23 @@ implementation
     signal BlockWrite.syncDone[img_num](error);
   }
 
+  command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr)
+  {
+    storage_addr_t p_addr = 0xFFFFFFFF;
+    
+    #if defined(PLATFORM_TELOSB)
+      p_addr = call StorageMap.getPhysicalAddress[img_num](addr);
+    #elif defined(PLATFORM_MICAZ)
+      at45page_t page = call At45dbVolume.remap[img_num]((addr >> AT45_PAGE_SIZE_LOG2));
+      at45pageoffset_t offset = addr & ((1 << AT45_PAGE_SIZE_LOG2) - 1);
+      p_addr = page;
+      p_addr = p_addr << AT45_PAGE_SIZE_LOG2;
+      p_addr += offset;
+    #endif
+    
+    return p_addr;
+  }
+
   default event void BlockRead.readDone[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {}
   default event void BlockRead.computeCrcDone[uint8_t img_num](storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error) {}
   default event void BlockWrite.writeDone[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {}
@@ -185,4 +208,10 @@ implementation
   
   command error_t Notify.enable() { return SUCCESS; }
   command error_t Notify.disable() { return SUCCESS; }
+  
+#if defined(PLATFORM_TELOSB)
+  default command storage_addr_t StorageMap.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0xFFFFFFFF; }
+#elif defined(PLATFORM_MICAZ)
+  default command at45page_t At45dbVolume.remap[volume_id_t volid](at45page_t volumePage) { return 0xFFFF; };
+#endif
 }

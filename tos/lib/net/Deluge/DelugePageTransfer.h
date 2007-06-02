@@ -31,7 +31,14 @@
 #ifndef DELUGEPAGETRANSFER_H
 #define DELUGEPAGETRANSFER_H
 
-#include "extra/telosb/TOSBoot_platform.h"
+#if defined(PLATFORM_TELOSB)
+  #include "extra/telosb/TOSBoot_platform.h"
+#elif defined(PLATFORM_MICAZ)
+  #include "extra/micaz/TOSBoot_platform.h"
+#else
+  #error "Target platform is not currently supported by Deluge T2"
+#endif
+
 #include <message.h>
 
 #define AM_DELUGEADVMSG  161

@@ -31,7 +31,7 @@ configuration DelugeStorageC
   provides {
     interface BlockRead[uint8_t img_num];
     interface BlockWrite[uint8_t img_num];
-    interface StorageMap[uint8_t img_num];
+    interface DelugeStorage[uint8_t img_num];
     interface DelugeMetadata;
     
     interface Notify<uint8_t>;
@@ -40,22 +40,34 @@ configuration DelugeStorageC
 
 implementation
 {
-  components new BlockStorageC(VOLUME_DELUGE0) as BlockStorageC_0;
-  components new BlockStorageC(VOLUME_DELUGE1) as BlockStorageC_1;
   components DelugeStorageP;
 
-  BlockRead[0] = DelugeStorageP.BlockRead[0];
-  BlockWrite[0] = DelugeStorageP.BlockWrite[0];
-  StorageMap[0] = BlockStorageC_0;
-  BlockRead[1] = DelugeStorageP.BlockRead[1];
-  BlockWrite[1] = DelugeStorageP.BlockWrite[1];
-  StorageMap[1] = BlockStorageC_1;
+  BlockRead[VOLUME_DELUGE0] = DelugeStorageP.BlockRead[VOLUME_DELUGE0];
+  BlockWrite[VOLUME_DELUGE0] = DelugeStorageP.BlockWrite[VOLUME_DELUGE0];
+  BlockRead[VOLUME_DELUGE1] = DelugeStorageP.BlockRead[VOLUME_DELUGE1];
+  BlockWrite[VOLUME_DELUGE1] = DelugeStorageP.BlockWrite[VOLUME_DELUGE1];
   DelugeMetadata = DelugeStorageP.DelugeMetadata;
+ 
+  components new BlockStorageC(VOLUME_DELUGE0) as BlockStorageC_0;
+  components new BlockStorageC(VOLUME_DELUGE1) as BlockStorageC_1;
+  DelugeStorageP.SubBlockRead[VOLUME_DELUGE0] -> BlockStorageC_0;
+  DelugeStorageP.SubBlockWrite[VOLUME_DELUGE0] -> BlockStorageC_0;
+  DelugeStorageP.SubBlockRead[VOLUME_DELUGE1] -> BlockStorageC_1;
+  DelugeStorageP.SubBlockWrite[VOLUME_DELUGE1] -> BlockStorageC_1;
+  
+#if defined(PLATFORM_TELOSB)
+  DelugeStorageP.StorageMap[VOLUME_DELUGE0] -> BlockStorageC_0;
+  DelugeStorageP.StorageMap[VOLUME_DELUGE1] -> BlockStorageC_1;
+#elif defined(PLATFORM_MICAZ)
+  components At45dbStorageManagerC;
+  DelugeStorageP.At45dbVolume[VOLUME_DELUGE0] -> At45dbStorageManagerC.At45dbVolume[VOLUME_DELUGE0];
+  DelugeStorageP.At45dbVolume[VOLUME_DELUGE1] -> At45dbStorageManagerC.At45dbVolume[VOLUME_DELUGE1];
+#else
+  #error "Target platform is not currently supported by Deluge T2"
+#endif
 
-  DelugeStorageP.SubBlockRead[0] -> BlockStorageC_0;
-  DelugeStorageP.SubBlockWrite[0] -> BlockStorageC_0;
-  DelugeStorageP.SubBlockRead[1] -> BlockStorageC_1;
-  DelugeStorageP.SubBlockWrite[1] -> BlockStorageC_1;
+  DelugeStorage[VOLUME_DELUGE0] = DelugeStorageP.DelugeStorage[VOLUME_DELUGE0];
+  DelugeStorage[VOLUME_DELUGE1] = DelugeStorageP.DelugeStorage[VOLUME_DELUGE1];
   
   components LedsC, MainC;
   DelugeStorageP.Leds -> LedsC;

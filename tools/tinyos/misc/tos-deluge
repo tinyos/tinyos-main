@@ -28,7 +28,7 @@
 #
 # A command line utility to interact with nodes via a direct serial connection.
 # For the usage menu, please run this tool without any arguments. For example, 
-# "./tos-deluge.py"
+# "./tos-deluge"
 ###############################################################################
 
 import sys, os, stat, struct, subprocess
@@ -57,8 +57,9 @@ ERROR_SUCCESS = 0   # T2-compatible
 ERROR_FAIL    = 1   # T2-compatible
 
 # Deluge-specific parameters
+DELUGE_PLATFORMS       = ["telosb", "micaz"]   # Currently supported platforms
 DELUGE_MAX_PAGES       = 128
-DELUGE_METADATA_OFFSET = 0
+DELUGE_METADATA_OFFSET = 0   # Location offset in the image
 DELUGE_METADATA_SIZE   = 16
 DELUGE_IDENT_OFFSET    = 16 + (2 * DELUGE_MAX_PAGES)
 DELUGE_IDENT_SIZE      = 16 + 16 + 16 + 16 + 4 + 4 + 4 + 4   # Metadata size in binary 
@@ -374,49 +375,57 @@ def op_reset(s, img_num):
     return True
       
 def print_usage():
-    print "Usage: %s <device> <-p|-i|-r|-d|-e|-s> image_number [options]" % sys.argv[0]
+    print "Usage: %s <device_port> <baud_rate> <-p|-i|-r|-d|-e|-s> image_number [options]" % sys.argv[0]
+    print "  <baud_rate>\n     Either the platform name or the baud rate value"
+    print "      -------------------"
+    print "      | micaz  |  57600 |"
+    print "      ---------+---------"
+    print "      | telosb | 115200 |"
+    print "      -------------------"
+    print ""
     print "  -p --ping\n     Provide status of the image in the external flash"
     print "  -i --inject\n     Inject a compiled TinyOS application"
-    print "      [options]: <tos_image.xml file path>"
+    print "      [options]: tos_image.xml file path"
     print "  -r --reboot\n     Reboot and reprogram the directly-connected mote"
     print "  -d --dissemination\n     Disseminate the image in the external flash to the network"
     print "  -e --erase\n     Erase an image in the external flash"
     print "  -s --reset\n     Reset the versioning information for a given image"
 
 # ======== MAIN ======== #
-num_req_arg = 4   # Minimum number of required arguments for this script
+num_req_arg = 5   # Minimum number of required arguments for this script
 if len(sys.argv) >= num_req_arg:
+    # Checks for valid image number format
     try:
-        sys.argv[3] = int(sys.argv[3])
+        sys.argv[4] = int(sys.argv[4])
     except:
-        print "ERROR: Volume ID is not valid"
+        print "ERROR: Image number is not valid"
         os._exit(-1)
     
     # Initializes serial port communication
     try:
-        s = tinyos.Serial(sys.argv[1], 115200)
-        s.set_debug(False)   # Disables debug msg
+        s = tinyos.Serial(sys.argv[1], sys.argv[2])
+        s.set_debug(False)
     except:
-        print "ERROR: Unable to initialize serial port connection"
+        print "ERROR: Unable to initialize serial port connection to", sys.argv[1]
         os._exit(-1)
     
-    if sys.argv[2] in ["-p", "--ping"]:
+    if sys.argv[3] in ["-p", "--ping"]:
         print "Pinging node ..."
-        op_ping(s, sys.argv[3]) 
-    elif sys.argv[2] in ["-i", "--inject"] and len(sys.argv) == (num_req_arg + 1):
+        op_ping(s, sys.argv[4]) 
+    elif sys.argv[3] in ["-i", "--inject"] and len(sys.argv) == (num_req_arg + 1):
         print "Pinging node ..."
-        op_inject(s, sys.argv[3], sys.argv[4])
-    elif sys.argv[2] in ["-r", "--reboot"]:
-        if op_reprog(s, sys.argv[3]):
+        op_inject(s, sys.argv[4], sys.argv[5])
+    elif sys.argv[3] in ["-r", "--reboot"]:
+        if op_reprog(s, sys.argv[4]):
             print "Command sent"
-    elif sys.argv[2] in ["-d", "--dissemination"]:
-        if op_diss(s, sys.argv[3]):
+    elif sys.argv[3] in ["-d", "--dissemination"]:
+        if op_diss(s, sys.argv[4]):
             print "Command sent"
-    elif sys.argv[2] in ["-e", "--erase"]:
-        if op_erase(s, sys.argv[3]):
-            print "Image number %d erased" % sys.argv[3]
-    elif sys.argv[2] in ["-s", "--reset"]:
-        if op_reset(s, sys.argv[3]):
+    elif sys.argv[3] in ["-e", "--erase"]:
+        if op_erase(s, sys.argv[4]):
+            print "Image number %d erased" % sys.argv[4]
+    elif sys.argv[3] in ["-s", "--reset"]:
+        if op_reset(s, sys.argv[4]):
             print "Successfully reset image versioning information"
     else:
         print_usage()

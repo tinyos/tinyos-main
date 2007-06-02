@@ -42,7 +42,10 @@ configuration BlinkAppC
 }
 implementation
 {
-  components MainC, BlinkC, LedsC, DelugeC;
+  components MainC, BlinkC, LedsC;
+#ifdef DELUGE
+  components DelugeC;
+#endif
   components new TimerMilliC() as Timer0;
 
   BlinkC -> MainC.Boot;

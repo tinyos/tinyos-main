@@ -34,7 +34,7 @@ generic module FlashVolumeManagerP()
   uses {
     interface BlockRead[uint8_t img_num];
     interface BlockWrite[uint8_t img_num];
-    interface StorageMap[uint8_t img_num];
+    interface DelugeStorage[uint8_t img_num];
     interface AMSend as SerialAMSender;
     interface Receive as SerialAMReceiver;
     interface Leds;
@@ -121,12 +121,17 @@ implementation
   event void BlockWrite.eraseDone[uint8_t img_num](error_t error)
   {
     if (state == S_ERASE) {
+      call BlockWrite.sync[img_num]();
+    }
+  }
+  
+  event void BlockWrite.syncDone[uint8_t img_num](error_t error)
+  {
+    if (state == S_ERASE) {
       state = S_IDLE;
       sendReply(error, sizeof(SerialReplyPacket));
     }
   }
-  
-  event void BlockWrite.syncDone[uint8_t img_num](error_t error) {}
   
   event void SerialAMSender.sendDone(message_t* msg, error_t error) {}
   
@@ -136,44 +141,55 @@ implementation
     SerialReqPacket *srpkt = (SerialReqPacket *)payload;
     SerialReplyPacket *serialMsg_payload =
                               (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg);
+    uint8_t img_num = 0xFF;
+    
+    // Converts the image number that the user wants to the real image number
+    switch (srpkt->img_num) {
+      case 0:
+        img_num = VOLUME_DELUGE0;
+        break;
+      case 1:
+        img_num = VOLUME_DELUGE1;
+        break;
+    }
     
     switch (srpkt->msg_type) {
       case SERIALMSG_ERASE:    // === Erases a volume ===
         state = S_ERASE;
-        error = call BlockWrite.erase[srpkt->img_num]();
+        error = call BlockWrite.erase[img_num]();
         break;
       case SERIALMSG_WRITE:    // === Writes to a volume ===
         state = S_WRITE;
         memcpy(buffer, srpkt->data, srpkt->len);
-        error = call BlockWrite.write[srpkt->img_num](srpkt->offset,
+        error = call BlockWrite.write[img_num](srpkt->offset,
                                                       buffer,
                                                       srpkt->len);
         break;
       case SERIALMSG_READ:     // === Reads a portion of a volume ===
         state = S_READ;
-        error = call BlockRead.read[srpkt->img_num](srpkt->offset,
+        error = call BlockRead.read[img_num](srpkt->offset,
                                                     serialMsg_payload->data,
                                                     srpkt->len);
         break;
       case SERIALMSG_CRC:      // === Computes CRC over a portion of a volume ===
         state = S_CRC;
-        error = call BlockRead.computeCrc[srpkt->img_num](srpkt->offset,
+        error = call BlockRead.computeCrc[img_num](srpkt->offset,
                                                           srpkt->len, 0);
         break;
       case SERIALMSG_ADDR:     // === Gets the physical starting address of a volume ===
 	*(nx_uint32_t*)(&serialMsg_payload->data) =
-	                      (uint32_t)call StorageMap.getPhysicalAddress[srpkt->img_num](0);
+	                      (uint32_t)call DelugeStorage.getPhysicalAddress[img_num](0);
 	sendReply(SUCCESS, sizeof(SerialReplyPacket) + 4);
         break;
 #ifdef DELUGE
       case SERIALMSG_REPROG:   // === Reboots and reprograms ===
         state = S_REPROG;
         sendReply(SUCCESS, sizeof(SerialReplyPacket));
-        img_num_reboot = srpkt->img_num;
+        img_num_reboot = img_num;
 	call Timer.startOneShot(1024);
 	break;
       case SERIALMSG_DISS:     // === Starts disseminating a volume ===
-	signal Notify.notify(srpkt->img_num);   // Notifies Deluge to start disseminate
+	signal Notify.notify(img_num);   // Notifies Deluge to start disseminate
 	sendReply(SUCCESS, sizeof(SerialReplyPacket));
 	break;
 #endif
@@ -205,5 +221,5 @@ implementation
   default command error_t BlockRead.read[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
   default command error_t BlockRead.computeCrc[uint8_t img_num](storage_addr_t addr, storage_len_t len, uint16_t crc) { return FAIL; }
 
-  default command storage_addr_t StorageMap.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0; }
+  default command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0; }
 }

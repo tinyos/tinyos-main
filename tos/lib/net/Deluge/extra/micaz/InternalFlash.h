@@ -1,5 +1,9 @@
-/*
- * "Copyright (c) 2000-2005 The Regents of the University  of California.  
+// $Id: InternalFlash.h,v 1.1 2007-06-02 00:09:15 razvanm Exp $
+
+/*                                                                      tab:4
+ *
+ *
+ * "Copyright (c) 2000-2004 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -18,40 +22,20 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2007 Johns Hopkins University.
- * All rights reserved.
- *
  */
 
 /**
+ * InternalFlash.h - Internal flash implementation for the avr
+ * platform.
+ *
+ * Valid address range is 0x0 - 0xFFF.
+ *
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-includes NetProg;
-includes TOSBoot;
+#ifndef __INTERNAL_FLASH_H__
+#define __INTERNAL_FLASH_H__
 
-configuration NetProgC {
-  provides {
-    interface NetProg;
-  }
-}
+#include <avr/eeprom.h>
 
-implementation {
-
-  components MainC, InternalFlashC as IFlash, CrcP, 
-    DelugeStorageC, NetProgM;
-
-  NetProg = NetProgM;
-
-  MainC.SoftwareInit -> NetProgM.Init;
-  NetProgM.DelugeStorage[VOLUME_DELUGE0] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE0];
-  NetProgM.DelugeStorage[VOLUME_DELUGE1] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE1];
-  NetProgM.DelugeMetadata -> DelugeStorageC;
-  NetProgM.IFlash -> IFlash;
-  NetProgM.Crc -> CrcP;
-  
-  components LedsC;
-  NetProgM.Leds -> LedsC;
-}
+#endif
