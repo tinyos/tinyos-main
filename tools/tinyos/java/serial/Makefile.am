@@ -19,7 +19,7 @@ toscomm_dll_SOURCES = \
   TOSComm_wrap.cxx
 
 libtoscomm.so: $(libtoscomm_so_SOURCES)
-	$(CXX) -O2 -shared -fPIC "-I$(JDK)/include" "-I$(JDK)/include/linux" \
+	$(CXX) -m32 -O2 -shared -fPIC "-I$(JDK)/include" "-I$(JDK)/include/linux" \
 	  -o $@ NativeSerial_linux.cpp
 
 toscomm.dll: $(toscomm_dll_SOURCES)

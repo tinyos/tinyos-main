@@ -1,4 +1,4 @@
-//$Id: NativeSerial_linux.cpp,v 1.4 2006-12-12 18:23:02 vlahan Exp $
+//$Id: NativeSerial_linux.cpp,v 1.5 2007-06-05 21:08:55 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -348,22 +348,23 @@ note( "waitForEvent begin" );
     fd_set input;
     struct timeval tv;
     m_events_out = 0;
+    int fd = m_fd;
 
     while( m_wait_for_events && (m_fd != -1) && (m_events_out == 0) )
     {
       FD_ZERO( &input );
-      FD_SET( m_fd, &input );
+      FD_SET( fd, &input );
       tv.tv_sec = 0;
       tv.tv_usec = 100*1000; // 1ms is the minimum resolution, at best
 
-      if( select( m_fd+1, &input, NULL, NULL, &tv ) == -1 )
+      if( select( fd+1, &input, NULL, NULL, &tv ) == -1 )
       {
 	if( errno == EINTR )
 	  break;
 	errno_wrap( true, "waitForEvent.select" );
       }
 
-      if( FD_ISSET( m_fd, &input ) )
+      if( FD_ISSET( fd, &input ) )
 	m_events_out |= DATA_AVAILABLE;
     }
 
