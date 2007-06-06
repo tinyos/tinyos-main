@@ -58,12 +58,21 @@ if [ $? -ne 0 ]; then
   echo "Java not found, not installing JNI code"
   exit 0
 fi
-echo "Installing Java JNI code in $jni ... "
 %ifos linux
-for lib in $RPM_INSTALL_PREFIX/lib/tinyos/*.so; do 
-  install $lib "$jni" || exit 0
+java=`$RPM_INSTALL_PREFIX/bin/tos-locate-jre --java`
+bits=32
+if [ $? -ne 0 ]; then
+  echo "java command not found - assuming 32 bits"
+elif file -L $java/java | grep -q 64-bit; then
+  bits=64
+fi
+echo "Installing $bits-bit Java JNI code in $jni ... "
+for lib in $tinyoslibdir/*-$bits.so; do 
+  realname=`basename $lib | sed -e s/-$bits\.so/.so/`
+  install $lib "$jni/$realname" || exit 1
 done
 %else
+echo "Installing Java JNI code in $jni ... "
 for lib in $RPM_INSTALL_PREFIX/lib/tinyos/*.dll; do 
   install --group=SYSTEM $lib "$jni" || exit 0
 done

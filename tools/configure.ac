@@ -73,12 +73,14 @@ case $host in
     AC_MSG_RESULT(yes)
     JNIPREFIX=
     JNISUFFIX=dll
+    JNIVERSIONS=.
     INSTALLJNI="install --group=SYSTEM"
     CYGWIN=yes
     ;;
   *)
     JNIPREFIX=lib
     JNISUFFIX=so
+    JNIVERSIONS="-32. -64."
     INSTALLJNI="install"
     AC_MSG_RESULT(no)
 esac
@@ -93,8 +95,14 @@ fi
 JDK=`dirname "$JAVAC_DIR"`
 AC_MSG_RESULT($JDK)
 
-GETENVLIB=${JNIPREFIX}getenv.$JNISUFFIX
-TOSCOMMLIB=${JNIPREFIX}toscomm.$JNISUFFIX
+function jnimap {
+  for v in $JNIVERSIONS; do
+    echo -n "${JNIPREFIX}$1$v$JNISUFFIX "
+  done
+}
+
+GETENVLIB=`jnimap getenv`
+TOSCOMMLIB=`jnimap toscomm`
 
 AC_SUBST(GETENVLIB)
 AC_SUBST(TOSCOMMLIB)

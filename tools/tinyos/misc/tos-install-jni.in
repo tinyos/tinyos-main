@@ -9,8 +9,24 @@ if [ $? -ne 0 ]; then
   echo "Java not found, not installing JNI code"
   exit 1
 fi
-echo "Installing Java JNI code in $jni ... "
-for lib in $tinyoslibdir/*.@JNISUFFIX@; do 
-  @INSTALLJNI@ $lib "$jni" || exit 1
-done
+
+if cygpath -w / >/dev/null 2>/dev/null; then
+  echo "Installing Java JNI code in $jni ... "
+  for lib in $tinyoslibdir/*.@JNISUFFIX@; do 
+    @INSTALLJNI@ $lib "$jni" || exit 1
+  done
+else
+  java=`tos-locate-jre --java`
+  bits=32
+  if [ $? -ne 0 ]; then
+    echo "java command not found - assuming 32 bits"
+  elif file -L $java/java | grep -q 64-bit; then
+    bits=64
+  fi
+  echo "Installing $bits-bit Java JNI code in $jni ... "
+  for lib in $tinyoslibdir/*-$bits.@JNISUFFIX@; do 
+    realname=`basename $lib | sed -e s/-$bits\.@JNISUFFIX@/.@JNISUFFIX@/`
+    @INSTALLJNI@ $lib "$jni/$realname" || exit 1
+  done
+fi
 echo "done."
