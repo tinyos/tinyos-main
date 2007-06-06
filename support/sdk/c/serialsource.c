@@ -193,7 +193,9 @@ static void message(serial_source src, serial_source_msg msg)
 }
 
 /* Work around buggy usb serial driver (returns 0 when no data is
-   available, independent of the blocking/non-blocking mode) */
+   available, independent of the blocking/non-blocking mode).
+   Mac OS X seems to like to do this too (at least with a Keyspan 49WG)
+*/
 static int buggyread(serial_source src, void *buffer, int n)
 {
   fd_set fds;
@@ -206,7 +208,6 @@ static int buggyread(serial_source src, void *buffer, int n)
 	{
 	  cnt = -1;
 	  errno = EAGAIN;
-	  printf("foo\n");
 	}
       return cnt;
     }
@@ -590,6 +591,7 @@ static void read_and_process(serial_source src)
 	  else
 	    {
 	      message(src, msg_bad_crc);
+	      free(received);
 	      /* We don't lose sync here. If we did, garbage on the line
 		 at startup will cause loss of the first packet. */
 	      continue;

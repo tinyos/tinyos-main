@@ -87,6 +87,7 @@ void rem_client(struct client_list **c)
 
 void new_client(int fd)
 {
+  fcntl(fd, F_SETFL, 0);
   if (init_sf_source(fd) < 0)
     close(fd);
   else
