@@ -603,8 +603,9 @@ for i in range(0, 7):
       <p>CPM can use a good deal of RAM: using the entire meyer-heavy
       trace as input has a cost of approximately 10MB per node. You
       can reduce this overhead by using a shorter trace; this will of
-      course reduce simulation fidelity. Future versions of TOSSIM
-      will reduce this greatly through optimization.</p>
+      course reduce simulation fidelity. <u>The trace
+      must be at least 100 entries long, or CPM will not work as it does
+      not have enough data to generate a statistical model.</u> </p>
 
       <p>You can also use 
       <p>The Radio object only deals with physical layer
@@ -898,7 +899,10 @@ java net.tinyos.sim.PropagationModel config.txt
         variables properly. You do this by instantiating a Python
         object that parses the XML file to extract all of the relevant
         information. You have to import the Python support package for
-        TOSSIM to do this:</p>
+        TOSSIM to do this. First, set your PYTHONPATH environment variable
+	to point to <tt>tinyos-2.x/support/sdk/python</tt>. This tells
+	Python where to find the TOSSIM packages. Then, in an interpreter
+	type this:</p>
 
         <pre>
 from tinyos.tossim.TossimApp import *
