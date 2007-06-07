@@ -10,7 +10,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-if cygpath -w / >/dev/null 2>/dev/null; then
+if [ cygpath -w / >/dev/null 2>/dev/null ] || [ `uname` == "Darwin" ]; then
   echo "Installing Java JNI code in $jni ... "
   for lib in $tinyoslibdir/*.@JNISUFFIX@; do 
     @INSTALLJNI@ $lib "$jni" || exit 1

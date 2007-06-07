@@ -49,6 +49,11 @@ case `uname` in
     jhome=`cygpath -u "$jhome"`
     ;;
 
+    Darwin)
+    #Just statically typed in, uses default location of installation for XTools.  May need to be fixed
+    jhome=/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK
+    ;;
+
     Linux)
     # Check gentoo java configuration
     javapath=`java-config -c 2>/dev/null`
@@ -108,7 +113,9 @@ if [ "$jni" = "yes" ]; then
     # Look for a likely JNI directory
     # Windows, and IBM Java: in jre/bin
     # Sun Java on Linux: in jre/lib/i386
-    if "$jhome/bin/java" -version 2>&1 | grep -q IBM || cygpath -w / >/dev/null 2>/dev/null; then
+    if [ `uname` = "Darwin" ]; then 
+	jnilocate "/Library/java/Extensions"
+    elif "$jhome/bin/java" -version 2>&1 | grep -q IBM || cygpath -w / >/dev/null 2>/dev/null; then
 	jnilocate "$jhome/jre/bin" || jnilocate "$jhome/bin"
     else
 	arch=`uname -m`
@@ -118,9 +125,17 @@ if [ "$jni" = "yes" ]; then
 	    jnilocate "$jhome/lib/i386"
     fi
 elif [ "$javac" = "yes" ]; then
- dir="$jhome/bin"
+ if [ `uname` = "Darwin" ]; then
+   dir="$jhome/Commands"
+ else 
+   dir="$jhome/bin"
+ fi
 elif [ "$java" = "yes" ]; then
- dir="$jhome/bin"
+ if [ `uname` = "Darwin" ]; then  
+   dir="$jhome/Commands"
+ else 
+   dir="$jhome/bin"
+ fi
 fi
 
 # Check that what we found actually exists
