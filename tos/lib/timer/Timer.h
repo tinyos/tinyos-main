@@ -1,4 +1,4 @@
-//$Id: Timer.h,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+//$Id: Timer.h,v 1.5 2007-06-07 16:57:22 idgay Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -26,9 +26,9 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-typedef struct { } TMilli;
-typedef struct { } T32khz;
-typedef struct { } TMicro;
+typedef struct { int notUsed; } TMilli;
+typedef struct { int notUsed; } T32khz;
+typedef struct { int notUsed; } TMicro;
 
 #define UQ_TIMER_MILLI "HilTimerMilliC.Timer"
 #define UQ_TIMER_32KHZ "HilTimer32khzC.Timer"
