@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2007-04-18 15:12:45 $
+ * @version $Revision: 1.6 $ $Date: 2007-06-07 16:14:22 $
  */
 
 #include <Stm25p.h>
@@ -199,6 +199,18 @@ implementation {
     
   }
   
+  uint8_t calcSector( uint8_t client, stm25p_addr_t addr ) {
+    uint8_t sector = call Sector.getNumSectors[ client ]();
+    return (uint8_t)( addr >> STM25P_SECTOR_SIZE_LOG2 ) % sector;
+  }
+
+  stm25p_addr_t calcAddr( uint8_t client, stm25p_addr_t addr  ) {
+    stm25p_addr_t result = calcSector( client, addr );
+    result <<= STM25P_SECTOR_SIZE_LOG2;
+    result |= addr & STM25P_SECTOR_MASK;
+    return result;
+  }
+
   event void ClientResource.granted[ uint8_t id ]() {
 
     // log never used, need to find start and end of log
@@ -228,12 +240,12 @@ implementation {
 	      (storage_cookie_t)(writeSector-numSectors)
 		<<STM25P_SECTOR_SIZE_LOG2;
 	  }
-	  m_log_info[ id ].read_addr = m_log_state[ id ].cookie & BLOCK_MASK;
+	  m_log_info[ id ].read_addr = m_log_state[ id ].cookie & ~BLOCK_MASK;
 	  m_log_info[ id ].remaining = 0;
 	  m_rw_state = S_SEARCH_SEEK;
 	  if ( m_log_info[ id ].read_addr != m_log_state[ id ].cookie )
-	    call Sector.read[ id ]( m_log_info[ id ].read_addr, &m_header,
-				    sizeof( m_header ) );
+	    call Sector.read[ id ]( calcAddr( id, m_log_info[ id ].read_addr ),
+				    &m_header, sizeof( m_header ) );
 	  else
 	    signalDone( id, SUCCESS );
 	}
@@ -253,18 +265,6 @@ implementation {
       }
     }
     
-  }
-
-  uint8_t calcSector( uint8_t client, stm25p_addr_t addr ) {
-    uint8_t sector = call Sector.getNumSectors[ client ]();
-    return (uint8_t)( addr >> STM25P_SECTOR_SIZE_LOG2 ) % sector;
-  }
-
-  stm25p_addr_t calcAddr( uint8_t client, stm25p_addr_t addr  ) {
-    stm25p_addr_t result = calcSector( client, addr );
-    result <<= STM25P_SECTOR_SIZE_LOG2;
-    result |= addr & STM25P_SECTOR_MASK;
-    return result;
   }
 
   void continueReadOp( uint8_t client ) {
@@ -317,7 +317,7 @@ implementation {
     switch( m_rw_state ) {
     case S_SEARCH_BLOCKS: 
       {
-	uint8_t block = addr >> BLOCK_SIZE_LOG2;
+	uint16_t block = addr >> BLOCK_SIZE_LOG2;
 	// record potential starting and ending addresses
 	if ( m_addr != STM25P_INVALID_ADDRESS ) {
 	  if ( m_addr < log_info->read_addr )
@@ -355,8 +355,8 @@ implementation {
 	// if header is valid and is on same block, move to next record
 	if ( m_header != INVALID_HEADER && cur_block == new_block ) {
 	  log_info->write_addr += sizeof( m_header ) + m_header;
-	  call Sector.read[ id ]( log_info->write_addr, &m_header,
-				  sizeof( m_header ) );
+	  call Sector.read[ id ]( calcAddr( id, log_info->write_addr ), 
+				  &m_header, sizeof( m_header ) );
 	}
 	// found last record
 	else {
@@ -370,7 +370,7 @@ implementation {
 	// searching for last log record to read
 	log_info->read_addr += sizeof( m_header ) + m_header;
 	// if not yet at cookie, keep searching
-	if ( log_info->read_addr < m_log_state->cookie ) {
+	if ( log_info->read_addr < m_log_state[ id ].cookie ) {
 	  call Sector.read[ id ]( log_info->read_addr, &m_header,
 				  sizeof( m_header ) );
 	}
@@ -454,7 +454,7 @@ implementation {
       // (the log could have cycled around)
       stm25p_addr_t volume_size = 
 	STM25P_SECTOR_SIZE * ( call Sector.getNumSectors[ id ]() - 1 );
-      if ( m_log_info[ id ].write_addr >= volume_size ) {
+      if ( m_log_info[ id ].write_addr > volume_size ) {
 	stm25p_addr_t read_addr = m_log_info[ id ].write_addr - volume_size;
 	if ( m_log_info[ id ].read_addr < read_addr )
 	  m_log_info[ id ].read_addr = read_addr;
