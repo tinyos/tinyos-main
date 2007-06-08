@@ -1,5 +1,12 @@
 #!/bin/bash
 
+TOS_DELUGE=`type -p tos-deluge`
+if [[ ! -x ${TOS_DELUGE} ]] ; then 
+    TOS_DELUGE=../../../../tools/tinyos/misc/tos-deluge
+fi 
+
+echo ${TOS_DELUGE}
+
 if [ $# -ne 2 ]; then
   echo "Usage: $0 <port> <platform>"
   echo "<port>       For example, /dev/ttyUSB0"
@@ -30,7 +37,7 @@ echo ==================== Compile a new Blink ====================
 CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make $PLATFORM 
 
 echo ==================== Upload the image ====================
-../../../../tools/tinyos/misc/tos-deluge $PORT $PLATFORM -i 0 build/$PLATFORM/tos_image.xml
+${TOS_DELUGE} $PORT $PLATFORM -i 0 build/$PLATFORM/tos_image.xml
 
 echo ==================== Reboot ====================
-../../../../tools/tinyos/misc/tos-deluge $PORT $PLATFORM -r 0 
+${TOS_DELUGE} $PORT $PLATFORM -r 0 
