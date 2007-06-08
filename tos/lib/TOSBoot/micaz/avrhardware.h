@@ -1,4 +1,4 @@
-// $Id: avrhardware.h,v 1.1 2007-05-22 20:34:21 razvanm Exp $
+// $Id: avrhardware.h,v 1.2 2007-06-08 16:56:38 razvanm Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -52,8 +52,12 @@
 
 #ifdef TOSH_NEW_AVRLIBC
 #include <avr/io.h>
-#include <avr/signal.h>
+#if __AVR_LIBC_VERSION__ >= 10400UL
 #include <avr/interrupt.h>
+#else
+#include <avr/interrupt.h>
+#include <avr/signal.h>
+#endif
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
