@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: bnp.extra,v 1.1 2007-05-22 20:34:20 razvanm Exp $
+#$Id: bnp.extra,v 1.2 2007-06-08 16:53:05 razvanm Exp $
 
 DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
 DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
@@ -19,6 +19,12 @@ ifeq ($(TINYOS_NP),BNP)
     ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
       BOOTLOADER := $(shell cygpath -m $(BOOTLOADER))
     endif
+  endif
+
+  ifeq ($(TARGETS),micaz)
+    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/avr -I$(DELUGE_EXTRA)/micaz -I$(DELUGE_EXTRA)/mica2
+    BOOTLOADER ?= $(TOSBOOT_DIR)/micaz/main.ihex
+    AVR_FUSE_H ?= 0xda
   endif
 
 endif
