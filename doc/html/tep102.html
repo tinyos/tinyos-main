@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Timers</title>
 <meta name="author" content="Cory Sharp, Martin Turon, David Gay" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-05-23 21:41:57 $
-:version: $Revision: 1.8 $
+:date: $Date: 2007-06-11 20:42:35 $
+:version: $Revision: 1.9 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -216,11 +216,7 @@ pre.line-block {
 pre.literal-block, pre.doctest-block {
   margin-left: 2em ;
   margin-right: 2em ;
-  background-color: #eeeeee;
-  border-color: #000000;
-  border-width: thin; 
-  font-size: 14px
-}
+  background-color: #eeeeee }
 
 span.classifier {
   font-family: sans-serif ;
@@ -275,7 +271,10 @@ th.docinfo-name, th.field-name {
 h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
   font-size: 100% }
 
-tt {}
+tt {
+  font: Courier,monospaced;
+  font-size: 12px;
+  background-color: #eeeeee }
 
 ul.auto-toc {
   list-style-type: none }
@@ -303,7 +302,7 @@ ul.auto-toc {
 <td>Cory Sharp, Martin Turon, David Gay</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">22-Sep-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.9</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-05-23</td>
 </tr>
@@ -375,11 +374,10 @@ reasonably accommodating other precisions. The use of &quot;binary&quot; units
 is motivated by the common availability of hardware clocks driven
 by a 32768Hz crystal.</p>
 <p>Examples of widths are 8-bit, 16-bit, 32-bit, and 64-bit.  The width
-for timer interfaces and components SHOULD be 32-bits.  That is, for
-lack of a good reason, timer interfaces should expose a 32-bit
-interface.  In a number of circumstances there are good reasons not
-to expose a 32-bit interface.  This TEP emphasizes 32-bit widths
-while reasonably accommodating other widths.</p>
+for timer interfaces and components SHOULD be 32-bits.  This TEP
+emphasizes 32-bit widths while reasonably accommodating other widths -
+a particular platform may have good reasons not to expose a 32-bit
+interface.</p>
 <p>Accuracy reflects how closely a component conforms to the precision it
 claims to provide. Accuracy is affected by issues such as clock drift (much
 higher for internal vs crystal oscillators) and hardware limitations. As an
@@ -482,7 +480,7 @@ stop.</dd>
 <dt>stop()</dt>
 <dd>cancel any previously running alarm.</dd>
 <dt>fired()</dt>
-<dd>signals that the alarm has occurred.</dd>
+<dd>signals that the alarm has expired.</dd>
 <dt>isRunning()</dt>
 <dd>return TRUE if the alarm has been started and has not been cancelled
 or has not yet fired.  FALSE is returned otherwise.</dd>
@@ -517,7 +515,7 @@ reasonably efficient or accurate.  The BusyWait interface replaces
 the TOSH_uwait macro from TinyOS 1.x.</p>
 <p>BusyWait blocks for no less than the specified amount of time.  No
 explicit upper bound is imposed on the enacted delay, though it is
-expected the underlying implementation spins in a busy loop until
+expected that the underlying implementation spins in a busy loop until
 the specified amount of time has elapsed.</p>
 <pre class="literal-block">
 interface BusyWait&lt;precision_tag,size_type&gt;
@@ -583,10 +581,10 @@ stop.</dd>
 <dt>stop()</dt>
 <dd>cancel any previously running timer.</dd>
 <dt>fired()</dt>
-<dd>signals that the timer has occurred.</dd>
+<dd>signals that the timer has expired (one-shot) or repeated (periodic).</dd>
 <dt>isRunning()</dt>
 <dd>return TRUE if the timer has been started and has not been cancelled
-and has not fired for the case of one-shot timers.  One a periodic
+and has not fired for the case of one-shot timers.  Once a periodic
 timer is started, isRunning will return TRUE until it is cancelled.</dd>
 <dt>isOneShot()</dt>
 <dd>return TRUE if the timer is a one-shot timer.  Return FALSE
@@ -655,8 +653,8 @@ generic configuration Alarm32khz8C()
   provides interface Alarm&lt; T32khz, uint8_t &gt;;
 }
 </pre>
-<p>This pattern MAY be used to defined components for the platform that
-are mutually incompatible in single application.  Incompatible
+<p>This pattern MAY be used to define components for the platform that
+are mutually incompatible in a single application.  Incompatible
 components SHOULD produce compile-time errors when compiled
 together.</p>
 </div>
@@ -851,7 +849,7 @@ generic component VirtualizeTimerC( typedef precision_tag, int max_timers )
 <li><tt class="docutils literal"><span class="pre">VirtualizeTimerC.nc</span></tt></li>
 </ul>
 </blockquote>
-<p>The implementation of Timers for the MSP430 is in
+<p>The implementation of timers for the MSP430 is in
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/msp430/timer</span></tt>:</p>
 <blockquote>
 <ul class="simple">
@@ -895,6 +893,9 @@ capture/compare special function registers</li>
 special function registers</li>
 </ul>
 </blockquote>
+<p>Implementation of timers for the ATmega128 and PXA27x may be found in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128/timer</span></tt> and
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/pxa27x/timer</span></tt> respectively.</p>
 </div>
 <div class="section">
 <h1><a id="author-s-address" name="author-s-address">7. Author's Address</a></h1>

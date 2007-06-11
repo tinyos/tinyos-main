@@ -10,8 +10,8 @@ Timers
 :Author: Cory Sharp, Martin Turon, David Gay
 
 :Draft-Created: 22-Sep-2004
-:Draft-Version: $Revision: 1.9 $
-:Draft-Modified: $Date: 2007-05-23 21:41:58 $
+:Draft-Version: $Revision: 1.10 $
+:Draft-Modified: $Date: 2007-06-11 20:42:35 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -87,11 +87,10 @@ is motivated by the common availability of hardware clocks driven
 by a 32768Hz crystal.
 
 Examples of widths are 8-bit, 16-bit, 32-bit, and 64-bit.  The width
-for timer interfaces and components SHOULD be 32-bits.  That is, for
-lack of a good reason, timer interfaces should expose a 32-bit
-interface.  In a number of circumstances there are good reasons not
-to expose a 32-bit interface.  This TEP emphasizes 32-bit widths
-while reasonably accommodating other widths.
+for timer interfaces and components SHOULD be 32-bits.  This TEP
+emphasizes 32-bit widths while reasonably accommodating other widths -
+a particular platform may have good reasons not to expose a 32-bit
+interface.
 
 Accuracy reflects how closely a component conforms to the precision it
 claims to provide. Accuracy is affected by issues such as clock drift (much
@@ -203,7 +202,7 @@ stop()
   cancel any previously running alarm.
 
 fired() 
-  signals that the alarm has occurred.
+  signals that the alarm has expired.
 
 isRunning() 
   return TRUE if the alarm has been started and has not been cancelled
@@ -242,7 +241,7 @@ the TOSH_uwait macro from TinyOS 1.x.
 
 BusyWait blocks for no less than the specified amount of time.  No
 explicit upper bound is imposed on the enacted delay, though it is
-expected the underlying implementation spins in a busy loop until
+expected that the underlying implementation spins in a busy loop until
 the specified amount of time has elapsed.
 ::
 
@@ -311,11 +310,11 @@ stop()
   cancel any previously running timer.
 
 fired()
-  signals that the timer has occurred.
+  signals that the timer has expired (one-shot) or repeated (periodic).
 
 isRunning() 
   return TRUE if the timer has been started and has not been cancelled
-  and has not fired for the case of one-shot timers.  One a periodic
+  and has not fired for the case of one-shot timers.  Once a periodic
   timer is started, isRunning will return TRUE until it is cancelled.
 
 isOneShot() 
@@ -392,8 +391,8 @@ ${P}=32khz and ${W}=16 are::
     provides interface Alarm< T32khz, uint8_t >;
   }
 
-This pattern MAY be used to defined components for the platform that
-are mutually incompatible in single application.  Incompatible
+This pattern MAY be used to define components for the platform that
+are mutually incompatible in a single application.  Incompatible
 components SHOULD produce compile-time errors when compiled
 together.
 
@@ -597,7 +596,7 @@ The implementation of the utility components are also found in
   * ``VirtualizeAlarmC.nc``
   * ``VirtualizeTimerC.nc``
 
-The implementation of Timers for the MSP430 is in
+The implementation of timers for the MSP430 is in
 ``tinyos-2.x/tos/chips/msp430/timer``:
 
   * ``Alarm32khz16C.nc`` is generic and provides a new ``Alarm<T32khz,uint16_t>``
@@ -638,6 +637,11 @@ The implementation of Timers for the MSP430 is in
   * ``Msp430TimerEvent.nc`` HPL interface definition
   * ``Msp430TimerP.nc`` is generic and implements the HPL for MSP430 timer
     special function registers
+
+Implementation of timers for the ATmega128 and PXA27x may be found in
+``tinyos-2.x/tos/chips/atm128/timer`` and
+``tinyos-2.x/tos/chips/pxa27x/timer`` respectively.
+
 
 7. Author's Address
 ====================================================================
