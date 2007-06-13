@@ -19,7 +19,7 @@ $(OVERVIEW_HTML): $(OVERVIEW) $(STYLESHEET)
 	$(RST2HTML) --stylesheet-path=$(STYLESHEET) --embed-stylesheet $< > html/$@
 
 %.html: txt/%.txt $(TEP_STYLESHEET)
-	rst2html.py --stylesheet-path=$(TEP_STYLESHEET) --embed-stylesheet $< > html/$@
+	$(RST2HTML) --stylesheet-path=$(TEP_STYLESHEET) --embed-stylesheet $< > html/$@
 
 overview: $(OVERVIEW_HTML)
 
