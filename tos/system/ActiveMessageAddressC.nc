@@ -1,4 +1,4 @@
-// $Id: ActiveMessageAddressC.nc,v 1.4 2006-12-12 18:23:47 vlahan Exp $
+// $Id: ActiveMessageAddressC.nc,v 1.5 2007-06-13 20:45:29 rincon Exp $
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -27,27 +27,71 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  *
- * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.4 2006-12-12 18:23:47 vlahan Exp $
+ * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.5 2007-06-13 20:45:29 rincon Exp $
  *
  */
 
 /**
- * Component that stores the node's active message address.
+ * Component that stores the node's active message address and group ID.
  *
  * @author Philip Levis
- * @date June 19 2005
+ * @author David Moss
  */
 
 module ActiveMessageAddressC  {
-  provides async command am_addr_t amAddress();
-  provides async command void setAmAddress(am_addr_t a);
+  provides {
+    interface ActiveMessageAddress;
+    async command am_addr_t amAddress();
+    async command void setAmAddress(am_addr_t a);
+  }
 }
 implementation {
+
+  /** Node address */
   am_addr_t addr = TOS_AM_ADDRESS;
 
+  /** Group address */
+  am_group_t group = TOS_AM_GROUP;
+ 
+  
+  /***************** ActiveMessageAddress Commands ****************/
+  /**
+   * @return the active message address of this node
+   */
+  async command am_addr_t ActiveMessageAddress.amAddress() {
+    return call amAddress();
+  }
+  
+  /**
+   * Set the active message address of this node
+   * @param a The target active message address
+   */
+  async command void ActiveMessageAddress.setAmAddress(am_addr_t a) {
+    call setAmAddress(a);
+  }
+  
+    
+  /**
+   * @return the group address of this node
+   */
+  async command am_group_t ActiveMessageAddress.amGroup() {
+    return group;
+  }
+  
+  /**
+   * Set the group address of this node
+   * @param group The group address
+   */
+  async command void ActiveMessageAddress.setAmGroup(am_group_t myGroup) {
+    group = myGroup;
+    signal ActiveMessageAddress.changed();
+  }
+
+  /***************** Deprecated Commands ****************/
   /**
    * Get the node's default AM address.
    * @return address
+   * @deprecated Use ActiveMessageAddress.amAddress() instead
    */
   async command am_addr_t amAddress() {
     return addr;
@@ -57,8 +101,19 @@ implementation {
    * Set the node's default AM address.
    *
    * @param a - the address.
+   * @deprecated Use ActiveMessageAddress.setAmAddress() instead
    */
   async command void setAmAddress(am_addr_t a) {
     addr = a;
+    signal ActiveMessageAddress.changed();
   }
+  
+  
+  /***************** Defaults ****************/
+  /**
+   * Notification that the address of this node changed.
+   */
+  default async event void ActiveMessageAddress.changed() {
+  }
+  
 }
