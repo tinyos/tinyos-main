@@ -11,7 +11,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the Arch Rock Corporation nor the names of
+ * - Neither the name of the Rincon Research Corporation nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -19,7 +19,7 @@
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
- * ARCHED ROCK OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * RINCON RESEARCH OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -71,7 +71,7 @@ module StateImplP {
 implementation {
 
   /** Each component's state - uniqueCount("State") of them */
-  norace uint8_t state[uniqueCount(UQ_STATE)];
+  uint8_t state[uniqueCount(UQ_STATE)];
   
   enum {
     S_IDLE = 0,
@@ -109,14 +109,14 @@ implementation {
    * regardless of the current state it's in.
    */
   async command void State.forceState[uint8_t id](uint8_t reqState) {
-    state[id] = reqState;
+    atomic state[id] = reqState;
   }
     
   /**
    * Set the current state back to S_IDLE
    */
   async command void State.toIdle[uint8_t id]() {
-    state[id] = S_IDLE;
+    atomic state[id] = S_IDLE;
   }
   
     
@@ -124,14 +124,26 @@ implementation {
    * @return TRUE if the state machine is in S_IDLE
    */
   async command bool State.isIdle[uint8_t id]() {
-    return state[id] == S_IDLE;
+    return call State.isState[id](S_IDLE);
   }
+  
+  /**
+   * @return TRUE if the state machine is in the given state
+   */
+  async command bool State.isState[uint8_t id](uint8_t myState) {
+    bool isState;
+    atomic isState = (state[id] == myState);
+    return isState;
+  }
+  
   
   /**
    * Get the current state
    */
   async command uint8_t State.getState[uint8_t id]() {
-    return state[id];
+    uint8_t theState;
+    atomic theState = state[id];
+    return theState;
   }
   
 }
