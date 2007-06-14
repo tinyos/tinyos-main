@@ -1,4 +1,4 @@
-// $Id: ActiveMessageAddressC.nc,v 1.5 2007-06-13 20:45:29 rincon Exp $
+// $Id: ActiveMessageAddressC.nc,v 1.6 2007-06-14 04:39:02 rincon Exp $
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -27,7 +27,7 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  *
- * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.5 2007-06-13 20:45:29 rincon Exp $
+ * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.6 2007-06-14 04:39:02 rincon Exp $
  *
  */
 
@@ -75,7 +75,9 @@ implementation {
    * @return the group address of this node
    */
   async command am_group_t ActiveMessageAddress.amGroup() {
-    return group;
+    am_group_t myGroup;
+    atomic myGroup = group;
+    return myGroup;
   }
   
   /**
@@ -83,7 +85,7 @@ implementation {
    * @param group The group address
    */
   async command void ActiveMessageAddress.setAmGroup(am_group_t myGroup) {
-    group = myGroup;
+    atomic group = myGroup;
     signal ActiveMessageAddress.changed();
   }
 
@@ -94,7 +96,9 @@ implementation {
    * @deprecated Use ActiveMessageAddress.amAddress() instead
    */
   async command am_addr_t amAddress() {
-    return addr;
+    am_addr_t myAddr;
+    atomic myAddr = addr;
+    return myAddr;
   }
   
   /**
@@ -104,7 +108,7 @@ implementation {
    * @deprecated Use ActiveMessageAddress.setAmAddress() instead
    */
   async command void setAmAddress(am_addr_t a) {
-    addr = a;
+    atomic addr = a;
     signal ActiveMessageAddress.changed();
   }
   
