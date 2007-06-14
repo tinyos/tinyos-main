@@ -10,8 +10,8 @@ CC2420 Radio Stack
 :Author: David Moss, Jonathan Hui, Philip Levis, and Jung Il Choi
 
 :Draft-Created: 5-Mar-2007
-:Draft-Version: $Revision: 1.3 $
-:Draft-Modified: $Date: 2007-04-20 17:14:04 $
+:Draft-Version: $Revision: 1.4 $
+:Draft-Modified: $Date: 2007-06-14 17:41:50 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -181,44 +181,43 @@ The layers found within this radio stack are in the following order:
  |               Application Layer                  |
  |                                                  |
  +-----------------------+--------------------------+
-                         |
-                         |
+
   +----------------------+-------------------------+
   |             Active Message Layer               |
   +----------------------+-------------------------+
-                         |
+
   +----------------------+-------------------------+
   |              Unique Send Layer                 |
   +----------------------+-------------------------+
-                         |
+                         
   +----------------------+-------------------------+
   |         Optional Packet Link Layer             |
   +----------------------+-------------------------+
-                         |
+                         
   +----------------------+-------------------------+
   |  Optional Low Power Listening Implementations  |
   +----------------------+-------------------------+
-                         |
+                         
   +----------------------+-------------------------+
   |        Unique Receive Filtering Layer          |
   +----------------------+-------------------------+
-                         |
+                         
   +----------------------+-------------------------+
   |      Optional 6LowPAN TinyOS Network Layer     |
   +----------------------+-------------------------+
-                         |
+                         
   +----------------------+-------------------------+
   |     Carrier Sense Multiple Access (CSMA)       |
   +----------------------+-------------------------+
-                         |
+                         
             +------------+------------+
-            |                         |
+                                    
  +----------+----------+   +----------+----------+
  |      ReceiveP       |   |      TransmitP      |
  +----------+----------+   +----------+----------+
-            |                         |
+                                     
             +------------+------------+
-                         |
+                         
  +-----------------------+-------------------------+
  |    SPI bus, GPIO, Interrupts, Timer Capture     |
  +-------------------------------------------------+
@@ -468,6 +467,7 @@ There are several methods the CC2420 radio stack uses to minimize
 power consumption:
 
 1. Invalid Packet Shutdown
+
   Typically, packets are filtered out by address at the radio hardware
   level.  When a receiver wakes up and does not receive any
   packets into the low power listening layer of the radio stack, it 
@@ -479,6 +479,7 @@ power consumption:
   behavior found in an ad-hoc network with many nodes.
 
 2. Early Transmission Completion
+
   A transmitter typically sends a packet for twice the amount of time
   as the receiver's receive check period.  This increases the probability
   that the receiver will detect the packet.  However, if the transmitter receives
@@ -489,11 +490,13 @@ power consumption:
   already woken up and received the packet.
 
 3. Auto Shutdown
+
   If the radio does not send or receive messages for some period of
   time while low power listening is enabled, the radio will automatically 
   turn off and begin duty cycling at its specified duty cycle period.
 
 4. CCA Sampling Strategy
+
   The actual receive check is performed in a loop inside a function, 
   not a spinning task.  This allows the sampling to be performed
   continuously, with the goal of turning the radio off as quickly as 
