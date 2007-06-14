@@ -107,13 +107,13 @@ unified BlockStorage interface:::
   }
 
 
-read(uint32_t addr, void *buf, uint32_t len);
- - Read 'len' bytes into '*buf' from the given address
+``read(uint32_t addr, void *buf, uint32_t len);``
+ - Read 'len' bytes into ``*buf`` from the given address
  - Returns FAIL if the request cannot be handled
  - Signals readDone(...) when complete.
 
-write(uint32_t addr, void *buf, uint32_t len);
- - Write 'len' bytes from '*buf' starting at the given address
+``write(uint32_t addr, void *buf, uint32_t len);``
+ - Write 'len' bytes from ``*buf`` starting at the given address
  - Returns FAIL if the request cannot be handled
  - Signals writeDone(...) when complete.
 
@@ -375,15 +375,15 @@ getTotalKeys()
  - Determine the total number of valid keys stored on non-volatile memory
  - Signals totalKeys(...) when complete
 
-insert(uint32_t key, void *value, uint16_t valueSize)
+``insert(uint32_t key, void *value, uint16_t valueSize)``
  - Insert some data into the configuration storage associated with the
    given key
  - Signals inserted(...) when complete
 
-retrieve(uint32_t key, void *valueHolder, uint16_t maxValueSize)
+``retrieve(uint32_t key, void *valueHolder, uint16_t maxValueSize)``
  - Retrieve the value associated with the given key.  The maximum value
    size is the maximum amount of data that can be loaded into the 
-   *valueHolder location, to avoid overflow
+   ``*valueHolder`` location, to avoid overflow
  - Signals retrieved(...) when complete
 
 remove(uint32_t key)

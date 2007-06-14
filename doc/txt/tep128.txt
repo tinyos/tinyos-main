@@ -268,17 +268,17 @@ somewhere else on the non-volatile memory:::
   }
 
 
-read(uint32_t addr, void *buf, uint32_t len);
- - Read 'len' bytes into '*buf' from the given address
+``read(uint32_t addr, void '*buf', uint32_t len);``
+ - Read 'len' bytes into ``*buf`` from the given address
  - Returns FAIL if the volume is already in use
  - Signals readDone(...) when complete.
 
-write(uint32_t addr, void *buf, uint32_t len);
- - Write 'len' bytes from '*buf' starting at the given address
+``write(uint32_t addr, void '*buf', uint32_t len);``
+ - Write 'len' bytes from ``*buf`` starting at the given address
  - Returns FAIL if the volume is already in use
  - Signals writeDone(...) when complete.
 
-erase(uint16_t eraseUnitIndex);
+``erase(uint16_t eraseUnitIndex);``
  - Erase a single 0-indexed erase unit
  - Returns FAIL if the volume is already in use
  - Signals eraseDone(...) when complete.
@@ -354,37 +354,37 @@ a DirectStorage interface:::
   }
 
 
-modify(uint32_t addr, void *buf, uint32_t len)
+``modify(uint32_t addr, void *buf, uint32_t len)``
  - Modify 'len' bytes located on non-volatile memory at the given address,
    replacing them with data from the given buffer
  - Returns FAIL if the volume is already in use
  - Signals modified(...) when the operation is complete
 
-read(uint32_t addr, void *buf, uint32_t len)
- - Read 'len' bytes into '*buf' from the given address
+``read(uint32_t addr, void *buf, uint32_t len)``
+ - Read 'len' bytes into ``*buf`` from the given address
  - Same as DirectStorage.read(...)
  - Returns FAIL if the volume is already in use
  - Signals readDone(...) when complete.
 
-erase(uint16_t eraseUnitIndex);
+``erase(uint16_t eraseUnitIndex);``
  - Erase a single 0-indexed erase unit
  - Returns FAIL if the volume is already in use
  - Signals eraseDone(...) when complete.
 
-flush()
+``flush()``
  - All data that has been previously written and is not yet located on 
    non-volatile memory should be immediately stored to non-volatile memory.
  - Same behavior as flush() methods found in Java
  - Returns FAIL if the operation cannot be completed at this time
  - Signals flushDone(...) when complete.
 
-crc(uint32_t addr, uint32_t len, uint16_t baseCrc);
+``crc(uint32_t addr, uint32_t len, uint16_t baseCrc);``
  - Calculate the CRC of 'len' bytes starting at the given address, using
    the given baseCrc as a seed.
  - Returns FAIL if the volume is already in use
  - Signals crcDone(...) when complete.
 
-isSupported()
+``isSupported()``
  - Returns TRUE if DirectModify is available on the current memory type
 
 
