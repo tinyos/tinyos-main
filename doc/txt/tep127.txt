@@ -103,24 +103,30 @@ The TEP proposes this PacketLink interface:::
     command bool wasDelivered(message_t *msg);
   }
 
+PacketLinks interface functions:
 
-setRetries(message_t *msg, uint16_t maxRetries)
- - Sets the maximum number of times to retry the transmission of the message
+  ``setRetries(message_t *msg, uint16_t maxRetries)``
 
-setRetryDelay(message_t *msg, uint16_t retryDelay)
- - Set the delay, in milliseconds, between each retransmission
+- Sets the maximum number of times to retry the transmission of the message
 
-getRetries(message_t *msg)
- - Returns the maximum number of retries configured for the given message
+  ``setRetryDelay(message_t *msg, uint16_t retryDelay)``
 
-getRetryDelay(message_t *msg)
- - Returns the delay, in milliseconds, between each retransmission for the
-   given message
+- Set the delay, in milliseconds, between each retransmission
 
-wasDelivered(message_t *msg)
- - This command may be called after the sendDone() event is signaled. It
-   is the equivalent of PacketAcknowledgements.wasAcked(message_t *msg), so
-   is only a helper function to make the PacketLink interface easier to use.
+  ``getRetries(message_t *msg)``
+
+- Returns the maximum number of retries configured for the given message
+
+  ``getRetryDelay(message_t *msg)``
+
+- Returns the delay, in milliseconds, between each retransmission for the given 
+  message
+
+  ``wasDelivered(message_t *msg)``
+ 
+- This command may be called after the sendDone() event is signaled. It is the 
+  equivalent of ``PacketAcknowledgements.wasAcked(message_t *msg)``, so is only 
+  a helper function to make the PacketLink interface easier to use.
 
 
 
