@@ -1,4 +1,4 @@
-// $Id: SerialForwarder.java,v 1.4 2006-12-12 18:23:00 vlahan Exp $
+// $Id: SerialForwarder.java,v 1.5 2007-06-18 20:36:36 rincon Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -29,7 +29,6 @@
  * 94704.  Attention:  Intel License Inquiry.
  */
 
-
 /**
  * File: SerialForwarder.java
  *
@@ -49,174 +48,181 @@ import net.tinyos.util.*;
 
 public class SerialForwarder implements Messenger {
   public static final int DEFAULT_PORT = 9002;
-  
-    // appication defaults
-    public SFRenderer renderer;
-    public SFListen listenServer;
-    public String motecom = "serial@com1:57600";
-    public boolean logDB;
 
-    public int serverPort = DEFAULT_PORT;
+  // appication defaults
+  public SFRenderer renderer;
 
-    private boolean guiMode = true;
-    private boolean displayHelp = false;
-    private int nClients = 0;
-    private int nPacketsRead = 0;
-    private int nPacketsWritten = 0;
-    private SFListen listener = null;
-    SFMessenger verbose = new SFMessenger(true);
-    SFMessenger debug = new SFMessenger(false);
+  public SFListen listenServer;
 
-    class SFMessenger implements Messenger {
-	boolean on;
+  public String motecom = "serial@com1:57600";
 
-	SFMessenger(boolean on) {
-	    this.on = on;
-	}
+  public boolean logDB;
 
-	public void message(String message) {
-	    if (on) {
-		SerialForwarder.this.message(message);
-	    }
-	}
+  public int serverPort = DEFAULT_PORT;
+
+  private boolean displayHelp = false;
+
+  private int nClients = 0;
+
+  private int nPacketsRead = 0;
+
+  private int nPacketsWritten = 0;
+
+  private SFListen listener = null;
+
+  SFMessenger verbose = new SFMessenger(true);
+
+  SFMessenger debug = new SFMessenger(false);
+
+  class SFMessenger implements Messenger {
+    boolean on;
+
+    SFMessenger(boolean on) {
+      this.on = on;
     }
 
-    public static void main(String[] args) throws IOException {
-	new SerialForwarder(args);
+    public void message(String message) {
+      if (on) {
+        SerialForwarder.this.message(message);
+      }
     }
+  }
 
-    public SerialForwarder(String[] args) throws IOException {
-        ProcessCommandLineArgs (args);
+  public static void main(String[] args) throws IOException {
+    new SerialForwarder(args);
+  }
 
-	if (displayHelp) {
-	    printHelp();
-	    System.exit(2);
-	}
-	if (guiMode) {
-            renderer = SFWindow.createGui( this, "TinyOS 2.x Serial Forwarder" );
-	} else {
-            renderer = new SFConsoleRenderer();
+  public SerialForwarder(String[] args) throws IOException {
+    ProcessCommandLineArgs(args);
+
+    if (displayHelp) {
+      printHelp();
+      System.exit(2);
+    }
+    
+    if(renderer == null) {
+      // Default is GUI
+      renderer = SFWindow.createGui(this, "TinyOS 2.x Serial Forwarder");
+    }
+    
+    startListenServer();
+  }
+
+  private void ProcessCommandLineArgs(String[] args) {
+    for (int i = 0; i < args.length; i++) {
+      debug.message(args[i]);
+    }
+    for (int i = 0; i < args.length; i++) {
+      if (args[i].equals("-no-gui") && renderer == null) {
+        renderer = new SFConsoleRenderer();
+        
+      } else if(args[i].equals("-no-output") && renderer == null) {
+        renderer = new SFNullRenderer();
+        
+      } else if (args[i].equals("-comm")) {
+        i++;
+        if (i < args.length) {
+          motecom = args[i];
+        } else {
+          displayHelp = true;
         }
-	startListenServer();
+        
+      } else if (args[i].equals("-port")) {
+        i++;
+        if (i < args.length) {
+          serverPort = Integer.parseInt(args[i]);
+        } else {
+          displayHelp = true;
+        }
+      } else if (args[i].equals("-log")) {
+        logDB = true;
+      } else if (args[i].equals("-quiet")) {
+        verbose.on = false;
+      } else if (args[i].equals("-debug")) {
+        debug.on = true;
+      } else {
+        displayHelp = true;
+      }
     }
+  }
 
-    private void ProcessCommandLineArgs(String[] args) {
-	for (int i = 0; i < args.length; i++) {
-	    debug.message(args[i]);
-	}
-	for (int i = 0; i < args.length; i++) {
-	    if (args[i].equals ("-no-gui")) {
-		guiMode = false;
-	    }
-	    else if (args[i].equals ("-comm")) {
-		i++;
-		if (i < args.length) {
-		    motecom = args[i];
-		}
-		else {
-		    displayHelp = true; 
-		}
-	    }
-	    else if (args[i].equals ("-port")) {
-		i++;
-		if (i < args.length) {
-		    serverPort = Integer.parseInt(args[i]);
-		}
-		else {
-		    displayHelp = true;
-		}
-	    }
-	    else if (args[i].equals ("-log")) {
-		logDB = true;
-	    }
-	    else if (args[i].equals ("-quiet")) {
-		verbose.on = false;
-	    }
-	    else if (args[i].equals ("-debug")) {
-		debug.on = true;
-	    }
-	    else {
-		displayHelp = true;
-	    }
-	}
+  private static void printHelp() {
+    System.err.println("optional arguments:");
+    System.err.println("-port [server port] (default " + DEFAULT_PORT + ")");
+    System.err.println("-comm [motecom spec] (default serial@com1:57600)");
+    System.err.println("-packetsize [size] (default 36)");
+    System.err.println("-no-gui      = do not display graphic interface");
+    System.err.println("-no-output");
+    System.err.println("-quiet       = non-verbose mode");
+    System.err.println("-debug       = display debug messages");
+    System.err.println("-log         = log to database");
+  }
+
+  private void createGui() {
+    renderer = SFWindow.createGui(this, "SerialForwarder");
+  }
+
+  public void message(String msg) {
+    renderer.message(msg);
+  }
+
+  synchronized public void incrementPacketsRead() {
+    nPacketsRead++;
+    renderer.updatePacketsRead(nPacketsRead);
+  }
+
+  synchronized public void incrementPacketsWritten() {
+    nPacketsWritten++;
+    renderer.updatePacketsWritten(nPacketsWritten);
+  }
+
+  synchronized public void incrementClients() {
+    nClients++;
+    renderer.updateNumClients(nClients);
+  }
+
+  synchronized public void decrementClients() {
+    nClients--;
+    renderer.updateNumClients(nClients);
+  }
+
+  public synchronized void clearCounts() {
+    nPacketsRead = nPacketsWritten = 0;
+    renderer.updatePacketsWritten(nPacketsWritten);
+    renderer.updatePacketsRead(nPacketsRead);
+  }
+
+  public synchronized void startListenServer() {
+    if (listenServer == null) {
+      nClients = 0;
+      listenServer = new SFListen(this);
+      listenServer.start();
     }
+    renderer.updateListenServerStatus(true);
+    renderer.updateNumClients(nClients);
+    clearCounts();
+  }
 
-    private static void printHelp() {
-	System.err.println ("optional arguments:");
-	System.err.println ("-port [server port] (default " + DEFAULT_PORT + ")");
-	System.err.println ("-comm [motecom spec] (default serial@com1:57600)");
-	System.err.println ("-packetsize [size] (default 36)");
-	System.err.println ("-no-gui      = do not display graphic interface");
-	System.err.println ("-quiet       = non-verbose mode");
-	System.err.println ("-debug       = display debug messages");
-	System.err.println ("-log         = log to database");
+  public void stopListenServer() {
+    SFListen lserver;
+
+    // We can't just make stopSFListen synchronized because
+    // listenServerStopped must be synchronized too
+    synchronized (this) {
+      lserver = listenServer;
+      if (lserver != null)
+        listenServer.shutdown();
     }
-
-    private void createGui() {
-        renderer = SFWindow.createGui( this, "SerialForwarder" );
+    if (lserver != null) {
+      try {
+        lserver.join(2000);
+      } catch (InterruptedException ex) {
+      }
     }
+  }
 
-    public void message(String msg) {
-        renderer.message(msg);
-    }
-
-    synchronized public void incrementPacketsRead() {
-        nPacketsRead++;
-	renderer.updatePacketsRead(nPacketsRead);
-    }
-
-    synchronized public void incrementPacketsWritten() {
-        nPacketsWritten++;
-        renderer.updatePacketsWritten(nPacketsWritten);
-    }
-
-    synchronized public void incrementClients() {
-        nClients++;
-        renderer.updateNumClients(nClients);
-    }
-
-    synchronized public void decrementClients() {
-        nClients--;
-	renderer.updateNumClients(nClients);
-    }
-
-    public synchronized void clearCounts() {
-	nPacketsRead = nPacketsWritten = 0;
-	renderer.updatePacketsWritten(nPacketsWritten);
-	renderer.updatePacketsRead(nPacketsRead);
-    }
-
-    public synchronized void startListenServer() {
-	if (listenServer == null) {
-	    nClients = 0;
-	    listenServer = new SFListen(this);
-	    listenServer.start();
-	}
-	renderer.updateListenServerStatus(true);
-	renderer.updateNumClients(nClients);
-	clearCounts();
-    }
-
-    public void stopListenServer() {
-	SFListen lserver;
-
-	// We can't just make stopSFListen synchronized because
-	// listenServerStopped must be synchronized too
-	synchronized (this) {
-	    lserver = listenServer;
-	    if (lserver != null)
-		listenServer.shutdown();
-	}
-        if (lserver != null) {
-	    try {
-		lserver.join(2000);
-	    }
-	    catch (InterruptedException ex) { }
-	}
-    }
-
-    public synchronized void listenServerStopped() {
-	listenServer = null;
-        renderer.updateListenServerStatus(false);
-    }
+  public synchronized void listenServerStopped() {
+    listenServer = null;
+    renderer.updateListenServerStatus(false);
+  }
 }
