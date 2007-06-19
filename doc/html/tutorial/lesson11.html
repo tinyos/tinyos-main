@@ -316,7 +316,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__str__',
 '__swig_getmethods__', '__swig_setmethods__', '__weakref__', 'addChannel',
 'currentNode', 'getNode', 'init', 'mac', 'newPacket', 'radio', 'removeChannel',
-'runNextEvent', 'setCurrentNode', 'setTime', 'this', 'thisown', 'time', 'timeStr']
+'runNextEvent', 'setCurrentNode', 'setTime', 'this', 'thisown', 'ticksPerSecond', 'time', 'timeStr']
         </pre>
 
         <p>The most common utility functions are:</p>
@@ -568,14 +568,14 @@ DEBUG (32): Application booted a third time.
 	which is a noise trace taken from Meyer Library at Stanford University:</p>
 
       <pre>
--97
+-39
 -98
 -98
--86
--90
--91
--87
--87
+-98
+-99
+-98
+-94
+-98
 -98
 -98
 </pre>
@@ -869,15 +869,10 @@ java net.tinyos.sim.PropagationModel config.txt
 
         <p>The format of a configuration file is beyond the scope of
         this document: the tool has its own <A
-        HREF="usc-topologies.html">documentation</A>. TOSSIM has two sample configuration
+        HREF="usc-topologies.html">documentation</A>. TOSSIM has a few sample configuration
         files generated from the tool in
-        <code>tos/lib/tossim/topologies</code>. The first is <code><A
-        HREF="">grid.txt</A></code>, which is a 10x10 grid of nodes
-        spaced roughly 40 feet apart. Each node is placed randomly
-        within a 40'x40' "cell." The cells follow a strict grid. The
-        second file is <code><A HREF="">scatter.txt</A></code>, which is
-        100 nodes scattered randomly (with a uniform distribution)
-        over a 360'x360' area. Note that the tool uses random numbers,
+        <code>tos/lib/tossim/topologies</code>. 
+        Note that the tool uses random numbers,
         these configuration files can generate multiple different
         network topologies. Network topology files generated from the
         tool follow the same format as <code>15-15-tight-mica2-grid.txt</code>.
@@ -1203,7 +1198,7 @@ pkt.setData(msg.data)
 pkt.setType(msg.get_amType())
 pkt.setDestination(0)
 
-print "Delivering " + msg.__str__() + " to 0 at " + str(t.time() + 3);
+print "Delivering " + str(msg) + " to 0 at " + str(t.time() + 3);
 pkt.deliver(0, t.time() + 3)
 
 
