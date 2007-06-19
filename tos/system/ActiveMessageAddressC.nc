@@ -1,4 +1,4 @@
-// $Id: ActiveMessageAddressC.nc,v 1.6 2007-06-14 04:39:02 rincon Exp $
+// $Id: ActiveMessageAddressC.nc,v 1.7 2007-06-19 17:30:08 rincon Exp $
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -27,7 +27,7 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  *
- * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.6 2007-06-14 04:39:02 rincon Exp $
+ * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.7 2007-06-19 17:30:08 rincon Exp $
  *
  */
 
@@ -64,10 +64,15 @@ implementation {
   
   /**
    * Set the active message address of this node
-   * @param a The target active message address
+   * @param group The node's group ID
+   * @param addr The node's active message address
    */
-  async command void ActiveMessageAddress.setAmAddress(am_addr_t a) {
-    call setAmAddress(a);
+  async command void ActiveMessageAddress.setAddress(am_group_t myGroup, am_addr_t myAddr) {
+    atomic {
+      addr = myAddr;
+      group = myGroup;
+    }
+    signal ActiveMessageAddress.changed();
   }
   
     
@@ -80,14 +85,6 @@ implementation {
     return myGroup;
   }
   
-  /**
-   * Set the group address of this node
-   * @param group The group address
-   */
-  async command void ActiveMessageAddress.setAmGroup(am_group_t myGroup) {
-    atomic group = myGroup;
-    signal ActiveMessageAddress.changed();
-  }
 
   /***************** Deprecated Commands ****************/
   /**
@@ -105,7 +102,7 @@ implementation {
    * Set the node's default AM address.
    *
    * @param a - the address.
-   * @deprecated Use ActiveMessageAddress.setAmAddress() instead
+   * @deprecated Use ActiveMessageAddress.setAddress() instead
    */
   async command void setAmAddress(am_addr_t a) {
     atomic addr = a;

@@ -34,28 +34,23 @@
  * @author David Moss
  */
 interface ActiveMessageAddress {
+
+  /**
+   * Set the active message address of this node
+   * @param group The node's group ID
+   * @param addr The node's active message address
+   */
+  async command void setAddress(am_group_t group, am_addr_t addr);
+  
   /**
    * @return the active message address of this node
    */
   async command am_addr_t amAddress();
   
   /**
-   * Set the active message address of this node
-   * @param addr The target active message address
-   */
-  async command void setAmAddress(am_addr_t addr);
-  
-  /**
    * @return the group address of this node
    */
   async command am_group_t amGroup();
-  
-  /**
-   * Set the group address of this node
-   * @param group The group address
-   */
-  async command void setAmGroup(am_group_t group);
-  
   
   /**
    * Notification that the address or group settings changed.
