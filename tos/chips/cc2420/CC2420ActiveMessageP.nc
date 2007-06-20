@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.5 $ $Date: 2007-04-12 17:11:11 $
+ * @version $Revision: 1.6 $ $Date: 2007-06-20 23:49:02 $
  */
  
 #include "CC2420.h"
@@ -149,6 +149,20 @@ implementation {
     header->type = type;
   }
 
+  command void AMPacket.setGroup(message_t* msg, am_group_t group) {
+    cc2420_header_t* header = call CC2420Packet.getHeader(msg);
+    header->destpan = group;
+  }
+
+  command am_group_t AMPacket.group(message_t* msg) {
+    cc2420_header_t* header = call CC2420Packet.getHeader(msg);
+    return header->destpan;
+  }
+
+  command am_group_t AMPacket.localGroup() {
+    return TOS_AM_GROUP;
+  }
+  
   default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) {
     return msg;
   }

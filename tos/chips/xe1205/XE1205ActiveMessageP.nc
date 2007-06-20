@@ -92,6 +92,20 @@ implementation {
     header->type = type;
   }
 
+  command void AMPacket.setGroup(message_t* msg, am_group_t group) {
+    xe1205_header_t* header = getHeader(msg);
+    header->group = group;
+  }
+
+  command am_group_t AMPacket.group(message_t* msg) {
+    xe1205_header_t* header = getHeader(msg);
+    return header->group;
+  }
+
+  command am_group_t AMPacket.localGroup() {
+    return TOS_AM_GROUP;
+  }
+
   command uint8_t AMSend.maxPayloadLength[am_id_t id]() {
     return call Packet.maxPayloadLength();
   }

@@ -1,4 +1,4 @@
-// $Id: AMPacket.nc,v 1.4 2006-12-12 18:23:14 vlahan Exp $
+// $Id: AMPacket.nc,v 1.5 2007-06-20 23:49:02 scipio Exp $
 /*									tab:4
  * "Copyright (c) 2004-5 The Regents of the University  of California.  
  * All rights reserved.
@@ -150,4 +150,36 @@ interface AMPacket {
   
   command void setType(message_t* amsg, am_id_t t);
 
+  /**
+   * Get the AM group of the AM packet. The AM group is a logical
+   * identifier that distinguishes sets of nodes which may share
+   * a physical communication medium but wish to not communicate.
+   * The AM group logically separates the sets of nodes. When
+   * a node sends a packet, it fills in its AM group, and typically
+   * nodes only receive packets whose AM group field matches their
+   * own.
+   *
+   * @param amsg the packet
+   * @return the AM group of this packet
+   */
+  
+  command am_group_t group(message_t* amsg);
+
+  /**
+   * Set the AM group field of a packet. Note that most data link
+   * stacks will set this field automatically on a send request, which
+   * may overwrite changes made with this command.
+   *
+   * @param amsg the packet
+   * @param group the packet's new AM group value
+   */
+  command void setGroup(message_t* amsg, am_group_t grp);
+
+  /**
+   * Provides the current AM group of this communication interface.
+   *
+   * @return The AM group.
+   */
+  
+  command am_group_t localGroup();
 }
