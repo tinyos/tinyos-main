@@ -41,7 +41,7 @@ significantly different tradeoffs than other flash chips:
 
 
   =============  ==================  =================  ===================
-       	X        NOR                 AT45DB             NAND
+       	X        NOR                 AT45DB              NAND  
   	         (ex: ST M25P40,   		         (ex: Samsung
   	         Intel PXA27x)     		         K9K1G08R0B)
   =============  ==================  =================  ===================
