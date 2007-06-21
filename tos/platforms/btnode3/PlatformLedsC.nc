@@ -1,7 +1,7 @@
-// $Id: PlatformLedsC.nc,v 1.4 2006-12-12 18:23:40 vlahan Exp $
+// $Id: PlatformLedsC.nc,v 1.5 2007-06-21 21:44:16 beutel Exp $
 
 /**
- * Copyright (c) 2006 ETH Zurich.  
+ * Copyright (c) 2006-2007 ETH Zurich.  
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -45,9 +45,9 @@ implementation
 
   Init = PlatformP.MoteInit;
     
-  Led0 = IO.PortC1;  // Pin C1 = Red LED
-  Led1 = IO.PortC3;  // Pin C3 = Green LED
+  Led0 = IO.PortC0;  // Pin C0 = Blue LED
+  Led1 = IO.PortC1;  // Pin C1 = Red LED
   Led2 = IO.PortC2;  // Pin C2 = Yellow LED
-  Led3 = IO.PortC0;  // Pin C0 = Blue LED
+  Led3 = IO.PortC3;  // Pin C3 = Green LED
 }
 

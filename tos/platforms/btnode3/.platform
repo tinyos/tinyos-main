@@ -7,8 +7,9 @@
 # by ncc.  And because of that, the current platform's include directory
 # must be specified, otherwise its search order is last instead of first.
 #
-# $Id: .platform,v 1.4 2006-12-12 18:23:40 vlahan Exp $
+# $Id: .platform,v 1.5 2007-06-21 21:44:16 beutel Exp $
 #
+
 push( @includes, qw(
 
   %T/platforms/btnode3
@@ -16,20 +17,21 @@ push( @includes, qw(
   %T/platforms/mica
   %T/platforms/mica2
   %T/platforms/mica2/chips/cc1000
-  %T/chips/cc1000
+  %T/chips/cc1000_lpl
   %T/chips/atm128
   %T/chips/atm128/adc
+  %T/chips/atm128/i2c
   %T/chips/atm128/pins
   %T/chips/atm128/spi
   %T/chips/atm128/timer
+  %T/lib/timer
   %T/lib/serial
   %T/lib/power
-  %T/lib/timer
-  
+
 #  %T/platforms/mica2/chips/at45db not existent on btnode3
 #  %T/platforms/mica/chips/at45db  not existent on btnode3
 #  %T/chips/at45db
-  
+
 ) );
 
 @opts = qw(
