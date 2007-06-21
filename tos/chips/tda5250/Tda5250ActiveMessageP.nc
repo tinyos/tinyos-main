@@ -1,4 +1,4 @@
-// $Id: Tda5250ActiveMessageP.nc,v 1.5 2007-06-20 23:49:02 scipio Exp $
+// $Id: Tda5250ActiveMessageP.nc,v 1.6 2007-06-21 11:44:14 phihup Exp $
 
 /*                                                                      tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:             Philip Levis
- * Date last modified:  $Id: Tda5250ActiveMessageP.nc,v 1.5 2007-06-20 23:49:02 scipio Exp $
+ * Date last modified:  $Id: Tda5250ActiveMessageP.nc,v 1.6 2007-06-21 11:44:14 phihup Exp $
  *
  */
 
@@ -154,14 +154,13 @@ implementation {
   }
 
   command void AMPacket.setGroup(message_t* msg, am_group_t group) {
-    //tda5250_header_t* header = getHeader(msg);
-    //header->group = group;
+    tda5250_header_t* header = getHeader(msg);
+    header->group = group;
   }
 
   command am_group_t AMPacket.group(message_t* msg) {
-    //tda5250_header_t* header = getHeader(msg);
-    //return header->group;
-    return TOS_AM_GROUP;
+    tda5250_header_t* header = getHeader(msg);
+    return header->group;
   }
 
   command am_group_t AMPacket.localGroup() {
