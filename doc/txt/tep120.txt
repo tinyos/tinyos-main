@@ -9,8 +9,8 @@ TinyOS Alliance Structure
 :TinyOS-Version: All
 :Authors: Philippe Bonnet, David Culler, Deborah Estrin, Ramesh Govindan, Mike Horton, Jeonghoon Kang, Philip Levis, Lama Nachman, Jack Stankovic, Rob Szewczyk, Matt Welsh, Adam Wolisz 
 :Draft-Created: 17-April-2006
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2007-05-15 23:29:48 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-06-21 19:38:42 $
 :Draft-Discuss: TinyOS Alliance <tinyos-alliance at mail.millennium.berkeley.edu>
 
 
@@ -71,8 +71,10 @@ different goals from those set out in the charter.
 5) OSGI - Service layer
 6) FSF - Foundational software
 
-We (the Alliance) draw most strongly upon the IETF, even though that 
-organization was
+Examining the structure and policies of these organizations helps
+determine what the Alliance can borrow from them, what it must
+do differently, and why.  We (the Alliance) draw most strongly upon the 
+IETF, even though that organization was
 focused around creating and standardizing protocols, rather than
 developing a code base.  Its emphasis on rough consensus AND
 running code placed issues akin to those we face near the fore.  We
@@ -89,10 +91,11 @@ it keeps financial support and marketing activities (while both
 important) at arms length from the technical process.  We share the
 concept that proper behavior of participants and member companies is
 most strongly shaped by code of ethics, captured in organization rules
-and social norms, rather than threats of legal reprocusions.  The
+and social norms, rather than threats of legal repercussions.  The
 broader marketplace is a more effective enforcement body than any
 technical organization.  Thus, we ask that participants declare
-relevant IP that they are aware of, rather than force a strict
+relevant intellectual proprt (IP) that they are aware of, rather than 
+force a strict
 accounting of potentially relevant IP.  We encourage the development
 of open solutions that are implemented without the need for particular
 proprietary IP.  In the IETF, this is addressed by the requirement of
@@ -134,7 +137,8 @@ prevent members from obtaining IP to use it to their advantage with
 other members of the alliance.  It also does not constrain non-members
 from obtaining blocking IP.  It does discourage contributions that
 might pull IP into the pool.  We prefer a process of declaration and
-multiple implementation.
+multiple implementation. Section 7 goes deeper into how the Alliance
+manages the issues and complexities of IP in an open organization.
 
 3. Mission
 ====================================================================
@@ -204,7 +208,8 @@ process, managing WG creation/extinction, arbitrating between WGs, and
 supervising activities to resolve conflicting directions and moving
 the process towards overall architectural coherence.
 
-The SC is also responsible for reviewing and approving all TEPs. WGs
+The SC is also responsible for reviewing and approving all TinyOS 
+Enhancement Proposals (TEPs) that working groups generate. WGs
 submit TEPs to the SC for review. The SC should appoint one
 contributing Alliance member not affiliated with the corresponding WG
 to review the TEP. This reviewer, who may or may not be a member of
@@ -284,7 +289,8 @@ alliance in facilitating a healthy academic and industrial, research
 and production ecosystem around embedded network technology.
 
 The organization will be able to accept direct financial and
-intellectual property contributions.  The IP policy should encourage
+intellectual property contributions.  The IP policy, described 
+in Section 7, should encourage
 corporate participation while preserving focus on soundness, merit,
 and consensus building.  Ultimately, we seek to promote a meritocracy
 that recognizess the contributions of the individuals, whether they
@@ -314,6 +320,8 @@ marketing goals, as well as technical goals.
 
 The typical output of a working group is technical documentation AND
 working code, including interface definitions and standard proposals.
+While this is the typical output, working groups are not constrained
+to this model, and can have a variety of purposes and work products.
 We seek to promote the development of standardized interfaces,
 protocols, services, and tools with high quality, open reference
 implementations of each.  We seek to have these standards be
@@ -331,7 +339,7 @@ participating in the community review process and document evolution.
 In general we want to promote the development, adoption and use of
 open technology.  We want to avoid having the advancement of embedded
 networks getting trapped into proprietary IP.  Accordingly, our IP
-policy builds heavily on the IETF mode.  We also want to avoid a high
+policy builds heavily on the IETF model.  We also want to avoid a high
 barrier to participation.  Thus, we want to avoid demanding membership
 requirements that require extensive legal analysis and assessing deep
 strategic analysis before joining.  In particular, IP pooling or broad
@@ -376,8 +384,8 @@ be available on reasonable and non-discriminatory (RAND) terms for the
 Steering Committee to be able to approve the action.
 
 Of course, Intellectual Property in the TinyOS alliance is closely
-tied to source licensing terms, as dicussed in greater detail in that
-section. As part of Alliance rules, members agree to only check in
+tied to source licensing terms, as dicussed in greater detail in Section 8.
+As part of Alliance rules, members agree to only contribute 
 code that conforms to Alliance source license policy.  As part of
 keeping barriers to participation low, GPL and code based on
 potentially viral licensing terms must be carefully compartmentalized,
@@ -403,12 +411,12 @@ several examples where companies, or even resarch institutions, have
 gained substantial benefit from the work of others while presenting it
 as their own.  This concern is partially addressed by GPL, where if
 you build upon the work of others you are obliged to put it back in
-the open.  Apache addresses this issue by requiring acreditation of
+the open.  Apache addresses this issue by requiring accreditation of
 the Apache foundation.  However, this is connected with a stiff
 membership requirement of signing the copyright to Apache.
 Participants make that sacrifice when they view the brand appeal
 associated with the Apache meritocracy as of sufficient value to
-warrant the arrangement.  Apache is also a losely affiliated
+warrant the arrangement.  Apache is also a loosely affiliated
 consortium of relatively localized projects, typically in very well
 established technical areas.  Our situation is different because we
 have many contributors to a cohesive whole and many of these
@@ -437,16 +445,20 @@ as possible.  Fortunately, we are seeing convergence in licenses,
 after several years of proliferation.
 
 To address these matters, the Alliance has a preferred source license
-based on the BSD framework and a small set of accepted licenses, some
+based on the BSD framework, (the "new" BSD license approved by the
+Open Source Initiative [BSD]_ ) and a small set of accepted licenses, some
 of which have been gradfathered in with the existing code
 base. Contributions can be made using one of those accepted licenses,
 with the member organization name changed appropriately.
 Organizations can submit additional proposed licenses to the Steering
 Committee.  In order to avoid the debate of what constitutes "open
 source," the Steering Committee will generally only consider
-OSL-approved licenses for inclusion in the core. If a contributor
+licenses approved by the Open Source Initiative (OSI) for inclusion in 
+the core.  However, being an 
+OSI-approved license is not a sufficient condition for approval
+within the Alliance. If a contributor
 wishes to use a completely new license, it can submit the license to
-the OSL first.
+the OSI first.
 
 We will not require that the Alliance hold copyright of submitted
 source code, but that it conform to Alliance guidelines.  These
@@ -595,19 +607,25 @@ set of expectations that will encourage the exchange of ideas and
 technology.
 
 
-12. Author's Address
+12. Authors' Address
 ====================================================================
 
-| Philippe Bonnet <bonnet.p@gmail.com> 
+| Philippe Bonnet <bonnet.p at gmail.com> 
 | David Culler <dculler at archrock.com>
-| Deborah Estrin 	<destrin@cs.ucla.edu> 
-| Ramesh Govindan <ramesh@usc.edu> 
-| Mike Horton 	<mhorton@xbow.com> 
-| Jeonghoon Kang 	<budge@keti.re.kr> 
-| Philip Levis    <pal@cs.stanford.edu>
-| Lama Nachman 	<lama.nachman@intel.com>
-| Jack Stankovic 	<stankovic@cs.virginia.edu>
-| Rob Szewczyk 	<rob@moteiv.com> 
-| Matt Welsh 	<mdw@cs.harvard.edu> 
-| Adam Wolisz 	<awo@ieee.org> 
+| Deborah Estrin 	<destrin at cs.ucla.edu> 
+| Ramesh Govindan <ramesh at usc.edu> 
+| Mike Horton 	<mhorton at xbow.com> 
+| Jeonghoon Kang 	<budge at keti.re.kr> 
+| Philip Levis    <pal at cs.stanford.edu>
+| Lama Nachman 	<lama.nachman at intel.com>
+| Jack Stankovic 	<stankovic at cs.virginia.edu>
+| Rob Szewczyk 	<rob at moteiv.com> 
+| Matt Welsh 	<mdw at cs.harvard.edu> 
+| Adam Wolisz 	<awo at ieee.org> 
+
+13. Citations
+====================================================================
+
+.. [BSD] http://www.opensource.org/licenses/bsd-license.php
+
 

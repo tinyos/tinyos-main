@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-05-15 23:31:21 $
-:version: $Revision: 1.8 $
+:date: $Date: 2007-06-21 19:38:42 $
+:version: $Revision: 1.9 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -377,8 +377,10 @@ different goals from those set out in the charter.</p>
 <li>OSGI - Service layer</li>
 <li>FSF - Foundational software</li>
 </ol>
-<p>We (the Alliance) draw most strongly upon the IETF, even though that
-organization was
+<p>Examining the structure and policies of these organizations helps
+determine what the Alliance can borrow from them, what it must
+do differently, and why.  We (the Alliance) draw most strongly upon the
+IETF, even though that organization was
 focused around creating and standardizing protocols, rather than
 developing a code base.  Its emphasis on rough consensus AND
 running code placed issues akin to those we face near the fore.  We
@@ -394,10 +396,11 @@ it keeps financial support and marketing activities (while both
 important) at arms length from the technical process.  We share the
 concept that proper behavior of participants and member companies is
 most strongly shaped by code of ethics, captured in organization rules
-and social norms, rather than threats of legal reprocusions.  The
+and social norms, rather than threats of legal repercussions.  The
 broader marketplace is a more effective enforcement body than any
 technical organization.  Thus, we ask that participants declare
-relevant IP that they are aware of, rather than force a strict
+relevant intellectual proprt (IP) that they are aware of, rather than
+force a strict
 accounting of potentially relevant IP.  We encourage the development
 of open solutions that are implemented without the need for particular
 proprietary IP.  In the IETF, this is addressed by the requirement of
@@ -436,7 +439,8 @@ prevent members from obtaining IP to use it to their advantage with
 other members of the alliance.  It also does not constrain non-members
 from obtaining blocking IP.  It does discourage contributions that
 might pull IP into the pool.  We prefer a process of declaration and
-multiple implementation.</p>
+multiple implementation. Section 7 goes deeper into how the Alliance
+manages the issues and complexities of IP in an open organization.</p>
 </div>
 <div class="section">
 <h1><a id="mission" name="mission">3. Mission</a></h1>
@@ -498,7 +502,8 @@ groups (WGs). This means establishing WG policy, providing appeals
 process, managing WG creation/extinction, arbitrating between WGs, and
 supervising activities to resolve conflicting directions and moving
 the process towards overall architectural coherence.</p>
-<p>The SC is also responsible for reviewing and approving all TEPs. WGs
+<p>The SC is also responsible for reviewing and approving all TinyOS
+Enhancement Proposals (TEPs) that working groups generate. WGs
 submit TEPs to the SC for review. The SC should appoint one
 contributing Alliance member not affiliated with the corresponding WG
 to review the TEP. This reviewer, who may or may not be a member of
@@ -579,7 +584,8 @@ the alliance, we are interested in maximizing the impact of the
 alliance in facilitating a healthy academic and industrial, research
 and production ecosystem around embedded network technology.</p>
 <p>The organization will be able to accept direct financial and
-intellectual property contributions.  The IP policy should encourage
+intellectual property contributions.  The IP policy, described
+in Section 7, should encourage
 corporate participation while preserving focus on soundness, merit,
 and consensus building.  Ultimately, we seek to promote a meritocracy
 that recognizess the contributions of the individuals, whether they
@@ -606,6 +612,8 @@ a particular charter in mind.  WGs may be formed for organizational or
 marketing goals, as well as technical goals.</p>
 <p>The typical output of a working group is technical documentation AND
 working code, including interface definitions and standard proposals.
+While this is the typical output, working groups are not constrained
+to this model, and can have a variety of purposes and work products.
 We seek to promote the development of standardized interfaces,
 protocols, services, and tools with high quality, open reference
 implementations of each.  We seek to have these standards be
@@ -622,7 +630,7 @@ participating in the community review process and document evolution.</p>
 <p>In general we want to promote the development, adoption and use of
 open technology.  We want to avoid having the advancement of embedded
 networks getting trapped into proprietary IP.  Accordingly, our IP
-policy builds heavily on the IETF mode.  We also want to avoid a high
+policy builds heavily on the IETF model.  We also want to avoid a high
 barrier to participation.  Thus, we want to avoid demanding membership
 requirements that require extensive legal analysis and assessing deep
 strategic analysis before joining.  In particular, IP pooling or broad
@@ -662,8 +670,8 @@ proposals are sufficiently critical that they be pursued, such IP must
 be available on reasonable and non-discriminatory (RAND) terms for the
 Steering Committee to be able to approve the action.</p>
 <p>Of course, Intellectual Property in the TinyOS alliance is closely
-tied to source licensing terms, as dicussed in greater detail in that
-section. As part of Alliance rules, members agree to only check in
+tied to source licensing terms, as dicussed in greater detail in Section 8.
+As part of Alliance rules, members agree to only contribute
 code that conforms to Alliance source license policy.  As part of
 keeping barriers to participation low, GPL and code based on
 potentially viral licensing terms must be carefully compartmentalized,
@@ -687,12 +695,12 @@ several examples where companies, or even resarch institutions, have
 gained substantial benefit from the work of others while presenting it
 as their own.  This concern is partially addressed by GPL, where if
 you build upon the work of others you are obliged to put it back in
-the open.  Apache addresses this issue by requiring acreditation of
+the open.  Apache addresses this issue by requiring accreditation of
 the Apache foundation.  However, this is connected with a stiff
 membership requirement of signing the copyright to Apache.
 Participants make that sacrifice when they view the brand appeal
 associated with the Apache meritocracy as of sufficient value to
-warrant the arrangement.  Apache is also a losely affiliated
+warrant the arrangement.  Apache is also a loosely affiliated
 consortium of relatively localized projects, typically in very well
 established technical areas.  Our situation is different because we
 have many contributors to a cohesive whole and many of these
@@ -717,16 +725,20 @@ however, want to have as few distinct licenses with a little variation
 as possible.  Fortunately, we are seeing convergence in licenses,
 after several years of proliferation.</p>
 <p>To address these matters, the Alliance has a preferred source license
-based on the BSD framework and a small set of accepted licenses, some
+based on the BSD framework, (the &quot;new&quot; BSD license approved by the
+Open Source Initiative <a class="citation-reference" href="#bsd" id="id2" name="id2">[BSD]</a> ) and a small set of accepted licenses, some
 of which have been gradfathered in with the existing code
 base. Contributions can be made using one of those accepted licenses,
 with the member organization name changed appropriately.
 Organizations can submit additional proposed licenses to the Steering
 Committee.  In order to avoid the debate of what constitutes &quot;open
 source,&quot; the Steering Committee will generally only consider
-OSL-approved licenses for inclusion in the core. If a contributor
+licenses approved by the Open Source Initiative (OSI) for inclusion in
+the core.  However, being an
+OSI-approved license is not a sufficient condition for approval
+within the Alliance. If a contributor
 wishes to use a completely new license, it can submit the license to
-the OSL first.</p>
+the OSI first.</p>
 <p>We will not require that the Alliance hold copyright of submitted
 source code, but that it conform to Alliance guidelines.  These
 include guidelines for adding copyrights to existing sources.</p>
@@ -858,21 +870,30 @@ set of expectations that will encourage the exchange of ideas and
 technology.</p>
 </div>
 <div class="section">
-<h1><a id="author-s-address" name="author-s-address">12. Author's Address</a></h1>
+<h1><a id="authors-address" name="authors-address">12. Authors' Address</a></h1>
 <div class="line-block">
-<div class="line">Philippe Bonnet &lt;<a class="reference" href="mailto:bonnet.p&#64;gmail.com">bonnet.p&#64;gmail.com</a>&gt;</div>
+<div class="line">Philippe Bonnet &lt;bonnet.p at gmail.com&gt;</div>
 <div class="line">David Culler &lt;dculler at archrock.com&gt;</div>
-<div class="line">Deborah Estrin        &lt;<a class="reference" href="mailto:destrin&#64;cs.ucla.edu">destrin&#64;cs.ucla.edu</a>&gt;</div>
-<div class="line">Ramesh Govindan &lt;<a class="reference" href="mailto:ramesh&#64;usc.edu">ramesh&#64;usc.edu</a>&gt;</div>
-<div class="line">Mike Horton   &lt;<a class="reference" href="mailto:mhorton&#64;xbow.com">mhorton&#64;xbow.com</a>&gt;</div>
-<div class="line">Jeonghoon Kang        &lt;<a class="reference" href="mailto:budge&#64;keti.re.kr">budge&#64;keti.re.kr</a>&gt;</div>
-<div class="line">Philip Levis    &lt;<a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a>&gt;</div>
-<div class="line">Lama Nachman  &lt;<a class="reference" href="mailto:lama.nachman&#64;intel.com">lama.nachman&#64;intel.com</a>&gt;</div>
-<div class="line">Jack Stankovic        &lt;<a class="reference" href="mailto:stankovic&#64;cs.virginia.edu">stankovic&#64;cs.virginia.edu</a>&gt;</div>
-<div class="line">Rob Szewczyk  &lt;<a class="reference" href="mailto:rob&#64;moteiv.com">rob&#64;moteiv.com</a>&gt;</div>
-<div class="line">Matt Welsh    &lt;<a class="reference" href="mailto:mdw&#64;cs.harvard.edu">mdw&#64;cs.harvard.edu</a>&gt;</div>
-<div class="line">Adam Wolisz   &lt;<a class="reference" href="mailto:awo&#64;ieee.org">awo&#64;ieee.org</a>&gt;</div>
+<div class="line">Deborah Estrin        &lt;destrin at cs.ucla.edu&gt;</div>
+<div class="line">Ramesh Govindan &lt;ramesh at usc.edu&gt;</div>
+<div class="line">Mike Horton   &lt;mhorton at xbow.com&gt;</div>
+<div class="line">Jeonghoon Kang        &lt;budge at keti.re.kr&gt;</div>
+<div class="line">Philip Levis    &lt;pal at cs.stanford.edu&gt;</div>
+<div class="line">Lama Nachman  &lt;lama.nachman at intel.com&gt;</div>
+<div class="line">Jack Stankovic        &lt;stankovic at cs.virginia.edu&gt;</div>
+<div class="line">Rob Szewczyk  &lt;rob at moteiv.com&gt;</div>
+<div class="line">Matt Welsh    &lt;mdw at cs.harvard.edu&gt;</div>
+<div class="line">Adam Wolisz   &lt;awo at ieee.org&gt;</div>
 </div>
+</div>
+<div class="section">
+<h1><a id="citations" name="citations">13. Citations</a></h1>
+<table class="docutils citation" frame="void" id="bsd" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2" name="bsd">[BSD]</a></td><td><a class="reference" href="http://www.opensource.org/licenses/bsd-license.php">http://www.opensource.org/licenses/bsd-license.php</a></td></tr>
+</tbody>
+</table>
 </div>
 </div>
 </body>

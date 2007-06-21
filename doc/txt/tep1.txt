@@ -10,8 +10,8 @@ TEP Structure and Keywords
 :Author: Philip Levis
 
 :Draft-Created: 18-Oct-2004
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2007-05-29 22:23:55 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2007-06-21 19:38:42 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -233,8 +233,9 @@ The last numbered section of a TEP (but before citations, if there are any),
 entitled "Author's Address" or "Author's Addresses" MUST contain
 detailed author contact information.
 
-A TEP MAY have appendices after its Author section. Unlike regular sections,
-appendices are lettered. Please refer to Appendix A for details.
+A TEP MAY have appendices after its numbered sections. Unlike 
+numbered sections, appendices are lettered. Please refer to Appendix 
+A for details.
 
 4. Reference
 ====================================================================
