@@ -1,12 +1,12 @@
 #
-# FILE: micaz/.platform
+# FILE: mica2/.platform
 # 
 # Includes that should take precedence come first.  Platforms come before
 # chips because they may override files.  These must be specified as
 # @includes instead of -I's to @opts, otherwise the %T won't be processed
 # by ncc. 
 #
-# $Id: .platform,v 1.5 2007-06-07 17:08:49 idgay Exp $
+# $Id: .platform,v 1.6 2007-06-21 21:44:52 beutel Exp $
 #
 push( @includes, qw(
 
