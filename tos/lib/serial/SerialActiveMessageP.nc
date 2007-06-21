@@ -1,4 +1,4 @@
-//$Id: SerialActiveMessageP.nc,v 1.4 2006-12-12 18:23:31 vlahan Exp $
+//$Id: SerialActiveMessageP.nc,v 1.5 2007-06-21 16:00:04 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -171,7 +171,22 @@ implementation {
   async command error_t PacketAcknowledgements.noAck( message_t* msg ) {
     return SUCCESS;
   }
-   
+  
+  command void AMPacket.setGroup(message_t* msg, am_group_t group) {
+    serial_header_t* header = getHeader(msg);
+    header->group = group;
+  }
+
+  command am_group_t AMPacket.group(message_t* msg) {
+    serial_header_t* header = getHeader(msg);
+    return header->group;
+  }
+
+  command am_group_t AMPacket.localGroup() {
+    return TOS_AM_GROUP;
+  }
+
+ 
   async command bool PacketAcknowledgements.wasAcked(message_t* msg) {
     return FALSE;
   }
