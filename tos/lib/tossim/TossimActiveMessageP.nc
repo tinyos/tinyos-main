@@ -1,4 +1,4 @@
-// $Id: TossimActiveMessageP.nc,v 1.6 2007-05-17 22:03:59 scipio Exp $
+// $Id: TossimActiveMessageP.nc,v 1.7 2007-06-22 21:15:01 hiro Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -191,10 +191,20 @@ implementation {
     return msg->data;
   }
 
-  //command am_group_t AMPacket.group(message_t* amsg) {
-  //  return amsg->header.group;
-  //}
+  command am_group_t AMPacket.group(message_t* amsg) {
+    tossim_header_t* header = getHeader(amsg);
+    return header->group;
+  }
   
+  command void AMPacket.setGroup(message_t* msg, am_group_t group) {
+    tossim_header_t* header = getHeader(msg);
+    header->group = group;
+  }
+
+  command am_group_t AMPacket.localGroup() {
+    return TOS_AM_GROUP;
+  }
+
  default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) {
     return msg;
   }
