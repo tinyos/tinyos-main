@@ -1,4 +1,4 @@
-// $Id: SerialActiveMessageC.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: SerialActiveMessageC.nc,v 1.5 2007-06-23 03:33:16 hiro Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -72,10 +72,19 @@ implementation {
   command error_t AMSend.send[am_id_t id](am_addr_t addr,
 					  message_t* amsg,
 					  uint8_t len) {
+    int i;
+    char* payload = call Packet.getPayload(amsg, NULL);
+    dbg("Serial", "Serial: sending a packet of size %d\n", len);
+    for (i = 0; i < len; i++)
+      printf("%02x ", payload[i]);
+
+    printf("\n");
+
     return FAIL;
   }
 
   command error_t AMSend.cancel[am_id_t id](message_t* msg) {
+    dbg("Serial", "Serial: cancelled a packet\n");
     return FAIL;
   }
   
@@ -141,7 +150,20 @@ implementation {
     serial_header_t* header = getHeader(amsg);
     header->type = t;
   }
- 
+
+  command am_group_t AMPacket.group(message_t* amsg) {
+    serial_header_t* header = getHeader(amsg);
+    return header->group;
+  }
+  
+  command void AMPacket.setGroup(message_t* msg, am_group_t group) {
+    serial_header_t* header = getHeader(msg);
+    header->group = group;
+  }
+
+  command am_group_t AMPacket.localGroup() {
+    return TOS_AM_GROUP;
+  }
   command void Packet.clear(message_t* msg) {}
   
   command uint8_t Packet.payloadLength(message_t* msg) {
