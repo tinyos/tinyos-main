@@ -25,42 +25,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $ $Date: 2007-06-25 13:44:49 $ @author: Jan Hauer
+ * $Revision: 1.1 $ $Date: 2007-06-25 13:44:49 $ @author: Jan Hauer
  * <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
  
 /** 
- * This component virtualizes access to the HAL of the MSP430 ADC12.
- * Reference voltage is enabled automatically as required by the configuration.
- * 
- * @author Jan Hauer 
+ * The only purpose of this component is to generate a nesC warning
+ * if someone has wired to Msp430Adc12ClientAutoRVGC or 
+ * Msp430Adc12ClientAutoDMA_RVGC and forgotten to wire to AdcConfigure.
+ * (nesC optimizes all of its code away).
  *
- * @see  Please refer to the README.txt and TEP 101 for more information about
- * this component and its intended use.
+ * @author: Jan Hauer
  */
 #include <Msp430Adc12.h> 
-generic configuration Msp430Adc12ClientAutoRVGC()
+generic module Msp430Adc12ConfAlertC()
 {
-  provides {
-    interface Resource;
-    interface Msp430Adc12SingleChannel;
-    interface Msp430Adc12MultiChannel;
-  }
-  uses interface AdcConfigure<const msp430adc12_channel_config_t*>;
+  provides interface AdcConfigure<const msp430adc12_channel_config_t*> as ConfSub;
+  uses interface AdcConfigure<const msp430adc12_channel_config_t*> as ConfUp;
 } implementation {
-  components Msp430Adc12P, Msp430RefVoltArbiterP;
-
-  enum {
-    ID = unique(MSP430ADC12_RESOURCE),
-  };
-  Resource = Msp430RefVoltArbiterP.ClientResource[ID];
-  Msp430Adc12SingleChannel = Msp430Adc12P.SingleChannel[ID];
-  Msp430Adc12MultiChannel = Msp430Adc12P.MultiChannel[ID];
-  
-  Msp430RefVoltArbiterP.AdcResource[ID] -> Msp430Adc12P.Resource[ID];
-
-  components new Msp430Adc12ConfAlertC();
-  AdcConfigure = Msp430Adc12ConfAlertC.ConfUp;
-  Msp430RefVoltArbiterP.Config[ID] -> Msp430Adc12ConfAlertC.ConfSub; 
+  async command const msp430adc12_channel_config_t* ConfSub.getConfiguration()
+  {
+    return call ConfUp.getConfiguration();
+  }
 }
