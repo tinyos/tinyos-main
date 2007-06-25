@@ -27,40 +27,91 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2007-04-05 13:45:08 $
+ * $Revision: 1.2 $
+ * $Date: 2007-06-25 15:43:37 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 /**
- * Testing HAL of ADC12 on msp430. Switches three LEDs on, if successful.
+ * Testing HAL of ADC12 on msp430. Switches three LEDs on, if the test was
+ * successful.
  * 
  * Author: Jan Hauer
  */
 #include "Msp430Adc12.h"
+#include "evaluator.h"
 configuration TestAdcAppC {
 }
 implementation
 {
-  components MainC,
-             new TestAdcC(REFVOLT_LEVEL_1_5) as TestAdcC1,
-             new Msp430Adc12ClientAutoRVGC() as Wrapper1,
-             LedsC;
+  // msp430 internal temperature sensor with ref volt from generator
+#define CONFIG_VREF TEMPERATURE_DIODE_CHANNEL, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_2_5, SHT_SOURCE_ACLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_4_CYCLES, SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1
 
-  TestAdcC1 -> MainC.Boot;
-  TestAdcC1.Leds -> LedsC;
-  TestAdcC1.Resource -> Wrapper1;
-  TestAdcC1.SingleChannel -> Wrapper1.Msp430Adc12SingleChannel;
-  Wrapper1.AdcConfigure -> TestAdcC1;
+  // msp430 internal temperature sensor with ref volt from AVcc
+#define CONFIG_AVCC TEMPERATURE_DIODE_CHANNEL, REFERENCE_AVcc_AVss, REFVOLT_LEVEL_NONE, SHT_SOURCE_SMCLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_4_CYCLES, SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1
+                        
+  components MainC, LedsC, EvaluatorC;
+  EvaluatorC.Leds -> LedsC;
 
-  components new TestAdcC(REFVOLT_LEVEL_2_5) as TestAdcC2,
-             new Msp430Adc12ClientAutoRVGC() as Wrapper2;
+  // Single, none
+  components new TestAdcSingleC(CONFIG_AVCC) as TestSingle0,
+             new Msp430Adc12ClientC() as Wrapper0;
 
-  TestAdcC2 -> MainC.Boot;
-  TestAdcC2.Leds -> LedsC;
-  TestAdcC2.Resource -> Wrapper2;
-  TestAdcC2.SingleChannel -> Wrapper2.Msp430Adc12SingleChannel;
-  Wrapper2.AdcConfigure -> TestAdcC2;
+  TestSingle0 -> MainC.Boot;
+  TestSingle0.Resource -> Wrapper0;
+  TestSingle0.SingleChannel -> Wrapper0.Msp430Adc12SingleChannel;
+  EvaluatorC.Notify[unique(EVALUATOR_CLIENT)] -> TestSingle0;
+
+  // Single, RefVolt
+  components new TestAdcSingleC(CONFIG_VREF) as TestSingle1,
+             new Msp430Adc12ClientAutoRVGC() as Wrapper1;
+
+  TestSingle1 -> MainC.Boot;
+  TestSingle1.Resource -> Wrapper1;
+  TestSingle1.SingleChannel -> Wrapper1.Msp430Adc12SingleChannel;
+  EvaluatorC.Notify[unique(EVALUATOR_CLIENT)] -> TestSingle1;
+  Wrapper1.AdcConfigure -> TestSingle1;
+
+  // Single, DMA
+  components new TestAdcSingleC(CONFIG_AVCC) as TestSingle2,
+             new Msp430Adc12ClientAutoDMAC() as Wrapper2;
+
+  TestSingle2 -> MainC.Boot;
+  TestSingle2.Resource -> Wrapper2;
+  TestSingle2.SingleChannel -> Wrapper2.Msp430Adc12SingleChannel;
+  EvaluatorC.Notify[unique(EVALUATOR_CLIENT)] -> TestSingle2;
+
+  // Single, RefVolt + DMA
+  components new TestAdcSingleC(CONFIG_VREF) as TestSingle3,
+             new Msp430Adc12ClientAutoDMA_RVGC() as Wrapper3;
+
+  TestSingle3 -> MainC.Boot;
+  TestSingle3.Resource -> Wrapper3;
+  TestSingle3.SingleChannel -> Wrapper3.Msp430Adc12SingleChannel;
+  EvaluatorC.Notify[unique(EVALUATOR_CLIENT)] -> TestSingle3;
+  Wrapper3.AdcConfigure -> TestSingle3;
+
+  // Multi, none
+  components new TestAdcMultiC(CONFIG_AVCC,
+                     SUPPLY_VOLTAGE_HALF_CHANNEL, REFERENCE_AVcc_AVss) as TestMulti1,
+             new Msp430Adc12ClientC() as Wrapper4;
+
+  TestMulti1 -> MainC.Boot;
+  TestMulti1.Resource -> Wrapper4;
+  TestMulti1.MultiChannel -> Wrapper4.Msp430Adc12MultiChannel;
+  EvaluatorC.Notify[unique(EVALUATOR_CLIENT)] -> TestMulti1;
+
+  // Multi, RefVolt
+  components new TestAdcMultiC(CONFIG_VREF,
+                      SUPPLY_VOLTAGE_HALF_CHANNEL, REFERENCE_VREFplus_AVss) as TestMulti2,
+             new Msp430Adc12ClientAutoRVGC() as Wrapper5;
+
+  TestMulti2 -> MainC.Boot;
+  TestMulti2.Resource -> Wrapper5;
+  TestMulti2.MultiChannel -> Wrapper5.Msp430Adc12MultiChannel;
+  EvaluatorC.Notify[unique(EVALUATOR_CLIENT)] -> TestMulti2;
+  Wrapper5.AdcConfigure -> TestMulti2;
+
 }
 
