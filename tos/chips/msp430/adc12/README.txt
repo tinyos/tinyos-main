@@ -32,9 +32,13 @@ rather about portability it should wire to any of these components.
 ====================================================================
 
 An application that is written for an MSP430-based platform like 'eyesIFX' or
-'telosb' can access the ADC12 in a more efficient way to, for example, do
-high-frequency sampling through the Msp430Adc12SingleChannel interface. On the
-MSP430 two additional hardware modules may become relevant when the ADC12 is
+'telosb' can access the ADC12 in a more efficient way via two interfaces: (1)
+the Msp430Adc12SingleChannel allows to perform one or more ADC conversions on a
+single channel with a specified sampling frequency and (2) the
+Msp430Adc12MultiChannel allows to sample a group of up to 16 different ADC
+channels "at once" (with minimum latency) and in addition define a sampling
+frequency for the whole group (useful for multi-channel accelerometers, etc.).
+On the MSP430 two additional hardware modules may play a role when the ADC12 is
 used: the internal reference voltage generator and the DMA controller. 
 
 The voltage generator outputs stabilized voltage of 1.5 V or 2.5 V, which may
@@ -52,7 +56,7 @@ the client calls Resource.release(), but only after some pre-defined interval
 clients are present. Second, one must not forget to wire the AdcConfigure
 interface to the Msp430Adc12ClientAutoRVGC or Msp430Adc12ClientAutoDMA_RVGC
 component in addition to configuring the ADC through the
-Msp430Adc12SingleChannel interface (no nesC warning will be signalled).
+Msp430Adc12SingleChannel interface (a nesC warning will be signalled).
   
 The DMA controller can be used to copy conversion data from the ADC registers
 to the application buffer. DMA is only present on MSP430x15x and MSP430x16x
@@ -67,6 +71,7 @@ by the following components that an MSP430-based application may wire to:
   * Msp430Adc12ClientAutoDMAC: DMA, but no automatic reference voltage
   * Msp430Adc12ClientAutoDMA_RVGC: DMA and automatic reference voltage
 
+Currently Msp430Adc12MultiChannel is only provided by the first two components.
 
 I/O PINs
 --------------------------------------------------------------------
@@ -78,7 +83,7 @@ pin is switched to input direction. By default, for every client this is done
 conversion starts the respective pin is switched to peripheral module function
 and input direction and immediately after the conversion has finished it is
 switched to I/O function mode. To disable this feature please comment out the
-"P6PIN_AUTO_CONFIGURE" macro in Msp430Adc12.h.
+"ADC12_P6PIN_AUTO_CONFIGURE" macro in Msp430Adc12.h.
 
 
 Configuration for single channel conversions
@@ -161,8 +166,17 @@ SAMPCON_CLOCK_DIV_1 and a "jiffies" parameter of (1000000 / 4000) = 250.
     // buffer contains conversion results
   }
 
+
+3. Implementation
+====================================================================
+
+The ADC12 stack is located at tinyos-2.x/tos/chips/msp430/adc12. Sensor
+wrappers for the msp430 internal sensors are in
+tinyos-2.x/tos/chips/msp430/sensors, an HAL test app can be found in
+tinyos-2.x/apps/tests/msp430/Adc12.
+
 -----
 
-$Date: 2007-03-14 18:14:06 $
+$Date: 2007-06-25 15:47:15 $
 @author: Jan Hauer <hauer@tkn.tu-berlin.de>
 

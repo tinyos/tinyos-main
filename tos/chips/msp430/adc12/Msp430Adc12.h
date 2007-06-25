@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2007-06-25 15:47:14 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -37,12 +37,16 @@
 #define MSP430ADC12_H
 #include "Msp430RefVoltGenerator.h"
 
-#define P6PIN_AUTO_CONFIGURE
+#define ADC12_TIMERA_ENABLED
+#define ADC12_P6PIN_AUTO_CONFIGURE
+#define ADC12_CHECK_ARGS
+//#define ADC12_ONLY_WITH_DMA
+
+// for HIL clients 
 #define REF_VOLT_AUTO_CONFIGURE
-#define CHECK_ARGS
- 
+
 typedef struct { 
-  // see README.txt for a more detailed explanation
+  // see README.txt
   unsigned int inch: 4;            // input channel 
   unsigned int sref: 3;            // reference voltage 
   unsigned int ref2_5v: 1;         // reference voltage level 
@@ -56,7 +60,7 @@ typedef struct {
 
 typedef struct 
 {
-  // see README.txt for a more detailed explanation
+  // see README.txt
   volatile unsigned
   inch: 4,                                     // input channel
   sref: 3,                                     // reference voltage

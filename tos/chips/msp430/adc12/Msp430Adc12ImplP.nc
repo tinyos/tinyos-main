@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2007-06-25 15:47:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -92,6 +92,7 @@ implementation
 
   void prepareTimerA(uint16_t interval, uint16_t csSAMPCON, uint16_t cdSAMPCON)
   {
+#ifdef ADC12_TIMERA_ENABLED
     msp430_compare_control_t ccResetSHI = {
       ccifg : 0, cov : 0, out : 0, cci : 0, ccie : 0,
       outmod : 0, cap : 0, clld : 0, scs : 0, ccis : 0, cm : 0 };
@@ -104,10 +105,12 @@ implementation
     call ControlA0.setControl(ccResetSHI);
     call CompareA0.setEvent(interval-1);
     call CompareA1.setEvent((interval-1)/2);
+#endif
   }
     
   void startTimerA()
   {
+#ifdef ADC12_TIMERA_ENABLED
     msp430_compare_control_t ccSetSHI = {
       ccifg : 0, cov : 0, out : 1, cci : 0, ccie : 0,
       outmod : 0, cap : 0, clld : 0, scs : 0, ccis : 0, cm : 0 };
@@ -123,11 +126,12 @@ implementation
     //call ControlA1.setControl(ccResetSHI); 
     call ControlA1.setControl(ccRSOutmod);
     call TimerA.setMode(MSP430TIMER_UP_MODE); // go!
+#endif
   }   
   
   void configureAdcPin( uint8_t inch )
   {
-#ifdef P6PIN_AUTO_CONFIGURE
+#ifdef ADC12_P6PIN_AUTO_CONFIGURE
     switch (inch)
     {
       case 0: call Port60.selectModuleFunc(); call Port60.makeInput(); break;
@@ -144,7 +148,7 @@ implementation
   
   void resetAdcPin( uint8_t inch )
   {
-#ifdef P6PIN_AUTO_CONFIGURE
+#ifdef ADC12_P6PIN_AUTO_CONFIGURE
     switch (inch)
     {
       case 0: call Port60.selectIOFunc(); break;
@@ -163,7 +167,7 @@ implementation
       const msp430adc12_channel_config_t *config)
   {
     error_t result = ERESERVE;
-#ifdef CHECK_ARGS
+#ifdef ADC12_CHECK_ARGS
     if (!config)
       return EINVAL;
 #endif
@@ -207,7 +211,7 @@ implementation
       uint16_t jiffies)
   {
     error_t result = ERESERVE;
-#ifdef CHECK_ARGS
+#ifdef ADC12_CHECK_ARGS
     if (!config || jiffies == 1 || jiffies == 2)
       return EINVAL;
 #endif
@@ -255,7 +259,7 @@ implementation
       uint16_t *buf, uint16_t length, uint16_t jiffies)
   {
     error_t result = ERESERVE;
-#ifdef CHECK_ARGS
+#ifdef ADC12_CHECK_ARGS
     if (!config || !buf || !length || jiffies == 1 || jiffies == 2)
       return EINVAL;
 #endif
@@ -311,7 +315,7 @@ implementation
       uint16_t *buf, uint8_t length, uint16_t jiffies)
   {
     error_t result = ERESERVE;
-#ifdef CHECK_ARGS
+#ifdef ADC12_CHECK_ARGS
     if (!config || !buf || !length || length > 16 || jiffies == 1 || jiffies == 2)
       return EINVAL;
 #endif
@@ -389,7 +393,7 @@ implementation
       uint16_t numSamples, uint16_t jiffies)
   {
     error_t result = ERESERVE;
-#ifdef CHECK_ARGS
+#ifdef ADC12_CHECK_ARGS
     if (!config || !memctl || !numMemctl || numMemctl > 15 || !numSamples || 
         !buf || jiffies == 1 || jiffies == 2 || numSamples % (numMemctl+1) != 0)
       return EINVAL;
@@ -471,8 +475,10 @@ implementation
   void stopConversion()
   {
     uint8_t i;
+#ifdef ADC12_TIMERA_ENABLED
     if (state & USE_TIMERA)
       call TimerA.setMode(MSP430TIMER_STOP_MODE);
+#endif
     resetAdcPin( (call HplAdc12.getMCtl(0)).inch );
     if (state & MULTI_CHANNEL){
       ADC12IV = 0; // clear any pending overflow
@@ -519,7 +525,6 @@ implementation
       else
         signal Overflow.conversionTimeOverflow[clientID]();
     }
-#ifndef MSP430ADC12_ONLY_DMA
     switch (state & CONVERSION_MODE_MASK) 
     { 
       case SINGLE_DATA:
@@ -535,6 +540,7 @@ implementation
             stopConversion();
           break;
         }
+#ifndef ADC12_ONLY_WITH_DMA
       case MULTI_CHANNEL:
         {
           uint16_t i = 0;
@@ -590,8 +596,8 @@ implementation
             stopConversion();
           break;
         }
-      } // switch
 #endif
+      } // switch
   }
 
   default async event error_t SingleChannel.singleDataReady[uint8_t id](uint16_t data)

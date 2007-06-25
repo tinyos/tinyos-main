@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2007-06-25 15:47:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -44,7 +44,7 @@ configuration Msp430Adc12P
     interface AsyncStdControl as DMAExtension[uint8_t id];
   }
 } implementation { 
-  components Msp430Adc12ImplP, HplAdc12P, Msp430TimerC, MainC, HplMsp430GeneralIOC, 
+  components Msp430Adc12ImplP, HplAdc12P, MainC, 
              new SimpleRoundRobinArbiterC(MSP430ADC12_RESOURCE) as Arbiter;
 
   Resource = Arbiter;
@@ -56,6 +56,9 @@ configuration Msp430Adc12P
   Msp430Adc12ImplP.Init <- MainC;
   Msp430Adc12ImplP.ADCArbiterInfo -> Arbiter;
   Msp430Adc12ImplP.HplAdc12 -> HplAdc12P;
+
+#ifdef ADC12_P6PIN_AUTO_CONFIGURE
+  components HplMsp430GeneralIOC;
   Msp430Adc12ImplP.Port60 -> HplMsp430GeneralIOC.Port60;
   Msp430Adc12ImplP.Port61 -> HplMsp430GeneralIOC.Port61;
   Msp430Adc12ImplP.Port62 -> HplMsp430GeneralIOC.Port62;
@@ -64,11 +67,15 @@ configuration Msp430Adc12P
   Msp430Adc12ImplP.Port65 -> HplMsp430GeneralIOC.Port65;
   Msp430Adc12ImplP.Port66 -> HplMsp430GeneralIOC.Port66;
   Msp430Adc12ImplP.Port67 -> HplMsp430GeneralIOC.Port67;
+#endif
 
+#ifdef ADC12_TIMERA_ENABLED
+  components Msp430TimerC;
   Msp430Adc12ImplP.TimerA -> Msp430TimerC.TimerA;
   Msp430Adc12ImplP.ControlA0 -> Msp430TimerC.ControlA0;
   Msp430Adc12ImplP.ControlA1 -> Msp430TimerC.ControlA1;
   Msp430Adc12ImplP.CompareA0 -> Msp430TimerC.CompareA0;
   Msp430Adc12ImplP.CompareA1 -> Msp430TimerC.CompareA1;
+#endif
 }
 
