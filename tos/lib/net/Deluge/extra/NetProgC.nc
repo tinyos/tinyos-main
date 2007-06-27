@@ -54,4 +54,8 @@ implementation {
   
   components LedsC;
   NetProgM.Leds -> LedsC;
+  
+  components CC2420ControlP, ActiveMessageAddressC;
+  NetProgM.CC2420Config -> CC2420ControlP;
+  NetProgM.setAmAddress -> ActiveMessageAddressC;
 }

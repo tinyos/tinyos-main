@@ -73,7 +73,7 @@ implementation
       
       delugeDis.uid = imgDesc->uid;
       delugeDis.vNum = imgDesc->vNum;
-      delugeDis.imgNum = imgDesc->imgNum;
+      delugeDis.imgNum = img_num;
       delugeDis.size = imgDesc->size;
       
       call DisseminationUpdate.change(&delugeDis);   // Disseminates image information

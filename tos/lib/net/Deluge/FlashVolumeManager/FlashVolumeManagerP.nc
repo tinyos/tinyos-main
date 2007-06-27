@@ -34,14 +34,14 @@ generic module FlashVolumeManagerP()
   uses {
     interface BlockRead[uint8_t img_num];
     interface BlockWrite[uint8_t img_num];
-    interface DelugeStorage[uint8_t img_num];
-    interface AMSend as SerialAMSender;
-    interface Receive as SerialAMReceiver;
-    interface Leds;
 #ifdef DELUGE
+    interface DelugeStorage[uint8_t img_num];
     interface NetProg;
     interface Timer<TMilli> as Timer;
 #endif
+    interface AMSend as SerialAMSender;
+    interface Receive as SerialAMReceiver;
+    interface Leds;
   }
 }
 
@@ -153,46 +153,50 @@ implementation
         break;
     }
     
-    switch (srpkt->msg_type) {
-      case SERIALMSG_ERASE:    // === Erases a volume ===
-        state = S_ERASE;
-        error = call BlockWrite.erase[img_num]();
-        break;
-      case SERIALMSG_WRITE:    // === Writes to a volume ===
-        state = S_WRITE;
-        memcpy(buffer, srpkt->data, srpkt->len);
-        error = call BlockWrite.write[img_num](srpkt->offset,
-                                                      buffer,
+    if (img_num != 0xFF) {
+      switch (srpkt->msg_type) {
+        case SERIALMSG_ERASE:    // === Erases a volume ===
+          state = S_ERASE;
+          error = call BlockWrite.erase[img_num]();
+          break;
+        case SERIALMSG_WRITE:    // === Writes to a volume ===
+          state = S_WRITE;
+          memcpy(buffer, srpkt->data, srpkt->len);
+          error = call BlockWrite.write[img_num](srpkt->offset,
+                                                        buffer,
+                                                        srpkt->len);
+          break;
+        case SERIALMSG_READ:     // === Reads a portion of a volume ===
+          state = S_READ;
+          error = call BlockRead.read[img_num](srpkt->offset,
+                                                      serialMsg_payload->data,
                                                       srpkt->len);
-        break;
-      case SERIALMSG_READ:     // === Reads a portion of a volume ===
-        state = S_READ;
-        error = call BlockRead.read[img_num](srpkt->offset,
-                                                    serialMsg_payload->data,
-                                                    srpkt->len);
-        break;
-      case SERIALMSG_CRC:      // === Computes CRC over a portion of a volume ===
-        state = S_CRC;
-        error = call BlockRead.computeCrc[img_num](srpkt->offset,
-                                                          srpkt->len, 0);
-        break;
-      case SERIALMSG_ADDR:     // === Gets the physical starting address of a volume ===
-	*(nx_uint32_t*)(&serialMsg_payload->data) =
-	                      (uint32_t)call DelugeStorage.getPhysicalAddress[img_num](0);
-	sendReply(SUCCESS, sizeof(SerialReplyPacket) + 4);
-        break;
-#ifdef DELUGE
-      case SERIALMSG_REPROG:   // === Reboots and reprograms ===
-        state = S_REPROG;
-        sendReply(SUCCESS, sizeof(SerialReplyPacket));
-        img_num_reboot = img_num;
-	call Timer.startOneShot(1024);
-	break;
-      case SERIALMSG_DISS:     // === Starts disseminating a volume ===
-	signal Notify.notify(img_num);   // Notifies Deluge to start disseminate
-	sendReply(SUCCESS, sizeof(SerialReplyPacket));
-	break;
-#endif
+          break;
+        case SERIALMSG_CRC:      // === Computes CRC over a portion of a volume ===
+          state = S_CRC;
+          error = call BlockRead.computeCrc[img_num](srpkt->offset,
+                                                            srpkt->len, 0);
+          break;
+  #ifdef DELUGE
+        case SERIALMSG_ADDR:     // === Gets the physical starting address of a volume ===
+          *(nx_uint32_t*)(&serialMsg_payload->data) =
+                                  (uint32_t)call DelugeStorage.getPhysicalAddress[img_num](0);
+          sendReply(SUCCESS, sizeof(SerialReplyPacket) + 4);
+          break;
+        case SERIALMSG_REPROG:   // === Reboots and reprograms ===
+          state = S_REPROG;
+          sendReply(SUCCESS, sizeof(SerialReplyPacket));
+          img_num_reboot = img_num;
+          call Timer.startOneShot(1024);
+          break;
+        case SERIALMSG_DISS:     // === Starts disseminating a volume ===
+          signal Notify.notify(img_num);   // Notifies Deluge to start disseminate
+          sendReply(SUCCESS, sizeof(SerialReplyPacket));
+          break;
+  #endif
+      }
+    } else {
+      error = FAIL;
     }
     
     // If a split-phase operation fails when being requested, signals the failure now
@@ -213,6 +217,8 @@ implementation
   
   command error_t Notify.enable() { return SUCCESS; }
   command error_t Notify.disable() { return SUCCESS; }
+  
+  default command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0; }
 #endif
 
   default command error_t BlockWrite.write[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
@@ -220,6 +226,4 @@ implementation
   default command error_t BlockWrite.sync[uint8_t img_num]() { return FAIL; }
   default command error_t BlockRead.read[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
   default command error_t BlockRead.computeCrc[uint8_t img_num](storage_addr_t addr, storage_len_t len, uint16_t crc) { return FAIL; }
-
-  default command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0; }
 }

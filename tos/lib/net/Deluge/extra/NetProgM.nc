@@ -42,6 +42,8 @@ module NetProgM {
     interface Crc;
     interface DelugeMetadata;
     interface Leds;
+    interface CC2420Config;
+    async command void setAmAddress(am_addr_t a);
   }
 }
 
@@ -76,13 +78,20 @@ implementation {
 
     if (tosInfo.crc == computeTosInfoCrc(&tosInfo)) {
       // TOS_AM_GROUP is not a variable in T2
-      //      TOS_AM_GROUP = tosInfo.groupId;
-      atomic TOS_NODE_ID = tosInfo.addr;
+      //   TOS_AM_GROUP = tosInfo.groupId;
+      
+      // Updates local node ID
+      atomic {
+        TOS_NODE_ID = tosInfo.addr;
+        call setAmAddress(tosInfo.addr);
+      }
+      call CC2420Config.setShortAddr(tosInfo.addr);
+      call CC2420Config.sync();
     }
     else {
       writeTOSinfo();
     }
- 
+    
     return SUCCESS;
   }
   
@@ -122,6 +131,8 @@ implementation {
     // couldn't reboot
     return FAIL;
   }
+
+  event void CC2420Config.syncDone(error_t error) {}
 
   default command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0xFFFFFFFF; }
 

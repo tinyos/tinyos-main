@@ -25,6 +25,7 @@
  */
 
 #include "AM.h"
+#include "StorageVolumes.h"
 
 generic configuration FlashVolumeManagerC(am_id_t AMId)
 {
@@ -34,7 +35,9 @@ generic configuration FlashVolumeManagerC(am_id_t AMId)
   uses {
     interface BlockRead[uint8_t img_num];
     interface BlockWrite[uint8_t img_num];
+#ifdef DELUGE
     interface DelugeStorage[uint8_t img_num];
+#endif
   }
 }
 
@@ -45,21 +48,21 @@ implementation
              new FlashVolumeManagerP(),
              NoLedsC, LedsC;
   
-  FlashVolumeManagerP.BlockRead[0] = BlockRead[0];
-  FlashVolumeManagerP.BlockWrite[0] = BlockWrite[0];
-  FlashVolumeManagerP.DelugeStorage[0] = DelugeStorage[0];
-  FlashVolumeManagerP.BlockRead[1] = BlockRead[1];
-  FlashVolumeManagerP.BlockWrite[1] = BlockWrite[1];
-  FlashVolumeManagerP.DelugeStorage[1] = DelugeStorage[1];
+  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE0] = BlockRead[VOLUME_DELUGE0];
+  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE0] = BlockWrite[VOLUME_DELUGE0];
+  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE1] = BlockRead[VOLUME_DELUGE1];
+  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE1] = BlockWrite[VOLUME_DELUGE1];
   FlashVolumeManagerP.SerialAMSender -> SerialAMSenderC;
   FlashVolumeManagerP.SerialAMReceiver -> SerialAMReceiverC;
-  FlashVolumeManagerP.Leds -> LedsC;
+  FlashVolumeManagerP.Leds -> NoLedsC;
 
 #ifdef DELUGE  
   components NetProgC, new TimerMilliC();
+  
   FlashVolumeManagerP.NetProg -> NetProgC;
   FlashVolumeManagerP.Timer -> TimerMilliC;
-  
+  FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE0] = DelugeStorage[VOLUME_DELUGE0];
+  FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE1] = DelugeStorage[VOLUME_DELUGE1];
   Notify = FlashVolumeManagerP.Notify;
 #endif
 }

@@ -55,6 +55,7 @@ implementation
   // States
   enum {
     S_ERASE,
+    S_SYNC,
     S_INITIALIZING_PUB,
     S_INITIALIZING_RECV,
     S_STARTED,
@@ -110,7 +111,8 @@ implementation
       resetTimer();
     } else {
       call DelugePageTransfer.setWorkingPage(DELUGE_INVALID_OBJID, DELUGE_INVALID_PGNUM);
-      post signalObjRecvDone();
+      state = S_SYNC;
+      call BlockWrite.sync[cont_receive_img_num]();
     }
   }
   
@@ -150,7 +152,6 @@ implementation
       if (call SendAdvMsg.send(addr, &pMsgBuf, sizeof(DelugeAdvMsg)) == SUCCESS) {
         //dbg(DBG_USR1, "DELUGE: Sent ADV_MSG(imgNum=%d)\n", imgDesc->imgNum);
 //call StatsCollector.msg_bcastReq();
-call Leds.led0Toggle();
         isBusy_pMsgBuf = TRUE;
       }
     }
@@ -215,7 +216,7 @@ call Leds.led0Toggle();
     cont_receive_new_size = new_size;
     cont_receive_img_num = img_num;
     
-    error = call BlockWrite.erase[img_num]();
+    error = call BlockWrite.erase[cont_receive_img_num]();
     if (error == SUCCESS) {
       state = S_ERASE;
     }
@@ -246,8 +247,19 @@ call Leds.led0Toggle();
         setNextPage();
       } else {
         call DelugePageTransfer.setWorkingPage(curObjDesc.objid, curObjDesc.numPgsComplete);
-        post signalObjRecvDone();
+        state = S_SYNC;
+        call BlockWrite.sync[cont_receive_img_num]();
       }
+    }
+  }
+  
+  event void BlockWrite.syncDone[uint8_t img_num](error_t error)
+  {
+    if (state == S_SYNC) {
+      if (error != SUCCESS) {
+        call Leds.led2On();
+      }
+      post signalObjRecvDone();
     }
   }
   
@@ -326,6 +338,8 @@ call Leds.led0Toggle();
   }
   
   default command error_t BlockWrite.erase[uint8_t img_num]() { return FAIL; }
+  default command error_t BlockWrite.sync[uint8_t img_num]() { return FAIL; }
+  
   event void BlockWrite.writeDone[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {}
   event void BlockWrite.eraseDone[uint8_t img_num](error_t error)
   {
@@ -333,5 +347,4 @@ call Leds.led0Toggle();
       cont_receive();
     }
   }
-  event void BlockWrite.syncDone[uint8_t img_num](error_t error) {}
 }

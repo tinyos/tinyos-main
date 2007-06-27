@@ -25,6 +25,7 @@
  */
 
 #include "DelugePageTransfer.h"
+#include "StorageVolumes.h"
 
 configuration ObjectTransferC
 {
@@ -40,10 +41,10 @@ implementation
   components ObjectTransferP, DelugePageTransferC;
   
   ObjectTransfer = ObjectTransferP;
-  BlockRead[0] = DelugePageTransferC.BlockRead[0];
-  BlockWrite[0] = DelugePageTransferC.BlockWrite[0];
-  BlockRead[1] = DelugePageTransferC.BlockRead[1];
-  BlockWrite[1] = DelugePageTransferC.BlockWrite[1];
+  BlockRead[VOLUME_DELUGE0] = DelugePageTransferC.BlockRead[VOLUME_DELUGE0];
+  BlockWrite[VOLUME_DELUGE0] = DelugePageTransferC.BlockWrite[VOLUME_DELUGE0];
+  BlockRead[VOLUME_DELUGE1] = DelugePageTransferC.BlockRead[VOLUME_DELUGE1];
+  BlockWrite[VOLUME_DELUGE1] = DelugePageTransferC.BlockWrite[VOLUME_DELUGE1];
   ObjectTransferP.DelugePageTransfer -> DelugePageTransferC.DelugePageTransfer;
   
   components CrcP;
@@ -64,8 +65,8 @@ implementation
   DelugePageTransferC.ReceiveDataMsg -> ReceiveDataMsg;
   DelugePageTransferC.AMPacket -> SendDataMsg;
   
-  ObjectTransferP.BlockWrite[0] = BlockWrite[0];
-  ObjectTransferP.BlockWrite[1] = BlockWrite[1];
+  ObjectTransferP.BlockWrite[VOLUME_DELUGE0] = BlockWrite[VOLUME_DELUGE0];
+  ObjectTransferP.BlockWrite[VOLUME_DELUGE1] = BlockWrite[VOLUME_DELUGE1];
   
   components MainC, LedsC, NoLedsC;
   ObjectTransferP.Leds -> NoLedsC;

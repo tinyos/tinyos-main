@@ -25,31 +25,32 @@
  */
 
 #include "Deluge.h"
+#include "StorageVolumes.h"
 
 configuration DelugeC {}
 
 implementation
 {
   components DelugeStorageC;
-
+  
 #ifdef DELUGE_BASESTATION
   components SerialStarterC;
   components new FlashVolumeManagerC(0xAB);
-
+  
   DelugeP.ReprogNotify -> FlashVolumeManagerC;
-  FlashVolumeManagerC.BlockRead[0] -> DelugeStorageC.BlockRead[0];
-  FlashVolumeManagerC.BlockWrite[0] -> DelugeStorageC.BlockWrite[0];
-  FlashVolumeManagerC.DelugeStorage[0] -> DelugeStorageC.DelugeStorage[0];
-  FlashVolumeManagerC.BlockRead[1] -> DelugeStorageC.BlockRead[1];
-  FlashVolumeManagerC.BlockWrite[1] -> DelugeStorageC.BlockWrite[1];
-  FlashVolumeManagerC.DelugeStorage[1] -> DelugeStorageC.DelugeStorage[1];
+  FlashVolumeManagerC.BlockRead[VOLUME_DELUGE0] -> DelugeStorageC.BlockRead[VOLUME_DELUGE0];
+  FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE0] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE0];
+  FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE0] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE0];
+  FlashVolumeManagerC.BlockRead[VOLUME_DELUGE1] -> DelugeStorageC.BlockRead[VOLUME_DELUGE1];
+  FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE1] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE1];
+  FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE1] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE1];
 #endif
   
   components ObjectTransferC;
-  ObjectTransferC.BlockRead[0] -> DelugeStorageC.BlockRead[0];
-  ObjectTransferC.BlockWrite[0] -> DelugeStorageC.BlockWrite[0];
-  ObjectTransferC.BlockRead[1] -> DelugeStorageC.BlockRead[1];
-  ObjectTransferC.BlockWrite[1] -> DelugeStorageC.BlockWrite[1];
+  ObjectTransferC.BlockRead[VOLUME_DELUGE0] -> DelugeStorageC.BlockRead[VOLUME_DELUGE0];
+  ObjectTransferC.BlockWrite[VOLUME_DELUGE0] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE0];
+  ObjectTransferC.BlockRead[VOLUME_DELUGE1] -> DelugeStorageC.BlockRead[VOLUME_DELUGE1];
+  ObjectTransferC.BlockWrite[VOLUME_DELUGE1] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE1];
   
   components new DisseminatorC(DelugeDissemination, 0xDE00), DisseminationC;
   components ActiveMessageC;
