@@ -10,8 +10,8 @@ Testbeds - Setup and Interfaces
 :Author: Jan Beutel
 
 :Draft-Created: 14-Jun-2007
-:Draft-Version: $Revision: 1.1 $
-:Draft-Modified: $Date: 2007-06-21 18:23:44 $
+:Draft-Version: $Revision: 1.2 $
+:Draft-Modified: $Date: 2007-06-28 16:41:55 $
 :Draft-Discuss: TinyOS Testbed WG <tinyos-testbed-wg@eecs.harvard.edu>>
 
 .. Note::
@@ -52,23 +52,41 @@ wireless environment.
 A typical testbed is made up of a number of nodes (?do we state amounts here?) 
 connected to a central resource for control and logging that are deployed in a 
 physical space (testing area). Typically the central resource is a server with 
-integrated datalogging capability.
+integrated datalogging capability. Often a web front end serves as a simple control and 
+visualization resource. For the submission of testing jobs and the analysis of 
+testing results external tools are attached to the central resource using a 
+standardized interface. This document serves as a key specification document for 
+such an interface and its intended usage.
 
 MISSING: Difference of a testbed vs. a desktop test (e.g. single nodes with a 
 programmer or a simple usb grid)
 
-Examples of current sensor network testbeds are MoteLab [1_] and the 
+Examples of currently used sensor network testbeds are MoteLab [1_] and the 
 Deployment-Support Network [2_].
 
 
 2. Testbed Usage
 ====================================================================
+A testbed can serve different purposes depending on the development status and 
+requirements of a specific project. While this document does not target to restrict 
+such usage it defines a set of mandatory modes of operation that a testbed must 
+be able to support:
 
 Modes of Operation:
 
-- Single Shot
+- Single Shot Operation
 
-- Continuous Integration
+Execute a testing job consisting of an uploading of a specific code image onto a 
+set of nodes, remote programming of nodes using a testbed resource, the 
+synchronized start of this software, capture of resulting target response, the 
+centralized storage and timestamping of all actions and target response, ending 
+of test execution, notification of a user of the end of test execution, output 
+of all stored data on demand.
+
+- Repetitive (e.g. using continuous integration or for regression testing)
+
+A concatenation of single shot testing jobs, that in practice often will be used 
+with the variation of one or more parameters.
 
 - Long Term Operation (Profiling)
 
@@ -78,21 +96,29 @@ Other Topics:
 
 - Access/Resource Arbitration
 
+- Scheduling of testing jobs
+
 
 3. Testbed Services
 ====================================================================
+Required Services:
+
 
 - identification of target devices (presence, type, hw rev)
 - programming of target devices
 - resetting of target devices
-- logging of target response
+- logging of target response (UART mandatory, IRQ optional)
 - versioning/identification of uploaded software 
 - identification/versioning/archiving of testing jobs
 
 - testbed status information
 - identification of testbed services
-- authentification
+- user authentification
 
+Optional:
+- power measurements
+- stimuli
+- distributed scheduling of actions (at nodes)
 
 4. Implementation
 ====================================================================
