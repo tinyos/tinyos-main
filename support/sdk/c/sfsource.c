@@ -26,7 +26,7 @@ int saferead(int fd, void *buffer, int count)
 
       count -= n;
       actual += n;
-      buffer += n;
+      buffer = (char*)buffer + n;
     }
   return actual;
 }
@@ -46,7 +46,7 @@ int safewrite(int fd, const void *buffer, int count)
 
       count -= n;
       actual += n;
-      buffer += n;
+      buffer = (char*)buffer + n;
     }
   return actual;
 }

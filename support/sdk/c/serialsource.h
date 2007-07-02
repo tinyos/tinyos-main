@@ -1,6 +1,10 @@
 #ifndef SERIALSOURCE_H
 #define SERIALSOURCE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct serial_source *serial_source;
 
 typedef enum {
@@ -69,5 +73,9 @@ int platform_baud_rate(char *platform_name);
      platforms. If platform_name starts with a digit, just return 
      atoi(platform_name).
 */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -15,6 +15,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** The type of message buffers */
 typedef struct tmsg tmsg_t;
 
@@ -144,5 +148,9 @@ float tmsg_read_float_be(tmsg_t *msg, size_t offset);
  * and no write occurs.
  */
 void tmsg_write_float_be(tmsg_t *msg, size_t offset, float x);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
