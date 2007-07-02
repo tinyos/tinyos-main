@@ -10,8 +10,8 @@ TEP Structure and Keywords
 :Author: Philip Levis
 
 :Draft-Created: 18-Oct-2004
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2007-07-02 21:30:48 $
+:Draft-Version: $Revision: 1.9 $
+:Draft-Modified: $Date: 2007-07-02 23:35:04 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -231,13 +231,12 @@ the practices.
 
 The last three sections of a TEP are author information, citations,
 and appendices. A TEP MUST have an author information section titled
-entitled "Author's Address" or "Author's Addresses." A TEP MAY have
+entitled "Author's Address" or "Authors' Addresses." A TEP MAY have
 a citation section entitled "Citations." A citations section MUST
 immediately follow the author information section. A TEP MAY have
 appendices. Appendices MUST immediately follow the citations section,
 or if there is no citations section, the author information section.
-Author information and citation sections are numbered. Appendices are
-lettered.  Please refer to Appendix A for details.
+Appendices are lettered.  Please refer to Appendix A for details.
 
 4. Reference
 ====================================================================
@@ -253,13 +252,13 @@ definitions taken from IETF RFC 2119.
 ====================================================================
 
 | Philip Levis
-| 467 Soda Hall
-| UC Berkeley
-| Berkeley, CA 94720
+| 358 Gates Hall
+| Stanford University 
+| Stanford, CA 94305
 |
-| phone - +1 510 290 5283
+| phone - +1 650 725 9046
 |
-| email - pal@cs.berkeley.edu
+| email - pal@cs.stanford.edu
 
 7. Citations
 ====================================================================
