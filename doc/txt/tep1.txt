@@ -10,8 +10,8 @@ TEP Structure and Keywords
 :Author: Philip Levis
 
 :Draft-Created: 18-Oct-2004
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2007-06-21 19:38:42 $
+:Draft-Version: $Revision: 1.8 $
+:Draft-Modified: $Date: 2007-07-02 21:30:48 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -225,21 +225,22 @@ If a TEP is Documentary, it MUST have a section entitled
 "Implementation," which instructs the reader how to obtain the
 implementation documented.
 
-If a TEP is Best Current Practic, it MUST have a section entitled
+If a TEP is Best Current Practice, it MUST have a section entitled
 "Reference," which points the reader to one or more reference uses of
 the practices.
 
-The last numbered section of a TEP (but before citations, if there are any),
-entitled "Author's Address" or "Author's Addresses" MUST contain
-detailed author contact information.
-
-A TEP MAY have appendices after its numbered sections. Unlike 
-numbered sections, appendices are lettered. Please refer to Appendix 
-A for details.
+The last three sections of a TEP are author information, citations,
+and appendices. A TEP MUST have an author information section titled
+entitled "Author's Address" or "Author's Addresses." A TEP MAY have
+a citation section entitled "Citations." A citations section MUST
+immediately follow the author information section. A TEP MAY have
+appendices. Appendices MUST immediately follow the citations section,
+or if there is no citations section, the author information section.
+Author information and citation sections are numbered. Appendices are
+lettered.  Please refer to Appendix A for details.
 
 4. Reference
 ====================================================================
-
 The reference use of this document is TEP 1 (itself).
 
 5. Acknowledgments
