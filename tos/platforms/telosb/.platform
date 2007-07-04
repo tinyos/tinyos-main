@@ -13,6 +13,18 @@ push( @includes, qw(
   %T/platforms/telosa/chips/s10871
   %T/platforms/telosa/chips/sht11
   %T/chips/cc2420
+  %T/chips/cc2420/alarm
+  %T/chips/cc2420/control
+  %T/chips/cc2420/csma
+  %T/chips/cc2420/interfaces
+  %T/chips/cc2420/link
+  %T/chips/cc2420/lowpan
+  %T/chips/cc2420/lpl
+  %T/chips/cc2420/packet
+  %T/chips/cc2420/receive
+  %T/chips/cc2420/spi
+  %T/chips/cc2420/transmit
+  %T/chips/cc2420/unique
   %T/chips/msp430
   %T/chips/msp430/adc12
   %T/chips/msp430/dma
