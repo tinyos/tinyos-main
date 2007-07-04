@@ -30,7 +30,7 @@
  * @date   Jan 2 2006
  */
 
-// $Id: sim_packet.h,v 1.4 2006-12-12 18:23:35 vlahan Exp $
+// $Id: sim_packet.h,v 1.5 2007-07-04 16:15:11 scipio Exp $
 
 #ifndef SIM_PACKET_H_INCLUDED
 #define SIM_PACKET_H_INCLUDED
@@ -49,6 +49,9 @@ extern "C" {
    * friendly pointer to a message_t.
    */
   typedef struct sim_packet {} sim_packet_t;
+  
+  void sim_packet_set_source(sim_packet_t* msg, uint16_t src);
+  uint16_t sim_packet_source(sim_packet_t* msg);
   
   void sim_packet_set_destination(sim_packet_t* msg, uint16_t dest);
   uint16_t sim_packet_destination(sim_packet_t* msg);

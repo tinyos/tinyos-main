@@ -30,7 +30,7 @@
  * @date   Jan 2 2006
  */
 
-// $Id: sim_packet.c,v 1.4 2006-12-12 18:23:35 vlahan Exp $
+// $Id: sim_packet.c,v 1.5 2007-07-04 16:15:11 scipio Exp $
 
 #include <sim_packet.h>
 #include <message.h>
@@ -43,10 +43,20 @@ static tossim_header_t* getHeader(message_t* msg) {
   return (tossim_header_t*)(msg->data - sizeof(tossim_header_t));
 }
 
+void sim_packet_set_source(sim_packet_t* msg, uint16_t src)__attribute__ ((C, spontaneous)) {
+  tossim_header_t* hdr = getHeader((message_t*)msg);
+  hdr->src = src;
+}
+
+uint16_t sim_packet_source(sim_packet_t* msg)__attribute__ ((C, spontaneous)) {
+  tossim_header_t* hdr = getHeader((message_t*)msg);
+  return hdr->src;
+}
+
 void sim_packet_set_destination(sim_packet_t* msg, uint16_t dest)__attribute__ ((C, spontaneous)) {
   tossim_header_t* hdr = getHeader((message_t*)msg);
   hdr->dest = dest;
-}__attribute__ ((C, spontaneous))
+}
 
 uint16_t sim_packet_destination(sim_packet_t* msg)__attribute__ ((C, spontaneous)) {
   tossim_header_t* hdr = getHeader((message_t*)msg);

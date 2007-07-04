@@ -1504,6 +1504,40 @@ static PyObject *_wrap_delete_Packet(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *_wrap_Packet_setSource(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    Packet *arg1 = (Packet *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"Oi:Packet_setSource",&obj0,&arg2)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Packet,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    (arg1)->setSource(arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Packet_source(PyObject *self, PyObject *args) {
+    PyObject *resultobj;
+    Packet *arg1 = (Packet *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Packet_source",&obj0)) goto fail;
+    if ((SWIG_ConvertPtr(obj0,(void **) &arg1, SWIGTYPE_p_Packet,SWIG_POINTER_EXCEPTION | 0 )) == -1) SWIG_fail;
+    result = (int)(arg1)->source();
+    
+    resultobj = PyInt_FromLong((long)result);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_Packet_setDestination(PyObject *self, PyObject *args) {
     PyObject *resultobj;
     Packet *arg1 = (Packet *) 0 ;
@@ -3322,6 +3356,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Radio_swigregister", Radio_swigregister, METH_VARARGS },
 	 { (char *)"new_Packet", _wrap_new_Packet, METH_VARARGS },
 	 { (char *)"delete_Packet", _wrap_delete_Packet, METH_VARARGS },
+	 { (char *)"Packet_setSource", _wrap_Packet_setSource, METH_VARARGS },
+	 { (char *)"Packet_source", _wrap_Packet_source, METH_VARARGS },
 	 { (char *)"Packet_setDestination", _wrap_Packet_setDestination, METH_VARARGS },
 	 { (char *)"Packet_destination", _wrap_Packet_destination, METH_VARARGS },
 	 { (char *)"Packet_setLength", _wrap_Packet_setLength, METH_VARARGS },

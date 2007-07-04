@@ -40,6 +40,9 @@ class Packet {
     Packet(sim_packet_t* msg);
     ~Packet();
 
+    void setSource(int src);
+    int source();
+
     void setDestination(int dest);
     int destination();
 

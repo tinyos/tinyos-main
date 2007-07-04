@@ -113,6 +113,8 @@ class Packet(_object):
         try:
             if self.thisown: destroy(self)
         except: pass
+    def setSource(*args): return apply(_TOSSIM.Packet_setSource,args)
+    def source(*args): return apply(_TOSSIM.Packet_source,args)
     def setDestination(*args): return apply(_TOSSIM.Packet_setDestination,args)
     def destination(*args): return apply(_TOSSIM.Packet_destination,args)
     def setLength(*args): return apply(_TOSSIM.Packet_setLength,args)

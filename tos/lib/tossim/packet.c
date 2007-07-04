@@ -54,6 +54,13 @@ Packet::~Packet() {
   }
 }
 
+void Packet::setSource(int src) {
+  sim_packet_set_source(msgPtr, (uint16_t)src);
+}
+int Packet::source() {
+  return sim_packet_source(msgPtr);
+}
+
 void Packet::setDestination(int dest) {
   sim_packet_set_destination(msgPtr, (uint16_t)dest);
 }
