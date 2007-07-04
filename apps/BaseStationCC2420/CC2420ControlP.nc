@@ -31,8 +31,9 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
+ * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.6 $ $Date: 2007-04-12 17:12:26 $
+ * @version $Revision: 1.7 $ $Date: 2007-07-04 17:45:12 $
  */
 
 #include "Timer.h"
@@ -50,6 +51,7 @@ module CC2420ControlP {
   uses interface GeneralIO as RSTN;
   uses interface GeneralIO as VREN;
   uses interface GpioInterrupt as InterruptCCA;
+  uses interface ActiveMessageAddress;
 
   uses interface CC2420Ram as PANID;
   uses interface CC2420Register as FSCTRL;
@@ -83,27 +85,54 @@ implementation {
     S_XOSC_STARTED,
   } cc2420_control_state_t;
 
-  uint8_t m_channel = CC2420_DEF_CHANNEL;
+  uint8_t m_channel;
   
-  uint8_t m_tx_power = CC2420_DEF_RFPOWER;
+  uint8_t m_tx_power;
   
-  uint16_t m_pan = TOS_AM_GROUP;
+  uint16_t m_pan;
   
   uint16_t m_short_addr;
   
   bool m_sync_busy;
   
+  bool autoAckEnabled;
+  
+  bool hwAutoAckDefault;
+  
   norace cc2420_control_state_t m_state = S_VREG_STOPPED;
   
   /***************** Prototypes ****************/
-  task void syncDone_task();
 
+  void writeFsctrl();
+  void writeMdmctrl0();
+  void writeId();
+
+  task void sync();
+  task void syncDone();
+    
   /***************** Init Commands ****************/
   command error_t Init.init() {
     call CSN.makeOutput();
     call RSTN.makeOutput();
     call VREN.makeOutput();
-    m_short_addr = call AMPacket.address();
+    
+    m_short_addr = call ActiveMessageAddress.amAddress();
+    m_pan = call ActiveMessageAddress.amGroup();
+    m_tx_power = CC2420_DEF_RFPOWER;
+    m_channel = CC2420_DEF_CHANNEL;
+    
+#if defined(CC2420_NO_ACKNOWLEDGEMENTS)
+    autoAckEnabled = FALSE;
+#else
+    autoAckEnabled = TRUE;
+#endif
+
+#if defined(CC2420_HW_ACKNOWLEDGEMENTS)
+    hwAutoAckDefault = TRUE;
+#else
+    hwAutoAckDefault = FALSE;
+#endif
+
     return SUCCESS;
   }
 
@@ -166,27 +195,18 @@ implementation {
       call SXOSCON.strobe();
       
       call IOCFG0.write( ( 1 << CC2420_IOCFG0_FIFOP_POLARITY ) |
-                         ( 127 << CC2420_IOCFG0_FIFOP_THR ) );
+          ( 127 << CC2420_IOCFG0_FIFOP_THR ) );
                          
-      call FSCTRL.write( ( 1 << CC2420_FSCTRL_LOCK_THR ) |
-                         ( ( (m_channel - 11)*5+357 ) 
-                           << CC2420_FSCTRL_FREQ ) );
-                           
-      call MDMCTRL0.write( ( 1 << CC2420_MDMCTRL0_RESERVED_FRAME_MODE ) |
-                           ( 0 << CC2420_MDMCTRL0_ADR_DECODE ) |
-                           ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
-                           ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
-                           ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |
-                           ( 0 << CC2420_MDMCTRL0_AUTOACK ) |  // we now SACK
-                           ( 2 << CC2420_MDMCTRL0_PREAMBLE_LENGTH ) );
-                           
+      writeFsctrl();
+      writeMdmctrl0();
+  
       call RXCTRL1.write( ( 1 << CC2420_RXCTRL1_RXBPF_LOCUR ) |
-                          ( 1 << CC2420_RXCTRL1_LOW_LOWGAIN ) |
-                          ( 1 << CC2420_RXCTRL1_HIGH_HGM ) |
-                          ( 1 << CC2420_RXCTRL1_LNA_CAP_ARRAY ) |
-                          ( 1 << CC2420_RXCTRL1_RXMIX_TAIL ) |
-                          ( 1 << CC2420_RXCTRL1_RXMIX_VCM ) |
-                          ( 2 << CC2420_RXCTRL1_RXMIX_CURRENT ) );
+          ( 1 << CC2420_RXCTRL1_LOW_LOWGAIN ) |
+          ( 1 << CC2420_RXCTRL1_HIGH_HGM ) |
+          ( 1 << CC2420_RXCTRL1_LNA_CAP_ARRAY ) |
+          ( 1 << CC2420_RXCTRL1_RXMIX_TAIL ) |
+          ( 1 << CC2420_RXCTRL1_RXMIX_VCM ) |
+          ( 2 << CC2420_RXCTRL1_RXMIX_CURRENT ) );
     }
     return SUCCESS;
   }
@@ -249,6 +269,11 @@ implementation {
     atomic m_pan = pan;
   }
 
+  /**
+   * Sync must be called to commit software parameters configured on
+   * the microcontroller (through the CC2420Config interface) to the
+   * CC2420 radio chip.
+   */
   command error_t CC2420Config.sync() {
     atomic {
       if ( m_sync_busy ) {
@@ -259,12 +284,46 @@ implementation {
       if ( m_state == S_XOSC_STARTED ) {
         call SyncResource.request();
       } else {
-        post syncDone_task();
+        post syncDone();
       }
     }
     return SUCCESS;
   }
 
+  /**
+   * Sync must be called for acknowledgement changes to take effect
+   * @param enableAutoAck TRUE to enable auto acknowledgements
+   * @param hwAutoAck TRUE to default to hardware auto acks, FALSE to
+   *     default to software auto acknowledgements
+   */
+  command void CC2420Config.setAutoAck(bool enableAutoAck, bool hwAutoAck) {
+    autoAckEnabled = enableAutoAck;
+    hwAutoAckDefault = hwAutoAck;
+  }
+  
+  /**
+   * @return TRUE if hardware auto acks are the default, FALSE if software
+   *     acks are the default
+   */
+  async command bool CC2420Config.isHwAutoAckDefault() {
+    bool isHwAck;
+    atomic {
+      isHwAck = hwAutoAckDefault;
+    }
+    return isHwAck;    
+  }
+  
+  /**
+   * @return TRUE if auto acks are enabled
+   */
+  async command bool CC2420Config.isAutoAckEnabled() {
+    bool isAckEnabled;
+    atomic {
+      isAckEnabled = autoAckEnabled;
+    }
+    return isAckEnabled;
+  }
+  
   /***************** ReadRssi Commands ****************/
   command error_t ReadRssi.read() { 
     return call RssiResource.request();
@@ -272,29 +331,17 @@ implementation {
   
   /***************** Spi Resources Events ****************/
   event void SyncResource.granted() {
-
-    nxle_uint16_t id[ 2 ];
-    uint8_t channel;
-
-    atomic {
-      channel = m_channel;
-      id[ 0 ] = m_pan;
-      id[ 1 ] = m_short_addr;
-    }
-
     call CSN.clr();
     call SRFOFF.strobe();
-    call FSCTRL.write( ( 1 << CC2420_FSCTRL_LOCK_THR ) |
-                       ( ( (channel - 11)*5+357 ) << CC2420_FSCTRL_FREQ ) );
-    call PANID.write( 0, (uint8_t*)id, sizeof( id ) );
+    writeFsctrl();
+    writeMdmctrl0();
+    writeId();
     call CSN.set();
     call CSN.clr();
     call SRXON.strobe();
     call CSN.set();
     call SyncResource.release();
-    
-    post syncDone_task();
-    
+    post syncDone();
   }
 
   event void SpiResource.granted() {
@@ -326,24 +373,89 @@ implementation {
 
   /***************** InterruptCCA Events ****************/
   async event void InterruptCCA.fired() {
-    nxle_uint16_t id[ 2 ];
     m_state = S_XOSC_STARTED;
-    id[ 0 ] = m_pan;
-    id[ 1 ] = m_short_addr;
     call InterruptCCA.disable();
     call IOCFG1.write( 0 );
-    call PANID.write( 0, (uint8_t*)&id, 4 );
+    writeId();
     call CSN.set();
     call CSN.clr();
     signal CC2420Power.startOscillatorDone();
   }
+ 
+  /***************** ActiveMessageAddress Events ****************/
+  async event void ActiveMessageAddress.changed() {
+    atomic {
+      m_short_addr = call ActiveMessageAddress.amAddress();
+      m_pan = call ActiveMessageAddress.amGroup();
+    }
+    
+    post sync();
+  }
   
   /***************** Tasks ****************/
-  task void syncDone_task() {
+  /**
+   * Attempt to synchronize our current settings with the CC2420
+   */
+  task void sync() {
+    call CC2420Config.sync();
+  }
+  
+  task void syncDone() {
     atomic m_sync_busy = FALSE;
     signal CC2420Config.syncDone( SUCCESS );
   }
+  
+  
+  /***************** Functions ****************/
+  /**
+   * Write teh FSCTRL register
+   */
+  void writeFsctrl() {
+    uint8_t channel;
+    
+    atomic {
+      channel = m_channel;
+    }
+    
+    call FSCTRL.write( ( 1 << CC2420_FSCTRL_LOCK_THR ) |
+          ( ( (channel - 11)*5+357 ) << CC2420_FSCTRL_FREQ ) );
+  }
 
+  /**
+   * Write the MDMCTRL0 register
+   */
+  void writeMdmctrl0() {
+    atomic {
+      call MDMCTRL0.write( ( 1 << CC2420_MDMCTRL0_RESERVED_FRAME_MODE ) |
+          ( 0 << CC2420_MDMCTRL0_ADR_DECODE ) |  // Sniffer behavior
+          ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
+          ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
+          ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |
+          ( 0 << CC2420_MDMCTRL0_AUTOACK ) |  // Sniffer behavior
+          ( 0 << CC2420_MDMCTRL0_AUTOACK ) |
+          ( 2 << CC2420_MDMCTRL0_PREAMBLE_LENGTH ) );
+    }
+    // Jon Green:
+    // MDMCTRL1.CORR_THR is defaulted to 20 instead of 0 like the datasheet says
+    // If we add in changes to MDMCTRL1, be sure to include this fix.
+  }
+  
+  /**
+   * Write the PANID register
+   */
+  void writeId() {
+    nxle_uint16_t id[ 2 ];
+
+    atomic {
+      id[ 0 ] = m_pan;
+      id[ 1 ] = m_short_addr;
+    }
+    
+    call PANID.write(0, (uint8_t*)&id, sizeof(id));
+  }
+
+
+  
   /***************** Defaults ****************/
   default event void CC2420Config.syncDone( error_t error ) {
   }
