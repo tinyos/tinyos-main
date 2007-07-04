@@ -1,4 +1,4 @@
-// $Id: TestTimerC.nc,v 1.2 2007-04-10 01:27:10 scipio Exp $
+// $Id: TestTimerC.nc,v 1.3 2007-07-04 15:53:56 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -64,10 +64,10 @@ implementation {
     sim_time_t elapsed = now - start;
     elapsed /= (sim_ticks_per_sec() / 1024);
     if (elapsed != interval) {
-      dbg("TestTimer", "Timer %c is off. Should have fired in %u, fired in %u.\n", name, interval, (uint32_t)elapsed);
+      dbg("TestTimer", "Timer %c is off. Should have fired in %u, fired in %u @ %s.\n", name, interval, (uint32_t)elapsed, sim_time_string());
     }
     else {
-      dbg("TestTimer", "Timer %c is good.\n", name);
+      dbg("TestTimer", "Timer %c is good @ %s.\n", name, sim_time_string());
     }
   }
   
@@ -81,8 +81,8 @@ implementation {
   void startTimers() {
     call A.startPeriodic(aTime);
     call B.startPeriodic(bTime);
-    call C.startOneShot(cTime);
-    call D.startOneShot(dTime);
+//    call C.startOneShot(cTime);
+ //   call D.startOneShot(dTime);
     aStart = bStart = cStart = dStart = sim_time();
   }
   
@@ -104,7 +104,7 @@ implementation {
   event void B.fired() {
     check('B', bStart, bTime);
     call B.stop();
-    bTime = 1 + (call Random.rand32() & 0x3ff);
+    bTime = 1 + (call Random.rand32() & 0x3fff);
     call B.startPeriodic(bTime);
     bStart = sim_time();
   }

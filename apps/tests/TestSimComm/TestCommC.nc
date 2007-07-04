@@ -1,4 +1,4 @@
-// $Id: TestCommC.nc,v 1.1 2007-05-17 22:06:10 scipio Exp $
+// $Id: TestCommC.nc,v 1.2 2007-07-04 15:53:56 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -55,6 +55,7 @@ implementation {
   uint8_t busy;
   
   event void Boot.booted() {
+    dbg("TestComm", "Booted @ %s.\n", sim_time_string());
     call SplitControl.start();
   }
 
