@@ -59,5 +59,10 @@ implementation {
     
     return (uint8_t)sig;
   }
-  
+  async command cc2420_header_t* Packet.getHeader(message_t* msg) {
+    return NULL;
+  }  
+  async command cc2420_metadata_t* Packet.getMetadata(message_t* msg) {
+    return NULL;
+  }  
 }

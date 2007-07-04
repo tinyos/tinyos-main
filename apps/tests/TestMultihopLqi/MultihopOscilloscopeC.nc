@@ -78,7 +78,7 @@ implementation {
     local.interval = DEFAULT_INTERVAL;
     local.id = TOS_NODE_ID;
     local.version = 0;
-
+    dbg("App", "Booted.");
     // Beginning our initialization phases:
     if (call RadioControl.start() != SUCCESS)
       fatal_problem();
@@ -127,6 +127,14 @@ implementation {
   Receive.receive(message_t* msg, void *payload, uint8_t len) {
     oscilloscope_t* in = (oscilloscope_t*)payload;
     oscilloscope_t* out;
+    dbg("App", "Received a packet.\n\t");
+    {
+      int i;
+      for (i = 0; i < len; i++) {
+        dbg_clear("App", "[%hhx] ", ((uint8_t*)payload)[i]);
+      }
+      dbg_clear("App", "\n");
+    }
     if (uartbusy == FALSE) {
       out = (oscilloscope_t*)call SerialSend.getPayload(&uartbuf);
       if (len != sizeof(oscilloscope_t)) {
@@ -226,8 +234,10 @@ implementation {
       if (!sendbusy) {
 	oscilloscope_t *o = (oscilloscope_t *)call Send.getPayload(&sendbuf);
 	memcpy(o, &local, sizeof(local));
-	if (call Send.send(&sendbuf, sizeof(local)) == SUCCESS)
+	if (call Send.send(&sendbuf, sizeof(local)) == SUCCESS) {
+          dbg("App", "Sending a packet.\n");
 	  sendbusy = TRUE;
+        }
         else
           report_problem();
       }

@@ -57,14 +57,14 @@ implementation {
   //
   // Components for debugging collection.
   //
-  /*  components new PoolC(message_t, 20) as DebugMessagePool,
+   components new PoolC(message_t, 20) as DebugMessagePool,
     new QueueC(message_t*, 20) as DebugSendQueue,
-    new SerialAMSenderC(AM_CTP_DEBUG) as DebugSerialSender,
+    new SerialAMSenderC(AM_LQI_DEBUG) as DebugSerialSender,
     UARTDebugSenderP as DebugSender;
 
   DebugSender.Boot -> MainC;
   DebugSender.UARTSend -> DebugSerialSender;
   DebugSender.MessagePool -> DebugMessagePool;
   DebugSender.SendQueue -> DebugSendQueue;
-  Collector.CollectionDebug -> DebugSender;*/
+  Collector.CollectionDebug -> DebugSender;
 }

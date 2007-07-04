@@ -21,7 +21,7 @@ enum {
      increase the message_t size. */
   NREADINGS = 5,
   /* Default sampling period. */
-  DEFAULT_INTERVAL = 1024,
+  DEFAULT_INTERVAL = 200,
   AM_OSCILLOSCOPE = 0x93
 };
 
