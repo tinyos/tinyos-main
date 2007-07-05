@@ -192,18 +192,19 @@ static void message(serial_source src, serial_source_msg msg)
     src->message(msg);
 }
 
-/* Work around buggy usb serial driver (returns 0 when no data is
-   available, independent of the blocking/non-blocking mode).
-   Mac OS X seems to like to do this too (at least with a Keyspan 49WG)
-*/
-static int buggyread(serial_source src, void *buffer, int n)
+static int serial_read(serial_source src, int non_blocking, void *buffer, int n)
 {
   fd_set fds;
   int cnt;
 
-  if (src->non_blocking)
+  if (non_blocking)
     {
       cnt = read(src->fd, buffer, n);
+
+      /* Work around buggy usb serial driver (returns 0 when no data
+	 is available). Mac OS X seems to like to do this too (at
+	 least with a Keyspan 49WG).
+      */
       if (cnt == 0)
 	{
 	  cnt = -1;
@@ -469,18 +470,17 @@ static uint16_t crc_packet(uint8_t *data, int len)
   return crc;
 }
 
-static int read_byte(serial_source src)
-/* Returns: next byte (>= 0), or -1 if no data available and the source
-     is non-blocking.
+static int read_byte(serial_source src, int non_blocking)
+/* Returns: next byte (>= 0), or -1 if no data available and non-blocking is true.
 */
 {
   if (src->recv.bufpos >= src->recv.bufused)
     {
       for (;;)
 	{
-	  int n = buggyread(src, src->recv.buffer, sizeof src->recv.buffer);
+	  int n = serial_read(src, non_blocking, src->recv.buffer, sizeof src->recv.buffer);
 
-	  if (n == 0) /* Can't occur because of buggyread bug workaround */
+	  if (n == 0) /* Can't occur because of serial_read bug workaround */
 	    {
 	      message(src, msg_closed);
 	      return -1;
@@ -509,7 +509,7 @@ static int write_framed_packet(serial_source src,
 			       uint8_t packet_type, uint8_t first_byte,
 			       const uint8_t *packet, int count);
 
-static void read_and_process(serial_source src)
+static void read_and_process(serial_source src, int non_blocking)
 /* Effects: reads and processes up to one packet.
 */
 {
@@ -517,7 +517,7 @@ static void read_and_process(serial_source src)
 
   for (;;)
     {
-      int byte = read_byte(src);
+      int byte = read_byte(src, non_blocking);
 
       if (byte < 0)
 	return;
@@ -631,7 +631,7 @@ void *read_serial_packet(serial_source src, int *len)
     {
       struct packet_list *entry;
 
-      read_and_process(src);
+      read_and_process(src, src->non_blocking);
       entry = pop_protocol_packet(src, P_PACKET_NO_ACK);
       if (entry)
 	{
@@ -763,7 +763,7 @@ int write_serial_packet(serial_source src, const void *packet, int len)
     {
       struct packet_list *entry;
       
-      read_and_process(src);
+      read_and_process(src, TRUE);
       entry = pop_protocol_packet(src, P_ACK);
       if (entry)
 	{
