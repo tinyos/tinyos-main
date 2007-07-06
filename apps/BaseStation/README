@@ -29,6 +29,23 @@ GREEN Toggle       - Message bridged from radio to serial
 YELLOW/BLUE Toggle - Dropped message due to queue overflow 
                      in either direction
 
+When using a CC2420 radio, several default preprocessor configurations
+are defined in the Makefile:
+  * CC2420_NO_ACKNOWLEDGEMENTS
+    - Prevents the base station from falsly acknowledging packets
+  * CC2420_NO_ADDRESS_RECOGNITION
+    - Allows the base station to sniff packets from any transmitter
+
+Other combinations can be defined to meet your application's needs:
+  * CC2420_NO_ADDRESS_RECOGNITION only
+    - Sniff all packets, but acknowledge packets only if they
+      are sent to the base station's address
+
+  * Removing all preprocessor definitions in the Makefile
+    - Only accept packets destined for the base station's address,
+      and acknowledge those packets
+
+
 Tools:
 
 tools/java/net/tinyos/sf/SerialForwarder.  
@@ -36,9 +53,5 @@ tools/java/net/tinyos/sf/SerialForwarder.
 See doc/serialcomm/index.html for more information using these tools.
 
 Known bugs/limitations:
-
-On CC2420 platforms, BaseStation can only overhear packets transmitted
-to it or to the broadcast address. For these platforms (e.g., micaz,
-telos, intel mote 2), you should use BaseStationCC2420.
 
 
