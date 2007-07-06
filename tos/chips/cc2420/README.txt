@@ -40,6 +40,19 @@ __________________________________________
   packet's destpan after send().
 
 
+7/5/07:
+* Added two methods to enable/disable automatic address recognition:
+  - Preprocessor CC2420_NO_ADDRESS_RECOGNITION to disable address recognition at
+    compile time
+  - CC2420Config.setAddressRecognition(bool on) through CC2420ControlC
+
+* Allowed the CC2420ReceiveP to perform software address checks to support
+  the case where a base station type application must sniff packets from other 
+  address, but also SACK packets destined for its address
+  
+* Updated CC2420Config interface to provide an async getShortAddr() and getPanAddr()
+
+
 Known issues
 __________________________________________
 
