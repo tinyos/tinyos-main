@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.2 $ $Date: 2007-07-06 18:09:44 $
  */
 
 #include "Timer.h"
@@ -99,6 +99,8 @@ implementation {
   
   bool hwAutoAckDefault;
   
+  bool addressRecognition;
+  
   norace cc2420_control_state_t m_state = S_VREG_STOPPED;
   
   /***************** Prototypes ****************/
@@ -131,6 +133,12 @@ implementation {
     hwAutoAckDefault = TRUE;
 #else
     hwAutoAckDefault = FALSE;
+#endif
+
+#if defined(CC2420_NO_ADDRESS_RECOGNITION)
+    addressRecognition = FALSE;
+#else
+    addressRecognition = TRUE;
 #endif
 
     return SUCCESS;
@@ -253,7 +261,7 @@ implementation {
     atomic m_channel = channel;
   }
 
-  command uint16_t CC2420Config.getShortAddr() {
+  async command uint16_t CC2420Config.getShortAddr() {
     atomic return m_short_addr;
   }
 
@@ -261,8 +269,8 @@ implementation {
     atomic m_short_addr = addr;
   }
 
-  command uint16_t CC2420Config.getPanAddr() {
-    return m_pan;
+  async command uint16_t CC2420Config.getPanAddr() {
+    atomic return m_pan;
   }
 
   command void CC2420Config.setPanAddr( uint16_t pan ) {
@@ -291,6 +299,21 @@ implementation {
   }
 
   /**
+   * @param on TRUE to turn address recognition on, FALSE to turn it off
+   */
+  command void CC2420Config.setAddressRecognition(bool on) {
+    atomic addressRecognition = on;
+  }
+  
+  /**
+   * @return TRUE if address recognition is enabled
+   */
+  async command bool CC2420Config.isAddressRecognitionEnabled() {
+    atomic return addressRecognition;
+  }
+  
+  
+  /**
    * Sync must be called for acknowledgement changes to take effect
    * @param enableAutoAck TRUE to enable auto acknowledgements
    * @param hwAutoAck TRUE to default to hardware auto acks, FALSE to
@@ -306,22 +329,14 @@ implementation {
    *     acks are the default
    */
   async command bool CC2420Config.isHwAutoAckDefault() {
-    bool isHwAck;
-    atomic {
-      isHwAck = hwAutoAckDefault;
-    }
-    return isHwAck;    
+    atomic return hwAutoAckDefault;    
   }
   
   /**
    * @return TRUE if auto acks are enabled
    */
   async command bool CC2420Config.isAutoAckEnabled() {
-    bool isAckEnabled;
-    atomic {
-      isAckEnabled = autoAckEnabled;
-    }
-    return isAckEnabled;
+    atomic return autoAckEnabled;
   }
   
   /***************** ReadRssi Commands ****************/
@@ -427,7 +442,7 @@ implementation {
   void writeMdmctrl0() {
     atomic {
       call MDMCTRL0.write( ( 1 << CC2420_MDMCTRL0_RESERVED_FRAME_MODE ) |
-          ( 1 << CC2420_MDMCTRL0_ADR_DECODE ) |
+          ( addressRecognition << CC2420_MDMCTRL0_ADR_DECODE ) |
           ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
           ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
           ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |

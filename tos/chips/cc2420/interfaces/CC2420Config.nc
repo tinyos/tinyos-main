@@ -38,7 +38,7 @@
  * before calling sync().
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.2 $ $Date: 2007-07-06 18:09:44 $
  */
 
 interface CC2420Config {
@@ -61,15 +61,25 @@ interface CC2420Config {
   /**
    * Change the short address of the radio.
    */
-  command uint16_t getShortAddr();
+  async command uint16_t getShortAddr();
   command void setShortAddr( uint16_t address );
 
   /**
    * Change the PAN address of the radio.
    */
-  command uint16_t getPanAddr();
+  async command uint16_t getPanAddr();
   command void setPanAddr( uint16_t address );
 
+  
+  /**
+   * @param on TRUE to turn address recognition on, FALSE to turn it off
+   */
+  command void setAddressRecognition(bool on);
+  
+  /**
+   * @return TRUE if address recognition is enabled
+   */
+  async command bool isAddressRecognitionEnabled();
   
   /**
    * Sync must be called for acknowledgement changes to take effect

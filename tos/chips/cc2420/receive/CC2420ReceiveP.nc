@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:16 $
+ * @version $Revision: 1.2 $ $Date: 2007-07-06 18:09:44 $
  */
 
 module CC2420ReceiveP {
@@ -73,7 +73,7 @@ implementation {
   enum {
     RXFIFO_SIZE = 128,
     TIMESTAMP_QUEUE_SIZE = 8,
-    FCF_LENGTH = 2,
+    SACK_HEADER_LENGTH = 7,
   };
 
   uint16_t m_timestamp_queue[ TIMESTAMP_QUEUE_SIZE ];
@@ -124,8 +124,6 @@ implementation {
     }
     return SUCCESS;
   }
-
-
   
   command error_t StdControl.stop() {
     atomic {
@@ -224,9 +222,9 @@ implementation {
         
         if(rxFrameLength <= MAC_PACKET_SIZE) {
           if(rxFrameLength > 0) {
-            if(rxFrameLength > FCF_LENGTH) {
+            if(rxFrameLength > SACK_HEADER_LENGTH) {
               // This packet has an FCF byte plus at least one more byte to read
-              call RXFIFO.continueRead(buf + 1, FCF_LENGTH);
+              call RXFIFO.continueRead(buf + 1, SACK_HEADER_LENGTH);
               
             } else {
               // This is really a bad packet, skip FCF and get it out of here.
@@ -251,8 +249,19 @@ implementation {
       
     case S_RX_FCF:
       m_state = S_RX_PAYLOAD;
+      
+      /*
+       * The destination address check here is not completely optimized. If you 
+       * are seeing issues with dropped acknowledgements, try removing
+       * the address check and decreasing SACK_HEADER_LENGTH to 2.
+       * The length byte and the FCF byte are the only two bytes required
+       * to know that the packet is valid and requested an ack.  The destination
+       * address is useful when we want to sniff packets from other transmitters
+       * while acknowledging packets that were destined for our local address.
+       */
       if(call CC2420Config.isAutoAckEnabled() && !call CC2420Config.isHwAutoAckDefault()) {
         if (((( header->fcf >> IEEE154_FCF_ACK_REQ ) & 0x01) == 1)
+            && (header->dest == call CC2420Config.getShortAddr())
             && ((( header->fcf >> IEEE154_FCF_FRAME_TYPE ) & 7) == IEEE154_TYPE_DATA)) {
           // CSn flippage cuts off our FIFO; SACK and begin reading again
           call CSN.set();
@@ -260,15 +269,15 @@ implementation {
           call SACK.strobe();
           call CSN.set();
           call CSN.clr();
-          call RXFIFO.beginRead(buf + 1 + FCF_LENGTH, 
-              rxFrameLength - FCF_LENGTH);
+          call RXFIFO.beginRead(buf + 1 + SACK_HEADER_LENGTH, 
+              rxFrameLength - SACK_HEADER_LENGTH);
           return;
         }
       }
       
       // Didn't flip CSn, we're ok to continue reading.
-      call RXFIFO.continueRead(buf + 1 + FCF_LENGTH, 
-          rxFrameLength - FCF_LENGTH);
+      call RXFIFO.continueRead(buf + 1 + SACK_HEADER_LENGTH, 
+          rxFrameLength - SACK_HEADER_LENGTH);
       break;
     
     case S_RX_PAYLOAD:
@@ -334,7 +343,7 @@ implementation {
     atomic receivingPacket = FALSE;
     waitForNextPacket();
   }
-
+  
   /****************** CC2420Config Events ****************/
   event void CC2420Config.syncDone( error_t error ) {
   }
