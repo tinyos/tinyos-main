@@ -1,4 +1,21 @@
 
+To compile in the default Ack LPL version, #define the preprocessor variable:
+  LOW_POWER_LISTENING
+  
+To compile in the PacketLink (auto-retransmission) layer, #define:
+  PACKET_LINK
+  
+To remove all acknowledgements, #define (or use CC2420Config in 2.0.2)
+  CC2420_NO_ACKNOWLEDGEMENTS
+  
+To use hardware auto-acks instead of software acks, #define:
+  CC2420_HW_ACKNOWLEDGEMENTS
+
+To stop using address recognition on the radio hardware, #define:
+  CC2420_NO_ADDRESS_RECOGNITION
+
+
+
 ============================================================
 CC2420 2.0.2 Release Notes 7/2/07
 
@@ -99,17 +116,4 @@ shorter but the transmissions are longer.  This is more experimental than
 the Ack LPL version.  The radio continuously modulates the channel when
 delivering its packetized preamble.  This is better for fast receive check,
 low transmission rate networks.
-
-To compile in the default Ack LPL version, #define the preprocessor variable:
-  LOW_POWER_LISTENING
-  
-To compile in the PacketLink (auto-retransmission) layer, #define:
-  PACKET_LINK
-  
-To remove all acknowledgements, #define (or use CC2420Config in 2.0.2)
-  CC2420_NO_ACKNOWLEDGEMENTS
-  
-To use hardware auto-acks instead of software acks, #define:
-  CC2420_HW_ACKNOWLEDGEMENTS
-
 
