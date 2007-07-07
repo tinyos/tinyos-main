@@ -83,11 +83,13 @@ implementation {
   bool dutyCycling;
 
   /**
-   * Radio State
+   * Radio Power State
    */
   enum {
-    S_OFF,
+    S_OFF, // off by default
+    S_TURNING_ON,
     S_ON,
+    S_TURNING_OFF,
   };
   
   /**
@@ -347,9 +349,7 @@ implementation {
     // just a little longer in case there is more than one lpl transmitter on
     // the channel.
     
-    if(call SendState.isIdle()) {
-      startOffTimer();
-    }
+    startOffTimer();
   }
   
   
@@ -426,13 +426,15 @@ implementation {
   
   /***************** Timer Events ****************/
   event void OffTimer.fired() {
+    call Leds.led1Toggle();
+    
     /*
      * Only stop the radio if the radio is supposed to be off permanently
      * or if the duty cycle is on and our sleep interval is not 0
      */
     if(call SplitControlState.getState() == S_OFF
         || (call PowerCycle.getSleepInterval() > 0
-            && call SplitControlState.getState() == S_ON
+            && call SplitControlState.getState() != S_OFF
                 && call SendState.getState() == S_LPL_NOT_SENDING)) { 
       post stopRadio();
     }
