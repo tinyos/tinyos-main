@@ -25,9 +25,9 @@ run the test with mote id = 4 to do a complete test.
 If the log fills up (which should take 4 or 5 write operations), the write 
 will fail, but a subsequent read will succeed.
 
-A successful test will turn on the green led. A failed test will turn on
-the red led. The yellow led blinks during the steps of the full test. A
-serial message whose last byte is 0x80 for success and all other values
+A successful test will turn on the LED 1. A failed test will turn on
+the LED 0. LED 1 blinks during the steps of the full test. A serial
+message whose last byte is 0x80 for success and all other values
 indicate failure is also sent at the end of the test.
 
 Tools:
@@ -36,4 +36,4 @@ Known bugs/limitations:
 
 None.
 
-$Id: README.txt,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+$Id: README.txt,v 1.5 2007-07-09 20:45:54 idgay Exp $
