@@ -1,4 +1,4 @@
-TestTimer, 5/22/07 
+TestSimComm, 5/22/07 
 
 This application tests the TOSSIM radio model by setting up a simple
 hidden terminal case. It checks whether packets collide correctly and
