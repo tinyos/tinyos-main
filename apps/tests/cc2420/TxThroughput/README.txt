@@ -1,4 +1,9 @@
 
+This application is used more for characterization rather than a test.
+It measures the maximum radio throughput using the largest message payload 
+size, and does not use low power listening.
+
+
 Install:
 Compile and install this application to one mote. Leave the mote connected
 to the computer.
