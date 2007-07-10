@@ -27,13 +27,14 @@
 #ifndef FLASHVOLUMEMANAGER_H
 #define FLASHVOLUMEMANAGER_H
 
-#define SERIALMSG_ERASE  0
-#define SERIALMSG_WRITE  1
-#define SERIALMSG_READ   2
-#define SERIALMSG_CRC    3
-#define SERIALMSG_ADDR   4
-#define SERIALMSG_REPROG 5
-#define SERIALMSG_DISS   6
+#define SERIALMSG_ERASE     0
+#define SERIALMSG_WRITE     1
+#define SERIALMSG_READ      2
+#define SERIALMSG_CRC       3
+#define SERIALMSG_ADDR      4
+#define SERIALMSG_REPROG    5
+#define SERIALMSG_DISS      6
+#define SERIALMSG_REPROG_BS 7
 
 typedef nx_struct SerialReqPacket {
   nx_uint8_t msg_type;

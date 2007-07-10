@@ -122,6 +122,7 @@ implementation {
       imgDesc = call DelugeMetadata.getImgDesc(img_num);
       nodeDesc.uid = imgDesc->uid;
       nodeDesc.imgNum = img_num;
+      nodeDesc.vNum = imgDesc->vNum;
       call IFlash.write((uint8_t*)IFLASH_NODE_DESC_ADDR, &nodeDesc, sizeof(nodeDesc));
       
       // reboot

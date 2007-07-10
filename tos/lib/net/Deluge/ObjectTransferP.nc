@@ -112,6 +112,7 @@ implementation
     } else {
       call DelugePageTransfer.setWorkingPage(DELUGE_INVALID_OBJID, DELUGE_INVALID_PGNUM);
       state = S_SYNC;
+      call ObjectTransfer.stop();
       call BlockWrite.sync[cont_receive_img_num]();
     }
   }
@@ -209,7 +210,6 @@ implementation
     error_t error;
     
     call ObjectTransfer.stop();
-    state = S_STOPPED;
 //call StatsCollector.startStatsCollector();
     
     cont_receive_new_objid = new_objid;
@@ -228,12 +228,13 @@ implementation
   {
     call Timer.stop();
     call DelugePageTransfer.stop();
+    state = S_STOPPED;
 //call StatsCollector.stopStatsCollector();
     
-    state = S_STOPPED;
     curObjDesc.objid = DELUGE_INVALID_OBJID;
     curObjDesc.numPgs = DELUGE_INVALID_PGNUM;
     curObjDesc.numPgsComplete = DELUGE_INVALID_PGNUM;
+    advTimers.periodLog2 = 0;
     
     return SUCCESS;
   }
@@ -248,6 +249,7 @@ implementation
       } else {
         call DelugePageTransfer.setWorkingPage(curObjDesc.objid, curObjDesc.numPgsComplete);
         state = S_SYNC;
+        call ObjectTransfer.stop();
         call BlockWrite.sync[cont_receive_img_num]();
       }
     }
@@ -256,9 +258,6 @@ implementation
   event void BlockWrite.syncDone[uint8_t img_num](error_t error)
   {
     if (state == S_SYNC) {
-      if (error != SUCCESS) {
-        call Leds.led2On();
-      }
       post signalObjRecvDone();
     }
   }
@@ -317,7 +316,7 @@ implementation
   }
     
   event void Timer.fired()
-  {
+  {    
     updateTimers();
     
     if (advTimers.overheard == 0) {

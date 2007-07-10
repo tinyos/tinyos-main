@@ -16,6 +16,8 @@
                .title {
                font-size: 200%;
                font-weight: normal;
+               margin-top: 2.8em;
+               text-align: center;
                }
 
                .partheading {
@@ -94,12 +96,6 @@
                list-style-type: upper-alpha;
                }
 
-               /*
-               .verbatim {
-               color: #4d0000;
-               }
-               */
-
                tt i {
                font-family: serif;
                }
@@ -108,9 +104,15 @@
                font-family: serif;
                }
 
+               /*
+               .verbatim {
+               color: #4d0000;
+               }
+               */
+
                .scheme em {
-               font-family: serif;
                color: black;
+               font-family: serif;
                }
 
                .scheme {
@@ -183,11 +185,11 @@
                .colophon {
                color: gray;
                font-size: 80%;
+               font-style: italic;
                text-align: right;
                }
 
                .colophon a {
                color: gray;
                }
-
                

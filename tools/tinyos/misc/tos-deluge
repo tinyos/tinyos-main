@@ -47,11 +47,12 @@ SERIAL_AMID        = 0xAB
 SERIAL_DATA_LENGTH = 28 - 1 - 1 - 2 - 2
 
 # Serial message types
-MSG_ERASE  = 0
-MSG_WRITE  = 1
-MSG_READ   = 2
-MSG_REPROG = 5
-MSG_DISS   = 6
+MSG_ERASE     = 0
+MSG_WRITE     = 1
+MSG_READ      = 2
+MSG_REPROG    = 5
+MSG_DISS      = 6
+MSG_REPROG_BS = 7
 
 ERROR_SUCCESS = 0   # T2-compatible
 ERROR_FAIL    = 1   # T2-compatible
@@ -320,12 +321,12 @@ def op_inject(s, img_num, tos_image_xml):
     
     return False
 
-# Requests the mote to reboot and reprogram itself
-def op_reprog(s, img_num):
+# Requests the base station to reprogram itself
+def op_reprog_bs(s, img_num):
     if getMetaData(s, img_num) == None:
         print "ERROR: No proper Deluge image found!"
     else:
-        sreqpkt = SerialReqPacket((MSG_REPROG, img_num, 0, 0, []))
+        sreqpkt = SerialReqPacket((MSG_REPROG_BS, img_num, 0, 0, []))
         success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
         if success == True:
             packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
@@ -333,11 +334,26 @@ def op_reprog(s, img_num):
             if sreplypkt.error == ERROR_SUCCESS:
                 return True
             else:
-                print "ERROR: Unable to reboot the mote"
+                print "ERROR: Unable to reprogram the base station"
                 return False
             
         print "ERROR: Unable to send the command"
     return False
+
+# Requests the network to reprogram with the specified image number
+def op_reprog(s, img_num):
+    sreqpkt = SerialReqPacket((MSG_REPROG, img_num, 0, 0, []))
+    success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
+    if success == True:
+        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+        sreplypkt = SerialReplyPacket(packet[1])
+        if sreplypkt.error == ERROR_SUCCESS:
+            return True
+        else:
+            print "ERROR: Unable to reprogram the network"
+            return False
+        
+    print "ERROR: Unable to send the command"
 
 # Requests the mote to disseminate an image
 def op_diss(s, img_num):
@@ -386,7 +402,8 @@ def print_usage():
     print "  -p --ping\n     Provide status of the image in the external flash"
     print "  -i --inject\n     Inject a compiled TinyOS application"
     print "      [options]: tos_image.xml file path"
-    print "  -r --reboot\n     Reboot and reprogram the directly-connected mote"
+    print "  -r --reprogram\n     Reprogram the network"
+    print "  -b --reprogram_bs\n     Reprogram only the directly-connected mote"
     print "  -d --dissemination\n     Disseminate the image in the external flash to the network"
     print "  -e --erase\n     Erase an image in the external flash"
     print "  -s --reset\n     Reset the versioning information for a given image"
@@ -415,8 +432,11 @@ if len(sys.argv) >= num_req_arg:
     elif sys.argv[3] in ["-i", "--inject"] and len(sys.argv) == (num_req_arg + 1):
         print "Pinging node ..."
         op_inject(s, sys.argv[4], sys.argv[5])
-    elif sys.argv[3] in ["-r", "--reboot"]:
+    elif sys.argv[3] in ["-r", "--reprogram"]:
         if op_reprog(s, sys.argv[4]):
+            print "Command sent"
+    elif sys.argv[3] in ["-b", "--reprogram_bs"]:
+        if op_reprog_bs(s, sys.argv[4]):
             print "Command sent"
     elif sys.argv[3] in ["-d", "--dissemination"]:
         if op_diss(s, sys.argv[4]):

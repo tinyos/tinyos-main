@@ -30,7 +30,8 @@
 generic configuration FlashVolumeManagerC(am_id_t AMId)
 {
 #ifdef DELUGE  
-  provides interface Notify<uint8_t>;
+  provides interface Notify<uint8_t> as DissNotify;
+  provides interface Notify<uint8_t> as ReprogNotify;
 #endif
   uses {
     interface BlockRead[uint8_t img_num];
@@ -63,6 +64,7 @@ implementation
   FlashVolumeManagerP.Timer -> TimerMilliC;
   FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE0] = DelugeStorage[VOLUME_DELUGE0];
   FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE1] = DelugeStorage[VOLUME_DELUGE1];
-  Notify = FlashVolumeManagerP.Notify;
+  DissNotify = FlashVolumeManagerP.DissNotify;
+  ReprogNotify = FlashVolumeManagerP.ReprogNotify;
 #endif
 }

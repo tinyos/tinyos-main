@@ -9,6 +9,8 @@ Deluge T2 - Programming Manual
 <meta name=robots content="index,follow">
 </head>
 <body>
+<div id=title>
+<p></p>
 <p>
 
 </p>
@@ -19,11 +21,11 @@ Deluge T2 - Programming Manual
 
 
 </p>
-<h1 class=title align=center><br><br>Deluge T2 - Programming Manual</h1>
+<h1 class=title>Deluge T2 - Programming Manual</h1>
 <p></p>
 <div align=center>
 Chieh-Jan Mike Liang<br>
-Razvan Musaloiu-E.<p>June 21, 2007</p>
+Razvan Musaloiu-E.<p>July 9, 2007</p>
 </div>
 <p></p>
 <p>
@@ -214,7 +216,7 @@ You should see something similar to the output below.</p>
 first test on the base station by issuing the reboot command. For 
 example,
 </p>
-<pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -r 1
+<pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -b 1
 </pre><p>
 After a few moments, the mote will begin quickly flashing the LEDs to 
 signify the reprogramming process.</p>
@@ -225,10 +227,14 @@ the network. For example,
 <pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -d 1
 </pre><p>
 This command instructs the base station to notify the whole network of 
-the availablility of a new program image. This notification is currently 
+the availability of a new program image. This notification is currently 
 done via TinyOS dissemination service, and it triggers all motes in the 
-network to get the new program image. Upon receiving the complete image 
-over-the-air, each node automatically reboots and reprograms itself.</p>
+network to get the new program image. After all motes receive the image 
+over-the-air, you can instruct the base station to disseminate a command 
+to reprogram the network. For example,
+</p>
+<pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -r 1
+</pre><p></p>
 <p>
 </p>
 <a name="node_sec_5"></a>
@@ -281,9 +287,8 @@ reprogram themselves.</p>
 directly connected mote.</p>
 <p>
 </p>
-<div align=right class=colophon>
-<i>Last modified: Thursday, June 21st, 2007<br>
-HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 2004-09-11</a></i>
+<p></p>
+<div align=right class=colophon>Last modified: Monday, July 9th, 2007 8:43:40pm<br><div align=right class=advertisement>HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 20050501</a></div></div>
 </div>
 </body>
 </html>

@@ -29,7 +29,10 @@
 generic module FlashVolumeManagerP()
 {
 #ifdef DELUGE
-  provides interface Notify<uint8_t>;
+  provides {
+    interface Notify<uint8_t> as DissNotify;
+    interface Notify<uint8_t> as ReprogNotify;
+  }
 #endif
   uses {
     interface BlockRead[uint8_t img_num];
@@ -183,14 +186,18 @@ implementation
                                   (uint32_t)call DelugeStorage.getPhysicalAddress[img_num](0);
           sendReply(SUCCESS, sizeof(SerialReplyPacket) + 4);
           break;
-        case SERIALMSG_REPROG:   // === Reboots and reprograms ===
+        case SERIALMSG_REPROG_BS:   // === Reprograms only the base station ===
           state = S_REPROG;
           sendReply(SUCCESS, sizeof(SerialReplyPacket));
           img_num_reboot = img_num;
           call Timer.startOneShot(1024);
           break;
         case SERIALMSG_DISS:     // === Starts disseminating a volume ===
-          signal Notify.notify(img_num);   // Notifies Deluge to start disseminate
+          signal DissNotify.notify(img_num);   // Notifies Deluge to start disseminate
+          sendReply(SUCCESS, sizeof(SerialReplyPacket));
+          break;
+        case SERIALMSG_REPROG:   // === Reprograms the network (except the base station) ===
+          signal ReprogNotify.notify(img_num);
           sendReply(SUCCESS, sizeof(SerialReplyPacket));
           break;
   #endif
@@ -215,8 +222,10 @@ implementation
     call NetProg.programImgAndReboot(img_num_reboot);
   }
   
-  command error_t Notify.enable() { return SUCCESS; }
-  command error_t Notify.disable() { return SUCCESS; }
+  command error_t DissNotify.enable() { return SUCCESS; }
+  command error_t DissNotify.disable() { return SUCCESS; }
+  command error_t ReprogNotify.enable() { return SUCCESS; }
+  command error_t ReprogNotify.disable() { return SUCCESS; }
   
   default command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0; }
 #endif

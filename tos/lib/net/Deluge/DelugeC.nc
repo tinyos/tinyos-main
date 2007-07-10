@@ -37,7 +37,8 @@ implementation
   components SerialStarterC;
   components new FlashVolumeManagerC(0xAB);
   
-  DelugeP.ReprogNotify -> FlashVolumeManagerC;
+  DelugeP.DissNotify -> FlashVolumeManagerC.DissNotify;
+  DelugeP.ReprogNotify -> FlashVolumeManagerC.ReprogNotify;
   FlashVolumeManagerC.BlockRead[VOLUME_DELUGE0] -> DelugeStorageC.BlockRead[VOLUME_DELUGE0];
   FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE0] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE0];
   FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE0] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE0];

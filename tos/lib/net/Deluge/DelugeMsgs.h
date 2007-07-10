@@ -42,26 +42,26 @@ enum {
 };
 
 typedef nx_struct DelugeAdvMsg {
-  nx_uint16_t       sourceAddr;
-  nx_uint8_t        version;    // Deluge Version
-  nx_uint8_t        type;
+  nx_uint16_t    sourceAddr;
+  nx_uint8_t     version;    // Deluge Version
+  nx_uint8_t     type;
   DelugeObjDesc  objDesc;
-  nx_uint8_t        reserved;
+  nx_uint8_t     reserved;
 } DelugeAdvMsg;
 
 typedef nx_struct DelugeReqMsg {
-  nx_uint16_t     dest;
-  nx_uint16_t     sourceAddr;
-  nx_object_id_t  objid;
-  nx_page_num_t   pgNum;
-  nx_uint8_t      requestedPkts[DELUGE_PKT_BITVEC_SIZE];
+  nx_uint16_t    dest;
+  nx_uint16_t    sourceAddr;
+  nx_object_id_t objid;
+  nx_page_num_t  pgNum;
+  nx_uint8_t     requestedPkts[DELUGE_PKT_BITVEC_SIZE];
 } DelugeReqMsg;
 
 typedef nx_struct DelugeDataMsg {
   nx_object_id_t objid;
-  nx_page_num_t pgNum;
-  nx_uint8_t    pktNum;
-  nx_uint8_t    data[DELUGE_PKT_PAYLOAD_SIZE];
+  nx_page_num_t  pgNum;
+  nx_uint8_t     pktNum;
+  nx_uint8_t     data[DELUGE_PKT_PAYLOAD_SIZE];
 } DelugeDataMsg;
 
 #endif

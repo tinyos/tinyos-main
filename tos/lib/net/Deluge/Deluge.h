@@ -29,12 +29,16 @@
 
 #include "DelugeMetadata.h"
 
+#define DISSMSG_DISS   0
+#define DISSMSG_REPROG 1
+
 enum {
   DELUGE_INVALID_UID = 0xffffffff,
   DELUGE_NUM_VOLUMES = 2,
 };
 
 typedef nx_struct DelugeDissemination {
+  nx_uint8_t msg_type;
   nx_uint32_t uid;      // unique id of image
   nx_uint16_t vNum;     // version num of image
   nx_uint8_t  imgNum;   // image number
