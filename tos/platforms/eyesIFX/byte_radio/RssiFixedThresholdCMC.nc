@@ -34,6 +34,7 @@
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * @author: Andreas Koepke (koepke@tkn.tu-berlin.de)
  */
+// #define RSSI_FIXED_DEBUG
 configuration RssiFixedThresholdCMC
 {
     provides {
@@ -65,9 +66,9 @@ implementation
     ChannelMonitorData = RssiFixedThresholdCMP;
     BatteryLevel = RssiFixedThresholdCMP;
 
-/*    components PlatformLedsC;
-    RssiFixedThresholdCMP.Led3 -> PlatformLedsC.Led3;
-    RssiFixedThresholdCMP.Led2 -> PlatformLedsC.Led2;
-*/
     RssiFixedThresholdCMP.Timer -> Timer;    
+#ifdef RSSI_FIXED_DEBUG
+    components new SerialDebugC() as SD;
+    RssiFixedThresholdCMP.SerialDebug -> SD;
+#endif
 }
