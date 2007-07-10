@@ -1,4 +1,4 @@
-README for RadioCountToLeds
+
 Author/Contact: tinyos-help@millennium.berkeley.edu
 
 Description:
@@ -49,4 +49,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.2 2007-07-10 17:20:46 rincon Exp $
+$Id: README.txt,v 1.3 2007-07-10 17:30:36 rincon Exp $
