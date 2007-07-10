@@ -8,7 +8,7 @@ low-power-listening settings every ~32s, repeating every ~256s.
 
 This application currently runs on motes using the CC1000 and CC2420
 radios. To compile for motes with CC2420 radios, you must do:
-  env CFLAGS="-I%T/chips/cc2420_lpl -DLOW_POWER_LISTENING" make <platform>
+  env CFLAGS="-DLOW_POWER_LISTENING" make <platform>
 
 This application blinks LED 0 every time it sends a message, and toggles
 LED 1 every time it receives a message. If this application is
