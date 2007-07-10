@@ -49,11 +49,8 @@ implementation {
     TOSH_FLASH_M25P_DP_bit(TRUE);   // 7
 
     TOSH_SET_FLASH_CS_PIN();
-
+    TOSH_SET_UCLK0_PIN();
     TOSH_SET_SIMO0_PIN();
-    TOSH_MAKE_SIMO0_INPUT();
-    TOSH_MAKE_UCLK0_INPUT();
-    TOSH_CLR_FLASH_HOLD_PIN();
   }
 
   command error_t Init.init() {
