@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-03-10 21:58:37 $
+ * $Revision: 1.6 $
+ * $Date: 2007-07-10 13:19:04 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -78,8 +78,8 @@ const msp430adc12_channel_config_t sensorconfigurations[] = {
     /* PHOTO_SENSOR_DEFAULT */
     {
         INPUT_CHANNEL_A2, REFERENCE_VREFplus_AVss, REFVOLT_LEVEL_1_5,
-        SHT_SOURCE_ACLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_4_CYCLES,
-        SAMPCON_SOURCE_ACLK, SAMPCON_CLOCK_DIV_1
+        SHT_SOURCE_SMCLK, SHT_CLOCK_DIV_1, SAMPLE_HOLD_64_CYCLES,
+        SAMPCON_SOURCE_SMCLK, SAMPCON_CLOCK_DIV_1 
     },
     /* PHOTO_SENSOR_VCC */
     {
