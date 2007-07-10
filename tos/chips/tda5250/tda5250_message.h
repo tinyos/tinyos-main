@@ -9,7 +9,6 @@ typedef nx_struct tda5250_header_t {
   nx_am_addr_t src;
   nx_am_addr_t dest;
   nx_am_id_t   type;
-  nx_am_group_t group;
   nx_uint8_t   token;
 } tda5250_header_t;
 
@@ -24,6 +23,9 @@ typedef nx_struct tda5250_metadata_t {
   nx_uint32_t time;
   nx_uint8_t sendSecurityMode;
   nx_uint8_t receiveSecurityMode;
+  /* some meta information that allows to compute a density */
+  nx_uint8_t maxRepetitions;
+  nx_uint8_t repetitions;
 } tda5250_metadata_t;
 
 #endif
