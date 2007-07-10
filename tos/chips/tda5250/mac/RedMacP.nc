@@ -148,7 +148,7 @@ implementation
         // the duration of a send ACK
         ACK_DURATION = SUB_HEADER_TIME + SUB_FOOTER_TIME,
         MAX_SHORT_RETRY=9,
-        MAX_LONG_RETRY=1,
+        MAX_LONG_RETRY=3,
         MAX_AGE=2*MAX_LONG_RETRY*MAX_SHORT_RETRY,
         MSG_TABLE_ENTRIES=20,
         TOKEN_ACK_FLAG = 64,
@@ -205,7 +205,7 @@ implementation
     am_id_t teamgeistType = 0;
 
     uint8_t congestionLevel = 0;
-
+    
     message_t *txBufPtr = NULL;
     uint16_t txLen = 0;
     red_mac_header_t *txMacHdr = NULL;
@@ -404,6 +404,7 @@ implementation
             txStat.maxRepCounter = macHdr->repetitionCounter;
             txStat.creationTime =  getMetadata(msg)->time;
 #endif
+            getMetadata(msg)->maxRepetitions = macHdr->repetitionCounter;
         }
     }
 
@@ -495,8 +496,8 @@ implementation
         uint16_t now;
         if(call Timer.isRunning()) {
             restLaufzeit = call Timer.getAlarm();
-            call Timer.stop();
-            now = call Timer.getNow();
+            call Timer.stop(); 
+            now = call Timer.getNow(); 
             if(restLaufzeit >= now) {
                 restLaufzeit = restLaufzeit - now;
             }
@@ -773,10 +774,6 @@ implementation
                     }
                 }
             }
-            else if(macState == INIT) {
-                // sdDebug(167);
-                post StartDoneTask();
-            }
             else if(macState == STOP) {
                 // sdDebug(168);
                 post StopDoneTask();
@@ -850,7 +847,7 @@ implementation
             if(macState == CCA) {
                 computeBackoff();
 #ifdef REDMAC_PERFORMANCE
-            call Performance.macDetectedOnCca();
+                call Performance.macDetectedOnCca();
 #endif
             }
             if(macState != RX_ACK) {
@@ -916,6 +913,11 @@ implementation
 #endif
                             }
                         }
+#ifdef REDMAC_PERFORMANCE
+                        else {
+                            rxStat.duplicate = PERF_REPEATED_MSG;
+                        }
+#endif                  
                         if(needsAckRx(msg, &level) && (action != RX)) {
                             // sdDebug(197);
                             action = CCA_ACK;
@@ -933,9 +935,6 @@ implementation
                     else {
                         // sdDebug(199);
                         action = RX;
-#ifdef REDMAC_PERFORMANCE
-                        rxStat.duplicate = PERF_REPEATED_MSG;
-#endif
                     }
                 }
                 else {
@@ -969,8 +968,11 @@ implementation
                             (getMetadata(txBufPtr))->strength = 1;
                         }
                     }
-                    (getMetadata(txBufPtr))->ack = WAS_ACKED;
-                    if(isFlagSet(&flags, TEAMGEIST_ACTIVE) && (getHeader(txBufPtr)->type == teamgeistType)) {
+                    getMetadata(txBufPtr)->ack = WAS_ACKED;
+                    getMetadata(txBufPtr)->repetitions = txMacHdr->repetitionCounter;
+                    if(isFlagSet(&flags, TEAMGEIST_ACTIVE) &&
+                       (getHeader(txBufPtr)->type == teamgeistType))
+                    {
                         signal Teamgeist.gotAck(txBufPtr, getHeader(msg)->src,
                                                 getMetadata(txBufPtr)->strength);
                     }
@@ -980,6 +982,7 @@ implementation
                     action = SLEEP;
                 }
                 else {
+                    sdDebug(203);
                     updateLongRetryCounters();
                     action = RX;
                 }
@@ -990,7 +993,7 @@ implementation
                     action = RX_ACK;
                 }
                 else {
-                    // sdDebug(205);
+                    sdDebug(205);
                     updateLongRetryCounters();
                     action = RX;
                 }
@@ -1057,14 +1060,14 @@ implementation
             macState = RX_ACK;
             setRxMode();
             call Timer.start(RX_ACK_TIMEOUT);
-            sdDebug(220);
+            // sdDebug(220);
             checkCounter = 0;
         }
         else if(macState == TX_ACK) {
             checkCounter = 0;
             macState = RX;
             setRxMode();
-            sdDebug(221);
+            // sdDebug(221);
 #ifdef REDMAC_DEBUG            
             // sdDebug(40000U + repCounter);
 #endif
@@ -1165,7 +1168,7 @@ implementation
             // sdDebug(244);
             macState = TX_ACK;
             setTxMode();
-            sdDebug(20000 + getHeader(&ackMsg)->dest);
+            // sdDebug(20000 + getHeader(&ackMsg)->dest);
 #ifdef REDMAC_PERFORMANCE
             call Performance.macTxAckStats(getHeader(&ackMsg)->type,
                                           getHeader(&ackMsg)->dest,
@@ -1190,13 +1193,13 @@ implementation
         }
         else if(macState == RX_ACK) {
             if(prepareRepetition()) {
-                sdDebug(253);
+                // sdDebug(253);
                 macState = TX;
                 setTxMode();
             }
             else {
                 if(needsAckTx(txBufPtr)) {
-                    sdDebug(254);
+                    // sdDebug(254);
 #ifdef REDMAC_PERFORMANCE
                     call Performance.macAckTimeout();
 #endif
@@ -1212,7 +1215,7 @@ implementation
         }
         else if(macState == TX_ACK) {
             setTxMode();
-            sdDebug(10000 + getHeader(&ackMsg)->dest);
+            // sdDebug(10000 + getHeader(&ackMsg)->dest);
         }
         else if(macState == SLEEP) {
              if(isFlagSet(&flags, SWITCHING)) {
