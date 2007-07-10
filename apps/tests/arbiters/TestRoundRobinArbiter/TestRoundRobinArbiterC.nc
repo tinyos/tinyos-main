@@ -27,9 +27,11 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
  
+#include "Timer.h"
+ 
 /**
  * Please refer to TEP 108 for more information about the components
- * this application is used to test.<br><br>
+ * this application is used to test
  *
  * This application is used to test the functionality of the
  * RoundRobinArbiter component developed using the Resource
@@ -55,35 +57,59 @@
  * <br>
  *
  * @author Kevin Klues <klues@tkn.tu-berlin.de>
- * @version  $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:49 $
+ * @version  $Revision: 1.1 $
+ * @date $Date: 2007-07-10 19:55:30 $
  */
- 
-#define TEST_ARBITER_RESOURCE   "Test.Arbiter.Resource"
-configuration TestRoundRobinArbiterAppC{
+
+module TestRoundRobinArbiterC {
+  uses {
+    interface Boot;  
+    interface Leds;
+    interface Resource as Resource0;
+    interface Resource as Resource1;
+    interface Resource as Resource2;
+    interface Timer<TMilli> as Timer0;
+    interface Timer<TMilli> as Timer1;
+    interface Timer<TMilli> as Timer2;
+  }
 }
 implementation {
-  components MainC, TestRoundRobinArbiterC as App,LedsC,
-  new TimerMilliC() as Timer0,
-  new TimerMilliC() as Timer1,
-  new TimerMilliC() as Timer2,
-  new RoundRobinArbiterC(TEST_ARBITER_RESOURCE) as Arbiter;
 
-     enum {
-       RESOURCE0_ID = unique(TEST_ARBITER_RESOURCE),
-       RESOURCE1_ID = unique(TEST_ARBITER_RESOURCE),
-       RESOURCE2_ID = unique(TEST_ARBITER_RESOURCE),
-     };
-
-  App -> MainC.Boot;
+  #define HOLD_PERIOD 250
   
-  App.Resource0 -> Arbiter.Resource[RESOURCE0_ID];
-  App.Resource1 -> Arbiter.Resource[RESOURCE1_ID];
-  App.Resource2 -> Arbiter.Resource[RESOURCE2_ID];
-  App.Timer0 -> Timer0;
-  App.Timer1 -> Timer1;
-  App.Timer2 -> Timer2;
+  //All resources try to gain access
+  event void Boot.booted() {
+    call Resource0.request();
+    call Resource2.request();
+    call Resource1.request();
+  }
   
-  App.Leds -> LedsC;
+  //If granted the resource, turn on an LED  
+  event void Resource0.granted() {
+    call Timer0.startOneShot(HOLD_PERIOD);
+    call Leds.led0Toggle();      
+  }  
+  event void Resource1.granted() {
+    call Timer1.startOneShot(HOLD_PERIOD);
+    call Leds.led1Toggle();     
+  }  
+  event void Resource2.granted() {
+    call Timer2.startOneShot(HOLD_PERIOD);
+    call Leds.led2Toggle();  
+  }  
+  
+  //After the hold period release the resource
+  event void Timer0.fired() {
+    call Resource0.release();
+    call Resource0.request();
+  }
+  event void Timer1.fired() {
+    call Resource1.release();
+    call Resource1.request();
+  }
+  event void Timer2.fired() {
+    call Resource2.release();
+    call Resource2.request();
+  }
 }
 

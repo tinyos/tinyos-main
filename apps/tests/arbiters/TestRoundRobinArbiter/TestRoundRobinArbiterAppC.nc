@@ -32,7 +32,7 @@
  * this application is used to test.<br><br>
  *
  * This application is used to test the functionality of the
- * FcfsArbiter component developed using the Resource
+ * RoundRobinArbiter component developed using the Resource
  * interface.  Three Resource users are created and all three request
  * control of the resource before any one of them is granted it.
  * Once the first user is granted control of the resource, a timer
@@ -40,14 +40,14 @@
  * amount of time.  Once this timer expires, the resource is released
  * and then immediately requested again.  Upon releasing the resource
  * control will be granted to the next user that has
- * requested it in FCFS order.  Initial requests are made
+ * requested it in Round Robin order.  Initial requests are made
  * by the three resource users in the following order<br>
  * <li> Resource 0
  * <li> Resource 2
  * <li> Resource 1
  * <br>
- * It is expected then that using a first-come-first-serve policy, control of the
- * resource will be granted in the order of 0,2,1 and the Leds
+ * It is expected then that using a round robin policy, control of the
+ * resource will be granted in the order of 0,1,2, and the Leds
  * corresponding to each resource will flash whenever this occurs.<br>
  * <li> Led 0 -> Resource 0
  * <li> Led 1 -> Resource 1
@@ -55,28 +55,28 @@
  * <br>
  *
  * @author Kevin Klues <klues@tkn.tu-berlin.de>
- * @version  $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:49 $
+ * @version  $Revision: 1.1 $
+ * @date $Date: 2007-07-10 19:55:30 $
  */
  
 #define TEST_ARBITER_RESOURCE   "Test.Arbiter.Resource"
-configuration TestFcfsArbiterAppC{
+configuration TestRoundRobinArbiterAppC{
 }
 implementation {
-  components MainC, TestFcfsArbiterC as App,LedsC,
-     new TimerMilliC() as Timer0,
-     new TimerMilliC() as Timer1,
-     new TimerMilliC() as Timer2,
-     new FcfsArbiterC(TEST_ARBITER_RESOURCE) as Arbiter;
+  components MainC, TestRoundRobinArbiterC as App,LedsC,
+  new TimerMilliC() as Timer0,
+  new TimerMilliC() as Timer1,
+  new TimerMilliC() as Timer2,
+  new RoundRobinArbiterC(TEST_ARBITER_RESOURCE) as Arbiter;
 
-  enum {
-    RESOURCE0_ID = unique(TEST_ARBITER_RESOURCE),
-    RESOURCE1_ID = unique(TEST_ARBITER_RESOURCE),
-    RESOURCE2_ID = unique(TEST_ARBITER_RESOURCE),
-  };
+     enum {
+       RESOURCE0_ID = unique(TEST_ARBITER_RESOURCE),
+       RESOURCE1_ID = unique(TEST_ARBITER_RESOURCE),
+       RESOURCE2_ID = unique(TEST_ARBITER_RESOURCE),
+     };
 
   App -> MainC.Boot;
- 
+  
   App.Resource0 -> Arbiter.Resource[RESOURCE0_ID];
   App.Resource1 -> Arbiter.Resource[RESOURCE1_ID];
   App.Resource2 -> Arbiter.Resource[RESOURCE2_ID];
