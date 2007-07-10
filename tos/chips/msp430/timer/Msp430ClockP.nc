@@ -1,4 +1,4 @@
-//$Id: Msp430ClockP.nc,v 1.5 2007-04-05 05:53:52 andreaskoepke Exp $
+//$Id: Msp430ClockP.nc,v 1.6 2007-07-10 00:24:31 vlahan Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.
  * All rights reserved.
@@ -22,6 +22,7 @@
 
 /**
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
+ * @author Vlado Handziski <handzisk@tkn.tu-berlind.de>
  */
 
 #include <Msp430DcoSpec.h>
@@ -44,10 +45,22 @@ implementation
   enum
   {
     ACLK_CALIB_PERIOD = 8,
-    ACLK_HZ = 32768U,
-    TARGET_DCO_DELTA = (TARGET_DCO_HZ / ACLK_HZ) * ACLK_CALIB_PERIOD,
+    TARGET_DCO_DELTA = (TARGET_DCO_KHZ / ACLK_KHZ) * ACLK_CALIB_PERIOD,
   };
 
+
+  command void Msp430ClockInit.defaultSetupDcoCalibrate()
+  {
+  
+    // --- setup ---
+
+    TACTL = TASSEL1 | MC1; // source SMCLK, continuous mode, everything else 0
+    TBCTL = TBSSEL0 | MC1;
+    BCSCTL1 = XT2OFF | RSEL2;
+    BCSCTL2 = 0;
+    TBCCTL0 = CM0;
+   }
+    
   command void Msp430ClockInit.defaultInitClocks()
   {
     // BCSCTL1
@@ -99,6 +112,11 @@ implementation
     TBCTL = TBSSEL0 | TBIE;
   }
 
+  default event void Msp430ClockInit.setupDcoCalibrate()
+  {
+    call Msp430ClockInit.defaultSetupDcoCalibrate();
+  }
+  
   default event void Msp430ClockInit.initClocks()
   {
     call Msp430ClockInit.defaultInitClocks();
@@ -174,14 +192,6 @@ implementation
     int calib;
     int step;
 
-    // --- setup ---
-
-    TACTL = TASSEL1 | MC1; // source SMCLK, continuous mode, everything else 0
-    TBCTL = TBSSEL0 | MC1;
-    BCSCTL1 = XT2OFF | RSEL2;
-    BCSCTL2 = 0;
-    TBCCTL0 = CM0;
-
     // --- calibrate ---
 
     // Binary search for RSEL,DCO,DCOMOD.
@@ -211,6 +221,7 @@ implementation
 
     atomic
     {
+      signal Msp430ClockInit.setupDcoCalibrate();
       busyCalibrateDco();
       signal Msp430ClockInit.initClocks();
       signal Msp430ClockInit.initTimerA();

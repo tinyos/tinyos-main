@@ -1,4 +1,4 @@
-// $Id: PlatformC.nc,v 1.4 2006-12-12 18:23:44 vlahan Exp $
+// $Id: PlatformC.nc,v 1.5 2007-07-10 00:24:31 vlahan Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -22,7 +22,7 @@
 
 /**
  * @author Joe Polastre and Cory Sharp
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:44 $
+ * @version $Revision: 1.5 $ $Date: 2007-07-10 00:24:31 $
  */
 #include "hardware.h"
 
@@ -32,10 +32,10 @@ configuration PlatformC
 }
 implementation
 {
-  components PlatformP, MotePlatformC, Msp430ClockC;
+  components PlatformP, MotePlatformC, MoteClockC;
 
   Init = PlatformP;
-  PlatformP.Msp430ClockInit -> Msp430ClockC.Init;
+  PlatformP.MoteClockInit -> MoteClockC;
   PlatformP.MoteInit -> MotePlatformC;
 }
 
