@@ -1,3 +1,0 @@
-COMPONENT=SpiOffC
-
-include $(MAKERULES)
