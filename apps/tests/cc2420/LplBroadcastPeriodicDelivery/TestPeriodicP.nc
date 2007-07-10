@@ -56,6 +56,8 @@ implementation {
   uint8_t count;
   message_t fullMsg;
   bool transmitter;
+
+  uint8_t lastCount;
   
   /**************** Prototypes ****************/
   task void send();
@@ -89,8 +91,20 @@ implementation {
   }
   
   event message_t *Receive.receive(message_t *msg, void *payload, uint8_t len) {
+    TestPeriodicMsg *periodicMsg = (TestPeriodicMsg *) payload;
+
     if(!transmitter) {
-      call Leds.led1Toggle();
+      if(lastCount == periodicMsg->count) {
+        call Leds.led0On();
+        call Leds.led1Off();
+      } else {
+        call Leds.led1On();
+        call Leds.led0Off();
+      }
+
+      lastCount = periodicMsg->count;
+
+      call Leds.led2Toggle();
     }
     return msg;
   }
