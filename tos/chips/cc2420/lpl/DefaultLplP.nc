@@ -425,9 +425,7 @@ implementation {
   }
   
   /***************** Timer Events ****************/
-  event void OffTimer.fired() {
-    call Leds.led1Toggle();
-    
+  event void OffTimer.fired() {    
     /*
      * Only stop the radio if the radio is supposed to be off permanently
      * or if the duty cycle is on and our sleep interval is not 0
