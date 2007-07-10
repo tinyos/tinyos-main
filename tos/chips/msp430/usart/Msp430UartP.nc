@@ -32,7 +32,7 @@
 /**
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
+ * @version $Revision: 1.5 $ $Date: 2007-07-10 00:49:41 $
  */
 
 #include<Timer.h>
@@ -157,10 +157,13 @@ implementation {
     }
   }
   
-  async command error_t UartByte.send( uint8_t data ) {
-    call Usart.tx( data );
-    while( !call Usart.isTxIntrPending() );
-    call Usart.clrTxIntr();
+    async command error_t UartByte.send( uint8_t data ) {
+      call Usart.clrTxIntr();
+      call Usart.disableTxIntr ();
+      call Usart.tx( data );
+      while( !call Usart.isTxIntrPending() );
+      call Usart.clrTxIntr();
+      call Usart.enableTxIntr();
     return SUCCESS;
   }
   
