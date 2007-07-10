@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-04-05 06:38:45 $
+ * $Revision: 1.6 $
+ * $Date: 2007-07-10 13:16:01 $
  * ========================================================================
  */
 
@@ -53,14 +53,23 @@
 // shortest: low rx; low tx energy consumption (1m to 3m range)
 #define TABLE_TOP                                    0x84E8
 
-/** regulate distance using variable resistor */
-#define RF_DAMPING_0dB  255
-#define RF_DAMPING_5dB  248
-#define RF_DAMPING_10dB 245
-#define RF_DAMPING_15dB 241
-#define RF_DAMPING_20dB 239
+/** regulate distance using variable resistor, values for high tx power */
+#define RF_HITX_DAMPING_0dB  255
+#define RF_HITX_DAMPING_5dB  248
+#define RF_HITX_DAMPING_10dB 245
+#define RF_HITX_DAMPING_15dB 241
+#define RF_HITX_DAMPING_20dB 239
 
-#define INITIAL_RF_POWER RF_DAMPING_0dB
+/** regulate distance using variable resistor, values for low tx power */
+#define RF_LOTX_DAMPING_0dB  255
+#define RF_LOTX_DAMPING_5dB  90
+#define RF_LOTX_DAMPING_10dB 67
+#define RF_LOTX_DAMPING_15dB 50
+#define RF_LOTX_DAMPING_16dB 40
+#define RF_LOTX_DAMPING_17dB 30
+
+// choose one
+#define INITIAL_RF_POWER RF_HITX_DAMPING_0dB
 
 #define TDA5250_REG_DEFAULT_SETTING_CONFIG           FULL_RANGE
 #define TDA5250_REG_DEFAULT_SETTING_FSK              0x0A0C
