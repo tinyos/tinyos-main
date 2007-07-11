@@ -58,6 +58,7 @@ implementation
     S_READ,
     S_CRC,
     S_REPROG,
+    S_SYNC,
   };
   
   message_t serialMsg;
@@ -130,7 +131,7 @@ implementation
   
   event void BlockWrite.syncDone[uint8_t img_num](error_t error)
   {
-    if (state == S_ERASE) {
+    if (state == S_ERASE || state == S_SYNC) {
       state = S_IDLE;
       sendReply(error, sizeof(SerialReplyPacket));
     }
@@ -180,6 +181,9 @@ implementation
           error = call BlockRead.computeCrc[img_num](srpkt->offset,
                                                             srpkt->len, 0);
           break;
+        case SERIALMSG_SYNC:     // === Sync the flash ===
+          state = S_SYNC;
+          error = call BlockWrite.sync[img_num]();
   #ifdef DELUGE
         case SERIALMSG_ADDR:     // === Gets the physical starting address of a volume ===
           *(nx_uint32_t*)(&serialMsg_payload->data) =

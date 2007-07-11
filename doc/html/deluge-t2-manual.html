@@ -25,7 +25,7 @@ Deluge T2 - Programming Manual
 <p></p>
 <div align=center>
 Chieh-Jan Mike Liang<br>
-Razvan Musaloiu-E.<p>July 9, 2007</p>
+Razvan Musaloiu-E.<p>July 11, 2007</p>
 </div>
 <p></p>
 <p>
@@ -42,10 +42,10 @@ Hui, and Deluge 2.0 is the most recent version. Documentations on Deluge
 <a href="http://www.cs.berkeley.edu/~jwhui/research/deluge/">http://www.cs.berkeley.edu/~jwhui/research/deluge/</a>.</p>
 <p>
 Deluge T2 is an effort to port Deluge 2.0 from TinyOS 1 to TinyOS 2. 
-Since the code from Deluge 2.0 is reused as much as possible, the 
-behavior and the usage of Deluge T2 should be similar to Deluge 2.0. 
-Having said that, it would be helpful to read the Deluge 2.0 manual and 
-related documentations.</p>
+Although the code from Deluge 2.0 is reused as much as possible, the 
+behavior and the usage of Deluge T2 are not entirely identical to Deluge 
+2.0. Having said that, it would still be helpful to read the Deluge 2.0 
+manual and related documentations.</p>
 <p>
 Deluge T2 is still in experimental phase. One current limitation is 
 platform support. Deluge T2 has been developed on Tmote Sky (<i>telosb</i>) 
@@ -230,8 +230,8 @@ This command instructs the base station to notify the whole network of
 the availability of a new program image. This notification is currently 
 done via TinyOS dissemination service, and it triggers all motes in the 
 network to get the new program image. After all motes receive the image 
-over-the-air, you can instruct the base station to disseminate a command 
-to reprogram the network. For example,
+over-the-air, you can instruct the base station to disseminate the 
+command to reprogram in the network. For example,
 </p>
 <pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -r 1
 </pre><p></p>
@@ -242,8 +242,7 @@ to reprogram the network. For example,
 <p></p>
 <p>
 Different from Deluge 2.0, Deluge T2 toolchain is written in Python. 
-However, as demonstrated in the previous section, the usage is very 
-similar.</p>
+However, as demonstrated in the previous section, the usage is similar.</p>
 <p>
 </p>
 <a name="node_sec_5.1"></a>
@@ -262,33 +261,38 @@ no state is stored on the PC.</p>
 <p>
 </p>
 <a name="node_sec_5.3"></a>
-<h2>5.3&nbsp;&nbsp;-r -reboot</h2>
+<h2>5.3&nbsp;&nbsp;-b -reprogram_bs</h2>
 <p>This command sets up the mote to reprogram itself after reboot, and then 
-it reboots the mote. This command is applicable only to the directly 
-connected mote.</p>
+it reboots the mote. This command is applicable only to the base station 
+mote.</p>
 <p>
 </p>
 <a name="node_sec_5.4"></a>
 <h2>5.4&nbsp;&nbsp;-d -dissemination</h2>
-<p>This command instructs the directly connected mote to disseminate an 
-image to the network. This image is specified by the volume ID. Upon 
-successfully receiving an image, motes in the network automatically 
-reprogram themselves.</p>
+<p>This command instructs the base station mote to disseminate an image to 
+the network. This image is specified by the volume ID.</p>
 <p>
 </p>
 <a name="node_sec_5.5"></a>
-<h2>5.5&nbsp;&nbsp;-e -erase</h2>
-<p>This command erases a flash volume on the directly connected mote.</p>
+<h2>5.5&nbsp;&nbsp;-r -reprogram</h2>
+<p>This command instructs the base station mote to disseminate the 
+command to reprogram in the network. This command does not reprogram the 
+base station mote. The image is specified by the volume ID.</p>
 <p>
 </p>
 <a name="node_sec_5.6"></a>
-<h2>5.6&nbsp;&nbsp;-s -reset</h2>
+<h2>5.6&nbsp;&nbsp;-e -erase</h2>
+<p>This command erases a flash volume on the base station mote.</p>
+<p>
+</p>
+<a name="node_sec_5.7"></a>
+<h2>5.7&nbsp;&nbsp;-s -reset</h2>
 <p>This command resets versioning information of a specific image on the 
-directly connected mote.</p>
+base station mote.</p>
 <p>
 </p>
 <p></p>
-<div align=right class=colophon>Last modified: Monday, July 9th, 2007 8:43:40pm<br><div align=right class=advertisement>HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 20050501</a></div></div>
+<div align=right class=colophon>Last modified: Wednesday, July 11th, 2007 2:26:06pm<br><div align=right class=advertisement>HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 20050501</a></div></div>
 </div>
 </body>
 </html>

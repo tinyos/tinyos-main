@@ -53,6 +53,7 @@ MSG_READ      = 2
 MSG_REPROG    = 5
 MSG_DISS      = 6
 MSG_REPROG_BS = 7
+MSG_SYNC      = 8
 
 ERROR_SUCCESS = 0   # T2-compatible
 ERROR_FAIL    = 1   # T2-compatible
@@ -243,6 +244,21 @@ def op_erase(s, img_num):
     print "ERROR: Unable to send the command"
     return False
 
+def op_sync(s, img_num):
+    sreqpkt = SerialReqPacket((MSG_SYNC, img_num, 0, 0, []))
+    success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
+    if success == True:
+        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+        sreplypkt = SerialReplyPacket(packet[1])
+        if sreplypkt.error == ERROR_SUCCESS:
+            return True
+        else:
+            print "ERROR: Unable to sync the flash volume"
+            return False
+        
+    print "ERROR: Unable to send the command"
+    return False
+
 # Writes to an image volume
 def op_write(s, img_num, binary_stream):
     sreqpkt = SerialReqPacket((MSG_WRITE, img_num, 0, 0, []))
@@ -331,14 +347,15 @@ def op_inject(s, img_num, tos_image_xml):
     # Writes the new binary image
     if op_erase(s, img_num):
         if op_write(s, img_num, p.stdout.read()):
-            print "--------------------------------------------------"
-            metadata = getMetaData(s, img_num)
-            if not metadata == None:
-                if verifyMetaData(metadata) == True:
-                    print "Replace image with:"
-                    print toStatusStr(2, metadata)
-                    print "--------------------------------------------------"
-                    return True
+            if op_sync(s, img_num):
+                print "--------------------------------------------------"
+                metadata = getMetaData(s, img_num)
+                if not metadata == None:
+                    if verifyMetaData(metadata) == True:
+                        print "Replace image with:"
+                        print toStatusStr(2, metadata)
+                        print "--------------------------------------------------"
+                        return True
     
     return False
 
@@ -408,6 +425,9 @@ def op_reset(s, img_num):
     if sreplypkt.error != ERROR_SUCCESS:
         print "ERROR: Unable to write new versioning information"
         return False
+    else:
+        if op_sync(s, img_num) == False:
+            return False
             
     return True
 

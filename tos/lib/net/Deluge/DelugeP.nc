@@ -47,7 +47,9 @@ module DelugeP
 
 implementation
 {
-  //uint8_t img_num;
+  uint32_t recv_uid = 0xffffffff;
+  uint16_t recv_size = 0xffff;
+  uint8_t recv_imgNum = 0xff;
   
   /**
    * Starts the radio
@@ -56,7 +58,7 @@ implementation
   {
     call RadioSplitControl.start();
   }
-
+  
 #ifdef DELUGE_BASESTATION
   /**
    * Starts disseminating image information
@@ -104,14 +106,20 @@ implementation
   {
     const DelugeDissemination *delugeDis = call DisseminationValue.get();
     DelugeImgDesc *imgDesc = call DelugeMetadata.getImgDesc(delugeDis->imgNum);
-    
+        
     switch (delugeDis->msg_type) {
       case DISSMSG_DISS:
         if (imgDesc->uid == delugeDis->uid && imgDesc->uid != DELUGE_INVALID_UID) {
           if (imgDesc->vNum < delugeDis->vNum) {
+            recv_uid = delugeDis->uid;
+            recv_size = delugeDis->size;
+            recv_imgNum = delugeDis->imgNum;
             call ObjectTransfer.receive(delugeDis->uid, delugeDis->size, delugeDis->imgNum);
           }
         } else {
+          recv_uid = delugeDis->uid;
+          recv_size = delugeDis->size;
+          recv_imgNum = delugeDis->imgNum;
           call ObjectTransfer.receive(delugeDis->uid, delugeDis->size, delugeDis->imgNum);
         }
         
@@ -133,11 +141,7 @@ implementation
   
   event void ObjectTransfer.receiveDone(error_t error)
   {
-    //call ObjectTransfer.publish(imgDesc->uid, imgDesc->size, imgDesc->imgNum);
-    call ObjectTransfer.stop();
-//    if (error == SUCCESS) {
-//      call NetProg.programImgAndReboot(img_num);
-//    }
+    call ObjectTransfer.publish(recv_uid, recv_size, recv_imgNum);
   }
 
   /**
@@ -146,17 +150,6 @@ implementation
   event void RadioSplitControl.startDone(error_t error)
   {
     if (error == SUCCESS) {
-//      // Start publishing the current image
-//      DelugeImgDesc *imgDesc;
-//      DelugeNodeDesc nodeDesc;
-//      call IFlash.read((uint8_t*)IFLASH_NODE_DESC_ADDR,
-//                       &nodeDesc,
-//                       sizeof(DelugeNodeDesc));   // Reads which image was just reprogrammed
-//      imgDesc = call DelugeMetadata.getImgDesc(nodeDesc.imgNum);
-//      if (nodeDesc.uid == imgDesc->uid && imgDesc->uid != DELUGE_INVALID_UID) {
-//        call ObjectTransfer.publish(imgDesc->uid, imgDesc->size, imgDesc->imgNum);
-//      }
-            
       call StdControlDissemination.start();
     }
   }

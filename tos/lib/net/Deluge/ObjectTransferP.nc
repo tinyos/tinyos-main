@@ -111,8 +111,8 @@ implementation
       resetTimer();
     } else {
       call DelugePageTransfer.setWorkingPage(DELUGE_INVALID_OBJID, DELUGE_INVALID_PGNUM);
-      state = S_SYNC;
       call ObjectTransfer.stop();
+      state = S_SYNC;
       call BlockWrite.sync[cont_receive_img_num]();
     }
   }
@@ -248,9 +248,11 @@ implementation
         setNextPage();
       } else {
         call DelugePageTransfer.setWorkingPage(curObjDesc.objid, curObjDesc.numPgsComplete);
-        state = S_SYNC;
         call ObjectTransfer.stop();
-        call BlockWrite.sync[cont_receive_img_num]();
+        state = S_SYNC;
+        if (call BlockWrite.sync[cont_receive_img_num]() != SUCCESS) {
+          post signalObjRecvDone();
+        }
       }
     }
   }
