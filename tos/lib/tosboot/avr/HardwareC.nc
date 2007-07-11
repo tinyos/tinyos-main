@@ -1,4 +1,8 @@
-/*
+// $Id: HardwareC.nc,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+
+/*									tab:2
+ *
+ *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -18,48 +22,25 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2002-2003 Intel Corporation
- * All rights reserved.
- *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
- * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
- * 94704.  Attention:  Intel License Inquiry.
  */
 
 /**
- * Implementation for Blink application.  Toggle the red LED when a
- * Timer fires.
- *
- * @author tinyos-help@millennium.berkeley.edu
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
- **/
+ * @author Jonathan Hui <jwhui@cs.berkeley.edu>
+ */
 
-#include "Timer.h"
-
-module BlinkC
-{
-  uses interface Timer<TMilli> as Timer0;
-  uses interface Leds;
-  uses interface Boot;
-}
-
-implementation
-{
-  event void Boot.booted()
-  {
-    call Timer0.startPeriodic( 500 );
-  }
-
-  event void Timer0.fired()
-  {
-    dbg("BlinkC", "Timer 0 fired @ %s.\n", sim_time_string());
-#ifndef BLINK_REVERSE
-    call Leds.led0Toggle();
-#else
-    call Leds.led2Toggle();
-#endif
+module HardwareC {
+  provides {
+    interface Hardware;
   }
 }
 
+implementation {
+
+  command void Hardware.init() {}
+  
+  command void Hardware.reboot() {
+    wdt_enable(1);
+    while(1);
+  }
+
+}

@@ -1,4 +1,8 @@
-/*
+// $Id: HPLUSARTControl.nc,v 1.1 2007-07-11 00:42:57 razvanm Exp $
+
+/*									tab:2
+ *
+ *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -18,48 +22,25 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2002-2003 Intel Corporation
- * All rights reserved.
- *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
- * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
- * 94704.  Attention:  Intel License Inquiry.
  */
 
 /**
- * Implementation for Blink application.  Toggle the red LED when a
- * Timer fires.
- *
- * @author tinyos-help@millennium.berkeley.edu
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
- **/
+ * @author Jonathan Hui <jwhui@cs.berkeley.edu>
+ */
+ 
+includes msp430usart;
 
-#include "Timer.h"
+interface HPLUSARTControl {
 
-module BlinkC
-{
-  uses interface Timer<TMilli> as Timer0;
-  uses interface Leds;
-  uses interface Boot;
-}
+  command void disableSPI();
+  command void setModeSPI();
+  command void disableI2C();
+  command void setModeI2C();
+  command error_t isTxEmpty();
+  command error_t isTxIntrPending();
+  command error_t isRxIntrPending();
+  command void tx(uint8_t data);
+  command uint8_t rx();
 
-implementation
-{
-  event void Boot.booted()
-  {
-    call Timer0.startPeriodic( 500 );
-  }
-
-  event void Timer0.fired()
-  {
-    dbg("BlinkC", "Timer 0 fired @ %s.\n", sim_time_string());
-#ifndef BLINK_REVERSE
-    call Leds.led0Toggle();
-#else
-    call Leds.led2Toggle();
-#endif
-  }
 }
 

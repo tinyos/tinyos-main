@@ -1,4 +1,6 @@
-/*
+// $Id: TOSBoot_platform.h,v 1.1 2007-07-11 00:42:57 razvanm Exp $
+
+/*									tab:2
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -17,49 +19,29 @@
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
- *
- * Copyright (c) 2002-2003 Intel Corporation
- * All rights reserved.
- *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
- * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
- * 94704.  Attention:  Intel License Inquiry.
  */
 
 /**
- * Implementation for Blink application.  Toggle the red LED when a
- * Timer fires.
- *
- * @author tinyos-help@millennium.berkeley.edu
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
- **/
+ * @author  Jonathan Hui <jwhui@cs.berkeley.edu>
+ */
 
-#include "Timer.h"
+#ifndef __TOSBOOT_PLATFORM_H__
+#define __TOSBOOT_PLATFORM_H__
 
-module BlinkC
-{
-  uses interface Timer<TMilli> as Timer0;
-  uses interface Leds;
-  uses interface Boot;
-}
+enum {
+  // address of TOSBoot args in internal flash
+  TOSBOOT_ARGS_ADDR = 0x70,
+  // number of resets to force golden image
+  TOSBOOT_GESTURE_MAX_COUNT = 3,
+  // address of the golden image in external flash
+  TOSBOOT_GOLDEN_IMG_ADDR = 0xf0000L,
+  // size of each internal program flash page
+  TOSBOOT_INT_PAGE_SIZE = 512L,
+};
 
-implementation
-{
-  event void Boot.booted()
-  {
-    call Timer0.startPeriodic( 500 );
-  }
+enum {
+  DELUGE_MIN_ADV_PERIOD_LOG2 = 9,
+  DELUGE_QSIZE = 1,
+};
 
-  event void Timer0.fired()
-  {
-    dbg("BlinkC", "Timer 0 fired @ %s.\n", sim_time_string());
-#ifndef BLINK_REVERSE
-    call Leds.led0Toggle();
-#else
-    call Leds.led2Toggle();
 #endif
-  }
-}
-

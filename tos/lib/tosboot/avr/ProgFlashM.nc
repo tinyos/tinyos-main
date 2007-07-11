@@ -1,4 +1,8 @@
-/*
+// $Id: ProgFlashM.nc,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+
+/*									tab:2
+ *
+ *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -18,48 +22,44 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2002-2003 Intel Corporation
- * All rights reserved.
- *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
- * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
- * 94704.  Attention:  Intel License Inquiry.
  */
 
 /**
- * Implementation for Blink application.  Toggle the red LED when a
- * Timer fires.
- *
- * @author tinyos-help@millennium.berkeley.edu
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
- **/
+ * @author Jonathan Hui <jwhui@cs.berkeley.edu>
+ */
 
-#include "Timer.h"
-
-module BlinkC
-{
-  uses interface Timer<TMilli> as Timer0;
-  uses interface Leds;
-  uses interface Boot;
-}
-
-implementation
-{
-  event void Boot.booted()
-  {
-    call Timer0.startPeriodic( 500 );
-  }
-
-  event void Timer0.fired()
-  {
-    dbg("BlinkC", "Timer 0 fired @ %s.\n", sim_time_string());
-#ifndef BLINK_REVERSE
-    call Leds.led0Toggle();
-#else
-    call Leds.led2Toggle();
-#endif
+module ProgFlashM {
+  provides {
+    interface ProgFlash;
   }
 }
 
+implementation {
+
+#include <boot.h>
+
+  command error_t ProgFlash.write(in_flash_addr_t addr, uint8_t* buf, in_flash_addr_t len) {
+
+    uint16_t* wordBuf = (uint16_t*)buf;
+    uint32_t i;
+
+    if ( addr + len > TOSBOOT_START )
+      return FAIL;    
+
+    boot_page_erase( addr );
+    while( boot_rww_busy() )
+      boot_rww_enable();
+    
+    for ( i = 0; i < len; i += 2 )
+      boot_page_fill( addr + i, *wordBuf++ );
+
+    boot_page_write( addr );
+    
+    while ( boot_rww_busy() )
+      boot_rww_enable();
+    
+    return SUCCESS;
+    
+  }
+
+}

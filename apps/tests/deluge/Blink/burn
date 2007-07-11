@@ -24,20 +24,43 @@ PLATFORM=$2
 
 make clean
 
-echo ==================== Compile and load Blink ====================
+echo ============================ Compile and load Blink ============================
 if [ $PLATFORM == 'micaz' ]
 then
-  CFLAGS=-DDELUGE_BASESTATION make $PLATFORM install mib510,$PORT
+  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install mib510,${PORT}
 elif [ $PLATFORM == 'telosb' ]
 then
-  CFLAGS=-DDELUGE_BASESTATION make $PLATFORM install bsl,$PORT
+  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install bsl,${PORT}
 fi
 
-echo ==================== Compile a new Blink ====================
-CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make $PLATFORM 
+echo '           +-------------------------------------------------------+'
+echo '           |                                                       |'
+echo '           | At this point the first led (red) should be blinking. |'
+echo '           |                                                       |'
+echo '           |               Press ENTER to continue...              |'
+echo '           |                                                       |'
+echo '           +-------------------------------------------------------+'
+read
 
-echo ==================== Upload the image ====================
-${TOS_DELUGE} $PORT $PLATFORM -i 0 build/$PLATFORM/tos_image.xml
+echo  ============================= Compile a new Blink ==============================
+CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make ${PLATFORM}
 
-echo ==================== Reboot ====================
-${TOS_DELUGE} $PORT $PLATFORM -r 0 
+echo =============================== Upload the image ===============================
+${TOS_DELUGE} ${PORT} ${PLATFORM} -i 0 build/${PLATFORM}/tos_image.xml
+
+echo '       +----------------------------------------------------------------+'
+echo '       |                                                                |'
+echo '       | After pressing enter the following things will take place:     |'
+echo '       | - mote will be rebooted                                        |'
+echo '       | - all the leds will blink for some time as the                 |'
+echo '       |   reprogramming by tosboot takes place.                        |'
+echo '       | - a fading of the leds will indicate the exiting from tosboot. |'
+echo '       | - the mote should start blinking the 3rd led (blue/yellow).    |'
+echo '       |                                                                |'
+echo '       |                   Press ENTER to continue...                   |'
+echo '       |                                                                |'
+echo '       +----------------------------------------------------------------+'
+read
+
+echo =========================== Reboot the base station ============================
+${TOS_DELUGE} ${PORT} ${PLATFORM} -b 0 

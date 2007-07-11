@@ -1,9 +1,9 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: bnp.extra,v 1.2 2007-06-08 16:53:05 razvanm Exp $
+#$Id: bnp.extra,v 1.3 2007-07-11 00:42:54 razvanm Exp $
 
 DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
 DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
-TOSBOOT_DIR ?= $(TOSDIR)/lib/TOSBoot/build
+TOSBOOT_DIR ?= $(TOSDIR)/lib/tosboot/build
 
 ifeq ($(TINYOS_NP),BNP)
 

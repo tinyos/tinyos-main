@@ -1,5 +1,7 @@
-/*
- * "Copyright (c) 2000-2005 The Regents of the University  of California.  
+// $Id: crc.h,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+
+/*									tab:4
+ * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -28,38 +30,27 @@
  */
 
 /**
- * Implementation for Blink application.  Toggle the red LED when a
- * Timer fires.
+ * Default CRC function. Note that avrmote has a much more efficient one. 
  *
- * @author tinyos-help@millennium.berkeley.edu
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
- **/
+ * This CRC-16 function produces a 16-bit running CRC that adheres to the
+ * ITU-T CRC standard.
+ *
+ * The ITU-T polynomial is: G_16(x) = x^16 + x^12 + x^5 + 1
+ *
+ */
 
-#include "Timer.h"
-
-module BlinkC
+uint16_t crcByte(uint16_t crc, uint8_t b)
 {
-  uses interface Timer<TMilli> as Timer0;
-  uses interface Leds;
-  uses interface Boot;
+  uint8_t i;
+  
+  crc = crc ^ b << 8;
+  i = 8;
+  do
+    if (crc & 0x8000)
+      crc = crc << 1 ^ 0x1021;
+    else
+      crc = crc << 1;
+  while (--i);
+
+  return crc;
 }
-
-implementation
-{
-  event void Boot.booted()
-  {
-    call Timer0.startPeriodic( 500 );
-  }
-
-  event void Timer0.fired()
-  {
-    dbg("BlinkC", "Timer 0 fired @ %s.\n", sim_time_string());
-#ifndef BLINK_REVERSE
-    call Leds.led0Toggle();
-#else
-    call Leds.led2Toggle();
-#endif
-  }
-}
-

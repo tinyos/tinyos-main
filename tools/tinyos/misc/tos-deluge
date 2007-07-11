@@ -31,7 +31,7 @@
 # "./tos-deluge"
 ###############################################################################
 
-import sys, os, stat, struct, subprocess
+import sys, os, stat, struct, subprocess, time
 import tinyos
 from datetime import datetime
 import os.path 
@@ -186,6 +186,16 @@ def op_read(s, img_num, offset, length):
         
     return r
     
+# Checks for valid CRC and image timestamp
+def verifyMetaData(r):
+    if r != None:
+        if crc16(r[6:8]) == toInt(r[8:10]) and r[84:88] != [0xFF, 0xFF, 0xFF, 0xFF]:
+            return True
+        else:
+            print "WARNING: Invalid image format detected"
+    
+    return False
+
 # Returns the metadata (first 16 bytes of the image) plus the "ident" 
 # (DELUGE_IDENT_SIZE bytes after CRC)
 def getMetaData(s, img_num):
@@ -197,30 +207,24 @@ def getMetaData(s, img_num):
         temp = op_read(s, img_num, DELUGE_IDENT_OFFSET, DELUGE_IDENT_SIZE)
         if temp != None:
             r.extend(temp)
-        else:
-            r = None
-        
-    # Checks for valid CRC and image timestamp
-    if r != None:
-        if crc16(r[6:8]) == toInt(r[8:10]) and r[84:88] != [0xFF, 0xFF, 0xFF, 0xFF]:
             return r
-        
-    print "ERROR: Unable to retrieve image information"
+    
+    print "ERROR: Unable to retrieve image information over serial"
     return None
 
 # Prints status of the image in the external flash
 def op_ping(s, img_num):
     metadata = getMetaData(s, img_num)
     if not metadata == None:
-        print "Connected to Deluge node."
-        # Prints out image status
-        print "--------------------------------------------------"
-        print "Stored image %d" % img_num
-        print toStatusStr(2, metadata)
-        print "--------------------------------------------------"
-        return True
+        if verifyMetaData(metadata) == True:
+            print "Connected to Deluge node."
+            # Prints out image status
+            print "--------------------------------------------------"
+            print "Stored image %d" % img_num
+            print toStatusStr(2, metadata)
+            print "--------------------------------------------------"
+            return True
         
-    print "No proper Deluge image found!"
     return False
 
 # Erases an image volume
@@ -244,9 +248,19 @@ def op_write(s, img_num, binary_stream):
     sreqpkt = SerialReqPacket((MSG_WRITE, img_num, 0, 0, []))
     local_crc = 0   # Running CRC
     length = len(binary_stream)
+    total_length = length   # For progress bar
+    next_tick = 100   # For progress bar
+    start_time = time.time()
     
+    print "[0%        25%         50%         75%         100%]\r[",
+ 
     sreqpkt.offset = 0
     while length > 0:
+        if ((length * 100) / total_length) < next_tick:
+            next_tick = next_tick - 2
+            sys.stdout.write('-')
+            sys.stdout.flush()
+    
         # Calculates the payload size for the current packet
         if length >= SERIAL_DATA_LENGTH:
             sreqpkt.len = SERIAL_DATA_LENGTH
@@ -260,6 +274,7 @@ def op_write(s, img_num, binary_stream):
         
         # Sends over serial to the mote
         if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()) == False:
+            print
             print "ERROR: Unable to send the last serial packet (file offset: %d)" % sreqpkt.offset
             return False
         
@@ -267,13 +282,17 @@ def op_write(s, img_num, binary_stream):
         packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
         sreplypkt = SerialReplyPacket(packet[1])
         if sreplypkt.error != ERROR_SUCCESS:
+            print
             print "ERROR: Unable to write to the flash volume (file offset: %d)" % sreqpkt.offset
             return False
             
         local_crc = s.crc16(local_crc, sreqpkt.data)   # Computes running CRC
         length -= sreqpkt.len
         sreqpkt.offset += sreqpkt.len
-        
+
+    print '\r' + ' ' * 52,
+    elasped_time = time.time() - start_time
+    print "\r%s bytes in %.2f seconds (%.4f bytes/s)" % (total_length, elasped_time, int(total_length) / (elasped_time))
     return True
 
 # Injects an image (specified by tos_image_xml) to an image volume
@@ -291,19 +310,20 @@ def op_inject(s, img_num, tos_image_xml):
         return False
   
     # Gets status information of stored image
-    metadata = getMetaData(s, img_num)
-    print "Connected to Deluge nodes."
-    print "--------------------------------------------------"
-    print "Stored image %d" % img_num
     version = 0
+    metadata = getMetaData(s, img_num)
     if not metadata == None:
-        version = toInt(metadata[4:6]) + 1   # Increments the version
-        print toStatusStr(2, metadata)
+        print "Connected to Deluge nodes."
+        if verifyMetaData(metadata) == True:
+            print "--------------------------------------------------"
+            print "Stored image %d" % img_num
+            print toStatusStr(2, metadata)
+            version = toInt(metadata[4:6]) + 1   # Increments the version
     else:
-        print "  No proper Deluge image found!"
-    print "--------------------------------------------------"
+        return False
     
     # Creates binary image from the TOS image XML
+    print "--------------------------------------------------"
     p = subprocess.Popen([PATH_PY_BUILD_IMAGE, "-v", str(version), "-i", str(img_num), tos_image_xml], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print p.stderr.read(),
     print "--------------------------------------------------"
@@ -311,33 +331,34 @@ def op_inject(s, img_num, tos_image_xml):
     # Writes the new binary image
     if op_erase(s, img_num):
         if op_write(s, img_num, p.stdout.read()):
+            print "--------------------------------------------------"
             metadata = getMetaData(s, img_num)
-            if not metadata == None:       
-                print "Replace image with:"
-                print toStatusStr(2, metadata)
-                print "--------------------------------------------------"
-        
-                return True
+            if not metadata == None:
+                if verifyMetaData(metadata) == True:
+                    print "Replace image with:"
+                    print toStatusStr(2, metadata)
+                    print "--------------------------------------------------"
+                    return True
     
     return False
 
 # Requests the base station to reprogram itself
 def op_reprog_bs(s, img_num):
-    if getMetaData(s, img_num) == None:
-        print "ERROR: No proper Deluge image found!"
-    else:
-        sreqpkt = SerialReqPacket((MSG_REPROG_BS, img_num, 0, 0, []))
-        success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
-        if success == True:
-            packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-            sreplypkt = SerialReplyPacket(packet[1])
-            if sreplypkt.error == ERROR_SUCCESS:
-                return True
-            else:
-                print "ERROR: Unable to reprogram the base station"
-                return False
-            
-        print "ERROR: Unable to send the command"
+    metadata = getMetaData(s, img_num)
+    if not metadata == None:
+        if verifyMetaData(metadata) == True:
+            sreqpkt = SerialReqPacket((MSG_REPROG_BS, img_num, 0, 0, []))
+            success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
+            if success == True:
+                packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+                sreplypkt = SerialReplyPacket(packet[1])
+                if sreplypkt.error == ERROR_SUCCESS:
+                    return True
+                else:
+                    print "ERROR: Unable to reprogram the base station"
+                
+            print "ERROR: Unable to send the command"
+    
     return False
 
 # Requests the network to reprogram with the specified image number
@@ -357,28 +378,28 @@ def op_reprog(s, img_num):
 
 # Requests the mote to disseminate an image
 def op_diss(s, img_num):
-    if getMetaData(s, img_num) == None:
-        print "ERROR: No proper Deluge image found!"
-    else:
-        sreqpkt = SerialReqPacket((MSG_DISS, img_num, 0, 0, []))
-        success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
-        if success == True:
-            packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-            sreplypkt = SerialReplyPacket(packet[1])
-            if sreplypkt.error == ERROR_SUCCESS:
-                return True
-            else:
-                print "ERROR: Unable to start the command dissemination"
-                return False
+    metadata = getMetaData(s, img_num)
+    if not metadata == None:
+        if verifyMetaData(metadata) == True:
+            sreqpkt = SerialReqPacket((MSG_DISS, img_num, 0, 0, []))
+            success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
+            if success == True:
+                packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+                sreplypkt = SerialReplyPacket(packet[1])
+                if sreplypkt.error == ERROR_SUCCESS:
+                    return True
+                else:
+                    print "ERROR: Unable to start the command dissemination"
+                
+            print "ERROR: Unable to send the command"
             
-        print "ERROR: Unable to send the command"
     return False
-      
+
 # Resets image versioning information
 def op_reset(s, img_num):
     sreqpkt = SerialReqPacket((MSG_WRITE, img_num, 4, 2, [0, 0]))
     if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()) == False:
-        print "ERROR: Unable to send the last serial packet (file offset: %d)" % sreqpkt.offset
+        print "ERROR: Unable to send the command"
         return False
         
     # Waiting for confirmation
@@ -389,7 +410,7 @@ def op_reset(s, img_num):
         return False
             
     return True
-      
+
 def print_usage():
     print "Usage: %s <device_port> <baud_rate> <-p|-i|-r|-d|-e|-s> image_number [options]" % sys.argv[0]
     print "  <baud_rate>\n     Either the platform name or the baud rate value"

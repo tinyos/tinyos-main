@@ -68,7 +68,6 @@ implementation
       DelugeDissemination delugeDis;
       
       call ObjectTransfer.stop();
-      call Leds.led0Toggle();
       
       delugeDis.uid = imgDesc->uid;
       delugeDis.vNum = imgDesc->vNum;
@@ -86,8 +85,6 @@ implementation
   event void ReprogNotify.notify(uint8_t new_img_num)
   {
     DelugeDissemination delugeDis;
-    
-    call Leds.led2Toggle();
     
     delugeDis.uid = 0;
     delugeDis.vNum = 0;

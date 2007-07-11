@@ -1,0 +1,95 @@
+#!/bin/bash
+
+TOS_DELUGE=`type -p tos-deluge`
+if [[ ! -x ${TOS_DELUGE} ]] ; then 
+    TOS_DELUGE=../../../../tools/tinyos/misc/tos-deluge
+fi 
+
+echo ${TOS_DELUGE}
+
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <platform> <number of motes>"
+  echo "<platform>         \"micaz\", \"telosb\""
+  echo "<number of motes>  how many motes will be used in the test"
+  exit 2
+fi
+
+PLATFORM=$1
+NO_MOTES=$2
+
+if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' ]; then
+  echo "\"$2\" is not a supported platform"
+  exit 2
+fi
+
+echo ================================ Compile Blink =================================
+make clean
+CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM}
+ID=0
+
+function burn_one() {
+    ID=`expr $ID + 1`
+    echo -n ">>> Please plug mote $ID and type the port to continue: "
+    read PORT
+
+    if [ ${PLATFORM} == 'micaz' ]
+    then
+	CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} reinstall,$ID mib510,${PORT}
+    elif [ ${PLATFORM} == 'telosb' ]
+    then
+	CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} reinstall,$ID bsl,${PORT}
+    fi
+    
+}
+
+while [[ ${NO_MOTES} > 0 ]]
+do
+  burn_one
+  NO_MOTES=`expr ${NO_MOTES} - 1`
+done
+
+echo '   +------------------------------------------------------------------------+'
+echo '   |                                                                        |'
+echo '   | At this point the first led (red) of all the motes should be blinking. |'
+echo '   |                                                                        |'
+echo '   |                       Press ENTER to continue...                       |'
+echo '   |                                                                        |'
+echo '   +------------------------------------------------------------------------+'
+read
+
+echo ============================= Compile a new Blink ==============================
+CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make ${PLATFORM} 
+
+echo ========= Upload the new image to the external flash of the last mote ==========
+${TOS_DELUGE} ${PORT} ${PLATFORM} -i 0 build/${PLATFORM}/tos_image.xml
+
+echo '                  +-----------------------------------------+'
+echo '                  |                                         |'
+echo '                  | Press ENTER to start the dissemination. |'
+echo '                  |                                         |'
+echo '                  +-----------------------------------------+'
+read
+
+echo ============================= Start dissemination ==============================
+${TOS_DELUGE} ${PORT} ${PLATFORM} -d 0
+
+echo '              +--------------------------------------------------+'
+echo '              |                                                  |'
+echo '              | Press ENTER when the second led (green) from all |'
+echo '              | the motes except the last one stops blinking.    |'
+echo '              |                                                  |'
+echo '              +--------------------------------------------------+'
+read
+
+echo ===================== Trigger the reboot in the new image ======================
+${TOS_DELUGE} ${PORT} ${PLATFORM} -r 0
+
+echo '        +-------------------------------------------------------------+'
+echo '        |                                                             |'
+echo '        | All the motes except the last one should reboot, reprogram  |'
+echo '        | the internal flash with the new image and start running it. |'
+echo '        | The end result should be that the last led (blue/yellow)    |'
+echo '        | from all the motes except the last one is blinking.         |'
+echo '        |                                                             |'
+echo '        +-------------------------------------------------------------+'
+
