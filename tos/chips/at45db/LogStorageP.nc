@@ -267,6 +267,9 @@ implementation
   void sync() {
     metadata.flags = F_SYNC | F_LASTVALID;
     metadata.lastRecordOffset = s[client].woffset;
+    /* rend is now no longer the end of the page */
+    if (s[client].rpage == s[client].wpage)
+      s[client].rend = s[client].woffset;
     wmetadataStart();
   }
 
