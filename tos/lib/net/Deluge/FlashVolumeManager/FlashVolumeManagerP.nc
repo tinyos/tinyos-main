@@ -184,6 +184,7 @@ implementation
         case SERIALMSG_SYNC:     // === Sync the flash ===
           state = S_SYNC;
           error = call BlockWrite.sync[img_num]();
+	  break;
   #ifdef DELUGE
         case SERIALMSG_ADDR:     // === Gets the physical starting address of a volume ===
           *(nx_uint32_t*)(&serialMsg_payload->data) =
