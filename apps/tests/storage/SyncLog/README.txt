@@ -1,4 +1,4 @@
-README for Log
+README for SyncLog
 Author/Contact: tinyos-help@millennium.berkeley.edu
 
 Description:
@@ -23,4 +23,4 @@ Known bugs/limitations:
 
 None.
 
-$Id: README.txt,v 1.1 2007-07-11 18:10:34 idgay Exp $
+$Id: README.txt,v 1.2 2007-07-11 20:36:07 idgay Exp $
