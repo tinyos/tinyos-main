@@ -5,14 +5,9 @@ TEP Structure and Keywords
 :TEP: 1
 :Group: Core Working Group 
 :Type: Best Current Practice
-:Status: Draft
+:Status: Final
 :TinyOS-Version: All
 :Author: Philip Levis
-
-:Draft-Created: 18-Oct-2004
-:Draft-Version: $Revision: 1.9 $
-:Draft-Modified: $Date: 2007-07-02 23:35:04 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
