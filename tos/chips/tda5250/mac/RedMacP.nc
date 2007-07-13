@@ -535,9 +535,9 @@ implementation
         bool rVal = TRUE;
         uint8_t i;
         for(i=0; i < MSG_TABLE_ENTRIES; i++) {
-            if((getHeader(msg)->src == knownMsgTable[i].src) &&
-               (((getHeader(msg)->token) & TOKEN_ACK_MASK) == knownMsgTable[i].token) &&
-               (knownMsgTable[i].age < MAX_AGE)) {
+            if((knownMsgTable[i].age < MAX_AGE) &&
+               (getHeader(msg)->src == knownMsgTable[i].src) &&
+               (((getHeader(msg)->token) & TOKEN_ACK_MASK) == knownMsgTable[i].token)) {
                 knownMsgTable[i].age = 0;
                 rVal = FALSE;
                 break;
@@ -983,8 +983,10 @@ implementation
                 }
                 else {
                     sdDebug(203);
-                    updateLongRetryCounters();
-                    action = RX;
+                    updateLongRetryCounters(); // this will eventually schedule the right backoff
+                    macState = SLEEP;          // so much traffic is going on -- take a nap
+                    setSleepMode();
+                    action = INIT;             // a difficult way to say: do nothing
                 }
             }
             else {
