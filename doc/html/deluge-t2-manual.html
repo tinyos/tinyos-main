@@ -25,7 +25,7 @@ Deluge T2 - Programming Manual
 <p></p>
 <div align=center>
 Chieh-Jan Mike Liang<br>
-Razvan Musaloiu-E.<p>July 11, 2007</p>
+Razvan Musaloiu-E.<p>July 13, 2007</p>
 </div>
 <p></p>
 <p>
@@ -86,7 +86,7 @@ addition, it provides a quick test for software prerequisite. The latest
 TinyOS 2 CVS tree and Python 2.4 with pySerial support are recommended 
 for running Deluge T2.</p>
 <p>
-To start the example, we first compile TOSBoot provided in <code class=verbatim>tinyos-2.x/tos/lib/TOSBoot</code>.
+To start the example, we first compile tosboot provided in <code class=verbatim>tinyos-2.x/tos/lib/tosboot</code>.
 For example,
 </p>
 <pre class=verbatim>   % make telosb
@@ -139,7 +139,7 @@ versioning information is retrieved.</p>
 </p>
 <a name="node_sec_4.1"></a>
 <h2>4.1&nbsp;&nbsp;Setting Up the Motes</h2>
-<p>We first install both TOSBoot and a program that runs Deluge T2. For 
+<p>We first install both tosboot and a program that runs Deluge T2. For 
 simplicity, we use the golden image as the program. The golden image is 
 provided in <code class=verbatim>tinyos-2.x/apps/tests/deluge/GoldenImage</code>, and it does 
 nothing except initializing Deluge T2. This step can be done by 
@@ -152,7 +152,7 @@ act as a base station, which requires an additional component to accept
 user commands from the serial port. Normally, only one mote in the 
 network needs to be the base station, and other motes are reprogrammed 
 over-the-air. If error occurs when running the command above, you might 
-need to compile TOSBoot as shown in section <a href="#node_sec_3">3</a>. 
+need to compile tosboot as shown in section <a href="#node_sec_3">3</a>. 
 Deluge T2 makes sure the mote ID remain persistent over image 
 reprogramming. You can test the installation by interacting with the 
 mote through <code class=verbatim>tos-deluge</code>.</p>
@@ -292,7 +292,7 @@ base station mote.</p>
 <p>
 </p>
 <p></p>
-<div align=right class=colophon>Last modified: Wednesday, July 11th, 2007 2:26:06pm<br><div align=right class=advertisement>HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 20050501</a></div></div>
+<div align=right class=colophon>Last modified: Friday, July 13th, 2007 1:48:23pm<br><div align=right class=advertisement>HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 20050501</a></div></div>
 </div>
 </body>
 </html>
