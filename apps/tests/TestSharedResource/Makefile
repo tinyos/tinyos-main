@@ -1,3 +1,0 @@
-COMPONENT=TestSharedResourceAppC
-include $(MAKERULES)
-

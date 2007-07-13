@@ -21,34 +21,40 @@
  */
  
 /**
- * SharedResourceC is used to provide a generic configuration around 
- * the SharedResourceP component so that new instantiations of 
- * it provide a single set of interfaces that are all properly associated 
- * with one another rather than requiring the user to deal with the complexity
- * of doing this themselves.
+ * The SharedResourceImplP component is used to wrap all of the operations
+ * from a dedicated resource so that access to them is protected when 
+ * it is used as a shared resource.  It uses the ArbiterInfo interface 
+ * provided by an Arbiter to accomplish this.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:51 $
+ * @version $Revision: 1.1 $
+ * @date $Date: 2007-07-13 23:43:17 $
  */
- 
-#define TEST_SHARED_RESOURCE   "Test.Shared.Resource"
-generic configuration SharedResourceC() {
-	provides interface Resource;
-	provides interface ResourceRequested;
-	provides interface ResourceOperations;
-    uses interface ResourceConfigure;
+
+module SharedResourceImplP {
+  provides {
+    interface ResourceOperations as SharedResourceOperations[uint8_t id];
+  }
+  uses {
+  	interface ArbiterInfo;
+  	interface ResourceOperations;
+  }
 }
 implementation {
-  components SharedResourceP;
+  uint8_t current_id = 0xFF;
   
-  enum {
-    RESOURCE_ID = unique(TEST_SHARED_RESOURCE)
-  };
-
-  Resource = SharedResourceP.Resource[RESOURCE_ID];
-  ResourceRequested = SharedResourceP.ResourceRequested[RESOURCE_ID];
-  ResourceOperations = SharedResourceP.ResourceOperations[RESOURCE_ID];
-  ResourceConfigure = SharedResourceP.ResourceConfigure[RESOURCE_ID];
+  event void ResourceOperations.operationDone(error_t error) {
+  	signal SharedResourceOperations.operationDone[current_id](error);
+  }
+  
+  command error_t SharedResourceOperations.operation[uint8_t id]() {
+  	if(call ArbiterInfo.userId() == id && call ResourceOperations.operation() == SUCCESS) {
+      current_id = id;
+  	  return SUCCESS;
+  	}
+  	return FAIL;
+  }
+  
+  default event void SharedResourceOperations.operationDone[uint8_t id](error_t error) {}
 }
 

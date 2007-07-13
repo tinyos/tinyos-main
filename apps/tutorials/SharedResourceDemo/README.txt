@@ -1,4 +1,4 @@
-README for TestSharedResource
+README for SharedResourceDemo
 Author/Contact: tinyos-help@millennium.berkeley.edu
 @author Kevin Klues <klues@tkn.tu-berlin.de>
 

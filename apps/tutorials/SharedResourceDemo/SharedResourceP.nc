@@ -21,40 +21,35 @@
  */
  
 /**
- * The SharedResourceImplP component is used to wrap all of the operations
- * from a dedicated resource so that access to them is protected when 
- * it is used as a shared resource.  It uses the ArbiterInfo interface 
- * provided by an Arbiter to accomplish this.
+ * The SharedResourceP component is used to create a shared resource
+ * out of a dedicated one.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:51 $
+ * @version $Revision: 1.1 $
+ * @date $Date: 2007-07-13 23:43:17 $
  */
-
-module SharedResourceImplP {
-  provides {
-    interface ResourceOperations as SharedResourceOperations[uint8_t id];
-  }
-  uses {
-  	interface ArbiterInfo;
-  	interface ResourceOperations;
-  }
+ 
+#define UQ_SHARED_RESOURCE   "Shared.Resource"
+configuration SharedResourceP {
+	provides interface Resource[uint8_t id];
+	provides interface ResourceRequested[uint8_t id];
+	provides interface ResourceOperations[uint8_t id];
+	uses interface ResourceConfigure[uint8_t id];
 }
 implementation {
-  uint8_t current_id = 0xFF;
+  components new RoundRobinArbiterC(UQ_SHARED_RESOURCE) as Arbiter;
+  components new SplitControlPowerManagerC() as PowerManager;
+  components ResourceP;
+  components SharedResourceImplP;
+
+  ResourceOperations = SharedResourceImplP;
+  Resource = Arbiter;
+  ResourceRequested = Arbiter;
+  ResourceConfigure = Arbiter;
+  SharedResourceImplP.ArbiterInfo -> Arbiter;
+  PowerManager.ResourceDefaultOwner -> Arbiter;
   
-  event void ResourceOperations.operationDone(error_t error) {
-  	signal SharedResourceOperations.operationDone[current_id](error);
-  }
-  
-  command error_t SharedResourceOperations.operation[uint8_t id]() {
-  	if(call ArbiterInfo.userId() == id && call ResourceOperations.operation() == SUCCESS) {
-      current_id = id;
-  	  return SUCCESS;
-  	}
-  	return FAIL;
-  }
-  
-  default event void SharedResourceOperations.operationDone[uint8_t id](error_t error) {}
+  PowerManager.SplitControl -> ResourceP;
+  SharedResourceImplP.ResourceOperations -> ResourceP;
 }
 

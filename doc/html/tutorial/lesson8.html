@@ -124,15 +124,15 @@ Specifically, this tutorial will teach users how to:
 <p>This section shows you how to gain access to and use shared resources in TinyOS.  It walks through the process of making a request through the <code>Resource</code> interface and handling the <tt>granted</tt> event that is signaled back.  We will connect multiple clients to a single shared resources and see how access to each of them gets arbitrated.  We also show how to hold onto a resource until another client has requested it by implementing the <tt>ResourceRequested</tt> interface.
 </p>
 
-<p>To begin, go to the <tt>tinyos-2.x/apps/tests/TestSharedResource</tt> directory and install this application on a mote.  After installing the application you should see three leds flashing in sequence.</p> 
+<p>To begin, go to the <tt>tinyos-2.x/apps/tutorials/SharedResourceDemo</tt> directory and install this application on a mote.  After installing the application you should see three leds flashing in sequence.</p> 
 
-<p>Let's take a look at the different components contained in this directory to see whats going on.  Start with the top level application component: <code>TestSharedResourceAppC</code></p>
+<p>Let's take a look at the different components contained in this directory to see whats going on.  Start with the top level application component: <code>SharedResourceDemoAppC</code></p>
 
 <pre>
-configuration TestSharedResourceAppC{
+configuration SharedResourceDemoAppC{
 }
 implementation {
-  components MainC,LedsC, TestSharedResourceC as App,
+  components MainC,LedsC, SharedResourceDemoC as App,
   new TimerMilliC() as Timer0,
   new TimerMilliC() as Timer1,
   new TimerMilliC() as Timer2;
@@ -157,14 +157,14 @@ implementation {
 
 <p>Other than the instantiation and wiring of the interfaces provided by the <code>SharedResourceC</code> component, this configuration is identical to the one presented in Lesson 1 for the Blink Application.</p>  
 
-<p>All shared resources in TinyOS are provided through a generic component similar to the <code>SharedResourceC</code> component.  A resource client simply instantiates a new instance of this component and wires to the interfaces it provides.  In this application, three instances of the <code>SharedResourceC</code> component are instantiated and wired to three different clients from the <code>TestSharedResourceC</code> component.  Each instantiation provides a <tt>Resource</tt>, <tt>ResourceOperations</tt>, and <tt>ResourceRequested</tt> interface, and uses a <tt>ResourceConfgigure</tt> interface. In this example, no wiring is done to the <tt>ResourceConfigure</tt> or <tt>ResourceRequested</tt> interface as wiring to to these interfaces is optional.  The <tt>ResourceOperations</tt> interface is an <b>EXAMPLE</B> of a resource specific interface that a resource may provide to perform operations on it.  Calls to commands through this interface will only succeed if the client calling them happens to have access to the resource when they are called.
+<p>All shared resources in TinyOS are provided through a generic component similar to the <code>SharedResourceC</code> component.  A resource client simply instantiates a new instance of this component and wires to the interfaces it provides.  In this application, three instances of the <code>SharedResourceC</code> component are instantiated and wired to three different clients from the <code>SharedResourceDemoC</code> component.  Each instantiation provides a <tt>Resource</tt>, <tt>ResourceOperations</tt>, and <tt>ResourceRequested</tt> interface, and uses a <tt>ResourceConfgigure</tt> interface. In this example, no wiring is done to the <tt>ResourceConfigure</tt> or <tt>ResourceRequested</tt> interface as wiring to to these interfaces is optional.  The <tt>ResourceOperations</tt> interface is an <b>EXAMPLE</B> of a resource specific interface that a resource may provide to perform operations on it.  Calls to commands through this interface will only succeed if the client calling them happens to have access to the resource when they are called.
 </p>
 
-<p>Let's take a look at the <code>TestSharedResourceC</code> to see how access is actually granted to a Resource.
+<p>Let's take a look at the <code>SharedResourceDemoC</code> to see how access is actually granted to a Resource.
 </p>
 
 <pre>
-module TestSharedResourceC {
+module SharedResourceDemoC {
   uses {
     interface Boot;  
     interface Leds;
@@ -246,7 +246,7 @@ event void Timer2.fired() {
 }
 </pre>
 
-<p>In this way, requests are continuously put in by each client, allowing the application to continuously flash the LEDs in the order in which requests are being serviced.  As stated before, the <code>SharedResourceC</code> component services these requests in a round-robin fashion.  If you would like to see the requests serviced in the order they are received (and see the LEDs flash accordingly), you can open up the <code>SharedResourceP</code> component in the <tt>apps/tests/TestSharedResource</tt> directory and replace the <code>RoundRobinArbiter</code> component with the <code>FcfsArbiter</code> component.</p>
+<p>In this way, requests are continuously put in by each client, allowing the application to continuously flash the LEDs in the order in which requests are being serviced.  As stated before, the <code>SharedResourceC</code> component services these requests in a round-robin fashion.  If you would like to see the requests serviced in the order they are received (and see the LEDs flash accordingly), you can open up the <code>SharedResourceP</code> component in the <tt>apps/tutorials/SharedResourceDemo</tt> directory and replace the <code>RoundRobinArbiter</code> component with the <code>FcfsArbiter</code> component.</p>
 
 <table>
  <tr><td><b>RoundRobinArbiter</b></td><td width=10></td><td><b>FcfsArbiter</b></td></tr>
@@ -259,7 +259,7 @@ configuration SharedResourceP {
 	uses interface ResourceConfigure[uint8_t id];
 }
 implementation {
-  components new RoundRobinArbiterC(TEST_SHARED_RESOURCE) as Arbiter;
+  components new RoundRobinArbiterC(UQ_SHARED_RESOURCE) as Arbiter;
   ...
   ...
 }
@@ -275,7 +275,7 @@ configuration SharedResourceP {
 	uses interface ResourceConfigure[uint8_t id];
 }
 implementation {
-  components new FcfsArbiterC(TEST_SHARED_RESOURCE) as Arbiter;
+  components new FcfsArbiterC(UQ_SHARED_RESOURCE) as Arbiter;
   ...
   ...
 }
@@ -289,7 +289,7 @@ implementation {
 <p>Looking through the rest of this component, you can see how its wiring matches the connections shown in Figure 2.</p>
 
 <pre>
-#define TEST_SHARED_RESOURCE   "Test.Shared.Resource"
+#define UQ_SHARED_RESOURCE   "Shared.Resource"
 configuration SharedResourceP {
 	provides interface Resource[uint8_t id];
 	provides interface ResourceRequested[uint8_t id];
@@ -297,7 +297,7 @@ configuration SharedResourceP {
 	uses interface ResourceConfigure[uint8_t id];
 }
 implementation {
-  components new RoundRobinArbiterC(TEST_SHARED_RESOURCE) as Arbiter;
+  components new RoundRobinArbiterC(UQ_SHARED_RESOURCE) as Arbiter;
   components new SplitControlPowerManagerC() as PowerManager;
   components ResourceP;
   components SharedResourceImplP;
@@ -319,7 +319,7 @@ Four different components are instantiated by this configuration:
 </p>
 
 <pre>
-components new RoundRobinArbiterC(TEST_SHARED_RESOURCE) as Arbiter;
+components new RoundRobinArbiterC(UQ_SHARED_RESOURCE) as Arbiter;
 components new SplitControlPowerManagerC() as PowerManager;
 components ResourceP;
 components SharedResourceImplP;
@@ -345,7 +345,7 @@ This tutorial has given an overview of how resource arbitration and mechanisms f
 </p>
 
 <p>
-While the power managers presented in this tutorial are powerful components for providing power management of shared reosurces, they are not the only power management mechanisms provided by TinyOS.  Microcontroller power management is also preformed as outlined in TEP115.  Whenever the task queue empties, the lowest power state that the microcontroller is capapble of dropping to is automatically calculated and then switched to.  In this way, the user is not burdened with explicity controlling these power states.  The cc1000 and cc2420 radio implementations also provide "Low Power Listening" (LPL) interfaces for controlling their duty cycles.  Although the LPL interface used by each radio stack differs somewhat, they are both able to provide energy savings not achieveable through other means.  Ultimately we would like to see the components providing this LPL interface implemented as power manager components for the "radio resource" and be wired to the radio in the same way as the other power managers described in this tutorial.  The LPL implementation for the cc2420 can be found under <tt>tinyos-2.x/tos/chips/cc2420_lpl</tt> and the LPL implementation for the cc1000 can be found under <tt>tinyos-2.x/tos/chips/cc1000</tt>.  As these interfaces begin to mature and merge into one, this tutorial will be updated appropriately to accomodate the change.
+While the power managers presented in this tutorial are powerful components for providing power management of shared resources, they are not the only power management mechanisms provided by TinyOS.  Microcontroller power management is also preformed as outlined in TEP115.  Whenever the task queue empties, the lowest power state that the microcontroller is capapble of dropping to is automatically calculated and then switched to.  In this way, the user is not burdened with explicity controlling these power states.  The cc1000 and cc2420 radio implementations also provide "Low Power Listening" (LPL) interfaces for controlling their duty cycles.  Although the LPL interface used by each radio stack differs somewhat, they are both able to provide energy savings not achieveable through other means.  The LPL implementation for the cc2420 can be found under <tt>tinyos-2.x/tos/chips/cc2420</tt> and the LPL implementation for the cc1000 can be found under <tt>tinyos-2.x/tos/chips/cc1000</tt>.  As these interfaces begin to mature and merge into one, this tutorial will be updated appropriately to accomodate the change.
 </p>
 
 <!-- Related Docs -->

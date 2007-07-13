@@ -1,0 +1,3 @@
+COMPONENT=SharedResourceDemoAppC
+include $(MAKERULES)
+

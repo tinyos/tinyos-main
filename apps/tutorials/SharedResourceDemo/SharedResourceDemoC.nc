@@ -48,11 +48,11 @@
  * <br>
  * 
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:51 $
+ * @version $Revision: 1.1 $
+ * @date $Date: 2007-07-13 23:43:17 $
  */
 
-module TestSharedResourceC {
+module SharedResourceDemoC {
   uses {
     interface Boot;  
     interface Leds;

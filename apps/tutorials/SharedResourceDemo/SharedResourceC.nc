@@ -21,17 +21,34 @@
  */
  
 /**
- * An EXAMPLE of an interface for performing operations on a resource.
- * In this test application it is provided by the dedicated ResourceP component
- * and passed through all of the proper components before being exposed by the
- * shared resource at the topmost level.
+ * SharedResourceC is used to provide a generic configuration around 
+ * the SharedResourceP component so that new instantiations of 
+ * it provide a single set of interfaces that are all properly associated 
+ * with one another rather than requiring the user to deal with the complexity
+ * of doing this themselves.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:51 $
+ * @version $Revision: 1.1 $
+ * @date $Date: 2007-07-13 23:43:17 $
  */
-
-interface ResourceOperations {
-	command error_t operation();
-	event void operationDone(error_t error);
+ 
+#define UQ_SHARED_RESOURCE   "Shared.Resource"
+generic configuration SharedResourceC() {
+	provides interface Resource;
+	provides interface ResourceRequested;
+	provides interface ResourceOperations;
+    uses interface ResourceConfigure;
 }
+implementation {
+  components SharedResourceP;
+  
+  enum {
+    RESOURCE_ID = unique(UQ_SHARED_RESOURCE)
+  };
+
+  Resource = SharedResourceP.Resource[RESOURCE_ID];
+  ResourceRequested = SharedResourceP.ResourceRequested[RESOURCE_ID];
+  ResourceOperations = SharedResourceP.ResourceOperations[RESOURCE_ID];
+  ResourceConfigure = SharedResourceP.ResourceConfigure[RESOURCE_ID];
+}
+

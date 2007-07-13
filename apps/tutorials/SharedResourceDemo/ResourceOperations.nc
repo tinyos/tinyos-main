@@ -21,58 +21,17 @@
  */
  
 /**
- * This is an example implementation of a dedicated resource.  
- * It provides the SplitControl interface for power management
- * of the resource and an EXAMPLE ResourceOperations interface
- * for performing operations on it.
+ * An EXAMPLE of an interface for performing operations on a resource.
+ * In this test application it is provided by the dedicated ResourceP component
+ * and passed through all of the proper components before being exposed by the
+ * shared resource at the topmost level.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:22:51 $
+ * @version $Revision: 1.1 $
+ * @date $Date: 2007-07-13 23:43:17 $
  */
 
-module ResourceP {
-  provides {
-    interface SplitControl;
-    interface ResourceOperations;
-  }
+interface ResourceOperations {
+	command error_t operation();
+	event void operationDone(error_t error);
 }
-implementation {
-	
-  bool lock;
-	
-  task void startDone() {
-  	lock = FALSE;
-  	signal SplitControl.startDone(SUCCESS);
-  }
-  
-  task void stopDone() {
-  	signal SplitControl.stopDone(SUCCESS);
-  }
-  
-  task void operationDone() {
-  	lock = FALSE;
-  	signal ResourceOperations.operationDone(SUCCESS);
-  }
-	
-  command error_t SplitControl.start() {
-  	post startDone();
-  	return  SUCCESS;
-  }
-  
-  command error_t SplitControl.stop() {
-  	lock = TRUE;
-  	post stopDone();
-  	return  SUCCESS;
-  }
-  
-  command error_t ResourceOperations.operation() {
-  	if(lock == FALSE) {
-      lock = TRUE;
-  	  post operationDone();
-  	  return SUCCESS;
-  	}
-  	return FAIL;
-  }
-}
-

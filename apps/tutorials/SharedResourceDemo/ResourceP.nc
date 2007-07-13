@@ -21,35 +21,58 @@
  */
  
 /**
- * The SharedResourceP component is used to create a shared resource
- * out of a dedicated one.
+ * This is an example implementation of a dedicated resource.  
+ * It provides the SplitControl interface for power management
+ * of the resource and an EXAMPLE ResourceOperations interface
+ * for performing operations on it.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.5 $
- * @date $Date: 2007-02-04 19:54:32 $
+ * @version $Revision: 1.1 $
+ * @date $Date: 2007-07-13 23:43:17 $
  */
- 
-#define TEST_SHARED_RESOURCE   "Test.Shared.Resource"
-configuration SharedResourceP {
-	provides interface Resource[uint8_t id];
-	provides interface ResourceRequested[uint8_t id];
-	provides interface ResourceOperations[uint8_t id];
-	uses interface ResourceConfigure[uint8_t id];
+
+module ResourceP {
+  provides {
+    interface SplitControl;
+    interface ResourceOperations;
+  }
 }
 implementation {
-  components new RoundRobinArbiterC(TEST_SHARED_RESOURCE) as Arbiter;
-  components new SplitControlPowerManagerC() as PowerManager;
-  components ResourceP;
-  components SharedResourceImplP;
-
-  ResourceOperations = SharedResourceImplP;
-  Resource = Arbiter;
-  ResourceRequested = Arbiter;
-  ResourceConfigure = Arbiter;
-  SharedResourceImplP.ArbiterInfo -> Arbiter;
-  PowerManager.ResourceDefaultOwner -> Arbiter;
+	
+  bool lock;
+	
+  task void startDone() {
+  	lock = FALSE;
+  	signal SplitControl.startDone(SUCCESS);
+  }
   
-  PowerManager.SplitControl -> ResourceP;
-  SharedResourceImplP.ResourceOperations -> ResourceP;
+  task void stopDone() {
+  	signal SplitControl.stopDone(SUCCESS);
+  }
+  
+  task void operationDone() {
+  	lock = FALSE;
+  	signal ResourceOperations.operationDone(SUCCESS);
+  }
+	
+  command error_t SplitControl.start() {
+  	post startDone();
+  	return  SUCCESS;
+  }
+  
+  command error_t SplitControl.stop() {
+  	lock = TRUE;
+  	post stopDone();
+  	return  SUCCESS;
+  }
+  
+  command error_t ResourceOperations.operation() {
+  	if(lock == FALSE) {
+      lock = TRUE;
+  	  post operationDone();
+  	  return SUCCESS;
+  	}
+  	return FAIL;
+  }
 }
 
