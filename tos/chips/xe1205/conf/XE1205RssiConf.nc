@@ -48,7 +48,7 @@ interface XE1205RssiConf {
    * @param on: 1 to enable, 0 to disable
    * @return SUCCESS if operation done ok, error status otherwise 
    */
-  async command error_t setRssiMode(bool on);
+    async command error_t setRssiMode(bool on);
 
   /** 
    * Return the returns the period (in us) between two successive rssi measurements, 

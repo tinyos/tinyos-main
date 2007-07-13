@@ -96,7 +96,26 @@ implementation {
     call SpiResource.release();
     return SUCCESS;
   }
-    
+  async command error_t XE1205PatternConf.loadDataPatternHasBus() {
+      
+      call Pattern13.write((data_pattern >> 16) & 0xff);
+      call Pattern14.write((data_pattern >> 8) & 0xff);
+      call Pattern15.write(data_pattern & 0xff);
+     
+    return SUCCESS;
+
+  }
+
+  async command error_t XE1205PatternConf.loadAckPatternHasBus() {
+
+      call Pattern13.write((ack_pattern >> 16) & 0xff);
+      call Pattern14.write((ack_pattern >> 8) & 0xff);
+      call Pattern15.write(ack_pattern & 0xff);
+
+    return SUCCESS;
+
+  }
+
   async command error_t XE1205PatternConf.loadPattern(uint8_t* pattern, uint8_t len) 
   {
     error_t status;

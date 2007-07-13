@@ -61,6 +61,8 @@ interface XE1205PatternConf {
    * @return SUCCESS if operation done ok, error status otherwise 
    */
   async command error_t loadPattern(uint8_t* pattern, uint8_t len);
+  async command error_t loadDataPatternHasBus();
+  async command error_t loadAckPatternHasBus();
 
   /**
    * Set the number of bit errors accepted by the XE1205 

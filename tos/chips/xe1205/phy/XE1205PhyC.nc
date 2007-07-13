@@ -38,6 +38,7 @@
 
 configuration XE1205PhyC {
   provides interface XE1205PhyRxTx;
+  provides interface XE1205PhyRssi;
   provides interface SplitControl;
 }
 implementation {
@@ -57,6 +58,9 @@ implementation {
   components new XE1205SpiC() as SpiConfig;
   XE1205PhyP.SpiResourceConfig -> SpiConfig;
 
+  components new XE1205SpiC() as SpiRSSI;
+  XE1205PhyP.SpiResourceRssi -> SpiRSSI;
+
   components HplXE1205InterruptsC;
   XE1205PhyP.Interrupt0 -> HplXE1205InterruptsC.Interrupt0;
   XE1205PhyP.Interrupt1 -> HplXE1205InterruptsC.Interrupt1;
@@ -64,12 +68,19 @@ implementation {
 
   XE1205PhyRxTx = XE1205PhyP;
   SplitControl = XE1205PhyP;
+  XE1205PhyRssi = XE1205PhyP;
 
   components MainC;
   MainC.SoftwareInit -> XE1205PhyP.Init;
 
+  components XE1205PatternConfC;
+  XE1205PhyP.XE1205PatternConf -> XE1205PatternConfC;
+
   components XE1205IrqConfC;
   XE1205PhyP.XE1205IrqConf -> XE1205IrqConfC;
+
+  components XE1205PhyRssiConfC;
+  XE1205PhyP.XE1205RssiConf -> XE1205PhyRssiConfC;
 
   components new Alarm32khz16C();
   XE1205PhyP.Alarm32khz16 -> Alarm32khz16C.Alarm;

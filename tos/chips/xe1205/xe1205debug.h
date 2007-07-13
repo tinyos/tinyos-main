@@ -4,7 +4,7 @@ uint16_t lasterr;
 void xe1205error(uint8_t loc, uint8_t value_)  __attribute__ ((noinline)) {
   // this is just to make sure the compiler doesn't optimize 
   // out calls to this function, since we use it as a gdb breakpoint
-  atomic var += value_ + loc; 
+  atomic var += value_ + loc;
 }
 
 

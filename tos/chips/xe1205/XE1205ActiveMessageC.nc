@@ -44,20 +44,30 @@ configuration XE1205ActiveMessageC {
     interface AMPacket;
     interface Packet;
     interface PacketAcknowledgements;
+    #ifdef LOW_POWER_LISTENING
+    interface LowPowerListening;
+    #endif
   }
 }
 implementation {
   components XE1205SendReceiveC;
-  SplitControl           = XE1205SendReceiveC;
   Packet                 = XE1205SendReceiveC;
   PacketAcknowledgements = XE1205SendReceiveC;
+ components XE1205ActiveMessageP;
 
-
-  components XE1205ActiveMessageP;
+#ifdef LOW_POWER_LISTENING
+  components  XE1205LowPowerListeningC as Lpl;
+  LowPowerListening = Lpl;
+  XE1205ActiveMessageP.SubSend -> Lpl.Send;
+  XE1205ActiveMessageP.SubReceive -> Lpl.Receive;
+  SplitControl = Lpl;
+#else
+ 
   XE1205ActiveMessageP.Packet     -> XE1205SendReceiveC;
   XE1205ActiveMessageP.SubSend    -> XE1205SendReceiveC.Send;
   XE1205ActiveMessageP.SubReceive -> XE1205SendReceiveC.Receive;
-
+  SplitControl = XE1205SendReceiveC;
+#endif
   AMPacket = XE1205ActiveMessageP;
   AMSend   = XE1205ActiveMessageP;
   Receive  = XE1205ActiveMessageP.Receive;

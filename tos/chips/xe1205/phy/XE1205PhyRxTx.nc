@@ -64,7 +64,7 @@ interface XE1205PhyRxTx {
    * the client module returned NULL to continueSendBuf().
    *
    */
-  async event void sendFrameDone();
+  async event void sendFrameDone(error_t err);
 
 
   /**
@@ -129,4 +129,5 @@ interface XE1205PhyRxTx {
 
 
 
+  async command void enableAck(bool onOff);
 }

@@ -52,15 +52,19 @@ typedef nx_struct xe1205_header_t {
   nx_am_addr_t source;
   nx_am_id_t type;
   nx_am_group_t group;
+  nx_uint8_t ack;
 } xe1205_header_t;
 
 typedef nx_struct xe1205_footer_t {
-  nxle_uint16_t crc;  
+#ifdef LOW_POWER_LISTENING
+    nx_uint16_t rxInterval;
+#endif
+  nxle_uint16_t crc;
 } xe1205_footer_t;
 
 typedef nx_struct xe1205_metadata_t {
   nx_uint8_t length;
-  nx_uint8_t ack;// xxx this should move to header or footer, leaving it here for now for 1.x compat
+  nx_uint8_t strength;
 } xe1205_metadata_t;
 
 
@@ -108,7 +112,8 @@ enum {
 };
 
 enum {
-  data_pattern = 0x893456,
+    data_pattern = 0x893456,
+    ack_pattern = 0x123fed
 };
 
 
@@ -133,9 +138,12 @@ typedef enum {
 
 
 typedef enum {
-  xe1205_channelpreset_867mhz=0,
-  xe1205_channelpreset_868mhz=1,
-  xe1205_channelpreset_869mhz=2,
+  xe1205_channelpreset_868mhz=0,
+  xe1205_channelpreset_869mhz=1,
+  xe1205_channelpreset_870mhz=2,
+  xe1205_channelpreset_433mhz=3,
+  xe1205_channelpreset_434mhz=4,
+  xe1205_channelpreset_435mhz=5,
 } xe1205_channelpreset_t;
 
 typedef enum {
@@ -187,6 +195,37 @@ enum {
   XE1205_Sleep_to_TX_Time = XE1205_Sleep_to_Standby_Time + XE1205_Standby_to_TX_Time
 };
 
+
+
+enum {
+  RSSI_BELOW_110 = 0,
+  RSSI_110_TO_105 = 1,
+  RSSI_105_TO_100 = 2,
+  RSSI_100_TO_95 = 3,
+  RSSI_95_TO_90 = 4,
+  RSSI_90_TO_85 = 5,
+  RSSI_ABOVE_85 = 6
+};
+
+uint8_t const rssiTab[] = {
+  RSSI_BELOW_110,  // 0b0000
+  RSSI_110_TO_105, // 0b0001
+  RSSI_105_TO_100, // 0b0010
+  RSSI_100_TO_95,  // 0b0011
+  RSSI_95_TO_90,   // 0b0100 *
+  RSSI_95_TO_90,   // 0b0101 *
+  RSSI_95_TO_90,   // 0b0110 *
+  RSSI_95_TO_90,   // 0b0111
+  RSSI_90_TO_85,   // 0b1000 *
+  RSSI_90_TO_85,   // 0b1001 *
+  RSSI_90_TO_85,   // 0b1010 *
+  RSSI_90_TO_85,   // 0b1011 
+  RSSI_ABOVE_85,   // 0b1100 *
+  RSSI_ABOVE_85,   // 0b1101 *
+  RSSI_ABOVE_85,   // 0b1110 *
+  RSSI_ABOVE_85    // 0b1111 
+  // (*) : 'inconsistent' pairs
+};
 
 #endif /* _XE1205CONST_H */
 
