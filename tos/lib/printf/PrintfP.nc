@@ -40,8 +40,8 @@
  * 
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.6 $
- * @date $Date: 2007-04-20 01:14:13 $
+ * @version $Revision: 1.7 $
+ * @date $Date: 2007-07-16 19:42:34 $
  */
 
 #include "printf.h"
@@ -84,10 +84,10 @@ implementation {
   }
   
   void sendNext() {
-  	printf_msg_t* m = (printf_msg_t*)call Packet.getPayload(&printfMsg, NULL);
-  	length_to_send = (bytes_left_to_flush < sizeof(printf_msg_t)) ? bytes_left_to_flush : sizeof(printf_msg_t);
-  	memset(m->buffer, 0, sizeof(printfMsg));
-  	memcpy(m->buffer, (uint8_t*)next_byte, length_to_send);
+    printf_msg_t* m = (printf_msg_t*)call Packet.getPayload(&printfMsg, NULL);
+    length_to_send = (bytes_left_to_flush < sizeof(printf_msg_t)) ? bytes_left_to_flush : sizeof(printf_msg_t);
+    memset(m->buffer, 0, sizeof(m->buffer));
+    memcpy(m->buffer, (uint8_t*)next_byte, length_to_send);
     if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg_t)) != SUCCESS)
       post retrySend();  
     else {
@@ -139,7 +139,7 @@ implementation {
   	atomic {
   	  if(state == S_STARTED && (next_byte > buffer)) {
   	    state = S_FLUSHING;
-        bytes_left_to_flush = next_byte - buffer;
+            bytes_left_to_flush = next_byte - buffer;
   	    next_byte = buffer;
   	  }
   	  else return FAIL;
