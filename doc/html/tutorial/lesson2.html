@@ -733,7 +733,7 @@ state = WAITING;
 op1();
 call Timer.startOneShot(500);
 
-command void Timer.fired() {
+event void Timer.fired() {
   op2();
   state = RUNNING;
 }
