@@ -627,11 +627,11 @@ void *read_serial_packet(serial_source src, int *len)
      the serial source is in non-blocking mode
 */
 {
+  read_and_process(src, TRUE);
   for (;;)
     {
       struct packet_list *entry;
 
-      read_and_process(src, src->non_blocking);
       entry = pop_protocol_packet(src, P_PACKET_NO_ACK);
       if (entry)
 	{
@@ -645,6 +645,7 @@ void *read_serial_packet(serial_source src, int *len)
       if (src->non_blocking && serial_source_empty(src))
 	return NULL;
       source_wait(src, NULL);
+      read_and_process(src, src->non_blocking);
     }
 }
 
