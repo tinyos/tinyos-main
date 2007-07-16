@@ -48,11 +48,11 @@ generic configuration HplXE1205SpiC() {
 
 implementation {
 
-  components new Msp430Spi0C() as SpiC;
-  
-  Resource = SpiC;
-  SpiByte = SpiC;
-  SpiPacket = SpiC;
-  
+    components new Xe1205Spi0C() as SpiC;
+    
+    Resource = SpiC;
+    SpiByte = SpiC;
+    SpiPacket = SpiC;
+    
 }
 
