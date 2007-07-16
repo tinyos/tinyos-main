@@ -345,8 +345,9 @@ def op_inject(s, img_num, tos_image_xml):
     print "--------------------------------------------------"
     
     # Writes the new binary image
-    if op_erase(s, img_num):
-        if op_write(s, img_num, p.stdout.read()):
+    image = p.stdout.read()
+    if len(image) > 0 and op_erase(s, img_num):
+        if op_write(s, img_num, image):
             if op_sync(s, img_num):
                 print "--------------------------------------------------"
                 metadata = getMetaData(s, img_num)

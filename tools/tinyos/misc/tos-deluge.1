@@ -1,0 +1,55 @@
+.TH tos-deluge 1 "Jul 16, 2007"
+.SH NAME
+tos-deluge \- Management tool for Deluge T2
+
+.SH SYNOPSIS
+\fBtos-deluge\fR \fIdevice\fR \fIbaudrate\fR <\fB-p\fR|\fB-r\fR|\fB-d\fR|\fB-e\fR|\fB-s\fR> \fIimage_number\fR
+
+\fBtos-deluge\fR \fIdevice\fR \fIbaudrate\fR \fB-i\fR \fIimage_number\fR \fItos_image.xml\fR
+
+.SH DESCRIPTION
+
+\fBtos-deluge\fR is the management tool for Deluge T2. The available operations are: 
+
+.SH ARGUMENTS
+.TP
+.I device
+Any device accepted by PySerial. Examples:
+.RS
+.IP \(bu 4
+/dev/ttyUSB0
+.IP \(bu 4
+COM10
+.IP \(bu 4
+11
+.RE
+
+.TP
+.I baudrate
+Two shortcuts are available: \fBmicaz\fR for 57600 and \fBtelosb\fR for 115200.
+.TP
+.I image_number
+A integer number. 0 is the first image.
+
+.SH OPTIONS
+.TP
+.B -p, --ping
+Provide status of the image in the external flash
+.TP
+.B -i, --inject
+Inject a compiled TinyOS application. The tos_image.xml file path
+.TP
+.B -r, --reprogram
+Reprogram the network
+.TP
+.B -b, --reprogram_bs
+Reprogram only the directly-connected mote
+.TP
+.B -d, --dissemination
+Disseminate the image in the external flash to the network
+.TP
+.B -e, --erase
+Erase an image in the external flash
+.TP
+.B -s, --reset
+Reset the versioning information for a given image

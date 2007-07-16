@@ -54,7 +54,7 @@ class Serial:
         
         # Converts baud rate from platform name to value, if necessary
         try:
-            int(baudrate)
+            baudrate = int(baudrate)
         except:
             baudrate = __baud_rate.get(baudrate)
         

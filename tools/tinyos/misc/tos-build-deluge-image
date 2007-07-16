@@ -132,7 +132,17 @@ for (k, v) in ident_list:
   ident[k] = v
 for p in ['unix_time', 'user_hash', 'uid_hash']:
   ident[p] = int(ident[p][:-1], 16)
-image = dom.getElementsByTagName('image')[0].firstChild.nodeValue
+
+error = "ERROR: getting the image from the XML file failed."
+try:
+  image_element = dom.getElementsByTagName('image')[0]
+  if image_element.getAttribute('format') != 'ihex':
+    error = "ERROR: image format is %s instead of ihex" % image_element.getAttribute('format')
+    sys.exit()
+  image = image_element.firstChild.nodeValue
+except:
+  sys.stderr.write(error + '\n')
+  sys.exit()
 
 all = []
 section = []
