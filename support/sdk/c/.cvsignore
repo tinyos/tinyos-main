@@ -2,6 +2,7 @@ sf
 sflisten
 sfsend
 seriallisten
+serialsend
 libmote.a
 config-aux
 autom4te.cache
