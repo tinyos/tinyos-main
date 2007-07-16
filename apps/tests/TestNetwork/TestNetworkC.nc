@@ -7,7 +7,7 @@
  * See TEP118: Dissemination and TEP 119: Collection for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.5 $ $Date: 2007-04-14 00:34:20 $
+ * @version $Revision: 1.6 $ $Date: 2007-07-16 14:51:57 $
  */
 
 #include <Timer.h>
@@ -162,14 +162,14 @@ implementation {
    else if (!uartbusy) {
      message_t* msg = call Queue.dequeue();
      dbg("Traffic", "Sending packet to UART.\n");
-     if (call UARTSend.send(0xffff, recvPtr, call Receive.payloadLength(msg) + 4) == SUCCESS) {
+     if (call UARTSend.send(0xffff, msg, call Receive.payloadLength(msg)) == SUCCESS) {
        uartbusy = TRUE;
      }
      else {
       call CollectionDebug.logEventMsg(NET_C_DBG_2,
-				       call CollectionPacket.getSequenceNumber(recvPtr),
-				       call CollectionPacket.getOrigin(recvPtr),
-				       call AMPacket.destination(recvPtr));
+				       call CollectionPacket.getSequenceNumber(msg),
+				       call CollectionPacket.getOrigin(msg),
+				       call AMPacket.destination(msg));
      }
    }
  }
