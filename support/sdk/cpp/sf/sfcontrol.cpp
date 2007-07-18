@@ -452,7 +452,11 @@ bool SFControl::sendToClient(string message)
     const char* buffer = message.c_str();
     while (length > 0)
     {
+#ifdef __APPLE__
+        int n = send(clientFD, buffer, length, 0);
+#else
         int n = send(clientFD, buffer, length, MSG_NOSIGNAL);
+#endif
         if (!(n > 0))
         {
             return false;

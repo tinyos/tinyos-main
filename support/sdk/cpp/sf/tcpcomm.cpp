@@ -158,7 +158,11 @@ int TCPComm::writeFD(int fd, const char *buffer, int count)
     int actual = 0;
     while (count > 0)
     {
+#ifdef __APPLE__
+        int n = send(fd, buffer, count, 0);
+#else
         int n = send(fd, buffer, count, MSG_NOSIGNAL);
+#endif
         if (n == -1)
         {
             return -1;

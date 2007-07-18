@@ -46,6 +46,10 @@
 #include "serialcomm.h"
 #include "packetbuffer.h"
 
+#ifdef __APPLE__
+#include <unistd.h>
+#include <signal.h>
+#endif
 
 using namespace std;
 
@@ -54,6 +58,11 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
+#ifdef __APPLE__
+    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+        cerr << "Warning: failed to ignore SIGPIPE " << endl;
+#endif
+    
   SFControl control;
   control.parseArgs(argc, argv);
   control.waitOnInput();
