@@ -62,7 +62,7 @@ protected:
     std::list<sfServer_t> servers;
 
     /* max. allowed sf-servers */
-    static const unsigned int maxSFServers = 4;
+    static const unsigned int maxSFServers = 512;
 
     /* pthread for thread cancel notification */
     pthread_t cancelThread;
