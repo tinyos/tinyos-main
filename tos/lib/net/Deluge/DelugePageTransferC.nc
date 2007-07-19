@@ -37,6 +37,7 @@ configuration DelugePageTransferC
     interface AMSend as SendReqMsg;
     interface AMPacket;
     interface PacketAcknowledgements;
+    interface Leds;
   }
 }
 
@@ -63,8 +64,7 @@ implementation
   DelugePageTransferP.Timer -> Timer;
   DelugePageTransferP.BitVecUtils -> BitVecUtilsC;
   
-  components NoLedsC, LedsC;
-  DelugePageTransferP.Leds -> LedsC;
+  DelugePageTransferP.Leds = Leds;
   
   // For collecting statistics
   //components StatsCollectorC;

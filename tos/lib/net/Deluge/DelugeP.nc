@@ -141,6 +141,7 @@ implementation
   
   event void ObjectTransfer.receiveDone(error_t error)
   {
+    call Leds.set(LEDS_LED1 | LEDS_LED2);
     call ObjectTransfer.publish(recv_uid, recv_size, recv_imgNum);
   }
 
@@ -155,4 +156,6 @@ implementation
   }
   
   event void RadioSplitControl.stopDone(error_t error) {}
+  
+  default async void command Leds.set(uint8_t val) {}
 }

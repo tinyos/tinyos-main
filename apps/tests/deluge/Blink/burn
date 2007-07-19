@@ -1,11 +1,22 @@
 #!/bin/bash
 
+python -c '
+import sys
+try: 
+  import serial
+except ImportError, e: 
+  sys.exit(1)'
+
+if [[ $? != 0 ]]
+then
+  echo "Please install PySerial first." 
+  exit 2
+fi
+
 TOS_DELUGE=`type -p tos-deluge`
 if [[ ! -x ${TOS_DELUGE} ]] ; then 
     TOS_DELUGE=../../../../tools/tinyos/misc/tos-deluge
 fi 
-
-echo ${TOS_DELUGE}
 
 if [ $# -ne 2 ]; then
   echo "Usage: $0 <port> <platform>"
@@ -14,13 +25,19 @@ if [ $# -ne 2 ]; then
   exit 2
 fi
 
-if [ $2 != 'micaz' -a $2 != 'telosb' ]; then
-  echo "\"$2\" is not a supported platform"
+PORT=$1
+PLATFORM=$2
+
+if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' ]; then
+  echo "\"${PLATFORM}\" is not a supported platform"
   exit 2
 fi
 
-PORT=$1
-PLATFORM=$2
+if ! [ -a ${TOSDIR}/lib/tosboot/build/${PLATFORM}/main.ihex ]
+then
+  echo ========================== Compile tosboot for ${PLATFORM} ===========================
+  ( cd $TOSDIR/lib/tosboot ; make ${PLATFORM} ) 
+fi
 
 make clean
 
@@ -50,8 +67,8 @@ ${TOS_DELUGE} ${PORT} ${PLATFORM} -i 0 build/${PLATFORM}/tos_image.xml
 
 echo '       +----------------------------------------------------------------+'
 echo '       |                                                                |'
-echo '       | After pressing enter the following things will take place:     |'
-echo '       | - mote will be rebooted                                        |'
+echo '       | In the next step the following things will take place:         |'
+echo '       | - the mote will be rebooted                                    |'
 echo '       | - all the leds will blink for some time as the                 |'
 echo '       |   reprogramming by tosboot takes place.                        |'
 echo '       | - a fading of the leds will indicate the exiting from tosboot. |'

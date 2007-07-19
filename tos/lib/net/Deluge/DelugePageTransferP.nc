@@ -490,4 +490,5 @@ dbg("Deluge", "%.3f 115 116 116 117 115 2 %d\n", ((float)((sim_time() * 1000) / 
   
   default command error_t BlockRead.read[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
   default command error_t BlockWrite.write[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
+  default async command void Leds.led1Toggle() {}
 }

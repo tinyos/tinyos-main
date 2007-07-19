@@ -5,8 +5,6 @@ if [[ ! -x ${TOS_DELUGE} ]] ; then
     TOS_DELUGE=../../../../tools/tinyos/misc/tos-deluge
 fi 
 
-echo ${TOS_DELUGE}
-
 if [ $# -ne 2 ]; then
   echo "Usage: $0 <platform> <number of motes>"
   echo "<platform>         \"micaz\", \"telosb\""
@@ -18,8 +16,14 @@ PLATFORM=$1
 NO_MOTES=$2
 
 if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' ]; then
-  echo "\"$2\" is not a supported platform"
+  echo "\"${PLAFTORM}\" is not a supported platform"
   exit 2
+fi
+
+if ! [ -a ${TOSDIR}/lib/tosboot/build/${PLATFORM}/main.ihex ]
+then
+  echo ========================== Compile tosboot for ${PLATFORM} ===========================
+  ( cd $TOSDIR/lib/tosboot ; make ${PLATFORM} ) 
 fi
 
 echo ================================ Compile Blink =================================
@@ -63,22 +67,32 @@ CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make ${PLATFORM}
 echo ========= Upload the new image to the external flash of the last mote ==========
 ${TOS_DELUGE} ${PORT} ${PLATFORM} -i 0 build/${PLATFORM}/tos_image.xml
 
-echo '                  +-----------------------------------------+'
-echo '                  |                                         |'
-echo '                  | Press ENTER to start the dissemination. |'
-echo '                  |                                         |'
-echo '                  +-----------------------------------------+'
+echo '            +-----------------------------------------------------+'
+echo '            |                                                     |'
+echo '            | In the next step the dissemination will be started. |'
+echo '            | When a node receives a page, the second led (green) |'
+echo '            | will blink.                                         |'
+echo '            |                                                     |'
+echo '            |              Press ENTER to continue...             |'
+echo '            |                                                     |'
+echo '            +-----------------------------------------------------+'
+
 read
 
 echo ============================= Start dissemination ==============================
 ${TOS_DELUGE} ${PORT} ${PLATFORM} -d 0
 
-echo '              +--------------------------------------------------+'
-echo '              |                                                  |'
-echo '              | Press ENTER when the second led (green) from all |'
-echo '              | the motes except the last one stops blinking.    |'
-echo '              |                                                  |'
-echo '              +--------------------------------------------------+'
+echo '         +------------------------------------------------------------+'
+echo '         |                                                            |'
+echo '         | The dissemination is completed when the second and third   |'
+echo '         | led from all the motes except the last one stops blinking. |'
+echo '         |                                                            |'
+echo '         | In the next step the motes will be rebooted to allow the   |'
+echo '         | reprogramming to take place.                               |'
+echo '         |                                                            |'
+echo '         |                 Press ENTER to continue...                 |'
+echo '         |                                                            |'
+echo '         +------------------------------------------------------------+'
 read
 
 echo ===================== Trigger the reboot in the new image ======================

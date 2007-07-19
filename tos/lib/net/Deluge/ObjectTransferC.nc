@@ -33,6 +33,7 @@ configuration ObjectTransferC
   uses {
     interface BlockRead[uint8_t img_num];
     interface BlockWrite[uint8_t img_num];
+    interface Leds;
   }
 }
 
@@ -64,12 +65,10 @@ implementation
   DelugePageTransferC.SendDataMsg -> SendDataMsg;
   DelugePageTransferC.ReceiveDataMsg -> ReceiveDataMsg;
   DelugePageTransferC.AMPacket -> SendDataMsg;
+  DelugePageTransferC.Leds = Leds;
   
   ObjectTransferP.BlockWrite[VOLUME_DELUGE0] = BlockWrite[VOLUME_DELUGE0];
   ObjectTransferP.BlockWrite[VOLUME_DELUGE1] = BlockWrite[VOLUME_DELUGE1];
-  
-  components MainC, LedsC, NoLedsC;
-  ObjectTransferP.Leds -> NoLedsC;
   
   components RandomC, new TimerMilliC() as Timer;
   ObjectTransferP.Random -> RandomC;

@@ -27,7 +27,10 @@
 #include "Deluge.h"
 #include "StorageVolumes.h"
 
-configuration DelugeC {}
+configuration DelugeC
+{
+  uses interface Leds;
+}
 
 implementation
 {
@@ -52,13 +55,13 @@ implementation
   ObjectTransferC.BlockWrite[VOLUME_DELUGE0] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE0];
   ObjectTransferC.BlockRead[VOLUME_DELUGE1] -> DelugeStorageC.BlockRead[VOLUME_DELUGE1];
   ObjectTransferC.BlockWrite[VOLUME_DELUGE1] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE1];
+  ObjectTransferC.Leds = Leds;
   
   components new DisseminatorC(DelugeDissemination, 0xDE00), DisseminationC;
   components ActiveMessageC;
   components NetProgC, DelugeP;
   components new TimerMilliC() as Timer;
-  components LedsC, NoLedsC;
-  DelugeP.Leds -> LedsC;  
+  DelugeP.Leds = Leds;  
   DelugeP.DisseminationValue -> DisseminatorC;
   DelugeP.DisseminationUpdate -> DisseminatorC;
   DelugeP.StdControlDissemination -> DisseminationC;
