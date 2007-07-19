@@ -45,6 +45,7 @@ implementation
   components MainC, BlinkC, LedsC;
 #ifdef DELUGE
   components DelugeC;
+  DelugeC.Leds -> LedsC;
 #endif
   components new TimerMilliC() as Timer0;
 
