@@ -330,7 +330,7 @@ implementation {
   event void Timer.fired() {
     call Leds.led0Toggle();
     post TimerTask();
-    call Timer.startPeriodic(1024 * gUpdateInterval + 1);
+    call Timer.startOneShot((uint32_t)1024 * gUpdateInterval + 1);
   }
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len) {
