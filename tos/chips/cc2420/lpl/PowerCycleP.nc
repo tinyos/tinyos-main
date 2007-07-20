@@ -50,7 +50,9 @@
  *
  * @author David Moss
  */
- 
+
+#include "DefaultLpl.h"
+
 module PowerCycleP {
   provides {
     interface PowerCycle;
