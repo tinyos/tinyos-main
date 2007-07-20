@@ -200,8 +200,8 @@ implementation {
   }
   
   command bool Model.clearChannel() {
-    dbg("CpmModelC", "Checking clear channel @ %s: %f <= %f \n", sim_time_string(), (double)noise_hash_generation(), clearThreshold);
-    return noise_hash_generation() < clearThreshold;
+    dbg("CpmModelC", "Checking clear channel @ %s: %f <= %f \n", sim_time_string(), (double)packetNoise(NULL), clearThreshold);
+    return packetNoise(NULL) < clearThreshold;
   }
 
   void sim_gain_schedule_ack(int source, sim_time_t t, receive_message_t* r) {
