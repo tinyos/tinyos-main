@@ -1,4 +1,4 @@
-// $Id: Tda5250ActiveMessageC.nc,v 1.4 2006-12-12 18:23:13 vlahan Exp $
+// $Id: Tda5250ActiveMessageC.nc,v 1.5 2007-07-24 12:22:42 andreaskoepke Exp $
 
 /*                                                                      tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:             Philip Levis
- * Date last modified:  $Id: Tda5250ActiveMessageC.nc,v 1.4 2006-12-12 18:23:13 vlahan Exp $
+ * Date last modified:  $Id: Tda5250ActiveMessageC.nc,v 1.5 2007-07-24 12:22:42 andreaskoepke Exp $
  *
  */
 
@@ -58,6 +58,7 @@ configuration Tda5250ActiveMessageC {
     interface AMPacket;
     interface Packet;
     interface PacketAcknowledgements;
+    interface Tda5250Packet;	
   }
 }
 implementation {
@@ -69,6 +70,7 @@ implementation {
 
   Packet       = Radio;
   PacketAcknowledgements = Radio;
+  Tda5250Packet = AM;		
 
   AMSend   = AM;
   Receive  = AM.Receive;
