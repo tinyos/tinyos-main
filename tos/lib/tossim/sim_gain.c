@@ -101,6 +101,7 @@ void sim_gain_remove(int src, int dest) __attribute__ ((C, spontaneous))  {
   prevLink = NULL;
     
   while (current != NULL) {
+    gain_entry_t* tmp;
     if (current->mote == dest) {
       if (prevLink == NULL) {
 	connectivity[src] = current->next;
@@ -108,8 +109,9 @@ void sim_gain_remove(int src, int dest) __attribute__ ((C, spontaneous))  {
       else {
 	prevLink->next = current->next;
       }
+      tmp = current->next;
       sim_gain_deallocate_link(current);
-      current = prevLink->next;
+      current = tmp;
     }
     else {
       prevLink = current;
