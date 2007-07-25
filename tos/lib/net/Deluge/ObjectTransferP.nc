@@ -248,7 +248,6 @@ implementation
         setNextPage();
       } else {
         call DelugePageTransfer.setWorkingPage(curObjDesc.objid, curObjDesc.numPgsComplete);
-        call ObjectTransfer.stop();
         state = S_SYNC;
         if (call BlockWrite.sync[cont_receive_img_num]() != SUCCESS) {
           post signalObjRecvDone();
