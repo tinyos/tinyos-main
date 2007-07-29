@@ -127,7 +127,7 @@ implementation {
     else {
       noise_val = (double)sim_noise_generate(node_id, quotient);
     }
-    dbg("CpmModelC", "OUT: noise_hash_generation()\n");
+    dbg("CpmModelC,Tal", "%s: OUT: noise_hash_generation(): %lf\n", sim_time_string(), noise_val);
 
     return noise_val;
   }
