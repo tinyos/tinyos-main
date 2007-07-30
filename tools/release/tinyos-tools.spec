@@ -2,8 +2,8 @@
 
 Summary: TinyOS tools 
 Name: tinyos-tools
-Version: 1.2.3
-Release: 1
+Version: 1.2.4
+Release: 2
 License: Please see source
 Group: Development/System
 URL: http://www.tinyos.net/
@@ -83,6 +83,8 @@ echo "done."
 # Remove JNI code on uninstall
 
 %changelog
+* Sun Jul 29 2007 <pal@cs.stanford.edu> 1.2.4-2
+- Add 64-bit support for Java VMs and deluge tools.
 * Wed Jul 5 2006 <kwright@archrock.com> 1.2.2-1
 * Thu Feb 9 2006 <david.e.gay@intel.com> 1.2.1-2
 * Sat Feb 4 2006 <kwright@cs.berkeley.edu> 1.2.1-1
