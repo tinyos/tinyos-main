@@ -1,4 +1,4 @@
-// $Id: TrickleTimerImplP.nc,v 1.4 2006-12-12 18:23:29 vlahan Exp $
+// $Id: TrickleTimerImplP.nc,v 1.5 2007-07-30 00:42:00 scipio Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -208,24 +208,24 @@ implementation {
     // How much time has elapsed on the current timer
     // since it was scheduled? This value is needed because
     // the time remaining of a running timer is its time
-    // value minus tiem elapsed.
+    // value minus time elapsed.
     uint32_t elapsed = (call Timer.getNow() - call Timer.gett0());
 	
     for (i = 0; i < count; i++) {
-      uint32_t time = trickles[i].time;
-      if (time != 0) {
+      uint32_t timeRemaining = trickles[i].time;
+      if (timeRemaining != 0) {
 	atomic {
 	  if (!call Changed.get(i)) {
 	    call Changed.clear(i);
-	    time -= elapsed;
+	    timeRemaining -= elapsed;
 	  }
 	}
 	if (!set) {
-	  lowest = time;
+	  lowest = timeRemaining;
 	  set = TRUE;
 	}
-	else if (time < lowest) {
-	  lowest = time;
+	else if (timeRemaining < lowest) {
+	  lowest = timeRemaining;
 	}
       }
     }
@@ -244,7 +244,7 @@ implementation {
    * running (time != 0), then double the period.
    */
   void generateTime(uint8_t id) {
-    uint32_t time;
+    uint32_t newTime;
     uint16_t rval;
     
     if (trickles[id].time != 0) {
@@ -256,14 +256,14 @@ implementation {
     
     trickles[id].time = trickles[id].remainder;
     
-    time = trickles[id].period;
-    time = time << (scale - 1);
+    newTime = trickles[id].period;
+    newTime = newTime << (scale - 1);
 
     rval = call Random.rand16() % (trickles[id].period << (scale - 1));
-    time += rval;
+    newTime += rval;
     
-    trickles[id].remainder = (trickles[id].period << scale) - time;
-    trickles[id].time += time;
+    trickles[id].remainder = (trickles[id].period << scale) - newTime;
+    trickles[id].time += newTime;
     dbg("Trickle,TrickleTimes", "Generated time for %hhu with period %hu (%u) is %u (%i + %hu)\n", id, trickles[id].period, (uint32_t)trickles[id].period << scale, trickles[id].time, (trickles[id].period << (scale - 1)), rval);
   }
 
