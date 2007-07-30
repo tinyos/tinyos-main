@@ -11,6 +11,7 @@ tools/release/extractor $NAME-$VERSION <<'EOF' | gzip >../$NAME-$VERSION.tar.gz
 !^./support/make/Makelocal
 !^./support/make/btnode3.target
 !^./tests
+!^./tools
 !^./tos/chips/Atmega128
 !^./tos/chips/cc2420_pm
 !^./tos/chips/cc1000_pm
