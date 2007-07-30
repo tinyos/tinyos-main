@@ -250,13 +250,6 @@ void makePmfDistr(uint16_t node_id)__attribute__ ((C, spontaneous))
       //printf("Inserting first element.\n");
     }
     pKey[NOISE_HISTORY-1] = search_bin_num(noiseData[node_id].noiseTrace[i]);
-    dbg("TestCorrupt", "Looking up with key ");
-    {
-      int ctr;
-      for(ctr = 0; ctr < NOISE_HISTORY; ctr++)
-	dbg_clear("TestCorrupt", "%0.3hhi ", pKey[ctr]);
-    }
-    dbg_clear("TestCorrupt", "\n");
     sim_noise_dist(node_id);
     arrangeKey(node_id);
   }
