@@ -7,7 +7,7 @@
 # by ncc.  And because of that, the current platform's include directory
 # must be specified, otherwise its search order is last instead of first.
 #
-# $Id: .platform,v 1.5 2007-06-21 21:44:16 beutel Exp $
+# $Id: .platform,v 1.6 2007-07-30 17:48:49 beutel Exp $
 #
 
 push( @includes, qw(
@@ -17,7 +17,7 @@ push( @includes, qw(
   %T/platforms/mica
   %T/platforms/mica2
   %T/platforms/mica2/chips/cc1000
-  %T/chips/cc1000_lpl
+  %T/chips/cc1000
   %T/chips/atm128
   %T/chips/atm128/adc
   %T/chips/atm128/i2c

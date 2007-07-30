@@ -37,7 +37,7 @@
  *  @author Martin Turon <mturon@xbow.com>
  *  @author Jan Beutel <j.beutel@ieee.org>
  * 
- *  $Id: hardware.h,v 1.5 2007-06-21 21:44:16 beutel Exp $
+ *  $Id: hardware.h,v 1.6 2007-07-30 17:48:49 beutel Exp $
  */
 
 #ifndef HARDWARE_H
@@ -51,6 +51,7 @@
 
 #include <atm128hardware.h>
 #include <Atm128Adc.h>
+#include <MicaTimer.h>
 
 // A/D constants (channels, etc)
 enum {
