@@ -250,6 +250,13 @@ void makePmfDistr(uint16_t node_id)__attribute__ ((C, spontaneous))
       //printf("Inserting first element.\n");
     }
     pKey[NOISE_HISTORY-1] = search_bin_num(noiseData[node_id].noiseTrace[i]);
+    dbg("TestCorrupt", "Looking up with key ");
+    {
+      int ctr;
+      for(ctr = 0; ctr < NOISE_HISTORY; ctr++)
+	dbg_clear("TestCorrupt", "%0.3hhi ", pKey[ctr]);
+    }
+    dbg_clear("TestCorrupt", "\n");
     sim_noise_dist(node_id);
     arrangeKey(node_id);
   }
@@ -389,7 +396,7 @@ void makeNoiseModel(uint16_t node_id)__attribute__ ((C, spontaneous)) {
   sim_noise_add(node_id, noiseData[node_id].noiseTrace[NOISE_HISTORY]);
   arrangeKey(node_id);
   
-  for(i = NOISE_HISTORY+1; i < noiseData[node_id].noiseTraceIndex; i++) {
+  for(i = NOISE_HISTORY; i < noiseData[node_id].noiseTraceIndex; i++) {
     noiseData[node_id].key[NOISE_HISTORY-1] = search_bin_num(noiseData[node_id].noiseTrace[i]);
     sim_noise_add(node_id, noiseData[node_id].noiseTrace[i+1]);
     arrangeKey(node_id);
