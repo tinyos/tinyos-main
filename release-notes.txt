@@ -1,4 +1,15 @@
-These release notes are as of: $Date: 2007-04-19 23:08:12 $
+These release notes are as of: $Date: 2007-07-30 02:23:23 $
+
+2.0.2:
+  Added reimplementation of low-power CC2420 stack to support AUTOACK and SACK
+  Added Deluge and related tools (support for micaZ and telosb only)
+  Added TEPs
+  Added 64-bit support for Java support code
+  Fixed oscillator calibration bug in MSP430 USART
+  Fixed clear channel detection bug in TOSSIM
+  Fixed errors in tutorial text
+  Fixed deadlock in C-based serial forwarder
+  Fixed bugs in at45db and stm25p storage stacks
 
 2.0.1:
   Added low-power cc2420 stack as default on relevant platforms
