@@ -81,7 +81,7 @@ implementation {
     return (call CC2420PacketBody.getMetadata( p_msg ))->rssi;
   }
 
-  async command error_t CC2420Packet.getLqi( message_t* p_msg ) {
+  async command uint8_t CC2420Packet.getLqi( message_t* p_msg ) {
     return (call CC2420PacketBody.getMetadata( p_msg ))->lqi;
   }
 
