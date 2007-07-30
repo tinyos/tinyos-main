@@ -1,10 +1,16 @@
 This contains the TinyOS 2.0 source code as of
 
-$Date: 2007-04-19 06:25:21 $
+$Date: 2007-07-30 07:18:52 $
 
 This tree includes the TinyOS 2.0 documentation in tinyos-2.x/doc; 
 you can also find the documentation online at:
 http://www.tinyos.net/tinyos-2.x/doc/
+
+Please note that RPM releases do not include the doc/ or tools/
+directories. They do not include the former because of the above URL,
+where corrections can be applied quickly. They do not include the
+latter because that compiled versions of its code are installed in
+the tinyos-tools RPM.
 
 The basic directory structure is as follows:
 
