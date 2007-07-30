@@ -12,7 +12,7 @@ dnl -*- m4 -*-
 # force autoconf 2.5 on Debian systems
 AC_PREREQ(2.50)
 
-AC_INIT(tinyos-tools, 1.2.1)
+AC_INIT(tinyos-tools, 1.2.4)
 AC_CONFIG_AUX_DIR(config-aux)
 AM_INIT_AUTOMAKE
 AC_CANONICAL_HOST
