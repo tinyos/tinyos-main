@@ -153,7 +153,14 @@ Sending packet 6
 TOSComm JNI support, this means the Java Native Interface (JNI) files that
 control the serial port haven't been correctly installed. Run the command
 <code>tos-install-jni</code> (on Linux, do this as the superuser). If this
-command does not exist, go to <code>tinyos-2.x/tools/tinyos/java</code>. If
+command does not exist, then you have either not installed the tinyos-tools
+RPM or it was installed incorrectly. The <tt>tos-</tt> commands are typically
+installed in /usr/bin. If you still cannot find the script, email <tt>tinyos-help</tt>.</p>
+
+<h3>Installing <tt>tos-install-jre</tt> from CVS sources</h3>
+<p>If you have not installed the tools RPM and are working directly from the 
+TinyOS CVS repository, you can manually install the tos-locate-jre script. 
+Go to <code>tinyos-2.x/tools/tinyos/java</code>. If
 the directory has a <code>Makefile</code> in it, type <code>make</code>
 and (again, on Linux, as superuser) <code>make
 install</code>.  If the directory does not have a <code>Makefile</code>, go
