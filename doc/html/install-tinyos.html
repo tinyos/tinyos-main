@@ -2,13 +2,13 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
-  <title>Installing TinyOS 2.0</title>
+  <title>Installing TinyOS 2.0.2</title>
   <link href="../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
 </head>
 <body>
 
-<div class="title">Installing TinyOS 2.0</div>
-<div class="subtitle">Last updated 1 May 2007</div>
+<div class="title">Installing TinyOS 2.0.2</div>
+<div class="subtitle">Last updated 30 July 2007</div>
 
 <p>If you already have a 1.x tree or an existing 2.x tree, you are better off 
 following the <i>upgrade</i> instructions at 
@@ -265,6 +265,12 @@ If you are using Cygwin and installing the nesC RPM
 causes an error that the RPM was built for Cygwin,
 add the <code>--ignoreos</code> option.
 
+Finally, there are two Linux versions of tinyos-tools, depending
+on whether you have a 32-bit or 64-bit machine. The first is the
+i386 RPM and the second is the i686 RPM. If you have a 64-bit
+Java VM, it is important that you install the i686 RPM or otherwise
+the Java support may not work properly.
+
 <!----- tinyos-2.x/tinyos rpms  -------->
 </p><p><b><em>TinyOS-specific Tools</em></b>
 <table border="0">
@@ -284,13 +290,20 @@ add the <code>--ignoreos</code> option.
   <td><a href=""></a><code>rpm -Uvh</code><br>
                      <code>rpm -Uvh --ignoreos</code> (if Cygwin complains)</td>
 </tr>
-
+<tr></tr>
 <tr>
-  <td bgcolor="#dddddd">tinyos-tools</td>
-  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.3-1.cygwin.i386.rpm">tinyos-tools-1.2.3-1.cygwin.i386.rpm</a></td>
-  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.3-1.cygwin.i386.rpm">tinyos-tools-1.2.3-1.cygwin.i386.rpm</a></td>
-  <td bgcolor="#dddddd"><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.3-1.i386.rpm">tinyos-tools-1.2.3-1.i386.rpm</a></td>
-  <td bgcolor="#dddddd"><a href=""></a><code>rpm -ivh --force</code>&nbsp;(1.x tree)<br><code>rpm -Uvh</code>&nbsp;(no 1.x tree)<br></td>
+  <td bgcolor="#dddddd"><b>Tool</b></td>
+  <td bgcolor="#dddddd"><b>Windows/Cygwin</b></td>
+  <td bgcolor="#dddddd"><b>32-bit Linux</b></td>
+  <td bgcolor="#dddddd"><b>64-bit Linux</b></td>
+  <td bgcolor="#dddddd"><b>Command</b></td>
+</tr>
+<tr>
+  <td>tinyos-tools</td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.4-2.cygwin.i386.rpm">tinyos-tools-1.2.4-2.cygwin.i386.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.4-2.i386.rpm">tinyos-tools-1.2.4-2.i386.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.4-2.i686.rpm">tinyos-tools-1.2.4-2.i686.rpm</a></td>
+  <td><a href=""></a><code>rpm -ivh --force</code>&nbsp;(1.x tree)<br><code>rpm -Uvh</code>&nbsp;(no 1.x tree)<br></td>
 </tr>
 
 </tbody></table>
@@ -322,8 +335,8 @@ bypass the erroneous error by using 'rpm -ivh --ignoreos
 
 <tr>
   <td>TinyOS</td>
-  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-2.0.1-5.cygwin.noarch.rpm">tinyos-2.0.1-5.cygwin.noarch.rpm</a></td>
-  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-2.0.1-5.noarch.rpm">tinyos-2.0.1-5.noarch.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-2.0.2-2.cygwin.noarch.rpm">tinyos-2.0.2-2.cygwin.noarch.rpm</a></td>
+  <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-2.0.2-2.noarch.rpm">tinyos-2.0.2-2.noarch.rpm</a></td>
 </tr>
 
 </tbody></table>
