@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2007-07-10 13:16:01 $
+ * $Revision: 1.7 $
+ * $Date: 2007-08-06 12:56:56 $
  * ========================================================================
  */
 
@@ -46,11 +46,11 @@
 /** regulate distance by switching the amplifiers */
 // longest distance
 #define FULL_RANGE                                   0x84F9
-// shorter distance; low rx, high tx energy consumption (30m)
-#define MED_RANGE_LP                                 0x84E9
-// shorter distance; high rx, low tx energy consumption (25m)
-#define MED_RANGE_HP                                 0x84F8
-// shortest: low rx; low tx energy consumption (1m to 3m range)
+// shorter distance; low gain, high tx energy consumption (30m)
+#define MED_RANGE_HP                                 0x84E9
+// shorter distance; high gain, low tx energy consumption (25m)
+#define MED_RANGE_LP                                 0x84F8
+// shortest: low gain; low tx energy consumption (1m to 3m range)
 #define TABLE_TOP                                    0x84E8
 
 /** regulate distance using variable resistor, values for high tx power */
