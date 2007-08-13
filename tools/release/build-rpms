@@ -3,7 +3,9 @@
 
 # For linux, change to /usr/src/redhat
 # For my cygwin: /cygdrive/c/rpmsrc
-RPMS=/usr/src/redhat
+if [ -z $RPMS ]; then #test to see if RPMS is overridden by the environment
+		RPMS=/usr/src/redhat
+fi		
 TINYOS_VERSION=2.0.2
 TINYOS_TOOLS_VERSION=1.2.4
 
@@ -34,7 +36,7 @@ cp tinyos-tools-$TINYOS_TOOLS_VERSION.tar.gz $RPMS/SOURCES
 echo "*** Creating rpms"
 cd $RPMS
 rpmbuild -bb $HERE/tinyos.spec
-rpmbuild -bb $HERE/tinyos-tools.spec
+#rpmbuild -bb $HERE/tinyos-tools.spec
 #rpmbuild -bb $HERE/task-tinydb/task-tinydb.spec
 #rpmbuild -bb $HERE/contrib/contrib.spec
 #rpmbuild -bb $HERE/vm/vm.spec
