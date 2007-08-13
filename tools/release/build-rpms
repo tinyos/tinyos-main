@@ -36,7 +36,7 @@ cp tinyos-tools-$TINYOS_TOOLS_VERSION.tar.gz $RPMS/SOURCES
 echo "*** Creating rpms"
 cd $RPMS
 rpmbuild -bb $HERE/tinyos.spec
-#rpmbuild -bb $HERE/tinyos-tools.spec
+rpmbuild -bb $HERE/tinyos-tools.spec
 #rpmbuild -bb $HERE/task-tinydb/task-tinydb.spec
 #rpmbuild -bb $HERE/contrib/contrib.spec
 #rpmbuild -bb $HERE/vm/vm.spec
