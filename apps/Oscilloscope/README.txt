@@ -3,11 +3,12 @@ Author/Contact: tinyos-help@millennium.berkeley.edu
 
 Description:
 
-Oscilloscope is a simple data-collection demo. It periodically samples the
-default sensor and broadcasts a message every 10 readings. These readings
-can be displayed by the Java "Oscilloscope" application found in the java
-subdirectory. The sampling rate starts at 4Hz, but can be changed from the
-Java application.
+Oscilloscope is a simple data-collection demo. It periodically samples
+the default sensor and broadcasts a message over the radio every 10
+readings. These readings can be received by a BaseStation mote and
+displayed by the Java "Oscilloscope" application found in the java
+subdirectory. The sampling rate starts at 4Hz, but can be changed from
+the Java application.
 
 You can compile Oscilloscope with a sensor board's default sensor by compiling
 as follows:
@@ -17,9 +18,11 @@ You can change the sensor used by editing OscilloscopeAppC.nc.
 
 Tools:
 
-The Java application displays readings it receives from motes running the
-Oscilloscope demo via a serial forwarder. To run it, change to the java
-subdirectory and type:
+To display the readings from Oscilloscope motes, install the BaseStation
+application on a mote connected to your PC's serial port. Then run the 
+Oscilloscope display application found in the java subdirectory, as
+follows:
+  cd java
   make
   java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<mote>
   # e.g., java net.tinyps.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
@@ -36,4 +39,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.4 2006-12-12 18:22:48 vlahan Exp $
+$Id: README.txt,v 1.5 2007-08-13 15:51:20 idgay Exp $
