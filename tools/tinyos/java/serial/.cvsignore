@@ -3,3 +3,4 @@ Makefile.in
 .deps
 toscomm.dll
 libtoscomm.so
+libtoscomm-32.so
