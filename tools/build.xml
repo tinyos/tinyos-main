@@ -1,7 +1,7 @@
 <project name="tinyos-2.x tools" default="all">
 
 	<target name="all" >
-		<echo message = "Building ${project.name}" />
+		<echo message = "Building tinyos-2.x tools" />
 		<exec executable="./Bootstrap" failonerror="true">
 		</exec>
 		<exec executable="./configure" failonerror="true">
@@ -12,7 +12,7 @@
 	</target>
 
 	<target name="install_cruisecontrol" >
-		<echo message = "Building ${project.name}" />
+		<echo message = "Building tinyos-2.x tools" />
 		<exec executable="./Bootstrap" failonerror="true">
 		</exec>
 		<exec executable="./configure" failonerror="true">
