@@ -1,0 +1,16 @@
+<project name="tinyos-2.x docs" default="all">
+
+	<target name="all" >
+		<echo message = "Building tinyos-2.x docs as html" />
+		<exec executable="make" failonerror="true">
+			<arg  line="all" />
+		</exec>
+	</target>
+
+	<target name="clean" >
+		<echo message = "Building tinyos-2.x docs as pdf" />
+		<exec executable="make" failonerror="true">
+			<arg  line="pdf" />
+		</exec>
+	</target>
+</project>
