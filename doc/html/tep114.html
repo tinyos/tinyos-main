@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>SIDs: Source and Sink Independent Drivers</title>
 <meta name="author" content="Gilman Tolle, Philip Levis, and David Gay" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-21 07:04:39 $
-:version: $Revision: 1.8 $
+:date: $Date: 2007-08-14 18:58:00 $
+:version: $Revision: 1.9 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -40,11 +40,6 @@ blockquote.epigraph {
 
 dd {
   margin-bottom: 0.5em }
-
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
-  font-weight: bold }
-*/
 
 div.abstract {
   margin: 2em 5em }
@@ -283,6 +278,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="sids-source-and-sink-independent-drivers">
 <h1 class="title">SIDs: Source and Sink Independent Drivers</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -310,7 +306,6 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
-<div class="document" id="sids-source-and-sink-independent-drivers">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -318,13 +313,13 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
-<p>This memo documents a set of hardware- and sensor-independent interfaces 
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<p>This memo documents a set of hardware- and sensor-independent interfaces
 for data sources and sinks in TinyOS 2.x.</p>
 </div>
-<div class="section" id="introduction">
-<h1><a name="introduction">1. Introduction</a></h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>Sensing is an integral part of any sensor network application.  Having
 a wide variety of sensor interfaces usually does not impose a large
 burden on an application developer, as any given application uses a
@@ -335,8 +330,8 @@ systems, they require a sensor-independent interface. TinyOS 2.0
 therefore has telescoping sensor abstractions, providing both simple
 and sensor-independent as well as sensor-specific interfaces.</p>
 </div>
-<div class="section" id="sensors-in-tinyos-1-x">
-<h1><a name="sensors-in-tinyos-1-x">2. Sensors in TinyOS 1.x</a></h1>
+<div class="section">
+<h1><a id="sensors-in-tinyos-1-x" name="sensors-in-tinyos-1-x">2. Sensors in TinyOS 1.x</a></h1>
 <p>Early TinyOS sensors were generally analog. To sample one of these
 sensors, an application makes an analog-to-digital conversion using
 the MCU ADC.  Because all early sensors required ADC conversions, the
@@ -380,8 +375,8 @@ interfaces for high performance or special case use, but also simple
 and common interfaces for basic and portable use. Providing a
 telescoping sensor abstraction allows both classes of use.</p>
 </div>
-<div class="section" id="sensors-in-tinyos-2-x">
-<h1><a name="sensors-in-tinyos-2-x">3. Sensors in TinyOS 2.x</a></h1>
+<div class="section">
+<h1><a id="sensors-in-tinyos-2-x" name="sensors-in-tinyos-2-x">3. Sensors in TinyOS 2.x</a></h1>
 <p>TinyOS 2.x has several sensor-independent interfaces, which cover a
 range of common use cases. These interfaces can be used to write a
 Source- or Sink-Independent Driver (SID). A SID is source/sink
@@ -389,8 +384,8 @@ independent because its interfaces do not themselves contain
 information on the sort of sensor or device they sit on top of.  A SID
 SHOULD provide one or more of the interfaces described in this
 section, depending on its expected uses and underlying data model.</p>
-<div class="section" id="split-phase-small-scalar-i-o">
-<h2><a name="split-phase-small-scalar-i-o">3.1 Split-Phase Small Scalar I/O</a></h2>
+<div class="section">
+<h2><a id="split-phase-small-scalar-i-o" name="split-phase-small-scalar-i-o">3.1 Split-Phase Small Scalar I/O</a></h2>
 <p>The first set of interfaces can be used for low-rate scalar I/O:</p>
 <pre class="literal-block">
 interface Read&lt;val_t&gt; {
@@ -432,8 +427,8 @@ complexity of code that is a client of a SID interface.</p>
 include many basic sensors, such as photo, temp, voltage, and ADC
 readings.</p>
 </div>
-<div class="section" id="split-phase-large-scalar-i-o">
-<h2><a name="split-phase-large-scalar-i-o">3.2 Split-Phase Large Scalar I/O</a></h2>
+<div class="section">
+<h2><a id="split-phase-large-scalar-i-o" name="split-phase-large-scalar-i-o">3.2 Split-Phase Large Scalar I/O</a></h2>
 <p>If the SID's data object is too big to be passed efficienctly on the
 stack, it can provide read/write interfaces that pass parameters by
 pointer rather than value:</p>
@@ -474,11 +469,11 @@ ReadWriteRef.</p>
 <tt class="docutils literal"><span class="pre">val</span></tt> parameter points to MUST be filled with zeroes.</p>
 <p>Examples of sensors that are suited to this set of interfaces include
 those that generate multiple simultaneous readings for which
-passing by value is inefficient, such as a two-axis digital 
+passing by value is inefficient, such as a two-axis digital
 accelerometer.</p>
 </div>
-<div class="section" id="single-phase-scalar-i-o">
-<h2><a name="single-phase-scalar-i-o">3.4 Single-Phase Scalar I/O</a></h2>
+<div class="section">
+<h2><a id="single-phase-scalar-i-o" name="single-phase-scalar-i-o">3.4 Single-Phase Scalar I/O</a></h2>
 <p>Some devices may have their state cached or readily available. In
 these cases, the device can provide a single-phase instead of
 split-phase operation.  Examples include a node's MAC address (which
@@ -516,8 +511,8 @@ interface GetSetRef&lt;val_t&gt; {
 }
 </pre>
 </div>
-<div class="section" id="notification-based-scalar-i-o">
-<h2><a name="notification-based-scalar-i-o">3.5 Notification-Based Scalar I/O</a></h2>
+<div class="section">
+<h2><a id="notification-based-scalar-i-o" name="notification-based-scalar-i-o">3.5 Notification-Based Scalar I/O</a></h2>
 <p>Some sensor devices represent triggers, rather than request-driven
 data acquisition. Examples of such sensors include switches,
 passive-IR (PIR) motion sensors, tone detectors, and smoke
@@ -540,8 +535,8 @@ if an enabled sensor is powered down, then when powered up it MUST
 remain enabled.</p>
 <p>The val parameter is used as defined in the Read interface.</p>
 </div>
-<div class="section" id="split-phase-streaming-i-o">
-<h2><a name="split-phase-streaming-i-o">3.7 Split-Phase Streaming I/O</a></h2>
+<div class="section">
+<h2><a id="split-phase-streaming-i-o" name="split-phase-streaming-i-o">3.7 Split-Phase Streaming I/O</a></h2>
 <p>Some sensors can provide a continuous stream of readings, and some
 actuators can accept a continuous stream of new data. Depending on the
 rate needed and jitter bounds that higher level components can
@@ -559,11 +554,11 @@ interface ReadStream&lt;val_t&gt; {
 
   command error_t read( uint32_t usPeriod );
 
-  event void bufferDone( error_t result, 
+  event void bufferDone( error_t result,
                          val_t* buf, uint16_t count );
 
   event void readDone( error_t result );
-}    
+}
 </pre>
 <p>The postBuffer command takes an array parameterized by the sample
 type, and the number of entries in that buffer. A driver can then
@@ -594,7 +589,7 @@ interface WriteStream&lt;val_t&gt; {
 
   command error_t write( uint32_t period );
 
-  event void bufferDone( error_t result, 
+  event void bufferDone( error_t result,
                          val_t* buf, uint16_t count );
 
   event void writeDone( error_t result );
@@ -604,8 +599,8 @@ interface WriteStream&lt;val_t&gt; {
 for the ReadStream interface, as are write() and writeDone().</p>
 </div>
 </div>
-<div class="section" id="summary">
-<h1><a name="summary">4. Summary</a></h1>
+<div class="section">
+<h1><a id="summary" name="summary">4. Summary</a></h1>
 <p>According to the design principles described in the HAA[_haa], authors
 should write device drivers that provide rich, device-specific
 interfaces that expose the full capabilities of each device. In
@@ -615,8 +610,8 @@ providing such an abstraction, driver authors can support developers
 who only need simple interfaces, and can reduce the effort needed to
 connect a sensor into a more general system.</p>
 </div>
-<div class="section" id="author-s-address">
-<h1><a name="author-s-address">5. Author's Address</a></h1>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Gilman Tolle</div>
 <div class="line">2168 Shattuck Ave.</div>
@@ -647,8 +642,8 @@ connect a sensor into a more general system.</p>
 <div class="line"><br /></div>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">6. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">6. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

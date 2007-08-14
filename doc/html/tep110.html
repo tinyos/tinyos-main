@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Virtualization</title>
 <meta name="author" content="Philip Levis" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-21 07:04:39 $
-:version: $Revision: 1.7 $
+:date: $Date: 2007-08-14 18:58:00 $
+:version: $Revision: 1.8 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -40,11 +40,6 @@ blockquote.epigraph {
 
 dd {
   margin-bottom: 0.5em }
-
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
-  font-weight: bold }
-*/
 
 div.abstract {
   margin: 2em 5em }
@@ -283,6 +278,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="virtualization">
 <h1 class="title">Virtualization</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -310,7 +306,6 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
-<div class="document" id="virtualization">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -318,15 +313,15 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>This memo desribes how TinyOS 2.0 virtualizes common abstractions through
 a combination of static allocation and runtime arbitration. It describes
 the benefits and tradeoffs of this approach and how it is used in several
 major abstractions.</p>
 </div>
-<div class="section" id="introduction">
-<h1><a name="introduction">1. Introduction</a></h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>The TinyOS component model allows flexible composition, but that
 flexibility is often limited by reasons which are not explicitly
 stated in components. These implicit assumptions can manifest as buggy
@@ -350,8 +345,8 @@ System Key Interfaces). It describes the services OSKI provides and
 how their implementations are structured to simplify application
 writing.</p>
 </div>
-<div class="section" id="distributions">
-<h1><a name="distributions">2. Distributions</a></h1>
+<div class="section">
+<h1><a id="distributions" name="distributions">2. Distributions</a></h1>
 <p>A distribution presents <em>services</em> to the programmer. A service is a
 set of generic (instantiable) components that represent API
 abstractions. To use an abstraction, a programmer instantiates the
@@ -372,8 +367,8 @@ look something like this:</p>
 <p>Services often present abstractions at a fine grain. For example, the
 active message service has AMSender, AMReceiver, and AMSnooper, each
 of which is a separate abstraction.</p>
-<div class="section" id="controlling-a-service">
-<h2><a name="controlling-a-service">2.1 Controlling a Service</a></h2>
+<div class="section">
+<h2><a id="controlling-a-service" name="controlling-a-service">2.1 Controlling a Service</a></h2>
 <p>Every service has two abstractions: <tt class="docutils literal"><span class="pre">ServiceC</span></tt>, for powering it on
 and off, and <tt class="docutils literal"><span class="pre">ServiceNotifierC</span></tt>, for learning when the service's
 power state has changed. For example, active messages have the
@@ -424,8 +419,8 @@ active messages being used by two components, RouterA and RouterB:</p>
 application to use the service, at least one component has to call
 <tt class="docutils literal"><span class="pre">Service.start()</span></tt>.</p>
 </div>
-<div class="section" id="service-initialization">
-<h2><a name="service-initialization">2.2 Service Initialization</a></h2>
+<div class="section">
+<h2><a id="service-initialization" name="service-initialization">2.2 Service Initialization</a></h2>
 <p>Because distributions are collections of services that are designed to
 work together, they can avoid many of the common issues that arise
 when composing TinyOS programs. For example, user code does not have
@@ -436,13 +431,13 @@ initialized. Section 4 goes into an example implementation of how a
 distribution can achieve this.</p>
 </div>
 </div>
-<div class="section" id="oski-services">
-<h1><a name="oski-services">3. OSKI Services</a></h1>
+<div class="section">
+<h1><a id="oski-services" name="oski-services">3. OSKI Services</a></h1>
 <p>This section briefly describes the services that OSKI, an example
 distribution provides. It is intended to give a feel for how a
 distribution presents its abstractions.</p>
-<div class="section" id="timers">
-<h2><a name="timers">3.1 Timers</a></h2>
+<div class="section">
+<h2><a id="timers" name="timers">3.1 Timers</a></h2>
 <p>OSKI provides timers at one fidelity: milliseconds. Timers do not have
 a Service abstraction, as their use implicitly defines whether the
 service is active or not (the timer service is off if there are no
@@ -466,8 +461,8 @@ configuration:</p>
 <div class="line">}</div>
 </div>
 </div>
-<div class="section" id="active-messages">
-<h2><a name="active-messages">3.2 Active Messages</a></h2>
+<div class="section">
+<h2><a id="active-messages" name="active-messages">3.2 Active Messages</a></h2>
 <p>OSKI provides four functional active messaging abstractions:
 <tt class="docutils literal"><span class="pre">AMSender</span></tt>, <tt class="docutils literal"><span class="pre">AMReceiver</span></tt>, <tt class="docutils literal"><span class="pre">AMSnooper</span></tt>, and
 <tt class="docutils literal"><span class="pre">AMSnoopingReceiver</span></tt>. Each one takes an <tt class="docutils literal"><span class="pre">am_id_t</span></tt> as a parameter,
@@ -525,8 +520,8 @@ its topology formation:</p>
 <p>The active messages layer has control abstractions, named <tt class="docutils literal"><span class="pre">AMServiceC</span></tt>
 and <tt class="docutils literal"><span class="pre">AMServiceNotifierC</span></tt>. Active messages follow an OR policy.</p>
 </div>
-<div class="section" id="broadcasts">
-<h2><a name="broadcasts">3.3 Broadcasts</a></h2>
+<div class="section">
+<h2><a id="broadcasts" name="broadcasts">3.3 Broadcasts</a></h2>
 <p>In addition to active messages, OSKI provides a broadcasting service.
 Unlike active messages, which are addressed in terms of AM addresses,
 broadcasts are address-free. Broadcast communication has two
@@ -537,9 +532,9 @@ the Packet interface. The broadcast service has control abstractions,
 named <tt class="docutils literal"><span class="pre">BroadcastServiceC</span></tt> and <tt class="docutils literal"><span class="pre">BroadcastServiceNotifierC</span></tt>, which
 follow an OR policy.</p>
 </div>
-<div class="section" id="tree-collection-convergecast">
-<h2><a name="tree-collection-convergecast">3.4 Tree Collection/Convergecast</a></h2>
-<p><strong>NOTE: These services are not supported as of the 2.x prerelease. 
+<div class="section">
+<h2><a id="tree-collection-convergecast" name="tree-collection-convergecast">3.4 Tree Collection/Convergecast</a></h2>
+<p><strong>NOTE: These services are not supported as of the 2.x prerelease.
 They will be supported by the first full release.</strong></p>
 <p>OSKI's third communication service is tree-based collection routing.
 This service has four abstractions:</p>
@@ -572,16 +567,16 @@ or not.</dd>
 <tt class="docutils literal"><span class="pre">CollectionServiceNotifierC</span></tt> abstractions, which follow an OR
 policy.</p>
 </div>
-<div class="section" id="uart">
-<h2><a name="uart">3.5 UART</a></h2>
-<p><strong>NOTE: These services are not supported as of the 2.x prerelease. 
-They will be supported by the first full release. 
-They will be fully defined pending discussion/codification of 
+<div class="section">
+<h2><a id="uart" name="uart">3.5 UART</a></h2>
+<p><strong>NOTE: These services are not supported as of the 2.x prerelease.
+They will be supported by the first full release.
+They will be fully defined pending discussion/codification of
 UART interfaces.</strong></p>
 </div>
 </div>
-<div class="section" id="oski-service-structure-and-design">
-<h1><a name="oski-service-structure-and-design">4. OSKI Service Structure and Design</a></h1>
+<div class="section">
+<h1><a id="oski-service-structure-and-design" name="oski-service-structure-and-design">4. OSKI Service Structure and Design</a></h1>
 <p>Presenting services through abstractions hides the underlying wiring
 details and gives a distribution a great deal of implementation
 freedom. One issue that arises, however, is initialization. If a user
@@ -589,8 +584,8 @@ component instantiates a service, then a distribution MUST make sure
 the service is initialized properly. OSKI achieves this by
 encapsulating a complete service as a working component; abstractions
 export the service's interfaces.</p>
-<div class="section" id="example-timers">
-<h2><a name="example-timers">4.1 Example: Timers</a></h2>
+<div class="section">
+<h2><a id="example-timers" name="example-timers">4.1 Example: Timers</a></h2>
 <p>For example, the timer service provides a single abstraction,
 OskiTimerMilliC, which is a generic component. OskiTimerMilliC provides a
 single instance of the Timer&lt;TMilli&gt; interface. It is implemented as a
@@ -642,8 +637,8 @@ itself to one of the sub-Inits.</p>
 underlying Service Instance pattern: the abstractions take care of
 that.</p>
 </div>
-<div class="section" id="example-active-messages">
-<h2><a name="example-active-messages">4.2 Example: Active Messages</a></h2>
+<div class="section">
+<h2><a id="example-active-messages" name="example-active-messages">4.2 Example: Active Messages</a></h2>
 <p>Active messaging reprsent a slightly more complex service, as it has
 several abstractions and a control interface. However, it follows the
 same basic pattern: abstractions are generics that export wirings to
@@ -653,7 +648,7 @@ the underlying service, named <tt class="docutils literal"><span class="pre">Act
 <div class="line-block">
 <div class="line">provides {</div>
 <div class="line-block">
-<div class="line">interface SplitControl;      </div>
+<div class="line">interface SplitControl;</div>
 <div class="line">interface AMSend[am_id_t id];</div>
 <div class="line">interface Receive[am_id_t id];</div>
 <div class="line">interface Receive as Snoop[am_id_t id];</div>
@@ -777,8 +772,8 @@ of AMServiceC. As with timers, encapsulating the service instance
 pattern in generic components relieves the programmer of having to
 deal with unique strings, a common source of bugs in TinyOS 1.x code.</p>
 </div>
-<div class="section" id="oski-requirements">
-<h2><a name="oski-requirements">4.3 OSKI Requirements</a></h2>
+<div class="section">
+<h2><a id="oski-requirements" name="oski-requirements">4.3 OSKI Requirements</a></h2>
 <p>OSKI is a layer on top of system components: it presents a more
 usable, less error-prone, and simpler interface to common TinyOS
 functionality. For OSKI to work properly, a platform MUST be compliant
@@ -793,11 +788,11 @@ o TEP 1XX: Collection Routing</blockquote>
 inoperable, exhibit strange behavior, or being uncompilable.</p>
 </div>
 </div>
-<div class="section" id="distribution-interfaces">
-<h1><a name="distribution-interfaces">5. Distribution Interfaces</a></h1>
+<div class="section">
+<h1><a id="distribution-interfaces" name="distribution-interfaces">5. Distribution Interfaces</a></h1>
 <p>The basic notion of a distribution is that it provides a self-contained,
-tested, and complete (for an application domain) programming interface 
-to TinyOS. Layers can be added on top of a distribution, but as a 
+tested, and complete (for an application domain) programming interface
+to TinyOS. Layers can be added on top of a distribution, but as a
 distribution is a self-contained set of abstractions, adding new
 services can lead to failures. A distribution represents a hard line
 above which all other code operates. One SHOULD NOT add new services,
@@ -805,7 +800,7 @@ as they can disrupt the underlying organization. Of course, one MAY
 create a new distribution that extends an existing one, but this is
 in and of itself a new distribution.</p>
 <p>Generally, as distributions are intended to be higher-level abstractions,
-they SHOULD NOT provide any asynchronous (async) events. They can, 
+they SHOULD NOT provide any asynchronous (async) events. They can,
 of course, provide async commands. The idea is that no code written on
 top of a distribution should be asynchronous, due to the complexity
 introduced by having to manage concurrency. Distributions are usually
@@ -813,8 +808,8 @@ platform independent; if an application needs async events, then
 chances are it is operating close to the hardware, and so is not
 platform independent.</p>
 </div>
-<div class="section" id="author-s-address">
-<h1><a name="author-s-address">6. Author's Address</a></h1>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">467 Soda Hall</div>
@@ -826,8 +821,8 @@ platform independent.</p>
 <div class="line">email - <a class="reference" href="mailto:pal&#64;cs.berkeley.edu">pal&#64;cs.berkeley.edu</a></div>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">7. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">7. Citations</a></h1>
 <table class="docutils citation" frame="void" id="rst" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Serial Communication</title>
 <meta name="author" content="Ben Greenstein and Philip Levis" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-21 07:04:39 $
-:version: $Revision: 1.9 $
+:date: $Date: 2007-08-14 18:57:59 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -40,11 +40,6 @@ blockquote.epigraph {
 
 dd {
   margin-bottom: 0.5em }
-
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
-  font-weight: bold }
-*/
 
 div.abstract {
   margin: 2em 5em }
@@ -283,6 +278,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="serial-communication">
 <h1 class="title">Serial Communication</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -310,7 +306,6 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
-<div class="document" id="serial-communication">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -318,8 +313,8 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>This memo describes the structure and standard implementation of the
 TinyOS 2.x serial communication system for mote-to-PC data
 exchange. The system is broken into three levels (encoding, framing,
@@ -329,8 +324,8 @@ are not bound to the mote's radio packet format. Additionally, one of
 the supported packet formats is platform independent, so PC-side
 applications can communicate with arbitrary motes.</p>
 </div>
-<div class="section" id="introduction">
-<h1><a name="introduction">1. Introduction</a></h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>Users need to read data out of a TinyOS network. The most common
 approach is to attach a mote to a PC or laptop with a wired
 connection. While the interface on the PC side can vary from a serial
@@ -345,8 +340,8 @@ parallel with platform-independent communication, which simplifies the
 PC toolchain. This memo documents the protocols and structure of the
 TinyOS 2.x serial communication stack.</p>
 </div>
-<div class="section" id="serial-stack-structure">
-<h1><a name="serial-stack-structure">2. Serial Stack Structure</a></h1>
+<div class="section">
+<h1><a id="serial-stack-structure" name="serial-stack-structure">2. Serial Stack Structure</a></h1>
 <p>The TinyOS 2.x serial communication stack is broken up into four
 functional components. From bottom to top, they are</p>
 <blockquote>
@@ -357,20 +352,20 @@ functional components. From bottom to top, they are</p>
 </blockquote>
 <p>Structurally, they look like this:</p>
 <pre class="literal-block">
- _____________________     
-|                     |    
+ _____________________
+|                     |
 |     Dispatcher      |       Packet formatting.
-|_____________________|    
- _____________________     
-|                     |    
+|_____________________|
+ _____________________
+|                     |
 |      Protocol       |       Acknowledgements, CRC computation,
 |_____________________|       windowing.
- _____________________     
-|                     |    
+ _____________________
+|                     |
 |    Encoder/Framer   |       Translating raw bytes into frame
 |_____________________|       delimiters, escape bytes.
- _____________________     
-|                     |    
+ _____________________
+|                     |
 |      Raw UART       |       Platform code for reading/writing
 |_____________________|       bytes over the serial connection.
 </pre>
@@ -401,15 +396,15 @@ particular packet format begins (based on its header size). Section
 3.4 describes how the default TinyOS 2.x implementation,
 <tt class="docutils literal"><span class="pre">SerialDispatcherC</span></tt> does this.</p>
 </div>
-<div class="section" id="the-2-x-serial-stack-implementation">
-<h1><a name="the-2-x-serial-stack-implementation">3. The 2.x Serial Stack Implementation</a></h1>
+<div class="section">
+<h1><a id="the-2-x-serial-stack-implementation" name="the-2-x-serial-stack-implementation">3. The 2.x Serial Stack Implementation</a></h1>
 <p>Section 2 describes the basic structure of the TinyOS 2.x serial
 stack. This section describes its actual implementation,
 including SerialActiveMessageC, which sits on top of the Dispatcher.
 All of the components except for UartC are part of the serial
 library that lives in <tt class="docutils literal"><span class="pre">tos/lib/serial</span></tt>.</p>
-<div class="section" id="raw-uart-uartc">
-<h2><a name="raw-uart-uartc">3.1 Raw UART: UartC</a></h2>
+<div class="section">
+<h2><a id="raw-uart-uartc" name="raw-uart-uartc">3.1 Raw UART: UartC</a></h2>
 <p>The UART HIL[<a class="reference" href="#tep2">TEP2</a>] is <tt class="docutils literal"><span class="pre">UartC</span></tt>, which provides a byte-level
 interface to the underlying serial communication. It provides the
 <tt class="docutils literal"><span class="pre">SerialByteComm</span></tt> interface:</p>
@@ -439,8 +434,8 @@ interface SerialFlush {
 <p>It may provide additional interfaces for configuring the serial
 port. This TEP does not consider this topic.</p>
 </div>
-<div class="section" id="encoder-framer-hdlctranslatec">
-<h2><a name="encoder-framer-hdlctranslatec">3.2 Encoder/Framer: HdlcTranslateC</a></h2>
+<div class="section">
+<h2><a id="encoder-framer-hdlctranslatec" name="encoder-framer-hdlctranslatec">3.2 Encoder/Framer: HdlcTranslateC</a></h2>
 <p>HdlcTranslateC is the serial encoder/framer. It uses the
 <tt class="docutils literal"><span class="pre">SerialByteComm</span></tt> interface and provides the <tt class="docutils literal"><span class="pre">SerialFrameComm</span></tt>
 interface:</p>
@@ -475,8 +470,8 @@ the transmitEscape flag to true, stores the data byte XOR <tt class="docutils li
 and sends an escape byte. When the escape byte is sent, it sends the
 stored data byte.</p>
 </div>
-<div class="section" id="protocol-serialp">
-<h2><a name="protocol-serialp">3.3 Protocol: SerialP</a></h2>
+<div class="section">
+<h2><a id="protocol-serialp" name="protocol-serialp">3.3 Protocol: SerialP</a></h2>
 <p>The SerialP component implements the serial protocol using PPP/HDLC-
 like framing (See RFC 1662[<a class="reference" href="#rfc1662">RFC1662</a>]). Type dispatch and buffer
 management are left to higher layers in the serial stack. The protocol
@@ -535,8 +530,8 @@ stored in a queue separate from the data buffer, so a data packet to
 be transmitted may begin spooling into SerialP while SerialP is
 actively sending an acknowledgement.</p>
 </div>
-<div class="section" id="dispatcher-serialdispatcherc">
-<h2><a name="dispatcher-serialdispatcherc">3.4 Dispatcher: SerialDispatcherC</a></h2>
+<div class="section">
+<h2><a id="dispatcher-serialdispatcherc" name="dispatcher-serialdispatcherc">3.4 Dispatcher: SerialDispatcherC</a></h2>
 <p>SerialDispatcherC handles the data packets that the Protocol component
 receives. It uses the SendBytePacket and ReceiveBytePacket interfaces,
 and provides parameterized Send and Receive interfaces. The parameter
@@ -574,8 +569,8 @@ active messages (<tt class="docutils literal"><span class="pre">TOS_SERIAL_802_1
 <tt class="docutils literal"><span class="pre">TOS_SERIAL_UNKNOWN_ID</span></tt> are reserved. New packet formats MUST NOT
 reuse any reserved identifiers.</p>
 </div>
-<div class="section" id="serialactivemessagec">
-<h2><a name="serialactivemessagec">3.5 SerialActiveMessageC</a></h2>
+<div class="section">
+<h2><a id="serialactivemessagec" name="serialactivemessagec">3.5 SerialActiveMessageC</a></h2>
 <p>SerialActiveMessageC is a platform-independent active message layer
 that operates on top of the serial communication
 stack. SerialActiveMessageC is a configuration that wires
@@ -597,18 +592,18 @@ configuration SerialActiveMessageC {
 implementation {
   components new SerialActiveMessageP() as AM, SerialDispatcherC;
   components SerialPacketInfoActiveMessageP as Info;
- 
+
   Init = SerialDispatcherC;
   Leds = SerialDispatcherC;
- 
+
   AMSend = AM;
   Receive = AM;
   Packet = AM;
   AMPacket = AM;
-  
+
   AM.SubSend -&gt; SerialDispatcherC.Send[TOS_SERIAL_ACTIVE_MESSAGE_ID];
   AM.SubReceive -&gt; SerialDispatcherC.Receive[TOS_SERIAL_ACTIVE_MESSAGE_ID];
-  
+
   SerialDispatcherC.SerialPacketInfo[TOS_SERIAL_ACTIVE_MESSAGE_ID] -&gt; Info;
 }
 </pre>
@@ -629,17 +624,17 @@ typedef nx_struct SerialAMHeader {
 } SerialAMHeader;
 </pre>
 </div>
-<div class="section" id="packet-format">
-<h2><a name="packet-format">3.6 Packet Format</a></h2>
+<div class="section">
+<h2><a id="packet-format" name="packet-format">3.6 Packet Format</a></h2>
 <p>A data packet in the TinyOS 2.x serial stack has the following format
 over the wire. Each protocol field is associated with a specific component:</p>
 <pre class="literal-block">
    ____________________________________________
   | | | | |                               |  | |
-  | | | | |                               |  | | 
+  | | | | |                               |  | |
   |_|_|_|_|_______________________________|__|_|
    F P S D         Payload                 CR F
- 
+
 F       = Framing byte, denoting start of packet: HdlcTranslateC
 P       = Protocol byte: SerialP
 S       = Sequence number byte: SerialP
@@ -658,8 +653,8 @@ destination 0xbeef with a payload of 1 2 3 4 5 would look like this:</p>
 (P) is 0x40 (64), corresponding to <tt class="docutils literal"><span class="pre">SERIAL_PROTO_ACK</span></tt> (in Serial.h).</p>
 </div>
 </div>
-<div class="section" id="access-abstractions">
-<h1><a name="access-abstractions">4. Access Abstractions</a></h1>
+<div class="section">
+<h1><a id="access-abstractions" name="access-abstractions">4. Access Abstractions</a></h1>
 <p>Two generic components: SerialAMSenderC and SerialAMReceiverC connect
 to SerialActiveMessageC to provide virtualized access to the serial
 stack. Each instantiation of SerialAMSenderC has its own queue of
@@ -673,8 +668,8 @@ Section 4 of TEP 116[<a class="reference" href="#tep116">TEP116</a>] for more in
 services in the TEP 116, the serial component virtualizations provide
 no snooping capabilities.</p>
 </div>
-<div class="section" id="author-s-address">
-<h1><a name="author-s-address">5. Author's Address</a></h1>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Philip Levis</div>
 <div class="line">358 Gates</div>
@@ -695,8 +690,8 @@ no snooping capabilities.</p>
 <div class="line">email - <a class="reference" href="mailto:benjamin.m.greenstein&#64;intel.com">benjamin.m.greenstein&#64;intel.com</a></div>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">6. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">6. Citations</a></h1>
 <table class="docutils citation" frame="void" id="tep2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

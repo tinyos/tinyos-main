@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Permanent Data Storage (Flash)</title>
 <meta name="author" content="David Gay, Jonathan Hui" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-21 07:04:39 $
-:version: $Revision: 1.7 $
+:date: $Date: 2007-08-14 18:58:00 $
+:version: $Revision: 1.8 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -40,11 +40,6 @@ blockquote.epigraph {
 
 dd {
   margin-bottom: 0.5em }
-
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
-  font-weight: bold }
-*/
 
 div.abstract {
   margin: 2em 5em }
@@ -283,6 +278,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="permanent-data-storage-flash">
 <h1 class="title">Permanent Data Storage (Flash)</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -302,7 +298,6 @@ ul.auto-toc {
 <td>David Gay, Jonathan Hui</td></tr>
 </tbody>
 </table>
-<div class="document" id="permanent-data-storage-flash">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -310,14 +305,14 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>This memo documents a set of hardware-independent interfaces to non-volatile
 storage for TinyOS 2.x. It describes some design principles for the HPL and
 HAL layers of various flash chips.</p>
 </div>
-<div class="section" id="introduction">
-<h1><a name="introduction">1. Introduction</a></h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>Flash chips are a form of EEPROM (electrically-erasable, programmable
 read-only memory), distinguished by a fast erase capability. However,
 erases can only be done in large units (from 256B to 128kB depending on the
@@ -338,17 +333,14 @@ significantly different tradeoffs than other flash chips:</p>
 <col width="28%" />
 </colgroup>
 <thead valign="bottom">
-<tr><th>X</th>
-<th>NOR
+<tr><th class="head">X</th>
+<th class="head">NOR
 (ex: ST M25P40,
 Intel PXA27x)</th>
-<th>AT45DB</th>
-<th><dl class="first last docutils">
-<dt>NAND</dt>
-<dd>(ex: Samsung
-K9K1G08R0B)</dd>
-</dl>
-</th>
+<th class="head">AT45DB</th>
+<th class="head">NAND
+(ex: Samsung
+K9K1G08R0B)</th>
 </tr>
 </thead>
 <tbody valign="top">
@@ -444,8 +436,8 @@ reimplemented for these other chips, in part because it does not
 support some applications (e.g., network reprogramming) very well.</li>
 </ul>
 </div>
-<div class="section" id="storage-in-tinyos-2-x">
-<h1><a name="storage-in-tinyos-2-x">2. Storage in TinyOS 2.x</a></h1>
+<div class="section">
+<h1><a id="storage-in-tinyos-2-x" name="storage-in-tinyos-2-x">2. Storage in TinyOS 2.x</a></h1>
 <p>One approach to hiding the differences between different flash chips is to
 provide a disk-like, block interface (with, e.g., 512B blocks). This is the
 approach taken by compact flash cards. However, in the context of TinyOS,
@@ -503,8 +495,8 @@ this framework.</p>
 flash chips (Section 3), then describes the flash volumes and
 storage abstractions in detail (Section 4).</p>
 </div>
-<div class="section" id="hpl-hal-hil-architecture">
-<h1><a name="hpl-hal-hil-architecture">3. HPL/HAL/HIL Architecture</a></h1>
+<div class="section">
+<h1><a id="hpl-hal-hil-architecture" name="hpl-hal-hil-architecture">3. HPL/HAL/HIL Architecture</a></h1>
 <p>The flash chip architecture follows the three-layer Hardware
 Abstraction Architecture (HAA), with each chip providing a presentation
 layer (HPL, Section 3.1), adaptation layer (HAL, Section 3.2) and
@@ -515,8 +507,8 @@ family with a similar interface, the HAA SHOULD support all family members
 by relying, e.g., on platform-provided configuration information.</p>
 <p>Appendix A shows example HPL and HAL specifications for the AT45DB
 and ST M25P chip families.</p>
-<div class="section" id="hardware-presentation-layer-hpl">
-<h2><a name="hardware-presentation-layer-hpl">3.1 Hardware Presentation Layer (HPL)</a></h2>
+<div class="section">
+<h2><a id="hardware-presentation-layer-hpl" name="hardware-presentation-layer-hpl">3.1 Hardware Presentation Layer (HPL)</a></h2>
 <p>The flash HPL has a chip-dependent, platform-independent interface. The
 implementation of this HPL is platform-dependent. The flash HPL SHOULD be
 stateless.</p>
@@ -528,8 +520,8 @@ directory. If the flash chip implementation supports a family of
 flash chips, this directory MAY also contain a file describing the
 particular flash chip found on the platform.</p>
 </div>
-<div class="section" id="hardware-adaptation-layer-hal">
-<h2><a name="hardware-adaptation-layer-hal">3.2 Hardware Adaptation Layer (HAL)</a></h2>
+<div class="section">
+<h2><a id="hardware-adaptation-layer-hal" name="hardware-adaptation-layer-hal">3.2 Hardware Adaptation Layer (HAL)</a></h2>
 <p>The flash HAL has a chip-dependent, platform-independent interface and
 implementation. Flash families with a common HPL SHOULD have a common
 HAL. Flash HAL's SHOULD expose a <tt class="docutils literal"><span class="pre">Resource</span></tt> interface and automatically
@@ -538,8 +530,8 @@ provide a way to access the volume information specified by the
 programmer (see Section 3). This allows users to build new flash
 abstractions that interact cleanly with the rest of the flash system.</p>
 </div>
-<div class="section" id="hardware-interface-layer-hil">
-<h2><a name="hardware-interface-layer-hil">3.3 Hardware Interface Layer (HIL)</a></h2>
+<div class="section">
+<h2><a id="hardware-interface-layer-hil" name="hardware-interface-layer-hil">3.3 Hardware Interface Layer (HIL)</a></h2>
 <p>Each flash chip MUST support at least one of the storage abstractions
 described in Section 4. These abstractions SHOULD be presented in
 components named <tt class="docutils literal"><span class="pre">ChipAbstractionC</span></tt>, e.g., <tt class="docutils literal"><span class="pre">At45dbLogStorageC</span></tt>.
@@ -553,13 +545,13 @@ SHOULD redirect uses of <tt class="docutils literal"><span class="pre">Abstracti
 chip, based on the requested volume.</p>
 </div>
 </div>
-<div class="section" id="non-volatile-storage-abstractions">
-<h1><a name="non-volatile-storage-abstractions">4. Non-Volatile Storage Abstractions</a></h1>
+<div class="section">
+<h1><a id="non-volatile-storage-abstractions" name="non-volatile-storage-abstractions">4. Non-Volatile Storage Abstractions</a></h1>
 <p>The HIL implementations are platform-independent, but chip (family)
 dependent. They implement the three storage abstractions and
 volume structure discussed in the introduction.</p>
-<div class="section" id="volumes">
-<h2><a name="volumes">4.1. Volumes</a></h2>
+<div class="section">
+<h2><a id="volumes" name="volumes">4.1. Volumes</a></h2>
 <p>The division of the flash chip into fixed-size volumes is specified by
 an XML file that is placed in the application's directory (where one
 types 'make'). The XML file specifies the allocation as follows:</p>
@@ -597,8 +589,8 @@ components new BlockStorageC(VOLUME_DELUGE0);
 compile-time error since the symbol will be undefined.</p>
 <p>A volume MUST NOT be used with more than one storage abstraction instance.</p>
 </div>
-<div class="section" id="large-objects">
-<h2><a name="large-objects">4.2 Large objects</a></h2>
+<div class="section">
+<h2><a id="large-objects" name="large-objects">4.2 Large objects</a></h2>
 <p>The motivating example for large objects is the transmission or
 long-term storage of large pieces of data. For instance, programs in a
 network-reprogramming system, or large data-packets in a reliable
@@ -647,8 +639,8 @@ integrity of the BlockStorage data, but such support can easily be built
 by using the <tt class="docutils literal"><span class="pre">computeCrc</span></tt> command and storing the result in a
 well-defined location, and checking this CRC when desired.</p>
 </div>
-<div class="section" id="logging">
-<h2><a name="logging">4.3 Logging</a></h2>
+<div class="section">
+<h2><a id="logging" name="logging">4.3 Logging</a></h2>
 <p>Event and result logging is a common requirement in sensor
 networks. Such logging should be reliable (a mote crash should not
 lose data). It should also be easy to extract data from the log,
@@ -735,8 +727,8 @@ a single record. However, the guarantee that only whole records are lost
 is sufficient to ensure that applications do not to have worry about
 incomplete or inconsistent log entries.</p>
 </div>
-<div class="section" id="small-objects">
-<h2><a name="small-objects">4.4 Small objects:</a></h2>
+<div class="section">
+<h2><a id="small-objects" name="small-objects">4.4 Small objects:</a></h2>
 <p>Sensor network applications need to store configuration data, e.g.,
 mote identity, radio frequency, sample rates, etc. Such data is not large, but
 losing it may lead to a mote misbehaving or losing contact with the
@@ -783,13 +775,13 @@ in the small object.</li>
 definitions.</p>
 </div>
 </div>
-<div class="section" id="implementations">
-<h1><a name="implementations">5. Implementations</a></h1>
+<div class="section">
+<h1><a id="implementations" name="implementations">5. Implementations</a></h1>
 <p>An AT45DB implementation can be found in tinyos-2.x/tos/chips/at45db.</p>
 <p>An ST M25P implementation can be found in tinyos-2.x/tos/chips/stm25p.</p>
 </div>
-<div class="section" id="authors-addresses">
-<h1><a name="authors-addresses">6. Authors' Addresses</a></h1>
+<div class="section">
+<h1><a id="authors-addresses" name="authors-addresses">6. Authors' Addresses</a></h1>
 <div class="line-block">
 <div class="line">David Gay</div>
 <div class="line">2150 Shattuck Ave, Suite 1300</div>
@@ -809,8 +801,8 @@ definitions.</p>
 <div class="line">email - <a class="reference" href="mailto:jhui&#64;archedrock.com">jhui&#64;archedrock.com</a></div>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">7. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">7. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -825,10 +817,10 @@ motes. (version 1.0).&quot;</td></tr>
 </tbody>
 </table>
 </div>
-<div class="section" id="appendix-a-haa-for-some-existing-flash-chips">
-<h1><a name="appendix-a-haa-for-some-existing-flash-chips">Appendix A. HAA for some existing flash chips</a></h1>
-<div class="section" id="a-1-at45db">
-<h2><a name="a-1-at45db">A.1 AT45DB</a></h2>
+<div class="section">
+<h1><a id="appendix-a-haa-for-some-existing-flash-chips" name="appendix-a-haa-for-some-existing-flash-chips">Appendix A. HAA for some existing flash chips</a></h1>
+<div class="section">
+<h2><a id="a-1-at45db" name="a-1-at45db">A.1 AT45DB</a></h2>
 <p>The Atmel AT45DB family HPL is:</p>
 <pre class="literal-block">
 configuration HplAt45dbC {
@@ -878,8 +870,8 @@ copy. It also includes flush and sync operations to manage the cache.</p>
 <p>The <tt class="docutils literal"><span class="pre">At45dbVolume</span></tt> interface has operations to report volume size and
 map volume-relative pages to absolute pages.</p>
 </div>
-<div class="section" id="a-2-st-m25p">
-<h2><a name="a-2-st-m25p">A.2 ST M25P</a></h2>
+<div class="section">
+<h2><a id="a-2-st-m25p" name="a-2-st-m25p">A.2 ST M25P</a></h2>
 <p>The ST M25P family HPL is:</p>
 <pre class="literal-block">
 configuration Stm25pSpiC {
@@ -912,13 +904,13 @@ volume-relative addresses. Clients of the ST M25P HAL must implement the
 obtain the volume id of each of its clients.</p>
 </div>
 </div>
-<div class="section" id="appendix-b-storage-interfaces">
-<h1><a name="appendix-b-storage-interfaces">Appendix B. Storage interfaces</a></h1>
+<div class="section">
+<h1><a id="appendix-b-storage-interfaces" name="appendix-b-storage-interfaces">Appendix B. Storage interfaces</a></h1>
 <p>These interfaces are presented briefly here for reference; please refer
 to the TinyOS documentation for a full description of the commands,
 events and their parameters.</p>
-<div class="section" id="b-1-blockstorage-interfaces">
-<h2><a name="b-1-blockstorage-interfaces">B.1 BlockStorage interfaces</a></h2>
+<div class="section">
+<h2><a id="b-1-blockstorage-interfaces" name="b-1-blockstorage-interfaces">B.1 BlockStorage interfaces</a></h2>
 <p>The BlockStorage interfaces are:</p>
 <pre class="literal-block">
 interface BlockRead {
@@ -947,8 +939,8 @@ interface BlockWrite {
 }
 </pre>
 </div>
-<div class="section" id="b-2-configstorage-interfaces">
-<h2><a name="b-2-configstorage-interfaces">B.2 ConfigStorage interfaces</a></h2>
+<div class="section">
+<h2><a id="b-2-configstorage-interfaces" name="b-2-configstorage-interfaces">B.2 ConfigStorage interfaces</a></h2>
 <p>The ConfigStorage interfaces are:</p>
 <pre class="literal-block">
 interface Mount {
@@ -973,8 +965,8 @@ interface ConfigStorage {
 }
 </pre>
 </div>
-<div class="section" id="b-3-logstorage-interfaces">
-<h2><a name="b-3-logstorage-interfaces">B.3 LogStorage interfaces</a></h2>
+<div class="section">
+<h2><a id="b-3-logstorage-interfaces" name="b-3-logstorage-interfaces">B.3 LogStorage interfaces</a></h2>
 <p>The LogStorage interfaces are:</p>
 <pre class="literal-block">
 interface LogRead {

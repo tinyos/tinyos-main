@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Power Management of Non-Virtualised Devices</title>
 <meta name="author" content="Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Phil Levis" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-21 07:04:39 $
-:version: $Revision: 1.9 $
+:date: $Date: 2007-08-14 18:58:00 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -40,11 +40,6 @@ blockquote.epigraph {
 
 dd {
   margin-bottom: 0.5em }
-
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
-  font-weight: bold }
-*/
 
 div.abstract {
   margin: 2em 5em }
@@ -283,6 +278,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="power-management-of-non-virtualised-devices">
 <h1 class="title">Power Management of Non-Virtualised Devices</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -306,12 +302,11 @@ ul.auto-toc {
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-21</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List 
+<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List
 &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
 </tbody>
 </table>
-<div class="document" id="power-management-of-non-virtualised-devices">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -319,13 +314,13 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with TEP
 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>This memo documents how TinyOS 2.x manages the power state of physical
 (not virtualised) abstractions.</p>
 </div>
-<div class="section" id="introduction">
-<h1><a name="introduction">1. Introduction</a></h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>TinyOS platforms have limited energy. A unified power management
 strategy for all devices and peripherpals is not feasible, as
 they vary significantly in warm-up times, power profiles, and
@@ -354,8 +349,8 @@ arbitrates access with the mechanisms described in <a class="citation-reference"
 devices are not  virtualised in the sense that access to
 them must be explicitly requested and released by their users.</p>
 </div>
-<div class="section" id="power-management-models">
-<h1><a name="power-management-models">2. Power Management Models</a></h1>
+<div class="section">
+<h1><a id="power-management-models" name="power-management-models">2. Power Management Models</a></h1>
 <p>There are two different models to managing the power state of a
 peripheral in TinyOS: <em>explicit power management</em> and <em>implicit
 power management</em>.</p>
@@ -383,13 +378,13 @@ should be on or off based on the interfaces they provide to their
 clients. For example, when a client requests the ADC, this implies
 the ADC should be on; if there are no requests of the ADC, this implies
 it should be off. Therefore shared devices do not need to provide a
-power control interface. They can use an implicit power management policy. 
+power control interface. They can use an implicit power management policy.
 Section 4.2 discusses this in more detail.:</p>
 <pre class="literal-block">
                /|\                                    /|\
                 |                                      |
           Data Interface                            Resource
-                |                                      |  
+                |                                      |
 -----------------------------------------------------------------------
 |             Shared Device (implicitly power managed)                |
 -----------------------------------------------------------------------
@@ -410,8 +405,8 @@ Section 4.2 discusses this in more detail.:</p>
 ---------------------------------      --------------------------------
 </pre>
 </div>
-<div class="section" id="explicit-power-management">
-<h1><a name="explicit-power-management">3. Explicit Power Management</a></h1>
+<div class="section">
+<h1><a id="explicit-power-management" name="explicit-power-management">3. Explicit Power Management</a></h1>
 <p>Just as in TinyOS 1.x, TinyOS 2.x has  <tt class="docutils literal"><span class="pre">StdControl</span></tt> and <tt class="docutils literal"><span class="pre">SplitControl</span></tt>
 interfaces in order to control the on and off
 power states of explicitly managed peripherals. TinyOS 2.x also
@@ -422,10 +417,10 @@ The selection of the right interface depends on the
 latencies involved in changing between these two states as well as the
 nature of the code (sync or async) executing any of the interfaces
 commands.</p>
-<div class="section" id="power-management-with-stdcontrol">
-<h2><a name="power-management-with-stdcontrol">3.1 Power Management with <tt class="docutils literal"><span class="pre">StdControl</span></tt></a></h2>
+<div class="section">
+<h2><a id="power-management-with-stdcontrol" name="power-management-with-stdcontrol">3.1 Power Management with <tt class="docutils literal"><span class="pre">StdControl</span></tt></a></h2>
 <p>Whenever the powerup and powerdown times of a non-virtualised device
-are negligible, they SHOULD provide the <tt class="docutils literal"><span class="pre">StdControl</span></tt> interface as 
+are negligible, they SHOULD provide the <tt class="docutils literal"><span class="pre">StdControl</span></tt> interface as
 defined below:</p>
 <pre class="literal-block">
 interface StdControl {
@@ -452,7 +447,7 @@ either command MUST return either SUCCESS or FAIL.</p>
 device MUST be completely powered on, allowing calls to commands of other
 interfaces implemented by the device to succeed.</p>
 <p>Upon the successful return of a call to <tt class="docutils literal"><span class="pre">StdControl.stop()</span></tt>, a
-device MUST be completely powered down, and any calls to commands 
+device MUST be completely powered down, and any calls to commands
 of other interfaces implemented by that device MUST return FAIL or EOFF.</p>
 <p>If a device is not able to complete the <tt class="docutils literal"><span class="pre">StdControl.start()</span></tt> or
 <tt class="docutils literal"><span class="pre">StdControl.stop()</span></tt> request for any reason, it MUST return FAIL.</p>
@@ -466,9 +461,9 @@ to describe the valid return values for any call made through the
 <col width="31%" />
 </colgroup>
 <thead valign="bottom">
-<tr><th>Call</th>
-<th>Device On</th>
-<th>Device Off</th>
+<tr><th class="head">Call</th>
+<th class="head">Device On</th>
+<th class="head">Device Off</th>
 </tr>
 </thead>
 <tbody valign="top">
@@ -497,8 +492,8 @@ configuration DeviceC {
 }
 </pre>
 </div>
-<div class="section" id="power-management-with-splitcontrol">
-<h2><a name="power-management-with-splitcontrol">3.2 Power Management with <tt class="docutils literal"><span class="pre">SplitControl</span></tt></a></h2>
+<div class="section">
+<h2><a id="power-management-with-splitcontrol" name="power-management-with-splitcontrol">3.2 Power Management with <tt class="docutils literal"><span class="pre">SplitControl</span></tt></a></h2>
 <p>When a device's powerup and powerdown times are non-negligible, the
 <em>``SplitControl``</em> interface MUST be used in place of the <em>``StdControl``</em>
 interface.  The definition of this interface can be seen below:</p>
@@ -526,18 +521,18 @@ device's power state could not be changed. More explicitly:</p>
 <p>Successful calls to <tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> MUST signal one of
 <tt class="docutils literal"><span class="pre">SplitControl.stopDone(SUCCESS)</span></tt> or <tt class="docutils literal"><span class="pre">SplitControl.stopDone(FAIL)</span></tt>.</p>
 <p>Upon signaling a <tt class="docutils literal"><span class="pre">SplitControl.startDone(SUCCESS)</span></tt>, a device MUST
-be completely powered on, and operation requests through calls to commands 
+be completely powered on, and operation requests through calls to commands
 of other interfaces implemented by the device MAY succeed.</p>
-<p>Upon signalling a <tt class="docutils literal"><span class="pre">SplitControl.stopDone(SUCCESS)</span></tt>, a device MUST be 
-completely powered down, and any subsequent calls to commands of other 
+<p>Upon signalling a <tt class="docutils literal"><span class="pre">SplitControl.stopDone(SUCCESS)</span></tt>, a device MUST be
+completely powered down, and any subsequent calls to commands of other
 interfaces implemented by the device MUST return EOFF or FAIL.</p>
 <p>If a device is powered on and a successful call to <tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt>
-signals a <tt class="docutils literal"><span class="pre">SplitControl.stopDone(FAIL)</span></tt>, the device MUST still be fully 
-powered on, and operation requests through calls to commands of other 
+signals a <tt class="docutils literal"><span class="pre">SplitControl.stopDone(FAIL)</span></tt>, the device MUST still be fully
+powered on, and operation requests through calls to commands of other
 interfaces implemented by the device MAY succeed.</p>
-<p>If a device is powered down and a successful call to <tt class="docutils literal"><span class="pre">SplitControl.start()</span></tt> 
-signals a <tt class="docutils literal"><span class="pre">SplitControl.startDone(FAIL)</span></tt>, the device MUST still be fully 
-powered down, and operation requests through calls to commands of other 
+<p>If a device is powered down and a successful call to <tt class="docutils literal"><span class="pre">SplitControl.start()</span></tt>
+signals a <tt class="docutils literal"><span class="pre">SplitControl.startDone(FAIL)</span></tt>, the device MUST still be fully
+powered down, and operation requests through calls to commands of other
 interfaces implemented by the device MUST return EOFF or FAIL.</p>
 <p>If a device is not able to complete the <tt class="docutils literal"><span class="pre">SplitControl.start()</span></tt> or
 <tt class="docutils literal"><span class="pre">SplitControl.stop()</span></tt> requests they MUST return FAIL.</p>
@@ -565,11 +560,11 @@ stopDone for stop) MUST NOT be signaled.</p>
 <col width="15%" />
 </colgroup>
 <thead valign="bottom">
-<tr><th>Call</th>
-<th>Device On</th>
-<th>Device Off</th>
-<th>Starting</th>
-<th>Stopping</th>
+<tr><th class="head">Call</th>
+<th class="head">Device On</th>
+<th class="head">Device Off</th>
+<th class="head">Starting</th>
+<th class="head">Stopping</th>
 </tr>
 </thead>
 <tbody valign="top">
@@ -611,8 +606,8 @@ configuration DeviceC {
 }
 </pre>
 </div>
-<div class="section" id="power-management-with-asyncstdcontrol">
-<h2><a name="power-management-with-asyncstdcontrol">3.3 Power Management with <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt></a></h2>
+<div class="section">
+<h2><a id="power-management-with-asyncstdcontrol" name="power-management-with-asyncstdcontrol">3.3 Power Management with <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt></a></h2>
 <p>The commands and the events of the <em>``StdControl``</em> and the <em>``SplitControl``</em>
 interfaces are synchronous and can not be called from within
 asynchronous code (such as interrupt service routines, etc.). For the
@@ -641,54 +636,54 @@ configuration DeviceC {
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt> interface should be provided whenever it might be
-necessary to allow a device to be powered on or off while running in 
-async context.  If it is anticipated that a device <em>will</em> not (or more 
+necessary to allow a device to be powered on or off while running in
+async context.  If it is anticipated that a device <em>will</em> not (or more
 likely <em>should</em> not) be powered on or off while in asynchronous context,
-then the <tt class="docutils literal"><span class="pre">StdControl</span></tt> interface SHOULD be provided instead.  Components 
+then the <tt class="docutils literal"><span class="pre">StdControl</span></tt> interface SHOULD be provided instead.  Components
 that wish to power the device on or off from within async context would
-then be required to post a task before doing so.  In practice, 
-<tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt> is provided by low-level hardware resources, while 
-<tt class="docutils literal"><span class="pre">StdControl</span></tt> is provided by higher level services built on top of these 
+then be required to post a task before doing so.  In practice,
+<tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt> is provided by low-level hardware resources, while
+<tt class="docutils literal"><span class="pre">StdControl</span></tt> is provided by higher level services built on top of these
 resources.</p>
 </div>
 </div>
 </div>
-<div class="section" id="implicit-power-management">
-<h1><a name="implicit-power-management">4. Implicit Power Management</a></h1>
+<div class="section">
+<h1><a id="implicit-power-management" name="implicit-power-management">4. Implicit Power Management</a></h1>
 <p>While explicit power management provides the mechanism for changing
 power states, it does not specify a policy.
 This does not represent a large problem for the simple case
-of <em>dedicated</em> devices, but can become crucial for non-trivial cases 
-involving complex interdependencies between devices controlled by multiple 
+of <em>dedicated</em> devices, but can become crucial for non-trivial cases
+involving complex interdependencies between devices controlled by multiple
 clients.</p>
-<p>For example, if component <em>A</em> is a client of both component <em>B</em> 
+<p>For example, if component <em>A</em> is a client of both component <em>B</em>
 and component <em>C</em>, what happens with <em>B</em> and <em>C</em> if
 <tt class="docutils literal"><span class="pre">StdControl.stop()</span></tt> is called on component <em>A</em> ? Should components
-<em>B</em> and <em>C</em> also be stopped?  What about the reverse case where both 
-<em>B</em> and <em>C</em> are clients of the single shared component, <em>A</em>?  If 
-devices <em>B</em> and <em>C</em> are shut off, should <em>A</em> be shut off as well?  
+<em>B</em> and <em>C</em> also be stopped?  What about the reverse case where both
+<em>B</em> and <em>C</em> are clients of the single shared component, <em>A</em>?  If
+devices <em>B</em> and <em>C</em> are shut off, should <em>A</em> be shut off as well?
 How can one decide when it is appropriate to cascade such powerup
 and powerdown requests?</p>
 <p>The complex nature of the problem is evident from the number of
 unexpected behaviors in TinyOS 1.x involving <tt class="docutils literal"><span class="pre">StdControl</span></tt>. On several
 platforms, one of the SPI buses is shared between the radio and the
 flash device. On some of them, issuing <tt class="docutils literal"><span class="pre">StdControl.stop()</span></tt> on the
-radio results in a series of cascaded calls that result in SPI bus 
-becoming disabled, rendering the communication with the flash impossible. 
-Of course, the right policy would involve tracking the clients of the 
-SPI bus and powering it off only once both the radio and the flash 
+radio results in a series of cascaded calls that result in SPI bus
+becoming disabled, rendering the communication with the flash impossible.
+Of course, the right policy would involve tracking the clients of the
+SPI bus and powering it off only once both the radio and the flash
 devices were no longer using it. Conversely, the SPI bus should be
 powered on whenever there is at least one active client.</p>
-<p>The selection of the right power management policy to use is a complex 
-task that depends on the nature of the devices in use, their 
-interdependency, as well as on any specific application requirements. 
-For cases when some of these features are known a-priori or are 
-restricted in some sense, it is preferable that the system provide 
-architectural support for enforcing a meaningful <em>default</em> power-management 
-policy instead of passing that task on to the application programmer to be 
+<p>The selection of the right power management policy to use is a complex
+task that depends on the nature of the devices in use, their
+interdependency, as well as on any specific application requirements.
+For cases when some of these features are known a-priori or are
+restricted in some sense, it is preferable that the system provide
+architectural support for enforcing a meaningful <em>default</em> power-management
+policy instead of passing that task on to the application programmer to be
 solved on a case-by-case basis.</p>
-<div class="section" id="power-management-policies">
-<h2><a name="power-management-policies">4.1. Power Management Policies</a></h2>
+<div class="section">
+<h2><a id="power-management-policies" name="power-management-policies">4.1. Power Management Policies</a></h2>
 <p>Just as generic arbiters are offered in TinyOS 2.x to provide the
 arbitration functionality required by shared resources, generic power
 management policies are also offered to allow the power management of
@@ -718,27 +713,27 @@ interface ResourceDefaultOwner {
 <tt class="docutils literal"><span class="pre">ResourceDefaultOwner.granted()</span></tt> event to be signaled in order to
 gain ownership over the resource device.</p>
 <p>Once it owns the device, the <em>Power Manager</em> is free to execute its
-power-management policy using the StdControl-like interface provided by the 
-underlying resource. Different power managers can implement different 
+power-management policy using the StdControl-like interface provided by the
+underlying resource. Different power managers can implement different
 policies. In the simplest case, this would involve an immediate power-down
-via one of the <tt class="docutils literal"><span class="pre">stop()</span></tt> commands. When the power-state transition 
-involves non-negligible costs in terms of wake-up latency or power 
-consumption, the <em>PowerManager</em> might revert to a more intelligent 
-strategy that tries to reduce these effects. As pointed out in the 
-introduction, one such strategy might involve the use of a timer to defer 
-the power-down of the resource to some later point in time, giving any 
-resource clients a window of opportunity to put in requests before the 
+via one of the <tt class="docutils literal"><span class="pre">stop()</span></tt> commands. When the power-state transition
+involves non-negligible costs in terms of wake-up latency or power
+consumption, the <em>PowerManager</em> might revert to a more intelligent
+strategy that tries to reduce these effects. As pointed out in the
+introduction, one such strategy might involve the use of a timer to defer
+the power-down of the resource to some later point in time, giving any
+resource clients a window of opportunity to put in requests before the
 device is fully shut down.</p>
-<p>Regardless of the power management policy in use, the <em>Power Manager</em> 
-remains owner of the resource as long as the resource is not requested 
+<p>Regardless of the power management policy in use, the <em>Power Manager</em>
+remains owner of the resource as long as the resource is not requested
 by one of its clients.  Whenever a client puts in a request, the
-<em>Power Manager</em> will receive a <tt class="docutils literal"><span class="pre">ResourceDefaultOwner.requested()</span></tt> event 
-(or <tt class="docutils literal"><span class="pre">immediateRequested()</span></tt> event) from the arbiter it is associated with. 
-Upon receiving this event, the <em>Power Manager</em> MUST power up the 
+<em>Power Manager</em> will receive a <tt class="docutils literal"><span class="pre">ResourceDefaultOwner.requested()</span></tt> event
+(or <tt class="docutils literal"><span class="pre">immediateRequested()</span></tt> event) from the arbiter it is associated with.
+Upon receiving this event, the <em>Power Manager</em> MUST power up the
 resource through the StdControl-like interface provided by the lower level
 abstraction of the physical device. The <em>Power Manager</em> SHOULD release the
 ownership of the resource (using the <tt class="docutils literal"><span class="pre">ResourceDefaultOwner.release()</span></tt>
-command) but MUST wait until after the resource has been fully powered on 
+command) but MUST wait until after the resource has been fully powered on
 before doing so.</p>
 <p>Modeling devices as shared resources and allowing them to be
 controlled in the way described here, solves the problems outlined in
@@ -750,7 +745,7 @@ management policy being used and the reception of the
 events answers the question of when.  As long as the resource at
 the bottom of a large set of nested resource clients has been fully released,
 the power mananger will be able to power down the resource appropriately.</p>
-<p>Using the model described above, a resource that uses one of these policies 
+<p>Using the model described above, a resource that uses one of these policies
 according to the <em>implicitly power management</em> model could be built as shown below:</p>
 <pre class="literal-block">
 module MyFlashP {
@@ -764,7 +759,7 @@ module MyFlashP {
 }
 implementation {
   ...
-}     
+}
 
 generic module PowerManagerC(uint8_t POWERDOWN_DELAY) {
   provides {
@@ -794,12 +789,12 @@ implementation {
       , MyFlashP;
 
   Init = MyFlashP;
-  Resource = FcfsArbiter; 
+  Resource = FcfsArbiter;
   FlashCommands = MyFlashP;
 
   PowerManagerC.ResourceDefaultUser -&gt; FcfsArbiter;
   PowerManagerC.SplitControl -&gt; MyFlashP;
-  
+
 }
 </pre>
 <p>This example implementation is built out of three components.  The
@@ -814,25 +809,25 @@ management</em> model.  It includes the <tt class="docutils literal"><span class
 components, as well as an arbiter component for managing shared clients
 of the device.  Notice how the <em>Power Manager</em> is wired to both the
 <tt class="docutils literal"><span class="pre">ResourceDefaultUser</span></tt> interface provided by the arbiter, and the
-<tt class="docutils literal"><span class="pre">SplitControl</span></tt> interface provided by the flash.  All clients of this flash 
+<tt class="docutils literal"><span class="pre">SplitControl</span></tt> interface provided by the flash.  All clients of this flash
 device are directly connected to the resource interface provided by
 the arbiter.  As outlined above, the <tt class="docutils literal"><span class="pre">PowerManagerC</span></tt> component will use
-the events signaled through the <tt class="docutils literal"><span class="pre">ResourceDefaultUser</span></tt> interface to determine 
+the events signaled through the <tt class="docutils literal"><span class="pre">ResourceDefaultUser</span></tt> interface to determine
 when to make calls to power the device up and power it down through
 the <tt class="docutils literal"><span class="pre">SplitControl</span></tt> interface.</p>
 </div>
-<div class="section" id="example-power-managers-powermanagerc-and-deferredpowermanagerc">
-<h2><a name="example-power-managers-powermanagerc-and-deferredpowermanagerc">4.2. Example Power Managers: PowerManagerC and DeferredPowerManagerC</a></h2>
+<div class="section">
+<h2><a id="example-power-managers-powermanagerc-and-deferredpowermanagerc" name="example-power-managers-powermanagerc-and-deferredpowermanagerc">4.2. Example Power Managers: PowerManagerC and DeferredPowerManagerC</a></h2>
 <p>TinyOS 2.x currently has two default power management policies
-that it provides.  These policies are implemented by the various 
-components located under tinyos-2.x/lib/power. The first policy 
+that it provides.  These policies are implemented by the various
+components located under tinyos-2.x/lib/power. The first policy
 is implemented using an <em>immediate</em> power control scheme, whereby
 devices are powered on and off immediately after they have been
 requested and released.  The second policy is implemented using
-a <em>deferred</em> power control scheme, whereby devices are powered 
+a <em>deferred</em> power control scheme, whereby devices are powered
 on immediately after being requested, but powered off after
 some small delay from being released.</p>
-<p>Each policy has three different implementations for use by each of 
+<p>Each policy has three different implementations for use by each of
 the <tt class="docutils literal"><span class="pre">StdControl</span></tt>, <tt class="docutils literal"><span class="pre">SplitControl</span></tt>, and <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt>
 interfaces.</p>
 <p>For reference, each of the available components are listed below</p>
@@ -854,8 +849,8 @@ interfaces.</p>
 </dl>
 </div>
 </div>
-<div class="section" id="author-s-address">
-<h1><a name="author-s-address">5. Author's Address</a></h1>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Kevin Klues</div>
 <div class="line">503 Bryan Hall</div>
@@ -889,11 +884,11 @@ interfaces.</p>
 <div class="line">Stanford, CA 94305-9030</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a> </div>
+<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">6. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">6. Citations</a></h1>
 <table class="docutils citation" frame="void" id="tep102" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

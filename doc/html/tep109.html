@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Sensors and Sensor Boards</title>
 <meta name="author" content="David Gay, Phil Levis, Wei Hong, Joe Polastre, and Gilman Tolle" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-21 07:04:39 $
-:version: $Revision: 1.8 $
+:date: $Date: 2007-08-14 18:58:00 $
+:version: $Revision: 1.9 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -40,11 +40,6 @@ blockquote.epigraph {
 
 dd {
   margin-bottom: 0.5em }
-
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
-  font-weight: bold }
-*/
 
 div.abstract {
   margin: 2em 5em }
@@ -283,6 +278,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="sensors-and-sensor-boards">
 <h1 class="title">Sensors and Sensor Boards</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -306,7 +302,6 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
-<div class="document" id="sensors-and-sensor-boards">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -314,15 +309,15 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>This memo documents how sensor drivers are organized in TinyOS and how
 sets of sensor drivers are combined into sensor boards and sensor
 platforms, along with general principles followed by the components
 that provide access to sensors.</p>
 </div>
-<div class="section" id="principles">
-<h1><a name="principles">1. Principles</a></h1>
+<div class="section">
+<h1><a id="principles" name="principles">1. Principles</a></h1>
 <p>This section describes the basic organization principles for sensor
 drivers in TinyOS.</p>
 <p>For background, a sensor can be attached to the microcontroller on a
@@ -374,8 +369,8 @@ the driver MAY provide additional interfaces that would allow
 higher-level clients to obtain information needed to properly
 interpret the value.</p>
 </div>
-<div class="section" id="sensor-hil-components">
-<h1><a name="sensor-hil-components">2. Sensor HIL Components</a></h1>
+<div class="section">
+<h1><a id="sensor-hil-components" name="sensor-hil-components">2. Sensor HIL Components</a></h1>
 <p>A sensor HIL component MUST provide:</p>
 <ul class="simple">
 <li>One or more SID interfaces <a class="citation-reference" href="#tep114" id="id2" name="id2">[TEP114]</a>, for reading data.</li>
@@ -467,8 +462,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section" id="sensor-hal-components">
-<h1><a name="sensor-hal-components">3. Sensor HAL Components</a></h1>
+<div class="section">
+<h1><a id="sensor-hal-components" name="sensor-hal-components">3. Sensor HAL Components</a></h1>
 <p>Sensors with a richer interface than would be supported by the SID
 interfaces MAY provide a HAL component in addition to a HIL
 component.</p>
@@ -497,8 +492,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section" id="directory-organization-guidelines">
-<h1><a name="directory-organization-guidelines">4. Directory Organization Guidelines</a></h1>
+<div class="section">
+<h1><a id="directory-organization-guidelines" name="directory-organization-guidelines">4. Directory Organization Guidelines</a></h1>
 <p>Because the same physical sensor can be attached to TinyOS platforms
 in many different ways, the organization of sensor drivers SHOULD
 reflect the distinction between sensor and sensor interconnect.</p>
@@ -567,8 +562,8 @@ code that will enter the core source tree. In general, sensor
 components can be placed anywhere as long as the nesC compiler
 receives enough <cite>-I</cite> directives to locate all of the necessary pieces.</p>
 </div>
-<div class="section" id="authors-addresses">
-<h1><a name="authors-addresses">5. Authors' Addresses</a></h1>
+<div class="section">
+<h1><a id="authors-addresses" name="authors-addresses">5. Authors' Addresses</a></h1>
 <div class="line-block">
 <div class="line">David Gay</div>
 <div class="line">2150 Shattuck Ave, Suite 1300</div>
@@ -611,8 +606,8 @@ receives enough <cite>-I</cite> directives to locate all of the necessary pieces
 <div class="line">email - <a class="reference" href="mailto:gtolle&#64;archrock.com">gtolle&#64;archrock.com</a></div>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">6. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">6. Citations</a></h1>
 <table class="docutils citation" frame="void" id="tep2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -632,10 +627,10 @@ receives enough <cite>-I</cite> directives to locate all of the necessary pieces
 </tbody>
 </table>
 </div>
-<div class="section" id="appendix-a-sensor-driver-examples">
-<h1><a name="appendix-a-sensor-driver-examples">Appendix A: Sensor Driver Examples</a></h1>
-<div class="section" id="analog-adc-connected-sensor">
-<h2><a name="analog-adc-connected-sensor">1. Analog ADC-Connected Sensor</a></h2>
+<div class="section">
+<h1><a id="appendix-a-sensor-driver-examples" name="appendix-a-sensor-driver-examples">Appendix A: Sensor Driver Examples</a></h1>
+<div class="section">
+<h2><a id="analog-adc-connected-sensor" name="analog-adc-connected-sensor">1. Analog ADC-Connected Sensor</a></h2>
 <p>The Analog sensor requires two components</p>
 <ul class="simple">
 <li>a component to present the sensor itself (HamamatsuS1087ParC)</li>
@@ -696,8 +691,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section" id="binary-pin-connected-sensor">
-<h2><a name="binary-pin-connected-sensor">2. Binary Pin-Connected Sensor</a></h2>
+<div class="section">
+<h2><a id="binary-pin-connected-sensor" name="binary-pin-connected-sensor">2. Binary Pin-Connected Sensor</a></h2>
 <p>The Binary sensor gets a bit more complex, because it has three
 components:</p>
 <ul class="simple">
@@ -737,7 +732,7 @@ module UserButtonLogicP {
   provides interface DeviceMetadata;
 
   uses interface GeneralIO;
-  uses interface GpioInterrupt; 
+  uses interface GpioInterrupt;
 }
 implementation {
   norace bool m_pinHigh;
@@ -773,9 +768,9 @@ implementation {
   task void sendEvent() {
     bool pinHigh;
     pinHigh = m_pinHigh;
-  
+
     signal Notify.notify( pinHigh );
-  
+
     if ( pinHigh ) {
       call GpioInterrupt.enableFallingEdge();
     } else {
@@ -809,8 +804,8 @@ implementation {
 }
 </pre>
 </div>
-<div class="section" id="digital-bus-connected-sensor">
-<h2><a name="digital-bus-connected-sensor">3. Digital Bus-Connected Sensor</a></h2>
+<div class="section">
+<h2><a id="digital-bus-connected-sensor" name="digital-bus-connected-sensor">3. Digital Bus-Connected Sensor</a></h2>
 <p>The Digital sensor is the most complex out of the set, and includes
 six components:</p>
 <ul class="simple">
@@ -833,7 +828,7 @@ on top of the I2C or SPI bus would likely require fewer components.</p>
 <pre class="literal-block">
 tos/platforms/telosa/chips/sht11/SensirionSht11C.nc
 
-generic configuration SensirionSht11C() {  
+generic configuration SensirionSht11C() {
   provides interface Read&lt;uint16_t&gt; as Temperature;
   provides interface DeviceMetadata as TemperatureDeviceMetadata;
   provides interface Read&lt;uint16_t&gt; as Humidity;
@@ -866,7 +861,7 @@ generic module SensirionSht11ReaderP() {
   provides interface DeviceMetadata as TemperatureDeviceMetadata;
   provides interface Read&lt;uint16_t&gt; as Humidity;
   provides interface DeviceMetadata as HumidityDeviceMetadata;
-  
+
   uses interface Resource as TempResource;
   uses interface Resource as HumResource;
   uses interface SensirionSht11 as Sht11Temp;
@@ -943,7 +938,7 @@ implementation {
   SensirionSht11LogicP.DATA -&gt; HplSensirionSht11C.DATA;
   SensirionSht11LogicP.CLOCK -&gt; HplSensirionSht11C.SCK;
   SensirionSht11LogicP.InterruptDATA -&gt; HplSensirionSht11C.InterruptDATA;
-  
+
   components new TimerMilliC();
   SensirionSht11LogicP.Timer -&gt; TimerMilliC;
 
@@ -982,7 +977,7 @@ configuration HplSensirionSht11C {
 }
 implementation {
   components HplMsp430GeneralIOC;
-  
+
   components new Msp430GpioC() as DATAM;
   DATAM -&gt; HplMsp430GeneralIOC.Port15;
   DATA = DATAM;
@@ -1009,7 +1004,7 @@ implementation {
 
   components new FcfsArbiterC( &quot;Sht11.Resource&quot; ) as Arbiter;
   Resource = Arbiter;
-  
+
   components new SplitControlPowerManagerC();
   SplitControlPowerManagerC.SplitControl -&gt; HplSensirionSht11P;
   SplitControlPowerManagerC.ArbiterInit -&gt; Arbiter.Init;
@@ -1036,7 +1031,7 @@ implementation {
     call Timer.startOneShot( 11 );
     return SUCCESS;
   }
-  
+
   event void Timer.fired() {
     signal SplitControl.startDone( SUCCESS );
   }

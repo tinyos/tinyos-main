@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>The Collection Tree Protocol (CTP)</title>
 <meta name="author" content="Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-21 07:04:39 $
-:version: $Revision: 1.9 $
+:date: $Date: 2007-08-14 18:57:59 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -40,11 +40,6 @@ blockquote.epigraph {
 
 dd {
   margin-bottom: 0.5em }
-
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
-  font-weight: bold }
-*/
 
 div.abstract {
   margin: 2em 5em }
@@ -283,6 +278,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="the-collection-tree-protocol-ctp">
 <h1 class="title">The Collection Tree Protocol (CTP)</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -310,7 +306,6 @@ ul.auto-toc {
 </tr>
 </tbody>
 </table>
-<div class="document" id="the-collection-tree-protocol-ctp">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -318,17 +313,17 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
-<p>This memo documents the Collection Tree Protocol (CTP), which 
-provides best-effort anycast datagram communication to one of the 
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<p>This memo documents the Collection Tree Protocol (CTP), which
+provides best-effort anycast datagram communication to one of the
 collection roots in a network.</p>
 </div>
-<div class="section" id="introduction">
-<h1><a name="introduction">1. Introduction</a></h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 </div>
-<div class="section" id="assumptions-and-limitations">
-<h1><a name="assumptions-and-limitations">2. Assumptions and Limitations</a></h1>
+<div class="section">
+<h1><a id="assumptions-and-limitations" name="assumptions-and-limitations">2. Assumptions and Limitations</a></h1>
 <p>CTP is a tree-based collection protocol. Some number of nodes in a
 network advertise themselves as tree roots. Nodes form a set of routing
 trees to these roots. CTP is <strong>address-free</strong> in that a node does not
@@ -345,8 +340,8 @@ protocols.</li>
 <li>Has single-hop source and destination fields.</li>
 </ol>
 </blockquote>
-<p>CTP assumes that it has link quality estimates of some number of nearby 
-neighbors. These provide an estimate of the number of transmissions it 
+<p>CTP assumes that it has link quality estimates of some number of nearby
+neighbors. These provide an estimate of the number of transmissions it
 takes for the node to send a unicast packet whose acknowledgment is
 successfully received.</p>
 <p>CTP has several mechanisms in order to improve delivery reliability,
@@ -356,8 +351,8 @@ a best effort that <em>tries very hard.</em></p>
 might benefit from a different protocol, which can, for example, pack
 multiple small frames into a single data-link packet.</p>
 </div>
-<div class="section" id="collection-and-ctp">
-<h1><a name="collection-and-ctp">3. Collection and CTP</a></h1>
+<div class="section">
+<h1><a id="collection-and-ctp" name="collection-and-ctp">3. Collection and CTP</a></h1>
 <p>CTP uses expected transmissions (ETX) as its routing gradient. A root
 has an ETX of 0.  The ETX of a node is the ETX of its parent plus the
 ETX of its link to its parent. This additive measure assumes that
@@ -398,22 +393,22 @@ routing layer increments on each hop. A link-level retransmission has
 the same THL value, while a looped version of the packet is unlikely
 to do so.</p>
 </div>
-<div class="section" id="ctp-data-frame">
-<h1><a name="ctp-data-frame">4. CTP Data Frame</a></h1>
+<div class="section">
+<h1><a id="ctp-data-frame" name="ctp-data-frame">4. CTP Data Frame</a></h1>
 <p>The CTP data frame format is as follows:</p>
 <pre class="literal-block">
-                     1            
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
+                     1
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |P|C| reserved  |      THL        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |              ETX                |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|             origin              |                 
+|             origin              |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|     seqno     |   collect_id    |    
+|     seqno     |   collect_id    |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    data ... 
+|    data ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
 <p>Field definitions are as follows:</p>
@@ -429,7 +424,7 @@ to do so.</p>
 <li>data: the data payload, of zero or more bytes. A node forwarding a data frame MUST NOT modify the data payload.</li>
 </ul>
 </blockquote>
-<p>Together, the origin, seqno and collect_id fields denote a unique 
+<p>Together, the origin, seqno and collect_id fields denote a unique
 <strong>*origin packet.*</strong> Together, the origin, seqno, collect_id, and
 THL denote a unique <strong>*packet instance*</strong> within the network. The
 distinction is important for duplicate suppression in the presence
@@ -438,21 +433,21 @@ asked to forward the same packet twice due to a routing loop, it will
 drop the packet. However, if it suppresses packet instances, then it
 will route succesfully in the presence of transient loops unless the
 THL happens to wrap around to a forwarded packet instance.</p>
-<p>A node MUST send CTP data frames as unicast messages with link-layer 
+<p>A node MUST send CTP data frames as unicast messages with link-layer
 acknowledgments enabled.</p>
 </div>
-<div class="section" id="ctp-routing-frame">
-<h1><a name="ctp-routing-frame">5. CTP Routing Frame</a></h1>
+<div class="section">
+<h1><a id="ctp-routing-frame" name="ctp-routing-frame">5. CTP Routing Frame</a></h1>
 <p>The CTP routing frame format is as follows:</p>
 <pre class="literal-block">
-                     1            
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
+                     1
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |P|C| reserved  |      parent     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|     parent    |       ETX       |    
+|     parent    |       ETX       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|      ETX      |          
+|      ETX      |
 +-+-+-+-+-+-+-+-+
 </pre>
 <p>The fields are as follows:</p>
@@ -474,8 +469,8 @@ below its own. When a parent hears a child advertise an ETX below its
 own, it MUST schedule a routing frame for transmission in the near
 future.</p>
 </div>
-<div class="section" id="implementation">
-<h1><a name="implementation">6. Implementation</a></h1>
+<div class="section">
+<h1><a id="implementation" name="implementation">6. Implementation</a></h1>
 <p>An implementation of CTP can be found in the tos/lib/net/ctp directory
 of TinyOS 2.0. This section describes the structure of that implementation
 and is not in any way part of the specification of CTP.</p>
@@ -489,8 +484,8 @@ routing hop.</p>
 to send. It decides when and if to send them. The name is a little
 misleading: the forwarding engine is responsible for forwarded traffic
 as well as traffic generated on the node.</p>
-<div class="section" id="link-estimation">
-<h2><a name="link-estimation">6.1 Link Estimation</a></h2>
+<div class="section">
+<h2><a id="link-estimation" name="link-estimation">6.1 Link Estimation</a></h2>
 <p>The implementation uses two mechanisms to estimate the quality of a link:
 periodic LEEP <a class="footnote-reference" href="#id4" id="id1" name="id1">[1]</a> packets and data packets. The implementation sends
 routing beacons as LEEP packets. These packets seed the neighbor table
@@ -515,7 +510,7 @@ of 6.</p>
 <p>The estimator combines the beacon and data estimates by incorporating
 them into an exponentially weighted moving average. Beacon-based
 estimates seed the neighbor table. The expectation is that the low
-beacon rate in a stable network means that for a selected route, 
+beacon rate in a stable network means that for a selected route,
 data estimates will outweigh beacon estimates. Additionally, as
 the rate at which CTP collects data estimates is proportional to
 the transmission rate, then it can quickly detect a broken link and
@@ -523,8 +518,8 @@ switch to another candidate neighbor.</p>
 <p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/le/LinkEstimatorP</span></tt> implements the
 link estimator. It couples LEEP-based and data-based estimates.</p>
 </div>
-<div class="section" id="routing-engine">
-<h2><a name="routing-engine">6.2 Routing Engine</a></h2>
+<div class="section">
+<h2><a id="routing-engine" name="routing-engine">6.2 Routing Engine</a></h2>
 <p>The implementation's routing engine is responsible for picking the next
 hop for a data transmission. It keeps track of the path ETX values of
 a subset of the nodes maintained by the link estimation table. The minimum
@@ -533,8 +528,8 @@ ETX of that node. The path ETX is therefore the sum of link ETX values
 along the entire route. The component <tt class="docutils literal"><span class="pre">tos/lib/net/ctp/CtpRoutingEngineP</span></tt>
 implements the routing engine.</p>
 </div>
-<div class="section" id="forwarding-engine">
-<h2><a name="forwarding-engine">6.3 Forwarding Engine</a></h2>
+<div class="section">
+<h2><a id="forwarding-engine" name="forwarding-engine">6.3 Forwarding Engine</a></h2>
 <p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/ctp/CtpForwardingEngineP</span></tt> implements the
 forwarding engine. It has five repsonsibilities:</p>
 <blockquote>
@@ -575,10 +570,10 @@ stream packets as quickly as possible, in order to prevent self-collisions
 along the path.</p>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">7. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">7. Citations</a></h1>
 <div class="line-block">
-<div class="line">Rodrigo Fonseca </div>
+<div class="line">Rodrigo Fonseca</div>
 <div class="line">473 Soda Hall</div>
 <div class="line">Berkeley, CA 94720-1776</div>
 <div class="line"><br /></div>
@@ -587,9 +582,9 @@ along the path.</p>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Omprakash Gnawali</div>
-<div class="line">Ronald Tutor Hall (RTH) 418 </div>
+<div class="line">Ronald Tutor Hall (RTH) 418</div>
 <div class="line">3710 S. McClintock Avenue</div>
-<div class="line">Los Angeles, CA 90089 </div>
+<div class="line">Los Angeles, CA 90089</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 213 821-5627</div>
 <div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
@@ -598,7 +593,7 @@ along the path.</p>
 <div class="line">Kyle Jamieson</div>
 <div class="line">The Stata Center</div>
 <div class="line">32 Vassar St.</div>
-<div class="line">Cambridge, MA 02139 </div>
+<div class="line">Cambridge, MA 02139</div>
 <div class="line"><br /></div>
 <div class="line">email - <a class="reference" href="mailto:jamieson&#64;csail.mit.edu">jamieson&#64;csail.mit.edu</a></div>
 <div class="line"><br /></div>
@@ -613,8 +608,8 @@ along the path.</p>
 <div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section" id="id3">
-<h1><a name="id3">8. Citations</a></h1>
+<div class="section">
+<h1><a id="id3" name="id3">8. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

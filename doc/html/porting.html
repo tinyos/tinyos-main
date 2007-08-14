@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Porting TinyOS 1.x Code to TinyOS 2.0</title>
 <meta name="author" content="Tahir Azim and Philip Levis" />
 <meta name="date" content="October 26 2006" />
@@ -12,8 +12,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-04-21 07:04:39 $
-:version: $Revision: 1.6 $
+:date: $Date: 2007-08-14 18:58:00 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -41,11 +41,6 @@ blockquote.epigraph {
 
 dd {
   margin-bottom: 0.5em }
-
-/* Uncomment (& remove this text!) to get bold-faced definition list terms
-dt {
-  font-weight: bold }
-*/
 
 div.abstract {
   margin: 2em 5em }
@@ -284,6 +279,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="porting-tinyos-1-x-code-to-tinyos-2-0">
 <h1 class="title">Porting TinyOS 1.x Code to TinyOS 2.0</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -295,18 +291,17 @@ ul.auto-toc {
 <td>October 26 2006</td></tr>
 </tbody>
 </table>
-<div class="document" id="porting-tinyos-1-x-code-to-tinyos-2-0">
 <div class="note">
 <p class="first admonition-title">Note</p>
-<p class="last">This document provides a few important points that describe 
+<p class="last">This document provides a few important points that describe
 major steps required for porting TinyOS 1.x code to TinyOS 2.0.
 It is based on Tahir Azim's experience porting Beacon Vector
 Routing (BVR[<a class="reference" href="#id1">1</a>]) from TinyOS 1.x to T2. This document is not
 a complete porting guide, but the hope is that it will provide
 some help or guidance.</p>
 </div>
-<div class="section" id="porting-points">
-<h1><a name="porting-points">1. Porting Points</a></h1>
+<div class="section">
+<h1><a id="porting-points" name="porting-points">1. Porting Points</a></h1>
 <p>As these observations come from porting a network protocol, they are
 rather protocol-centric and do not consider other abstractions such
 as storage. We hope to add such points in the future.</p>
@@ -322,7 +317,7 @@ if (call Packet...) {
 </ol>
 <p>In TinyOS 2.x, SUCCESS is equal to a zero error code, while other error codes are non-zero. So calls like this should be changed to make sure they test the result for equality with SUCCESS:</p>
 <pre class="literal-block">
-if (call Packet... () == SUCCESS ) { 
+if (call Packet... () == SUCCESS ) {
       //SUCCESS!: do this...
   }
 </pre>
@@ -342,8 +337,8 @@ if (call Packet... () == SUCCESS ) {
 </ol>
 </blockquote>
 </div>
-<div class="section" id="author-s-address">
-<h1><a name="author-s-address">2. Author's Address</a></h1>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">2. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Tahir Azim</div>
 <div class="line">358 Gates Hall</div>
@@ -364,8 +359,8 @@ if (call Packet... () == SUCCESS ) {
 <div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 </div>
 </div>
-<div class="section" id="citations">
-<h1><a name="citations">3. Citations</a></h1>
+<div class="section">
+<h1><a id="citations" name="citations">3. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
