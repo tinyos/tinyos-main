@@ -11,4 +11,16 @@
 		</exec>
 	</target>
 
+	<target name="install_cruisecontrol" >
+		<echo message = "Building ${project.name}" />
+		<exec executable="./Bootstrap" failonerror="true">
+		</exec>
+		<exec executable="./configure" failonerror="true">
+			<arg line="--prefix=/scratch/tos2/usr" />
+			</exec>
+		<exec executable="make" failonerror="true">
+			<arg line="install" />
+		</exec>
+	</target>
+
 </project>
