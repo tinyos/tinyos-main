@@ -1,0 +1,14 @@
+<project name="tinyos-2.x tools" default="all">
+
+	<target name="all" >
+		<echo message = "Building ${project.name}" />
+		<exec executable="./Bootstrap" failonerror="true">
+		</exec>
+		<exec executable="./configure" failonerror="true">
+		</exec>
+		<exec executable="make" failonerror="true">
+			<arg line="all" />
+		</exec>
+	</target>
+
+</project>
