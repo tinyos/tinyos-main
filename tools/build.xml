@@ -5,6 +5,7 @@
 		<exec executable="./Bootstrap" failonerror="true">
 		</exec>
 		<exec executable="./configure" failonerror="true">
+			<arg  line="--quiet" />
 		</exec>
 		<exec executable="make" failonerror="true">
 			<arg line="all" />
@@ -16,7 +17,7 @@
 		<exec executable="./Bootstrap" failonerror="true">
 		</exec>
 		<exec executable="./configure" failonerror="true">
-			<arg line="--prefix=/scratch/tos2/usr" />
+			<arg line="--prefix=/scratch/tos2/usr --quiet" />
 			</exec>
 		<exec executable="make" failonerror="true">
 			<arg line="install" />
