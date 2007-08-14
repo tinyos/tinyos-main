@@ -24,7 +24,7 @@ repository under tinyos-2.x/tools.
 %build
 cd tools
 ./Bootstrap
-TOSDIR=/opt/tinyos-2.x/tos ./configure --prefix=/usr
+NESCC_PREFIX=/usr TOSDIR=/opt/tinyos-2.x/tos ./configure --prefix=/usr
 make
 
 %install
