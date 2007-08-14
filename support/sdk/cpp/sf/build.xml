@@ -1,0 +1,10 @@
+<project name="tinyos-2.x support sdk java" default="all">
+
+	<target name="all" >
+		<echo message = "Building support sdk cpp sf" />
+		<exec executable="make" failonerror="true">
+			<arg line="all" />
+		</exec>
+	</target>
+
+</project>
