@@ -12,8 +12,8 @@
 		<exec executable="make" failonerror="true">
 			<arg  line="pdf" />
 		</exec>
-		<exec executable="rm" failonerror="true">
-			<arg  line="pdf/*.out pdf/*.aux pdf/*.log" />
+		<exec executable="make" failonerror="true">
+			<arg  line="clean" />
 		</exec>
 	</target>
 </project>
