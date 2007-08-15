@@ -6,10 +6,18 @@
 			<arg line="all" />
 		</exec>
 	</target>
+
 	<target name="tinyos.jar">
 		<echo message="Building tinyos.jar"></echo>
 		<exec failonerror="true" executable="make">
 			<arg line="tinyos.jar"></arg></exec>
 	</target>
 
+	<target name="javadoc" >
+		<echo message = "Building javadoc" />
+		<exec executable="make" failonerror="true">
+			<arg line="javadoc" />
+		</exec>
+	</target>
+	
 </project>
