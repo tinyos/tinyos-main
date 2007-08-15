@@ -13,7 +13,7 @@
 
 	<target name="install_cruisecontrol" >
 		<echo message = "Building tinyos-2.x support sdk c" />
-		<exec executable="./bootstrap" failonerror="true">
+		<exec executable="./Bootstrap" failonerror="true">
 		</exec>
 		<exec executable="./configure" failonerror="true">
 			<arg line="--prefix=/scratch/tos2/usr --quiet" />
