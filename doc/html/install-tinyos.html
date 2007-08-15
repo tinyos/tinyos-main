@@ -1,9 +1,9 @@
-
-<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
-<html>
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
   <title>Installing TinyOS 2.0.2</title>
-  <link href="../stylesheets/tutorial.css" rel="stylesheet" type="text/css">
+  <link href="../stylesheets/tutorial.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 
@@ -23,9 +23,8 @@ following the <i>upgrade</i> instructions at
 
       <h1>One-step Install with a Live CD</h1>
 
-      <p><A
-      HREF="http://toilers.mines.edu/Public/XubunTOS">Download a
-      Linux live CD that has a TinyOS installation on it</A>. 
+      <p><a href="http://toilers.mines.edu/Public/XubunTOS">Download a
+      Linux live CD that has a TinyOS installation on it</a>. 
       All you
       need to do is download the CD image, burn it onto a CD, and
       install from there. This saves you all of the complexities of
@@ -37,7 +36,7 @@ following the <i>upgrade</i> instructions at
       <h1>Two-step install on your host OS with Debian packages</h1>
 
    <p>If you are running a version of Linux that supports Debian packages, then
-   you may want to use the TinyOS package repository. There is a <A HREF="http://www.tinyos.net/scoop/story/2007/3/1/142950/4912">story on www.tinyos.net</A> 
+   you may want to use the TinyOS package repository. There is a <a href="http://www.tinyos.net/scoop/story/2007/3/1/142950/4912">story on www.tinyos.net</a> 
    that describes how to use it. If you do this, then you do not have to
    install the instructions here, except that you will need to check
    that your environment is set up correctly (the end of step 5 in
@@ -45,7 +44,7 @@ following the <i>upgrade</i> instructions at
 
       <h1>Manual installation on your host OS with RPMs</h1>
 <p>Currently, the TinyOS Core Working Group supports TinyOS on two platforms: Cygwin (Windows)
-and Linux. There have been some <A HREF="">successful efforts</A> to getting TinyOS environments working
+and Linux. There have been some <a href="">successful efforts</a> to getting TinyOS environments working
 on Mac OSX, but OSX is not supported by the Core WG.</p>
 
 
@@ -55,7 +54,7 @@ installing Cygwin, which is a UNIX-like environment. The steps are:</p>
 <ol>
   <li><b>Installing a Java 1.5 (Java 5) JDK.</b> Java is the most common way of interacting
   with mote base stations or gateways that are plugged into a PC or laptop.</li>
-  <li><b><font color=red>Windows only.</font> Install Cygwin.</b> This gives you a shell
+  <li><b><font color="red">Windows only.</font> Install Cygwin.</b> This gives you a shell
   and many UNIX tools which the TinyOS environment uses, such as perl and shell
   scripts.</li>
   <li><b>Installing native compilers.</b> As you're compiling code for low-power
@@ -73,23 +72,24 @@ installing Cygwin, which is a UNIX-like environment. The steps are:</p>
   environment includes <tt>nesdoc</tt>, a tool that automatically
   generates HTML documentation from source code. Part of this process
   involves drawing diagrams that show the relationships between
-  different TinyOS components. <A HREF="http://www.graphviz.org">Graphviz</A>
+  different TinyOS components. <a href="http://www.graphviz.org">Graphviz</a>
   is an open source tool
   that nesdoc uses to draw the diagrams.</li>
 </ol>
 
 <h2>Step 1: Install Java 1.5 JDK</h2>
 
-<b>Windows</b><br>
+<b>Windows</b>
 Download and install Sun's 1.5 JDK from <a href="http://java.sun.com">http://java.sun.com</a>.
 
 <p>
-<b>Linux</b><br>
+<b>Linux</b>
 Download and install IBM's 1.5 JDK from <a href="http://www-128.ibm.com/developerworks/java/jdk/">http://www-128.ibm.com/developerworks/java/jdk/</a>.
+</p>
 
 <h2>Step 2: Install Cygwin</h2>
 
-<font color=red> This step is required for Windows installations only. If you are installing
+<font color="red"> This step is required for Windows installations only. If you are installing
 on Linux, skip to step 3.</font>
 
 <p>We have put online the cygwin packages that we've confirmed to be
@@ -100,51 +100,66 @@ number of TinyOS users, upgrade their cygwin packages at least monthly
 from cygnus. However, since we can't test what packages are compatible
 as they become available daily, we can't confirm that today's set will
 work.
+</p>
 
-<p>
 <ol>
-<li> Download and install Cygwin from <A HREF="http://www.cygwin.com">www.cygwin.com</A>.</li>
-<p>
-<li> Download the confirmed-compatible cygwin packages from the tinyos web site <a href="http://www.tinyos.net/dist-1.2.0/tools/windows/cygwin-1.2a.tgz">here</a>.
-<p>
-<li> In a cygwin shell, unzip the above package into some directory. In these instructions the directory is /cygdrive/c/newcygpkgs.
+<li> Download and install Cygwin from <a href="http://www.cygwin.com">www.cygwin.com</a>.<p></p></li>
+
+<li> Download the confirmed-compatible cygwin packages from the tinyos web site 
+     <a href="http://www.tinyos.net/dist-1.2.0/tools/windows/cygwin-1.2a.tgz">here
+     </a>.<p></p></li>
+
+<li> In a cygwin shell, unzip the above package into some directory. In these 
+     instructions the directory is /cygdrive/c/newcygpkgs.
 <pre>
      $ cd /cygdrive/c/newcygpkgs
      $ tar zxvf cygwin-1.2a.tgz 
 </pre>
-This unzips the packages.
-<p>
-<li> In Windows Explorer, navigate to /cygdrive/c/newcygpkgs and click on the file setup.exe. Setup.exe is the setup program distributed by Cygnus Solutions.
-<p>
-<li> Follow these steps when the Cygwin Setup windows appears:
-<ol>
+This unzips the packages.<p></p></li>
+
+<li> In Windows Explorer, navigate to /cygdrive/c/newcygpkgs and click on the 
+     file setup.exe. Setup.exe is the setup program distributed by Cygnus Solutions.<p></p></li>
+
+<li> Follow these steps when the Cygwin Setup windows appears:<p></p></li>
+
+<li> Opt to disable the virus scanner (it will be enabled when you're finished).<p></p></li>
+
+<li> Opt to Install from Local Directory.<p></p></li>
+
+<li> Specify the Root directory to be where your <i>current</i> cygwin installation 
+     is. This would be the directory that directories like 'opt' and 'usr' are in. 
+     For example, mine is rooted at c:\tinyos\cygwin, so I enter that.<p></p></li>
+
+<li> Select to Install for All Users<p></p></li>
+
+<li> Select the Unix file type (very important!)<p></p></li>
+
+<li> For the Local Packages Directory, specify where you unzipped the cygwin 
+     packages tarfile. For example, I would specify c:\newcygpkgs. (The setup.exe 
+     program will probably select the right default directory.)<p></p></li>
+
+<li> The next window will allow you to select packages to install. You should 
+     see that most of the packages have an X-ed box next to them; these are the 
+     packages that are to be installed. <p></p></li>
+
+<li> Click install.  <p></p></li>
 </ol>
-<li> Opt to disable the virus scanner (it will be enabled when you're finished).
-<p>
-<li> Opt to Install from Local Directory.
-<p>
-<li> Specify the Root directory to be where your <i>current</i> cygwin installation is. This would be the directory that directories like 'opt' and 'usr' are in. For example, mine is rooted at c:\tinyos\cygwin, so I enter that.  
-<p>
-<li> Select to Install for All Users
-<p>
-<li> Select the Unix file type (very important!)
-<p>
-<li> For the Local Packages Directory, specify where you unzipped the cygwin packages tarfile. For example, I would specify c:\newcygpkgs. (The setup.exe program will probably select the right default directory.)
-<p>
-<li> The next window will allow you to select packages to install. You should see that most of the packages have an X-ed box next to them; these are the packages that are to be installed. 
-<p>
-<li> Click install. Some notes: 
+
+Some notes:
 <ul>
-<li> You might see a message explaining that you need to reboot because some files are in use. This most likely means that your cygwin DLL is loaded and in-use and, therefore, cannot be replaced. When you reboot, the new DLL will be loaded. 
-<li> Related to the above warnings, if you see warnings about the cygwin1.dll not being found, don't worry. All will be well once you reboot and the right DLL is loaded. 
+<li> You might see a message explaining that you need to reboot because some 
+     files are in use. This most likely means that your cygwin DLL is loaded 
+     and in-use and, therefore, cannot be replaced. When you reboot, the new DLL 
+     will be loaded. <p></p></li>
+
+<li> Related to the above warnings, if you see warnings about the cygwin1.dll not 
+     being found, don't worry. All will be well once you reboot and the right DLL is loaded. <p></p></li>
 </ul>
-</ol>
-</ol>
 
 <h2>Step 3: Install native compilers </h2>
 
-Install the appropriate version of the following (Windows or Linux,
-avr or msp430 or both) with the rpm command 'rpm -ivh <rpm>'. 
+<p>Install the appropriate version of the following (Windows or Linux,
+avr or msp430 or both) with the rpm command 'rpm -ivh <i>rpm></i>'. 
 On
 windows, if you get an error claiming that the rpm was build for an NT
 computer and you're on a windows NT computer, bypass the erroneous
@@ -152,10 +167,9 @@ error by using 'rpm -ivh --ignoreos <i>rpmname</i>'.
 (We have xscale
 compiler tools online at 
 <a href="http://www.tinyos.net/dist-1.2.0/tools/">http://www.tinyos.net/dist-1.2.0/tools/</a>
-but they have not yet been extensively tested by a large community.)
+but they have not yet been extensively tested by a large community.)</p>
 
-<!----- AVR external tools -------->
-</p><p><b><em>Atmel AVR Tools</em></b>
+<b><em>Atmel AVR Tools</em></b>
 <table border="0">
 <tbody><tr>
   <td bgcolor="#dddddd"><b>Tool</b></td>
@@ -196,8 +210,7 @@ but they have not yet been extensively tested by a large community.)
 </tbody></table>
 <i><font color="red">&#8224;</font>If you receive an rpm error that indicates that you have a newer version already installed, try <code>rpm -Uvh --force</code></i>
 
-<!----- MSP external tools -------->
-</p><p><b><em>TI MSP430 Tools</em></b>
+<p></p><b><em>TI MSP430 Tools</em></b>
 <table border="0">
 <tbody><tr>
   <td bgcolor="#dddddd"><b>Tool</b></td>
@@ -275,8 +288,8 @@ i386 RPM and the second is the i686 RPM. If you have a 64-bit
 Java VM, it is important that you install the i686 RPM or otherwise
 the Java support may not work properly.
 
-<!----- tinyos-2.x/tinyos rpms  -------->
-</p><p><b><em>TinyOS-specific Tools</em></b>
+<p></p>
+<b><em>TinyOS-specific Tools</em></b>
 <table border="0">
 <tbody><tr>
   <td bgcolor="#dddddd"><b>Tool</b></td>
@@ -291,10 +304,10 @@ the Java support may not work properly.
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/windows/nesc-1.2.8a-1.cygwin.i386.rpm">nesc-1.2.8a-1.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/windows/nesc-1.2.8b-1.cygwin.i386.rpm">nesc-1.2.8b-1.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-1.2.0/tinyos/linux/nesc-1.2.8a-1.i386.rpm">nesc-1.2.8a-1.i386.rpm </a></td>
-  <td><a href=""></a><code>rpm -Uvh</code><br>
+  <td><a href=""></a><code>rpm -Uvh</code><br/>
                      <code>rpm -Uvh --ignoreos</code> (if Cygwin complains)</td>
 </tr>
-<tr></tr>
+
 <tr>
   <td bgcolor="#dddddd"><b>Tool</b></td>
   <td bgcolor="#dddddd"><b>Windows/Cygwin</b></td>
@@ -302,34 +315,34 @@ the Java support may not work properly.
   <td bgcolor="#dddddd"><b>64-bit Linux</b></td>
   <td bgcolor="#dddddd"><b>Command</b></td>
 </tr>
+
 <tr>
   <td>tinyos-tools</td>
   <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/windows/tinyos-tools-1.2.4-2.cygwin.i386.rpm">tinyos-tools-1.2.4-2.cygwin.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.4-2.i386.rpm">tinyos-tools-1.2.4-2.i386.rpm</a></td>
   <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-tools-1.2.4-2.i686.rpm">tinyos-tools-1.2.4-2.i686.rpm</a></td>
-  <td><a href=""></a><code>rpm -ivh --force</code>&nbsp;(1.x tree)<br><code>rpm -Uvh</code>&nbsp;(no 1.x tree)<br></td>
+  <td><a href=""></a><code>rpm -ivh --force</code>&nbsp;(1.x tree)<br/><code>rpm -Uvh</code>&nbsp;(no 1.x tree)<br/></td>
 </tr>
 
 </tbody></table>
 
 <h2>Step 5: Install the TinyOS 2.x source tree </h2>
 
-Now that the tools are installed, you need only install the tinyos 2.x 
+<p>Now that the tools are installed, you need only install the tinyos 2.x 
 source tree and then set your environment variables.
 Install the appropriate version of the following (Window or Linux)
-with the rpm command 'rpm -ivh <rpm>'. 
+with the rpm command 'rpm -ivh <i>rpm</i>'. 
 As with the previous rpms, if you get an error claiming that the rpm
 was build for an NT computer and you're on a windows NT computer,
 bypass the erroneous error by using 'rpm -ivh --ignoreos
 <i>rpmname</i>'.
-<p>
+</p>
+
 <ul>
 <li> Install tinyos-2.x
-<p>
-<!----- TinyOS  -------->
 
-
-</p><p><b><em>TinyOS 2.x</em></b>
+<p></p>
+<b><em>TinyOS 2.x</em></b>
 <table border="0">
 <tbody><tr>
   <td bgcolor="#dddddd"><b></b></td>
@@ -343,22 +356,27 @@ bypass the erroneous error by using 'rpm -ivh --ignoreos
   <td><a href="http://www.tinyos.net/dist-2.0.0/tinyos/linux/tinyos-2.0.2-2.noarch.rpm">tinyos-2.0.2-2.noarch.rpm</a></td>
 </tr>
 
-</tbody></table>
-</p></li><li> Configure your environment
+</tbody></table></li>
+
+<li> Configure your environment
+
 <p>
 Ideally, you'll put these environment variables in a shell script that will run when your shell starts, but you needn't 
 put such a script under /etc/profile.d. 
-</p><p>
+</p>
+<p>
 The example
 settings below assume that the tinyos-2.x installation is in /opt/tinyos-2.x.
 Change the settings to be correct for where you've put your tinyos-2.x tree. Note
 that the windows CLASSPATH must be a windows-style path, not a cygwin path. You can 
 generate a windows style path from a cygwin-style path using 'cygpath -w'. For example:
-</p><pre>export CLASSPATH=`cygpath -w $TOSROOT/support/sdk/java/tinyos.jar`
+</p>
+
+<pre>export CLASSPATH=`cygpath -w $TOSROOT/support/sdk/java/tinyos.jar`
 export CLASSPATH="$CLASSPATH;."
 </pre>
 
-<p><b><em>TinyOS 2.x</em></b>
+<b><em>TinyOS 2.x</em></b>
 <table border="0">
 <tbody><tr>
   <td bgcolor="#dddddd"><b>Environment Variable</b></td>
@@ -400,44 +418,43 @@ export CLASSPATH="$CLASSPATH;."
 
 <i><font color="red">&#8224;</font>Only necessary if you're using the MSP430 platform/tools.</i>
 
-</p><p>
+<p>
 In addition to the above environment variables, do the following on Linux machines:
-</p><ol>
-<li> Change the ownership on your /opt/tinyos-2.x files: <code>chown -R&nbsp;&lt;your uid&gt;&nbsp;/opt/tinyos-2.x
-</code></li><li> Change the permissions on any serial (/dev/ttyS&lt;N&gt;), usb
-(/dev/tts/usb&lt;N&gt;, /dev/ttyUSB&lt;N&gt;), or parallel (/dev/parport) devices you
-are going to use: <code>chmod 666 /dev/&lt;devicename&gt;<code>
-<!-- 
-<li> Add any users who will be using TinyOS to the uucp, lp, and lock 
-groups: </li>
--->
-</code></code></li></ol>
+</p>
 
+<ol>
+<li> Change the ownership on your /opt/tinyos-2.x files: <code>chown -R&nbsp;&lt;your uid&gt;&nbsp;/opt/tinyos-2.x
+</code></li>
+<li> Change the permissions on any serial (/dev/ttyS&lt;N&gt;), usb
+(/dev/tts/usb&lt;N&gt;, /dev/ttyUSB&lt;N&gt;), or parallel (/dev/parport) devices you
+are going to use: <code>chmod 666 /dev/&lt;devicename&gt;</code></li>
+</ol>
+</li>
 
 
 
 <li><p>Finally, if you have installed TinyOS 2.0.1, there is a bug in TOSSIM (which will be fixed in 2.0.2).
-The bug is in file <tt>tos/chips/atm128/sim/atm128_sim.h</tt>. Change these lines 22 and 23 from:
+The bug is in file <tt>tos/chips/atm128/sim/atm128_sim.h</tt>. Change these lines 22 and 23 from:</p>
 
 <pre>
 #define _SFR_IO8(io_addr) _MMIO_BYTE((io_addr) + 0x20)
 #define _SFR_IO16(io_addr) _MMIO_WORD((io_addr) + 0x20)
 </pre>
 
-to
+<p>to</p>
 
 <pre>
 #define _SFR_IO8(io_addr) _MMIO_BYTE((io_addr))
 #define _SFR_IO16(io_addr) _MMIO_WORD((io_addr))
 </pre>
 
-If you do not do this, then timers will not work correctly.
+<p>If you do not do this, then timers will not work correctly.</p>
 
 </li></ul>
 
 <h2>Step 6: Installing Graphviz</h2>
 
-<p>Go to <A HREF="http://www.graphviz.org/Download..php">download page</A> of the Graphviz project
+<p>Go to <a href="http://www.graphviz.org/Download..php">download page</a> of the Graphviz project
 and download the appropriate RPM. You only need the basic graphviz RPM (<tt>graphviz-</tt>);
 you don't need all of the add-ons, such as -devel, -doc, -perl, etc.
 If you're not sure what version of Linux you're running,</p>
