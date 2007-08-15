@@ -7,7 +7,7 @@
 		</exec>
 	</target>
 
-	<target name="clean" >
+	<target name="pdf" >
 		<echo message = "Building tinyos-2.x docs as pdf" />
 		<exec executable="make" failonerror="true">
 			<arg  line="pdf" />
