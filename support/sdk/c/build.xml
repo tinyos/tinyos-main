@@ -1,0 +1,26 @@
+<project name="tinyos-2.x support sdk c" default="all">
+
+	<target name="all" >
+		<echo message = "Building support sdk c" />
+		<exec executable="./bootstrap" failonerror="true">
+		</exec>
+		<exec executable="./configure" failonerror="true">
+		</exec>
+		<exec executable="make" failonerror="true">
+			<arg line="all" />
+		</exec>
+	</target>
+
+	<target name="install_cruisecontrol" >
+		<echo message = "Building tinyos-2.x support sdk c" />
+		<exec executable="./bootstrap" failonerror="true">
+		</exec>
+		<exec executable="./configure" failonerror="true">
+			<arg line="--prefix=/scratch/tos2/usr --quiet" />
+			</exec>
+		<exec executable="make" failonerror="true">
+			<arg line="install" />
+		</exec>
+	</target>
+
+</project>
