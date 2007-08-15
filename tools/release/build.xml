@@ -1,0 +1,8 @@
+<project name="tinyos-2.x tools" default="all">
+
+	<target name="all" >
+		<echo message = "Building tinyos-2.x release" />
+		<exec executable="./build-rpms" failonerror="false">
+		</exec>
+	</target>
+</project>
