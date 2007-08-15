@@ -13,7 +13,7 @@
 			<arg  line="pdf" />
 		</exec>
 		<exec executable="make" failonerror="true">
-			<arg  line="clean" />
+			<arg  line="cleanpdf" />
 		</exec>
 	</target>
 </project>

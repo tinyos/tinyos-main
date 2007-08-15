@@ -39,3 +39,6 @@ teps: $(TEPS_HTML)
 clean:
 	rm -f html/*.html txt/*~ pdf/*.log pdf/*.out pdf/*.tex pdf/*.aux
 
+cleanpdf:
+	rm -f pdf/*.log pdf/*.out pdf/*.tex pdf/*.aux
+
