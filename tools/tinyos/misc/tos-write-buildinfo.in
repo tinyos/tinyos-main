@@ -1,0 +1,59 @@
+#!@pathperl@ -w
+#
+# This script generates an XML description of the buildinformation. This is 
+# primarily used by other tools such as checkers, tests and continuous 
+# integration.
+#
+#$Id: tos-write-buildinfo.in,v 1.1 2007-08-17 15:48:30 beutel Exp $
+#@author Jan Beutel <j.beutel@ieee.org>
+#
+use strict;
+
+my $MaxNameLength = 10;
+
+if ( @ARGV == 0 ) {
+  print "usage: tos-write-buildinfo [ident_flags] [exe_file]\n";
+  exit 0;
+}
+
+my %ident_flags = ();
+my $exe = "";
+my $size = "avr-size";
+my $platform = "";
+
+for my $arg (@ARGV) {
+  if ($arg =~ /^-DIDENT_(.+)=0x(.+)$/) {
+    $ident_flags{lc($1)} = uc($2);
+  }
+  elsif ($arg =~ /^-DIDENT_(.+)="(.+)"$/) {
+    $ident_flags{lc($1)} = $2;
+  }
+  elsif ($arg =~ /^--exe=(.+)$/) {
+    $exe = $1;
+  }
+  elsif ($arg =~ /^--size=(.+)$/) {
+    $size = $1;
+  }
+  elsif ($arg =~ /^--platform=(.+)$/) {
+    $platform = $1;
+  }
+}
+
+
+my @text;
+my $rc2 = qx"$size $exe |grep main ";
+#print $rc2;
+print $size;
+@text =  split(' ', $rc2);
+
+print "<metrics>\n";
+print "  <ram>";
+print $text[1];
+print "<ram>\n";
+print "  <flash>";
+print $text[0];
+print "<flash>\n";
+print "  <stack>";
+print $text[2];
+print "<stack>\n";
+print "</metrics>\n";

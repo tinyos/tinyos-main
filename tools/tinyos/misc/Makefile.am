@@ -23,6 +23,7 @@ bin_SCRIPTS = tos-ident-flags \
               tos-mviz    \
 	      tos-serial-configure \
 	      tos-set-symbols \
+	      tos-write-buildinfo \
 	      tos-write-image \
 	      tos-check-env \
 	      tos-storage-stm25p \

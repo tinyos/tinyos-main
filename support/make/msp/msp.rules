@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.5 2007-04-11 21:30:08 idgay Exp $
+#$Id: msp.rules,v 1.6 2007-08-17 15:47:30 beutel Exp $
 
 define MSP_HELP
 
@@ -72,6 +72,9 @@ endif
 setid: FORCE
 	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd cp $(MAIN_IHEX) $(INSTALL_IHEX); else cmd $(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target ihex $(MAIN_IHEX) $(INSTALL_IHEX) TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID); fi
 
+tos_buildinfo: ihex build_buildinfo FORCE
+  @:
+  
 tosimage: ihex build_tosimage FORCE
 	@:
 

@@ -138,6 +138,7 @@ AC_OUTPUT(
 	tinyos/misc/tos-ident-flags
 	tinyos/misc/tos-install-jni
 	tinyos/misc/tos-set-symbols
+	tinyos/misc/tos-write-buildinfo
 	tinyos/misc/tos-write-image
 	tinyos/misc/tos-storage-at45db
 	tinyos/misc/tos-storage-stm25p
