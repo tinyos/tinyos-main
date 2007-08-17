@@ -5,6 +5,7 @@
 		<exec executable="./bootstrap" failonerror="true">
 		</exec>
 		<exec executable="./configure" failonerror="true">
+			<arg  line="--quiet" />
 		</exec>
 		<exec executable="make" failonerror="true">
 			<arg line="all" />
@@ -12,11 +13,11 @@
 	</target>
 
 	<target name="install" >
-		<echo message = "Building tinyos-2.x support sdk c" />
-		<exec executable="bootstrap" failonerror="true">
+		<echo message = "Installing tinyos-2.x support sdk c" />
+		<exec executable="./bootstrap" failonerror="true">
 		</exec>
 		<exec executable="./configure" failonerror="true">
-			<arg line="--prefix=/scratch/tos2/usr --quiet" />
+			<arg line="--prefix=$TOSTOOLS_PREFIX --quiet" />
 			</exec>
 		<exec executable="make" failonerror="true">
 			<arg line="install" />
