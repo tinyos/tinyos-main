@@ -4,7 +4,7 @@
 # primarily used by other tools such as checkers, tests and continuous 
 # integration.
 #
-#$Id: tos-write-buildinfo.in,v 1.1 2007-08-17 15:48:30 beutel Exp $
+#$Id: tos-write-buildinfo.in,v 1.2 2007-08-17 16:57:55 beutel Exp $
 #@author Jan Beutel <j.beutel@ieee.org>
 #
 use strict;
@@ -43,7 +43,7 @@ for my $arg (@ARGV) {
 my @text;
 my $rc2 = qx"$size $exe |grep main ";
 #print $rc2;
-print $size;
+#print $size;
 @text =  split(' ', $rc2);
 
 print "<metrics>\n";
