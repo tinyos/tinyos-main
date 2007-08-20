@@ -23,14 +23,19 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.6 $
- * @date $Date: 2007-04-20 01:14:13 $
+ * @version $Revision: 1.7 $
+ * @date $Date: 2007-08-20 16:43:43 $
  */
 
 #ifndef PRINTF_H
 #define PRINTF_H
 
-#include <stdio.h>
+#ifdef _H_msp430hardware_h
+  #include <stdio.h>
+#endif
+#ifdef _H_atmega128hardware_H
+  #include "avr_stdio.h"
+#endif
 #include "message.h"
 
 #define PRINTF_BUFFER_SIZE 250
