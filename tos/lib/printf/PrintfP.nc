@@ -40,8 +40,8 @@
  * 
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.7 $
- * @date $Date: 2007-07-16 19:42:34 $
+ * @version $Revision: 1.8 $
+ * @date $Date: 2007-08-20 06:09:11 $
  */
 
 #include "printf.h"
@@ -57,18 +57,17 @@ module PrintfP {
     interface PrintfFlush;
   }
   uses {
-  	interface SplitControl as SerialControl;
-    interface Leds;
+    interface SplitControl as SerialControl;
     interface AMSend;
     interface Packet;
   }
 }
 implementation {
-	
+  
   enum {
-  	S_STARTED,
-  	S_STOPPED,
-  	S_FLUSHING,
+    S_STARTED,
+    S_STOPPED,
+    S_FLUSHING,
   };
   
   message_t printfMsg;
@@ -86,7 +85,7 @@ implementation {
   void sendNext() {
     printf_msg_t* m = (printf_msg_t*)call Packet.getPayload(&printfMsg, NULL);
     length_to_send = (bytes_left_to_flush < sizeof(printf_msg_t)) ? bytes_left_to_flush : sizeof(printf_msg_t);
-    memset(m->buffer, 0, sizeof(m->buffer));
+    memset(m->buffer, 0, sizeof(printf_msg_t));
     memcpy(m->buffer, (uint8_t*)next_byte, length_to_send);
     if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg_t)) != SUCCESS)
       post retrySend();  
@@ -97,24 +96,24 @@ implementation {
   }
 
   command error_t PrintfControl.start() {
-  	if(state == S_STOPPED)
+    if(state == S_STOPPED)
       return call SerialControl.start();
     return FAIL;
   }
   
   command error_t PrintfControl.stop() {
-  	if(state == S_STARTED)
+    if(state == S_STARTED)
       return call SerialControl.stop();
     return FAIL;
   }
 
   event void SerialControl.startDone(error_t error) {
-  	if(error != SUCCESS) {
-  	  signal PrintfControl.startDone(error);
-  	  return;
-  	}
+    if(error != SUCCESS) {
+      signal PrintfControl.startDone(error);
+      return;
+    }
 #ifdef _H_atmega128hardware_H
-	stdout = &atm128_stdout;
+    stdout = &atm128_stdout;
 #endif
     atomic {
       memset(buffer, 0, sizeof(buffer));
@@ -127,40 +126,40 @@ implementation {
   }
 
   event void SerialControl.stopDone(error_t error) {
-  	if(error != SUCCESS) {
-  	  signal PrintfControl.stopDone(error);
-  	  return;
-  	}
+    if(error != SUCCESS) {
+      signal PrintfControl.stopDone(error);
+      return;
+    }
     atomic state = S_STOPPED;
     signal PrintfControl.stopDone(error); 
   }
   
   command error_t PrintfFlush.flush() {
-  	atomic {
-  	  if(state == S_STARTED && (next_byte > buffer)) {
-  	    state = S_FLUSHING;
-            bytes_left_to_flush = next_byte - buffer;
-  	    next_byte = buffer;
-  	  }
-  	  else return FAIL;
-  	}
-  	sendNext();
-  	return SUCCESS;
+    atomic {
+      if(state == S_STARTED && (next_byte > buffer)) {
+        state = S_FLUSHING;
+        bytes_left_to_flush = next_byte - buffer;
+        next_byte = buffer;
+      }
+      else return FAIL;
+    }
+    sendNext();
+    return SUCCESS;
   }
     
   event void AMSend.sendDone(message_t* msg, error_t error) {    
-  	if(error == SUCCESS) {
-  	  if(bytes_left_to_flush > 0)
-  	    sendNext();
-  	  else {
+    if(error == SUCCESS) {
+      if(bytes_left_to_flush > 0)
+        sendNext();
+      else {
         next_byte = buffer;
         bytes_left_to_flush = 0; 
-    	length_to_send = 0;
+        length_to_send = 0;
         atomic state = S_STARTED;
-	    signal PrintfFlush.flushDone(error);
-	  }
-	}
-	else post retrySend();
+      signal PrintfFlush.flushDone(error);
+    }
+  }
+  else post retrySend();
   }
   
 #ifdef _H_msp430hardware_h
@@ -169,13 +168,12 @@ implementation {
 #ifdef _H_atmega128hardware_H
   int uart_putchar(char c, FILE *stream) __attribute__((noinline)) @C() @spontaneous() {
 #endif
-  	atomic {
-  	  if(state == S_STARTED && ((next_byte-buffer+1) < PRINTF_BUFFER_SIZE)) {
-  	    *next_byte = c;
-  	    next_byte++;
-  	    return 0;
-  	  }
-  	  else return -1;
-  	}
+    atomic {
+      if(state == S_STARTED && ((next_byte-buffer) < PRINTF_BUFFER_SIZE)) {
+        *(next_byte++) = c;
+        return 0;
+      }
+      else return -1;
+    }
   }
 }

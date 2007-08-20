@@ -30,10 +30,11 @@
  * actually get sent out over the serial line.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.5 $
- * @date $Date: 2007-04-20 00:41:40 $
+ * @version $Revision: 1.6 $
+ * @date $Date: 2007-08-20 06:08:29 $
  */
 
+#include "printf.h"
 module TestPrintfC {
   uses {
     interface Boot;  
@@ -44,24 +45,27 @@ module TestPrintfC {
 }
 implementation {
 	
-  #define NUM_TIMES_TO_PRINT	100
+  #define NUM_TIMES_TO_PRINT	5
   uint16_t counter=0;
-  uint32_t dummyVar = 345678;
+  uint8_t dummyVar1 = 123;
+  uint16_t dummyVar2 = 12345;
+  uint32_t dummyVar3 = 1234567890;
 
   event void Boot.booted() {
     call PrintfControl.start();
   }
   
   event void PrintfControl.startDone(error_t error) {
-  	printf("Hi my name is Kevin Klues and I am writing to you from my telos mote\n");
-  	printf("Here is a uint8: %hd\n", 123);
-  	printf("Here is a uint16: %d\n", 12345);
-  	printf("Here is a uint32: %ld\n", 1234567890);
+  	printf("Hi I am writing to you from my TinyOS application!!\n");
+  	printf("Here is a uint8: %u\n", dummyVar1);
+  	printf("Here is a uint16: %u\n", dummyVar2);
+  	printf("Here is a uint32: %ld\n", dummyVar3);
   	call PrintfFlush.flush();
   }
 
   event void PrintfControl.stopDone(error_t error) {
   	counter = 0;
+    call Leds.led2Toggle();
   	printf("This should not be printed...");
   	call PrintfFlush.flush();
   }
@@ -73,8 +77,8 @@ implementation {
     }
     else if(counter == NUM_TIMES_TO_PRINT) {
       printf("This is a really short string...\n");
-      printf("I am generating this string to have just less than 250 characters since that is the limit of the size I put on my maximum buffer when I instantiated the PrintfC component.\n");
-      printf("Only part of this line should get printed because by writing this sentence, I go over my character limit that the internal Printf buffer can hold.  If I were to flush before trying to write this, or increase my buffer size when I instantiate my PrintfC component to 1000, we would see this line too\n");
+      printf("I am generating this string to have just less than 250\ncharacters since that is the limit of the size I put on my\nmaximum buffer when I instantiated the PrintfC component.\n");
+      printf("Only part of this line should get printed because by writing\nthis sentence, I go over my character limit that the internal Printf buffer can hold.\n");
       call PrintfFlush.flush();
     }
     else call PrintfControl.stop();
