@@ -282,9 +282,9 @@ event void PrintfFlush.flushDone(error_t error) {
 }</pre>
     <p>
     Notice that the last line of output is cut short before being fully printed.
-    If you actually read the line printed above it can see why.  The buffer
-    used to store TinyOS <code>printf</code> messages befor ethey are flushed
-    is limited to a total of 250 bytes.  If you try and print more characters then
+    If you actually read the line printed above it you can see why.  The buffer
+    used to store TinyOS <code>printf</code> messages before they are flushed
+    is limited to a total of 250 bytes.  If you try and print more characters than
     this before flushing, then only the first 250 characters will actually be printed.
     As of now, this buffer size is fixed and can't be changed.  In the future we
     hope to allow developers to specify custom buffer sizes at the time that
