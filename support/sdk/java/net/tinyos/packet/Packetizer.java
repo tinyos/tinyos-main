@@ -1,4 +1,4 @@
-// $Id: Packetizer.java,v 1.6 2007-05-18 18:53:24 rincon Exp $
+// $Id: Packetizer.java,v 1.7 2007-08-20 23:50:04 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -42,29 +42,43 @@ import java.nio.*;
  */
 public class Packetizer extends AbstractSource implements Runnable {
   /*
-   * Protocol inspired by, but not identical to, RFC 1663. There is currently no
-   * protocol establishment phase, and a single byte ("packet type") to identify
-   * the kind/target/etc of each packet.
+   * Protocol inspired by, but not identical to, RFC 1663. There is
+   * currently no protocol establishment phase, and a single byte
+   * ("packet type") to identify the kind/target/etc of each packet.
    * 
    * The protocol is really, really not aiming for high performance.
    * 
-   * There is however a hook for future extensions: implementations are required
-   * to answer all unknown packet types with a P_UNKNOWN packet.
+   * There is however a hook for future extensions: implementations
+   * are required to answer all unknown packet types with a P_UNKNOWN
+   * packet.
    * 
-   * To summarise the protocol: - the two sides (A & B) are connected by a
-   * (potentially unreliable) byte stream - the two sides exchange packets
-   * framed by 0x7e (SYNC_BYTE) bytes - each packet has the form <packet type>
-   * <data bytes 1..n> <16-bit crc> where the crc (see net.tinyos.util.Crc)
-   * covers the packet type and bytes 1..n - bytes can be escaped by preceding
-   * them with 0x7d and their value xored with 0x20; 0x7d and 0x7e bytes must be
-   * escaped, 0x00 - 0x1f and 0x80-0x9f may be optionally escaped - There are
-   * currently 5 packet types: P_PACKET_NO_ACK: A user-packet, with no ack
-   * required P_PACKET_ACK: A user-packet with a prefix byte, ack required. The
-   * receiver must send a P_ACK packet with the prefix byte as its contents.
-   * P_ACK: ack for a previous P_PACKET_ACK packet P_UNKNOWN: unknown packet
-   * type received. On reception of an unknown packet type, the receicer must
-   * send a P_UNKNOWN packet, the first byte must be the unknown packet type. -
-   * Packets that are greater than a (private) MTU are silently dropped.
+   * To summarise the protocol: 
+   * - the two sides (A & B) are connected by a (potentially
+   *   unreliable) byte stream
+   *
+   * - the two sides exchange packets framed by 0x7e (SYNC_BYTE) bytes
+   *
+   * - each packet has the form 
+   *     <packet type> <data bytes 1..n> <16-bit crc> 
+   *   where the crc (see net.tinyos.util.Crc) covers the packet type
+   *   and bytes 1..n
+   *
+   * - bytes can be escaped by preceding them with 0x7d and their
+   *   value xored with 0x20; 0x7d and 0x7e bytes must be escaped,
+   *   0x00 - 0x1f and 0x80-0x9f may be optionally escaped
+   *
+   * - There are currently 5 packet types: 
+   *   P_PACKET_NO_ACK: A user-packet, with no ack required
+   *   P_PACKET_ACK: A user-packet with a prefix byte, ack
+   *   required. The receiver must send a P_ACK packet with the 
+   *   prefix byte as its contents.  
+   *   P_ACK: ack for a previous P_PACKET_ACK packet 
+   *   P_UNKNOWN: unknown packet type received. On reception of an
+   *   unknown packet type, the receicer must send a P_UNKNOWN packet,
+   *   the first byte must be the unknown packet type. 
+   *
+   * - Packets that are greater than a (private) MTU are silently
+   *   dropped.
    */
   final static boolean DEBUG = false;
 
