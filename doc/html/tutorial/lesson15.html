@@ -9,8 +9,8 @@
     <div class="subtitle">Last updated August 19th, 2007</div>
     
     <p>This lesson demonstrates how to use the <code>printf</code> library located in 
-    tos/lib/printf to debug TinyOS applications by printing messages over the serial 
-    port.</p>
+    <code>tos/lib/printf</code> to debug TinyOS applications by printing messages over
+    the serial port.</p>
     
     <h1>Overview</h1>
     <p> 
@@ -342,6 +342,11 @@ event void PrintfFlush.flushDone(error_t error) {
           level application:
           <pre>
 CFLAGS += -I$(TOSDIR)/lib/printf</pre></li>
+      <li>You MUST be sure to #include <code>"printf.h"</code> header file in
+          every component in which you would like to call the <code>printf()</code>
+          command.  Failure
+          to do so will result in obscure error messages making it difficult to identify
+          the problem.</li>
     </ol>
 
 <p>
