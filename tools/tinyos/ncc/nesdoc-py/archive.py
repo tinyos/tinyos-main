@@ -215,7 +215,7 @@ for x in interfacedefs.getElementsByTagName("interfacedef"):
   filename = "interfaces/%s.xml" % nicename
   if preserve and os.path.exists(filename):
     continue
-  print "interface %s (%s)" % (name, nicename)
+  # print "interface %s (%s)" % (name, nicename)
   doc = creator.createDocument(None, None, None)
   copy = x.cloneNode(True)
   doc.appendChild(copy)
@@ -234,7 +234,7 @@ for x in components.getElementsByTagName("component"):
     if preserve and os.path.exists(filename):
       continue
     
-    print "component %s (%s)" % (name, nicename)
+    # print "component %s (%s)" % (name, nicename)
     doc = creator.createDocument(None, None, None)
     # copy component and create its specification
     copy = x.cloneNode(True)

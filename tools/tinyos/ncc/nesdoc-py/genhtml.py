@@ -75,14 +75,14 @@ except OSError:
 
 for intf in intffiles:
   if search("\\.xml$", intf):
-    stderr.write("interface " + intf + "\n")
+    #stderr.write("interface " + intf + "\n")
     ixml = parse("interfaces/" + intf)
     generate_interface(ixml.documentElement)
     ixml.unlink()
 
 for comp in compfiles:
   if search("\\.xml$", comp):
-    stderr.write("component " + comp + "\n")
+    #stderr.write("component " + comp + "\n")
     ixml = parse("components/" + comp)
     generate_component_graph(ixml.documentElement)
     generate_component(ixml.documentElement)
