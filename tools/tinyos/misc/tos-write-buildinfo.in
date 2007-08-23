@@ -4,7 +4,7 @@
 # primarily used by other tools such as checkers, tests and continuous 
 # integration.
 #
-#$Id: tos-write-buildinfo.in,v 1.4 2007-08-23 19:24:53 beutel Exp $
+#$Id: tos-write-buildinfo.in,v 1.5 2007-08-23 19:57:59 beutel Exp $
 #@author Jan Beutel <j.beutel@ieee.org>
 #
 use strict;
@@ -56,7 +56,13 @@ print "</$platform-ram>\n";
 print "  <flash>";
 print $text[0];
 print "</flash>\n";
+print "  <$platform-flash>";
+print $text[0];
+print "</$platform-flash>\n";
 print "  <stack>";
 print $text[2];
 print "</stack>\n";
+print "  <$platform-stack>";
+print $text[2];
+print "</$platform-stack>\n";
 print "</metrics>\n";
