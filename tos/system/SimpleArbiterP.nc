@@ -134,7 +134,11 @@ implementation {
     will be 0xFF
   */      
   async command uint8_t ArbiterInfo.userId() {
-    atomic return resId;
+    atomic {
+      if(state != RES_BUSY)
+        return NO_RES;
+      return resId;
+    }
   }
 
   /**
@@ -142,7 +146,7 @@ implementation {
    */      
   async command uint8_t Resource.isOwner[uint8_t id]() {
     atomic {
-      if(resId == id) return TRUE;
+      if(resId == id && state == RES_BUSY) return TRUE;
       else return FALSE;
     }
   }

@@ -66,6 +66,7 @@ implementation {
 
   enum {RES_CONTROLLED, RES_GRANTING, RES_IMM_GRANTING, RES_BUSY};
   enum {default_owner_id = default_owner_id};
+  enum {NO_RES = 0xFF};
 
   uint8_t state = RES_CONTROLLED;
   norace uint8_t resId = default_owner_id;
@@ -144,6 +145,10 @@ implementation {
     Check if the Resource is currently in use
   */    
   async command bool ArbiterInfo.inUse() {
+    atomic {
+      if (state == RES_CONTROLLED)
+        return FALSE;
+    }
     return TRUE;
   }
 
@@ -153,7 +158,11 @@ implementation {
     will be 0xFF
   */      
   async command uint8_t ArbiterInfo.userId() {
-    atomic return resId;
+    atomic {
+      if(state != RES_BUSY)
+        return NO_RES;
+      return resId;
+    }
   }
 
   /**
@@ -161,7 +170,7 @@ implementation {
    */      
   async command uint8_t Resource.isOwner[uint8_t id]() {
     atomic {
-      if(resId == id) return TRUE;
+      if(resId == id && state == RES_BUSY) return TRUE;
       else return FALSE;
     }
   }
