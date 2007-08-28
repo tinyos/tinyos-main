@@ -6,7 +6,7 @@ tinyoslibdir=$(libdir)/tinyos
 
 tinyoslib_PROGRAMS = @GETENVLIB@
 
-EXTRA_PROGRAMS = libgetenv-32.so libgetenv-64.so getenv.dll
+EXTRA_PROGRAMS = libgetenv-32.so libgetenv-64.so getenv.dll libgetenv.jnilib
 
 SOFLAGS = "-I$(JDK)/include/linux" "-I$(JDK)/include" -shared -fpic
 
@@ -23,3 +23,7 @@ libgetenv-64.so : net_tinyos_util_Env.h net_tinyos_util_Env.c
 
 getenv.dll: net_tinyos_util_Env.h net_tinyos_util_Env.c
 	gcc -shared -o$@ -mno-cygwin "-I$(JDK)/include" "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at net_tinyos_util_Env.c
+
+libgetenv.jnilib : net_tinyos_util_Env.h net_tinyos_util_Env.c
+	gcc "-I$(JDK)/Headers" -bundle -fPIC net_tinyos_util_Env.c -o $@
+

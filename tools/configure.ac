@@ -80,6 +80,7 @@ case $host in
   *-apple-darwin*)
     JNIPREFIX=lib
     JNISUFFIX=jnilib
+    JNIVERSIONS=.
     INSTALLJNI="install"
     AC_MSG_RESULT(no)
     DARWIN=yes

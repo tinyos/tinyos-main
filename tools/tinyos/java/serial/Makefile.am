@@ -6,7 +6,7 @@ tinyoslibdir=$(libdir)/tinyos
 
 tinyoslib_PROGRAMS = @TOSCOMMLIB@
 
-EXTRA_PROGRAMS = libtoscomm-32.so libtoscomm-64.so toscomm.dll
+EXTRA_PROGRAMS = libtoscomm-32.so libtoscomm-64.so toscomm.dll libtoscomm.jnilib
 
 # Compiling libtoscomm.so with -O2 generates bad code with gcc 4.1.x on x86_64
 # (the -O1 code is slightly weird, but works at least ;-))
@@ -23,6 +23,15 @@ toscomm_dll_SOURCES = \
   NativeSerialEnums.h \
   NativeSerial_win32.cpp \
   TOSComm_wrap.cxx
+
+libtoscomm_jnilib_SOURCES = \
+  NativeSerialEnums.h \
+  NativeSerial_darwin.cpp \
+  TOSComm_wrap.cxx
+
+libtoscomm.jnilib:  $(libtoscomm_jnilib_SOURCES)
+	$(CXX) -O2 -bundle "-I$(JDK)/Headers" \
+	 -o $@ NativeSerial_darwin.cpp
 
 libtoscomm-32.so: $(libtoscomm_so_SOURCES)
 	$(CXX) -m32 $(SOFLAGS) -o $@ NativeSerial_linux.cpp
