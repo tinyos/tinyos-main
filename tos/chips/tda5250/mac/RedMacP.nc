@@ -136,9 +136,10 @@ implementation
         // DEFAULT_SLEEP_TIME=1625,
         // DEFAULT_SLEEP_TIME=3250,
         // DEFAULT_SLEEP_TIME=6500,
-        // DEFAULT_SLEEP_TIME=9750,
+        // DEFAULT_SLEEP_TIME=8192,
         DEFAULT_SLEEP_TIME=16384,
         // DEFAULT_SLEEP_TIME=32768U,
+        // DEFAULT_SLEEP_TIME=65535U,
         DATA_DETECT_TIME=17,
         RX_SETUP_TIME=102,    // time to set up receiver
         TX_SETUP_TIME=58,     // time to set up transmitter
@@ -149,8 +150,8 @@ implementation
         ACK_DURATION = SUB_HEADER_TIME + SUB_FOOTER_TIME,
         MAX_SHORT_RETRY=9,
         MAX_LONG_RETRY=3,
-        MAX_AGE=2*MAX_LONG_RETRY*MAX_SHORT_RETRY,
-        MSG_TABLE_ENTRIES=20,
+        MAX_AGE=0xff,
+        MSG_TABLE_ENTRIES=16,
         TOKEN_ACK_FLAG = 64,
         TOKEN_ACK_MASK = 0x3f,
         INVALID_SNR = 0xffff,
@@ -213,6 +214,23 @@ implementation
     message_t ackMsg;
 
     uint16_t MIN_BACKOFF_MASK;
+
+#ifdef REDMAC_DEBUG
+    uint8_t dupOldest;
+    task void dumpLast() {
+        knownMessage_t mem;
+        unsigned i;
+        atomic {
+            i = dupOldest;
+            mem = knownMsgTable[i];
+        }
+        sdDebug(5000);
+        sdDebug(i);
+        sdDebug(mem.src);
+        sdDebug(mem.token);
+        sdDebug(mem.age);
+    }
+#endif
     
     /****** Secure switching of radio modes ***/
     void interruptBackoffTimer();
@@ -302,6 +320,15 @@ implementation
     }
 
     /**************** Helper functions ************************/
+    task void ageMsgsTask() {
+        unsigned i;
+        atomic {
+            for(i = 0; i < MSG_TABLE_ENTRIES; i++) {
+                if(knownMsgTable[i].age < MAX_AGE) ++knownMsgTable[i].age;
+            }
+        }
+    }
+    
     void computeBackoff();
     
     void checkSend() {
@@ -564,6 +591,10 @@ implementation
         knownMsgTable[oldest].src = getHeader(msg)->src;
         knownMsgTable[oldest].token = (getHeader(msg)->token) & TOKEN_ACK_MASK;
         knownMsgTable[oldest].age = 0;
+#ifdef REDMAC_DEBUG
+        dupOldest = oldest;
+        post dumpLast();
+#endif
     }
 
     void prepareAck(message_t* msg) {
@@ -876,6 +907,7 @@ implementation
         if(macState == RX_P) {
             // sdDebug(191);
             if(error == SUCCESS) {
+                post ageMsgsTask();
                 // sdDebug(192);
                 isCnt = isControl(msg);
                 if(msgIsForMe(msg)) {
@@ -950,7 +982,7 @@ implementation
             }
             else {
                 // sdDebug(201);
-                action = RX;
+                action = SLEEP;
             }
         }
         else if(macState == RX_ACK_P) {
@@ -982,7 +1014,7 @@ implementation
                     action = SLEEP;
                 }
                 else {
-                    sdDebug(203);
+                    // sdDebug(203);
                     updateLongRetryCounters(); // this will eventually schedule the right backoff
                     macState = SLEEP;          // so much traffic is going on -- take a nap
                     setSleepMode();
@@ -991,11 +1023,11 @@ implementation
             }
             else {
                 if(call Timer.isRunning()) {
-                    sdDebug(204);
+                    // sdDebug(204);
                     action = RX_ACK;
                 }
                 else {
-                    sdDebug(205);
+                    // sdDebug(205);
                     updateLongRetryCounters();
                     action = RX;
                 }
@@ -1251,15 +1283,6 @@ implementation
 
     /****** SampleTimer ******************************/
 
-    task void ageMsgsTask() {
-        unsigned i;
-        atomic {
-            for(i = 0; i < MSG_TABLE_ENTRIES; i++) {
-                if(knownMsgTable[i].age <= MAX_AGE) ++knownMsgTable[i].age;
-            }
-        }
-    }
-    
     async event void SampleTimer.fired() {
         call SampleTimer.start(localSleeptime);
         // sdDebug(270);

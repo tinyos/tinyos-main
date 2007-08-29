@@ -107,8 +107,8 @@ implementation
         TOKEN_ACK_FLAG = 64,
         TOKEN_ACK_MASK = 0x3f,
         INVALID_SNR = 0xffff,
-        MSG_TABLE_ENTRIES=20,
-        MAX_AGE=2*MAX_LONG_RETRY*MAX_SHORT_RETRY,
+        MSG_TABLE_ENTRIES=16,
+        MAX_AGE=0xff;
     };
     
 /**************** Module Global Variables  *****************/
@@ -167,7 +167,7 @@ implementation
         unsigned i;
         atomic {
             for(i = 0; i < MSG_TABLE_ENTRIES; i++) {
-                if(knownMsgTable[i].age <= MAX_AGE) ++knownMsgTable[i].age;
+                if(knownMsgTable[i].age < MAX_AGE) ++knownMsgTable[i].age;
             }
         }
     }
