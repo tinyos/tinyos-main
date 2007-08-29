@@ -108,7 +108,7 @@ implementation
         TOKEN_ACK_MASK = 0x3f,
         INVALID_SNR = 0xffff,
         MSG_TABLE_ENTRIES=16,
-        MAX_AGE=0xff,
+        MAX_AGE=0xff
     };
     
 /**************** Module Global Variables  *****************/
