@@ -31,7 +31,9 @@
 /**
  * Null is an empty skeleton application.  It is useful to test that the
  * build environment is functional in its most minimal sense, i.e., you
- * can correctly compile an application.
+ * can correctly compile an application. It is also useful to test the
+ * minimum power consumption of a node when it has absolutely no 
+ * interrupts or resources active.
  *
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
  * @date February 4, 2006
