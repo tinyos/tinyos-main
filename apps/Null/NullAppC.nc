@@ -42,9 +42,6 @@
 configuration NullAppC{}
 implementation {
   components MainC, NullC;
-  components new TimerMilliC() as Timer0;
-  components new TimerMilliC() as Timer1;
-  components new TimerMilliC() as Timer2;
 
   MainC.Boot <- NullC;
 }
