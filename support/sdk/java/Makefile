@@ -2,7 +2,7 @@
 
 SUBDIRS = net
 
-JAVADOCDIR = ../../../doc/html/javadoc
+JAVADOCDIR = ../../../doc/javadoc
 
 ROOT = .
 include $(ROOT)/Makefile.include
