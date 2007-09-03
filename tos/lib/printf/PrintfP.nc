@@ -40,8 +40,8 @@
  * 
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.8 $
- * @date $Date: 2007-08-20 06:09:11 $
+ * @version $Revision: 1.9 $
+ * @date $Date: 2007-09-03 20:29:08 $
  */
 
 #include "printf.h"
@@ -69,12 +69,12 @@ implementation {
     S_STOPPED,
     S_FLUSHING,
   };
-  
+
   message_t printfMsg;
   nx_uint8_t buffer[PRINTF_BUFFER_SIZE];
   norace nx_uint8_t* next_byte;
   uint8_t state = S_STOPPED;
-  uint8_t bytes_left_to_flush;
+  uint32_t bytes_left_to_flush;
   uint8_t length_to_send;
   
   task void retrySend() {
@@ -86,7 +86,7 @@ implementation {
     printf_msg_t* m = (printf_msg_t*)call Packet.getPayload(&printfMsg, NULL);
     length_to_send = (bytes_left_to_flush < sizeof(printf_msg_t)) ? bytes_left_to_flush : sizeof(printf_msg_t);
     memset(m->buffer, 0, sizeof(printf_msg_t));
-    memcpy(m->buffer, (uint8_t*)next_byte, length_to_send);
+    memcpy(m->buffer, (nx_uint8_t*)next_byte, length_to_send);
     if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg_t)) != SUCCESS)
       post retrySend();  
     else {

@@ -23,12 +23,16 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.7 $
- * @date $Date: 2007-08-20 16:43:43 $
+ * @version $Revision: 1.8 $
+ * @date $Date: 2007-09-03 20:29:08 $
  */
 
 #ifndef PRINTF_H
 #define PRINTF_H
+
+#ifndef PRINTF_BUFFER_SIZE
+#define PRINTF_BUFFER_SIZE  250
+#endif
 
 #ifdef _H_msp430hardware_h
   #include <stdio.h>
@@ -37,8 +41,6 @@
   #include "avr_stdio.h"
 #endif
 #include "message.h"
-
-#define PRINTF_BUFFER_SIZE 250
 
 typedef nx_struct printf_msg {
   nx_uint8_t buffer[TOSH_DATA_LENGTH];
