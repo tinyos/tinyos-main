@@ -94,7 +94,7 @@
     Currently, only a single buffer is used to store the strings supplied to
     calls to <code>printf</code> before flushing them.  This means that while
     the buffer is being flushed, any calls to <code>printf</code> will fail.
-    In the future, we plan to implement a doubled buffer approach so that
+    In the future, we plan to implement a double buffered approach so that
     strings can continue to be buffered at the same time they are being printed.
     </p>
     <p>
@@ -133,7 +133,7 @@ cvs -z3 -d:pserver:anonymous@tinyos.cvs.sourceforge.net:/cvsroot/tinyos co -P -d
 
     <p>
     If you are not using cvs, you will also have to apply the patch
-    found <a href=http://www.stanford.edu/~klueska/tinyos-2.0-printf.patch>here</a>
+    found <a href=http://sing.stanford.edu/klueska/tinyos-2.0-printf.patch>here</a>
     in order to allow the <code>printf</code> library to compile correctly for
     atmega128x based platforms (i.e. mica2, micaz):
     </p>
@@ -300,12 +300,13 @@ event void PrintfFlush.flushDone(error_t error) {
     Notice that the last line of output is cut short before being fully printed.
     If you actually read the line printed above it you can see why.  The buffer
     used to store TinyOS <code>printf</code> messages before they are flushed
-    is limited to a total of 250 bytes.  If you try and print more characters than
+    is by default limited to 250 bytes.  If you try and print more characters than
     this before flushing, then only the first 250 characters will actually be printed.
-    As of now, this buffer size is fixed and can't be changed.  In the future we
-    hope to allow developers to specify custom buffer sizes at the time that
-    they include the PrintfC component in their configuration file.
+    This buffer size is configurable, however, by specifying the proper CFLAGS option
+    in your Makefile.
     </p>
+    <pre>
+CFLAGS += -DPRINTF_BUFFER_SIZE=XXX</pre>
     <p>
     Once the the <code>Printf</code> service has been stopped, the
     <code>PrintfControl.stopDone()</code> event is signaled and Led 2 is turned
@@ -331,17 +332,16 @@ event void PrintfFlush.flushDone(error_t error) {
     use the functionality provided by the <code>printf</code> library.
     </p>
     <ol>
-      <li>The buffer used by the <code>printf</code> library is limited to 250 bytes.
-          Do NOT try and increase this value.  It is unclear why, but at present,
-          larger buffer sizes result in messages being cut short when printed over the
-          serial line.  Tracking down
-          the source of this problem is on our list of things to do.</li>
       <li>In order to use the <code>printf</code> library, the <code>tos/lib/printf</code>
           directory must be in your include path.  The easiest way to include it is
           by adding the following line directly within the Makefile of your top
           level application:
           <pre>
-CFLAGS += -I$(TOSDIR)/lib/printf</pre></li>
+CFLAGS += -I$(TOSDIR)/lib/printf</pre>
+          Remember that changing the <code>printf</code> buffer size is done similarly:
+          <pre>
+CFLAGS += -DPRINTF_BUFFER_SIZE=XXX</pre>
+      </li>
       <li>You MUST be sure to #include <code>"printf.h"</code> header file in
           every component in which you would like to call the <code>printf()</code>
           command.  Failure
