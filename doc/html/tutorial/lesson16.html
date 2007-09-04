@@ -416,12 +416,28 @@ you are interested in seeing an example of where this override functionality is 
 <h1>
 Low Power Sensing Application
 </h1>
-A fully functional low-power sensing application that combines each of the techniques 
-found in this tutorial can be found in <code>apps/tutorials/LowPowerSensing</code>.  This
+<p>
+A fully functional low-power sensing application has been created that combines each 
+of the techniques found in this tutorial.  At present, this application is not included 
+in the official TinyOS distribution (<= 2.0.2).  If you are using TinyOS from a cvs 
+checkout, you will find it located under <code>apps/tutorials/LowPowerSensing</code>.  
+Otherwise, you can obtain it from
+cvs by running the following set of commands from a terminal window:
+</p>
+
+    <pre>
+cd $TOSROOT/apps/tutorials
+cvs -d:pserver:anonymous@tinyos.cvs.sourceforge.net:/cvsroot/tinyos login
+cvs -z3 -d:pserver:anonymous@tinyos.cvs.sourceforge.net:/cvsroot/tinyos co -P -d LowPowerSensing tinyos-2.x/apps/tutorials/LowPowerSensing</pre>
+    <p>
+    Just hit enter when prompted for a CVS password.  You do not need to enter one.
+    </p>
+
+This
 application has been tested on telosb and mica2 platforms, but should be usable
 on others without modification.  Take a look at the README file found in the top level directory
 for more information.
-
+</p>
 <a name=#related_docs>
 <h1>Related Documentation</h1>
 </a>
