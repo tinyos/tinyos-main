@@ -32,7 +32,7 @@
  * @date   August 6 2005
  */
 
-// $Id: MainC.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: MainC.nc,v 1.5 2007-09-04 17:19:23 scipio Exp $
 
 #include "hardware.h"
 
@@ -61,7 +61,7 @@ implementation {
   // the application does not wire this up to, e.g., ActiveMessageC,
   // the default handlers make sure nothing happens when a script
   // tries to deliver a packet to a node that has no radio stack.
-  components TossimActiveMessageP;
+  components TossimActiveMessageC;
   
 }
 

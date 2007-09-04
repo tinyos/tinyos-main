@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.5 2007-04-01 00:29:34 scipio Exp $
+// $Id: ActiveMessageC.nc,v 1.6 2007-09-04 17:19:22 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -45,7 +45,7 @@ configuration ActiveMessageC {
   }
 }
 implementation {
-  components TossimActiveMessageP as AM;
+  components TossimActiveMessageC as AM;
   components TossimPacketModelC as Network;
 
   components CpmModelC as Model;

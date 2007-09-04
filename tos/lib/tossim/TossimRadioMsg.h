@@ -16,7 +16,7 @@ typedef nx_struct tossim_footer {
 } tossim_footer_t;
 
 typedef nx_struct tossim_metadata {
-  nx_uint16_t strength;
+  nx_int8_t strength;
   nx_uint8_t ack;
   nx_uint16_t time;
 } tossim_metadata_t;

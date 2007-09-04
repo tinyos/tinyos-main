@@ -1,4 +1,4 @@
-// $Id: TestCommC.nc,v 1.2 2007-07-04 15:53:56 scipio Exp $
+// $Id: TestCommC.nc,v 1.3 2007-09-04 17:19:23 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -47,6 +47,7 @@ module TestCommC {
     interface SplitControl;
     interface AMPacket;
     interface PacketAcknowledgements;
+    interface TossimPacket;
   }
 }
 implementation {
@@ -93,7 +94,7 @@ implementation {
 
 
   event message_t* Receive.receive(message_t* msg, void* p, uint8_t l) {
-    dbg("TestComm", "Received message from %hu @ %s\n", call AMPacket.source(msg), sim_time_string());
+    dbg("TestComm", "Received message from %hu @ %s with strength %hhi\n", call AMPacket.source(msg), sim_time_string(), call TossimPacket.strength(msg));
     return msg;
   }
 }

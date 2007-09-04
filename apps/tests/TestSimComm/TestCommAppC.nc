@@ -1,4 +1,4 @@
-// $Id: TestCommAppC.nc,v 1.1 2007-05-17 22:06:10 scipio Exp $
+// $Id: TestCommAppC.nc,v 1.2 2007-09-04 17:19:23 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -52,7 +52,7 @@ implementation {
     AM_TEST  = 5
   };
   
-  components MainC, TestCommC as App, RandomC, ActiveMessageC;
+  components MainC, TestCommC as App, RandomC, ActiveMessageC, TossimActiveMessageC;
   components new TimerMilliC(), new AMSenderC(AM_TEST), new AMReceiverC(AM_TEST);
   
   App.Boot -> MainC.Boot;
@@ -63,6 +63,7 @@ implementation {
   App.Random -> RandomC;
   App.AMPacket -> AMSenderC;
   App.PacketAcknowledgements -> AMSenderC;
+  App.TossimPacket -> TossimActiveMessageC;
 }
 
 

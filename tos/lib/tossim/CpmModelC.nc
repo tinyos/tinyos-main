@@ -24,11 +24,10 @@
 /**
  *
  * CPM (closest-pattern matching) is a wireless noise simulation model
- * based on statistical extraction from empirical noise data.
- * This model provides far more precise
- * software simulation environment by exploiting time-correlated noise
- * characteristic and shadowing effect as well as path-loss model. For
- * details, please refer to the paper
+ * based on statistical extraction from empirical noise data.  This
+ * model provides far more precise software simulation environment by
+ * exploiting time-correlated noise characteristics. For details,
+ * please refer to the paper
  *
  * "Improving Wireless Simulation through Noise Modeling." HyungJune
  * Lee and Philip Levis, IPSN 2007. You can find a copy at
@@ -60,6 +59,7 @@ implementation {
     sim_time_t end;
     double power;
     double reversePower;
+    int8_t strength;
     bool lost;
     bool ack;
     message_t* msg;
@@ -309,6 +309,12 @@ implementation {
       mine->lost = 1;
     }
     if (!mine->lost) {
+      // Copy this receiver's packet signal strength to the metadata region
+      // of the packet. Note that this packet is actually shared across all
+      // receivers: a higher layer performs the copy.
+      tossim_metadata_t* meta = (tossim_metadata_t*)(&mine->msg->metadata);
+      meta->strength = mine->strength;
+      
       dbg_clear("CpmModelC,SNRLoss", "  -signaling reception\n");
       signal Model.receive(mine->msg);
       if (mine->ack) {
@@ -359,10 +365,14 @@ implementation {
     rcv->end = endTime;
     rcv->power = power;
     rcv->reversePower = reversePower;
+    // The strength of a packet is the sum of the signal and noise. In most cases, this means
+    // the signal. By sampling this here, it assumes that the packet RSSI is sampled at
+    // the beginning of the packet. This is true for the CC2420, but is not true for all
+    // radios. But generalizing seems like complexity for minimal gain at this point.
+    rcv->strength = (int8_t)(floor(10.0 * log(pow(10.0, power/10.0) + pow(10.0, noiseStr/10.0)) / log(10.0)));
     rcv->msg = msg;
     rcv->lost = 0;
     rcv->ack = receive;
-    
     // If I'm off, I never receive the packet, but I need to keep track of
     // it in case I turn on and someone else starts sending me a weaker
     // packet. So I don't set receiving to 1, but I keep track of
