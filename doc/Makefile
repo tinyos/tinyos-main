@@ -30,7 +30,7 @@ $(OVERVIEW_HTML): $(OVERVIEW) $(STYLESHEET)
 
 %.tex: txt/%.txt 
 	$(RST2LATEX) $< > pdf/$@
-	pdflatex -output-directory pdf $@
+	pdflatex -interaction=batchmode -output-directory pdf $@
 
 overview: $(OVERVIEW_HTML)
 
