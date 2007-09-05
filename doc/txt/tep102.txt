@@ -10,8 +10,8 @@ Timers
 :Author: Cory Sharp, Martin Turon, David Gay
 
 :Draft-Created: 22-Sep-2004
-:Draft-Version: $Revision: 1.10 $
-:Draft-Modified: $Date: 2007-06-11 20:42:35 $
+:Draft-Version: $Revision: 1.11 $
+:Draft-Modified: $Date: 2007-09-05 17:30:31 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -400,9 +400,16 @@ together.
 4. HIL requirements
 ====================================================================
 
-The following component MUST be provided on all platforms::
+The following component MUST be provided on all platforms
+::
+
   HilTimerMilliC
   BusyWaitMicroC
+
+Both of these components use "binary" units, i.e., 1/1024s for
+HilTimerMilliC and 1/1048576s for BusyWaitMicroC. Components using
+other precisions (e.g., regular, non-binary milliseconds) MAY also be
+provided.
 
 HilTimerMilliC
 --------------------------------------------------------------------

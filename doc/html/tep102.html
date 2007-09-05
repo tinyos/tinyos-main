@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:58:00 $
-:version: $Revision: 1.10 $
+:date: $Date: 2007-09-05 17:30:31 $
+:version: $Revision: 1.11 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -656,11 +656,15 @@ together.</p>
 </div>
 <div class="section">
 <h1><a id="hil-requirements" name="hil-requirements">4. HIL requirements</a></h1>
-<dl class="docutils">
-<dt>The following component MUST be provided on all platforms::</dt>
-<dd>HilTimerMilliC
-BusyWaitMicroC</dd>
-</dl>
+<p>The following component MUST be provided on all platforms</p>
+<pre class="literal-block">
+HilTimerMilliC
+BusyWaitMicroC
+</pre>
+<p>Both of these components use &quot;binary&quot; units, i.e., 1/1024s for
+HilTimerMilliC and 1/1048576s for BusyWaitMicroC. Components using
+other precisions (e.g., regular, non-binary milliseconds) MAY also be
+provided.</p>
 <div class="section">
 <h2><a id="hiltimermillic" name="hiltimermillic">HilTimerMilliC</a></h2>
 <pre class="literal-block">
