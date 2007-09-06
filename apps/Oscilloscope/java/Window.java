@@ -189,7 +189,7 @@ class Window {
     // Adjust X-axis zoom.
     Box xControl = new Box(BoxLayout.Y_AXIS);
     xLabel = makeLabel("", JLabel.CENTER);
-    JSlider xSlider = new JSlider(JSlider.HORIZONTAL, 0, 8, graph.scale);
+    final JSlider xSlider = new JSlider(JSlider.HORIZONTAL, 0, 8, graph.scale);
     Hashtable xTable = new Hashtable();
     for (int i = 0; i <= 8; i += 2) {
         xTable.put(new Integer(i),
