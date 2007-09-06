@@ -74,10 +74,10 @@ class Graph extends JPanel
     }
 
     void rightDrawString(
-    		Graphics2D g, 
-    		String s, 
-    		int x, 
-    		int y) {
+            Graphics2D g, 
+            String s, 
+            int x, 
+            int y) {
     TextLayout layout =
         new TextLayout(s, parent.smallFont, g.getFontRenderContext());
     Rectangle2D bounds = layout.getBounds();
