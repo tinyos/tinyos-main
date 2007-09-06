@@ -67,9 +67,9 @@ class Window {
             return getValueAt(0, col).getClass();
         }
     public boolean isCellEditable(int row, 
-    		int col) { return col == 1; }
+            int col) { return col == 1; }
         public synchronized void setValueAt(Object value, 
-        		int row, int col) {
+                  int row, int col) {
         colors.set(row, value);
             fireTableCellUpdated(row, col);
         graph.repaint();
@@ -163,7 +163,7 @@ class Window {
     JTable moteList = new JTable(moteListModel);
     moteList.setDefaultRenderer(Color.class, new MoteColor());
     moteList.setDefaultEditor(Color.class, 
-    		new ColorCellEditor("Pick Mote Color"));
+              new ColorCellEditor("Pick Mote Color"));
     moteList.setPreferredScrollableViewportSize(new Dimension(100, 400));
     JScrollPane motePanel = new JScrollPane();
     motePanel.getViewport().add(moteList, null);
@@ -260,10 +260,10 @@ class Window {
 
         if (!graph.setYAxis(Integer.parseInt(min), Integer.parseInt(max))) {
             error("Invalid range " 
-            		+ min 
-            		+ " - " 
-            		+ max 
-            		+ " (expected values between 0 and 65535)");
+                      + min 
+                      + " - " 
+                      + max 
+                      + " (expected values between 0 and 65535)");
         }
         return;
         }

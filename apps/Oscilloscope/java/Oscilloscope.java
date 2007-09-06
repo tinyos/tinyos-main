@@ -63,7 +63,7 @@ public class Oscilloscope implements MessageListener
     }
 
     public synchronized void messageReceived(int dest_addr, 
-    		Message msg) {
+            Message msg) {
     if (msg instanceof OscilloscopeMsg) {
         OscilloscopeMsg omsg = (OscilloscopeMsg)msg;
 
