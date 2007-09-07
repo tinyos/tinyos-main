@@ -176,7 +176,7 @@ implementation {
   }
 
   async command uint8_t ResourceDefaultOwner.isOwner() {
-    return call Resource.isOwner[default_owner_id]();
+    atomic return (state == RES_CONTROLLED);
   }
   
   task void grantedTask() {
