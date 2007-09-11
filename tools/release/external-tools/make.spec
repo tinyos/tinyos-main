@@ -5,7 +5,7 @@ Release: 1
 Packager: TinyOS Group, UC Berkeley
 License: GNU GPL
 Group: Development/Tools
-URL: http://webs.cs.berkeley.edu/tos/dist-1.1.0
+URL: http://www.tinyos.net/dist-2.0.0
 Source0: %{name}-%{version}.tar.bz2
 BuildRoot: %{_tmppath}/%{name}-root
 
