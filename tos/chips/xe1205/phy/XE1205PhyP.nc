@@ -239,7 +239,7 @@ implementation {
      // so that we know precisely when last byte was received 
 
      if (n > 16) {
-	 if (n < 32) nextRxLen = n - 16; else nextRxLen = 15;
+	 if (n < 32) nextRxLen = n - 15; else nextRxLen = 15;
      } 
      else {
 	 nextRxLen = n;
@@ -282,9 +282,6 @@ implementation {
  error_t getRssi() {
      error_t err;
 
-     if(call SpiResourceRssi.immediateRequest() != SUCCESS) {
-	 return FAIL;
-     }
      err = call XE1205RssiConf.setRssiMode(TRUE);
      err = ecombine(err,call XE1205RssiConf.setRssiRange(FALSE));
      rssiRange=RSSI_RANGE_LOW;
@@ -301,6 +298,11 @@ implementation {
 	 if (call XE1205PhyRxTx.off()) {
 	     return EOFF;
 	 }
+	 
+	 if(call SpiResourceRssi.immediateRequest() != SUCCESS) {
+	     return FAIL;
+	 }
+
 	 err=getRssi();
 	 if (SUCCESS ==err) {
 	     state = RADIO_RSSI;
