@@ -29,6 +29,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
+#include "AM.h"
+
 /**
  * @author Phil Levis
  * @author David Moss
