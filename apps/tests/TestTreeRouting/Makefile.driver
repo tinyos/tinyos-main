@@ -1,4 +1,0 @@
-all:
-	make micaz sim
-	g++ -g -c -o test.o test.cc -I$(TOSROOT)/tos/lib/tossim/
-	g++ -o test test.o build/micaz/tossim.o build/micaz/sim.o
