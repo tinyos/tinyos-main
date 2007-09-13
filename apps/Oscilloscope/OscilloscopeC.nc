@@ -101,7 +101,9 @@ implementation
       {
 	if (!sendbusy && sizeof local <= call AMSend.maxPayloadLength())
 	  {
-	    memcpy(call AMSend.getPayload(&sendbuf), &local, sizeof local);
+	    // Don't need to check for null because we've already checked length
+	    // above
+	    memcpy(call AMSend.getPayload(&sendbuf, sizeof(local)), &local, sizeof local);
 	    if (call AMSend.send(AM_BROADCAST_ADDR, &sendbuf, sizeof local) == SUCCESS)
 	      sendbusy = TRUE;
 	  }

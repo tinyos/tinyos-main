@@ -1,4 +1,4 @@
-// $Id: TossimActiveMessageC.nc,v 1.1 2007-09-04 17:19:23 scipio Exp $
+// $Id: TossimActiveMessageC.nc,v 1.2 2007-09-13 23:10:19 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -84,26 +84,10 @@ implementation {
     return call Packet.maxPayloadLength();
   }
 
-  command void* AMSend.getPayload[am_id_t id](message_t* m) {
-    return call Packet.getPayload(m, NULL);
-  }
-
-  command void* Receive.getPayload[am_id_t id](message_t* m, uint8_t* len) {
+  command void* AMSend.getPayload[am_id_t id](message_t* m, uint8_t len) {
     return call Packet.getPayload(m, len);
   }
 
-  command uint8_t Receive.payloadLength[am_id_t id](message_t* m) {
-    return call Packet.payloadLength(m);
-  }
-  
-  command void* Snoop.getPayload[am_id_t id](message_t* m, uint8_t* len) {
-    return call Packet.getPayload(m, len);
-  }
-
-  command uint8_t Snoop.payloadLength[am_id_t id](message_t* m) {
-    return call Packet.payloadLength(m);
-  }
-  
   command int8_t TossimPacket.strength(message_t* msg) {
     return getMetadata(msg)->strength;
   }
@@ -119,7 +103,7 @@ implementation {
     void* payload;
 
     memcpy(bufferPointer, msg, sizeof(message_t));
-    payload = call Packet.getPayload(bufferPointer, &len);
+    payload = call Packet.getPayload(bufferPointer, call Packet.maxPayloadLength());
 
     if (call AMPacket.isForMe(msg)) {
       dbg("AM", "Received active message (%p) of type %hhu and length %hhu for me @ %s.\n", bufferPointer, call AMPacket.type(bufferPointer), len, sim_time_string());
@@ -193,11 +177,13 @@ implementation {
     return TOSH_DATA_LENGTH;
   }
   
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-    if (len != NULL) {
-      *len = call Packet.payloadLength(msg);
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
+    if (len <= TOSH_DATA_LENGTH) {
+      return msg->data;
     }
-    return msg->data;
+    else {
+      return NULL;
+    }
   }
 
   command am_group_t AMPacket.group(message_t* amsg) {

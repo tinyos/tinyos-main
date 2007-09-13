@@ -79,7 +79,11 @@ implementation {
             return FAIL;
         } else {
             message_t* msg = call MessagePool.get();
-            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg);
+            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg, sizeof(CollectionDebugMsg));
+	    if (dbg_msg == NULL) {
+	      return FAIL;
+	    }
+	    
             memset(dbg_msg, 0, len);
 
             dbg_msg->type = type;
@@ -102,7 +106,10 @@ implementation {
             return FAIL;
         } else {
             message_t* msg = call MessagePool.get();
-            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg);
+            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg, sizeof(CollectionDebugMsg));
+	    if (dbg_msg == NULL) {
+	      return FAIL;
+	    }
             memset(dbg_msg, 0, len);
 
             dbg_msg->type = type;
@@ -128,7 +135,10 @@ implementation {
             return FAIL;
         } else {
             message_t* msg = call MessagePool.get();
-            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg);
+            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg, sizeof(CollectionDebugMsg));
+	    if (dbg_msg == NULL) {
+	      return FAIL;
+	    }
             memset(dbg_msg, 0, len);
 
             dbg_msg->type = type;
@@ -154,7 +164,10 @@ implementation {
             return FAIL;
         } else {
             message_t* msg = call MessagePool.get();
-            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg);
+            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg, sizeof(CollectionDebugMsg));
+	    if (dbg_msg == NULL) {
+	      return FAIL;
+	    }
             memset(dbg_msg, 0, len);
 
             dbg_msg->type = type;
@@ -178,7 +191,10 @@ implementation {
             return FAIL;
         } else {
             message_t* msg = call MessagePool.get();
-            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg);
+            CollectionDebugMsg* dbg_msg = call UARTSend.getPayload(msg, sizeof(CollectionDebugMsg));
+	    if (dbg_msg == NULL) {
+	      return FAIL;
+	    }
             memset(dbg_msg, 0, len);
 
             dbg_msg->type = type;

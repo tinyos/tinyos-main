@@ -98,7 +98,11 @@ implementation
     sending_packet = FALSE;
     packet_ready = FALSE;
     state = STATE_IDLE;
-    pMsg = (Mts300Msg*)call RadioPacket.getPayload(&packet, NULL);
+    pMsg = (Mts300Msg*)call RadioPacket.getPayload(&packet, sizeof(Mts300Msg));
+    if (pMsg == NULL) {
+      call Leds.led0On();
+      return;
+    }
 
     // Zero out the accelerometer, chrl@20070213
     accel_ave_x = 0;

@@ -1,4 +1,4 @@
-// $Id: TestSerialC.nc,v 1.4 2006-12-12 18:22:50 vlahan Exp $
+// $Id: TestSerialC.nc,v 1.5 2007-09-13 23:10:21 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -83,8 +83,8 @@ implementation {
       return;
     }
     else {
-      TestSerialMsg* rcm = (TestSerialMsg*)call Packet.getPayload(&packet, NULL);
-      if (call Packet.maxPayloadLength() < sizeof(TestSerialMsg)) {
+      TestSerialMsg* rcm = (TestSerialMsg*)call Packet.getPayload(&packet, sizeof(TestSerialMsg));
+      if (rcm == NULL || call Packet.maxPayloadLength() < sizeof(TestSerialMsg)) {
 	return;
       }
 
@@ -128,7 +128,10 @@ implementation {
       locked = FALSE;
       // as fast as possible
       if (afap){
-        TestSerialMsg* rcm = (TestSerialMsg*)call Packet.getPayload(&packet,NULL);
+        TestSerialMsg* rcm = (TestSerialMsg*)call Packet.getPayload(&packet, sizeof(TestSerialMsg));
+	if (rcm == NULL || call Packet.payloadLength(&packet) != sizeof(TestSerialMsg)) {
+	  return;
+	}
         counter++;
         rcm->counter = counter;
         call Leds.led0Toggle();

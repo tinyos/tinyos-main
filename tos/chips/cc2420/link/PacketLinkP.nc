@@ -163,8 +163,8 @@ implementation {
     return call SubSend.maxPayloadLength();
   }
 
-  command void *Send.getPayload(message_t* msg) {
-    return call SubSend.getPayload(msg);
+  command void *Send.getPayload(message_t* msg, uint8_t len) {
+    return call SubSend.getPayload(msg, len);
   }
   
   

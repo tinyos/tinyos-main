@@ -7,7 +7,7 @@
  * See TEP118: Dissemination and TEP 119: Collection for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.6 $ $Date: 2007-07-16 14:51:57 $
+ * @version $Revision: 1.7 $ $Date: 2007-09-13 23:10:20 $
  */
 
 #include <Timer.h>
@@ -84,7 +84,7 @@ implementation {
 
    
   void sendMessage() {
-    TestNetworkMsg* msg = (TestNetworkMsg*)call Send.getPayload(&packet);
+    TestNetworkMsg* msg = (TestNetworkMsg*)call Send.getPayload(&packet, sizeof(TestNetworkMsg));
     uint16_t metric;
     am_addr_t parent;
 
@@ -162,7 +162,7 @@ implementation {
    else if (!uartbusy) {
      message_t* msg = call Queue.dequeue();
      dbg("Traffic", "Sending packet to UART.\n");
-     if (call UARTSend.send(0xffff, msg, call Receive.payloadLength(msg)) == SUCCESS) {
+     if (call UARTSend.send(0xffff, msg, call Packet.payloadLength(msg)) == SUCCESS) {
        uartbusy = TRUE;
      }
      else {

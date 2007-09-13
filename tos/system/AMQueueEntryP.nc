@@ -1,4 +1,4 @@
-// $Id: AMQueueEntryP.nc,v 1.4 2006-12-12 18:23:46 vlahan Exp $
+// $Id: AMQueueEntryP.nc,v 1.5 2007-09-13 23:10:19 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -62,8 +62,8 @@ implementation {
     return call Send.maxPayloadLength();
   }
 
-  command void* AMSend.getPayload(message_t* m) {
-    return call Send.getPayload(m);
+  command void* AMSend.getPayload(message_t* m, uint8_t len) {
+    return call Send.getPayload(m, len);
   }
   
 }

@@ -1,4 +1,4 @@
-// $Id: AMSend.nc,v 1.4 2006-12-12 18:23:14 vlahan Exp $
+// $Id: AMSend.nc,v 1.5 2007-09-13 23:10:17 scipio Exp $
 /*									tab:4
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -114,15 +114,14 @@ interface AMSend {
 
    /**
     * Return a pointer to a protocol's payload region in a packet.
-    * The length of this region is maxPayloadLength(). This command
-    * behaves similarly to <tt>Packet.getPayload</tt> (minus the
-    * length parameter) and is included in this interface
+    * This command behaves identically to <tt>Packet.getPayload</tt>
+    * (minus the length parameter) and is included in this interface
     * as a convenience.
     *
     * @param  msg    the packet
     * @return        the payload of the packet
     */
-  command void* getPayload(message_t* msg);
+  command void* getPayload(message_t* msg, uint8_t len);
 
   
 }

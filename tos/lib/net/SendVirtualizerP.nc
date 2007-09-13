@@ -1,4 +1,4 @@
-// $Id: SendVirtualizerP.nc,v 1.1 2007-04-07 01:58:04 scipio Exp $
+// $Id: SendVirtualizerP.nc,v 1.2 2007-09-13 23:10:18 scipio Exp $
 /*
 * "Copyright (c) 2005 Stanford University. All rights reserved.
 *
@@ -182,8 +182,8 @@ implementation {
         return call SubSend.maxPayloadLength();
     }
 
-    command void* Send.getPayload[uint8_t id](message_t* m) {
-        return call SubSend.getPayload(m);
+    command void* Send.getPayload[uint8_t id](message_t* m, uint8_t len) {
+      return call SubSend.getPayload(m, len);
     }
 
     default event void Send.sendDone[uint8_t id](message_t* msg, error_t err) {

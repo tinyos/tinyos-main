@@ -1,4 +1,4 @@
-//$Id: SerialActiveMessageP.nc,v 1.5 2007-06-21 16:00:04 scipio Exp $
+//$Id: SerialActiveMessageP.nc,v 1.6 2007-09-13 23:10:19 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -74,8 +74,8 @@ implementation {
     return call Packet.maxPayloadLength();
   }
 
-  command void* AMSend.getPayload[am_id_t id](message_t* m) {
-    return call Packet.getPayload(m, NULL);
+  command void* AMSend.getPayload[am_id_t id](message_t* m, uint8_t len) {
+    return call Packet.getPayload(m, len);
   }
   
   event void SubSend.sendDone(message_t* msg, error_t result) {
@@ -90,16 +90,7 @@ implementation {
    return msg;
  }
  
-  
-  command void* Receive.getPayload[am_id_t id](message_t* m, uint8_t* len) {
-    return call Packet.getPayload(m, len);
-  }
-
-  command uint8_t Receive.payloadLength[am_id_t id](message_t* m) {
-    return call Packet.payloadLength(m);
-  }
-  
-  event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
+ event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
     return signal Receive.receive[call AMPacket.type(msg)](msg, msg->data, len);
   }
 
@@ -120,11 +111,13 @@ implementation {
     return TOSH_DATA_LENGTH;
   }
   
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-    if (len != NULL) { 
-      *len = call Packet.payloadLength(msg);
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
+    if (len > call Packet.maxPayloadLength()) {
+      return NULL;
     }
-    return msg->data;
+    else {
+      return msg->data;
+    }
   }
 
   command am_addr_t AMPacket.address() {

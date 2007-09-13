@@ -1,4 +1,4 @@
-// $Id: RadioSenseToLedsC.nc,v 1.4 2006-12-12 18:22:49 vlahan Exp $
+// $Id: RadioSenseToLedsC.nc,v 1.5 2007-09-13 23:10:20 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -82,8 +82,8 @@ implementation {
     else {
       radio_sense_msg_t* rsm;
 
-      rsm = (radio_sense_msg_t*)call Packet.getPayload(&packet, NULL);
-      if (call Packet.maxPayloadLength() < sizeof(radio_sense_msg_t)) {
+      rsm = (radio_sense_msg_t*)call Packet.getPayload(&packet, sizeof(radio_sense_msg_t));
+      if (rsm == NULL) {
 	return;
       }
       rsm->error = result;

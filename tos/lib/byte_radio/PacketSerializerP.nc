@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2007-04-17 12:57:59 $
+ * $Revision: 1.7 $
+ * $Date: 2007-09-13 23:10:17 $
  * ========================================================================
  */
 
@@ -203,11 +203,13 @@ implementation {
     return TOSH_DATA_LENGTH;
   }
 
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-    if (len != NULL) {
-      *len = (getHeader(msg))->length;
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
+    if (len <= TOSH_DATA_LENGTH) {
+      return (void*)msg->data;
     }
-    return (void*)msg->data;
+    else {
+      return NULL;
+    }
   }
   
   // Default events for radio send/receive coordinators do nothing.

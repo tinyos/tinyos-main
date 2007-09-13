@@ -47,8 +47,8 @@ implementation {
     return call SubSend.cancel(msg);
   }
 
-  command void* Send.getPayload(message_t* m) {
-    return call SubSend.getPayload(m);
+  command void* Send.getPayload(message_t* m, uint8_t len) {
+    return call SubSend.getPayload(m, len);
   }
 
   command uint8_t Send.maxPayloadLength() {

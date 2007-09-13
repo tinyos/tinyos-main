@@ -81,25 +81,6 @@ implementation {
   bool hasSeen(uint16_t msgSource, uint8_t msgDsn);
   void insert(uint16_t msgSource, uint8_t msgDsn);
   
-  /***************** Receive Commands ***************/
-  command void *Receive.getPayload(message_t* msg, uint8_t* len) {
-    return call SubReceive.getPayload(msg, len);
-  }
-
-  command uint8_t Receive.payloadLength(message_t* msg) {
-    return call SubReceive.payloadLength(msg);
-  }
-  
-  
-  /***************** DuplicateReceive Commands ****************/
-  command void *DuplicateReceive.getPayload(message_t* msg, uint8_t* len) {
-    return call SubReceive.getPayload(msg, len);
-  }
-
-  command uint8_t DuplicateReceive.payloadLength(message_t* msg) {
-    return call SubReceive.payloadLength(msg);
-  }
-  
   /***************** SubReceive Events *****************/
   event message_t *SubReceive.receive(message_t* msg, void* payload, 
       uint8_t len) {

@@ -118,7 +118,7 @@ implementation {
   
   /**************** Tasks ****************/
   task void send() {
-    TestPeriodicMsg *periodicMsg = (TestPeriodicMsg *) call Packet.getPayload(&fullMsg, NULL);
+    TestPeriodicMsg *periodicMsg = (TestPeriodicMsg *) call Packet.getPayload(&fullMsg, sizeof(TestPeriodicMsg));
     periodicMsg->count = count;
     call LowPowerListening.setRxSleepInterval(&fullMsg, 1000);
     if(call AMSend.send(AM_BROADCAST_ADDR, &fullMsg, sizeof(TestPeriodicMsg)) != SUCCESS) {

@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.6 2007-04-09 15:34:34 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.7 2007-09-13 23:10:18 scipio Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -91,12 +91,13 @@ implementation {
 
   // get the link estimation header in the packet
   linkest_header_t* getHeader(message_t* m) {
-    return (linkest_header_t*)call SubPacket.getPayload(m, NULL);
+    return (linkest_header_t*)call SubPacket.getPayload(m, sizeof(linkest_header_t));
   }
 
   // get the link estimation footer (neighbor entries) in the packet
   linkest_footer_t* getFooter(message_t* m, uint8_t len) {
-    return (linkest_footer_t*)(len + (uint8_t *)call Packet.getPayload(m,NULL));
+    // To get a footer at offset "len", the payload must be len + sizeof large.
+    return (linkest_footer_t*)(len + (uint8_t *)call Packet.getPayload(m,len + sizeof(linkest_footer_t)));
   }
 
   // add the link estimation header (seq no) and link estimation
@@ -585,8 +586,8 @@ implementation {
     return call Packet.maxPayloadLength();
   }
 
-  command void* Send.getPayload(message_t* msg) {
-    return call Packet.getPayload(msg, NULL);
+  command void* Send.getPayload(message_t* msg, uint8_t len) {
+    return call Packet.getPayload(msg, len);
   }
 
   // called when link estimator generator packet or
@@ -649,10 +650,12 @@ implementation {
       }
 
       if ((nidx != INVALID_RVAL) && (num_entries > 0)) {
+	uint8_t payloadLen = call SubPacket.payloadLength(msg);
+	void* subPayload = call SubPacket.getPayload(msg, payloadLen);
+	void* payloadEnd = subPayload + payloadLen;
 	dbg("LI", "Number of footer entries: %d\n", num_entries);
-	footer = (linkest_footer_t*) ((uint8_t *)call SubPacket.getPayload(msg, NULL)
-				      + call SubPacket.payloadLength(msg)
-				      - num_entries*sizeof(linkest_footer_t));
+	
+	footer = (linkest_footer_t*) (payloadEnd - (num_entries*sizeof(linkest_footer_t)));
 	{
 	  uint8_t i, my_ll_addr;
 	  my_ll_addr = call SubAMPacket.address();
@@ -681,16 +684,8 @@ implementation {
     dbg("LI", "Received upper packet. Will signal up\n");
     processReceivedMessage(msg, payload, len);
     return signal Receive.receive(msg,
-				  call Packet.getPayload(msg, NULL),
+				  call Packet.getPayload(msg, call Packet.payloadLength(msg)),
 				  call Packet.payloadLength(msg));
-  }
-
-  command void* Receive.getPayload(message_t* msg, uint8_t* len) {
-    return call Packet.getPayload(msg, len);
-  }
-
-  command uint8_t Receive.payloadLength(message_t* msg) {
-    return call Packet.payloadLength(msg);
   }
 
   command void Packet.clear(message_t* msg) {
@@ -723,14 +718,14 @@ implementation {
   }
 
   // application payload pointer is just past the link estimation header
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-    uint8_t* payload = call SubPacket.getPayload(msg, len);
-    linkest_header_t *hdr;
-    hdr = getHeader(msg);
-    if (len != NULL) {
-      *len = *len - sizeof(linkest_header_t) - sizeof(linkest_footer_t)*(NUM_ENTRIES_FLAG & hdr->flags);
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
+    linkest_header_t *hdr = getHeader(msg);
+    uint8_t footerLen = (hdr->flags & NUM_ENTRIES_FLAG) * sizeof(linkest_header_t);
+    void* payload = call SubPacket.getPayload(msg, len + footerLen);
+    if (payload != NULL) {
+      payload += sizeof(linkest_header_t);
     }
-    return payload + sizeof(linkest_header_t);
+    return payload;
   }
 }
 

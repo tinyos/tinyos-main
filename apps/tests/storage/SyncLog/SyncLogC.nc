@@ -101,7 +101,7 @@ implementation {
     if (!busy)
       {
 	SenseStoreRadioMsg* ssrpkt =
-	  (SenseStoreRadioMsg*)(call AMSend.getPayload(&pkt));
+	  (SenseStoreRadioMsg*)(call AMSend.getPayload(&pkt, sizeof(SenseStoreRadioMsg)));
 	ssrpkt->nodeid = TOS_NODE_ID;
 	ssrpkt->payloadData = data;
 	if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(SenseStoreRadioMsg)) == SUCCESS)

@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.7 2007-04-21 07:02:37 scipio Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.8 2007-09-13 23:10:18 scipio Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2007-04-21 07:02:37 $
+ *  @date   $Date: 2007-09-13 23:10:18 $
  *  @see Net2-WG
  */
 
@@ -207,7 +207,7 @@ implementation {
         routeInfoInit(&routeInfo);
         routingTableInit();
         my_ll_addr = call AMPacket.address();
-        beaconMsg = call BeaconSend.getPayload(&beaconMsgBuffer);
+        beaconMsg = call BeaconSend.getPayload(&beaconMsgBuffer, call BeaconSend.maxPayloadLength());
         maxLength = call BeaconSend.maxPayloadLength();
         dbg("TreeRoutingCtl","TreeRouting initialized. (used payload:%d max payload:%d!\n", 
               sizeof(beaconMsg), maxLength);
@@ -454,7 +454,7 @@ implementation {
 
 
     ctp_routing_header_t* getHeader(message_t* m) {
-      return (ctp_routing_header_t*)call BeaconReceive.getPayload(m, NULL);
+      return (ctp_routing_header_t*)call BeaconSend.getPayload(m, call BeaconSend.maxPayloadLength());
     }
     
     

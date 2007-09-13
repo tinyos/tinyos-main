@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:40 $
+ * $Revision: 1.5 $
+ * $Date: 2007-09-13 23:10:19 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -56,17 +56,13 @@ module ActiveMessageFilterC {
   command error_t AMSend.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len){ return call SubAMSend.send[id](addr, msg, len);}
   command error_t AMSend.cancel[am_id_t id](message_t* msg){ return call SubAMSend.cancel[id](msg);}
   command uint8_t AMSend.maxPayloadLength[am_id_t id](){ return call SubAMSend.maxPayloadLength[id]();}
-  command void* AMSend.getPayload[am_id_t id](message_t* msg){ return call SubAMSend.getPayload[id](msg);}
+  command void* AMSend.getPayload[am_id_t id](message_t* msg, uint8_t len){ return call SubAMSend.getPayload[id](msg, len);}
   event void SubAMSend.sendDone[am_id_t id](message_t* msg, error_t error) { signal AMSend.sendDone[id](msg, error); }
   default event void AMSend.sendDone[am_id_t id](message_t* msg, error_t error) { return; }
 
-  command void* Receive.getPayload[am_id_t id](message_t* msg, uint8_t* len){ return call SubReceive.getPayload[id](msg, len);}
-  command uint8_t Receive.payloadLength[am_id_t id](message_t* msg){ return call SubReceive.payloadLength[id](msg);}
   event message_t* SubReceive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) { return signal Receive.receive[id](msg, payload, len); }
   default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len){ return msg;}
   
-  command void* Snoop.getPayload[am_id_t id](message_t* msg, uint8_t* len){ return call SubSnoop.getPayload[id](msg, len);}
-  command uint8_t Snoop.payloadLength[am_id_t id](message_t* msg){ return call SubSnoop.payloadLength[id](msg);}
   event message_t* SubSnoop.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) { return signal Snoop.receive[id](msg, payload, len);
   }
   default event message_t* Snoop.receive[am_id_t id](message_t* msg, void* payload, uint8_t len){return msg;}

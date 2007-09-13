@@ -1,4 +1,4 @@
-//$Id: SerialDispatcherP.nc,v 1.5 2007-04-19 22:45:47 scipio Exp $
+//$Id: SerialDispatcherP.nc,v 1.6 2007-09-13 23:10:19 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -134,21 +134,16 @@ implementation {
     return (sizeof(message_t));
   }
 
-  command void* Send.getPayload[uint8_t id](message_t* m) {
-    return m;
-  }
-
-  command void* Receive.getPayload[uint8_t id](message_t* m, uint8_t* len) {
-    if (len != NULL) {
-      *len = 0;
+  command void* Send.getPayload[uint8_t id](message_t* m, uint8_t len) {
+    if (len > sizeof(message_t)) {
+      return NULL;
     }
-    return m;
+    else {
+      return m;
+    }
   }
 
-  command uint8_t Receive.payloadLength[uint8_t id](message_t* m) {
-    return 0;
-  }
-
+    
   task void signalSendDone(){
     error_t error;
 

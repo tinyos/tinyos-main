@@ -133,16 +133,8 @@ implementation {
 	return call Packet.maxPayloadLength();
     }
 
-    command void* Send.getPayload(message_t* m) {
-	return call Packet.getPayload(m, NULL);
-    }
-
-    command void* Receive.getPayload(message_t* m, uint8_t* len) {
+    command void* Send.getPayload(message_t* m, uint8_t len) {
 	return call Packet.getPayload(m, len);
-    }
-
-    command uint8_t Receive.payloadLength(message_t* m) {
-	return call Packet.payloadLength(m);
     }
 
    task void sendDoneTask() {
@@ -386,11 +378,13 @@ implementation {
 	return TOSH_DATA_LENGTH;
     }
 
-    command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-	if (len != NULL) {
-	    *len = getMetadata(msg)->length;
-	}
+    command void* Packet.getPayload(message_t* msg, uint8_t len) {
+      if (len <= TOSH_DATA_LENGTH) {
 	return (void*)msg->data;
+      }
+      else {
+	return NULL;
+      }
     }
 
     async command error_t PacketAcknowledgements.requestAck(message_t* msg) {

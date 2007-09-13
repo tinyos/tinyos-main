@@ -71,7 +71,10 @@ implementation
    */
   void sendReply(error_t error, storage_len_t len)
   {
-    SerialReplyPacket *srpkt = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg);
+    SerialReplyPacket *srpkt = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
+    if (srpkt == NULL) {
+      return;
+    }
     if (error == SUCCESS) {
       srpkt->error = SERIALMSG_SUCCESS;
     } else {
@@ -86,7 +89,10 @@ implementation
 				error_t error)
   {
     if (state == S_READ) {
-      SerialReplyPacket *serialMsg_payload = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg);
+      SerialReplyPacket *serialMsg_payload = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
+      if (serialMsg_payload == NULL) {
+	return;
+      }
       if (buf == serialMsg_payload->data) {
         state = S_IDLE;
         sendReply(error, len + sizeof(SerialReplyPacket));
@@ -103,7 +109,10 @@ implementation
       state = S_IDLE;
       
       if (error == SUCCESS) {
-        SerialReplyPacket *srpkt = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg);
+        SerialReplyPacket *srpkt = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
+	if (srpkt == NULL) {
+	  return;
+	}
         srpkt->data[1] = crc & 0xFF;
         srpkt->data[0] = (crc >> 8) & 0xFF;
       }
@@ -144,9 +153,12 @@ implementation
     error_t error = SUCCESS;
     SerialReqPacket *srpkt = (SerialReqPacket *)payload;
     SerialReplyPacket *serialMsg_payload =
-                              (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg);
+      (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
     uint8_t img_num = 0xFF;
-    
+
+    if (serialMsg_payload == NULL) {
+      return msg;
+    }
     // Converts the image number that the user wants to the real image number
     switch (srpkt->img_num) {
       case 0:

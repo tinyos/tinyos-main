@@ -1,4 +1,4 @@
-// $Id: CC1000SendReceiveP.nc,v 1.5 2006-12-12 18:23:05 vlahan Exp $
+// $Id: CC1000SendReceiveP.nc,v 1.6 2007-09-13 23:10:16 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -632,13 +632,13 @@ implementation
     return TOSH_DATA_LENGTH;
   }
 
-  command void* Packet.getPayload(message_t *msg, uint8_t *len) {
-    if (len != NULL) {
-      cc1000_header_t *header = getHeader(msg);
-
-      *len = header->length;
+  command void* Packet.getPayload(message_t *msg, uint8_t len) {
+    if (len <= TOSH_DATA_LENGTH) {
+      return (void*)msg->data;
     }
-    return (void*)msg->data;
+    else {
+      return NULL;
+    }
   }
 
   async command error_t PacketAcknowledgements.requestAck(message_t *msg) {
@@ -649,20 +649,12 @@ implementation
     return FAIL;		/* We always ack */
   }
 
-  command void* Receive.getPayload(message_t *m, uint8_t *len) {
-    return call Packet.getPayload(m, len);
-  }
-
-  command uint8_t Receive.payloadLength(message_t *m) {
-    return call Packet.payloadLength(m);
-  }
-
   command uint8_t Send.maxPayloadLength() {
     return call Packet.maxPayloadLength();
   }
 
-  command void* Send.getPayload(message_t *m) {
-    return call Packet.getPayload(m, NULL);
+  command void* Send.getPayload(message_t *m, uint8_t len) {
+    return call Packet.getPayload(m, len);
   }
 
   async command bool PacketAcknowledgements.wasAcked(message_t *msg) {

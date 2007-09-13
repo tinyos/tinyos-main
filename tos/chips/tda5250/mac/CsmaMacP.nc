@@ -562,7 +562,7 @@ implementation
         return call SubPacket.maxPayloadLength();
     }
     
-    command void* Packet.getPayload(message_t* msg, uint8_t* len) {
+    command void* Packet.getPayload(message_t* msg, uint8_t len) {
         return call SubPacket.getPayload(msg, len);
     }
    

@@ -148,7 +148,7 @@ implementation {
       call Leds.led0Toggle();
     }
     
-    ((PacketLinkMsg *) call AMSend.getPayload(&myMsg))->count = count[0];
+    ((PacketLinkMsg *) call AMSend.getPayload(&myMsg, sizeof(PacketLinkMsg)))->count = count[0];
     call Timer.startOneShot(50);
   }
   
@@ -166,11 +166,11 @@ implementation {
     }
     
     if(linkMsg->count != count[source]) {
-      ((PacketLinkMsg *) (call SerialAMSend.getPayload(&serialMsg)))->src = source;
+      ((PacketLinkMsg *) (call SerialAMSend.getPayload(&serialMsg, sizeof(PacketLinkMsg))))->src = source;
       if(linkMsg->count > count[source]) {
-        ((PacketLinkMsg *) (call SerialAMSend.getPayload(&serialMsg)))->cmd = CMD_DROPPED_PACKET;
+        ((PacketLinkMsg *) (call SerialAMSend.getPayload(&serialMsg, sizeof(PacketLinkMsg))))->cmd = CMD_DROPPED_PACKET;
       } else {
-        ((PacketLinkMsg *) (call SerialAMSend.getPayload(&serialMsg)))->cmd = CMD_DUPLICATE_PACKET;
+        ((PacketLinkMsg *) (call SerialAMSend.getPayload(&serialMsg, sizeof(PacketLinkMsg))))->cmd = CMD_DUPLICATE_PACKET;
       }
       post sendSerial();
       

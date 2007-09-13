@@ -1,4 +1,4 @@
-// $Id: AntiTheftRootC.nc,v 1.3 2007-04-14 00:35:07 gtolle Exp $
+// $Id: AntiTheftRootC.nc,v 1.4 2007-09-13 23:10:19 scipio Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -93,11 +93,12 @@ implementation
       {
 	/* Copy payload (newAlert) from collection system to our serial
 	   message buffer (fwdAlert), then send our serial message */
-	alert_t *fwdAlert = call AlertsForward.getPayload(&fwdMsg);
-
-	*fwdAlert = *newAlert;
-	if (call AlertsForward.send(AM_BROADCAST_ADDR, &fwdMsg, sizeof *fwdAlert) == SUCCESS)
-	  fwdBusy = TRUE;
+	alert_t *fwdAlert = call AlertsForward.getPayload(&fwdMsg, sizeof(alert_t));
+	if (fwdAlert != NULL) {
+	  *fwdAlert = *newAlert;
+	  if (call AlertsForward.send(AM_BROADCAST_ADDR, &fwdMsg, sizeof *fwdAlert) == SUCCESS)
+	    fwdBusy = TRUE;
+	}
       }
     return msg;
   }

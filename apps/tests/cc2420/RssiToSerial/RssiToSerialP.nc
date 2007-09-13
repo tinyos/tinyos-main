@@ -154,7 +154,7 @@ implementation {
       return;
     }
     else {
-      rssi_serial_msg_t* rsm = (rssi_serial_msg_t*)call Packet.getPayload(&packet, NULL);
+      rssi_serial_msg_t* rsm = (rssi_serial_msg_t*)call Packet.getPayload(&packet, sizeof(rssi_serial_msg_t));
       
       if (call Packet.maxPayloadLength() < sizeof(rssi_serial_msg_t)) {
 	    return;

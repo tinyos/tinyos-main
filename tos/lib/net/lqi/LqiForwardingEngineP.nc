@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.9 2007-05-16 19:07:19 razvanm Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.10 2007-09-13 23:10:18 scipio Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -124,7 +124,7 @@ implementation {
   int fwdbusy = 0;
   
   lqi_header_t* getHeader(message_t* msg) {
-    return (lqi_header_t*) call SubPacket.getPayload(msg, NULL);
+    return (lqi_header_t*) call SubPacket.getPayload(msg, sizeof(lqi_header_t));
   }
   
   /***********************************************************************
@@ -435,8 +435,8 @@ implementation {
     
   }
 
-  command void* Send.getPayload(message_t* m) {
-    return call Packet.getPayload(m, NULL);
+  command void* Send.getPayload(message_t* m, uint8_t len) {
+    return call Packet.getPayload(m, len);
   }
 
   command uint8_t Send.maxPayloadLength() {
@@ -448,22 +448,6 @@ implementation {
   }
 
   
-  command void* Receive.getPayload[collection_id_t id](message_t* msg, uint8_t* len) {
-    return call Packet.getPayload(msg, len);
-  }
-  
-  command uint8_t Receive.payloadLength[collection_id_t id](message_t* m) {
-    return call Packet.payloadLength(m);
-  }
-
-  command void* Snoop.getPayload[collection_id_t id](message_t* msg, uint8_t* len) {
-    return call Packet.getPayload(msg, len);
-  }
-  
-  command uint8_t Snoop.payloadLength[collection_id_t id](message_t* m) {
-    return call Packet.payloadLength(m);
-  }
-  
   command uint8_t Packet.payloadLength(message_t* msg) {
     return call SubPacket.payloadLength(msg) - sizeof(lqi_header_t);
   }
@@ -473,12 +457,11 @@ implementation {
   command uint8_t Packet.maxPayloadLength() {
     return (call SubPacket.maxPayloadLength() - sizeof(lqi_header_t));
   }
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-    void* rval = call SubPacket.getPayload(msg, len);
-    if (len != NULL) {
-      *len -= sizeof(lqi_header_t);
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
+    void* rval = call SubPacket.getPayload(msg, len + sizeof(lqi_header_t));
+    if (rval != NULL) {
+      rval += sizeof(lqi_header_t);
     }
-    rval += sizeof(lqi_header_t);
     return rval;
   }
 

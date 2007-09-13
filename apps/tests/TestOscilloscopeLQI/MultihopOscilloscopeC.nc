@@ -129,8 +129,8 @@ implementation {
     oscilloscope_t* out;
     call Leds.led1Toggle();
     if (uartbusy == FALSE) {
-      out = (oscilloscope_t*)call SerialSend.getPayload(&uartbuf);
-      if (len != sizeof(oscilloscope_t)) {
+      out = (oscilloscope_t*)call SerialSend.getPayload(&uartbuf, sizeof(oscilloscope_t));
+      if (call Packet.payloadLength(msg) != sizeof(oscilloscope_t)) {
 	return msg;
       }
       else {
@@ -149,7 +149,10 @@ implementation {
       }
 
       //Prepare message to be sent over the uart
-      out = (oscilloscope_t*)call SerialSend.getPayload(newmsg);
+      out = (oscilloscope_t*)call SerialSend.getPayload(newmsg, sizeof(oscilloscope_t));
+      if (out == NULL) {
+	return msg;
+      }
       memcpy(out, in, sizeof(oscilloscope_t));
 
       if (call UARTQueue.enqueue(newmsg) != SUCCESS) {
@@ -226,7 +229,10 @@ implementation {
     if (TOS_NODE_ID % 500 == 0) {return;}
     if (reading == NREADINGS) {
       if (!sendbusy) {
-	oscilloscope_t *o = (oscilloscope_t *)call Send.getPayload(&sendbuf);
+	oscilloscope_t *o = (oscilloscope_t *)call Send.getPayload(&sendbuf, sizeof(oscilloscope_t));
+	if (o == NULL) {
+	  return;
+	}
 	memcpy(o, &local, sizeof(local));
 	if (call Send.send(&sendbuf, sizeof(local)) == SUCCESS)
 	  sendbusy = TRUE;

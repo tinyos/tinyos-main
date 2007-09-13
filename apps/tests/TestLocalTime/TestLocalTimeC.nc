@@ -1,4 +1,4 @@
-// $Id: TestLocalTimeC.nc,v 1.1 2007-05-23 22:00:55 idgay Exp $
+// $Id: TestLocalTimeC.nc,v 1.2 2007-09-13 23:10:20 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -73,7 +73,7 @@ implementation {
   event void MilliTimer.fired() {
     if (!locked)
       {
-	test_localtime_msg_t* rcm = (test_localtime_msg_t*)call AMSend.getPayload(&packet);
+	test_localtime_msg_t* rcm = (test_localtime_msg_t*)call AMSend.getPayload(&packet, sizeof(test_localtime_msg_t));
 	if (call AMSend.maxPayloadLength() < sizeof(test_localtime_msg_t))
 	  return;
 

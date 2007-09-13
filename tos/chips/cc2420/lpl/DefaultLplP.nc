@@ -302,8 +302,8 @@ implementation {
     return call SubSend.maxPayloadLength();
   }
 
-  command void *Send.getPayload(message_t* msg) {
-    return call SubSend.getPayload(msg);
+  command void *Send.getPayload(message_t* msg, uint8_t len) {
+    return call SubSend.getPayload(msg, len);
   }
   
   
@@ -327,15 +327,6 @@ implementation {
   async event void RadioBackoff.requestCca[am_id_t amId](message_t *msg) {
   }
   
-  /***************** Receive Commands ***************/
-  command void *Receive.getPayload(message_t* msg, uint8_t* len) {
-    return call SubReceive.getPayload(msg, len);
-  }
-
-  command uint8_t Receive.payloadLength(message_t* msg) {
-    return call SubReceive.payloadLength(msg);
-  }
-
 
   /***************** DutyCycle Events ***************/
   /**

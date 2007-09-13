@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.6 2007-01-16 04:39:20 gnawali Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.7 2007-09-13 23:10:18 scipio Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2007-01-16 04:39:20 $
+ *  @date   $Date: 2007-09-13 23:10:18 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -292,7 +292,7 @@ implementation {
   }
 
   ctp_data_header_t* getHeader(message_t* m) {
-    return (ctp_data_header_t*)call SubPacket.getPayload(m, NULL);
+    return (ctp_data_header_t*)call SubPacket.getPayload(m, sizeof(ctp_data_header_t));
   }
  
   /*
@@ -358,8 +358,8 @@ implementation {
     return call Packet.maxPayloadLength();
   }
 
-  command void* Send.getPayload[uint8_t client](message_t* msg) {
-    return call Packet.getPayload(msg, NULL);
+  command void* Send.getPayload[uint8_t client](message_t* msg, uint8_t len) {
+    return call Packet.getPayload(msg, len);
   }
 
   /*
@@ -459,8 +459,8 @@ implementation {
 	
         dbg("Forwarder", "%s: I'm a root, so loopback and signal receive.\n", __FUNCTION__);
         loopbackMsgPtr = signal Receive.receive[collectid](loopbackMsgPtr,
-							  call Packet.getPayload(loopbackMsgPtr, NULL), 
-							  call Packet.payloadLength(loopbackMsgPtr));
+							   call Packet.getPayload(loopbackMsgPtr, call Packet.payloadLength(loopbackMsgPtr)), 
+							   call Packet.payloadLength(loopbackMsgPtr));
         signal SubSend.sendDone(qe->msg, SUCCESS);
         return;
       }
@@ -727,7 +727,6 @@ implementation {
    */ 
   event message_t* 
   SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
-    uint8_t netlen;
     collection_id_t collectid;
     bool duplicate = FALSE;
     fe_queue_entry_t* qe;
@@ -775,37 +774,18 @@ implementation {
     // If I'm the root, signal receive. 
     else if (call RootControl.isRoot())
       return signal Receive.receive[collectid](msg, 
-                        call Packet.getPayload(msg, &netlen), 
-                        call Packet.payloadLength(msg));
+					       call Packet.getPayload(msg, call Packet.payloadLength(msg)), 
+					       call Packet.payloadLength(msg));
     // I'm on the routing path and Intercept indicates that I
     // should not forward the packet.
     else if (!signal Intercept.forward[collectid](msg, 
-                        call Packet.getPayload(msg, &netlen), 
-                        call Packet.payloadLength(msg)))
+						  call Packet.getPayload(msg, call Packet.payloadLength(msg)), 
+						  call Packet.payloadLength(msg)))
       return msg;
     else {
       dbg("Route", "Forwarding packet from %hu.\n", getHeader(msg)->origin);
       return forward(msg);
     }
-  }
-
-  command void* 
-  Receive.getPayload[collection_id_t id](message_t* msg, uint8_t* len) {
-    return call Packet.getPayload(msg, NULL);
-  }
-
-  command uint8_t
-  Receive.payloadLength[collection_id_t id](message_t *msg) {
-    return call Packet.payloadLength(msg);
-  }
-
-  command void *
-  Snoop.getPayload[collection_id_t id](message_t *msg, uint8_t *len) {
-    return call Packet.getPayload(msg, NULL);
-  }
-
-  command uint8_t Snoop.payloadLength[collection_id_t id](message_t *msg) {
-    return call Packet.payloadLength(msg);
   }
 
   event message_t* 
@@ -870,12 +850,12 @@ implementation {
     return call SubPacket.maxPayloadLength() - sizeof(ctp_data_header_t);
   }
 
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-    uint8_t* payload = call SubPacket.getPayload(msg, len);
-    if (len != NULL) {
-      *len -= sizeof(ctp_data_header_t);
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
+    uint8_t* payload = call SubPacket.getPayload(msg, len + sizeof(ctp_data_header_t));
+    if (payload != NULL) {
+      payload += sizeof(ctp_data_header_t);
     }
-    return payload + sizeof(ctp_data_header_t);
+    return payload;
   }
 
   command am_addr_t       CollectionPacket.getOrigin(message_t* msg) {return getHeader(msg)->origin;}

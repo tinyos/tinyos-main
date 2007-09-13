@@ -101,8 +101,10 @@ implementation
   
   void setupReqMsg()
   {
-    DelugeReqMsg *pReqMsg = (DelugeReqMsg *)(call SendReqMsg.getPayload(&pMsgBuf));
-    
+    DelugeReqMsg *pReqMsg = (DelugeReqMsg *)(call SendReqMsg.getPayload(&pMsgBuf, sizeof(DelugeReqMsg)));
+    if (pReqMsg == NULL) {
+      return;
+    }
     if (state == S_RX_LOCKING) {
       if (isBusy_pMsgBuf) {
         return;
@@ -151,7 +153,7 @@ implementation
   
   void setupDataMsg()
   {
-    DelugeDataMsg *pDataMsg = (DelugeDataMsg *)(call SendDataMsg.getPayload(&pMsgBuf));
+    DelugeDataMsg *pDataMsg = (DelugeDataMsg *)(call SendDataMsg.getPayload(&pMsgBuf, sizeof(DelugeDataMsg)));
     uint16_t nextPkt;
     
     if (state != S_SENDING && state != S_TX_LOCKING) {
@@ -363,7 +365,10 @@ implementation
   
   event void SendDataMsg.sendDone(message_t* msg, error_t error)
   {
-    DelugeDataMsg *pDataMsg = (DelugeDataMsg *)(call SendDataMsg.getPayload(&pMsgBuf));
+    DelugeDataMsg *pDataMsg = (DelugeDataMsg *)(call SendDataMsg.getPayload(&pMsgBuf, sizeof (DelugeDataMsg)));
+    if (pDataMsg == NULL) {
+      return;
+    }
     BITVEC_CLEAR(pktsToSend, pDataMsg->pktNum);
     call Timer.startOneShot(2);
     
@@ -417,7 +422,7 @@ call Leds.led1Toggle();
   
   event void BlockRead.readDone[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len, error_t error)
   {
-    DelugeDataMsg *pDataMsg = (DelugeDataMsg *)(call SendDataMsg.getPayload(&pMsgBuf));
+    DelugeDataMsg *pDataMsg = (DelugeDataMsg *)(call SendDataMsg.getPayload(&pMsgBuf, sizeof(DelugeDataMsg)));
     // make sure this event for us
     if (buf != pDataMsg->data) {
       return;

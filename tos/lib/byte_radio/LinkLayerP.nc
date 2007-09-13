@@ -172,8 +172,8 @@ implementation
       return call Packet.maxPayloadLength();
     }
 
-    command void* Send.getPayload(message_t* msg) {
-      return call Packet.getPayload(msg, (uint8_t*) (call Packet.payloadLength(msg)) );
+    command void* Send.getPayload(message_t* msg, uint8_t len) {
+      return call Packet.getPayload(msg, len);
     }
     
     async event void SendDown.sendDone(message_t* msg, error_t error) { 
@@ -196,7 +196,7 @@ implementation
       message_t* tmpMsgPtr;
       atomic {
         len = call Packet.payloadLength(rxBufPtr);
-        payload = call Packet.getPayload(rxBufPtr, &len);
+        payload = call Packet.getPayload(rxBufPtr, len);
         tmpMsgPtr = rxBufPtr;
       }
       tmpMsgPtr = signal Receive.receive(tmpMsgPtr, payload , len);
@@ -222,13 +222,6 @@ implementation
       return msgPtr;
     }
 
-    command void* Receive.getPayload(message_t* msg, uint8_t* len) {
-      return call Packet.getPayload(msg, len);
-    }
-
-    command uint8_t Receive.payloadLength(message_t* msg) {
-      return call Packet.payloadLength(msg);
-    }
 
     /*************** default events ***********/
 

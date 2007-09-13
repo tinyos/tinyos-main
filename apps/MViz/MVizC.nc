@@ -125,8 +125,8 @@ implementation {
   Receive.receive(message_t* msg, void *payload, uint8_t len) {
     if (uartbusy == FALSE) {
       mviz_msg_t* in = (mviz_msg_t*)payload;
-      mviz_msg_t* out = (mviz_msg_t*)call SerialSend.getPayload(&uartbuf);
-      if (len != sizeof(mviz_msg_t)) {
+      mviz_msg_t* out = (mviz_msg_t*)call SerialSend.getPayload(&uartbuf, sizeof(mviz_msg_t));
+      if (out == NULL) {
 	return msg;
       }
       else {
@@ -177,7 +177,11 @@ implementation {
   */
   event void Timer.fired() {
     if (!sendbusy) {
-      mviz_msg_t *o = (mviz_msg_t *)call Send.getPayload(&sendbuf);
+      mviz_msg_t *o = (mviz_msg_t *)call Send.getPayload(&sendbuf, sizeof(mviz_msg_t));
+      if (o == NULL) {
+	fatal_problem();
+	return;
+      }
       memcpy(o, &local, sizeof(local));
       if (call Send.send(&sendbuf, sizeof(local)) == SUCCESS)
 	sendbusy = TRUE;

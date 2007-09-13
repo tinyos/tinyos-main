@@ -130,8 +130,10 @@ implementation
   
   void sendAdvMsg(uint16_t addr)
   {
-    DelugeAdvMsg *pMsg = (DelugeAdvMsg *)(call SendAdvMsg.getPayload(&pMsgBuf));
-    
+    DelugeAdvMsg *pMsg = (DelugeAdvMsg *)(call SendAdvMsg.getPayload(&pMsgBuf, sizeof(DelugeAdvMsg)));
+    if (pMsg == NULL) {
+      return;
+    }
     if (isBusy_pMsgBuf == FALSE) {
       pMsg->sourceAddr = TOS_NODE_ID;
       pMsg->version = DELUGE_VERSION;

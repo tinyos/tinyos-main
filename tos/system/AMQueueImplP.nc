@@ -1,4 +1,4 @@
-// $Id: AMQueueImplP.nc,v 1.6 2007-04-13 17:31:15 scipio Exp $
+// $Id: AMQueueImplP.nc,v 1.7 2007-09-13 23:10:19 scipio Exp $
 /*
 * "Copyright (c) 2005 Stanford University. All rights reserved.
 *
@@ -200,8 +200,8 @@ implementation {
         return call AMSend.maxPayloadLength[0]();
     }
 
-    command void* Send.getPayload[uint8_t id](message_t* m) {
-        return call AMSend.getPayload[0](m);
+    command void* Send.getPayload[uint8_t id](message_t* m, uint8_t len) {
+      return call AMSend.getPayload[0](m, len);
     }
 
     default event void Send.sendDone[uint8_t id](message_t* msg, error_t err) {

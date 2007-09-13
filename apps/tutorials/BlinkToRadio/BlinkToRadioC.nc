@@ -1,4 +1,4 @@
-// $Id: BlinkToRadioC.nc,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+// $Id: BlinkToRadioC.nc,v 1.5 2007-09-13 23:10:23 scipio Exp $
 
 /*
  * "Copyright (c) 2000-2006 The Regents of the University  of California.  
@@ -90,7 +90,10 @@ implementation {
     counter++;
     if (!busy) {
       BlinkToRadioMsg* btrpkt = 
-       (BlinkToRadioMsg*)(call Packet.getPayload(&pkt, NULL));
+	(BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
+      if (btrpkt == NULL) {
+	return;
+      }
       btrpkt->nodeid = TOS_NODE_ID;
       btrpkt->counter = counter;
       if (call AMSend.send(AM_BROADCAST_ADDR, 

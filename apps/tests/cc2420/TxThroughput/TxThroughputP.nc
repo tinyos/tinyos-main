@@ -105,7 +105,7 @@ implementation {
   
   /***************** Timer Events ***************/
   event void Timer.fired() {
-    ((ThroughputMsg *) call SerialAMSend.getPayload(&serialMsg))->packetsPerSecond = packetsPerSecond;
+    ((ThroughputMsg *) call SerialAMSend.getPayload(&serialMsg, sizeof(ThroughputMsg)))->packetsPerSecond = packetsPerSecond;
     packetsPerSecond = 0;
     post sendSerial();
   }

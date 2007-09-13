@@ -1,4 +1,4 @@
-// $Id: Receive.nc,v 1.4 2006-12-12 18:23:15 vlahan Exp $
+// $Id: Receive.nc,v 1.5 2007-09-13 23:10:17 scipio Exp $
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -65,27 +65,5 @@ interface Receive {
    */
   
   event message_t* receive(message_t* msg, void* payload, uint8_t len);
-
-  /**
-   * Return point to a protocol's payload region in a packet.  If len
-   * is not NULL, getPayload will return the length of the payload in
-   * it. This call is identical to <TT>Packet.getPayload</TT>, and is
-   * included in Receive as a convenience.
-   *
-   * @param  msg      the packet
-   * @param  len      a pointer to where to store the payload length
-   * @return          a pointer to the payload of the packet
-   */
-  command void* getPayload(message_t* msg, uint8_t* len);
-
-  /**
-   * Return the length of the payload of msg. This call is identical
-   * to <TT>Packet.payloadLength</TT>, and is included in Receive as a
-   * convenience.
-   *
-   * @param  msg      the packet
-   * @return          the length of the packet's payload
-   */
-  command uint8_t payloadLength(message_t* msg);
   
 }

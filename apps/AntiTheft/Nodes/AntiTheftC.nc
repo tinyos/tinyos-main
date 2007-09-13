@@ -1,4 +1,4 @@
-// $Id: AntiTheftC.nc,v 1.3 2007-04-14 00:35:07 gtolle Exp $
+// $Id: AntiTheftC.nc,v 1.4 2007-09-13 23:10:19 scipio Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -103,11 +103,12 @@ implementation
 	/* Report the identity of this node, using the collection protocol */
 
 	/* Get the payload part of alertMsg and fill in our data */
-	alert_t *newAlert = call AlertRoot.getPayload(&alertMsg);
-	newAlert->stolenId = TOS_NODE_ID;
-
-	/* and send it... */
-	check(call AlertRoot.send(&alertMsg, sizeof *newAlert));
+	alert_t *newAlert = call AlertRoot.getPayload(&alertMsg, sizeof(alert_t));
+	if (newAlert != NULL) {
+	  newAlert->stolenId = TOS_NODE_ID;
+	  /* and send it... */
+	  check(call AlertRoot.send(&alertMsg, sizeof *newAlert));
+	}
       }
   }
 

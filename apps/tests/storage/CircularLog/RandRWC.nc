@@ -1,4 +1,4 @@
-/* $Id: RandRWC.nc,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+/* $Id: RandRWC.nc,v 1.5 2007-09-13 23:10:22 scipio Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -65,7 +65,7 @@ implementation {
   message_t reportmsg;
 
   void report(error_t e) {
-    uint8_t *msg = call AMSend.getPayload(&reportmsg);
+    uint8_t *msg = call AMSend.getPayload(&reportmsg, 1);
 
     msg[0] = e;
     if (call AMSend.send(AM_BROADCAST_ADDR, &reportmsg, 1) != SUCCESS)

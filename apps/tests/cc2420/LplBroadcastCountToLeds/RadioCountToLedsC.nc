@@ -1,4 +1,4 @@
-// $Id: RadioCountToLedsC.nc,v 1.1 2007-04-12 17:14:08 rincon Exp $
+// $Id: RadioCountToLedsC.nc,v 1.2 2007-09-13 23:10:21 scipio Exp $
 
 /*                                                                        tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -88,7 +88,7 @@ implementation {
       return;
     }
     else {
-      radio_count_msg_t* rcm = (radio_count_msg_t*)call Packet.getPayload(&packet, NULL);
+      radio_count_msg_t* rcm = (radio_count_msg_t*)call Packet.getPayload(&packet, sizeof(radio_count_msg_t));
       if (call Packet.maxPayloadLength() < sizeof(radio_count_msg_t)) {
         return;
       }

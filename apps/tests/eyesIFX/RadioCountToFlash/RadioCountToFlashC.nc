@@ -115,8 +115,8 @@ implementation {
       return;
     }
     else {
-      RadioCountMsg* rcm = (RadioCountMsg*)call Packet.getPayload(&packet, NULL);
-      if (call Packet.maxPayloadLength() < sizeof(RadioCountMsg)) {
+      RadioCountMsg* rcm = (RadioCountMsg*)call Packet.getPayload(&packet, sizeof(rcm));
+      if (rcm == NULL || call Packet.maxPayloadLength() < sizeof(RadioCountMsg)) {
         return;
       }
       ++sendingCounter;

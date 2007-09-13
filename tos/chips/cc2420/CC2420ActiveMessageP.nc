@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.8 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.9 $ $Date: 2007-09-13 23:10:16 $
  */
  
 #include "CC2420.h"
@@ -77,26 +77,8 @@ implementation {
     return call Packet.maxPayloadLength();
   }
 
-  command void* AMSend.getPayload[am_id_t id](message_t* m) {
-    return call Packet.getPayload(m, NULL);
-  }
-
-  /***************** Receive Commands ****************/
-  command void* Receive.getPayload[am_id_t id](message_t* m, uint8_t* len) {
+  command void* AMSend.getPayload[am_id_t id](message_t* m, uint8_t len) {
     return call Packet.getPayload(m, len);
-  }
-
-  command uint8_t Receive.payloadLength[am_id_t id](message_t* m) {
-    return call Packet.payloadLength(m);
-  }
-  
-  /***************** Snoop Commands ****************/
-  command void* Snoop.getPayload[am_id_t id](message_t* m, uint8_t* len) {
-    return call Packet.getPayload(m, len);
-  }
-
-  command uint8_t Snoop.payloadLength[am_id_t id](message_t* m) {
-    return call Packet.payloadLength(m);
   }
 
   /***************** AMPacket Commands ****************/
@@ -169,11 +151,8 @@ implementation {
     return TOSH_DATA_LENGTH;
   }
   
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-    if (len != NULL) {
-      *len = call Packet.payloadLength(msg);
-    }
-    return msg->data;
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
+    return call SubSend.getPayload(msg, len);
   }
 
   

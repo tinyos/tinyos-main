@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.2 $ $Date: 2007-09-13 23:10:16 $
  */
 
 module CC2420CsmaP {
@@ -155,8 +155,13 @@ implementation {
 
   }
 
-  command void* Send.getPayload(message_t* m) {
-    return m->data;
+  command void* Send.getPayload(message_t* m, uint8_t len) {
+    if (len <= call Send.maxPayloadLength()) {
+      return m->data;
+    }
+    else {
+      return NULL;
+    }
   }
 
   command uint8_t Send.maxPayloadLength() {
