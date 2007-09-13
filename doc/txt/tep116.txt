@@ -6,12 +6,12 @@ Packet Protocols
 :Group: Core Working Group 
 :Type: Documentary
 :Status: Draft
-:TinyOS-Version: 2.x
+:TinyOS-Version: > 2.1
 :Author: Philip Levis
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.10 $
-:Draft-Modified: $Date: 2007-03-28 05:46:28 $
+:Draft-Version: $Revision: 1.11 $
+:Draft-Modified: $Date: 2007-09-13 23:09:19 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -122,29 +122,33 @@ The Packet interface defines this mechanism::
     command uint8_t payloadLength(message_t* msg);
     command void setPayLoadLength(message_t* msg, uint8_t len);
     command uint8_t maxPayloadLength();
-    command void* getPayload(message_t* msg, uint8_t* len);
+    command void* getPayload(message_t* msg, uint8_t len);
   }
 
 A component can obtain a pointer to its data region within a packet by
-calling ``getPayload()`` the optional ``len`` argument is for also
-obtaining the size of the data region. A provider of a Packet
-interface MUST check if ``len`` is NULL and ignore it if it is. A
-component can also obtain the size of the data region with a call to
-``payloadLength``. 
+calling ``getPayload()``. A call to this command includes the length
+the caller requires. The command ``maxPayloadLength`` returns the maximum
+length the payload can be: if the ``len`` parameter to ``getPayload``
+is greater than the value ``maxPayloadLength``would return,
+``getPayload`` MUST return NULL.
 
-A component can set the payload length with
-``setPayLoadLength.`` As Send interfaces always include a length
-parameter in their send call, this command is not required for
-sending, and so is never called in common use cases. Instead, 
-it is a way for queues and other packet buffering components
-to store the full state of a packet without requiring additional
-memory allocation. 
+
+A component can set the payload length with ``setPayLoadLength.`` A
+component can obtain the size of the data region of packet in use with
+a call to ``payloadLength``. As Send interfaces always include a
+length parameter in their send call, ``setPayLoadLength`` is not
+required for sending, and so is never called in common use
+cases. Instead, it is a way for queues and other packet buffering
+components to store the full state of a packet without requiring
+additional memory allocation.
 
 The distinction between ``payloadLength`` and ``maxPayloadLength``
-comes from whether the packet is being received or sent. In the receive
-case, determining the size of the existing data payload is needed;
-in the send case, a component needs to know how much data it can put
-in the packet. 
+comes from whether the packet is being received or sent. In the
+receive case, determining the size of the existing data payload is
+needed; in the send case, a component needs to know how much data it
+can put in the packet. By definition, the return value of
+``payloadLength`` must be less than or equal to the return value of
+``maxPayloadLength``.
 
 The Packet interface assumes that headers have a fixed size. 
 It is difficult to return a pointer into the data region when its 
@@ -171,7 +175,7 @@ layer. For example, if there is a network that introduces
  
     command void Packet.clear(message_t* msg) {
       uint8_t len;
-      void* payload = call SubPacket.getPayload(msg, &len);
+      void* payload = call SubPacket.getPayload(msg, call SubPacket.maxPayloadLength());
       memset(payload, len, 0);
     }
 
@@ -187,12 +191,12 @@ layer. For example, if there is a network that introduces
       return SubPacket.maxPayloadLength(msg) - SEQNO_OFFSET;
     }
 
-    command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-      uint8_t* payload = call SubPacket.getPayload(msg, len);
-      if (len != NULL) {
-        *len -= SEQNO_OFFSET;
+    command void* Packet.getPayload(message_t* msg, uint8_t len) {
+      uint8_t* payload = call SubPacket.getPayload(msg, len + SEQNO_OFFSET);
+      if (payload != NULL) {       
+        payload += SEQNO_OFFSET;
       }
-      return payload + SEQNO_OFFSET; 
+      return payload;
     } 
   }
 
@@ -257,7 +261,7 @@ basic, address-free Send interface::
     event void sendDone(message_t* msg, error_t error);  
 
     command uint8_t maxPayloadLength();
-    command void* getPayload(message_t* msg);
+    command void* getPayload(message_t* msg, uint8_t len);
   }
 
 while this is the AMSend interface::
@@ -268,16 +272,14 @@ while this is the AMSend interface::
     event void sendDone(message_t* msg, error_t error);
 
     command uint8_t maxPayloadLength();
-    command void* getPayload(message_t* msg); 
+    command void* getPayload(message_t* msg, uint8_t len); 
   }
 
 Sending interfaces MUST include these four commands and one event.
 The duplication of some of the commands in Packet is solely for ease
 of use: ``maxPayloadLength`` and ``getPayload`` MUST behave
-identically as ``Packet.maxPayloadLength`` and ``Packet.getPayload``,
-with the exception that the latter has no length parameter (it should
-behave as if the length parameter of the ``Packet`` call were
-NULL). Their inclusion is so that components do not have to wire to
+identically as ``Packet.maxPayloadLength`` and ``Packet.getPayload.``
+Their inclusion is so that components do not have to wire to
 both Packet and the sending interface for basic use cases.
 
 When called with a length that is too long for the underlying
@@ -313,8 +315,6 @@ Receive is the interface for receiving packets. It has this signature::
 
   interface Receive {
     event message_t* receive(message_t* msg, void* payload, uint8_t len);
-    command void* getPayload(message_t* msg, uint8_t* len);
-    command uint8_t payloadLength(message_t* msg);
   }
 
 A call to ``Receive.getPayload()`` MUST behave identically to a call
@@ -681,6 +681,3 @@ which exports the interfaces of ``CC2420ActiveMessageC``.
 
 .. [4] TEP 113: Serial Communication.
 
-
-
- 

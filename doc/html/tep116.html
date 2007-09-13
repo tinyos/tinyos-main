@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
 <title>Packet Protocols</title>
 <meta name="author" content="Philip Levis" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:58:00 $
-:version: $Revision: 1.13 $
+:date: $Date: 2007-09-13 23:09:19 $
+:version: $Revision: 1.14 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -292,7 +292,7 @@ ul.auto-toc {
 </tr>
 <tr><th class="docinfo-name">Status:</th>
 <td>Draft</td></tr>
-<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">&gt; 2.1</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
 <td>Philip Levis</td></tr>
@@ -404,27 +404,30 @@ interface Packet {
   command uint8_t payloadLength(message_t* msg);
   command void setPayLoadLength(message_t* msg, uint8_t len);
   command uint8_t maxPayloadLength();
-  command void* getPayload(message_t* msg, uint8_t* len);
+  command void* getPayload(message_t* msg, uint8_t len);
 }
 </pre>
 <p>A component can obtain a pointer to its data region within a packet by
-calling <tt class="docutils literal"><span class="pre">getPayload()</span></tt> the optional <tt class="docutils literal"><span class="pre">len</span></tt> argument is for also
-obtaining the size of the data region. A provider of a Packet
-interface MUST check if <tt class="docutils literal"><span class="pre">len</span></tt> is NULL and ignore it if it is. A
-component can also obtain the size of the data region with a call to
-<tt class="docutils literal"><span class="pre">payloadLength</span></tt>.</p>
-<p>A component can set the payload length with
-<tt class="docutils literal"><span class="pre">setPayLoadLength.</span></tt> As Send interfaces always include a length
-parameter in their send call, this command is not required for
-sending, and so is never called in common use cases. Instead,
-it is a way for queues and other packet buffering components
-to store the full state of a packet without requiring additional
-memory allocation.</p>
+calling <tt class="docutils literal"><span class="pre">getPayload()</span></tt>. A call to this command includes the length
+the caller requires. The command <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt> returns the maximum
+length the payload can be: if the <tt class="docutils literal"><span class="pre">len</span></tt> parameter to <tt class="docutils literal"><span class="pre">getPayload</span></tt>
+is greater than the value <tt class="docutils literal"><span class="pre">maxPayloadLength``would</span> <span class="pre">return,</span>
+<span class="pre">``getPayload</span></tt> MUST return NULL.</p>
+<p>A component can set the payload length with <tt class="docutils literal"><span class="pre">setPayLoadLength.</span></tt> A
+component can obtain the size of the data region of packet in use with
+a call to <tt class="docutils literal"><span class="pre">payloadLength</span></tt>. As Send interfaces always include a
+length parameter in their send call, <tt class="docutils literal"><span class="pre">setPayLoadLength</span></tt> is not
+required for sending, and so is never called in common use
+cases. Instead, it is a way for queues and other packet buffering
+components to store the full state of a packet without requiring
+additional memory allocation.</p>
 <p>The distinction between <tt class="docutils literal"><span class="pre">payloadLength</span></tt> and <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt>
-comes from whether the packet is being received or sent. In the receive
-case, determining the size of the existing data payload is needed;
-in the send case, a component needs to know how much data it can put
-in the packet.</p>
+comes from whether the packet is being received or sent. In the
+receive case, determining the size of the existing data payload is
+needed; in the send case, a component needs to know how much data it
+can put in the packet. By definition, the return value of
+<tt class="docutils literal"><span class="pre">payloadLength</span></tt> must be less than or equal to the return value of
+<tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt>.</p>
 <p>The Packet interface assumes that headers have a fixed size.
 It is difficult to return a pointer into the data region when its
 position will only be known once the header values are bound.</p>
@@ -449,7 +452,7 @@ implementation {
 
   command void Packet.clear(message_t* msg) {
     uint8_t len;
-    void* payload = call SubPacket.getPayload(msg, &amp;len);
+    void* payload = call SubPacket.getPayload(msg, call SubPacket.maxPayloadLength());
     memset(payload, len, 0);
   }
 
@@ -465,12 +468,12 @@ implementation {
     return SubPacket.maxPayloadLength(msg) - SEQNO_OFFSET;
   }
 
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
-    uint8_t* payload = call SubPacket.getPayload(msg, len);
-    if (len != NULL) {
-      *len -= SEQNO_OFFSET;
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
+    uint8_t* payload = call SubPacket.getPayload(msg, len + SEQNO_OFFSET);
+    if (payload != NULL) {
+      payload += SEQNO_OFFSET;
     }
-    return payload + SEQNO_OFFSET;
+    return payload;
   }
 }
 </pre>
@@ -530,7 +533,7 @@ interface Send {
   event void sendDone(message_t* msg, error_t error);
 
   command uint8_t maxPayloadLength();
-  command void* getPayload(message_t* msg);
+  command void* getPayload(message_t* msg, uint8_t len);
 }
 </pre>
 <p>while this is the AMSend interface:</p>
@@ -541,16 +544,14 @@ interface AMSend {
   event void sendDone(message_t* msg, error_t error);
 
   command uint8_t maxPayloadLength();
-  command void* getPayload(message_t* msg);
+  command void* getPayload(message_t* msg, uint8_t len);
 }
 </pre>
 <p>Sending interfaces MUST include these four commands and one event.
 The duplication of some of the commands in Packet is solely for ease
 of use: <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt> and <tt class="docutils literal"><span class="pre">getPayload</span></tt> MUST behave
-identically as <tt class="docutils literal"><span class="pre">Packet.maxPayloadLength</span></tt> and <tt class="docutils literal"><span class="pre">Packet.getPayload</span></tt>,
-with the exception that the latter has no length parameter (it should
-behave as if the length parameter of the <tt class="docutils literal"><span class="pre">Packet</span></tt> call were
-NULL). Their inclusion is so that components do not have to wire to
+identically as <tt class="docutils literal"><span class="pre">Packet.maxPayloadLength</span></tt> and <tt class="docutils literal"><span class="pre">Packet.getPayload.</span></tt>
+Their inclusion is so that components do not have to wire to
 both Packet and the sending interface for basic use cases.</p>
 <p>When called with a length that is too long for the underlying
 maximum transfer unit (MTU), the send command MUST return ESIZE.</p>
@@ -582,8 +583,6 @@ was not called.</p>
 <pre class="literal-block">
 interface Receive {
   event message_t* receive(message_t* msg, void* payload, uint8_t len);
-  command void* getPayload(message_t* msg, uint8_t* len);
-  command uint8_t payloadLength(message_t* msg);
 }
 </pre>
 <p>A call to <tt class="docutils literal"><span class="pre">Receive.getPayload()</span></tt> MUST behave identically to a call
