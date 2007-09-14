@@ -1,4 +1,4 @@
-/* $Id: CC1000CsmaRadioC.nc,v 1.5 2006-12-12 18:23:05 vlahan Exp $
+/* $Id: CC1000CsmaRadioC.nc,v 1.6 2007-09-14 00:15:57 scipio Exp $
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -60,7 +60,8 @@ configuration CC1000CsmaRadioC {
     interface CsmaBackoff;
     interface RadioTimeStamping;
     interface PacketAcknowledgements;
-
+    interface LinkPacketMetadata;
+    
     interface LowPowerListening;
   }
 }
@@ -87,7 +88,8 @@ implementation {
   LowPowerListening = Csma;
   RadioTimeStamping = SendReceive;
   PacketAcknowledgements = SendReceive;
-
+  LinkPacketMetadata = SendReceive;
+  
   Csma.CC1000Control -> Control;
   Csma.Random -> RandomC;
   Csma.CC1000Squelch -> Squelch;
@@ -100,6 +102,7 @@ implementation {
   SendReceive.HplCC1000Spi -> Hpl;
   SendReceive.amAddress -> ActiveMessageAddressC;
   SendReceive.RssiRx -> Rssi.Rssi[unique(UQ_CC1000_RSSI)];
+  SendReceive.CC1000Squelch -> Squelch;
   
   Csma.RssiNoiseFloor -> Rssi.Rssi[unique(UQ_CC1000_RSSI)];
   Csma.RssiCheckChannel -> Rssi.Rssi[unique(UQ_CC1000_RSSI)];

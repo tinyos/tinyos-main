@@ -1,4 +1,4 @@
-// $Id: CC1000ActiveMessageC.nc,v 1.4 2006-12-12 18:23:05 vlahan Exp $
+// $Id: CC1000ActiveMessageC.nc,v 1.5 2007-09-14 00:15:57 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -50,6 +50,7 @@ configuration CC1000ActiveMessageC {
     interface AMPacket;
     interface Packet;
     interface PacketAcknowledgements;
+    interface LinkPacketMetadata;
   }
 }
 implementation {
@@ -60,7 +61,8 @@ implementation {
   SplitControl = Radio;
   Packet       = Radio;
   PacketAcknowledgements = Radio;
-
+  LinkPacketMetadata = Radio;
+  
   AMSend   = AM;
   Receive  = AM.Receive;
   Snoop    = AM.Snoop;
@@ -70,4 +72,5 @@ implementation {
   AM.SubReceive -> Radio.Receive;
   AM.amAddress -> Address;
   AM.Packet     -> Radio;
+  
 }

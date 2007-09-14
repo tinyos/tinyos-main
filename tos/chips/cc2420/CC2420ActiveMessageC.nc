@@ -31,7 +31,7 @@
  *
  * @author Philip Levis
  * @author David Moss
- * @version $Revision: 1.8 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.9 $ $Date: 2007-09-14 00:15:57 $
  */
 
 #include "CC2420.h"
@@ -47,6 +47,7 @@ configuration CC2420ActiveMessageC {
     interface Packet;
     interface CC2420Packet;
     interface PacketAcknowledgements;
+    interface LinkPacketMetadata;
     interface RadioBackoff[am_id_t amId];
     interface LowPowerListening;
     interface PacketLink;
@@ -86,7 +87,7 @@ implementation {
   LowPowerListening = LplC;
   CC2420Packet = CC2420PacketC;
   PacketAcknowledgements = CC2420PacketC;
-  
+  LinkPacketMetadata = CC2420PacketC;
   
   // SplitControl Layers
   SplitControl = LplC;

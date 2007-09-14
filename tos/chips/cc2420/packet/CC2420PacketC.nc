@@ -44,6 +44,7 @@ module CC2420PacketC {
     interface CC2420Packet;
     interface PacketAcknowledgements as Acks;
     interface CC2420PacketBody;
+    interface LinkPacketMetadata;
   }
 
 }
@@ -94,4 +95,7 @@ implementation {
     return (cc2420_metadata_t*)msg->metadata;
   }
 
+  async command bool LinkPacketMetadata.highChannelQuality(message_t* msg) {
+    return call CC2420Packet.getLqi(msg) > 105;
+  }
 }

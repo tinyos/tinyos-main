@@ -1,4 +1,4 @@
-// $Id: CC1000SendReceiveP.nc,v 1.6 2007-09-13 23:10:16 scipio Exp $
+// $Id: CC1000SendReceiveP.nc,v 1.7 2007-09-14 00:15:57 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -62,12 +62,13 @@ module CC1000SendReceiveP {
     interface Packet;
     interface ByteRadio;
     interface PacketAcknowledgements;
+    interface LinkPacketMetadata;
   }
   uses {
     //interface PowerManagement;
     interface CC1000Control;
     interface HplCC1000Spi;
-
+    interface CC1000Squelch;
     interface ReadNow<uint16_t> as RssiRx;
     async command am_addr_t amAddress();
   }
@@ -361,14 +362,14 @@ implementation
 
 	if (rxShiftBuf == ACK_WORD)
 	  {
-	    getMetadata(txBufPtr)->ack = 1;
+	    getMetadata(txBufPtr)->metadataBits |= CC1000_ACK_BIT;
 	    enterTxDoneState();
 	    return;
 	  }
       }
     if (count >= MAX_ACK_WAIT)
       {
-	getMetadata(txBufPtr)->ack = 0;
+	getMetadata(txBufPtr)->metadataBits &= ~CC1000_ACK_BIT;
 	enterTxDoneState();
       }
   }
@@ -567,6 +568,24 @@ implementation
   }
 
   void packetReceiveDone() {
+    message_t* pBuf;
+    uint16_t snr;
+    atomic {
+      if (radioState != RECEIVED_STATE) {
+	return;
+      }
+      pBuf = rxBufPtr;
+    }
+    snr = (uint16_t) getMetadata(pBuf)->strength_or_preamble;
+    /* Higher signal strengths have lower voltages. So see if we're
+       CC1000_WHITE_BIT_THRESH *below* the noise floor. */
+    if ((snr + CC1000_WHITE_BIT_THRESH) < ((call CC1000Squelch.get()))) {
+      getMetadata(pBuf)->metadataBits |= CC1000_WHITE_BIT;
+    }
+    else {
+      getMetadata(pBuf)->metadataBits &= ~CC1000_WHITE_BIT;
+    }
+    
     post signalPacketReceived();
     enterReceivedState();
   }
@@ -658,8 +677,13 @@ implementation
   }
 
   async command bool PacketAcknowledgements.wasAcked(message_t *msg) {
-    return getMetadata(msg)->ack;
+    return getMetadata(msg)->metadataBits & CC1000_ACK_BIT;
   }
+
+  async command bool LinkPacketMetadata.highChannelQuality(message_t* msg) {
+    return getMetadata(msg)->metadataBits & CC1000_WHITE_BIT;
+  }
+  
   // Default events for radio send/receive coordinators do nothing.
   // Be very careful using these, or you'll break the stack.
   default async event void RadioTimeStamping.transmittedSFD(uint16_t time, message_t *msgBuff) { }
