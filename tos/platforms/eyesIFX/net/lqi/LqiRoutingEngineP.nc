@@ -121,11 +121,11 @@ implementation {
   }
 
   lqi_header_t* getHeader(message_t* msg) {
-    return (lqi_header_t*)call Packet.getPayload(msg, NULL);
+    return (lqi_header_t*)call Packet.getPayload(msg, sizeof(lqi_header_t));
   }
   
   lqi_beacon_msg_t* getBeacon(message_t* msg) {
-    return (lqi_beacon_msg_t*)call Packet.getPayload(msg, NULL);
+    return (lqi_beacon_msg_t*)call Packet.getPayload(msg, sizeof(lqi_beacon_msg_t));
   }
 
   task void SendRouteTask() {
@@ -288,7 +288,7 @@ implementation {
   }
 
   command error_t RouteSelect.initializeFields(message_t* msg) {
-    lqi_header_t* header = (lqi_header_t*)call Packet.getPayload(msg, NULL);
+    lqi_header_t* header = (lqi_header_t*)call Packet.getPayload(msg, sizeof(lqi_header_t));
 
     header->originaddr = TOS_NODE_ID;
     header->originseqno = gOriginSeqNo++;
