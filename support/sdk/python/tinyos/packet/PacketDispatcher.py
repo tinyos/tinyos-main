@@ -28,4 +28,32 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["Message", "MoteIF", "SerialPacket"]
+import struct
+
+class PacketDispatcher:
+    def __init__(self):
+        self.listeners = {}
+
+    def addListener(self, listener, msgClass):
+        if listener not in self.listeners:
+            self.listeners[listener] = {}
+
+        amTypes = self.listeners[listener]
+        amTypes[msgClass.get_amType()] = msgClass
+
+    def removeListener(self, listener):
+        del self.listeners[listener]
+
+    def dispatchPacket(self, source, packet):
+        (addr, amType, group, length) = struct.unpack("<HBBB", packet[0:5])
+        msgData = packet[5:]
+
+        #print (addr, amType, group, length)
+
+        for l in self.listeners:
+            amTypes = self.listeners[l]
+            if amType in amTypes:
+                msgClass = amTypes[amType]
+                msg = msgClass(msgData)
+
+                l.receive(source, msg)

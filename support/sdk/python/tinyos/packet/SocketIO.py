@@ -28,4 +28,53 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["Message", "MoteIF", "SerialPacket"]
+import socket
+
+from IO import *
+
+class SocketIO(IO):
+    def __init__(self, host, port):
+        IO.__init__(self)
+
+        self.done = False
+
+        self.host = host
+        self.port = port
+
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.IPPROTO_TCP,
+                               socket.TCP_NODELAY,
+                               1)
+        self.socket.settimeout(1)
+        self.socket.bind(("", 0))
+
+    def cancel(self):
+        self.done = True
+
+    def open(self):
+        print "SocketIO: Connecting socket to "+str(self.host)+":"+str(self.port)
+        self.socket.connect((self.host, self.port))
+        self.socket.settimeout(1)
+
+    def close(self):
+        self.socket.close()
+        self.socket = None
+
+    def read(self, count):
+        data = ""
+        while count - len(data) > 0:
+            if self.isDone():
+                raise IODone()
+
+            try:
+                data += self.socket.recv(count - len(data))
+            except:
+                pass
+
+        return data
+
+    def write(self, data):
+        return self.socket.send(data)
+
+    def flush(self):
+        pass

@@ -28,4 +28,30 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["Message", "MoteIF", "SerialPacket"]
+class IODone(Exception):
+    pass
+
+class IO:
+    def __init__(self):
+        self.done = False
+
+    def isDone(self):
+        return self.done
+
+    def cancel(self):
+        self.done = True
+
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def read(self, count):
+        pass
+
+    def write(self, data):
+        pass
+
+    def flush(self):
+        pass

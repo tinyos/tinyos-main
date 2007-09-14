@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005
+# Copyright (c) 2005-2006
 #      The President and Fellows of Harvard College.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,4 +28,42 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["Message", "MoteIF", "SerialPacket"]
+import re
+import socket
+
+from PacketSource import *
+from Platform import *
+from SFProtocol import *
+from SocketIO import *
+
+class SFSource(PacketSource):
+    def __init__(self, dispatcher, args):
+        PacketSource.__init__(self, dispatcher)
+
+        m = re.match(r'(.*):(.*)', args)
+        if m == None:
+            raise PacketSourceException("bad arguments")
+
+        (host, port) = m.groups()
+        port = int(port)
+
+        self.io = SocketIO(host, port)
+        self.prot = SFProtocol(self.io, self.io)
+
+    def cancel(self):
+        self.done = True
+        self.io.cancel()
+
+    def open(self):
+        self.io.open()
+        self.prot.open()
+        PacketSource.open(self)
+
+    def close(self):
+        self.io.close()
+
+    def readPacket(self):
+        return self.prot.readPacket()
+
+    def writePacket(self, packet):
+        self.prot.writePacket(packet)

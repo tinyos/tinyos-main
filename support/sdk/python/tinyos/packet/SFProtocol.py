@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005
+# Copyright (c) 2005-2006
 #      The President and Fellows of Harvard College.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,4 +28,50 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["Message", "MoteIF", "SerialPacket"]
+VERSION = "U"
+SUBVERSION = " "
+
+PLATFORM_UNKNOWN = 0
+
+class SFProtocolException(Exception):
+    def __init__(self, *args):
+        self.args = args
+
+class SFProtocol:
+    def __init__(self, ins, outs):
+        self.ins = ins
+        self.outs = outs
+        self.platform = None
+
+    def open(self):
+        self.outs.write(VERSION + SUBVERSION)
+        partner = self.ins.read(2)
+        if partner[0] != VERSION:
+            print "SFProtocol : version error"
+            raise SFProtocolException("protocol version error")
+
+	# Actual version is min received vs our version
+        # ourversion = partner[1] & 0xff
+        
+        if self.platform == None:
+            self.platform = PLATFORM_UNKNOWN
+
+        # In tinyox-1.x, we then exchanged platform information
+
+        # the tinyos-2.x serial forwarder doesn't do that, so the
+        # connection is all set up at this point.
+
+
+    def readPacket(self):
+        size = self.ins.read(1)
+        packet = self.ins.read(ord(size))
+        return packet
+
+    def writePacket(self, packet):
+        if len(packet) > 255:
+            raise SFProtocolException("packet too long")
+
+        self.outs.write(chr(len(packet)))
+        self.outs.write(packet)
+        self.outs.flush()
+        

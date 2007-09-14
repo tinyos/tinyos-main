@@ -28,4 +28,6 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["Message", "MoteIF", "SerialPacket"]
+__all__ = ["PacketDispatcher", "PacketSource", "Packetizer",
+           "SFProtocol", "SFSource", "ThreadTask",
+           "avrmote", "micaz", "telos"]

@@ -46,11 +46,12 @@ class Message:
 
             if data == None or len(data) != data_length:
                 self.data = chr(0) * data_length
+
         else:
             self.data_length = len(data)
 
             self.am_type = 0
-
+            
     def dataGet(self):
         return self.data
 

@@ -28,4 +28,64 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["Message", "MoteIF", "SerialPacket"]
+import threading
+import time
+
+class ThreadTask:
+    def __init__(self, runner):
+        self.done = False
+        self.runner = runner
+
+        runner.add(self)
+
+    def isDone(self):
+        return self.done
+
+    def cancel(self):
+        self.done = True
+
+    def finish(self):
+        self.runner.remove(self)
+
+class ThreadTaskRunner:
+    def __init__(self):
+        self.taskList = []
+        self.taskListLock = threading.Lock()
+
+    def add(self, task):
+        self.taskListLock.acquire()
+        self.taskList = [task] + self.taskList
+        self.taskListLock.release()
+
+    def remove(self, task):
+        self.taskListLock.acquire()
+        self.taskList.remove(task)
+        self.taskListLock.release()
+
+    def start(self, task):
+        thread = threading.Thread(None, task)
+        thread.start()
+
+    def cancelAll(self):
+        self.taskListLock.acquire()
+
+        for t in self.taskList:
+            try:
+                t.cancel()
+            except:
+                pass
+
+        self.taskListLock.release()
+
+    def finish(self):
+        try:
+            self.taskListLock.acquire()
+
+            while len(self.taskList) != 0:
+                self.taskListLock.release()
+                time.sleep(0.2)
+                self.taskListLock.acquire()
+
+            self.taskListLock.release()
+        except:
+            pass
