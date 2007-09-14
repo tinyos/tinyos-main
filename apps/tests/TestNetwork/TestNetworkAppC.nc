@@ -8,7 +8,7 @@
  * Collection Tree Protocol for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.5 $ $Date: 2007-04-14 00:34:20 $
+ * @version $Revision: 1.6 $ $Date: 2007-09-14 18:48:51 $
  */
 #include "TestNetwork.h"
 #include "Ctp.h"
@@ -51,7 +51,8 @@ implementation {
   TestNetworkC.Random -> RandomC;
   TestNetworkC.Pool -> PoolC;
   TestNetworkC.Queue -> QueueC;
-
+  TestNetworkC.RadioPacket -> ActiveMessageC;
+  
 #ifndef NO_DEBUG
   components new PoolC(message_t, 10) as DebugMessagePool;
   components new QueueC(message_t*, 10) as DebugSendQueue;
