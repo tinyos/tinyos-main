@@ -31,6 +31,7 @@
  
  /**
   * @author David Moss
+  * @author Tony O'Donovan
   */
 #ifndef DEFAULTLPL_H
 #define DEFAULTLPL_H
@@ -57,9 +58,13 @@ typedef enum {
 /**
  * This is a measured value of the time in ms the radio is actually on
  * We round this up to err on the side of better performance ratios
+ * This includes the acknowledgement wait period and backoffs,
+ * which can typically be much longer than the transmission.
+ * 
+ * Measured by Tony O'Donovan
  */
 #ifndef DUTY_ON_TIME
-#define DUTY_ON_TIME 5 
+#define DUTY_ON_TIME 11 
 #endif
 
 /**
