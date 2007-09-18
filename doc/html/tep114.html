@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
 <title>SIDs: Source and Sink Independent Drivers</title>
 <meta name="author" content="Gilman Tolle, Philip Levis, and David Gay" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:58:00 $
-:version: $Revision: 1.9 $
+:date: $Date: 2007-09-18 19:50:33 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Gilman Tolle, Philip Levis, and David Gay</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">30-Oct-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-01-10</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-09-18</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -320,15 +320,16 @@ for data sources and sinks in TinyOS 2.x.</p>
 </div>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
-<p>Sensing is an integral part of any sensor network application.  Having
-a wide variety of sensor interfaces usually does not impose a large
-burden on an application developer, as any given application uses a
-small and static set. However, applications often build on top of more
-general systems, such as management or database layers, which may need
-to sample sensors. Since these are general and sensor-independent
-systems, they require a sensor-independent interface. TinyOS 2.0
-therefore has telescoping sensor abstractions, providing both simple
-and sensor-independent as well as sensor-specific interfaces.</p>
+<p>Sensing is an integral part of any sensor network application. The
+diversity of sensors can lead to a wide variety of different software
+interfaces to these sensors. However, the burden of connecting a
+general sensor data management application to every one of these
+different interfaces suggests that sensors also provide a simple,
+general-purpose interface for data acquisition. Therefore, TinyOS 2.0
+has telescoping sensor abstractions, providing both sensor-independent
+and sensor-specific interfaces. This memo documents a set of hardware-
+and sensor-independent interfaces for data sources and sinks in TinyOS
+2.x.</p>
 </div>
 <div class="section">
 <h1><a id="sensors-in-tinyos-1-x" name="sensors-in-tinyos-1-x">2. Sensors in TinyOS 1.x</a></h1>
@@ -340,11 +341,14 @@ the ADC interface was originally designed for inexpensive,
 interrupt-driven sampling.  All of its commands and events are async
 and sensor values are always 16 bits, although only some subset of the
 bits may be significant (e.g., a 12-bit value).</p>
-<p>Because sensing can be a part of high-level application logic,
+<p>Because sensing is an integral part of high-level application logic,
 the asynchronicity of these events means that high-level components
-must deal with atomic sections and possible race conditions, even
-if the sampling rate is very low (e.g., every five minutes)
-and so could be easily placed in a task.</p>
+must work with atomic section, even if the sampling rate is very low
+(e.g., every five minutes) and so could be easily placed in a
+task. Race conditions are problematic and possible in any real time
+multi-tasking design. Race conditions are a failure in design, and
+especially difficult to detect at low sampling rates. Careful and
+skillful design review practices flush out race conditions early on.</p>
 <p>Additionally, not all sensors require ADC conversions from the MCU.
 Many sensors today are digital. To sample these sensors, the MCU sends
 a sample command and receives the corresponding data over a bus (e.g.,
@@ -354,36 +358,37 @@ synchronous code. In the command direction, this can force a task
 allocation to convert async to sync; in the event direction, the
 application has to deal with async code even though the event is, in
 practice, in a task.</p>
-<p>Finally, the simplicity of the ADC interface has led many sensors to
-introduce several new ones for calibration and control, such as
-<tt class="docutils literal"><span class="pre">Mic</span></tt> and <tt class="docutils literal"><span class="pre">MagSetting</span></tt>. Because ADCs generally do not have error
-conditions, the ADC interface has no way to signal that a sample
-failed. This turns out to be important for sensors where the sampling
-request is split-phase, such as sensors over a bus. In these cases, it
-is possible that the driver accepts the request to sample, but once
-acquiring the bus discovers something is wrong with the sensor. This
-property has led bus-based sensors to also have a separate
-<tt class="docutils literal"><span class="pre">ADCError</span></tt> interface; this interface breaks the basic TinyOS pattern
-of a tight coupling between split-phase commands and their completion
-events, as the command is in ADC but the completion event is in
-ADCError.</p>
-<p>All of these complications can make it difficult to write high-level
-code that is sensor independent, unless the sensor is a simple ADC
-reading. Sensors, when possible, should follow an approach similar to
-the HAA[_haa], where they have sensor- or sensor-class-specific
-interfaces for high performance or special case use, but also simple
-and common interfaces for basic and portable use. Providing a
-telescoping sensor abstraction allows both classes of use.</p>
+<p>Finally, the simplicity of the ADC interface has led many sensor
+modules to introduce several new interfaces for calibration and
+control, such as <tt class="docutils literal"><span class="pre">Mic</span></tt> and <tt class="docutils literal"><span class="pre">MagSetting</span></tt>. Because ADCs generally do
+not have error conditions, the ADC interface has no way to signal that
+a sample failed. This turns out to be important for sensors where the
+sampling request is split-phase, such as sensors over a bus. In these
+cases, it is possible that the driver accepts the request to sample,
+but once acquiring the bus discovers something is wrong with the
+sensor. This property has led bus-based sensors to also have a
+separate <tt class="docutils literal"><span class="pre">ADCError</span></tt> interface; this interface breaks the basic
+TinyOS pattern of a tight coupling between split-phase commands and
+their completion events, as the command is in ADC but the completion
+event is in ADCError.</p>
+<p>All of these complications provide the context of the challenge to
+write high-level code that is sensor independent. Sensors, when
+possible, should follow an approach similar to the HAA[_haa], where
+they have sensor- or sensor-class-specific interfaces for high
+performance or special case use, but also simple and common interfaces
+for basic and portable use. Providing a telescoping sensor abstraction
+allows both classes of use.</p>
 </div>
 <div class="section">
 <h1><a id="sensors-in-tinyos-2-x" name="sensors-in-tinyos-2-x">3. Sensors in TinyOS 2.x</a></h1>
-<p>TinyOS 2.x has several sensor-independent interfaces, which cover a
-range of common use cases. These interfaces can be used to write a
-Source- or Sink-Independent Driver (SID). A SID is source/sink
-independent because its interfaces do not themselves contain
-information on the sort of sensor or device they sit on top of.  A SID
-SHOULD provide one or more of the interfaces described in this
-section, depending on its expected uses and underlying data model.</p>
+<p>TinyOS 2.x contains several nesC interfaces that can be used to
+provide sensor-independent interfaces which cover a range of common
+use cases. This document describes these interfaces, and explains how
+to use these interfaces to write a Source- or Sink-Independent Driver
+(SID). A SID is source/sink independent because its interfaces do not
+themselves contain information on the sort of sensor or device they
+sit on top of.  A SID SHOULD provide one or more of the interfaces
+described in this section.</p>
 <div class="section">
 <h2><a id="split-phase-small-scalar-i-o" name="split-phase-small-scalar-i-o">3.1 Split-Phase Small Scalar I/O</a></h2>
 <p>The first set of interfaces can be used for low-rate scalar I/O:</p>
@@ -429,9 +434,8 @@ readings.</p>
 </div>
 <div class="section">
 <h2><a id="split-phase-large-scalar-i-o" name="split-phase-large-scalar-i-o">3.2 Split-Phase Large Scalar I/O</a></h2>
-<p>If the SID's data object is too big to be passed efficienctly on the
-stack, it can provide read/write interfaces that pass parameters by
-pointer rather than value:</p>
+<p>If the SID's data object is large, it can provide read/write
+interfaces that pass parameters by pointer rather than value:</p>
 <pre class="literal-block">
 interface ReadRef&lt;val_t&gt; {
   command error_t read( val_t* val );
@@ -451,13 +455,13 @@ interface ReadWriteRef&lt;val_t&gt; {
   event void writeDone( error_t result, val_t* val );
 }
 </pre>
-<p>The caller is responsible for allocating storage pointed to by the val
-pointer which is passed to read() or write(). The SID MUST then
-take ownership of the storage, store a new value into it or copy a
-value out of it, and then relinquish it before signaling readDone() or
-writeDone(). If read or write() returns SUCCESS then the caller MUST
-NOT access or modify the storage pointed to by the val pointer until
-it handles the readDone() or writeDone() event.</p>
+<p>The caller is responsible for managing storage pointed to by the val
+pointer which is passed to read() or write(). The SID takes ownership
+of the storage, stores a new value into it or copy a value out of it,
+and then relinquishes it when signaling readDone() or writeDone(). If
+read or write() returns SUCCESS then the caller MUST NOT access or
+modify the storage pointed to by the val pointer until it handles the
+readDone() or writeDone() event.</p>
 <p>As is the case with the parameters by value, whether a component
 provides separate ReadRef and WriteRef or ReadWriteRef affects the
 concurrency it allows. If a component can allow the two to execute
@@ -575,12 +579,13 @@ begins to fill the buffers in the queue, signalling the bufferDone()
 event when a buffer has been filled. The client MAY call postBuffer()
 after read() in order to provide the device with new storage for
 future reads.</p>
-<p>If the device ever takes a sample that it cannot store (e.g., no
-buffers are available), it MUST signal readDone(). If an error occurs
-during a read, then the device MUST signal readDone() with an
-appropriate failure code. Before a device signals readDone(), it MUST
-signal bufferDone() for all outstanding buffers. If a readDone() is
-pending, calls to postBuffer MUST return FAIL.</p>
+<p>If the device ever takes a sample that it cannot store (e.g., due to
+buffer underrun), it MUST signal readDone() with an appropriate
+failure code. If an error occurs during a read, then the device MUST
+signal readDone() with an appropriate failure code. Before a device
+signals readDone(), it MUST signal bufferDone() for all outstanding
+buffers. If a readDone() is pending, calls to postBuffer MUST return
+FAIL.</p>
 <p>The following interface can be used for bulk writes:</p>
 <pre class="literal-block">
 interface WriteStream&lt;val_t&gt; {
