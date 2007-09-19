@@ -1,4 +1,4 @@
-/* $Id: BigQueue.nc,v 1.1 2007-09-19 17:20:08 klueska Exp $ */
+/* $Id: BigQueue.nc,v 1.2 2007-09-19 17:29:17 klueska Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -36,11 +36,11 @@
  *
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2007-09-19 17:20:08 $
+ *  @date   $Date: 2007-09-19 17:29:17 $
  */
 
    
-interface Queue<t> {
+interface BigQueue<t> {
 
   /**
    * Returns if the queue is empty.
