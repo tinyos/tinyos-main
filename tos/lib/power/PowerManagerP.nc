@@ -23,8 +23,8 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-02-04 19:55:53 $ 
+ * $Revision: 1.6 $
+ * $Date: 2007-09-19 18:00:00 $ 
  * ======================================================================== 
  */
  
@@ -90,7 +90,8 @@ implementation {
   }
 
   event void SplitControl.startDone(error_t error) {
-    call ResourceDefaultOwner.release();
+    if(call ResourceDefaultOwner.isOwner())
+      call ResourceDefaultOwner.release();
   }
   
   async event void ResourceDefaultOwner.granted() {
