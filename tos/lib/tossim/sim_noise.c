@@ -254,15 +254,14 @@ void makePmfDistr(uint16_t node_id)__attribute__ ((C, spontaneous))
   for(i=0; i<NOISE_HISTORY; i++) {
     pKey[i] = /* noiseData[node_id].noiseTrace[i]; // */ search_bin_num(noiseData[node_id].noiseTrace[i]);
   }
-  sim_noise_dist(node_id);
-  arrangeKey(node_id);
+
   for(i = NOISE_HISTORY; i < noiseData[node_id].noiseTraceIndex; i++) {
     if (i == NOISE_HISTORY) {
       //printf("Inserting first element.\n");
     }
-    pKey[NOISE_HISTORY-1] = /*noiseData[node_id].noiseTrace[i]; //*/ search_bin_num(noiseData[node_id].noiseTrace[i]);
     sim_noise_dist(node_id);
     arrangeKey(node_id);
+    pKey[NOISE_HISTORY-1] =  search_bin_num(noiseData[node_id].noiseTrace[i]);
   }
 
   dbg_clear("HASH", "FreqKey = ");
@@ -416,13 +415,13 @@ void makeNoiseModel(uint16_t node_id)__attribute__ ((C, spontaneous)) {
     dbg("Insert", "Setting history %i to be %i\n", (int)i, (int)noiseData[node_id].key[i]);
   }
   
-  sim_noise_add(node_id, noiseData[node_id].noiseTrace[NOISE_HISTORY]);
-  arrangeKey(node_id);
+  //sim_noise_add(node_id, noiseData[node_id].noiseTrace[NOISE_HISTORY]);
+  //arrangeKey(node_id);
   
   for(i = NOISE_HISTORY; i < noiseData[node_id].noiseTraceIndex; i++) {
-    noiseData[node_id].key[NOISE_HISTORY-1] = search_bin_num(noiseData[node_id].noiseTrace[i]);
-    sim_noise_add(node_id, noiseData[node_id].noiseTrace[i+1]);
+    sim_noise_add(node_id, noiseData[node_id].noiseTrace[i]);
     arrangeKey(node_id);
+    noiseData[node_id].key[NOISE_HISTORY-1] = search_bin_num(noiseData[node_id].noiseTrace[i]);
   }
   noiseData[node_id].generated = 1;
 }
