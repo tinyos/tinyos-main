@@ -106,6 +106,10 @@ protected:
     /* file descriptor for server port on local machine */
     int serverFD;
 
+    /* pipe fd pair to inform client reader thread of new clients */
+    int pipeWriteFD;
+    int pipeReadFD;
+    
     /* reference to read packet buffer */
     PacketBuffer &readBuffer;    
 
@@ -163,6 +167,11 @@ protected:
     /* reports error to stderr */
     int reportError(const char *msg, int result);
 
+    /* write something into pipe to wake up client readerThread */
+    void stuffPipe();
+    
+    /* remove data written into pipe */
+    void clearPipe();
 
 public:
     /* create SF TCP server - init and start threads */
