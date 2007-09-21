@@ -144,6 +144,8 @@ TCPComm::~TCPComm()
     {
         close(*it);
     }
+    close(pipeWriteFD);
+    close(pipeReadFD);
     pthread_mutex_destroy(&clientInfo.sleeplock);
     pthread_mutex_destroy(&clientInfo.countlock);
     pthread_cond_destroy(&clientInfo.wakeup);
