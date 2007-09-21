@@ -130,8 +130,8 @@ implementation {
   components new AMSenderC(AM_CTP_DATA);
   components new AMReceiverC(AM_CTP_DATA);
   components new AMSnooperC(AM_CTP_DATA);
-  
-  components new CtpRoutingEngineP(TREE_ROUTING_TABLE_SIZE, 1, 1024) as Router;
+
+  components new CtpRoutingEngineP(TREE_ROUTING_TABLE_SIZE, 10, 1024) as Router;
   StdControl = Router;
   StdControl = Estimator;
   RootControl = Router;
@@ -139,6 +139,9 @@ implementation {
   Router.BeaconSend -> Estimator.Send;
   Router.BeaconReceive -> Estimator.Receive;
   Router.LinkEstimator -> Estimator.LinkEstimator;
+
+  Router.CompareBit -> Estimator.CompareBit;
+
   Router.AMPacket -> ActiveMessageC;
   Router.RadioControl -> ActiveMessageC;
   Router.BeaconTimer -> RoutingBeaconTimer;
@@ -149,6 +152,10 @@ implementation {
   Router.CtpCongestion -> Forwarder;
   CtpInfo = Router;
 
+  components CC2420ActiveMessageC;
+  components CC2420PacketC as CC2420;
+  Router.CC2420Packet -> CC2420;
+  
   components new TimerMilliC() as RetxmitTimer;
   Forwarder.RetxmitTimer -> RetxmitTimer;
 
@@ -176,9 +183,13 @@ implementation {
 
   LinkEstimator = Estimator;
   
+  Estimator.Random -> RandomC;
+
   Estimator.AMSend -> SendControl;
   Estimator.SubReceive -> ReceiveControl;
   Estimator.SubPacket -> SendControl;
   Estimator.SubAMPacket -> SendControl;
+  Estimator.LinkPacketMetadata -> CC2420ActiveMessageC;
+  //  Estimator.LinkPacketMetadata -> ActiveMessageC;
   MainC.SoftwareInit -> Estimator;
 }

@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.8 2007-09-13 23:10:18 scipio Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.9 2007-09-21 23:50:28 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2007-09-13 23:10:18 $
+ *  @date   $Date: 2007-09-21 23:50:28 $
  *  @see Net2-WG
  */
 
@@ -113,6 +113,10 @@ generic module CtpRoutingEngineP(uint8_t routingTableSize, uint16_t minInterval,
         interface Random;
         interface CollectionDebug;
         interface CtpCongestion;
+
+	interface CompareBit;
+	interface CC2420Packet;
+
     }
 }
 
@@ -434,7 +438,7 @@ implementation {
 
     event void RouteTimer.fired() {
       if (radioOn && running) {
-	post updateRouteTask();
+         post updateRouteTask();
       }
     }
       
@@ -464,6 +468,7 @@ implementation {
         am_addr_t from;
         ctp_routing_header_t* rcvBeacon;
         bool congested;
+        uint8_t lqi = call CC2420Packet.getLqi(msg);
 
         // Received a beacon, but it's not from us.
         if (len != sizeof(ctp_routing_header_t)) {
@@ -484,7 +489,7 @@ implementation {
         dbg("TreeRouting","%s from: %d  [ parent: %d etx: %d]\n",
             __FUNCTION__, from, 
             rcvBeacon->parent, rcvBeacon->etx);
-        //call CollectionDebug.logEventRoute(NET_C_TREE_RCV_BEACON, rcvBeacon->parent, 0, rcvBeacon->etx);
+        call CollectionDebug.logEventRoute(NET_C_TREE_RCV_BEACON, from, lqi, rcvBeacon->etx);
 
         //update neighbor table
         if (rcvBeacon->parent != INVALID_ADDR) {
@@ -508,6 +513,12 @@ implementation {
         //post updateRouteTask();
         return msg;
     }
+
+
+  //event void LinkEstimator.newNeighbor(am_addr_t neighbor, uint8_t lqi) {
+  //  call CollectionDebug.logEventRoute(NET_C_TREE_RCV_BEACON, neighbor, lqi, 0);
+  //}
+
 
     /* Signals that a neighbor is no longer reachable. need special care if
      * that neighbor is our parent */
@@ -637,6 +648,61 @@ implementation {
     }
     
     default event void Routing.routeFound() {
+    }
+
+
+  /* This should see if the node should be inserted in the table.
+   * If the white_bit is set, this means the LL believes this is a good
+   * first hop link. 
+   * The link will be recommended for insertion if it is better* than some
+   * link in the routing table that is not our parent.
+   * We are comparing the path quality up to the node, and ignoring the link
+   * quality from us to the node. This is because of a couple of things:
+   *   1. because of the white bit, we assume that the 1-hop to the candidate
+   *      link is good (say, etx=1)
+   *   2. we are being optimistic to the nodes in the table, by ignoring the
+   *      1-hop quality to them (which means we are assuming it's 1 as well)
+   *      This actually sets the bar a little higher for replacement
+   *   3. this is faster
+   *   4. it doesn't require the link estimator to have stabilized on a link
+   */
+    event bool CompareBit.shouldInsert(message_t *msg, void* payload, uint8_t len, bool white_bit) {
+        
+        bool found = FALSE;
+        uint16_t pathEtx;
+        //uint16_t linkEtx = evaluateEtx(0);
+        uint16_t neighEtx;
+        int i;
+        routing_table_entry* entry;
+        ctp_routing_header_t* rcvBeacon;
+
+        if ((call AMPacket.type(msg) != AM_CTP_ROUTING) ||
+            (len != sizeof(ctp_routing_header_t))) 
+            return FALSE;
+
+        /* 1.determine this packet's path quality */
+        rcvBeacon = (ctp_routing_header_t*)payload;
+
+        if (rcvBeacon->parent == INVALID_ADDR)
+            return FALSE;
+        /* the node is a root, recommend insertion! */
+        if (rcvBeacon->etx == 0) {
+            return TRUE;
+        }
+    
+        pathEtx = rcvBeacon->etx; // + linkEtx;
+
+        /* 2. see if we find some neighbor that is worse */
+        for (i = 0; i < routingTableActive && !found; i++) {
+            entry = &routingTable[i];
+            //ignore parent, since we can't replace it
+            if (entry->neighbor == routeInfo.parent)
+                continue;
+            neighEtx = entry->info.etx;
+            //neighEtx = evaluateEtx(call LinkEstimator.getLinkQuality(entry->neighbor));
+            found |= (pathEtx < neighEtx); 
+        }
+        return found;
     }
 
 
