@@ -152,9 +152,6 @@ implementation {
   Router.CtpCongestion -> Forwarder;
   CtpInfo = Router;
 
-  components CC2420ActiveMessageC;
-  components CC2420PacketC as CC2420;
-  Router.CC2420Packet -> CC2420;
   
   components new TimerMilliC() as RetxmitTimer;
   Forwarder.RetxmitTimer -> RetxmitTimer;
@@ -189,7 +186,19 @@ implementation {
   Estimator.SubReceive -> ReceiveControl;
   Estimator.SubPacket -> SendControl;
   Estimator.SubAMPacket -> SendControl;
-  Estimator.LinkPacketMetadata -> CC2420ActiveMessageC;
+
+#if defined(PLATFORM_TELOSB) || defined(PLATFORM_MICAZ)
+  components CC2420ActiveMessageC as PlatformActiveMessageC;
+#elif defined (PLATFORM_MICA2) || defined (PLATFORM_MICA2DOT)
+  components CC1000ActiveMessageC as PlatformActiveMessageC;
+#else
+  components DummyActiveMessageP as PlatformActiveMessageC;
+#endif
+
+  Estimator.LinkPacketMetadata -> PlatformActiveMessageC;
+
+  // eventually
   //  Estimator.LinkPacketMetadata -> ActiveMessageC;
+
   MainC.SoftwareInit -> Estimator;
 }

@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.10 2007-09-24 14:01:22 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.11 2007-09-24 17:00:18 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2007-09-24 14:01:22 $
+ *  @date   $Date: 2007-09-24 17:00:18 $
  *  @see Net2-WG
  */
 
@@ -115,7 +115,6 @@ generic module CtpRoutingEngineP(uint8_t routingTableSize, uint16_t minInterval,
         interface CtpCongestion;
 
 	interface CompareBit;
-	interface CC2420Packet;
 
     }
 }
