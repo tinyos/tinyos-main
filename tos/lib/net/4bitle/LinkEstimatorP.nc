@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.1 2007-09-21 06:34:04 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.2 2007-09-25 13:47:14 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -393,9 +393,9 @@ implementation {
     for (i = 0; i < NEIGHBOR_TABLE_SIZE; i++) {
       ne = &NeighborTable[i];
       if (ne->flags & VALID_ENTRY) {
-	dbg("LI,LITest", "%d:%d inQ=%d, inA=%d, outQ=%d, outA=%d, rcv=%d, fail=%d, biQ=%d\n",
-	    i, ne->ll_addr, ne->inquality, ne->inage, ne->outquality, ne->outage,
-	    ne->rcvcnt, ne->failcnt, computeBidirEETX(ne->inquality, ne->outquality));
+	dbg("LI,LITest", "%d:%d inQ=%d, inA=%d, rcv=%d, fail=%d, Q=%d\n",
+	    i, ne->ll_addr, ne->inquality, ne->inage,
+	    ne->rcvcnt, ne->failcnt, computeEETX(ne->inquality));
       }
     }
   }
