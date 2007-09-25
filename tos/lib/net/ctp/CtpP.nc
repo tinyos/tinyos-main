@@ -188,7 +188,11 @@ implementation {
   Estimator.SubAMPacket -> SendControl;
 
 #if defined(PLATFORM_TELOSB) || defined(PLATFORM_MICAZ)
+#ifndef TOSSIM
   components CC2420ActiveMessageC as PlatformActiveMessageC;
+#else
+  components DummyActiveMessageP as PlatformActiveMessageC;
+#endif
 #elif defined (PLATFORM_MICA2) || defined (PLATFORM_MICA2DOT)
   components CC1000ActiveMessageC as PlatformActiveMessageC;
 #else
