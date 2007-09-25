@@ -6,7 +6,7 @@ implementation
 {
 
   async command bool LinkPacketMetadata.highChannelQuality(message_t* msg) {
-    return 1;
+    return 0;
   }
 
 }
