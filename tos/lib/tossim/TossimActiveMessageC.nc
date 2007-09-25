@@ -1,4 +1,4 @@
-// $Id: TossimActiveMessageC.nc,v 1.2 2007-09-13 23:10:19 scipio Exp $
+// $Id: TossimActiveMessageC.nc,v 1.3 2007-09-25 00:01:58 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -103,6 +103,7 @@ implementation {
     void* payload;
 
     memcpy(bufferPointer, msg, sizeof(message_t));
+    len = call Packet.getPayloadLength(bufferPtr);
     payload = call Packet.getPayload(bufferPointer, call Packet.maxPayloadLength());
 
     if (call AMPacket.isForMe(msg)) {
