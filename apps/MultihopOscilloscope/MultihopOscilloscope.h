@@ -19,7 +19,7 @@
 enum {
   /* Number of readings per message. If you increase this, you may have to
      increase the message_t size. */
-  NREADINGS = 12,
+  NREADINGS = 5,
   /* Default sampling period. */
   DEFAULT_INTERVAL = 1024,
   AM_OSCILLOSCOPE = 0x93
