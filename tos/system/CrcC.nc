@@ -29,18 +29,41 @@
  * value of a byte array.
  *
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
+ * @author David Moss
  */
+ 
 #include <crc.h>
 
 module CrcC {
   provides interface Crc;
 }
+
 implementation {
 
-  command uint16_t Crc.crc16(void* buf, uint8_t len) {
-    uint8_t* tmp = (uint8_t*)buf;
+  /**
+   * Compute the CRC-16 value of a byte array.
+   *
+   * @param   buf A pointer to the buffer over which to compute CRC.
+   * @param   len The length of the buffer over which to compute CRC.
+   * @return  The CRC-16 value.
+   */
+  async command uint16_t Crc.crc16(void *buf, uint8_t len) {
+    return call Crc.seededCrc16(0, buf, len);
+  }
+  
+  /**
+   * Compute a generic CRC-16 using a given seed.  Used to compute CRC's
+   * of discontinuous data.
+   * 
+   * @param startCrc An initial CRC value to begin with
+   * @param buf A pointer to a buffer of data
+   * @param len The length of the buffer
+   * @return The CRC-16 value.
+   */
+  async command uint16_t Crc.seededCrc16(uint16_t startCrc, void *buf, uint8_t len) {
+    uint8_t *tmp = (uint8_t *) buf;
     uint16_t crc;
-    for (crc = 0; len > 0; len--) {
+    for (crc = startCrc; len > 0; len--) {
       crc = crcByte(crc, *tmp++);
     }
     return crc;

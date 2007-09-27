@@ -28,6 +28,7 @@
  * Compute the CRC-16 value of a byte array.
  *
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
+ * @author David Moss
  */
 interface Crc {
 
@@ -38,5 +39,17 @@ interface Crc {
    * @param   len The length of the buffer over which to compute CRC.
    * @return  The CRC-16 value.
    */
-  command uint16_t crc16(void* buf, uint8_t len);
+  async command uint16_t crc16(void* buf, uint8_t len);
+  
+  /**
+   * Compute a generic CRC-16 using a given seed.  Used to compute CRC's
+   * of discontinuous data.
+   * 
+   * @param startCrc An initial CRC value to begin with
+   * @param buf A pointer to a buffer of data
+   * @param len The length of the buffer
+   * @return The CRC-16 value.
+   */
+  async command uint16_t seededCrc16(uint16_t startCrc, void *buf, uint8_t len);
+  
 }
