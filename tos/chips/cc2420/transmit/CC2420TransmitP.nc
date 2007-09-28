@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:16 $
+ * @version $Revision: 1.2 $ $Date: 2007-09-28 17:53:58 $
  */
 
 #include "CC2420.h"
@@ -84,9 +84,7 @@ implementation {
     S_SFD,
     S_EFD,
     S_ACK_WAIT,
-    S_LOAD_CANCEL,
-    S_TX_CANCEL,
-    S_CCA_CANCEL,
+    S_CANCEL,
   } cc2420_transmit_state_t;
 
   // This specifies how many jiffies the stack should wait after a
@@ -181,15 +179,9 @@ implementation {
     atomic {
       switch( m_state ) {
       case S_LOAD:
-        m_state = S_LOAD_CANCEL;
-        break;
-        
       case S_SAMPLE_CCA:
-        m_state = S_CCA_CANCEL;
-        break;
-        
       case S_BEGIN_TRANSMIT:
-        m_state = S_TX_CANCEL;
+        m_state = S_CANCEL;
         break;
         
       default:
@@ -381,9 +373,7 @@ implementation {
       attemptSend();
       break;
       
-    case S_LOAD_CANCEL:
-    case S_CCA_CANCEL:
-    case S_TX_CANCEL:
+    case S_CANCEL:
       call CSN.clr();
       call SFLUSHTX.strobe();
       call CSN.set();
@@ -391,6 +381,7 @@ implementation {
       atomic {
         m_state = S_STARTED;
       }
+      signal Send.sendDone( m_msg, ECANCEL );
       break;
       
     default:
@@ -408,7 +399,7 @@ implementation {
                                      error_t error ) {
 
     call CSN.set();
-    if ( m_state == S_LOAD_CANCEL ) {
+    if ( m_state == S_CANCEL ) {
       atomic {
         call CSN.clr();
         call SFLUSHTX.strobe();
@@ -416,25 +407,18 @@ implementation {
       }
       releaseSpiResource();
       m_state = S_STARTED;
-            
+      signal Send.sendDone( m_msg, ECANCEL );
+      
     } else if ( !m_cca ) {
       atomic {
-        if (m_state == S_LOAD_CANCEL) {
-          m_state = S_TX_CANCEL;
-        } else {
-          m_state = S_BEGIN_TRANSMIT;
-        }
+        m_state = S_BEGIN_TRANSMIT;
       }
       attemptSend();
       
     } else {
       releaseSpiResource();
       atomic {
-        if (m_state == S_LOAD_CANCEL) {
-          m_state = S_CCA_CANCEL;
-        } else {
-          m_state = S_SAMPLE_CCA;
-        }
+        m_state = S_SAMPLE_CCA;
       }
       
       signal RadioBackoff.requestInitialBackoff(m_msg);
@@ -471,12 +455,8 @@ implementation {
         }
         break;
         
-      case S_CCA_CANCEL:
-        m_state = S_TX_CANCEL;
-        /** Fall Through */
-        
       case S_BEGIN_TRANSMIT:
-      case S_TX_CANCEL:
+      case S_CANCEL:
         if ( acquireSpiResource() == SUCCESS ) {
           attemptSend();
         }
@@ -510,9 +490,7 @@ implementation {
    */
   error_t send( message_t* p_msg, bool cca ) {
     atomic {
-      if (m_state == S_LOAD_CANCEL
-          || m_state == S_CCA_CANCEL
-          || m_state == S_TX_CANCEL) {
+      if (m_state == S_CANCEL) {
         return ECANCEL;
       }
       
@@ -541,9 +519,7 @@ implementation {
   error_t resend( bool cca ) {
 
     atomic {
-      if (m_state == S_LOAD_CANCEL
-          || m_state == S_CCA_CANCEL
-          || m_state == S_TX_CANCEL) {
+      if (m_state == S_CANCEL) {
         return ECANCEL;
       }
       
@@ -585,11 +561,12 @@ implementation {
     bool congestion = TRUE;
 
     atomic {
-      if (m_state == S_TX_CANCEL) {
+      if (m_state == S_CANCEL) {
         call SFLUSHTX.strobe();
         releaseSpiResource();
         call CSN.set();
         m_state = S_STARTED;
+        signal Send.sendDone( m_msg, ECANCEL );
         return;
       }
       
