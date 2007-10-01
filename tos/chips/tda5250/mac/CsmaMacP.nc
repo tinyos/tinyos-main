@@ -72,6 +72,7 @@ module CsmaMacP {
 
         interface Timer<TMilli> as ReRxTimer;
         interface Duplicate;
+        interface TimeDiff16;
         
         interface Alarm<T32khz, uint16_t> as Timer;
         async command am_addr_t amAddress();
@@ -303,17 +304,9 @@ implementation
     }
 
     void interruptBackoffTimer() {
-        uint16_t now;
         if(call Timer.isRunning()) {
-            restLaufzeit = call Timer.getAlarm();
+            restLaufzeit = call TimeDiff16.computeDelta(call Timer.getAlarm(), call Timer.getNow());
             call Timer.stop();
-            now = call Timer.getNow();
-            if(restLaufzeit >= now) {
-                restLaufzeit = restLaufzeit - now;
-            }
-            else {
-                restLaufzeit =  (uint16_t)(-1) - restLaufzeit + now;
-            }
             if(restLaufzeit > BACKOFF_MASK) {
                 restLaufzeit = call Random.rand16() & 0xFF;
             }

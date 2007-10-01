@@ -74,6 +74,8 @@ module RedMacP {
         interface LocalTime<T32khz> as LocalTime32kHz;
 
         interface Duplicate;
+        interface TimeDiff16;
+        interface TimeDiff32;
         
         async command am_addr_t amAddress();
 /*
@@ -485,17 +487,9 @@ implementation
     }
 
     void interruptBackoffTimer() {
-        uint16_t now;
         if(call Timer.isRunning()) {
-            restLaufzeit = call Timer.getAlarm();
-            call Timer.stop(); 
-            now = call Timer.getNow(); 
-            if(restLaufzeit >= now) {
-                restLaufzeit = restLaufzeit - now;
-            }
-            else {
-                restLaufzeit =  (uint16_t)(-1) - restLaufzeit + now;
-            }
+            restLaufzeit = call TimeDiff16.computeDelta(call Timer.getAlarm(), call Timer.getNow());
+            call Timer.stop();
             if(restLaufzeit > MIN_BACKOFF_MASK << MAX_LONG_RETRY) {
                 restLaufzeit = call Random.rand16() & ZERO_BACKOFF_MASK;
             }
@@ -1023,18 +1017,9 @@ implementation
     }
     
     async event void RadioTimeStamping.transmittedSFD( uint16_t time, message_t* p_msg ) {
-        uint32_t now;
-        uint32_t mTime;
         if((macState == TX) && (p_msg == txBufPtr)) {
-            now = call LocalTime32kHz.get();
-            mTime = getMetadata(p_msg)->time;
-            if(now >= mTime) {
-                txMacHdr->time = now - mTime;
-            }
-            else {
-                // assume a clock wrap here
-                txMacHdr->time = (uint32_t)(-1) - mTime + now;
-            }
+            txMacHdr->time =
+                call TimeDiff32.computeDelta(call LocalTime32kHz.get(), getMetadata(p_msg)->time);
         }
     }
     

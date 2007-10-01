@@ -63,7 +63,7 @@ implementation {
         RssiFixedThresholdCMC as Cca,
         new Alarm32khz16C() as Timer,
         new Alarm32khz16C() as SampleTimer,
-        RandomLfsrC, LocalTimeC, DuplicateC;
+        RandomLfsrC, LocalTimeC, DuplicateC, TimeDiffC;
     
     components ActiveMessageAddressC;
     RedMacP.amAddress -> ActiveMessageAddressC;
@@ -98,6 +98,8 @@ implementation {
     RedMacP.LocalTime32kHz -> LocalTimeC;
 
     RedMacP.Duplicate -> DuplicateC;
+    RedMacP.TimeDiff16 -> TimeDiffC;
+    RedMacP.TimeDiff32 -> TimeDiffC;
     
 /*    components PlatformLedsC;
     RedMacP.Led0 -> PlatformLedsC.Led0;

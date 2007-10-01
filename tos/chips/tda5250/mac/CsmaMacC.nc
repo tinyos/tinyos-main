@@ -60,6 +60,7 @@ implementation {
       new Alarm32khz16C() as Timer,
       new TimerMilliC() as ReRxTimer,
       DuplicateC,
+      TimeDiffC,
       RandomLfsrC
 #ifdef MAC_DEBUG
       ,PlatformLedsC
@@ -99,6 +100,7 @@ implementation {
     CsmaMacP.ReRxTimer -> ReRxTimer;
 
     CsmaMacP.Duplicate -> DuplicateC;
+    CsmaMacP.TimeDiff16 -> TimeDiffC;
     
 #ifdef MAC_DEBUG
     CsmaMacP.Led0 -> PlatformLedsC.Led0;

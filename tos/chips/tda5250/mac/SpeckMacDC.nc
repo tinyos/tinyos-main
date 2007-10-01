@@ -64,7 +64,9 @@ implementation {
         new Alarm32khz16C() as Timer,
         new Alarm32khz16C() as SampleTimer,
         RandomLfsrC,
-        LocalTimeC, DuplicateC;
+        LocalTimeC,
+        DuplicateC,
+        TimeDiffC;
     
     components ActiveMessageAddressC;
     SpeckMacDP.amAddress -> ActiveMessageAddressC;
@@ -100,6 +102,8 @@ implementation {
     SpeckMacDP.LocalTime32kHz -> LocalTimeC;
 
     SpeckMacDP.Duplicate -> DuplicateC;
+    SpeckMacDP.TimeDiff16 -> TimeDiffC;
+    SpeckMacDP.TimeDiff32 -> TimeDiffC;
     
 /*    components PlatformLedsC;
     SpeckMacDP.Led0 -> PlatformLedsC.Led0;
