@@ -59,6 +59,7 @@ implementation {
       RssiFixedThresholdCMC as Cca,
       new Alarm32khz16C() as Timer,
       new TimerMilliC() as ReRxTimer,
+      DuplicateC,
       RandomLfsrC
 #ifdef MAC_DEBUG
       ,PlatformLedsC
@@ -96,6 +97,8 @@ implementation {
     CsmaMacP.Timer -> Timer;
 
     CsmaMacP.ReRxTimer -> ReRxTimer;
+
+    CsmaMacP.Duplicate -> DuplicateC;
     
 #ifdef MAC_DEBUG
     CsmaMacP.Led0 -> PlatformLedsC.Led0;

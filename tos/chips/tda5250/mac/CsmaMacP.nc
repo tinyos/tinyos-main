@@ -71,6 +71,7 @@ module CsmaMacP {
         interface Random;
 
         interface Timer<TMilli> as ReRxTimer;
+        interface Duplicate;
         
         interface Alarm<T32khz, uint16_t> as Timer;
         async command am_addr_t amAddress();
@@ -106,9 +107,7 @@ implementation
         MIN_PREAMBLE_BYTES=2,
         TOKEN_ACK_FLAG = 64,
         TOKEN_ACK_MASK = 0x3f,
-        INVALID_SNR = 0xffff,
-        MSG_TABLE_ENTRIES=16,
-        MAX_AGE=0xff
+        INVALID_SNR = 0xffff
     };
     
 /**************** Module Global Variables  *****************/
@@ -154,24 +153,8 @@ implementation
     
     uint16_t restLaufzeit;
 
-    /* duplicate suppression */
-    typedef struct knownMessage_t {
-        am_addr_t src;
-        uint8_t token;
-        uint8_t age;
-    } knownMessage_t;
+    uint16_t rssiValue = 0;
     
-    knownMessage_t knownMsgTable[MSG_TABLE_ENTRIES];
-
-    task void ageMsgsTask() {
-        unsigned i;
-        atomic {
-            for(i = 0; i < MSG_TABLE_ENTRIES; i++) {
-                if(knownMsgTable[i].age < MAX_AGE) ++knownMsgTable[i].age;
-            }
-        }
-    }
-
     /****** debug vars & defs & functions  ***********************/
 #ifdef MACM_DEBUG
 #define HISTORY_ENTRIES 100
@@ -274,6 +257,7 @@ implementation
     }
     
     void setRxMode() {
+        rssiValue = INVALID_SNR;
         if(call RadioModes.RxMode() == FAIL) {
             post SetRxModeTask();
         }
@@ -336,7 +320,21 @@ implementation
             setFlag(&flags, RESUME_BACKOFF);
         }
     }
-    
+
+    void storeStrength(message_t *m) {
+        if(rssiValue != INVALID_SNR) {
+            (getMetadata(m))->strength = rssiValue;
+        }
+        else {
+            if(call RssiAdcResource.isOwner()) {
+                (getMetadata(m))->strength = call ChannelMonitorData.readSnr();
+            }
+            else {
+                (getMetadata(m))->strength = 1;
+            }
+        }
+    }
+
     void signalSendDone(error_t error) {
         message_t *m;
         error_t e = error;
@@ -349,6 +347,7 @@ implementation
             if(isFlagSet(&flags, CANCEL_SEND)) {
                 e = ECANCEL;
             }
+            storeStrength(m);
             clearFlag(&flags, CANCEL_SEND);
         }
         signal MacSend.sendDone(m, e);
@@ -386,36 +385,11 @@ implementation
     }
 
     bool isNewMsg(message_t* msg) {
-        uint8_t i;
-        for(i=0; i < MSG_TABLE_ENTRIES; i++) {
-            if((getHeader(msg)->src == knownMsgTable[i].src) &&
-               (((getHeader(msg)->token) & TOKEN_ACK_MASK) == knownMsgTable[i].token) &&
-               (knownMsgTable[i].age < MAX_AGE)) {
-                knownMsgTable[i].age = 0;
-                return FALSE;
-            }
-        }
-        return TRUE;
-    }
-
-    unsigned findOldest() {
-        unsigned i;
-        unsigned oldIndex = 0;
-        unsigned age = knownMsgTable[oldIndex].age;
-        for(i = 1; i < MSG_TABLE_ENTRIES; i++) {
-            if(age < knownMsgTable[i].age) {
-                oldIndex = i;
-                age = knownMsgTable[i].age;
-            }
-        }
-        return oldIndex;
+        return call Duplicate.isNew(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
     }
     
     void rememberMsg(message_t* msg) {
-        unsigned oldest = findOldest();
-        knownMsgTable[oldest].src = getHeader(msg)->src;
-        knownMsgTable[oldest].token = (getHeader(msg)->token) & TOKEN_ACK_MASK;
-        knownMsgTable[oldest].age = 0;
+        call Duplicate.remember(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
     }
     
     void checkSend() {
@@ -483,7 +457,6 @@ implementation
     /**************** Init ************************/
     
     command error_t Init.init(){
-        unsigned i;
         atomic {
             txBufPtr = NULL;
             macState = INIT;
@@ -491,9 +464,6 @@ implementation
             shortRetryCounter = 0;
             longRetryCounter = 0;
             flags = 0;
-            for(i = 0; i < MSG_TABLE_ENTRIES; i++) {
-                knownMsgTable[i].age = MAX_AGE;
-            }
 #ifdef MACM_DEBUG
             histIndex = 0;
 #endif
@@ -687,19 +657,18 @@ implementation
     
     /****** PacketSerializer events **********************/
     async event void PacketReceive.receiveDetected() {
+        rssiValue = INVALID_SNR;
         if(macState <= RX_ACK) {
             storeOldState(60);
             interruptBackoffTimer();
             if(macState == CCA) computeBackoff();
         }
         if(macState <= RX) {
-          post ReleaseAdcTask();  
-          storeOldState(61);
+            storeOldState(61);
             macState = RX_P;
             signalMacState();
         }
         else if(macState <= RX_ACK) {
-            post ReleaseAdcTask();
             storeOldState(62);
             macState = RX_ACK_P;
             signalMacState();
@@ -720,12 +689,11 @@ implementation
         macState_t action = RX;
         if(macState == RX_P) {
             if(error == SUCCESS) {
-                post ageMsgsTask();
                 storeOldState(82);
                 isCnt = isControl(msg);
                 if(msgIsForMe(msg)) {
                     if(!isCnt) {
-                        (getMetadata(m))->strength = 10;
+                        storeStrength(msg);
                         if(isNewMsg(m)) {
                             m = signal MacReceive.receiveDone(msg);
                             rememberMsg(m);   
@@ -753,7 +721,6 @@ implementation
             if(error == SUCCESS) {
                 if(ackIsForMe(msg)) {
                     storeOldState(92);
-                    (getMetadata(txBufPtr))->strength = 10;
                     (getMetadata(txBufPtr))->ack = WAS_ACKED;
                     signalSendDone(SUCCESS);
                 }
@@ -956,6 +923,8 @@ implementation
     /***** ChannelMonitorData events ******************/
     
     async event void ChannelMonitorData.getSnrDone(int16_t data) {
+        atomic if((macState == RX_P) || (macState == RX_ACK_P)) rssiValue = data;
+        post ReleaseAdcTask();  
     }
     
     /***** unused Radio Modes events **************************/
@@ -982,6 +951,7 @@ implementation
     
     /***** abused TimeStamping events **************************/
     async event void RadioTimeStamping.receivedSFD( uint16_t time ) {
+        if(call RssiAdcResource.isOwner()) call ChannelMonitorData.getSnr();
         if(macState == RX_P) call ChannelMonitor.rxSuccess();
     }
     

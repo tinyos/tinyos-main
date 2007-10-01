@@ -39,7 +39,7 @@
 #include "PacketAck.h"
 #include "RedMac.h"
 
-module RedMacP {
+module SpeckMacDP {
     provides {
         interface Init;
         interface SplitControl;
@@ -47,7 +47,6 @@ module RedMacP {
         interface MacReceive;
         interface Packet;
         interface Sleeptime;
-        interface Teamgeist;
         interface ChannelCongestion;
     }
     uses {
@@ -55,7 +54,7 @@ module RedMacP {
         interface PhySend as PacketSend;
         interface PhyReceive as PacketReceive;
         interface RadioTimeStamping;
-        
+
         interface Tda5250Control as RadioModes;  
 
         interface UartPhyControl;
@@ -74,7 +73,7 @@ module RedMacP {
         interface LocalTime<T32khz> as LocalTime32kHz;
 
         interface Duplicate;
-        
+
         async command am_addr_t amAddress();
 /*
         interface GeneralIO as Led0;
@@ -82,10 +81,10 @@ module RedMacP {
         interface GeneralIO as Led2;
         interface GeneralIO as Led3;        
 */  
-#ifdef REDMAC_DEBUG
+#ifdef SPECKMAC_DEBUG
         interface SerialDebug;
 #endif
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
         interface Performance;
 #endif
 
@@ -111,7 +110,7 @@ implementation
     macState_t macState;
 
     /****** debug vars & defs & functions  ***********************/
-#ifdef REDMAC_DEBUG
+#ifdef SPECKMAC_DEBUG
     void sdDebug(uint16_t p) {
         call SerialDebug.putPlace(p);
     }
@@ -120,7 +119,7 @@ implementation
     void sdDebug(uint16_t p) {};
 #endif
     
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
     macTxStat_t txStat;
     macRxStat_t rxStat;
 #endif
@@ -162,6 +161,15 @@ implementation
     };
     
     /**************** Module Global Variables  *****************/
+    typedef union 
+    {
+        uint32_t op;
+        struct {
+            uint16_t lo;
+            uint16_t hi;
+        };
+    } ui32parts_t;
+    
     /* flags */
     typedef enum {
         SWITCHING = 1,
@@ -171,7 +179,6 @@ implementation
         RESUME_BACKOFF = 16,
         CANCEL_SEND = 32,
         ACTION_DETECTED = 64,
-        TEAMGEIST_ACTIVE=128
     } flags_t;
 
     uint8_t flags = 0;
@@ -185,8 +192,6 @@ implementation
     
     uint32_t rxTime = 0;
 
-    am_id_t teamgeistType = 0;
-
     uint8_t congestionLevel = 0;
     
     message_t *txBufPtr = NULL;
@@ -196,7 +201,7 @@ implementation
     message_t ackMsg;
 
     uint16_t MIN_BACKOFF_MASK;
-
+    
     /****** Secure switching of radio modes ***/
     void interruptBackoffTimer();
     
@@ -230,7 +235,7 @@ implementation
             post SetRxModeTask();
         }
         else {
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
             call Performance.macRxMode();
 #endif
         }
@@ -252,7 +257,7 @@ implementation
             post SetSleepModeTask();
         }
         else {
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
             call Performance.macSleepMode();
 #endif
         }
@@ -272,7 +277,7 @@ implementation
             post SetTxModeTask();
         }
         else {
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
             call Performance.macTxMode();
 #endif
         }
@@ -284,7 +289,7 @@ implementation
         }
     }
 
-    /**************** Helper functions ************************/    
+    /**************** Helper functions ************************/
     void computeBackoff();
     
     void checkSend() {
@@ -323,25 +328,14 @@ implementation
         return rVal;
     }
     
-    bool needsAckRx(message_t* msg, uint8_t *level) {
+    bool needsAckRx(message_t* msg) {
         bool rVal = FALSE;
         am_addr_t dest = getHeader(msg)->dest;
         uint8_t token;
-        uint16_t snr = 1;
         if(dest < AM_BROADCAST_ADDR) {
-            if(dest < RELIABLE_MCAST_MIN_ADDR) {
-                token = getHeader(msg)->token;
-                if(isFlagSet(&token, ACK_REQUESTED)) {
-                    rVal = TRUE;
-                }
-            }
-            else {
-                if(isFlagSet(&flags, TEAMGEIST_ACTIVE) &&
-                   (getHeader(msg)->type == teamgeistType)) {
-                    if(rssiValue != INVALID_SNR) snr = rssiValue;
-                    rVal = signal Teamgeist.needsAck(msg, getHeader(msg)->src, getHeader(msg)->dest, snr);
-                    *level = 2;
-                }
+            token = getHeader(msg)->token;
+            if(isFlagSet(&token, ACK_REQUESTED)) {
+                rVal = TRUE;
             }
         }
         return rVal;
@@ -359,14 +353,8 @@ implementation
         }
         if(msg == NULL) return;
         macHdr = (red_mac_header_t *)call SubPacket.getPayload(msg, sizeof(red_mac_header_t) + length);
-        macHdr->repetitionCounter = sT/(length * BYTE_TIME + SUB_HEADER_TIME + SUB_FOOTER_TIME + 
-                                        TX_GAP_TIME) + 1;
+        macHdr->repetitionCounter = sT/(length * BYTE_TIME + SUB_HEADER_TIME + SUB_FOOTER_TIME) + 1;
         atomic {
-            if((longRetryCounter > 1) &&
-               isFlagSet(&flags, TEAMGEIST_ACTIVE) &&
-               (getHeader(msg)->type == teamgeistType)) {
-                getHeader(msg)->dest = signal Teamgeist.getDestination(msg, longRetryCounter - 1);
-            }
             getHeader(msg)->token = seqNo;
             if(needsAckTx(msg)) getHeader(msg)->token |= ACK_REQUESTED;
             txMacHdr = macHdr;
@@ -380,7 +368,7 @@ implementation
                     call Timer.start(backoff(longRetryCounter));
                 }
             }
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
             txStat.type = getHeader(msg)->type;
             txStat.to = getHeader(msg)->dest;
             txStat.token = getHeader(msg)->token;
@@ -405,6 +393,7 @@ implementation
         }
     }
 
+
     bool prepareRepetition() {
         bool repeat;
         atomic {
@@ -418,7 +407,7 @@ implementation
         }
         return repeat;
     }
-    
+
     void signalSendDone(error_t error) {
         message_t *m;
         error_t e = error;
@@ -427,7 +416,7 @@ implementation
             m = txBufPtr;
             txBufPtr = NULL;
             txLen  = 0;
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
             txStat.repCounter = txMacHdr->repetitionCounter;
             txStat.longRetry = longRetryCounter;
             txStat.shortRetry = shortRetryCounter;
@@ -444,7 +433,7 @@ implementation
         // sdDebug(3000 + e);
         // sdDebug(4000 + getHeader(m)->type);
         signal MacSend.sendDone(m, e);
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
         txStat.success = e;
         txStat.strength = getMetadata(m)->strength;
         call Performance.macTxMsgStats(&txStat);
@@ -525,8 +514,8 @@ implementation
     
     bool isNewMsg(message_t* msg) {
         return call Duplicate.isNew(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
-   }
-
+    }
+    
     void rememberMsg(message_t* msg) {
         call Duplicate.remember(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
     }
@@ -538,7 +527,7 @@ implementation
         getHeader(&ackMsg)->src = call amAddress();
         getHeader(&ackMsg)->dest = getHeader(msg)->src;
         getHeader(&ackMsg)->type = getHeader(msg)->type;
-#ifdef REDMAC_DEBUG
+#ifdef SPECKMAC_DEBUG
         repCounter = ((red_mac_header_t *)
                       call SubPacket.getPayload(msg, sizeof(red_mac_header_t)))->repetitionCounter;
 #endif
@@ -547,6 +536,7 @@ implementation
     uint32_t calcGeneratedTime(red_mac_header_t *m) {
         return rxTime - m->time - TIME_CORRECTION;
     }
+    
     /**************** Init ************************/
     
     command error_t Init.init(){
@@ -558,8 +548,8 @@ implementation
             }
             MIN_BACKOFF_MASK >>= 2;
         }
-#ifdef REDMAC_DEBUG
-        call SerialDebug.putShortDesc("RedMacP");
+#ifdef SPECKMAC_DEBUG
+        call SerialDebug.putShortDesc("SpeckMacP");
 #endif
         return SUCCESS;
     }
@@ -571,8 +561,6 @@ implementation
         atomic  {
             call SampleTimer.start(localSleeptime);
             macState = SLEEP;
-            setFlag(&flags, TEAMGEIST_ACTIVE);
-            teamgeistType = signal Teamgeist.observedAMType();
         }
         signal SplitControl.startDone(SUCCESS);        
     }
@@ -753,7 +741,7 @@ implementation
                 txLen = len + sizeof(red_mac_header_t);
                 seqNo++;
                 if(seqNo >= TOKEN_ACK_FLAG) seqNo = 1;
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
                 txStat.payloadLength = txLen;
                 txStat.interfaceTime = call LocalTime32kHz.get();
 #endif
@@ -804,7 +792,7 @@ implementation
         if(macState <= CCA_ACK) {
             if(macState == CCA) {
                 computeBackoff();
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
                 call Performance.macDetectedOnCca();
 #endif
             }
@@ -824,9 +812,8 @@ implementation
         message_t *m = msg;
         macState_t action = STOP;
         uint32_t nav = 0;
-        uint8_t level = 0;
         bool isCnt;
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
         rxStat.duplicate = PERF_UNKNOWN;
         rxStat.repCounter = 0xff;
 #endif
@@ -840,10 +827,9 @@ implementation
                     if(!isCnt) {
                         // sdDebug(193);
                         if(isNewMsg(msg)) {
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
                             rxStat.duplicate = PERF_NEW_MSG;
 #endif
-                            // sdDebug(194);
                             storeStrength(msg);
                             getMetadata(msg)->time = calcGeneratedTime((red_mac_header_t*) payload);
                             getMetadata(msg)->ack = WAS_NOT_ACKED;
@@ -856,26 +842,31 @@ implementation
                             } else {
                                 // sdDebug(196);
                                 action = RX;
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
                                 call Performance.macQueueFull();
 #endif
                             }
                         }
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
                         else {
                             rxStat.duplicate = PERF_REPEATED_MSG;
                         }
 #endif                  
-                        if(needsAckRx(msg, &level) && (action != RX)) {
+                        if(needsAckRx(msg) && (action != RX)) {
                             // sdDebug(197);
-                            action = CCA_ACK;
+                            if(((red_mac_header_t*)payload)->repetitionCounter == 0) {
+                                action = CCA_ACK;
+                            }
+                            else {
+                                action = RX;
+                            }
                         }
                         else {
                             // sdDebug(198);
                             if(action != RX) {
                                 nav = ((red_mac_header_t*)payload)->repetitionCounter *
                                     (SUB_HEADER_TIME + getHeader(msg)->length*BYTE_TIME +
-                                     SUB_FOOTER_TIME + RX_ACK_TIMEOUT + TX_SETUP_TIME) + ACK_DURATION;
+                                     SUB_FOOTER_TIME) + RX_ACK_TIMEOUT + TX_SETUP_TIME + ACK_DURATION;
                                 action = SLEEP;
                             }
                         }
@@ -891,8 +882,7 @@ implementation
                     if(!isCnt) {
                         nav = ((red_mac_header_t*)payload)->repetitionCounter *
                             (SUB_HEADER_TIME + getHeader(msg)->length*BYTE_TIME +
-                             SUB_FOOTER_TIME + RX_ACK_TIMEOUT + TX_SETUP_TIME) +
-                            ACK_DURATION;
+                             SUB_FOOTER_TIME) + RX_ACK_TIMEOUT + TX_SETUP_TIME + ACK_DURATION;
                     }
                 }
             }
@@ -905,14 +895,9 @@ implementation
             if(error == SUCCESS) {
                 if(ackIsForMe(msg)) {
                     // sdDebug(202);
+                    storeStrength(msg);
                     getMetadata(txBufPtr)->ack = WAS_ACKED;
                     getMetadata(txBufPtr)->repetitions = txMacHdr->repetitionCounter;
-                    if(isFlagSet(&flags, TEAMGEIST_ACTIVE) &&
-                       (getHeader(txBufPtr)->type == teamgeistType))
-                    {
-                        signal Teamgeist.gotAck(txBufPtr, getHeader(msg)->src,
-                                                getMetadata(txBufPtr)->strength);
-                    }
                     // sdDebug(203);
                     signalSendDone(SUCCESS);
                     // sdDebug(30000 + getHeader(msg)->src);
@@ -943,14 +928,8 @@ implementation
             action = INIT;
         }
         if(action == CCA_ACK) {
-            macState = CCA_ACK;
-            if(call Random.rand16() & 2) {
-                call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME + 16 - level*8 + ADDED_DELAY);
-            }
-            else {
-                macState = TX_ACK;
-                call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME + 16);
-            }
+            macState = TX_ACK;
+            call Timer.start(RX_SETUP_TIME - TX_SETUP_TIME + 16);
             prepareAck(msg);
         }
         else if(action == RX_ACK) {
@@ -978,7 +957,7 @@ implementation
         else {
             // sdDebug(207);
         }
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
         if(error == SUCCESS) {
             rxStat.type = getHeader(msg)->type;
             rxStat.from = getHeader(msg)->src;
@@ -996,18 +975,23 @@ implementation
 
     async event void PacketSend.sendDone(message_t* msg, error_t error) {
         if(macState == TX) {
-            macState = RX_ACK;
-            setRxMode();
-            call Timer.start(RX_ACK_TIMEOUT);
-            // sdDebug(220);
-            checkCounter = 0;
+            if(prepareRepetition()) {
+                call PacketSend.send(txBufPtr, txLen);
+            }
+            else {
+                macState = RX_ACK;
+                setRxMode();
+                call Timer.start(RX_ACK_TIMEOUT);
+                // sdDebug(220);
+                checkCounter = 0;
+            }
         }
         else if(macState == TX_ACK) {
             checkCounter = 0;
             macState = RX;
             setRxMode();
             // sdDebug(221);
-#ifdef REDMAC_DEBUG            
+#ifdef SPECKMAC_DEBUG            
             // sdDebug(40000U + repCounter);
 #endif
         }
@@ -1045,7 +1029,7 @@ implementation
         if((macState == RX) || (macState == CCA) || (macState == CCA_ACK)) {
             if(macState == CCA) {
                 computeBackoff();
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
                 call Performance.macBusyOnCca();
 #endif
             }
@@ -1059,17 +1043,9 @@ implementation
 
     void checkOnIdle()  {
         if(macState == RX) {
-            checkCounter++;
-            if(checkCounter >= 3) {
-                // sdDebug(240);
-                macState = SLEEP;
-                setSleepMode();
-            }
-            else {
-                // sdDebug(241);
-                call Timer.start(TX_GAP_TIME >> 1);
-                requestAdc();
-            }
+            // sdDebug(240);
+            macState = SLEEP;
+            setSleepMode();
         }
         else if(macState == CCA) {
             checkCounter++;
@@ -1082,22 +1058,11 @@ implementation
                 // sdDebug(243);
                 macState = TX;
                 setTxMode();
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
                 call Performance.macIdleOnCca();
                 txStat.txModeTime = call LocalTime32kHz.get();
 #endif
             }
-        }
-        else if(macState == CCA_ACK) {
-            // sdDebug(244);
-            macState = TX_ACK;
-            setTxMode();
-            // sdDebug(20000 + getHeader(&ackMsg)->dest);
-#ifdef REDMAC_PERFORMANCE
-            call Performance.macTxAckStats(getHeader(&ackMsg)->type,
-                                          getHeader(&ackMsg)->dest,
-                                          getHeader(&ackMsg)->token);
-#endif
         }
     }
     
@@ -1116,26 +1081,19 @@ implementation
             }
         }
         else if(macState == RX_ACK) {
-            if(prepareRepetition()) {
-                // sdDebug(253);
-                macState = TX;
-                setTxMode();
+            if(needsAckTx(txBufPtr)) {
+                // sdDebug(254);
+#ifdef SPECKMAC_PERFORMANCE
+                call Performance.macAckTimeout();
+#endif
+                updateLongRetryCounters();
             }
             else {
-                if(needsAckTx(txBufPtr)) {
-                    // sdDebug(254);
-#ifdef REDMAC_PERFORMANCE
-                    call Performance.macAckTimeout();
-#endif
-                    updateLongRetryCounters();
-                }
-                else {
-                    // sdDebug(255);
-                    signalSendDone(SUCCESS);
-                }
-                macState = SLEEP;
-                setSleepMode();
+                // sdDebug(255);
+                signalSendDone(SUCCESS);
             }
+            macState = SLEEP;
+            setSleepMode();
         }
         else if(macState == TX_ACK) {
             setTxMode();
@@ -1258,29 +1216,6 @@ implementation
             // sdDebug(302);
             post ReleaseAdcTask();
         }
-    }
-    
-    /***** default Teamgeist events **************************/
-
-    default event am_id_t Teamgeist.observedAMType() {
-        clearFlag(&flags, TEAMGEIST_ACTIVE);
-        return teamgeistType;
-    }
-
-    default async event bool Teamgeist.needsAck(message_t *msg, am_addr_t src, am_addr_t dest, uint16_t snr) {
-        clearFlag(&flags, TEAMGEIST_ACTIVE);
-        return TRUE;
-    }
-
-    default async event uint8_t Teamgeist.estimateForwarders(message_t *msg) {
-        return 1;
-    }
-
-    default async event am_addr_t Teamgeist.getDestination(message_t *msg, uint8_t retryCounter) {
-        return getHeader(msg)->dest;
-    }
-    
-    default async event void Teamgeist.gotAck(message_t *msg, am_addr_t ackSender, uint16_t snr) {
     }
     
     default async event void ChannelCongestion.congestionEvent(uint8_t level) {}

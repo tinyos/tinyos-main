@@ -33,13 +33,13 @@
  * ========================================================================
  */
 
-// #define REDMAC_DEBUG
+// #define SPECKMAC_DEBUG
 
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
 #include <Performance.h>
 #endif
 
-configuration RedMacC {
+configuration SpeckMacDC {
   provides {
     interface SplitControl;
     interface MacSend;
@@ -59,60 +59,62 @@ configuration RedMacC {
 }
 implementation {
     components  MainC,
-        RedMacP,
+        SpeckMacDP,
         RssiFixedThresholdCMC as Cca,
         new Alarm32khz16C() as Timer,
         new Alarm32khz16C() as SampleTimer,
-        RandomLfsrC, LocalTimeC, DuplicateC;
+        RandomLfsrC,
+        LocalTimeC, DuplicateC;
     
     components ActiveMessageAddressC;
-    RedMacP.amAddress -> ActiveMessageAddressC;
+    SpeckMacDP.amAddress -> ActiveMessageAddressC;
 
-    MainC.SoftwareInit -> RedMacP;
+    MainC.SoftwareInit -> SpeckMacDP;
               
-    SplitControl = RedMacP;
-    MacSend = RedMacP;
-    MacReceive = RedMacP;
-    Tda5250Control = RedMacP;
-    UartPhyControl = RedMacP;
-    RadioTimeStamping = RedMacP;
-    ChannelCongestion = RedMacP;
+    SplitControl = SpeckMacDP;
+    MacSend = SpeckMacDP;
+    MacReceive = SpeckMacDP;
+    Tda5250Control = SpeckMacDP;
+    UartPhyControl = SpeckMacDP;
+    RadioTimeStamping = SpeckMacDP;
+
+    ChannelCongestion = SpeckMacDP;
     
-    RedMacP = PacketSend;
-    RedMacP = PacketReceive;
-    RedMacP = SubPacket;
-    RedMacP = Packet;
-    RedMacP = Sleeptime;
+    SpeckMacDP = PacketSend;
+    SpeckMacDP = PacketReceive;
+    SpeckMacDP = SubPacket;
+    SpeckMacDP = Packet;
+    SpeckMacDP = Sleeptime;
     
-    RedMacP.CcaStdControl -> Cca.StdControl;
-    RedMacP.ChannelMonitor -> Cca.ChannelMonitor;
-    RedMacP.ChannelMonitorData -> Cca.ChannelMonitorData;
-    RedMacP.ChannelMonitorControl -> Cca.ChannelMonitorControl;
-    RedMacP.RssiAdcResource -> Cca.RssiAdcResource;
+    SpeckMacDP.CcaStdControl -> Cca.StdControl;
+    SpeckMacDP.ChannelMonitor -> Cca.ChannelMonitor;
+    SpeckMacDP.ChannelMonitorData -> Cca.ChannelMonitorData;
+    SpeckMacDP.ChannelMonitorControl -> Cca.ChannelMonitorControl;
+    SpeckMacDP.RssiAdcResource -> Cca.RssiAdcResource;
     
     MainC.SoftwareInit -> RandomLfsrC;
-    RedMacP.Random -> RandomLfsrC;
+    SpeckMacDP.Random -> RandomLfsrC;
 
-    RedMacP.Timer -> Timer;
-    RedMacP.SampleTimer -> SampleTimer;
-    RedMacP.LocalTime32kHz -> LocalTimeC;
+    SpeckMacDP.Timer -> Timer;
+    SpeckMacDP.SampleTimer -> SampleTimer;
+    SpeckMacDP.LocalTime32kHz -> LocalTimeC;
 
-    RedMacP.Duplicate -> DuplicateC;
+    SpeckMacDP.Duplicate -> DuplicateC;
     
 /*    components PlatformLedsC;
-    RedMacP.Led0 -> PlatformLedsC.Led0;
-    RedMacP.Led1 -> PlatformLedsC.Led1;
-    RedMacP.Led2 -> PlatformLedsC.Led2;
-    RedMacP.Led3 -> PlatformLedsC.Led3;
+    SpeckMacDP.Led0 -> PlatformLedsC.Led0;
+    SpeckMacDP.Led1 -> PlatformLedsC.Led1;
+    SpeckMacDP.Led2 -> PlatformLedsC.Led2;
+    SpeckMacDP.Led3 -> PlatformLedsC.Led3;
 */
-#ifdef REDMAC_DEBUG
+#ifdef SPECKMAC_DEBUG
     components new SerialDebugC() as SD;
-    RedMacP.SerialDebug -> SD;
+    SpeckMacDP.SerialDebug -> SD;
 #endif
 
-#ifdef REDMAC_PERFORMANCE
+#ifdef SPECKMAC_PERFORMANCE
     components new PerformanceC() as Perf;
-    RedMacP.Performance -> Perf;
+    SpeckMacDP.Performance -> Perf;
 #endif
 }
 
