@@ -1,0 +1,126 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: sim-sf.extra,v 1.1 2007-10-03 02:09:59 hiro Exp $
+# Copyright (c) 2007 Toilers Research Group - Colorado School of Mines
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# - Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# - Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the
+#   distribution.
+# - Neither the name of Toilers Research Group - Colorado School of 
+#   Mines  nor the names of its contributors may be used to endorse 
+#   or promote products derived from this software without specific
+#   prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL STANFORD
+# UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Author: Chad Metcalf
+
+SF_DIR=$(TOSDIR)/lib/tossim/sf
+SF_FLAGS=-I$(SF_DIR)
+
+GCC=gcc
+GPP=g++
+OPTFLAGS = -g -O0
+LIBS = -lm -lstdc++ 
+PFLAGS += -tossim -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber=sim_node\(\) $(SF_FLAGS)
+WFLAGS = -Wno-nesc-data-race
+PYTHON_VERSION=2.5
+
+BUILDDIR = simbuild/$(PLATFORM)
+
+CFILE   = $(BUILDDIR)/sim.c
+OBJFILE = $(BUILDDIR)/sim.o
+
+CSFFILE         = $(SF_DIR)/sim_serial_forwarder.c
+CSFOBJFILE      = $(BUILDDIR)/c-sf.o
+SFFILE          = $(SF_DIR)/SerialForwarder.c 
+SFOBJFILE       = $(BUILDDIR)/sf.o
+THROTTLEFILE    = $(SF_DIR)/Throttle.cpp
+THROTTLEOBJFILE = $(BUILDDIR)/throttle.o
+
+PYFILE          = $(SF_DIR)/tossim_wrap.cxx
+PYOBJFILE       = $(BUILDDIR)/pytossim.o
+
+CXXFILE     = $(SF_DIR)/tossim.c
+CXXOBJFILE  = $(BUILDDIR)/tossim.o
+HASHFILE    = $(TOSDIR)/lib/tossim/hashtable.c
+HASHOBJFILE = $(BUILDDIR)/c-support.o
+
+PYDIR       = /usr/include/python$(PYTHON_VERSION)
+SIMDIR      = $(TOSDIR)/lib/tossim
+XML         = app.xml
+
+DUMPTYPES = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags
+
+ifeq ($(findstring cygwin, $(OSTYPE)),cygwin)
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
+  PLATFORM_LIB_FLAGS = -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else 
+ifeq ($(OS), Windows_NT) # Some TinyOS installs are like this
+  PLATFORM_FLAGS=-DUSE_DL_IMPORT -fpic 
+  SHARED_OBJECT=_TOSSIM.dll
+  PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
+  PLATFORM_LIB_FLAGS =-shared -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
+else 
+ifeq ($(findstring darwin, $(OSTYPE)), darwin)
+  PLATFORM_FLAGS=-fPIC
+  PLATFORM_CC_FLAGS=-bundle
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_BUILD_FLAGS=-flat_namespace -undefined suppress 
+  PLATFORM_LIB_FLAGS = -lstdc++ 
+else # linux
+  PLATFORM_FLAGS=-shared -fPIC
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_LIB_FLAGS = -lstdc++ 
+  PLATFORM_BUILD_FLAGS= -shared -fPIC
+endif
+endif
+endif
+ 
+BUILD_DEPS = sim-exe
+
+# lib/tossim has to come at the end in order to ensure basic TOSSIM
+# implementations are the last resort, so put it directly in the call
+
+sim-exe: builddir $(BUILD_EXTRA_DEPS) FORCE
+	@echo "  placing object files in $(BUILDDIR)"
+	@echo "  writing XML schema to $(XML)"
+	@echo "  compiling $(COMPONENT) to object file sim.o"
+	$(NCC) -c $(PLATFORM_FLAGS) -o $(OBJFILE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WFLAGS) $(COMPONENT).nc $(LDFLAGS)  $(DUMPTYPES) -fnesc-dumpfile=$(XML)
+
+	@echo "  compiling Python support and C libraries into pytossim.o, tossim.o, and c-support.o"
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(PYOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_CFLAGS) $(SF_FLAGS) $(PYFILE) -I$(PYDIR) -I$(SIMDIR) -DHAVE_CONFIG_H 
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(CXXOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_CFLAGS) $(SF_FLAGS) $(CXXFILE) -I$(PYDIR) -I$(SIMDIR)
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(HASHOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_CFLAGS) $(SF_FLAGS) $(HASHFILE) -I$(PYDIR) -I$(SIMDIR)
+
+	@echo "  compiling sf support and C libraries into sf.o, c-sf.o, and throttle.o"
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(CSFOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_CFLAGS) $(SF_FLAGS) $(CSFFILE) -I$(PYDIR) -I$(SIMDIR)
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(SFOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_CFLAGS) $(SF_FLAGS) $(SFFILE) -I$(PYDIR) -I$(SIMDIR)
+	$(GPP) -c $(PLATFORM_CC_FLAGS) $(PLATFORM_FLAGS) -o $(THROTTLEOBJFILE) $(OPTFLAGS) $(CFLAGS) $(SIM_CFLAGS) $(SF_FLAGS) $(THROTTLEFILE) -I$(PYDIR) -I$(SIMDIR)
+
+	@echo "  linking into shared object ./$(SHARED_OBJECT)"
+	$(GPP) $(PLATFORM_BUILD_FLAGS) $(PLATFORM_CC_FLAGS) $(PYOBJFILE) $(OBJFILE) $(CXXOBJFILE) $(HASHOBJFILE) $(CSFOBJFILE) $(SFOBJFILE) $(THROTTLEOBJFILE)  $(PLATFORM_LIB_FLAGS) $(LIBS) -o $(SHARED_OBJECT)
+	@echo "  copying Python script interface TOSSIM.py from lib/tossim to local directory"
+	@cp $(SF_DIR)/TOSSIM.py .
+	@echo " "
+	@echo "*** Successfully built $(PLATFORM) TOSSIM library with TOSSIM Live extensions. "
+
