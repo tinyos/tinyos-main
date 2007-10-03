@@ -1,4 +1,12 @@
-These release notes are as of: $Date: 2007-07-30 02:23:23 $
+These release notes are as of: $Date: 2007-10-03 05:47:47 $
+
+Upcoming:
+  Added 4-bit link estimator
+  Added low-power application tutorial
+  Changed Packet interface to better support type checking
+  Changed Receive interface to support fan-in
+  Changed atm128 I2C bus to obey same addressing as MSP430
+  Fixed memory leak in CTP on duplicate suppression
 
 2.0.2:
   Added reimplementation of low-power CC2420 stack to support AUTOACK and SACK
