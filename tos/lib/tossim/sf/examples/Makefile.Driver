@@ -33,16 +33,15 @@
 # Date: July 9, 2007
 #
 
-DRIVER_OBJS=build/micaz/c-sf.o build/micaz/sf.o build/micaz/tossim.o build/micaz/c-support.o build/micaz/sim.o build/micaz/pytossim.o build/micaz/throttle.o 
+DRIVER_OBJS=build/micaz/c-sf.o build/micaz/sf.o build/micaz/tossim.o build/micaz/c-support.o build/micaz/sim.o build/micaz/throttle.o 
 
 SFDIR=$(TOSDIR)/lib/tossim/sf
 
 all:
 	make micaz sim-sf
-	g++ -g -c -o TestSerial.o TestSerial.c -I../../../tos/lib/tossim -I$(SFDIR) 
+	g++ -g -c -o TestSerial.o TestSerial.c -I$(TOSDIR)/lib/tossim -I$(SFDIR) 
 	g++ -o TestSerial $(DRIVER_OBJS)  TestSerial.o -lpython2.5 
 	mig python -target=null -python-classname=TestSerialMsg TestSerial.h test_serial_msg -o TestSerialMsg.py
-
 
 clean:
 	make clean
