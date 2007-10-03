@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.7 2007-09-13 23:10:18 scipio Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.8 2007-10-03 02:15:16 scipio Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2007-09-13 23:10:18 $
+ *  @date   $Date: 2007-10-03 02:15:16 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -440,6 +440,10 @@ implementation {
       if (call SentCache.lookup(qe->msg)) {
         call CollectionDebug.logEvent(NET_C_FE_DUPLICATE_CACHE_AT_SEND);
         call SendQueue.dequeue();
+	if (call MessagePool.put(qe->msg) != SUCCESS)
+	  call CollectionDebug.logEvent(NET_C_FE_PUT_MSGPOOL_ERR);
+	if (call QEntryPool.put(qe) != SUCCESS)
+	  call CollectionDebug.logEvent(NET_C_FE_PUT_QEPOOL_ERR);
         post sendTask();
         return;
       }
