@@ -108,7 +108,7 @@ implementation
         INIT,
         STOP
     } macState_t;
-
+    
     macState_t macState;
 
     /****** debug vars & defs & functions  ***********************/
@@ -162,16 +162,7 @@ implementation
         ZERO_BACKOFF_MASK = 0xff
     };
     
-    /**************** Module Global Variables  *****************/
-    typedef union 
-    {
-        uint32_t op;
-        struct {
-            uint16_t lo;
-            uint16_t hi;
-        };
-    } ui32parts_t;
-    
+    /**************** Module Global Variables  *****************/    
     /* flags */
     typedef enum {
         SWITCHING = 1,
@@ -361,13 +352,30 @@ implementation
             if(needsAckTx(msg)) getHeader(msg)->token |= ACK_REQUESTED;
             txMacHdr = macHdr;
             setFlag(&flags, MESSAGE_PREPARED);
+            if(macState == SLEEP) {
+                sdDebug(400);
+            } else {
+                sdDebug(401);
+            }
+            if(!call Timer.isRunning()) {
+                sdDebug(402);
+            } else {
+                sdDebug(403);
+            }
+            if(!isFlagSet(&flags, RESUME_BACKOFF)) {
+                sdDebug(404);
+            } else {
+                sdDebug(405);
+            }
             if((macState == SLEEP) && (!call Timer.isRunning()) && (!isFlagSet(&flags, RESUME_BACKOFF))) {
                 if((longRetryCounter == 1) &&
                    (getHeader(msg)->dest != AM_BROADCAST_ADDR)) {
                     call Timer.start((call Random.rand16() >> 3) & ZERO_BACKOFF_MASK);
+                    sdDebug(406);
                 }
                 else {
                     call Timer.start(backoff(longRetryCounter));
+                    sdDebug(407);
                 }
             }
 #ifdef SPECKMAC_PERFORMANCE
@@ -479,9 +487,13 @@ implementation
         if(call Timer.isRunning()) {
             restLaufzeit = call TimeDiff16.computeDelta(call Timer.getAlarm(), call Timer.getNow());
             call Timer.stop();
+            sdDebug(10);
+            sdDebug(restLaufzeit);
             if(restLaufzeit > MIN_BACKOFF_MASK << MAX_LONG_RETRY) {
                 restLaufzeit = call Random.rand16() & ZERO_BACKOFF_MASK;
             }
+            sdDebug(11);
+            sdDebug(restLaufzeit);
             setFlag(&flags, RESUME_BACKOFF);
         }
     }
@@ -490,6 +502,8 @@ implementation
         if(!isFlagSet(&flags, RESUME_BACKOFF)) {
             setFlag(&flags, RESUME_BACKOFF);
             restLaufzeit = backoff(longRetryCounter);
+            sdDebug(20);
+            sdDebug(restLaufzeit);
             updateRetryCounters();
         }
     }
@@ -707,6 +721,7 @@ implementation
                         clearFlag(&flags, RESUME_BACKOFF);
                         call Timer.start(restLaufzeit);
                         restLaufzeit = 0;
+                        sdDebug(30);
                     }
                     else {
                         // sdDebug(165);
@@ -746,6 +761,7 @@ implementation
             }
         }
         if(err == SUCCESS) {
+            sdDebug(300);
             post PrepareMsgTask();
         }
         return err;
@@ -785,6 +801,7 @@ implementation
         call ChannelMonitor.rxSuccess();
         if(macState <= CCA_ACK) {
             if(macState == CCA) {
+                sdDebug(100);
                 computeBackoff();
 #ifdef SPECKMAC_PERFORMANCE
                 call Performance.macDetectedOnCca();
@@ -793,6 +810,7 @@ implementation
             if(macState != RX_ACK) {
                 macState = RX_P;
             } else {
+                sdDebug(500);
                 macState = RX_ACK_P;
             }
         }
@@ -888,7 +906,7 @@ implementation
         else if(macState == RX_ACK_P) {
             if(error == SUCCESS) {
                 if(ackIsForMe(msg)) {
-                    // sdDebug(202);
+                    sdDebug(510);
                     storeStrength(msg);
                     getMetadata(txBufPtr)->ack = WAS_ACKED;
                     getMetadata(txBufPtr)->repetitions = txMacHdr->repetitionCounter;
@@ -898,7 +916,7 @@ implementation
                     action = SLEEP;
                 }
                 else {
-                    // sdDebug(203);
+                    sdDebug(511);
                     updateLongRetryCounters(); // this will eventually schedule the right backoff
                     macState = SLEEP;          // so much traffic is going on -- take a nap
                     setSleepMode();
@@ -907,11 +925,11 @@ implementation
             }
             else {
                 if(call Timer.isRunning()) {
-                    // sdDebug(204);
+                    sdDebug(512);
                     action = RX_ACK;
                 }
                 else {
-                    // sdDebug(205);
+                    sdDebug(513);
                     updateLongRetryCounters();
                     action = RX;
                 }
@@ -937,11 +955,19 @@ implementation
         else if(action == SLEEP) {
             macState = SLEEP;
             if(isFlagSet(&flags, RESUME_BACKOFF)) {
-                if(nav > restLaufzeit) restLaufzeit += nav;
+                if(nav > restLaufzeit) {
+                    sdDebug(40);
+                    sdDebug(restLaufzeit);
+                    restLaufzeit += nav;
+                }
+                sdDebug(41);
+                sdDebug(restLaufzeit);
             }
             else {
                 setFlag(&flags, RESUME_BACKOFF);
                 restLaufzeit = call Random.rand16() & ZERO_BACKOFF_MASK;
+                sdDebug(42);
+                sdDebug(restLaufzeit);
             }
             setSleepMode();
         }
@@ -1013,6 +1039,7 @@ implementation
         setFlag(&flags, ACTION_DETECTED);
         if((macState == RX) || (macState == CCA) || (macState == CCA_ACK)) {
             if(macState == CCA) {
+                sdDebug(101);
                 computeBackoff();
 #ifdef SPECKMAC_PERFORMANCE
                 call Performance.macBusyOnCca();
@@ -1029,8 +1056,14 @@ implementation
     void checkOnIdle()  {
         if(macState == RX) {
             // sdDebug(240);
-            macState = SLEEP;
-            setSleepMode();
+            checkCounter++;
+            if(checkCounter < 2) {
+                call Timer.start(DATA_DETECT_TIME);
+                requestAdc();
+            } else {
+                macState = SLEEP;
+                setSleepMode();
+            }
         }
         else if(macState == CCA) {
             checkCounter++;
@@ -1095,6 +1128,7 @@ implementation
                      clearFlag(&flags, RESUME_BACKOFF);
                      call Timer.start(restLaufzeit);
                      restLaufzeit = 0;
+                     sdDebug(50);
                  }
                  else {
                      // sdDebug(262);
@@ -1121,6 +1155,7 @@ implementation
         // sdDebug(270);
         if((macState == SLEEP) && (!isFlagSet(&flags, SWITCHING))) {
             clearFlag(&flags, ACTION_DETECTED);
+            sdDebug(200);
             interruptBackoffTimer();
             macState = RX;
             // sdDebug(271);
