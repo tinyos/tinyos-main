@@ -391,14 +391,14 @@ implementation
 
     void storeStrength(message_t *m) {
         if(rssiValue != INVALID_SNR) {
-            (getMetadata(txBufPtr))->strength = rssiValue;
+            (getMetadata(m))->strength = rssiValue;
         }
         else {
             if(call RssiAdcResource.isOwner()) {
-                (getMetadata(txBufPtr))->strength = call ChannelMonitorData.readSnr();
+                (getMetadata(m))->strength = call ChannelMonitorData.readSnr();
             }
             else {
-                (getMetadata(txBufPtr))->strength = 1;
+                (getMetadata(m))->strength = 1;
             }
         }
     }
