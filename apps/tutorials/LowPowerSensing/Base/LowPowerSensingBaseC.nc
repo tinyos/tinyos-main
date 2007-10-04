@@ -65,7 +65,7 @@ implementation {
 
   event void Boot.booted() {
     serialSending = FALSE;
-    sample_msg_payload = (serial_sample_msg_t*)call SerialPacket.getPayload(&sample_msg, NULL);
+    sample_msg_payload = (serial_sample_msg_t*)call SerialPacket.getPayload(&sample_msg, sizeof(serial_sample_msg_t));
     call RadioAMControl.start();
   }
   

@@ -92,7 +92,7 @@ implementation {
   
   event void SampleLogRead.readDone(sensor_sample_t* sample, error_t error) {
     if(error == SUCCESS) {
-      nx_sensor_sample_t* nx_sample = call SampleSend.getPayload(&sample_msg);
+      nx_sensor_sample_t* nx_sample = call SampleSend.getPayload(&sample_msg, sizeof(nx_sample));
       call SampleNxConverter.copyToNx(nx_sample, sample);
       sendSampleMsg();
     }
