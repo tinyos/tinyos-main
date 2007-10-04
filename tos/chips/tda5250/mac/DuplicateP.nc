@@ -39,11 +39,35 @@ module DuplicateP {
   }
   uses {
       interface Timer<TMilli> as Timer;
+#ifdef DUPLICATE_DEBUG
+      interface SerialDebug;
+#endif
   }
 }
-implementation {    
+implementation {
     known_t knownTable[TABLE_ENTRIES];
-
+    
+#ifdef DUPLICATE_DEBUG
+    void sdDebug(uint16_t p) {
+        call SerialDebug.putPlace(p);
+    }
+    known_t dupOldest;
+    unsigned last;
+    task void dump() {
+        sdDebug(3000 + last);
+        sdDebug(dupOldest.src);
+        sdDebug(dupOldest.seqno);
+        sdDebug(dupOldest.age);
+        sdDebug(4000);
+        sdDebug(knownTable[last].src);
+        sdDebug(knownTable[last].seqno);
+        sdDebug(knownTable[last].age);
+        sdDebug(5000);
+    }
+#else
+    void sdDebug(uint16_t p) {};
+#endif
+    
     /** helper functions */
     task void ageMsgsTask() {
         unsigned i;
@@ -80,14 +104,22 @@ implementation {
                 break;
             }
         }
+        sdDebug(100 + rVal);
+        sdDebug(200 + i);
         return rVal;
     }
     
     async command void Duplicate.remember(am_addr_t src, uint8_t seqno) {
         unsigned oldest = findOldest();
+#ifdef DUPLICATE_DEBUG
+        dupOldest = knownTable[oldest];
+        last = oldest;
+        post dump();
+#endif
         knownTable[oldest].src = src;
         knownTable[oldest].seqno = seqno;
         knownTable[oldest].age = 0;
+        post ageMsgsTask();
     }
 
     /** helper interfaces */
@@ -99,7 +131,7 @@ implementation {
         uint8_t i;
         for(i = 0; i < TABLE_ENTRIES; i++) {
             atomic {
-                    knownTable[i].age = MAX_AGE;
+                knownTable[i].age = MAX_AGE;
             }
         }
         call Timer.startPeriodic(AGE_INTERVALL);

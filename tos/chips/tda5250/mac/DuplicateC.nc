@@ -47,4 +47,10 @@ implementation {
     Duplicate = DuplicateP;
     DuplicateP.Timer -> Timer;        // make information soft state
     MainC.SoftwareInit -> DuplicateP; 
+
+#ifdef DUPLICATE_DEBUG
+    components new SerialDebugC() as SD;
+    DuplicateP.SerialDebug -> SD;
+#endif
+
 }
