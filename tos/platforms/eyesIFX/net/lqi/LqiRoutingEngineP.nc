@@ -113,8 +113,8 @@ implementation {
   int16_t gRecentOriginPacketSeqNo[MHOP_HISTORY_SIZE];
 
   uint16_t adjustLQI(uint8_t val) {
-    uint16_t result;		     
-    if(val > 30) val = 30;
+    uint16_t result;
+    if(val >= 80) val = 80;		     
     result = 80 - val;
     result = (((result * result) >> 3) * result) >> 3;
     return result;
