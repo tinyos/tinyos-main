@@ -1,4 +1,4 @@
-// $Id: TinyError.h,v 1.5 2007-04-15 21:11:38 klueska Exp $
+// $Id: TinyError.h,v 1.6 2007-10-08 20:10:08 idgay Exp $
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -23,7 +23,7 @@
 /**
  * @author Phil Levis
  * @author David Gay
- * Revision:  $Revision: 1.5 $
+ * Revision:  $Revision: 1.6 $
  *
  * Defines global error codes for error_t in TinyOS.
  */
@@ -44,7 +44,7 @@ enum {
   EALREADY       = 9,           // The device state you are requesting is already set
 };
 
-typedef uint8_t error_t __attribute__((combine(ecombine)));
+typedef uint8_t error_t @combine("ecombine");
 
 error_t ecombine(error_t r1, error_t r2)
 /* Returns: r1 if r1 == r2, FAIL otherwise. This is the standard error

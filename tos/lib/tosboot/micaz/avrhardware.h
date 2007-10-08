@@ -1,4 +1,4 @@
-// $Id: avrhardware.h,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+// $Id: avrhardware.h,v 1.2 2007-10-08 20:10:09 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -133,10 +133,10 @@ static inline void TOSH_MAKE_##alias##_INPUT()  {TOSH_MAKE_##connector##_INPUT()
 
 // We need slightly different defs than SIGNAL, INTERRUPT
 #define TOSH_SIGNAL(signame)					\
-void signame() __attribute__ ((signal, spontaneous, C))
+  void signame() __attribute__ ((signal)) @spontaneous() @C()
 
 #define TOSH_INTERRUPT(signame)				\
-void signame() __attribute__ ((interrupt, spontaneous, C))
+  void signame() __attribute__ ((interrupt)) @spontaneous() @C()
 
 /* Watchdog Prescaler
  */
@@ -166,14 +166,14 @@ void TOSH_wait()
 
 /* #ifndef NESC_BUILD_BINARY */
 
-/* inline __nesc_atomic_t __nesc_atomic_start(void) __attribute__((spontaneous)) */
+/* inline __nesc_atomic_t __nesc_atomic_start(void) @spontaneous() */
 /* { */
 /*   __nesc_atomic_t result = inp(SREG); */
 /*   cli(); */
 /*   return result; */
 /* } */
 
-/* inline void __nesc_atomic_end(__nesc_atomic_t oldSreg) __attribute__((spontaneous)) */
+/* inline void __nesc_atomic_end(__nesc_atomic_t oldSreg) @spontaneous() */
 /* { */
 /*   outp(oldSreg, SREG); */
 /* } */

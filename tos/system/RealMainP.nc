@@ -1,4 +1,4 @@
-// $Id: RealMainP.nc,v 1.5 2007-03-01 04:21:44 scipio Exp $
+// $Id: RealMainP.nc,v 1.6 2007-10-08 20:10:05 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: RealMainP.nc,v 1.5 2007-03-01 04:21:44 scipio Exp $
+ * Date last modified:  $Id: RealMainP.nc,v 1.6 2007-10-08 20:10:05 idgay Exp $
  *
  */
 
@@ -49,7 +49,7 @@ module RealMainP {
   uses interface Init as SoftwareInit;
 }
 implementation {
-  int main() __attribute__ ((C, spontaneous)) {
+  int main() @C() @spontaneous() {
     atomic
       {
 	/* First, initialize the Scheduler so components can post

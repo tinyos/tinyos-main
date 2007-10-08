@@ -250,7 +250,7 @@ implementation {
 
   }
 
-  int main() __attribute__ ((C, spontaneous)) {
+  int main() @C() @spontaneous() {
 
     __nesc_disable_interrupt();
 

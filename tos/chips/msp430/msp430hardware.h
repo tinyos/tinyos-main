@@ -146,11 +146,11 @@ MSP430REG_NORACE2(I2CDCTLnr,I2CDCTL);
 
 // The signal attribute has opposite meaning in msp430-gcc than in avr-gcc
 #define TOSH_SIGNAL(signame) \
-void sig_##signame() __attribute__((interrupt (signame), wakeup, C))
+  void sig_##signame() __attribute__((interrupt (signame), wakeup)) @C()
 
 // TOSH_INTERRUPT allows nested interrupts
 #define TOSH_INTERRUPT(signame) \
-void isr_##signame() __attribute__((interrupt (signame), signal, wakeup, C))
+  void isr_##signame() __attribute__((interrupt (signame), signal, wakeup)) @C()
 
 
 #define SET_FLAG(port, flag) ((port) |= (flag))

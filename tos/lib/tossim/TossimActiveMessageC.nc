@@ -1,4 +1,4 @@
-// $Id: TossimActiveMessageC.nc,v 1.4 2007-09-25 00:07:59 scipio Exp $
+// $Id: TossimActiveMessageC.nc,v 1.5 2007-10-08 20:10:09 idgay Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -243,7 +243,7 @@ implementation {
    return evt;
  }
  
- void active_message_deliver(int node, message_t* msg, sim_time_t t) __attribute__ ((C, spontaneous)) {
+ void active_message_deliver(int node, message_t* msg, sim_time_t t) @C() @spontaneous() {
    sim_event_t* evt = allocate_deliver_event(node, msg, t);
    sim_queue_insert(evt);
  }

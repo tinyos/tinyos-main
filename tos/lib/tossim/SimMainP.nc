@@ -40,7 +40,7 @@ module SimMainP {
 }
 implementation {
 
-  int sim_main_start_mote() __attribute__ ((C, spontaneous)) {
+  int sim_main_start_mote() @C() @spontaneous() {
     char timeBuf[128];
     atomic {
       /* First, initialize the Scheduler so components can post

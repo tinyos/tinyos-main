@@ -36,6 +36,8 @@
  * @author Jonathan Hui
  */
  
+#include <message.h>
+ 
 interface LowPowerListening {
 
   /**

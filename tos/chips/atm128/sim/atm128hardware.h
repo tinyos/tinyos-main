@@ -33,7 +33,7 @@
  *  @author Jason Hill, Philip Levis, Nelson Lee, David Gay
  *  @author Martin Turon <mturon@xbow.com>
  *
- *  $Id: atm128hardware.h,v 1.5 2007-04-27 17:32:20 scipio Exp $
+ *  $Id: atm128hardware.h,v 1.6 2007-10-08 20:10:09 idgay Exp $
  */
 
 #ifndef _H_atmega128hardware_H
@@ -48,10 +48,10 @@ uint8_t atm128RegFile[TOSSIM_MAX_NODES][0xa0];
 
 /* We need slightly different defs than SIGNAL, INTERRUPT */
 #define AVR_ATOMIC_HANDLER(signame) \
-  void signame() __attribute__ ((spontaneous, C))
+  void signame() @spontaneous() @C()
 
 #define AVR_NONATOMIC_HANDLER(signame) \
-  void signame() __attribute__ ((spontaneous, C))
+  void signame() @spontaneous() @C()
 
 /* Macro to create union casting functions. */
 #define DEFINE_UNION_CAST(func_name, from_type, to_type) \
@@ -89,7 +89,7 @@ typedef uint8_t __nesc_atomic_t;
 
 /* Saves current interrupt mask state and disables interrupts. */
 inline __nesc_atomic_t 
-__nesc_atomic_start(void) __attribute__((spontaneous))
+__nesc_atomic_start(void) @spontaneous()
 {
     __nesc_atomic_t result = SREG;
     __nesc_disable_interrupt();
@@ -98,7 +98,7 @@ __nesc_atomic_start(void) __attribute__((spontaneous))
 
 /* Restores interrupt mask to original state. */
 inline void 
-__nesc_atomic_end(__nesc_atomic_t original_SREG) __attribute__((spontaneous))
+__nesc_atomic_end(__nesc_atomic_t original_SREG) @spontaneous()
 {
   SREG = original_SREG;
 }
