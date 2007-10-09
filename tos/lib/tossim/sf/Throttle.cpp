@@ -59,7 +59,7 @@ void Throttle::finalize() {
 void Throttle::checkThrottle() {
     
     double secondsElasped = getTime() - simStartTime;
-    sim_time_t ticksElasped = secondsElasped*sim->ticksPerSecond();
+    sim_time_t ticksElasped = (sim_time_t) secondsElasped*sim->ticksPerSecond();
 
     sim_time_t difference = sim->time() - ticksElasped;
 
