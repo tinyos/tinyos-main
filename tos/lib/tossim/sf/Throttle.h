@@ -66,7 +66,7 @@ class Throttle {
 
         Tossim* sim;
 
-        long throttleCount;
+        unsigned long throttleCount;
 
         double getTime();
         double toDouble(struct timeval* tv);
