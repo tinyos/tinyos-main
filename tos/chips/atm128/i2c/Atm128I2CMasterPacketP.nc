@@ -38,7 +38,7 @@
  *
  * @author Philip Levis
  *
- * @version $Id: Atm128I2CMasterPacketP.nc,v 1.5 2007-10-01 19:19:39 scipio Exp $
+ * @version $Id: Atm128I2CMasterPacketP.nc,v 1.6 2007-10-12 22:30:26 klueska Exp $
  */
 
 generic module Atm128I2CMasterPacketP() {
@@ -114,6 +114,7 @@ implementation {
 	call I2C.enable(FALSE);
 	call I2C.enableInterrupt(FALSE);
 	call I2C.setInterruptPending(FALSE);
+	call I2C.sendCommand();
 	call I2C.off();
 	state = I2C_OFF;
 	return SUCCESS;
