@@ -10,8 +10,8 @@ The Collection Tree Protocol (CTP)
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2007-02-28 22:33:28 $
+:Draft-Version: $Revision: 1.9 $
+:Draft-Modified: $Date: 2007-10-18 16:11:57 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -116,18 +116,18 @@ to do so.
 The CTP data frame format is as follows::
 
                            1            
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |P|C| reserved  |      THL        |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |              ETX                |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |             origin              |                 
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |     seqno     |   collect_id    |    
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |P|C| reserved  |      THL      |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |              ETX              |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |             origin            |                 
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |     seqno     |   collect_id  |    
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |    data ... 
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Field definitions are as follows:
 
@@ -159,12 +159,12 @@ acknowledgments enabled.
 The CTP routing frame format is as follows::
 
                            1            
-       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |P|C| reserved  |      parent     |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |     parent    |       ETX       |    
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |P|C| reserved  |     parent    |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |     parent    |      ETX      |    
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |      ETX      |          
       +-+-+-+-+-+-+-+-+
 
