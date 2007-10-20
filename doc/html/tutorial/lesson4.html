@@ -233,17 +233,17 @@ $ java net.tinyos.tools.Listen
 packet it sees. Your output should look something like this:</p>
 
 <pre>
-00 FF FF 04 22 06 00 02 00 01
-00 FF FF 04 22 06 00 02 00 02
-00 FF FF 04 22 06 00 02 00 03
-00 FF FF 04 22 06 00 02 00 04
-00 FF FF 04 22 06 00 02 00 05
-00 FF FF 04 22 06 00 02 00 06
-00 FF FF 04 22 06 00 02 00 07
-00 FF FF 04 22 06 00 02 00 08
-00 FF FF 04 22 06 00 02 00 09
-00 FF FF 04 22 06 00 02 00 0A
-00 FF FF 04 22 06 00 02 00 0B
+00 FF FF 00 00 04 22 06 00 02 00 01
+00 FF FF 00 00 04 22 06 00 02 00 02
+00 FF FF 00 00 04 22 06 00 02 00 03
+00 FF FF 00 00 04 22 06 00 02 00 04
+00 FF FF 00 00 04 22 06 00 02 00 05
+00 FF FF 00 00 04 22 06 00 02 00 06
+00 FF FF 00 00 04 22 06 00 02 00 07
+00 FF FF 00 00 04 22 06 00 02 00 08
+00 FF FF 00 00 04 22 06 00 02 00 09
+00 FF FF 00 00 04 22 06 00 02 00 0A
+00 FF FF 00 00 04 22 06 00 02 00 0B
 </pre>
 
 
@@ -265,6 +265,7 @@ The overall message format for the BlinkToRadioC application is
 therefore (ignoring the first 00 byte): </p>
 <ul>
   <li> <b>Destination address</b> (2 bytes)</li>
+  <li> <b>Source address</b> (2 bytes)</li>
   <li> <b>Message length</b> (1 byte)</li>
   <li> <b>Group ID</b> (1 byte)</li>
   <li> <b>Active Message handler type</b> (1 byte)</li>
@@ -279,13 +280,15 @@ So we can interpret the data packet as follows:
   <tbody>
     <tr bgcolor="#d0d0d0">
       <td><b>dest addr</b></td>
+      <td><b>src addr</b></td>
       <td><b>msg len</b></td>
       <td><b>groupID</b></td>
       <td><b>handlerID</b></td>
-      <td><b>source addr</b></td>
+      <td><b>hop addr</b></td>
       <td><b>counter</b></td>
     </tr>    <tr>
       <td bgcolor="#d0d0ff">ff ff</td>
+      <td bgcolor="#d0d0ff">00 00</td>
       <td bgcolor="#d0d0ff">04</td>
       <td bgcolor="#d0d0ff">22</td>
       <td bgcolor="#d0d0ff">06</td>
@@ -295,7 +298,7 @@ So we can interpret the data packet as follows:
   </tbody>
 </table>
 
-<p>The source address depends on what mote ID you installed your
+<p>The hop address depends on what mote ID you installed your
 BlinkToRadio application with. The default (if you do not specify
 and ID) is <code>00 01</code>.
 Note that the data is sent by the mote in <i>big-endian</i>
@@ -306,6 +309,13 @@ a network format, that is, big-endian and byte-aligned. Using
 <code>nx_struct</code> (rather than a standard C <code>struct</code>)
 for a message payload ensures that it will work across platforms.</p>
 
+<p>TinyOS serial stacks do not fill in the source address as the
+address of the sending mote. The assumption is that the serial connection
+can identify the node, and setting the source address prevents 
+applications such as BaseStation from working properly. This is
+because BaseStation just forwards radio packets to the serial port:
+it needs to fill in the <i>radio source</i> address as the source
+address of the serial packet.</p>
 <p>As you watch the packets scroll by, you should see the counter
 field increase as the BlinkToRadio app increments its counter.</p>
 
