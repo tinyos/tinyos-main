@@ -29,7 +29,7 @@
  * @date   Nov 22 2005
  */
 
-// $Id: sim_tossim.c,v 1.6 2007-06-15 00:45:18 scipio Exp $
+// $Id: sim_tossim.c,v 1.7 2007-10-26 01:47:12 scipio Exp $
 
 
 #include <sim_tossim.h>
@@ -55,7 +55,17 @@ void sim_init() __attribute__ ((C, spontaneous)) {
   {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    sim_seed = tv.tv_usec;
+    // Need to make sure we don't pass zero to seed simulation.
+    // But in case some weird timing factor causes usec to always
+    // be zero, default to tv_sec. Note that the explicit
+    // seeding call also has a check for zero. Thanks to Konrad
+    // Iwanicki for finding this. -pal
+    if (tv.tv_usec != 0) {
+      sim_random_seed(tv.tv_usec);
+    }
+    else {
+      sim_random_seed(tv.tv_sec);
+    }
   } 
 }
 
@@ -82,6 +92,10 @@ int sim_random() __attribute__ ((C, spontaneous)) {
 }
 
 void sim_random_seed(int seed) __attribute__ ((C, spontaneous)) {
+  // A seed of zero wedges on zero, so use 1 instead.
+  if (seed == 0) {
+    seed = 1;
+  }
   sim_seed = seed;
 }
 
