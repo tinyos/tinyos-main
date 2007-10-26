@@ -174,7 +174,7 @@ CtpCongestion interface (see tos/lib/net/ctp/CtpCongestion.nc)<br>
 <p>Finally, to compile this program we create the following
 Makefile:<br>
 </p>
-<pre>COMPONENT=EasyCollectionAppC<br>CFLAGS += -I$(TOSDIR)/lib/net \<br>          -I$(TOSDIR)/lib/net/le \<br>          -I$(TOSDIR)/lib/net/ctp<br>include $(MAKERULES)<br></pre>
+<pre>COMPONENT=EasyCollectionAppC<br>CFLAGS += -I$(TOSDIR)/lib/net \<br>          -I$(TOSDIR)/lib/net/4bitle \<br>          -I$(TOSDIR)/lib/net/ctp<br>include $(MAKERULES)<br></pre>
 Now install this program into several nodes (make sure you have one
 base station, that is, one node whose ID is 1) and see how all the
 packets generated in the nodes are collected in the base station.<br>
