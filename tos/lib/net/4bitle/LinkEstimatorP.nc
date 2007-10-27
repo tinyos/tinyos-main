@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.2 2007-09-25 13:47:14 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.3 2007-10-27 00:07:56 scipio Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -690,9 +690,7 @@ implementation {
 
   // application payload pointer is just past the link estimation header
   command void* Packet.getPayload(message_t* msg, uint8_t len) {
-    linkest_header_t *hdr = getHeader(msg);
-    uint8_t footerLen = (hdr->flags & NUM_ENTRIES_FLAG) * sizeof(linkest_header_t);
-    void* payload = call SubPacket.getPayload(msg, len + footerLen);
+    void* payload = call SubPacket.getPayload(msg, len + sizeof(linkest_header_t));
     if (payload != NULL) {
       payload += sizeof(linkest_header_t);
     }
