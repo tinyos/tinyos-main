@@ -1,0 +1,8 @@
+Andreas Koepke <koepke@tkn.tu-berlin.de>
+
+Based on bslsh code by Dirk Jagdmann <doj@cubic.org> and Michael Stickel <michael@cubic.org>
+Based on bsl.py by Chris Liechti <cliechti@gmx.net>, 
+which includes fixes from Colin Domoney and maybe others
+Based on the application note slaa96d.pdf by Volker Rzehak and Stefan Schauer, published by Texas Instruments, Inc.
+Based on the application note slaa089d.pdf by Stefan Schauer, published by Texas Instruments, Inc.
+

@@ -1,0 +1,47 @@
+bsltool is a C++ based tool that can reset, erase and flash msp430 CPUs with a
+bootstrap loader of version 1.6 or higher. Your should be able to use it for
+telosb, tmote sky and eyesIFXv2 node platforms.
+
+bsltool provides only a very basic set of functions, it can not be used for
+debug purposes like the full blown bsl.py. For the basic tasks like reset, erase
+and flash an Intel Hex file it can be used as a drop-in replacement for bsl.py
+from the mspgcc tool chain or tos-bsl from the tinyos-2 tool chain.
+
+On resource limited devices like the NSLU2 it delivers higher performance and
+allows you to flash images on more than two nodes at once, which can lead to a
+significant gain in time compared with the python version. Due to the reduced
+CPU load its impact on other running processes is much lower than the python
+version. 
+
+However, this is a specialized tool and may not work under all conditions.
+
+You should make sure that you have:
+1. the GNU C++ compiler like g++ to compile the tool
+2. little endian byte order on the executing host 
+3. \n (new line) appearing somewhere at the end of the line in the intel hex file
+4. the image to flash as an Intel Hex (TI text is not yet supported)
+5. msp430 CPUs with a bootstrap loader version higher or equal to 1.6 
+
+Trouble Shooting:
+
+If your host needs something different for 2. and 4.: tell me. 
+
+1. Node should be supported (telosb, eyesIFXv2)
+
+   Can not flash (but erase and transmit password work): 
+   Maybe the flash memory of the node is corrupt.
+
+   ... to be extended ;-)
+
+2. Unsupported MSP430 MCU
+   - Check BSL version with some other tool
+   - Check schematic assumed by bsl.py and your schematic, if TEST and RESET are
+     swapped implement your own ...Serial (see Serial.h)
+   - Play with --invert-test, --invert-reset
+
+   ... you are somewhat on your own here.
+
+This tool works great for me!
+
+Happy flashing, Andreas
+
