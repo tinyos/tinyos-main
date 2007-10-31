@@ -1,4 +1,4 @@
-/* $Id: CtpInfo.nc,v 1.4 2006-12-12 18:23:29 vlahan Exp $ */
+/* $Id: CtpInfo.nc,v 1.5 2007-10-31 22:53:01 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -24,7 +24,7 @@
 /*
  *  @author Rodrigo Fonseca
  *  @author Philip Levis
- *  @date   $Date: 2006-12-12 18:23:29 $
+ *  @date   $Date: 2007-10-31 22:53:01 $
  *  @see Net2-WG
  */
 
@@ -45,7 +45,7 @@ interface CtpInfo {
    * through the current parent.  The pointer is allocated by the
    * caller.  If the parent is invalid, return FAIL (no info).  The
    * caller MUST NOT use the value in parent if the return is not
-   * SUCCESS.
+   * SUCCESS. Calling getEtx at the root will set the etx argument to 0.
    */
   
   command error_t getEtx(uint16_t* etx);

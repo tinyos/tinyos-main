@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.11 2007-09-24 17:00:18 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.12 2007-10-31 22:53:01 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2007-09-24 17:00:18 $
+ *  @date   $Date: 2007-10-31 22:53:01 $
  *  @see Net2-WG
  */
 
@@ -548,7 +548,12 @@ implementation {
             return FAIL;
         if (routeInfo.parent == INVALID_ADDR)    
             return FAIL;
-        *etx = routeInfo.etx;
+	if (state_is_root == 1) {
+	  *etx = 0;
+	} else {
+	  // path etx = etx(parent) + etx(link to the parent)
+	  *etx = routeInfo.etx + evaluateEtx(call LinkEstimator.getLinkQuality(routeInfo.parent));
+	}
         return SUCCESS;
     }
 
