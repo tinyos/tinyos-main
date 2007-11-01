@@ -45,7 +45,7 @@ int serial_connect(int* err, const char* dev, int* readFD, int* writeFD, termios
     int r = 0;
     *readFD = -1;
     *writeFD = -1;
-    for(int i = 0; i < 3; i++) {
+    for(int i = 0; i < 2; i++) {
         *readFD = open(dev, O_RDONLY | O_NOCTTY | O_NONBLOCK);
         *err = errno;
         if(*readFD != -1) {
@@ -146,11 +146,14 @@ int serial_connect(int* err, const char* dev, int* readFD, int* writeFD, termios
     return r;
 };
 
+int BaseSerial::setPins(int *err) {
+    setRST(err);
+    return setTEST(err);
+}
+
 int BaseSerial::resetPins(int *err) {
-    int r = 0;
-    r = setRST(err);
-    r = clrTEST(err);
-    return r;
+    setRST(err);
+    return clrTEST(err);
 }
 
 int BaseSerial::disconnect(int *err) {
@@ -185,13 +188,13 @@ int BaseSerial::reset(int *err) {
     if(r == -1) return -1;
     r = setTEST(err);
     if(r == -1) return -1;
-    serial_delay(2500);
+    serial_delay(switchdelay);
     r = clrRST(err);
     if(r == -1) return -1;
-    serial_delay(10);
+    serial_delay(switchdelay);
     r = setRST(err);
     if(r == -1) return -1;
-    serial_delay(2500);
+    serial_delay(switchdelay);
     cout << "Reset device ..." << endl;
     return clearBuffers(err);
 };
@@ -202,27 +205,22 @@ int BaseSerial::invokeBsl(int *err) {
     if(r == -1) return -1;
     r = setTEST(err);
     if(r == -1) return -1;
-    serial_delay(2500);
+    serial_delay(switchdelay);
     r = clrRST(err);
     if(r == -1) return -1;
     r = setTEST(err);
     if(r == -1) return -1;
-    serial_delay(10);
     r = clrTEST(err);
     if(r == -1) return -1;
-    serial_delay(10);
     r = setTEST(err);
     if(r == -1) return -1;
-    serial_delay(10);
     r = clrTEST(err);
     if(r == -1) return -1;
-    serial_delay(10);
     r = setRST(err);
     if(r == -1) return -1;
-    serial_delay(10);
     r = setTEST(err);
     if(r == -1) return -1;
-    serial_delay(2500);
+    serial_delay(switchdelay);
     cout << "Invoking BSL..." << endl;
     return clearBuffers(err);
 }
@@ -243,8 +241,8 @@ int BaseSerial::readFD(int *err, char *buffer, int count, int maxCount) {
                 return -1;
             }
             FD_CLR(serialReadFD, &rfds);
-            if(retries++ >= 3) {
-                cerr << "FATAL: BaseSerial::readFD no data available after 3s" << endl;
+            if(retries++ >= 2) {
+                cerr << "FATAL: BaseSerial::readFD no data available after 1s" << endl;
                 return -1;
             }
         }
@@ -270,7 +268,7 @@ int BaseSerial::txrx(int *err, frame_t *txframe, frame_t *rxframe) {
              << endl;
         return -1;
     }
-    for(unsigned i = 0; i < 3; i++) {
+    for(unsigned i = 0; i < 2; i++) {
         r = write(serialWriteFD,&sync, 1);
         if(r == -1) {
             *err = errno;
@@ -368,7 +366,7 @@ int TelosBSerial::reset(int *err) {
     int r;
     r = telosI2CWriteCmd(err, 0, 0);
     if(r == -1) return r;
-    serial_delay(10000);
+    serial_delay(switchdelay);
     r = telosI2CWriteCmd(err, 0, 3);
     if(r == -1) return r;
     r = telosI2CWriteCmd(err, 0, 2);
@@ -377,7 +375,7 @@ int TelosBSerial::reset(int *err) {
     if(r == -1) return r;
     r = telosI2CWriteCmd(err, 0, 0);
     if(r == -1) return r;
-    serial_delay(2500);
+    serial_delay(switchdelay);
     cout << "Reset device ..." << endl;
     return clearBuffers(err);
 }
@@ -386,7 +384,7 @@ int TelosBSerial::invokeBsl(int *err) {
     int r;
     r = telosI2CWriteCmd(err, 0, 0);
     if(r == -1) return r;
-    serial_delay(10000);
+    serial_delay(switchdelay);
     r = telosI2CWriteCmd(err, 0, 1);
     if(r == -1) return r;
     r = telosI2CWriteCmd(err, 0, 3);
@@ -401,7 +399,7 @@ int TelosBSerial::invokeBsl(int *err) {
     if(r == -1) return r;
     r = telosI2CWriteCmd(err, 0, 0);
     if(r == -1) return r;
-    serial_delay(2500);
+    serial_delay(switchdelay);
     cout << "Invoking BSL..." << endl;
     return clearBuffers(err);
 }
@@ -471,12 +469,15 @@ int TelosBSerial::telosI2CWriteCmd(int *err, uint8_t addr, uint8_t cmdbyte) {
     if(r == -1) return r;
     r = telosI2CWriteByte(err,  cmdbyte );
     if(r == -1) return r;
-    return telosI2CStop(err);
+    r = telosI2CStop(err);
+    if(r == -1) return r;
+    return clearBuffers(err);
+}
+
+int TelosBSerial::setPins(int *err) {
+    return 0;
 }
 
 int TelosBSerial::resetPins(int *err) {
-    int r = 0;
-    r = setRTS(err);
-    r = clrDTR(err);
-    return r;
+    return 0;
 }

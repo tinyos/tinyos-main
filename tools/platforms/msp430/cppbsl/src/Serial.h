@@ -103,9 +103,6 @@ protected:
             *err = errno;
             std::cerr << "ERROR: BaseSerial::setDTR could not set DTR pin" << std::endl;
         }
-        else {
-            serial_delay(switchdelay);
-        }
         return r;
     }
     inline int clrDTR(int *err) {
@@ -114,9 +111,6 @@ protected:
         if(r == -1) {
             *err = errno;
             std::cerr << "ERROR: BaseSerial::clrDTR could not clr DTR pin" << std::endl;
-        }
-        else {
-            serial_delay(switchdelay);
         }
         return r;
     }
@@ -127,9 +121,6 @@ protected:
             *err = errno;
             std::cerr << "ERROR: BaseSerial::setRTS could not set RTS pin" << std::endl;
         }
-        else {
-            serial_delay(switchdelay);
-        }
         return r;
     }
     inline int clrRTS(int *err) {
@@ -138,9 +129,6 @@ protected:
         if(r == -1) {
             *err = errno;
             std::cerr << "ERROR: BaseSerial::clrRTS could not clr RTS pin" << std::endl;
-        }
-        else {
-            serial_delay(switchdelay);
         }
         return r;
     }
@@ -181,18 +169,18 @@ protected:
     }
     
     int readFD(int *err, char *buffer, int count, int maxCount);
+    virtual int setPins(int *err);
     virtual int resetPins(int *err);
     
 public:
     BaseSerial(const termios& term, int rFD, int wFD, bool T=false, bool R=false) :
-        switchdelay(10),
+        switchdelay(30000),
         oldtermios(term),
         serialReadFD(rFD), serialWriteFD(wFD),
         invertTest(T), invertReset(R) {
         int err;
         FD_ZERO(&rfds);
-        setRST(&err);
-        setTEST(&err);
+        setPins(&err);
     }
     
     virtual ~BaseSerial() {
@@ -235,6 +223,7 @@ public:
 class TelosBSerial : public BaseSerial {    
 protected:
     virtual int resetPins(int *err);
+    virtual int setPins(int *err);
         
     int telosSetSCL(int *err) {
         return clrRTS(err);
