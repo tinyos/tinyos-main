@@ -38,7 +38,7 @@
  *
  * @author Philip Levis
  *
- * @version $Id: Atm128I2CMasterPacketP.nc,v 1.6 2007-10-12 22:30:26 klueska Exp $
+ * @version $Id: Atm128I2CMasterPacketP.nc,v 1.7 2007-11-01 18:10:36 fredjiang Exp $
  */
 
 generic module Atm128I2CMasterPacketP() {
@@ -323,10 +323,10 @@ implementation {
       }
       if (state == I2C_ADDR) {
 	if (reading == TRUE) {
-	  call I2C.write(((packetAddr & 0x7f) << 1)) | ATM128_I2C_SLA_READ);
+	  call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_READ);
 	}
 	else
-	  call I2C.write(((packetAddr & 0x7f) << 1)) | ATM128_I2C_SLA_WRITE);
+	  call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_WRITE);
 	state = I2C_DATA;
 	call I2C.sendCommand();
       }
