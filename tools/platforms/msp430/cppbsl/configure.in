@@ -20,8 +20,8 @@ AC_C_CONST
 #checks for header files and libraries
 #AC_CHECK_HEADER(readline.h)
 #AC_CHECK_LIB(readline, rl_initialize)
-# AC_CHECK_HEADER(popt.h)
-# AC_CHECK_LIB(popt, poptGetNextOpt)
+AC_CHECK_HEADER(popt.h)
+AC_CHECK_LIB(popt, poptGetNextOpt)
 #AC_CHECK_HEADER(pthread.h)
 
 # Checks for typedefs, structures, and compiler characteristics.

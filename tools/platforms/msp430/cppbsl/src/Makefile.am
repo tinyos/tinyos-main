@@ -3,8 +3,6 @@
 MAINTAINERCLEANFILES = Makefile.in
 bin_PROGRAMS=cppbsl
 cppbsl_SOURCES=\
-	cmdline.h \
-	cmdline.cc \
 	Parameters.h \
 	Parameters.cc \
 	Serial.h \

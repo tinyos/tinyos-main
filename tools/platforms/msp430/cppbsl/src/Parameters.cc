@@ -31,52 +31,96 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <iostream>
-#include "cmdline.h"
+#include <popt.h>
 #include "Parameters.h"
 
 using namespace std;
 
 Parameters::Parameters(int argc, char **argv) {
+    int c;
     action = NONE;
-    gengetopt_args_info args_info;
-    cmdline_parser_init(&args_info);    
-    if(cmdline_parser(argc, argv, &args_info) != 0) {
+    device = 0;
+    verbose = false;
+    action = NONE;
+    image = 0;
+    telosb = false;
+
+    poptOption optionsTable[] = {
+        {"debug",'D', 0, 0, 'd', "print many statements on progress"},
+        {"f1x",'1', 0, 0, '1', "Specify CPU family, in case autodetect fails"},
+        {"invert-reset",'R', 0, 0, 'R', "RESET pin is inverted"},
+        {"invert-test",'T', 0, 0, 'T', "TEST pin is inverted"},
+        {"telosb",'b', 0, 0, 'b', "Assume a TelosB node"},
+        {"tmote",'b', 0, 0, 'b', "Assume a Tmote node"},
+        {"intelhex",'I', 0, 0, 'I', "force fileformat to be  IntelHex"},
+        {"erase",'e', 0, 0, 'e', "erase device"},
+        {"reset",'r', 0, 0, 'r', "reset device"},
+        {"program",'p', POPT_ARG_STRING, &image, 0,
+         "Program file", ""},
+        {"comport",'c', POPT_ARG_STRING, &device, 0,
+         "communicate with MSP430 using this device", ""},
+        POPT_AUTOHELP
+        POPT_TABLEEND
+    };
+    
+    poptContext optCon;   /* context for parsing command-line options */
+    optCon = poptGetContext(NULL, argc, (const char**)argv, optionsTable, 0);
+    /* Now do options processing */
+    while((c = poptGetNextOpt(optCon)) >= 0) {
+        switch(c) {
+            case 'R':
+                invertReset = true;
+                break;
+            case 'T':
+                invertTest = true;
+                break;
+            case 'd':
+                verbose = true;
+                break;
+            case 'r':
+                if(action < RESET) {
+                    action = RESET;
+                }
+                break;
+            case 'e':
+                if(action < ERASE) {
+                    action = ERASE;
+                }
+                break;
+            case 'b':
+                telosb = true;
+                break;
+            default:
+                break;
+        }
+    }
+    if (c < -1) {
+        /* an error occurred during option processing */
+        fprintf(stderr, "%s: %s\n",
+                poptBadOption(optCon, POPT_BADOPTION_NOALIAS),
+                poptStrerror(c));
         exit(1);
     }
-    if(args_info.invert_test_given) {
-        invertTest = true;
-    } else {
+    if(telosb) {
+        invertReset = false;
         invertTest = false;
     }
-    if(args_info.invert_reset_given) {
-        invertReset = true;
-    } else {
-        invertReset = false;
-    }
-    if(args_info.debug_given) {
-        verbose = true;
-    } else {
-        verbose = false;
-    }
-    if((args_info.erase_given) && (action < ERASE)) {
-        action = ERASE;
-    }
-    if((args_info.reset_given) && (action < RESET)) {
-        action = RESET;
-    }
-    if(args_info.program_given) {
+    if(image != 0) {
         action = FLASH;
-        img = args_info.program_arg;
     }
-    if(args_info.comport_given) {
-        dev = args_info.comport_arg;
+    if(device != 0) {
+        dev = device;
     }
-    if(args_info.telosb_given  || args_info.tmote_given) {
-        telosb = true;
-        invertReset = false;
-        invertTest = false;
+    else {
+        exit(1);
     }
-    cmdline_parser_free(&args_info);
+    if(image != 0) {
+        img = image;
+    }
+    else if(action == FLASH) {
+        exit(1);
+    }
+    poptFreeContext(optCon);
 };
 
 
