@@ -49,16 +49,15 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_cppbsl_OBJECTS = cmdline.$(OBJEXT) Parameters.$(OBJEXT) \
-	Serial.$(OBJEXT) Bsl.$(OBJEXT) cppbsl.$(OBJEXT)
+am_cppbsl_OBJECTS = Parameters.$(OBJEXT) Serial.$(OBJEXT) \
+	Bsl.$(OBJEXT) cppbsl.$(OBJEXT)
 cppbsl_OBJECTS = $(am_cppbsl_OBJECTS)
 cppbsl_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/Bsl.Po ./$(DEPDIR)/Parameters.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/Serial.Po ./$(DEPDIR)/cmdline.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/cppbsl.Po
+@AMDEP_TRUE@	./$(DEPDIR)/Serial.Po ./$(DEPDIR)/cppbsl.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
@@ -150,8 +149,6 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 MAINTAINERCLEANFILES = Makefile.in
 cppbsl_SOURCES = \
-	cmdline.h \
-	cmdline.cc \
 	Parameters.h \
 	Parameters.cc \
 	Serial.h \
@@ -229,7 +226,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Bsl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Parameters.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Serial.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmdline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cppbsl.Po@am__quote@
 
 .cc.o:
