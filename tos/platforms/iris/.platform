@@ -1,0 +1,48 @@
+#
+# FILE: micaz/.platform
+# 
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.  
+#
+# $Id: .platform,v 1.1 2007-11-05 20:37:17 sallai Exp $
+#
+push( @includes, qw(
+
+  %T/platforms/micaz
+  %T/platforms/mica
+  %T/platforms/iris/chips/rf230
+  %T/chips/rf230
+  %T/chips/cc2420	# for IEEE802154.h
+  %T/platforms/mica2/chips/at45db
+  %T/platforms/mica/chips/at45db
+  %T/chips/at45db
+  %T/chips/atm1281  
+  %T/chips/atm1281/adc
+  %T/chips/atm1281/timer  
+  %T/chips/atm128
+  %T/chips/atm128/adc
+  %T/chips/atm128/pins
+  %T/chips/atm128/spi
+  %T/chips/atm128/i2c
+  %T/chips/atm128/timer
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/power
+  %T/lib/diagmsg	# for testing purposes
+
+) );
+
+@opts = qw(
+
+  -gcc=avr-gcc
+  -mmcu=atmega1281
+  -fnesc-target=avr
+  -fnesc-no-debug
+  -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+
+);
+
+push @opts, "-mingw-gcc" if $cygwin;
+

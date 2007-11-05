@@ -1,0 +1,64 @@
+DiagMsg:
+
+Author/Contact: miklos.maroti@vanderbilt.edu (Miklos Maroti, ISIS, Vanderbilt)
+
+DESCRIPTION:
+
+The DiagMsg component allows messages to be sent back to the base station 
+containing several diagnostic or debugging values together with their type 
+information. The base station must run the GenericBase or TOSBase application 
+which forwards all messages to a PC connected to the base station. A java 
+programm (PrintDiagMsgs) displays the messages on the screen according to 
+the formating rules contained in the message.
+
+The following data types are supported: 1,2, 4 and 8 byte long signed, unsigned and 
+hexadecimal integers, characters, floating point numbers, strings and arrays 
+of the previous types (of length up to 15). Each field requires an additional 
+4 bit type descriptor.
+
+USAGE:
+
+When you want to report some data, write code something like this:
+
+	if( call DiagMsg.record() )
+	{
+		call DiagMsg.str("test");
+		call DiagMsg.uint8(17);
+		call DiagMsg.int16(1973);
+		call DiagMsg.real(12.345);
+		call DiagMsg.chr('Z');
+		call DiagMsg.uint32(123456789);
+		call DiagMsg.send();
+	}
+
+The DiagMsg component will record the message and will send it as soon 
+as possible. You can record up to 29 bytes of data in a single message.
+Each field uses and additional 4-bit type descriptor. For arrays, including
+strings, there is an additional 1-byte length descriptor as well. The diag 
+message above, for example, uses
+
+	5+1+1+2+4+1+4+7*0.5 = 21.5
+
+that is 22 bytes. If the message cannot hold more fields, then additional 
+fields will be silently ignored. 
+
+THE JAVA PROGRAM:
+
+The java program (DiagMsgs) displays each DiagMsg in a line. The program 
+can connect to a SerialForward application, or can use the serial port directly.
+
+TUNABLE PARAMETERS:
+
+The DiagMsg component can be configured by defining the following values in 
+your make file:
+
+DIAGMSG_BASE_STATION: The node ID of the base station or 0xFFFF to broadcast
+the message. The default value is to broadcast the message.
+
+DIAGMSG_RETRY_COUNT: The DiagMsg component will retry messages this many times 
+before dropping them. The base station must acknowledge them (this is done 
+automatically).
+
+DIAGMSG_RECORDED_MSGS: The DiagMsg component keeps an internal buffer of this 
+many messages. This allows sending several small messages without waiting for 
+their completion.
