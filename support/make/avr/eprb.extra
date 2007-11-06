@@ -1,17 +1,33 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: eprb.extra,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+#$Id: eprb.extra,v 1.5 2007-11-06 19:32:56 sallai Exp $
 
 ifeq ($(EPRB),)
 $(error EPRB must be defined, try "make $(TARGETS) help")
 endif
 
 PROGRAM = eprb
-PROGRAMMER_FLAGS = -dprog=stk500 -dhost=$(EPRB) --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS_STK)
+
+ifeq ($(PROGRAMMER),avrdude)
+    ifdef BOOTLOADER
+      ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+        BOOTLOADER := $(shell cygpath -m $(BOOTLOADER))
+      endif
+    endif
+    PROGRAMMER_FLAGS = -cstk500 -P$(EPRB)   -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_STK)
+    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -D -U flash:w:$(BOOTLOADER):a
+endif
+
+ifeq ($(PROGRAMMER),uisp)
+    PROGRAMMER_FLAGS = -dprog=stk500 -dhost=$(EPRB)     --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_STK)
+    PROGRAMMER_INSTALL_SREC_FLAGS = --erase --upload if=$(INSTALL_SREC) --verify
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = --upload if=$(BOOTLOADER) --verify
+endif
 
 program: FORCE
 	@echo "    installing $(PLATFORM) binary using eprb"
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --erase --upload if=$(INSTALL_SREC)
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
 
 program_bl: FORCE
 	@echo "    installing $(PLATFORM) bootloader using eprb"
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --upload if=$(BOOTLOADER)
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS)

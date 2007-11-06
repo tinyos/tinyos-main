@@ -1,19 +1,33 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: dapa.extra,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+#$Id: dapa.extra,v 1.5 2007-11-06 19:32:56 sallai Exp $
+
+
+
+
 
 PROGRAM = dapa
-PROGRAMMER_FLAGS = -dprog=dapa --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)
+
+ifeq ($(PROGRAMMER),avrdude)
+    ifdef BOOTLOADER
+      ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+        BOOTLOADER := $(shell cygpath -m $(BOOTLOADER))
+      endif
+    endif
+    PROGRAMMER_FLAGS = -cdapa               -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_MIB)
+    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -D -U flash:w:$(BOOTLOADER):a
+endif
+
+ifeq ($(PROGRAMMER),uisp)
+    PROGRAMMER_FLAGS = -dprog=dapa                      --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_MIB)
+    PROGRAMMER_INSTALL_SREC_FLAGS = --erase --upload if=$(INSTALL_SREC) --verify
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = --upload if=$(BOOTLOADER) --verify
+endif
 
 program: FORCE
-	@echo "    installing $(PLATFORM) binary with dapa"
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --erase 
-	sleep 1	     
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --upload if=$(INSTALL_SREC)
-	sleep 1	     
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --verify if=$(INSTALL_SREC)
+	@echo "    installing $(PLATFORM) binary using dapa"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
 
 program_bl: FORCE
-	@echo "    installing $(PLATFORM) bootloader with dapa"
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --upload if=$(BOOTLOADER)
-	sleep 1	     
-	$(PROGRAMMER) $(PROGRAMMER_FLAGS) --verify if=$(BOOTLOADER)
+	@echo "    installing $(PLATFORM) bootloader using dapa"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS)

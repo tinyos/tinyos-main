@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.6 2007-08-17 15:47:30 beutel Exp $
+#$Id: avr.rules,v 1.7 2007-11-06 19:32:56 sallai Exp $
 
 define AVR_HELP
 
@@ -12,7 +12,7 @@ define AVR_HELP
  Programmer options:
 
    dapa         : (default) use parallel port programmer
-   mib510,<dev> : use MIB510 serial port programming board at port <dev>
+   mib510,<dev> : use MIB510/MIB520 serial port programming board at port <dev>
    eprb,<host>	: use EPRB at hostname <host>
    avrisp,<dev> : use AVRISP serial programmer at port <dev>
 
@@ -26,11 +26,16 @@ HELP += $(AVR_HELP)
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
 SET_ID = tos-set-symbols
-PROGRAMMER = uisp
+PROGRAMMER ?= uisp
 NCC = ncc
 LIBS = -lm
 
+
 AMADDR = ActiveMessageAddressC\$$addr
+# Uncomment the next two lines if you have a toolchain without the dollar sign
+# patch. This needs nesc 1.2.8 or newer (1.2.9 is recommended).
+#PFLAGS += -fnesc-separator=__
+#AMADDR = ActiveMessageAddressC__addr
 BUILDDIR = build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
 MAIN_SREC = $(BUILDDIR)/main.srec
@@ -44,9 +49,28 @@ ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
 endif
 
-ifndef DEFAULT_PROGRAM
-DEFAULT_PROGRAM = dapa
+AVRGCCMAJOR = $(shell avr-gcc -v 2>&1 | grep "gcc version" | sed -n 's/gcc version \([2-5]\)\.\([0-9]\)\.\([0-9]\).*/\1/p')
+ifeq ($(AVRGCCMAJOR),4)
+  PFLAGS += --param max-inline-insns-single=100000
+else
+  PFLAGS += -finline-limit=100000
 endif
+
+ifeq ($(PROGRAMMER),avrdude)
+  AVRDUDE_CONF ?= /etc/avrdude/avrdude.conf
+  ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+    AVRDUDE_CONF := $(shell cygpath -m $(AVRDUDE_CONF))
+  endif
+  PROGRAMMER_EXTRA_FLAGS += -C$(AVRDUDE_CONF)
+#  PROGRAMMER_EXTRA_FLAGS += -v -v
+endif
+
+ifdef DEFAULT_PROGRAM_AVR
+DEFAULT_PROGRAM = $(DEFAULT_PROGRAM_AVR)
+endif
+DEFAULT_PROGRAM ?= dapa
+
+
 
 BUILDLESS_DEPS += bytes 
 

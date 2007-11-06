@@ -1,0 +1,20 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: iris.target,v 1.1 2007-11-06 19:32:56 sallai Exp $
+
+PLATFORM = iris
+SENSORBOARD ?= micasb
+PROGRAMMER ?= avrdude
+ifeq ($(PROGRAMMER),avrdude)
+  PROGRAMMER_PART ?= -pm1281 -U efuse:w:0xff:m
+endif
+
+ifeq ($(PROGRAMMER),uisp)
+  PROGRAMMER_PART ?= -dpart=ATmega1281 --wr_fuse_e=ff
+endif
+
+AVR_FUSE_H ?= 0xd9
+AVR_FUSE_L ?= 0xff
+$(call TOSMake_include_platform,avr)
+
+iris: $(BUILD_DEPS)
+	@:

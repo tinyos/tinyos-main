@@ -1,10 +1,16 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: mica2.target,v 1.4 2006-12-12 18:22:55 vlahan Exp $
+#$Id: mica2.target,v 1.5 2007-11-06 19:32:56 sallai Exp $
 
 PLATFORM = mica2
 SENSORBOARD ?= micasb
-PROGRAMMER_PART ?= -dpart=ATmega128 --wr_fuse_e=ff
-PFLAGS += -finline-limit=100000
+PROGRAMMER ?= uisp
+ifeq ($(PROGRAMMER),avrdude)
+  PROGRAMMER_PART ?= -pm128  -U efuse:w:0xff:m
+endif
+
+ifeq ($(PROGRAMMER),uisp)
+  PROGRAMMER_PART ?= -dpart=ATmega128  --wr_fuse_e=ff
+endif
 
 AVR_FUSE_H ?= 0xd9
 
