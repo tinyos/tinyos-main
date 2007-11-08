@@ -31,11 +31,18 @@
 
 /**
  * @author Jonathan Hui <jhui@archedrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
+ * @author Mark Hays
+ * @version $Revision: 1.5 $ $Date: 2007-11-08 21:34:42 $
  */
 
 
-generic module Msp430SpiDmaP() {
+generic module Msp430SpiDmaP( uint16_t IFG_addr,
+			      uint16_t TXBUF_addr,
+			      uint8_t  TXIFG,
+			      uint16_t TXTRIG,
+			      uint16_t RXBUF_addr,
+			      uint8_t  RXIFG,
+			      uint16_t RXTRIG ) {
 
   provides interface Resource[ uint8_t id ];
   provides interface ResourceConfigure[ uint8_t id ];
@@ -54,7 +61,7 @@ generic module Msp430SpiDmaP() {
 
 implementation {
 
-  MSP430REG_NORACE( IFG1 );
+#define IFG (*(volatile uint8_t*)IFG_addr)
 
   uint8_t* m_tx_buf;
   uint8_t* m_rx_buf;
@@ -115,8 +122,6 @@ implementation {
 						      uint8_t* rx_buf,
 						      uint16_t len ) {
 
-    uint16_t ctrl;
-
     atomic {
       m_client = id;
       m_tx_buf = tx_buf;
@@ -124,23 +129,43 @@ implementation {
       m_len = len;
     }
 
-    if ( rx_buf ) {
-      ctrl = 0xcd4;
-    }
-    else {
-      ctrl = 0x0d4;
-      rx_buf = &m_dump;
-    }
-
     if ( len ) {
-      IFG1 &= ~( UTXIFG0 | URXIFG0 );
-      call DmaChannel1.setupTransferRaw( ctrl, DMA_TRIGGER_USARTRX,
-					 (uint16_t*)U0RXBUF_, rx_buf, len );
-      call DmaChannel2.setupTransferRaw( 0x3d4, DMA_TRIGGER_USARTTX,
-					 tx_buf, (uint16_t*)U0TXBUF_, len );
-      IFG1 |= UTXIFG0;
-    }
-    else {
+      // clear the interrupt flags
+      IFG &= ~( TXIFG | RXIFG );
+
+      // set up the RX xfer
+      call DmaChannel1.setupTransfer(DMA_SINGLE_TRANSFER,
+				     RXTRIG,
+				     DMA_EDGE_SENSITIVE,
+				     (void *) RXBUF_addr,
+				     rx_buf ? rx_buf : &m_dump,
+				     len,
+				     DMA_BYTE,
+				     DMA_BYTE,
+				     DMA_ADDRESS_UNCHANGED,
+				     rx_buf ?
+				       DMA_ADDRESS_INCREMENTED :
+				       DMA_ADDRESS_UNCHANGED);
+      // this doesn't start a transfer; it simply enables the channel
+      call DmaChannel1.startTransfer();
+
+      // set up the TX xfer
+      call DmaChannel2.setupTransfer(DMA_SINGLE_TRANSFER,
+				     TXTRIG,
+				     DMA_EDGE_SENSITIVE,
+				     tx_buf,
+				     (void *) TXBUF_addr,
+				     len,
+				     DMA_BYTE,
+				     DMA_BYTE,
+				     DMA_ADDRESS_INCREMENTED,
+				     DMA_ADDRESS_UNCHANGED);
+      // this doesn't start a transfer; it simply enables the channel
+      call DmaChannel2.startTransfer();
+
+      // pong the tx flag to get things rolling
+      IFG |= TXIFG;
+    } else {
       post signalDone_task();
     }
 

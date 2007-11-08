@@ -54,7 +54,8 @@
  * @author Ben Greenstein <ben@cs.ucla.edu>
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Joe Polastre <info@moteiv.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:07 $
+ * @author Mark Hays
+ * @version $Revision: 1.5 $ $Date: 2007-11-08 21:34:42 $
  */
 
 generic module HplMsp430DmaXP( uint16_t DMAxCTL_addr,
@@ -105,69 +106,79 @@ implementation {
 
   async command void DMA.setSingleMode() {
     DMAxCTL &= ~( DMADT0 | DMADT1 | DMADT2 );
+    DMAxCTL |= DMA_SINGLE_TRANSFER;
   }
 
   async command void DMA.setBlockMode() {
     DMAxCTL &= ~( DMADT0 | DMADT1 | DMADT2 );
-    DMAxCTL |= DMADT0;
+    DMAxCTL |= DMA_BLOCK_TRANSFER;
   }
 
   async command void DMA.setBurstMode() {
     DMAxCTL &= ~( DMADT0 | DMADT1 | DMADT2 );
-    DMAxCTL |= DMADT1;
+    DMAxCTL |= DMA_BURST_BLOCK_TRANSFER;
   }
 
   async command void DMA.setRepeatedSingleMode() {
     DMAxCTL &= ~( DMADT0 | DMADT1 | DMADT2 );
-    DMAxCTL |= DMADT2;
+    DMAxCTL |= DMA_REPEATED_SINGLE_TRANSFER;
   }
 
   async command void DMA.setRepeatedBlockMode() {
     DMAxCTL &= ~( DMADT0 | DMADT1 | DMADT2 );
-    DMAxCTL |= ( DMADT2 | DMADT0 );
+    DMAxCTL |= DMA_REPEATED_BLOCK_TRANSFER;
   }
 
   async command void DMA.setRepeatedBurstMode() {
     DMAxCTL &= ~( DMADT0 | DMADT1 | DMADT2 );
-    DMAxCTL |= ( DMADT2 | DMADT1 );
+    DMAxCTL |= DMA_REPEATED_BURST_BLOCK_TRANSFER;
   }
 
   async command void DMA.setSrcNoIncrement() {
     DMAxCTL &= ~( DMASRCINCR0 | DMASRCINCR1 );
+    DMAxCTL |= DMA_ADDRESS_UNCHANGED;
   }
 
   async command void DMA.setSrcDecrement() {
-    DMAxCTL |= DMASRCINCR1;
+    DMAxCTL &= ~( DMASRCINCR0 | DMASRCINCR1 );
+    DMAxCTL |= DMA_ADDRESS_DECREMENTED;
   }
 
   async command void DMA.setSrcIncrement() {
-    DMAxCTL |= ( DMASRCINCR0 | DMASRCINCR1 );
+    DMAxCTL &= ~( DMASRCINCR0 | DMASRCINCR1 );
+    DMAxCTL |= DMA_ADDRESS_INCREMENTED;
   }
 
   async command void DMA.setDstNoIncrement() {
     DMAxCTL &= ~( DMADSTINCR0 | DMADSTINCR1 );
+    DMAxCTL |= DMA_ADDRESS_UNCHANGED;
   }          
 
   async command void DMA.setDstDecrement() {
-    DMAxCTL |= DMADSTINCR1;
+    DMAxCTL &= ~( DMADSTINCR0 | DMADSTINCR1 );
+    DMAxCTL |= DMA_ADDRESS_DECREMENTED;
   }
 
   async command void DMA.setDstIncrement() {
-    DMAxCTL |= ( DMADSTINCR0 | DMADSTINCR1 );
+    DMAxCTL &= ~( DMADSTINCR0 | DMADSTINCR1 );
+    DMAxCTL |= DMA_ADDRESS_INCREMENTED;
   }
 
   async command void DMA.setWordToWord() {
     DMAxCTL &= ~(DMASRCBYTE | DMADSTBYTE);
     DMAxCTL |= DMASWDW;
   }
+
   async command void DMA.setByteToWord() {
     DMAxCTL &= ~(DMASRCBYTE | DMADSTBYTE);
     DMAxCTL |= DMASBDW;
   }
+
   async command void DMA.setWordToByte() {
     DMAxCTL &= ~(DMASRCBYTE | DMADSTBYTE);
     DMAxCTL |= DMASWDB;
   }
+
   async command void DMA.setByteToByte() {
     DMAxCTL &= ~(DMASRCBYTE | DMADSTBYTE);
     DMAxCTL |= DMASBDB;
@@ -190,11 +201,11 @@ implementation {
   }
 
   async command void DMA.enableInterrupt() {
-    DMAxCTL  |= DMAIE;
+    DMAxCTL |= DMAIE;
   }
 
   async command void DMA.disableInterrupt() {
-    DMAxCTL  &= ~DMAIE;
+    DMAxCTL &= ~DMAIE;
   }
 
   async command bool DMA.interruptPending() {
@@ -235,7 +246,7 @@ implementation {
     DMAxSA = (uint16_t)src;
     DMAxDA = (uint16_t)dest;
     DMAxSZ = size;
-    DMACTL0 = ( DMACTL0 & ~DMAxTSEL_mask ) | ( t << DMAxTSEL_shift );
+    call DMA.setTrigger((dma_trigger_t) t);
     DMAxCTL = s;
   }
 
@@ -268,7 +279,5 @@ implementation {
     DMAxDA = 0;
     DMAxSZ = 0;
   }
-
-
 }
 
