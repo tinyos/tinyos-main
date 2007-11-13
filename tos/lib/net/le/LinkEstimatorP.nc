@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.9 2007-10-27 00:09:23 scipio Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.10 2007-11-13 08:36:29 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -648,6 +648,20 @@ implementation {
 	  }
 	}
       }
+
+
+      /* Graphical explanation of how we get to the head of the
+       * footer in the following code 
+       * <---------------------- payloadLen ------------------->
+       * -------------------------------------------------------
+       * linkest_header_t  | payload  | linkest_footer_t* ...|
+       * -------------------------------------------------------
+       * ^                              ^                      ^
+       * |                              |                      |
+       * subpayload                     |                      payloadEnd
+       *                                |
+       *                                payloadEnd - footersize*num footers
+      */
 
       if ((nidx != INVALID_RVAL) && (num_entries > 0)) {
 	uint8_t payloadLen = call SubPacket.payloadLength(msg);
