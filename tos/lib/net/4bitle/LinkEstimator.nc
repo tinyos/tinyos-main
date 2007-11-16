@@ -1,4 +1,4 @@
-/* $Id: LinkEstimator.nc,v 1.1 2007-09-21 06:34:04 gnawali Exp $ */
+/* $Id: LinkEstimator.nc,v 1.2 2007-11-16 23:14:49 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -25,7 +25,7 @@
  * provided quality increases when the true link quality increases.
  *  @author Rodrigo Fonseca
  *  @author Omprakash Gnawali
- *  @date   $Date: 2007-09-21 06:34:04 $
+ *  @date   $Date: 2007-11-16 23:14:49 $
  */
 
 /* Quality of a link is defined by the implementor of this interface.
@@ -35,7 +35,7 @@
 interface LinkEstimator {
   
   /* get link quality for link to the neighbor */
-  command uint8_t getLinkQuality(uint16_t neighbor);
+  command uint16_t getLinkQuality(uint16_t neighbor);
 
   /* insert this neighbor into the neighbor table */
   command error_t insertNeighbor(am_addr_t neighbor);

@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.10 2007-11-13 08:36:29 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.11 2007-11-16 23:14:49 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -430,7 +430,7 @@ implementation {
   }
 
   // return bi-directional link quality to the neighbor
-  command uint8_t LinkEstimator.getLinkQuality(am_addr_t neighbor) {
+  command uint16_t LinkEstimator.getLinkQuality(am_addr_t neighbor) {
     uint8_t idx;
     idx = findIdx(neighbor);
     if (idx == INVALID_RVAL) {
@@ -441,7 +441,7 @@ implementation {
   }
 
   // return the quality of the link: neighor->self
-  command uint8_t LinkEstimator.getReverseQuality(am_addr_t neighbor) {
+  command uint16_t LinkEstimator.getReverseQuality(am_addr_t neighbor) {
     uint8_t idx;
     idx = findIdx(neighbor);
     if (idx == INVALID_RVAL) {
@@ -452,7 +452,7 @@ implementation {
   }
 
   // return the quality of the link: self->neighbor
-  command uint8_t LinkEstimator.getForwardQuality(am_addr_t neighbor) {
+  command uint16_t LinkEstimator.getForwardQuality(am_addr_t neighbor) {
     uint8_t idx;
     idx = findIdx(neighbor);
     if (idx == INVALID_RVAL) {
