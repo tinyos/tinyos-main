@@ -84,7 +84,9 @@ implementation
 			call RadioState.turnOn();
 		else if( seqNo == 7 )
 		{
-			*(uint16_t*)(call AMSend.getPayload[111](&testMsg)) = seqNo;
+			*(uint16_t*)(call AMSend.getPayload[111](
+                    &testMsg,
+			        call AMSend.maxPayloadLength[111]())) = seqNo;
 			call AMSend.send[111](0xFFFF, &testMsg, 2);
 		}
 	}
@@ -97,7 +99,9 @@ implementation
 			call RadioState.turnOn();
 		else if( 2 <= seqMod && seqMod <= 14 )
 		{
-			*(uint16_t*)(call AMSend.getPayload[111](&testMsg)) = seqNo;
+			*(uint16_t*)(call AMSend.getPayload[111](
+                    &testMsg,
+                    call AMSend.maxPayloadLength[111]())) = seqNo;
 			call AMSend.send[111](0xFFFF, &testMsg, 2);
 		}
 		else if( seqMod == 15 )
