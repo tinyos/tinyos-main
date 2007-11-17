@@ -215,7 +215,7 @@ implementation
 
 		call BusyWait.wait(510);
 
-		writeRegister(RF230_IRQ_MASK, RF230_IRQ_TRX_UR | RF230_IRQ_PLL_UNLOCK | RF230_IRQ_PLL_LOCK | RF230_IRQ_TRX_END | RF230_IRQ_RX_START);
+		writeRegister(RF230_IRQ_MASK, RF230_IRQ_TRX_UR | RF230_IRQ_PLL_LOCK | RF230_IRQ_TRX_END | RF230_IRQ_RX_START);
 		writeRegister(RF230_CCA_THRES, RF230_CCA_THRES_VALUE);
 		writeRegister(RF230_PHY_TX_PWR, RF230_TX_AUTO_CRC_ON | RF230_TX_PWR_DEFAULT);
 
@@ -443,7 +443,10 @@ implementation
 		/*
 		 * There is a very small window (~1 microsecond) when the RF230 went 
 		 * into PLL_ON state but was somehow not properly initialized because 
-		 * of an incoming message and could not go into BUSY_TX. 
+		 * of an incoming message and could not go into BUSY_TX. I think the
+		 * radio can even receive a message, and generate a TRX_UR interrupt
+		 * because of concurrent access, but that message probably cannot be
+		 * recovered.
 		 */
 		if( (length & RF230_TRX_STATUS_MASK) != RF230_BUSY_TX )
 		{
@@ -603,9 +606,6 @@ implementation
 				}
 			}
 #endif
-
-			// TODO: handle this interrupt
-			ASSERT( ! (irq & RF230_IRQ_PLL_UNLOCK) );
 
 			if( irq & RF230_IRQ_PLL_LOCK )
 			{
