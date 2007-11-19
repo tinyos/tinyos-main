@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.2 $ $Date: 2007-07-06 18:09:44 $
+ * @version $Revision: 1.3 $ $Date: 2007-11-19 15:48:54 $
  */
 
 #include "Timer.h"
@@ -320,8 +320,8 @@ implementation {
    *     default to software auto acknowledgements
    */
   command void CC2420Config.setAutoAck(bool enableAutoAck, bool hwAutoAck) {
-    autoAckEnabled = enableAutoAck;
-    hwAutoAckDefault = hwAutoAck;
+    atomic autoAckEnabled = enableAutoAck;
+    atomic hwAutoAckDefault = hwAutoAck;
   }
   
   /**
