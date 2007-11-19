@@ -27,8 +27,8 @@ using the java GUI found in the java subdirectory.
 Nodes blink their yellow LED when turned on or when an internal error
 occurs, and blink their green LED when new settings are received.
 
-This demo is written for mica2 or micaz motes using the mts300 sensor
-board.
+This demo is written for mica2, micaz or iris motes using the mts300
+sensor board.
 
 The code in the Nodes directory should be installed on the motes
 detecting theft. Each mote should have a separate id, and a mts31n0 or
@@ -45,11 +45,11 @@ The java directory contains a control GUI for the antitheft demo app.
 Usage:
 
 The following instructions will get you started with the AntiTheft demo
-(the instructions are for mica2 motes, replace mica2 with micaz if using
-micaz motes)
+(the instructions are for mica2 motes, replace mica2 with micaz or iris
+if using either of those motes)
 
 1. Compile the root and node code for the antitheft application for your
-   platform (mica2 or micaz):
+   platform (mica2, micaz or iris):
 
     $ (cd Nodes; make mica2)
     $ (cd Root; make mica2)
@@ -97,4 +97,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.5 2007-04-19 20:50:47 idgay Exp $
+$Id: README.txt,v 1.6 2007-11-19 17:21:20 sallai Exp $
