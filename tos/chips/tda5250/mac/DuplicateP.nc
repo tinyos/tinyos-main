@@ -124,6 +124,7 @@ implementation {
 
     /** helper interfaces */
     event void Timer.fired() {
+        call Timer.startOneShot(AGE_INTERVALL);
         post ageMsgsTask();
     }
 
@@ -134,7 +135,7 @@ implementation {
                 knownTable[i].age = MAX_AGE;
             }
         }
-        call Timer.startPeriodic(AGE_INTERVALL);
+        call Timer.startOneShot(AGE_INTERVALL);
         return SUCCESS;
     }
 }
