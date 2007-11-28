@@ -1,4 +1,4 @@
-/* $Id: CtpInfo.nc,v 1.5 2007-10-31 22:53:01 gnawali Exp $ */
+/* $Id: CtpInfo.nc,v 1.6 2007-11-28 19:18:07 rincon Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -24,10 +24,11 @@
 /*
  *  @author Rodrigo Fonseca
  *  @author Philip Levis
- *  @date   $Date: 2007-10-31 22:53:01 $
+ *  @date   $Date: 2007-11-28 19:18:07 $
  *  @see Net2-WG
  */
 
+#include "AM.h"
 
 interface CtpInfo {
 
