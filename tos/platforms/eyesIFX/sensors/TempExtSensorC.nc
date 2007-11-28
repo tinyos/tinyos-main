@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-01-11 16:11:18 $
+ * $Revision: 1.6 $
+ * $Date: 2007-11-28 13:19:49 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -67,7 +67,7 @@ implementation
   
   components HplMsp430GeneralIOC as MspGeneralIO;
   components new Msp430GpioC() as TEMP;
-  TEMP -> MspGeneralIO.Port60;
+  TEMP -> MspGeneralIO.Port54;
   
   components TempExtSensorP;
   Read = TempExtSensorP.Read;
