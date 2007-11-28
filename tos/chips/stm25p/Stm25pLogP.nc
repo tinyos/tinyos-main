@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.6 $ $Date: 2007-06-07 16:14:22 $
+ * @version $Revision: 1.7 $ $Date: 2007-11-28 03:15:30 $
  */
 
 #include <Stm25p.h>
@@ -243,9 +243,11 @@ implementation {
 	  m_log_info[ id ].read_addr = m_log_state[ id ].cookie & ~BLOCK_MASK;
 	  m_log_info[ id ].remaining = 0;
 	  m_rw_state = S_SEARCH_SEEK;
-	  if ( m_log_info[ id ].read_addr != m_log_state[ id ].cookie )
+	  if ( m_log_info[ id ].read_addr != m_log_state[ id ].cookie ) {
+	    m_log_info[ id ].read_addr += sizeof( m_addr );
 	    call Sector.read[ id ]( calcAddr( id, m_log_info[ id ].read_addr ),
 				    &m_header, sizeof( m_header ) );
+	  }
 	  else
 	    signalDone( id, SUCCESS );
 	}
