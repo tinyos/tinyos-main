@@ -33,7 +33,7 @@
  * Implementation of the user button for the telosb platform
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 
 #include <UserButton.h>
@@ -72,4 +72,6 @@ implementation {
       signal Notify.notify( BUTTON_PRESSED );
     }
   }
+  
+  default event void Notify.notify( button_state_t val ) { }
 }
