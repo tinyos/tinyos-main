@@ -1,4 +1,4 @@
-// $Id: SerialActiveMessageC.nc,v 1.1 2007-10-03 01:50:20 hiro Exp $
+// $Id: SerialActiveMessageC.nc,v 1.2 2007-12-03 02:17:49 hiro Exp $
 /*
  * Copyright (c) 2007 Toilers Research Group - Colorado School of Mines
  * All rights reserved.
@@ -282,7 +282,7 @@ implementation {
         return evt;
     }
 
-    void serial_active_message_deliver(int node, message_t* msg, sim_time_t t) __attribute__ ((C, spontaneous)) {
+    void serial_active_message_deliver(int node, message_t* msg, sim_time_t t) @C() @spontaneous() {
         sim_event_t* evt = allocate_serial_deliver_event(node, msg, t);
         sim_queue_insert(evt);
     }
