@@ -829,7 +829,7 @@ int platform_baud_rate(char *platform_name)
 #define throws ;
 #define Exception
 #define package
-#include "../java/net/tinyos/packet/BaudRate.java"
+#include "../../java/net/tinyos/packet/BaudRate.java"
 
   return args.rate;
 }

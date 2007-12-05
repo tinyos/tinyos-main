@@ -3,12 +3,12 @@
 FLAGS=
 FLAGS+=-Wall
 FLAGS+=-g
-FLAGS+=-I${TOSROOT}/support/sdk/c
+FLAGS+=-I${TOSROOT}/support/sdk/c/sf
 
 all: serial_tun
 
 serial_tun: serial_tun.c tun_dev.c 6lowpan.h
-	gcc $(FLAGS) -o serial_tun serial_tun.c tun_dev.c ${TOSROOT}/support/sdk/c/libmote.a
+	gcc $(FLAGS) -o serial_tun serial_tun.c tun_dev.c ${TOSROOT}/support/sdk/c/sf/libmote.a
 
 clean:
 	rm -f serial_tun TAGS
