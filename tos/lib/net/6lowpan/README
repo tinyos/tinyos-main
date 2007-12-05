@@ -1,0 +1,72 @@
+	       A 6lowpan implementation for TinyOS 2.x
+
+This is a 6lowpan implementation for TinyOS 2.x. Mesh Addressing and
+Broadcast headers are parsed, but no mesh-networking/multi-hopping is
+implemented. 6lowpan fragmentation and fragment reassembly is fully
+supported. The 6lowpan-specified HC1 compression of the IPv6 header
+and the HC_UDP compression of the UDP header are supported as well as
+handling of the uncompressed headers. The implementation can respond
+to ICMP echo requests and handles communication over the UDP
+protocol. It has been tested on the TelosB and MicaZ hardware
+platforms. In addition a 6lowpan-translating daemon has been
+implemented to allow a linux PC to use a mote as an 802.15.4
+interface.
+
+Shortcomings and missing features:
+ * 6lowpan payload is sent as Active Message payload. This means that
+   the 802.15.4 payload is prefixed with the 1-byte AM Type field.
+ * non-zero Traffic Class and Flow Label are not supported by the
+   current HC1 implementation
+ * UDP port numbers compression is not supported and port numbers are
+   always sent in full by the current HC_UDP compression
+ * Neighbor Discovery has not been implemented and link local
+   broadcasts are used instead.
+ * Not all fragments of a datagram seem to be always received by the
+   mote. A workaround is to add a usleep(10000) before sending subsequent
+   fragments in the serial_tun daemon on the PC.
+
+More details can be found in
+	http://www.inf.ethz.ch/personal/mharvan/docs/msc-thesis.pdf
+or by reading the source code.
+
+
+USAGE - MOTE
+The 6lowpan/IPv6 stack is implemented in the IPP module. Applications
+should use the IPC component which takes care of wiring the necessary
+components. The stack offers the UDPClient interface to application
+wishing to exchange UDP datagrams. Replying to ICMP echo requests is
+done by the 6lowpan stack.
+
+The stack support two IPv6 addresses:
+ * a global address
+ * a link-local address
+
+The link-local address is assigned using an interface identifier
+computed from the Active Message address of the mote. This is almost
+like the stateless autoconfiguration, but Duplicate Address Detection
+or Router Solicitations are not implemented.
+
+The global address can be set manually with
+IPC.setAddress(). Alternatively, only the prefix of the global address
+can be set with IPC.setAddressAutoconf() and the suffix will be
+generated from the Active Message address of the mote.
+
+A sample application using the 6lowpan stack is in apps/6lowpancli.
+
+USAGE - PC
+To interact with a 6lowpan mote from a PC, a mote flashed with the
+BaseStation application (apps/BaseStation) has to be attached to the
+PC. Note that the application has to be built with
+	CFLAGS += -D'TOSH_DATA_LENGTH=102'.
+
+Furthermore, the serial_tun daemon (support/sdk/c/6lowpan/serial_tun/)
+has to run on the PC.
+
+Afterwards, ping6 and nc6 should work for talking to the motes.
+
+Debugging output with printf over USB can be enabled with
+	CFLAGS="-D'ENABLE_PRINTF_DEBUG=1'
+
+To minimize memory usage, i.e. disable everything (at the moment only
+the UDP cli) to determine minimum RAM/ROM requirements, use
+	CFLAGS="-D'MINIMIZE_MEMORY=1'

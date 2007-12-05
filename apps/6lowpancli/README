@@ -1,0 +1,42 @@
+6lowpan cli is a sample application using the 6lowpan stack. It
+implements a cli listening on UDP port 1234 for commands and replying
+with answers.
+
+Besides that, the mote answers to pings.
+
+The IPv6 addresses
+ * a global address with prefix 2001:0638:0709:1234::/64
+ * a link-local address
+are assigned using an interface identifier computed from the Active
+Message address of the mote. This is almost like the stateless
+autoconfiguration, but Duplicate Address Detection or Router
+Solicitations are not implemented.
+
+
+Note that you also need a BaseStation application and the serial_tun
+daemon running. See tos/lib/net/6lowpan/REAME for more details.
+
+			       BUILDING
+Debugging output with printf over USB can be enabled with
+	CFLAGS="-D'ENABLE_PRINTF_DEBUG=1'
+
+To minimize memory usage, i.e. disable everything (at the moment only
+the UDP cli) to determine minimum RAM/ROM requirements, use
+	CFLAGS="-D'MINIMIZE_MEMORY=1'
+
+
+			       TESTING
+Assuming active message address (mote id) 20 (0x14):
+
+Small unfragmented ping
+	sudo ping6 -s 50 2001:638:709:1234::fffe:14
+
+Large fragmented ping
+	sudo ping6 -s 1230 -i 3 2001:638:709:1234::fffe:14
+
+Link-local all-nodes ping
+	sudo ping6 -s 20 ff02::01
+
+UDP cli
+	nc6 -u  2001:638:709:1234::fffe:14 1234	
+
