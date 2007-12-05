@@ -1,4 +1,4 @@
-// $Id: Packet.nc,v 1.5 2007-09-13 23:10:17 scipio Exp $
+// $Id: Packet.nc,v 1.6 2007-12-05 09:45:25 janhauer Exp $
 /*									tab:4
  * "Copyright (c) 2004-5 The Regents of the University  of California.  
  * All rights reserved.
@@ -94,14 +94,23 @@ interface Packet {
    */
   command uint8_t maxPayloadLength();
 
+
  /**
-   * Return a pointer to a protocol's payload region in a packet which
-   * at least a certain length.  If the payload region is smaller than
-   * the len parameter, then getPayload returns NULL.
+   * Return a pointer to a protocol's payload region in a packet.
+   * If the caller intends to write to the payload region then
+   * the <tt>len</tt> parameter must reflect the maximum required
+   * length. If the caller (only) wants to read from the payload
+   * region, then <tt>len</tt> may be set to the value of
+   * payloadLength(). If the payload region is smaller than 
+   * <tt>len</tt> this command returns NULL. The offset where
+   * the payload region starts within a packet is fixed, i.e. for
+   * a given <tt>msg</tt> this command will always return the same
+   * pointer or NULL.
    *
-   * @param msg   the packet
+   * @param msg   the packet 
    * @param len   the length of payload required
    * @return      a pointer to the packet's data payload for this layer
+   *              or NULL if <tt>len</tt> is too big
    */
   command void* getPayload(message_t* msg, uint8_t len);
 
