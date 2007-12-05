@@ -30,6 +30,7 @@
 module LocalTimeP {
     provides {  
         interface LocalTime<T32khz> as LocalTime32kHz;
+        interface WideLocalTime<T32khz> as WideLocalTime;
     }
     uses {
         interface Counter<T32khz,uint16_t> as Counter32khz16;
@@ -45,20 +46,42 @@ implementation  {
         };
     } ui32parts_t;
     
-    uint16_t counter2sec = 127;
+    typedef union 
+    {
+        uint64_t op;
+        struct {
+            uint32_t lo;
+            uint32_t hi;
+        };
+    } ui64parts_t;
 
+    uint16_t counter2sec = 127;
+    uint32_t dayCounter = 0;
+    
     async command uint32_t LocalTime32kHz.get() {
         ui32parts_t time;
         atomic {
             time.lo = call Counter32khz16.get();
             time.hi = counter2sec;
-            if(call Counter32khz16.isOverflowPending()) ++time.hi;
+            if(call Counter32khz16.isOverflowPending()) {
+                time.hi++;
+            }
         }
         return time.op;
     }
 
+    async command uint64_t WideLocalTime.get() {
+        ui64parts_t time;
+        atomic {
+            time.lo = call LocalTime32kHz.get();
+            time.hi = dayCounter;
+        }
+        return time.op;
+    }
+    
     async event void Counter32khz16.overflow() {
         ++counter2sec;
+        if(counter2sec == 0) ++dayCounter;
     }
 }
 

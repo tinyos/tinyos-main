@@ -26,17 +26,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * A wide version of the localtime interface, 32 bit are too narrow
+ */
+#include "Timer.h"
 
-configuration LocalTimeC {
-    provides {  
-        interface LocalTime<T32khz> as LocalTime;
-        interface WideLocalTime<T32khz> as WideLocalTime;
-    }
-}
-implementation  {
-    components LocalTimeP, Counter32khz16C as Counter;
-    LocalTime = LocalTimeP;
-    WideLocalTime = LocalTimeP;
-    LocalTimeP.Counter32khz16 -> Counter;
+interface WideLocalTime<precision_tag>
+{
+  /** 
+   * Return current time. Time starts counting at boot - some time sources
+   * may stop counting while the processor is in low-power mode.
+   *
+   * @return Current time.
+   */
+  async command uint64_t get();
 }
 
