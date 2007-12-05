@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.11 2007-11-16 23:14:49 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.12 2007-12-05 22:37:02 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -39,6 +39,7 @@ module LinkEstimatorP {
     interface LinkEstimator;
     interface Init;
     interface Packet;
+    interface CompareBit;
   }
 
   uses {
@@ -46,6 +47,8 @@ module LinkEstimatorP {
     interface AMPacket as SubAMPacket;
     interface Packet as SubPacket;
     interface Receive as SubReceive;
+    interface LinkPacketMetadata;
+    interface Random;
   }
 }
 
