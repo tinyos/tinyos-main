@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.8 2007-10-03 02:15:16 scipio Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.9 2007-12-05 22:30:57 gnawali Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2007-10-03 02:15:16 $
+ *  @date   $Date: 2007-12-05 22:30:57 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -748,7 +748,7 @@ implementation {
     call CollectionDebug.logEventMsg(NET_C_FE_RCV_MSG,
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
-                                         call AMPacket.destination(msg));
+				     thl--);
     if (len > call SubSend.maxPayloadLength()) {
       return msg;
     }
