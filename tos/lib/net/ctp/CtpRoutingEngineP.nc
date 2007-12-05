@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.12 2007-10-31 22:53:01 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.13 2007-12-05 22:41:25 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2007-10-31 22:53:01 $
+ *  @date   $Date: 2007-12-05 22:41:25 $
  *  @see Net2-WG
  */
 
@@ -259,7 +259,7 @@ implementation {
 
     /* Converts the output of the link estimator to path metric
      * units, that can be *added* to form path metric measures */
-    uint16_t evaluateEtx(uint8_t quality) {
+    uint16_t evaluateEtx(uint16_t quality) {
         //dbg("TreeRouting","%s %d -> %d\n",__FUNCTION__,quality, quality+10);
         return (quality + 10);
     }
