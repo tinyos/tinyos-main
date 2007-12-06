@@ -49,11 +49,12 @@ module CoulombCounterP {
     }
 }
 implementation {
-#define MIN_DELAY 30
+#define MIN_DELAY 60
     
     uint16_t timerHighBits = 0;
     uint32_t dur = 0;
-
+    bool warned = FALSE;
+    
     void resetBoard() {
         call ResetBoard.set();
         __asm__("NOP");
@@ -106,12 +107,12 @@ implementation {
         }
     }
     
-    command error_t CoulombCounter.startMeasurement(uint32_t delay, uint32_t duration) {
+    command error_t CoulombCounter.start(uint32_t delay, uint32_t duration) {
         error_t result = SUCCESS;
         
         timerHighBits = duration >> 22;
         dur = duration * (uint32_t)1024;
-        
+        warned = FALSE;
         if(call CoulombCounter.isMeasureing()) {
             startLongTimer();
             call EnergyInterrupt.enableFallingEdge();
@@ -128,7 +129,7 @@ implementation {
     }
 
     /** Stop a measurement, returns FAIL if there is no ongoing measurement */
-    command error_t CoulombCounter.stopMeasurement() {
+    command error_t CoulombCounter.stop() {
         error_t result = FAIL;
         call Timer.stop();
         timerHighBits = 0;
@@ -151,8 +152,14 @@ implementation {
                 startLongTimer();
             }
             else {
-                // measurement finished
-                call CoulombCounter.stopMeasurement();
+                if(warned == TRUE) {
+                    call CoulombCounter.stop();
+                }
+                else {
+                    signal CoulombCounter.soonOver();
+                    call Timer.startOneShot((uint32_t)MIN_DELAY*1024);
+                    warned = TRUE;
+                }
             }
         }
         else {

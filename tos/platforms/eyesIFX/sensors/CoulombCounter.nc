@@ -46,11 +46,14 @@ interface CoulombCounter {
      *  re-boot every time we fiddle with the power supply -- this trick
      *  allows us to "continue" measureing.
      */
-    command error_t startMeasurement(uint32_t delay, uint32_t duration);
+    command error_t start(uint32_t delay, uint32_t duration);
 
     /** Stop a measurement, returns FAIL if there is no ongoing measurement */
-    command error_t stopMeasurement();
+    command error_t stop();
 
     /** notification: a fixed portion of energy has been consumed */
     async event void portionConsumed();
+
+    /** notification that the measurement will be soon over */
+    event void soonOver();
 }
