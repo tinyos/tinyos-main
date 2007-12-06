@@ -39,6 +39,6 @@ interface WideLocalTime<precision_tag>
    *
    * @return Current time.
    */
-  async command uint64_t get();
+  async command int64_t get();
 }
 

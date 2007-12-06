@@ -29,8 +29,8 @@
  * - Description ---------------------------------------------------------
  * provides preamble sampling csma with timestamping
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2007-12-05 10:14:55 $
+ * $Revision: 1.7 $
+ * $Date: 2007-12-06 18:32:11 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * ========================================================================
  */
@@ -51,9 +51,9 @@ implementation
         Tda5250RadioC as Radio,                  //The actual Tda5250 radio over which data is receives/transmitted
         Uart4b6bPhyC as UartPhy,                 //The UartPhy turns Bits into Bytes
         PacketSerializerP  as PacketSerializer,  //The PacketSerializer turns Bytes into Packets
-        RedMacC as Mac,                         //The MAC protocol to use
+        // RedMacC as Mac,                         //The MAC protocol to use
         // SpeckMacDC as Mac,                         //The MAC protocol to use
-        // CsmaMacC as Mac,                         //The MAC protocol to use
+        CsmaMacC as Mac,                         //The MAC protocol to use
         LinkLayerC as Llc;                       //The Link Layer Control module to use
     
     //Don't change wirings below this point, just change which components

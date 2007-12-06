@@ -37,51 +37,51 @@ module LocalTimeP {
     }
 }
 implementation  {
-    typedef union 
-    {
-        uint32_t op;
-        struct {
-            uint16_t lo;
-            uint16_t hi;
-        };
-    } ui32parts_t;
-    
-    typedef union 
-    {
-        uint64_t op;
-        struct {
-            uint32_t lo;
-            uint32_t hi;
-        };
-    } ui64parts_t;
-
-    uint16_t counter2sec = 127;
-    uint32_t dayCounter = 0;
-    
+    uint16_t counter2sec = 40000U;
+    int32_t dayCounter = 0;
+    bool increaseDay = FALSE;
     async command uint32_t LocalTime32kHz.get() {
-        ui32parts_t time;
+        int64_t time;
+        unsigned t;
+        bool dirty1;
+        bool dirty2;
         atomic {
-            time.lo = call Counter32khz16.get();
-            time.hi = counter2sec;
-            if(call Counter32khz16.isOverflowPending()) {
-                time.hi++;
+            increaseDay = FALSE;
+            do {
+                dirty1 = call Counter32khz16.isOverflowPending();
+                t = call Counter32khz16.get();
+                dirty2 = call Counter32khz16.isOverflowPending();
+            } while (dirty1 != dirty2);
+            time = counter2sec;
+            if(dirty1) {
+                ++time;
+                if(time == 0) {
+                    increaseDay = TRUE;
+                }
             }
+            time = (time << 16) + t;
         }
-        return time.op;
+        return time;
     }
 
-    async command uint64_t WideLocalTime.get() {
-        ui64parts_t time;
+    async command int64_t WideLocalTime.get() {
+        int64_t time;
+        uint32_t t;
         atomic {
-            time.lo = call LocalTime32kHz.get();
-            time.hi = dayCounter;
+            t = call LocalTime32kHz.get();
+            time = dayCounter;
+            if(increaseDay) time++;
+            if(time < 0) time = 0;
+            time <<= 32;
+            time += t;
         }
-        return time.op;
+        return time;
     }
     
     async event void Counter32khz16.overflow() {
         ++counter2sec;
         if(counter2sec == 0) ++dayCounter;
+        if(dayCounter < 0) dayCounter = 0;
     }
 }
 
