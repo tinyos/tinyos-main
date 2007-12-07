@@ -24,6 +24,21 @@ Shortcomings and missing features:
  * Not all fragments of a datagram seem to be always received by the
    mote. A workaround is to add a usleep(10000) before sending subsequent
    fragments in the serial_tun daemon on the PC.
+ * The mspgcc compiler generates broken code using 16-bit values not
+   aligned at 16-bit boundaries. See
+   http://www.nabble.com/msp430-gcc-generating-unaligned-access.-t2261862.html
+   and page 25 in
+   http://www.eecs.harvard.edu/~konrad/projects/motetrack/
+   mspgcc-manual-20031127.pdf
+   for details. This seems to only happen with packed structs, where
+   some elements cannot be aligned. For example, a struct with an
+   8-bit, 16-bit, 8-bit and 16-bit value in the given order. As the
+   struct is packed, one of the 16-bit values can be aligned at a
+   16-bit boundary.
+   The current workaround is to force 8-bit operations for cases where
+   this can happen. This is done by the set_16t(), get_16t()
+   functions. In cases where unaligned accesses could happen, these
+   functions have to be used.
 
 More details can be found in
 	http://www.inf.ethz.ch/personal/mharvan/docs/msc-thesis.pdf
