@@ -37,11 +37,20 @@ module LocalTimeP {
     }
 }
 implementation  {
-    uint16_t counter2sec = 40000U;
+    typedef union 
+    {
+        int64_t op;
+        struct {
+            uint32_t lo;
+            int32_t hi;
+        };
+    } i64parts_t;
+    
+    uint16_t counter2sec = 126;
     int32_t dayCounter = 0;
     bool increaseDay = FALSE;
     async command uint32_t LocalTime32kHz.get() {
-        int64_t time;
+        uint32_t time;
         unsigned t;
         bool dirty1;
         bool dirty2;
@@ -65,17 +74,16 @@ implementation  {
     }
 
     async command int64_t WideLocalTime.get() {
-        int64_t time;
+        i64parts_t time;
         uint32_t t;
         atomic {
             t = call LocalTime32kHz.get();
-            time = dayCounter;
-            if(increaseDay) time++;
-            if(time < 0) time = 0;
-            time <<= 32;
-            time += t;
+            time.hi = dayCounter;
+            if(increaseDay) time.hi++;
+            if(time.hi < 0) time.hi = 0;
+            time.lo = t;
         }
-        return time;
+        return time.op;
     }
     
     async event void Counter32khz16.overflow() {
