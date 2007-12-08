@@ -1,4 +1,4 @@
-// $Id: CC1000ActiveMessageP.nc,v 1.6 2007-09-13 23:10:14 scipio Exp $
+// $Id: CC1000ActiveMessageP.nc,v 1.7 2007-12-08 00:32:45 klueska Exp $
 
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -54,6 +54,10 @@ implementation {
   cc1000_header_t* getHeader(message_t* amsg) {
     return (cc1000_header_t*)(amsg->data - sizeof(cc1000_header_t));
   }
+
+  cc1000_footer_t *getFooter(message_t *amsg) {
+    return (cc1000_footer_t *)(amsg->footer);
+  }
   
   command error_t AMSend.send[am_id_t id](am_addr_t addr,
 					  message_t* amsg,
@@ -78,21 +82,40 @@ implementation {
     return call Packet.maxPayloadLength();
   }
 
-  command void* AMSend.getPayload[am_id_t id](message_t* m, uint8_t len) {
-    return call Packet.getPayload(m, len);
+  command void* AMSend.getPayload[am_id_t id](message_t* m) {
+    return call Packet.getPayload(m, NULL);
   }
 
   /* Receiving a packet */
 
   event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
-    if (call AMPacket.isForMe(msg)) {
-      return signal Receive.receive[call AMPacket.type(msg)](msg, payload, len);
-    }
-    else {
-      return signal Snoop.receive[call AMPacket.type(msg)](msg, payload, len);
+    cc1000_footer_t* msg_footer = getFooter(msg);
+    if(msg_footer->crc == 1) {      
+      if (call AMPacket.isForMe(msg)) {
+        return signal Receive.receive[call AMPacket.type(msg)](msg, payload, len);
+      }
+      else {
+        return signal Snoop.receive[call AMPacket.type(msg)](msg, payload, len);
+      }
     }
   }
   
+  command void* Receive.getPayload[am_id_t id](message_t* m, uint8_t* len) {
+    return call Packet.getPayload(m, len);
+  }
+
+  command uint8_t Receive.payloadLength[am_id_t id](message_t* m) {
+    return call Packet.payloadLength(m);
+  }
+  
+  command void* Snoop.getPayload[am_id_t id](message_t* m, uint8_t* len) {
+    return call Packet.getPayload(m, len);
+  }
+
+  command uint8_t Snoop.payloadLength[am_id_t id](message_t* m) {
+    return call Packet.payloadLength(m);
+  }
+
   command am_addr_t AMPacket.address() {
     return call amAddress();
   }
