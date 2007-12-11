@@ -1,4 +1,4 @@
-// $Id: CC1000ActiveMessageP.nc,v 1.6 2007-12-08 00:32:45 klueska Exp $
+// $Id: CC1000ActiveMessageP.nc,v 1.7 2007-12-11 00:46:47 klueska Exp $
 
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -58,7 +58,7 @@ implementation {
   cc1000_footer_t *getFooter(message_t *amsg) {
     return (cc1000_footer_t *)(amsg->footer);
   }
-  
+
   command error_t AMSend.send[am_id_t id](am_addr_t addr,
 					  message_t* amsg,
 					  uint8_t len) {
@@ -90,7 +90,7 @@ implementation {
 
   event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
     cc1000_footer_t* msg_footer = getFooter(msg);
-    if(msg_footer->crc == 1) {      
+    if(msg_footer->crc == 1) {
       if (call AMPacket.isForMe(msg)) {
         return signal Receive.receive[call AMPacket.type(msg)](msg, payload, len);
       }
