@@ -1,4 +1,4 @@
-// $Id: BaseStationP.nc,v 1.5 2007-02-08 01:00:26 scipio Exp $
+// $Id: BaseStationP.nc,v 1.6 2007-12-13 01:16:42 gnawali Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -33,7 +33,7 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.5 2007-02-08 01:00:26 scipio Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.6 2007-12-13 01:16:42 gnawali Exp $
  */
   
 /* 
@@ -177,7 +177,7 @@ implementation
   task void uartSendTask() {
     uint8_t len;
     am_id_t id;
-    am_addr_t addr;
+    am_addr_t addr, src;
     message_t* msg;
     atomic
       if (uartIn == uartOut && !uartFull)
@@ -190,6 +190,8 @@ implementation
     tmpLen = len = call RadioPacket.payloadLength(msg);
     id = call RadioAMPacket.type(msg);
     addr = call RadioAMPacket.destination(msg);
+    src = call RadioAMPacket.source(msg);
+    call UartAMPacket.setSource(msg, src);
 
     if (call UartSend.send[id](addr, uartQueue[uartOut], len) == SUCCESS)
       call Leds.led1Toggle();
