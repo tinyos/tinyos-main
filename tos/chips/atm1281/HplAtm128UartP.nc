@@ -32,7 +32,7 @@
 /**
  * @author Alec Woo <awoo@archrock.com>
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-11-05 20:36:40 $
+ * @version $Revision: 1.2 $ $Date: 2007-12-14 20:30:13 $
  */
 
 /*
@@ -128,50 +128,47 @@ implementation {
   }
 
   command error_t Uart0TxControl.start() {
-    SET_BIT(UCSR0B, TXCIE0);
     SET_BIT(UCSR0B, TXEN0);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart0TxControl.stop() {
-    CLR_BIT(UCSR0B, TXCIE0);
     CLR_BIT(UCSR0B, TXEN0);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart0RxControl.start() {
-    SET_BIT(UCSR0B, RXCIE0);
     SET_BIT(UCSR0B, RXEN0);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart0RxControl.stop() {
-    CLR_BIT(UCSR0B, RXCIE0);
     CLR_BIT(UCSR0B, RXEN0);
     call McuPowerState.update();
     return SUCCESS;
   }
   
   async command error_t HplUart0.enableTxIntr() {
-    SET_BIT(UCSR0B, TXEN0);
+    SET_BIT(UCSR0A, TXC0);
+    SET_BIT(UCSR0B, TXCIE0);
     return SUCCESS;
   }
   
   async command error_t HplUart0.disableTxIntr(){
-    CLR_BIT(UCSR0B, TXEN0);
+    CLR_BIT(UCSR0B, TXCIE0);
     return SUCCESS;
   }
   
   async command error_t HplUart0.enableRxIntr(){
-    SET_BIT(UCSR0B, RXEN0);
+    SET_BIT(UCSR0B, RXCIE0);
     return SUCCESS;
   }
 
   async command error_t HplUart0.disableRxIntr(){
-    CLR_BIT(UCSR0B, RXEN0);
+    CLR_BIT(UCSR0B, RXCIE0);
     return SUCCESS;
   }
   
@@ -225,50 +222,47 @@ implementation {
   }
 
   command error_t Uart1TxControl.start() {
-    SET_BIT(UCSR1B, TXCIE1);
     SET_BIT(UCSR1B, TXEN1);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart1TxControl.stop() {
-    CLR_BIT(UCSR1B, TXCIE1);
     CLR_BIT(UCSR1B, TXEN1);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart1RxControl.start() {
-    SET_BIT(UCSR1B, RXCIE1);
     SET_BIT(UCSR1B, RXEN1);
     call McuPowerState.update();
     return SUCCESS;
   }
 
   command error_t Uart1RxControl.stop() {
-    CLR_BIT(UCSR1B, RXCIE1);
     CLR_BIT(UCSR1B, RXEN1);
     call McuPowerState.update();
     return SUCCESS;
   }
   
   async command error_t HplUart1.enableTxIntr() {
-    SET_BIT(UCSR1B, TXEN1);
+    SET_BIT(UCSR1A, TXC1);
+    SET_BIT(UCSR1B, TXCIE1);
     return SUCCESS;
   }
   
   async command error_t HplUart1.disableTxIntr(){
-    CLR_BIT(UCSR1B, TXEN1);
+    CLR_BIT(UCSR1B, TXCIE1);
     return SUCCESS;
   }
   
   async command error_t HplUart1.enableRxIntr(){
-    SET_BIT(UCSR1B, RXEN1);
+    SET_BIT(UCSR1B, RXCIE1);
     return SUCCESS;
   }
 
   async command error_t HplUart1.disableRxIntr(){
-    CLR_BIT(UCSR1B, RXEN1);
+    CLR_BIT(UCSR1B, RXCIE1);
     return SUCCESS;
   }
   
