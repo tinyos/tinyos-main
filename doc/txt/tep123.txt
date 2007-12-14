@@ -10,8 +10,8 @@ The Collection Tree Protocol (CTP)
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.9 $
-:Draft-Modified: $Date: 2007-10-18 16:11:57 $
+:Draft-Version: $Revision: 1.10 $
+:Draft-Modified: $Date: 2007-12-14 20:09:39 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -72,8 +72,8 @@ ETX of its link to its parent. This additive measure assumes that
 nodes use link-level retransmissions.  Given a choice of valid routes,
 CTP SHOULD choose the one with the lowest ETX value. CTP represents
 ETX values as 16-bit fixed-point real numbers with a precision of
-hundredths. An ETX value of 451, for example, represents an ETX of
-4.51, while an ETX value of 109 represents an ETX of 1.09.
+hundredths. An ETX value of 45, for example, represents an ETX of 4.5,
+while an ETX value of 10 represents an ETX of 1.
 
 Routing loops are a problem that can emerge in a CTP network. Routing
 loops generally occur when a node choose a new route that has a
