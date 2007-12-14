@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.1 2007-11-05 20:36:41 sallai Exp $
+/// $Id: McuSleepC.nc,v 1.2 2007-12-14 20:29:36 sallai Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -51,7 +51,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.1 2007-11-05 20:36:41 sallai Exp $
+ *  $Id: McuSleepC.nc,v 1.2 2007-12-14 20:29:36 sallai Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -86,19 +86,18 @@ implementation {
     (1 << SM1)};
     
   mcu_power_t getPowerState() {
-    // Note: we go to sleep even if timer 0, 1, 3, 4,  or 5's overflow interrupt
-    // is enabled - this allows using these timers as TinyOS "Alarm"s
-    // while still having power management.
+    // Note: we go to sleep even if timer 0, 1, 3, 4,  or 5's overflow
+    // interrupt is enabled - this allows using timers 0, 1 and 3 as TinyOS
+    // "Alarm"s while still having power management. (see TEP102 Appendix C)
+    // Input capture and output compare for timer 4 and 5 are not functional
+    // on the atm1281. 
 
-    // Are external timers running?  
+    // Are there any input capture or output compare interrupts enabled
+    // for timers 0, 1 or 3?  
     if (
-        TIMSK0 & (1 << OCIE0A | 1 << OCIE0B | 1 << TOIE0) ||
-        TIMSK1 & (1 << ICIE1  | 1 << OCIE1A | 1 << OCIE1B | 1 << OCIE1C | 1 << TOIE1) ||
-        TIMSK3 & (1 << ICIE3  | 1 << OCIE3A | 1 << OCIE3B | 1 << OCIE3C | 1 << TOIE3) ||
-        // input capture and output compare for timer 4 and 5 are
-        // not functional on atm1281
-        TIMSK4 & (1 << TOIE4) ||
-        TIMSK5 & (1 << TOIE5)
+        TIMSK0 & (1 << OCIE0A | 1 << OCIE0B ) ||
+        TIMSK1 & (1 << ICIE1  | 1 << OCIE1A | 1 << OCIE1B | 1 << OCIE1C) ||
+        TIMSK3 & (1 << ICIE3  | 1 << OCIE3A | 1 << OCIE3B | 1 << OCIE3C)
     ) {
       return ATM128_POWER_IDLE;
     }    
