@@ -1,4 +1,4 @@
-// $Id: CC1000ActiveMessageP.nc,v 1.7 2007-12-11 00:46:47 klueska Exp $
+// $Id: CC1000ActiveMessageP.nc,v 1.8 2007-12-14 04:35:56 klueska Exp $
 
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -98,6 +98,7 @@ implementation {
         return signal Snoop.receive[call AMPacket.type(msg)](msg, payload, len);
       }
     }
+    return msg;
   }
   
   command void* Receive.getPayload[am_id_t id](message_t* m, uint8_t* len) {
