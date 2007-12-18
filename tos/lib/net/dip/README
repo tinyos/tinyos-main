@@ -1,0 +1,27 @@
+
+Title: DIP
+Author: Kaisen Lin
+------------------
+
+DIP is a dissemination protocol for detecting and disseminating new
+items in a network. It uses the same interfaces as Drip.
+
+Data disseminated under DIP cannot be larger than 16 bytes. It was not
+designed for large data items, but rather for many small data items.
+
+Ties, like Drip, are handled with higher node IDs serving as
+tiebreakers.
+
+Key 0 is reserved, do not use it.
+
+There is minimal error checking, don't try to intentionally break
+it. (e.g. illegal keys, weird and wacky version numbers)
+
+Usage:
+------
+
+To use include the following in your Makefile:
+
+CFLAGS += -I$(TOSDIR)/lib/net
+CFLAGS += -I$(TOSDIR)/lib/net/dip
+CFLAGS += -I$(TOSDIR)/lib/net/dip/interfaces
