@@ -162,10 +162,16 @@ implementation
     // Converts the image number that the user wants to the real image number
     switch (srpkt->img_num) {
       case 0:
-        img_num = VOLUME_DELUGE0;
+        img_num = VOLUME_GOLDENIMAGE;
         break;
       case 1:
         img_num = VOLUME_DELUGE1;
+        break;
+      case 2:
+        img_num = VOLUME_DELUGE2;
+        break;
+      case 3:
+        img_num = VOLUME_DELUGE3;
         break;
     }
     

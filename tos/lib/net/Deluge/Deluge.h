@@ -34,7 +34,7 @@
 
 enum {
   DELUGE_INVALID_UID = 0xffffffff,
-  DELUGE_NUM_VOLUMES = 2,
+  DELUGE_NUM_VOLUMES = 4, 
 };
 
 typedef nx_struct DelugeDissemination {

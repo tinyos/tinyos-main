@@ -65,7 +65,7 @@ echo ============================= Compile a new Blink =========================
 CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make ${PLATFORM} 
 
 echo ========= Upload the new image to the external flash of the last mote ==========
-${TOS_DELUGE} ${PORT} ${PLATFORM} -i 0 build/${PLATFORM}/tos_image.xml
+${TOS_DELUGE} ${PORT} ${PLATFORM} -i 1 build/${PLATFORM}/tos_image.xml
 
 echo '            +-----------------------------------------------------+'
 echo '            |                                                     |'
@@ -80,7 +80,7 @@ echo '            +-----------------------------------------------------+'
 read
 
 echo ============================= Start dissemination ==============================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -d 0
+${TOS_DELUGE} ${PORT} ${PLATFORM} -d 1
 
 echo '         +------------------------------------------------------------+'
 echo '         |                                                            |'
@@ -96,7 +96,7 @@ echo '         +------------------------------------------------------------+'
 read
 
 echo ===================== Trigger the reboot in the new image ======================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -r 0
+${TOS_DELUGE} ${PORT} ${PLATFORM} -r 1
 
 echo '        +-------------------------------------------------------------+'
 echo '        |                                                             |'

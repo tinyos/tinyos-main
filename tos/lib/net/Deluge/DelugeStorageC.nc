@@ -42,32 +42,51 @@ implementation
 {
   components DelugeStorageP;
 
-  BlockRead[VOLUME_DELUGE0] = DelugeStorageP.BlockRead[VOLUME_DELUGE0];
-  BlockWrite[VOLUME_DELUGE0] = DelugeStorageP.BlockWrite[VOLUME_DELUGE0];
+  BlockRead[VOLUME_GOLDENIMAGE] = DelugeStorageP.BlockRead[VOLUME_GOLDENIMAGE];
+  BlockWrite[VOLUME_GOLDENIMAGE] = DelugeStorageP.BlockWrite[VOLUME_GOLDENIMAGE];
   BlockRead[VOLUME_DELUGE1] = DelugeStorageP.BlockRead[VOLUME_DELUGE1];
   BlockWrite[VOLUME_DELUGE1] = DelugeStorageP.BlockWrite[VOLUME_DELUGE1];
+  BlockRead[VOLUME_DELUGE2] = DelugeStorageP.BlockRead[VOLUME_DELUGE2];
+  BlockWrite[VOLUME_DELUGE2] = DelugeStorageP.BlockWrite[VOLUME_DELUGE2];
+  BlockRead[VOLUME_DELUGE3] = DelugeStorageP.BlockRead[VOLUME_DELUGE3];
+  BlockWrite[VOLUME_DELUGE3] = DelugeStorageP.BlockWrite[VOLUME_DELUGE3];
   DelugeMetadata = DelugeStorageP.DelugeMetadata;
+
+  components new BlockStorageC(VOLUME_GOLDENIMAGE) as BlockStorageC_Golden;
+  DelugeStorageP.SubBlockRead[VOLUME_GOLDENIMAGE] -> BlockStorageC_Golden;
+  DelugeStorageP.SubBlockWrite[VOLUME_GOLDENIMAGE] -> BlockStorageC_Golden;
  
-  components new BlockStorageC(VOLUME_DELUGE0) as BlockStorageC_0;
   components new BlockStorageC(VOLUME_DELUGE1) as BlockStorageC_1;
-  DelugeStorageP.SubBlockRead[VOLUME_DELUGE0] -> BlockStorageC_0;
-  DelugeStorageP.SubBlockWrite[VOLUME_DELUGE0] -> BlockStorageC_0;
   DelugeStorageP.SubBlockRead[VOLUME_DELUGE1] -> BlockStorageC_1;
   DelugeStorageP.SubBlockWrite[VOLUME_DELUGE1] -> BlockStorageC_1;
+
+  components new BlockStorageC(VOLUME_DELUGE2) as BlockStorageC_2;
+  DelugeStorageP.SubBlockRead[VOLUME_DELUGE2] -> BlockStorageC_2;
+  DelugeStorageP.SubBlockWrite[VOLUME_DELUGE2] -> BlockStorageC_2;
+
+  components new BlockStorageC(VOLUME_DELUGE3) as BlockStorageC_3;
+  DelugeStorageP.SubBlockRead[VOLUME_DELUGE3] -> BlockStorageC_3;
+  DelugeStorageP.SubBlockWrite[VOLUME_DELUGE3] -> BlockStorageC_3;
   
 #if defined(PLATFORM_TELOSB)
-  DelugeStorageP.StorageMap[VOLUME_DELUGE0] -> BlockStorageC_0;
+  DelugeStorageP.StorageMap[VOLUME_GOLDENIMAGE] -> BlockStorageC_Golden;
   DelugeStorageP.StorageMap[VOLUME_DELUGE1] -> BlockStorageC_1;
+  DelugeStorageP.StorageMap[VOLUME_DELUGE2] -> BlockStorageC_2;
+  DelugeStorageP.StorageMap[VOLUME_DELUGE3] -> BlockStorageC_3;
 #elif defined(PLATFORM_MICAZ)
   components At45dbStorageManagerC;
-  DelugeStorageP.At45dbVolume[VOLUME_DELUGE0] -> At45dbStorageManagerC.At45dbVolume[VOLUME_DELUGE0];
+  DelugeStorageP.At45dbVolume[VOLUME_GOLDENIMAGE] -> At45dbStorageManagerC.At45dbVolume[VOLUME_GOLDENIMAGE];
   DelugeStorageP.At45dbVolume[VOLUME_DELUGE1] -> At45dbStorageManagerC.At45dbVolume[VOLUME_DELUGE1];
+  DelugeStorageP.At45dbVolume[VOLUME_DELUGE2] -> At45dbStorageManagerC.At45dbVolume[VOLUME_DELUGE2];
+  DelugeStorageP.At45dbVolume[VOLUME_DELUGE3] -> At45dbStorageManagerC.At45dbVolume[VOLUME_DELUGE3];
 #else
   #error "Target platform is not currently supported by Deluge T2"
 #endif
 
-  DelugeStorage[VOLUME_DELUGE0] = DelugeStorageP.DelugeStorage[VOLUME_DELUGE0];
+  DelugeStorage[VOLUME_GOLDENIMAGE] = DelugeStorageP.DelugeStorage[VOLUME_GOLDENIMAGE];
   DelugeStorage[VOLUME_DELUGE1] = DelugeStorageP.DelugeStorage[VOLUME_DELUGE1];
+  DelugeStorage[VOLUME_DELUGE2] = DelugeStorageP.DelugeStorage[VOLUME_DELUGE2];
+  DelugeStorage[VOLUME_DELUGE3] = DelugeStorageP.DelugeStorage[VOLUME_DELUGE3];
   
   components LedsC, MainC;
   DelugeStorageP.Leds -> LedsC;

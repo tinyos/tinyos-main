@@ -49,10 +49,15 @@ implementation
              new FlashVolumeManagerP(),
              NoLedsC, LedsC;
   
-  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE0] = BlockRead[VOLUME_DELUGE0];
-  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE0] = BlockWrite[VOLUME_DELUGE0];
+  FlashVolumeManagerP.BlockRead[VOLUME_GOLDENIMAGE] = BlockRead[VOLUME_GOLDENIMAGE];
+  FlashVolumeManagerP.BlockWrite[VOLUME_GOLDENIMAGE] = BlockWrite[VOLUME_GOLDENIMAGE];
   FlashVolumeManagerP.BlockRead[VOLUME_DELUGE1] = BlockRead[VOLUME_DELUGE1];
   FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE1] = BlockWrite[VOLUME_DELUGE1];
+  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE2] = BlockRead[VOLUME_DELUGE2];
+  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE2] = BlockWrite[VOLUME_DELUGE2];
+  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE3] = BlockRead[VOLUME_DELUGE3];
+  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE3] = BlockWrite[VOLUME_DELUGE3];
+ 
   FlashVolumeManagerP.SerialAMSender -> SerialAMSenderC;
   FlashVolumeManagerP.SerialAMReceiver -> SerialAMReceiverC;
   FlashVolumeManagerP.Leds -> NoLedsC;
@@ -62,8 +67,10 @@ implementation
   
   FlashVolumeManagerP.NetProg -> NetProgC;
   FlashVolumeManagerP.Timer -> TimerMilliC;
-  FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE0] = DelugeStorage[VOLUME_DELUGE0];
+  FlashVolumeManagerP.DelugeStorage[VOLUME_GOLDENIMAGE] = DelugeStorage[VOLUME_GOLDENIMAGE];
   FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE1] = DelugeStorage[VOLUME_DELUGE1];
+  FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE2] = DelugeStorage[VOLUME_DELUGE2];
+  FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE3] = DelugeStorage[VOLUME_DELUGE3];
   DissNotify = FlashVolumeManagerP.DissNotify;
   ReprogNotify = FlashVolumeManagerP.ReprogNotify;
 #endif

@@ -46,8 +46,10 @@ implementation {
   NetProg = NetProgM;
 
   MainC.SoftwareInit -> NetProgM.Init;
-  NetProgM.DelugeStorage[VOLUME_DELUGE0] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE0];
+  NetProgM.DelugeStorage[VOLUME_GOLDENIMAGE] -> DelugeStorageC.DelugeStorage[VOLUME_GOLDENIMAGE];
   NetProgM.DelugeStorage[VOLUME_DELUGE1] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE1];
+  NetProgM.DelugeStorage[VOLUME_DELUGE2] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE2];
+  NetProgM.DelugeStorage[VOLUME_DELUGE3] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE3];
   NetProgM.DelugeMetadata -> DelugeStorageC;
   NetProgM.IFlash -> IFlash;
   NetProgM.Crc -> CrcP;

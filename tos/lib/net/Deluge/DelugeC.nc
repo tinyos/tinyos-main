@@ -42,19 +42,31 @@ implementation
   
   DelugeP.DissNotify -> FlashVolumeManagerC.DissNotify;
   DelugeP.ReprogNotify -> FlashVolumeManagerC.ReprogNotify;
-  FlashVolumeManagerC.BlockRead[VOLUME_DELUGE0] -> DelugeStorageC.BlockRead[VOLUME_DELUGE0];
-  FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE0] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE0];
-  FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE0] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE0];
+
+  FlashVolumeManagerC.BlockRead[VOLUME_GOLDENIMAGE] -> DelugeStorageC.BlockRead[VOLUME_GOLDENIMAGE];
+  FlashVolumeManagerC.BlockWrite[VOLUME_GOLDENIMAGE] -> DelugeStorageC.BlockWrite[VOLUME_GOLDENIMAGE];
+  FlashVolumeManagerC.DelugeStorage[VOLUME_GOLDENIMAGE] -> DelugeStorageC.DelugeStorage[VOLUME_GOLDENIMAGE];
+  
   FlashVolumeManagerC.BlockRead[VOLUME_DELUGE1] -> DelugeStorageC.BlockRead[VOLUME_DELUGE1];
   FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE1] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE1];
   FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE1] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE1];
+
+  FlashVolumeManagerC.BlockRead[VOLUME_DELUGE2] -> DelugeStorageC.BlockRead[VOLUME_DELUGE2];
+  FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE2] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE2];
+  FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE2] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE2];
+
+  FlashVolumeManagerC.BlockRead[VOLUME_DELUGE3] -> DelugeStorageC.BlockRead[VOLUME_DELUGE3];
+  FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE3] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE3];
+  FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE3] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE3];
 #endif
   
   components ObjectTransferC;
-  ObjectTransferC.BlockRead[VOLUME_DELUGE0] -> DelugeStorageC.BlockRead[VOLUME_DELUGE0];
-  ObjectTransferC.BlockWrite[VOLUME_DELUGE0] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE0];
   ObjectTransferC.BlockRead[VOLUME_DELUGE1] -> DelugeStorageC.BlockRead[VOLUME_DELUGE1];
   ObjectTransferC.BlockWrite[VOLUME_DELUGE1] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE1];
+  ObjectTransferC.BlockRead[VOLUME_DELUGE2] -> DelugeStorageC.BlockRead[VOLUME_DELUGE2];
+  ObjectTransferC.BlockWrite[VOLUME_DELUGE2] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE2];
+  ObjectTransferC.BlockRead[VOLUME_DELUGE3] -> DelugeStorageC.BlockRead[VOLUME_DELUGE3];
+  ObjectTransferC.BlockWrite[VOLUME_DELUGE3] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE3];
   ObjectTransferC.Leds = Leds;
   
   components new DisseminatorC(DelugeDissemination, 0xDE00), DisseminationC;
