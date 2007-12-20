@@ -36,6 +36,7 @@
 #define SERIALMSG_DISS      6
 #define SERIALMSG_REPROG_BS 7
 #define SERIALMSG_SYNC      8
+#define SERIALMSG_IDENT     9
 
 typedef nx_struct SerialReqPacket {
   nx_uint8_t msg_type;

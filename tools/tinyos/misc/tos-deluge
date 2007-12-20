@@ -54,6 +54,7 @@ MSG_REPROG    = 5
 MSG_DISS      = 6
 MSG_REPROG_BS = 7
 MSG_SYNC      = 8
+MSG_IDENT     = 9
 
 ERROR_SUCCESS = 0   # T2-compatible
 ERROR_FAIL    = 1   # T2-compatible
@@ -186,6 +187,15 @@ def op_read(s, img_num, offset, length):
         sreqpkt['len'] = (offset + length) - sreqpkt['offset']
         
     return r
+
+def op_ident(s):
+    sreqpkt = SerialReqPacket((MSG_IDENT, 0, 0, 0, []))
+    if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()):
+        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
+        sreplypkt = SerialReplyPacket(packet[1])
+        if sreplypkt.error == ERROR_SUCCESS:
+            return toInt(sreplypkt.data)
+    return 0
     
 # Checks for valid CRC and image timestamp
 def verifyMetaData(r):
@@ -215,12 +225,15 @@ def getMetaData(s, img_num):
 
 # Prints status of the image in the external flash
 def op_ping(s, img_num):
+    uid = op_ident(s)
     metadata = getMetaData(s, img_num)
     if not metadata == None:
         if verifyMetaData(metadata) == True:
             print "Connected to Deluge node."
             # Prints out image status
             print "--------------------------------------------------"
+            print "Currently Executing:"
+            print "  UID:         %d" % (uid)
             print "Stored image %d" % img_num
             print toStatusStr(2, metadata)
             print "--------------------------------------------------"

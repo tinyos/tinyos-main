@@ -223,6 +223,12 @@ implementation
           signal ReprogNotify.notify(img_num);
           sendReply(SUCCESS, sizeof(SerialReplyPacket));
           break;
+        case SERIALMSG_IDENT:
+	  // This is not send using nx_uint32 in order to maintain
+	  // consistency with data from the Deluge image.
+          *(uint32_t*)(&serialMsg_payload->data) = IDENT_UID_HASH;
+	  sendReply(SUCCESS, sizeof(SerialReplyPacket) + 4);
+	  break;
   #endif
       }
     } else {
