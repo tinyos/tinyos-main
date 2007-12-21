@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.4 2007-11-16 23:14:49 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.5 2007-12-21 04:36:42 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -70,7 +70,7 @@ implementation {
     INFINITY = 0xff,
     // decay the link estimate using this alpha
     // we use a denominator of 10, so this corresponds to 0.2
-    ALPHA = 2,
+    ALPHA = 9,
     // number of packets to wait before computing a new
     // DLQ (Data-driven Link Quality)
     DLQ_PKT_WINDOW = 5,
@@ -443,8 +443,12 @@ implementation {
     if (idx == INVALID_RVAL) {
       return INFINITY;
     } else {
-      return NeighborTable[idx].eetx;
-    };
+      if (NeighborTable[idx].flags & MATURE_ENTRY) {
+	return NeighborTable[idx].eetx;
+      } else {
+	return INFINITY;
+      }
+    }
   }
 
   // insert the neighbor at any cost (if there is a room for it)
