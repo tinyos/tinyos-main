@@ -57,7 +57,7 @@ implementation
 
   event void Timer0.fired()
   {
-    char *payload = call AMSend.getPayload(&byte_msg);
+    char *payload = call AMSend.getPayload(&byte_msg, 1);
     dbg("BlinkC", "Timer 0 fired @ %s.\n", sim_time_string());
 #ifndef BLINK_REVERSE
     call Leds.led1Toggle();
