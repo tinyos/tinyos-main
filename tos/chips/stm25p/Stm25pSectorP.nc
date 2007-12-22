@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:13 $
+ * @version $Revision: 1.5 $ $Date: 2007-12-22 08:11:51 $
  */
 
 #include <Stm25p.h>
@@ -239,7 +239,7 @@ implementation {
     m_addr = addr;
     m_len = len;
     
-    return call Spi.computeCrc( crc, m_addr, m_len );
+    return call Spi.computeCrc( crc, physicalAddr( id, addr ), m_len );
     
   }
   
