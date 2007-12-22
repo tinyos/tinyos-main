@@ -170,7 +170,7 @@ implementation
     
     state = S_INITIALIZING_PUB;
     curObjDesc.objid = new_objid;
-    curObjDesc.numPgs = ((new_size - 1) / DELUGE_BYTES_PER_PAGE) + 1;   // Number of pages to transmit
+    curObjDesc.numPgs = ((new_size - 1) / DELUGET2_BYTES_PER_PAGE) + 1;   // Number of pages to transmit
     curObjDesc.numPgsComplete = curObjDesc.numPgs;   // Publisher doesn't really care about this
     curObjDesc.crc = call Crc.crc16(&curObjDesc, sizeof(object_id_t) + sizeof(page_num_t));
     
@@ -191,7 +191,7 @@ implementation
   void cont_receive() {
     state = S_INITIALIZING_RECV;
     curObjDesc.objid = cont_receive_new_objid;
-    curObjDesc.numPgs = ((cont_receive_new_size - 1) / DELUGE_BYTES_PER_PAGE) + 1;   // Number of pages to receive
+    curObjDesc.numPgs = ((cont_receive_new_size - 1) / DELUGET2_BYTES_PER_PAGE) + 1;   // Number of pages to receive
     curObjDesc.numPgsComplete = 0;
     curObjDesc.crc = call Crc.crc16(&curObjDesc, sizeof(object_id_t) + sizeof(page_num_t));
     

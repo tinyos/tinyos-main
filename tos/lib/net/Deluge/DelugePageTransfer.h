@@ -53,10 +53,15 @@ typedef uint8_t page_num_t;
 typedef nx_uint8_t nx_page_num_t;
 
 enum {
-  DELUGE_PKT_PAYLOAD_SIZE  = TOSH_DATA_LENGTH - sizeof(nx_object_id_t) - sizeof(nx_page_num_t) - sizeof(nx_uint8_t),
-  DELUGE_BYTES_PER_PAGE    = 1024,
-  DELUGE_PKTS_PER_PAGE     = ((DELUGE_BYTES_PER_PAGE - 1) / DELUGE_PKT_PAYLOAD_SIZE) + 1,
-  
+  DELUGET2_PKT_PAYLOAD_SIZE  = TOSH_DATA_LENGTH - sizeof(nx_object_id_t) - sizeof(nx_page_num_t) - sizeof(nx_uint8_t),
+  DELUGET2_BYTES_PER_PAGE    = 1024,
+  DELUGET2_PKTS_PER_PAGE     = ((DELUGET2_BYTES_PER_PAGE - 1) / DELUGET2_PKT_PAYLOAD_SIZE) + 1,
+  DELUGET2_PKT_BITVEC_SIZE   = (((DELUGET2_PKTS_PER_PAGE - 1) / 8) + 1),
+
+  DELUGE_PKT_PAYLOAD_SIZE           = 23,
+  DELUGE_PKTS_PER_PAGE              = 48,
+  DELUGE_BYTES_PER_PAGE             = (DELUGE_PKTS_PER_PAGE*DELUGE_PKT_PAYLOAD_SIZE),
+
   DELUGE_VERSION                    = 2,
   DELUGE_MAX_ADV_PERIOD_LOG2        = 22,
   DELUGE_NUM_NEWDATA_ADVS_REQUIRED  = 2,
@@ -70,7 +75,6 @@ enum {
   DELUGE_INVALID_ADDR               = (0x7fffffffL),
   DELUGE_MAX_REQ_DELAY              = (0x1L << (DELUGE_MIN_ADV_PERIOD_LOG2 - 1)),
   DELUGE_NACK_TIMEOUT               = (DELUGE_MAX_REQ_DELAY >> 0x1),
-  DELUGE_PKT_BITVEC_SIZE            = (((DELUGE_PKTS_PER_PAGE - 1) / 8) + 1),
   DELUGE_MAX_IMAGE_SIZE             = (128L * 1024L),
   DELUGE_MAX_PAGES                  = 128,
   DELUGE_CRC_SIZE                   = sizeof(uint16_t),

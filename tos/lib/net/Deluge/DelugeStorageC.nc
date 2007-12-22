@@ -34,7 +34,7 @@ configuration DelugeStorageC
     interface DelugeStorage[uint8_t img_num];
     interface DelugeMetadata;
     
-    interface Notify<uint8_t>;
+    interface Notify<uint8_t> as ReadyNotify;
   }
 }
 
@@ -92,5 +92,5 @@ implementation
   DelugeStorageP.Leds -> LedsC;
   DelugeStorageP.Boot -> MainC;
   
-  Notify = DelugeStorageP.Notify;
+  ReadyNotify = DelugeStorageP.ReadyNotify;
 }

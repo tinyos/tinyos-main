@@ -25,6 +25,7 @@
  */
 
 #include "Deluge.h"
+#include "DelugePageTransfer.h"
 
 module DelugeStorageP
 {
@@ -45,20 +46,45 @@ module DelugeStorageP
     interface DelugeStorage[uint8_t img_num];
     interface DelugeMetadata;
     
-    interface Notify<uint8_t>;
+    interface Notify<uint8_t> as ReadyNotify;
   }
 }
 
 implementation
 {
   enum {
-    S_INIT,
+    S_READ_META,
+    S_READ_CRC,
+    S_CRC,
     S_READY,
   };
 
-  uint8_t state = S_INIT;
-  uint8_t last_init_img_num = 0;
+  uint8_t state;
+  uint8_t current_image;
+  uint8_t current_page;
+  uint16_t current_crc;
   DelugeImgDesc imgDesc[DELUGE_NUM_VOLUMES];
+
+  void nextImage()
+  {
+    if (current_image < DELUGE_NUM_VOLUMES) {
+      state = S_READ_META;
+      call SubBlockRead.read[current_image](0, &(imgDesc[current_image]), sizeof(DelugeImgDesc));
+    } else {
+      signal ReadyNotify.notify(SUCCESS);
+      state = S_READY;
+    }
+  }  
+
+  uint32_t calcCrcAddr()
+  {
+    return DELUGE_METADATA_SIZE + current_page * sizeof(uint16_t);
+  }
+
+  uint32_t calcPageAddr()
+  {
+    return DELUGE_METADATA_SIZE + current_page * DELUGE_BYTES_PER_PAGE;
+  }
 
   event void Boot.booted()
   {
@@ -74,11 +100,14 @@ implementation
       imgDesc[i].size = 0;
     }
     
-    // Reads image descriptions
-    state = S_INIT;
-    if (DELUGE_NUM_VOLUMES > 0) {
-      call SubBlockRead.read[last_init_img_num](0, &(imgDesc[last_init_img_num]), sizeof(DelugeImgDesc));
-    }
+    // We are going to iterate over all the images and verify their
+    // integrity. For each image we first read the metadata to find
+    // the number of pages and then iterate over all of them, compute
+    // the CRC and check it against the corresponding value from the CRCs
+    // block.
+    state = S_READ_META;
+    current_image = 0;
+    nextImage();
   }
 
   command DelugeImgDesc* DelugeMetadata.getImgDesc(imgnum_t imgNum)
@@ -105,25 +134,56 @@ implementation
   // BlockRead events
   event void SubBlockRead.readDone[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len, error_t error)
   {
-    if (state == S_READY) {
+    switch (state) {
+    case S_READY:
       signal BlockRead.readDone[img_num](addr, buf, len, error);
-    } else {
-      // Continues reading image descriptions
+      break;
+    case S_READ_META:
       if (error == SUCCESS) {
-        last_init_img_num++;
-        if (last_init_img_num >= DELUGE_NUM_VOLUMES) {
-          signal Notify.notify(SUCCESS);
-          state = S_READY;
-        } else {
-          call SubBlockRead.read[last_init_img_num](0, &(imgDesc[last_init_img_num]), sizeof(DelugeImgDesc));
-        }
+	if (imgDesc[current_image].uid != DELUGE_INVALID_UID) {
+	  current_page = 0;
+	  state = S_READ_CRC;
+	  call SubBlockRead.read[current_image](calcCrcAddr(), &current_crc, sizeof(current_crc));
+	} else {
+	  current_image++;
+	  nextImage();
+	}
+      }      
+      break;
+    case S_READ_CRC:
+      state = S_CRC;
+      if (current_page == 0) {
+	call SubBlockRead.computeCrc[current_image](calcPageAddr() + DELUGE_CRC_BLOCK_SIZE, 
+						    DELUGE_BYTES_PER_PAGE - DELUGE_CRC_BLOCK_SIZE, 0);
+      } else {
+	call SubBlockRead.computeCrc[current_image](calcPageAddr(), DELUGE_BYTES_PER_PAGE, 0);
       }
+      break;
     }
   }
 
   event void SubBlockRead.computeCrcDone[uint8_t img_num](storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error)
   {
-    signal BlockRead.computeCrcDone[img_num](addr, len, crc, error);
+    switch (state) {
+    case S_READY:
+      signal BlockRead.computeCrcDone[img_num](addr, len, crc, error);
+      break;
+    case S_CRC:
+      if (crc != current_crc) {
+	// invalidate the image by erasing it
+	call SubBlockWrite.erase[current_image]();
+      } else {
+	current_page++;
+	if (current_page < imgDesc[current_image].numPgs) {
+	  state = S_READ_CRC;
+	  call SubBlockRead.read[current_image](calcCrcAddr(), &current_crc, sizeof(current_crc));
+	} else {
+	  current_image++;
+	  nextImage();
+	}
+      }
+      break;
+    }
   }
 
   // SubBlockWrite commands
@@ -167,8 +227,16 @@ implementation
       imgDesc[img_num].reserved = 0;
       imgDesc[img_num].size = 0;
     }
-    
-    signal BlockWrite.eraseDone[img_num](error);
+
+    switch (state) {
+    case S_READY:
+      signal BlockWrite.eraseDone[img_num](error);
+      break;
+    case S_CRC:
+      current_image++;
+      nextImage();
+      break;
+    }
   }
 
   event void SubBlockWrite.syncDone[uint8_t img_num](error_t error)
@@ -206,8 +274,8 @@ implementation
   default command error_t SubBlockRead.computeCrc[uint8_t img_num](storage_addr_t addr, storage_len_t len, uint16_t crc) { return FAIL; }
   default command storage_len_t SubBlockRead.getSize[uint8_t img_num]() { return 0; }
   
-  command error_t Notify.enable() { return SUCCESS; }
-  command error_t Notify.disable() { return SUCCESS; }
+  command error_t ReadyNotify.enable() { return SUCCESS; }
+  command error_t ReadyNotify.disable() { return SUCCESS; }
   
 #if defined(PLATFORM_TELOSB)
   default command storage_addr_t StorageMap.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0xFFFFFFFF; }

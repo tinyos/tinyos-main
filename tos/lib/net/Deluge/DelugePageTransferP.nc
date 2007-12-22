@@ -56,8 +56,8 @@ module DelugePageTransferP
 implementation
 {
   // send/receive page buffers, and state variables for buffers
-  uint8_t pktsToSend[DELUGE_PKT_BITVEC_SIZE];    // bit vec of packets to send
-  uint8_t pktsToReceive[DELUGE_PKT_BITVEC_SIZE]; // bit vec of packets to receive
+  uint8_t pktsToSend[DELUGET2_PKT_BITVEC_SIZE];    // bit vec of packets to send
+  uint8_t pktsToReceive[DELUGET2_PKT_BITVEC_SIZE]; // bit vec of packets to receive
 
   DelugeDataMsg rxQueue[DELUGE_QSIZE];
   uint8_t       head, size;
@@ -133,7 +133,7 @@ implementation
     // send req message
     else {
       uint32_t i;
-      for (i = 0; i < DELUGE_PKT_BITVEC_SIZE; i++) {
+      for (i = 0; i < DELUGET2_PKT_BITVEC_SIZE; i++) {
         pReqMsg->requestedPkts[i] = pktsToReceive[i];
       }
       //memcpy(pReqMsg->requestedPkts, pktsToReceive, DELUGE_PKT_BITVEC_SIZE);
@@ -146,8 +146,8 @@ implementation
   
   storage_addr_t calcOffset(page_num_t pgNum, uint8_t pktNum)
   {
-    return (storage_addr_t)pgNum * (storage_addr_t)DELUGE_BYTES_PER_PAGE
-            + (uint16_t)pktNum * (uint16_t)DELUGE_PKT_PAYLOAD_SIZE;
+    return (storage_addr_t)pgNum * (storage_addr_t)DELUGET2_BYTES_PER_PAGE
+            + (uint16_t)pktNum * (uint16_t)DELUGET2_PKT_PAYLOAD_SIZE;
             //+ DELUGE_METADATA_SIZE;
   }
   
@@ -173,13 +173,13 @@ implementation
       pDataMsg->pktNum = 0;
     }
     
-    if (call BitVecUtils.indexOf(&nextPkt, pDataMsg->pktNum, pktsToSend, DELUGE_PKTS_PER_PAGE) != SUCCESS) {
+    if (call BitVecUtils.indexOf(&nextPkt, pDataMsg->pktNum, pktsToSend, DELUGET2_PKTS_PER_PAGE) != SUCCESS) {
       // no more packets to send
       //dbg(DBG_USR1, "DELUGE: SEND_DONE\n");
       changeState(S_IDLE);
     } else {
       pDataMsg->pktNum = nextPkt;
-      if (call BlockRead.read[imgNum](calcOffset(pageToSend, nextPkt), pDataMsg->data, DELUGE_PKT_PAYLOAD_SIZE) != SUCCESS) {
+      if (call BlockRead.read[imgNum](calcOffset(pageToSend, nextPkt), pDataMsg->data, DELUGET2_PKT_PAYLOAD_SIZE) != SUCCESS) {
         call Timer.startOneShot(DELUGE_FAILED_SEND_DELAY);
       }
     }
@@ -215,7 +215,7 @@ implementation
       if (objid < objToSend || (objid == objToSend && pgNum < pageToSend)) {
 	uint32_t i;
 	changeState(S_IDLE);
-	for (i = 0; i < DELUGE_PKT_BITVEC_SIZE; i++) {
+	for (i = 0; i < DELUGET2_PKT_BITVEC_SIZE; i++) {
           pktsToSend[i] = 0x00;
 	}
 	//memset(pktsToSend, 0x00, DELUGE_PKT_BITVEC_SIZE);
@@ -231,7 +231,7 @@ implementation
   void writeData()
   {
     if(call BlockWrite.write[imgNum](calcOffset(rxQueue[head].pgNum, rxQueue[head].pktNum),
-                            rxQueue[head].data, DELUGE_PKT_PAYLOAD_SIZE) != SUCCESS) {
+                            rxQueue[head].data, DELUGET2_PKT_PAYLOAD_SIZE) != SUCCESS) {
       size = 0;
     }
   }
@@ -245,10 +245,10 @@ implementation
     workingObjid = DELUGE_INVALID_OBJID;
     workingPgNum = DELUGE_INVALID_PGNUM;
     
-    for (i = 0; i < DELUGE_PKT_BITVEC_SIZE; i++) {
+    for (i = 0; i < DELUGET2_PKT_BITVEC_SIZE; i++) {
       pktsToReceive[i] = 0x00;
     }
-    for (i = 0; i < DELUGE_PKT_BITVEC_SIZE; i++) {
+    for (i = 0; i < DELUGET2_PKT_BITVEC_SIZE; i++) {
       pktsToSend[i] = 0x00;
     }
     //memset(pktsToReceive, 0x00, DELUGE_PKT_BITVEC_SIZE);
@@ -268,7 +268,7 @@ implementation
     workingObjid = new_objid;
     workingPgNum = new_pgNum;
     
-    for (i = 0; i < DELUGE_PKT_BITVEC_SIZE; i++) {
+    for (i = 0; i < DELUGET2_PKT_BITVEC_SIZE; i++) {
       pktsToReceive[i] = 0xFF;
     }
     //memset(pktsToReceive, (nx_uint8_t)0xff, DELUGE_PKT_BITVEC_SIZE);
@@ -346,7 +346,7 @@ implementation
            && objid == objToSend
            && pgNum == pageToSend)) {
       // take union of packet bit vectors
-      for (i = 0; i < DELUGE_PKT_BITVEC_SIZE; i++) {
+      for (i = 0; i < DELUGET2_PKT_BITVEC_SIZE; i++) {
         pktsToSend[i] |= rxReqMsg->requestedPkts[i];
       }
     }
@@ -460,7 +460,7 @@ call Leds.led1Toggle();
     // failed to write
     if (error != SUCCESS) {
       uint32_t i;
-      for (i = 0; i < DELUGE_PKT_BITVEC_SIZE; i++) {
+      for (i = 0; i < DELUGET2_PKT_BITVEC_SIZE; i++) {
         pktsToReceive[i] = 0xFF;
       }
       size = 0;
@@ -472,7 +472,7 @@ call Leds.led1Toggle();
     head = (head + 1) % DELUGE_QSIZE;
     size--;
     
-    if (call BitVecUtils.indexOf(&tmp, 0, pktsToReceive, DELUGE_PKTS_PER_PAGE) != SUCCESS) {
+    if (call BitVecUtils.indexOf(&tmp, 0, pktsToReceive, DELUGET2_PKTS_PER_PAGE) != SUCCESS) {
 // For collecting stats
 //call StatsCollector.endRecvPageTransTime(publisher_addr);
 dbg("Deluge", "%.3f 115 116 116 117 115 2 %d\n", ((float)((sim_time() * 1000) / sim_ticks_per_sec())) / 1000, publisher_addr);
