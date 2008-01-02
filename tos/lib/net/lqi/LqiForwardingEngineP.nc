@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.10 2007-09-13 23:10:18 scipio Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.11 2008-01-02 04:08:32 gnawali Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -111,7 +111,8 @@ implementation {
 
   enum {
     FWD_QUEUE_SIZE = MHOP_QUEUE_SIZE, // Forwarding Queue
-    EMPTY = 0xff
+    EMPTY = 0xff,
+    MAX_RETRIES = 5
   };
 
   /* Internal storage and scheduling state */
@@ -120,7 +121,8 @@ implementation {
   uint8_t FwdBufBusy[FWD_QUEUE_SIZE];
   uint8_t iFwdBufHead, iFwdBufTail;
   uint16_t sendFailures = 0;
-  uint8_t fail_count = 0;
+  uint8_t fwd_fail_count = 0;
+  uint8_t my_fail_count = 0;
   int fwdbusy = 0;
   
   lqi_header_t* getHeader(message_t* msg) {
@@ -300,7 +302,7 @@ implementation {
     message_t* nextToSend;
     if (!call PacketAcknowledgements.wasAcked(msg) &&
 	call AMPacket.destination(msg) != TOS_BCAST_ADDR &&
-	fail_count < 5){
+	fwd_fail_count < MAX_RETRIES){
       call RouteSelect.selectRoute(msg, 1);
       call PacketAcknowledgements.requestAck(msg);
       if (call SubSend.send(call AMPacket.destination(msg),
@@ -311,7 +313,7 @@ implementation {
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
-	fail_count ++;
+	fwd_fail_count ++;
 	return;
       } else {
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
@@ -323,7 +325,7 @@ implementation {
 	return;
       }
     }
-    else if (fail_count >= 5) {
+    else if (fwd_fail_count >= MAX_RETRIES) {
       call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_FWD, 
 				       call CollectionPacket.getSequenceNumber(msg), 
 				       call CollectionPacket.getOrigin(msg), 
@@ -338,7 +340,7 @@ implementation {
 				       call AMPacket.destination(msg));
     }
     
-    fail_count = 0;
+    fwd_fail_count = 0;
     buf = is_ours(msg);
     if (buf != -1) {
       FwdBufBusy[(uint8_t)buf] = 0;
@@ -357,18 +359,18 @@ implementation {
   event void SubSendMine.sendDone(message_t* msg, error_t success) {
     if (!call PacketAcknowledgements.wasAcked(msg) &&
 	call AMPacket.destination(msg) != TOS_BCAST_ADDR &&
-	fail_count < 5){
+	my_fail_count < MAX_RETRIES){
       call RouteSelect.selectRoute(msg, 1);
       call PacketAcknowledgements.requestAck(msg);
       if (call SubSendMine.send(call AMPacket.destination(msg),
 			    msg,
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
-	dbg("LQI", "Packet not acked, retransmit (%hhu) @%s:\n\t%s\n", fail_count, sim_time_string(), fields(msg));
+	dbg("LQI", "Packet not acked, retransmit (%hhu) @%s:\n\t%s\n", my_fail_count, sim_time_string(), fields(msg));
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
-	fail_count ++;
+	my_fail_count ++;
 	return;
       } else {
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
@@ -380,7 +382,7 @@ implementation {
 	return;
       }
     }
-    else if (fail_count >= 5) {
+    else if (my_fail_count >= MAX_RETRIES) {
       call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
 				       call CollectionPacket.getSequenceNumber(msg), 
 				       call CollectionPacket.getOrigin(msg), 
@@ -395,7 +397,7 @@ implementation {
 				       call AMPacket.destination(msg));
     }
 
-    fail_count = 0;
+    my_fail_count = 0;
     signal Send.sendDone(msg, success);
   }
 
