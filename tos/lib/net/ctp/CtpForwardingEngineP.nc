@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.9 2007-12-05 22:30:57 gnawali Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.10 2008-01-02 04:02:45 gnawali Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2007-12-05 22:30:57 $
+ *  @date   $Date: 2008-01-02 04:02:45 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -684,9 +684,11 @@ implementation {
         // Loop-detection code:
         if (call CtpInfo.getEtx(&gradient) == SUCCESS) {
           // We only check for loops if we know our own metric
-          if (call CtpPacket.getEtx(m) < gradient) {
-            // The incoming packet's metric (gradient) is less than our
-            // own gradient.  Trigger a route update and backoff.
+          if (call CtpPacket.getEtx(m) <= gradient) {
+            // If our etx metric is less than or equal to the etx value
+	    // on the packet (etx of the previous hop node), then we believe
+	    // we are in a loop.
+	    // Trigger a route update and backoff.
             call CtpInfo.triggerImmediateRouteUpdate();
             startRetxmitTimer(LOOPY_WINDOW, LOOPY_OFFSET);
             call CollectionDebug.logEventMsg(NET_C_FE_LOOP_DETECTED,
