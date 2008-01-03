@@ -1,11 +1,11 @@
 
-module AMDIPP {
+module AMDipP {
   provides interface Init;
 
-  provides interface DIPSend;
-  provides interface DIPReceive as DIPDataReceive;
-  provides interface DIPReceive as DIPVectorReceive;
-  provides interface DIPReceive as DIPSummaryReceive;
+  provides interface DipSend;
+  provides interface DipReceive as DipDataReceive;
+  provides interface DipReceive as DipVectorReceive;
+  provides interface DipReceive as DipSummaryReceive;
 
   uses interface AMSend as NetAMSend;
   uses interface Receive as NetReceive;
@@ -27,7 +27,7 @@ implementation {
       call AMSplitControl.start();
       return;
     }
-    dbg("AMDIPP", "ActiveMessageC started!\n");
+    dbg("AMDipP", "ActiveMessageC started!\n");
   }
 
   event void AMSplitControl.stopDone(error_t err) { }
@@ -37,9 +37,9 @@ implementation {
     return SUCCESS;
   }
 
-  command error_t DIPSend.send(uint8_t len) {
+  command error_t DipSend.send(uint8_t len) {
     error_t err;
-    dbg("AMDIPP", "Attempting to send data in the air\n");
+    dbg("AMDipP", "Attempting to send data in the air\n");
     err = call NetAMSend.send(AM_BROADCAST_ADDR, &am_msg, len);
     if(err == SUCCESS) {
       busy = TRUE;
@@ -47,7 +47,7 @@ implementation {
     return err;
   }
 
-  command void* DIPSend.getPayloadPtr() {
+  command void* DipSend.getPayloadPtr() {
     // returns NULL if message is busy
     if(busy) {
       return NULL;
@@ -55,12 +55,12 @@ implementation {
     return call NetAMSend.getPayload(&am_msg, 0);
   }
 
-  command uint8_t DIPSend.maxPayloadLength() {
+  command uint8_t DipSend.maxPayloadLength() {
     return call NetAMSend.maxPayloadLength();
   }
 
   event void NetAMSend.sendDone(message_t* msg, error_t err) {
-    dbg("AMDIPP", "Data send successfully in the air\n");
+    dbg("AMDipP", "Data send successfully in the air\n");
     if(msg == &am_msg) {
       busy = FALSE;
     }
@@ -75,13 +75,13 @@ implementation {
     type = dmsg->type;
     switch(type) {
     case ID_DIP_DATA:
-      signal DIPDataReceive.receive(dmsg->content, len);
+      signal DipDataReceive.receive(dmsg->content, len);
       break;
     case ID_DIP_VECTOR:
-      signal DIPVectorReceive.receive(dmsg->content, len);
+      signal DipVectorReceive.receive(dmsg->content, len);
       break;
     case ID_DIP_SUMMARY:
-      signal DIPSummaryReceive.receive(dmsg->content, len);
+      signal DipSummaryReceive.receive(dmsg->content, len);
       break;
     }
     return msg;

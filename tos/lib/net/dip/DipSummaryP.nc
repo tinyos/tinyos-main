@@ -1,16 +1,16 @@
 
 // Need to deal with non powers of base for the length of the hash
 
-#include <DIP.h>
+#include <Dip.h>
 
-module DIPSummaryP {
-  provides interface DIPDecision;
+module DipSummaryP {
+  provides interface DipDecision;
 
-  uses interface DIPSend as SummarySend;
-  uses interface DIPReceive as SummaryReceive;
+  uses interface DipSend as SummarySend;
+  uses interface DipReceive as SummaryReceive;
 
-  uses interface DIPHelp;
-  uses interface DIPEstimates;
+  uses interface DipHelp;
+  uses interface DipEstimates;
 
   uses interface Random;
 }
@@ -32,15 +32,15 @@ implementation {
   // this can be combined with pairs_t in DIPVectorP maybe?
   dip_estimate_t shadowEstimates[UQCOUNT_DIP];
 
-  command uint8_t DIPDecision.getCommRate() {
+  command uint8_t DipDecision.getCommRate() {
     return commRate;
   }
 
-  command void DIPDecision.resetCommRate() {
+  command void DipDecision.resetCommRate() {
     commRate = 0;
   }
 
-  command error_t DIPDecision.send() {
+  command error_t DipDecision.send() {
     dip_index_t i, j, left, right;
     dip_version_t* allVers;
     dip_estimate_t* allEsts;
@@ -53,8 +53,8 @@ implementation {
     dmsg->type = ID_DIP_SUMMARY;
     dsmsg = (dip_summary_msg_t*) dmsg->content;
 
-    allVers = call DIPHelp.getAllVersions();
-    allEsts = call DIPEstimates.getEstimates();
+    allVers = call DipHelp.getAllVersions();
+    allEsts = call DipEstimates.getEstimates();
     salt = call Random.rand32();
     
     for(i = 0; i < UQCOUNT_DIP; i++) {
@@ -63,14 +63,14 @@ implementation {
 
     for(i = 0; i < DIP_SUMMARY_ENTRIES_PER_PACKET; i += 3) {
       findRangeShadow(&left, &right);
-      dbg("DIPSummaryP", "Found range %u, %u\n", left, right);
+      dbg("DipSummaryP", "Found range %u, %u\n", left, right);
       dsmsg->info[i] = buildRange(left, right);
       dsmsg->info[i+1] = computeHash(left, right, allVers, salt);
       dsmsg->info[i+2] = computeBloomHash(left, right, allVers, salt);
       for(j = left; j < right; j++) {
 	shadowEstimates[j] = 0;
       }
-      dbg("DIPSummaryP", "Hash Entry: %08x %08x %08x\n",
+      dbg("DipSummaryP", "Hash Entry: %08x %08x %08x\n",
 	  dsmsg->info[i], dsmsg->info[i+1], dsmsg->info[i+2]);
     }
 
@@ -100,7 +100,7 @@ implementation {
     dsmsg = (dip_summary_msg_t*) payload;
     unitlen = dsmsg->unitLen;
     salt = dsmsg->salt;
-    allVers = call DIPHelp.getAllVersions();
+    allVers = call DipHelp.getAllVersions();
     
     for(i = 0; i < unitlen; i += 3) {
       splitRange(dsmsg->info[i], &left, &right);
@@ -141,8 +141,8 @@ implementation {
 	est1 = est2;
       }
     }
-    len = call DIPEstimates.estimateToHashlength(est1);
-    dbg("DIPSummaryP","Highest key at %u with estimate %u and thus len %u\n",
+    len = call DipEstimates.estimateToHashlength(est1);
+    dbg("DipSummaryP","Highest key at %u with estimate %u and thus len %u\n",
 	highIndex, est1, len);
 
     // initialize bounds on range
@@ -161,12 +161,12 @@ implementation {
       est1 = shadowEstimates[i];
       highEstSum += est1;
     }
-    dbg("DIPSummaryP", "First range: %u, %u = %u\n", LBound, LBound + len,
+    dbg("DipSummaryP", "First range: %u, %u = %u\n", LBound, LBound + len,
 	highEstSum);
 
     // iterate through the range
     runEstSum = highEstSum;
-    dbg("DIPSummaryP", "Iterating from %u to %u\n", LBound, RBound);
+    dbg("DipSummaryP", "Iterating from %u to %u\n", LBound, RBound);
     for(i = LBound ; i + len <= RBound; i++) {
       est1 = shadowEstimates[i];
       est2 = shadowEstimates[i + len];
@@ -175,7 +175,7 @@ implementation {
       if(runEstSum > highEstSum) {
 	highEstSum = runEstSum;
 	highIndex = i + 1;
-	dbg("DIPSummaryP", "Next range: %u, %u = %u\n", highIndex,
+	dbg("DipSummaryP", "Next range: %u, %u = %u\n", highIndex,
 	    highIndex + len, highEstSum);
       }
     }
@@ -238,7 +238,7 @@ implementation {
     dip_index_t i;
 
     for(i = left; i < right; i++) {
-      call DIPEstimates.decEstimateByIndex(i);
+      call DipEstimates.decEstimateByIndex(i);
     }
   }
 
@@ -251,19 +251,19 @@ implementation {
     uint32_t indexSeqPair[2];
     uint32_t bit;
 
-    est = call DIPEstimates.hashlengthToEstimate(right - left) + 1; // + 1 to improve search
+    est = call DipEstimates.hashlengthToEstimate(right - left) + 1; // + 1 to improve search
     for(i = left; i < right; i++) {
       indexSeqPair[0] = i;
       indexSeqPair[1] = data[i];
       bit = computeHash(0, 2, indexSeqPair, salt) % 32;
-      key = call DIPHelp.indexToKey(i);
+      key = call DipHelp.indexToKey(i);
       if(bHash & (1 << bit)) {
 	//set estimate only if better
-	call DIPEstimates.setSummaryEstimateByIndex(i, est);
+	call DipEstimates.setSummaryEstimateByIndex(i, est);
       }
       else {
 	dbg("DisseminationDebug", "Key %x definitely different\n", key);
-	call DIPEstimates.setVectorEstimate(key);
+	call DipEstimates.setVectorEstimate(key);
       }
     }
   }

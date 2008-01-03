@@ -1,4 +1,4 @@
-// $Id: DIPTrickleMilliC.nc,v 1.1 2007-12-18 07:03:18 kaisenl Exp $
+// $Id: DipTrickleMilliC.nc,v 1.1 2008-01-03 21:30:35 kaisenl Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -40,11 +40,11 @@
  */ 
 
 
-configuration DIPTrickleMilliC {
-  provides interface DIPTrickleTimer as TrickleTimer;
+configuration DipTrickleMilliC {
+  provides interface DipTrickleTimer as TrickleTimer;
 }
 implementation {
-  components DIPTrickleMilliP as TrickleP;
+  components DipTrickleMilliP as TrickleP;
   components MainC, RandomC;
   components new TimerMilliC() as PeriodicIntervalTimer;
   components new TimerMilliC() as SingleEventTimer;

@@ -1,4 +1,4 @@
-#include <DIP.h>
+#include <Dip.h>
 
 /*
  * Copyright (c) 2006 Arch Rock Corporation
@@ -43,7 +43,7 @@
  * @param key the 16-bit identifier of the disseminated object
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-12-18 07:03:19 $
+ * @version $Revision: 1.2 $ $Date: 2008-01-03 21:30:35 $
  */
 
 generic configuration DisseminatorC(typedef t, dip_key_t key) {
@@ -62,16 +62,16 @@ implementation {
   components LedsC;
   DisseminatorP.Leds -> LedsC;
 
-  components DIPLogicC;
-  DisseminatorP.DIPDisseminationUpdate -> DIPLogicC.DisseminationUpdate[key];
+  components DipLogicC;
+  DisseminatorP.DipDisseminationUpdate -> DipLogicC.DisseminationUpdate[key];
 
-  components DIPVersionC;
-  DisseminatorP.DIPHelp -> DIPVersionC;
+  components DipVersionC;
+  DisseminatorP.DipHelp -> DipVersionC;
 
   components MainC;
   MainC.SoftwareInit -> DisseminatorP;
 
-  components DIPDataC;
-  DIPDataC.DisseminationUpdate[key] -> DisseminatorP.DataDisseminationUpdate;
-  DIPDataC.DisseminationValue[key] -> DisseminatorP.DataDisseminationValue;
+  components DipDataC;
+  DipDataC.DisseminationUpdate[key] -> DisseminatorP.DataDisseminationUpdate;
+  DipDataC.DisseminationValue[key] -> DisseminatorP.DataDisseminationValue;
 }

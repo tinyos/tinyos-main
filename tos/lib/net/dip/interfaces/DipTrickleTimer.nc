@@ -1,4 +1,4 @@
-// $Id: DIPTrickleTimer.nc,v 1.1 2007-12-18 07:03:19 kaisenl Exp $
+// $Id: DipTrickleTimer.nc,v 1.1 2008-01-03 21:30:35 kaisenl Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -46,7 +46,7 @@
  */ 
 
 
-interface DIPTrickleTimer {
+interface DipTrickleTimer {
 
   /**
    * Start the trickle timer. At boot, the timer period is its maximum
@@ -77,7 +77,7 @@ interface DIPTrickleTimer {
   event void fired();
 
   /**
-   * Compute the window size based on DIP's estimates
+   * Compute the window size based on Dip's estimates
    */
   event uint32_t requestWindowSize();
 

@@ -1,11 +1,11 @@
 
-#include <DIP.h>
+#include <Dip.h>
 
 configuration DisseminationC {
   provides interface StdControl;
 }
 
 implementation {
-  components DIPLogicC;
-  StdControl = DIPLogicC;
+  components DipLogicC;
+  StdControl = DipLogicC;
 }

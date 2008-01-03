@@ -1,20 +1,20 @@
 
-#include <DIP.h>
+#include <Dip.h>
 
-module DIPLogicP {
+module DipLogicP {
   provides interface DisseminationUpdate<dip_data_t>[dip_key_t key];
-  provides interface DIPEstimates;
+  provides interface DipEstimates;
 
   provides interface Init;
   provides interface StdControl;
 
   uses interface Boot;
-  uses interface DIPTrickleTimer;
+  uses interface DipTrickleTimer;
   uses interface DisseminationUpdate<dip_data_t> as VersionUpdate[dip_key_t key];
-  uses interface DIPDecision as DIPDataDecision;
-  uses interface DIPDecision as DIPVectorDecision;
-  uses interface DIPDecision as DIPSummaryDecision;
-  uses interface DIPHelp;
+  uses interface DipDecision as DipDataDecision;
+  uses interface DipDecision as DipVectorDecision;
+  uses interface DipDecision as DipSummaryDecision;
+  uses interface DipHelp;
 }
 
 implementation {
@@ -34,19 +34,19 @@ implementation {
     DIP_DATA_ESTIMATE = getDataEstimate(UQCOUNT_DIP);
     DIP_MAX_ESTIMATE = getMaxEstimate(UQCOUNT_DIP);
     DIP_VECTOR_ESTIMATE = DIP_DATA_ESTIMATE - 1;
-    totalPossible = call DIPEstimates.estimateToHashlength(0);
-    dbg("DIPLogicP", "Real Total: %u, DIP Total: %u\n", UQCOUNT_DIP, totalPossible);
+    totalPossible = call DipEstimates.estimateToHashlength(0);
+    dbg("DipLogicP", "Real Total: %u, Dip Total: %u\n", UQCOUNT_DIP, totalPossible);
     if(totalPossible < UQCOUNT_DIP) {
       DIP_DATA_ESTIMATE++;
       DIP_MAX_ESTIMATE++;
       DIP_VECTOR_ESTIMATE++;
-      totalPossible = call DIPEstimates.estimateToHashlength(0);
+      totalPossible = call DipEstimates.estimateToHashlength(0);
     }
-    dbg("DIPLogicP", "Real Total: %u, DIP New Total: %u\n", UQCOUNT_DIP, totalPossible);
-    dbg("DIPLogicP","DATA_ESTIMATE initialized to %u\n", DIP_DATA_ESTIMATE);
-    dbg("DIPLogicP","MAX_ESTIMATE initialized to %u\n", DIP_MAX_ESTIMATE);
-    dbg("DIPLogicP","VECT_ESTIMATE initialized to %u\n", DIP_VECTOR_ESTIMATE);
-    dbg("DIPLogicP","DIP ready\n");
+    dbg("DipLogicP", "Real Total: %u, DIP New Total: %u\n", UQCOUNT_DIP, totalPossible);
+    dbg("DipLogicP","DATA_ESTIMATE initialized to %u\n", DIP_DATA_ESTIMATE);
+    dbg("DipLogicP","MAX_ESTIMATE initialized to %u\n", DIP_MAX_ESTIMATE);
+    dbg("DipLogicP","VECT_ESTIMATE initialized to %u\n", DIP_VECTOR_ESTIMATE);
+    dbg("DipLogicP","DIP ready\n");
 
     return SUCCESS;
   }
@@ -56,25 +56,25 @@ implementation {
   }
 
   command error_t StdControl.start() {
-    return call DIPTrickleTimer.start();
+    return call DipTrickleTimer.start();
   }
 
   command error_t StdControl.stop() {
-    call DIPTrickleTimer.stop();
+    call DipTrickleTimer.stop();
     return SUCCESS;
   }
 
   command void DisseminationUpdate.change[dip_key_t key](dip_data_t* val) {
     dip_index_t i;
 
-    dbg("DIPLogicP","App notified key %x is new\n", key);
-    i = call DIPHelp.keyToIndex(key);
+    dbg("DipLogicP","App notified key %x is new\n", key);
+    i = call DipHelp.keyToIndex(key);
     estimates[i] = DIP_DATA_ESTIMATE;
     call VersionUpdate.change[key](val);
-    call DIPTrickleTimer.reset();
+    call DipTrickleTimer.reset();
   }
 
-  event uint32_t DIPTrickleTimer.requestWindowSize() {
+  event uint32_t DipTrickleTimer.requestWindowSize() {
     dip_index_t i;
     dip_estimate_t max = 0;
 
@@ -92,69 +92,69 @@ implementation {
       }
     }
 
-    dbg("DIPLogicP", "Window size requested, give %u\n", windowSize);
+    dbg("DipLogicP", "Window size requested, give %u\n", windowSize);
     return windowSize;
   }
 
-  event void DIPTrickleTimer.fired() {
+  event void DipTrickleTimer.fired() {
     dip_index_t i;
     uint8_t decision;
 
-    dbg("DIPLogicP","Trickle Timer fired!\n");
+    dbg("DipLogicP","Trickle Timer fired!\n");
 
     for(i = 0; i < UQCOUNT_DIP; i++) {
-      dbg("DIPLogicP","Index-%u Estimate-%u\n", i, estimates[i]);
+      dbg("DipLogicP","Index-%u Estimate-%u\n", i, estimates[i]);
     }
 
     decision = sendDecision();
 
     switch(decision) {
     case ID_DIP_INVALID:
-      dbg("DIPLogicP", "Decision to SUPPRESS\n");
+      dbg("DipLogicP", "Decision to SUPPRESS\n");
       break;
     case ID_DIP_SUMMARY:
-      dbg("DIPLogicP", "Decision to SUMMARY\n");
-      call DIPSummaryDecision.send();
+      dbg("DipLogicP", "Decision to SUMMARY\n");
+      call DipSummaryDecision.send();
       break;
     case ID_DIP_VECTOR:
-      dbg("DIPLogicP", "Decision to VECTOR\n");
-      call DIPVectorDecision.send();
+      dbg("DipLogicP", "Decision to VECTOR\n");
+      call DipVectorDecision.send();
       break;
     case ID_DIP_DATA:
-      dbg("DIPLogicP", "Decision to DATA\n");
-      call DIPDataDecision.send();
+      dbg("DipLogicP", "Decision to DATA\n");
+      call DipDataDecision.send();
       break;
     }
-    call DIPDataDecision.resetCommRate();
-    call DIPVectorDecision.resetCommRate();
-    call DIPSummaryDecision.resetCommRate();
+    call DipDataDecision.resetCommRate();
+    call DipVectorDecision.resetCommRate();
+    call DipSummaryDecision.resetCommRate();
   }
 
-  command dip_estimate_t* DIPEstimates.getEstimates() {
+  command dip_estimate_t* DipEstimates.getEstimates() {
     return estimates;
   }
 
-  command void DIPEstimates.decEstimateByIndex(dip_index_t i) {
+  command void DipEstimates.decEstimateByIndex(dip_index_t i) {
     if(estimates[i] != 0) {
       estimates[i] = estimates[i] - 1;
     }
   }
 
-  command void DIPEstimates.decEstimateByKey(dip_key_t key) {
+  command void DipEstimates.decEstimateByKey(dip_key_t key) {
     dip_index_t i;
 
-    i = call DIPHelp.keyToIndex(key);
-    call DIPEstimates.decEstimateByIndex(i);
+    i = call DipHelp.keyToIndex(key);
+    call DipEstimates.decEstimateByIndex(i);
   }
 
-  command dip_estimate_t DIPEstimates.hashlengthToEstimate(dip_hashlen_t len) {
+  command dip_estimate_t DipEstimates.hashlengthToEstimate(dip_hashlen_t len) {
     if(len == UQCOUNT_DIP) {
       len = totalPossible;
     }
     return DIP_MAX_ESTIMATE - diplog(DIP_SUMMARY_VALUES_PER_PACKET, len);
   }
 
-  command dip_hashlen_t DIPEstimates.estimateToHashlength(dip_estimate_t est) {
+  command dip_hashlen_t DipEstimates.estimateToHashlength(dip_estimate_t est) {
     uint8_t expt, base;
     uint16_t val;
 
@@ -181,30 +181,30 @@ implementation {
     return counter - 1;
   }
 
-  command void DIPEstimates.setDataEstimate(dip_key_t key) {
+  command void DipEstimates.setDataEstimate(dip_key_t key) {
     dip_index_t i;
 
-    i = call DIPHelp.keyToIndex(key);
+    i = call DipHelp.keyToIndex(key);
     estimates[i] = DIP_DATA_ESTIMATE;
-    call DIPTrickleTimer.reset();
+    call DipTrickleTimer.reset();
   }
 
-  command void DIPEstimates.setVectorEstimate(dip_key_t key) {
+  command void DipEstimates.setVectorEstimate(dip_key_t key) {
     dip_index_t i;
     
-    i = call DIPHelp.keyToIndex(key);
+    i = call DipHelp.keyToIndex(key);
     if(estimates[i] < DIP_VECTOR_ESTIMATE) {
       estimates[i] = DIP_VECTOR_ESTIMATE;
     }
-    call DIPTrickleTimer.reset();
+    call DipTrickleTimer.reset();
   }
 
-  command void DIPEstimates.setSummaryEstimateByIndex(dip_index_t ind,
+  command void DipEstimates.setSummaryEstimateByIndex(dip_index_t ind,
 						      dip_estimate_t est) {
     if(estimates[ind] < est) {
       estimates[ind] = est;
     }
-    call DIPTrickleTimer.reset();
+    call DipTrickleTimer.reset();
   }
 
   uint16_t dipexp(uint16_t base, uint16_t expt) {
@@ -250,14 +250,14 @@ implementation {
 
     uint16_t E, D, L, V, C;
 
-    allEsts = call DIPEstimates.getEstimates();
+    allEsts = call DipEstimates.getEstimates();
     highEst = 0;
-    dataCommRate = call DIPDataDecision.getCommRate();
-    vectorCommRate = call DIPVectorDecision.getCommRate();
-    summaryCommRate = call DIPSummaryDecision.getCommRate();
+    dataCommRate = call DipDataDecision.getCommRate();
+    vectorCommRate = call DipVectorDecision.getCommRate();
+    summaryCommRate = call DipSummaryDecision.getCommRate();
 
     if(dataCommRate > 1) {
-      dbg("DIPLogicP", "Heard data\n");
+      dbg("DipLogicP", "Heard data\n");
       return ID_DIP_INVALID;
     }
 
@@ -270,12 +270,12 @@ implementation {
 
     // didn't send or hear data at this point
     if(vectorCommRate + summaryCommRate > 1) {
-      dbg("DIPLogicP", "Heard an advertisement\n");
+      dbg("DipLogicP", "Heard an advertisement\n");
       return ID_DIP_INVALID;
     }
 
     // corner case, if hash is too short
-    if(call DIPEstimates.estimateToHashlength(highEst) <= DIP_VECTOR_VALUES_PER_PACKET) {
+    if(call DipEstimates.estimateToHashlength(highEst) <= DIP_VECTOR_VALUES_PER_PACKET) {
       return ID_DIP_VECTOR;
     }
 
@@ -284,10 +284,10 @@ implementation {
     if(C == 0) C = 1; // don't want to divide by zero
     E = highEst;
     D = DIP_DATA_ESTIMATE;
-    L = call DIPEstimates.estimateToHashlength(E);
+    L = call DipEstimates.estimateToHashlength(E);
     V = DIP_VECTOR_VALUES_PER_PACKET;
 
-    dbg("DIPLogicP", "D=%u, E=%u, L=%u, V=%u, C=%u\n", D, E, L, V, C);
+    dbg("DipLogicP", "D=%u, E=%u, L=%u, V=%u, C=%u\n", D, E, L, V, C);
     if((D - E) < (L / (C * V))) {
       return ID_DIP_SUMMARY;
     }

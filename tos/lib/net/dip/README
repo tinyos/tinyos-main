@@ -1,12 +1,21 @@
 
-Title: DIP
+Title: Dip
 Author: Kaisen Lin
 ------------------
 
-DIP is a dissemination protocol for detecting and disseminating new
-items in a network. It uses the same interfaces as Drip.
+Dip is a dissemination protocol for detecting and disseminating new
+items in a network. It uses the same interfaces as Drip. It improves
+node density and item scalability by sending only one packet per
+interval rather than many. If the network is small and with very few
+data items, Drip may be more efficient due to Dip's advertisement
+overhead.
 
-Data disseminated under DIP cannot be larger than 16 bytes. It was not
+
+
+Notes:
+------
+
+Data disseminated under Dip cannot be larger than 16 bytes. It was not
 designed for large data items, but rather for many small data items.
 
 Ties, like Drip, are handled with higher node IDs serving as

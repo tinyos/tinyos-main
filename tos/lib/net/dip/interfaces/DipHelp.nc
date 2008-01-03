@@ -1,7 +1,7 @@
 
-#include <DIP.h>
+#include <Dip.h>
 
-interface DIPHelp {
+interface DipHelp {
   command void registerKey(dip_key_t key);
 
   command dip_index_t keyToIndex(dip_key_t key);

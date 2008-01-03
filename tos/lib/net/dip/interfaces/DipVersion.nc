@@ -1,7 +1,7 @@
 
-#include <DIP.h>
+#include <Dip.h>
 
-interface DIPVersion {
+interface DipVersion {
   command void setVersion();
   command void incVersion();
 }

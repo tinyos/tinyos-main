@@ -39,7 +39,7 @@
  * @param t the type of the object that will be disseminated
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-12-18 07:03:19 $
+ * @version $Revision: 1.2 $ $Date: 2008-01-03 21:30:35 $
  */
 
 generic module DisseminatorP(typedef t, dip_key_t key) {
@@ -50,8 +50,8 @@ generic module DisseminatorP(typedef t, dip_key_t key) {
 
   provides interface Init;
 
-  uses interface DisseminationUpdate<dip_data_t> as DIPDisseminationUpdate;
-  uses interface DIPHelp;
+  uses interface DisseminationUpdate<dip_data_t> as DipDisseminationUpdate;
+  uses interface DipHelp;
 
   uses interface Leds;
 }
@@ -63,7 +63,7 @@ implementation {
   }
 
   command error_t Init.init() {
-    call DIPHelp.registerKey(key);
+    call DipHelp.registerKey(key);
     return SUCCESS;
   }
 
@@ -82,9 +82,9 @@ implementation {
   command void AppDisseminationUpdate.change( t* newVal ) {
     memcpy( &valueCache, newVal, sizeof(t) );
     /* Increment the counter and append the local node ID later. */
-    /* DIPLogicC doesn't care what the data actually is,
+    /* DipLogicC doesn't care what the data actually is,
        it just wants the key, so we cast it recklessly */
-    call DIPDisseminationUpdate.change((dip_data_t*)newVal);
+    call DipDisseminationUpdate.change((dip_data_t*)newVal);
   }
 
   command const dip_data_t* DataDisseminationValue.get() {

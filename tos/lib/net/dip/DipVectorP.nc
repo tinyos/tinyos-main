@@ -1,14 +1,14 @@
 
-#include <DIP.h>
+#include <Dip.h>
 
-module DIPVectorP {
-  provides interface DIPDecision;
+module DipVectorP {
+  provides interface DipDecision;
 
-  uses interface DIPSend as VectorSend;
-  uses interface DIPReceive as VectorReceive;
+  uses interface DipSend as VectorSend;
+  uses interface DipReceive as VectorReceive;
 
-  uses interface DIPHelp;
-  uses interface DIPEstimates;
+  uses interface DipHelp;
+  uses interface DipEstimates;
 
   uses interface Random;
 }
@@ -24,15 +24,15 @@ implementation {
   int myComparator(const void* a, const void* b);
   void randomizeRun(pairs_t* localPairs, dip_index_t length);
 
-  command uint8_t DIPDecision.getCommRate() {
+  command uint8_t DipDecision.getCommRate() {
     return commRate;
   }
 
-  command void DIPDecision.resetCommRate() {
+  command void DipDecision.resetCommRate() {
     commRate = 0;
   }
 
-  command error_t DIPDecision.send() {
+  command error_t DipDecision.send() {
     dip_index_t i, j, r;
     dip_key_t sendkey;
     dip_estimate_t* ests;
@@ -45,10 +45,10 @@ implementation {
       return FAIL;
     }
 
-    ests = call DIPEstimates.getEstimates();
+    ests = call DipEstimates.getEstimates();
     // get all estimates and sort
     for(i = 0; i < UQCOUNT_DIP; i++) {
-      pairs[i].key = call DIPHelp.indexToKey(i);
+      pairs[i].key = call DipHelp.indexToKey(i);
       pairs[i].estimate = ests[i];
     }
     qsort(pairs, UQCOUNT_DIP, sizeof(pairs_t), myComparator);
@@ -73,9 +73,9 @@ implementation {
 	i += 2, j++) {
       sendkey = pairs[j].key;
       dvmsg->vector[i] = sendkey;
-      dvmsg->vector[i+1] = call DIPHelp.keyToVersion(sendkey);
+      dvmsg->vector[i+1] = call DipHelp.keyToVersion(sendkey);
       // adjust estimate
-      call DIPEstimates.decEstimateByKey(sendkey);
+      call DipEstimates.decEstimateByKey(sendkey);
     }
 
     return call VectorSend.send(sizeof(dip_msg_t) + sizeof(dip_vector_msg_t) +
@@ -98,17 +98,17 @@ implementation {
     for(i = 0; i < unitlen; i += 2) {
       vectorkey = dvmsg->vector[i];
       vectorver = dvmsg->vector[i+1];
-      myver = call DIPHelp.keyToVersion(vectorkey);
+      myver = call DipHelp.keyToVersion(vectorkey);
 
       // TODO: handle the invalid versions
       if(myver < vectorver) {
-	call DIPEstimates.setVectorEstimate(vectorkey);
+	call DipEstimates.setVectorEstimate(vectorkey);
       }
       else if(myver > vectorver) {
-	call DIPEstimates.setDataEstimate(vectorkey);
+	call DipEstimates.setDataEstimate(vectorkey);
       }
       else if(myver == vectorver) {
-	call DIPEstimates.decEstimateByKey(vectorkey);
+	call DipEstimates.decEstimateByKey(vectorkey);
       }
     }
 

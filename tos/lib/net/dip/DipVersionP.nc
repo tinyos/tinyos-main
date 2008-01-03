@@ -1,6 +1,6 @@
 
-module DIPVersionP {
-  provides interface DIPHelp;
+module DipVersionP {
+  provides interface DipHelp;
 
   provides interface DisseminationUpdate<dip_data_t>[dip_key_t key];
 }
@@ -13,16 +13,16 @@ implementation {
   dip_version_t versions[UQCOUNT_DIP];
   dip_index_t count = 0;
 
-  command void DIPHelp.registerKey(dip_key_t key) {
+  command void DipHelp.registerKey(dip_key_t key) {
     dip_index_t i;
 
     keys[count] = key;
     count = count + 1;
     if(count == UQCOUNT_DIP) {
       qsort(keys, UQCOUNT_DIP, sizeof(dip_key_t), lessThan);
-      dbg("DIPVersionP","Key registration complete!\n");
+      dbg("DipVersionP","Key registration complete!\n");
       for(i = 0; i < UQCOUNT_DIP; i++) {
-	dbg("DIPVersionP","Key %x\n", keys[i]);
+	dbg("DipVersionP","Key %x\n", keys[i]);
       }
     }
   }
@@ -31,7 +31,7 @@ implementation {
     dip_index_t i;
     dip_version_t ver;
 
-    i = call DIPHelp.keyToIndex(key);
+    i = call DipHelp.keyToIndex(key);
     ver = versions[i];
 
     // the version has node ID embedded in it, so need to do some shifts
@@ -44,7 +44,7 @@ implementation {
     versions[i] = ver;
   }
 
-  command dip_index_t DIPHelp.keyToIndex(dip_key_t key) {
+  command dip_index_t DipHelp.keyToIndex(dip_key_t key) {
     dip_index_t answer;
     dip_index_t i;
 
@@ -56,30 +56,30 @@ implementation {
 	break;
       }
     }
-    dbg("DIPVersionP", "Converting key %x to index %u\n", key, answer);
+    dbg("DipVersionP", "Converting key %x to index %u\n", key, answer);
     return answer;
   }
 
-  command dip_key_t DIPHelp.indexToKey(dip_index_t ind) {
+  command dip_key_t DipHelp.indexToKey(dip_index_t ind) {
     return keys[ind];
   }
 
-  command dip_version_t DIPHelp.keyToVersion(dip_key_t key) {
+  command dip_version_t DipHelp.keyToVersion(dip_key_t key) {
     dip_index_t i;
 
-    i = call DIPHelp.keyToIndex(key);
+    i = call DipHelp.keyToIndex(key);
     return versions[i];
   }
 
-  command void DIPHelp.setVersion(dip_key_t key, dip_version_t ver) {
+  command void DipHelp.setVersion(dip_key_t key, dip_version_t ver) {
     dip_index_t i;
 
-    i = call DIPHelp.keyToIndex(key);
+    i = call DipHelp.keyToIndex(key);
     versions[i] = ver;
-    dbg("DIPVersionP","Setting key %x at index %u to version %x\n", key, i, ver);
+    dbg("DipVersionP","Setting key %x at index %u to version %x\n", key, i, ver);
   }
 
-  command dip_version_t* DIPHelp.getAllVersions() {
+  command dip_version_t* DipHelp.getAllVersions() {
     return versions;
   }
 

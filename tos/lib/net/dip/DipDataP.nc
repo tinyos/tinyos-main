@@ -1,17 +1,17 @@
 
-#include <DIP.h>
+#include <Dip.h>
 
-module DIPDataP {
-  provides interface DIPDecision;
+module DipDataP {
+  provides interface DipDecision;
 
-  uses interface DIPSend as DataSend;
-  uses interface DIPReceive as DataReceive;
+  uses interface DipSend as DataSend;
+  uses interface DipReceive as DataReceive;
 
   uses interface DisseminationUpdate<dip_data_t>[dip_key_t key];
   uses interface DisseminationValue<dip_data_t>[dip_key_t key];
 
-  uses interface DIPHelp;
-  uses interface DIPEstimates;
+  uses interface DipHelp;
+  uses interface DipEstimates;
 
   uses interface Leds;
 }
@@ -19,15 +19,15 @@ module DIPDataP {
 implementation {
   uint8_t commRate = 0;
 
-  command uint8_t DIPDecision.getCommRate() {
+  command uint8_t DipDecision.getCommRate() {
     return commRate;
   }
 
-  command void DIPDecision.resetCommRate() {
+  command void DipDecision.resetCommRate() {
     commRate = 0;
   }
 
-  command error_t DIPDecision.send() {
+  command error_t DipDecision.send() {
     // Scan all estimates and send the highest estimate in deterministic order
     dip_index_t i;
     dip_index_t high_i;
@@ -39,7 +39,7 @@ implementation {
     dip_data_msg_t* ddmsg;
     const dip_data_t* data;
 
-    ests = call DIPEstimates.getEstimates();
+    ests = call DipEstimates.getEstimates();
     high_i = 0;
     high_est = 0;
     for(i = 0; i < UQCOUNT_DIP; i++) {
@@ -48,8 +48,8 @@ implementation {
 	high_est = ests[i];
       }
     }
-    key = call DIPHelp.indexToKey(high_i);
-    ver = call DIPHelp.keyToVersion(key);
+    key = call DipHelp.indexToKey(high_i);
+    ver = call DipHelp.keyToVersion(key);
     data = call DisseminationValue.get[key]();
     dmsg = (dip_msg_t*) call DataSend.getPayloadPtr();
     if(dmsg == NULL) {
@@ -63,8 +63,8 @@ implementation {
     ddmsg->size = sizeof(dip_data_t);
     memcpy(ddmsg->data, data, sizeof(dip_data_t));
 
-    call DIPEstimates.decEstimateByKey(key);
-    dbg("DIPDataP", "Data sent with key %x and version %08x\n", key, ver);
+    call DipEstimates.decEstimateByKey(key);
+    dbg("DipDataP", "Data sent with key %x and version %08x\n", key, ver);
     return call DataSend.send(sizeof(dip_data_msg_t) + sizeof(dip_msg_t) + sizeof(dip_data_t));
   }
   
@@ -79,20 +79,20 @@ implementation {
     ddmsg = (dip_data_msg_t*) payload;
     key = ddmsg->key;
     msgVer = ddmsg->version;
-    myVer = call DIPHelp.keyToVersion(key);
-    dbg("DIPDataP", "Data rcved with key %x and version %08x\n", key, msgVer);
+    myVer = call DipHelp.keyToVersion(key);
+    dbg("DipDataP", "Data rcved with key %x and version %08x\n", key, msgVer);
 
     // TODO: handle the invalid versions
     if(myVer < msgVer) {
       call DisseminationUpdate.change[key]((dip_data_t*)ddmsg->data);
-      call DIPHelp.setVersion(key, msgVer);
-      call DIPEstimates.setDataEstimate(key);
+      call DipHelp.setVersion(key, msgVer);
+      call DipEstimates.setDataEstimate(key);
     }
     else if (myVer > msgVer) {
-      call DIPEstimates.setDataEstimate(key);
+      call DipEstimates.setDataEstimate(key);
     }
     else {
-      call DIPEstimates.decEstimateByKey(key);
+      call DipEstimates.decEstimateByKey(key);
     }
   }
   

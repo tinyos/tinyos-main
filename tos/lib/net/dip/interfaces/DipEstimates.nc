@@ -1,7 +1,7 @@
 
-#include <DIP.h>
+#include <Dip.h>
 
-interface DIPEstimates {
+interface DipEstimates {
   command dip_estimate_t* getEstimates();
   command void decEstimateByIndex(dip_index_t i);
   command void decEstimateByKey(dip_key_t key);
