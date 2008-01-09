@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.9 $ $Date: 2007-09-13 23:10:16 $
+ * @version $Revision: 1.10 $ $Date: 2008-01-09 19:44:37 $
  */
  
 #include "CC2420.h"
@@ -164,6 +164,11 @@ implementation {
   
   /***************** SubReceive Events ****************/
   event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
+    
+    if(!(call CC2420PacketBody.getMetadata(msg))->crc) {
+      return msg;
+    }
+    
     if (call AMPacket.isForMe(msg)) {
       return signal Receive.receive[call AMPacket.type(msg)](msg, payload, len - CC2420_SIZE);
     }
