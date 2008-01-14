@@ -33,8 +33,10 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.4 $ $Date: 2007-09-13 23:10:16 $
+ * @version $Revision: 1.5 $ $Date: 2008-01-14 22:18:19 $
  */
+
+#include "IEEE802154.h"
 
 module CC2420ReceiveP {
 
