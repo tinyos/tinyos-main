@@ -1,5 +1,28 @@
 #!/usr/bin/env python
 
+# Copyright (c) 2007 Johns Hopkins University.
+# All rights reserved.
+#
+# Permission to use, copy, modify, and distribute this software and its
+# documentation for any purpose, without fee, and without written
+# agreement is hereby granted, provided that the above copyright
+# notice, the (updated) modification history and the author appear in
+# all copies of this source code.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
+# OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+
+# @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+# @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
+
 import sys, stat, struct, subprocess, time
 import tinyos
 from datetime import datetime
@@ -417,14 +440,6 @@ if len(sys.argv) >= 4:
     elif sys.argv[3] in ["-ls", "--local-stop"]:
         if localstop():
             print "Command sent"
-
-
-#     elif sys.argv[3] in ["-b", "--reprogram_bs"]:
-#         if op_reprog_bs(imgNum):
-#             print "Command sent"
-#     elif sys.argv[3] in ["-s", "--reset"]:
-#         if op_reset(imgNum):
-#             print "Successfully reset image versioning information"
     else:
         print_usage()
 
@@ -433,32 +448,3 @@ else:
 
 sys.exit()
 
-# Testing ------------------------------------------------------------
-
-s = tinyos.Serial('/dev/ttyUSB0', 115200, flush=False)
-# print "ident: 0x%x" % ident()
-# r = read(0, 0, 10)
-# print "read:", len(r), r
-
-# erase(0)
-# write(0, [i % 256 for i in range(20*1024)])
-# r = read(0, 0, 10)
-# print "read:", len(r), r
-
-# inject(0, 'build/telosb/tos_image.xml')
-ping(0)
-
-# print formatDescription(getMetadata(0), getIdent(0))
-# print getMetadata(0)
-# print getIdent(0)
-
-# print verifyDescription(getMetadata(0), getIdent(0))
-
-# print formatShortIdent(ident())
-
-# def encode(val, dim):
-#   output = []
-#   for i in range(dim):
-#       output.append(val & 0xFF)
-#       val = val >> 8
-#   return output
