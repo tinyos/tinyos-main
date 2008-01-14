@@ -29,7 +29,7 @@ from datetime import datetime
 import os.path 
 
 # Path to the python script that builds Deluge image from XML
-PATH_PY_BUILD_IMAGE  = './tos-build-deluge-image'
+PATH_PY_BUILD_IMAGE  = os.path.join(os.path.dirname(sys.argv[0]), 'tos-build-deluge-image')
 
 # TinyOS serial communication parameters
 FM_AMID = 0xAB
