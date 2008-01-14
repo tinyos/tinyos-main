@@ -70,7 +70,7 @@ implementation
   BlockStorageManagerP.SubStorageMap[VOLUME_DELUGE2]     -> BlockStorageC_2;
   BlockStorageManagerP.SubStorageMap[VOLUME_DELUGE3]     -> BlockStorageC_3;
 #elif defined(PLATFORM_MICAZ)
-  components StorageMapperAt45dbC;
-  BlockStorageManagerP.At45dbVolume = At45dbStorageManagerC;
+  components At45dbStorageManagerC;
+  BlockStorageManagerP.At45dbVolume -> At45dbStorageManagerC;
 #endif
 }

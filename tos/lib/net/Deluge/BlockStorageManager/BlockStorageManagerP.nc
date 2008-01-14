@@ -181,7 +181,7 @@ implementation
 #if defined(PLATFORM_TELOSB)
     p_addr = call SubStorageMap.getPhysicalAddress[volume_id](addr);
 #elif defined(PLATFORM_MICAZ)
-    at45page_t page = call At45dbVolume.remap[img_num]((addr >> AT45_PAGE_SIZE_LOG2));
+    at45page_t page = call At45dbVolume.remap[volume_id]((addr >> AT45_PAGE_SIZE_LOG2));
     at45pageoffset_t offset = addr & ((1 << AT45_PAGE_SIZE_LOG2) - 1);
     p_addr = page;
     p_addr = p_addr << AT45_PAGE_SIZE_LOG2;
