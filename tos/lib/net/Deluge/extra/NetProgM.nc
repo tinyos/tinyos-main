@@ -25,8 +25,8 @@
 
 /**
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
 #include "AM.h"
@@ -37,10 +37,8 @@ module NetProgM {
     interface Init;
   }
   uses {
-    interface DelugeStorage[uint8_t img_num];
     interface InternalFlash as IFlash;
     interface Crc;
-    interface DelugeMetadata;
     interface Leds;
     interface CC2420Config;
     async command void setAmAddress(am_addr_t a);
@@ -49,82 +47,52 @@ module NetProgM {
 
 implementation {
 
-  uint16_t computeTosInfoCrc(NetProg_TOSInfo* tosInfo)
-  {
-    return call Crc.crc16(tosInfo, sizeof(NetProg_TOSInfo)-2);
-  }
-
-  void writeTOSinfo()
-  {
-    NetProg_TOSInfo tosInfo;
-    uint16_t crc;
-    call IFlash.read((uint8_t*)IFLASH_TOS_INFO_ADDR, &tosInfo, sizeof(tosInfo));
-    tosInfo.addr = TOS_NODE_ID;
-    tosInfo.groupId = TOS_AM_GROUP;
-    crc = computeTosInfoCrc(&tosInfo);
-    // don't write if data is already correct
-    if (tosInfo.crc == crc)
-      return;
-    tosInfo.crc = crc;
-    call IFlash.write((uint8_t*)IFLASH_TOS_INFO_ADDR, &tosInfo, sizeof(tosInfo));
-  }
-
   command error_t Init.init()
   {
+    BootArgs bootArgs;
+    call IFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
 
-    NetProg_TOSInfo tosInfo;
-
-    call IFlash.read((uint8_t*)IFLASH_TOS_INFO_ADDR, &tosInfo, sizeof(tosInfo));
-
-    if (tosInfo.crc == computeTosInfoCrc(&tosInfo)) {
-      // TOS_AM_GROUP is not a variable in T2
-      //   TOS_AM_GROUP = tosInfo.groupId;
-      
-      // Updates local node ID
-      atomic {
-        TOS_NODE_ID = tosInfo.addr;
-        call setAmAddress(tosInfo.addr);
-      }
-      call CC2420Config.setShortAddr(tosInfo.addr);
-      call CC2420Config.sync();
+    // Update the local node ID
+    if (bootArgs.address != 0xFFFF) {
+      TOS_NODE_ID = bootArgs.address;
+      call setAmAddress(bootArgs.address);
     }
-    else {
-      writeTOSinfo();
-    }
+    call CC2420Config.setShortAddr(bootArgs.address);
+    call CC2420Config.sync();
     
     return SUCCESS;
   }
   
   command error_t NetProg.reboot()
   {
+    BootArgs bootArgs;
+
     atomic {
-      writeTOSinfo();
+      call IFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
+
+      if (bootArgs.address != TOS_NODE_ID) {
+	bootArgs.address = TOS_NODE_ID;
+	call IFlash.write((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
+      }
       netprog_reboot();
     }
+
     return FAIL;
   }
   
-  command error_t NetProg.programImgAndReboot(uint8_t img_num)
+  command error_t NetProg.programImageAndReboot(uint32_t imgAddr)
   {
-    tosboot_args_t args;
-    DelugeNodeDesc nodeDesc;
-    DelugeImgDesc *imgDesc;
-    
+    BootArgs bootArgs;
+
     atomic {
-      writeTOSinfo();
+      call IFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
       
-      args.imageAddr = call DelugeStorage.getPhysicalAddress[img_num](0);
-      args.gestureCount = 0xff;
-      args.noReprogram = FALSE;
-      call IFlash.write((uint8_t*)TOSBOOT_ARGS_ADDR, &args, sizeof(args));
-      
-      // Write info about what img to disseminate after reboot
-      imgDesc = call DelugeMetadata.getImgDesc(img_num);
-      nodeDesc.uid = imgDesc->uid;
-      nodeDesc.imgNum = img_num;
-      nodeDesc.vNum = imgDesc->vNum;
-      call IFlash.write((uint8_t*)IFLASH_NODE_DESC_ADDR, &nodeDesc, sizeof(nodeDesc));
-      
+      bootArgs.imageAddr = imgAddr;
+      bootArgs.gestureCount = 0xff;
+      bootArgs.noReprogram = FALSE;
+
+      call IFlash.write((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
+
       // reboot
       netprog_reboot();
     }
@@ -134,7 +102,5 @@ implementation {
   }
 
   event void CC2420Config.syncDone(error_t error) {}
-
-  default command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0xFFFFFFFF; }
 
 }

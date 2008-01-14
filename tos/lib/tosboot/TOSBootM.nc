@@ -70,55 +70,66 @@ implementation {
 
   in_flash_addr_t extFlashReadAddr() {
     in_flash_addr_t result = 0;
-    uint8_t  i;
-    for ( i = 0; i < 4; i++ )
+    int8_t  i;
+    for ( i = 3; i >= 0; i-- )
       result |= ((in_flash_addr_t)call ExtFlash.readByte() & 0xff) << (i*8);    
     return result;
   }
 
-  bool verifyImage(ex_flash_addr_t startAddr) {
+  bool verifyBlock(ex_flash_addr_t crcAddr, ex_flash_addr_t startAddr, uint16_t len)
+  {
+    uint16_t crcTarget, crcTmp;
 
-    uint16_t crcTarget = 0, crcTmp = 0;
-    uint16_t addr, len;
-    pgnum_t  numPgs;
+    // read crc
+    call ExtFlash.startRead(crcAddr);
+    crcTarget = (uint16_t)(call ExtFlash.readByte() & 0xff) << 8;
+    crcTarget |= (uint16_t)(call ExtFlash.readByte() & 0xff);
+    call ExtFlash.stopRead();
+
+    // compute crc
+    call ExtFlash.startRead(startAddr);
+    for ( crcTmp = 0; len; len-- )
+      crcTmp = crcByte(crcTmp, call ExtFlash.readByte());
+    call ExtFlash.stopRead();
+    
+    return crcTarget == crcTmp;
+  }
+
+  bool verifyImage(ex_flash_addr_t startAddr) {
+    uint16_t addr;
+    uint8_t  numPgs;
     uint8_t  i;
 
+    if (!verifyBlock(startAddr + offsetof(DelugeIdent,crc), 
+		     startAddr, offsetof(DelugeIdent,crc)))
+      return FALSE;
+
     // read size of image
-    call ExtFlash.startRead(startAddr + offsetof(DelugeImgDesc,numPgs));
+    call ExtFlash.startRead(startAddr + offsetof(DelugeIdent,numPgs));
     numPgs = call ExtFlash.readByte();
     call ExtFlash.stopRead();
 
     if (numPgs == 0 || numPgs == 0xff)
       return FALSE;
 
-    startAddr += DELUGE_METADATA_SIZE;
-
+    startAddr += DELUGE_IDENT_SIZE;
     addr = DELUGE_CRC_BLOCK_SIZE;
-    len = DELUGE_BYTES_PER_PAGE-DELUGE_CRC_BLOCK_SIZE;
 
-    for ( i = 0; i < numPgs && crcTarget == crcTmp; i++ ) {
-
-      // read crc
-      call ExtFlash.startRead(startAddr + i*sizeof(uint16_t));
-      crcTarget = (uint16_t)(call ExtFlash.readByte() & 0xff);
-      crcTarget |= (uint16_t)(call ExtFlash.readByte() & 0xff) << 8;
-      call ExtFlash.stopRead();
-
-      // compute crc
-      call ExtFlash.startRead(startAddr + addr);
-      for ( crcTmp = 0; len; len-- )
-	crcTmp = crcByte(crcTmp, call ExtFlash.readByte());
-      call ExtFlash.stopRead();
-
-      addr = (uint16_t)(i+1)*DELUGE_BYTES_PER_PAGE;
-      len = DELUGE_BYTES_PER_PAGE;
+    for ( i = 0; i < numPgs; i++ ) {
+      if (!verifyBlock(startAddr + i*sizeof(uint16_t), 
+		       startAddr + addr, DELUGE_BYTES_PER_PAGE)) {
+	if (i == 0)
+	  while (1)
+	    call Leds.flash(1);
+	return FALSE;
+      }
+      addr += DELUGE_BYTES_PER_PAGE;
     }
 
-    return (i == numPgs) && (crcTarget == crcTmp);
+    return TRUE;
   }
 
   error_t programImage(ex_flash_addr_t startAddr) {
-
     uint8_t  buf[TOSBOOT_INT_PAGE_SIZE];
     uint16_t pageAddr, newPageAddr;
     in_flash_addr_t intAddr;
@@ -128,7 +139,7 @@ implementation {
     if (!verifyImage(startAddr))
       return R_INVALID_IMAGE_ERROR;
 
-    curAddr = startAddr + DELUGE_METADATA_SIZE + DELUGE_CRC_BLOCK_SIZE + DELUGE_IDENT_SIZE;
+    curAddr = startAddr + DELUGE_IDENT_SIZE + DELUGE_CRC_BLOCK_SIZE;
 
     call ExtFlash.startRead(curAddr);
 
@@ -147,7 +158,7 @@ implementation {
       return R_INVALID_IMAGE_ERROR;
     }
     
-    call ExtFlash.stopRead();   // MIKE_LIANG
+    call ExtFlash.stopRead();
     
     while ( secLength ) {
       
@@ -159,7 +170,7 @@ implementation {
 
 	// check if secLength is all ones
 	if ( secLength == 0xffffffff ) {
-	  call ExtFlash.stopRead();   // MIKE_LIANG
+	  call ExtFlash.stopRead();
 	  return FAIL;
 	}
 
@@ -179,7 +190,6 @@ implementation {
 
       call Leds.set(pageAddr);
 
-
       // write out page
       if (call ProgFlash.write(pageAddr*TOSBOOT_INT_PAGE_SIZE, buf,
 			       TOSBOOT_INT_PAGE_SIZE) == FAIL) {
@@ -198,7 +208,7 @@ implementation {
 
   void startupSequence() {
 
-    tosboot_args_t args;
+    BootArgs args;
 
     // check voltage and make sure flash can be programmed
     //   if not, just run the app, can't check for gestures

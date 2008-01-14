@@ -20,142 +20,168 @@
 */
 
 /**
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
 module DelugeP
 {
   uses {
+    interface Boot;
     interface Leds;
-    interface Notify<uint8_t> as StorageReadyNotify;
-    interface DisseminationUpdate<DelugeDissemination>;
-    interface DisseminationValue<DelugeDissemination>;
-    interface StdControl as StdControlDissemination;
-    interface DelugeMetadata;
+    interface DisseminationValue<DelugeCmd>;
+    interface StdControl as DisseminationStdControl;
     interface ObjectTransfer;
-    interface NetProg;
-    interface InternalFlash as IFlash;
     interface SplitControl as RadioSplitControl;
-    
-#ifdef DELUGE_BASESTATION
-    interface Notify<uint8_t> as DissNotify;
-    interface Notify<uint8_t> as ReprogNotify;
-#endif
+    interface NetProg;
+    interface StorageMap[uint8_t volumeId];
+    interface DelugeMetadata;
+    interface DelugeVolumeManager;
+    interface Resource;
+  }
+  provides {
+    event void storageReady();
+    command void stop();
   }
 }
 
 implementation
 {
-  uint32_t recv_uid = 0xffffffff;
-  uint16_t recv_size = 0xffff;
-  uint8_t recv_imgNum = 0xff;
-  
-  /**
-   * Starts the radio
-   */
-  event void StorageReadyNotify.notify(uint8_t val)
+  enum {
+    S_IDLE,
+    S_PUB,
+    S_RECV
+  };
+
+  DelugeCmd lastCmd;
+  uint8_t state = S_IDLE;
+
+  event void storageReady()
   {
     call RadioSplitControl.start();
   }
-  
-#ifdef DELUGE_BASESTATION
-  /**
-   * Starts disseminating image information
-   */
-  event void DissNotify.notify(uint8_t new_img_num)
+
+  event void Boot.booted()
   {
-    DelugeImgDesc* imgDesc = call DelugeMetadata.getImgDesc(new_img_num);
-    if (imgDesc->uid != DELUGE_INVALID_UID) {
-      DelugeDissemination delugeDis;
-      
-      call ObjectTransfer.stop();
-      
-      delugeDis.uid = imgDesc->uid;
-      delugeDis.vNum = imgDesc->vNum;
-      delugeDis.imgNum = new_img_num;
-      delugeDis.size = imgDesc->size;
-      delugeDis.msg_type = DISSMSG_DISS;
-      
-      call DisseminationUpdate.change(&delugeDis);   // Disseminates command
-      call ObjectTransfer.publish(delugeDis.uid,
-                                  delugeDis.size,
-                                  delugeDis.imgNum);   // Prepares to publish image data
+    lastCmd.uidhash = DELUGE_INVALID_UID;
+  }
+
+  event void RadioSplitControl.startDone(error_t error)
+  {
+    if (error == SUCCESS) {
+      call DisseminationStdControl.start();
     }
   }
-  
-  event void ReprogNotify.notify(uint8_t new_img_num)
-  {
-    DelugeDissemination delugeDis;
-    
-    delugeDis.uid = 0;
-    delugeDis.vNum = 0;
-    delugeDis.imgNum = new_img_num;
-    delugeDis.size = 0;
-    delugeDis.msg_type = DISSMSG_REPROG;
-    
-    call DisseminationUpdate.change(&delugeDis);   // Disseminates command
-  }
-#endif
 
-  /**
-   * Receives a disseminated message. If the message contains information about a
-   * newer image, then we should grab this image from the network
-   */
+  command void stop()
+  {
+    call Resource.release();
+    if (state == S_RECV) {
+//      printf("erase %d\n", lastCmd.imgNum);
+      call DelugeVolumeManager.erase(lastCmd.imgNum);
+    }
+    call ObjectTransfer.stop();
+    state = S_IDLE;
+  }
+
+  task void taskRequest()
+  {
+    signal Resource.granted();
+  }
+  
+  void request()
+  {
+    if (call Resource.isOwner()) {
+      post taskRequest();
+    } else {
+      call Resource.request();
+    }
+  }
+
   event void DisseminationValue.changed()
   {
-    const DelugeDissemination *delugeDis = call DisseminationValue.get();
-    DelugeImgDesc *imgDesc = call DelugeMetadata.getImgDesc(delugeDis->imgNum);
-        
-    switch (delugeDis->msg_type) {
-      case DISSMSG_DISS:
-        if (imgDesc->uid == delugeDis->uid && imgDesc->uid != DELUGE_INVALID_UID) {
-          if (imgDesc->vNum < delugeDis->vNum) {
-            recv_uid = delugeDis->uid;
-            recv_size = delugeDis->size;
-            recv_imgNum = delugeDis->imgNum;
-            call ObjectTransfer.receive(delugeDis->uid, delugeDis->size, delugeDis->imgNum);
-          }
-        } else {
-          recv_uid = delugeDis->uid;
-          recv_size = delugeDis->size;
-          recv_imgNum = delugeDis->imgNum;
-          call ObjectTransfer.receive(delugeDis->uid, delugeDis->size, delugeDis->imgNum);
-        }
-        
-        break;
-      case DISSMSG_REPROG:
-        if (imgDesc->uid != DELUGE_INVALID_UID) {
-          DelugeNodeDesc nodeDesc;
-          call IFlash.read((uint8_t*)IFLASH_NODE_DESC_ADDR,
-                           &nodeDesc,
-                           sizeof(DelugeNodeDesc));   // Reads which image was just reprogrammed
-          if (nodeDesc.uid != imgDesc->uid || nodeDesc.vNum != imgDesc->vNum) {
-            call NetProg.programImgAndReboot(delugeDis->imgNum);
-          }
-        }
-        
-        break;
+    const DelugeCmd *cmd = call DisseminationValue.get();
+//    printf("cmd: %d uidhash: 0x%lx imgNum: %d size: %u\n", cmd->type, cmd->uidhash, cmd->imgNum, cmd->size);
+    switch (cmd->type) {
+    case DELUGE_CMD_STOP:
+      call stop();
+      break;
+    case DELUGE_CMD_ONLY_DISSEMINATE:
+    case DELUGE_CMD_DISSEMINATE_AND_REPROGRAM:
+      if (state == S_RECV) {
+	if (cmd->uidhash == lastCmd.uidhash) {
+	  if (cmd->imgNum == lastCmd.imgNum) {
+	    // Same uidhash, same imgNum, only cmd should be
+	    // different.  That will be properly updated by the last
+	    // statement from this function.
+	    break;
+	  }
+	}
+	call stop();
+      }
+      if (cmd->uidhash != IDENT_UIDHASH) {
+	call DelugeMetadata.read(cmd->imgNum);
+      } else {
+	state = S_PUB;
+	request();
+      }
+      break;
     }
+    lastCmd = *cmd;
+//    printf("lastCmd: %d uidhash: 0x%lx\n", lastCmd.type, lastCmd.uidhash);
   }
   
   event void ObjectTransfer.receiveDone(error_t error)
   {
     call Leds.set(LEDS_LED1 | LEDS_LED2);
-    call ObjectTransfer.publish(recv_uid, recv_size, recv_imgNum);
-  }
-
-  /**
-   * Prepares to publish the image that was just reprogrammed
-   */
-  event void RadioSplitControl.startDone(error_t error)
-  {
+    state = S_IDLE;
+    
     if (error == SUCCESS) {
-      call StdControlDissemination.start();
+      switch (lastCmd.type) {
+      case DELUGE_CMD_ONLY_DISSEMINATE:
+	state = S_PUB;
+	request();
+	break;
+      case DELUGE_CMD_DISSEMINATE_AND_REPROGRAM:
+	call NetProg.programImageAndReboot(call StorageMap.getPhysicalAddress[lastCmd.imgNum](0));
+	break;
+      }
+    } else {
+      call DelugeVolumeManager.erase(lastCmd.imgNum);
     }
   }
-  
+
+  event void DelugeMetadata.readDone(uint8_t imgNum, DelugeIdent* ident, error_t error)
+  {
+//    printf("readDone 0x%lx imgNum: %d size: %u\n", lastCmd.uidhash, lastCmd.imgNum, lastCmd.size);
+    if (ident->uidhash == lastCmd.uidhash) {
+      if (lastCmd.type == DELUGE_CMD_DISSEMINATE_AND_REPROGRAM) {
+	call NetProg.programImageAndReboot(call StorageMap.getPhysicalAddress[imgNum](0));
+      } else {
+	// We already have the image so we'll go ahead and start publishing.
+	state = S_PUB;
+	request();
+      }
+    } else {
+      state = S_RECV;
+      request();
+    }
+  }
+
+  event void Resource.granted()
+  {
+    switch (state) {
+    case S_PUB:
+//      printf("start pub 0x%lx imgNum: %d size: %u\n", lastCmd.uidhash, lastCmd.imgNum, lastCmd.size);
+      call ObjectTransfer.publish(lastCmd.uidhash, lastCmd.size, lastCmd.imgNum);
+      break;
+    case S_RECV:
+      call ObjectTransfer.receive(lastCmd.uidhash, lastCmd.size, lastCmd.imgNum);
+      break;
+    }
+  }
+
+  event void DelugeVolumeManager.eraseDone(uint8_t imgNum) {}
   event void RadioSplitControl.stopDone(error_t error) {}
-  
   default async void command Leds.set(uint8_t val) {}
 }

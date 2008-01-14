@@ -20,38 +20,14 @@
 */
 
 /**
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
-#ifndef FLASHVOLUMEMANAGER_H
-#define FLASHVOLUMEMANAGER_H
+#ifndef BLOCK_STORAGE_MANAGER_H
+#define BLOCK_STORAGE_MANAGER_H
 
-#define SERIALMSG_ERASE     0
-#define SERIALMSG_WRITE     1
-#define SERIALMSG_READ      2
-#define SERIALMSG_CRC       3
-#define SERIALMSG_ADDR      4
-#define SERIALMSG_REPROG    5
-#define SERIALMSG_DISS      6
-#define SERIALMSG_REPROG_BS 7
-#define SERIALMSG_SYNC      8
-#define SERIALMSG_IDENT     9
-
-typedef nx_struct SerialReqPacket {
-  nx_uint8_t msg_type;
-  nx_uint8_t img_num;
-  nx_uint16_t offset;
-  nx_uint16_t len;
-  nx_uint8_t data[0];
-} SerialReqPacket;
-
-#define SERIALMSG_SUCCESS 0
-#define SERIALMSG_FAIL    1
-
-typedef nx_struct SerialReplyPacket {
-  nx_uint8_t error;
-  nx_uint8_t data[0];
-} SerialReplyPacket;
+#define UQ_BSTORAGEM_CLIENT "BlockStorageManager.client"
+#define UQ_BSTORAGEL_CLIENT "BlockStorageLock.client"
 
 #endif

@@ -27,30 +27,49 @@
 #ifndef __DELUGE_H__
 #define __DELUGE_H__
 
-#include "DelugeMetadata.h"
-
-#define DISSMSG_DISS   0
-#define DISSMSG_REPROG 1
+typedef nx_struct DelugeIdent {
+  nx_uint32_t  uidhash;        // unique id of the image
+  nx_uint32_t  size;           // size of the whole image (ident + CRCs + binary)
+  nx_uint8_t   numPgs;         // number of pages of complete image
+  nx_uint8_t   reserved;
+  nx_uint16_t  crc;            // crc over the above 4 fields
+  nx_uint8_t   appname[16];
+  nx_uint8_t   username[16];
+  nx_uint8_t   hostname[16];
+  nx_uint8_t   platform[16];
+  nx_uint32_t  timestamp;
+  nx_uint32_t  userhash;
+} DelugeIdent;
 
 enum {
   DELUGE_INVALID_UID = 0xffffffff,
   DELUGE_NUM_VOLUMES = 4, 
 };
 
-typedef nx_struct DelugeDissemination {
-  nx_uint8_t msg_type;
-  nx_uint32_t uid;      // unique id of image
-  nx_uint16_t vNum;     // version num of image
+enum {
+  DELUGE_CMD_STOP = 1,
+  DELUGE_CMD_LOCAL_STOP = 2,
+  DELUGE_CMD_ONLY_DISSEMINATE = 3,
+  DELUGE_CMD_DISSEMINATE_AND_REPROGRAM = 4,
+  DELUGE_CMD_REPROGRAM = 5, // Reprogram the local mote
+  DELUGE_CMD_REBOOT = 6,    // Reboot the local mode
+};
+
+#define UQ_DELUGE_METADATA "DelugeMetadata.client"
+#define UQ_DELUGE_VOLUME_MANAGER "DelugeVolumeManager.client"
+
+typedef nx_struct DelugeCmd {
+  nx_uint8_t type;
+  nx_uint32_t uidhash;  // unique id of image
   nx_uint8_t  imgNum;   // image number
   nx_uint16_t size;     // size of the image
-} DelugeDissemination;
+} DelugeCmd;
 
-typedef struct DelugeNodeDesc {
-  imgvnum_t vNum;
-  uint32_t  uid;
-  imgnum_t  imgNum;
-  uint8_t   reserved;
-  uint16_t  crc;
-} DelugeNodeDesc;
+typedef struct BootArgs {
+  uint16_t  address;
+  uint32_t imageAddr;
+  uint8_t  gestureCount;
+  bool     noReprogram;
+} BootArgs;
 
 #endif

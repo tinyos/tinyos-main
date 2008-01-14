@@ -148,7 +148,6 @@ implementation
   {
     return (storage_addr_t)pgNum * (storage_addr_t)DELUGET2_BYTES_PER_PAGE
             + (uint16_t)pktNum * (uint16_t)DELUGET2_PKT_PAYLOAD_SIZE;
-            //+ DELUGE_METADATA_SIZE;
   }
   
   void setupDataMsg()
@@ -175,7 +174,6 @@ implementation
     
     if (call BitVecUtils.indexOf(&nextPkt, pDataMsg->pktNum, pktsToSend, DELUGET2_PKTS_PER_PAGE) != SUCCESS) {
       // no more packets to send
-      //dbg(DBG_USR1, "DELUGE: SEND_DONE\n");
       changeState(S_IDLE);
     } else {
       pDataMsg->pktNum = nextPkt;
@@ -321,9 +319,6 @@ implementation
     page_num_t pgNum;
     int i;
     
-    //dbg(DBG_USR1, "DELUGE: Received REQ_MSG(dest=%d,vNum=%d,imgNum=%d,pgNum=%d,pkts=%x)\n",
-    //    rxReqMsg->dest, rxReqMsg->vNum, rxReqMsg->imgNum, rxReqMsg->pgNum, rxReqMsg->requestedPkts[0]);
-    
     if (state == S_DISABLED) {
       return msg;
     }
@@ -386,9 +381,6 @@ if (error == SUCCESS) {
       return msg;
     }
     
-    //dbg(DBG_USR1, "DELUGE: Received DATA_MSG(vNum=%d,imgNum=%d,pgNum=%d,pktNum=%d)\n",
-    //    rxDataMsg->vNum, rxDataMsg->imgNum, rxDataMsg->pgNum, rxDataMsg->pktNum);
-    
     // check if need to suppress req or data messages
     suppressMsgs(rxDataMsg->objid, rxDataMsg->pgNum);
     
@@ -401,13 +393,9 @@ if (error == SUCCESS) {
 // For collecting stats
 if (rxDataMsg->pktNum == 0) {
   //call StatsCollector.startRecvPageTransTime(0);
-  dbg("Deluge", "%.3f 115 116 116 117 115 1 %d\n", ((float)((sim_time() * 1000) / sim_ticks_per_sec())) / 1000, CC2420_DEF_CHANNEL);
 }
 call Leds.led1Toggle();
 //call Leds.set(rxDataMsg->pktNum);
-      
-      //dbg(DBG_USR1, "DELUGE: SAVING(pgNum=%d,pktNum=%d)\n", 
-      //    rxDataMsg->pgNum, rxDataMsg->pktNum);
       
       // copy data
       memcpy(&rxQueue[head^size], rxDataMsg, sizeof(DelugeDataMsg));
@@ -475,8 +463,8 @@ call Leds.led1Toggle();
     if (call BitVecUtils.indexOf(&tmp, 0, pktsToReceive, DELUGET2_PKTS_PER_PAGE) != SUCCESS) {
 // For collecting stats
 //call StatsCollector.endRecvPageTransTime(publisher_addr);
-dbg("Deluge", "%.3f 115 116 116 117 115 2 %d\n", ((float)((sim_time() * 1000) / sim_ticks_per_sec())) / 1000, publisher_addr);
 
+call Leds.led1Off();
       signal DelugePageTransfer.receivedPage(workingObjid, workingPgNum);
       changeState(S_IDLE);
       size = 0;
@@ -496,4 +484,5 @@ dbg("Deluge", "%.3f 115 116 116 117 115 2 %d\n", ((float)((sim_time() * 1000) / 
   default command error_t BlockRead.read[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
   default command error_t BlockWrite.write[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
   default async command void Leds.led1Toggle() {}
+  default async command void Leds.led1Off() {}
 }

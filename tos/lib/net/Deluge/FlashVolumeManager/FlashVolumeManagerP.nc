@@ -24,33 +24,46 @@
  * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-#include "FlashVolumeManager.h"
-
 generic module FlashVolumeManagerP()
 {
-#ifdef DELUGE
-  provides {
-    interface Notify<uint8_t> as DissNotify;
-    interface Notify<uint8_t> as ReprogNotify;
-  }
-#endif
   uses {
-    interface BlockRead[uint8_t img_num];
-    interface BlockWrite[uint8_t img_num];
-#ifdef DELUGE
-    interface DelugeStorage[uint8_t img_num];
-    interface NetProg;
-    interface Timer<TMilli> as Timer;
-#endif
+    interface BlockRead[uint8_t imgNum];
+    interface BlockWrite[uint8_t imgNum];
+    interface Resource[uint8_t imgNum];
+    interface ArbiterInfo;
     interface AMSend as SerialAMSender;
     interface Receive as SerialAMReceiver;
+    interface Timer<TMilli> as TimeoutTimer;
     interface Leds;
   }
 }
 
 implementation
 {
-  // States for keeping track of split-phase events
+  typedef nx_struct SerialReqPacket {
+    nx_uint8_t cmd;
+    nx_uint8_t imgNum;
+    nx_uint16_t offset;
+    nx_uint16_t len;
+    nx_uint8_t data[0];
+  } SerialReqPacket;
+  
+  typedef nx_struct SerialReplyPacket {
+    nx_uint8_t error;
+    nx_uint8_t data[0];
+  } SerialReplyPacket;
+
+
+  enum {
+    CMD_ERASE = 0,
+    CMD_WRITE = 1,
+    CMD_READ  = 2,
+    CMD_CRC   = 3,
+    CMD_ADDR  = 4,
+    CMD_SYNC  = 5,
+    CMD_IDENT = 6
+  };
+
   enum {
     S_IDLE,
     S_ERASE,
@@ -62,45 +75,47 @@ implementation
   };
   
   message_t serialMsg;
-  uint8_t buffer[TOSH_DATA_LENGTH];   // Temporary buffer for "write" operation
-  uint8_t img_num_reboot = 0xFF;       // Image number to reprogram
+  uint8_t buffer[TOSH_DATA_LENGTH];    // Temporary buffer for "write" operation
+  uint8_t currentImgNum = 0xFF;      // Image number to reprogram
   uint8_t state = S_IDLE;              // Manager state for multiplexing "done" events
+
+  nx_struct ShortIdent {
+    nx_uint8_t name[16];
+    //nx_uint8_t username[16];
+    //nx_uint8_t hostname[16];
+    nx_uint32_t timestamp;
+    nx_uint32_t uidhash;
+    nx_uint16_t nodeid;
+  };
   
-  /**
-   * Replies to the PC request with operation results
-   */
   void sendReply(error_t error, storage_len_t len)
   {
-    SerialReplyPacket *srpkt = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
-    if (srpkt == NULL) {
+    SerialReplyPacket *reply = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
+    if (reply == NULL) {
       return;
     }
-    if (error == SUCCESS) {
-      srpkt->error = SERIALMSG_SUCCESS;
-    } else {
-      srpkt->error = SERIALMSG_FAIL;
-    }
+    reply->error = error;
     call SerialAMSender.send(AM_BROADCAST_ADDR, &serialMsg, len);
   }
   
-  event void BlockRead.readDone[uint8_t img_num](storage_addr_t addr, 
+  event void BlockRead.readDone[uint8_t imgNum](storage_addr_t addr, 
 				void* buf, 
 				storage_len_t len, 
 				error_t error)
   {
     if (state == S_READ) {
-      SerialReplyPacket *serialMsg_payload = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
-      if (serialMsg_payload == NULL) {
+      SerialReplyPacket *reply = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
+      if (reply == NULL) {
 	return;
       }
-      if (buf == serialMsg_payload->data) {
+      if (buf == reply->data) {
         state = S_IDLE;
         sendReply(error, len + sizeof(SerialReplyPacket));
       }
     }
   }
   
-  event void BlockRead.computeCrcDone[uint8_t img_num](storage_addr_t addr, 
+  event void BlockRead.computeCrcDone[uint8_t imgNum](storage_addr_t addr, 
 				      storage_len_t len, 
 				      uint16_t crc, 
 				      error_t error)
@@ -120,7 +135,7 @@ implementation
     }
   }
   
-  event void BlockWrite.writeDone[uint8_t img_num](storage_addr_t addr, 
+  event void BlockWrite.writeDone[uint8_t imgNum](storage_addr_t addr, 
 				  void* buf, 
 				  storage_len_t len, 
 				  error_t error)
@@ -131,14 +146,14 @@ implementation
     }
   }
   
-  event void BlockWrite.eraseDone[uint8_t img_num](error_t error)
+  event void BlockWrite.eraseDone[uint8_t imgNum](error_t error)
   {
     if (state == S_ERASE) {
-      call BlockWrite.sync[img_num]();
+      call BlockWrite.sync[imgNum]();
     }
   }
   
-  event void BlockWrite.syncDone[uint8_t img_num](error_t error)
+  event void BlockWrite.syncDone[uint8_t imgNum](error_t error)
   {
     if (state == S_ERASE || state == S_SYNC) {
       state = S_IDLE;
@@ -146,91 +161,93 @@ implementation
     }
   }
   
-  event void SerialAMSender.sendDone(message_t* msg, error_t error) {}
-  
+ 
   event message_t* SerialAMReceiver.receive(message_t* msg, void* payload, uint8_t len)
   {
     error_t error = SUCCESS;
-    SerialReqPacket *srpkt = (SerialReqPacket *)payload;
-    SerialReplyPacket *serialMsg_payload =
-      (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
-    uint8_t img_num = 0xFF;
+    SerialReqPacket *request = (SerialReqPacket *)payload;
+    SerialReplyPacket *reply = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
+    nx_struct ShortIdent *shortIdent;
+    uint8_t imgNum = 0xFF;
 
-    if (serialMsg_payload == NULL) {
+    if (reply == NULL) {
       return msg;
     }
+
+    if (state != S_IDLE) {
+      return msg;
+    }
+
     // Converts the image number that the user wants to the real image number
-    switch (srpkt->img_num) {
+    switch (request->imgNum) {
       case 0:
-        img_num = VOLUME_GOLDENIMAGE;
+        imgNum = VOLUME_GOLDENIMAGE;
         break;
       case 1:
-        img_num = VOLUME_DELUGE1;
+        imgNum = VOLUME_DELUGE1;
         break;
       case 2:
-        img_num = VOLUME_DELUGE2;
+        imgNum = VOLUME_DELUGE2;
         break;
       case 3:
-        img_num = VOLUME_DELUGE3;
+        imgNum = VOLUME_DELUGE3;
         break;
     }
     
-    if (img_num != 0xFF) {
-      switch (srpkt->msg_type) {
-        case SERIALMSG_ERASE:    // === Erases a volume ===
-          state = S_ERASE;
-          error = call BlockWrite.erase[img_num]();
-          break;
-        case SERIALMSG_WRITE:    // === Writes to a volume ===
-          state = S_WRITE;
-          memcpy(buffer, srpkt->data, srpkt->len);
-          error = call BlockWrite.write[img_num](srpkt->offset,
-                                                        buffer,
-                                                        srpkt->len);
-          break;
-        case SERIALMSG_READ:     // === Reads a portion of a volume ===
-          state = S_READ;
-          error = call BlockRead.read[img_num](srpkt->offset,
-                                                      serialMsg_payload->data,
-                                                      srpkt->len);
-          break;
-        case SERIALMSG_CRC:      // === Computes CRC over a portion of a volume ===
-          state = S_CRC;
-          error = call BlockRead.computeCrc[img_num](srpkt->offset,
-                                                            srpkt->len, 0);
-          break;
-        case SERIALMSG_SYNC:     // === Sync the flash ===
-          state = S_SYNC;
-          error = call BlockWrite.sync[img_num]();
-	  break;
-  #ifdef DELUGE
-        case SERIALMSG_ADDR:     // === Gets the physical starting address of a volume ===
-          *(nx_uint32_t*)(&serialMsg_payload->data) =
-                                  (uint32_t)call DelugeStorage.getPhysicalAddress[img_num](0);
-          sendReply(SUCCESS, sizeof(SerialReplyPacket) + 4);
-          break;
-        case SERIALMSG_REPROG_BS:   // === Reprograms only the base station ===
-          state = S_REPROG;
-          sendReply(SUCCESS, sizeof(SerialReplyPacket));
-          img_num_reboot = img_num;
-          call Timer.startOneShot(1024);
-          break;
-        case SERIALMSG_DISS:     // === Starts disseminating a volume ===
-          signal DissNotify.notify(img_num);   // Notifies Deluge to start disseminate
-          sendReply(SUCCESS, sizeof(SerialReplyPacket));
-          break;
-        case SERIALMSG_REPROG:   // === Reprograms the network (except the base station) ===
-          signal ReprogNotify.notify(img_num);
-          sendReply(SUCCESS, sizeof(SerialReplyPacket));
-          break;
-        case SERIALMSG_IDENT:
-	  // This is not send using nx_uint32 in order to maintain
-	  // consistency with data from the Deluge image.
-          *(uint32_t*)(&serialMsg_payload->data) = IDENT_UID_HASH;
-	  sendReply(SUCCESS, sizeof(SerialReplyPacket) + 4);
-	  break;
-  #endif
+    if (imgNum != 0xFF) {
+      error = SUCCESS;
+      // We ask for a reservation only for erase and write.
+      switch (request->cmd) {
+	case CMD_ERASE:
+	case CMD_WRITE:
+	  if (!call Resource.isOwner[imgNum]()) {
+	    error = call Resource.immediateRequest[imgNum]();
+	  }
       }
+      if (error == SUCCESS) {
+	call Leds.led1On();
+	call TimeoutTimer.startOneShot(2*1024);
+	currentImgNum = imgNum;
+	switch (request->cmd) {
+        case CMD_ERASE:    // === Erases a volume ===
+          state = S_ERASE;
+          error = call BlockWrite.erase[imgNum]();
+          break;
+        case CMD_WRITE:    // === Writes to a volume ===
+          state = S_WRITE;
+          memcpy(buffer, request->data, request->len);
+          error = call BlockWrite.write[imgNum](request->offset,
+						 buffer,
+						 request->len);
+          break;
+        case CMD_READ:     // === Reads a portion of a volume ===
+          state = S_READ;
+          error = call BlockRead.read[imgNum](request->offset,
+					       reply->data,
+					       request->len);
+          break;
+        case CMD_CRC:      // === Computes CRC over a portion of a volume ===
+          state = S_CRC;
+          error = call BlockRead.computeCrc[imgNum](request->offset,
+						     request->len, 0);
+          break;
+        case CMD_SYNC:     // === Sync the flash ===
+          state = S_SYNC;
+          error = call BlockWrite.sync[imgNum]();
+	  break;
+        case CMD_IDENT:
+	  shortIdent = (nx_struct ShortIdent*)&reply->data;
+	  memset(shortIdent, 0, sizeof(nx_struct ShortIdent));
+	  memcpy(shortIdent->name, IDENT_APPNAME, sizeof(IDENT_APPNAME));
+	  //memcpy(shortIdent->username, IDENT_USER_ID, sizeof(IDENT_USER_ID));
+	  //memcpy(shortIdent->hostname, IDENT_HOSTNAME, sizeof(IDENT_HOSTNAME));
+          shortIdent->timestamp = IDENT_TIMESTAMP;
+          shortIdent->uidhash  = IDENT_UIDHASH;
+          shortIdent->nodeid = TOS_NODE_ID;
+	  sendReply(SUCCESS, sizeof(SerialReplyPacket) + sizeof(nx_struct ShortIdent));
+	  break;
+	}
+      } 
     } else {
       error = FAIL;
     }
@@ -244,24 +261,28 @@ implementation
     return msg;
   }
 
-#ifdef DELUGE
-  event void Timer.fired()
+  event void TimeoutTimer.fired()
   {
-    // Reboots and reprograms
-    call NetProg.programImgAndReboot(img_num_reboot);
+    // Release the resource.
+    if (state == S_IDLE && call Resource.isOwner[currentImgNum]()) {
+      call Leds.led1Off();
+      call Resource.release[currentImgNum]();
+    }
+    if (state == S_IDLE && !call ArbiterInfo.inUse()) {
+      call Leds.led1Off();
+    }
   }
-  
-  command error_t DissNotify.enable() { return SUCCESS; }
-  command error_t DissNotify.disable() { return SUCCESS; }
-  command error_t ReprogNotify.enable() { return SUCCESS; }
-  command error_t ReprogNotify.disable() { return SUCCESS; }
-  
-  default command storage_addr_t DelugeStorage.getPhysicalAddress[uint8_t img_num](storage_addr_t addr) { return 0; }
-#endif
 
-  default command error_t BlockWrite.write[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
-  default command error_t BlockWrite.erase[uint8_t img_num]() { return FAIL; }
-  default command error_t BlockWrite.sync[uint8_t img_num]() { return FAIL; }
-  default command error_t BlockRead.read[uint8_t img_num](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
-  default command error_t BlockRead.computeCrc[uint8_t img_num](storage_addr_t addr, storage_len_t len, uint16_t crc) { return FAIL; }
+  event void SerialAMSender.sendDone(message_t* msg, error_t error) {}
+  event void Resource.granted[uint8_t imgNum]() {}
+
+  default command error_t BlockWrite.write[uint8_t imgNum](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
+  default command error_t BlockWrite.erase[uint8_t imgNum]() { return FAIL; }
+  default command error_t BlockWrite.sync[uint8_t imgNum]() { return FAIL; }
+  default command error_t BlockRead.read[uint8_t imgNum](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
+  default command error_t BlockRead.computeCrc[uint8_t imgNum](storage_addr_t addr, storage_len_t len, uint16_t crc) { return FAIL; }
+
+  default async command error_t Resource.immediateRequest[uint8_t imgNum]() { return FAIL; }
+  default async command error_t Resource.release[uint8_t imgNum]() { return FAIL; }
+  default async command bool Resource.isOwner[uint8_t imgNum]() { return FAIL; }
 }

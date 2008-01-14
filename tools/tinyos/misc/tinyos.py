@@ -1,33 +1,31 @@
-import struct, time, serial, socket
+"""A library that implements the T2 serial communication.
 
-# Copyright (c) 2007 Johns Hopkins University.
-# All rights reserved.
-#
-# Permission to use, copy, modify, and distribute this software and its
-# documentation for any purpose, without fee, and without written
-# agreement is hereby granted, provided that the above copyright
-# notice, the (updated) modification history and the author appear in
-# all copies of this source code.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
-# OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-# THE POSSIBILITY OF SUCH DAMAGE.
+This library has two parts: one that deals with sending and receiving
+packets using the serial format from T2 (TEP113) and a second one that
+tries to simplifies the work with arbitrary packets.
 
-# @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
-# @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+"""
 
-###############################################################################
-# TinyOS 2 Python Serial Module
-###############################################################################
+import sys, struct, time, serial, socket, operator
+from Queue import Queue
+
+__version__ = "$Id: tinyos.py,v 1.4 2008-01-14 04:22:01 razvanm Exp $"
+
+__all__ = ['Serial', 'GenericPacket', 'RawPacket',
+           'AckFrame', 'DataFrame', 'NoAckDataFrame',
+           'ActiveMessage']
+
+_seqno = 1
+
+def list2hex(v):
+    return " ".join(["%02x" % p for p in v])
 
 class Serial:
+    """
+    A Serial object offers a way to send and data using a HDLC-like
+    formating.
+    """
+    
     HDLC_FLAG_BYTE = 0x7e
     HDLC_CTLESC_BYTE = 0x7d
     
@@ -40,33 +38,37 @@ class Serial:
     SERIAL_PROTO_PACKET_ACK = 68
     SERIAL_PROTO_PACKET_NOACK = 69
     SERIAL_PROTO_PACKET_UNKNOWN = 255
+  
+    _debug = False   # Debug mode
     
-    __s = None        # An instance of serial.Serial object
-    __debug = False   # Debug mode
-    
-    __baud_rate = {}
-    
-    def __init__(self, port, baudrate):
-        __baud_rate = {'telos': 115200, 'telosb': 115200, 
-                       'tmote': 115200, 'micaz': 57600, 
-                       'mica2': 57600, 'mica2dot': 19200, 
-                       'eyes': 115200, 'intelmote2': 115200}
-        
-        # Converts baud rate from platform name to value, if necessary
-        try:
-            baudrate = int(baudrate)
-        except:
-            baudrate = __baud_rate.get(baudrate)
-        
-        if not baudrate == None:
-            self.__s = serial.Serial(port, baudrate, rtscts=0, timeout=0.5)
+    def __init__(self, port, baudrate, flush=True):
+       self._s = serial.Serial(port, baudrate, rtscts=0, timeout=0.5)
+       self._queue = Queue()
+       self._ts = None
+       self._seqno = 0
+
+       self._s.flushInput()
+       start = time.time();
+       if flush:
+           print "Flushing the serial port",
+           while time.time() - start < 1:
+               p = self.sniff()
+               sys.stdout.write(".")
+           if not self._debug:
+               sys.stdout.write("\n")
+
+    def _format_packet(self, payload):
+        f = NoAckDataFrame(payload)
+        if f.protocol == self.SERIAL_PROTO_ACK:
+            rpacket = AckFrame(payload)
+            return "Ack seqno: %d" % (rpacket.seqno)
         else:
-            raise ValueError, 'Invalid baud rate'
-    
-    def __format_packet(self, packet):
-        return " ".join(["%02x" % p for p in packet]) + " | " + \
-               " ".join(["%d" % p for p in packet])
-    
+            rpacket = ActiveMessage(f.data)
+            return "D: %04x S: %04x L: %02x G: %02x T: %02x | %s" % \
+                   (rpacket.destination, rpacket.source,
+                    rpacket.length, rpacket.group, rpacket.type,
+                    list2hex(rpacket.data))
+
     def crc16(self, base_crc, frame_data):
         crc = base_crc
         for b in frame_data:
@@ -79,32 +81,33 @@ class Serial:
                 crc = crc & 0xffff
         return crc
     
-    def __encode(self, val, dim):
+    def _encode(self, val, dim):
         output = []
         for i in range(dim):
             output.append(val & 0xFF)
             val = val >> 8
         return output
     
-    def __decode(self, v):
+    def _decode(self, v):
         r = long(0)
         for i in v[::-1]:
             r = (r << 8) + i
         return r
     
-    def __get_byte(self):
+    def _get_byte(self):
         try:
-            r = struct.unpack("B", self.__s.read())[0]
+            r = struct.unpack("B", self._s.read())[0]
             return r
         except struct.error:
             # Serial port read timeout
             raise socket.timeout
     
-    def __put_bytes(self, data):
+    def _put_bytes(self, data):
+        #print "DEBUG: _put_bytes:", data
         for b in data:
-            self.__s.write(struct.pack('B', b))
+            self._s.write(struct.pack('B', b))
     
-    def __unescape(self, packet):
+    def _unescape(self, packet):
         r = []
         esc = False
         for b in packet:
@@ -117,7 +120,7 @@ class Serial:
                 r.append(b)
         return r
     
-    def __escape(self, packet):
+    def _escape(self, packet):
         r = []
         for b in packet:
             if b == self.HDLC_FLAG_BYTE or b == self.HDLC_CTLESC_BYTE:
@@ -128,101 +131,126 @@ class Serial:
         return r
     
     # Returns the next incoming serial packet
-    def sniff_packet(self):
+    def sniff(self, skip_queue = False):
+        """Wait for a packet and return it as a RawPacket."""
+        
+        if (not skip_queue and not self._queue.empty()):
+            print "DEBUG: sniff_packet: return a packet from the queue(%d)." % self._queue.qsize()
+            return self._queue.get()
         try:
-            d = self.__get_byte()
+            d = self._get_byte()
             ts = time.time()
             while d != self.HDLC_FLAG_BYTE:
-                d = self.__get_byte()
+                d = self._get_byte()
                 ts = time.time()
             packet = [d]
-            d = self.__get_byte()
+            d = self._get_byte()
             if d == self.HDLC_FLAG_BYTE:
-                d = self.__get_byte()
+                d = self._get_byte()
                 ts = time.time()
             else:
                 packet.append(d)
             while d != self.HDLC_FLAG_BYTE:
-                d = self.__get_byte()
+                d = self._get_byte()
                 packet.append(d)
-            un_packet = self.__unescape(packet)
+            if self._debug == True:
+                print "sniff: unescaped", packet
+            packet = self._unescape(packet)
             
-            crc = self.crc16(0, un_packet[1:-3])
-            packet_crc = self.__decode(un_packet[-3:-1])
+            crc = self.crc16(0, packet[1:-3])
+            packet_crc = self._decode(packet[-3:-1])
             
-            if self.__debug == True:
+            if self._debug:
                 if crc != packet_crc:
-                    print "Warning: wrong CRC!"
-                print "Recv:", self.__format_packet(un_packet)
-            return (ts, un_packet)
+                    print "Warning: wrong CRC! %s" % packet
+                if self._ts == None:
+                    self._ts = ts
+                else:
+                    print "%.4f (%.4f) Recv:" % (ts, ts - self._ts), self._format_packet(packet[1:-3])
+                self._ts = ts
+            return RawPacket(ts, packet[1:-3], crc == packet_crc)
         except socket.timeout:
             return None
-    
-    # Filters and returns the next incoming serial packet with 
-    # specified AM group ID and AM ID
-    def read_packet(self, am_group, am_id):
-        packet = None
+
+    def sniff_am(self, skip_queue = False, timeout=0):
+        """Wait for a packet and return it as a ActiveMessage."""
         
-        while True:
-            packet = self.sniff_packet()
-            if not packet == None and len(packet[1]) >= 10:
-                if (packet[1])[8] == am_group and (packet[1])[9] == am_id:
-                    break
-            
-        return packet
+        start = time.time();
+        p = None
+        done = False
+        while not done:
+            while p == None:
+                if timeout == 0 or time.time() - start < timeout:
+                    p = self.sniff(skip_queue)
+                else:
+                    return None
+            if p.crc:
+                done = True
+        return ActiveMessage(NoAckDataFrame(p.data).data)
+
     
     # Sends data with the specified AM group ID and AM ID. To have a "reliable"
     # transfer, num_tries defines how many times to retry before giving up
-    def write_packet(self, am_group, am_id, data, num_tries=10):
+    def write(self, payload, num_tries=3):
+        """
+        Write a packet. If the payload argument is a list, it is
+        assumed to be exactly the payload. Otherwise the payload is
+        assume to be a GenericPacket and the real payload is obtain
+        by calling the .payload().
+        """
+        
+        global _seqno
+        if type(payload) != type([]):
+            # Assume this will be derived from GenericPacket
+            payload = payload.payload()
+        _seqno = (_seqno + 1) % 100
+        packet = DataFrame();
+        packet.protocol = self.SERIAL_PROTO_PACKET_ACK
+        packet.seqno = _seqno
+        packet.dispatch = 0
+        packet.data = payload
+        packet = packet.payload()
+        crc = self.crc16(0, packet)
+        packet.append(crc & 0xff)
+        packet.append((crc >> 8) & 0xff)
+        packet = [self.HDLC_FLAG_BYTE] + self._escape(packet) + [self.HDLC_FLAG_BYTE]
+
         for i in range(num_tries):
-            # The first byte after SERIAL_PROTO_PACKET_ACK is a sequence
-            # number that will be send back by the mote to ack the receive of
-            # the data.
-            packet = [self.SERIAL_PROTO_PACKET_ACK, 0, self.TOS_SERIAL_ACTIVE_MESSAGE_ID,
-                      0xff, 0xff,
-                      0, 0,
-                      len(data), am_group, am_id] + data
-            crc = self.crc16(0, packet)
-            packet.append(crc & 0xff)
-            packet.append((crc >> 8) & 0xff)
-            packet = [self.HDLC_FLAG_BYTE] + self.__escape(packet) + [self.HDLC_FLAG_BYTE]
-            
-            self.__put_bytes(packet)
-            if self.__debug == True:
-                print "Send:", self.__format_packet(packet)
+            self._put_bytes(packet)
+            if self._debug == True:
+                print "Send:", packet
             
             # Waits for ACK
             for j in range(3):
-                while True:
-                    packet = self.sniff_packet()
-                    if packet == None:
-                        break
-                    elif (packet[1])[1] == self.SERIAL_PROTO_ACK:
+                p = self.sniff(skip_queue = True)
+                if p != None:
+                    ack = AckFrame(p.data)
+                    if ack.protocol == self.SERIAL_PROTO_ACK:
+                        if ack.seqno != _seqno:
+                            print ">" * 40, "Wrong ACK!", ack.seqno, _seqno, "<" * 40
                         return True
+                    else:
+                        if self._debug == True:
+                            print "write_packet: put a packet in the queue(%d)." % (self._queue.qsize())
+                        self._queue.put(p)
                         
-            # Debug messages
-            if self.__debug == True:
-                if i == (num_tries - 1):
-                    print "Failed to send the packet!" 
-                else:
-                    print "Timeout waiting for ACK... Retry"
-                    
         return False
     
-    # Sets whether debugging message will in this module will be printed
-    def set_debug(self, debug):
-        self.__debug = debug
+    def debug(self, debug):
+        self._debug = debug
+
+
 
 class GenericPacket:
     """ GenericPacket """
 
-    def __decode(self, v):
+    def _decode(self, v):
         r = long(0)
         for i in v:
             r = (r << 8) + i
         return r
     
-    def __encode(self, val, dim):
+    def _encode(self, val, dim):
         output = []
         for i in range(dim):
             output.append(int(val & 0xFF))
@@ -231,21 +259,44 @@ class GenericPacket:
         return output
     
     def __init__(self, desc, packet = None):
+        offset = 0
+        boffset = 0
+        sum = 0
+        for i in range(len(desc)-1, -1, -1):
+            (n, t, s) = desc[i]
+            if s == None:
+                if sum > 0:
+                    desc[i] = (n, t, -sum)
+                break
+            sum += s
         self.__dict__['_schema'] = [(t, s) for (n, t, s) in desc]
         self.__dict__['_names'] = [n for (n, t, s) in desc]
         self.__dict__['_values'] = []
-        offset = 10
         if type(packet) == type([]):
             for (t, s) in self._schema:
                 if t == 'int':
-                    self._values.append(self.__decode(packet[offset:offset + s]))
+                    self._values.append(self._decode(packet[offset:offset + s]))
+                    offset += s
+                elif t == 'bint':
+                    doffset = 8 - (boffset + s)
+                    self._values.append((packet[offset] >> doffset) & ((1<<s) - 1))
+                    boffset += s
+                    if boffset == 8:
+                        offset += 1
+                        boffset = 0
+                elif t == 'string':
+                    self._values.append(''.join([chr(i) for i in packet[offset:offset + s]]))
                     offset += s
                 elif t == 'blob':
                     if s:
-                        self._values.append(packet[offset:offset + s])
-                        offset += s
+                        if s > 0:
+                            self._values.append(packet[offset:offset + s])
+                            offset += s
+                        else:
+                            self._values.append(packet[offset:s])
+                            offset = len(packet) + s
                     else:
-                        self._values.append(packet[offset:-3])
+                        self._values.append(packet[offset:])
         elif type(packet) == type(()):
             for i in packet:
                 self._values.append(i)
@@ -257,7 +308,13 @@ class GenericPacket:
         return self._values.__repr__()
 
     def __str__(self):
-        return self._values.__str__()
+        r = ""
+        for i in range(len(self._names)):
+            r += "%s: %s " % (self._names[i], self._values[i])
+        for i in range(len(self._names), len(self._values)):
+            r += "%s" % self._values[i]
+        return r
+#        return self._values.__str__()
 
     # Implement the map behavior
     def __getitem__(self, key):
@@ -277,6 +334,7 @@ class GenericPacket:
 
     # Implement the struct behavior
     def __getattr__(self, name):
+        #print "DEBUG: __getattr__", name
         if type(name) == type(0):
             return self._names[name]
         else:
@@ -288,6 +346,21 @@ class GenericPacket:
         else:
             self._values[self._names.index(name)] = value
 
+    def __ne__(self, other):
+        if other.__class__ == self.__class__:
+            return self._values != other._values
+        else:
+            return True
+
+    def __eq__(self, other):
+        if other.__class__ == self.__class__:
+            return self._values == other._values
+        else:
+            return False
+
+    def __nonzero__(self):
+        return True;
+
     # Custom
     def names(self):
         return self._names
@@ -297,10 +370,90 @@ class GenericPacket:
 
     def payload(self):
         r = []
+        boffset = 0
         for i in range(len(self._schema)):
             (t, s) = self._schema[i]
             if t == 'int':
-                r += self.__encode(self._values[i], s)
-            else:
+                r += self._encode(self._values[i], s)
+                boffset = 0
+            elif t == 'bint':
+                doffset = 8 - (boffset + s)
+                if boffset == 0:
+                    r += [self._values[i] << doffset]
+                else:
+                    r[-1] |= self._values[i] << doffset
+                boffset += s
+                if boffset == 8:
+                    boffset = 0
+            elif self._values[i] != []:
                 r += self._values[i]
+        for i in self._values[len(self._schema):]:
+            r += i
         return r
+
+
+class RawPacket(GenericPacket):
+    def __init__(self, ts = None, data = None, crc = None):
+        GenericPacket.__init__(self,
+                               [('ts' , 'int', 4),
+                                ('crc', 'int', 1),
+                                ('data', 'blob', None)],
+                               None)
+        self.ts = ts;
+        self.data = data
+        self.crc = crc
+        
+
+class AckFrame(GenericPacket):
+    def __init__(self, payload = None):
+        GenericPacket.__init__(self,
+                               [('protocol',  'int', 1),
+                                ('seqno',  'int', 1)],
+                               payload)
+
+class DataFrame(GenericPacket):
+    def __init__(self, payload = None):
+        if payload != None and type(payload) != type([]):
+            # Assume is a GenericPacket
+            payload = payload.payload()
+        GenericPacket.__init__(self,
+                               [('protocol',  'int', 1),
+                                ('seqno',  'int', 1),
+                                ('dispatch',  'int', 1),
+                                ('data', 'blob', None)],
+                               payload)
+
+class NoAckDataFrame(GenericPacket):
+    def __init__(self, payload = None):
+        if payload != None and type(payload) != type([]):
+            # Assume is a GenericPacket
+            payload = payload.payload()
+        GenericPacket.__init__(self,
+                               [('protocol',  'int', 1),
+                                ('dispatch',  'int', 1),
+                                ('data', 'blob', None)],
+                               payload)
+
+class ActiveMessage(GenericPacket):
+    def __init__(self, gpacket = None, am_id = 0x00, dest = 0xFFFF):
+        if type(gpacket) == type([]):
+            payload = gpacket
+        else:
+            # Assume this will be derived from GenericPacket
+            payload = None
+        GenericPacket.__init__(self,
+                               [('destination', 'int', 2),
+                                ('source',   'int', 2),
+                                ('length',   'int', 1),
+                                ('group',    'int', 1),
+                                ('type',     'int', 1),
+                                ('data',     'blob', None)],
+                               payload)
+        if payload == None:
+            self.destination = dest
+            self.source = 0x0000
+            self.group = 0x00
+            self.type = am_id
+            self.data = gpacket.payload()
+            self.length = len(self.data)
+

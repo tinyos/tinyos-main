@@ -1,4 +1,4 @@
-// $Id: TOSBoot.nc,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+// $Id: TOSBoot.nc,v 1.2 2008-01-14 04:22:02 razvanm Exp $
 
 /*									tab:2
  *
@@ -29,6 +29,7 @@
  */
 
 includes Deluge;
+includes DelugePageTransfer;
 includes TOSBoot;
 
 configuration TOSBoot {

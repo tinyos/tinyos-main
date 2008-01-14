@@ -40,17 +40,12 @@ configuration ObjectTransferC
 implementation
 {
   components ObjectTransferP, DelugePageTransferC;
+  components CrcP;
   
   ObjectTransfer = ObjectTransferP;
-  BlockRead[VOLUME_DELUGE1] = DelugePageTransferC.BlockRead[VOLUME_DELUGE1];
-  BlockWrite[VOLUME_DELUGE1] = DelugePageTransferC.BlockWrite[VOLUME_DELUGE1];
-  BlockRead[VOLUME_DELUGE2] = DelugePageTransferC.BlockRead[VOLUME_DELUGE2];
-  BlockWrite[VOLUME_DELUGE2] = DelugePageTransferC.BlockWrite[VOLUME_DELUGE2];
-  BlockRead[VOLUME_DELUGE3] = DelugePageTransferC.BlockRead[VOLUME_DELUGE3];
-  BlockWrite[VOLUME_DELUGE3] = DelugePageTransferC.BlockWrite[VOLUME_DELUGE3];
+  DelugePageTransferC.BlockRead = BlockRead;
+  DelugePageTransferC.BlockWrite = BlockWrite;
   ObjectTransferP.DelugePageTransfer -> DelugePageTransferC.DelugePageTransfer;
-  
-  components CrcP;
   ObjectTransferP.Crc -> CrcP.Crc;
   
   components new AMSenderC(AM_DELUGEADVMSG) as SendAdvMsg, 
@@ -69,9 +64,7 @@ implementation
   DelugePageTransferC.AMPacket -> SendDataMsg;
   DelugePageTransferC.Leds = Leds;
   
-  ObjectTransferP.BlockWrite[VOLUME_DELUGE1] = BlockWrite[VOLUME_DELUGE1];
-  ObjectTransferP.BlockWrite[VOLUME_DELUGE2] = BlockWrite[VOLUME_DELUGE2];
-  ObjectTransferP.BlockWrite[VOLUME_DELUGE3] = BlockWrite[VOLUME_DELUGE3];
+  ObjectTransferP.BlockWrite = BlockWrite;
   
   components RandomC, new TimerMilliC() as Timer;
   ObjectTransferP.Random -> RandomC;

@@ -63,7 +63,6 @@ implementation
   };
   
   DelugeAdvTimer advTimers;
-  //DelugeNodeDesc nodeDesc;
   uint8_t state = S_STOPPED;
   
   object_id_t cont_receive_new_objid;
@@ -117,11 +116,6 @@ implementation
     }
   }
   
-//  bool isNodeDescValid(DelugeNodeDesc* tmpNodeDesc)
-//  {
-//    return (tmpNodeDesc->crc == crc16(tmpNodeDesc, 4 + sizeof(object_id_t) + 1));
-//  }
-  
   bool isObjDescValid(DelugeObjDesc* tmpObjDesc)
   {
     return (tmpObjDesc->crc == call Crc.crc16(tmpObjDesc, sizeof(object_id_t) + sizeof(page_num_t))
@@ -137,23 +131,11 @@ implementation
     if (isBusy_pMsgBuf == FALSE) {
       pMsg->sourceAddr = TOS_NODE_ID;
       pMsg->version = DELUGE_VERSION;
-      //pMsg->type = (imagesLoaded) ? DELUGE_ADV_NORMAL : DELUGE_ADV_ERROR;
       pMsg->type = DELUGE_ADV_NORMAL;
-      
-      // make sure node desc is valid
-//      if (!isNodeDescValid(&nodeDesc)) {
-//        memset(&nodeDesc, 0xff, sizeof(nodeDesc));
-//      }
-//      memcpy(&pMsg->nodeDesc, &nodeDesc, sizeof(DelugeNodeDesc));
-      
-      // make sure obj desc is valid
-//      if (!isObjDescValid(&curObjDesc)) {
-//        //curObjDesc.objid = objid;
-//      }
+     
       memcpy(&(pMsg->objDesc), &curObjDesc, sizeof(DelugeObjDesc));
       
       if (call SendAdvMsg.send(addr, &pMsgBuf, sizeof(DelugeAdvMsg)) == SUCCESS) {
-        //dbg(DBG_USR1, "DELUGE: Sent ADV_MSG(imgNum=%d)\n", imgDesc->imgNum);
 //call StatsCollector.msg_bcastReq();
         isBusy_pMsgBuf = TRUE;
       }
@@ -243,6 +225,7 @@ implementation
   
   event void DelugePageTransfer.receivedPage(object_id_t new_objid, page_num_t new_pgNum)
   {
+//    printf("R: %08lx %d\n", new_objid, new_pgNum);
     if (new_objid == curObjDesc.objid && new_pgNum == curObjDesc.numPgsComplete) {
       curObjDesc.numPgsComplete++;
       curObjDesc.crc = call Crc.crc16(&curObjDesc, sizeof(object_id_t) + sizeof(page_num_t));
@@ -287,9 +270,7 @@ implementation
       return msg;
     }
     
-    if (rxAdvMsg->version != DELUGE_VERSION 
-        //|| !isNodeDescValid(&rxAdvMsg->nodeDesc)
-        || state != S_STARTED) {
+    if (rxAdvMsg->version != DELUGE_VERSION || state != S_STARTED) {
       return msg;
     }
     

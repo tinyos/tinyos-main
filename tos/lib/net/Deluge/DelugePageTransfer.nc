@@ -37,6 +37,5 @@ interface DelugePageTransfer {
   event void suppressMsgs(object_id_t new_objid);
   event void receivedPage(object_id_t new_objid, page_num_t new_pgNum);
   command void setImgNum(uint8_t new_img_num);
-  
   command error_t stop();
 }

@@ -27,51 +27,46 @@
 #include "AM.h"
 #include "StorageVolumes.h"
 
-generic configuration FlashVolumeManagerC(am_id_t AMId)
-{
-#ifdef DELUGE  
-  provides interface Notify<uint8_t> as DissNotify;
-  provides interface Notify<uint8_t> as ReprogNotify;
-#endif
-  uses {
-    interface BlockRead[uint8_t img_num];
-    interface BlockWrite[uint8_t img_num];
-#ifdef DELUGE
-    interface DelugeStorage[uint8_t img_num];
-#endif
-  }
-}
+generic configuration FlashVolumeManagerC(am_id_t AMId) {}
 
 implementation
 {
-  components new SerialAMSenderC(AMId),
-             new SerialAMReceiverC(AMId),
-             new FlashVolumeManagerP(),
-             NoLedsC, LedsC;
+  components new SerialAMSenderC(AMId);
+  components new SerialAMReceiverC(AMId);
+  components new FlashVolumeManagerP();
+  components new TimerMilliC() as TimeoutTimer;
+  components NoLedsC, LedsC;
+  components BlockStorageLockC;
+
+  components new BlockReaderC(VOLUME_GOLDENIMAGE) as BlockReaderGoldenImage;
+  components new BlockReaderC(VOLUME_DELUGE1)     as BlockReaderDeluge1;
+  components new BlockReaderC(VOLUME_DELUGE2)     as BlockReaderDeluge2;
+  components new BlockReaderC(VOLUME_DELUGE3)     as BlockReaderDeluge3;
+
+  components new BlockWriterC(VOLUME_GOLDENIMAGE) as BlockWriterGoldenImage;
+  components new BlockWriterC(VOLUME_DELUGE1)     as BlockWriterDeluge1;
+  components new BlockWriterC(VOLUME_DELUGE2)     as BlockWriterDeluge2;
+  components new BlockWriterC(VOLUME_DELUGE3)     as BlockWriterDeluge3;
   
-  FlashVolumeManagerP.BlockRead[VOLUME_GOLDENIMAGE] = BlockRead[VOLUME_GOLDENIMAGE];
-  FlashVolumeManagerP.BlockWrite[VOLUME_GOLDENIMAGE] = BlockWrite[VOLUME_GOLDENIMAGE];
-  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE1] = BlockRead[VOLUME_DELUGE1];
-  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE1] = BlockWrite[VOLUME_DELUGE1];
-  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE2] = BlockRead[VOLUME_DELUGE2];
-  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE2] = BlockWrite[VOLUME_DELUGE2];
-  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE3] = BlockRead[VOLUME_DELUGE3];
-  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE3] = BlockWrite[VOLUME_DELUGE3];
+  FlashVolumeManagerP.BlockRead[VOLUME_GOLDENIMAGE] -> BlockReaderGoldenImage;
+  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE1]     -> BlockReaderDeluge1;
+  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE2]     -> BlockReaderDeluge2;
+  FlashVolumeManagerP.BlockRead[VOLUME_DELUGE3]     -> BlockReaderDeluge3;
+
+  FlashVolumeManagerP.BlockWrite[VOLUME_GOLDENIMAGE] -> BlockWriterGoldenImage;
+  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE1]     -> BlockWriterDeluge1;
+  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE2]     -> BlockWriterDeluge2;
+  FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE3]     -> BlockWriterDeluge3;
+
+  FlashVolumeManagerP.Resource[VOLUME_GOLDENIMAGE] -> BlockWriterGoldenImage;
+  FlashVolumeManagerP.Resource[VOLUME_DELUGE1] -> BlockWriterDeluge1;
+  FlashVolumeManagerP.Resource[VOLUME_DELUGE2] -> BlockWriterDeluge2;
+  FlashVolumeManagerP.Resource[VOLUME_DELUGE3] -> BlockWriterDeluge3;
+
+  FlashVolumeManagerP.ArbiterInfo -> BlockStorageLockC;
  
+  FlashVolumeManagerP.TimeoutTimer -> TimeoutTimer;
   FlashVolumeManagerP.SerialAMSender -> SerialAMSenderC;
   FlashVolumeManagerP.SerialAMReceiver -> SerialAMReceiverC;
-  FlashVolumeManagerP.Leds -> NoLedsC;
-
-#ifdef DELUGE  
-  components NetProgC, new TimerMilliC();
-  
-  FlashVolumeManagerP.NetProg -> NetProgC;
-  FlashVolumeManagerP.Timer -> TimerMilliC;
-  FlashVolumeManagerP.DelugeStorage[VOLUME_GOLDENIMAGE] = DelugeStorage[VOLUME_GOLDENIMAGE];
-  FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE1] = DelugeStorage[VOLUME_DELUGE1];
-  FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE2] = DelugeStorage[VOLUME_DELUGE2];
-  FlashVolumeManagerP.DelugeStorage[VOLUME_DELUGE3] = DelugeStorage[VOLUME_DELUGE3];
-  DissNotify = FlashVolumeManagerP.DissNotify;
-  ReprogNotify = FlashVolumeManagerP.ReprogNotify;
-#endif
+  FlashVolumeManagerP.Leds -> LedsC;
 }

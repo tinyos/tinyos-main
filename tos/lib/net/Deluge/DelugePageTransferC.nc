@@ -46,12 +46,8 @@ implementation
   components DelugePageTransferP;
   
   DelugePageTransfer = DelugePageTransferP;
-  BlockRead[VOLUME_DELUGE1] = DelugePageTransferP.BlockRead[VOLUME_DELUGE1];
-  BlockWrite[VOLUME_DELUGE1] = DelugePageTransferP.BlockWrite[VOLUME_DELUGE1];
-  BlockRead[VOLUME_DELUGE2] = DelugePageTransferP.BlockRead[VOLUME_DELUGE2];
-  BlockWrite[VOLUME_DELUGE2] = DelugePageTransferP.BlockWrite[VOLUME_DELUGE2];
-  BlockRead[VOLUME_DELUGE3] = DelugePageTransferP.BlockRead[VOLUME_DELUGE3];
-  BlockWrite[VOLUME_DELUGE3] = DelugePageTransferP.BlockWrite[VOLUME_DELUGE3];
+  BlockRead = DelugePageTransferP.BlockRead;
+  BlockWrite = DelugePageTransferP.BlockWrite;
   
   ReceiveDataMsg = DelugePageTransferP.ReceiveDataMsg;
   ReceiveReqMsg = DelugePageTransferP.ReceiveReqMsg;

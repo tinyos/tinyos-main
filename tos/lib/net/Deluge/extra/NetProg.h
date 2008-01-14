@@ -1,4 +1,4 @@
-// $Id: NetProg.h,v 1.1 2007-05-22 20:34:24 razvanm Exp $
+// $Id: NetProg.h,v 1.2 2008-01-14 04:22:02 razvanm Exp $
 
 /*									tab:2
  *
@@ -38,11 +38,11 @@
 #endif
 
 static const uint32_t DELUGE_IMAGE_UID = IDENT_UID_HASH;
-
+/*
 typedef struct NetProg_TOSInfo {
   uint16_t addr;
   uint8_t  groupId;
   uint16_t crc;
 } NetProg_TOSInfo;
-
+*/
 #endif

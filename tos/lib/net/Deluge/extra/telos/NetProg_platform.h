@@ -1,4 +1,4 @@
-// $Id: NetProg_platform.h,v 1.1 2007-05-22 20:34:24 razvanm Exp $
+// $Id: NetProg_platform.h,v 1.2 2008-01-14 04:22:02 razvanm Exp $
 
 /*									tab:2
  *
@@ -30,11 +30,6 @@
 
 #ifndef __NETPROG_PLATFORM_H__
 #define __NETPROG_PLATFORM_H__
-
-enum {
-  IFLASH_TOS_INFO_ADDR = 0x60,  // 6 bytes
-  IFLASH_NODE_DESC_ADDR = 0x66, // 10 bytes
-};
 
 void netprog_reboot() {
   WDTCTL = WDT_ARST_1_9; 

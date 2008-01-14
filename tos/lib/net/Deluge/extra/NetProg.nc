@@ -1,4 +1,4 @@
-// $Id: NetProg.nc,v 1.1 2007-05-22 20:34:24 razvanm Exp $
+// $Id: NetProg.nc,v 1.2 2008-01-14 04:22:02 razvanm Exp $
 
 /*									tab:4
  *
@@ -42,16 +42,14 @@ interface NetProg
   command error_t reboot();
 
   /**
-   * Reboot into the image specified by <code>imgNum</code>. This
-   * assumes that an image has been downloaded into slot <code>imgNum</code>
-   * using Deluge.
+   * Reboot into the image specified by <code>imageAddr</code>. This
+   * assumes that an image is present into the external flash
+   * at the <code>imageAddr</code> address.
    *
-   * @param imgNum  Number of image to boot in to.
+   * @param imageAddr  Address in external flash
    * @return        <code>FAIL</code> if the reboot command fails to 
-   *                complete due to an invalid imgNum or incomplete 
-   *                image, 
-   *                does not return, otherwise.
+   *                complete, does not return, otherwise.
    */
-  command error_t programImgAndReboot(uint8_t imgNum);
+  command error_t programImageAndReboot(uint32_t imageAddr);
 
 }

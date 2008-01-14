@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: bnp.extra,v 1.4 2007-12-20 02:25:18 razvanm Exp $
+#$Id: bnp.extra,v 1.5 2008-01-14 04:22:01 razvanm Exp $
 
 DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
 DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
@@ -8,7 +8,7 @@ TOSBOOT_DIR ?= $(TOSDIR)/lib/tosboot/build
 ifeq ($(TINYOS_NP),BNP)
 
   CFLAGS += -DDELUGE
-  CFLAGS += -I$(TOSDIR)/lib/net -I$(TOSDIR)/lib/net/drip -I$(DELUGE_DIR) -I$(DELUGE_DIR)/FlashVolumeManager
+  CFLAGS += -I$(TOSDIR)/lib/net -I$(TOSDIR)/lib/net/drip -I$(DELUGE_DIR) -I$(DELUGE_DIR)/FlashVolumeManager -I$(DELUGE_DIR)/BlockStorageManager
 
   ifneq ($(filter telosb tmote,$(TARGETS)),)
     CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/telos -I$(DELUGE_EXTRA)/telosb

@@ -27,62 +27,63 @@
 #include "Deluge.h"
 #include "StorageVolumes.h"
 
-configuration DelugeC
-{
+configuration DelugeC {
   uses interface Leds;
 }
 
 implementation
 {
-  components DelugeStorageC;
-  
-#ifdef DELUGE_BASESTATION
-  components SerialStarterC;
-  components new FlashVolumeManagerC(0xAB);
-  
-  DelugeP.DissNotify -> FlashVolumeManagerC.DissNotify;
-  DelugeP.ReprogNotify -> FlashVolumeManagerC.ReprogNotify;
-
-  FlashVolumeManagerC.BlockRead[VOLUME_GOLDENIMAGE] -> DelugeStorageC.BlockRead[VOLUME_GOLDENIMAGE];
-  FlashVolumeManagerC.BlockWrite[VOLUME_GOLDENIMAGE] -> DelugeStorageC.BlockWrite[VOLUME_GOLDENIMAGE];
-  FlashVolumeManagerC.DelugeStorage[VOLUME_GOLDENIMAGE] -> DelugeStorageC.DelugeStorage[VOLUME_GOLDENIMAGE];
-  
-  FlashVolumeManagerC.BlockRead[VOLUME_DELUGE1] -> DelugeStorageC.BlockRead[VOLUME_DELUGE1];
-  FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE1] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE1];
-  FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE1] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE1];
-
-  FlashVolumeManagerC.BlockRead[VOLUME_DELUGE2] -> DelugeStorageC.BlockRead[VOLUME_DELUGE2];
-  FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE2] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE2];
-  FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE2] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE2];
-
-  FlashVolumeManagerC.BlockRead[VOLUME_DELUGE3] -> DelugeStorageC.BlockRead[VOLUME_DELUGE3];
-  FlashVolumeManagerC.BlockWrite[VOLUME_DELUGE3] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE3];
-  FlashVolumeManagerC.DelugeStorage[VOLUME_DELUGE3] -> DelugeStorageC.DelugeStorage[VOLUME_DELUGE3];
-#endif
-  
   components ObjectTransferC;
-  ObjectTransferC.BlockRead[VOLUME_DELUGE1] -> DelugeStorageC.BlockRead[VOLUME_DELUGE1];
-  ObjectTransferC.BlockWrite[VOLUME_DELUGE1] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE1];
-  ObjectTransferC.BlockRead[VOLUME_DELUGE2] -> DelugeStorageC.BlockRead[VOLUME_DELUGE2];
-  ObjectTransferC.BlockWrite[VOLUME_DELUGE2] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE2];
-  ObjectTransferC.BlockRead[VOLUME_DELUGE3] -> DelugeStorageC.BlockRead[VOLUME_DELUGE3];
-  ObjectTransferC.BlockWrite[VOLUME_DELUGE3] -> DelugeStorageC.BlockWrite[VOLUME_DELUGE3];
+  
+  components new BlockReaderC(VOLUME_DELUGE1) as BlockReaderDeluge1;
+  components new BlockReaderC(VOLUME_DELUGE2) as BlockReaderDeluge2;
+  components new BlockReaderC(VOLUME_DELUGE3) as BlockReaderDeluge3;
+
+  components new BlockWriterC(VOLUME_DELUGE1) as BlockWriterDeluge1;
+  components new BlockWriterC(VOLUME_DELUGE2) as BlockWriterDeluge2;
+  components new BlockWriterC(VOLUME_DELUGE3) as BlockWriterDeluge3;
+  
+  ObjectTransferC.BlockRead[VOLUME_DELUGE1]  -> BlockReaderDeluge1;
+  ObjectTransferC.BlockRead[VOLUME_DELUGE2]  -> BlockReaderDeluge2;
+  ObjectTransferC.BlockRead[VOLUME_DELUGE3]  -> BlockReaderDeluge3;
+
+  ObjectTransferC.BlockWrite[VOLUME_DELUGE1] ->  BlockWriterDeluge1;
+  ObjectTransferC.BlockWrite[VOLUME_DELUGE2] ->  BlockWriterDeluge2;
+  ObjectTransferC.BlockWrite[VOLUME_DELUGE3] ->  BlockWriterDeluge3;
+
   ObjectTransferC.Leds = Leds;
   
-  components new DisseminatorC(DelugeDissemination, 0xDE00), DisseminationC;
+  components new DisseminatorC(DelugeCmd, 0xDE00);
+  components DisseminationC;
   components ActiveMessageC;
   components NetProgC, DelugeP;
   components new TimerMilliC() as Timer;
+  components BlockStorageManagerC;
+  components DelugeMetadataC;
+  components new DelugeMetadataClientC();
+  components new DelugeVolumeManagerClientC();
+  components new BlockStorageLockClientC();
+  components MainC;
+
+  DelugeP.Boot -> MainC;
   DelugeP.Leds = Leds;  
   DelugeP.DisseminationValue -> DisseminatorC;
-  DelugeP.DisseminationUpdate -> DisseminatorC;
-  DelugeP.StdControlDissemination -> DisseminationC;
+  DelugeP.DisseminationStdControl -> DisseminationC;
   DelugeP.ObjectTransfer -> ObjectTransferC;
   DelugeP.NetProg -> NetProgC;
-  DelugeP.StorageReadyNotify -> DelugeStorageC;
-  DelugeP.DelugeMetadata -> DelugeStorageC;
   DelugeP.RadioSplitControl -> ActiveMessageC;
-  
-  components InternalFlashC as IFlash;
-  DelugeP.IFlash -> IFlash;
+  DelugeP.StorageMap -> BlockStorageManagerC;
+  DelugeP.DelugeMetadata -> DelugeMetadataClientC;
+  DelugeP.storageReady <- DelugeMetadataC;
+  DelugeP.DelugeVolumeManager -> DelugeVolumeManagerClientC;
+  DelugeP.Resource -> BlockStorageLockClientC;
+
+#ifdef DELUGE_BASESTATION
+  components SerialStarterC;
+  components new FlashVolumeManagerC(0xAB);
+  components new DelugeManagerC(0xAC);
+
+  DelugeManagerC.DisseminationUpdate -> DisseminatorC;
+#endif
+
 }

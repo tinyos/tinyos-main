@@ -1,4 +1,4 @@
-// $Id: TOSBoot.h,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+// $Id: TOSBoot.h,v 1.2 2008-01-14 04:22:02 razvanm Exp $
 
 /*									tab:2
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -29,11 +29,5 @@
 #define __TOSBOOT_H__
 
 #include "TOSBoot_platform.h"
-
-typedef struct tosboot_args_t {
-  uint32_t imageAddr;
-  uint8_t  gestureCount;
-  bool     noReprogram;
-} tosboot_args_t;
 
 #endif

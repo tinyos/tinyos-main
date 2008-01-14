@@ -1,81 +1,60 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2007 Johns Hopkins University.
-# All rights reserved.
-#
-# Permission to use, copy, modify, and distribute this software and its
-# documentation for any purpose, without fee, and without written
-# agreement is hereby granted, provided that the above copyright
-# notice, the (updated) modification history and the author appear in
-# all copies of this source code.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
-# OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-# THE POSSIBILITY OF SUCH DAMAGE.
-
-# @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
-# @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
-
-###############################################################################
-# Deluge Python Toolchain
-#
-# A command line utility to interact with nodes via a direct serial connection.
-# For the usage menu, please run this tool without any arguments. For example, 
-# "./tos-deluge"
-###############################################################################
-
-import sys, os, stat, struct, subprocess, time
+import sys, stat, struct, subprocess, time
 import tinyos
 from datetime import datetime
 import os.path 
 
-# Script-specific parameters
-HEX_OUTPUT_LINE_SIZE = 16
 # Path to the python script that builds Deluge image from XML
-PATH_PY_BUILD_IMAGE  = os.path.join(os.path.dirname(sys.argv[0]), 'tos-build-deluge-image')
+PATH_PY_BUILD_IMAGE  = './tos-build-deluge-image'
 
 # TinyOS serial communication parameters
-SERIAL_AMGROUP     = 0
-SERIAL_AMID        = 0xAB
+FM_AMID = 0xAB
+DM_AMID = 0xAC
 SERIAL_DATA_LENGTH = 28 - 1 - 1 - 2 - 2
+BAUDRATES = {'micaz': 57600,
+             'telosb': 115200}
 
-# Serial message types
-MSG_ERASE     = 0
-MSG_WRITE     = 1
-MSG_READ      = 2
-MSG_REPROG    = 5
-MSG_DISS      = 6
-MSG_REPROG_BS = 7
-MSG_SYNC      = 8
-MSG_IDENT     = 9
+# Commands for FlashManager
+FM_CMD_ERASE     = 0
+FM_CMD_WRITE     = 1
+FM_CMD_READ      = 2
+FM_CMD_CRC       = 3
+FM_CMD_ADDR      = 4
+FM_CMD_SYNC      = 5
+FM_CMD_IDENT     = 6
+
+# Commands for DelugeManager
+DM_CMD_STOP             = 1
+DM_CMD_LOCAL_STOP       = 2
+DM_CMD_ONLY_DISSEMINATE = 3
+DM_CMD_DISSEMINATE_AND_REPROGRAM = 4
+DM_CMD_REPROGRAM        = 5
+DM_CMD_BOOT             = 6
 
 ERROR_SUCCESS = 0   # T2-compatible
 ERROR_FAIL    = 1   # T2-compatible
 
-# Deluge-specific parameters
-DELUGE_PLATFORMS       = ["telosb", "micaz"]   # Currently supported platforms
-DELUGE_MAX_PAGES       = 128
-DELUGE_METADATA_OFFSET = 0   # Location offset in the image
-DELUGE_METADATA_SIZE   = 16
-DELUGE_IDENT_OFFSET    = 16 + (2 * DELUGE_MAX_PAGES)
-DELUGE_IDENT_SIZE      = 16 + 16 + 16 + 16 + 4 + 4 + 4 + 4   # Metadata size in binary 
-                                                             # image
+# Deluge parameters
+DELUGE_MAX_PAGES    = 128
+DELUGE_IDENT_OFFSET = 0
+DELUGE_IDENT_SIZE   = 128
 
-class SerialReqPacket(tinyos.GenericPacket):
+class FMReqPacket(tinyos.GenericPacket):
     def __init__(self, packet = None):
         tinyos.GenericPacket.__init__(self,
-                                      [('msg_type', 'int',  1),
-                                       ('img_num',  'int',  1),
-                                       ('offset',   'int',  2),
-                                       ('len',      'int',  2),
-                                       ('data',     'blob', None)],
+                                      [('cmd',    'int',  1),
+                                       ('imgNum', 'int',  1),
+                                       ('offset', 'int',  2),
+                                       ('length', 'int',  2),
+                                       ('data',   'blob', None)],
+                                      packet)
+
+class DMReqPacket(tinyos.GenericPacket):
+    def __init__(self, packet = None):
+        tinyos.GenericPacket.__init__(self,
+                                      [('cmd',    'int',  1),
+                                       ('imgNum', 'int',  1)],
                                       packet)
 
 class SerialReplyPacket(tinyos.GenericPacket):
@@ -85,18 +64,31 @@ class SerialReplyPacket(tinyos.GenericPacket):
                                       ('data',  'blob', None)],
                                      packet)
 
-# Displays an integer representation of byte stream to hex representation
-def print_hex(start_addr, byte_stream):
-    num_iterations = int( (len(byte_stream) - 1) / HEX_OUTPUT_LINE_SIZE ) + 1
-  
-    for i in range(num_iterations):
-        line = "%07x" % start_addr + " "   # Prints memory address
-        for j in range(HEX_OUTPUT_LINE_SIZE):
-            if (i * HEX_OUTPUT_LINE_SIZE + j) < len(byte_stream):
-                line += "%02x" % byte_stream[i * HEX_OUTPUT_LINE_SIZE + j] + " "
-    print line
-    
-    start_addr += HEX_OUTPUT_LINE_SIZE
+class Ident(tinyos.GenericPacket):
+    def __init__(self, packet = None):
+        tinyos.GenericPacket.__init__(self,
+                                      [('uidhash',  'int', 4),
+                                       ('size',     'int', 4),
+                                       ('pages',    'int', 1),
+                                       ('reserved', 'int', 1),
+                                       ('crc',      'int', 2),
+                                       ('appname', 'string', 16),
+                                       ('username', 'string', 16),
+                                       ('hostname', 'string', 16),
+                                       ('platform', 'string', 16),
+                                       ('timestamp','int', 4),
+                                       ('userhash', 'int', 4)],
+                                      packet)
+
+class ShortIdent(tinyos.GenericPacket):
+    def __init__(self, packet = None):
+        tinyos.GenericPacket.__init__(self,
+                                      [('appname',  'string', 16),
+                                       ('timestamp','int', 4),
+                                       ('uidhash',  'int', 4),
+                                       ('nodeid',   'int', 2)],
+                                      packet)
+
 
 # Computes 16-bit CRC
 def crc16(data):
@@ -112,68 +104,45 @@ def crc16(data):
     
     return crc
 
-# Converts a byte-stream array to int representation
-def toInt(byte_stream):
-    r = long(0)
-    for i in byte_stream[::-1]:
-        r = (r << 8) + i
-    
-    return r
-
-# Converts a byte-stream array to string representation
-def toString(byte_stream):
-    r = ""
-    for i in range(len(byte_stream)):
-        if byte_stream[i] == 0:
-            r += " "
+def handleResponse(success, msg):
+    if success == True:
+        packet = s.sniff_am()
+        while packet and packet.type == 100:
+            print "".join([chr(i) for i in p.data])
+            packet = s.sniff_am()
+        reply = SerialReplyPacket(packet.data)
+        if reply.error == ERROR_SUCCESS:
+            print reply
+            return True
         else:
-            r += struct.pack("B", byte_stream[i])
-    
-    return r
+            print msg, reply
+            return False
+        
+    print "ERROR: Unable to send the command"
+    return False
 
-# Converts a byte-stream array to image status string representation
-def toStatusStr(num_space, binary_stream):
-    r = "%sProg Name:   %s\n" % (" " * num_space, 
-                                 toString(binary_stream[16:32]))
-    r += "%sCompiled On: %s\n" % (" " * num_space, 
-                                  datetime.fromtimestamp(toInt(binary_stream[84:88])).strftime('%a %h %d %T %Y'))
-    r += "%sPlatform:    %s\n" % (" " * num_space, 
-                                  toString(binary_stream[64:80]))
-    r += "%sUser ID:     %s\n" % (" " * num_space, 
-                                  toString(binary_stream[32:48]))
-    r += "%sHost Name:   %s\n" % (" " * num_space, 
-                                  toString(binary_stream[48:64]))
-    r += "%sUser Hash:   %s\n" % (" " * num_space, 
-                                  hex(toInt(binary_stream[88:92])))
-    r += "%sNum Pages:   %d/%d" % (" " * num_space, 
-                                   toInt(binary_stream[7:8]), 
-                                   toInt(binary_stream[10:11]))
-    
-    r += "\n\n"
-    r += "%sSize:        %d\n" % (" " * num_space, 
-                                   toInt(binary_stream[12:14]))
-    r += "%sUID:         %d\n" % (" " * num_space, 
-                                   toInt(binary_stream[0:4]))
-    r += "%sVersion:     %d" % (" " * num_space, 
-                                   toInt(binary_stream[4:6]))
-    
-    return r
+def ident():
+    sreqpkt = FMReqPacket((FM_CMD_IDENT, 0, 0, 0, []))
+    if s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID)):
+        packet = s.sniff_am()
+        reply = SerialReplyPacket(packet.data)
+        if reply.error == ERROR_SUCCESS:
+            return ShortIdent(reply.data)
+    return 0
 
-# Reads a portion from the image in the external flash
-def op_read(s, img_num, offset, length):
+def read(imgNum, offset, length):
     r = []
     
-    # Gets the metadata (first 16 bytes of the image)
-    sreqpkt = SerialReqPacket((MSG_READ, img_num, offset, length, []))
+    sreqpkt = FMReqPacket((FM_CMD_READ, imgNum, offset, length, []))
     while True:
-        if sreqpkt['len'] > SERIAL_DATA_LENGTH:
-            sreqpkt['len'] = SERIAL_DATA_LENGTH
+        if sreqpkt.length > SERIAL_DATA_LENGTH:
+            sreqpkt.length = SERIAL_DATA_LENGTH
         
-        if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()):
-            packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-            sreplypkt = SerialReplyPacket(packet[1])
-            if sreplypkt.error == ERROR_SUCCESS:
-                r.extend(sreplypkt.data)
+        if s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID)):
+            packet = s.sniff_am()
+            reply = SerialReplyPacket(packet.data)
+            if reply.error == ERROR_SUCCESS:
+                r.extend(reply.data)
             else:
                 r = None
                 break
@@ -181,104 +150,28 @@ def op_read(s, img_num, offset, length):
             r = None
             break
         
-        sreqpkt['offset'] = sreqpkt['offset'] + sreqpkt['len']
-        if sreqpkt['offset'] >= (offset + length):
+        sreqpkt.offset += sreqpkt.length
+        if sreqpkt.offset >= (offset + length):
             break
-        sreqpkt['len'] = (offset + length) - sreqpkt['offset']
-        
+        sreqpkt.length = (offset + length) - sreqpkt.offset
+
     return r
 
-def op_ident(s):
-    sreqpkt = SerialReqPacket((MSG_IDENT, 0, 0, 0, []))
-    if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()):
-        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-        sreplypkt = SerialReplyPacket(packet[1])
-        if sreplypkt.error == ERROR_SUCCESS:
-            return toInt(sreplypkt.data)
-    return 0
-    
-# Checks for valid CRC and image timestamp
-def verifyMetaData(r):
-    if r != None:
-        if crc16(r[6:8]) == toInt(r[8:10]) and r[84:88] != [0xFF, 0xFF, 0xFF, 0xFF]:
-            return True
-        else:
-            print "WARNING: Invalid image format detected"
-    
-    return False
+def erase(imgNum):
+    sreqpkt = FMReqPacket((FM_CMD_ERASE, imgNum, 0, 0, []))
+    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID))
+    return handleResponse(success, "ERROR: Unable to erase the flash volume")
 
-# Returns the metadata (first 16 bytes of the image) plus the "ident" 
-# (DELUGE_IDENT_SIZE bytes after CRC)
-def getMetaData(s, img_num):
-    # Gets the metadata (first 16 bytes of the image)
-    r = op_read(s, img_num, DELUGE_METADATA_OFFSET, DELUGE_METADATA_SIZE)
+def sync(imgNum):
+    sreqpkt = FMReqPacket((FM_CMD_SYNC, imgNum, 0, 0, []))
+    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID))
+    return handleResponse(success, "ERROR: Unable to sync the flash volume")
 
-    # Gets the "ident" portion of the image
-    if r != None:
-        temp = op_read(s, img_num, DELUGE_IDENT_OFFSET, DELUGE_IDENT_SIZE)
-        if temp != None:
-            r.extend(temp)
-            return r
-    
-    print "ERROR: Unable to retrieve image information over serial"
-    return None
-
-# Prints status of the image in the external flash
-def op_ping(s, img_num):
-    uid = op_ident(s)
-    metadata = getMetaData(s, img_num)
-    if not metadata == None:
-        if verifyMetaData(metadata) == True:
-            print "Connected to Deluge node."
-            # Prints out image status
-            print "--------------------------------------------------"
-            print "Currently Executing:"
-            print "  UID:         %d" % (uid)
-            print "Stored image %d" % img_num
-            print toStatusStr(2, metadata)
-            print "--------------------------------------------------"
-            return True
-        
-    return False
-
-# Erases an image volume
-def op_erase(s, img_num):
-    sreqpkt = SerialReqPacket((MSG_ERASE, img_num, 0, 0, []))
-    success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
-    if success == True:
-        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-        sreplypkt = SerialReplyPacket(packet[1])
-        if sreplypkt.error == ERROR_SUCCESS:
-            return True
-        else:
-            print "ERROR: Unable to erase the flash volume"
-            return False
-        
-    print "ERROR: Unable to send the command"
-    return False
-
-def op_sync(s, img_num):
-    sreqpkt = SerialReqPacket((MSG_SYNC, img_num, 0, 0, []))
-    success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
-    if success == True:
-        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-        sreplypkt = SerialReplyPacket(packet[1])
-        if sreplypkt.error == ERROR_SUCCESS:
-            return True
-        else:
-            print "ERROR: Unable to sync the flash volume"
-            return False
-        
-    print "ERROR: Unable to send the command"
-    return False
-
-# Writes to an image volume
-def op_write(s, img_num, binary_stream):
-    sreqpkt = SerialReqPacket((MSG_WRITE, img_num, 0, 0, []))
-    local_crc = 0   # Running CRC
-    length = len(binary_stream)
+def write(imgNum, data):
+    sreqpkt = FMReqPacket((FM_CMD_WRITE, imgNum, 0, 0, []))
+    length = len(data)
     total_length = length   # For progress bar
-    next_tick = 100   # For progress bar
+    next_tick = 100         # For progress bar
     start_time = time.time()
     
     print "[0%        25%         50%         75%         100%]\r[",
@@ -292,40 +185,70 @@ def op_write(s, img_num, binary_stream):
     
         # Calculates the payload size for the current packet
         if length >= SERIAL_DATA_LENGTH:
-            sreqpkt.len = SERIAL_DATA_LENGTH
+            sreqpkt.length = SERIAL_DATA_LENGTH
         else:
-            sreqpkt.len = length
-        sreqpkt.data = []
-        
-        # Reads in the file we want to transmit
-        for i in range(sreqpkt.len):
-            sreqpkt.data.append(struct.unpack("B", binary_stream[sreqpkt.offset + i])[0])
+            sreqpkt.length = length
+        sreqpkt.data = data[sreqpkt.offset:sreqpkt.offset+sreqpkt.length]
         
         # Sends over serial to the mote
-        if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()) == False:
+        if not s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID)):
             print
             print "ERROR: Unable to send the last serial packet (file offset: %d)" % sreqpkt.offset
             return False
         
         # Waiting for confirmation
-        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-        sreplypkt = SerialReplyPacket(packet[1])
-        if sreplypkt.error != ERROR_SUCCESS:
+        packet = s.sniff_am()
+        reply = SerialReplyPacket(packet.data)
+        if reply.error != ERROR_SUCCESS:
             print
             print "ERROR: Unable to write to the flash volume (file offset: %d)" % sreqpkt.offset
             return False
             
-        local_crc = s.crc16(local_crc, sreqpkt.data)   # Computes running CRC
-        length -= sreqpkt.len
-        sreqpkt.offset += sreqpkt.len
+        length -= sreqpkt.length
+        sreqpkt.offset += sreqpkt.length
 
     print '\r' + ' ' * 52,
     elasped_time = time.time() - start_time
     print "\r%s bytes in %.2f seconds (%.4f bytes/s)" % (total_length, elasped_time, int(total_length) / (elasped_time))
     return True
+    
+# Checks for valid CRC and timestamp
+def verifyIdent(i):
+    if i != None:
+        if crc16(i.payload()[0:10]) == i.crc and i.timestamp != 0xFFFFFFFF:
+            return True
+        else:
+            print "No valid image was detected."
+    return False
+
+def getIdent(imgNum):
+    r = read(imgNum, DELUGE_IDENT_OFFSET, DELUGE_IDENT_SIZE)
+    if r:
+        return Ident(r)
+    print "ERROR: Unable to retrieve the ident."
+    return None
+
+def formatIdent(i):
+    r  = "  Prog Name:   %s\n" % (i.appname)
+    r += "  UID:         0x%08X\n" % (i.uidhash)
+    r += "  Compiled On: %s\n" % (datetime.fromtimestamp(i.timestamp).strftime('%a %h %d %T %Y'))
+    r += "  Platform:    %s\n" % (i.platform)
+    r += "  User ID:     %s\n" % (i.username)
+    r += "  Host Name:   %s\n" % (i.hostname)
+    r += "  User Hash:   0x%08X\n" % (i.userhash)
+    r += "  Size:        %d\n" % (i.size)
+    r += "  Num Pages:   %d" % (i.pages)
+    return r
+
+def formatShortIdent(i):
+    r  = "  Prog Name:   %s\n" % (i.appname)
+    r += "  UID:         0x%08X\n" % (i.uidhash)
+    r += "  Compiled On: %s\n" % (datetime.fromtimestamp(i.timestamp).strftime('%a %h %d %T %Y'))
+    r += "  Node ID:     %d\n" % (i.nodeid)
+    return r
 
 # Injects an image (specified by tos_image_xml) to an image volume
-def op_inject(s, img_num, tos_image_xml):
+def inject(imgNum, tos_image_xml):
     # Checks for valid file path
     try:
         os.stat(tos_image_xml)         # Checks whether tos_image_xml is a valid file
@@ -339,171 +262,203 @@ def op_inject(s, img_num, tos_image_xml):
         return False
   
     # Gets status information of stored image
-    version = 0
-    metadata = getMetaData(s, img_num)
-    if not metadata == None:
+    i = getIdent(imgNum)
+    if ident:
         print "Connected to Deluge nodes."
-        if verifyMetaData(metadata) == True:
+        if verifyIdent(i):
             print "--------------------------------------------------"
-            print "Stored image %d" % img_num
-            print toStatusStr(2, metadata)
-            version = toInt(metadata[4:6]) + 1   # Increments the version
+            print "Stored image %d" % imgNum
+            print formatIdent(i)
     else:
         return False
-    
+
     # Creates binary image from the TOS image XML
     print "--------------------------------------------------"
-    p = subprocess.Popen([PATH_PY_BUILD_IMAGE, "-v", str(version), "-i", str(img_num), tos_image_xml], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    cmd = [PATH_PY_BUILD_IMAGE, "-i", str(imgNum), tos_image_xml]
+    print "Create image:", ' '.join(cmd)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print p.stderr.read(),
     print "--------------------------------------------------"
     
     # Writes the new binary image
-    image = p.stdout.read()
-    if len(image) > 0 and op_erase(s, img_num):
-        if op_write(s, img_num, image):
-            if op_sync(s, img_num):
+    image = [struct.unpack("B", c)[0] for c in p.stdout.read()]
+    if len(image) > 0 and erase(imgNum):
+        if write(imgNum, image):
+            if sync(imgNum):
                 print "--------------------------------------------------"
-                metadata = getMetaData(s, img_num)
-                if not metadata == None:
-                    if verifyMetaData(metadata) == True:
-                        print "Replace image with:"
-                        print toStatusStr(2, metadata)
-                        print "--------------------------------------------------"
-                        return True
+                print "Replace image with:"
+                print formatIdent(getIdent(imgNum))
+                print "--------------------------------------------------"
     
     return False
 
-# Requests the base station to reprogram itself
-def op_reprog_bs(s, img_num):
-    metadata = getMetaData(s, img_num)
-    if not metadata == None:
-        if verifyMetaData(metadata) == True:
-            sreqpkt = SerialReqPacket((MSG_REPROG_BS, img_num, 0, 0, []))
-            success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
-            if success == True:
-                packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-                sreplypkt = SerialReplyPacket(packet[1])
-                if sreplypkt.error == ERROR_SUCCESS:
-                    return True
-                else:
-                    print "ERROR: Unable to reprogram the base station"
-                
-            print "ERROR: Unable to send the command"
-    
+def ping(imgNum):
+    uid = ident()
+    # Prints out image status
+    print "--------------------------------------------------"
+    print "Currently Executing:"
+    print formatShortIdent(ident())
+    i = getIdent(imgNum)
+    if verifyIdent(i):
+        print "Stored image %d" % imgNum
+        print formatIdent(i)
+        print "--------------------------------------------------"
+        return True
+        
+    print "--------------------------------------------------"
     return False
 
-# Requests the network to reprogram with the specified image number
-def op_reprog(s, img_num):
-    sreqpkt = SerialReqPacket((MSG_REPROG, img_num, 0, 0, []))
-    success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
-    if success == True:
-        packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-        sreplypkt = SerialReplyPacket(packet[1])
-        if sreplypkt.error == ERROR_SUCCESS:
-            return True
-        else:
-            print "ERROR: Unable to reprogram the network"
-            return False
-        
-    print "ERROR: Unable to send the command"
+def boot():
+    sreqpkt = DMReqPacket((DM_CMD_BOOT, 0))
+    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    return handleResponse(success, "ERROR: Unable to boot the mote")
 
-# Requests the mote to disseminate an image
-def op_diss(s, img_num):
-    metadata = getMetaData(s, img_num)
-    if not metadata == None:
-        if verifyMetaData(metadata) == True:
-            sreqpkt = SerialReqPacket((MSG_DISS, img_num, 0, 0, []))
-            success = s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload())
-            if success == True:
-                packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-                sreplypkt = SerialReplyPacket(packet[1])
-                if sreplypkt.error == ERROR_SUCCESS:
-                    return True
-                else:
-                    print "ERROR: Unable to start the command dissemination"
-                
-            print "ERROR: Unable to send the command"
-            
-    return False
+def reprogram(imgNum):
+    sreqpkt = DMReqPacket((DM_CMD_REPROGRAM, imgNum))
+    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    return handleResponse(success, "ERROR: Unable to reprogram the mote")
 
-# Resets image versioning information
-def op_reset(s, img_num):
-    sreqpkt = SerialReqPacket((MSG_WRITE, img_num, 4, 2, [0, 0]))
-    if s.write_packet(SERIAL_AMGROUP, SERIAL_AMID, sreqpkt.payload()) == False:
-        print "ERROR: Unable to send the command"
-        return False
-        
-    # Waiting for confirmation
-    packet = s.read_packet(SERIAL_AMGROUP, SERIAL_AMID)
-    sreplypkt = SerialReplyPacket(packet[1])
-    if sreplypkt.error != ERROR_SUCCESS:
-        print "ERROR: Unable to write new versioning information"
-        return False
-    else:
-        if op_sync(s, img_num) == False:
-            return False
-            
-    return True
+def disseminate(imgNum):
+    sreqpkt = DMReqPacket((DM_CMD_ONLY_DISSEMINATE, imgNum))
+    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    return handleResponse(success, "ERROR: Unable to disseminate")
+
+def disseminateAndReboot(imgNum):
+    sreqpkt = DMReqPacket((DM_CMD_DISSEMINATE_AND_REPROGRAM, imgNum))
+    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    return handleResponse(success, "ERROR: Unable to disseminate-and-reboot")
+
+def stop():
+    sreqpkt = DMReqPacket((DM_CMD_STOP, 0))
+    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    return handleResponse(success, "ERROR: Unable to initiate the stop")
+
+def localstop():
+    sreqpkt = DMReqPacket((DM_CMD_LOCAL_STOP, 0))
+    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    return handleResponse(success, "ERROR: Unable to initiate the local stop")
 
 def print_usage():
     print "Usage: %s <device_port> <baud_rate> <-p|-i|-r|-d|-e|-s> image_number [options]" % sys.argv[0]
-    print "  <baud_rate>\n     Either the platform name or the baud rate value"
-    print "      -------------------"
-    print "      | micaz  |  57600 |"
-    print "      ---------+---------"
-    print "      | telosb | 115200 |"
-    print "      -------------------"
-    print ""
-    print "  -p --ping\n     Provide status of the image in the external flash"
-    print "  -i --inject\n     Inject a compiled TinyOS application"
-    print "      [options]: tos_image.xml file path"
-    print "  -r --reprogram\n     Reprogram the network"
-    print "  -b --reprogram_bs\n     Reprogram only the directly-connected mote"
-    print "  -d --dissemination\n     Disseminate the image in the external flash to the network"
-    print "  -e --erase\n     Erase an image in the external flash"
-    print "  -s --reset\n     Reset the versioning information for a given image"
+    print "  <baud_rate>      Either the platform name (micaz or telosv) or a baudrate value"
+    print "  -p --ping        Provide status of the image in the external flash"
+    print "  -i --inject      Inject a compiled TinyOS application"
+    print "                   [options]: tos_image.xml file path"
+    print "  -e --erase       Erase an image in the external flash"
+    print "  -b --boot        Force a reboot of the mote"
+    print "  -r --reprogram   Reprogram the mote"
+    print "  -d --disseminate Disseminate the image in the external flash to the network"
+    print "  -dr --disseminate-and-reprogram"
+    print "  -s --stop        Stop the dissemination "
+    print "  -ls --local-stop Stop the dissemination only on the local mote"
 
-# ======== MAIN ======== #
-num_req_arg = 5   # Minimum number of required arguments for this script
-if len(sys.argv) >= num_req_arg:
+#     print "  -b --reprogram_bs\n     Reprogram only the directly-connected mote"
+#     print "  -s --reset\n     Reset the versioning information for a given image"
+
+def checkImgNum():
+    global imgNum
     # Checks for valid image number format
     try:
-        sys.argv[4] = int(sys.argv[4])
+        imgNum = int(sys.argv[4])
     except:
         print "ERROR: Image number is not valid"
-        os._exit(-1)
-    
+        sys.exit(-1)
+    return imgNum
+
+# ======== MAIN ======== #
+if len(sys.argv) >= 4:
+
+    if sys.argv[2] in BAUDRATES:
+        baudrate = BAUDRATES[sys.argv[2]]
+    else:
+        try:
+            baudrate = int(sys.argv[2])
+        except:
+            print "ERROR: Wrong baudrate"
+            sys.exit(-1)
+            
     # Initializes serial port communication
     try:
-        s = tinyos.Serial(sys.argv[1], sys.argv[2])
-        s.set_debug(False)
+        s = tinyos.Serial(sys.argv[1], baudrate, flush=False)
     except:
         print "ERROR: Unable to initialize serial port connection to", sys.argv[1]
-        os._exit(-1)
-    
+        sys.exit(-1)
+
     if sys.argv[3] in ["-p", "--ping"]:
+        checkImgNum()
         print "Pinging node ..."
-        op_ping(s, sys.argv[4]) 
-    elif sys.argv[3] in ["-i", "--inject"] and len(sys.argv) == (num_req_arg + 1):
+        ping(imgNum) 
+    elif sys.argv[3] in ["-i", "--inject"] and len(sys.argv) == 6:
+        checkImgNum()
         print "Pinging node ..."
-        op_inject(s, sys.argv[4], sys.argv[5])
-    elif sys.argv[3] in ["-r", "--reprogram"]:
-        if op_reprog(s, sys.argv[4]):
-            print "Command sent"
-    elif sys.argv[3] in ["-b", "--reprogram_bs"]:
-        if op_reprog_bs(s, sys.argv[4]):
-            print "Command sent"
-    elif sys.argv[3] in ["-d", "--dissemination"]:
-        if op_diss(s, sys.argv[4]):
-            print "Command sent"
+        inject(imgNum, sys.argv[5])
     elif sys.argv[3] in ["-e", "--erase"]:
-        if op_erase(s, sys.argv[4]):
-            print "Image number %d erased" % sys.argv[4]
-    elif sys.argv[3] in ["-s", "--reset"]:
-        if op_reset(s, sys.argv[4]):
-            print "Successfully reset image versioning information"
+        checkImgNum()
+        if erase(imgNum):
+            print "Image number %d erased" % imgNum
+    elif sys.argv[3] in ["-b", "--boot"]:
+        if boot():
+            print "Command sent"
+    elif sys.argv[3] in ["-r", "--reprogram"]:
+        checkImgNum()
+        if reprogram(imgNum):
+            print "Command sent"
+    elif sys.argv[3] in ["-d", "--disseminate"]:
+        checkImgNum()
+        if disseminate(imgNum):
+            print "Command sent"
+    elif sys.argv[3] in ["-dr", "--disseminate-and-reboot"]:
+        checkImgNum()
+        if disseminateAndReboot(imgNum):
+            print "Command sent"
+    elif sys.argv[3] in ["-s", "--stop"]:
+        if stop():
+            print "Command sent"
+    elif sys.argv[3] in ["-ls", "--local-stop"]:
+        if localstop():
+            print "Command sent"
+
+
+#     elif sys.argv[3] in ["-b", "--reprogram_bs"]:
+#         if op_reprog_bs(imgNum):
+#             print "Command sent"
+#     elif sys.argv[3] in ["-s", "--reset"]:
+#         if op_reset(imgNum):
+#             print "Successfully reset image versioning information"
     else:
         print_usage()
 
 else:
     print_usage()
+
+sys.exit()
+
+# Testing ------------------------------------------------------------
+
+s = tinyos.Serial('/dev/ttyUSB0', 115200, flush=False)
+# print "ident: 0x%x" % ident()
+# r = read(0, 0, 10)
+# print "read:", len(r), r
+
+# erase(0)
+# write(0, [i % 256 for i in range(20*1024)])
+# r = read(0, 0, 10)
+# print "read:", len(r), r
+
+# inject(0, 'build/telosb/tos_image.xml')
+ping(0)
+
+# print formatDescription(getMetadata(0), getIdent(0))
+# print getMetadata(0)
+# print getIdent(0)
+
+# print verifyDescription(getMetadata(0), getIdent(0))
+
+# print formatShortIdent(ident())
+
+# def encode(val, dim):
+#   output = []
+#   for i in range(dim):
+#       output.append(val & 0xFF)
+#       val = val >> 8
+#   return output

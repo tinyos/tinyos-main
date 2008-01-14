@@ -70,9 +70,10 @@ enum {
   DELUGE_REBOOT_DELAY               = 4,
   DELUGE_FAILED_SEND_DELAY          = 16,
   DELUGE_MIN_DELAY                  = 16,
-  DELUGE_DATA_OFFSET                = 128,
+//  DELUGE_DATA_OFFSET                = 128,
   DELUGE_IDENT_SIZE                 = 128,
   DELUGE_INVALID_ADDR               = (0x7fffffffL),
+  DELUGE_MIN_ADV_PERIOD_LOG2        = 9,
   DELUGE_MAX_REQ_DELAY              = (0x1L << (DELUGE_MIN_ADV_PERIOD_LOG2 - 1)),
   DELUGE_NACK_TIMEOUT               = (DELUGE_MAX_REQ_DELAY >> 0x1),
   DELUGE_MAX_IMAGE_SIZE             = (128L * 1024L),
@@ -83,6 +84,7 @@ enum {
   DELUGE_INVALID_OBJID              = 0xff,
   DELUGE_INVALID_PKTNUM             = 0xff,
   DELUGE_INVALID_PGNUM              = 0xff,
+  DELUGE_QSIZE                      = 2
 };
 
 typedef struct DelugeAdvTimer {
