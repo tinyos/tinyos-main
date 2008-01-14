@@ -5,7 +5,7 @@
 <title>
 Deluge T2 - Programming Manual
 </title>
-<link rel="stylesheet" type="text/css" href="../stylesheets/deluge-t2-manual.css" title=default>
+<link rel="stylesheet" type="text/css" href="deluge-t2-manual.css" title=default>
 <meta name=robots content="index,follow">
 </head>
 <body>
@@ -25,7 +25,7 @@ Deluge T2 - Programming Manual
 <p></p>
 <div align=center>
 Chieh-Jan Mike Liang<br>
-Razvan Musaloiu-E.<p>July 13, 2007</p>
+Razvan Musaloiu-E.<p>January 14, 2008</p>
 </div>
 <p></p>
 <p>
@@ -107,20 +107,23 @@ provided in <code class=verbatim>tinyos-2.x/tools/tinyos/misc</code>. For exampl
 You should see something similar to the output below.
 </p>
 <pre class=verbatim>   Pinging node ...
-   Connected to Deluge node.
    --------------------------------------------------
-   Stored image 0
-     Prog Name:   BlinkAppC     
-     Compiled On: Thu May 17 00:36:33 2007
-     Platform:    telosb          
-     User ID:     mike          
-     Host Name:   sprite        
-     User Hash:   0xC50D8DA4L
-     Num Pages:   24/24
+   Currently Executing:
+     Prog Name:   BlinkAppC
+     UID:         0xA274CBBE
+     Compiled On: Mon Jan 14 13:09:38 2008
+     Node ID:     1
    
-     Size:        26512
-     UID:         2302157803
-     Version:     6
+   Stored image 0
+     Prog Name:   BlinkAppC
+     UID:         0xD7EEFACE
+     Compiled On: Mon Jan 14 12:40:06 2008
+     Platform:    telosb
+     User ID:     tinyos2
+     Host Name:   bluephase
+     User Hash:   0x587C9C16
+     Size:        33504
+     Num Pages:   30
    --------------------------------------------------
 </pre><p></p>
 <p>
@@ -186,26 +189,32 @@ You should see something similar to the output below.</p>
 </p>
 <pre class=verbatim>   Pinging node ...
    Connected to Deluge nodes.
+   No valid image was detected.
    --------------------------------------------------
-   Stored image 1
-     No proper Deluge image found!
-   --------------------------------------------------
+   Create image: /home/tinyos2/local/bin/tos-build-deluge-image -i 1 build/telosb/tos_image.xml
    Ihex read complete:
-     Total bytes = 25526
-     Sections = 2
+     35916 bytes starting at 0x4A00
+        32 bytes starting at 0xFFE0
+     35948 bytes in 2 sections
+   CRCs:
+     0xCC0E 0xE57B 0xC224 0xE4FA 0x63EB 0xEBA5 0xE50B 
+     0x8073 0x345E 0x3BBF 0xF415 0xA7DB 0xA67C 0x6953 
+     0x6638 0x3D76 0x7218 0x0E8F 0x9C93 0xD679 0x7A50 
+     0xBFCD 0x8B57 0x7A47 0x323E 0x29FF 0x5EFF 0xB0AE 
+     0x1392 0x4A82 0xACFB 0x69D7 0x8C07 
+   --------------------------------------------------
+   36816 bytes in 28.23 seconds (1303.9932 bytes/s)     
    --------------------------------------------------
    Replace image with:
-     Prog Name:   BlinkAppC     
-     Compiled On: Mon May 07 00:01:43 2007
-     Platform:    telosb          
-     User ID:     mike          
-     Host Name:   sprite        
-     User Hash:   0xC50D8DA4L
-     Num Pages:   24/24
-   
-     Size:        26512
-     UID:         507153792
-     Version:     0
+     Prog Name:   BlinkAppC
+     UID:         0x76D2FB1B
+     Compiled On: Sun Jan 13 21:47:54 2008
+     Platform:    telosb
+     User ID:     tinyos2
+     Host Name:   bluephase
+     User Hash:   0x587C9C16
+     Size:        36816
+     Num Pages:   33
    --------------------------------------------------
 </pre><p></p>
 <p>
@@ -216,7 +225,7 @@ You should see something similar to the output below.</p>
 first test on the base station by issuing the reboot command. For 
 example,
 </p>
-<pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -b 1
+<pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -r 1
 </pre><p>
 After a few moments, the mote will begin quickly flashing the LEDs to 
 signify the reprogramming process.</p>
@@ -233,7 +242,7 @@ network to get the new program image. After all motes receive the image
 over-the-air, you can instruct the base station to disseminate the 
 command to reprogram in the network. For example,
 </p>
-<pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -r 1
+<pre class=verbatim>   % tos-deluge /dev/ttyUSB0 telosb -dr 1
 </pre><p></p>
 <p>
 </p>
@@ -254,30 +263,27 @@ of the image, and so on.</p>
 </p>
 <a name="node_sec_5.2"></a>
 <h2>5.2&nbsp;&nbsp;-i -inject</h2>
-<p>This command creates a program image from the supplied 
-<code class=verbatim>tos_image.xml</code> file, and it injects the image into specified 
-volume on the mote. All versioning information is kept on the mote, so 
-no state is stored on the PC.</p>
+<p>This command creates a program image from the supplied
+<code class=verbatim>tos_image.xml</code> file, and it injects the image into specified
+volume on the mote. </p>
 <p>
 </p>
 <a name="node_sec_5.3"></a>
-<h2>5.3&nbsp;&nbsp;-b -reprogram_bs</h2>
-<p>This command sets up the mote to reprogram itself after reboot, and then 
-it reboots the mote. This command is applicable only to the base station 
-mote.</p>
+<h2>5.3&nbsp;&nbsp;-r -reprogram</h2>
+<p>This command sets up the directly-connected mote to reprogram itself
+after reboot, and then it reboots the mote.</p>
 <p>
 </p>
 <a name="node_sec_5.4"></a>
-<h2>5.4&nbsp;&nbsp;-d -dissemination</h2>
+<h2>5.4&nbsp;&nbsp;-d -disseminate</h2>
 <p>This command instructs the base station mote to disseminate an image to 
 the network. This image is specified by the volume ID.</p>
 <p>
 </p>
 <a name="node_sec_5.5"></a>
-<h2>5.5&nbsp;&nbsp;-r -reprogram</h2>
-<p>This command instructs the base station mote to disseminate the 
-command to reprogram in the network. This command does not reprogram the 
-base station mote. The image is specified by the volume ID.</p>
+<h2>5.5&nbsp;&nbsp;-dr -disseminate-and-reprogram</h2>
+<p>This command asks the motes in the network not only to disseminate an
+image but also to start running it. This is accomplish using a reboot.</p>
 <p>
 </p>
 <a name="node_sec_5.6"></a>
@@ -286,13 +292,21 @@ base station mote. The image is specified by the volume ID.</p>
 <p>
 </p>
 <a name="node_sec_5.7"></a>
-<h2>5.7&nbsp;&nbsp;-s -reset</h2>
-<p>This command resets versioning information of a specific image on the 
-base station mote.</p>
+<h2>5.7&nbsp;&nbsp;-s -stop</h2>
+<p>The effect of <code class=verbatim>-d</code> and <code class=verbatim>-dr</code> is continuous which means a new
+mote will become ``infected'' if he is nearby. This command stops the
+``infection''.</p>
+<p>
+</p>
+<a name="node_sec_5.8"></a>
+<h2>5.8&nbsp;&nbsp;-ls -local-stop</h2>
+<p>When <code class=verbatim>-d</code> or <code class=verbatim>-dr</code> are in effect, the volume used by them is
+locked. This command can be used to unlock the volume in order to
+erase or inject a new image.</p>
 <p>
 </p>
 <p></p>
-<div align=right class=colophon>Last modified: Friday, July 13th, 2007 1:48:23pm<br><div align=right class=advertisement>HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 20050501</a></div></div>
+<div align=right class=colophon>Last modified: Monday, January 14th, 2008 2:11:03pm<br><div align=right class=advertisement>HTML conversion by <a href="http://www.ccs.neu.edu/~dorai/tex2page/tex2page-doc.html">TeX2page 20050501</a></div></div>
 </div>
 </body>
 </html>
