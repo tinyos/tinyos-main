@@ -20,8 +20,8 @@ fi
 
 if [ $# -ne 2 ]; then
   echo "Usage: $0 <port> <platform>"
-  echo "<port>       For example, /dev/ttyUSB0"
-  echo "<platform>   \"micaz\", \"telosb\""
+  echo "  <port>       /dev/ttyUSB0"
+  echo "  <platform>   micaz or telosb"
   exit 2
 fi
 
@@ -63,7 +63,7 @@ echo  ============================= Compile a new Blink ========================
 CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make ${PLATFORM}
 
 echo =============================== Upload the image ===============================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -i 0 build/${PLATFORM}/tos_image.xml
+${TOS_DELUGE} ${PORT} ${PLATFORM} -i 1 build/${PLATFORM}/tos_image.xml
 
 echo '       +----------------------------------------------------------------+'
 echo '       |                                                                |'
@@ -80,4 +80,4 @@ echo '       +----------------------------------------------------------------+'
 read
 
 echo =========================== Reboot the base station ============================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -b 0 
+${TOS_DELUGE} ${PORT} ${PLATFORM} -dr 1 

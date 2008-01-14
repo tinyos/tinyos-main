@@ -7,8 +7,8 @@ fi
 
 if [ $# -ne 2 ]; then
   echo "Usage: $0 <platform> <number of motes>"
-  echo "<platform>         \"micaz\", \"telosb\""
-  echo "<number of motes>  how many motes will be used in the test"
+  echo "  <platform>         micaz or telosb"
+  echo "  <number of motes>  how many motes will be used in the test"
   exit 2
 fi
 
@@ -80,30 +80,20 @@ echo '            +-----------------------------------------------------+'
 read
 
 echo ============================= Start dissemination ==============================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -d 1
+${TOS_DELUGE} ${PORT} ${PLATFORM} -dr 1
 
 echo '         +------------------------------------------------------------+'
 echo '         |                                                            |'
 echo '         | The dissemination is completed when the second and third   |'
 echo '         | led from all the motes except the last one stops blinking. |'
 echo '         |                                                            |'
+echo '         | After a mote gets the whole image he will reboot and       |'
+echo '         | reprogram itself. If the new image contains Deluge he will |'
+echo '         | continue participating in dissemination.                   |'
+echo '         |                                                            |'
 echo '         | In the next step the motes will be rebooted to allow the   |'
 echo '         | reprogramming to take place.                               |'
 echo '         |                                                            |'
-echo '         |                 Press ENTER to continue...                 |'
-echo '         |                                                            |'
 echo '         +------------------------------------------------------------+'
-read
 
-echo ===================== Trigger the reboot in the new image ======================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -r 1
-
-echo '        +-------------------------------------------------------------+'
-echo '        |                                                             |'
-echo '        | All the motes except the last one should reboot, reprogram  |'
-echo '        | the internal flash with the new image and start running it. |'
-echo '        | The end result should be that the last led (blue/yellow)    |'
-echo '        | from all the motes except the last one is blinking.         |'
-echo '        |                                                             |'
-echo '        +-------------------------------------------------------------+'
 
