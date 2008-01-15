@@ -87,6 +87,13 @@ implementation
     nx_uint32_t uidhash;
     nx_uint16_t nodeid;
   };
+
+  uint8_t imgNum2volumeId[] = {
+    VOLUME_GOLDENIMAGE,
+    VOLUME_DELUGE1,
+    VOLUME_DELUGE2,
+    VOLUME_DELUGE3
+  };
   
   void sendReply(error_t error, storage_len_t len)
   {
@@ -179,20 +186,7 @@ implementation
     }
 
     // Converts the image number that the user wants to the real image number
-    switch (request->imgNum) {
-      case 0:
-        imgNum = VOLUME_GOLDENIMAGE;
-        break;
-      case 1:
-        imgNum = VOLUME_DELUGE1;
-        break;
-      case 2:
-        imgNum = VOLUME_DELUGE2;
-        break;
-      case 3:
-        imgNum = VOLUME_DELUGE3;
-        break;
-    }
+    imgNum = imgNum2volumeId[request->imgNum];
     
     if (imgNum != 0xFF) {
       error = SUCCESS;

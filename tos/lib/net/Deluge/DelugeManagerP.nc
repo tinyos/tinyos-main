@@ -55,6 +55,12 @@ implementation
 
   message_t serialMsg;
   DelugeCmd delugeCmd;
+  uint8_t imgNum2volumeId[] = {
+    VOLUME_GOLDENIMAGE,
+    VOLUME_DELUGE1,
+    VOLUME_DELUGE2,
+    VOLUME_DELUGE3
+  };
 
   void sendReply(error_t error)
   {
@@ -85,14 +91,14 @@ implementation
     case DELUGE_CMD_ONLY_DISSEMINATE:
     case DELUGE_CMD_DISSEMINATE_AND_REPROGRAM:
       if (call Resource.immediateRequest() == SUCCESS) {
-	call DelugeMetadata.read(request->imgNum);
+	call DelugeMetadata.read(imgNum2volumeId[request->imgNum]);
       } else {
 	sendReply(FAIL);
       }
       break;
     case DELUGE_CMD_REPROGRAM:
     case DELUGE_CMD_REBOOT:
-      delugeCmd.imgNum = request->imgNum;
+      delugeCmd.imgNum = imgNum2volumeId[request->imgNum];
       call DelayTimer.startOneShot(1024);
       sendReply(SUCCESS);
       break;
