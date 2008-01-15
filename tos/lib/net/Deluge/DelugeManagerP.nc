@@ -92,6 +92,7 @@ implementation
       break;
     case DELUGE_CMD_REPROGRAM:
     case DELUGE_CMD_REBOOT:
+      delugeCmd.imgNum = request->imgNum;
       call DelayTimer.startOneShot(1024);
       sendReply(SUCCESS);
       break;
