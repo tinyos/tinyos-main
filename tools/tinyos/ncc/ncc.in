@@ -14,10 +14,13 @@ $TOSDIR = "@TOSDIR@";
 $TOSDIR = $ENV{"TOSDIR"} if defined($ENV{"TOSDIR"});
 $nescc = "@nescc_prefix@/bin/nescc";
 $tossim = 0;
+$is_tos_1 = 0;
+$with_scheduler_flag = 1;
 
 # Support platform directory renaming for 2.x
 if (-d "$TOSDIR/platform") {
     $platform = "platform";
+    $is_tos_1 = 1;
 }
 else {
     $platform = "platforms";
@@ -36,6 +39,10 @@ for ($i = 0; $i <= $#ARGV; $i++) {
 	}
 	elsif (/^-tosdir=(.*)/) {
 	    $TOSDIR = $1;
+	    $strip = 1;
+	}
+	elsif (/^-tosscheduler=(.*)/) {
+	    $scheduler = $1;
 	    $strip = 1;
 	}
 	elsif (/^-nostdinc$/) {
@@ -111,6 +118,10 @@ if (!defined $target) {
     else {
 	$target = "@default_target@";
     }
+}
+
+if (!defined $scheduler && !$is_tos_1) {
+	$scheduler = "TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask";
 }
 
 if ($print_target) {
@@ -202,6 +213,9 @@ do $family_def if -f $family_def;
 unshift @new_args, "-DPLATFORM_\U$target";
 
 push @new_args, @opts;
+if(!$is_tos_1) {
+  unshift @new_args, "-fnesc-scheduler=$scheduler";
+}
 
 # old nesdoc: set the default topdir based on TOSDIR
 my ($tosparent) = ($TOSDIR =~ m!^(.*)/.*?$!);

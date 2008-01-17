@@ -6,7 +6,7 @@
 # @includes instead of -I's to @opts, otherwise the %T won't be processed
 # by ncc. 
 #
-# $Id: .platform,v 1.6 2007-07-10 23:19:06 idgay Exp $
+# $Id: .platform,v 1.7 2008-01-17 23:18:59 klueska Exp $
 #
 push( @includes, qw(
 
@@ -37,9 +37,9 @@ push( @includes, qw(
   -mmcu=atmega128
   -fnesc-target=avr
   -fnesc-no-debug
-  -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
 
 );
 
+push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;
 push @opts, "-mingw-gcc" if $cygwin;
 

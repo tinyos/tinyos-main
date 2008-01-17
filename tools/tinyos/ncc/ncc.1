@@ -45,6 +45,22 @@ given, \fBncc\fR uses the value specified with the option. If neither the
 environment variable or option are specified, ncc uses its compiled-in
 TinyOS directory.
 .TP
+\fB-tosscheduler=\fIcomponent,unique-string,interface-name,interface-definition,run-event,post-command\fR 
+By  default,  nesC  compiles uses of \fBtask void\fR \fItaskname\fR\fB() ...\fR to \fBvoid\fR 
+\fItaskname\fR\fB()\fR, 
+and \fBpost\fR \fItaskname\fR\fB()\fR to \fBTOS_post\fR\fB(\fR\fItaskname\fR\fB)\fR.
+.IP
+With this option, each task gets  its  own  \fIinterface-definition\fR interface, 
+the task implementation is transformed into a \fIrun-event event\fR and posts becomes a 
+call to the \fIpost-command\fR  command.  This per-task interface is automatically 
+connected to the parameterised \fIinterface-name\fR interface of scheduler 
+\fIcomponent\fR component.  The parameter id for the connection is chosen with 
+\fBunique\fR("\fIunique-string\fR").
+.IP
+If this option is not set explicity, its parameters are assigned by default as follows:
+.IP
+-tosscheduler=\fITinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask\fR
+.TP
 \fB-tossim\fR
 Compile for the TOSSIM environment rather than a native platform. Every
 directory in the search path will be duplicated, with the first copy having
