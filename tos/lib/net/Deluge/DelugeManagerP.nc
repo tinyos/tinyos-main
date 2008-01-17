@@ -90,7 +90,8 @@ implementation
       break;
     case DELUGE_CMD_ONLY_DISSEMINATE:
     case DELUGE_CMD_DISSEMINATE_AND_REPROGRAM:
-      if (call Resource.immediateRequest() == SUCCESS) {
+      if (call Resource.isOwner() || 
+	  call Resource.immediateRequest() == SUCCESS) {
 	call DelugeMetadata.read(imgNum2volumeId[request->imgNum]);
       } else {
 	sendReply(FAIL);
