@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.5 $ $Date: 2008-01-14 22:18:19 $
+ * @version $Revision: 1.6 $ $Date: 2008-01-17 15:19:27 $
  */
 
 #include "IEEE802154.h"
@@ -324,8 +324,8 @@ implementation {
     uint8_t* buf = (uint8_t*) call CC2420PacketBody.getHeader( m_p_rx_buf );;
     
     metadata->crc = buf[ rxFrameLength ] >> 7;
-    metadata->rssi = buf[ rxFrameLength - 1 ];
     metadata->lqi = buf[ rxFrameLength ] & 0x7f;
+    metadata->rssi = buf[ rxFrameLength - 1 ];
     m_p_rx_buf = signal Receive.receive( m_p_rx_buf, m_p_rx_buf->data, 
                                          rxFrameLength );
 
