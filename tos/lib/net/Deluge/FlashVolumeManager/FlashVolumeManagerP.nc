@@ -29,7 +29,7 @@ generic module FlashVolumeManagerP()
   uses {
     interface BlockRead[uint8_t imgNum];
     interface BlockWrite[uint8_t imgNum];
-    interface Resource[uint8_t imgNum];
+    interface Resource;
     interface ArbiterInfo;
     interface AMSend as SerialAMSender;
     interface Receive as SerialAMReceiver;
@@ -194,8 +194,8 @@ implementation
       switch (request->cmd) {
 	case CMD_ERASE:
 	case CMD_WRITE:
-	  if (!call Resource.isOwner[imgNum]()) {
-	    error = call Resource.immediateRequest[imgNum]();
+	  if (!call Resource.isOwner()) {
+	    error = call Resource.immediateRequest();
 	  }
       }
       if (error == SUCCESS) {
@@ -258,9 +258,9 @@ implementation
   event void TimeoutTimer.fired()
   {
     // Release the resource.
-    if (state == S_IDLE && call Resource.isOwner[currentImgNum]()) {
+    if (state == S_IDLE && call Resource.isOwner()) {
       call Leds.led1Off();
-      call Resource.release[currentImgNum]();
+      call Resource.release();
     }
     if (state == S_IDLE && !call ArbiterInfo.inUse()) {
       call Leds.led1Off();
@@ -268,7 +268,7 @@ implementation
   }
 
   event void SerialAMSender.sendDone(message_t* msg, error_t error) {}
-  event void Resource.granted[uint8_t imgNum]() {}
+  event void Resource.granted() {}
 
   default command error_t BlockWrite.write[uint8_t imgNum](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
   default command error_t BlockWrite.erase[uint8_t imgNum]() { return FAIL; }
@@ -276,7 +276,7 @@ implementation
   default command error_t BlockRead.read[uint8_t imgNum](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
   default command error_t BlockRead.computeCrc[uint8_t imgNum](storage_addr_t addr, storage_len_t len, uint16_t crc) { return FAIL; }
 
-  default async command error_t Resource.immediateRequest[uint8_t imgNum]() { return FAIL; }
-  default async command error_t Resource.release[uint8_t imgNum]() { return FAIL; }
-  default async command bool Resource.isOwner[uint8_t imgNum]() { return FAIL; }
+  default async command error_t Resource.immediateRequest() { return FAIL; }
+  default async command error_t Resource.release() { return FAIL; }
+  default async command bool Resource.isOwner() { return FAIL; }
 }

@@ -37,6 +37,7 @@ implementation
   components new TimerMilliC() as TimeoutTimer;
   components NoLedsC, LedsC;
   components BlockStorageLockC;
+  components new BlockStorageLockClientC();
 
   components new BlockReaderC(VOLUME_GOLDENIMAGE) as BlockReaderGoldenImage;
   components new BlockReaderC(VOLUME_DELUGE1)     as BlockReaderDeluge1;
@@ -58,11 +59,7 @@ implementation
   FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE2]     -> BlockWriterDeluge2;
   FlashVolumeManagerP.BlockWrite[VOLUME_DELUGE3]     -> BlockWriterDeluge3;
 
-  FlashVolumeManagerP.Resource[VOLUME_GOLDENIMAGE] -> BlockWriterGoldenImage;
-  FlashVolumeManagerP.Resource[VOLUME_DELUGE1] -> BlockWriterDeluge1;
-  FlashVolumeManagerP.Resource[VOLUME_DELUGE2] -> BlockWriterDeluge2;
-  FlashVolumeManagerP.Resource[VOLUME_DELUGE3] -> BlockWriterDeluge3;
-
+  FlashVolumeManagerP.Resource -> BlockStorageLockClientC;
   FlashVolumeManagerP.ArbiterInfo -> BlockStorageLockC;
  
   FlashVolumeManagerP.TimeoutTimer -> TimeoutTimer;
