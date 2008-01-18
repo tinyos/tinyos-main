@@ -90,6 +90,7 @@ implementation {
       bootArgs.imageAddr = imgAddr;
       bootArgs.gestureCount = 0xff;
       bootArgs.noReprogram = FALSE;
+      bootArgs.address = TOS_NODE_ID;
 
       call IFlash.write((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
 
