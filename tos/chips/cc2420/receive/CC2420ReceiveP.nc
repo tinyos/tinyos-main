@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.6 $ $Date: 2008-01-17 15:19:27 $
+ * @version $Revision: 1.7 $ $Date: 2008-01-18 18:36:00 $
  */
 
 #include "IEEE802154.h"
@@ -394,6 +394,16 @@ implementation {
       }
       
       atomic receivingPacket = FALSE;
+      
+      /*
+       * The FIFOP pin here is high when there are 0 bytes in the RX FIFO
+       * and goes low as soon as there are bytes in the RX FIFO.  The pin
+       * is inverted from what the datasheet says, and its threshold is 127.
+       * Whenever the FIFOP line goes low, as you can see from the interrupt
+       * handler elsewhere in this module, it means we received a new packet.
+       * If the line stays low without generating an interrupt, that means
+       * there's still more data to be received.
+       */
       if ( ( m_missed_packets && call FIFO.get() ) || !call FIFOP.get() ) {
         // A new packet is buffered up and ready to go
         if ( m_missed_packets ) {
