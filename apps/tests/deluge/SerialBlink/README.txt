@@ -13,13 +13,8 @@ You can reprogram the whole network (non-basestation motes) by first
 uploading the image to the base station. Then, tell the base station to 
 disseminate the image. Example:
 
-   tos-deluge /dev/ttyUSB0 telosb -d 0
+   tos-deluge /dev/ttyUSB0 telosb -dr 1
    
-Finally, after the image has been disseminated, instruct the base 
-station to disseminate the command to reprogram. Example:
-
-   tos-deluge /dev/ttyUSB0 telosb -r 0
-
 For a more detailed discussion on Deluge T2, please refer to the Deluge 
 T2 manual.
 
