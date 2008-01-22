@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.5 2007-12-21 04:36:42 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.6 2008-01-22 18:03:40 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -67,7 +67,9 @@ implementation {
     BEST_EETX = 0,
     INVALID_RVAL = 0xff,
     INVALID_NEIGHBOR_ADDR = 0xff,
-    INFINITY = 0xff,
+    // if we don't know the link quality, we need to return a value so
+    // large that it will not be used to form paths
+    VERY_LARGE_EETX_VALUE = 0xff,
     // decay the link estimate using this alpha
     // we use a denominator of 10, so this corresponds to 0.2
     ALPHA = 9,
@@ -130,7 +132,8 @@ implementation {
     newPrevSentIdx = 0;
     for (i = 0; i < NEIGHBOR_TABLE_SIZE && j < maxEntries; i++) {
       k = (prevSentIdx + i + 1) % NEIGHBOR_TABLE_SIZE;
-      if (NeighborTable[k].flags & VALID_ENTRY) {
+      if ((NeighborTable[k].flags & VALID_ENTRY) &&
+	  (NeighborTable[k].flags & MATURE_ENTRY)) {
 	footer->neighborList[j].ll_addr = NeighborTable[k].ll_addr;
 	footer->neighborList[j].inquality = NeighborTable[k].inquality;
 	newPrevSentIdx = k;
@@ -295,11 +298,11 @@ implementation {
     if (q1 > 0) {
       q =  2550 / q1 - 10;
       if (q > 255) {
-	q = INFINITY;
+	q = VERY_LARGE_EETX_VALUE;
       }
       return (uint8_t)q;
     } else {
-      return INFINITY;
+      return VERY_LARGE_EETX_VALUE;
     }
   }
 
@@ -441,12 +444,12 @@ implementation {
     uint8_t idx;
     idx = findIdx(neighbor);
     if (idx == INVALID_RVAL) {
-      return INFINITY;
+      return VERY_LARGE_EETX_VALUE;
     } else {
       if (NeighborTable[idx].flags & MATURE_ENTRY) {
 	return NeighborTable[idx].eetx;
       } else {
-	return INFINITY;
+	return VERY_LARGE_EETX_VALUE;
       }
     }
   }
