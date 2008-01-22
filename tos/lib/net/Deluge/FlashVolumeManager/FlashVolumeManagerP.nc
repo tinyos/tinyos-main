@@ -186,7 +186,7 @@ implementation
     }
 
     // Converts the image number that the user wants to the real image number
-    imgNum = imgNum2volumeId[request->imgNum];
+    imgNum = request->imgNum < DELUGE_NUM_VOLUMES ? imgNum2volumeId[request->imgNum] : 0xFF;
     
     if (imgNum != 0xFF) {
       error = SUCCESS;

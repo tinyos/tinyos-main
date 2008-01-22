@@ -90,14 +90,19 @@ implementation
       break;
     case DELUGE_CMD_ONLY_DISSEMINATE:
     case DELUGE_CMD_DISSEMINATE_AND_REPROGRAM:
-      if (call Resource.isOwner() || 
-	  call Resource.immediateRequest() == SUCCESS) {
+      if (request->imgNum < DELUGE_NUM_VOLUMES &&
+	  (call Resource.isOwner() || 
+	   call Resource.immediateRequest() == SUCCESS)) {
 	call DelugeMetadata.read(imgNum2volumeId[request->imgNum]);
       } else {
 	sendReply(FAIL);
       }
       break;
     case DELUGE_CMD_REPROGRAM:
+      if (!(request->imgNum < DELUGE_NUM_VOLUMES)) {
+	sendReply(FAIL);
+	break;
+      }
     case DELUGE_CMD_REBOOT:
       delugeCmd.imgNum = imgNum2volumeId[request->imgNum];
       call DelayTimer.startOneShot(1024);
