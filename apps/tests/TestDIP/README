@@ -1,0 +1,47 @@
+
+Title: TestDIP Application
+Author: Kaisen Lin
+
+1. SETTING UP THE TEST
+
+You need to first generate the code for compilation. The gentest.py
+script reads in the Master files and creates TestDIPC.nc (the
+configuration) and TESTDIPP.nc (the module). It takes two parameters,
+the total number of items and the number of new items. The items that
+are random are chosen randomly.
+
+If you want 128 total items and 96 new items, you would type:
+
+python gentest.py 128 96
+
+After the configuration and module have been generated, you can use
+the normal compilation method (e.g. make telosb).
+
+2, READING THE LEDS
+
+When an node receives a new item, it toggles LED0. When a node
+completes all items, it turns all LEDs on.
+
+3. SERIAL MESSAGES
+
+typedef nx_struct dip_test_msg_t {
+  nx_am_addr_t id;
+  nx_uint8_t count;
+  nx_uint8_t isOk;
+} dip_test_msg_t;
+
+Every time a node a receives a new item, it sends a dip_test_msg_t
+through the serial interface.
+
+id is the node id
+count is how many new items it has received so far
+isOk will be true if the data value was as expected
+
+4. TIMING
+
+With a single sender and single receiver on a table, it takes
+approximately:
+
+3.5 minutes for a node to receive 128 out of 128 items. 
+4.0 minutes for a node to receive 240 out of 240 items.
+
