@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: bnp.extra,v 1.5 2008-01-14 04:22:01 razvanm Exp $
+#$Id: bnp.extra,v 1.6 2008-01-24 20:38:00 sallai Exp $
 
 DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
 DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
@@ -26,5 +26,12 @@ ifeq ($(TINYOS_NP),BNP)
     BOOTLOADER ?= $(TOSBOOT_DIR)/micaz/main.ihex
     AVR_FUSE_H ?= 0xda
   endif
+
+  ifeq ($(TARGETS),iris)
+    CFLAGS += -I$(DELUGE_EXTRA)/iris -I$(DELUGE_EXTRA)/micaz -I$(DELUGE_EXTRA)/mica2 -I$(DELUGE_EXTRA)/avr -I$(DELUGE_EXTRA)
+    BOOTLOADER ?= $(TOSBOOT_DIR)/iris/main.ihex
+    AVR_FUSE_H ?= 0xda
+  endif
+
 
 endif
