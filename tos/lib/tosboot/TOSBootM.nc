@@ -1,17 +1,17 @@
 /*
- * "Copyright (c) 2000-2005 The Regents of the University  of California.  
+ * "Copyright (c) 2000-2005 The Regents of the University  of California.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
  * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -72,7 +72,7 @@ implementation {
     in_flash_addr_t result = 0;
     int8_t  i;
     for ( i = 3; i >= 0; i-- )
-      result |= ((in_flash_addr_t)call ExtFlash.readByte() & 0xff) << (i*8);    
+      result |= ((in_flash_addr_t)call ExtFlash.readByte() & 0xff) << (i*8);
     return result;
   }
 
@@ -91,7 +91,7 @@ implementation {
     for ( crcTmp = 0; len; len-- )
       crcTmp = crcByte(crcTmp, call ExtFlash.readByte());
     call ExtFlash.stopRead();
-    
+
     return crcTarget == crcTmp;
   }
 
@@ -100,7 +100,7 @@ implementation {
     uint8_t  numPgs;
     uint8_t  i;
 
-    if (!verifyBlock(startAddr + offsetof(DelugeIdent,crc), 
+    if (!verifyBlock(startAddr + offsetof(DelugeIdent,crc),
 		     startAddr, offsetof(DelugeIdent,crc)))
       return FALSE;
 
@@ -116,7 +116,7 @@ implementation {
     addr = DELUGE_CRC_BLOCK_SIZE;
 
     for ( i = 0; i < numPgs; i++ ) {
-      if (!verifyBlock(startAddr + i*sizeof(uint16_t), 
+      if (!verifyBlock(startAddr + i*sizeof(uint16_t),
 		       startAddr + addr, DELUGE_BYTES_PER_PAGE)) {
 	if (i == 0)
 	  while (1)
@@ -149,7 +149,7 @@ implementation {
 
 #if defined(PLATFORM_TELOSB)
     if (intAddr != TOSBOOT_END) {
-#elif defined(PLATFORM_MICAZ)
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
     if (intAddr != 0) {
 #else
   #error "Target platform is not currently supported by Deluge T2"
@@ -157,11 +157,11 @@ implementation {
       call ExtFlash.stopRead();
       return R_INVALID_IMAGE_ERROR;
     }
-    
+
     call ExtFlash.stopRead();
-    
+
     while ( secLength ) {
-      
+
       pageAddr = newPageAddr = intAddr / TOSBOOT_INT_PAGE_SIZE;
 
       call ExtFlash.startRead(curAddr);
@@ -176,7 +176,7 @@ implementation {
 
 	buf[(uint16_t)intAddr % TOSBOOT_INT_PAGE_SIZE] = call ExtFlash.readByte();
 	intAddr++; curAddr++;
-	
+
 	if ( --secLength == 0 ) {
 	  intAddr = extFlashReadAddr();
 	  secLength = extFlashReadAddr();
@@ -219,7 +219,7 @@ implementation {
       startupLeds();
       runApp();
     }
-    
+
     // get current value of counter
     call IntFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &args, sizeof(args));
 
@@ -255,7 +255,7 @@ implementation {
     args.gestureCount = 0xff;
     args.noReprogram = TRUE;
     call IntFlash.write((uint8_t*)TOSBOOT_ARGS_ADDR, &args, sizeof(args));
-    
+
     runApp();
 
   }
