@@ -80,4 +80,4 @@ echo '       +----------------------------------------------------------------+'
 read
 
 echo =========================== Reboot the base station ============================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -dr 1 
+${TOS_DELUGE} ${PORT} ${PLATFORM} -r 1 
