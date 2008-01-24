@@ -1,11 +1,12 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: mib510.extra,v 1.5 2007-11-06 19:32:56 sallai Exp $
+#$Id: mib510.extra,v 1.6 2008-01-24 20:35:40 sallai Exp $
 
 ifeq ($(MIB510),)
 $(error MIB510 must be defined, try "make $(TARGETS) help")
 endif
 
 PROGRAM = mib510
+
 ifeq ($(PROGRAMMER),avrdude)
     ifdef BOOTLOADER
       ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
@@ -14,7 +15,7 @@ ifeq ($(PROGRAMMER),avrdude)
     endif
     PROGRAMMER_FLAGS = -cmib510 -P$(MIB510) -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_MIB)
     PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
-    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -D -U flash:w:$(BOOTLOADER):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER):a
 endif
 
 ifeq ($(PROGRAMMER),uisp)
@@ -26,7 +27,7 @@ endif
 program: FORCE
 	@echo "    installing $(PLATFORM) binary using mib510"
 	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
-	
+
 program_bl: FORCE
 	@echo "    installing $(PLATFORM) bootloader using mib510"
 	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS)

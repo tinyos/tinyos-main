@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avrisp.extra,v 1.5 2007-11-06 19:32:56 sallai Exp $
+#$Id: avrisp.extra,v 1.6 2008-01-24 20:35:40 sallai Exp $
 
 ifeq ($(AVRISP),)
 $(error AVRISP must be defined, try "make $(TARGETS) help")
@@ -15,7 +15,7 @@ ifeq ($(PROGRAMMER),avrdude)
     endif
     PROGRAMMER_FLAGS = -cstk500 -P$(MIB510) -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_AVRISP)
     PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
-    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -D -U flash:w:$(BOOTLOADER):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER):a
 endif
 
 ifeq ($(PROGRAMMER),uisp)
