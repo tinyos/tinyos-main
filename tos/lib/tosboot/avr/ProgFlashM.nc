@@ -1,4 +1,4 @@
-// $Id: ProgFlashM.nc,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+// $Id: ProgFlashM.nc,v 1.2 2008-01-25 00:47:33 razvanm Exp $
 
 /*									tab:2
  *
@@ -36,7 +36,7 @@ module ProgFlashM {
 
 implementation {
 
-#include <boot.h>
+#include <avr/boot.h>
 
   command error_t ProgFlash.write(in_flash_addr_t addr, uint8_t* buf, in_flash_addr_t len) {
 
