@@ -131,7 +131,7 @@ def handleResponse(success, msg):
     if success == True:
         packet = s.sniff_am()
         while packet and packet.type == 100:
-            print "".join([chr(i) for i in p.data])
+            print "".join([chr(i) for i in packet.data])
             packet = s.sniff_am()
         reply = SerialReplyPacket(packet.data)
         if reply.error == ERROR_SUCCESS:
