@@ -72,14 +72,16 @@ implementation {
     }
     dbg("TestDIPP", "Got an update, %u complete now at %s\n", count, sim_time_string());
     call Leds.led0Toggle();
+
+    testmsg = (dip_test_msg_t*) call SerialSend.getPayload(&m_test, 0);
+    testmsg->id = TOS_NODE_ID;
+    testmsg->count = count;
+    testmsg->isOk = okbit;
+    call SerialSend.send(0, &m_test, sizeof(dip_test_msg_t));
     
+
     if(newcount == count) {
       call Leds.set(7);
-      testmsg = (dip_test_msg_t*) call SerialSend.getPayload(&m_test, 0);
-      testmsg->id = TOS_NODE_ID;
-      testmsg->count = count;
-      testmsg->isOk = okbit;
-      call SerialSend.send(0, &m_test, sizeof(dip_test_msg_t));
     }
     
   }

@@ -30,8 +30,8 @@ typedef nx_struct dip_test_msg_t {
   nx_uint8_t isOk;
 } dip_test_msg_t;
 
-Every time a node a receives a new item, it sends a dip_test_msg_t
-through the serial interface.
+When a node receives a new item, it sends a dip_test_msg_t through the
+serial interface.
 
 id is the node id
 count is how many new items it has received so far
@@ -39,9 +39,14 @@ isOk will be true if the data value was as expected
 
 4. TIMING
 
-With a single sender and single receiver on a table, it takes
-approximately:
+With a single sender and single receiver on a table using TelosB
+nodes, it takes approximately:
 
 3.5 minutes for a node to receive 128 out of 128 items. 
 4.0 minutes for a node to receive 240 out of 240 items.
 
+With a single sender and two receivers on Mirage MicaZ nodes, it takes
+approximately:
+
+2 minutes for both nodes to receive 96 out of 96 items.
+With 128 items or more, MicaZ nodes don't receive anything. Memory limitation?
