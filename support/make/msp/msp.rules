@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.6 2007-08-17 15:47:30 beutel Exp $
+#$Id: msp.rules,v 1.7 2008-02-01 20:25:37 scipio Exp $
 
 define MSP_HELP
 
@@ -39,10 +39,13 @@ MAIN_EXE = $(BUILDDIR)/main.exe
 MAIN_IHEX = $(BUILDDIR)/main.ihex
 INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
 
-PFLAGS += -Wall -Wshadow -DDEF_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP) $(NESC_FLAGS)
+PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
 PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+ifdef DEFAULT_LOCAL_GROUP
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
 endif
 
 DEFAULT_PROGRAM ?= bsl

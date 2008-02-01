@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: pxa27x.rules,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+#$Id: pxa27x.rules,v 1.5 2008-02-01 20:25:37 scipio Exp $
 
 define PXA27X_HELP
 
@@ -35,10 +35,13 @@ ASSEMBLY_OBJS =  $(BUILDDIR)/asms.o
 #LIBRARY_OBJS  =  $(PLATFORM_DIR)/lib/profile.o $(PLATFORM_DIR)/lib/queue.o
 
 OPTFLAGS ?= -O3 -g
-PFLAGS += -Wall -Wshadow -DDEF_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP) $(NESC_FLAGS)
+PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
 PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+ifdef DEFAULT_LOCAL_GROUP
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
 endif
 
 DEFAULT_PROGRAM ?= xflash

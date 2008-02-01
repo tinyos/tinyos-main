@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: null.rules,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+#$Id: null.rules,v 1.5 2008-02-01 20:25:37 scipio Exp $
 
 define NULL_HELP
 
@@ -22,10 +22,13 @@ MAIN_IHEX = $(BUILDDIR)/main.ihex
 INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
 VOLUMEFILE = volumes-at45db.xml
 
-PFLAGS += -Wall -Wshadow -DDEF_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP) $(NESC_FLAGS)
+PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
 PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+ifdef DEFAULT_LOCAL_GROUP
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
 endif
 
 BUILDLESS_DEPS += bytes

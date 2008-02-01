@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.7 2007-11-06 19:32:56 sallai Exp $
+#$Id: avr.rules,v 1.8 2008-02-01 20:25:37 scipio Exp $
 
 define AVR_HELP
 
@@ -47,6 +47,9 @@ PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
 PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
 ifdef MSG_SIZE
 PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+ifdef DEFAULT_LOCAL_GROUP
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
 endif
 
 AVRGCCMAJOR = $(shell avr-gcc -v 2>&1 | grep "gcc version" | sed -n 's/gcc version \([2-5]\)\.\([0-9]\)\.\([0-9]\).*/\1/p')
