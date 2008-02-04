@@ -31,7 +31,7 @@
  *
  * @author Philip Levis
  * @author David Moss
- * @version $Revision: 1.9 $ $Date: 2007-09-14 00:15:57 $
+ * @version $Revision: 1.10 $ $Date: 2008-02-04 23:10:13 $
  */
 
 #include "CC2420.h"
@@ -51,6 +51,7 @@ configuration CC2420ActiveMessageC {
     interface RadioBackoff[am_id_t amId];
     interface LowPowerListening;
     interface PacketLink;
+    interface SendNotifier[am_id_t amId];
   }
 }
 implementation {
@@ -80,6 +81,7 @@ implementation {
   RadioBackoff = CsmaC;
   Packet = AM;
   AMSend = AM;
+  SendNotifier = AM;
   Receive = AM.Receive;
   Snoop = AM.Snoop;
   AMPacket = AM;

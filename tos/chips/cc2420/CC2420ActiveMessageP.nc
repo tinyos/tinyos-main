@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.10 $ $Date: 2008-01-09 19:44:37 $
+ * @version $Revision: 1.11 $ $Date: 2008-02-04 23:10:13 $
  */
  
 #include "CC2420.h"
@@ -41,7 +41,9 @@ module CC2420ActiveMessageP {
     interface Receive as Snoop[am_id_t id];
     interface AMPacket;
     interface Packet;
+    interface SendNotifier[am_id_t id];
   }
+  
   uses {
     interface Send as SubSend;
     interface Receive as SubReceive;
@@ -65,6 +67,8 @@ implementation {
     header->type = id;
     header->dest = addr;
     header->destpan = call CC2420Config.getPanAddr();
+    
+    signal SendNotifier.aboutToSend[id](addr, msg);
     
     return call SubSend.send( msg, len + CC2420_SIZE );
   }
@@ -196,7 +200,9 @@ implementation {
   }
 
   default event void AMSend.sendDone[uint8_t id](message_t* msg, error_t err) {
-    return;
   }
 
+  default event void SendNotifier.aboutToSend[am_id_t amId](am_addr_t addr, message_t *msg) {
+  }
+  
 }
