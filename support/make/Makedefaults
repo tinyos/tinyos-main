@@ -1,7 +1,7 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makedefaults,v 1.6 2007-05-22 20:34:20 razvanm Exp $
+#$Id: Makedefaults,v 1.7 2008-02-06 18:19:50 scipio Exp $
 
-DEFAULT_LOCAL_GROUP ?= 0x7d
+DEFAULT_LOCAL_GROUP ?= 0x22
 OPTFLAGS ?= -Os
 NESC_FLAGS ?= -Wnesc-all
 GOALS += ident_flags tos_image bnp
