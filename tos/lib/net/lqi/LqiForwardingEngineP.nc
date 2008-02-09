@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.11 2008-01-02 04:08:32 gnawali Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.12 2008-02-09 05:45:10 gnawali Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -502,7 +502,7 @@ implementation {
  default event message_t* Receive.receive[collection_id_t id](message_t* pMsg, void* payload, uint8_t len) {
    return pMsg;
  }
- default event bool Intercept.forward[collection_id_t id](message_t* pMsg, void* payload, uint16_t len) {
+ default event bool Intercept.forward[collection_id_t id](message_t* pMsg, void* payload, uint8_t len) {
    return 1;
  }
 

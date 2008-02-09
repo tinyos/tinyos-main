@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.10 2008-01-02 04:02:45 gnawali Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.11 2008-02-09 05:45:10 gnawali Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-01-02 04:02:45 $
+ *  @date   $Date: 2008-02-09 05:45:10 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -921,7 +921,7 @@ implementation {
 
   default event bool
   Intercept.forward[collection_id_t collectid](message_t* msg, void* payload, 
-                                               uint16_t len) {
+                                               uint8_t len) {
     return TRUE;
   }
 
