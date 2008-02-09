@@ -5,7 +5,7 @@
  *
  * @author Philip Levis
  * @author Kyle Jamieson
- * @version $Id: Intercept.nc,v 1.4 2006-12-12 18:23:14 vlahan Exp $
+ * @version $Id: Intercept.nc,v 1.5 2008-02-09 05:44:09 gnawali Exp $
  * @see TEP 116: Packet Protocols, TEP 119: Collection
  */
 
@@ -28,5 +28,5 @@ interface Intercept {
    * indicates that it should not be forwarded.
    *
    */
-  event bool forward(message_t* msg, void* payload, uint16_t len);
+  event bool forward(message_t* msg, void* payload, uint8_t len);
 }
