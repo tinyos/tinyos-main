@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-09-13 23:09:19 $
-:version: $Revision: 1.14 $
+:date: $Date: 2008-02-11 18:11:47 $
+:version: $Revision: 1.15 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.10</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.12</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-03-28</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-02-11</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -409,10 +409,10 @@ interface Packet {
 </pre>
 <p>A component can obtain a pointer to its data region within a packet by
 calling <tt class="docutils literal"><span class="pre">getPayload()</span></tt>. A call to this command includes the length
-the caller requires. The command <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt> returns the maximum
-length the payload can be: if the <tt class="docutils literal"><span class="pre">len</span></tt> parameter to <tt class="docutils literal"><span class="pre">getPayload</span></tt>
-is greater than the value <tt class="docutils literal"><span class="pre">maxPayloadLength``would</span> <span class="pre">return,</span>
-<span class="pre">``getPayload</span></tt> MUST return NULL.</p>
+the caller requires. The command <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt> returns the
+maximum length the payload can be: if the <tt class="docutils literal"><span class="pre">len</span></tt> parameter to
+<tt class="docutils literal"><span class="pre">getPayload</span></tt> is greater than the value <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt> would
+return, <tt class="docutils literal"><span class="pre">getPayload</span></tt> MUST return NULL.</p>
 <p>A component can set the payload length with <tt class="docutils literal"><span class="pre">setPayLoadLength.</span></tt> A
 component can obtain the size of the data region of packet in use with
 a call to <tt class="docutils literal"><span class="pre">payloadLength</span></tt>. As Send interfaces always include a
@@ -428,14 +428,26 @@ needed; in the send case, a component needs to know how much data it
 can put in the packet. By definition, the return value of
 <tt class="docutils literal"><span class="pre">payloadLength</span></tt> must be less than or equal to the return value of
 <tt class="docutils literal"><span class="pre">maxPayloadLength</span></tt>.</p>
-<p>The Packet interface assumes that headers have a fixed size.
-It is difficult to return a pointer into the data region when its
-position will only be known once the header values are bound.</p>
-<p>Generally, an incoming call to the Packet interface of a protocol
-has an accompanying outgoing call to the Packet interface of the
-component below it. The one exception to this is the data link
-layer. For example, if there is a network that introduces
-16-bit sequence numbers to packets, it might look like this:</p>
+<p>The Packet interface assumes that headers have a fixed size. It is
+difficult to return a pointer into the data region when its position
+will only be known once the header values are bound.</p>
+<p>The <tt class="docutils literal"><span class="pre">clear</span></tt> command clears out all headers, footers, and metadata
+for lower layers. For example, calling <tt class="docutils literal"><span class="pre">clear</span></tt> on a routing
+component, such as CollectionSenderC[4]_, will clear out the
+collection headers and footers. Furthermore, CollectionSenderC will
+recursively call <tt class="docutils literal"><span class="pre">clear</span></tt> on the layer below it, clearing out the
+link layer headers and footers. Calling <tt class="docutils literal"><span class="pre">clear</span></tt> is typically
+necessary when moving a packet across two link layers. Otherwise, the
+destination link layer may incorrectly interpret metadata from the
+source link layer, and, for example, transmit the packet on the wrong
+RF channel. Because <tt class="docutils literal"><span class="pre">clear</span></tt> prepares a packet for a particular link
+layer, in this example correct code would call the command on the
+destination link layer, not the source link layer.</p>
+<p>Typically, an incoming call to the Packet interface of a protocol has
+an accompanying outgoing call to the Packet interface of the component
+below it. The one exception to this is the data link layer. For
+example, if there is a network that introduces 16-bit sequence numbers
+to packets, it might look like this:</p>
 <pre class="literal-block">
 generic module SequenceNumber {
   provides interface Packet;
@@ -453,7 +465,10 @@ implementation {
   command void Packet.clear(message_t* msg) {
     uint8_t len;
     void* payload = call SubPacket.getPayload(msg, call SubPacket.maxPayloadLength());
-    memset(payload, len, 0);
+    call SubPacket.clear();
+    if (payload != NULL) {
+      memset(payload, sizeof(seq_header_t), 0);
+    }
   }
 
   command uint8_t Packet.payloadLength(message_t* msg) {
@@ -505,18 +520,23 @@ interface AMPacket {
   command bool isForMe(message_t* amsg);
   command am_id_t type(message_t* amsg);
   command void setType(message_t* amsg, am_id_t t);
+  command am_group_t group(message_t* amsg);
+  command void setGroup(message_t* amsg, am_group_t grp);
+  command am_group_t localGroup();
 }
 </pre>
 <p>The command address() returns the local AM address of the
 node. AMPacket provides accessors for its two fields, destination and
 type. It also provides commands to set these fields, for the same
-reason that Packet allows a caller to set the payload length.
-Packet interfaces SHOULD provide accessors
-and mutators for all of their fields to enable queues and other
-buffering to store values in a packet buffer. Typically, a component
-stores these values in the packet buffer itself (where the field is),
-but when necessary it may use the metadata region of message_t or other
-locations.</p>
+reason that Packet allows a caller to set the payload length.  Packet
+interfaces SHOULD provide accessors and mutators for all of their
+fields to enable queues and other buffering to store values in a
+packet buffer. Typically, a component stores these values in the
+packet buffer itself (where the field is), but when necessary it may
+use the metadata region of message_t or other locations.</p>
+<p>The group field refers to the AM group, a logical network identifier.
+Link layers will typically only signal reception for packets whose AM
+group matches the node's, which <tt class="docutils literal"><span class="pre">localGroup</span></tt> returns.</p>
 </div>
 <div class="section">
 <h2><a id="sending-interfaces" name="sending-interfaces">2.2 Sending interfaces</a></h2>
@@ -570,12 +590,12 @@ use a QueueC (found in tos/system) to store pending packet pointers
 and serialize them onto sending interface, or they can introduce
 a new sending interface that supports multiple pending transmissions.</p>
 <p>The cancel command allows a sender to cancel the current transmission.
-A call to cancel when there is no pending sendDone event MUST return FAIL.
-If there is a pending sendDone event and the cancel returns SUCCESS, then
-the packet layer MUST NOT transmit the packet and MUST signal sendDone
-with ECANCEL as its error code. If there is a pending sendDone event
-and cancel returns FAIL, then sendDone SHOULD occur as if the cancel
-was not called.</p>
+A call to cancel when there is no pending sendDone event MUST return
+FAIL.  If there is a pending sendDone event and the cancel returns
+SUCCESS, then the packet layer MUST NOT transmit the packet and MUST
+signal sendDone with ECANCEL as its error code. If there is a pending
+sendDone event and cancel returns FAIL, then sendDone MUST occur as if
+the cancel was not called.</p>
 </div>
 <div class="section">
 <h2><a id="receive-interface" name="receive-interface">2.3 Receive interface</a></h2>
@@ -585,27 +605,26 @@ interface Receive {
   event message_t* receive(message_t* msg, void* payload, uint8_t len);
 }
 </pre>
-<p>A call to <tt class="docutils literal"><span class="pre">Receive.getPayload()</span></tt> MUST behave identically to a call
-to <tt class="docutils literal"><span class="pre">Packet.getPayload()</span></tt>. The <tt class="docutils literal"><span class="pre">receive()</span></tt> event's <tt class="docutils literal"><span class="pre">payload</span></tt>
-parameter MUST be identical to what a call to <tt class="docutils literal"><span class="pre">getPayload()</span></tt> would
-return, and the <tt class="docutils literal"><span class="pre">len</span></tt> parameter MUST be identical to the length that
-a call to <tt class="docutils literal"><span class="pre">getPayload</span></tt> would return. These parameters are for
+<p>The <tt class="docutils literal"><span class="pre">receive()</span></tt> event's <tt class="docutils literal"><span class="pre">payload</span></tt> parameter MUST be identical to
+what a call to the corresponding <tt class="docutils literal"><span class="pre">Packet.getPayload()</span></tt> would return,
+and the <tt class="docutils literal"><span class="pre">len</span></tt> parameter MUST be identical to the length that a call
+to <tt class="docutils literal"><span class="pre">Packet.getPayload</span></tt> would return. These parameters are for
 convenience, as they are commonly used by receive handlers, and their
-presence removes the need for a call to <tt class="docutils literal"><span class="pre">getPayload()</span></tt>, while
-<tt class="docutils literal"><span class="pre">getPayload()</span></tt> is a convenience so a component does not have to wire
-to <tt class="docutils literal"><span class="pre">Packet.</span></tt> The command <tt class="docutils literal"><span class="pre">payloadLength</span></tt> has a similar motivation
-and the same semantics as its twin in <tt class="docutils literal"><span class="pre">Packet</span></tt>.</p>
-<p>Receive has a <em>buffer-swap</em> policy. The handler of the event MUST return
-a pointer to a valid message buffer for the signaler to use. This
-approach enforces an equilibrium between upper and lower packet
-layers. If an upper layer cannot handle packets as quickly as they
-are arriving, it still has to return a valid buffer to the lower
+presence removes the need for a call to <tt class="docutils literal"><span class="pre">getPayload()</span></tt>. Unlike Send,
+Receive does not have a convenience <tt class="docutils literal"><span class="pre">getPayload</span></tt> call, because doing
+so prevents fan-in. As Receive has only a single event, users of
+Receive can be wired multiple times.</p>
+<p>Receive has a <em>buffer-swap</em> policy. The handler of the event MUST
+return a pointer to a valid message buffer for the signaler to
+use. This approach enforces an equilibrium between upper and lower
+packet layers. If an upper layer cannot handle packets as quickly as
+they are arriving, it still has to return a valid buffer to the lower
 layer. This buffer could be the <tt class="docutils literal"><span class="pre">msg</span></tt> parameter passed to it: it
 just returns the buffer it was given without looking at it. Following
-this policy means that a data-rate mismatch in an upper-level component
-will be isolated to that component. It will drop packets, but it will
-not prevent other components from receiving packets. If an upper
-layer did not have to return a buffer immediately, then when an
+this policy means that a data-rate mismatch in an upper-level
+component will be isolated to that component. It will drop packets,
+but it will not prevent other components from receiving packets. If an
+upper layer did not have to return a buffer immediately, then when an
 upper layer cannot handle packets quickly enough it will end up
 holding all of them, starving lower layers and possibly preventing
 packet reception.</p>
