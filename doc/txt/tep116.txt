@@ -10,8 +10,8 @@ Packet Protocols
 :Author: Philip Levis
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.11 $
-:Draft-Modified: $Date: 2007-09-13 23:09:19 $
+:Draft-Version: $Revision: 1.12 $
+:Draft-Modified: $Date: 2008-02-11 18:11:20 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -127,10 +127,10 @@ The Packet interface defines this mechanism::
 
 A component can obtain a pointer to its data region within a packet by
 calling ``getPayload()``. A call to this command includes the length
-the caller requires. The command ``maxPayloadLength`` returns the maximum
-length the payload can be: if the ``len`` parameter to ``getPayload``
-is greater than the value ``maxPayloadLength``would return,
-``getPayload`` MUST return NULL.
+the caller requires. The command ``maxPayloadLength`` returns the
+maximum length the payload can be: if the ``len`` parameter to
+``getPayload`` is greater than the value ``maxPayloadLength`` would
+return, ``getPayload`` MUST return NULL.
 
 
 A component can set the payload length with ``setPayLoadLength.`` A
@@ -150,15 +150,28 @@ can put in the packet. By definition, the return value of
 ``payloadLength`` must be less than or equal to the return value of
 ``maxPayloadLength``.
 
-The Packet interface assumes that headers have a fixed size. 
-It is difficult to return a pointer into the data region when its 
-position will only be known once the header values are bound.
+The Packet interface assumes that headers have a fixed size. It is
+difficult to return a pointer into the data region when its position
+will only be known once the header values are bound.
 
-Generally, an incoming call to the Packet interface of a protocol
-has an accompanying outgoing call to the Packet interface of the 
-component below it. The one exception to this is the data link
-layer. For example, if there is a network that introduces
-16-bit sequence numbers to packets, it might look like this::
+The ``clear`` command clears out all headers, footers, and metadata
+for lower layers. For example, calling ``clear`` on a routing
+component, such as CollectionSenderC[4]_, will clear out the
+collection headers and footers. Furthermore, CollectionSenderC will
+recursively call ``clear`` on the layer below it, clearing out the
+link layer headers and footers. Calling ``clear`` is typically
+necessary when moving a packet across two link layers. Otherwise, the
+destination link layer may incorrectly interpret metadata from the
+source link layer, and, for example, transmit the packet on the wrong
+RF channel. Because ``clear`` prepares a packet for a particular link
+layer, in this example correct code would call the command on the
+destination link layer, not the source link layer.
+
+Typically, an incoming call to the Packet interface of a protocol has
+an accompanying outgoing call to the Packet interface of the component
+below it. The one exception to this is the data link layer. For
+example, if there is a network that introduces 16-bit sequence numbers
+to packets, it might look like this::
 
   generic module SequenceNumber {
     provides interface Packet;
@@ -176,7 +189,10 @@ layer. For example, if there is a network that introduces
     command void Packet.clear(message_t* msg) {
       uint8_t len;
       void* payload = call SubPacket.getPayload(msg, call SubPacket.maxPayloadLength());
-      memset(payload, len, 0);
+      call SubPacket.clear();
+      if (payload != NULL) {
+        memset(payload, sizeof(seq_header_t), 0);
+      }
     }
 
     command uint8_t Packet.payloadLength(message_t* msg) {
@@ -231,19 +247,25 @@ has this signature::
     command bool isForMe(message_t* amsg);
     command am_id_t type(message_t* amsg);
     command void setType(message_t* amsg, am_id_t t);
+    command am_group_t group(message_t* amsg);
+    command void setGroup(message_t* amsg, am_group_t grp);
+    command am_group_t localGroup();
   }
 
 
 The command address() returns the local AM address of the
 node. AMPacket provides accessors for its two fields, destination and
 type. It also provides commands to set these fields, for the same
-reason that Packet allows a caller to set the payload length.
-Packet interfaces SHOULD provide accessors
-and mutators for all of their fields to enable queues and other
-buffering to store values in a packet buffer. Typically, a component
-stores these values in the packet buffer itself (where the field is),
-but when necessary it may use the metadata region of message_t or other
-locations.
+reason that Packet allows a caller to set the payload length.  Packet
+interfaces SHOULD provide accessors and mutators for all of their
+fields to enable queues and other buffering to store values in a
+packet buffer. Typically, a component stores these values in the
+packet buffer itself (where the field is), but when necessary it may
+use the metadata region of message_t or other locations.
+
+The group field refers to the AM group, a logical network identifier.
+Link layers will typically only signal reception for packets whose AM
+group matches the node's, which ``localGroup`` returns.
 
 2.2 Sending interfaces
 --------------------------------------------------------------------
@@ -301,12 +323,12 @@ and serialize them onto sending interface, or they can introduce
 a new sending interface that supports multiple pending transmissions.
 
 The cancel command allows a sender to cancel the current transmission.
-A call to cancel when there is no pending sendDone event MUST return FAIL.
-If there is a pending sendDone event and the cancel returns SUCCESS, then
-the packet layer MUST NOT transmit the packet and MUST signal sendDone
-with ECANCEL as its error code. If there is a pending sendDone event
-and cancel returns FAIL, then sendDone SHOULD occur as if the cancel
-was not called. 
+A call to cancel when there is no pending sendDone event MUST return
+FAIL.  If there is a pending sendDone event and the cancel returns
+SUCCESS, then the packet layer MUST NOT transmit the packet and MUST
+signal sendDone with ECANCEL as its error code. If there is a pending
+sendDone event and cancel returns FAIL, then sendDone MUST occur as if
+the cancel was not called.
 
 2.3 Receive interface
 --------------------------------------------------------------------
@@ -317,28 +339,27 @@ Receive is the interface for receiving packets. It has this signature::
     event message_t* receive(message_t* msg, void* payload, uint8_t len);
   }
 
-A call to ``Receive.getPayload()`` MUST behave identically to a call
-to ``Packet.getPayload()``. The ``receive()`` event's ``payload``
-parameter MUST be identical to what a call to ``getPayload()`` would
-return, and the ``len`` parameter MUST be identical to the length that
-a call to ``getPayload`` would return. These parameters are for
+The ``receive()`` event's ``payload`` parameter MUST be identical to
+what a call to the corresponding ``Packet.getPayload()`` would return,
+and the ``len`` parameter MUST be identical to the length that a call
+to ``Packet.getPayload`` would return. These parameters are for
 convenience, as they are commonly used by receive handlers, and their
-presence removes the need for a call to ``getPayload()``, while
-``getPayload()`` is a convenience so a component does not have to wire
-to ``Packet.`` The command ``payloadLength`` has a similar motivation
-and the same semantics as its twin in ``Packet``.
+presence removes the need for a call to ``getPayload()``. Unlike Send,
+Receive does not have a convenience ``getPayload`` call, because doing
+so prevents fan-in. As Receive has only a single event, users of
+Receive can be wired multiple times.
 
-Receive has a *buffer-swap* policy. The handler of the event MUST return
-a pointer to a valid message buffer for the signaler to use. This
-approach enforces an equilibrium between upper and lower packet 
-layers. If an upper layer cannot handle packets as quickly as they
-are arriving, it still has to return a valid buffer to the lower
+Receive has a *buffer-swap* policy. The handler of the event MUST
+return a pointer to a valid message buffer for the signaler to
+use. This approach enforces an equilibrium between upper and lower
+packet layers. If an upper layer cannot handle packets as quickly as
+they are arriving, it still has to return a valid buffer to the lower
 layer. This buffer could be the ``msg`` parameter passed to it: it
 just returns the buffer it was given without looking at it. Following
-this policy means that a data-rate mismatch in an upper-level component 
-will be isolated to that component. It will drop packets, but it will
-not prevent other components from receiving packets. If an upper
-layer did not have to return a buffer immediately, then when an
+this policy means that a data-rate mismatch in an upper-level
+component will be isolated to that component. It will drop packets,
+but it will not prevent other components from receiving packets. If an
+upper layer did not have to return a buffer immediately, then when an
 upper layer cannot handle packets quickly enough it will end up
 holding all of them, starving lower layers and possibly preventing
 packet reception.
