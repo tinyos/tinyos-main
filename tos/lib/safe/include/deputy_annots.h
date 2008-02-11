@@ -8,3 +8,4 @@
 #define __DEPUTY_NONNULL                       __attribute__((nonnull))
 #define __DEPUTY_TRUSTED                       __attribute__((trusted))
 #define __DEPUTY_COPYTYPE                      __attribute__((copytype))
+#define __DEPUTY_TRUSTEDBLOCK                  __blockattribute__((trusted))
