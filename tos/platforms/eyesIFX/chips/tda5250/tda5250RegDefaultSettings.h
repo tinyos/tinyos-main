@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2008-02-13 10:34:28 $
+ * $Revision: 1.9 $
+ * $Date: 2008-02-13 11:52:42 $
  * ========================================================================
  */
 
@@ -69,7 +69,7 @@
 #define RF_LOTX_DAMPING_17dB 30
 
 // choose one
-#define INITIAL_RF_POWER RF_LOTX_DAMPING_0dB
+#define INITIAL_RF_POWER RF_HITX_DAMPING_0dB
 
 #define TDA5250_REG_DEFAULT_SETTING_CONFIG           FULL_RANGE
 #define TDA5250_REG_DEFAULT_SETTING_FSK              0x0A0C
