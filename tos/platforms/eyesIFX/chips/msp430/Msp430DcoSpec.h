@@ -40,6 +40,6 @@
 #ifndef MS430DCOSPEC_H
 #define MS430DCOSPEC_H
 
-#define TARGET_DCO_KHZ 3904 // the target MCLK clock rate in binary kHz (4 000 000 Hz)
+#define TARGET_DCO_KHZ 3906 // the target MCLK clock rate in binary kHz (4 000 000 Hz)
 #define ACLK_KHZ 32 // the ACLK rate in binary kHz
 #endif

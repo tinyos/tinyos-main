@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2007-08-03 12:06:34 $
+ * $Revision: 1.8 $
+ * $Date: 2008-02-13 10:34:28 $
  * ========================================================================
  */
 
@@ -43,8 +43,9 @@ enum {
 enum {
     // real milli seconds
     UBR_1MHZ_23405=0x002A,  UMCTL_1MHZ_23405=0xDD, // 23405 bit/s
+    UBR_1MHZ_35108=0x001C,  UMCTL_1MHZ_35108=0xAA, // 35108 bit/s    
 };
 
-msp430_uart_union_config_t tda5250_uart_config = { {ubr: UBR_1MHZ_23405, umctl: UMCTL_1MHZ_23405, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie:0, urxwie: 0, urxe: 1, utxe: 0} };
+msp430_uart_union_config_t tda5250_uart_config = { {ubr: UBR_1MHZ_35108, umctl: UMCTL_1MHZ_35108, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie:0, urxwie: 0, urxe: 1, utxe: 0} };
 
 #endif
