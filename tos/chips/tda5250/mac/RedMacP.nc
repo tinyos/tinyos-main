@@ -39,6 +39,10 @@
 #include "PacketAck.h"
 #include "RedMac.h"
 
+#ifdef DELTATIMEDEBUG
+#include "DeltaTrace.h"
+#endif
+
 module RedMacP {
     provides {
         interface Init;
@@ -49,6 +53,9 @@ module RedMacP {
         interface Sleeptime;
         interface Teamgeist;
         interface ChannelCongestion;
+#ifdef MAC_EVAL
+        interface MacEval;
+#endif
     }
     uses {
         interface StdControl as CcaStdControl;
@@ -90,7 +97,9 @@ module RedMacP {
 #ifdef REDMAC_PERFORMANCE
         interface Performance;
 #endif
-
+#ifdef DELTATIMEDEBUG
+        interface DeltaTrace;
+#endif
     }
 }
 implementation
@@ -123,26 +132,31 @@ implementation
 #endif
     
 #ifdef REDMAC_PERFORMANCE
-    macTxStat_t txStat;
-    macRxStat_t rxStat;
+     PfmTxMsg_t txStat;
+     PfmRxMsg_t rxStat;
 #endif
 
     /**************** Module Global Constants  *****************/
     enum {
-
+/*
         BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
         PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
         PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
         TIME_CORRECTION=16,           // difference between txSFD and rxSFD: 475us
-                
+*/
+        BYTE_TIME=14,                 // byte at 35108 kBit/s, 4b6b encoded
+        PREAMBLE_BYTE_TIME=9,         // byte at 35108 kBit/s, no coding
+        PHY_HEADER_TIME=56,           // 6 Phy Preamble at 35108 bits/s
+        TIME_CORRECTION=11,           // difference between txSFD and rxSFD: to do
+        
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         // DEFAULT_SLEEP_TIME=1625,
-        // DEFAULT_SLEEP_TIME=3250,
-        // DEFAULT_SLEEP_TIME=6500,
+        // DEFAULT_SLEEP_TIME=2048,
+        // DEFAULT_SLEEP_TIME=4096,
         // DEFAULT_SLEEP_TIME=8192,
-        // DEFAULT_SLEEP_TIME=16384,
-        DEFAULT_SLEEP_TIME=32768U,
+        DEFAULT_SLEEP_TIME=16384,
+        // DEFAULT_SLEEP_TIME=32768U,
         // DEFAULT_SLEEP_TIME=65535U,
         DATA_DETECT_TIME=17,
         RX_SETUP_TIME=102,    // time to set up receiver
@@ -152,8 +166,13 @@ implementation
         TX_GAP_TIME = RX_ACK_TIMEOUT + TX_SETUP_TIME + 33,
         // the duration of a send ACK
         ACK_DURATION = SUB_HEADER_TIME + SUB_FOOTER_TIME,
-        MAX_SHORT_RETRY=9,
-        MAX_LONG_RETRY=3,
+        NAV_FACTOR = 4,
+#ifndef MAC_EVAL
+        MAX_SHORT_RETRY=3,
+        MAX_LONG_RETRY=7,
+        ADD_NAV = 2,
+        INCREASE_BACKOFF = TRUE,
+#endif
         TOKEN_ACK_FLAG = 64,
         TOKEN_ACK_MASK = 0x3f,
         INVALID_SNR = 0xffff,
@@ -162,7 +181,16 @@ implementation
         // reduced minimal backoff
         ZERO_BACKOFF_MASK = 0xff
     };
-    
+
+#ifdef MAC_EVAL
+    uint8_t MAX_SHORT_RETRY = 9;
+    uint8_t MAX_LONG_RETRY = 3;
+    uint8_t ADD_NAV = 4;
+    bool INCREASE_BACKOFF = TRUE;
+#endif
+#ifdef DELTATIMEDEBUG
+    DeltaTrace_t dTrace;
+#endif    
     /**************** Module Global Variables  *****************/
     /* flags */
     typedef enum {
@@ -312,6 +340,7 @@ implementation
 
     uint32_t backoff(uint8_t counter) {
         uint32_t rVal = call Random.rand16() &  MIN_BACKOFF_MASK;
+        if(!INCREASE_BACKOFF) counter = 1;
         return (rVal << counter) + ZERO_BACKOFF_MASK;
     }
     
@@ -539,7 +568,14 @@ implementation
     }
     
     uint32_t calcGeneratedTime(red_mac_header_t *m) {
-        return rxTime - m->time - TIME_CORRECTION;
+        uint32_t lt = rxTime - m->time - TIME_CORRECTION;
+#ifdef DELTATIMEDEBUG
+        dTrace.now = rxTime;
+        dTrace.msgTime = lt;
+        dTrace.delta = m->time;
+        call DeltaTrace.traceRx(&dTrace);
+#endif
+        return lt;
     }
     /**************** Init ************************/
     
@@ -839,6 +875,9 @@ implementation
 #endif
                             // sdDebug(194);
                             storeStrength(msg);
+#ifdef DELTATIMEDEBUG
+                            dTrace.sender = getHeader(msg)->src;
+#endif
                             getMetadata(msg)->time = calcGeneratedTime((red_mac_header_t*) payload);
                             getMetadata(msg)->ack = WAS_NOT_ACKED;
                             m = signal MacReceive.receiveDone(msg);
@@ -958,6 +997,7 @@ implementation
         else if(action == SLEEP) {
             macState = SLEEP;
             if(isFlagSet(&flags, RESUME_BACKOFF)) {
+                nav = nav*(uint32_t)ADD_NAV/(uint32_t)NAV_FACTOR;
                 if(nav > restLaufzeit) restLaufzeit += nav;
             }
             else {
@@ -1018,8 +1058,16 @@ implementation
     
     async event void RadioTimeStamping.transmittedSFD( uint16_t time, message_t* p_msg ) {
         if((macState == TX) && (p_msg == txBufPtr)) {
+#ifdef DELTATIMEDEBUG
+            dTrace.now = call LocalTime32kHz.get();
+            dTrace.msgTime = getMetadata(p_msg)->time;
+            dTrace.delta = call TimeDiff32.computeDelta(dTrace.now, dTrace.msgTime);
+            txMacHdr->time = dTrace.delta;
+            call DeltaTrace.traceTx(&dTrace);
+#else
             txMacHdr->time =
                 call TimeDiff32.computeDelta(call LocalTime32kHz.get(), getMetadata(p_msg)->time);
+#endif
         }
     }
     
@@ -1270,8 +1318,26 @@ implementation
     
     default async event void ChannelCongestion.congestionEvent(uint8_t level) {}
 
-    /***** unused Radio Modes events **************************/
+    /***** Mac Eval *******************************************/
+#ifdef MAC_EVAL
+    async command void MacEval.setBackoffMask(uint16_t mask) {
+        atomic MIN_BACKOFF_MASK = mask;
+    }
+    async command void MacEval.increaseBackoff(bool value) {
+        atomic INCREASE_BACKOFF = value;
+    }
+    async command void MacEval.addNav(bool value) {
+        atomic ADD_NAV = value;
+    }
+    async command void MacEval.setLongRetry(uint8_t lr) {
+        atomic MAX_LONG_RETRY = lr;
+    }
+    async command void MacEval.setShortRetry(uint8_t sr) {
+        atomic MAX_SHORT_RETRY = sr;
+    }    
+#endif
     
+    /***** unused Radio Modes events **************************/
     async event void RadioModes.TimerModeDone() {}
     async event void RadioModes.SelfPollingModeDone() {}
     async event void RadioModes.PWDDDInterrupt() {}

@@ -47,6 +47,9 @@ configuration SpeckMacDC {
     interface Packet;
     interface Sleeptime;
     interface ChannelCongestion;
+#ifdef MAC_EVAL
+    interface MacEval;
+#endif
   }
   uses {
     interface PhySend as PacketSend;
@@ -111,6 +114,11 @@ implementation {
     SpeckMacDP.Led2 -> PlatformLedsC.Led2;
     SpeckMacDP.Led3 -> PlatformLedsC.Led3;
 */
+
+#ifdef MAC_EVAL
+    MacEval = SpeckMacDP;
+#endif
+
 #ifdef SPECKMAC_DEBUG
     components new SerialDebugC() as SD;
     SpeckMacDP.SerialDebug -> SD;

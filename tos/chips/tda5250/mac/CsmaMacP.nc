@@ -89,9 +89,17 @@ implementation
 {
 
     enum {
-        BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
-        PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
+        /*
+          BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
+          PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
+          PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
+          TIME_CORRECTION=16,           // difference between txSFD and rxSFD: 475us
+        */
+        
+        BYTE_TIME=14,                 // byte at 35108 kBit/s, 4b6b encoded
+        PREAMBLE_BYTE_TIME=9,         // byte at 35108 kBit/s, no coding
+        PHY_HEADER_TIME=56,           // 6 Phy Preamble at 35108 bits/s
+        TIME_CORRECTION=11,           // difference between txSFD and rxSFD: to do
 
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(tda5250_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 

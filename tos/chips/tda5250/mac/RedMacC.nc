@@ -36,7 +36,7 @@
 // #define REDMAC_DEBUG
 
 #ifdef REDMAC_PERFORMANCE
-#include <Performance.h>
+#include <PerformanceMsgs.h>
 #endif
 
 configuration RedMacC {
@@ -47,6 +47,9 @@ configuration RedMacC {
     interface Packet;
     interface Sleeptime;
     interface ChannelCongestion;
+#ifdef MAC_EVAL
+    interface MacEval;
+#endif
   }
   uses {
     interface PhySend as PacketSend;
@@ -107,6 +110,9 @@ implementation {
     RedMacP.Led2 -> PlatformLedsC.Led2;
     RedMacP.Led3 -> PlatformLedsC.Led3;
 */
+#ifdef MAC_EVAL
+    MacEval = RedMacP;
+#endif
 #ifdef REDMAC_DEBUG
     components new SerialDebugC() as SD;
     RedMacP.SerialDebug -> SD;
@@ -115,6 +121,11 @@ implementation {
 #ifdef REDMAC_PERFORMANCE
     components new PerformanceC() as Perf;
     RedMacP.Performance -> Perf;
+#endif
+
+#ifdef DELTATIMEDEBUG
+    components DeltaTraceC;
+    RedMacP.DeltaTrace -> DeltaTraceC;
 #endif
 }
 
