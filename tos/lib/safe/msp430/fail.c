@@ -122,7 +122,7 @@ static void display_int_flid (const unsigned int x)
 }
 
 // Not sure how to do this in Telosb without looking it up
-void deputy_fail_noreturn_fast (const char* file, int flid, const char* func)
+void deputy_fail_noreturn_fast (int flid)
 {
   // disable interrupts
   // set LEDS to output
@@ -133,18 +133,12 @@ void deputy_fail_noreturn_fast (const char* file, int flid, const char* func)
 
 }
 
-void deputy_fail_mayreturn(const char *check, const char *text,
-                           const char* file, int line, const char* func)
+void deputy_fail_mayreturn(int flid)
 {
-    // I don't think this has any meaning without FLID transformation
-    // FLID transformation stores FLID in line variable
-    deputy_fail_noreturn_fast(file, line, func);
+    deputy_fail_noreturn_fast(flid);
 }
 
-void deputy_fail_noreturn(const char *check, const char *text,
-                          const char* file, int line, const char* func)
+void deputy_fail_noreturn(int flid)
 {
-    // I don't think this has any meaning without FLID transformation
-    // FLID transformation stores FLID in line variable
-    deputy_fail_noreturn_fast(file, line, func);
+    deputy_fail_noreturn_fast(flid);
 }

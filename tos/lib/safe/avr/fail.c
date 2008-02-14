@@ -138,7 +138,7 @@ static inline void load_to_z_and_break (int value)
 		: "=z"(value)  : "r" (value));
 }
 
-void deputy_fail_noreturn_fast (const char* file, int flid, const char* func)
+void deputy_fail_noreturn_fast (int flid)
 {
   asm volatile ("cli");
   load_to_z_and_break (flid);
@@ -171,18 +171,12 @@ void deputy_fail_noreturn_fast (const char* file, int flid, const char* func)
 
 }
 
-void deputy_fail_mayreturn(const char *check, const char *text,
-                           const char* file, int line, const char* func)
+void deputy_fail_mayreturn(int flid)
 {
-    // I don't think this has any meaning without FLID transformation
-    // FLID transformation stores FLID in line variable
-    deputy_fail_noreturn_fast(file, line, func);
+    deputy_fail_noreturn_fast(flid);
 }
 
-void deputy_fail_noreturn(const char *check, const char *text,
-                          const char* file, int line, const char* func)
+void deputy_fail_noreturn(int flid)
 {
-    // I don't think this has any meaning without FLID transformation
-    // FLID transformation stores FLID in line variable
-    deputy_fail_noreturn_fast(file, line, func);
+    deputy_fail_noreturn_fast(flid);
 }
