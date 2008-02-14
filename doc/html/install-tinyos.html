@@ -8,18 +8,33 @@
 <body>
 
 <div class="title">Installing TinyOS 2.0.2</div>
-<div class="subtitle">Last updated 30 July 2007</div>
+<div class="subtitle">Last updated 14 Feb 2008</div>
 
 <p>If you already have a 1.x tree or an existing 2.x tree, you are better off 
 following the <i>upgrade</i> instructions at 
-<a href="upgrade-tinyos.html">upgrade-tinyos.html</a>. There are two ways to install
+<a href="upgrade-tinyos.html">upgrade-tinyos.html</a>. There are several ways to install
       TinyOS. The first way is to install a live CD that gives
       you a virtualized Linux with a complete TinyOS install. Note that since
       this is on a CD, you can't modify anything; you can, however, make
-      a LiveUSB device to use as your TinyOS install. The second way is to
+      a LiveUSB device to use as your TinyOS install. The second way is 
+      to a Ubuntu-based virtual machine directly on your hard drive.  The final way is to
       install TinyOS on your host operating system. When installing
       on a host operating system, you can either use a debian package
       repository or manually instally with RPMs.</p> 
+
+      <p>Of the four options, installing a VM image is simplest. 
+         Using a Live CD lets you try out TinyOS without installing it on your
+	 drive. Debian packages are the simplest and best way to install TinyOS
+	 on your host operating system. RPMs are mostly a stand-by for RedHat
+	 or other Linux distributions, as well as Windows/Cygwin users. If you
+	 are using Cygwin, we strongly recommend using a VM image, unless you
+	 are completely unfamiliar with UNIX tools such as editors (xemacs, vi)
+	 and the shell,
+	 
+	 <h1>One-step install with a VM Image</h1>
+     
+      The most <A HREF="http://www.tinyos.net/scoop/section/Releases">current instructions</A> on 
+      how to install the VM image are on <A HREF="http://www.tinyos.net">www.tinyos.net</A>.
 
       <h1>One-step Install with a Live CD</h1>
 
@@ -33,6 +48,8 @@ following the <i>upgrade</i> instructions at
       provided by the Toilers group at the Colorado School of
       Mines.</p>
 
+
+      
       <h1>Two-step install on your host OS with Debian packages</h1>
 
    <p>If you are running a version of Linux that supports Debian packages, then
