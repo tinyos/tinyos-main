@@ -10,8 +10,8 @@ Packet Protocols
 :Author: Philip Levis
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.12 $
-:Draft-Modified: $Date: 2008-02-11 18:11:20 $
+:Draft-Version: $Revision: 1.13 $
+:Draft-Modified: $Date: 2008-02-14 19:07:35 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -254,8 +254,9 @@ has this signature::
 
 
 The command address() returns the local AM address of the
-node. AMPacket provides accessors for its two fields, destination and
-type. It also provides commands to set these fields, for the same
+node. AMPacket provides accessors for its four fields, destination, 
+source, type and group. It also provides commands to set these 
+fields, for the same
 reason that Packet allows a caller to set the payload length.  Packet
 interfaces SHOULD provide accessors and mutators for all of their
 fields to enable queues and other buffering to store values in a
