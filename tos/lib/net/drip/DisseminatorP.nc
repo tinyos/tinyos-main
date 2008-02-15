@@ -39,7 +39,7 @@
  * @param t the type of the object that will be disseminated
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-09-14 00:22:18 $
+ * @version $Revision: 1.2 $ $Date: 2008-02-15 22:51:30 $
  */
 
 generic module DisseminatorP(typedef t) {
@@ -59,6 +59,10 @@ implementation {
   // counter, while the bottom 16 bits are a unique node identifier.
   uint32_t seqno = DISSEMINATION_SEQNO_UNKNOWN;
 
+  task void changedTask() {
+    signal DisseminationValue.changed();
+  }
+  
   command error_t StdControl.start() {
     error_t result = signal DisseminationCache.start();
     if ( result == SUCCESS ) { m_running = TRUE; }
@@ -89,6 +93,7 @@ implementation {
     seqno = seqno << 16;
     seqno += TOS_NODE_ID;
     signal DisseminationCache.newData();
+    post changedTask();
   }
 
   command void* DisseminationCache.requestData( uint8_t* size ) {
@@ -100,7 +105,7 @@ implementation {
 					     uint32_t newSeqno ) {
     memcpy( &valueCache, data, size < sizeof(t) ? size : sizeof(t) );
     seqno = newSeqno;
-    signal DisseminationValue.changed();
+    post changedTask();
   }
 
   command uint32_t DisseminationCache.requestSeqno() {
