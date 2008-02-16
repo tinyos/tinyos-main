@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.9 2008-02-11 20:12:15 regehr Exp $
+#$Id: avr.rules,v 1.10 2008-02-16 19:48:52 regehr Exp $
 
 define AVR_HELP
 
@@ -130,9 +130,6 @@ exe: exe0 bytes FORCE
 
 exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
-ifdef MAKE_DEPUTY_FLAG
-	@echo "  ***** compiling Safe TinyOS *****"
-endif
 	$(NCC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAG) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 ifdef WIRING_CHECK_FILE
 	@nescc-wiring $(WIRING_CHECK_FILE)
