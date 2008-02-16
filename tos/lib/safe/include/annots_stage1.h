@@ -16,6 +16,11 @@ struct @nonnull @deputy_scope() @macro("__DEPUTY_NONNULL") { };
 #error Safe TinyOS requires nesC >= 1.3.0
 #endif
 
+#define COUNT(x)                               
+#define BOUND(x,y)                             
+#define SINGLE                                 
+#define NONNULL                                
+
 #endif // NESC version check
 
 #ifdef SAFE_TINYOS
