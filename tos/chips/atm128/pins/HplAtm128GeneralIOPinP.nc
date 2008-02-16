@@ -1,4 +1,4 @@
-/// $Id: HplAtm128GeneralIOPinP.nc,v 1.4 2006-12-12 18:23:03 vlahan Exp $
+/// $Id: HplAtm128GeneralIOPinP.nc,v 1.5 2008-02-16 05:30:24 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -38,9 +38,9 @@ generic module HplAtm128GeneralIOPinP (uint8_t port_addr,
 }
 implementation
 {
-#define pin (*(volatile uint8_t *)pin_addr)
-#define port (*(volatile uint8_t *)port_addr)
-#define ddr (*(volatile uint8_t *)ddr_addr)
+#define pin (*TCAST(volatile uint8_t * SINGLE NONNULL, pin_addr))
+#define port (*TCAST(volatile uint8_t * SINGLE NONNULL, port_addr))
+#define ddr (*TCAST(volatile uint8_t * SINGLE NONNULL, ddr_addr))
 
   inline async command bool IO.get()        { return READ_BIT (pin, bit); }
   inline async command void IO.set()        { SET_BIT  (port, bit); }
