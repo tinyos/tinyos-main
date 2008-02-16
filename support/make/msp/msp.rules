@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.7 2008-02-01 20:25:37 scipio Exp $
+#$Id: msp.rules,v 1.8 2008-02-16 19:49:05 regehr Exp $
 
 define MSP_HELP
 
@@ -21,6 +21,12 @@ define MSP_HELP
 
 endef
 HELP += $(MSP_HELP)
+
+ifdef MAKE_DEPUTY_FLAG
+        NCC_SAFE_TINYOS_FLAG = -safe
+else
+        NCC_SAFE_TINYOS_FLAG =
+endif
 
 #MSP_NESC_TARGET ?= msp430
 #MSP_GCC ?= msp430-gcc
@@ -89,7 +95,7 @@ exe: exe0 bytes FORCE
 
 exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
-	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+	$(NCC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAG) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 ifdef WIRING_CHECK_FILE
 	@nescc-wiring $(WIRING_CHECK_FILE)
 endif
