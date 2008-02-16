@@ -38,8 +38,8 @@ generic module Msp430TimerCapComP(
 }
 implementation
 {
-  #define TxCCTLx (*(volatile TYPE_TACCTL0*)TxCCTLx_addr)
-  #define TxCCRx (*(volatile TYPE_TACCR0*)TxCCRx_addr)
+  #define TxCCTLx (*TCAST(volatile TYPE_TACCTL0* SINGLE NONNULL, TxCCTLx_addr))
+  #define TxCCRx (*TCAST(volatile TYPE_TACCR0* SINGLE NONNULL, TxCCRx_addr))
 
   typedef msp430_compare_control_t cc_t;
 
