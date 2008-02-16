@@ -39,7 +39,7 @@
  * @param t the type of the object that will be disseminated
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2008-01-03 21:30:35 $
+ * @version $Revision: 1.3 $ $Date: 2008-02-16 10:56:07 $
  */
 
 generic module DisseminatorP(typedef t, dip_key_t key) {
@@ -57,11 +57,11 @@ generic module DisseminatorP(typedef t, dip_key_t key) {
 }
 implementation {
   dip_data_t valueCache;
-
+  
   task void signalNewData() {
     signal AppDisseminationValue.changed();
   }
-
+  
   command error_t Init.init() {
     call DipHelp.registerKey(key);
     return SUCCESS;
@@ -77,6 +77,8 @@ implementation {
 
   command void AppDisseminationValue.set( const t* val ) {
     memcpy( &valueCache, val, sizeof(t) );
+    // must signal here instead of posting task to prevent race condition
+    signal AppDisseminationValue.changed();
   }
 
   command void AppDisseminationUpdate.change( t* newVal ) {
@@ -85,6 +87,7 @@ implementation {
     /* DipLogicC doesn't care what the data actually is,
        it just wants the key, so we cast it recklessly */
     call DipDisseminationUpdate.change((dip_data_t*)newVal);
+    post signalNewData();
   }
 
   command const dip_data_t* DataDisseminationValue.get() {
@@ -95,7 +98,7 @@ implementation {
 
   command void DataDisseminationUpdate.change( dip_data_t* newVal ) {
     memcpy( &valueCache, newVal, sizeof(dip_data_t) );
-    //post signalNewData();
+    // don't post the task, this came from the network
     signal AppDisseminationValue.changed();
   }
 

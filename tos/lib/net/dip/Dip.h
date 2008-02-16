@@ -19,7 +19,10 @@ typedef enum {
 } dip_msgid_t;
 
 enum {
-  AM_DIP = 0x84
+  AM_DIP = 0x84,
+  AM_DIP_DATA_MSG = 0x84, // For MIG tool
+  AM_DIP_MSG = 0x84, // For MIG tool
+  AM_DIP_DATA = 0x84 // For MIG tool
 };
 
 typedef uint16_t dip_index_t;
@@ -30,24 +33,24 @@ typedef nx_uint32_t nx_dip_version_t;
 typedef uint8_t dip_estimate_t;
 typedef dip_index_t dip_hashlen_t;
 
-typedef nx_struct dip_msg_t {
+typedef nx_struct dip_msg {
   nx_uint8_t type; // dip_msgid_t
   nx_uint8_t content[0];
 } dip_msg_t;
 
-typedef nx_struct dip_data_msg_t {
+typedef nx_struct dip_data_msg {
   nx_dip_key_t key;
   nx_dip_version_t version;
   nx_uint8_t size;
   nx_uint8_t data[0];
 } dip_data_msg_t;
 
-typedef nx_struct dip_vector_msg_t {
+typedef nx_struct dip_vector_msg {
   nx_uint8_t unitLen;
   nx_uint32_t vector[0];
 } dip_vector_msg_t;
 
-typedef nx_struct dip_summary_msg_t {
+typedef nx_struct dip_summary_msg {
   nx_uint8_t unitLen;
   nx_uint32_t salt;
   nx_uint32_t info[0];
@@ -64,8 +67,8 @@ dip_estimate_t DIP_VECTOR_ESTIMATE;
 
 /* TUNABLE PARAMETERS */
 
-typedef struct dip_data_t {
-  uint8_t data[16];
+typedef nx_struct dip_data {
+  nx_uint8_t data[16];
 } dip_data_t;
 
 #define DIP_SUMMARY_VALUES_PER_PACKET 2
