@@ -26,7 +26,7 @@ public class DipInject implements MessageListener
 
 	DipDataMsg ddm = new DipDataMsg(dm, DipMsg.DEFAULT_MESSAGE_SIZE);
 	ddm.set_key(key);
-        ddm.set_version(version);
+        ddm.set_version(version << 16);
         ddm.set_size((short)data.length);
 
         DipData dd = new DipData(ddm, DipDataMsg.DEFAULT_MESSAGE_SIZE); 

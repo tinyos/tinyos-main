@@ -7,6 +7,8 @@ CFLAGS += -I$(TOSDIR)/lib/net/dip -I$(TOSDIR)/lib/net/dip/interfaces
 CONSTANTS += -DTOSH_DATA_LENGTH=32
 CFLAGS += $(CONSTANTS)
 
+CLEAN_EXTRA += DipMsg.py DipDataMsg.py DipData.py DipMsg.java DipDataMsg.java DipData.java DipMsg.class DipDataMsg.class DipData.class DipInject.class
+
 DipMsg.py:
 	mig python -target=$(PLATFORM) -python-classname=DipMsg $(CFLAGS) $(TOSDIR)/lib/net/dip/Dip.h dip_msg -o $@
 
@@ -37,11 +39,5 @@ DipData.java:
 
 DipInject.class:
 	javac -target 1.4 -source 1.4 DipInject.java
-
-#clean-inject:
-#	rm -f DipMsg.py DipDataMsg.py DipData.py
-#	rm -f DipMsg.java DipDataMsg.java DipData.java
-#	rm -f DipMsg.class DipDataMsg.class DipData.class
-#	rm -f DipInject.class
 
 include $(MAKERULES)
