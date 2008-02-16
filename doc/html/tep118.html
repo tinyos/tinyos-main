@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-02-16 01:32:58 $
-:version: $Revision: 1.9 $
+:date: $Date: 2008-02-16 01:37:52 $
+:version: $Revision: 1.10 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Philip Levis and Gilman Tolle</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.9</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-08-24</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-02-16</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -327,7 +327,7 @@ include network reconfiguration and reprogramming.</p>
 <p>Dissemination is a service for establishing eventual consistency on a
 shared variable. Every node in the network stores a copy of this
 variable. The dissemination service tells nodes when the value
-changes, and exchanges packets to it will reach eventual consistency
+changes, and exchanges packets so it will reach eventual consistency
 across the network. At any given time, two nodes may disagree, but
 over time the number of disagreements will shrink and the network will
 converge on a single value.</p>
@@ -344,32 +344,33 @@ similarities. Separating a dissemination protocol into two parts ---
 control traffic and data traffic --- shows that while the data traffic
 protocols are greatly dependent on the size of the data item, the
 control traffic tends to be the same or very similar. For example, the
-Deluge binary reprogramming service, disseminates metadata about the
+Deluge binary reprogramming service disseminates metadata about the
 binaries. When nodes learn the disseminated metadata differs from the
 metadata of their local binary, they know they either have a bad
 binary or need a new one.</p>
 <p>Novelty is an explicit consideration in dissemination's consistency
-model: it seeks to have every node agree on what the most recent
-version of the variable is. In this way, a node can prompt the network
-to reach consistency on a new value for a variable by telling the
-network it is newer. If several nodes all decide they need to update
-the variable, dissemination ensures that the network converges on a
-single value. Consistency does not mean that every node will see every
-possible value the variable takes: it only means that the network will
-eventually agree on what the newest is. This means that if a node is
-disconnected from a network and the network goes through eight
-versions of a disseminated value, when it rejoins the network it will
-only see the most recent.</p>
+model: it seeks to have every node agree on the most recent version of
+the variable. In this way, a node can prompt the network to reach
+consistency on a new value for a variable by telling the network it is
+newer. If several nodes all decide to update the variable,
+dissemination ensures that the network converges on a single one of
+the updates.</p>
+<p>Consistency does not mean that every node will see every possible
+value the variable takes: it only means that the network will
+eventually agree on what the newest is. If a node is disconnected from
+a network and the network goes through eight updates to a shared
+variable, when it rejoins the network it will only see the most
+recent.</p>
 <p>Being able to disseminate small values into a network is a useful
 building block for sensornet applications. It allows an administrator
-to inject small programs or commands and configuration constants.  For
+to inject small programs, commands, and configuration constants.  For
 example, installing a small program through the entire network can be
 cast as the problem of establishing consistency on a variable that
 contains the program.</p>
 <p>The rest of this document describes a set of components and interfaces
 for a dissemination service included in TinyOS 2.0. This service only
 handles small values that can fit in a single packet. Larger values
-would likely require different interfaces and abstractions.</p>
+require different interfaces and abstractions.</p>
 </div>
 <div class="section">
 <h1><a id="dissemination-interfaces" name="dissemination-interfaces">2. Dissemination interfaces</a></h1>
