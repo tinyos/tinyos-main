@@ -10,7 +10,8 @@ configuration) and TESTDIPP.nc (the module). It takes two parameters,
 the total number of items and the number of new items. The items that
 are random are chosen randomly.
 
-If you want 128 total items and 96 new items, you would type:
+If you want 128 total items in the dissemination set, where 96 of
+those 128 items are new, you would type:
 
 python gentest.py 128 96
 
@@ -37,7 +38,26 @@ id is the node id
 count is how many new items it has received so far
 isOk will be true if the data value was as expected
 
-4. TIMING
+4. PACKET INJECTOR
+
+You can also use the injector to send data packets via a
+basestation. The syntax to do that is:
+
+java DipInject [key] [version] [data in quotes delimited by space]
+
+key is the data key in hexadecimal
+version is the version number in decimal
+data is the actual data in quotes delimited by space
+
+For example, if you want to send key 10, version 2, and data "ab cd
+ef". You would type:
+
+java DipInject 0a 2 "ab cd ef"
+
+For this specific test application, your data needs to be "ef be". You
+will need a SerialForwarder running for this work.
+
+5. TIMING
 
 With a single sender and single receiver on a table using TelosB
 nodes, it takes approximately:
