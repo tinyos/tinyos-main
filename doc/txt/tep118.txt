@@ -1,6 +1,6 @@
-============================
-Dissemination
-============================
+================================
+Dissemination of Small Values
+================================
 
 :TEP: 118 
 :Group: Net2 Working Group
@@ -10,8 +10,8 @@ Dissemination
 :Author: Philip Levis and Gilman Tolle
 
 :Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2007-08-24 16:29:35 $
+:Draft-Version: $Revision: 1.9 $
+:Draft-Modified: $Date: 2008-02-16 01:32:58 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -26,20 +26,28 @@ Abstract
 
 The memo documents the interfaces, components, and semantics for
 disseminating small (smaller than a single packet payload) pieces of
-data in TinyOS 2.x.  Dissemination is reliably delivering a piece of
-data to every node in a network.
+data in TinyOS 2.x.  Dissemination establishes eventual consistency
+across the entire network on a shared variable and tells an
+application when the variable changes. Common uses of this mechanism
+include network reconfiguration and reprogramming.
+
 
 1. Introduction
 ====================================================================
 
-Dissemination is a a sensor network protocol that reliably delivers a
-piece of data to every node in the network. Dissemination can be used
-to reconfigure, query, and reprogram a network.  Reliability is
-important because it makes the operation robust to temporary
-disconnections or high packet loss. Unlike flooding protocols, which
-are discrete efforts that terminate, possibly not delivering the data
-to some nodes, dissemination achieves reliability by using a
-continuous approach that can detect when a node is missing the data.
+Dissemination is a service for establishing eventual consistency on a
+shared variable. Every node in the network stores a copy of this
+variable. The dissemination service tells nodes when the value
+changes, and exchanges packets to it will reach eventual consistency
+across the network. At any given time, two nodes may disagree, but
+over time the number of disagreements will shrink and the network will
+converge on a single value.
+
+Eventual consistency is robust to temporary disconnections or high
+packet loss. Unlike flooding protocols, which are discrete efforts
+that terminate and not reach consistency, dissemination assures that
+the network will reach consensus on the value as long as it is not
+disconnected.
 
 Depending on the size of the data item, dissemination protocols can
 differ greatly: efficiently disseminating tens of kilobytes of a
@@ -48,19 +56,36 @@ configuration constant. Looking more deeply, however, there are
 similarities. Separating a dissemination protocol into two parts ---
 control traffic and data traffic --- shows that while the data traffic
 protocols are greatly dependent on the size of the data item, the
-control traffic tends to be the same or very similar.
+control traffic tends to be the same or very similar. For example, the
+Deluge binary reprogramming service, disseminates metadata about the
+binaries. When nodes learn the disseminated metadata differs from the
+metadata of their local binary, they know they either have a bad
+binary or need a new one.
 
-Being able to reliably disseminate small values into a network is a
-useful building block for sensornet applications. It allows an
-administrator to inject small programs or commands and configuration
-constants. Because TinyOS nodes have limited RAM, these dissemination
-services have the assumption that data values have some form of
-versioning. Dissemination propagates only the most recent version.
-This means that if a node is disconnected from a network and the
-network goes through eight versions of a disseminated value, when it
-rejoins the network it will only see the most recent. The rest of this
-document describes a set of components and interfaces for a
-dissemination service included in TinyOS 2.0.
+Novelty is an explicit consideration in dissemination's consistency
+model: it seeks to have every node agree on what the most recent
+version of the variable is. In this way, a node can prompt the network
+to reach consistency on a new value for a variable by telling the
+network it is newer. If several nodes all decide they need to update
+the variable, dissemination ensures that the network converges on a
+single value. Consistency does not mean that every node will see every
+possible value the variable takes: it only means that the network will
+eventually agree on what the newest is. This means that if a node is
+disconnected from a network and the network goes through eight
+versions of a disseminated value, when it rejoins the network it will
+only see the most recent.
+
+Being able to disseminate small values into a network is a useful
+building block for sensornet applications. It allows an administrator
+to inject small programs or commands and configuration constants.  For
+example, installing a small program through the entire network can be
+cast as the problem of establishing consistency on a variable that
+contains the program.
+
+The rest of this document describes a set of components and interfaces
+for a dissemination service included in TinyOS 2.0. This service only
+handles small values that can fit in a single packet. Larger values
+would likely require different interfaces and abstractions.
 
 2. Dissemination interfaces
 ====================================================================
@@ -71,6 +96,7 @@ value, the latter is for producers. They are as follows::
 
   interface DisseminationValue<t> {
     command const t* get();
+    command void set(const t*);
     event void changed(); 
   }
 
@@ -79,17 +105,29 @@ value, the latter is for producers. They are as follows::
   }
 
 
-These interfaces assume that the allocation for the disseminated data
-is within the dissemination service. A consumer can obtain a const
-pointer to the data through DissemnationValue.get(). It MUST NOT
-store this pointer, as it may not be constant across updates.
-Additionally, doing so wastes RAM, as it can be easily re-obtained.
-The service signals a changed() event whenever the dissemination value
-changes, in case the consumer needs to perform some computation on it.
+These interfaces assume that the dissemination service allocates space
+to store the variable. In that way, multiple components can all access
+and share the same variable that the dissemination service establishes
+consistency over. A consumer can obtain a const pointer to the data
+through DissemnationValue.get(). It MUST NOT store this pointer, as it
+may not be constant across updates.  Additionally, doing so wastes
+RAM, as it can be easily re-obtained.  The service signals a changed()
+event whenever the dissemination value changes, in case the consumer
+needs to perform some computation on it or take some action.
 
-DisseminationUpdate has a single command, ``change``, which takes a
+DisseminationValue has a command, ''set'', which allows a node to
+change its local copy of a value without establishing consistency.
+This command exists so a node can establish an initial value for the
+variable. A node MUST NOT call ''set'' after it has handled a
+''changed'' event, or the network may become inconsistent. If a node
+has received an update or a client has called ''change'' then set MUST
+NOT apply its new value.
+
+DisseminationUpdate has a single command, ''change'', which takes a
 pointer as an argument. This pointer is not stored: a provider of
 DisseminationUpdate MUST copy the data into its own allocated memory.
+DisseminationValue MUST signal ''changed'' in response to a
+call to ''change''.
 
 A dissemination protocol MUST reach consensus on the newest value in a
 network (assuming the network is connected).  Calling change
@@ -113,15 +151,15 @@ which has the following signature::
     provides interface DisseminationUpdate <t>;
   }
 
-The t argument MUST be able to fit in a single message_t [TEP111] after
-considering the headers that the dissemination protocol introduces.
-A dissemination implementation SHOULD have a compile error if a larger
-type than this is used.
+The t argument MUST be able to fit in a single message_t [TEP111]
+after considering the headers that the dissemination protocol
+introduces.  A dissemination implementation SHOULD have a compile
+error if a larger type than this is used.
 
-As each instantiation of DisseminatorC probably allocates storage
-and generates code, if more than one component wants to share
-a disseminated value then they SHOULD encapsulate the value in
-a non-generic component that can be shared. E.g.::
+As each instantiation of DisseminatorC probably allocates storage and
+generates code, if more than one component wants to share a
+disseminated value then they SHOULD encapsulate the value in a
+non-generic component that can be shared. E.g.::
 
   configuration DisseminateTxPowerC {
     provides interface DisseminationValue<uint8_t>;
@@ -185,18 +223,25 @@ interface, but will be used internally.
 
 An application can use this low-level networking primitive to build
 more complex dissemination systems. For example, if you want have a
-dissemination that only nodes which satisfy a predicate receive, you
-can do that by making the <t> a struct that stores a predicate and
-data value in it, and layering the predicate evaluation on top of the
-above interfaces.
+dissemination that causes only nodes which satisfy a predicate to
+apply a change, you can do that by making the <t> a struct that stores
+a predicate and data value in it, and layering the predicate
+evaluation on top of the above interfaces.
 
 6. Implementation
 ====================================================================
 
-An implementation of this TEP can be found in
-``tinyos-2.x/tos/lib/net``. This dissemination implementation uses
-network trickles [2]_. Each dissemination value has a separate
-trickle.
+Two implementations of this TEP exist and can be found in
+``tinyos-2.x/tos/lib/net``. The first, Drip, can be found in
+''tinyos-2.x/tos/lib/net/drip''. The second, DIP, can be found in
+''tinyos-2.x/tos/lib/net/dip''. Both implementations are based on the
+Trickle algorithm[2]_. Drip is a simple, basic implementation that
+establishes an independent trickle for each variable. DIP uses a more
+complex approach involving hash trees, such that it is faster,
+especially when the dissemination service is maintaining many
+variables[3]_. This complexity, however, causes DIP to use more
+program memory.
+
 
 6. Author's Address
 ====================================================================
@@ -224,4 +269,7 @@ trickle.
 .. [1] TEP 111: message_t.
 
 .. [2] Philip Levis, Neil Patel, David Culler, and Scott Shenker. "Trickle: A Self-Regulating Algorithm for Code Maintenance and Propagation in Wireless Sensor Networks." In Proceedings of the First USENIX/ACM Symposium on Networked Systems Design and Implementation (NSDI 2004).
+
+.. [3] Kaisen Lin and Philip Levis. "Data Discovery and Dissemination with DIP." In Proceedings of the Proceedings of the Seventh International Conference on Information Processing in Wireless Sensor Networks (IPSN), 2008.
+
  
