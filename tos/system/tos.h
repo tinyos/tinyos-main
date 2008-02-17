@@ -16,6 +16,9 @@
 #include <stddef.h>
 #include <ctype.h>
 
+/* TEMPORARY: include the Safe TinyOS macros so that annotations get
+ * defined away for non-safe users */
+#include "../lib/safe/include/annots_stage1.h"
 
 typedef uint8_t bool;
 enum { FALSE = 0, TRUE = 1 };
