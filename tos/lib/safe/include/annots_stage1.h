@@ -1,3 +1,6 @@
+#ifndef ANNOTS_STAGE1_INCLUDED
+#define ANNOTS_STAGE1_INCLUDED
+
 #if NESC >= 130
 
 struct @bound @deputy_scope() @macro("__DEPUTY_BOUND") { void *lo, *hi; }; 
@@ -21,13 +24,16 @@ struct @nonnull @deputy_scope() @macro("__DEPUTY_NONNULL") { };
 #define SINGLE                                 
 #define NONNULL                                
 
-#endif // NESC version check
+#endif 
 
 #ifdef SAFE_TINYOS
+
 #define TCAST(__type,__expr)                   ((__type)((void * __DEPUTY_TRUSTED __DEPUTY_COPYTYPE)(__expr)))
 #define __DEPUTY_TRUSTED                       __attribute__((trusted))
 #define __DEPUTY_COPYTYPE                      __attribute__((copytype))
 #else
 #define TCAST(__type,__expr)                   ((__type)(__expr))                
-#endif
+#endif 
+
+#endif // ANNOTS_STAGE1_INCLUDED
 

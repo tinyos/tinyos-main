@@ -1,3 +1,6 @@
+#ifndef ANNOTS_STAGE2_INCLUDED
+#define ANNOTS_STAGE2_INCLUDED
+
 #ifdef SAFE_TINYOS
 
 #define __DEPUTY_BOUND(__lo,__hi)              __attribute__((bounds((__lo),(__hi))))
@@ -6,7 +9,7 @@
 #define __DEPUTY_NONNULL(__n)                  __attribute__((nonnull))
 #define __DEPUTY_TRUSTEDBLOCK                  __blockattribute__((trusted))
 
-#else
+#else 
 
 #define __DEPUTY_BOUND(__lo,__hi)              
 #define __DEPUTY_COUNT(__n)                    
@@ -14,4 +17,7 @@
 #define __DEPUTY_NONNULL(__n)                  
 #define __DEPUTY_TRUSTEDBLOCK                  
 
-#endif
+#endif 
+
+#endif 
+
