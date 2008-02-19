@@ -48,6 +48,7 @@ typedef union message_footer {
 
 typedef union message_metadata {
   xe1205_metadata_t xe1205;
+  serial_metadata_t serial;
 } message_metadata_t;
 
 #endif

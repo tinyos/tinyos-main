@@ -1,4 +1,4 @@
-/* $Id: platform_message.h,v 1.1 2007-11-05 20:37:17 sallai Exp $
+/* $Id: platform_message.h,v 1.2 2008-02-19 22:03:45 scipio Exp $
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -55,7 +55,7 @@
  *
  * @author Philip Levis
  * @date   May 16 2005
- * Revision:  $Revision: 1.1 $
+ * Revision:  $Revision: 1.2 $
  */
 
 
@@ -75,6 +75,7 @@ typedef union message_footer {
 
 typedef union message_metadata {
   defaultmac_metadata_t rf230;
+  serial_metadata_t serial;
 } message_metadata_t;
 
 #endif

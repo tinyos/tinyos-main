@@ -1,4 +1,4 @@
-/* $Id: platform_message.h,v 1.4 2006-12-12 18:23:44 vlahan Exp $
+/* $Id: platform_message.h,v 1.5 2008-02-19 22:03:45 scipio Exp $
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -32,7 +32,7 @@
  * chip-specific CC1000 packet structures.
  *
  * @author Philip Levis
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:44 $
+ * @version $Revision: 1.5 $ $Date: 2008-02-19 22:03:45 $
  */
 
 
@@ -53,6 +53,7 @@ typedef union TOSRadioFooter {
 
 typedef union TOSRadioMetadata {
   cc2420_metadata_t cc2420;
+  serial_metadata_t serial;
 } message_metadata_t;
 
 #endif

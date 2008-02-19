@@ -1,4 +1,4 @@
-/* $Id: platform_message.h,v 1.4 2006-12-12 18:23:42 vlahan Exp $
+/* $Id: platform_message.h,v 1.5 2008-02-19 22:03:45 scipio Exp $
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -33,7 +33,7 @@
  *
  * @author Philip Levis
  * @date   May 16 2005
- * Revision:  $Revision: 1.4 $
+ * Revision:  $Revision: 1.5 $
  */
 
 
@@ -54,6 +54,7 @@ typedef union message_footer {
 
 typedef union message_metadata {
   cc2420_metadata_t cc2420;
+  serial_metadata_t serial;
 } message_metadata_t;
 
 #endif
