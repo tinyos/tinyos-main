@@ -1,4 +1,4 @@
-//$Id: Serial.h,v 1.5 2008-02-19 22:00:08 scipio Exp $
+//$Id: Serial.h,v 1.6 2008-02-19 22:01:17 scipio Exp $
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
  *
@@ -123,7 +123,7 @@ typedef nx_struct serial_packet {
 } serial_packet_t;
 
 typedef nx_struct serial_metadata {
-  bool acked;
+  nx_bool acked;
 } serial_metadata_t;
     
 #endif
