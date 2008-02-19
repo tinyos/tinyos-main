@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.12 2008-02-09 05:45:10 gnawali Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.13 2008-02-19 19:50:21 scipio Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -92,6 +92,7 @@ module LqiForwardingEngineP {
     interface Packet;
   }
   uses {
+    interface SplitControl;
     interface Receive as SubReceive;
     interface AMSend as SubSend;
     interface AMSend as SubSendMine;
@@ -123,8 +124,9 @@ implementation {
   uint16_t sendFailures = 0;
   uint8_t fwd_fail_count = 0;
   uint8_t my_fail_count = 0;
-  int fwdbusy = 0;
-  
+  bool fwdbusy = FALSE;
+  bool running = FALSE;
+ 
   lqi_header_t* getHeader(message_t* msg) {
     return (lqi_header_t*) call SubPacket.getPayload(msg, sizeof(lqi_header_t));
   }
@@ -150,8 +152,27 @@ implementation {
     initialize();
     return SUCCESS;
   }
+ 
+  message_t* nextMsg();
+  static void forward(message_t* msg);
+
+  event void SplitControl.startDone(error_t err) {
+    message_t* nextToSend;
+    if (err != SUCCESS) {return;}
+    nextToSend = nextMsg();
+    running = TRUE;
+    fwdbusy = FALSE;
+
+    if (nextToSend != NULL) {
+      forward(nextToSend);
+    }
+  }
 
 
+  event void SplitControl.stopDone(error_t err) {
+    if (err != SUCCESS) {return;}
+    running = FALSE;
+  }
   /***********************************************************************
    * Commands and events
    ***********************************************************************/
@@ -162,6 +183,9 @@ implementation {
     }
     if (call RootControl.isRoot()) {
       return FAIL;
+    }
+    if (running == FALSE) {
+      return EOFF;
     }
     call RouteSelect.initializeFields(pMsg);
     
@@ -241,8 +265,8 @@ implementation {
   static void forward(message_t* msg) {
     // Failures at the send level do not cause the seq. number space to be 
     // rolled back properly.  This is somewhat broken.
-    if (fwdbusy) {
-      dbg("LQI", "%s forwarding busy, wait for later.\n", __FUNCTION__);
+    if (fwdbusy || running == FALSE) {
+      dbg("LQI", "%s forwarding busy or off, wait for later.\n", __FUNCTION__);
       return;
     }
     else {
@@ -255,8 +279,8 @@ implementation {
 					 call CollectionPacket.getOrigin(msg), 
 					 call AMPacket.destination(msg));
 	dbg("LQI", "%s: Send to %hu success.\n", __FUNCTION__, call AMPacket.destination(msg));
+        fwdbusy = TRUE;
       }
-      fwdbusy = TRUE;
     }
   }
 
@@ -365,7 +389,7 @@ implementation {
       if (call SubSendMine.send(call AMPacket.destination(msg),
 			    msg,
 			    call SubPacket.payloadLength(msg)) == SUCCESS) {
-	dbg("LQI", "Packet not acked, retransmit (%hhu) @%s:\n\t%s\n", my_fail_count, sim_time_string(), fields(msg));
+	dbg("LQI", "Local packet not acked, retransmit (%hhu) @%s:\n\t%s\n", my_fail_count, sim_time_string(), fields(msg));
 	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
@@ -377,8 +401,9 @@ implementation {
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
-	dbg("LQI", "Packet not acked, retransmit fail @%s:\n\t%s\n", sim_time_string(), fields(msg));
+	dbg("LQI", "Local packet not acked, retransmit fail @%s:\n\t%s\n", sim_time_string(), fields(msg));
 	sendFailures++;
+	signal Send.sendDone(msg, FAIL);
 	return;
       }
     }
@@ -387,10 +412,10 @@ implementation {
 				       call CollectionPacket.getSequenceNumber(msg), 
 				       call CollectionPacket.getOrigin(msg), 
 				       call AMPacket.destination(msg));
-      dbg("LQI", "Packet failed:\t%s\n", fields(msg));
+      dbg("LQI", "Local packet failed:\t%s\n", fields(msg));
     }
     else if (call PacketAcknowledgements.wasAcked(msg)) {
-      dbg("LQI", "Packet acked:\t%s\n", fields(msg));
+      dbg("LQI", "Local packet acked:\t%s\n", fields(msg));
       call CollectionDebug.logEventMsg(NET_C_FE_SENT_MSG, 
 				       call CollectionPacket.getSequenceNumber(msg), 
 				       call CollectionPacket.getOrigin(msg), 
@@ -398,6 +423,7 @@ implementation {
     }
 
     my_fail_count = 0;
+    dbg("LQI", "Local send done with success %d\n", success);
     signal Send.sendDone(msg, success);
   }
 

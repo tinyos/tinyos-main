@@ -113,9 +113,9 @@ implementation {
   Packet = Forwarder;
   CollectionPacket = Forwarder;
   RootControl = Router;
-
   //CC2420.SubPacket -> DataSender;
   
+  Forwarder.SplitControl -> ActiveMessageC;
   Forwarder.RouteSelectCntl -> Router.RouteControl;
   Forwarder.RouteSelect -> Router;
   Forwarder.SubSend -> DataSender;
