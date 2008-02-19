@@ -29,7 +29,7 @@
  * @date   Nov 22 2005
  */
 
-// $Id: tos.h,v 1.4 2006-12-12 18:23:35 vlahan Exp $
+// $Id: tos.h,v 1.5 2008-02-19 05:13:08 regehr Exp $
 
 #ifndef TOS_H_INCLUDED
 #define TOS_H_INCLUDED
@@ -56,6 +56,14 @@
 #ifndef __cplusplus
 typedef uint8_t bool;
 #endif
+
+/* 
+ * TEMPORARY: include the Safe TinyOS macros so that annotations get
+ * defined away for non-safe users -- this will no longer be necessary
+ * after we require users to use the ncc that has Safe TinyOS
+ * support 
+ */
+#include "../../lib/safe/include/annots_stage1.h"
 
 enum { FALSE = 0, TRUE = 1 };
 
