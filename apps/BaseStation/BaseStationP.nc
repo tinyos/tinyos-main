@@ -1,4 +1,4 @@
-// $Id: BaseStationP.nc,v 1.6 2007-12-13 01:16:42 gnawali Exp $
+// $Id: BaseStationP.nc,v 1.7 2008-02-19 19:54:34 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -33,7 +33,7 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.6 2007-12-13 01:16:42 gnawali Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.7 2008-02-19 19:54:34 scipio Exp $
  */
   
 /* 
@@ -191,6 +191,7 @@ implementation
     id = call RadioAMPacket.type(msg);
     addr = call RadioAMPacket.destination(msg);
     src = call RadioAMPacket.source(msg);
+    call RadioAMPacket.clear(msg);
     call UartAMPacket.setSource(msg, src);
 
     if (call UartSend.send[id](addr, uartQueue[uartOut], len) == SUCCESS)
@@ -253,7 +254,7 @@ implementation
   task void radioSendTask() {
     uint8_t len;
     am_id_t id;
-    am_addr_t addr;
+    am_addr_t addr,source;
     message_t* msg;
     
     atomic
@@ -266,7 +267,12 @@ implementation
     msg = radioQueue[radioOut];
     len = call UartPacket.payloadLength(msg);
     addr = call UartAMPacket.destination(msg);
+    source = call UartAMPacket.source(msg);
     id = call UartAMPacket.type(msg);
+
+    call RadioAMPacket.clear(msg);
+    call RadioAMPacket.setSource(msg, source);
+    
     if (call RadioSend.send[id](addr, msg, len) == SUCCESS)
       call Leds.led0Toggle();
     else
