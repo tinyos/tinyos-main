@@ -1,4 +1,4 @@
-//$Id: SerialActiveMessageP.nc,v 1.6 2007-09-13 23:10:19 scipio Exp $
+//$Id: SerialActiveMessageP.nc,v 1.7 2008-02-19 21:33:13 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -95,6 +95,7 @@ implementation {
   }
 
   command void Packet.clear(message_t* msg) {
+    memset(getHeader(msg), 0, sizeof(serial_header_t));
     return;
   }
 
