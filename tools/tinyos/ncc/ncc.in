@@ -143,7 +143,7 @@ my $cpp;
 my $deputyasmexe;
 my $gcc;
 
-my $safe_home = $ENV{'TOSDIR'}."/lib/safe";
+my $safe_home = $TOSDIR."/lib/safe";
 push @new_args, "-fnesc-include=${safe_home}/include/annots_stage1";
 push @new_args, "-fnesc-genprefix=#include \"${safe_home}/include/annots_stage2.h\"";
 
@@ -334,6 +334,7 @@ foreach $idir (@includes) {
 print STDERR join(' ', @new_args), "\n" if $verbose;
 
 if ($safe) {
+
     # nescc runs and puts in annotations like COUNT etc... 
     system(@new_args)==0 or die "Couldn't execute nescc\n";
 
