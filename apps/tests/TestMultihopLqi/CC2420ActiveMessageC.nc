@@ -1,5 +1,6 @@
 #include <sim_gain.h>
 #include <sim_tossim.h>
+#include <AM.h>
 
 module CC2420ActiveMessageC {
   provides interface CC2420Packet as Packet;
@@ -7,6 +8,9 @@ module CC2420ActiveMessageC {
 }
 implementation {
 
+  typedef struct cc2420_header {
+
+  } cc2420_header_t;
   /**
    * Get transmission power setting for current packet.
    *
@@ -59,10 +63,4 @@ implementation {
     
     return (uint8_t)sig;
   }
-  async command cc2420_header_t* Packet.getHeader(message_t* msg) {
-    return NULL;
-  }  
-  async command cc2420_metadata_t* Packet.getMetadata(message_t* msg) {
-    return NULL;
-  }  
 }

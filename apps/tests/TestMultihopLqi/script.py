@@ -11,11 +11,11 @@ r = t.radio()
 #t.addChannel("RadioCountToLedsC", sys.stdout)
 #t.addChannel("CpmModelC", sys.stdout)
 #t.addChannel("Gain", sys.stdout)
-t.addChannel("AM", sys.stdout)
+#t.addChannel("AM", sys.stdout)
 t.addChannel("App", sys.stdout)
-#t.addChannel("LQI", sys.stdout)
+t.addChannel("LQI", sys.stdout)
 #t.addChannel("LQIRoute", sys.stdout)
-#t.addChannel("LQIDeliver", sys.stdout)
+t.addChannel("LQIDeliver", sys.stdout)
 #t.addChannel("LQIRoute", sys.stdout)
 #t.addChannel("PointerBug", sys.stdout)
 
@@ -54,5 +54,5 @@ print "time: ", duration;
 #for i in range(0, 196607):
 #    print m1.generateNoise(i)
 
-for i in range(0, 2000):
+while ((t.time() / t.ticksPerSecond()) < 3000):
     t.runNextEvent();

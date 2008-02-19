@@ -18,8 +18,8 @@
 
 configuration MultihopOscilloscopeAppC { }
 implementation {
-  components MainC, MultihopOscilloscopeC, LedsC, new TimerMilliC(), 
-    new DemoSensorC() as Sensor;
+  components MainC, MultihopOscilloscopeC, LedsC, new TimerMilliC(),
+    new TimerMilliC() as OnOffTimer, new DemoSensorC() as Sensor;
 
   //MainC.SoftwareInit -> Sensor;
   
@@ -27,7 +27,7 @@ implementation {
   MultihopOscilloscopeC.Timer -> TimerMilliC;
   MultihopOscilloscopeC.Read -> Sensor;
   MultihopOscilloscopeC.Leds -> LedsC;
-
+  MultihopOscilloscopeC.OnOffTimer -> OnOffTimer;
   //
   // Communication components.  These are documented in TEP 113:
   // Serial Communication, and TEP 119: Collection.
@@ -37,6 +37,7 @@ implementation {
     new CollectionSenderC(AM_OSCILLOSCOPE), // Sends multihop RF
     SerialActiveMessageC,                   // Serial messaging
     new SerialAMSenderC(AM_OSCILLOSCOPE);   // Sends to the serial port
+  components RandomC;
 
   MultihopOscilloscopeC.RadioControl -> ActiveMessageC;
   MultihopOscilloscopeC.SerialControl -> SerialActiveMessageC;
@@ -47,17 +48,15 @@ implementation {
   MultihopOscilloscopeC.Snoop -> Collector.Snoop[AM_OSCILLOSCOPE];
   MultihopOscilloscopeC.Receive -> Collector.Receive[AM_OSCILLOSCOPE];
   MultihopOscilloscopeC.RootControl -> Collector;
-
+  MultihopOscilloscopeC.Random -> RandomC;
+  
   components new PoolC(message_t, 10) as UARTMessagePoolP,
     new QueueC(message_t*, 10) as UARTQueueP;
 
   MultihopOscilloscopeC.UARTMessagePool -> UARTMessagePoolP;
   MultihopOscilloscopeC.UARTQueue -> UARTQueueP;
-
-  //
-  // Components for debugging collection.
-  //
-   components new PoolC(message_t, 20) as DebugMessagePool,
+  
+  components new PoolC(message_t, 20) as DebugMessagePool,
     new QueueC(message_t*, 20) as DebugSendQueue,
     new SerialAMSenderC(AM_LQI_DEBUG) as DebugSerialSender,
     UARTDebugSenderP as DebugSender;
@@ -67,4 +66,8 @@ implementation {
   DebugSender.MessagePool -> DebugMessagePool;
   DebugSender.SendQueue -> DebugSendQueue;
   Collector.CollectionDebug -> DebugSender;
+
+  components CC2420ActiveMessageC;
+  CC2420ActiveMessageC.SubPacket -> ActiveMessageC;
+
 }

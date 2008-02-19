@@ -40,8 +40,10 @@ module MultihopOscilloscopeC {
 
     // Miscalleny:
     interface Timer<TMilli>;
+    interface Timer<TMilli> as OnOffTimer;
     interface Read<uint16_t>;
     interface Leds;
+    interface Random;
   }
 }
 
@@ -69,7 +71,7 @@ implementation {
      is a very simple form of "time" synchronization (for an abstract
      notion of time). */
   bool suppress_count_change;
-
+  bool running = FALSE;
   // 
   // On bootup, initialize radio and serial communications, and our
   // own state variables.
@@ -78,16 +80,19 @@ implementation {
     local.interval = DEFAULT_INTERVAL;
     local.id = TOS_NODE_ID;
     local.version = 0;
-    dbg("App", "Booted.");
+
     // Beginning our initialization phases:
     if (call RadioControl.start() != SUCCESS)
       fatal_problem();
 
     if (call RoutingControl.start() != SUCCESS)
       fatal_problem();
+
+    startTimer();
   }
 
   event void RadioControl.startDone(error_t error) {
+    //dbg("App", "Radio control start done.\n");
     if (error != SUCCESS)
       fatal_problem();
 
@@ -96,6 +101,9 @@ implementation {
 
     if (call SerialControl.start() != SUCCESS)
       fatal_problem();
+
+    running = TRUE;
+    call OnOffTimer.startOneShot(19 + (call Random.rand32() % 173));
   }
 
   event void SerialControl.startDone(error_t error) {
@@ -105,17 +113,33 @@ implementation {
     // This is how to set yourself as a root to the collection layer:
     if (local.id % 500 == 0)
       call RootControl.setRoot();
+    
 
-    startTimer();
   }
 
+
+  event void OnOffTimer.fired() {
+    if (running) {
+      call RadioControl.stop();
+    }
+    else {
+      call RadioControl.start();
+    }
+    
+  }
+  
   static void startTimer() {
+    dbg("App", "Starting timer.\n");
     if (call Timer.isRunning()) call Timer.stop();
     call Timer.startPeriodic(local.interval);
     reading = 0;
   }
 
-  event void RadioControl.stopDone(error_t error) { }
+  event void RadioControl.stopDone(error_t error) {
+    //dbg("App", "Radio control stop done.\n");
+    running = FALSE;
+    call OnOffTimer.startOneShot(3);
+  }
   event void SerialControl.stopDone(error_t error) { }
 
   //
@@ -127,17 +151,10 @@ implementation {
   Receive.receive(message_t* msg, void *payload, uint8_t len) {
     oscilloscope_t* in = (oscilloscope_t*)payload;
     oscilloscope_t* out;
-    dbg("App", "Received a packet.\n\t");
-    {
-      int i;
-      for (i = 0; i < len; i++) {
-        dbg_clear("App", "[%hhx] ", ((uint8_t*)payload)[i]);
-      }
-      dbg_clear("App", "\n");
-    }
     if (uartbusy == FALSE) {
       out = (oscilloscope_t*)call SerialSend.getPayload(&uartbuf, sizeof(oscilloscope_t));
-      if (out == NULL || call Packet.payloadLength(&uartbuf) != sizeof(oscilloscope_t)) {
+      if (out == NULL) {
+	fatal_problem();
 	return msg;
       }
       else {
@@ -158,7 +175,8 @@ implementation {
       //Prepare message to be sent over the uart
       out = (oscilloscope_t*)call SerialSend.getPayload(newmsg, sizeof(oscilloscope_t));
       if (out == NULL) {
-	return;
+	fatal_problem();
+	return msg;
       }
       memcpy(out, in, sizeof(oscilloscope_t));
 
@@ -237,15 +255,18 @@ implementation {
       if (!sendbusy) {
 	oscilloscope_t *o = (oscilloscope_t *)call Send.getPayload(&sendbuf, sizeof(oscilloscope_t));
 	if (o == NULL) {
+	  fatal_problem();
 	  return;
 	}
 	memcpy(o, &local, sizeof(local));
 	if (call Send.send(&sendbuf, sizeof(local)) == SUCCESS) {
-          dbg("App", "Sending a packet.\n");
 	  sendbusy = TRUE;
-        }
-        else
+	  dbg("App", "Sending data packet.\n");
+	}
+        else {
+	  dbg("App", "Data packet send failed.\n");
           report_problem();
+	}
       }
       
       reading = 0;
@@ -261,6 +282,7 @@ implementation {
   }
 
   event void Send.sendDone(message_t* msg, error_t error) {
+    dbg("App", "App-level send done.\n");
     if (error == SUCCESS)
       report_sent();
     else
