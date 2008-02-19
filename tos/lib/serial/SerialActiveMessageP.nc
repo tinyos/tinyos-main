@@ -1,4 +1,4 @@
-//$Id: SerialActiveMessageP.nc,v 1.7 2008-02-19 21:33:13 scipio Exp $
+//$Id: SerialActiveMessageP.nc,v 1.8 2008-02-19 22:00:08 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -48,6 +48,10 @@ implementation {
 
   serial_header_t* getHeader(message_t* msg) {
     return (serial_header_t*)(msg->data - sizeof(serial_header_t));
+  }
+
+  serial_metadata_t* getMetadata(message_t* msg) {
+    return (serial_metadata_t*)(msg->metadata);
   }
   
   command error_t AMSend.send[am_id_t id](am_addr_t dest,
