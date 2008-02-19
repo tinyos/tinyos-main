@@ -1,4 +1,4 @@
-// $Id: TossimPacketModelC.nc,v 1.7 2007-06-15 00:45:18 scipio Exp $
+// $Id: TossimPacketModelC.nc,v 1.8 2008-02-19 19:51:08 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -133,7 +133,7 @@ implementation {
     tossim_metadata_t* meta = getMetadata(ack);
     return meta->ack;
   }
-
+      
   task void sendDoneTask() {
     message_t* msg = sending;
     tossim_metadata_t* meta = getMetadata(msg);
@@ -141,7 +141,7 @@ implementation {
     meta->strength = 0;
     meta->time = 0;
     sending = FALSE;
-    signal Packet.sendDone(msg, SUCCESS);
+    signal Packet.sendDone(msg, running? SUCCESS:EOFF);
   }
 
   command error_t Packet.cancel(message_t* msg) {
@@ -244,7 +244,7 @@ implementation {
   void send_transmit(sim_event_t* evt) {
     sim_time_t duration;
     tossim_metadata_t* metadata = getMetadata(sending);
-    
+
     duration = 8 * (sendingLength + sim_packet_header_length());
     duration /= sim_csma_bits_per_symbol();
     duration += sim_csma_preamble_length();
@@ -273,7 +273,7 @@ implementation {
     sending = NULL;
     transmitting = FALSE;
     dbg("TossimPacketModelC", "PACKET: Signaling send done at %llu.\n", sim_time());
-    signal Packet.sendDone(rval, SUCCESS);
+    signal Packet.sendDone(rval, running? SUCCESS:EOFF);
   }
 
   event void GainRadioModel.receive(message_t* msg) {
