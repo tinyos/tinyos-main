@@ -1,4 +1,4 @@
-// $Id: BaseStationP.nc,v 1.7 2008-02-19 19:54:34 scipio Exp $
+// $Id: BaseStationP.nc,v 1.8 2008-02-19 19:56:03 scipio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -33,7 +33,7 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.7 2008-02-19 19:54:34 scipio Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.8 2008-02-19 19:56:03 scipio Exp $
  */
   
 /* 
@@ -191,7 +191,7 @@ implementation
     id = call RadioAMPacket.type(msg);
     addr = call RadioAMPacket.destination(msg);
     src = call RadioAMPacket.source(msg);
-    call RadioAMPacket.clear(msg);
+    call UartPacket.clear(msg);
     call UartAMPacket.setSource(msg, src);
 
     if (call UartSend.send[id](addr, uartQueue[uartOut], len) == SUCCESS)
@@ -270,7 +270,7 @@ implementation
     source = call UartAMPacket.source(msg);
     id = call UartAMPacket.type(msg);
 
-    call RadioAMPacket.clear(msg);
+    call RadioPacket.clear(msg);
     call RadioAMPacket.setSource(msg, source);
     
     if (call RadioSend.send[id](addr, msg, len) == SUCCESS)
