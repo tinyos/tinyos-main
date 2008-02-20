@@ -10,8 +10,8 @@ Power Management of Non-Virtualised Devices
 :Author: Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Phil Levis
 
 :Draft-Created: 11-Jan-2006
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2007-09-14 22:45:30 $
+:Draft-Version: $Revision: 1.9 $
+:Draft-Modified: $Date: 2008-02-20 17:34:55 $
 :Draft-Discuss: TinyOS Developer List 
                 <tinyos-devel at mail.millennium.berkeley.edu>
 
@@ -485,9 +485,9 @@ according to the *implicitly power management* model could be built as shown bel
     provides {
       interface Init;
       interface SplitControl;
-	  interface Resource;
-	  interface FlashCommands;
-	  ...
+      interface Resource;
+      interface FlashCommands;
+      ...
     }
   }
   implementation {
@@ -496,11 +496,11 @@ according to the *implicitly power management* model could be built as shown bel
 
   generic module PowerManagerC(uint8_t POWERDOWN_DELAY) {
     provides {
-	  interface Init;
+      interface Init;
     }
     uses {
-	  interface SplitControl;
-	  interface ResourceDefaultOwner;
+      interface SplitControl;
+      interface ResourceDefaultOwner;
     }
   }
   implementation {
@@ -511,15 +511,15 @@ according to the *implicitly power management* model could be built as shown bel
   #define MYFLASH_POWERDOWN_DELAY	1000
   configuration MyFlashC {
     provides {
-	  interface Init;
-	  interface Resource;
-	  interface FlashCommands;
+      interface Init;
+      interface Resource;
+      interface FlashCommands;
     }
   }
   implementation {
     components new PowerManagerC(MYFLASH_POWERDOWN_DELAY)
-	, FcfsArbiter(MYFLASH_RESOURCE)
-	, MyFlashP;
+    , FcfsArbiter(MYFLASH_RESOURCE)
+    , MyFlashP;
 
     Init = MyFlashP;
     Resource = FcfsArbiter; 

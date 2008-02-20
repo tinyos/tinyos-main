@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:Date: $Date: 2007-09-14 22:45:30 $
-:Revision: $Revision: 1.11 $
+:Date: $Date: 2008-02-20 17:34:55 $
+:Revision: $Revision: 1.12 $
 :Copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -311,9 +311,9 @@ ul.auto-toc {
 <td>Kevin Klues, Vlado Handziski, Jan-Hinrich Hauer, Phil Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">11-Jan-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-21</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-09-14</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List
 &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
@@ -790,9 +790,9 @@ module MyFlashP {
   provides {
     interface Init;
     interface SplitControl;
-        interface Resource;
-        interface FlashCommands;
-        ...
+    interface Resource;
+    interface FlashCommands;
+    ...
   }
 }
 implementation {
@@ -801,11 +801,11 @@ implementation {
 
 generic module PowerManagerC(uint8_t POWERDOWN_DELAY) {
   provides {
-        interface Init;
+    interface Init;
   }
   uses {
-        interface SplitControl;
-        interface ResourceDefaultOwner;
+    interface SplitControl;
+    interface ResourceDefaultOwner;
   }
 }
 implementation {
@@ -816,15 +816,15 @@ implementation {
 #define MYFLASH_POWERDOWN_DELAY       1000
 configuration MyFlashC {
   provides {
-        interface Init;
-        interface Resource;
-        interface FlashCommands;
+    interface Init;
+    interface Resource;
+    interface FlashCommands;
   }
 }
 implementation {
   components new PowerManagerC(MYFLASH_POWERDOWN_DELAY)
-      , FcfsArbiter(MYFLASH_RESOURCE)
-      , MyFlashP;
+  , FcfsArbiter(MYFLASH_RESOURCE)
+  , MyFlashP;
 
   Init = MyFlashP;
   Resource = FcfsArbiter;
