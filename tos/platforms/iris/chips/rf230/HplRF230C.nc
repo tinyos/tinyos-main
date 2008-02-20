@@ -68,8 +68,6 @@ implementation
 	components new AlarmOne16C() as AlarmC;
 	Alarm = AlarmC;
 
-	// TODO: do these from PlatformC
-	components RealMainP, RF230LayerC;
+	components RealMainP;
 	RealMainP.PlatformInit -> HplRF230P.PlatformInit;
-	RealMainP.PlatformInit -> RF230LayerC.PlatformInit;
 }

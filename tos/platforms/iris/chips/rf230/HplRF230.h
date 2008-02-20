@@ -57,4 +57,14 @@ typedef TOne TRF230;
  */
 #define RF230_ALARM_MICROSEC	((7.3728 / MHZ / 32.0) * (1 << MICA_DIVIDE_ONE_FOR_32KHZ_LOG2))
 
+/* This is the default value of the TX_PWR field of the PHY_TX_PWR register. */
+#ifndef RF230_DEF_RFPOWER
+#define RF230_DEF_RFPOWER	0
+#endif
+
+/* This is the default value of the CHANNEL field of the PHY_CC_CCA register. */
+#ifndef RF230_DEF_CHANNEL
+#define RF230_DEF_CHANNEL	11
+#endif
+
 #endif//__HPLRF230_H__

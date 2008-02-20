@@ -32,7 +32,11 @@ configuration ActiveMessageC
 		interface Receive as Snoop[uint8_t id];
 		interface Packet;
 		interface AMPacket;
-		interface PacketAcknowledgements as Acks;
+
+		interface PacketAcknowledgements;
+		interface PacketField<uint8_t> as PacketLinkQuality;
+		interface PacketTimeStamp<TMicro, uint16_t>;
+		interface PacketTimeSynch<TMicro, uint16_t>;
 	}
 }
 
@@ -46,10 +50,9 @@ implementation
 	Snoop        = MAC.Snoop;
 	Packet       = MAC;
 	AMPacket     = MAC;
-	Acks         = MAC;
 
-	// TODO: do these from PlatformC
-//	components RealMainP, HplRF230C, RF230DriverC;
-//	RealMainP.PlatformInit -> HplRF230C.PlatformInit;
-//	RealMainP.PlatformInit -> RF230DriverC.PlatformInit;
+	PacketAcknowledgements = MAC;
+	PacketLinkQuality = MAC;
+	PacketTimeStamp = MAC;
+	PacketTimeSynch = MAC;
 }

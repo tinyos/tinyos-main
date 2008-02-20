@@ -1,4 +1,4 @@
-// $Id: MicaTimer.h,v 1.1 2007-11-05 20:37:17 sallai Exp $
+// $Id: MicaTimer.h,v 1.2 2008-02-20 01:07:04 mmaroti Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -144,7 +144,7 @@ enum {
 
 // get a 1MHz (1 microsecond resolution) timer for debugging purposes
 
-typedef TMilli TOne;
+typedef TMicro TOne;
 typedef TMicro TThree;
 typedef uint32_t counter_one_overflow_t;
 typedef uint16_t counter_three_overflow_t;
