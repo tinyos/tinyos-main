@@ -21,6 +21,8 @@
  * Author: Miklos Maroti
  */
 
+#include <HplRF230.h>
+
 configuration DefaultMacC
 {
 	provides 
@@ -34,19 +36,31 @@ configuration DefaultMacC
 		interface Packet;
 		interface AMPacket;
 		interface PacketAcknowledgements;
+
+		interface PacketField<uint8_t> as PacketLinkQuality;
+		interface PacketTimeStamp<TRF230, uint16_t>;
+		interface PacketTimeSynch<TRF230, uint16_t>;
 	}
 }
 
 implementation
 {
-	components DefaultMacP, IEEE154PacketC, RadioAlarmC;
+	components DefaultMacP, DefaultPacketC, IEEE154PacketC, RadioAlarmC;
 
 #ifdef RF230_DEBUG
 	components AssertC;
 #endif
 
 	DefaultMacP.IEEE154Packet -> IEEE154PacketC;
+	DefaultMacP.Packet -> DefaultPacketC;
 	DefaultMacP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
+
+	Packet = DefaultPacketC;
+	AMPacket = DefaultPacketC;
+	PacketAcknowledgements = DefaultPacketC;
+	PacketLinkQuality = DefaultPacketC.PacketLinkQuality;
+	PacketTimeStamp = DefaultPacketC.PacketTimeStamp;
+	PacketTimeSynch = DefaultPacketC.PacketTimeSynch;
 
 	components ActiveMessageLayerC;
 	components MessageBufferLayerC;
@@ -62,9 +76,6 @@ implementation
 	AMSend = ActiveMessageLayerC;
 	Receive = ActiveMessageLayerC.Receive;
 	Snoop = ActiveMessageLayerC.Snoop;
-	Packet = DefaultMacP;
-	AMPacket = IEEE154PacketC;
-	PacketAcknowledgements = DefaultMacP;
 
 	ActiveMessageLayerC.Config -> DefaultMacP;
 	ActiveMessageLayerC.AMPacket -> IEEE154PacketC;
@@ -74,7 +85,7 @@ implementation
 	UniqueLayerC.Config -> DefaultMacP;
 	UniqueLayerC.SubSend -> MessageBufferLayerC;
 
-	MessageBufferLayerC.Packet -> DefaultMacP;
+	MessageBufferLayerC.Packet -> DefaultPacketC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
@@ -99,4 +110,8 @@ implementation
 	CsmaLayerC.SubCCA -> RF230LayerC;
 
 	RF230LayerC.RF230Config -> DefaultMacP;
+	RF230LayerC.PacketLinkQuality -> DefaultPacketC.PacketLinkQuality;
+	RF230LayerC.PacketTransmitPower -> DefaultPacketC.PacketTransmitPower;
+	RF230LayerC.PacketTimeStamping -> DefaultPacketC.PacketTimeStamping;
+	RF230LayerC.PacketTimeSynchron -> DefaultPacketC.PacketTimeSynchron;
 }

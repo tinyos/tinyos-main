@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <DefaultMac.h>
+#include <DefaultPacket.h>
 #include <HplRF230.h>
 #include <Tasklet.h>
 
@@ -38,63 +38,18 @@ module DefaultMacP
 		interface SlottedCollisionConfig;
 		interface ActiveMessageConfig;
 		interface DummyConfig;
-
-		interface PacketAcknowledgements;
-		interface Packet;
 	}
 
 	uses
 	{
 		interface IEEE154Packet;
+		interface Packet;
 		interface RadioAlarm;
 	}
 }
 
 implementation
 {
-/*----------------- Packet -----------------*/
-
-	command void Packet.clear(message_t* msg) 
-	{
-		call IEEE154Packet.createDataFrame(msg);
-
-#ifdef IEEE154_6LOWPAN
-		call IEEE154Packet.set6LowPan(msg, TINYOS_6LOWPAN_NETWORK_ID);
-#endif
-	}
-  
-	command uint8_t Packet.payloadLength(message_t* msg) 
-	{
-		return call IEEE154Packet.getLength(msg) - sizeof(ieee154_header_t) + 1 - sizeof(ieee154_footer_t);
-	}
-  
-	command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
-	{
-		call IEEE154Packet.setLength(msg, len + sizeof(ieee154_header_t) - 1 + sizeof(ieee154_footer_t));
-	}
-  
-	command uint8_t Packet.maxPayloadLength()
-	{
-		return TOSH_DATA_LENGTH;
-	}
-  
-	command void* Packet.getPayload(message_t* msg, uint8_t len)
-	{
-		if( len > TOSH_DATA_LENGTH )
-			return NULL;
-
-		return msg->data;
-	}
-
-	command error_t ActiveMessageConfig.checkPacket(message_t* msg)
-	{
-		// the user forgot to call clear, we should return EINVAL
-		if( ! call IEEE154Packet.isDataFrame(msg) )
-			call Packet.clear(msg);
-
-		return SUCCESS;
-	}
-
 /*----------------- RF230Config -----------------*/
 
 	async command uint8_t RF230Config.getLength(message_t* msg)
@@ -112,19 +67,9 @@ implementation
 		return ((uint8_t*)(call IEEE154Packet.getHeader(msg))) + 1;
 	}
 
-	inline defaultmac_metadata_t* getMeta(message_t* msg)
+	inline defpacket_metadata_t* getMeta(message_t* msg)
 	{
-		return (defaultmac_metadata_t*)(msg->metadata);
-	}
-
-	async command void RF230Config.setTimestamp(message_t* msg, uint16_t time)
-	{
-		getMeta(msg)->timestamp = time;
-	}
-
-	async command void RF230Config.setLinkQuality(message_t* msg, uint8_t lqi)
-	{
-		getMeta(msg)->lqi = lqi;
+		return (defpacket_metadata_t*)(msg->metadata);
 	}
 
 	async command uint8_t RF230Config.getHeaderLength()
@@ -136,12 +81,7 @@ implementation
 	async command uint8_t RF230Config.getMaxLength()
 	{
 		// note, that the ieee154_footer_t is not stored, but we should include it here
-		return sizeof(defaultmac_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
-	}
-
-	async command uint8_t RF230Config.getTransmitPower(message_t* msg)
-	{
-		return RF230_DEF_RFPOWER;
+		return sizeof(defpacket_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
 	}
 
 	async command uint8_t RF230Config.getDefaultChannel()
@@ -184,9 +124,9 @@ implementation
 	async command void SoftwareAckConfig.setAckReceived(message_t* msg, bool acked)
 	{
 		if( acked )
-			getMeta(msg)->flags |= DEFAULTMAC_WAS_ACKED;
+			getMeta(msg)->flags |= DEFPACKET_WAS_ACKED;
 		else
-			getMeta(msg)->flags &= ~DEFAULTMAC_WAS_ACKED;
+			getMeta(msg)->flags &= ~DEFPACKET_WAS_ACKED;
 	}
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()
@@ -197,27 +137,6 @@ implementation
 	tasklet_async command void SoftwareAckConfig.reportChannelError()
 	{
 		signal TrafficMonitorConfig.channelError();
-	}
-
-/*----------------- PacketAcknowledgements -----------------*/
-
-	async command error_t PacketAcknowledgements.requestAck(message_t* msg)
-	{
-		call IEEE154Packet.setAckRequired(msg, TRUE);
-
-		return SUCCESS;
-	}
-
-	async command error_t PacketAcknowledgements.noAck(message_t* msg)
-	{
-		call IEEE154Packet.setAckRequired(msg, FALSE);
-
-		return SUCCESS;
-	}
-
-	async command bool PacketAcknowledgements.wasAcked(message_t* msg)
-	{
-		return getMeta(msg)->flags & DEFAULTMAC_WAS_ACKED;
 	}
 
 /*----------------- UniqueConfig -----------------*/
@@ -240,6 +159,17 @@ implementation
 	tasklet_async command void UniqueConfig.reportChannelError()
 	{
 		signal TrafficMonitorConfig.channelError();
+	}
+
+/*----------------- ActiveMessageConfig -----------------*/
+
+	command error_t ActiveMessageConfig.checkPacket(message_t* msg)
+	{
+		// the user forgot to call clear, we should return EINVAL
+		if( ! call IEEE154Packet.isDataFrame(msg) )
+			call Packet.clear(msg);
+
+		return SUCCESS;
 	}
 
 /*----------------- CsmaConfig -----------------*/

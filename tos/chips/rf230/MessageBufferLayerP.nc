@@ -104,6 +104,7 @@ implementation
 		
 		s = state;
 
+		// change the state before so we can be reentered rom the event
 		if( s == STATE_TURN_ON || s == STATE_TURN_OFF )
 			state = STATE_READY;
 

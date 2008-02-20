@@ -55,13 +55,16 @@ module RF230LayerP
 		interface BusyWait<TMicro, uint16_t>;
 
 		interface RF230Config;
+		interface PacketField<uint8_t> as PacketLinkQuality;
+		interface PacketField<uint16_t> as PacketTimeStamping;
+		interface PacketField<uint16_t> as PacketTimeSynchron;
+		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface Tasklet;
+		interface RadioAlarm;
 
 #ifdef RF230_DEBUG
 		interface DiagMsg;
 #endif
-
-		interface RadioAlarm;
 	}
 }
 
@@ -389,7 +392,9 @@ implementation
 		writeRegister(RF230_TRX_STATE, RF230_PLL_ON);
 
 		// do something useful, just to wait a little
-		length = call RF230Config.getTransmitPower(msg) & RF230_TX_PWR_MASK;
+		length = (call PacketTransmitPower.isSet(msg) ?
+			call PacketTransmitPower.get(msg) : RF230_DEF_RFPOWER) & RF230_TX_PWR_MASK;
+
 		if( length != txPower )
 		{
 			txPower = length;
@@ -408,7 +413,7 @@ implementation
 		atomic
 		{
 			call SLP_TR.set();
-			time = call RadioAlarm.getNow();
+			time = call RadioAlarm.getNow() + TX_SFD_DELAY;
 		}
 		call SLP_TR.clr();
 
@@ -425,6 +430,10 @@ implementation
 
 		// the FCS is atomatically generated
 		length -= 2;
+
+		// calculate and embed the time offset
+		if( call PacketTimeSynchron.isSet(msg) )
+			call PacketTimeSynchron.set(msg, call PacketTimeSynchron.get(msg) - time);
 
 		do {
 			call HplRF230.spiSplitReadWrite(*(data++));
@@ -467,8 +476,11 @@ implementation
 			return FAIL;
 		}
 
-		time += TX_SFD_DELAY;
-		call RF230Config.setTimestamp(msg, time);
+		// TODO: be nicer for retransmissions
+		// clear the embedded time stamp field
+		call PacketTimeSynchron.clear(msg);
+
+		call PacketTimeStamping.set(msg, time);
 
 		// wait for the TRX_END interrupt
 		state = STATE_BUSY_TX_2_RX_ON;
@@ -545,7 +557,7 @@ implementation
 				crc = call HplRF230.crcByte(crc, call HplRF230.spiSplitReadWrite(0));
 				crc = call HplRF230.crcByte(crc, call HplRF230.spiSplitReadWrite(0));
 
-				call RF230Config.setLinkQuality(rxMsg, call HplRF230.spiSplitRead());
+				call PacketLinkQuality.set(rxMsg, call HplRF230.spiSplitRead());
 			}
 			else
 				crc = 1;
@@ -556,6 +568,10 @@ implementation
 		call SELN.set();
 		state = STATE_RX_ON;
 		cmd = CMD_NONE;
+
+		// we need a correct time stamp of the message
+		if( call PacketTimeSynchron.isSet(rxMsg) && call PacketTimeStamping.isSet(rxMsg) )
+			call PacketTimeSynchron.set(rxMsg, call PacketTimeSynchron.get(rxMsg) + call PacketTimeStamping.get(rxMsg));
 
 		// signal only if it has passed the CRC check
 		if( crc == 0 )
@@ -647,7 +663,11 @@ implementation
 					 * we could not be after a transmission, because then cmd = 
 					 * CMD_TRANSMIT.
 					 */
-					call RF230Config.setTimestamp(rxMsg, time - RX_SFD_DELAY);
+					if( irq == RF230_IRQ_RX_START ) // just to be cautious
+						call PacketTimeStamping.set(rxMsg, time - RX_SFD_DELAY);
+					else
+						call PacketTimeStamping.clear(rxMsg);
+
 					cmd = CMD_RECEIVE;
 				}
 				else

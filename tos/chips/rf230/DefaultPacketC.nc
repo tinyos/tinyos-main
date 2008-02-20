@@ -21,63 +21,39 @@
  * Author: Miklos Maroti
  */
 
-configuration RF230LayerC
+#include <HplRF230.h>
+
+configuration DefaultPacketC
 {
 	provides
 	{
-		interface RadioState;
-		interface RadioSend;
-		interface RadioReceive;
-		interface RadioCCA;
-	}
-
-	uses 
-	{
-		interface RF230Config;
+		interface Packet;
+		interface AMPacket;
+		interface PacketAcknowledgements;
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint16_t> as PacketTimeStamping;
 		interface PacketField<uint16_t> as PacketTimeSynchron;
+
+		interface PacketTimeStamp<TRF230, uint16_t>;
+		interface PacketTimeSynch<TRF230, uint16_t>;
 	}
 }
 
 implementation
 {
-	components RF230LayerP, HplRF230C, BusyWaitMicroC, TaskletC, MainC, RadioAlarmC;
+	components DefaultPacketP, IEEE154PacketC;
 
-	RadioState = RF230LayerP;
-	RadioSend = RF230LayerP;
-	RadioReceive = RF230LayerP;
-	RadioCCA = RF230LayerP;
+	DefaultPacketP.IEEE154Packet -> IEEE154PacketC;
 
-	RF230Config = RF230LayerP;
-	PacketLinkQuality = RF230LayerP.PacketLinkQuality;
-	PacketTransmitPower = RF230LayerP.PacketTransmitPower;
-	PacketTimeStamping = RF230LayerP.PacketTimeStamping;
-	PacketTimeSynchron = RF230LayerP.PacketTimeSynchron;
+	Packet = DefaultPacketP;
+	AMPacket = IEEE154PacketC;
+	PacketAcknowledgements = DefaultPacketP;
+	PacketLinkQuality = DefaultPacketP.PacketLinkQuality;
+	PacketTransmitPower = DefaultPacketP.PacketTransmitPower;
+	PacketTimeStamping = DefaultPacketP.PacketTimeStamping;
+	PacketTimeSynchron = DefaultPacketP.PacketTimeSynchron;
 
-	RF230LayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	RadioAlarmC.Alarm -> HplRF230C.Alarm;
-
-	RF230LayerP.SELN -> HplRF230C.SELN;
-	RF230LayerP.SpiResource -> HplRF230C.SpiResource;
-	RF230LayerP.SpiByte -> HplRF230C;
-	RF230LayerP.HplRF230 -> HplRF230C;
-
-	RF230LayerP.SLP_TR -> HplRF230C.SLP_TR;
-	RF230LayerP.RSTN -> HplRF230C.RSTN;
-
-	RF230LayerP.IRQ -> HplRF230C.IRQ;
-	RF230LayerP.Tasklet -> TaskletC;
-	RF230LayerP.BusyWait -> BusyWaitMicroC;
-
-#ifdef RF230_DEBUG
-	components DiagMsgC;
-	RF230LayerP.DiagMsg -> DiagMsgC;
-#endif
-
-	MainC.SoftwareInit -> RF230LayerP.SoftwareInit;
-
-	components RealMainP;
-	RealMainP.PlatformInit -> RF230LayerP.PlatformInit;
+	PacketTimeStamp = DefaultPacketP.PacketTimeStamp;
+	PacketTimeSynch = DefaultPacketP.PacketTimeSynch;
 }

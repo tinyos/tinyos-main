@@ -24,21 +24,11 @@
 interface PacketTimeSynch<precision_tag, size_type>
 {
 	/**
-	 * This command should be called by the sender on packets used for sender- 
-	 * receiver time synchronization. The eventTime parameter should be as 
-	 * close to the current time as possible (precision and size of the stamp 
-	 * permitting) to avoid large time synchronization errors resulting from
-	 * the time skew between the clocks of the sender and receiver. The
-	 * time difference between the sending time and eventTime is stored in 
-	 * the message just before it is transmitted over the air.
-	 */
-	async command void set(message_t* msg, size_type eventTime);
-
-	/**
-	 * The recveive should call this method to ensure that the received time
-	 * stamp is correct (for the same reason as for PacketTimeStamp.isSet).
-	 * If this method returns TRUE, then the eventTime returned by the get
-	 * command is correct.
+	 * The recveiver should call this method to ensure that the received 
+	 * message contains an embedded timestamp and that is correct (for the 
+	 * same reason as for PacketTimeStamp.isSet). If this method returns 
+	 * TRUE, then the eventTime returned by the get command is correct,
+	 * and reflects the event time in the local clock of the receiver.
 	 */
 	async command bool isSet(message_t* msg);
 
@@ -50,4 +40,20 @@ interface PacketTimeSynch<precision_tag, size_type>
 	 * correct.
 	 */
 	async command size_type get(message_t* msg);
+
+	/**
+	 * Clears the time stamp in the message. 
+	 */
+	async command void clear(message_t* msg);
+
+	/**
+	 * This command should be called by the sender on packets used for sender- 
+	 * receiver time synchronization. The eventTime parameter should be as 
+	 * close to the current time as possible (precision and size of the stamp 
+	 * permitting) to avoid large time synchronization errors resulting from
+	 * the time skew between the clocks of the sender and receiver. The
+	 * time difference between the sending time and eventTime is stored in 
+	 * the message just before it is transmitted over the air.
+	 */
+	async command void set(message_t* msg, size_type eventTime);
 }

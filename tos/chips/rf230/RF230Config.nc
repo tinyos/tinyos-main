@@ -46,16 +46,6 @@ interface RF230Config
 	async command uint8_t* getPayload(message_t* msg);
 
 	/**
-	 * Sets the timestamp (when the message was sent or received)
-	 */
-	async command void setTimestamp(message_t* msg, uint16_t time);
-
-	/**
-	 * Sets the link quality indicator field for the received message
-	 */
-	async command void setLinkQuality(message_t* msg, uint8_t lqi);
-
-	/**
 	 * Gets the number of bytes we should read before the RadioReceive.header
 	 * event is fired. If the length of the packet is less than this amount, 
 	 * then that event is fired earlier.
@@ -66,12 +56,6 @@ interface RF230Config
 	 * Returns the maximum PHY length that can be set via the setLength command
 	 */
 	async command uint8_t getMaxLength();
-
-	/**
-	 * Returns the transmit power for the given message, this must be a value 
-	 * in the range [0, 15] which will be stored in the PHY_TX_PWR register.
-	 */
-	async command uint8_t getTransmitPower(message_t* msg);
 
 	/**
 	 * This command is used at power up to set the default channel.

@@ -21,31 +21,21 @@
  * Author: Miklos Maroti
  */
 
-interface PacketTimeStamp<precision_tag, size_type>
+interface PacketField<value_type>
 {
 	/**
-	 * Returns TRUE if the time stamp stored in the metadata of the message 
-	 * is valid. Under special circumstances the radio chip might not be 
-	 * able to correctly assign a precise time value to an incoming packet 
-	 * (e.g. under very heavy traffic multiple interrupts can occur before 
-	 * they could be serviced, and even if capture registers are used, it 
-	 * is not possible to get the time stamp for the first or last unserviced 
-	 * event), in which case the time stamp value should not be used.
+	 * Returns TRUE if the value is set for this message.
 	 */
 	async command bool isSet(message_t* msg);
 
 	/**
-	 * Return the time stamp for the given message. Please check with the 
-	 * isSet command if this value can be relied upon. If this command is
-	 * called after transmission, then the transmit time of the packet
-	 * is returned (the time when the frame synchronization byte was 
-	 * transmitted). If this command is called after the message is received,
-	 * the tne receive time of the message is returned.
+	 * Returns the stored value of this field in the message. If the
+	 * value is not set, then the returned value is undefined.
 	 */
-	async command size_type get(message_t* msg);
+	async command value_type get(message_t* msg);
 
 	/**
-	 * Sets the isSet flag to FALSE.
+	 * Clears the isSet flag.
 	 */
 	async command void clear(message_t* msg);
 
@@ -53,5 +43,5 @@ interface PacketTimeStamp<precision_tag, size_type>
 	 * Sets the isSet false to TRUE and the time stamp value to the 
 	 * specified value.
 	 */
-	async command void set(message_t* msg, size_type value);
+	async command void set(message_t* msg, value_type value);
 }
