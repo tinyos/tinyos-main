@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-02-14 19:08:07 $
-:version: $Revision: 1.16 $
+:date: $Date: 2008-02-21 05:05:04 $
+:version: $Revision: 1.17 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -291,19 +291,11 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
-<td>Draft</td></tr>
+<td>Final</td></tr>
 <tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">&gt; 2.1</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
 <td>Philip Levis</td></tr>
-<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">10-Dec-2004</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.12</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-02-11</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
-</tr>
 </tbody>
 </table>
 <div class="note">
@@ -463,7 +455,6 @@ implementation {
   };
 
   command void Packet.clear(message_t* msg) {
-    uint8_t len;
     void* payload = call SubPacket.getPayload(msg, call SubPacket.maxPayloadLength());
     call SubPacket.clear();
     if (payload != NULL) {
@@ -526,8 +517,9 @@ interface AMPacket {
 }
 </pre>
 <p>The command address() returns the local AM address of the
-node. AMPacket provides accessors for its two fields, destination and
-type. It also provides commands to set these fields, for the same
+node. AMPacket provides accessors for its four fields, destination,
+source, type and group. It also provides commands to set these
+fields, for the same
 reason that Packet allows a caller to set the payload length.  Packet
 interfaces SHOULD provide accessors and mutators for all of their
 fields to enable queues and other buffering to store values in a

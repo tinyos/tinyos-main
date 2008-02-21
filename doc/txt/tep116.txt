@@ -5,14 +5,9 @@ Packet Protocols
 :TEP: 116 
 :Group: Core Working Group 
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: > 2.1
 :Author: Philip Levis
-
-:Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.13 $
-:Draft-Modified: $Date: 2008-02-14 19:07:35 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
@@ -187,7 +182,6 @@ to packets, it might look like this::
     };
  
     command void Packet.clear(message_t* msg) {
-      uint8_t len;
       void* payload = call SubPacket.getPayload(msg, call SubPacket.maxPayloadLength());
       call SubPacket.clear();
       if (payload != NULL) {
