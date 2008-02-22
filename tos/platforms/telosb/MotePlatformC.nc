@@ -64,23 +64,23 @@ implementation {
 	P5SEL = 0;
 	P6SEL = 0;
 
-	P1DIR = 0xe0;
 	P1OUT = 0x00;
+	P1DIR = 0xe0;
  
-	P2DIR = 0x7b;
 	P2OUT = 0x30;
+	P2DIR = 0x7b;
 
-	P3DIR = 0xf1;
 	P3OUT = 0x00;
+	P3DIR = 0xf1;
 
-	P4DIR = 0xfd;
 	P4OUT = 0xdd;
+	P4DIR = 0xfd;
 
-	P5DIR = 0xff;
 	P5OUT = 0xff;
+	P5DIR = 0xff;
 
-	P6DIR = 0xff;
 	P6OUT = 0x00;
+	P6DIR = 0xff;
 
 	P1IE = 0;
 	P2IE = 0;
