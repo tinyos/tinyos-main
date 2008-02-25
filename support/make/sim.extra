@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: sim.extra,v 1.8 2007-04-21 07:00:30 scipio Exp $
+#$Id: sim.extra,v 1.9 2008-02-25 18:24:38 klueska Exp $
 
 GCC=gcc
 GPP=g++
@@ -35,12 +35,11 @@ ifeq ($(OS), Windows_NT) # Some TinyOS installs are like this
   PLATFORM_BUILD_FLAGS= -fpic -W1,--enabled-auto-image-base 
   PLATFORM_LIB_FLAGS =-shared -L/usr/lib/python$(PYTHON_VERSION)/config -L/$(PYDIR)/config -lstdc++ -lpython$(PYTHON_VERSION)
 else 
-ifeq ($(findstring darwin, $(OSTYPE)), darwin)
-  PLATFORM_FLAGS=-fPIC
-  PLATFORM_CC_FLAGS=-bundle
-  SHARED_OBJECT=_TOSSIMmodule.so
-  PLATFORM_BUILD_FLAGS=-flat_namespace -undefined suppress 
-  PLATFORM_LIB_FLAGS = -lstdc++ 
+ifeq ($(findstring darwin, $(OSTYPE)), darwin) 
+  SIM_DARWIN=TRUE
+else
+ifeq ($(findstring Darwin, $(shell uname)), Darwin)
+  SIM_DARWIN = TRUE  
 else # linux
   PLATFORM_FLAGS=-shared -fPIC
   SHARED_OBJECT=_TOSSIMmodule.so
@@ -49,7 +48,15 @@ else # linux
 endif
 endif
 endif
- 
+endif 
+ifdef SIM_DARWIN
+  PLATFORM_FLAGS=-fPIC
+  PLATFORM_CC_FLAGS=-bundle
+  SHARED_OBJECT=_TOSSIMmodule.so
+  PLATFORM_BUILD_FLAGS=-flat_namespace -undefined suppress 
+  PLATFORM_LIB_FLAGS = -lstdc++ 
+endif 
+
 BUILD_DEPS = sim-exe
 
 # lib/tossim has to come at the end in order to ensure basic TOSSIM
