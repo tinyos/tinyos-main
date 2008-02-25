@@ -1,0 +1,10 @@
+<project name="tinyos-2.x support sdk c 6lowpan serial_tun" default="all">
+
+	<target name="all" >
+		<echo message = "Building support sdk c 6lowpan serial_tun" />
+		<exec executable="make" failonerror="true">
+			<arg line="all" />
+		</exec>
+	</target>
+
+</project>
