@@ -642,7 +642,11 @@ void SerialComm::readSerial()
             }
             else
             {
-                ++droppedReadPacketCount;
+                while(readBuffer.isFull()) {
+                    readBuffer.dequeue();
+                    ++droppedReadPacketCount;
+                }
+                readBuffer.enqueueBack(packet);
                 // DEBUG("SerialComm::readSerial : dropped packet")
             }
         }
