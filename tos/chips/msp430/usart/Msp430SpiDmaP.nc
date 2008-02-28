@@ -32,7 +32,8 @@
 /**
  * @author Jonathan Hui <jhui@archedrock.com>
  * @author Mark Hays
- * @version $Revision: 1.5 $ $Date: 2007-11-08 21:34:42 $
+ * @author Roman Lim
+ * @version $Revision: 1.6 $ $Date: 2008-02-28 17:28:12 $
  */
 
 
@@ -89,6 +90,9 @@ implementation {
   }
 
   async command void ResourceConfigure.unconfigure[ uint8_t id ]() {
+    call Usart.resetUsart(TRUE);
+    call Usart.disableSpi();
+    call Usart.resetUsart(FALSE);
   }
 
   event void UsartResource.granted[ uint8_t id ]() {
