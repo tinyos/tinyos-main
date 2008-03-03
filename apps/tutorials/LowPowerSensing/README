@@ -1,0 +1,206 @@
+========================================================================
+README:  LowPowerSensing Application
+Created: 2-March-2008
+Author:  Kevin Klues (klueska@cs.stanford.edu)
+========================================================================
+
+This README is intended to give an overview of the organizational
+structure of the LowPowerSensing Application application as well as 
+how to best utilize and customize some of the features it contains.  
+This document is divided into three sections.  The first section 
+contains an overview of how the application is organized and what it 
+is capable of doing.  The second section gives instructions on how to 
+install the application and interact with it from your PC.  The third
+section demonstrates how to customize the application to meet your 
+particualr needs.
+
+------------------------------------------------------------------------
+Organizational Structure and Overview
+------------------------------------------------------------------------
+
+The LowPowerSensing application is actually made up of three separate 
+mini-applications: one mote base station application, one mote sampling 
+application, and one java based application used to interact with the 
+mote applications.  The code for all three applications is divided up 
+among several directories:
+
+LowPowerSensing
+./Base
+./java
+./sampleLog
+./Sampler
+./tmote_onboard_sensors
+./universal_sensors
+
+The code specific to the base station aplication is contained under
+the 'Base' directory, and code for the sampling application is found 
+under 'Sampler'.  Code shared between them is found either in the top 
+level directory (LowPowerSensing) or in the subdirectories 'sampleLog',
+'tmote_onboard_sensors', and 'universal_sensors'.  Code for the java 
+application is found in the 'java' directory.
+
+Now the application itself is fairly straightforward.  The sampler
+application periodically takes some sensor readings, logs them to flash,
+and waits for requests from the base station to stream out the contents 
+or its flash over the radio.  Requests originate from end users of the 
+java application and simply get forwarded on to a mote running the 
+sampler application through the base station application.  Conversely,
+whenever the base station receives any packets from the sampler 
+application, it forwards these packets back to the java application for
+further processing.  Any number of motes running the sampler application 
+can exist simultaneously, and data can be requested from them using a 
+unique address assigned to each of them.  
+
+What sensors are sampled, the periodicity of sampling, and the check 
+interval for performing LowPowerListening the are all configurable 
+options that can easily be set by the user at compile time.
+
+This application is admittedly *not* robust in the sense that no reliable 
+transfer protocol is implemented for the exchange of data, data can only
+be retreived from one mote at a time, and there is no code anywhere to 
+recover from node failures at any point in time.  This application is 
+intended more for demonstration purposes, and as a starting point for 
+developers learning how to write low power sensornet applications. Enjoy!
+
+------------------------------------------------------------------------
+Installation Instructions and Running the Applications
+------------------------------------------------------------------------
+
+The default configuration of the LowPowerSensing applcation has been 
+designed to compile and run on any platform that supports 
+LowPowerListening and has a LogStorage component defined for its 
+external flash (i.e. telos, mica2, micaz, eyesIFX, etc.).  For purposes
+of illustration the instructions below are given for installation on the
+telosb platform, but should be applicable to other platforms as well.
+
+To run the LowPowerSensing application with its default configuration 
+do the following:
+
+1) Install the base station application on a mote and connect it to your
+PC via whatever serial interface you normally use to communicate with it.
+IMPORTANT: the base station mote must be installed with address 0
+
+cd Base
+make telosb install.0
+
+2) Install the sampler application on a mote.  You can install this 
+application on any number of motes, remembering to change the TOS_NODE_ID
+of each installation instance (in the example below I use 5, 10, and 20, 
+but any number is acceptable as long as its not 0).
+
+cd Sampler
+make telosb install.5
+make telosb install.10
+make telosb install.20
+
+3) Compile and run the java application.  You first need to start up an 
+instance of serial forwarder to do so.
+
+cd java
+make 
+java net.tinyos.sf.SerialForwarder -comm serial@/dev/ttyUSB0:telosb &
+java LowePowerSensingApp
+
+After starting the java application you will be presented with a user 
+prompt that looks like:
+
+Enter 's' to request samples
+>> 
+
+Just type 's' and hit enter in order to request samples from one of your 
+sampler motes.  After doing so, you will be presented with a prompt for 
+the address of the mote from which you are requesting data. You should 
+enter the TOS_NODE_ID of one of the motes you installed the sampler 
+application on before.  
+
+Enter Address:
+
+Once the address has been entered, a request message will be sent from 
+the java application through the base station mote and out to the 
+mote running the sampling application.  Once the sampler mote receives
+this request, it will start streaming back any data it has logged to flash
+since the last time a request was received.  If this is the first request
+message it is receiving, it will send all of the samples back that it has
+logged since the time it was booted up.  
+
+------------------------------------------------------------------------
+Changing the default Configuration
+------------------------------------------------------------------------
+
+The LowPowerSensing Application is set up by default to use a software
+based Sinusoidal generator sensor with a sampling period of 3s, and an 
+LPL check interval of 2s. The code for using this sensor can be found 
+in the 'universal_sensors' directory.  The pattern followed by the set 
+of files found in this directory can be used to setup other types of 
+sensors for sampling by the LowPowerSensing application.  If you take a 
+look in the 'tmote_onboard_sensors' directory you will see the exact 
+same set of files as you do in the 'universal_sensors' directory.  Of 
+course, these files are set up to use the set of sensors found onboard
+the tmote sky motes: namely a temperature sensor, a humidity sensor, a 
+photo active sensor, and a total solar sensor.  Because the files in 
+each directory are named identically, we can tell the LowPowerSensing 
+application which set of sensors to expect completely at compile time 
+by simply setting a few compiler flags.
+
+So if you happen to have a tmote laying around and you want to sample 
+its onboard sensors instead of using the default sinusoidal sensor you 
+need to do the following:
+
+Open up the makefiles for both the the Sampler and Base station 
+applications and change this line:
+
+CFLAGS += -I.. -I../sampleLog -I../universal_sensors
+to
+CFLAGS += -I.. -I../sampleLog -I../tmote_onboard_sensors
+
+Additionally, to allow the java application to recognize the new types 
+of sensors being sampled you need to change this line in the makefile 
+of the java directory:
+
+SENSOR_DIR = universal_sensors
+to 
+SENSOR_DIR = tmote_onboard_sensors
+
+And thats it.  You should now be sampling the oboard tmote sensors 
+instead of the sinusoaidal one.  If you wish to create a custom set of 
+sensors to sample using the LowPowerSensing application (such as those 
+from one of the mica sensorboards), just follow the pattern found in 
+the 'universal_sensors' and 'tmote_onboard_sensors' and then change 
+the compiler flags appropriately.
+
+Additionally, if you wish to change the LowPowerListening check 
+interval or the sampling period of the Sampler application you can 
+eitheropen up the 'LowPowerSensingConsants.h' file and directly change 
+them there, or pass new values for them at compile time through the 
+makefile (all values are in binary milliseconds i.e. 1s is specified as 
+1024 not 1000).
+
+To change them via the makefile add lines such as the following to
+your makefile in both the Base and Sampler application directories
+(its important that its in both makefiles for the LPL check interval,
+but only necessary in the Sampler application if you are only changing 
+the sampling period):
+
+PFLAGS += -DSAMPLING_INTERVAL=10000
+PFLAGS += -DLPL_INTERVAL=3000
+PFLAGS += -DSAMPLING_INTERVAL=10000  -DLPL_INTERVAL=3000
+
+And that should be it.  The rest of it involves sifting through the code
+and figuring out how the application does what it does.  If you have any 
+questions feel free to email me (Kevin) at klueska@cs.stanford.edu .
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
