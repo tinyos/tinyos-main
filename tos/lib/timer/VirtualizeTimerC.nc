@@ -1,4 +1,4 @@
-//$Id: VirtualizeTimerC.nc,v 1.10 2006-12-12 18:23:32 vlahan Exp $
+//$Id: VirtualizeTimerC.nc,v 1.11 2008-03-05 18:40:17 janhauer Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -79,6 +79,7 @@ implementation
 		  timer->t0 += timer->dt;
 
 		signal Timer.fired[num]();
+    break;
 	      }
 	  }
       }
