@@ -38,7 +38,8 @@
 #define CODE_4B_6B_H
 
 enum {
-    ILLEGAL_CODE = 0xff
+    ILLEGAL_CODE = 0xff,
+    ENCODED_32KHZ_BYTE_TIME = 3*TDA5250_32KHZ_BYTE_TIME/2
 };
 
 const uint8_t nibbleToSixBit[] = {

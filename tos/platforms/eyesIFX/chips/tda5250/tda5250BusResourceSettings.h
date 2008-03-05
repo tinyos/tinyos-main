@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2008-02-13 10:34:28 $
+ * $Revision: 1.9 $
+ * $Date: 2008-03-05 11:14:00 $
  * ========================================================================
  */
 
@@ -40,12 +40,39 @@ enum {
     TDA5250_UART_BUS_ID = unique(MSP430_UARTO_BUS)
 };
 
+/* frequency of crystal: 18089580 Hz,
+   divide by 18 -> 1004976 Hz */
+
+#ifndef TDA5250_UART_BAUDRATE
+#define TDA5250_UART_BAUDRATE 40960U
+#endif
+
 enum {
-    // real milli seconds
-    UBR_1MHZ_23405=0x002A,  UMCTL_1MHZ_23405=0xDD, // 23405 bit/s
-    UBR_1MHZ_35108=0x001C,  UMCTL_1MHZ_35108=0xAA, // 35108 bit/s    
+    /** for reference, not recommended for new experiments */
+    UBR_1MHZ_35108=0x001C,  UMCTL_1MHZ_35108=0xAA, // 35108 bit/s
+
+    /** use real frequency, use only settings that result in an even byte time */
+    UBR_1MHZ_10240=0x0062,  UMCTL_1MHZ_10240=0x08, // 10240 bit/s
+    UBR_1MHZ_10922=0x005C,  UMCTL_1MHZ_10922=0x00, // 10922 bit/s
+    UBR_1MHZ_11702=0x0055,  UMCTL_1MHZ_11702=0xEF, // 11702 bit/s
+    UBR_1MHZ_12603=0x004F,  UMCTL_1MHZ_12603=0xDD, // 12603 bit/s
+    UBR_1MHZ_13653=0x0049,  UMCTL_1MHZ_13653=0xB5, // 13653 bit/s
+    UBR_1MHZ_14894=0x0043,  UMCTL_1MHZ_14894=0xAA, // 14894 bit/s
+    UBR_1MHZ_16384=0x003D,  UMCTL_1MHZ_16384=0x92, // 16384 bit/s
+    UBR_1MHZ_18204=0x0037,  UMCTL_1MHZ_18204=0x84, // 18204 bit/s
+    UBR_1MHZ_20480=0x0031,  UMCTL_1MHZ_20480=0x80, // 20480 bit/s
+    UBR_1MHZ_23405=0x002A,  UMCTL_1MHZ_23405=0x7F, // 23405 bit/s
+    UBR_1MHZ_27306=0x0024,  UMCTL_1MHZ_27306=0x7B, // 27306 bit/s
+    UBR_1MHZ_32768=0x001E,  UMCTL_1MHZ_32768=0x5B, // 32768 bit/s
+    UBR_1MHZ_40960=0x0018,  UMCTL_1MHZ_40960=0x55, // 40960 bit/s
 };
 
-msp430_uart_union_config_t tda5250_uart_config = { {ubr: UBR_1MHZ_35108, umctl: UMCTL_1MHZ_35108, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie:0, urxwie: 0, urxe: 1, utxe: 0} };
+#include "eyesIFXBaudrates.h"
+
+msp430_uart_union_config_t tda5250_uart_config = { {ubr: TDA5250_UART_UBR, umctl: TDA5250_UART_UMCTL, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie:0, urxwie: 0, urxe: 1, utxe: 0} };
+
+enum {
+    TDA5250_32KHZ_BYTE_TIME = (32768UL*10)/TDA5250_UART_BAUDRATE
+};
 
 #endif

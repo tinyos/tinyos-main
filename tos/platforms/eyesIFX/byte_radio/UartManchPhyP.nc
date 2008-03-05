@@ -29,8 +29,8 @@
  * - Description ---------------------------------------------------------
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2007-04-05 06:38:45 $
+ * $Revision: 1.7 $
+ * $Date: 2008-03-05 11:14:00 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * @author: Philipp Huppertz <huppertz@tkn.tu-berlin.de>
  * ========================================================================
@@ -75,7 +75,7 @@ implementation
     } phyState_t;
 
 #define PREAMBLE_LENGTH   2
-#define BYTE_TIME         21
+#define BYTE_TIME         TDA5250_32KHZ_BYTE_TIME
 #define PREAMBLE_BYTE     0x55
 #define SYNC_BYTE         0xFF
 #define SFD_BYTE          0x50

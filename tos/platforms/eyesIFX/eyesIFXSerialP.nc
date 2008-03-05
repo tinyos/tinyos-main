@@ -5,8 +5,7 @@ module eyesIFXSerialP {
 }
 implementation {
   enum {
-     // true mega hertz
-     UBR_1MHZ_57601=0x0011,  UMCTL_1MHZ_57601=0x52 // 57600 bit/s
+     UBR_1MHZ_57601=0x0011,  UMCTL_1MHZ_57601=0xAA // 57600 bit/s
   };			     
 
   msp430_uart_union_config_t msp430_uart_eyes_config = { {ubr: UBR_1MHZ_57601, umctl: UMCTL_1MHZ_57601, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie: 1, urxwie: 0, urxe: 1, utxe: 1} };

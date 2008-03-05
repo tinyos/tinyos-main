@@ -64,4 +64,10 @@ implementation
     UartPhyControl = Uart4b6bPhyP;
     
     Uart4b6bPhyP.RxByteTimer -> RxByteTimer;
+    
+#ifdef UART_DEBUG
+    components new SerialDebugC() as SD;
+    Uart4b6bPhyP.SerialDebug -> SD;
+#endif
+
 }

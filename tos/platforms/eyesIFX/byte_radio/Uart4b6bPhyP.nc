@@ -47,10 +47,21 @@ module Uart4b6bPhyP {
     uses {
         interface RadioByteComm;
         interface Alarm<T32khz, uint16_t> as RxByteTimer;
+#ifdef UART_DEBUG
+        interface SerialDebug;
+#endif
     }
 }
 implementation
 {
+#ifdef UART_DEBUG
+    void sdDebug(uint16_t p) {
+        call SerialDebug.putPlace(p);
+    }
+#else
+    void sdDebug(uint16_t p) {};
+#endif
+
     /* Module Definitions  */
     typedef enum {
         STATE_PREAMBLE,
@@ -72,7 +83,7 @@ implementation
     /* constants */
     enum {
         PREAMBLE_LENGTH=2,
-        BYTE_TIME=21,
+        BYTE_TIME=ENCODED_32KHZ_BYTE_TIME+3,
         PREAMBLE_BYTE=0x55,
         SYNC_BYTE=0xFF,
         SFD_BYTE=0x83,
@@ -96,6 +107,9 @@ implementation
             numPreambles = PREAMBLE_LENGTH;
             byteTime = BYTE_TIME;
         }
+#ifdef UART_DEBUG
+        call SerialDebug.putShortDesc("U4b6bP");
+#endif
         return SUCCESS;
     }
     
@@ -123,8 +137,9 @@ implementation
         call RxByteTimer.stop();
         if(phyState >= STATE_DATA_HIGH) {
             signal PhyPacketRx.recvFooterDone(FAIL);
+            sdDebug(10);
         }
-        phyState = STATE_PREAMBLE; 
+        phyState = STATE_PREAMBLE;
     }
 
     async event void RxByteTimer.fired() {
@@ -182,6 +197,7 @@ implementation
         phyState = STATE_PREAMBLE;
         call RxByteTimer.stop();
         signal PhyPacketRx.recvFooterDone(SUCCESS);
+        sdDebug(20);
     }
 
     
