@@ -61,6 +61,7 @@ implementation {
       new TimerMilliC() as ReRxTimer,
       DuplicateC,
       TimeDiffC,
+      LocalTimeC,
       RandomLfsrC
 #ifdef MAC_DEBUG
       ,PlatformLedsC
@@ -101,7 +102,8 @@ implementation {
 
     CsmaMacP.Duplicate -> DuplicateC;
     CsmaMacP.TimeDiff16 -> TimeDiffC;
-    
+    CsmaMacP.LocalTime32kHz -> LocalTimeC;
+
 #ifdef MAC_DEBUG
     CsmaMacP.Led0 -> PlatformLedsC.Led0;
     CsmaMacP.Led1 -> PlatformLedsC.Led1;

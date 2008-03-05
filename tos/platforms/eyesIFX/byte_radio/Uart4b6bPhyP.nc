@@ -83,7 +83,7 @@ implementation
     /* constants */
     enum {
         PREAMBLE_LENGTH=2,
-        BYTE_TIME=ENCODED_32KHZ_BYTE_TIME+3,
+        BYTE_TIME=TDA5250_32KHZ_BYTE_TIME+3,
         PREAMBLE_BYTE=0x55,
         SYNC_BYTE=0xFF,
         SFD_BYTE=0x83,

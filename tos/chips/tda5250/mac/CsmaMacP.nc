@@ -76,7 +76,8 @@ module CsmaMacP {
         
         interface Alarm<T32khz, uint16_t> as Timer;
         async command am_addr_t amAddress();
-
+        interface LocalTime<T32khz> as LocalTime32kHz;
+        
 #ifdef MACM_DEBUG
         interface GeneralIO as Led0;
         interface GeneralIO as Led1;
@@ -89,18 +90,13 @@ implementation
 {
 
     enum {
-        /*
-          BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
-          PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
-          PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
-          TIME_CORRECTION=16,           // difference between txSFD and rxSFD: 475us
-        */
-        
-        BYTE_TIME=14,                 // byte at 35108 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=9,         // byte at 35108 kBit/s, no coding
-        PHY_HEADER_TIME=56,           // 6 Phy Preamble at 35108 bits/s
-        TIME_CORRECTION=11,           // difference between txSFD and rxSFD: to do
 
+        BYTE_TIME=ENCODED_32KHZ_BYTE_TIME,           // phy encoded
+        PREAMBLE_BYTE_TIME=TDA5250_32KHZ_BYTE_TIME,  // no coding
+        PHY_HEADER_TIME=6*PREAMBLE_BYTE_TIME,        // 6 Phy Preamble
+        TIME_CORRECTION=TDA5250_32KHZ_BYTE_TIME+2,   // difference between txSFD and rxSFD
+
+        
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(tda5250_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         MAXTIMERVALUE=0xFFFF,        // helps to compute backoff
@@ -163,6 +159,8 @@ implementation
     uint16_t restLaufzeit;
 
     uint16_t rssiValue = 0;
+
+    uint32_t rxTime = 0;
     
     /****** debug vars & defs & functions  ***********************/
 #ifdef MACM_DEBUG
@@ -386,11 +384,13 @@ implementation
     }
 
     bool isNewMsg(message_t* msg) {
-        return call Duplicate.isNew(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
+        return call Duplicate.isNew(getHeader(msg)->src, getHeader(msg)->dest,
+                                    (getHeader(msg)->token) & TOKEN_ACK_MASK);
     }
     
     void rememberMsg(message_t* msg) {
-        call Duplicate.remember(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
+        call Duplicate.remember(getHeader(msg)->src, getHeader(msg)->dest,
+                                (getHeader(msg)->token) & TOKEN_ACK_MASK);
     }
     
     void checkSend() {
@@ -668,6 +668,7 @@ implementation
             storeOldState(61);
             macState = RX_P;
             signalMacState();
+            requestAdc();
         }
         else if(macState <= RX_ACK) {
             storeOldState(62);
@@ -782,6 +783,7 @@ implementation
             storeOldState(94);
             signalFailure(11);
         }
+        post ReleaseAdcTask();
         return m;        
     }
 
@@ -809,6 +811,7 @@ implementation
         else {
             signalFailure(13);
         }
+        post ReleaseAdcTask();
     }
        
     
@@ -953,7 +956,10 @@ implementation
     /***** abused TimeStamping events **************************/
     async event void RadioTimeStamping.receivedSFD( uint16_t time ) {
         if(call RssiAdcResource.isOwner()) call ChannelMonitorData.getSnr();
-        if(macState == RX_P) call ChannelMonitor.rxSuccess();
+        if(macState == RX_P) {
+            rxTime = call LocalTime32kHz.get();
+            call ChannelMonitor.rxSuccess();
+        }
     }
     
     async event void RadioTimeStamping.transmittedSFD( uint16_t time, message_t* p_msg ) {}

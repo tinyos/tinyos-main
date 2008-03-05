@@ -132,17 +132,12 @@ implementation
 
     /**************** Module Global Constants  *****************/
     enum {
-/*
-        BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
-        PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
-        TIME_CORRECTION=16,           // difference between txSFD and rxSFD: 475us
-*/
-        BYTE_TIME=14,                 // byte at 35108 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=9,         // byte at 35108 kBit/s, no coding
-        PHY_HEADER_TIME=56,           // 6 Phy Preamble at 35108 bits/s
-        TIME_CORRECTION=11,           // difference between txSFD and rxSFD: to do
-                
+        
+        BYTE_TIME=ENCODED_32KHZ_BYTE_TIME,           // phy encoded
+        PREAMBLE_BYTE_TIME=TDA5250_32KHZ_BYTE_TIME,  // no coding
+        PHY_HEADER_TIME=6*PREAMBLE_BYTE_TIME,        // 6 Phy Preamble
+        TIME_CORRECTION=TDA5250_32KHZ_BYTE_TIME+2,   // difference between txSFD and rxSFD
+        
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         DEFAULT_SLEEP_TIME=1625,
@@ -508,11 +503,13 @@ implementation
     }
     
     bool isNewMsg(message_t* msg) {
-        return call Duplicate.isNew(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
+        return call Duplicate.isNew(getHeader(msg)->src, getHeader(msg)->dest,
+                                    (getHeader(msg)->token) & TOKEN_ACK_MASK);
     }
     
     void rememberMsg(message_t* msg) {
-        call Duplicate.remember(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
+        call Duplicate.remember(getHeader(msg)->src, getHeader(msg)->dest,
+                                (getHeader(msg)->token) & TOKEN_ACK_MASK);
     }
 
     void prepareAck(message_t* msg) {

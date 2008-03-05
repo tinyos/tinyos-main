@@ -138,24 +138,19 @@ implementation
 
     /**************** Module Global Constants  *****************/
     enum {
-/*
-        BYTE_TIME=21,                 // byte at 23405 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=14,        // byte at 23405 kBit/s, no coding
-        PHY_HEADER_TIME=84,           // 6 Phy Preamble at 23405 bits/s
-        TIME_CORRECTION=16,           // difference between txSFD and rxSFD: 475us
-*/
-        BYTE_TIME=14,                 // byte at 35108 kBit/s, 4b6b encoded
-        PREAMBLE_BYTE_TIME=9,         // byte at 35108 kBit/s, no coding
-        PHY_HEADER_TIME=56,           // 6 Phy Preamble at 35108 bits/s
-        TIME_CORRECTION=11,           // difference between txSFD and rxSFD: to do
         
+        BYTE_TIME=ENCODED_32KHZ_BYTE_TIME,           // phy encoded
+        PREAMBLE_BYTE_TIME=TDA5250_32KHZ_BYTE_TIME,  // no coding
+        PHY_HEADER_TIME=6*PREAMBLE_BYTE_TIME,        // 6 Phy Preamble
+        TIME_CORRECTION=TDA5250_32KHZ_BYTE_TIME+2,   // difference between txSFD and rxSFD
+
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         // DEFAULT_SLEEP_TIME=1625,
-        // DEFAULT_SLEEP_TIME=2048,
+        DEFAULT_SLEEP_TIME=2048,
         // DEFAULT_SLEEP_TIME=4096,
         // DEFAULT_SLEEP_TIME=8192,
-        DEFAULT_SLEEP_TIME=16384,
+        // DEFAULT_SLEEP_TIME=16384,
         // DEFAULT_SLEEP_TIME=32768U,
         // DEFAULT_SLEEP_TIME=65535U,
         DATA_DETECT_TIME=17,
@@ -370,8 +365,8 @@ implementation
                 if(isFlagSet(&flags, TEAMGEIST_ACTIVE) &&
                    (getHeader(msg)->type == teamgeistType)) {
                     if(rssiValue != INVALID_SNR) snr = rssiValue;
-                    rVal = signal Teamgeist.needsAck(msg, getHeader(msg)->src, getHeader(msg)->dest, snr);
                     *level = 2;
+                    rVal = signal Teamgeist.needsAck(msg, getHeader(msg)->src, getHeader(msg)->dest, snr);
                 }
             }
         }
@@ -547,11 +542,14 @@ implementation
     }
     
     bool isNewMsg(message_t* msg) {
-        return call Duplicate.isNew(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
+        return call Duplicate.isNew(getHeader(msg)->src,
+                                    getHeader(msg)->dest,
+                                    (getHeader(msg)->token) & TOKEN_ACK_MASK);
    }
 
     void rememberMsg(message_t* msg) {
-        call Duplicate.remember(getHeader(msg)->src, (getHeader(msg)->token) & TOKEN_ACK_MASK);
+        call Duplicate.remember(getHeader(msg)->src, getHeader(msg)->dest,
+                                (getHeader(msg)->token) & TOKEN_ACK_MASK);
     }
 
     void prepareAck(message_t* msg) {
@@ -577,6 +575,7 @@ implementation
 #endif
         return lt;
     }
+
     /**************** Init ************************/
     
     command error_t Init.init(){
@@ -675,8 +674,6 @@ implementation
             if(call RssiAdcResource.isOwner()) call ChannelMonitorData.getSnr();
         }
         else if(macState == RX_ACK) {
-            // if(call RssiAdcResource.isOwner()) call ChannelMonitor.start();
-            // sdDebug(132);
         }
         else if(macState == RX_ACK_P) {
         }
@@ -860,7 +857,7 @@ implementation
         rxStat.duplicate = PERF_UNKNOWN;
         rxStat.repCounter = 0xff;
 #endif
-        // sdDebug(190);
+        sdDebug(190);
         if(macState == RX_P) {
             // sdDebug(191);
             if(error == SUCCESS) {
@@ -894,14 +891,16 @@ implementation
 #endif
                             }
                         }
-#ifdef REDMAC_PERFORMANCE
                         else {
+#ifdef REDMAC_PERFORMANCE
                             rxStat.duplicate = PERF_REPEATED_MSG;
+#endif
                         }
-#endif                  
                         if(needsAckRx(msg, &level) && (action != RX)) {
-                            // sdDebug(197);
                             action = CCA_ACK;
+                            if(level == 2) {
+                                getMetadata(msg)->ack = WAS_ACKED;
+                            }
                         }
                         else {
                             // sdDebug(198);
@@ -1038,8 +1037,10 @@ implementation
         }
         else if(macState == TX_ACK) {
             checkCounter = 0;
-            macState = RX;
-            setRxMode();
+            macState = SLEEP;
+            setSleepMode();
+            // macState = RX;
+            // setRxMode();
             // sdDebug(221);
 #ifdef REDMAC_DEBUG            
             // sdDebug(40000U + repCounter);
@@ -1053,6 +1054,7 @@ implementation
         if(macState == RX_P) {
             rxTime = call LocalTime32kHz.get();
             call ChannelMonitor.rxSuccess();
+            sdDebug(221);
         }
     }
     
@@ -1203,9 +1205,8 @@ implementation
             // sdDebug(260);
         }
     }
-
+    
     /****** SampleTimer ******************************/
-
     async event void SampleTimer.fired() {
         call SampleTimer.start(localSleeptime);
         // sdDebug(270);
@@ -1326,7 +1327,7 @@ implementation
     async command void MacEval.increaseBackoff(bool value) {
         atomic INCREASE_BACKOFF = value;
     }
-    async command void MacEval.addNav(bool value) {
+    async command void MacEval.addNav(uint8_t value) {
         atomic ADD_NAV = value;
     }
     async command void MacEval.setLongRetry(uint8_t lr) {
