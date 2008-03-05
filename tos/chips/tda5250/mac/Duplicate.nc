@@ -35,9 +35,9 @@
 
 interface Duplicate {
     /** check whether this message is a new message, does not store anything */
-    async command bool isNew(am_addr_t src, uint8_t seqno);
+    async command bool isNew(am_addr_t src, am_addr_t dest, uint8_t seqno);
 
     /** remember the fingerprint of this message, stores/updates the information */
-    async command void remember(am_addr_t src, uint8_t seqno);
+    async command void remember(am_addr_t src, am_addr_t dest, uint8_t seqno);
 }
 

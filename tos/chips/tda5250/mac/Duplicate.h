@@ -36,6 +36,7 @@
 
 typedef struct known_t {
     am_addr_t src;
+    am_addr_t dest;
     uint8_t seqno;
     uint8_t age;
 } known_t;

@@ -56,10 +56,12 @@ implementation {
     task void dump() {
         sdDebug(3000 + last);
         sdDebug(dupOldest.src);
+        sdDebug(dupOldest.dest);
         sdDebug(dupOldest.seqno);
         sdDebug(dupOldest.age);
         sdDebug(4000);
         sdDebug(knownTable[last].src);
+        sdDebug(knownTable[last].dest);
         sdDebug(knownTable[last].seqno);
         sdDebug(knownTable[last].age);
         sdDebug(5000);
@@ -92,12 +94,13 @@ implementation {
     }
 
     /*** duplicate interface */
-    async command bool Duplicate.isNew(am_addr_t src, uint8_t seqno) {
+    async command bool Duplicate.isNew(am_addr_t src, am_addr_t dest, uint8_t seqno) {
         bool rVal = TRUE;
         unsigned i;
         for(i=0; i < TABLE_ENTRIES; i++) {
             if((knownTable[i].age < MAX_AGE) &&
                (src == knownTable[i].src) &&
+               (dest == knownTable[i].dest) &&
                (seqno == knownTable[i].seqno)) {
                 knownTable[i].age = 0;
                 rVal = FALSE;
@@ -109,7 +112,7 @@ implementation {
         return rVal;
     }
     
-    async command void Duplicate.remember(am_addr_t src, uint8_t seqno) {
+    async command void Duplicate.remember(am_addr_t src, am_addr_t dest, uint8_t seqno) {
         unsigned oldest = findOldest();
 #ifdef DUPLICATE_DEBUG
         dupOldest = knownTable[oldest];
@@ -117,6 +120,7 @@ implementation {
         post dump();
 #endif
         knownTable[oldest].src = src;
+        knownTable[oldest].dest = dest;
         knownTable[oldest].seqno = seqno;
         knownTable[oldest].age = 0;
         post ageMsgsTask();
