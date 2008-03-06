@@ -143,9 +143,11 @@ my $cpp;
 my $deputyasmexe;
 my $gcc;
 
-my $safe_home = $TOSDIR."/lib/safe";
-push @new_args, "-fnesc-include=${safe_home}/include/annots_stage1";
-push @new_args, "-fnesc-genprefix=#include \"${safe_home}/include/annots_stage2.h\"";
+if(defined $safe) {
+  my $safe_home = $TOSDIR."/lib/safe";
+  push @new_args, "-fnesc-include=${safe_home}/include/annots_stage1";
+  push @new_args, "-fnesc-genprefix=#include \"${safe_home}/include/annots_stage2.h\"";
+}
 
 if ($safe) {
 
