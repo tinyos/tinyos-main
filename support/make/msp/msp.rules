@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.9 2008-03-11 08:28:54 klueska Exp $
+#$Id: msp.rules,v 1.10 2008-03-11 09:51:24 klueska Exp $
 
 define MSP_HELP
 
@@ -68,7 +68,7 @@ exe0: $(BUILDDIR)/StorageVolumes.h
 
 VOLUME_ALLOCATOR_FLAGS ?= 
 $(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
-	$(VOLUME_ALLOCATOR) $(PLATFORMDIR) $(VOLUME_ALLOCATOR_FLAGS) <$(VOLUME_FILE) >$@ || rm -f $@
+	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
 
 PFLAGS += -I$(BUILDDIR)
 endif
