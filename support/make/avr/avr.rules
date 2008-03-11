@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.10 2008-02-16 19:48:52 regehr Exp $
+#$Id: avr.rules,v 1.11 2008-03-11 08:28:54 klueska Exp $
 
 define AVR_HELP
 
@@ -36,7 +36,6 @@ PROGRAMMER ?= uisp
 NCC = ncc
 LIBS = -lm
 
-
 AMADDR = ActiveMessageAddressC\$$addr
 # Uncomment the next two lines if you have a toolchain without the dollar sign
 # patch. This needs nesc 1.2.8 or newer (1.2.9 is recommended).
@@ -48,6 +47,8 @@ MAIN_SREC = $(BUILDDIR)/main.srec
 MAIN_IHEX = $(BUILDDIR)/main.ihex
 INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
 VOLUMEFILE = volumes-at45db.xml
+VOLUME_ALLOCATOR = tos-storage-at45db
+VOLUME_ALLOCATOR_FLAGS ?=
 
 PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
 PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
@@ -96,7 +97,7 @@ ifneq ($(wildcard $(VOLUMEFILE)), )
 exe0: $(BUILDDIR)/StorageVolumes.h
 
 $(BUILDDIR)/StorageVolumes.h: $(VOLUMEFILE)
-	tos-storage-at45db $(PLATFORMDIR) <$(VOLUMEFILE) >$@ || rm -f $@
+	$(VOLUME_ALLOCATOR) $(PLATFORMDIR) $(VOLUME_ALLOCATOR_FLAGS) <$(VOLUMEFILE) >$@ || rm -f $@
 
 PFLAGS += -I$(BUILDDIR)
 endif
