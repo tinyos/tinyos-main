@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: eyesIFXv1.target,v 1.4 2006-12-12 18:22:55 vlahan Exp $
+#$Id: eyesIFXv1.target,v 1.5 2008-03-11 09:34:13 klueska Exp $
 
 PLATFORM = eyesIFXv1
 
@@ -14,7 +14,7 @@ DEFAULT_PROGRAM = jtag
 endif
 
 VOLUME_FILE = volumes-stm25p.xml
-VOLUME_ALLOCATOR = tos-storage-stm25p
+VOLUME_ALLOCATOR ?= tos-storage-stm25p
 
 NESC_FLAGS:=-Wnesc-all
 

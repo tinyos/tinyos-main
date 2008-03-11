@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: telosb.target,v 1.4 2006-12-12 18:22:55 vlahan Exp $
+#$Id: telosb.target,v 1.5 2008-03-11 09:34:13 klueska Exp $
 
 PLATFORM ?= telosb
 
@@ -13,7 +13,7 @@ MSP_BSL ?= tos-bsl
 MSP_BSL_FLAGS = --telosb
 
 VOLUME_FILE = volumes-stm25p.xml
-VOLUME_ALLOCATOR = tos-storage-stm25p
+VOLUME_ALLOCATOR ?= tos-storage-stm25p
 
 ifdef CC2420_CHANNEL
 PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)
