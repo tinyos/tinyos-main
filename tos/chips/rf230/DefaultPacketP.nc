@@ -31,11 +31,8 @@ module DefaultPacketP
 		interface Packet;
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
-		interface PacketField<uint16_t> as PacketTimeStamping;
-		interface PacketField<uint16_t> as PacketTimeSynchron;
 
 		interface PacketTimeStamp<TRF230, uint16_t>;
-		interface PacketTimeSynch<TRF230, uint16_t>;
 	}
 
 	uses
@@ -46,36 +43,16 @@ module DefaultPacketP
 
 implementation
 {
-/*----------------- Async Packet -----------------*/
-
-#define PACKET_OVERHEAD ((sizeof(ieee154_header_t) - 1) + sizeof(defpacket_footer_t) + sizeof(ieee154_footer_t))
-
-	// async Packet.payloadLength
-	inline uint8_t getPayloadLength(message_t* msg)
+	enum
 	{
-		//	sizeof(ieee154_header_t) - 1 : the ieee154 header minus the length field
-		//	sizeof(defpacket_footer_t) : footer containing the embedded time offset
-		//	sizeof(ieee154_footer_t) : the size of the CRC (not transmitted)
-
-		return call IEEE154Packet.getLength(msg) - PACKET_OVERHEAD;
-	}
-
-	// async Pakcet.maxPayloadLength
-	inline uint8_t getMaxPayloadLength()
-	{
-		return TOSH_DATA_LENGTH;
-	}
-
-/*----------------- Accessors -----------------*/
+		PACKET_LENGTH_INCREASE = 
+			sizeof(defpacket_header_t) - 1	// the 8-bit length field is not counted
+			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
+	};
 
 	inline defpacket_metadata_t* getMeta(message_t* msg)
 	{
 		return (defpacket_metadata_t*)(msg->metadata);
-	}
-
-	inline defpacket_footer_t* getFooter(message_t* msg)
-	{
-		return (defpacket_footer_t*)(msg->data + getPayloadLength(msg));
 	}
 
 /*----------------- Packet -----------------*/
@@ -90,22 +67,24 @@ implementation
 
 		getMeta(msg)->flags = DEFPACKET_CLEAR_METADATA;
 	}
-  
+
 	inline command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
 	{
-		call IEEE154Packet.setLength(msg, len + PACKET_OVERHEAD);
+		call IEEE154Packet.setLength(msg, len + PACKET_LENGTH_INCREASE);
 	}
-  
+
+	// TODO: make Packet.payloadLength async
 	inline command uint8_t Packet.payloadLength(message_t* msg) 
 	{
-		return getPayloadLength(msg);
+		return call IEEE154Packet.getLength(msg) - PACKET_LENGTH_INCREASE;
 	}
-  
+
+	// TODO: make Packet.maxPayloadLength async
 	inline command uint8_t Packet.maxPayloadLength()
 	{
-		return getMaxPayloadLength();
+		return TOSH_DATA_LENGTH;
 	}
-  
+
 	command void* Packet.getPayload(message_t* msg, uint8_t len)
 	{
 		if( len > TOSH_DATA_LENGTH )
@@ -158,99 +137,25 @@ implementation
 
 /*----------------- PacketTimeStamp -----------------*/
 
-	async command bool PacketTimeStamping.isSet(message_t* msg)
+	async command bool PacketTimeStamp.isSet(message_t* msg)
 	{
 		return getMeta(msg)->flags & DEFPACKET_TIMESTAMP;
 	}
 
-	async command uint16_t PacketTimeStamping.get(message_t* msg)
+	async command uint16_t PacketTimeStamp.get(message_t* msg)
 	{
 		return getMeta(msg)->timestamp;
 	}
 
-	async command void PacketTimeStamping.clear(message_t* msg)
+	async command void PacketTimeStamp.clear(message_t* msg)
 	{
 		getMeta(msg)->flags &= ~DEFPACKET_TIMESTAMP;
 	}
 
-	async command void PacketTimeStamping.set(message_t* msg, uint16_t value)
+	async command void PacketTimeStamp.set(message_t* msg, uint16_t value)
 	{
 		getMeta(msg)->flags |= DEFPACKET_TIMESTAMP;
 		getMeta(msg)->timestamp = value;
-	}
-
-	inline async command bool PacketTimeStamp.isSet(message_t* msg)
-	{
-		return call PacketTimeStamping.isSet(msg);
-	}
-
-	inline async command uint16_t PacketTimeStamp.get(message_t* msg)
-	{
-		return call PacketTimeStamping.get(msg);
-	}
-
-	inline async command void PacketTimeStamp.clear(message_t* msg)
-	{
-		call PacketTimeStamping.clear(msg);
-	}
-
-	inline async command void PacketTimeStamp.set(message_t* msg, uint16_t value)
-	{
-		call PacketTimeStamping.set(msg, value);
-	}
-
-/*----------------- PacketTimeSynch -----------------*/
-
-	async command bool PacketTimeSynchron.isSet(message_t* msg)
-	{
-		// just sanity check if the length is not initialized
-		if( getPayloadLength(msg) > getMaxPayloadLength() )
-			return FALSE;
-
-		return getFooter(msg)->timeoffset != DEFPACKET_INVALID_TIMEOFFSET;
-	}
-
-	async command uint16_t PacketTimeSynchron.get(message_t* msg)
-	{
-		return getFooter(msg)->timeoffset;
-	}
-
-	async command void PacketTimeSynchron.clear(message_t* msg)
-	{
-		// just sanity check if the length is not initialized
-		if( getPayloadLength(msg) <= getMaxPayloadLength() )
-			getFooter(msg)->timeoffset = DEFPACKET_INVALID_TIMEOFFSET;
-	}
-
-	async command void PacketTimeSynchron.set(message_t* msg, uint16_t value)
-	{
-		if( getPayloadLength(msg) > getMaxPayloadLength() )
-			return;
-
-		if( value == DEFPACKET_INVALID_TIMEOFFSET )
-			++value;
-
-		getFooter(msg)->timeoffset = value;
-	}
-
-	inline async command bool PacketTimeSynch.isSet(message_t* msg)
-	{
-		return call PacketTimeSynchron.isSet(msg);
-	}
-
-	inline async command uint16_t PacketTimeSynch.get(message_t* msg)
-	{
-		return call PacketTimeSynchron.get(msg);
-	}
-
-	inline async command void PacketTimeSynch.clear(message_t* msg)
-	{
-		call PacketTimeSynchron.clear(msg);
-	}
-
-	inline async command void PacketTimeSynch.set(message_t* msg, uint16_t value)
-	{
-		call PacketTimeSynchron.set(msg, value);
 	}
 
 /*----------------- Global fields -----------------*/

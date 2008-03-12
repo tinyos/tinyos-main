@@ -43,15 +43,4 @@ enum defpacket_metadata_flags
 	DEFPACKET_CLEAR_METADATA = 0x00,
 };
 
-typedef nx_struct defpacket_footer_t
-{
-	nx_uint16_t timeoffset;
-} defpacket_footer_t;
-
-enum defpacket_footer_enum
-{
-	// just to signal missing time offsets
-	DEFPACKET_INVALID_TIMEOFFSET = 0x7317,
-};
-
 #endif//__DEFAULTPACKET_H__

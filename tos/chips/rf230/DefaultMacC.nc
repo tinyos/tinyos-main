@@ -39,7 +39,6 @@ configuration DefaultMacC
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketTimeStamp<TRF230, uint16_t>;
-		interface PacketTimeSynch<TRF230, uint16_t>;
 	}
 }
 
@@ -60,7 +59,6 @@ implementation
 	PacketAcknowledgements = DefaultPacketC;
 	PacketLinkQuality = DefaultPacketC.PacketLinkQuality;
 	PacketTimeStamp = DefaultPacketC.PacketTimeStamp;
-	PacketTimeSynch = DefaultPacketC.PacketTimeSynch;
 
 	components ActiveMessageLayerC;
 	components MessageBufferLayerC;
@@ -112,6 +110,5 @@ implementation
 	RF230LayerC.RF230Config -> DefaultMacP;
 	RF230LayerC.PacketLinkQuality -> DefaultPacketC.PacketLinkQuality;
 	RF230LayerC.PacketTransmitPower -> DefaultPacketC.PacketTransmitPower;
-	RF230LayerC.PacketTimeStamping -> DefaultPacketC.PacketTimeStamping;
-	RF230LayerC.PacketTimeSynchron -> DefaultPacketC.PacketTimeSynchron;
+	RF230LayerC.PacketTimeStamp -> DefaultPacketC.PacketTimeStamp;
 }

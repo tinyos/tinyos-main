@@ -36,8 +36,7 @@ configuration RF230LayerC
 		interface RF230Config;
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
-		interface PacketField<uint16_t> as PacketTimeStamping;
-		interface PacketField<uint16_t> as PacketTimeSynchron;
+		interface PacketTimeStamp<TRF230, uint16_t>;
 	}
 }
 
@@ -53,8 +52,7 @@ implementation
 	RF230Config = RF230LayerP;
 	PacketLinkQuality = RF230LayerP.PacketLinkQuality;
 	PacketTransmitPower = RF230LayerP.PacketTransmitPower;
-	PacketTimeStamping = RF230LayerP.PacketTimeStamping;
-	PacketTimeSynchron = RF230LayerP.PacketTimeSynchron;
+	PacketTimeStamp = RF230LayerP.PacketTimeStamp;
 
 	RF230LayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 	RadioAlarmC.Alarm -> HplRF230C.Alarm;

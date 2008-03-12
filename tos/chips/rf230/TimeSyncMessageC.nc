@@ -21,32 +21,51 @@
  * Author: Miklos Maroti
  */
 
-#include <HplRF230.h>
+#include <Timer.h>
+#include <AM.h>
 
-configuration DefaultPacketC
+configuration TimeSyncMessageC
 {
 	provides
 	{
+		interface TimeSyncSend<TMicro> as TimeSyncSendMicro[am_id_t id];
+		interface TimeSyncPacket<TMicro> as TimeSyncPacketMicro;
+		interface LocalTime<TMicro> as LocalTimeMicro;
+
+		interface TimeSyncSend<TMilli> as TimeSyncSendMilli[am_id_t id];
+		interface TimeSyncPacket<TMilli> as TimeSyncPacketMilli;
+		interface LocalTime<TMilli> as LocalTimeMilli;
+
+		interface SplitControl;
+		interface Receive[uint8_t id];
+		interface Receive as Snoop[am_id_t id];
 		interface Packet;
 		interface AMPacket;
 		interface PacketAcknowledgements;
-		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketField<uint8_t> as PacketTransmitPower;
-
-		interface PacketTimeStamp<TRF230, uint16_t>;
 	}
 }
 
 implementation
 {
-	components DefaultPacketP, IEEE154PacketC;
+	components TimeSyncMessageP, ActiveMessageC, LocalTimeMilliC;
 
-	DefaultPacketP.IEEE154Packet -> IEEE154PacketC;
+	TimeSyncSendMicro = TimeSyncMessageP;
+	TimeSyncPacketMicro = TimeSyncMessageP;
+	LocalTimeMicro = ActiveMessageC;
 
-	Packet = DefaultPacketP;
-	AMPacket = IEEE154PacketC;
-	PacketAcknowledgements = DefaultPacketP;
-	PacketLinkQuality = DefaultPacketP.PacketLinkQuality;
-	PacketTransmitPower = DefaultPacketP.PacketTransmitPower;
-	PacketTimeStamp = DefaultPacketP.PacketTimeStamp;
+	TimeSyncSendMilli = TimeSyncMessageP;
+	TimeSyncPacketMilli = TimeSyncMessageP;
+	LocalTimeMilli = LocalTimeMilliC;
+
+	Packet = TimeSyncMessageP;
+	TimeSyncMessageP.SubSend -> ActiveMessageC.AMSend;
+	TimeSyncMessageP.SubPacket -> ActiveMessageC.Packet;
+
+	TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
+
+	SplitControl = ActiveMessageC;
+	Receive	= ActiveMessageC.Receive;
+	Snoop = ActiveMessageC.Snoop;
+	AMPacket = ActiveMessageC;
+	PacketAcknowledgements = ActiveMessageC;
 }

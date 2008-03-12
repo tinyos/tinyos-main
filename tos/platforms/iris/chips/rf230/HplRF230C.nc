@@ -36,6 +36,7 @@ configuration HplRF230C
 
 		interface GpioCapture as IRQ;
 		interface Alarm<TRF230, uint16_t> as Alarm;
+		interface LocalTime<TRF230>;
 
 		interface HplRF230;
 	}
@@ -70,4 +71,12 @@ implementation
 
 	components RealMainP;
 	RealMainP.PlatformInit -> HplRF230P.PlatformInit;
+
+	components CounterOne16C;
+	components new TransformCounterC(TRF230, uint32_t, TRF230, uint16_t, 0, uint32_t);
+	components new CounterToLocalTimeC(TRF230);
+
+	LocalTime = CounterToLocalTimeC;
+	CounterToLocalTimeC.Counter -> TransformCounterC;
+	TransformCounterC.CounterFrom -> CounterOne16C;
 }

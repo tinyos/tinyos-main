@@ -21,34 +21,23 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __DEFAULTMAC_H__
-#define __DEFAULTMAC_H__
-
-#include <IEEE154Packet.h>
-
-typedef ieee154_header_t defaultmac_header_t;
-
-typedef nx_struct defaultmac_metadata_t
+interface TimeSyncPacket<precision_tag>
 {
-	nx_uint8_t flags;
-	nx_uint8_t lqi;
-	nx_uint16_t timestamp;
-} defaultmac_metadata_t;
+	/**
+	 * Returns TRUE if the value returned by <tt>getTime</tt> can be trusted.
+	 * Under certain circumstances the received message cannot be properly 
+	 * time stamped, so the sender-receiver synchronization cannot be finished
+	 * on the receiver side. In this case, this command returns FALSE.
+	 * This command MUST BE called only on the receiver side and only for 
+	 * messages transmitted via the TimeSyncSend interface.
+	 */
+	async command bool hasValidTime(message_t* msg);
 
-enum defaultmac_metadata_flags
-{
-	DEFAULTMAC_WAS_ACKED = 0x01,
-	DEFAULTMAC_SCHEDULED_TX = 0x02,
-};
-
-/* This is the default value of the TX_PWR field of the PHY_TX_PWR register. */
-#ifndef RF230_DEF_RFPOWER
-#define RF230_DEF_RFPOWER	0
-#endif
-
-/* This is the default value of the CHANNEL field of the PHY_CC_CCA register. */
-#ifndef RF230_DEF_CHANNEL
-#define RF230_DEF_CHANNEL	11
-#endif
-
-#endif//__DEFAULTMAC_H__
+	/**
+	 * This command should be called by the receiver of a message. The time 
+	 * of the synchronization event is returned as expressed in the local
+	 * clock of the caller. This command MUST BE called only on the receiver
+	 * side and only for messages transmitted via the TimeSyncSend interface.
+	 */
+	async command uint32_t getEventTime(message_t* msg);
+}

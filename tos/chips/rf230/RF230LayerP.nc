@@ -56,9 +56,8 @@ module RF230LayerP
 
 		interface RF230Config;
 		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketField<uint16_t> as PacketTimeStamping;
-		interface PacketField<uint16_t> as PacketTimeSynchron;
 		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketTimeStamp<TRF230, uint16_t>;
 		interface Tasklet;
 		interface RadioAlarm;
 
@@ -431,10 +430,6 @@ implementation
 		// the FCS is atomatically generated
 		length -= 2;
 
-		// calculate and embed the time offset
-		if( call PacketTimeSynchron.isSet(msg) )
-			call PacketTimeSynchron.set(msg, call PacketTimeSynchron.get(msg) - time);
-
 		do {
 			call HplRF230.spiSplitReadWrite(*(data++));
 		}
@@ -476,11 +471,7 @@ implementation
 			return FAIL;
 		}
 
-		// TODO: be nicer for retransmissions
-		// clear the embedded time stamp field
-		call PacketTimeSynchron.clear(msg);
-
-		call PacketTimeStamping.set(msg, time);
+		call PacketTimeStamp.set(msg, time);
 
 		// wait for the TRX_END interrupt
 		state = STATE_BUSY_TX_2_RX_ON;
@@ -568,10 +559,6 @@ implementation
 		call SELN.set();
 		state = STATE_RX_ON;
 		cmd = CMD_NONE;
-
-		// we need a correct time stamp of the message
-		if( call PacketTimeSynchron.isSet(rxMsg) && call PacketTimeStamping.isSet(rxMsg) )
-			call PacketTimeSynchron.set(rxMsg, call PacketTimeSynchron.get(rxMsg) + call PacketTimeStamping.get(rxMsg));
 
 		// signal only if it has passed the CRC check
 		if( crc == 0 )
@@ -664,9 +651,9 @@ implementation
 					 * CMD_TRANSMIT.
 					 */
 					if( irq == RF230_IRQ_RX_START ) // just to be cautious
-						call PacketTimeStamping.set(rxMsg, time - RX_SFD_DELAY);
+						call PacketTimeStamp.set(rxMsg, time - RX_SFD_DELAY);
 					else
-						call PacketTimeStamping.clear(rxMsg);
+						call PacketTimeStamp.clear(rxMsg);
 
 					cmd = CMD_RECEIVE;
 				}

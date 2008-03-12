@@ -21,32 +21,25 @@
  * Author: Miklos Maroti
  */
 
-#include <HplRF230.h>
-
-configuration DefaultPacketC
+interface PacketLastTouch
 {
-	provides
-	{
-		interface Packet;
-		interface AMPacket;
-		interface PacketAcknowledgements;
-		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketField<uint8_t> as PacketTransmitPower;
+	/**
+	 * Requests the touch event to be called back just before the message
+	 * transmission starts.
+	 */
+	async command void request(message_t* msg);
 
-		interface PacketTimeStamp<TRF230, uint16_t>;
-	}
-}
+	/**
+	 * Cancels any pending requests.
+	 */
+	async command void cancel(message_t* msg);
 
-implementation
-{
-	components DefaultPacketP, IEEE154PacketC;
-
-	DefaultPacketP.IEEE154Packet -> IEEE154PacketC;
-
-	Packet = DefaultPacketP;
-	AMPacket = IEEE154PacketC;
-	PacketAcknowledgements = DefaultPacketP;
-	PacketLinkQuality = DefaultPacketP.PacketLinkQuality;
-	PacketTransmitPower = DefaultPacketP.PacketTransmitPower;
-	PacketTimeStamp = DefaultPacketP.PacketTimeStamp;
+	/**
+	 * This event is called by the MAC layer when the tranmission of the
+	 * message starts (the SFD byte is already transmitted and the packet
+	 * is already time stamped). In this method the packet payload can be
+	 * updated. This method MUST do absolutely minimal processing, and 
+	 * should complete in 1-2 microseconds.
+	 */
+	async event void touch(message_t* msg);
 }
