@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.10 $
- * $Date: 2008-03-10 13:59:58 $
+ * $Revision: 1.11 $
+ * $Date: 2008-03-13 17:09:07 $
  * ========================================================================
  */
 
@@ -44,13 +44,10 @@ enum {
    divide by 18 -> 1004976 Hz */
 
 #ifndef TDA5250_UART_BAUDRATE
-#define TDA5250_UART_BAUDRATE 32768U
+#define TDA5250_UART_BAUDRATE 23405U
 #endif
 
 enum {
-    /** for reference, not recommended for new experiments */
-    UBR_1MHZ_35108=0x001C,  UMCTL_1MHZ_35108=0xAA, // 35108 bit/s
-
     /** use real frequency, use only settings that result in an even byte time */
     UBR_1MHZ_10240=0x0062,  UMCTL_1MHZ_10240=0x08, // 10240 bit/s
     UBR_1MHZ_10922=0x005C,  UMCTL_1MHZ_10922=0x00, // 10922 bit/s
@@ -64,9 +61,7 @@ enum {
     UBR_1MHZ_23405=0x002A,  UMCTL_1MHZ_23405=0x7F, // 23405 bit/s
     UBR_1MHZ_27306=0x0024,  UMCTL_1MHZ_27306=0x7B, // 27306 bit/s
     UBR_1MHZ_32768=0x001E,  UMCTL_1MHZ_32768=0x5B, // 32768 bit/s
-/** too much for only 50kHz frequency hub
     UBR_1MHZ_40960=0x0018,  UMCTL_1MHZ_40960=0x55, // 40960 bit/s
-*/
 };
 
 #include "eyesIFXBaudrates.h"
