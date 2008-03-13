@@ -134,6 +134,11 @@ to_type func_name(from_type x) { union {from_type f; to_type t;} c = {f:x}; retu
 #define __msp430_have_adc12
 #endif
 
+// backwards compatibility to older versions of the header files
+#ifdef __MSP430_HAS_I2C__
+#define __msp430_have_usart0_with_i2c
+#endif
+
 // I2CBusy flag is not defined by current MSP430-GCC
 #ifdef __msp430_have_usart0_with_i2c
 #ifndef I2CBUSY
