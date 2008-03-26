@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: bsl.extra,v 1.5 2008-03-11 08:28:54 klueska Exp $
+#$Id: bsl.extra,v 1.6 2008-03-26 22:51:33 klueska Exp $
 
 # BSL arguments:
 #
@@ -20,9 +20,9 @@ BSL ?= auto
 MSP_BSL_FLAGS ?= --telos
 
 ifeq ($(BSL),auto)
-BSLTEST = $(shell motelist -c | perl -e '<> =~ /^[^,]+,(\S+),/; print $$1;' )
+BSLTEST = $(shell motelist -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; print $$1;' )
 BSLTEST_COMMENT = "using bsl,auto"
-BSL = $(shell motelist -c | perl -e '<> =~ /^[^,]+,(\S+),/; ($$s,$$n)=($$1,$$2); if($$s=~/^com/i) { print $$n-1 } else { print $$s; };' )
+BSL = $(shell motelist -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; ($$s,$$n)=($$1,$$2); if($$s=~/^com/i) { print $$n-1 } else { print $$s; };' )
 BSL_TARGETS += bsltest
 else
 ifeq ($(BSL:ref,%=ref),ref)
