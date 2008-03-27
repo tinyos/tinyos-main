@@ -1,4 +1,4 @@
-// $Id: TinyError.h,v 1.6 2007-10-08 20:10:08 idgay Exp $
+// $Id: TinyError.h,v 1.7 2008-03-27 00:52:02 klueska Exp $
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -23,13 +23,19 @@
 /**
  * @author Phil Levis
  * @author David Gay
- * Revision:  $Revision: 1.6 $
+ * Revision:  $Revision: 1.7 $
  *
  * Defines global error codes for error_t in TinyOS.
  */
 
 #ifndef TINY_ERROR_H_INCLUDED
 #define TINY_ERROR_H_INCLUDED
+
+#ifdef NESC
+#define NESC_COMBINE(x) @combine(x)
+#else
+#define NESC_COMBINE(x)
+#endif
 
 enum {
   SUCCESS        = 0,          
@@ -44,7 +50,7 @@ enum {
   EALREADY       = 9,           // The device state you are requesting is already set
 };
 
-typedef uint8_t error_t @combine("ecombine");
+typedef uint8_t error_t NESC_COMBINE("ecombine");
 
 error_t ecombine(error_t r1, error_t r2)
 /* Returns: r1 if r1 == r2, FAIL otherwise. This is the standard error

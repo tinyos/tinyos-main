@@ -30,9 +30,11 @@ uint16_t TOS_NODE_ID = 1;
    transfer in interfaces. See TEP 3 for more discussion. */
 #define PASS
 
+#ifdef NESC
 struct @atmostonce { };
 struct @atleastonce { };
 struct @exactlyonce { };
+#endif
 
 /* This platform_bootstrap macro exists in accordance with TEP
    107. A platform may override this through a platform.h file. */
