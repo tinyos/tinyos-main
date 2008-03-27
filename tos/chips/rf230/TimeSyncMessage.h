@@ -21,36 +21,12 @@
  * Author: Miklos Maroti
  */
 
-configuration ActiveMessageC
+#ifndef __TIMESYNCMESSAGE_H__
+#define __TIMESYNCMESSAGE_H__
+
+typedef nx_struct timesync_footer_t
 {
-	provides
-	{
-		interface SplitControl;
+	nx_uint32_t time_offset;	// in micorsec
+} timesync_footer_t;
 
-		interface AMSend[uint8_t id];
-		interface Receive[uint8_t id];
-		interface Receive as Snoop[uint8_t id];
-		interface Packet;
-		interface AMPacket;
-
-		interface PacketAcknowledgements;
-		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketTimeStamp<TMicro, uint16_t>;
-	}
-}
-
-implementation
-{
-	components DefaultMacC as MAC;
-
-	SplitControl = MAC;
-	AMSend       = MAC;
-	Receive      = MAC.Receive;
-	Snoop        = MAC.Snoop;
-	Packet       = MAC;
-	AMPacket     = MAC;
-
-	PacketAcknowledgements = MAC;
-	PacketLinkQuality = MAC;
-	PacketTimeStamp = MAC;
-}
+#endif//__TIMESYNCMESSAGE_H__

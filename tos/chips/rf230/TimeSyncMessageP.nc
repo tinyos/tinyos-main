@@ -21,6 +21,8 @@
  * Author: Miklos Maroti
  */
 
+#include <TimeSyncMessage.h>
+
 module TimeSyncMessageP
 {
 	provides
@@ -47,11 +49,6 @@ module TimeSyncMessageP
 implementation
 {
 /*----------------- Packet -----------------*/
-
-	typedef nx_struct timesync_footer_t
-	{
-		nx_uint32_t time_offset;	// in micorsec
-	} timesync_footer_t;
 
 	typedef struct timesync_local_t
 	{

@@ -25,8 +25,14 @@
 #define __DEFAULTPACKET_H__
 
 #include <IEEE154Packet.h>
+#include <TimeSyncMessage.h>
 
 typedef ieee154_header_t defpacket_header_t;
+
+typedef nx_struct defpacket_footer_t
+{
+	timesync_footer_t timesync;
+} defpacket_footer_t;
 
 typedef nx_struct defpacket_metadata_t
 {
