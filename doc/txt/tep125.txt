@@ -10,8 +10,8 @@ TinyOS 802.15.4 Frames
 :Author: Jonathan Hui, Philip Levis, and David Moss
 
 :Draft-Created: 2-Feb-2007
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2007-04-09 18:43:52 $
+:Draft-Version: $Revision: 1.3 $
+:Draft-Modified: $Date: 2008-03-28 20:19:26 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -51,7 +51,7 @@ A TinyOS device MAY support additional 802.15.4 frame formats.
 
 TinyOS has two 802.15.4 frame formats. The first format, the T-Frame, is
 for TinyOS networks which do not share their channel with other wireless
-networking archtiectures. This frame format assumes that TinyOS can use
+networking architectures. This frame format assumes that TinyOS can use
 every bit of the packet and does not need to state that it is a TinyOS packet.
 T-Frame stands for "TinyOS Frame."
 
@@ -76,20 +76,19 @@ The TinyOS 802.15.4 I-frame format is as follows::
   | 802.15.4 Header   | 6lowpan | AM type |        data        | 802.15.4 CRC |
   +-------------------+---------+------------------------------+--------------+
 
-AM type is the same as in a T-frame. 6lowpan is the IANA-assigned code
-to identify this as a TinyOS packet. At this time, the exact value of
-this code has not been determined. To inform 6lowpan that this is not
-a 6lowpan packet, the code used MUST be in the range of 192-55.
+AM type is the same as in a T-frame. 6lowpan is the NALP code to identify 
+this as a TinyOS packet. NALP codes must be in the range of 192-255. 
+TinyOS uses code 255.
 
-The AM type 6lowpan is reserved. A TinyOS program MUST NOT use it.
+The AM type 255 is reserved for both T-Frames and I-Frames. A TinyOS 
+program MUST NOT use it.
 
 4. Implementation
 ====================================================================
 
 An implementation of the T-Frame can be found in tinyos-2.x/tos/chips/cc2420.
 
-An implementation of the I-Frame will soon be found in 
-tinyos-2.x/tos/chips/cc2420.
+An implementation of the I-Frame can be found in tinyos-2.x/tos/chips/cc2420.
 
 5. Author Addresses
 ====================================================================
