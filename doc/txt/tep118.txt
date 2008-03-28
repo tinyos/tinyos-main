@@ -5,14 +5,9 @@ Dissemination of Small Values
 :TEP: 118 
 :Group: Net2 Working Group
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Author: Philip Levis and Gilman Tolle
-
-:Draft-Created: 10-Dec-2004
-:Draft-Version: $Revision: 1.10 $
-:Draft-Modified: $Date: 2008-02-16 01:37:52 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
