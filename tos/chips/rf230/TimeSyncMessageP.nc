@@ -38,7 +38,7 @@ module TimeSyncMessageP
 	{
 		interface AMSend as SubSend[uint8_t id];
 		interface Packet as SubPacket;
-		interface PacketTimeStamp<TMicro,uint32_t>;
+		interface PacketTimeStamp<TMicro,uint16_t>;		// TODO: change this to 32-bit
 		interface PacketLastTouch;
 
 		interface LocalTime<TMicro> as LocalTimeMicro;
@@ -55,6 +55,7 @@ implementation
 		uint32_t event_time;		// in microsec
 	} timesync_local_t;
 
+	// TODO: change the Packet.payloadLength and Packet.maxPayloadLength commands to async
 	inline timesync_footer_t* getFooter(message_t* msg)
 	{
 		return (timesync_footer_t*)(msg->data + call SubPacket.payloadLength(msg) - sizeof(timesync_footer_t));
@@ -101,7 +102,7 @@ implementation
 
 		call PacketLastTouch.request(msg);
 
-		return call SubSend.send[id](addr, msg, len);
+		return call SubSend.send[id](addr, msg, len + sizeof(timesync_footer_t));
 	}
 
 	command error_t TimeSyncSendMicro.cancel[am_id_t id](message_t* msg)
@@ -137,7 +138,7 @@ implementation
 
 		call PacketLastTouch.request(msg);
 
-		return call SubSend.send[id](addr, msg, len);
+		return call SubSend.send[id](addr, msg, len + sizeof(timesync_footer_t));
 	}
 
 	command error_t TimeSyncSendMilli.cancel[am_id_t id](message_t* msg)

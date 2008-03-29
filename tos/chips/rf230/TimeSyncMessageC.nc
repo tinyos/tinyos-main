@@ -30,7 +30,7 @@ configuration TimeSyncMessageC
 	{
 		interface TimeSyncSend<TMicro> as TimeSyncSendMicro[am_id_t id];
 		interface TimeSyncPacket<TMicro> as TimeSyncPacketMicro;
-		interface LocalTime<TMicro> as LocalTimeMicro;
+//		interface LocalTime<TMicro> as LocalTimeMicro;
 
 		interface TimeSyncSend<TMilli> as TimeSyncSendMilli[am_id_t id];
 		interface TimeSyncPacket<TMilli> as TimeSyncPacketMilli;
@@ -51,7 +51,7 @@ implementation
 
 	TimeSyncSendMicro = TimeSyncMessageP;
 	TimeSyncPacketMicro = TimeSyncMessageP;
-	LocalTimeMicro = ActiveMessageC;
+//	LocalTimeMicro = LocalTimeMicroC;
 
 	TimeSyncSendMilli = TimeSyncMessageP;
 	TimeSyncPacketMilli = TimeSyncMessageP;
@@ -60,8 +60,11 @@ implementation
 	Packet = TimeSyncMessageP;
 	TimeSyncMessageP.SubSend -> ActiveMessageC.AMSend;
 	TimeSyncMessageP.SubPacket -> ActiveMessageC.Packet;
+	TimeSyncMessageP.PacketTimeStamp -> ActiveMessageC;
 
 	TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
+
+	TimeSyncMessageP.PacketLastTouch -> ActiveMessageC;
 
 	SplitControl = ActiveMessageC;
 	Receive	= ActiveMessageC.Receive;

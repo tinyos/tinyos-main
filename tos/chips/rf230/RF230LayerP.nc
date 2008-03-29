@@ -61,6 +61,8 @@ module RF230LayerP
 		interface Tasklet;
 		interface RadioAlarm;
 
+		async event void lastTouch(message_t* msg);
+
 #ifdef RF230_DEBUG
 		interface DiagMsg;
 #endif
@@ -380,6 +382,7 @@ implementation
 		uint16_t time;
 		uint8_t length;
 		uint8_t* data;
+		uint8_t header;
 
 		if( cmd != CMD_NONE || state != STATE_RX_ON || ! isSpiAcquired() || radioIrq )
 			return EBUSY;
@@ -427,8 +430,23 @@ implementation
 		// length | data[0] ... data[length-3] | automatically generated FCS
 		call HplRF230.spiSplitReadWrite(length);
 
-		// the FCS is atomatically generated
+		// the FCS is atomatically generated (2 bytes)
 		length -= 2;
+
+		header = call RF230Config.getHeaderLength();
+		if( header > length )
+			header = length;
+
+		length -= header;
+
+		// first upload the header
+		do {
+			call HplRF230.spiSplitReadWrite(*(data++));
+		}
+		while( --header != 0 );
+
+		call PacketTimeStamp.set(msg, time);
+		signal lastTouch(msg);
 
 		do {
 			call HplRF230.spiSplitReadWrite(*(data++));
@@ -537,8 +555,10 @@ implementation
 
 			length -= read;
 
-			while( read-- != 0 )
+			do {
 				crc = call HplRF230.crcByte(crc, *(data++) = call HplRF230.spiSplitReadWrite(0));
+			}
+			while( --read != 0  );
 
 			if( signal RadioReceive.header(rxMsg) )
 			{

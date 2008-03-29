@@ -39,6 +39,8 @@ configuration DefaultMacC
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketTimeStamp<TRF230, uint16_t>;
+
+		interface PacketLastTouch;
 	}
 }
 
@@ -59,6 +61,9 @@ implementation
 	PacketAcknowledgements = DefaultPacketC;
 	PacketLinkQuality = DefaultPacketC.PacketLinkQuality;
 	PacketTimeStamp = DefaultPacketC.PacketTimeStamp;
+
+	PacketLastTouch = DefaultPacketC;
+	RF230LayerC.lastTouch -> DefaultPacketC.lastTouch;
 
 	components ActiveMessageLayerC;
 	components MessageBufferLayerC;

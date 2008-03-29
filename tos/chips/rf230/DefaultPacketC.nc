@@ -34,6 +34,9 @@ configuration DefaultPacketC
 		interface PacketField<uint8_t> as PacketTransmitPower;
 
 		interface PacketTimeStamp<TRF230, uint16_t>;
+		interface PacketLastTouch;
+
+		async event void lastTouch(message_t* msg);
 	}
 }
 
@@ -48,5 +51,8 @@ implementation
 	PacketAcknowledgements = DefaultPacketP;
 	PacketLinkQuality = DefaultPacketP.PacketLinkQuality;
 	PacketTransmitPower = DefaultPacketP.PacketTransmitPower;
-	PacketTimeStamp = DefaultPacketP.PacketTimeStamp;
+	PacketTimeStamp = DefaultPacketP;
+
+	PacketLastTouch = DefaultPacketP;
+	lastTouch = DefaultPacketP;
 }

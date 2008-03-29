@@ -295,5 +295,4 @@ implementation
 	async command void DummyConfig.nothing()
 	{
 	}
-
 }

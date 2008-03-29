@@ -48,7 +48,9 @@ interface RF230Config
 	/**
 	 * Gets the number of bytes we should read before the RadioReceive.header
 	 * event is fired. If the length of the packet is less than this amount, 
-	 * then that event is fired earlier.
+	 * then that event is fired earlier. The last touch event is not signaled 
+	 * for packets whose length is less than or equal to this header length.
+	 * The header length must be at least 1.
 	 */
 	async command uint8_t getHeaderLength();
 

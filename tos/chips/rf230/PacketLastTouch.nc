@@ -35,6 +35,11 @@ interface PacketLastTouch
 	async command void cancel(message_t* msg);
 
 	/**
+	 * Returns TRUE if the touch callback is already scheduled.
+	 */
+	async command bool isPending(message_t* msg);
+
+	/**
 	 * This event is called by the MAC layer when the tranmission of the
 	 * message starts (the SFD byte is already transmitted and the packet
 	 * is already time stamped). In this method the packet payload can be

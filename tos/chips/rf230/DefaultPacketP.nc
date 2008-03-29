@@ -33,6 +33,9 @@ module DefaultPacketP
 		interface PacketField<uint8_t> as PacketTransmitPower;
 
 		interface PacketTimeStamp<TRF230, uint16_t>;
+		interface PacketLastTouch;
+
+		async event void lastTouch(message_t* msg);
 	}
 
 	uses
@@ -189,5 +192,32 @@ implementation
 	{
 		flags |= FLAG_TXPOWER;
 		transmitPower = value;
+	}
+
+/*----------------- PacketLastTouch -----------------*/
+	
+	async command void PacketLastTouch.request(message_t* msg)
+	{
+		getMeta(msg)->flags |= DEFPACKET_LAST_TOUCH;
+	}
+
+	async command void PacketLastTouch.cancel(message_t* msg)
+	{
+		getMeta(msg)->flags &= ~DEFPACKET_LAST_TOUCH;
+	}
+
+	async command bool PacketLastTouch.isPending(message_t* msg)
+	{
+		return getMeta(msg)->flags & DEFPACKET_LAST_TOUCH;
+	}
+
+	async event void lastTouch(message_t* msg)
+	{
+		if( getMeta(msg)->flags & DEFPACKET_LAST_TOUCH )
+			signal PacketLastTouch.touch(msg);
+	}
+
+	default async event void PacketLastTouch.touch(message_t* msg)
+	{
 	}
 }

@@ -37,6 +37,8 @@ configuration RF230LayerC
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketTimeStamp<TRF230, uint16_t>;
+
+		async event void lastTouch(message_t* msg);
 	}
 }
 
@@ -68,6 +70,8 @@ implementation
 	RF230LayerP.IRQ -> HplRF230C.IRQ;
 	RF230LayerP.Tasklet -> TaskletC;
 	RF230LayerP.BusyWait -> BusyWaitMicroC;
+
+	lastTouch = RF230LayerP.lastTouch;
 
 #ifdef RF230_DEBUG
 	components DiagMsgC;
