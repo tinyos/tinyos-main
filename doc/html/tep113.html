@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:57:59 $
-:version: $Revision: 1.10 $
+:date: $Date: 2008-04-01 17:01:30 $
+:version: $Revision: 1.11 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Ben Greenstein and Philip Levis</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">11-Jul-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.9</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.11</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-06</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-04-01</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -529,6 +529,23 @@ may be slightly delayed. However, acknowledgement information is
 stored in a queue separate from the data buffer, so a data packet to
 be transmitted may begin spooling into SerialP while SerialP is
 actively sending an acknowledgement.</p>
+<p>Only the PC-to-mote communication path supports acknowledgements.
+SerialP does not request acknowledgements from the PC for two reasons.
+First, acks are not perfect reliable: they are used on the
+PC-to-mote path to raise reliability to a usable level. In the case of
+the PC-to-mote path, the UART receive buffer is typically a single
+byte, so a high interrupt load can easily lose (and sometimes does) a
+byte. This is in contrast to the PC receive buffer, which is much
+larger and does not have to deal with overflow. Second, adding support
+for acks would increase the code size and complexity of the serial
+stack. As code space is often at a premium, this would add little
+needed functionality at significant cost. Of course, any application
+that requires perfect reliability may layer its own scheme on top of
+the serial protocol.</p>
+<p>The acknowledgement protocol is stop-and-wait to minimize buffering on
+the mote side. This is considered more important on memory constrained
+devices than increased throughput in the PC-to-mote direction, which
+most applications only use for occasional control transmissions.</p>
 </div>
 <div class="section">
 <h2><a id="dispatcher-serialdispatcherc" name="dispatcher-serialdispatcherc">3.4 Dispatcher: SerialDispatcherC</a></h2>
