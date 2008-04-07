@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $ $Date: 2007-06-25 13:44:49 $ @author: Jan Hauer
+ * $Revision: 1.7 $ $Date: 2008-04-07 09:41:55 $ @author: Jan Hauer
  * <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -47,15 +47,17 @@ generic configuration Msp430Adc12ClientAutoDMA_RVGC()
   provides {
     interface Resource;
     interface Msp430Adc12SingleChannel;
+    interface Msp430Adc12Overflow;
   }
   uses interface AdcConfigure<const msp430adc12_channel_config_t*>;
 } implementation {
-  components Msp430Adc12P, Msp430RefVoltArbiterP;
+  components Msp430Adc12P, Msp430RefVoltArbiterP, Msp430Adc12DMAWireC;
 
   enum {
     ID = unique(MSP430ADC12_RESOURCE),
   };
   Resource = Msp430RefVoltArbiterP.ClientResource[ID];
+  Msp430Adc12Overflow = Msp430Adc12P.Overflow[ID];
   
   Msp430RefVoltArbiterP.AdcResource[ID] -> Msp430Adc12P.Resource[ID];
 
@@ -69,8 +71,4 @@ generic configuration Msp430Adc12ClientAutoDMA_RVGC()
   
   Msp430Adc12DMAP.SubSingleChannel[ID] -> Msp430Adc12P.SingleChannel[ID];
   Msp430Adc12DMAP.AsyncAdcControl[ID] -> Msp430Adc12P.DMAExtension[ID];
-
-  Msp430Adc12DMAP.DMAControl -> Msp430DmaC.Control;
-  Msp430Adc12DMAP.DMAChannel -> Msp430DmaC.Channel0;
-  
 }

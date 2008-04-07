@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-06-25 15:47:15 $
+ * $Revision: 1.6 $
+ * $Date: 2008-04-07 09:41:55 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -63,6 +63,7 @@ module Msp430Adc12ImplP
 }
 implementation
 { 
+#warning Accessing TimerA for ADC12 
   enum {
     SINGLE_DATA = 1,
     SINGLE_DATA_REPEAT = 2,
@@ -86,7 +87,12 @@ implementation
 
   command error_t Init.init()
   {
+    adc12ctl0_t ctl0;
     call HplAdc12.stopConversion();
+    ctl0 = call HplAdc12.getCtl0();
+    ctl0.adc12tovie = 1;
+    ctl0.adc12ovie = 1;
+    call HplAdc12.setCtl0(ctl0);
     return SUCCESS;
   }
 
@@ -325,7 +331,7 @@ implementation
       if (call ADCArbiterInfo.userId() == id){
         adc12ctl1_t ctl1 = {
           adc12busy: 0,
-          ctl1.conseq = 3,
+          conseq: 3,
           adc12ssel: config->adc12ssel,
           adc12div: config->adc12div,
           issh: 0,
@@ -404,8 +410,7 @@ implementation
       if (call ADCArbiterInfo.userId() == id){
         adc12ctl1_t ctl1 = {
           adc12busy: 0,
-          // use seq. of channels (rep.seq. channel does not work with TimerA + MSC ?)
-          conseq: (jiffies == 0) ? 3 : 1, 
+          conseq: (numSamples > numMemctl+1) ? 3 : 1, 
           adc12ssel: config->adc12ssel,
           adc12div: config->adc12div,
           issh: 0,
@@ -420,7 +425,7 @@ implementation
         };     
         uint16_t i, mask = 1;
         adc12ctl0_t ctl0 = call HplAdc12.getCtl0();
-        ctl0.msc = 1;
+        ctl0.msc = (jiffies == 0) ? 1 : 0;
         ctl0.sht0 = config->sht;
         ctl0.sht1 = config->sht;
 
@@ -481,13 +486,14 @@ implementation
 #endif
     resetAdcPin( (call HplAdc12.getMCtl(0)).inch );
     if (state & MULTI_CHANNEL){
-      ADC12IV = 0; // clear any pending overflow
       for (i=1; i<numChannels; i++)
         resetAdcPin( (call HplAdc12.getMCtl(i)).inch );
     }
-    call HplAdc12.stopConversion();
-    call HplAdc12.resetIFGs(); 
-    state &= ~ADC_BUSY;
+    atomic {
+      call HplAdc12.stopConversion();
+      call HplAdc12.resetIFGs(); 
+      state &= ~ADC_BUSY;
+    }
   }
 
   async command error_t DMAExtension.start[uint8_t id]()
@@ -504,13 +510,8 @@ implementation
   
   async command error_t DMAExtension.stop[uint8_t id]()
   {
-    atomic {
-      if (call ADCArbiterInfo.userId() == id){
-        stopConversion();
-        return SUCCESS;
-      }
-    }
-    return FAIL;
+    stopConversion();
+    return SUCCESS;
   }
   
   async event void TimerA.overflow(){}
@@ -519,11 +520,15 @@ implementation
 
   async event void HplAdc12.conversionDone(uint16_t iv)
   {
+    bool overflow = FALSE;
     if (iv <= 4){ // check for overflow
       if (iv == 2)
         signal Overflow.memOverflow[clientID]();
       else
         signal Overflow.conversionTimeOverflow[clientID]();
+      // only if the client didn't ask for data as fast as possible (jiffies was not zero)
+      if (!(call HplAdc12.getCtl0()).msc)
+        overflow = TRUE;
     }
     switch (state & CONVERSION_MODE_MASK) 
     { 
@@ -536,29 +541,31 @@ implementation
           error_t repeatContinue;
           repeatContinue = signal SingleChannel.singleDataReady[clientID](
                 call HplAdc12.getMem(0));
-          if (repeatContinue == FAIL)
+          if (repeatContinue != SUCCESS)
             stopConversion();
           break;
         }
 #ifndef ADC12_ONLY_WITH_DMA
       case MULTI_CHANNEL:
         {
-          uint16_t i = 0;
+          uint16_t i = 0, k;
           do {
             *resultBuffer++ = call HplAdc12.getMem(i);
           } while (++i < numChannels);
           resultBufferIndex += numChannels;
-          if (resultBufferLength == resultBufferIndex){
+          if (overflow || resultBufferLength == resultBufferIndex){
             stopConversion();
-            resultBuffer -= resultBufferLength;
+            resultBuffer -= resultBufferIndex;
+            k = resultBufferIndex - numChannels;
             resultBufferIndex = 0;
-            signal MultiChannel.dataReady[clientID](resultBuffer, resultBufferLength);
+            signal MultiChannel.dataReady[clientID](resultBuffer, 
+                overflow ? k : resultBufferLength);
           } else call HplAdc12.enableConversion();
         }
         break;
       case MULTIPLE_DATA:
         {
-          uint16_t i = 0, length;
+          uint16_t i = 0, length, k;
           if (resultBufferLength - resultBufferIndex > 16) 
             length = 16;
           else
@@ -567,18 +574,20 @@ implementation
             *resultBuffer++ = call HplAdc12.getMem(i);
           } while (++i < length);
           resultBufferIndex += length;
-              
-          if (resultBufferLength - resultBufferIndex > 15)
+          if (overflow || resultBufferLength == resultBufferIndex){
+            stopConversion();
+            resultBuffer -= resultBufferIndex;
+            k = resultBufferIndex - length;
+            resultBufferIndex = 0;
+            signal SingleChannel.multipleDataReady[clientID](resultBuffer,
+               overflow ? k : resultBufferLength);
+          } else if (resultBufferLength - resultBufferIndex > 15)
             return;
-          else if (resultBufferLength - resultBufferIndex > 0){
+          else {
+            // last sequence < 16 samples
             adc12memctl_t memctl = call HplAdc12.getMCtl(0);
             memctl.eos = 1;
             call HplAdc12.setMCtl(resultBufferLength - resultBufferIndex, memctl);
-          } else {
-            stopConversion();
-            resultBuffer -= resultBufferLength;
-            resultBufferIndex = 0;
-            signal SingleChannel.multipleDataReady[clientID](resultBuffer, resultBufferLength);
           }
         }
         break;
@@ -591,7 +600,7 @@ implementation
           
           resultBuffer = signal SingleChannel.multipleDataReady[clientID](
               resultBuffer-resultBufferLength,
-                    resultBufferLength);
+              overflow ? 0 : resultBufferLength);
           if (!resultBuffer)  
             stopConversion();
           break;

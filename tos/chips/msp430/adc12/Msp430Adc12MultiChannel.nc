@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.3 $
+ * $Date: 2008-04-07 09:41:55 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -74,13 +74,8 @@ interface Msp430Adc12MultiChannel
    * (numMemctl+1) must be zero. For example, to sample every channel twice use
    * numSamples = (numMemctl+1) * 2
    *
-   * @param jiffies Sampling period per sequence in terms of clock ticks of
-   * "sampcon_ssel" and input divider "sampcon_id". A sequence of (numMemctl+1)
-   * is always sampled as fast as possible and <code>jiffies</code> specifies
-   * the time between those sequences. For example, if numSamples =
-   * (numMemctl+1) * 5, then dataReady() will be signalled after (approx.)
-   * 5*jiffies clock ticks after the call to getData() and each set of
-   * numMemctl+1 channels was sampled at (almost) the same time.
+   * @param jiffies Sampling period in terms of clock ticks of "sampcon_ssel"
+   * and input divider "sampcon_id".
    *
    * @return SUCCESS means that the ADC was configured successfully and
    * <code>getData()</code> can be called to start the conversion.

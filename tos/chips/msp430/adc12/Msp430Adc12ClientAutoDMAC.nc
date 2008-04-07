@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-05-29 16:19:20 $
+ * $Revision: 1.6 $
+ * $Date: 2008-04-07 09:41:55 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -48,19 +48,19 @@ generic configuration Msp430Adc12ClientAutoDMAC()
   provides {
     interface Resource;
     interface Msp430Adc12SingleChannel;
+    interface Msp430Adc12Overflow;
   }
 } implementation {
-  components Msp430DmaC, Msp430Adc12DMAP, Msp430Adc12P;
+  components Msp430DmaC, Msp430Adc12DMAP, Msp430Adc12P, Msp430Adc12DMAWireC;
    
   enum {
     ID = unique(MSP430ADC12_RESOURCE),
   };
   Resource = Msp430Adc12P.Resource[ID];
   Msp430Adc12SingleChannel = Msp430Adc12DMAP.SingleChannel[ID];
+  Msp430Adc12Overflow = Msp430Adc12P.Overflow[ID];
   
   Msp430Adc12DMAP.SubSingleChannel[ID] -> Msp430Adc12P.SingleChannel[ID];
   Msp430Adc12DMAP.AsyncAdcControl[ID] -> Msp430Adc12P.DMAExtension[ID];
 
-  Msp430Adc12DMAP.DMAControl -> Msp430DmaC.Control;
-  Msp430Adc12DMAP.DMAChannel -> Msp430DmaC.Channel0;
 }

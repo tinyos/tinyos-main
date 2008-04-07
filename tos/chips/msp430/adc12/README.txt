@@ -36,8 +36,8 @@ An application that is written for an MSP430-based platform like 'eyesIFX' or
 the Msp430Adc12SingleChannel allows to perform one or more ADC conversions on a
 single channel with a specified sampling frequency and (2) the
 Msp430Adc12MultiChannel allows to sample a group of up to 16 different ADC
-channels "at once" (with minimum latency) and in addition define a sampling
-frequency for the whole group (useful for multi-channel accelerometers, etc.).
+channels.
+
 On the MSP430 two additional hardware modules may play a role when the ADC12 is
 used: the internal reference voltage generator and the DMA controller. 
 
@@ -177,6 +177,6 @@ tinyos-2.x/apps/tests/msp430/Adc12.
 
 -----
 
-$Date: 2007-06-25 15:47:15 $
+$Date: 2008-04-07 09:41:55 $
 @author: Jan Hauer <hauer@tkn.tu-berlin.de>
 

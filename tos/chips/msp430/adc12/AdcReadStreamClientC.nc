@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2008-04-07 09:41:55 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -48,26 +48,24 @@ generic configuration AdcReadStreamClientC() {
   provides interface ReadStream<uint16_t>;
   uses interface AdcConfigure<const msp430adc12_channel_config_t*>;
 } implementation {
-  components AdcP,
+  components WireAdcStreamP, 
 #ifdef REF_VOLT_AUTO_CONFIGURE     
              // if the client configuration requires a stable 
              // reference voltage, the reference voltage generator 
              // is automatically enabled
-             new Msp430Adc12ClientAutoRVGC() as Msp430AdcPlient;
+             new Msp430Adc12ClientAutoRVGC() as Msp430AdcClient;
+  AdcConfigure = Msp430AdcClient.AdcConfigure;
 #else
-             new Msp430Adc12ClientC() as Msp430AdcPlient;
+             new Msp430Adc12ClientC() as Msp430AdcClient;
 #endif
 
   enum {
     RSCLIENT = unique(ADCC_READ_STREAM_SERVICE),
   };
 
-  ReadStream = AdcP.ReadStream[RSCLIENT];
-  AdcConfigure = AdcP.ConfigReadStream[RSCLIENT];
-  AdcP.SingleChannelReadStream[RSCLIENT] -> Msp430AdcPlient.Msp430Adc12SingleChannel;
-  AdcP.ResourceReadStream[RSCLIENT] -> Msp430AdcPlient.Resource;
-#ifdef REF_VOLT_AUTO_CONFIGURE
-  AdcConfigure = Msp430AdcPlient.AdcConfigure;
-#endif
+  ReadStream = WireAdcStreamP.ReadStream[RSCLIENT];
+  AdcConfigure = WireAdcStreamP.AdcConfigure[RSCLIENT];
+  WireAdcStreamP.Resource[RSCLIENT] -> Msp430AdcClient.Resource;
+  WireAdcStreamP.Msp430Adc12SingleChannel[RSCLIENT] -> Msp430AdcClient.Msp430Adc12SingleChannel;
 }
   

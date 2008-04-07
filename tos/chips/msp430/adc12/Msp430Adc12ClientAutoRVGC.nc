@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $ $Date: 2007-06-25 13:44:49 $ @author: Jan Hauer
+ * $Revision: 1.7 $ $Date: 2008-04-07 09:41:55 $ @author: Jan Hauer
  * <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -46,6 +46,7 @@ generic configuration Msp430Adc12ClientAutoRVGC()
     interface Resource;
     interface Msp430Adc12SingleChannel;
     interface Msp430Adc12MultiChannel;
+    interface Msp430Adc12Overflow;
   }
   uses interface AdcConfigure<const msp430adc12_channel_config_t*>;
 } implementation {
@@ -57,6 +58,7 @@ generic configuration Msp430Adc12ClientAutoRVGC()
   Resource = Msp430RefVoltArbiterP.ClientResource[ID];
   Msp430Adc12SingleChannel = Msp430Adc12P.SingleChannel[ID];
   Msp430Adc12MultiChannel = Msp430Adc12P.MultiChannel[ID];
+  Msp430Adc12Overflow = Msp430Adc12P.Overflow[ID];
   
   Msp430RefVoltArbiterP.AdcResource[ID] -> Msp430Adc12P.Resource[ID];
 

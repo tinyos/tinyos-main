@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:06 $
+ * $Revision: 1.5 $
+ * $Date: 2008-04-07 09:41:55 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -38,7 +38,6 @@ module AdcP {
     interface Read<uint16_t> as Read[uint8_t client];
     interface ReadNow<uint16_t> as ReadNow[uint8_t client];
     interface Resource as ResourceReadNow[uint8_t client];
-    interface ReadStream<uint16_t> as ReadStream[uint8_t streamClient];
   }
   uses {
     // for Read only:
@@ -48,11 +47,6 @@ module AdcP {
     // for Read and ReadNow:
     interface AdcConfigure<const msp430adc12_channel_config_t*> as Config[uint8_t client];
     interface Msp430Adc12SingleChannel as SingleChannel[uint8_t client];
-    // for ReadStream only:
-    interface AdcConfigure<const msp430adc12_channel_config_t*> as ConfigReadStream[uint8_t streamClient];
-    interface Msp430Adc12SingleChannel as SingleChannelReadStream[uint8_t streamClient];
-    interface Resource as ResourceReadStream[uint8_t streamClient];
-
   }
 }
 implementation
@@ -61,28 +55,12 @@ implementation
     STATE_READ,
     STATE_READNOW,
     STATE_READNOW_INVALID_CONFIG,
-    STATE_READSTREAM,
-  };
-  
-  struct stream_entry_t {
-    uint16_t count;
-    struct stream_entry_t *next;
   };
   
   // Resource interface / arbiter makes norace declaration safe
   norace uint8_t state;
   norace uint8_t owner;
   norace uint16_t value;
-  norace uint16_t *resultBuf; 
-
-  // atomic section in postBuffer() makes norace safe
-  norace struct stream_entry_t *streamBuf[uniqueCount(ADCC_READ_STREAM_SERVICE)];
-  norace uint32_t usPeriod[uniqueCount(ADCC_READ_STREAM_SERVICE)];
-  msp430adc12_channel_config_t streamConfig;
-    
-  void task finishStreamRequest();
-  void task signalBufferDone();
-  void nextReadStreamRequest(uint8_t streamClient);
 
   error_t configure(uint8_t client)
   {
@@ -96,8 +74,6 @@ implementation
 
   command error_t Read.read[uint8_t client]()
   {
-    if (call ResourceRead.isOwner[client]())
-      return EBUSY;
     return call ResourceRead.request[client]();
   }
 
@@ -108,8 +84,7 @@ implementation
     if (result == SUCCESS){
       state = STATE_READ;
       result = call SingleChannel.getData[client]();
-    }
-    if (result != SUCCESS){
+    } else {
       call ResourceRead.release[client]();
       signal Read.readDone[client](result, 0);
     }
@@ -189,137 +164,6 @@ implementation
     // error !
     return 0;
   }
-  
-  command error_t ReadStream.postBuffer[uint8_t streamClient]( uint16_t* buf, uint16_t count )
-  {
-    struct stream_entry_t *newEntry = (struct stream_entry_t *) buf;
-    
-    newEntry->count = count;
-    newEntry->next = 0;
-    atomic {
-      if (!streamBuf[streamClient])
-        streamBuf[streamClient] = newEntry;
-      else {
-        struct stream_entry_t *tmp = streamBuf[streamClient];
-        while (tmp->next)
-          tmp = tmp->next;
-        tmp->next = newEntry;
-      }
-    }
-    return SUCCESS;
-  }
-  
-  command error_t ReadStream.read[uint8_t streamClient]( uint32_t _usPeriod )
-  {
-    if (!streamBuf[streamClient])
-      return EINVAL;
-    if (call ResourceReadStream.isOwner[streamClient]())
-      return EBUSY;
-    usPeriod[streamClient] = _usPeriod;
-    return call ResourceReadStream.request[streamClient]();
-  }
-
-  void task finishStreamRequest()
-  {
-    call ResourceReadStream.release[owner]();
-    if (!streamBuf[owner])
-      // all posted buffers were filled
-      signal ReadStream.readDone[owner]( SUCCESS, usPeriod[owner] );
-    else {
-      // the commented code below makes gcc throw
-      // "internal error: unsupported relocation error" !?!
-      /*
-      do {
-        signal ReadStream.bufferDone[owner]( FAIL, (uint16_t *) streamBuf[owner], 0);
-        streamBuf[owner] = streamBuf[owner]->next;
-      } while (streamBuf[owner]);
-      */
-      signal ReadStream.readDone[owner]( FAIL, 0 );
-    }
-  }  
-
-  event void ResourceReadStream.granted[uint8_t streamClient]() 
-  {
-    error_t result;
-    const msp430adc12_channel_config_t *config;
-    struct stream_entry_t *entry = streamBuf[streamClient];
-
-    if (!entry)
-      result = EINVAL;
-    else {
-      config = call ConfigReadStream.getConfiguration[streamClient]();
-      if (config->inch == INPUT_CHANNEL_NONE)
-        result = EINVAL;
-      else {
-        owner = streamClient;
-        streamConfig = *config;
-        streamConfig.sampcon_ssel = SAMPCON_SOURCE_SMCLK; // assumption: SMCLK runs at 1 MHz
-        streamConfig.sampcon_id = SAMPCON_CLOCK_DIV_1; 
-        streamBuf[streamClient] = entry->next;
-        result = call SingleChannelReadStream.configureMultiple[streamClient](
-            &streamConfig, (uint16_t *) entry, entry->count, usPeriod[streamClient]);
-        if (result == SUCCESS)
-          result = call SingleChannelReadStream.getData[streamClient]();
-        else {
-          streamBuf[streamClient] = entry;
-          post finishStreamRequest();
-          return;
-        }
-      }
-    }
-    if (result != SUCCESS){
-      call ResourceReadStream.release[streamClient]();
-      signal ReadStream.readDone[streamClient]( FAIL, 0 );
-    }
-    return;
-  }
-
-
-  async event uint16_t* SingleChannelReadStream.multipleDataReady[uint8_t streamClient](
-      uint16_t *buf, uint16_t length)
-  {
-    error_t nextRequest;
-    
-    if (!resultBuf){
-      value = length;
-      resultBuf = buf;
-      post signalBufferDone();
-      if (!streamBuf[streamClient])
-        post finishStreamRequest();
-      else {
-        // fill next buffer (this is the only async code dealing with buffers)
-        struct stream_entry_t *entry = streamBuf[streamClient];
-        streamBuf[streamClient] = streamBuf[streamClient]->next;
-        nextRequest = call SingleChannelReadStream.configureMultiple[streamClient](
-            &streamConfig, (uint16_t *) entry, entry->count, usPeriod[streamClient]);
-        if (nextRequest == SUCCESS)
-          nextRequest = call SingleChannelReadStream.getData[streamClient]();
-        if (nextRequest != SUCCESS){
-          streamBuf[owner] = entry;
-          post finishStreamRequest();
-        }
-      }
-    } else {
-      // overflow: can't signal data fast enough
-      struct stream_entry_t *entry = (struct stream_entry_t *) buf;
-      entry->next = streamBuf[streamClient];
-      streamBuf[streamClient] = entry; // what a waste
-      post finishStreamRequest();
-    }
-    return 0;
-  }
-
-  void task signalBufferDone()
-  {
-    signal ReadStream.bufferDone[owner]( SUCCESS, resultBuf, value);
-    resultBuf = 0;
-  }
-  
-  async event error_t SingleChannelReadStream.singleDataReady[uint8_t streamClient](uint16_t data)
-  {
-    // won't happen
-    return SUCCESS;
-  }
 
   default async command error_t ResourceRead.request[uint8_t client]() { return FAIL; }
   default async command error_t ResourceRead.immediateRequest[uint8_t client]() { return FAIL; }
@@ -332,52 +176,19 @@ implementation
   default async command bool SubResourceReadNow.isOwner[uint8_t client]() { return FALSE; }
   default event void ResourceReadNow.granted[uint8_t nowClient](){}
   default async event void ReadNow.readDone[uint8_t client]( error_t result, uint16_t val ){}
-  default async command error_t SubResourceReadNow.immediateRequest[uint8_t nowClient]()
-  { 
-    return FAIL; 
-  }
-  
-  default async command error_t ResourceReadStream.request[uint8_t streamClient]() { return FAIL; }
-  default async command error_t ResourceReadStream.release[uint8_t streamClient]() { return FAIL; }
-  default async command bool ResourceReadStream.isOwner[uint8_t streamClient]() { return FALSE; }
-  default event void ReadStream.bufferDone[uint8_t streamClient]( error_t result, 
-			 uint16_t* buf, uint16_t count ){}
-  default event void ReadStream.readDone[uint8_t streamClient]( error_t result, uint32_t actualPeriod ){ } 
-
+  default async command error_t SubResourceReadNow.immediateRequest[uint8_t nowClient]() { return FAIL; }
   default async command error_t SingleChannel.getData[uint8_t client]()
   {
     return EINVAL;
   }
 
-  // will be placed in flash
   const msp430adc12_channel_config_t defaultConfig = {INPUT_CHANNEL_NONE,0,0,0,0,0,0,0}; 
   default async command const msp430adc12_channel_config_t*
     Config.getConfiguration[uint8_t client]()
   { 
     return &defaultConfig;
-  }
-
-  default async command const msp430adc12_channel_config_t*
-    ConfigReadStream.getConfiguration[uint8_t client]()
-  { 
-    return &defaultConfig;
-  }
-
-  default async command error_t SingleChannelReadStream.configureMultiple[uint8_t client](
-      const msp430adc12_channel_config_t *config, uint16_t buffer[], 
-      uint16_t numSamples, uint16_t jiffies)
-  {
-    return FAIL;
-  }
-
-  default async command error_t SingleChannelReadStream.getData[uint8_t client]()
-  {
-    return FAIL;
-  }
-
+  }  
   default async command error_t SingleChannel.configureSingle[uint8_t client](
       const msp430adc12_channel_config_t *config){ return FAIL; }
-
-
-}
-
+  
+} 

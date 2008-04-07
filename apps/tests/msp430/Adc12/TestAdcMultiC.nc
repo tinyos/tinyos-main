@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2007-06-25 15:43:37 $
+ * $Revision: 1.2 $
+ * $Date: 2008-04-07 09:41:55 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -68,7 +68,7 @@ implementation
 #define BUFFER_SIZE 100
   const msp430adc12_channel_config_t config = {inch, sref, ref2_5v, adc12ssel, adc12div, sht, sampcon_ssel, sampcon_id};
   adc12memctl_t memCtl = {inch2, sref2};
-  uint8_t state;
+  norace uint8_t state;
   uint16_t buffer[BUFFER_SIZE];
   void task getData();
 
@@ -85,6 +85,8 @@ implementation
   bool assertData(uint16_t *data, uint16_t num)
   {
     uint16_t i;
+    if (num != BUFFER_SIZE)
+      post signalFailure();
     for (i=0; i<num; i++)
       if (!data[i] || data[i] >= 0xFFF){
         post signalFailure();
@@ -117,8 +119,10 @@ implementation
 
   async event void MultiChannel.dataReady(uint16_t *buf, uint16_t numSamples)
   {
-    if (assertData(buf, numSamples))
+    if (assertData(buf, numSamples) && state++ == 0)
       post signalSuccess();
+    else
+      post signalFailure();
     call Resource.release();
   }
 

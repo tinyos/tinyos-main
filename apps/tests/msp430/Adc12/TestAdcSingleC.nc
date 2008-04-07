@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2007-06-25 15:43:37 $
+ * $Revision: 1.2 $
+ * $Date: 2008-04-07 09:41:55 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -64,6 +64,7 @@ implementation
 #define BUFFER_SIZE 100
   const msp430adc12_channel_config_t config = {inch, sref, ref2_5v, adc12ssel, adc12div, sht, sampcon_ssel, sampcon_id};
   uint8_t state;
+  norace uint8_t numDone;
   uint16_t buffer[BUFFER_SIZE];
   void task getData();
 
@@ -117,13 +118,15 @@ implementation
                 call SingleChannel.getData();
               break;
       default: call Resource.release();
-              signal Notify.notify(TRUE);
+              if (numDone == state)
+                signal Notify.notify(TRUE);
               break;
     }
   }
 
   async event error_t SingleChannel.singleDataReady(uint16_t data)
   { 
+    numDone++;
     assertData(&data, 1);
     call Resource.release();
     post getData();
@@ -133,6 +136,7 @@ implementation
     
   async event uint16_t* SingleChannel.multipleDataReady(uint16_t *buf, uint16_t length)
   {
+    numDone++;
     assertData(buf, length);
     call Resource.release();
     post getData();
