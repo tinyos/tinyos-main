@@ -1,4 +1,4 @@
-/* $Id: AdcStreamP.nc,v 1.5 2007-02-08 17:52:33 idgay Exp $
+/* $Id: AdcStreamP.nc,v 1.6 2008-04-09 08:56:30 janhauer Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -104,6 +104,8 @@ implementation {
   }
 
   command error_t ReadStream.postBuffer[uint8_t c](uint16_t *buf, uint16_t n) {
+    if (n < sizeof(struct list_entry_t))
+      return ESIZE;
     atomic
       {
 	struct list_entry_t *newEntry = (struct list_entry_t *)buf;
