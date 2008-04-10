@@ -1,5 +1,4 @@
-//$Id: Leds.h,v 1.4 2006-12-12 18:23:47 vlahan Exp $
-
+//$Id: Leds.h,v 1.5 2008-04-10 20:01:37 scipio Exp $
 /* "Copyright (c) 2005 The Regents of the University of California.  
  * All rights reserved.
  *
@@ -27,6 +26,9 @@
  * @date   March 21, 2005
  */
 
+#ifndef LEDS_H
+#define LEDS_H 
+
 enum {
   LEDS_LED0 = 1 << 0,
   LEDS_LED1 = 1 << 1,
@@ -38,3 +40,4 @@ enum {
   LEDS_LED7 = 1 << 7
 };
 
+#endif
