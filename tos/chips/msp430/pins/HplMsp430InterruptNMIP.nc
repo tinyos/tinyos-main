@@ -27,10 +27,11 @@ module HplMsp430InterruptNMIP
   provides interface HplMsp430Interrupt as NMI;
   provides interface HplMsp430Interrupt as OF;
   provides interface HplMsp430Interrupt as ACCV;
+  uses interface HplMsp430InterruptSig as SIGNAL_NMI_VECTOR;
 }
 implementation
 {
-  TOSH_SIGNAL(NMI_VECTOR)
+  inline async event void SIGNAL_NMI_VECTOR.fired() 
   {
     volatile int n = IFG1;
     if (n & NMIIFG) { signal NMI.fired(); return; }

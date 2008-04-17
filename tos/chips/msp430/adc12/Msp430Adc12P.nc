@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-06-25 15:47:15 $
+ * $Revision: 1.6 $
+ * $Date: 2008-04-17 22:38:34 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -77,5 +77,8 @@ configuration Msp430Adc12P
   Msp430Adc12ImplP.CompareA0 -> Msp430TimerC.CompareA0;
   Msp430Adc12ImplP.CompareA1 -> Msp430TimerC.CompareA1;
 #endif
+
+  components HplMsp430InterruptSigP;
+  HplAdc12P.SIGNAL_ADC_VECTOR -> HplMsp430InterruptSigP.SIGNAL_ADC_VECTOR;
 }
 

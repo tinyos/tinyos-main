@@ -38,4 +38,7 @@ implementation
   NMI = HplInterruptP.NMI;
   OF = HplInterruptP.OF;
   ACCV = HplInterruptP.ACCV;
+  
+  components HplMsp430InterruptSigP;
+  HplInterruptP.SIGNAL_NMI_VECTOR -> HplMsp430InterruptSigP.SIGNAL_NMI_VECTOR;
 }

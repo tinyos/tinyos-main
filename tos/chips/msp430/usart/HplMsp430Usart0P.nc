@@ -68,7 +68,7 @@
  * @author: Vlado Handziski <handzisk@tkn.tu-berlin.de>
  * @author: Joe Polastre
  * @author: Philipp Huppertz <huppertz@tkn.tu-berlin.de>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
+ * @version $Revision: 1.5 $ $Date: 2008-04-17 22:38:34 $
  */
 
 module HplMsp430Usart0P {
@@ -82,6 +82,8 @@ module HplMsp430Usart0P {
   uses interface HplMsp430GeneralIO as UCLK;
   uses interface HplMsp430GeneralIO as URXD;
   uses interface HplMsp430GeneralIO as UTXD;
+  uses interface HplMsp430InterruptSig as SIGNAL_UART0RX_VECTOR;
+  uses interface HplMsp430InterruptSig as SIGNAL_UART0TX_VECTOR;
 }
 
 implementation
@@ -93,12 +95,12 @@ implementation
   MSP430REG_NORACE(U0RCTL);
   MSP430REG_NORACE(U0TXBUF);
   
-  TOSH_SIGNAL(UART0RX_VECTOR) {
+  inline async event void SIGNAL_UART0RX_VECTOR.fired() {
     uint8_t temp = U0RXBUF;
     signal Interrupts.rxDone(temp);
   }
   
-  TOSH_SIGNAL(UART0TX_VECTOR) {
+  inline async event void SIGNAL_UART0TX_VECTOR.fired() {
     if ( call HplI2C.isI2C() )
       signal I2CInterrupts.fired();
     else

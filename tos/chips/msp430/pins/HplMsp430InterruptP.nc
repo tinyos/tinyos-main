@@ -33,6 +33,7 @@ module HplMsp430InterruptP
   provides interface HplMsp430Interrupt as Port15;
   provides interface HplMsp430Interrupt as Port16;
   provides interface HplMsp430Interrupt as Port17;
+  uses interface HplMsp430InterruptSig as SIGNAL_PORT1_VECTOR;
 #endif
 #ifdef __msp430_have_port2
   provides interface HplMsp430Interrupt as Port20;
@@ -43,6 +44,7 @@ module HplMsp430InterruptP
   provides interface HplMsp430Interrupt as Port25;
   provides interface HplMsp430Interrupt as Port26;
   provides interface HplMsp430Interrupt as Port27;
+  uses interface HplMsp430InterruptSig as SIGNAL_PORT2_VECTOR;
 #endif
 
 }
@@ -50,7 +52,7 @@ implementation
 {
 
 #ifdef __msp430_have_port1
-  TOSH_SIGNAL(PORT1_VECTOR)
+  inline async event void SIGNAL_PORT1_VECTOR.fired()
   {
     volatile int n = P1IFG & P1IE;
 
@@ -155,7 +157,7 @@ implementation
 #endif
 
 #ifdef __msp430_have_port2
-  TOSH_SIGNAL(PORT2_VECTOR)
+  inline async event void SIGNAL_PORT2_VECTOR.fired()
   {
     volatile int n = P2IFG & P2IE;
 

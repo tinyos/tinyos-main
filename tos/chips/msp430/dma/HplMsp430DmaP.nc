@@ -54,14 +54,14 @@
  * @author Ben Greenstein <ben@cs.ucla.edu>
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Joe Polastre <info@moteiv.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:07 $
+ * @version $Revision: 1.5 $ $Date: 2008-04-17 22:38:34 $
  */
 
 module HplMsp430DmaP {
 
   provides interface HplMsp430DmaControl as DmaControl;
   provides interface HplMsp430DmaInterrupt as Interrupt;
-
+  uses interface HplMsp430InterruptSig as SIGNAL_DACDMA_VECTOR;
 }
 
 implementation {
@@ -69,7 +69,7 @@ implementation {
   MSP430REG_NORACE( DMACTL0 );
   MSP430REG_NORACE( DMACTL1 );
 
-  TOSH_SIGNAL( DACDMA_VECTOR ) {
+  inline async event void SIGNAL_DACDMA_VECTOR.fired {
     signal Interrupt.fired();
   }
 

@@ -58,7 +58,7 @@
  *
  * @author Jonathan Hui <jhui@archedrock.com>
  * @author Joe Polastre
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
+ * @version $Revision: 1.5 $ $Date: 2008-04-17 22:38:34 $
  */
 
 #include "msp430usart.h"
@@ -85,5 +85,8 @@ implementation {
   HplUsartP.UCLK -> GIO.UCLK1;
   HplUsartP.URXD -> GIO.URXD1;
   HplUsartP.UTXD -> GIO.UTXD1;
-
+  
+  components HplMsp430InterruptSigP;
+  HplUsartP.SIGNAL_UART1RX_VECTOR -> HplMsp430InterruptSigP.SIGNAL_UART1RX_VECTOR;
+  HplUsartP.SIGNAL_UART1TX_VECTOR -> HplMsp430InterruptSigP.SIGNAL_UART1TX_VECTOR;
 }
