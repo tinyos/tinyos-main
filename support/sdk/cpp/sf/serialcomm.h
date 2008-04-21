@@ -199,10 +199,10 @@ protected:
     /**
      *  try to read at least count bytes in one go, but may read up to maxCount bytes.
      */
-    virtual int readFD(int fd, char *buffer, int count, int maxCount);
+    virtual int readFD(int fd, char *buffer, int count, int maxCount, int *err);
 
     /* enables byte escaping. overwrites method from base class.*/
-    virtual int writeFD(int fd, const char *buffer, int count);
+    virtual int writeFD(int fd, const char *buffer, int count, int *err);
 
     /* reads a packet (blocking) */
     bool readPacket(SFPacket &pPacket);

@@ -138,7 +138,7 @@ private:
 
 protected:
     /* performs blocking write on fd */
-    virtual int writeFD(int fd, const char *buffer, int count);
+    virtual int writeFD(int fd, const char *buffer, int count, int *err);
 
     /* checks SF client protocol version */
     bool versionCheck(int clientFD);

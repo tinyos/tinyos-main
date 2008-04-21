@@ -57,7 +57,7 @@ void* writeClientsThread(void*);
 
 /* opens tcp server port for listening and start threads*/
 TCPComm::TCPComm(int pPort, PacketBuffer &pReadBuffer, PacketBuffer &pWriteBuffer, sharedControlInfo_t& pControl) : readBuffer(pReadBuffer), writeBuffer(pWriteBuffer), errorReported(false), errorMsg(""), control(pControl)
-{
+{   
     // init values
     writerThreadRunning = false;
     readerThreadRunning = false;
@@ -67,6 +67,7 @@ TCPComm::TCPComm(int pPort, PacketBuffer &pReadBuffer, PacketBuffer &pWriteBuffe
     readPacketCount = 0;
     writtenPacketCount = 0;
     port = pPort;
+    
     pthread_mutex_init(&clientInfo.sleeplock, NULL);
     pthread_mutex_init(&clientInfo.countlock, NULL);
     pthread_cond_init(&clientInfo.wakeup, NULL);
@@ -161,8 +162,9 @@ bool TCPComm::readPacket(int pFD, SFPacket &pPacket)
 {
     char l;
     char* buffer[SFPacket::getMaxPayloadLength()];
-
-    if (readFD(pFD, &l, 1) != 1)
+    int err;
+    
+    if (readFD(pFD, &l, 1, &err) != 1)
     {
         return false;
     }
@@ -170,7 +172,7 @@ bool TCPComm::readPacket(int pFD, SFPacket &pPacket)
     {
         return false;
     }
-    if (readFD(pFD, (char*) buffer, static_cast<int>(l)) != l)
+    if (readFD(pFD, (char*) buffer, static_cast<int>(l), &err) != l)
     {
         return false;
     }
@@ -184,7 +186,7 @@ bool TCPComm::readPacket(int pFD, SFPacket &pPacket)
     }
 }
 
-int TCPComm::writeFD(int fd, const char *buffer, int count)
+int TCPComm::writeFD(int fd, const char *buffer, int count, int *err)
 {
     int actual = 0;
     while (count > 0)
@@ -194,8 +196,8 @@ int TCPComm::writeFD(int fd, const char *buffer, int count)
 #else
         int n = send(fd, buffer, count, MSG_NOSIGNAL);
 #endif
-        if (n == -1)
-        {
+        if (n == -1) {
+            *err = errno;
             return -1;
         }
         count -= n;
@@ -209,11 +211,12 @@ int TCPComm::writeFD(int fd, const char *buffer, int count)
 bool TCPComm::writePacket(int pFD, SFPacket &pPacket)
 {
     char len = pPacket.getLength();
-    if (writeFD(pFD, &len, 1) != 1)
+    int err;
+    if (writeFD(pFD, &len, 1, &err) != 1)
     {
         return false;
     }
-    if (writeFD(pFD, pPacket.getPayload(), len) != len)
+    if (writeFD(pFD, pPacket.getPayload(), len, &err) != len)
     {
         return false;
     }
@@ -225,15 +228,16 @@ bool TCPComm::versionCheck(int clientFD)
 {
     char check[2], us[2];
     int version;
-
+    int err = 0;
     /* Indicate version and check if a TinyOS 2.0 serial forwarder on the other end */
     us[0] = 'U';
     us[1] = ' ';
-    if (writeFD(clientFD, us, 2) != 2)
+    
+    if (writeFD(clientFD, us, 2, &err) != 2)
     {
         return false;
     }
-    if (readFD(clientFD, check, 2) != 2)
+    if (readFD(clientFD, check, 2, &err) != 2)
     {
         return false;
     }
@@ -395,14 +399,12 @@ void TCPComm::readClients()
                 if (FD_ISSET(*it, &rfds))
                 {
                     SFPacket packet;
-                    if (readPacket(*it, packet))
-                    {
+                    if(readPacket(*it, packet)) {
                         // this call blocks until buffer is not full
                         readBuffer.enqueueBack(packet);
                         ++readPacketCount;
                     }
-                    else
-                    {
+                    else {
                         DEBUG("TCPComm::readClients : removeClient")
                         removeClient(*it);
                     }

@@ -41,10 +41,10 @@ public:
     virtual ~BaseComm();
 protected:
     /* performs blocking read on fd */
-    virtual int readFD(int fd, char *buffer, int count);
+    virtual int readFD(int fd, char *buffer, int count, int *err);
 
     /* performs blocking write on fd */
-    virtual int writeFD(int fd, const char *buffer, int count);
+    virtual int writeFD(int fd, const char *buffer, int count, int *err);
 };
 
 #endif

@@ -37,7 +37,7 @@
 #include <list>
 #include "sfpacket.h"
 
-//#define DEBUG_PACKETBUFFER
+// #define DEBUG_PACKETBUFFER
 
 #undef DEBUG
 #ifdef DEBUG_PACKETBUFFER
@@ -51,7 +51,7 @@ class PacketBuffer
 {
 protected:
 
-  static const int cMaxBufferSize = 25;
+  static const unsigned cMaxBufferSize = 25;
 
   typedef std::list<SFPacket> container_t;
 
@@ -66,8 +66,6 @@ protected:
     pthread_cond_t notfull;
     // actual buffer 
     container_t container;
-    // number of packets in buffer
-    int size;
   } sharedBuffer_t;
 
   sharedBuffer_t buffer;

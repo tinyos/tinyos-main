@@ -40,7 +40,6 @@ PacketBuffer::PacketBuffer()
     pthread_mutex_init(&buffer.lock, NULL);
     pthread_cond_init(&buffer.notempty, NULL);
     pthread_cond_init(&buffer.notfull, NULL);
-    buffer.size = 0;
 }
 
 
@@ -57,7 +56,6 @@ void PacketBuffer::clear() {
     pthread_mutex_lock(&buffer.lock);
     // clear
     buffer.container.clear();
-    buffer.size = 0;
     DEBUG("PacketBuffer::clear : cleared buffer and signal <notfull>")
     pthread_cond_signal(&buffer.notfull);
     pthread_mutex_unlock(&buffer.lock);
@@ -71,7 +69,7 @@ SFPacket PacketBuffer::dequeue()
     pthread_cleanup_push((void(*)(void*)) pthread_mutex_unlock, (void *) &buffer.lock);
     pthread_mutex_lock(&buffer.lock);
     // wait until buffer is _not_ empty
-    while(buffer.size == 0)
+    while(buffer.container.size() == 0)
     {
         DEBUG("PacketBuffer::dequeue : waiting until buffer is <notempty>")
         pthread_cond_wait(&buffer.notempty, &buffer.lock);
@@ -79,7 +77,6 @@ SFPacket PacketBuffer::dequeue()
     // dequeue
     packet = buffer.container.front();
     buffer.container.pop_front();
-    --buffer.size;
     DEBUG("PacketBuffer::dequeue : get from buffer and signal <notfull>")
     pthread_cond_signal(&buffer.notfull);
     pthread_cleanup_pop(1); 
@@ -93,13 +90,12 @@ bool PacketBuffer::enqueueFront(SFPacket &pPacket)
     pthread_cleanup_push((void(*)(void*)) pthread_mutex_unlock, (void *) &buffer.lock);
     pthread_mutex_lock(&buffer.lock);
     // wait until buffer is _not_ full
-    while(buffer.size >= cMaxBufferSize)
+    while(buffer.container.size() >= cMaxBufferSize)
     {
         DEBUG("PacketBuffer::enqueueFront : waiting until buffer is <notfull>")
         pthread_cond_wait(&buffer.notfull, &buffer.lock);
     }
     // enqueue
-    ++buffer.size;
     buffer.container.push_front(pPacket);
     DEBUG("PacketBuffer::enqueueFront : put in buffer and signal <notempty>")
     // signal that buffer is now not empty
@@ -115,13 +111,12 @@ bool PacketBuffer::enqueueBack(SFPacket &pPacket)
     pthread_cleanup_push((void(*)(void*)) pthread_mutex_unlock, (void *) &buffer.lock);
     pthread_mutex_lock(&buffer.lock);
     // wait until buffer is _not_ full
-    while(buffer.size >= cMaxBufferSize)
+    while(buffer.container.size() >= cMaxBufferSize)
     {
         DEBUG("PacketBuffer::enqueueBack : waiting until buffer is <notfull>")
         pthread_cond_wait(&buffer.notfull, &buffer.lock);
     }
     // enqueue
-    ++buffer.size;
     buffer.container.push_back(pPacket);
     DEBUG("PacketBuffer::enqueueBack : put in buffer and signal <notempty>")
     // signal that buffer is now not empty
@@ -135,8 +130,8 @@ bool PacketBuffer::isFull() {
   bool isFull = true;
   pthread_testcancel();
   pthread_mutex_lock(&buffer.lock);
-  if (buffer.size < cMaxBufferSize) {
-    isFull = false;
+  if (buffer.container.size() < cMaxBufferSize) {
+      isFull = false;
   }
   pthread_mutex_unlock(&buffer.lock);
   return isFull;
@@ -147,8 +142,8 @@ bool PacketBuffer::isEmpty() {
   bool isEmpty = true;
   pthread_testcancel();
   pthread_mutex_lock(&buffer.lock);
-  if (buffer.size > 0) {
-    isEmpty = false;
+  if (buffer.container.size() > 0) {
+      isEmpty = false;
   }
   pthread_mutex_unlock(&buffer.lock);
   return isEmpty;

@@ -241,7 +241,7 @@ tcflag_t SerialComm::parseBaudrate(int requested)
     return baudrate;
 }
 
-SerialComm::SerialComm(const char* pDevice, int pBaudrate, PacketBuffer &pReadBuffer, PacketBuffer &pWriteBuffer, sharedControlInfo_t& pControl) : readBuffer(pReadBuffer), writeBuffer(pWriteBuffer), droppedReadPacketCount(0), droppedWritePacketCount(0), readPacketCount(0), writtenPacketCount(0), badPacketCount(0), sumRetries(0), device(pDevice), baudrate(pBaudrate), errorReported(false), errorMsg(""), control(pControl)
+SerialComm::SerialComm(const char* pDevice, int pBaudrate, PacketBuffer &pReadBuffer, PacketBuffer &pWriteBuffer, sharedControlInfo_t& pControl) : readBuffer(pReadBuffer), writeBuffer(pWriteBuffer), droppedReadPacketCount(0), droppedWritePacketCount(0), readPacketCount(0), writtenPacketCount(0), badPacketCount(0), sumRetries(0), device(pDevice), baudrate(pBaudrate), serialReadFD(-1), serialWriteFD(-1), errorReported(false), errorMsg(""), control(pControl)
 {
     writerThreadRunning = false;
     readerThreadRunning = false;
@@ -314,8 +314,8 @@ SerialComm::~SerialComm()
     pthread_mutex_destroy(&ack.lock);
     pthread_cond_destroy(&ack.received);
 
-    close(serialReadFD);
-    close(serialWriteFD);
+    if(serialReadFD > 2) close(serialReadFD);
+    if(serialWriteFD > 2) close(serialWriteFD);
 }
 
 int SerialComm::hdlcEncode(int count, const char* from, char *to) {
@@ -333,7 +333,7 @@ int SerialComm::hdlcEncode(int count, const char* from, char *to) {
     return offset;
 }
 
-int SerialComm::writeFD(int fd, const char *buffer, int count)
+int SerialComm::writeFD(int fd, const char *buffer, int count, int *err)
 {
     int cnt = 0;
     /*
@@ -343,8 +343,9 @@ int SerialComm::writeFD(int fd, const char *buffer, int count)
     }
     FD_CLR(serialWriteFD, &wfds);
      */
-    int tmpCnt = BaseComm::writeFD(fd, buffer, count);
+    int tmpCnt = BaseComm::writeFD(fd, buffer, count, err);
     if (tmpCnt < 0) {
+        *err = errno;
         return tmpCnt;
     }
     else {
@@ -356,7 +357,7 @@ int SerialComm::writeFD(int fd, const char *buffer, int count)
 
 /* Work around buggy usb serial driver (returns 0 when no data is
    available, independent of the blocking/non-blocking mode) */
-int SerialComm::readFD(int fd, char *buffer, int count, int maxCount)
+int SerialComm::readFD(int fd, char *buffer, int count, int maxCount, int *err)
 {
     int cnt = 0;
     timeval tvold;
@@ -376,6 +377,7 @@ int SerialComm::readFD(int fd, char *buffer, int count, int maxCount)
         select(0, NULL, NULL, NULL, &tv);
         int tmpCnt = read(fd, buffer, maxCount);
         if (tmpCnt < 0) {
+            *err = errno;
             return tmpCnt;
         }
         else {
@@ -387,14 +389,23 @@ int SerialComm::readFD(int fd, char *buffer, int count, int maxCount)
 
 char SerialComm::nextRaw() {
     char nextByte = 0;
+    int err = 0;
     if(rawFifo.tail < rawFifo.head) {
         nextByte = rawFifo.queue[rawFifo.tail++];
     }
     else {
         // fifo empty -- need to get some bytes
         rawFifo.tail = 0;
+        rawFifo.head = readFD(serialReadFD, rawFifo.queue, rawReadBytes, maxMTU-1, &err);
+        if(rawFifo.head < 0) {
+            close(serialReadFD);
+            close(serialWriteFD);
+            serialReadFD = -1;
+            serialWriteFD = -1;
+            errno = err;
+        }
         reportError("SerialComm::nextRaw: readFD(serialReadFD, rawFifo.queue, rawReadBytes, maxMTU-1)",
-                    rawFifo.head = readFD(serialReadFD, rawFifo.queue, rawReadBytes, maxMTU-1));
+                    rawFifo.head);
         nextByte = rawFifo.queue[rawFifo.tail++];
     }
     return nextByte;
@@ -545,11 +556,13 @@ bool SerialComm::readPacket(SFPacket &pPacket)
 /* writes packet */
 bool SerialComm::writePacket(SFPacket &pPacket)
 {
-    char type, byte;
+    char type, byte = 0;
     uint16_t crc = 0;
     char buffer[2*pPacket.getLength() + 20];
     int offset = 0;
-
+    int err = 0;
+    int written = 0;
+    
     // put SFD into buffer 
     buffer[offset++] = SYNC_BYTE;
 
@@ -562,7 +575,6 @@ bool SerialComm::writePacket(SFPacket &pPacket)
     byte = pPacket.getSeqno();
     crc = byteCRC(byte, crc);
     offset += hdlcEncode(1, &byte, buffer + offset);
-
     switch (type)
     {
     case SF_ACK:
@@ -587,7 +599,19 @@ bool SerialComm::writePacket(SFPacket &pPacket)
     
     // put SFD into buffer
     buffer[offset++] = SYNC_BYTE;
-    if(writeFD(serialWriteFD, buffer, offset) < offset)  {
+    written = writeFD(serialWriteFD, buffer, offset, &err);
+    if(written < 0) {
+        if(err != EINTR) {
+            close(serialReadFD);
+            serialReadFD = -1;
+            close(serialWriteFD);
+            serialWriteFD = -1;
+            errno = err;
+            reportError("SerialComm::writePacket failed",-1);
+            return false;
+        }
+    }
+    else if(written < offset) {
         DEBUG("SerialComm::writePacket failed");
         return false;
     }
@@ -737,7 +761,7 @@ void SerialComm::writeSerial()
 void SerialComm::cancel()
 {
     pthread_t callingThread = pthread_self();
-    if (pthread_equal(callingThread, readerThread))
+    if(readerThreadRunning && pthread_equal(callingThread, readerThread))
     {
         DEBUG("SerialComm::cancel : by readerThread")
         pthread_detach(readerThread);
@@ -752,7 +776,7 @@ void SerialComm::cancel()
 	pthread_cond_signal(&control.cancel);
         pthread_exit(NULL);
     }
-    else if ((pthread_equal(callingThread, writerThread)))
+    else if(writerThreadRunning && pthread_equal(callingThread, writerThread))
     {
         DEBUG("SerialComm::cancel : by writerThread")
         pthread_detach(writerThread);

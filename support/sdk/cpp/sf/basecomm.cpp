@@ -46,7 +46,7 @@ BaseComm::~BaseComm()
 }
 
 /* all count bytes must be read before returning - blocking in that way... */
-int BaseComm::readFD(int fd, char *buffer, int count)
+int BaseComm::readFD(int fd, char *buffer, int count, int *err)
 {
     int actual = 0;
     while (count > 0)
@@ -54,6 +54,7 @@ int BaseComm::readFD(int fd, char *buffer, int count)
         int n = read(fd, buffer, count);
         if (n == -1)
         {
+            *err = errno;
             return -1;
         }
         if (n == 0)
@@ -68,7 +69,7 @@ int BaseComm::readFD(int fd, char *buffer, int count)
 }
 
 /* all count bytes must be written before returning - blocking in that way... */
-int BaseComm::writeFD(int fd, const char *buffer, int count)
+int BaseComm::writeFD(int fd, const char *buffer, int count, int *err)
 {
     int actual = 0;
     while (count > 0)
@@ -77,6 +78,7 @@ int BaseComm::writeFD(int fd, const char *buffer, int count)
         if(n == -1)
         {
             if(errno != 0) {
+                *err = errno;
                 return -1;
             }
             else {

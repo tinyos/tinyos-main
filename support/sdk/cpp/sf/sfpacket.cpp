@@ -44,6 +44,7 @@ SFPacket::SFPacket(const SFPacket &pPacket)
 {
     length = pPacket.getLength();
     type = pPacket.getType();
+    seqno = pPacket.getSeqno();
     setPayload(pPacket.getPayload(), length);
 }
 
