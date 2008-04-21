@@ -21,6 +21,8 @@
  * Author: Miklos Maroti
  */
 
+#include <HplRF230.h>
+
 configuration RF230LayerC
 {
 	provides

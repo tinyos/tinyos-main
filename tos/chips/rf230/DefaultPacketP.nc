@@ -31,6 +31,7 @@ module DefaultPacketP
 		interface Packet;
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint16_t> as PacketSleepInterval;
 
 		interface PacketTimeStamp<TRF230, uint16_t>;
 		interface PacketLastTouch;
@@ -167,9 +168,11 @@ implementation
 	enum
 	{
 		FLAG_TXPOWER = 0x01,
+		FLAG_SLEEPINT = 0x02,
 	};
 
 	uint8_t transmitPower;
+	uint16_t sleepInterval;
 
 /*----------------- PacketTransmitPower -----------------*/
 
@@ -192,6 +195,29 @@ implementation
 	{
 		flags |= FLAG_TXPOWER;
 		transmitPower = value;
+	}
+
+/*----------------- PacketSleepInterval -----------------*/
+
+	async command bool PacketSleepInterval.isSet(message_t* msg)
+	{
+		return flags & FLAG_SLEEPINT;
+	}
+
+	async command uint16_t PacketSleepInterval.get(message_t* msg)
+	{
+		return sleepInterval;
+	}
+
+	async command void PacketSleepInterval.clear(message_t* msg)
+	{
+		flags &= ~FLAG_SLEEPINT;
+	}
+
+	async command void PacketSleepInterval.set(message_t* msg, uint16_t value)
+	{
+		flags |= FLAG_SLEEPINT;
+		sleepInterval = value;
 	}
 
 /*----------------- PacketLastTouch -----------------*/

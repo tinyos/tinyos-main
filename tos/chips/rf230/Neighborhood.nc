@@ -41,7 +41,7 @@ interface Neighborhood
 	 * Returns the age of the given entry. The age is incremented by one
 	 * every time a new node is inserted into the neighborhood table that
 	 * is not already at the very end. If the age would get too large to
-	 * fit into a byte, then it is periodically reset to a large value.
+	 * fit into a byte, then it is periodically reset to a smaller value.
 	 */
 	tasklet_async command uint8_t getAge(uint8_t index);
 

@@ -104,7 +104,7 @@ implementation
 		
 		s = state;
 
-		// change the state before so we can be reentered rom the event
+		// change the state before so we can be reentered from the event
 		if( s == STATE_TURN_ON || s == STATE_TURN_OFF )
 			state = STATE_READY;
 
@@ -258,7 +258,7 @@ implementation
 	{
 		bool notFull;
 
-		// this prevents undelivered messages to be acknowledged
+		// this prevents undeliverable messages to be acknowledged
 		atomic notFull = receiveQueueSize < RECEIVE_QUEUE_SIZE;
 
 		return notFull;

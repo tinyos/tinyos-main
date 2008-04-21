@@ -36,6 +36,7 @@ configuration DefaultMacC
 		interface Packet;
 		interface AMPacket;
 		interface PacketAcknowledgements;
+		interface LowPowerListening;
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketTimeStamp<TRF230, uint16_t>;
@@ -61,11 +62,13 @@ implementation
 	PacketAcknowledgements = DefaultPacketC;
 	PacketLinkQuality = DefaultPacketC.PacketLinkQuality;
 	PacketTimeStamp = DefaultPacketC.PacketTimeStamp;
+	LowPowerListening = LowPowerListeningLayerC;
 
 	PacketLastTouch = DefaultPacketC;
 	RF230LayerC.lastTouch -> DefaultPacketC.lastTouch;
 
 	components ActiveMessageLayerC;
+	components LowPowerListeningLayerC;
 	components MessageBufferLayerC;
 	components UniqueLayerC;
 	components TrafficMonitorLayerC;
@@ -75,7 +78,7 @@ implementation
 	components new DummyLayerC() as CsmaLayerC;
 	components RF230LayerC;
 
-	SplitControl = MessageBufferLayerC;
+	SplitControl = LowPowerListeningLayerC;
 	AMSend = ActiveMessageLayerC;
 	Receive = ActiveMessageLayerC.Receive;
 	Snoop = ActiveMessageLayerC.Snoop;
@@ -83,10 +86,14 @@ implementation
 	ActiveMessageLayerC.Config -> DefaultMacP;
 	ActiveMessageLayerC.AMPacket -> IEEE154PacketC;
 	ActiveMessageLayerC.SubSend -> UniqueLayerC;
-	ActiveMessageLayerC.SubReceive -> MessageBufferLayerC;
+	ActiveMessageLayerC.SubReceive -> LowPowerListeningLayerC;
 
 	UniqueLayerC.Config -> DefaultMacP;
-	UniqueLayerC.SubSend -> MessageBufferLayerC;
+	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
+
+	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
 
 	MessageBufferLayerC.Packet -> DefaultPacketC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;

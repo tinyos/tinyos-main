@@ -18,30 +18,41 @@
  * ON AN "AS IS" BASIS, AND THE VANDERBILT UNIVERSITY HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
- * Author: Janos Sallai
+ * Author: Miklos Maroti
  */
 
-module DummyLPLP {
-  provides interface LowPowerListening as LPL;
+configuration LowPowerListeningLayerC
+{
+	provides
+	{
+		interface SplitControl;
+		interface Send;
+		interface Receive;
+
+		interface LowPowerListening;
+	}
+	uses
+	{
+		interface SplitControl as SubControl;
+		interface Send as SubSend;
+		interface Receive as SubReceive;
+
+		interface PacketField<uint16_t> as PacketSleepInterval;
+	}
 }
-implementation {
-  command void LPL.setLocalSleepInterval(uint16_t sleepIntervalMs)
-    {}
-  command uint16_t LPL.getLocalSleepInterval()
-    { return 0; }
-  command void LPL.setLocalDutyCycle(uint16_t dutyCycle) {}
-  command uint16_t LPL.getLocalDutyCycle()
-    { return 10000; }
-  command void LPL.setRxSleepInterval(message_t *msg, uint16_t sleepIntervalMs)
-    {}
-  command uint16_t LPL.getRxSleepInterval(message_t *msg)
-    { return 0; }
-  command void LPL.setRxDutyCycle(message_t *msg, uint16_t dutyCycle)
-    {}
-  command uint16_t LPL.getRxDutyCycle(message_t *msg)
-    { return 10000; }
-  command uint16_t LPL.dutyCycleToSleepInterval(uint16_t dutyCycle)
-    { return 0; }
-  command uint16_t LPL.sleepIntervalToDutyCycle(uint16_t sleepInterval)
-    { return 10000; }
+
+implementation
+{
+	components LowPowerListeningLayerP, new TimerMilliC();
+
+	LowPowerListening = LowPowerListeningLayerP;
+	PacketSleepInterval = LowPowerListeningLayerP;
+	SplitControl = LowPowerListeningLayerP;
+	SubControl = LowPowerListeningLayerP;
+	Send = LowPowerListeningLayerP;
+	SubSend = LowPowerListeningLayerP;
+	Receive = LowPowerListeningLayerP;
+	SubReceive = LowPowerListeningLayerP;
+	
+	LowPowerListeningLayerP.Timer -> TimerMilliC;
 }
