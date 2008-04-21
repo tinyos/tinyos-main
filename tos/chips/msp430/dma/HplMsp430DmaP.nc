@@ -54,7 +54,7 @@
  * @author Ben Greenstein <ben@cs.ucla.edu>
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Joe Polastre <info@moteiv.com>
- * @version $Revision: 1.5 $ $Date: 2008-04-17 22:38:34 $
+ * @version $Revision: 1.6 $ $Date: 2008-04-21 18:52:53 $
  */
 
 module HplMsp430DmaP {
@@ -69,7 +69,7 @@ implementation {
   MSP430REG_NORACE( DMACTL0 );
   MSP430REG_NORACE( DMACTL1 );
 
-  inline async event void SIGNAL_DACDMA_VECTOR.fired {
+  inline async event void SIGNAL_DACDMA_VECTOR.fired() {
     signal Interrupt.fired();
   }
 
