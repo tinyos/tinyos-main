@@ -78,7 +78,7 @@ while(<SECTS>) {
   }
 }
 close(SECTS);
-die "Could not find data section in $exein, aborting.\n"
+warn "Could not find data section in $exein, aborting.\n"
   unless defined $segment_vma && defined $segment_lma && defined $segment_off;
 
 # build a hash of all data segment symbols to their address and size
