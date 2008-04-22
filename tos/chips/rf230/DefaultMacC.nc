@@ -94,6 +94,9 @@ implementation
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
+	LowPowerListeningLayerC.PacketSleepInterval -> DefaultPacketC;
+	LowPowerListeningLayerC.IEEE154Packet -> IEEE154PacketC;
+	LowPowerListeningLayerC.PacketAcknowledgements -> DefaultPacketC;
 
 	MessageBufferLayerC.Packet -> DefaultPacketC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
@@ -116,8 +119,8 @@ implementation
 	SoftwareAckLayerC.SubReceive -> RF230LayerC;
 
 	CsmaLayerC.Config -> DefaultMacP;
-	CsmaLayerC.SubSend -> RF230LayerC;
-	CsmaLayerC.SubCCA -> RF230LayerC;
+	CsmaLayerC -> RF230LayerC.RadioSend;
+	CsmaLayerC -> RF230LayerC.RadioCCA;
 
 	RF230LayerC.RF230Config -> DefaultMacP;
 	RF230LayerC.PacketLinkQuality -> DefaultPacketC.PacketLinkQuality;

@@ -25,30 +25,55 @@ generic configuration DummyLayerC()
 {
 	provides
 	{
+		interface SplitControl;
+		interface Send;
+		interface Receive;
+		interface LowPowerListening;
+
 		interface RadioState;
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioCCA;
 
 		interface DummyConfig as UnconnectedConfig;
+		interface PacketField<uint16_t> as UnconnectedPacketSleepInterval;
+		interface IEEE154Packet as UnconnectedIEEE154Packet;
+		interface PacketAcknowledgements as UnconnectedPacketAcknowledgments;
 	}
 
 	uses 
 	{
 		interface RadioState as SubState;
-		interface RadioSend as SubSend;
-		interface RadioReceive as SubReceive;
-		interface RadioCCA as SubCCA;
+		interface RadioSend as SubRadioSend;
+		interface RadioReceive as SubRadioReceive;
+		interface RadioCCA as SubRadioCCA;
+		interface SplitControl as SubControl;
+		interface Send as SubSend;
+		interface Receive as SubReceive;
 
 		interface DummyConfig as Config;
+		interface PacketField<uint16_t> as PacketSleepInterval;
+		interface IEEE154Packet;
+		interface PacketAcknowledgements;
+
+		interface LowPowerListening as UnconnectedLowPowerListening;
 	}
 }
 
 implementation
 {
 	RadioState = SubState;
-	RadioSend = SubSend;
-	RadioReceive = SubReceive;
-	RadioCCA = SubCCA;
+	RadioSend = SubRadioSend;
+	RadioReceive = SubRadioReceive;
+	RadioCCA = SubRadioCCA;
+
+	SplitControl = SubControl;
+	Send = SubSend;
+	Receive = SubReceive;
+
 	Config = UnconnectedConfig;
+	PacketSleepInterval = UnconnectedPacketSleepInterval;
+	IEEE154Packet = UnconnectedIEEE154Packet;
+	PacketAcknowledgements = UnconnectedPacketAcknowledgments;
+	LowPowerListening = UnconnectedLowPowerListening;
 }
