@@ -52,13 +52,13 @@ implementation
 	enum
 	{
 		// minimum wakeup time to catch a transmission in milliseconds
-		LISTEN_WAKEUP = 6,	// use xxxL if LISTEN_WAKEUP * 10000 > 65535
+		LISTEN_WAKEUP = 6U,	// use xxxL if LISTEN_WAKEUP * 10000 > 65535
 
 		// extra wakeup time after receiving a message in milliseconds
-		AFTER_RECEIVE = 10,
+		AFTER_RECEIVE = 10U,
 
 		// extra wakeup time after transmitting a message in milliseconds
-		AFTER_TRANSMIT = 10,
+		AFTER_TRANSMIT = 10U,
 
 		MIN_SLEEP = 2,		// the minimum sleep interval in milliseconds
 		MAX_SLEEP = 30000,	// the maximum sleep interval in milliseconds
@@ -308,6 +308,8 @@ implementation
 		txMsg = msg;
 		txLen = len;
 		txError = FAIL;
+
+		return SUCCESS;
 	}
 
 	command error_t Send.cancel(message_t* msg)
@@ -366,7 +368,7 @@ implementation
 		else if( dutyCycle <= MIN_DUTY  )
 			return MAX_SLEEP;
 
-		return ((10000 * LISTEN_WAKEUP) / dutyCycle) - LISTEN_WAKEUP;
+		return ((10000U * LISTEN_WAKEUP) / dutyCycle) - LISTEN_WAKEUP;
 	}
 
 	command uint16_t LowPowerListening.sleepIntervalToDutyCycle(uint16_t interval)
@@ -376,7 +378,7 @@ implementation
 		else if( interval >= MAX_SLEEP )
 			return MIN_DUTY;
 
-		return (10000 * LISTEN_WAKEUP) / (LISTEN_WAKEUP + interval);
+		return (10000U * LISTEN_WAKEUP) / (LISTEN_WAKEUP + interval);
 	}
 
 	command void LowPowerListening.setLocalSleepInterval(uint16_t interval)
