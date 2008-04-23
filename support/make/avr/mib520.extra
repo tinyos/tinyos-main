@@ -1,0 +1,7 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: mib520.extra,v 1.1 2008-04-23 20:31:58 sallai Exp $
+
+# The MIB520 uses the same protocol as the MIB510, so we 
+# just include mib510.extra
+MIB510 = $(MIB520)
+include $(TINYOS_MAKE_PATH)/avr/mib510.extra
