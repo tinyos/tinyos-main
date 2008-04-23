@@ -495,7 +495,7 @@ void SFControl::waitOnInput()
     bool clientConnected = false;
 
     struct sockaddr_in client;
-    unsigned int clientAddrLen = sizeof(client);
+    socklen_t clientAddrLen = sizeof(client);
     FD_ZERO(&rfds);
 
     while (true)
