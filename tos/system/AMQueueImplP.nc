@@ -1,4 +1,4 @@
-// $Id: AMQueueImplP.nc,v 1.7 2007-09-13 23:10:19 scipio Exp $
+// $Id: AMQueueImplP.nc,v 1.8 2008-04-23 06:25:45 klueska Exp $
 /*
 * "Copyright (c) 2005 Stanford University. All rights reserved.
 *
@@ -206,5 +206,8 @@ implementation {
 
     default event void Send.sendDone[uint8_t id](message_t* msg, error_t err) {
         // Do nothing
+    }
+    default command error_t AMSend.send[uint8_t id](am_addr_t am_id, message_t* msg, uint8_t len) {
+        return FAIL;
     }
 }
