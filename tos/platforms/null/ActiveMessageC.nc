@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.5 2007-05-23 22:17:49 idgay Exp $
+// $Id: ActiveMessageC.nc,v 1.6 2008-04-24 06:52:12 klueska Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -48,7 +48,7 @@ implementation {
     return 0;
   }
 
-  command void* AMSend.getPayload[uint8_t id](message_t* msg) {
+  command void* AMSend.getPayload[uint8_t id](message_t* msg, uint8_t len) {
     return NULL;
   }
 
@@ -63,7 +63,7 @@ implementation {
     return 0;
   }
 
-  command void* Packet.getPayload(message_t* msg, uint8_t* len) {
+  command void* Packet.getPayload(message_t* msg, uint8_t len) {
     return msg;
   }
 
@@ -97,20 +97,14 @@ implementation {
   }
 
   command void AMPacket.setSource(message_t* amsg, am_addr_t addr) { }
-
-  command void* Receive.getPayload[uint8_t id](message_t* msg, uint8_t* len) {
-    return NULL;
-  }
-
-  command uint8_t Receive.payloadLength[uint8_t id](message_t* msg) {
+  
+  command am_group_t AMPacket.group(message_t* amsg) {
     return 0;
   }
 
-  command void* Snoop.getPayload[uint8_t id](message_t* msg, uint8_t* len) {
-    return NULL;
-  }
+  command void AMPacket.setGroup(message_t* amsg, am_group_t grp) { }
 
-  command uint8_t Snoop.payloadLength[uint8_t id](message_t* msg) {
+  command am_group_t AMPacket.localGroup() {
     return 0;
   }
 
