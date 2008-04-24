@@ -1,4 +1,4 @@
-/// $Id: Atm128SpiP.nc,v 1.6 2007-02-28 17:33:59 scipio Exp $
+/// $Id: Atm128SpiP.nc,v 1.7 2008-04-24 22:31:25 mmaroti Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -63,7 +63,7 @@
  *
  *
  * <pre>
- *  $Id: Atm128SpiP.nc,v 1.6 2007-02-28 17:33:59 scipio Exp $
+ *  $Id: Atm128SpiP.nc,v 1.7 2008-04-24 22:31:25 mmaroti Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -101,7 +101,6 @@ implementation {
   command error_t Init.init() {
     return SUCCESS;
   }
-  bool started;
   
   void startSpi() {
     call Spi.enableSpi(FALSE);
@@ -119,7 +118,6 @@ implementation {
 
   void stopSpi() {
     call Spi.enableSpi(FALSE);
-    started = FALSE;
     atomic {
       call Spi.sleep();
     }

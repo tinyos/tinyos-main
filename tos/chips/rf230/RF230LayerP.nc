@@ -236,6 +236,7 @@ implementation
 	event void SpiResource.granted()
 	{
 		// TODO: this should not be here, see my comment in HplRF230C.nc
+		call SELN.makeOutput();
 		call SELN.set();
 
 		if( state == STATE_P_ON )
@@ -255,6 +256,7 @@ implementation
 		if( call SpiResource.immediateRequest() == SUCCESS )
 		{
 			// TODO: this should not be here, see my comment in HplRF230C.nc
+			call SELN.makeOutput();
 			call SELN.set();
 
 			return TRUE;

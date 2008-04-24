@@ -30,29 +30,58 @@
  */
 
 /**
- * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2008-04-24 22:31:25 $
+ * Automatic slave select update for the SpiResource
+ *
+ * @author Miklos Maroti
  */
 
-generic configuration HplCC2420SpiC() {
-
-  provides interface Init;
-  provides interface Resource;
-
-  provides interface SpiByte;
-  provides interface SpiPacket;
-
+module HplCC2420SpiP
+{
+	provides interface Resource;
+  
+	uses
+	{
+		interface Resource as SubResource;	// raw SPI resource
+		interface GeneralIO as SS;			// Slave set line
+	}
 }
 
-implementation {
+implementation
+{
+	async command error_t Resource.request()
+	{
+		return call SubResource.request();
+	}
 
-  components Atm128SpiC, HplCC2420SpiP, HplAtm128GeneralIOC as IO;
+	async command error_t Resource.immediateRequest()
+	{
+		error_t error = call SubResource.immediateRequest();
+		if( error == SUCCESS )
+		{
+			call SS.makeOutput();
+			call SS.clr();
+		}
+		return error;
+	}
 
-  Init = Atm128SpiC;
-  Resource = HplCC2420SpiP;
-  HplCC2420SpiP.SubResource -> Atm128SpiC.Resource[ unique("Atm128SpiC.Resource") ];
-  HplCC2420SpiP.SS -> IO.PortB0;  // Slave set line
-  SpiByte = Atm128SpiC;
-  SpiPacket = Atm128SpiC;
+	event void SubResource.granted()
+	{
+		call SS.makeOutput();
+		call SS.clr();
 
+		signal Resource.granted();
+	}
+	
+	async command error_t Resource.release()
+	{
+		if( call SubResource.isOwner() )
+			call SS.set();
+
+		return call SubResource.release();
+	}
+
+	async command bool Resource.isOwner()
+	{
+		return call SubResource.isOwner();
+	}
 }

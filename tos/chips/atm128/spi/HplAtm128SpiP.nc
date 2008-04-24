@@ -1,4 +1,4 @@
-/// $Id: HplAtm128SpiP.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+/// $Id: HplAtm128SpiP.nc,v 1.5 2008-04-24 22:31:25 mmaroti Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -80,10 +80,9 @@ implementation {
     call MOSI.makeOutput();
     call MISO.makeInput();
     call SCK.makeOutput();
-    call SS.makeOutput();
     call SPI.setMasterBit(TRUE);
-    call SS.clr();
   }
+
   async command void SPI.initSlave() {
     call MISO.makeOutput();
     call MOSI.makeInput();
@@ -93,7 +92,7 @@ implementation {
   }
   
   async command void SPI.sleep() {
-    call SS.set();
+//    call SS.set();	// why was this needed?
   }
   
   async command uint8_t SPI.read()        { return SPDR; }

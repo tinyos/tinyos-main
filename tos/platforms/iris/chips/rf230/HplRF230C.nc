@@ -49,8 +49,6 @@ implementation
 	HplRF230P.PortCLKM -> IO.PortD6;
 	HplRF230P.PortIRQ -> IO.PortD4;
 	
-	// TODO: Ask why the HplAtm128SpiC does SlaveSelect via PortB0
-	// TODO: Remove the unused started field from Atm128SpiP
 	components Atm128SpiC as SpiC;
 	SpiResource = SpiC.Resource[unique("Atm128SpiC.Resource")];
 	SpiByte = SpiC;
