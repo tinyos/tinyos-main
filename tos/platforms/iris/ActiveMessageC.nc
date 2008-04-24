@@ -36,6 +36,7 @@ configuration ActiveMessageC
 		interface PacketAcknowledgements;
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketTimeStamp<TMicro, uint16_t>;
+		interface LowPowerListening;
 		interface PacketLastTouch;
 	}
 }
@@ -55,4 +56,5 @@ implementation
 	PacketLinkQuality = MAC;
 	PacketTimeStamp = MAC;
 	PacketLastTouch = MAC;
+	LowPowerListening = MAC;
 }

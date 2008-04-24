@@ -1,4 +1,4 @@
-// $Id: AntiTheftRootAppC.nc,v 1.5 2007-11-19 17:21:20 sallai Exp $
+// $Id: AntiTheftRootAppC.nc,v 1.6 2008-04-24 21:15:51 mmaroti Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -29,7 +29,7 @@ implementation
 #elif defined(PLATFORM_MICAZ)
   components CC2420ActiveMessageC as Radio;
 #elif defined(PLATFORM_IRIS)
-  components DummyLPLMacC as Radio;
+  components ActiveMessageC as Radio;
 #else
 #error "The AntiTheft application is only supported for mica2, micaz and iris nodes"
 #endif
