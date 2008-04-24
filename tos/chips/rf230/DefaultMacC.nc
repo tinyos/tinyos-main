@@ -68,7 +68,11 @@ implementation
 	RF230LayerC.lastTouch -> DefaultPacketC.lastTouch;
 
 	components ActiveMessageLayerC;
+#if defined(LOW_POWER_LISTENING)
 	components LowPowerListeningLayerC;
+#else	
+	components new DummyLayerC() as LowPowerListeningLayerC;
+#endif	
 	components MessageBufferLayerC;
 	components UniqueLayerC;
 	components TrafficMonitorLayerC;
