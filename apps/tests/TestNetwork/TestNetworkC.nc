@@ -7,7 +7,7 @@
  * See TEP118: Dissemination and TEP 119: Collection for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.8 $ $Date: 2007-09-14 18:48:51 $
+ * @version $Revision: 1.9 $ $Date: 2008-04-28 04:29:37 $
  */
 
 #include <Timer.h>
@@ -142,7 +142,7 @@ implementation {
     dbg("TestNetworkC", "Received packet at %s from node %hhu.\n", sim_time_string(), call CollectionPacket.getOrigin(msg));
     call Leds.led1Toggle();    
     if (!call Pool.size() <= (TEST_NETWORK_QUEUE_SIZE < 4)? 1:3)  {
-      call CtpCongestion.setClientCongested(TRUE);
+      //      call CtpCongestion.setClientCongested(TRUE);
     }
     if (!call Pool.empty() && call Queue.size() < call Queue.maxSize()) {
       message_t* tmp = call Pool.get();
@@ -183,7 +183,7 @@ implementation {
       post uartEchoTask();
     } 
     else {
-        call CtpCongestion.setClientCongested(FALSE);
+      //        call CtpCongestion.setClientCongested(FALSE);
     }
   }
 
