@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.11 2008-02-09 05:45:10 gnawali Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.12 2008-04-28 04:28:36 gnawali Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-02-09 05:45:10 $
+ *  @date   $Date: 2008-04-28 04:28:36 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -716,9 +716,9 @@ implementation {
     }
 
     // NB: at this point, we have a resource acquistion problem.
-    // Trigger an immediate route update, log the event, and drop the
+    // Log the event, and drop the
     // packet on the floor.
-    call CtpInfo.triggerImmediateRouteUpdate();
+
     call CollectionDebug.logEvent(NET_C_FE_SEND_QUEUE_FULL);
     return m;
   }
@@ -801,8 +801,9 @@ implementation {
 
     // Check for the pull bit (P) [TEP123] and act accordingly.  This
     // check is made for all packets, not just ones addressed to us.
-    if (call CtpPacket.option(msg, CTP_OPT_PULL))
+    if (call CtpPacket.option(msg, CTP_OPT_PULL)) {
       call CtpInfo.triggerRouteUpdate();
+    }
 
     call CtpInfo.setNeighborCongested(proximalSrc, call CtpPacket.option(msg, CTP_OPT_ECN));
     return signal Snoop.receive[call CtpPacket.getType(msg)] 
