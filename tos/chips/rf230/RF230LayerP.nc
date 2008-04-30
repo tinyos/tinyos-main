@@ -235,7 +235,6 @@ implementation
 
 	event void SpiResource.granted()
 	{
-		// TODO: this should not be here, see my comment in HplRF230C.nc
 		call SELN.makeOutput();
 		call SELN.set();
 
@@ -255,7 +254,6 @@ implementation
 
 		if( call SpiResource.immediateRequest() == SUCCESS )
 		{
-			// TODO: this should not be here, see my comment in HplRF230C.nc
 			call SELN.makeOutput();
 			call SELN.set();
 
