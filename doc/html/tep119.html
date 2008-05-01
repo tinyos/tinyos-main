@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:57:59 $
-:version: $Revision: 1.11 $
+:date: $Date: 2008-05-01 20:18:50 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -374,12 +374,11 @@ there is only one collection infrastructure, <em>i.e.</em>, all roots in this
 set active at the same time are part of the same infrastructure.</p>
 <p>A node is configured to become a root by using the RootControl
 interface. RootControl.setRoot() MUST make the current node a root of
-the the collection infrastructure. RootControl.unsetRoot() MUST
-make the current root no longer a root in the collection infrastructure.
-Both calls are idempotent.
-RootControl.setRoot() MAY be called on a node that is already a root, to
-no effect. RootControl.unsetRoot() MAY be called on a node that is
-not a root:</p>
+the collection infrastructure. RootControl.unsetRoot() MUST make
+the current root no longer a root in the collection infrastructure.
+Both calls are idempotent.  RootControl.setRoot() MAY be called on a
+node that is already a root, to no effect. RootControl.unsetRoot() MAY
+be called on a node that is not a root:</p>
 <pre class="literal-block">
 interface RootControl {
   command error_t setRoot();
@@ -387,6 +386,10 @@ interface RootControl {
   command bool isRoot();
 }
 </pre>
+<p>Both commands MUST return SUCCESS if the node is now in the specified
+state, and FAIL otherwise. For example, if a node is already a root
+and an application calls RootControl.setRoot(), the call will
+return SUCCESS.</p>
 <p>The collection infrastructure can be multiplexed among independent
 applications, by means of a <em>collection identifier</em>. It is important
 to note that the <em>data</em> traffic in the protocol is multiplexed,
@@ -404,9 +407,22 @@ snoopers use the Receive interface [<a class="reference" href="#id1">1</a>] to r
 message. The collection identifier is specified as a parameter
 to Receive during instantiation.</p>
 <p>The nodes can process a packet that are in transit. These in-network
-<em>processors</em> use the Intercept interface [<a class="reference" href="#id1">1</a>] to receive and update
-a packet. The collection identifier is specified as a parameter
-to Intercept during instantiation.</p>
+<em>processors</em> use the Intercept interface to receive
+and update a packet. The collection identifier is specified as a parameter
+to Intercept during instantiation. The Intercept interface has this
+signature:</p>
+<pre class="literal-block">
+interface Intercept {
+  event bool forward(message_t* msg, void* payload, uint8_t len);
+}
+</pre>
+<p>Intercept has a single event, Intercept.forward(). A collection
+service SHOULD signal this event when it receives a packet to forward.
+If the return value of the event is FALSE, then the collection layer
+MUST NOT forward the packet. This interface allows a higher layer
+to inspect the internals of a packet and possibly suppress it if
+it is unnecessary or if its contents can be aggregated into an
+existing packet.</p>
 </div>
 <div class="section">
 <h1><a id="collection-services" name="collection-services">3 Collection Services</a></h1>
@@ -480,7 +496,7 @@ based on its collection ID and contents.</p>
 <div class="section">
 <h1><a id="implementation" name="implementation">4 Implementation</a></h1>
 <p>An implementation of this TEP can be found in
-<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/ctp</span></tt> and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/le</span></tt>, in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/ctp</span></tt> and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/4bitle</span></tt>, in
 the CTP protocol. It is beyond the scope of this document to fully
 describe CTP, but we outline its main components. CTP will be
 described in an upcoming TEP [<a class="reference" href="#id2">2</a>].  This implementation is a
@@ -657,6 +673,17 @@ QEntryPool</li>
 </ul>
 </blockquote>
 </div>
+</div>
+<div class="section">
+<h1><a id="multihoplqi" name="multihoplqi">4.4 MultihopLqi</a></h1>
+<p>There is another implementation of collection in <tt class="docutils literal"><span class="pre">tos/lib/net/lqi</span></tt>.
+Its software structure is similar, with the exception that it does
+not have a separate link estimator. MultihopLqi only works on
+platforms that have a CC2420 radio, as it uses a special piece
+of physical layer data the radio provides (the LQI value).
+The three major components of the MultihopLqi implementation
+are the modules LqiForwardingEngineP and  LqiRoutingEngineP, as
+well as the configuration MultihopLqiP.</p>
 </div>
 <div class="section">
 <h1><a id="author-addresses" name="author-addresses">5. Author Addresses</a></h1>

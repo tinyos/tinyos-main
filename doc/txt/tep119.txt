@@ -93,18 +93,22 @@ set active at the same time are part of the same infrastructure.
 
 A node is configured to become a root by using the RootControl
 interface. RootControl.setRoot() MUST make the current node a root of
-the the collection infrastructure. RootControl.unsetRoot() MUST
-make the current root no longer a root in the collection infrastructure.
-Both calls are idempotent.
-RootControl.setRoot() MAY be called on a node that is already a root, to
-no effect. RootControl.unsetRoot() MAY be called on a node that is
-not a root::
+the collection infrastructure. RootControl.unsetRoot() MUST make
+the current root no longer a root in the collection infrastructure.
+Both calls are idempotent.  RootControl.setRoot() MAY be called on a
+node that is already a root, to no effect. RootControl.unsetRoot() MAY
+be called on a node that is not a root::
 
   interface RootControl {
     command error_t setRoot();
     command error_t unsetRoot();
     command bool isRoot();
   }
+
+Both commands MUST return SUCCESS if the node is now in the specified
+state, and FAIL otherwise. For example, if a node is already a root
+and an application calls RootControl.setRoot(), the call will
+return SUCCESS.
 
 The collection infrastructure can be multiplexed among independent
 applications, by means of a *collection identifier*. It is important
@@ -127,9 +131,23 @@ message. The collection identifier is specified as a parameter
 to Receive during instantiation.
 
 The nodes can process a packet that are in transit. These in-network
-*processors* use the Intercept interface [1_] to receive and update
-a packet. The collection identifier is specified as a parameter
-to Intercept during instantiation.
+*processors* use the Intercept interface to receive
+and update a packet. The collection identifier is specified as a parameter
+to Intercept during instantiation. The Intercept interface has this
+signature:: 
+
+  interface Intercept {
+    event bool forward(message_t* msg, void* payload, uint8_t len);
+  }
+
+Intercept has a single event, Intercept.forward(). A collection
+service SHOULD signal this event when it receives a packet to forward.
+If the return value of the event is FALSE, then the collection layer
+MUST NOT forward the packet. This interface allows a higher layer
+to inspect the internals of a packet and possibly suppress it if
+it is unnecessary or if its contents can be aggregated into an
+existing packet.
+
 
 3 Collection Services
 ====================================================================
@@ -214,7 +232,7 @@ based on its collection ID and contents.
 ====================================================================
 
 An implementation of this TEP can be found in
-``tinyos-2.x/tos/lib/net/ctp`` and ``tinyos-2.x/tos/lib/net/le``, in
+``tinyos-2.x/tos/lib/net/ctp`` and ``tinyos-2.x/tos/lib/net/4bitle``, in
 the CTP protocol. It is beyond the scope of this document to fully
 describe CTP, but we outline its main components. CTP will be
 described in an upcoming TEP [2_].  This implementation is a
@@ -400,6 +418,18 @@ broken up into a few groups of functionality:
   * Queue and buffer management: SendQueue, MessagePool,
     QEntryPool
   * Packet timing: Random, RetxmitTimer
+
+4.4 MultihopLqi
+====================================================================
+
+There is another implementation of collection in ``tos/lib/net/lqi``.
+Its software structure is similar, with the exception that it does
+not have a separate link estimator. MultihopLqi only works on
+platforms that have a CC2420 radio, as it uses a special piece
+of physical layer data the radio provides (the LQI value).
+The three major components of the MultihopLqi implementation
+are the modules LqiForwardingEngineP and  LqiRoutingEngineP, as
+well as the configuration MultihopLqiP.
 
 
 5. Author Addresses
