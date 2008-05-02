@@ -18,27 +18,71 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  */
-
-/**
- * This is the configuration for RandomMlcgC, a 
- * multiplicative linear congruential generator. 
+/** This code is a fast implementation of the Park-Miller Minimal Standard 
+ *  Generator for pseudo-random numbers.  It uses the 32 bit multiplicative 
+ *  linear congruential generator, 
  *
- * @author  Barbara Hohlt
- * @author  Philip Levis
- * @date    March 1 2005
+ *		S' = (A x S) mod (2^31 - 1) 
+ *
+ *  for A = 16807.
+ *
+ *
+ * @author Barbara Hohlt 
+ * @date   March 1 2005
  */
 
-configuration RandomMlcgC {
+module RandomMlcgC {
   provides interface Init;
   provides interface ParameterInit<uint16_t> as SeedInit;
-  provides interface Random as Random;
+  provides interface Random;
 }
+implementation
+{
+    uint32_t seed ;
 
-implementation {
-  components RandomMlcgP;
+  /* Initialize the seed from the ID of the node */
+  command error_t Init.init() {
+    atomic  seed = (uint32_t)(TOS_NODE_ID + 1);
+    
+    return SUCCESS;
+  }
 
-  Init = RandomMlcgP;
-  SeedInit = RandomMlcgP;
-  Random = RandomMlcgP;
+  /* Initialize with 16-bit seed */ 
+  command error_t SeedInit.init(uint16_t s) {
+    atomic  seed = (uint32_t)(s + 1);
+    
+    return SUCCESS;
+  }
 
-} 
+  /* Return the next 32 bit random number */
+  async command uint32_t Random.rand32() {
+    uint32_t mlcg,p,q;
+    uint64_t tmpseed;
+    atomic
+      {
+	tmpseed =  (uint64_t)33614U * (uint64_t)seed;
+	q = tmpseed; 	/* low */
+	q = q >> 1;
+	p = tmpseed >> 32 ;		/* hi */
+	mlcg = p + q;
+        if (mlcg & 0x80000000) { 
+	  mlcg = mlcg & 0x7FFFFFFF;
+	  mlcg++;
+	}
+	seed = mlcg;
+      }
+    return mlcg; 
+  }
+
+  /* Return low 16 bits of next 32 bit random number */
+  async command uint16_t Random.rand16() {
+    return (uint16_t)call Random.rand32();
+  }
+
+#if 0
+ /* Return high 16 bits of 32 bit number */
+ inline uint16_t getHigh16(uint32_t num) {
+    return num >> 16;
+ }
+#endif
+}

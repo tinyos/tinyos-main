@@ -1,3 +1,5 @@
+// $Id: RandomLfsrC.nc,v 1.3 2008-05-02 19:54:15 idgay Exp $
+
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
@@ -25,30 +27,65 @@
  * file. If you do not find these files, copies can be found by writing to
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
+ */
+
+/*
  *
- * Date last modified:  6/25/02
+ * Authors:		Alec Woo, David Gay, Philip Levis
+ * Date last modified:  8/8/05
+ *
  */
 
 /**
  * This is a 16 bit Linear Feedback Shift Register pseudo random number
- * generator. It is faster than the MLCG generator but does not generate
- * nearly as good random numbers.
+   generator. It is faster than the MLCG generator, but the numbers generated
+ * have less randomness.
  *
- * @author Philip Levis
- * @author David Gay
  * @author Alec Woo
- * @date   Jan 20 2005
+ * @author David Gay
+ * @author Philip Levis
+ * @date   August 8 2005
  */
 
-configuration RandomLfsrC
+module RandomLfsrC
 {
   provides interface Init;
   provides interface Random;
 }
 implementation
 {
-  components RandomLfsrP;
+  uint16_t shiftReg;
+  uint16_t initSeed;
+  uint16_t mask;
 
-  Init = RandomLfsrP;
-  Random = RandomLfsrP;
+  /* Initialize the seed from the ID of the node */
+  command error_t Init.init() {
+    atomic {
+      shiftReg = 119 * 119 * (TOS_NODE_ID + 1);
+      initSeed = shiftReg;
+      mask = 137 * 29 * (TOS_NODE_ID + 1);
+    }
+    return SUCCESS;
+  }
+
+  /* Return the next 16 bit random number */
+  async command uint16_t Random.rand16() {
+    bool endbit;
+    uint16_t tmpShiftReg;
+    atomic {
+      tmpShiftReg = shiftReg;
+      endbit = ((tmpShiftReg & 0x8000) != 0);
+      tmpShiftReg <<= 1;
+      if (endbit) 
+	tmpShiftReg ^= 0x100b;
+      tmpShiftReg++;
+      shiftReg = tmpShiftReg;
+      tmpShiftReg = tmpShiftReg ^ mask;
+    }
+    return tmpShiftReg;
+  }
+
+  async command uint32_t Random.rand32() {
+    return (uint32_t)call Random.rand16() << 16 | call Random.rand16();
+  }
 }
