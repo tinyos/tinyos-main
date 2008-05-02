@@ -34,7 +34,7 @@
  * TEP103.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:14 $
+ * @version $Revision: 1.5 $ $Date: 2008-05-02 19:50:00 $
  */
 
 #include "Storage.h"
@@ -91,11 +91,10 @@ interface BlockWrite {
   event void eraseDone(error_t error);
 
   /**
-   * Initiate a sync operation and finialize any additional writes to
-   * the volume. A sync operation must be issued to ensure that data is
-   * stored in non-volatile storage. On SUCCES, the
-   * <code>syncDone</code> event will signal completion of the
-   * operation.
+   * Initiate a sync operation to finalize writes to the volume. A
+   * sync operation must be issued to ensure that data is stored in
+   * non-volatile storage. On SUCCES, the <code>syncDone</code> event
+   * will signal completion of the operation.
    *
    * @return 
    *   <li>SUCCESS if the request was accepted, 
