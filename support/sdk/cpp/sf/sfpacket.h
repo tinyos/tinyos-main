@@ -66,8 +66,9 @@ public:
 
 /** member vars **/
 protected:
-    /* payload buffer */
-    char payloadBuffer[cMaxPacketLength];
+    /* internal buffer */
+    char buffer[cMaxPacketLength + 1];
+    
     /* length of byte buffer */
     int length;
     /* type */
@@ -92,6 +93,12 @@ public:
     /* returns length of buffer */
     int getLength() const;
 
+    /* return the length that shall be transmitted via TCP */
+    int getTcpLength() const;
+
+    /* return the payload of the TCP packet */
+    const char* getTcpPayload();
+    
     /* returns the seqno of this packet */
     int getSeqno() const;
 

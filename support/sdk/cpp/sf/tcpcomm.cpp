@@ -210,17 +210,9 @@ int TCPComm::writeFD(int fd, const char *buffer, int count, int *err)
 /* writes packet */
 bool TCPComm::writePacket(int pFD, SFPacket &pPacket)
 {
-    char len = pPacket.getLength();
+    int len = pPacket.getTcpLength();
     int err;
-    if (writeFD(pFD, &len, 1, &err) != 1)
-    {
-        return false;
-    }
-    if (writeFD(pFD, pPacket.getPayload(), len, &err) != len)
-    {
-        return false;
-    }
-    return true;
+    return (writeFD(pFD, pPacket.getTcpPayload(), len, &err) == len);
 }
 
 /* checks for correct version of SF protocol */

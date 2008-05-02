@@ -32,16 +32,14 @@
 
 #include "sfpacket.h"
 
-SFPacket::SFPacket(int pType, int pSeqno)
-{
+SFPacket::SFPacket(int pType, int pSeqno) {
     length = 0;
     seqno = pSeqno;
     type = pType;
 }
 
 // copy constructor
-SFPacket::SFPacket(const SFPacket &pPacket)
-{
+SFPacket::SFPacket(const SFPacket &pPacket) {
     length = pPacket.getLength();
     type = pPacket.getType();
     seqno = pPacket.getSeqno();
@@ -55,18 +53,15 @@ SFPacket::~SFPacket()
 
 const char* SFPacket::getPayload() const
 {
-    if ( ((type == SF_PACKET_ACK) || (type == SF_PACKET_NO_ACK)))
-    {
-        return payloadBuffer;
+    if(((type == SF_PACKET_ACK) || (type == SF_PACKET_NO_ACK))) {
+        return buffer + 1;
     }
-    else
-    {
+    else {
         return NULL;
     }
 }
 
-int SFPacket::getLength() const
-{
+int SFPacket::getLength() const {
     return length;
 }
 
@@ -85,10 +80,7 @@ bool SFPacket::setPayload(const char* pBuffer, uint8_t pLength)
     if ((pLength > 0) && (pLength < cMaxPacketLength) && ((type == SF_PACKET_ACK) || (type == SF_PACKET_NO_ACK)))
     {
         length = pLength;
-        for (int i=0; i < pLength; i++)
-        {
-            payloadBuffer[i] = *(pBuffer+i);
-        }
+        memcpy(buffer + 1, pBuffer, pLength);
         return true;
     }
     DEBUG("SFPACKET::setPayload : wrong packet length = " << static_cast<int>(pLength) << " or type = " << type)
@@ -114,29 +106,23 @@ int const SFPacket::getMaxPayloadLength()
 bool SFPacket::operator==(SFPacket const& pPacket)
 {
     bool retval=false;
-    if (!((pPacket.getType() != type) || (pPacket.getLength() != length) || pPacket.getSeqno() != seqno))
-    {
-        if ((type == SF_PACKET_ACK) || (type == SF_PACKET_NO_ACK))
-        {
-            const char* cmpBuffer = pPacket.getPayload();
-            if (cmpBuffer) {
-	        retval = true;
-                // compare buffers
-                for (int i=0; i < length; i++)
-                {
-                    if (payloadBuffer[i] != cmpBuffer[i])
-                    {
-                        i = length;
-                        retval = false;
-                    }
-                }
-	    }
-        }
-        else
-        {
-            retval = true;
+    if((pPacket.getType() == type) && (pPacket.getLength() == length) && (pPacket.getSeqno() == seqno)) {
+        if((type == SF_PACKET_ACK) || (type == SF_PACKET_NO_ACK)) {
+            retval = (memcmp(pPacket.getPayload(), getPayload(), length) == 0);
         }
     }
     return retval;
+}
+
+    /* return the length that shall be transmitted via TCP */
+int SFPacket::getTcpLength() const {
+    return length + 1;
+}
+
+/* return the payload of the TCP packet */
+const char* SFPacket::getTcpPayload() {
+    char l = length;
+    buffer[0] = l;
+    return buffer;
 }
 
