@@ -1,4 +1,4 @@
-/* $Id: QueueC.nc,v 1.4 2006-12-12 18:23:47 vlahan Exp $ */
+/* $Id: QueueC.nc,v 1.5 2008-05-02 19:52:48 idgay Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -35,7 +35,7 @@
  *
  *  @author Philip Levis
  *  @author Geoffrey Mainland
- *  @date   $Date: 2006-12-12 18:23:47 $
+ *  @date   $Date: 2008-05-02 19:52:48 $
  */
 
    
@@ -87,7 +87,7 @@ implementation {
     dbg("QueueC", "%s: size is %hhu\n", __FUNCTION__, size);
     if (!call Queue.empty()) {
       head++;
-      head %= QUEUE_SIZE;
+      if (head == QUEUE_SIZE) head = 0;
       size--;
       printQueue();
     }
@@ -99,7 +99,7 @@ implementation {
       dbg("QueueC", "%s: size is %hhu\n", __FUNCTION__, size);
       queue[tail] = newVal;
       tail++;
-      tail %= QUEUE_SIZE;
+      if (tail == QUEUE_SIZE) tail = 0;
       size++;
       printQueue();
       return SUCCESS;
