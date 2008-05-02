@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: sim.extra,v 1.9 2008-02-25 18:24:38 klueska Exp $
+#$Id: sim.extra,v 1.10 2008-05-02 20:40:35 idgay Exp $
 
 GCC=gcc
 GPP=g++
@@ -20,7 +20,7 @@ PYFILE     = $(TOSDIR)/lib/tossim/tossim_wrap.cxx
 PYOBJFILE  = $(BUILDDIR)/pytossim.o
 PYDIR      =/usr/include/python$(PYTHON_VERSION)
 SIMDIR     =$(TOSDIR)/lib/tossim
-XML        = app.xml
+XML        = build/app.xml
 DUMPTYPES = -fnesc-dump=components -fnesc-dump=variables -fnesc-dump=constants -fnesc-dump=typedefs -fnesc-dump=interfacedefs -fnesc-dump=tags
 
 ifeq ($(findstring cygwin, $(OSTYPE)),cygwin)
