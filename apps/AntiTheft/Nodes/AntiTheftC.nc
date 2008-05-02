@@ -1,4 +1,4 @@
-// $Id: AntiTheftC.nc,v 1.4 2007-09-13 23:10:19 scipio Exp $
+// $Id: AntiTheftC.nc,v 1.5 2008-05-02 19:55:26 idgay Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -13,6 +13,8 @@
  *
  * @author David Gay
  */
+#include "antitheft.h"
+
 module AntiTheftC
 {
   uses {
