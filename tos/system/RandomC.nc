@@ -32,7 +32,7 @@
 configuration RandomC {
   provides interface Init;
   provides interface ParameterInit<uint16_t> as SeedInit;
-  provides interface Random as Random;
+  provides interface Random;
 }
 
 implementation {
