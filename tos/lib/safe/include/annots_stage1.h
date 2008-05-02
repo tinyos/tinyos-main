@@ -1,7 +1,7 @@
 #ifndef ANNOTS_STAGE1_INCLUDED
 #define ANNOTS_STAGE1_INCLUDED
 
-#if NESC >= 130
+#if NESC >= 130 && defined(SAFE_TINYOS)
 
 struct @bound @deputy_scope() @macro("__DEPUTY_BOUND") { void *lo, *hi; }; 
 struct @count @deputy_scope() @macro("__DEPUTY_COUNT") { int n; }; 
