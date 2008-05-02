@@ -12,12 +12,13 @@ TinyOS 1.x usage:
 TinyOS 2.x: collect documentation from a program:
 .br
 \fBnesdoc\fR -o \fIdocumentation-directory\fR [\fB-preserve\fR]
-        [\fB-new\fR] [\fB-target=\fIplatform\fR] [\fB-topdir=\fIdirectory\fR]
-        [\fIncc-options\fR] \fIfiles...\fR
+       [\fB-new\fR] [\fB-quiet\fR] [\fB-target=\fIplatform\fR] [\fB-topdir=\fIdirectory\fR]
+       [\fIncc-options\fR] \fIfiles...\fR
 
 TinyOS 2.x: generate nesdoc HTML pages:
 .br
-\fBnesdoc\fR -o \fIdocumentation-directory\fR  [\fB-new\fR] [\fB-target=\fIplatform\fR] \fB-html\fR
+\fBnesdoc\fR -o \fIdocumentation-directory\fR \fB-html\fR
+       [\fB-new\fR] [\fB-quiet\fR] [\fB-target=\fIplatform\fR]
 
 .SH DESCRIPTION
 
@@ -67,6 +68,9 @@ Generate HTML pages for all the nesdoc information collected in
 \fIdocumentation-directory\fR.
 \fB-new\fR
 Force the use of the new nesdoc even when using a TinyOS 1.x source tree.
+.TP
+\fB-quiet\fR
+Don't print informational messages.
 .TP
 \fB-topdir=\fIdir\fR 
 Specify directory paths that should be stripped from the source file names

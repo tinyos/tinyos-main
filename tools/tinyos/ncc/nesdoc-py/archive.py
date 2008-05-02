@@ -54,13 +54,14 @@ def get1(x, tag):
   return check(xml_tagfind(x, tag))
 
 def usage():
-  print "Usage: %s [-t dir] [--topdir dir] [--preserve] [--app] repository" % argv[0]
+  print "Usage: %s [-t dir] [--topdir dir] [--preserve] [--app] [--quiet] repository" % argv[0]
   print "  where -t/--topdir specify prefixes to remove from file names"
   print "  to create nice, package-like names for interface and components"
   print "  (based on their full filename)."
   print "  If --preserve is specified, existing XML files are preserved."
   print "  If --app is specified, a page for this application is created in the"
   print "  current directory."
+  print "  If --quiet is specified, the program is less verbose."
   print "  The XML input is read from stdin."
 
 # Return package name for elem, or None if no valid name is found
@@ -103,10 +104,11 @@ def canonicalisedir(dirname):
     return dirname
 
 # option processing. See usage string for details.
-(opts, args) = getopt(argv[1:], "t:", [ "topdir=", "preserve", "app" ])
-topopts = filter(lambda (x): x[0] != "--preserve" and x[0] != "--app", opts)
+(opts, args) = getopt(argv[1:], "t:", [ "topdir=", "preserve", "app", "quiet" ])
+topopts = filter(lambda (x): x[0] != "--preserve" and x[0] != "--app" and x[0] != "--quiet", opts)
 preserve = filter(lambda(x): x[0] == "--preserve", opts) != []
 app = filter(lambda(x): x[0] == "--app", opts) != []
+quiet = filter(lambda(x): x[0] == "--quiet", opts) != []
 topdirs = map(lambda (x): canonicalisedir(x[1]), topopts)
 if len(args) != 1:
   usage()
@@ -215,7 +217,8 @@ for x in interfacedefs.getElementsByTagName("interfacedef"):
   filename = "interfaces/%s.xml" % nicename
   if preserve and os.path.exists(filename):
     continue
-  # print "interface %s (%s)" % (name, nicename)
+  if not quiet:
+    print "interface %s (%s)" % (name, nicename)
   doc = creator.createDocument(None, None, None)
   copy = x.cloneNode(True)
   doc.appendChild(copy)
@@ -233,8 +236,8 @@ for x in components.getElementsByTagName("component"):
     filename = "components/%s.xml" % nicename
     if preserve and os.path.exists(filename):
       continue
-    
-    # print "component %s (%s)" % (name, nicename)
+    if not quiet:
+      print "component %s (%s)" % (name, nicename)
     doc = creator.createDocument(None, None, None)
     # copy component and create its specification
     copy = x.cloneNode(True)

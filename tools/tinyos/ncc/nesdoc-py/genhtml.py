@@ -51,7 +51,13 @@ register_doctag("return", return_doctag)
 
 # Generate HTML files, and a global index for all interfaces and components
 # in the specified repository
-repository = argv[1]
+if argv[1] == "--quiet":
+  repository = argv[2]
+  quiet = True
+else:
+  repository = argv[1]
+  quiet = False
+
 try:
   chdir(repository)
   
@@ -75,14 +81,16 @@ except OSError:
 
 for intf in intffiles:
   if search("\\.xml$", intf):
-    #stderr.write("interface " + intf + "\n")
+    if not quiet:
+      stderr.write("interface " + intf + "\n")
     ixml = parse("interfaces/" + intf)
     generate_interface(ixml.documentElement)
     ixml.unlink()
 
 for comp in compfiles:
   if search("\\.xml$", comp):
-    #stderr.write("component " + comp + "\n")
+    if not quiet:
+      stderr.write("component " + comp + "\n")
     ixml = parse("components/" + comp)
     generate_component_graph(ixml.documentElement)
     generate_component(ixml.documentElement)

@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: docs.extra,v 1.4 2006-12-12 18:22:55 vlahan Exp $
+#$Id: docs.extra,v 1.5 2008-05-02 20:49:44 idgay Exp $
 
 # configure the base for the app dirs.  This is used to generate more
 # useful package names in the documentation.
@@ -23,13 +23,17 @@ ifeq ($(filter preserve,$(DOCS)),preserve)
 PFLAGS += -preserve
 endif
 
+ifeq ($(filter quiet,$(DOCS)),quiet)
+QUIET = -quiet
+endif
+
 BUILD_DEPS = docs_
 
 docs_: FORCE
 	@echo "    Making documentation for $(COMPONENT) on $(PLATFORM)"
         # first generate the xml files
-	nesdoc -o $(DOCDIR) $(NESDOC_FLAGS) $(PFLAGS) $(CFLAGS) $(COMPONENT).nc
+	nesdoc -o $(DOCDIR) $(NESDOC_FLAGS) $(PFLAGS) $(CFLAGS) $(QUIET) $(COMPONENT).nc
 ifneq ($(filter nohtml,$(DOCS)),nohtml)
         # generate html from the xml files
-	nesdoc -o $(DOCDIR) -html -target=$(PLATFORM) $(DOCS)
+	nesdoc -o $(DOCDIR) -html $(QUIET) -target=$(PLATFORM)
 endif
