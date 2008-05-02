@@ -1,4 +1,4 @@
-/// $Id: HplAtm128AdcP.nc,v 1.5 2006-12-12 18:23:03 vlahan Exp $
+/// $Id: HplAtm128AdcP.nc,v 1.6 2008-05-02 19:48:54 idgay Exp $
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
@@ -66,7 +66,6 @@ implementation {
   }
 
   // Individual bit manipulation. These all clear any pending A/D interrupt.
-  // It's not clear these are that useful...
   async command void HplAtm128Adc.enableAdc() {
     SET_BIT(ADCSRA, ADEN); 
     call McuPowerState.update();
