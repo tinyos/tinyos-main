@@ -24,7 +24,7 @@
  *
  *  @author Hu Siquan <husq@xbow.com>
  *
- *  $Id: MicDeviceP.nc,v 1.3 2007-03-14 04:14:13 pipeng Exp $
+ *  $Id: MicDeviceP.nc,v 1.4 2008-05-02 19:47:28 idgay Exp $
  */
 
 #include "mts300.h"
@@ -39,14 +39,14 @@ configuration MicDeviceP {
 implementation {
   components MicP, MicaBusC, HplAtm128GeneralIOC as Pins,
     HplAtm128InterruptC as IntPins,
-		new Atm128I2CMasterC() as I2CPot,
-		new TimerMilliC() as WarmupTimer,
+    new Atm128I2CMasterC() as I2CPot,
+    new TimerMilliC() as WarmupTimer,
     new RoundRobinArbiterC(UQ_MIC_RESOURCE) as Arbiter,
     new SplitControlPowerManagerC() as PowerManager;
 
   Resource = Arbiter;
-	Atm128AdcConfig = MicP;
-	MicSetting = MicP;
+  Atm128AdcConfig = MicP;
+  MicSetting = MicP;
 	
   PowerManager.ResourceDefaultOwner -> Arbiter;
   PowerManager.ArbiterInfo -> Arbiter;

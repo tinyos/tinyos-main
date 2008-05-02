@@ -24,7 +24,7 @@
  *
  *  @author Hu Siquan <husq@xbow.com> 
  *
- *  $Id: MicP.nc,v 1.3 2007-03-14 04:14:13 pipeng Exp $
+ *  $Id: MicP.nc,v 1.4 2008-05-02 19:47:28 idgay Exp $
  */
 
 #include "Timer.h"
@@ -37,9 +37,9 @@ module MicP
   provides interface Atm128AdcConfig as MicAtm128AdcConfig;
 
   uses interface Timer<TMilli>;
-	uses interface GeneralIO as MicPower;
-	uses interface GeneralIO as MicMuxSel;
-	uses interface MicaBusAdc as MicAdc;
+  uses interface GeneralIO as MicPower;
+  uses interface GeneralIO as MicMuxSel;
+  uses interface MicaBusAdc as MicAdc;
   uses interface I2CPacket<TI2CBasicAddr>;
   uses interface Resource as I2CResource;
   uses interface HplAtm128Interrupt as AlertInterrupt;
@@ -53,14 +53,13 @@ implementation
     call AlertInterrupt.disable();
     call MicPower.makeOutput();
     call MicPower.set();
-		call MicMuxSel.makeOutput();    
-		call MicMuxSel.clr();
+    call MicMuxSel.makeOutput();    
+    call MicMuxSel.clr();
 		
     call MicSetting.muxSel(1);  // Set the mux so that raw microhpone output is selected
     call MicSetting.gainAdjust(64);  // Set the gain of the microphone.
 
     call Timer.startOneShot(1200); 
-//    signal SplitControl.startDone(SUCCESS);
     return SUCCESS;
   }
 
@@ -79,33 +78,30 @@ implementation
   }
   
   /**
-  * Resource request
-  * 
-  */  
+   * Resource request
+   * 
+   */  
   event void I2CResource.granted()
   {
-    if ( call I2CPacket.write(0x3,TOS_MIC_POT_ADDR, 2, gainData) == SUCCESS)
-    {
-      return;
-    };
+    call I2CPacket.write(0x3,TOS_MIC_POT_ADDR, 2, gainData);
   }
 
   /**
-  * mic control
-  * 
-  */  
+   * mic control
+   * 
+   */  
   command error_t MicSetting.muxSel(uint8_t sel)
   {
     if (sel == 0)
-    {
-      call MicMuxSel.clr();
-      return SUCCESS;
-    }
+      {
+	call MicMuxSel.clr();
+	return SUCCESS;
+      }
     else if (sel == 1)
-    {
-      call MicMuxSel.set();
-      return SUCCESS;
-    }
+      {
+	call MicMuxSel.set();
+	return SUCCESS;
+      }
     return FAIL;
   }
   
@@ -123,9 +119,9 @@ implementation
   }
   
   /**
-  * mic interrupt control
-  * 
-  */
+   * mic interrupt control
+   * 
+   */
   async command error_t MicSetting.enable()
   {
     call AlertInterrupt.enable();
@@ -149,9 +145,9 @@ implementation
   }
   
   /**
-  *
-  *
-  */
+   *
+   *
+   */
   
   async command uint8_t MicAtm128AdcConfig.getChannel() 
   {
@@ -169,18 +165,16 @@ implementation
   }
   
   /**
-  * I2CPot2
-  * 
-  */
+   * I2CPot2
+   * 
+   */
   async event void I2CPacket.readDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data)
   {
-    return ;
   }
   
   async event void I2CPacket.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data)
   {
     call I2CResource.release();
-    return ;
   }
 }
 
