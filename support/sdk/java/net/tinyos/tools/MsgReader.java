@@ -93,7 +93,12 @@ public class MsgReader implements net.tinyos.message.MessageListener {
 	    Class c = Class.forName(className);
 	    Object packet = c.newInstance();
 	    Message msg = (Message)packet;
-	    v.addElement(msg);
+	    if (msg.amType() < 0) {
+		System.err.println(className + " does not have an AM type - ignored");
+	    }
+	    else {
+		v.addElement(msg);
+	    }
 	  }
 	  catch (Exception e) {
 	    System.err.println(e);
