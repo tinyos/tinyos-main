@@ -238,7 +238,7 @@ describe CTP, but we outline its main components. CTP will be
 described in an upcoming TEP [2_].  This implementation is a
 reference implementation, and is not the only possibility.  It
 consists of three major components, which are wired together to form
-a CollectionC: LinkEstimatorP, CtpTreeRoutingEngineP, and
+a CollectionC: LinkEstimatorP, CtpRoutingEngineP, and
 CtpForwardingEngineP. 
 
 This decomposition tries to encourage evolution of components and
@@ -251,25 +251,34 @@ forwarding policies, such as queueing and timing.
 --------------------------------------------------------------------
 
 LinkEstimatorP estimates the quality of link to or from each
-neighbor. Link estimation can be done in a variety of ways, and we
-do not impose one here. It is decoupled from the establishment of
-routes. There is a narrow interface -- LinkEstimator -- between the
-link estimator and the routing engine. The one requirement is that
-the quality returned is standardized. A smaller return value from
-LinkEstimator.getQuality(), LinkEstimator.getforwardQuality(),
-LinkEstimator.getReverseQuality() MUST imply that the link to the
+neighbor. In this TEP, we briefly describe the reference
+implementation in ''tinyos-2.x/tos/lib/4bitle'' and refer the readers
+to [3]_ for detailed description of the estimator.
+
+Link estimation is decoupled from the establishment of routes. There
+is a narrow interface -- LinkEstimator and CompareBit -- between the
+link estimator and the routing engine. The one requirement is that the
+quality returned is standardized. A smaller return value from
+LinkEstimator.getLinkQuality() MUST imply that the link to the
 neighbor is estimated to be of a higher quality than the one that
 results in a larger return value. The range of value SHOULD be
-[0,255] and the variation in link quality in that range SHOULD be
+[0,65535] and the variation in link quality in that range SHOULD be
 linear. Radio provided values such as LQI or RSI, beacon based link
 estimation to compute ETX, or their combination are some possible
-approaches to estimating link qualities. 
+approaches to estimating link qualities. The routing engine instructs
+LinkEstimatorP to insert the neighbor, through which a high quality
+path to the root can be constructed, into the neighbor table by
+returning TRUE when LinkEstimatorP signals Comparebit.shouldInsert()
+for the newly discovered neighbor.
 
 LinkEstimatorP MAY have its own control messages to compute
-bi-directional link qualities. LinkEstimatorP provides calls
-(txAck(), txNoAck(), and clearDLQ()) to update the link estimates
-based on successful or unsuccessful data transmission to the
-neighbors. 
+bi-directional link qualities. LinkEstimatorP provides calls (txAck(),
+txNoAck(), and clearDLQ()) to update the link estimates based on
+successful or unsuccessful data transmission to the
+neighbors. LinkEstimatorP uses the LinkPacketMetadata interface to
+determine if the channel was of high quality when a packet is received
+from a neighbor to consider the link to that neighbor for insertion
+into the neighbor table.
 
 The user of LinkEstimatorP can call insertNeighbor() to manually
 insert a node in the neighbor table, pinNeighbor() to prevent a
@@ -286,14 +295,24 @@ policy::
       interface LinkEstimator;
       interface Init;
       interface Packet;
-      interface LinkSrcPacket;
+      interface CompareBit;
+    }
+    uses {
+      interface AMSend;
+      interface AMPacket as SubAMPacket;
+      interface Packet as SubPacket;
+      interface Receive as SubReceive;
+      interface LinkPacketMetadata;
+      interface Random;
     }
   }
 
+  interface CompareBit {
+    event bool shouldInsert(message_t *msg, void* payload, uint8_t len, bool white_bit);
+  }
+
   interface LinkEstimator {
-    command uint8_t getLinkQuality(uint16_t neighbor);
-    command uint8_t getReverseQuality(uint16_t neighbor);
-    command uint8_t getForwardQuality(uint16_t neighbor);
+    command uint16_t getLinkQuality(uint16_t neighbor);
     command error_t insertNeighbor(am_addr_t neighbor);
     command error_t pinNeighbor(am_addr_t neighbor);
     command error_t unpinNeighbor(am_addr_t neighbor);
@@ -338,13 +357,13 @@ dynamically. CtpRoutingEngineP maintains multiple candidate next hops::
           interface Receive as BeaconReceive;
           interface LinkEstimator;
           interface AMPacket;
-          interface LinkSrcPacket;
           interface SplitControl as RadioControl;
           interface Timer<TMilli> as BeaconTimer;
           interface Timer<TMilli> as RouteTimer;
           interface Random;
           interface CollectionDebug;
           interface CtpCongestion;
+          interface Comparebit;
       }
   }
 
@@ -474,5 +493,7 @@ well as the configuration MultihopLqiP.
 ====================================================================
 
 .. [1] TEP 116: Packet Protocols
+
 .. [2] TEP 123: The Collection Tree Protocol (CTP) 
- 
+
+.. [3] Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis. "Four Bit Wireless Link Estimation." In Proceedings of the Sixth Workshop on Hot Topics in Networks (HotNets VI), November 2007
