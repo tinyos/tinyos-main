@@ -251,28 +251,29 @@ forwarding policies, such as queueing and timing.
 LinkEstimatorP estimates the quality of link to or from each
 neighbor. In this TEP, we briefly describe the reference
 implementation in ''tinyos-2.x/tos/lib/4bitle'' and refer the readers
-to [3]_ for detailed description of the estimator.
+to [3]_ for a detailed description of the estimator.
 
 Link estimation is decoupled from the establishment of routes. There
 is a narrow interface -- LinkEstimator and CompareBit -- between the
-link estimator and the routing engine. The one requirement is that the
-quality returned is standardized. A smaller return value from
-LinkEstimator.getLinkQuality() MUST imply that the link to the
-neighbor is estimated to be of a higher quality than the one that
-results in a larger return value. The range of value SHOULD be
-[0,65535] and the variation in link quality in that range SHOULD be
-linear. Radio provided values such as LQI or RSI, beacon based link
-estimation to compute ETX, or their combination are some possible
-approaches to estimating link qualities. The routing engine instructs
+link estimator and the routing engine. A smaller return value from
+LinkEstimator.getLinkQuality() implies that the link to the neighbor
+is estimated to be of a higher quality than the one that results in a
+larger return value. Radio provided values such as LQI or RSI, beacon
+based link estimation to compute ETX, or their combination are some
+possible approaches to estimating link qualities. LinkEstimatorP
+returns (ETX-1)*10 as the link quality. The routing engine instructs
 LinkEstimatorP to insert the neighbor, through which a high quality
 path to the root can be constructed, into the neighbor table by
 returning TRUE when LinkEstimatorP signals Comparebit.shouldInsert()
 for the newly discovered neighbor.
 
-LinkEstimatorP MAY have its own control messages to compute
-bi-directional link qualities. LinkEstimatorP provides calls (txAck(),
-txNoAck(), and clearDLQ()) to update the link estimates based on
-successful or unsuccessful data transmission to the
+LinkEstimatorP does not generate its own control messages to compute
+link qualities. When a user of LinkEstimatorP (CtpRoutingEngineP, for
+example) sends a packet using the Send interface provided by
+LinkEstimatorP, link estimation information is also sent with the
+packet as described in an upcoming TEP [4_]. LinkEstimatorP provides
+calls (txAck(), txNoAck(), and clearDLQ()) to update the link
+estimates based on successful or unsuccessful data transmission to the
 neighbors. LinkEstimatorP uses the LinkPacketMetadata interface to
 determine if the channel was of high quality when a packet is received
 from a neighbor to consider the link to that neighbor for insertion
@@ -328,16 +329,16 @@ policy::
 CtpRoutingEngineP is responsible for computing routes to the roots of a
 tree. In traditional networking terminology, this is part of the
 control plane of the network, and is does not directly forward any
-data packets, which is the responsibility of CtpForwardingEngine. 
+data packets, which is the responsibility of CtpForwardingEngineP. 
 The main interface between the two is UnicastNameFreeRouting.
 
-CtpRoutingEngineP uses the LinkEstimator interface to learn
-about the nodes in the neighbor table maintained by LinkEstimatorP and
-the quality of links to and from the neighbors. The routing protocol
-on which collection is implemented MUST be a tree-based routing
-protocol with a single or multiple roots. CtpRoutingEngineP 
-allows a node to be configured as a root or a non-root node
-dynamically. CtpRoutingEngineP maintains multiple candidate next hops::
+CtpRoutingEngineP uses the LinkEstimator interface to learn about the
+nodes in the neighbor table maintained by LinkEstimatorP and the
+quality of links to and from the neighbors. The routing protocol on
+which collection is implemented computes a routing tree with a single
+or multiple roots. CtpRoutingEngineP allows a node to be configured as
+a root or a non-root node dynamically. CtpRoutingEngineP maintains
+multiple candidate next hops::
 
   generic module CtpRoutingEngineP(uint8_t routingTableSize, 
                                    uint16_t minInterval, 
@@ -495,3 +496,5 @@ well as the configuration MultihopLqiP.
 .. [2] TEP 123: The Collection Tree Protocol (CTP) 
 
 .. [3] Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis. "Four Bit Wireless Link Estimation." In Proceedings of the Sixth Workshop on Hot Topics in Networks (HotNets VI), November 2007
+
+.. [4] TEP 124: The Link Estimation Exchange Protocol (LEEP)
