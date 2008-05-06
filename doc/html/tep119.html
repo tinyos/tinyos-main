@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-05-01 20:18:50 $
-:version: $Revision: 1.12 $
+:date: $Date: 2008-05-06 22:21:03 $
+:version: $Revision: 1.13 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -313,9 +313,9 @@ TEP 1.</p>
 <h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>The memo documents the interfaces, components, and semantics used by
 collection protocol in TinyOS 2.x. Collection provides a best-effort,
-multihop delivery of packets to the root of <em>a</em> tree. There may be
-multiple roots in a network, and in this case the semantics implemented
-are of <em>anycast</em> delivery to at least one of the roots. A node sending
+multihop delivery of packets to the root of a tree. There may be
+multiple tree roots in a network, and in this case the semantics
+are <em>anycast</em> delivery to at least one of the roots. A node sending
 a packet does not specify which root the packet is destined to.</p>
 </div>
 <div class="section">
@@ -358,52 +358,27 @@ neighbors.</li>
 from introducing interference for subsequent packets.</li>
 </ul>
 </blockquote>
-<p>The rest of this document describes a set of components and interfaces
-for a collection service outlined above.</p>
+<p>While collection protocols can take a wide range of approaches to
+address these challenges, the programming interface they provide is
+typically independent of these details. The rest of this document
+describes a set of components and interfaces for collection services.</p>
 </div>
 <div class="section">
 <h1><a id="collection-interfaces" name="collection-interfaces">2. Collection interfaces</a></h1>
 <p>A node can perform four different roles in collection: producer,
-consumer, snooper, and in-network processor. Depending on their role,
+snooper, in-network processor, and consumer. Depending on their role,
 the nodes use different interfaces to interact with the collection
 component.</p>
-<p>A consumer is a root of a tree. The set of all roots and the paths that
-lead to them form the collection routing infrastructure in the network.
-For any connected set of nodes implementing the collection protocol
-there is only one collection infrastructure, <em>i.e.</em>, all roots in this
-set active at the same time are part of the same infrastructure.</p>
-<p>A node is configured to become a root by using the RootControl
-interface. RootControl.setRoot() MUST make the current node a root of
-the collection infrastructure. RootControl.unsetRoot() MUST make
-the current root no longer a root in the collection infrastructure.
-Both calls are idempotent.  RootControl.setRoot() MAY be called on a
-node that is already a root, to no effect. RootControl.unsetRoot() MAY
-be called on a node that is not a root:</p>
-<pre class="literal-block">
-interface RootControl {
-  command error_t setRoot();
-  command error_t unsetRoot();
-  command bool isRoot();
-}
-</pre>
-<p>Both commands MUST return SUCCESS if the node is now in the specified
-state, and FAIL otherwise. For example, if a node is already a root
-and an application calls RootControl.setRoot(), the call will
-return SUCCESS.</p>
 <p>The collection infrastructure can be multiplexed among independent
 applications, by means of a <em>collection identifier</em>. It is important
 to note that the <em>data</em> traffic in the protocol is multiplexed,
 while the <em>control</em> traffic is not.</p>
 <p>The nodes that generate data to be sent to the root are <em>producers</em>.
-The producers use the Send interface [<a class="reference" href="#id1">1</a>] to send data to the root
+The producers use the Send interface [<a class="reference" href="#id2">1</a>] to send data to the root
 of the collection tree.  The collection identifier is specified as a
 parameter to Send during instantiation.</p>
-<p>Root nodes that receive data from the network are <em>consumers</em>. The
-consumers use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a message
-delivered by collection. The collection identifier is specified
-as a parameter to Receive during instantiation.</p>
 <p>The nodes that overhear messages in transit are <em>snoopers</em>. The
-snoopers use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a snooped
+snoopers use the Receive interface [<a class="reference" href="#id2">1</a>] to receive a snooped
 message. The collection identifier is specified as a parameter
 to Receive during instantiation.</p>
 <p>The nodes can process a packet that are in transit. These in-network
@@ -423,6 +398,30 @@ MUST NOT forward the packet. This interface allows a higher layer
 to inspect the internals of a packet and possibly suppress it if
 it is unnecessary or if its contents can be aggregated into an
 existing packet.</p>
+<p>Root nodes that receive data from the network are <em>consumers</em>. The
+consumers use the Receive interface [<a class="reference" href="#id2">1</a>] to receive a message
+delivered by collection. The collection identifier is specified
+as a parameter to Receive during instantiation.</p>
+<p>The set of all roots and the paths that
+lead to them form the collection routing infrastructure in the network.
+For any connected set of nodes implementing the collection protocol
+there is only one collection infrastructure, <em>i.e.</em>, all roots in this
+set active at the same time are part of the same infrastructure.</p>
+<p>The RootControl interface configures whether a node is a
+root:</p>
+<pre class="literal-block">
+interface RootControl {
+  command error_t setRoot();
+  command error_t unsetRoot();
+  command bool isRoot();
+}
+</pre>
+<p>Both commands MUST return SUCCESS if the node is now in the specified
+state, and FAIL otherwise. For example, if a node is already a root
+and an application calls RootControl.setRoot(), the call will
+return SUCCESS. If setRoot() returns SUCCESS, then a subsequent call
+to isRoot() MUST return TRUE. If unsetRoot() returns SUCCESS, then
+a subsequent call to isRoot() MUST return FALSE.</p>
 </div>
 <div class="section">
 <h1><a id="collection-services" name="collection-services">3 Collection Services</a></h1>
@@ -445,10 +444,10 @@ configuration CollectionC {
   }
 }
 </pre>
-<p>CollectionC MAY have additional interfaces, but they MUST have
-default functions on all outgoing invocations (commands for uses,
-events for provides) of those interfaces so that it can operate
-properly if they are not wired.</p>
+<p>CollectionC MAY have additional interfaces. These additional
+interfaces MUST have default functions on all outgoing invocations
+(commands for uses, events for provides) of those interfaces so that
+it can operate properly if they are not wired.</p>
 <p>Components SHOULD NOT wire to CollectionC.Send. The generic
 component CollectionSenderC (described in section 3.1) provides
 a virtualized sending interface.</p>
@@ -459,7 +458,7 @@ different am_id_t values represent different protocols operating on
 top of active messages. All packets sent with a particular
 collection_id_t generally have the same payload format, so that
 snoopers, intercepters, and receivers can parse it properly.</p>
-<p>Receive.receive MUST NOT be signaled on non-root
+<p>ColletionC MUST NOT signal Receive.receive on non-root
 nodes. CollectionC MAY signal Receive.receive on a root node when
 a data packet successfully arrives at that node. If a root node calls
 Send, CollectionC MUST treat it as it if were a received packet.
@@ -473,7 +472,7 @@ is supposed to forward, it MAY signal Snoop.receive.</p>
 <p>RootControl allows a node to be made a collection tree root.
 CollectionC SHOULD NOT configure a node as a root by default.</p>
 <p>Packet and CollectionPacket allow components to access collection
-data packet fields [<a class="reference" href="#id1">1</a>].</p>
+data packet fields [<a class="reference" href="#id2">1</a>].</p>
 <div class="section">
 <h2><a id="collectionsenderc" name="collectionsenderc">3.1 CollectionSenderC</a></h2>
 <p>Collection has a virtualized sending abstraction, the generic
@@ -487,7 +486,7 @@ generic configuration CollectionSenderC(collection_id_t collectid) {
 }
 </pre>
 <p>This abstraction follows a similar virtualization approach to
-AMSenderC [<a class="reference" href="#id1">1</a>], except that it is parameterized by a collection_id_t
+AMSenderC [<a class="reference" href="#id2">1</a>], except that it is parameterized by a collection_id_t
 rather than an am_id_t. As with am_id_t, every collection_id_t SHOULD
 have a single packet format, so that receivers can parse a packet
 based on its collection ID and contents.</p>
@@ -499,10 +498,10 @@ based on its collection ID and contents.</p>
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/ctp</span></tt> and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/4bitle</span></tt>, in
 the CTP protocol. It is beyond the scope of this document to fully
 describe CTP, but we outline its main components. CTP will be
-described in an upcoming TEP [<a class="reference" href="#id2">2</a>].  This implementation is a
+described in an upcoming TEP [<a class="reference" href="#id3">2</a>].  This implementation is a
 reference implementation, and is not the only possibility.  It
 consists of three major components, which are wired together to form
-a CollectionC: LinkEstimatorP, CtpTreeRoutingEngineP, and
+a CollectionC: LinkEstimatorP, CtpRoutingEngineP, and
 CtpForwardingEngineP.</p>
 <p>This decomposition tries to encourage evolution of components and
 ease of use through modularization. Neighbor management and link
@@ -512,24 +511,32 @@ forwarding policies, such as queueing and timing.</p>
 <div class="section">
 <h2><a id="linkestimatorp" name="linkestimatorp">4.1 LinkEstimatorP</a></h2>
 <p>LinkEstimatorP estimates the quality of link to or from each
-neighbor. Link estimation can be done in a variety of ways, and we
-do not impose one here. It is decoupled from the establishment of
-routes. There is a narrow interface -- LinkEstimator -- between the
-link estimator and the routing engine. The one requirement is that
-the quality returned is standardized. A smaller return value from
-LinkEstimator.getQuality(), LinkEstimator.getforwardQuality(),
-LinkEstimator.getReverseQuality() MUST imply that the link to the
+neighbor. In this TEP, we briefly describe the reference
+implementation in ''tinyos-2.x/tos/lib/4bitle'' and refer the readers
+to <a class="footnote-reference" href="#id4" id="id1" name="id1">[3]</a> for detailed description of the estimator.</p>
+<p>Link estimation is decoupled from the establishment of routes. There
+is a narrow interface -- LinkEstimator and CompareBit -- between the
+link estimator and the routing engine. The one requirement is that the
+quality returned is standardized. A smaller return value from
+LinkEstimator.getLinkQuality() MUST imply that the link to the
 neighbor is estimated to be of a higher quality than the one that
 results in a larger return value. The range of value SHOULD be
-[0,255] and the variation in link quality in that range SHOULD be
+[0,65535] and the variation in link quality in that range SHOULD be
 linear. Radio provided values such as LQI or RSI, beacon based link
 estimation to compute ETX, or their combination are some possible
-approaches to estimating link qualities.</p>
+approaches to estimating link qualities. The routing engine instructs
+LinkEstimatorP to insert the neighbor, through which a high quality
+path to the root can be constructed, into the neighbor table by
+returning TRUE when LinkEstimatorP signals Comparebit.shouldInsert()
+for the newly discovered neighbor.</p>
 <p>LinkEstimatorP MAY have its own control messages to compute
-bi-directional link qualities. LinkEstimatorP provides calls
-(txAck(), txNoAck(), and clearDLQ()) to update the link estimates
-based on successful or unsuccessful data transmission to the
-neighbors.</p>
+bi-directional link qualities. LinkEstimatorP provides calls (txAck(),
+txNoAck(), and clearDLQ()) to update the link estimates based on
+successful or unsuccessful data transmission to the
+neighbors. LinkEstimatorP uses the LinkPacketMetadata interface to
+determine if the channel was of high quality when a packet is received
+from a neighbor to consider the link to that neighbor for insertion
+into the neighbor table.</p>
 <p>The user of LinkEstimatorP can call insertNeighbor() to manually
 insert a node in the neighbor table, pinNeighbor() to prevent a
 neighbor from being evicted, and unpinNeighbor() to restore eviction
@@ -545,14 +552,24 @@ LinkEstimatorP {
     interface LinkEstimator;
     interface Init;
     interface Packet;
-    interface LinkSrcPacket;
+    interface CompareBit;
+  }
+  uses {
+    interface AMSend;
+    interface AMPacket as SubAMPacket;
+    interface Packet as SubPacket;
+    interface Receive as SubReceive;
+    interface LinkPacketMetadata;
+    interface Random;
   }
 }
 
+interface CompareBit {
+  event bool shouldInsert(message_t *msg, void* payload, uint8_t len, bool white_bit);
+}
+
 interface LinkEstimator {
-  command uint8_t getLinkQuality(uint16_t neighbor);
-  command uint8_t getReverseQuality(uint16_t neighbor);
-  command uint8_t getForwardQuality(uint16_t neighbor);
+  command uint16_t getLinkQuality(uint16_t neighbor);
   command error_t insertNeighbor(am_addr_t neighbor);
   command error_t pinNeighbor(am_addr_t neighbor);
   command error_t unpinNeighbor(am_addr_t neighbor);
@@ -594,13 +611,13 @@ generic module CtpRoutingEngineP(uint8_t routingTableSize,
         interface Receive as BeaconReceive;
         interface LinkEstimator;
         interface AMPacket;
-        interface LinkSrcPacket;
         interface SplitControl as RadioControl;
         interface Timer&lt;TMilli&gt; as BeaconTimer;
         interface Timer&lt;TMilli&gt; as RouteTimer;
         interface Random;
         interface CollectionDebug;
         interface CtpCongestion;
+        interface Comparebit;
     }
 }
 </pre>
@@ -725,16 +742,22 @@ well as the configuration MultihopLqiP.</p>
 </div>
 <div class="section">
 <h1><a id="citations" name="citations">6. Citations</a></h1>
-<table class="docutils footnote" frame="void" id="id1" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a name="id1">[1]</a></td><td>TEP 116: Packet Protocols</td></tr>
-</tbody>
-</table>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id2">[2]</a></td><td>TEP 123: The Collection Tree Protocol (CTP)</td></tr>
+<tr><td class="label"><a name="id2">[1]</a></td><td>TEP 116: Packet Protocols</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="id3">[2]</a></td><td>TEP 123: The Collection Tree Protocol (CTP)</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1" name="id4">[3]</a></td><td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis. &quot;Four Bit Wireless Link Estimation.&quot; In Proceedings of the Sixth Workshop on Hot Topics in Networks (HotNets VI), November 2007</td></tr>
 </tbody>
 </table>
 </div>

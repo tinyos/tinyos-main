@@ -24,9 +24,9 @@ Abstract
 
 The memo documents the interfaces, components, and semantics used by
 collection protocol in TinyOS 2.x. Collection provides a best-effort,
-multihop delivery of packets to the root of *a* tree. There may be
-multiple roots in a network, and in this case the semantics implemented
-are of *anycast* delivery to at least one of the roots. A node sending
+multihop delivery of packets to the root of a tree. There may be
+multiple tree roots in a network, and in this case the semantics
+are *anycast* delivery to at least one of the roots. A node sending
 a packet does not specify which root the packet is destined to.
  
 
@@ -74,41 +74,18 @@ family:
   * Self-interference, preventing forwarding packets along the route
     from introducing interference for subsequent packets.
 
-The rest of this document describes a set of components and interfaces
-for a collection service outlined above.
+While collection protocols can take a wide range of approaches to
+address these challenges, the programming interface they provide is
+typically independent of these details. The rest of this document
+describes a set of components and interfaces for collection services.
 
 2. Collection interfaces
 ====================================================================
 
 A node can perform four different roles in collection: producer,
-consumer, snooper, and in-network processor. Depending on their role,
+snooper, in-network processor, and consumer. Depending on their role,
 the nodes use different interfaces to interact with the collection
 component. 
-
-A consumer is a root of a tree. The set of all roots and the paths that
-lead to them form the collection routing infrastructure in the network.
-For any connected set of nodes implementing the collection protocol 
-there is only one collection infrastructure, *i.e.*, all roots in this 
-set active at the same time are part of the same infrastructure.
-
-A node is configured to become a root by using the RootControl
-interface. RootControl.setRoot() MUST make the current node a root of
-the collection infrastructure. RootControl.unsetRoot() MUST make
-the current root no longer a root in the collection infrastructure.
-Both calls are idempotent.  RootControl.setRoot() MAY be called on a
-node that is already a root, to no effect. RootControl.unsetRoot() MAY
-be called on a node that is not a root::
-
-  interface RootControl {
-    command error_t setRoot();
-    command error_t unsetRoot();
-    command bool isRoot();
-  }
-
-Both commands MUST return SUCCESS if the node is now in the specified
-state, and FAIL otherwise. For example, if a node is already a root
-and an application calls RootControl.setRoot(), the call will
-return SUCCESS.
 
 The collection infrastructure can be multiplexed among independent
 applications, by means of a *collection identifier*. It is important
@@ -119,11 +96,6 @@ The nodes that generate data to be sent to the root are *producers*.
 The producers use the Send interface [1_] to send data to the root
 of the collection tree.  The collection identifier is specified as a
 parameter to Send during instantiation.
-
-Root nodes that receive data from the network are *consumers*. The
-consumers use the Receive interface [1_] to receive a message
-delivered by collection. The collection identifier is specified
-as a parameter to Receive during instantiation.
 
 The nodes that overhear messages in transit are *snoopers*. The
 snoopers use the Receive interface [1_] to receive a snooped
@@ -148,6 +120,32 @@ to inspect the internals of a packet and possibly suppress it if
 it is unnecessary or if its contents can be aggregated into an
 existing packet.
 
+Root nodes that receive data from the network are *consumers*. The
+consumers use the Receive interface [1_] to receive a message
+delivered by collection. The collection identifier is specified
+as a parameter to Receive during instantiation.
+
+The set of all roots and the paths that
+lead to them form the collection routing infrastructure in the network.
+For any connected set of nodes implementing the collection protocol 
+there is only one collection infrastructure, *i.e.*, all roots in this 
+set active at the same time are part of the same infrastructure.
+
+The RootControl interface configures whether a node is a
+root::
+
+  interface RootControl {
+    command error_t setRoot();
+    command error_t unsetRoot();
+    command bool isRoot();
+  }
+
+Both commands MUST return SUCCESS if the node is now in the specified
+state, and FAIL otherwise. For example, if a node is already a root
+and an application calls RootControl.setRoot(), the call will
+return SUCCESS. If setRoot() returns SUCCESS, then a subsequent call
+to isRoot() MUST return TRUE. If unsetRoot() returns SUCCESS, then
+a subsequent call to isRoot() MUST return FALSE. 
 
 3 Collection Services
 ====================================================================
@@ -172,10 +170,10 @@ which has the following signature::
   }
 
 
-CollectionC MAY have additional interfaces, but they MUST have
-default functions on all outgoing invocations (commands for uses,
-events for provides) of those interfaces so that it can operate
-properly if they are not wired.
+CollectionC MAY have additional interfaces. These additional
+interfaces MUST have default functions on all outgoing invocations
+(commands for uses, events for provides) of those interfaces so that
+it can operate properly if they are not wired.
 
 Components SHOULD NOT wire to CollectionC.Send. The generic
 component CollectionSenderC (described in section 3.1) provides
@@ -189,7 +187,7 @@ top of active messages. All packets sent with a particular
 collection_id_t generally have the same payload format, so that
 snoopers, intercepters, and receivers can parse it properly.
 
-Receive.receive MUST NOT be signaled on non-root
+ColletionC MUST NOT signal Receive.receive on non-root
 nodes. CollectionC MAY signal Receive.receive on a root node when
 a data packet successfully arrives at that node. If a root node calls
 Send, CollectionC MUST treat it as it if were a received packet.
