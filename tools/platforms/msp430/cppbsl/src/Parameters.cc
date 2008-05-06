@@ -44,7 +44,8 @@ Parameters::Parameters(int argc, char **argv) {
     action = NONE;
     image = 0;
     telosb = false;
-
+    chunksize = 250;
+    
     poptOption optionsTable[] = {
         {"debug",'D', 0, 0, 'd', "print many statements on progress"},
         {"f1x",'1', 0, 0, '1', "Specify CPU family, in case autodetect fails"},
@@ -55,6 +56,8 @@ Parameters::Parameters(int argc, char **argv) {
         {"intelhex",'I', 0, 0, 'I', "force fileformat to be  IntelHex"},
         {"erase",'e', 0, 0, 'e', "erase device"},
         {"reset",'r', 0, 0, 'r', "reset device"},
+        {"send-chunk-size",'s', POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,
+         &chunksize, 0, "program msp430 using chunks of this size", ""},
         {"program",'p', POPT_ARG_STRING, &image, 0,
          "Program file", ""},
         {"comport",'c', POPT_ARG_STRING, &device, 0,
@@ -120,6 +123,16 @@ Parameters::Parameters(int argc, char **argv) {
     else if(action == FLASH) {
         exit(1);
     }
+    // force sane chunk size
+    if(chunksize < 150) {
+        chunksize = 150;
+    }
+    else if(chunksize > 250) {
+        chunksize = 250;
+    }
+    // must be even!
+    chunksize /= 2; 
+    chunksize *= 2;
     poptFreeContext(optCon);
 };
 

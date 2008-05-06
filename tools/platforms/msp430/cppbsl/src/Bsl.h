@@ -46,6 +46,7 @@ class Bsl {
 protected:
     BaseSerial *s;
     const char *image;
+    const int CHUNKSIZE;
     
     enum commands_t {
         MASS_ERASE = 0x18,
@@ -81,7 +82,7 @@ protected:
     int highSpeed(int *err);
     
 public:
-    Bsl(BaseSerial* ser, const char *img) : s(ser), image(img) {
+    Bsl(BaseSerial* ser, const char *img, int cs=250) : s(ser), image(img), CHUNKSIZE(cs) {
     };
 
     ~Bsl() {

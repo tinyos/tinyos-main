@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
     else {
         bs = new BaseSerial(oldterm, readFD, writeFD, parameters->invertTest, parameters->invertReset);
     }
-    bsl = new Bsl(bs, parameters->img.c_str());
+    bsl = new Bsl(bs, parameters->img.c_str(), parameters->chunksize);
     switch(parameters->action) {
         case Parameters::ERASE:
             r = bsl->erase(&err);
@@ -104,5 +104,5 @@ int main(int argc, char *argv[]) {
     bs->disconnect(&err);
     delete bs;
     delete parameters;
-    return 0;
+    return (r != 0);
 }

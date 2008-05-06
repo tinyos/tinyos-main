@@ -61,6 +61,7 @@ public:
     bool telosb;
     
     actions_t action;
+    int chunksize;
     
 public:
     Parameters(int argc, char **argv);

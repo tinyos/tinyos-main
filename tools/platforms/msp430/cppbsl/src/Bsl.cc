@@ -152,7 +152,7 @@ int Bsl::writeData(int *err, const uint16_t addr, const uint8_t* data, const uin
     uint16_t adr;
     for(int i=0; i<len; i+=l) {
         l=len-i;
-        if(l>250) l=250;
+        if(l>CHUNKSIZE) l=CHUNKSIZE;
         adr=addr+i;
         r = writeBlock(err, adr, &data[i], l);
         if(r == -1) {
