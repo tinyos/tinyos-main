@@ -133,6 +133,8 @@ implementation
 
 		if( state == STATE_ACK_WAIT )
 		{
+			ASSERT( !ack || call SoftwareAckConfig.verifyAckPacket(txMsg, msg) );
+
 			call RadioAlarm.cancel();
 			call SoftwareAckConfig.setAckReceived(txMsg, ack);
 

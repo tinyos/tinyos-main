@@ -312,7 +312,9 @@ implementation
 		}
 		else if( cmd == CMD_TURNON && state == STATE_TRX_OFF && isSpiAcquired() )
 		{
+			ASSERT( ! radioIRQ );
 			call IRQ.captureRisingEdge();
+
 			writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 			state = STATE_TRX_OFF_2_RX_ON;
 		}
@@ -320,6 +322,8 @@ implementation
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
 			call IRQ.disable();
+			radioIrq = FALSE;
+
 			writeRegister(RF230_TRX_STATE, RF230_FORCE_TRX_OFF);
 			state = STATE_TRX_OFF;
 		}
@@ -658,22 +662,7 @@ implementation
 					ASSERT( state == STATE_BUSY_TX_2_RX_ON );
 				}
 				else
-				{
-#ifdef RF230_DEBUG
-//					ASSERT(FALSE);
-					if( call DiagMsg.record() )
-					{
-						call DiagMsg.str("assert pll");
-						call DiagMsg.uint16(call RadioAlarm.getNow());
-						call DiagMsg.hex8(readRegister(RF230_TRX_STATUS));
-						call DiagMsg.hex8(readRegister(RF230_TRX_STATE));
-						call DiagMsg.hex8(irq);
-						call DiagMsg.uint8(state);
-						call DiagMsg.uint8(cmd);
-						call DiagMsg.send();
-					}
-#endif
-				}
+					ASSERT(FALSE);
 			}
 
 			if( irq & RF230_IRQ_RX_START )
@@ -757,22 +746,7 @@ implementation
 					cmd = CMD_DOWNLOAD;
 				}
 				else
-				{
-#ifdef RF230_DEBUG
-//					ASSERT(FALSE);
-					if( call DiagMsg.record() )
-					{
-						call DiagMsg.str("assert trx");
-						call DiagMsg.uint16(call RadioAlarm.getNow());
-						call DiagMsg.hex8(readRegister(RF230_TRX_STATUS));
-						call DiagMsg.hex8(readRegister(RF230_TRX_STATE));
-						call DiagMsg.hex8(irq);
-						call DiagMsg.uint8(state);
-						call DiagMsg.uint8(cmd);
-						call DiagMsg.send();
-					}
-#endif
-				}
+					ASSERT(FALSE);
 			}
 		}
 	}
