@@ -296,7 +296,7 @@ implementation
 			post transition();
 		}
 
-		if( state == LISTEN_SUBSTART || state == SLEEP_TIMER || state == LISTEN )
+		if( state == LISTEN_SUBSTART || state == SLEEP_TIMER || state == SLEEP )
 			state = SEND_SUBSTART;
 		else if( state == LISTEN_SUBSTART_DONE )
 			state = SEND_SUBSTART_DONE;
