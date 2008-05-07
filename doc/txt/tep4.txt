@@ -1,0 +1,133 @@
+===================================================================
+Active Message ID Allocation for Network Protocols and Applications
+===================================================================
+
+:TEP: 4
+:Group: Network Protocol Working Group 
+:Type: Best Current Practice
+:Status: Draft
+:TinyOS-Version: 2.x
+:Author: Omprakash Gnawali
+
+:Draft-Created: 07-May-2008
+:Draft-Version: $Revision: 1.1 $
+:Draft-Modified: $Date: 2008-05-07 21:37:44 $
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This document specifies a Best Current Practices for the
+   TinyOS Community, and requests discussion and suggestions for
+   improvements.  Distribution of this memo is unlimited.  This memo
+   is in full compliance with [TEP_1]_.
+
+
+1. Introduction
+====================================================================
+
+In order to document the Active Message Type [1]_, also known as
+Active Message Identifier (AM ID), used by the protocols and to
+prevent AM ID conflicts between applications and protocols distributed
+with TinyOS 2.x, the application and protocol developers MUST use AM
+IDs in the appropriate range. The network protocol implementors MUST
+use AM ID allocated by the Network Protocol Working Group for the
+specific protocol. The application developers MUST use AM IDs from the
+unreserved pool.
+
+2. Current Allocations
+====================================================================
+
+The unreserved pool is in the range 0-127 (0x00-0x7F). The reserved
+pool is in the range 128-255 (0x80-0xFF).
+
+2.1 Unreserved pool (0x00 - 0x7F)
+---------------------------------
+
+When an application uses the AM ID in the range 0-127, it is
+guaranteed to not conflict with AM IDs used by the protocols
+distributed with TinyOS 2.x. These IDs may conflict with the protocols
+in the contrib tree or other applications. No allocation request is
+necessary to use AM IDs in this range.
+
+2.2 Reserved pool (0x80 - 0xFF)
+-------------------------------
+
+When a protocol uses an allocated AM ID in the reserved pool, it is
+guaranteed to not conflict with AM IDs used by applications or other
+protocols that also use an allocated AM ID. The AM ID may conflict
+with the protocols and applications in the contrib tree.
+
+Here is a list of current allocations::
+
+  * 0xF0 - 0XFF are reserved for collection protocols maintained by
+    the Network Protocol Working Group.
+
+    0xF0 - CTP routing beacon and LEEP (''tos/lib/net/ctp'', TEP 119, 123, and 124)
+    0xF1 - CTP data packets (''tos/lib/net/ctp'', TEP 119, 123)
+    0xF2 - CTP debug messages (''tos/lib/net/ctp'')
+    0xF3 - MultiHopLQI routing beacon (''tos/lib/net/lqi'')
+    0xF4 - MultiHopLQI data packets (''tos/lib/net/lqi'')
+    0xF5 - MultiHopLQI debug messages (''tos/lib/net/lqi'')
+
+  * 0xE0 - 0xEF are reserved for dissemination protocols maintained by
+    the Network Protocol Working Group.
+
+    0xE0 - Drip (''tos/lib/net/drip'', TEP 118)
+    0xE1 - DIP (''tos/lib/net/dip'', TEP 118)
+
+  * 0xD0 - DYMO (''tos/lib/net/dymo'') maintained by the Network
+    Protocol Working Group.
+
+
+
+3. Requesting AM ID Allocation
+====================================================================
+
+The Network Protocol Working Group will maintain a list of all the
+allocations in the reserved range.
+
+Developers whose protocols will be included within the ''tos''
+directory MUST receive AM ID allocation from the Network Protocol
+Working Group. This allocation policy applies to software and
+protocols maintained by any working group.
+
+To receive an AM ID allocation, please send an email to the chair of
+Network Protocol Working Group with the following information:
+  * Working Group responsible for the protocol
+  * Name of the protocol and relevant TEPs
+  * Location of the protocol in TinyOS source tree
+
+Upon receiving this information, the chair of the Network Protocol
+Working Group will allocate an AM ID and update this TEP.
+
+4. Reclaiming the AM ID Allocation
+====================================================================
+
+When the working group responsible for maintaining the protocol with
+an allocated AM ID obsoletes the protocol, the chair of the working
+group should send a deallocation request to the chair of the Network
+Protocol Working Group. The chair of the Network Protocol Working
+Group will update this TEP by deleting the entry for the obsolete
+protocol.
+
+5. Acknowledgments
+====================================================================
+
+Thanks to the TinyOS community at large for helping to formulate this
+ID allocation policy.
+
+6. Author's Address
+====================================================================
+
+| Omprakash Gnawali
+| Ronald Tutor Hall (RTH) 418 
+| 3710 S. McClintock Avenue
+| Los Angeles, CA 90089 
+|
+| phone - +1 213 821-5627
+| email - gnawali@usc.edu
+
+7. Citations
+====================================================================
+
+.. [1] TEP 116: Packet Protocols
