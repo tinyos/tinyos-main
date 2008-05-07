@@ -164,15 +164,17 @@ implementation
 
 /*----------------- Global fields -----------------*/
 
-	uint8_t flags;
+	norace uint8_t flags;
 	enum
 	{
 		FLAG_TXPOWER = 0x01,
 		FLAG_SLEEPINT = 0x02,
 	};
 
-	uint8_t transmitPower;
-	uint16_t sleepInterval;
+	norace uint8_t transmitPower;
+
+	// TODO: Move sleepInterval into the metadata
+	norace uint16_t sleepInterval;
 
 /*----------------- PacketTransmitPower -----------------*/
 

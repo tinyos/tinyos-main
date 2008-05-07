@@ -267,16 +267,6 @@ implementation
 		post transition();
 	}
 
-	void sleepIntervalChanged()
-	{
-		if( (state == LISTEN && sleepInterval == 0) || state == SLEEP )
-		{
-			call Timer.stop();
-			--state;
-			post transition();
-		}
-	}
-
 	event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len)
 	{
 		if( state == SLEEP_SUBSTOP )
@@ -389,7 +379,13 @@ implementation
 			interval = MAX_SLEEP;
 
 		sleepInterval = interval;
-		sleepIntervalChanged();
+
+		if( (state == LISTEN && sleepInterval == 0) || state == SLEEP )
+		{
+			call Timer.stop();
+			--state;
+			post transition();
+		}
 	}
 
 	command uint16_t LowPowerListening.getLocalSleepInterval()
