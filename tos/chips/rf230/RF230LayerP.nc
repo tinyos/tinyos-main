@@ -472,24 +472,22 @@ implementation
 		 */
 		if( (length & RF230_TRX_STATUS_MASK) != RF230_BUSY_TX )
 		{
-#ifdef RF230_DEBUG
-			if( call DiagMsg.record() )
-			{
-				call DiagMsg.str("assert tx");
-				call DiagMsg.uint16(call RadioAlarm.getNow());
-				call DiagMsg.hex8(readRegister(RF230_TRX_STATUS));
-				call DiagMsg.hex8(readRegister(RF230_TRX_STATE));
-				call DiagMsg.hex8(radioIrq);
-				call DiagMsg.uint8(state);
-				call DiagMsg.uint8(cmd);
-				call DiagMsg.send();
-			}
-#endif
 			ASSERT( (length & RF230_TRX_STATUS_MASK) == RF230_PLL_ON );
+
+			call PacketTimeStamp.clear(msg);
 			return FAIL;
 		}
 
-		call PacketTimeStamp.set(msg, time);
+#ifdef RF230_DEBUG_MESSAGES
+		if( call DiagMsg.record() )
+		{
+			call DiagMsg.str("tx");
+			call DiagMsg.uint16(time);
+			call DiagMsg.uint8(length);
+			call DiagMsg.hex8s(data, length - 2);
+			call DiagMsg.send();
+		}
+#endif
 
 		// wait for the TRX_END interrupt
 		state = STATE_BUSY_TX_2_RX_ON;
@@ -499,6 +497,7 @@ implementation
 	}
 
 	default tasklet_async event void RadioSend.sendDone(error_t error) { }
+	default tasklet_async event void RadioSend.ready() { }
 
 /*----------------- CCA -----------------*/
 
@@ -578,6 +577,21 @@ implementation
 
 		call SELN.set();
 		state = STATE_RX_ON;
+
+#ifdef RF230_DEBUG_MESSAGES
+		if( call DiagMsg.record() )
+		{
+			length = call RF230Config.getLength(rxMsg);
+			call DiagMsg.str("rx");
+			call DiagMsg.uint16(call PacketTimeStamp.isSet(rxMsg) ? call PacketTimeStamp.get(rxMsg) : 0);
+			call DiagMsg.uint16(call RadioAlarm.getNow());
+			call DiagMsg.uint8(length);
+			call DiagMsg.uint8(crc != 0);
+			call DiagMsg.hex8s(call RF230Config.getPayload(rxMsg), length - 2);
+			call DiagMsg.send();
+		}
+#endif
+		
 		cmd = CMD_NONE;
 
 		// signal only if it has passed the CRC check
