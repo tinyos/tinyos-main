@@ -21,8 +21,8 @@
  * Author: Miklos Maroti
  */
 
+#include <DefaultPacket.h>
 #include <Tasklet.h>
-#include <DefaultMac.h>
 #include <message.h>
 
 module RF230SnifferP
@@ -33,12 +33,6 @@ module RF230SnifferP
 		interface SplitControl;
 
 		interface RadioState;
-		interface IEEE154Packet;
-	}
-
-	provides 
-	{
-		interface RF230Config;
 	}
 }
 
@@ -69,57 +63,5 @@ implementation
 
 	tasklet_async event void RadioState.done()
 	{
-	}
-
-	async command uint8_t RF230Config.getLength(message_t* msg)
-	{
-		return call IEEE154Packet.getLength(msg);
-	}
-
-	async command void RF230Config.setLength(message_t* msg, uint8_t len)
-	{
-		call IEEE154Packet.setLength(msg, len);
-	}
-
-	async command uint8_t* RF230Config.getPayload(message_t* msg)
-	{
-		return ((uint8_t*)(call IEEE154Packet.getHeader(msg))) + 1;
-	}
-
-	inline defaultmac_metadata_t* getMeta(message_t* msg)
-	{
-		return (defaultmac_metadata_t*)(msg->metadata);
-	}
-
-	async command void RF230Config.setTimestamp(message_t* msg, uint16_t time)
-	{
-		getMeta(msg)->timestamp = time;
-	}
-
-	async command void RF230Config.setLinkQuality(message_t* msg, uint8_t lqi)
-	{
-		getMeta(msg)->lqi = lqi;
-	}
-
-	async command uint8_t RF230Config.getHeaderLength()
-	{
-		// we need the fcf, dsn, destpan and dest
-		return 7;
-	}
-
-	async command uint8_t RF230Config.getMaxLength()
-	{
-		// note, that the ieee154_footer_t is not stored, but we should include it here
-		return sizeof(defaultmac_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
-	}
-
-	async command uint8_t RF230Config.getTransmitPower(message_t* msg)
-	{
-		return 0;
-	}
-
-	async command uint8_t RF230Config.getDefaultChannel()
-	{
-		return RF230_DEF_CHANNEL;
 	}
 }
