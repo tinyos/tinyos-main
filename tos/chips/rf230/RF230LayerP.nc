@@ -156,9 +156,7 @@ implementation
 	tasklet_async event void RadioAlarm.fired()
 	{
 		if( state == STATE_SLEEP_2_TRX_OFF )
-		{
 			state = STATE_TRX_OFF;
-		}
 		else if( cmd == CMD_CCA )
 		{
 			uint8_t cca;
@@ -312,7 +310,9 @@ implementation
 		}
 		else if( cmd == CMD_TURNON && state == STATE_TRX_OFF && isSpiAcquired() )
 		{
-			ASSERT( ! radioIRQ );
+			ASSERT( ! radioIrq );
+
+			readRegister(RF230_IRQ_STATUS); // clear the interrupt register
 			call IRQ.captureRisingEdge();
 
 			writeRegister(RF230_TRX_STATE, RF230_RX_ON);
@@ -321,10 +321,11 @@ implementation
 		else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY) 
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
+			writeRegister(RF230_TRX_STATE, RF230_FORCE_TRX_OFF);
+
 			call IRQ.disable();
 			radioIrq = FALSE;
 
-			writeRegister(RF230_TRX_STATE, RF230_FORCE_TRX_OFF);
 			state = STATE_TRX_OFF;
 		}
 
@@ -461,11 +462,6 @@ implementation
 		call HplRF230.spiSplitRead();
 		call SELN.set();
 
-		length = readRegister(RF230_TRX_STATUS); 
-
-		// go back to RX_ON state when finished
-		writeRegister(RF230_TRX_STATE, RF230_RX_ON);
-
 		/*
 		 * There is a very small window (~1 microsecond) when the RF230 went 
 		 * into PLL_ON state but was somehow not properly initialized because 
@@ -474,17 +470,27 @@ implementation
 		 * because of concurrent access, but that message probably cannot be
 		 * recovered.
 		 */
-		if( (length & RF230_TRX_STATUS_MASK) != RF230_BUSY_TX )
+		if( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) != RF230_BUSY_TX )
 		{
-			ASSERT( (length & RF230_TRX_STATUS_MASK) == RF230_PLL_ON );
+			ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_PLL_ON );
+
+			writeRegister(RF230_TRX_STATE, RF230_RX_ON);
+			readRegister(RF230_IRQ_STATUS);
+			radioIrq = FALSE;
 
 			call PacketTimeStamp.clear(msg);
+
 			return FAIL;
 		}
+
+		// go back to RX_ON state when finished
+		writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 
 #ifdef RF230_DEBUG_MESSAGES
 		if( call DiagMsg.record() )
 		{
+			length = call RF230Config.getLength(msg);
+
 			call DiagMsg.str("tx");
 			call DiagMsg.uint16(time);
 			call DiagMsg.uint8(length);
@@ -586,11 +592,12 @@ implementation
 		if( call DiagMsg.record() )
 		{
 			length = call RF230Config.getLength(rxMsg);
+
 			call DiagMsg.str("rx");
 			call DiagMsg.uint16(call PacketTimeStamp.isSet(rxMsg) ? call PacketTimeStamp.get(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
-			call DiagMsg.uint8(length);
 			call DiagMsg.uint8(crc != 0);
+			call DiagMsg.uint8(length);
 			call DiagMsg.hex8s(call RF230Config.getPayload(rxMsg), length - 2);
 			call DiagMsg.send();
 		}
@@ -631,7 +638,6 @@ implementation
 
 #ifdef RF230_DEBUG
 			// TODO: handle this interrupt
-//			ASSERT( ! (irq & RF230_IRQ_TRX_UR) );
 			if( irq & RF230_IRQ_TRX_UR )
 			{
 				if( call DiagMsg.record() )
@@ -696,21 +702,7 @@ implementation
 					cmd = CMD_RECEIVE;
 				}
 				else
-				{
-#ifdef RF230_DEBUG
-					if( call DiagMsg.record() )
-					{
-						call DiagMsg.str("assert irq");
-						call DiagMsg.uint16(call RadioAlarm.getNow());
-						call DiagMsg.hex8(readRegister(RF230_TRX_STATUS));
-						call DiagMsg.hex8(readRegister(RF230_TRX_STATE));
-						call DiagMsg.hex8(irq);
-						call DiagMsg.uint8(state);
-						call DiagMsg.uint8(cmd);
-						call DiagMsg.send();
-					}
-#endif
-				}
+					ASSERT( cmd == CMD_TURNOFF );
 			}
 
 			if( irq & RF230_IRQ_TRX_END )
@@ -772,7 +764,7 @@ implementation
 		{
 			if( cmd == CMD_DOWNLOAD )
 				downloadMessage();
-			else if( cmd <= CMD_TURNON && CMD_TURNOFF <= cmd )
+			else if( CMD_TURNOFF <= cmd && cmd <= CMD_TURNON )
 				changeState();
 			else if( cmd == CMD_CHANNEL )
 				changeChannel();
