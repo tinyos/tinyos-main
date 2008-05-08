@@ -469,19 +469,10 @@ implementation
 		 * radio can even receive a message, and generate a TRX_UR interrupt
 		 * because of concurrent access, but that message probably cannot be
 		 * recovered.
+		 *
+		 * TODO: this needs to be verified, and make sure that the chip is 
+		 * not locked up in this case.
 		 */
-		if( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) != RF230_BUSY_TX )
-		{
-			ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_PLL_ON );
-
-			writeRegister(RF230_TRX_STATE, RF230_RX_ON);
-			readRegister(RF230_IRQ_STATUS);
-			radioIrq = FALSE;
-
-			call PacketTimeStamp.clear(msg);
-
-			return FAIL;
-		}
 
 		// go back to RX_ON state when finished
 		writeRegister(RF230_TRX_STATE, RF230_RX_ON);

@@ -41,11 +41,16 @@ module RadioCountToDiagP
 		interface SplitControl as RadioControl;
 
 		interface ActiveMessageAddress;
+		interface LowPowerListening;
 	}
 }
 
 #ifndef SEND_PERIOD
 #define SEND_PERIOD 10
+#endif
+
+#ifndef SLEEP_INTERVAL
+#define SLEEP_INTERVAL	50
 #endif
 
 implementation
@@ -62,6 +67,9 @@ implementation
 			post radioPowerUp();
 		else
 		{
+#ifdef LOW_POWER_LISTENING
+			call LowPowerListening.setLocalSleepInterval(SLEEP_INTERVAL);
+#endif		
 			call SendTimer.startPeriodic(SEND_PERIOD);
 			call ReportTimer.startPeriodic(1000);
 		}
@@ -99,7 +107,6 @@ implementation
 	}
 
 	uint32_t sendCount;
-	uint32_t sendError;
 	uint32_t sendDoneSuccess;
 	uint32_t sendDoneError;
 	uint32_t ackedCount;
@@ -112,7 +119,6 @@ implementation
 		if( call DiagMsg.record() )
 		{
 			call DiagMsg.uint16(sendCount);
-			call DiagMsg.uint16(sendError);
 			call DiagMsg.uint16(sendDoneSuccess);
 			call DiagMsg.uint16(sendDoneError);
 			call DiagMsg.uint16(ackedCount);
@@ -137,6 +143,9 @@ implementation
 
 		call Packet.clear(&txMsg);
 		call PacketAcknowledgements.requestAck(&txMsg);
+#ifdef LOW_POWER_LISTENING
+		call LowPowerListening.setRxSleepInterval(&txMsg, SLEEP_INTERVAL);
+#endif
 
 		addr = call ActiveMessageAddress.amAddress();
 		if( addr == 2 )
@@ -148,8 +157,6 @@ implementation
 
 		if( call AMSend.send(addr, &txMsg, sizeof(ping_t)) == SUCCESS )
 			++sendCount;
-		else
-			++sendError;
 	}
 
 	event void AMSend.sendDone(message_t* msg, error_t error)

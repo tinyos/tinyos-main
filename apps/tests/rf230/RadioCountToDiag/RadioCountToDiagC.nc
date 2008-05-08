@@ -48,4 +48,6 @@ implementation
 
 	components ActiveMessageAddressC;
 	RadioCountToDiagP.ActiveMessageAddress -> ActiveMessageAddressC;
+
+	RadioCountToDiagP.LowPowerListening -> ActiveMessageC;
 }
