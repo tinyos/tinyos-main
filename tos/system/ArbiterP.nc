@@ -112,13 +112,14 @@ implementation {
           reqResId = call Queue.dequeue();
           state = RES_GRANTING;
           post grantedTask();
+          call ResourceConfigure.unconfigure[id]();
         }
         else {
           resId = default_owner_id;
           state = RES_CONTROLLED;
+          call ResourceConfigure.unconfigure[id]();
           signal ResourceDefaultOwner.granted();
         }
-        call ResourceConfigure.unconfigure[id]();
       }
     }
     return FAIL;
