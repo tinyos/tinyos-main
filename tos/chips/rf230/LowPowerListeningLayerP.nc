@@ -253,7 +253,7 @@ implementation
 
 	event void Timer.fired()
 	{
-		ASSERT( state == LISTEN || state == SLEEP || state == SEND_SUBSEND|| state == SEND_SUBSEND_DONE );
+		ASSERT( state == LISTEN || state == SLEEP || state == SEND_SUBSEND || state == SEND_SUBSEND_DONE );
 
 		if( state == LISTEN )
 			state = SLEEP_SUBSTOP;
@@ -290,7 +290,7 @@ implementation
 			state = SEND_SUBSTART;
 		else if( state == LISTEN_SUBSTART_DONE )
 			state = SEND_SUBSTART_DONE;
-		else if( state == LISTEN_TIMER || state == SLEEP_SUBSTOP|| state == LISTEN )
+		else if( state == LISTEN_TIMER || state == SLEEP_SUBSTOP || state == LISTEN )
 			state = SEND_TIMER;
 		else
 			return EBUSY;
@@ -307,11 +307,18 @@ implementation
 		if( state == SEND_SUBSEND )
 		{
 			call Timer.stop();
-			state = LISTEN_TIMER;
+			state = SEND_DONE;
+			txError = ECANCEL;
 			post transition();
 
-			// TODO: ask if sendDone should be called after a succesfull cancel
 			return SUCCESS;
+		}
+		else if( state == SEND_SUBSEND_DONE )
+		{
+			// we stop sending the message even if SubSend.cancel was not succesfull
+			state = SEND_SUBSEND_DONE_LAST;
+
+			return call SubSend.cancel(txMsg);
 		}
 		else
 			return FAIL;
@@ -417,23 +424,20 @@ implementation
 	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg)
     {
 		if( ! call PacketSleepInterval.isSet(msg) )
-			return 0;
+			return sleepInterval;
 
 		return call PacketSleepInterval.get(msg);
 	}
 
 	command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t dutyCycle)
     {
-		call PacketSleepInterval.set(msg, 
+		call LowPowerListening.setRxSleepInterval(msg, 
 			call LowPowerListening.dutyCycleToSleepInterval(dutyCycle));
 	}
 
 	command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg)
     {
-		if( ! call PacketSleepInterval.isSet(msg) )
-			return 10000;
-
 		return call LowPowerListening.sleepIntervalToDutyCycle(
-			call PacketSleepInterval.get(msg));
+			call LowPowerListening.getRxSleepInterval(msg));
 	}
 }
