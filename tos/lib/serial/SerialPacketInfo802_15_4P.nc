@@ -1,4 +1,4 @@
-//$Id: SerialPacketInfo802_15_4P.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+//$Id: SerialPacketInfo802_15_4P.nc,v 1.5 2008-05-13 00:15:21 vlahan Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -30,18 +30,17 @@
  *
  */
 
-#include "802_15_4.h"
 module SerialPacketInfo802_15_4P {
   provides interface SerialPacketInfo as Info;
 }
 implementation {
   async command uint8_t Info.offset() {
-    return sizeof(TOSRadioHeader) - sizeof(TOS802Header);
+    return sizeof(message_header_t)-sizeof(cc2420_header_t);
   }
   async command uint8_t Info.dataLinkLength(message_t* msg, uint8_t upperLen) {
-    return upperLen + sizeof(TOS802Header) + sizeof(TOS802Footer);
+    return upperLen + sizeof(cc2420_header_t) + sizeof(cc2420_footer_t);
   }
   async command uint8_t Info.upperLength(message_t* msg, uint8_t dataLinkLen) {
-    return dataLinkLen - (sizeof(TOS802Header) + sizeof(TOS802Footer));
+    return dataLinkLen - (sizeof(cc2420_header_t) + sizeof(cc2420_footer_t));
   }
 }
