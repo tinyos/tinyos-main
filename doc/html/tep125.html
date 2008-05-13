@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:58:00 $
-:version: $Revision: 1.4 $
+:date: $Date: 2008-05-13 18:38:55 $
+:version: $Revision: 1.5 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Jonathan Hui, Philip Levis, and David Moss</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">2-Feb-2007</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.2</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.4</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-04-09</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-05-13</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -339,7 +339,7 @@ A TinyOS device MAY support additional 802.15.4 frame formats.</p>
 <h1><a id="frame-format" name="frame-format">3. Frame Format</a></h1>
 <p>TinyOS has two 802.15.4 frame formats. The first format, the T-Frame, is
 for TinyOS networks which do not share their channel with other wireless
-networking archtiectures. This frame format assumes that TinyOS can use
+networking architectures. This frame format assumes that TinyOS can use
 every bit of the packet and does not need to state that it is a TinyOS packet.
 T-Frame stands for &quot;TinyOS Frame.&quot;</p>
 <p>The TinyOS 802.15.4 T-frame format is as follows:</p>
@@ -361,17 +361,16 @@ for &quot;Interoperable Frame.&quot;</p>
 | 802.15.4 Header   | 6lowpan | AM type |        data        | 802.15.4 CRC |
 +-------------------+---------+------------------------------+--------------+
 </pre>
-<p>AM type is the same as in a T-frame. 6lowpan is the IANA-assigned code
-to identify this as a TinyOS packet. At this time, the exact value of
-this code has not been determined. To inform 6lowpan that this is not
-a 6lowpan packet, the code used MUST be in the range of 192-55.</p>
-<p>The AM type 6lowpan is reserved. A TinyOS program MUST NOT use it.</p>
+<p>AM type is the same as in a T-frame. 6lowpan is the NALP code to identify
+this as a TinyOS packet. NALP codes must be in the range of 0-63.
+TinyOS uses code 63.</p>
+<p>The AM type 63 is reserved for both T-Frames and I-Frames. A TinyOS
+program MUST NOT use it.</p>
 </div>
 <div class="section">
 <h1><a id="implementation" name="implementation">4. Implementation</a></h1>
 <p>An implementation of the T-Frame can be found in tinyos-2.x/tos/chips/cc2420.</p>
-<p>An implementation of the I-Frame will soon be found in
-tinyos-2.x/tos/chips/cc2420.</p>
+<p>An implementation of the I-Frame can be found in tinyos-2.x/tos/chips/cc2420.</p>
 </div>
 <div class="section">
 <h1><a id="author-addresses" name="author-addresses">5. Author Addresses</a></h1>
