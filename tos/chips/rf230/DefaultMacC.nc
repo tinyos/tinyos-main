@@ -39,6 +39,8 @@ configuration DefaultMacC
 		interface LowPowerListening;
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
+		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketTimeStamp<TRF230, uint16_t>;
 
 		interface PacketLastTouch;
@@ -61,6 +63,8 @@ implementation
 	AMPacket = DefaultPacketC;
 	PacketAcknowledgements = DefaultPacketC;
 	PacketLinkQuality = DefaultPacketC.PacketLinkQuality;
+	PacketTransmitPower = DefaultPacketC.PacketTransmitPower;
+	PacketRSSI = DefaultPacketC.PacketRSSI;
 	PacketTimeStamp = DefaultPacketC.PacketTimeStamp;
 	LowPowerListening = LowPowerListeningLayerC;
 
@@ -129,5 +133,6 @@ implementation
 	RF230LayerC.RF230Config -> DefaultMacP;
 	RF230LayerC.PacketLinkQuality -> DefaultPacketC.PacketLinkQuality;
 	RF230LayerC.PacketTransmitPower -> DefaultPacketC.PacketTransmitPower;
+	RF230LayerC.PacketRSSI -> DefaultPacketC.PacketRSSI;
 	RF230LayerC.PacketTimeStamp -> DefaultPacketC.PacketTimeStamp;
 }

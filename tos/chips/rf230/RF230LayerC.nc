@@ -36,8 +36,10 @@ configuration RF230LayerC
 	uses 
 	{
 		interface RF230Config;
+
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketTimeStamp<TRF230, uint16_t>;
 
 		async event void lastTouch(message_t* msg);
@@ -56,6 +58,7 @@ implementation
 	RF230Config = RF230LayerP;
 	PacketLinkQuality = RF230LayerP.PacketLinkQuality;
 	PacketTransmitPower = RF230LayerP.PacketTransmitPower;
+	PacketRSSI = RF230LayerP.PacketRSSI;
 	PacketTimeStamp = RF230LayerP.PacketTimeStamp;
 
 	RF230LayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];

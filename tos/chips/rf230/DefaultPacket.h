@@ -38,6 +38,7 @@ typedef nx_struct defpacket_metadata_t
 {
 	nx_uint8_t flags;
 	nx_uint8_t lqi;
+	nx_uint8_t power;				// shared between TXPOWER and RSSI
 	nx_uint16_t timestamp;
 } defpacket_metadata_t;
 
@@ -46,6 +47,8 @@ enum defpacket_metadata_flags
 	DEFPACKET_WAS_ACKED = 0x01,		// PacketAcknowledgements
 	DEFPACKET_TIMESTAMP = 0x02,		// PacketTimeStamp
 	DEFPACKET_LAST_TOUCH = 0x04,	// PacketLastTouch.touch
+	DEFPACKET_TXPOWER = 0x10,		// PacketTransmitPower
+	DEFPACKET_RSSI = 0x20,			// PacketRSSI
 
 	DEFPACKET_CLEAR_METADATA = 0x00,
 };

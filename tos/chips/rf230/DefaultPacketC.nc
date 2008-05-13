@@ -32,6 +32,7 @@ configuration DefaultPacketC
 		interface PacketAcknowledgements;
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint16_t> as PacketSleepInterval;
 
 		interface PacketTimeStamp<TRF230, uint16_t>;
@@ -52,6 +53,7 @@ implementation
 	PacketAcknowledgements = DefaultPacketP;
 	PacketLinkQuality = DefaultPacketP.PacketLinkQuality;
 	PacketTransmitPower = DefaultPacketP.PacketTransmitPower;
+	PacketRSSI = DefaultPacketP.PacketRSSI;
 	PacketSleepInterval = DefaultPacketP.PacketSleepInterval;
 	PacketTimeStamp = DefaultPacketP;
 

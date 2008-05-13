@@ -31,6 +31,7 @@ module DefaultPacketP
 		interface Packet;
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint16_t> as PacketSleepInterval;
 
 		interface PacketTimeStamp<TRF230, uint16_t>;
@@ -162,42 +163,64 @@ implementation
 		getMeta(msg)->timestamp = value;
 	}
 
+/*----------------- PacketTransmitPower -----------------*/
+
+	async command bool PacketTransmitPower.isSet(message_t* msg)
+	{
+		return getMeta(msg)->flags & DEFPACKET_TXPOWER;
+	}
+
+	async command uint8_t PacketTransmitPower.get(message_t* msg)
+	{
+		return getMeta(msg)->power;
+	}
+
+	async command void PacketTransmitPower.clear(message_t* msg)
+	{
+		getMeta(msg)->flags &= ~DEFPACKET_TXPOWER;
+	}
+
+	async command void PacketTransmitPower.set(message_t* msg, uint8_t value)
+	{
+		getMeta(msg)->flags &= ~DEFPACKET_RSSI;
+		getMeta(msg)->flags |= DEFPACKET_TXPOWER;
+		getMeta(msg)->power = value;
+	}
+
+/*----------------- PacketRSSI -----------------*/
+
+	async command bool PacketRSSI.isSet(message_t* msg)
+	{
+		return getMeta(msg)->flags & DEFPACKET_RSSI;
+	}
+
+	async command uint8_t PacketRSSI.get(message_t* msg)
+	{
+		return getMeta(msg)->power;
+	}
+
+	async command void PacketRSSI.clear(message_t* msg)
+	{
+		getMeta(msg)->flags &= ~DEFPACKET_RSSI;
+	}
+
+	async command void PacketRSSI.set(message_t* msg, uint8_t value)
+	{
+		getMeta(msg)->flags &= ~DEFPACKET_TXPOWER;
+		getMeta(msg)->flags |= DEFPACKET_RSSI;
+		getMeta(msg)->power = value;
+	}
+
 /*----------------- Global fields -----------------*/
 
 	norace uint8_t flags;
 	enum
 	{
-		FLAG_TXPOWER = 0x01,
-		FLAG_SLEEPINT = 0x02,
+		FLAG_SLEEPINT = 0x01,
 	};
-
-	norace uint8_t transmitPower;
 
 	// TODO: Move sleepInterval into the metadata
 	norace uint16_t sleepInterval;
-
-/*----------------- PacketTransmitPower -----------------*/
-
-	async command bool PacketTransmitPower.isSet(message_t* msg)
-	{
-		return flags & FLAG_TXPOWER;
-	}
-
-	async command uint8_t PacketTransmitPower.get(message_t* msg)
-	{
-		return transmitPower;
-	}
-
-	async command void PacketTransmitPower.clear(message_t* msg)
-	{
-		flags &= ~FLAG_TXPOWER;
-	}
-
-	async command void PacketTransmitPower.set(message_t* msg, uint8_t value)
-	{
-		flags |= FLAG_TXPOWER;
-		transmitPower = value;
-	}
 
 /*----------------- PacketSleepInterval -----------------*/
 

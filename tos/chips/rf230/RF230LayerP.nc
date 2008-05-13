@@ -54,10 +54,12 @@ module RF230LayerP
 
 		interface BusyWait<TMicro, uint16_t>;
 
-		interface RF230Config;
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketTimeStamp<TRF230, uint16_t>;
+
+		interface RF230Config;
 		interface Tasklet;
 		interface RadioAlarm;
 
@@ -622,6 +624,7 @@ implementation
 		{
 			uint16_t time;
 			uint8_t irq;
+			uint8_t temp;
 			
 			atomic time = capturedTime;
 			radioIrq = FALSE;
@@ -674,8 +677,16 @@ implementation
 				{
 					ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
 
-					// the most likely place for busy channel
-					rssiBusy += readRegister(RF230_PHY_RSSI) - (rssiBusy >> 2);
+					// the most likely place for busy channel, with no TRX_END
+					if( irq == RF230_IRQ_RX_START )
+					{
+						temp = readRegister(RF230_PHY_RSSI);
+
+						rssiBusy += temp - (rssiBusy >> 2);
+						call PacketRSSI.set(rxMsg, temp);
+					}
+					else
+						call PacketRSSI.clear(rxMsg);
 
 					/*
 					 * The timestamp corresponds to the first event which could not
