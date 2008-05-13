@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.3 $ $Date: 2007-11-19 15:48:54 $
+ * @version $Revision: 1.4 $ $Date: 2008-05-13 15:48:09 $
  */
 
 #include "Timer.h"
@@ -65,7 +65,6 @@ module CC2420ControlP {
   uses interface CC2420Strobe as SRFOFF;
   uses interface CC2420Strobe as SXOSCOFF;
   uses interface CC2420Strobe as SXOSCON;
-  uses interface AMPacket;
   
   uses interface Resource as SpiResource;
   uses interface Resource as RssiResource;

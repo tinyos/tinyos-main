@@ -33,7 +33,7 @@
  * Implementation for configuring a ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.2 $ $Date: 2008-05-13 15:48:09 $
  */
 
 #include "CC2420.h"
@@ -58,9 +58,6 @@ implementation {
 
   components MainC;
   MainC.SoftwareInit -> CC2420ControlP;
-  
-  components CC2420ActiveMessageC;
-  CC2420ControlP.AMPacket -> CC2420ActiveMessageC;
   
   components AlarmMultiplexC as Alarm;
   CC2420ControlP.StartupTimer -> Alarm;
