@@ -395,7 +395,7 @@ implementation
 			return EBUSY;
 
 		if( call RF230Config.requiresRssiCca(msg) 
-				&& readRegister(RF230_PHY_RSSI) > ((rssiClear + rssiBusy) >> 3) )
+				&& (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
 			return EBUSY;
 
 		writeRegister(RF230_TRX_STATE, RF230_PLL_ON);
@@ -677,12 +677,17 @@ implementation
 				{
 					ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
 
-					// the most likely place for busy channel, with no TRX_END
+					// the most likely place for busy channel, with no TRX_END interrupt
 					if( irq == RF230_IRQ_RX_START )
 					{
-						temp = readRegister(RF230_PHY_RSSI);
+						temp = readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK;
 
 						rssiBusy += temp - (rssiBusy >> 2);
+
+#ifdef RF230_RSSI_ENERGY
+						temp = readRegister(RF230_PHY_ED_LEVEL);
+#endif
+
 						call PacketRSSI.set(rxMsg, temp);
 					}
 					else
@@ -734,7 +739,7 @@ implementation
 					else
 					{
 						// the most likely place for clear channel (hope to avoid acks)
-						rssiClear += readRegister(RF230_PHY_RSSI) - (rssiClear >> 2);
+						rssiClear += (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) - (rssiClear >> 2);
 					}
 
 					cmd = CMD_DOWNLOAD;
