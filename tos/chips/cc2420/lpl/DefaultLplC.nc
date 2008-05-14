@@ -36,7 +36,7 @@
 
 
 #include "DefaultLpl.h"
-#warning "*** USING DEFAULT POWER LISTENING LAYER"
+#warning "*** USING DEFAULT LOW POWER COMMUNICATIONS ***"
 
 configuration DefaultLplC {
   provides {

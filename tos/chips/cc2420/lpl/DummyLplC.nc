@@ -35,7 +35,9 @@
  * Sleep interval is always 0, and duty cycle is always 100%
  * @author David Moss
  */
- 
+
+#warning "*** LOW POWER COMMUNICATIONS DISABLED ***"
+
 configuration DummyLplC {
   provides {
     interface Send;
