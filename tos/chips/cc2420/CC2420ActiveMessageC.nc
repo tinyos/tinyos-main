@@ -31,7 +31,7 @@
  *
  * @author Philip Levis
  * @author David Moss
- * @version $Revision: 1.10 $ $Date: 2008-02-04 23:10:13 $
+ * @version $Revision: 1.11 $ $Date: 2008-05-14 21:33:07 $
  */
 
 #include "CC2420.h"
@@ -78,7 +78,7 @@ implementation {
 #endif
 
   
-  RadioBackoff = CsmaC;
+  RadioBackoff = AM;
   Packet = AM;
   AMSend = AM;
   SendNotifier = AM;
@@ -112,5 +112,7 @@ implementation {
   AM.CC2420Packet -> CC2420PacketC;
   AM.CC2420PacketBody -> CC2420PacketC;
   AM.CC2420Config -> CC2420ControlC;
+  
+  AM.SubBackoff -> CsmaC;
   
 }

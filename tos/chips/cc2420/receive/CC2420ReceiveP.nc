@@ -33,10 +33,12 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.7 $ $Date: 2008-01-18 18:36:00 $
+ * @version $Revision: 1.8 $ $Date: 2008-05-14 21:33:07 $
  */
 
 #include "IEEE802154.h"
+#include "message.h"
+#include "AM.h"
 
 module CC2420ReceiveP {
 
@@ -107,6 +109,7 @@ implementation {
   void receive();
   void waitForNextPacket();
   void flush();
+  bool passesAddressCheck(message_t *msg);
   
   task void receiveDone_task();
   
@@ -326,9 +329,12 @@ implementation {
     metadata->crc = buf[ rxFrameLength ] >> 7;
     metadata->lqi = buf[ rxFrameLength ] & 0x7f;
     metadata->rssi = buf[ rxFrameLength - 1 ];
-    m_p_rx_buf = signal Receive.receive( m_p_rx_buf, m_p_rx_buf->data, 
-                                         rxFrameLength );
-
+    
+    if(passesAddressCheck(m_p_rx_buf)) {
+      m_p_rx_buf = signal Receive.receive( m_p_rx_buf, m_p_rx_buf->data, 
+          rxFrameLength );
+    }
+    
     atomic receivingPacket = FALSE;
     waitForNextPacket();
   }
@@ -432,4 +438,16 @@ implementation {
     m_missed_packets = 0;
   }
 
+  /**
+   * @return TRUE if the given message passes address recognition
+   */
+  bool passesAddressCheck(message_t *msg) {
+    cc2420_header_t *header = call CC2420PacketBody.getHeader( msg );
+    
+    if(!(call CC2420Config.isAddressRecognitionEnabled())) {
+      return TRUE;
+    } 
+    
+    return (header->dest == call CC2420Config.getShortAddr());
+  }
 }

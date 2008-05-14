@@ -54,7 +54,7 @@ module DefaultLplP {
   uses {
     interface Send as SubSend;
     interface CC2420Transmit as Resend;
-    interface RadioBackoff[am_id_t amId];
+    interface RadioBackoff;
     interface Receive as SubReceive;
     interface AMPacket;
     interface SplitControl as SubControl;
@@ -283,7 +283,7 @@ implementation {
       return SUCCESS;
     }
     
-    return FAIL;
+    return EBUSY;
   }
 
   command error_t Send.cancel(message_t *msg) {
@@ -308,23 +308,23 @@ implementation {
   
   
   /***************** RadioBackoff Events ****************/
-  async event void RadioBackoff.requestInitialBackoff[am_id_t amId](message_t *msg) {
+  async event void RadioBackoff.requestInitialBackoff(message_t *msg) {
     if((call CC2420PacketBody.getMetadata(msg))->rxInterval 
         > ONE_MESSAGE) {
-      call RadioBackoff.setInitialBackoff[amId]( call Random.rand16() 
+      call RadioBackoff.setInitialBackoff( call Random.rand16() 
           % (0x4 * CC2420_BACKOFF_PERIOD) + CC2420_MIN_BACKOFF);
     }
   }
   
-  async event void RadioBackoff.requestCongestionBackoff[am_id_t amId](message_t *msg) {
+  async event void RadioBackoff.requestCongestionBackoff(message_t *msg) {
     if((call CC2420PacketBody.getMetadata(msg))->rxInterval 
         > ONE_MESSAGE) {
-      call RadioBackoff.setCongestionBackoff[amId]( call Random.rand16() 
+      call RadioBackoff.setCongestionBackoff( call Random.rand16() 
           % (0x3 * CC2420_BACKOFF_PERIOD) + CC2420_MIN_BACKOFF);
     }
   }
   
-  async event void RadioBackoff.requestCca[am_id_t amId](message_t *msg) {
+  async event void RadioBackoff.requestCca(message_t *msg) {
   }
   
 

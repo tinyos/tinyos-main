@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.4 $ $Date: 2008-05-13 15:48:09 $
+ * @version $Revision: 1.5 $ $Date: 2008-05-14 21:33:07 $
  */
 
 #include "Timer.h"
@@ -437,11 +437,14 @@ implementation {
 
   /**
    * Write the MDMCTRL0 register
+   * Disabling hardware address recognition improves acknowledgment success
+   * rate and low power communications reliability by causing the local node
+   * to do work while the real destination node of the packet is acknowledging.
    */
   void writeMdmctrl0() {
     atomic {
       call MDMCTRL0.write( ( 1 << CC2420_MDMCTRL0_RESERVED_FRAME_MODE ) |
-          ( addressRecognition << CC2420_MDMCTRL0_ADR_DECODE ) |
+          ( 0 << CC2420_MDMCTRL0_ADR_DECODE ) |
           ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
           ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
           ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |

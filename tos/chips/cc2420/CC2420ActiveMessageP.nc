@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.13 $ $Date: 2008-04-24 17:03:43 $
+ * @version $Revision: 1.14 $ $Date: 2008-05-14 21:33:07 $
  */
  
 #include "CC2420.h"
@@ -42,6 +42,7 @@ module CC2420ActiveMessageP {
     interface AMPacket;
     interface Packet;
     interface SendNotifier[am_id_t id];
+    interface RadioBackoff[am_id_t id];
   }
   
   uses {
@@ -51,6 +52,7 @@ module CC2420ActiveMessageP {
     interface CC2420PacketBody;
     interface CC2420Config;
     interface ActiveMessageAddress;
+    interface RadioBackoff as SubBackoff;
   }
 }
 implementation {
@@ -67,6 +69,7 @@ implementation {
     header->type = id;
     header->dest = addr;
     header->destpan = call CC2420Config.getPanAddr();
+    header->src = call AMPacket.address();
     
     signal SendNotifier.aboutToSend[id](addr, msg);
     
@@ -192,6 +195,48 @@ implementation {
   event void CC2420Config.syncDone( error_t error ) {
   }
   
+  
+  /***************** RadioBackoff ***********************/
+
+  async event void SubBackoff.requestInitialBackoff(message_t *msg) {
+    signal RadioBackoff.requestInitialBackoff[((cc2420_header_t*)(msg->data - 
+                                        sizeof(cc2420_header_t)))->type](msg);
+  }
+
+  async event void SubBackoff.requestCongestionBackoff(message_t *msg) {
+    signal RadioBackoff.requestCongestionBackoff[((cc2420_header_t*)(msg->data - 
+        sizeof(cc2420_header_t)))->type](msg);
+  }
+  async event void SubBackoff.requestCca(message_t *msg) {
+    // Lower layers than this do not configure the CCA settings
+    signal RadioBackoff.requestCca[((cc2420_header_t*)(msg->data - 
+        sizeof(cc2420_header_t)))->type](msg);
+  }
+
+  async command void RadioBackoff.setInitialBackoff[am_id_t amId](uint16_t backoffTime) {
+    call SubBackoff.setInitialBackoff(backoffTime);
+  }
+  
+  /**
+   * Must be called within a requestCongestionBackoff event
+   * @param backoffTime the amount of time in some unspecified units to backoff
+   */
+  async command void RadioBackoff.setCongestionBackoff[am_id_t amId](uint16_t backoffTime) {
+    call SubBackoff.setCongestionBackoff(backoffTime);
+  }
+
+      
+  /**
+   * Enable CCA for the outbound packet.  Must be called within a requestCca
+   * event
+   * @param ccaOn TRUE to enable CCA, which is the default.
+   */
+  async command void RadioBackoff.setCca[am_id_t amId](bool useCca) {
+    call SubBackoff.setCca(useCca);
+  }
+
+
+  
   /***************** Defaults ****************/
   default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) {
     return msg;
@@ -205,6 +250,17 @@ implementation {
   }
 
   default event void SendNotifier.aboutToSend[am_id_t amId](am_addr_t addr, message_t *msg) {
+  }
+  default async event void RadioBackoff.requestInitialBackoff[am_id_t id](
+      message_t *msg) {
+  }
+
+  default async event void RadioBackoff.requestCongestionBackoff[am_id_t id](
+      message_t *msg) {
+  }
+  
+  default async event void RadioBackoff.requestCca[am_id_t id](
+      message_t *msg) {
   }
   
 }

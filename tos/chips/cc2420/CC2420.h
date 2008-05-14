@@ -30,7 +30,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
- * @version $Revision: 1.8 $ $Date: 2008-01-17 02:09:39 $
+ * @version $Revision: 1.9 $ $Date: 2008-05-14 21:33:07 $
  */
 
 #ifndef __CC2420_H__
@@ -55,7 +55,10 @@ typedef nx_struct cc2420_header_t {
   nxle_uint8_t network;
 #endif
 
+#ifndef TINYOS_IP
   nxle_uint8_t type;
+#endif
+
 } cc2420_header_t;
   
 /**
