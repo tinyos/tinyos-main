@@ -36,9 +36,6 @@ generic configuration DummyLayerC()
 		interface RadioCCA;
 
 		interface DummyConfig as UnconnectedConfig;
-		interface PacketField<uint16_t> as UnconnectedPacketSleepInterval;
-		interface IEEE154Packet as UnconnectedIEEE154Packet;
-		interface PacketAcknowledgements as UnconnectedPacketAcknowledgments;
 	}
 
 	uses 
@@ -52,11 +49,6 @@ generic configuration DummyLayerC()
 		interface Receive as SubReceive;
 
 		interface DummyConfig as Config;
-		interface PacketField<uint16_t> as PacketSleepInterval;
-		interface IEEE154Packet;
-		interface PacketAcknowledgements;
-
-		interface LowPowerListening as UnconnectedLowPowerListening;
 	}
 }
 
@@ -72,8 +64,7 @@ implementation
 	Receive = SubReceive;
 
 	Config = UnconnectedConfig;
-	PacketSleepInterval = UnconnectedPacketSleepInterval;
-	IEEE154Packet = UnconnectedIEEE154Packet;
-	PacketAcknowledgements = UnconnectedPacketAcknowledgments;
-	LowPowerListening = UnconnectedLowPowerListening;
+
+	components DummyLayerP;
+	LowPowerListening = DummyLayerP.LowPowerListening;
 }

@@ -21,45 +21,30 @@
  * Author: Miklos Maroti
  */
 
-#warning "*** USING LOW POWER LISTENING LAYER"
-
-configuration LowPowerListeningLayerC
+module DummyLayerP
 {
-	provides
-	{
-		interface SplitControl;
-		interface Send;
-		interface Receive;
-
-		interface LowPowerListening;
-	}
-	uses
-	{
-		interface SplitControl as SubControl;
-		interface Send as SubSend;
-		interface Receive as SubReceive;
-
-		interface PacketField<uint16_t> as PacketSleepInterval;
-		interface IEEE154Packet;
-		interface PacketAcknowledgements;
-	}
+	provides interface LowPowerListening;
 }
 
 implementation
 {
-	components LowPowerListeningLayerP, new TimerMilliC();
+	command void LowPowerListening.setLocalSleepInterval(uint16_t sleepIntervalMs) { }
 
-	SplitControl = LowPowerListeningLayerP;
-	Send = LowPowerListeningLayerP;
-	Receive = LowPowerListeningLayerP;
-	LowPowerListening = LowPowerListeningLayerP;
+	command uint16_t LowPowerListening.getLocalSleepInterval() { return 0; }
+  
+	command void LowPowerListening.setLocalDutyCycle(uint16_t dutyCycle) { }
+  
+	command uint16_t LowPowerListening.getLocalDutyCycle() { return 10000; }
+  
+	command void LowPowerListening.setRxSleepInterval(message_t *msg, uint16_t sleepIntervalMs) { }
+  
+	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg) { return 0; }
+  
+	command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t dutyCycle) { }
+  
+	command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg) { return 10000; }
+  
+	command uint16_t LowPowerListening.dutyCycleToSleepInterval(uint16_t dutyCycle) { return 0; }
 
-	SubControl = LowPowerListeningLayerP;
-	SubSend = LowPowerListeningLayerP;
-	SubReceive = LowPowerListeningLayerP;
-	PacketSleepInterval = LowPowerListeningLayerP;
-	IEEE154Packet = LowPowerListeningLayerP;
-	PacketAcknowledgements = LowPowerListeningLayerP;
-	
-	LowPowerListeningLayerP.Timer -> TimerMilliC;
+	command uint16_t LowPowerListening.sleepIntervalToDutyCycle(uint16_t sleepInterval) { return 10000; }
 }

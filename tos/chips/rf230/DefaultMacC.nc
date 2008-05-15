@@ -72,16 +72,19 @@ implementation
 	RF230LayerC.lastTouch -> DefaultPacketC.lastTouch;
 
 	components ActiveMessageLayerC;
-#if defined(LOW_POWER_LISTENING)
+#ifdef LOW_POWER_LISTENING
 	components LowPowerListeningLayerC;
 #else	
 	components new DummyLayerC() as LowPowerListeningLayerC;
-#endif	
+#endif
 	components MessageBufferLayerC;
 	components UniqueLayerC;
 	components TrafficMonitorLayerC;
+#ifdef RF230_SLOTTED_MAC
+	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
+#else
 	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
-//	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
+#endif
 	components SoftwareAckLayerC;
 	components new DummyLayerC() as CsmaLayerC;
 	components RF230LayerC;
@@ -102,9 +105,11 @@ implementation
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
+#ifdef LOW_POWER_LISTENING
 	LowPowerListeningLayerC.PacketSleepInterval -> DefaultPacketC;
 	LowPowerListeningLayerC.IEEE154Packet -> IEEE154PacketC;
 	LowPowerListeningLayerC.PacketAcknowledgements -> DefaultPacketC;
+#endif
 
 	MessageBufferLayerC.Packet -> DefaultPacketC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
