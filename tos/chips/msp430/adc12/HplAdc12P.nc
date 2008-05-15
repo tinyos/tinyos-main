@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2008-04-17 22:38:34 $
+ * $Revision: 1.7 $
+ * $Date: 2008-05-15 23:57:13 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -44,7 +44,6 @@
 
 module HplAdc12P {
   provides interface HplAdc12;
-  uses interface HplMsp430InterruptSig as SIGNAL_ADC_VECTOR;
 }
 implementation
 {
@@ -119,7 +118,7 @@ implementation
     
   async command bool HplAdc12.isBusy(){ return ADC12CTL1 & ADC12BUSY; }
 
-  inline async event void SIGNAL_ADC_VECTOR.fired() {
+  TOSH_SIGNAL(ADC_VECTOR) {
     signal HplAdc12.conversionDone(ADC12IV);
   }
 }

@@ -53,7 +53,7 @@
 /**
  * @author Ben Greenstein <ben@cs.ucla.edu>
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2008-04-17 22:38:34 $
+ * @version $Revision: 1.6 $ $Date: 2008-05-15 23:57:13 $
  */
 
 configuration HplMsp430DmaC {
@@ -85,9 +85,6 @@ implementation {
   Dma0.Interrupt -> HplMsp430DmaP;
   Dma1.Interrupt -> HplMsp430DmaP;
   Dma2.Interrupt -> HplMsp430DmaP;
-  
-  components HplMsp430InterruptSigP;
-  HplMsp430DmaP.SIGNAL_DACDMA_VECTOR -> HplMsp430InterruptSigP.SIGNAL_DACDMA_VECTOR;
 
 }
 

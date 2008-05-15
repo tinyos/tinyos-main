@@ -51,7 +51,6 @@ configuration HplMsp430InterruptC
 implementation
 {
   components HplMsp430InterruptP as HplInterruptP;
-  components HplMsp430InterruptSigP;
 #ifdef __msp430_have_port1
   Port10 = HplInterruptP.Port10;
   Port11 = HplInterruptP.Port11;
@@ -61,7 +60,6 @@ implementation
   Port15 = HplInterruptP.Port15;
   Port16 = HplInterruptP.Port16;
   Port17 = HplInterruptP.Port17;
-  HplInterruptP.SIGNAL_PORT1_VECTOR -> HplMsp430InterruptSigP.SIGNAL_PORT1_VECTOR;
 #endif
 #ifdef __msp430_have_port2
   Port20 = HplInterruptP.Port20;
@@ -72,6 +70,5 @@ implementation
   Port25 = HplInterruptP.Port25;
   Port26 = HplInterruptP.Port26;
   Port27 = HplInterruptP.Port27;
-  HplInterruptP.SIGNAL_PORT2_VECTOR -> HplMsp430InterruptSigP.SIGNAL_PORT2_VECTOR;
 #endif
 }

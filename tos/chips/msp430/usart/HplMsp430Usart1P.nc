@@ -67,7 +67,7 @@
  * @author: Jonathan Hui <jhui@archedrock.com>
  * @author: Vlado Handziski <handzisk@tkn.tu-berlin.de>
  * @author: Joe Polastre
- * @version $Revision: 1.5 $ $Date: 2008-04-17 22:38:34 $
+ * @version $Revision: 1.6 $ $Date: 2008-05-15 23:57:13 $
  */
 
 module HplMsp430Usart1P {
@@ -80,8 +80,6 @@ module HplMsp430Usart1P {
   uses interface HplMsp430GeneralIO as UCLK;
   uses interface HplMsp430GeneralIO as URXD;
   uses interface HplMsp430GeneralIO as UTXD;
-  uses interface HplMsp430InterruptSig as SIGNAL_UART1RX_VECTOR;
-  uses interface HplMsp430InterruptSig as SIGNAL_UART1TX_VECTOR;
 }
 
 implementation
@@ -93,12 +91,14 @@ implementation
   MSP430REG_NORACE(U1RCTL);
   MSP430REG_NORACE(U1TXBUF);
 
-  inline async event void SIGNAL_UART1RX_VECTOR.fired() {
+
+
+  TOSH_SIGNAL(UART1RX_VECTOR) {
     uint8_t temp = U1RXBUF;
     signal Interrupts.rxDone(temp);
   }
 
-  inline async event void SIGNAL_UART1TX_VECTOR.fired() {
+  TOSH_SIGNAL(UART1TX_VECTOR) {
     signal Interrupts.txDone();
   }
 

@@ -159,11 +159,5 @@ implementation
   CaptureB6 = Msp430TimerB6.Capture;
   Msp430TimerB6.Timer -> Msp430TimerB.Timer;
   Msp430TimerB6.Event -> Msp430TimerB.Event[6];
-  
-  components HplMsp430InterruptSigP;
-  Common.SIGNAL_TIMERA0_VECTOR -> HplMsp430InterruptSigP.SIGNAL_TIMERA0_VECTOR;
-  Common.SIGNAL_TIMERA1_VECTOR -> HplMsp430InterruptSigP.SIGNAL_TIMERA1_VECTOR;
-  Common.SIGNAL_TIMERB0_VECTOR -> HplMsp430InterruptSigP.SIGNAL_TIMERB0_VECTOR;
-  Common.SIGNAL_TIMERB1_VECTOR -> HplMsp430InterruptSigP.SIGNAL_TIMERB1_VECTOR;
 }
 
