@@ -34,12 +34,8 @@ configuration ActiveMessageC
 		interface AMPacket;
 
 		interface PacketAcknowledgements;
-		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketField<uint8_t> as PacketTransmitPower;
-		interface PacketField<uint8_t> as PacketRSSI;
-		interface PacketTimeStamp<TMicro, uint16_t>;
 		interface LowPowerListening;
-		interface PacketLastTouch;
+		interface PacketTimeStamp<TMicro, uint16_t>;
 	}
 }
 
@@ -55,10 +51,6 @@ implementation
 	AMPacket     = MAC;
 
 	PacketAcknowledgements	= MAC.PacketAcknowledgements;
-	PacketLinkQuality		= MAC.PacketLinkQuality;
-	PacketTransmitPower		= MAC.PacketTransmitPower;
-	PacketRSSI				= MAC.PacketRSSI;
-	PacketTimeStamp			= MAC.PacketTimeStamp;
-	PacketLastTouch			= MAC.PacketLastTouch;
 	LowPowerListening		= MAC.LowPowerListening;
+	PacketTimeStamp			= MAC.PacketTimeStamp;
 }

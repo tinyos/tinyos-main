@@ -28,6 +28,13 @@ configuration TimeSyncMessageC
 {
 	provides
 	{
+		interface SplitControl;
+
+		interface Receive[uint8_t id];
+		interface Receive as Snoop[am_id_t id];
+		interface Packet;
+		interface AMPacket;
+
 		interface TimeSyncSend<TMicro> as TimeSyncSendMicro[am_id_t id];
 		interface TimeSyncPacket<TMicro> as TimeSyncPacketMicro;
 //		interface LocalTime<TMicro> as LocalTimeMicro;
@@ -36,18 +43,13 @@ configuration TimeSyncMessageC
 		interface TimeSyncPacket<TMilli> as TimeSyncPacketMilli;
 		interface LocalTime<TMilli> as LocalTimeMilli;
 
-		interface SplitControl;
-		interface Receive[uint8_t id];
-		interface Receive as Snoop[am_id_t id];
-		interface Packet;
-		interface AMPacket;
-		interface PacketAcknowledgements;
+		interface PacketTimeStamp<TMicro, uint16_t>;
 	}
 }
 
 implementation
 {
-	components TimeSyncMessageP, ActiveMessageC, LocalTimeMilliC;
+	components TimeSyncMessageP, RF230ActiveMessageC, LocalTimeMilliC;
 
 	TimeSyncSendMicro = TimeSyncMessageP;
 	TimeSyncPacketMicro = TimeSyncMessageP;
@@ -58,17 +60,17 @@ implementation
 	LocalTimeMilli = LocalTimeMilliC;
 
 	Packet = TimeSyncMessageP;
-	TimeSyncMessageP.SubSend -> ActiveMessageC.AMSend;
-	TimeSyncMessageP.SubPacket -> ActiveMessageC.Packet;
-	TimeSyncMessageP.PacketTimeStamp -> ActiveMessageC;
+	TimeSyncMessageP.SubSend -> RF230ActiveMessageC.AMSend;
+	TimeSyncMessageP.SubPacket -> RF230ActiveMessageC.Packet;
+	TimeSyncMessageP.PacketTimeStamp -> RF230ActiveMessageC;
 
 	TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
 
-	TimeSyncMessageP.PacketLastTouch -> ActiveMessageC;
+	TimeSyncMessageP.PacketLastTouch -> RF230ActiveMessageC;
 
-	SplitControl = ActiveMessageC;
-	Receive	= ActiveMessageC.Receive;
-	Snoop = ActiveMessageC.Snoop;
-	AMPacket = ActiveMessageC;
-	PacketAcknowledgements = ActiveMessageC;
+	SplitControl = RF230ActiveMessageC;
+	Receive	= RF230ActiveMessageC.Receive;
+	Snoop = RF230ActiveMessageC.Snoop;
+	AMPacket = RF230ActiveMessageC;
+	PacketTimeStamp = RF230ActiveMessageC;
 }
