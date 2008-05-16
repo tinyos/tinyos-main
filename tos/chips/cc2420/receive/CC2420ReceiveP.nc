@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.8 $ $Date: 2008-05-14 21:33:07 $
+ * @version $Revision: 1.9 $ $Date: 2008-05-16 16:03:45 $
  */
 
 #include "IEEE802154.h"
@@ -446,8 +446,9 @@ implementation {
     
     if(!(call CC2420Config.isAddressRecognitionEnabled())) {
       return TRUE;
-    } 
+    }
     
-    return (header->dest == call CC2420Config.getShortAddr());
+    return (header->dest == call CC2420Config.getShortAddr()
+        || header->dest == AM_BROADCAST_ADDR);
   }
 }
