@@ -1,19 +1,19 @@
-// $Id: ListenRaw.java,v 1.4 2006-12-12 18:23:00 vlahan Exp $
+// $Id: ListenRaw.java,v 1.5 2008-05-16 19:28:40 sallai Exp $
 
 /*									tab:4
- * "Copyright (c) 2000-2003 The Regents of the University  of California.  
+ * "Copyright (c) 2000-2003 The Regents of the University  of California.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
  * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -23,9 +23,9 @@
  * Copyright (c) 2002-2003 Intel Corporation
  * All rights reserved.
  *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * This file is distributed under the terms in the attached INTEL-LICENSE
  * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
  * 94704.  Attention:  Intel License Inquiry.
  */
 /* Authors: Mike Chen, Philip Levis
@@ -57,6 +57,7 @@ public class ListenRaw {
     private static final int PORT_SPEED_MICA2DOT = 19200;
     private static final int PORT_SPEED_MICA = 19200;
     private static final int PORT_SPEED_RENE = 19200;
+    private static final int PORT_SPEED_IRIS = 57600;
     private static final int LENGTH_OFFSET = 4;
     private int packetLength;
     private int portSpeed;
@@ -77,14 +78,14 @@ public class ListenRaw {
 	port = new TOSSerial(portName);
 	in = port.getInputStream();
 	out = port.getOutputStream();
-	
+
 	//port.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 	// These are the mote UART parameters
 	port.setSerialPortParams(portSpeed, 8, SerialPort.STOPBITS_1, false);
 	printPortStatus();
 	System.out.println();
     }
-    
+
     private void printPortStatus() {
 	System.out.println(" baud rate: " + port.getBaudRate());
 	System.out.println(" data bits: " + port.getDataBits());
@@ -93,10 +94,10 @@ public class ListenRaw {
     }
 
     public void read() throws IOException {
-	int i; 
+	int i;
 	int count = 0;
 	byte[] packet = new byte[MAX_MSG_SIZE];
-	
+
 	while ((i = in.read()) != -1) {
 	    if (i == 0x7e) {
 		System.out.println();
@@ -116,6 +117,7 @@ public class ListenRaw {
 	System.err.println("  -mica2dot:        Mica2Dot ("+PORT_SPEED_MICA2DOT+" bps)");
 	System.err.println("  -mica:         Mica ("+PORT_SPEED_MICA+" bps)");
 	System.err.println("  -rene:         Rene ("+PORT_SPEED_RENE+" bps)");
+	System.err.println("  -iris:         Iris ("+PORT_SPEED_IRIS+" bps) [default]");
 	System.exit(-1);
     }
 
@@ -126,7 +128,7 @@ public class ListenRaw {
 	if ((args.length < 1) || (args.length > 3)) {
 	    printUsage();
 	}
-	
+
 	for (int i = 0; i < args.length; i++) {
 	    if (args[i].equals("-h") || args[i].equals("--help")) {
 		printUsage();
@@ -149,12 +151,15 @@ public class ListenRaw {
 	    if (args[i].equals("-rene")) {
 	        speed = PORT_SPEED_RENE;
 	    }
+	    if (args[i].equals("-iris")) {
+	        speed = PORT_SPEED_IRIS;
+	    }
 	}
 
 	if (args[args.length - 1].charAt(0) == '-') {
 	    return; // No port specified
 	}
-	
+
 	ListenRaw reader = new ListenRaw(args[args.length - 1], speed);
 	try {
 	    reader.open();
@@ -162,7 +167,7 @@ public class ListenRaw {
 	catch (Exception e) {
 	    e.printStackTrace();
 	}
-	
+
 	try {
 	    reader.read();
 	}

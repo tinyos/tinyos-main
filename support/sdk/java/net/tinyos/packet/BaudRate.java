@@ -20,5 +20,6 @@ class BaudRate {
 	Platform.add(Platform.x, "micaz",      57600);
 	Platform.add(Platform.x, "eyesIFX",       57600);
 	Platform.add(Platform.x, "intelmote2", 115200);
+	Platform.add(Platform.x, "iris",      57600);
     }
 }
