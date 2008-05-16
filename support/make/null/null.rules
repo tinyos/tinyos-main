@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: null.rules,v 1.6 2008-03-11 09:34:14 klueska Exp $
+#$Id: null.rules,v 1.7 2008-05-16 22:10:21 klueska Exp $
 
 define NULL_HELP
 
@@ -15,7 +15,7 @@ OBJDUMP = objdump
 NCC = ncc
 LIBS = -lm
 
-BUILDDIR = build/$(PLATFORM)
+BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
 MAIN_SREC = $(BUILDDIR)/main.srec
 MAIN_IHEX = $(BUILDDIR)/main.ihex

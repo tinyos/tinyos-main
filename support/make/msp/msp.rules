@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.10 2008-03-11 09:51:24 klueska Exp $
+#$Id: msp.rules,v 1.11 2008-05-16 22:10:21 klueska Exp $
 
 define MSP_HELP
 
@@ -40,7 +40,7 @@ NCC = ncc
 LIBS = -lm
 
 AMADDR = ActiveMessageAddressC\$$addr
-BUILDDIR = build/$(PLATFORM)
+BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
 MAIN_IHEX = $(BUILDDIR)/main.ihex
 INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
