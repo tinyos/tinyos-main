@@ -1,4 +1,4 @@
-/* $Id: platform_message.h,v 1.3 2008-02-20 01:07:04 mmaroti Exp $
+/* $Id: platform_message.h,v 1.4 2008-05-16 17:43:48 mmaroti Exp $
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -55,27 +55,27 @@
  *
  * @author Philip Levis
  * @date   May 16 2005
- * Revision:  $Revision: 1.3 $
+ * Revision:  $Revision: 1.4 $
  */
 
 
 #ifndef PLATFORM_MESSAGE_H
 #define PLATFORM_MESSAGE_H
 
-#include <DefaultPacket.h>
+#include <RF230Packet.h>
 #include <Serial.h>
 
 typedef union message_header {
-	defpacket_header_t rf230;
+	rf230packet_header_t rf230;
 	serial_header_t serial;
 } message_header_t;
 
 typedef union message_footer {
-	defpacket_footer_t rf230;
+	rf230packet_footer_t rf230;
 } message_footer_t;
 
 typedef union message_metadata {
-	defpacket_metadata_t rf230;
+	rf230packet_metadata_t rf230;
 } message_metadata_t;
 
 #endif

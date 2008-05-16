@@ -21,42 +21,36 @@
  * Author: Miklos Maroti
  */
 
-#include <HplRF230.h>
+#ifndef __RF230PACKET_H__
+#define __RF230PACKET_H__
 
-configuration DefaultPacketC
+#include <IEEE154Packet.h>
+#include <TimeSyncMessage.h>
+
+typedef ieee154_header_t rf230packet_header_t;
+
+typedef nx_struct rf230packet_footer_t
 {
-	provides
-	{
-		interface Packet;
-		interface AMPacket;
-		interface PacketAcknowledgements;
-		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketField<uint8_t> as PacketTransmitPower;
-		interface PacketField<uint8_t> as PacketRSSI;
-		interface PacketField<uint16_t> as PacketSleepInterval;
+	timesync_footer_t timesync;
+} rf230packet_footer_t;
 
-		interface PacketTimeStamp<TRF230, uint16_t>;
-		interface PacketLastTouch;
-
-		async event void lastTouch(message_t* msg);
-	}
-}
-
-implementation
+typedef nx_struct rf230packet_metadata_t
 {
-	components DefaultPacketP, IEEE154PacketC;
+	nx_uint8_t flags;
+	nx_uint8_t lqi;
+	nx_uint8_t power;				// shared between TXPOWER and RSSI
+	nx_uint16_t timestamp;
+} rf230packet_metadata_t;
 
-	DefaultPacketP.IEEE154Packet -> IEEE154PacketC;
+enum rf230packet_metadata_flags
+{
+	RF230PACKET_WAS_ACKED = 0x01,		// PacketAcknowledgements
+	RF230PACKET_TIMESTAMP = 0x02,		// PacketTimeStamp
+	RF230PACKET_LAST_TOUCH = 0x04,	// PacketLastTouch.touch
+	RF230PACKET_TXPOWER = 0x10,		// PacketTransmitPower
+	RF230PACKET_RSSI = 0x20,			// PacketRSSI
 
-	Packet = DefaultPacketP;
-	AMPacket = IEEE154PacketC;
-	PacketAcknowledgements = DefaultPacketP;
-	PacketLinkQuality = DefaultPacketP.PacketLinkQuality;
-	PacketTransmitPower = DefaultPacketP.PacketTransmitPower;
-	PacketRSSI = DefaultPacketP.PacketRSSI;
-	PacketSleepInterval = DefaultPacketP.PacketSleepInterval;
-	PacketTimeStamp = DefaultPacketP;
+	RF230PACKET_CLEAR_METADATA = 0x00,
+};
 
-	PacketLastTouch = DefaultPacketP;
-	lastTouch = DefaultPacketP;
-}
+#endif//__RF230PACKET_H__

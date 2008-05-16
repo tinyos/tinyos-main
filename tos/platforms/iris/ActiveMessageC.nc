@@ -45,7 +45,7 @@ configuration ActiveMessageC
 
 implementation
 {
-	components DefaultMacC as MAC;
+	components RF230ActiveMessageC as MAC;
 
 	SplitControl = MAC;
 	AMSend       = MAC;

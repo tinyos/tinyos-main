@@ -37,8 +37,8 @@ implementation
 	RF230TestM.SplitControl -> SerialActiveMessageC;
 	RF230TestM.Timer -> TimerMilliC;
 
-	components RF230LayerC, DefaultMacC;
+	components RF230LayerC, RF230ActiveMessageC;
 
 	RF230TestM.RadioState -> RF230LayerC;
-	RF230TestM.AMSend -> DefaultMacC;
+	RF230TestM.AMSend -> RF230ActiveMessageC;
 }

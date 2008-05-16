@@ -21,11 +21,11 @@
  * Author: Miklos Maroti
  */
 
-#include <DefaultPacket.h>
+#include <RF230Packet.h>
 #include <HplRF230.h>
 #include <Tasklet.h>
 
-module DefaultMacP
+module RF230ActiveMessageP
 {
 	provides
 	{
@@ -67,9 +67,9 @@ implementation
 		return ((uint8_t*)(call IEEE154Packet.getHeader(msg))) + 1;
 	}
 
-	inline defpacket_metadata_t* getMeta(message_t* msg)
+	inline rf230packet_metadata_t* getMeta(message_t* msg)
 	{
-		return (defpacket_metadata_t*)(msg->metadata);
+		return (rf230packet_metadata_t*)(msg->metadata);
 	}
 
 	async command uint8_t RF230Config.getHeaderLength()
@@ -81,7 +81,7 @@ implementation
 	async command uint8_t RF230Config.getMaxLength()
 	{
 		// note, that the ieee154_footer_t is not stored, but we should include it here
-		return sizeof(defpacket_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
+		return sizeof(rf230packet_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
 	}
 
 	async command uint8_t RF230Config.getDefaultChannel()
@@ -124,9 +124,9 @@ implementation
 	async command void SoftwareAckConfig.setAckReceived(message_t* msg, bool acked)
 	{
 		if( acked )
-			getMeta(msg)->flags |= DEFPACKET_WAS_ACKED;
+			getMeta(msg)->flags |= RF230PACKET_WAS_ACKED;
 		else
-			getMeta(msg)->flags &= ~DEFPACKET_WAS_ACKED;
+			getMeta(msg)->flags &= ~RF230PACKET_WAS_ACKED;
 	}
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()

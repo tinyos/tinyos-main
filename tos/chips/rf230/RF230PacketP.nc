@@ -21,9 +21,9 @@
  * Author: Miklos Maroti
  */
 
-#include <DefaultPacket.h>
+#include <RF230Packet.h>
 
-module DefaultPacketP
+module RF230PacketP
 {
 	provides
 	{
@@ -51,13 +51,13 @@ implementation
 	enum
 	{
 		PACKET_LENGTH_INCREASE = 
-			sizeof(defpacket_header_t) - 1	// the 8-bit length field is not counted
+			sizeof(rf230packet_header_t) - 1	// the 8-bit length field is not counted
 			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
 	};
 
-	inline defpacket_metadata_t* getMeta(message_t* msg)
+	inline rf230packet_metadata_t* getMeta(message_t* msg)
 	{
-		return (defpacket_metadata_t*)(msg->metadata);
+		return (rf230packet_metadata_t*)(msg->metadata);
 	}
 
 /*----------------- Packet -----------------*/
@@ -70,7 +70,7 @@ implementation
 		call IEEE154Packet.set6LowPan(msg, TINYOS_6LOWPAN_NETWORK_ID);
 #endif
 
-		getMeta(msg)->flags = DEFPACKET_CLEAR_METADATA;
+		getMeta(msg)->flags = RF230PACKET_CLEAR_METADATA;
 	}
 
 	inline command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
@@ -116,7 +116,7 @@ implementation
 
 	async command bool PacketAcknowledgements.wasAcked(message_t* msg)
 	{
-		return getMeta(msg)->flags & DEFPACKET_WAS_ACKED;
+		return getMeta(msg)->flags & RF230PACKET_WAS_ACKED;
 	}
 
 /*----------------- PacketLinkQuality -----------------*/
@@ -144,7 +144,7 @@ implementation
 
 	async command bool PacketTimeStamp.isSet(message_t* msg)
 	{
-		return getMeta(msg)->flags & DEFPACKET_TIMESTAMP;
+		return getMeta(msg)->flags & RF230PACKET_TIMESTAMP;
 	}
 
 	async command uint16_t PacketTimeStamp.get(message_t* msg)
@@ -154,12 +154,12 @@ implementation
 
 	async command void PacketTimeStamp.clear(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~DEFPACKET_TIMESTAMP;
+		getMeta(msg)->flags &= ~RF230PACKET_TIMESTAMP;
 	}
 
 	async command void PacketTimeStamp.set(message_t* msg, uint16_t value)
 	{
-		getMeta(msg)->flags |= DEFPACKET_TIMESTAMP;
+		getMeta(msg)->flags |= RF230PACKET_TIMESTAMP;
 		getMeta(msg)->timestamp = value;
 	}
 
@@ -167,7 +167,7 @@ implementation
 
 	async command bool PacketTransmitPower.isSet(message_t* msg)
 	{
-		return getMeta(msg)->flags & DEFPACKET_TXPOWER;
+		return getMeta(msg)->flags & RF230PACKET_TXPOWER;
 	}
 
 	async command uint8_t PacketTransmitPower.get(message_t* msg)
@@ -177,13 +177,13 @@ implementation
 
 	async command void PacketTransmitPower.clear(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~DEFPACKET_TXPOWER;
+		getMeta(msg)->flags &= ~RF230PACKET_TXPOWER;
 	}
 
 	async command void PacketTransmitPower.set(message_t* msg, uint8_t value)
 	{
-		getMeta(msg)->flags &= ~DEFPACKET_RSSI;
-		getMeta(msg)->flags |= DEFPACKET_TXPOWER;
+		getMeta(msg)->flags &= ~RF230PACKET_RSSI;
+		getMeta(msg)->flags |= RF230PACKET_TXPOWER;
 		getMeta(msg)->power = value;
 	}
 
@@ -191,7 +191,7 @@ implementation
 
 	async command bool PacketRSSI.isSet(message_t* msg)
 	{
-		return getMeta(msg)->flags & DEFPACKET_RSSI;
+		return getMeta(msg)->flags & RF230PACKET_RSSI;
 	}
 
 	async command uint8_t PacketRSSI.get(message_t* msg)
@@ -201,13 +201,13 @@ implementation
 
 	async command void PacketRSSI.clear(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~DEFPACKET_RSSI;
+		getMeta(msg)->flags &= ~RF230PACKET_RSSI;
 	}
 
 	async command void PacketRSSI.set(message_t* msg, uint8_t value)
 	{
-		getMeta(msg)->flags &= ~DEFPACKET_TXPOWER;
-		getMeta(msg)->flags |= DEFPACKET_RSSI;
+		getMeta(msg)->flags &= ~RF230PACKET_TXPOWER;
+		getMeta(msg)->flags |= RF230PACKET_RSSI;
 		getMeta(msg)->power = value;
 	}
 
@@ -249,22 +249,22 @@ implementation
 	
 	async command void PacketLastTouch.request(message_t* msg)
 	{
-		getMeta(msg)->flags |= DEFPACKET_LAST_TOUCH;
+		getMeta(msg)->flags |= RF230PACKET_LAST_TOUCH;
 	}
 
 	async command void PacketLastTouch.cancel(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~DEFPACKET_LAST_TOUCH;
+		getMeta(msg)->flags &= ~RF230PACKET_LAST_TOUCH;
 	}
 
 	async command bool PacketLastTouch.isPending(message_t* msg)
 	{
-		return getMeta(msg)->flags & DEFPACKET_LAST_TOUCH;
+		return getMeta(msg)->flags & RF230PACKET_LAST_TOUCH;
 	}
 
 	async event void lastTouch(message_t* msg)
 	{
-		if( getMeta(msg)->flags & DEFPACKET_LAST_TOUCH )
+		if( getMeta(msg)->flags & RF230PACKET_LAST_TOUCH )
 			signal PacketLastTouch.touch(msg);
 	}
 

@@ -23,7 +23,7 @@
 
 #include <HplRF230.h>
 
-configuration DefaultMacC
+configuration RF230ActiveMessageC
 {
 	provides 
 	{
@@ -49,27 +49,27 @@ configuration DefaultMacC
 
 implementation
 {
-	components DefaultMacP, DefaultPacketC, IEEE154PacketC, RadioAlarmC;
+	components RF230ActiveMessageP, RF230PacketC, IEEE154PacketC, RadioAlarmC;
 
 #ifdef RF230_DEBUG
 	components AssertC;
 #endif
 
-	DefaultMacP.IEEE154Packet -> IEEE154PacketC;
-	DefaultMacP.Packet -> DefaultPacketC;
-	DefaultMacP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
+	RF230ActiveMessageP.IEEE154Packet -> IEEE154PacketC;
+	RF230ActiveMessageP.Packet -> RF230PacketC;
+	RF230ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 
-	Packet = DefaultPacketC;
-	AMPacket = DefaultPacketC;
-	PacketAcknowledgements = DefaultPacketC;
-	PacketLinkQuality = DefaultPacketC.PacketLinkQuality;
-	PacketTransmitPower = DefaultPacketC.PacketTransmitPower;
-	PacketRSSI = DefaultPacketC.PacketRSSI;
-	PacketTimeStamp = DefaultPacketC.PacketTimeStamp;
+	Packet = RF230PacketC;
+	AMPacket = RF230PacketC;
+	PacketAcknowledgements = RF230PacketC;
+	PacketLinkQuality = RF230PacketC.PacketLinkQuality;
+	PacketTransmitPower = RF230PacketC.PacketTransmitPower;
+	PacketRSSI = RF230PacketC.PacketRSSI;
+	PacketTimeStamp = RF230PacketC.PacketTimeStamp;
 	LowPowerListening = LowPowerListeningLayerC;
 
-	PacketLastTouch = DefaultPacketC;
-	RF230LayerC.lastTouch -> DefaultPacketC.lastTouch;
+	PacketLastTouch = RF230PacketC;
+	RF230LayerC.lastTouch -> RF230PacketC.lastTouch;
 
 	components ActiveMessageLayerC;
 #ifdef LOW_POWER_LISTENING
@@ -94,50 +94,50 @@ implementation
 	Receive = ActiveMessageLayerC.Receive;
 	Snoop = ActiveMessageLayerC.Snoop;
 
-	ActiveMessageLayerC.Config -> DefaultMacP;
+	ActiveMessageLayerC.Config -> RF230ActiveMessageP;
 	ActiveMessageLayerC.AMPacket -> IEEE154PacketC;
 	ActiveMessageLayerC.SubSend -> UniqueLayerC;
 	ActiveMessageLayerC.SubReceive -> LowPowerListeningLayerC;
 
-	UniqueLayerC.Config -> DefaultMacP;
+	UniqueLayerC.Config -> RF230ActiveMessageP;
 	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
 
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
 #ifdef LOW_POWER_LISTENING
-	LowPowerListeningLayerC.PacketSleepInterval -> DefaultPacketC;
+	LowPowerListeningLayerC.PacketSleepInterval -> RF230PacketC;
 	LowPowerListeningLayerC.IEEE154Packet -> IEEE154PacketC;
-	LowPowerListeningLayerC.PacketAcknowledgements -> DefaultPacketC;
+	LowPowerListeningLayerC.PacketAcknowledgements -> RF230PacketC;
 #endif
 
-	MessageBufferLayerC.Packet -> DefaultPacketC;
+	MessageBufferLayerC.Packet -> RF230PacketC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
 
 	UniqueLayerC.SubReceive -> TrafficMonitorLayerC;
 
-	TrafficMonitorLayerC.Config -> DefaultMacP;
+	TrafficMonitorLayerC.Config -> RF230ActiveMessageP;
 	TrafficMonitorLayerC.SubSend -> CollisionAvoidanceLayerC;
 	TrafficMonitorLayerC.SubReceive -> CollisionAvoidanceLayerC;
 	TrafficMonitorLayerC.SubState -> RF230LayerC;
 
-	CollisionAvoidanceLayerC.Config -> DefaultMacP;
+	CollisionAvoidanceLayerC.Config -> RF230ActiveMessageP;
 	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
 	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
 
-	SoftwareAckLayerC.Config -> DefaultMacP;
+	SoftwareAckLayerC.Config -> RF230ActiveMessageP;
 	SoftwareAckLayerC.SubSend -> CsmaLayerC;
 	SoftwareAckLayerC.SubReceive -> RF230LayerC;
 
-	CsmaLayerC.Config -> DefaultMacP;
+	CsmaLayerC.Config -> RF230ActiveMessageP;
 	CsmaLayerC -> RF230LayerC.RadioSend;
 	CsmaLayerC -> RF230LayerC.RadioCCA;
 
-	RF230LayerC.RF230Config -> DefaultMacP;
-	RF230LayerC.PacketLinkQuality -> DefaultPacketC.PacketLinkQuality;
-	RF230LayerC.PacketTransmitPower -> DefaultPacketC.PacketTransmitPower;
-	RF230LayerC.PacketRSSI -> DefaultPacketC.PacketRSSI;
-	RF230LayerC.PacketTimeStamp -> DefaultPacketC.PacketTimeStamp;
+	RF230LayerC.RF230Config -> RF230ActiveMessageP;
+	RF230LayerC.PacketLinkQuality -> RF230PacketC.PacketLinkQuality;
+	RF230LayerC.PacketTransmitPower -> RF230PacketC.PacketTransmitPower;
+	RF230LayerC.PacketRSSI -> RF230PacketC.PacketRSSI;
+	RF230LayerC.PacketTimeStamp -> RF230PacketC.PacketTimeStamp;
 }

@@ -27,17 +27,18 @@ configuration RF230SnifferC
 
 implementation
 {
-	components RF230SnifferP, MainC, SerialActiveMessageC, RF230LayerC, DefaultMacP, DefaultPacketC, IEEE154PacketC, AssertC;
+	components RF230SnifferP, MainC, SerialActiveMessageC, RF230LayerC, RF230ActiveMessageP, RF230PacketC, IEEE154PacketC, AssertC;
 
 	RF230SnifferP.Boot -> MainC;
 	RF230SnifferP.SplitControl -> SerialActiveMessageC;
 
 	RF230SnifferP.RadioState -> RF230LayerC;
 
-	RF230LayerC.RF230Config -> DefaultMacP;
-	RF230LayerC.PacketLinkQuality -> DefaultPacketC.PacketLinkQuality;
-	RF230LayerC.PacketTransmitPower -> DefaultPacketC.PacketTransmitPower;
-	RF230LayerC.PacketTimeStamp -> DefaultPacketC.PacketTimeStamp;
+	RF230LayerC.RF230Config -> RF230ActiveMessageP;
+	RF230LayerC.PacketLinkQuality -> RF230PacketC.PacketLinkQuality;
+	RF230LayerC.PacketRSSI -> RF230PacketC.PacketRSSI;
+	RF230LayerC.PacketTransmitPower -> RF230PacketC.PacketTransmitPower;
+	RF230LayerC.PacketTimeStamp -> RF230PacketC.PacketTimeStamp;
 
-	DefaultMacP.IEEE154Packet -> IEEE154PacketC;
+	RF230ActiveMessageP.IEEE154Packet -> IEEE154PacketC;
 }
