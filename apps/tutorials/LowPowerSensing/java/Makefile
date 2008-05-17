@@ -1,6 +1,7 @@
 GEN=SerialRequestSamplesMsg.java SerialSampleMsg.java Constants.java
 
 SENSOR_DIR = universal_sensors
+#SENSOR_DIR = tmote_onboard_sensors
 SENSOR_DEPS = ../$(SENSOR_DIR)/SensorSample.h
 
 all: LowPowerSensingApp.jar
@@ -28,4 +29,4 @@ clean:
 	rm -f *.class $(GEN)
 
 veryclean: clean
-	rm LowPowerSensingApp.jar
+	rm -f LowPowerSensingApp.jar
