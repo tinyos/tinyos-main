@@ -18,17 +18,24 @@ if [[ ! -x ${TOS_DELUGE} ]] ; then
     TOS_DELUGE=../../../../tools/tinyos/misc/tos-deluge
 fi 
 
-if [ $# -ne 2 ]; then
-  echo "Usage: $0 <port> <platform>"
+if [[ $# -ne 2 && $# -ne 3 ]]; then
+  echo "Usage: $0 <port> [<comm_port>] <platform>"
   echo "  <port>       /dev/ttyUSB0"
-  echo "  <platform>   micaz or telosb"
+  echo "  <comm_port>  /dev/ttyUSB1"
+  echo "  <platform>   micaz, telosb or iris"
   exit 2
 fi
 
-PORT=$1
+PPORT=$1
+CPORT=$1
 PLATFORM=$2
 
-if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' ]; then
+if [ $# -eq 3 ]; then
+ CPORT=$2
+ PLATFORM=$3
+fi
+
+if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' -a ${PLATFORM} != 'iris' ]; then
   echo "\"${PLATFORM}\" is not a supported platform"
   exit 2
 fi
@@ -44,11 +51,15 @@ make clean
 echo ============================ Compile and load Blink ============================
 if [ $PLATFORM == 'micaz' ]
 then
-  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install mib510,${PORT}
+  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install mib510,${PPORT}
 elif [ $PLATFORM == 'telosb' ]
 then
-  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install bsl,${PORT}
+  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install bsl,${PPORT}
+elif [ $PLATFORM == 'iris' ]
+then
+  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install mib510,${PPORT}
 fi
+
 
 echo '           +-------------------------------------------------------+'
 echo '           |                                                       |'
@@ -63,7 +74,7 @@ echo  ============================= Compile a new Blink ========================
 CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make ${PLATFORM}
 
 echo =============================== Upload the image ===============================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -i 1 build/${PLATFORM}/tos_image.xml
+${TOS_DELUGE} ${CPORT} ${PLATFORM} -i 1 build/${PLATFORM}/tos_image.xml
 
 echo '       +----------------------------------------------------------------+'
 echo '       |                                                                |'
@@ -80,4 +91,4 @@ echo '       +----------------------------------------------------------------+'
 read
 
 echo =========================== Reboot the base station ============================
-${TOS_DELUGE} ${PORT} ${PLATFORM} -r 1 
+${TOS_DELUGE} ${CPORT} ${PLATFORM} -r 1 

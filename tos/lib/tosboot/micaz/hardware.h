@@ -1,4 +1,4 @@
-// $Id: hardware.h,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+// $Id: hardware.h,v 1.2 2008-05-19 21:25:09 razvanm Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -67,7 +67,7 @@
  */
 /*
  *
- * $Id: hardware.h,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+ * $Id: hardware.h,v 1.2 2008-05-19 21:25:09 razvanm Exp $
  *
  */
 
@@ -80,8 +80,16 @@
 typedef uint32_t in_flash_addr_t;
 typedef uint32_t ex_flash_addr_t;
 
-void wait( uint16_t t ) {
-  for ( ; t; t-- );
+static inline void wait( uint16_t dt ) {
+  /* In most cases (constant arg), the test is elided at compile-time */
+  if (dt)
+    /* loop takes 8 cycles. this is 1uS if running on an internal 8MHz
+       clock, and 1.09uS if running on the external crystal. */
+    asm volatile (
+      "1:       sbiw    %0,1\n"
+      " adiw    %0,1\n"
+      " sbiw    %0,1\n"
+      " brne    1b" : "+w" (dt));
 }
 
 // LED assignments

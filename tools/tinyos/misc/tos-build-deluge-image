@@ -20,8 +20,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-# @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
 # @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+# @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
 
 import sys, struct, operator
 from xml.dom.minidom import parse
@@ -147,8 +147,8 @@ for line in image.split():
             all.append((start_addr, section))
             if rectype == 0x03:
                 # This last record updates the first 4 bytes which
-                # holds some some low level configuration. They are
-                # the same all the time so I guess that's why they are
+                # holds some low level configuration. They are the
+                # same all the time so I guess that's why they are
                 # skipped.
                 break
             section = []
@@ -173,6 +173,7 @@ for (addr, data) in all:
   all_data += encode(addr, 4) + \
               encode(len(data), 4) + \
               data
+all_data += encode(0, 4) + encode(0, 4) # Add the marker for the end of an image
 padding = [0] * (DELUGE_BYTES_PER_PAGE - len(all_data) % DELUGE_BYTES_PER_PAGE)
 if len(padding) < DELUGE_BYTES_PER_PAGE:
   all_data += padding

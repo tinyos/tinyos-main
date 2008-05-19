@@ -44,6 +44,9 @@ typedef nx_struct DelugeIdent {
 enum {
   DELUGE_INVALID_UID = 0xffffffff,
   DELUGE_NUM_VOLUMES = 4, 
+  DELUGE_KEY = 0xDE00,
+  DELUGE_AM_FLASH_VOL_MANAGER = 0xAB,
+  DELUGE_AM_DELUGE_MANAGER = 0xAC,
 };
 
 enum {

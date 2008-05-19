@@ -24,6 +24,8 @@
  * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
+#include "imgNum2volumeId.h"
+
 generic module FlashVolumeManagerP()
 {
   uses {
@@ -88,13 +90,6 @@ implementation
     nx_uint16_t nodeid;
   };
 
-  uint8_t imgNum2volumeId[] = {
-    VOLUME_GOLDENIMAGE,
-    VOLUME_DELUGE1,
-    VOLUME_DELUGE2,
-    VOLUME_DELUGE3
-  };
-  
   void sendReply(error_t error, storage_len_t len)
   {
     SerialReplyPacket *reply = (SerialReplyPacket *)call SerialAMSender.getPayload(&serialMsg, sizeof(SerialReplyPacket));
@@ -186,9 +181,9 @@ implementation
     }
 
     // Converts the image number that the user wants to the real image number
-    imgNum = request->imgNum < DELUGE_NUM_VOLUMES ? imgNum2volumeId[request->imgNum] : 0xFF;
+    imgNum = imgNum2volumeId(request->imgNum);
     
-    if (imgNum != 0xFF) {
+    if (imgNum != NON_DELUGE_VOLUME) {
       error = SUCCESS;
       // We ask for a reservation only for erase and write.
       switch (request->cmd) {
@@ -259,10 +254,9 @@ implementation
   {
     // Release the resource.
     if (state == S_IDLE && call Resource.isOwner()) {
-      call Leds.led1Off();
       call Resource.release();
     }
-    if (state == S_IDLE && !call ArbiterInfo.inUse()) {
+    if (state == S_IDLE) {
       call Leds.led1Off();
     }
   }

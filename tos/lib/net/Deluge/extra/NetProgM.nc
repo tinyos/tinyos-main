@@ -42,10 +42,13 @@ module NetProgM {
     interface Leds;
     interface CC2420Config;
     async command void setAmAddress(am_addr_t a);
+    interface ReprogramGuard;
   }
 }
 
 implementation {
+
+  uint32_t reprogramImgAddr;
 
   command error_t Init.init()
   {
@@ -82,12 +85,23 @@ implementation {
   
   command error_t NetProg.programImageAndReboot(uint32_t imgAddr)
   {
+    reprogramImgAddr = imgAddr;
+    return call ReprogramGuard.okToProgram();
+  }
+
+  event void ReprogramGuard.okToProgramDone(bool ok)
+  {
     BootArgs bootArgs;
+
+    if (!ok) {
+      // The voltage is too low. Nothing to do.
+      return;
+    }
 
     atomic {
       call IFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
       
-      bootArgs.imageAddr = imgAddr;
+      bootArgs.imageAddr = reprogramImgAddr;
       bootArgs.gestureCount = 0xff;
       bootArgs.noReprogram = FALSE;
       bootArgs.address = TOS_NODE_ID;
@@ -97,11 +111,7 @@ implementation {
       // reboot
       netprog_reboot();
     }
-
-    // couldn't reboot
-    return FAIL;
   }
 
   event void CC2420Config.syncDone(error_t error) {}
-
 }

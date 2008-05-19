@@ -24,6 +24,8 @@
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
+#include "imgNum2volumeId.h"
+
 generic module DelugeManagerP()
 {
   uses {
@@ -55,12 +57,6 @@ implementation
 
   message_t serialMsg;
   DelugeCmd delugeCmd;
-  uint8_t imgNum2volumeId[] = {
-    VOLUME_GOLDENIMAGE,
-    VOLUME_DELUGE1,
-    VOLUME_DELUGE2,
-    VOLUME_DELUGE3
-  };
 
   void sendReply(error_t error)
   {
@@ -77,9 +73,10 @@ implementation
   {
     SerialReqPacket *request = (SerialReqPacket *)payload;
     memset(&delugeCmd, 0, sizeof(DelugeCmd));
-
     call stop();
     delugeCmd.type = request->cmd;
+    // Converts the image number that the user wants to the real image number
+    request->imgNum = imgNum2volumeId(request->imgNum);
 
     switch (request->cmd) {
     case DELUGE_CMD_STOP:
@@ -90,21 +87,21 @@ implementation
       break;
     case DELUGE_CMD_ONLY_DISSEMINATE:
     case DELUGE_CMD_DISSEMINATE_AND_REPROGRAM:
-      if (request->imgNum < DELUGE_NUM_VOLUMES &&
+      if (request->imgNum != NON_DELUGE_VOLUME &&
 	  (call Resource.isOwner() || 
 	   call Resource.immediateRequest() == SUCCESS)) {
-	call DelugeMetadata.read(imgNum2volumeId[request->imgNum]);
+	call DelugeMetadata.read(request->imgNum);
       } else {
 	sendReply(FAIL);
       }
       break;
     case DELUGE_CMD_REPROGRAM:
-      if (!(request->imgNum < DELUGE_NUM_VOLUMES)) {
+    case DELUGE_CMD_REBOOT:
+      if (request->imgNum == NON_DELUGE_VOLUME) {
 	sendReply(FAIL);
 	break;
       }
-    case DELUGE_CMD_REBOOT:
-      delugeCmd.imgNum = imgNum2volumeId[request->imgNum];
+      delugeCmd.imgNum = request->imgNum;
       call DelayTimer.startOneShot(1024);
       sendReply(SUCCESS);
       break;

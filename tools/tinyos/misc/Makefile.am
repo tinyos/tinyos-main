@@ -34,4 +34,4 @@ bin_SCRIPTS = tos-ident-flags \
 bin_PROGRAMS = tos-serial-debug
 
 pythondir = $(bindir)
-python_DATA = tinyos.py
+python_DATA = tos.py

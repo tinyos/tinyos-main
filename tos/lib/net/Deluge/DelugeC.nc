@@ -53,7 +53,7 @@ implementation
 
   ObjectTransferC.Leds = Leds;
   
-  components new DisseminatorC(DelugeCmd, 0xDE00);
+  components new DisseminatorC(DelugeCmd, DELUGE_KEY);
   components DisseminationC;
   components ActiveMessageC;
   components NetProgC, DelugeP;
@@ -67,7 +67,9 @@ implementation
 
   DelugeP.Boot -> MainC;
   DelugeP.Leds = Leds;  
+#ifndef DELUGE_BASESTATION
   DelugeP.DisseminationValue -> DisseminatorC;
+#endif
   DelugeP.DisseminationStdControl -> DisseminationC;
   DelugeP.ObjectTransfer -> ObjectTransferC;
   DelugeP.NetProg -> NetProgC;
@@ -78,10 +80,13 @@ implementation
   DelugeP.DelugeVolumeManager -> DelugeVolumeManagerClientC;
   DelugeP.Resource -> BlockStorageLockClientC;
 
-#ifdef DELUGE_BASESTATION
+#if defined(DELUGE_BASESTATION) || defined(DELUGE_LIGHT_BASESTATION)
   components SerialStarterC;
-  components new FlashVolumeManagerC(0xAB);
-  components new DelugeManagerC(0xAC);
+  components new FlashVolumeManagerC(DELUGE_AM_FLASH_VOL_MANAGER);
+#endif
+
+#ifdef DELUGE_BASESTATION
+  components new DelugeManagerC(DELUGE_AM_DELUGE_MANAGER);
 
   DelugeManagerC.DisseminationUpdate -> DisseminatorC;
 #endif

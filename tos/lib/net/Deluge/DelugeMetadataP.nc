@@ -24,6 +24,8 @@
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
+#include "imgNum2volumeId.h"
+
 module DelugeMetadataP
 {
   provides interface DelugeMetadata[uint8_t client];
@@ -48,16 +50,17 @@ implementation
   
   DelugeIdent ident;
   uint8_t state;
-  uint8_t currentImage;
+  uint8_t currentVolume;
+  uint8_t currentImageIdx;
   uint8_t currentPage;
   nx_uint16_t currentCrc;
   uint8_t currentClient;
 
   void nextImage()
   {
-    if (currentImage < DELUGE_NUM_VOLUMES) {
+    if (currentImageIdx < DELUGE_NUM_VOLUMES) {
       state = S_READ_IDENT;
-      call BlockRead.read[currentImage](0, &ident, sizeof(ident));
+      call BlockRead.read[currentVolume](0, &ident, sizeof(ident));
     } else {
       signal storageReady();
       state = S_READY;
@@ -82,7 +85,8 @@ implementation
     // CRC and check it against the corresponding value from the CRCs
     // block.
     state = S_READ_IDENT;
-    currentImage = 0;
+    currentImageIdx = 0;
+    currentVolume = _imgNum2volumeId[currentImageIdx];
     nextImage();    
   }
 
@@ -110,16 +114,16 @@ implementation
         if (ident.uidhash != DELUGE_INVALID_UID) {
           currentPage = 0;
           state = S_READ_CRC;
-          call BlockRead.read[currentImage](calcCrcAddr(), &currentCrc, sizeof(currentCrc));
+          call BlockRead.read[currentVolume](calcCrcAddr(), &currentCrc, sizeof(currentCrc));
         } else {
-          currentImage++;
+          currentImageIdx++;
           nextImage();
         }
       }
       break;
     case S_READ_CRC:
       state = S_CRC;
-      call BlockRead.computeCrc[currentImage](calcPageAddr(), DELUGE_BYTES_PER_PAGE, 0);
+      call BlockRead.computeCrc[currentVolume](calcPageAddr(), DELUGE_BYTES_PER_PAGE, 0);
       break;
     }
   }
@@ -131,14 +135,15 @@ implementation
       if (crc != currentCrc) {
 //	printf("%04x %04x\n", crc, currentCrc);
         // invalidate the image by erasing it
-        call BlockWrite.erase[currentImage]();
+        call BlockWrite.erase[currentVolume]();
       } else {
         currentPage++;
         if (currentPage < ident.numPgs) {
           state = S_READ_CRC;
-          call BlockRead.read[currentImage](calcCrcAddr(), &currentCrc, sizeof(currentCrc));
+          call BlockRead.read[currentVolume](calcCrcAddr(), &currentCrc, sizeof(currentCrc));
         } else {
-          currentImage++;
+          currentImageIdx++;
+	  currentVolume = _imgNum2volumeId[currentImageIdx];
           nextImage();
         }
       }
@@ -157,7 +162,8 @@ implementation
       signal BlockWrite.eraseDone[imgNum](error);
       break;
     case S_CRC:
-      currentImage++;
+      currentImageIdx++;
+      currentVolume = _imgNum2volumeId[currentImageIdx];
       nextImage();
       break;
     }

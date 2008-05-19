@@ -24,7 +24,7 @@
 # @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
 
 import sys, stat, struct, subprocess, time
-import tinyos
+import tos
 from datetime import datetime
 import os.path 
 
@@ -36,7 +36,8 @@ FM_AMID = 0xAB
 DM_AMID = 0xAC
 SERIAL_DATA_LENGTH = 28 - 1 - 1 - 2 - 2
 BAUDRATES = {'micaz': 57600,
-             'telosb': 115200}
+             'telosb': 115200,
+             'iris': 57600}
 
 # Commands for FlashManager
 FM_CMD_ERASE     = 0
@@ -63,54 +64,54 @@ DELUGE_MAX_PAGES    = 128
 DELUGE_IDENT_OFFSET = 0
 DELUGE_IDENT_SIZE   = 128
 
-class FMReqPacket(tinyos.GenericPacket):
+class FMReqPacket(tos.Packet):
     def __init__(self, packet = None):
-        tinyos.GenericPacket.__init__(self,
-                                      [('cmd',    'int',  1),
-                                       ('imgNum', 'int',  1),
-                                       ('offset', 'int',  2),
-                                       ('length', 'int',  2),
-                                       ('data',   'blob', None)],
-                                      packet)
+        tos.Packet.__init__(self,
+                            [('cmd',    'int',  1),
+                             ('imgNum', 'int',  1),
+                             ('offset', 'int',  2),
+                             ('length', 'int',  2),
+                             ('data',   'blob', None)],
+                            packet)
 
-class DMReqPacket(tinyos.GenericPacket):
+class DMReqPacket(tos.Packet):
     def __init__(self, packet = None):
-        tinyos.GenericPacket.__init__(self,
-                                      [('cmd',    'int',  1),
-                                       ('imgNum', 'int',  1)],
-                                      packet)
+        tos.Packet.__init__(self,
+                            [('cmd',    'int',  1),
+                             ('imgNum', 'int',  1)],
+                            packet)
 
-class SerialReplyPacket(tinyos.GenericPacket):
+class SerialReplyPacket(tos.Packet):
    def __init__(self, packet = None):
-       tinyos.GenericPacket.__init__(self,
-                                     [('error', 'int',  1),
-                                      ('data',  'blob', None)],
-                                     packet)
+       tos.Packet.__init__(self,
+                           [('error', 'int',  1),
+                            ('data',  'blob', None)],
+                           packet)
 
-class Ident(tinyos.GenericPacket):
+class Ident(tos.Packet):
     def __init__(self, packet = None):
-        tinyos.GenericPacket.__init__(self,
-                                      [('uidhash',  'int', 4),
-                                       ('size',     'int', 4),
-                                       ('pages',    'int', 1),
-                                       ('reserved', 'int', 1),
-                                       ('crc',      'int', 2),
-                                       ('appname', 'string', 16),
-                                       ('username', 'string', 16),
-                                       ('hostname', 'string', 16),
-                                       ('platform', 'string', 16),
-                                       ('timestamp','int', 4),
-                                       ('userhash', 'int', 4)],
-                                      packet)
+        tos.Packet.__init__(self,
+                            [('uidhash',  'int', 4),
+                             ('size',     'int', 4),
+                             ('pages',    'int', 1),
+                             ('reserved', 'int', 1),
+                             ('crc',      'int', 2),
+                             ('appname', 'string', 16),
+                             ('username', 'string', 16),
+                             ('hostname', 'string', 16),
+                             ('platform', 'string', 16),
+                             ('timestamp','int', 4),
+                             ('userhash', 'int', 4)],
+                            packet)
 
-class ShortIdent(tinyos.GenericPacket):
+class ShortIdent(tos.Packet):
     def __init__(self, packet = None):
-        tinyos.GenericPacket.__init__(self,
-                                      [('appname',  'string', 16),
-                                       ('timestamp','int', 4),
-                                       ('uidhash',  'int', 4),
-                                       ('nodeid',   'int', 2)],
-                                      packet)
+        tos.Packet.__init__(self,
+                            [('appname',  'string', 16),
+                             ('timestamp','int', 4),
+                             ('uidhash',  'int', 4),
+                             ('nodeid',   'int', 2)],
+                            packet)
 
 
 # Computes 16-bit CRC
@@ -129,13 +130,15 @@ def crc16(data):
 
 def handleResponse(success, msg):
     if success == True:
-        packet = s.sniff_am()
+        packet = am.read(timeout=1)
         while packet and packet.type == 100:
             print "".join([chr(i) for i in packet.data])
-            packet = s.sniff_am()
+            packet = am.read()
+        if not packet:
+            print "No response"
+            return False
         reply = SerialReplyPacket(packet.data)
         if reply.error == ERROR_SUCCESS:
-            print reply
             return True
         else:
             print msg, reply
@@ -146,8 +149,8 @@ def handleResponse(success, msg):
 
 def ident():
     sreqpkt = FMReqPacket((FM_CMD_IDENT, 0, 0, 0, []))
-    if s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID)):
-        packet = s.sniff_am()
+    if am.write(sreqpkt, FM_AMID):
+        packet = am.read()
         reply = SerialReplyPacket(packet.data)
         if reply.error == ERROR_SUCCESS:
             return ShortIdent(reply.data)
@@ -161,8 +164,8 @@ def read(imgNum, offset, length):
         if sreqpkt.length > SERIAL_DATA_LENGTH:
             sreqpkt.length = SERIAL_DATA_LENGTH
         
-        if s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID)):
-            packet = s.sniff_am()
+        if am.write(sreqpkt, FM_AMID):
+            packet = am.read()
             reply = SerialReplyPacket(packet.data)
             if reply.error == ERROR_SUCCESS:
                 r.extend(reply.data)
@@ -182,12 +185,12 @@ def read(imgNum, offset, length):
 
 def erase(imgNum):
     sreqpkt = FMReqPacket((FM_CMD_ERASE, imgNum, 0, 0, []))
-    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID))
+    success = am.write(sreqpkt, FM_AMID)
     return handleResponse(success, "ERROR: Unable to erase the flash volume")
 
 def sync(imgNum):
     sreqpkt = FMReqPacket((FM_CMD_SYNC, imgNum, 0, 0, []))
-    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID))
+    success = am.write(sreqpkt, FM_AMID)
     return handleResponse(success, "ERROR: Unable to sync the flash volume")
 
 def write(imgNum, data):
@@ -214,13 +217,13 @@ def write(imgNum, data):
         sreqpkt.data = data[sreqpkt.offset:sreqpkt.offset+sreqpkt.length]
         
         # Sends over serial to the mote
-        if not s.write(tinyos.ActiveMessage(sreqpkt, am_id=FM_AMID)):
+        if not am.write(sreqpkt, FM_AMID):
             print
             print "ERROR: Unable to send the last serial packet (file offset: %d)" % sreqpkt.offset
             return False
         
         # Waiting for confirmation
-        packet = s.sniff_am()
+        packet = am.read()
         reply = SerialReplyPacket(packet.data)
         if reply.error != ERROR_SUCCESS:
             print
@@ -300,11 +303,12 @@ def inject(imgNum, tos_image_xml):
     cmd = [PATH_PY_BUILD_IMAGE, "-i", str(imgNum), tos_image_xml]
     print "Create image:", ' '.join(cmd)
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print p.stderr.read(),
+    (out, err) = p.communicate(None)
+    print err,
     print "--------------------------------------------------"
     
     # Writes the new binary image
-    image = [struct.unpack("B", c)[0] for c in p.stdout.read()]
+    image = [struct.unpack("B", c)[0] for c in out]
     if len(image) > 0 and erase(imgNum):
         if write(imgNum, image):
             if sync(imgNum):
@@ -333,32 +337,32 @@ def ping(imgNum):
 
 def boot():
     sreqpkt = DMReqPacket((DM_CMD_BOOT, 0))
-    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    success = am.write(sreqpkt, DM_AMID)
     return handleResponse(success, "ERROR: Unable to boot the mote")
 
 def reprogram(imgNum):
     sreqpkt = DMReqPacket((DM_CMD_REPROGRAM, imgNum))
-    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    success = am.write(sreqpkt, DM_AMID)
     return handleResponse(success, "ERROR: Unable to reprogram the mote")
 
 def disseminate(imgNum):
     sreqpkt = DMReqPacket((DM_CMD_ONLY_DISSEMINATE, imgNum))
-    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    success = am.write(sreqpkt, DM_AMID)
     return handleResponse(success, "ERROR: Unable to disseminate")
 
 def disseminateAndReboot(imgNum):
     sreqpkt = DMReqPacket((DM_CMD_DISSEMINATE_AND_REPROGRAM, imgNum))
-    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    success = am.write(sreqpkt, DM_AMID)
     return handleResponse(success, "ERROR: Unable to disseminate-and-reboot")
 
 def stop():
     sreqpkt = DMReqPacket((DM_CMD_STOP, 0))
-    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    success = am.write(sreqpkt, DM_AMID)
     return handleResponse(success, "ERROR: Unable to initiate the stop")
 
 def localstop():
     sreqpkt = DMReqPacket((DM_CMD_LOCAL_STOP, 0))
-    success = s.write(tinyos.ActiveMessage(sreqpkt, am_id=DM_AMID))
+    success = am.write(sreqpkt, DM_AMID)
     return handleResponse(success, "ERROR: Unable to initiate the local stop")
 
 def print_usage():
@@ -402,7 +406,8 @@ if len(sys.argv) >= 4:
             
     # Initializes serial port communication
     try:
-        s = tinyos.Serial(sys.argv[1], baudrate, flush=False)
+        s = tos.Serial(sys.argv[1], baudrate, flush=True, debug=False)
+        am = tos.AM(s)
     except:
         print "ERROR: Unable to initialize serial port connection to", sys.argv[1]
         sys.exit(-1)
