@@ -1,4 +1,4 @@
-// $Id: TinyError.h,v 1.7 2008-03-27 00:52:02 klueska Exp $
+// $Id: TinyError.h,v 1.8 2008-05-20 21:46:21 scipio Exp $
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -23,7 +23,7 @@
 /**
  * @author Phil Levis
  * @author David Gay
- * Revision:  $Revision: 1.7 $
+ * Revision:  $Revision: 1.8 $
  *
  * Defines global error codes for error_t in TinyOS.
  */
@@ -38,16 +38,18 @@
 #endif
 
 enum {
-  SUCCESS        = 0,          
-  FAIL           = 1,           // Generic condition: backwards compatible
-  ESIZE          = 2,           // Parameter passed in was too big.
-  ECANCEL        = 3,           // Operation cancelled by a call.
-  EOFF           = 4,           // Subsystem is not active
-  EBUSY          = 5,           // The underlying system is busy; retry later
-  EINVAL         = 6,           // An invalid parameter was passed
-  ERETRY         = 7,           // A rare and transient failure: can retry
-  ERESERVE       = 8,           // Reservation required before usage
-  EALREADY       = 9,           // The device state you are requesting is already set
+  SUCCESS        =  0,          
+  FAIL           =  1,           // Generic condition: backwards compatible
+  ESIZE          =  2,           // Parameter passed in was too big.
+  ECANCEL        =  3,           // Operation cancelled by a call.
+  EOFF           =  4,           // Subsystem is not active
+  EBUSY          =  5,           // The underlying system is busy; retry later
+  EINVAL         =  6,           // An invalid parameter was passed
+  ERETRY         =  7,           // A rare and transient failure: can retry
+  ERESERVE       =  8,           // Reservation required before usage
+  EALREADY       =  9,           // The device state you are requesting is already set
+  ENOMEM         = 10,           // Memory required not available
+  ELAST          = 10            // Last enum value
 };
 
 typedef uint8_t error_t NESC_COMBINE("ecombine");
