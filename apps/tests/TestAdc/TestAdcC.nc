@@ -27,18 +27,18 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:22:49 $
+ * $Revision: 1.5 $
+ * $Date: 2008-05-20 18:16:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 /**
- * Tests the AdcC subsystem and switches on leds 0, 1 and 2
+ * Tests the AdcC subsystem and switches on leds 0, 1 and 2.
  * if the test is successful:
- * LED0 denotes a successful Read operation,
- * LED1 denotes a successful ReadNow operation,
- * LED2 denotes a successful ReadStream operation.
+ *   LED0 denotes a successful Read operation,
+ *   LED1 denotes a successful ReadNow operation,
+ *   LED2 denotes a successful ReadStream operation.
  *
  * @author Jan Hauer 
  */
