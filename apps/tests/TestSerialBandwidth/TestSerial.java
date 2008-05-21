@@ -75,7 +75,7 @@ public class TestSerial implements MessageListener {
   }
   
   public static void main(String[] args) throws Exception {
-    String source = "";
+    String source = null;
     System.out.println("hello");
     if (args.length == 2) {
       if (!args[0].equals("-comm")) {
