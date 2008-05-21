@@ -37,7 +37,7 @@
  *
  * @author Jonathan Hui <jhui@archedrock.com>
  * @author Mark Hays
- * @version $Revision: 1.5 $ $Date: 2007-11-08 21:34:42 $
+ * @version $Revision: 1.6 $ $Date: 2008-05-21 22:11:57 $
  */
 
 #include "msp430usart.h"
@@ -45,6 +45,7 @@
 generic configuration Msp430Spi0C() {
 
   provides interface Resource;
+  provides interface ResourceRequested;
   provides interface SpiByte;
   provides interface SpiPacket;
 
@@ -70,6 +71,7 @@ implementation {
   Msp430SpiConfigure = SpiP.Msp430SpiConfigure[ CLIENT_ID ];
 
   components new Msp430Usart0C() as UsartC;
+  ResourceRequested = UsartC;
   SpiP.ResourceConfigure[ CLIENT_ID ] <- UsartC.ResourceConfigure;
   SpiP.UsartResource[ CLIENT_ID ] -> UsartC.Resource;
   SpiP.UsartInterrupts -> UsartC.HplMsp430UsartInterrupts;

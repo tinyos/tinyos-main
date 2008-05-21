@@ -34,12 +34,13 @@
  *
  * @author Vlado Handziski <handisk@tkn.tu-berlin.de>
  * @author Jonathan Hui <jhui@archedrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
+ * @version $Revision: 1.5 $ $Date: 2008-05-21 22:11:57 $
  */
 
 generic configuration Msp430Usart1C() {
 
   provides interface Resource;
+  provides interface ResourceRequested;
   provides interface ArbiterInfo;
   provides interface HplMsp430Usart;
   provides interface HplMsp430UsartInterrupts;
@@ -56,6 +57,7 @@ implementation {
   components Msp430UsartShare1P as UsartShareP;
 
   Resource = UsartShareP.Resource[ CLIENT_ID ];
+  ResourceRequested = UsartShareP.ResourceRequested[ CLIENT_ID ];
   ResourceConfigure = UsartShareP.ResourceConfigure[ CLIENT_ID ];
   ArbiterInfo = UsartShareP.ArbiterInfo;
   HplMsp430UsartInterrupts = UsartShareP.Interrupts[ CLIENT_ID ];
