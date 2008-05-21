@@ -1,0 +1,48 @@
+# SHIMMER - platform includes
+# Konrad Lorincz 5/14/08
+#
+# Includes that should take precedence come first.  Platforms come before
+# chips because they may override files.  These must be specified as
+# @includes instead of -I's to @opts, otherwise the %T won't be processed
+# by ncc.
+
+push( @includes, qw(
+
+  %T/platforms/shimmer
+  %T/platforms/shimmer/chips/cc2420
+  %T/chips/cc2420
+  %T/chips/cc2420/alarm
+  %T/chips/cc2420/control
+  %T/chips/cc2420/csma
+  %T/chips/cc2420/interfaces
+  %T/chips/cc2420/link
+  %T/chips/cc2420/lowpan
+  %T/chips/cc2420/lpl
+  %T/chips/cc2420/packet
+  %T/chips/cc2420/receive
+  %T/chips/cc2420/spi
+  %T/chips/cc2420/transmit
+  %T/chips/cc2420/unique
+  %T/chips/msp430
+  %T/chips/msp430/adc12
+  %T/chips/msp430/dma
+  %T/chips/msp430/pins
+  %T/chips/msp430/timer
+  %T/chips/msp430/usart
+  %T/chips/msp430/sensors
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/adc
+  %T/lib/power
+  ) );
+
+@opts = qw(
+
+  -gcc=msp430-gcc
+  -mmcu=msp430x1611
+  -fnesc-target=msp430
+  -fnesc-no-debug
+);
+
+push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;
+push @opts, "-mingw-gcc" if $cygwin;
