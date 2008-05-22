@@ -10,8 +10,8 @@ Active Message ID Allocation for Network Protocols and Applications
 :Author: Omprakash Gnawali
 
 :Draft-Created: 07-May-2008
-:Draft-Version: $Revision: 1.3 $
-:Draft-Modified: $Date: 2008-05-21 21:56:35 $
+:Draft-Version: $Revision: 1.4 $
+:Draft-Modified: $Date: 2008-05-22 00:03:40 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -131,5 +131,7 @@ ID allocation policy.
 
 7. Citations
 ====================================================================
+
+.. [TEP_1] TEP 1: TEP Structure and Keywords 
 
 .. [1] TEP 116: Packet Protocols
