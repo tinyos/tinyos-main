@@ -37,7 +37,7 @@
  *
  * @author Jonathan Hui <jhui@archedrock.com>
  * @author Mark Hays
- * @version $Revision: 1.6 $ $Date: 2008-05-21 22:11:57 $
+ * @version $Revision: 1.7 $ $Date: 2008-05-22 20:25:28 $
  */
 
 #include "msp430usart.h"
@@ -71,7 +71,7 @@ implementation {
   Msp430SpiConfigure = SpiP.Msp430SpiConfigure[ CLIENT_ID ];
 
   components new Msp430Usart1C() as UsartC;
-  ResourceReqeusted = UsartC;
+  ResourceRequested = UsartC;
   SpiP.ResourceConfigure[ CLIENT_ID ] <- UsartC.ResourceConfigure;
   SpiP.UsartResource[ CLIENT_ID ] -> UsartC.Resource;
   SpiP.UsartInterrupts -> UsartC.HplMsp430UsartInterrupts;
