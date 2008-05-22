@@ -10,8 +10,8 @@ Active Message ID Allocation for Network Protocols and Applications
 :Author: Omprakash Gnawali
 
 :Draft-Created: 07-May-2008
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2008-05-22 00:03:40 $
+:Draft-Version: $Revision: 1.5 $
+:Draft-Modified: $Date: 2008-05-22 12:42:59 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -95,9 +95,9 @@ protocols maintained by any working group.
 
 To receive an AM ID allocation, please send an email to the chair of
 Network Protocol Working Group with the following information:
-  * Working Group responsible for the protocol
-  * Name of the protocol and relevant TEPs
-  * Location of the protocol in TinyOS source tree
+* Working Group responsible for the protocol
+* Name of the protocol and relevant TEPs
+* Location of the protocol in TinyOS source tree
 
 Upon receiving this information, the chair of the Network Protocol
 Working Group will allocate an AM ID and update this TEP.
