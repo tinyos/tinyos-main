@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2008-05-22 17:45:00 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -69,24 +69,24 @@ interface HplAdc12
   
   /** 
    * Sets the ADC12 conversion memory control register ADC12MCTLx.
-   * @param index The register index (the 'x' in ADC12MCTLx) [0..15] 
+   * @param idx The register index (the 'x' in ADC12MCTLx) [0..15] 
    * @param memControl ADC12MCTLx register data.
    */
-  async command void setMCtl(uint8_t index, adc12memctl_t memControl); 
+  async command void setMCtl(uint8_t idx, adc12memctl_t memControl); 
   
   /** 
    * Returns the ADC12 conversion memory control register ADC12MCTLx.
-   * @param index The register index (the 'x' in ADC12MCTLx) [0..15] 
+   * @param idx The register index (the 'x' in ADC12MCTLx) [0..15] 
    * @return memControl ADC12MCTLx register data.
    */
-  async command adc12memctl_t getMCtl(uint8_t index); 
+  async command adc12memctl_t getMCtl(uint8_t idx); 
 
   /** 
    * Returns the ADC12 conversion memory register ADC12MEMx.
-   * @param index The register index (the 'x' in ADC12MEMx) [0..15] 
+   * @param idx The register index (the 'x' in ADC12MEMx) [0..15] 
    * @return ADC12MEMx 
    */  
-  async command uint16_t getMem(uint8_t index); 
+  async command uint16_t getMem(uint8_t idx); 
 
   /** 
    * Sets the ADC12 interrupt enable register, ADC12IE.
