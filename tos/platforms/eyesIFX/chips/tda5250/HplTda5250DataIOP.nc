@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:41 $
+ * $Revision: 1.5 $
+ * $Date: 2008-05-22 14:56:33 $
  * ========================================================================
  */
 
@@ -42,8 +42,8 @@
 module HplTda5250DataIOP {
   provides {
     interface HplTda5250DataControl as UartDataControl;
-		interface Msp430UartConfigure as UartResourceConfigure;
-  } 
+    interface Msp430UartConfigure as UartResourceConfigure;
+  }
 }
 
 implementation {
@@ -64,8 +64,8 @@ implementation {
     return SUCCESS;
   }
 	
-	async command msp430_uart_union_config_t* UartResourceConfigure.getConfig() {
-		return &tda5250_uart_config;
-	}
+  async command msp430_uart_union_config_t* UartResourceConfigure.getConfig() {
+    return &tda5250_uart_config;
+  }
 
 }
