@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.11 2008-05-16 22:10:21 klueska Exp $
+#$Id: msp.rules,v 1.12 2008-05-22 23:56:08 klueska Exp $
 
 define MSP_HELP
 
@@ -64,13 +64,19 @@ $(if $(PROGRAM),,$(call TOSMake_include,msp/$(DEFAULT_PROGRAM).extra))
 
 # Build storage file if volumes.xml present
 ifneq ($(wildcard $(VOLUME_FILE)), )
-exe0: $(BUILDDIR)/StorageVolumes.h
+build_storage: $(BUILDDIR)/StorageVolumes.h
+
+exe0: build_storage
 
 VOLUME_ALLOCATOR_FLAGS ?= 
 $(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
 	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
 
 PFLAGS += -I$(BUILDDIR)
+else
+
+build_storage:
+
 endif
 
 ifndef BUILD_DEPS
