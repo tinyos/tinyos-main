@@ -382,7 +382,7 @@ implementation
   }
 
   command error_t LogRead.seek[uint8_t id](storage_cookie_t offset) {
-    return newRequest(R_SEEK, id, (void *)(offset >> 16), offset);
+    return newRequest(R_SEEK, id, (void *)((uint16_t)(offset >> 16)), offset);
   }
 
   command storage_len_t LogRead.getSize[uint8_t id]() {
