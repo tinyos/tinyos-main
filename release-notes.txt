@@ -1,11 +1,13 @@
-These release notes are as of: $Date: 2007-10-03 05:47:47 $
+These release notes are as of: $Date: 2008-05-23 19:30:19 $
 
 Upcoming:
   Added 4-bit link estimator
   Added low-power application tutorial
+  Added printf tutorial
   Changed Packet interface to better support type checking
   Changed Receive interface to support fan-in
   Changed atm128 I2C bus to obey same addressing as MSP430
+  Changed printf implementation to no longer require explicit wiring of PrintfC component
   Fixed memory leak in CTP on duplicate suppression
 
 2.0.2:
