@@ -5,25 +5,28 @@
 tos-storage-at45db - Generate storage volume description code
 .SH SYNOPSIS
 
-\fBtos-storage-at45db\fR \fIplatform-directory\fR
+\fBtos-storage-at45db\fR [\fB-t\fR] \fIplatform-directory\fR
 .SH DESCRIPTION
 
 \fBtos-storage-at45db\fR reads a user specification describing the layout
 of storage volumes on an Atmel AT45DB-family flash chip, and generates code
 describing that layout for use by the TinyOS 2.0 storage subsystem.  The
-user specification is in XML and is read from standard input. The code is
-written to standard output.
+user specification is in XML and is read from standard input. With all options,
+the code for a header file is written to standard output.  With the 
+optional \fB-t\fR flag specified, a VolumeMapC.nc file is generated that provides 
+interfaces to all the storage volume abstractions defined in the XML file.
 
-The argument should specify the platform directory for the current
-compilation target; this is necessary for the correct handling of 
-file include statements in the XML input.
+The mandatory \fIplatform-directory\fR argument should specify the platform 
+directory for the current compilation target; this is necessary for the correct 
+handling of file include statements in the XML input.
 
 This program is normally invoked automatically by the TinyOS build system
 when your application directory contains a \fBvolumes-at45db.xml\fR file.
 .SH EXAMPLES
 
-  tos-storage-at45db /opt/tinyos-2.x/tos/platforms/mica2 \\
+  tos-storage-at45db -t /opt/tinyos-2.x/tos/platforms/mica2 \\
       <volumes-at45db.xml >build/mica2/StorageVolumes.h
 .SH SEE ALSO
 
-.IR tos-storage-stm25p (1)
+.IR tos-storage-stm25p (1) 
+.IR tos-storage-pxa27xp30 (1)

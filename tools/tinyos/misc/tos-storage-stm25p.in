@@ -39,9 +39,10 @@
 
 # @author Jonathan Hui <jhui@archedrock.com>
 # @author David Gay
+# @author Kevin Klues <klueska@cs.stanford.edu>
 #
-# $Revision: 1.5 $
-# $Date: 2007-04-11 21:29:29 $
+# $Revision: 1.6 $
+# $Date: 2008-05-23 01:04:36 $
 #
                                   
 from re import match
@@ -49,6 +50,33 @@ from sys import *
 from xml.dom import *
 from xml.dom.minidom import *
 from subprocess import Popen, PIPE
+
+from getopt import *
+import string
+import commands
+#New way of handling arguments........
+try:
+  opts, args = getopt(argv[1:], "t", [])
+except GetoptError, err:
+  print str(err) # will print something like "option -a not recognized"
+  stderr.write( "Usage: tos-storage-stm25p [-t] <platform directory>\n" )
+  
+if len( args ) == 1:
+  platformdir = args[0]
+  # This gives the whole string when there's no / in platformdir
+  platform = platformdir[platformdir.rfind( "/" ) + 1:]
+elif len( args ) == 0:
+  platformdir = ""
+  platform = ""
+else:
+  stderr.write( "Usage: tos-storage-stm25p [-t] <platform directory>\n" )
+  
+cthreads = False
+for o, a in opts:
+  if o == "-t":
+    cthreads = True
+  else:
+    assert False, "unhandled option"
 
 def error_exit( s ):
     stderr.write( "ERROR: " + s + "\n" )
@@ -92,17 +120,9 @@ volumes = {}
 volumeNames = []
 volumeSizes = []
 volumeOffsets = []
+volumeTypes = dict()
+volumeOptions = dict()
 freeSectors = NUM_SECTORS*[ True ]
-
-if len( argv ) == 2:
-  platformdir = argv[1]
-  # This gives the whole string when there's no / in platformdir
-  platform = platformdir[platformdir.rfind( "/" ) + 1:]
-elif len( argv ) == 1:
-  platformdir = ""
-  platform = ""
-else:
-  error_exit( "Usage: tos-storage-stm25p <platform directory>" )
 
 def volumeparse( file, fname, depth ):
   if depth > 10:
@@ -119,6 +139,11 @@ def volumeparse( file, fname, depth ):
       name = volume.getAttribute( "name" )
       size = volume.getAttribute( "size" )
       base = volume.getAttribute( "base" )
+      type = string.lower(volume.getAttribute("type"))
+      isCircular = string.upper(volume.getAttribute("circular"))
+      if isCircular == "":
+          isCircular = "FALSE"
+      
       if name == "":
           error_exit( "volume has no name" )
       elif not match( "^[a-zA-Z0-9_]+$", name ):
@@ -148,6 +173,9 @@ def volumeparse( file, fname, depth ):
 
       volumeNames.append( "VOLUME_" + name )
       volumeSizes.append( size / SECTOR_SIZE )
+      volumeTypes["VOLUME_" + name] = type
+      volumeOptions["VOLUME_" + name] = isCircular
+      
       if base == "":
           volumeOffsets.append( -1 )
       else:
@@ -207,3 +235,48 @@ print "};"
 
 print ""
 print "#endif"
+
+# output nc file for threads
+if cthreads == True:
+  outFile = open(commands.getstatusoutput("pwd")[1] + "/VolumeMapC.nc", "w")
+  outFile.write("#include \"StorageVolumes.h\" \n")
+  outFile.write("\n")
+  outFile.write("configuration VolumeMapC { \n")
+  outFile.write("  provides { \n")
+  outFile.write("    interface BlockRead[uint8_t volume_id]; \n")
+  outFile.write("    interface BlockWrite[uint8_t volume_id]; \n")
+  outFile.write("    interface LogRead[uint8_t volumeId]; \n")
+  outFile.write("    interface LogWrite[uint8_t volumeId]; \n")
+#   outFile.write("    interface Mount[uint8_t volumeId]; \n")
+#   outFile.write("    interface ConfigStorage[uint8_t volumeId]; \n")
+  outFile.write("  } \n")
+  outFile.write("} \n")
+  outFile.write("\n")
+  outFile.write("implementation { \n")
+  outFile.write("  components VolumeMapP; \n")
+  outFile.write("\n")
+  outFile.write("  BlockRead = VolumeMapP; \n")
+  outFile.write("  BlockWrite = VolumeMapP; \n")
+  outFile.write("  LogRead = VolumeMapP; \n")
+  outFile.write("  LogWrite = VolumeMapP; \n")
+
+  for i in range(len(volumeNames)):
+    if volumeTypes[volumeNames[i]] == "block":
+      outFile.write("\n")
+      outFile.write("  components new BlockStorageC(" + volumeNames[i] + ") as BlockStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  VolumeMapP.SubBlockRead[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  VolumeMapP.SubBlockWrite[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("\n")
+      
+    elif volumeTypes[volumeNames[i]] == "log":
+      outFile.write("\n")      
+      outFile.write("  components new LogStorageC(" + volumeNames[i] + ", " + volumeOptions[volumeNames[i]] + ") as LogStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  VolumeMapP.SubLogRead[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  VolumeMapP.SubLogWrite[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("\n")
+
+#     elif volumeTypes[volumeNames[i]] == "config":
+#       outFile.write("  components new ConfigStorageC(" + volumeNames[i] + ") as ConfigStorageC_" + volumeNames[i] + "; \n")
+#       outFile.write("  Mount[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
+#       outFile.write("  ConfigStorage[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
+  outFile.write("} \n")

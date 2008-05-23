@@ -13,26 +13,46 @@ from re import match
 from sys import *
 from subprocess import Popen, PIPE
 
+from getopt import *
+import string
+import commands
+#New way of handling arguments........
+try:
+  opts, args = getopt(argv[1:], "t", [])
+except GetoptError, err:
+  print str(err) # will print something like "option -a not recognized"
+  stderr.write("Usage: tos-storage-at45db [-t] <platform directory>\n")
+  
+cthreads = False
+for o, a in opts:
+  if o == "-t":
+    cthreads = True
+  else:
+    assert False, "unhandled option"
+
+if len( args ) == 1:
+  platformdir = args[0]
+  # This gives the whole string when there's no / in platformdir
+  platform = platformdir[platformdir.rfind( "/" ) + 1:]
+elif len( args ) == 0:
+  platformdir = ""
+  platform = ""
+else:
+  stderr.write("Usage: tos-storage-at45db [-t] <platform directory>\n")
+
 # print an error message and exit
 def nfail(s):
   stderr.write(s + "\n")
   exit(2)
-
-if len(argv) == 2:
-  platformdir = argv[1]
-  # This gives the whole string when there's no / in platformdir
-  platform = platformdir[platformdir.rfind("/") + 1:]
-elif len(argv) == 1:
-  platformdir = ""
-  platform = ""
-else:
-  nfail("Usage: tos-storage-at45db <platform directory>")
 
 sector_size = 256
 flash_size = 2048 # in sectors
 
 volumes = {}
 volmap = []
+volumeNames = []
+volumeTypes = dict()
+volumeOptions = dict()
 
 def check_volume(name, base, size):
   if base == "":
@@ -130,11 +150,20 @@ def volumeparse(file, fname, depth):
     name = volume.getAttribute("name")
     size = volume.getAttribute("size")
     base = volume.getAttribute("base")
+    type = string.lower(volume.getAttribute("type"))
+    isCircular = string.upper(volume.getAttribute("circular"))
+    if isCircular == "":
+      isCircular = "FALSE"
     if name == None:
       nfail("name omitted in volume " + fname)
     if size == None:
       nfail("size omitted in volume %s %s" % (name, fname))
     check_volume(name, base, size)
+    
+    volumeNames.append( "VOLUME_" + name )
+    volumeTypes["VOLUME_" + name] = type
+    volumeOptions["VOLUME_" + name] = isCircular
+    
   for include in dom.documentElement.getElementsByTagName("include"):
     included = include.firstChild
     if included != None and included.nodeType == included.TEXT_NODE:
@@ -188,4 +217,49 @@ for (vname, vbase, vsize) in volmap:
   print "VB(VOLUME_%s, %d)" % (vname, vbase)
 print "#undef VB"
 print "#endif"
+
+# output nc file for threads
+if cthreads == True:
+  outFile = open(commands.getstatusoutput("pwd")[1] + "/VolumeMapC.nc", "w")
+  outFile.write("#include \"StorageVolumes.h\" \n")
+  outFile.write("\n")
+  outFile.write("configuration VolumeMapC { \n")
+  outFile.write("  provides { \n")
+  outFile.write("    interface BlockRead[uint8_t volume_id]; \n")
+  outFile.write("    interface BlockWrite[uint8_t volume_id]; \n")
+  outFile.write("    interface LogRead[uint8_t volumeId]; \n")
+  outFile.write("    interface LogWrite[uint8_t volumeId]; \n")
+#   outFile.write("    interface Mount[uint8_t volumeId]; \n")
+#   outFile.write("    interface ConfigStorage[uint8_t volumeId]; \n")
+  outFile.write("  } \n")
+  outFile.write("} \n")
+  outFile.write("\n")
+  outFile.write("implementation { \n")
+  outFile.write("  components VolumeMapP; \n")
+  outFile.write("\n")
+  outFile.write("  BlockRead = VolumeMapP; \n")
+  outFile.write("  BlockWrite = VolumeMapP; \n")
+  outFile.write("  LogRead = VolumeMapP; \n")
+  outFile.write("  LogWrite = VolumeMapP; \n")
+
+  for i in range(len(volumeNames)):
+    if volumeTypes[volumeNames[i]] == "block":
+      outFile.write("\n")
+      outFile.write("  components new BlockStorageC(" + volumeNames[i] + ") as BlockStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  VolumeMapP.SubBlockRead[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  VolumeMapP.SubBlockWrite[" + volumeNames[i] + "] -> BlockStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("\n")
+      
+    elif volumeTypes[volumeNames[i]] == "log":
+      outFile.write("\n")      
+      outFile.write("  components new LogStorageC(" + volumeNames[i] + ", " + volumeOptions[volumeNames[i]] + ") as LogStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  VolumeMapP.SubLogRead[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  VolumeMapP.SubLogWrite[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("\n")
+
+#     elif volumeTypes[volumeNames[i]] == "config":
+#       outFile.write("  components new ConfigStorageC(" + volumeNames[i] + ") as ConfigStorageC_" + volumeNames[i] + "; \n")
+#       outFile.write("  Mount[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
+#       outFile.write("  ConfigStorage[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
+  outFile.write("} \n")
 
