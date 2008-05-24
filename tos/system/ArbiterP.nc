@@ -120,6 +120,7 @@ implementation {
           call ResourceConfigure.unconfigure[id]();
           signal ResourceDefaultOwner.granted();
         }
+        return SUCCESS;
       }
     }
     return FAIL;
