@@ -8,4 +8,5 @@ tos-set-symbols
 tos-write-image
 tos-storage-at45db
 tos-storage-stm25p
+tos-storage-pxa27xp30
 tos-write-buildinfo
