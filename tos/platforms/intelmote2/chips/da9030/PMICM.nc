@@ -1,4 +1,4 @@
-/* $Id: PMICM.nc,v 1.4 2006-12-12 18:23:42 vlahan Exp $ */
+/* $Id: PMICM.nc,v 1.5 2008-05-27 17:51:54 kusy Exp $ */
 /*
  * Copyright (c) 2005 Arched Rock Corporation 
  * All rights reserved. 
@@ -244,7 +244,10 @@ implementation {
 
     // Set default core voltage to 0.85 V
 #ifdef PXA27X_13M
-    call PMIC.setCoreVoltage(B2R1_TRIM_P85_V);
+    //P85 is not reliable, using P95
+    call PMIC.setCoreVoltage(B2R1_TRIM_P95_V);
+#else
+    call PMIC.setCoreVoltage(B2R1_TRIM_1_25_V);
 #endif
     startLDOs();
     return SUCCESS;
