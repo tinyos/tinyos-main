@@ -1,4 +1,4 @@
-/* $Id: HalPXA27xSpiPioM.nc,v 1.4 2006-12-12 18:23:12 vlahan Exp $ */
+/* $Id: HalPXA27xSpiPioM.nc,v 1.5 2008-05-27 17:28:32 kusy Exp $ */
 /*
  * Copyright (c) 2005 Arched Rock Corporation 
  * All rights reserved. 
@@ -47,6 +47,7 @@
  * which requires that the transmitter send zeros (0) for this case.
  * 
  * @author Phil Buonadonna
+ * @author Miklos Maroti, Brano Kusy
  */
 
 generic module HalPXA27xSpiPioM(uint8_t valFRF, uint8_t valSCR, uint8_t valDSS, bool enableRWOT) 
@@ -63,29 +64,17 @@ generic module HalPXA27xSpiPioM(uint8_t valFRF, uint8_t valSCR, uint8_t valDSS, 
 
 implementation
 {
-  // The BitBuckets need to be 8 bytes. 
+  enum{
+    FLAGS_SSCR0 = SSCR0_SCR(valSCR) | SSCR0_FRF(/*0*/valFRF) | SSCR0_DSS(valDSS),
+    FLAGS_SSCR1 = 0
+  };
+
+  // The BitBuckets need to be 8 bytes.
   norace unsigned long long txBitBucket, rxBitBucket;
-  uint8_t *txCurrentBuf, *rxCurrentBuf, *txPtr, *rxPtr;
-  uint8_t instanceCurrent;
-  uint32_t lenCurrent, lenRemain, txInc, rxInc;
-  norace uint32_t flagsSSCR0, flagsSSCR1;
-
-  task void SpiPacketDone() {
-    uint8_t *txBuf,*rxBuf;
-    uint8_t instance;
-    uint32_t len;
-
-    atomic {
-      instance = instanceCurrent;
-      len = lenCurrent;
-      txBuf = txCurrentBuf;
-      rxBuf = rxCurrentBuf;
-      lenCurrent = 0;
-      signal SpiPacket.sendDone[instance](txBuf,rxBuf,len,SUCCESS);
-    }
-    
-    return;
-  }
+  norace uint8_t *txCurrentBuf, *rxCurrentBuf, *txPtr, *rxPtr;
+  norace uint8_t txInc, rxInc;
+  norace uint8_t instanceCurrent;
+  uint32_t lenCurrent, lenRemain;
 
   command error_t Init.init() {
 
@@ -93,25 +82,21 @@ implementation
     txCurrentBuf = rxCurrentBuf = NULL;
     lenCurrent = 0 ;
     instanceCurrent = 0;
-    lenRemain = 0;
+    atomic lenRemain = 0;
 
-    flagsSSCR1 = 0;
-    flagsSSCR0 = (SSCR0_SCR(valSCR) | SSCR0_FRF(/*0*/valFRF) | SSCR0_DSS(valDSS) );
-
-    call SSP.setSSCR1(flagsSSCR1);
+    call SSP.setSSCR1(FLAGS_SSCR1);
     call SSP.setSSTO(3500 /*96*8*/);
-    call SSP.setSSCR0(flagsSSCR0);
-    call SSP.setSSCR0(flagsSSCR0 | SSCR0_SSE);
+    call SSP.setSSCR0(FLAGS_SSCR0);
+    call SSP.setSSCR0(FLAGS_SSCR0 | SSCR0_SSE);
 
     return SUCCESS;
   }
 
   async command uint8_t SpiByte.write(uint8_t tx) {
-    volatile uint32_t tmp;
     volatile uint8_t val;
 #if 1
     while ((call SSP.getSSSR()) & SSSR_RNE) {
-      tmp = call SSP.getSSDR();
+      call SSP.getSSDR();
     } 
 #endif
     call SSP.setSSDR(tx); 
@@ -124,133 +109,99 @@ implementation
   }
 
   async command error_t SpiPacket.send[uint8_t instance](uint8_t* txBuf, uint8_t* rxBuf, uint16_t len) {
-    uint32_t tmp,i;
-    //uint8_t *txPtr,*rxPtr;
-    //uint32_t txInc = 1,rxInc = 1;
-    error_t error = FAIL;
+    uint32_t i;
 
 #if 1
     while ((call SSP.getSSSR()) & SSSR_RNE) {
-      tmp = call SSP.getSSDR();
+      call SSP.getSSDR();
     }
 #endif 
 
-    atomic {
-      txCurrentBuf = txBuf;
-      rxCurrentBuf = rxBuf;
-      lenCurrent = lenRemain = len;
-      instanceCurrent = instance;
+    txCurrentBuf = txBuf;
+    rxCurrentBuf = rxBuf;
+    atomic lenCurrent = lenRemain = len;
+    instanceCurrent = instance;
+  
+    if (rxBuf == NULL) { 
+    	rxPtr = (uint8_t *)&rxBitBucket;
+    	rxInc = 0;
+    }
+    else {
+    	rxPtr = rxBuf;
+    	rxInc = 1;
+    }
     
-      if (rxBuf == NULL) { 
-	rxPtr = (uint8_t *)&rxBitBucket; 
-	rxInc = 0;
-      }
-      else {
-	rxPtr = rxBuf; 
-	rxInc = 1;
-      }
-      
-      if (txBuf == NULL) {
-	txPtr = (uint8_t *)&txBitBucket; 
-	txInc = 0;
-      }
-      else {
-	txPtr = txBuf;
-	txInc = 1;
-      }
+    if (txBuf == NULL) {
+    	txPtr = (uint8_t *)&txBitBucket;
+    	txInc = 0;
+    }
+    else {
+    	txPtr = txBuf;
+    	txInc = 1;
     }
 
-    atomic {
-      if ((txBuf == NULL) && (enableRWOT == TRUE)) {
-	
-	call SSP.setSSCR0(flagsSSCR0);
-	call SSP.setSSCR1(flagsSSCR1 | SSCR1_RWOT);
-	call SSP.setSSCR0(flagsSSCR0 | SSCR0_SSE);
-	while (len > 0) {
-	  while (!(call SSP.getSSSR() & SSSR_RNE));
-	  *rxPtr = call SSP.getSSDR();
-	  rxPtr += rxInc;
-	  len--;
-	}
-	call SSP.setSSCR0(flagsSSCR0);
-	call SSP.setSSCR1(flagsSSCR1);
-	call SSP.setSSCR0(flagsSSCR0 | SSCR0_SSE);
-      }
-      else {
-	uint8_t burst = (len < 16) ? len : 16;
-	for (i = 0;i < burst; i++) {
-	  call SSP.setSSDR(*txPtr);
-	  txPtr += txInc;
-	}
-	call SSP.setSSCR1(flagsSSCR1 | SSCR1_TINTE | SSCR1_RIE);
-	/*
-	  while (len > 16) {
-	  for (i = 0;i < 16; i++) {
-	  call SSP.setSSDR(*txPtr);
-	  txPtr += txInc;
-	  }
-	  while (call SSP.getSSSR() & SSSR_BSY);
-	  for (i = 0;i < 16;i++) {
-	  *rxPtr = call SSP.getSSDR();
-	  rxPtr += rxInc;
-	  }
-	  len -= 16;
-	  }
-	  for (i = 0;i < len; i++) {
-	  call SSP.setSSDR(*txPtr);
-	  txPtr += txInc;
-	  }
-	  while (call SSP.getSSSR() & SSSR_BSY);
-	  for (i = 0;i < len;i++) {
-	  *rxPtr = call SSP.getSSDR();
-	  rxPtr += rxInc;
-	  }
-	*/
-      }
+    if ((txBuf == NULL) && (enableRWOT == TRUE)) {
+    	call SSP.setSSCR0(FLAGS_SSCR0);
+    	call SSP.setSSCR1(FLAGS_SSCR1 | SSCR1_RWOT);
+    	call SSP.setSSCR0(FLAGS_SSCR0 | SSCR0_SSE);
+    	while (len > 0) {
+    	  while (!(call SSP.getSSSR() & SSSR_RNE));
+    	  *rxPtr = call SSP.getSSDR();
+    	  rxPtr += rxInc;
+    	  len--;
+    	}
+    	call SSP.setSSCR0(FLAGS_SSCR0);
+    	call SSP.setSSCR1(FLAGS_SSCR1);
+    	call SSP.setSSCR0(FLAGS_SSCR0 | SSCR0_SSE);
     }
-    //post SpiPacketDone();
+    else {
+    	uint8_t burst = (len < 16) ? len : 16;
+    	for (i = 0;i < burst; i++) {
+    	  call SSP.setSSDR(*txPtr);
+    	  txPtr += txInc;
+    	}
+    	call SSP.setSSCR1(FLAGS_SSCR1 | SSCR1_TINTE | SSCR1_RIE);
+    }
     
-    error = SUCCESS;
-    
-    return error;
+    return SUCCESS;
   }
   
   async event void SSP.interruptSSP() {
-    // For this Hal, we should never get here normally
-    // Perhaps we should signal any weird errors? For now, just clear the interrupts
     uint32_t i, uiStatus, uiFifoLevel;
     uint32_t burst;
 
     uiStatus = call SSP.getSSSR();
     call SSP.setSSSR(SSSR_TINT);
 
-    uiFifoLevel = ((uiStatus & SSSR_RFL) >> 12) | 0xFUL;
+    uiFifoLevel = (((uiStatus & SSSR_RFL) >> 12) | 0xF) + 1;
+    uiFifoLevel = (uiFifoLevel > lenRemain) ? lenRemain : uiFifoLevel;
 
-    if ((uiFifoLevel < 0xF) || (uiStatus & SSSR_RNE)) {
-      //uiFifoLevel = (uiFifoLevel == 0) ? 16 : uiFifoLevel;
-      uiFifoLevel = (uiFifoLevel > lenRemain) ? lenRemain : uiFifoLevel;
-      for (i = 0;i < uiFifoLevel;i++) {
-	*rxPtr = call SSP.getSSDR();
-	rxPtr += rxInc;
-      }
-      lenRemain -= uiFifoLevel;
+    if( !(uiStatus & SSSR_RNE))
+      return;
+
+    for (i = 0; i < uiFifoLevel; i++) {
+      *rxPtr = call SSP.getSSDR();
+      rxPtr += rxInc;
     }
-    if (lenRemain > 0) {
-      burst = (lenRemain < uiFifoLevel) ? lenRemain : uiFifoLevel;
+
+    atomic {
+      lenRemain -= uiFifoLevel;
+      burst = (lenRemain < 16) ? lenRemain : 16;
+    }
+
+    if (burst > 0) {
       for (i = 0;i < burst;i++) {
-	call SSP.setSSDR(*txPtr);
-	txPtr += txInc;
+        call SSP.setSSDR(*txPtr);
+        txPtr += txInc;
       }
     }
     else {
       uint32_t len = lenCurrent;
-      call SSP.setSSCR1(flagsSSCR1);
+      call SSP.setSSCR1(FLAGS_SSCR1);
       lenCurrent = 0;
       signal SpiPacket.sendDone[instanceCurrent](txCurrentBuf, rxCurrentBuf,len,SUCCESS);
     }
 
-    /*call SSP.setSSSR(SSSR_BCE | SSSR_TUR | SSSR_EOC | SSSR_TINT | 
-      SSSR_PINT | SSSR_ROR ); */
     return;
   }
 
