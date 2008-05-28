@@ -33,7 +33,7 @@
  * Implementation of basic SPI primitives for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:16 $
+ * @version $Revision: 1.2 $ $Date: 2008-05-28 16:39:53 $
  */
 
 generic configuration CC2420SpiC() {
@@ -42,27 +42,43 @@ generic configuration CC2420SpiC() {
   provides interface ChipSpiResource;
 
   // commands
-  provides interface CC2420Strobe as SFLUSHRX;
-  provides interface CC2420Strobe as SFLUSHTX;
   provides interface CC2420Strobe as SNOP;
+  provides interface CC2420Strobe as SXOSCON;
+  provides interface CC2420Strobe as STXCAL;
   provides interface CC2420Strobe as SRXON;
-  provides interface CC2420Strobe as SRFOFF;
   provides interface CC2420Strobe as STXON;
   provides interface CC2420Strobe as STXONCCA;
-  provides interface CC2420Strobe as SXOSCON;
+  provides interface CC2420Strobe as SRFOFF;
   provides interface CC2420Strobe as SXOSCOFF;
-  
+  provides interface CC2420Strobe as SFLUSHRX;
+  provides interface CC2420Strobe as SFLUSHTX;
   provides interface CC2420Strobe as SACK;
+  provides interface CC2420Strobe as SACKPEND;
+  provides interface CC2420Strobe as SRXDEC;
+  provides interface CC2420Strobe as STXENC;
+  provides interface CC2420Strobe as SAES;
 
   // registers
-  provides interface CC2420Register as FSCTRL;
-  provides interface CC2420Register as IOCFG0;
-  provides interface CC2420Register as IOCFG1;
+  provides interface CC2420Register as MAIN;
   provides interface CC2420Register as MDMCTRL0;
   provides interface CC2420Register as MDMCTRL1;
-  provides interface CC2420Register as TXCTRL;
-  provides interface CC2420Register as RXCTRL1;
   provides interface CC2420Register as RSSI;
+  provides interface CC2420Register as SYNCWORD;
+  provides interface CC2420Register as TXCTRL;
+  provides interface CC2420Register as RXCTRL0;
+  provides interface CC2420Register as RXCTRL1;
+  provides interface CC2420Register as FSCTRL;
+  provides interface CC2420Register as SECCTRL0;
+  provides interface CC2420Register as SECCTRL1;
+  provides interface CC2420Register as BATTMON;
+  provides interface CC2420Register as IOCFG0;
+  provides interface CC2420Register as IOCFG1;
+  provides interface CC2420Register as MANFIDL;
+  provides interface CC2420Register as MANFIDH;
+  provides interface CC2420Register as FSMTC;
+  provides interface CC2420Register as MANAND;
+  provides interface CC2420Register as MANOR;
+  provides interface CC2420Register as AGCCTRL;
 
   // ram
   provides interface CC2420Ram as IEEEADR;
@@ -81,7 +97,7 @@ implementation {
   enum {
     CLIENT_ID = unique( "CC2420Spi.Resource" ),
   };
-
+  
   components HplCC2420PinsC as Pins;
   components CC2420SpiWireC as Spi;
   
@@ -89,27 +105,44 @@ implementation {
   Resource = Spi.Resource[ CLIENT_ID ];
   
   // commands
-  SFLUSHRX = Spi.Strobe[ CC2420_SFLUSHRX ];
-  SFLUSHTX = Spi.Strobe[ CC2420_SFLUSHTX ];
   SNOP = Spi.Strobe[ CC2420_SNOP ];
+  SXOSCON = Spi.Strobe[ CC2420_SXOSCON ];
+  STXCAL = Spi.Strobe[ CC2420_STXCAL ];
   SRXON = Spi.Strobe[ CC2420_SRXON ];
-  SRFOFF = Spi.Strobe[ CC2420_SRFOFF ];
   STXON = Spi.Strobe[ CC2420_STXON ];
   STXONCCA = Spi.Strobe[ CC2420_STXONCCA ];
-  SXOSCON = Spi.Strobe[ CC2420_SXOSCON ];
+  SRFOFF = Spi.Strobe[ CC2420_SRFOFF ];
   SXOSCOFF = Spi.Strobe[ CC2420_SXOSCOFF ];
+  SFLUSHRX = Spi.Strobe[ CC2420_SFLUSHRX ];
+  SFLUSHTX = Spi.Strobe[ CC2420_SFLUSHTX ];
   SACK = Spi.Strobe[ CC2420_SACK ];
-
+  SACKPEND = Spi.Strobe[ CC2420_SACKPEND ];
+  SRXDEC = Spi.Strobe[ CC2420_SRXDEC ];
+  STXENC = Spi.Strobe[ CC2420_STXENC ];
+  SAES = Spi.Strobe[ CC2420_SAES ];
+  
   // registers
-  FSCTRL = Spi.Reg[ CC2420_FSCTRL ];
-  IOCFG0 = Spi.Reg[ CC2420_IOCFG0 ];
-  IOCFG1 = Spi.Reg[ CC2420_IOCFG1 ];
+  MAIN = Spi.Reg[ CC2420_MAIN ];
   MDMCTRL0 = Spi.Reg[ CC2420_MDMCTRL0 ];
   MDMCTRL1 = Spi.Reg[ CC2420_MDMCTRL1 ];
-  TXCTRL = Spi.Reg[ CC2420_TXCTRL ];
-  RXCTRL1 = Spi.Reg[ CC2420_RXCTRL1 ];
   RSSI = Spi.Reg[ CC2420_RSSI ];
-
+  SYNCWORD = Spi.Reg[ CC2420_SYNCWORD ];
+  TXCTRL = Spi.Reg[ CC2420_TXCTRL ];
+  RXCTRL0 = Spi.Reg[ CC2420_RXCTRL0 ];
+  RXCTRL1 = Spi.Reg[ CC2420_RXCTRL1 ];
+  FSCTRL = Spi.Reg[ CC2420_FSCTRL ];
+  SECCTRL0 = Spi.Reg[ CC2420_SECCTRL0 ];
+  SECCTRL1 = Spi.Reg[ CC2420_SECCTRL1 ];
+  BATTMON = Spi.Reg[ CC2420_BATTMON ];
+  IOCFG0 = Spi.Reg[ CC2420_IOCFG0 ];
+  IOCFG1 = Spi.Reg[ CC2420_IOCFG1 ];
+  MANFIDL = Spi.Reg[ CC2420_MANFIDL ];
+  MANFIDH = Spi.Reg[ CC2420_MANFIDH ];
+  FSMTC = Spi.Reg[ CC2420_FSMTC ];
+  MANAND = Spi.Reg[ CC2420_MANAND ];
+  MANOR = Spi.Reg[ CC2420_MANOR ];
+  AGCCTRL = Spi.Reg[ CC2420_AGCCTRL ];
+  
   // ram
   IEEEADR = Spi.Ram[ CC2420_RAM_IEEEADR ];
   PANID = Spi.Ram[ CC2420_RAM_PANID ];
