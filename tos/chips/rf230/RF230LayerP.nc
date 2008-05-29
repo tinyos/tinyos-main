@@ -634,6 +634,7 @@ implementation
 		if( isSpiAcquired() )
 		{
 			uint16_t time;
+			uint32_t time32;
 			uint8_t irq;
 			uint8_t temp;
 			
@@ -713,7 +714,11 @@ implementation
 					 * CMD_TRANSMIT.
 					 */
 					if( irq == RF230_IRQ_RX_START ) // just to be cautious
-						call PacketTimeStamp.set(rxMsg, time - RX_SFD_DELAY);
+					{
+						time32 = call LocalTime.get();
+						time32 += (int16_t)(time - RX_SFD_DELAY) - (int16_t)(time32);
+						call PacketTimeStamp.set(rxMsg, time32);
+					}
 					else
 						call PacketTimeStamp.clear(rxMsg);
 
