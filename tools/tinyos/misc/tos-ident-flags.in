@@ -1,5 +1,5 @@
 #!@pathperl@ -w
-#$Id: tos-ident-flags.in,v 1.5 2008-01-14 14:10:31 razvanm Exp $
+#$Id: tos-ident-flags.in,v 1.6 2008-05-29 20:08:03 razvanm Exp $
 #@author Cory Sharp <cssharp@eecs.berkeley.edu>
 
 use strict;
@@ -16,8 +16,14 @@ my $time = sprintf( "0x%08x", `date +%s` );
 
 (my $whoami = `whoami`) =~ s/\s//g;
 (my $hostname = `hostname`) =~ s/\s//g;
-my $uidhash = `echo "$name$time$whoami$hostname" | sha1sum`;
-my $idhash = `echo "$whoami$hostname" | sha1sum`;
+my ($uidhash, $idhash);
+if( `uname` =~ /Darwin/ ) {
+  $uidhash = `echo "$name$time$whoami$hostname" | md5`;
+  $idhash = `echo "$whoami$hostname" | md5`;
+} else {
+  $uidhash = `echo "$name$time$whoami$hostname" | sha1sum`;
+  $idhash = `echo "$whoami$hostname" | sha1sum`;
+}
 my $uid = ($uidhash =~/^(.{8})/) ? "0x$1" : 0;
 my $id = ($idhash =~/^(.{8})/) ? "0x$1" : 0;
 
