@@ -46,6 +46,8 @@ module TimeSyncMessageP
 
 		interface LocalTime<TRF230> as LocalTimeRadio;
 		interface LocalTime<TMilli> as LocalTimeMilli;
+
+		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 	}
 }
 
@@ -91,6 +93,8 @@ implementation
 	{
 		timesync_footer_t* footer = (timesync_footer_t*)(msg->data + len);
 		footer->time_offset = (nx_int32_t)event_time;
+
+		call PacketTimeSyncOffset.set(msg, len);
 
 		return call SubSend.send[id](addr, msg, len + sizeof(timesync_footer_t));
 	}

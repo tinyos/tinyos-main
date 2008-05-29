@@ -46,7 +46,7 @@ configuration TimeSyncMessageC
 
 implementation
 {
-	components TimeSyncMessageP, RF230ActiveMessageC, LocalTimeMilliC, LocalTimeMicroC as LocalTimeRadioC;
+	components TimeSyncMessageP, RF230ActiveMessageC, LocalTimeMilliC, LocalTimeMicroC as LocalTimeRadioC, RF230PacketC;
 
 	TimeSyncAMSendRadio = TimeSyncMessageP;
 	TimeSyncPacketRadio = TimeSyncMessageP;
@@ -62,6 +62,8 @@ implementation
 	TimeSyncMessageP.PacketTimeStampMilli -> RF230ActiveMessageC;
 	TimeSyncMessageP.LocalTimeRadio -> LocalTimeRadioC;
 	TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
+
+	TimeSyncMessageP.PacketTimeSyncOffset -> RF230PacketC.PacketTimeSyncOffset;
 
 	SplitControl = RF230ActiveMessageC;
 	Receive	= RF230ActiveMessageC.Receive;
