@@ -41,9 +41,9 @@ configuration RF230ActiveMessageC
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
-		interface PacketTimeStamp<TRF230, uint16_t>;
 
-		interface PacketLastTouch;
+		interface PacketTimeStamp<TRF230, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
 }
 
@@ -65,11 +65,9 @@ implementation
 	PacketLinkQuality = RF230PacketC.PacketLinkQuality;
 	PacketTransmitPower = RF230PacketC.PacketTransmitPower;
 	PacketRSSI = RF230PacketC.PacketRSSI;
-	PacketTimeStamp = RF230PacketC.PacketTimeStamp;
+	PacketTimeStampRadio = RF230PacketC;
+	PacketTimeStampMilli = RF230PacketC;
 	LowPowerListening = LowPowerListeningLayerC;
-
-	PacketLastTouch = RF230PacketC;
-	RF230LayerC.lastTouch -> RF230PacketC.lastTouch;
 
 	components ActiveMessageLayerC;
 #ifdef LOW_POWER_LISTENING
@@ -136,8 +134,4 @@ implementation
 	CsmaLayerC -> RF230LayerC.RadioCCA;
 
 	RF230LayerC.RF230Config -> RF230ActiveMessageP;
-	RF230LayerC.PacketLinkQuality -> RF230PacketC.PacketLinkQuality;
-	RF230LayerC.PacketTransmitPower -> RF230PacketC.PacketTransmitPower;
-	RF230LayerC.PacketRSSI -> RF230PacketC.PacketRSSI;
-	RF230LayerC.PacketTimeStamp -> RF230PacketC.PacketTimeStamp;
 }

@@ -23,7 +23,7 @@
 
 #include "Timer.h"
 
-configuration LocalTimeMilliC
+configuration LocalTimeMicroC
 {
 	provides interface LocalTime<TMicro>;
 }

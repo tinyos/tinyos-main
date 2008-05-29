@@ -33,16 +33,18 @@ module RF230PacketP
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint16_t> as PacketSleepInterval;
+		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 
-		interface PacketTimeStamp<TRF230, uint16_t>;
-		interface PacketLastTouch;
-
-		async event void lastTouch(message_t* msg);
+		interface PacketTimeStamp<TRF230, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
 
 	uses
 	{
 		interface IEEE154Packet;
+
+		interface LocalTime<TRF230> as LocalTimeRadio;
+		interface LocalTime<TMilli> as LocalTimeMilli;
 	}
 }
 
@@ -52,7 +54,7 @@ implementation
 	{
 		PACKET_LENGTH_INCREASE = 
 			sizeof(rf230packet_header_t) - 1	// the 8-bit length field is not counted
-			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
+			+ sizeof(ieee154_footer_t),			// the CRC is not stored in memory
 	};
 
 	inline rf230packet_metadata_t* getMeta(message_t* msg)
@@ -140,27 +142,55 @@ implementation
 		getMeta(msg)->lqi = value;
 	}
 
-/*----------------- PacketTimeStamp -----------------*/
+/*----------------- PacketTimeStampRadio -----------------*/
 
-	async command bool PacketTimeStamp.isSet(message_t* msg)
+	async command bool PacketTimeStampRadio.isValid(message_t* msg)
 	{
 		return getMeta(msg)->flags & RF230PACKET_TIMESTAMP;
 	}
 
-	async command uint16_t PacketTimeStamp.get(message_t* msg)
+	async command uint32_t PacketTimeStampRadio.timestamp(message_t* msg)
 	{
 		return getMeta(msg)->timestamp;
 	}
 
-	async command void PacketTimeStamp.clear(message_t* msg)
+	async command void PacketTimeStampRadio.clear(message_t* msg)
 	{
 		getMeta(msg)->flags &= ~RF230PACKET_TIMESTAMP;
 	}
 
-	async command void PacketTimeStamp.set(message_t* msg, uint16_t value)
+	async command void PacketTimeStampRadio.set(message_t* msg, uint32_t value)
 	{
 		getMeta(msg)->flags |= RF230PACKET_TIMESTAMP;
 		getMeta(msg)->timestamp = value;
+	}
+
+/*----------------- PacketTimeStampMilli -----------------*/
+
+	async command bool PacketTimeStampMilli.isValid(message_t* msg)
+	{
+		return call PacketTimeStampRadio.isValid(msg);
+	}
+
+	async command uint32_t PacketTimeStampMilli.timestamp(message_t* msg)
+	{
+		int32_t offset = call PacketTimeStampRadio.timestamp(msg) - call LocalTimeRadio.get();
+
+		// TODO: Make the shift constant configurable
+		return (offset >> 10) + call LocalTimeMilli.get();
+	}
+
+	async command void PacketTimeStampMilli.clear(message_t* msg)
+	{
+		call PacketTimeStampRadio.clear(msg);
+	}
+
+	async command void PacketTimeStampMilli.set(message_t* msg, uint32_t value)
+	{
+		// TODO: Make the shift constant configurable
+		int32_t offset = (value - call LocalTimeMilli.get()) << 10;
+
+		call PacketTimeStampRadio.set(msg, offset + call LocalTimeRadio.get());
 	}
 
 /*----------------- PacketTransmitPower -----------------*/
@@ -211,6 +241,29 @@ implementation
 		getMeta(msg)->power = value;
 	}
 
+/*----------------- PacketTimeSyncOffset -----------------*/
+
+	async command bool PacketTimeSyncOffset.isSet(message_t* msg)
+	{
+		return getMeta(msg)->flags & RF230PACKET_TIMESYNC;
+	}
+
+	async command uint8_t PacketTimeSyncOffset.get(message_t* msg)
+	{
+		return call IEEE154Packet.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_footer_t);
+	}
+
+	async command void PacketTimeSyncOffset.clear(message_t* msg)
+	{
+		getMeta(msg)->flags &= ~RF230PACKET_TIMESYNC;
+	}
+
+	async command void PacketTimeSyncOffset.set(message_t* msg, uint8_t value)
+	{
+		// the value is ignored, the offset always points to the timesync footer at the end of the payload
+		getMeta(msg)->flags |= RF230PACKET_TIMESYNC;
+	}
+
 /*----------------- Global fields -----------------*/
 
 	norace uint8_t flags;
@@ -243,32 +296,5 @@ implementation
 	{
 		flags |= FLAG_SLEEPINT;
 		sleepInterval = value;
-	}
-
-/*----------------- PacketLastTouch -----------------*/
-	
-	async command void PacketLastTouch.request(message_t* msg)
-	{
-		getMeta(msg)->flags |= RF230PACKET_LAST_TOUCH;
-	}
-
-	async command void PacketLastTouch.cancel(message_t* msg)
-	{
-		getMeta(msg)->flags &= ~RF230PACKET_LAST_TOUCH;
-	}
-
-	async command bool PacketLastTouch.isPending(message_t* msg)
-	{
-		return getMeta(msg)->flags & RF230PACKET_LAST_TOUCH;
-	}
-
-	async event void lastTouch(message_t* msg)
-	{
-		if( getMeta(msg)->flags & RF230PACKET_LAST_TOUCH )
-			signal PacketLastTouch.touch(msg);
-	}
-
-	default async event void PacketLastTouch.touch(message_t* msg)
-	{
 	}
 }

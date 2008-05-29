@@ -26,7 +26,7 @@
 
 typedef nx_struct timesync_footer_t
 {
-	nx_uint32_t time_offset;	// in micorsec
+	nx_int32_t time_offset;	// in micorsec
 } timesync_footer_t;
 
 #endif//__TIMESYNCMESSAGE_H__

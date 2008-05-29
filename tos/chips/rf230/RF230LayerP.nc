@@ -57,13 +57,14 @@ module RF230LayerP
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
-		interface PacketTimeStamp<TRF230, uint16_t>;
+		interface PacketField<uint8_t> as PacketTimeSyncOffset;
+
+		interface PacketTimeStamp<TRF230, uint32_t>;
+		interface LocalTime<TRF230>;
 
 		interface RF230Config;
 		interface Tasklet;
 		interface RadioAlarm;
-
-		async event void lastTouch(message_t* msg);
 
 #ifdef RF230_DEBUG
 		interface DiagMsg;
@@ -390,6 +391,7 @@ implementation
 		uint8_t length;
 		uint8_t* data;
 		uint8_t header;
+		uint32_t time32;
 
 		if( cmd != CMD_NONE || state != STATE_RX_ON || ! isSpiAcquired() || radioIrq )
 			return EBUSY;
@@ -409,6 +411,8 @@ implementation
 			txPower = length;
 			writeRegister(RF230_PHY_TX_PWR, RF230_TX_AUTO_CRC_ON | txPower);
 		}
+
+		time32 = call LocalTime.get();
 
 		// we have missed an incoming message in this short amount of time
 		if( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) != RF230_PLL_ON )
@@ -446,14 +450,16 @@ implementation
 
 		length -= header;
 
-		// first upload the header
+		// first upload the header to gain some time
 		do {
 			call HplRF230.spiSplitReadWrite(*(data++));
 		}
 		while( --header != 0 );
 
-		call PacketTimeStamp.set(msg, time);
-		signal lastTouch(msg);
+		time32 += (int16_t)(time) - (int16_t)(time32);
+
+		if( call PacketTimeSyncOffset.isSet(msg) )
+			((timesync_footer_t*)(msg->data + call PacketTimeSyncOffset.get(msg)))->time_offset += time32;
 
 		do {
 			call HplRF230.spiSplitReadWrite(*(data++));
@@ -491,6 +497,11 @@ implementation
 			call DiagMsg.send();
 		}
 #endif
+
+		if( call PacketTimeSyncOffset.isSet(msg) )
+			((timesync_footer_t*)(msg->data + call PacketTimeSyncOffset.get(msg)))->time_offset -= time32;
+
+		call PacketTimeStamp.set(msg, time32);
 
 		// wait for the TRX_END interrupt
 		state = STATE_BUSY_TX_2_RX_ON;
@@ -587,7 +598,7 @@ implementation
 			length = call RF230Config.getLength(rxMsg);
 
 			call DiagMsg.str("rx");
-			call DiagMsg.uint16(call PacketTimeStamp.isSet(rxMsg) ? call PacketTimeStamp.get(rxMsg) : 0);
+			call DiagMsg.uint32(call PacketTimeStamp.isSet(rxMsg) ? call PacketTimeStamp.get(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.uint8(crc != 0);
 			call DiagMsg.uint8(length);

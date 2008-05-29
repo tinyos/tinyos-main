@@ -34,29 +34,31 @@ configuration RF230PacketC
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint16_t> as PacketSleepInterval;
+		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 
-		interface PacketTimeStamp<TRF230, uint16_t>;
-		interface PacketLastTouch;
-
-		async event void lastTouch(message_t* msg);
+		interface PacketTimeStamp<TRF230, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
 }
 
 implementation
 {
-	components RF230PacketP, IEEE154PacketC;
+	components RF230PacketP, IEEE154PacketC, LocalTimeMicroC, LocalTimeMilliC;
 
 	RF230PacketP.IEEE154Packet -> IEEE154PacketC;
+	RF230PacketP.LocalTimeRadio -> LocalTimeMicroC;
+	RF230PacketP.LocalTimeMilli -> LocalTimeMilliC;
 
 	Packet = RF230PacketP;
 	AMPacket = IEEE154PacketC;
-	PacketAcknowledgements = RF230PacketP;
-	PacketLinkQuality = RF230PacketP.PacketLinkQuality;
-	PacketTransmitPower = RF230PacketP.PacketTransmitPower;
-	PacketRSSI = RF230PacketP.PacketRSSI;
-	PacketSleepInterval = RF230PacketP.PacketSleepInterval;
-	PacketTimeStamp = RF230PacketP;
 
-	PacketLastTouch = RF230PacketP;
-	lastTouch = RF230PacketP;
+	PacketAcknowledgements	= RF230PacketP;
+	PacketLinkQuality		= RF230PacketP.PacketLinkQuality;
+	PacketTransmitPower		= RF230PacketP.PacketTransmitPower;
+	PacketRSSI				= RF230PacketP.PacketRSSI;
+	PacketSleepInterval		= RF230PacketP.PacketSleepInterval;
+	PacketTimeSyncOffset	= RF230PacketP.PacketTimeSyncOffset;
+
+	PacketTimeStampRadio	= RF230PacketP;
+	PacketTimeStampMilli	= RF230PacketP;
 }

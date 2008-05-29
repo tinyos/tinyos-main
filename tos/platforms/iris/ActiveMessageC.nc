@@ -35,7 +35,9 @@ configuration ActiveMessageC
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
-		interface PacketTimeStamp<TMicro, uint16_t>;
+
+		interface PacketTimeStamp<TMicro, uint32_t> as PacketTimeStampMicro;
+		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
 }
 
@@ -50,7 +52,8 @@ implementation
 	Packet       = MAC;
 	AMPacket     = MAC;
 
-	PacketAcknowledgements	= MAC.PacketAcknowledgements;
-	LowPowerListening		= MAC.LowPowerListening;
-	PacketTimeStamp			= MAC.PacketTimeStamp;
+	PacketAcknowledgements	= MAC;
+	LowPowerListening		= MAC;
+	PacketTimeStampMilli	= MAC;
+	PacketTimeStampMicro	= MAC;
 }

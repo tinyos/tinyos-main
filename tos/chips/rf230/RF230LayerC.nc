@@ -33,22 +33,12 @@ configuration RF230LayerC
 		interface RadioCCA;
 	}
 
-	uses 
-	{
-		interface RF230Config;
-
-		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketField<uint8_t> as PacketTransmitPower;
-		interface PacketField<uint8_t> as PacketRSSI;
-		interface PacketTimeStamp<TRF230, uint16_t>;
-
-		async event void lastTouch(message_t* msg);
-	}
+	uses interface RF230Config;
 }
 
 implementation
 {
-	components RF230LayerP, HplRF230C, BusyWaitMicroC, TaskletC, MainC, RadioAlarmC;
+	components RF230LayerP, HplRF230C, BusyWaitMicroC, TaskletC, MainC, RadioAlarmC, RF230PacketC, LocalTimeMicroC as LocalTimeRadioC;
 
 	RadioState = RF230LayerP;
 	RadioSend = RF230LayerP;
@@ -56,10 +46,13 @@ implementation
 	RadioCCA = RF230LayerP;
 
 	RF230Config = RF230LayerP;
-	PacketLinkQuality = RF230LayerP.PacketLinkQuality;
-	PacketTransmitPower = RF230LayerP.PacketTransmitPower;
-	PacketRSSI = RF230LayerP.PacketRSSI;
-	PacketTimeStamp = RF230LayerP.PacketTimeStamp;
+
+	RF230LayerP.PacketLinkQuality -> RF230PacketC.PacketLinkQuality;
+	RF230LayerP.PacketTransmitPower -> RF230PacketC.PacketTransmitPower;
+	RF230LayerP.PacketRSSI -> RF230PacketC.PacketRSSI;
+	RF230LayerP.PacketTimeSyncOffset -> RF230PacketC.PacketTimeSyncOffset;
+	RF230LayerP.PacketTimeStamp -> RF230PacketC;
+	RF230LayerP.LocalTime -> LocalTimeRadioC;
 
 	RF230LayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 	RadioAlarmC.Alarm -> HplRF230C.Alarm;
@@ -75,8 +68,6 @@ implementation
 	RF230LayerP.IRQ -> HplRF230C.IRQ;
 	RF230LayerP.Tasklet -> TaskletC;
 	RF230LayerP.BusyWait -> BusyWaitMicroC;
-
-	lastTouch = RF230LayerP.lastTouch;
 
 #ifdef RF230_DEBUG
 	components DiagMsgC;

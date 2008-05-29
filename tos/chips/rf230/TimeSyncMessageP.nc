@@ -22,54 +22,47 @@
  */
 
 #include <TimeSyncMessage.h>
+#include <HplRF230.h>
 
 module TimeSyncMessageP
 {
 	provides
 	{
-		interface TimeSyncSend<TMicro> as TimeSyncSendMicro[uint8_t id];
-		interface TimeSyncSend<TMilli> as TimeSyncSendMilli[uint8_t id];
+		interface TimeSyncAMSend<TRF230, uint32_t> as TimeSyncAMSendRadio[uint8_t id];
+		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[uint8_t id];
 		interface Packet;
-		interface TimeSyncPacket<TMicro> as TimeSyncPacketMicro;
-		interface TimeSyncPacket<TMilli> as TimeSyncPacketMilli;
+
+		interface TimeSyncPacket<TRF230, uint32_t> as TimeSyncPacketRadio;
+		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
 	}
 
 	uses
 	{
 		interface AMSend as SubSend[uint8_t id];
 		interface Packet as SubPacket;
-		interface PacketTimeStamp<TMicro,uint16_t>;		// TODO: change this to 32-bit
-		interface PacketLastTouch;
 
-		interface LocalTime<TMicro> as LocalTimeMicro;
+		interface PacketTimeStamp<TRF230, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+
+		interface LocalTime<TRF230> as LocalTimeRadio;
 		interface LocalTime<TMilli> as LocalTimeMilli;
 	}
 }
 
 implementation
 {
-/*----------------- Packet -----------------*/
-
-	typedef struct timesync_local_t
-	{
-		uint32_t event_time;		// in microsec
-	} timesync_local_t;
-
 	// TODO: change the Packet.payloadLength and Packet.maxPayloadLength commands to async
 	inline timesync_footer_t* getFooter(message_t* msg)
 	{
-		return (timesync_footer_t*)(msg->data + call SubPacket.payloadLength(msg) - sizeof(timesync_footer_t));
+		// we use the payload length we export (the smaller one)
+		return (timesync_footer_t*)(msg->data + call Packet.payloadLength(msg));
 	}
 
-	inline timesync_local_t* getLocal(message_t* msg)
-	{
-		return (timesync_local_t*)(msg->data + call SubPacket.maxPayloadLength() - sizeof(timesync_local_t));
-	}
+/*----------------- Packet -----------------*/
 
 	command void Packet.clear(message_t* msg) 
 	{
 		call SubPacket.clear(msg);
-		call PacketLastTouch.cancel(msg);	// TODO: check if we need to do this
 	}
 
 	command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
@@ -84,144 +77,109 @@ implementation
 
 	command uint8_t Packet.maxPayloadLength()
 	{
-		return call SubPacket.maxPayloadLength() - sizeof(timesync_footer_t) - sizeof(timesync_local_t);
+		return call SubPacket.maxPayloadLength() - sizeof(timesync_footer_t);
 	}
 
 	command void* Packet.getPayload(message_t* msg, uint8_t len)
 	{
-		return call SubPacket.getPayload(msg, len + sizeof(timesync_footer_t) + sizeof(timesync_local_t));
+		return call SubPacket.getPayload(msg, len + sizeof(timesync_footer_t));
 	}
 
-/*----------------- TimeSyncSendMicro -----------------*/
+/*----------------- TimeSyncAMSendRadio -----------------*/
 
-	command error_t TimeSyncSendMicro.send[am_id_t id](uint32_t event_time, am_addr_t addr, message_t* msg, uint8_t len)
+	command error_t TimeSyncAMSendRadio.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len, uint32_t event_time)
 	{
-		timesync_local_t* local = getLocal(msg);
-
-		local->event_time = event_time;
-
-		call PacketLastTouch.request(msg);
+		timesync_footer_t* footer = (timesync_footer_t*)(msg->data + len);
+		footer->time_offset = (nx_int32_t)event_time;
 
 		return call SubSend.send[id](addr, msg, len + sizeof(timesync_footer_t));
 	}
 
-	command error_t TimeSyncSendMicro.cancel[am_id_t id](message_t* msg)
+	command error_t TimeSyncAMSendRadio.cancel[am_id_t id](message_t* msg)
 	{
-		call PacketLastTouch.cancel(msg);
 		return call SubSend.cancel[id](msg);
 	}
 
-	default event void TimeSyncSendMicro.sendDone[am_id_t id](message_t* msg, error_t error)
+	default event void TimeSyncAMSendRadio.sendDone[am_id_t id](message_t* msg, error_t error)
 	{
 	}
 
-	command uint8_t TimeSyncSendMicro.maxPayloadLength[am_id_t id]()
+	command uint8_t TimeSyncAMSendRadio.maxPayloadLength[am_id_t id]()
 	{
 		return call SubSend.maxPayloadLength[id]() - sizeof(timesync_footer_t);
 	}
 
-	command void* TimeSyncSendMicro.getPayload[am_id_t id](message_t* msg, uint8_t len)
+	command void* TimeSyncAMSendRadio.getPayload[am_id_t id](message_t* msg, uint8_t len)
 	{
 		return call SubSend.getPayload[id](msg, len + sizeof(timesync_footer_t));
 	}
 
-/*----------------- TimeSyncSendMilli -----------------*/
+/*----------------- TimeSyncAMSendMilli -----------------*/
 
-	command error_t TimeSyncSendMilli.send[am_id_t id](uint32_t event_time, am_addr_t addr, message_t* msg, uint8_t len)
+	command error_t TimeSyncAMSendMilli.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len, uint32_t event_time)
 	{
-		timesync_local_t* local = getLocal(msg);
-
 		// compute elapsed time in millisecond
-		event_time = ((event_time - call LocalTimeMilli.get()) << 10) + call LocalTimeMicro.get();
+		event_time = ((event_time - call LocalTimeMilli.get()) << 10) + call LocalTimeRadio.get();
 
-		local->event_time = event_time;
-
-		call PacketLastTouch.request(msg);
-
-		return call SubSend.send[id](addr, msg, len + sizeof(timesync_footer_t));
+		return call TimeSyncAMSendRadio.send[id](addr, msg, len, event_time);
 	}
 
-	command error_t TimeSyncSendMilli.cancel[am_id_t id](message_t* msg)
+	command error_t TimeSyncAMSendMilli.cancel[am_id_t id](message_t* msg)
 	{
-		return call SubSend.cancel[id](msg);
+		return call TimeSyncAMSendRadio.cancel[id](msg);
 	}
 
-	default event void TimeSyncSendMilli.sendDone[am_id_t id](message_t* msg, error_t error)
+	default event void TimeSyncAMSendMilli.sendDone[am_id_t id](message_t* msg, error_t error)
 	{
 	}
 
-	command uint8_t TimeSyncSendMilli.maxPayloadLength[am_id_t id]()
+	command uint8_t TimeSyncAMSendMilli.maxPayloadLength[am_id_t id]()
 	{
-		return call SubSend.maxPayloadLength[id]() - sizeof(timesync_footer_t);
+		return call TimeSyncAMSendRadio.maxPayloadLength[id]();
 	}
 
-	command void* TimeSyncSendMilli.getPayload[am_id_t id](message_t* msg, uint8_t len)
+	command void* TimeSyncAMSendMilli.getPayload[am_id_t id](message_t* msg, uint8_t len)
 	{
-		return call SubSend.getPayload[id](msg, len + sizeof(timesync_footer_t));
+		return call TimeSyncAMSendRadio.getPayload[id](msg, len);
 	}
 
 	/*----------------- SubSend.sendDone -------------------*/
 
 	event void SubSend.sendDone[am_id_t id](message_t* msg, error_t error)
 	{
-		signal TimeSyncSendMicro.sendDone[id](msg, error);
-		signal TimeSyncSendMilli.sendDone[id](msg, error);
+		signal TimeSyncAMSendRadio.sendDone[id](msg, error);
+		signal TimeSyncAMSendMilli.sendDone[id](msg, error);
 	}
 
-	/*----------------- PacketLastTouch.touch -------------------*/
+	/*----------------- TimeSyncPacketRadio -----------------*/
 
-	enum
-	{
-		TIMESYNC_INVALID_STAMP = 0x80000000L,
-	};
-
-	async event void PacketLastTouch.touch(message_t* msg)
-	{
-		timesync_footer_t* footer = footer = getFooter(msg);
-		timesync_local_t* local;
-
-		if( call PacketTimeStamp.isSet(msg) )
-		{
-			local = getLocal(msg);
-
-			footer->time_offset = local->event_time - call PacketTimeStamp.get(msg);
-		}
-		else
-			footer->time_offset = TIMESYNC_INVALID_STAMP;
-	}
-
-	/*----------------- TimeSyncPacketMicro -----------------*/
-
-	async command bool TimeSyncPacketMicro.hasValidTime(message_t* msg)
+	async command bool TimeSyncPacketRadio.isValid(message_t* msg)
 	{
 		timesync_footer_t* footer = getFooter(msg);
 
-		return call PacketTimeStamp.isSet(msg) && footer->time_offset != TIMESYNC_INVALID_STAMP;
+		return call PacketTimeStampRadio.isValid(msg) && footer->time_offset != 0x80000000L;
 	}
 
-	async command uint32_t TimeSyncPacketMicro.getEventTime(message_t* msg)
+	async command uint32_t TimeSyncPacketRadio.eventTime(message_t* msg)
 	{
 		timesync_footer_t* footer = getFooter(msg);
 
-		return (uint32_t)(footer->time_offset) + call PacketTimeStamp.get(msg);
+		return (int32_t)(footer->time_offset) + call PacketTimeStampRadio.timestamp(msg);
 	}
 
 	/*----------------- TimeSyncPacketMilli -----------------*/
 
-	async command bool TimeSyncPacketMilli.hasValidTime(message_t* msg)
+	async command bool TimeSyncPacketMilli.isValid(message_t* msg)
 	{
 		timesync_footer_t* footer = getFooter(msg);
 
-		return call PacketTimeStamp.isSet(msg) && footer->time_offset != TIMESYNC_INVALID_STAMP;
+		return call PacketTimeStampMilli.isValid(msg) && footer->time_offset != 0x80000000L;
 	}
 
-	async command uint32_t TimeSyncPacketMilli.getEventTime(message_t* msg)
+	async command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg)
 	{
 		timesync_footer_t* footer = getFooter(msg);
 
-		// time offset compared to now in microsec, important that this is signed
-		int32_t elapsed = (uint32_t)(footer->time_offset) + call PacketTimeStamp.get(msg) - call LocalTimeMicro.get();
-
-		return (elapsed >> 10) + call LocalTimeMilli.get();
+		return ((int32_t)(footer->time_offset) << 10) + call PacketTimeStampMilli.timestamp(msg);
 	}
 }

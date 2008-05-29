@@ -23,6 +23,7 @@
 
 #include <Timer.h>
 #include <AM.h>
+#include <HplRF230.h>
 
 configuration TimeSyncMessageC
 {
@@ -35,42 +36,35 @@ configuration TimeSyncMessageC
 		interface Packet;
 		interface AMPacket;
 
-		interface TimeSyncSend<TMicro> as TimeSyncSendMicro[am_id_t id];
-		interface TimeSyncPacket<TMicro> as TimeSyncPacketMicro;
-//		interface LocalTime<TMicro> as LocalTimeMicro;
+		interface TimeSyncAMSend<TRF230, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
+		interface TimeSyncPacket<TRF230, uint32_t> as TimeSyncPacketRadio;
 
-		interface TimeSyncSend<TMilli> as TimeSyncSendMilli[am_id_t id];
-		interface TimeSyncPacket<TMilli> as TimeSyncPacketMilli;
-		interface LocalTime<TMilli> as LocalTimeMilli;
-
-		interface PacketTimeStamp<TMicro, uint16_t>;
+		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
+		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
 	}
 }
 
 implementation
 {
-	components TimeSyncMessageP, RF230ActiveMessageC, LocalTimeMilliC;
+	components TimeSyncMessageP, RF230ActiveMessageC, LocalTimeMilliC, LocalTimeMicroC as LocalTimeRadioC;
 
-	TimeSyncSendMicro = TimeSyncMessageP;
-	TimeSyncPacketMicro = TimeSyncMessageP;
-//	LocalTimeMicro = LocalTimeMicroC;
+	TimeSyncAMSendRadio = TimeSyncMessageP;
+	TimeSyncPacketRadio = TimeSyncMessageP;
 
-	TimeSyncSendMilli = TimeSyncMessageP;
+	TimeSyncAMSendMilli = TimeSyncMessageP;
 	TimeSyncPacketMilli = TimeSyncMessageP;
-	LocalTimeMilli = LocalTimeMilliC;
 
 	Packet = TimeSyncMessageP;
 	TimeSyncMessageP.SubSend -> RF230ActiveMessageC.AMSend;
 	TimeSyncMessageP.SubPacket -> RF230ActiveMessageC.Packet;
-	TimeSyncMessageP.PacketTimeStamp -> RF230ActiveMessageC;
 
+	TimeSyncMessageP.PacketTimeStampRadio -> RF230ActiveMessageC;
+	TimeSyncMessageP.PacketTimeStampMilli -> RF230ActiveMessageC;
+	TimeSyncMessageP.LocalTimeRadio -> LocalTimeRadioC;
 	TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
-
-	TimeSyncMessageP.PacketLastTouch -> RF230ActiveMessageC;
 
 	SplitControl = RF230ActiveMessageC;
 	Receive	= RF230ActiveMessageC.Receive;
 	Snoop = RF230ActiveMessageC.Snoop;
 	AMPacket = RF230ActiveMessageC;
-	PacketTimeStamp = RF230ActiveMessageC;
 }
