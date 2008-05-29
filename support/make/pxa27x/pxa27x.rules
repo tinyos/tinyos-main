@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: pxa27x.rules,v 1.8 2008-05-27 18:21:43 kusy Exp $
+#$Id: pxa27x.rules,v 1.9 2008-05-29 18:04:06 kusy Exp $
 
 define PXA27X_HELP
 
@@ -81,7 +81,7 @@ setid: FORCE
 
 
 bin: exe FORCE
-	@cmd () { echo "$$@"; $$@; }; if [ "${DEFAULT_PROGRAM}" = "xflash" ]; then $(XDB_SYMBOL_EXTRACT) $(MAIN_EXE); fi
+	@cmd () { echo "$$@"; $$@; }; if [ "${PROGRAM}" = "xflash" ]; then $(XDB_SYMBOL_EXTRACT) $(MAIN_EXE); fi
 
 exe: exe0 bytes FORCE
 	@:
