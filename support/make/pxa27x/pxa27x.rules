@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: pxa27x.rules,v 1.9 2008-05-29 18:04:06 kusy Exp $
+#$Id: pxa27x.rules,v 1.10 2008-05-29 20:16:43 kusy Exp $
 
 define PXA27X_HELP
 
@@ -12,6 +12,7 @@ define PXA27X_HELP
 
    jflashmm : (default) use the Intel JFLASHMM tool to install
    xflash   : Use the Intel XFLASH tool to install
+   openocd  : Use openocd to install
 
 endef
 HELP += $(PXA27X_HELP)
