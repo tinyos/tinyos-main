@@ -1,4 +1,4 @@
-//$Id: VirtualizeAlarmC.nc,v 1.5 2006-12-12 18:23:32 vlahan Exp $
+//$Id: VirtualizeAlarmC.nc,v 1.6 2008-05-30 16:25:10 janhauer Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -132,7 +132,10 @@ implementation
 
     for( id=0; id<NUM_ALARMS; id++ ) {
       if( m.isset[id] ) {
-        size_type elapsed = call AlarmFrom.getNow() - m.alarm[id].t0;
+        //size_type elapsed = call AlarmFrom.getNow() - m.alarm[id].t0;
+        //if( m.alarm[id].dt <= elapsed ) {
+        size_type t0 = m.alarm[id].t0;
+        size_type elapsed = call AlarmFrom.getNow() - t0;
         if( m.alarm[id].dt <= elapsed ) {
           m.isset[id] = FALSE;
           signal Alarm.fired[id]();
