@@ -1,4 +1,4 @@
-// $Id: TinyError.h,v 1.8 2008-05-20 21:46:21 scipio Exp $
+// $Id: TinyError.h,v 1.9 2008-05-30 16:27:05 janhauer Exp $
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -23,7 +23,7 @@
 /**
  * @author Phil Levis
  * @author David Gay
- * Revision:  $Revision: 1.8 $
+ * Revision:  $Revision: 1.9 $
  *
  * Defines global error codes for error_t in TinyOS.
  */
@@ -49,7 +49,8 @@ enum {
   ERESERVE       =  8,           // Reservation required before usage
   EALREADY       =  9,           // The device state you are requesting is already set
   ENOMEM         = 10,           // Memory required not available
-  ELAST          = 10            // Last enum value
+  ENOACK         = 11,           // A packet was not acknowledged
+  ELAST          = 11            // Last enum value
 };
 
 typedef uint8_t error_t NESC_COMBINE("ecombine");
