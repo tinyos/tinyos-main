@@ -84,7 +84,7 @@ for ($i = 0; $i <= $#ARGV; $i++) {
 	}
         elsif (/^-safe$/) {
             $safe = 1;
-            $strip = 1;
+            $_ = "-fnesc-safe";
         }
 	elsif (/^-fnesc-cfile=(.*)/){
 	    $appfilename=$1;
@@ -139,17 +139,9 @@ if (!defined $target) {
     }
 }
 
-my $cpp;
-my $deputyasmexe;
-my $gcc;
-
-if(defined $safe) {
-  my $safe_home = $TOSDIR."/lib/safe";
-  push @new_args, "-fnesc-include=${safe_home}/include/annots_stage1";
-  push @new_args, "-fnesc-genprefix=#include \"${safe_home}/include/annots_stage2.h\"";
-}
-
 if ($safe) {
+
+    my $safe_home = $ENV{'TOSDIR'}."/lib/safe";
 
     if (($target eq "mica2") or ($target eq "micaz")) {
 	$mcu = "avr";
@@ -162,47 +154,17 @@ if ($safe) {
 	exit 2;
     }
 
-    my $deputy_include = $ENV{'DEPUTY_HOME'}."/include";
-
-    push @new_args, "-DSAFE_TINYOS";
-    push @new_args, "-conly";
     push @new_args, "-fnesc-deputy";
 
-    if (!defined $appfilename) {
-	$appfilename="build/${target}/app.c";
-    }
-    if (!defined $exefilename) {
-	$exefilename="build/${target}/main.exe";
-    }
-
-    $appfilename =~ m/^((.*\/)?)[^\/]+$/;
-    my $directory = $1;
-
-    # Might be useful to keep this app.c somewhere...
-    # This could probably be avoided by using the deputy script 
-    # instead of the executable directly...
-    $cpp = "${mcu}-gcc -E -DSAFE_TINYOS $appfilename -o ${directory}deputy-in.c -I${safe_home}/include"; 
-    
-    # Not worrying about racing protection, for now...
-    # --checksnescatomic racing.txt 
-    $deputyasmexe = "deputy-${mcu} --FLIDs --out ${directory}deputy-out.c ${directory}deputy-in.c";
-    
     $failfile = "${TOSDIR}/lib/safe/${mcu}/fail.c";
 
-    my $gccflags;
-    if (($target eq "mica2") or ($target eq "micaz")) {
-	$gccflags = ("-mmcu=atmega128 -Os -fdollars-in-identifiers " .
-		    "-finline-limit=1000000 -Winline " .
-		    "--param inline-unit-growth=1000000 " .
-		    "--param large-function-growth=1000000");
-    }
-    elsif($target eq "telosb"){
-	$gccflags = "-Os -mdisable-hwmul -mmcu=msp430x1611";
-    }
-    
-    $gcc = ("${mcu}-gcc $gccflags -I${deputy_include} ${directory}deputy-out.c " .
-	    "$failfile -o $exefilename $libs");
-
+    my $deputy_args = "-I${safe_home}/include " .
+                      "--FLIDs " . 
+                      "--envmachine " .
+                      "-DSAFE_TINYOS " .
+                      "--nolib";
+    push @new_args, "-fnesc-deputy-args=$deputy_args";
+    push @new_args, "$failfile";
 }
 
 if (!defined $scheduler && !$is_tos_1) {
@@ -334,28 +296,9 @@ foreach $idir (@includes) {
 
 
 print STDERR join(' ', @new_args), "\n" if $verbose;
-
-if ($safe) {
-
-    # nescc runs and puts in annotations like COUNT etc... 
-    system(@new_args)==0 or die "Couldn't execute nescc\n";
-
-    # cpp changes annotations into attributes for deputy
-    print STDERR "${cpp}\n" if $verbose;
-    system($cpp)==0 or die "gcc preprocess error!\n";
-
-    # deputy inserts the checks
-    print STDERR "${deputyasmexe}\n" if $verbose;
-    system($deputyasmexe)==0 or die "deputy error!\n";
-
-    print STDERR "${gcc}\n" if $verbose;
-    system($gcc)==0 or die "cil error!\n";
-
-} else {
-    exec @new_args;
-    print STDERR "Couldn't execute nescc\n";
-    exit 2;
-}
+exec @new_args;
+print STDERR "Couldn't execute nescc\n";
+exit 2;
 
 sub extractarg {
     local ($i) = @_;
