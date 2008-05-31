@@ -1,4 +1,4 @@
-/// $Id: HplAtm128GeneralIOSlowPinP.nc,v 1.5 2008-02-16 05:30:24 regehr Exp $
+/// $Id: HplAtm128GeneralIOSlowPinP.nc,v 1.6 2008-05-31 20:20:49 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -39,9 +39,9 @@ generic module HplAtm128GeneralIOSlowPinP (uint8_t port_addr,
 }
 implementation
 {
-#define pin (*TCAST(volatile uint8_t * SINGLE NONNULL, pin_addr))
-#define port (*TCAST(volatile uint8_t * SINGLE NONNULL, port_addr))
-#define ddr (*TCAST(volatile uint8_t * SINGLE NONNULL, ddr_addr))
+#define pin (*TCAST(volatile uint8_t * ONE, pin_addr))
+#define port (*TCAST(volatile uint8_t * ONE, port_addr))
+#define ddr (*TCAST(volatile uint8_t * ONE, ddr_addr))
 
   inline async command bool IO.get()        { return READ_BIT (pin, bit); }
   inline async command void IO.set()        { atomic SET_BIT  (port, bit); }

@@ -1,4 +1,4 @@
-/// $Id: HplAtm128InterruptPinP.nc,v 1.4 2006-12-12 18:23:03 vlahan Exp $
+/// $Id: HplAtm128InterruptPinP.nc,v 1.5 2008-05-31 20:20:49 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -42,7 +42,7 @@ implementation
   inline async command void Irq.enable()   { EIMSK |= 1 << bit; }
   inline async command void Irq.disable()  { EIMSK &= ~(1 << bit); }
 
-#define ctrl  (*(volatile uint8_t *)ctrl_addr)
+#define ctrl  (*TCAST(volatile uint8_t * ONE, ctrl_addr))
 
   inline async command void Irq.edge(bool low_to_high) {
     ctrl |= 1 << edge1bit; // use edge mode

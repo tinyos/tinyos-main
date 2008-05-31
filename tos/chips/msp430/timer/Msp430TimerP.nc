@@ -44,9 +44,9 @@ generic module Msp430TimerP(
 }
 implementation
 {
-  #define TxIV (*TCAST(volatile TYPE_TAIV* SINGLE NONNULL, TxIV_addr))
-  #define TxR (*TCAST(volatile TYPE_TAR* SINGLE NONNULL, TxR_addr))
-  #define TxCTL (*TCAST(volatile TYPE_TACTL* SINGLE NONNULL, TxCTL_addr))
+  #define TxIV (*TCAST(volatile TYPE_TAIV* ONE, TxIV_addr))
+  #define TxR (*TCAST(volatile TYPE_TAR* ONE, TxR_addr))
+  #define TxCTL (*TCAST(volatile TYPE_TACTL* ONE, TxCTL_addr))
 
   async command uint16_t Timer.get()
   {

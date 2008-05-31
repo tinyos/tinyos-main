@@ -37,10 +37,10 @@ generic module HplMsp430GeneralIOP(
 }
 implementation
 {
-  #define PORTxIN (*TCAST(volatile TYPE_PORT_IN* SINGLE NONNULL, port_in_addr))
-  #define PORTx (*TCAST(volatile TYPE_PORT_OUT* SINGLE NONNULL, port_out_addr))
-  #define PORTxDIR (*TCAST(volatile TYPE_PORT_DIR* SINGLE NONNULL, port_dir_addr))
-  #define PORTxSEL (*TCAST(volatile TYPE_PORT_SEL* SINGLE NONNULL, port_sel_addr))
+  #define PORTxIN (*TCAST(volatile TYPE_PORT_IN* ONE, port_in_addr))
+  #define PORTx (*TCAST(volatile TYPE_PORT_OUT* ONE, port_out_addr))
+  #define PORTxDIR (*TCAST(volatile TYPE_PORT_DIR* ONE, port_dir_addr))
+  #define PORTxSEL (*TCAST(volatile TYPE_PORT_SEL* ONE, port_sel_addr))
 
   async command void IO.set() { atomic PORTx |= (0x01 << pin); }
   async command void IO.clr() { atomic PORTx &= ~(0x01 << pin); }
