@@ -1,4 +1,4 @@
-/* $Id: PoolP.nc,v 1.4 2006-12-12 18:23:47 vlahan Exp $ */
+/* $Id: PoolP.nc,v 1.5 2008-05-31 20:27:07 regehr Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -47,7 +47,7 @@
  *  @author Philip Levis
  *  @author Kyle Jamieson
  *  @author Geoffrey Mainland
- *  @date   $Date: 2006-12-12 18:23:47 $
+ *  @date   $Date: 2008-05-31 20:27:07 $
  */
 
 generic module PoolP(typedef pool_t, uint8_t size) {
@@ -59,7 +59,7 @@ generic module PoolP(typedef pool_t, uint8_t size) {
 implementation {
   uint8_t free;
   uint8_t index;
-  pool_t* queue[size];
+  pool_t* ONE_NOK queue[size];
   pool_t pool[size];
 
   command error_t Init.init() {

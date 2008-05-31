@@ -1,4 +1,4 @@
-/* $Id: QueueC.nc,v 1.5 2008-05-02 19:52:48 idgay Exp $ */
+/* $Id: QueueC.nc,v 1.6 2008-05-31 20:27:07 regehr Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -35,7 +35,7 @@
  *
  *  @author Philip Levis
  *  @author Geoffrey Mainland
- *  @date   $Date: 2008-05-02 19:52:48 $
+ *  @date   $Date: 2008-05-31 20:27:07 $
  */
 
    
@@ -45,7 +45,7 @@ generic module QueueC(typedef queue_t, uint8_t QUEUE_SIZE) {
 
 implementation {
 
-  queue_t queue[QUEUE_SIZE];
+  queue_t ONE_NOK queue[QUEUE_SIZE];
   uint8_t head = 0;
   uint8_t tail = 0;
   uint8_t size = 0;
