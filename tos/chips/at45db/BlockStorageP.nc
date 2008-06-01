@@ -1,4 +1,4 @@
-// $Id: BlockStorageP.nc,v 1.4 2006-12-12 18:23:02 vlahan Exp $
+// $Id: BlockStorageP.nc,v 1.5 2008-06-01 04:24:33 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2004 The Regents of the University  of California.  
@@ -93,7 +93,7 @@ implementation
   struct {
     /* The latest request made for this client, and it's arguments */
     uint8_t request; /* automatically initialised to R_IDLE */
-    uint8_t *buf;
+    uint8_t * COUNT_NOK(len) buf;
     storage_addr_t addr;
     storage_len_t len;
   } s[N];
@@ -179,7 +179,7 @@ implementation
   }
 
   error_t newRequest(uint8_t newState, uint8_t id,
-		       storage_addr_t addr, uint8_t* buf, storage_len_t len) {
+		       storage_addr_t addr, uint8_t* COUNT_NOK(len) buf, storage_len_t len) {
     storage_len_t vsize;
 
     if (s[id].request != R_IDLE)
@@ -336,7 +336,7 @@ implementation
   /* ------------------------------------------------------------------ */
 
   command error_t BlockRead.computeCrc[uint8_t id](storage_addr_t addr, storage_len_t len, uint16_t basecrc) {
-    return newRequest(R_CRC, id, addr, (void *)basecrc, len);
+    return newRequest(R_CRC, id, addr, TCAST(void * COUNT(len),basecrc), len);
   }
 
   /* ------------------------------------------------------------------ */

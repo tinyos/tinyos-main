@@ -117,7 +117,7 @@ interface HplAt45db {
    *   AT45_PAGE_SIZE
    */
   command void readBuffer(uint8_t cmd, at45pageoffset_t offset,
-		    uint8_t *PASS data, uint16_t n);
+  		    uint8_t *PASS COUNT_NOK(n) data, uint16_t n);
 
   /**
    * Read directly from flash. readDone will be signaled.
@@ -132,7 +132,7 @@ interface HplAt45db {
    * @param n Number of bytes to read (> 0).
    */
   command void read(uint8_t cmd, at45page_t page, at45pageoffset_t offset,
-		    uint8_t *PASS data, at45pageoffset_t n);
+  		    uint8_t *PASS COUNT_NOK(n) data, at45pageoffset_t n);
 
   /**
    * Signaled when data has been read from the buffer. The data buffer
@@ -176,7 +176,7 @@ interface HplAt45db {
    *   AT45_PAGE_SIZE
    */
   command void write(uint8_t cmd, at45page_t page, at45pageoffset_t offset,
-		     uint8_t *PASS data, at45pageoffset_t n);
+  		     uint8_t *PASS COUNT_NOK(n) data, at45pageoffset_t n);
 
   /**
    * Signaled when data has been written to the buffer. The data buffer

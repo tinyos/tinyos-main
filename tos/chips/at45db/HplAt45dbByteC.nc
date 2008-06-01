@@ -48,8 +48,8 @@ implementation
   };
   uint8_t status = P_IDLE;
   uint8_t flashCmd[4];
-  uint8_t *data;
   at45pageoffset_t dataCount;
+  uint8_t * COUNT_NOK(dataCount) data;
   uint8_t dontCare;
 
   void complete(uint16_t crc) {
@@ -172,7 +172,7 @@ implementation
 
   void execCommand(uint8_t op, uint8_t reqCmd, uint8_t reqDontCare,
 		   at45page_t reqPage, at45pageoffset_t reqOffset,
-		   uint8_t *reqData, at45pageoffset_t reqCount) {
+		   uint8_t * COUNT_NOK(reqCount) reqData, at45pageoffset_t reqCount) {
     status = op;
 
     // page (2 bytes) and highest bit of offset
@@ -244,7 +244,7 @@ implementation
 			     at45page_t page, at45pageoffset_t offset,
 			     at45pageoffset_t count,
 			     uint16_t baseCrc) {
-    execCommand(P_READ_CRC, cmd, 2, page, offset, (uint8_t *)baseCrc, count);
+    execCommand(P_READ_CRC, cmd, 2, page, offset, TCAST(uint8_t * COUNT(count), baseCrc), count);
   }
 
   command void HplAt45db.write(uint8_t cmd,
