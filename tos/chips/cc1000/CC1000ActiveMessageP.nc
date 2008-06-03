@@ -1,4 +1,4 @@
-// $Id: CC1000ActiveMessageP.nc,v 1.9 2007-12-14 04:35:56 klueska Exp $
+// $Id: CC1000ActiveMessageP.nc,v 1.10 2008-06-03 04:08:34 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -51,8 +51,8 @@ module CC1000ActiveMessageP {
 }
 implementation {
 
-  cc1000_header_t* getHeader(message_t* amsg) {
-    return (cc1000_header_t*)(amsg->data - sizeof(cc1000_header_t));
+  cc1000_header_t* ONE getHeader(message_t* ONE amsg) {
+    return TCAST(cc1000_header_t* ONE, (uint8_t*)amsg + offsetof(message_t, data) - sizeof(cc1000_header_t));
   }
 
   cc1000_footer_t *getFooter(message_t *amsg) {

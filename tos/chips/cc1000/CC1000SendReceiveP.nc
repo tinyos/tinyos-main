@@ -1,4 +1,4 @@
-// $Id: CC1000SendReceiveP.nc,v 1.7 2007-09-14 00:15:57 scipio Exp $
+// $Id: CC1000SendReceiveP.nc,v 1.8 2008-06-03 04:08:34 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -122,26 +122,26 @@ implementation
 
   uint16_t rxShiftBuf;
   message_t rxBuf;
-  message_t *rxBufPtr = &rxBuf;
+  message_t * ONE rxBufPtr = &rxBuf;
 
   uint16_t preambleLength;
-  message_t *txBufPtr;
+  message_t * ONE_NOK txBufPtr;
   uint8_t nextTxByte;
 
   const_uint8_t ackCode[5] = { 0xab, ACK_BYTE1, ACK_BYTE2, 0xaa, 0xaa };
 
   /* Packet structure accessor functions. Note that everything is
    * relative to the data field. */
-  cc1000_header_t *getHeader(message_t *amsg) {
-    return (cc1000_header_t *)(amsg->data - sizeof(cc1000_header_t));
+  cc1000_header_t * ONE getHeader(message_t * ONE amsg) {
+    return TCAST(cc1000_header_t * ONE, (uint8_t *)amsg + offsetof(message_t, data) - sizeof(cc1000_header_t));
   }
 
-  cc1000_footer_t *getFooter(message_t *amsg) {
+  cc1000_footer_t *getFooter(message_t * ONE amsg) {
     return (cc1000_footer_t *)(amsg->footer);
   }
   
-  cc1000_metadata_t *getMetadata(message_t *amsg) {
-    return (cc1000_metadata_t *)((uint8_t *)amsg->footer + sizeof(cc1000_footer_t));
+  cc1000_metadata_t * ONE getMetadata(message_t * ONE amsg) {
+    return TCAST(cc1000_metadata_t * ONE, (uint8_t *)amsg + offsetof(message_t, footer) + sizeof(cc1000_footer_t));
   }
   
   /* State transition functions */
@@ -498,7 +498,7 @@ implementation
 
     rxShiftBuf = rxShiftBuf << 8 | in;
     nextByte = rxShiftBuf >> f.rxBitOffset;
-    ((uint8_t *)rxBufPtr)[count++] = nextByte;
+    ((uint8_t *COUNT(sizeof(message_t)))rxBufPtr)[count++] = nextByte;
 
     // Adjust rxLength to correspond to the corresponding offset in message_t
     rxLength += offsetof(message_t, data);
@@ -653,7 +653,7 @@ implementation
 
   command void* Packet.getPayload(message_t *msg, uint8_t len) {
     if (len <= TOSH_DATA_LENGTH) {
-      return (void*)msg->data;
+      return (void* COUNT_NOK(len))msg->data;
     }
     else {
       return NULL;

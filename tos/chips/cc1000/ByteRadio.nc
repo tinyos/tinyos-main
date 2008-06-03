@@ -1,4 +1,4 @@
-/* $Id: ByteRadio.nc,v 1.4 2006-12-12 18:23:05 vlahan Exp $
+/* $Id: ByteRadio.nc,v 1.5 2008-06-03 04:08:34 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -22,7 +22,7 @@ interface ByteRadio
    * SendReceive wants to send a packet.
    * @param msg Message to be sent.
    */
-  event void rts(message_t *msg);
+  event void rts(message_t * ONE msg);
 
   /**
    * Access to the media granted. Start sending. SendReceive must signal

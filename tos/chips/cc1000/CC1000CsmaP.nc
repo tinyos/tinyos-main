@@ -1,4 +1,4 @@
-// $Id: CC1000CsmaP.nc,v 1.5 2006-12-12 18:23:05 vlahan Exp $
+// $Id: CC1000CsmaP.nc,v 1.6 2008-06-03 04:08:34 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -107,8 +107,8 @@ implementation
 
   task void setWakeupTask();
 
-  cc1000_metadata_t *getMetadata(message_t *amsg) {
-    return (cc1000_metadata_t *)((uint8_t *)amsg->footer + sizeof(cc1000_footer_t));
+  cc1000_metadata_t * ONE getMetadata(message_t * ONE amsg) {
+    return TCAST(cc1000_metadata_t * ONE, (uint8_t*)amsg + offsetof(message_t, footer) + sizeof(cc1000_footer_t));
   }
   
   void enterIdleState() {
@@ -160,7 +160,7 @@ implementation
     call ByteRadio.off();
   }
 
-  void setPreambleLength(message_t *msg);
+  void setPreambleLength(message_t * ONE msg);
 
   /* Initialisation, startup and stopping */
   /*--------------------------------------*/
@@ -355,7 +355,7 @@ implementation
   /* CSMA */
   /*------*/
 
-  event void ByteRadio.rts(message_t *msg) {
+  event void ByteRadio.rts(message_t * ONE msg) {
     atomic
       {
 	f.txPending = TRUE;
@@ -554,7 +554,7 @@ implementation
     return sleepToDuty(s);
   }
 
-  void setPreambleLength(message_t *msg) {
+  void setPreambleLength(message_t * ONE msg) {
     cc1000_metadata_t *meta = getMetadata(msg);
     uint16_t s;
     uint32_t plen;
