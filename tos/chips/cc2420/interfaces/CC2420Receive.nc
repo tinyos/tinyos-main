@@ -34,7 +34,7 @@
  * ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2008-05-13 15:48:10 $
+ * @version $Revision: 1.3 $ $Date: 2008-06-03 04:43:03 $
  */
 
 #include "message.h"
@@ -60,7 +60,7 @@ interface CC2420Receive {
    * @param type of the message received.
    * @param message pointer to message received.
    */
-  async event void receive( uint8_t type, message_t* message );
+  async event void receive( uint8_t type, message_t* ONE_NOK message );
 
 }
 

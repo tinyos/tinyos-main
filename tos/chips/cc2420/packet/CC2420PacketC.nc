@@ -87,8 +87,8 @@ implementation {
   }
 
   /***************** CC2420PacketBody Commands ****************/
-  async command cc2420_header_t *CC2420PacketBody.getHeader( message_t* msg ) {
-    return (cc2420_header_t*)( msg->data - sizeof( cc2420_header_t ) );
+  async command cc2420_header_t * ONE CC2420PacketBody.getHeader( message_t* ONE msg ) {
+    return TCAST(cc2420_header_t* ONE, (uint8_t *)msg + offsetof(message_t, data) - sizeof( cc2420_header_t ));
   }
 
   async command cc2420_metadata_t *CC2420PacketBody.getMetadata( message_t* msg ) {

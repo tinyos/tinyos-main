@@ -35,7 +35,7 @@
  * @author Roman Lim
  * @author Razvan Musaloie-E.
  * @author Jeonggil Ko
- * @version $Revision: 1.2 $ $Date: 2007-11-07 22:22:01 $
+ * @version $Revision: 1.3 $ $Date: 2008-06-03 04:43:03 $
  */
 
 module CC2420SpiP {
@@ -262,6 +262,8 @@ implementation {
                                                             uint8_t len ) {
 
     cc2420_status_t status = 0;
+    uint8_t tmpLen = len;
+    uint8_t * COUNT(tmpLen) tmpData = (uint8_t * COUNT(tmpLen))data;
 
     atomic {
       if(call WorkingState.isIdle()) {
@@ -274,7 +276,7 @@ implementation {
     status = call SpiByte.write( addr | 0x80 );
     call SpiByte.write( ( addr >> 1 ) & 0xc0 );
     for ( ; len; len-- ) {
-      call SpiByte.write( *data++ );
+      call SpiByte.write( tmpData[tmpLen-len] );
     }
 
     return status;

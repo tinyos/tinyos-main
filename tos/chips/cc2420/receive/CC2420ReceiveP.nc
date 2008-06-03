@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.9 $ $Date: 2008-05-16 16:03:45 $
+ * @version $Revision: 1.10 $ $Date: 2008-06-03 04:43:03 $
  */
 
 #include "IEEE802154.h"
@@ -97,7 +97,7 @@ implementation {
   
   norace uint8_t m_bytes_left;
   
-  norace message_t* m_p_rx_buf;
+  norace message_t* ONE_NOK m_p_rx_buf;
 
   message_t m_rx_buf;
   
@@ -195,7 +195,8 @@ implementation {
                                     error_t error ) {
     cc2420_header_t* header = call CC2420PacketBody.getHeader( m_p_rx_buf );
     cc2420_metadata_t* metadata = call CC2420PacketBody.getMetadata( m_p_rx_buf );
-    uint8_t* buf = (uint8_t*) header;
+    uint8_t tmpLen = sizeof(message_t) - (offsetof(message_t, data) - sizeof(cc2420_header_t));
+    uint8_t* COUNT(tmpLen) buf = TCAST(uint8_t* COUNT(tmpLen), header);
     rxFrameLength = buf[ 0 ];
 
     switch( m_state ) {
@@ -324,7 +325,9 @@ implementation {
    */
   task void receiveDone_task() {
     cc2420_metadata_t* metadata = call CC2420PacketBody.getMetadata( m_p_rx_buf );
-    uint8_t* buf = (uint8_t*) call CC2420PacketBody.getHeader( m_p_rx_buf );;
+    cc2420_header_t* header = call CC2420PacketBody.getHeader( m_p_rx_buf);
+    uint8_t tmpLen = sizeof(message_t) - (offsetof(message_t, data) - sizeof(cc2420_header_t));
+    uint8_t* COUNT(tmpLen) buf = TCAST(uint8_t* COUNT(tmpLen), header);
     
     metadata->crc = buf[ rxFrameLength ] >> 7;
     metadata->lqi = buf[ rxFrameLength ] & 0x7f;

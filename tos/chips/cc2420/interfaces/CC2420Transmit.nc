@@ -34,7 +34,7 @@
  * ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.2 $ $Date: 2008-06-03 04:43:03 $
  */
 
 #include "message.h"
@@ -48,7 +48,7 @@ interface CC2420Transmit {
    * @param useCca TRUE if this Tx should use clear channel assessments
    * @return SUCCESS if the request was accepted, FAIL otherwise.
    */
-  async command error_t send( message_t* p_msg, bool useCca );
+  async command error_t send( message_t* ONE p_msg, bool useCca );
 
   /**
    * Send the previous message again
@@ -70,7 +70,7 @@ interface CC2420Transmit {
    * @param p_msg message to send.
    * @param error notifaction of how the operation went.
    */
-  async event void sendDone( message_t* p_msg, error_t error );
+  async event void sendDone( message_t* ONE_NOK p_msg, error_t error );
 
   /**
    * Modify the contents of a packet. This command can only be used
@@ -81,7 +81,7 @@ interface CC2420Transmit {
    * @param len of bytes to write
    * @return SUCCESS if the request was accepted, FAIL otherwise.
    */
-  async command error_t modify( uint8_t offset, uint8_t* buf, uint8_t len );
+  async command error_t modify( uint8_t offset, uint8_t* COUNT_NOK(len) buf, uint8_t len );
 
 }
 

@@ -78,20 +78,20 @@ interface RadioBackoff {
    * Reply using setInitialBackoff(..)
    * @param msg pointer to the message being sent
    */
-  async event void requestInitialBackoff(message_t *msg);
+  async event void requestInitialBackoff(message_t * ONE msg);
   
   /**
    * Request for input on the congestion backoff
    * Reply using setCongestionBackoff(..)
    * @param msg pointer to the message being sent
    */
-  async event void requestCongestionBackoff(message_t *msg);
+  async event void requestCongestionBackoff(message_t * ONE msg);
   
   /**
    * Request for input on whether or not to use CCA on the outbound packet.
    * Replies should come in the form of setCca(..)
    * @param msg pointer to the message being sent
    */
-  async event void requestCca(message_t *msg);
+  async event void requestCca(message_t * ONE msg);
 }
 

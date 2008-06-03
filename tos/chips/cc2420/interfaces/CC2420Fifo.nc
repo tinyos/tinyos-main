@@ -34,7 +34,7 @@
  * CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.2 $ $Date: 2008-06-03 04:43:03 $
  */
 
 interface CC2420Fifo {
@@ -48,7 +48,7 @@ interface CC2420Fifo {
    * @return status byte returned when sending the last address byte
    * of the SPI transaction.
    */
-  async command cc2420_status_t beginRead( uint8_t* data, uint8_t length );
+  async command cc2420_status_t beginRead( uint8_t* COUNT_NOK(length) data, uint8_t length );
 
   /**
    * Continue reading from the FIFO without having to send the address
@@ -59,7 +59,7 @@ interface CC2420Fifo {
    * @param length number of bytes to read.
    * @return SUCCESS always.
    */
-  async command error_t continueRead( uint8_t* data, uint8_t length );
+  async command error_t continueRead( uint8_t* COUNT_NOK(length) data, uint8_t length );
 
   /**
    * Signals the completion of a read operation.
@@ -68,7 +68,7 @@ interface CC2420Fifo {
    * @param length number of bytes read.
    * @param error notification of how the operation went
    */
-  async event void readDone( uint8_t* data, uint8_t length, error_t error );
+  async event void readDone( uint8_t* COUNT_NOK(length) data, uint8_t length, error_t error );
 
   /**
    * Start writing the FIFO. The <code>writeDone</code> event will be
@@ -79,7 +79,7 @@ interface CC2420Fifo {
    * @return status byte returned when sending the last address byte
    * of the SPI transaction.
    */
-  async command cc2420_status_t write( uint8_t* data, uint8_t length );
+  async command cc2420_status_t write( uint8_t* COUNT_NOK(length) data, uint8_t length );
 
   /**
    * Signals the completion of a write operation.
@@ -88,6 +88,6 @@ interface CC2420Fifo {
    * @param length number of bytes written.
    * @param error notification of how the operation went
    */
-  async event void writeDone( uint8_t* data, uint8_t length, error_t error );
+  async event void writeDone( uint8_t* COUNT_NOK(length) data, uint8_t length, error_t error );
 
 }

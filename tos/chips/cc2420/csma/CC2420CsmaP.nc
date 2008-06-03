@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2008-05-14 21:33:07 $
+ * @version $Revision: 1.4 $ $Date: 2008-06-03 04:43:02 $
  */
 
 module CC2420CsmaP {
@@ -63,7 +63,7 @@ implementation {
     S_TRANSMITTING,
   };
 
-  message_t* m_msg;
+  message_t* ONE_NOK m_msg;
   
   error_t sendErr = SUCCESS;
   
@@ -156,7 +156,7 @@ implementation {
 
   command void* Send.getPayload(message_t* m, uint8_t len) {
     if (len <= call Send.maxPayloadLength()) {
-      return m->data;
+      return (void* COUNT_NOK(len))m->data;
     }
     else {
       return NULL;

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2005-2006 Arch Rock Corporation
+/* 
+ * Copyright (c) 2005-2006 Arch Rock Corporation 
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.2 $ $Date: 2007-09-28 17:53:58 $
+ * @version $Revision: 1.3 $ $Date: 2008-06-03 04:43:03 $
  */
 
 #include "CC2420.h"
@@ -95,7 +95,7 @@ implementation {
     CC2420_ABORT_PERIOD = 320
   };
   
-  norace message_t *m_msg;
+  norace message_t * ONE_NOK m_msg;
   
   norace bool m_cca;
   
@@ -124,7 +124,7 @@ implementation {
   
 
   /***************** Prototypes ****************/
-  error_t send( message_t *p_msg, bool cca );
+  error_t send( message_t * ONE p_msg, bool cca );
   error_t resend( bool cca );
   void loadTXFIFO();
   void attemptSend();
@@ -167,7 +167,7 @@ implementation {
 
 
   /**************** Send Commands ****************/
-  async command error_t Send.send( message_t* p_msg, bool useCca ) {
+  async command error_t Send.send( message_t* ONE p_msg, bool useCca ) {
     return send( p_msg, useCca );
   }
 
@@ -488,7 +488,7 @@ implementation {
    * @param *p_msg Pointer to the message that needs to be sent
    * @param cca TRUE if this transmit should use clear channel assessment
    */
-  error_t send( message_t* p_msg, bool cca ) {
+  error_t send( message_t* ONE p_msg, bool cca ) {
     atomic {
       if (m_state == S_CANCEL) {
         return ECANCEL;
@@ -654,7 +654,10 @@ implementation {
     
     m_tx_power = tx_power;
     
-    call TXFIFO.write( (uint8_t*)header, header->length - 1);
+    {
+      uint8_t tmpLen = header->length - 1;
+      call TXFIFO.write(TCAST(uint8_t * COUNT(tmpLen), header), header->length - 1);
+    }
   }
   
   void signalDone( error_t err ) {

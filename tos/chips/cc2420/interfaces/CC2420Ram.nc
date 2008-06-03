@@ -33,7 +33,7 @@
  * HAL abstraction for accessing theRAM of a ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.2 $ $Date: 2008-06-03 04:43:03 $
  */
 
 #include "CC2420.h"
@@ -49,7 +49,7 @@ interface CC2420Ram {
    * @return status byte returned when sending the last byte
    * of the SPI transaction.
    */
-  async command cc2420_status_t read( uint8_t offset, uint8_t* data, uint8_t length );
+  async command cc2420_status_t read( uint8_t offset, uint8_t* COUNT_NOK(length) data, uint8_t length );
 
   /**
    * Write data to RAM. This operation is sychronous.
@@ -60,6 +60,6 @@ interface CC2420Ram {
    * @return status byte returned when sending the last address byte
    * of the SPI transaction.
    */
-  async command cc2420_status_t write( uint8_t offset, uint8_t* data, uint8_t length );
+  async command cc2420_status_t write( uint8_t offset, uint8_t* COUNT_NOK(length) data, uint8_t length );
 
 }
