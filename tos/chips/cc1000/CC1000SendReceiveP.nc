@@ -1,4 +1,4 @@
-// $Id: CC1000SendReceiveP.nc,v 1.8 2008-06-03 04:08:34 regehr Exp $
+// $Id: CC1000SendReceiveP.nc,v 1.9 2008-06-03 20:32:09 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -568,22 +568,16 @@ implementation
   }
 
   void packetReceiveDone() {
-    message_t* pBuf;
     uint16_t snr;
-    atomic {
-      if (radioState != RECEIVED_STATE) {
-	return;
-      }
-      pBuf = rxBufPtr;
-    }
-    snr = (uint16_t) getMetadata(pBuf)->strength_or_preamble;
+
+    snr = (uint16_t) getMetadata(rxBufPtr)->strength_or_preamble;
     /* Higher signal strengths have lower voltages. So see if we're
        CC1000_WHITE_BIT_THRESH *below* the noise floor. */
     if ((snr + CC1000_WHITE_BIT_THRESH) < ((call CC1000Squelch.get()))) {
-      getMetadata(pBuf)->metadataBits |= CC1000_WHITE_BIT;
+      getMetadata(rxBufPtr)->metadataBits |= CC1000_WHITE_BIT;
     }
     else {
-      getMetadata(pBuf)->metadataBits &= ~CC1000_WHITE_BIT;
+      getMetadata(rxBufPtr)->metadataBits &= ~CC1000_WHITE_BIT;
     }
     
     post signalPacketReceived();
