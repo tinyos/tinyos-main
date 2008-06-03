@@ -1,4 +1,4 @@
-/// $Id: Atm128SpiP.nc,v 1.7 2008-04-24 22:31:25 mmaroti Exp $
+/// $Id: Atm128SpiP.nc,v 1.8 2008-06-03 03:00:59 regehr Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -63,7 +63,7 @@
  *
  *
  * <pre>
- *  $Id: Atm128SpiP.nc,v 1.7 2008-04-24 22:31:25 mmaroti Exp $
+ *  $Id: Atm128SpiP.nc,v 1.8 2008-06-03 03:00:59 regehr Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -87,9 +87,9 @@ module Atm128SpiP {
   }
 }
 implementation {
-  uint8_t* txBuffer;
-  uint8_t* rxBuffer;
   uint16_t len;
+  uint8_t* COUNT_NOK(len) txBuffer;
+  uint8_t* COUNT_NOK(len) rxBuffer;
   uint16_t pos;
   
   enum {
@@ -162,10 +162,12 @@ implementation {
   error_t sendNextPart() {
     uint16_t end;
     uint16_t tmpPos;
-    uint8_t* tx;
-    uint8_t* rx;
+    uint16_t myLen;
+    uint8_t* COUNT_NOK(myLen) tx;
+    uint8_t* COUNT_NOK(myLen) rx;
     
     atomic {
+      myLen = len;
       tx = txBuffer;
       rx = rxBuffer;
       tmpPos = pos;
@@ -203,13 +205,14 @@ implementation {
 
 
   task void zeroTask() {
-     uint8_t* rx;
-     uint8_t* tx;
      uint16_t  myLen;
+     uint8_t* COUNT_NOK(myLen) rx;
+     uint8_t* COUNT_NOK(myLen) tx;
+
      atomic {
+       myLen = len;
        rx = rxBuffer;
        tx = txBuffer;
-       myLen = len;
        rxBuffer = NULL;
        txBuffer = NULL;
        len = 0;
@@ -240,9 +243,9 @@ implementation {
 				       uint16_t  bufLen) {
     uint8_t discard;
     atomic {
+      len = bufLen;
       txBuffer = writeBuf;
       rxBuffer = readBuf;
-      len = bufLen;
       pos = 0;
     }
     if (bufLen > 0) {
@@ -279,15 +282,15 @@ implementation {
      sendNextPart();
    }
    else {
-     uint8_t* rx;
-     uint8_t* tx;
-     uint16_t  myLen;
      uint8_t discard;
+     uint16_t  myLen;
+     uint8_t* COUNT_NOK(myLen) rx;
+     uint8_t* COUNT_NOK(myLen) tx;
      
      atomic {
+       myLen = len;
        rx = rxBuffer;
        tx = txBuffer;
-       myLen = len;
        rxBuffer = NULL;
        txBuffer = NULL;
        len = 0;

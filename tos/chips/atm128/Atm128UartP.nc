@@ -33,7 +33,7 @@
  * @author Alec Woo <awoo@archrock.com>
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Philip Levis <pal@cs.stanford.edu> (maintainer)
- * @version $Revision: 1.5 $ $Date: 2007-11-27 19:26:45 $
+ * @version $Revision: 1.6 $ $Date: 2008-06-03 03:00:59 $
  *
  * Modification @ 11/27 (pal): Folded in Alec's reimplementation
  * from the -devel branch. Fixed bug in RX interrupts, where
@@ -59,8 +59,8 @@ generic module Atm128UartP(){
 
 implementation{
   
-  norace uint8_t *m_tx_buf, *m_rx_buf;
   norace uint16_t m_tx_len, m_rx_len;
+  norace uint8_t *COUNT_NOK(m_tx_len) m_tx_buf, * COUNT_NOK(m_rx_len) m_rx_buf;
   norace uint16_t m_tx_pos, m_rx_pos;
   norace uint16_t m_byte_time;
   norace uint8_t m_rx_intr;
@@ -159,8 +159,8 @@ implementation{
     else if ( m_tx_buf )
       return EBUSY;
     
-    m_tx_buf = buf;
     m_tx_len = len;
+    m_tx_buf = buf;
     m_tx_pos = 0;
     m_tx_intr = 1;
     call HplUart.enableTxIntr();
