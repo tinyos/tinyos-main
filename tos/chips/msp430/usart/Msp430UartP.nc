@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
  * @author Eric B. Decker <cire831@gmail.com>
- * @version $Revision: 1.6 $ $Date: 2008-05-21 22:11:57 $
+ * @version $Revision: 1.7 $ $Date: 2008-06-04 05:31:15 $
  */
 
 #include<Timer.h>
@@ -56,8 +56,8 @@ generic module Msp430UartP() {
 
 implementation {
   
-  norace uint8_t *m_tx_buf, *m_rx_buf;
   norace uint16_t m_tx_len, m_rx_len;
+  norace uint8_t * COUNT_NOK(m_tx_len) m_tx_buf, * COUNT_NOK(m_rx_len) m_rx_buf;
   norace uint16_t m_tx_pos, m_rx_pos;
   norace uint8_t m_byte_time;
   norace uint8_t current_owner;

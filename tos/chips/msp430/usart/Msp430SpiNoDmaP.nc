@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archedrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-04 05:31:15 $
  */
 
 
@@ -56,9 +56,9 @@ implementation {
     SPI_ATOMIC_SIZE = 2,
   };
 
-  norace uint8_t* m_tx_buf;
-  norace uint8_t* m_rx_buf;
   norace uint16_t m_len;
+  norace uint8_t* COUNT_NOK(m_len) m_tx_buf;
+  norace uint8_t* COUNT_NOK(m_len) m_rx_buf;
   norace uint16_t m_pos;
   norace uint8_t m_client;
 

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2008-04-07 09:41:55 $
+ * $Revision: 1.6 $
+ * $Date: 2008-06-04 05:31:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -65,7 +65,7 @@ implementation
   error_t configure(uint8_t client)
   {
     error_t result = EINVAL;
-    const msp430adc12_channel_config_t *config;
+    const msp430adc12_channel_config_t * ONE config;
     config = call Config.getConfiguration[client]();
     if (config->inch != INPUT_CHANNEL_NONE)
       result = call SingleChannel.configureSingle[client](config);
@@ -159,7 +159,7 @@ implementation
   }
 
   async event uint16_t* SingleChannel.multipleDataReady[uint8_t client](
-      uint16_t *buf, uint16_t length)
+      uint16_t * COUNT_NOK(length) buf, uint16_t length)
   {
     // error !
     return 0;

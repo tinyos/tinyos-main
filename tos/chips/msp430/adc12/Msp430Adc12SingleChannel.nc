@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2008-06-04 05:31:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -81,7 +81,7 @@ interface Msp430Adc12SingleChannel
    * @return SUCCESS means that the ADC was configured successfully and
    * <code>getData()</code> can be called to start the conversion.
    */
-  async command error_t configureSingle(const msp430adc12_channel_config_t *config);
+  async command error_t configureSingle(const msp430adc12_channel_config_t *ONE config);
 
   /** 
    * Configures the ADC for repeated single channel conversion mode. Any
@@ -103,7 +103,7 @@ interface Msp430Adc12SingleChannel
    * @return SUCCESS means that the ADC was configured successfully and
    * <code>getData()</code> can be called to start with the first conversion.
    */
-  async command error_t configureSingleRepeat(const msp430adc12_channel_config_t *config, uint16_t jiffies);
+  async command error_t configureSingleRepeat(const msp430adc12_channel_config_t *ONE config, uint16_t jiffies);
 
   
   /** 
@@ -135,7 +135,7 @@ interface Msp430Adc12SingleChannel
    * @return SUCCESS means that the ADC was configured successfully and
    * <code>getData()</code> can be called to start with the first conversion.
    */ 
-  async command error_t configureMultiple( const msp430adc12_channel_config_t *config, uint16_t buffer[], uint16_t numSamples, uint16_t jiffies);
+  async command error_t configureMultiple( const msp430adc12_channel_config_t *ONE config, uint16_t *COUNT(numSamples) buffer, uint16_t numSamples, uint16_t jiffies);
 
   /** 
    *
@@ -174,7 +174,7 @@ interface Msp430Adc12SingleChannel
    * @return SUCCESS means that the ADC was configured successfully and
    * <code>getData()</code> can be called to start with the first conversion.
    */ 
-  async command error_t configureMultipleRepeat(const msp430adc12_channel_config_t *config, uint16_t buffer[], uint8_t numSamples, uint16_t jiffies);
+  async command error_t configureMultipleRepeat(const msp430adc12_channel_config_t *ONE config, uint16_t *COUNT(numSamples) buffer, uint8_t numSamples, uint16_t jiffies);
 
 
   /** 
@@ -224,7 +224,7 @@ interface Msp430Adc12SingleChannel
    * <code>numSamples</code> entries. The return value is ignored if the ADC
    * was configured with <code>configureMultiple()</code>.
    */    
-  async event uint16_t* multipleDataReady(uint16_t buffer[], uint16_t numSamples); 
+  async event uint16_t * ONE_NOK multipleDataReady(uint16_t *COUNT(numSamples) buffer, uint16_t numSamples); 
 
 }
 

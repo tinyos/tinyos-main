@@ -1,4 +1,4 @@
-/* $Id: AdcStreamP.nc,v 1.1 2008-04-07 09:41:55 janhauer Exp $
+/* $Id: AdcStreamP.nc,v 1.2 2008-06-04 05:31:15 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -67,13 +67,15 @@ implementation {
   /* Stream data */
   struct list_entry_t {
     uint16_t count;
-    struct list_entry_t *next;
+    struct list_entry_t * ONE_NOK next;
   };
   struct list_entry_t *bufferQueue[NSTREAM];
-  struct list_entry_t **bufferQueueEnd[NSTREAM];
-  uint16_t *lastBuffer, lastCount;
+  struct list_entry_t * ONE_NOK * bufferQueueEnd[NSTREAM];
+  uint16_t * ONE_NOK lastBuffer, lastCount;
 
-  norace uint16_t *buffer, *pos, count;
+  norace uint16_t count;
+  norace uint16_t * COUNT_NOK(count) buffer; 
+  norace uint16_t * FAT_NOK(buffer, buffer+count) pos;
   norace uint32_t now, period;
   norace bool periodModified;
 
@@ -96,7 +98,7 @@ implementation {
       return ESIZE;
     atomic
     {
-      struct list_entry_t *newEntry = (struct list_entry_t *)buf;
+      struct list_entry_t * ONE newEntry = TCAST(struct list_entry_t * ONE, buf);
 
       if (!bufferQueueEnd[c]) // Can't post right now.
         return FAIL;
@@ -131,8 +133,10 @@ implementation {
     uint8_t c = client;
 
     atomic entry = bufferQueue[c];
-    for (; entry; entry = entry->next)
-      signal ReadStream.bufferDone[c](FAIL, (uint16_t *)entry, entry->count);
+    for (; entry; entry = entry->next) {
+      uint16_t tmp_count __DEPUTY_UNUSED__ = entry->count;
+      signal ReadStream.bufferDone[c](FAIL, TCAST(uint16_t * COUNT_NOK(tmp_count),entry), entry->count);
+    }
 
     atomic
     {
@@ -179,11 +183,13 @@ implementation {
       }
       else
       {
+        uint16_t tmp_count;
         bufferQueue[client] = entry->next;
         if (!bufferQueue[client])
           bufferQueueEnd[client] = &bufferQueue[client];
-        pos = buffer = (uint16_t *)entry;
         count = entry->count;
+        tmp_count = count;
+	pos = buffer = TCAST(uint16_t * COUNT_NOK(tmp_count), entry);
         if (startNextAlarm)
           nextAlarm();
         return SUCCESS;

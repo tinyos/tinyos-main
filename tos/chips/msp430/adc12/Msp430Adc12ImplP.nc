@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2008-04-07 09:41:55 $
+ * $Revision: 1.7 $
+ * $Date: 2008-06-04 05:31:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -79,8 +79,9 @@ implementation
 
   uint8_t state;                  /* see enum above */
   
-  uint16_t *resultBuffer;         /* conversion results */
   uint16_t resultBufferLength;    /* length of buffer */
+  uint16_t *COUNT_NOK(resultBufferLength) resultBufferStart;
+  uint16_t *FAT_NOK(resultBufferStart, resultBufferStart+resultBufferLength) resultBuffer;         /* conversion results */
   uint16_t resultBufferIndex;     /* offset into buffer */
   uint8_t numChannels;            /* number of channels (multi-channel conversion) */
   uint8_t clientID;               /* ID of client that called getData() */
@@ -549,6 +550,7 @@ implementation
       case MULTI_CHANNEL:
         {
           uint16_t i = 0, k;
+          resultBufferStart = resultBuffer;
           do {
             *resultBuffer++ = call HplAdc12.getMem(i);
           } while (++i < numChannels);
@@ -566,6 +568,7 @@ implementation
       case MULTIPLE_DATA:
         {
           uint16_t i = 0, length, k;
+          resultBufferStart = resultBuffer;
           if (resultBufferLength - resultBufferIndex > 16) 
             length = 16;
           else
@@ -594,6 +597,7 @@ implementation
       case MULTIPLE_DATA_REPEAT:
         {
           uint8_t i = 0;
+          resultBufferStart = resultBuffer;
           do {
             *resultBuffer++ = call HplAdc12.getMem(i);
           } while (++i < resultBufferLength);
