@@ -1,4 +1,4 @@
-//$Id: SerialActiveMessageP.nc,v 1.8 2008-02-19 22:00:08 scipio Exp $
+//$Id: SerialActiveMessageP.nc,v 1.9 2008-06-04 03:43:50 regehr Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -46,8 +46,8 @@ generic module SerialActiveMessageP () {
 }
 implementation {
 
-  serial_header_t* getHeader(message_t* msg) {
-    return (serial_header_t*)(msg->data - sizeof(serial_header_t));
+  serial_header_t* ONE getHeader(message_t* ONE msg) {
+    return TCAST(serial_header_t* ONE, (uint8_t*)msg + offsetof(message_t, data) - sizeof(serial_header_t));
   }
 
   serial_metadata_t* getMetadata(message_t* msg) {
@@ -121,7 +121,7 @@ implementation {
       return NULL;
     }
     else {
-      return msg->data;
+      return (void * COUNT_NOK(len))msg->data;
     }
   }
 

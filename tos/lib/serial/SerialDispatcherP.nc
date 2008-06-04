@@ -1,4 +1,4 @@
-//$Id: SerialDispatcherP.nc,v 1.6 2007-09-13 23:10:19 scipio Exp $
+//$Id: SerialDispatcherP.nc,v 1.7 2008-06-04 03:43:53 regehr Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -75,14 +75,14 @@ implementation {
 
   /* This component provides double buffering. */
   message_t messages[2];     // buffer allocation
-  message_t* messagePtrs[2] = { &messages[0], &messages[1]};
+  message_t* ONE messagePtrs[2] = { &messages[0], &messages[1]};
   
   // We store a separate receiveBuffer variable because indexing
   // into a pointer array can be costly, and handling interrupts
   // is time critical.
-  uint8_t* receiveBuffer = (uint8_t*)(&messages[0]);
+  uint8_t* COUNT_NOK(sizeof(message_t)) receiveBuffer = (uint8_t* COUNT_NOK(sizeof(message_t)))(&messages[0]);
 
-  uint8_t *sendBuffer = NULL;
+  uint8_t *COUNT_NOK(sizeof(message_t)) sendBuffer = NULL;
   send_state_t sendState = SEND_STATE_IDLE;
   uint8_t sendLen = 0;
   uint8_t sendIndex = 0;
@@ -94,7 +94,7 @@ implementation {
   uint8_t receiveTaskPending = FALSE;
   uart_id_t receiveTaskType = 0;
   uint8_t receiveTaskWhich;
-  message_t *receiveTaskBuf = NULL;
+  message_t * ONE_NOK receiveTaskBuf = NULL;
   uint8_t receiveTaskSize = 0;
 
   command error_t Send.send[uint8_t id](message_t* msg, uint8_t len) {
