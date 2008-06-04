@@ -25,5 +25,5 @@
 
 interface Crc
 {
-  command uint16_t crc16(void* buf, uint8_t len);
+  command uint16_t crc16(void* COUNT(len) buf, uint8_t len);
 }

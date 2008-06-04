@@ -53,7 +53,7 @@ implementation {
   command error_t Init.init()
   {
     BootArgs bootArgs;
-    call IFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
+    call IFlash.read(TCAST(uint8_t* COUNT(sizeof(bootArgs)),TOSBOOT_ARGS_ADDR), &bootArgs, sizeof(bootArgs));
 
     // Update the local node ID
     if (bootArgs.address != 0xFFFF) {
@@ -71,11 +71,11 @@ implementation {
     BootArgs bootArgs;
 
     atomic {
-      call IFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
+      call IFlash.read(TCAST(uint8_t* COUNT(sizeof(bootArgs)),TOSBOOT_ARGS_ADDR), &bootArgs, sizeof(bootArgs));
 
       if (bootArgs.address != TOS_NODE_ID) {
 	bootArgs.address = TOS_NODE_ID;
-	call IFlash.write((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
+	call IFlash.write(TCAST(uint8_t* COUNT(sizeof(bootArgs)),TOSBOOT_ARGS_ADDR), &bootArgs, sizeof(bootArgs));
       }
       netprog_reboot();
     }
@@ -99,14 +99,14 @@ implementation {
     }
 
     atomic {
-      call IFlash.read((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
+      call IFlash.read(TCAST(uint8_t* COUNT(sizeof(bootArgs)),TOSBOOT_ARGS_ADDR), &bootArgs, sizeof(bootArgs));
       
       bootArgs.imageAddr = reprogramImgAddr;
       bootArgs.gestureCount = 0xff;
       bootArgs.noReprogram = FALSE;
       bootArgs.address = TOS_NODE_ID;
 
-      call IFlash.write((uint8_t*)TOSBOOT_ARGS_ADDR, &bootArgs, sizeof(bootArgs));
+      call IFlash.write(TCAST(uint8_t* COUNT(sizeof(bootArgs)),TOSBOOT_ARGS_ADDR), &bootArgs, sizeof(bootArgs));
 
       // reboot
       netprog_reboot();

@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.14 2008-04-28 04:28:36 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.15 2008-06-04 04:30:41 regehr Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2008-04-28 04:28:36 $
+ *  @date   $Date: 2008-06-04 04:30:41 $
  *  @see Net2-WG
  */
 
@@ -453,7 +453,7 @@ implementation {
     }
 
 
-    ctp_routing_header_t* getHeader(message_t* m) {
+    ctp_routing_header_t* getHeader(message_t* ONE m) {
       return (ctp_routing_header_t*)call BeaconSend.getPayload(m, call BeaconSend.maxPayloadLength());
     }
     

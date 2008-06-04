@@ -100,7 +100,7 @@ implementation {
         }
     }
     /* Used for FE_SENT_MSG, FE_RCV_MSG, FE_FWD_MSG, FE_DST_MSG */
-    command error_t CollectionDebug.logEventMsg(uint8_t type, uint16_t msg_id, am_addr_t origin, am_addr_t node) {
+    command error_t TRUSTEDBLOCK CollectionDebug.logEventMsg(uint8_t type, uint16_t msg_id, am_addr_t origin, am_addr_t node) {
         statLogReceived++;
         if (call MessagePool.empty()) {
             return FAIL;
@@ -129,7 +129,7 @@ implementation {
         }
     }
     /* Used for TREE_NEW_PARENT, TREE_ROUTE_INFO */
-    command error_t CollectionDebug.logEventRoute(uint8_t type, am_addr_t parent, uint8_t hopcount, uint16_t metric) {
+    command error_t TRUSTEDBLOCK CollectionDebug.logEventRoute(uint8_t type, am_addr_t parent, uint8_t hopcount, uint16_t metric) {
         statLogReceived++;
         if (call MessagePool.empty()) {
             return FAIL;
@@ -185,7 +185,7 @@ implementation {
         }
     }
     /* Used for DBG_2, DBG_3 */
-    command error_t CollectionDebug.logEventDbg(uint8_t type, uint16_t arg1, uint16_t arg2, uint16_t arg3) {
+    command TRUSTEDBLOCK error_t CollectionDebug.logEventDbg(uint8_t type, uint16_t arg1, uint16_t arg2, uint16_t arg3) {
         statLogReceived++;
         if (call MessagePool.empty()) {
             return FAIL;

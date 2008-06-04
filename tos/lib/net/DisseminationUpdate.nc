@@ -1,4 +1,4 @@
-// $Id: DisseminationUpdate.nc,v 1.4 2006-12-12 18:23:29 vlahan Exp $
+// $Id: DisseminationUpdate.nc,v 1.5 2008-06-04 04:35:18 regehr Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -49,5 +49,5 @@ interface DisseminationUpdate<t> {
    * by newVal is copied out, so newVal can be reclaimed when
    * <tt>change</tt> returns.
    */
-  command void change(t* newVal);
+  command void change(t* ONE newVal);
 }

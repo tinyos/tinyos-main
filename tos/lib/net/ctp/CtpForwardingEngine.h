@@ -110,7 +110,7 @@ typedef nx_struct {
  * of how many times the packet has been transmitted.
  */
 typedef struct {
-  message_t *msg;
+  message_t * ONE_NOK msg;
   uint8_t client;
   uint8_t retries;
 } fe_queue_entry_t;

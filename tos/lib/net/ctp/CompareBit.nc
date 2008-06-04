@@ -1,4 +1,4 @@
-/* $Id: CompareBit.nc,v 1.1 2007-12-05 22:29:55 gnawali Exp $ */
+/* $Id: CompareBit.nc,v 1.2 2008-06-04 04:30:41 regehr Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -32,11 +32,11 @@
  * will be better than a path through at least one current neighbor.
  @ author Omprakash Gnawali
  @ Created: September 16, 2006
- @date   $Date: 2007-12-05 22:29:55 $
+ @date   $Date: 2008-06-04 04:30:41 $
  */
 
 interface CompareBit {
 
   /* should the source of this message be inserted into the neighbor table? */
-   event bool shouldInsert(message_t *msg, void* payload, uint8_t len, bool white_bit);
+   event bool shouldInsert(message_t * ONE msg, void* COUNT_NOK(len) payload, uint8_t len, bool white_bit);
 }

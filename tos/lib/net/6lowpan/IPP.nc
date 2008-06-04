@@ -1653,7 +1653,7 @@ void layer3_input(uint8_t *buf, uint16_t len)
 }
 
 /* process the optional 6lowpan headers */
-void lowpan_input(uint8_t* buf, uint8_t len )
+void TRUSTEDBLOCK lowpan_input(uint8_t* buf, uint8_t len )
 {
       uint8_t *dispatch;
       struct lowpan_broadcast_hdr *bc_hdr;
@@ -1960,7 +1960,7 @@ void lowpan_input(uint8_t* buf, uint8_t len )
 }
 
 /* Receive an AM from the lower layer */
-event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len)
+event TRUSTEDBLOCK message_t* Receive.receive(message_t* msg, void* payload, uint8_t len)
 {
     am_addr_t am_addr;
     

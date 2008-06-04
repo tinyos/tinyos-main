@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.12 2008-04-28 04:28:36 gnawali Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.13 2008-06-04 04:30:41 regehr Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-04-28 04:28:36 $
+ *  @date   $Date: 2008-06-04 04:30:41 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -220,7 +220,7 @@ implementation {
      its queue entry is pointed to by clientPtrs. */
 
   fe_queue_entry_t clientEntries[CLIENT_COUNT];
-  fe_queue_entry_t* clientPtrs[CLIENT_COUNT];
+  fe_queue_entry_t* ONE_NOK clientPtrs[CLIENT_COUNT];
 
   /* The loopback message is for when a collection roots calls
      Send.send. Since Send passes a pointer but Receive allows
@@ -229,7 +229,7 @@ implementation {
      See sendTask(). */
      
   message_t loopbackMsg;
-  message_t* loopbackMsgPtr;
+  message_t* ONE_NOK loopbackMsgPtr;
 
   command error_t Init.init() {
     int i;
@@ -642,7 +642,7 @@ implementation {
    * message in the pool, it returns the passed message and does not
    * put it on the send queue.
    */
-  message_t* forward(message_t* m) {
+  message_t* ONE forward(message_t* ONE m) {
     if (call MessagePool.empty()) {
       dbg("Route", "%s cannot forward, message pool empty.\n", __FUNCTION__);
       // send a debug message to the uart
