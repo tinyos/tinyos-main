@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.3 $ $Date: 2008-06-03 04:43:03 $
+ * @version $Revision: 1.4 $ $Date: 2008-06-04 05:36:21 $
  */
 
 #include "CC2420.h"
@@ -655,7 +655,7 @@ implementation {
     m_tx_power = tx_power;
     
     {
-      uint8_t tmpLen = header->length - 1;
+      uint8_t tmpLen __DEPUTY_UNUSED__ = header->length - 1;
       call TXFIFO.write(TCAST(uint8_t * COUNT(tmpLen), header), header->length - 1);
     }
   }
