@@ -1,3 +1,5 @@
+#undef SAFE_TINYOS
+
 #include <stdint.h>
 #include <avr/io.h>
 

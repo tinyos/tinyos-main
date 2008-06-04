@@ -1,3 +1,5 @@
+#undef SAFE_TINYOS
+
 static void led_off_0 (void) { 
     __asm__ volatile ("bis.b #16, &0x0031"); 
 }
