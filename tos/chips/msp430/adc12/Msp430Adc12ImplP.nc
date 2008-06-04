@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2008-06-04 05:31:15 $
+ * $Revision: 1.8 $
+ * $Date: 2008-06-04 19:22:33 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -81,7 +81,7 @@ implementation
   
   uint16_t resultBufferLength;    /* length of buffer */
   uint16_t *COUNT_NOK(resultBufferLength) resultBufferStart;
-  uint16_t *FAT_NOK(resultBufferStart, resultBufferStart+resultBufferLength) resultBuffer;         /* conversion results */
+  uint16_t *BND_NOK(resultBufferStart, resultBufferStart+resultBufferLength) resultBuffer;         /* conversion results */
   uint16_t resultBufferIndex;     /* offset into buffer */
   uint8_t numChannels;            /* number of channels (multi-channel conversion) */
   uint8_t clientID;               /* ID of client that called getData() */

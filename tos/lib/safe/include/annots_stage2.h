@@ -4,9 +4,9 @@
 #ifdef SAFE_TINYOS
 
 #define __DEPUTY_NONNULL(__n)                  __attribute__((nonnull))
-#define __DEPUTY_FAT_NOK(__lo,__hi)            __attribute__((bounds((__lo),(__hi))))
-#define __DEPUTY_FAT(__lo,__hi)                __DEPUTY_NONNULL(__n) __DEPUTY_FAT_NOK(__lo,__hi)
-#define __DEPUTY_COUNT_NOK(__n)                __DEPUTY_FAT_NOK(__this, __this + (__n))
+#define __DEPUTY_BND_NOK(__lo,__hi)            __attribute__((bounds((__lo),(__hi))))
+#define __DEPUTY_BND(__lo,__hi)                __DEPUTY_NONNULL(__n) __DEPUTY_BND_NOK(__lo,__hi)
+#define __DEPUTY_COUNT_NOK(__n)                __DEPUTY_BND_NOK(__this, __this + (__n))
 #define __DEPUTY_COUNT(__n)                    __DEPUTY_NONNULL(__n) __DEPUTY_COUNT_NOK(__n)
 #define __DEPUTY_ONE_NOK(__n)                  __DEPUTY_COUNT_NOK(1)
 #define __DEPUTY_ONE(__n)                      __DEPUTY_NONNULL(__n) __DEPUTY_ONE_NOK(__n)
@@ -17,8 +17,8 @@
 #else 
 
 #define __DEPUTY_NONNULL(__n)                  
-#define __DEPUTY_FAT_NOK(__lo,__hi)              
-#define __DEPUTY_FAT(__lo,__hi)              
+#define __DEPUTY_BND_NOK(__lo,__hi)              
+#define __DEPUTY_BND(__lo,__hi)              
 #define __DEPUTY_COUNT_NOK(__n)                    
 #define __DEPUTY_COUNT(__n)                    
 #define __DEPUTY_ONE_NOK(__n)                   

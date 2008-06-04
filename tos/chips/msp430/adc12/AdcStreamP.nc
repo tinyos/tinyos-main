@@ -1,4 +1,4 @@
-/* $Id: AdcStreamP.nc,v 1.2 2008-06-04 05:31:15 regehr Exp $
+/* $Id: AdcStreamP.nc,v 1.3 2008-06-04 19:22:33 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -75,7 +75,7 @@ implementation {
 
   norace uint16_t count;
   norace uint16_t * COUNT_NOK(count) buffer; 
-  norace uint16_t * FAT_NOK(buffer, buffer+count) pos;
+  norace uint16_t * BND_NOK(buffer, buffer+count) pos;
   norace uint32_t now, period;
   norace bool periodModified;
 

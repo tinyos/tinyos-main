@@ -11,8 +11,8 @@
 #if NESC >= 130
 
 struct @nonnull @deputy_scope() @macro("__DEPUTY_NONNULL") { }; 
-struct @fat @deputy_scope() @macro("__DEPUTY_FAT") { void *lo, *hi; }; 
-struct @fat_nok @deputy_scope() @macro("__DEPUTY_FAT_NOK") { void *lo, *hi; }; 
+struct @bnd @deputy_scope() @macro("__DEPUTY_BND") { void *lo, *hi; }; 
+struct @bnd_nok @deputy_scope() @macro("__DEPUTY_BND_NOK") { void *lo, *hi; }; 
 struct @count @deputy_scope() @macro("__DEPUTY_COUNT") { int n; }; 
 struct @count_nok @deputy_scope() @macro("__DEPUTY_COUNT_NOK") { int n; }; 
 struct @one @deputy_scope() @macro("__DEPUTY_ONE") { }; 
@@ -21,8 +21,8 @@ struct @dmemset @deputy_scope() @macro("__DEPUTY_DMEMSET") {void *p; int what; s
 struct @dmemcpy @deputy_scope() @macro("__DEPUTY_DMEMCPY") {void *dst; void *src; size_t sz; };
 
 #define NONNULL                                @nonnull()
-#define FAT(x,y)                               @fat(x,y)
-#define FAT_NOK(x,y)                           @fat_nok(x,y)
+#define BND(x,y)                               @bnd(x,y)
+#define BND_NOK(x,y)                           @bnd_nok(x,y)
 #define COUNT(x)                               @count(x)
 #define COUNT_NOK(x)                           @count_nok(x)
 #define ONE                                    @one()
@@ -38,8 +38,8 @@ struct @dmemcpy @deputy_scope() @macro("__DEPUTY_DMEMCPY") {void *dst; void *src
 #endif
 
 #define NONNULL                                
-#define FAT(x,y)                             
-#define FAT_NOK(x,y)                             
+#define BND(x,y)                             
+#define BND_NOK(x,y)                             
 #define COUNT(x)                               
 #define COUNT_NOK(x)                               
 #define ONE 
