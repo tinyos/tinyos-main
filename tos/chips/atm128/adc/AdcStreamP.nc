@@ -1,4 +1,4 @@
-/* $Id: AdcStreamP.nc,v 1.7 2008-06-03 03:00:59 regehr Exp $
+/* $Id: AdcStreamP.nc,v 1.8 2008-06-04 05:33:07 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -144,7 +144,7 @@ implementation {
 
     atomic entry = bufferQueue[c];
     for (; entry; entry = entry->next){
-      uint16_t tmp_count = entry->count;
+      uint16_t tmp_count __DEPUTY_UNUSED__ = entry->count;
       signal ReadStream.bufferDone[c](FAIL, TCAST(uint16_t * COUNT_NOK(tmp_count),entry), entry->count);
     }
 
