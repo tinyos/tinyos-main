@@ -1,4 +1,4 @@
-// $Id: RouteSelect.nc,v 1.3 2007-04-13 21:45:25 scipio Exp $
+// $Id: RouteSelect.nc,v 1.4 2008-06-04 03:57:41 regehr Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -98,7 +98,7 @@ interface RouteSelect {
    *
    */
   
-  command error_t selectRoute(message_t* msg, uint8_t resend);
+  command error_t selectRoute(message_t* ONE msg, uint8_t resend);
 
 
   /**

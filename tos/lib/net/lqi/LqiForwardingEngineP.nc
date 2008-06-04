@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.13 2008-02-19 19:50:21 scipio Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.14 2008-06-04 03:57:41 regehr Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -284,7 +284,7 @@ implementation {
     }
   }
 
-  event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
+  event message_t* SubReceive.receive(message_t* ONE msg, void* COUNT_NOK(len) payload, uint8_t len) {
     collection_id_t id = call CollectionPacket.getType(msg);
     payload += sizeof(lqi_header_t);
     len -= sizeof(lqi_header_t);
