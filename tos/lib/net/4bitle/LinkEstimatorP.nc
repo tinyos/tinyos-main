@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.6 2008-01-22 18:03:40 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.7 2008-06-04 05:45:20 regehr Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -110,8 +110,8 @@ implementation {
   // the packet.
   uint8_t addLinkEstHeaderAndFooter(message_t *msg, uint8_t len) {
     uint8_t newlen;
-    linkest_header_t *hdr;
-    linkest_footer_t *footer;
+    linkest_header_t * ONE hdr;
+    linkest_footer_t * ONE footer;
     uint8_t i, j, k;
     uint8_t maxEntries, newPrevSentIdx;
     dbg("LI", "newlen1 = %d\n", len);
@@ -131,14 +131,22 @@ implementation {
     j = 0;
     newPrevSentIdx = 0;
     for (i = 0; i < NEIGHBOR_TABLE_SIZE && j < maxEntries; i++) {
+      uint8_t neighborCount;
+      neighbor_stat_entry_t * COUNT(neighborCount) neighborLists;
+      if(maxEntries <= NEIGHBOR_TABLE_SIZE)
+        neighborCount = maxEntries;
+      else
+        neighborCount = NEIGHBOR_TABLE_SIZE;
+      
+      neighborLists = TCAST(neighbor_stat_entry_t * COUNT(neighborCount), footer->neighborList);
       k = (prevSentIdx + i + 1) % NEIGHBOR_TABLE_SIZE;
       if ((NeighborTable[k].flags & VALID_ENTRY) &&
 	  (NeighborTable[k].flags & MATURE_ENTRY)) {
-	footer->neighborList[j].ll_addr = NeighborTable[k].ll_addr;
-	footer->neighborList[j].inquality = NeighborTable[k].inquality;
+	neighborLists[j].ll_addr = NeighborTable[k].ll_addr;
+	neighborLists[j].inquality = NeighborTable[k].inquality;
 	newPrevSentIdx = k;
-	dbg("LI", "Loaded on footer: %d %d %d\n", j, footer->neighborList[j].ll_addr,
-	    footer->neighborList[j].inquality);
+	dbg("LI", "Loaded on footer: %d %d %d\n", j, neighborLists[j].ll_addr,
+	    neighborLists[j].inquality);
 	j++;
       }
     }
@@ -585,7 +593,7 @@ implementation {
   // called when link estimator generator packet or
   // packets from upper layer that are wired to pass through
   // link estimator is received
-  void processReceivedMessage(message_t* msg, void* payload, uint8_t len) {
+  void processReceivedMessage(message_t* ONE msg, void* COUNT_NOK(len) payload, uint8_t len) {
     uint8_t nidx;
     uint8_t num_entries;
 
