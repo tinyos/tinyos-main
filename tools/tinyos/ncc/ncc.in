@@ -82,10 +82,6 @@ for ($i = 0; $i <= $#ARGV; $i++) {
 	    $strip = 1;
 	    push @includes, $file;
 	}
-        elsif (/^-safe$/) {
-            $safe = 1;
-            $_ = "-fnesc-safe";
-        }
 	elsif (/^-fnesc-cfile=(.*)/){
 	    $appfilename=$1;
 	}
@@ -137,34 +133,6 @@ if (!defined $target) {
     else {
 	$target = "@default_target@";
     }
-}
-
-if ($safe) {
-
-    my $safe_home = $ENV{'TOSDIR'}."/lib/safe";
-
-    if (($target eq "mica2") or ($target eq "micaz")) {
-	$mcu = "avr";
-    } elsif ($target eq "telosb") {
-	$mcu = "msp430";
-    } else {
-	print STDERR "Safe TinyOS does not (yet) support the ${target} target.\n";
-	print STDERR "Supported targets: ";
-	print STDERR "mica2, micaz, telosb\n";
-	exit 2;
-    }
-
-    push @new_args, "-fnesc-deputy";
-
-    $failfile = "${TOSDIR}/lib/safe/${mcu}/fail.c";
-
-    my $deputy_args = "-I${safe_home}/include " .
-                      "--FLIDs " . 
-                      "--envmachine " .
-                      "-DSAFE_TINYOS " .
-                      "--nolib";
-    push @new_args, "-fnesc-deputy-args=$deputy_args";
-    push @new_args, "$failfile";
 }
 
 if (!defined $scheduler && !$is_tos_1) {
