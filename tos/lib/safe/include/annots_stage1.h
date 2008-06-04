@@ -2,6 +2,8 @@
 #define ANNOTS_STAGE1_INCLUDED
 #include <stddef.h>
 
+#define __DEPUTY_UNUSED__                      __attribute__((unused))
+
 // define away two obsolete annotations
 #define BOUND(x,y)
 #define SINGLE
