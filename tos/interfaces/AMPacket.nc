@@ -1,4 +1,4 @@
-// $Id: AMPacket.nc,v 1.5 2007-06-20 23:49:02 scipio Exp $
+// $Id: AMPacket.nc,v 1.6 2008-06-04 03:00:25 regehr Exp $
 /*									tab:4
  * "Copyright (c) 2004-5 The Regents of the University  of California.  
  * All rights reserved.
@@ -60,7 +60,7 @@ interface AMPacket {
    * Return the AM address of the destination of the AM packet.
    * If <tt>amsg</tt> is not an AM packet, the results of this command
    * are undefined.
-   * @param amsg    the packet
+   * @param 'message_t* ONE amsg'    the packet
    * @return        the destination address of the packet.
    */
   
@@ -70,7 +70,7 @@ interface AMPacket {
    * Return the AM address of the source of the AM packet.
    * If <tt>amsg</tt> is not an AM packet, the results of this command
    * are undefined.
-   * @param amsg  the packet
+   * @param 'message_t* ONE amsg'  the packet
    * @return      the source address of the packet.
    */
    
@@ -85,7 +85,7 @@ interface AMPacket {
    * and then recover it when actually sending. If <tt>amsg</tt> is
    * not an AM packet, the results of this command are undefined.
    *
-   * @param  amsg   the packet
+   * @param  'message_t* ONE amsg'   the packet
    * @param  addr   the address
    */
 
@@ -103,7 +103,7 @@ interface AMPacket {
    * layer (e.g., a protocol bridge). If <tt>amsg</tt> is
    * not an AM packet, the results of this command are undefined.
    *
-   * @param  amsg   the packet
+   * @param  'message_t* ONE amsg'   the packet
    * @param  addr   the address
    */
 
@@ -119,7 +119,7 @@ interface AMPacket {
    * the mote's local address. If <tt>amsg</tt> is not an AM packet,
    * the results of this command are undefined.
    *
-   * @param  amsg   the packet
+   * @param  'message_t* ONE amsg'   the packet
    * @return        whether the packet is addressed to this AM stack
    */
   command bool isForMe(message_t* amsg);
@@ -129,7 +129,7 @@ interface AMPacket {
    * If <tt>amsg</tt> is not an AM packet, the results of this command
    * are undefined.
    *
-   * @param  amsg   the packet
+   * @param  'message_t* ONE amsg'   the packet
    * @return        the AM type
    */
   
@@ -144,7 +144,7 @@ interface AMPacket {
    * sending. If <tt>amsg</tt> is not an AM packet, the results of
    * this command are undefined.
    * 
-   * @param  amsg    the packet
+   * @param  'message_t* ONE amsg'    the packet
    * @param  t       the AM type
    */
   
@@ -159,7 +159,7 @@ interface AMPacket {
    * nodes only receive packets whose AM group field matches their
    * own.
    *
-   * @param amsg the packet
+   * @param 'message_t* ONE amsg' the packet
    * @return the AM group of this packet
    */
   
@@ -170,7 +170,7 @@ interface AMPacket {
    * stacks will set this field automatically on a send request, which
    * may overwrite changes made with this command.
    *
-   * @param amsg the packet
+   * @param 'message_t* ONE amsg' the packet
    * @param group the packet's new AM group value
    */
   command void setGroup(message_t* amsg, am_group_t grp);

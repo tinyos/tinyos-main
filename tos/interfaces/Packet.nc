@@ -1,4 +1,4 @@
-// $Id: Packet.nc,v 1.6 2007-12-05 09:45:25 janhauer Exp $
+// $Id: Packet.nc,v 1.7 2008-06-04 03:00:30 regehr Exp $
 /*									tab:4
  * "Copyright (c) 2004-5 The Regents of the University  of California.  
  * All rights reserved.
@@ -48,7 +48,7 @@ interface Packet {
     * Clear out this packet.  Note that this is a deep operation and
     * total operation: calling clear() on any layer will completely
     * clear the packet for reuse.
-    * @param  msg    the packet to clear
+    * @param  'message_t* ONE msg'    the packet to clear
     */
 
   command void clear(message_t* msg);
@@ -60,7 +60,7 @@ interface Packet {
     * sized data regions, then payloadLength() will always return
     * the same value as maxPayloadLength(). 
     *
-    * @param  msg    the packet to examine
+    * @param  'message_t* ONE msg'    the packet to examine
     * @return        the length of its current payload
     */
 
@@ -76,7 +76,7 @@ interface Packet {
     * specified in the request and later recover it when actually
     * sending.
     *
-    * @param msg   the packet
+    * @param 'message_t* ONE msg'   the packet
     * @param len   the value to set its length field to
     */
 
@@ -107,9 +107,9 @@ interface Packet {
    * a given <tt>msg</tt> this command will always return the same
    * pointer or NULL.
    *
-   * @param msg   the packet 
+   * @param 'message_t* ONE msg'   the packet 
    * @param len   the length of payload required
-   * @return      a pointer to the packet's data payload for this layer
+   * @return 'void* COUNT_NOK(len)'     a pointer to the packet's data payload for this layer
    *              or NULL if <tt>len</tt> is too big
    */
   command void* getPayload(message_t* msg, uint8_t len);

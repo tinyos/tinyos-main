@@ -1,4 +1,4 @@
-/* $Id: Pool.nc,v 1.4 2006-12-12 18:23:14 vlahan Exp $ */
+/* $Id: Pool.nc,v 1.5 2008-06-04 03:00:31 regehr Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -43,7 +43,7 @@
  *
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2006-12-12 18:23:14 $
+ *  @date   $Date: 2008-06-04 03:00:31 $
  */
 
    
@@ -82,6 +82,7 @@ interface Pool<t> {
   /**
     * Deallocate an object, putting it back into the pool.
     *
+    * @param 't* ONE newVal'
     * @return SUCCESS if the entry was put in successfully, FAIL
     * if the pool is full.
     */
@@ -90,7 +91,7 @@ interface Pool<t> {
   /**
     * Allocate an element from the pool.
     *
-    * @return A pointer if the pool is not empty, NULL if
+    * @return 't* ONE_NOK' A pointer if the pool is not empty, NULL if
     * the pool is empty.
     */
   command t* get();

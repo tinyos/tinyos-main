@@ -39,7 +39,7 @@ interface PacketLink {
   /**
    * Set the maximum number of times attempt message delivery
    * Default is 0
-   * @param msg
+   * @param 'message_t* ONE msg'
    * @param maxRetries the maximum number of attempts to deliver
    *     the message
    */
@@ -53,16 +53,19 @@ interface PacketLink {
   command void setRetryDelay(message_t *msg, uint16_t retryDelay);
 
   /** 
+   * @param 'message_t* ONE msg'
    * @return the maximum number of retry attempts for this message
    */
   command uint16_t getRetries(message_t *msg);
 
   /**
+   * @param 'message_t* ONE msg'
    * @return the delay between retry attempts in ms for this message
    */
   command uint16_t getRetryDelay(message_t *msg);
 
   /**
+   * @param 'message_t* ONE msg'
    * @return TRUE if the message was delivered.
    */
   command bool wasDelivered(message_t *msg);

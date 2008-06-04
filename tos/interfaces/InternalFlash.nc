@@ -39,7 +39,7 @@ interface InternalFlash {
    * return them in <code>buf</code>.
    *
    * @param   addr A pointer to the starting address from which to read.
-   * @param   buf  A pointer to the buffer into which read bytes are
+   * @param   'void* COUNT(size) buf'  A pointer to the buffer into which read bytes are
    *               placed.
    * @param   size The number of bytes to read.
    * @return  SUCCESS if the bytes were successfully read.
@@ -52,7 +52,7 @@ interface InternalFlash {
    * flash starting at <code>addr</code>.
    *
    * @param   addr A pointer to the starting address to which to write.
-   * @param   buf  A pointer to the buffer from which bytes are read.
+   * @param   'void* COUNT(size) buf'  A pointer to the buffer from which bytes are read.
    * @param   size The number of bytes to write.
    * @return  SUCCESS if the bytes were successfully written.
    *          FAIL if the call could not be completed.

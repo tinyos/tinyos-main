@@ -84,12 +84,13 @@ interface LowPowerListening {
   /**
    * Configure this outgoing message so it can be transmitted to a neighbor mote
    * with the specified Rx sleep interval.
-   * @param msg Pointer to the message that will be sent
+   * @param 'message_t* ONE msg' Pointer to the message that will be sent
    * @param sleepInterval The receiving node's sleep interval, in [ms]
    */
   command void setRxSleepInterval(message_t *msg, uint16_t sleepIntervalMs);
   
   /**
+   * @param 'message_t* ONE msg'
    * @return the destination node's sleep interval configured in this message
    */
   command uint16_t getRxSleepInterval(message_t *msg);
@@ -99,13 +100,14 @@ interface LowPowerListening {
    * with the specified Rx duty cycle rate.
    * Duty cycle is in units of [percentage*100], i.e. 0.25% duty cycle = 25.
    * 
-   * @param msg Pointer to the message that will be sent
+   * @param 'message_t* ONE msg' Pointer to the message that will be sent
    * @param dutyCycle The duty cycle of the receiving mote, in units of 
    *     [percentage*100]
    */
   command void setRxDutyCycle(message_t *msg, uint16_t dutyCycle);
   
   /**
+   * @param 'message_t* ONE msg'
    * @return the destination node's duty cycle configured in this message
    *     in units of [percentage*100]
    */

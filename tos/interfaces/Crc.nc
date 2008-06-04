@@ -35,7 +35,7 @@ interface Crc {
   /**
    * Compute the CRC-16 value of a byte array.
    *
-   * @param   buf A pointer to the buffer over which to compute CRC.
+   * @param   'void* COUNT(len) buf' A pointer to the buffer over which to compute CRC.
    * @param   len The length of the buffer over which to compute CRC.
    * @return  The CRC-16 value.
    */
@@ -46,7 +46,7 @@ interface Crc {
    * of discontinuous data.
    * 
    * @param startCrc An initial CRC value to begin with
-   * @param buf A pointer to a buffer of data
+   * @param 'void* COUNT(len) buf' A pointer to a buffer of data
    * @param len The length of the buffer
    * @return The CRC-16 value.
    */

@@ -43,7 +43,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Gay
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:14 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-04 03:00:29 $
  */
 
 #include "Storage.h"
@@ -54,7 +54,7 @@ interface LogRead {
    * volume. On SUCCESS, the <code>readDone</code> event will signal
    * completion of the operation.
    * 
-   * @param buf buffer to place read data.
+   * @param 'void* COUNT(len) buf' buffer to place read data.
    * @param len number of bytes to read.
    * @return 
    *   <li>SUCCESS if the request was accepted, 
@@ -67,7 +67,7 @@ interface LogRead {
    * advanced by <code>len</code> bytes.
    *
    * @param addr starting address of read.
-   * @param buf buffer where read data was placed.
+   * @param 'void* COUNT(len) buf' buffer where read data was placed.
    * @param len number of bytes read - this may be less than requested
    *    (even equal to 0) if the end of the log was reached
    * @param error SUCCESS if read was possible, FAIL otherwise

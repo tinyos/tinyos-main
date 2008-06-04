@@ -54,7 +54,7 @@ interface SendNotifier {
    * and the message will be sent.
    * 
    * @param dest The destination address of the messsage
-   * @param msg The message about to be transmitted
+   * @param 'message_t* ONE msg' The message about to be transmitted
    */
   event void aboutToSend(am_addr_t dest, message_t *msg);
   

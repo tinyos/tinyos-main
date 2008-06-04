@@ -51,7 +51,7 @@
  * @param val_t the type of the object that will be returned
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:15 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-04 03:00:31 $
  */
 
 interface ReadStream<val_t> {
@@ -60,7 +60,7 @@ interface ReadStream<val_t> {
    * should be placed into the buffer. Make sure your count doesn't
    * overrun the buffer.
    *
-   * @param buf a pointer to the buffer
+   * @param 'val_t* COUNT(count) buf' a pointer to the buffer
    * @param count the number of values the buffer should hold
    *
    * @return SUCCESS if the post was successful
@@ -83,7 +83,7 @@ interface ReadStream<val_t> {
    * SUCCESS, and the buffer will be filled with zeroes.
    *
    * @param result SUCCESS if the buffer was filled without errors
-   * @param buf a pointer to the buffer that has been filled
+   * @param 'val_t* COUNT(count) buf' a pointer to the buffer that has been filled
    * @param count the number of values actually read
    */
   event void bufferDone(error_t result, 

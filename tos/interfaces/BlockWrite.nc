@@ -34,7 +34,7 @@
  * TEP103.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2008-05-02 19:50:00 $
+ * @version $Revision: 1.6 $ $Date: 2008-06-04 03:00:25 $
  */
 
 #include "Storage.h"
@@ -48,7 +48,7 @@ interface BlockWrite {
    * Between two erases, no byte may be written more than once.
    * 
    * @param addr starting address to begin write.
-   * @param buf buffer to write data from.
+   * @param 'void* COUNT(len) buf' buffer to write data from.
    * @param len number of bytes to write.
    * @return 
    *   <li>SUCCESS if the request was accepted, 
@@ -63,7 +63,7 @@ interface BlockWrite {
    * been completed.
    *
    * @param addr starting address of write.
-   * @param buf buffer that written data was read from.
+   * @param 'void* COUNT(len) buf' buffer that written data was read from.
    * @param len number of bytes written.
    * @param error SUCCESS if the operation was successful, FAIL if
    *   it failed

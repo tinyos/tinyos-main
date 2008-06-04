@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archedrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:15 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-04 03:00:35 $
  */
 
 interface UartByte {
@@ -49,7 +49,7 @@ interface UartByte {
    * Receive a single uart byte. The call blocks until a byte is
    * received.
    *
-   * @param byte Where to place received byte.
+   * @param 'uint8_t* ONE byte' Where to place received byte.
    * @param timeout How long in byte times to wait.
    * @return SUCCESS if a byte was received, FAIL if timed out.
    */

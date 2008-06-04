@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archedrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:15 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-04 03:00:35 $
  */
 
 interface UartStream {
@@ -41,7 +41,7 @@ interface UartStream {
    * <code>sendDone</code> will be signalled when transmission is
    * complete.
    *
-   * @param buf Buffer for bytes to send.
+   * @param 'uint8_t* COUNT(len) buf' Buffer for bytes to send.
    * @param len Number of bytes to send.
    * @return SUCCESS if request was accepted, FAIL otherwise.
    */
@@ -50,7 +50,7 @@ interface UartStream {
   /**
    * Signal completion of sending a stream.
    *
-   * @param buf Bytes sent.
+   * @param 'uint8_t* COUNT(len) buf' Bytes sent.
    * @param len Number of bytes sent.
    * @param error SUCCESS if the transmission was successful, FAIL otherwise.
    */
@@ -83,7 +83,7 @@ interface UartStream {
    * <code>receiveDone</code> will be signalled when reception is
    * complete.
    *
-   * @param buf Buffer for received bytes.
+   * @param 'uint8_t* COUNT(len) buf' Buffer for received bytes.
    * @param len Number of bytes to receive.
    * @return SUCCESS if request was accepted, FAIL otherwise.
    */
@@ -92,7 +92,7 @@ interface UartStream {
   /**
    * Signal completion of receiving a stream.
    *
-   * @param buf Buffer for bytes received.
+   * @param 'uint8_t* COUNT(len) buf' Buffer for bytes received.
    * @param len Number of bytes received.
    * @param error SUCCESS if the reception was successful, FAIL otherwise.
    */

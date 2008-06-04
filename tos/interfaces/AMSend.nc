@@ -1,4 +1,4 @@
-// $Id: AMSend.nc,v 1.5 2007-09-13 23:10:17 scipio Exp $
+// $Id: AMSend.nc,v 1.6 2008-06-04 03:00:25 regehr Exp $
 /*									tab:4
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -57,7 +57,7 @@ interface AMSend {
     * will signal sendDone with error code.
     *
     * @param addr   address to which to send the packet
-    * @param msg    the packet
+    * @param 'message_t* ONE msg'    the packet
     * @param len    the length of the data in the packet payload
     * @return       SUCCESS if the request to send succeeded and a
     *               sendDone will be signaled later, EBUSY if the
@@ -78,7 +78,7 @@ interface AMSend {
     * A successful call to cancel must always result in a 
     * sendFailed event, and never a sendSucceeded event.
     * 
-    * @param  msg     the packet whose transmission should be cancelled.
+    * @param  'message_t* ONE msg'    the packet whose transmission should be cancelled.
     * @return SUCCESS if the transmission was cancelled, FAIL otherwise.
     * @see    sendDone
     */
@@ -89,7 +89,7 @@ interface AMSend {
     * the message buffer sent, and <tt>error</tt> indicates whether
     * the send was successful.
     *
-    * @param  msg   the packet which was submitted as a send request
+    * @param  'message_t* ONE msg'   the packet which was submitted as a send request
     * @param  error SUCCESS if it was sent successfully, FAIL if it was not,
     *               ECANCEL if it was cancelled
     * @see send
@@ -118,8 +118,8 @@ interface AMSend {
     * (minus the length parameter) and is included in this interface
     * as a convenience.
     *
-    * @param  msg    the packet
-    * @return        the payload of the packet
+    * @param  'message_t* ONE msg'    the packet
+    * @return 'void* COUNT(len)'      the payload of the packet
     */
   command void* getPayload(message_t* msg, uint8_t len);
 

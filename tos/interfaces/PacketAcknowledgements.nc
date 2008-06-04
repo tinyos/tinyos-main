@@ -39,7 +39,7 @@ interface PacketAcknowledgements {
    * ack was received through the wasAcked() command as soon as a send operation
    * completes.
    *
-   * @param msg - A message which should be acknowledged when transmitted.
+   * @param 'message_t* ONE msg' - A message which should be acknowledged when transmitted.
    * @return SUCCESS if acknowledgements are enabled, EBUSY
    * if the communication layer cannot enable them at this time, FAIL
    * if it does not support them.
@@ -51,7 +51,7 @@ interface PacketAcknowledgements {
    * Tell a protocol that when it sends this packet, it should not use
    * synchronous acknowledgments.
    *
-   * @param msg - A message which should not be acknowledged when transmitted.
+   * @param 'message_t* ONE msg' - A message which should not be acknowledged when transmitted.
    * @return SUCCESS if acknowledgements are disabled, EBUSY
    * if the communication layer cannot disable them at this time, FAIL
    * if it cannot support unacknowledged communication.
@@ -66,7 +66,7 @@ interface PacketAcknowledgements {
    * layer does not support acknowledgements, this command must return always
    * return FALSE.
    *
-   * @param msg - A transmitted message.
+   * @param 'message_t* ONE msg' - A transmitted message.
    * @return Whether the packet was acknowledged.
    *
    */

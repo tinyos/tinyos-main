@@ -34,7 +34,7 @@
  * TEP103.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:14 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-04 03:00:25 $
  */
 
 #include "Storage.h"
@@ -46,7 +46,7 @@ interface BlockRead {
    * operation.
    * 
    * @param addr starting address to begin reading.
-   * @param buf buffer to place read data.
+   * @param 'void* COUNT(len) buf' buffer to place read data.
    * @param len number of bytes to read.
    * @return 
    *   <li>SUCCESS if the request was accepted, 
@@ -59,7 +59,7 @@ interface BlockRead {
    * Signals the completion of a read operation.
    *
    * @param addr starting address of read.
-   * @param buf buffer where read data was placed.
+   * @param 'void* COUNT(len) buf' buffer where read data was placed.
    * @param len number of bytes read.
    * @param error SUCCESS if the operation was successful, FAIL if
    *   it failed

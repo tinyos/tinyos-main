@@ -35,6 +35,7 @@ interface RadioTimeStamping
   /** 
    * Provides the time at which start of frame delimiter has been
    * transmitted: units are in terms of a 32kHz clock.
+   * @param 'message_t* ONE p_msg'
    */
   async event void transmittedSFD( uint16_t time, message_t* p_msg );
   

@@ -31,6 +31,7 @@ interface CsmaBackoff
   /**
    * Return initial backoff time before attempting to send message m. The
    * units are radio dependent.
+   * @param 'message_t* ONE m'
    * @return Initial backoff time
    */
   async event uint16_t initial(message_t* m);
@@ -38,6 +39,7 @@ interface CsmaBackoff
   /**
    * Return backoff time after message m could not be send due to congestion.
    * The units are raio dependent.
+   * @param 'message_t* ONE m'
    * @return Backoff time after congestion
    */
   async event uint16_t congestion(message_t* m);
