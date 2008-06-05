@@ -598,7 +598,7 @@ implementation
 			length = call RF230Config.getLength(rxMsg);
 
 			call DiagMsg.str("rx");
-			call DiagMsg.uint32(call PacketTimeStamp.isSet(rxMsg) ? call PacketTimeStamp.get(rxMsg) : 0);
+			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.uint8(crc != 0);
 			call DiagMsg.uint8(length);
