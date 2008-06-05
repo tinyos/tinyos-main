@@ -25,13 +25,12 @@
 #define __RF230PACKET_H__
 
 #include <IEEE154Packet.h>
-#include <TimeSyncMessage.h>
 
 typedef ieee154_header_t rf230packet_header_t;
 
 typedef nx_struct rf230packet_footer_t
 {
-	timesync_footer_t timesync;
+	// the time stamp is not recorded here, time stamped messaged cannot have max length
 } rf230packet_footer_t;
 
 typedef struct rf230packet_metadata_t

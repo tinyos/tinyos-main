@@ -22,6 +22,7 @@
  */
 
 #include <RF230Packet.h>
+#include <TimeSyncMessage.h>
 
 module RF230PacketP
 {
@@ -250,7 +251,7 @@ implementation
 
 	async command uint8_t PacketTimeSyncOffset.get(message_t* msg)
 	{
-		return call IEEE154Packet.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_footer_t);
+		return call IEEE154Packet.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_absolute_t);
 	}
 
 	async command void PacketTimeSyncOffset.clear(message_t* msg)

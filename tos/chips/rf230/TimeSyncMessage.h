@@ -24,9 +24,10 @@
 #ifndef __TIMESYNCMESSAGE_H__
 #define __TIMESYNCMESSAGE_H__
 
-typedef nx_struct timesync_footer_t
-{
-	nx_int32_t time_offset;	// in micorsec
-} timesync_footer_t;
+// this value is sent in the air
+typedef nx_int32_t timesync_relative_t;
+
+// this value is stored in memory
+typedef uint32_t timesync_absolute_t;
 
 #endif//__TIMESYNCMESSAGE_H__

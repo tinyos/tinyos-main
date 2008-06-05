@@ -25,6 +25,7 @@
 #include <HplRF230.h>
 #include <Tasklet.h>
 #include <RadioAssert.h>
+#include <TimeSyncMessage.h>
 
 module RF230LayerP
 {
@@ -392,17 +393,11 @@ implementation
 		uint8_t* data;
 		uint8_t header;
 		uint32_t time32;
+		void* timesync;
 
 		if( cmd != CMD_NONE || state != STATE_RX_ON || ! isSpiAcquired() || radioIrq )
 			return EBUSY;
 
-		if( call RF230Config.requiresRssiCca(msg) 
-				&& (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
-			return EBUSY;
-
-		writeRegister(RF230_TRX_STATE, RF230_PLL_ON);
-
-		// do something useful, just to wait a little
 		length = (call PacketTransmitPower.isSet(msg) ?
 			call PacketTransmitPower.get(msg) : RF230_DEF_RFPOWER) & RF230_TX_PWR_MASK;
 
@@ -412,7 +407,15 @@ implementation
 			writeRegister(RF230_PHY_TX_PWR, RF230_TX_AUTO_CRC_ON | txPower);
 		}
 
+		if( call RF230Config.requiresRssiCca(msg) 
+				&& (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
+			return EBUSY;
+
+		writeRegister(RF230_TRX_STATE, RF230_PLL_ON);
+
+		// do something useful, just to wait a little
 		time32 = call LocalTime.get();
+		timesync = call PacketTimeSyncOffset.isSet(msg) ? msg->data + call PacketTimeSyncOffset.get(msg) : 0;
 
 		// we have missed an incoming message in this short amount of time
 		if( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) != RF230_PLL_ON )
@@ -458,8 +461,8 @@ implementation
 
 		time32 += (int16_t)(time) - (int16_t)(time32);
 
-		if( call PacketTimeSyncOffset.isSet(msg) )
-			((timesync_footer_t*)(msg->data + call PacketTimeSyncOffset.get(msg)))->time_offset += time32;
+		if( timesync != 0 )
+			*(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time32;
 
 		do {
 			call HplRF230.spiSplitReadWrite(*(data++));
@@ -498,8 +501,8 @@ implementation
 		}
 #endif
 
-		if( call PacketTimeSyncOffset.isSet(msg) )
-			((timesync_footer_t*)(msg->data + call PacketTimeSyncOffset.get(msg)))->time_offset -= time32;
+		if( timesync != 0 )
+			*(timesync_absolute_t*)timesync = (*(timesync_relative_t*)timesync) + time32;
 
 		call PacketTimeStamp.set(msg, time32);
 

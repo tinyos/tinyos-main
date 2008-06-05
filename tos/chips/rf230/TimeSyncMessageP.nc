@@ -54,10 +54,10 @@ module TimeSyncMessageP
 implementation
 {
 	// TODO: change the Packet.payloadLength and Packet.maxPayloadLength commands to async
-	inline timesync_footer_t* getFooter(message_t* msg)
+	inline void* getFooter(message_t* msg)
 	{
-		// we use the payload length we export (the smaller one)
-		return (timesync_footer_t*)(msg->data + call Packet.payloadLength(msg));
+		// we use the payload length that we export (the smaller one)
+		return msg->data + call Packet.payloadLength(msg);
 	}
 
 /*----------------- Packet -----------------*/
@@ -69,34 +69,33 @@ implementation
 
 	command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
 	{
-		call SubPacket.setPayloadLength(msg, len + sizeof(timesync_footer_t));
+		call SubPacket.setPayloadLength(msg, len + sizeof(timesync_relative_t));
 	}
 
 	command uint8_t Packet.payloadLength(message_t* msg) 
 	{
-		return call SubPacket.payloadLength(msg) - sizeof(timesync_footer_t);
+		return call SubPacket.payloadLength(msg) - sizeof(timesync_relative_t);
 	}
 
 	command uint8_t Packet.maxPayloadLength()
 	{
-		return call SubPacket.maxPayloadLength() - sizeof(timesync_footer_t);
+		return call SubPacket.maxPayloadLength() - sizeof(timesync_relative_t);
 	}
 
 	command void* Packet.getPayload(message_t* msg, uint8_t len)
 	{
-		return call SubPacket.getPayload(msg, len + sizeof(timesync_footer_t));
+		return call SubPacket.getPayload(msg, len + sizeof(timesync_relative_t));
 	}
 
 /*----------------- TimeSyncAMSendRadio -----------------*/
 
 	command error_t TimeSyncAMSendRadio.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len, uint32_t event_time)
 	{
-		timesync_footer_t* footer = (timesync_footer_t*)(msg->data + len);
-		footer->time_offset = (nx_int32_t)event_time;
+		*(timesync_absolute_t*)(msg->data + len) = event_time;
 
 		call PacketTimeSyncOffset.set(msg, len);
 
-		return call SubSend.send[id](addr, msg, len + sizeof(timesync_footer_t));
+		return call SubSend.send[id](addr, msg, len + sizeof(timesync_relative_t));
 	}
 
 	command error_t TimeSyncAMSendRadio.cancel[am_id_t id](message_t* msg)
@@ -110,12 +109,12 @@ implementation
 
 	command uint8_t TimeSyncAMSendRadio.maxPayloadLength[am_id_t id]()
 	{
-		return call SubSend.maxPayloadLength[id]() - sizeof(timesync_footer_t);
+		return call SubSend.maxPayloadLength[id]() - sizeof(timesync_relative_t);
 	}
 
 	command void* TimeSyncAMSendRadio.getPayload[am_id_t id](message_t* msg, uint8_t len)
 	{
-		return call SubSend.getPayload[id](msg, len + sizeof(timesync_footer_t));
+		return call SubSend.getPayload[id](msg, len + sizeof(timesync_relative_t));
 	}
 
 /*----------------- TimeSyncAMSendMilli -----------------*/
@@ -159,31 +158,31 @@ implementation
 
 	async command bool TimeSyncPacketRadio.isValid(message_t* msg)
 	{
-		timesync_footer_t* footer = getFooter(msg);
+		timesync_relative_t* timesync = getFooter(msg);
 
-		return call PacketTimeStampRadio.isValid(msg) && footer->time_offset != 0x80000000L;
+		return call PacketTimeStampRadio.isValid(msg) && *timesync != 0x80000000L;
 	}
 
 	async command uint32_t TimeSyncPacketRadio.eventTime(message_t* msg)
 	{
-		timesync_footer_t* footer = getFooter(msg);
+		timesync_relative_t* timesync = getFooter(msg);
 
-		return (int32_t)(footer->time_offset) + call PacketTimeStampRadio.timestamp(msg);
+		return (*timesync) + call PacketTimeStampRadio.timestamp(msg);
 	}
 
 	/*----------------- TimeSyncPacketMilli -----------------*/
 
 	async command bool TimeSyncPacketMilli.isValid(message_t* msg)
 	{
-		timesync_footer_t* footer = getFooter(msg);
+		timesync_relative_t* timesync = getFooter(msg);
 
-		return call PacketTimeStampMilli.isValid(msg) && footer->time_offset != 0x80000000L;
+		return call PacketTimeStampMilli.isValid(msg) && *timesync != 0x80000000L;
 	}
 
 	async command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg)
 	{
-		timesync_footer_t* footer = getFooter(msg);
+		timesync_relative_t* timesync = getFooter(msg);
 
-		return ((int32_t)(footer->time_offset) << 10) + call PacketTimeStampMilli.timestamp(msg);
+		return ((int32_t)(*timesync) << 10) + call PacketTimeStampMilli.timestamp(msg);
 	}
 }
