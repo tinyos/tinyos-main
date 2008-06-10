@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
       {
 	char seqno = packet[i++];
-	printf("  Sequence number: %hhx\n", seqno);
+	printf("  Sequence number: 0x%hhx\n", seqno);
       }
       
       {
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 	// 16- and 64-bit destinations have a PAN ID
 	if (addrLen == 2 || addrLen == 3) { 
 	  short destPan = packet[i++] << 8 | packet[i++];
-	  printf("  Destination PAN: %hx\n", destPan);
+	  printf("  Destination PAN: 0x%02hx\n", destPan);
 	}
 	
 	switch (addrLen) {
@@ -109,8 +109,9 @@ int main(int argc, char **argv)
 	  printf("  Destination address: invalid? (0x01)\n");
 	  break;
 	case 2:
-	  saddr =  (packet[i++] << 8 | packet[i++]);
-	  printf("  Destination address: %hx\n", saddr);
+	  saddr =  (packet[i] << 8 | packet[i+1]);
+	  i += 2;
+	  printf("  Destination address: 0x%04hx\n", saddr);
 	  break;
 	case 3: {
 	  int j;
@@ -118,7 +119,7 @@ int main(int argc, char **argv)
 	    laddr = laddr << 8;
 	    laddr |= packet[i++];
 	  }
-	  printf("  Destination address: %llx\n", laddr);
+	  printf("  Destination address: 0x%016llx\n", laddr);
 	  break;
 	}
 	default:
@@ -133,8 +134,9 @@ int main(int argc, char **argv)
 	long long laddr = 0;
 
 	if (!intraPan) { // Intra-PAN packet
-	  short srcPan = packet[i++] << 8 | packet[i++];
-	  printf("  Source PAN: %hx\n", srcPan);
+	  short srcPan = packet[i] << 8 | packet[i+1];
+	  i += 2;
+	  printf("  Source PAN: 0x%02hx\n", srcPan);
 	}
 	
 	switch (addrLen) {
@@ -145,8 +147,9 @@ int main(int argc, char **argv)
 	  printf("  Source address: invalid? (0x01)\n");
 	  break;
 	case 2:
-	  saddr =  (packet[i++] << 8 | packet[i++]);
-	  printf("  Source address: %hx\n", saddr);
+	  saddr =  (packet[i] << 8 | packet[i + 1]);
+	  i += 2;
+	  printf("  Source address: 0x%04hx\n", saddr);
 	  break;
 	case 3: {
 	  int j;
@@ -154,7 +157,7 @@ int main(int argc, char **argv)
 	    laddr = laddr << 8;
 	    laddr |= packet[i++];
 	  }
-	  printf("  Source address: %llx\n", laddr);
+	  printf("  Source address: 0x%016llx\n", laddr);
 	  break;
 	}
 	default:
@@ -162,7 +165,7 @@ int main(int argc, char **argv)
 	}
       }
       
-      printf("  AM type: %hhx\n", packet[i++]);
+      printf("  AM type: 0x%02hhx\n", packet[i++]);
 
       if (i >= plen) {
 	printf("Packet format error: read packet is shorter than expected.\n");
@@ -170,7 +173,7 @@ int main(int argc, char **argv)
       else {
 	printf("  Payload: ");
 	for (; i < plen; i++) {
-	  printf("%hhx ", packet[i]);
+	  printf("0x%02hhx ", packet[i]);
 	}
 	printf("\n\n");
 	putchar('\n');
