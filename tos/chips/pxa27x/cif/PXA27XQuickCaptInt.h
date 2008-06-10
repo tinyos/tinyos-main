@@ -45,10 +45,10 @@
 #define PXA27XQuickCaptInt_H
 
 /******************************************************************************/
-/* Configure the GPIO Alt functions and directions
-/* Note:
-/*  - In Sensor Master-Parallel mode, CIF_FV and CIF_LV are set to INPUTS
-/*  - In Sensor  Slave-Parallel mode, CIF_FV and CIF_LV are set to OUTPUTS
+// Configure the GPIO Alt functions and directions
+// Note:
+//  - In Sensor Master-Parallel mode, CIF_FV and CIF_LV are set to INPUTS
+//  - In Sensor  Slave-Parallel mode, CIF_FV and CIF_LV are set to OUTPUTS
 // Configure the GPIO Alt Functions and Directions
 //     --- Template ----
 //     _GPIO_setaltfn(PIN, PIN_ALTFN);
