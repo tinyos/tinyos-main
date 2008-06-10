@@ -10,8 +10,8 @@ SIDs: Source and Sink Independent Drivers
 :Author: Gilman Tolle, Philip Levis, and David Gay
 
 :Draft-Created: 30-Oct-2005
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2007-09-18 19:27:42 $
+:Draft-Version: $Revision: 1.9 $
+:Draft-Modified: $Date: 2008-06-10 17:45:28 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -106,6 +106,20 @@ themselves contain information on the sort of sensor or device they
 sit on top of.  A SID SHOULD provide one or more of the interfaces
 described in this section.
 
+This table summarizes the SID interfaces:
+
++------------------------+-----------+-----------+-----------+
+| Name                   | Phase     | Data type | Section   |
++------------------------+-----------+-----------+-----------+
+| Read                   | Split     | Scalar    | 3.1       |
++------------------------+-----------+-----------+-----------+
+| Get                    | Single    | Scalar    | 3.2       |
++------------------------+-----------+-----------+-----------+
+| Notify                 | Trigger   | Scalar    | 3.3       |
++------------------------+-----------+-----------+-----------+
+| ReadStream             | Split     | Stream    | 3.4       |
++------------------------+-----------+-----------+-----------+
+
 3.1 Split-Phase Small Scalar I/O
 --------------------------------------------------------------------
 
@@ -116,131 +130,37 @@ The first set of interfaces can be used for low-rate scalar I/O::
     event void readDone( error_t result, val_t val );
   }
 
-  interface Write<val_t> {
-    command error_t write( val_t val );
-    event void writeDone( error_t result );
-  }
-
-A component that provides both read and write functionality might want
-to use a combined version of the interface, to reduce the amount of
-wiring required by the client application::
-
-  interface ReadWrite<val_t> {
-    command error_t read();
-    event void readDone( error_t result, val_t val );
-
-    command error_t write( val_t val );
-    event void writeDone( error_t result );
-  }
-
-A component that can support concurrent reads and writes SHOULD
-provide separate Read/Write interfaces. A component whose internal
-logic will cause a read to fail while a write is pending or a write to
-fail while a read is pending MUST provide a ReadWrite interface.
-
 If the ``result`` parameter of the ``Read.readDone`` and
 ``ReadWrite.readDone`` events is not SUCCESS, then the memory of the
 ``val`` parameter MUST be filled with zeroes.
 
-If the call to ``Read.read`` has returned SUCCESS, but the
-``Read.readDone`` event has not yet been signalled, then a subsequent
-call to ``Read.read`` MUST not return SUCCESS. This simple locking
-technique, as opposed to a more complex system in which multiple
-read/readDone pairs may be outstanding, is intended to reduce the
-complexity of code that is a client of a SID interface.
+If the call to ``read`` has returned SUCCESS, but the ``readDone``
+event has not yet been signalled, then a subsequent call to ``read``
+MUST return EBUSY or FAIL.  This simple locking technique, as opposed
+to a more complex system in which multiple read/readDone pairs may be
+outstanding, is intended to reduce the complexity of SID client code.
 
 Examples of sensors that would be suited to this class of interface
 include many basic sensors, such as photo, temp, voltage, and ADC
 readings.
 
-3.2 Split-Phase Large Scalar I/O 
---------------------------------------------------------------------
-
-If the SID's data object is large, it can provide read/write
-interfaces that pass parameters by pointer rather than value::
-
-  interface ReadRef<val_t> {
-    command error_t read( val_t* val );
-    event void readDone( error_t result, val_t* val );
-  }
-
-  interface WriteRef<val_t> {
-    command error_t write( val_t* val );
-    event void writeDone( error_t result, val_t* val );
-  }
-
-  interface ReadWriteRef<val_t> {
-    command error_t read( val_t* val );
-    event void readDone( error_t result, val_t* val );
-
-    command error_t write( val_t* val );
-    event void writeDone( error_t result, val_t* val );
-  }
-
-The caller is responsible for managing storage pointed to by the val
-pointer which is passed to read() or write(). The SID takes ownership
-of the storage, stores a new value into it or copy a value out of it,
-and then relinquishes it when signaling readDone() or writeDone(). If
-read or write() returns SUCCESS then the caller MUST NOT access or
-modify the storage pointed to by the val pointer until it handles the
-readDone() or writeDone() event.
-
-As is the case with the parameters by value, whether a component
-provides separate ReadRef and WriteRef or ReadWriteRef affects the
-concurrency it allows. If a component can allow the two to execute
-concurrently, then it SHOULD provide separate ReadRef and WriteRef
-interfaces. If the two cannot occur concurrently, then it MUST provide
-ReadWriteRef.
-
-If the ``result`` parameter of the ``ReadRef.readDone`` and
-``ReadWriteRef.readDone`` events is not SUCCESS, then the memory the
-``val`` parameter points to MUST be filled with zeroes. 
-
-Examples of sensors that are suited to this set of interfaces include
-those that generate multiple simultaneous readings for which
-passing by value is inefficient, such as a two-axis digital 
-accelerometer.
-
-3.4 Single-Phase Scalar I/O
+3.2 Single-Phase Scalar I/O
 --------------------------------------------------------------------
 
 Some devices may have their state cached or readily available. In
 these cases, the device can provide a single-phase instead of
 split-phase operation.  Examples include a node's MAC address (which
 the radio stack caches in memory), profiling information (e.g.,
-packets received), or a GPIO pin. These devices MAY use these
-single-phase interfaces::
+packets received), or a GPIO pin. These devices MAY use the
+Get interface::
 
   interface Get<val_t> {
     command val_t get();
   }
 
-  interface Set<val_t> {
-    command void set( val_t val );
-  }
 
-  interface GetSet<val_t> {
-    command val_t get();
-    command void set( val_t val );
-  }
 
-If a device's data object is readily available but still too large to
-be passed on the stack, then the device MAY use these interfaces::
-
-  interface GetRef<val_t> {
-    command error_t get( val_t* val );
-  }
-
-  interface SetRef<val_t> {
-    command error_t set( val_t* val );
-  }
-
-  interface GetSetRef<val_t> {
-    command error_t get( val_t* val );
-    command error_t set( val_t* val );
-  }
-
-3.5 Notification-Based Scalar I/O
+3.3 Notification-Based Scalar I/O
 --------------------------------------------------------------------
 
 Some sensor devices represent triggers, rather than request-driven
@@ -262,12 +182,16 @@ more platform- or hardware-specific async interfaces.
 The enable() and disable() command enable and disable notification
 events for the interface instance used by a single particular
 client. They are distinct from the sensor's power state. For example,
-if an enabled sensor is powered down, then when powered up it MUST
+if an enabled sensor is powered down, then when powered up it will
 remain enabled.
+
+If ``enable`` returns SUCCESS, the interface MUST subsequently
+signal notifications when appropriate. If ``disable`` returns SUCCESS,
+the interface MUST NOT signal any notifications.
 
 The val parameter is used as defined in the Read interface.
 
-3.7 Split-Phase Streaming I/O
+3.4 Split-Phase Streaming I/O
 --------------------------------------------------------------------
 
 Some sensors can provide a continuous stream of readings, and some
@@ -279,7 +203,7 @@ may provide data at a high rate that cannot be processed quickly
 enough when each new reading must be transferred from asynchronous to
 synchronous context through the task queue.
 
-The ReadStreaming interface MAY be provided by a device that can
+The ReadStream interface MAY be provided by a device that can
 provide a continuous stream of readings::
 
   interface ReadStream<val_t> {
@@ -319,24 +243,32 @@ signals readDone(), it MUST signal bufferDone() for all outstanding
 buffers. If a readDone() is pending, calls to postBuffer MUST return
 FAIL.
 
-The following interface can be used for bulk writes::
+In the ReadStream interface, ``postBuffer`` returns SUCCESS if the buffer
+was successfully added to the queue, FAIL otherwise. A return value
+of SUCCESS from ``read`` indicates reading has begun and the interface
+will signal ``bufferDone`` and/or ``readDone`` in the future. A
+return value of FAIL means the read did not begin and the interface
+MUST NOT signal ``readDone`` or ``bufferDone``. Calls to ``read``
+MAY return EBUSY if the component cannot service the request.
 
-  interface WriteStream<val_t> {
+4. Implementation
+====================================================================
 
-    command error_t postBuffer( val_t* buf, uint16_t count );
+An implementation of the Read interface can be found in
+``tos/system/SineSensorC.nc`` and ``tos/system/ArbitratedReadC.nc``.
 
-    command error_t write( uint32_t period );
+An implementation of the Get interface can be found in
+``tos/platforms/telosb/UserButtonC.nc``.
 
-    event void bufferDone( error_t result, 
-                           val_t* buf, uint16_t count );
+An implementation of the ReadStream interface can be found in
+``tos/sensorboards/mts300/MageXStreamC.nc``.
 
-    event void writeDone( error_t result );
-  }
+Implementations of the Notify interface can be found in
+``tos/platforms/telosb/SwitchToggleC.nc`` and
+``tos/platforms/telosb/UserButtonP.nc``.
 
-postBuffer() and bufferDone() are matched in the same way described
-for the ReadStream interface, as are write() and writeDone().
 
-4. Summary
+5. Summary
 ====================================================================
 
 According to the design principles described in the HAA[_haa], authors
@@ -348,7 +280,7 @@ providing such an abstraction, driver authors can support developers
 who only need simple interfaces, and can reduce the effort needed to
 connect a sensor into a more general system.
 
-5. Author's Address
+6. Author's Address
 ====================================================================
 
 | Gilman Tolle

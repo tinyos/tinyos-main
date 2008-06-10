@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>SIDs: Source and Sink Independent Drivers</title>
 <meta name="author" content="Gilman Tolle, Philip Levis, and David Gay" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-09-18 19:50:33 $
-:version: $Revision: 1.10 $
+:date: $Date: 2008-06-10 17:45:28 $
+:version: $Revision: 1.11 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -389,6 +389,42 @@ to use these interfaces to write a Source- or Sink-Independent Driver
 themselves contain information on the sort of sensor or device they
 sit on top of.  A SID SHOULD provide one or more of the interfaces
 described in this section.</p>
+<p>This table summarizes the SID interfaces:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="42%" />
+<col width="19%" />
+<col width="19%" />
+<col width="19%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>Name</td>
+<td>Phase</td>
+<td>Data type</td>
+<td>Section</td>
+</tr>
+<tr><td>Read</td>
+<td>Split</td>
+<td>Scalar</td>
+<td>3.1</td>
+</tr>
+<tr><td>Get</td>
+<td>Single</td>
+<td>Scalar</td>
+<td>3.2</td>
+</tr>
+<tr><td>Notify</td>
+<td>Trigger</td>
+<td>Scalar</td>
+<td>3.3</td>
+</tr>
+<tr><td>ReadStream</td>
+<td>Split</td>
+<td>Stream</td>
+<td>3.4</td>
+</tr>
+</tbody>
+</table>
 <div class="section">
 <h2><a id="split-phase-small-scalar-i-o" name="split-phase-small-scalar-i-o">3.1 Split-Phase Small Scalar I/O</a></h2>
 <p>The first set of interfaces can be used for low-rate scalar I/O:</p>
@@ -397,126 +433,35 @@ interface Read&lt;val_t&gt; {
   command error_t read();
   event void readDone( error_t result, val_t val );
 }
-
-interface Write&lt;val_t&gt; {
-  command error_t write( val_t val );
-  event void writeDone( error_t result );
-}
 </pre>
-<p>A component that provides both read and write functionality might want
-to use a combined version of the interface, to reduce the amount of
-wiring required by the client application:</p>
-<pre class="literal-block">
-interface ReadWrite&lt;val_t&gt; {
-  command error_t read();
-  event void readDone( error_t result, val_t val );
-
-  command error_t write( val_t val );
-  event void writeDone( error_t result );
-}
-</pre>
-<p>A component that can support concurrent reads and writes SHOULD
-provide separate Read/Write interfaces. A component whose internal
-logic will cause a read to fail while a write is pending or a write to
-fail while a read is pending MUST provide a ReadWrite interface.</p>
 <p>If the <tt class="docutils literal"><span class="pre">result</span></tt> parameter of the <tt class="docutils literal"><span class="pre">Read.readDone</span></tt> and
 <tt class="docutils literal"><span class="pre">ReadWrite.readDone</span></tt> events is not SUCCESS, then the memory of the
 <tt class="docutils literal"><span class="pre">val</span></tt> parameter MUST be filled with zeroes.</p>
-<p>If the call to <tt class="docutils literal"><span class="pre">Read.read</span></tt> has returned SUCCESS, but the
-<tt class="docutils literal"><span class="pre">Read.readDone</span></tt> event has not yet been signalled, then a subsequent
-call to <tt class="docutils literal"><span class="pre">Read.read</span></tt> MUST not return SUCCESS. This simple locking
-technique, as opposed to a more complex system in which multiple
-read/readDone pairs may be outstanding, is intended to reduce the
-complexity of code that is a client of a SID interface.</p>
+<p>If the call to <tt class="docutils literal"><span class="pre">read</span></tt> has returned SUCCESS, but the <tt class="docutils literal"><span class="pre">readDone</span></tt>
+event has not yet been signalled, then a subsequent call to <tt class="docutils literal"><span class="pre">read</span></tt>
+MUST return EBUSY or FAIL.  This simple locking technique, as opposed
+to a more complex system in which multiple read/readDone pairs may be
+outstanding, is intended to reduce the complexity of SID client code.</p>
 <p>Examples of sensors that would be suited to this class of interface
 include many basic sensors, such as photo, temp, voltage, and ADC
 readings.</p>
 </div>
 <div class="section">
-<h2><a id="split-phase-large-scalar-i-o" name="split-phase-large-scalar-i-o">3.2 Split-Phase Large Scalar I/O</a></h2>
-<p>If the SID's data object is large, it can provide read/write
-interfaces that pass parameters by pointer rather than value:</p>
-<pre class="literal-block">
-interface ReadRef&lt;val_t&gt; {
-  command error_t read( val_t* val );
-  event void readDone( error_t result, val_t* val );
-}
-
-interface WriteRef&lt;val_t&gt; {
-  command error_t write( val_t* val );
-  event void writeDone( error_t result, val_t* val );
-}
-
-interface ReadWriteRef&lt;val_t&gt; {
-  command error_t read( val_t* val );
-  event void readDone( error_t result, val_t* val );
-
-  command error_t write( val_t* val );
-  event void writeDone( error_t result, val_t* val );
-}
-</pre>
-<p>The caller is responsible for managing storage pointed to by the val
-pointer which is passed to read() or write(). The SID takes ownership
-of the storage, stores a new value into it or copy a value out of it,
-and then relinquishes it when signaling readDone() or writeDone(). If
-read or write() returns SUCCESS then the caller MUST NOT access or
-modify the storage pointed to by the val pointer until it handles the
-readDone() or writeDone() event.</p>
-<p>As is the case with the parameters by value, whether a component
-provides separate ReadRef and WriteRef or ReadWriteRef affects the
-concurrency it allows. If a component can allow the two to execute
-concurrently, then it SHOULD provide separate ReadRef and WriteRef
-interfaces. If the two cannot occur concurrently, then it MUST provide
-ReadWriteRef.</p>
-<p>If the <tt class="docutils literal"><span class="pre">result</span></tt> parameter of the <tt class="docutils literal"><span class="pre">ReadRef.readDone</span></tt> and
-<tt class="docutils literal"><span class="pre">ReadWriteRef.readDone</span></tt> events is not SUCCESS, then the memory the
-<tt class="docutils literal"><span class="pre">val</span></tt> parameter points to MUST be filled with zeroes.</p>
-<p>Examples of sensors that are suited to this set of interfaces include
-those that generate multiple simultaneous readings for which
-passing by value is inefficient, such as a two-axis digital
-accelerometer.</p>
-</div>
-<div class="section">
-<h2><a id="single-phase-scalar-i-o" name="single-phase-scalar-i-o">3.4 Single-Phase Scalar I/O</a></h2>
+<h2><a id="single-phase-scalar-i-o" name="single-phase-scalar-i-o">3.2 Single-Phase Scalar I/O</a></h2>
 <p>Some devices may have their state cached or readily available. In
 these cases, the device can provide a single-phase instead of
 split-phase operation.  Examples include a node's MAC address (which
 the radio stack caches in memory), profiling information (e.g.,
-packets received), or a GPIO pin. These devices MAY use these
-single-phase interfaces:</p>
+packets received), or a GPIO pin. These devices MAY use the
+Get interface:</p>
 <pre class="literal-block">
 interface Get&lt;val_t&gt; {
   command val_t get();
 }
-
-interface Set&lt;val_t&gt; {
-  command void set( val_t val );
-}
-
-interface GetSet&lt;val_t&gt; {
-  command val_t get();
-  command void set( val_t val );
-}
-</pre>
-<p>If a device's data object is readily available but still too large to
-be passed on the stack, then the device MAY use these interfaces:</p>
-<pre class="literal-block">
-interface GetRef&lt;val_t&gt; {
-  command error_t get( val_t* val );
-}
-
-interface SetRef&lt;val_t&gt; {
-  command error_t set( val_t* val );
-}
-
-interface GetSetRef&lt;val_t&gt; {
-  command error_t get( val_t* val );
-  command error_t set( val_t* val );
-}
 </pre>
 </div>
 <div class="section">
-<h2><a id="notification-based-scalar-i-o" name="notification-based-scalar-i-o">3.5 Notification-Based Scalar I/O</a></h2>
+<h2><a id="notification-based-scalar-i-o" name="notification-based-scalar-i-o">3.3 Notification-Based Scalar I/O</a></h2>
 <p>Some sensor devices represent triggers, rather than request-driven
 data acquisition. Examples of such sensors include switches,
 passive-IR (PIR) motion sensors, tone detectors, and smoke
@@ -535,12 +480,15 @@ more platform- or hardware-specific async interfaces.</p>
 <p>The enable() and disable() command enable and disable notification
 events for the interface instance used by a single particular
 client. They are distinct from the sensor's power state. For example,
-if an enabled sensor is powered down, then when powered up it MUST
+if an enabled sensor is powered down, then when powered up it will
 remain enabled.</p>
+<p>If <tt class="docutils literal"><span class="pre">enable</span></tt> returns SUCCESS, the interface MUST subsequently
+signal notifications when appropriate. If <tt class="docutils literal"><span class="pre">disable</span></tt> returns SUCCESS,
+the interface MUST NOT signal any notifications.</p>
 <p>The val parameter is used as defined in the Read interface.</p>
 </div>
 <div class="section">
-<h2><a id="split-phase-streaming-i-o" name="split-phase-streaming-i-o">3.7 Split-Phase Streaming I/O</a></h2>
+<h2><a id="split-phase-streaming-i-o" name="split-phase-streaming-i-o">3.4 Split-Phase Streaming I/O</a></h2>
 <p>Some sensors can provide a continuous stream of readings, and some
 actuators can accept a continuous stream of new data. Depending on the
 rate needed and jitter bounds that higher level components can
@@ -549,7 +497,7 @@ blocks instead of singly.  For example, a microphone or accelerometer
 may provide data at a high rate that cannot be processed quickly
 enough when each new reading must be transferred from asynchronous to
 synchronous context through the task queue.</p>
-<p>The ReadStreaming interface MAY be provided by a device that can
+<p>The ReadStream interface MAY be provided by a device that can
 provide a continuous stream of readings:</p>
 <pre class="literal-block">
 interface ReadStream&lt;val_t&gt; {
@@ -586,26 +534,29 @@ signal readDone() with an appropriate failure code. Before a device
 signals readDone(), it MUST signal bufferDone() for all outstanding
 buffers. If a readDone() is pending, calls to postBuffer MUST return
 FAIL.</p>
-<p>The following interface can be used for bulk writes:</p>
-<pre class="literal-block">
-interface WriteStream&lt;val_t&gt; {
-
-  command error_t postBuffer( val_t* buf, uint16_t count );
-
-  command error_t write( uint32_t period );
-
-  event void bufferDone( error_t result,
-                         val_t* buf, uint16_t count );
-
-  event void writeDone( error_t result );
-}
-</pre>
-<p>postBuffer() and bufferDone() are matched in the same way described
-for the ReadStream interface, as are write() and writeDone().</p>
+<p>In the ReadStream interface, <tt class="docutils literal"><span class="pre">postBuffer</span></tt> returns SUCCESS if the buffer
+was successfully added to the queue, FAIL otherwise. A return value
+of SUCCESS from <tt class="docutils literal"><span class="pre">read</span></tt> indicates reading has begun and the interface
+will signal <tt class="docutils literal"><span class="pre">bufferDone</span></tt> and/or <tt class="docutils literal"><span class="pre">readDone</span></tt> in the future. A
+return value of FAIL means the read did not begin and the interface
+MUST NOT signal <tt class="docutils literal"><span class="pre">readDone</span></tt> or <tt class="docutils literal"><span class="pre">bufferDone</span></tt>. Calls to <tt class="docutils literal"><span class="pre">read</span></tt>
+MAY return EBUSY if the component cannot service the request.</p>
 </div>
 </div>
 <div class="section">
-<h1><a id="summary" name="summary">4. Summary</a></h1>
+<h1><a id="implementation" name="implementation">4. Implementation</a></h1>
+<p>An implementation of the Read interface can be found in
+<tt class="docutils literal"><span class="pre">tos/system/SineSensorC.nc</span></tt> and <tt class="docutils literal"><span class="pre">tos/system/ArbitratedReadC.nc</span></tt>.</p>
+<p>An implementation of the Get interface can be found in
+<tt class="docutils literal"><span class="pre">tos/platforms/telosb/UserButtonC.nc</span></tt>.</p>
+<p>An implementation of the ReadStream interface can be found in
+<tt class="docutils literal"><span class="pre">tos/sensorboards/mts300/MageXStreamC.nc</span></tt>.</p>
+<p>Implementations of the Notify interface can be found in
+<tt class="docutils literal"><span class="pre">tos/platforms/telosb/SwitchToggleC.nc</span></tt> and
+<tt class="docutils literal"><span class="pre">tos/platforms/telosb/UserButtonP.nc</span></tt>.</p>
+</div>
+<div class="section">
+<h1><a id="summary" name="summary">5. Summary</a></h1>
 <p>According to the design principles described in the HAA[_haa], authors
 should write device drivers that provide rich, device-specific
 interfaces that expose the full capabilities of each device. In
@@ -616,7 +567,7 @@ who only need simple interfaces, and can reduce the effort needed to
 connect a sensor into a more general system.</p>
 </div>
 <div class="section">
-<h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
+<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Gilman Tolle</div>
 <div class="line">2168 Shattuck Ave.</div>
