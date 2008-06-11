@@ -1,4 +1,4 @@
-/// $Id: HplAtm128AdcP.nc,v 1.6 2008-05-02 19:48:54 idgay Exp $
+/// $Id: HplAtm128AdcP.nc,v 1.7 2008-06-11 00:42:13 razvanm Exp $
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *

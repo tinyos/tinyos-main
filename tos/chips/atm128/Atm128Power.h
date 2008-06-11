@@ -1,4 +1,4 @@
-// $Id: Atm128Power.h,v 1.5 2006-12-12 18:23:02 vlahan Exp $
+// $Id: Atm128Power.h,v 1.6 2008-06-11 00:42:13 razvanm Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.

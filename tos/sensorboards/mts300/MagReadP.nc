@@ -1,4 +1,4 @@
-// $Id: MagReadP.nc,v 1.1 2007-03-14 05:38:37 pipeng Exp $
+// $Id: MagReadP.nc,v 1.2 2008-06-11 00:42:14 razvanm Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.

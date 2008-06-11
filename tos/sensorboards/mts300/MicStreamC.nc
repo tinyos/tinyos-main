@@ -25,7 +25,7 @@
  /*
  *  @author Hu Siquan <husq@xbow.com>
  *
- *  $Id: MicStreamC.nc,v 1.1 2007-03-14 05:41:52 pipeng Exp $
+ *  $Id: MicStreamC.nc,v 1.2 2008-06-11 00:42:14 razvanm Exp $
  */
 
 #include "mts300.h"

@@ -1,4 +1,4 @@
-/* $Id: PXA27X_UARTREG.h,v 1.4 2006-12-12 18:23:12 vlahan Exp $ */
+/* $Id: PXA27X_UARTREG.h,v 1.5 2008-06-11 00:42:13 razvanm Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 

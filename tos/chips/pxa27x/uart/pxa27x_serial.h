@@ -1,4 +1,4 @@
-/* $Id: pxa27x_serial.h,v 1.4 2006-12-12 18:23:12 vlahan Exp $ */
+/* $Id: pxa27x_serial.h,v 1.5 2008-06-11 00:42:13 razvanm Exp $ */
 /*
  * Copyright (c) 2005 Arched Rock Corporation 
  * All rights reserved. 

@@ -231,7 +231,7 @@ LOOP1:
 	BNE LOOP1
 	
 	@Clean the Mini-data Cache
-	@ Canít use line-allocate command, so cycle 2KB of unused data through.
+	@ Can∆t use line-allocate command, so cycle 2KB of unused data through.
 	@ R2 contains the virtual address of a region of cacheable memory reserved for
 	@ cleaning the Mini-data Cache
 	@ R0 is the loop count; Iterate 64 times which is the number of lines in the

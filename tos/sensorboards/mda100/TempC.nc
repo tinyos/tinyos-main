@@ -1,4 +1,4 @@
-/* $Id: TempC.nc,v 1.1 2007-08-21 04:44:09 klueska Exp $
+/* $Id: TempC.nc,v 1.2 2008-06-11 00:42:15 razvanm Exp $
  * Copyright (c) 2006 Intel Corporation
  * All rights reserved.
  *

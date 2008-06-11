@@ -25,7 +25,7 @@
  *  @author Martin Turon <mturon@xbow.com>
  *  @author Hu Siquan <husq@xbow.com>
  *
- *  $Id: SensorMts300C.nc,v 1.7 2007-03-14 04:14:13 pipeng Exp $
+ *  $Id: SensorMts300C.nc,v 1.8 2008-06-11 00:42:14 razvanm Exp $
  */
 
 //configuration SensorMts300C

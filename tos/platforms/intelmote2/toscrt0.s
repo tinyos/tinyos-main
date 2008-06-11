@@ -38,7 +38,7 @@
 /*
  *
  * Authors: Phil Buonadonna,David Gay
- * Date last modified:  $Revision: 1.4 $
+ * Date last modified:  $Revision: 1.5 $
  *
  */
 			
@@ -174,7 +174,7 @@ reset_handler_start:
 @ reset handler should first check whether this is a debug exception
 @ or a real RESET event.
 @ NOTE: r13 is only safe register to use.
-@ - For RESET, donít really care about which register is used
+@ - For RESET, don∆t really care about which register is used
 @ - For debug exception, r13=DBG_r13, prevents application registers
 @ - from being corrupted, before debug handler can save.
 	mrs r13, cpsr
@@ -199,15 +199,15 @@ dbg_handler_stub:
 	mcr p15, 0, r13, c1, c0, 0
 @ do a sync operation to ensure all outstanding instr fetches have
 @ completed before continuing. The invalidate cache line function
-@ serves as a synchronization operation, thatís why it is used
+@ serves as a synchronization operation, that∆s why it is used
 @ here. The target line is some scratch address in memory.
 	adr r13, line2
 	mcr p15, 0, r13, c7, c5, 1
 @ invalidate BTB. make sure downloaded vector table does not hit one of
-@ the applicationís branches cached in the BTB, branch to the wrong place
+@ the application∆s branches cached in the BTB, branch to the wrong place
 	mcr p15, 0, r13, c7, c5, 6
-@ Now, send ëready for downloadí message to debugger, indicating debugger
-@ can begin the download. ëready for downloadí = 0x00B00000.
+@ Now, send Êready for download∆ message to debugger, indicating debugger
+@ can begin the download. Êready for download∆ = 0x00B00000.
 TXloop:
 	mrc p14, 0, r15, c14, c0, 0	@ first make sure TX reg. is available
 	bvs TXloop
@@ -225,7 +225,7 @@ TXloop:
 @ First, check DBG_LR[0] to see if the IC was enabled or disabled
 	tst r14, #0x1
 @ Then, if it was previously disabled, then disable it now, otherwise,
-@ thereís no need to change the state, because its already enabled.
+@ there∆s no need to change the state, because its already enabled.
 	biceq r13, r13, #0x1000
 	mcr p15, 0, r13, c1, c0, 0
 @ Restore the link register value
