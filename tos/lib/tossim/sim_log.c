@@ -1,6 +1,6 @@
-// $Id: sim_log.c,v 1.5 2007-04-01 00:29:34 scipio Exp $
+// $Id: sim_log.c,v 1.6 2008-06-11 00:46:26 razvanm Exp $
 
-/*									tab:4
+/*
 * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and

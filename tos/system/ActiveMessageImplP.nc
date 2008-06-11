@@ -1,5 +1,5 @@
-// $Id: ActiveMessageImplP.nc,v 1.4 2006-12-12 18:23:47 vlahan Exp $
-/*									tab:4
+// $Id: ActiveMessageImplP.nc,v 1.5 2008-06-11 00:46:27 razvanm Exp $
+/*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
  *

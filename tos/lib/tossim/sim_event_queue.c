@@ -1,6 +1,6 @@
-// $Id: sim_event_queue.c,v 1.4 2006-12-12 18:23:35 vlahan Exp $
+// $Id: sim_event_queue.c,v 1.5 2008-06-11 00:46:26 razvanm Exp $
 
-/*									tab:4
+/*
 * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and

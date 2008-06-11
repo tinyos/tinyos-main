@@ -1,4 +1,4 @@
-/*                                                                      tab:2
+/*                                                                      
  *
  * "Copyright (c) 2000-2007 The Regents of the University of
  * California.  All rights reserved.

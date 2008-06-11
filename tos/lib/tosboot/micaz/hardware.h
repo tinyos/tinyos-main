@@ -1,6 +1,6 @@
-// $Id: hardware.h,v 1.2 2008-05-19 21:25:09 razvanm Exp $
+// $Id: hardware.h,v 1.3 2008-06-11 00:46:25 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -28,7 +28,7 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  */
-/*									tab:4
+/*
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,
@@ -67,7 +67,7 @@
  */
 /*
  *
- * $Id: hardware.h,v 1.2 2008-05-19 21:25:09 razvanm Exp $
+ * $Id: hardware.h,v 1.3 2008-06-11 00:46:25 razvanm Exp $
  *
  */
 

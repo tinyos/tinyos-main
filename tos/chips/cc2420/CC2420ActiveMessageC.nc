@@ -1,4 +1,4 @@
-/*									tab:4
+/*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -31,7 +31,7 @@
  *
  * @author Philip Levis
  * @author David Moss
- * @version $Revision: 1.11 $ $Date: 2008-05-14 21:33:07 $
+ * @version $Revision: 1.12 $ $Date: 2008-06-11 00:46:23 $
  */
 
 #include "CC2420.h"

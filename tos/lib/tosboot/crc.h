@@ -1,6 +1,6 @@
-// $Id: crc.h,v 1.1 2007-07-11 00:42:56 razvanm Exp $
+// $Id: crc.h,v 1.2 2008-06-11 00:46:25 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
  *

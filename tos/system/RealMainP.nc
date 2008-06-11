@@ -1,6 +1,6 @@
-// $Id: RealMainP.nc,v 1.6 2007-10-08 20:10:05 idgay Exp $
+// $Id: RealMainP.nc,v 1.7 2008-06-11 00:46:27 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: RealMainP.nc,v 1.6 2007-10-08 20:10:05 idgay Exp $
+ * Date last modified:  $Id: RealMainP.nc,v 1.7 2008-06-11 00:46:27 razvanm Exp $
  *
  */
 

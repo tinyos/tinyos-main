@@ -1,4 +1,4 @@
-/*                                                                     tab:4
+/*                                                                     
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,
@@ -33,7 +33,7 @@
  *  @author Jason Hill, Philip Levis, Nelson Lee, David Gay
  *  @author Martin Turon <mturon@xbow.com>
  *
- *  $Id: atm128hardware.h,v 1.6 2007-10-08 20:10:09 idgay Exp $
+ *  $Id: atm128hardware.h,v 1.7 2008-06-11 00:46:23 razvanm Exp $
  */
 
 #ifndef _H_atmega128hardware_H

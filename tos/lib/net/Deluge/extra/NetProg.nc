@@ -1,6 +1,6 @@
-// $Id: NetProg.nc,v 1.2 2008-01-14 04:22:02 razvanm Exp $
+// $Id: NetProg.nc,v 1.3 2008-06-11 00:46:24 razvanm Exp $
 
-/*									tab:4
+/*
  *
  *
  * "Copyright (c) 2000-2004 The Regents of the University  of California.  

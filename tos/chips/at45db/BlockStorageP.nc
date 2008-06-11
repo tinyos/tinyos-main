@@ -1,6 +1,6 @@
-// $Id: BlockStorageP.nc,v 1.5 2008-06-01 04:24:33 regehr Exp $
+// $Id: BlockStorageP.nc,v 1.6 2008-06-11 00:46:23 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2004 The Regents of the University  of California.  
  * All rights reserved.
  *

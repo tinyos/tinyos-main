@@ -1,6 +1,6 @@
-// $Id: ActiveMessageC.nc,v 1.4 2006-12-12 18:23:44 vlahan Exp $
+// $Id: ActiveMessageC.nc,v 1.5 2008-06-11 00:46:27 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: ActiveMessageC.nc,v 1.4 2006-12-12 18:23:44 vlahan Exp $
+ * Date last modified:  $Id: ActiveMessageC.nc,v 1.5 2008-06-11 00:46:27 razvanm Exp $
  *
  */
 
@@ -41,7 +41,7 @@
  * around the CC2420 Active Message layer.
  *
  * @author Philip Levis
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:44 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-11 00:46:27 $
  */
 
 configuration ActiveMessageC {

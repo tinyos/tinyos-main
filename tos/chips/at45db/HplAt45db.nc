@@ -1,4 +1,4 @@
-/*									tab:4
+/*
  * Copyright (c) 2002-2005 Intel Corporation
  * All rights reserved.
  *

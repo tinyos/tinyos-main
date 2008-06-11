@@ -1,4 +1,4 @@
-/*									tab:4
+/*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.15 $ $Date: 2008-06-03 04:43:02 $
+ * @version $Revision: 1.16 $ $Date: 2008-06-11 00:46:23 $
  */
  
 #include "CC2420.h"

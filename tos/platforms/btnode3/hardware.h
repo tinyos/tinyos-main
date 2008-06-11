@@ -1,4 +1,4 @@
-/**                                                                     tab:4
+/**                                                                     
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,
@@ -37,7 +37,7 @@
  *  @author Martin Turon <mturon@xbow.com>
  *  @author Jan Beutel <j.beutel@ieee.org>
  * 
- *  $Id: hardware.h,v 1.6 2007-07-30 17:48:49 beutel Exp $
+ *  $Id: hardware.h,v 1.7 2008-06-11 00:46:26 razvanm Exp $
  */
 
 #ifndef HARDWARE_H

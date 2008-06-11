@@ -1,6 +1,6 @@
-// $Id: NetProg_platform.h,v 1.2 2008-01-14 04:22:02 razvanm Exp $
+// $Id: NetProg_platform.h,v 1.3 2008-06-11 00:46:25 razvanm Exp $
 
-/*									tab:2
+/*
  *
  *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  

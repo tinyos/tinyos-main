@@ -1,5 +1,5 @@
-// $Id: HplCC1000C.nc,v 1.5 2006-12-12 18:23:43 vlahan Exp $
-/*									tab:4
+// $Id: HplCC1000C.nc,v 1.6 2008-06-11 00:46:26 razvanm Exp $
+/*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
  *

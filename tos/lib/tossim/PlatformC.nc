@@ -1,4 +1,4 @@
-/*									tab:4
+/*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -28,7 +28,7 @@
  * @date   November 22 2005
  */
 
-// $Id: PlatformC.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: PlatformC.nc,v 1.5 2008-06-11 00:46:26 razvanm Exp $
 
 module PlatformC {
   provides interface Init;

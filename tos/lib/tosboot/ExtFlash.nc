@@ -1,6 +1,6 @@
-// $Id: ExtFlash.nc,v 1.1 2007-07-11 00:42:55 razvanm Exp $
+// $Id: ExtFlash.nc,v 1.2 2008-06-11 00:46:25 razvanm Exp $
 
-/*									tab:2
+/*
  *
  *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  

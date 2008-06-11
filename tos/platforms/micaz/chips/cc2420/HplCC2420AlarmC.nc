@@ -1,4 +1,4 @@
-/*									tab:4
+/*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -58,7 +58,7 @@
  * uses the Compare1A register.
  *
  * @author Philip Levis
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:44 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-11 00:46:27 $
  */
 
 #include "Atm128Timer.h"

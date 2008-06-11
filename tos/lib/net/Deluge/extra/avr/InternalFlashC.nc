@@ -1,6 +1,6 @@
-// $Id: InternalFlashC.nc,v 1.1 2007-06-02 00:09:15 razvanm Exp $
+// $Id: InternalFlashC.nc,v 1.2 2008-06-11 00:46:24 razvanm Exp $
 
-/*									tab:2
+/*
  *
  *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  

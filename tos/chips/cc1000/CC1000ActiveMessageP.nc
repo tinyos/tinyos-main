@@ -1,6 +1,6 @@
-// $Id: CC1000ActiveMessageP.nc,v 1.10 2008-06-03 04:08:34 regehr Exp $
+// $Id: CC1000ActiveMessageP.nc,v 1.11 2008-06-11 00:46:23 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
  *

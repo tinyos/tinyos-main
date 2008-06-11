@@ -1,4 +1,4 @@
-/*									tab:4
+/*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -54,11 +54,11 @@
  * 14-15 of the CC2420 datasheet (rev 1.2).
  *
  * <pre>
- * $Id: HplCC2420PinsC.nc,v 1.4 2006-12-12 18:23:44 vlahan Exp $
+ * $Id: HplCC2420PinsC.nc,v 1.5 2008-06-11 00:46:27 razvanm Exp $
  * </pre>
  *
  * @author Philip Levis
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:44 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-11 00:46:27 $
  */
 
 configuration HplCC2420PinsC {

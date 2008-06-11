@@ -1,6 +1,6 @@
-// $Id: pxa27xhardware.h,v 1.6 2007-10-08 20:10:10 idgay Exp $
+// $Id: pxa27xhardware.h,v 1.7 2008-06-11 00:46:23 razvanm Exp $
 
-/*									tab:4
+/*
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,
@@ -37,7 +37,7 @@
  * 
  * 
  */
-/*									tab:4
+/*
  *
  *
  * "Copyright (c) 2000-2002 The Regents of the University  of California.  

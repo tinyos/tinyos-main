@@ -1,5 +1,5 @@
-// $Id: AMSend.nc,v 1.6 2008-06-04 03:00:25 regehr Exp $
-/*									tab:4
+// $Id: AMSend.nc,v 1.7 2008-06-11 00:46:24 razvanm Exp $
+/*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
  *

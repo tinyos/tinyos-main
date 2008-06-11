@@ -1,5 +1,5 @@
-// $Id: ActiveMessageAddressC.nc,v 1.7 2007-06-19 17:30:08 rincon Exp $
-/*									tab:4
+// $Id: ActiveMessageAddressC.nc,v 1.8 2008-06-11 00:46:27 razvanm Exp $
+/*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -27,7 +27,7 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  *
- * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.7 2007-06-19 17:30:08 rincon Exp $
+ * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.8 2008-06-11 00:46:27 razvanm Exp $
  *
  */
 

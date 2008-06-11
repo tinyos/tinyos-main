@@ -1,7 +1,7 @@
-// $Id: CC1000Const.h,v 1.4 2006-12-12 18:23:05 vlahan Exp $
+// $Id: CC1000Const.h,v 1.5 2008-06-11 00:46:23 razvanm Exp $
 
 /* -*- Mode: C; c-basic-indent: 2; indent-tabs-mode: nil -*- */ 
-/*									tab:4
+/*
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,

@@ -1,6 +1,6 @@
-// $Id: ActiveMessageC.nc,v 1.1 2008-05-21 22:07:24 konradlorincz Exp $
+// $Id: ActiveMessageC.nc,v 1.2 2008-06-11 00:46:27 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: ActiveMessageC.nc,v 1.1 2008-05-21 22:07:24 konradlorincz Exp $
+ * Date last modified:  $Id: ActiveMessageC.nc,v 1.2 2008-06-11 00:46:27 razvanm Exp $
  *
  */
 /**

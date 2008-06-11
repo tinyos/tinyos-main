@@ -1,6 +1,6 @@
-// $Id: NoLedsC.nc,v 1.5 2008-05-02 19:54:15 idgay Exp $
+// $Id: NoLedsC.nc,v 1.6 2008-06-11 00:46:27 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *

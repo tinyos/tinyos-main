@@ -1,4 +1,4 @@
-/*									tab:4
+/*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -28,7 +28,7 @@
  * such as power-up, transmission, or clear a FIFO.
  *
  * @author Philip Levis
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:14 $
+ * @version $Revision: 1.2 $ $Date: 2008-06-11 00:46:23 $
  */
 
 #include "CC2420.h"

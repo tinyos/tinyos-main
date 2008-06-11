@@ -1,6 +1,6 @@
-// $Id: hardware.h,v 1.1 2007-07-11 00:42:57 razvanm Exp $
+// $Id: hardware.h,v 1.2 2008-06-11 00:46:26 razvanm Exp $
 
-/*									tab:2
+/*
  *
  *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  

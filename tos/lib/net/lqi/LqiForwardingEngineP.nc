@@ -1,4 +1,4 @@
-// $Id: LqiForwardingEngineP.nc,v 1.14 2008-06-04 03:57:41 regehr Exp $
+// $Id: LqiForwardingEngineP.nc,v 1.15 2008-06-11 00:46:25 razvanm Exp $
 
 /* Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -30,7 +30,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
  *

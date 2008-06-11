@@ -1,5 +1,5 @@
 // $Id: HALAT45DBC.nc,v 1.1 2005/01/22 00:26:31 idgay Exp 
-/*									tab:4
+/*
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *

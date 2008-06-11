@@ -1,6 +1,6 @@
-// $Id: CC1000SendReceiveP.nc,v 1.9 2008-06-03 20:32:09 idgay Exp $
+// $Id: CC1000SendReceiveP.nc,v 1.10 2008-06-11 00:46:23 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *

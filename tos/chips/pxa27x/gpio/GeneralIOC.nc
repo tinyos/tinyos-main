@@ -1,6 +1,6 @@
-// $Id: GeneralIOC.nc,v 1.5 2008-06-11 00:42:13 razvanm Exp $
+// $Id: GeneralIOC.nc,v 1.6 2008-06-11 00:46:24 razvanm Exp $
 
-/*									tab:4
+/*
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,

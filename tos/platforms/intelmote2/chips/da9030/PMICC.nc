@@ -1,4 +1,4 @@
-/* $Id: PMICC.nc,v 1.5 2008-06-11 00:42:14 razvanm Exp $ */
+/* $Id: PMICC.nc,v 1.6 2008-06-11 00:46:26 razvanm Exp $ */
 /*
  * Copyright (c) 2005 Arched Rock Corporation 
  * All rights reserved. 
@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  */
-/*									tab:4
+/*
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,

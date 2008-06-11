@@ -1,6 +1,6 @@
-// $Id: heap.c,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+// $Id: heap.c,v 1.5 2008-06-11 00:46:26 razvanm Exp $
 
-/*									tab:4
+/*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
  *
