@@ -23,20 +23,22 @@
 /**
  * This is the PrintfC component.  It provides the printf service for printing
  * data over the serial interface using the standard c-style printf command.  
- * It must be started via the SplitControl interface it provides.  Data
- * printed using printf are buffered and only sent over the serial line after
- * making a call to PrintfFlush.flush().  This buffer has a maximum size of 
- * 250 bytes at present.  After calling start on this component, printf
- * statements can be made anywhere throughout your code, so long as you include
- * the "printf.h" header file in every file you wish to use it.  Standard
- * practice is to start the printf service in the main application, and set up 
- * a timer to periodically flush the printf buffer (500ms should do).  In future
- * versions, user defined buffer sizes as well as well as automatic flushing at 
- * user defined intervals will be supported.  
+ * Data printed using printf are buffered and only sent over the serial line after
+ * the buffer is half full or an explicit call to printfflush() is made.  This 
+ * buffer has a maximum size of 250 bytes at present.  This component is wired
+ * to a shadowed MainC component so that printf statements can be made anywhere 
+ * throughout your code, so long as you include the "printf.h" header file in 
+ * every file you wish to use it.  Take a look at the printf tutorial (lesson 15)
+ * for more details.
  *
- * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.8 $
- * @date $Date: 2008-06-12 12:33:47 $
+ * The printf service is currently only available for msp430 based motes 
+ * (i.e. telos, eyes) and atmega128x based motes (i.e. mica2, micaz, iris).  On the
+ * atmega platforms, avr-libc version 1.4 or above must be used.
+ */
+ 
+/**
+ * @author Kevin Klues <klueska@cs.stanford.edu>
+ * @date September 18, 2007
  */
 #include "printf.h"
 
