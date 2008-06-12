@@ -1,0 +1,332 @@
+#!@pathpython@
+
+# Copyright (c) 2008 Johns Hopkins University.
+# All rights reserved.
+#
+# Permission to use, copy, modify, and distribute this software and its
+# documentation for any purpose, without fee, and without written
+# agreement is hereby granted, provided that the above copyright
+# notice, the (updated) modification history and the author appear in
+# all copies of this source code.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
+# OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+
+# @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
+# @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+# @author Kevin Klues <klueska@cs.stanford.edu>
+
+import sys, subprocess
+import struct
+sys.path.append("@tosthreadslibdir@")
+
+def error_exit( s ):
+    sys.stderr.write("\n" + s + "\n\n")
+    exit( 2 )
+    
+def exit_usage():
+  error_exit( "Usage: tosthreads-dynamic-app [-a --array --api=<standard, tenet> ] <obj_file> <bin_file> <tos_file>" )
+
+#Handle arguments........
+from getopt import *
+try:
+  opts, args = getopt(sys.argv[1:], "a" ,['array', 'api='])
+except GetoptError, err:
+  print str(err) # will print something like "option -a not recognized"
+  exit_usage()
+
+array_opt = False
+api_opt = False
+valid_apis = ["standard", "tenet"];
+for o, a in opts:
+  if o == "--api" and (a not in valid_apis):
+    exit_usage()
+  elif o == "--api" and a == "tenet":
+    api_opt = True
+    import tosthreads_tenet_api as tosthread_slcs_extfun
+  elif o == "--api" and a == "standard":
+    api_opt = True
+    import tosthreads_standard_api as tosthread_slcs_extfun
+  elif o == "-a" or o == "--array":
+    array_opt = True
+  else:
+    exit_usage()
+
+if api_opt == False:
+  import tosthreads_standard_api as tosthread_slcs_extfun
+
+if len( args ) != 3:
+  exit_usage()
+
+def slice(v, s):
+    r = []
+    for i in range(0, len(v), s):
+        r.append(v[i:i+s])
+    return r
+
+def cmp(x, y):
+    if int(x[0]) > int(y[0]):
+      return 1
+    elif int(x[0]) == int(y[0]):
+      if x[1] > y[1]:
+        return 1
+      elif x[1] == y[1]:
+        return 0
+      else:
+        return -1
+    else:
+      return -1
+
+# ===== STEP 0: Prepares function-ID maps ===== #
+map_extfun = tosthread_slcs_extfun.map_extfun
+
+map_hook = {"tosthread_main":0}
+map_intfun = dict()
+map_intfun_counter = 0
+
+# ===== STEP 1: Reads in the binary of the loadable program ===== #
+s = open(args[1]).read()
+code = ["0x%02x" % (struct.unpack("B", i)) for i in s]
+
+# ===== STEP 2: Allocation Table ===== #
+var = {}   # var[variable_name] = (variable_size, allocated_addr)
+alloc = {}   # alloc[variable_name] = ((offset, addr), (offset, addr), ...)
+compact_alloc = []   # Final allocation table: [("real" addr, next patching addr), ...]
+compact_alloc_binary = []
+dataSection = {}
+dataSection_values = []
+dataSection_values_binary = []
+
+# Gets variables' name and size
+p = subprocess.Popen(["msp430-readelf", "-W", "-s", args[0]], stdout=subprocess.PIPE)
+line = p.stdout.readline()
+fm_addr = 0
+while line:
+    v = line.split()
+    if len(v) == 8 and v[4] == "GLOBAL" and (v[6] == "COM" or v[6] == "3"):
+        name = v[-1]
+        if name != "TOS_NODE_ID":
+            size = int(v[2])
+            var[name] = [size, fm_addr]
+            alloc[name] = []   # Filled later
+            
+            if v[6] == "3":
+                dataSection[name] = [int(v[1], 16)]
+                
+            fm_addr += size
+    line = p.stdout.readline()
+
+# Gets the variables' location in the loadable program
+p = subprocess.Popen(["msp430-readelf", "-W", "-r", args[0]], stdout=subprocess.PIPE)
+line = p.stdout.readline()
+while line:
+    v = line.split()
+    if len(v) == 7:
+        name = v[4]
+        if name in var and name != "TOS_NODE_ID":
+            addr = int(v[0], 16)
+            offset = int(v[-1], 16)
+            alloc[name].append([offset, addr])
+    line = p.stdout.readline()
+
+# Patches the binary for address-chaining, and compacts the allocation table
+for name in alloc.keys():
+    alloc[name].sort(cmp)   # Sort by offset, then addr
+    for i in range(len(alloc[name])):
+        # Sees if address-chaining if necessary
+        if (i + 1) < len(alloc[name]) and alloc[name][i][0] == alloc[name][i + 1][0]:
+            code[alloc[name][i][1]] = "0x%02x" % ((alloc[name][i + 1][1]) & 0xFF)
+            code[alloc[name][i][1] + 1] = "0x%02x" % ((alloc[name][i + 1][1] >> 8) & 0xFF)
+        
+        # Sees if the current entry should be included
+        if i == 0 or (alloc[name][i - 1][0] != alloc[name][i][0]):
+            real_addr = var[name][1] + alloc[name][i][0]   # "real" address = FM + offset
+            compact_alloc.append("{%d, (void*)0x%04x}   /* %s + %d */" % (real_addr, alloc[name][i][1], name, alloc[name][i][0]))   # ["real" addr, next patching addr]
+            compact_alloc_binary.append("0x%02x" % (real_addr & 0xFF))
+            compact_alloc_binary.append("0x%02x" % ((real_addr >> 8) & 0xFF))
+            compact_alloc_binary.append("0x%02x" % (alloc[name][i][1] & 0xFF))
+            compact_alloc_binary.append("0x%02x" % ((alloc[name][i][1] >> 8) & 0xFF))
+            
+            if name in dataSection.keys():
+                #print ".data:", real_addr, dataSection[name][0], var[name][0]
+                dataSection_values_binary.append("0x%02x" % (real_addr & 0xFF))
+                dataSection_values_binary.append("0x%02x" % ((real_addr >> 8) & 0xFF))
+                dataSection_values_binary.append("0x%02x" % (dataSection[name][0] & 0xFF))
+                dataSection_values_binary.append("0x%02x" % ((dataSection[name][0] >> 8) & 0xFF))
+                dataSection_values_binary.append("0x%02x" % (var[name][0] & 0xFF))
+                dataSection_values_binary.append("0x%02x" % ((var[name][0] >> 8) & 0xFF))
+
+# ===== STEP 3: Full relocation table (compacted in step 5) ===== #
+fun = []
+global_fun = []
+local_fun = []
+# Gets both where functions are called and where it is located
+p = subprocess.Popen(["msp430-readelf", "-W", "-s", args[0]], stdout=subprocess.PIPE)
+line = p.stdout.readline()
+while line:
+    v = line.split()
+    if len(v) == 8 and v[4] == "GLOBAL":
+        if v[3] == "NOTYPE" or v[3] == "FUNC":
+            fun.append(v[-1])
+    line = p.stdout.readline()
+
+# Gets global and local function calls and their locations in the loadable program
+p = subprocess.Popen(["msp430-readelf", "-W", "-r", args[0]], stdout=subprocess.PIPE)
+line = p.stdout.readline()
+while line and line != "There are no relocations in this file.\n":
+    v = line.split()
+    if len(v) == 7:
+        name = v[4]
+        addr = int(v[0], 16)
+        offset = int(v[-1], 16)
+        if name in fun:
+            if offset != 0:
+                print "ERROR: Non zero offset for", name, "at", offset
+            
+            if map_extfun.has_key(name):
+                global_fun.append([map_extfun[name], addr, name])
+            else:
+                if not map_intfun.has_key(name):
+                  map_intfun[name] = [map_intfun_counter, 0]   # fun_id, addr
+                  map_intfun_counter += 1
+                local_fun.append([map_intfun[name][0], addr, name])
+    line = p.stdout.readline()
+
+# ===== STEP 4: Global and local symbol tables ===== #
+global_sym = []
+local_sym = []
+global_sym_binary = []
+compact_global_sym_binary = ["0x00", "0x00"]   # Just have address to one symbol (should be to main())
+p = subprocess.Popen(["msp430-objdump", "-t", args[0]], stdout=subprocess.PIPE)
+line = p.stdout.readline()
+while line:
+    v = line.split()
+    if len(v) == 6 and \
+       v[1] == "g" and v[2] == 'F' and v[3] == '.text':
+        name = v[5]
+        addr = int(v[0], 16)
+        if map_hook.has_key(name):
+            global_sym.append('{%d, (void*)0x%04x}   /* %s */' % (map_hook[name], addr, name))
+            global_sym_binary.append("0x%02x" % (map_hook[name] & 0xFF))
+            global_sym_binary.append("0x%02x" % ((map_hook[name] >> 8) & 0xFF))
+            global_sym_binary.append("0x%02x" % (addr & 0xFF))
+            global_sym_binary.append("0x%02x" % ((addr >> 8) & 0xFF))
+            compact_global_sym_binary = ["0x%02x" % (addr & 0xFF)]
+            compact_global_sym_binary.append("0x%02x" % ((addr >> 8) & 0xFF))
+        else:
+            if map_intfun.has_key(name):
+                local_sym.append('{%s, (void*)0x%04x}   /* %s */' % (map_intfun[name][0], addr, name))
+                map_intfun[name] = [map_intfun[name][0], addr]
+    line = p.stdout.readline()
+
+# ===== STEP 5: Patches the binary for address-chaining, and compacts the relocation table ===== #
+global_fun_binary = []
+local_fun_binary = []
+# Patches the binary code
+global_fun.sort(cmp)
+for i in range(len(global_fun)):
+    # Sees if address-chaining if necessary
+    if (i + 1) < len(global_fun) and global_fun[i][0] == global_fun[i + 1][0]:
+        code[global_fun[i][1]] = "0x%02x" % ((global_fun[i + 1][1]) & 0xFF)
+        code[global_fun[i][1] + 1] = "0x%02x" % ((global_fun[i + 1][1] >> 8) & 0xFF)
+local_fun.sort(cmp)
+for i in range(len(local_fun)):
+    # Sees if address-chaining if necessary
+    if (i + 1) < len(local_fun) and local_fun[i][0] == local_fun[i + 1][0]:
+        code[local_fun[i][1]] = "0x%02x" % ((local_fun[i + 1][1]) & 0xFF)
+        code[local_fun[i][1] + 1] = "0x%02x" % ((local_fun[i + 1][1] >> 8) & 0xFF)
+
+# Compacts the relocation table
+i = 0
+while True:
+    if i >= len(global_fun):
+        break
+    
+    if (i + 1) < len(global_fun) and (global_fun[i][0] == global_fun[i + 1][0]):
+        del global_fun[i + 1]
+    else:
+        global_fun_binary.append("0x%02x" % (global_fun[i][0] & 0xFF))
+        global_fun_binary.append("0x%02x" % ((global_fun[i][0] >> 8) & 0xFF))
+        global_fun_binary.append("0x%02x" % (global_fun[i][1] & 0xFF))
+        global_fun_binary.append("0x%02x" % ((global_fun[i][1] >> 8) & 0xFF))
+        global_fun[i] = '{%d, (void*)0x%04x}   /* %s */' % (global_fun[i][0], global_fun[i][1], global_fun[i][2])
+        i += 1
+i = 0
+while True:
+    if i >= len(local_fun):
+        break
+    
+    if (i + 1) < len(local_fun) and (local_fun[i][0] == local_fun[i + 1][0]):
+        del local_fun[i + 1]
+    else:
+        local_fun_binary.append("0x%02x" % (map_intfun[local_fun[i][2]][1] & 0xFF))
+        local_fun_binary.append("0x%02x" % ((map_intfun[local_fun[i][2]][1] >> 8) & 0xFF))
+        local_fun_binary.append("0x%02x" % (local_fun[i][1] & 0xFF))
+        local_fun_binary.append("0x%02x" % ((local_fun[i][1] >> 8) & 0xFF))
+        local_fun[i] = '{%d, (void*)0x%04x}   /* %s */' % (map_intfun[local_fun[i][2]][1], local_fun[i][1], local_fun[i][2])
+        i += 1
+
+# ===== STEP 6: Prints out the image ===== #
+#print "uint16_t g_sym_count = %d;" % (len(global_sym))
+#print "uint16_t alloc_count = %d;" % (len(compact_alloc))
+#print "uint16_t g_reloc_count = %d;" % (len(global_fun))
+#print "uint16_t l_reloc_count = %d;" % (len(local_fun))
+#print "uint16_t code_count = %d;" % (len(code))
+#print
+#
+#print "uint8_t patch_table[] = {"
+#print "\t%s,\n" % (",\n\t".join([", ".join(l) for l in slice(compact_alloc_binary, 16)]))   # Allocation table
+#print "\t%s,\n" % (",\n\t".join([", ".join(l) for l in slice(global_fun_binary, 16)]))      # Global relocation table
+#print "\t%s\n};" % (",\n\t".join([", ".join(l) for l in slice(local_fun_binary, 16)]))      # Local relocation table
+#print
+#print "struct value_addr_pair patch_table[] = {"
+#print "\t%s,\n" % (",\n\t".join(compact_alloc))   # Allocation table
+#print "\t%s,\n" % (",\n\t".join(global_fun))      # Global relocation table
+#print "\t%s\n};" % (",\n\t".join(local_fun))      # Local relocation table
+#print
+#
+#print "struct value_addr_pair g_syma[] = {\n\t%s\n};" % (",\n\t".join(global_sym))   # Global symbol table
+#print "uint8_t g_sym[] = {\n\t%s\n};" % (",\n\t".join([", ".join(l) for l in slice(global_sym_binary, 16)]))
+#print
+#
+#print "uint8_t code[] = {\n\t%s\n};" % (",\n\t".join([", ".join(l) for l in slice(code, 16)]))   # The binary code of the loadable program
+#print
+
+# Don't need it because local_fun has the following information already
+## Local symbol table
+#print "uint16_t l_sym_count = %d;" % (len(local_sym))
+#print "struct addr_addr_pair l_sym[] = {\n\t%s\n};" % (",\n\t".join(local_sym))
+#print
+
+binary_image = compact_global_sym_binary
+binary_image.extend(["0x%02x" % (i) for i in [#len(global_sym) & 0xFF, (len(global_sym) >> 8) & 0xFF,
+                                              len(compact_alloc) & 0xFF, (len(compact_alloc) >> 8) & 0xFF,
+                                              fm_addr & 0xFF, (fm_addr >> 8) & 0xFF,
+                                              len(global_fun) & 0xFF, (len(global_fun) >> 8) & 0xFF,
+                                              len(local_fun) & 0xFF, (len(local_fun) >> 8) & 0xFF,
+                                              (len(dataSection_values_binary) / 6) & 0xFF, ((len(dataSection_values_binary) / 6) >> 8) & 0xFF,
+                                              len(code) & 0xFF, (len(code) >> 8) & 0xFF]])
+
+#binary_image.extend(global_sym_binary)
+binary_image.extend(compact_alloc_binary)
+binary_image.extend(global_fun_binary)
+binary_image.extend(local_fun_binary)
+binary_image.extend(dataSection_values_binary)
+binary_image.extend(code)
+
+#print len(code)
+
+f = open(args[2], 'wb')
+for i in binary_image:
+    f.write(struct.pack("B", int(i, 16)))
+
+if array_opt:
+  print "uint8_t code[] = {\n\t%s\n};" % (",\n\t".join([", ".join(l) for l in slice(binary_image, 16)]))

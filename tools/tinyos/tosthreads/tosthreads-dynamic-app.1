@@ -1,0 +1,16 @@
+.TH tosthreads-dynamic-app 1 "May 29, 2008"
+.LO 1
+.SH NAME
+
+tosthreads-dynamic-app - Generate a TOSThreads dynamically loadable binary
+from an ELF object file
+.SH SYNOPSIS
+
+\fBtosthreads-dynamic-app\fR [\fB-a --array --api=<standard, tenet>\fR] \fI<obj_file> <bin_file> <tos_file>\fR
+.SH DESCRIPTION
+
+\fBtosthreads-dynamic-app\fR generates a TOSThreads dynamically loadable binary
+from an ELF object file.
+.SH EXAMPLES
+
+ tosthreads-dynamic-app -a --api=standard  main.o main.bin main.tos
