@@ -1,0 +1,3 @@
+COMPONENT=TestLogStorageAppC
+
+include $(MAKERULES)

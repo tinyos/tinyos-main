@@ -1,0 +1,3 @@
+COMPONENT=RadioStressAppC
+
+include $(MAKERULES)

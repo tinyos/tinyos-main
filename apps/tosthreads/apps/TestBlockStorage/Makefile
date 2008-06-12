@@ -1,0 +1,3 @@
+COMPONENT=TestBlockStorageAppC
+
+include $(MAKERULES)

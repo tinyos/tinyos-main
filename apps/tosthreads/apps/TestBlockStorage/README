@@ -1,0 +1,2 @@
+This program erases volume, then randomly write (then verified by read).
+Led0 is ON during the test, and Led1 is ON if all tests pass. If there is a problem, all three LEDs will be ON.
