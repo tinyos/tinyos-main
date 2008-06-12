@@ -1,0 +1,38 @@
+# Extra threads Makefile target to enable thread support for tinyos
+# Kevin Klues May 16th, 2008
+
+MAKE_DYNTHREADS =
+BUILD_DEPS = dynthreads_all
+
+#Get all the normal include directories for a cthreads build
+$(call TOSMake_include,cthreads.extra)
+
+#Stuff to build dynamically loadable binary
+DYNLOAD_CFILE = $(TOSTHREAD_MAIN_PATH)
+CFLAGS += -c
+PFLAGS += -x nesc
+
+BUILDDIR = build/$(PLATFORM)/dynthreads
+#DYNLOAD_BASENAME = $(shell basename $(DYNLOAD_CFILE) .c)
+DYNLOAD_BASENAME = main
+
+DYNLOAD_OBJFILE = $(BUILDDIR)/$(DYNLOAD_BASENAME).o
+DYNLOAD_BINFILE = $(BUILDDIR)/$(DYNLOAD_BASENAME).bin
+DYNLOAD_TOSFILE = $(BUILDDIR)/$(DYNLOAD_BASENAME).tos
+
+DYNLOAD_NCC_COMMAND = $(NCC) -o $(DYNLOAD_OBJFILE) $(PFLAGS) $(OPTFLAGS) $(CFLAGS) $(DYNLOAD_CFILE)
+DYNLOAD_OBJCOPY_COMMAND = $(OBJCOPY) --output-target=binary $(DYNLOAD_OBJFILE) $(DYNLOAD_BINFILE)
+DYNLOAD_GENTOS_COMMAND = tosthreads-dynamic-app $(DYNLOAD_OBJFILE) $(DYNLOAD_BINFILE) $(DYNLOAD_TOSFILE)
+
+dynthreads_build: dynthreads_builddir build_storage
+	@echo "    compiling $(DYNLOAD_CFILE) to a $(PLATFORM) dynamically loadable binary"
+	$(DYNLOAD_NCC_COMMAND)
+	$(DYNLOAD_OBJCOPY_COMMAND)
+	$(DYNLOAD_GENTOS_COMMAND)
+	
+dynthreads_all: dynthreads_build
+	@echo "            $(shell stat -F $(DYNLOAD_TOSFILE) | perl -lane 'print $$F[4];') bytes in BINARY"
+	@echo "    writing TOS image"
+
+dynthreads_builddir:
+	mkdir -p $(BUILDDIR)
