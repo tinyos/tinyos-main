@@ -103,4 +103,5 @@ implementation {
     p->error = result;
     call SystemCall.finish(s);  
   }
+  default command error_t ReadStream.read[uint8_t id](uint32_t usPeriod) { return FAIL; }
 }

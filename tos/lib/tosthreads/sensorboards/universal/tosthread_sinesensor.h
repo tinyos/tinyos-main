@@ -28,71 +28,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+ 
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
+ 
+#ifndef TOSTHREAD_SINESENSOR_H
+#define TOSTHREAD_SINESENSOR_H
 
-generic module BlockingReadP() {
-  provides {
-    interface Init;
-    interface BlockingRead<uint16_t> as BlockingRead[uint8_t client];
-  }
-  uses {
-    interface Read<uint16_t> as Read[uint8_t client];
-    
-    interface SystemCall;
-    interface SystemCallQueue;
-  }
-}
-implementation {
+#include "TinyError.h"
 
-  typedef struct read_params {
-    uint16_t* val;
-    error_t   error;
-  } read_params_t;
+extern error_t sinesensor_read(uint16_t* val);
 
-  syscall_queue_t read_queue;
-  
-  command error_t Init.init() {
-    call SystemCallQueue.init(&read_queue);
-    return SUCCESS;
-  }
-  
-  /**************************** Read ********************************/
-  void readTask(syscall_t* s) {
-    read_params_t* p = s->params;
-    p->error = call Read.read[s->id]();
-    if(p->error != SUCCESS) {
-      call SystemCall.finish(s);
-    } 
-  }  
-  
-  command error_t BlockingRead.read[uint8_t id](uint16_t* val) {
-    syscall_t s;
-    read_params_t p;
-    atomic {
-      if(call SystemCallQueue.find(&read_queue, id) != NULL)
-        return EBUSY;
-      call SystemCallQueue.enqueue(&read_queue, &s);
-    }
-    
-    p.val = val;
-    call SystemCall.start(&readTask, &s, id, &p);
-    
-    atomic {
-      call SystemCallQueue.remove(&read_queue, &s);
-      return p.error;
-    }
-  }
-  
-  event void Read.readDone[uint8_t id]( error_t result, uint16_t val ) {
-    syscall_t* s = call SystemCallQueue.find(&read_queue, id);
-    read_params_t* p = s->params;
-    *(p->val) = val;
-    p->error = result;
-    call SystemCall.finish(s);  
-  }
-  default command error_t Read.read[uint8_t id]() { return FAIL; }
-
-}
+#endif //TOSTHREAD_SINESENSOR_H

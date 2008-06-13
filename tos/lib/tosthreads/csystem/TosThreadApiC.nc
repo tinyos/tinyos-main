@@ -68,7 +68,7 @@ implementation {
     components CLogStorageC;
   #endif 
   
-  //Telosb sensorbard specific.  Later need to find conditional way of adding this in
+  //Telosb sensorboard specific.  Later need to find conditional way of adding this in
   #if defined(TOSTHREAD_HAMAMATSUS1087_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
     components CHamamatsuS1087ParC;
   #endif
@@ -77,5 +77,10 @@ implementation {
   #endif
   #if defined(TOSTHREAD_SENSIRIONSHT11_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
     components CSensirionSht11C;
+  #endif
+  
+  //Universal sensorboard specific
+  #if defined(TOSTHREAD_SINESENSOR_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
+    components CSineSensorC;
   #endif
 }
