@@ -56,28 +56,32 @@ implementation {
   components MainC;
   components AdcP;
   components WireAdcStreamP;
-  components BlockingAdcImplP;
+  components new BlockingReadP();
+  components new BlockingReadStreamP();
   
-  MainC.SoftwareInit -> BlockingAdcImplP;
+  MainC.SoftwareInit -> BlockingReadP;
+  MainC.SoftwareInit -> BlockingReadStreamP;
   
   //For BlockingRead
-  BlockingRead = BlockingAdcImplP;
+  BlockingRead = BlockingReadP;
   Config = AdcP.Config;
   SingleChannel = AdcP.SingleChannel;
   ResourceRead = AdcP.ResourceRead;
-  BlockingAdcImplP.Read -> AdcP.Read;
+  BlockingReadP.Read -> AdcP.Read;
   
   //For BlockingReadStream
-  BlockingReadStream = BlockingAdcImplP;
+  BlockingReadStream = BlockingReadStreamP;
   ConfigReadStream = WireAdcStreamP;
   SingleChannelReadStream = WireAdcStreamP;
   ResourceReadStream = WireAdcStreamP;
-  BlockingAdcImplP.ReadStream -> WireAdcStreamP;
+  BlockingReadStreamP.ReadStream -> WireAdcStreamP;
   
   components SystemCallC;
   components SystemCallQueueC;
-  BlockingAdcImplP.SystemCallQueue -> SystemCallQueueC;
-  BlockingAdcImplP.SystemCall -> SystemCallC;
+  BlockingReadP.SystemCallQueue -> SystemCallQueueC;
+  BlockingReadP.SystemCall -> SystemCallC;
+  BlockingReadStreamP.SystemCallQueue -> SystemCallQueueC;
+  BlockingReadStreamP.SystemCall -> SystemCallC;
 }
 
 

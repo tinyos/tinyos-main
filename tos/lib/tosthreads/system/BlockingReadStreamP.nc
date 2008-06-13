@@ -33,14 +33,12 @@
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
 
-module BlockingAdcImplP {
+generic module BlockingReadStreamP() {
   provides {
     interface Init;
-    interface BlockingRead<uint16_t> as BlockingRead[uint8_t client];
     interface BlockingReadStream<uint16_t> as BlockingReadStream[uint8_t streamClient];
   }
   uses {
-    interface Read<uint16_t> as Read[uint8_t client];
     interface ReadStream<uint16_t> as ReadStream[uint8_t streamClient];
     
     interface SystemCall;
@@ -49,11 +47,6 @@ module BlockingAdcImplP {
 }
 implementation {
 
-  typedef struct read_params {
-    uint16_t* val;
-    error_t   error;
-  } read_params_t;
-
   typedef struct readstream_params {
     uint32_t* usPeriod;
     uint16_t* buf;
@@ -61,48 +54,11 @@ implementation {
     error_t   error;
   } readstream_params_t;
 
-  syscall_queue_t read_queue;
   syscall_queue_t readstream_queue;
   
   command error_t Init.init() {
-    call SystemCallQueue.init(&read_queue);
     call SystemCallQueue.init(&readstream_queue);
     return SUCCESS;
-  }
-  
-  /**************************** Read ********************************/
-  void readTask(syscall_t* s) {
-    read_params_t* p = s->params;
-    p->error = call Read.read[s->id]();
-    if(p->error != SUCCESS) {
-      call SystemCall.finish(s);
-    } 
-  }  
-  
-  command error_t BlockingRead.read[uint8_t id](uint16_t* val) {
-    syscall_t s;
-    read_params_t p;
-    atomic {
-      if(call SystemCallQueue.find(&read_queue, id) != NULL)
-        return EBUSY;
-      call SystemCallQueue.enqueue(&read_queue, &s);
-    }
-    
-    p.val = val;
-    call SystemCall.start(&readTask, &s, id, &p);
-    
-    atomic {
-      call SystemCallQueue.remove(&read_queue, &s);
-      return p.error;
-    }
-  }
-  
-  event void Read.readDone[uint8_t id]( error_t result, uint16_t val ) {
-    syscall_t* s = call SystemCallQueue.find(&read_queue, id);
-    read_params_t* p = s->params;
-    *(p->val) = val;
-    p->error = result;
-    call SystemCall.finish(s);  
   }
   
   /**************************** ReadStream ********************************/
@@ -127,7 +83,7 @@ implementation {
     p.usPeriod = usPeriod;
     p.buf = buf;
     p.count = &count;
-    call SystemCall.start(&readTask, &s, id, &p);
+    call SystemCall.start(&readStreamTask, &s, id, &p);
     
     atomic {
       call SystemCallQueue.remove(&readstream_queue, &s);
@@ -141,7 +97,7 @@ implementation {
   }
 			 
   event void ReadStream.readDone[uint8_t id](error_t result, uint32_t usPeriod) {
-    syscall_t* s = call SystemCallQueue.find(&read_queue, id);
+    syscall_t* s = call SystemCallQueue.find(&readstream_queue, id);
     readstream_params_t* p = s->params;
     *(p->usPeriod) = usPeriod;
     p->error = result;

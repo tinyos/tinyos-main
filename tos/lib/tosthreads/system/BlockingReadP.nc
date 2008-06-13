@@ -32,52 +32,65 @@
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
- 
-#include "thread.h"
 
-configuration BlockingAdcP {
+generic module BlockingReadP() {
   provides {
+    interface Init;
     interface BlockingRead<uint16_t> as BlockingRead[uint8_t client];
-    interface BlockingReadStream<uint16_t> as BlockingReadStream[uint8_t streamClient];
   }
   uses {
-    //For BlockingRead
-    interface Atm128AdcConfig as Config[uint8_t client];
-    interface Resource as ResourceRead[uint8_t client];
+    interface Read<uint16_t> as Read[uint8_t client];
     
-    //For BlockingReadStream
-    interface Atm128AdcConfig as ConfigReadStream[uint8_t streamClient];
-    interface Resource as ResourceReadStream[uint8_t streamClient];
+    interface SystemCall;
+    interface SystemCallQueue;
   }
 }
 implementation {
-  components MainC;
-  components WireAdcP;
-  components WireAdcStreamP;
-  components new BlockingReadP();
-  components new BlockingReadStreamP();
+
+  typedef struct read_params {
+    uint16_t* val;
+    error_t   error;
+  } read_params_t;
+
+  syscall_queue_t read_queue;
   
-  MainC.SoftwareInit -> BlockingReadP;
-  MainC.SoftwareInit -> BlockingReadStreamP;
+  command error_t Init.init() {
+    call SystemCallQueue.init(&read_queue);
+    return SUCCESS;
+  }
   
-  //For BlockingRead
-  BlockingRead = BlockingReadP;
-  BlockingReadP.Read -> WireAdcP;
-  Config = WireAdcP;
-  ResourceRead = WireAdcP;
+  /**************************** Read ********************************/
+  void readTask(syscall_t* s) {
+    read_params_t* p = s->params;
+    p->error = call Read.read[s->id]();
+    if(p->error != SUCCESS) {
+      call SystemCall.finish(s);
+    } 
+  }  
   
-  //For BlockingReadStream
-  BlockingReadStream = BlockingReadStreamP;
-  BlockingReadStreamP.ReadStream -> WireAdcStreamP;
-  ConfigReadStream = WireAdcStreamP;
-  ResourceReadStream = WireAdcStreamP;
+  command error_t BlockingRead.read[uint8_t id](uint16_t* val) {
+    syscall_t s;
+    read_params_t p;
+    atomic {
+      if(call SystemCallQueue.find(&read_queue, id) != NULL)
+        return EBUSY;
+      call SystemCallQueue.enqueue(&read_queue, &s);
+    }
+    
+    p.val = val;
+    call SystemCall.start(&readTask, &s, id, &p);
+    
+    atomic {
+      call SystemCallQueue.remove(&read_queue, &s);
+      return p.error;
+    }
+  }
   
-  components SystemCallC;
-  components SystemCallQueueC;
-  BlockingReadP.SystemCallQueue -> SystemCallQueueC;
-  BlockingReadP.SystemCall -> SystemCallC;
-  BlockingReadStreamP.SystemCallQueue -> SystemCallQueueC;
-  BlockingReadStreamP.SystemCall -> SystemCallC;
+  event void Read.readDone[uint8_t id]( error_t result, uint16_t val ) {
+    syscall_t* s = call SystemCallQueue.find(&read_queue, id);
+    read_params_t* p = s->params;
+    *(p->val) = val;
+    p->error = result;
+    call SystemCall.finish(s);  
+  }
 }
-
-

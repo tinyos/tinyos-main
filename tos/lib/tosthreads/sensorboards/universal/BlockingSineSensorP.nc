@@ -32,52 +32,19 @@
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
- 
-#include "thread.h"
 
-configuration BlockingAdcP {
-  provides {
-    interface BlockingRead<uint16_t> as BlockingRead[uint8_t client];
-    interface BlockingReadStream<uint16_t> as BlockingReadStream[uint8_t streamClient];
-  }
-  uses {
-    //For BlockingRead
-    interface Atm128AdcConfig as Config[uint8_t client];
-    interface Resource as ResourceRead[uint8_t client];
-    
-    //For BlockingReadStream
-    interface Atm128AdcConfig as ConfigReadStream[uint8_t streamClient];
-    interface Resource as ResourceReadStream[uint8_t streamClient];
-  }
+configuration BlockingSineSensorP {
+  provides interface BlockingRead<uint16_t>[uint8_t id];
+  uses interface Read<uint16_t>[uint8_t id];
 }
 implementation {
-  components MainC;
-  components WireAdcP;
-  components WireAdcStreamP;
   components new BlockingReadP();
-  components new BlockingReadStreamP();
   
-  MainC.SoftwareInit -> BlockingReadP;
-  MainC.SoftwareInit -> BlockingReadStreamP;
-  
-  //For BlockingRead
   BlockingRead = BlockingReadP;
-  BlockingReadP.Read -> WireAdcP;
-  Config = WireAdcP;
-  ResourceRead = WireAdcP;
-  
-  //For BlockingReadStream
-  BlockingReadStream = BlockingReadStreamP;
-  BlockingReadStreamP.ReadStream -> WireAdcStreamP;
-  ConfigReadStream = WireAdcStreamP;
-  ResourceReadStream = WireAdcStreamP;
+  Read = BlockingReadP;
   
   components SystemCallC;
   components SystemCallQueueC;
   BlockingReadP.SystemCallQueue -> SystemCallQueueC;
   BlockingReadP.SystemCall -> SystemCallC;
-  BlockingReadStreamP.SystemCallQueue -> SystemCallQueueC;
-  BlockingReadStreamP.SystemCall -> SystemCallC;
 }
-
-
