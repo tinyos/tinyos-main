@@ -32,33 +32,48 @@
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
+ 
+#include "thread.h"
 
-#include <Msp430Adc12.h>
-generic configuration BlockingAdcReadClientC() {
-  provides interface BlockingRead<uint16_t>;
-  uses interface AdcConfigure<const msp430adc12_channel_config_t*>;
-} 
-implementation {
-  components BlockingAdcP,
-#ifdef REF_VOLT_AUTO_CONFIGURE     
-             // if the client configuration requires a stable 
-             // reference voltage, the reference voltage generator 
-             // is automatically enabled
-             new Msp430Adc12ClientAutoRVGC() as Msp430AdcClient;
-#else
-             new Msp430Adc12ClientC() as Msp430AdcClient;
-#endif
-
-  enum {
-    CLIENT = unique(ADCC_SERVICE),
-  };
-
-  BlockingRead = BlockingAdcP.BlockingRead[CLIENT];
-  AdcConfigure = BlockingAdcP.Config[CLIENT];
-  BlockingAdcP.SingleChannel[CLIENT] -> Msp430AdcClient.Msp430Adc12SingleChannel;
-  BlockingAdcP.ResourceRead[CLIENT] -> Msp430AdcClient.Resource;
-#ifdef REF_VOLT_AUTO_CONFIGURE
-  AdcConfigure = Msp430AdcClient.AdcConfigure;
-#endif 
+configuration BlockingAdcP {
+  provides {
+    interface BlockingRead<uint16_t> as BlockingRead[uint8_t client];
+    interface BlockingReadStream<uint16_t> as BlockingReadStream[uint8_t streamClient];
+  }
+  uses {
+    //For BlockingRead
+    interface Atm128AdcConfig as Config[uint8_t client];
+    interface Resource as ResourceRead[uint8_t client];
+    
+    //For BlockingReadStream
+    interface Atm128AdcConfig as ConfigReadStream[uint8_t streamClient];
+    interface Resource as ResourceReadStream[uint8_t streamClient];
+  }
 }
+implementation {
+  components MainC;
+  components WireAdcP;
+  components WireAdcStreamP;
+  components BlockingAdcImplP;
   
+  MainC.SoftwareInit -> BlockingAdcImplP;
+  
+  //For BlockingRead
+  BlockingRead = BlockingAdcImplP;
+  BlockingAdcImplP.Read -> WireAdcP;
+  Config = WireAdcP;
+  ResourceRead = WireAdcP;
+  
+  //For BlockingReadStream
+  BlockingReadStream = BlockingAdcImplP;
+  BlockingAdcImplP.ReadStream -> WireAdcStreamP;
+  ConfigReadStream = WireAdcStreamP;
+  ResourceReadStream = WireAdcStreamP;
+  
+  components SystemCallC;
+  components SystemCallQueueC;
+  BlockingAdcImplP.SystemCallQueue -> SystemCallQueueC;
+  BlockingAdcImplP.SystemCall -> SystemCallC;
+}
+
+
