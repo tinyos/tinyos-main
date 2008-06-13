@@ -26,8 +26,8 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * - Revision -------------------------------------------------------------
-* $Revision: 1.4 $
-* $Date: 2006-12-12 18:23:13 $
+* $Revision: 1.5 $
+* $Date: 2008-06-13 13:40:59 $
 * ========================================================================
 */
 
@@ -80,9 +80,9 @@ implementation {
   /****************************************************************
   Global Variables Declared
   *****************************************************************/
-  norace uint16_t currentConfig;
+  norace uint16_t currentConfig = TDA5250_REG_DEFAULT_SETTING_CONFIG;
   uint8_t currentClockDiv;
-  norace uint8_t currentLpf;
+  norace uint8_t currentLpf = TDA5250_REG_DEFAULT_SETTING_LPF;
 
 
   /****************************************************************
