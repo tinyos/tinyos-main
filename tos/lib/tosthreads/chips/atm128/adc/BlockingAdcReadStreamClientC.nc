@@ -1,4 +1,4 @@
-/* $Id: BlockingAdcReadStreamClientC.nc,v 1.1 2008-06-13 19:33:39 klueska Exp $
+/* $Id: BlockingAdcReadStreamClientC.nc,v 1.2 2008-06-14 19:27:25 klueska Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -36,6 +36,6 @@ implementation {
 
   BlockingReadStream = BlockingAdcP.BlockingReadStream[ID];
   Atm128AdcConfig = BlockingAdcP.ConfigReadStream[ID];
-  BlockingAdcP.ReadStreamResource[ID] -> Atm128AdcC.Resource[HAL_ID];
+  BlockingAdcP.ResourceReadStream[ID] -> Atm128AdcC.Resource[HAL_ID];
   ResourceConfigure = Atm128AdcC.ResourceConfigure[HAL_ID];
 }
