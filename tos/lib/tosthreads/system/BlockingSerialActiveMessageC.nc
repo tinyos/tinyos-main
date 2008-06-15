@@ -44,6 +44,10 @@ configuration BlockingSerialActiveMessageC {
     interface AMPacket;
     interface PacketAcknowledgements;
   }
+  uses {
+    interface Receive as Receive[uint8_t id];
+    interface AMSend as AMSend[uint8_t id];
+  }
 }
 implementation {
   components SerialActiveMessageC as AM;
@@ -56,8 +60,8 @@ implementation {
   BlockingAMSend = AMSenderP;
   
   BlockingStdControlC.SplitControl -> AM;
-  AMReceiverP.Receive -> AM.Receive;
-  AMSenderP.AMSend -> AM.AMSend;
+  Receive = AMReceiverP.Receive;
+  AMSend = AMSenderP.AMSend;
     
   Packet       = AM;
   AMPacket     = AM;
