@@ -21,6 +21,7 @@
  * @author: Miklos Maroti, Brano Kusy (kusy@isis.vanderbilt.edu)
  * Ported to T2: 3/17/08 by Brano Kusy (branislav.kusy@gmail.com)
  */
+#include "Timer.h"
 
 interface GlobalTime<precision_tag>
 {
