@@ -14,5 +14,4 @@ PFLAGS += -DTIMESYNC_RATE=3
 
 PFLAGS += -I$(TOSDIR)/lib/ftsp -I$(TOSDIR)/../apps/RadioCountToLeds
 
-include ../../Makerules
-
+include $(MAKERULES)
