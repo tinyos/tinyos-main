@@ -30,13 +30,17 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
- * @version $Revision: 1.9 $ $Date: 2008-05-14 21:33:07 $
+ * @version $Revision: 1.10 $ $Date: 2008-06-16 22:45:07 $
  */
 
 #ifndef __CC2420_H__
 #define __CC2420_H__
 
 typedef uint8_t cc2420_status_t;
+
+#ifndef TFRAMES_ENABLED
+#define CC2420_IFRAME_TYPE
+#endif
 
 /**
  * CC2420 header.  An I-frame (interoperability frame) header has an 
@@ -119,10 +123,10 @@ typedef nx_struct cc2420_packet_t {
 #endif
 
 /** 
- * The 6LowPAN ID has yet to be defined for a TinyOS network.
+ * The 6LowPAN NALP ID for a TinyOS network is 63 (TEP 125).
  */
 #ifndef TINYOS_6LOWPAN_NETWORK_ID
-#define TINYOS_6LOWPAN_NETWORK_ID 0x0
+#define TINYOS_6LOWPAN_NETWORK_ID 0x3f
 #endif
 
 

@@ -71,26 +71,8 @@ implementation {
     return call SubSend.maxPayloadLength();
   }
 
-  command void* Send.getPayload(message_t* msg) {
-    return call SubSend.getPayload(msg);
-  }
-  
-  /***************** Receive Commands ****************/
-  command void* Receive.getPayload(message_t* msg, uint8_t* len) {
-    return call SubReceive.getPayload(msg, len);
-  }
-
-  command uint8_t Receive.payloadLength(message_t* msg) {
-    return call SubReceive.payloadLength(msg);
-  }
-  
-  /***************** NonTinyosReceive Commands ****************/
-  command void* NonTinyosReceive.getPayload[uint8_t networkId](message_t* msg, uint8_t* len) {
-    return call SubReceive.getPayload(msg, len);
-  }
-
-  command uint8_t NonTinyosReceive.payloadLength[uint8_t networkId](message_t* msg) {
-    return call SubReceive.payloadLength(msg);
+  command void* Send.getPayload(message_t* msg, uint8_t len) {
+    return call SubSend.getPayload(msg, len);
   }
   
   /***************** SubSend Events *****************/
