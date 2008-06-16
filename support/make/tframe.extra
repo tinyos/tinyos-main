@@ -1,0 +1,9 @@
+# Makefile extra for compiling 802.15.4 TinyOS apps with t-frames.
+# T-frames are not interoperable with 6lowpan networks.
+# Please see TEP 125 for details.
+# Philip Levis, June 15 2008.
+
+#Include directory where T-Frame implementation lies.
+CFLAGS += -DTFRAMES_ENABLED
+
+
