@@ -1,4 +1,4 @@
-//$Id: Serial802_15_4C.nc,v 1.1 2008-05-13 00:15:21 vlahan Exp $
+//$Id: Serial802_15_4C.nc,v 1.2 2008-06-16 18:57:46 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -33,6 +33,7 @@
 #include "Serial.h"
 configuration Serial802_15_4C {
   provides {
+    interface SplitControl;
     interface Send;
     interface Receive;
   }
@@ -42,6 +43,8 @@ implementation {
   components MainC, SerialPacketInfo802_15_4P, SerialDispatcherC;
 
   MainC.SoftwareInit -> SerialDispatcherC;
+
+  SplitControl = SerialDispatcherC;
   Leds = SerialDispatcherC;
   Send = SerialDispatcherC.Send[TOS_SERIAL_802_15_4_ID];
   Receive = SerialDispatcherC.Receive[TOS_SERIAL_802_15_4_ID];
