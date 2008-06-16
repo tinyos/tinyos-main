@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.5 $ $Date: 2008-05-14 21:33:07 $
+ * @version $Revision: 1.6 $ $Date: 2008-06-16 15:33:32 $
  */
 
 #include "Timer.h"
@@ -94,11 +94,17 @@ implementation {
   
   bool m_sync_busy;
   
+  /** TRUE if acknowledgments are enabled */
   bool autoAckEnabled;
   
+  /** TRUE if acknowledgments are generated in hardware only */
   bool hwAutoAckDefault;
   
+  /** TRUE if software or hardware address recognition is enabled */
   bool addressRecognition;
+  
+  /** TRUE if address recognition should also be performed in hardware */
+  bool hwAddressRecognition;
   
   norace cc2420_control_state_t m_state = S_VREG_STOPPED;
   
@@ -122,24 +128,34 @@ implementation {
     m_tx_power = CC2420_DEF_RFPOWER;
     m_channel = CC2420_DEF_CHANNEL;
     
-#if defined(CC2420_NO_ACKNOWLEDGEMENTS)
-    autoAckEnabled = FALSE;
-#else
-    autoAckEnabled = TRUE;
-#endif
-
-#if defined(CC2420_HW_ACKNOWLEDGEMENTS)
-    hwAutoAckDefault = TRUE;
-#else
-    hwAutoAckDefault = FALSE;
-#endif
-
+    
 #if defined(CC2420_NO_ADDRESS_RECOGNITION)
     addressRecognition = FALSE;
 #else
     addressRecognition = TRUE;
 #endif
-
+    
+#if defined(CC2420_HW_ADDRESS_RECOGNITION)
+    hwAddressRecognition = TRUE;
+#else
+    hwAddressRecognition = FALSE;
+#endif
+    
+    
+#if defined(CC2420_NO_ACKNOWLEDGEMENTS)
+    autoAckEnabled = FALSE;
+#else
+    autoAckEnabled = TRUE;
+#endif
+    
+#if defined(CC2420_HW_ACKNOWLEDGEMENTS)
+    hwAutoAckDefault = TRUE;
+    hwAddressRecognition = TRUE;
+#else
+    hwAutoAckDefault = FALSE;
+#endif
+    
+    
     return SUCCESS;
   }
 
@@ -298,10 +314,16 @@ implementation {
   }
 
   /**
-   * @param on TRUE to turn address recognition on, FALSE to turn it off
+   * @param enableAddressRecognition TRUE to turn address recognition on
+   * @param useHwAddressRecognition TRUE to perform address recognition first
+   *     in hardware. This doesn't affect software address recognition. The
+   *     driver must sync with the chip after changing this value.
    */
-  command void CC2420Config.setAddressRecognition(bool on) {
-    atomic addressRecognition = on;
+  command void CC2420Config.setAddressRecognition(bool enableAddressRecognition, bool useHwAddressRecognition) {
+    atomic {
+      addressRecognition = enableAddressRecognition;
+      hwAddressRecognition = useHwAddressRecognition;
+    }
   }
   
   /**
@@ -309,6 +331,13 @@ implementation {
    */
   async command bool CC2420Config.isAddressRecognitionEnabled() {
     atomic return addressRecognition;
+  }
+  
+  /**
+   * @return TRUE if address recognition is performed first in hardware.
+   */
+  async command bool CC2420Config.isHwAddressRecognitionDefault() {
+    atomic return hwAddressRecognition;
   }
   
   
@@ -444,7 +473,7 @@ implementation {
   void writeMdmctrl0() {
     atomic {
       call MDMCTRL0.write( ( 1 << CC2420_MDMCTRL0_RESERVED_FRAME_MODE ) |
-          ( 0 << CC2420_MDMCTRL0_ADR_DECODE ) |
+          ( (addressRecognition && hwAddressRecognition) << CC2420_MDMCTRL0_ADR_DECODE ) |
           ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
           ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
           ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |

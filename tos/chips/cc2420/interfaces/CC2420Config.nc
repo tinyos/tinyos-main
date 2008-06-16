@@ -38,7 +38,7 @@
  * before calling sync().
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2007-07-06 18:09:44 $
+ * @version $Revision: 1.3 $ $Date: 2008-06-16 15:33:32 $
  */
 
 interface CC2420Config {
@@ -72,14 +72,23 @@ interface CC2420Config {
 
   
   /**
-   * @param on TRUE to turn address recognition on, FALSE to turn it off
+   * @param enableAddressRecognition TRUE to turn address recognition on
+   * @param useHwAddressRecognition TRUE to perform address recognition first
+   *     in hardware. This doesn't affect software address recognition. The
+   *     driver must sync with the chip after changing this value.
    */
-  command void setAddressRecognition(bool on);
+  command void setAddressRecognition(bool enableAddressRecognition, bool useHwAddressRecognition);
+  
   
   /**
    * @return TRUE if address recognition is enabled
    */
   async command bool isAddressRecognitionEnabled();
+  
+  /**
+   * @return TRUE if address recognition is performed first in hardware.
+   */
+  async command bool isHwAddressRecognitionDefault();
   
   /**
    * Sync must be called for acknowledgement changes to take effect
@@ -99,5 +108,7 @@ interface CC2420Config {
    * @return TRUE if auto acks are enabled
    */
   async command bool isAutoAckEnabled();
+  
+
   
 }
