@@ -696,17 +696,15 @@ implementation
 					if( irq == RF230_IRQ_RX_START )
 					{
 						temp = readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK;
-
 						rssiBusy += temp - (rssiBusy >> 2);
-
-#ifdef RF230_RSSI_ENERGY
-						temp = readRegister(RF230_PHY_ED_LEVEL);
-#endif
-
+#ifndef RF230_RSSI_ENERGY
 						call PacketRSSI.set(rxMsg, temp);
 					}
 					else
+					{
 						call PacketRSSI.clear(rxMsg);
+#endif
+					}
 
 					/*
 					 * The timestamp corresponds to the first event which could not
@@ -747,7 +745,12 @@ implementation
 				else if( cmd == CMD_RECEIVE )
 				{
 					ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
-
+#ifdef RF230_RSSI_ENERGY
+					if( irq == RF230_IRQ_TRX_END )
+						call PacketRSSI.set(rxMsg, readRegister(RF230_PHY_ED_LEVEL));
+					else
+						call PacketRSSI.clear(rxMsg);
+#endif
 					if( state == STATE_PLL_ON_2_RX_ON )
 					{
 						ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_PLL_ON );
