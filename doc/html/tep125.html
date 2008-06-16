@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
 <title>TinyOS 802.15.4 Frames</title>
 <meta name="author" content="Jonathan Hui, Philip Levis, and David Moss" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-05-13 18:38:55 $
-:version: $Revision: 1.5 $
+:date: $Date: 2008-06-16 23:07:36 $
+:version: $Revision: 1.6 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Jonathan Hui, Philip Levis, and David Moss</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">2-Feb-2007</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.4</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-05-13</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-06-16</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -369,13 +369,18 @@ program MUST NOT use it.</p>
 </div>
 <div class="section">
 <h1><a id="implementation" name="implementation">4. Implementation</a></h1>
-<p>An implementation of the T-Frame can be found in tinyos-2.x/tos/chips/cc2420.</p>
-<p>An implementation of the I-Frame can be found in tinyos-2.x/tos/chips/cc2420.</p>
+<p>An implementation of T-Frames and I-Frames can be found in
+tinyos-2.x/tos/chips/cc2420/.  The components in
+tos/chips/cc2420/lowpan/ control which is used. By default, TinyOS
+802.15.4 stacks use I-Frames, and the 'tframe' make option configures
+them to use T-Frames. This make option defines a symbol named
+<tt class="docutils literal"><span class="pre">TFRAMES_ENABLED</span></tt>. In the case of the CC2420 stack, this causes
+<tt class="docutils literal"><span class="pre">CC2420.h</span></tt> to define <tt class="docutils literal"><span class="pre">CC2420_IFRAME_TYPE</span></tt>, which adds the extra
+byte to the message_t header structure.</p>
 </div>
 <div class="section">
 <h1><a id="author-addresses" name="author-addresses">5. Author Addresses</a></h1>
 <div class="line-block">
-<div class="line"><br /></div>
 <div class="line">Jonathan Hui</div>
 <div class="line">657 Mission St. Ste. 600</div>
 <div class="line">Arched Rock Corporation</div>
@@ -393,10 +398,12 @@ program MUST NOT use it.</p>
 <div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line">David Moss</div>
-<div class="line">Rincon Research</div>
+<div class="line">Rincon Research Corporation</div>
+<div class="line">101 N. Wilmot, Suite 101</div>
+<div class="line">Tucson, AZ  85750</div>
 <div class="line"><br /></div>
-<div class="line"><br /></div>
-<div class="line"><br /></div>
+<div class="line">phone - +1 520 519 3138</div>
+<div class="line">email - <a class="reference" href="mailto:dmm&#64;rincon.com">dmm&#64;rincon.com</a></div>
 </div>
 </div>
 </div>
