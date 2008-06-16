@@ -22,6 +22,7 @@ THREADS_MSP430_INCLUDE_DIRS += -I$(THREADS_MSP430_DIR)/adc12
 #Atm128 specific include directories on tested platforms
 THREADS_ATM128_DIR = $(TOS_THREADS_DIR)/chips/atm128
 THREADS_ATM128_INCLUDE_DIRS = -I$(THREADS_ATM128_DIR)
+THREADS_ATM128_INCLUDE_DIRS += -I$(THREADS_ATM128_DIR)/adc
 
 #Atm1281 specific include directories on tested platforms
 THREADS_ATM1281_DIR = $(TOS_THREADS_DIR)/chips/atm1281
