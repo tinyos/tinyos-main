@@ -1,0 +1,4 @@
+CFLAGS += -I$(TOSDIR)/platforms/telosb/mac/tkn154 \
+	-I$(TOSDIR)/platforms/telosb/mac/tkn154/timer \
+	-I$(TOSDIR)/chips/cc2420_tkn154
+
