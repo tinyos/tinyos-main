@@ -1,9 +1,16 @@
-These release notes are as of: $Date: 2008-05-23 19:30:19 $
+These release notes are as of: $Date: 2008-06-16 23:02:25 $
 
-Upcoming:
-  Added 4-bit link estimator
+2.1:
+  Added 4-bit link estimator to CTP in lib/net/4bitle
+  Added DIP dissemination protocol in lib/net/dip
+  Added FTSP time synchronization service in lib/ftsp
+  Added TOSThreads library in lib/tosthreads
+  Added SafeTinyOS support with 'safe' make option
+  Added support for 802.15.4 T-Frames through 'tframe' make option
   Added low-power application tutorial
   Added printf tutorial
+  Added TEPs
+  Changed 802.15.4 stacks to use I-Frames by default (TEP 125)
   Changed Packet interface to better support type checking
   Changed Receive interface to support fan-in
   Changed atm128 I2C bus to obey same addressing as MSP430
