@@ -25,7 +25,7 @@
 #include <AM.h>
 #include <HplRF230.h>
 
-configuration TimeSyncMessageC
+configuration RF230TimeSyncMessageC
 {
 	provides
 	{
@@ -46,24 +46,24 @@ configuration TimeSyncMessageC
 
 implementation
 {
-	components TimeSyncMessageP, RF230ActiveMessageC, LocalTimeMilliC, LocalTimeMicroC as LocalTimeRadioC, RF230PacketC;
+	components RF230TimeSyncMessageP, RF230ActiveMessageC, LocalTimeMilliC, LocalTimeMicroC as LocalTimeRadioC, RF230PacketC;
 
-	TimeSyncAMSendRadio = TimeSyncMessageP;
-	TimeSyncPacketRadio = TimeSyncMessageP;
+	TimeSyncAMSendRadio = RF230TimeSyncMessageP;
+	TimeSyncPacketRadio = RF230TimeSyncMessageP;
 
-	TimeSyncAMSendMilli = TimeSyncMessageP;
-	TimeSyncPacketMilli = TimeSyncMessageP;
+	TimeSyncAMSendMilli = RF230TimeSyncMessageP;
+	TimeSyncPacketMilli = RF230TimeSyncMessageP;
 
-	Packet = TimeSyncMessageP;
-	TimeSyncMessageP.SubSend -> RF230ActiveMessageC.AMSend;
-	TimeSyncMessageP.SubPacket -> RF230ActiveMessageC.Packet;
+	Packet = RF230TimeSyncMessageP;
+	RF230TimeSyncMessageP.SubSend -> RF230ActiveMessageC.AMSend;
+	RF230TimeSyncMessageP.SubPacket -> RF230ActiveMessageC.Packet;
 
-	TimeSyncMessageP.PacketTimeStampRadio -> RF230ActiveMessageC;
-	TimeSyncMessageP.PacketTimeStampMilli -> RF230ActiveMessageC;
-	TimeSyncMessageP.LocalTimeRadio -> LocalTimeRadioC;
-	TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
+	RF230TimeSyncMessageP.PacketTimeStampRadio -> RF230ActiveMessageC;
+	RF230TimeSyncMessageP.PacketTimeStampMilli -> RF230ActiveMessageC;
+	RF230TimeSyncMessageP.LocalTimeRadio -> LocalTimeRadioC;
+	RF230TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
 
-	TimeSyncMessageP.PacketTimeSyncOffset -> RF230PacketC.PacketTimeSyncOffset;
+	RF230TimeSyncMessageP.PacketTimeSyncOffset -> RF230PacketC.PacketTimeSyncOffset;
 
 	SplitControl = RF230ActiveMessageC;
 	Receive	= RF230ActiveMessageC.Receive;

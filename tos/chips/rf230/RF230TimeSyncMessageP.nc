@@ -24,7 +24,7 @@
 #include <TimeSyncMessage.h>
 #include <HplRF230.h>
 
-module TimeSyncMessageP
+module RF230TimeSyncMessageP
 {
 	provides
 	{
@@ -53,7 +53,6 @@ module TimeSyncMessageP
 
 implementation
 {
-	// TODO: change the Packet.payloadLength and Packet.maxPayloadLength commands to async
 	inline void* getFooter(message_t* msg)
 	{
 		// we use the payload length that we export (the smaller one)
@@ -156,14 +155,14 @@ implementation
 
 	/*----------------- TimeSyncPacketRadio -----------------*/
 
-	async command bool TimeSyncPacketRadio.isValid(message_t* msg)
+	command bool TimeSyncPacketRadio.isValid(message_t* msg)
 	{
 		timesync_relative_t* timesync = getFooter(msg);
 
 		return call PacketTimeStampRadio.isValid(msg) && *timesync != 0x80000000L;
 	}
 
-	async command uint32_t TimeSyncPacketRadio.eventTime(message_t* msg)
+	command uint32_t TimeSyncPacketRadio.eventTime(message_t* msg)
 	{
 		timesync_relative_t* timesync = getFooter(msg);
 
@@ -172,14 +171,14 @@ implementation
 
 	/*----------------- TimeSyncPacketMilli -----------------*/
 
-	async command bool TimeSyncPacketMilli.isValid(message_t* msg)
+	command bool TimeSyncPacketMilli.isValid(message_t* msg)
 	{
 		timesync_relative_t* timesync = getFooter(msg);
 
 		return call PacketTimeStampMilli.isValid(msg) && *timesync != 0x80000000L;
 	}
 
-	async command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg)
+	command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg)
 	{
 		timesync_relative_t* timesync = getFooter(msg);
 
