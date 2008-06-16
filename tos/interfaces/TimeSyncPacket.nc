@@ -32,7 +32,7 @@ interface TimeSyncPacket<precision_tag, size_type>
 	 * messages transmitted via the TimeSyncSend interface. It is recommended
 	 * that this command be called from the receive event handler.
 	 */
-	async command bool isValid(message_t* msg);
+	command bool isValid(message_t* msg);
 
 	/**
 	 * This command should be called by the receiver of a message. The time
@@ -42,5 +42,5 @@ interface TimeSyncPacket<precision_tag, size_type>
 	 * It is recommended that this command be called from the receive event
 	 * handler.
 	 */
-	async command size_type eventTime(message_t* msg);
+	command size_type eventTime(message_t* msg);
 }
