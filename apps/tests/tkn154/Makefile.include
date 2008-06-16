@@ -1,0 +1,16 @@
+PLATFORM_INCLUDE?=$(TOSDIR)/platforms/$(PLATFORM)/mac/tkn154/Makefile.include
+
+CFLAGS += -I$(TOSDIR)/lib/mac/tkn154 \
+	-I$(TOSDIR)/lib/mac/tkn154/dummies \
+	-I$(TOSDIR)/lib/mac/tkn154/interfaces/MCPS \
+	-I$(TOSDIR)/lib/mac/tkn154/interfaces/MLME \
+	-I$(TOSDIR)/lib/mac/tkn154/interfaces/private \
+	-I$(TOSDIR)/lib/mac/tkn154/interfaces/public
+
+ifdef IEEE154_EXTENDED_ADDRESS
+PFLAGS += -DIEEE154_EXTENDED_ADDRESS=$(IEEE154_EXTENDED_ADDRESS)
+endif
+
+include $(MAKERULES)
+PLATFORM?=telosb
+include $(PLATFORM_INCLUDE)
