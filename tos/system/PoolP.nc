@@ -1,4 +1,4 @@
-/* $Id: PoolP.nc,v 1.5 2008-05-31 20:27:07 regehr Exp $ */
+/* $Id: PoolP.nc,v 1.6 2008-06-16 18:58:15 scipio Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -47,7 +47,7 @@
  *  @author Philip Levis
  *  @author Kyle Jamieson
  *  @author Geoffrey Mainland
- *  @date   $Date: 2008-05-31 20:27:07 $
+ *  @date   $Date: 2008-06-16 18:58:15 $
  */
 
 generic module PoolP(typedef pool_t, uint8_t size) {
@@ -73,9 +73,11 @@ implementation {
   }
   
   command bool Pool.empty() {
+    dbg("PoolP", "%s size is %i\n", __FUNCTION__, (int)free);
     return free == 0;
   }
   command uint8_t Pool.size() {
+    dbg("PoolP", "%s size is %i\n", __FUNCTION__, (int)free);
     return free;
   }
     
@@ -92,6 +94,7 @@ implementation {
       if (index == size) {
         index = 0;
       }
+      dbg("PoolP", "%s size is %i\n", __FUNCTION__, (int)free);
       return rval;
     }
     return NULL;
@@ -108,6 +111,7 @@ implementation {
       }
       queue[emptyIndex] = newVal;
       free++;
+      dbg("PoolP", "%s size is %i\n", __FUNCTION__, (int)free);
       return SUCCESS;
     }
   }
