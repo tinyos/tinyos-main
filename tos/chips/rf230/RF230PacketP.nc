@@ -265,37 +265,33 @@ implementation
 		getMeta(msg)->flags |= RF230PACKET_TIMESYNC;
 	}
 
-/*----------------- Global fields -----------------*/
-
-	norace uint8_t flags;
-	enum
-	{
-		FLAG_SLEEPINT = 0x01,
-	};
-
-	// TODO: Move sleepInterval into the metadata
-	norace uint16_t sleepInterval;
-
 /*----------------- PacketSleepInterval -----------------*/
 
 	async command bool PacketSleepInterval.isSet(message_t* msg)
 	{
-		return flags & FLAG_SLEEPINT;
+		return getMeta(msg)->flags & RF230PACKET_LPL_SLEEPINT;
 	}
 
 	async command uint16_t PacketSleepInterval.get(message_t* msg)
 	{
-		return sleepInterval;
+#ifdef LOW_POWER_LISTENING
+		return getMeta(msg)->lpl_sleepint;
+#else
+		return 0;
+#endif
 	}
 
 	async command void PacketSleepInterval.clear(message_t* msg)
 	{
-		flags &= ~FLAG_SLEEPINT;
+		getMeta(msg)->flags &= ~RF230PACKET_LPL_SLEEPINT;
 	}
 
 	async command void PacketSleepInterval.set(message_t* msg, uint16_t value)
 	{
-		flags |= FLAG_SLEEPINT;
-		sleepInterval = value;
+		getMeta(msg)->flags |= RF230PACKET_LPL_SLEEPINT;
+
+#ifdef LOW_POWER_LISTENING
+		getMeta(msg)->lpl_sleepint = value;
+#endif
 	}
 }
