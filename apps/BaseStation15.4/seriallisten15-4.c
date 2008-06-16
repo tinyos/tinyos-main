@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "serialsource.h"
 
@@ -28,19 +29,31 @@ enum {
 int main(int argc, char **argv)
 {
   serial_source src;
+  int iframes = 0;
+  if (argc != 4) {
+    fprintf(stderr, "Usage: %s <iframe|tframe> <device> <rate> - dump packets from a serial port\n", argv[0]);
+    exit(2);
+  }
 
-  if (argc != 3)
-    {
-      fprintf(stderr, "Usage: %s <device> <rate> - dump packets from a serial port\n", argv[0]);
-      exit(2);
-    }
-  src = open_serial_source(argv[1], platform_baud_rate(argv[2]), 0, stderr_msg);
-  if (!src)
-    {
-      fprintf(stderr, "Couldn't open serial port at %s:%s\n",
-	      argv[1], argv[2]);
-      exit(1);
-    }
+  if (strncmp(argv[1], "tframe", strlen("tframe")) == 0) {
+    iframes = 0;
+  }
+  else if (strncmp(argv[1], "iframe", strlen("iframe")) == 0) {
+    iframes = 1;
+  }
+  else {
+    fprintf(stderr, "Usage: %s <iframe|tframe> <device> <rate> - dump packets from a serial port\n", argv[0]);
+    exit(3);
+  }
+
+  src = open_serial_source(argv[2], platform_baud_rate(argv[3]), 0, stderr_msg);
+
+  if (!src) {
+    fprintf(stderr, "Couldn't open serial port at %s:%s\n",
+	    argv[2], argv[3]);
+    exit(1);
+  }
+	      
   for (;;)
     {
       int len, i, plen;
@@ -163,6 +176,10 @@ int main(int argc, char **argv)
 	default:
 	  printf("  Source address: parse serror\n");
 	}
+      }
+
+      if (iframes) {
+	printf("  I-Frame: %s\n", (packet[i++] == 0x3f)? "yes":"no");
       }
       
       printf("  AM type: 0x%02hhx\n", packet[i++]);
