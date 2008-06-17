@@ -30,7 +30,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
- * @version $Revision: 1.10 $ $Date: 2008-06-16 22:45:07 $
+ * @version $Revision: 1.11 $ $Date: 2008-06-17 07:28:24 $
  */
 
 #ifndef __CC2420_H__
@@ -84,7 +84,8 @@ typedef nx_struct cc2420_metadata_t {
   nx_uint8_t tx_power;
   nx_bool crc;
   nx_bool ack;
-  nx_uint16_t time;
+  nx_bool timesync;
+  nx_uint32_t timestamp;
   nx_uint16_t rxInterval;
 
   /** Packet Link Metadata */
@@ -367,6 +368,11 @@ enum cc2420_fsmtc_enums {
 enum cc2420_sfdmux_enums {
   CC2420_SFDMUX_SFD = 0,
   CC2420_SFDMUX_XOSC16M_STABLE = 24,
+};
+
+enum
+{
+  CC2420_INVALID_TIMESTAMP  = 0x80000000L,
 };
 
 #endif

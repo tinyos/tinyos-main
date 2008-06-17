@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2008-06-03 04:43:02 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-17 07:28:24 $
  */
 
 module CC2420CsmaP {
@@ -144,8 +144,9 @@ implementation {
     metadata->ack = FALSE;
     metadata->rssi = 0;
     metadata->lqi = 0;
-    metadata->time = 0;
-    
+    metadata->timesync = FALSE;
+    metadata->timestamp = CC2420_INVALID_TIMESTAMP;
+
     ccaOn = TRUE;
     signal RadioBackoff.requestCca(m_msg);
 

@@ -33,10 +33,11 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.4 $ $Date: 2008-06-04 05:36:21 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-17 07:28:24 $
  */
 
 #include "CC2420.h"
+#include "CC2420TimeSyncMessage.h"
 #include "crc.h"
 #include "message.h"
 
@@ -46,13 +47,14 @@ module CC2420TransmitP {
   provides interface StdControl;
   provides interface CC2420Transmit as Send;
   provides interface RadioBackoff;
-  provides interface RadioTimeStamping as TimeStamp;
   provides interface ReceiveIndicator as EnergyIndicator;
   provides interface ReceiveIndicator as ByteIndicator;
   
   uses interface Alarm<T32khz,uint32_t> as BackoffTimer;
   uses interface CC2420Packet;
   uses interface CC2420PacketBody;
+  uses interface PacketTimeStamp<T32khz,uint32_t>;
+  uses interface PacketTimeSyncOffset;
   uses interface GpioCapture as CaptureSFD;
   uses interface GeneralIO as CCA;
   uses interface GeneralIO as CSN;
@@ -234,7 +236,14 @@ implementation {
   }
   
   
-  
+  inline uint32_t time16to32(uint16_t time, uint32_t recent_time)
+  {
+    if ((recent_time&0xFFFF)<time)
+      return ((recent_time-0x10000UL)&0xFFFF0000UL)|time;
+    else
+      return (recent_time&0xFFFF0000UL)|time;
+  }
+
   /**
    * The CaptureSFD event is actually an interrupt from the capture pin
    * which is connected to timing circuitry and timer modules.  This
@@ -249,6 +258,7 @@ implementation {
    * would have picked up and executed had our microcontroller been fast enough.
    */
   async event void CaptureSFD.captured( uint16_t time ) {
+    uint32_t time32 = time16to32(time, call BackoffTimer.getNow());
     atomic {
       switch( m_state ) {
         
@@ -256,7 +266,16 @@ implementation {
         m_state = S_EFD;
         sfdHigh = TRUE;
         call CaptureSFD.captureFallingEdge();
-        signal TimeStamp.transmittedSFD( time, m_msg );
+        call PacketTimeStamp.set(m_msg, time32);
+        if (call PacketTimeSyncOffset.isSet(m_msg)) {
+           timesync_radio_t *timesync = (timesync_radio_t*)((void*)m_msg + call PacketTimeSyncOffset.get(m_msg));
+           // set timesync event time as the offset between the event time and the SFD interrupt time (TEP  133)
+           *timesync  -= time32;
+           call CSN.clr();
+           call TXFIFO_RAM.write( call PacketTimeSyncOffset.get(m_msg), (void*)timesync, sizeof(timesync_radio_t) );
+           call CSN.set();
+        }
+
         if ( (call CC2420PacketBody.getHeader( m_msg ))->fcf & ( 1 << IEEE154_FCF_ACK_REQ ) ) {
           // This is an ack packet, don't release the chip's SPI bus lock.
           abortSpiRelease = TRUE;
@@ -266,7 +285,7 @@ implementation {
 
         
         if ( ( ( (call CC2420PacketBody.getHeader( m_msg ))->fcf >> IEEE154_FCF_FRAME_TYPE ) & 7 ) == IEEE154_TYPE_DATA ) {
-          (call CC2420PacketBody.getMetadata( m_msg ))->time = time;
+          call PacketTimeStamp.set(m_msg, time32);
         }
         
         if ( call SFD.get() ) {
@@ -294,8 +313,7 @@ implementation {
         if ( !m_receiving ) {
           sfdHigh = TRUE;
           call CaptureSFD.captureFallingEdge();
-          signal TimeStamp.receivedSFD( time );
-          call CC2420Receive.sfd( time );
+          call CC2420Receive.sfd( time32 );
           m_receiving = TRUE;
           m_prev_time = time;
           if ( call SFD.get() ) {
@@ -309,6 +327,7 @@ implementation {
         m_receiving = FALSE;
         if ( time - m_prev_time < 10 ) {
           call CC2420Receive.sfd_dropped();
+          call PacketTimeStamp.clear(m_msg);
         }
         break;
       
@@ -666,17 +685,5 @@ implementation {
     call ChipSpiResource.attemptRelease();
     signal Send.sendDone( m_msg, err );
   }
-  
-  
-  
-  /***************** Tasks ****************/
-
-  /***************** Defaults ****************/
-  default async event void TimeStamp.transmittedSFD( uint16_t time, message_t* p_msg ) {
-  }
-  
-  default async event void TimeStamp.receivedSFD( uint16_t time ) {
-  }
-
 }
 

@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.5 2008-06-11 00:46:27 razvanm Exp $
+// $Id: ActiveMessageC.nc,v 1.6 2008-06-17 07:29:25 kusy Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: ActiveMessageC.nc,v 1.5 2008-06-11 00:46:27 razvanm Exp $
+ * Date last modified:  $Id: ActiveMessageC.nc,v 1.6 2008-06-17 07:29:25 kusy Exp $
  *
  */
 
@@ -48,13 +48,15 @@ configuration ActiveMessageC {
   provides {
     interface SplitControl;
 
-    interface AMSend[uint8_t id];
-    interface Receive[uint8_t id];
-    interface Receive as Snoop[uint8_t id];
+    interface AMSend[am_id_t id];
+    interface Receive[am_id_t id];
+    interface Receive as Snoop[am_id_t id];
 
     interface Packet;
     interface AMPacket;
     interface PacketAcknowledgements;
+    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+    interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
   }
 }
 implementation {
@@ -68,4 +70,8 @@ implementation {
   Packet       = AM;
   AMPacket     = AM;
   PacketAcknowledgements = AM;
+
+  components CC2420PacketC;
+  PacketTimeStamp32khz = CC2420PacketC;
+  PacketTimeStampMilli = CC2420PacketC;
 }

@@ -34,7 +34,7 @@
  * ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2008-06-03 04:43:03 $
+ * @version $Revision: 1.4 $ $Date: 2008-06-17 07:28:24 $
  */
 
 #include "message.h"
@@ -46,7 +46,7 @@ interface CC2420Receive {
    *
    * @param time at which the capture happened.
    */
-  async command void sfd( uint16_t time );
+  async command void sfd( uint32_t time );
 
   /**
    * Notification that the packet has been dropped by the radio

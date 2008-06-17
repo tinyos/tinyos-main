@@ -33,7 +33,7 @@
  * Implementation of the transmit path for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2007-07-04 00:37:16 $
+ * @version $Revision: 1.2 $ $Date: 2008-06-17 07:28:24 $
  */
 
 #include "IEEE802154.h"
@@ -44,7 +44,6 @@ configuration CC2420TransmitC {
     interface StdControl;
     interface CC2420Transmit;
     interface RadioBackoff;
-    interface RadioTimeStamping;
     interface ReceiveIndicator as EnergyIndicator;
     interface ReceiveIndicator as ByteIndicator;
   }
@@ -56,7 +55,6 @@ implementation {
   StdControl = CC2420TransmitP;
   CC2420Transmit = CC2420TransmitP;
   RadioBackoff = CC2420TransmitP;
-  RadioTimeStamping = CC2420TransmitP;
   EnergyIndicator = CC2420TransmitP.EnergyIndicator;
   ByteIndicator = CC2420TransmitP.ByteIndicator;
 
@@ -93,7 +91,9 @@ implementation {
   components CC2420PacketC;
   CC2420TransmitP.CC2420Packet -> CC2420PacketC;
   CC2420TransmitP.CC2420PacketBody -> CC2420PacketC;
-  
+  CC2420TransmitP.PacketTimeStamp -> CC2420PacketC;
+  CC2420TransmitP.PacketTimeSyncOffset -> CC2420PacketC;
+
   components LedsC;
   CC2420TransmitP.Leds -> LedsC;
 }

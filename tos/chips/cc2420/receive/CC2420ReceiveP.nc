@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.11 $ $Date: 2008-06-04 05:36:21 $
+ * @version $Revision: 1.12 $ $Date: 2008-06-17 07:28:24 $
  */
 
 #include "IEEE802154.h"
@@ -60,7 +60,8 @@ module CC2420ReceiveP {
   uses interface CC2420Packet;
   uses interface CC2420PacketBody;
   uses interface CC2420Config;
-  
+  uses interface PacketTimeStamp<T32khz,uint32_t>;
+
   uses interface Leds;
 }
 
@@ -80,8 +81,8 @@ implementation {
     SACK_HEADER_LENGTH = 7,
   };
 
-  uint16_t m_timestamp_queue[ TIMESTAMP_QUEUE_SIZE ];
-  
+  uint32_t m_timestamp_queue[ TIMESTAMP_QUEUE_SIZE ];
+
   uint8_t m_timestamp_head;
   
   uint8_t m_timestamp_size;
@@ -145,7 +146,7 @@ implementation {
    * Start frame delimiter signifies the beginning/end of a packet
    * See the CC2420 datasheet for details.
    */
-  async command void CC2420Receive.sfd( uint16_t time ) {
+  async command void CC2420Receive.sfd( uint32_t time ) {
     if ( m_timestamp_size < TIMESTAMP_QUEUE_SIZE ) {
       uint8_t tail =  ( ( m_timestamp_head + m_timestamp_size ) % 
                         TIMESTAMP_QUEUE_SIZE );
@@ -194,7 +195,6 @@ implementation {
   async event void RXFIFO.readDone( uint8_t* rx_buf, uint8_t rx_len,
                                     error_t error ) {
     cc2420_header_t* header = call CC2420PacketBody.getHeader( m_p_rx_buf );
-    cc2420_metadata_t* metadata = call CC2420PacketBody.getMetadata( m_p_rx_buf );
     uint8_t tmpLen __DEPUTY_UNUSED__ = sizeof(message_t) - (offsetof(message_t, data) - sizeof(cc2420_header_t));
     uint8_t* COUNT(tmpLen) buf = TCAST(uint8_t* COUNT(tmpLen), header);
     rxFrameLength = buf[ 0 ];
@@ -283,12 +283,12 @@ implementation {
       
       if ( m_timestamp_size ) {
         if ( rxFrameLength > 10 ) {
-          metadata->time = m_timestamp_queue[ m_timestamp_head ];
+          call PacketTimeStamp.set(m_p_rx_buf, m_timestamp_queue[ m_timestamp_head ]);
           m_timestamp_head = ( m_timestamp_head + 1 ) % TIMESTAMP_QUEUE_SIZE;
           m_timestamp_size--;
         }
       } else {
-        metadata->time = 0xffff;
+        call PacketTimeStamp.clear(m_p_rx_buf);
       }
       
       // We may have received an ack that should be processed by Transmit

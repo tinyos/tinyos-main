@@ -35,67 +35,36 @@
  * @author Chad Metcalf
  */
 
-#include "IEEE802154.h"
-#include "message.h"
-
-module CC2420PacketC {
+configuration CC2420PacketC {
 
   provides {
     interface CC2420Packet;
     interface PacketAcknowledgements as Acks;
     interface CC2420PacketBody;
     interface LinkPacketMetadata;
+
+    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+    interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+    interface PacketTimeSyncOffset;
   }
 
 }
 
 implementation {
+  components CC2420PacketP;
+  CC2420Packet         = CC2420PacketP;
+  Acks                 = CC2420PacketP;
+  CC2420PacketBody     = CC2420PacketP;
+  LinkPacketMetadata   = CC2420PacketP;
+  PacketTimeStamp32khz = CC2420PacketP;
+  PacketTimeStampMilli = CC2420PacketP;
+  PacketTimeSyncOffset = CC2420PacketP;
 
+  components CC2420ActiveMessageC;
+  CC2420PacketP.Packet -> CC2420ActiveMessageC;
 
-  /***************** PacketAcknowledgement Commands ****************/
-  async command error_t Acks.requestAck( message_t* p_msg ) {
-    (call CC2420PacketBody.getHeader( p_msg ))->fcf |= 1 << IEEE154_FCF_ACK_REQ;
-    return SUCCESS;
-  }
-
-  async command error_t Acks.noAck( message_t* p_msg ) {
-    (call CC2420PacketBody.getHeader( p_msg ))->fcf &= ~(1 << IEEE154_FCF_ACK_REQ);
-    return SUCCESS;
-  }
-
-  async command bool Acks.wasAcked( message_t* p_msg ) {
-    return (call CC2420PacketBody.getMetadata( p_msg ))->ack;
-  }
-
-  /***************** CC2420Packet Commands ****************/
-  async command void CC2420Packet.setPower( message_t* p_msg, uint8_t power ) {
-    if ( power > 31 )
-      power = 31;
-    (call CC2420PacketBody.getMetadata( p_msg ))->tx_power = power;
-  }
-
-  async command uint8_t CC2420Packet.getPower( message_t* p_msg ) {
-    return (call CC2420PacketBody.getMetadata( p_msg ))->tx_power;
-  }
-   
-  async command int8_t CC2420Packet.getRssi( message_t* p_msg ) {
-    return (call CC2420PacketBody.getMetadata( p_msg ))->rssi;
-  }
-
-  async command uint8_t CC2420Packet.getLqi( message_t* p_msg ) {
-    return (call CC2420PacketBody.getMetadata( p_msg ))->lqi;
-  }
-
-  /***************** CC2420PacketBody Commands ****************/
-  async command cc2420_header_t * ONE CC2420PacketBody.getHeader( message_t* ONE msg ) {
-    return TCAST(cc2420_header_t* ONE, (uint8_t *)msg + offsetof(message_t, data) - sizeof( cc2420_header_t ));
-  }
-
-  async command cc2420_metadata_t *CC2420PacketBody.getMetadata( message_t* msg ) {
-    return (cc2420_metadata_t*)msg->metadata;
-  }
-
-  async command bool LinkPacketMetadata.highChannelQuality(message_t* msg) {
-    return call CC2420Packet.getLqi(msg) > 105;
-  }
+  components Counter32khz32C, new CounterToLocalTimeC(T32khz), HilTimerMilliC;
+  CounterToLocalTimeC.Counter -> Counter32khz32C;
+  CC2420PacketP.LocalTime32khz -> CounterToLocalTimeC;
+  CC2420PacketP.LocalTimeMilli -> HilTimerMilliC;
 }
