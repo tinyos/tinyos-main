@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2008-06-13 13:40:59 $
+ * $Revision: 1.8 $
+ * $Date: 2008-06-17 16:53:50 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * ========================================================================
  */
@@ -55,9 +55,6 @@ module Tda5250RadioP {
         interface RadioByteComm;
         interface ResourceRequested;
         interface ClkDiv;
-#ifdef LNDW
-        interface RfPower;
-#endif
     }
     uses {
         interface HplTda5250Config;
@@ -82,27 +79,6 @@ implementation {
     radioMode_t radioMode;    // Current Mode of the Radio
     float onTime, offTime;
 
-#ifdef LNDW
-    norace bool rfpowerdirty = FALSE;
-    norace uint8_t rfpower = INITIAL_RF_POWER;
-    task void setRfPower() {
-        uint8_t rp, rd;
-        atomic {
-            rp = rfpower;
-            rd = rfpowerdirty;
-        }
-        if(rd) {
-            if(call ConfigResource.immediateRequest() == SUCCESS)  {
-                call HplTda5250Config.SetRFPower(rp);                
-                atomic rfpowerdirty = FALSE;
-            }
-            else {
-                post setRfPower();
-            }
-        }
-    }
-#endif
-    
     /**************** Radio Init *****************/
     command error_t Init.init() {
         radioMode = RADIO_MODE_OFF;
@@ -180,7 +156,6 @@ implementation {
                 call HplTda5250Config.SetSleepMode();
                 atomic radioMode = RADIO_MODE_SLEEP;
                 signal Tda5250Control.SleepModeDone();
-                if(rfpowerdirty) post setRfPower();
                 break;
             case RADIO_MODE_TX_TRANSITION:
                 call HplTda5250Config.SetSlaveMode();
@@ -479,13 +454,4 @@ implementation {
       }
       default async event void ClkDiv.stopping() {
       }
-#ifdef LNDW
-      async command error_t RfPower.set(uint8_t setting) {
-          atomic {
-              rfpower = setting;
-              rfpowerdirty = TRUE;
-          }
-          return SUCCESS;
-      }
-#endif
 }
