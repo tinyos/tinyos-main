@@ -6,7 +6,7 @@
 # @includes instead of -I's to @opts, otherwise the %T won't be processed
 # by ncc.
 #
-# $Id: .platform,v 1.3 2008-01-24 20:45:51 sallai Exp $
+# $Id: .platform,v 1.4 2008-06-17 18:21:08 sallai Exp $
 #
 push( @includes, qw(
 
@@ -47,3 +47,28 @@ push( @includes, qw(
 push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;
 push @opts, "-mingw-gcc" if $cygwin;
 
+$ENV{'CIL_MACHINE'} =
+    "version_major=3 " .
+    "version_minor=4 " .
+    "version=avr-3.4.3 " .
+    "short=2,1, " .
+    "int=2,1 " .
+    "long=4,1 " .
+    "long_long=8,1 " .
+    "pointer=2,1 " .
+    "enum=2,1 " .
+    "float=4,1 " .
+    "double=4,1 " .
+    "long_double=4,1 " .
+    "void=1,1 " .
+    "fun=1,1 " .
+    "wchar_size_size=2,2 " .
+    "alignof_string=1 " .
+    "max_alignment=1 " .
+    "char_wchar_signed=true,true " .
+    "const_string_literals=true " .
+    "big_endian=false " .
+    "underscore_name=false " .
+    "__builtin_va_list=true " .
+    "__thread_is_keyword=true";
+    
