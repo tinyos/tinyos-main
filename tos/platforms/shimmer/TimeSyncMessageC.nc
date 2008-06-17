@@ -1,4 +1,4 @@
-// $Id: TimeSyncMessageC.nc,v 1.1 2008-06-17 07:29:25 kusy Exp $
+// $Id: TimeSyncMessageC.nc,v 1.2 2008-06-17 07:35:54 kusy Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.
@@ -43,11 +43,10 @@ configuration TimeSyncMessageC {
   provides
   {
     interface SplitControl;
-    interface Receive[uint8_t id];
-    interface Receive as Snoop[uint8_t id];
+    interface Receive[am_id_t id];
+    interface Receive as Snoop[am_id_t id];
     interface Packet;
     interface AMPacket;
-    interface PacketAcknowledgements;
 
     interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -68,7 +67,7 @@ implementation {
   Snoop        = AM.Snoop;
   Packet       = AM;
   AMPacket     = AM;
-  PacketAcknowledgements = AM;
+
   TimeSyncAMSend32khz       = AM;
   TimeSyncAMSendMilli       = AM;
   TimeSyncPacket32khz       = AM;
