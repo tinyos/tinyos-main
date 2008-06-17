@@ -35,53 +35,82 @@
 
 module CCollectionP {
   uses {
-    interface BlockingStdControl;
-    interface BlockingReceive[am_id_t amId];
-    interface BlockingReceive as BlockingReceiveAny;
-    interface BlockingReceive as BlockingSnoop[am_id_t amId];
-    interface BlockingReceive as BlockingSnoopAny;
-    interface BlockingAMSend as Send[am_id_t id];
+    interface BlockingStdControl as RoutingControl;
+    interface BlockingReceive[collection_id_t id];
+    interface BlockingReceive as BlockingSnoop[collection_id_t id];
+    interface BlockingSend[am_id_t id];
     interface Packet;
-    interface AMPacket;
-    interface PacketAcknowledgements;
+    interface CollectionPacket;
+    interface RootControl;
+  }
+  provides {
+    interface CollectionId[uint8_t client];
   }
 }
 implementation {
+  command collection_id_t CollectionId.fetch[uint8_t id]() {
+    return id;
+  }
+  
+  error_t collectionRoutingStart() @C() @spontaneous() {
+    return call RoutingControl.start();
+  }
+  error_t collectionRoutingStop() @C() @spontaneous() {
+    return call RoutingControl.stop();
+  }
+
   error_t collectionReceive(message_t* m, uint32_t timeout, collection_id_t id) @C() @spontaneous() {
+    return call BlockingReceive.receive[id](m, timeout);
   }
   error_t collectionSnoop(message_t* m, uint32_t timeout, collection_id_t id) @C() @spontaneous() {
+    return call BlockingSnoop.receive[id](m, timeout);
   }
   error_t collectionSend(message_t* msg, uint8_t len, collection_id_t id) @C() @spontaneous() {
+    return call BlockingSend.send[id](msg, len);
   }
  
   void collectionClear(message_t* msg) @C() @spontaneous() {
+    call Packet.clear(msg);
   }
   uint8_t collectionGetPayloadLength(message_t* msg) @C() @spontaneous() {
+    return call Packet.payloadLength(msg);
   }
   void collectionSetPayloadLength(message_t* msg, uint8_t len) @C() @spontaneous() {
+    call Packet.setPayloadLength(msg, len);
   }
   uint8_t collectionMaxPayloadLength() @C() @spontaneous() {
+    return call Packet.maxPayloadLength();
   }
   void* collectionGetPayload(message_t* msg, uint8_t len) @C() @spontaneous() {
+    return call Packet.getPayload(msg, len);
   }
 
   am_addr_t collectionGetOrigin(message_t* msg) @C() @spontaneous() {
+    return call CollectionPacket.getOrigin(msg);
   }
   void collectionSetOrigin(message_t* msg, am_addr_t addr) @C() @spontaneous() {
+    call CollectionPacket.setOrigin(msg, addr);
   }
   collection_id_t collectionGetType(message_t* msg) @C() @spontaneous() {
+    return call CollectionPacket.getType(msg);
   }
   void collectionSetType(message_t* msg, collection_id_t id) @C() @spontaneous() {
+    call CollectionPacket.setType(msg, id);
   }
   uint8_t collectionGetSequenceNumber(message_t* msg) @C() @spontaneous() {
+    return call CollectionPacket.getSequenceNumber(msg);
   }
   void collectionSetSequenceNumber(message_t* msg, uint8_t seqno) @C() @spontaneous() {
+    call CollectionPacket.setSequenceNumber(msg, seqno);
   }
 
   error_t collectionSetRoot() @C() @spontaneous() {
+    return call RootControl.setRoot();
   }
   error_t collectionUnsetRoot() @C() @spontaneous() {
+    return call RootControl.unsetRoot();
   }
   bool collectionIsRoot() @C() @spontaneous() {
+    return call RootControl.isRoot();
   }
 }

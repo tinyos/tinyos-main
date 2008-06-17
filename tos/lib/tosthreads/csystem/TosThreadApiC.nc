@@ -67,6 +67,9 @@ implementation {
   #if defined(TOSTHREAD_LOGSTORAGE_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
     components CLogStorageC;
   #endif 
+  #if defined(TOSTHREAD_COLLECTION_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
+    components CCollectionC;
+  #endif 
   
   //Telosb sensorboard specific.
   #if defined(TOSTHREAD_HAMAMATSUS1087_H) || defined(TOSTHREAD_DYNAMIC_LOADER)

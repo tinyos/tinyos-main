@@ -34,6 +34,7 @@
  */
 
 #include "tosthread_collection.h"
+#include "Ctp.h"
 
 configuration CCollectionC {}
 
@@ -42,14 +43,26 @@ implementation {
   components BlockingCollectionReceiverP;
   components BlockingCollectionSnooperP;
   components BlockingCollectionSenderP;
+  components BlockingCollectionControlC;
   
-  CAMP.BlockingStdControl -> AM;
-  CAMP.BlockingReceive -> AM.BlockingReceive;
-  CAMP.BlockingSnoop -> AM.BlockingSnoop;
-  CAMP.BlockingReceiveAny -> AM.BlockingReceiveAny;
-  CAMP.BlockingSnoopAny -> AM.BlockingSnoopAny;
-  CAMP.Send -> AM;
-  CAMP.Packet -> AM;
-  CAMP.AMPacket -> AM;
-  CAMP.PacketAcknowledgements -> AM;
+  //Allocate enough room in the message queue for all message types.
+  //This number needs to be 255-1-12 because 
+  //(1) The max number that can be provided to the Queue underneath for its size is 255
+  //(2) uniqueN() will give you values from 0..N constituting N+1 unique numbers
+  //(3) there are 12 spaces reserved in the send queue in CtpP for forwarding messages.
+  //I don't like this implementation, but it will do for now....
+  enum {
+   FIRST_CLIENT = uniqueN(UQ_CTP_CLIENT, 255-1-12),
+  };
+  
+  CCP.BlockingReceive -> BlockingCollectionReceiverP;
+  CCP.BlockingSnoop -> BlockingCollectionSnooperP;
+  CCP.BlockingSend -> BlockingCollectionSenderP;
+  CCP.RoutingControl -> BlockingCollectionControlC;
+  
+  components CollectionC;
+  CCP.Packet -> CollectionC;
+  CCP.CollectionPacket -> CollectionC;
+  CCP.RootControl -> CollectionC;
+  CollectionC.CollectionId -> CCP;
 }

@@ -25,27 +25,26 @@
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
 
-configuration BlockingCollectionSenderP {
+#include <MultiHopLqi.h>
+
+generic configuration BlockingCollectionSenderC (collection_id_t collectid) {
   provides {
-    interface BlockingSend[uint8_t id];
+    interface BlockingSend;
+    interface Packet;
   }
 }
 
 implementation {
-  components BlockingCollectionSenderImplP,
-             CollectionC as Collector,
-             MutexC,
-             SystemCallC,
-             MainC,
-             LedsC;
-  
-  MainC.SoftwareInit -> BlockingCollectionSenderImplP;
-  BlockingSend = BlockingCollectionSenderImplP.BlockingSend;
-  
-  BlockingCollectionSenderImplP.Mutex -> MutexC;
-  BlockingCollectionSenderImplP.SystemCall -> SystemCallC;
-  BlockingCollectionSenderImplP.Send -> Collector;
-  BlockingCollectionSenderImplP.Packet -> Collector;
-  BlockingCollectionSenderImplP.Leds -> LedsC;
-}
+  components BlockingCollectionSenderP,
+             new CollectionIdP(collectid),
+             CollectionC as Collector;
+             
+  enum {
+    CLIENT_ID = unique(UQ_LQI_CLIENT),
+  };
 
+  BlockingSend = BlockingCollectionSenderP.BlockingSend[CLIENT_ID];
+  Packet = Collector;
+  
+  Collector.CollectionId[CLIENT_ID] -> CollectionIdP;
+}

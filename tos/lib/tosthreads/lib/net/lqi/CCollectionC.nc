@@ -32,36 +32,37 @@
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
- 
-#ifndef TOSTHREAD_COLLECTION_H
-#define TOSTHREAD_COLLECTION_H
 
-#include "message.h"
-#include "TinyError.h"
-#include "Collection.h"
+#include "tosthread_collection.h"
+#include "MultiHopLqi.h"
 
-extern error_t collectionRoutingStart();
-extern error_t collectionRoutingStop();
+configuration CCollectionC {}
 
-extern error_t collectionReceive(message_t* m, uint32_t timeout, collection_id_t id);
-extern error_t collectionSnoop(message_t* m, uint32_t timeout, collection_id_t id);
-extern error_t collectionSend(message_t* msg, uint8_t len, collection_id_t id);
- 
-extern void    collectionClear(message_t* msg);
-extern uint8_t collectionGetPayloadLength(message_t* msg);
-extern void    collectionSetPayloadLength(message_t* msg, uint8_t len);
-extern uint8_t collectionMaxPayloadLength();
-extern void*   collectionGetPayload(message_t* msg, uint8_t len);
-
-extern am_addr_t       collectionGetOrigin(message_t* msg);
-extern void            collectionSetOrigin(message_t* msg, am_addr_t addr);
-extern collection_id_t collectionGetType(message_t* msg);
-extern void            collectionSetType(message_t* msg, collection_id_t id);
-extern uint8_t         collectionGetSequenceNumber(message_t* msg);
-extern void            collectionSetSequenceNumber(message_t* msg, uint8_t seqno);
-
-extern error_t collectionSetRoot();
-extern error_t collectionUnsetRoot();
-extern bool    collectionIsRoot();
-
-#endif //TOSTHREAD_COLLECTION_H
+implementation {
+  components CCollectionP as CCP;
+  components BlockingCollectionReceiverP;
+  components BlockingCollectionSnooperP;
+  components BlockingCollectionSenderP;
+  components BlockingCollectionControlC;
+  
+  //Allocate enough room in the message queue for all message types.
+  //This number needs to be 255-1-12 because 
+  //(1) The max number that can be provided to the Queue underneath for its size is 255
+  //(2) uniqueN() will give you values from 0..N constituting N+1 unique numbers
+  //(3) there are 12 spaces reserved in the send queue in CtpP for forwarding messages.
+  //I don't like this implementation, but it will do for now....
+  enum {
+   FIRST_CLIENT = uniqueN(UQ_LQI_CLIENT, 255-1-12),
+  };
+  
+  CCP.BlockingReceive -> BlockingCollectionReceiverP;
+  CCP.BlockingSnoop -> BlockingCollectionSnooperP;
+  CCP.BlockingSend -> BlockingCollectionSenderP;
+  CCP.RoutingControl -> BlockingCollectionControlC;
+  
+  components CollectionC;
+  CCP.Packet -> CollectionC;
+  CCP.CollectionPacket -> CollectionC;
+  CCP.RootControl -> CollectionC;
+  CollectionC.CollectionId -> CCP;
+}

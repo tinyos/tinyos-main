@@ -22,6 +22,7 @@
 
 /*
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
+ * @author Kevin Klues <klueska@cs.stanford.edu>
  */
 
 #include <Ctp.h>
@@ -34,9 +35,16 @@ generic configuration BlockingCollectionSenderC (collection_id_t collectid) {
 }
 
 implementation {
-  components new BlockingCollectionSenderP(collectid, unique(UQ_CTP_CLIENT)),
+  components BlockingCollectionSenderP,
+             new CollectionIdP(collectid),
              CollectionC as Collector;
+             
+  enum {
+    CLIENT_ID = unique(UQ_CTP_CLIENT),
+  };
 
-  BlockingSend = BlockingCollectionSenderP;
+  BlockingSend = BlockingCollectionSenderP.BlockingSend[CLIENT_ID];
   Packet = Collector;
+  
+  Collector.CollectionId[CLIENT_ID] -> CollectionIdP;
 }
