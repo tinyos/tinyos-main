@@ -1,0 +1,50 @@
+TestFTSP
+
+-------------------------------------------------------------------------------
+Author/Contact:
+---------------
+ Brano Kusy: branislav.kusy@gmail.com
+ Janos Sallai: janos.sallai@vanderbilt.edu
+ Miklos Maroti: mmaroti@gmail.com
+
+-------------------------------------------------------------------------------
+DESCRIPTION:
+------------
+ The TestFTSP application tests the Flooding Time Synchronization Protocol
+ (FTSP) implementation. A network of motes programmed with TestFTSP run the
+ FTSP protocol to time synchronize, and sends to the base station the global
+ reception timestamps of messages broadcast by a dedicated beacon mote
+ programmed with RadioCountToLeds. Ideally, the global reception timestamps of
+ the same RadioCountToLeds message should agree for all TestFTSP motes (with a
+ small synchronization error).
+
+-------------------------------------------------------------------------------
+SUPPORTED PLATFORMS:
+--------------------------------------------
+ The supported platforms are micaz, telosb and iris.
+
+-------------------------------------------------------------------------------
+STEP BY STEP GUIDE TO RUN OUR TEST SCENARIO:
+--------------------------------------------
+ - program one mote with apps/RadioCountToLeds
+ - program multiple motes with TestFTSP
+ - program a mote with apps/BaseStation, leave it on the programming board
+ - turn on all the motes
+ - start the FTSPDataLogger java application (type "java FTSPDataLogger")
+
+-------------------------------------------------------------------------------
+REPORTED DATA:
+--------------
+ The most important reported data is the global time of arrival of the beacons.
+ The beacon msg arrives to all clients at the same time instant, thus reported
+ global times should be the same for all clients for the same sequence number.
+
+ Each message contains:
+ - the time of message reception by the java app [JAVA_TIME]
+ - the node ID of the mote that is sending this report [NODE_ID]
+ - the  sequence number of the RadioCountToLeds message that is increased
+   for each new polling msg [SEQ_NUM]
+ - the global time when the polling message arrived [GLOB_TIME]
+ - a result_t value indicating if the timestamp is valid [IS_TIME_VALID]
+
+
