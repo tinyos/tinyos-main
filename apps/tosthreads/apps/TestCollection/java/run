@@ -1,0 +1,7 @@
+#!/bin/sh
+if cygpath -w / >/dev/null 2>/dev/null; then
+  CLASSPATH="oscilloscope.jar;$CLASSPATH"
+else
+  CLASSPATH="oscilloscope.jar:$CLASSPATH"
+fi
+java Oscilloscope

@@ -1,0 +1,19 @@
+<project name="tinyos-2.x app multihoposcilloscope" default="all">
+
+	<target name="all" >
+		<exec executable="make" failonerror="true">
+			<arg line="all" />
+		</exec>
+	</target>
+
+	<target name="java" depends="all">
+	</target>
+
+	<target name="javadoc" >
+		<echo message = "Building javadoc" />
+		<exec executable="make" failonerror="true">
+			<arg line="javadoc" />
+		</exec>
+	</target>
+	
+</project>
