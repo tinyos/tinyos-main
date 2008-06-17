@@ -40,6 +40,7 @@ implementation {
              MainC,
              BlockingSerialActiveMessageC,
              new BlockingSerialAMSenderC(AM_OSCILLOSCOPE);
+             
   
   TestCollectionC.MainThread -> MainThread;
   TestCollectionC.Boot -> MainC;

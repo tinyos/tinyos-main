@@ -78,8 +78,7 @@ void tosthread_main(void* arg) {
   barrier_reset(&send_barrier, NUM_SENSORS+1);
   barrier_reset(&sense_barrier, NUM_SENSORS+1);
   sensor_data = radioGetPayload(&send_msg, sizeof(sensor_data_t));
-  //sensor_data->seq_no = 0;
-  __nesc_hton_uint32((unsigned char *)&sensor_data->seq_no, (unsigned long )0);
+  sensor_data->seq_no = 0;
 
   amRadioStart();
   tosthread_create(&humidity, humidity_thread, NULL, 200);
@@ -94,8 +93,7 @@ void read_sensor(error_t (*read)(uint16_t*), nx_uint16_t* nx_val) {
   for(;;) {
     (*read)(&val);
     mutex_lock(&data_mutex);
-    //  *nx_val = val;
-    __nesc_hton_uint16((unsigned char *)&*nx_val, val);
+     *nx_val = val;
     mutex_unlock(&data_mutex);
     barrier_block(&send_barrier);
     barrier_block(&sense_barrier);
@@ -115,17 +113,12 @@ void photo_active_thread(void* arg) {
   read_sensor(hamamatsuS1087_par_read, &(sensor_data->par));
 }
 void send_thread(void* arg) {
-  //Only needed for nesC magic.... I hate this hack.....
-  unsigned long __nesc_temp43;
-  unsigned char *__nesc_temp42;
-
   for(;;) {
     barrier_block(&send_barrier);
     barrier_reset(&send_barrier, NUM_SENSORS + 1);
     
     if(amRadioSend(AM_BROADCAST_ADDR, &send_msg, sizeof(sensor_data_t), AM_SENSOR_DATA_MSG) == SUCCESS) {
-      //sensor_data->seq_no++;
-      (__nesc_temp42 = (unsigned char *)&sensor_data->seq_no, __nesc_hton_uint32(__nesc_temp42, (__nesc_temp43 = __nesc_ntoh_uint32(__nesc_temp42)) + 1), __nesc_temp43);
+      sensor_data->seq_no++;
       led0Toggle();
     }
     //tosthread_sleep(SAMPLING_PERIOD);

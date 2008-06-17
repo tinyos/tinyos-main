@@ -84,8 +84,7 @@ void tosthread_main(void* arg) {
   barrier_reset(&send_barrier, NUM_SENSORS+1);
   barrier_reset(&sense_barrier, NUM_SENSORS+1);
   sending_sensor_data = radioGetPayload(&send_msg, sizeof(sensor_data_t));
-  //storing_sensor_data->seq_no = 0;
-  __nesc_hton_uint32((unsigned char *)&storing_sensor_data.seq_no, (unsigned long )0);
+  storing_sensor_data.seq_no = 0;
 
   amRadioStart();
   led0Toggle();
@@ -104,8 +103,7 @@ void read_sensor(error_t (*read)(uint16_t*), nx_uint16_t* nx_val) {
   for(;;) {
     (*read)(&val);
     mutex_lock(&data_mutex);
-    //  *nx_val = val;
-    __nesc_hton_uint16((unsigned char *)&*nx_val, val);
+    *nx_val = val;
     mutex_unlock(&data_mutex);
     barrier_block(&send_barrier);
     barrier_block(&sense_barrier);
@@ -128,10 +126,6 @@ void store_thread(void* arg) {
   storage_len_t sensor_data_len;
   bool sensor_records_lost;
   
-  //Only needed for nesC magic.... I hate this hack.....
-  unsigned long __nesc_temp43;
-  unsigned char *__nesc_temp42;
-  
   for(;;) {
     barrier_block(&send_barrier);
     barrier_reset(&send_barrier, NUM_SENSORS + 1);
@@ -141,8 +135,7 @@ void store_thread(void* arg) {
       while( volumeLogAppend(VOLUME_SENSORLOG, &storing_sensor_data, &sensor_data_len, &sensor_records_lost) != SUCCESS );
     mutex_unlock(&log_mutex);
     
-    //storing_sensor_data.seq_no++
-    (__nesc_temp42 = (unsigned char *)&storing_sensor_data.seq_no, __nesc_hton_uint32(__nesc_temp42, (__nesc_temp43 = __nesc_ntoh_uint32(__nesc_temp42)) + 1), __nesc_temp43);
+    storing_sensor_data.seq_no++;
     led0Toggle();
 
     //tosthread_sleep(SAMPLING_PERIOD);
