@@ -159,7 +159,7 @@ interface IEEE154Packet
 	 */
 	async command void setSrcAddr(message_t* msg, uint16_t addr);
 
-#ifdef IEEE154_6LOWPAN
+#ifndef TFRAMES_ENABLED
 
 	/**
 	 * Returns the value of the 6LowPan network field.

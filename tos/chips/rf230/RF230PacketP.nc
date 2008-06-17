@@ -55,7 +55,7 @@ implementation
 	{
 		PACKET_LENGTH_INCREASE = 
 			sizeof(rf230packet_header_t) - 1	// the 8-bit length field is not counted
-			+ sizeof(ieee154_footer_t),			// the CRC is not stored in memory
+			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
 	};
 
 	inline rf230packet_metadata_t* getMeta(message_t* msg)
@@ -69,10 +69,6 @@ implementation
 	{
 		call IEEE154Packet.createDataFrame(msg);
 
-#ifdef IEEE154_6LOWPAN
-		call IEEE154Packet.set6LowPan(msg, TINYOS_6LOWPAN_NETWORK_ID);
-#endif
-
 		getMeta(msg)->flags = RF230PACKET_CLEAR_METADATA;
 	}
 
@@ -81,13 +77,11 @@ implementation
 		call IEEE154Packet.setLength(msg, len + PACKET_LENGTH_INCREASE);
 	}
 
-	// TODO: make Packet.payloadLength async
 	inline command uint8_t Packet.payloadLength(message_t* msg) 
 	{
 		return call IEEE154Packet.getLength(msg) - PACKET_LENGTH_INCREASE;
 	}
 
-	// TODO: make Packet.maxPayloadLength async
 	inline command uint8_t Packet.maxPayloadLength()
 	{
 		return TOSH_DATA_LENGTH;

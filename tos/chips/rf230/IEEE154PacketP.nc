@@ -191,7 +191,7 @@ implementation
 		getHeader(msg)->src = addr;
 	}
 
-#ifdef IEEE154_6LOWPAN
+#ifndef TFRAMES_ENABLED
 
 	inline async command uint8_t IEEE154Packet.get6LowPan(message_t* msg)
 	{

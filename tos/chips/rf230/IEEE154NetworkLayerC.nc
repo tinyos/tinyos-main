@@ -21,55 +21,33 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __IEEE154PACKET_H__
-#define __IEEE154PACKET_H__
-
-typedef nx_struct ieee154_header_t
+configuration IEEE154NetworkLayerC
 {
-	nxle_uint8_t length;
-	nxle_uint16_t fcf;
-	nxle_uint8_t dsn;
-	nxle_uint16_t destpan;
-	nxle_uint16_t dest;
-	nxle_uint16_t src;
+	provides
+	{
+		interface SplitControl;
+		interface Send;
+		interface Receive;
+	}
+	uses
+	{
+		interface SplitControl as SubControl;
+		interface Send as SubSend;
+		interface Receive as SubReceive;
+	}
+}
 
-// I-Frame 6LowPAN interoperability byte
-#ifndef TFRAMES_ENABLED	
-	nxle_uint8_t network;
-#endif
+implementation
+{
+	components IEEE154NetworkLayerP, IEEE154PacketC;
 
-	nxle_uint8_t type;
-} ieee154_header_t;
+	SplitControl = SubControl;
 
-// the actual radio driver might not use this
-typedef nx_struct ieee154_footer_t
-{ 
-	nxle_uint16_t crc;
-} ieee154_footer_t;
+	Send = IEEE154NetworkLayerP;
+	Receive = IEEE154NetworkLayerP;
 
-enum ieee154_fcf_enums {
-	IEEE154_FCF_FRAME_TYPE = 0,
-	IEEE154_FCF_SECURITY_ENABLED = 3,
-	IEEE154_FCF_FRAME_PENDING = 4,
-	IEEE154_FCF_ACK_REQ = 5,
-	IEEE154_FCF_INTRAPAN = 6,
-	IEEE154_FCF_DEST_ADDR_MODE = 10,
-	IEEE154_FCF_SRC_ADDR_MODE = 14,
-};
+	SubSend = IEEE154NetworkLayerP;
+	SubReceive = IEEE154NetworkLayerP;
 
-enum ieee154_fcf_type_enums {
-	IEEE154_TYPE_BEACON = 0,
-	IEEE154_TYPE_DATA = 1,
-	IEEE154_TYPE_ACK = 2,
-	IEEE154_TYPE_MAC_CMD = 3,
-	IEEE154_TYPE_MASK = 7,
-};
-
-enum iee154_fcf_addr_mode_enums {
-	IEEE154_ADDR_NONE = 0,
-	IEEE154_ADDR_SHORT = 2,
-	IEEE154_ADDR_EXT = 3,
-	IEEE154_ADDR_MASK = 3,
-};
-
-#endif//__IEEE154PACKET_H__
+	IEEE154NetworkLayerP.IEEE154Packet -> IEEE154PacketC;
+}

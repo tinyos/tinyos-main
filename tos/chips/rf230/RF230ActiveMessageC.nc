@@ -75,6 +75,13 @@ implementation
 #else	
 	components new DummyLayerC() as LowPowerListeningLayerC;
 #endif
+
+#ifdef TFRAMES_ENABLED
+	components new DummyLayerC() as IEEE154NetworkLayerC;
+#else
+	components IEEE154NetworkLayerC;
+#endif
+
 	components MessageBufferLayerC;
 	components UniqueLayerC;
 	components TrafficMonitorLayerC;
