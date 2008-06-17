@@ -63,8 +63,11 @@ implementation {
   components CC2420ActiveMessageC;
   CC2420PacketP.Packet -> CC2420ActiveMessageC;
 
-  components Counter32khz32C, new CounterToLocalTimeC(T32khz), HilTimerMilliC;
+  components Counter32khz32C, new CounterToLocalTimeC(T32khz);
   CounterToLocalTimeC.Counter -> Counter32khz32C;
   CC2420PacketP.LocalTime32khz -> CounterToLocalTimeC;
+
+  //DummyTimer is introduced to compile apps that use no timers
+  components HilTimerMilliC, new TimerMilliC() as DummyTimer;
   CC2420PacketP.LocalTimeMilli -> HilTimerMilliC;
 }
