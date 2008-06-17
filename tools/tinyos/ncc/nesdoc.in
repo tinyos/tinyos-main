@@ -137,7 +137,7 @@ unshift @ncc_args, "-fnesc-dump=interfacedefs";
 unshift @ncc_args, "-fnesc-dump=components(wiring)";
 unshift @ncc_args, "-fnesc-dump=interfaces";
 unshift @ncc_args, "-fnesc-dump=functions(!global())";
-unshift @ncc_args, "-fnesc-dump=referenced(interfaces,components)";
+unshift @ncc_args, "-fnesc-dump=referenced(interfaces,components,functions)";
 unshift @ncc_args, "$exec_prefix/bin/ncc";
 
 print STDERR join(' ', @ncc_args), "\n" if $verbose;

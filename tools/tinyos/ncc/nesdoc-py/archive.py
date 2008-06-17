@@ -150,7 +150,8 @@ for x in interfaces.getElementsByTagName("interface"):
 # and bare commands, events
 for x in functions.getElementsByTagName("function"):
   # hack: tasks don't show up with a command/event attribute
-  if x.hasAttribute("event") or x.hasAttribute("command"):
+  # don't include commands/events from interfaces
+  if (x.hasAttribute("event") or x.hasAttribute("command")) and (not xml_tag(x, "interface-ref")):
     incomponent = get1(x, "component-ref").getAttribute("qname")
     if speclist.has_key(incomponent):
       speclist[incomponent].append(x)
