@@ -70,18 +70,16 @@ implementation
 	LowPowerListening = LowPowerListeningLayerC;
 
 	components ActiveMessageLayerC;
-#ifdef LOW_POWER_LISTENING
-	components LowPowerListeningLayerC;
-#else	
-	components new DummyLayerC() as LowPowerListeningLayerC;
-#endif
-
 #ifdef TFRAMES_ENABLED
 	components new DummyLayerC() as IEEE154NetworkLayerC;
 #else
 	components IEEE154NetworkLayerC;
 #endif
-
+#ifdef LOW_POWER_LISTENING
+	components LowPowerListeningLayerC;
+#else	
+	components new DummyLayerC() as LowPowerListeningLayerC;
+#endif
 	components MessageBufferLayerC;
 	components UniqueLayerC;
 	components TrafficMonitorLayerC;
@@ -101,9 +99,13 @@ implementation
 
 	ActiveMessageLayerC.Config -> RF230ActiveMessageP;
 	ActiveMessageLayerC.AMPacket -> IEEE154PacketC;
-	ActiveMessageLayerC.SubSend -> UniqueLayerC;
-	ActiveMessageLayerC.SubReceive -> LowPowerListeningLayerC;
+	ActiveMessageLayerC.SubSend -> IEEE154NetworkLayerC;
+	ActiveMessageLayerC.SubReceive -> IEEE154NetworkLayerC;
 
+	IEEE154NetworkLayerC.SubSend -> UniqueLayerC;
+	IEEE154NetworkLayerC.SubReceive -> LowPowerListeningLayerC;
+
+	// the UniqueLayer is wired at two points
 	UniqueLayerC.Config -> RF230ActiveMessageP;
 	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
 
