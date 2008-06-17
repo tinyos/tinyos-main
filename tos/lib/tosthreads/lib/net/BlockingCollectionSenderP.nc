@@ -44,7 +44,7 @@ implementation {
   
   BlockingCollectionSenderImplP.Mutex -> MutexC;
   BlockingCollectionSenderImplP.SystemCall -> SystemCallC;
-  BlockingCollectionSenderImplP.Send -> Collector;
+  BlockingCollectionSenderImplP.Send[clientid] -> Collector[clientid];
   BlockingCollectionSenderImplP.Packet -> Collector;
   BlockingCollectionSenderImplP.Leds -> LedsC;
   
