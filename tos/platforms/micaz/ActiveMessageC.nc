@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.6 2008-06-17 07:29:25 kusy Exp $
+// $Id: ActiveMessageC.nc,v 1.7 2008-06-17 22:45:29 kusy Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: ActiveMessageC.nc,v 1.6 2008-06-17 07:29:25 kusy Exp $
+ * Date last modified:  $Id: ActiveMessageC.nc,v 1.7 2008-06-17 22:45:29 kusy Exp $
  *
  */
 
@@ -43,6 +43,7 @@
  * @author Philip Levis
  * @date June 19 2005
  */
+#include "Timer.h"
 
 configuration ActiveMessageC {
   provides {
