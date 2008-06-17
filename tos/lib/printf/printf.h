@@ -23,8 +23,8 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.9 $
- * @date $Date: 2008-06-12 12:33:47 $
+ * @version $Revision: 1.10 $
+ * @date $Date: 2008-06-17 19:11:01 $
  */
 
 #ifndef PRINTF_H
@@ -49,6 +49,7 @@
   #include "avr_stdio.h"
 #endif
 #include "message.h"
+int printfflush();
 
 typedef nx_struct printf_msg {
   nx_uint8_t buffer[TOSH_DATA_LENGTH];
