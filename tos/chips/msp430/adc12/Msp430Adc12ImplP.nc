@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2008-06-04 19:22:33 $
+ * $Revision: 1.9 $
+ * $Date: 2008-06-18 12:04:10 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -63,7 +63,7 @@ module Msp430Adc12ImplP
 }
 implementation
 { 
-#warning Accessing TimerA for ADC12 
+//#warning Accessing TimerA for ADC12 
   enum {
     SINGLE_DATA = 1,
     SINGLE_DATA_REPEAT = 2,
