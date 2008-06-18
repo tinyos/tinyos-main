@@ -42,7 +42,6 @@
 #endif
 #include "LowPowerSensingMsgs.h"
 
-#define LOW_POWER_LISTENING
 enum {
   LPL_INTERVAL       = 2000,
   SAMPLING_INTERVAL	 = 3000,

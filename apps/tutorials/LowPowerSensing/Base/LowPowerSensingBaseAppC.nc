@@ -74,5 +74,10 @@ implementation {
   components CC1000CsmaRadioC as LPLProvider;
   App.LPL -> LPLProvider;
 #endif
+
+#if defined(PLATFORM_IRIS)
+  components RF230ActiveMessageC as LPLProvider;
+  App.LPL -> LPLProvider;
+#endif
 }
 
