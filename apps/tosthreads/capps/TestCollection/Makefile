@@ -1,5 +1,7 @@
 TOSTHREAD_MAIN=TestCollection.c
 
+PFLAGS += -DTOSTHREAD_MAIN_STACK_SIZE=800
+
 CFLAGS += -I$(TOSDIR)/lib/tosthreads/sensorboards/universal
 
 CFLAGS += -I$(TOSDIR)/lib/tosthreads/lib/net/

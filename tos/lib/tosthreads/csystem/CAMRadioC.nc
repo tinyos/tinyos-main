@@ -30,6 +30,7 @@ configuration CAMRadioC {}
 
 implementation {
   components CAMRadioP as CAMP;
+  components ActiveMessageC;
   components BlockingActiveMessageC as AM;
   
   CAMP.BlockingStdControl -> AM;
@@ -41,4 +42,8 @@ implementation {
   CAMP.Packet -> AM;
   CAMP.AMPacket -> AM;
   CAMP.PacketAcknowledgements -> AM;
+  
+  AM.Receive -> ActiveMessageC.Receive;
+  AM.Snoop -> ActiveMessageC.Snoop;
+  AM.AMSend -> ActiveMessageC;
 }

@@ -46,81 +46,65 @@
 #include "tosthread_amradio.h"
 #include "tosthread_leds.h"
 
-typedef nx_struct RadioCountMsg {
-  nx_uint16_t counter;
-} RadioCountMsg;
+//Initialize variables associated with each thread
+tosthread_t radioStress0;
+tosthread_t radioStress1;
+tosthread_t radioStress2;
 
-enum {
-  AM_RADIOCOUNTMSG = 6,
-};
+void radioStress0_thread(void* arg);
+void radioStress1_thread(void* arg);
+void radioStress2_thread(void* arg);
 
-//Initialize variables associated with the RadioStress thread
-tosthread_t timerHandle;
-tosthread_t receiveHandle;
-tosthread_t sendHandle;
-void timer_thread(void* arg);
-void receive_thread(void* arg);
-void send_thread(void* arg);
-
-//Initialize the message variable
-message_t send_packet; 
-message_t receive_packet;  
-  
-//Initalize counter variables
-uint32_t txCounter = 0;
-uint32_t ackCounter = 0;
-uint32_t rxCounter = 0;
-int16_t timerCounter = -1;
-uint16_t errorCounter = 0;
+//Initialize messages for sending out over the radio
+message_t msg0;
+message_t msg1;
+message_t msg2;
 
 void tosthread_main(void* arg) {
-  led0On();
   while( amRadioStart() != SUCCESS );
-  led1On();
-  tosthread_create(&timerHandle, timer_thread, NULL, 200);
-  tosthread_create(&receiveHandle, receive_thread, NULL, 200);
+  tosthread_create(&radioStress0, radioStress0_thread, &msg0, 200);
+  tosthread_create(&radioStress1, radioStress1_thread, &msg1, 200);
+  tosthread_create(&radioStress2, radioStress2_thread, &msg2, 200);
 }
 
-void sendPacket() {
-  RadioCountMsg* rcm = (RadioCountMsg*)radioGetPayload(&send_packet, sizeof(RadioCountMsg));
-  rcm->counter = txCounter;
-  while( amRadioSend(AM_BROADCAST_ADDR, &send_packet, 2, AM_RADIOCOUNTMSG) != SUCCESS )
-    errorCounter++; 
-}
-
-void timer_thread(void* arg) {
-  tosthread_sleep(1000);
-  tosthread_create(&sendHandle, send_thread, NULL, 200);
+void radioStress0_thread(void* arg) {
+  message_t* m = (message_t*)arg;
   for(;;) {
-    led2Toggle();
-    timerCounter++;
-    tosthread_sleep(1000);
-    sendPacket();
-  }
-}
-
-void receive_thread(void* arg) {
-  for(;;) {
-    amRadioReceive(&receive_packet, 0, AM_RADIOCOUNTMSG);
-    rxCounter++;
-    if ((rxCounter % 32) == 0) {
+    if(TOS_NODE_ID == 0) {
+      amRadioReceive(m, 2000, 20);
       led0Toggle();
     }
+    else {
+      if(amRadioSend(!TOS_NODE_ID, m, 0, 20) == SUCCESS)
+        led0Toggle(); 
+    }
   }
 }
 
-void send_thread(void* arg) {
+void radioStress1_thread(void* arg) {
+  message_t* m = (message_t*)arg;
   for(;;) {
-    sendPacket();
-    txCounter++;
-    if (txCounter % 32 == 0) {
+    if(TOS_NODE_ID == 0) {
+      amRadioReceive(m, 2000, 21);
       led1Toggle();
     }
-    if ( radioWasAcked(&send_packet) ) {
-      ackCounter++;
-      if (ackCounter % 32 == 0) {
-	    led2Toggle();
-      }
+    else {
+      if(amRadioSend(!TOS_NODE_ID, m, 0, 21) == SUCCESS)
+        led1Toggle();
+    }
+  }
+}
+
+void radioStress2_thread(void* arg) {
+  message_t* m = (message_t*)arg;
+  for(;;) {
+    if(TOS_NODE_ID == 0) {
+      amRadioReceive(m, 2000, 22);
+      led2Toggle();
+    }
+    else {
+      if(amRadioSend(!TOS_NODE_ID, m, 0, 22) == SUCCESS)
+        led2Toggle();
     }
   }
 }

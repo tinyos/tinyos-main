@@ -30,6 +30,7 @@ configuration CAMSerialC {}
 
 implementation {
   components CAMSerialP as CAMP;
+  components SerialActiveMessageC;
   components BlockingSerialActiveMessageC as AM;
   
   CAMP.BlockingStdControl -> AM;
@@ -39,4 +40,7 @@ implementation {
   CAMP.Packet -> AM;
   CAMP.AMPacket -> AM;
   CAMP.PacketAcknowledgements -> AM;
+  
+  AM.Receive -> SerialActiveMessageC.Receive;
+  AM.AMSend -> SerialActiveMessageC.AMSend;
 }
