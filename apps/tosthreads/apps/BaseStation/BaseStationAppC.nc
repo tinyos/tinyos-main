@@ -29,28 +29,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Copyright (c) 2008 Johns Hopkins University.
- * All rights reserved.
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose, without fee, and without written
- * agreement is hereby granted, provided that the above copyright
- * notice, the (updated) modification history and the author appear in
- * all copies of this source code.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
- * OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
@@ -71,6 +49,7 @@ implementation
              
              new ThreadC(BOOT_THREAD_STACK_SIZE) as BootThread,
              new ThreadC(RADIO_RECEIVE_THREAD_STACK_SIZE) as RadioReceiveThread,
+             new ThreadC(RADIO_SNOOP_THREAD_STACK_SIZE) as RadioSnoopThread,
              new ThreadC(SERIAL_SEND_THREAD_STACK_SIZE) as SerialSendThread,
              new ThreadC(SERIAL_RECEIVE_THREAD_STACK_SIZE) as SerialReceiveThread,
              new ThreadC(RADIO_SEND_THREAD_STACK_SIZE) as RadioSendThread,
@@ -89,6 +68,7 @@ implementation
 
   BaseStationC.BootThread -> BootThread;
   RadioReceiveSerialSendP.ReceiveThread -> RadioReceiveThread;
+  RadioReceiveSerialSendP.SnoopThread -> RadioSnoopThread;
   RadioReceiveSerialSendP.SendThread -> SerialSendThread;
   SerialReceiveRadioSendP.ReceiveThread -> SerialReceiveThread;
   SerialReceiveRadioSendP.SendThread -> RadioSendThread;  
@@ -116,6 +96,7 @@ implementation
   RadioReceiveSerialSendP.ReceiveAMPacket -> BlockingRadioActiveMessageC;
   RadioReceiveSerialSendP.SendAMPacket -> BlockingSerialActiveMessageC;             
   RadioReceiveSerialSendP.BlockingReceiveAny -> BlockingRadioActiveMessageC.BlockingReceiveAny;
+  RadioReceiveSerialSendP.BlockingSnoopAny -> BlockingRadioActiveMessageC.BlockingSnoopAny;
   RadioReceiveSerialSendP.BlockingAMSend -> BlockingSerialActiveMessageC;
   
   SerialReceiveRadioSendP.ReceivePacket -> BlockingSerialActiveMessageC;

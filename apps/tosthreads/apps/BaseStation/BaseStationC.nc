@@ -55,5 +55,5 @@ implementation {
     call BlockingRadioAMControl.start();
     call BlockingSerialAMControl.start();
     signal BaseStationBoot.booted();
-  }
+  }  
 }

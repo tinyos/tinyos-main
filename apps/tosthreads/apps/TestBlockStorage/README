@@ -1,2 +1,27 @@
-This program erases volume, then randomly write (then verified by read).
-Led0 is ON during the test, and Led1 is ON if all tests pass. If there is a problem, all three LEDs will be ON.
+README for TOSThreads TestBlockStorage 
+Author/Contact: tinyos-help@millennium.berkeley.edu
+
+Description:
+
+This application is used to test the threaded version of the API for performing
+block storage.
+
+You can install TestBlockStorage on a mote via the following comand:
+  make <platform> threads install
+  
+Valid platforms are currently: tmote, telosb, mica2, and micaz 
+
+This application first erases a block storage volume, then randomly writes records to it,
+followed by a verification with read.
+
+Successful running of this application results in LED0 being ON throughout the duration
+of the erase, write, and read sequence, followed by LED1 turning ON if all tests pass, and
+all three LEDs turning on if there is a problem.
+
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.
+
+
