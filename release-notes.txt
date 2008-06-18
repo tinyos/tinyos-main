@@ -1,6 +1,8 @@
-These release notes are as of: $Date: 2008-06-18 17:11:20 $
+These release notes are as of: $Date: 2008-06-18 23:07:04 $
 
 2.1:
+  Added support for iris platform
+  Added support for shimmer platform
   Added 4-bit link estimator to CTP in lib/net/4bitle
   Added DIP dissemination protocol in lib/net/dip
   Added FTSP time synchronization service in lib/ftsp
