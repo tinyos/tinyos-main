@@ -73,7 +73,10 @@ implementation {
       call RootControl.setRoot();
       for (;;) {
         if (call BlockingReceive.receive(&recvbuf, 0) == SUCCESS) {
-          call SerialBlockingSend.send(AM_BROADCAST_ADDR, &recvbuf, sizeof(local));
+          oscilloscope_t *recv_o = (oscilloscope_t *) call BlockingReceive.getPayload(&recvbuf, sizeof(oscilloscope_t));
+          oscilloscope_t *send_o = (oscilloscope_t *) call SerialBlockingSend.getPayload(&sendbuf, sizeof(oscilloscope_t));
+          memcpy(send_o, recv_o, sizeof(oscilloscope_t));
+          call SerialBlockingSend.send(AM_BROADCAST_ADDR, &sendbuf, sizeof(oscilloscope_t));
           report_received();
         }
       }
@@ -82,14 +85,13 @@ implementation {
       
       for (;;) {
         if (reading == NREADINGS) {
-          oscilloscope_t *o = o;
-          o = (oscilloscope_t *)call BlockingSend.getPayload(&sendbuf, sizeof(oscilloscope_t));
+          oscilloscope_t *o = (oscilloscope_t *) call BlockingSend.getPayload(&sendbuf, sizeof(oscilloscope_t));
           if (o == NULL) {
             fatal_problem();
             return;
           }
-          memcpy(o, &local, sizeof(local));
-          if (call BlockingSend.send(&sendbuf, sizeof(local)) == SUCCESS) {
+          memcpy(o, &local, sizeof(oscilloscope_t));
+          if (call BlockingSend.send(&sendbuf, sizeof(oscilloscope_t)) == SUCCESS) {
             report_sent();
           } else {
             report_problem();

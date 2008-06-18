@@ -64,7 +64,10 @@ void tosthread_main(void* arg) {
     collectionSetRoot();
     for (;;) {
       if ( collectionReceive(&recvbuf, 0, AM_OSCILLOSCOPE) == SUCCESS) {
-        amSerialSend(AM_BROADCAST_ADDR, &recvbuf, sizeof(local), AM_OSCILLOSCOPE);
+        oscilloscope_t *recv_o = (oscilloscope_t *) collectionGetPayload(&recvbuf, sizeof(oscilloscope_t));
+        oscilloscope_t *send_o = (oscilloscope_t *) serialGetPayload(&sendbuf, sizeof(oscilloscope_t));
+        memcpy(send_o, recv_o, sizeof(oscilloscope_t));
+        amSerialSend(AM_BROADCAST_ADDR, &sendbuf, sizeof(local), AM_OSCILLOSCOPE);
         report_received();
       }
     }
