@@ -147,10 +147,10 @@ implementation
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         // DEFAULT_SLEEP_TIME=1625,
-        DEFAULT_SLEEP_TIME=2048,
+        // DEFAULT_SLEEP_TIME=2048,
         // DEFAULT_SLEEP_TIME=4096,
         // DEFAULT_SLEEP_TIME=8192,
-        // DEFAULT_SLEEP_TIME=16384,
+        DEFAULT_SLEEP_TIME=16384,
         // DEFAULT_SLEEP_TIME=32768U,
         // DEFAULT_SLEEP_TIME=65535U,
         DATA_DETECT_TIME=17,
@@ -163,8 +163,8 @@ implementation
         ACK_DURATION = SUB_HEADER_TIME + SUB_FOOTER_TIME,
         NAV_FACTOR = 4,
 #ifndef MAC_EVAL
-        MAX_SHORT_RETRY=3,
-        MAX_LONG_RETRY=7,
+        MAX_SHORT_RETRY=9,
+        MAX_LONG_RETRY=3,
         ADD_NAV = 2,
         INCREASE_BACKOFF = TRUE,
 #endif
