@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: mib510.extra,v 1.6 2008-01-24 20:35:40 sallai Exp $
+#$Id: mib510.extra,v 1.7 2008-06-18 20:22:51 razvanm Exp $
 
 ifeq ($(MIB510),)
 $(error MIB510 must be defined, try "make $(TARGETS) help")
@@ -8,20 +8,20 @@ endif
 PROGRAM = mib510
 
 ifeq ($(PROGRAMMER),avrdude)
-    ifdef BOOTLOADER
+    ifdef BOOTLOADER_IMG
       ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
-        BOOTLOADER := $(shell cygpath -m $(BOOTLOADER))
+        BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
       endif
     endif
     PROGRAMMER_FLAGS = -cmib510 -P$(MIB510) -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_MIB)
     PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
-    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
 endif
 
 ifeq ($(PROGRAMMER),uisp)
     PROGRAMMER_FLAGS = -dprog=mib510 -dserial=$(MIB510) --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_MIB)
     PROGRAMMER_INSTALL_SREC_FLAGS = --erase --upload if=$(INSTALL_SREC) --verify
-    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = --upload if=$(BOOTLOADER) --verify
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = --upload if=$(BOOTLOADER_IMG) --verify
 endif
 
 program: FORCE

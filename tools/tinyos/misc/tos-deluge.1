@@ -26,7 +26,7 @@ COM10
 
 .TP
 .I baudrate
-Two shortcuts are available: \fBmicaz\fR for 57600 and \fBtelosb\fR for 115200.
+Three shortcuts are available: \fBmicaz\fR and \fBiris\fR for 57600 and \fBtelosb\fR for 115200.
 .TP
 .I image_number
 A integer number. 0 is the first image.
@@ -34,22 +34,25 @@ A integer number. 0 is the first image.
 .SH OPTIONS
 .TP
 .B -p, --ping
-Provide status of the image in the external flash
+This command is useful for checking the status of program images on a mote. It provides information such as program name, compile time, size of the image, and so on.
 .TP
 .B -i, --inject
-Inject a compiled TinyOS application. The tos_image.xml file path
+This command creates a program image from the supplied tos_image.xml file, and it injects the image into specified volume on the mote.
 .TP
 .B -r, --reprogram
-Reprogram the network
+This command sets up the directly-connected mote to reprogram itself after reboot, and then it reboots the mote.
 .TP
-.B -b, --reprogram_bs
-Reprogram only the directly-connected mote
+.B -d, --disseminate
+This command instructs the base station mote to disseminate an image to the network. This image is specified by the volume ID.
 .TP
-.B -d, --dissemination
-Disseminate the image in the external flash to the network
+.B -dr, --disseminate-and-reprogram
+This command asks the motes in the network not only to disseminate an image but also to start running it. This is accomplish using a reboot.
 .TP
 .B -e, --erase
-Erase an image in the external flash
+This command erases a flash volume on the base station mote.
 .TP
-.B -s, --reset
-Reset the versioning information for a given image
+.B -s, --stop
+The effect of -d and -dr is continuous which means a new mote will become infected if he is nearby. This command stops the infection.
+.TP
+.B -ls, --local-stop
+When -d or -dr are in effect, the volume used by them is locked. This command can be used to unlock the volume in order to erase or inject a new image. 

@@ -34,6 +34,3 @@ bin_SCRIPTS = tos-ident-flags \
 	      tos-deluge
 
 bin_PROGRAMS = tos-serial-debug
-
-pythondir = $(bindir)
-python_DATA = tos.py

@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: jtag.extra,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+#$Id: jtag.extra,v 1.5 2008-06-18 20:22:51 razvanm Exp $
 
 PROGRAM = jtag
 
@@ -17,7 +17,7 @@ program_no_e: FORCE
 
 program_bl: FORCE
 	@echo "    installing $(PLATFORM) bootloader using jtag"
-	$(MSP_JTAG) $(MSP_JTAG_FLAGS) -r -e -I -p $(BOOTLOADER)
+	$(MSP_JTAG) $(MSP_JTAG_FLAGS) -r -e -I -p $(BOOTLOADER_IMG)
 
 program_input: ihex
 	@:

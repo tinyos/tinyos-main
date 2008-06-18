@@ -22,5 +22,5 @@ program_no_e: FORCE
 program_bl: FORCE
 	@echo "    installing $(PLATFORM) bootloader using gdb"
 	@echo "    installing $(PLATFORM) binary using gdb (without mass erase)"
-	cat $(INIT_GDB) $(FLASH_GDB) $(FLASH_GDB_NO_E) $(GDB_SCRIPT) | sed -e "s/@HOST@/$(PROXY_HOST)/g" -e "s#@EXE@#$(BOOTLOADER)#g" -e "s#@MAIN@#$(MAIN_EXE)#g" -e "s#@PROMPT@#msp-gdb $(COMPONENT)#g"> build/init.gdb;	\
+	cat $(INIT_GDB) $(FLASH_GDB) $(FLASH_GDB_NO_E) $(GDB_SCRIPT) | sed -e "s/@HOST@/$(PROXY_HOST)/g" -e "s#@EXE@#$(BOOTLOADER_IMG)#g" -e "s#@MAIN@#$(MAIN_EXE)#g" -e "s#@PROMPT@#msp-gdb $(COMPONENT)#g"> build/init.gdb;	\
 	msp430-gdb $(GDB_ARGS) -silent -x build/init.gdb -se $(MAIN_EXE);

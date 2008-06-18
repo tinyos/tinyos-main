@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: bsl.extra,v 1.6 2008-03-26 22:51:33 klueska Exp $
+#$Id: bsl.extra,v 1.7 2008-06-18 20:22:51 razvanm Exp $
 
 # BSL arguments:
 #
@@ -52,7 +52,7 @@ program_no_e: $(BSL_TARGETS) $(TELOS_PROGRAM_DEPS) FORCE
 
 program_bl: $(BSL_TARGETS) $(TELOS_PROGRAM_DEPS) FORCE
 	@echo "    installing $(PLATFORM) bootloader using bsl"
-	$(MSP_BSL) $(MSP_BSL_FLAGS) -c $(BSL) -r -e -I -p $(BOOTLOADER)
+	$(MSP_BSL) $(MSP_BSL_FLAGS) -c $(BSL) -r -e -I -p $(BOOTLOADER_IMG)
 
 program_input: ihex
 	@:

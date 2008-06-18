@@ -1,10 +1,10 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makedefaults,v 1.7 2008-02-06 18:19:50 scipio Exp $
+#$Id: Makedefaults,v 1.8 2008-06-18 20:22:51 razvanm Exp $
 
 DEFAULT_LOCAL_GROUP ?= 0x22
 OPTFLAGS ?= -Os
 NESC_FLAGS ?= -Wnesc-all
-GOALS += ident_flags tos_image bnp
+GOALS += ident_flags tos_image tosboot
 
 define DEFAULT_HELP
 

@@ -23,10 +23,14 @@
 # @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
 # @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
 
-import sys, stat, struct, subprocess, time
-import tos
+import sys, stat, struct, subprocess, time, os.path
+try:
+    import tos
+except ImportError:
+    import posix
+    sys.path = [os.path.join(posix.environ['TOSROOT'], 'support', 'sdk', 'python')] + sys.path
+    import tos
 from datetime import datetime
-import os.path 
 
 # Path to the python script that builds Deluge image from XML
 PATH_PY_BUILD_IMAGE  = os.path.join(os.path.dirname(sys.argv[0]), 'tos-build-deluge-image')
@@ -125,12 +129,12 @@ def crc16(data):
             else:
                 crc = crc << 1
             crc = crc & 0xffff
-    
+
     return crc
 
 def handleResponse(success, msg):
     if success == True:
-        packet = am.read(timeout=1)
+        packet = am.read(timeout=2)
         while packet and packet.type == 100:
             print "".join([chr(i) for i in packet.data])
             packet = am.read()
@@ -143,14 +147,14 @@ def handleResponse(success, msg):
         else:
             print msg, reply
             return False
-        
+
     print "ERROR: Unable to send the command"
     return False
 
-def ident():
+def ident(timeout=None):
     sreqpkt = FMReqPacket((FM_CMD_IDENT, 0, 0, 0, []))
-    if am.write(sreqpkt, FM_AMID):
-        packet = am.read()
+    if am.write(sreqpkt, FM_AMID, timeout=timeout):
+        packet = am.read(timeout=timeout)
         reply = SerialReplyPacket(packet.data)
         if reply.error == ERROR_SUCCESS:
             return ShortIdent(reply.data)
@@ -158,12 +162,12 @@ def ident():
 
 def read(imgNum, offset, length):
     r = []
-    
+
     sreqpkt = FMReqPacket((FM_CMD_READ, imgNum, offset, length, []))
     while True:
         if sreqpkt.length > SERIAL_DATA_LENGTH:
             sreqpkt.length = SERIAL_DATA_LENGTH
-        
+
         if am.write(sreqpkt, FM_AMID):
             packet = am.read()
             reply = SerialReplyPacket(packet.data)
@@ -175,7 +179,7 @@ def read(imgNum, offset, length):
         else:
             r = None
             break
-        
+
         sreqpkt.offset += sreqpkt.length
         if sreqpkt.offset >= (offset + length):
             break
@@ -199,29 +203,29 @@ def write(imgNum, data):
     total_length = length   # For progress bar
     next_tick = 100         # For progress bar
     start_time = time.time()
-    
+
     print "[0%        25%         50%         75%         100%]\r[",
- 
+
     sreqpkt.offset = 0
     while length > 0:
         if ((length * 100) / total_length) < next_tick:
             next_tick = next_tick - 2
             sys.stdout.write('-')
             sys.stdout.flush()
-    
+
         # Calculates the payload size for the current packet
         if length >= SERIAL_DATA_LENGTH:
             sreqpkt.length = SERIAL_DATA_LENGTH
         else:
             sreqpkt.length = length
         sreqpkt.data = data[sreqpkt.offset:sreqpkt.offset+sreqpkt.length]
-        
+
         # Sends over serial to the mote
         if not am.write(sreqpkt, FM_AMID):
             print
             print "ERROR: Unable to send the last serial packet (file offset: %d)" % sreqpkt.offset
             return False
-        
+
         # Waiting for confirmation
         packet = am.read()
         reply = SerialReplyPacket(packet.data)
@@ -229,7 +233,7 @@ def write(imgNum, data):
             print
             print "ERROR: Unable to write to the flash volume (file offset: %d)" % sreqpkt.offset
             return False
-            
+
         length -= sreqpkt.length
         sreqpkt.offset += sreqpkt.length
 
@@ -237,7 +241,7 @@ def write(imgNum, data):
     elasped_time = time.time() - start_time
     print "\r%s bytes in %.2f seconds (%.4f bytes/s)" % (total_length, elasped_time, int(total_length) / (elasped_time))
     return True
-    
+
 # Checks for valid CRC and timestamp
 def verifyIdent(i):
     if i != None:
@@ -286,7 +290,7 @@ def inject(imgNum, tos_image_xml):
     except:
         print "ERROR: Unable to find the image building utility, \"%s\"" % PATH_PY_BUILD_IMAGE
         return False
-  
+
     # Gets status information of stored image
     i = getIdent(imgNum)
     if ident:
@@ -306,7 +310,7 @@ def inject(imgNum, tos_image_xml):
     (out, err) = p.communicate(None)
     print err,
     print "--------------------------------------------------"
-    
+
     # Writes the new binary image
     image = [struct.unpack("B", c)[0] for c in out]
     if len(image) > 0 and erase(imgNum):
@@ -316,7 +320,7 @@ def inject(imgNum, tos_image_xml):
                 print "Replace image with:"
                 print formatIdent(getIdent(imgNum))
                 print "--------------------------------------------------"
-    
+
     return False
 
 def ping(imgNum):
@@ -331,7 +335,7 @@ def ping(imgNum):
         print formatIdent(i)
         print "--------------------------------------------------"
         return True
-        
+
     print "--------------------------------------------------"
     return False
 
@@ -403,7 +407,7 @@ if len(sys.argv) >= 4:
         except:
             print "ERROR: Wrong baudrate"
             sys.exit(-1)
-            
+
     # Initializes serial port communication
     try:
         s = tos.Serial(sys.argv[1], baudrate, flush=True, debug=False)
@@ -412,10 +416,18 @@ if len(sys.argv) >= 4:
         print "ERROR: Unable to initialize serial port connection to", sys.argv[1]
         sys.exit(-1)
 
+    # Check if the mote has the Deluge T2 basestation component:
+    try:
+        print "Checking if node is a Deluge T2 base station ..."
+        ident(timeout=5)
+    except tos.TimeoutError:
+        print "ERROR: Timeout. Is the node a Deluge T2 base station?"
+        sys.exit(-1)
+
     if sys.argv[3] in ["-p", "--ping"]:
         checkImgNum()
         print "Pinging node ..."
-        ping(imgNum) 
+        ping(imgNum)
     elif sys.argv[3] in ["-i", "--inject"] and len(sys.argv) == 6:
         checkImgNum()
         print "Pinging node ..."

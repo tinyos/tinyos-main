@@ -1,14 +1,14 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: reinstall.extra,v 1.4 2006-12-12 18:22:59 vlahan Exp $
+#$Id: reinstall.extra,v 1.5 2008-06-18 20:22:51 razvanm Exp $
 
 NODEID = $(REINSTALL)
 BUILD_DEPS = setid program
 
-ifdef TINYOS_NP
-  ifeq ($(TINYOS_NP),BNP)
+ifdef BOOTLOADER
+  ifeq ($(BOOTLOADER),tosboot)
     BUILD_DEPS = setid program_bl program_no_e
   endif
 endif
 
-check_bnp: FORCE
-	@perl -e 'exit 0 if (<> =~ /^\:103000/); print "\nERROR: Trying to install with BNP support.\n       main.ihex was not built properly, please recompile.\n\n"; exit 1;' $(INSTALL_IHEX)
+check_tosboot: FORCE
+	@perl -e 'exit 0 if (<> =~ /^\:103000/); print "\nERROR: Trying to install with tosboot support.\n       main.ihex was not built properly, please recompile.\n\n"; exit 1;' $(INSTALL_IHEX)

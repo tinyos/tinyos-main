@@ -1,4 +1,4 @@
 COMPONENT=BlinkAppC
-TINYOS_NP=BNP
+BOOTLOADER=tosboot
 
 include $(MAKERULES)
