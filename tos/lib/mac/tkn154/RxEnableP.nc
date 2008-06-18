@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:28 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -57,7 +57,7 @@ module RxEnableP
     interface Timer<TSymbolIEEE802154> as RxEnableTimer;
     interface Get<bool> as IsBeaconEnabledPAN;
     interface Get<ieee154_macPanCoordinator_t> as IsMacPanCoordinator;
-    interface Get<bool> as IsTrackingBeacons;
+    interface GetNow<bool> as IsTrackingBeacons;
     interface GetNow<uint32_t> as IncomingSfStart; 
     interface GetNow<uint32_t> as IncomingBeaconInterval; 
     interface Get<bool> as IsSendingBeacons;
@@ -116,7 +116,7 @@ implementation
         // for OUTGOING SUPERFRAME
         lastBeaconTime = call OutgoingSfStart.getNow();
         beaconInterval = call OutgoingBeaconInterval.getNow();
-      } else if (call IsTrackingBeacons.get()){
+      } else if (call IsTrackingBeacons.getNow()){
         // for INCOMING SUPERFRAME 
         lastBeaconTime = call IncomingSfStart.getNow();
         beaconInterval = call IncomingBeaconInterval.getNow();

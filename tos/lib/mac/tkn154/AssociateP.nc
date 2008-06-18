@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:22 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -62,7 +62,6 @@ module AssociateP
 
     interface DataRequest;
     interface Timer<TSymbolIEEE802154> as ResponseTimeout;
-    interface Get<bool> as IsTrackingBeacons;
     interface Pool<ieee154_txframe_t> as TxFramePool;
     interface Pool<ieee154_txcontrol_t> as TxControlPool;
     interface MLME_GET;

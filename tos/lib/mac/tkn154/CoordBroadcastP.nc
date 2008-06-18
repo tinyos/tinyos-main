@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:27 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -106,7 +106,7 @@ implementation
       return (m_realignmentFrame != NULL || m_queueHead != NULL);
   }
 
-  async event void TokenTransferred.transferred()
+  event void TokenTransferred.transferred()
   {
     // CAP has started - are there any broadcast frames to be transmitted?
     if (call BeaconFramePendingBit.getNow()){

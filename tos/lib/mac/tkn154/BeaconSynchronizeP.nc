@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:22 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -45,7 +45,7 @@ module BeaconSynchronizeP
     interface MLME_SYNC;
     interface MLME_BEACON_NOTIFY;
     interface MLME_SYNC_LOSS;
-    interface Get<bool> as IsTrackingBeacons;
+    interface GetNow<bool> as IsTrackingBeacons;
     interface GetNow<uint32_t> as CapStart;
     interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
     interface GetNow<uint32_t> as CapLen;
@@ -66,6 +66,7 @@ module BeaconSynchronizeP
     interface MLME_GET;
     interface MLME_SET;
     interface FrameUtility;
+    interface Notify<bool> as FindBeacon;
     interface IEEE154BeaconFrame as BeaconFrame;
     interface Alarm<TSymbolIEEE802154,uint32_t> as TrackAlarm;
     interface RadioRx as BeaconRx;
@@ -95,12 +96,13 @@ implementation
   };
 
   norace bool m_tracking = FALSE;
-  norace bool m_updatePending = FALSE;
+  bool m_updatePending = FALSE;
   uint8_t m_updateLogicalChannel;
   bool m_updateTrackBeacon;
   bool m_stopTracking = FALSE;
+  bool m_internalRequest = FALSE;
 
-  norace uint8_t m_numBeaconsLost;
+  uint8_t m_numBeaconsLost;
   uint8_t m_coordAddress[8];
   message_t m_beaconBuffer;
   norace message_t *m_beaconBufferPtr = &m_beaconBuffer;
@@ -162,12 +164,25 @@ implementation
       m_stopTracking = FALSE;
       m_updateLogicalChannel = logicalChannel;
       m_updateTrackBeacon = trackBeacon;
-      atomic m_updatePending = TRUE;
+      m_updatePending = TRUE;
+      m_internalRequest = FALSE;
       call Debug.log(LEVEL_INFO,SyncP_RESOURCE_REQUEST, 0, 0, 0);
       call Token.request();
     }
     call Debug.flush();
     return IEEE154_SUCCESS;
+  }
+
+  event void FindBeacon.notify( bool val )
+  {
+    if (!m_tracking && !m_updatePending){
+      // find a single beacon now (treat this like a user request)
+      m_updateLogicalChannel = call MLME_GET.phyCurrentChannel();
+      m_updateTrackBeacon = FALSE;
+      m_updatePending = TRUE;
+      m_internalRequest = TRUE;
+      call Token.request();
+    }
   }
 
   event void Token.granted()
@@ -295,13 +310,16 @@ implementation
         m_tracking = FALSE;
         call Debug.log(LEVEL_IMPORTANT, SyncP_LOST_SYNC,0,0,0);
         call Leds.led2Off();
-        signal MLME_SYNC_LOSS.indication(
-            IEEE154_BEACON_LOSS, 
-            call MLME_GET.macPANId(),
-            call MLME_GET.phyCurrentChannel(),
-            call MLME_GET.phyCurrentPage(), 
-            NULL // security
-            );
+        if (m_internalRequest)
+          call TokenToCap.transfer();
+        else
+          signal MLME_SYNC_LOSS.indication(
+              IEEE154_BEACON_LOSS, 
+              call MLME_GET.macPANId(),
+              call MLME_GET.phyCurrentChannel(),
+              call MLME_GET.phyCurrentPage(), 
+              NULL // security
+              );
       } else
         call Token.request(); // make another request again (before giving the token up)
       call Debug.log(LEVEL_INFO,SyncP_RELEASE_RESOURCE, 0, 0, 0);
@@ -385,7 +403,7 @@ implementation
     }
   }
 
-  command bool IsTrackingBeacons.get(){ return m_tracking;}
+  async command bool IsTrackingBeacons.getNow(){ return m_tracking;}
 
   default event message_t* MLME_BEACON_NOTIFY.indication (message_t* frame){return frame;}
 

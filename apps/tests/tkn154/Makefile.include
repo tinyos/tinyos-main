@@ -1,4 +1,5 @@
-PLATFORM_INCLUDE?=$(TOSDIR)/platforms/$(PLATFORM)/mac/tkn154/Makefile.include
+PLATFORMS = telosb
+TKN154_PLATFORM_INCLUDE?=$(TOSDIR)/platforms/$(PLATFORM)/mac/tkn154/Makefile.include
 
 CFLAGS += -I$(TOSDIR)/lib/mac/tkn154 \
 	-I$(TOSDIR)/lib/mac/tkn154/dummies \
@@ -11,6 +12,16 @@ ifdef IEEE154_EXTENDED_ADDRESS
 PFLAGS += -DIEEE154_EXTENDED_ADDRESS=$(IEEE154_EXTENDED_ADDRESS)
 endif
 
+# parses the PLATFORM variable
 include $(MAKERULES)
-PLATFORM?=telosb
-include $(PLATFORM_INCLUDE)
+
+# checks whether the target platform is supported by the application;
+# the application Makefile can define PLATFORMS as a whitespace-separated
+# list of supported platforms
+ifneq ($(PLATFORMS),)
+  ifeq ($(strip $(foreach platform,$(PLATFORMS),$(findstring $(platform),$(PLATFORM)))),)
+    $(error The target platform is not supported by this application - supported platforms are: $(PLATFORMS))
+  endif
+endif
+
+include $(TKN154_PLATFORM_INCLUDE)

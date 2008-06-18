@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-06-16 18:00:28 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -175,13 +175,8 @@ implementation
       return IEEE154_INVALID_PARAMETER;
     if (call PromiscuousModeGet.get())
       return IEEE154_TRANSACTION_OVERFLOW; // must first cancel promiscuous mode!
-
-    // nonbeacon-enabled mode is not yet implemented!
-    if (PANType != BEACON_ENABLED_PAN)
-      return IEEE154_INVALID_PARAMETER;
-
     m_setDefaultPIB = SetDefaultPIB;
-    m_panType = PANType; // TODO: set this later?
+    m_panType = PANType; 
     if (!call Token.isOwner())
       call Token.request();
     return IEEE154_SUCCESS;

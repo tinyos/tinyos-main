@@ -34,7 +34,7 @@
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @version $Revision: 1.1 $ $Date: 2008-06-16 18:02:40 $
+ * @version $Revision: 1.2 $ $Date: 2008-06-18 15:39:32 $
  */
 
 #include "CC2420.h"
@@ -49,13 +49,11 @@ module CC2420TransmitP {
   provides interface CC2420Tx;
 /*  provides interface RadioBackoff;*/
 /*  provides interface RadioTimeStamping as TimeStamp;*/
-  provides interface ReceiveIndicator as EnergyIndicator;
-  provides interface ReceiveIndicator as ByteIndicator;
+/*  provides interface ReceiveIndicator as EnergyIndicator;*/
+/*  provides interface ReceiveIndicator as ByteIndicator;*/
   
 /*  uses interface Alarm<T32khz,uint32_t> as BackoffAlarm;*/
   uses interface Alarm<T62500hz,uint32_t> as BackoffAlarm;
-  uses interface CC2420Packet;
-  uses interface CC2420PacketBody;
   uses interface GpioCapture as CaptureSFD;
   uses interface GeneralIO as CCA;
   uses interface GeneralIO as CSN;
@@ -211,15 +209,15 @@ implementation {
   }
 
   /***************** Indicator Commands ****************/
-  command bool EnergyIndicator.isReceiving() {
-    return !(call CCA.get());
-  }
-  
-  command bool ByteIndicator.isReceiving() {
-    bool high;
-    atomic high = sfdHigh;
-    return high;
-  }
+/*  command bool EnergyIndicator.isReceiving() {*/
+/*    return !(call CCA.get());*/
+/*  }*/
+/*  */
+/*  command bool ByteIndicator.isReceiving() {*/
+/*    bool high;*/
+/*    atomic high = sfdHigh;*/
+/*    return high;*/
+/*  }*/
   
 
   /***************** RadioBackoff Commands ****************/

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:27 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -59,6 +59,7 @@ generic module CapP(uint8_t superframeDirection)
     interface FrameExtracted as FrameExtracted[uint8_t frameType];
     interface FrameTxNow as BroadcastTx;
     interface Notify<bool> as WasRxEnabled;
+    interface Notify<bool> as FindBeacon;
   }
   uses
   {
@@ -80,6 +81,7 @@ generic module CapP(uint8_t superframeDirection)
     interface GetNow<bool> as IsRxBroadcastPending; 
     interface GetNow<bool> as IsRxEnableActive; 
     interface Notify<bool> as RxEnableStateChange;
+    interface GetNow<bool> as IsTrackingBeacons;
     interface FrameUtility;
     interface RadioTx;
     interface RadioRx;
@@ -120,6 +122,7 @@ implementation
   norace ieee154_txframe_t *m_bcastFrame;
   norace ieee154_txframe_t *m_lastFrame;
   norace ieee154_macMaxBE_t m_BE;
+  norace ieee154_macMaxBE_t m_numCCA;
   norace ieee154_macMaxCSMABackoffs_t m_allowedBackoffs;
   norace ieee154_macMaxBE_t m_macMaxBE;
   norace uint16_t m_backoff;
@@ -129,6 +132,7 @@ implementation
   norace bool m_indirectTxPending = FALSE;
   norace bool m_broadcastRxPending;
   norace ieee154_macMaxFrameTotalWaitTime_t m_macMaxFrameTotalWaitTime;
+  norace bool m_isBeaconEnabledPAN;
 
   uint16_t generateRandomBackoff(uint8_t BE);
   void stopAllAlarms();
@@ -158,15 +162,24 @@ implementation
       signalTxBroadcastDone(m_bcastFrame, IEEE154_TRANSACTION_OVERFLOW);
     m_currentFrame = m_lastFrame = m_bcastFrame = NULL;
     m_macMaxFrameTotalWaitTime = call MLME_GET.macMaxFrameTotalWaitTime();
+    m_isBeaconEnabledPAN = call IsBeaconEnabledPAN.get();
     stopAllAlarms();
     return SUCCESS;
   }
 
-  async event void TokenTransferred.transferred()
+  event void TokenTransferred.transferred()
   {
     // we got the token, i.e. CAP has just started    
     uint32_t actualCapLen = call CapLen.getNow();
-    if (actualCapLen < IEEE154_RADIO_GUARD_TIME){
+    if (m_isBeaconEnabledPAN && (DEVICE_ROLE && !call IsTrackingBeacons.getNow())){
+      // rare case: we're on a beacon-enabled PAN, not tracking beacons, searched
+      // and didn't find a beacon for aBaseSuperframeDuration*(2n+1) symbols
+      // -> transmit current frame using unslotted CSMA-CA
+      m_numCCA = 1;
+      signal Token.granted();
+      return;
+    }
+    else if (actualCapLen < IEEE154_RADIO_GUARD_TIME){
       call Debug.log(LEVEL_IMPORTANT, CapP_TOO_SHORT, superframeDirection, actualCapLen, IEEE154_RADIO_GUARD_TIME);
       call TokenToCfp.transfer();
       return;
@@ -188,7 +201,8 @@ implementation
       call CapEndAlarm.startAt(call CapStart.getNow(), actualCapLen);
       if (call IsBLEActive.getNow())
         call BLEAlarm.startAt(call CapStart.getNow(), call BLELen.getNow());
-      call Debug.log(LEVEL_IMPORTANT, CapP_SET_CAP_END, call CapStart.getNow(), actualCapLen, call CapStart.getNow()+ actualCapLen);
+      call Debug.log(LEVEL_IMPORTANT, CapP_SET_CAP_END, call CapStart.getNow(), 
+          actualCapLen, call CapStart.getNow()+ actualCapLen);
     }
     updateState();
   }
@@ -200,7 +214,17 @@ implementation
       return IEEE154_TRANSACTION_OVERFLOW;
     else {
       setCurrentFrame(frame);
-      updateState();
+      if (!m_isBeaconEnabledPAN){
+        call Token.request(); // prepare for unslotted CSMA-CA
+      } else {
+        // a beacon must be found before transmitting in a beacon-enabled PAN
+        if (DEVICE_ROLE && !call IsTrackingBeacons.getNow()){
+          signal FindBeacon.notify(TRUE);
+          // we'll receive the Token at latest after aBaseSuperframeDuration*(2n+1) symbols; 
+          // if the beacon was not found, then we'll send the frame using unslotted CSMA-CA
+        }
+        updateState();
+      }
       return IEEE154_SUCCESS;
     }
   }
@@ -243,6 +267,10 @@ implementation
     m_BE = call MLME_GET.macMinBE();
     if (call MLME_GET.macBattLifeExt() && m_BE > 2)
       m_BE = 2;
+    if (m_isBeaconEnabledPAN)
+      m_numCCA = 2;
+    else
+      m_numCCA = 1;
     m_transactionTime = IEEE154_SHR_DURATION + 
       (frame->headerLen + frame->payloadLen) * IEEE154_SYMBOLS_PER_OCTET;
     if (frame->header->mhr[0] & FC1_ACK_REQUEST)
@@ -304,9 +332,11 @@ implementation
         return;
       m_lock = TRUE; // lock
 
-      // Check 1: has the CAP finished?
-      if (call TimeCalc.hasExpired(call CapStart.getNow(), call CapLen.getNow()-IEEE154_RADIO_GUARD_TIME) ||
-          !call CapEndAlarm.isRunning()){
+      // Check 1: for beacon-enabled PANs, has the CAP finished?
+      if (m_isBeaconEnabledPAN 
+          && (COORD_ROLE || call IsTrackingBeacons.getNow()) // FALSE only if device could't find a beacon
+          && (call TimeCalc.hasExpired(call CapStart.getNow(), call CapLen.getNow()-IEEE154_RADIO_GUARD_TIME) ||
+          !call CapEndAlarm.isRunning())){
         if (call RadioOff.isOff()) {
           stopAllAlarms();  // may still fire, locked through isOwner()
           if (DEVICE_ROLE && m_indirectTxPending)
@@ -377,6 +407,13 @@ implementation
       // Check 8: just make sure the radio is switched off  
       else {
         next = trySwitchOff();
+        if (next == DO_NOTHING && (!m_isBeaconEnabledPAN || (DEVICE_ROLE && !call IsTrackingBeacons.getNow()))){
+          // nothing more to do... just release the Token
+          m_lock = FALSE; // unlock
+          call TokenToCfp.transfer();
+          return;
+           
+        }        
       }
 
       // if there is nothing to do, then we must clear the lock
@@ -402,29 +439,36 @@ implementation
     // in other module variables (m_backoff, etc.)
     next_state_t next;
     if (call RadioTx.getLoadedFrame() == m_currentFrame){
-      // the frame is already loaded -> transmit it now (if there's enough time)
-      uint32_t capLen = call CapLen.getNow(), capStart = call CapStart.getNow();
-      uint32_t elapsed, totalTime;
-      totalTime = IEEE154_RADIO_TX_SEND_DELAY + 
-        m_backoff - m_backoffElapsed + m_transactionTime + IEEE154_RADIO_GUARD_TIME;
-      if (totalTime > capLen)
-        totalTime = capLen; // CAP is too short
-      elapsed = call TimeCalc.timeElapsed(capStart, call CapEndAlarm.getNow());
-      elapsed += (20 - (elapsed % 20)); // round to backoff boundary
-      if (!call TimeCalc.hasExpired(capStart, capLen - totalTime)){
-        call RadioTx.transmit(call CapStartRefTime.getNow(), 
-            elapsed + IEEE154_RADIO_TX_SEND_DELAY + m_backoff - m_backoffElapsed, 
-            2, 
-            m_currentFrame->header->mhr[0] & FC1_ACK_REQUEST ? TRUE : FALSE);
-        next = WAIT_FOR_TXDONE; // ATTENTION: this will NOT clear the lock
+      // the frame is already loaded -> transmit it now
+      if (m_numCCA == 1){
+        // unslotted CSMA-CA
+        call RadioTx.transmit(NULL, m_backoff, m_numCCA, m_currentFrame->header->mhr[0] & FC1_ACK_REQUEST ? TRUE : FALSE);
+        next = WAIT_FOR_TXDONE; // this will NOT clear the lock
       } else {
-        // frame does not fit in remaing portion of the CAP
-        if (elapsed < call CapLen.getNow()){
-          m_backoffElapsed += call CapLen.getNow() - elapsed;
-          if (m_backoffElapsed > m_backoff)
-            m_backoffElapsed = m_backoff;
+        // slotted CSMA-CA
+        uint32_t capLen = call CapLen.getNow(), capStart = call CapStart.getNow();
+        uint32_t elapsed, totalTime;
+        totalTime = IEEE154_RADIO_TX_SEND_DELAY + 
+          m_backoff - m_backoffElapsed + m_transactionTime + IEEE154_RADIO_GUARD_TIME;
+        if (totalTime > capLen)
+          totalTime = capLen; // CAP is too short
+        elapsed = call TimeCalc.timeElapsed(capStart, call CapEndAlarm.getNow());
+        elapsed += (20 - (elapsed % 20)); // round to backoff boundary
+        if (!call TimeCalc.hasExpired(capStart, capLen - totalTime)){
+          call RadioTx.transmit(call CapStartRefTime.getNow(), 
+              elapsed + IEEE154_RADIO_TX_SEND_DELAY + m_backoff - m_backoffElapsed, 
+              m_numCCA, 
+              m_currentFrame->header->mhr[0] & FC1_ACK_REQUEST ? TRUE : FALSE);
+          next = WAIT_FOR_TXDONE; // this will NOT clear the lock
+        } else {
+          // frame does not fit in remaing portion of the CAP
+          if (elapsed < call CapLen.getNow()){
+            m_backoffElapsed += call CapLen.getNow() - elapsed;
+            if (m_backoffElapsed > m_backoff)
+              m_backoffElapsed = m_backoff;
+          }
+          next = SWITCH_OFF;
         }
-        next = SWITCH_OFF;
       }
     } else {
       // the frame to transmit has not yet been loaded -> load it now
@@ -637,9 +681,35 @@ implementation
     signal WasRxEnabled.notify(TRUE);
   }
 
-  async event void TokenRequested.requested() {}
+  bool isUnslottedCSMA_CA()
+  {
+    return (m_numCCA == 1);
+  }
+
+  event void Token.granted()
+  {
+    // the current frame should be transmitted using unslotted CSMA-CA
+    updateState();
+  }
+
+  task void tokenRequestedTask()
+  {
+    signal TokenRequested.requested();
+  }
+
+  async event void TokenRequested.requested() 
+  {
+    atomic {
+      if (call Token.isOwner()){
+        if (!m_lock && !(DEVICE_ROLE && m_indirectTxPending) && !(COORD_ROLE && m_bcastFrame))
+          call Token.release();
+        else
+          post tokenRequestedTask();
+      }
+    }
+  }
+
   async event void TokenRequested.immediateRequested() {}
-  event void Token.granted(){}
 
   default event void CapTx.transmitDone(ieee154_txframe_t *data, ieee154_status_t status){}
   default event message_t* FrameRx.received[uint8_t client](message_t* data){return data;}
@@ -661,4 +731,6 @@ implementation
 
   command error_t WasRxEnabled.enable(){return FAIL;}
   command error_t WasRxEnabled.disable(){return FAIL;}
+  command error_t FindBeacon.enable(){return FAIL;}
+  command error_t FindBeacon.disable(){return FAIL;}
 }

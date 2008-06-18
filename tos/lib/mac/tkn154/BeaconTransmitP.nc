@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:27 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -77,7 +77,7 @@ module BeaconTransmitP
     interface WriteBeaconField as GtsInfoWrite;
     interface WriteBeaconField as PendingAddrWrite;
     interface FrameUtility;
-    interface Get<bool> as IsTrackingBeacons;
+    interface GetNow<bool> as IsTrackingBeacons;
     interface GetNow<uint32_t> as LastBeaconRxTime;
     interface GetNow<ieee154_reftime_t*> as LastBeaconRxRefTime; 
     interface Ieee802154Debug as Debug;
@@ -222,7 +222,7 @@ implementation
         !(IEEE154_SUPPORTED_CHANNELS & ((uint32_t) 1 << logicalChannel)) ||
         (superframeOrder > beaconOrder))
       status =  IEEE154_INVALID_PARAMETER;
-    else if (startTime && !call IsTrackingBeacons.get())
+    else if (startTime && !call IsTrackingBeacons.getNow())
       status = IEEE154_TRACKING_OFF;
     else if (startTime && 0xFF000000)
       status = IEEE154_INVALID_PARAMETER;

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:29 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -61,15 +61,16 @@ implementation
 
   async command uint8_t TransferredFrom.getUserId(){ return myUserId;}
 
-  async command void TransferredFrom.transfer()
+  task void TransferredTask()
   {
     signal ResourceTransferred.transferred();
   }
 
-  async command error_t ResourceTransferred.release()
+  async command void TransferredFrom.transfer()
   {
-    return call ResourceTransferControl.release(myUserId);
+    post TransferredTask();
   }
   default async command uint8_t TransferTo.getUserId(){ call Leds.led0On(); return 0xFF;}
   default async command void TransferTo.transfer(){ call Leds.led0On(); }
+  default event void ResourceTransferred.transferred(){}
 }

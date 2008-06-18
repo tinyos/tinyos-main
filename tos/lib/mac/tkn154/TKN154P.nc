@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:29 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -248,6 +248,8 @@ implementation
   BeaconSynchronizeP.MLME_GET -> PibP;
   BeaconSynchronizeP.TrackAlarm = Alarm2;
   BeaconSynchronizeP.FrameUtility -> PibP;
+  BeaconSynchronizeP.FindBeacon -> DeviceCap.FindBeacon;
+  BeaconSynchronizeP.FindBeacon -> CoordCap.FindBeacon;
   BeaconSynchronizeP.Frame -> PibP;
   BeaconSynchronizeP.BeaconFrame -> PibP;
   BeaconSynchronizeP.BeaconRx -> SyncRadioClient;
@@ -280,7 +282,6 @@ implementation
     CoordCap.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_DISASSOCIATION_NOTIFICATION];
   AssociateP.DataRequest -> PollP.DataRequest[ASSOCIATE_CLIENT];
   AssociateP.ResponseTimeout = Timer3;
-  AssociateP.IsTrackingBeacons -> BeaconSynchronizeP.IsTrackingBeacons;
   AssociateP.TxFramePool -> TxFramePoolP;
   AssociateP.TxControlPool -> TxControlPoolP;
   AssociateP.MLME_GET -> PibP;
@@ -394,6 +395,7 @@ implementation
   DeviceCap.IsRxBroadcastPending -> BeaconSynchronizeP.IsRxBroadcastPending;
   DeviceCap.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
   DeviceCap.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
+  DeviceCap.IsTrackingBeacons -> BeaconSynchronizeP.IsTrackingBeacons;  
   DeviceCap.FrameUtility -> PibP;
   DeviceCap.RadioTx -> DeviceCapRadioClient;
   DeviceCap.RadioRx -> DeviceCapRadioClient;
@@ -426,6 +428,7 @@ implementation
   CoordCap.BLELen -> BeaconTransmitP.BLELen;
   CoordCap.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
   CoordCap.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
+  CoordCap.IsTrackingBeacons -> BeaconSynchronizeP.IsTrackingBeacons;  
   CoordCap.FrameUtility -> PibP;
   CoordCap.RadioTx -> CoordCapRadioClient;
   CoordCap.RadioRx -> CoordCapRadioClient;
@@ -496,8 +499,8 @@ implementation
   RxEnableP.TimeCalc -> PibP.TimeCalc;
   RxEnableP.RadioOff -> RxEnableRadioClient;
   RxEnableP.RadioPromiscuousMode = RadioPromiscuousMode;
-  RxEnableP.WasRxEnabled -> DeviceCap;
-  RxEnableP.WasRxEnabled -> CoordCap;
+  RxEnableP.WasRxEnabled -> DeviceCap.WasRxEnabled;
+  RxEnableP.WasRxEnabled -> CoordCap.WasRxEnabled;
   RxEnableP.RxEnableTimer = Timer5;
   RxEnableP.Debug = Ieee802154Debug[RXENABLE_CLIENT];
 

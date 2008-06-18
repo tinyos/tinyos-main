@@ -1,22 +1,25 @@
 This directory contains "TKN15.4", a platform-independent IEEE 802.15.4-2006
-MAC implementation. The code is still under active development, but most of the
-functionality described in the standard is implemented. The MAC itself is
-platform-independent, but it requires (1) a suitable radio driver, (2)
-Alarms/Timers with symbol precision and (3) some "platform glue" code (defining
-guard times, etc.). Currently the only supported platform is TelosB (however:
-without additional hardware support the timing is not standard compliant).
+MAC implementation. The code is in alpha state, under active development, but
+most of the functionality described in the standard is implemented (and
+cursorily tested). The MAC itself is platform-independent, but it requires
+(1) a suitable radio driver, (2) Alarms/Timers with symbol precision and (3)
+some "platform glue" code (defining guard times, etc.). Currently the only
+supported platform is TelosB (however: without additional hardware support on
+TelosB the timing in beacon-enabled mode is not standard compliant).
 
 Status 6/16/08
 --------------
 
 missing functionality:
-
 - security (not planned)
 - GTS (not planned)
-- non-beacon-enabled mode
 - PAN ID conflict resolution
 - multiple indirect transmissions to the same destination
-- documentation
+
+missing documentation:
+- overview on the architecture of TKN15.4
+- porting TKN15.4 to a new platform
+- ...
 
 Implementation 
 --------------

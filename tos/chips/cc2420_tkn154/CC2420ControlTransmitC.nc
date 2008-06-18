@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:02:40 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:39:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -39,7 +39,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Jan-Hinrich Hauer
- * @version $Revision: 1.1 $ $Date: 2008-06-16 18:02:40 $
+ * @version $Revision: 1.2 $ $Date: 2008-06-18 15:39:32 $
  */
 
 #include "CC2420.h"
@@ -139,9 +139,5 @@ implementation {
   
   components CC2420ReceiveC;
   CC2420TransmitP.CC2420Receive -> CC2420ReceiveC;
-  
-  components CC2420PacketC;
-  CC2420TransmitP.CC2420Packet -> CC2420PacketC;
-  CC2420TransmitP.CC2420PacketBody -> CC2420PacketC;
 }
 
