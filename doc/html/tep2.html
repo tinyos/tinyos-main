@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
 <title>Hardware Abstraction Architecture</title>
 <meta name="author" content="Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer, Cory Sharp, Adam Wolisz, David Culler, David Gay" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:57:59 $
-:version: $Revision: 1.12 $
+:date: $Date: 2008-06-18 19:04:43 $
+:version: $Revision: 1.13 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -291,20 +291,12 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Best Current Practice</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
-<td>Draft</td></tr>
-<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.0</td>
+<td>Final</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
 <td>Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer,
 Cory Sharp, Adam Wolisz, David Culler, David Gay</td></tr>
-<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">14-Sep-2004</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-28</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
-</tr>
 </tbody>
 </table>
 <div class="note">
@@ -383,45 +375,46 @@ the components become less and less hardware dependent, giving the
 developer more freedom in the design and the implementation of
 reusable applications.</p>
 <pre class="literal-block" id="fig-1">
-                                +-----------------------------+
-                                |                             |
-                                | Cross-platform applications |
-                                |                             |
-                                +--------------+--------------+
-+-----------------+                            |                            +-----------------+
-|Platform-specific|                            |                            |Platform-specific|
-|  applications   |                            |                            |  applications   |
-+--------+--------+       Platform-independent |  hardware interface        +--------+--------+
-         |          +-----------------+--------+--------+-----------------+          |
-         |          |                 |                 |                 |          |
-         |  +-------+-------+ +-------+-------+ +-------+-------+ +-------+-------+  |
-         |  |.------+------.| |.------+------.| |.------+------.| |.------+------.|  |
-         |  ||             || ||             || ||             || ||    HIL 4    ||  |
-         |  ||    HIL 1    || ||    HIL 2    || ||    HIL 3    || |`------+------'|  |
-         |  ||             || |`------+------'| |`------+------'| |       |       |  |
-         |  |`------+------'| |       |       | |       |       | |       |  +----+--+
-         +--+----+  |       | |.------+------.| |       |       | |       |  |    |
-            |    |  |       | ||             || |.------+------.| |.------+--+---.|
-            |.---+--+------.| ||             || ||             || ||             ||
-            ||             || ||    HAL 2    || ||             || ||             ||
-            ||             || ||             || ||    HAL 3    || ||    HAL 4    ||
-            ||    HAL 1    || |`------+------'| ||             || ||             ||
-            ||             || |       |       | ||             || ||             ||
-            ||             || |       |       | |`------+------'| |`------+------'|
-            |`------+------'| |.------+------.| |       |       | |       |       |
-            |       |       | ||             || |.------+------.| |       |       |
-            |.------+------.| ||    HPL 2    || ||             || |.------+------.|
-            ||    HPL 1    || ||             || ||    HPL 3    || ||    HPL 4    ||
-            |`------+------'| |`------+------'| |`------+------'| |`------+------'|
-            +-------+-------+ +-------+-------+ +-------+-------+ +-------+-------+  HW/SW
-                    |                 |                 |                 |          boundary
-       ************************************************************************************
-             +------+------+   +------+------+   +------+------+   +------+------+
-             |HW Platform 1|   |HW Platform 2|   |HW Platform 3|   |HW Platform 4|
-             +-------------+   +-------------+   +-------------+   +-------------+
+                          +-----------------------------+
+                          |                             |
+                          | Cross-platform applications |
+                          |                             |
+                          +--------------+--------------+
++-----------------+                      |                  +-----------------+
+|Platform-specific|                      |                  |Platform-specific|
+|  applications   |                      |                  |  applications   |
++--------+--------+                      |                  +--------+--------+
+         |          Platform-independent | hardware interface        |
+         |        +-------------+--------+----+-------------+        |
+         |        |             |             |             |        |
+         |  +-----+-----+ +-----+-----+ +-----+-----+ +-----+-----+  |
+         |  |.----+----.| |.----+----.| |.----+----.| |.----+----.|  |
+         |  ||         || ||         || ||         || ||  HIL 4  ||  |
+         |  ||  HIL 1  || ||  HIL 2  || ||  HIL 3  || |`----+----'|  |
+         |  ||         || |`----+----'| |`----+----'| |     |     |  |
+         |  |`----+----'| |     |     | |     |     | |     |  +--+--+
+         +--+--+  |     | |.----+----.| |     |     | |     |  |  |
+            |  |  |     | ||         || |.----+----.| |.----+--+-.|
+            |.-+--+----.| ||         || ||         || ||         ||
+            ||         || ||  HAL 2  || ||         || ||         ||
+            ||         || ||         || ||  HAL 3  || ||  HAL 4  ||
+            ||  HAL 1  || |`----+----'| ||         || ||         ||
+            ||         || |     |     | ||         || ||         ||
+            ||         || |     |     | |`----+----'| |`----+----'|
+            |`----+----'| |.----+----.| |     |     | |     |     |
+            |     |     | ||         || |.----+----.| |     |     |
+            |.----+----.| ||  HPL 2  || ||         || |.----+----.|
+            ||  HPL 1  || ||         || ||  HPL 3  || ||  HPL 4  ||
+            |`----+----'| |`----+----'| |`----+----'| |`----+----'|
+            +-----+-----+ +-----+-----+ +-----+-----+ +-----+-----+  HW/SW
+                  |             |             |             |          boundary
+       ************************************************************************
+           +------+-----+ +-----+-----+ +-----+-----+ +-----+-----+
+           |HW Plat 1   | |HW Plat 2  | |HW Plat 3  | |HW Plat 4  |
+           +------------+ +-----------+ +-----------+ +-----------+
 
 
-                      Fig.1: The proposed Hardware Abstraction Architecture
+             Fig.1: The proposed Hardware Abstraction Architecture
 </pre>
 <p>In contrast to the more traditional two step approach used in other
 embedded operating systems like <a class="citation-reference" href="#windowsce" id="id9" name="id9">[WindowsCE]</a>, the three-level design
@@ -850,7 +843,7 @@ M.Turon, J.Hui, K.Klues, C.Sharp, R.Szewczyk, J.Polastre,
 P.Buonadonna, L.Nachman, G.Tolle, D.Culler, and A.Wolisz,
 &quot;T2: A Second Generation OS For Embedded Sensor Networks&quot;,
 <em>Technical Report TKN-05-007</em>, Telecommunication Networks Group,
-Technische Universität Berlin, November 2005.</td></tr>
+Technische Universitaet Berlin, November 2005.</td></tr>
 </tbody>
 </table>
 <table class="docutils citation" frame="void" id="windowsce" rules="none">
@@ -939,12 +932,6 @@ Levis, &quot;Power Management of Non-Virtualised Devices&quot;</td></tr>
 <tr><td class="label"><a name="tep117">[TEP117]</a></td><td><em>(<a class="fn-backref" href="#id12">1</a>, <a class="fn-backref" href="#id18">2</a>)</em> Phil Buonadonna, Jonathan Hui, &quot;Low-Level I/O&quot;</td></tr>
 </tbody>
 </table>
-<!-- Local Variables:
-mode: indented-text
-indent-tabs-mode: nil
-sentence-end-double-space: t
-fill-column: 70
-End: -->
 </div>
 </div>
 </body>

@@ -5,15 +5,10 @@ Hardware Abstraction Architecture
 :TEP: 2
 :Group: Core Working Group 
 :Type: Best Current Practice
-:Status: Draft
-:TinyOS-Version: 2.0
+:Status: Final
+:TinyOS-Version: 2.x
 :Author: Vlado Handziski, Joseph Polastre, Jan-Hinrich Hauer, 
          Cory Sharp, Adam Wolisz, David Culler, David Gay
-
-:Draft-Created: 14-Sep-2004
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2007-09-05 14:07:32 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
@@ -650,10 +645,3 @@ Citations
 
 .. [TEP117] Phil Buonadonna, Jonathan Hui, "Low-Level I/O"
 
-..
-   Local Variables:
-   mode: indented-text
-   indent-tabs-mode: nil
-   sentence-end-double-space: t
-   fill-column: 70
-   End:
