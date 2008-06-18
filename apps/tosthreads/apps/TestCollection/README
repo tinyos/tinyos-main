@@ -1,0 +1,60 @@
+README for TOSThreads TestCollection
+Author/Contact: tinyos-help@millennium.berkeley.edu
+Author: Kevin Klues <klueska@cs.stanford.edu>
+
+Description:
+
+TestCollection is a reimplementation of the Multihop Oscilloscope application
+using TOSThreads. It periodically samples a universal software-based SineSensor
+and broadcasts a message every few readings. These readings can be displayed by
+the Java "Oscilloscope" application found in the the TestCollection/java
+subdirectory. The sampling rate starts at 4Hz, but can be changed from the Java
+application.
+
+You can install TestCollection on a mote via the following comand:
+  make <platform> cthreads install
+  
+Valid platforms are currently: tmote, telosb, mica2, and micaz 
+
+At least two motes must be used by this application, with one of them installed
+as a base station.  Base station motes can be created by installing them with
+NODE_ID % 500 == 0. 
+  i.e. make <platform> threads install.0
+       make <platform> threads install.500
+       make <platform> threads install.1000
+  
+All other nodes can be installed with arbitrary NODE_IDs.
+  make <platform> threads install.123
+
+Successful running of this application is verified by all NON-base station motes
+periodically flashing LED0 upon sending a message, and the base station mote,
+flashing LED2 upon successful reception of a message.  Additionally, correct
+operation should be verified by running the java tool described in the following
+section.
+
+Tools:
+
+The Java application displays readings it receives from motes running the
+MultihopOscilloscope demo via a serial forwarder. To run it, change to the
+TestCollection/java subdirectory and type:
+
+  make
+  java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<mote>
+  # e.g., java net.tinyps.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
+  # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:telosb
+  ./run
+
+The controls at the bootom of the screen allow yoy to zoom in or out the X
+axis, change the range of the Y axis, and clear all received data. You can
+change the color used to display a mote by clicking on its color in the
+mote table.
+
+Notes:
+
+By default, the Makefile for TestCollection is setup to run CTP as the 
+underlying collection protocol.  The makefile can be modified to work with
+MultihopLQI by changing the appropriate include directories.
+
+Known bugs/limitations:
+  None.
+

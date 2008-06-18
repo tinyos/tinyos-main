@@ -1,0 +1,42 @@
+README for TOSThreads Bounce 
+Author/Contact: tinyos-help@millennium.berkeley.edu
+Author: Kevin Klues <klueska@cs.stanford.edu>
+
+Description:
+
+This application is derived from a similar application in the TinyThread 
+implementation by William P. McCartney from Cleveland State University (2006)
+
+This application stresses the operation of the thread based AM commands for
+packet transmission and reception.  To run this application you will need to
+burn it on one mote with NODE_ID 0, and a second mote with NODE_ID 1. 
+
+You can install Bounce on a mote via the following comand:
+  make <platform> cthreads install.0
+  make <platform> cthreads install.1
+  
+Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+
+Three different threads run that each contain an infinite loop that first sends
+a message and then waits to receive a message before returning to the top of the
+loop. After each message reception, one of the onboard LEDs is toggled to
+indicate that it was received. Thread 0 blinks LED0, thread 1 blinks LED1, and
+thread 2 blinks LED2. The three threads run independently, and three different
+messages are bounced back and forth between the two motes in an unsynchronized
+fashion.  In contrast to the more complicated Bounce application found in the
+normal nesC threads version of this application, once a thread receives a
+message it will immediately flip on its LED instead of waiting on a Barrier and
+synchronizing the LEDs to come on only once messages have been received from all
+threads.  In this way, messages are bounced back and forth between the two motes
+in an asynchronous fashion, and LEDS are toggled immediately upon message
+reception..  
+
+Successful running of this application results in each LED bouncing back and
+forth between each mote independent of one another.  This will continue in an
+finitie loop forever.
+
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.

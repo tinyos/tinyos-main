@@ -1,0 +1,35 @@
+README for TOSThreads RadioStress 
+Author/Contact: tinyos-help@millennium.berkeley.edu
+Author: Kevin Klues <klueska@cs.stanford.edu>
+
+Description:
+
+This application stresses the operation of the thread based AM commands for
+packet transmission and reception.  To run this application you will need to
+burn it on one mote with NODE_ID 0, and a second mote with NODE_ID 1.  
+
+You can install RadioStress on a mote via the following comand:
+  make <platform> threads install.0
+  make <platform> threads install.1
+  
+Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+
+The applicaiton burned with NODE_ID 0 will be programmed as a Receiver and will
+wait for messages from the sender programmed with NODE_ID 1.  In the case of the
+sender, messages with three different AM ids are sent from three different
+threads in an infinite loop, and one of LED0, LED1, and LED2 are toggled upon
+successful transmission.  In the case of the receiver, three different threads
+are used to wait for messages in an infinite loop from the three sending threads
+on the sender mote.  Upon successful reception, one of LED0, LED1, or LED2 is
+toggled depending on the AM id received.
+
+Successful running of this application will result in all three leds flashing
+very rapidly on both motes, with the receiver mote flashing less rapidly if the
+sender mote is turned off (i.e. once every 5000ms because there is a timeout on
+how long it waits for messages to be received before retrying).
+
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.

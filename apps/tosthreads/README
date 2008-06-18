@@ -1,0 +1,31 @@
+Author: Kevin Klues <klueska@cs.stanford.edu>
+
+The applications contained in this directory are both 'example' and 'test'
+applications for running TOSThreads based applications in TinyOS.  All
+applications in the 'apps' directory can be compiled by running the command:
+
+    make <platform> threads
+    
+and all applications in the 'capps' directory can be compiled by running:
+    
+    make <platform> cthreads
+    
+Some applications may be platform specific, but in general TOSThreads currently
+supports the following platforms: tmote, telosb, iris, mica2, and micaz 
+
+To compile all applications under 'apps' for a given platform, simpley 'cd' into
+the 'apps' directory and run the 'make' command specified above.  Similarly,
+'cd' into the 'capps' directory and run the 'cthreads' version of the make
+command to compile all of those applications too.
+
+There are READMEs contained in each application subdirectory that explain how
+the application works, and hwo one can verify that it is operating correctly.  
+
+I hope everyone finds these application and their descriptions useful.  And I
+hope everyone finds TOSThreads both intuitive and easy to use.  Enjoy.
+
+~Kevin Klues
+
+
+
+

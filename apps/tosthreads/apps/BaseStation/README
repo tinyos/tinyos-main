@@ -1,0 +1,61 @@
+README for TOSThreads BaseStation 
+Author/Contact: tinyos-help@millennium.berkeley.edu
+Author: Kevin Klues <klueska@cs.stanford.edu>
+
+Description:
+
+BaseStation is a reimplementation of the standard BaseStation application using
+the TOSThreads thread library.  It transparently forwards any AM messages it
+receives from its radio interface to its serial interface and vice versa. Upon
+successful reception of a packet, LED0 is toggled, and upon successful
+forwarding, LED1 is toggled.  If there are any errors, LED2 is toggled.  
+
+To run this application install it on a mote via the command:
+  make <platform> threads install.45
+  
+Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+
+Installing with NODE_ID 45 (i.e. AM_ADDRESS 45) is jsut to verify that the
+application forwards packets with an arbitrarily chosen id, which it should.
+
+To test the correct operation of this application, you need two motes:  one with
+this BaseStation application installed on it, and one with an application that
+is sending messages installed, (let's use the RadioStress application from the
+current directory).  
+
+On one mote install the Base station via the command above, and on the other
+install RadioStress via the command:
+  make <platform> threads install.1
+  
+Don't forget the '.1' when you install, or RadioStress will be configured to
+receive rather than send messages.  Messages are sent to AM_ADDRESS 0.
+
+A succssfull test will result in the RadioStress mote constantly flickering all
+of its leds very rapidly, and the BaseStation mote flickering its LED0 and LED1
+leds rapidly.  Additionally, messages should be forwarded over the serial interface
+as verified by running the following for the platform of interest:
+  java net.tinyos.tools.Listen -comm serial@/dev/ttyUSBXXX:<baud_rate>
+  
+NOTE::  The baud rate 57600 must be used telos based motes, as its configuration
+has been changed to work with this baud rate when compiled for tosthreads. I.e.
+DO NOT just substitute 'telosb' or 'tmote' for <baud_rate> above.  Explicitly
+set it to 57600.
+
+Once this java application is running, you should see output of the sort
+constantly being streamed to your terminal:
+  00 00 00 00 01 00 00 14 
+  00 00 00 00 01 00 00 16 
+  00 00 00 00 01 00 00 15 
+  00 00 00 00 01 00 00 14 
+  00 00 00 00 01 00 00 16 
+  00 00 00 00 01 00 00 15 
+  00 00 00 00 01 00 00 14 
+  00 00 00 00 01 00 00 16 
+  00 00 00 00 01 00 00 15 
+  00 00 00 00 01 00 00 14 
+
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.

@@ -1,0 +1,22 @@
+README for TOSThreads Blink 
+Author/Contact: tinyos-help@millennium.berkeley.edu
+Author: Kevin Klues <klueska@cs.stanford.edu>
+
+Description:
+
+Blink is a simple application used to test the basic functionality of
+TOSThreads.
+
+You can install Blink on a mote via the following comand:
+  make <platform> cthreads install
+  
+Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+
+Upon a successful burn, you should see LED0 flashing with a period of every
+200ms, and LED1 and LED2 flashing in unison with a period of 1000ms.
+
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.

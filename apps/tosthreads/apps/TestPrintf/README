@@ -1,0 +1,47 @@
+README for TOSThreads TestPrintf 
+Author/Contact: tinyos-help@millennium.berkeley.edu
+Author: Kevin Klues <klueska@cs.stanford.edu>
+
+Description:
+
+This application tests the operation of the Printf cleint in TOSThreads.  It
+continusouly prints the value of a counter starting at 0, increasing as it
+prints.
+
+You can install TestPrintf on a mote via the following comand:
+  make <platform> threads install
+  
+Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+
+Once burned on a mote, the java based PrintfClient must be ran to verify
+proper operation of the application.
+  java net.tinyos.tools.PrintfClient -comm serial@/dev/ttyUSBXXX:<baud_rate>
+  
+NOTE::  The baud rate 57600 must be used telos based motes, as its configuration
+has been changed to work with this baud rate when compiled for tosthreads. I.e.
+DO NOT just substitute 'telosb' or 'tmote' for <baud_rate> above.  Explicitly
+set it to 57600.
+
+Once this java application is running, you should see output of the sort
+continuously being streamed to your terminal:
+...
+...
+Counter: 4549
+Counter: 4550
+Counter: 4551
+Counter: 4552
+Counter: 4553
+Counter: 4554
+Counter: 4555
+Counter: 4556
+Counter: 4557
+Counter: 4558
+Counter: 4559
+...
+...
+
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.
