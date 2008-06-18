@@ -41,7 +41,9 @@ module RssiBaseC {
 
 #ifdef __CC2420_H__
   uses interface CC2420Packet;
-#endif //__CC2420_H__  
+#else
+  uses interface PacketField<uint8_t> as PacketRSSI;
+#endif 
 } implementation {
 
   uint16_t getRssi(message_t *msg);
@@ -64,10 +66,15 @@ module RssiBaseC {
     cc1000_metadata_t *md =(cc1000_metadata_t*) msg->metadata;
     return md->strength_or_preamble;
   }
+#elif defined(PLATFORM_IRIS)
+  uint16_t getRssi(message_t *msg){
+    if(call PacketRSSI.isSet(msg))
+      return (uint16_t) call PacketRSSI.get(msg);
+    else
+      return 0xFFFF;
+  }
 #else
   #error Radio chip not supported! This demo currently works only \
-         for motes with CC1000 or CC2420 radios.  
-#endif //__CC2420_H__
-  
+         for motes with CC1000, CC2420 or RF230 radios.  
+#endif
 }
-

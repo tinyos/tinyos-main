@@ -44,7 +44,10 @@ configuration RssiBaseAppC {
 #ifdef __CC2420_H__
   components CC2420ActiveMessageC;
   App -> CC2420ActiveMessageC.CC2420Packet;
-#endif //__CC2420_H__
+#elif  defined(PLATFORM_IRIS)
+  components  RF230ActiveMessageC;
+  App -> RF230ActiveMessageC.PacketRSSI;
+#endif
   
   App-> BaseStationC.RadioIntercept[AM_RSSIMSG];
 }
