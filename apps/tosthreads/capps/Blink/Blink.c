@@ -57,7 +57,7 @@ void tosthread_main(void* arg) {
 void blink0_thread(void* arg) {
   for(;;) {
     led0Toggle();
-    tosthread_sleep(1000);
+    tosthread_sleep(200);
   }
 }
 
