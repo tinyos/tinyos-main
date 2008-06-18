@@ -1,4 +1,6 @@
 COMPONENT=BaseStationAppC
+
+
  
 CFLAGS+=-DCC2420_DEF_CHANNEL=26
  
