@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:30 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:52:53 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -44,7 +44,7 @@ module NoBeaconSynchronizeP
     interface MLME_SYNC;
     interface MLME_BEACON_NOTIFY;
     interface MLME_SYNC_LOSS;
-    interface Get<bool> as IsTrackingBeacons;
+    interface GetNow<bool> as IsTrackingBeacons;
     interface Get<uint32_t> as GetLastBeaconRxTime;
     interface GetNow<uint32_t> as CapStart;
     interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
@@ -66,6 +66,7 @@ module NoBeaconSynchronizeP
     interface MLME_GET;
     interface MLME_SET;
     interface FrameUtility;
+    interface Notify<bool> as FindBeacon;
     interface IEEE154BeaconFrame as BeaconFrame;
     interface Alarm<TSymbolIEEE802154,uint32_t> as TrackAlarm;
     interface RadioRx as BeaconRx;
@@ -99,7 +100,7 @@ implementation
 
   event void Token.granted() { }
 
-  async event void TokenTransferred.transferred() { call Token.release(); }
+  event void TokenTransferred.transferred() { call Token.release(); }
 
   async event void TrackAlarm.fired() {}
 
@@ -109,7 +110,7 @@ implementation
 
   async event void RadioOff.offDone() {}
 
-  command bool IsTrackingBeacons.get(){ return FALSE;}
+  async command bool IsTrackingBeacons.getNow(){ return FALSE;}
   command uint32_t GetLastBeaconRxTime.get(){ return 0;}
   async command uint8_t* GtsField.getNow() { return 0; }
   async command uint32_t SfSlotDuration.getNow() { return 0; }
@@ -128,4 +129,5 @@ implementation
   async command uint8_t NumGtsSlots.getNow() { return 0; }
   async command bool IsRxBroadcastPending.getNow() { return FALSE; }
   event message_t* CoordRealignmentRx.received(message_t* frame) {return frame;}
+  event void FindBeacon.notify( bool val ){}
 }

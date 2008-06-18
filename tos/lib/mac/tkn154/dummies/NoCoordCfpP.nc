@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:30 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:52:53 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -89,7 +89,7 @@ implementation
     return IEEE154_INVALID_HANDLE; 
   } 
 
-  async event void TokenTransferred.transferred()
+  event void TokenTransferred.transferred()
   {
     // the CFP has started, this component now owns the token -  
     // because GTS is not implemented we release the token
