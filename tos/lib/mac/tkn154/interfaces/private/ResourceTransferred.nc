@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:34 $
+ * $Revision: 1.2 $
+ * $Date: 2008-06-18 15:45:57 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,18 +42,5 @@ interface ResourceTransferred
    *
    * @see ResourceTransfer interface
    */
-  async event void transferred();
-
-  /** 
-   *
-   * Release control of a resource - this command is equivalent to calling
-   * Resource.release() and included for convenience. 
-   *
-   * @return SUCCESS The resource has been released <br> FAIL You tried to
-   * release but you are not the owner of the resource
-   *
-   * @see ResourceTransfer interface
-   */
-
-  async command error_t release();
+  event void transferred();
 }
