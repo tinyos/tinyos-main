@@ -1,4 +1,4 @@
-These release notes are as of: $Date: 2008-06-16 23:02:25 $
+These release notes are as of: $Date: 2008-06-18 17:11:20 $
 
 2.1:
   Added 4-bit link estimator to CTP in lib/net/4bitle
@@ -7,6 +7,7 @@ These release notes are as of: $Date: 2008-06-16 23:02:25 $
   Added TOSThreads library in lib/tosthreads
   Added SafeTinyOS support with 'safe' make option
   Added support for 802.15.4 T-Frames through 'tframe' make option
+  Added TKN15.4, a platform-independent 802.15.4-2006 MAC implementation
   Added low-power application tutorial
   Added printf tutorial
   Added TEPs
