@@ -9,10 +9,10 @@ TEP_STYLESHEET = stylesheets/tep.css
 
 #override for different docutils installations
 ifndef RST2HTML
-RST2HTML= rst2html.py
+RST2HTML= rst2html
 endif
 ifndef RST2LATEX
-RST2LATEX= rst2latex.py
+RST2LATEX= rst2latex
 endif
 
 
