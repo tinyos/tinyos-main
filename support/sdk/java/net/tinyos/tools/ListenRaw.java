@@ -1,4 +1,4 @@
-// $Id: ListenRaw.java,v 1.5 2008-05-16 19:28:40 sallai Exp $
+// $Id: ListenRaw.java,v 1.6 2008-06-18 19:04:45 sallai Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.
@@ -58,6 +58,7 @@ public class ListenRaw {
     private static final int PORT_SPEED_MICA = 19200;
     private static final int PORT_SPEED_RENE = 19200;
     private static final int PORT_SPEED_IRIS = 57600;
+    private static final int PORT_SPEED_SHIMMER = 115200;
     private static final int LENGTH_OFFSET = 4;
     private int packetLength;
     private int portSpeed;
@@ -111,13 +112,14 @@ public class ListenRaw {
 	System.err.println("options are:");
 	System.err.println("  -h, --help:    usage help");
 	System.err.println("  -p:            print available ports");
-	System.err.println("  -telos:        Telos ("+PORT_SPEED_TELOS+" bps) [default]");
+	System.err.println("  -telos:        Telos ("+PORT_SPEED_TELOS+" bps)");
 	System.err.println("  -micaz:        Mica2 ("+PORT_SPEED_MICAZ+" bps) [default]");
 	System.err.println("  -mica2:        Mica2 ("+PORT_SPEED_MICA2+" bps) [default]");
-	System.err.println("  -mica2dot:        Mica2Dot ("+PORT_SPEED_MICA2DOT+" bps)");
+	System.err.println("  -mica2dot:     Mica2Dot ("+PORT_SPEED_MICA2DOT+" bps)");
 	System.err.println("  -mica:         Mica ("+PORT_SPEED_MICA+" bps)");
 	System.err.println("  -rene:         Rene ("+PORT_SPEED_RENE+" bps)");
 	System.err.println("  -iris:         Iris ("+PORT_SPEED_IRIS+" bps) [default]");
+	System.err.println("  -shimmer:      Shimmer ("+PORT_SPEED_SHIMMER+" bps)");
 	System.exit(-1);
     }
 
@@ -153,6 +155,9 @@ public class ListenRaw {
 	    }
 	    if (args[i].equals("-iris")) {
 	        speed = PORT_SPEED_IRIS;
+	    }
+	    if (args[i].equals("-shimmer")) {
+	        speed = PORT_SPEED_SHIMMER;
 	    }
 	}
 
