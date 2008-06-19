@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: eprb.extra,v 1.7 2008-06-18 20:22:51 razvanm Exp $
+#$Id: eprb.extra,v 1.8 2008-06-19 15:52:39 sallai Exp $
 
 ifeq ($(EPRB),)
 $(error EPRB must be defined, try "make $(TARGETS) help")
@@ -13,7 +13,7 @@ ifeq ($(PROGRAMMER),avrdude)
         BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
       endif
     endif
-    PROGRAMMER_FLAGS = -cstk500 -P$(EPRB)   -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_STK)
+    PROGRAMMER_FLAGS = -cmib510 -Pnet:$(EPRB):10001    -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_STK)
     PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
     PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
 endif
