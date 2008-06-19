@@ -36,7 +36,7 @@
  * @author David Moss
  */
 
-#warning "*** LOW POWER COMMUNICATIONS DISABLED ***"
+//#warning "*** LOW POWER COMMUNICATIONS DISABLED ***"
 
 configuration DummyLplC {
   provides {
