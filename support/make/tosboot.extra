@@ -1,0 +1,37 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: tosboot.extra,v 1.1 2008-06-19 15:51:25 razvanm Exp $
+
+DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
+DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
+TOSBOOT_DIR ?= $(TOSDIR)/lib/tosboot/build
+
+ifeq ($(BOOTLOADER),tosboot)
+
+  CFLAGS += -DDELUGE
+  CFLAGS += -I$(TOSDIR)/lib/net -I$(TOSDIR)/lib/net/drip -I$(DELUGE_DIR) -I$(DELUGE_DIR)/FlashVolumeManager -I$(DELUGE_DIR)/BlockStorageManager
+
+  ifneq ($(filter telosb tmote,$(TARGETS)),)
+    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/telos -I$(DELUGE_EXTRA)/telosb
+    ifeq ($(filter docs,$(GOALS)),)
+      CFLAGS += -Wl,--section-start=.text=0x4a00,--defsym=_reset_vector__=0x4000
+    endif
+    BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/telosb/main.ihex
+    ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+      BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
+    endif
+  endif
+
+  ifeq ($(TARGETS),micaz)
+    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/avr -I$(DELUGE_EXTRA)/micaz -I$(DELUGE_EXTRA)/mica2
+    BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/micaz/main.ihex
+    AVR_FUSE_H ?= 0xda
+  endif
+
+  ifeq ($(TARGETS),iris)
+    CFLAGS += -I$(DELUGE_EXTRA)/iris -I$(DELUGE_EXTRA)/micaz -I$(DELUGE_EXTRA)/mica2 -I$(DELUGE_EXTRA)/avr -I$(DELUGE_EXTRA)
+    BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/iris/main.ihex
+    AVR_FUSE_H ?= 0xda
+  endif
+
+
+endif
