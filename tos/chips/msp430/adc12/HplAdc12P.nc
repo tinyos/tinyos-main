@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2008-05-15 23:57:13 $
+ * $Revision: 1.8 $
+ * $Date: 2008-06-20 10:30:28 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -107,9 +107,11 @@ implementation
   
   async command void HplAdc12.stopConversion(){
     // stop conversion mode immediately, conversion data is unreliable
+    uint16_t ctl1 = ADC12CTL1;
     ADC12CTL1 &= ~(CONSEQ0 | CONSEQ1);
     ADC12CTL0 &= ~(ADC12SC + ENC); 
-    ADC12CTL0 &= ~(ADC12ON); 
+    ADC12CTL0 &= ~(ADC12ON);
+    ADC12CTL1 |= (ctl1 & (CONSEQ0 | CONSEQ1));
   }
   
   async command void HplAdc12.enableConversion(){ 
