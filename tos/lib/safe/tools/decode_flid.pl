@@ -43,24 +43,25 @@ if (defined ($fn)) {
 	    (s/\"$//g);
 	}
 	if (hex($fields[0]) == hex($flidstr)) {
-	    $found = 1;
+	    my $check = $fields[1];
 	    my $text = $fields[2];
-	    my $check = $fields[3];
-	    my $file = $fields[5];
-	    my $line = $fields[6];
-	    my $func = $fields[7];
+	    my $loc = $fields[3];
+	    my $func = $fields[4];
 
-	    print "\n$line\n\n";
+
+	    $found = 1;
 
 	    print "Deputy error message for flid $flidstr:\n\n";
 
-	    printf "%s:%d: %s: Assertion failed in %s:\n  %s\n", 
-	    $file, $line, $func, $check, $text;
-	    
-	    print "\n";
+	    printf "%s: %s: Assertion failed in %s:\n  %s\n", 
+	      $loc, $func, $check, $text;
 	}
     }
     close INF;
+}
+else {
+    print "Usage: decode-flid.pl FLID flid-filename\n";
+    exit 2;
 }
 
 if (!$found) {
