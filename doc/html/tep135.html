@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<title>Active Message ID Allocation in TinyOS 2.1</title>
+<meta name="author" content="Omprakash Gnawali" />
+<style type="text/css">
+
+/*
+:Author: David Goodger
+:Contact: goodger@users.sourceforge.net
+:date: $Date: 2008-06-20 19:12:21 $
+:version: $Revision: 1.1 $
+:copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+*/
+body {
+  font-family: Times;
+  font-size: 16px;
+}
+
+.first {
+  margin-top: 0 ! important }
+
+.last {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dd {
+  margin-bottom: 0.5em }
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning, div.admonition {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.hint p.admonition-title, div.important p.admonition-title,
+div.note p.admonition-title, div.tip p.admonition-title,
+div.admonition p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em }
+
+div.footer, div.header {
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin-left: 1em ;
+  border: medium outset ;
+  padding: 0em 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
+
+h1.title {
+ text-align: center;
+ font-size: 32px;
+}
+
+h2 {
+ font-size: 16px;
+ font-family: Arial, sans-serif;
+}
+
+h2.subtitle {
+  text-align: center }
+
+h3 {
+ font-size: 12px;
+ font-family: Arial, sans-serif;
+}
+
+hr {
+  width: 75% }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font-family: serif ;
+  font-size: 100% }
+
+pre.line-block {
+  font-family: serif ;
+  font-size: 100% }
+
+pre.literal-block, pre.doctest-block {
+  margin-left: 2em ;
+  margin-right: 2em ;
+  background-color: #eeeeee;
+  border-color: #000000;
+  border-width: thin; 
+  font-size: 14px
+}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.option-argument {
+  font-style: italic }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+table {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.citation {
+  border-left: solid thin gray ;
+  padding-left: 0.5ex }
+
+table.docinfo {
+  margin: 2em 4em;
+}
+
+table.footnote {
+  border-left: solid thin black ;
+  padding-left: 0.5ex }
+
+td, th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+th.docinfo-name, th.field-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap;
+  }
+
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+  font-size: 100% }
+
+tt {}
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="active-message-id-allocation-in-tinyos-2-1">
+<h1 class="title">Active Message ID Allocation in TinyOS 2.1</h1>
+<table class="docinfo" frame="void" rules="none">
+<col class="docinfo-name" />
+<col class="docinfo-content" />
+<tbody valign="top">
+<tr class="field"><th class="docinfo-name">TEP:</th><td class="field-body">135</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Group:</th><td class="field-body">Network Protocol Working Group</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
+</tr>
+<tr><th class="docinfo-name">Status:</th>
+<td>Draft</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.1</td>
+</tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Omprakash Gnawali</td></tr>
+<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-June-2008</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-06-20</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p class="first admonition-title">Note</p>
+<p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
+requests discussion and suggestions for improvements.  Distribution
+of this memo is unlimited. This memo is in full compliance with
+<a class="citation-reference" href="#tep-1" id="id1" name="id1">[TEP_1]</a> and <a class="citation-reference" href="#tep-4" id="id2" name="id2">[TEP_4]</a>.</p>
+</div>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<p>In this TEP, we document the Active Message Type <a class="footnote-reference" href="#id4" id="id3" name="id3">[1]</a> allocations
+in TinyOS 2.1.</p>
+<div class="section">
+<h2><a id="unreserved-pool-0x80-0xff" name="unreserved-pool-0x80-0xff">2. Unreserved pool (0x80 - 0xFF)</a></h2>
+<p>The unreserved pool is in the range 128-255 (0x80-0xFF). Applications
+distributed with TinyOS use AM IDs in this range. Protocols and
+applications in contrib as well as those developed by the community
+but not included in the distribution or contrib SHOULD use AM IDs in
+this range.</p>
+</div>
+<div class="section">
+<h2><a id="reserved-pool-0x00-0x7f" name="reserved-pool-0x00-0x7f">3. Reserved pool (0x00 - 0x7F)</a></h2>
+<p>The reserved pool is in the range 0-127 (0x00-0x7F). The AM IDs in
+this range are used by protocols distributed with TinyOS.</p>
+<p>Here is a list of allocations for TinyOS 2.1:</p>
+<pre class="literal-block">
+* 0x70 - 0x7F are reserved for collection protocols maintained by
+  the Network Protocol Working Group.
+
+  0x70 - CTP routing beacon and LEEP (''tos/lib/net/ctp'', TEP 119, 123, and 124)
+  0x71 - CTP data packets (''tos/lib/net/ctp'', TEP 119, 123)
+  0x72 - CTP debug messages (''tos/lib/net/ctp'')
+  0x73 - MultiHopLQI routing beacon (''tos/lib/net/lqi'')
+  0x74 - MultiHopLQI data packets (''tos/lib/net/lqi'')
+  0x75 - MultiHopLQI debug messages (''tos/lib/net/lqi'')
+
+* 0x60 - 0x6F are reserved for dissemination protocols maintained by
+  the Network Protocol Working Group.
+
+  0x60 - Drip (''tos/lib/net/drip'', TEP 118)
+  0x61 - DIP (''tos/lib/net/dip'', TEP 118)
+
+* 0x50 - 0x5F are reserved for Deluge (''tos/lib/net/Deluge'')
+  maintained by the Network Protocol Working Group.
+
+  0x50 - AM_DELUGEADVMSG (advertisements)
+  0x51 - AM_DELUGEREQMSG (requests)
+  0x52 - AM_DELUGEDATAMSG (data)
+  0x53 - DELUGE_AM_FLASH_VOL_MANAGER (flash volume manager)
+  0x54 - DELUGE_AM_DELUGE_MANAGER (deluge manger)
+
+* 0x3F - TinyOS NALP code (TEP 125) reserved by the Core Working
+  Group.
+</pre>
+</div>
+</div>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">4. Author's Address</a></h1>
+<div class="line-block">
+<div class="line">Omprakash Gnawali</div>
+<div class="line">Ronald Tutor Hall (RTH) 418</div>
+<div class="line">3710 S. McClintock Avenue</div>
+<div class="line">Los Angeles, CA 90089</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 213 821-5627</div>
+<div class="line">email - <a class="reference" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
+</div>
+</div>
+<div class="section">
+<h1><a id="citations" name="citations">5. Citations</a></h1>
+<table class="docutils citation" frame="void" id="tep-1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1" name="tep-1">[TEP_1]</a></td><td>TEP 1: TEP Structure and Keywords</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep-4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2" name="tep-4">[TEP_4]</a></td><td>TEP 4: Active Message ID Allocation for Network Protocols and Applications</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3" name="id4">[1]</a></td><td>TEP 116: Packet Protocols</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</body>
+</html>
