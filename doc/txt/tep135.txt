@@ -4,14 +4,14 @@ Active Message ID Allocation in TinyOS 2.1
 
 :TEP: 135
 :Group: Network Protocol Working Group 
-:Type: Documentary
+:Type: Informational
 :Status: Draft
 :TinyOS-Version: 2.1
 :Author: Omprakash Gnawali
 
 :Draft-Created: 19-June-2008
-:Draft-Version: $Revision: 1.1 $
-:Draft-Modified: $Date: 2008-06-20 05:57:35 $
+:Draft-Version: $Revision: 1.2 $
+:Draft-Modified: $Date: 2008-06-20 22:19:35 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -25,11 +25,13 @@ Active Message ID Allocation in TinyOS 2.1
 1. Introduction
 ====================================================================
 
-In this TEP, we document the Active Message Type [1]_ allocations
-in TinyOS 2.1.
+TinyOS network protocols use allocated Active Message Type [TEP_116]_
+to prevent AM ID conflict between different protocols. [TEP_4]_
+describes how AM IDs are allocated for a TinyOS network protocol. In
+this TEP, we document the AM ID allocations in TinyOS 2.1.
 
-2. Unreserved pool (0x80 - 0xFF)
----------------------------------
+2. Unreserved pool 128-255 (0x80 - 0xFF)
+====================================================================
 
 The unreserved pool is in the range 128-255 (0x80-0xFF). Applications
 distributed with TinyOS use AM IDs in this range. Protocols and
@@ -37,40 +39,47 @@ applications in contrib as well as those developed by the community
 but not included in the distribution or contrib SHOULD use AM IDs in
 this range.
 
-3. Reserved pool (0x00 - 0x7F)
--------------------------------
+3. Reserved pool 0-127 (0x00 - 0x7F)
+====================================================================
 
 The reserved pool is in the range 0-127 (0x00-0x7F). The AM IDs in
 this range are used by protocols distributed with TinyOS.
 
 Here is a list of allocations for TinyOS 2.1::
 
-  * 0x70 - 0x7F are reserved for collection protocols maintained by
-    the Network Protocol Working Group.
-
-    0x70 - CTP routing beacon and LEEP (''tos/lib/net/ctp'', TEP 119, 123, and 124)
-    0x71 - CTP data packets (''tos/lib/net/ctp'', TEP 119, 123)
-    0x72 - CTP debug messages (''tos/lib/net/ctp'')
-    0x73 - MultiHopLQI routing beacon (''tos/lib/net/lqi'')
-    0x74 - MultiHopLQI data packets (''tos/lib/net/lqi'')
-    0x75 - MultiHopLQI debug messages (''tos/lib/net/lqi'')
-
-  * 0x60 - 0x6F are reserved for dissemination protocols maintained by
-    the Network Protocol Working Group.
-
-    0x60 - Drip (''tos/lib/net/drip'', TEP 118)
-    0x61 - DIP (''tos/lib/net/dip'', TEP 118)
-
-  * 0x50 - 0x5F are reserved for Deluge (''tos/lib/net/Deluge'')
+  * 0x70 - 0x75 are reserved for collection protocols [TEP_119]_
     maintained by the Network Protocol Working Group.
 
-    0x50 - AM_DELUGEADVMSG (advertisements)
-    0x51 - AM_DELUGEREQMSG (requests)
-    0x52 - AM_DELUGEDATAMSG (data)
-    0x53 - DELUGE_AM_FLASH_VOL_MANAGER (flash volume manager)
-    0x54 - DELUGE_AM_DELUGE_MANAGER (deluge manger)
+    For CTP (''tos/lib/net/ctp'') [TEP_123]_ and LEEP  [TEP_124]_
+    0x70 - AM_CTP_ROUTING CTP (Routing beacon)
+    0x71 - AM_CTP_DATA CTP (Data packets)
+    0x72 - AM_CTP_DEBUG CTP (Debug messages)
 
-  * 0x3F - TinyOS NALP code (TEP 125) reserved by the Core Working
+    For MultiHopLQI (''tos/lib/net/lqi'')
+    0x73 - AM_LQI_BEACON_MSG (Routing beacon)
+    0x74 - AM_LQI_DATA_MSG MultiHopLQI (Data packets)
+    0x75 - AM_LQI_DEBUG MultiHopLQI (Debug messages)
+
+  * 0x60 - 0x62 are reserved for dissemination protocols [TEP_118]_
+    maintained by the Network Protocol Working Group.
+
+    For Drip (''tos/lib/net/drip'')
+    0x60 - AM_DISSEMINATION_MESSAGE
+    0x61 - AM_DISSEMINATION_PROBE_MESSAGE
+
+    For DIP (''tos/lib/net/dip'')
+    0x62 - AM_DIP 
+
+  * 0x50 - 0x54 are reserved for Deluge (''tos/lib/net/Deluge'')
+    maintained by the Network Protocol Working Group.
+
+    0x50 - AM_DELUGEADVMSG (Advertisements)
+    0x51 - AM_DELUGEREQMSG (Requests)
+    0x52 - AM_DELUGEDATAMSG (Data)
+    0x53 - DELUGE_AM_FLASH_VOL_MANAGER (Flash volume manager)
+    0x54 - DELUGE_AM_DELUGE_MANAGER (Deluge manger)
+
+  * 0x3F - TinyOS NALP code [TEP_125]_ reserved by the Core Working
     Group.
 
 
@@ -92,4 +101,15 @@ Here is a list of allocations for TinyOS 2.1::
 
 .. [TEP_4] TEP 4: Active Message ID Allocation for Network Protocols and Applications
 
-.. [1] TEP 116: Packet Protocols
+.. [TEP_116] TEP 116: Packet Protocols
+
+.. [TEP_118] TEP 118: Dissemination of Small Values
+
+.. [TEP_119] TEP 119: Collection
+
+.. [TEP_123] TEP 123: The Collection Tree Protocol (CTP)
+
+.. [TEP_124] TEP 124: The Link Estimation Exchange Protocol (LEEP)
+
+.. [TEP_125] TEP 125: TinyOS 802.15.4 Frames
+
