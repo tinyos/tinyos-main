@@ -19,10 +19,10 @@ typedef enum {
 } dip_msgid_t;
 
 enum {
-  AM_DIP = 0x61,
-  AM_DIP_DATA_MSG = 0x61, // For MIG tool
-  AM_DIP_MSG = 0x61, // For MIG tool
-  AM_DIP_DATA = 0x61 // For MIG tool
+  AM_DIP = 0x62,
+  AM_DIP_DATA_MSG = 0x62, // For MIG tool
+  AM_DIP_MSG = 0x62, // For MIG tool
+  AM_DIP_DATA = 0x62 // For MIG tool
 };
 
 typedef uint16_t dip_index_t;

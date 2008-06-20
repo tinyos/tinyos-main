@@ -1,4 +1,4 @@
-/* $Id: Ctp.h,v 1.4 2006-12-12 18:23:29 vlahan Exp $ */
+/* $Id: Ctp.h,v 1.5 2008-06-20 21:54:32 gnawali Exp $ */
 
 /*
  * Copyright (c) 2006 Stanford University.
@@ -37,7 +37,7 @@
  *  Collection Tree Protocol (CTP), as documented in TEP 123.
  *
  *  @author Philip Levis
- *  @date   $Date: 2006-12-12 18:23:29 $
+ *  @date   $Date: 2008-06-20 21:54:32 $
  */
 
 #ifndef CTP_H
@@ -50,9 +50,9 @@
 
 enum {
     // AM types:
-    AM_CTP_DATA    = 23,
-    AM_CTP_ROUTING = 24,
-    AM_CTP_DEBUG   = 25,
+    AM_CTP_ROUTING = 0x70,
+    AM_CTP_DATA    = 0x71,
+    AM_CTP_DEBUG   = 0x72,
 
     // CTP Options:
     CTP_OPT_PULL      = 0x80, // TEP 123: P field
