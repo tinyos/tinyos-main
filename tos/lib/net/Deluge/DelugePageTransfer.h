@@ -41,9 +41,9 @@
 
 #include <message.h>
 
-#define AM_DELUGEADVMSG  161
-#define AM_DELUGEREQMSG  162
-#define AM_DELUGEDATAMSG 163
+#define AM_DELUGEADVMSG  0x50
+#define AM_DELUGEREQMSG  0x51
+#define AM_DELUGEDATAMSG 0x52
 
 typedef int32_t object_id_t;
 typedef nx_int32_t nx_object_id_t;

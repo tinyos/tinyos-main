@@ -36,8 +36,8 @@ from datetime import datetime
 PATH_PY_BUILD_IMAGE  = os.path.join(os.path.dirname(sys.argv[0]), 'tos-build-deluge-image')
 
 # TinyOS serial communication parameters
-FM_AMID = 0xAB
-DM_AMID = 0xAC
+FM_AMID = 0x53
+DM_AMID = 0x54
 SERIAL_DATA_LENGTH = 28 - 1 - 1 - 2 - 2
 BAUDRATES = {'micaz': 57600,
              'telosb': 115200,
