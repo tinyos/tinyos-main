@@ -10,8 +10,8 @@ Active Message ID Allocation for Network Protocols and Applications
 :Author: Omprakash Gnawali
 
 :Draft-Created: 07-May-2008
-:Draft-Version: $Revision: 1.5 $
-:Draft-Modified: $Date: 2008-05-22 12:42:59 $
+:Draft-Version: $Revision: 1.6 $
+:Draft-Modified: $Date: 2008-06-20 05:56:42 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -32,9 +32,10 @@ with TinyOS 2.x, the application and protocol developers MUST use AM
 IDs in the appropriate range. The network protocol implementors MUST
 use AM ID allocated by the Network Protocol Working Group for the
 specific protocol. The application developers MUST use AM IDs from the
-unreserved pool.
+unreserved pool. This TEP describes the process of AM ID allocations
+and deallocations and how the allocations are documented.
 
-2. Current Allocations
+2. AM ID pools
 ====================================================================
 
 The unreserved pool is in the range 128-255 (0x80-0xFF). The reserved
@@ -57,31 +58,6 @@ guaranteed to not conflict with AM IDs used by applications or other
 protocols that also use an allocated AM ID. The AM ID may conflict
 with the protocols and applications in the contrib tree.
 
-Here is a list of current allocations::
-
-  * 0x70 - 0x7F are reserved for collection protocols maintained by
-    the Network Protocol Working Group.
-
-    0x70 - CTP routing beacon and LEEP (''tos/lib/net/ctp'', TEP 119, 123, and 124)
-    0x71 - CTP data packets (''tos/lib/net/ctp'', TEP 119, 123)
-    0x72 - CTP debug messages (''tos/lib/net/ctp'')
-    0x73 - MultiHopLQI routing beacon (''tos/lib/net/lqi'')
-    0x74 - MultiHopLQI data packets (''tos/lib/net/lqi'')
-    0x75 - MultiHopLQI debug messages (''tos/lib/net/lqi'')
-
-  * 0x60 - 0x6F are reserved for dissemination protocols maintained by
-    the Network Protocol Working Group.
-
-    0x60 - Drip (''tos/lib/net/drip'', TEP 118)
-    0x61 - DIP (''tos/lib/net/dip'', TEP 118)
-
-  * 0x50 - DYMO (''tos/lib/net/dymo'') maintained by the Network
-    Protocol Working Group.
-
-  * 0x3F - TinyOS NALP code (TEP 125) reserved by the Core Working
-    Group.
-
-
 3. Requesting AM ID Allocation
 ====================================================================
 
@@ -100,7 +76,7 @@ Network Protocol Working Group with the following information:
 * Location of the protocol in TinyOS source tree
 
 Upon receiving this information, the chair of the Network Protocol
-Working Group will allocate an AM ID and update this TEP.
+Working Group will allocate an AM ID and document the allocation.
 
 4. Reclaiming the AM ID Allocation
 ====================================================================
@@ -109,16 +85,22 @@ When the working group responsible for maintaining the protocol with
 an allocated AM ID obsoletes the protocol, the chair of the working
 group should send a deallocation request to the chair of the Network
 Protocol Working Group. The chair of the Network Protocol Working
-Group will update this TEP by deleting the entry for the obsolete
-protocol.
+Group will document the deallocation.
 
-5. Acknowledgments
+5. Documenting allocations and deallocations
+====================================================================
+
+For each TinyOS 2.x release that introduces a new protocol or use of a
+new AM ID, the chair of the Network Protocol Working Group creates a
+new TEP that lists all the AM ID allocations for that release.
+
+6. Acknowledgments
 ====================================================================
 
 Thanks to the TinyOS community at large for helping to formulate this
 ID allocation policy.
 
-6. Author's Address
+7. Author's Address
 ====================================================================
 
 | Omprakash Gnawali
@@ -129,7 +111,7 @@ ID allocation policy.
 | phone - +1 213 821-5627
 | email - gnawali@usc.edu
 
-7. Citations
+8. Citations
 ====================================================================
 
 .. [TEP_1] TEP 1: TEP Structure and Keywords 
