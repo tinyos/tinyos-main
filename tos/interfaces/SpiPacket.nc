@@ -1,4 +1,4 @@
-// $Id: SpiPacket.nc,v 1.6 2008-06-11 00:46:24 razvanm Exp $
+// $Id: SpiPacket.nc,v 1.7 2008-06-20 21:39:09 idgay Exp $
 
 /*                                                                      
  * "Copyright (c) 2000-2005 The Regents of the University  of California.
@@ -38,7 +38,7 @@
  * @author Philip Levis
  * @author Jonathan Hui
  * @author Joe Polastre
- * Revision:  $Revision: 1.6 $
+ * Revision:  $Revision: 1.7 $
  */
 interface SpiPacket {
 
@@ -61,8 +61,8 @@ interface SpiPacket {
   /**
    * Notification that the send command has completed.
    *
-   * @param 'uint8_t* COUNT(len) txBuf' The buffer used for transmission
-   * @param 'uint8_t* COUNT(len) rxBuf' The buffer used for reception
+   * @param 'uint8_t* COUNT_NOK(len) txBuf' The buffer used for transmission
+   * @param 'uint8_t* COUNT_NOK(len) rxBuf' The buffer used for reception
    * @param len    The request length of the transfer, but not necessarily
    *               the number of bytes that were actually transferred
    * @param error  SUCCESS if the operation completed successfully, FAIL

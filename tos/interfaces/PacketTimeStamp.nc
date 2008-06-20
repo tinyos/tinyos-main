@@ -24,6 +24,8 @@
 interface PacketTimeStamp<precision_tag, size_type>
 {
 	/**
+	 * @param 'message_t *ONE msg' Message to examine.
+	 *
 	 * Returns TRUE if the time stamp of the message is valid. Under special
 	 * circumstances the radio chip might not be able to correctly assign a
 	 * precise time value to an incoming packet (e.g. under very heavy traffic
@@ -36,6 +38,8 @@ interface PacketTimeStamp<precision_tag, size_type>
   async command bool isValid(message_t* msg);
 
 	/**
+	 * @param 'message_t *ONE msg' Message to get timestamp from.
+	 *
 	 * Return the time stamp for the given message. Please check with the
 	 * isValid command if this value can be relied upon. If this command is
 	 * called after transmission, then the transmit time of the packet
@@ -48,11 +52,15 @@ interface PacketTimeStamp<precision_tag, size_type>
   async command size_type timestamp(message_t* msg);
 
 	/**
+	 * @param 'message_t *ONE msg' Message to modify.
+	 *
 	 * Sets the isValid flag to FALSE.
 	 */
   async command void clear(message_t* msg);
 
 	/**
+	 * @param 'message_t *ONE msg' Message to modify.
+	 *
 	 * Sets the isValid flag to TRUE and the time stamp value to the
 	 * specified value.
 	 */
