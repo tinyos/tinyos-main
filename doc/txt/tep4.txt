@@ -10,8 +10,8 @@ Active Message ID Allocation for Network Protocols and Applications
 :Author: Omprakash Gnawali
 
 :Draft-Created: 07-May-2008
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2008-06-20 05:56:42 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2008-06-20 22:36:44 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -25,7 +25,7 @@ Active Message ID Allocation for Network Protocols and Applications
 1. Introduction
 ====================================================================
 
-In order to document the Active Message Type [1]_, also known as
+In order to document the Active Message Type [TEP_116]_, also known as
 Active Message Identifier (AM ID), used by the protocols and to
 prevent AM ID conflicts between applications and protocols distributed
 with TinyOS 2.x, the application and protocol developers MUST use AM
@@ -74,9 +74,13 @@ Network Protocol Working Group with the following information:
 * Working Group responsible for the protocol
 * Name of the protocol and relevant TEPs
 * Location of the protocol in TinyOS source tree
+* Number of AM IDs requested and description of each ID
+* Specific AM ID request (only if necessary)
 
-Upon receiving this information, the chair of the Network Protocol
-Working Group will allocate an AM ID and document the allocation.
+Upon receiving this request, the chair of the Network Protocol Working
+Group will allocate the AM ID(s) and document the allocation. If the
+request is made for a specific AM ID, the chair of the Network
+Protocol Work Group will try to accommodate that request.
 
 4. Reclaiming the AM ID Allocation
 ====================================================================
@@ -92,7 +96,9 @@ Group will document the deallocation.
 
 For each TinyOS 2.x release that introduces a new protocol or use of a
 new AM ID, the chair of the Network Protocol Working Group creates a
-new TEP that lists all the AM ID allocations for that release.
+new Informational TEP that lists all the AM ID allocations for that
+release. The TEP is finalized at the time of the release. [TEP_135]_
+documents the AM IDs allocated for TinyOS 2.1.
 
 6. Acknowledgments
 ====================================================================
@@ -116,4 +122,6 @@ ID allocation policy.
 
 .. [TEP_1] TEP 1: TEP Structure and Keywords 
 
-.. [1] TEP 116: Packet Protocols
+.. [TEP_116] TEP 116: Packet Protocols
+
+.. [TEP_135] TEP 135: Active Message ID Allocation in TinyOS 2.1
