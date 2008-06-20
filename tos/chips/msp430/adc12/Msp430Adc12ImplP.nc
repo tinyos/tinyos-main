@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2008-06-18 12:04:10 $
+ * $Revision: 1.10 $
+ * $Date: 2008-06-20 15:50:34 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,10 +42,10 @@ module Msp430Adc12ImplP
     interface Msp430Adc12MultiChannel as MultiChannel[uint8_t id];
     interface Msp430Adc12Overflow as Overflow[uint8_t id];
     interface AsyncStdControl as DMAExtension[uint8_t id];
-	}
-	uses {
+  }
+  uses {
     interface ArbiterInfo as ADCArbiterInfo;
-	  interface HplAdc12;
+    interface HplAdc12;
     interface Msp430Timer as TimerA;;
     interface Msp430TimerControl as ControlA0;
     interface Msp430TimerControl as ControlA1;
@@ -59,11 +59,11 @@ module Msp430Adc12ImplP
     interface HplMsp430GeneralIO as Port65;
     interface HplMsp430GeneralIO as Port66;
     interface HplMsp430GeneralIO as Port67;
-	}
+  }
 }
 implementation
 { 
-//#warning Accessing TimerA for ADC12 
+#warning Accessing TimerA for ADC12 
   enum {
     SINGLE_DATA = 1,
     SINGLE_DATA_REPEAT = 2,
