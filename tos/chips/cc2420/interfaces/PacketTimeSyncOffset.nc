@@ -24,23 +24,31 @@
 interface PacketTimeSyncOffset
 {
     /**
+     * @param 'message_t *ONE msg' message to examine.
+     *
      * Returns TRUE if the value is set for this message.
      */
     async command bool isSet(message_t* msg);
 
     /**
+     * @param 'message_t *ONE msg' message to examine.
+     *
      * Returns the stored value of this field in the message. If the
      * value is not set, then the returned value is undefined.
      */
     async command uint8_t get(message_t* msg);
 
     /**
+     * @param 'message_t *ONE msg' message to modify.
+     *
      * Sets the isSet false to TRUE and the time stamp value to the
      * specified value.
      */
     async command void set(message_t* msg);
 
     /**
+     * @param 'message_t *ONE msg' message to modify.
+     *
      * Cancels any pending requests.
      */
     async command void cancel(message_t* msg);

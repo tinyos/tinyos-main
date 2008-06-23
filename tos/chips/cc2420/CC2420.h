@@ -30,7 +30,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
- * @version $Revision: 1.11 $ $Date: 2008-06-17 07:28:24 $
+ * @version $Revision: 1.12 $ $Date: 2008-06-23 23:40:21 $
  */
 
 #ifndef __CC2420_H__
@@ -138,6 +138,8 @@ enum {
   MAC_FOOTER_SIZE = sizeof( uint16_t ),
   // MDU
   MAC_PACKET_SIZE = MAC_HEADER_SIZE + TOSH_DATA_LENGTH + MAC_FOOTER_SIZE,
+
+  CC2420_SIZE = MAC_HEADER_SIZE + MAC_FOOTER_SIZE,
 };
 
 enum cc2420_enums {

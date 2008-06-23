@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.16 $ $Date: 2008-06-11 00:46:23 $
+ * @version $Revision: 1.17 $ $Date: 2008-06-23 23:40:21 $
  */
  
 #include "CC2420.h"
@@ -57,10 +57,6 @@ module CC2420ActiveMessageP {
 }
 implementation {
 
-  enum {
-    CC2420_SIZE = MAC_HEADER_SIZE + MAC_FOOTER_SIZE,
-  };
-  
   /***************** AMSend Commands ****************/
   command error_t AMSend.send[am_id_t id](am_addr_t addr,
 					  message_t* msg,
@@ -73,7 +69,7 @@ implementation {
     
     signal SendNotifier.aboutToSend[id](addr, msg);
     
-    return call SubSend.send( msg, len + CC2420_SIZE );
+    return call SubSend.send( msg, len );
   }
 
   command error_t AMSend.cancel[am_id_t id](message_t* msg) {
@@ -179,10 +175,10 @@ implementation {
     }
     
     if (call AMPacket.isForMe(msg)) {
-      return signal Receive.receive[call AMPacket.type(msg)](msg, payload, len - CC2420_SIZE);
+      return signal Receive.receive[call AMPacket.type(msg)](msg, payload, len);
     }
     else {
-      return signal Snoop.receive[call AMPacket.type(msg)](msg, payload, len - CC2420_SIZE);
+      return signal Snoop.receive[call AMPacket.type(msg)](msg, payload, len);
     }
   }
   

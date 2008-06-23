@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2008-06-17 07:28:24 $
+ * @version $Revision: 1.6 $ $Date: 2008-06-23 23:40:21 $
  */
 
 module CC2420CsmaP {
@@ -134,7 +134,7 @@ implementation {
       m_msg = p_msg;
     }
 
-    header->length = len;
+    header->length = len + CC2420_SIZE;
     header->fcf &= 1 << IEEE154_FCF_ACK_REQ;
     header->fcf |= ( ( IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE ) |
 		     ( 1 << IEEE154_FCF_INTRAPAN ) |

@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.13 $ $Date: 2008-06-23 20:25:15 $
+ * @version $Revision: 1.14 $ $Date: 2008-06-23 23:40:21 $
  */
 
 #include "IEEE802154.h"
@@ -326,16 +326,17 @@ implementation {
   task void receiveDone_task() {
     cc2420_metadata_t* metadata = call CC2420PacketBody.getMetadata( m_p_rx_buf );
     cc2420_header_t* header = call CC2420PacketBody.getHeader( m_p_rx_buf);
+    uint8_t length = header->length;
     uint8_t tmpLen __DEPUTY_UNUSED__ = sizeof(message_t) - (offsetof(message_t, data) - sizeof(cc2420_header_t));
     uint8_t* COUNT(tmpLen) buf = TCAST(uint8_t* COUNT(tmpLen), header);
     
-    metadata->crc = buf[ rxFrameLength ] >> 7;
-    metadata->lqi = buf[ rxFrameLength ] & 0x7f;
-    metadata->rssi = buf[ rxFrameLength - 1 ];
+    metadata->crc = buf[ length ] >> 7;
+    metadata->lqi = buf[ length ] & 0x7f;
+    metadata->rssi = buf[ length - 1 ];
     
     if(passesAddressCheck(m_p_rx_buf)) {
       m_p_rx_buf = signal Receive.receive( m_p_rx_buf, m_p_rx_buf->data, 
-          rxFrameLength );
+					   length - CC2420_SIZE);
     }
     
     atomic receivingPacket = FALSE;
