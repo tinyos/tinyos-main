@@ -32,9 +32,16 @@ interface Msp430TimerControl
   async command bool isInterruptPending();
   async command void clearPendingInterrupt();
 
-  async command void setControl(msp430_compare_control_t control );
+  async command void setControl(msp430_compare_control_t control);
   async command void setControlAsCompare();
-  async command void setControlAsCapture(bool low_to_high);
+  
+  /** 
+  * Sets the timer in capture mode.
+  * @param cm configures the capture to occur on none, rising, falling or rising_and_falling edges
+  * Msp430Timer.h has convenience definitions:
+  * MSP430TIMER_CM_NONE, MSP430TIMER_CM_RISING, MSP430TIMER_CM_FALLING, MSP430TIMER_CM_BOTH
+  */ 
+  async command void setControlAsCapture(uint8_t cm);
 
   async command void enableEvents();
   async command void disableEvents();

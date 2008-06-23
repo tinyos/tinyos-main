@@ -61,7 +61,7 @@ implementation
   uint16_t captureControl(uint8_t l_cm)
   {
     cc_t x = {
-      cm : l_cm & 0x03,    // capture on rising edge
+      cm : l_cm & 0x03,  // capture on none, rising, falling or both edges
       ccis : 0,  // capture/compare input select
       clld : 0,  // TBCL1 loads on write to TBCCR1
       cap : 1,   // compare mode
