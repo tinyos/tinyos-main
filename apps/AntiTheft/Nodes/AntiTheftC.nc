@@ -1,4 +1,4 @@
-// $Id: AntiTheftC.nc,v 1.5 2008-05-02 19:55:26 idgay Exp $
+// $Id: AntiTheftC.nc,v 1.6 2008-06-23 23:42:46 idgay Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -38,7 +38,7 @@ implementation
 {
   enum {
     /* Threshold for considering mote in a dark place */
-    DARK_THRESHOLD = 200, 
+    DARK_THRESHOLD = 600, 
 
     /* Amount of time warning leds should stay on (in checkInterval counts) */
     WARNING_TIME = 3,
