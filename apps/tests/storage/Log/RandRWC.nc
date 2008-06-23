@@ -1,4 +1,4 @@
-/* $Id: RandRWC.nc,v 1.5 2007-04-20 17:39:37 idgay Exp $
+/* $Id: RandRWC.nc,v 1.6 2008-06-23 20:02:19 idgay Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -65,11 +65,15 @@ implementation {
   message_t reportmsg;
 
   void report(error_t e) {
-    uint8_t *msg = call AMSend.getPayload(&reportmsg);
+    uint8_t *msg = call AMSend.getPayload(&reportmsg, 1);
 
-    msg[0] = e;
-    if (call AMSend.send(AM_BROADCAST_ADDR, &reportmsg, 1) != SUCCESS)
-      call Leds.led0On();
+    if (msg)
+      {
+	msg[0] = e;
+	if (call AMSend.send(AM_BROADCAST_ADDR, &reportmsg, 1) == SUCCESS)
+	  return;
+      }
+    call Leds.led0On();
   }
 
   event void AMSend.sendDone(message_t* msg, error_t error) {
