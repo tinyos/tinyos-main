@@ -7,7 +7,7 @@ typedef nx_struct test_serial_msg {
 } test_serial_msg_t;
 
 enum {
-  AM_TEST_SERIAL_MSG = 9,
+  AM_TEST_SERIAL_MSG = 0x89,
 };
 
 #endif
