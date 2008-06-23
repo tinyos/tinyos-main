@@ -1,4 +1,4 @@
-// $Id: At45dbP.nc,v 1.7 2008-06-11 00:46:23 razvanm Exp $
+// $Id: At45dbP.nc,v 1.8 2008-06-23 18:53:14 idgay Exp $
 
 /*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -367,8 +367,9 @@ implementation
 		  void * COUNT_NOK(n) reqdata, at45pageoffset_t n) {
     request = req;
 
-    reqBuf = reqdata;
+    reqBuf = NULL;
     reqBytes = n;
+    reqBuf = reqdata;
     reqPage = page;
     reqOffset = offset;
 

@@ -1,4 +1,4 @@
-// $Id: BlockStorageP.nc,v 1.6 2008-06-11 00:46:23 razvanm Exp $
+// $Id: BlockStorageP.nc,v 1.7 2008-06-23 18:53:14 idgay Exp $
 
 /*
  * "Copyright (c) 2000-2004 The Regents of the University  of California.  
@@ -88,7 +88,7 @@ implementation
   };
 
   uint8_t client = NO_CLIENT;
-  storage_addr_t bytesRemaining;
+  storage_addr_t currentOffset;
 
   struct {
     /* The latest request made for this client, and it's arguments */
@@ -131,7 +131,7 @@ implementation
 
   void eraseStart();
   void syncStart();
-  void multipageStart(storage_len_t len, uint16_t crc);
+  void multipageStart(uint16_t crc);
 
   void startRequest() {
     switch (s[client].request)
@@ -143,16 +143,13 @@ implementation
 	syncStart();
 	break;
       default:
-	multipageStart(s[client].len, (uint16_t)s[client].buf);
+	multipageStart((uint16_t)s[client].buf);
       }
   }
 
   void endRequest(error_t result, uint16_t crc) {
     uint8_t c = client;
     uint8_t tmpState = s[c].request;
-    storage_addr_t actualLength = s[c].len - bytesRemaining;
-    storage_addr_t addr = s[c].addr - actualLength;
-    void *ptr = s[c].buf - actualLength;
     
     client = NO_CLIENT;
     s[c].request = R_IDLE;
@@ -161,16 +158,16 @@ implementation
     switch(tmpState)
       {
       case R_READ:
-	signal BlockRead.readDone[c](addr, ptr, actualLength, result);
+	signal BlockRead.readDone[c](s[c].addr, s[c].buf, currentOffset, result);
 	break;
       case R_WRITE:
-	signal BlockWrite.writeDone[c](addr, ptr, actualLength, result);
+	signal BlockWrite.writeDone[c](s[c].addr, s[c].buf, currentOffset, result);
 	break;
       case R_ERASE:
 	signal BlockWrite.eraseDone[c](result);
 	break;
       case R_CRC:
-	signal BlockRead.computeCrcDone[c](addr, actualLength, crc, result);
+	signal BlockRead.computeCrcDone[c](s[c].addr, currentOffset, crc, result);
 	break;
       case R_SYNC:
 	signal BlockWrite.syncDone[c](result);
@@ -191,8 +188,13 @@ implementation
 
     s[id].request = newState;
     s[id].addr = addr;
-    s[id].buf = buf;
+    /* With deputy, updating a buffer/length pair requires nulling-out the 
+       buffer first (setting the buffer first would fail if the new buffer
+       is shorter than the old, setting the length first would fail if the
+       new buffer is longer than the old) */
+    s[id].buf = NULL;
     s[id].len = len;
+    s[id].buf = buf;
 
     call Resource.request[id]();
 
@@ -230,49 +232,42 @@ implementation
   /* Multipage operations            					*/
   /* ------------------------------------------------------------------ */
 
-  void calcRequest(storage_addr_t addr, at45page_t *page,
-		   at45pageoffset_t *offset, at45pageoffset_t *count) {
-    *page = pageRemap(addr >> AT45_PAGE_SIZE_LOG2);
-    *offset = addr & ((1 << AT45_PAGE_SIZE_LOG2) - 1);
-    if (bytesRemaining < (1 << AT45_PAGE_SIZE_LOG2) - *offset)
-      *count = bytesRemaining;
-    else
-      *count = (1 << AT45_PAGE_SIZE_LOG2) - *offset;
-
-  }
-
   void multipageContinue(uint16_t crc) {
+    storage_addr_t remaining = s[client].len - currentOffset, addr;
     at45page_t page;
-    at45pageoffset_t offset, count;
-    uint8_t *buf = s[client].buf;
+    at45pageoffset_t pageOffset, count;
+    uint8_t *buf = s[client].buf + currentOffset;
 
-    if (bytesRemaining == 0)
+    if (remaining == 0)
       {
 	endRequest(SUCCESS, crc);
 	return;
       }
 
-    calcRequest(s[client].addr, &page, &offset, &count);
-    bytesRemaining -= count;
-    s[client].addr += count;
-    s[client].buf = buf + count;
+    addr = s[client].addr + currentOffset;
+    page = pageRemap(addr >> AT45_PAGE_SIZE_LOG2);
+    pageOffset = addr & ((1 << AT45_PAGE_SIZE_LOG2) - 1);
+    count = (1 << AT45_PAGE_SIZE_LOG2) - pageOffset;
+    if (remaining < count)
+      count = remaining;
 
     switch (s[client].request)
       {
       case R_WRITE:
-	call At45db.write(page, offset, buf, count);
+	call At45db.write(page, pageOffset, buf, count);
 	break;
       case R_READ:
-	call At45db.read(page, offset, buf, count);
+	call At45db.read(page, pageOffset, buf, count);
 	break;
       case R_CRC:
-	call At45db.computeCrc(page, offset, count, crc);
+	call At45db.computeCrc(page, pageOffset, count, crc);
 	break;
       }
+    currentOffset += count;
   }
 
-  void multipageStart(storage_len_t len, uint16_t crc) {
-    bytesRemaining = len;
+  void multipageStart(uint16_t crc) {
+    currentOffset = 0;
     multipageContinue(crc);
   }
 
