@@ -1,4 +1,4 @@
-// $Id: ConfigStorageP.nc,v 1.5 2008-06-11 00:46:23 razvanm Exp $
+// $Id: ConfigStorageP.nc,v 1.6 2008-06-23 19:57:55 idgay Exp $
 
 /*
  * Copyright (c) 2002-2006 Intel Corporation
@@ -190,7 +190,7 @@ implementation
     return call BlockRead.read[id](addr + sizeof low[0], buf, len);
   }
 
-  void readReadDone(uint8_t id, storage_addr_t addr, void* buf, storage_len_t len, error_t error) {
+  void readReadDone(uint8_t id, storage_addr_t addr, void* COUNT(len) buf, storage_len_t len, error_t error) {
     signal ConfigStorage.readDone[id](addr - sizeof low[0], buf, len, error);
   }
 
@@ -257,7 +257,7 @@ implementation
     signal BConfig.writeContinue[id](error);
   }
 
-  void writeWriteDone(uint8_t id, storage_addr_t addr, void* buf, storage_len_t len, error_t error) {
+  void writeWriteDone(uint8_t id, storage_addr_t addr, void* COUNT(len) buf, storage_len_t len, error_t error) {
     flip(id); // flip back to current half
     signal ConfigStorage.writeDone[id](addr - sizeof low[0], buf, len, error);
   }

@@ -1,4 +1,4 @@
-// $Id: At45dbP.nc,v 1.8 2008-06-23 18:53:14 idgay Exp $
+// $Id: At45dbP.nc,v 1.9 2008-06-23 19:57:55 idgay Exp $
 
 /*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -399,8 +399,7 @@ implementation
 					at45pageoffset_t n,
 					uint16_t baseCrc) {
     /* This is a hack (store crc in reqBuf), but it saves 2 bytes of RAM */
-    reqBuf = TCAST(uint8_t * COUNT(baseCrc), baseCrc);
-    newRequest(R_READCRC, page, offset, reqBuf, n);
+    newRequest(R_READCRC, page, offset, TCAST(uint8_t * COUNT(n), baseCrc), n);
   }
 
   command void At45db.write(at45page_t page, at45pageoffset_t offset,
