@@ -1,4 +1,4 @@
-/* $Id: AdcStreamP.nc,v 1.11 2008-06-23 22:44:27 idgay Exp $
+/* $Id: AdcStreamP.nc,v 1.12 2008-06-23 23:38:28 idgay Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -183,6 +183,7 @@ implementation {
   {
     /* The first reading may be imprecise. So we just do a dummy read
        to get things rolling - this is indicated by setting count to 0 */
+    buffer = pos = NULL;
     count = 0;
     period = call Atm128Calibrate.calibrateMicro(usPeriod);
     client = c;
