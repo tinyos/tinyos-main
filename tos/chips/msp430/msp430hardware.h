@@ -123,6 +123,17 @@ to_type func_name(from_type x) { union {from_type f; to_type t;} c = {f:x}; retu
 #undef signal
 #endif
 
+
+// Re-definitions for safe tinyOS
+// These rely on io.h being included at the top of this file
+// thus pulling the affected header files before the re-definitions
+#ifdef SAFE_TINYOS
+#undef ADC12MEM
+#define ADC12MEM            TCAST(int* ONE, ADC12MEM_) /* ADC12 Conversion Memory (for C) */
+#undef ADC12MCTL
+#define ADC12MCTL           TCAST(char * ONE, ADC12MCTL_)
+#endif
+
 // define platform constants that can be changed for different compilers
 // these are all msp430-gcc specific (add as necessary)
 
