@@ -29,8 +29,8 @@
  * actually get sent out over the serial line.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.1 $
- * @date $Date: 2007-09-04 21:19:25 $
+ * @version $Revision: 1.2 $
+ * @date $Date: 2008-06-23 22:46:54 $
  */
  
 #include "printf.h"
@@ -38,12 +38,8 @@
 configuration TestPrintfAppC{
 }
 implementation {
-  components MainC, TestPrintfC, LedsC;
-  components PrintfC;
+  components MainC, TestPrintfC;
 
   TestPrintfC.Boot -> MainC;
-  TestPrintfC.Leds -> LedsC;
-  TestPrintfC.PrintfControl -> PrintfC;
-  TestPrintfC.PrintfFlush -> PrintfC;
 }
 
