@@ -143,6 +143,7 @@ happy:
   }
   
   async event void ThreadCleanup.cleanup[uint8_t id]() {
+    call Leds.led2Toggle();
     signal ThreadNotification.aboutToDestroy[id]();
     atomic {
       uint8_t adjusted_id = id-TOSTHREAD_NUM_STATIC_THREADS;

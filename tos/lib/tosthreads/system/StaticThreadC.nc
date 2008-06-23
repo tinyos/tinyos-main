@@ -30,36 +30,35 @@
  */
  
 /**
- * @author Kevin Klues <klueska@cs.stanford.edu>
+ * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 
-#include "thread.h"
-
-configuration DynamicThreadC {
+configuration StaticThreadC {
   provides {
-    interface DynamicThread;
+    interface Thread[uint8_t id];
     interface ThreadNotification[uint8_t id];
+  }
+  uses {
+    interface ThreadInfo[uint8_t id];
+    interface ThreadFunction[uint8_t id];
+    interface ThreadCleanup[uint8_t id];
   }
 }
 implementation {
-  components DynamicThreadP;
-  components TinyThreadSchedulerC;
-  components BitArrayUtilsC;
-  components ThreadSleepC;
-  components TosMallocC;
-  
-  DynamicThread = DynamicThreadP;
-  ThreadNotification = DynamicThreadP.ThreadNotification;
-  
-  DynamicThreadP.ThreadSleep -> ThreadSleepC;
-  DynamicThreadP.ThreadScheduler -> TinyThreadSchedulerC;
-  DynamicThreadP.BitArrayUtils -> BitArrayUtilsC;
-  DynamicThreadP.Malloc -> TosMallocC;
-  
+  components StaticThreadP;
   components ThreadMapC;
-  ThreadMapC.DynamicThreadInfo -> DynamicThreadP;
-  DynamicThreadP.ThreadCleanup -> ThreadMapC.DynamicThreadCleanup;
   
-  components LedsC;
-  DynamicThreadP.Leds -> LedsC;
+  Thread = StaticThreadP;
+  ThreadNotification = StaticThreadP;
+  ThreadCleanup = StaticThreadP;
+
+  StaticThreadP.ThreadInfo = ThreadInfo;
+  ThreadMapC.StaticThreadInfo = ThreadInfo;
+  StaticThreadP.ThreadFunction = ThreadFunction;
+  
+  components ThreadSleepC;
+  components TinyThreadSchedulerC;
+  StaticThreadP.ThreadSleep -> ThreadSleepC;
+  StaticThreadP.ThreadScheduler -> TinyThreadSchedulerC;
 }
+

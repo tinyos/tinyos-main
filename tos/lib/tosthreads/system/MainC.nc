@@ -26,7 +26,7 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  *
- * Date last modified:  $Id: MainC.nc,v 1.1 2008-06-12 14:02:46 klueska Exp $
+ * Date last modified:  $Id: MainC.nc,v 1.2 2008-06-23 01:25:03 klueska Exp $
  */
 
 /**
@@ -52,7 +52,7 @@ implementation {
   
   components TinyTaskSchedulerC;
   components TinyThreadSchedulerC;
-  components ThreadP;
+  components StaticThreadC;
     
   // Export the SoftwareInit and Boot for applications
   SoftwareInit = TinyOSMainP.SoftwareInit;
@@ -66,7 +66,7 @@ implementation {
   TinyTaskSchedulerC.ThreadScheduler -> TinyThreadSchedulerC;
   
   //Wire up the TinyOS code to its thread
-  ThreadP.StaticThreadInfo[TOSTHREAD_TOS_THREAD_ID] -> TinyOSMainP;
+  StaticThreadC.ThreadInfo[TOSTHREAD_TOS_THREAD_ID] -> TinyOSMainP;
   TinyOSMainP.TinyOSBoot -> TinyThreadSchedulerC;
   
   //Wire up the thread scheduler to start running

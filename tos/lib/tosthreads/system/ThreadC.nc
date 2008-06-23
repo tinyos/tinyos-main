@@ -49,16 +49,17 @@ implementation {
   
   components MainC;
   components new ThreadInfoP(stack_size, THREAD_ID);
-  components ThreadP;
-  components StaticThreadP;
+  components StaticThreadC;
+  components ThreadMapC;
   
   MainC.SoftwareInit -> ThreadInfoP;
-  Thread = ThreadP.StaticThread[THREAD_ID];
-  ThreadNotification = ThreadP.StaticThreadNotification[THREAD_ID];
+  Thread = StaticThreadC.Thread[THREAD_ID];
+  ThreadNotification = StaticThreadC.ThreadNotification[THREAD_ID];
   ThreadInfo = ThreadInfoP;
-  ThreadP.StaticThreadInfo[THREAD_ID] -> ThreadInfoP;
-  ThreadP.StaticThreadFunction[THREAD_ID] -> ThreadInfoP;
-  StaticThreadP.ThreadCleanup[THREAD_ID] -> ThreadP.StaticThreadCleanup[THREAD_ID];
+  
+  StaticThreadC.ThreadFunction[THREAD_ID] -> ThreadInfoP;
+  StaticThreadC.ThreadCleanup[THREAD_ID]  -> ThreadMapC.StaticThreadCleanup[THREAD_ID];
+  StaticThreadC.ThreadInfo[THREAD_ID] -> ThreadInfoP;
   
   components LedsC;
   ThreadInfoP.Leds -> LedsC;

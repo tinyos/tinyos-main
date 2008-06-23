@@ -30,36 +30,29 @@
  */
  
 /**
- * @author Kevin Klues <klueska@cs.stanford.edu>
+ * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 
-#include "thread.h"
-
-configuration DynamicThreadC {
+configuration ThreadMapC {
   provides {
-    interface DynamicThread;
-    interface ThreadNotification[uint8_t id];
+    interface ThreadCleanup as StaticThreadCleanup[uint8_t id];
+    interface ThreadCleanup as DynamicThreadCleanup[uint8_t id];
+  }
+  uses {
+    interface ThreadInfo as StaticThreadInfo[uint8_t id];
+    interface ThreadInfo as DynamicThreadInfo[uint8_t id];
   }
 }
 implementation {
-  components DynamicThreadP;
   components TinyThreadSchedulerC;
-  components BitArrayUtilsC;
-  components ThreadSleepC;
-  components TosMallocC;
+  components ThreadMapP;
   
-  DynamicThread = DynamicThreadP;
-  ThreadNotification = DynamicThreadP.ThreadNotification;
-  
-  DynamicThreadP.ThreadSleep -> ThreadSleepC;
-  DynamicThreadP.ThreadScheduler -> TinyThreadSchedulerC;
-  DynamicThreadP.BitArrayUtils -> BitArrayUtilsC;
-  DynamicThreadP.Malloc -> TosMallocC;
-  
-  components ThreadMapC;
-  ThreadMapC.DynamicThreadInfo -> DynamicThreadP;
-  DynamicThreadP.ThreadCleanup -> ThreadMapC.DynamicThreadCleanup;
-  
-  components LedsC;
-  DynamicThreadP.Leds -> LedsC;
+  TinyThreadSchedulerC.ThreadInfo -> ThreadMapP;
+  ThreadMapP.StaticThreadInfo = StaticThreadInfo;
+  ThreadMapP.DynamicThreadInfo = DynamicThreadInfo;
+
+  ThreadMapP.ThreadCleanup -> TinyThreadSchedulerC;
+  DynamicThreadCleanup =  ThreadMapP.DynamicThreadCleanup;
+  StaticThreadCleanup = ThreadMapP.StaticThreadCleanup;
 }
+

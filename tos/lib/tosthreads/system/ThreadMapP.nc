@@ -30,57 +30,43 @@
  */
  
 /**
- * @author Kevin Klues (klueska@cs.stanford.edu)
+ * @author Kevin Klues <klueska@cs.stanford.edu>
  */
 
-configuration ThreadP {
+module ThreadMapP {
   provides {
-    interface Thread as StaticThread[uint8_t id];
-    interface DynamicThread;
-    interface ThreadNotification as StaticThreadNotification[uint8_t id];
-    interface ThreadNotification as DynamicThreadNotification[uint8_t id];
+    interface ThreadInfo[uint8_t id];
     interface ThreadCleanup as StaticThreadCleanup[uint8_t id];
+    interface ThreadCleanup as DynamicThreadCleanup[uint8_t id];
   }
   uses {
     interface ThreadInfo as StaticThreadInfo[uint8_t id];
-    interface ThreadFunction as StaticThreadFunction[uint8_t id];
+    interface ThreadInfo as DynamicThreadInfo[uint8_t id];
+    interface ThreadCleanup[uint8_t id];
+    interface Leds;
   }
 }
 implementation {
-  components StaticThreadP;
-  components DynamicThreadP;
-  components TinyThreadSchedulerC;
-  components ThreadTimersC;
-  components ThreadInfoMapP;
-  components BitArrayUtilsC;
-  components ThreadSleepC;
-  components TosMallocC;
-  
-  StaticThread = StaticThreadP;
-  StaticThreadNotification = StaticThreadP;
-  StaticThreadP.ThreadInfo = StaticThreadInfo;
-  StaticThreadP.ThreadFunction = StaticThreadFunction;
-  StaticThreadP.ThreadSleep -> ThreadSleepC;
-  StaticThreadP.ThreadScheduler -> TinyThreadSchedulerC;
-  
-  DynamicThread = DynamicThreadP;
-  DynamicThreadP.ThreadNotification = DynamicThreadNotification;
-  DynamicThreadP.ThreadSleep -> ThreadSleepC;
-  DynamicThreadP.ThreadScheduler -> TinyThreadSchedulerC;
-  DynamicThreadP.BitArrayUtils -> BitArrayUtilsC;
-  DynamicThreadP.Malloc -> TosMallocC;
-  
-  TinyThreadSchedulerC.ThreadInfo -> ThreadInfoMapP;
-  ThreadInfoMapP.StaticThreadInfo = StaticThreadInfo;
-  ThreadInfoMapP.DynamicThreadInfo -> DynamicThreadP;
-
-  ThreadInfoMapP.ThreadCleanup -> TinyThreadSchedulerC;
-  DynamicThreadP.ThreadCleanup -> ThreadInfoMapP.DynamicThreadCleanup;
-  StaticThreadCleanup = ThreadInfoMapP.StaticThreadCleanup;
-  
-  components LedsC;
-  StaticThreadP.Leds -> LedsC;
-  DynamicThreadP.Leds -> LedsC;
-  ThreadInfoMapP.Leds -> LedsC;
+  async command thread_t* ThreadInfo.get[uint8_t id]() {
+    return call StaticThreadInfo.get[id]();
+  }
+  default async command thread_t* StaticThreadInfo.get[uint8_t id]() {
+    return call DynamicThreadInfo.get[id]();
+  }
+  default async command thread_t* DynamicThreadInfo.get[uint8_t id]() {
+    return call StaticThreadInfo.get[id]();
+  }
+  async event void ThreadCleanup.cleanup[uint8_t id]() {
+    signal StaticThreadCleanup.cleanup[id]();
+  }
+  default async event void StaticThreadCleanup.cleanup[uint8_t id]() {
+    signal DynamicThreadCleanup.cleanup[id]();
+  }
+  default async event void DynamicThreadCleanup.cleanup[uint8_t id]() {
+    signal StaticThreadCleanup.cleanup[id]();
+  }
 }
+
+
+
 
