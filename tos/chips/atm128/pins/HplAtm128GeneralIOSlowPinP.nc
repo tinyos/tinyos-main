@@ -1,4 +1,4 @@
-/// $Id: HplAtm128GeneralIOSlowPinP.nc,v 1.6 2008-05-31 20:20:49 regehr Exp $
+/// $Id: HplAtm128GeneralIOSlowPinP.nc,v 1.7 2008-06-23 20:25:15 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -33,7 +33,7 @@
 generic module HplAtm128GeneralIOSlowPinP (uint8_t port_addr, 
 				     uint8_t ddr_addr, 
 				     uint8_t pin_addr,
-				     uint8_t bit)
+				     uint8_t bit) @safe()
 {
   provides interface GeneralIO as IO;
 }

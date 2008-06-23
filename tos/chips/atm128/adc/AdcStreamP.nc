@@ -1,4 +1,4 @@
-/* $Id: AdcStreamP.nc,v 1.9 2008-06-04 19:22:33 regehr Exp $
+/* $Id: AdcStreamP.nc,v 1.10 2008-06-23 20:25:15 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -43,7 +43,7 @@
  */
 #include "Timer.h"
 
-module AdcStreamP {
+module AdcStreamP @safe() {
   provides {
     interface Init @atleastonce();
     interface ReadStream<uint16_t>[uint8_t client];

@@ -35,10 +35,10 @@
  * @author Roman Lim
  * @author Razvan Musaloie-E.
  * @author Jeonggil Ko
- * @version $Revision: 1.3 $ $Date: 2008-06-03 04:43:03 $
+ * @version $Revision: 1.4 $ $Date: 2008-06-23 20:25:15 $
  */
 
-module CC2420SpiP {
+module CC2420SpiP @safe() {
 
   provides {
     interface ChipSpiResource;

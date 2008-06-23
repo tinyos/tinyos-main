@@ -28,7 +28,7 @@
 generic module Msp430TimerCapComP(
     uint16_t TxCCTLx_addr,
     uint16_t TxCCRx_addr
-  )
+  ) @safe()
 {
   provides interface Msp430TimerControl as Control;
   provides interface Msp430Compare as Compare;

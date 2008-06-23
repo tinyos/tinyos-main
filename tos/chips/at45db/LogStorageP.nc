@@ -38,7 +38,7 @@
  * @author: Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-module LogStorageP {
+module LogStorageP @safe() {
   provides {
     interface LogRead[uint8_t logId];
     interface LogWrite[uint8_t logId];

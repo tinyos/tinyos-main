@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-04-07 09:41:55 $
+ * $Revision: 1.3 $
+ * $Date: 2008-06-23 20:25:14 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -50,7 +50,7 @@ generic module TestAdcMultiC(
 
                           uint8_t inch2,           // second input channel 
                           uint8_t sref2            // second reference voltage 
-)
+) @safe()
 {
   uses {
     interface Boot;

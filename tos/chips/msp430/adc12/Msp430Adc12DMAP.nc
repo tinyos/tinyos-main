@@ -27,15 +27,15 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006-12-12 18:23:07 $
+ * $Revision: 1.5 $
+ * $Date: 2008-06-23 20:25:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 #include <Msp430Adc12.h>
 #include <Msp430Dma.h>
-module Msp430Adc12DMAP 
+module Msp430Adc12DMAP @safe()
 {
   provides {
     interface Msp430Adc12SingleChannel as SingleChannel[uint8_t id];

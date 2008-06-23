@@ -1,4 +1,4 @@
-// $Id: BlockStorageP.nc,v 1.8 2008-06-23 19:57:55 idgay Exp $
+// $Id: BlockStorageP.nc,v 1.9 2008-06-23 20:25:15 regehr Exp $
 
 /*
  * "Copyright (c) 2000-2004 The Regents of the University  of California.  
@@ -39,7 +39,7 @@
 
 #include "Storage.h"
 
-module BlockStorageP {
+module BlockStorageP @safe() {
   provides {
     interface BlockWrite[uint8_t blockId];
     interface BlockRead[uint8_t blockId];

@@ -1,4 +1,4 @@
-// $Id: ConfigStorageP.nc,v 1.6 2008-06-23 19:57:55 idgay Exp $
+// $Id: ConfigStorageP.nc,v 1.7 2008-06-23 20:25:15 regehr Exp $
 
 /*
  * Copyright (c) 2002-2006 Intel Corporation
@@ -20,7 +20,7 @@
 #include "Storage.h"
 #include "crc.h"
 
-module ConfigStorageP {
+module ConfigStorageP @safe() {
   provides {
     interface Mount[uint8_t id];
     interface ConfigStorage[uint8_t id];

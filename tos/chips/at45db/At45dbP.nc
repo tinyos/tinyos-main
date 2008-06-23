@@ -1,4 +1,4 @@
-// $Id: At45dbP.nc,v 1.9 2008-06-23 19:57:55 idgay Exp $
+// $Id: At45dbP.nc,v 1.10 2008-06-23 20:25:15 regehr Exp $
 
 /*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -39,7 +39,7 @@
  * @author David Gay
  */
 
-module At45dbP {
+module At45dbP @safe() {
   provides {
     interface Init;
     interface At45db;

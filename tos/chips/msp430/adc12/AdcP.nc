@@ -27,13 +27,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2008-06-04 05:31:15 $
+ * $Revision: 1.7 $
+ * $Date: 2008-06-23 20:25:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
-module AdcP {
+module AdcP @safe() {
   provides {
     interface Read<uint16_t> as Read[uint8_t client];
     interface ReadNow<uint16_t> as ReadNow[uint8_t client];

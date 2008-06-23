@@ -44,7 +44,7 @@
 #include "AM.h"
 #include "Serial.h"
 
-module BaseStationP {
+module BaseStationP @safe() {
   uses {
     interface Boot;
     interface SplitControl as SerialControl;

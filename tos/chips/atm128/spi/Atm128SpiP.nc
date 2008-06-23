@@ -1,4 +1,4 @@
-/// $Id: Atm128SpiP.nc,v 1.8 2008-06-03 03:00:59 regehr Exp $
+/// $Id: Atm128SpiP.nc,v 1.9 2008-06-23 20:25:15 regehr Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -63,7 +63,7 @@
  *
  *
  * <pre>
- *  $Id: Atm128SpiP.nc,v 1.8 2008-06-03 03:00:59 regehr Exp $
+ *  $Id: Atm128SpiP.nc,v 1.9 2008-06-23 20:25:15 regehr Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -72,7 +72,7 @@
  *
  */
 
-module Atm128SpiP {
+module Atm128SpiP @safe() {
   provides {
     interface Init;
     interface SpiByte;

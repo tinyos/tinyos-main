@@ -1,4 +1,4 @@
-// $Id: BaseStationP.nc,v 1.9 2008-05-31 20:31:06 regehr Exp $
+// $Id: BaseStationP.nc,v 1.10 2008-06-23 20:25:14 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -33,7 +33,7 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.9 2008-05-31 20:31:06 regehr Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.10 2008-06-23 20:25:14 regehr Exp $
  */
   
 /* 
@@ -46,7 +46,7 @@
 #include "AM.h"
 #include "Serial.h"
 
-module BaseStationP {
+module BaseStationP @safe() {
   uses {
     interface Boot;
     interface SplitControl as SerialControl;

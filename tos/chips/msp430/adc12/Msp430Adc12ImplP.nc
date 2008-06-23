@@ -27,14 +27,14 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.10 $
- * $Date: 2008-06-20 15:50:34 $
+ * $Revision: 1.11 $
+ * $Date: 2008-06-23 20:25:15 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 #include <Msp430Adc12.h>
-module Msp430Adc12ImplP 
+module Msp430Adc12ImplP @safe()
 {
   provides {
     interface Init;

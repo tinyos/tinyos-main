@@ -22,7 +22,7 @@
  * @author David Gay
  */
 
-generic module HplAt45dbByteC(int sectorSizeLog2) {
+generic module HplAt45dbByteC(int sectorSizeLog2) @safe() {
   provides interface HplAt45db;
   uses {
     interface Resource;

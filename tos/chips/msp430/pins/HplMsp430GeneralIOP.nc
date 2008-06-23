@@ -31,7 +31,7 @@ generic module HplMsp430GeneralIOP(
 				uint8_t port_dir_addr,
 				uint8_t port_sel_addr,
 				uint8_t pin
-				)
+				) @safe()
 {
   provides interface HplMsp430GeneralIO as IO;
 }

@@ -33,14 +33,14 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.12 $ $Date: 2008-06-17 07:28:24 $
+ * @version $Revision: 1.13 $ $Date: 2008-06-23 20:25:15 $
  */
 
 #include "IEEE802154.h"
 #include "message.h"
 #include "AM.h"
 
-module CC2420ReceiveP {
+module CC2420ReceiveP @safe() {
 
   provides interface Init;
   provides interface StdControl;

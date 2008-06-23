@@ -1,4 +1,4 @@
-/// $Id: HplAtm128Timer1P.nc,v 1.5 2008-06-03 03:00:59 regehr Exp $
+/// $Id: HplAtm128Timer1P.nc,v 1.6 2008-06-23 20:25:15 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -30,7 +30,7 @@
 
 #include <Atm128Timer.h>
 
-module HplAtm128Timer1P
+module HplAtm128Timer1P @safe()
 {
   provides {
     // 16-bit Timers

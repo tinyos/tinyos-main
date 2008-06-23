@@ -1,4 +1,4 @@
-/* $Id: RandRWC.nc,v 1.5 2007-09-13 23:10:22 scipio Exp $
+/* $Id: RandRWC.nc,v 1.6 2008-06-23 20:25:14 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -13,7 +13,7 @@
  *
  * @author David Gay
  */
-module RandRWC {
+module RandRWC @safe() {
   uses {
     interface Boot;
     interface Leds;

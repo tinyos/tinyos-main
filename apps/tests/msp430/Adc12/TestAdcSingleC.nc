@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-04-07 09:41:55 $
+ * $Revision: 1.3 $
+ * $Date: 2008-06-23 20:25:14 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -47,7 +47,7 @@ generic module TestAdcSingleC(
                           uint8_t sht,             // sample-hold-time
                           uint8_t sampcon_ssel,    // clock source sampcon signal 
                           uint8_t sampcon_id       // clock divider sampcon 
-)
+) @safe()
 {
   uses {
     interface Boot;

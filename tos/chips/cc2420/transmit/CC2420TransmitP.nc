@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.6 $ $Date: 2008-06-20 21:38:36 $
+ * @version $Revision: 1.7 $ $Date: 2008-06-23 20:25:15 $
  */
 
 #include "CC2420.h"
@@ -41,7 +41,7 @@
 #include "crc.h"
 #include "message.h"
 
-module CC2420TransmitP {
+module CC2420TransmitP @safe() {
 
   provides interface Init;
   provides interface StdControl;

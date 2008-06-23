@@ -1,4 +1,4 @@
-/// $Id: HplAtm128InterruptPinP.nc,v 1.5 2008-05-31 20:20:49 regehr Exp $
+/// $Id: HplAtm128InterruptPinP.nc,v 1.6 2008-06-23 20:25:15 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -30,7 +30,7 @@
 generic module HplAtm128InterruptPinP (uint8_t ctrl_addr, 
 				 uint8_t edge0bit, 
 				 uint8_t edge1bit, 
-				 uint8_t bit)
+				 uint8_t bit) @safe()
 {
   provides interface HplAtm128Interrupt as Irq;
   uses interface HplAtm128InterruptSig as IrqSignal;
