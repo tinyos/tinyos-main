@@ -40,7 +40,7 @@ typedef nx_struct PacketLinkMsg {
 } PacketLinkMsg;
 
 enum {
-  AM_PACKETLINKMSG = 0,
+  AM_PACKETLINKMSG = 128,
 };
 
 enum {

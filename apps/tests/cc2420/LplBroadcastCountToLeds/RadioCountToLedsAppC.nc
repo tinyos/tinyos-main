@@ -1,4 +1,4 @@
-// $Id: RadioCountToLedsAppC.nc,v 1.1 2007-04-12 17:14:08 rincon Exp $
+// $Id: RadioCountToLedsAppC.nc,v 1.2 2008-06-24 18:05:48 idgay Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -37,9 +37,11 @@
  * every time it gets updated. A RadioCountToLeds node that hears a counter 
  * displays the bottom three bits on its LEDs. This application is a useful 
  * test to show that basic AM communication and timers work.
+ * <p>
+ * This version uses low-power listening.
  *
  * @author Philip Levis
- * @date   June 6 2005
+ * @date   June 24 2008
  */
 
 configuration RadioCountToLedsAppC {}

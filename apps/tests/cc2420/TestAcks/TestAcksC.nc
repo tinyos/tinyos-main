@@ -46,8 +46,8 @@ implementation {
   components TestAcksP,
       MainC,
       ActiveMessageC,
-      new AMSenderC(0),
-      new AMReceiverC(0),
+      new AMSenderC(128),
+      new AMReceiverC(128),
       new TimerMilliC(),
       LedsC;
       

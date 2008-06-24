@@ -31,7 +31,9 @@
  */
 
 /**
- * 
+ * Java class to display RSSI readings returned from a mote running the
+ * RssiToSerial application.
+ *
  * @author Jared Hill
  */
 

@@ -44,7 +44,7 @@ typedef nx_struct rssi_serial_msg {
 } rssi_serial_msg_t;
 
 enum {
-  AM_RSSI_SERIAL_MSG = 6,
+  AM_RSSI_SERIAL_MSG = 134,
   WAIT_TIME = 256,
   //* Using log2 samples to avoid a divide. Sending a packet every 1 second will allow
   //* allow about 5000 samples. A packet every half second allows for 2500 samples, and

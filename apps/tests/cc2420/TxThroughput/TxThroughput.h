@@ -52,7 +52,7 @@ typedef nx_struct ThroughputMsg {
 } ThroughputMsg;
 
 enum {
-  AM_THROUGHPUTMSG = 5,
+  AM_THROUGHPUTMSG = 133,
 };
 
 /**
