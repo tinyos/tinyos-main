@@ -1,4 +1,4 @@
-//$Id: AlarmToTimerC.nc,v 1.5 2006-12-12 18:23:32 vlahan Exp $
+//$Id: AlarmToTimerC.nc,v 1.6 2008-06-24 05:32:31 regehr Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -32,7 +32,7 @@
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
  */
 
-generic module AlarmToTimerC(typedef precision_tag)
+generic module AlarmToTimerC(typedef precision_tag) @safe()
 {
   provides interface Timer<precision_tag>;
   uses interface Alarm<precision_tag,uint32_t>;

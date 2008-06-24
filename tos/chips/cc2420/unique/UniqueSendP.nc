@@ -35,7 +35,7 @@
  * @author David Moss
  */
  
-module UniqueSendP {
+module UniqueSendP @safe() {
   provides {
     interface Send;
     interface Init;

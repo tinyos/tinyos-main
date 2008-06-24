@@ -23,13 +23,13 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.4 $
- * @date $Date: 2006-12-12 18:23:47 $
+ * @version $Revision: 1.5 $
+ * @date $Date: 2008-06-24 05:32:32 $
  */
  
 #include "Resource.h"
  
-generic module FcfsResourceQueueC(uint8_t size) {
+generic module FcfsResourceQueueC(uint8_t size) @safe() {
   provides {
     interface Init;
     interface ResourceQueue as FcfsQueue;

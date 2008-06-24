@@ -31,10 +31,10 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-24 05:32:31 $
  */
 
-module HplMsp430I2C0P {
+module HplMsp430I2C0P @safe() {
   
   provides interface HplMsp430I2C as HplI2C;
   

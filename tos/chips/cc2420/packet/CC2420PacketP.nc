@@ -39,7 +39,7 @@
 #include "message.h"
 #include "CC2420.h"
 
-module CC2420PacketP {
+module CC2420PacketP @safe() {
 
   provides {
     interface CC2420Packet;

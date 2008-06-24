@@ -29,12 +29,12 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.17 $ $Date: 2008-06-23 23:40:21 $
+ * @version $Revision: 1.18 $ $Date: 2008-06-24 05:32:31 $
  */
  
 #include "CC2420.h"
 
-module CC2420ActiveMessageP {
+module CC2420ActiveMessageP @safe() {
   provides {
     interface AMSend[am_id_t id];
     interface Receive[am_id_t id];

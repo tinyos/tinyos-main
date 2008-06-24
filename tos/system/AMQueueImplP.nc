@@ -1,4 +1,4 @@
-// $Id: AMQueueImplP.nc,v 1.9 2008-05-31 20:27:07 regehr Exp $
+// $Id: AMQueueImplP.nc,v 1.10 2008-06-24 05:32:32 regehr Exp $
 /*
 * "Copyright (c) 2005 Stanford University. All rights reserved.
 *
@@ -34,7 +34,7 @@
 
 #include "AM.h"
 
-generic module AMQueueImplP(int numClients) {
+generic module AMQueueImplP(int numClients) @safe() {
     provides interface Send[uint8_t client];
     uses{
         interface AMSend[am_id_t id];

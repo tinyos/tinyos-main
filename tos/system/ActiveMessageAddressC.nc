@@ -1,4 +1,4 @@
-// $Id: ActiveMessageAddressC.nc,v 1.8 2008-06-11 00:46:27 razvanm Exp $
+// $Id: ActiveMessageAddressC.nc,v 1.9 2008-06-24 05:32:32 regehr Exp $
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -27,7 +27,7 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  *
- * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.8 2008-06-11 00:46:27 razvanm Exp $
+ * Date last modified:  $Id: ActiveMessageAddressC.nc,v 1.9 2008-06-24 05:32:32 regehr Exp $
  *
  */
 
@@ -38,7 +38,7 @@
  * @author David Moss
  */
 
-module ActiveMessageAddressC  {
+module ActiveMessageAddressC @safe() {
   provides {
     interface ActiveMessageAddress;
     async command am_addr_t amAddress();

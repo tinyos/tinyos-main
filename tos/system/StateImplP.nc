@@ -61,7 +61,7 @@
  
 #include "State.h"
  
-module StateImplP {
+module StateImplP @safe() {
   provides {
   	interface Init;
     interface State[uint8_t id];

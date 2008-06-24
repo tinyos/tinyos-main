@@ -1,4 +1,4 @@
-//$Id: VirtualizeTimerC.nc,v 1.11 2008-03-05 18:40:17 janhauer Exp $
+//$Id: VirtualizeTimerC.nc,v 1.12 2008-06-24 05:32:31 regehr Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -32,7 +32,7 @@
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
  */
 
-generic module VirtualizeTimerC(typedef precision_tag, int max_timers)
+generic module VirtualizeTimerC(typedef precision_tag, int max_timers) @safe()
 {
   provides interface Timer<precision_tag> as Timer[uint8_t num];
   uses interface Timer<precision_tag> as TimerFrom;

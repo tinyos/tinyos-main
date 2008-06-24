@@ -68,10 +68,10 @@
  * @author: Vlado Handziski <handzisk@tkn.tu-berlin.de>
  * @author: Joe Polastre
  * @author: Philipp Huppertz <huppertz@tkn.tu-berlin.de>
- * @version $Revision: 1.6 $ $Date: 2008-05-15 23:57:13 $
+ * @version $Revision: 1.7 $ $Date: 2008-06-24 05:32:31 $
  */
 
-module HplMsp430Usart0P {
+module HplMsp430Usart0P @safe() {
   provides interface HplMsp430Usart as Usart;
   provides interface HplMsp430UsartInterrupts as Interrupts;
   provides interface HplMsp430I2CInterrupts as I2CInterrupts;

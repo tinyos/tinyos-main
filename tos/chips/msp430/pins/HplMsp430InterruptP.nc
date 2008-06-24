@@ -22,7 +22,7 @@
 /**
  * @author Joe Polastre
  */
-module HplMsp430InterruptP
+module HplMsp430InterruptP @safe()
 {
 #ifdef __msp430_have_port1
   provides interface HplMsp430Interrupt as Port10;

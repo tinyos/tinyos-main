@@ -31,7 +31,7 @@
  * @date   March 1 2005
  */
 
-module RandomMlcgC {
+module RandomMlcgC @safe() {
   provides interface Init;
   provides interface ParameterInit<uint16_t> as SeedInit;
   provides interface Random;
