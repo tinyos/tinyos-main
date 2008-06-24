@@ -152,4 +152,5 @@ AC_OUTPUT(
 	tinyos/ncc/nesdoc
 	tinyos/ncc/nesdoc-py/Makefile
 	tinyos/tosthreads/Makefile
+	tinyos/safe/Makefile
 )
