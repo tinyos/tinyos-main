@@ -28,6 +28,9 @@
 #warning Safe TinyOS requires nesC >= 1.3.0
 #endif
 
+struct @safe { };
+struct @unsafe { };
+
 #endif // NESC version check
 
 #endif
