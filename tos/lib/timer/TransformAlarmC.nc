@@ -1,4 +1,4 @@
-//$Id: TransformAlarmC.nc,v 1.4 2006-12-12 18:23:32 vlahan Exp $
+//$Id: TransformAlarmC.nc,v 1.5 2008-06-24 04:07:29 regehr Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -42,7 +42,7 @@ generic module TransformAlarmC(
   typedef to_size_type @integer(),
   typedef from_precision_tag,
   typedef from_size_type @integer(),
-  uint8_t bit_shift_right)
+  uint8_t bit_shift_right) @safe()
 {
   /**
    * The transformed Alarm.

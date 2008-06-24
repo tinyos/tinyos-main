@@ -24,7 +24,7 @@
  * @author Joe Polastre
  */
 
-generic module GpioCaptureC() {
+generic module GpioCaptureC() @safe() {
 
   provides interface GpioCapture as Capture;
   uses interface Msp430TimerControl;

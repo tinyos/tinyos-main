@@ -31,10 +31,10 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.6 $ $Date: 2008-06-23 23:40:21 $
+ * @version $Revision: 1.7 $ $Date: 2008-06-24 04:07:28 $
  */
 
-module CC2420CsmaP {
+module CC2420CsmaP @safe() {
 
   provides interface SplitControl;
   provides interface Send;

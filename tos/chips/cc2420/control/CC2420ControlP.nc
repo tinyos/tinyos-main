@@ -33,12 +33,12 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.6 $ $Date: 2008-06-16 15:33:32 $
+ * @version $Revision: 1.7 $ $Date: 2008-06-24 04:07:28 $
  */
 
 #include "Timer.h"
 
-module CC2420ControlP {
+module CC2420ControlP @safe() {
 
   provides interface Init;
   provides interface Resource;

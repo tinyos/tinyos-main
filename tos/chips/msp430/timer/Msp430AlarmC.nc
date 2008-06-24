@@ -1,4 +1,4 @@
-//$Id: Msp430AlarmC.nc,v 1.4 2006-12-12 18:23:11 vlahan Exp $
+//$Id: Msp430AlarmC.nc,v 1.5 2008-06-24 04:07:29 regehr Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.
  * All rights reserved.
@@ -29,7 +29,7 @@
  *          intended use.
  */
 
-generic module Msp430AlarmC(typedef frequency_tag)
+generic module Msp430AlarmC(typedef frequency_tag) @safe()
 {
   provides interface Init;
   provides interface Alarm<frequency_tag,uint16_t> as Alarm;

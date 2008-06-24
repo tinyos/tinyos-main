@@ -40,7 +40,7 @@
  
 #include "CC2420.h"
 
-module CC2420TinyosNetworkP {
+module CC2420TinyosNetworkP @safe() {
   provides {
     interface Send;
     interface Receive;

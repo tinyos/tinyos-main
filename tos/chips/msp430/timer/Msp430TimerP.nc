@@ -34,7 +34,7 @@ generic module Msp430TimerP(
   uint16_t TxIE,
   uint16_t TxSSEL0,
   uint16_t TxSSEL1,
-  bool isClockSourceAsync )
+  bool isClockSourceAsync ) @safe()
 {
   provides interface Msp430Timer as Timer;
   provides interface Msp430TimerEvent as Event[uint8_t n];
