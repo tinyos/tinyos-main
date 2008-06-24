@@ -1,4 +1,4 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = java misc ncc tosthreads
+SUBDIRS = java misc ncc tosthreads safe
 
