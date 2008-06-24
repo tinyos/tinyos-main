@@ -38,39 +38,98 @@
  *
  * @author David Moss
  */
- 
+
 #include "TestPeriodic.h"
 
-configuration TestPeriodicC {
+module TestPeriodicC {
+  uses {
+    interface Boot;
+    interface SplitControl;
+    interface LowPowerListening;
+    interface AMSend;
+    interface Receive;
+    interface AMPacket;
+    interface Packet;
+    interface Leds;
+    interface Timer<TMilli>;
+  }
 }
 
 implementation {
+ 
+  uint8_t count;
+  message_t fullMsg;
+  bool transmitter;
 
-#if defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT)
-  components CC1000ActiveMessageC as Lpl;
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB)
-  components CC2420ActiveMessageC as Lpl;
-#else
-#error "LPL testing not supported on this platform"
-#endif
+  uint8_t lastCount;
+  
+  /**************** Prototypes ****************/
+  task void send();
+  
+  /**************** Boot Events ****************/
+  event void Boot.booted() {
+    transmitter = (call AMPacket.address() == 1);
+    count = 0;
+    
+    call LowPowerListening.setLocalSleepInterval(1000);
+    call SplitControl.start();
+  }
+  
+  event void SplitControl.startDone(error_t error) {
+    if(transmitter) {
+      post send();
+    }
+  }
+  
+  event void SplitControl.stopDone(error_t error) {
+  }
+  
+  
+  /**************** Send Receive Events *****************/
+  event void AMSend.sendDone(message_t *msg, error_t error) {
+    if(transmitter) {
+      count++; 
+      call Timer.startOneShot(1000);
+      call Leds.led0Off();
+    }
+  }
+  
+  event message_t *Receive.receive(message_t *msg, void *payload, uint8_t len) {
+    TestPeriodicMsg *periodicMsg = (TestPeriodicMsg *) payload;
 
-  components TestPeriodicP,
-      MainC,
-      ActiveMessageC,
-      new TimerMilliC(),
-      new AMSenderC(AM_TESTPERIODICMSG),
-      new AMReceiverC(AM_TESTPERIODICMSG),
-      LedsC;
-      
-  TestPeriodicP.Boot -> MainC;
-  TestPeriodicP.SplitControl -> ActiveMessageC;
-  TestPeriodicP.LowPowerListening -> Lpl;
-  TestPeriodicP.AMPacket -> ActiveMessageC;
-  TestPeriodicP.AMSend -> AMSenderC;
-  TestPeriodicP.Receive -> AMReceiverC;
-  TestPeriodicP.Packet -> ActiveMessageC;
-  TestPeriodicP.Timer -> TimerMilliC;
-  TestPeriodicP.Leds -> LedsC;
+    if(!transmitter) {
+      if(lastCount == periodicMsg->count) {
+        call Leds.led0On();
+        call Leds.led1Off();
+      } else {
+        call Leds.led1On();
+        call Leds.led0Off();
+      }
 
+      lastCount = periodicMsg->count;
+
+      call Leds.led2Toggle();
+    }
+    return msg;
+  }
+  
+  /**************** Timer Events ****************/
+  event void Timer.fired() {
+    if(transmitter) {
+      post send();
+    }
+  }
+  
+  /**************** Tasks ****************/
+  task void send() {
+    TestPeriodicMsg *periodicMsg = (TestPeriodicMsg *) call Packet.getPayload(&fullMsg, sizeof(TestPeriodicMsg));
+    periodicMsg->count = count;
+    call LowPowerListening.setRxSleepInterval(&fullMsg, 1000);
+    if(call AMSend.send(AM_BROADCAST_ADDR, &fullMsg, sizeof(TestPeriodicMsg)) != SUCCESS) {
+      post send();
+    } else {
+      call Leds.led0On();
+    }
+  }
 }
 
