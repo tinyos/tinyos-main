@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * - Revision -------------------------------------------------------------
- * $Revision: 1.11 $
- * $Date: 2008-03-13 17:09:07 $
+ * $Revision: 1.12 $
+ * $Date: 2008-06-24 14:46:18 $
  * ========================================================================
  */
 
@@ -44,7 +44,7 @@ enum {
    divide by 18 -> 1004976 Hz */
 
 #ifndef TDA5250_UART_BAUDRATE
-#define TDA5250_UART_BAUDRATE 23405U
+#define TDA5250_UART_BAUDRATE 32768U
 #endif
 
 enum {
