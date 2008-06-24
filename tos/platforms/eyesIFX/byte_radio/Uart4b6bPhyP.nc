@@ -304,6 +304,7 @@ implementation
                             bufByte |= data & 0x03;
                             bufByte <<= 2;
                             phyState = STATE_DATA_MIDDLE;
+                            call RxByteTimer.stop();
                             signal PhyPacketRx.recvHeaderDone(SUCCESS);
                             call RxByteTimer.start(byteTime);
                         }
@@ -313,6 +314,7 @@ implementation
                     }
                     else {
                         phyState = STATE_DATA_HIGH;
+                        call RxByteTimer.stop();
                         signal PhyPacketRx.recvHeaderDone(SUCCESS);
                         call RxByteTimer.start(byteTime);
                     }
@@ -334,6 +336,7 @@ implementation
                     decodedByte = sixBitToNibble[((bufByte & 0x0f)<<2) | (data >> 4)];
                     if(decodedByte != ILLEGAL_CODE) {
                         phyState = STATE_DATA_LOW;
+                        call RxByteTimer.stop();
                         signal SerializerRadioByteComm.rxByteReady((bufByte & 0xf0) | decodedByte);
                         bufByte = (data & 0x0f) << 2;
                         call RxByteTimer.start(byteTime);
@@ -349,6 +352,7 @@ implementation
                         decodedByte = sixBitToNibble[data & 0x3f];
                         if(decodedByte != ILLEGAL_CODE) {
                             phyState = STATE_DATA_HIGH;
+                            call RxByteTimer.stop();
                             signal SerializerRadioByteComm.rxByteReady(bufByte | decodedByte);
                             call RxByteTimer.start(byteTime);
                         }
