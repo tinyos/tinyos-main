@@ -1,4 +1,4 @@
-// $Id: TimeSyncMessageC.nc,v 1.2 2008-06-17 07:35:54 kusy Exp $
+// $Id: TimeSyncMessageC.nc,v 1.3 2008-06-24 23:38:13 konradlorincz Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.
@@ -77,3 +77,4 @@ implementation {
   PacketTimeStamp32khz = CC2420PacketC;
   PacketTimeStampMilli = CC2420PacketC;
 }
+
