@@ -27,3 +27,6 @@ Java Application Usage:
 
   If not specified, the <packetsource> defaults to sf@localhost:9001 or
   to your MOTECOM environment variable (if defined).
+
+  This application will report dropped and duplicate packets as seen on
+  the receiver.
