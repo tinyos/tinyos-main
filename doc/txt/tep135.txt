@@ -10,8 +10,8 @@ Active Message ID Allocation in TinyOS 2.1
 :Author: Omprakash Gnawali
 
 :Draft-Created: 19-June-2008
-:Draft-Version: $Revision: 1.2 $
-:Draft-Modified: $Date: 2008-06-20 22:19:35 $
+:Draft-Version: $Revision: 1.3 $
+:Draft-Modified: $Date: 2008-06-24 02:12:26 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -78,6 +78,9 @@ Here is a list of allocations for TinyOS 2.1::
     0x52 - AM_DELUGEDATAMSG (Data)
     0x53 - DELUGE_AM_FLASH_VOL_MANAGER (Flash volume manager)
     0x54 - DELUGE_AM_DELUGE_MANAGER (Deluge manger)
+
+  * 0x3E - AM_TIMESYNCMSG for FTSP (''tos/lib/ftsp'') reserved by the
+    Core Working Group.
 
   * 0x3F - TinyOS NALP code [TEP_125]_ reserved by the Core Working
     Group.
