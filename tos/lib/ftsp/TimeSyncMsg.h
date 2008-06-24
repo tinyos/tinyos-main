@@ -43,7 +43,7 @@ typedef nx_struct TimeSyncMsg
 } TimeSyncMsg;
 
 enum {
-    AM_TIMESYNCMSG = 0xAA,
+    AM_TIMESYNCMSG = 0x3E,
     TIMESYNCMSG_LEN = sizeof(TimeSyncMsg) - sizeof(nx_uint32_t),
     TS_TIMER_MODE = 0,      // see TimeSyncMode interface
     TS_USER_MODE = 1,       // see TimeSyncMode interface
