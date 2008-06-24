@@ -33,7 +33,7 @@ TOSROOT/apps/Oscilloscope/java subdirectory and type:
   # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:telosb
   ./run
 
-The controls at the bootom of the screen allow yoy to zoom in or out the X
+The controls at the bottom of the screen allow you to zoom in or out the X
 axis, change the range of the Y axis, and clear all received data. You can
 change the color used to display a mote by clicking on its color in the
 mote table.
