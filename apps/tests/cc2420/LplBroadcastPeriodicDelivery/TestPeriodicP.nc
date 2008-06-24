@@ -30,9 +30,13 @@
  */
 
 /**
+ * This app sends a message from Transmitter node to AM_BROADCAST_ADDR
+ * and waits 1000 ms between each delivery so the Rx mote's radio
+ * shuts back off and has to redetect to receive the next message. 
+ * Receiver: TOS_NODE_ID != 1
+ * Transmitter: TOS_NODE_ID == 1
+ *
  * @author David Moss
- * Rx != 1
- * Tx == 1
  */
 
 #include "TestPeriodic.h"

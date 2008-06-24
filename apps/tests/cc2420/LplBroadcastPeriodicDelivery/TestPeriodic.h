@@ -7,7 +7,7 @@ typedef nx_struct TestPeriodicMsg {
 } TestPeriodicMsg;
 
 enum {
-  AM_TESTPERIODICMSG = 0x5,
+  AM_TESTPERIODICMSG = 133,
 };
 
 #endif
