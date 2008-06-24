@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.14 2008-06-22 04:31:34 regehr Exp $
+#$Id: msp.rules,v 1.15 2008-06-24 15:39:13 regehr Exp $
 
 define MSP_HELP
 
@@ -23,7 +23,7 @@ endef
 HELP += $(MSP_HELP)
 
 ifdef MAKE_DEPUTY_FLAG
-        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -fnesc-deputy -fnesc-deputy-args='-I$(TOSDIR)/lib/safe/include --FLIDs --envmachine -DSAFE_TINYOS --nolib ' $(TOSDIR)/lib/safe/msp430/fail.c 
+        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -fnesc-deputy -fnesc-deputy-args='-I$(TOSDIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib ' $(TOSDIR)/lib/safe/msp430/fail.c 
 else
         NCC_SAFE_TINYOS_FLAGS =
 endif
