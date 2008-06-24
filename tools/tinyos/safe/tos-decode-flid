@@ -12,6 +12,11 @@ sub decode ($$) {
     return $h;
 }
 
+sub usage() {
+    print "Usage: tos-decode-flid flid flid-file\n";
+    exit 2;
+}
+
 sub make_flid () {
 
     my $flid = $ARGV[0];
@@ -24,6 +29,8 @@ sub make_flid () {
 	decode(substr($flid,4,1),substr($flid,5,1)) .
 	decode(substr($flid,6,1),substr($flid,7,1));
 }
+
+usage() if (scalar(@ARGV)!=2);
 
 my $flidstr = make_flid();
 
@@ -60,8 +67,7 @@ if (defined ($fn)) {
     close INF;
 }
 else {
-    print "Usage: tos-decode-flid flid flid-file\n";
-    exit 2;
+    usage();
 }
 
 if (!$found) {
