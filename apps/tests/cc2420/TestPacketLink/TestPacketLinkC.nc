@@ -30,6 +30,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
+#include "TestPacketLink.h"
+
 /**
  * Test the effectiveness of the PacketLink layer
  *
@@ -56,8 +58,6 @@
  * @author David Moss
  */
  
-#include "TestPacketLink.h"
-
 configuration TestPacketLinkC {
 }
 

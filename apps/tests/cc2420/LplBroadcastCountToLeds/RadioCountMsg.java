@@ -10,7 +10,7 @@ public class RadioCountMsg extends net.tinyos.message.Message {
     public static final int DEFAULT_MESSAGE_SIZE = 2;
 
     /** The Active Message type associated with this message. */
-    public static final int AM_TYPE = 6;
+    public static final int AM_TYPE = 134;
 
     /** Create a new RadioCountMsg of size 2. */
     public RadioCountMsg() {

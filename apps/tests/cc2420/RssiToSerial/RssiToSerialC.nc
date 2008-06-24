@@ -30,20 +30,22 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE
  */
  
+#include "RssiToSerial.h"
+
  /**
+  * This is more of a general demonstration than a test.
+  *
+  * Install this application to one node, connected to the computer.
+  * The node will measure the environmental RSSI from the CC2420 and
+  * sending those readings over the serial port.
+  *
+  * Use the Java application to display the relative RSSI readings.
+  *
   * @author Jared Hill
+  * @date   23 March 2007
   */
  
  
-#include "RssiToSerial.h"
-
-/**
- * 
- *
- * @author Jared Hill
- * @date   23 March 2007
- */
-
 configuration RssiToSerialC {}
 implementation {
   components MainC, RssiToSerialP as App, LedsC;

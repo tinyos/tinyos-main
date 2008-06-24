@@ -29,12 +29,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE
  */
  
+#include "TxThroughput.h"
+
 /**
+ * This application is used more for characterization rather than a
+ * test.  It measures the maximum radio throughput using the largest
+ * message payload size, and does not use low power listening.
+ *
  * @author David Moss
  */
  
-#include "TxThroughput.h"
-
 configuration TxThroughputC {
 }
 
