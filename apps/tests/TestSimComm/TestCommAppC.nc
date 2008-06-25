@@ -1,4 +1,4 @@
-// $Id: TestCommAppC.nc,v 1.2 2007-09-04 17:19:23 scipio Exp $
+// $Id: TestCommAppC.nc,v 1.3 2008-06-25 03:28:52 razvanm Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -49,7 +49,7 @@
 configuration TestCommAppC {}
 implementation {
   enum {
-    AM_TEST  = 5
+    AM_TEST  = 133
   };
   
   components MainC, TestCommC as App, RandomC, ActiveMessageC, TossimActiveMessageC;

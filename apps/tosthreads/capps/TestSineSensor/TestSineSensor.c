@@ -46,7 +46,7 @@ void tosthread_main(void* arg) {
   while( amSerialStart() != SUCCESS );
   for(;;) {
     while( sinesensor_read(var) != SUCCESS );
-    while( amSerialSend(AM_BROADCAST_ADDR, &msg, sizeof(uint16_t), 100) != SUCCESS );
+    while( amSerialSend(AM_BROADCAST_ADDR, &msg, sizeof(uint16_t), 228) != SUCCESS );
     led0Toggle();
   }
 }

@@ -41,7 +41,7 @@ implementation {
   
   components new BlockingSineSensorC();
   components BlockingSerialActiveMessageC;
-  components new BlockingSerialAMSenderC(100);
+  components new BlockingSerialAMSenderC(228);
 
   MainC.Boot <- TestSineSensorC;
   MainC.SoftwareInit -> BlockingSineSensorC;
