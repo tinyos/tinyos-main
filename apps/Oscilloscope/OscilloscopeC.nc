@@ -30,8 +30,8 @@ module OscilloscopeC
 }
 implementation
 {
-  message_t sendbuf;
-  bool sendbusy;
+  message_t sendBuf;
+  bool sendBusy;
 
   /* Current local state - interval, version and accumulated readings */
   oscilloscope_t local;
@@ -43,7 +43,7 @@ implementation
      count). However, we must then suppress our next count increment. This
      is a very simple form of "time" synchronization (for an abstract
      notion of time). */
-  bool suppress_count_change;
+  bool suppressCountChange;
 
   // Use LEDs to report various status issues.
   void report_problem() { call Leds.led0Toggle(); }
@@ -86,7 +86,7 @@ implementation
     if (omsg->count > local.count)
       {
 	local.count = omsg->count;
-	suppress_count_change = TRUE;
+	suppressCountChange = TRUE;
       }
 
     return msg;
@@ -99,23 +99,23 @@ implementation
   event void Timer.fired() {
     if (reading == NREADINGS)
       {
-	if (!sendbusy && sizeof local <= call AMSend.maxPayloadLength())
+	if (!sendBusy && sizeof local <= call AMSend.maxPayloadLength())
 	  {
 	    // Don't need to check for null because we've already checked length
 	    // above
-	    memcpy(call AMSend.getPayload(&sendbuf, sizeof(local)), &local, sizeof local);
-	    if (call AMSend.send(AM_BROADCAST_ADDR, &sendbuf, sizeof local) == SUCCESS)
-	      sendbusy = TRUE;
+	    memcpy(call AMSend.getPayload(&sendBuf, sizeof(local)), &local, sizeof local);
+	    if (call AMSend.send(AM_BROADCAST_ADDR, &sendBuf, sizeof local) == SUCCESS)
+	      sendBusy = TRUE;
 	  }
-	if (!sendbusy)
+	if (!sendBusy)
 	  report_problem();
 
 	reading = 0;
 	/* Part 2 of cheap "time sync": increment our count if we didn't
 	   jump ahead. */
-	if (!suppress_count_change)
+	if (!suppressCountChange)
 	  local.count++;
-	suppress_count_change = FALSE;
+	suppressCountChange = FALSE;
       }
     if (call Read.read() != SUCCESS)
       report_problem();
@@ -127,7 +127,7 @@ implementation
     else
       report_problem();
 
-    sendbusy = FALSE;
+    sendBusy = FALSE;
   }
 
   event void Read.readDone(error_t result, uint16_t data) {
