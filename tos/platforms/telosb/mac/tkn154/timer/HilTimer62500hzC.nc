@@ -35,7 +35,7 @@ configuration HilTimer62500hzC
 }
 implementation
 {
-  components new Alarm62500hz32VirtualizedHilC() as Alarm;
+  components new Alarm62500hz32VirtualizedC() as Alarm;
   components new AlarmToTimerC(T62500hz);
   components new VirtualizeTimerC(T62500hz,uniqueCount(UQ_TIMER_62500HZ));
 

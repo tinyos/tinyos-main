@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-18 15:39:32 $
+ * $Revision: 1.3 $
+ * $Date: 2008-06-25 10:19:03 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -122,9 +122,12 @@ implementation
   norace ieee154_txframe_t *m_bcastFrame;
   norace ieee154_txframe_t *m_lastFrame;
   norace ieee154_macMaxBE_t m_BE;
+  norace ieee154_macMaxBE_t m_NB;
   norace ieee154_macMaxBE_t m_numCCA;
-  norace ieee154_macMaxCSMABackoffs_t m_allowedBackoffs;
+  norace ieee154_macMaxCSMABackoffs_t m_macMaxCSMABackoffs;
+  norace ieee154_macMaxFrameRetries_t m_macMaxFrameRetries;
   norace ieee154_macMaxBE_t m_macMaxBE;
+  norace ieee154_macMinBE_t m_macMinBE;
   norace uint16_t m_backoff;
   norace uint16_t m_backoffElapsed;
   norace ieee154_status_t m_result;
@@ -205,6 +208,7 @@ implementation
           actualCapLen, call CapStart.getNow()+ actualCapLen);
     }
     updateState();
+    call Debug.flush();
   }
 
   command ieee154_status_t CapTx.transmit(ieee154_txframe_t *frame)
@@ -261,19 +265,21 @@ implementation
     ieee154_macDSN_t dsn = call MLME_GET.macDSN();
     frame->header->mhr[MHR_INDEX_SEQNO] = dsn++;
     call MLME_SET.macDSN(dsn);
-    // m_allowedBackoffs will be decreased in every iteration (at zero the transmission failed)
-    m_allowedBackoffs =  call MLME_GET.macMaxCSMABackoffs();
+    m_macMaxCSMABackoffs =  call MLME_GET.macMaxCSMABackoffs();
+    m_macMaxFrameRetries =  call MLME_GET.macMaxFrameRetries();
     m_macMaxBE = call MLME_GET.macMaxBE();
-    m_BE = call MLME_GET.macMinBE();
-    if (call MLME_GET.macBattLifeExt() && m_BE > 2)
-      m_BE = 2;
+    m_macMinBE = call MLME_GET.macMinBE();
+    if (call MLME_GET.macBattLifeExt() && m_macMinBE > 2)
+      m_macMinBE = 2;
+    m_BE = m_macMinBE;
     if (m_isBeaconEnabledPAN)
       m_numCCA = 2;
     else
       m_numCCA = 1;
+    m_NB = 0;
     m_transactionTime = IEEE154_SHR_DURATION + 
       (frame->headerLen + frame->payloadLen) * IEEE154_SYMBOLS_PER_OCTET;
-    if (frame->header->mhr[0] & FC1_ACK_REQUEST)
+    if (frame->header->mhr[MHR_INDEX_FC1] & FC1_ACK_REQUEST)
       m_transactionTime += (IEEE154_aTurnaroundTime + IEEE154_aUnitBackoffPeriod + 
           11 * IEEE154_SYMBOLS_PER_OCTET);
     if (frame->headerLen + frame->payloadLen > IEEE154_aMaxSIFSFrameSize)
@@ -412,8 +418,7 @@ implementation
           m_lock = FALSE; // unlock
           call TokenToCfp.transfer();
           return;
-           
-        }        
+        }
       }
 
       // if there is nothing to do, then we must clear the lock
@@ -442,7 +447,7 @@ implementation
       // the frame is already loaded -> transmit it now
       if (m_numCCA == 1){
         // unslotted CSMA-CA
-        call RadioTx.transmit(NULL, m_backoff, m_numCCA, m_currentFrame->header->mhr[0] & FC1_ACK_REQUEST ? TRUE : FALSE);
+        call RadioTx.transmit(NULL, m_backoff, m_numCCA, m_currentFrame->header->mhr[MHR_INDEX_FC1] & FC1_ACK_REQUEST ? TRUE : FALSE);
         next = WAIT_FOR_TXDONE; // this will NOT clear the lock
       } else {
         // slotted CSMA-CA
@@ -458,7 +463,7 @@ implementation
           call RadioTx.transmit(call CapStartRefTime.getNow(), 
               elapsed + IEEE154_RADIO_TX_SEND_DELAY + m_backoff - m_backoffElapsed, 
               m_numCCA, 
-              m_currentFrame->header->mhr[0] & FC1_ACK_REQUEST ? TRUE : FALSE);
+              m_currentFrame->header->mhr[MHR_INDEX_FC1] & FC1_ACK_REQUEST ? TRUE : FALSE);
           next = WAIT_FOR_TXDONE; // this will NOT clear the lock
         } else {
           // frame does not fit in remaing portion of the CAP
@@ -476,8 +481,8 @@ implementation
         next = SWITCH_OFF;
       else {
         if (m_lastFrame){
-          // we just transmitted a frame and have not yet 
-          // signalled the done to the upper layer -> wait
+          // the done event for the previous frame has not yet been
+          // signalled to the upper layer -> wait
           next = DO_NOTHING; 
         } else
           next = LOAD_TX;
@@ -541,10 +546,11 @@ implementation
 
   async event void RadioTx.transmitDone(ieee154_txframe_t *frame, 
       ieee154_reftime_t *referenceTime, bool ackPendingFlag, error_t error)
-  { 
+  {
+    bool retry = FALSE;
     switch (error)
     {
-      case SUCCESS:   
+      case SUCCESS:
         m_result = IEEE154_SUCCESS;
         if (DEVICE_ROLE && frame->payload[0] == CMD_FRAME_DATA_REQUEST &&
             ((frame->header->mhr[MHR_INDEX_FC1]) & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_CMD){
@@ -562,26 +568,35 @@ implementation
           }
         }
         break;
-      case EBUSY: 
+      case EBUSY:
+        // we're following the SDL Spec in IEEE 802.15.4-2003 Annex D
         m_result = IEEE154_CHANNEL_ACCESS_FAILURE;
-        if (m_allowedBackoffs > 0){
-          m_allowedBackoffs -= 1;
+        m_NB += 1;
+        if (m_NB < m_macMaxCSMABackoffs){
           m_BE += 1;
           if (m_BE > m_macMaxBE)
             m_BE = m_macMaxBE;
-          m_backoff = generateRandomBackoff(m_BE) * IEEE154_aUnitBackoffPeriod; // next backoff
-          m_backoffElapsed = 0;
-          m_lock = FALSE;
-          updateState();
-          return;
+          retry = TRUE;
         }
         break;
-      case ENOACK: 
+      case ENOACK:
+        // we're following the SDL Spec in IEEE 802.15.4-2003 Annex D
         m_result = IEEE154_NO_ACK;
+        m_NB += 1;
+        // shouldn't the next check be (m_NB-1 < m_macMaxFrameRetries)? but
+        // on the other hand, NB is used for CHANNEL_ACCESS_FAILURE and NO_ACK,
+        // i.e. m_NB does not tell us much about past retransmissions anyway...
+        if (m_NB < m_macMaxFrameRetries){
+          m_BE = m_macMinBE;
+          retry = TRUE;
+        }
         break;
       default: break;
     }
-    if (COORD_ROLE && frame == m_bcastFrame){
+    if (retry){
+      m_backoff = generateRandomBackoff(m_BE) * IEEE154_aUnitBackoffPeriod; // next backoff
+      m_backoffElapsed = 0;
+    } else if (COORD_ROLE && frame == m_bcastFrame){
       // signal result of broadcast transmissions immediately 
       restoreFrameFromBackup();
       signalTxBroadcastDone(m_bcastFrame, m_result);
@@ -635,8 +650,8 @@ implementation
 
   void backupCurrentFrame()
   {
-    ieee154_cap_frame_backup_t backup = {m_currentFrame, m_BE, m_allowedBackoffs, 
-      m_macMaxBE, m_backoff, m_backoffElapsed, m_transactionTime};
+    ieee154_cap_frame_backup_t backup = {m_currentFrame, m_BE, m_macMaxCSMABackoffs, 
+      m_macMaxBE, m_macMinBE, m_NB, m_backoff, m_backoffElapsed, m_transactionTime};
     call FrameBackup.setNow(&backup);
   }
 
@@ -646,8 +661,10 @@ implementation
     if (backup != NULL){
       m_currentFrame = backup->frame;
       m_BE = backup->BE;
-      m_allowedBackoffs = backup->allowedBackoffs;
+      m_macMaxCSMABackoffs = backup->allowedBackoffs;
       m_macMaxBE = backup->macMaxBE; 
+      m_macMinBE = backup->macMinBE; 
+      m_NB = backup->NB; 
       m_backoff = backup->backoff;
       m_backoffElapsed = backup->backoffElapsed;
       m_transactionTime = backup->transactionTime;

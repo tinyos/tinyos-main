@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-18 15:39:32 $
+ * $Revision: 1.3 $
+ * $Date: 2008-06-25 10:19:03 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -391,6 +391,7 @@ implementation
 
   event void Token.granted()
   {
+    call Debug.flush();
     call Debug.log(LEVEL_INFO, StartP_GOT_RESOURCE, m_lastBeaconTxTime, m_beaconInterval, m_requests);
     if (m_requests & REQUEST_REALIGNMENT_DONE_PENDING){
       // unlikely to occur: we have not yet received a done()
@@ -516,7 +517,7 @@ implementation
       m_framePendingBit = TRUE;
     else
       m_framePendingBit = FALSE;
-    memcpy(m_gtsField, &frame->payload[0], gtsFieldLength);
+    memcpy(m_gtsField, &frame->payload[2], gtsFieldLength);
     if (frame->payload[1] & 0x10){
       // BLE is active; calculate the time offset from slot0
       m_BLELen = IEEE154_SHR_DURATION + 

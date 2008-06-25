@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-06-16 18:00:29 $
+ * $Date: 2008-06-25 10:19:03 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -170,6 +170,8 @@ typedef struct {
   ieee154_macMaxBE_t BE;
   ieee154_macMaxCSMABackoffs_t allowedBackoffs;
   ieee154_macMaxBE_t macMaxBE;
+  ieee154_macMinBE_t macMinBE;
+  uint8_t NB;
   uint16_t backoff;
   uint16_t backoffElapsed;
   uint32_t transactionTime;

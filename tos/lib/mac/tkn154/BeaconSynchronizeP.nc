@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-18 15:39:32 $
+ * $Revision: 1.3 $
+ * $Date: 2008-06-25 10:19:02 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -188,6 +188,7 @@ implementation
   event void Token.granted()
   {
     bool missed = FALSE;
+    call Debug.flush();
     call Debug.log(LEVEL_INFO,SyncP_GOT_RESOURCE, m_lastBeaconRxTime+m_beaconInterval, 
         m_beaconInterval, (m_updatePending<<1)+m_tracking);
     if (m_updatePending){
@@ -235,7 +236,7 @@ implementation
 
   async event void TrackAlarm.fired()
   {
-    call Debug.log(LEVEL_IMPORTANT,SyncP_SWITCHOFF, 0,0,0);
+    call Debug.log(LEVEL_IMPORTANT,SyncP_TRACK_ALARM, m_state,m_lastBeaconRxTime,m_dt);
     atomic {
       switch (m_state)
       {
@@ -243,7 +244,6 @@ implementation
           call BeaconRx.prepare();
           break;
         case S_RADIO_OFF: 
-          call Debug.log(LEVEL_INFO, SyncP_SWITCHOFF, 0, 0,0);
           call RadioOff.off(); 
           break;
       }
@@ -252,6 +252,7 @@ implementation
 
   async event void BeaconRx.prepareDone()
   {
+    error_t result;
     if (m_state == S_FIRST_SCAN){
       m_state = S_RADIO_OFF;
       atomic {
@@ -261,8 +262,10 @@ implementation
       }
     } else {
       m_state = S_RADIO_OFF;
-      call BeaconRx.receive(&m_lastBeaconRxRefTime, m_dt-RX_LAG);
-      call Debug.log(LEVEL_IMPORTANT,SyncP_RX_ON, call TrackAlarm.getNow(),m_lastBeaconRxTime+m_dt,RX_LAG);
+      result = call BeaconRx.receive(&m_lastBeaconRxRefTime, m_dt-RX_LAG);
+      call Debug.log(LEVEL_IMPORTANT,SyncP_RX_ON, m_lastBeaconRxTime, call TrackAlarm.getNow(), m_dt+RX_DURATION);
+      if (result != SUCCESS)
+        call Debug.log(LEVEL_IMPORTANT,SyncP_RADIO_BUSY, result, 0, 0);
       call TrackAlarm.startAt(m_lastBeaconRxTime, m_dt + RX_DURATION);
     }
   }
@@ -274,6 +277,7 @@ implementation
         mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK,mhr[MHR_INDEX_SEQNO]);
     if (!m_beaconSwapBufferReady || !call FrameUtility.isBeaconFromCoord(frame))
     {
+      call Debug.log(LEVEL_IMPORTANT,SyncP_RX_GARBAGE, m_beaconSwapBufferReady, 0, 0);
       return frame;
     } else {
       message_t *tmp = m_beaconBufferPtr;

@@ -21,9 +21,6 @@
 
 /**
  * Alarm62500hzC is the alarm for async 62500hz alarms (virtualized)
- * This is the place where we cheat: since we don't have a clock source
- * running at 62500 Hz, we cast 2 symbols to 1 tick of the 32768
- * clock, which introduces a small error.
  *
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
@@ -39,11 +36,12 @@ generic configuration Alarm62500hz32VirtualizedC()
 }
 implementation
 {
-#warning "Warning: MAC timing is not standard compliant (the symbol clock is based on the 32768 Hz oscillator)!"
-  components new Alarm32khzTo62500hzTransformC();
-  components Alarm32khz32VirtualizedP;
+  components Alarm32khzTo62500hzTransformC, Alarm32khz32VirtualizedP;
+  enum {
+    CLIENT_ID = unique(UQ_ALARM_32KHZ32),
+  };
   
-  Alarm = Alarm32khzTo62500hzTransformC;
-  Alarm32khzTo62500hzTransformC.AlarmFrom -> Alarm32khz32VirtualizedP.Alarm[unique(UQ_ALARM_32KHZ32)];
+  Alarm = Alarm32khzTo62500hzTransformC.Alarm[CLIENT_ID];
+  Alarm32khzTo62500hzTransformC.AlarmFrom[CLIENT_ID] -> Alarm32khz32VirtualizedP.Alarm[CLIENT_ID];
 }
 
