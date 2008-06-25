@@ -8,13 +8,13 @@ This application stresses the operation of the thread based AM commands for
 packet transmission and reception.  To run this application you will need to
 burn it on one mote with NODE_ID 0, and a second mote with NODE_ID 1.  
 
-You can install RadioStress on a mote via the following comand:
+You can install RadioStress on a mote via the following command:
   make <platform> cthreads install.0
   make <platform> cthreads install.1
   
 Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
 
-The applicaiton burned with NODE_ID 0 will be programmed as a Receiver and will
+The application burned with NODE_ID 0 will be programmed as a Receiver and will
 wait for messages from the sender programmed with NODE_ID 1.  In the case of the
 sender, messages with three different AM ids are sent from three different
 threads in an infinite loop, and one of LED0, LED1, and LED2 are toggled upon

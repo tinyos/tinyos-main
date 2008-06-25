@@ -7,7 +7,7 @@ Description:
 Blink is a simple application used to test the basic functionality of
 TOSThreads.
 
-You can install Blink on a mote via the following comand:
+You can install Blink on a mote via the following command:
   make <platform> cthreads install
   
 Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 

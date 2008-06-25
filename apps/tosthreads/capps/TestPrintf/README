@@ -4,11 +4,11 @@ Author: Kevin Klues <klueska@cs.stanford.edu>
 
 Description:
 
-This application tests the operation of the Printf cleint in TOSThreads.  It
-continusouly prints the value of a counter starting at 0, increasing as it
+This application tests the operation of the Printf client in TOSThreads.  It
+continuously prints the value of a counter starting at 0, increasing as it
 prints.
 
-You can install TestPrintf on a mote via the following comand:
+You can install TestPrintf on a mote via the following command:
   make <platform> cthreads install
   
 Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 

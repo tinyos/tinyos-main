@@ -20,7 +20,7 @@ interface in an infinite loop.  Upon successful transmission, LED0 is toggled,
 and the process starts over again.
 
 A successful test will result in LED0 toggling periodically at a rate of
-approxiately 220ms (the time it takes to take a humidty + temperature sensor
+approximately 220ms (the time it takes to take a humidity + temperature sensor
 reading since they share the same hardware and cannot be taken in parallel). 
 
 Additionally, a base station application should be run to verify the reception
