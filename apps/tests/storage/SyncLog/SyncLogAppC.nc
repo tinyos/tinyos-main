@@ -21,6 +21,6 @@ implementation {
   SyncLogC.Timer1 -> Timer1;
   SyncLogC.LogWrite -> LogStorageC;
   SyncLogC.LogRead -> LogStorageC;
-  SyncLogC.AMSend -> SerialActiveMessageC.AMSend[11];
+  SyncLogC.AMSend -> SerialActiveMessageC.AMSend[139];
   SyncLogC.AMControl -> SerialActiveMessageC;
 }

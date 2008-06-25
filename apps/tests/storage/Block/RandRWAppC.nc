@@ -1,4 +1,4 @@
-/* $Id: RandRWAppC.nc,v 1.4 2006-12-12 18:22:52 vlahan Exp $
+/* $Id: RandRWAppC.nc,v 1.5 2008-06-25 01:29:44 konradlorincz Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -24,7 +24,7 @@ implementation {
   MainC.Boot <- RandRWC;
 
   RandRWC.SerialControl -> SerialActiveMessageC;
-  RandRWC.AMSend -> SerialActiveMessageC.AMSend[1];
+  RandRWC.AMSend -> SerialActiveMessageC.AMSend[139];
   RandRWC.BlockRead -> BlockStorageC.BlockRead;
   RandRWC.BlockWrite -> BlockStorageC.BlockWrite;
   RandRWC.Leds -> LedsC;

@@ -8,7 +8,7 @@ abstraction, using the log in linear mode. There must be a
 volumes-<chip>.xml file in this directory describing a 64kB volume
 named SYNCLOG for your flash chip.
 
-A successful test will send serial messages (id 11) with increasing
+A successful test will send serial messages (id 139) with increasing
 sequence numbers (approximately 2 messages every 5 seconds) - the
 easiest way to see these messages is to connect the mote with the
 SyncLog code to your PC and run the java Listen tool:
@@ -23,4 +23,4 @@ Known bugs/limitations:
 
 None.
 
-$Id: README.txt,v 1.2 2007-07-11 20:36:07 idgay Exp $
+$Id: README.txt,v 1.3 2008-06-25 01:29:44 konradlorincz Exp $

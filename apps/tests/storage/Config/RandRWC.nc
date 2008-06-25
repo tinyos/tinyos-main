@@ -1,4 +1,4 @@
-/* $Id: RandRWC.nc,v 1.7 2008-06-23 23:43:37 idgay Exp $
+/* $Id: RandRWC.nc,v 1.8 2008-06-25 01:29:44 konradlorincz Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -41,7 +41,7 @@ implementation {
     uint16_t len;
   } ops[NWRITES];
 
-  message_t reportmsg;
+  message_t reportMsg;
 
 
   void done();
@@ -70,10 +70,10 @@ implementation {
   }
   
   void report(error_t e) {
-    uint8_t *msg = call AMSend.getPayload(&reportmsg, 1);
+    uint8_t *msg = call AMSend.getPayload(&reportMsg, 1);
 
     msg[0] = e;
-    if (call AMSend.send(AM_BROADCAST_ADDR, &reportmsg, 1) != SUCCESS)
+    if (call AMSend.send(AM_BROADCAST_ADDR, &reportMsg, 1) != SUCCESS)
       call Leds.led0On();
   }
 
