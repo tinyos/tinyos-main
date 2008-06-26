@@ -1,12 +1,37 @@
-TestTimer, 4/9/07 
+README for TestTimer, 4/9/07 
+Author/Contact: tinyos-help@millennium.berkeley.edu
 
-This application tests TinyOS millisecond timers
-(TimerMilliC). It is intended for use with TOSSIM,
-to test whether the timer implementation is working
-correctly: its output consists of TOSSIM dbg() 
-statements.
+Description:
 
+This application tests TinyOS millisecond timers (TimerMilliC). It is
+intended for use with TOSSIM, to test whether the timer implementation
+is working correctly: its output consists of TOSSIM dbg() statements.
 The relevant output channel is "TestTimer".
 
-Philip Levis
+To test this application, compile for TOSSIM ('make micaz sim') and run
+script.py ('python script.py'). If the TOSSIM timers are operating
+correctly, then the output should say that timers are good, e.g.:
 
+DEBUG (0): Timer A is good @ 0:9:56.837925167.
+DEBUG (0): Timer B is good @ 0:9:57.356479854.
+DEBUG (0): Timer A is good @ 0:9:57.837925167.
+DEBUG (0): Timer A is good @ 0:9:58.837925167.
+DEBUG (0): Timer B is good @ 0:9:59.648472042.
+DEBUG (0): Timer A is good @ 0:9:59.837925167.
+DEBUG (0): Timer A is good @ 0:10:0.837925167.
+DEBUG (0): Timer A is good @ 0:10:1.837925167.
+DEBUG (0): Timer A is good @ 0:10:2.837925167.
+DEBUG (0): Timer A is good @ 0:10:3.837925167.
+
+If there is a timer bug, then the output will read
+
+DEBUG (0): Timer A is off. Should have fired in X, fired in Y @ Z.
+
+
+Tools:
+
+None.
+
+Known bugs/limitations:
+
+None.
