@@ -6,7 +6,7 @@ Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
 
 Description:
 
-This is a sample application for Deluge T2. The program blinks and send 
+This is a sample application for Deluge T2. The program blinks and sends 
 a serial msg every second.
 
 You can reprogram the whole network (non-basestation motes) by first 
