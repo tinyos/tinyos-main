@@ -1,4 +1,4 @@
-/* $Id: MotePlatformP.nc,v 1.4 2006-12-12 18:23:43 vlahan Exp $
+/* $Id: MotePlatformP.nc,v 1.5 2008-06-26 04:39:08 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -12,7 +12,7 @@
  * 
  * @author David Gay
  */
-module MotePlatformP
+module MotePlatformP @safe()
 {
   provides interface Init as PlatformInit;
   uses interface GeneralIO as SerialIdPin;

@@ -1,4 +1,4 @@
-/* $Id: ArbitratedReadC.nc,v 1.5 2006-12-12 18:23:47 vlahan Exp $
+/* $Id: ArbitratedReadC.nc,v 1.6 2008-06-26 04:39:14 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -20,7 +20,7 @@
  *
  * @author David Gay
  */
-generic module ArbitratedReadC(typedef width_t) {
+generic module ArbitratedReadC(typedef width_t) @safe() {
   provides interface Read<width_t>[uint8_t client];
   uses {
     interface Read<width_t> as Service[uint8_t client];

@@ -35,7 +35,7 @@
  * @author David Gay
  */
 
-module BusyWaitMicroC
+module BusyWaitMicroC @safe()
 {
   provides interface BusyWait<TMicro,uint16_t>;
 }

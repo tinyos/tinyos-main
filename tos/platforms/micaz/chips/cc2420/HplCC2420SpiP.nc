@@ -35,7 +35,7 @@
  * @author Miklos Maroti
  */
 
-module HplCC2420SpiP
+module HplCC2420SpiP @safe()
 {
 	provides interface Resource;
   

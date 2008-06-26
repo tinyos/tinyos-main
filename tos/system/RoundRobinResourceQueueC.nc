@@ -23,13 +23,13 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.5 $
- * @date $Date: 2007-02-08 17:49:22 $
+ * @version $Revision: 1.6 $
+ * @date $Date: 2008-06-26 04:39:15 $
  */
  
 #include "Resource.h"
  
-generic module RoundRobinResourceQueueC(uint8_t size) {
+generic module RoundRobinResourceQueueC(uint8_t size) @safe() {
   provides {
     interface Init;
     interface ResourceQueue as RoundRobinQueue;

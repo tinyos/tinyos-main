@@ -22,7 +22,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
  *  THE POSSIBILITY OF SUCH DAMAGE.
  *
- *  $Id: Atm128GpioCaptureC.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+ *  $Id: Atm128GpioCaptureC.nc,v 1.5 2008-06-26 04:39:06 regehr Exp $
  */
 
 /**
@@ -30,7 +30,7 @@
  *
  * @author Martin Turon, Crossbow <mturon@xbow.com>
  */
-generic module Atm128GpioCaptureC() {
+generic module Atm128GpioCaptureC() @safe() {
 
   provides interface GpioCapture as Capture;
   uses interface HplAtm128Capture<uint16_t> as Atm128Capture;

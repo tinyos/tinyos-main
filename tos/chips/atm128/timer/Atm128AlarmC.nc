@@ -1,4 +1,4 @@
-/// $Id: Atm128AlarmC.nc,v 1.7 2006-12-12 18:23:04 vlahan Exp $
+/// $Id: Atm128AlarmC.nc,v 1.8 2008-06-26 04:39:05 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -41,7 +41,7 @@
 
 generic module Atm128AlarmC(typedef frequency_tag, 
 			    typedef timer_size @integer(),
-			    int mindt)
+			    int mindt) @safe()
 {
   provides interface Alarm<frequency_tag, timer_size> as Alarm @atmostonce();
 

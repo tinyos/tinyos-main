@@ -23,8 +23,8 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-02-04 19:55:28 $ 
+ * $Revision: 1.6 $
+ * $Date: 2008-06-26 04:39:08 $ 
  * ======================================================================== 
  */
  
@@ -45,7 +45,7 @@
  * @author Kevin Klues (klueska@cs.wustl.edu)
  */
  
-generic module AsyncPowerManagerP() {
+generic module AsyncPowerManagerP() @safe() {
   uses {
     interface AsyncStdControl;
 

@@ -1,9 +1,9 @@
-/// $Id: Atm128GpioInterruptC.nc,v 1.4 2006-12-12 18:23:03 vlahan Exp $
+/// $Id: Atm128GpioInterruptC.nc,v 1.5 2008-06-26 04:39:03 regehr Exp $
 
 /**
  * @author Phil Levis
  */
-generic module Atm128GpioInterruptC() {
+generic module Atm128GpioInterruptC() @safe() {
 
   provides interface GpioInterrupt as Interrupt;
   uses interface HplAtm128Interrupt as Atm128Interrupt;

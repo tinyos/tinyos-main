@@ -1,4 +1,4 @@
-/// $Id: HplAtm128InterruptSigP.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+/// $Id: HplAtm128InterruptSigP.nc,v 1.5 2008-06-26 04:39:03 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -29,7 +29,7 @@
  *
  * @author Martin Turon <mturon@xbow.com>
  */
-module HplAtm128InterruptSigP
+module HplAtm128InterruptSigP @safe()
 {
   provides interface HplAtm128InterruptSig as IntSig0;
   provides interface HplAtm128InterruptSig as IntSig1;

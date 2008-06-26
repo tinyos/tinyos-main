@@ -1,4 +1,4 @@
-/* $Id: CC1000ControlP.nc,v 1.4 2006-12-12 18:23:05 vlahan Exp $
+/* $Id: CC1000ControlP.nc,v 1.5 2008-06-26 04:39:06 regehr Exp $
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -38,7 +38,7 @@
  * @author Jaein Jeong
  * @author David Gay
  */
-module CC1000ControlP {
+module CC1000ControlP @safe() {
   provides {
     interface CC1000Control;
   }

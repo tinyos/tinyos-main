@@ -29,7 +29,7 @@
  *          intended use.
  */
 
-generic module Msp430InterruptC() {
+generic module Msp430InterruptC() @safe() {
 
   provides interface GpioInterrupt as Interrupt;
   uses interface HplMsp430Interrupt as HplInterrupt;

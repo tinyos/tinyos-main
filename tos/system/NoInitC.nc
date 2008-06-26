@@ -1,4 +1,4 @@
-/* $Id: NoInitC.nc,v 1.4 2006-12-12 18:23:47 vlahan Exp $
+/* $Id: NoInitC.nc,v 1.5 2008-06-26 04:39:15 regehr Exp $
  * Copyright (c) 2006 Intel Corporation
  * All rights reserved.
  *
@@ -13,7 +13,7 @@
  *
  * @author David Gay <david.e.gay@intel.com>
  */
-module NoInitC 
+module NoInitC @safe()
 {
   provides interface Init;
 }

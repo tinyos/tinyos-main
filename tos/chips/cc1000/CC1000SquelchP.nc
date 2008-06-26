@@ -1,4 +1,4 @@
-/* $Id: CC1000SquelchP.nc,v 1.4 2006-12-12 18:23:05 vlahan Exp $
+/* $Id: CC1000SquelchP.nc,v 1.5 2008-06-26 04:39:06 regehr Exp $
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -37,7 +37,7 @@
  * @author David Gay
  */
   
-module CC1000SquelchP
+module CC1000SquelchP @safe()
 {
   provides {
     interface Init;

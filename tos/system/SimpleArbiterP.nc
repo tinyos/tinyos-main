@@ -46,7 +46,7 @@
  * @author Philip Levis
  */
  
-generic module SimpleArbiterP() {
+generic module SimpleArbiterP() @safe() {
   provides {
     interface Resource[uint8_t id];
     interface ResourceRequested[uint8_t id];

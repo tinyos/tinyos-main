@@ -1,4 +1,4 @@
-/* $Id: AdcP.nc,v 1.5 2007-02-08 17:52:32 idgay Exp $
+/* $Id: AdcP.nc,v 1.6 2008-06-26 04:39:03 regehr Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -43,7 +43,7 @@
  */
 #include "Timer.h"
 
-module AdcP {
+module AdcP @safe() {
   provides {
     interface Read<uint16_t>[uint8_t client];
     interface ReadNow<uint16_t>[uint8_t client];

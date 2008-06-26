@@ -1,4 +1,4 @@
-/// $Id: HplAtm128AdcP.nc,v 1.7 2008-06-11 00:42:13 razvanm Exp $
+/// $Id: HplAtm128AdcP.nc,v 1.8 2008-06-26 04:39:03 regehr Exp $
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
@@ -31,7 +31,7 @@
  * @author David Gay
  */
 
-module HplAtm128AdcP {
+module HplAtm128AdcP @safe() {
   provides interface HplAtm128Adc;
   uses interface McuPowerState;
 }

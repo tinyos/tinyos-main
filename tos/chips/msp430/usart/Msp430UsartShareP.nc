@@ -31,10 +31,10 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.4 $ $Date: 2006-12-12 18:23:11 $
+ * @version $Revision: 1.5 $ $Date: 2008-06-26 04:39:08 $
  */
 
-generic module Msp430UsartShareP() {
+generic module Msp430UsartShareP() @safe() {
   
   provides interface HplMsp430UsartInterrupts as Interrupts[ uint8_t id ];
   provides interface HplMsp430I2CInterrupts as I2CInterrupts[ uint8_t id ];

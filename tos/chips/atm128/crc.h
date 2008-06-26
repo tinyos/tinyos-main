@@ -1,4 +1,4 @@
-// $Id: crc.h,v 1.5 2008-06-11 00:46:23 razvanm Exp $
+// $Id: crc.h,v 1.6 2008-06-26 04:39:00 regehr Exp $
 
 /*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -78,7 +78,7 @@ uint16_t crcTable[256] PROGMEM = {
  * @param b Byte to "add" to the CRC
  * @return New CRC value
  */
-uint16_t crcByte(uint16_t oldCrc, uint8_t byte) __attribute__((noinline))
+uint16_t crcByte(uint16_t oldCrc, uint8_t byte) __attribute__((noinline)) @safe()
 {
 #if 1
   uint16_t *table = crcTable;

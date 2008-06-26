@@ -1,4 +1,4 @@
-/* $Id: CC1000RssiP.nc,v 1.6 2007-02-08 17:52:33 idgay Exp $
+/* $Id: CC1000RssiP.nc,v 1.7 2008-06-26 04:39:06 regehr Exp $
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -41,7 +41,7 @@
  *   the stack.
  */
 
-module CC1000RssiP
+module CC1000RssiP @safe()
 {
   provides {
     interface ReadNow<uint16_t> as Rssi[uint8_t reason];

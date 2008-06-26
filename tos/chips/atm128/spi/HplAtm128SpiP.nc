@@ -1,4 +1,4 @@
-/// $Id: HplAtm128SpiP.nc,v 1.5 2008-04-24 22:31:25 mmaroti Exp $
+/// $Id: HplAtm128SpiP.nc,v 1.6 2008-06-26 04:39:03 regehr Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -53,7 +53,7 @@
 
 #include "Atm128Spi.h"
 
-module HplAtm128SpiP {
+module HplAtm128SpiP @safe() {
   provides interface Atm128Spi as SPI;
   provides interface AsyncStdControl;
   

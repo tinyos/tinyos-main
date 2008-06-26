@@ -1,4 +1,4 @@
-//  $Id: atm128hardware.h,v 1.8 2008-06-11 00:46:23 razvanm Exp $
+//  $Id: atm128hardware.h,v 1.9 2008-06-26 04:39:00 regehr Exp $
 
 /*                                                                     
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
@@ -79,11 +79,11 @@
 #define READ_FLAG(port, flag) ((port) & (flag))
 
 /* Enables interrupts. */
-inline void __nesc_enable_interrupt() {
+inline void __nesc_enable_interrupt() @safe() {
     sei();
 }
 /* Disables all interrupts. */
-inline void __nesc_disable_interrupt() {
+inline void __nesc_disable_interrupt() @safe() {
     cli();
 }
 
@@ -100,7 +100,7 @@ void __nesc_atomic_end(__nesc_atomic_t original_SREG);
 
 /* Saves current interrupt mask state and disables interrupts. */
 inline __nesc_atomic_t 
-__nesc_atomic_start(void) @spontaneous()
+__nesc_atomic_start(void) @spontaneous() @safe()
 {
     __nesc_atomic_t result = SREG;
     __nesc_disable_interrupt();
@@ -110,7 +110,7 @@ __nesc_atomic_start(void) @spontaneous()
 
 /* Restores interrupt mask to original state. */
 inline void 
-__nesc_atomic_end(__nesc_atomic_t original_SREG) @spontaneous()
+__nesc_atomic_end(__nesc_atomic_t original_SREG) @spontaneous() @safe()
 {
   asm volatile("" : : : "memory"); /* ensure atomic section effect visibility */
   SREG = original_SREG;
@@ -131,7 +131,7 @@ enum {
 };
 
 /* Combine function.  */
-mcu_power_t mcombine(mcu_power_t m1, mcu_power_t m2) {
+mcu_power_t mcombine(mcu_power_t m1, mcu_power_t m2) @safe() {
   return (m1 < m2)? m1: m2;
 }
 

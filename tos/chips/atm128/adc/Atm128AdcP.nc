@@ -1,4 +1,4 @@
-/* $Id: Atm128AdcP.nc,v 1.6 2008-06-11 00:42:13 razvanm Exp $
+/* $Id: Atm128AdcP.nc,v 1.7 2008-06-26 04:39:03 regehr Exp $
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -59,7 +59,7 @@
  * @author Hu Siquan <husq@xbow.com>
  */
 
-module Atm128AdcP 
+module Atm128AdcP @safe()
 {
   provides {
     interface Init;

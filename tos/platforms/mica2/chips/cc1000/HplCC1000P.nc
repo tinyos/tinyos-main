@@ -1,4 +1,4 @@
-// $Id: HplCC1000P.nc,v 1.5 2008-06-11 00:46:26 razvanm Exp $
+// $Id: HplCC1000P.nc,v 1.6 2008-06-26 04:39:12 regehr Exp $
 
 /*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -38,7 +38,7 @@
 #include "Atm128Adc.h"
 #include "CC1000Const.h"
 
-module HplCC1000P {
+module HplCC1000P @safe() {
   provides {
     interface Init as PlatformInit;
     interface HplCC1000;

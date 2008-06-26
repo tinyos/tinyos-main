@@ -1,4 +1,4 @@
-/// $Id: Atm128TimerInitC.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+/// $Id: Atm128TimerInitC.nc,v 1.5 2008-06-26 04:39:06 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -32,7 +32,7 @@
  * @author David Gay <david.e.gay@intel.com>
  */
 
-generic module Atm128TimerInitC(typedef timer_size @integer(), uint8_t prescaler)
+generic module Atm128TimerInitC(typedef timer_size @integer(), uint8_t prescaler) @safe()
 {
   provides interface Init @atleastonce();
   uses interface HplAtm128Timer<timer_size> as Timer;

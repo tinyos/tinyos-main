@@ -1,4 +1,4 @@
-// $Id: TinyError.h,v 1.10 2008-06-11 00:46:28 razvanm Exp $
+// $Id: TinyError.h,v 1.11 2008-06-26 04:39:16 regehr Exp $
 /*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -23,7 +23,7 @@
 /**
  * @author Phil Levis
  * @author David Gay
- * Revision:  $Revision: 1.10 $
+ * Revision:  $Revision: 1.11 $
  *
  * Defines global error codes for error_t in TinyOS.
  */
@@ -55,7 +55,7 @@ enum {
 
 typedef uint8_t error_t NESC_COMBINE("ecombine");
 
-error_t ecombine(error_t r1, error_t r2)
+error_t ecombine(error_t r1, error_t r2) @safe()
 /* Returns: r1 if r1 == r2, FAIL otherwise. This is the standard error
      combination function: two successes, or two identical errors are
      preserved, while conflicting errors are represented by FAIL.
