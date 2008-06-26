@@ -37,20 +37,17 @@
  * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  **/
 
-configuration BlinkAppC
-{
-}
+configuration BlinkAppC { }
+
 implementation
 {
   components MainC, BlinkC, LedsC;
-#ifdef DELUGE
-  components DelugeC;
-  DelugeC.Leds -> LedsC;
-#endif
   components new TimerMilliC() as Timer0;
+  components DelugeC;
+
+  DelugeC.Leds -> LedsC;
 
   BlinkC -> MainC.Boot;
-
   BlinkC.Timer0 -> Timer0;
   BlinkC.Leds -> LedsC;
 }

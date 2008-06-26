@@ -9,19 +9,10 @@ Description:
 This is a sample application for Deluge T2. The application is similar 
 to Null, but it includes Deluge T2.
 
-You can reprogram the whole network (non-basestation motes) by first 
-uploading the image to the base station. Then, tell the base station to 
-disseminate the image. Example:
-
-   tos-deluge /dev/ttyUSB0 telosb -d 0
-   
-Finally, after the image has been disseminated, instruct the base 
-station to disseminate the command to reprogram. Example:
-
-   tos-deluge /dev/ttyUSB0 telosb -r 0
-
-For a more detailed discussion on Deluge T2, please refer to the Deluge 
-T2 manual.
+To program a basestation (a mote which can accept images over the
+serial port) you have to add CFLAGS=-DDELUGE_BASESTATION to the make
+command. For telosb this might look like this:
+	 CFLAGS=-DDELUGE_BASESTATION make telosb install bsl,/dev/ttyUSB0
 
 Prerequisites:
 

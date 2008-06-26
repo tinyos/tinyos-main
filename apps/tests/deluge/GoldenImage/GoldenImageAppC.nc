@@ -24,7 +24,7 @@
  * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-configuration GoldenImageC {}
+configuration GoldenImageAppC {}
 
 implementation
 {
