@@ -1,4 +1,4 @@
-// $Id: Atm128AlarmAsyncP.nc,v 1.7 2007-06-20 23:49:02 scipio Exp $
+// $Id: Atm128AlarmAsyncP.nc,v 1.8 2008-06-26 03:38:27 regehr Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -20,7 +20,7 @@
  *
  * @author David Gay
  */
-generic module Atm128AlarmAsyncP(typedef precision, int divider) {
+generic module Atm128AlarmAsyncP(typedef precision, int divider) @safe() {
   provides {
     interface Init;
     interface Alarm<precision, uint32_t>;

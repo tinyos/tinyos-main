@@ -1,5 +1,5 @@
 
-module Msp430TimerCommonP
+module Msp430TimerCommonP @safe()
 {
   provides interface Msp430TimerEvent as VectorTimerA0;
   provides interface Msp430TimerEvent as VectorTimerA1;

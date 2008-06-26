@@ -38,7 +38,7 @@
  *
  */
 
-module McuSleepC {
+module McuSleepC @safe() {
   provides {
     interface McuSleep;
     interface McuPowerState;

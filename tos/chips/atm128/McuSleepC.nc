@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.8 2007-04-08 01:17:12 scipio Exp $
+/// $Id: McuSleepC.nc,v 1.9 2008-06-26 03:38:27 regehr Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -29,7 +29,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.8 2007-04-08 01:17:12 scipio Exp $
+ *  $Id: McuSleepC.nc,v 1.9 2008-06-26 03:38:27 regehr Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -37,7 +37,7 @@
  * @date   October 26, 2005
  */
 
-module McuSleepC {
+module McuSleepC @safe() {
   provides {
     interface McuSleep;
     interface McuPowerState;

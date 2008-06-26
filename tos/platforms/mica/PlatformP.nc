@@ -1,4 +1,4 @@
-/// $Id: PlatformP.nc,v 1.4 2006-12-12 18:23:42 vlahan Exp $
+/// $Id: PlatformP.nc,v 1.5 2008-06-26 03:38:27 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -30,7 +30,7 @@
 
 #include "hardware.h"
 
-module PlatformP
+module PlatformP @safe()
 {
   provides interface Init;
   uses interface Init as MoteInit;

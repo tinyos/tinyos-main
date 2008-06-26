@@ -1,4 +1,4 @@
-// $Id: RealMainP.nc,v 1.7 2008-06-11 00:46:27 razvanm Exp $
+// $Id: RealMainP.nc,v 1.8 2008-06-26 03:38:27 regehr Exp $
 
 /*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: RealMainP.nc,v 1.7 2008-06-11 00:46:27 razvanm Exp $
+ * Date last modified:  $Id: RealMainP.nc,v 1.8 2008-06-26 03:38:27 regehr Exp $
  *
  */
 
@@ -42,7 +42,7 @@
  * @date   January 17 2005
  */
 
-module RealMainP {
+module RealMainP @safe() {
   provides interface Boot;
   uses interface Scheduler;
   uses interface Init as PlatformInit;

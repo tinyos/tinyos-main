@@ -1,4 +1,4 @@
-// $Id: MeasureClockC.nc,v 1.4 2006-12-12 18:23:42 vlahan Exp $
+// $Id: MeasureClockC.nc,v 1.5 2008-06-26 03:38:27 regehr Exp $
 /*
  * Copyright (c) 2006 Intel Corporation
  * All rights reserved.
@@ -19,7 +19,7 @@
  * @author David Gay
  */
 
-module MeasureClockC {
+module MeasureClockC @safe() {
   provides {
     /**
      * This code MUST be called from PlatformP only, hence the exactlyonce.

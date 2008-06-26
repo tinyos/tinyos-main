@@ -1,4 +1,4 @@
-// $Id: BlinkC.nc,v 1.4 2006-12-12 18:22:48 vlahan Exp $
+// $Id: BlinkC.nc,v 1.5 2008-06-26 03:38:26 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -36,7 +36,7 @@
 
 #include "Timer.h"
 
-module BlinkC
+module BlinkC @safe()
 {
   uses interface Timer<TMilli> as Timer0;
   uses interface Timer<TMilli> as Timer1;

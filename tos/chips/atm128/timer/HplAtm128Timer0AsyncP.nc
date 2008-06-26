@@ -1,4 +1,4 @@
-/// $Id: HplAtm128Timer0AsyncP.nc,v 1.3 2007-03-29 21:29:33 idgay Exp $
+/// $Id: HplAtm128Timer0AsyncP.nc,v 1.4 2008-06-26 03:38:27 regehr Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -34,7 +34,7 @@
 
 #include <Atm128Timer.h>
 
-module HplAtm128Timer0AsyncP {
+module HplAtm128Timer0AsyncP @safe() {
   provides {
     // 8-bit Timers
     interface HplAtm128Timer<uint8_t>   as Timer;
