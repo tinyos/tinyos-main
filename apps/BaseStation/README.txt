@@ -50,7 +50,8 @@ Tools:
 
 tools/java/net/tinyos/sf/SerialForwarder.  
 
-See doc/serialcomm/index.html for more information using these tools.
+See the TinyOS Tutorial on Mote-PC serial communication and
+SerialForwarder on docs.tinyos.net for more details.
 
 Known bugs/limitations:
 
