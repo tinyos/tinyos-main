@@ -222,7 +222,7 @@ implementation
 
         // clear table if the received entry's been inconsistent for some time
         timeError = msg->localTime;
-        call GlobalTime.local2Global(&timeError);
+        call GlobalTime.local2Global((uint32_t*)(&timeError));
         timeError -= msg->globalTime;
         if( (is_synced() == SUCCESS) &&
             (timeError > ENTRY_THROWOUT_LIMIT || timeError < -ENTRY_THROWOUT_LIMIT))
