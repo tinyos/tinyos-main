@@ -29,12 +29,12 @@ configuration TestFTSPC {
 }
 
 implementation {
-	components MainC, TimeSyncC;
+  components MainC, TimeSyncC;
 
   MainC.SoftwareInit -> TimeSyncC;
   TimeSyncC.Boot -> MainC;
 
-	components TestFTSPAppC as App;
+  components TestFTSPAppC as App;
   App.Boot -> MainC;
 
   components ActiveMessageC;

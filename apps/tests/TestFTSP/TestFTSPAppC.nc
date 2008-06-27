@@ -57,13 +57,13 @@ implementation
             radio_count_msg_t* rcm = (radio_count_msg_t*)call Packet.getPayload(msgPtr, sizeof(radio_count_msg_t));
             test_ftsp_msg_t* report = (test_ftsp_msg_t*)call Packet.getPayload(&msg, sizeof(test_ftsp_msg_t));
 
-            uint32_t rx_timestamp = call PacketTimeStamp.timestamp(msgPtr);
+            uint32_t rxTimestamp = call PacketTimeStamp.timestamp(msgPtr);
 
             report->src_addr = TOS_NODE_ID;
             report->counter = rcm->counter;
-            report->local_rx_timestamp = rx_timestamp;
-            report->is_synced = call GlobalTime.local2Global(&rx_timestamp);
-            report->global_rx_timestamp = rx_timestamp;
+            report->local_rx_timestamp = rxTimestamp;
+            report->is_synced = call GlobalTime.local2Global(&rxTimestamp);
+            report->global_rx_timestamp = rxTimestamp;
             report->skew_times_1000000 = (uint32_t)call TimeSyncInfo.getSkew()*1000000UL;
             report->ftsp_root_addr = call TimeSyncInfo.getRootID();
             report->ftsp_seq = call TimeSyncInfo.getSeqNum();
