@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.11 $
- * $Date: 2008-06-23 20:25:15 $
+ * $Revision: 1.12 $
+ * $Date: 2008-06-27 18:05:23 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -81,7 +81,6 @@ implementation
   
   uint16_t resultBufferLength;    /* length of buffer */
   uint16_t *COUNT_NOK(resultBufferLength) resultBufferStart;
-  uint16_t *BND_NOK(resultBufferStart, resultBufferStart+resultBufferLength) resultBuffer;         /* conversion results */
   uint16_t resultBufferIndex;     /* offset into buffer */
   uint8_t numChannels;            /* number of channels (multi-channel conversion) */
   uint8_t clientID;               /* ID of client that called getData() */
@@ -296,8 +295,9 @@ implementation
         ctl0.sht1 = config->sht;
 
         state = MULTIPLE_DATA;
-        resultBuffer = buf;
+	resultBufferStart = NULL;
         resultBufferLength = length;
+        resultBufferStart = buf;
         resultBufferIndex = 0;
         call HplAdc12.setCtl0(ctl0);
         call HplAdc12.setCtl1(ctl1);
@@ -352,8 +352,9 @@ implementation
         ctl0.sht1 = config->sht;
 
         state = MULTIPLE_DATA_REPEAT;
-        resultBuffer = buf;
+	resultBufferStart = NULL;
         resultBufferLength = length;
+        resultBufferStart = buf;
         resultBufferIndex = 0;            
         
         call HplAdc12.setCtl0(ctl0);
@@ -378,7 +379,7 @@ implementation
   {
     atomic {
       if (call ADCArbiterInfo.userId() == id){
-        if (state & MULTIPLE_DATA_REPEAT && !resultBuffer)
+        if (state & MULTIPLE_DATA_REPEAT && !resultBufferStart)
           return EINVAL;
         if (state & ADC_BUSY)
           return EBUSY;
@@ -431,8 +432,9 @@ implementation
         ctl0.sht1 = config->sht;
 
         state = MULTI_CHANNEL;
-        resultBuffer = buf;
+	resultBufferStart = NULL;
         resultBufferLength = numSamples;
+        resultBufferStart = buf;
         resultBufferIndex = 0;
         numChannels = numMemctl+1;
         call HplAdc12.setCtl0(ctl0);
@@ -461,7 +463,7 @@ implementation
     uint8_t i;
     atomic {
       if (call ADCArbiterInfo.userId() == id){
-        if (!resultBuffer)
+        if (!resultBufferStart)
           return EINVAL;
         if (state & ADC_BUSY)
           return EBUSY;
@@ -522,6 +524,8 @@ implementation
   async event void HplAdc12.conversionDone(uint16_t iv)
   {
     bool overflow = FALSE;
+    uint16_t *resultBuffer;
+
     if (iv <= 4){ // check for overflow
       if (iv == 2)
         signal Overflow.memOverflow[clientID]();
@@ -550,7 +554,7 @@ implementation
       case MULTI_CHANNEL:
         {
           uint16_t i = 0, k;
-          resultBufferStart = resultBuffer;
+          resultBuffer = resultBufferStart;
           do {
             *resultBuffer++ = call HplAdc12.getMem(i);
           } while (++i < numChannels);
@@ -568,7 +572,7 @@ implementation
       case MULTIPLE_DATA:
         {
           uint16_t i = 0, length, k;
-          resultBufferStart = resultBuffer;
+          resultBuffer = resultBufferStart + resultBufferIndex;
           if (resultBufferLength - resultBufferIndex > 16) 
             length = 16;
           else
@@ -597,15 +601,15 @@ implementation
       case MULTIPLE_DATA_REPEAT:
         {
           uint8_t i = 0;
-          resultBufferStart = resultBuffer;
+          resultBuffer = resultBufferStart;
           do {
             *resultBuffer++ = call HplAdc12.getMem(i);
           } while (++i < resultBufferLength);
           
-          resultBuffer = signal SingleChannel.multipleDataReady[clientID](
+          resultBufferStart = signal SingleChannel.multipleDataReady[clientID](
               resultBuffer-resultBufferLength,
               overflow ? 0 : resultBufferLength);
-          if (!resultBuffer)  
+          if (!resultBufferStart)  
             stopConversion();
           break;
         }
@@ -619,7 +623,7 @@ implementation
   }
    
   default async event uint16_t* SingleChannel.multipleDataReady[uint8_t id](
-      uint16_t *buf, uint16_t length)
+      uint16_t *buf, uint16_t numSamples)
   {
     return 0;
   }

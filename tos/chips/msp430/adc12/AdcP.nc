@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2008-06-23 20:25:15 $
+ * $Revision: 1.8 $
+ * $Date: 2008-06-27 18:05:23 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -159,7 +159,7 @@ implementation
   }
 
   async event uint16_t* SingleChannel.multipleDataReady[uint8_t client](
-      uint16_t * COUNT_NOK(length) buf, uint16_t length)
+      uint16_t *buf, uint16_t numSamples)
   {
     // error !
     return 0;

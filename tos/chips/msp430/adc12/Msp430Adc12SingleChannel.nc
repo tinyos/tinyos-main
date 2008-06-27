@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2008-06-04 05:31:15 $
+ * $Revision: 1.6 $
+ * $Date: 2008-06-27 18:05:23 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -224,7 +224,7 @@ interface Msp430Adc12SingleChannel
    * <code>numSamples</code> entries. The return value is ignored if the ADC
    * was configured with <code>configureMultiple()</code>.
    */    
-  async event uint16_t * ONE_NOK multipleDataReady(uint16_t *COUNT(numSamples) buffer, uint16_t numSamples); 
+  async event uint16_t * COUNT_NOK(numSamples) multipleDataReady(uint16_t *COUNT(numSamples) buffer, uint16_t numSamples); 
 
 }
 
