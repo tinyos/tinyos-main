@@ -40,7 +40,7 @@ typedef nx_struct test_ftsp_msg
 
 enum
 {
-	AM_TEST_FTSP_MSG = 9
+	AM_TEST_FTSP_MSG = 137
 };
 
 #endif
