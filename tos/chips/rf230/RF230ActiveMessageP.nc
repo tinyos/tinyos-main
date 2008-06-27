@@ -184,7 +184,7 @@ implementation
 	enum
 	{
 		TRAFFIC_UPDATE_PERIOD = 100,	// in milliseconds
-		TRAFFIC_MAX_BYTES = (uint16_t)(TRAFFIC_UPDATE_PERIOD * 1000.0 / 32),	// 3125
+		TRAFFIC_MAX_BYTES = (uint16_t)(TRAFFIC_UPDATE_PERIOD * 1000UL / 32),	// 3125
 	};
 
 	async command uint16_t TrafficMonitorConfig.getUpdatePeriod()

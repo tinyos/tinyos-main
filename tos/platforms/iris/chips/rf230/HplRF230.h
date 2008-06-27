@@ -52,10 +52,16 @@ enum
  */
 typedef TOne TRF230;
 
+
+/**
+ * The number of alarm ticks per one second (921600)
+ */
+#define RF230_ALARM_SEC	((7372800UL / MHZ / 32) * (1 << MICA_DIVIDE_ONE_FOR_32KHZ_LOG2))
+
 /**
  * The number of alarm ticks per one microsecond (0.9216)
  */
-#define RF230_ALARM_MICROSEC	((7.3728 / MHZ / 32.0) * (1 << MICA_DIVIDE_ONE_FOR_32KHZ_LOG2))
+#define RF230_ALARM_MICROSEC	(RF230_ALARM_SEC / 1000000.0)
 
 /* This is the default value of the TX_PWR field of the PHY_TX_PWR register. */
 #ifndef RF230_DEF_RFPOWER
