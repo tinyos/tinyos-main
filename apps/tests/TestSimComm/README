@@ -29,5 +29,30 @@ quality links (-60 dBm) to node 2, but the reverse links (2 to 1 and
 2 to 3) are much worse (-80 dBm). You should see packet deliveries
 like test-equal.py but few acknowledgements.
 
+The ./run script runs all the three tests and counts the number of
+ACKed and non-ACKed send packets. The output look like this:
+
+test-asym.log
+           ACK           NOACK   total
+         1 4930          35923   40853
+         3 4983          35870   40853
+test-equal.log
+           ACK           NOACK   total
+         1 21197         19666   40863
+         3 21320         19543   40863
+test-unequal.log
+           ACK           NOACK   total
+         1 27619         12966   40585
+         3 21040         19545   40585
+
+This output shows several this:
+- the number of ACKs in the asymmetric links case is much less than in
+  the equal case which proves the fact that the reverse links are indeed
+  poor.
+- in the unequal case the number on ACKs for node 1 is higher than
+  node 3 which is expected because node 1 has a better link to 2 than 3.
+- in the equal case both nodes perform similar, each of them loosing
+  about half of their packets.
+
 Philip Levis
 

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+make micaz sim
+
+for t in test*.py
+do
+ echo Running $t...
+ python $t > `basename $t .py`.log
+done
+
+make clean
+
+for l in test*.log
+do
+    echo $l
+    echo -e '\t   ACK \t\t NOACK \t total'
+    for i in 1 3
+    do
+	N1=`grep 'Send completed' $l | grep ' ACK' | grep "($i)" | wc -l`
+	N2=`grep 'Send completed' $l | grep 'NOACK' | grep "($i)" | wc -l`
+	echo -e "\t $i $N1 \t $N2 \t" `expr $N1 + $N2`
+    done
+done
+
