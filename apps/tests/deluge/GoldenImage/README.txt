@@ -20,4 +20,4 @@ Python 2.4 with pySerial
 
 References:
 
-The Deluge T2 manual is available under $TOS_DIR/doc/html/.
+The Deluge T2 wiki page from http://docs.tinyos.net/
