@@ -1,4 +1,4 @@
-COMPONENT=TestDIPC
+COMPONENT=TestDipC
 BUILD_EXTRA_DEPS = DipMsg.py DipDataMsg.py DipMsg.class DipDataMsg.class DipData.class DipInject.class
 CFLAGS += -I$(TOSDIR)/lib/net
 CFLAGS += -I$(TOSDIR)/lib/net/dip -I$(TOSDIR)/lib/net/dip/interfaces

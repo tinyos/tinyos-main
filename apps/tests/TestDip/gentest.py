@@ -12,8 +12,8 @@ newitems = sys.argv[2]
 
 print "Generating Configurations"
 
-fin = open("TestDIPC-Master.nc", "r")
-fout = open("TestDIPC.nc", "w")
+fin = open("TestDipC-Master.nc", "r")
+fout = open("TestDipC.nc", "w")
 lines = fin.readlines()
 for line in lines:
     if(line.find("... DISSEMINATORS") != -1):
@@ -21,9 +21,9 @@ for line in lines:
             fout.write("  components new DisseminatorC(uint16_t, ")
             fout.write(str(i))
             fout.write(") as Dissem" + str(i) + ";\n")
-            fout.write("  TestDIPP.DisseminationUpdate" + str(i))
+            fout.write("  TestDipP.DisseminationUpdate" + str(i))
             fout.write(" -> Dissem" + str(i) + ";\n")
-            fout.write("  TestDIPP.DisseminationValue" + str(i))
+            fout.write("  TestDipP.DisseminationValue" + str(i))
             fout.write(" -> Dissem" + str(i) + ";\n\n")
     else:
         fout.write(line)
@@ -33,8 +33,8 @@ fout.close()
 
 print "Generating Modules"
 
-fin = open("TestDIPP-Master.nc", "r")
-fout = open("TestDIPP.nc", "w")
+fin = open("TestDipP-Master.nc", "r")
+fout = open("TestDipP.nc", "w")
 lines = fin.readlines()
 for line in lines:
     if(line.find("... INTERFACES") != -1):
@@ -44,7 +44,7 @@ for line in lines:
             fout.write("  uses interface DisseminationValue<uint16_t> as DisseminationValue")
             fout.write(str(i) + ";\n\n")
     elif(line.find("... NEWCOUNT") != -1):
-        fout.write("  uint8_t newcount = " + str(newitems) + ";\n")
+        fout.write("  uint8_t newCount = " + str(newitems) + ";\n")
     elif(line.find("... CHANGES") != -1):
         for i in random.sample(range(1, int(items)+1), int(newitems)):
             fout.write("      call DisseminationUpdate" + str(i) + ".change(&data);\n")

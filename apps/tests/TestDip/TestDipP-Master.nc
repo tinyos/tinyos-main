@@ -1,5 +1,5 @@
 
-module TestDIPP {
+module TestDipP {
   uses interface Leds;
   uses interface StdControl;
 
@@ -22,13 +22,13 @@ implementation {
     nx_uint8_t isOk;
   } dip_test_msg_t;
 
-  message_t m_test;
+  message_t testMsg;
 
-  uint8_t okbit = 1;
+  uint8_t okBit = 1;
   uint16_t data;
   uint8_t count = 0;
   /*
-  uint8_t newcount = N;
+  uint8_t newCount = N;
   */
   // ... NEWCOUNT
 
@@ -38,7 +38,7 @@ implementation {
     call StdControl.start();
     if(TOS_NODE_ID == 0) {
       data = 0xBEEF;
-      dbg("TestDIPP","Updating data items\n");
+      dbg("TestDipP","Updating data items\n");
       /*
       call DisseminationUpdate1.change(&data);
       */
@@ -52,7 +52,7 @@ implementation {
 
   event void Boot.booted() {
     call SerialControl.start();
-    dbg("TestDIPP", "Booted at %s\n", sim_time_string());
+    dbg("TestDipP", "Booted at %s\n", sim_time_string());
   }
   /*
   event void DisseminationValue1.changed() {
@@ -65,22 +65,22 @@ implementation {
   // ... EVENTS
 
   void bookkeep() {
-    dip_test_msg_t* testmsg;
+    dip_test_msg_t* dipTestMsgPtr;
 
-    if(count < newcount) {
+    if(count < newCount) {
       count++;
     }
     dbg("TestDIPP", "Got an update, %u complete now at %s\n", count, sim_time_string());
     call Leds.led0Toggle();
 
-    testmsg = (dip_test_msg_t*) call SerialSend.getPayload(&m_test, 0);
-    testmsg->id = TOS_NODE_ID;
-    testmsg->count = count;
-    testmsg->isOk = okbit;
-    call SerialSend.send(0, &m_test, sizeof(dip_test_msg_t));
+    dipTestMsgPtr = (dip_test_msg_t*) call SerialSend.getPayload(&testMsg, 0);
+    dipTestMsgPtr->id = TOS_NODE_ID;
+    dipTestMsgPtr->count = count;
+    dipTestMsgPtr->isOk = okBit;
+    call SerialSend.send(0, &testMsg, sizeof(dip_test_msg_t));
     
 
-    if(newcount == count) {
+    if(newCount == count) {
       call Leds.set(7);
     }
     

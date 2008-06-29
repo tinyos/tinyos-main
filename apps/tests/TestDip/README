@@ -1,12 +1,12 @@
 
-Title: TestDIP Application
+Title: TestDip Application
 Author: Kaisen Lin
 
 1. SETTING UP THE TEST
 
 You need to first generate the code for compilation. The gentest.py
-script reads in the Master files and creates TestDIPC.nc (the
-configuration) and TESTDIPP.nc (the module). It takes two parameters,
+script reads in the Master files and creates TestDipC.nc (the
+configuration) and TestDipP.nc (the module). It takes two parameters,
 the total number of items and the number of new items. The items that
 are random are chosen randomly.
 
