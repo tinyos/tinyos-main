@@ -13,13 +13,13 @@ sub decode ($$) {
 }
 
 sub usage() {
-    print "Usage: tos-decode-flid flid flid-file\n";
+    print "Usage: tos-decode-flid flid-file flid\n";
     exit 2;
 }
 
 sub make_flid () {
 
-    my $flid = $ARGV[0];
+    my $flid = $ARGV[1];
     die "expected 8 characters" if (length($flid) != 8);
     
     my $flidstr =
@@ -34,7 +34,7 @@ usage() if (scalar(@ARGV)!=2);
 
 my $flidstr = make_flid();
 
-my $fn = $ARGV[1];
+my $fn = $ARGV[0];
 my $found = 0;
 
 if (defined ($fn)) {
