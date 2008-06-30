@@ -42,7 +42,7 @@ implementation {
   components new BlockingPhotoC();
   components new BlockingTempC();
   components BlockingSerialActiveMessageC;
-  components new BlockingSerialAMSenderC(100);
+  components new BlockingSerialAMSenderC(128);
 
   MainC.Boot <- TestBasicsbSensorsC;
   TestBasicsbSensorsC.MainThread -> MainThread;
