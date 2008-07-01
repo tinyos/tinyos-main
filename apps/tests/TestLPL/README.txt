@@ -6,8 +6,9 @@ Description:
 A simple low-power-listening test app, which cycles through different
 low-power-listening settings every ~32s, repeating every ~256s. 
 
-This application currently runs on motes using the CC1000 and CC2420
-radios. To compile for motes with CC2420 radios, you must do:
+This application currently runs on motes using the CC1000, CC2420 and
+RF230 radios. To compile for motes with CC2420 or RF230 radios, you
+must do:
   env CFLAGS="-DLOW_POWER_LISTENING" make <platform>
 
 This application blinks LED 0 every time it sends a message, and toggles
