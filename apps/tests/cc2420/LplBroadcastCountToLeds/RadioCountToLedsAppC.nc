@@ -1,4 +1,4 @@
-// $Id: RadioCountToLedsAppC.nc,v 1.2 2008-06-24 18:05:48 idgay Exp $
+// $Id: RadioCountToLedsAppC.nc,v 1.3 2008-07-01 23:01:00 konradlorincz Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -49,7 +49,7 @@ implementation {
 
 #if defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT)
   components CC1000ActiveMessageC as LplC;
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB)
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER)
   components CC2420ActiveMessageC as LplC;
 #else
 #error "LPL testing not supported on this platform"

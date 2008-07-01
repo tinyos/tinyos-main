@@ -48,7 +48,7 @@ implementation {
 
 #if defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT)
   components CC1000ActiveMessageC as Lpl;
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB)
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER)
   components CC2420ActiveMessageC as Lpl;
 #else
 #error "LPL testing not supported on this platform"
