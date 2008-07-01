@@ -1,0 +1,33 @@
+.TH tos-decode-flid 1 "Jun 30, 2008"
+.LO 1
+.SH NAME
+
+tos-decode-flid - Turn a base-4 Safe TinyOS error code into a human-readable error message
+.SH SYNOPSIS
+
+\fBtos-decode-flid\fR flid-file flid
+.SH DESCRIPTION
+
+By default, a mote that encounters a safety violation repeatedly
+blinks a failure code (also called flid, or fault-location identifier)
+on its LEDs.  \fBtos-decode-flid\fR can be used to turn this code into
+a readable error message.
+
+A flid is a sequence of 8 digits each in the range 0-3. To read this
+code, wait for the mote's LEDs to "roll," or rapidly blink several
+times in a 1-2-3 sequence. Next, some number of LEDs will be lit--
+write down this number. Usually the first digit or two of the flid
+will be zero. Following each digit of the flid, all three LEDs will be
+very briefly illuminated to serve as a separator. After all 8 digits
+have been presented the LEDs will roll and then the FLID is
+repeated. Once you have the sequence of 8 digits, it can be decoded
+using tos-decode-flid.
+
+The flid-file argument specifies a file that helps the script map from
+the flid to an error message.  The flid file is create as a side
+effect of compiling a safe application; it is placed into the
+application's build directory and is named flids.txt.
+
+
+
+
