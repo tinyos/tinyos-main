@@ -28,12 +28,12 @@
  * data actually get sent out over the serial line.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.8 $
- * @date $Date: 2008-06-23 21:05:13 $
+ * @version $Revision: 1.9 $
+ * @date $Date: 2008-07-02 18:45:40 $
  */
 
 #include "printf.h"
-module TestPrintfC {
+module TestPrintfC @safe() {
   uses {
     interface Boot;
   }
