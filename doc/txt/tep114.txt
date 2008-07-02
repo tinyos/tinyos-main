@@ -10,8 +10,8 @@ SIDs: Source and Sink Independent Drivers
 :Author: Gilman Tolle, Philip Levis, and David Gay
 
 :Draft-Created: 30-Oct-2005
-:Draft-Version: $Revision: 1.9 $
-:Draft-Modified: $Date: 2008-06-10 17:45:28 $
+:Draft-Version: $Revision: 1.10 $
+:Draft-Modified: $Date: 2008-07-02 19:31:57 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -284,12 +284,12 @@ connect a sensor into a more general system.
 ====================================================================
 
 | Gilman Tolle
-| 2168 Shattuck Ave.
-| Arched Rock Corporation
-| Berkeley, CA 94704
+| 501 2nd St. Ste 410
+| Arch Rock Corporation
+| San Francisco, CA 94107
 |
-| phone - +1 510 981 8714
-| email - gtolle@archedrock.com
+| phone - +1 415 692 0828
+| email - gtolle@archrock.com
 |
 |
 | Philip Levis
