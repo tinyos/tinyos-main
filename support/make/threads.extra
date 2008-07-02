@@ -35,6 +35,9 @@ THREADS_TELOS_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/telosa
 THREADS_MICA2_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/mica2/chips/cc1000
 
 #Add CFLAGS for supported platforms
+ifneq ($(filter telos telosa telosb tmote eyesIFX eyesIFXv2 shimmer,$(MAKECMDGOALS)),) 
+  CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+endif
 ifneq ($(filter telos telosa telosb tmote,$(MAKECMDGOALS)),) 
   CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
   CFLAGS += $(THREADS_TELOS_INCLUDE_DIRS)
