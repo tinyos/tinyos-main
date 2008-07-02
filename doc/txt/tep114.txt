@@ -6,12 +6,8 @@ SIDs: Source and Sink Independent Drivers
 :Group: Core Working Group
 :Type: Documentary 
 :Status: Final
+:TinyOS-Version: 2.x
 :Author: Gilman Tolle, Philip Levis, and David Gay
-
-:Draft-Created: 30-Oct-2005
-:Draft-Version: $Revision: 1.11 $
-:Draft-Modified: $Date: 2008-07-02 19:38:46 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
