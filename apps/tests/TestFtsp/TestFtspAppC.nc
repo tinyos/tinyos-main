@@ -25,63 +25,29 @@
 #include "TestFtsp.h"
 #include "RadioCountToLeds.h"
 
-module TestFtspAppC
-{
-    uses
-    {
-        interface GlobalTime<TMilli>;
-        interface TimeSyncInfo;
-        interface Receive;
-        interface AMSend;
-        interface Packet;
-        interface Leds;
-        interface PacketTimeStamp<TMilli,uint32_t>;
-        interface Boot;
-        interface SplitControl as RadioControl;
-    }
+configuration TestFtspAppC {
 }
 
-implementation
-{
-    message_t msg;
-    bool locked = FALSE;
+implementation {
+  components MainC, TimeSyncC;
 
-    event void Boot.booted() {
-        call RadioControl.start();
-    }
+  MainC.SoftwareInit -> TimeSyncC;
+  TimeSyncC.Boot -> MainC;
 
-    event message_t* Receive.receive(message_t* msgPtr, void* payload, uint8_t len)
-    {
-        call Leds.led0Toggle();
-        if (!locked && call PacketTimeStamp.isValid(msgPtr)) {
-            radio_count_msg_t* rcm = (radio_count_msg_t*)call Packet.getPayload(msgPtr, sizeof(radio_count_msg_t));
-            test_ftsp_msg_t* report = (test_ftsp_msg_t*)call Packet.getPayload(&msg, sizeof(test_ftsp_msg_t));
+  components TestFtspC as App;
+  App.Boot -> MainC;
 
-            uint32_t rxTimestamp = call PacketTimeStamp.timestamp(msgPtr);
+  components ActiveMessageC;
+  App.RadioControl -> ActiveMessageC;
+  App.Receive -> ActiveMessageC.Receive[AM_RADIO_COUNT_MSG];
+  App.AMSend -> ActiveMessageC.AMSend[AM_TEST_FTSP_MSG];
+  App.Packet -> ActiveMessageC;
+  App.PacketTimeStamp -> ActiveMessageC;
 
-            report->src_addr = TOS_NODE_ID;
-            report->counter = rcm->counter;
-            report->local_rx_timestamp = rxTimestamp;
-            report->is_synced = call GlobalTime.local2Global(&rxTimestamp);
-            report->global_rx_timestamp = rxTimestamp;
-            report->skew_times_1000000 = (uint32_t)call TimeSyncInfo.getSkew()*1000000UL;
-            report->ftsp_root_addr = call TimeSyncInfo.getRootID();
-            report->ftsp_seq = call TimeSyncInfo.getSeqNum();
-            report->ftsp_table_entries = call TimeSyncInfo.getNumEntries();
+  components LedsC;
 
-            if (call AMSend.send(AM_BROADCAST_ADDR, &msg, sizeof(test_ftsp_msg_t)) == SUCCESS) {
-              locked = TRUE;
-            }
-        }
+  App.GlobalTime -> TimeSyncC;
+  App.TimeSyncInfo -> TimeSyncC;
+  App.Leds -> LedsC;
 
-        return msgPtr;
-    }
-
-    event void AMSend.sendDone(message_t* ptr, error_t success) {
-        locked = FALSE;
-        return;
-    }
-
-    event void RadioControl.startDone(error_t err) {}
-    event void RadioControl.stopDone(error_t error){}
 }
