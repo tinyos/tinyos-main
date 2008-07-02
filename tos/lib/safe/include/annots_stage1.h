@@ -3,9 +3,14 @@
 #ifndef ANNOTS_STAGE1_INCLUDED
 #define ANNOTS_STAGE1_INCLUDED
 
-// define away two obsolete annotations
+// JDR temporary code: define away two obsolete annotations
 #define BOUND(x,y)
 #define SINGLE
+
+// JDR temporary code: define away NTS in unsafe mode
+#ifndef SAFE_TINYOS
+#define NTS
+#endif
 
 #if NESC < 130 
 
