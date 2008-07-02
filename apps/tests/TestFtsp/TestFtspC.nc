@@ -22,10 +22,10 @@
  * Ported to T2: 3/17/08 by Brano Kusy (branislav.kusy@gmail.com)
  */
 
-#include "TestFTSP.h"
+#include "TestFtsp.h"
 #include "RadioCountToLeds.h"
 
-configuration TestFTSPC {
+configuration TestFtspC {
 }
 
 implementation {
@@ -34,7 +34,7 @@ implementation {
   MainC.SoftwareInit -> TimeSyncC;
   TimeSyncC.Boot -> MainC;
 
-  components TestFTSPAppC as App;
+  components TestFtspAppC as App;
   App.Boot -> MainC;
 
   components ActiveMessageC;

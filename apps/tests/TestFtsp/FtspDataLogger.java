@@ -37,7 +37,7 @@ import java.io.PrintStream;
 import net.tinyos.message.*;
 import net.tinyos.util.*;
 
-public class FTSPDataLogger implements MessageListener {
+public class FtspDataLogger implements MessageListener {
         public class RunWhenShuttingDown extends Thread {
                 public void run()
                 {
@@ -53,7 +53,7 @@ public class FTSPDataLogger implements MessageListener {
         {
                 try {
                         mote = new MoteIF(PrintStreamMessenger.err);
-                        mote.registerListener(new TestFTSPMsg(), this);
+                        mote.registerListener(new TestFtspMsg(), this);
                         System.out.println("Connection ok!");
                 }
                 catch(Exception e) {
@@ -63,7 +63,7 @@ public class FTSPDataLogger implements MessageListener {
         }
         PrintStream outReport = null;
 
-        public FTSPDataLogger() {
+        public FtspDataLogger() {
                 connect();
                 Runtime.getRuntime().addShutdownHook(new RunWhenShuttingDown());
                 String name=""+System.currentTimeMillis();
@@ -74,11 +74,11 @@ public class FTSPDataLogger implements MessageListener {
                 }
                 catch (Exception e)
                 {
-                        System.out.println("FTSPDataLogger.FTSPDataLogger(): "+e.toString());
+                        System.out.println("FtspDataLogger.FtspDataLogger(): "+e.toString());
                 }
         }
 
-        public void writeReprot(TestFTSPMsg tspr)
+        public void writeReprot(TestFtspMsg tspr)
         {
                 String foo = (System.currentTimeMillis()
                 		+" "+tspr.get_src_addr()+" "+tspr.get_counter()
@@ -88,7 +88,7 @@ public class FTSPDataLogger implements MessageListener {
                 outReport.flush();
         }
 
-        public void writeFullReprot(TestFTSPMsg tspr)
+        public void writeFullReprot(TestFtspMsg tspr)
         {
                 String foo = (System.currentTimeMillis()
                 		+" "+tspr.get_src_addr()
@@ -107,14 +107,14 @@ public class FTSPDataLogger implements MessageListener {
 
         public void messageReceived(int dest_addr, Message msg)
         {
-                if (msg instanceof TestFTSPMsg)
-                        //writeFullReprot((TestFTSPMsg)msg);
-                        writeReprot((TestFTSPMsg)msg);
+                if (msg instanceof TestFtspMsg)
+                        //writeFullReprot((TestFtspMsg)msg);
+                        writeReprot((TestFtspMsg)msg);
         }
 
         /* Just start the app... */
         public static void main(String[] args)
         {
-                new FTSPDataLogger();
+                new FtspDataLogger();
         }
 }

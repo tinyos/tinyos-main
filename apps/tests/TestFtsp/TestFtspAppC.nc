@@ -22,10 +22,10 @@
  * Ported to T2: 3/17/08 by Brano Kusy (branislav.kusy@gmail.com)
  */
 
-#include "TestFTSP.h"
+#include "TestFtsp.h"
 #include "RadioCountToLeds.h"
 
-module TestFTSPAppC
+module TestFtspAppC
 {
     uses
     {

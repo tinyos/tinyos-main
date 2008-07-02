@@ -1,4 +1,4 @@
-TestFTSP
+TestFtsp
 
 -------------------------------------------------------------------------------
 Author/Contact:
@@ -10,12 +10,12 @@ Author/Contact:
 -------------------------------------------------------------------------------
 DESCRIPTION:
 ------------
- The TestFTSP application tests the Flooding Time Synchronization Protocol
- (FTSP) implementation. A network of motes programmed with TestFTSP run the
+ The TestFtsp application tests the Flooding Time Synchronization Protocol
+ (FTSP) implementation. A network of motes programmed with TestFtsp run the
  FTSP protocol to time synchronize, and sends to the base station the global
  reception timestamps of messages broadcast by a dedicated beacon mote
  programmed with RadioCountToLeds. Ideally, the global reception timestamps of
- the same RadioCountToLeds message should agree for all TestFTSP motes (with a
+ the same RadioCountToLeds message should agree for all TestFtsp motes (with a
  small synchronization error).
 
 -------------------------------------------------------------------------------
@@ -27,10 +27,10 @@ SUPPORTED PLATFORMS:
 STEP BY STEP GUIDE TO RUN OUR TEST SCENARIO:
 --------------------------------------------
  - program one mote with apps/RadioCountToLeds
- - program multiple motes with TestFTSP
+ - program multiple motes with TestFtsp
  - program a mote with apps/BaseStation, leave it on the programming board
  - turn on all the motes
- - start the FTSPDataLogger java application (type "java FTSPDataLogger")
+ - start the FtspDataLogger java application (type "java FtspDataLogger")
 
 -------------------------------------------------------------------------------
 REPORTED DATA:
