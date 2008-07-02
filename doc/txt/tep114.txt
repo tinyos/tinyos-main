@@ -5,13 +5,12 @@ SIDs: Source and Sink Independent Drivers
 :TEP: 114
 :Group: Core Working Group
 :Type: Documentary 
-:Status: Draft
-:TinyOS-Version: 2.x
+:Status: Final
 :Author: Gilman Tolle, Philip Levis, and David Gay
 
 :Draft-Created: 30-Oct-2005
-:Draft-Version: $Revision: 1.10 $
-:Draft-Modified: $Date: 2008-07-02 19:31:57 $
+:Draft-Version: $Revision: 1.11 $
+:Draft-Modified: $Date: 2008-07-02 19:38:46 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -54,13 +53,12 @@ and sensor values are always 16 bits, although only some subset of the
 bits may be significant (e.g., a 12-bit value).
 
 Because sensing is an integral part of high-level application logic,
-the asynchronicity of these events means that high-level components
-must work with atomic section, even if the sampling rate is very low
+having asynchronous events means that high-level components
+must work with atomic sections, even if the sampling rate is very low
 (e.g., every five minutes) and so could be easily placed in a
 task. Race conditions are problematic and possible in any real time
 multi-tasking design. Race conditions are a failure in design, and
-especially difficult to detect at low sampling rates. Careful and
-skillful design review practices flush out race conditions early on.
+especially difficult to detect at low sampling rates. 
 
 Additionally, not all sensors require ADC conversions from the MCU.
 Many sensors today are digital. To sample these sensors, the MCU sends
@@ -135,7 +133,7 @@ If the ``result`` parameter of the ``Read.readDone`` and
 ``val`` parameter MUST be filled with zeroes.
 
 If the call to ``read`` has returned SUCCESS, but the ``readDone``
-event has not yet been signalled, then a subsequent call to ``read``
+event has not yet been signaled, then a subsequent call to ``read``
 MUST return EBUSY or FAIL.  This simple locking technique, as opposed
 to a more complex system in which multiple read/readDone pairs may be
 outstanding, is intended to reduce the complexity of SID client code.
@@ -230,7 +228,7 @@ building a linked list.
 
 After posting at least one buffer, the client can call read() with a
 specified sample period in terms of microseconds. The driver then
-begins to fill the buffers in the queue, signalling the bufferDone()
+begins to fill the buffers in the queue, signaling the bufferDone()
 event when a buffer has been filled. The client MAY call postBuffer()
 after read() in order to provide the device with new storage for
 future reads.
