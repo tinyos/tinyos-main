@@ -305,7 +305,7 @@ connect a sensor into a more general system.
 | email - david.e.gay@intel.com
 |
 
-6. Citations
+7. Citations
 ============================================================================
 
 .. [1] TEP 108: Resource Arbitration.

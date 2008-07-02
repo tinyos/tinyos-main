@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-06-10 17:45:28 $
-:version: $Revision: 1.11 $
+:date: $Date: 2008-07-02 19:42:13 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -291,19 +291,11 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
-<td>Draft</td></tr>
+<td>Final</td></tr>
 <tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
 <td>Gilman Tolle, Philip Levis, and David Gay</td></tr>
-<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">30-Oct-2005</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-09-18</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
-</tr>
 </tbody>
 </table>
 <div class="note">
@@ -342,13 +334,12 @@ interrupt-driven sampling.  All of its commands and events are async
 and sensor values are always 16 bits, although only some subset of the
 bits may be significant (e.g., a 12-bit value).</p>
 <p>Because sensing is an integral part of high-level application logic,
-the asynchronicity of these events means that high-level components
-must work with atomic section, even if the sampling rate is very low
+having asynchronous events means that high-level components
+must work with atomic sections, even if the sampling rate is very low
 (e.g., every five minutes) and so could be easily placed in a
 task. Race conditions are problematic and possible in any real time
 multi-tasking design. Race conditions are a failure in design, and
-especially difficult to detect at low sampling rates. Careful and
-skillful design review practices flush out race conditions early on.</p>
+especially difficult to detect at low sampling rates.</p>
 <p>Additionally, not all sensors require ADC conversions from the MCU.
 Many sensors today are digital. To sample these sensors, the MCU sends
 a sample command and receives the corresponding data over a bus (e.g.,
@@ -438,7 +429,7 @@ interface Read&lt;val_t&gt; {
 <tt class="docutils literal"><span class="pre">ReadWrite.readDone</span></tt> events is not SUCCESS, then the memory of the
 <tt class="docutils literal"><span class="pre">val</span></tt> parameter MUST be filled with zeroes.</p>
 <p>If the call to <tt class="docutils literal"><span class="pre">read</span></tt> has returned SUCCESS, but the <tt class="docutils literal"><span class="pre">readDone</span></tt>
-event has not yet been signalled, then a subsequent call to <tt class="docutils literal"><span class="pre">read</span></tt>
+event has not yet been signaled, then a subsequent call to <tt class="docutils literal"><span class="pre">read</span></tt>
 MUST return EBUSY or FAIL.  This simple locking technique, as opposed
 to a more complex system in which multiple read/readDone pairs may be
 outstanding, is intended to reduce the complexity of SID client code.</p>
@@ -523,7 +514,7 @@ drivers that may store the queue of buffers and count sizes by
 building a linked list.</p>
 <p>After posting at least one buffer, the client can call read() with a
 specified sample period in terms of microseconds. The driver then
-begins to fill the buffers in the queue, signalling the bufferDone()
+begins to fill the buffers in the queue, signaling the bufferDone()
 event when a buffer has been filled. The client MAY call postBuffer()
 after read() in order to provide the device with new storage for
 future reads.</p>
@@ -570,12 +561,12 @@ connect a sensor into a more general system.</p>
 <h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Gilman Tolle</div>
-<div class="line">2168 Shattuck Ave.</div>
-<div class="line">Arched Rock Corporation</div>
-<div class="line">Berkeley, CA 94704</div>
+<div class="line">501 2nd St. Ste 410</div>
+<div class="line">Arch Rock Corporation</div>
+<div class="line">San Francisco, CA 94107</div>
 <div class="line"><br /></div>
-<div class="line">phone - +1 510 981 8714</div>
-<div class="line">email - <a class="reference" href="mailto:gtolle&#64;archedrock.com">gtolle&#64;archedrock.com</a></div>
+<div class="line">phone - +1 415 692 0828</div>
+<div class="line">email - <a class="reference" href="mailto:gtolle&#64;archrock.com">gtolle&#64;archrock.com</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
@@ -599,7 +590,7 @@ connect a sensor into a more general system.</p>
 </div>
 </div>
 <div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<h1><a id="citations" name="citations">7. Citations</a></h1>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
