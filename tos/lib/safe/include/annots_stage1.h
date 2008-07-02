@@ -21,6 +21,7 @@
 #define DMEMSET(x,y,z)
 #define DMEMCPY(x,y,z)
 #define TRUSTEDBLOCK
+#define NTS
 
 #define TCAST(__type,__expr)                   ((__type)(__expr))                
 
