@@ -33,7 +33,7 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
-  $Id: avr_stdio.h,v 1.1 2007-08-20 16:43:43 klueska Exp $
+  $Id: avr_stdio.h,v 1.2 2008-07-02 18:46:18 regehr Exp $
 */
 
 #ifndef _STDIO_H_
@@ -405,7 +405,7 @@ extern "C" {
  * Doxygen documentation can be found in fdevopen.c.
  */
 
-extern struct __file *__iob[];
+extern struct __file * (COUNT(3) __iob)[];
 
 #if defined(__STDIO_FDEVOPEN_COMPAT_12)
 /*
@@ -595,25 +595,25 @@ extern int	fclose(FILE *__stream);
 
  */
 
-extern int	vfprintf(FILE *__stream, const char *__fmt, va_list __ap);
+extern int	vfprintf(FILE * ONE __stream, const char * NTS __fmt, va_list __ap);
 
 /**
    Variant of \c vfprintf() that uses a \c fmt string that resides
    in program memory.
 */
-extern int	vfprintf_P(FILE *__stream, const char *__fmt, va_list __ap);
+extern int	vfprintf_P(FILE * ONE __stream, const char * NTS __fmt, va_list __ap);
 
 /**
    The function \c fputc sends the character \c c (though given as type
    \c int) to \c stream.  It returns the character, or \c EOF in case
    an error occurred.
 */
-extern int	fputc(int __c, FILE *__stream);
+extern int	fputc(int __c, FILE * ONE __stream);
 
 #if !defined(__DOXYGEN__)
 
 /* putc() function implementation, required by standard */
-extern int	putc(int __c, FILE *__stream);
+extern int	putc(int __c, FILE * ONE __stream);
 
 /* putchar() function implementation, required by standard */
 extern int	putchar(int __c);
@@ -636,13 +636,13 @@ extern int	putchar(int __c);
    The function \c printf performs formatted output to stream
    \c stderr.  See \c vfprintf() for details.
 */
-extern int	printf(const char *__fmt, ...);
+extern int	printf(const char * NTS __fmt, ...);
 
 /**
    Variant of \c printf() that uses a \c fmt string that resides
    in program memory.
 */
-extern int	printf_P(const char *__fmt, ...);
+extern int	printf_P(const char * NTS __fmt, ...);
 
 /**
    The function \c vprintf performs formatted output to stream
@@ -650,19 +650,19 @@ extern int	printf_P(const char *__fmt, ...);
 
    See vfprintf() for details.
 */
-extern int	vprintf(const char *__fmt, va_list __ap);
+extern int	vprintf(const char * NTS __fmt, va_list __ap);
 
 /**
    Variant of \c printf() that sends the formatted characters
    to string \c s.
 */
-extern int	sprintf(char *__s, const char *__fmt, ...);
+extern int	sprintf(char * NTS __s, const char * NTS __fmt, ...);
 
 /**
    Variant of \c sprintf() that uses a \c fmt string that resides
    in program memory.
 */
-extern int	sprintf_P(char *__s, const char *__fmt, ...);
+extern int	sprintf_P(char * NTS __s, const char * NTS __fmt, ...);
 
 /**
    Like \c sprintf(), but instead of assuming \c s to be of infinite
@@ -672,25 +672,25 @@ extern int	sprintf_P(char *__s, const char *__fmt, ...);
    Returns the number of characters that would have been written to
    \c s if there were enough space.
 */
-extern int	snprintf(char *__s, size_t __n, const char *__fmt, ...);
+extern int	snprintf(char * NTS __s, size_t __n, const char * NTS __fmt, ...);
 
 /**
    Variant of \c snprintf() that uses a \c fmt string that resides
    in program memory.
 */
-extern int	snprintf_P(char *__s, size_t __n, const char *__fmt, ...);
+extern int	snprintf_P(char * NTS __s, size_t __n, const char * NTS __fmt, ...);
 
 /**
    Like \c sprintf() but takes a variable argument list for the
    arguments.
 */
-extern int	vsprintf(char *__s, const char *__fmt, va_list ap);
+extern int	vsprintf(char * NTS __s, const char * NTS __fmt, va_list ap);
 
 /**
    Variant of \c vsprintf() that uses a \c fmt string that resides
    in program memory.
 */
-extern int	vsprintf_P(char *__s, const char *__fmt, va_list ap);
+extern int	vsprintf_P(char * NTS __s, const char * NTS __fmt, va_list ap);
 
 /**
    Like \c vsprintf(), but instead of assuming \c s to be of infinite
@@ -700,47 +700,47 @@ extern int	vsprintf_P(char *__s, const char *__fmt, va_list ap);
    Returns the number of characters that would have been written to
    \c s if there were enough space.
 */
-extern int	vsnprintf(char *__s, size_t __n, const char *__fmt, va_list ap);
+extern int	vsnprintf(char * NTS __s, size_t __n, const char * NTS __fmt, va_list ap);
 
 /**
    Variant of \c vsnprintf() that uses a \c fmt string that resides
    in program memory.
 */
-extern int	vsnprintf_P(char *__s, size_t __n, const char *__fmt, va_list ap);
+extern int	vsnprintf_P(char * NTS __s, size_t __n, const char * NTS __fmt, va_list ap);
 /**
    The function \c fprintf performs formatted output to \c stream.
    See \c vfprintf() for details.
 */
-extern int	fprintf(FILE *__stream, const char *__fmt, ...);
+extern int	fprintf(FILE * ONE __stream, const char * NTS __fmt, ...);
 
 /**
    Variant of \c fprintf() that uses a \c fmt string that resides
    in program memory.
 */
-extern int	fprintf_P(FILE *__stream, const char *__fmt, ...);
+extern int	fprintf_P(FILE * ONE __stream, const char * NTS __fmt, ...);
 
 /**
    Write the string pointed to by \c str to stream \c stream.
 
    Returns 0 on success and EOF on error.
 */
-extern int	fputs(const char *__str, FILE *__stream);
+extern int	fputs(const char * NTS __str, FILE * ONE __stream);
 
 /**
    Variant of fputs() where \c str resides in program memory.
 */
-extern int	fputs_P(const char *__str, FILE *__stream);
+extern int	fputs_P(const char * NTS __str, FILE * ONE __stream);
 
 /**
    Write the string pointed to by \c str, and a trailing newline
    character, to \c stdout.
 */
-extern int	puts(const char *__str);
+extern int	puts(const char * NTS __str);
 
 /**
    Variant of puts() where \c str resides in program memory.
 */
-extern int	puts_P(const char *__str);
+extern int	puts_P(const char * NTS __str);
 
 /**
    Write \c nmemb objects, \c size bytes each, to \c stream.
@@ -750,7 +750,7 @@ extern int	puts_P(const char *__str);
    \c nmemb unless an output error occured.
  */
 extern size_t	fwrite(const void *__ptr, size_t __size, size_t __nmemb,
-		       FILE *__stream);
+		       FILE * ONE __stream);
 
 /**
    The function \c fgetc reads a character from \c stream.  It returns
@@ -758,12 +758,12 @@ extern size_t	fwrite(const void *__ptr, size_t __size, size_t __nmemb,
    error occurred.  The routines feof() or ferror() must be used to
    distinguish between both situations.
 */
-extern int	fgetc(FILE *__stream);
+extern int	fgetc(FILE * ONE __stream);
 
 #if !defined(__DOXYGEN__)
 
 /* getc() function implementation, required by standard */
-extern int	getc(FILE *__stream);
+extern int	getc(FILE * ONE __stream);
 
 /* getchar() function implementation, required by standard */
 extern int	getchar(void);
@@ -797,7 +797,7 @@ extern int	getchar(void);
    argument \c c character equals \c EOF, the operation will fail and
    the stream will remain unchanged.
 */
-extern int	ungetc(int __c, FILE *__stream);
+extern int	ungetc(int __c, FILE * ONE __stream);
 
 /**
    Read at most <tt>size - 1</tt> bytes from \c stream, until a
@@ -809,14 +809,14 @@ extern int	ungetc(int __c, FILE *__stream);
    If an error was encountered, the function returns NULL and sets the
    error flag of \c stream, which can be tested using ferror().
    Otherwise, a pointer to the string will be returned.  */
-extern char	*fgets(char *__str, int __size, FILE *__stream);
+extern char	*fgets(char * NTS __str, int __size, FILE * ONE __stream);
 
 /**
    Similar to fgets() except that it will operate on stream \c stdin,
    and the trailing newline (if any) will not be stored in the string.
    It is the caller's responsibility to provide enough storage to hold
    the characters read.  */
-extern char	*gets(char *__str);
+extern char	*gets(char * NTS __str);
 
 /**
    Read \c nmemb objects, \c size bytes each, from \c stream,
@@ -828,12 +828,12 @@ extern char	*gets(char *__str);
    between these two conditions.
  */
 extern size_t	fread(void *__ptr, size_t __size, size_t __nmemb,
-		      FILE *__stream);
+		      FILE * ONE __stream);
 
 /**
    Clear the error and end-of-file flags of \c stream.
  */
-extern void	clearerr(FILE *__stream);
+extern void	clearerr(FILE * ONE __stream);
 
 #if !defined(__DOXYGEN__)
 /* fast inlined version of clearerr() */
@@ -844,7 +844,7 @@ extern void	clearerr(FILE *__stream);
    Test the end-of-file flag of \c stream.  This flag can only be cleared
    by a call to clearerr().
  */
-extern int	feof(FILE *__stream);
+extern int	feof(FILE * ONE __stream);
 
 #if !defined(__DOXYGEN__)
 /* fast inlined version of feof() */
@@ -855,7 +855,7 @@ extern int	feof(FILE *__stream);
    Test the error flag of \c stream.  This flag can only be cleared
    by a call to clearerr().
  */
-extern int	ferror(FILE *__stream);
+extern int	ferror(FILE * ONE __stream);
 
 #if !defined(__DOXYGEN__)
 /* fast inlined version of ferror() */
@@ -1005,12 +1005,12 @@ extern int	ferror(FILE *__stream);
      However, the usual skip of initial white space in the formats
      that support it is implemented.
 */
-extern int	vfscanf(FILE *__stream, const char *__fmt, va_list __ap);
+extern int	vfscanf(FILE * ONE __stream, const char * NTS __fmt, va_list __ap);
 
 /**
    Variant of vfscanf() using a \c fmt string in program memory.
  */
-extern int	vfscanf_P(FILE *__stream, const char *__fmt, va_list __ap);
+extern int	vfscanf_P(FILE * ONE __stream, const char * NTS __fmt, va_list __ap);
 
 /**
    The function \c fscanf performs formatted input, reading the
@@ -1018,24 +1018,24 @@ extern int	vfscanf_P(FILE *__stream, const char *__fmt, va_list __ap);
 
    See vfscanf() for details.
  */
-extern int	fscanf(FILE *__stream, const char *__fmt, ...);
+extern int	fscanf(FILE * ONE __stream, const char * NTS __fmt, ...);
 
 /**
    Variant of fscanf() using a \c fmt string in program memory.
  */
-extern int	fscanf_P(FILE *__stream, const char *__fmt, ...);
+extern int	fscanf_P(FILE * ONE __stream, const char * NTS __fmt, ...);
 
 /**
    The function \c scanf performs formatted input from stream \c stdin.
 
    See vfscanf() for details.
  */
-extern int	scanf(const char *__fmt, ...);
+extern int	scanf(const char * NTS __fmt, ...);
 
 /**
    Variant of scanf() where \c fmt resides in program memory.
  */
-extern int	scanf_P(const char *__fmt, ...);
+extern int	scanf_P(const char * NTS __fmt, ...);
 
 /**
    The function \c vscanf performs formatted input from stream
@@ -1043,7 +1043,7 @@ extern int	scanf_P(const char *__fmt, ...);
 
    See vfscanf() for details.
 */
-extern int	vscanf(const char *__fmt, va_list __ap);
+extern int	vscanf(const char * NTS __fmt, va_list __ap);
 
 /**
    The function \c sscanf performs formatted input, reading the
@@ -1051,12 +1051,12 @@ extern int	vscanf(const char *__fmt, va_list __ap);
 
    See vfscanf() for details.
  */
-extern int	sscanf(const char *__buf, const char *__fmt, ...);
+extern int	sscanf(const char * NTS __buf, const char * NTS __fmt, ...);
 
 /**
    Variant of sscanf() using a \c fmt string in program memory.
  */
-extern int	sscanf_P(const char *__buf, const char *__fmt, ...);
+extern int	sscanf_P(const char * NTS __buf, const char * NTS __fmt, ...);
 
 #if defined(__DOXYGEN__)
 /**
@@ -1066,9 +1066,9 @@ extern int	sscanf_P(const char *__buf, const char *__fmt, ...);
    only, as the standard IO implementation currently does not perform
    any buffering.
  */
-extern int	fflush(FILE *stream);
+extern int	fflush(FILE * ONE stream);
 #else
-static __inline__ int fflush(FILE *stream __attribute__((unused)))
+static __inline__ int fflush(FILE * ONE stream __attribute__((unused)))
 {
 	return 0;
 }

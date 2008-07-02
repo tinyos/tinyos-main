@@ -76,10 +76,12 @@
 
 #ifdef _H_atmega128hardware_H
 static int uart_putchar(char c, FILE *stream);
-static FILE atm128_stdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
+static FILE atm128_stdout = 
+	FDEV_SETUP_STREAM(TCAST(int (*)(char c, FILE *stream), uart_putchar), 
+	NULL, _FDEV_SETUP_WRITE);
 #endif
 
-module PrintfP {
+module PrintfP @safe() {
   provides {
     interface Boot;
   }
