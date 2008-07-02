@@ -1,3 +1,0 @@
-<volume_table>
-  <volume name="SENSORLOG" size="1048576" type="log" circular="true"/>
-</volume_table>
