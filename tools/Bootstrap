@@ -11,7 +11,7 @@ AUTOHEADER="autoheader"
 
 set -x
 (
-    $ACLOCAL --warnings=none
+    $ACLOCAL
     $AUTOCONF
     [ -d config-aux ] || mkdir config-aux
     $AUTOMAKE -a -c
