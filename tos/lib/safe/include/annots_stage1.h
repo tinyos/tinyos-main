@@ -9,7 +9,9 @@
 
 // JDR temporary code: define away NTS in unsafe mode
 #ifndef SAFE_TINYOS
+#ifndef NTS
 #define NTS
+#endif
 #endif
 
 #if NESC < 130 
