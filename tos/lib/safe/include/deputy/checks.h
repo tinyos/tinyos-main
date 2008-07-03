@@ -56,15 +56,7 @@ void deputy_fail_noreturn_fast(void);
 extern asmlinkage
 int deputy_findnull(const void *e1, unsigned int sz);
 
-//Define deputy_memset, which we use to initialize locals
-//FIXME:  We should set __deputy_memset = __builtin_memset to take advantage 
-//of optimizations.  How do we do that in a portable way?
-#if defined(memset) && !defined(IN_DEPUTY_LIBRARY)
 #define __deputy_memset memset
-#else
-extern asmlinkage
-void *__deputy_memset(void *s, int c, unsigned int n);
-#endif
 
 #if  defined(DEPUTY_FAST_CHECKS)
    #define deputy_fail deputy_fail_noreturn_fast
