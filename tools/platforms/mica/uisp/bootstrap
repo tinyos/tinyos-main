@@ -1,4 +1,4 @@
-aclocal --warnings=none
+aclocal
 autoheader
 autoconf
 [ -d config ] || mkdir config
