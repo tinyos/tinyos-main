@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.2 2007-12-14 20:29:36 sallai Exp $
+/// $Id: McuSleepC.nc,v 1.3 2008-07-07 19:52:52 sallai Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -8,13 +8,13 @@
  * agreement is hereby granted, provided that the above copyright
  * notice, the following two paragraphs and the author appear in all
  * copies of this software.
- * 
+ *
  * IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
  * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
  * IF STANFORD UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * STANFORD UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE
@@ -31,12 +31,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -51,7 +51,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.2 2007-12-14 20:29:36 sallai Exp $
+ *  $Id: McuSleepC.nc,v 1.3 2008-07-07 19:52:52 sallai Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -60,7 +60,7 @@
  * @date   October 30, 2007
  */
 
-module McuSleepC {
+module McuSleepC @safe() {
   provides {
     interface McuSleep;
     interface McuPowerState;
@@ -84,25 +84,25 @@ implementation {
     (1 << SM1) | (1 << SM0),
     (1 << SM2) | (1 << SM1),
     (1 << SM1)};
-    
+
   mcu_power_t getPowerState() {
     // Note: we go to sleep even if timer 0, 1, 3, 4,  or 5's overflow
     // interrupt is enabled - this allows using timers 0, 1 and 3 as TinyOS
     // "Alarm"s while still having power management. (see TEP102 Appendix C)
     // Input capture and output compare for timer 4 and 5 are not functional
-    // on the atm1281. 
+    // on the atm1281.
 
     // Are there any input capture or output compare interrupts enabled
-    // for timers 0, 1 or 3?  
+    // for timers 0, 1 or 3?
     if (
         TIMSK0 & (1 << OCIE0A | 1 << OCIE0B ) ||
         TIMSK1 & (1 << ICIE1  | 1 << OCIE1A | 1 << OCIE1B | 1 << OCIE1C) ||
         TIMSK3 & (1 << ICIE3  | 1 << OCIE3A | 1 << OCIE3B | 1 << OCIE3C)
     ) {
       return ATM128_POWER_IDLE;
-    }    
+    }
     // SPI (Radio stack)
-    else if (bit_is_set(SPCR, SPIE)) { 
+    else if (bit_is_set(SPCR, SPIE)) {
       return ATM128_POWER_IDLE;
     }
     // UARTs are active
@@ -115,9 +115,9 @@ implementation {
     // I2C (Two-wire) is active
     else if (bit_is_set(TWCR, TWEN)){
       return ATM128_POWER_IDLE;
-    }    
+    }
     // ADC is enabled
-    else if (bit_is_set(ADCSRA, ADEN)) { 
+    else if (bit_is_set(ADCSRA, ADEN)) {
       return ATM128_POWER_ADC_NR;
     }
     else {
@@ -130,11 +130,11 @@ implementation {
 
     powerState = mcombine(getPowerState(), call McuPowerOverride.lowestState());
     SMCR =
-      (SMCR & 0xf0) | 1 << SE | read_uint8_t(&atm128PowerBits[powerState]);      
+      (SMCR & 0xf0) | 1 << SE | read_uint8_t(&atm128PowerBits[powerState]);
     sei();
     asm volatile ("sleep");
     cli();
-    
+
     CLR_BIT(SMCR, SE);
   }
 

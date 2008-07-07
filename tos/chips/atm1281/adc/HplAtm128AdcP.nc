@@ -1,4 +1,4 @@
-/// $Id: HplAtm128AdcP.nc,v 1.1 2007-11-05 20:36:42 sallai Exp $
+/// $Id: HplAtm128AdcP.nc,v 1.2 2008-07-07 19:52:52 sallai Exp $
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
@@ -6,19 +6,19 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
- * IN NO EVENT SHALL CROSSBOW TECHNOLOGY OR ANY OF ITS LICENSORS BE LIABLE TO 
- * ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL 
+ *
+ * IN NO EVENT SHALL CROSSBOW TECHNOLOGY OR ANY OF ITS LICENSORS BE LIABLE TO
+ * ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
  * DAMAGES ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
- * IF CROSSBOW OR ITS LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
- * DAMAGE. 
+ * IF CROSSBOW OR ITS LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
  *
  * CROSSBOW TECHNOLOGY AND ITS LICENSORS SPECIFICALLY DISCLAIM ALL WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS 
- * ON AN "AS IS" BASIS, AND NEITHER CROSSBOW NOR ANY LICENSOR HAS ANY 
- * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR 
- * MODIFICATIONS. 
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND NEITHER CROSSBOW NOR ANY LICENSOR HAS ANY
+ * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+ * MODIFICATIONS.
  */
 
 /*
@@ -29,12 +29,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -55,35 +55,35 @@
  * @author Janos Sallai <janos.sallai@vanderbilt.edu>
  */
 
-module HplAtm128AdcP {
+module HplAtm128AdcP @safe() {
   provides interface HplAtm128Adc;
   uses interface McuPowerState;
 }
 implementation {
   //=== Direct read of HW registers. =================================
-  async command Atm128Admux_t HplAtm128Adc.getAdmux() { 
-    return *(Atm128Admux_t*)&ADMUX; 
+  async command Atm128Admux_t HplAtm128Adc.getAdmux() {
+    return *(Atm128Admux_t*)&ADMUX;
   }
-  async command Atm128Adcsra_t HplAtm128Adc.getAdcsra() { 
-    return *(Atm128Adcsra_t*)&ADCSRA; 
+  async command Atm128Adcsra_t HplAtm128Adc.getAdcsra() {
+    return *(Atm128Adcsra_t*)&ADCSRA;
   }
-  async command uint16_t HplAtm128Adc.getValue() { 
-    return ADC; 
+  async command uint16_t HplAtm128Adc.getValue() {
+    return ADC;
   }
 
   DEFINE_UNION_CAST(Admux2int, Atm128Admux_t, uint8_t);
   DEFINE_UNION_CAST(Adcsra2int, Atm128Adcsra_t, uint8_t);
 
   //=== Direct write of HW registers. ================================
-  async command void HplAtm128Adc.setAdmux( Atm128Admux_t x ) { 
-    ADMUX = Admux2int(x); 
+  async command void HplAtm128Adc.setAdmux( Atm128Admux_t x ) {
+    ADMUX = Admux2int(x);
   }
-  async command void HplAtm128Adc.setAdcsra( Atm128Adcsra_t x ) { 
-    ADCSRA = Adcsra2int(x); 
+  async command void HplAtm128Adc.setAdcsra( Atm128Adcsra_t x ) {
+    ADCSRA = Adcsra2int(x);
   }
 
   async command void HplAtm128Adc.setPrescaler(uint8_t scale){
-    Atm128Adcsra_t  current_val = call HplAtm128Adc.getAdcsra(); 
+    Atm128Adcsra_t  current_val = call HplAtm128Adc.getAdcsra();
     current_val.adif = FALSE;
     current_val.adps = scale;
     call HplAtm128Adc.setAdcsra(current_val);
@@ -92,17 +92,17 @@ implementation {
   // Individual bit manipulation. These all clear any pending A/D interrupt.
   // It's not clear these are that useful...
   async command void HplAtm128Adc.enableAdc() {
-    SET_BIT(ADCSRA, ADEN); 
+    SET_BIT(ADCSRA, ADEN);
     call McuPowerState.update();
   }
   async command void HplAtm128Adc.disableAdc() {
-    CLR_BIT(ADCSRA, ADEN); 
+    CLR_BIT(ADCSRA, ADEN);
     call McuPowerState.update();
   }
   async command void HplAtm128Adc.enableInterruption() { SET_BIT(ADCSRA, ADIE); }
   async command void HplAtm128Adc.disableInterruption() { CLR_BIT(ADCSRA, ADIE); }
-  async command void HplAtm128Adc.setContinuous() { 
-    ((Atm128Adcsrb_t*)&ADCSRB)->adts = 0; 
+  async command void HplAtm128Adc.setContinuous() {
+    ((Atm128Adcsrb_t*)&ADCSRB)->adts = 0;
     SET_BIT(ADCSRA, ADATE);
   }
   async command void HplAtm128Adc.setSingle() { CLR_BIT(ADCSRA, ADATE); }
@@ -111,29 +111,29 @@ implementation {
 
 
   /* A/D status checks */
-  async command bool HplAtm128Adc.isEnabled()     {       
-    return (call HplAtm128Adc.getAdcsra()).aden; 
+  async command bool HplAtm128Adc.isEnabled()     {
+    return (call HplAtm128Adc.getAdcsra()).aden;
   }
 
   async command bool HplAtm128Adc.isStarted()     {
-    return (call HplAtm128Adc.getAdcsra()).adsc; 
+    return (call HplAtm128Adc.getAdcsra()).adsc;
   }
-  
+
   async command bool HplAtm128Adc.isComplete()    {
-    return (call HplAtm128Adc.getAdcsra()).adif; 
+    return (call HplAtm128Adc.getAdcsra()).adif;
   }
 
   /* A/D interrupt handlers. Signals dataReady event with interrupts enabled */
   AVR_ATOMIC_HANDLER(SIG_ADC) {
     uint16_t data = call HplAtm128Adc.getValue();
-    
+
     __nesc_enable_interrupt();
     signal HplAtm128Adc.dataReady(data);
   }
 
   default async event void HplAtm128Adc.dataReady(uint16_t done) { }
 
-  async command bool HplAtm128Adc.cancel() { 
+  async command bool HplAtm128Adc.cancel() {
     /* This is tricky */
     atomic
       {

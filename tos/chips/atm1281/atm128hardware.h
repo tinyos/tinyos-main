@@ -1,4 +1,4 @@
-/*                                                                     
+/*
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,
@@ -6,7 +6,7 @@
  *
  *  Copyright (c) 2004-2005 Crossbow Technology, Inc.
  *  Copyright (c) 2002-2003 Intel Corporation.
- *  Copyright (c) 2000-2003 The Regents of the University  of California.    
+ *  Copyright (c) 2000-2003 The Regents of the University  of California.
  *  All rights reserved.
  *
  *  Permission to use, copy, modify, and distribute this software and its
@@ -39,12 +39,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -102,11 +102,11 @@
 #define READ_FLAG(port, flag) ((port) & (flag))
 
 /* Enables interrupts. */
-inline void __nesc_enable_interrupt() {
+inline void __nesc_enable_interrupt() @safe() {
     sei();
 }
 /* Disables all interrupts. */
-inline void __nesc_disable_interrupt() {
+inline void __nesc_disable_interrupt() @safe() {
     cli();
 }
 
@@ -122,8 +122,8 @@ void __nesc_atomic_end(__nesc_atomic_t original_SREG);
    though. */
 
 /* Saves current interrupt mask state and disables interrupts. */
-inline __nesc_atomic_t 
-__nesc_atomic_start(void) @spontaneous()
+inline __nesc_atomic_t
+__nesc_atomic_start(void) @spontaneous() @safe()
 {
     __nesc_atomic_t result = SREG;
     __nesc_disable_interrupt();
@@ -132,8 +132,8 @@ __nesc_atomic_start(void) @spontaneous()
 }
 
 /* Restores interrupt mask to original state. */
-inline void 
-__nesc_atomic_end(__nesc_atomic_t original_SREG) @spontaneous()
+inline void
+__nesc_atomic_end(__nesc_atomic_t original_SREG) @spontaneous() @safe()
 {
   asm volatile("" : : : "memory"); /* ensure atomic section effect visibility */
   SREG = original_SREG;
@@ -150,11 +150,11 @@ enum {
   ATM128_POWER_EXT_STANDBY = 2,
   ATM128_POWER_SAVE        = 3,
   ATM128_POWER_STANDBY     = 4,
-  ATM128_POWER_DOWN        = 5, 
+  ATM128_POWER_DOWN        = 5,
 };
 
 /* Combine function.  */
-mcu_power_t mcombine(mcu_power_t m1, mcu_power_t m2) {
+mcu_power_t mcombine(mcu_power_t m1, mcu_power_t m2) @safe() {
   return (m1 < m2)? m1: m2;
 }
 

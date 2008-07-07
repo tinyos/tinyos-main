@@ -1,17 +1,17 @@
-/* $Id: Atm128AdcP.nc,v 1.1 2007-11-05 20:36:42 sallai Exp $
- * "Copyright (c) 2000-2003 The Regents of the University  of California.  
+/* $Id: Atm128AdcP.nc,v 1.2 2008-07-07 19:52:52 sallai Exp $
+ * "Copyright (c) 2000-2003 The Regents of the University  of California.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
  * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -21,9 +21,9 @@
  * Copyright (c) 2002-2005 Intel Corporation
  * All rights reserved.
  *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * This file is distributed under the terms in the attached INTEL-LICENSE
  * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
  * 94704.  Attention:  Intel License Inquiry.
  *
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -32,18 +32,18 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
- * IN NO EVENT SHALL CROSSBOW TECHNOLOGY OR ANY OF ITS LICENSORS BE LIABLE TO 
- * ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL 
+ *
+ * IN NO EVENT SHALL CROSSBOW TECHNOLOGY OR ANY OF ITS LICENSORS BE LIABLE TO
+ * ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
  * DAMAGES ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
- * IF CROSSBOW OR ITS LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
- * DAMAGE. 
+ * IF CROSSBOW OR ITS LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
  *
  * CROSSBOW TECHNOLOGY AND ITS LICENSORS SPECIFICALLY DISCLAIM ALL WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS 
- * ON AN "AS IS" BASIS, AND NEITHER CROSSBOW NOR ANY LICENSOR HAS ANY 
- * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR 
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND NEITHER CROSSBOW NOR ANY LICENSOR HAS ANY
+ * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
  * MODIFICATIONS.
  *
  * Copyright (c) 2007, Vanderbilt University
@@ -53,12 +53,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -81,7 +81,7 @@
  * @author Janos Sallai <janos.sallai@vanderbilt.edu>
  */
 
-module Atm128AdcP 
+module Atm128AdcP @safe()
 {
   provides {
     interface Init;
@@ -95,24 +95,24 @@ module Atm128AdcP
   }
 }
 implementation
-{  
+{
   /* State for the current and next (multiple-sampling only) conversion */
   struct {
     bool multiple : 1;		/* single and multiple-sampling mode */
     bool precise : 1;		/* is this result going to be precise? */
     uint8_t channel : 5;	/* what channel did this sample come from? */
   } f, nextF;
-  
+
   command error_t Init.init() {
     atomic
       {
 	Atm128Adcsra_t adcsr;
 
 	adcsr.aden = ATM128_ADC_ENABLE_OFF;
-	adcsr.adsc = ATM128_ADC_START_CONVERSION_OFF;  
-	adcsr.adate= ATM128_ADC_FREE_RUNNING_OFF; 
-	adcsr.adif = ATM128_ADC_INT_FLAG_OFF;               
-	adcsr.adie = ATM128_ADC_INT_ENABLE_OFF;       
+	adcsr.adsc = ATM128_ADC_START_CONVERSION_OFF;
+	adcsr.adate= ATM128_ADC_FREE_RUNNING_OFF;
+	adcsr.adif = ATM128_ADC_INT_FLAG_OFF;
+	adcsr.adie = ATM128_ADC_INT_ENABLE_OFF;
 	adcsr.adps = ATM128_ADC_PRESCALE_2;
 	call HplAtm128Adc.setAdcsra(adcsr);
       }
@@ -121,7 +121,7 @@ implementation
 
   /* We enable the A/D when start is called, and disable it when stop is
      called. This drops A/D conversion latency by a factor of two (but
-     increases idle mode power consumption a little). 
+     increases idle mode power consumption a little).
   */
   async command error_t AsyncStdControl.start() {
     atomic call HplAtm128Adc.enableAdc();
@@ -147,7 +147,7 @@ implementation
     bool precise, multiple;
     uint8_t channel;
 
-    atomic 
+    atomic
       {
 	channel = f.channel;
 	precise = f.precise;
@@ -174,7 +174,7 @@ implementation
 	uint8_t nextChannel, nextVoltage;
 	Atm128Admux_t admux;
 
-	atomic 
+	atomic
 	  {
 	    admux = call HplAtm128Adc.getAdmux();
 	    nextVoltage = admux.refs;

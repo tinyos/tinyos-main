@@ -6,18 +6,18 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
- * IN NO EVENT SHALL CROSSBOW TECHNOLOGY OR ANY OF ITS LICENSORS BE LIABLE TO 
- * ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL 
+ *
+ * IN NO EVENT SHALL CROSSBOW TECHNOLOGY OR ANY OF ITS LICENSORS BE LIABLE TO
+ * ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
  * DAMAGES ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
- * IF CROSSBOW OR ITS LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
- * DAMAGE. 
+ * IF CROSSBOW OR ITS LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
  *
  * CROSSBOW TECHNOLOGY AND ITS LICENSORS SPECIFICALLY DISCLAIM ALL WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS 
- * ON AN "AS IS" BASIS, AND NEITHER CROSSBOW NOR ANY LICENSOR HAS ANY 
- * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR 
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND NEITHER CROSSBOW NOR ANY LICENSOR HAS ANY
+ * OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
  * MODIFICATIONS.
  */
 
@@ -29,12 +29,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -52,7 +52,7 @@
 
 #include <Atm128Timer.h>
 
-module HplAtm1281Timer3P
+module HplAtm1281Timer3P @safe()
 {
   provides {
     // 16-bit Timers
@@ -79,56 +79,56 @@ implementation
   async command void Timer.off() { call Timer.setScale(AVR_CLOCK_OFF); }
 
   //=== Write a new timer scale. ========================================
-  async command void Timer.setScale(uint8_t s)  { 
+  async command void Timer.setScale(uint8_t s)  {
     Atm128_TCCRB_t x = (Atm128_TCCRB_t) call TimerCtrl.getControlB();
     x.bits.cs = s;
-    call TimerCtrl.setControlB(x.flat);  
+    call TimerCtrl.setControlB(x.flat);
   }
 
   //=== Read the control registers. =====================================
-  async command uint8_t TimerCtrl.getControlA() { 
-    return TCCR3A; 
+  async command uint8_t TimerCtrl.getControlA() {
+    return TCCR3A;
   }
 
-  async command uint8_t TimerCtrl.getControlB() { 
-    return TCCR3B; 
+  async command uint8_t TimerCtrl.getControlB() {
+    return TCCR3B;
   }
 
-  async command uint8_t TimerCtrl.getControlC() { 
-    return TCCR3C; 
+  async command uint8_t TimerCtrl.getControlC() {
+    return TCCR3C;
   }
 
   //=== Write the control registers. ====================================
-  async command void TimerCtrl.setControlA( uint8_t x ) { 
-    TCCR3A = x; 
+  async command void TimerCtrl.setControlA( uint8_t x ) {
+    TCCR3A = x;
   }
 
-  async command void TimerCtrl.setControlB( uint8_t x ) { 
-    TCCR3B = x; 
+  async command void TimerCtrl.setControlB( uint8_t x ) {
+    TCCR3B = x;
   }
 
-  async command void TimerCtrl.setControlC( uint8_t x ) { 
-    TCCR3C = x; 
+  async command void TimerCtrl.setControlC( uint8_t x ) {
+    TCCR3C = x;
   }
 
   //=== Read the interrupt mask. =====================================
-  async command uint8_t TimerCtrl.getInterruptMask() { 
-    return TIMSK3; 
+  async command uint8_t TimerCtrl.getInterruptMask() {
+    return TIMSK3;
   }
 
   //=== Write the interrupt mask. ====================================
-  async command void TimerCtrl.setInterruptMask( uint8_t x ) { 
-    TIMSK3 = x; 
+  async command void TimerCtrl.setInterruptMask( uint8_t x ) {
+    TIMSK3 = x;
   }
 
   //=== Read the interrupt flags. =====================================
-  async command uint8_t TimerCtrl.getInterruptFlag() { 
-    return TIFR3; 
+  async command uint8_t TimerCtrl.getInterruptFlag() {
+    return TIFR3;
   }
 
   //=== Write the interrupt flags. ====================================
-  async command void TimerCtrl.setInterruptFlag( uint8_t x ) { 
-    TIFR3 = x; 
+  async command void TimerCtrl.setInterruptFlag( uint8_t x ) {
+    TIFR3 = x;
   }
 
   //=== Capture 16-bit implementation. ===================================
@@ -153,20 +153,20 @@ implementation
   async command void CompareB.stop() { CLR_BIT(TIMSK3,OCIE3B); }
   async command void CompareC.stop() { CLR_BIT(TIMSK3,OCIE3C); }
 
-  async command bool Timer.test() { 
-    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.tov; 
+  async command bool Timer.test() {
+    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.tov;
   }
-  async command bool Capture.test()  { 
-    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.icf; 
+  async command bool Capture.test()  {
+    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.icf;
   }
-  async command bool CompareA.test() { 
-    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfa; 
+  async command bool CompareA.test() {
+    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfa;
   }
-  async command bool CompareB.test() { 
-    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfb; 
+  async command bool CompareB.test() {
+    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfb;
   }
-  async command bool CompareC.test() { 
-    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfc; 
+  async command bool CompareC.test() {
+    return ((Atm128_TIFR_t)call TimerCtrl.getInterruptFlag()).bits.ocfc;
   }
 
   async command bool Timer.isOn() {

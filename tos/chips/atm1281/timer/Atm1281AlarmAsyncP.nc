@@ -1,11 +1,11 @@
-// $Id: Atm1281AlarmAsyncP.nc,v 1.1 2007-11-05 20:36:42 sallai Exp $
+// $Id: Atm1281AlarmAsyncP.nc,v 1.2 2008-07-07 19:52:52 sallai Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
  *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * This file is distributed under the terms in the attached INTEL-LICENSE
  * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
  * 94704.  Attention:  Intel License Inquiry.
  */
 
@@ -17,12 +17,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -30,13 +30,13 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  */
-  
+
 /**
  * Build a 32-bit alarm and counter from the atmega1281's 8-bit timer 2
  * in asynchronous mode. Attempting to use the generic Atm128AlarmC
  * component and the generic timer components runs into problems
  * apparently related to letting timer 2 overflow.
- * 
+ *
  * So, instead, this version (inspired by the 1.x code and a remark from
  * Martin Turon) directly builds a 32-bit alarm and counter on top of timer 2
  * and never lets timer 2 overflow.
@@ -44,7 +44,7 @@
  * @author David Gay
  * @author Janos Sallai <janos.sallai@vanderbilt.edu>
  */
-generic module Atm1281AlarmAsyncP(typedef precision, int divider) {
+generic module Atm1281AlarmAsyncP(typedef precision, int divider) @safe() {
   provides {
     interface Init;
     interface Alarm<precision, uint32_t>;
@@ -80,7 +80,7 @@ implementation
       {
 	Atm128_TCCR2A_t x;
 	Atm128_TCCR2B_t y;
-    
+
 	call TimerAsync.setTimer2Asynchronous();
 	x.flat = 0;
 	x.bits.wgm21 = 1; /* We use the clear-on-compare mode */
@@ -95,7 +95,7 @@ implementation
     return SUCCESS;
   }
 
-  /* Set compare register for timer 2 to n. But increment n by 1 if TCNT2 
+  /* Set compare register for timer 2 to n. But increment n by 1 if TCNT2
      reaches this value before we can set the compare register.
   */
   void setOcr2A(uint8_t n) {
@@ -103,7 +103,7 @@ implementation
       ;
     if (n == call Timer.get())
       n++;
-    /* Support for overflow. Force interrupt at wrap around value. 
+    /* Support for overflow. Force interrupt at wrap around value.
        This does not cause a backwards-in-time value as we do this
        every time we set OCR2A. */
     if (base + n + 1 < base)
@@ -183,7 +183,7 @@ implementation
     setInterrupt();
     if (overflowed)
       signal Counter.overflow();
-  }  
+  }
 
   async command uint32_t Counter.get() {
     uint32_t now;
@@ -212,7 +212,7 @@ implementation
 	!(base + call Compare.get() + 1);
   }
 
-  async command void Counter.clearOverflow() { 
+  async command void Counter.clearOverflow() {
     atomic
       if (call Counter.isOverflowPending())
 	{
