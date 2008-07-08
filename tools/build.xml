@@ -17,7 +17,7 @@
 		<exec executable="./Bootstrap" failonerror="true">
 		</exec>
 		<exec executable="./configure" failonerror="true">
-			<arg line="--prefix=/scratch/tos2/usr --quiet" />
+			<arg line="--prefix=/scratch/tos2_trial --quiet" />
 			</exec>
 		<exec executable="make" failonerror="true">
 			<arg line="install" />
