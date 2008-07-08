@@ -41,6 +41,8 @@ module RssiBaseC {
 
 #ifdef __CC2420_H__
   uses interface CC2420Packet;
+#elif defined(TDA5250_MESSAGE_H)
+  uses interface Tda5250Packet;    
 #else
   uses interface PacketField<uint8_t> as PacketRSSI;
 #endif 
@@ -73,8 +75,12 @@ module RssiBaseC {
     else
       return 0xFFFF;
   }
+#elif defined(TDA5250_MESSAGE_H)
+   uint16_t getRssi(message_t *msg){
+       return call Tda5250Packet.getSnr(msg);
+   }
 #else
   #error Radio chip not supported! This demo currently works only \
-         for motes with CC1000, CC2420 or RF230 radios.  
+         for motes with CC1000, CC2420, RF230 or TDA5250 radios.  
 #endif
 }
