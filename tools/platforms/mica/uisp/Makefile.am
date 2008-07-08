@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.am,v 1.4 2006-12-12 18:23:00 vlahan Exp $
+# $Id: Makefile.am,v 1.5 2008-07-08 12:31:18 beutel Exp $
 #
 # uisp - The Micro In-System Programmer for Atmel AVR microcontrollers.
 # Copyright (C) 2002  Theodore A. Roth
@@ -49,7 +49,7 @@ DIST_SUBDIRS         = $(SUBDIRS)
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure src/config-h.in \
                        src/stamp-h.in $(AUX_DIST)
 
-ACLOCAL              = aclocal -I $(auxdir)
+ACLOCAL              = aclocal --warnings=none -I $(auxdir)
 
 install_aux_files    = AUTHORS ChangeLog COPYING INSTALL CHANGES CHANGES.old \
                        TODO
