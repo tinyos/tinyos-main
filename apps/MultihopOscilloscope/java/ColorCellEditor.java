@@ -20,26 +20,26 @@ public class ColorCellEditor extends AbstractCellEditor
     private JButton button;
 
     public ColorCellEditor(String title) {
-	button = new JButton();
-	final JColorChooser chooser = new JColorChooser();
-	final JDialog dialog = JColorChooser.createDialog
-	    (button, title, true, chooser,
-	     new ActionListener() {
-		 public void actionPerformed(ActionEvent e) {
-		     color = chooser.getColor();
-		 } },
-	     null);
+    button = new JButton();
+    final JColorChooser chooser = new JColorChooser();
+    final JDialog dialog = JColorChooser.createDialog
+        (button, title, true, chooser,
+         new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+             color = chooser.getColor();
+         } },
+         null);
 
-	button.setBorderPainted(false);
-	button.addActionListener
-	    (new ActionListener () {
-		    public void actionPerformed(ActionEvent e) {
-			button.setBackground(color);
-			chooser.setColor(color);
-			dialog.setVisible(true);
-			fireEditingStopped();
-		    } } );
-	
+    button.setBorderPainted(false);
+    button.addActionListener
+        (new ActionListener () {
+            public void actionPerformed(ActionEvent e) {
+            button.setBackground(color);
+            chooser.setColor(color);
+            dialog.setVisible(true);
+            fireEditingStopped();
+            } } );
+    
     }
 
     public Object getCellEditorValue() { return color; }
