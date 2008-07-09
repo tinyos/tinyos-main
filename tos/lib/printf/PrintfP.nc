@@ -111,11 +111,13 @@ implementation {
   }
 
   event void SerialControl.startDone(error_t error) {
+    if (state == S_STOPPED) {
 #ifdef _H_atmega128hardware_H
-    stdout = &atm128_stdout;
+      stdout = &atm128_stdout;
 #endif
-    atomic state = S_STARTED;
-    signal Boot.booted();
+      atomic state = S_STARTED;
+      signal Boot.booted();
+    }
   }
 
   event void SerialControl.stopDone(error_t error) {
