@@ -51,7 +51,8 @@ configuration TimeSyncMessageC {
 implementation {
     components TimeSyncMessageP as TS;
     components ActiveMessageC as AM;
-
+    components LocalTimeC as LT;
+    
     SplitControl = AM;
 
     Receive      = AM.Receive;
@@ -64,6 +65,7 @@ implementation {
 
     TS.SubSend -> AM.AMSend;
     TS.AMPacket -> AM.AMPacket;
+    TS.LocalTimeMilli -> LT;
 
     TimeSyncAMSend32khz       = TS;
     TimeSyncAMSendMilli       = TS;

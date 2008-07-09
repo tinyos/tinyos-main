@@ -94,7 +94,7 @@ implementation  {
     }
     
     async command uint32_t LocalTimeTMilli.get() {
-        return (call LocalTime32kHz.get() / 32);
+        return (call WideLocalTime.get() / 32);
     }
 }
 

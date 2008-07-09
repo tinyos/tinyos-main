@@ -34,6 +34,9 @@ module PacketStampP {
         interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
         interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
     }
+    uses {
+        interface LocalTime<TMilli> as LocalTimeMilli;
+    }
 }
 implementation  {
     async command bool PacketTimeStamp32khz.isValid(message_t* msg) {
@@ -47,14 +50,15 @@ implementation  {
     async command void PacketTimeStamp32khz.set(message_t* msg, uint32_t value) {
         getMetadata(msg)->time = value;
     }
-    
     async command bool PacketTimeStampMilli.isValid(message_t* msg) {
         return TRUE;
     }
     async command void PacketTimeStampMilli.clear(message_t* msg) {
     }
     async command uint32_t PacketTimeStampMilli.timestamp(message_t* msg) {
-        return (getMetadata(msg)->time / 32);
+        uint32_t now = call LocalTimeMilli.get();
+        uint32_t delay = (now * 32) - (getMetadata(msg)->time);
+        return now - (delay / 32);
     }
     async command void PacketTimeStampMilli.set(message_t* msg, uint32_t value) {
         getMetadata(msg)->time = value * 32;

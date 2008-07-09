@@ -43,6 +43,7 @@ module TimeSyncMessageP {
     uses {
         interface AMSend as SubSend[am_id_t id];
         interface AMPacket;
+        interface LocalTime<TMilli> as LocalTimeMilli;
     }
 }
 implementation {
@@ -111,7 +112,9 @@ implementation {
     }
     
     command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg) {
-        return (getMetadata(msg)->time / 32);
+        uint32_t now = call LocalTimeMilli.get();
+        uint32_t delay = (now * 32) - (getMetadata(msg)->time);
+        return now - (delay / 32);
     };
 
     event void SubSend.sendDone[uint8_t id](message_t* msg, error_t result) {

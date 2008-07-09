@@ -35,7 +35,10 @@ configuration PacketStampC {
 }
 implementation  {
     components PacketStampP as PS;
+    components LocalTimeC as LT;
+    
     PacketTimeStamp32khz = PS;
     PacketTimeStampMilli = PS;
+    PS.LocalTimeMilli -> LT;  
 }
 
