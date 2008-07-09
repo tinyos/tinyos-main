@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: micaz.target,v 1.5 2007-11-06 19:32:56 sallai Exp $
+#$Id: micaz.target,v 1.6 2008-07-09 15:36:50 sallai Exp $
 
 PLATFORM = micaz
 SENSORBOARD ?= micasb
@@ -11,8 +11,12 @@ endif
 ifeq ($(PROGRAMMER),uisp)
   PROGRAMMER_PART ?= -dpart=ATmega128  --wr_fuse_e=ff
 endif
-  
+
 AVR_FUSE_H ?= 0xd9
+
+ifdef CC2420_CHANNEL
+PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)
+endif
 
 $(call TOSMake_include_platform,avr)
 
