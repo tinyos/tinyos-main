@@ -1,5 +1,5 @@
 /* -*- mode:c++; indent-tabs-mode:nil -*- 
- * Copyright (c) 2007, Technische Universitaet Berlin
+ * Copyright (c) 2008, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -27,18 +27,15 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-configuration LocalTimeC {
+configuration PacketStampC {
     provides {  
-        interface LocalTime<T32khz> as LocalTimeT32khz;
-        interface LocalTime<TMilli> as LocalTimeTMilli;
-        interface WideLocalTime<T32khz> as WideLocalTime;
+        interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+        interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
     }
 }
 implementation  {
-    components LocalTimeP, Counter32khz16C as Counter;
-    LocalTimeT32khz = LocalTimeP;
-    LocalTimeTMilli = LocalTimeP;
-    WideLocalTime = LocalTimeP;
-    LocalTimeP.Counter32khz16 -> Counter;
+    components PacketStampP as PS;
+    PacketTimeStamp32khz = PS;
+    PacketTimeStampMilli = PS;
 }
 

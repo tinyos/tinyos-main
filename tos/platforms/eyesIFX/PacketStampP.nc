@@ -1,5 +1,5 @@
 /* -*- mode:c++; indent-tabs-mode:nil -*- 
- * Copyright (c) 2007, Technische Universitaet Berlin
+ * Copyright (c) 2008, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -27,18 +27,37 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-configuration LocalTimeC {
+#include "radiopacketfunctions.h"
+
+module PacketStampP {
     provides {  
-        interface LocalTime<T32khz> as LocalTimeT32khz;
-        interface LocalTime<TMilli> as LocalTimeTMilli;
-        interface WideLocalTime<T32khz> as WideLocalTime;
+        interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+        interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
     }
 }
 implementation  {
-    components LocalTimeP, Counter32khz16C as Counter;
-    LocalTimeT32khz = LocalTimeP;
-    LocalTimeTMilli = LocalTimeP;
-    WideLocalTime = LocalTimeP;
-    LocalTimeP.Counter32khz16 -> Counter;
+    async command bool PacketTimeStamp32khz.isValid(message_t* msg) {
+        return TRUE;
+    }
+    async command void PacketTimeStamp32khz.clear(message_t* msg) {
+    }
+    async command uint32_t PacketTimeStamp32khz.timestamp(message_t* msg) {
+        return getMetadata(msg)->time;
+    }
+    async command void PacketTimeStamp32khz.set(message_t* msg, uint32_t value) {
+        getMetadata(msg)->time = value;
+    }
+    
+    async command bool PacketTimeStampMilli.isValid(message_t* msg) {
+        return TRUE;
+    }
+    async command void PacketTimeStampMilli.clear(message_t* msg) {
+    }
+    async command uint32_t PacketTimeStampMilli.timestamp(message_t* msg) {
+        return (getMetadata(msg)->time / 32);
+    }
+    async command void PacketTimeStampMilli.set(message_t* msg, uint32_t value) {
+        getMetadata(msg)->time = value * 32;
+    }
 }
 

@@ -30,6 +30,7 @@
 module LocalTimeP {
     provides {  
         interface LocalTime<T32khz> as LocalTime32kHz;
+        interface LocalTime<TMilli> as LocalTimeTMilli;
         interface WideLocalTime<T32khz> as WideLocalTime;
     }
     uses {
@@ -90,6 +91,10 @@ implementation  {
         ++counter2sec;
         if(counter2sec == 0) ++dayCounter;
         if(dayCounter < 0) dayCounter = 0;
+    }
+    
+    async command uint32_t LocalTimeTMilli.get() {
+        return (call LocalTime32kHz.get() / 32);
     }
 }
 

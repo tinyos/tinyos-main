@@ -1,5 +1,5 @@
 /* -*- mode:c++; indent-tabs-mode:nil -*- 
- * Copyright (c) 2007, Technische Universitaet Berlin
+ * Copyright (c) 2008, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -27,18 +27,46 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-configuration LocalTimeC {
-    provides {  
-        interface LocalTime<T32khz> as LocalTimeT32khz;
-        interface LocalTime<TMilli> as LocalTimeTMilli;
-        interface WideLocalTime<T32khz> as WideLocalTime;
-    }
-}
-implementation  {
-    components LocalTimeP, Counter32khz16C as Counter;
-    LocalTimeT32khz = LocalTimeP;
-    LocalTimeTMilli = LocalTimeP;
-    WideLocalTime = LocalTimeP;
-    LocalTimeP.Counter32khz16 -> Counter;
-}
+/**
+ * Expose the time sync capabilities of the eyesIFX platform 
+ */
+configuration TimeSyncMessageC {
+  provides {
+    interface SplitControl;
+    interface Receive[am_id_t id];
+    interface Receive as Snoop[am_id_t id];
+    interface Packet;
+    interface AMPacket;
 
+    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+    interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+
+    interface TimeSyncAMSend<T32khz, uint32_t> as TimeSyncAMSend32khz[am_id_t id];
+    interface TimeSyncPacket<T32khz, uint32_t> as TimeSyncPacket32khz;
+
+    interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
+    interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
+  }
+}
+implementation {
+    components TimeSyncMessageP as TS;
+    components ActiveMessageC as AM;
+
+    SplitControl = AM;
+
+    Receive      = AM.Receive;
+    Snoop        = AM.Snoop;
+    Packet       = AM;
+    AMPacket     = AM;
+    
+    PacketTimeStamp32khz = AM;
+    PacketTimeStampMilli = AM;
+
+    TS.SubSend -> AM.AMSend;
+    TS.AMPacket -> AM.AMPacket;
+
+    TimeSyncAMSend32khz       = TS;
+    TimeSyncAMSendMilli       = TS;
+    TimeSyncPacket32khz       = TS;
+    TimeSyncPacketMilli       = TS;
+}
