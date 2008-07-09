@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.7 $ $Date: 2008-06-23 20:25:15 $
+ * @version $Revision: 1.8 $ $Date: 2008-07-09 16:23:27 $
  */
 
 #include "CC2420.h"
@@ -272,7 +272,7 @@ implementation {
            // set timesync event time as the offset between the event time and the SFD interrupt time (TEP  133)
            *timesync  -= time32;
            call CSN.clr();
-           call TXFIFO_RAM.write( call PacketTimeSyncOffset.get(m_msg), (void*)timesync, sizeof(timesync_radio_t) );
+           call TXFIFO_RAM.write( call PacketTimeSyncOffset.get(m_msg), (uint8_t*)timesync, sizeof(timesync_radio_t) );
            call CSN.set();
         }
 
