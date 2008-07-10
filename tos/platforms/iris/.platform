@@ -6,15 +6,14 @@
 # @includes instead of -I's to @opts, otherwise the %T won't be processed
 # by ncc.
 #
-# $Id: .platform,v 1.4 2008-06-17 18:21:08 sallai Exp $
+# $Id: .platform,v 1.5 2008-07-10 16:42:25 sallai Exp $
 #
 push( @includes, qw(
-
   %T/platforms/micaz
   %T/platforms/mica
   %T/platforms/iris/chips/rf230
   %T/chips/rf230
-  %T/chips/cc2420	# for IEEE802154.h
+  %T/chips/cc2420
   %T/platforms/iris/chips/at45db
   %T/platforms/mica2/chips/at45db
   %T/platforms/mica/chips/at45db
@@ -31,8 +30,7 @@ push( @includes, qw(
   %T/lib/timer
   %T/lib/serial
   %T/lib/power
-  %T/lib/diagmsg	# for testing purposes
-
+  %T/lib/diagmsg
 ) );
 
 @opts = qw(
