@@ -33,9 +33,16 @@ from flash and sent out over the radio.  Once all of the records currently
 recorded to flash since the last batch of sends have been sent out, LED2 Toggles
 to indicate completion.  This process continues in an infinite loop forever.
 
-Additionally, a base station application should be run to verify the reception
-of packets sent from a TestLogStorage mote, with reasonable looking sensor 
-data (i.e. counting up from 0 to ...).
+Additionally, the TestLogStorage mote writes its records out to the serial
+port. You can test that the application is working properly by reading these
+packets (e.g., through seriallisten) and checking that they have reasonable
+values, counting up from 0. E.g.:
+
+00 ff ff 00 00 06 00 25 00 00 00 9f 00 9f 
+00 ff ff 00 00 06 00 25 00 00 00 a0 00 a0 
+00 ff ff 00 00 06 00 25 00 00 00 a1 00 a1 
+00 ff ff 00 00 06 00 25 00 00 00 a2 00 a2 
+00 ff ff 00 00 06 00 25 00 00 00 a3 00 a3 
 
 Tools:
   None.
