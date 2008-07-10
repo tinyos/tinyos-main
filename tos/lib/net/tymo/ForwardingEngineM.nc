@@ -43,7 +43,7 @@ implementation {
   message_t * waiting;
   uint8_t typebuf;
   uint8_t lenWaiting;
-  uint8_t amWaiting;
+  uint8_t amWaiting = 0;
   am_addr_t bufAddr;
   am_addr_t * addrWaiting;
   bool lockAvail, lockWaiting;
@@ -60,6 +60,7 @@ implementation {
     case FW_SEND:
       call PPacket.setPayloadLength(msg, len);
       acks = DYMO_LINK_FEEDBACK && (call Acks.requestAck(msg) == SUCCESS);
+      typebuf = am;
       return call SubSend.send(call AMPacket.destination(msg), msg, call SubPacket.payloadLength(msg));
 
     case FW_WAIT: 
@@ -90,23 +91,29 @@ implementation {
     switch(call RouteSelect.selectRoute(msg, NULL, &typebuf)){
     case FW_SEND:
       atomic {
-	if(lockAvail)
+	if (lockAvail) {
+          dbg("fwe", "FE: Discarding a received message because no avail buffer.\n");
 	  return msg;
+        }
 	lockAvail = TRUE;
       }
       if ( signal Intercept.forward[typebuf](msg, call PPacket.getPayload(msg, call PPacket.payloadLength(msg)), call PPacket.payloadLength(msg)) ) {
+          acks = DYMO_LINK_FEEDBACK && (call Acks.requestAck(msg) == SUCCESS);
 	  call SubSend.send(call AMPacket.destination(msg), msg, len);
       }
       return avail;
 
     case FW_RECEIVE:
+      dbg("fwe", "FE: Received a message, signaling to upper layer.\n");
       payload = call PPacket.getPayload(msg, call PPacket.payloadLength(msg));
       return signal Receive.receive[typebuf](msg, payload, call PPacket.payloadLength(msg));
 
     case FW_WAIT:
       atomic {
-	if(lockAvail || lockWaiting)
+	if(lockAvail || lockWaiting) {
+          dbg("fwe", "FE: Discarding a received message because no avail or wait buffer.\n");
 	  return msg;
+        }
 	lockAvail = lockWaiting = TRUE;
       }
       waiting = msg;
@@ -117,13 +124,14 @@ implementation {
       return avail;
 
     default:
+      dbg("fwe", "FE: Discarding a received message because I don't know what to do.\n");
       return msg;
     }
   }
 
   event void SubSend.sendDone(message_t * msg, error_t e){
-    dbg("fwe", "FE: Sending done.\n");
-    if( (e == SUCCESS) && acks ){
+    dbg("fwe", "FE: Sending done...\n");
+    if ((e == SUCCESS) && acks) {
       if( !(call Acks.wasAcked(msg)) ){
 	e = FAIL;
 	dbg("fwe", "FE: The message was not acked => FAIL.\n");
@@ -131,17 +139,24 @@ implementation {
 	signal LinkMonitor.brokenLink(call AMPacket.destination(msg));
       }
     } else if (e != SUCCESS) {
-      dbg("fwe", "FE: But failed!\n");
+      dbg("fwe", "FE: ...but failed!\n");
       signal MHControl.sendFailed(msg, 1);
     }
-
-    if(lockAvail){
+    
+    if (lockAvail) {
       avail = msg;
       atomic {
 	lockAvail = FALSE;
       }
+      dbg("fwe", "FE: No need to signal sendDone.\n");
     } else {
-      signal AMSend.sendDone[amWaiting](msg, e);
+      dbg("fwe", "FE: Signaling sendDone.\n");
+      if (amWaiting) {
+         signal AMSend.sendDone[amWaiting](msg, e);
+         amWaiting = 0;
+      } else {
+         signal AMSend.sendDone[typebuf](msg, e);
+      }
       atomic {
 	lockWaiting = FALSE;
       }
