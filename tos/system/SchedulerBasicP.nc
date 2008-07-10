@@ -1,4 +1,4 @@
-// $Id: SchedulerBasicP.nc,v 1.6 2008-06-24 05:32:32 regehr Exp $
+// $Id: SchedulerBasicP.nc,v 1.7 2008-07-10 20:44:08 regehr Exp $
 
 /*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -53,9 +53,9 @@ implementation
     NO_TASK = 255,
   };
 
-  volatile uint8_t m_head;
-  volatile uint8_t m_tail;
-  volatile uint8_t m_next[NUM_TASKS];
+  uint8_t m_head;
+  uint8_t m_tail;
+  uint8_t m_next[NUM_TASKS];
 
   // Helper functions (internal functions) intentionally do not have atomic
   // sections.  It is left as the duty of the exported interface functions to
