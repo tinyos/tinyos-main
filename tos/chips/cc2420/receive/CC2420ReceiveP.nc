@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.14 $ $Date: 2008-06-23 23:40:21 $
+ * @version $Revision: 1.15 $ $Date: 2008-07-10 21:46:14 $
  */
 
 #include "IEEE802154.h"
@@ -214,7 +214,7 @@ implementation {
         
         if(rxFrameLength <= MAC_PACKET_SIZE) {
           if(rxFrameLength > 0) {
-            if(rxFrameLength > SACK_HEADER_LENGTH) {
+            if(rxFrameLength >= CC2420_SIZE) {
               // This packet has an FCF byte plus at least one more byte to read
               call RXFIFO.continueRead(buf + 1, SACK_HEADER_LENGTH);
               
