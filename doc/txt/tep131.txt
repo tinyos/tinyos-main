@@ -1388,7 +1388,7 @@ each.
  
    async command void setControl(msp430_compare_control_t control );
    async command void setControlAsCompare();
-   async command void setControlAsCapture(bool low_to_high);
+   async command void setControlAsCapture(uint8_t cm);
  
    async command void enableEvents();
    async command void disableEvents();
