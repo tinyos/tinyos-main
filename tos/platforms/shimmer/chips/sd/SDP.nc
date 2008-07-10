@@ -3,7 +3,7 @@
 * REPRESENTATIONS, EITHER EXPRESS, IMPLIED OR STATUTORY, 
 * INCLUDING ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS 
 * FOR A PARTICULAR PURPOSE, LACK OF VIRUSES, ACCURACY OR 
-* COMPLETENESS OF RESPONSES, RESULTS AND LACK OF NEGLIGENCE. 
+* COMPLETENESS OF RESPONSES, RESULTS AND LACK OF NEGLIGENCE.           
 * TI DISCLAIMS ANY WARRANTY OF TITLE, QUIET ENJOYMENT, QUIET 
 * POSSESSION, AND NON-INFRINGEMENT OF ANY THIRD PARTY 
 * INTELLECTUAL PROPERTY RIGHTS WITH REGARD TO THE PROGRAM OR 
@@ -113,10 +113,6 @@ implementation
     async event void HplMsp430UsartInterrupts.txDone()             {/*do nothing*/}
     async event void HplMsp430UsartInterrupts.rxDone(uint8_t data) {/*do nothing*/}
 
-    event void Boot.booted()
-    {
-        call SD.init();
-    }
 
   // This is from TOS 1.x!
   void setModeSPI()
@@ -270,20 +266,7 @@ implementation
     return response;
   }
 
-  command mmcerror_t SD.init(){
-    register uint8_t i;
-
-    initSPI();
-
-    CS_HIGH();
-
-    for(i = 0; i < 10; i++)
-      spiSendByte(0xff);
-    
-    return call SD.setIdle();
-  }
-
-  command mmcerror_t SD.setIdle(){
+  mmcerror_t SD_setIdle() {
     char response;
     CS_LOW();
 
@@ -307,18 +290,35 @@ implementation
     return MMC_SUCCESS;
   }
 
-  // we don't have pin for this one yet; it uses cd pin, which we don't have wired in mock-up
-  //  command mmcerror_t detect();
+  mmcerror_t SD_init() {
+    register uint8_t i;
 
+    initSPI();
+
+    CS_HIGH();
+
+    for(i = 0; i < 10; i++)
+      spiSendByte(0xff);
+    
+    return SD_setIdle();
+  }
+
+    event void Boot.booted()
+    {
+        SD_init();
+    }
+
+
+  // we don't have pin for this one yet; it uses cd pin, which we don't have wired in mock-up
   // change block length to 2^len bytes; default is 512
-  command mmcerror_t SD.setBlockLength (const uint16_t len) {
+  mmcerror_t SD_setBlockLength (const uint16_t len) {
     CS_LOW ();
 
     sendCmd(MMC_SET_BLOCKLEN, len, 0xff);
 
     // get response from card, should be 0; so, shouldn't this be 'while'?
     if(getResponse() != 0x00){
-      call SD.init();
+      SD_init();
       sendCmd(MMC_SET_BLOCKLEN, len, 0xff);
       getResponse();
     }
@@ -332,17 +332,13 @@ implementation
   }
     
 
-  command mmcerror_t SD.readSector(uint32_t sector, uint8_t * pBuffer) {
-    return call SD.readBlock(sector * 512, 512, pBuffer);
-  }
-
   // see macro in module for writing to a sector instead of an address
-  command mmcerror_t SD.readBlock(const uint32_t address, const uint16_t count, uint8_t * buffer){
+  mmcerror_t SD_readBlock(const uint32_t address, const uint16_t count, uint8_t * buffer){
     register uint16_t i = 0;
     uint8_t rvalue = MMC_RESPONSE_ERROR;
 
     // Set the block length to read
-    if(call SD.setBlockLength(count) == MMC_SUCCESS){   // block length can be set
+    if(SD_setBlockLength(count) == MMC_SUCCESS){   // block length can be set
       CS_LOW ();
 
       sendCmd(MMC_READ_SINGLE_BLOCK, address, 0xff);
@@ -382,17 +378,12 @@ implementation
     return rvalue;
   }
 
-  command mmcerror_t SD.writeSector(uint32_t sector, uint8_t * pBuffer){
-    return call SD.writeBlock(sector * 512, 512, pBuffer);
-  }
-
-
-  command mmcerror_t SD.writeBlock(const uint32_t address, const uint16_t count, uint8_t * buffer){
+  mmcerror_t SD_writeBlock(const uint32_t address, const uint16_t count, uint8_t * buffer){
     register uint16_t i;
     uint8_t rvalue = MMC_RESPONSE_ERROR;         // MMC_SUCCESS;
 
     // Set the block length to write
-    if(call SD.setBlockLength (count) == MMC_SUCCESS){   // block length could be set
+    if(SD_setBlockLength (count) == MMC_SUCCESS){   // block length could be set
       //      call Leds.yellowOn();
       CS_LOW ();
       sendCmd(MMC_WRITE_BLOCK, address, 0xff);
@@ -433,11 +424,31 @@ implementation
     return rvalue;
   }
 
+  command error_t SD.readBlock(const uint32_t sector, void *bufferPtr)
+  {
+    mmcerror_t mmcerror = SD_readBlock(sector * 512, 512, bufferPtr);
+    if (mmcerror == MMC_SUCCESS)
+      return SUCCESS;
+    else
+      return FAIL;
+  }
+
+
+  command error_t SD.writeBlock(const uint32_t sector, void *bufferPtr)
+  {
+    mmcerror_t mmcerror = SD_writeBlock(sector * 512, 512, bufferPtr);
+    if (mmcerror == MMC_SUCCESS)
+      return SUCCESS;
+    else
+      return FAIL;
+  }
+
+
   // register read of length len into buffer
-  command mmcerror_t SD.readRegister(const uint8_t reg, const uint8_t len, uint8_t * buffer){
+  mmcerror_t SD_readRegister(const uint8_t reg, const uint8_t len, uint8_t * buffer){
     uint8_t uc, rvalue = MMC_TIMEOUT_ERROR;
 
-    if((call SD.setBlockLength (len)) == MMC_SUCCESS){
+    if((SD_setBlockLength (len)) == MMC_SUCCESS){
       CS_LOW ();
       // CRC not used: 0xff as last byte
       sendCmd(reg, 0x000000, 0xff);

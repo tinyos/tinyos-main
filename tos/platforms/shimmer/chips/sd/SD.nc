@@ -31,36 +31,36 @@
  * Interface for communciating with an SD card via a standard sd card slot.
  *
  * @author Steve Ayer
+ * @author Konrad Lorincz
  * @date May 2006
- */
-
+ */                      
 #include "SD.h"
 
-interface SD {
+interface SD 
+{
+    /**
+     * Returns the card size in bytes.
+     *
+     * @return the card size in bytes.
+     */
+    command uint32_t readCardSize();
 
-  command mmcerror_t init ();
+    /**
+     * Reads 512 bytes from the SD at sector and copies it to bufferPtr
+     *
+     * @param sector the sector on the SD card (in multiples of 512 bytes).
+     * @param bufferPtr pointer to where the SD will copy the data to.  Must be 512 bytes.
+     * @return <code>SUCCESS<code> if it was read successfully; <code>FAIL<code> otherwise
+    */
+    command error_t readBlock(const uint32_t sector, void *bufferPtr);
 
-  command mmcerror_t setIdle();
-
-  // we don't have pin for this one yet; it uses cd
-  //  command mmcerror_t detect();
-
-  // change block length to 2^len bytes; default is 512
-  command mmcerror_t setBlockLength (const uint16_t len);
-
-  // see macro in module for writing to a sector instead of an address
-  // read a block of size count from address
-  command mmcerror_t readBlock(const uint32_t address, const uint16_t count, uint8_t * buffer);
-  command mmcerror_t readSector(uint32_t sector, uint8_t * pBuffer);
-
-  // see macro in module for writing to a sector instead of an address
-  command mmcerror_t writeBlock (const uint32_t address, const uint16_t count, uint8_t * buffer);
-  command mmcerror_t writeSector(uint32_t sector, uint8_t * pBuffer);
-
-  // register read of length len into buffer
-  command mmcerror_t readRegister(const uint8_t register, const uint8_t len, uint8_t * buffer);
-
-  // Read the Card Size from the CSD Register
-  // unsupported on sdio only cards
-  command uint32_t readCardSize();
+    /**
+     * Writes 512 bytes from the bufferPtr to the SD card
+     *
+     * @param sector the sector on the SD card (in multiples of 512 bytes
+     *                       where to write the data to).
+     * @param bufferPtr pointer to data to be added.  Must be 512 bytes.
+     * @return <code>SUCCESS<code> if it was written successfully; <code>FAIL<code> otherwise
+     */
+    command error_t writeBlock(const uint32_t sector, void *bufferPtr);
 }
