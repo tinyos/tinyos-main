@@ -46,7 +46,7 @@ enum {
 typedef nx_struct dissemination_message {
   nx_uint16_t key;
   nx_uint32_t seqno;
-  nx_uint8_t data[0];
+  nx_uint8_t (COUNT(0) data)[0]; // Deputy place-holder, field will probably be removed when we Deputize Drip
 } dissemination_message_t;
 
 typedef nx_struct dissemination_probe_message {

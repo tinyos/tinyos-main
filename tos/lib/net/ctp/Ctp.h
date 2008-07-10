@@ -1,4 +1,4 @@
-/* $Id: Ctp.h,v 1.5 2008-06-20 21:54:32 gnawali Exp $ */
+/* $Id: Ctp.h,v 1.6 2008-07-10 18:59:47 idgay Exp $ */
 
 /*
  * Copyright (c) 2006 Stanford University.
@@ -37,7 +37,7 @@
  *  Collection Tree Protocol (CTP), as documented in TEP 123.
  *
  *  @author Philip Levis
- *  @date   $Date: 2008-06-20 21:54:32 $
+ *  @date   $Date: 2008-07-10 18:59:47 $
  */
 
 #ifndef CTP_H
@@ -69,14 +69,14 @@ typedef nx_struct {
   nx_am_addr_t        origin;
   nx_uint8_t          originSeqNo;
   nx_collection_id_t  type;
-  nx_uint8_t          data[0];
+  nx_uint8_t (COUNT(0) data)[0]; // Deputy place-holder, field will probably be removed when we Deputize Ctp
 } ctp_data_header_t;
 
 typedef nx_struct {
   nx_ctp_options_t    options;
   nx_am_addr_t        parent;
   nx_uint16_t         etx;
-  nx_uint8_t          data[0];
+  nx_uint8_t (COUNT(0) data)[0]; // Deputy place-holder, field will probably be removed when we Deputize Ctp
 } ctp_routing_header_t;
 
 #endif
