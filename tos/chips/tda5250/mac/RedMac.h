@@ -36,13 +36,6 @@
 #ifndef RED_MAC_H
 #define RED_MAC_H
 
-/*
- * highest bit of token set: this message is ACK and not intended for the
- * upper layers. Token is used for alternating bit like duplicate detection,
- * and set by the sender in [0,127] intervall. The receiver reflects the
- * token in the Ack, with the highest bit set. 
- */
-
 typedef nx_struct red_mac_header_t {
     nx_uint8_t    repetitionCounter;
     nx_uint32_t   time; // processing delay of message

@@ -788,6 +788,7 @@ implementation
                             rxStat.duplicate = PERF_NEW_MSG;
 #endif
                             storeStrength(msg);
+                            getMetadata(msg)->sfdtime = rxTime;
                             getMetadata(msg)->time = calcGeneratedTime((red_mac_header_t*) payload);
                             getMetadata(msg)->ack = WAS_NOT_ACKED;
                             m = signal MacReceive.receiveDone(msg);
@@ -949,8 +950,10 @@ implementation
     
     async event void RadioTimeStamping.transmittedSFD(uint16_t time, message_t* p_msg ) {
         if((macState == TX) && (p_msg == txBufPtr)) {
+            getMetadata(msg)->sfdtime = call LocalTime32kHz.get();
             txMacHdr->time =
-                call TimeDiff32.computeDelta(call LocalTime32kHz.get(), getMetadata(p_msg)->time);
+                call TimeDiff32.computeDelta(getMetadata(msg)->sfdtime,
+                                             getMetadata(p_msg)->time);
         }
     }
     

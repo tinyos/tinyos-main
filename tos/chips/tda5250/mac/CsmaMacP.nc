@@ -303,7 +303,7 @@ implementation
     task void postponeReRx() {
         call ReRxTimer.startOneShot(5000);
     }
-    
+
     uint16_t backoff(uint8_t counter) {
         uint16_t mask = BACKOFF_MASK >> (MAX_LONG_RETRY - counter);
         return (call Random.rand16() & mask);
@@ -962,7 +962,11 @@ implementation
         }
     }
     
-    async event void RadioTimeStamping.transmittedSFD( uint16_t time, message_t* p_msg ) {}
+    async event void RadioTimeStamping.transmittedSFD( uint16_t time, message_t* p_msg ) {
+        if((macState == TX) && (p_msg == txBufPtr)) {
+            // to do
+        }
+    }
 
     /***** Rssi Resource events ******************/
     event void RssiAdcResource.granted() {

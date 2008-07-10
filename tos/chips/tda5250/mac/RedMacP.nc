@@ -147,10 +147,10 @@ implementation
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         // DEFAULT_SLEEP_TIME=1625,
-        // DEFAULT_SLEEP_TIME=2048,
+        DEFAULT_SLEEP_TIME=2048,
         // DEFAULT_SLEEP_TIME=4096,
         // DEFAULT_SLEEP_TIME=8192,
-        DEFAULT_SLEEP_TIME=16384,
+        // DEFAULT_SLEEP_TIME=16384,
         // DEFAULT_SLEEP_TIME=32768U,
         // DEFAULT_SLEEP_TIME=65535U,
         DATA_DETECT_TIME=17,
@@ -875,6 +875,7 @@ implementation
 #ifdef DELTATIMEDEBUG
                             dTrace.sender = getHeader(msg)->src;
 #endif
+                            getMetadata(msg)->sfdtime = rxTime;
                             getMetadata(msg)->time = calcGeneratedTime((red_mac_header_t*) payload);
                             getMetadata(msg)->ack = WAS_NOT_ACKED;
                             m = signal MacReceive.receiveDone(msg);
@@ -1066,9 +1067,12 @@ implementation
             dTrace.delta = call TimeDiff32.computeDelta(dTrace.now, dTrace.msgTime);
             txMacHdr->time = dTrace.delta;
             call DeltaTrace.traceTx(&dTrace);
+            getMetadata(p_msg)->sfdtime = dTrace.now;
 #else
+            getMetadata(p_msg)->sfdtime = call LocalTime32kHz.get();
             txMacHdr->time =
-                call TimeDiff32.computeDelta(call LocalTime32kHz.get(), getMetadata(p_msg)->time);
+                call TimeDiff32.computeDelta(getMetadata(p_msg)->sfdtime,
+                                             getMetadata(p_msg)->time);
 #endif
         }
     }

@@ -1,4 +1,4 @@
-// -*- mode:c++; indent-tabs-mode: nil -*- $Id: Tda5250ActiveMessageP.nc,v 1.9 2007-09-13 23:10:16 scipio Exp $
+// -*- mode:c++; indent-tabs-mode: nil -*- $Id: Tda5250ActiveMessageP.nc,v 1.10 2008-07-10 12:40:02 andreaskoepke Exp $
 /* 
  * "Copyright (c) 2004-2005 The Regents of the University  of California.
  * All rights reserved.
@@ -30,7 +30,7 @@
 /*
  *
  * Authors:             Philip Levis
- * Date last modified:  $Id: Tda5250ActiveMessageP.nc,v 1.9 2007-09-13 23:10:16 scipio Exp $
+ * Date last modified:  $Id: Tda5250ActiveMessageP.nc,v 1.10 2008-07-10 12:40:02 andreaskoepke Exp $
  *
  */
 
@@ -157,7 +157,7 @@ implementation {
       return getMetadata(msg)->strength;
   }
   
- default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) {
+  default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) {
     return msg;
   }
 
