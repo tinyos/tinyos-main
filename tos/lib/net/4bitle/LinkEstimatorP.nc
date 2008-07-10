@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.7 2008-06-04 05:45:20 regehr Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.8 2008-07-10 19:01:00 idgay Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -574,7 +574,7 @@ implementation {
   // done sending the message that originated by
   // the user of this component
   event void AMSend.sendDone(message_t* msg, error_t error ) {
-    return signal Send.sendDone(msg, error);
+    signal Send.sendDone(msg, error);
   }
 
   // cascade the calls down
