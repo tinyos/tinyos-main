@@ -76,8 +76,7 @@ void tosthread_main(void* arg) {
       
     for (;;) {
       if (reading == NREADINGS) {
-        oscilloscope_t *o = o;
-        o = (oscilloscope_t *) collectionGetPayload(&sendbuf, sizeof(oscilloscope_t));
+        oscilloscope_t *o = (oscilloscope_t *) collectionGetPayload(&sendbuf, sizeof(oscilloscope_t));
         if (o == NULL) {
           fatal_problem();
           return;
