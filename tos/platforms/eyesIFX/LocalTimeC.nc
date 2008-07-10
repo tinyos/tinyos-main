@@ -30,14 +30,12 @@
 configuration LocalTimeC {
     provides {  
         interface LocalTime<T32khz> as LocalTimeT32khz;
-        interface LocalTime<TMilli> as LocalTimeTMilli;
         interface WideLocalTime<T32khz> as WideLocalTime;
     }
 }
 implementation  {
     components LocalTimeP, Counter32khz16C as Counter;
     LocalTimeT32khz = LocalTimeP;
-    LocalTimeTMilli = LocalTimeP;
     WideLocalTime = LocalTimeP;
     LocalTimeP.Counter32khz16 -> Counter;
 }

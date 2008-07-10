@@ -38,9 +38,6 @@ configuration TimeSyncMessageC {
     interface Packet;
     interface AMPacket;
 
-    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
-    interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
-
     interface TimeSyncAMSend<T32khz, uint32_t> as TimeSyncAMSend32khz[am_id_t id];
     interface TimeSyncPacket<T32khz, uint32_t> as TimeSyncPacket32khz;
 
@@ -51,7 +48,7 @@ configuration TimeSyncMessageC {
 implementation {
     components TimeSyncMessageP as TS;
     components ActiveMessageC as AM;
-    components LocalTimeC as LT;
+    components PacketStampC as PS;
     
     SplitControl = AM;
 
@@ -60,13 +57,12 @@ implementation {
     Packet       = AM;
     AMPacket     = AM;
     
-    PacketTimeStamp32khz = AM;
-    PacketTimeStampMilli = AM;
-
     TS.SubSend -> AM.AMSend;
     TS.AMPacket -> AM.AMPacket;
-    TS.LocalTimeMilli -> LT;
 
+    TS.PacketTimeStamp32khz -> PS;
+    TS.PacketTimeStampMilli -> PS;
+    
     TimeSyncAMSend32khz       = TS;
     TimeSyncAMSendMilli       = TS;
     TimeSyncPacket32khz       = TS;

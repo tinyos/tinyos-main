@@ -28,17 +28,26 @@
  */
 
 configuration PacketStampC {
-    provides {  
+    provides {
+        interface TimeSyncPacket<T32khz, uint32_t> as TimeSyncPacket32khz;
         interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+        
+        interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
         interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
     }
 }
 implementation  {
     components PacketStampP as PS;
     components LocalTimeC as LT;
-    
+    components HilTimerMilliC as HilMilli;    
+
     PacketTimeStamp32khz = PS;
+    TimeSyncPacket32khz = PS;
+    
     PacketTimeStampMilli = PS;
-    PS.LocalTimeMilli -> LT;  
+    TimeSyncPacketMilli = PS;
+    
+    PS.LocalTime32khz -> LT;
+    PS.LocalTimeMilli -> HilMilli;
 }
 

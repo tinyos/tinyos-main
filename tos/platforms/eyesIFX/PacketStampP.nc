@@ -32,36 +32,66 @@
 module PacketStampP {
     provides {  
         interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+        interface TimeSyncPacket<T32khz, uint32_t> as TimeSyncPacket32khz;
+        
         interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+        interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
     }
     uses {
         interface LocalTime<TMilli> as LocalTimeMilli;
+        interface LocalTime<T32khz> as LocalTime32khz;
     }
 }
 implementation  {
-    async command bool PacketTimeStamp32khz.isValid(message_t* msg) {
+    // 32 kHz interface
+    // get the time when SFD event was generated
+    async command uint32_t PacketTimeStamp32khz.timestamp(message_t* msg) {
+        return getMetadata(msg)->sfdtime;
+    }
+    // set the time when SFD event was generated?
+    async command void PacketTimeStamp32khz.set(message_t* msg, uint32_t value) {
+        getMetadata(msg)->sfdtime = value;
+    }
+    // return time when event was generated at the source
+    command uint32_t TimeSyncPacket32khz.eventTime(message_t* msg) {
+        return getMetadata(msg)->time;
+    };
+    
+    // Milli interface
+    // get the time when SFD was send/received
+    async command uint32_t PacketTimeStampMilli.timestamp(message_t* msg) {
+        return call LocalTimeMilli.get() -
+            (call LocalTime32khz.get() - getMetadata(msg)->sfdtime)/32;
+    }
+    // set the time when SFD was send/received?
+    async command void PacketTimeStampMilli.set(message_t* msg, uint32_t value) {
+        getMetadata(msg)->sfdtime =
+            call LocalTime32khz.get() - (call LocalTimeMilli.get() - value)*32;
+    }
+    // return time when event was generated
+    command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg) {
+        return call LocalTimeMilli.get() -
+            (call LocalTime32khz.get() - getMetadata(msg)->time)/32;        
+    };
+
+    // not really supported functions, valid section
+    command bool TimeSyncPacket32khz.isValid(message_t* msg) {
         return TRUE;
     }
-    async command void PacketTimeStamp32khz.clear(message_t* msg) {
+    command bool TimeSyncPacketMilli.isValid(message_t* msg) {
+        return TRUE;
     }
-    async command uint32_t PacketTimeStamp32khz.timestamp(message_t* msg) {
-        return getMetadata(msg)->time;
-    }
-    async command void PacketTimeStamp32khz.set(message_t* msg, uint32_t value) {
-        getMetadata(msg)->time = value;
+    async command bool PacketTimeStamp32khz.isValid(message_t* msg) {
+        return TRUE;
     }
     async command bool PacketTimeStampMilli.isValid(message_t* msg) {
         return TRUE;
     }
+    
+    // not really supported functions, clear section
+    async command void PacketTimeStamp32khz.clear(message_t* msg) {
+    }
     async command void PacketTimeStampMilli.clear(message_t* msg) {
-    }
-    async command uint32_t PacketTimeStampMilli.timestamp(message_t* msg) {
-        uint32_t now = call LocalTimeMilli.get();
-        uint32_t delay = (now * 32) - (getMetadata(msg)->time);
-        return now - (delay / 32);
-    }
-    async command void PacketTimeStampMilli.set(message_t* msg, uint32_t value) {
-        getMetadata(msg)->time = value * 32;
     }
 }
 

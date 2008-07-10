@@ -30,7 +30,6 @@
 /**
  * Expose the time sync capabilities of the eyesIFX platform 
  */
-#include "radiopacketfunctions.h"
 
 module TimeSyncMessageP {
     provides {
@@ -43,7 +42,8 @@ module TimeSyncMessageP {
     uses {
         interface AMSend as SubSend[am_id_t id];
         interface AMPacket;
-        interface LocalTime<TMilli> as LocalTimeMilli;
+        interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+        interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
     }
 }
 implementation {
@@ -60,7 +60,7 @@ implementation {
                                                          message_t* msg,
                                                          uint8_t len,
                                                          uint32_t event_time) {
-        getMetadata(msg)->time = event_time;
+        call PacketTimeStamp32khz.set(msg, event_time);
         resolution = RES_32_K;
         return call SubSend.send[id](addr, msg, len);
     }
@@ -79,18 +79,19 @@ implementation {
 
 
     command bool TimeSyncPacket32khz.isValid(message_t* msg) {
-        return TRUE;
+        return call PacketTimeStamp32khz.isValid(msg);
     }
     
     command uint32_t TimeSyncPacket32khz.eventTime(message_t* msg) {
-        return getMetadata(msg)->time;
+        return call PacketTimeStamp32khz.timestamp(msg);
     };
     
     command error_t TimeSyncAMSendMilli.send[am_id_t id](am_addr_t addr,
                                                          message_t* msg,
                                                          uint8_t len,
                                                          uint32_t event_time) {
-        getMetadata(msg)->time = (event_time * 32);
+
+        call PacketTimeStampMilli.set(msg, event_time);
         resolution = RES_1_K;
         return call SubSend.send[id](addr, msg, len);
     }
@@ -108,13 +109,11 @@ implementation {
     }
 
     command bool TimeSyncPacketMilli.isValid(message_t* msg) {
-        return TRUE;
+        return call PacketTimeStamp32khz.isValid(msg);
     }
     
     command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg) {
-        uint32_t now = call LocalTimeMilli.get();
-        uint32_t delay = (now * 32) - (getMetadata(msg)->time);
-        return now - (delay / 32);
+        return call PacketTimeStampMilli.timestamp(msg);        
     };
 
     event void SubSend.sendDone[uint8_t id](message_t* msg, error_t result) {
