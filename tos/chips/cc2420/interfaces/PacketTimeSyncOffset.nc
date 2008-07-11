@@ -18,7 +18,15 @@
  * ON AN "AS IS" BASIS, AND THE VANDERBILT UNIVERSITY HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
- * Author: Miklos Maroti
+ * Author: Miklos Maroti, Brano Kusy
+ *
+ * Interface for one hop time synchronization. Allows to modify timesync
+ * messages in the MAC layer with elapsed time of an event (ETA timesync
+ * primitive). Interface also provides a command to determine offset within
+ * a CC2420 packet, where the timesync ETA value is stored. word 'timestamping'
+ * used in describing commands does not refer to metadata.timestamp value,
+ *  rather it refers to the timesync ETA timestamp which is part of data
+ *  payload and is transmitted over the air.
  */
 
 interface PacketTimeSyncOffset
@@ -26,30 +34,29 @@ interface PacketTimeSyncOffset
     /**
      * @param 'message_t *ONE msg' message to examine.
      *
-     * Returns TRUE if the value is set for this message.
+     * Returns TRUE if the current message should be timestamped.
      */
     async command bool isSet(message_t* msg);
 
     /**
      * @param 'message_t *ONE msg' message to examine.
      *
-     * Returns the stored value of this field in the message. If the
-     * value is not set, then the returned value is undefined.
+     * Returns the offset of where the timesync timestamp is sotred in a
+     * CC2420 packet
      */
     async command uint8_t get(message_t* msg);
 
     /**
      * @param 'message_t *ONE msg' message to modify.
      *
-     * Sets the isSet false to TRUE and the time stamp value to the
-     * specified value.
+     *  Sets the current message to be timestamped in the MAC layer.
      */
     async command void set(message_t* msg);
 
     /**
      * @param 'message_t *ONE msg' message to modify.
      *
-     * Cancels any pending requests.
+     * Cancels any pending requests to timestamp the message in MAC.
      */
     async command void cancel(message_t* msg);
 }
