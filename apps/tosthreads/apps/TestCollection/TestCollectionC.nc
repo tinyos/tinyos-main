@@ -92,6 +92,7 @@ implementation {
           }
           memcpy(o, &local, sizeof(oscilloscope_t));
           if (call BlockingSend.send(&sendbuf, sizeof(oscilloscope_t)) == SUCCESS) {
+	    local.count++;
             report_sent();
           } else {
             report_problem();
