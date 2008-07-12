@@ -83,6 +83,7 @@ void tosthread_main(void* arg) {
         }
         memcpy(o, &local, sizeof(local));
         if (collectionSend(&sendbuf, sizeof(local), AM_OSCILLOSCOPE) == SUCCESS) {
+          local.count++;
           report_sent();
         } else {
           report_problem();
