@@ -47,10 +47,15 @@ implementation
   {
     int i;
     error_t error;
+#if defined USE_AT45DB
+    storage_len_t expectedVolumeSize = 262144;
+#elif defined USE_STM25P
+    storage_len_t expectedVolumeSize = 1048576;
+#endif
 
     call Leds.set(1);
 
-    if (call BlockingBlock1.getSize() != 1048576) {
+    if (call BlockingBlock1.getSize() != expectedVolumeSize) {
       call Leds.set(7);
       return;
     }
@@ -61,7 +66,7 @@ implementation
       return;
     }
     
-    for (i = 0; i < 20; i++) {
+    for (i = 0; i < 50; i++) {
       storage_addr_t writeAddr = call Random.rand32() % (call BlockingBlock1.getSize() - sizeof(storage_addr_t));
       storage_len_t len = sizeof(storage_addr_t);
       storage_addr_t readBuf;
