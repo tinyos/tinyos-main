@@ -31,6 +31,7 @@
  
 /**
  * @author Kevin Klues (klueska@cs.stanford.edu)
+ * @author Chieh-Jan Mike Liang (cliang4@cs.jhu.edu)
  */
 
 #include "AM.h"
@@ -46,7 +47,7 @@ implementation {
   components ActiveMessageC;
   components BlockingActiveMessageC as AM;
   BlockingReceive = AM.BlockingReceive[amId];
-  AM.Receive[amId] -> ActiveMessageC.Receive[amId];
+  AM.Receive[amId] -> ActiveMessageC.ReceiveDefault[amId];
   
   Packet = AM;
   AMPacket = AM;

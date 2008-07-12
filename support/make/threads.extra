@@ -1,5 +1,6 @@
 # Extra threads Makefile target to enable thread support for tinyos
 # Kevin Klues May 16th, 2008
+# Chieh-Jan Mike Liang July 11th, 2008
 
 #Set up flag signifying threads are enabled 
 THREADS = THREADS
@@ -28,11 +29,18 @@ THREADS_ATM128_INCLUDE_DIRS += -I$(THREADS_ATM128_DIR)/adc
 THREADS_ATM1281_DIR = $(TOS_THREADS_DIR)/chips/atm1281
 THREADS_ATM1281_INCLUDE_DIRS = -I$(THREADS_ATM1281_DIR)
 
+#CC2420 specific include directories on tested platforms
+THREADS_CC2420_DIR = $(TOS_THREADS_DIR)/chips/cc2420
+THREADS_CC2420_INCLUDE_DIRS = -I$(THREADS_CC2420_DIR)
+
 #Telos specific include directories
 THREADS_TELOS_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/telosa
 
 #Mica2 specific include directories
-THREADS_MICA2_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/mica2/chips/cc1000
+THREADS_MICA2_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/chips/cc1000 -I$(TOS_THREADS_DIR)/platforms/mica2/chips/cc1000 -I$(TOS_THREADS_DIR)/platforms/mica2
+
+#MicaZ specific include directories
+THREADS_MICAZ_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/micaz
 
 #Add CFLAGS for supported platforms
 ifneq ($(filter telos telosa telosb tmote eyesIFX eyesIFXv2 shimmer,$(MAKECMDGOALS)),) 
@@ -48,8 +56,12 @@ ifneq ($(filter mica2,$(MAKECMDGOALS)),)
 endif
 ifneq ($(filter micaz,$(MAKECMDGOALS)),) 
   CFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_MICAZ_INCLUDE_DIRS)
 endif
 ifneq ($(filter iris,$(MAKECMDGOALS)),) 
   CFLAGS += $(THREADS_ATM1281_INCLUDE_DIRS)
   CFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+endif
+ifneq ($(filter telos telosa telosb tmote micaz shimmer,$(MAKECMDGOALS)),) 
+  CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
 endif

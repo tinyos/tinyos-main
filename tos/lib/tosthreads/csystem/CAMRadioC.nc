@@ -43,7 +43,7 @@ implementation {
   CAMP.AMPacket -> AM;
   CAMP.PacketAcknowledgements -> AM;
   
-  AM.Receive -> ActiveMessageC.Receive;
-  AM.Snoop -> ActiveMessageC.Snoop;
+  AM.Receive -> ActiveMessageC.ReceiveDefault;
+  AM.Snoop -> ActiveMessageC.SnoopDefault;
   AM.AMSend -> ActiveMessageC;
 }
