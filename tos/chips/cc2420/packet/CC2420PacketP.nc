@@ -38,6 +38,7 @@
 #include "IEEE802154.h"
 #include "message.h"
 #include "CC2420.h"
+#include "CC2420TimeSyncMessage.h"
 
 module CC2420PacketP @safe() {
 
@@ -159,12 +160,18 @@ implementation {
     return ((call CC2420PacketBody.getMetadata( msg ))->timesync);
   }
 
+  //returns offset of timestamp from the beginning of cc2420 header which is
+  //          sizeof(cc2420_header_t)+datalen-sizeof(timesync_radio_t)
+  //uses packet length of the message which is
+  //          MAC_HEADER_SIZE+MAC_FOOTER_SIZE+datalen
   async command uint8_t PacketTimeSyncOffset.get(message_t* msg)
   {
-    // minus 1 because one less byte is transmitted
-    return (call CC2420PacketBody.getHeader(msg))->length - 1 - sizeof(uint32_t);
+    return (call CC2420PacketBody.getHeader(msg))->length
+            + (sizeof(cc2420_header_t) - MAC_HEADER_SIZE)
+            - MAC_FOOTER_SIZE
+            - sizeof(timesync_radio_t);
   }
-
+  
   async command void PacketTimeSyncOffset.set(message_t* msg)
   {
     (call CC2420PacketBody.getMetadata( msg ))->timesync = TRUE;
