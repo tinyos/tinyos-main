@@ -1,5 +1,5 @@
 mkdir config-aux
-aclocal --warnings=none
+aclocal 
 autoheader
 autoconf
 automake -a -c
