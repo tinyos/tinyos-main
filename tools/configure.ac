@@ -88,7 +88,7 @@ case $host in
   *)
     JNIPREFIX=lib
     JNISUFFIX=so
-    JNIVERSIONS="-64."
+    JNIVERSIONS="-32. -64."
     INSTALLJNI="install"
     AC_MSG_RESULT(no)
 esac
