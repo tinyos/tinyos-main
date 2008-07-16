@@ -1,9 +1,13 @@
 
+Author/Contact: tinyos-help@millennium.berkeley.edu
+
+Description:
+
 Test the effectiveness of the PacketLink layer
 
 INSTALL
-  Transmitter == 1, 2, 3, 4, or 5 (up to MAX_TRANSMITTERS)
-  Receiver == 0, plugged into the computer
+  Transmitter: id == 1, 2, 3, 4, or 5 (up to MAX_TRANSMITTERS)
+  Receiver: id == 0, plugged into the computer
 
 EXPECTATIONS
    Transmitter (ID not 0) -
@@ -21,12 +25,18 @@ EXPECTATIONS
      reaction.
 
 
-Java Application Usage:
-  Linux: java TestPacketLink.class [-comm <packetsource>]
-  Windows: java TestPacketLink [-comm <packetsource>]
+Tools:
+
+  java TestPacketLink [-comm <packetsource>]
 
   If not specified, the <packetsource> defaults to sf@localhost:9001 or
   to your MOTECOM environment variable (if defined).
 
   This application will report dropped and duplicate packets as seen on
   the receiver.
+
+Known bugs/limitations:
+
+None.
+
+$Id: README.txt,v 1.3 2008-07-16 18:09:49 idgay Exp $

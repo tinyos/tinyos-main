@@ -3,9 +3,6 @@ Author/Contact: tinyos-help@millennium.berkeley.edu
 
 Description:
 
-To compile for motes with CC2420 radios, you must do:
-  env CFLAGS="-DLOW_POWER_LISTENING" make <platform>
-
 Install the application to two nodes with the following ID's:
   Node 0 (Receiver node): id = 0
   Node 1 (Transmitter node): id = 1 (or.. id > 0)
@@ -38,4 +35,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.2 2007-07-10 17:43:06 rincon Exp $
+$Id: README.txt,v 1.3 2008-07-16 18:09:49 idgay Exp $

@@ -1,18 +1,23 @@
 
+Author/Contact: tinyos-help@millennium.berkeley.edu
+
+Description:
+
 This application is used more for characterization rather than a test.
 It measures the maximum radio throughput using the largest message payload 
 size, and does not use low power listening.
 
-
-Install:
+INSTALL
 Compile and install this application to one mote. Leave the mote connected
 to the computer.
 
-Expectations:
+EXPECTATIONS
 Led1 will toggle as each message is transmitted.  Once a second, the mote
-will send a packet through the serial port to the computer.  Run the
-TxThroughput java application:
+will send a packet through the serial port to the computer.  
 
+Tools:
+
+Run the TxThroughput java application:
   Linux: java TxThroughput.class [-comm <packetsource>]
   Windows: java TxThroughput [-comm <packetsource>]
 
@@ -24,3 +29,8 @@ second and the number of bytes sent in the payload per second:
 [Packets/s]: 115;  [(Payload Bytes)/s]: 3220
 [Packets/s]: 124;  [(Payload Bytes)/s]: 3472
 
+Known bugs/limitations:
+
+None.
+
+$Id: README.txt,v 1.3 2008-07-16 18:09:49 idgay Exp $
