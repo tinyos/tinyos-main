@@ -80,12 +80,13 @@ reflect the specifc name of the sensor, and MAY provide a component
 with a generic name for application authors who only care about the
 general class of the sensor.
 
-This document takes no position on the meaning of the values returned
-by sensor drivers. They MAY be raw uninterpreted values or they MAY
-have some physical meaning. If a driver returns uninterpreted values,
-the driver MAY provide additional interfaces that would allow
-higher-level clients to obtain information needed to properly
-interpret the value.
+This document requires that sensor components specify the range (in
+bits) of values returned by sensor drivers, but takes no position on
+the meaning of these values. They MAY be raw uninterpreted values or
+they MAY have some physical meaning. If a driver returns uninterpreted
+values, the driver MAY provide additional interfaces that would allow
+higher-level clients to obtain information (e.g. calibration
+coefficients) needed to properly interpret the value.
 
 2. Sensor HIL Components
 ====================================================================
@@ -149,7 +150,8 @@ interface it corresponds to.
 
 The getSignificantBits() call MUST return the number of significant
 bits in the reading. For example, a sensor reading taken from a 12-bit
-ADC MUST return the value "12". 
+ADC would typically return the value 12 (it might return less if, e.g.,
+physical constraints limit the maximum A/D result to 10-bits).
 
 Sensor driver components SHOULD be named according to the make and
 model of the sensing device being presented. Using specific names
@@ -204,10 +206,11 @@ A sensor HAL component MAY need to provide:
   management by the user, following the conventions described in
   [TEP115]_.
 
-- A Resource[] interface for requesting access to the device and
+- A `Resource` interface for requesting access to the device and
   possibly performing automated power management.
 
-- Any other interfaces needed to control the device.
+- Any other interfaces needed to control the device, e.g., to
+  read or write calibration coefficients.
 
 For example::
 
@@ -219,87 +222,95 @@ For example::
     // connect to the sensor's platform-dependent HPL here
   }
 
-4. Directory Organization Guidelines
+4. Sensor Component Organization and Compiler Interaction Guidelines
 ====================================================================
 
-Because the same physical sensor can be attached to TinyOS platforms
-in many different ways, the organization of sensor drivers SHOULD
-reflect the distinction between sensor and sensor interconnect.
+Sensors are associated either with a particular sensor board or with a
+particular platform. Both sensors and sensor boards MUST have unique
+names. Case is significant, but two sensor (or sensor board) names
+MUST differ in more than case. This is necessary to support platforms
+where filename case differences are not significant.
 
-Sensor components commonly exist at three levels:
-platform-independent, sensorboard-dependent, and
-platform-dependent. Factoring a sensor driver into these three pieces
-allows for greater code reuse when the same sensor is attached to
-different sensorboards or platforms.
-
-Platform-independent sensor driver components for a particular sensor,
-like protocol logic, when in the core TinyOS 2.x source tree, SHOULD
-be placed into "tos/chips/<sensor>", where <sensor> reflects the make
-and model of the sensor device being supported. When not a part of the
-core source tree, this directory can be placed anywhere as long as the
-nesC compiler recieves a `-I` directive pointing to the sensor's
-directory. However, not all sensors have a sufficiently large amount
-of platform-independent logic to justify a separate "chips"
-directory. Sensor chips are more likely to be digital sensors than
-analog sensors, for example.
-
-A sensor board is a collection of sensor components with a fixed name,
-intended for attachment to multiple platforms. Each sensor board MUST
-have its own directory named <sensorboard>. Default TinyOS 2.x sensor
-boards are placed in "tos/sensorboards/<sensorboard>", but sensor
-board directories can be placed anywhere as long as the nesC compiler
-receives a `-I` directive pointing to the sensor board's directory.
-
-Both sensors and sensor boards MUST have unique names. Case is
-significant, but two sensor boards MUST differ in more than case. This
-is necessary to support platforms where filename case differences are
-not significant.
-
-Each sensor board directory MUST contain a `.sensor` file.  This file
-is a perl script which gets executed as part of the `ncc` nesC
-compiler frontend. It can add or modify any compile-time options
-necessary for a particular sensor board. It MAY modify the following
-perl variables, and MUST NOT modify any others:
-
-- @new_args: This is the array of arguments which will be passed to
-  nescc. For instance, you might add an include directive to @new_args
-  with push @new_args, `-Isomedir`. This could be used to include
-  subdirectories.
-
-- @commonboards: This can be set to a list of sensor board names which
-  will be added to the include path list. These sensor boards MUST be
-  in tinyos-2.x/tos/sensorboards.
-
-If the sensor board wishes to define any C types or constants, it
-SHOULD place these in a file named <sensorboard>.h in the sensor
-board's directory.
-
-A sensor board directory MAY contain a "chips" directory, with
-subdirectories for each of the sensors connected to the sensor board.
-If a "chips" subdirectory is used, sensorboard-dependent driver
-components needed to connect platform-independent logic to a
-particular attachment for that sensor SHOULD be placed in
-"<sensorboard>/chips/<sensor>".
-
-Components needed to connect the platform-independent sensor driver
-components or sensorboard-dependent components to the hardware
-resources available on a particular platform SHOULD be placed in
-"tos/<platform>/chips/<sensor>". In addition, components for a sensor
-that only exists on a particular platform SHOULD be placed in a such a
+Each sensor board MUST have its own directory whose name is the sensor
+board's unique name (referred to as <sensorboard> in the rest of this
+section). Default TinyOS 2.x sensor boards are placed in
+``tos/sensorboards/<sensorboard>``, but sensor board directories can be
+placed anywhere as long as the nesC compiler receives a ``-I`` directive
+pointing to the sensor board's directory. Each sensor board directory
+MUST contain a ``.sensor`` file (described below). If the
+sensor board wishes to define any C types or constants, it SHOULD
+place these in a file named ``<sensorboard>.h`` in the sensor board's
 directory.
 
-Sensors that exist as part of a larger chip, like a MCU internal
-voltage sensor, SHOULD be placed in a subdirectory of the chip's
-directory. "tos/<chip>/sensors/<sensor>".
+4.1 Compiler Interaction
+------------------------
 
-The `.platform` and `.sensor` files need to include enough `-I`
-directives to locate all of the necessary components needed to support
-the sensors on a platform and/or sensorboard.
+When the ``ncc`` nesC compiler frontend is passed a ``-board=X`` option,
+it executes the ``.sensor`` file found in the sensor board directory
+``X``.  This file is a perl script which can add or modify any
+compile-time options necessary for the sensor board. It MAY modify the
+following perl variables, and MUST NOT modify any others:
 
-All of these directory organization guidelines are only intended for
-code that will enter the core source tree. In general, sensor
-components can be placed anywhere as long as the nesC compiler
-receives enough `-I` directives to locate all of the necessary pieces.
+- ``@includes``: This array contains the TinyOS search path, i.e., the
+  directories which will be passed to nescc (the TinyOS-agnostic nesC
+  compiler) as ``-I`` arguments. You MUST add to ``@includes`` any
+  directories needed to compile this sensor board's components.  For
+  instance, if your sensor boards depends on support code found in
+  ``tos/chips/sht11``, you would add ``"%T/chips/sht11"`` to ``@includes``.
+
+- ``@new_args``: This is the array of arguments which will be passed to
+  nescc. You MUST add any arguments other than ``-I`` that are necessary
+  to compile your sensor board components to ``@new_args``.
+
+If a sensor is associated with a platform `P` rather than a sensor
+board, then that platform MUST ensure that, when compiling for
+platform `P`, all directories needed to compile that sensor's 
+component are added to the TinyOS search path (see [TEP131]_ for
+information on how to set up a TinyOS platform).
+
+4.2 Sensor Components
+---------------------
+
+A particular sensor is typically supported by many components,
+including the HIL and HAL components from Sections 2 and 3, A/D
+conversion components (for analog sensors), digital bus components
+(e.g., SPI, for digital sensors), system services (timers, resource
+and power management, ...), glue components (to connect sensors,
+sensor boards and platforms), etc.  These components can be divided
+into three classes: sensorboard-dependent, platform-dependent and
+platform-independent. The sensorboard and platform MUST ensure
+(Section 4.1) that all these components can be found at compile-time.
+
+Because the same physical sensor can be used on many platforms or
+sensor boards, and attached in many different ways, to maximize code
+reuse the organization of sensor drivers SHOULD reflect the
+distinction between sensor and sensor interconnect. The sensor
+components SHOULD be platform-independent, while the sensor
+interconnect components are typically sensorboard or
+platform-dependent. However, some sensors (e.g. analong sensors) will
+not have a sufficiently large amount of platform-independent logic to
+justify creating platform-independent components.
+
+The following guidelines specify how to organize sensor and sensor
+interconnect components within TinyOS's directory hierarchy. These
+guidelines are only relevant to components that are part of the core
+source tree. The string ``<sensor>`` SHOULD reflect the make and model
+of the sensor device.
+
+- Platform-independent sensor components that exist as part of a
+  larger chip, like a MCU internal voltage sensor, SHOULD be placed in
+  a subdirectory of the chip's directory
+  ``tos/<chip>/sensors/<sensor>``.
+
+- Other platform-independent sensor components SHOULD be placed
+  in ``tos/chips/<sensor>``.
+
+- Sensorboard-dependent sensor and sensor interconnect components
+  SHOULD be placed either in the ``<sensorboard>`` directory or in a
+  ``<sensorboard>/chips/<sensor>`` directory.
+
+- Platform-dependent sensor and sensor interconnect components SHOULD
+  be placed in ``tos/<platform>/chips/<sensor>``.
 
 5. Authors' Addresses
 ====================================================================
@@ -350,6 +361,7 @@ receives enough `-I` directives to locate all of the necessary pieces.
 .. [TEP2] TEP 2: Hardware Abstraction Architecture
 .. [TEP114] TEP 114: SIDs: Source and Sink Indepedent Drivers
 .. [TEP115] TEP 115: Power Management of Non-Virtualized Devices
+.. [TEP131] TEP 131: Creating a New Platform for TinyOS 2.x
 
 Appendix A: Sensor Driver Examples
 ====================================================================
@@ -372,12 +384,15 @@ the arbitration and access to the ADC.
 
   tos/platforms/telosa/chips/s1087/HamamatsuS1087ParC.nc
 
+  // HIL for the HamamatsuS1087 analog photodiode sensor
   generic configuration HamamatsuS1087ParC() {
     provides interface Read<uint16_t>;
     provides interface ReadStream<uint16_t>;
     provides interface DeviceMetadata;
   }
   implementation {
+    // Create a new A/D client and connect it to the Hamamatsu S1087 A/D
+    // parameters
     components new AdcReadClientC();
     Read = AdcReadClientC;
 
@@ -396,12 +411,15 @@ the arbitration and access to the ADC.
 
   #include "Msp430Adc12.h"
 
+  // A/D parameters for the Hamamatsu - see the MSP430 A/D converter manual,
+  // Hamamatsu specification, Telos hardware schematic and TinyOS MSP430
+  // A/D converter component specifications for the explanation of these
+  // parameters
   module HamamatsuS1087ParP {
     provides interface AdcConfigure<const msp430adc12_channel_config_t*>;
     provides interface DeviceMetadata;
   }
   implementation {
-
     msp430adc12_channel_config_t config = {
       inch: INPUT_CHANNEL_A4,
       sref: REFERENCE_VREFplus_AVss,
@@ -440,13 +458,15 @@ none of the operations are split-phase.
 
   tos/platforms/telosa/UserButtonC.nc
 
+  // HIL for the user button sensor on Telos-family motes
   configuration UserButtonC {
-    provides interface Get<bool>;
-    provides interface Notify<bool>;
+    provides interface Get<bool>; // Get button status
+    provides interface Notify<bool>; // Get button-press notifications
     provides interface DeviceMetadata;
   }
   implementation {
 
+    // Simply connect the button logic to the button HPL
     components UserButtonLogicP;
     Get = UserButtonLogicP;
     Notify = UserButtonLogicP;
@@ -461,6 +481,8 @@ none of the operations are split-phase.
 
   tos/platforms/telosa/UserButtonLogicP.nc
  
+  // Transform the low-level (GeneralIO and GpioInterrupt) interface to the
+  // button to high-level SID interfaces  
   module UserButtonLogicP {
     provides interface Get<bool>;
     provides interface Notify<bool>;
@@ -479,6 +501,8 @@ none of the operations are split-phase.
     command error_t Notify.enable() {
       call GeneralIO.makeInput();
 
+      // If the pin is high, we need to trigger on falling edge interrupt, and
+      // vice-versa
       if ( call GeneralIO.get() ) {
         m_pinHigh = TRUE;
         return call GpioInterrupt.enableFallingEdge();
@@ -492,6 +516,7 @@ none of the operations are split-phase.
       return call GpioInterrupt.disable();
     }
 
+    // Button changed, signal user (in a task) and update interrupt detection
     async event void GpioInterrupt.fired() {
       call GpioInterrupt.disable();
 
@@ -520,6 +545,9 @@ none of the operations are split-phase.
 
   tos/platforms/telosa/HplUserButtonC.nc
 
+  // HPL for the user button sensor on Telos-family motes - just provides
+  // access to the I/O and interrupt control for the pin to which the
+  // button is connected
   configuration HplUserButtonC {
     provides interface GeneralIO;
     provides interface GpioInterrupt;
@@ -571,6 +599,7 @@ on top of the I2C or SPI bus would likely require fewer components.
 
   tos/platforms/telosa/chips/sht11/SensirionSht11C.nc
   
+  // HIL interface to Sensirion SHT11 temperature and humidity sensor
   generic configuration SensirionSht11C() {  
     provides interface Read<uint16_t> as Temperature;
     provides interface DeviceMetadata as TemperatureDeviceMetadata;
@@ -578,6 +607,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     provides interface DeviceMetadata as HumidityDeviceMetadata;
   }
   implementation {
+    // Instantiate the module providing the HIL interfaces
     components new SensirionSht11ReaderP();
   
     Temperature = SensirionSht11ReaderP.Temperature;
@@ -585,6 +615,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     Humidity = SensirionSht11ReaderP.Humidity;
     HumidityDeviceMetadata = SensirionSht11ReaderP.HumidityDeviceMetadata;
 
+    // And connect it to the HAL component for the Sensirion SHT11
     components HalSensirionSht11C;
   
     enum { TEMP_KEY = unique("Sht11.Resource") };
@@ -600,12 +631,18 @@ on top of the I2C or SPI bus would likely require fewer components.
   
   tos/chips/sht11/SensirionSht11ReaderP.nc
   
+  // Convert Sensirion SHT11 HAL to HIL interfaces for a single
+  // client, performing automatic resource arbitration
   generic module SensirionSht11ReaderP() {
     provides interface Read<uint16_t> as Temperature;
     provides interface DeviceMetadata as TemperatureDeviceMetadata;
     provides interface Read<uint16_t> as Humidity;
     provides interface DeviceMetadata as HumidityDeviceMetadata;
     
+    // Using separate resource interfaces for temperature and humidity allows
+    // temperature and humidity measurements to be requested simultaneously
+    // (if a single Resource interface was used, a request for temperature would
+    // prevent any humidity requests until the temperature measurement was complete) 
     uses interface Resource as TempResource;
     uses interface Resource as HumResource;
     uses interface SensirionSht11 as Sht11Temp;
@@ -613,12 +650,13 @@ on top of the I2C or SPI bus would likely require fewer components.
   }
   implementation {
     command error_t Temperature.read() {
-      call TempResource.request();
-      return SUCCESS;
+      // Start by requesting access to the SHT11
+      return call TempResource.request();
     }
   
     event void TempResource.granted() {
       error_t result;
+      // If the HAL measurement fails, release the SHT11 and signal failure
       if ((result = call Sht11Temp.measureTemperature()) != SUCCESS) {
         call TempResource.release();
         signal Temperature.readDone( result, 0 );
@@ -626,6 +664,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     }
   
     event void Sht11Temp.measureTemperatureDone( error_t result, uint16_t val ) {
+      // Release the SHT11 and signal the result
       call TempResource.release();
       signal Temperature.readDone( result, val );
     }
@@ -633,12 +672,13 @@ on top of the I2C or SPI bus would likely require fewer components.
     command uint8_t TemperatureDeviceMetadata.getSignificantBits() { return 14; }
 
     command error_t Humidity.read() {
-      call HumResource.request();
-      return SUCCESS;
+      // Start by requesting access to the SHT11
+      return call HumResource.request();
     }
   
     event void HumResource.granted() {
       error_t result;
+      // If the HAL measurement fails, release the SHT11 and signal failure
       if ((result = call Sht11Hum.measureHumidity()) != SUCCESS) {
         call HumResource.release();
         signal Humidity.readDone( result, 0 );
@@ -646,12 +686,14 @@ on top of the I2C or SPI bus would likely require fewer components.
     }
   
     event void Sht11Hum.measureHumidityDone( error_t result, uint16_t val ) {
+      // Release the SHT11 and signal the result
       call HumResource.release();
       signal Humidity.readDone( result, val );
     }
   
     command uint8_t HumidityDeviceMetadata.getSignificantBits() { return 12; }
 
+    // Dummy handlers for unused portions of the HAL interface
     event void Sht11Temp.resetDone( error_t result ) { }
     event void Sht11Temp.measureHumidityDone( error_t result, uint16_t val ) { }
     event void Sht11Temp.readStatusRegDone( error_t result, uint8_t val ) { }
@@ -662,6 +704,8 @@ on top of the I2C or SPI bus would likely require fewer components.
     event void Sht11Hum.readStatusRegDone( error_t result, uint8_t val ) { }
     event void Sht11Hum.writeStatusRegDone( error_t result ) { }
   
+    // We need default handlers as a client may wire to only the Temperature
+    // sensor or only the Humidity sensor
     default event void Temperature.readDone( error_t result, uint16_t val ) { }
     default event void Humidity.readDone( error_t result, uint16_t val ) { }
   }
@@ -670,14 +714,21 @@ on top of the I2C or SPI bus would likely require fewer components.
   
   tos/platforms/telosa/chips/sht11/HalSensirionSht11C.nc
   
+  // HAL interface to Sensirion SHT11 temperature and humidity sensor
   configuration HalSensirionSht11C {
+    // The SHT11 HAL uses resource arbitration to allow the sensor to shared
+    // between multiple clients and for automatic power management (the SHT11
+    // is switched off when no clients are waiting to use it)
     provides interface Resource[ uint8_t client ];
     provides interface SensirionSht11[ uint8_t client ];
   }
   implementation {
+    // The HAL implementation logic
     components new SensirionSht11LogicP();
     SensirionSht11 = SensirionSht11LogicP;
   
+    // And it's wiring to the SHT11 HPL - the actual resource management is
+    // provided at the HPL layer
     components HplSensirionSht11C;
     Resource = HplSensirionSht11C.Resource;
     SensirionSht11LogicP.DATA -> HplSensirionSht11C.DATA;
@@ -715,7 +766,10 @@ on top of the I2C or SPI bus would likely require fewer components.
 ::
   
   tos/platforms/telosa/chips/sht11/HplSensirionSht11C.nc
-  
+
+  // Low-level, platform-specific glue-code to access the SHT11 sensor found
+  // on telos-family motes - here  the HPL just provides resource management
+  // and access to the SHT11 data, clock and interrupt pins
   configuration HplSensirionSht11C {
     provides interface Resource[ uint8_t id ];
     provides interface GeneralIO as DATA;
@@ -723,6 +777,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     provides interface GpioInterrupt as InterruptDATA;
   }
   implementation {
+    // Pins used to access the SHT11
     components HplMsp430GeneralIOC;
     
     components new Msp430GpioC() as DATAM;
@@ -736,6 +791,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     components new Msp430GpioC() as PWRM;
     PWRM -> HplMsp430GeneralIOC.Port17;
   
+    // HPL logic for switching the SHT11 on and off
     components HplSensirionSht11P;
     HplSensirionSht11P.PWR -> PWRM;
     HplSensirionSht11P.DATA -> DATAM;
@@ -749,6 +805,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     InterruptDATAC.HplInterrupt -> HplMsp430InterruptC.Port15;
     InterruptDATA = InterruptDATAC.Interrupt;
   
+    // The arbiter and power manager for the SHT11
     components new FcfsArbiterC( "Sht11.Resource" ) as Arbiter;
     Resource = Arbiter;
     
@@ -763,7 +820,12 @@ on top of the I2C or SPI bus would likely require fewer components.
   
   tos/platforms/telosa/chips/sht11/HplSensirionSht11P.nc
   
+  // Switch the SHT11 on and off, and handle the 11ms warmup delay
   module HplSensirionSht11P {
+    // The SplitControl interface powers the SHT11 on or off (it's automatically
+    // called by the SHT11 power manager, see HplSensirionSht11C)
+    // We use a SplitControl interface as we need to wait 11ms for the sensor to
+    // warm up
     provides interface SplitControl;
     uses interface Timer<TMilli>;
     uses interface GeneralIO as PWR;
@@ -774,6 +836,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     task void stopTask();
   
     command error_t SplitControl.start() {
+      // Power SHT11 on and wait for 11ms
       call PWR.makeOutput();
       call PWR.set();
       call Timer.startOneShot( 11 );
@@ -785,6 +848,7 @@ on top of the I2C or SPI bus would likely require fewer components.
     }
   
     command error_t SplitControl.stop() {
+      // Power the SHT11 off
       call SCK.makeInput();
       call SCK.clr();
       call DATA.makeInput();
