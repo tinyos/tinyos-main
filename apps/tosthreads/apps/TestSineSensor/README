@@ -7,7 +7,7 @@ Description:
 This application is used to test the threaded version of the API for accessing
 the software based SineSensor usable by any platform for demonstration purposes.
 
-You can install TestSineSensor on a mote via the following comand:
+You can install TestSineSensor on a mote via the following command:
   make <platform> threads install
   
 Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 

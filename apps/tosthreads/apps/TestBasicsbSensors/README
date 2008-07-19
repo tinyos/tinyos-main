@@ -7,7 +7,7 @@ Description:
 This application is used to test the threaded version of the API for accessing
 sensors on the basicsb sensor board.
 
-You can install TestBasicsbSensors on a mote via the following comand:
+You can install TestBasicsbSensors on a mote via the following command:
   make <platform> threads install
   
 Valid platforms are currently: mica2, and micaz 
@@ -16,7 +16,7 @@ This application simply takes sensor readings in an infinite loop from the
 Photo and Temperature sensors on the basicsb sensor board and forwards them
 over the serial interface.  Upon successful transmission, LED0 is toggled.
 
-A succssfull test will result in the TestBasicsbSensors mote constantly
+A successful test will result in the TestBasicsbSensors mote constantly
 flickering LED0. Additionally, messages containing the sensor readings should 
 be forwarded over the serial interface as verified by running the following 
 for the platform of interest:

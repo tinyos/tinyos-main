@@ -15,7 +15,7 @@ To run this application install it on a mote via the command:
   
 Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
 
-Installing with NODE_ID 45 (i.e. AM_ADDRESS 45) is jsut to verify that the
+Installing with NODE_ID 45 (i.e. AM_ADDRESS 45) is just to verify that the
 application forwards packets with an arbitrarily chosen id, which it should.
 
 To test the correct operation of this application, you need two motes:  one with
@@ -30,7 +30,7 @@ install RadioStress via the command:
 Don't forget the '.1' when you install, or RadioStress will be configured to
 receive rather than send messages.  Messages are sent to AM_ADDRESS 0.
 
-A succssfull test will result in the RadioStress mote constantly flickering all
+A successful test will result in the RadioStress mote constantly flickering all
 of its leds very rapidly, and the BaseStation mote flickering its LED0 and LED1
 leds rapidly.  Additionally, messages should be forwarded over the serial interface
 as verified by running the following for the platform of interest:
