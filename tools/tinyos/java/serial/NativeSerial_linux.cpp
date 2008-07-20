@@ -1,4 +1,4 @@
-//$Id: NativeSerial_linux.cpp,v 1.5 2007-06-05 21:08:55 idgay Exp $
+//$Id: NativeSerial_linux.cpp,v 1.6 2008-07-20 22:47:34 razvanm Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -34,6 +34,8 @@
 #include <termios.h>
 #include <signal.h>
 #include <errno.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "NativeSerialEnums.h"
 using namespace NativeSerialEnums;
