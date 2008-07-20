@@ -19,6 +19,7 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 # @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
+# @author David Purdy <david@radioretail.co.za>
 
 """A library that implements the T2 serial communication.
 
@@ -32,7 +33,7 @@ import sys, struct, time, serial, socket, operator, thread
 from Queue import Queue
 from threading import Lock, Condition
 
-__version__ = "$Id: tos.py,v 1.1 2008-06-18 20:22:51 razvanm Exp $"
+__version__ = "$Id: tos.py,v 1.2 2008-07-20 22:16:50 razvanm Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
