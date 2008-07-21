@@ -18,10 +18,12 @@ include $(MAKERULES)
 # checks whether the target platform is supported by the application;
 # the application Makefile can define PLATFORMS as a whitespace-separated
 # list of supported platforms
-ifneq ($(PLATFORMS),)
-  ifeq ($(strip $(foreach platform,$(PLATFORMS),$(findstring $(platform),$(PLATFORM)))),)
-    $(error The target platform is not supported by this application - supported platforms are: $(PLATFORMS))
+ifneq ($(PLATFORM),)
+  ifneq ($(PLATFORMS),)
+    ifeq ($(strip $(foreach platform,$(PLATFORMS),$(findstring $(platform),$(PLATFORM)))),)
+      $(error The target platform is not supported by this application - supported platforms are: $(PLATFORMS))
+    endif
   endif
+  include $(TKN154_PLATFORM_INCLUDE)
 endif
 
-include $(TKN154_PLATFORM_INCLUDE)
