@@ -37,7 +37,9 @@
 
 #ifdef _H_atmega128hardware_H
 static int uart_putchar(char c, FILE *stream);
-static FILE atm128_stdout = FDEV_SETUP_STREAM(uart_putchar, NULL, _FDEV_SETUP_WRITE);
+static FILE atm128_stdout =
+	FDEV_SETUP_STREAM(TCAST(int (*)(char c, FILE *stream), uart_putchar), 
+	NULL, _FDEV_SETUP_WRITE);
 #endif
 
 module PrintfP {
@@ -60,21 +62,21 @@ implementation {
   mutex_t printf_mutex;
   barrier_t flushstart_barrier;
   barrier_t flushdone_barrier;
-  
+
   void flush_buffer();
-  
+
   event void Boot.booted() {
     #ifdef _H_atmega128hardware_H
       stdout = &atm128_stdout;
     #endif
-    
+
     printf_payload = (printf_msg_t*)call Packet.getPayload(&printfMsg, sizeof(printf_msg_t));
     call Mutex.init(&printf_mutex);
     call Barrier.reset(&flushstart_barrier, 2);
     call Barrier.reset(&flushdone_barrier, 2);
     call PrintfThread.start(NULL);
   }
-  
+
   event void PrintfThread.run(void* arg) {
     call SerialControl.start();
     for(;;) {
@@ -83,21 +85,21 @@ implementation {
       call Barrier.block(&flushdone_barrier);
     }
   }
-  
+
   void flush_buffer() {
     int i;
     uint16_t q_size;
     uint16_t length_to_send;
-    
+
     call Mutex.lock(&printf_mutex);
       q_size = call Queue.size();
     call Mutex.unlock(&printf_mutex);
-    
+
     while(q_size > 0) {
-      memset(printf_payload->buffer, 0, sizeof(printf_msg_t));    
+      memset(printf_payload->buffer, 0, sizeof(printf_msg_t));
       length_to_send = (q_size < sizeof(printf_msg_t)) ? q_size : sizeof(printf_msg_t);
-     
-      call Mutex.lock(&printf_mutex); 
+
+      call Mutex.lock(&printf_mutex);
         for(i=0; i<length_to_send; i++)
           printf_payload->buffer[i] = call Queue.dequeue();
         q_size = call Queue.size();
@@ -105,15 +107,15 @@ implementation {
       call BlockingAMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg_t));
     }
   }
-  
+
   int printfflush() @C() @spontaneous() {
     call Barrier.block(&flushstart_barrier);
-    call Barrier.reset(&flushstart_barrier, 2);  
+    call Barrier.reset(&flushstart_barrier, 2);
     call Barrier.block(&flushdone_barrier);
-    call Barrier.reset(&flushdone_barrier, 2);  
+    call Barrier.reset(&flushdone_barrier, 2);
     return SUCCESS;
   }
-  
+
   #ifdef _H_msp430hardware_h
   int putchar(int c) __attribute__((noinline)) @C() @spontaneous() {
   #endif
@@ -122,12 +124,12 @@ implementation {
   #endif
     uint16_t q_size;
     error_t q_error;
-    
+
     call Mutex.lock(&printf_mutex);
       q_error = call Queue.enqueue(c);
       q_size = call Queue.size();
     call Mutex.unlock(&printf_mutex);
-    
+
     if((q_size == PRINTF_BUFFER_SIZE/2))
       printfflush();
     if(q_error == SUCCESS) return 0;
