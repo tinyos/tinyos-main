@@ -1,4 +1,4 @@
-README for TOSThreads TestBasicsbSensors 
+README for TOSThreads TestBasicsbSensors
 Author/Contact: tinyos-help@millennium.berkeley.edu
 Author: Kevin Klues <klueska@cs.stanford.edu>
 
@@ -9,16 +9,16 @@ sensors on the basicsb sensor board.
 
 You can install TestBasicsbSensors on a mote via the following command:
   make <platform> threads install
-  
-Valid platforms are currently: mica2, and micaz 
 
-This application simply takes sensor readings in an infinite loop from the 
+Valid platforms are currently: mica2, micaz and iris
+
+This application simply takes sensor readings in an infinite loop from the
 Photo and Temperature sensors on the basicsb sensor board and forwards them
 over the serial interface.  Upon successful transmission, LED0 is toggled.
 
 A successful test will result in the TestBasicsbSensors mote constantly
-flickering LED0. Additionally, messages containing the sensor readings should 
-be forwarded over the serial interface as verified by running the following 
+flickering LED0. Additionally, messages containing the sensor readings should
+be forwarded over the serial interface as verified by running the following
 for the platform of interest:
   java net.tinyos.tools.Listen -comm serial@/dev/ttyUSBXXX:<baud_rate>
 
