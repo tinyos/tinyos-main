@@ -207,7 +207,8 @@ A sensor HAL component MAY need to provide:
   [TEP115]_.
 
 - A `Resource` interface for requesting access to the device and
-  possibly performing automated power management.
+  possibly performing automated power management, following
+  the conventions described in [TEP108]_ and [TEP115]_.
 
 - Any other interfaces needed to control the device, e.g., to
   read or write calibration coefficients.
@@ -241,6 +242,41 @@ MUST contain a ``.sensor`` file (described below). If the
 sensor board wishes to define any C types or constants, it SHOULD
 place these in a file named ``<sensorboard>.h`` in the sensor board's
 directory.
+
+A sensor board MAY contain components that override the default TinyOS
+*demo sensors*. This allows the sensor board to easily be used with
+TinyOS sample applications that use the demo sensors. If a sensor 
+board wishes to override the default demo sensor:
+
+* It MUST provide a generic component named ``DemoSensorC`` with the
+  following signature::
+
+    provides interface Read<uint16_t>;
+    provides interface DeviceMetadata;
+
+* It MAY provide a generic component named ``DemoSensorNowC`` with the
+  following signature::
+
+    provides interface ReadNow<uint16_t>;
+    provides interface DeviceMetadata;
+
+  This component SHOULD sample the same sensor as ``DemoSensorC``.
+
+* It MAY provide a generic component named ``DemoSensorStreamC`` with the
+  following signature::
+
+    provides interface ReadStream<uint16_t>;
+    provides interface DeviceMetadata;
+
+  This component SHOULD sample the same sensor as ``DemoSensorC``.
+
+These components MUST be an alias for one of the sensor board's usual
+sensors, though they change the precision of the sensor if necessary.
+For instance, if ``DemoSensorC`` is an alias for a 20-bit sensor that
+provides a ``Read<uint32_t>`` interface, ``DemoSensorC`` would still
+provide ``Read<uint16_t>`` and would include code to reduce the
+precision of the aliased sensor.
+
 
 4.1 Compiler Interaction
 ------------------------
@@ -359,6 +395,7 @@ of the sensor device.
 ====================================================================
 
 .. [TEP2] TEP 2: Hardware Abstraction Architecture
+.. [TEP108] TEP 108: Resource Arbitration
 .. [TEP114] TEP 114: SIDs: Source and Sink Indepedent Drivers
 .. [TEP115] TEP 115: Power Management of Non-Virtualized Devices
 .. [TEP131] TEP 131: Creating a New Platform for TinyOS 2.x
@@ -862,3 +899,41 @@ on top of the I2C or SPI bus would likely require fewer components.
       signal SplitControl.stopDone( SUCCESS );
     }
   }
+
+4. MDA100 Sensor Board Directory Organization
+---------------------------------------------
+
+Here we show the organization of the sensor board directory for the
+mica-family Xbow MDA100CA and MDA100CB sensor boards, which have
+temperature and light sensors. It is found in
+``tos/sensorboards/mda100``::
+
+  ./tos/sensorboards/mda100:
+  .sensor					# Compiler configuration
+  ArbitratedPhotoDeviceP.nc			# Light sensor support component
+  ArbitratedTempDeviceP.nc			# Temperature sensor support component
+  DemoSensorC.nc				# Override TinyOS's default sensor
+  PhotoC.nc					# Light sensor HIL
+  PhotoImplP.nc					# Light sensor support component
+  PhotoTempConfigC.nc				# Shared support component
+  PhotoTempConfigP.nc				# Shared support component
+  SharedAnalogDeviceC.nc			# Shared support component
+  SharedAnalogDeviceP.nc			# Shared support component
+  TempC.nc					# Temperature Sensor HIL
+  ca/TempImplP.nc				# Temperature sensor support component
+  						# (MDA100CA board)
+  cb/TempImplP.nc				# Temperature sensor support component
+  						# (MDA100CB board)
+  mda100.h					# Header file for mda100
+
+This sensor board provides only a HIL (PhotoC and TempC components), and overrides the
+TinyOS demo sensor (DemoSensorC). The demo sensor is an alias for PhotoC.
+
+The two forms of the mda100 differ only by the wiring of the
+temperature sensor.  The user has to specify which form of the sensor
+board is in use by providing a ``-I%T/sensorboards/mda100/ca`` or
+``-I%T/sensorboards/mda100/cb`` compiler option.
+
+This sensor board relies on a platform-provided ``MicaBusC`` component
+that specifies how the mica-family sensor board bus is connected to
+the microcontroller.
