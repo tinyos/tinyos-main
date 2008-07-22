@@ -49,8 +49,11 @@ THREADS_MICAZ_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/micaz
 #IRIS specific include directories
 THREADS_IRIS_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/iris
 
+#TinyNode specific include directories
+THREADS_TINYNODE_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/tinynode
+
 #Add CFLAGS for supported platforms
-ifneq ($(filter telos telosa telosb tmote eyesIFX eyesIFXv2 shimmer,$(MAKECMDGOALS)),)
+ifneq ($(filter tinynode telos telosa telosb tmote eyesIFX eyesIFXv2 shimmer,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
 endif
 ifneq ($(filter telos telosa telosb tmote,$(MAKECMDGOALS)),)
@@ -70,6 +73,11 @@ ifneq ($(filter iris,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
   CFLAGS += $(THREADS_IRIS_INCLUDE_DIRS)
 endif
+ifneq ($(filter tinynode,$(MAKECMDGOALS)),) 
+  CFLAGS += $(THREADS_TINYNODE_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_TINYNODE_INCLUDE_DIRS)
+endif
+
 ifneq ($(filter telos telosa telosb tmote micaz shimmer,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
 endif
