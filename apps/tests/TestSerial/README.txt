@@ -14,8 +14,7 @@ to the serial port at 1Hz. Upon reception of a packet, the java
 application prints the counter's value to standard out.
 
 Java Application Usage:
-  Linux: java TestSerial.class [-comm <packetsource>]
-  Windows: java TestSerial [-comm <packetsource>]
+  java TestSerial [-comm <packetsource>]
 
   If not specified, the <packetsource> defaults to sf@localhost:9001 or
   to your MOTECOM environment variable (if defined).
