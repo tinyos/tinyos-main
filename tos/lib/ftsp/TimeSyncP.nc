@@ -265,7 +265,7 @@ implementation
 
     void task processMsg()
     {
-        TimeSyncMsg* msg = (TimeSyncMsg*)(processedMsg->data);
+        TimeSyncMsg* msg = (TimeSyncMsg*)(call Send.getPayload(processedMsg, sizeof(TimeSyncMsg)));
 
         if( msg->rootID < outgoingMsg->rootID &&
             // jw: after becoming the root ignore other roots messages (in send period)
@@ -306,7 +306,7 @@ implementation
             message_t* old = processedMsg;
 
             processedMsg = msg;
-            ((TimeSyncMsg*)(processedMsg->data))->localTime = call TimeSyncPacket.eventTime(msg);
+            ((TimeSyncMsg*)(payload))->localTime = call TimeSyncPacket.eventTime(msg);
 
             state |= STATE_PROCESSING;
             post processMsg();
