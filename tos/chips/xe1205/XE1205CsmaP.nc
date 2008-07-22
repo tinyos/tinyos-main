@@ -100,8 +100,8 @@ implementation {
 	    atomic {
 	    if (rState == RADIO_TX)
 		signal Send.sendDone(txMsg,FAIL);
-	    else
-		signal SplitControl.startDone(FAIL);
+	    else 
+		signal SplitControl.startDone(err);
 	    }
 	} else {
 	    atomic {
@@ -109,9 +109,9 @@ implementation {
 		    if(enableCCA==TRUE) {
 			if(SUCCESS != post readRssi()) {
 			    signal Send.sendDone(txMsg,FAIL);
-			    return;
 			}
-		    } 
+			return;
+		    }
 		    else {
 			post send();
 			return;
@@ -121,8 +121,7 @@ implementation {
 			}
 		    }
 		}
-		if(SUCCESS != post readRssi())
-		    signal SplitControl.startDone(FAIL);
+		signal SplitControl.startDone(err);
 	    }
 	}
     }
@@ -147,7 +146,7 @@ implementation {
 
 	switch (maType) {
 	case RSSI_CLR:
-	    if((float)value < MAX(RSSI_RX_MA,RSSI_RX_MA))
+	    if((float)value < MAX(RSSI_RX_MA,RSSI_CLR_MA))
 		RSSI_CLR_MA = (RSSI_CLR_MA*(MA_LENGTH - 1)+ value )/(MA_LENGTH);
 	    break;
 	    
@@ -198,7 +197,7 @@ implementation {
 	signal Send.sendDone(msg, err);
     }
 
-    command void* Send.getPayload(message_t* m) {
+    command void* Send.getPayload(message_t* m,uint8_t len) {
 	return m->data;
     }
 
@@ -210,14 +209,6 @@ implementation {
 	return FAIL;
     }
 
-    command uint8_t Receive.payloadLength(message_t* msg) {
-	return call SubReceive.payloadLength(msg);
-    }
-
-    command void *Receive.getPayload(message_t* msg, uint8_t* len) {
-	return call SubReceive.getPayload(msg, len);
-    }
-    
     task void readRssi() {
 	if(SUCCESS!=call Rssi.getRssi()) {
 	 

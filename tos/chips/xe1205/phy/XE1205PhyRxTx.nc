@@ -93,6 +93,17 @@ interface XE1205PhyRxTx {
   async event void rxFrameEnd(char* data, uint8_t len, error_t status);
 
 
+ /**
+   * Signalled at end of a Ack reception.
+   *
+   * @param data pointer to Ack (at first byte of header)
+   * @param len length of the Ack 
+   * @param status SUCCESS if packet received ok, ERROR if packet reception was aborted.
+   *
+   */
+  async event void rxAckEnd(char* data, uint8_t len, error_t status);
+
+
   /** 
    * Set header size, ie number of bytes at start of packet to be read and passed along 
    * with the rxFrameBegin() event.

@@ -137,7 +137,7 @@ implementation {
 	return call Packet.getPayload(m, len);
     }
 
-   task void sendDoneTask() {
+    task void sendDoneTask() {
 	txMsgSendDonePtr = txMsgPtr;
 	txMsgPtr=NULL;
 	signal Send.sendDone(txMsgSendDonePtr, SUCCESS);
@@ -150,6 +150,13 @@ implementation {
 	signal Send.sendDone(txMsgSendDonePtr, FAIL);
 
     }
+
+   task void sendDoneNoAckTask() {
+       txMsgSendDonePtr = txMsgPtr;
+       txMsgPtr=NULL;
+       signal Send.sendDone(txMsgSendDonePtr, ENOACK);
+   }
+
 
     command error_t SplitControl.start() {
 	error_t err;
@@ -193,23 +200,23 @@ implementation {
 
 
 
- task void sendAck() {
-     atomic {
-	 ((xe1205_metadata_t*)((uint8_t*)ackMsgPtr->footer + sizeof(xe1205_footer_t)))->length = sizeof(ackMsg_t);
-	 ((xe1205_header_t*)(&ackMsg.data - sizeof(xe1205_header_t)))->group = \
-	     (getHeader((message_t*)rxMsgPtr))->group;
-	 ((xe1205_header_t*)(ackMsgPtr->data - sizeof(xe1205_header_t)))->type = \
-	     ((xe1205_header_t*)(rxMsgPtr->data - sizeof(xe1205_header_t)))->type;
-	 ((xe1205_header_t*)(ackMsgPtr->data - sizeof(xe1205_header_t)))->dest = \
-	     ((xe1205_header_t*)(rxMsgPtr->data - sizeof(xe1205_header_t)))->source;
-	 ((xe1205_header_t*)(ackMsgPtr->data - sizeof(xe1205_header_t)))->source = TOS_NODE_ID; 
-	 ((ackMsg_t*)(ackMsgPtr->data))->pl = ackPayload;
+    task void sendAck() {
+	atomic {
+	    ((xe1205_metadata_t*)((uint8_t*)ackMsgPtr->footer + sizeof(xe1205_footer_t)))->length = sizeof(ackMsg_t);
+	    ((xe1205_header_t*)(&ackMsg.data - sizeof(xe1205_header_t)))->group = \
+		(getHeader((message_t*)rxMsgPtr))->group;
+	    ((xe1205_header_t*)(ackMsgPtr->data - sizeof(xe1205_header_t)))->type = \
+		((xe1205_header_t*)(rxMsgPtr->data - sizeof(xe1205_header_t)))->type;
+	    ((xe1205_header_t*)(ackMsgPtr->data - sizeof(xe1205_header_t)))->dest = \
+		((xe1205_header_t*)(rxMsgPtr->data - sizeof(xe1205_header_t)))->source;
+	    ((xe1205_header_t*)(ackMsgPtr->data - sizeof(xe1205_header_t)))->source = TOS_NODE_ID; 
+	    ((ackMsg_t*)(ackMsgPtr->data))->pl = ackPayload;
 
-	 txMsgPtr = ackMsgPtr;
-     }
-	 _len = sizeof(ackMsg_t);
-     sendRadioOn(ACK_CODE);
- }
+	    txMsgPtr = ackMsgPtr;
+	}
+	_len = sizeof(ackMsg_t);
+	sendRadioOn(ACK_CODE);
+    }
 
     command error_t Send.cancel(message_t* msg) {
 	/* Cancel is unsupported for now. */
@@ -247,7 +254,7 @@ implementation {
 	txPhyHdr.length = _len;
 	txRunningCRC=0;
 	getMetadata(txMsgPtr)->length = _len; 
-	if (((xe1205_header_t*)( (uint8_t*)txMsgPtr->data - sizeof(xe1205_header_t)))->ack==1) {
+	if ((((xe1205_header_t*)( (uint8_t*)txMsgPtr->data - sizeof(xe1205_header_t)))->ack & 0x01)==0x01) {
 	    call XE1205PhyRxTx.enableAck(TRUE);
 	}
 	txIndex = min(sizeof(xe1205_header_t) + _len + sizeof(xe1205_footer_t), 
@@ -264,8 +271,7 @@ implementation {
 	    sendingAck=TRUE;
 	    memcpy(txBuf, ackPreamble, sizeof(ackPreamble));
 	    memcpy(txBuf + sizeof(pktPreamble), &txPhyHdr, sizeof(txPhyHdr));
-
-	    post signalPacketReceived();
+	  
 	    break;
 	}
 	
@@ -347,18 +353,29 @@ implementation {
     uint8_t sendDones = 0;
     async event void XE1205PhyRxTx.sendFrameDone(error_t err) __attribute__ ((noinline)) {
 	sendDones++;
-	if(sendingAck==FALSE)
-	    if(err==SUCCESS) {
+	if(sendingAck==FALSE) {
+	    switch (err) {
+
+	    case SUCCESS:
 		if (post sendDoneTask() != SUCCESS)
 		    xe1205check(2, FAIL);
-	    } else {
+		break;
+		
+	    case ENOACK:
+		if(post sendDoneNoAckTask() !=SUCCESS)
+		    xe1205check(2, FAIL);
+		break;
+
+	    default:	
 		if (post sendDoneFailTask() != SUCCESS)
 		    xe1205check(2, FAIL);
 	    }
-	else {
 
+	} else {
+	    
 	    txMsgPtr = NULL;
-	    sendingAck=FALSE;
+	    sendingAck=FALSE; 
+	    post signalPacketReceived();
 	}
     }
 
@@ -379,12 +396,12 @@ implementation {
     }
 
     command void* Packet.getPayload(message_t* msg, uint8_t len) {
-      if (len <= TOSH_DATA_LENGTH) {
-	return (void*)msg->data;
-      }
-      else {
-	return NULL;
-      }
+	if (len <= TOSH_DATA_LENGTH) {
+	    return (void*)msg->data;
+	}
+	else {
+	    return NULL;
+	}
     }
 
     async command error_t PacketAcknowledgements.requestAck(message_t* msg) {
@@ -426,6 +443,7 @@ implementation {
 
 
  uint32_t nrxmsgs;
+
  async event void XE1205PhyRxTx.rxFrameEnd(char* data, uint8_t len, error_t status)   __attribute__ ((noinline)) {
      if (status != SUCCESS){ return;}
 
@@ -451,6 +469,42 @@ implementation {
      }
 
  }
+
+ async event void XE1205PhyRxTx.rxAckEnd(char* data, uint8_t len, error_t status)   __attribute__ ((noinline)) {
+
+     sendingAck=FALSE;
+
+     if (status != SUCCESS) { 
+	 post sendDoneNoAckTask();
+	 return;
+     }
+
+     if (rxBufPtr) {
+	 post sendDoneNoAckTask();
+	 return; // this could happen whenever rxFrameBegin was called with rxBufPtr still active
+     }
+
+     rxBufPtr = (data + sizeof(xe1205_phy_header_t));
+
+     checkCrcAndUnwhiten(rxBufPtr, rxPhyHdr.whitening, rxPhyHdr.length);
+
+     if (!getFooter(rxMsgPtr)->crc) {
+	 post sendDoneNoAckTask();
+	 atomic rxBufPtr = NULL;
+	 return;
+     }
+     
+     getMetadata((message_t*) rxMsgPtr)->strength =  call XE1205PhyRssi.readRxRssi();
+     getMetadata((message_t*) rxMsgPtr)->length = rxPhyHdr.length;
+
+     if ((getHeader((message_t*)rxMsgPtr))->dest == TOS_NODE_ID) {
+	 post sendDoneTask();
+     } else {
+	 post sendDoneNoAckTask();
+     }
+     atomic rxBufPtr = NULL;
+ }
+
  async event void XE1205PhyRssi.rssiDone(uint8_t _rssi) { }
 
 }

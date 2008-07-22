@@ -1,23 +1,23 @@
 /* Copyright (c) 2007 Shockfish SA
-*  All rights reserved.
-*
-*  Permission to use, copy, modify, and distribute this software and its
-*  documentation for any purpose, without fee, and without written
-*  agreement is hereby granted, provided that the above copyright
-*  notice, the (updated) modification history and the author appear in
-*  all copies of this source code.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
-*  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-*  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-*  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
-*  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-*  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
-*  OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-*  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-*  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-*  THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ *  All rights reserved.
+ *
+ *  Permission to use, copy, modify, and distribute this software and its
+ *  documentation for any purpose, without fee, and without written
+ *  agreement is hereby granted, provided that the above copyright
+ *  notice, the (updated) modification history and the author appear in
+ *  all copies of this source code.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+ *  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
+ *  OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ *  THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /**
  * @author Maxime Muller
@@ -100,7 +100,8 @@ implementation {
     }
     
     event void SubControl.startDone(error_t err) {
-	if(!err) {
+	
+	if(err==SUCCESS) {
 	    if(sleepTime > 0) {// keep radio on for a while
 		call OffTimer.stop();
 		call OnTimer.startOneShot(DELAY_AFTER_RECEIVE);
@@ -145,12 +146,13 @@ implementation {
 
     event void OffTimer.fired() { 
 	if (SUCCESS==call SubControl.start()) {
-		if (sleepTime > 0)
-		    call LPLControl.setMode(RX);
-		if (sleepTime == 0) // radio always on
-		    call LPLControl.setMode(IDLE); 
-	    } else call OffTimer.startOneShot(sleepTime);
-	    //}
+	    if (sleepTime > 0)
+		call LPLControl.setMode(RX);
+	    if (sleepTime == 0) // radio always on
+		call LPLControl.setMode(IDLE); 
+	} 
+	else 
+	    call OffTimer.startOneShot(sleepTime);
     }
 
     event void OnTimer.fired() {
@@ -166,9 +168,8 @@ implementation {
 	if(SUCCESS != call SubSend.send(curTxMsg,curTxMsgLength)) {
 	    call LPLControl.setMode(IDLE); 
 	    call OffTimer.startOneShot(sleepTime);
-	    
 	    sendDone(FAIL);
-	} 
+	}
     }
 
     /*
@@ -186,9 +187,9 @@ implementation {
 	    if(call LowPowerListening.getRxSleepInterval(curTxMsg) 
 	       > ONE_MESSAGE) {
 		txSeqNo+=0x02;
-		if (AM_BROADCAST_ADDR != call AMPacket.destination(curTxMsg))
+		if (AM_BROADCAST_ADDR != call AMPacket.destination(curTxMsg)) {
 		    getHeader(curTxMsg)->ack = txSeqNo|0x01;
-		else
+		} else
 		    getHeader(curTxMsg)->ack = txSeqNo&0xFE;
 		call CsmaControl.enableCca();
 		
@@ -212,8 +213,8 @@ implementation {
 
     event void SendTimeout.fired() {
 	atomic {
-	if (rState == RADIO_TX) // let sendDone occur
-	    rState = RADIO_ON;
+	    if (rState == RADIO_TX) // let sendDone occur
+		rState = RADIO_ON;
 	}
 	call OffTimer.startOneShot(DELAY_AFTER_RECEIVE);
     }
@@ -229,20 +230,25 @@ implementation {
     }
 
     event void SubSend.sendDone(message_t *msg, error_t err) {
-	if(rState == RADIO_TX 
-	   && call SendTimeout.isRunning()) 
-	    if ( AM_BROADCAST_ADDR != call AMPacket.destination(msg) 
-		 && call PacketAcknowledgements.wasAcked(msg)) {
+
+	if(rState == RADIO_TX
+	   && call SendTimeout.isRunning()) {
+	    if ( AM_BROADCAST_ADDR != call AMPacket.destination(msg)
+		 && err==SUCCESS) {
+		call SendTimeout.stop();
 		sendDone(err);
-		return;
-	    }
-	    else { // ack timeout or bcast msg
+	    } else { // ack timeout or bcast msg
 		call CsmaControl.disableCca();
-		if(SUCCESS!=post sendPkt())
+		if(SUCCESS!=post sendPkt()) {
+
 		    sendDone(FAIL);
-		return;
+		}
 	    }
-	sendDone(err);
+	} 
+	else {
+	    sendDone(err);
+	  
+	}
     }
 
     command error_t Send.cancel(message_t *msg) {
@@ -257,8 +263,8 @@ implementation {
 	return call SubSend.maxPayloadLength();
     }
     
-    command void *Send.getPayload(message_t* msg) {
-	return call SubSend.getPayload(msg);
+    command void *Send.getPayload(message_t* msg, uint8_t len) {
+	return call SubSend.getPayload(msg,len);
     }
     
     /* 
@@ -266,28 +272,20 @@ implementation {
      */
     event message_t *SubReceive.receive(message_t *msg,void *payload, uint8_t len) {
 	
-    if ((getHeader(msg)->ack & 0xFE ) == lastSeqNo
-	&& call AMPacket.destination(msg) == AM_BROADCAST_ADDR) {
-	return msg;
-    } else {
-	lastSeqNo = getHeader(msg)->ack & 0xFE;
-	if(!call SendTimeout.isRunning()) {
-	    // catched a packet between pktSend
-	    call OffTimer.startOneShot(DELAY_AFTER_RECEIVE);
-	}
+	if ((getHeader(msg)->ack & 0xFE ) == lastSeqNo
+	    && call AMPacket.destination(msg) == AM_BROADCAST_ADDR) {
+	    return msg;
+	} else {
+	    lastSeqNo = getHeader(msg)->ack & 0xFE;
+	    if(!call SendTimeout.isRunning()) {
+		// catched a packet between pktSend
+		call OffTimer.startOneShot(DELAY_AFTER_RECEIVE);
+	    }
 
-	return signal Receive.receive(msg,payload,len);
+	    return signal Receive.receive(msg,payload,len);
 	}
     }
     
-    command void *Receive.getPayload(message_t* msg, uint8_t* len) {
-	return call SubReceive.getPayload(msg, len);
-    }
-    
-    command uint8_t Receive.payloadLength(message_t* msg) {
-	return call SubReceive.payloadLength(msg);
-    }
-
     uint16_t getActualDutyCycle(uint16_t dutyCycle) {
 	if(dutyCycle > 10000) {
 	    return 10000;

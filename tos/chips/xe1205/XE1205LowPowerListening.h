@@ -46,7 +46,7 @@
 #endif
 
 #ifndef DEFAULT_DUTY_PERIOD
-#define DEFAULT_DUTY_PERIOD 1000
+#define DEFAULT_DUTY_PERIOD 80
 #endif
 
 

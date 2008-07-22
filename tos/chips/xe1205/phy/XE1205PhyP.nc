@@ -142,7 +142,9 @@ implementation {
 	call SpiResourceConfig.release();
 	atomic {
 	    if (state == RADIO_STARTING){
-		post startDone();}
+	
+		post startDone();
+	    }
 	    if (state == RADIO_RX_ACK) { 
 		enableAck=FALSE; 
 		signal XE1205PhyRxTx.sendFrameDone(FAIL);
@@ -161,17 +163,15 @@ implementation {
     command error_t SplitControl.start() 
     {
 
-	    atomic {
-		if (state == RADIO_LISTEN){ post startDone(); return SUCCESS;}
-		if (state != RADIO_SLEEP) return EBUSY;
-		state = RADIO_STARTING;
-	    }
-	    call XE1205PhySwitch.rxMode();
-	    call XE1205PhySwitch.antennaRx();
-	    
-	    
-	    call Alarm32khz16.start(usecs_to_jiffies(XE1205_Sleep_to_RX_Time));
-	    return SUCCESS;
+	atomic {
+	    if (state == RADIO_LISTEN){ post startDone(); return SUCCESS;}
+	    if (state != RADIO_SLEEP) return EBUSY;
+	    state = RADIO_STARTING;
+	}
+	call XE1205PhySwitch.rxMode();
+	call XE1205PhySwitch.antennaRx();
+	call Alarm32khz16.start(usecs_to_jiffies(XE1205_Sleep_to_RX_Time));
+	return SUCCESS;
     }
 
     command error_t SplitControl.stop() 
@@ -385,19 +385,19 @@ implementation {
      switch (state) {
 
      case RADIO_RX_ACK:
-	 
+
 	 call Alarm32khz16.stop();
      case RADIO_LISTEN:
 	 rxByte=1;
 	 atomic state = RADIO_RX_HEADER;
 	 status = call SpiResourceRX.immediateRequest();
 	 atomic {
-	 if (status != SUCCESS) {
-	     state = RADIO_LISTEN;
-	     call Interrupt0.disable(); // because pattern detector won't be rearmed right away
-	     call SpiResourceConfig.request();
-	     return;
-	 }
+	     if (status != SUCCESS) {
+		 state = RADIO_LISTEN;
+		 call Interrupt0.disable(); // because pattern detector won't be rearmed right away
+		 call SpiResourceConfig.request();
+		 return;
+	     }
 	 }
 	 call Alarm32khz16.start(3000);
 	 return;
@@ -494,7 +494,6 @@ implementation {
 	     call XE1205PatternConf.loadAckPatternHasBus();
 	     armPatternDetect();
 	     call SpiResourceTX.release();
-	     
 	     call Alarm32khz16.start(usecs_to_jiffies(8000));
 	     atomic {
 		 call Interrupt0.enableRisingEdge();
@@ -556,11 +555,8 @@ implementation {
 
 	 } else {
 	     enableAck = FALSE;
-	     signal XE1205PhyRxTx.sendFrameDone(SUCCESS);
+	     signal XE1205PhyRxTx.rxAckEnd(rxFrame, rxFrameLen + headerLen, SUCCESS); 
 	 }
-
-	 
-
 
 
 	 return;
@@ -593,9 +589,9 @@ implementation {
      case RADIO_RX_HEADER:
      case RADIO_RX_PACKET:
 	 if (rssiRange!=RSSI_OFF) {
-		 readRssi();
-		 return;
-	     }
+	     readRssi();
+	     return;
+	 }
 	 stats_rxOverruns++;
 
 	 signal XE1205PhyRxTx.rxFrameEnd(NULL, 0, FAIL);
@@ -611,7 +607,7 @@ implementation {
 	 return;
 
      case RADIO_RSSI:
-	     readRssi();
+	 readRssi();
 	 return;
 
      case RADIO_RX_ACK: // ack timeout
@@ -633,11 +629,10 @@ implementation {
 
 	 }
 
-	 signal XE1205PhyRxTx.sendFrameDone(FAIL);
+	 signal XE1205PhyRxTx.sendFrameDone(ENOACK);
 	 return;
      default:
-   
-
+	 
 	 return;
      }
 
