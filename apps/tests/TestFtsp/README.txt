@@ -86,3 +86,8 @@ is what it looks like when node 1 in the earlier trace is reset:
 1214516498277 5 10964 445705 0
 1214516498285 1 10964 445707 0
 1214516498521 1 10965 445964 0
+
+This output is also saved in a file named 'current_timestamp.report'.
+'.report' files can be used with the FtspDataAnalyzer.m Matlab
+application. Mean absolute timesync error, global time, and % of
+synced motes will be plotted.
