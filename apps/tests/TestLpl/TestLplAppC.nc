@@ -1,4 +1,4 @@
-// $Id: TestLplAppC.nc,v 1.1 2008-07-02 17:42:42 idgay Exp $
+// $Id: TestLplAppC.nc,v 1.2 2008-07-23 08:08:10 andreaskoepke Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -49,6 +49,8 @@ implementation {
   components CC2420ActiveMessageC as LplRadio;
 #elif defined(PLATFORM_IRIS)
   components RF230ActiveMessageC as LplRadio;
+#elif defined(PLATFORM_EYESIFXV1) || defined(PLATFORM_EYESIFXV2)
+  components LplC as LplRadio;
 #else
 #error "LPL testing not supported on this platform"
 #endif
