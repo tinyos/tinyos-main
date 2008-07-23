@@ -23,8 +23,8 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.10 $
- * @date $Date: 2008-06-17 19:11:01 $
+ * @version $Revision: 1.11 $
+ * @date $Date: 2008-07-23 01:46:43 $
  */
 
 #ifndef PRINTF_H
@@ -51,8 +51,9 @@
 #include "message.h"
 int printfflush();
 
+#define PRINTF_MSG_LENGTH	28
 typedef nx_struct printf_msg {
-  nx_uint8_t buffer[TOSH_DATA_LENGTH];
+  nx_uint8_t buffer[PRINTF_MSG_LENGTH];
 } printf_msg_t;
 
 enum {

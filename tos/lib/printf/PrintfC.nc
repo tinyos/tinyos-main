@@ -63,6 +63,6 @@ implementation {
   PrintfP.Queue -> QueueC;
   PrintfP.AMSend -> SerialAMSenderC;
   PrintfP.Packet -> SerialAMSenderC;
-  PrintfP.Leds -> LedsC;
+  //PrintfP.Leds -> LedsC;
 }
 
