@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.9 2008-06-26 03:38:27 regehr Exp $
+/// $Id: McuSleepC.nc,v 1.10 2008-07-23 17:25:42 idgay Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -29,7 +29,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.9 2008-06-26 03:38:27 regehr Exp $
+ *  $Id: McuSleepC.nc,v 1.10 2008-07-23 17:25:42 idgay Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -102,7 +102,8 @@ implementation {
       (MCUCR & 0xe3) | 1 << SE | read_uint8_t(&atm128PowerBits[powerState]);
 
     sei();
-    asm volatile ("sleep");
+    // All of memory may change at this point...
+    asm volatile ("sleep" : : : "memory");
     cli();
   }
 

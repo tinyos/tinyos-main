@@ -32,7 +32,7 @@
  * the Intel Xscale PXA27x
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.4 2006-12-12 18:23:11 vlahan Exp $
+ *  $Id: McuSleepC.nc,v 1.5 2008-07-23 17:25:42 idgay Exp $
  * </pre>
  *
  * @author Philip Buonadonna
@@ -58,6 +58,8 @@ implementation {
 		  : "r" (PWRMODE_M_IDLE)
 		  );
     __nesc_enable_interrupt();
+    // All of memory may change at this point...
+    asm volatile ("" : : : "memory");
     __nesc_disable_interrupt();
     return;
   }

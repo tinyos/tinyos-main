@@ -27,7 +27,7 @@
  * for the Atmega128. It currently does nothing.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.4 2006-12-12 18:23:04 vlahan Exp $
+ *  $Id: McuSleepC.nc,v 1.5 2008-07-23 17:25:42 idgay Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -110,7 +110,8 @@ implementation {
       MCUCR = temp;
     }
     sei();
-    asm volatile ("sleep");
+    // All of memory may change at this point...
+    asm volatile ("sleep" : : : "memory");
     cli();
   }
 

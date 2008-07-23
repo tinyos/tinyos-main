@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.3 2008-07-07 19:52:52 sallai Exp $
+/// $Id: McuSleepC.nc,v 1.4 2008-07-23 17:25:42 idgay Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -51,7 +51,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.3 2008-07-07 19:52:52 sallai Exp $
+ *  $Id: McuSleepC.nc,v 1.4 2008-07-23 17:25:42 idgay Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -132,7 +132,8 @@ implementation {
     SMCR =
       (SMCR & 0xf0) | 1 << SE | read_uint8_t(&atm128PowerBits[powerState]);
     sei();
-    asm volatile ("sleep");
+    // All of memory may change at this point...
+    asm volatile ("sleep" : : : "memory");
     cli();
 
     CLR_BIT(SMCR, SE);
