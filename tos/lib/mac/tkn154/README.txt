@@ -18,7 +18,7 @@ missing functionality:
 
 missing documentation:
 - overview on the architecture of TKN15.4
-- porting TKN15.4 to a new platform
+- guidance on porting TKN15.4 to a new platform
 - ...
 
 Implementation 
@@ -29,6 +29,11 @@ MAC interfaces: tinyos-2.x/tos/lib/mac/tkn154/interfaces
 CC2420 driver: tinyos-2.x/tos/chips/cc2420_tkn154
 TelosB "platform glue" code: tinyos-2.x/tos/platforms/telosb/mac/tkn154
 Example applications: tinyos-2.x/apps/tests/tkn154
+
+Note: TEP3 recommends that interface names "should be mixed case, starting
+upper case". To match the syntax used in the IEEE 802.15.4 standard the
+interfaces provided by the MAC to the next higher layer deviate from this
+convention (they are all caps, e.g. MLME_START).
 
 Copyright
 ---------
