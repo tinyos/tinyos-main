@@ -85,7 +85,7 @@ interface LowPowerListening {
   /**
    * Configure this outgoing message so it can be transmitted to a neighbor mote
    * with the specified Rx sleep interval.
-   * @param msg Pointer to the message that will be sent
+   * @param 'message_t* ONE msg' Pointer to the message that will be sent
    * @param sleepInterval The receiving node's sleep interval, in [ms]
    */
   command void setRxSleepInterval(message_t *msg, uint16_t sleepIntervalMs);
