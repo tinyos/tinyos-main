@@ -50,3 +50,4 @@ void tosthread_main(void* arg) {
     led0Toggle();
   }
 }
+
