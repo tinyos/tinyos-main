@@ -110,7 +110,7 @@ ifneq ($(filter tinynode,$(MAKECMDGOALS)),)
 endif
 ifneq ($(filter eyesIFX eyesIFXv2,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
-  CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_TDA5250_INCLUDE_DIRS)
   CFLAGS += $(THREADS_EYES_INCLUDE_DIRS)
 endif
 ifneq ($(filter shimmer,$(MAKECMDGOALS)),)
