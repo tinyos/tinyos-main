@@ -1,4 +1,4 @@
-// $Id: CC1000CsmaP.nc,v 1.8 2008-06-23 20:25:15 regehr Exp $
+// $Id: CC1000CsmaP.nc,v 1.9 2008-07-24 03:43:11 regehr Exp $
 
 /*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -516,7 +516,7 @@ implementation
   }
 
   command void LowPowerListening.setLocalDutyCycle(uint16_t d) {
-    return call LowPowerListening.setLocalSleepInterval(dutyToSleep(d));
+    call LowPowerListening.setLocalSleepInterval(dutyToSleep(d));
   }
 
   command uint16_t LowPowerListening.getLocalDutyCycle() {
