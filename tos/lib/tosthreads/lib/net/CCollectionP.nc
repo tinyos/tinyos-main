@@ -114,3 +114,4 @@ implementation {
     return call RootControl.isRoot();
   }
 }
+
