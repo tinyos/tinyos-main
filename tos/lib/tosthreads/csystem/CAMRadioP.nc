@@ -75,7 +75,7 @@ implementation {
     call AMPacket.setDestination(amsg, addr);
   }
   void amRadioSetSource(message_t* amsg, am_addr_t addr) @C() @spontaneous() {
-    return call AMPacket.setSource(amsg, addr);
+    call AMPacket.setSource(amsg, addr);
   }
   bool amRadioIsForMe(message_t* amsg) @C() @spontaneous() {
     return call AMPacket.isForMe(amsg);
@@ -90,7 +90,7 @@ implementation {
     return call AMPacket.group(amsg);
   }
   void amRadioSetGroup(message_t* amsg, am_group_t grp) @C() @spontaneous() {
-    return call AMPacket.setGroup(amsg, grp);
+    call AMPacket.setGroup(amsg, grp);
   }
   void radioClear(message_t* msg) @C() @spontaneous() {
     call Packet.clear(msg);
