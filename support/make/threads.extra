@@ -29,6 +29,10 @@ THREADS_ATM128_INCLUDE_DIRS += -I$(THREADS_ATM128_DIR)/adc
 THREADS_ATM1281_DIR = $(TOS_THREADS_DIR)/chips/atm1281
 THREADS_ATM1281_INCLUDE_DIRS = -I$(THREADS_ATM1281_DIR)
 
+#CC1000 specific include directories on tested platforms
+THREADS_CC1000_DIR = $(TOS_THREADS_DIR)/chips/cc1000
+THREADS_CC1000_INCLUDE_DIRS = -I$(THREADS_CC1000_DIR)
+
 #CC2420 specific include directories on tested platforms
 THREADS_CC2420_DIR = $(TOS_THREADS_DIR)/chips/cc2420
 THREADS_CC2420_INCLUDE_DIRS = -I$(THREADS_CC2420_DIR)
@@ -37,11 +41,24 @@ THREADS_CC2420_INCLUDE_DIRS = -I$(THREADS_CC2420_DIR)
 THREADS_RF230_DIR = $(TOS_THREADS_DIR)/chips/rf230
 THREADS_RF230_INCLUDE_DIRS = -I$(THREADS_RF230_DIR)
 
+#TDA5250 specific include directories on tested platforms
+THREADS_TDA5250_DIR = $(TOS_THREADS_DIR)/chips/tda5250
+THREADS_TDA5250_INCLUDE_DIRS = -I$(THREADS_TDA5250_DIR)
+
+#XE1205 specific include directories on tested platforms
+THREADS_XE1205_DIR = $(TOS_THREADS_DIR)/chips/xe1205
+THREADS_XE1205_INCLUDE_DIRS = -I$(THREADS_XE1205_DIR)
+
 #Telos specific include directories
 THREADS_TELOS_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/telosa
 
 #Mica2 specific include directories
-THREADS_MICA2_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/chips/cc1000 -I$(TOS_THREADS_DIR)/platforms/mica2/chips/cc1000 -I$(TOS_THREADS_DIR)/platforms/mica2
+THREADS_MICA2_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/mica2
+THREADS_MICA2_INCLUDE_DIRS += -I$(TOS_THREADS_DIR)/platforms/mica2/chips/cc1000
+
+#Mica2dot specific include directories
+THREADS_MICA2DOT_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/mica2dot
+THREADS_MICA2DOT_INCLUDE_DIRS += -I$(TOS_THREADS_DIR)/platforms/mica2dot/chips/cc1000
 
 #MicaZ specific include directories
 THREADS_MICAZ_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/micaz
@@ -52,35 +69,52 @@ THREADS_IRIS_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/iris
 #TinyNode specific include directories
 THREADS_TINYNODE_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/tinynode
 
+#eyesIFX specific include directories
+THREADS_EYES_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/eyesIFX
+
+#Shimmer specific include directories
+THREADS_SHIMMER_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/shimmer
+
 #Add CFLAGS for supported platforms
-ifneq ($(filter tinynode telos telosa telosb tmote eyesIFX eyesIFXv2 shimmer,$(MAKECMDGOALS)),)
-  CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
-endif
 ifneq ($(filter telos telosa telosb tmote,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
   CFLAGS += $(THREADS_TELOS_INCLUDE_DIRS)
 endif
 ifneq ($(filter mica2,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_CC1000_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_MICA2_INCLUDE_DIRS)
+endif
+ifneq ($(filter mica2dot,$(MAKECMDGOALS)),)
+  CFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_MICA2DOT_INCLUDE_DIRS)
   CFLAGS += $(THREADS_MICA2_INCLUDE_DIRS)
 endif
 ifneq ($(filter micaz,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
   CFLAGS += $(THREADS_MICAZ_INCLUDE_DIRS)
 endif
 ifneq ($(filter iris,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_ATM1281_INCLUDE_DIRS)
   CFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_RF230_INCLUDE_DIRS)
   CFLAGS += $(THREADS_IRIS_INCLUDE_DIRS)
 endif
 ifneq ($(filter tinynode,$(MAKECMDGOALS)),) 
+  CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_XE1205_INCLUDE_DIRS)
   CFLAGS += $(THREADS_TINYNODE_INCLUDE_DIRS)
-  CFLAGS += $(THREADS_TINYNODE_INCLUDE_DIRS)
+endif
+ifneq ($(filter eyesIFX eyesIFXv2,$(MAKECMDGOALS)),)
+  CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_EYES_INCLUDE_DIRS)
+endif
+ifneq ($(filter shimmer,$(MAKECMDGOALS)),)
+  CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_SHIMMER_INCLUDE_DIRS)
 endif
 
-ifneq ($(filter telos telosa telosb tmote micaz shimmer,$(MAKECMDGOALS)),)
-  CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
-endif
-ifneq ($(filter iris,$(MAKECMDGOALS)),)
-  CFLAGS += $(THREADS_RF230_INCLUDE_DIRS)
-endif
