@@ -38,7 +38,7 @@
 
 typedef struct list_element {
   struct list_element* next;
-  uint8_t element_data[0];
+  uint8_t* element_data;
 } list_element_t;
 
 typedef struct linked_list {
