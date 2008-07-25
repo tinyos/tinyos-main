@@ -2,32 +2,32 @@
 
 static void led_off_0 (void) {
     __asm__ volatile ("bis.b #16, &0x0031"); // telos
-    __asm__ volatile ("bis.b #16, &0x0029"); // shimmer
+    __asm__ volatile ("bis.b #1, &0x001D"); // shimmer
 }
 
 static void led_off_1 (void)  { 
     __asm__ volatile ("bis.b #32, &0x0031"); // telos
-    __asm__ volatile ("bis.b #32, &0x0029"); // shimmer
+    __asm__ volatile ("bis.b #2, &0x001D"); // shimmer
 }
 
 static void led_off_2 (void)  {
     __asm__ volatile ("bis.b #64, &0x0031"); // telos
-    __asm__ volatile ("bis.b #64, &0x0029"); // shimmer
+    __asm__ volatile ("bis.b #4, &0x001D"); // shimmer
 }
 
 static void led_on_0 (void) { 
     __asm__ volatile ("bic.b #16, &0x0031"); // telos
-    __asm__ volatile ("bic.b #16, &0x0029"); // shimmer
+    __asm__ volatile ("bic.b #1, &0x001D"); // shimmer
 }
 
 static void led_on_1 (void) { 
     __asm__ volatile ("bic.b #32, &0x0031"); // telos
-    __asm__ volatile ("bic.b #32, &0x0029"); // shimmer
+    __asm__ volatile ("bic.b #2, &0x001D"); // shimmer
 }
 
 static void led_on_2 (void) { 
     __asm__ volatile ("bic.b #64, &0x0031"); // telos
-    __asm__ volatile ("bic.b #64, &0x0029"); // shimmer
+    __asm__ volatile ("bic.b #4, &0x001D"); // shimmer
 }
 
 static void delay (int len) 
