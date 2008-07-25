@@ -246,7 +246,7 @@ implementation {
      }
  }
 
- command uint8_t  XE1205PhyRssi.readRxRssi() {
+ async command uint8_t  XE1205PhyRssi.readRxRssi() {
      return rssiTab[(rssiH<<2) |rssiL];
  }
 

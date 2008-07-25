@@ -431,7 +431,7 @@ implementation {
      return datalen + sizeof(xe1205_header_t) + sizeof(xe1205_footer_t) + sizeof(xe1205_phy_header_t);
  }
 
- task void signalPacketReceived()   __attribute__ ((noinline)) {
+ task void signalPacketReceived() {
      
      atomic { 
 	 getMetadata((message_t*) rxMsgPtr)->length = rxPhyHdr.length; 
@@ -464,8 +464,7 @@ implementation {
 	 (((getHeader((message_t*)rxMsgPtr))->ack)& 0x01)==1) {
 	 post sendAck();
      } else {
-	 atomic rxBufPtr = NULL;
-	 rxMsgPtr =  signal Receive.receive(rxMsgPtr, rxMsgPtr->data, getMetadata(rxMsgPtr)->length);
+	 post signalPacketReceived();
      }
 
  }
