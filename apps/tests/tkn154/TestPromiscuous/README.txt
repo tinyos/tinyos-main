@@ -20,9 +20,7 @@ Install the application on a node
 
 Start the printf client on 
 
-    $ cd $TOSDIR/../apps/tests/TestPrintf
-    $ make telosb
-    $ java net.tinyos.tools.PrintfClient -comm serial@/dev/ttyUSB0:telosb
+    $ java net.tinyos.tools.PrintfClient -comm serial@/dev/ttyUSBXXX:telosb
 
 (http://docs.tinyos.net/ has a section on how to use the TinyOS printf library)
 
@@ -31,5 +29,5 @@ Known bugs/limitations:
 - Currently this application only works on TelosB nodes
 - The timestamps for ACKs are incorrect
 
-$Id: README.txt,v 1.1 2008-07-21 15:18:16 janhauer Exp $
+$Id: README.txt,v 1.2 2008-07-26 02:32:44 klueska Exp $
 

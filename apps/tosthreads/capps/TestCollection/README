@@ -39,10 +39,15 @@ MultihopOscilloscope demo via a serial forwarder. To run it, change to the
 TestCollection/java subdirectory and type:
 
   make
-  java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<mote>
+  java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<baud_rate>
   # e.g., java net.tinyps.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
   # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:telosb
   ./run
+
+NOTE::  The baud rate 57600 must be used telos based motes, as its configuration
+has been changed to work with this baud rate when compiled for tosthreads. I.e.
+DO NOT just substitute 'telosb' or 'tmote' for <baud_rate> above.  Explicitly
+set it to 57600.
 
 The controls at the bottom of the screen allow you to zoom in or out the X
 axis, change the range of the Y axis, and clear all received data. You can

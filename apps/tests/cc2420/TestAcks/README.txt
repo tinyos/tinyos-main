@@ -1,4 +1,4 @@
-
+README for TestAcks
 Author/Contact: tinyos-help@millennium.berkeley.edu
 
 Description:
@@ -21,4 +21,4 @@ Known bugs/limitations:
 
 None.
 
-$Id: README.txt,v 1.2 2008-07-16 18:09:49 idgay Exp $
+$Id: README.txt,v 1.3 2008-07-26 02:32:44 klueska Exp $

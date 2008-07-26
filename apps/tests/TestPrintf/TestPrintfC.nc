@@ -28,14 +28,15 @@
  * data actually get sent out over the serial line.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.9 $
- * @date $Date: 2008-07-02 18:45:40 $
+ * @version $Revision: 1.10 $
+ * @date $Date: 2008-07-26 02:32:44 $
  */
 
 #include "printf.h"
 module TestPrintfC @safe() {
   uses {
     interface Boot;
+    interface Timer<TMilli>;
   }
 }
 implementation {
@@ -45,10 +46,14 @@ implementation {
   uint32_t dummyVar3 = 1234567890;
 
   event void Boot.booted() {
+	call Timer.startPeriodic(1000);
+  }
+
+  event void Timer.fired() {
   	printf("Hi I am writing to you from my TinyOS application!!\n");
   	printf("Here is a uint8: %u\n", dummyVar1);
   	printf("Here is a uint16: %u\n", dummyVar2);
-  	printf("Here is a uint32: %ld\n", dummyVar3);
+  	printf("Here is a uint32: %lu\n", dummyVar3);
   	printfflush();
   }
 }

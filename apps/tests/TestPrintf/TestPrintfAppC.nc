@@ -27,8 +27,8 @@
  * data actually get sent out over the serial line.
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.7 $
- * @date $Date: 2008-06-23 21:05:13 $
+ * @version $Revision: 1.8 $
+ * @date $Date: 2008-07-26 02:32:44 $
  */
 
 #include "printf.h"
@@ -37,7 +37,9 @@ configuration TestPrintfAppC{
 }
 implementation {
   components MainC, TestPrintfC;
+  components new TimerMilliC();
 
   TestPrintfC.Boot -> MainC;
+  TestPrintfC.Timer -> TimerMilliC;
 }
 

@@ -1,5 +1,3 @@
-$Id: README.txt,v 1.1 2008-06-23 21:05:13 sallai Exp $
-
 README for TestPrintf
 Author/Contact: tinyos-help@millennium.berkeley.edu
 
@@ -22,3 +20,4 @@ Known bugs/limitations:
 
 None.
  
+$Id: README.txt,v 1.2 2008-07-26 02:32:43 klueska Exp $

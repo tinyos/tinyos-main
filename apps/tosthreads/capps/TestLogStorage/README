@@ -6,7 +6,7 @@ Description:
 
 TestLogStorage is a threaded implementation of an application that takes a dummy
 sensor readings of a counter, logs it flash, and then sends it out over the
-radio at some later time. In the current implementation, each sensor reading is
+serial port at some later time. In the current implementation, each sensor reading is
 taken once every 3000ms, and records containing a set of readings from each
 iteration are batched out over the radio every 10000ms.  This application is
 very similar to the SenseStoreAndForward application contained in this same
@@ -22,19 +22,19 @@ Valid platforms are currently: tmote, telosb, iris, mica2, and micaz
 
 Readings are taken from the dummy sensor and logged to flash as one record in an
 infinite loop. Records are then read out of flash and and sent out over the
-radio interface in separate infinite loop.  Before the application starts
+serial interface in separate infinite loop.  Before the application starts
 running, the entire contents of the flash drive are erased.
 
 A successful test will result in LED0 remaining solid for approximately 6s while
 the flash is being erased.  After that LED0 will toggle with each successful
 sensor readings logged to flash, at a rate of 3000ms.  Also, LED1 will begin
 toggling in rapid succession once every 10000ms as records are successfully read
-from flash and sent out over the radio.  Once all of the records currently
+from flash and sent out over the serial port.  Once all of the records currently
 recorded to flash since the last batch of sends have been sent out, LED2 Toggles
 to indicate completion.  This process continues in an infinite loop forever.
 
-Additionally, the TestLogStorage mote writes its records out to the serial
-port. You can test that the application is working properly by reading these
+Since the TestLogStorage mote writes its records out to the serial
+port, you can test that the application is working properly by reading these
 packets (e.g., through seriallisten) and checking that they have reasonable
 values, counting up from 0. E.g.:
 

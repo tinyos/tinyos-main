@@ -1,4 +1,4 @@
-
+README for LplBroadcastPeriodicDelivery
 Author/Contact: tinyos-help@millennium.berkeley.edu
 
 Description:
@@ -46,4 +46,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.5 2008-07-16 17:39:44 idgay Exp $
+$Id: README.txt,v 1.6 2008-07-26 02:32:44 klueska Exp $
