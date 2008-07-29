@@ -7,7 +7,7 @@ Sensors and Sensor Boards
 :Type: Documentary
 :Status: Draft
 :TinyOS-Version: 2.x
-:Author: David Gay, Phil Levis, Wei Hong, Joe Polastre, and Gilman Tolle
+:Author: David Gay, Philip Levis, Wei Hong, Joe Polastre, and Gilman Tolle
 
 :Draft-Created: 10-Jun-2006
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
