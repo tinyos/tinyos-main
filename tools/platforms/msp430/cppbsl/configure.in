@@ -12,20 +12,25 @@ AM_INIT_AUTOMAKE
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
+AC_PROG_GCC_TRADITIONAL
 
 AC_FUNC_ERROR_AT_LINE
 AC_HEADER_STDC
-AC_C_CONST
+AC_HEADER_STDBOOL
+AC_HEADER_TIME
 
 #checks for header files and libraries
-#AC_CHECK_HEADER(readline.h)
-#AC_CHECK_LIB(readline, rl_initialize)
-AC_CHECK_HEADER(popt.h)
+AC_CHECK_HEADERS([linux/version.h popt.h fcntl.h inttypes.h stdlib.h sys/ioctl.h sys/time.h termios.h unistd.h])
 AC_CHECK_LIB(popt, poptGetNextOpt)
-#AC_CHECK_HEADER(pthread.h)
 
 # Checks for typedefs, structures, and compiler characteristics.
-# AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_UINT16_T
+AC_TYPE_UINT8_T
+
+AC_FUNC_SELECT_ARGTYPES
+AC_CHECK_FUNCS([select strerror])
 
 AC_DEFUN([ACX_PTHREAD], [
 AC_REQUIRE([AC_CANONICAL_HOST])
