@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.13 2008-06-04 04:30:41 regehr Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.14 2008-08-01 03:54:47 gnawali Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -120,7 +120,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-06-04 04:30:41 $
+ *  @date   $Date: 2008-08-01 03:54:47 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -436,7 +436,7 @@ implementation {
         parentCongested = FALSE;
         call CollectionDebug.logEvent(NET_C_FE_CONGESTION_END);
       } 
-      // Once we are here, we have decided to send the packet.
+      // Now we check if we have already sent a packet with matching signature
       if (call SentCache.lookup(qe->msg)) {
         call CollectionDebug.logEvent(NET_C_FE_DUPLICATE_CACHE_AT_SEND);
         call SendQueue.dequeue();
