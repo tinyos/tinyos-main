@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-18 15:52:53 $
+ * $Revision: 1.1 $
+ * $Date: 2008-08-02 16:56:21 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -36,12 +36,12 @@
 #include "TKN154_PHY.h"
 #include "TKN154_MAC.h"
 
-generic module NoCapP()
+generic module NoCsmaP()
 {
   provides
   {
     interface Init as Reset;
-    interface FrameTx as CapTx;
+    interface FrameTx as FrameTx;
     interface FrameRx as FrameRx[uint8_t frameType];
     interface FrameExtracted as FrameExtracted[uint8_t frameType];
     interface FrameTxNow as BroadcastTx;
@@ -95,7 +95,7 @@ implementation
     call TokenToCfp.transfer();
   }
 
-  command ieee154_status_t CapTx.transmit(ieee154_txframe_t *frame)
+  command ieee154_status_t FrameTx.transmit(ieee154_txframe_t *frame)
   {
     return IEEE154_TRANSACTION_OVERFLOW;
   }

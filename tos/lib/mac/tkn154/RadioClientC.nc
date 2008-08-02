@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:28 $
+ * $Revision: 1.2 $
+ * $Date: 2008-08-02 16:56:21 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -56,20 +56,20 @@ implementation
     CLIENT = unique(IEEE802154_RADIO_RESOURCE),
   };
 
-  components FrameDispatchP;
-  RadioRx = FrameDispatchP.RadioRx[CLIENT];
-  RadioTx = FrameDispatchP.RadioTx[CLIENT];
-  RadioOff = FrameDispatchP.RadioOff[CLIENT];
-  Token = FrameDispatchP.Token[CLIENT];
-  IsResourceRequested = FrameDispatchP.IsResourceRequested;
-  TokenRequested = FrameDispatchP.TokenRequested[CLIENT];
+  components RadioControlP;
+  RadioRx = RadioControlP.RadioRx[CLIENT];
+  RadioTx = RadioControlP.RadioTx[CLIENT];
+  RadioOff = RadioControlP.RadioOff[CLIENT];
+  Token = RadioControlP.Token[CLIENT];
+  IsResourceRequested = RadioControlP.IsResourceRequested;
+  TokenRequested = RadioControlP.TokenRequested[CLIENT];
 
   components new TransferClientP(CLIENT);
   ResourceTransfer = TransferClientP;
   ResourceTransferred = TransferClientP;
   TransferTo = TransferClientP;
   TransferFrom = TransferClientP;
-  TransferClientP.ResourceTransferControl -> FrameDispatchP;
-  TransferClientP.Leds -> FrameDispatchP;
+  TransferClientP.ResourceTransferControl -> RadioControlP;
+  TransferClientP.Leds -> RadioControlP;
 }
 

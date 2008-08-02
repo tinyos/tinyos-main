@@ -10,16 +10,17 @@ TelosB the timing in beacon-enabled mode is not standard compliant).
 Status 6/16/08
 --------------
 
-missing functionality:
+Missing functionality:
 - security (not planned)
 - GTS (not planned)
 - PAN ID conflict resolution
 - multiple indirect transmissions to the same destination
 
-missing documentation:
-- overview on the architecture of TKN15.4
-- guidance on porting TKN15.4 to a new platform
-- ...
+Documentation
+-------------
+
+A technical report on TKN15.4 is under way and will be available at:
+http://www.tkn.tu-berlin.de/publications/reports.jsp
 
 Implementation 
 --------------

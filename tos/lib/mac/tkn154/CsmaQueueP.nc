@@ -28,12 +28,12 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:27 $
+ * $Date: 2008-08-02 16:56:21 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 #include "TKN154_MAC.h"
-generic module CapQueueP() {
+generic module CsmaQueueP() {
   provides
   {
     interface Init as Reset;
@@ -42,13 +42,13 @@ generic module CapQueueP() {
     interface Purge;
   } uses {
     interface Queue<ieee154_txframe_t*>;
-    interface FrameTx as CapTx;
+    interface FrameTx as FrameTxCsma;
     interface FrameRx as SubFrameExtracted;
   }
 }
 implementation
 {
-  task void tryCapTxTask();
+  task void txTask();
   bool m_busy;
   uint8_t m_client;
 
@@ -68,12 +68,12 @@ implementation
     if (call Queue.enqueue(txFrame) != SUCCESS)
       return IEEE154_TRANSACTION_OVERFLOW;
     else {
-      post tryCapTxTask();
+      post txTask();
       return IEEE154_SUCCESS;
     }
   }
 
-  task void tryCapTxTask()
+  task void txTask()
   {
     if (!m_busy && call Queue.size()){
       ieee154_txframe_t *txFrame = call Queue.head();
@@ -81,21 +81,21 @@ implementation
         // was purged
         call Queue.dequeue();
         signal Purge.purgeDone(txFrame, IEEE154_SUCCESS);
-        post tryCapTxTask();
+        post txTask();
       }
       m_client = txFrame->client;
-      if (call CapTx.transmit(txFrame) == IEEE154_SUCCESS){
+      if (call FrameTxCsma.transmit(txFrame) == IEEE154_SUCCESS){
         m_busy = TRUE;
       }
     }
   }
 
-  event void CapTx.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
+  event void FrameTxCsma.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
   {
     call Queue.dequeue();
     m_busy = FALSE;
     signal FrameTx.transmitDone[txFrame->client](txFrame, status);
-    post tryCapTxTask();
+    post txTask();
   }
 
   event message_t* SubFrameExtracted.received(message_t* frame)

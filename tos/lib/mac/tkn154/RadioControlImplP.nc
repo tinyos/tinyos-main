@@ -28,13 +28,13 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:27 $
+ * $Date: 2008-08-02 16:56:21 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 #include "TKN154_MAC.h"
 #include "TKN154_DEBUG.h"
-module FrameDispatchImplP 
+module RadioControlImplP 
 {
   provides
   {
