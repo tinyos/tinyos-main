@@ -67,6 +67,7 @@ implementation {
       while( call Temp.read(&(readings->temp)) != SUCCESS );
       while( call BlockingAMSend.send(AM_BROADCAST_ADDR, &msg, sizeof(sensor_readings_t)) != SUCCESS );
       call Leds.led0Toggle();
+      call MainThread.sleep(512);
     }
   }
 }
