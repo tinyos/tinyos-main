@@ -37,7 +37,7 @@ configuration TestSineSensorAppC {
 }
 implementation {
   components MainC, TestSineSensorC;
-  components new ThreadC(100) as MainThread;
+  components new ThreadC(150) as MainThread;
   
   components new BlockingSineSensorC();
   components BlockingSerialActiveMessageC;
