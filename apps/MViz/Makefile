@@ -1,5 +1,5 @@
 COMPONENT=MVizAppC
-CFLAGS += -I$(TOSDIR)/lib/net/ -I$(TOSDIR)/lib/net/ctp -I$(TOSDIR)/lib/net/le -I.
+CFLAGS += -I$(TOSDIR)/lib/net/ -I$(TOSDIR)/lib/net/ctp -I$(TOSDIR)/lib/net/4bitle -I.
 BUILD_EXTRA_DEPS = MVizMsg.class
 
 MVizMsg.java: MViz.h
