@@ -1,5 +1,5 @@
 NAME=tinyos-tools
-VERSION=1.2.4
+VERSION=1.3.0
 
 cd ../..
 rm -rf $NAME-$VERSION
@@ -9,7 +9,7 @@ tools/release/extractor $NAME-$VERSION <<'EOF' | gzip >../$NAME-$VERSION.tar.gz
 !^./support
 !^./tools/release
 !^./tos
-!^./README|overall-todo.txt
+!^./README|overall-todo.txt|release-notes.txt
 !/.cvsignore
 !/CVS/
 !/CVS$

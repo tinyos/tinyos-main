@@ -2,8 +2,8 @@
 
 Summary: TinyOS tools 
 Name: tinyos-tools
-Version: 1.2.4
-Release: 2
+Version: 1.3.0
+Release: 1
 License: Please see source
 Group: Development/System
 URL: http://www.tinyos.net/
@@ -11,11 +11,11 @@ BuildRoot: %{_tmppath}/%{name}-root
 Source0: %{name}-%{version}.tar.gz
 # This makes cygwin happy
 Provides: /bin/sh /bin/bash
-Requires: nesc >= 1.2.7
+Requires: nesc >= 1.3
 
 %description
 Tools for use with tinyos. Includes, for example: uisp, motelist, pybsl, mig,
-ncc and nesdoc. The source for these tools is found in the TinyOS CSV
+ncc and nesdoc. The source for these tools is found in the TinyOS CVS
 repository under tinyos-2.x/tools.
 
 %prep
