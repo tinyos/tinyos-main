@@ -22,8 +22,8 @@
 
 /**
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.1 $
- * @date $Date: 2007-09-19 04:39:16 $
+ * @version $Revision: 1.2 $
+ * @date $Date: 2008-08-06 16:20:46 $
  */
 
 package net.tinyos.tools;
@@ -58,17 +58,13 @@ public class PrintfClient implements MessageListener {
   }
   
   public static void main(String[] args) throws Exception {
-    String source = "";
+    String source = null;
     if (args.length == 2) {
       if (!args[0].equals("-comm")) {
 	       usage();
 	       System.exit(1);
       }
       source = args[1];
-    }
-    else {
-      usage();
-      System.exit(1);
     }
     
     PhoenixSource phoenix;
