@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.9 $ $Date: 2008-07-11 19:21:23 $
+ * @version $Revision: 1.10 $ $Date: 2008-08-07 00:06:53 $
  */
 
 #include "CC2420.h"
@@ -268,12 +268,12 @@ implementation {
         call CaptureSFD.captureFallingEdge();
         call PacketTimeStamp.set(m_msg, time32);
         if (call PacketTimeSyncOffset.isSet(m_msg)) {
-           nx_uint8_t *taddr = m_msg->data + (call PacketTimeSyncOffset.get(m_msg) - sizeof(cc2420_header_t));
-           timesync_radio_t *timesync = (timesync_radio_t*)taddr;
+           uint8_t absOffset = sizeof(message_header_t)-sizeof(cc2420_header_t)+call PacketTimeSyncOffset.get(m_msg);
+           timesync_radio_t *timesync = (timesync_radio_t *)((nx_uint8_t*)m_msg+absOffset);
            // set timesync event time as the offset between the event time and the SFD interrupt time (TEP  133)
            *timesync  -= time32;
            call CSN.clr();
-           call TXFIFO_RAM.write( call PacketTimeSyncOffset.get(m_msg), (uint8_t*)timesync, sizeof(timesync_radio_t) );
+           call TXFIFO_RAM.write( absOffset, (uint8_t*)timesync, sizeof(timesync_radio_t) );
            call CSN.set();
         }
 
