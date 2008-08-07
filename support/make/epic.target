@@ -1,0 +1,28 @@
+#-*-Makefile-*-
+#$Id: epic.target,v 1.1 2008-08-07 06:37:34 prabal Exp $
+
+PLATFORM ?= epic
+
+# Disable MSP430 hardware multiply because it makes MSPGCC die
+PFLAGS += -mdisable-hwmul
+OPTFLAGS += -O
+
+# Default BSL assumes telosb-like programming interface
+MSP_BSL ?= tos-bsl
+MSP_BSL_FLAGS = --telosb
+
+#Update for Epic AT45 flash
+#VOLUME_FILE = volumes-stm25p.xml
+#VOLUME_ALLOCATOR = tos-storage-stm25p
+
+ifdef CC2420_CHANNEL
+PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)
+endif
+
+# Include the epic-specific targets
+$(call TOSMake_include_platform,epic)
+# Include the msp extra targets
+$(call TOSMake_include_platform,msp)
+
+epic: $(BUILD_DEPS)
+	@:

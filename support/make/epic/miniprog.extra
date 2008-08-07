@@ -1,0 +1,5 @@
+#-*-Makefile-*-
+#$Id: miniprog.extra,v 1.1 2008-08-07 06:38:02 prabal Exp $
+
+# Special flags for Epic USB Mini Programmer
+MSP_BSL_FLAGS = --swap-reset-test --invert-reset --invert-test
