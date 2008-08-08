@@ -140,6 +140,7 @@ implementation
         
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
+#ifndef DEFAULT_SLEEP_TIME
         DEFAULT_SLEEP_TIME=1625,
         // DEFAULT_SLEEP_TIME=3250,
         // DEFAULT_SLEEP_TIME=6500,
@@ -147,6 +148,7 @@ implementation
         // DEFAULT_SLEEP_TIME=16384,
         // DEFAULT_SLEEP_TIME=32768U,
         // DEFAULT_SLEEP_TIME=65535U,
+#endif
         DATA_DETECT_TIME=17,
         RX_SETUP_TIME=102,    // time to set up receiver
         TX_SETUP_TIME=58,     // time to set up transmitter
@@ -346,7 +348,7 @@ implementation
             sT = networkSleeptime;
         }
         if(msg == NULL) return;
-        macHdr = (red_mac_header_t *)call SubPacket.getPayload(msg, sizeof(red_mac_header_t) + length);
+        macHdr = (red_mac_header_t *)call SubPacket.getPayload(msg, sizeof(red_mac_header_t));
         macHdr->repetitionCounter = sT/(length * BYTE_TIME + SUB_HEADER_TIME + SUB_FOOTER_TIME) + 1;
         atomic {
             getHeader(msg)->token = seqNo;
@@ -539,6 +541,7 @@ implementation
                 MIN_BACKOFF_MASK = (MIN_BACKOFF_MASK << 1) + 1;
             }
             MIN_BACKOFF_MASK >>= 2;
+            if(MIN_BACKOFF_MASK < 0x3ff) MIN_BACKOFF_MASK=0x3ff;
         }
 #ifdef SPECKMAC_DEBUG
         call SerialDebug.putShortDesc("SpeckMacP");
@@ -950,9 +953,9 @@ implementation
     
     async event void RadioTimeStamping.transmittedSFD(uint16_t time, message_t* p_msg ) {
         if((macState == TX) && (p_msg == txBufPtr)) {
-            getMetadata(msg)->sfdtime = call LocalTime32kHz.get();
+            getMetadata(p_msg)->sfdtime = call LocalTime32kHz.get();
             txMacHdr->time =
-                call TimeDiff32.computeDelta(getMetadata(msg)->sfdtime,
+                call TimeDiff32.computeDelta(getMetadata(p_msg)->sfdtime,
                                              getMetadata(p_msg)->time);
         }
     }

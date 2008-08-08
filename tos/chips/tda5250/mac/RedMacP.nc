@@ -147,12 +147,14 @@ implementation
         SUB_HEADER_TIME=PHY_HEADER_TIME + sizeof(message_header_t)*BYTE_TIME,
         SUB_FOOTER_TIME=2*BYTE_TIME, // 2 bytes crc 
         // DEFAULT_SLEEP_TIME=1625,
+#ifndef DEFAULT_SLEEP_TIME
         DEFAULT_SLEEP_TIME=2048,
         // DEFAULT_SLEEP_TIME=4096,
         // DEFAULT_SLEEP_TIME=8192,
         // DEFAULT_SLEEP_TIME=16384,
         // DEFAULT_SLEEP_TIME=32768U,
         // DEFAULT_SLEEP_TIME=65535U,
+#endif
         DATA_DETECT_TIME=17,
         RX_SETUP_TIME=102,    // time to set up receiver
         TX_SETUP_TIME=58,     // time to set up transmitter
@@ -384,7 +386,7 @@ implementation
             sT = networkSleeptime;
         }
         if(msg == NULL) return;
-        macHdr = (red_mac_header_t *)call SubPacket.getPayload(msg, sizeof(red_mac_header_t) + length);
+        macHdr = (red_mac_header_t *)call SubPacket.getPayload(msg, sizeof(red_mac_header_t));
         macHdr->repetitionCounter = sT/(length * BYTE_TIME + SUB_HEADER_TIME + SUB_FOOTER_TIME + 
                                         TX_GAP_TIME) + 1;
         atomic {
@@ -403,6 +405,8 @@ implementation
                     call Timer.start((call Random.rand16() >> 3) & ZERO_BACKOFF_MASK);
                 }
                 else {
+                    sdDebug(332);
+                    sdDebug(macHdr->repetitionCounter);
                     call Timer.start(backoff(longRetryCounter));
                 }
             }
@@ -857,7 +861,7 @@ implementation
         rxStat.duplicate = PERF_UNKNOWN;
         rxStat.repCounter = 0xff;
 #endif
-        sdDebug(190);
+        // sdDebug(190);
         if(macState == RX_P) {
             // sdDebug(191);
             if(error == SUCCESS) {
@@ -1055,7 +1059,6 @@ implementation
         if(macState == RX_P) {
             rxTime = call LocalTime32kHz.get();
             call ChannelMonitor.rxSuccess();
-            sdDebug(221);
         }
     }
     
