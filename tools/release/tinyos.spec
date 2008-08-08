@@ -2,7 +2,7 @@ Summary: An event-based operating environment designed for use with embedded net
 Name: tinyos
 BuildArchitectures: noarch
 Version: 2.1.0
-Release: 1
+Release: 1%{dist}
 License: Please see source
 Packager: TinyOS Group, UC Berkeley
 Group: Development/System

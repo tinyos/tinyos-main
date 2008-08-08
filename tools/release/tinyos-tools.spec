@@ -3,7 +3,7 @@
 Summary: TinyOS tools 
 Name: tinyos-tools
 Version: 1.3.0
-Release: 1
+Release: 1%{dist}
 License: Please see source
 Group: Development/System
 URL: http://www.tinyos.net/
@@ -60,6 +60,7 @@ if [ $? -ne 0 ]; then
 fi
 %ifos linux
 java=`$RPM_INSTALL_PREFIX/bin/tos-locate-jre --java`
+tinyoslibdir=$RPM_INSTALL_PREFIX/lib/tinyos
 bits=32
 if [ $? -ne 0 ]; then
   echo "java command not found - assuming 32 bits"

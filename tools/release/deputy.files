@@ -1,0 +1,11 @@
+NAME=tinyos-deputy
+VERSION=1.1
+RELEASE=1
+
+cd ../..
+rm -rf $NAME-$VERSION
+svn checkout svn://hal.cs.berkeley.edu/home/svn/projects/trunk/deputy
+mv deputy $NAME-$VERSION
+tar czvf ../$NAME-$VERSION-$RELEASE.tar.gz $NAME-$VERSION
+wget -O ../$NAME-$VERSION-$RELEASE.patch http://www.cs.utah.edu/~coop/safetinyos/files/deputy.patch
+

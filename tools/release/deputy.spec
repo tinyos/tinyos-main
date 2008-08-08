@@ -1,13 +1,13 @@
-%define name deputy
-%define version 1.1
-%define release 1
+%define deputy_name deputy
+%define tinyos_deputy_version 1.1
+%define tinyos_deputy_release 1
 
 Summary: Deputy compiler for Safe TinyOS.
-Name: %{name}
-Version: %{version}
-Release: %{release}%{?dist}
-Source: http://deputy.cs.berkeley.edu/deputy-1.1.tar.gz
-Patch0: deputy.patch
+Name: tinyos-%{deputy_name}
+Version: %{tinyos_deputy_version}
+Release: %{tinyos_deputy_release}%{dist}
+Source: http://deputy.cs.berkeley.edu/%{name}-%{tinyos_deputy_version}-%{tinyos_deputy_release}.tar.gz
+Patch0: tinyos-%{deputy_name}-%{tinyos_deputy_version}-%{tinyos_deputy_release}.patch
 Vendor: Deputy
 URL: http://deputy.cs.berkeley.edu/
 License: LGPL
