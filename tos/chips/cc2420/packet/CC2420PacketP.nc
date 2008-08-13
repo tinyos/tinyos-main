@@ -138,10 +138,13 @@ implementation {
     return call PacketTimeStamp32khz.isValid(msg);
   }
 
+  //timestmap is always represented in 32khz
+  //28.1 is coefficient difference between T32khz and TMilli on MicaZ
   async command uint32_t PacketTimeStampMilli.timestamp(message_t* msg)
   {
-    int32_t offset = call PacketTimeStamp32khz.timestamp(msg) - call LocalTime32khz.get();
-    return (offset >> 5) + call LocalTimeMilli.get();
+    int32_t offset = (call LocalTime32khz.get()-call PacketTimeStamp32khz.timestamp(msg));
+    offset/=28.1;
+    return call LocalTimeMilli.get() - offset;
   }
 
   async command void PacketTimeStampMilli.clear(message_t* msg)
