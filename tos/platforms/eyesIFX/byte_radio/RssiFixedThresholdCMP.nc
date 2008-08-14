@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-07-10 13:13:42 $
+ * $Revision: 1.6 $
+ * $Date: 2008-08-14 13:14:09 $
  * @author: Kevin Klues (klues@tkn.tu-berlin.de)
  * @author: Philipp Huppertz (huppertz@tkn.tu-berlin.de)
  * @author: Andreas Koepke (koepke@tkn.tu-berlin.de)
@@ -286,7 +286,7 @@ implementation
     task void UpdateNoiseFloorTask() {
         shellsort(rssisamples,NSAMPLES);
         atomic { 
-            noisefloor = (5*noisefloor + rssisamples[NSAMPLES/2])/6;
+            noisefloor = (5*noisefloor + rssisamples[NSAMPLES/2] + 3)/6;
             rssiindex = 0; 
         }
         sdDebug(60000U + noisefloor);
@@ -318,7 +318,7 @@ implementation
             } else { 
                 shellsort(rssisamples,NSAMPLES);
                 if(rssisamples[MINIMUM_POSITION] < noisefloor + THREE_SIGMA)  {
-                    noisefloor = (7*noisefloor + rssisamples[NSAMPLES/2])/8;
+                    noisefloor = (7*noisefloor + rssisamples[NSAMPLES/2] + 4)/8;
                     ++deadlockCounter;
                 }
                 else {
@@ -411,6 +411,6 @@ implementation
     async command uint16_t BatteryLevel.getLevel() {
         uint16_t l;
         atomic l = batteryLevel;
-        return (uint32_t)l*39>>5;
+        return (uint32_t)(l+3)*6/5;
     }
 }
