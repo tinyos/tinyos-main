@@ -157,9 +157,6 @@ implementation {
   components new TimerMilliC() as RetxmitTimer;
   Forwarder.RetxmitTimer -> RetxmitTimer;
 
-  components new TimerMilliC() as CongestionTimer;
-  Forwarder.CongestionTimer -> CongestionTimer;
-
   components RandomC;
   Router.Random -> RandomC;
   Forwarder.Random -> RandomC;

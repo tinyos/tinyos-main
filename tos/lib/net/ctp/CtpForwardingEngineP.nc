@@ -1,6 +1,6 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.14 2008-08-01 03:54:47 gnawali Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.15 2008-08-15 16:48:14 scipio Exp $ */
 /*
- * Copyright (c) 2006 Stanford University.
+ * Copyright (c) 2008 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,12 +68,15 @@
  *  packet. This approach assumes that the network is operating at low
  *  utilization; its goal is to prevent correlated traffic -- such as 
  *  nodes along a route forwarding packets -- from interfering with itself.
+ *  The values for these constants are defined in CC2420ForwardingEngine.h.
+ *  A waiting interval is Base wait plus a random wait in the range of
+ *  0 - Wait window.
  *
  *  <table>
  *    <tr>
  *      <td><b>Case</b></td>
- *      <td><b>CC2420 Wait (ms)</b></td>
- *      <td><b>Other Wait (ms)</b></td>
+ *      <td><b>Base wait</b></td>
+ *      <td><b>Wait window</b></td>
  *      <td><b>Description</b></td>
  *    </tr>
  *    <tr>
@@ -86,16 +89,16 @@
  *    </tr>
  *    <tr>
  *      <td>Success</td>
- *      <td>16-31</td>
- *      <td>128-255</td>
+ *      <td>SENDDONE_OK_OFFSET</td>
+ *      <td>SENDDONE_OK_WINDOW</td>
  *      <td>When the ForwardingEngine successfully sends a packet to the next
  *          hop, it waits this long before sending the next packet in the queue.
  *          </td>
  *    </tr>
  *    <tr>
  *      <td>Ack Failure</td>
- *      <td>8-15</td>
- *      <td>128-255</td>
+ *      <td>SENDDONE_NOACK_OFFSET</td>
+ *      <td>SENDDONE_NOACK_WINDOW</td>
  *      <td>If the link layer supports acks and the ForwardingEngine did not
  *          receive an acknowledgment from the next hop, it waits this long before
  *          trying a retransmission. If the packet has exceeded the retransmission
@@ -103,8 +106,8 @@
  *    </tr>
  *    <tr>
  *      <td>Loop Detection</td>
- *      <td>32-63</td>
- *      <td>512-1023</td>
+ *      <td>LOOPY_OFFSET</td>
+ *      <td>LOOPY_WINDOW</td>
  *      <td>If the ForwardingEngine is asked to forward a packet from a node that
  *          believes it is closer to the root, the ForwardingEngine pauses its
  *          transmissions for this interval and triggers the RoutingEngine to 
@@ -114,13 +117,14 @@
  *    </tr>
  *  </table>  
  *
- *  <p>The times above are all for CC2420-based platforms. The timings for
- *  other platforms depend on their bit rates, as they are based on packet
- *  transmission times.</p>
+ *  <p>For CC2420-based platforms, SENDDONE_OK_OFFSET and SENDDONE_NOACK_OFFSET are 16ms,
+     LOOPY_OFFSET is 64ms, SENDDONE_OK_WINDOW and SENDDONE_NOACK_WINDOW are 15ms and
+     LOOPY_WINDOW is 63ms. DIfferent radios have different packet timings and so use
+     different constants.</p>
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-08-01 03:54:47 $
+ *  @date   $Date: 2008-08-15 16:48:14 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -155,8 +159,6 @@ generic module CtpForwardingEngineP() {
 
     // Counts down from the last time we heard from our parent; used
     // to expire local state about parent congestion.
-    interface Timer<TMilli> as CongestionTimer;
-
     interface Cache<message_t*> as SentCache;
     interface CtpInfo;
     interface PacketAcknowledgements;
@@ -173,7 +175,6 @@ implementation {
    * masked by the given mask and added to the given offset.
    */
   static void startRetxmitTimer(uint16_t mask, uint16_t offset);
-  static void startCongestionTimer(uint16_t mask, uint16_t offset);
 
   /* Indicates whether our client is congested */
   bool clientCongested = FALSE;
@@ -198,7 +199,10 @@ implementation {
   bool ackPending = FALSE;
 
   /* Keeps track of whether the packet on the head of the queue
-   * is being used, and control access to the data-link layer.*/
+   * is being used, and control access to the data-link layer. Note
+   * that CTP may be busy sending but there might be no transmission
+   * scheduled to the link layer, because CTP is using its own layer 3
+   * timers to prevent self-interference.*/
   bool sending = FALSE;
 
   /* Keep track of the last parent address we sent to, so that
@@ -269,7 +273,15 @@ implementation {
       }
     }
   }
- 
+
+  static void startRetxmitTimer(uint16_t mask, uint16_t offset) {
+    uint16_t r = call Random.rand16();
+    r &= mask;
+    r += offset;
+    call RetxmitTimer.startOneShot(r);
+    dbg("Forwarder", "Rexmit timer will fire in %hu ms\n", r);
+  }
+  
   /* 
    * If the ForwardingEngine has stopped sending packets because
    * these has been no route, then as soon as one is found, start
@@ -302,7 +314,9 @@ implementation {
    * already sending packets (the RetxmitTimer isn't running), post
    * sendTask. It could be that the engine is running and sendTask
    * has already been posted, but the post-once semantics make this
-   * not matter.
+   * not matter. What's important is that you don't post sendTask
+   * if the retransmit timer is running; this would circumvent the
+   * timer and send a packet before it fires.
    */ 
   command error_t Send.send[uint8_t client](message_t* msg, uint8_t len) {
     ctp_data_header_t* hdr;
@@ -366,7 +380,8 @@ implementation {
    * These is where all of the send logic is. When the ForwardingEngine
    * wants to send a packet, it posts this task. The send logic is
    * independent of whether it is a forwarded packet or a packet from
-   * a send client. 
+   * a send clientL the two cases differ in how memory is managed in
+   * sendDone.
    *
    * The task first checks that there is a packet to send and that
    * there is a valid route. It then marshals the relevant arguments
@@ -382,61 +397,39 @@ implementation {
   task void sendTask() {
     dbg("Forwarder", "%s: Trying to send a packet. Queue size is %hhu.\n", __FUNCTION__, call SendQueue.size());
     if (sending) {
-      dbg("Forwarder", "%s: busy, don't send\n", __FUNCTION__);
+      dbg("Forwarder", "%s: busy, don't send.\n", __FUNCTION__);
       call CollectionDebug.logEvent(NET_C_FE_SEND_BUSY);
       return;
     }
     else if (call SendQueue.empty()) {
-      dbg("Forwarder", "%s: queue empty, don't send\n", __FUNCTION__);
+      dbg("Forwarder", "%s: queue empty, nothing to send.\n", __FUNCTION__);
       call CollectionDebug.logEvent(NET_C_FE_SENDQUEUE_EMPTY);
       return;
     }
     else if (!call RootControl.isRoot() && 
              !call UnicastNameFreeRouting.hasRoute()) {
-      dbg("Forwarder", "%s: no route, don't send, start retry timer\n", __FUNCTION__);
-      call RetxmitTimer.startOneShot(10000);
-
-      // send a debug message to the uart
+      // Technically, this retry isn't necessary, as if a route
+      // is found we'll get an event. But just in case such an event
+      // is lost (e.g., a bug in the routing engine), we retry.
+      // Otherwise the forwarder might hang indefinitely. As this test
+      // doesn't require radio activity, the energy cost is minimal.
+      dbg("Forwarder", "%s: no route, don't send, try again in %i.\n", __FUNCTION__, NO_ROUTE_RETRY);
+      call RetxmitTimer.startOneShot(NO_ROUTE_RETRY);
       call CollectionDebug.logEvent(NET_C_FE_NO_ROUTE);
-
       return;
     }
-    /*
-    else if (parentCongested) {
-      // Do nothing; the congestion timer is necessarily set which
-      // will clear parentCongested and repost sendTask().
-      dbg("Forwarder", "%s: sendTask deferring for congested parent\n",
-          __FUNCTION__);
-      call CollectionDebug.logEvent(NET_C_FE_CONGESTION_SENDWAIT);
-    }
-    */
     else {
+      // We can send a packet.
       error_t subsendResult;
       fe_queue_entry_t* qe = call SendQueue.head();
       uint8_t payloadLen = call SubPacket.payloadLength(qe->msg);
       am_addr_t dest = call UnicastNameFreeRouting.nextHop();
       uint16_t gradient;
 
-      if (call CtpInfo.isNeighborCongested(dest)) {
-        // Our parent is congested. We should wait.
-        // Don't repost the task, CongestionTimer will do the job
-        if (! parentCongested ) {
-          parentCongested = TRUE;
-          call CollectionDebug.logEvent(NET_C_FE_CONGESTION_BEGIN);
-        }
-        if (! call CongestionTimer.isRunning()) {
-          startCongestionTimer(CONGESTED_WAIT_WINDOW, CONGESTED_WAIT_OFFSET);
-        } 
-        dbg("Forwarder", "%s: sendTask deferring for congested parent\n",
-            __FUNCTION__);
-        //call CollectionDebug.logEvent(NET_C_FE_CONGESTION_SENDWAIT);
-        return;
-      } 
-      if (parentCongested) {
-        parentCongested = FALSE;
-        call CollectionDebug.logEvent(NET_C_FE_CONGESTION_END);
-      } 
-      // Now we check if we have already sent a packet with matching signature
+      // Make sure we haven't sent this packet before with the same THL.
+      // Note that this implies it's a forwarded packet, so we can
+      // circumvent the client or forwarded branch for freeing
+      // the buffer.
       if (call SentCache.lookup(qe->msg)) {
         call CollectionDebug.logEvent(NET_C_FE_DUPLICATE_CACHE_AT_SEND);
         call SendQueue.dequeue();
@@ -450,12 +443,21 @@ implementation {
       /* If our current parent is not the same as the last parent
          we sent do, then reset the count of unacked packets: don't
          penalize a new parent for the failures of a prior one.*/
+      // Give the high retry count, keeping this seems like a bad idea.
+      // If you've reached MAX_RETRIES, you've cycled through a bunch of
+      // parents. -pal
+      /*
       if (dest != lastParent) {
         qe->retries = MAX_RETRIES;
         lastParent = dest;
       }
- 
+      */
+
+      // We've decided we're going to send.
       dbg("Forwarder", "Sending queue entry %p\n", qe);
+      // If we're a root, copy the packet to a receive buffer and signal
+      // receive. We have to copy because send expects the buffer back,
+      // but receive might do a buffer swap.
       if (call RootControl.isRoot()) {
         collection_id_t collectid = getHeader(qe->msg)->type;
         memcpy(loopbackMsgPtr, qe->msg, sizeof(message_t));
@@ -479,11 +481,8 @@ implementation {
       
       ackPending = (call PacketAcknowledgements.requestAck(qe->msg) == SUCCESS);
 
-      // Set or clear the congestion bit on *outgoing* packets.
-      if (call CtpCongestion.isCongested())
-        call CtpPacket.setOption(qe->msg, CTP_OPT_ECN);
-      else
-        call CtpPacket.clearOption(qe->msg, CTP_OPT_ECN);
+      // Make sure the ECN bit is not set.
+      call CtpPacket.clearOption(qe->msg, CTP_OPT_ECN);
       
       subsendResult = call SubSend.send(dest, qe->msg, payloadLen);
       if (subsendResult == SUCCESS) {
@@ -491,10 +490,10 @@ implementation {
         sending = TRUE;
         dbg("Forwarder", "%s: subsend succeeded with %p.\n", __FUNCTION__, qe->msg);
         if (qe->client < CLIENT_COUNT) {
-	        dbg("Forwarder", "%s: client packet.\n", __FUNCTION__);
+	  dbg("Forwarder", "%s: client packet.\n", __FUNCTION__);
         }
         else {
-	        dbg("Forwarder", "%s: forwarded packet.\n", __FUNCTION__);
+	  dbg("Forwarder", "%s: forwarded packet.\n", __FUNCTION__);
         }
         return;
       }
@@ -511,12 +510,13 @@ implementation {
 	// This shouldn't happen, as we sit on top of a client and
         // control our own output; it means we're trying to
         // double-send (bug). This means we expect a sendDone, so just
-        // wait for that: when the sendDone comes in, // we'll try
+        // wait for that: when the sendDone comes in,  we'll try
         // sending this packet again.	
 	dbg("Forwarder", "%s: subsend failed from EBUSY.\n", __FUNCTION__);
         // send a debug message to the uart
         call CollectionDebug.logEvent(NET_C_FE_SUBSEND_BUSY);
       }
+      // The packet is too big: truncate it and retry.
       else if (subsendResult == ESIZE) {
 	dbg("Forwarder", "%s: subsend failed from ESIZE: truncate packet.\n", __FUNCTION__);
 	call Packet.setPayloadLength(qe->msg, call Packet.maxPayloadLength());
@@ -554,9 +554,9 @@ implementation {
       // Immediate retransmission is the worst thing to do.
       dbg("Forwarder", "%s: send failed\n", __FUNCTION__);
       call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL, 
-					 call CollectionPacket.getSequenceNumber(msg), 
-					 call CollectionPacket.getOrigin(msg), 
-                                         call AMPacket.destination(msg));
+				       call CollectionPacket.getSequenceNumber(msg), 
+				       call CollectionPacket.getOrigin(msg), 
+				       call AMPacket.destination(msg));
       startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
     }
     else if (ackPending && !call PacketAcknowledgements.wasAcked(msg)) {
@@ -571,23 +571,25 @@ implementation {
                                          call AMPacket.destination(msg));
         startRetxmitTimer(SENDDONE_NOACK_WINDOW, SENDDONE_NOACK_OFFSET);
       } else {
-        //max retries, dropping packet
-        if (qe->client < CLIENT_COUNT) {
-            clientPtrs[qe->client] = qe;
-            signal Send.sendDone[qe->client](msg, FAIL);
-            call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
-					 call CollectionPacket.getSequenceNumber(msg), 
-					 call CollectionPacket.getOrigin(msg), 
-                                         call AMPacket.destination(msg));
-        } else {
-           if (call MessagePool.put(qe->msg) != SUCCESS)
-             call CollectionDebug.logEvent(NET_C_FE_PUT_MSGPOOL_ERR);
-           if (call QEntryPool.put(qe) != SUCCESS)
-             call CollectionDebug.logEvent(NET_C_FE_PUT_QEPOOL_ERR);
-           call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_FWD, 
-					 call CollectionPacket.getSequenceNumber(msg), 
-					 call CollectionPacket.getOrigin(msg), 
-                                         call AMPacket.destination(msg));
+	// <Max retries reached, dropping packet: first case is a client packet,
+	// second case is a forwarded packet. Memory management for the
+	// two is different.
+        if (qe->client < CLIENT_COUNT) { // Client packet
+	  clientPtrs[qe->client] = qe;
+	  signal Send.sendDone[qe->client](msg, FAIL);
+	  call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
+					   call CollectionPacket.getSequenceNumber(msg), 
+					   call CollectionPacket.getOrigin(msg), 
+					   call AMPacket.destination(msg));
+        } else { // Forwarded packet
+	  if (call MessagePool.put(qe->msg) != SUCCESS)
+	    call CollectionDebug.logEvent(NET_C_FE_PUT_MSGPOOL_ERR);
+	  if (call QEntryPool.put(qe) != SUCCESS)
+	    call CollectionDebug.logEvent(NET_C_FE_PUT_QEPOOL_ERR);
+	  call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_FWD, 
+					   call CollectionPacket.getSequenceNumber(msg), 
+					   call CollectionPacket.getOrigin(msg), 
+					   call AMPacket.destination(msg));
         }
         call SendQueue.dequeue();
         sending = FALSE;
@@ -816,35 +818,23 @@ implementation {
     post sendTask();
   }
 
-  event void CongestionTimer.fired() {
-    //parentCongested = FALSE;
-    //call CollectionDebug.logEventSimple(NET_C_FE_CONGESTION_END, 0);
-    post sendTask();
-  }
-  
-
   command bool CtpCongestion.isCongested() {
-    // A simple predicate for now to determine congestion state of
-    // this node.
-    bool congested = (call SendQueue.size() > congestionThreshold) ? 
-      TRUE : FALSE;
-    return ((congested || clientCongested)?TRUE:FALSE);
+    return FALSE;
   }
 
   command void CtpCongestion.setClientCongested(bool congested) {
-    bool wasCongested = call CtpCongestion.isCongested();
-    clientCongested = congested;
-    if (!wasCongested && congested) {
-      call CtpInfo.triggerImmediateRouteUpdate();
-    } else if (wasCongested && ! (call CtpCongestion.isCongested())) {
-      call CtpInfo.triggerRouteUpdate();
-    }
+    // Do not respond to congestion.
   }
+  
+  /* signalled when this neighbor is evicted from the neighbor table */
+  event void LinkEstimator.evicted(am_addr_t neighbor) {}
 
+  
+  // Packet ADT commands
   command void Packet.clear(message_t* msg) {
     call SubPacket.clear(msg);
   }
-  
+
   command uint8_t Packet.payloadLength(message_t* msg) {
     return call SubPacket.payloadLength(msg) - sizeof(ctp_data_header_t);
   }
@@ -865,44 +855,38 @@ implementation {
     return payload;
   }
 
+  // CollectionPacket ADT commands
   command am_addr_t       CollectionPacket.getOrigin(message_t* msg) {return getHeader(msg)->origin;}
-
   command collection_id_t CollectionPacket.getType(message_t* msg) {return getHeader(msg)->type;}
   command uint8_t         CollectionPacket.getSequenceNumber(message_t* msg) {return getHeader(msg)->originSeqNo;}
   command void CollectionPacket.setOrigin(message_t* msg, am_addr_t addr) {getHeader(msg)->origin = addr;}
   command void CollectionPacket.setType(message_t* msg, collection_id_t id) {getHeader(msg)->type = id;}
   command void CollectionPacket.setSequenceNumber(message_t* msg, uint8_t _seqno) {getHeader(msg)->originSeqNo = _seqno;}
-  
-  //command ctp_options_t CtpPacket.getOptions(message_t* msg) {return getHeader(msg)->options;}
 
+  // CtpPacket ADT commands
   command uint8_t       CtpPacket.getType(message_t* msg) {return getHeader(msg)->type;}
   command am_addr_t     CtpPacket.getOrigin(message_t* msg) {return getHeader(msg)->origin;}
   command uint16_t      CtpPacket.getEtx(message_t* msg) {return getHeader(msg)->etx;}
   command uint8_t       CtpPacket.getSequenceNumber(message_t* msg) {return getHeader(msg)->originSeqNo;}
   command uint8_t       CtpPacket.getThl(message_t* msg) {return getHeader(msg)->thl;}
-  
   command void CtpPacket.setThl(message_t* msg, uint8_t thl) {getHeader(msg)->thl = thl;}
   command void CtpPacket.setOrigin(message_t* msg, am_addr_t addr) {getHeader(msg)->origin = addr;}
   command void CtpPacket.setType(message_t* msg, uint8_t id) {getHeader(msg)->type = id;}
-
+  command void CtpPacket.setEtx(message_t* msg, uint16_t e) {getHeader(msg)->etx = e;}
+  command void CtpPacket.setSequenceNumber(message_t* msg, uint8_t _seqno) {getHeader(msg)->originSeqNo = _seqno;}
   command bool CtpPacket.option(message_t* msg, ctp_options_t opt) {
     return ((getHeader(msg)->options & opt) == opt) ? TRUE : FALSE;
   }
-
   command void CtpPacket.setOption(message_t* msg, ctp_options_t opt) {
     getHeader(msg)->options |= opt;
   }
-
   command void CtpPacket.clearOption(message_t* msg, ctp_options_t opt) {
     getHeader(msg)->options &= ~opt;
   }
 
-  command void CtpPacket.setEtx(message_t* msg, uint16_t e) {getHeader(msg)->etx = e;}
-  command void CtpPacket.setSequenceNumber(message_t* msg, uint8_t _seqno) {getHeader(msg)->originSeqNo = _seqno;}
 
   // A CTP packet ID is based on the origin and the THL field, to
   // implement duplicate suppression as described in TEP 123.
-
   command bool CtpPacket.matchInstance(message_t* m1, message_t* m2) {
     return (call CtpPacket.getOrigin(m1) == call CtpPacket.getOrigin(m2) &&
 	    call CtpPacket.getSequenceNumber(m1) == call CtpPacket.getSequenceNumber(m2) &&
@@ -916,6 +900,9 @@ implementation {
 	    call CtpPacket.getType(m1) == call CtpPacket.getType(m2));
   }
 
+
+  /******** Defaults. **************/
+   
   default event void
   Send.sendDone[uint8_t client](message_t *msg, error_t error) {
   }
@@ -941,64 +928,26 @@ implementation {
   default command collection_id_t CollectionId.fetch[uint8_t client]() {
     return 0;
   }
-
-  static void startRetxmitTimer(uint16_t mask, uint16_t offset) {
-    uint16_t r = call Random.rand16();
-    r &= mask;
-    r += offset;
-    call RetxmitTimer.startOneShot(r);
-    dbg("Forwarder", "Rexmit timer will fire in %hu ms\n", r);
-  }
-
-  static void startCongestionTimer(uint16_t mask, uint16_t offset) {
-    uint16_t r = call Random.rand16();
-    r &= mask;
-    r += offset;
-    call CongestionTimer.startOneShot(r);
-    dbg("Forwarder", "Congestion timer will fire in %hu ms\n", r);
-  }
-
-  /* signalled when this neighbor is evicted from the neighbor table */
-  event void LinkEstimator.evicted(am_addr_t neighbor) {
-  }
-
-
+  
   /* Default implementations for CollectionDebug calls.
    * These allow CollectionDebug not to be wired to anything if debugging
    * is not desired. */
-
-    default command error_t CollectionDebug.logEvent(uint8_t type) {
-        return SUCCESS;
-    }
-    default command error_t CollectionDebug.logEventSimple(uint8_t type, uint16_t arg) {
-        return SUCCESS;
-    }
-    default command error_t CollectionDebug.logEventDbg(uint8_t type, uint16_t arg1, uint16_t arg2, uint16_t arg3) {
-        return SUCCESS;
-    }
-    default command error_t CollectionDebug.logEventMsg(uint8_t type, uint16_t msg, am_addr_t origin, am_addr_t node) {
-        return SUCCESS;
-    }
-    default command error_t CollectionDebug.logEventRoute(uint8_t type, am_addr_t parent, uint8_t hopcount, uint16_t metric) {
-        return SUCCESS;
-    }
+  
+  default command error_t CollectionDebug.logEvent(uint8_t type) {
+    return SUCCESS;
+  }
+  default command error_t CollectionDebug.logEventSimple(uint8_t type, uint16_t arg) {
+    return SUCCESS;
+  }
+  default command error_t CollectionDebug.logEventDbg(uint8_t type, uint16_t arg1, uint16_t arg2, uint16_t arg3) {
+    return SUCCESS;
+  }
+  default command error_t CollectionDebug.logEventMsg(uint8_t type, uint16_t msg, am_addr_t origin, am_addr_t node) {
+    return SUCCESS;
+  }
+  default command error_t CollectionDebug.logEventRoute(uint8_t type, am_addr_t parent, uint8_t hopcount, uint16_t metric) {
+    return SUCCESS;
+  }
    
 }
-
-/* Rodrigo. This is an alternative
-  event void CtpInfo.ParentCongested(bool congested) {
-    if (congested) {
-      // We've overheard our parent's ECN bit set.
-      startCongestionTimer(CONGESTED_WAIT_WINDOW, CONGESTED_WAIT_OFFSET);
-      parentCongested = TRUE;
-      call CollectionDebug.logEvent(NET_C_FE_CONGESTION_BEGIN);
-    } else {
-      // We've overheard our parent's ECN bit cleared.
-      call CongestionTimer.stop();
-      parentCongested = FALSE;
-      call CollectionDebug.logEventSimple(NET_C_FE_CONGESTION_END, 1);
-      post sendTask();
-    }
-  }
-*/
 
