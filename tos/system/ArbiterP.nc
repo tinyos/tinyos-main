@@ -110,6 +110,7 @@ implementation {
       if(state == RES_BUSY && resId == id) {
         if(call Queue.isEmpty() == FALSE) {
           reqResId = call Queue.dequeue();
+          resId = NO_RES;
           state = RES_GRANTING;
           post grantedTask();
           call ResourceConfigure.unconfigure[id]();

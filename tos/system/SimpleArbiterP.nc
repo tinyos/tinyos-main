@@ -99,6 +99,7 @@ implementation {
     atomic {
       if(state == RES_BUSY && resId == id) {
         if(call Queue.isEmpty() == FALSE) {
+          resId = NO_RES;
           reqResId = call Queue.dequeue();
           state = RES_GRANTING;
           post grantedTask();
