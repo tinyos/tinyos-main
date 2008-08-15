@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.15 2008-06-04 04:30:41 regehr Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.16 2008-08-15 21:57:31 scipio Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2008-06-04 04:30:41 $
+ *  @date   $Date: 2008-08-15 21:57:31 $
  *  @see Net2-WG
  */
 
@@ -297,8 +297,8 @@ implementation {
             /* Compute this neighbor's path metric */
             linkEtx = evaluateEtx(call LinkEstimator.getLinkQuality(entry->neighbor));
             dbg("TreeRouting", 
-                "routingTable[%d]: neighbor: [id: %d parent: %d etx: %d]\n",  
-                i, entry->neighbor, entry->info.parent, linkEtx);
+                "routingTable[%d]: neighbor: [id: %d parent: %d etx: %d retx: %d]\n",  
+                i, entry->neighbor, entry->info.parent, linkEtx, entry->info.etx);
             pathEtx = linkEtx + entry->info.etx;
             /* Operations specific to the current parent */
             if (entry->neighbor == routeInfo.parent) {
@@ -321,6 +321,7 @@ implementation {
             }
             
             if (pathEtx < minEtx) {
+	      dbg("TreeRouting", "   best is %d, setting to %d\n", pathEtx, entry->neighbor);
                 minEtx = pathEtx;
                 best = entry;
             }  
@@ -354,11 +355,17 @@ implementation {
                 call LinkEstimator.unpinNeighbor(routeInfo.parent);
                 call LinkEstimator.pinNeighbor(best->neighbor);
                 call LinkEstimator.clearDLQ(best->neighbor);
-                atomic {
+
+		atomic {
                     routeInfo.parent = best->neighbor;
                     routeInfo.etx = best->info.etx;
                     routeInfo.congested = best->info.congested;
                 }
+		/* If we follow the CTP paper this should be in here.
+		if (currentEtx - minEtx > 20) {
+		  call CtpInfo.triggerRouteUpdate();
+		}
+		*/
             }
         }    
 

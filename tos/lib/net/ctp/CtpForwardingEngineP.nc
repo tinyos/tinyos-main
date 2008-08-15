@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.15 2008-08-15 16:48:14 scipio Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.16 2008-08-15 21:57:31 scipio Exp $ */
 /*
  * Copyright (c) 2008 Stanford University.
  * All rights reserved.
@@ -124,7 +124,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-08-15 16:48:14 $
+ *  @date   $Date: 2008-08-15 21:57:31 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -274,9 +274,9 @@ implementation {
     }
   }
 
-  static void startRetxmitTimer(uint16_t mask, uint16_t offset) {
+  static void startRetxmitTimer(uint16_t window, uint16_t offset) {
     uint16_t r = call Random.rand16();
-    r &= mask;
+    r %= window;
     r += offset;
     call RetxmitTimer.startOneShot(r);
     dbg("Forwarder", "Rexmit timer will fire in %hu ms\n", r);
