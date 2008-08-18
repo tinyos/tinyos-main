@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.18 $ $Date: 2008-06-24 05:32:31 $
+ * @version $Revision: 1.19 $ $Date: 2008-08-18 22:04:15 $
  */
  
 #include "CC2420.h"
@@ -62,6 +62,11 @@ implementation {
 					  message_t* msg,
 					  uint8_t len) {
     cc2420_header_t* header = call CC2420PacketBody.getHeader( msg );
+    
+    if (len > call Packet.maxPayloadLength()) {
+      return ESIZE;
+    }
+    
     header->type = id;
     header->dest = addr;
     header->destpan = call CC2420Config.getPanAddr();
