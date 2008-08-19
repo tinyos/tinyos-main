@@ -29,9 +29,15 @@ typedef enum {
 typedef nx_struct CC1KMetadata {
   nx_int16_t strength_or_preamble; /* negative when used for preamble length */
   nx_uint8_t metadataBits;
-  nx_uint16_t time;
+  nx_bool timesync;
+  nx_uint32_t timestamp;
   nx_uint8_t sendSecurityMode;
   nx_uint8_t receiveSecurityMode;  
 } cc1000_metadata_t;
+
+enum
+{
+  CC1000_INVALID_TIMESTAMP  = 0x80000000L,
+};
 
 #endif

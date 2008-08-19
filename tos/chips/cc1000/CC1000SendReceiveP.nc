@@ -1,5 +1,3 @@
-// $Id: CC1000SendReceiveP.nc,v 1.11 2008-06-23 20:25:15 regehr Exp $
-
 /*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -32,6 +30,7 @@
 #include "crc.h"
 #include "CC1000Const.h"
 #include "Timer.h"
+#include "CC1000TimeSyncMessage.h"
 
 /**
  * A rewrite of the low-power-listening CC1000 radio stack.
@@ -50,6 +49,7 @@
  * @author Jaein Jeong
  * @author Joe Polastre
  * @author David Gay
+ * @author Marco Langerwisch (Packet timestamping)
  */
   
 module CC1000SendReceiveP @safe() {
@@ -58,11 +58,14 @@ module CC1000SendReceiveP @safe() {
     interface StdControl;
     interface Send;
     interface Receive;
-    interface RadioTimeStamping;
     interface Packet;
     interface ByteRadio;
     interface PacketAcknowledgements;
     interface LinkPacketMetadata;
+
+    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+    interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+    interface PacketTimeSyncOffset;
   }
   uses {
     //interface PowerManagement;
@@ -71,10 +74,21 @@ module CC1000SendReceiveP @safe() {
     interface CC1000Squelch;
     interface ReadNow<uint16_t> as RssiRx;
     async command am_addr_t amAddress();
+
+    interface LocalTime<T32khz> as LocalTime32khz;
+    interface LocalTime<TMilli> as LocalTimeMilli;
   }
 }
 implementation 
 {
+#ifdef PLATFORM_MICA2
+  // estimated calibration, 19.2 Kbps data, Manchester Encoding, time in jiffies (32768 Hz)
+  static const int8_t BIT_CORRECTION[8] = { 27, 28, 30, 32, 34, 36, 38, 40 };
+#else
+  // other platforms not calibrated yet
+  static const uint8_t BIT_CORRECTION[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+#endif
+
   enum {
     OFF_STATE,
 
@@ -257,10 +271,14 @@ implementation
 	  return FAIL;
 	else {
 	  cc1000_header_t *header = getHeader(msg);
+          cc1000_metadata_t *metadata = getMetadata(msg);
 
 	  f.txBusy = TRUE;
 	  header->length = len;
 	  txBufPtr = msg;
+
+          metadata->timesync = FALSE;
+          metadata->timestamp = CC1000_INVALID_TIMESTAMP;
 	}
       }
     signal ByteRadio.rts(msg);
@@ -299,12 +317,23 @@ implementation
     sendNextByte();
     nextTxByte = SYNC_BYTE2;
     enterTxDataState();
-    signal RadioTimeStamping.transmittedSFD(0, txBufPtr); 
   }
 
   void txData() {
     cc1000_header_t *txHeader = getHeader(txBufPtr);
     sendNextByte();
+
+    if (nextTxByte == SYNC_BYTE2) {
+      // SYNC_WORD has just been sent
+      uint32_t time32khz = call LocalTime32khz.get();
+      call PacketTimeStamp32khz.set(txBufPtr, time32khz);
+
+      if (call PacketTimeSyncOffset.isSet(txBufPtr)) {
+        timesync_radio_t *timesync = (timesync_radio_t*)((void*)txBufPtr + call PacketTimeSyncOffset.get(txBufPtr));
+        // set timesync event time as the offset between the event time and the SFD interrupt time (TEP 133)
+        *timesync  -= time32khz;
+      }
+    }
     
     if (count < txHeader->length + sizeof(message_header_t))
       {
@@ -445,8 +474,11 @@ implementation
     else if (count <= 6)
       {
 	// TODO: Modify to be tolerant of bad bits in the preamble...
+        uint32_t time;
 	uint16_t tmp;
 	uint8_t i;
+
+        time = call LocalTime32khz.get();
 
 	// bit shift the data in with previous sample to find sync
 	tmp = rxShiftBuf;
@@ -464,7 +496,10 @@ implementation
 		enterRxState();
 		signal ByteRadio.rx();
 		f.rxBitOffset = 7 - i;
-		signal RadioTimeStamping.receivedSFD(0);
+                // correct receive time according to bit offset and set timestamp
+                time -= BIT_CORRECTION[f.rxBitOffset];
+                call PacketTimeStamp32khz.set(rxBufPtr, time);
+
 		call RssiRx.read();
 	      }
 	  }
@@ -677,9 +712,71 @@ implementation
   async command bool LinkPacketMetadata.highChannelQuality(message_t* msg) {
     return getMetadata(msg)->metadataBits & CC1000_WHITE_BIT;
   }
-  
-  // Default events for radio send/receive coordinators do nothing.
-  // Be very careful using these, or you'll break the stack.
-  default async event void RadioTimeStamping.transmittedSFD(uint16_t time, message_t *msgBuff) { }
-  default async event void RadioTimeStamping.receivedSFD(uint16_t time) { }
+
+  /***************** PacketTimeStamp32khz Commands ****************/
+  async command bool PacketTimeStamp32khz.isValid(message_t* msg)
+  {
+    return (getMetadata(msg)->timestamp != CC1000_INVALID_TIMESTAMP);
+  }
+
+  async command uint32_t PacketTimeStamp32khz.timestamp(message_t* msg)
+  {
+    return getMetadata(msg)->timestamp;
+  }
+
+  async command void PacketTimeStamp32khz.clear(message_t* msg)
+  {
+    getMetadata(msg)->timesync = FALSE;
+    getMetadata(msg)->timestamp = CC1000_INVALID_TIMESTAMP;
+  }
+
+  async command void PacketTimeStamp32khz.set(message_t* msg, uint32_t value)
+  {
+    getMetadata(msg)->timestamp = value;
+  }
+
+  /***************** PacketTimeStampMilli Commands ****************/
+  // over the air value is always T32khz
+  async command bool PacketTimeStampMilli.isValid(message_t* msg)
+  {
+    return call PacketTimeStamp32khz.isValid(msg);
+  }
+
+  async command uint32_t PacketTimeStampMilli.timestamp(message_t* msg)
+  {
+    int32_t offset = call PacketTimeStamp32khz.timestamp(msg) - call LocalTime32khz.get();
+    return (offset >> 5) + call LocalTimeMilli.get();
+  }
+
+  async command void PacketTimeStampMilli.clear(message_t* msg)
+  {
+    call PacketTimeStamp32khz.clear(msg);
+  }
+
+  async command void PacketTimeStampMilli.set(message_t* msg, uint32_t value)
+  {
+    int32_t offset = (value - call LocalTimeMilli.get()) << 5;
+    call PacketTimeStamp32khz.set(msg, offset + call LocalTime32khz.get());
+  }
+
+  /*----------------- PacketTimeSyncOffset -----------------*/
+  async command bool PacketTimeSyncOffset.isSet(message_t* msg)
+  {
+    return getMetadata(msg)->timesync;
+  }
+
+  async command uint8_t PacketTimeSyncOffset.get(message_t* msg)
+  {
+    return sizeof(cc1000_header_t) + getHeader(msg)->length - sizeof(timesync_radio_t);
+  }
+
+  async command void PacketTimeSyncOffset.set(message_t* msg)
+  {
+    getMetadata(msg)->timesync = TRUE;
+  }
+
+  async command void PacketTimeSyncOffset.cancel(message_t* msg)
+  {
+    getMetadata(msg)->timesync = FALSE;
+  }
 }

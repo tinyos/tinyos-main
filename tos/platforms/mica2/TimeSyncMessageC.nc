@@ -1,17 +1,17 @@
 /*
- * "Copyright (c) 2004-2005 The Regents of the University  of California.  
+ * "Copyright (c) 2004-2005 The Regents of the University  of California.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
  * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -21,61 +21,54 @@
  * Copyright (c) 2004-2005 Intel Corporation
  * All rights reserved.
  *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * This file is distributed under the terms in the attached INTEL-LICENSE
  * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA,
  * 94704.  Attention:  Intel License Inquiry.
  */
 
 /**
  *
- * The Active Message layer for the CC1000 radio. This configuration
- * just layers the AM dispatch (CC1000ActiveMessageM) on top of the
- * underlying CC1000 radio packet (CC1000CsmaRadioC), which is
- * inherently an AM packet (acknowledgements based on AM destination
- * addr and group).
- * 
+ * The Active Message layer on the mica2 platform. This is a naming wrapper
+ * around the CC1000 Active Message layer that implemets timesync interface (TEP 133).
+ *
  * @author Philip Levis
- * @author Marco Langerwisch (Packet timestamping)
+ * @author Brano Kusy
+ * @author Marco Langerwisch (Mica2 port)
  */
 
-configuration CC1000ActiveMessageC {
-  provides {
+configuration TimeSyncMessageC {
+  provides
+  {
     interface SplitControl;
-    interface AMSend[am_id_t id];
     interface Receive[am_id_t id];
     interface Receive as Snoop[am_id_t id];
-    interface AMPacket;
     interface Packet;
-    interface PacketAcknowledgements;
-    interface LinkPacketMetadata;
+    interface AMPacket;
 
     interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
-    interface PacketTimeSyncOffset;
+
+    interface TimeSyncAMSend<T32khz, uint32_t> as TimeSyncAMSend32khz[am_id_t id];
+    interface TimeSyncPacket<T32khz, uint32_t> as TimeSyncPacket32khz;
+
+    interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
+    interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
   }
 }
 implementation {
+  components CC1000TimeSyncMessageC as AM;
 
-  components CC1000ActiveMessageP as AM, CC1000CsmaRadioC as Radio;
-  components ActiveMessageAddressC as Address;
-  
-  SplitControl = Radio;
-  Packet       = Radio;
-  PacketAcknowledgements = Radio;
-  LinkPacketMetadata = Radio;
-  
-  AMSend   = AM;
-  Receive  = AM.Receive;
-  Snoop    = AM.Snoop;
-  AMPacket = AM;
+  SplitControl = AM;
 
-  AM.SubSend    -> Radio.Send;
-  AM.SubReceive -> Radio.Receive;
-  AM.amAddress -> Address;
-  AM.Packet     -> Radio;
-  
-  PacketTimeStamp32khz = Radio;
-  PacketTimeStampMilli = Radio;
-  PacketTimeSyncOffset = Radio;
+  Receive      = AM.Receive;
+  Snoop        = AM.Snoop;
+  Packet       = AM;
+  AMPacket     = AM;
+  TimeSyncAMSend32khz       = AM;
+  TimeSyncAMSendMilli       = AM;
+  TimeSyncPacket32khz       = AM;
+  TimeSyncPacketMilli       = AM;
+  PacketTimeStamp32khz      = AM;
+  PacketTimeStampMilli      = AM;
 }
