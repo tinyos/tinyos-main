@@ -23,11 +23,15 @@ Abstract
 ====================================================================
 
 The memo documents the interfaces, components, and semantics used by
-collection protocol in TinyOS 2.x. Collection provides a best-effort,
-multihop delivery of packets to the root of a tree. There may be
-multiple tree roots in a network, and in this case the semantics
-are *anycast* delivery to at least one of the roots. A node sending
-a packet does not specify which root the packet is destined to.
+collection protocol in TinyOS 2.x. Collection provides best-effort,
+multihop delivery of packets to one of a set of collection points.
+There may be multiple collection points in a network, and in this
+case the semantics are *anycast* delivery to at least one of the
+collection points. A node sending a packet does not specify which of
+the collection points the packet is destined to.  The union of the
+paths from each node to one or more of the collection points forms a
+set of trees, and in this document assume that collection points are
+the roots of these trees.
  
 
 1. Introduction
@@ -42,16 +46,16 @@ it. Sometimes, depending on the form of data collection, systems need
 to be able to inspect packets as they go by, either to gather
 statistics, compute aggregates, or suppress redundant transmissions.
 
-Collection provides a best-effort, multihop delivery of packets to one
-of a network's tree roots: it is an *anycast* protocol. The semantics
-is that the protocol will make a reasonable effort to deliver the
-message to at least one of the roots in the network. By picking a
-parent node, a collection protocol inductively joins the tree its
-parent has joined.  Delivery is best effort, and there can be
-duplicates delivered to one or more roots. Collection provides no
-ordering guarantees. Collection does not provide real-time guarantees,
-although specific implementations may extend the basic functionality
-to do so.
+Collection provides best-effort, multihop delivery of packets to one
+of a network's tree roots: it is an *anycast* protocol. The
+semantics are that the protocol will make a reasonable effort to
+deliver the message to at least one of the roots in the network. By
+picking a parent node, a node implementing the collection protocol
+inductively joins the tree its parent has joined.  Delivery is best
+effort, and there can be duplicates delivered to one or more roots.
+Collection provides no ordering or real-time guarantees, although
+specific implementations may extend the basic functionality to do
+so.
 
 Given the limited state that nodes can store and a general need for
 distributed tree building algorithms, collection protocols encounter
@@ -63,8 +67,8 @@ algorithmic edge cases that generally occur in wireless routing:
     a next hop.
 
   * Duplicate suppression, detecting and dealing with lost
-    acknowledgments causing packets to replicate in the network,
-    wasting capacity.
+    acknowledgments that can cause packets to replicate in the
+    network, wasting capacity.
 
   * Link estimation, evaluating the link quality to single-hop
     neighbors.
@@ -100,7 +104,7 @@ snoopers use the Receive interface [1_] to receive a snooped
 message. The collection identifier is specified as a parameter
 to Receive during instantiation.
 
-The nodes can process a packet that are in transit. These in-network
+The nodes can process a packet that is in transit. These in-network
 *processors* use the Intercept interface to receive and update a
 packet. The collection identifier is specified as a parameter to
 Intercept during instantiation. The Intercept interface has this
@@ -141,12 +145,12 @@ root::
     command bool isRoot();
   }
 
-Both commands MUST return SUCCESS if the node is now in the specified
-state, and FAIL otherwise. For example, if a node is already a root
-and an application calls RootControl.setRoot(), the call will
+The first two commands MUST return SUCCESS if the node is now in the
+specified state, and FAIL otherwise. For example, if a node is already
+a root and an application calls RootControl.setRoot(), the call will
 return SUCCESS. If setRoot() returns SUCCESS, then a subsequent call
-to isRoot() MUST return TRUE. If unsetRoot() returns SUCCESS, then
-a subsequent call to isRoot() MUST return FALSE.
+to isRoot() MUST return TRUE. If unsetRoot() returns SUCCESS, then a
+subsequent call to isRoot() MUST return FALSE.
 
 3 Collection Services
 ====================================================================
