@@ -194,11 +194,13 @@ snoopers, intercepters, and receivers can parse them properly.
 
 ColletionC MUST NOT signal Receive.receive on non-root
 nodes. CollectionC MUST signal Receive.receive on a root node when a
-data packet successfully arrives at that node. If a root node calls
-Send, CollectionC MUST treat it as it if were a received packet.  Note
-that the buffer swapping semantics of Receive.receive, when combined
-with the pass semantics of Send, require that CollectionC make a copy
-of the buffer if it signals Receive.receive. 
+unique (non-duplicate) data packet successfully arrives at that
+node. It MAY signal Receive.receive when a duplicate data packet
+successfully arrives. If a root node calls Send, CollectionC MUST
+treat it as it if were a received packet.  Note that the buffer
+swapping semantics of Receive.receive, when combined with the pass
+semantics of Send, require that CollectionC make a copy of the buffer
+if it signals Receive.receive.
 
 If CollectionC receives a data packet to forward and it is not a root
 node, it MAY signal Intercept.forward. CollectionC MAY signal
