@@ -32,26 +32,15 @@
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
+ 
+#ifndef CCOLLECTION_H
+#define CCOLLECTION_H
 
-#include "tosthread_collection.h"
+#include "message.h"
+#include "TinyError.h"
+#include "Collection.h"
 #include "MultiHopLqi.h"
 
-configuration CCollectionC {}
+#define  NEW_COLLECTION_ID() ((collection_id_t)unique(UQ_LQI_CLIENT))
 
-implementation {
-  components CCollectionP as CCP;
-  components BlockingCollectionReceiverP;
-  components BlockingCollectionSnooperP;
-  components BlockingCollectionSenderP;
-  components BlockingCollectionControlC;
-  
-  CCP.BlockingReceive -> BlockingCollectionReceiverP;
-  CCP.BlockingSnoop -> BlockingCollectionSnooperP;
-  CCP.BlockingSend -> BlockingCollectionSenderP;
-  CCP.RoutingControl -> BlockingCollectionControlC;
-  
-  components CollectionC;
-  CCP.Packet -> CollectionC;
-  CCP.CollectionPacket -> CollectionC;
-  CCP.RootControl -> CollectionC;
-}
+#endif //CCOLLECTION_H

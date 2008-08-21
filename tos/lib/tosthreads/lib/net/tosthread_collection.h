@@ -36,9 +36,7 @@
 #ifndef TOSTHREAD_COLLECTION_H
 #define TOSTHREAD_COLLECTION_H
 
-#include "message.h"
-#include "TinyError.h"
-#include "Collection.h"
+#include "ccollection.h"
 
 extern error_t collectionRoutingStart();
 extern error_t collectionRoutingStop();

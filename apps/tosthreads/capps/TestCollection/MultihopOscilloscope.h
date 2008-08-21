@@ -16,13 +16,15 @@
 #ifndef MULTIHOP_OSCILLOSCOPE_H
 #define MULTIHOP_OSCILLOSCOPE_H
 
+#include "Collection.h"
+
 enum {
   /* Number of readings per message. If you increase this, you may have to
      increase the message_t size. */
   NREADINGS = 5,
   /* Default sampling period. */
   DEFAULT_INTERVAL = 1024,
-  AM_OSCILLOSCOPE = 0x93
+  AM_OSCILLOSCOPE = NEW_COLLECTION_ID(),
 };
 
 typedef nx_struct oscilloscope {
