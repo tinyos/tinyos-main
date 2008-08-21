@@ -206,8 +206,8 @@ If CollectionC receives a data packet to forward and it is not a root
 node, it MAY signal Intercept.forward. CollectionC MAY signal
 Snoop.receive when it hears a packet which a different node is
 supposed to forward. For any given packet it receives, CollectionC
-MUST NOT signal more than one of the Snoop.receive and
-Intercept.forward events.
+MUST NOT signal more than one of the Snoop.receive, Receive.receive,
+and Intercept.forward events.
 
 RootControl allows a node to be made a collection tree root.
 CollectionC SHOULD NOT configure a node as a root by default.
