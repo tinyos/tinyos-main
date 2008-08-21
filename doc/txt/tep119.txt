@@ -84,10 +84,10 @@ describes a set of components and interfaces for collection services.
 2. Collection interfaces
 ====================================================================
 
-A node can perform four different roles in collection: sender,
-snooper, in-network processor, and receiver/root. Depending on their
-role, the nodes use different interfaces to interact with the
-collection component.
+A node can perform four different roles in collection: sender (or
+source), snooper, in-network processor, and receiver (or
+root). Depending on their role, the nodes use different interfaces to
+interact with the collection component.
 
 The collection infrastructure can be multiplexed among independent
 applications, by means of a collection identifier. While data traffic
@@ -193,7 +193,7 @@ collection_id_t generally have the same payload format, so that
 snoopers, intercepters, and receivers can parse them properly.
 
 ColletionC MUST NOT signal Receive.receive on non-root
-nodes. CollectionC MAY signal Receive.receive on a root node when a
+nodes. CollectionC MUST signal Receive.receive on a root node when a
 data packet successfully arrives at that node. If a root node calls
 Send, CollectionC MUST treat it as it if were a received packet.  Note
 that the buffer swapping semantics of Receive.receive, when combined
@@ -201,10 +201,11 @@ with the pass semantics of Send, require that CollectionC make a copy
 of the buffer if it signals Receive.receive. 
 
 If CollectionC receives a data packet to forward and it is not a root
-node, it MAY signal Intercept.forward.
-
-If CollectionC receives a data packet that a different node
-is supposed to forward, it MAY signal Snoop.receive.
+node, it MAY signal Intercept.forward. CollectionC MAY signal
+Snoop.receive when it hears a packet which a different node is
+supposed to forward. For any given packet it receives, CollectionC
+MUST NOT signal more than one of the Snoop.receive and
+Intercept.forward events.
 
 RootControl allows a node to be made a collection tree root.
 CollectionC SHOULD NOT configure a node as a root by default.
