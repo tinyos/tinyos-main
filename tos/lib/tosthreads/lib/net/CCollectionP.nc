@@ -31,6 +31,7 @@
 
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
 module CCollectionP {
@@ -38,10 +39,11 @@ module CCollectionP {
     interface BlockingStdControl as RoutingControl;
     interface BlockingReceive[collection_id_t id];
     interface BlockingReceive as BlockingSnoop[collection_id_t id];
-    interface BlockingSend[am_id_t id];
+    interface BlockingSend[uint8_t id];
     interface Packet;
     interface CollectionPacket;
     interface RootControl;
+    interface CCollectionId;
   }
   provides {
     interface CollectionId[uint8_t client];
@@ -49,7 +51,11 @@ module CCollectionP {
 }
 implementation {
   command collection_id_t CollectionId.fetch[uint8_t id]() {
-    return id;
+    return call CCollectionId.fetch(id);
+  }
+
+  error_t collectionSetCollectionId(uint8_t clientid, collection_id_t collectionid) @C() @spontaneous() {
+    return call CCollectionId.set(clientid, collectionid);
   }
   
   error_t collectionRoutingStart() @C() @spontaneous() {
@@ -65,7 +71,7 @@ implementation {
   error_t collectionSnoop(message_t* m, uint32_t timeout, collection_id_t id) @C() @spontaneous() {
     return call BlockingSnoop.receive[id](m, timeout);
   }
-  error_t collectionSend(message_t* msg, uint8_t len, collection_id_t id) @C() @spontaneous() {
+  error_t collectionSend(message_t* msg, uint8_t len, uint8_t id) @C() @spontaneous() {
     return call BlockingSend.send[id](msg, len);
   }
  

@@ -44,11 +44,13 @@ implementation {
   components BlockingCollectionSnooperP;
   components BlockingCollectionSenderP;
   components BlockingCollectionControlC;
+  components CCollectionIdP;
   
   CCP.BlockingReceive -> BlockingCollectionReceiverP;
   CCP.BlockingSnoop -> BlockingCollectionSnooperP;
   CCP.BlockingSend -> BlockingCollectionSenderP;
   CCP.RoutingControl -> BlockingCollectionControlC;
+  CCP.CCollectionId -> CCollectionIdP;
   
   components CollectionC;
   CCP.Packet -> CollectionC;

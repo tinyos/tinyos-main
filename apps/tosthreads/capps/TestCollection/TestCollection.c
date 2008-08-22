@@ -41,6 +41,8 @@
 #include "tosthread_sinesensor.h"
 #include "MultihopOscilloscope.h"
 
+#define MY_COLLECTION_ID 0x02
+
 void fatal_problem();
 void report_problem();
 void report_sent();
@@ -58,12 +60,14 @@ void tosthread_main(void* arg) {
   
   while ( amRadioStart() != SUCCESS );
   while ( collectionRoutingStart() != SUCCESS );
- 
+  
+  collectionSetCollectionId(AM_OSCILLOSCOPE, MY_COLLECTION_ID);
+  
   if (local.id % 500 == 0) {
-    while ( amSerialStart() != SUCCESS);
+    while ( amSerialStart() != SUCCESS );
     collectionSetRoot();
     for (;;) {
-      if ( collectionReceive(&recvbuf, 0, AM_OSCILLOSCOPE) == SUCCESS) {
+      if (collectionReceive(&recvbuf, 0, MY_COLLECTION_ID) == SUCCESS) {
         oscilloscope_t *recv_o = (oscilloscope_t *) collectionGetPayload(&recvbuf, sizeof(oscilloscope_t));
         oscilloscope_t *send_o = (oscilloscope_t *) serialGetPayload(&sendbuf, sizeof(oscilloscope_t));
         memcpy(send_o, recv_o, sizeof(oscilloscope_t));
@@ -73,7 +77,7 @@ void tosthread_main(void* arg) {
     }
   } else {
     uint16_t var;
-      
+
     for (;;) {
       if (reading == NREADINGS) {
         oscilloscope_t *o = (oscilloscope_t *) collectionGetPayload(&sendbuf, sizeof(oscilloscope_t));
@@ -91,11 +95,11 @@ void tosthread_main(void* arg) {
         
         reading = 0;
       }
-          
+        
       if (sinesensor_read(&var) == SUCCESS) {
         local.readings[reading++] = var;
       }
-        
+      
       tosthread_sleep(local.interval);
     }
   }

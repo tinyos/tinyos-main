@@ -41,6 +41,6 @@
 #include "Collection.h"
 #include "Ctp.h"
 
-#define  NEW_COLLECTION_ID() ((collection_id_t)unique(UQ_CTP_CLIENT))
+#define  NEW_COLLECTION_CLIENT_ID() ((uint8_t)unique(UQ_CTP_CLIENT))
 
 #endif //CCOLLECTION_H

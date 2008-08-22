@@ -31,6 +31,7 @@
 
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
  
 #ifndef TOSTHREAD_COLLECTION_H
@@ -40,6 +41,8 @@
 
 extern error_t collectionRoutingStart();
 extern error_t collectionRoutingStop();
+
+extern error_t collectionSetCollectionId(uint8_t clientid, collection_id_t collectionid);
 
 extern error_t collectionReceive(message_t* m, uint32_t timeout, collection_id_t id);
 extern error_t collectionSnoop(message_t* m, uint32_t timeout, collection_id_t id);
