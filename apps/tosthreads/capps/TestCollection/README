@@ -41,7 +41,7 @@ TestCollection/java subdirectory and type:
   make
   java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<baud_rate>
   # e.g., java net.tinyps.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
-  # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:telosb
+  # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:57600
   ./run
 
 NOTE::  The baud rate 57600 must be used telos based motes, as its configuration
@@ -58,6 +58,11 @@ Notes:
   By default, the Makefile for TestCollection is setup to run CTP as the
   underlying collection protocol.  The makefile can be modified to work with
   MultihopLQI by changing the appropriate include directories.
+
+  The baud rate 57600 must be used telos based motes, as its configuration
+  has been changed to work with this baud rate when compiled for tosthreads. I.e.
+  DO NOT just substitute 'telosb' or 'tmote' for <baud_rate> above.  Explicitly
+  set it to 57600.
 
 Known bugs/limitations:
   Warnings are issued about fan out on the 'Snoop.receive' and 'Receive.receive'

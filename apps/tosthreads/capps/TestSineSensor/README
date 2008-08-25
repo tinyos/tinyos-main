@@ -22,7 +22,7 @@ over the serial interface as verified by running the following for the platform
 of interest:
   java net.tinyos.tools.Listen -comm serial@/dev/ttyUSBXXX:<baud_rate>
   
-NOTE::  The baud rate 57600 must be used telos based motes, as its configuration
+NOTE:  The baud rate 57600 must be used telos based motes, as its configuration
 has been changed to work with this baud rate when compiled for tosthreads. I.e.
 DO NOT just substitute 'telosb' or 'tmote' for <baud_rate> above.  Explicitly
 set it to 57600.

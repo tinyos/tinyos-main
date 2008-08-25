@@ -44,6 +44,11 @@ values, counting up from 0. E.g.:
 00 ff ff 00 00 06 00 25 00 00 00 a2 00 a2 
 00 ff ff 00 00 06 00 25 00 00 00 a3 00 a3 
 
+NOTE:  The baud rate 57600 must be used telos based motes, as its configuration
+has been changed to work with this baud rate when compiled for tosthreads. I.e.
+DO NOT just substitute 'telosb' or 'tmote' for <baud_rate> above.  Explicitly
+set it to 57600.
+
 Tools:
   None.
 
