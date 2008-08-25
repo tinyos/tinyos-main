@@ -1,4 +1,4 @@
-// $Id: TOSBoot_platform.h,v 1.3 2008-08-25 16:48:47 razvanm Exp $
+// $Id: TOSBoot_platform.h,v 1.1 2008-08-25 16:48:47 razvanm Exp $
 
 /*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -29,15 +29,10 @@
 #define __TOSBOOT_PLATFORM_H__
 
 enum {
-  TOSBOOT_ARGS_ADDR = 0xff0,      // address of TOSBoot args in internal flash
+  TOSBOOT_ARGS_ADDR = 0x70,       // address of TOSBoot args in internal flash
   TOSBOOT_GESTURE_MAX_COUNT = 3,  // number of resets to force golden image
   TOSBOOT_GOLDEN_IMG_ADDR = 0x0L, // address of the golden image in external flash
-  TOSBOOT_INT_PAGE_SIZE = SPM_PAGESIZE, // size of each internal program flash page
-};
-
-enum {
-  DELUGE_MIN_ADV_PERIOD_LOG2 = 9,
-  DELUGE_QSIZE = 2,
+  TOSBOOT_INT_PAGE_SIZE = 512L,   // size of each internal program flash page
 };
 
 #endif

@@ -120,7 +120,7 @@ implementation {
 		       startAddr + addr, DELUGE_BYTES_PER_PAGE)) {
 	if (i == 0)
 	  while (1)
-	    call Leds.flash(1);
+	    call Leds.flash(2);
 	return FALSE;
       }
       addr += DELUGE_BYTES_PER_PAGE;
@@ -147,7 +147,7 @@ implementation {
     secLength = extFlashReadAddr();
     curAddr = curAddr + 8;
 
-#if defined(PLATFORM_TELOSB)
+#if defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC)
     if (intAddr != TOSBOOT_END) {
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
     if (intAddr != 0) {

@@ -1,4 +1,4 @@
-// $Id: PlatformP.nc,v 1.1 2008-08-07 06:37:05 prabal Exp $
+// $Id: PlatformP.nc,v 1.2 2008-08-25 16:48:47 razvanm Exp $
 
 /*
  * "Copyright (c) 2004-2008 The Regents of the University of
@@ -38,12 +38,14 @@ module PlatformP {
   }
   uses {
     interface Init as MoteClockInit;
+    interface Init as MoteInit;
     interface Init as LedsInit;
   }
 }
 implementation {
   command error_t Init.init() {
     call MoteClockInit.init();
+    call MoteInit.init();
     call LedsInit.init();
     return SUCCESS;
   }

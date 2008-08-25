@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2008-06-11 00:46:25 razvanm Exp $
+# $Id: Makefile,v 1.4 2008-08-25 16:48:47 razvanm Exp $
 
 #
 #
@@ -67,7 +67,14 @@ endif
 
 ifeq ($(MAKECMDGOALS),telosb)
   CFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
-  CFLAGS += -Imsp430 -Istm25p -Itelosb -Ilib
+  CFLAGS += -Imsp430 -Imsp430f1611 -Istm25p -Itelosb -Ilib
+  CFLAGS += -I../net/Deluge
+  POST_BUILD_EXTRA_DEPS += strip_iv
+endif
+
+ifeq ($(MAKECMDGOALS),epic)
+  CFLAGS += -DTOSBOOT_START=0x4000 -DTOSBOOT_END=0x4a00
+  CFLAGS += -Imsp430 -Imsp430f1611 -Iepic -Ilib
   CFLAGS += -I../net/Deluge
   POST_BUILD_EXTRA_DEPS += strip_iv
 endif

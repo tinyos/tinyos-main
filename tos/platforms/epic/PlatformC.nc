@@ -1,4 +1,4 @@
-// $Id: PlatformC.nc,v 1.1 2008-08-07 06:37:05 prabal Exp $
+// $Id: PlatformC.nc,v 1.2 2008-08-25 16:48:47 razvanm Exp $
 
 /*
  * "Copyright (c) 2004-2008 The Regents of the University of
@@ -40,7 +40,9 @@ configuration PlatformC {
 implementation {
   components PlatformP;
   components MoteClockC;
+  components MotePlatformC;
 
   Init = PlatformP;
   PlatformP.MoteClockInit -> MoteClockC;
+  PlatformP.MoteInit -> MotePlatformC;
 }

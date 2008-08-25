@@ -1,5 +1,5 @@
 #-*-Makefile-*-
-#$Id: epic.target,v 1.1 2008-08-07 06:37:34 prabal Exp $
+#$Id: epic.target,v 1.2 2008-08-25 16:48:45 razvanm Exp $
 
 PLATFORM ?= epic
 
@@ -11,9 +11,8 @@ OPTFLAGS += -O
 MSP_BSL ?= tos-bsl
 MSP_BSL_FLAGS = --telosb
 
-#Update for Epic AT45 flash
-#VOLUME_FILE = volumes-stm25p.xml
-#VOLUME_ALLOCATOR = tos-storage-stm25p
+VOLUME_FILE = volumes-at45db.xml
+VOLUME_ALLOCATOR ?= tos-storage-at45db
 
 ifdef CC2420_CHANNEL
 PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)

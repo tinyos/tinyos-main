@@ -1,7 +1,7 @@
-// $Id: TOSBoot_platform.h,v 1.3 2008-08-25 16:48:47 razvanm Exp $
+// $Id: HplAt45db_chip.h,v 1.1 2008-08-25 16:48:47 razvanm Exp $
 
 /*
- * "Copyright (c) 2000-2005 The Regents of the University  of California.  
+ * "Copyright (c) 2000-2003 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -19,25 +19,27 @@
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
+ *
+ * Copyright (c) 2002-2006 Intel Corporation
+ * All rights reserved.
+ *
+ * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * file. If you do not find these files, copies can be found by writing to
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * 94704.  Attention:  Intel License Inquiry.
  */
 
-/**
- * @author  Jonathan Hui <jwhui@cs.berkeley.edu>
- */
+#ifndef HPLAT45DB_CHIP_H
+#define HPLAT45DB_CHIP_H
 
-#ifndef __TOSBOOT_PLATFORM_H__
-#define __TOSBOOT_PLATFORM_H__
-
+// flash characteristics
 enum {
-  TOSBOOT_ARGS_ADDR = 0xff0,      // address of TOSBoot args in internal flash
-  TOSBOOT_GESTURE_MAX_COUNT = 3,  // number of resets to force golden image
-  TOSBOOT_GOLDEN_IMG_ADDR = 0x0L, // address of the golden image in external flash
-  TOSBOOT_INT_PAGE_SIZE = SPM_PAGESIZE, // size of each internal program flash page
+  AT45_MAX_PAGES = 4096,
+  AT45_PAGE_SIZE = 528,
+  AT45_PAGE_SIZE_LOG2 = 9 // For those who want to ignore the last 8 bytes
 };
 
-enum {
-  DELUGE_MIN_ADV_PERIOD_LOG2 = 9,
-  DELUGE_QSIZE = 2,
-};
+typedef uint16_t at45page_t;
+typedef uint16_t at45pageoffset_t; /* must fit 0 to AT45_PAGE_SIZE - 1 */
 
 #endif

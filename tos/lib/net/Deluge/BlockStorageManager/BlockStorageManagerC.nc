@@ -69,7 +69,7 @@ implementation
   BlockStorageManagerP.SubStorageMap[VOLUME_DELUGE1]     -> BlockStorageC_1;
   BlockStorageManagerP.SubStorageMap[VOLUME_DELUGE2]     -> BlockStorageC_2;
   BlockStorageManagerP.SubStorageMap[VOLUME_DELUGE3]     -> BlockStorageC_3;
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_EPIC)
   components At45dbStorageManagerC;
   BlockStorageManagerP.At45dbVolume -> At45dbStorageManagerC;
 #endif

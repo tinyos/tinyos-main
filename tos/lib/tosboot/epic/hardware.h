@@ -1,9 +1,9 @@
-// $Id: PowerOffM.nc,v 1.2 2008-06-11 00:46:26 razvanm Exp $
+// $Id: hardware.h,v 1.1 2008-08-25 16:48:47 razvanm Exp $
 
 /*
  *
  *
- * "Copyright (c) 2000-2004 The Regents of the University  of California.  
+ * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -28,58 +28,59 @@
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-module PowerOffM {
-  provides {
-    interface Init;
-    interface StdControl;
-  }
-  uses {
-    interface Leds;
-    interface StdControl as SubControl;
-  }
+#ifndef __HARDWARE_H__
+#define __HARDWARE_H__
+
+#include "msp430hardware.h"
+
+// internal flash is 16 bits in width
+typedef uint16_t in_flash_addr_t;
+// external flash is 32 bits in width
+typedef uint32_t ex_flash_addr_t;
+
+void wait(uint16_t t) {
+  for ( ; t > 0; t-- );
 }
 
-implementation {
+// LEDs
+TOSH_ASSIGN_PIN(RED_LED, 4, 0);
+TOSH_ASSIGN_PIN(GREEN_LED, 4, 3);
+TOSH_ASSIGN_PIN(YELLOW_LED, 4, 7);
 
-  void haltsystem() {
+// UART pins
+TOSH_ASSIGN_PIN(SOMI0, 3, 2);
+TOSH_ASSIGN_PIN(SIMO0, 3, 1);
+TOSH_ASSIGN_PIN(UCLK0, 3, 3);
+TOSH_ASSIGN_PIN(UTXD0, 3, 4);
+TOSH_ASSIGN_PIN(URXD0, 3, 5);
 
-    uint16_t _lpmreg;
+// User Interupt Pin
+TOSH_ASSIGN_PIN(USERINT, 2, 7);
 
-    TOSH_SET_PIN_DIRECTIONS();
+// FLASH
+TOSH_ASSIGN_PIN(FLASH_CS, 4, 4);
 
-    call SubControl.stop();
-
-    call Leds.glow(0x7, 0x0);
-
-    _lpmreg = LPM4_bits;
-    _lpmreg |= SR_GIE;
-
-    __asm__ __volatile__( "bis  %0, r2" : : "m" ((uint16_t)_lpmreg) );
-
-  }
-
-  command error_t Init.init() {
-    return SUCCESS;
-  }
-
-  command error_t StdControl.start() {
-
-    int i;
-
-    // wait a short period for things to stabilize
-    for ( i = 0; i < 4; i++ )
-      wait(0xffff);
-
-    // if user button is pressed, power down
-    if (!TOSH_READ_USERINT_PIN())
-      haltsystem();
-
-    return SUCCESS;
-
-  }
-
-  command error_t StdControl.stop() {
-    return SUCCESS;
-  }
-
+void TOSH_SET_PIN_DIRECTIONS(void)
+{
+  P3SEL = 0x0E; // set SPI and I2C to mod func
+  
+  P1DIR = 0xe0;
+  P1OUT = 0x00;
+  
+  P2DIR = 0x7b;
+  P2OUT = 0x10;
+  
+  P3DIR = 0xf1;
+  P3OUT = 0x00;
+  
+  P4DIR = 0xfd;
+  P4OUT = 0xdd;
+  
+  P5DIR = 0xff;
+  P5OUT = 0xff;
+  
+  P6DIR = 0xff;
+  P6OUT = 0x00;
 }
+
+#endif

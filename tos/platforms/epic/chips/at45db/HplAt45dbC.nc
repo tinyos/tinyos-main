@@ -32,7 +32,7 @@ configuration HplAt45dbC {
 }
 implementation {
 
-  components new HplAt45dbByteC(9),
+  components new HplAt45dbByteC(10),
 	new Msp430Spi0C() as Spi,
 	HplAt45dbP,
 	HplMsp430GeneralIOC as MspGeneralIO,

@@ -41,7 +41,8 @@ DM_AMID = 0x54
 SERIAL_DATA_LENGTH = 28 - 1 - 1 - 2 - 2
 BAUDRATES = {'micaz': 57600,
              'telosb': 115200,
-             'iris': 57600}
+             'iris': 57600,
+	     'epic': 115200}
 
 # Commands for FlashManager
 FM_CMD_ERASE     = 0

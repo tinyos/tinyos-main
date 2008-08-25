@@ -27,24 +27,45 @@
 * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-configuration HplAt45dbC {
-  provides interface HplAt45db;
+
+module HplAt45dbP {
+  provides {
+    interface HplAt45dbByte;
+  }
+  uses {
+    interface SpiByte as FlashSpi;
+    interface GeneralIO as Select;
+  }
 }
-implementation {
+implementation
+{
+  command void HplAt45dbByte.select() {
+    call Select.clr();
+  }
 
-  components new HplAt45dbByteC(9),
-	new Msp430Spi0C() as Spi,
-	HplAt45dbP,
-	HplMsp430GeneralIOC as MspGeneralIO,
-	new Msp430GpioC() as Select;
+  command void HplAt45dbByte.deselect() {
+    call Select.set();
+  }
 
-  HplAt45db = HplAt45dbByteC;
+  task void idleTask() {
+    uint8_t status;
+    status = call FlashSpi.write(0);
+    if (!(status & 0x80)) {
+      post idleTask();
+    } else {
+      //printf("idle: %d\n", status);
+      signal HplAt45dbByte.idle();
+    }
+  }
 
-  HplAt45dbByteC.Resource -> Spi;
-  HplAt45dbByteC.FlashSpi -> Spi;
-  HplAt45dbByteC.HplAt45dbByte -> HplAt45dbP;
+  command void HplAt45dbByte.waitIdle() {
+    post idleTask();
+  }
 
-  Select -> MspGeneralIO.Port44;
-  HplAt45dbP.Select -> Select;
-  HplAt45dbP.FlashSpi -> Spi;
+  command bool HplAt45dbByte.getCompareStatus() {
+    uint8_t status;
+    status = call FlashSpi.write(0);
+    //printf("s: %d\n", status);
+    return (!(status & 0x40));
+  }
 }

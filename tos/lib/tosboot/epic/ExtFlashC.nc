@@ -1,9 +1,9 @@
-// $Id: PluginC.nc,v 1.2 2008-06-11 00:46:26 razvanm Exp $
+// $Id: ExtFlashC.nc,v 1.1 2008-08-25 16:48:47 razvanm Exp $
 
 /*
  *
  *
- * "Copyright (c) 2000-2004 The Regents of the University  of California.  
+ * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -28,19 +28,24 @@
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-configuration PluginC {
+configuration ExtFlashC {
   provides {
+    interface Init;
     interface StdControl;
+    interface ExtFlash;
   }
 }
 
 implementation {
 
-  components ExtFlashC, LedsC, PowerOffM;
+  components 
+    ExtFlashM,
+    HPLUSART0M;
 
-  StdControl = PowerOffM;
+  Init = ExtFlashM;
+  StdControl = ExtFlashM;
+  ExtFlash = ExtFlashM;
 
-  PowerOffM.Leds -> LedsC;
-  PowerOffM.SubControl -> ExtFlashC;
+  ExtFlashM.USARTControl -> HPLUSART0M;
 
 }

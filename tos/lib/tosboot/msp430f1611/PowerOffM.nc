@@ -1,4 +1,4 @@
-// $Id: InternalFlash.h,v 1.2 2008-06-11 00:46:25 razvanm Exp $
+// $Id: PowerOffM.nc,v 1.1 2008-08-25 16:48:47 razvanm Exp $
 
 /*
  *
@@ -25,21 +25,61 @@
  */
 
 /**
- * InternalFlash.h - Internal flash implementation for telos msp
- * platform. On the msp, the flash must first be erased before a value
- * can be written. However, the msp can only erase the flash at a
- * segment granularity (128 bytes for the information section). This
- * module allows transparent read/write of individual bytes to the
- * information section by dynamically switching between the two
- * provided segments in the information section.
- *
- * Valid address range is 0x1000 - 0x107E (0x107F is used to store the
- * version number of the information segment).
- *
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-#ifndef __INTERNAL_FLASH_H__
-#define __INTERNAL_FLASH_H__
+module PowerOffM {
+  provides {
+    interface Init;
+    interface StdControl;
+  }
+  uses {
+    interface Leds;
+    interface StdControl as SubControl;
+  }
+}
 
-#endif
+implementation {
+
+  void haltsystem() {
+
+    uint16_t _lpmreg;
+
+    TOSH_SET_PIN_DIRECTIONS();
+
+    call SubControl.stop();
+
+    call Leds.glow(0x7, 0x0);
+
+    _lpmreg = LPM4_bits;
+    _lpmreg |= SR_GIE;
+
+    __asm__ __volatile__( "bis  %0, r2" : : "m" ((uint16_t)_lpmreg) );
+
+  }
+
+  command error_t Init.init() {
+    return SUCCESS;
+  }
+
+  command error_t StdControl.start() {
+
+    int i;
+
+    // wait a short period for things to stabilize
+    for ( i = 0; i < 4; i++ )
+      wait(0xffff);
+
+    // if user button is pressed, power down
+    if (!TOSH_READ_USERINT_PIN())
+      haltsystem();
+
+    return SUCCESS;
+
+  }
+
+  command error_t StdControl.stop() {
+    return SUCCESS;
+  }
+
+}

@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: tosboot.extra,v 1.1 2008-06-19 15:51:25 razvanm Exp $
+#$Id: tosboot.extra,v 1.2 2008-08-25 16:48:45 razvanm Exp $
 
 DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
 DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
@@ -10,12 +10,19 @@ ifeq ($(BOOTLOADER),tosboot)
   CFLAGS += -DDELUGE
   CFLAGS += -I$(TOSDIR)/lib/net -I$(TOSDIR)/lib/net/drip -I$(DELUGE_DIR) -I$(DELUGE_DIR)/FlashVolumeManager -I$(DELUGE_DIR)/BlockStorageManager
 
-  ifneq ($(filter telosb tmote,$(TARGETS)),)
-    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/telos -I$(DELUGE_EXTRA)/telosb
+  ifneq ($(filter telosb tmote epic,$(TARGETS)),)
+    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/msp430 -I$(DELUGE_EXTRA)/telos
     ifeq ($(filter docs,$(GOALS)),)
       CFLAGS += -Wl,--section-start=.text=0x4a00,--defsym=_reset_vector__=0x4000
     endif
-    BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/telosb/main.ihex
+    ifeq ($(TARGETS),telosb)
+	CFLAGS += -I$(DELUGE_EXTRA)/telosb
+	BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/telosb/main.ihex
+    endif
+    ifeq ($(TARGETS),epic)
+	CFLAGS += -I$(DELUGE_EXTRA)/epic
+	BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/epic/main.ihex
+    endif
     ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
       BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
     endif

@@ -31,7 +31,7 @@
 #ifndef DELUGEPAGETRANSFER_H
 #define DELUGEPAGETRANSFER_H
 
-#if defined(PLATFORM_TELOSB)
+#if defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
   #include "extra/telosb/TOSBoot_platform.h"
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
   #include "extra/micaz/TOSBoot_platform.h"

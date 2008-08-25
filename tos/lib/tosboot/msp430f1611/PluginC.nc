@@ -1,4 +1,4 @@
-// $Id: InternalFlash.nc,v 1.2 2008-06-11 00:46:26 razvanm Exp $
+// $Id: PluginC.nc,v 1.1 2008-08-25 16:48:47 razvanm Exp $
 
 /*
  *
@@ -25,13 +25,22 @@
  */
 
 /**
- * InternalFlash.nc - A generic interface to read and store values in
- * the internal flash of a microcontroller.
- *
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-interface InternalFlash {
-  command error_t write(void* addr, void* buf, uint16_t size);
-  command error_t read(void* addr, void* buf, uint16_t size);
+configuration PluginC {
+  provides {
+    interface StdControl;
+  }
+}
+
+implementation {
+
+  components ExtFlashC, LedsC, PowerOffM;
+
+  StdControl = PowerOffM;
+
+  PowerOffM.Leds -> LedsC;
+  PowerOffM.SubControl -> ExtFlashC;
+
 }

@@ -22,7 +22,7 @@ if [[ $# -ne 2 && $# -ne 3 ]]; then
   echo "Usage: $0 <port> [<comm_port>] <platform>"
   echo "  <port>       /dev/ttyUSB0"
   echo "  <comm_port>  /dev/ttyUSB1"
-  echo "  <platform>   micaz, telosb or iris"
+  echo "  <platform>   micaz, telosb, iris or epic"
   exit 2
 fi
 
@@ -35,7 +35,7 @@ if [ $# -eq 3 ]; then
  PLATFORM=$3
 fi
 
-if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' -a ${PLATFORM} != 'iris' ]; then
+if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' -a ${PLATFORM} != 'iris' -a ${PLATFORM} != 'epic' ]; then
   echo "\"${PLATFORM}\" is not a supported platform"
   exit 2
 fi
@@ -52,7 +52,7 @@ echo ============================ Compile and load Blink =======================
 if [ $PLATFORM == 'micaz' ]
 then
   CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install mib510,${PPORT}
-elif [ $PLATFORM == 'telosb' ]
+elif [ $PLATFORM == 'telosb' -o $PLATFORM == 'epic' ]
 then
   CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install bsl,${PPORT}
 elif [ $PLATFORM == 'iris' ]
