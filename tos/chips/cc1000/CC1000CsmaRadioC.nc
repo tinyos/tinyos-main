@@ -1,4 +1,4 @@
-/* $Id: CC1000CsmaRadioC.nc,v 1.8 2008-09-01 08:28:59 beutel Exp $
+/*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -44,6 +44,7 @@
  *
  * @author Joe Polastre
  * @author David Gay
+ * @author Marco Langerwisch (Packet timestamping)
  */
 
 #include "CC1000Const.h"
@@ -55,14 +56,17 @@ configuration CC1000CsmaRadioC {
     interface Send;
     interface Receive;
 
-    interface Packet;    
+    interface Packet;
     interface CsmaControl;
     interface CsmaBackoff;
-    interface RadioTimeStamping;
     interface PacketAcknowledgements;
     interface LinkPacketMetadata;
-    
+
     interface LowPowerListening;
+
+    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+    interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+    interface PacketTimeSyncOffset;
   }
 }
 implementation {
@@ -86,10 +90,9 @@ implementation {
   CsmaControl = Csma;
   CsmaBackoff = Csma;
   LowPowerListening = Csma;
-  RadioTimeStamping = SendReceive;
   PacketAcknowledgements = SendReceive;
   LinkPacketMetadata = SendReceive;
-  
+
   Csma.CC1000Control -> Control;
   Csma.Random -> RandomC;
   Csma.CC1000Squelch -> Squelch;
@@ -103,7 +106,7 @@ implementation {
   SendReceive.amAddress -> ActiveMessageAddressC;
   SendReceive.RssiRx -> Rssi.Rssi[unique(UQ_CC1000_RSSI)];
   SendReceive.CC1000Squelch -> Squelch;
-  
+
   Csma.RssiNoiseFloor -> Rssi.Rssi[unique(UQ_CC1000_RSSI)];
   Csma.RssiCheckChannel -> Rssi.Rssi[unique(UQ_CC1000_RSSI)];
   Csma.RssiPulseCheck -> Rssi.Rssi[unique(UQ_CC1000_RSSI)];
@@ -114,4 +117,16 @@ implementation {
   Rssi.Resource -> Hpl;
   Control.CC -> Hpl;
   Control.BusyWait -> BusyWaitMicroC;
+
+  PacketTimeStamp32khz = SendReceive;
+  PacketTimeStampMilli = SendReceive;
+  PacketTimeSyncOffset = SendReceive;
+
+  components Counter32khz32C, new CounterToLocalTimeC(T32khz);
+  CounterToLocalTimeC.Counter -> Counter32khz32C;
+  SendReceive.LocalTime32khz -> CounterToLocalTimeC;
+
+  //DummyTimer is introduced to compile apps that use no timers
+  components HilTimerMilliC, new TimerMilliC() as DummyTimer;
+  SendReceive.LocalTimeMilli -> HilTimerMilliC;
 }
