@@ -1,3 +1,5 @@
+// $Id: CC1000ActiveMessageC.nc,v 1.8 2008-09-01 08:28:14 beutel Exp $
+
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -36,7 +38,7 @@
  * addr and group).
  * 
  * @author Philip Levis
- * @author Marco Langerwisch (Packet timestamping)
+ * @date June 19 2005
  */
 
 configuration CC1000ActiveMessageC {
@@ -49,10 +51,6 @@ configuration CC1000ActiveMessageC {
     interface Packet;
     interface PacketAcknowledgements;
     interface LinkPacketMetadata;
-
-    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
-    interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
-    interface PacketTimeSyncOffset;
   }
 }
 implementation {
@@ -75,7 +73,4 @@ implementation {
   AM.amAddress -> Address;
   AM.Packet     -> Radio;
   
-  PacketTimeStamp32khz = Radio;
-  PacketTimeStampMilli = Radio;
-  PacketTimeSyncOffset = Radio;
 }
