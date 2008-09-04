@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.7 $ $Date: 2007-11-28 03:15:30 $
+ * @version $Revision: 1.8 $ $Date: 2008-09-04 17:20:59 $
  */
 
 #include <Stm25p.h>
@@ -201,7 +201,7 @@ implementation {
   
   uint8_t calcSector( uint8_t client, stm25p_addr_t addr ) {
     uint8_t sector = call Sector.getNumSectors[ client ]();
-    return (uint8_t)( addr >> STM25P_SECTOR_SIZE_LOG2 ) % sector;
+    return (uint8_t)(( addr >> STM25P_SECTOR_SIZE_LOG2 ) % sector);
   }
 
   stm25p_addr_t calcAddr( uint8_t client, stm25p_addr_t addr  ) {
@@ -342,7 +342,7 @@ implementation {
 	else {
 	  log_info->write_addr += sizeof( m_addr );
 	  m_rw_state = S_SEARCH_RECORDS;
-	  call Sector.read[ id ]( log_info->write_addr, &m_header,
+	  call Sector.read[ id ]( calcAddr(id, log_info->write_addr), &m_header,
 				  sizeof( m_header ) );
 	}
       }
@@ -373,7 +373,7 @@ implementation {
 	log_info->read_addr += sizeof( m_header ) + m_header;
 	// if not yet at cookie, keep searching
 	if ( log_info->read_addr < m_log_state[ id ].cookie ) {
-	  call Sector.read[ id ]( log_info->read_addr, &m_header,
+	  call Sector.read[ id ]( calcAddr(id, log_info->read_addr), &m_header,
 				  sizeof( m_header ) );
 	}
 	// at or passed cookie, stop
