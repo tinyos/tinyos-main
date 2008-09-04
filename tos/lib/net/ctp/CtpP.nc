@@ -193,6 +193,8 @@ implementation {
 #endif
 #elif defined (PLATFORM_MICA2) || defined (PLATFORM_MICA2DOT)
   components CC1000ActiveMessageC as PlatformActiveMessageC;
+#elif defined(PLATFORM_EYESIFXV1) || defined(PLATFORM_EYESIFXV2)
+  components WhiteBitAccessorC as PlatformActiveMessageC;    
 #else
   components DummyActiveMessageP as PlatformActiveMessageC;
 #endif
