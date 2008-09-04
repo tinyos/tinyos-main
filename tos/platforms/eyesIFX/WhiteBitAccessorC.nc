@@ -43,7 +43,7 @@ module WhiteBitAccessorC {
 implementation {
     async command bool LinkPacketMetadata.highChannelQuality(message_t* msg) {
         bool res = FALSE;
-        if(getMetadata(msg)->strength > 15) res = TRUE;
+        if(getMetadata(msg)->strength > 13) res = TRUE;
         return res;
     }
 }
