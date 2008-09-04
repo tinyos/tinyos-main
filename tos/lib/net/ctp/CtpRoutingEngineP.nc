@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.16 2008-08-15 21:57:31 scipio Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.17 2008-09-04 23:08:08 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2008-08-15 21:57:31 $
+ *  @date   $Date: 2008-09-04 23:08:08 $
  *  @see Net2-WG
  */
 
@@ -361,11 +361,9 @@ implementation {
                     routeInfo.etx = best->info.etx;
                     routeInfo.congested = best->info.congested;
                 }
-		/* If we follow the CTP paper this should be in here.
 		if (currentEtx - minEtx > 20) {
 		  call CtpInfo.triggerRouteUpdate();
 		}
-		*/
             }
         }    
 
