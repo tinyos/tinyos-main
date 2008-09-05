@@ -30,7 +30,7 @@
 /**
  * Accessor module for link quality
  *  
- * @author Andreas Köpke <koepke@tkn.tu-berlin.de>
+ * @author Andreas Koepke <koepke@tkn.tu-berlin.de>
  */
 
 #include "radiopacketfunctions.h"
