@@ -1,4 +1,4 @@
-// $Id: MainC.nc,v 1.5 2008-06-11 00:46:27 razvanm Exp $
+// $Id: MainC.nc,v 1.6 2008-09-06 21:22:33 regehr Exp $
 
 /*                                                                      
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -28,7 +28,7 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  *
- * Date last modified:  $Id: MainC.nc,v 1.5 2008-06-11 00:46:27 razvanm Exp $
+ * Date last modified:  $Id: MainC.nc,v 1.6 2008-09-06 21:22:33 regehr Exp $
  */
 
 /**
@@ -48,6 +48,10 @@ configuration MainC {
 }
 implementation {
   components PlatformC, RealMainP, TinySchedulerC;
+
+#ifdef SAFE_TINYOS
+  components SafeFailureHandlerC;
+#endif
 
   RealMainP.Scheduler -> TinySchedulerC;
   RealMainP.PlatformInit -> PlatformC;

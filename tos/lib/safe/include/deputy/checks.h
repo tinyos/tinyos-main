@@ -50,7 +50,7 @@ extern asmlinkage noreturn
 void deputy_fail_noreturn(__LOCATION__FORMALS);
 
 extern asmlinkage noreturn
-void deputy_fail_noreturn_fast(void);
+void deputy_fail_noreturn_fast(__LOCATION__FORMALS);
 
 /* Search for a NULL starting at e and return its index */
 extern asmlinkage
