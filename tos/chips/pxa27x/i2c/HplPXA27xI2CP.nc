@@ -1,4 +1,4 @@
-/* $Id: HplPXA27xI2CP.nc,v 1.5 2008-06-11 00:42:13 razvanm Exp $ */
+/* $Id: HplPXA27xI2CP.nc,v 1.6 2008-09-08 03:10:23 regehr Exp $ */
 /*
  * Copyright (c) 2005 Arch Rock Corporation 
  * All rights reserved. 
@@ -98,8 +98,8 @@ implementation
 
   async command uint32_t I2C.getIDBR() { 
     switch(dev) {
-    case 0: return IDBR; break;
-    case 1: return PIDBR; break;
+    case 0: return IDBR;
+    case 1: return PIDBR;
     default: return 0;
     }
   }
@@ -115,8 +115,8 @@ implementation
 
   async command uint32_t I2C.getICR() { 
     switch(dev) {
-    case 0: return ICR; break;
-    case 1: return PICR; break;
+    case 0: return ICR;
+    case 1: return PICR;
     default: return 0;
     }
   }
@@ -131,8 +131,8 @@ implementation
 
  async command uint32_t I2C.getISR() { 
     switch(dev) {
-    case 0: return ISR; break;
-    case 1: return PISR; break;
+    case 0: return ISR;
+    case 1: return PISR;
     default: return 0;
     }
   }
