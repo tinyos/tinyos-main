@@ -1,0 +1,23 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: avr-studio-debug.extra,v 1.1 2008-09-10 18:06:22 sallai Exp $
+
+BUILD_DEPS = srec tosimage bytes $(POST_BUILD_EXTRA_DEPS) buildelf
+APPC_WINPATH = $(BUILDDIR)/app-winpath.c
+MAIN_ELF = $(BUILDDIR)/main.elf
+
+# no inlining or optimizations
+OPTFLAGS += -O0 -fnesc-no-inline
+
+# produce dwarf-2 debug information for AVR Studio
+OPTFLAGS += -gdwarf-2
+
+# we use ncc to invoke gcc thus need to allow dollars in identifiers
+#OPTFLAGS += -fdollars-in-identifiers
+
+# alternatively, we can use a different separator
+PFLAGS += -fnesc-separator=__
+
+buildelf: FORCE
+	@echo "    building ELF output $(MAIN_ELF) for debugging in AVR Studio"
+	@perl -pe 's/#(.*)\"(.*)\"/ "#$$1\"".`cygpath -m $$2`."\""/e; s/\n\"/\"/;' $(BUILDDIR)/app.c > $(APPC_WINPATH)
+	@$(NCC) -o $(MAIN_ELF) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(APPC_WINPATH) $(LIBS) $(LDFLAGS)
