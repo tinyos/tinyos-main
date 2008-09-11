@@ -5,7 +5,7 @@ Collection
 :TEP: 119
 :Group: Net2 Working Group
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: > 2.1
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis
 
