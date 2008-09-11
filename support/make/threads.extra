@@ -19,6 +19,7 @@ PFLAGS += -tosscheduler=TinyTaskSchedulerC,TinyTaskSchedulerC.TaskBasic,TaskBasi
 THREADS_MSP430_DIR = $(TOS_THREADS_DIR)/chips/msp430
 THREADS_MSP430_INCLUDE_DIRS = -I$(THREADS_MSP430_DIR)
 THREADS_MSP430_INCLUDE_DIRS += -I$(THREADS_MSP430_DIR)/adc12
+THREADS_MSP430_INCLUDE_DIRS += -I$(THREADS_MSP430_DIR)/sensors
 
 #Atm128 specific include directories on tested platforms
 THREADS_ATM128_DIR = $(TOS_THREADS_DIR)/chips/atm128
