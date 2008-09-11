@@ -17,6 +17,7 @@
 %define name     %{target}-gcc
 %define theprefix /usr
 %define source %{name}-%{version}.tgz
+%define __strip avr-strip
 
 Summary: gcc compiled for the %{target} platform 
 Name: %{name}
@@ -45,6 +46,7 @@ rm -rf %{buildroot}%{theprefix}
 make prefix=%{buildroot}%{theprefix} install
 cd %{buildroot}%{theprefix}
 rm lib/libiberty.a
+sed -i -e "s|%{buildroot}||g" lib/gcc/avr/*/install-tools/mkheaders.conf
 
 %clean
 rm -rf $RPM_BUILD_DIR/%{name}-%{version}

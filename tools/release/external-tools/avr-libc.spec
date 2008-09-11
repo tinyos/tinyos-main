@@ -4,29 +4,16 @@
 # When unfolded, the top-level directory 
 # must be %{target}-%{version}.
 # 
-# avr:
-# target: avr
-# libname: libc
-# version: 1.2.3
-# release: 1
-# url: http://savannah.nongnu.org/download/avr-libc/
-# 
-# xscale-elf:
-# target: xscale-elf
-# libname: newlib
-# version: 1.11tinyos
-# release: 1
-# url: ftp://sources.redhat.com/pub/newlib/newlib-1.11.0.tar.gz
 
-%define target msp430tools 
+%define target avr
 %define libname libc
-%define version 20080808
+%define version 1.4.7
 %define release 1
 %define url http://savannah.nongnu.org/download/
 %define name     %{target}-%{libname}
-%define theprefix /opt
+%define theprefix /usr
 %define source   %{name}-%{version}.tgz
-%define __strip msp430-strip
+%define __strip avr-strip
 %define debug_package %{nil}
 
 Summary: C library for the %{target} platform
@@ -47,16 +34,12 @@ C library for the %{target} platform.
 %setup -q
 
 %build
-# doconf can have additional configuration parameters
-cd src
+./configure --prefix=%{theprefix}  --build=`./config.guess` --host=avr
 make
 
 %install
 rm -rf %{buildroot}%{theprefix}
-cd src
-make prefix=%{buildroot}%{theprefix}/msp430 install
-cd %{buildroot}%{theprefix}
-rm -rf info
+make prefix=%{buildroot}%{theprefix} install
 
 %clean
 rm -rf $RPM_BUILD_DIR/%{name}-%{version}
