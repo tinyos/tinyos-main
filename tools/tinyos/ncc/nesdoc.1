@@ -12,7 +12,7 @@ TinyOS 1.x usage:
 TinyOS 2.x: collect documentation from a program:
 .br
 \fBnesdoc\fR -o \fIdocumentation-directory\fR [\fB-preserve\fR]
-       [\fB-new\fR] [\fB-quiet\fR] [\fB-target=\fIplatform\fR] [\fB-topdir=\fIdirectory\fR]
+       [\fB-new\fR] [\fB-quiet\fR] [\fB-target=\fIplatform\fR] [\fB-topdir=\fIdirectory\fR] [\fB-app\fR] 
        [\fIncc-options\fR] \fIfiles...\fR
 
 TinyOS 2.x: generate nesdoc HTML pages:
@@ -77,7 +77,10 @@ Specify directory paths that should be stripped from the source file names
 when generating "package names" for the documentation files.  The directory
 above \fBTOSDIR\fR is automatically added, so this option is only needed for
 directories outside the main TinyOS distribution.
-
+.TP
+\fB-app\fR
+Also generate a graph for the whole application in the current directory -
+this is useful to check the wiring of a particular application.
 .SH SEE ALSO
 
 .IR ncc (1)

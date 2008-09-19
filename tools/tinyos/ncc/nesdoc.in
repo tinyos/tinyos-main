@@ -68,7 +68,7 @@ for ($i = 0; $i <= $#ARGV; $i++) {
     $_ = $ARGV[$i];
     if (/^-/) {
 	if (/^-topdir=(.*)/) {
-            push @archive_args, $1;
+            push @archive_args, "--topdir=$1";
 	    $strip = 1;
 	}
 	elsif (/^--version$/) {

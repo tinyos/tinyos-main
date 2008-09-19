@@ -70,7 +70,7 @@ def packagename(elem):
   loc = elem.getAttribute("loc")
   colon = index(loc, ":")
   filename = canonicalise(loc[colon + 1:])
-  for dir in topdirs:
+  for dir in topdir:
     dirlen = len(dir)
     if filename[0:dirlen] == dir:
       filename = filename[dirlen:]
@@ -104,14 +104,32 @@ def canonicalisedir(dirname):
     return dirname
 
 # option processing. See usage string for details.
-(opts, args) = getopt(argv[1:], "t:", [ "topdir=", "preserve", "app", "quiet" ])
-topopts = filter(lambda (x): x[0] != "--preserve" and x[0] != "--app" and x[0] != "--quiet", opts)
-preserve = filter(lambda(x): x[0] == "--preserve", opts) != []
-app = filter(lambda(x): x[0] == "--app", opts) != []
-quiet = filter(lambda(x): x[0] == "--quiet", opts) != []
-topdirs = map(lambda (x): canonicalisedir(x[1]), topopts)
+def process_opts(argv):
+  options = {
+    "topdir":	 (True,  lambda (x): topdir + [canonicalisedir(x)]),
+    "preserve":	 (False, lambda x: True),
+    "app":	 (False, lambda x: True),
+    "quiet":	 (False, lambda x: True),
+  }
+  getopt_args = []
+  for p in options:
+    globals()[p] = False
+    opt = p
+    if options[p][0]:
+      opt += "="
+    getopt_args += [ opt ]
+  (opts, args) = getopt(argv, "", getopt_args)
+  topdir = []
+  highlight = ""
+  for o, a in opts:
+    opt = o[2:]
+    globals()[opt] = options[opt][1](a)
+  return args
+
+args = process_opts(argv[1:])
 if len(args) != 1:
   usage()
+  exit(2)
 
 repository = args[0]
 try:
