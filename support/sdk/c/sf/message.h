@@ -43,6 +43,11 @@ tmsg_t *new_tmsg(void *packet, size_t len);
  */
 void free_tmsg(tmsg_t *msg);
 
+/** 
+ * Reuse an existing tmsg
+ */
+void reset_tmsg(tmsg_t *msg, void *packet, size_t len) ;
+
 /**
  * Return underlying array of a message buffer
  */

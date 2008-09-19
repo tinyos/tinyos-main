@@ -36,6 +36,14 @@ void free_tmsg(tmsg_t *msg)
     free(msg);
 }
 
+void reset_tmsg(tmsg_t *msg, void *packet, size_t len)
+{
+  if (!msg)
+    return;
+  msg->data = packet;
+  msg->len  = len;
+}
+
 void *tmsg_data(tmsg_t *msg)
 {
   return msg->data;
