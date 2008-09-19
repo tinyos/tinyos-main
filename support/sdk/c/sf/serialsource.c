@@ -1,3 +1,4 @@
+#ifndef _WIN32
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <termios.h>
@@ -15,6 +16,12 @@
 #else
 #include <stdint.h>
 #endif
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#include <stdint.h>
+#endif
 
 /* C implementation of the mote serial protocol. See
    net.tinyos.packet.Packetizer for more details */
@@ -28,8 +35,10 @@ typedef int bool;
 
 enum {
 #ifndef __CYGWIN__
+#ifndef _WIN32
   FALSE = 0,
   TRUE = 1,
+#endif
 #endif
   BUFSIZE = 256,
   MTU = 256,
@@ -50,8 +59,12 @@ struct packet_list
   struct packet_list *next;
 };
 
-struct serial_source {
+struct serial_source_t {
+#ifndef _WIN32
   int fd;
+#else
+  HANDLE hComm;
+#endif
   bool non_blocking;
   void (*message)(serial_source_msg problem);
 
@@ -72,6 +85,7 @@ struct serial_source {
   } send;
 };
 
+#ifndef _WIN32
 static tcflag_t parse_baudrate(int requested)
 {
   int baudrate;
@@ -173,6 +187,7 @@ static tcflag_t parse_baudrate(int requested)
     }
   return baudrate;
 }
+#endif
 
 #ifdef DEBUG
 static void dump(const char *msg, unsigned char *packet, int len)
@@ -194,6 +209,7 @@ static void message(serial_source src, serial_source_msg msg)
 
 static int serial_read(serial_source src, int non_blocking, void *buffer, int n)
 {
+#ifndef _WIN32
   fd_set fds;
   int cnt;
 
@@ -225,6 +241,30 @@ static int serial_read(serial_source src, int non_blocking, void *buffer, int n)
 	if (cnt != 0)
 	  return cnt;
       }
+#else // _WIN32
+  int cnt;
+
+  if (non_blocking) {
+    ReadFile(src->hComm, buffer, n, &cnt, NULL);
+
+    return cnt;
+
+  } else {
+      for (;;) {
+          DWORD eventMask;
+          SetCommMask(src->hComm, EV_RXCHAR);
+          if (!WaitCommEvent(src->hComm, &eventMask, NULL)) {
+              return -1;
+          }
+
+          ReadFile(src->hComm, buffer, n, &cnt, NULL);
+
+          if (cnt != 0) {
+            return cnt;
+          }
+      }
+  }
+#endif
 }
 
 serial_source open_serial_source(const char *device, int baud_rate,
@@ -237,6 +277,7 @@ serial_source open_serial_source(const char *device, int baud_rate,
      NULL for failure (bad device or bad baud rate)
  */
 {
+#ifndef _WIN32
   struct termios newtio;
   int fd;
   tcflag_t baudflag = parse_baudrate(baud_rate);
@@ -288,8 +329,52 @@ serial_source open_serial_source(const char *device, int baud_rate,
   close(fd);
 
   return NULL;
+#else // _WIN32
+	LPCTSTR       ComName = (LPCTSTR)device;
+    HANDLE        hComm;
+	DCB           dcb;
+    serial_source src;
+
+	int buflen = MultiByteToWideChar(CP_ACP,0,(PCSTR)device,-1,(LPWSTR)ComName,0);
+	MultiByteToWideChar(CP_ACP,0,(PCSTR)device,-1,(LPWSTR)ComName,buflen);
+	
+	//syncronize
+	hComm = CreateFile(ComName,  GENERIC_READ | GENERIC_WRITE,  0,  NULL,  OPEN_EXISTING,
+					FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (hComm == INVALID_HANDLE_VALUE) {
+        return NULL;
+    }
+
+    PurgeComm(hComm, PURGE_RXCLEAR);
+
+	GetCommState(hComm, &dcb); 
+	dcb.BaudRate = baud_rate;
+	dcb.ByteSize = 8;
+	dcb.Parity = NOPARITY;
+	dcb.fParity = FALSE;
+	dcb.StopBits = ONESTOPBIT;
+    if (SetCommState(hComm, &dcb) == 0) {
+        return NULL;
+    }
+
+    src = malloc(sizeof *src);
+
+    if (src) {
+	  memset(src, 0, sizeof *src);
+	  src->hComm = hComm;
+	  src->non_blocking = non_blocking;
+	  src->message = message;
+	  src->send.seqno = 37;
+
+	}
+
+	return src;
+
+#endif // _WIN32
 }
 
+#ifndef _WIN32
 int serial_source_fd(serial_source src)
 /* Returns: the file descriptor used by serial source src (useful when
      non-blocking reads were requested)
@@ -297,6 +382,17 @@ int serial_source_fd(serial_source src)
 {
   return src->fd;
 }
+#endif
+
+#ifdef _WIN32
+HANDLE serial_source_handle(serial_source src)
+/* Returns: the file descriptor used by serial source src (useful when
+     non-blocking reads were requested)
+*/
+{
+  return src->hComm;
+}
+#endif
 
 int close_serial_source(serial_source src)
 /* Effects: closes serial source src
@@ -304,7 +400,11 @@ int close_serial_source(serial_source src)
      considered closed anyway)
  */
 {
+#ifndef _WIN32
   int ok = close(src->fd);
+#else
+  int ok = CloseHandle(src->hComm);
+#endif
 
   free(src);
 
@@ -317,6 +417,7 @@ static int source_wait(serial_source src, struct timeval *deadline)
    Returns: 0 if data is available, -1 if the deadline expires
 */
 {
+#ifndef _WIN32
   struct timeval tv;
   fd_set fds;
   int cnt;
@@ -354,10 +455,23 @@ static int source_wait(serial_source src, struct timeval *deadline)
 	return -1;
       return 0;
     }
+#else // _WIN32
+    // FIXME: the deadline is ignored here
+
+    DWORD eventMask;
+    SetCommMask(src->hComm, EV_RXCHAR);
+    if (!WaitCommEvent(src->hComm, &eventMask, NULL)) {
+        return -1;
+    }
+
+    return 0;
+
+#endif
 }
 
 static int source_write(serial_source src, const void *buffer, int count)
 {
+#ifndef _WIN32
   int actual = 0;
 
   if (fcntl(src->fd, F_SETFL, 0) < 0)
@@ -388,6 +502,25 @@ static int source_write(serial_source src, const void *buffer, int count)
       /* We're in trouble, but there's no obvious fix. */
     }
   return actual;
+#else // _WIN32
+    int actual = 0;
+    int n;
+    const unsigned char * b = buffer;
+
+    while (count > 0) {
+      if (!WriteFile(src->hComm, b, count, &n, NULL)) {
+	      message(src, msg_unix_error);
+          actual = -1;
+          break;
+      }
+
+      count  -= n;
+      actual += n;
+      b      += n;
+    }
+
+    return actual;
+#endif
 }
 
 static void push_protocol_packet(serial_source src,
@@ -494,11 +627,13 @@ static int read_byte(serial_source src, int non_blocking)
 	      src->recv.bufused = n;
 	      break;
 	    }
+#ifndef _WIN32
 	  if (errno == EAGAIN)
 	    return -1;
 	  if (errno != EINTR)
 	    message(src, msg_unix_error);
-	}
+#endif
+    }
     }
   //printf("in %02x\n", src->recv.buffer[src->recv.bufpos]);
   return src->recv.buffer[src->recv.bufpos++];
@@ -758,8 +893,13 @@ int write_serial_packet(serial_source src, const void *packet, int len)
   if (write_framed_packet(src, P_PACKET_ACK, src->send.seqno, packet, len) < 0)
     return -1;
 
+  // FIXME: the WIN32 implementation of source_wait()
+  //        disregards the deadline parameter anyway
+#ifndef _WIN32
   gettimeofday(&deadline, NULL);
   add_timeval(&deadline, ACK_TIMEOUT);
+#endif
+
   for (;;) 
     {
       struct packet_list *entry;

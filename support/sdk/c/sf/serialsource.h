@@ -1,11 +1,15 @@
 #ifndef SERIALSOURCE_H
 #define SERIALSOURCE_H
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct serial_source *serial_source;
+typedef struct serial_source_t *serial_source;
 
 typedef enum {
   msg_unknown_packet_type,	/* packet of unknown type received */
@@ -32,10 +36,19 @@ serial_source open_serial_source(const char *device, int baud_rate,
      NULL for failure
  */
 
+#ifndef _WIN32
 int serial_source_fd(serial_source src);
 /* Returns: the file descriptor used by serial source src (useful when
      non-blocking reads were requested)
 */
+#endif
+
+#ifdef _WIN32
+HANDLE serial_source_handle(serial_source src);
+/* Returns: the file descriptor used by serial source src (useful when
+     non-blocking reads were requested)
+*/
+#endif
 
 int serial_source_empty(serial_source src);
 /* Returns: true if serial source does not contain any pending data, i.e.,
