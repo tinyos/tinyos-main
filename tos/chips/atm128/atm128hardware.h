@@ -1,4 +1,4 @@
-//  $Id: atm128hardware.h,v 1.10 2008-09-19 23:59:00 idgay Exp $
+//  $Id: atm128hardware.h,v 1.11 2008-09-20 00:10:18 idgay Exp $
 
 /*                                                                     
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
@@ -135,7 +135,12 @@ mcu_power_t mcombine(mcu_power_t m1, mcu_power_t m2) @safe() {
   return (m1 < m2)? m1: m2;
 }
 
-/* Floating-point network-type support */
+/* Floating-point network-type support.
+   These functions must convert to/from a 32-bit big-endian integer that follows
+   the layout of Java's java.lang.float.floatToRawIntBits method.
+   Conveniently, for the AVR family, this is a straight byte copy...
+*/
+
 typedef float nx_float __attribute__((nx_base_be(afloat)));
 
 inline float __nesc_ntoh_afloat(const void *COUNT(sizeof(float)) source) @safe() {

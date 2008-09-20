@@ -239,7 +239,12 @@ void __nesc_atomic_end(__nesc_atomic_t reenable_interrupts) @spontaneous() @safe
 }
 #endif
 
-/* Floating-point network-type support */
+/* Floating-point network-type support.
+   These functions must convert to/from a 32-bit big-endian integer that follows
+   the layout of Java's java.lang.float.floatToRawIntBits method.
+   Conveniently, for the MSP430 family, this is a straight byte copy...
+*/
+
 typedef float nx_float __attribute__((nx_base_be(afloat)));
 
 inline float __nesc_ntoh_afloat(const void *COUNT(sizeof(float)) source) @safe() {
