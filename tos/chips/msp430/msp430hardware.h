@@ -239,5 +239,19 @@ void __nesc_atomic_end(__nesc_atomic_t reenable_interrupts) @spontaneous() @safe
 }
 #endif
 
+/* Floating-point network-type support */
+typedef float nx_float __attribute__((nx_base_be(afloat)));
+
+inline float __nesc_ntoh_afloat(const void *COUNT(sizeof(float)) source) @safe() {
+  float f;
+  memcpy(&f, source, sizeof(float));
+  return f;
+}
+
+inline float __nesc_hton_afloat(void *COUNT(sizeof(float)) target, float value) @safe() {
+  memcpy(target, &value, sizeof(float));
+  return value;
+}
+
 #endif//_H_msp430hardware_h
 
