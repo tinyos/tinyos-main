@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: eprb.extra,v 1.9 2008-09-22 20:56:09 idgay Exp $
+#$Id: eprb.extra,v 1.10 2008-09-22 20:56:36 idgay Exp $
 
 ifeq ($(EPRB),)
 $(error EPRB must be defined, try "make $(TARGETS) help")
@@ -20,7 +20,7 @@ endif
 
 ifeq ($(PROGRAMMER),uisp)
     PROGRAMMER_FLAGS = -dprog=stk500 -dhost=$(EPRB)     --wr_fuse_h=$(AVR_FUSE_H) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_STK)
-    PROGRAMMER_INSTALL_SREC_FLAGS = --erase --upload if=$(INSTALL_SREC) 
+    PROGRAMMER_INSTALL_SREC_FLAGS = --erase --upload if=$(INSTALL_SREC) --verify
     PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = --upload if=$(BOOTLOADER_IMG) --verify
 endif
 
