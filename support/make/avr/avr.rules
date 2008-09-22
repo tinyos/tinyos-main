@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.19 2008-09-06 21:22:33 regehr Exp $
+#$Id: avr.rules,v 1.20 2008-09-22 20:55:19 idgay Exp $
 
 define AVR_HELP
 
@@ -36,11 +36,9 @@ PROGRAMMER ?= uisp
 NCC = ncc
 LIBS = -lm
 
-AMADDR = ActiveMessageAddressC\$$addr
-# Uncomment the next two lines if you have a toolchain without the dollar sign
-# patch. This needs nesc 1.2.8 or newer (1.2.9 is recommended).
-#PFLAGS += -fnesc-separator=__
-#AMADDR = ActiveMessageAddressC__addr
+# Use __ as the separator - requires nesC 1.2.9 or later
+PFLAGS += -fnesc-separator=__
+AMADDR = ActiveMessageAddressC__addr
 BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.exe
 MAIN_SREC = $(BUILDDIR)/main.srec
