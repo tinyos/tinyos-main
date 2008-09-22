@@ -16,7 +16,7 @@ application prints the counter's value to standard out.
 Java Application Usage:
   java TestSerial [-comm <packetsource>]
 
-  If not specified, the <packetsource> defaults to sf@localhost:9001 or
+  If not specified, the <packetsource> defaults to sf@localhost:9002 or
   to your MOTECOM environment variable (if defined).
 
 Tools:

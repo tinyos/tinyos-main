@@ -29,7 +29,7 @@ Tools:
 
   java TestPacketLink [-comm <packetsource>]
 
-  If not specified, the <packetsource> defaults to sf@localhost:9001 or
+  If not specified, the <packetsource> defaults to sf@localhost:9002 or
   to your MOTECOM environment variable (if defined).
 
   This application will report dropped and duplicate packets as seen on
@@ -39,4 +39,4 @@ Known bugs/limitations:
 
 None.
 
-$Id: README.txt,v 1.4 2008-07-26 02:32:44 klueska Exp $
+$Id: README.txt,v 1.5 2008-09-22 20:52:39 idgay Exp $
