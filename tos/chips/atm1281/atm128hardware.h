@@ -188,5 +188,23 @@ typedef struct
   uint8_t xmbk   : 1;    //!< External Memory Bus-keeper Enable
 } Atm128_XMCRB_t;
 
+/* Floating-point network-type support.
+   These functions must convert to/from a 32-bit big-endian integer that follows
+   the layout of Java's java.lang.float.floatToRawIntBits method.
+   Conveniently, for the AVR family, this is a straight byte copy...
+*/
+
+typedef float nx_float __attribute__((nx_base_be(afloat)));
+
+inline float __nesc_ntoh_afloat(const void *COUNT(sizeof(float)) source) @safe() {
+  float f;
+  memcpy(&f, source, sizeof(float));
+  return f;
+}
+
+inline float __nesc_hton_afloat(void *COUNT(sizeof(float)) target, float value) @safe() {
+  memcpy(target, &value, sizeof(float));
+  return value;
+}
 
 #endif //_H_atmega128hardware_H
