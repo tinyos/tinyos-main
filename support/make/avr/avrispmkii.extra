@@ -1,0 +1,31 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: avrispmkii.extra,v 1.1 2008-09-23 15:47:56 sallai Exp $
+
+ifeq ($(AVRISPMKII),)
+$(error AVRISPMKII must be defined, try "make $(TARGETS) help")
+endif
+
+PROGRAM = avrispmkii
+
+ifeq ($(PROGRAMMER),avrdude)
+    ifdef BOOTLOADER_IMG
+      ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+        BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
+      endif
+    endif
+    PROGRAMMER_FLAGS = -cavrispmkII -P$(AVRISPMKII) -U hfuse:w:$(AVR_FUSE_H):m $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS) $(PROGRAMMER_EXTRA_FLAGS_AVRISPMKII)
+    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
+endif
+
+ifeq ($(PROGRAMMER),uisp)
+    $(error uisp is not supported, please use avrdude")
+endif
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using avrispmkii"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
+
+program_bl: FORCE
+	@echo "    installing $(PLATFORM) bootloader using avrispmkii"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS)
