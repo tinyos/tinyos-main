@@ -26,7 +26,7 @@
  * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
  * 94704.  Attention:  Intel License Inquiry.
  *
- * Date last modified:  $Id: MainC.nc,v 1.2 2008-06-23 01:25:03 klueska Exp $
+ * Date last modified:  $Id: MainC.nc,v 1.3 2008-09-25 03:14:28 regehr Exp $
  */
 
 /**
@@ -54,6 +54,10 @@ implementation {
   components TinyThreadSchedulerC;
   components StaticThreadC;
     
+#ifdef SAFE_TINYOS
+  components SafeFailureHandlerC;
+#endif
+
   // Export the SoftwareInit and Boot for applications
   SoftwareInit = TinyOSMainP.SoftwareInit;
   Boot = TinyOSMainP;
