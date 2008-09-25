@@ -1,4 +1,4 @@
-// $Id: PowerupC.nc,v 1.4 2006-12-12 18:22:48 vlahan Exp $
+// $Id: PowerupC.nc,v 1.5 2008-09-25 04:08:46 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -34,7 +34,7 @@
   *
   * @author Cory Sharp <cssharp@eecs.berkeley.edu>
   */
-module PowerupC
+module PowerupC @safe()
 {
   uses interface Boot;
   uses interface Leds;

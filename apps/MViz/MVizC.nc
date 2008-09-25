@@ -19,7 +19,7 @@
 
 #include "MViz.h"
 
-module MVizC {
+module MVizC @safe(){
   uses {
     // Interfaces for initialization:
     interface Boot;

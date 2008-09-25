@@ -1,4 +1,4 @@
-// $Id: RadioSenseToLedsC.nc,v 1.5 2007-09-13 23:10:20 scipio Exp $
+// $Id: RadioSenseToLedsC.nc,v 1.6 2008-09-25 04:08:47 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -43,7 +43,7 @@
  * @date   June 6 2005
  */
 
-module RadioSenseToLedsC {
+module RadioSenseToLedsC @safe(){
   uses {
     interface Leds;
     interface Boot;

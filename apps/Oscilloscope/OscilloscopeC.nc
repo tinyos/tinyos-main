@@ -16,7 +16,7 @@
 #include "Timer.h"
 #include "Oscilloscope.h"
 
-module OscilloscopeC
+module OscilloscopeC @safe()
 {
   uses {
     interface Boot;

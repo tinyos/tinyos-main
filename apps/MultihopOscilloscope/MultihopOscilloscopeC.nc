@@ -19,7 +19,7 @@
 #include "Timer.h"
 #include "MultihopOscilloscope.h"
 
-module MultihopOscilloscopeC {
+module MultihopOscilloscopeC @safe(){
   uses {
     // Interfaces for initialization:
     interface Boot;

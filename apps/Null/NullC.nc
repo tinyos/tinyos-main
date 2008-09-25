@@ -38,7 +38,7 @@
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
  * @date February 4, 2006
  */
-module NullC
+module NullC @safe()
 {
   uses interface Boot;
 }
