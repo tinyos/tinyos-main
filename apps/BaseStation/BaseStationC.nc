@@ -1,4 +1,4 @@
-// $Id: BaseStationC.nc,v 1.5 2007-02-08 01:00:25 scipio Exp $
+// $Id: BaseStationC.nc,v 1.6 2008-09-25 04:08:09 regehr Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -76,7 +76,7 @@ implementation {
   BaseStationP.SerialControl -> Serial;
   
   BaseStationP.UartSend -> Serial;
-  BaseStationP.UartReceive -> Serial;
+  BaseStationP.UartReceive -> Serial.Receive;
   BaseStationP.UartPacket -> Serial;
   BaseStationP.UartAMPacket -> Serial;
   
