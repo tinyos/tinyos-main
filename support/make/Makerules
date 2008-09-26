@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makerules,v 1.5 2007-04-11 21:07:56 idgay Exp $
+#$Id: Makerules,v 1.6 2008-09-26 20:13:58 klueska Exp $
 
 # @author Cory Sharp <cssharp@eecs.berkeley.edu>
 
@@ -49,7 +49,9 @@ TINYOS_MAKELOCAL ?= $(TINYOS_MAKE_PATH)/Makelocal
 TINYOS_MAKEDEFAULTS ?= $(TINYOS_MAKE_PATH)/Makedefaults
 
 #  Allow users to specify additional directories to find TOSMake files.
-TOSMAKE_PATH += $(TINYOS_MAKE_PATH)
+TOSMAKE_TEMP_PATH := $(TOSMAKE_PATH)
+TOSMAKE_PATH = $(TINYOS_MAKE_PATH) 
+TOSMAKE_PATH += $(TOSMAKE_TEMP_PATH)
 
 #  Save makecmdgoals (a read only var) to goals so that we can modify it.
 GOALS += $(MAKECMDGOALS)
