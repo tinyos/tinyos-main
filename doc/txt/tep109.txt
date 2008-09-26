@@ -5,12 +5,9 @@ Sensors and Sensor Boards
 :TEP: 109
 :Group: Core Working Group 
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Author: David Gay, Philip Levis, Wei Hong, Joe Polastre, and Gilman Tolle
-
-:Draft-Created: 10-Jun-2006
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
