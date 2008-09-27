@@ -1,4 +1,4 @@
-/* $Id: CompareBit.nc,v 1.2 2008-06-04 04:30:41 regehr Exp $ */
+/* $Id: CompareBit.nc,v 1.3 2008-09-27 17:00:54 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -25,18 +25,20 @@
  */
 
 /** Link estimator asks the routing engine if this entry
- * should be inserted into the neighbor table given the
- * white bit. The return value is the "pin bit" - if true
+ * should be inserted into the neighbor table if the
+ * white bit on a link is set but there is no room for the link
+ * on the link table. The return value is the "pin bit" - if true
  * insert into the neighbor table. In the reference implementation
  * the router will return true if the path through the source
  * will be better than a path through at least one current neighbor.
  @ author Omprakash Gnawali
  @ Created: September 16, 2006
- @date   $Date: 2008-06-04 04:30:41 $
+ @date   $Date: 2008-09-27 17:00:54 $
  */
 
 interface CompareBit {
 
   /* should the source of this message be inserted into the neighbor table? */
-   event bool shouldInsert(message_t * ONE msg, void* COUNT_NOK(len) payload, uint8_t len, bool white_bit);
+  /* expect to be called only for links with the white bit set */
+   event bool shouldInsert(message_t * ONE msg, void* COUNT_NOK(len) payload, uint8_t len);
 }

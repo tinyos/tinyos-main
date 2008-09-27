@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.8 2008-07-10 19:01:00 idgay Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.9 2008-09-27 17:00:54 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -644,14 +644,20 @@ implementation {
 	    initNeighborIdx(nidx, ll_addr);
 	  } else {
 	    dbg("LI", "No room in the table\n");
-	    if (signal CompareBit.shouldInsert(msg, 
-					       call Packet.getPayload(msg, call Packet.payloadLength(msg)),
-					       call Packet.payloadLength(msg),
-					       call LinkPacketMetadata.highChannelQuality(msg))) {
-	      nidx = findRandomNeighborIdx();
-	      if (nidx != INVALID_RVAL) {
-		signal LinkEstimator.evicted(NeighborTable[nidx].ll_addr);
-		initNeighborIdx(nidx, ll_addr);
+
+	    /* if the white bit is set, lets ask the router if the path through
+	       this link is better than at least one known path - if so
+	       lets insert this link into the table.
+	    */
+	    if (call LinkPacketMetadata.highChannelQuality(msg)) {
+	      if (signal CompareBit.shouldInsert(msg, 
+						 call Packet.getPayload(msg, call Packet.payloadLength(msg)),
+						 call Packet.payloadLength(msg))) {
+		nidx = findRandomNeighborIdx();
+		if (nidx != INVALID_RVAL) {
+		  signal LinkEstimator.evicted(NeighborTable[nidx].ll_addr);
+		  initNeighborIdx(nidx, ll_addr);
+		}
 	      }
 	    }
 	  }
