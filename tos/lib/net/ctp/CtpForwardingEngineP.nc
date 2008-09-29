@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.16 2008-08-15 21:57:31 scipio Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.17 2008-09-29 19:24:37 gnawali Exp $ */
 /*
  * Copyright (c) 2008 Stanford University.
  * All rights reserved.
@@ -124,7 +124,7 @@
 
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-08-15 21:57:31 $
+ *  @date   $Date: 2008-09-29 19:24:37 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -576,7 +576,7 @@ implementation {
 	// two is different.
         if (qe->client < CLIENT_COUNT) { // Client packet
 	  clientPtrs[qe->client] = qe;
-	  signal Send.sendDone[qe->client](msg, FAIL);
+	  signal Send.sendDone[qe->client](msg, SUCCESS);
 	  call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
 					   call CollectionPacket.getSequenceNumber(msg), 
 					   call CollectionPacket.getOrigin(msg), 
