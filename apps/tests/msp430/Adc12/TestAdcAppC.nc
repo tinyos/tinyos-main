@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2007-06-25 15:43:37 $
+ * $Revision: 1.3 $
+ * $Date: 2008-09-29 15:51:23 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -94,7 +94,7 @@ implementation
 
   // Multi, none
   components new TestAdcMultiC(CONFIG_AVCC,
-                     SUPPLY_VOLTAGE_HALF_CHANNEL, REFERENCE_AVcc_AVss) as TestMulti1,
+                     TEMPERATURE_DIODE_CHANNEL, REFERENCE_AVcc_AVss) as TestMulti1,
              new Msp430Adc12ClientC() as Wrapper4;
 
   TestMulti1 -> MainC.Boot;
@@ -104,7 +104,7 @@ implementation
 
   // Multi, RefVolt
   components new TestAdcMultiC(CONFIG_VREF,
-                      SUPPLY_VOLTAGE_HALF_CHANNEL, REFERENCE_VREFplus_AVss) as TestMulti2,
+                      TEMPERATURE_DIODE_CHANNEL, REFERENCE_VREFplus_AVss) as TestMulti2,
              new Msp430Adc12ClientAutoRVGC() as Wrapper5;
 
   TestMulti2 -> MainC.Boot;

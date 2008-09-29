@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-06-23 20:25:14 $
+ * $Revision: 1.4 $
+ * $Date: 2008-09-29 15:51:23 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -66,10 +66,12 @@ implementation
 {
   
 #define BUFFER_SIZE 100
+#define NUM_REPETITIONS 5
   const msp430adc12_channel_config_t config = {inch, sref, ref2_5v, adc12ssel, adc12div, sht, sampcon_ssel, sampcon_id};
   adc12memctl_t memCtl = {inch2, sref2};
   norace uint8_t state;
   uint16_t buffer[BUFFER_SIZE];
+  norace uint8_t count = 0;
   void task getData();
 
   void task signalFailure()
@@ -102,7 +104,7 @@ implementation
 
   event void Boot.booted()
   {
-    state = 0;
+    count = NUM_REPETITIONS;
     post getData();
   }
 
@@ -119,11 +121,15 @@ implementation
 
   async event void MultiChannel.dataReady(uint16_t *buf, uint16_t numSamples)
   {
-    if (assertData(buf, numSamples) && state++ == 0)
-      post signalSuccess();
-    else
+    if (!assertData(buf, numSamples)){
       post signalFailure();
-    call Resource.release();
+    } else if (count){
+      count--;
+      call MultiChannel.getData();
+    } else {
+      post signalSuccess();
+      call Resource.release();
+    }
   }
 
   command error_t Notify.enable(){}

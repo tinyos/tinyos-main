@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-06-23 20:25:14 $
+ * $Revision: 1.4 $
+ * $Date: 2008-09-29 15:51:23 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -62,11 +62,19 @@ generic module TestAdcSingleC(
 implementation
 {
 #define BUFFER_SIZE 100
+#define NUM_REPETITIONS 5
   const msp430adc12_channel_config_t config = {inch, sref, ref2_5v, adc12ssel, adc12div, sht, sampcon_ssel, sampcon_id};
-  uint8_t state;
-  norace uint8_t numDone;
+  norace uint8_t state;
+  norace uint8_t count = 0;
   uint16_t buffer[BUFFER_SIZE];
   void task getData();
+  enum {
+    SINGLE_DATA,
+    SINGLE_DATA_REPEAT,
+    MULTIPLE_DATA,
+    MULTIPLE_DATA_REPEAT,
+  };
+
 
   void task signalFailure()
   {
@@ -83,7 +91,7 @@ implementation
 
   event void Boot.booted()
   {
-    state = 0;
+    state = SINGLE_DATA;
     post getData();
   }
 
@@ -99,36 +107,52 @@ implementation
   
   event void Resource.granted()
   {
+    count = NUM_REPETITIONS;
     switch(state)
     {
-      case 0: state++;
-              if (call SingleChannel.configureSingleRepeat(&config, 0) == SUCCESS)
-                call SingleChannel.getData();
-              break;
-      case 1: state++;
+      case SINGLE_DATA: 
               if (call SingleChannel.configureSingle(&config) == SUCCESS)
                 call SingleChannel.getData();
               break;
-      case 2: state++;
-              if (call SingleChannel.configureMultiple(&config, buffer, BUFFER_SIZE, 0) == SUCCESS)
+      case SINGLE_DATA_REPEAT: 
+              if (call SingleChannel.configureSingleRepeat(&config, 10) == SUCCESS)
                 call SingleChannel.getData();
               break;
-      case 3: state++;
-              if (call SingleChannel.configureMultipleRepeat(&config, buffer, 16, 0) == SUCCESS)
+      case MULTIPLE_DATA: 
+              if (call SingleChannel.configureMultiple(&config, buffer, BUFFER_SIZE, 10) == SUCCESS)
+                call SingleChannel.getData();
+              break;
+      case MULTIPLE_DATA_REPEAT: 
+              if (call SingleChannel.configureMultipleRepeat(&config, buffer, 16, 10) == SUCCESS)
                 call SingleChannel.getData();
               break;
       default: call Resource.release();
-              if (numDone == state)
-                signal Notify.notify(TRUE);
+              signal Notify.notify(TRUE);
               break;
     }
   }
 
   async event error_t SingleChannel.singleDataReady(uint16_t data)
   { 
-    numDone++;
     assertData(&data, 1);
+    switch(state)
+    {
+      case SINGLE_DATA: 
+              if (count){
+                count--;
+                call SingleChannel.getData();
+                return SUCCESS;
+              }
+              break;
+      case SINGLE_DATA_REPEAT:
+              if (count){
+                count--;
+                return SUCCESS;
+              }
+              break;
+    }
     call Resource.release();
+    state++;
     post getData();
     return FAIL;
   }
@@ -136,9 +160,24 @@ implementation
     
   async event uint16_t* SingleChannel.multipleDataReady(uint16_t *buf, uint16_t length)
   {
-    numDone++;
     assertData(buf, length);
+    switch(state)
+    {
+      case MULTIPLE_DATA: 
+              if (count){
+                count--;
+                call SingleChannel.getData();
+                return 0;
+              }
+              break;
+      case MULTIPLE_DATA_REPEAT:
+              if (count){
+                count--;
+                return buf;
+              }
+    }   
     call Resource.release();
+    state++;
     post getData();
     return 0;
   }
