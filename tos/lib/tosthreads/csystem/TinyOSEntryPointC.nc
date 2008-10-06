@@ -35,6 +35,12 @@
  
 #include "tosthread.h"
 
+#ifdef DYNTHREADS 
+  #define AT_SPONTANEOUS	@spontaneous()
+#else
+  #define AT_SPONTANEOUS
+#endif
+
 configuration TinyOSEntryPointC {
 }
 implementation {

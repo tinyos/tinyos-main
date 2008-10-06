@@ -40,4 +40,5 @@ interface Thread {
   command error_t resume();
   command error_t sleep(uint32_t milli);
   event void run(void* arg);
+  command error_t join();
 }  

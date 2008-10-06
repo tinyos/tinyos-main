@@ -38,64 +38,64 @@ module CLinkedListP {
   uses interface LinkedList;
 }
 implementation { 
-  void linked_list_init(linked_list_t* l) @C() @spontaneous() {  
+  void linked_list_init(linked_list_t* l) @C() AT_SPONTANEOUS {  
     call LinkedList.init(l);
   }
-  void linked_list_clear(linked_list_t* l) @C() @spontaneous() { 
+  void linked_list_clear(linked_list_t* l) @C() AT_SPONTANEOUS { 
     call LinkedList.clear(l);
   }
-  uint8_t linked_list_size(linked_list_t* l) @C() @spontaneous() { 
+  uint8_t linked_list_size(linked_list_t* l) @C() AT_SPONTANEOUS { 
     return call LinkedList.size(l);
   }
-  error_t linked_list_addFirst(linked_list_t* l, list_element_t* e) @C() @spontaneous() { 
+  error_t linked_list_addFirst(linked_list_t* l, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.addFirst(l, e);
   }
-  list_element_t* linked_list_getFirst(linked_list_t* l) @C() @spontaneous() { 
+  list_element_t* linked_list_getFirst(linked_list_t* l) @C() AT_SPONTANEOUS { 
     return call LinkedList.getFirst(l);
   }
-  list_element_t* linked_list_removeFirst(linked_list_t* l) @C() @spontaneous() { 
+  list_element_t* linked_list_removeFirst(linked_list_t* l) @C() AT_SPONTANEOUS { 
     return call LinkedList.removeFirst(l);
   }
-  error_t linked_list_addLast(linked_list_t* l, list_element_t* e) @C() @spontaneous() { 
+  error_t linked_list_addLast(linked_list_t* l, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.addLast(l, e);
   }
-  list_element_t* linked_list_getLast(linked_list_t* l) @C() @spontaneous() { 
+  list_element_t* linked_list_getLast(linked_list_t* l) @C() AT_SPONTANEOUS { 
     return call LinkedList.getLast(l);
   }
-  list_element_t* linked_list_removeLast(linked_list_t* l) @C() @spontaneous() { 
+  list_element_t* linked_list_removeLast(linked_list_t* l) @C() AT_SPONTANEOUS { 
     return call LinkedList.removeLast(l);
   }
-  error_t linked_list_addAt(linked_list_t* l, list_element_t* e, uint8_t i) @C() @spontaneous() { 
+  error_t linked_list_addAt(linked_list_t* l, list_element_t* e, uint8_t i) @C() AT_SPONTANEOUS { 
     return call LinkedList.addAt(l, e, i);
   }
-  list_element_t* linked_list_getAt(linked_list_t* l, uint8_t i) @C() @spontaneous() { 
+  list_element_t* linked_list_getAt(linked_list_t* l, uint8_t i) @C() AT_SPONTANEOUS { 
     return call LinkedList.getAt(l, i);
   }
-  list_element_t* linked_list_removeAt(linked_list_t* l, uint8_t i) @C() @spontaneous() { 
+  list_element_t* linked_list_removeAt(linked_list_t* l, uint8_t i) @C() AT_SPONTANEOUS { 
     return call LinkedList.removeAt(l, i);
   }  
-  error_t linked_list_addAfter(linked_list_t* l, list_element_t* first, list_element_t* second) @C() @spontaneous() { 
+  error_t linked_list_addAfter(linked_list_t* l, list_element_t* first, list_element_t* second) @C() AT_SPONTANEOUS { 
     return call LinkedList.addAfter(l, first, second);
   }
-  error_t linked_list_addBefore(linked_list_t* l, list_element_t* first, list_element_t* e) @C() @spontaneous() { 
+  error_t linked_list_addBefore(linked_list_t* l, list_element_t* first, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.addBefore(l, first, e);
   }
-  list_element_t* linked_list_getAfter(linked_list_t* l, list_element_t* e) @C() @spontaneous() { 
+  list_element_t* linked_list_getAfter(linked_list_t* l, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.getAfter(l, e);
   }  
-  list_element_t* linked_list_getBefore(linked_list_t* l, list_element_t* e) @C() @spontaneous() { 
+  list_element_t* linked_list_getBefore(linked_list_t* l, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.getBefore(l, e);
   }
-  list_element_t* linked_list_remove(linked_list_t* l, list_element_t* e) @C() @spontaneous() { 
+  list_element_t* linked_list_remove(linked_list_t* l, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.remove(l, e);
   }  
-  list_element_t* linked_list_removeBefore(linked_list_t* l, list_element_t* e) @C() @spontaneous() { 
+  list_element_t* linked_list_removeBefore(linked_list_t* l, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.removeBefore(l, e);
   }  
-  list_element_t* linked_list_removeAfter(linked_list_t* l, list_element_t* e) @C() @spontaneous() { 
+  list_element_t* linked_list_removeAfter(linked_list_t* l, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.removeAfter(l, e);
   }  
-  uint8_t linked_list_indexOf(linked_list_t* l, list_element_t* e) @C() @spontaneous() { 
+  uint8_t linked_list_indexOf(linked_list_t* l, list_element_t* e) @C() AT_SPONTANEOUS { 
     return call LinkedList.indexOf(l, e);
   }
 }

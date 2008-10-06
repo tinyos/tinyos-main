@@ -42,19 +42,22 @@ module CThreadP {
 }
 implementation {
 
-  error_t tosthread_create(tosthread_t* t, void (*start_routine)(void*), void* arg, uint16_t stack_size) @C() @spontaneous() {
+  error_t tosthread_create(tosthread_t* t, void (*start_routine)(void*), void* arg, uint16_t stack_size) @C() AT_SPONTANEOUS {
     return call DynamicThread.create(t, start_routine, arg, stack_size);
   }
-  error_t tosthread_destroy(tosthread_t* t) @C() @spontaneous() {
+  error_t tosthread_destroy(tosthread_t* t) @C() AT_SPONTANEOUS {
     return call DynamicThread.destroy(t);
   }
-  error_t tosthread_pause(tosthread_t* t) @C() @spontaneous() {
+  error_t tosthread_pause(tosthread_t* t) @C() AT_SPONTANEOUS {
     return call DynamicThread.pause(t);
   }
-  error_t tosthread_resume(tosthread_t* t) @C() @spontaneous() {
+  error_t tosthread_resume(tosthread_t* t) @C() AT_SPONTANEOUS {
     return call DynamicThread.resume(t);
   }
-  error_t tosthread_sleep(uint32_t milli) @C() @spontaneous() {
+  error_t tosthread_sleep(uint32_t milli) @C() AT_SPONTANEOUS {
     return call DynamicThread.sleep(milli);
+  }
+  error_t tosthread_join(tosthread_t* t) @C() AT_SPONTANEOUS {
+    return call DynamicThread.join(t);
   }
 }

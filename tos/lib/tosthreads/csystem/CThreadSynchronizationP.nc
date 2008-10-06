@@ -44,69 +44,69 @@ module CThreadSynchronizationP {
 }
 implementation {
   /******************** Mutex ***************************/
-  void mutex_init(mutex_t* m) @C() @spontaneous() {
+  void mutex_init(mutex_t* m) @C() AT_SPONTANEOUS {
     call Mutex.init(m);
   }
-  error_t mutex_lock(mutex_t* m) @C() @spontaneous() {
+  error_t mutex_lock(mutex_t* m) @C() AT_SPONTANEOUS {
     return call Mutex.lock(m);
   }
-  error_t mutex_unlock(mutex_t* m) @C() @spontaneous() {
+  error_t mutex_unlock(mutex_t* m) @C() AT_SPONTANEOUS {
     return call Mutex.unlock(m);
   }
   
   /******************** Semaphore ***************************/
-  void semaphore_reset(semaphore_t* s, uint8_t v) @C() @spontaneous() {
+  void semaphore_reset(semaphore_t* s, uint8_t v) @C() AT_SPONTANEOUS {
     call Semaphore.reset(s, v);
   }
-  error_t semaphore_acquire(semaphore_t* s) @C() @spontaneous() {
+  error_t semaphore_acquire(semaphore_t* s) @C() AT_SPONTANEOUS {
     return call Semaphore.acquire(s);
   }
-  error_t semaphore_release(semaphore_t* s) @C() @spontaneous() {
+  error_t semaphore_release(semaphore_t* s) @C() AT_SPONTANEOUS {
     return call Semaphore.release(s);
   }
   
   /******************** Barrier ***************************/
-  void barrier_reset(barrier_t* b, uint8_t count) @C() @spontaneous() {
+  void barrier_reset(barrier_t* b, uint8_t count) @C() AT_SPONTANEOUS {
     call Barrier.reset(b, count);
   }
-  void barrier_block(barrier_t* b) @C() @spontaneous() {
+  void barrier_block(barrier_t* b) @C() AT_SPONTANEOUS {
     call Barrier.block(b);
   }
-  bool barrier_isBlocking(barrier_t* b) @C() @spontaneous() {
+  bool barrier_isBlocking(barrier_t* b) @C() AT_SPONTANEOUS {
     return call Barrier.isBlocking(b);
   }
-  void condvar_init(condvar_t* c) @C() @spontaneous() {
+  void condvar_init(condvar_t* c) @C() AT_SPONTANEOUS {
     call ConditionVariable.init(c);
   }
   
   /******************** Condition Variable ***************************/
-  void condvar_wait(condvar_t* c, mutex_t* m) @C() @spontaneous() {
+  void condvar_wait(condvar_t* c, mutex_t* m) @C() AT_SPONTANEOUS {
     call ConditionVariable.wait(c, m);
   }
-  void condvar_signalNext(condvar_t* c) @C() @spontaneous() {
+  void condvar_signalNext(condvar_t* c) @C() AT_SPONTANEOUS {
     call ConditionVariable.signalNext(c);
   }
-  void condvar_signalAll(condvar_t* c) @C() @spontaneous() {
+  void condvar_signalAll(condvar_t* c) @C() AT_SPONTANEOUS {
     call ConditionVariable.signalAll(c);
   }
-  bool condvar_isBlocking(condvar_t* c) @C() @spontaneous() {
+  bool condvar_isBlocking(condvar_t* c) @C() AT_SPONTANEOUS {
     return call ConditionVariable.isBlocking(c);
   }
   
   /******************** Reference Counter ***************************/
-  void refcounter_init(refcounter_t* r) @C() @spontaneous() {
+  void refcounter_init(refcounter_t* r) @C() AT_SPONTANEOUS {
     call ReferenceCounter.init(r);
   }
-  void refcounter_increment(refcounter_t* r) @C() @spontaneous() {
+  void refcounter_increment(refcounter_t* r) @C() AT_SPONTANEOUS {
     call ReferenceCounter.increment(r);
   }
-  void refcounter_decrement(refcounter_t* r) @C() @spontaneous() {
+  void refcounter_decrement(refcounter_t* r) @C() AT_SPONTANEOUS {
     call ReferenceCounter.decrement(r);
   }
-  void refcounter_waitOnValue(refcounter_t* r, uint8_t count) @C() @spontaneous() {
+  void refcounter_waitOnValue(refcounter_t* r, uint8_t count) @C() AT_SPONTANEOUS {
     call ReferenceCounter.waitOnValue(r, count);
   }
-  uint8_t refcounter_count(refcounter_t* r) @C() @spontaneous() {
+  uint8_t refcounter_count(refcounter_t* r) @C() AT_SPONTANEOUS {
     return call ReferenceCounter.count(r);
   }
 }

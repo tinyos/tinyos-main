@@ -108,7 +108,7 @@ implementation {
     }
   }
 
-  int printfflush() @C() @spontaneous() {
+  int printfflush() @C() AT_SPONTANEOUS {
     call Barrier.block(&flushstart_barrier);
     call Barrier.reset(&flushstart_barrier, 2);
     call Barrier.block(&flushdone_barrier);

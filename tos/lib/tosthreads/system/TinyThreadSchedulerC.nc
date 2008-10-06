@@ -57,6 +57,9 @@ implementation {
   ThreadScheduler = Sched;
   Sched.McuSleep -> Sleep;
   
+  components BitArrayUtilsC;
+  Sched.BitArrayUtils -> BitArrayUtilsC;
+  
   components ThreadQueueC;
   Sched.ThreadQueue -> ThreadQueueC;
   

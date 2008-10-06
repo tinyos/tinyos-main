@@ -51,7 +51,7 @@ implementation {
     signal ThreadFunction.signalThreadRun(arg);
   }
   
-  command error_t Init.init() {
+  error_t init() {
     thread_info.next_thread = NULL;
     thread_info.id = thread_id;
     thread_info.init_block = NULL;
@@ -62,6 +62,14 @@ implementation {
     thread_info.start_arg_ptr = NULL;
     thread_info.syscall = NULL;
     return SUCCESS;
+  }
+  
+  command error_t Init.init() {
+    return init();
+  }
+  
+  async command error_t ThreadInfo.reset() {
+    return init();
   }
   
   async command thread_t* ThreadInfo.get() {

@@ -52,7 +52,7 @@ implementation {
 
   size_t malloc_heap[MALLOC_HEAP_SIZE];
 
-  void *tos_malloc (size_t size) @C() @spontaneous()
+  void *tos_malloc (size_t size) @C() AT_SPONTANEOUS
   {
     static char once = 0;
     size_t * heap_bottom = &(malloc_heap[MALLOC_HEAP_SIZE]);
@@ -103,7 +103,7 @@ implementation {
     return NULL;
   }
 
-  void tos_free (void *p) @C() @spontaneous()
+  void tos_free (void *p) @C() AT_SPONTANEOUS
   {
     size_t *t = (size_t*)p - 1;
     MARK_FREE (t);

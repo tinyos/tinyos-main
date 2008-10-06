@@ -42,16 +42,16 @@ module CSensirionSht11P {
   }
 }
 implementation {
-  error_t sensirionSht11_humidity_read(uint16_t* val) @C() @spontaneous() {
+  error_t sensirionSht11_humidity_read(uint16_t* val) @C() AT_SPONTANEOUS {
     return call Humidity.read(val);
   }
-  uint8_t sensirionSht11_humidity_getNumBits() @C() @spontaneous() {
+  uint8_t sensirionSht11_humidity_getNumBits() @C() AT_SPONTANEOUS {
     return call HumidityMetadata.getSignificantBits();
   }
-  error_t sensirionSht11_temperature_read(uint16_t* val) @C() @spontaneous() {
+  error_t sensirionSht11_temperature_read(uint16_t* val) @C() AT_SPONTANEOUS {
     return call Temperature.read(val);
   }
-  uint8_t sensirionSht11_temperature_getNumBits() @C() @spontaneous() {
+  uint8_t sensirionSht11_temperature_getNumBits() @C() AT_SPONTANEOUS {
     return call TemperatureMetadata.getSignificantBits();
   }
 }

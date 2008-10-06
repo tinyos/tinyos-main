@@ -47,8 +47,8 @@ implementation {
   BlockingResource = BlockingResourceP;
   Resource = BlockingResourceP;
   
-  components ThreadTimersC;
-  BlockingResourceP.Timer -> ThreadTimersC;
+  components ThreadSleepC;
+  BlockingResourceP.ThreadSleep -> ThreadSleepC;
   
   components SystemCallC;
   components TinyThreadSchedulerC;

@@ -54,69 +54,69 @@ implementation {
     return call CCollectionId.fetch(id);
   }
 
-  error_t collectionSetCollectionId(uint8_t clientid, collection_id_t collectionid) @C() @spontaneous() {
+  error_t collectionSetCollectionId(uint8_t clientid, collection_id_t collectionid) @C() AT_SPONTANEOUS {
     return call CCollectionId.set(clientid, collectionid);
   }
   
-  error_t collectionRoutingStart() @C() @spontaneous() {
+  error_t collectionRoutingStart() @C() AT_SPONTANEOUS {
     return call RoutingControl.start();
   }
-  error_t collectionRoutingStop() @C() @spontaneous() {
+  error_t collectionRoutingStop() @C() AT_SPONTANEOUS {
     return call RoutingControl.stop();
   }
 
-  error_t collectionReceive(message_t* m, uint32_t timeout, collection_id_t id) @C() @spontaneous() {
+  error_t collectionReceive(message_t* m, uint32_t timeout, collection_id_t id) @C() AT_SPONTANEOUS {
     return call BlockingReceive.receive[id](m, timeout);
   }
-  error_t collectionSnoop(message_t* m, uint32_t timeout, collection_id_t id) @C() @spontaneous() {
+  error_t collectionSnoop(message_t* m, uint32_t timeout, collection_id_t id) @C() AT_SPONTANEOUS {
     return call BlockingSnoop.receive[id](m, timeout);
   }
-  error_t collectionSend(message_t* msg, uint8_t len, uint8_t id) @C() @spontaneous() {
+  error_t collectionSend(message_t* msg, uint8_t len, uint8_t id) @C() AT_SPONTANEOUS {
     return call BlockingSend.send[id](msg, len);
   }
  
-  void collectionClear(message_t* msg) @C() @spontaneous() {
+  void collectionClear(message_t* msg) @C() AT_SPONTANEOUS {
     call Packet.clear(msg);
   }
-  uint8_t collectionGetPayloadLength(message_t* msg) @C() @spontaneous() {
+  uint8_t collectionGetPayloadLength(message_t* msg) @C() AT_SPONTANEOUS {
     return call Packet.payloadLength(msg);
   }
-  void collectionSetPayloadLength(message_t* msg, uint8_t len) @C() @spontaneous() {
+  void collectionSetPayloadLength(message_t* msg, uint8_t len) @C() AT_SPONTANEOUS {
     call Packet.setPayloadLength(msg, len);
   }
-  uint8_t collectionMaxPayloadLength() @C() @spontaneous() {
+  uint8_t collectionMaxPayloadLength() @C() AT_SPONTANEOUS {
     return call Packet.maxPayloadLength();
   }
-  void* collectionGetPayload(message_t* msg, uint8_t len) @C() @spontaneous() {
+  void* collectionGetPayload(message_t* msg, uint8_t len) @C() AT_SPONTANEOUS {
     return call Packet.getPayload(msg, len);
   }
 
-  am_addr_t collectionGetOrigin(message_t* msg) @C() @spontaneous() {
+  am_addr_t collectionGetOrigin(message_t* msg) @C() AT_SPONTANEOUS {
     return call CollectionPacket.getOrigin(msg);
   }
-  void collectionSetOrigin(message_t* msg, am_addr_t addr) @C() @spontaneous() {
+  void collectionSetOrigin(message_t* msg, am_addr_t addr) @C() AT_SPONTANEOUS {
     call CollectionPacket.setOrigin(msg, addr);
   }
-  collection_id_t collectionGetType(message_t* msg) @C() @spontaneous() {
+  collection_id_t collectionGetType(message_t* msg) @C() AT_SPONTANEOUS {
     return call CollectionPacket.getType(msg);
   }
-  void collectionSetType(message_t* msg, collection_id_t id) @C() @spontaneous() {
+  void collectionSetType(message_t* msg, collection_id_t id) @C() AT_SPONTANEOUS {
     call CollectionPacket.setType(msg, id);
   }
-  uint8_t collectionGetSequenceNumber(message_t* msg) @C() @spontaneous() {
+  uint8_t collectionGetSequenceNumber(message_t* msg) @C() AT_SPONTANEOUS {
     return call CollectionPacket.getSequenceNumber(msg);
   }
-  void collectionSetSequenceNumber(message_t* msg, uint8_t seqno) @C() @spontaneous() {
+  void collectionSetSequenceNumber(message_t* msg, uint8_t seqno) @C() AT_SPONTANEOUS {
     call CollectionPacket.setSequenceNumber(msg, seqno);
   }
 
-  error_t collectionSetRoot() @C() @spontaneous() {
+  error_t collectionSetRoot() @C() AT_SPONTANEOUS {
     return call RootControl.setRoot();
   }
-  error_t collectionUnsetRoot() @C() @spontaneous() {
+  error_t collectionUnsetRoot() @C() AT_SPONTANEOUS {
     return call RootControl.unsetRoot();
   }
-  bool collectionIsRoot() @C() @spontaneous() {
+  bool collectionIsRoot() @C() AT_SPONTANEOUS {
     return call RootControl.isRoot();
   }
 }

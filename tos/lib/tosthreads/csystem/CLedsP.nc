@@ -39,40 +39,40 @@ module CLedsP {
   }
 }
 implementation {
-  void led0On() @C() @spontaneous(){
+  void led0On() @C() AT_SPONTANEOUS {
     call Leds.led0On();
   }
-  void led0Off() @C() @spontaneous(){
+  void led0Off() @C() AT_SPONTANEOUS {
     call Leds.led0Off();
   }
-  void led0Toggle() @C() @spontaneous(){
+  void led0Toggle() @C() AT_SPONTANEOUS{
     call Leds.led0Toggle();
   }
 
-  void led1On() @C() @spontaneous(){
+  void led1On() @C() AT_SPONTANEOUS{
     call Leds.led1On();
   }
-  void led1Off() @C() @spontaneous(){
+  void led1Off() @C() AT_SPONTANEOUS{
     call Leds.led1Off();
   }
-  void led1Toggle() @C() @spontaneous(){
+  void led1Toggle() @C() AT_SPONTANEOUS{
     call Leds.led1Toggle();
   }
   
-  void led2On() @C() @spontaneous(){
+  void led2On() @C() AT_SPONTANEOUS{
     call Leds.led2On();
   }
-  void led2Off() @C() @spontaneous(){
+  void led2Off() @C() AT_SPONTANEOUS{
     call Leds.led2Off();
   }
-  void led2Toggle() @C() @spontaneous(){
+  void led2Toggle() @C() AT_SPONTANEOUS{
     call Leds.led2Toggle();
   }
 
-  uint8_t getLeds() @C() @spontaneous(){
+  uint8_t getLeds() @C() AT_SPONTANEOUS{
     return call Leds.get();
   }
-  void setLeds(uint8_t val) @C() @spontaneous(){
+  void setLeds(uint8_t val) @C() AT_SPONTANEOUS{
     call Leds.set(val);
   }
 }

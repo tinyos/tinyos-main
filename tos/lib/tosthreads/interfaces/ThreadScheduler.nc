@@ -48,4 +48,5 @@ interface ThreadScheduler {
   async command error_t interruptCurrentThread();
 
   async command error_t wakeupThread(thread_id_t id);
+  async command error_t joinThread(thread_id_t id);
 }

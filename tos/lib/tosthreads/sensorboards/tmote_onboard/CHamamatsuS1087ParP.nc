@@ -42,13 +42,13 @@ module CHamamatsuS1087ParP {
 }
 implementation {
 
-  error_t hamamatsuS1087_par_read(uint16_t* val) @C() @spontaneous() {
+  error_t hamamatsuS1087_par_read(uint16_t* val) @C() AT_SPONTANEOUS {
     return call Read.read(val);
   }
-  error_t hamamatsuS1087_par_readStream(uint32_t* usPeriod, uint16_t* buf, uint16_t count) @C() @spontaneous() {
+  error_t hamamatsuS1087_par_readStream(uint32_t* usPeriod, uint16_t* buf, uint16_t count) @C() AT_SPONTANEOUS {
     return call ReadStream.read(usPeriod, buf, count);                                           
   }                                           
-  uint8_t hamamatsuS1087_par_getNumBits() @C() @spontaneous() {
+  uint8_t hamamatsuS1087_par_getNumBits() @C() AT_SPONTANEOUS {
     return call DeviceMetadata.getSignificantBits();
   }
 }

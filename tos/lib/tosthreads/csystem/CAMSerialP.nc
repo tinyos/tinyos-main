@@ -36,76 +36,76 @@ module CAMSerialP {
   }
 }
 implementation {
-  error_t amSerialStart() @C() @spontaneous() { 
+  error_t amSerialStart() @C() AT_SPONTANEOUS { 
     return call BlockingStdControl.start();
   }
-  error_t amSerialStop() @C() @spontaneous() { 
+  error_t amSerialStop() @C() AT_SPONTANEOUS { 
     return call BlockingStdControl.stop();
   }
-  error_t amSerialReceive(message_t* m, uint32_t timeout, am_id_t amId) @C() @spontaneous() {
+  error_t amSerialReceive(message_t* m, uint32_t timeout, am_id_t amId) @C() AT_SPONTANEOUS {
     if(amId == AM_RECEIVE_FROM_ANY)
       return call BlockingReceiveAny.receive(m, timeout);
     else 
       return call BlockingReceive.receive[amId](m, timeout);
   }
-  error_t amSerialSend(am_addr_t addr, message_t* msg, uint8_t len, am_id_t amId) @C() @spontaneous() {
+  error_t amSerialSend(am_addr_t addr, message_t* msg, uint8_t len, am_id_t amId) @C() AT_SPONTANEOUS {
     return call Send.send[amId](addr, msg, len);
   }
-  am_addr_t amSerialLocalAddress() @C() @spontaneous() {
+  am_addr_t amSerialLocalAddress() @C() AT_SPONTANEOUS {
     return call AMPacket.address();
   }
-  am_group_t amSerialGetLocalGroup() @C() @spontaneous() {
+  am_group_t amSerialGetLocalGroup() @C() AT_SPONTANEOUS {
     return call AMPacket.localGroup();
   }
-  am_addr_t amSerialGetDestination(message_t* amsg) @C() @spontaneous() {
+  am_addr_t amSerialGetDestination(message_t* amsg) @C() AT_SPONTANEOUS {
     return call AMPacket.destination(amsg);
   }
-  am_addr_t amSerialGetSource(message_t* amsg) @C() @spontaneous() {
+  am_addr_t amSerialGetSource(message_t* amsg) @C() AT_SPONTANEOUS {
     return call AMPacket.source(amsg);
   }
-  void amSerialSetDestination(message_t* amsg, am_addr_t addr) @C() @spontaneous() {
+  void amSerialSetDestination(message_t* amsg, am_addr_t addr) @C() AT_SPONTANEOUS {
     call AMPacket.setDestination(amsg, addr);
   }
-  void amSerialSetSource(message_t* amsg, am_addr_t addr) @C() @spontaneous() {
+  void amSerialSetSource(message_t* amsg, am_addr_t addr) @C() AT_SPONTANEOUS {
     call AMPacket.setSource(amsg, addr);
   }
-  bool amSerialIsForMe(message_t* amsg) @C() @spontaneous() {
+  bool amSerialIsForMe(message_t* amsg) @C() AT_SPONTANEOUS {
     return call AMPacket.isForMe(amsg);
   }
-  am_id_t amSerialGetType(message_t* amsg) @C() @spontaneous() {
+  am_id_t amSerialGetType(message_t* amsg) @C() AT_SPONTANEOUS {
     return call AMPacket.type(amsg);
   }
-  void amSerialSetType(message_t* amsg, am_id_t t) @C() @spontaneous() {
+  void amSerialSetType(message_t* amsg, am_id_t t) @C() AT_SPONTANEOUS {
     call AMPacket.setType(amsg, t);
   }
-  am_group_t amSerialGetGroup(message_t* amsg) @C() @spontaneous() {
+  am_group_t amSerialGetGroup(message_t* amsg) @C() AT_SPONTANEOUS {
     return call AMPacket.group(amsg);
   }
-  void amSerialSetGroup(message_t* amsg, am_group_t grp) @C() @spontaneous() {
+  void amSerialSetGroup(message_t* amsg, am_group_t grp) @C() AT_SPONTANEOUS {
     call AMPacket.setGroup(amsg, grp);
   }
-  void serialClear(message_t* msg) @C() @spontaneous() {
+  void serialClear(message_t* msg) @C() AT_SPONTANEOUS {
     call Packet.clear(msg);
   }
-  uint8_t serialGetPayloadLength(message_t* msg) @C() @spontaneous() {
+  uint8_t serialGetPayloadLength(message_t* msg) @C() AT_SPONTANEOUS {
     return call Packet.payloadLength(msg);
   }
-  void  serialSetPayloadLength(message_t* msg, uint8_t len) @C() @spontaneous() {
+  void  serialSetPayloadLength(message_t* msg, uint8_t len) @C() AT_SPONTANEOUS {
     call Packet.setPayloadLength(msg, len);
   }
-  uint8_t serialMaxPayloadLength() @C() @spontaneous() {
+  uint8_t serialMaxPayloadLength() @C() AT_SPONTANEOUS {
     return call Packet.maxPayloadLength();
   }
-  void* serialGetPayload(message_t* msg, uint8_t len) @C() @spontaneous() {
+  void* serialGetPayload(message_t* msg, uint8_t len) @C() AT_SPONTANEOUS {
     return call Packet.getPayload(msg, len);
   }
-  error_t serialRequestAck( message_t* msg ) @C() @spontaneous() {
+  error_t serialRequestAck( message_t* msg ) @C() AT_SPONTANEOUS {
     return call PacketAcknowledgements.requestAck(msg);
   }
-  error_t serialNoAck( message_t* msg ) @C() @spontaneous() {
+  error_t serialNoAck( message_t* msg ) @C() AT_SPONTANEOUS {
     return call PacketAcknowledgements.noAck(msg);
   }
-  bool serialWasAcked(message_t* msg) @C() @spontaneous() {
+  bool serialWasAcked(message_t* msg) @C() AT_SPONTANEOUS {
     return call PacketAcknowledgements.wasAcked(msg);
   }
 }

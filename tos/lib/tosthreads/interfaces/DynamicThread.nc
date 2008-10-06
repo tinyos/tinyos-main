@@ -102,4 +102,17 @@ interface DynamicThread {
    *						  	FAIL		- 	The thread could not be put to sleep
    */
   command error_t sleep(uint32_t milli);
+  
+  /**
+   *  join(tosthread_t* t)
+   *
+   *  This function bocks until the thread passed as a parameter has completed
+   *  
+   *  @param id 			The handle to the thread to block on
+   *  @return				An error code indicating whether the thread could be waited on or not
+   *							SUCCESS		-	The thread has been waited on and is now completed
+   *							EALREADY	-	The thread we are trying to wait on has already completed
+   *						  	FAIL		- 	The thread could not waited on
+   */
+  command error_t join(tosthread_t* id);
 }  

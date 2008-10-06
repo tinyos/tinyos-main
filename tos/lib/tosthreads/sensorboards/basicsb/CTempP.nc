@@ -40,10 +40,10 @@ module CTempP {
   }
 }
 implementation {
-  error_t temp_read(uint16_t* val) @C() @spontaneous() {
+  error_t temp_read(uint16_t* val) @C() AT_SPONTANEOUS {
     return call BlockingRead.read(val);
   }
-  error_t temp_readStream(uint32_t* usPeriod, uint16_t* buf, uint16_t count) @C() @spontaneous() {
+  error_t temp_readStream(uint32_t* usPeriod, uint16_t* buf, uint16_t count) @C() AT_SPONTANEOUS {
     return call BlockingReadStream.read(usPeriod, buf, count);
   }
 }

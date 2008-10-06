@@ -38,25 +38,25 @@
 
 module CQueueC {}
 implementation { 
-  void queue_init(queue_t* q) @C() @spontaneous() {  
+  void queue_init(queue_t* q) @C() AT_SPONTANEOUS {  
     linked_list_init( &(q->l) );
   }
-  void queue_clear(queue_t* q) @C() @spontaneous() { 
+  void queue_clear(queue_t* q) @C() AT_SPONTANEOUS { 
     linked_list_clear( &(q->l) );
   }
-  error_t queue_enqueue(queue_t* q, queue_element_t* e) @C() @spontaneous() { 
+  error_t queue_enqueue(queue_t* q, queue_element_t* e) @C() AT_SPONTANEOUS { 
     return linked_list_addLast(&(q->l), (list_element_t*)e);
   }
-  queue_element_t* queue_dequeue(queue_t* q) @C() @spontaneous() { 
+  queue_element_t* queue_dequeue(queue_t* q) @C() AT_SPONTANEOUS { 
     return (queue_element_t*)linked_list_removeFirst( &(q->l) );
   }
-  queue_element_t* queue_remove(queue_t* q, queue_element_t* e) @C() @spontaneous() { 
+  queue_element_t* queue_remove(queue_t* q, queue_element_t* e) @C() AT_SPONTANEOUS { 
     return (queue_element_t*)linked_list_remove(&(q->l), (list_element_t*)e);
   }
-  uint8_t queue_size(queue_t* q) @C() @spontaneous() { 
+  uint8_t queue_size(queue_t* q) @C() AT_SPONTANEOUS { 
     return linked_list_size( &(q->l) );
   }
-  bool queue_is_empty(queue_t* q) @C() @spontaneous() { 
+  bool queue_is_empty(queue_t* q) @C() AT_SPONTANEOUS { 
     return (linked_list_size( &(q->l) ) == 0);
   }
 }

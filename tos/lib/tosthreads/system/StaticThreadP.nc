@@ -54,7 +54,7 @@ implementation {
     thread_info->start_arg_ptr = arg; 
     thread_info->mutex_count = 0;
     thread_info->next_thread = NULL;
-    return call ThreadScheduler.initThread(id);
+    return ecombine(call ThreadInfo.reset[id](), call ThreadScheduler.initThread(id));
   }
   
   command error_t Thread.start[uint8_t id](void* arg) {
@@ -87,6 +87,10 @@ implementation {
     return call ThreadSleep.sleep(milli);
   }
   
+  command error_t Thread.join[uint8_t id]() {
+    return call ThreadScheduler.joinThread(id);
+  }
+  
   event void ThreadFunction.signalThreadRun[uint8_t id](void *arg) {
     signal Thread.run[id](arg);
   }
@@ -97,6 +101,7 @@ implementation {
   
   default event void Thread.run[uint8_t id](void* arg) {}
   default async command thread_t* ThreadInfo.get[uint8_t id]() {return NULL;}
+  default async command error_t ThreadInfo.reset[uint8_t id]() {return FAIL;}
   default async event void ThreadNotification.justCreated[uint8_t id]() {}
   default async event void ThreadNotification.aboutToDestroy[uint8_t id]() {}
 

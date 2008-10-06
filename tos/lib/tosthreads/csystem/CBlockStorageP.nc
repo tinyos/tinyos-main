@@ -31,27 +31,27 @@ module CBlockStorageP {
 }
 
 implementation {
-  error_t volumeBlockRead(uint8_t volumeId, storage_addr_t addr, void* buf, storage_len_t* len) @C() @spontaneous()
+  error_t volumeBlockRead(uint8_t volumeId, storage_addr_t addr, void* buf, storage_len_t* len) @C() AT_SPONTANEOUS
   {
     return call BlockingBlock.read[volumeId](addr, buf, len);
   }
   
-  error_t volumeBlockWrite(uint8_t volumeId, storage_addr_t addr, void* buf, storage_len_t* len)  @C() @spontaneous()
+  error_t volumeBlockWrite(uint8_t volumeId, storage_addr_t addr, void* buf, storage_len_t* len)  @C() AT_SPONTANEOUS
   {
     return call BlockingBlock.write[volumeId](addr, buf, len);
   }
   
-  error_t volumeBlockCrc(uint8_t volumeId, storage_addr_t addr, storage_len_t* len, uint16_t crc, uint16_t *finalCrc) @C() @spontaneous()
+  error_t volumeBlockCrc(uint8_t volumeId, storage_addr_t addr, storage_len_t* len, uint16_t crc, uint16_t *finalCrc) @C() AT_SPONTANEOUS
   {
     return call BlockingBlock.computeCrc[volumeId](addr, len, crc, finalCrc);
   }
   
-  error_t volumeBlockErase(uint8_t volumeId) @C() @spontaneous()
+  error_t volumeBlockErase(uint8_t volumeId) @C() AT_SPONTANEOUS
   {
     return call BlockingBlock.erase[volumeId]();
   }
   
-  error_t volumeBlockSync(uint8_t volumeId) @C() @spontaneous()
+  error_t volumeBlockSync(uint8_t volumeId) @C() AT_SPONTANEOUS
   {
     return call BlockingBlock.sync[volumeId]();
   }

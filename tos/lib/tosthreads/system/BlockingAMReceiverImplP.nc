@@ -52,8 +52,8 @@ generic module BlockingAMReceiverImplP() {
 implementation {
   
   typedef struct params {
-    message_t* msg;
     uint32_t*  timeout;
+    message_t* msg;
     error_t    error;
   } params_t;
 

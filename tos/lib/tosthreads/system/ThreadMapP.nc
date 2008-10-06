@@ -50,11 +50,20 @@ implementation {
   async command thread_t* ThreadInfo.get[uint8_t id]() {
     return call StaticThreadInfo.get[id]();
   }
+  async command error_t ThreadInfo.reset[uint8_t id]() {
+    return call StaticThreadInfo.reset[id]();
+  }
   default async command thread_t* StaticThreadInfo.get[uint8_t id]() {
     return call DynamicThreadInfo.get[id]();
   }
+  default async command error_t StaticThreadInfo.reset[uint8_t id]() {
+    return call DynamicThreadInfo.reset[id]();
+  }
   default async command thread_t* DynamicThreadInfo.get[uint8_t id]() {
     return call StaticThreadInfo.get[id]();
+  }
+  default async command error_t DynamicThreadInfo.reset[uint8_t id]() {
+    return call StaticThreadInfo.reset[id]();
   }
   async event void ThreadCleanup.cleanup[uint8_t id]() {
     signal StaticThreadCleanup.cleanup[id]();

@@ -39,7 +39,7 @@ module CSineSensorP {
   }
 }
 implementation {
-  error_t sinesensor_read(uint16_t* val) @C() @spontaneous() {
+  error_t sinesensor_read(uint16_t* val) @C() AT_SPONTANEOUS {
     return call BlockingRead.read(val);
   }
 }

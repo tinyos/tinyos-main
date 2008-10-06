@@ -43,6 +43,7 @@ module TinyThreadSchedulerP {
     interface Boot as ThreadSchedulerBoot;
     interface ThreadInfo[uint8_t id];
     interface ThreadQueue;
+    interface BitArrayUtils;
     interface McuSleep;
     interface Leds;
     interface Timer<TMilli> as PreemptionAlarm;
@@ -138,8 +139,13 @@ implementation {
    * threads by the thread scheduler.
    */
    void stop(thread_t* t) {
+     int i;
      t->state = TOSTHREAD_STATE_INACTIVE;
      num_started_threads--;
+     for(i=0; i<TOSTHREAD_MAX_NUM_THREADS; i++) {
+       if(call BitArrayUtils.getBit(t->joinedOnMe, i))
+         call ThreadScheduler.wakeupThread(i);
+	 }
      if(num_started_threads == 1)
        call PreemptionAlarm.stop();
      signal ThreadCleanup.cleanup[t->id]();
@@ -178,6 +184,7 @@ implementation {
     thread_t* t = (call ThreadInfo.get[id]());
     t->state = TOSTHREAD_STATE_INACTIVE;
     t->init_block = current_thread->init_block;
+    call BitArrayUtils.clrArray(t->joinedOnMe, sizeof(t->joinedOnMe));
     PREPARE_THREAD(t, threadWrapper);
     return SUCCESS;
   }
@@ -230,6 +237,20 @@ implementation {
       }
       return FAIL;
     }
+  }
+  
+  async command error_t ThreadScheduler.joinThread(thread_id_t id) { 
+    thread_t* t = call ThreadInfo.get[id]();
+    atomic {
+      if(current_thread == tos_thread)
+        return FAIL;
+      if (t->state != TOSTHREAD_STATE_INACTIVE) {
+        call BitArrayUtils.setBit(t->joinedOnMe, current_thread->id);
+        call ThreadScheduler.suspendCurrentThread();
+        return SUCCESS;
+      }
+    }
+    return EALREADY;
   }
   
   async command error_t ThreadScheduler.wakeupThread(uint8_t id) {

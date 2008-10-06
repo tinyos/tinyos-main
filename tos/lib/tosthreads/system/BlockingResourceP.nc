@@ -41,12 +41,11 @@ generic module BlockingResourceP() {
     interface SystemCall;
     interface ThreadScheduler;
     interface Resource;
-    interface Timer<TMilli>[uint8_t id];
+    interface ThreadSleep;
   }
 }
 implementation {
   typedef struct params {
-    uint32_t* milli;
     error_t   error;
   } params_t;
   
@@ -108,11 +107,6 @@ implementation {
   }
   
   /************************* Timed Release *****************************/
-  void timerTask(syscall_t* s) {
-    params_t* p = s->params;
-    call Timer.startOneShot[s->thread->id](*(p->milli));
-  }    
-  
   command error_t BlockingResource.timedRelease(uint32_t milli) {
     syscall_t s;
     params_t p;
@@ -122,30 +116,17 @@ implementation {
       resource_call = &s;
     }
     
-    if(milli != 0) {
-      p.milli = &milli;
-      call SystemCall.start(timerTask, &s, INVALID_ID, &p);
-    }
-    else {
-      call SystemCall.start(releaseTask, &s, INVALID_ID, &p); 
-      if(p.error == SUCCESS)
-        call SystemCall.start(requestTask, &s, INVALID_ID, &p); 
-    }
+    if(milli != 0)
+      call ThreadSleep.sleep(milli);
+
+    call SystemCall.start(releaseTask, &s, INVALID_ID, &p); 
+    if(p.error == SUCCESS)
+      call SystemCall.start(requestTask, &s, INVALID_ID, &p); 
     
     atomic {
       resource_call = NULL;
       return p.error;
     }  
-  }
-  
-  event void Timer.fired[uint8_t id]() {
-    thread_t* t = call ThreadScheduler.threadInfo(id);
-    syscall_t* s = t->syscall;
-    params_t* p = t->syscall->params;
-    call SystemCall.start(releaseTask, s, INVALID_ID, p); 
-    if(p->error == SUCCESS)
-      call SystemCall.start(requestTask, s, INVALID_ID, p);   
-    else call SystemCall.finish(s); 
   }
   
   /************************* isOwner pass through *****************************/

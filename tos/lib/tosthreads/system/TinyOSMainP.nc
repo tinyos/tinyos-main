@@ -1,4 +1,4 @@
-// $Id: TinyOSMainP.nc,v 1.1 2008-06-12 14:02:47 klueska Exp $
+// $Id: TinyOSMainP.nc,v 1.2 2008-10-06 04:40:02 klueska Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: TinyOSMainP.nc,v 1.1 2008-06-12 14:02:47 klueska Exp $
+ * Date last modified:  $Id: TinyOSMainP.nc,v 1.2 2008-10-06 04:40:02 klueska Exp $
  *
  */
 
@@ -92,6 +92,10 @@ implementation {
     /* Spin in the TaskScheduler */
     call TaskScheduler.taskLoop();
     
+  }
+  
+  async command error_t ThreadInfo.reset() {
+    return FAIL;
   }
 
   async command thread_t* ThreadInfo.get() {

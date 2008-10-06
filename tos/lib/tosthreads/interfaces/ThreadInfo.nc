@@ -36,5 +36,6 @@
 #include "thread.h"
 
 interface ThreadInfo {
+  async command error_t reset();
   async command thread_t* get();
 }  

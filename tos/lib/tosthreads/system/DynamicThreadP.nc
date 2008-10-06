@@ -137,9 +137,16 @@ happy:
   command error_t DynamicThread.sleep(uint32_t milli) {
     return call ThreadSleep.sleep(milli);
   }
+  command error_t DynamicThread.join(tosthread_t* t) {
+    return call ThreadScheduler.joinThread(*t);
+  }
   
   async command thread_t* ThreadInfo.get[uint8_t id]() {
     atomic return thread_info[id - TOSTHREAD_NUM_STATIC_THREADS];
+  }
+  
+  async command error_t ThreadInfo.reset[uint8_t id]() {
+    return FAIL;
   }
   
   async event void ThreadCleanup.cleanup[uint8_t id]() {

@@ -94,7 +94,6 @@ struct syscall {
 };
 
 //This is a thread data structure
-//This structure is 43 bytes long...
 struct thread {
   //***** next_thread must be at first position in struct for casting purposes *******
   volatile struct thread* next_thread;  //Pointer to next thread for use in queues when blocked
@@ -103,6 +102,7 @@ struct thread {
   stack_ptr_t stack_ptr;                //Pointer to this threads stack
   volatile uint8_t state;               //Current state the thread is in
   volatile uint8_t mutex_count;         //A reference count of the number of mutexes held by this thread
+  uint8_t joinedOnMe[(TOSTHREAD_MAX_NUM_THREADS - 1) / 8 + 1]; //Bitmask of threads waiting for me to finish
   void (*start_ptr)(void*);             //Pointer to the start function of this thread
   void* start_arg_ptr;                  //Pointer to the argument passed as a parameter to the start function of this thread
   syscall_t* syscall;                   //Pointer to an instance of a system call

@@ -39,28 +39,28 @@ module CLogStorageP {
   }
 }
 implementation {
-  error_t volumeLogRead(uint8_t volumeId, void *buf, storage_len_t *len) @C() @spontaneous() {
+  error_t volumeLogRead(uint8_t volumeId, void *buf, storage_len_t *len) @C() AT_SPONTANEOUS {
     return call BlockingLog.read[volumeId](buf, len);
   }
-  storage_cookie_t volumeLogCurrentReadOffset(uint8_t volumeId) @C() @spontaneous() {
+  storage_cookie_t volumeLogCurrentReadOffset(uint8_t volumeId) @C() AT_SPONTANEOUS {
     return call BlockingLog.currentReadOffset[volumeId]();
   }
-  error_t volumeLogSeek(uint8_t volumeId, storage_cookie_t offset) @C() @spontaneous() {
+  error_t volumeLogSeek(uint8_t volumeId, storage_cookie_t offset) @C() AT_SPONTANEOUS {
     return call BlockingLog.seek[volumeId](offset);
   }
-  storage_len_t volumeLogGetSize(uint8_t volumeId) @C() @spontaneous() {
+  storage_len_t volumeLogGetSize(uint8_t volumeId) @C() AT_SPONTANEOUS {
     return call BlockingLog.getSize[volumeId]();
   }  
-  error_t volumeLogAppend(uint8_t volumeId, void* buf, storage_len_t *len, bool *recordsLost) @C() @spontaneous() {
+  error_t volumeLogAppend(uint8_t volumeId, void* buf, storage_len_t *len, bool *recordsLost) @C() AT_SPONTANEOUS {
     return call BlockingLog.append[volumeId](buf, len, recordsLost);
   }
-  storage_cookie_t volumeLogCurrentWriteOffset(uint8_t volumeId) @C() @spontaneous() {
+  storage_cookie_t volumeLogCurrentWriteOffset(uint8_t volumeId) @C() AT_SPONTANEOUS {
     return call BlockingLog.currentWriteOffset[volumeId]();
   }
-  error_t volumeLogErase(uint8_t volumeId) @C() @spontaneous() {
+  error_t volumeLogErase(uint8_t volumeId) @C() AT_SPONTANEOUS {
     return call BlockingLog.erase[volumeId]();
   }
-  error_t volumeLogSync(uint8_t volumeId) @C() @spontaneous() {
+  error_t volumeLogSync(uint8_t volumeId) @C() AT_SPONTANEOUS {
     return call BlockingLog.sync[volumeId]();
   }
 }

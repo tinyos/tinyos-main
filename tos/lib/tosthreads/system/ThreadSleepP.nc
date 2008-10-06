@@ -62,8 +62,20 @@ implementation {
     return SUCCESS;
   }
   
+  //Need to add a cancel command so that components like
+  //BlockingAMReceiverImplP can use the ThreadSleep interface
+  //directly instead of reusing the underlying ThreadTimerC 
+  //component.  The current implementation does things this way
+  //and causes us to be defensive in here since the same 
+  //TimerMilli.fired() event is sent to that component as well.
+  //Basically its just broken....  cancel() would get rid of this.
+  
+  //Also need some sort of a sleepWithSyscall command
+  //Need to think about this one a little more
+  
   event void TimerMilli.fired[uint8_t id]() {
     thread_t* t = call ThreadScheduler.threadInfo(id);
-    call SystemCall.finish(t->syscall);
+    if(t->syscall->syscall_ptr == sleepTask)
+	    call SystemCall.finish(t->syscall);
   }
 }
