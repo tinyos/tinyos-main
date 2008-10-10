@@ -57,9 +57,18 @@ implementation {
   //Pointer to yielding thread
   thread_t* yielding_thread;
   //Number of threads started, and currently capable of running if given the chance
-  uint8_t num_started_threads;
+  uint8_t num_runnable_threads;
   //Thread queue for keeping track of threads waiting to run
   thread_queue_t ready_queue;
+  
+  void task timerTask() {
+    uint8_t temp;
+    atomic temp = num_runnable_threads;
+    if(temp <= 1)
+      call PreemptionAlarm.stop();
+    if(temp > 1)
+      call PreemptionAlarm.startOneShot(TOSTHREAD_PREEMPTION_PERIOD);
+  }
   
   /* switch_threads()
    * This routine swaps the stack and allows a thread to run.
@@ -129,6 +138,8 @@ implementation {
   void suspend(thread_t* thread) {
     //if there are no active threads, put the MCU to sleep
     //Then wakeup the TinyOS thread whenever the MCU wakes up again
+    num_runnable_threads--;
+	post timerTask();
     sleepWhileIdle();
     interrupt(thread);
   }
@@ -141,13 +152,12 @@ implementation {
    void stop(thread_t* t) {
      int i;
      t->state = TOSTHREAD_STATE_INACTIVE;
-     num_started_threads--;
+     num_runnable_threads--;
+     post timerTask();
      for(i=0; i<TOSTHREAD_MAX_NUM_THREADS; i++) {
        if(call BitArrayUtils.getBit(t->joinedOnMe, i))
          call ThreadScheduler.wakeupThread(i);
 	 }
-     if(num_started_threads == 1)
-       call PreemptionAlarm.stop();
      signal ThreadCleanup.cleanup[t->id]();
    }
   
@@ -169,7 +179,7 @@ implementation {
   } 
   
   event void ThreadSchedulerBoot.booted() {
-    num_started_threads = 0;
+    num_runnable_threads = 0;
     tos_thread = call ThreadInfo.get[TOSTHREAD_TOS_THREAD_ID]();
     tos_thread->id = TOSTHREAD_TOS_THREAD_ID;
     call ThreadQueue.init(&ready_queue);
@@ -193,11 +203,10 @@ implementation {
     atomic {
       thread_t* t = (call ThreadInfo.get[id]());
       if(t->state == TOSTHREAD_STATE_INACTIVE) {
-        num_started_threads++;
-        if(num_started_threads == 2)
-          call PreemptionAlarm.startOneShot(TOSTHREAD_PREEMPTION_PERIOD);
         t->state = TOSTHREAD_STATE_READY;
         call ThreadQueue.enqueue(&ready_queue, t);
+        num_runnable_threads++;
+        post timerTask();
         return SUCCESS;
       }
     }
@@ -258,6 +267,8 @@ implementation {
     if((t->state) == TOSTHREAD_STATE_SUSPENDED) {
       t->state = TOSTHREAD_STATE_READY;
       call ThreadQueue.enqueue(&ready_queue, call ThreadInfo.get[id]());
+      atomic num_runnable_threads++;
+      post timerTask();
       return SUCCESS;
     }
     return FAIL;
