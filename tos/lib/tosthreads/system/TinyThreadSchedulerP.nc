@@ -98,7 +98,7 @@ implementation {
     while(TRUE) {
       bool mt;
       atomic mt = (call ThreadQueue.isEmpty(&ready_queue) == TRUE);
-      if(!mt) break;
+      if(!mt || tos_thread->state == TOSTHREAD_STATE_READY) break;
       call McuSleep.sleep();
     }
   }
@@ -110,7 +110,7 @@ implementation {
    */
   void scheduleNextThread() {
     if(tos_thread->state == TOSTHREAD_STATE_READY)
-      current_thread = call ThreadQueue.remove(&ready_queue, tos_thread);
+      current_thread = tos_thread;
     else
       current_thread = call ThreadQueue.dequeue(&ready_queue);
 
@@ -266,9 +266,11 @@ implementation {
     thread_t* t = call ThreadInfo.get[id]();
     if((t->state) == TOSTHREAD_STATE_SUSPENDED) {
       t->state = TOSTHREAD_STATE_READY;
-      call ThreadQueue.enqueue(&ready_queue, call ThreadInfo.get[id]());
-      atomic num_runnable_threads++;
-      post timerTask();
+      if(t != tos_thread) {
+        call ThreadQueue.enqueue(&ready_queue, call ThreadInfo.get[id]());
+        atomic num_runnable_threads++;
+        post timerTask();
+      }
       return SUCCESS;
     }
     return FAIL;
