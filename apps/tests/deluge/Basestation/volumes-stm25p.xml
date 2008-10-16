@@ -1,0 +1,6 @@
+<volume_table>
+  <volume name="GOLDENIMAGE" size="65536" base="983040" />
+  <volume name="DELUGE1" size="65536"/>
+  <volume name="DELUGE2" size="65536"/>
+  <volume name="DELUGE3" size="65536"/>
+</volume_table>
