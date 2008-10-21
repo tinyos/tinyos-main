@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-18 15:52:53 $
+ * $Revision: 1.3 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -54,7 +54,9 @@ module NoDeviceCfpP
     interface Resource as Token;
     interface ResourceTransferred as TokenTransferred;
     interface ResourceRequested as TokenRequested;
+    interface ResourceTransfer as TokenToBeaconSync;
     interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
+    interface GetNow<bool> as IsSendingBeacons; 
     interface GetNow<uint32_t> as CfpEnd; 
     interface GetNow<uint8_t*> as GtsField; 
     interface GetNow<uint32_t> as SfSlotDuration; 
@@ -88,23 +90,23 @@ implementation
     return IEEE154_INVALID_HANDLE; 
   } 
 
-  event void TokenTransferred.transferred()
+  async event void TokenTransferred.transferred()
   { 
-    // the CFP has started, this component now owns the token -  
+    // the CFP has started, this component now owns the token. 
     // because GTS is not implemented we release the token
-    // immediately; the general rule is: as long as a component
-    // owns the token it has exclusive access to the radio
-    call Token.release();
+    // (or pass it back to BeaconSynchronizeP if 
+    // we are not transmitting beacons)
+    if (call IsSendingBeacons.getNow())
+      call Token.release();  
+    else
+      call TokenToBeaconSync.transfer();
   }
 
-  async event void CfpEndAlarm.fired() { }
+  async event void CfpEndAlarm.fired() {}
 
   async event void CfpSlotAlarm.fired() {}
 
-  async event void RadioOff.offDone()
-  {
-    call Token.release();
-  }
+  async event void RadioOff.offDone() {}
 
   async event void RadioTx.loadDone(){}
   async event void RadioTx.transmitDone(ieee154_txframe_t *frame, 

@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-18 15:45:57 $
+ * $Revision: 1.3 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -35,12 +35,12 @@ interface ResourceTransferred
 {
 
   /** 
-   * Control of a resource was transferred to this component from another
-   * client. This event is similar to the Resource.granted() event, but when a
-   * the resource is released, it is released on behalf of the client who was
-   * last signalled the Resource.granted() event.
+   * Ownership of a resource is transferred, possibly overriding the default
+   * queueing policy. This event is similar to an async Resource.granted()
+   * event, but when a the resource is released, it is released on behalf of
+   * the client who was last signalled the Resource.granted() event.
    *
    * @see ResourceTransfer interface
    */
-  event void transferred();
+  async event void transferred(); 
 }

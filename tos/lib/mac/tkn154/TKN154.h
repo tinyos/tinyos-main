@@ -27,15 +27,14 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:29 $
+ * $Revision: 1.2 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 #ifndef __TKN154_H
 #define __TKN154_H
-
 
 /****************************************************
  * IEEE 802.15.4 Enumerations
@@ -229,6 +228,37 @@ typedef bool                ieee154_macPanCoordinator_t;
 
 // When security is implemented the following line should be commented out
 #define IEEE154_SECURITY_DISABLED
+
+/**************************************************** 
+ * Flags for disabling MAC functionality (to save program memory)
+ */
+
+// Disable scanning (MLME_SCAN will not work):
+// #define IEEE154_SCAN_DISABLED
+//
+// Disable beacon tracking (MLME_SYNC will not work):
+// #define IEEE154_BEACON_SYNC_DISABLED
+//
+// Disable beacon transmission (MLME_START will not work):
+// #define IEEE154_BEACON_TX_DISABLED
+//
+// Disable promiscuous mode (PromiscuousMode.start() will not work):
+// #define IEEE154_PROMISCUOUS_MODE_DISABLED
+//
+// Disallow next higher layer to switch to receive mode (MLME_RX_ENABLE will not work):
+// #define IEEE154_RXENABLE_DISABLED
+//
+// Disable association (MLME_ASSOCIATE will not work):
+// #define IEEE154_ASSOCIATION_DISABLED
+//
+// Disable association (MLME_DISASSOCIATE will not work):
+// #define IEEE154_DISASSOCIATION_DISABLED
+//
+// Disable coordinator realignment (MLME_ORPHAN will not work):
+// #define IEEE154_COORD_REALIGNMENT_DISABLED
+//
+// Disable transmission of broadcasts from coordinator to devices:
+// #define IEEE154_COORD_BROADCAST_DISABLED
 
 /**************************************************** 
  * Static memory allocation for Queue/Pool

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:27 $
+ * $Revision: 1.2 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,7 +42,7 @@ module DataP
     interface MCPS_DATA; 
     interface MCPS_PURGE;
   } uses {
-    interface Get<bool> as IsSendingBeacons;
+    interface GetNow<bool> as IsSendingBeacons;
     interface FrameRx as CoordCapRx;
     interface FrameTx as DeviceCapTx;
     interface FrameTx as CoordCapTx;
@@ -145,7 +145,7 @@ implementation
 
       // indirect transmission?
       } else if ((txOptions & TX_OPTIONS_INDIRECT) && 
-          call IsSendingBeacons.get() && 
+          call IsSendingBeacons.getNow() && 
           (dstAddrMode >= ADDR_MODE_SHORT_ADDRESS)){
         if (dstAddrMode == ADDR_MODE_SHORT_ADDRESS && dstAddr.shortAddress == 0xFFFF){
           mhr[MHR_INDEX_FC1] &= ~FC1_ACK_REQUEST;

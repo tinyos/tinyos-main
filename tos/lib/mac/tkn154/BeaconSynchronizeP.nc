@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2008-07-24 11:06:24 $
+ * $Revision: 1.5 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -75,6 +75,7 @@ module BeaconSynchronizeP
     interface DataRequest;
     interface FrameRx as CoordRealignmentRx;
     interface Resource as Token;
+    interface ResourceTransferred as TokenTransferred;
     interface ResourceTransfer as TokenToCap;
     interface TimeCalc;
     interface IEEE154Frame as Frame;
@@ -96,13 +97,13 @@ implementation
   };
 
   norace bool m_tracking = FALSE;
-  bool m_updatePending = FALSE;
+  norace bool m_updatePending = FALSE;
   uint8_t m_updateLogicalChannel;
   bool m_updateTrackBeacon;
   bool m_stopTracking = FALSE;
   bool m_internalRequest = FALSE;
 
-  uint8_t m_numBeaconsLost;
+  norace uint8_t m_numBeaconsLost;
   uint8_t m_coordAddress[8];
   message_t m_beaconBuffer;
   norace message_t *m_beaconBufferPtr = &m_beaconBuffer;
@@ -119,7 +120,10 @@ implementation
   norace uint16_t m_BLELen;
   norace bool m_broadcastPending;
   uint8_t m_gtsField[1+1+3*7];
+
   task void processBeaconTask();
+  void getNextBeacon();
+  task void signalGrantedTask();
 
   command error_t Reset.init()
   {
@@ -164,8 +168,8 @@ implementation
       m_stopTracking = FALSE;
       m_updateLogicalChannel = logicalChannel;
       m_updateTrackBeacon = trackBeacon;
-      m_updatePending = TRUE;
       m_internalRequest = FALSE;
+      m_updatePending = TRUE;
       call Debug.log(LEVEL_INFO,SyncP_RESOURCE_REQUEST, 0, 0, 0);
       call Token.request();
     }
@@ -187,7 +191,6 @@ implementation
 
   event void Token.granted()
   {
-    bool missed = FALSE;
     call Debug.flush();
     call Debug.log(LEVEL_INFO,SyncP_GOT_RESOURCE, m_lastBeaconRxTime+m_beaconInterval, 
         m_beaconInterval, (m_updatePending<<1)+m_tracking);
@@ -204,7 +207,15 @@ implementation
       m_numBeaconsLost = IEEE154_aMaxLostBeacons;  // will be reset when beacon is received
       call Debug.log(LEVEL_INFO,SyncP_UPDATING, call MLME_GET.macCoordShortAddress(), 
           call MLME_GET.macPANId(), m_updateLogicalChannel);
-    } else {
+    }
+    getNextBeacon();
+  }
+
+  void getNextBeacon()
+  {
+    bool missed = FALSE;
+    if (m_state != S_FIRST_SCAN){
+      // we have received at least one previous beacon
       m_state = S_PREPARE;
       if (!m_tracking){
         call Debug.log(LEVEL_INFO,SyncP_RELEASE_RESOURCE, 0, 0, 0);
@@ -212,10 +223,10 @@ implementation
         return;
       }
       while (call TimeCalc.hasExpired(m_lastBeaconRxTime, m_dt)){ // missed a beacon
+        missed = TRUE;
         call Debug.log(LEVEL_INFO,SyncP_BEACON_MISSED_1, m_lastBeaconRxTime, m_dt, missed);
         m_dt += m_beaconInterval;
         m_numBeaconsLost++;
-        missed = TRUE;
       }
       if (m_numBeaconsLost >= IEEE154_aMaxLostBeacons){
         post processBeaconTask();
@@ -232,6 +243,19 @@ implementation
       call RadioOff.off();
     else
       signal RadioOff.offDone();
+  }
+
+  async event void TokenTransferred.transferred()
+  {
+    if (m_updatePending)
+      post signalGrantedTask();
+    else
+      getNextBeacon();
+  }
+
+  task void signalGrantedTask()
+  {
+    signal Token.granted();
   }
 
   async event void TrackAlarm.fired()

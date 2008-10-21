@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:34 $
+ * $Revision: 1.2 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -35,24 +35,16 @@ interface ResourceTransfer
 {
 
   /** 
-   * Transfer control of a resource to another client. Conceptually, this
-   * command is similar to calling Resource.release() and then forcing the
-   * arbiter to signal the Resource.granted() event to the target client. But
-   * there is one difference: when a resource that was transferred through this
-   * command is released, it is released on behalf of the "original" client,
-   * i.e. who was last signalled the Resource.granted() event.  Releasing a
-   * transferred resource is thus equivalent to first transferring it back to
-   * the original client and then forcing the latter to release the resource
-   * through a call to Resource.release() -- this ensures that the arbitration
-   * policy can continue properly (and avoids possible starvation).
+   * Transfers ownership of a resource to another client, which will in turn
+   * be signalled a ResourceTransferred.transferred() event. 
    *
-   * Note that a resource may be transferred multiple times, before it is
-   * released. Then the current owner will change, but the "original" client
-   * will stay the same.
+   * When a resource that was transferred through this command is released, it
+   * is released on behalf of the "original" client, i.e. who was last
+   * signalled the Resource.granted() event and it then depends on the original
+   * queueing policy which component will be granted the resource next.
    *
    * @return SUCCESS If ownership has been transferred.<br> FAIL ownership has
    * not been transferred, because the caller is not owner of the resource
    */
-
-  async command error_t transfer();
+  async command error_t transfer(); 
 }

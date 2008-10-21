@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:29 $
+ * $Revision: 1.2 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -197,16 +197,17 @@ enum {
   RADIORXTX_CLIENT = 7,
   PIBDATABASE_CLIENT = 8,
   ASSOCIATE_CLIENT = 9,
-  DEVICECAPQUEUE_CLIENT = 10,
-  INDIRECTTX_DEBUG_CLIENT = 11,
-  DATA_CLIENT = 12,
-  POLL_CLIENT = 13,
-  DISASSOCIATE_CLIENT = 14,
+  DISASSOCIATE_CLIENT = 10,
+  DEVICECAPQUEUE_CLIENT = 11,
+  INDIRECTTX_DEBUG_CLIENT = 12,
+  DATA_CLIENT = 13,
+  POLL_CLIENT = 14,
   RXENABLE_CLIENT = 15,
+  PROMISCUOUS_MODE_CLIENT = 16,
 
-  PHY_CLIENT = 16,
-  PHY_TXCLIENT = 17,
-  PHY_RXCLIENT = 18,
+  PHY_CLIENT = 17,
+  PHY_TXCLIENT = 18,
+  PHY_RXCLIENT = 19,
 };
 
 typedef nx_struct serial_debug_msg {

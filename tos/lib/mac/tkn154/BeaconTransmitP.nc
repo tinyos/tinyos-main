@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-06-25 10:19:03 $
+ * $Revision: 1.4 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,7 +42,7 @@ module BeaconTransmitP
     interface Init as Reset;
     interface MLME_START;
     interface WriteBeaconField as SuperframeSpecWrite;
-    interface Get<bool> as IsSendingBeacons;
+    interface GetNow<bool> as IsSendingBeacons;
     interface GetNow<uint32_t> as CapStart; 
     interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
     interface GetNow<uint32_t> as CapLen; 
@@ -70,6 +70,7 @@ module BeaconTransmitP
     interface MLME_GET;
     interface MLME_SET;
     interface Resource as Token;
+    interface ResourceTransferred as TokenTransferred;
     interface ResourceTransfer as TokenToBroadcast;
     interface FrameTx as RealignmentBeaconEnabledTx;
     interface FrameTx as RealignmentNonBeaconEnabledTx;
@@ -158,7 +159,7 @@ implementation
   uint16_t m_updatePANId;
   uint8_t m_updateLogicalChannel;
   uint32_t m_updateStartTime;
-  uint8_t m_updateBeaconOrder;
+  norace uint8_t m_updateBeaconOrder;
   uint8_t m_updateSuperframeOrder;
   bool m_updatePANCoordinator;
   bool m_updateBatteryLifeExtension;
@@ -251,8 +252,8 @@ implementation
       m_requests = (REQUEST_CONFIRM_PENDING | REQUEST_UPDATE_SF); // lock
       if (coordRealignment)
         m_requests |= REQUEST_REALIGNMENT;
-      if (!call IsSendingBeacons.get())
-        call Token.request();
+      if (m_beaconOrder == 15) // only request token if we're not already transmitting beacons
+        call Token.request(); 
     }
     return status;
   }
@@ -282,7 +283,7 @@ implementation
       *((nxle_uint16_t*) &realignmentFrame->payload[6]) = 0xFFFF;
       realignmentFrame->payloadLen = 8;
       
-      if (call IsSendingBeacons.get()){
+      if (m_beaconOrder < 15){
         // we're already transmitting beacons; the realignment frame
         // must be sent (broadcast) after the next beacon
         if (call RealignmentBeaconEnabledTx.transmit(realignmentFrame) != IEEE154_SUCCESS){
@@ -409,6 +410,11 @@ implementation
     else
       call RadioOff.off();
   }
+
+  async event void TokenTransferred.transferred()
+  {
+    post grantedTask();
+  }  
 
   async event void RadioOff.offDone()
   {
@@ -760,7 +766,7 @@ implementation
 
   event message_t* BeaconRequestRx.received(message_t* frame)
   {
-    if (!call IsSendingBeacons.get()){
+    if (m_beaconOrder == 15){
       // transmit the beacon frame using unslotted CSMA-CA
       // TODO
     }
@@ -774,7 +780,10 @@ implementation
     signal MLME_START.confirm(SUCCESS);
   }
 
-  command bool IsSendingBeacons.get(){ return m_beaconOrder < 15;}
+  async command bool IsSendingBeacons.getNow()
+  { 
+    return (m_beaconOrder < 15) || ((m_requests & REQUEST_CONFIRM_PENDING) && m_updateBeaconOrder < 15);
+  }
 
   async command uint32_t BeaconInterval.getNow() { return m_beaconInterval; }
   async command uint32_t CapStart.getNow() { return m_lastBeaconTxTime; }

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-18 15:52:53 $
+ * $Revision: 1.3 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,7 +42,7 @@ module NoBeaconTransmitP
     interface Init;
     interface MLME_START;
     interface WriteBeaconField as SuperframeSpecWrite;
-    interface Get<bool> as IsSendingBeacons;
+    interface GetNow<bool> as IsSendingBeacons;
     interface GetNow<uint32_t> as CapStart; 
     interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
     interface GetNow<uint32_t> as CapLen; 
@@ -71,6 +71,7 @@ module NoBeaconTransmitP
     interface MLME_SET;
     interface Resource as Token;
     interface ResourceTransfer as TokenToBroadcast;
+    interface ResourceTransferred as TokenTransferred;
     interface FrameTx as RealignmentBeaconEnabledTx;
     interface FrameTx as RealignmentNonBeaconEnabledTx;
     interface FrameRx as BeaconRequestRx;
@@ -113,6 +114,8 @@ implementation
   }
 
   event void Token.granted() { }
+
+  async event void TokenTransferred.transferred() { call Token.release(); }
 
   async event void RadioOff.offDone() { }
 
@@ -173,7 +176,7 @@ implementation
     return frame;
   }
 
-  command bool IsSendingBeacons.get(){ return FALSE;}
+  async command bool IsSendingBeacons.getNow(){ return FALSE;}
 
   async command uint32_t CapStart.getNow() { return 0; }
   async command ieee154_reftime_t* CapStartRefTime.getNow() { return NULL; }

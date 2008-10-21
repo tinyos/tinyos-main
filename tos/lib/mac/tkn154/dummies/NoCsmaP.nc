@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-08-02 16:56:21 $
+ * $Revision: 1.2 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -90,7 +90,7 @@ implementation
     return SUCCESS;
   }
 
-  event void TokenTransferred.transferred()
+  async event void TokenTransferred.transferred()
   {
     call TokenToCfp.transfer();
   }

@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-06-18 15:39:32 $
+ * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -555,7 +555,6 @@ implementation
 
   command void Packet.clear(message_t* msg)
   {
-    uint8_t i;
     memset(msg->header, 0, sizeof(message_header_t));
     memset(msg->metadata, 0, sizeof(message_metadata_t));
   }

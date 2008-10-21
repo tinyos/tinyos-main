@@ -27,18 +27,14 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
+ * $Revision: 1.1 $
  * $Date: 2008-10-21 17:29:00 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
-/* This component is responsible for sending broadcast frames from
- * a coordinator to devices.
- **/
-
 #include "TKN154_MAC.h"
-module CoordBroadcastP
+module NoCoordBroadcastP
 {
   provides
   {
@@ -57,90 +53,30 @@ module CoordBroadcastP
 }
 implementation
 {
-  norace bool m_lock;
-  norace ieee154_txframe_t *m_realignmentFrame;
-  norace ieee154_txframe_t *m_queueHead;
-  norace ieee154_txframe_t *m_transmittedFrame;
-  norace ieee154_status_t m_status;
 
-  task void transmitNowDoneTask();
-
-  command error_t Reset.init()
-  {
-    while (call Queue.size())
-      signal BroadcastDataFrame.transmitDone(call Queue.dequeue(), IEEE154_TRANSACTION_OVERFLOW);
-    if (m_realignmentFrame) 
-      signal RealignmentTx.transmitDone(m_realignmentFrame, IEEE154_TRANSACTION_OVERFLOW);
-    m_realignmentFrame = m_queueHead = m_transmittedFrame = NULL;
-    m_lock = FALSE;
-    return SUCCESS;
-  }
+  command error_t Reset.init() { return SUCCESS; }
 
   command ieee154_status_t BroadcastDataFrame.transmit(ieee154_txframe_t *txFrame)
   {
-    if (call Queue.enqueue(txFrame) != SUCCESS)
-      return IEEE154_TRANSACTION_OVERFLOW;
-    atomic {
-      if (m_queueHead == NULL)
-        m_queueHead = call Queue.head();
-    }
-    return IEEE154_SUCCESS;
+    return IEEE154_TRANSACTION_OVERFLOW;
   }
 
   command ieee154_status_t RealignmentTx.transmit(ieee154_txframe_t *frame)
   {
-    atomic {
-      if (!m_realignmentFrame){
-        m_realignmentFrame = frame;
-        return IEEE154_SUCCESS;
-      } else
-        return IEEE154_TRANSACTION_OVERFLOW;
-    }
+    return IEEE154_TRANSACTION_OVERFLOW;
   }
 
   async command bool IsBroadcastReady.getNow()
   {
-    if (m_lock)
-      return FALSE;
-    else
-      return (m_realignmentFrame != NULL || m_queueHead != NULL);
+    return FALSE;
   }
 
   async event void TokenTransferred.transferred()
   {
-    // CAP has started - are there any broadcast frames to be transmitted?
-    if (call BeaconFramePendingBit.getNow()){
-      ieee154_txframe_t *broadcastFrame = m_realignmentFrame;
-      if (broadcastFrame == NULL)
-        broadcastFrame = m_queueHead;
-      if (broadcastFrame){
-        m_lock = TRUE;
-        call CapTransmitNow.transmitNow(broadcastFrame);
-      } else
-        call Leds.led0On(); // internal error!
-    }
     call TokenToCap.transfer();
   }
 
   async event void CapTransmitNow.transmitNowDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
   {
-    m_transmittedFrame = txFrame;
-    m_status = status;
-    post transmitNowDoneTask();
-  }
-
-  task void transmitNowDoneTask()
-  {
-    if (!m_lock)
-      return;
-    if (m_transmittedFrame == m_realignmentFrame){
-      m_realignmentFrame = NULL;
-      signal RealignmentTx.transmitDone(m_transmittedFrame, m_status);
-    } else if (m_transmittedFrame == m_queueHead){
-      call Queue.dequeue();
-      m_queueHead = call Queue.head();
-      signal BroadcastDataFrame.transmitDone(m_transmittedFrame, m_status);
-    }
-    m_lock = FALSE;
   }
 }
