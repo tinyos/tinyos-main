@@ -61,6 +61,7 @@ implementation {
   //Thread queue for keeping track of threads waiting to run
   thread_queue_t ready_queue;
   
+#ifdef TOSTHREADS_TIMER_OPTIMIZATION   
   void task timerTask() {
     uint8_t temp;
     atomic temp = num_runnable_threads;
@@ -69,6 +70,7 @@ implementation {
     if(temp > 1)
       call PreemptionAlarm.startOneShot(TOSTHREAD_PREEMPTION_PERIOD);
   }
+#endif
   
   /* switch_threads()
    * This routine swaps the stack and allows a thread to run.
@@ -138,8 +140,10 @@ implementation {
   void suspend(thread_t* thread) {
     //if there are no active threads, put the MCU to sleep
     //Then wakeup the TinyOS thread whenever the MCU wakes up again
-    num_runnable_threads--;
-	post timerTask();
+    #ifdef TOSTHREADS_TIMER_OPTIMIZATION   
+      num_runnable_threads--;
+	  post timerTask();
+	#endif
     sleepWhileIdle();
     interrupt(thread);
   }
@@ -149,17 +153,19 @@ implementation {
    * and decrementing any necessary variables used to keep track of
    * threads by the thread scheduler.
    */
-   void stop(thread_t* t) {
-     int i;
-     t->state = TOSTHREAD_STATE_INACTIVE;
-     num_runnable_threads--;
-     post timerTask();
-     for(i=0; i<TOSTHREAD_MAX_NUM_THREADS; i++) {
-       if(call BitArrayUtils.getBit(t->joinedOnMe, i))
-         call ThreadScheduler.wakeupThread(i);
-	 }
-     signal ThreadCleanup.cleanup[t->id]();
-   }
+  void stop(thread_t* t) {
+    int i;
+    t->state = TOSTHREAD_STATE_INACTIVE;
+    #ifdef TOSTHREADS_TIMER_OPTIMIZATION        
+      num_runnable_threads--;
+      post timerTask();
+    #endif
+    for(i=0; i<TOSTHREAD_MAX_NUM_THREADS; i++) {
+      if(call BitArrayUtils.getBit(t->joinedOnMe, i))
+        call ThreadScheduler.wakeupThread(i);
+    }
+    signal ThreadCleanup.cleanup[t->id]();
+  }
   
   /* This executes and cleans up a thread
    */
@@ -205,8 +211,10 @@ implementation {
       if(t->state == TOSTHREAD_STATE_INACTIVE) {
         t->state = TOSTHREAD_STATE_READY;
         call ThreadQueue.enqueue(&ready_queue, t);
-        num_runnable_threads++;
-        post timerTask();
+        #ifdef TOSTHREADS_TIMER_OPTIMIZATION   
+          num_runnable_threads++;
+          post timerTask();
+        #endif
         return SUCCESS;
       }
     }
@@ -266,11 +274,13 @@ implementation {
     thread_t* t = call ThreadInfo.get[id]();
     if((t->state) == TOSTHREAD_STATE_SUSPENDED) {
       t->state = TOSTHREAD_STATE_READY;
-      if(t != tos_thread) {
-        call ThreadQueue.enqueue(&ready_queue, call ThreadInfo.get[id]());
-        atomic num_runnable_threads++;
-        post timerTask();
-      }
+        if(t != tos_thread) {
+          call ThreadQueue.enqueue(&ready_queue, call ThreadInfo.get[id]());
+          #ifdef TOSTHREADS_TIMER_OPTIMIZATION   
+            atomic num_runnable_threads++;
+            post timerTask();
+          #endif
+        }
       return SUCCESS;
     }
     return FAIL;
