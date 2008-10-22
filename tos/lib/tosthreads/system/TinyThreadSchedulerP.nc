@@ -146,19 +146,28 @@ implementation {
     interrupt(thread);
   }
   
+  void wakeupJoined(thread_t* t) {
+    int i,j,k;
+    k = 0;
+    for(i=0; i<sizeof(t->joinedOnMe); i++) {
+      for(j=0; j<8; j++) {
+        if(t->joinedOnMe[i] & 0x1)
+          call ThreadScheduler.wakeupThread(k);
+        t->joinedOnMe[i] >>= 1;
+        k++;
+      }
+    }
+  }
+  
   /* stop
    * This routine stops a thread by putting it into the inactive state
    * and decrementing any necessary variables used to keep track of
    * threads by the thread scheduler.
    */
   void stop(thread_t* t) {
-    int i;
     t->state = TOSTHREAD_STATE_INACTIVE;
     num_runnable_threads--;
-    for(i=0; i<TOSTHREAD_MAX_NUM_THREADS; i++) {
-      if(call BitArrayUtils.getBit(t->joinedOnMe, i))
-        call ThreadScheduler.wakeupThread(i);
-    }
+    wakeupJoined(t);
     #ifdef TOSTHREADS_TIMER_OPTIMIZATION
 	  post alarmTask();    
 	#else
