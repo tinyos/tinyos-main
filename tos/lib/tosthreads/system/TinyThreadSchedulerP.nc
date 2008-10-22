@@ -150,6 +150,10 @@ implementation {
     int i,j,k;
     k = 0;
     for(i=0; i<sizeof(t->joinedOnMe); i++) {
+      if(t->joinedOnMe[i] == 0) {
+        k+=8;
+        continue;
+      }
       for(j=0; j<8; j++) {
         if(t->joinedOnMe[i] & 0x1)
           call ThreadScheduler.wakeupThread(k);
