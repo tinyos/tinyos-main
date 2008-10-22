@@ -32,7 +32,7 @@
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
- 
+  
 module TinyThreadSchedulerP {
   provides {
     interface ThreadScheduler;
@@ -98,7 +98,7 @@ implementation {
     while(TRUE) {
       bool mt;
       atomic mt = (call ThreadQueue.isEmpty(&ready_queue) == TRUE);
-      if(!mt) break;
+      if(!mt || tos_thread->state == TOSTHREAD_STATE_READY) break;
       call McuSleep.sleep();
     }
   }
@@ -110,7 +110,7 @@ implementation {
    */
   void scheduleNextThread() {
     if(tos_thread->state == TOSTHREAD_STATE_READY)
-      current_thread = call ThreadQueue.remove(&ready_queue, tos_thread);
+      current_thread = tos_thread;
     else
       current_thread = call ThreadQueue.dequeue(&ready_queue);
 
@@ -261,7 +261,8 @@ implementation {
     atomic {
       if(current_thread->state == TOSTHREAD_STATE_ACTIVE) {
         current_thread->state = TOSTHREAD_STATE_READY;
-        call ThreadQueue.enqueue(&ready_queue, current_thread);
+        if(current_thread != tos_thread)
+          call ThreadQueue.enqueue(&ready_queue, current_thread);
         interrupt(current_thread);
         return SUCCESS;
       }
@@ -287,11 +288,13 @@ implementation {
     thread_t* t = call ThreadInfo.get[id]();
     if((t->state) == TOSTHREAD_STATE_SUSPENDED) {
       t->state = TOSTHREAD_STATE_READY;
-      call ThreadQueue.enqueue(&ready_queue, call ThreadInfo.get[id]());
-      #ifdef TOSTHREADS_TIMER_OPTIMIZATION
-        atomic num_runnable_threads++;
-        post alarmTask();
-      #endif
+      if(t != tos_thread) {
+        call ThreadQueue.enqueue(&ready_queue, call ThreadInfo.get[id]());
+        #ifdef TOSTHREADS_TIMER_OPTIMIZATION
+          atomic num_runnable_threads++;
+          post alarmTask();
+        #endif
+      }
       return SUCCESS;
     }
     return FAIL;
