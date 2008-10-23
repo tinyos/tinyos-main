@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-10-21 17:29:00 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -50,7 +50,7 @@ module PibP {
     interface Set<ieee154_macBeaconTxTime_t> as SetMacBeaconTxTime;
     interface Set<ieee154_macPanCoordinator_t> as SetMacPanCoordinator;
     interface Get<ieee154_macPanCoordinator_t> as IsMacPanCoordinator;
-    interface Get<bool> as IsBeaconEnabledPAN;
+    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface FrameUtility;
     interface IEEE154Frame as Frame;
     interface IEEE154BeaconFrame as BeaconFrame;
@@ -77,7 +77,8 @@ implementation
   ieee154_PIB_t m_pib;
   uint8_t m_numResetClientPending;
   bool m_setDefaultPIB;
-  uint8_t m_panType;
+  norace uint8_t m_panType;
+  uint8_t m_updatePANType;
   uint8_t m_resetSpin;
 
 #ifdef IEEE154_EXTENDED_ADDRESS
@@ -176,7 +177,7 @@ implementation
     if (call PromiscuousModeGet.get())
       return IEEE154_TRANSACTION_OVERFLOW; // must first cancel promiscuous mode!
     m_setDefaultPIB = SetDefaultPIB;
-    m_panType = PANType; 
+    m_updatePANType = PANType; 
     if (!call Token.isOwner())
       call Token.request();
     return IEEE154_SUCCESS;
@@ -202,8 +203,9 @@ implementation
 
   event void RadioControl.stopDone(error_t error)
   {
-    call CapReset.init();       // resets the CAP component(s)
-    call CapQueueReset.init();  // resets the CAP queue component(s)
+    m_panType = m_updatePANType;
+    call CapReset.init();       // resets the CAP component(s), spool out frames
+    call CapQueueReset.init();  // resets the CAP queue component(s), spool out frames
     call MacReset.init();       // resets the remaining components
     m_resetSpin = 5;
     post resetSpinTask();
@@ -1047,7 +1049,7 @@ implementation
     return dest == m_pib.macCoordExtendedAddress;
   }
 
-  command bool IsBeaconEnabledPAN.get()
+  async command bool IsBeaconEnabledPAN.getNow()
   {
     return (m_panType == BEACON_ENABLED_PAN);
   }

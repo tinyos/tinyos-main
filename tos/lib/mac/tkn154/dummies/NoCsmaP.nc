@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.3 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -73,7 +73,7 @@ generic module NoCsmaP()
     interface RadioTx;
     interface RadioRx;
     interface RadioOff;
-    interface Get<bool> as IsBeaconEnabledPAN;
+    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface MLME_GET;
     interface MLME_SET;
     interface Ieee802154Debug as Debug;

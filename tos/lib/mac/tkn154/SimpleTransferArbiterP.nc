@@ -68,17 +68,12 @@ implementation {
   uint8_t state = RES_IDLE;
   norace uint8_t resId = NO_RES;
   norace uint8_t reqResId;
-  norace uint8_t numTransfers;
-  norace bool reqWhileTransferred;
   
   task void grantedTask();
-  task void checkResourceRequestedTask();
   
   async command error_t Resource.request[uint8_t id]() {
     signal ResourceRequested.requested[resId]();
     atomic {
-      if (numTransfers > 0)
-        reqWhileTransferred = TRUE;
       if(state == RES_IDLE) {
         state = RES_GRANTING;
         reqResId = id;
@@ -106,8 +101,6 @@ implementation {
     bool released = FALSE;
     atomic {
       if(state == RES_BUSY && resId == id) {
-        numTransfers = 0;
-        reqWhileTransferred = FALSE;
         if(call Queue.isEmpty() == FALSE) {
           reqResId = call Queue.dequeue();
           state = RES_GRANTING;
@@ -129,33 +122,20 @@ implementation {
 
   async command bool IsResourceRequested.getNow()
   {
-    return reqWhileTransferred;
-  }
-
-  task void checkResourceRequestedTask()
-  {
-    if (numTransfers && reqWhileTransferred)
-      signal ResourceRequested.requested[resId]();
+    return !(call Queue.isEmpty());
   }
 
   async command error_t ResourceTransferControl.transfer(uint8_t fromClient, uint8_t toClient)
   {
     atomic {
       if (call ArbiterInfo.userId() == fromClient){
-        numTransfers += 1;
         call ResourceConfigure.unconfigure[fromClient]();
         call ResourceConfigure.configure[resId]();
         resId = toClient;
-        post checkResourceRequestedTask();
         return SUCCESS;
       }
-    } 
+    }
     return FAIL;
-  }
-
-  async command error_t ResourceTransferControl.release(uint8_t client)
-  {
-    return call Resource.release[client]();
   }
     
   /**

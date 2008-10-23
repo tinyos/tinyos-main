@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.4 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -48,7 +48,7 @@ module RxEnableP
   {
     interface Ieee802154Debug as Debug;
     interface Timer<TSymbolIEEE802154> as RxEnableTimer;
-    interface Get<bool> as IsBeaconEnabledPAN;
+    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface Get<ieee154_macPanCoordinator_t> as IsMacPanCoordinator;
     interface GetNow<bool> as IsTrackingBeacons;
     interface GetNow<uint32_t> as IncomingSfStart; 
@@ -95,7 +95,7 @@ implementation
       return IEEE154_TRANSACTION_OVERFLOW;
     if (RxOnTime > 0xFFFFFF || RxOnDuration > 0xFFFFFF)
       return IEEE154_INVALID_PARAMETER;
-    if (call IsBeaconEnabledPAN.get()){
+    if (call IsBeaconEnabledPAN.getNow()){
       if (call IsSendingBeacons.getNow() && call IsMacPanCoordinator.get()){
         // for OUTGOING SUPERFRAME
         lastBeaconTime = call OutgoingSfStart.getNow();

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.3 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -72,10 +72,9 @@ generic module CsmaP(uint8_t superframeDirection)
     interface Alarm<TSymbolIEEE802154,uint32_t> as IndirectTxWaitAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as BroadcastAlarm;
     interface Resource as Token;
+    interface GetNow<bool> as IsTokenRequested;
     interface ResourceTransfer as TokenToCfp;
     interface ResourceTransferred as TokenTransferred;
-    interface ResourceRequested as TokenRequested;
-    interface GetNow<bool> as IsTokenRequested;
     interface GetNow<uint32_t> as CapStart; 
     interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
     interface GetNow<uint32_t> as CapLen; 
@@ -89,7 +88,7 @@ generic module CsmaP(uint8_t superframeDirection)
     interface RadioTx;
     interface RadioRx;
     interface RadioOff;
-    interface Get<bool> as IsBeaconEnabledPAN;
+    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface MLME_GET;
     interface MLME_SET;
     interface Ieee802154Debug as Debug;
@@ -138,7 +137,6 @@ implementation
   norace bool m_indirectTxPending = FALSE;
   norace bool m_broadcastRxPending;
   norace ieee154_macMaxFrameTotalWaitTime_t m_macMaxFrameTotalWaitTime;
-  norace bool m_isBeaconEnabledPAN;
 
   uint16_t generateRandomBackoff(uint8_t BE);
   void stopAllAlarms();
@@ -156,10 +154,6 @@ implementation
 
   command error_t Reset.init()
   {
-    if (call Token.isOwner()){
-      call Leds.led0On(); // internal error
-      return FAIL;
-    }
     if (m_currentFrame)
       signal FrameTx.transmitDone(m_currentFrame, IEEE154_TRANSACTION_OVERFLOW);
     if (m_lastFrame)
@@ -167,8 +161,6 @@ implementation
     if (m_bcastFrame)
       signalTxBroadcastDone(m_bcastFrame, IEEE154_TRANSACTION_OVERFLOW);
     m_currentFrame = m_lastFrame = m_bcastFrame = NULL;
-    m_macMaxFrameTotalWaitTime = call MLME_GET.macMaxFrameTotalWaitTime();
-    m_isBeaconEnabledPAN = call IsBeaconEnabledPAN.get();
     stopAllAlarms();
     return SUCCESS;
   }
@@ -177,11 +169,18 @@ implementation
   {
     // we got the token, i.e. CAP has just started    
     uint32_t actualCapLen = call CapLen.getNow();
-    if (m_isBeaconEnabledPAN && (DEVICE_ROLE && !call IsTrackingBeacons.getNow())){
-      // rare case: we're on a beacon-enabled PAN, not tracking beacons, searched
-      // and didn't find a beacon for aBaseSuperframeDuration*(2n+1) symbols
+    if (!call IsBeaconEnabledPAN.getNow()){
+      call Leds.led0On(); // internal error! 
+      call TokenToCfp.transfer();
+      call Debug.log(LEVEL_IMPORTANT, CapP_INTERNAL_ERROR, 0,0,0);
+    } else if (DEVICE_ROLE && actualCapLen == 0){
+      // very rare case: 
+      // this can only happen, if we're on a beacon-enabled PAN, not tracking beacons, 
+      // and searched but didn't find a beacon for aBaseSuperframeDuration*(2n+1) symbols
       // -> transmit current frame using unslotted CSMA-CA
       m_numCCA = 1;
+      updateState();
+      return;
     } else if (actualCapLen < IEEE154_RADIO_GUARD_TIME){
       call Debug.log(LEVEL_IMPORTANT, CapP_TOO_SHORT, superframeDirection, actualCapLen, IEEE154_RADIO_GUARD_TIME);
       call TokenToCfp.transfer();
@@ -216,7 +215,7 @@ implementation
       return IEEE154_TRANSACTION_OVERFLOW;
     else {
       setCurrentFrame(frame);
-      if (!m_isBeaconEnabledPAN){
+      if (!call IsBeaconEnabledPAN.getNow()){
         call Token.request(); // prepare for unslotted CSMA-CA
       } else {
         // a beacon must be found before transmitting in a beacon-enabled PAN
@@ -270,7 +269,7 @@ implementation
     if (call MLME_GET.macBattLifeExt() && m_macMinBE > 2)
       m_macMinBE = 2;
     m_BE = m_macMinBE;
-    if (m_isBeaconEnabledPAN)
+    if (call IsBeaconEnabledPAN.getNow())
       m_numCCA = 2;
     else
       m_numCCA = 1;
@@ -337,7 +336,7 @@ implementation
       m_lock = TRUE; // lock
 
       // Check 1: for beacon-enabled PANs, has the CAP finished?
-      if (m_isBeaconEnabledPAN 
+      if (call IsBeaconEnabledPAN.getNow() 
           && (COORD_ROLE || call IsTrackingBeacons.getNow()) // FALSE only if device could't find a beacon
           && (call TimeCalc.hasExpired(call CapStart.getNow(), call CapLen.getNow()-IEEE154_RADIO_GUARD_TIME) ||
           !call CapEndAlarm.isRunning())){
@@ -375,11 +374,13 @@ implementation
       }
 
       // Check 4: is some other operation (like MLME-SCAN or MLME-RESET) pending? 
-      else if (call IsTokenRequested.getNow()) {
+      else if (call IsTokenRequested.getNow() && call IsBeaconEnabledPAN.getNow()) {
         if (call RadioOff.isOff()) {
-          stopAllAlarms();  // may still fire, locked through isOwner()
-          call Token.release();
-          next = DO_NOTHING;
+          stopAllAlarms();  // may still fire, but is locked through isOwner()
+          // nothing more to do... just release the Token
+          m_lock = FALSE; // unlock
+          call TokenToCfp.transfer();
+          return;
         } else 
           next = SWITCH_OFF;
       }
@@ -411,10 +412,12 @@ implementation
       // Check 8: just make sure the radio is switched off  
       else {
         next = trySwitchOff();
-        if (next == DO_NOTHING && (!m_isBeaconEnabledPAN || (DEVICE_ROLE && !call IsTrackingBeacons.getNow()))){
+        if (next == DO_NOTHING && 
+            (!call IsBeaconEnabledPAN.getNow() || (DEVICE_ROLE && call CapLen.getNow() == 0))){
           // nothing more to do... just release the Token
+          stopAllAlarms();  // may still fire, but is locked through isOwner()
           m_lock = FALSE; // unlock
-          call TokenToCfp.transfer();
+          call Token.release();
           return;
         }
       }
@@ -703,30 +706,9 @@ implementation
 
   event void Token.granted()
   {
-    // will not happen
+    // the current frame should be transmitted using unslotted CSMA-CA
+    updateState();
   }
-
-  task void tokenRequestedTask()
-  {
-    signal TokenRequested.requested();
-  }
-
-  async event void TokenRequested.requested() 
-  {
-    // TODO: this event can be generated by the BeaconTransmitP or
-    // BeaconSynchronizeP component - in this case the Token should
-    // probably not be released!
-    atomic {
-      if (call Token.isOwner()){
-        if (!m_lock && !(DEVICE_ROLE && m_indirectTxPending) && !(COORD_ROLE && m_bcastFrame))
-          call Token.release();
-        else
-          post tokenRequestedTask();
-      }
-    }
-  }
-
-  async event void TokenRequested.immediateRequested() {}
 
   default event void FrameTx.transmitDone(ieee154_txframe_t *data, ieee154_status_t status){}
   default event message_t* FrameRx.received[uint8_t client](message_t* data){return data;}

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.6 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -71,10 +71,11 @@ module BeaconSynchronizeP
     interface Alarm<TSymbolIEEE802154,uint32_t> as TrackAlarm;
     interface RadioRx as BeaconRx;
     interface RadioOff;
-    interface Get<bool> as IsBeaconEnabledPAN;
+    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface DataRequest;
     interface FrameRx as CoordRealignmentRx;
     interface Resource as Token;
+    interface GetNow<bool> as IsTokenRequested;
     interface ResourceTransferred as TokenTransferred;
     interface ResourceTransfer as TokenToCap;
     interface TimeCalc;
@@ -157,7 +158,7 @@ implementation
 
     currentChannelBit <<= logicalChannel;
     if (!(currentChannelBit & supportedChannels) || (call MLME_GET.macPANId() == 0xFFFF) ||
-        (channelPage != IEEE154_SUPPORTED_CHANNELPAGE) || !call IsBeaconEnabledPAN.get())
+        (channelPage != IEEE154_SUPPORTED_CHANNELPAGE) || !call IsBeaconEnabledPAN.getNow())
       return IEEE154_INVALID_PARAMETER;
 
     call Debug.log(LEVEL_INFO,SyncP_REQUEST, logicalChannel, channelPage, trackBeacon);
@@ -171,7 +172,12 @@ implementation
       m_internalRequest = FALSE;
       m_updatePending = TRUE;
       call Debug.log(LEVEL_INFO,SyncP_RESOURCE_REQUEST, 0, 0, 0);
-      call Token.request();
+      atomic {
+        // if we are tracking then we'll get the Token automatically,
+        // otherwise request it now
+        if (!m_tracking && !call Token.isOwner())
+          call Token.request();  
+      }
     }
     call Debug.flush();
     return IEEE154_SUCCESS;
@@ -191,7 +197,6 @@ implementation
 
   event void Token.granted()
   {
-    call Debug.flush();
     call Debug.log(LEVEL_INFO,SyncP_GOT_RESOURCE, m_lastBeaconRxTime+m_beaconInterval, 
         m_beaconInterval, (m_updatePending<<1)+m_tracking);
     if (m_updatePending){
@@ -209,6 +214,7 @@ implementation
           call MLME_GET.macPANId(), m_updateLogicalChannel);
     }
     getNextBeacon();
+    call Debug.flush();
   }
 
   void getNextBeacon()
@@ -218,11 +224,12 @@ implementation
       // we have received at least one previous beacon
       m_state = S_PREPARE;
       if (!m_tracking){
+        // nothing to do, just give up the token
         call Debug.log(LEVEL_INFO,SyncP_RELEASE_RESOURCE, 0, 0, 0);
         call Token.release();
         return;
       }
-      while (call TimeCalc.hasExpired(m_lastBeaconRxTime, m_dt)){ // missed a beacon
+      while (call TimeCalc.hasExpired(m_lastBeaconRxTime, m_dt)){ // missed a beacon!
         missed = TRUE;
         call Debug.log(LEVEL_INFO,SyncP_BEACON_MISSED_1, m_lastBeaconRxTime, m_dt, missed);
         m_dt += m_beaconInterval;
@@ -247,7 +254,12 @@ implementation
 
   async event void TokenTransferred.transferred()
   {
-    if (m_updatePending)
+    if (call IsTokenRequested.getNow()){
+      // some other component needs the token - we give it up for now,  
+      // but make another request to get it back later
+      call Token.request();
+      call Token.release();
+    } else if (m_updatePending)
       post signalGrantedTask();
     else
       getNextBeacon();
@@ -327,10 +339,10 @@ implementation
 
   task void processBeaconTask()
   {
-
     // valid beacon timestamp is pre-condition for slotted CSMA-CA
     if (m_beaconSwapBufferReady || !call Frame.isTimestampValid(m_beaconBufferPtr)){
       // missed a beacon!
+      m_sfSlotDuration = 0; // CAP len will be 0
       m_numBeaconsLost++;
       m_dt += m_beaconInterval;
       call Debug.log(LEVEL_IMPORTANT, SyncP_BEACON_MISSED_3,m_numBeaconsLost,0,m_lastBeaconRxTime);
@@ -392,11 +404,12 @@ implementation
       if (m_stopTracking){
         m_tracking = FALSE;
         call Debug.log(LEVEL_INFO,SyncP_RELEASE_RESOURCE, 0, 0, 0);
+        if (m_updatePending) // there is already a new request pending...
+          call Token.request();
         call Token.release();
       } else {
-        error_t req = call Token.request();
-        call Debug.log(LEVEL_INFO,SyncP_TRANSFER_RESOURCE, req, 0, 0);
-        call TokenToCap.transfer(); 
+        call Debug.log(LEVEL_INFO,SyncP_TRANSFER_RESOURCE, 0, 0, 0);
+        call TokenToCap.transfer(); // borrow Token to CAP/CFP module, we'll get it back afterwards
       }
       
       if (pendAddrSpec & PENDING_ADDRESS_SHORT_MASK)

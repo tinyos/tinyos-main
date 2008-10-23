@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.2 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -48,7 +48,7 @@ module NoRxEnableP
   {
     interface Ieee802154Debug as Debug;
     interface Timer<TSymbolIEEE802154> as RxEnableTimer;
-    interface Get<bool> as IsBeaconEnabledPAN;
+    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface Get<ieee154_macPanCoordinator_t> as IsMacPanCoordinator;
     interface GetNow<bool> as IsTrackingBeacons;
     interface GetNow<uint32_t> as IncomingSfStart; 

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.4 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -71,10 +71,11 @@ module NoBeaconSynchronizeP
     interface Alarm<TSymbolIEEE802154,uint32_t> as TrackAlarm;
     interface RadioRx as BeaconRx;
     interface RadioOff;
-    interface Get<bool> as IsBeaconEnabledPAN;
+    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface DataRequest;
     interface FrameRx as CoordRealignmentRx;
     interface Resource as Token;
+    interface GetNow<bool> as IsTokenRequested;
     interface ResourceTransfer as TokenToCap;
     interface ResourceTransferred as TokenTransferred;
     interface GetNow<bool> as IsSendingBeacons;

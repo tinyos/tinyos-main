@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.3 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -134,6 +134,7 @@
 #define CapP_TOO_SHORT           0
 #define CapP_SET_CAP_END         1
 #define CapP_CAP_END_FIRED       2
+#define CapP_INTERNAL_ERROR      3
 
 #define DeviceCapTransmitP_CONTINUE           0
 #define DeviceCapTransmitP_TOVERFLOW          1

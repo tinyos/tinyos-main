@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.4 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -52,10 +52,10 @@ module NoCoordCfpP
     interface FrameTx as CfpTx;
     interface Purge;
   } uses {
-    interface Resource as Token;
     interface ResourceTransferred as TokenTransferred;
-    interface ResourceRequested as TokenRequested;
     interface ResourceTransfer as TokenToBeaconTransmit;
+    interface ResourceRequested as TokenRequested;
+    interface GetNow<bool> as IsTokenRequested;
     interface GetNow<bool> as IsTrackingBeacons; 
     interface GetNow<uint32_t> as CfpEnd; 
     interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
@@ -94,13 +94,11 @@ implementation
   async event void TokenTransferred.transferred()
   {
     // the CFP has started, this component now owns the token -  
-    // because GTS is not implemented we release the token
-    // (or pass it back to BeaconTransmitP if 
-    // we are not tracking beacons)
-    if (call IsTrackingBeacons.getNow())
-      call Token.release();  
-    else
-      call TokenToBeaconTransmit.transfer();
+    // because GTS is not implemented we pass it back to the
+    // BeaconTransmitP component
+    // Note: this component must not use the Resource
+    // interface to release the token!
+    call TokenToBeaconTransmit.transfer();
   }
 
   async event void CfpEndAlarm.fired() {}
@@ -134,10 +132,10 @@ implementation
 
   async event void TokenRequested.requested()
   {
-    // someone (e.g. SCAN component) requested access to the radio,
-    // you might want to release the token...
+    // someone (e.g. SCAN component) requested access to the radio, we 
+    // should pass the token back to BeaconTransmitP, which can release it
+    // call TokenToBeaconTransmit.transfer();
   }
 
   async event void TokenRequested.immediateRequested(){ }
-  event void Token.granted(){ }
 }

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.5 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -65,13 +65,14 @@ module BeaconTransmitP
     interface Alarm<TSymbolIEEE802154,uint32_t> as BeaconTxAlarm;
     interface Timer<TSymbolIEEE802154> as BeaconPayloadUpdateTimer;
     interface RadioOff;
-    interface Get<bool> as IsBeaconEnabledPAN;
+    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface RadioTx as BeaconTx;
     interface MLME_GET;
     interface MLME_SET;
     interface Resource as Token;
     interface ResourceTransferred as TokenTransferred;
     interface ResourceTransfer as TokenToBroadcast;
+    interface GetNow<bool> as IsTokenRequested;
     interface FrameTx as RealignmentBeaconEnabledTx;
     interface FrameTx as RealignmentNonBeaconEnabledTx;
     interface FrameRx as BeaconRequestRx;
@@ -229,8 +230,8 @@ implementation
       status = IEEE154_INVALID_PARAMETER;
     else if (m_requests & (REQUEST_CONFIRM_PENDING | REQUEST_UPDATE_SF))
       status = IEEE154_TRANSACTION_OVERFLOW;
-    else if ((call IsBeaconEnabledPAN.get() && beaconOrder > 14) ||
-              (!call IsBeaconEnabledPAN.get() && beaconOrder < 15))
+    else if ((call IsBeaconEnabledPAN.getNow() && beaconOrder == 15) ||
+              (!call IsBeaconEnabledPAN.getNow() && beaconOrder < 15))
       status = IEEE154_INVALID_PARAMETER;
     else {
       // new configuration *will* be put in operation
@@ -253,7 +254,7 @@ implementation
       if (coordRealignment)
         m_requests |= REQUEST_REALIGNMENT;
       if (m_beaconOrder == 15) // only request token if we're not already transmitting beacons
-        call Token.request(); 
+        call Token.request();  // otherwise we'll get it eventually and update the superframe then
     }
     return status;
   }
@@ -413,7 +414,13 @@ implementation
 
   async event void TokenTransferred.transferred()
   {
-    post grantedTask();
+    if (call IsTokenRequested.getNow()){
+      // some other component needs the token - we give it up for now,  
+      // but make another request to get it back later
+      call Token.request();
+      call Token.release();
+    } else
+      post grantedTask();
   }  
 
   async event void RadioOff.offDone()
@@ -428,7 +435,7 @@ implementation
       post grantedTask();
       call Debug.log(LEVEL_CRITICAL, StartP_OWNER_TOO_FAST, 0, 0, 0);
       return;
-    } else if (m_beaconOrder > 14){
+    } else if (m_beaconOrder == 15){
       call Token.release();
     } else {
       atomic {
@@ -535,8 +542,7 @@ implementation
       m_BLELen += m_battLifeExtPeriods;
     } else
       m_BLELen = 0;
-    call Token.request();             // register another request, before ...
-    call TokenToBroadcast.transfer(); // ... we let Broadcast module take over
+    call TokenToBroadcast.transfer(); // borrow Token to Broadcast/CAP/CFP module, we'll get it back afterwards
     post txDoneTask();
   }
 

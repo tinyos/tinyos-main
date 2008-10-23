@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:34 $
+ * $Revision: 1.2 $
+ * $Date: 2008-10-23 16:09:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -34,5 +34,4 @@
 interface ResourceTransferControl 
 {
   async command error_t transfer(uint8_t fromClient, uint8_t toClient);
-  async command error_t release(uint8_t client);
 }
