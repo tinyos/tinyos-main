@@ -1,4 +1,4 @@
-//$Id: VirtualizeAlarmC.nc,v 1.6 2008-05-30 16:25:10 janhauer Exp $
+//$Id: VirtualizeAlarmC.nc,v 1.7 2008-10-23 20:52:15 klueska Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -166,7 +166,7 @@ implementation
 
   // extended interface
   async command bool Alarm.isRunning[uint8_t id]() {
-    return m.isset[id];
+    atomic return m.isset[id];
   }
 
   async command void Alarm.startAt[uint8_t id]( size_type t0, size_type dt ) {
