@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.18 2008-09-27 17:00:54 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.19 2008-10-29 07:34:55 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2008-09-27 17:00:54 $
+ *  @date   $Date: 2008-10-29 07:34:55 $
  *  @see Net2-WG
  */
 
@@ -151,13 +151,6 @@ implementation {
     uint32_t parentChanges;
     /* end statistics */
 
-    uint32_t routeUpdateTimerCount;
-
-    // Maximimum it takes to hear four beacons
-    enum {
-      DEATH_TEST_INTERVAL = (maxInterval * 4) / (BEACON_INTERVAL / 1024),
-    };
-    
     // forward declarations
     void routingTableInit();
     uint8_t routingTableFind(am_addr_t);
@@ -199,7 +192,6 @@ implementation {
 
     command error_t Init.init() {
         uint8_t maxLength;
-        routeUpdateTimerCount = 0;
         radioOn = FALSE;
         running = FALSE;
         parentChanges = 0;
