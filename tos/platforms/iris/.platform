@@ -6,7 +6,7 @@
 # @includes instead of -I's to @opts, otherwise the %T won't be processed
 # by ncc.
 #
-# $Id: .platform,v 1.6 2008-07-10 18:16:39 sallai Exp $
+# $Id: .platform,v 1.7 2008-10-31 17:05:09 sallai Exp $
 #
 push( @includes, qw(
 
@@ -19,6 +19,9 @@ push( @includes, qw(
   %T/platforms/mica2/chips/at45db
   %T/platforms/mica/chips/at45db
   %T/chips/at45db
+  %T/platforms/iris/chips/ds2401
+  %T/platforms/mica2/chips/ds2401
+  %T/chips/ds2401
   %T/chips/atm1281
   %T/chips/atm1281/adc
   %T/chips/atm1281/timer
