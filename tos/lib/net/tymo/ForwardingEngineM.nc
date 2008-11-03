@@ -137,6 +137,8 @@ implementation {
 	dbg("fwe", "FE: The message was not acked => FAIL.\n");
 	signal MHControl.sendFailed(msg, 2);
 	signal LinkMonitor.brokenLink(call AMPacket.destination(msg));
+      } else {
+        signal LinkMonitor.refreshedLink(call AMPacket.destination(msg));
       }
     } else if (e != SUCCESS) {
       dbg("fwe", "FE: ...but failed!\n");

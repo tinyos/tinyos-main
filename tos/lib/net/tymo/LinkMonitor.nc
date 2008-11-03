@@ -6,7 +6,7 @@
 #include "AM.h"
 
 /**
- * LinkMonitor - Interface to signals broken links in the neighborhood.
+ * LinkMonitor - Interface to signals broken and used links in the neighborhood.
  *
  * @author Romain Thouvenin
  */
@@ -14,5 +14,7 @@
 interface LinkMonitor {
 
   event void brokenLink(am_addr_t neighbor);
+
+  event void refreshedLink(am_addr_t neighbor);
 
 }

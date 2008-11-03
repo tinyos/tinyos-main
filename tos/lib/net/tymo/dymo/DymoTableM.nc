@@ -252,6 +252,13 @@ implementation {
     }
   }
 
+  event void LinkMonitor.refreshedLink(addr_t neighbor) {
+    int8_t i = get_route(neighbor);
+    if (i != -1) {
+      replace_info(i, &table[i].info);
+    }
+  }
+
   void replace_info(uint8_t pos, const rt_info_t * route_info){
     table[pos].info = *route_info;
     table[pos].flags = FLAG_NEW;
