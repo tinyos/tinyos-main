@@ -5,13 +5,13 @@ Active Message ID Allocation for Network Protocols and Applications
 :TEP: 4
 :Group: Network Protocol Working Group 
 :Type: Best Current Practice
-:Status: Draft
-:TinyOS-Version: 2.x
+:Status: Final
+:TinyOS-Version: > 2.1
 :Author: Omprakash Gnawali
 
 :Draft-Created: 07-May-2008
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2008-06-20 22:36:44 $
+:Draft-Version: $Revision: 1.8 $
+:Draft-Modified: $Date: 2008-11-04 21:00:41 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
