@@ -1,4 +1,4 @@
-/* $Id: AdcStreamP.nc,v 1.5 2008-06-25 16:36:29 regehr Exp $
+/* $Id: AdcStreamP.nc,v 1.6 2008-11-10 14:56:12 janhauer Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -93,7 +93,8 @@ implementation {
     call SingleChannel.getData[client]();
   }
 
-  command error_t ReadStream.postBuffer[uint8_t c](uint16_t *buf, uint16_t n) {
+  error_t postBuffer(uint8_t c, uint16_t *buf, uint16_t n)
+  {
     if (n < sizeof(struct list_entry_t))
       return ESIZE;
     atomic
@@ -109,6 +110,10 @@ implementation {
       bufferQueueEnd[c] = &newEntry->next;
     }
     return SUCCESS;
+  }
+
+  command error_t ReadStream.postBuffer[uint8_t c](uint16_t *buf, uint16_t n) {
+    return postBuffer(c, buf, n);
   }
 
   task void readStreamDone() {
@@ -204,8 +209,12 @@ implementation {
       msp430adc12_channel_config_t config = *call AdcConfigure.getConfiguration[c]();
       config.sampcon_ssel = SAMPCON_SOURCE_SMCLK; // assumption: SMCLK runs at 1 MHz
       config.sampcon_id = SAMPCON_CLOCK_DIV_1; 
-      call SingleChannel.configureMultiple[c]( &config, pos, count, period);
-      call SingleChannel.getData[c]();
+      if (call SingleChannel.configureMultiple[c]( &config, pos, count, period) == SUCCESS)
+        call SingleChannel.getData[c]();
+      else {
+        postBuffer(c, pos, count);
+        post readStreamFail();
+      }
     }
   }
 
