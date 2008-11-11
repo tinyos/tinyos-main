@@ -56,7 +56,7 @@ implementation {
     async command uint8_t CC2420Packet.getLqi( message_t* p_msg ) {
         uint32_t s = (getMetadata(p_msg))->strength;
         if(s > 60) s = 10;
-        if(s > 24) s = 24;
+        if(s > 22) s = 22;
         return (s*13/5 + 48);
     }
 }
