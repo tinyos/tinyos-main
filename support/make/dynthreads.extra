@@ -30,9 +30,15 @@ dynthreads_build: dynthreads_builddir build_storage
 	$(DYNLOAD_OBJCOPY_COMMAND)
 	$(DYNLOAD_GENTOS_COMMAND)
 	
+ifneq ($(shell uname),Darwin)
+dynthreads_all: dynthreads_build
+	@echo "            $(shell stat -t $(DYNLOAD_TOSFILE) | perl -lane 'print $$F[1];') bytes in BINARY"
+	@echo "    writing TOS image"
+else
 dynthreads_all: dynthreads_build
 	@echo "            $(shell stat -F $(DYNLOAD_TOSFILE) | perl -lane 'print $$F[4];') bytes in BINARY"
 	@echo "    writing TOS image"
+endif
 
 dynthreads_builddir:
 	mkdir -p $(BUILDDIR)
