@@ -10,8 +10,8 @@ The Link Estimation Exchange Protocol (LEEP)
 :Author: Omprakash Gnawali
 
 :Draft-Created: 05-Feb-2006
-:Draft-Version: $Revision: 1.6 $
-:Draft-Modified: $Date: 2008-11-21 06:54:40 $
+:Draft-Version: $Revision: 1.7 $
+:Draft-Modified: $Date: 2008-11-21 07:19:12 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -48,28 +48,15 @@ statistics are later used to make these estimates more accurate.
 2. Definitions
 ============================================================================
 
-2.1 Link Quality
---------------------------------------------------------------------
-
-The link quality between a directed node pair (A,B) is the probability
-that a packet transmitted by A will be successfully received by B. The
-bidirectional link quality of an undirected node pair (A,B) is the 
-product of the link quality of (A,B) and (B,A). This definition
-assumes independent link losses. It also includes the case when
-the link quality of (A,B) and (B,A) are different; this can occur
-due to local interference or noise.
-
-2.2 In-bound Link Quality
+2.1 In-bound Link Quality
 --------------------------------------------------------------------
 
 In a node pair (A,B), with B as the node of reference, in-bound link
 quality is a value in the range of 0 to 255 that describes the quality
 of the link from A to B estimated by B by counting the successfully
-received packets from A among all the transmitted packets or using
-link quality indicators such as LQI and RSSI provided by the radio on
-the node B, or some other methods.
+received packets from A among all the packets transmitted by B.
 
-2.3 Out-bound Link Quality
+2.2 Out-bound Link Quality
 --------------------------------------------------------------------
 
 In a node pair (A,B), with B as the node of reference, out-bound link
@@ -77,6 +64,17 @@ quality is defined as the quality of the link from B to A. B can
 determine the out-bound link quality if A advertises its in-bound link
 qualities. LEEP is the protocol that is used to exchange the in-bound
 link qualities.
+
+2.3 Link Quality
+--------------------------------------------------------------------
+
+The link quality between a directed node pair (A,B) is the probability
+that a packet transmitted by A will be successfully received and
+acknowledged by B. The bidirectional link quality of an undirected
+node pair (A,B) is the product of the link quality of (A,B) and
+(B,A). This definition assumes independent link losses. It also
+includes the case when the link quality of (A,B) and (B,A) are
+different; this can occur due to local interference or noise.
 
 2.4 Link Information Entry
 --------------------------------------------------------------------
