@@ -10,8 +10,8 @@ The Link Estimation Exchange Protocol (LEEP)
 :Author: Omprakash Gnawali
 
 :Draft-Created: 05-Feb-2006
-:Draft-Version: $Revision: 1.5 $
-:Draft-Modified: $Date: 2007-10-18 16:11:57 $
+:Draft-Version: $Revision: 1.6 $
+:Draft-Modified: $Date: 2008-11-21 06:54:40 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -35,9 +35,15 @@ Routing protocols often require bi-directional link qualities to
 compute the routes. Nodes can estimate the quality of the in-bound
 link from a neighbor by estimating the ratio of successfully received
 messages and the total transmitted messages. LEEP appends in-bound
-packet reception rate (PRR) estimates to packets. Other nodes hearing 
+packet reception rate (PRR) estimates to packets. Other nodes hearing
 these packets can combine the in-bound PRR values with their own
-in-bound values to compute bi-directional link quality.
+in-bound values to compute bi-directional link quality. Thus, LEEP is
+a discovery and link table bootstrapping mechanism. The link quality
+is often fine-tuned using different mechanisms.
+
+Link quality estimates obtained using LEEP are often used as a
+bootstrapping values in the link quality table; data transmission
+statistics are later used to make these estimates more accurate.
 
 2. Definitions
 ============================================================================
@@ -103,7 +109,17 @@ link quality from the transmitter. LEEP MUST transmit Link Information
 entries describing the in-bound link qualities for a subset of its
 neighbors. The Link Information entry on the LEEP frame allows the
 receiver node to find the out-bound link quality to the transmitter
-node identified by the data link source address.
+node identified by the data link source address. Thus, LEEP is also a
+way for nodes to discover new nodes and links in the network.
+
+Link quality estimation is inherently imperfect - data transmission
+and link quality estimation might be done at different timescales. The
+PRR for LEEP frames (broadcast) and data frames (unicast) might be
+different. So LEEP is better used as a link quality bootstrapping
+mechanism. The link quality estimate can be made more accurate later
+using data transmission statistics.
+
+
 
 3.3 LEEP Frame
 --------------------------------------------------------------------
@@ -179,6 +195,10 @@ the entries to be exchanged that could not fit in the previous LEEP
 frame. The LEEP frames are transmitted whenever the CTP [1]_ beacons,
 sent as a LEEP payload, are sent.
 
+Another reference implementation resides in
+``tinyos-2.x/tos/lib/net/le``. This implementation is described in
+detail in [2]_.
+
 5. Author's Address
 ============================================================================
 
@@ -195,3 +215,6 @@ sent as a LEEP payload, are sent.
 ============================================================================
 
 .. [1] TEP 123: The Collection Tree Protocol.
+.. [2] Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis.
+       "Four Bit Wireless Link Estimation." In Proceedings of the Sixth Workshop
+       on Hot Topics in Networks (HotNets VI), November 2007.

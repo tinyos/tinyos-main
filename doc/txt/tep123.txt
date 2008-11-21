@@ -10,8 +10,8 @@ The Collection Tree Protocol (CTP)
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.11 $
-:Draft-Modified: $Date: 2008-11-21 01:05:50 $
+:Draft-Version: $Revision: 1.12 $
+:Draft-Modified: $Date: 2008-11-21 06:54:40 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -66,13 +66,17 @@ neighbors. These provide an estimate of the number of transmissions it
 takes for the node to send a unicast packet whose acknowledgment is
 successfully received.
 
-CTP has several mechanisms in order to improve delivery reliability,
-but it does not promise 100\% reliable delivery. It is best effort, but
-a best effort that *tries very hard.*
+CTP has several mechanisms in order to achieve high delivery
+reliability, but it does not promise 100\% reliable delivery. It is a
+best effort protocol.
 
-CTP is designed for relatively low traffic rates. Bandwidth-limited systems
-might benefit from a different protocol, which can, for example, pack
-multiple small frames into a single data-link packet.
+CTP is designed for relatively low traffic rates such that there is
+enough space in the channel to transmit and receive routing frames
+even when the network is forwarding collection data
+frames. Bandwidth-limited systems or high data rate applications might
+benefit from a different protocol, which can, for example, pack
+multiple small frames into a single data-link packet or employ rate
+control mechanisms.
 
 
 3. Collection and CTP
@@ -163,7 +167,7 @@ distinction is important for duplicate suppression in the presence
 of routing loops. If a node suppresses origin packets, then if
 asked to forward the same packet twice due to a routing loop, it will
 drop the packet. However, if it suppresses packet instances, then it
-will route succesfully in the presence of transient loops unless the
+will route successfully in the presence of transient loops unless the
 THL happens to wrap around to a forwarded packet instance.
 
 A node MUST send CTP data frames as unicast messages with link-layer 
@@ -237,12 +241,12 @@ increasing randomized timer. The implementation resets the timer to a
 small value when one or more of the following conditions are met:
 
  1) The routing table is empty (this also sets the P bit)
- 2) The node's routing ETX increases by >= 1 trasmission
+ 2) The node's routing ETX increases by >= 1 transmission
  3) The node hears a packet with the P bit set
 
 The implementation augments the LEEP link estimates with data
 transmissions. This is a direct measure of ETX. Whenever the data path
-transmits a packet, it tells the link estimator the destimation and
+transmits a packet, it tells the link estimator the destination and
 whether it was successfully acknowledged. The estimator produces an
 ETX estimate every 5 such transmissions, where 0 successes has an ETX
 of 6.
@@ -256,8 +260,9 @@ the rate at which CTP collects data estimates is proportional to
 the transmission rate, then it can quickly detect a broken link and
 switch to another candidate neighbor.
 
-The component ``tos/lib/net/le/LinkEstimatorP`` implements the
-link estimator. It couples LEEP-based and data-based estimates.
+The component ``tos/lib/net/4bitle/LinkEstimatorP`` implements the
+link estimator. It couples LEEP-based and data-based estimates as
+described in [4]_.
 
 6.2 Routing Engine
 ------------------------------------------------------------------------------
@@ -274,7 +279,7 @@ implements the routing engine.
 ------------------------------------------------------------------------------
 
 The component ``tos/lib/net/ctp/CtpForwardingEngineP`` implements the
-forwarding engine. It has five repsonsibilities:
+forwarding engine. It has five responsibilities:
 
  1) Transmitting packets to the next hop, retransmitting when necessary, and
     passing acknowledgment based information to the link estimator
@@ -360,3 +365,6 @@ along the path.
        in Wireless Sensor Networks." In Proceedings of the First USENIX
        Conference on Networked Systems Design and Implementation (NSDI), 2004.
 .. [3] TEP 119: Collection.
+.. [4] Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis.
+       "Four Bit Wireless Link Estimation." In Proceedings of the Sixth Workshop
+       on Hot Topics in Networks (HotNets VI), November 2007.
