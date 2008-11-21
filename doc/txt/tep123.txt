@@ -10,8 +10,8 @@ The Collection Tree Protocol (CTP)
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.10 $
-:Draft-Modified: $Date: 2007-12-14 20:09:39 $
+:Draft-Version: $Revision: 1.11 $
+:Draft-Modified: $Date: 2008-11-21 01:05:50 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -30,6 +30,18 @@ collection roots in a network.
 
 1. Introduction
 ==============================================================================
+
+A collection protocol delivers data to one of possibly several data
+sinks, providing a many-to-one network layer. Collection is a
+fundamental component of most sensor network applications. The
+Collection Tree Protocol (CTP) is a reference Collection protocol in
+TinyOS 2.x. The users use Collection interfaces described in TEP 119
+[3]_ to use CTP in their applications.
+
+In this TEP, after a brief discussion of Collection and CTP, we
+specify the CTP routing and data frames. CTP uses routing frames to
+update and build collection tree in the network. CTP uses data frames
+to deliver application payload to the sink.
 
 2. Assumptions and Limitations
 ==============================================================================
@@ -93,13 +105,17 @@ is to not consider routes with an ETX higher than a reasonable constant.
 The value of this constant is implementation dependent.
 
 Packet duplication is an additional problem that can occur in CTP.
-Packet duplication occurs when a node receives a data frame successfully
-and transmits an ACK, but the ACK is not received. The sender retransmits
-the packet, and the receiver receives it a second time. This can have
-disasterous effects over multiple hops, as the duplication is exponential.
-For example, if each hop on average produces one duplicate, then on the
-first hop there will be two packets, on the second there will be four,
-on the third there will be eight, etc.
+Packet duplication occurs when a node receives a data frame
+successfully and transmits an ACK, but the ACK is not received. The
+sender retransmits the packet, and the receiver receives it a second
+time. This can have disasterous effects over multiple hops, as the
+duplication is exponential.  For example, if each hop on average
+produces one duplicate, then on the first hop there will be two
+packets, on the second there will be four, on the third there will be
+eight, etc. CTP keeps a small cache of packet signature for the
+packets it has seen to detect packet duplicates. When a new packet
+arrives, if its signature results in cache hit, CTP drops the packet
+because it is a duplicate.
 
 Routing loops complicate duplicate suppression, as a routing loop may
 cause a node to legitimately receive a packet more than once. Therefore,
@@ -131,7 +147,7 @@ The CTP data frame format is as follows::
 
 Field definitions are as follows:
 
-  * P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future.
+  * P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future. Data frames are unicast so only the destination of the unicast transmission responds to the P bit in the data frame.
   * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next data frame it transmits.
   * THL: Time Has Lived. When a node generates a CTP data frame, it MUST set THL to 0. When a node receives a CTP data frame, it MUST increment the THL. If a node receives a THL of 255, it increments it to 0.
   * ETX: The ETX routing metric of the single-hop sender. When a node transmits a CTP data frame, it MUST put the ETX value of its route through the single-hop destination in the ETX field.  If a node receives a packet with a lower gradient than its own, then it MUST schedule a routing frame in the near future.
@@ -170,7 +186,7 @@ The CTP routing frame format is as follows::
 
 The fields are as follows:
   
-  * P: Same as data frame.
+  * P: Same as data frame with one difference: Routing frames are broadcast so multiple nodes respond to the P bit in the routing frame.
   * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.
   * parent: The node's current parent.
   * metric: The node's current routing metric value.
@@ -184,6 +200,8 @@ a data packet: a parent can detect when a child's ETX is significantly
 below its own. When a parent hears a child advertise an ETX below its
 own, it MUST schedule a routing frame for transmission in the near
 future.
+
+A node MUST send CTP routing frames as broadcast messages.
 
 6. Implementation
 ==============================================================================
@@ -341,7 +359,4 @@ along the path.
        Self-Regulating Algorithm for Code Maintenance and Propagation
        in Wireless Sensor Networks." In Proceedings of the First USENIX
        Conference on Networked Systems Design and Implementation (NSDI), 2004.
-       
- 
-
-
+.. [3] TEP 119: Collection.
