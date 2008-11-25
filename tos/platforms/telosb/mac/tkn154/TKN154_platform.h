@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:05:14 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -43,7 +43,7 @@
 
 enum {
   // guard time to give up the token before actual end of CAP/CFP
-  IEEE154_RADIO_GUARD_TIME = 1000,
+  IEEE154_ACTIVE_PERIOD_GUARD_TIME = 300,
 
   // the expected time for a RadioTx.prepare() operation to execute (return)
   IEEE154_RADIO_TX_PREPARE_DELAY = 220,

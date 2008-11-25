@@ -28,42 +28,43 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2008-08-02 16:56:21 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 #include "TKN154_MAC.h"
-generic module NoCsmaQueueP()
-{
+generic module NoFrameDispatchQueueP() {
   provides
   {
-    interface Init;
+    interface Init as Reset;
     interface FrameTx[uint8_t client];
     interface FrameRx as FrameExtracted[uint8_t client];
     interface Purge;
-  }
-  uses
-  {
-    interface Queue<ieee154_txframe_t*>; 
+  } uses {
+    interface Queue<ieee154_txframe_t*>;
     interface FrameTx as FrameTxCsma;
     interface FrameRx as SubFrameExtracted;
   }
 }
 implementation
 {
-  command error_t Init.init()
-  {
-    return SUCCESS;
-  }
+  command error_t Reset.init() { return SUCCESS; }
 
-  command ieee154_status_t FrameTx.transmit[uint8_t client](ieee154_txframe_t *data)
+  command ieee154_status_t FrameTx.transmit[uint8_t client](ieee154_txframe_t *txFrame)
   {
     return IEEE154_TRANSACTION_OVERFLOW;
   }
 
-  event void FrameTxCsma.transmitDone(ieee154_txframe_t *data, ieee154_status_t status) { }
+  event void FrameTxCsma.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status) { }
 
   event message_t* SubFrameExtracted.received(message_t* frame) { return frame; }
 
-  command ieee154_status_t Purge.purge(uint8_t msduHandle) { return IEEE154_INVALID_HANDLE; }
+  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status){}
+
+  command ieee154_status_t Purge.purge(uint8_t msduHandle)
+  {
+    return IEEE154_INVALID_HANDLE;
+  }
+  
+  default event void Purge.purgeDone(ieee154_txframe_t *txFrame, ieee154_status_t status){}
 }

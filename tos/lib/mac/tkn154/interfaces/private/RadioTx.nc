@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:33 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -49,7 +49,7 @@ interface RadioTx
    * The frame will be loaded (and the radio will stay in the state
    * TX_LOADED) until either the transmission was successful, i.e.
    * <tt>transmitDone()</tt> was signalled with a status IEEE154_SUCCESS, or
-   * the radio is explicitly switched off through the <tt>RadioOff</tt>
+   * the radio is switched off through the <tt>RadioOff</tt>
    * interface. Until then the callee might have to reserve certain resources
    * (e.g. the bus connected to the radio), so the caller should keep the time
    * while a frame is loaded as short as possible.
@@ -80,87 +80,137 @@ interface RadioTx
 
   /** 
    * Transmits the frame whose transmission has previously been prepared
-   * through a call to <tt>load()</tt>. The actual time of transmission -- the
-   * point in time when the first symbol of the PPDU is transmitted -- is
-   * defined by: <tt>t0 + dt</tt>. The data type of the <tt>t0</tt> parameter
-   * is platform-specific (symbol precision or better) while <tt>dt</tt> is
-   * expressed in 802.15.4 symbols. If <tt>t0</tt> is NULL, then the callee
-   * interprets <tt>t0</tt> as the current time. The caller guarantees (through
+   * through a call to <tt>load()</tt> at time <tt>t0+dt</tt> or immediately if
+   * <tt>t0</tt> is NULL. In the first case the caller has to guarantee (through
    * platform-specific guard times and by calling <tt>transmit</tt> in an
-   * atomic block) that the callee can start the transmission on time, taking
-   * any prior clear channel assesment(s) into consideration. 
-   *
-   * A transmission may require 0, 1 or 2 prior clear channel assesments
-   * (<tt>numCCA</tt> parameter) to be performed 0, 20 or 40 symbols,
-   * respectively, before the actual transmission. If a CCA determines a busy
-   * channel, then the frame will not be transmitted. 
-   *
-   * A successful transmission may also require an acknowledgement from the
-   * destination (indicated through the <tt>ackRequest</tt> parameter); then,
-   * the callee has to perform the necessary steps for receiving that
-   * acknowledgement (switching the radio to Rx mode immediately after
-   * transmission, etc.; for details see IEEE 802.15.4-2006).
-   *
-   * The <tt>transmit()</tt> command will succeed iff the radio is in state
-   * TX_LOADED. The <tt>transmitDone()</tt> event will then signal the result
+   * atomic block) that the callee can start the transmission on time.
+   * The frame is transmitted without carrier sense (without CCA).  
+   * The <tt>transmitDone()</tt> event will signal the result
    * of the transmission.
    *
    * @param t0 Reference time for transmission (NULL means now)  
-   *
    * @param dt A positive offset relative to <tt>t0</tt>.  
-   *
-   * @param numCCA Number of clear channel assesments.
-   *
-   * @param ackRequest TRUE means an acknowledgement is required, FALSE means
-   * no acknowledgement is not required
    *
    * @return SUCCESS if the transmission was triggered successfully and only
    * then <tt>transmitDone()</tt> will be signalled; FAIL, if the transmission
    * was not triggered because no frame was loaded.
-   */  
-  async command error_t transmit(ieee154_reftime_t *t0, uint32_t dt, 
-      uint8_t numCCA, bool ackRequest);
+   */
+  async command error_t transmit(ieee154_reftime_t *t0, uint32_t dt);
 
   /**
-   * Signalled in response to a call to <tt>transmit()</tt>. Depending on the
-   * <tt>error</tt> parameter the radio is now in state RADIO_OFF
-   * (<tt>error</tt> == IEEE154_SUCCESS) or still in state TX_LOADED
-   * (<tt>error</tt> != IEEE154_SUCCESS).  If the transmission succeeded then
-   * the time of transmission -- the point in time when the first symbol of the
-   * PPDU was transmitted -- will be stored in the metadata field of the frame.
-   * In addition, the <tt>t0</tt> parameter will hold a platform-specific
-   * representation of the same point in time (possibly with higher precision)
-   * to be used as future reference time in a <tt>transmit()</tt> command. If
-   * the transmission did not succeed no timestamp will be stored in the
-   * metadata portion, but <tt>t0</tt> will still represent the hypothetical
-   * transmission time. 
-   *
-   * If <tt>error</tt> has a value other than IEEE154_SUCCESS the frame will
-   * stay loaded and a subsequent call to <tt>transmit</tt> will (re-)transmit
-   * the same <tt>frame</tt> again. If <tt>error</tt> has a value of
-   * IEEE154_SUCCESS then the frame was automatically un-loaded and a new frame
-   * has to be loaded before the <tt>transmit()</tt> command will succeed.
-   *
-   * When the <tt>transmit()</tt> command was called with an
-   * <tt>ackRequest</tt> parameter with value TRUE, and <tt>error</tt> has a
-   * value of IEEE154_SUCCESS, then this means that a corresponding
-   * acknowledgement was successfully received. In this case, the
-   * <tt>ackPendingFlag</tt> represents the "pending" flag in the header of the
-   * acknowledgement frame (TRUE means set, FALSE means reset).
+   * Signalled in response to a call to <tt>transmit()</tt> and completing the transmission. Depending on the
+   * <tt>error</tt> parameter the radio is now in the state RADIO_OFF
+   * (<tt>error == IEEE154_SUCCESS</tt>) or back in state TX_LOADED
+   * (<tt>error != IEEE154_SUCCESS</tt>). 
    *
    * @param frame The frame that was transmitted.  
+   * @param txTime The time of transmission of the first symbol of the PPDU or NULL if the transmission failed.  
+   */
+  async event void transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime);
+
+
+ /** 
+   * Transmits the frame whose transmission has previously been prepared
+   * through a call to <tt>load()</tt> using the unslotted CSMA-CA 
+   * algorithm as specified in the IEEE 802.15.4-2006 standard Sect. 7.5.1.4. The initial 
+   * CSMA-CA parameters are passed as a parameter, the algorithm should start immediately.
+   * The <tt>transmitUnslottedCsmaCaDone()</tt> event will signal the result
+   * of the transmission.
+   * A successful transmission may include an acknowledgement from the
+   * destination if the ACK_REQUESTED flag is set in the loaded frame's header; then,
+   * the callee also has to perform the necessary steps for receiving the
+   * acknowledgement (switching the radio to Rx mode immediately after
+   * transmission, etc., as specified in IEEE 802.15.4-2006 Sect. 7.5.6.4). 
+   * 
+   * @param csmaParameters parameters for the unslotted CSMA-CA algorithm. 
    *
-   * @param t0 The (hypothetical) transmission time; the pointer is only valid
-   * until the eventhandler returns.  
+   * @return SUCCESS if the unslotted CSMA-CA was triggered successfully,
+   * FAIL otherwise.
+   */
+  async command error_t transmitUnslottedCsmaCa(ieee154_csma_t *csmaParameters);
+
+  /**
+   * Signalled in response to a call to <tt>transmitUnslottedCsmaCa()</tt>. 
+   * Depending on the
+   * <tt>error</tt> parameter the radio is now in the state RADIO_OFF
+   * (<tt>error == IEEE154_SUCCESS</tt>) or still in state TX_LOADED
+   * (<tt>error != IEEE154_SUCCESS</tt>). If the transmission succeeded then
+   * the time of the transmission -- the point in time when the first symbol of the
+   * PPDU was transmitted -- will be stored in the metadata field of the frame. 
    *
+   * @param frame The frame that was transmitted.  
+   * @param csmaParameters csmaParameters parameters for the unslotted CSMA-CA algorithm
    * @param ackPendingFlag TRUE if an acknowledgement was received and the
    * "pending" flag is set in the header of the ACK frame, FALSE otherwise
+   * @param result SUCCESS if the the frame was transmitted (and a matching
+   * acknowledgement was received, if requested); FAIL if the CSMA-CA algorithm failed
+   * because NB > macMaxCsmaBackoffs.  
    *
-   * @param error SUCCESS if the transmission succeeded (including successful
-   * CCA and acknowledgement reception, if requested); EBUSY if CCA was
-   * unsuccessful (frame was not transmitted); ENOACK if frame was transmitted
-   * but no matching acknowledgement was received.
-   **/  
-  async event void transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *t0, 
-      bool ackPendingFlag, error_t error);   
+   * unslotted CSMA-CA was triggered successfully,
+   * FAIL otherwiseThe time of transmission or NULL if the transmission failed.  
+   */
+  async event void transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
+      bool ackPendingFlag, ieee154_csma_t *csmaParameters, error_t result);
+
+
+ /** 
+   * Transmits the frame whose transmission has previously been prepared
+   * through a call to <tt>load()</tt> using the slotted CSMA-CA 
+   * algorithm as specified in the IEEE 802.15.4-2006 standard Sect. 7.5.1.4. The initial 
+   * CSMA-CA parameters are passed as a parameter, the algorithm should start immediately,
+   * but the frame transmission should start no later than <tt>slot0Time+dtMax</tt>. The backoff slot boundaries
+   * are defined relative to <tt>slot0Time</tt>, if the <tt>resume</tt>
+   * then the initial backoff (in symbols) is passed as the <tt>initialBackoff</tt> parameter.
+   *
+   * The <tt>transmitSlottedCsmaCaDone()</tt> event will signal the result
+   * of the transmission.
+   * A successful transmission may include an acknowledgement from the
+   * destination if the ACK_REQUESTED flag is set in the loaded frame's header; then,
+   * the callee also has to perform the necessary steps for receiving the
+   * acknowledgement (switching the radio to Rx mode immediately after
+   * transmission, etc., as specified in IEEE 802.15.4-2006 Sect. 7.5.6.4). 
+   * 
+   * @param slot0Time Reference time (last beacon)  
+   * @param dtMax <tt>slot0Time+dtMax</tt> is the last time the frame may be transmitted.
+   * @param resume TRUE means that the initial backoff is defined by the
+   * <tt>initialBackoff</tt> parameter, FALSE means the <tt>initialBackoff</tt>
+   * should be ignored.
+   * @param initialBackoff initial backoff.
+   * @param csmaParameters parameters for the slotted CSMA-CA algorithm. 
+   *
+   * @return SUCCESS if the slotted CSMA-CA was triggered successfully,
+   * FAIL otherwise.
+   */
+  async command error_t transmitSlottedCsmaCa(ieee154_reftime_t *slot0Time, uint32_t dtMax, 
+      bool resume, uint16_t initialBackoff, ieee154_csma_t *csmaParameters);
+
+  /**
+   * Signalled in response to a call to <tt>transmitSlottedCsmaCa()</tt>. 
+   * Depending on the
+   * <tt>error</tt> parameter the radio is now in the state RADIO_OFF
+   * (<tt>error == IEEE154_SUCCESS</tt>) or still in state TX_LOADED
+   * (<tt>error != IEEE154_SUCCESS</tt>). If the transmission succeeded then
+   * the time of the transmission -- the point in time when the first symbol of the
+   * PPDU was transmitted -- will be stored in the metadata field of the frame.
+   * It will also passed (possibly with higher precision) through the
+   * <tt>txTime</tt> parameter.
+   *
+   * @param frame The frame that was transmitted.  
+   * @param txTime The time of transmission of the first symbol of the PPDU or NULL if the transmission failed.  
+   * @param ackPendingFlag TRUE if an acknowledgement was received and the
+   * "pending" flag is set in the header of the ACK frame, FALSE otherwise
+   * @param remainingBackoff only valid if <tt>error == ERETRY</tt>, i.e.
+   * when the frame could not be transmitted because transmission would have
+   * started later than <tt>slot0Time+dtMax</tt>; then it 
+   * specifies the remaining offset (in symbols) relative to <tt>slot0Time+dtMax</tt>,
+   * when the frame would have been transmitted
+   * @param csmaParameters csmaParameters parameters for the unslotted CSMA-CA algorithm
+   *
+   * @result result SUCCESS if the the frame was transmitted (and a matching
+   * acknowledgement was received, if requested); FAIL if the CSMA-CA algorithm failed
+   * because NB > macMaxCsmaBackoffs; ERETRY if the frame could not be transmitted because transmission would have
+   * started later than <tt>slot0Time+dtMax</tt>
+   */
+  async event void transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
+      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParameters, error_t result);
 }

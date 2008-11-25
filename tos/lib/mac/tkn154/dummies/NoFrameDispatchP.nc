@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-10-23 16:09:28 $
+ * $Revision: 1.1 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -36,7 +36,7 @@
 #include "TKN154_PHY.h"
 #include "TKN154_MAC.h"
 
-generic module NoCsmaP()
+generic module NoFrameDispatchP(uint8_t superframeDirection)
 {
   provides
   {
@@ -50,23 +50,22 @@ generic module NoCsmaP()
   }
   uses
   {
-    interface Random;
     interface Alarm<TSymbolIEEE802154,uint32_t> as CapEndAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as BLEAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as IndirectTxWaitAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as BroadcastAlarm;
     interface Resource as Token;
+    interface GetNow<bool> as IsTokenRequested;
     interface ResourceTransfer as TokenToCfp;
     interface ResourceTransferred as TokenTransferred;
-    interface ResourceRequested as TokenRequested;
-    interface GetNow<bool> as IsTokenRequested;
     interface GetNow<uint32_t> as CapStart; 
     interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
     interface GetNow<uint32_t> as CapLen; 
     interface GetNow<bool> as IsBLEActive; 
     interface GetNow<uint16_t> as BLELen; 
-    interface GetNow<bool> as IsRxEnableActive; 
     interface GetNow<bool> as IsRxBroadcastPending; 
+    interface GetNow<bool> as IsRxEnableActive; 
+    interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
     interface Notify<bool> as RxEnableStateChange;
     interface GetNow<bool> as IsTrackingBeacons;
     interface FrameUtility;
@@ -98,7 +97,7 @@ implementation
   command ieee154_status_t FrameTx.transmit(ieee154_txframe_t *frame)
   {
     return IEEE154_TRANSACTION_OVERFLOW;
-  }
+   }
 
   async event void RadioTx.loadDone(){ }
   async event void RadioOff.offDone(){ }
@@ -106,20 +105,60 @@ implementation
 
   async event void CapEndAlarm.fired(){ }
   async event void BLEAlarm.fired(){ }
-  event void RxEnableStateChange.notify(bool x){ }
+  event void RxEnableStateChange.notify(bool whatever){ }
   async event void BroadcastAlarm.fired(){ }
 
   async event void IndirectTxWaitAlarm.fired() { }
+  
+  async event void RadioTx.transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
+      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result)
+  {
+  }
 
-  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t
-       *referenceTime, bool ackPendingFlag, error_t error) { }
+  async event void RadioTx.transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
+      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParams, error_t result)
+  {
+  }
 
-  event message_t* RadioRx.received(message_t* frame, ieee154_reftime_t* referenceTime) { return frame; }
-  async command ieee154_status_t  BroadcastTx.transmitNow(ieee154_txframe_t *frame){ return IEEE154_TRANSACTION_OVERFLOW; }
+  void transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
+      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result)
+  {
+  }
 
-  async event void TokenRequested.requested() {}
-  async event void TokenRequested.immediateRequested() {}
-  event void Token.granted(){}
+  event message_t* RadioRx.received(message_t* frame, ieee154_reftime_t *timestamp)
+  {
+    return frame;
+  }
+
+  async command ieee154_status_t BroadcastTx.transmitNow(ieee154_txframe_t *frame) 
+  {
+    return IEEE154_TRANSACTION_OVERFLOW;
+  }
+
+  event void Token.granted()
+  {
+  }
+
+  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime){}
+
+  default event void FrameTx.transmitDone(ieee154_txframe_t *data, ieee154_status_t status){}
+  default event message_t* FrameRx.received[uint8_t client](message_t* data){return data;}
+  default async command bool IsRxEnableActive.getNow(){return FALSE;}
+
+  default async command void IndirectTxWaitAlarm.start(uint32_t dt){call Leds.led0On();}
+  default async command void IndirectTxWaitAlarm.stop(){call Leds.led0On();}
+  default async command void IndirectTxWaitAlarm.startAt(uint32_t t0, uint32_t dt){call Leds.led0On();}
+  
+  default async command void BroadcastAlarm.start(uint32_t dt){call Leds.led0On();}
+  default async command void BroadcastAlarm.stop(){call Leds.led0On();}
+  default async command void BroadcastAlarm.startAt(uint32_t t0, uint32_t dt){call Leds.led0On();}
+
+  default async command bool IsRxBroadcastPending.getNow(){ return FALSE;}
+  default async event void BroadcastTx.transmitNowDone(ieee154_txframe_t *frame, ieee154_status_t status){}
+  default event message_t* FrameExtracted.received[uint8_t client](message_t* msg, ieee154_txframe_t *txFrame){return msg;}
+  default async command error_t FrameBackup.setNow(ieee154_cap_frame_backup_t* val ){return FAIL;}
+  default async command ieee154_cap_frame_backup_t* FrameRestore.getNow(){return NULL;}
+
   command error_t WasRxEnabled.enable(){return FAIL;}
   command error_t WasRxEnabled.disable(){return FAIL;}
   command error_t FindBeacon.enable(){return FAIL;}

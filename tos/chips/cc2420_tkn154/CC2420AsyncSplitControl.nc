@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $ $Date: 2008-06-16 18:02:40 $ 
+ * $Revision: 1.2 $ $Date: 2008-11-25 09:35:08 $ 
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -73,57 +73,33 @@
  */
 
 /**
- * An async version of the SplitControl interface.
+ * This interface is a mixture of a SplitControl/AsyncStdControl interface.
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  */
 
 interface CC2420AsyncSplitControl
 {
   /**
-   * Start this component and all of its subcomponents.  Return
-   * values of SUCCESS will always result in a <code>startDone()</code>
-   * event being signalled.
+   * Start this component and all of its subcomponents.  
    *
-   * @return SUCCESS if the device is already in the process of 
-   *         starting or the device was off and the device is now ready to turn 
-   *         on.  After receiving this return value, you should expect a 
-   *         <code>startDone</code> event in the near future.<br>
-   *         EBUSY if the component is in the middle of powering down
-   *               i.e. a <code>stop()</code> command has been called,
-   *               and a <code>stopDone()</code> event is pending<br>
-   *         EALREADY if the device is already on <br>
+   * @return SUCCESS if the component was started successfully.<br>
    *         FAIL Otherwise
    */
   async command error_t start();
 
-  /** 
-   * Notify caller that the component has been started and is ready to
-   * receive other commands.
-   *
-   * @param <b>error</b> -- SUCCESS if the component was successfully
-   *                        turned on, FAIL otherwise
-   */
-  async event void startDone(error_t error);
-
   /**
-   * Start this component and all of its subcomponents.  Return
-   * values of SUCCESS will always result in a <code>startDone()</code>
-   * event being signalled.
+   * Stop this component and all of its subcomponents - iff this command
+   * succeeds then <tt>stopDone</tt> will signal the result of the stop
+   * operation.
    *
-   * @return SUCCESS if the device is already in the process of 
-   *         stopping or the device was on and the device is now ready to turn 
-   *         off.  After receiving this return value, you should expect a 
-   *         <code>stopDone</code> event in the near future.<br>
-   *         EBUSY if the component is in the middle of powering up
-   *               i.e. a <code>start()</code> command has been called,
-   *               and a <code>startDone()</code> event is pending<br>
-   *         EALREADY if the device is already off <br>
-   *         FAIL Otherwise
+   * @return SUCCESS Stop operation was started, <tt>stopDone</tt> will be signalled
+   *         FAIL Otherwise (<tt>stopDone</tt> will not be signalled)
    */
   async command error_t stop();
 
   /**
-   * Notify caller that the component has been stopped.
+   * Notify caller that the component has been stopped. This event
+   * completes the <tt>stop()</tt> operation.
    *
   * @param <b>error</b> -- SUCCESS if the component was successfully
   *                        turned off, FAIL otherwise

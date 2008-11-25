@@ -34,7 +34,7 @@
  * @author David Moss
  * @author Jung Il Choi
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @version $Revision: 1.1 $ $Date: 2008-06-16 18:02:40 $
+ * @version $Revision: 1.2 $ $Date: 2008-11-25 09:35:08 $
  */
 module CC2420ReceiveP {
 
@@ -42,7 +42,6 @@ module CC2420ReceiveP {
   provides interface CC2420AsyncSplitControl as AsyncSplitControl; 
   provides interface CC2420Receive;
   provides interface CC2420Rx;
-/*  provides interface ReceiveIndicator as PacketIndicator;*/
 
   uses interface GeneralIO as CSN;
   uses interface GeneralIO as FIFO;
@@ -54,13 +53,12 @@ module CC2420ReceiveP {
   uses interface CC2420Strobe as SACK;
   uses interface CC2420Strobe as SFLUSHRX;
   uses interface CC2420Strobe as SRXON;
-  uses interface CC2420Strobe as SACKPEND; // JH: ACKs must have pending flag set
+  uses interface CC2420Strobe as SACKPEND; 
   uses interface CC2420Register as MDMCTRL1;
   uses interface ReferenceTime;
   uses interface FrameUtility;
   uses interface CC2420Config;
-/*  uses interface CC2420Packet;*/
-/*  uses interface CC2420PacketBody;*/
+  uses interface CC2420Ram as RXFIFO_RAM;
   
   uses interface Leds;
 }
@@ -70,7 +68,6 @@ implementation {
   typedef enum {
     S_STOPPED,
     S_STARTING,
-    S_STARTING_FLUSHRX,
     S_STARTED,
     S_RX_LENGTH,
     S_RX_FCF,
@@ -125,7 +122,6 @@ implementation {
   void flush();
   void switchToUnbufferedMode();
   void switchToBufferedMode();
-  void startingSpiReserved();
   void continueStart();
   void continueStop();
   task void stopContinueTask();
@@ -139,79 +135,48 @@ implementation {
     return SUCCESS;
   }
 
-  /***************** AsyncSplitControl ****************
-   * IMPORTANT: when AsyncSplitControl.start is called, 
-   * the radio MUST be off !
+  /***************** AsyncSplitControl ****************/
+  /* NOTE: AsyncSplitControl does not switch the state of the radio 
+   * hardware (i.e. it does not put the radio in Rx mode, this has to
+   * be done by the caller through a separate interface/component). 
+   */
+
+  /** 
+   * AsyncSplitControl.start should be called before radio
+   * is switched to Rx mode (or at least early enough before
+   * a packet has been received, i.e. before FIFOP changes)
    */
   async command error_t AsyncSplitControl.start()
   {
     atomic {
+      if ( !call FIFO.get() && !call FIFOP.get() ){
+        // RXFIFO has some data (remember: FIFOP is inverted)
+        // the problem is that this messses up the timestamping
+        // so why don't we flush here ourselves? 
+        // because we don't own the SPI...
+        return FAIL; 
+      }
       if (m_state != S_STOPPED){
         call Leds.led0On();
         return FAIL;
-      } else {
-        m_state = S_STARTING;
-        if (call SpiResource.isOwner()){ 
-          call Leds.led0On(); // internal error (debug) !
-          startingSpiReserved();
-        }
-        if (call SpiResource.immediateRequest() == SUCCESS)
-          startingSpiReserved();
-        else
-          call SpiResource.request();        
       }
+      reset_state();
+      m_state = S_STARTED;
+      call InterruptFIFOP.enableFallingEdge(); // ready!
     }
     return SUCCESS;
   }
 
-  void startingSpiReserved()
-  {
-    atomic {
-      if (!call FIFOP.get() || call FIFO.get()){ // FIFOP is inverted
-        // there is something in RXFIFO: flush it out 
-        // the datasheet says at least one byte should 
-        // be read before flushing
-        m_state = S_STARTING_FLUSHRX;
-        call CSN.set();
-        call CSN.clr();
-        call RXFIFO.beginRead( &m_dummy, 1 ); // will continue in continueFlushStart()
-        return;
-      }
-    }
-    continueStart();
-  }
-
-
-  void continueFlushStart()
-  {
-    atomic {
-      call CSN.set();
-      call CSN.clr();
-      call SFLUSHRX.strobe();
-      call SFLUSHRX.strobe();
-      call CSN.set();
-    }
-    continueStart();
-  }
-  
-  void continueStart()
-  {
-    // RXFIFO is empty
-    if (!call FIFOP.get() || call FIFO.get()){
-      call Leds.led0On();
-    }
-    atomic {
-      reset_state();
-      m_state = S_STARTED;
-    }
-    call SpiResource.release();
-    call InterruptFIFOP.enableFallingEdge();
-    signal AsyncSplitControl.startDone(SUCCESS);
-  }
-
-  /***************** AsyncSplitControl ****************
+  /* AsyncSplitControl.stop:
+   *
    * IMPORTANT: when AsyncSplitControl.stop is called, 
-   * the radio MUST NOT be off !
+   * then either
+   * 1) the radio MUST still be in RxMode
+   * 2) it was never put in RxMode after  
+   *    AsyncSplitControl.start() was called
+   *
+   * => The radio may be switched off only *after* the
+   * stopDone() event was signalled.
    */
   async command error_t AsyncSplitControl.stop()
   {
@@ -222,9 +187,9 @@ implementation {
         m_stop = TRUE;
         call InterruptFIFOP.disable();
         if (!receivingPacket)
-          continueStop();
-        // else stopContinueTask will be posted after 
-        // current Rx operation is finished, because m_stop is set
+          continueStop(); // it is safe to stop now
+        // else continueStop will be called after 
+        // current Rx operation is finished
       }
     }
     return SUCCESS;
@@ -233,6 +198,9 @@ implementation {
   void continueStop()
   {
     atomic {
+      if (!m_stop){
+        return;
+      }
       m_stop = FALSE;
       m_state = S_STOPPED;
     }
@@ -241,9 +209,8 @@ implementation {
 
   task void stopContinueTask()
   {
-    if (receivingPacket){
+    if (receivingPacket)
       call Leds.led0On();
-    }
     call SpiResource.release(); // may fail
     atomic m_state = S_STOPPED;
     signal AsyncSplitControl.stopDone(SUCCESS);
@@ -314,10 +281,10 @@ implementation {
     atomic {
       switch (m_state)
       {
-        case S_STARTING: startingSpiReserved(); break;
-        case S_STARTING_FLUSHRX: // fall through
-        case S_STOPPED: call Leds.led0On(); 
-                        call SpiResource.release(); break;
+        case S_STOPPED: // this should never happen!
+                        call Leds.led0On(); 
+                        call SpiResource.release(); 
+                        break;
         default: receive();
       }
     }
@@ -471,8 +438,6 @@ implementation {
       waitForNextPacket();
       break;
 
-    case S_STARTING_FLUSHRX: continueFlushStart(); break;
-      
     default:
       atomic receivingPacket = FALSE;
       call CSN.set();
@@ -538,8 +503,7 @@ implementation {
    */
   void beginReceive() { 
     atomic {
-      if ( m_state == S_STOPPED){
-        call Leds.led0On();
+      if (m_state == S_STOPPED || m_stop){
         return;
       }
       m_state = S_RX_LENGTH;
@@ -591,11 +555,11 @@ implementation {
    */
   void waitForNextPacket() {
     atomic {
-      receivingPacket = FALSE;
       if ( m_state == S_STOPPED) {
         call SpiResource.release();
         return;
       }
+      receivingPacket = FALSE;
       if (m_stop){
         continueStop();
         return;

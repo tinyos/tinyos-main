@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -43,8 +43,8 @@ interface MLME_BEACON_NOTIFY {
    * beacon payload is not empty.
    *
    * The beacon parameters can be accessed through the 
-   * <code>IEEE154BeaconFrame<\code> interface. The 
-   * <code>IEEE154Frame<\code> interface can be used to
+   * <tt>IEEE154BeaconFrame<\tt> interface. The 
+   * <tt>IEEE154Frame<\tt> interface can be used to
    * inspect the addressing fields in the MAC header.
    *
    * @param beacon The beacon frame

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2008-10-23 16:09:28 $
+ * $Revision: 1.6 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -135,23 +135,23 @@ implementation
 
 #ifndef IEEE154_BEACON_SYNC_DISABLED
              BeaconSynchronizeP,
-             new CsmaQueueP() as DeviceCapQueue,
-             new CsmaP(INCOMING_SUPERFRAME) as DeviceCap,
+             new FrameDispatchQueueP() as DeviceCapQueue,
+             new FrameDispatchP(INCOMING_SUPERFRAME) as DeviceCap,
 #else
              NoBeaconSynchronizeP as BeaconSynchronizeP,
-             new NoCsmaQueueP() as DeviceCapQueue,
-             new NoCsmaP() as DeviceCap,
+             new NoFrameDispatchQueueP() as DeviceCapQueue,
+             new NoFrameDispatchP(INCOMING_SUPERFRAME) as DeviceCap,
 #endif
              NoDeviceCfpP as DeviceCfp,
 
 #ifndef IEEE154_BEACON_TX_DISABLED
              BeaconTransmitP,
-             new CsmaQueueP() as CoordCapQueue,
-             new CsmaP(OUTGOING_SUPERFRAME) as CoordCap,
+             new FrameDispatchQueueP() as CoordCapQueue,
+             new FrameDispatchP(OUTGOING_SUPERFRAME) as CoordCap,
 #else
              NoBeaconTransmitP as BeaconTransmitP,
-             new NoCsmaQueueP() as CoordCapQueue,
-             new NoCsmaP() as CoordCap,
+             new NoFrameDispatchQueueP() as CoordCapQueue,
+             new NoFrameDispatchP(OUTGOING_SUPERFRAME) as CoordCap,
 #endif
              NoCoordCfpP as CoordCfp,
 
@@ -272,7 +272,7 @@ implementation
   BeaconTransmitP.IsBroadcastReady -> CoordBroadcastP.IsBroadcastReady;
   BeaconTransmitP.TimeCalc -> PibP;
   BeaconTransmitP.Leds = Leds;
-  BeaconTransmitP.Debug = Ieee802154Debug[START_CLIENT];
+  BeaconTransmitP.Debug = Ieee802154Debug[DEBUG_BEACON_TRANSMIT_ID];
   BeaconTxRadioClient.TransferTo -> CoordBroadcastRadioClient.TransferFrom;
 
 /* ------------------ Beacon Tracking (MLME-SYNC) ------------------ */
@@ -290,7 +290,7 @@ implementation
   BeaconSynchronizeP.BeaconRx -> SyncRadioClient;
   BeaconSynchronizeP.RadioOff -> SyncRadioClient;
   BeaconSynchronizeP.IsBeaconEnabledPAN -> PibP.IsBeaconEnabledPAN;
-  BeaconSynchronizeP.DataRequest -> PollP.DataRequest[SYNC_CLIENT];
+  BeaconSynchronizeP.DataRequest -> PollP.DataRequest[SYNC_POLL_CLIENT];
   BeaconSynchronizeP.Token -> SyncRadioClient;
   BeaconSynchronizeP.IsTokenRequested -> SyncRadioClient;
   BeaconSynchronizeP.TokenTransferred -> SyncRadioClient;
@@ -298,7 +298,7 @@ implementation
   BeaconSynchronizeP.TimeCalc -> PibP;
   BeaconSynchronizeP.CoordRealignmentRx -> DeviceCap.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_COORDINATOR_REALIGNMENT];
   BeaconSynchronizeP.Leds = Leds;
-  BeaconSynchronizeP.Debug = Ieee802154Debug[SYNC_CLIENT];
+  BeaconSynchronizeP.Debug = Ieee802154Debug[DEBUG_BEACON_SYNCHRONIZE_ID];
   SyncRadioClient.TransferTo -> DeviceCapRadioClient.TransferFrom;
 
 /* -------------------- Association (MLME-ASSOCIATE) -------------------- */
@@ -308,7 +308,7 @@ implementation
   AssociateP.AssociationRequestTx -> DeviceCapQueue.FrameTx[unique(CAP_TX_CLIENT)];
   AssociateP.AssociationResponseExtracted -> DeviceCap.FrameExtracted[FC1_FRAMETYPE_CMD + CMD_FRAME_ASSOCIATION_RESPONSE];
   AssociateP.AssociationResponseTx -> IndirectTxP.FrameTx[unique(INDIRECT_TX_CLIENT)];
-  AssociateP.DataRequest -> PollP.DataRequest[ASSOCIATE_CLIENT];
+  AssociateP.DataRequest -> PollP.DataRequest[ASSOCIATE_POLL_CLIENT];
   AssociateP.ResponseTimeout = Timer3;
   AssociateP.TxFramePool -> TxFramePoolP;
   AssociateP.TxControlPool -> TxControlPoolP;
@@ -317,7 +317,7 @@ implementation
   AssociateP.FrameUtility -> PibP;
   AssociateP.Frame -> PibP;
   AssociateP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;
-  AssociateP.Debug = Ieee802154Debug[ASSOCIATE_CLIENT];
+  AssociateP.Debug = Ieee802154Debug[DEBUG_ASSOCIATE_ID];
 
 /* --------------- Disassociation (MLME-DISASSOCIATE) --------------- */
 
@@ -337,7 +337,7 @@ implementation
   DisassociateP.FrameUtility -> PibP;
   DisassociateP.Frame -> PibP;
   DisassociateP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;
-  DisassociateP.Debug = Ieee802154Debug[DISASSOCIATE_CLIENT];
+  DisassociateP.Debug = Ieee802154Debug[DEBUG_DISASSOCIATE_ID];
 
 /* ------------------ Data Transmission (MCPS-DATA) ------------------- */
 
@@ -372,7 +372,7 @@ implementation
   PollP.FrameUtility -> PibP;
   PollP.TxFramePool -> TxFramePoolP;
   PollP.TxControlPool -> TxControlPoolP;
-  PollP.Debug = Ieee802154Debug[POLL_CLIENT];
+  PollP.Debug = Ieee802154Debug[DEBUG_POLL_ID];
   PollP.MLME_GET -> PibP;
   PollP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;
 
@@ -386,7 +386,7 @@ implementation
   IndirectTxP.IndirectTxTimeout = Timer4;
   IndirectTxP.TimeCalc -> PibP;
   IndirectTxP.Leds = Leds;
-  IndirectTxP.Debug = Ieee802154Debug[INDIRECTTX_DEBUG_CLIENT];
+  IndirectTxP.Debug = Ieee802154Debug[DEBUG_INDIRECTTX_ID];
 
 /* ---------------------------- Realignment --------------------------- */
 
@@ -424,7 +424,6 @@ implementation
   
   components new RadioClientC() as DeviceCapRadioClient;
   PibP.CapReset -> DeviceCap;
-  DeviceCap.Random = Random;
   DeviceCap.CapEndAlarm = Alarm3;
   DeviceCap.BLEAlarm = Alarm4;
   DeviceCap.IndirectTxWaitAlarm = Alarm5;
@@ -440,6 +439,7 @@ implementation
   DeviceCap.BLELen -> BeaconSynchronizeP.BLELen;
   DeviceCap.IsRxBroadcastPending -> BeaconSynchronizeP.IsRxBroadcastPending;
   DeviceCap.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
+  DeviceCap.GetIndirectTxFrame -> IndirectTxP;
   DeviceCap.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
   DeviceCap.IsTrackingBeacons -> BeaconSynchronizeP.IsTrackingBeacons;  
   DeviceCap.FrameUtility -> PibP;
@@ -449,7 +449,7 @@ implementation
   DeviceCap.IsBeaconEnabledPAN -> PibP.IsBeaconEnabledPAN;
   DeviceCap.MLME_GET -> PibP;
   DeviceCap.MLME_SET -> PibP.MLME_SET;
-  DeviceCap.Debug = Ieee802154Debug[DEVICE_CAP_CLIENT];
+  DeviceCap.Debug = Ieee802154Debug[DEBUG_FRAME_DISPATCH_DEVICE_ID];
   DeviceCap.TimeCalc -> PibP;
   DeviceCap.Leds = Leds;
   DeviceCapRadioClient.TransferTo -> DeviceCfpRadioClient.TransferFrom;
@@ -459,7 +459,6 @@ implementation
   components new RadioClientC() as CoordCapRadioClient, 
              new BackupP(ieee154_cap_frame_backup_t);
   PibP.CapReset -> CoordCap;
-  CoordCap.Random = Random;
   CoordCap.CapEndAlarm = Alarm7;
   CoordCap.BLEAlarm = Alarm8;
   CoordCap.Token -> CoordCapRadioClient;
@@ -472,6 +471,7 @@ implementation
   CoordCap.IsBLEActive -> BeaconTransmitP.IsBLEActive;
   CoordCap.BLELen -> BeaconTransmitP.BLELen;
   CoordCap.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
+  CoordCap.GetIndirectTxFrame -> IndirectTxP;
   CoordCap.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
   CoordCap.IsTrackingBeacons -> BeaconSynchronizeP.IsTrackingBeacons;  
   CoordCap.FrameUtility -> PibP;
@@ -481,7 +481,7 @@ implementation
   CoordCap.IsBeaconEnabledPAN -> PibP.IsBeaconEnabledPAN;
   CoordCap.MLME_GET -> PibP;
   CoordCap.MLME_SET -> PibP.MLME_SET;
-  CoordCap.Debug = Ieee802154Debug[COORD_CAP_CLIENT];
+  CoordCap.Debug = Ieee802154Debug[DEBUG_FRAME_DISPATCH_COORD_ID];
   CoordCap.TimeCalc -> PibP;
   CoordCap.Leds = Leds;
   CoordCapRadioClient.TransferTo -> CoordCfpRadioClient.TransferFrom;
@@ -540,7 +540,7 @@ implementation
   PromiscuousModeP.PromiscuousRx -> PromiscuousModeRadioClient;
   PromiscuousModeP.RadioOff -> PromiscuousModeRadioClient;
   PromiscuousModeP.RadioPromiscuousMode = RadioPromiscuousMode;
-  PromiscuousModeP.Debug = Ieee802154Debug[PROMISCUOUS_MODE_CLIENT];
+  PromiscuousModeP.Debug = Ieee802154Debug[DEBUG_PROMISCUOUSMODE_ID];
 
 /* --------------------------- MLME-RX-ENABLE  ------------------------ */
 
@@ -557,7 +557,7 @@ implementation
   RxEnableP.WasRxEnabled -> DeviceCap.WasRxEnabled;
   RxEnableP.WasRxEnabled -> CoordCap.WasRxEnabled;
   RxEnableP.RxEnableTimer = Timer5;
-  RxEnableP.Debug = Ieee802154Debug[RXENABLE_CLIENT];
+  RxEnableP.Debug = Ieee802154Debug[DEBUG_RXENABLE_ID];
 
 /* ------------------------------- PIB -------------------------------- */
 
@@ -578,5 +578,5 @@ implementation
   RadioControlP.PhyRadioOff = RadioOff;
   RadioControlP.RadioPromiscuousMode -> PromiscuousModeP;
   RadioControlP.Leds = Leds;
-  RadioControlP.Debug = Ieee802154Debug[RADIORXTX_CLIENT];
+  RadioControlP.Debug = Ieee802154Debug[DEBUG_RADIOCONTROL_ID];
 }

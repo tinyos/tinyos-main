@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:08 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -142,7 +142,7 @@ implementation
         call TxControlPool.put(txControl);
       }
     }
-    call Debug.log(LEVEL_INFO, DISSASSOCIATE_REQUEST, status, 0, 0);
+    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_REQUEST, status, 0, 0);
     return status;
   }
 
@@ -158,7 +158,7 @@ implementation
     call FrameUtility.convertToNative(&DeviceAddress.extendedAddress, &mhr[srcAddrOffset]);
     call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) data->header - offsetof(ieee154_txcontrol_t, header)));
     call TxFramePool.put(data);
-    call Debug.log(LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 2, 0);
+    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 2, 0);
     m_disAssociationOngoing = FALSE;
     signal MLME_DISASSOCIATE.confirm(status, DeviceAddrMode, DevicePANID, DeviceAddress);
   }
@@ -176,10 +176,10 @@ implementation
     uint16_t DevicePANID = *((nxle_uint16_t*) (&(mhr[MHR_INDEX_ADDRESS])));
     ieee154_address_t DeviceAddress;
     call FrameUtility.convertToNative(&DeviceAddress.extendedAddress, &mhr[dstAddrOffset]);
-    call Debug.log(LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 1, 0);
+    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 1, 0);
     call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) data->header - offsetof(ieee154_txcontrol_t, header)));
     call TxFramePool.put(data);
-    call Debug.log(LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 2, 0);
+    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 2, 0);
     m_disAssociationOngoing = FALSE;
     signal MLME_DISASSOCIATE.confirm(status, DeviceAddrMode, DevicePANID, DeviceAddress);
   }
@@ -205,7 +205,7 @@ implementation
   {
     // received a disassociation notification from the device
     ieee154_address_t address;
-    call Debug.log(LEVEL_INFO, DISSASSOCIATE_RX, 0, 0, 0);
+    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_RX, 0, 0, 0);
     if (call Frame.getSrcAddrMode(frame) == ADDR_MODE_EXTENDED_ADDRESS && 
         call Frame.getSrcAddr(frame, &address) == SUCCESS)
       signal MLME_DISASSOCIATE.indication(address.extendedAddress, frame->data[1], NULL);

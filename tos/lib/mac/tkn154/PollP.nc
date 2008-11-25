@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:28 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -111,7 +111,7 @@ implementation
       if ((txStatus = call PollTx.transmit(txFrame)) != IEEE154_SUCCESS){
         call TxFramePool.put(txFrame);
         call TxControlPool.put(txControl);
-        call Debug.log(LEVEL_IMPORTANT, PollP_ALLOC_FAIL1, 0, 0, 0);
+        call Debug.log(DEBUG_LEVEL_IMPORTANT, PollP_ALLOC_FAIL1, 0, 0, 0);
       } else 
         m_numPending++;
     }
@@ -124,8 +124,8 @@ implementation
     ieee154_txframe_t *txFrame;
     ieee154_txcontrol_t *txControl;
     ieee154_status_t status = IEEE154_TRANSACTION_OVERFLOW;
-    call Debug.log(LEVEL_INFO, PollP_INTERNAL_POLL, CoordAddrMode, client, m_numPending);
-    if (client == SYNC_CLIENT && m_numPending != 0){
+    call Debug.log(DEBUG_LEVEL_INFO, PollP_INTERNAL_POLL, CoordAddrMode, client, m_numPending);
+    if (client == SYNC_POLL_CLIENT && m_numPending != 0){
       // no point in auto-requesting if user request is pending
       signal DataRequest.pollDone[client]();
       return IEEE154_SUCCESS;
@@ -141,7 +141,7 @@ implementation
         if ((status = call PollTx.transmit(txFrame)) != IEEE154_SUCCESS){
           call TxControlPool.put(txControl);
           call TxFramePool.put(txFrame);
-          call Debug.log(LEVEL_IMPORTANT, PollP_ALLOC_FAIL2, 0, 0, 0);
+          call Debug.log(DEBUG_LEVEL_IMPORTANT, PollP_ALLOC_FAIL2, 0, 0, 0);
         } else 
           m_numPending++;
       }
@@ -188,23 +188,23 @@ implementation
   event message_t* DataExtracted.received(message_t* frame, ieee154_txframe_t *txFrame)
   {
     if (!txFrame){
-      call Debug.log(LEVEL_CRITICAL, PollP_INTERNAL_ERROR, 0, 0, 0);
+      call Debug.log(DEBUG_LEVEL_CRITICAL, PollP_INTERNAL_ERROR, 0, 0, 0);
       return frame;
     } else
-      call Debug.log(LEVEL_INFO, PollP_SUCCESS, 0, 0, 0);
+      call Debug.log(DEBUG_LEVEL_INFO, PollP_SUCCESS, 0, 0, 0);
     if (txFrame->handle == HANDLE_MLME_POLL_REQUEST)
       signal MLME_POLL.confirm(IEEE154_SUCCESS);
     else
       signal DataRequest.pollDone[txFrame->handle]();
     txFrame->handle = HANDLE_MLME_POLL_SUCCESS; // mark as processed
     // TODO: check if pending bit is set (then initiate another POLL)
-    call Debug.log(LEVEL_IMPORTANT, PollP_RX, txFrame->handle, 0, 0);
+    call Debug.log(DEBUG_LEVEL_IMPORTANT, PollP_RX, txFrame->handle, 0, 0);
     return signal DataRx.received(frame);
   }
 
   event void PollTx.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
   {
-    call Debug.log(LEVEL_IMPORTANT, PollP_TXDONE, status, txFrame->handle, 0);
+    call Debug.log(DEBUG_LEVEL_IMPORTANT, PollP_TXDONE, status, txFrame->handle, 0);
     m_numPending--;
     if (txFrame->handle != HANDLE_MLME_POLL_SUCCESS){
       // didn't receive a DATA frame from the coordinator

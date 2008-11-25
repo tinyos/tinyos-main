@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2008-10-23 16:09:28 $
+ * $Revision: 1.6 $
+ * $Date: 2008-11-25 09:35:08 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -238,7 +238,7 @@ implementation
       status = IEEE154_SUCCESS;
       if (panCoordinator)
         startTime = 0; // start immediately
-      call Debug.log(LEVEL_INFO, StartP_REQUEST, logicalChannel, beaconOrder, superframeOrder);
+      call Debug.log(DEBUG_LEVEL_INFO, 0, logicalChannel, beaconOrder, superframeOrder);
       if (beaconOrder == 15){
         // beaconless PAN
         superframeOrder = 15;
@@ -394,7 +394,7 @@ implementation
   event void Token.granted()
   {
     call Debug.flush();
-    call Debug.log(LEVEL_INFO, StartP_GOT_RESOURCE, m_lastBeaconTxTime, m_beaconInterval, m_requests);
+    call Debug.log(DEBUG_LEVEL_INFO, 1, m_lastBeaconTxTime, m_beaconInterval, m_requests);
     if (m_requests & REQUEST_REALIGNMENT_DONE_PENDING){
       // unlikely to occur: we have not yet received a done()
       // event after sending out a realignment frame 
@@ -404,7 +404,7 @@ implementation
     if (m_requests & REQUEST_UPDATE_SF){
       m_requests &= ~REQUEST_UPDATE_SF;
       continueStartRequest();
-      call Debug.log(LEVEL_INFO, StartP_UPDATE_STATE, 0, 0, 0);
+      call Debug.log(DEBUG_LEVEL_INFO, 2, 0, 0, 0);
     }
     if (call RadioOff.isOff())
       prepareNextBeaconTransmission();
@@ -433,7 +433,7 @@ implementation
     if (m_txState == S_TX_LOCKED){
       // have not had time to finish processing the last sent beacon
       post grantedTask();
-      call Debug.log(LEVEL_CRITICAL, StartP_OWNER_TOO_FAST, 0, 0, 0);
+      call Debug.log(DEBUG_LEVEL_IMPORTANT, 3, 0, 0, 0);
       return;
     } else if (m_beaconOrder == 15){
       call Token.release();
@@ -463,8 +463,8 @@ implementation
           // the usual case: next beacon tx time = last time + BI
           m_dt = m_beaconInterval;
         }
-        while (call TimeCalc.hasExpired(m_lastBeaconTxTime, m_dt)){ // missed sending a beacon
-          call Debug.log(LEVEL_INFO, StartP_SKIPPED_BEACON, m_lastBeaconTxTime, m_dt, 0);
+        while (call TimeCalc.hasExpired(m_lastBeaconTxTime, m_dt)){ // skipped a beacon
+          call Debug.log(DEBUG_LEVEL_IMPORTANT, 4, m_lastBeaconTxTime, m_dt, 0);
           m_dt += m_beaconInterval;
         }
         if (m_dt < IEEE154_RADIO_TX_PREPARE_DELAY)
@@ -489,12 +489,12 @@ implementation
           else
             m_beaconFrame.header->mhr[MHR_INDEX_FC1] &= ~FC1_FRAME_PENDING;
           m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] = m_bsn; // update beacon seqno
-          call Debug.log(LEVEL_INFO, StartP_PREPARE_TX, 0, m_lastBeaconTxTime, 0);
+          call Debug.log(DEBUG_LEVEL_INFO, 5, 0, m_lastBeaconTxTime, 0);
           call BeaconTx.load(&m_beaconFrame); 
           break;
         case S_TX_LOCKED: 
-          call Debug.log(LEVEL_INFO, StartP_TRANSMIT, m_lastBeaconTxTime, m_dt, ((uint32_t)m_lastBeaconTxRefTime));
-          call BeaconTx.transmit(&m_lastBeaconTxRefTime, m_dt, 0, FALSE);
+          call Debug.log(DEBUG_LEVEL_INFO, 6, m_lastBeaconTxTime, m_dt, 0);
+          call BeaconTx.transmit(&m_lastBeaconTxRefTime, m_dt);
           break;
       }
     }
@@ -503,25 +503,23 @@ implementation
   async event void BeaconTx.loadDone()
   {
     atomic {
-      call Debug.log(LEVEL_INFO, StartP_PREPARE_TXDONE, 0, m_lastBeaconTxTime, 0);
+      call Debug.log(DEBUG_LEVEL_INFO, 7, 0, m_lastBeaconTxTime, 0);
       if (m_txOneBeaconImmediately){
         m_txOneBeaconImmediately = FALSE;
-        call BeaconTx.transmit(0, 0, 0, FALSE); // now!
+        call BeaconTx.transmit(NULL, 0); // now!
       } else 
         call BeaconTxAlarm.startAt(m_lastBeaconTxTime, m_dt - IEEE154_RADIO_TX_SEND_DELAY);
     }
   }
-    
-  async event void BeaconTx.transmitDone(ieee154_txframe_t *frame, 
-      ieee154_reftime_t *referenceTime, bool pendingFlag, error_t error)
+  async event void BeaconTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime)
   {
     // Coord CAP has just started...
     uint8_t gtsFieldLength;
     // Sec. 7.5.1.1: "start of slot 0 is defined as the point at which 
     // the first symbol of the beacon PPDU is transmitted" 
-    call Debug.log(LEVEL_INFO, StartP_BEACON_TRANSMITTED, frame->metadata->timestamp, m_lastBeaconTxTime, m_dt);
+    call Debug.log(DEBUG_LEVEL_INFO, 8, frame->metadata->timestamp, m_lastBeaconTxTime, m_dt);
     m_lastBeaconTxTime = frame->metadata->timestamp;
-    memcpy(&m_lastBeaconTxRefTime, referenceTime, sizeof(ieee154_reftime_t));
+    memcpy(&m_lastBeaconTxRefTime, txTime, sizeof(ieee154_reftime_t));
     m_numGtsSlots = (frame->payload[2] & 0x07);
     gtsFieldLength = 1 + ((m_numGtsSlots > 0) ? 1 + m_numGtsSlots * 3: 0);
     m_finalCAPSlot = (frame->payload[1] & 0x0F);
@@ -534,12 +532,12 @@ implementation
     if (frame->payload[1] & 0x10){
       // BLE is active; calculate the time offset from slot0
       m_BLELen = IEEE154_SHR_DURATION + 
-        (frame->headerLen + frame->payloadLen) * IEEE154_SYMBOLS_PER_OCTET; 
-      if (frame->headerLen + frame->payloadLen > IEEE154_aMaxSIFSFrameSize)
+        (frame->headerLen + frame->payloadLen + 2) * IEEE154_SYMBOLS_PER_OCTET; 
+      if (frame->headerLen + frame->payloadLen + 2 > IEEE154_aMaxSIFSFrameSize)
         m_BLELen += IEEE154_MIN_LIFS_PERIOD;
       else
         m_BLELen += IEEE154_MIN_SIFS_PERIOD;
-      m_BLELen += m_battLifeExtPeriods;
+      m_BLELen = m_BLELen + m_battLifeExtPeriods * 20;
     } else
       m_BLELen = 0;
     call TokenToBroadcast.transfer(); // borrow Token to Broadcast/CAP/CFP module, we'll get it back afterwards
@@ -658,7 +656,7 @@ implementation
     atomic {
       if (m_txState == S_TX_LOCKED) 
       {
-        call Debug.log(LEVEL_INFO, StartP_BEACON_UPDATE, 0, 0, m_txState);
+        call Debug.log(DEBUG_LEVEL_IMPORTANT, 10, 0, 0, m_txState);
         return; // too late !
       }
       if (m_payloadState & MODIFIED_PENDING_ADDR_FIELD){
@@ -696,7 +694,7 @@ implementation
     atomic {
       if (m_txState == S_TX_LOCKED) 
       {
-        call Debug.log(LEVEL_INFO, StartP_BEACON_UPDATE_2, 0, 0, m_txState);
+        call Debug.log(DEBUG_LEVEL_INFO, 11, 0, 0, m_txState);
         return; // too late !
       }
       if (m_payloadState & MODIFIED_BEACON_PAYLOAD){
@@ -815,6 +813,11 @@ implementation
   async command uint32_t SfSlotDuration.getNow() { return m_sfSlotDuration; }
   async command uint8_t FinalCapSlot.getNow() { return m_finalCAPSlot; }
   async command uint8_t NumGtsSlots.getNow() { return m_numGtsSlots; }
+  async event void BeaconTx.transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
+      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result){}
+  async event void BeaconTx.transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
+      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParams, error_t result){} 
+
 
   default event void MLME_START.confirm    (
                           ieee154_status_t status

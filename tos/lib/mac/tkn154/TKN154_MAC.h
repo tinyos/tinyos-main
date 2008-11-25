@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-06-25 10:19:03 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -128,6 +128,8 @@ enum {
   FC2_FRAME_VERSION_MASK      = 0x30,
 };
 
+#define SYNC_POLL_CLIENT unique("PollP.client")
+#define ASSOCIATE_POLL_CLIENT unique("PollP.client")
 #define CAP_TX_CLIENT "CapQueueP.FrameTx.client"
 #define INDIRECT_TX_CLIENT "IndirectTx.client"
 #define IEEE802154_RADIO_RESOURCE "RadioRxTxP.resource"
@@ -164,16 +166,17 @@ typedef struct
   ieee154_header_t header;
   ieee154_metadata_t metadata;
 } ieee154_txcontrol_t;
+      
+typedef struct ieee154_csma {
+  uint8_t BE;                 // initial backoff exponent
+  uint8_t macMaxBE;           // maximum backoff exponent
+  uint8_t macMaxCsmaBackoffs; // maximum number of allowed backoffs
+  uint8_t NB;                 // number of backoff during current transmission
+} ieee154_csma_t;
 
 typedef struct {
   ieee154_txframe_t *frame;
-  ieee154_macMaxBE_t BE;
-  ieee154_macMaxCSMABackoffs_t allowedBackoffs;
-  ieee154_macMaxBE_t macMaxBE;
-  ieee154_macMinBE_t macMinBE;
-  uint8_t NB;
-  uint16_t backoff;
-  uint16_t backoffElapsed;
+  ieee154_csma_t csmaParams;
   uint32_t transactionTime;
 } ieee154_cap_frame_backup_t;
 

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-25 10:19:03 $
+ * $Revision: 1.3 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -41,6 +41,7 @@ module IndirectTxP
     interface FrameTx[uint8_t client];
     interface WriteBeaconField as PendingAddrWrite;
     interface Notify<bool> as PendingAddrSpecUpdated;
+    interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
     interface Purge;
   }
   uses
@@ -129,7 +130,7 @@ implementation
       for (j=0; j<8; j++)
         pendingAddrField[1 + 2*m_numShortPending + i*8 + j] = longAdrPtr[i][j];
     pendingAddrField[0] = m_numShortPending | (m_numExtPending << 4);
-    call Debug.log(LEVEL_INFO, IndirectTxP_BEACON_ASSEMBLY, len,0,0);
+    call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_BEACON_ASSEMBLY, len,0,0);
     return len;
   }
 
@@ -143,7 +144,7 @@ implementation
     // send a frame through indirect transmission
     uint8_t i;
     if (m_numTableEntries >= NUM_MAX_PENDING){
-      call Debug.log(LEVEL_IMPORTANT, IndirectTxP_OVERFLOW, 0,0,0);
+      call Debug.log(DEBUG_LEVEL_IMPORTANT, IndirectTxP_OVERFLOW, 0,0,0);
       return IEEE154_TRANSACTION_OVERFLOW;
     }
     txFrame->client = client;
@@ -159,7 +160,7 @@ implementation
       m_numExtPending++;
     if (!call IndirectTxTimeout.isRunning())
       call IndirectTxTimeout.startOneShot(getPersistenceTime());
-    call Debug.log(LEVEL_INFO, IndirectTxP_NOTIFIED, 0,0,0);
+    call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_NOTIFIED, 0,0,0);
     signal PendingAddrSpecUpdated.notify(TRUE);
     return IEEE154_SUCCESS;
   }
@@ -203,7 +204,7 @@ implementation
         }
       }
     }
-    call Debug.log(LEVEL_INFO, IndirectTxP_REQUESTED, NUM_MAX_PENDING-i,i,*src);
+    call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_REQUESTED, NUM_MAX_PENDING-i,i,*src);
     if (i != NUM_MAX_PENDING){
       // found a matching frame, mark it for transmission
       m_txFrameTable[i]->client |= SEND_THIS_FRAME;
@@ -219,16 +220,16 @@ implementation
     // iterate over the queued frames and transmit them in the CAP 
     // (if they are marked for transmission)
     uint8_t i;
-    if (!m_pendingTxFrame && m_numTableEntries){
+    if (m_pendingTxFrame == NULL && m_numTableEntries){
       for (i=0; i<NUM_MAX_PENDING; i++)
         if (m_txFrameTable[i] && (m_txFrameTable[i]->client & SEND_THIS_FRAME)){
           // TODO: set frame pending bit, if there's more data for this destination
           m_pendingTxFrame = m_txFrameTable[i];
           m_client = m_txFrameTable[i]->client;
           if (call CoordCapTx.transmit(m_txFrameTable[i]) == IEEE154_SUCCESS){
-            call Debug.log(LEVEL_INFO, IndirectTxP_SEND_NOW, 0,0,0);
+            call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_SEND_NOW, 0,0,0);
           } else {
-            m_pendingTxFrame = 0;
+            m_pendingTxFrame = NULL;
             post tryCoordCapTxTask();
           }
           return; // done - wait for txDone
@@ -275,7 +276,7 @@ implementation
   event void CoordCapTx.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
   {
     uint8_t i;
-    // TODO: if CSMA-CA algorithm failed, then frame shall remain in transaction queue
+    // TODO: if CSMA-CA algorithm failed, then frame shall still remain in transaction queue
     for (i=0; i<NUM_MAX_PENDING; i++)
       if (m_txFrameTable[i] == txFrame){
         m_txFrameTable[i] = NULL; // slot is now empty
@@ -292,9 +293,10 @@ implementation
       m_numExtPending--;    
     signal FrameTx.transmitDone[txFrame->client](txFrame, status);
     post tryCoordCapTxTask();
-    call Debug.log(LEVEL_INFO, IndirectTxP_SEND_DONE, status,m_numTableEntries,0);
+    call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_SEND_DONE, status,m_numTableEntries,0);
   }
 
+  command ieee154_txframe_t* GetIndirectTxFrame.get(){ return m_pendingTxFrame;}
   command error_t PendingAddrSpecUpdated.enable(){return FAIL;}
   command error_t PendingAddrSpecUpdated.disable(){return FAIL;}
   default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status){}

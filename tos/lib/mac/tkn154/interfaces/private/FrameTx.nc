@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:33 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -38,7 +38,7 @@ interface FrameTx
    *
    * @param  txFrame    the frame to transmit
    * @return IEEE154_SUCCESS if the request was accepted and
-   * only then <code>transmitDone()</code> will be signalled
+   * only then <tt>transmitDone()</tt> will be signalled
    */  
   command ieee154_status_t transmit(ieee154_txframe_t *txFrame); 
 

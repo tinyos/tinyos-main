@@ -27,15 +27,14 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:33 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 #include "TKN154_platform.h"
 interface RadioRx
 {
-
   /** 
    * Prepares the radio for receive mode. This command will fail, if the radio
    * is not in the state RADIO_OFF. The actual receive operation will be
@@ -55,13 +54,15 @@ interface RadioRx
    **/    
   async event void prepareDone(); 
 
-  /** @return TRUE if the radio is in the state RX_PREPARED, FALSE otherwise */
+  /** 
+   * Tells whether the radio is in state RX_PREPARED.
+   * @return TRUE if the radio is in the state RX_PREPARED, FALSE otherwise 
+   */
   async command bool isPrepared();
 
   /** 
    * Switches the radio to receive mode at time <tt>t0 + dt</tt>.  If
-   * <tt>t0</tt> is NULL, then the callee interprets <tt>t0</tt> as the current
-   * time. 
+   * <tt>t0</tt> is NULL, then the callee interprets <tt>t0</tt> as now. 
    *
    * @param t0 Reference time for receive operation (NULL means now)  
    *
@@ -73,7 +74,10 @@ interface RadioRx
    */
   async command error_t receive(ieee154_reftime_t *t0, uint32_t dt); 
   
-  /** @return TRUE if the radio is in the state RECEIVING, FALSE otherwise */
+  /**
+   * Tells whether the radio is in state RECEIVING.
+   * @return TRUE if the radio is in the state RECEIVING, FALSE otherwise 
+   */
   async command bool isReceiving();
 
   /** 

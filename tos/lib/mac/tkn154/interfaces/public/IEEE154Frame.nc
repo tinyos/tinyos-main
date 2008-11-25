@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:34 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -115,10 +115,10 @@ interface IEEE154Frame
  /**
    * Sets the addressing fields in the MAC header of a frame. The source 
    * PAN identifier and the source address will be set automatically, their
-   * values depend on the <code>SrcAddrMode</code> parameter: if 
-   * <code>SrcAddrMode</code> is a short or extended address, then
-   * the current PIB attributes <code>macShortAddress</code> or 
-   * <code>aExtendedAddress</code> and <code>macPANId</code> are used.
+   * values depend on the <tt>SrcAddrMode</tt> parameter: if 
+   * <tt>SrcAddrMode</tt> is a short or extended address, then
+   * the current PIB attributes <tt>macShortAddress</tt> or 
+   * <tt>aExtendedAddress</tt> and <tt>macPANId</tt> are used.
    *
    * @param frame         the frame
    * @param srcAddrMode   the source addressing mode
@@ -157,7 +157,7 @@ interface IEEE154Frame
 
  /**
    * Returns the point in time when the frame was received. If 
-   * <code>isTimestampValid()<\code> returns FALSE then the 
+   * <tt>isTimestampValid()<\tt> returns FALSE then the 
    * timestamp is not valid and must be ignored.
    *
    * @param frame     the frame
@@ -192,7 +192,7 @@ interface IEEE154Frame
     * Returns the type of the frame
     * BEACON=0, DATA=1, ACK=2, COMMAND=3.
     *
-    * Note: For beacon frames one can use the <code>IEEE154BeaconFrame<\code>
+    * Note: For beacon frames one can use the <tt>IEEE154BeaconFrame<\tt>
     * interface to inspect additional fields of the frame.
     *
     * @param  frame   the frame
@@ -233,8 +233,8 @@ interface IEEE154Frame
     * received while in promiscuous mode, because then no filtering
     * (except CRC check) was applied. Note: if this command returns
     * FALSE, then all other commands in this interface (except
-    * <code>wasPromiscuousModeEnabled()</code>) and the 
-    * <code>IEEE154BeaconFrame</code> interface return undefined values!
+    * <tt>wasPromiscuousModeEnabled()</tt>) and the 
+    * <tt>IEEE154BeaconFrame</tt> interface return undefined values!
     *
     * @param  frame   the frame
     * @return         TRUE if frame has a standard compliant header,

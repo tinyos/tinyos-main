@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -81,7 +81,7 @@ implementation
       return FAIL;
     m_promiscuousState = S_STARTING;
     call Token.request();
-    call Debug.log(LEVEL_INFO, EnableRxP_PROMISCUOUS_REQUEST, m_promiscuousState, 0, 0);
+    call Debug.log(DEBUG_LEVEL_INFO, EnableRxP_PROMISCUOUS_REQUEST, m_promiscuousState, 0, 0);
     call Debug.flush();
     return SUCCESS;
   }
@@ -96,7 +96,7 @@ implementation
     if (call PromiscuousRx.prepare() != IEEE154_SUCCESS){
       m_promiscuousState = S_IDLE;
       call Token.release();
-      call Debug.log(LEVEL_IMPORTANT, EnableRxP_RADIORX_ERROR, 0, 0, 0);
+      call Debug.log(DEBUG_LEVEL_IMPORTANT, EnableRxP_RADIORX_ERROR, 0, 0, 0);
       signal PromiscuousMode.startDone(FAIL);
     }
   }
@@ -115,7 +115,7 @@ implementation
     m_promiscuousState = S_STARTED;
     call PromiscuousRx.receive(NULL, 0);
     signal PromiscuousMode.startDone(SUCCESS);
-    call Debug.log(LEVEL_INFO, EnableRxP_PROMISCUOUS_ON, m_promiscuousState, 0, 0);
+    call Debug.log(DEBUG_LEVEL_INFO, EnableRxP_PROMISCUOUS_ON, m_promiscuousState, 0, 0);
   }
 
   event message_t* PromiscuousRx.received(message_t *frame, ieee154_reftime_t *timestamp)
@@ -151,7 +151,7 @@ implementation
     call RadioPromiscuousMode.set(FALSE);
     call Token.release();
     signal PromiscuousMode.stopDone(SUCCESS);
-    call Debug.log(LEVEL_INFO, EnableRxP_PROMISCUOUS_OFF, m_promiscuousState, 0, 0);
+    call Debug.log(DEBUG_LEVEL_INFO, EnableRxP_PROMISCUOUS_OFF, m_promiscuousState, 0, 0);
   }
 
   default event void PromiscuousMode.startDone(error_t error){}

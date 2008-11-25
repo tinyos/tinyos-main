@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:33 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -37,14 +37,14 @@ interface RadioOff
 {
 
   /** 
-   * Switches the radio off and changes the radio state to RADIO_OFF. This
+   * Disables the transceiver and changes the radio state to RADIO_OFF. This
    * command will succeed only if the current state of the radio is either
    * TX_LOADED, RX_PREPARED or RECEIVING.
    *
-   * @return EALREADY if radio is already switched off <br> FAIL if radio the
-   * current radio state is neither TX_LOADED, RX_PREPARED nor RECEIVING <br>
-   * SUCCESS if the command was accepted and the <tt>offDone()</tt> event will
-   * be signalled.
+   * @return SUCCESS if the command was accepted and the <tt>offDone()</tt>
+   * event will be signalled; EALREADY if radio is already switched off; FAIL
+   * if the current radio state is neither TX_LOADED, RX_PREPARED nor
+   * RECEIVING.
    */
   async command error_t off();
 
@@ -54,6 +54,9 @@ interface RadioOff
    **/  
   async event void offDone();
 
- /** @return TRUE if the radio is in the state RADIO_OFF, FALSE otherwise */
-  async command bool isOff();
+  /** 
+   * Tells whether the radio is in state RADIO_OFF.
+   * @return TRUE if the radio is in the state RADIO_OFF, FALSE otherwise 
+   */
+  async command bool isOff(); 
 }

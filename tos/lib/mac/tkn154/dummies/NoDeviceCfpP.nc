@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2008-10-23 16:09:28 $
+ * $Revision: 1.5 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -106,8 +106,7 @@ implementation
   async event void RadioOff.offDone() {}
 
   async event void RadioTx.loadDone(){}
-  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, 
-      ieee154_reftime_t *referenceTime, bool ackPendingFlag, error_t error){}
+  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime){}
 
   async event void RadioRx.prepareDone(){} 
   event message_t* RadioRx.received(message_t *frame, ieee154_reftime_t *timestamp){return frame;}
@@ -120,4 +119,9 @@ implementation
   }
 
   async event void TokenRequested.immediateRequested(){ }
+
+  async event void RadioTx.transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
+      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result){}
+  async event void RadioTx.transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
+      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParams, error_t result){} 
 }

@@ -33,8 +33,8 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @author Jan Hauer <hauer@tkn.tu-berlin.de> (support for promiscuous mode)
- * @version $Revision: 1.1 $ $Date: 2008-06-16 18:02:40 $
+ * @author Jan Hauer <hauer@tkn.tu-berlin.de>
+ * @version $Revision: 1.2 $ $Date: 2008-11-25 09:35:08 $
  */
 
 #include "Timer.h"
@@ -53,6 +53,7 @@ module CC2420ControlP {
   uses interface GeneralIO as RSTN;
   uses interface GeneralIO as VREN;
   uses interface GpioInterrupt as InterruptCCA;
+  uses interface GeneralIO as FIFO;
 
   uses interface CC2420Ram as IEEEADR;
   uses interface CC2420Register as FSCTRL;
@@ -62,11 +63,14 @@ module CC2420ControlP {
   uses interface CC2420Register as MDMCTRL1;
   uses interface CC2420Register as RXCTRL1;
   uses interface CC2420Register as RSSI;
+  uses interface CC2420Register as RXFIFO_REGISTER;
+  uses interface CC2420Strobe as SNOP;
   uses interface CC2420Strobe as SRXON;
   uses interface CC2420Strobe as SRFOFF;
   uses interface CC2420Strobe as SXOSCOFF;
   uses interface CC2420Strobe as SXOSCON;
-  uses interface CC2420Strobe as SACKPEND; // JH: ACKs must have pending flag set
+  uses interface CC2420Strobe as SACKPEND;
+  uses interface CC2420Strobe as SFLUSHRX;
   uses interface CC2420Register as TXCTRL;
   uses interface AMPacket;
   
@@ -122,6 +126,12 @@ implementation {
   }
 
   /***************** Resource Commands ****************/
+  /* This module never actively requests the SPI resource,
+   * instead the caller MUST request the SPI through this module
+   * before it calls any of the provided commands and it must
+   * release it afterwards (the caller can call multiple  
+   * commands in this module before it releases the SPI, though).
+   */ 
   async command error_t Resource.immediateRequest() {
     error_t error = call SpiResource.immediateRequest();
     if ( error == SUCCESS ) {
@@ -143,6 +153,11 @@ implementation {
 /*      call CSN.set();*/
       return call SpiResource.release();
     }
+  }
+
+  event void SpiResource.granted() {
+/*    call CSN.clr();*/
+    signal Resource.granted();
   }
 
   void switchToUnbufferedMode()
@@ -179,7 +194,7 @@ implementation {
       m_state = S_VREG_STARTING;
     }
     call VREN.set();
-    call StartupAlarm.start( CC2420_TIME_VREN * 2 ); // JH: a 15.4 symbol is about two 32khz ticks
+    call StartupAlarm.start( CC2420_TIME_VREN * 2 ); // JH: changed from 32khz jiffies
     return SUCCESS;
   }
 
@@ -241,32 +256,52 @@ implementation {
 
   async command error_t CC2420Power.rxOn() {
     atomic {
-      if ( m_state != S_XOSC_STARTED ) {
+      if ( !call SpiResource.isOwner() )
         return FAIL;
-      }
       call CSN.set();
       call CSN.clr();
       call SRXON.strobe();
-      call SACKPEND.strobe();  // JH: ACKs have the pending bit set
+      call SACKPEND.strobe();  // JH: ACKs need the pending bit set
       call CSN.set();
     }
     return SUCCESS;
   }
 
   async command error_t CC2420Power.rfOff() {
-    atomic {  
-      if ( m_state != S_XOSC_STARTED ) {
+    atomic {
+      if ( !call SpiResource.isOwner() )
         return FAIL;
-      }
       call CSN.set();
       call CSN.clr();
-      call SACKPEND.strobe();  // JH: ACKs have the pending bit set
       call SRFOFF.strobe();
       call CSN.set();
     }
     return SUCCESS;
   }
 
+  async command error_t CC2420Power.flushRxFifo()
+  {
+    uint16_t dummy;
+    atomic {
+      if ( !call SpiResource.isOwner() )
+        return FAIL;
+      if ( call FIFO.get() ){ // check if there is something in the RXFIFO
+        // SFLUSHRX: "Flush the RX FIFO buffer and reset the demodulator. 
+        // Always read at least one byte from the RXFIFO before 
+        // issuing the SFLUSHRX command strobe" (CC2420 Datasheet)
+        call CSN.clr();
+        call RXFIFO_REGISTER.read(&dummy); // reading 1 byte would be enough...
+        call CSN.set();
+        call CSN.clr();
+        // "SFLUSHRX command strobe should be issued twice to ensure 
+        // that the SFD pin goes back to its idle state." (CC2420 Datasheet)
+        call SFLUSHRX.strobe();
+        call SFLUSHRX.strobe();
+        call CSN.set();
+      }
+    }
+    return SUCCESS;
+  }
   
   /***************** CC2420Config Commands ****************/
   command uint8_t CC2420Config.getChannel() {
@@ -367,13 +402,11 @@ implementation {
    * Sync must be called to commit software parameters configured on
    * the microcontroller (through the CC2420Config interface) to the
    * CC2420 radio chip.
-   * ASSUMPTION: caller owns the SPI, radio will be switched off !
    */
   async command error_t CC2420Config.sync() {
     atomic {
-      if ( m_state != S_XOSC_STARTED ) {
+      if ( !call SpiResource.isOwner() )
         return FAIL;
-      }
       if (m_needsSync){
         call CSN.set();
         call CSN.clr();
@@ -396,29 +429,30 @@ implementation {
   /***************** ReadRssi Commands ****************/
   
   async command error_t CC2420Power.rssi(int8_t *rssi) {
-    // we are owner of the Spi !
     uint16_t data;
     cc2420_status_t status;
-    call CSN.clr();
-    status = call RSSI.read(&data);
-    call CSN.set();
-    if ((status & 0x02)){
-      *rssi = (data & 0x00FF);
-      return SUCCESS;
-    } else
-      return FAIL;
+    atomic {
+      if ( !call SpiResource.isOwner() )
+        return FAIL;
+      call CSN.set();
+      call CSN.clr();
+      status = call RSSI.read(&data);
+      call CSN.set();
+      if ((status & 0x02)){
+        *rssi = (data & 0x00FF);
+        return SUCCESS;
+      } else
+        return FAIL;
+    }
   }
-
-  event void SpiResource.granted() {
-/*    call CSN.clr();*/
-    signal Resource.granted();
-  }
-
-
   
   /***************** StartupAlarm Events ****************/
   async event void StartupAlarm.fired() {
     if ( m_state == S_VREG_STARTING ) {
+      cc2420_status_t status;
+      do {
+       status = call SNOP.strobe();  
+      } while (!(status & CC2420_STATUS_XOSC16M_STABLE));
       m_state = S_VREG_STARTED;
       call RSTN.clr();
       call RSTN.set();

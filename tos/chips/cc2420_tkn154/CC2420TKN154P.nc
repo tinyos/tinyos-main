@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:02:40 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:08 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -78,26 +78,30 @@ module CC2420TKN154P
 
     S_RESERVE_RX_SPI,
     S_RX_PREPARED,
+    S_RX_WAIT,
     S_RECEIVING,
     S_OFF_PENDING,
 
     S_LOAD_TXFIFO,
     S_TX_LOADED,
+    S_TX_WAIT,
     S_TX_ACTIVE,
     S_TX_CANCEL,
     S_TX_DONE,
   } m_state_t;
 
   norace m_state_t m_state = S_STOPPED;
-  norace ieee154_txframe_t *m_txdata;
+  norace ieee154_txframe_t *m_txframe;
   norace error_t m_txError;
   norace ieee154_reftime_t m_txReferenceTime;
   norace bool m_ackFramePending;
   uint32_t m_edDuration;
   bool m_pibUpdated;
-  uint8_t m_numCCA;
+  norace uint8_t m_numCCA;
   ieee154_reftime_t *m_t0Tx;
-  uint32_t m_dtTx;
+  uint32_t m_dtMax;
+  uint32_t m_dt;
+  norace ieee154_csma_t *m_csmaParams;
 
   norace uint8_t m_txLockOnCCAFail;
   norace bool m_rxAfterTx = FALSE;
@@ -112,34 +116,20 @@ module CC2420TKN154P
   void rxSpiReserved();
   void txSpiReserved();
   void txDoneSpiReserved();
-  void signalTxDone();
   void finishTx();
   void stopContinue();
   void offSpiReserved();
   void offStopRxDone();
-  void continueTxPrepare();
+  uint16_t generateRandomBackoff(uint8_t BE);
+  void randomDelayUnslottedCsmaCa();
+  void randomDelaySlottedCsmaCa(bool resume, uint16_t remainingBackoff);
+  void sendDone(ieee154_reftime_t *referenceTime, bool ackPendingFlag, error_t error);
   
 
-  /******************************/
-  /* StdControl Operations      */
-  /******************************/
-
-  /****************************************/
-  /*     TelosB Pin connection (debug)    */
-  /*                                      */
-  /* R1 = P6.6 = ADC6, R2 = P6.7 = ADC7   */
-  /* S1 = P2.3 = GIO2, S2 = P2.6 = GIO3   */
-  /* R1 is at 6pin-expansion pin 1,       */               
-  /* R2 is at 6pin-expansion pin 2,       */               
-  /****************************************/
+/* ----------------------- StdControl Operations ----------------------- */
 
   command error_t SplitControl.start()
   {
-    // debug
-    //P6SEL &= ~0xC0;     // debug PIN: 6.6, 6.7, set to I/O function
-    //P6DIR |= 0xC0;      // output
-    //P6OUT &= ~0xC0;     // low
-    
     atomic {
       if (m_state == S_RADIO_OFF)
         return EALREADY;
@@ -166,6 +156,7 @@ module CC2420TKN154P
   {
     // default configuration (addresses, etc) has been written
     call CC2420Power.rfOff();
+    call CC2420Power.flushRxFifo();
     call CC2420Tx.unlockChipSpi();
     post startDoneTask();
   }
@@ -203,10 +194,9 @@ module CC2420TKN154P
         m_state = S_STOPPING;
     }
     if (m_state != S_STOPPING)
-      post stopTask(); // this will not happen, because the caller has switched radio off
+      post stopTask(); // spin - this should not happen, because the caller has switched radio off
     else 
-      if (call RxControl.stop() == EALREADY)
-        stopContinue();
+      stopContinue();
   }
 
   void stopContinue()
@@ -219,19 +209,28 @@ module CC2420TKN154P
     // we own the SPI bus
     atomic {
       call CC2420Power.rfOff();
-      call CC2420Tx.unlockChipSpi();
-      call TxControl.stop();
+      call CC2420Power.flushRxFifo();
       call CC2420Power.stopOscillator(); 
       call CC2420Power.stopVReg();
+      call CC2420Tx.unlockChipSpi();
       call SpiResource.release();
       m_state  = S_STOPPED;
       signal SplitControl.stopDone(SUCCESS);
     }
   }
 
-  /*********************************/
-  /*  PIB Updates                  */
-  /*********************************/
+  uint16_t generateRandomBackoff(uint8_t BE)
+  {
+    // return random number from [0,(2^BE) - 1] (uniform distr.)
+    uint16_t res = call Random.rand16();
+    uint16_t mask = 0xFFFF;
+    mask <<= BE;
+    mask = ~mask;
+    res &= mask;
+    return res;
+  }
+
+/* ----------------------- PIB Updates ----------------------- */
   
   // input: power in dBm, output: PA_LEVEL parameter for cc2420 TXCTRL register
   uint8_t dBmToPA_LEVEL(int dBm)
@@ -292,9 +291,7 @@ module CC2420TKN154P
     call CC2420Config.setPromiscuousMode(val);
   }
 
-  /*********************************/
-  /* Energy Detection              */
-  /*********************************/
+/* ----------------------- Energy Detection ----------------------- */
 
   command error_t EnergyDetection.start(uint32_t duration)
   {
@@ -319,7 +316,7 @@ module CC2420TKN154P
     call CC2420Power.rxOn();
     // reading an RSSI value over SPI will usually almost
     // take as much time as 8 symbols, i.e. there's 
-    // no point using an Alarm here (but maybe a BusyWait?)
+    // no point using an Alarm here (but maybe a busy wait?)
     while (!call TimeCalc.hasExpired(start, m_edDuration)){
       if (call CC2420Power.rssi(&value) != SUCCESS)
         continue;
@@ -331,21 +328,33 @@ module CC2420TKN154P
     if (maxEnergy > -128)
       maxEnergy -= 45; 
     call CC2420Power.rfOff();
+    call CC2420Power.flushRxFifo();
     m_state = S_RADIO_OFF;
     call SpiResource.release();
     signal EnergyDetection.done(SUCCESS, maxEnergy);
   }
 
-  /****************************************/
-  /*     Transceiver Off                  */
-  /****************************************/
+/* ----------------------- Transceiver Off ----------------------- */
+
+  task void spinOffTask()
+  {
+    uint8_t i;
+      call Leds.led2On(); call Leds.led1On(); 
+      for (i=0; i<65500U; i++) ;
+      call Leds.led2Off(); call Leds.led1Off(); 
+      for (i=0; i<65500U; i++) ;
+    call RadioOff.off();
+  }
 
   async command error_t RadioOff.off()
   {
     atomic {
       if (m_state == S_RADIO_OFF)
         return EALREADY;
-      else if (m_state != S_RECEIVING && m_state != S_TX_LOADED && m_state != S_RX_PREPARED)
+      if (m_state == S_RX_WAIT || m_state == S_TX_WAIT){
+        post spinOffTask();
+        return SUCCESS;
+      } else if (m_state != S_RECEIVING && m_state != S_TX_LOADED && m_state != S_RX_PREPARED)
         return FAIL;
       m_state = S_OFF_PENDING;
     }
@@ -367,7 +376,7 @@ module CC2420TKN154P
   {
     call TxControl.stop();
     call CC2420Power.rfOff();
-    call CC2420Config.sync(); // put any PIB updates into operation
+    call CC2420Power.flushRxFifo();
     call CC2420Tx.unlockChipSpi();
     call SpiResource.release();
     m_state = S_RADIO_OFF;
@@ -379,9 +388,7 @@ module CC2420TKN154P
     return m_state == S_RADIO_OFF;
   }
 
-  /****************************************/
-  /*     Receive Operations               */
-  /****************************************/
+/* ----------------------- Receive Operations ----------------------- */
 
   async command error_t RadioRx.prepare()
   {
@@ -392,26 +399,24 @@ module CC2420TKN154P
         return FAIL;
       m_state = S_RESERVE_RX_SPI;
     }
-    if (call RxControl.start() != SUCCESS){  // will trigger rxStartRxDone()
+    if (call RxControl.start() != SUCCESS){
       m_state = S_RADIO_OFF;
       call Leds.led0On();
       return FAIL; 
+    } else {
+      if (call SpiResource.immediateRequest() == SUCCESS)   // will trigger rxSpiReserved()
+        rxSpiReserved();
+      else
+        call SpiResource.request();
     }
     return SUCCESS; 
-  }
-
-  void rxStartRxDone()
-  {
-    if (call SpiResource.immediateRequest() == SUCCESS)   // will trigger rxSpiReserved()
-      rxSpiReserved();
-    else
-      call SpiResource.request();
   }
 
   void rxSpiReserved()
   {
     call CC2420Config.sync(); // put PIB changes into operation
-    call TxControl.start();   // for timestamping
+    call TxControl.stop();    
+    call TxControl.start();   // for timestamping (SFD interrupt)
     m_state = S_RX_PREPARED;
     signal RadioRx.prepareDone(); // keep owning the SPI
   }
@@ -428,8 +433,9 @@ module CC2420TKN154P
         call Leds.led0On();
         return FAIL;
       }
-      if (t0 != NULL && dt)
-        call ReliableWait.waitRx(t0, dt);
+      m_state = S_RX_WAIT;
+      if (t0 != NULL)
+        call ReliableWait.waitRx(t0, dt); // will signal waitRxDone() in time
       else
         signal ReliableWait.waitRxDone();
     }
@@ -447,12 +453,12 @@ module CC2420TKN154P
     call SpiResource.release();    
   }
 
-  event message_t* CC2420Rx.received(message_t *data, ieee154_reftime_t *timestamp) 
+  event message_t* CC2420Rx.received(message_t *frame, ieee154_reftime_t *timestamp) 
   {
     if (m_state == S_RECEIVING)
-      return signal RadioRx.received(data, timestamp);
+      return signal RadioRx.received(frame, timestamp);
     else
-      return data;
+      return frame;
   }
 
   async command bool RadioRx.isReceiving()
@@ -460,40 +466,28 @@ module CC2420TKN154P
     return m_state == S_RECEIVING;
   }
 
-  /******************************/
-  /*     Transmit Operations    */
-  /******************************/
+/* ----------------------- Transmit Operations ----------------------- */
 
   async command error_t RadioTx.load(ieee154_txframe_t *frame)
   {
-    bool startRxControl;
     atomic {
       if (m_state != S_RADIO_OFF && m_state != S_TX_LOADED)
         return FAIL;
-      startRxControl = (m_state == S_RADIO_OFF);
-      m_txdata = frame;
+      m_txframe = frame;
       m_state = S_LOAD_TXFIFO;
     }
-    if (!startRxControl)
-      continueTxPrepare();
-    else if (call RxControl.start() != SUCCESS) // will trigger continueTxPrepare()
-      call Leds.led0On();
-    return SUCCESS;
-  }
-
-  void continueTxPrepare()
-  {
-    if (call SpiResource.immediateRequest() == SUCCESS) 
+    if (call SpiResource.isOwner() || call SpiResource.immediateRequest() == SUCCESS) 
       txSpiReserved();
     else
       call SpiResource.request(); // will trigger txSpiReserved()
+    return SUCCESS;
   }
 
   void txSpiReserved()
   {
     call CC2420Config.sync();
     call TxControl.start();
-    if (call CC2420Tx.loadTXFIFO(m_txdata) != SUCCESS)
+    if (call CC2420Tx.loadTXFIFO(m_txframe) != SUCCESS)
       call Leds.led0On();
   }
 
@@ -508,80 +502,228 @@ module CC2420TKN154P
   async command ieee154_txframe_t* RadioTx.getLoadedFrame()
   {
     if (m_state == S_TX_LOADED)
-     return m_txdata;
+     return m_txframe;
     else 
       return NULL;
   }
 
-  async command error_t RadioTx.transmit(ieee154_reftime_t *t0, uint32_t dt, uint8_t numCCA, bool ackRequest)
+  async command error_t RadioTx.transmit(ieee154_reftime_t *t0, uint32_t dt)
   {
+    // transmit without CCA
     atomic {
       if (m_state != S_TX_LOADED)
         return FAIL;
-      m_numCCA = numCCA;
-      m_t0Tx = t0;
-      m_dtTx = dt;
-      if (numCCA){
-        // for CCA we need to be in Rx mode
-        call CC2420Power.rxOn();
-        call ReliableWait.busyWait(20); // turnaround + CCA valid time
-        if (numCCA == 2){
-          // first CCA is done in software (8 symbols after backoff boundary)
-          if (t0 != NULL){
-            call ReliableWait.waitCCA(t0, dt-IEEE154_aUnitBackoffPeriod-12);
-            return SUCCESS;
-          }
-        }
-      }
-      signal ReliableWait.waitCCADone();
+      m_numCCA = 0;
+      m_state = S_TX_WAIT;
+      if (t0 != NULL)
+        call ReliableWait.waitTx(t0, dt); // will signal waitTxDone() in time
+      else
+        signal ReliableWait.waitTxDone();
     }
     return SUCCESS;
   }
 
-  async event void ReliableWait.waitCCADone()
+  void checkEnableRxForACK()
   {
-    bool cca = call CC2420Tx.cca();
-    if (m_numCCA == 2 && !cca){
-      // channel is busy
-      ieee154_reftime_t now;
-      call ReferenceTime.getNow(&now, IEEE154_aUnitBackoffPeriod+12);
-      memcpy(&m_txReferenceTime, &now, sizeof(ieee154_reftime_t));
-      m_ackFramePending = FALSE;
-      m_txError = EBUSY;
-      signalTxDone();
-      return;
-    } else {
-      // the second CCA (or first CCA if there's only one) is done in hardware...
-      uint16_t offset = 0;
-      if (m_numCCA)
-        offset = 12;
-      if (m_t0Tx)
-        call ReliableWait.waitTx(m_t0Tx, m_dtTx-offset);
-      else
-        signal ReliableWait.waitTxDone();
+    // the packet is currently being transmitted, check if we need the receive logic ready
+    bool ackRequest = (m_txframe->header->mhr[MHR_INDEX_FC1] & FC1_ACK_REQUEST) ? TRUE : FALSE;
+    if (ackRequest){
+      // ATTENTION: here the SpiResource is released if ACK is expected
+      // (so Rx part of the driver can take over)
+      call SpiResource.release();
+      if (call RxControl.start() != SUCCESS)
+        call Leds.led0On();
     }
   }
 
   async event void ReliableWait.waitTxDone()
   {
-    m_state = S_TX_ACTIVE;
-    call CC2420Tx.send(m_numCCA>0); // go (with or without CCA) !
+    atomic {
+      m_state = S_TX_ACTIVE;
+      if (call CC2420Tx.send(FALSE) == SUCCESS) // transmit without CCA, this must succeed
+        checkEnableRxForACK();
+      else
+        call Leds.led0On();
+    }
   }
 
-  async event void CC2420Tx.transmissionStarted( ieee154_txframe_t *data )
+  async command error_t RadioTx.transmitUnslottedCsmaCa(ieee154_csma_t *csmaParams)
   {
-    uint8_t frameType = data->header->mhr[0] & FC1_FRAMETYPE_MASK;
-    uint8_t token = data->headerLen;
-    signal Timestamp.transmissionStarted(frameType, data->handle, data->payload, token);
+    // transmit with single CCA
+    atomic {
+      if (m_state != S_TX_LOADED)
+        return FAIL;
+      m_csmaParams = csmaParams;
+      m_numCCA = 1;
+      randomDelayUnslottedCsmaCa(); 
+    }
+    return SUCCESS;
   }
 
-  async event void CC2420Tx.transmittedSFD(uint32_t time, ieee154_txframe_t *data)
+  void randomDelayUnslottedCsmaCa()
   {
-    uint8_t frameType = data->header->mhr[0] & FC1_FRAMETYPE_MASK;
-    uint8_t token = data->headerLen;
-    signal Timestamp.transmittedSFD(time, frameType, data->handle, data->payload, token);
-    // ATTENTION: here we release the SPI, so we can receive a possible ACK
-    call SpiResource.release();
+    // wait random delay (unslotted CSMA-CA)
+    uint16_t dtTx = generateRandomBackoff(m_csmaParams->BE) * 20; 
+    call ReferenceTime.getNow(m_t0Tx, 0);
+    m_state = S_TX_WAIT;
+    call ReliableWait.waitBackoff(m_t0Tx, dtTx); 
+  }
+
+  void waitBackoffUnslottedCsmaCaDone()
+  {
+    int8_t dummy;
+    atomic {
+      // CC2420 needs to be in an Rx state for STXONCCA strobe
+      // note: the receive logic of the CC2420 driver is not yet started, 
+      // i.e. we will not (yet) receive any packets
+      call CC2420Power.rxOn();
+      m_state = S_TX_ACTIVE;
+      // wait for CC2420 Rx to calibrate + CCA valid time
+      while (call CC2420Power.rssi(&dummy) != SUCCESS)
+        ;
+      // call ReliableWait.busyWait(40);
+      // transmit with single CCA (STXONCCA strobe)
+      if (call CC2420Tx.send(TRUE) == SUCCESS){
+        checkEnableRxForACK();
+      } else {
+        // channel is busy
+        call CC2420Power.rfOff();
+        call CC2420Power.flushRxFifo(); // we might have (accidentally) caught something during CCA
+        m_state = S_TX_LOADED;
+        m_csmaParams->NB += 1;
+        if (m_csmaParams->NB > m_csmaParams->macMaxCsmaBackoffs){
+          // CSMA-CA failure, note: we keep owning the SPI, 
+          // our state is back to S_TX_LOADED, the MAC may try to retransmit
+          signal RadioTx.transmitUnslottedCsmaCaDone(m_txframe, FALSE, m_csmaParams, FAIL);
+        } else {
+          // next iteration of unslotted CSMA-CA
+          m_csmaParams->BE += 1;
+          if (m_csmaParams->BE > m_csmaParams->macMaxBE)
+            m_csmaParams->BE = m_csmaParams->macMaxBE;
+          randomDelayUnslottedCsmaCa();
+        }
+      }
+    }
+  }
+
+  async command error_t RadioTx.transmitSlottedCsmaCa(ieee154_reftime_t *slot0Time, uint32_t dtMax, 
+      bool resume, uint16_t remainingBackoff, ieee154_csma_t *csmaParams)
+  {
+    // slotted CSMA-CA requires very exact timing (transmission on
+    // 320 us backoff boundary), even if we have a sufficiently precise and 
+    // accurate clock the CC2420 is not the right radio for
+    // this task because it is accessed over SPI. The code below relies on
+    // platform-specific busy-wait functions that must be adjusted
+    // (through measurements) such that they meet the timing constraints
+    atomic {
+      if (m_state != S_TX_LOADED)
+        return FAIL;
+      m_csmaParams = csmaParams;
+      m_numCCA = 2;
+      m_t0Tx = slot0Time;
+      m_dtMax = dtMax;
+      randomDelaySlottedCsmaCa(resume, remainingBackoff);
+    }
+    return SUCCESS;
+  }
+
+  void randomDelaySlottedCsmaCa(bool resume, uint16_t remainingBackoff)
+  {
+    uint16_t dtTx;
+    atomic {
+      dtTx = call TimeCalc.timeElapsed(call ReferenceTime.toLocalTime(m_t0Tx), call LocalTime.get());
+      dtTx += (20 - (dtTx % 20)); // round to backoff boundary
+      if (resume)
+        dtTx += remainingBackoff;
+      else
+        dtTx = dtTx + (generateRandomBackoff(m_csmaParams->BE) * 20);
+      dtTx += 40; // two backoff periods for the two CCA, the actual tx is scheduled for = m_t0Tx + dtTx
+      if (dtTx > m_dtMax){
+        uint16_t remaining = dtTx - m_dtMax;
+        if (remaining >= 40)
+          remaining -= 40; // substract the two CCA (they don't count for the backoff)
+        else
+          remaining = 0;
+        signal RadioTx.transmitSlottedCsmaCaDone(m_txframe, NULL, FALSE, remaining, m_csmaParams, ERETRY);
+      } else {
+        m_state = S_TX_WAIT;
+        call ReliableWait.waitBackoff(m_t0Tx, dtTx); 
+      }
+    }
+  }
+
+  void waitBackoffSlottedCsmaCaDone()
+  {
+    bool cca;
+    uint16_t dtTx=0;
+    int8_t dummy;
+    atomic {
+      // CC2420 needs to be in an Rx state for STXONCCA strobe
+      // note: the receive logic of the CC2420 driver is not yet started, 
+      // i.e. we will not (yet) receive any packets
+      call CC2420Power.rxOn();
+      m_state = S_TX_ACTIVE;
+      // wait for CC2420 Rx to calibrate + CCA valid time
+      while (call CC2420Power.rssi(&dummy) != SUCCESS)
+        ;
+      // perform CCA on slot boundary (or rather 8 symbols after)
+      call ReliableWait.busyWaitSlotBoundaryCCA(m_t0Tx, &dtTx); // platform-specific implementation
+      cca = call CC2420Tx.cca();
+      if (cca && dtTx <= m_dtMax){
+        // Tx in following slot (STXONCCA) 
+        call ReliableWait.busyWaitSlotBoundaryTx(m_t0Tx, dtTx+20);  // platform-specific implementation
+        if (call CC2420Tx.send(TRUE) == SUCCESS){
+          checkEnableRxForACK();
+          return;
+        } else
+          cca = FALSE;
+      }
+      // did not transmit the frame
+      call CC2420Power.rfOff();
+      call CC2420Power.flushRxFifo(); // we might have (accidentally) caught something
+      m_state = S_TX_LOADED;
+      if (dtTx > m_dtMax)
+        // frame didn't fit into remaining CAP, this can only
+        // be because we couldn't meet the time-constraints 
+        // (in principle the frame should have fitted)
+        signal RadioTx.transmitSlottedCsmaCaDone(m_txframe, NULL, FALSE, 0, m_csmaParams, ERETRY);
+      else {
+        // CCA failed
+        m_csmaParams->NB += 1;
+        if (m_csmaParams->NB > m_csmaParams->macMaxCsmaBackoffs){
+          // CSMA-CA failure, note: we keep owning the SPI
+          signal RadioTx.transmitSlottedCsmaCaDone(m_txframe, NULL, FALSE, 0, m_csmaParams, FAIL);
+        } else {
+          // next iteration of slotted CSMA-CA
+          m_csmaParams->BE += 1;
+          if (m_csmaParams->BE > m_csmaParams->macMaxBE)
+            m_csmaParams->BE = m_csmaParams->macMaxBE;
+          randomDelaySlottedCsmaCa(FALSE, 0);
+        }
+      }
+    }
+  }
+
+  async event void ReliableWait.waitBackoffDone()
+  {
+    if (m_numCCA == 1)
+      waitBackoffUnslottedCsmaCaDone();
+    else
+      waitBackoffSlottedCsmaCaDone();
+  }
+
+  async event void CC2420Tx.transmissionStarted( ieee154_txframe_t *frame )
+  {
+    uint8_t frameType = frame->header->mhr[0] & FC1_FRAMETYPE_MASK;
+    uint8_t token = frame->headerLen;
+    signal Timestamp.transmissionStarted(frameType, frame->handle, frame->payload, token);
+  }
+
+  async event void CC2420Tx.transmittedSFD(uint32_t time, ieee154_txframe_t *frame)
+  {
+    uint8_t frameType = frame->header->mhr[0] & FC1_FRAMETYPE_MASK;
+    uint8_t token = frame->headerLen;
+    signal Timestamp.transmittedSFD(time, frameType, frame->handle, frame->payload, token);
   }
 
   async command void Timestamp.modifyMACPayload(uint8_t token, uint8_t offset, uint8_t* buf, uint8_t len )
@@ -593,15 +735,18 @@ module CC2420TKN154P
   async event void CC2420Tx.sendDone(ieee154_txframe_t *frame, ieee154_reftime_t *referenceTime, 
       bool ackPendingFlag, error_t error)
   {
-    memcpy(&m_txReferenceTime, referenceTime, sizeof(ieee154_reftime_t));
-    m_ackFramePending = ackPendingFlag;
-    m_txError = error;
-    if (error == EBUSY) // CCA failure, i.e. didn't transmit
-      signalTxDone();
-    else 
-      // reset radio
+    if (!call SpiResource.isOwner()){
+      // this can only happen if an ack was requested and we gave up the SPI
+      bool wasAckRequested = (frame->header->mhr[MHR_INDEX_FC1] & FC1_ACK_REQUEST) ? TRUE : FALSE;
+      if (!wasAckRequested)
+        call Leds.led0On(); // internal error!
+      memcpy(&m_txReferenceTime, referenceTime, sizeof(ieee154_reftime_t));
+      m_ackFramePending = ackPendingFlag;
+      m_txError = error;
       if (call RxControl.stop() != SUCCESS) // will trigger txDoneRxControlStopped()
         call Leds.led0On();
+    } else
+      sendDone(referenceTime, ackPendingFlag, error);
   }
 
   void txDoneRxControlStopped()
@@ -615,37 +760,43 @@ module CC2420TKN154P
 
   void txDoneSpiReserved() 
   { 
-    // switch radio off
-    call CC2420Power.rfOff(); 
-    call TxControl.stop();
-    call SpiResource.release(); // for RxControl.start to succeed
-    if (m_txError == SUCCESS)
-      signalTxDone();
-    else {
-      call TxControl.start();
-      call RxControl.start(); // will trigger txDoneRxControlStarted()
-    }
+    sendDone(&m_txReferenceTime, m_ackFramePending, m_txError);
   }
 
-  void txDoneRxControlStarted()
+  void sendDone(ieee154_reftime_t *referenceTime, bool ackPendingFlag, error_t error)
   {
-    m_state = S_TX_DONE;
-    call SpiResource.request(); // will trigger signalTxDone()
-  }
-
-  void signalTxDone() 
-  { 
-    // radio is off, Rx component is started, radio is loaded, we own the SPI
-    if (m_txError == SUCCESS)
+    uint8_t numCCA = m_numCCA;
+    // transmission complete, we're owning the SPI, Rx logic is disabled
+    call CC2420Power.rfOff();
+    call CC2420Power.flushRxFifo();
+    switch (error)
+    {
+       case SUCCESS:
+         m_state = S_RADIO_OFF;
+         break;
+       case ENOACK:
+         m_state = S_TX_LOADED;
+         break;
+       default: 
+         call Leds.led0On(); // internal error!
+         break;
+    }
+    if (error == SUCCESS){
+      call CC2420Tx.unlockChipSpi();
+      call TxControl.stop();
+      call SpiResource.release();
       m_state = S_RADIO_OFF;
-    else
+    } else
       m_state = S_TX_LOADED;
-    signal RadioTx.transmitDone(m_txdata, &m_txReferenceTime, m_ackFramePending, m_txError);
+    if (numCCA == 0)
+      signal RadioTx.transmitDone(m_txframe, referenceTime);
+    else if (numCCA == 1)
+      signal RadioTx.transmitUnslottedCsmaCaDone(m_txframe, ackPendingFlag, m_csmaParams, error);
+    else
+      signal RadioTx.transmitSlottedCsmaCaDone(m_txframe, referenceTime, ackPendingFlag, 0, m_csmaParams, error);
   }
 
-  /*************/
-  /* RxControl */
-  /*************/
+/* ----------------------- RxControl ----------------------- */
 
   async event void RxControl.stopDone(error_t error)
   {
@@ -659,7 +810,6 @@ module CC2420TKN154P
     switch (m_state)
     {
       case S_OFF_PENDING: offStopRxDone(); break;
-      case S_RX_PREPARED: rxStartRxDone(); break;
       case S_TX_ACTIVE: txDoneRxControlStopped(); break;
       case S_STOPPING: stopContinue(); break;            
       default: // huh ?
@@ -667,21 +817,7 @@ module CC2420TKN154P
     }
   }
 
-  async event void RxControl.startDone(error_t error)
-  {
-    switch (m_state)
-    {
-      case S_RESERVE_RX_SPI: rxStartRxDone(); break;
-      case S_LOAD_TXFIFO: continueTxPrepare(); break;
-      case S_TX_ACTIVE: txDoneRxControlStarted(); break;
-      default: // huh ?
-           call Leds.led0On(); break;
-    }
-  }
-
-  /***********************/
-  /* SPI Bus Arbitration */
-  /***********************/
+/* ----------------------- SPI Bus Arbitration ----------------------- */
 
   event void SpiResource.granted() 
   {
@@ -693,7 +829,6 @@ module CC2420TKN154P
       case S_LOAD_TXFIFO: txSpiReserved(); break;
       case S_TX_ACTIVE: txDoneSpiReserved(); break;
       case S_STOPPING: stopReserved(); break;
-      case S_TX_DONE: signalTxDone(); break;
       case S_OFF_PENDING: offSpiReserved(); break;
       default: // huh ?
            call Leds.led0On(); break;

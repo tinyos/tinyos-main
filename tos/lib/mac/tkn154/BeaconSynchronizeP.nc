@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2008-10-23 16:09:28 $
+ * $Revision: 1.7 $
+ * $Date: 2008-11-25 09:35:08 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -105,7 +105,6 @@ implementation
   bool m_internalRequest = FALSE;
 
   norace uint8_t m_numBeaconsLost;
-  uint8_t m_coordAddress[8];
   message_t m_beaconBuffer;
   norace message_t *m_beaconBufferPtr = &m_beaconBuffer;
   norace bool m_beaconSwapBufferReady = TRUE;
@@ -161,7 +160,7 @@ implementation
         (channelPage != IEEE154_SUPPORTED_CHANNELPAGE) || !call IsBeaconEnabledPAN.getNow())
       return IEEE154_INVALID_PARAMETER;
 
-    call Debug.log(LEVEL_INFO,SyncP_REQUEST, logicalChannel, channelPage, trackBeacon);
+    call Debug.log(DEBUG_LEVEL_INFO,0, logicalChannel, channelPage, trackBeacon);
     if (!trackBeacon && m_tracking){
       // stop tracking after next received beacon
       m_stopTracking = TRUE;
@@ -171,7 +170,7 @@ implementation
       m_updateTrackBeacon = trackBeacon;
       m_internalRequest = FALSE;
       m_updatePending = TRUE;
-      call Debug.log(LEVEL_INFO,SyncP_RESOURCE_REQUEST, 0, 0, 0);
+      call Debug.log(DEBUG_LEVEL_INFO,1, 0, 0, 0);
       atomic {
         // if we are tracking then we'll get the Token automatically,
         // otherwise request it now
@@ -185,7 +184,8 @@ implementation
 
   event void FindBeacon.notify( bool val )
   {
-    if (!m_tracking && !m_updatePending){
+    call Debug.log(DEBUG_LEVEL_IMPORTANT,20, m_tracking, m_updatePending, 0);
+    if (!m_tracking && !m_updatePending && !call Token.isOwner()){
       // find a single beacon now (treat this like a user request)
       m_updateLogicalChannel = call MLME_GET.phyCurrentChannel();
       m_updateTrackBeacon = FALSE;
@@ -197,7 +197,7 @@ implementation
 
   event void Token.granted()
   {
-    call Debug.log(LEVEL_INFO,SyncP_GOT_RESOURCE, m_lastBeaconRxTime+m_beaconInterval, 
+    call Debug.log(DEBUG_LEVEL_INFO,2, m_lastBeaconRxTime+m_beaconInterval, 
         m_beaconInterval, (m_updatePending<<1)+m_tracking);
     if (m_updatePending){
       m_state = S_FIRST_SCAN;
@@ -210,7 +210,7 @@ implementation
       m_beaconInterval = ((uint32_t) 1 << m_beaconOrder) * (uint32_t) IEEE154_aBaseSuperframeDuration; 
       m_dt = m_beaconInterval;
       m_numBeaconsLost = IEEE154_aMaxLostBeacons;  // will be reset when beacon is received
-      call Debug.log(LEVEL_INFO,SyncP_UPDATING, call MLME_GET.macCoordShortAddress(), 
+      call Debug.log(DEBUG_LEVEL_INFO,3, call MLME_GET.macCoordShortAddress(), 
           call MLME_GET.macPANId(), m_updateLogicalChannel);
     }
     getNextBeacon();
@@ -225,23 +225,24 @@ implementation
       m_state = S_PREPARE;
       if (!m_tracking){
         // nothing to do, just give up the token
-        call Debug.log(LEVEL_INFO,SyncP_RELEASE_RESOURCE, 0, 0, 0);
+        call Debug.log(DEBUG_LEVEL_INFO,4, 0, 0, 0);
         call Token.release();
         return;
       }
       while (call TimeCalc.hasExpired(m_lastBeaconRxTime, m_dt)){ // missed a beacon!
         missed = TRUE;
-        call Debug.log(LEVEL_INFO,SyncP_BEACON_MISSED_1, m_lastBeaconRxTime, m_dt, missed);
+        call Debug.log(DEBUG_LEVEL_IMPORTANT,5, m_lastBeaconRxTime, m_dt, missed);
         m_dt += m_beaconInterval;
         m_numBeaconsLost++;
       }
       if (m_numBeaconsLost >= IEEE154_aMaxLostBeacons){
+        call Debug.log(DEBUG_LEVEL_IMPORTANT,19, m_numBeaconsLost, m_dt, missed);
         post processBeaconTask();
         return;
       }
       if (missed){
         call Token.request();
-        call Debug.log(LEVEL_INFO,SyncP_RELEASE_RESOURCE, m_lastBeaconRxTime, m_dt, missed);
+        call Debug.log(DEBUG_LEVEL_IMPORTANT,6, m_lastBeaconRxTime, m_dt, missed);
         call Token.release();
         return;
       }
@@ -272,17 +273,15 @@ implementation
 
   async event void TrackAlarm.fired()
   {
-    call Debug.log(LEVEL_IMPORTANT,SyncP_TRACK_ALARM, m_state,m_lastBeaconRxTime,m_dt);
-    atomic {
-      switch (m_state)
-      {
-        case S_PREPARE:
-          call BeaconRx.prepare();
-          break;
-        case S_RADIO_OFF: 
-          call RadioOff.off(); 
-          break;
-      }
+    call Debug.log(DEBUG_LEVEL_INFO,7, m_state,m_lastBeaconRxTime,m_dt);
+    switch (m_state)
+    {
+      case S_PREPARE:
+        call BeaconRx.prepare();
+        break;
+      case S_RADIO_OFF: 
+        call RadioOff.off(); 
+        break;
     }
   }
 
@@ -299,9 +298,10 @@ implementation
     } else {
       m_state = S_RADIO_OFF;
       result = call BeaconRx.receive(&m_lastBeaconRxRefTime, m_dt-RX_LAG);
-      call Debug.log(LEVEL_IMPORTANT,SyncP_RX_ON, m_lastBeaconRxTime, call TrackAlarm.getNow(), m_dt+RX_DURATION);
+      //__nesc_enable_interrupt();
+      call Debug.log(DEBUG_LEVEL_INFO,8, m_lastBeaconRxTime, 0,(m_lastBeaconRxTime+m_dt) - call TrackAlarm.getNow());
       if (result != SUCCESS)
-        call Debug.log(LEVEL_IMPORTANT,SyncP_RADIO_BUSY, result, 0, 0);
+        call Debug.log(DEBUG_LEVEL_CRITICAL,9, result, 0, 0);
       call TrackAlarm.startAt(m_lastBeaconRxTime, m_dt + RX_DURATION);
     }
   }
@@ -309,20 +309,23 @@ implementation
   event message_t* BeaconRx.received(message_t *frame, ieee154_reftime_t *timestamp)
   {
     uint8_t *mhr = MHR(frame);
-    call Debug.log(LEVEL_INFO,SyncP_RX_PACKET,*((nxle_uint32_t*) &mhr[MHR_INDEX_ADDRESS]), 
+    call Debug.log(DEBUG_LEVEL_INFO,10,*((nxle_uint32_t*) &mhr[MHR_INDEX_ADDRESS]), 
         mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK,mhr[MHR_INDEX_SEQNO]);
     if (!m_beaconSwapBufferReady || !call FrameUtility.isBeaconFromCoord(frame))
     {
-      call Debug.log(LEVEL_IMPORTANT,SyncP_RX_GARBAGE, m_beaconSwapBufferReady, 0, 0);
+      call Debug.log(DEBUG_LEVEL_IMPORTANT,11, m_beaconSwapBufferReady, 0, 0);
       return frame;
     } else {
+      error_t resultOff;
       message_t *tmp = m_beaconBufferPtr;
       call TrackAlarm.stop();
       m_beaconSwapBufferReady = FALSE;
       m_beaconBufferPtr = frame;
-      if (timestamp != NULL)
+      resultOff = call RadioOff.off();
+      if (timestamp != NULL){
         memcpy(&m_lastBeaconRxRefTime, timestamp, sizeof(ieee154_reftime_t));
-      call RadioOff.off();
+        call Debug.log(DEBUG_LEVEL_INFO,23,0, 0, resultOff);
+      }
       return tmp;
     }
   }
@@ -331,10 +334,14 @@ implementation
   {
     if (m_state == S_FIRST_SCAN)
       call BeaconRx.prepare();
-    else if (m_state == S_PREPARE)
-      call TrackAlarm.startAt(m_lastBeaconRxTime, m_dt - IEEE154_RADIO_RX_PREPARE_DELAY);
-    else
+    else if (m_state == S_PREPARE){
+      if (!call TimeCalc.hasExpired(m_lastBeaconRxTime, m_dt - IEEE154_RADIO_RX_PREPARE_DELAY))
+        call TrackAlarm.startAt(m_lastBeaconRxTime, m_dt - IEEE154_RADIO_RX_PREPARE_DELAY);
+      else
+        signal TrackAlarm.fired();
+    } else {
       post processBeaconTask();
+    }
   }
 
   task void processBeaconTask()
@@ -342,17 +349,22 @@ implementation
     // valid beacon timestamp is pre-condition for slotted CSMA-CA
     if (m_beaconSwapBufferReady || !call Frame.isTimestampValid(m_beaconBufferPtr)){
       // missed a beacon!
+      if (!m_beaconSwapBufferReady)
+        call Debug.log(DEBUG_LEVEL_IMPORTANT, 21,m_numBeaconsLost,m_beaconSwapBufferReady,m_lastBeaconRxTime);
+      else
+        call Debug.log(DEBUG_LEVEL_IMPORTANT, 12,m_numBeaconsLost,m_beaconSwapBufferReady,m_lastBeaconRxTime);
       m_sfSlotDuration = 0; // CAP len will be 0
       m_numBeaconsLost++;
       m_dt += m_beaconInterval;
-      call Debug.log(LEVEL_IMPORTANT, SyncP_BEACON_MISSED_3,m_numBeaconsLost,0,m_lastBeaconRxTime);
+      m_beaconSwapBufferReady = TRUE;
       if (m_numBeaconsLost >= IEEE154_aMaxLostBeacons){
         m_tracking = FALSE;
-        call Debug.log(LEVEL_IMPORTANT, SyncP_LOST_SYNC,0,0,0);
+        call Debug.log(DEBUG_LEVEL_IMPORTANT, 13,m_internalRequest,0,0);
         call Leds.led2Off();
-        if (m_internalRequest)
+        if (m_internalRequest){
           call TokenToCap.transfer();
-        else
+          return;
+        } else
           signal MLME_SYNC_LOSS.indication(
               IEEE154_BEACON_LOSS, 
               call MLME_GET.macPANId(),
@@ -362,7 +374,7 @@ implementation
               );
       } else
         call Token.request(); // make another request again (before giving the token up)
-      call Debug.log(LEVEL_INFO,SyncP_RELEASE_RESOURCE, 0, 0, 0);
+      call Debug.log(DEBUG_LEVEL_INFO,14, 0, 0, 0);
       call Token.release();
     } else { 
       // got the beacon!
@@ -379,7 +391,7 @@ implementation
       uint8_t gtsFieldLength;
       uint32_t timestamp = call Frame.getTimestamp(m_beaconBufferPtr);
 
-      call Debug.log(LEVEL_INFO, SyncP_BEACON_RX, m_lastBeaconRxTime, timestamp, mhr[2]);
+      call Debug.log(DEBUG_LEVEL_INFO, 15, m_lastBeaconRxTime, timestamp, mhr[2]);
       m_numGtsSlots = (payload[2] & 7);
       gtsFieldLength = 1 + ((m_numGtsSlots > 0) ? 1 + m_numGtsSlots * 3: 0);
       m_lastBeaconRxTime = timestamp;
@@ -395,7 +407,7 @@ implementation
           m_BLELen += call MLME_GET.macMinLIFSPeriod();
         else
           m_BLELen += call MLME_GET.macMinSIFSPeriod();
-        m_BLELen += call MLME_GET.macBattLifeExtPeriods();
+        m_BLELen = m_BLELen + call MLME_GET.macBattLifeExtPeriods() * 20;
       } else
         m_BLELen = 0;
       m_broadcastPending = mhr[MHR_INDEX_FC1] & FC1_FRAME_PENDING ? TRUE : FALSE;
@@ -403,12 +415,12 @@ implementation
       m_dt = m_beaconInterval = ((uint32_t) 1 << coordBeaconOrder) * (uint32_t) IEEE154_aBaseSuperframeDuration; 
       if (m_stopTracking){
         m_tracking = FALSE;
-        call Debug.log(LEVEL_INFO,SyncP_RELEASE_RESOURCE, 0, 0, 0);
+        call Debug.log(DEBUG_LEVEL_INFO,16, 0, 0, 0);
         if (m_updatePending) // there is already a new request pending...
           call Token.request();
         call Token.release();
       } else {
-        call Debug.log(LEVEL_INFO,SyncP_TRANSFER_RESOURCE, 0, 0, 0);
+        call Debug.log(DEBUG_LEVEL_INFO,17, 0, 0, 0);
         call TokenToCap.transfer(); // borrow Token to CAP/CFP module, we'll get it back afterwards
       }
       
@@ -435,7 +447,7 @@ implementation
         call DataRequest.poll(CoordAddrMode, CoordPANId, CoordAddress, SrcAddrMode);
       }
       // Beacon Tracking: update state
-      call Debug.log(LEVEL_INFO, SyncP_NEXT_RX_TIME, 0, timestamp, m_beaconInterval);
+      call Debug.log(DEBUG_LEVEL_INFO, 18, m_lastBeaconRxTime, m_beaconInterval, 0);
       m_numBeaconsLost = 0;
       // TODO: check PAN ID conflict here?
       if (!autoRequest || beaconPayloadSize)

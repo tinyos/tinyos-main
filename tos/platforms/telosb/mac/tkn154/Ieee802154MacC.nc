@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-06-25 10:19:04 $
+ * $Revision: 1.3 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -95,8 +95,9 @@ implementation
   Packet = MAC;
 
   components CC2420TKN154C as PHY,
-             new Alarm62500hz32VirtualizedC() as PHYAlarm1,
+             new Alarm62500hz32C() as PHYAlarm1,
              new Alarm62500hz32VirtualizedC() as PHYAlarm2,
+             new Alarm62500hz32C() as TKN154TimingPAlarm,
              LocalTime62500hzC, TKN154TimingP;
 
   // wire PHY to the PIB
@@ -117,7 +118,8 @@ implementation
   PHY.TimeCalc -> MAC;
   PHY.Leds -> LedsC;
   TKN154TimingP.TimeCalc -> MAC;
-  TKN154TimingP.LocalTime -> LocalTime62500hzC;
+  TKN154TimingP.Leds -> LedsC;
+  TKN154TimingP.SymbolAlarm -> TKN154TimingPAlarm;
 
   components new Alarm62500hz32VirtualizedC() as  MACAlarm1,
              new Alarm62500hz32VirtualizedC() as  MACAlarm2,
@@ -164,6 +166,7 @@ implementation
   components RandomC, LedsC, NoLedsC;
   MAC.Random -> RandomC;
   MAC.Leds -> LedsC;
+  PHY.Random -> RandomC;
 
 #ifdef TKN154_SERIAL_DEBUG
   components SerialDebugC as Debug;

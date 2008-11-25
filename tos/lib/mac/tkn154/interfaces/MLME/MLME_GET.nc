@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -39,7 +39,7 @@
  * command per attribute (and there are no confirm events). 
  *
  * NOTE: for the attributes macBeaconPayload (0x45) and
- * macBeaconPayloadLength (0x46) use the <code>IEEE154TxBeaconPayload <\code> 
+ * macBeaconPayloadLength (0x46) use the <tt>IEEE154TxBeaconPayload <\tt> 
  * interface; for promiscuous mode there is a separate (SplitControl)
  * interface. 
  **/
@@ -87,7 +87,7 @@ interface MLME_GET {
   command ieee154_macBattLifeExtPeriods_t macBattLifeExtPeriods();
 
   /* macBeaconPayload (0x45) and macBeaconPayloadLength (0x46) are read
-   * through the <code>IEEE154TxBeaconPayload<\code> interface. */
+   * through the <tt>IEEE154TxBeaconPayload<\tt> interface. */
 
   /** @return PIB attribute macBeaconOrder (0x47) */
   command ieee154_macBeaconOrder_t macBeaconOrder();

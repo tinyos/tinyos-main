@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:02:40 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:08 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -40,7 +40,7 @@ interface CC2420Tx {
   async command error_t loadTXFIFO(ieee154_txframe_t *data);
   async event void loadTXFIFODone(ieee154_txframe_t *data, error_t error );
 
-  async command void send(bool cca);
+  async command error_t send(bool cca);
   async event void sendDone(ieee154_txframe_t *frame, ieee154_reftime_t *referenceTime, 
       bool ackPendingFlag, error_t error);
 

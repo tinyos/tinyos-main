@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-08-02 16:56:21 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -142,22 +142,54 @@ implementation
     }
   }
 
-
-  async command error_t MacTx.transmit[uint8_t client](ieee154_reftime_t *referenceTime, 
-      uint32_t timeOffset, uint8_t numCCA, bool ackRequest)
+  async command error_t MacTx.transmit[uint8_t client](ieee154_reftime_t *t0, uint32_t dt)
   {
     if (client == call ArbiterInfo.userId()) 
-      return call PhyTx.transmit(referenceTime, timeOffset, numCCA, ackRequest);
+      return call PhyTx.transmit(t0, dt);
+    else {
+      call Leds.led0On();
+      return IEEE154_TRANSACTION_OVERFLOW;
+    }
+  }
+  
+  async event void PhyTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime)
+  {
+    signal MacTx.transmitDone[call ArbiterInfo.userId()](frame, txTime);
+  }
+
+  async command error_t MacTx.transmitUnslottedCsmaCa[uint8_t client](ieee154_csma_t *csmaParams)
+  {
+    if (client == call ArbiterInfo.userId()) 
+      return call PhyTx.transmitUnslottedCsmaCa(csmaParams);
     else {
       call Leds.led0On();
       return IEEE154_TRANSACTION_OVERFLOW;
     }
   }
 
-  async event void PhyTx.transmitDone(ieee154_txframe_t *frame, 
-      ieee154_reftime_t *referenceTime, bool ackPendingFlag, error_t error)   
+  async event void PhyTx.transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
+      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result)
   {
-    signal MacTx.transmitDone[call ArbiterInfo.userId()](frame, referenceTime, ackPendingFlag, error);
+    signal MacTx.transmitUnslottedCsmaCaDone[call ArbiterInfo.userId()](
+        frame, ackPendingFlag, csmaParams, result);
+  }
+
+  async command error_t MacTx.transmitSlottedCsmaCa[uint8_t client](ieee154_reftime_t *slot0Time, uint32_t dtMax, 
+      bool resume, uint16_t remainingBackoff, ieee154_csma_t *csmaParams)
+  {
+    if (client == call ArbiterInfo.userId()) 
+      return call PhyTx.transmitSlottedCsmaCa(slot0Time, dtMax, resume, remainingBackoff, csmaParams);
+    else {
+      call Leds.led0On();
+      return IEEE154_TRANSACTION_OVERFLOW;
+    }
+  }
+
+  async event void PhyTx.transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
+      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParams, error_t result)
+  {
+    signal MacTx.transmitSlottedCsmaCaDone[call ArbiterInfo.userId()](
+        frame, txTime, ackPendingFlag, remainingBackoff, csmaParams, result);
   }
 
 /* ----------------------- RadioOff ----------------------- */
@@ -190,24 +222,34 @@ implementation
 
   default async event void MacTx.loadDone[uint8_t client]()
   {
-    call Debug.log(LEVEL_CRITICAL, RadioRxTxP_DEFAULT_PREPARE_TX_DONE, 0, 0, 0);
+    call Debug.log(DEBUG_LEVEL_CRITICAL, 0, 0, 0, 0);
   }
-  default async event void MacTx.transmitDone[uint8_t client](ieee154_txframe_t *frame, 
-      ieee154_reftime_t *referenceTime, bool ackPendingFlag, error_t error) 
+  default async event void MacTx.transmitDone[uint8_t client](ieee154_txframe_t *frame, ieee154_reftime_t *txTime) 
   {
-    call Debug.log(LEVEL_CRITICAL, RadioRxTxP_DEFAULT_TX_DONE, 0, 0, 0);
+    call Debug.log(DEBUG_LEVEL_CRITICAL, 1, 0, 0, 0);
   }
   default async event void MacRx.prepareDone[uint8_t client]()
   {
-    call Debug.log(LEVEL_CRITICAL, RadioRxTxP_DEFAULT_PREPARE_RX_DONE, 0, 0, 0);
+    call Debug.log(DEBUG_LEVEL_CRITICAL, 2, 0, 0, 0);
   }
   default event message_t* MacRx.received[uint8_t client](message_t *frame, ieee154_reftime_t *timestamp)
   {
-    call Debug.log(LEVEL_INFO, RadioRxTxP_DEFAULT_RECEIVED, client, call ArbiterInfo.userId(), 0xff);
+    call Debug.log(DEBUG_LEVEL_IMPORTANT, 3, client, call ArbiterInfo.userId(), 0xff);
     return frame;
   }
   default async event void MacRadioOff.offDone[uint8_t client]()
   {
-    call Debug.log(LEVEL_CRITICAL, RadioRxTxP_DEFAULT_OFFDONE, 0, 0, 0);
+    call Debug.log(DEBUG_LEVEL_CRITICAL, 4, 0, 0, 0);
+  }
+  default async event void MacTx.transmitUnslottedCsmaCaDone[uint8_t client](ieee154_txframe_t *frame,
+      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result)
+  {
+    call Debug.log(DEBUG_LEVEL_CRITICAL, 5, 0, 0, 0);
+  }
+  default async event void MacTx.transmitSlottedCsmaCaDone[uint8_t client](ieee154_txframe_t *frame, 
+      ieee154_reftime_t *txTime, bool ackPendingFlag, uint16_t remainingBackoff, 
+      ieee154_csma_t *csmaParams, error_t result)
+  {
+    call Debug.log(DEBUG_LEVEL_CRITICAL, 6, 0, 0, 0);
   }
 }

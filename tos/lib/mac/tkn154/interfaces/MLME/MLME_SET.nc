@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -40,7 +40,7 @@
  * command per attribute (and there are no confirm events). 
  *
  * NOTE: for the attributes macBeaconPayload (0x45) and
- * macBeaconPayloadLength (0x46) use the <code>IEEE154TxBeaconPayload <\code> 
+ * macBeaconPayloadLength (0x46) use the <tt>IEEE154TxBeaconPayload <\tt> 
  * interface; for promiscuous mode there is a separate (SplitControl)
  * interface. 
  **/
@@ -90,7 +90,7 @@ interface MLME_SET {
   command ieee154_status_t macBattLifeExtPeriods(ieee154_macBattLifeExtPeriods_t value);
 
   /* macBeaconPayload (0x45) and macBeaconPayloadLength (0x46) are set
-   * through the <code>IEEE154TxBeaconPayload<\code> interface. */
+   * through the <tt>IEEE154TxBeaconPayload<\tt> interface. */
 
   /** @param value new PIB attribute value for macBeaconOrder (0x47) 
    *  @returns IEEE154_SUCCESS if PIB attribute was updated, INVALID_PARAMETER if 
@@ -138,7 +138,7 @@ interface MLME_SET {
   command ieee154_status_t macPANId(ieee154_macPANId_t value);
 
   /* macPromiscuousMode (0x51) is (re-)set through the 
-   * <code>PromiscuousMode<\code> (SplitControl) interface. */
+   * <tt>PromiscuousMode<\tt> (SplitControl) interface. */
 
   /** @param value new PIB attribute value for macRxOnWhenIdle (0x52) 
    *  @returns IEEE154_SUCCESS if PIB attribute was updated, INVALID_PARAMETER if 

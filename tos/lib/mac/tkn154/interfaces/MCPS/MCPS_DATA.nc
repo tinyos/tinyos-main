@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2008-11-25 09:35:09 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -44,12 +44,12 @@ interface MCPS_DATA
    * SPDU (i.e., MSDU) from a local SSCS entity to a single peer SSCS 
    * entity." (IEEE 802.15.4-2006, Sec. 7.1.1.1) 
    *
-   * The MSDU is the payload portion of a message_t (<code>frame<\code>
-   * parameter) and can be accessed through the <code>IEEE154Frame<\code> 
+   * The MSDU is the payload portion of a message_t (<tt>frame</tt>
+   * parameter) and can be accessed through the <tt>IEEE154Frame</tt> 
    * interface. In contrast to the standard interface definition address 
    * information is not passed as separate parameters; instead, the 
-   * address information is already part of the <code>frame<\code>, 
-   * i.e. it must have been set (through the <code>IEEE154Frame<\code> 
+   * address information is already part of the <tt>frame</tt>, 
+   * i.e. it must have been set (through the <tt>IEEE154Frame</tt> 
    * interface) before this command is called.
    * 
    * If this command returns IEEE154_SUCCESS, then the confirm event
@@ -93,7 +93,7 @@ interface MCPS_DATA
 
   /**
    * Indicates the arrival of a frame. Address information can be accessed 
-   * through the <code>IEEE154Frame<\code> interface.
+   * through the <tt>IEEE154Frame</tt> interface.
    * 
    * @return A frame buffer for the stack to use for the next received frame
    */

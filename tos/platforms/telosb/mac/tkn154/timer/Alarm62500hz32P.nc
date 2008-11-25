@@ -32,11 +32,11 @@
  * ========================================================================
  */
 
-module Alarm32khzTo62500hzTransformC
+generic module Alarm62500hz32P()
 
 {
-  provides interface Alarm<T62500hz,uint32_t> as Alarm[ uint8_t num ];
-  uses interface Alarm<T32khz,uint32_t> as AlarmFrom[ uint8_t num ];
+  provides interface Alarm<T62500hz,uint32_t> as Alarm;
+  uses interface Alarm<T32khz,uint32_t> as AlarmFrom;
 }
 implementation
 {
@@ -48,24 +48,23 @@ implementation
  * Thus the channel access in particular in beacon-enabled PANs 
  * (slotted CSMA-CA) is not be standard-compliant!
  */
-#warning "Warning: MAC timing is not standard compliant (the symbol clock is based on the 32768 Hz oscillator)!"
 
-  async command void Alarm.start[ uint8_t num ](uint32_t dt){ call AlarmFrom.start[num](dt >> 1);}
-  async command void Alarm.stop[ uint8_t num ](){ call AlarmFrom.stop[num]();}
-  async event void AlarmFrom.fired[ uint8_t num ](){ signal Alarm.fired[num]();}
-  async command bool Alarm.isRunning[ uint8_t num ](){ return call AlarmFrom.isRunning[num]();}
-  async command uint32_t Alarm.getAlarm[ uint8_t num ](){ return call AlarmFrom.getAlarm[num]() << 1;}
+  async command void Alarm.start(uint32_t dt){ call AlarmFrom.start(dt >> 1);}
+  async command void Alarm.stop(){ call AlarmFrom.stop();}
+  async event void AlarmFrom.fired(){ signal Alarm.fired();}
+  async command bool Alarm.isRunning(){ return call AlarmFrom.isRunning();}
+  async command uint32_t Alarm.getAlarm(){ return call AlarmFrom.getAlarm() << 1;}
 
-  async command uint32_t Alarm.getNow[ uint8_t num ](){ 
+  async command uint32_t Alarm.getNow(){ 
     // this might shift out the most significant bit
     // that's why Alarm.startAt() is converted to a Alarm.start()
-    return call AlarmFrom.getNow[num]() << 1; 
+    return call AlarmFrom.getNow() << 1; 
   }
 
-  async command void Alarm.startAt[ uint8_t num ](uint32_t t0, uint32_t dt){
+  async command void Alarm.startAt(uint32_t t0, uint32_t dt){
     // t0 occured before "now"
     atomic {
-      uint32_t now = call Alarm.getNow[num](), elapsed;
+      uint32_t now = call Alarm.getNow(), elapsed;
       if (t0 < now)
         elapsed = now - t0;
       else
@@ -73,17 +72,17 @@ implementation
       if (elapsed > dt)
         dt = elapsed;
       dt -= elapsed;
-      call Alarm.start[num](dt);
+      call Alarm.start(dt);
     }
   }
 
   /******************** Defaults ****************************/
 
-  default async command void AlarmFrom.start[ uint8_t num ](uint32_t dt){ }
-  default async command void AlarmFrom.stop[ uint8_t num ](){ }
-  default async command bool AlarmFrom.isRunning[ uint8_t num ](){ return FALSE;}
-  default async event void Alarm.fired[ uint8_t num ](){}
-  default async command void AlarmFrom.startAt[ uint8_t num ](uint32_t t0, uint32_t dt){ }
-  default async command uint32_t AlarmFrom.getNow[ uint8_t num ](){ return 0;}
-  default async command uint32_t AlarmFrom.getAlarm[ uint8_t num ](){ return 0;}
+  default async command void AlarmFrom.start(uint32_t dt){ }
+  default async command void AlarmFrom.stop(){ }
+  default async command bool AlarmFrom.isRunning(){ return FALSE;}
+  default async event void Alarm.fired(){}
+  default async command void AlarmFrom.startAt(uint32_t t0, uint32_t dt){ }
+  default async command uint32_t AlarmFrom.getNow(){ return 0;}
+  default async command uint32_t AlarmFrom.getAlarm(){ return 0;}
 }
