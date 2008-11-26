@@ -266,4 +266,14 @@ implementation {
   command storage_cookie_t BlockingLog.currentWriteOffset[uint8_t volume_id]() { return call LogWrite.currentOffset[volume_id](); }
   command storage_cookie_t BlockingLog.currentReadOffset[uint8_t volume_id]() { return call LogRead.currentOffset[volume_id](); }
   command storage_len_t BlockingLog.getSize[uint8_t volume_id]() { return call LogRead.getSize[volume_id](); }
+  
+  default command error_t LogRead.read[uint8_t volume_id](void* buf, storage_len_t len) { return FAIL; }
+  default command storage_cookie_t LogRead.currentOffset[uint8_t volume_id]() { return SEEK_BEGINNING; }
+  default command error_t LogRead.seek[uint8_t volume_id](storage_cookie_t offset) { return FAIL; }
+  default command storage_len_t LogRead.getSize[uint8_t volume_id]() { return 0; }
+  
+  default command error_t LogWrite.append[uint8_t volume_id](void* buf, storage_len_t len) { return FAIL; }
+  default command storage_cookie_t LogWrite.currentOffset[uint8_t volume_id]() { return SEEK_BEGINNING; }
+  default command error_t LogWrite.erase[uint8_t volume_id]() { return FAIL; }
+  default command error_t LogWrite.sync[uint8_t volume_id]() { return FAIL; }
 }
