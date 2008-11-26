@@ -122,8 +122,8 @@ implementation {
     p->error = error;
     call SystemCall.finish(s);
   }
-  default command error_t SplitControl.start[uint8_t id]() { return SUCCESS; }
-  default command error_t SplitControl.stop[uint8_t id]() { return SUCCESS; }
+  default command error_t SplitControl.start[uint8_t id]() { return FAIL; }
+  default command error_t SplitControl.stop[uint8_t id]() { return FAIL; }
 }
 
 

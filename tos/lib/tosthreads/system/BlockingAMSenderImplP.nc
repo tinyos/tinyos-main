@@ -102,7 +102,7 @@ implementation {
     call SystemCall.finish(send_call);
   }
   default command error_t AMSend.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len) {
-    return SUCCESS;
+    return FAIL;
   }
 }
 
