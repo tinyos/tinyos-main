@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.7 $ $Date: 2008-06-24 04:07:28 $
+ * @version $Revision: 1.8 $ $Date: 2008-12-01 19:56:53 $
  */
 
 module CC2420CsmaP @safe() {
@@ -71,7 +71,6 @@ implementation {
   norace bool ccaOn;
   
   /****************** Prototypes ****************/
-  task void startDone_task();
   task void startDone_task();
   task void stopDone_task();
   task void sendDone_task();
