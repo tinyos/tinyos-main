@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.16 $ $Date: 2008-07-25 16:27:52 $
+ * @version $Revision: 1.17 $ $Date: 2008-12-01 23:51:38 $
  */
 
 #include "IEEE802154.h"
@@ -126,6 +126,10 @@ implementation {
       reset_state();
       m_state = S_STARTED;
       atomic receivingPacket = FALSE;
+      /* Note:
+         We use the falling edge because the FIFOP polarity is reversed. 
+         This is done in CC2420Power.startOscillator from CC2420ControlP.nc.
+       */
       call InterruptFIFOP.enableFallingEdge();
     }
     return SUCCESS;
