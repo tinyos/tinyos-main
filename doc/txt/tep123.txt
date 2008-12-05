@@ -10,8 +10,8 @@ The Collection Tree Protocol (CTP)
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.12 $
-:Draft-Modified: $Date: 2008-11-21 06:54:40 $
+:Draft-Version: $Revision: 1.13 $
+:Draft-Modified: $Date: 2008-12-05 19:01:53 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -41,7 +41,8 @@ TinyOS 2.x. The users use Collection interfaces described in TEP 119
 In this TEP, after a brief discussion of Collection and CTP, we
 specify the CTP routing and data frames. CTP uses routing frames to
 update and build collection tree in the network. CTP uses data frames
-to deliver application payload to the sink.
+to deliver application payload to the sink and to probe topology
+inconsistencies.
 
 2. Assumptions and Limitations
 ==============================================================================
