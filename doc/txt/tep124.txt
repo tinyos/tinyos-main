@@ -10,8 +10,8 @@ The Link Estimation Exchange Protocol (LEEP)
 :Author: Omprakash Gnawali
 
 :Draft-Created: 05-Feb-2006
-:Draft-Version: $Revision: 1.7 $
-:Draft-Modified: $Date: 2008-11-21 07:19:12 $
+:Draft-Version: $Revision: 1.8 $
+:Draft-Modified: $Date: 2008-12-06 00:57:31 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -43,7 +43,7 @@ is often fine-tuned using different mechanisms.
 
 Link quality estimates obtained using LEEP are often used as a
 bootstrapping values in the link quality table; data transmission
-statistics are later used to make these estimates more accurate.
+statistics can later be used to make these estimates more accurate.
 
 2. Definitions
 ============================================================================
@@ -194,7 +194,7 @@ frame. The LEEP frames are transmitted whenever the CTP [1]_ beacons,
 sent as a LEEP payload, are sent.
 
 Another reference implementation resides in
-``tinyos-2.x/tos/lib/net/le``. This implementation is described in
+``tinyos-2.x/tos/lib/net/4bitle``. This implementation is described in
 detail in [2]_.
 
 5. Author's Address
