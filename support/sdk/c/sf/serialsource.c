@@ -1,4 +1,9 @@
-#ifndef _WIN32
+#if defined(_WIN32) && !defined(__CYGWIN__)
+/* Avoid confusing windows w/o cygwin w/ cygwin */
+#define LOSE32
+#endif
+
+#ifndef LOSE32
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <termios.h>
@@ -18,7 +23,7 @@
 #endif
 #endif
 
-#ifdef _WIN32
+#ifdef LOSE32
 #include <windows.h>
 #include <stdint.h>
 #endif
@@ -35,7 +40,7 @@ typedef int bool;
 
 enum {
 #ifndef __CYGWIN__
-#ifndef _WIN32
+#ifndef LOSE32
   FALSE = 0,
   TRUE = 1,
 #endif
@@ -60,7 +65,7 @@ struct packet_list
 };
 
 struct serial_source_t {
-#ifndef _WIN32
+#ifndef LOSE32
   int fd;
 #else
   HANDLE hComm;
@@ -85,7 +90,7 @@ struct serial_source_t {
   } send;
 };
 
-#ifndef _WIN32
+#ifndef LOSE32
 static tcflag_t parse_baudrate(int requested)
 {
   int baudrate;
@@ -209,7 +214,7 @@ static void message(serial_source src, serial_source_msg msg)
 
 static int serial_read(serial_source src, int non_blocking, void *buffer, int n)
 {
-#ifndef _WIN32
+#ifndef LOSE32
   fd_set fds;
   int cnt;
 
@@ -241,7 +246,7 @@ static int serial_read(serial_source src, int non_blocking, void *buffer, int n)
 	if (cnt != 0)
 	  return cnt;
       }
-#else // _WIN32
+#else // LOSE32
   int cnt;
 
   if (non_blocking) {
@@ -277,7 +282,7 @@ serial_source open_serial_source(const char *device, int baud_rate,
      NULL for failure (bad device or bad baud rate)
  */
 {
-#ifndef _WIN32
+#ifndef LOSE32
   struct termios newtio;
   int fd;
   tcflag_t baudflag = parse_baudrate(baud_rate);
@@ -329,7 +334,7 @@ serial_source open_serial_source(const char *device, int baud_rate,
   close(fd);
 
   return NULL;
-#else // _WIN32
+#else // LOSE32
 	LPCTSTR       ComName = (LPCTSTR)device;
     HANDLE        hComm;
 	DCB           dcb;
@@ -371,10 +376,10 @@ serial_source open_serial_source(const char *device, int baud_rate,
 
 	return src;
 
-#endif // _WIN32
+#endif // LOSE32
 }
 
-#ifndef _WIN32
+#ifndef LOSE32
 int serial_source_fd(serial_source src)
 /* Returns: the file descriptor used by serial source src (useful when
      non-blocking reads were requested)
@@ -384,7 +389,7 @@ int serial_source_fd(serial_source src)
 }
 #endif
 
-#ifdef _WIN32
+#ifdef LOSE32
 HANDLE serial_source_handle(serial_source src)
 /* Returns: the file descriptor used by serial source src (useful when
      non-blocking reads were requested)
@@ -400,7 +405,7 @@ int close_serial_source(serial_source src)
      considered closed anyway)
  */
 {
-#ifndef _WIN32
+#ifndef LOSE32
   int ok = close(src->fd);
 #else
   int ok = CloseHandle(src->hComm);
@@ -417,7 +422,7 @@ static int source_wait(serial_source src, struct timeval *deadline)
    Returns: 0 if data is available, -1 if the deadline expires
 */
 {
-#ifndef _WIN32
+#ifndef LOSE32
   struct timeval tv;
   fd_set fds;
   int cnt;
@@ -455,7 +460,7 @@ static int source_wait(serial_source src, struct timeval *deadline)
 	return -1;
       return 0;
     }
-#else // _WIN32
+#else // LOSE32
     // FIXME: the deadline is ignored here
 
     DWORD eventMask;
@@ -471,7 +476,7 @@ static int source_wait(serial_source src, struct timeval *deadline)
 
 static int source_write(serial_source src, const void *buffer, int count)
 {
-#ifndef _WIN32
+#ifndef LOSE32
   int actual = 0;
 
   if (fcntl(src->fd, F_SETFL, 0) < 0)
@@ -502,7 +507,7 @@ static int source_write(serial_source src, const void *buffer, int count)
       /* We're in trouble, but there's no obvious fix. */
     }
   return actual;
-#else // _WIN32
+#else // LOSE32
     int actual = 0;
     int n;
     const unsigned char * b = buffer;
@@ -627,7 +632,7 @@ static int read_byte(serial_source src, int non_blocking)
 	      src->recv.bufused = n;
 	      break;
 	    }
-#ifndef _WIN32
+#ifndef LOSE32
 	  if (errno == EAGAIN)
 	    return -1;
 	  if (errno != EINTR)
@@ -895,7 +900,7 @@ int write_serial_packet(serial_source src, const void *packet, int len)
 
   // FIXME: the WIN32 implementation of source_wait()
   //        disregards the deadline parameter anyway
-#ifndef _WIN32
+#ifndef LOSE32
   gettimeofday(&deadline, NULL);
   add_timeval(&deadline, ACK_TIMEOUT);
 #endif
