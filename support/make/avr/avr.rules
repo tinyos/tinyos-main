@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.20 2008-09-22 20:55:19 idgay Exp $
+#$Id: avr.rules,v 1.21 2008-12-06 03:40:39 razvanm Exp $
 
 define AVR_HELP
 
@@ -7,13 +7,12 @@ define AVR_HELP
 
    debug    : compile with minimal optimization and debug symbols
    debugopt : compile with debug symbols
-   xnp      : compile for network programming
 
  Programmer options:
 
    dapa         : (default) use parallel port programmer
    mib510,<dev> : use MIB510/MIB520 serial port programming board at port <dev>
-   eprb,<host>	: use EPRB at hostname <host>
+   eprb,<host>	: use EPRB (MIB600) at hostname <host>
    avrisp,<dev> : use AVRISP serial programmer at port <dev>
 
    The dev or host parameter for the programmer option need not be specified,
