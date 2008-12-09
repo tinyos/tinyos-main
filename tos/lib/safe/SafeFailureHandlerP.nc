@@ -120,6 +120,9 @@ implementation {
   void deputy_fail_noreturn_fast (int flid) @C() @spontaneous()
   {
     atomic {
+#if defined(__AVR_ARCH__)
+      asm volatile ("break");
+#endif
       while(1) {
         display_int_flid(flid);
       }
