@@ -11,7 +11,7 @@ import win32con   # constants.
 import sys, string
 import serialutil
 
-VERSION = string.split("$Revision: 1.4 $")[1]     #extract CVS version
+VERSION = "$Revision: 1.5 $"     #extract CVS version
 
 PARITY_NONE, PARITY_EVEN, PARITY_ODD = range(3)
 STOPBITS_ONE, STOPBITS_TWO = (1, 2)
