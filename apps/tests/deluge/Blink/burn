@@ -1,41 +1,35 @@
 #!/bin/bash
 
-python -c '
-import sys
-try: 
-  import serial
-except ImportError, e: 
-  sys.exit(1)'
-
-if [[ $? != 0 ]]
-then
-  echo "Please install PySerial first." 
-  exit 2
-fi
-
 TOS_DELUGE=`type -p tos-deluge`
 if [[ ! -x ${TOS_DELUGE} ]] ; then 
     TOS_DELUGE=../../../../tools/tinyos/misc/tos-deluge
 fi 
 
+$TOS_DELUGE > /dev/null
+
+if [[ $? != 0 ]]
+then
+  echo "Unable to locate tos-deluge."
+  exit 2
+fi
+
 if [[ $# -ne 2 && $# -ne 3 ]]; then
-  echo "Usage: $0 <port> [<comm_port>] <platform>"
-  echo "  <port>       /dev/ttyUSB0"
-  echo "  <comm_port>  /dev/ttyUSB1"
-  echo "  <platform>   micaz, telosb, iris or epic"
+  echo "Usage: $0 <prog_source> <comm_source> <platform>"
+  echo "  <prog_source> bsl,PORT | mib510,PORT | eprb,PORT"
+  echo "  <comm_source> serial@PORT:SPEED | network@HOST:PORT"
+  echo "  <platform>    micaz | telosb | iris | epic"
   exit 2
 fi
 
 PPORT=$1
-CPORT=$1
-PLATFORM=$2
+CPORT=$2
+PLATFORM=$3
 
-if [ $# -eq 3 ]; then
- CPORT=$2
- PLATFORM=$3
-fi
-
-if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' -a ${PLATFORM} != 'iris' -a ${PLATFORM} != 'epic' ]; then
+if [ ${PLATFORM} != 'micaz' -a \
+     ${PLATFORM} != 'telosb' -a \
+     ${PLATFORM} != 'iris' -a \
+     ${PLATFORM} != 'epic' ]
+then
   echo "\"${PLATFORM}\" is not a supported platform"
   exit 2
 fi
@@ -49,16 +43,7 @@ fi
 make clean
 
 echo ============================ Compile and load Blink ============================
-if [ $PLATFORM == 'micaz' ]
-then
-  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install mib510,${PPORT}
-elif [ $PLATFORM == 'telosb' -o $PLATFORM == 'epic' ]
-then
-  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install bsl,${PPORT}
-elif [ $PLATFORM == 'iris' ]
-then
-  CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install mib510,${PPORT}
-fi
+CFLAGS=-DDELUGE_BASESTATION make ${PLATFORM} install ${PPORT}
 
 
 echo '           +-------------------------------------------------------+'
@@ -74,7 +59,7 @@ echo  ============================= Compile a new Blink ========================
 CFLAGS=-DBLINK_REVERSE\ -DDELUGE_BASESTATION make ${PLATFORM}
 
 echo =============================== Upload the image ===============================
-${TOS_DELUGE} ${CPORT} ${PLATFORM} -i 1 build/${PLATFORM}/tos_image.xml
+${TOS_DELUGE} ${CPORT} -i 1 build/${PLATFORM}/tos_image.xml
 
 echo '       +----------------------------------------------------------------+'
 echo '       |                                                                |'
@@ -91,4 +76,4 @@ echo '       +----------------------------------------------------------------+'
 read
 
 echo =========================== Reboot the base station ============================
-${TOS_DELUGE} ${CPORT} ${PLATFORM} -r 1 
+${TOS_DELUGE} ${CPORT} -r 1 

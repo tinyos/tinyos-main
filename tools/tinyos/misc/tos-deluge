@@ -39,10 +39,6 @@ PATH_PY_BUILD_IMAGE  = os.path.join(os.path.dirname(sys.argv[0]), 'tos-build-del
 FM_AMID = 0x53
 DM_AMID = 0x54
 SERIAL_DATA_LENGTH = 28 - 1 - 1 - 2 - 2
-BAUDRATES = {'micaz': 57600,
-             'telosb': 115200,
-             'iris': 57600,
-	     'epic': 115200}
 
 # Commands for FlashManager
 FM_CMD_ERASE     = 0
@@ -371,8 +367,10 @@ def localstop():
     return handleResponse(success, "ERROR: Unable to initiate the local stop")
 
 def print_usage():
-    print "Usage: %s <device_port> <baud_rate> <-p|-i|-r|-d|-e|-s> image_number [options]" % sys.argv[0]
-    print "  <baud_rate>      Either the platform name (micaz or telosv) or a baudrate value"
+    print "Usage: %s <source> <-p|-i|-r|-d|-e|-s> image_number [options]" % sys.argv[0]
+    print "  <source> can be:"
+    print "     serial@PORT:SPEED   Serial ports"
+    print "     network@HOST:PORT   MIB600"
     print "  -p --ping        Provide status of the image in the external flash"
     print "  -i --inject      Inject a compiled TinyOS application"
     print "                   [options]: tos_image.xml file path"
@@ -391,71 +389,55 @@ def checkImgNum():
     global imgNum
     # Checks for valid image number format
     try:
-        imgNum = int(sys.argv[4])
+        imgNum = int(sys.argv[3])
     except:
         print "ERROR: Image number is not valid"
         sys.exit(-1)
     return imgNum
 
 # ======== MAIN ======== #
-if len(sys.argv) >= 4:
+if len(sys.argv) >= 3:
 
-    if sys.argv[2] in BAUDRATES:
-        baudrate = BAUDRATES[sys.argv[2]]
-    else:
-        try:
-            baudrate = int(sys.argv[2])
-        except:
-            print "ERROR: Wrong baudrate"
-            sys.exit(-1)
+    am = tos.AM()
 
-    # Initializes serial port communication
-    try:
-        s = tos.Serial(sys.argv[1], baudrate, flush=True, debug=False)
-        am = tos.AM(s)
-    except:
-        print "ERROR: Unable to initialize serial port connection to", sys.argv[1]
-        sys.exit(-1)
-
-    # Check if the mote has the Deluge T2 basestation component:
     try:
         print "Checking if node is a Deluge T2 base station ..."
         ident(timeout=5)
-    except tos.TimeoutError:
+    except tos.Timeout:
         print "ERROR: Timeout. Is the node a Deluge T2 base station?"
         sys.exit(-1)
 
-    if sys.argv[3] in ["-p", "--ping"]:
+    if sys.argv[2] in ["-p", "--ping"]:
         checkImgNum()
         print "Pinging node ..."
         ping(imgNum)
-    elif sys.argv[3] in ["-i", "--inject"] and len(sys.argv) == 6:
+    elif sys.argv[2] in ["-i", "--inject"] and len(sys.argv) == 5:
         checkImgNum()
         print "Pinging node ..."
-        inject(imgNum, sys.argv[5])
-    elif sys.argv[3] in ["-e", "--erase"]:
+        inject(imgNum, sys.argv[4])
+    elif sys.argv[2] in ["-e", "--erase"]:
         checkImgNum()
         if erase(imgNum):
             print "Image number %d erased" % imgNum
-    elif sys.argv[3] in ["-b", "--boot"]:
+    elif sys.argv[2] in ["-b", "--boot"]:
         if boot():
             print "Command sent"
-    elif sys.argv[3] in ["-r", "--reprogram"]:
+    elif sys.argv[2] in ["-r", "--reprogram"]:
         checkImgNum()
         if reprogram(imgNum):
             print "Command sent"
-    elif sys.argv[3] in ["-d", "--disseminate"]:
+    elif sys.argv[2] in ["-d", "--disseminate"]:
         checkImgNum()
         if disseminate(imgNum):
             print "Command sent"
-    elif sys.argv[3] in ["-dr", "--disseminate-and-reboot"]:
+    elif sys.argv[2] in ["-dr", "--disseminate-and-reboot"]:
         checkImgNum()
         if disseminateAndReboot(imgNum):
             print "Command sent"
-    elif sys.argv[3] in ["-s", "--stop"]:
+    elif sys.argv[2] in ["-s", "--stop"]:
         if stop():
             print "Command sent"
-    elif sys.argv[3] in ["-ls", "--local-stop"]:
+    elif sys.argv[2] in ["-ls", "--local-stop"]:
         if localstop():
             print "Command sent"
     else:

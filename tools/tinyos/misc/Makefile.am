@@ -31,6 +31,7 @@ bin_SCRIPTS = tos-ident-flags \
 	      tos-storage-at45db \
 	      tos-storage-pxa27xp30	\
 	      tos-build-deluge-image \
-	      tos-deluge
+	      tos-deluge \
+	      tos-dump.py
 
 bin_PROGRAMS = tos-serial-debug

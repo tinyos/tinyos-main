@@ -5,6 +5,14 @@ if [[ ! -x ${TOS_DELUGE} ]] ; then
     TOS_DELUGE=../../../../tools/tinyos/misc/tos-deluge
 fi 
 
+$TOS_DELUGE > /dev/null
+
+if [[ $? != 0 ]]
+then
+  echo "Unable to locate tos-deluge."
+  exit 2
+fi
+
 if [ $# -ne 2 ]; then
   echo "Usage: $0 <platform> <number of motes>"
   echo "  <platform>         micaz, telosb or iris"
@@ -15,7 +23,11 @@ fi
 PLATFORM=$1
 NO_MOTES=$2
 
-if [ ${PLATFORM} != 'micaz' -a ${PLATFORM} != 'telosb' -a ${PLATFORM} != 'iris' ]; then
+if [ ${PLATFORM} != 'micaz' -a \
+     ${PLATFORM} != 'telosb' -a \
+     ${PLATFORM} != 'iris' \
+     ${PLATFORM} != 'epic' ]
+then
   echo "\"${PLAFTORM}\" is not a supported platform"
   exit 2
 fi
@@ -32,19 +44,10 @@ ID=0
 
 function burn_one() {
     ID=`expr $ID + 1`
-    echo -n ">>> Please plug mote $ID and type the programming port to continue: "
+    echo -n ">>> Please plug mote $ID and type the programming sorce (bsl,PORT | mib510,PORT | eprb,PORT): "
     read PORT
 
-    if [ ${PLATFORM} == 'micaz' ]
-    then
-	CFLAGS=$1 make ${PLATFORM} install,$ID mib510,${PORT}
-    elif [ ${PLATFORM} == 'telosb' ]
-    then
-	CFLAGS=$1 make ${PLATFORM} install,$ID bsl,${PORT}
-    elif [ ${PLATFORM} == 'iris' ]
-    then
-	CFLAGS=$1 make ${PLATFORM} install,$ID mib510,${PORT}
-    fi
+    CFLAGS=$1 make ${PLATFORM} install,$ID ${PORT}
 }
 
 while [[ ${NO_MOTES} > 1 ]]
@@ -54,9 +57,8 @@ do
 done
 echo ">>> Note: this last mote will be the basestation! <<<"
 burn_one -DDELUGE_BASESTATION
-echo -n ">>> Please plug mote $ID and type the communication port to continue: "
-read PORT
-BASESTATION_PORT=$PORT
+echo -n ">>> Please plug mote $ID and type the communication sorce (serial@PORT:SPEED | network@HOST:PORT) to continue: "
+read CPORT
 
 echo '   +------------------------------------------------------------------------+'
 echo '   |                                                                        |'
@@ -71,7 +73,7 @@ echo ============================= Compile a new Blink =========================
 CFLAGS=-DBLINK_REVERSE\ -DDELUGE_LIGHT_BASESTATION make ${PLATFORM} 
 
 echo ========= Upload the new image to the external flash of the last mote ==========
-${TOS_DELUGE} ${BASESTATION_PORT} ${PLATFORM} -i 1 build/${PLATFORM}/tos_image.xml
+${TOS_DELUGE} ${CPORT} -i 1 build/${PLATFORM}/tos_image.xml
 
 echo '            +-----------------------------------------------------+'
 echo '            |                                                     |'
@@ -85,7 +87,7 @@ echo '            +-----------------------------------------------------+'
 read
 
 echo ============================= Start dissemination ==============================
-${TOS_DELUGE} ${BASESTATION_PORT} ${PLATFORM} -dr 1
+${TOS_DELUGE} ${CPORT} -dr 1
 
 echo '         +------------------------------------------------------------+'
 echo '         |                                                            |'
