@@ -230,7 +230,7 @@ implementation {
       return 0;
     }
     
-    return (DUTY_ON_TIME * (10000 - dutyCycle)) / dutyCycle;
+    return ((uint32_t)DUTY_ON_TIME * (10000 - dutyCycle)) / dutyCycle;
   }
   
   /**
@@ -245,7 +245,7 @@ implementation {
       return 10000;
     }
     
-    return getActualDutyCycle((DUTY_ON_TIME * 10000) 
+    return getActualDutyCycle(((uint32_t)DUTY_ON_TIME * 10000) 
         / (sleepInterval + DUTY_ON_TIME));
   }
 
