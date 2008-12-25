@@ -30,6 +30,7 @@ tries to simplifies the work with arbitrary packets.
 """
 
 import sys, struct, time, socket, operator, os
+import traceback
 
 try: 
     import serial
@@ -37,7 +38,7 @@ except ImportError, e:
     print "Please install PySerial first."
     sys.exit(1)
 
-__version__ = "$Id: tos.py,v 1.3 2008-12-15 00:50:37 razvanm Exp $"
+__version__ = "$Id: tos.py,v 1.4 2008-12-25 04:45:37 razvanm Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
@@ -68,22 +69,24 @@ def getSource(comm):
     params = source[1].split(':')
     if source[0] == 'serial':
         try:
-            return Serial(params[0], int(params[1]), flush=True, debug=False)
+            return Serial(params[0], int(params[1]), flush=True, debug=('--debug' in sys.argv))
         except:
-            print "ERROR: Unable to initialize serial port connection to", comm
-            sys.exit(-1)
+            print "ERROR: Unable to initialize a serial connection to", comm
+            raise Exception
     elif source[0] == 'network':
         try:
             return SerialMIB600(params[0], int(params[1]), debug=False)
         except:
-            print "ERROR: Unable to initialize serial port connection to", comm
-            sys.exit(-1)
+            print "ERROR: Unable to initialize a network connection to", comm
+            print "ERROR:", traceback.format_exc()
+            raise Exception
     raise Exception
 
 class Serial:
-    def __init__(self, port, baudrate, flush=False, debug=False, timeout=None):
+    def __init__(self, port, baudrate, flush=False, debug=False, readTimeout=None, ackTimeout=0.02):
         self.debug = debug
-        self.timeout = timeout
+        self.readTimeout = readTimeout
+        self.ackTimeout = ackTimeout
         self._ts = None
 
         self._s = serial.Serial(port, int(baudrate), rtscts=0, timeout=0.5)
@@ -97,7 +100,7 @@ class Serial:
             if not self.debug:
                 sys.stdout.write("\n")
         self._s.close()
-        self._s = serial.Serial(port, baudrate, rtscts=0, timeout=timeout)
+        self._s = serial.Serial(port, baudrate, rtscts=0, timeout=readTimeout)
 
     def getByte(self):
         c = self._s.read()
@@ -118,15 +121,20 @@ class Serial:
         self._s.timeout = timeout
 
 class SerialMIB600:
-    def __init__(self, host, port=10002, debug=False):
+    def __init__(self, host, port=10002, debug=False, readTimeout=None, ackTimeout=0.05):
         self.debug = debug
+        self.readTimeout = readTimeout
+        self.ackTimeout = ackTimeout
         self._ts = None
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._s.connect((host, port))
         print "Connected"
 
     def getByte(self):
-        c = self._s.recv(1)
+        try:
+            c = self._s.recv(1)
+        except socket.timeout:
+            c = ''
         if c == '':
             raise Timeout
         #print 'Serial:getByte: 0x%02x' % ord(c)
@@ -255,7 +263,7 @@ class HDLC:
         except Timeout:
             return None
 
-    def write(self, payload, seqno, timeout=0.2):
+    def write(self, payload, seqno):
         """
         Write a packet. If the payload argument is a list, it is
         assumed to be exactly the payload. Otherwise the payload is
@@ -346,38 +354,46 @@ class HDLC:
             print s
 
 class SimpleAM(object):
-    def __init__(self, s, oobHook=None):
-        self._s = HDLC(s)
+    def __init__(self, source, oobHook=None):
+        self._source = source
+        self._hdlc = HDLC(source)
         self.seqno = 0
         self.oobHook = oobHook
 
     def read(self, timeout=None):
-        f = self._s.read(timeout)
+        f = self._hdlc.read(timeout)
         if f:
             return ActiveMessage(NoAckDataFrame(f))
         return None
 
-    def write(self, packet, amId, timeout=None, blocking=True, inc=1):
+    def write(self, packet, amId, timeout=5, blocking=True, inc=1):
         self.seqno = (self.seqno + inc) % 256
-        while True:
-            self._s.write(ActiveMessage(packet, amId=amId), seqno=self.seqno, timeout=timeout)
+        prevTimeout = self._source.getTimeout()
+        end = None
+        if timeout: end = time.time() + timeout
+        while not end or time.time() < end:
+            self._hdlc.write(ActiveMessage(packet, amId=amId), seqno=self.seqno)
             if not blocking:
                 return True
-            f = self._s.read(timeout)
+            start = time.time()
+            f = self._hdlc.read(self._source.ackTimeout)
             if f == None:
+                #print "Ack Timeout!"
                 continue
             ack = AckFrame(f)
-            while ack.protocol != SERIAL_PROTO_ACK:
+            while ack.protocol != SERIAL_PROTO_ACK and (not end or time.time() < end):
                 if self.oobHook:
                     self.oobHook(ActiveMessage(NoAckDataFrame(f)))
                 else:
                     print 'SimpleAM:write: skip', ack, f
-                f = self._s.read(timeout)
+                f = self._hdlc.read(self._source.ackTimeout)
                 if f == None:
+                    #print "Ack Timeout!"
                     break
                 ack = AckFrame(f)
             if f != None:
                 break
+        self._source.setTimeout(prevTimeout)
         #print 'SimpleAM:write: got an ack:', ack, ack.seqno == self.seqno
         return ack.seqno == self.seqno
 
@@ -410,9 +426,8 @@ class AM(SimpleAM):
                 except:
                     try:
                         s = getSource(os.environ['MOTECOM'])
-                        print 'third'
                     except:
-                        print "ERROR: please indicate a way to connect to the mote"
+                        print "ERROR: Please indicate a way to connect to the mote"
                         sys.exit(-1)
         if oobHook == None:
             oobHook = printfHook
