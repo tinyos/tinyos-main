@@ -106,7 +106,7 @@ AC_MSG_RESULT($JDK)
 
 function jnimap {
   for v in $JNIVERSIONS; do
-    echo -n "${JNIPREFIX}$1$v$JNISUFFIX "
+    /bin/echo -n "${JNIPREFIX}$1$v$JNISUFFIX "
   done
 }
 
