@@ -38,7 +38,7 @@ except ImportError, e:
     print "Please install PySerial first."
     sys.exit(1)
 
-__version__ = "$Id: tos.py,v 1.4 2008-12-25 04:45:37 razvanm Exp $"
+__version__ = "$Id: tos.py,v 1.5 2008-12-29 23:52:03 razvanm Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
@@ -407,7 +407,7 @@ def printfHook(packet):
         s = "".join([chr(i) for i in packet.data]).strip('\0')
         lines = s.split('\n')
         for line in lines:
-            print "PRINTF:", line
+            if line: print "PRINTF:", line
         packet = None # No further processing for the printf packet
     return packet    
 
