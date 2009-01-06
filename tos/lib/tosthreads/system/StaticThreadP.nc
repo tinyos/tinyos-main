@@ -50,11 +50,14 @@ module StaticThreadP {
 implementation {
 
   error_t init(uint8_t id, void* arg) {
+    error_t r1, r2;
     thread_t* thread_info = call ThreadInfo.get[id]();
     thread_info->start_arg_ptr = arg; 
     thread_info->mutex_count = 0;
     thread_info->next_thread = NULL;
-    return ecombine(call ThreadInfo.reset[id](), call ThreadScheduler.initThread(id));
+    r1 = call ThreadInfo.reset[id]();
+    r2 = call ThreadScheduler.initThread(id);
+    return ecombine(r1, r2);
   }
   
   command error_t Thread.start[uint8_t id](void* arg) {
