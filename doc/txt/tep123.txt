@@ -10,8 +10,8 @@ The Collection Tree Protocol (CTP)
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.13 $
-:Draft-Modified: $Date: 2008-12-05 19:01:53 $
+:Draft-Version: $Revision: 1.14 $
+:Draft-Modified: $Date: 2009-01-07 22:08:22 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -60,7 +60,7 @@ The CTP protocol assumes that the data link layer provides four things:
  2) Provides synchronous acknowledgments for unicast packets.
  3) Provides a protocol dispatch field to support multiple higher-level
     protocols.
- 4) Has single-hop source and destination fields.
+ 4) Has single-hop 16-bit source and destination fields.
 
 CTP assumes that it has link quality estimates of some number of nearby 
 neighbors. These provide an estimate of the number of transmissions it 
@@ -88,8 +88,8 @@ has an ETX of 0.  The ETX of a node is the ETX of its parent plus the
 ETX of its link to its parent. This additive measure assumes that
 nodes use link-level retransmissions.  Given a choice of valid routes,
 CTP SHOULD choose the one with the lowest ETX value. CTP represents
-ETX values as 16-bit fixed-point real numbers with a precision of
-hundredths. An ETX value of 45, for example, represents an ETX of 4.5,
+ETX values as 16-bit decimal fixed-point real numbers with a precision
+of tenths. An ETX value of 45, for example, represents an ETX of 4.5,
 while an ETX value of 10 represents an ETX of 1.
 
 Routing loops are a problem that can emerge in a CTP network. Routing
@@ -159,7 +159,10 @@ Field definitions are as follows:
   * origin: The originating address of the packet. A node forwarding a data frame MUST NOT modify the origin field.
   * seqno: Origin sequence number. The originating node sets this field, and a node forwarding a data frame MUST NOT modify it. 
   * collect_id: Higher-level protocol identifier. The origin sets this field, and a node forwarding a data frame MUST NOT modify it.
-  * data: the data payload, of zero or more bytes. A node forwarding a data frame MUST NOT modify the data payload.
+  * data: the data payload, of zero or more bytes. A node forwarding a data frame MUST NOT modify the data payload. The length of the data field is computed by subtracting the size of the CTP header from the size of the link layer payload provided by the link layer.
+
+Note that the two 16-bit fields, ETX and origin, appear in network
+byte-order in the data frame.
 
 Together, the origin, seqno and collect_id fields denote a unique 
 ***origin packet.*** Together, the origin, seqno, collect_id, and
@@ -191,10 +194,13 @@ The CTP routing frame format is as follows::
 
 The fields are as follows:
   
-  * P: Same as data frame with one difference: Routing frames are broadcast so multiple nodes respond to the P bit in the routing frame.
+  * P: Same as data frame with one difference: Routing frames are broadcast so multiple nodes respond to the P bit in the routing frame. Thus, the P bit in the routing frame can be used for quick bootstrapping of the routes: when a node boots up and sends a frame with the P bit set, the neighboring nodes can quickly transmit routing frames advertising their routes enabling the new node to quickly compute the route to the sink.
   * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.
   * parent: The node's current parent.
   * metric: The node's current routing metric value.
+
+Note that the two 16-bit fields, parent and ETX, appear in network
+byte-order in the routing frame.
 
 When a node hears a routing frame, it MUST update its routing table to
 reflect the address' new metric. If a node's ETX value changes
@@ -356,6 +362,15 @@ along the path.
 |
 | phone - +1 650 725 9046
 | email - pal@cs.stanford.edu
+|
+|
+| Alec Woo
+| Arch Rock Corporation
+| 501 2nd St. Ste 410
+| San Francisco, CA 94107-4132
+|
+| email - awoo@archrock.com
+
 
 8. Citations
 ====================================================================
