@@ -44,10 +44,8 @@ generic configuration BlockingAMSnooperC(am_id_t amId) {
   }
 }
 implementation {
-  components ActiveMessageC;
   components BlockingActiveMessageC as AM;
   BlockingReceive = AM.BlockingSnoop[amId];
-  AM.Snoop[amId] -> ActiveMessageC.SnoopDefault[amId];
   
   Packet = AM;
   AMPacket = AM;

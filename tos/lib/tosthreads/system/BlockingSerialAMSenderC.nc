@@ -45,10 +45,8 @@ generic configuration BlockingSerialAMSenderC(am_id_t AMId) {
 }
 
 implementation {
-  components SerialActiveMessageC;
   components BlockingSerialActiveMessageC as AM;
   BlockingAMSend = AM.BlockingAMSend[AMId];
-  AM.AMSend[AMId] -> SerialActiveMessageC.AMSend[AMId];
   
   Packet = AM;
   AMPacket = AM;

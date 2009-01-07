@@ -44,10 +44,8 @@ generic configuration BlockingAMReceiverC(am_id_t amId) {
   }
 }
 implementation {
-  components ActiveMessageC;
   components BlockingActiveMessageC as AM;
   BlockingReceive = AM.BlockingReceive[amId];
-  AM.Receive[amId] -> ActiveMessageC.ReceiveDefault[amId];
   
   Packet = AM;
   AMPacket = AM;

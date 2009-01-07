@@ -46,11 +46,6 @@ configuration BlockingActiveMessageC {
     interface AMPacket;
     interface PacketAcknowledgements;
   }
-  uses {
-    interface Receive as Receive[uint8_t id];
-    interface Receive as Snoop[uint8_t id];
-    interface AMSend as AMSend[uint8_t id];
-  }
 }
 implementation {
   components ActiveMessageC as AM;
@@ -66,9 +61,9 @@ implementation {
   BlockingAMSend = AMSenderP;
   
   BlockingStdControlC.SplitControl -> AM;
-  Receive = AMReceiverP.Receive;
-  Snoop = AMSnooperP.Snoop;
-  AMSend = AMSenderP.AMSend;
+  AMReceiverP.Receive -> AM.Receive;
+  AMSnooperP.Snoop -> AM.Snoop;
+  AMSenderP.AMSend -> AM.AMSend;
     
   Packet       = AM;
   AMPacket     = AM;

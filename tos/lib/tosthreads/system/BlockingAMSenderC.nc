@@ -45,10 +45,8 @@ generic configuration BlockingAMSenderC(am_id_t AMId) {
 }
 
 implementation {
-  components ActiveMessageC;
   components BlockingActiveMessageC as AM;
   BlockingAMSend = AM.BlockingAMSend[AMId];
-  AM.AMSend[AMId] -> ActiveMessageC.AMSend[AMId];
   
   Packet = AM;
   AMPacket = AM;

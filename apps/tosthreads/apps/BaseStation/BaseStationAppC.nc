@@ -105,12 +105,4 @@ implementation
   SerialReceiveRadioSendP.SendAMPacket -> BlockingRadioActiveMessageC;             
   SerialReceiveRadioSendP.BlockingReceiveAny -> BlockingSerialActiveMessageC.BlockingReceiveAny;
   SerialReceiveRadioSendP.BlockingAMSend -> BlockingRadioActiveMessageC;
-  
-  components ActiveMessageC, SerialActiveMessageC;
-  BlockingRadioActiveMessageC.Receive -> ActiveMessageC.Receive;
-  BlockingRadioActiveMessageC.Snoop -> ActiveMessageC.Snoop;
-  BlockingRadioActiveMessageC.AMSend -> ActiveMessageC.AMSend;
-  
-  BlockingSerialActiveMessageC.Receive -> SerialActiveMessageC.Receive;
-  BlockingSerialActiveMessageC.AMSend -> SerialActiveMessageC.AMSend;
 }
