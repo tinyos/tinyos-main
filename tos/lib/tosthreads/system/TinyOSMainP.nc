@@ -1,4 +1,4 @@
-// $Id: TinyOSMainP.nc,v 1.2 2008-10-06 04:40:02 klueska Exp $
+// $Id: TinyOSMainP.nc,v 1.3 2009-01-09 01:38:52 liang_mike Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: TinyOSMainP.nc,v 1.2 2008-10-06 04:40:02 klueska Exp $
+ * Date last modified:  $Id: TinyOSMainP.nc,v 1.3 2009-01-09 01:38:52 liang_mike Exp $
  *
  */
 
@@ -41,6 +41,12 @@
  * @author Philip Levis
  * @author Kevin Klues <klueska@cs.stanford.edu> 
  */
+
+#ifdef DYNTHREADS 
+  #define AT_SPONTANEOUS	@spontaneous()
+#else
+  #define AT_SPONTANEOUS
+#endif
 
 module TinyOSMainP {
   provides {
