@@ -38,7 +38,7 @@ except ImportError, e:
     print "Please install PySerial first."
     sys.exit(1)
 
-__version__ = "$Id: tos.py,v 1.5 2008-12-29 23:52:03 razvanm Exp $"
+__version__ = "$Id: tos.py,v 1.6 2009-01-09 05:13:57 razvanm Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
@@ -611,7 +611,7 @@ class Packet:
         return self._names
 
     def values(self):
-        return self._names
+        return self._values
 
     # Custom functions
     def names(self):
