@@ -61,8 +61,8 @@ implementation {
   BlockingAMSend = AMSenderP;
   
   BlockingStdControlC.SplitControl -> AM;
-  AMReceiverP.Receive -> AM.Receive;
-  AMSnooperP.Snoop -> AM.Snoop;
+  AMReceiverP.Receive -> AM.ReceiveDefault;
+  AMSnooperP.Snoop -> AM.SnoopDefault;
   AMSenderP.AMSend -> AM.AMSend;
     
   Packet       = AM;

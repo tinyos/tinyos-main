@@ -57,7 +57,7 @@ implementation {
   BlockingAMSend = AMSenderP;
   
   BlockingStdControlC.SplitControl -> AM;
-  AMReceiverP.Receive -> AM.Receive;
+  AMReceiverP.Receive -> AM.ReceiveDefault;
   AMSenderP.AMSend -> AM.AMSend;
     
   Packet       = AM;

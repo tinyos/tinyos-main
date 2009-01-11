@@ -11,6 +11,7 @@ TOS_THREADS_DIR ?= $(TOSDIR)/lib/tosthreads
 CFLAGS += -I$(TOS_THREADS_DIR)/system
 CFLAGS += -I$(TOS_THREADS_DIR)/interfaces
 CFLAGS += -I$(TOS_THREADS_DIR)/types
+CFLAGS += -I$(TOS_THREADS_DIR)/lib/serial
 
 #Setup the thread scheduler for use by redefining the name of the task scheduler to use
 PFLAGS += -tosscheduler=TinyTaskSchedulerC,TinyTaskSchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
