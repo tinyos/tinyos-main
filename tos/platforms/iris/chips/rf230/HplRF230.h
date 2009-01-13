@@ -70,7 +70,7 @@ typedef TOne TRF230;
 
 /* This is the default value of the CHANNEL field of the PHY_CC_CCA register. */
 #ifndef RF230_DEF_CHANNEL
-#define RF230_DEF_CHANNEL	11
+#define RF230_DEF_CHANNEL	26
 #endif
 
 #endif//__HPLRF230_H__
