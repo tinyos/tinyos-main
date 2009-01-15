@@ -45,8 +45,6 @@
  * @author Brano Kusy (branislav.kusy@gmail.com)
  * @version October 25, 2007
  */
-#include "SCCB.h"
-#include "OV7649.h"
 #include "PXA27XQuickCaptInt.h"
 #include "DMA.h"
 #include "dmaArray.h"
@@ -150,7 +148,6 @@ implementation
 
     async command void HplPXA27XQuickCaptInt.disableQuick()
     {
-        led_clr();//call LED_PIN.clr();
         CICR0 &= ~(CICR0_EN);
         CISR |= CISR_CQD;
     } 
@@ -218,13 +215,11 @@ implementation
       
         //atomic{printfUART(">>>>>>>>>>>>>>> PPID_CIF_Irq.fired() >>>>>>>>>>>\n", "");}
         volatile uint32_t tempCISR;
-        call Leds.led0Toggle();
 
         atomic {  tempCISR = CISR; }
         // Start-Of-Frame
         if ((tempCISR & CISR_SOF) && (~(CICR0) & CICR0_SOFM)) {
             atomic CISR |= CISR_SOF;
-            led_set();//call LED_PIN.set();
             signal HplPXA27XQuickCaptInt.startOfFrame();
             // this disables CIF after the current frame capture is done 
             CICR0 |= CICR0_DIS;		
@@ -232,7 +227,6 @@ implementation
         // End-Of-Frame
         if ((tempCISR & CISR_EOF) && (~(CICR0) & CICR0_EOFM)) {
             atomic CISR |= CISR_EOF;
-            led_clr();//call LED_PIN.clr();
             signal HplPXA27XQuickCaptInt.endOfFrame();
             return;           
         }
