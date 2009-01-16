@@ -5,13 +5,13 @@ The Collection Tree Protocol (CTP)
 :TEP: 123
 :Group: Network Working Group 
 :Type: Documentary
-:Status: Draft
-:TinyOS-Version: 2.x
+:Status: Final
+:TinyOS-Version: > 2.1
 :Author: Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo
 
 :Draft-Created: 3-Aug-2006
-:Draft-Version: $Revision: 1.14 $
-:Draft-Modified: $Date: 2009-01-07 22:08:22 $
+:Draft-Version: $Revision: 1.15 $
+:Draft-Modified: $Date: 2009-01-16 19:50:47 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -43,6 +43,8 @@ specify the CTP routing and data frames. CTP uses routing frames to
 update and build collection tree in the network. CTP uses data frames
 to deliver application payload to the sink and to probe topology
 inconsistencies.
+
+All fields in this specification are in network byte order.
 
 2. Assumptions and Limitations
 ==============================================================================
@@ -152,7 +154,7 @@ The CTP data frame format is as follows::
 
 Field definitions are as follows:
 
-  * P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future. Data frames are unicast so only the destination of the unicast transmission responds to the P bit in the data frame.
+  * P: Routing pull. The P bit allows nodes to request routing information from other nodes. If the unicast destination of the data frame with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future. Nodes other than the link-layer destination of the data frame MAY respond to the P bit in the data frame.
   * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next data frame it transmits.
   * THL: Time Has Lived. When a node generates a CTP data frame, it MUST set THL to 0. When a node receives a CTP data frame, it MUST increment the THL. If a node receives a THL of 255, it increments it to 0.
   * ETX: The ETX routing metric of the single-hop sender. When a node transmits a CTP data frame, it MUST put the ETX value of its route through the single-hop destination in the ETX field.  If a node receives a packet with a lower gradient than its own, then it MUST schedule a routing frame in the near future.
@@ -160,9 +162,6 @@ Field definitions are as follows:
   * seqno: Origin sequence number. The originating node sets this field, and a node forwarding a data frame MUST NOT modify it. 
   * collect_id: Higher-level protocol identifier. The origin sets this field, and a node forwarding a data frame MUST NOT modify it.
   * data: the data payload, of zero or more bytes. A node forwarding a data frame MUST NOT modify the data payload. The length of the data field is computed by subtracting the size of the CTP header from the size of the link layer payload provided by the link layer.
-
-Note that the two 16-bit fields, ETX and origin, appear in network
-byte-order in the data frame.
 
 Together, the origin, seqno and collect_id fields denote a unique 
 ***origin packet.*** Together, the origin, seqno, collect_id, and
@@ -194,13 +193,10 @@ The CTP routing frame format is as follows::
 
 The fields are as follows:
   
-  * P: Same as data frame with one difference: Routing frames are broadcast so multiple nodes respond to the P bit in the routing frame. Thus, the P bit in the routing frame can be used for quick bootstrapping of the routes: when a node boots up and sends a frame with the P bit set, the neighboring nodes can quickly transmit routing frames advertising their routes enabling the new node to quickly compute the route to the sink.
+  * P: Same as data frame with one difference: Routing frames are broadcast so multiple nodes respond to the P bit in the routing frame.
   * C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.
   * parent: The node's current parent.
   * metric: The node's current routing metric value.
-
-Note that the two 16-bit fields, parent and ETX, appear in network
-byte-order in the routing frame.
 
 When a node hears a routing frame, it MUST update its routing table to
 reflect the address' new metric. If a node's ETX value changes
@@ -370,7 +366,16 @@ along the path.
 | San Francisco, CA 94107-4132
 |
 | email - awoo@archrock.com
-
+|
+|
+| Sukun Kim
+| Samsung Electronics
+| 416 Maetan-3-dong, Yeongtong-Gu
+| Suwon, Gyeonggi 443-742
+| Korea, Republic of
+|
+| phone - +82 10 3065 6836
+| email - sukun.kim@samsung.com
 
 8. Citations
 ====================================================================
