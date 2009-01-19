@@ -29,5 +29,8 @@ configuration GoldenImageAppC {}
 implementation
 {
   components DelugeC;
+  components LedsC;
+
+  DelugeC.Leds -> LedsC;
 }
 

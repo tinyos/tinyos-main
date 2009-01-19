@@ -7,12 +7,9 @@ Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
 Description:
 
 This is a sample application for Deluge T2. The application is similar 
-to Null, but it includes Deluge T2.
-
-To program a basestation (a mote which can accept images over the
-serial port) you have to add CFLAGS=-DDELUGE_BASESTATION to the make
-command. For telosb this might look like this:
-	 CFLAGS=-DDELUGE_BASESTATION make telosb install bsl,/dev/ttyUSB0
+to Null, but it includes Deluge T2. The Makefile includes the
+DELUGE_LIGHT_BASESTATION flag to allow the nodes to be pinged using
+tos-deluge.
 
 Prerequisites:
 
