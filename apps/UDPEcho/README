@@ -1,0 +1,6 @@
+
+ A simple application which verifies the 6loWPAN stack is functioning
+correctly.  A mote running this will respond to ICMP Echo requests
+(0x80), and provide a UDP echo service on port 7 (a la rfc862).
+
+
