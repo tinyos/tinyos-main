@@ -1,0 +1,59 @@
+$Id: TODO,v 1.1 2009-01-20 00:28:15 sdhsdh Exp $
+
+                       NOTE WELL
+                       =========
+
+	*NONE* of the items are being actively worked on.
+        So, if you're interested in one of these features,
+        it means you'll have to submit a patch... :-)
+
+
+read list of interfaces with SIOCGIFCONF (AF_INET6 support in the kernel would
+be nice) or from /proc
+
+Quoting Peter Bieringer (peter@bieringer.de):
+> Das war's schon. Ach ja, wenn Du mal eine neue Version machst, kannst Du
+> noch einen Schalter einbauen, damit radvd trotz debug-level >0 auf Wunsch
+> als daemon in den Hintergrund starten kann?
+[ Peter wants that a debugging level greater than 0 doesn't stop radvd
+from forking.]
+
+support for few protocol constants defined in RFC 2461 Sec 10 is missing.
+
+consider whether UnicastOnly flag should be detected by radvdump.
+
+read the man pages one more time and make sure their are understandable
+and English is correct
+
+The following parts of RFC2461(bis) are not implemented:
+ - section 6.2.1: Adv{Valid,Preferred}Lifetime that decrements in real time,
+   that is, one that will result in a Lifetime of zero at the specified time in
+   the future. (MUST)
+ - section 6.2.5: when AdvSendAdvertisements changes to FALSE, we don't send 
+   a final RA with zero Router Lifetime (we just send it when shutting down).
+   (SHOULD)
+ - section 6.2.8: if the link-local address of the router changes, it should
+   multicast a few RAs from the old address with zero router lifetime, and a
+   few from the new address. (SHOULD).
+
+Consider whether to support RFC 4286 (Multicast Router Discovery).
+
+Consider whether to support multiple IPv4 addresses with Base6to4Interface
+(currently the code just uses the first one).
+
+Consider whether to support a generalization of Base6to4Interface for
+arbitrary IPv6 prefixes, to be used for automatic generation of downstream
+prefixes.  Also consider whether this would need to support multiple IPv6
+prefixes on the upstream interfaces.  See question 3 in README for more on
+this.
+
+Use getifaddrs() instead of ioctl SIOCGIFADDR and other friends.  The
+problem with this is that e.g. RHL73's glibc didn't support getifaddrs(),
+and before glibc 2.3.3 getifaddrs() didn't use netlink so it didn't work
+well with IPv6.  So, some kind of compat library would be needed if this
+would be used...
+
+Consider whether radvd should work around missing/broken interfaces by
+default, especially if a previously working interface gets disabled.
+
+Implement Secure Neighbor Discovery (RFC 3971).

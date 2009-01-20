@@ -1,0 +1,56 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#undef TIME_WITH_SYS_TIME
+
+/* Define if lex declares yytext as a char * by default, not a char[].  */
+#undef YYTEXT_POINTER
+
+/* Define if you have the getopt_long function.  */
+#undef HAVE_GETOPT_LONG
+
+/* Define if you have the <getopt.h> header file.  */
+#undef HAVE_GETOPT_H
+
+/* Define if you have the <inttypes.h> header file.  */
+#undef HAVE_INTTYPES_H
+
+/* Define if you have the <machine/limits.h> header file.  */
+#undef HAVE_MACHINE_LIMITS_H
+
+/* Define if you have the <machine/param.h> header file.  */
+#undef HAVE_MACHINE_PARAM_H
+
+/* Define if you have the <net/if_arp.h> header file.  */
+#undef HAVE_NET_IF_ARP_H
+
+/* Define if you have the <net/if_dl.h> header file.  */
+#undef HAVE_NET_IF_DL_H
+
+/* Define if you have the <net/if_types.h> header file.  */
+#undef HAVE_NET_IF_TYPES_H
+
+/* Define if you have the <sys/param.h> header file.  */
+#undef HAVE_SYS_PARAM_H
+
+/* Define if you have the <sys/sockio.h> header file.  */
+#undef HAVE_SYS_SOCKIO_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the c library (-lc).  */
+#undef HAVE_LIBC
+
+/* whether struct sockaddr_in6 has sin6_scope_id */
+#undef HAVE_SIN6_SCOPE_ID
+
+/* whether struct in6_addr has u6_addrXX and defines s6_addrXX */
+#undef HAVE_IN6_ADDR_S6_ADDR
+

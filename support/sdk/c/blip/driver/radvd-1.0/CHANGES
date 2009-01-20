@@ -1,0 +1,346 @@
+$Id: CHANGES,v 1.1 2009-01-20 00:28:14 sdhsdh Exp $
+
+11/01/2006	Release 1.0.
+
+10/09/2006	Perform a static/dynamic code audit; plug some minor
+		bugs (see CVS changelogs for more information) and
+		perform minor clean-up.
+
+08/07/2006	Implement MAX_INITIAL_RTR_ADVERT_INTERVAL handling,
+		patch from Yoshifuji Hideaki / USAGI.
+
+05/23/2006	Unblock SIGALRM signals at startup.  Some scripts/programs
+		seem to run radvd from ALRM-blocked context which breaks
+		the timers.
+
+05/23/2006	Redefined IgnoreIfMissing: by default, radvd will now
+		try to reinitialize failed interfaces automatically.
+		IgnoreIfMissing is still needed if radvd is started when the
+		interface isn't up, and it also quenches some messages
+		relating to missing interfaces.
+
+03/29/2006	Implement RDNSS draft, using non-allocated
+		IANA ND type value 25, by Lauréline Provost,
+                Mickaël Guérin, Adrien Clerc, Gaetan Eleouet,
+                Bahattin Demirplak, Lionel Guilmin (at the
+                ENSEEIHT, Toulouse)
+
+03/06/2006	Fix the default STDERR+syslog logging methods, so
+		we don't try to unnecessarily log to STDERR after
+		forking.
+
+01/18/2006	radvd-0.9.1 did not initialize AdvDefaultLifetime (etc.)
+		appropriately, unbreak the "clean-up".
+
+01/13/2006	Release 0.9.1.
+
+12/30/2005	Great cleanup of signed/unsigned values, add
+		-Wall and a number of other warnings to CFLAGS
+		by default.  Do not allow signed values for
+		HomeAgentPreference anymore.
+
+12/30/2005	Fix a couple of  IPv6 Ready Logo Phase-2 IPv6 Core
+		Protocols Self Test issues, patches from Yoshifuji
+		Hideaki / USAGI.
+
+11/13/2005	Create a short FAQ in README file.
+
+10/28/2005	Get interface MTU automatically, so that you can
+		use jumboframes and advertise MTU >1500.
+
+10/19/2005	Release 0.9.
+
+10/18/2005	Transfer sole maintainership of radvd to Pekka Savola.
+
+10/18/2005	Make the radvd.conf syntax dump default
+		in radvdump and remove the previous default to
+		reduce code duplication.
+
+09/28/2005	Add NEMO Basic support (RFC3961) and fix default
+		HomeAgentLifetime, from Ville Nuorvala.
+
+08/18/2005	Implement more robust timer handler, especially
+		because some Linux kernels don't seem to behave
+		all that well; see http://lkml.org/lkml/2005/4/29/163.
+		Based on extensive testing & reports by
+		Tomasz Grobelny.  NB: the bug report was caused by
+		a bad timer patch in PLD's kernel package, and this
+		should not occur often with standard kernels.
+
+07/24/2005	Implement a new logging method "stderr_syslog" which is
+		now also the default.  Everything is logged on syslog,
+		while the most important messages (i.e., start-up failures)
+		are also logged on stderr.
+
+07/08/2005	Release 0.8.
+
+07/05/2005	Change the more-specific route ND option code
+		from de-facto '9' to the official '24'.  Change
+		back in defaults.h if you need old behaviour.
+
+07/05/2005	Fix wrongly calculated prefix with Base6to4Interface
+                on ppc and maybe other big endian arches, from
+		Debian #301543 by Sam Hathaway.
+
+07/05/2005	Fix Linux-2.6.12-bk4+ error with HUP signal,
+		from YOSHIFUJI Hideaki / USAGI.
+
+03/29/2005	Merge a part of MIPv6/non-MIPv6 code, make printing
+		error messages nicer.
+
+03/22/2005	Be a bit more informative about config file parsing
+		errors.
+
+02/21/2005	Release 0.7.3.
+
+02/19/2005	Fix crash when reloading config with AdvSendAdvert off.
+
+02/15/2005	Merge a few fixes and improvements from USAGI:
+		 - support microsecond scheduling and fix RA intervals
+		 - send zero router lifetime when forwarding is disabled
+		 - use a more flexible inter-RA delay
+
+01/07/2005	Accomodate interface indexes > 9999, from Hagen Fritsch.
+
+12/15/2004	Advertise zero Router Lifetime when shutting down;
+		implements a SHOULD in RFC2461 section 6.2.5.
+
+10/16/2004	Update Mobile IPv6 to match RFC 3775, from Greg Daley.
+
+08/20/2004	Minor documentation cleanups.
+
+03/09/2004      Implement "IgnoreIfMissing" interface flag, which can be
+                used on interfaces which aren't enabled when radvd starts
+                but will later become available (e.g., Bluetooth) --
+                and then you wish to send HUP to radvd to activate the
+                configs.
+
+02/21/2004      Further cleanups, to fix autoconf/autoheader problems
+                with newer toolchain; mostly by Marko Myllynen.
+
+02/20/2004      Clean up a bit: remove old junk from configure.in,
+                rename "log()" to "flog()" to satisfy newer GCCs,
+                allow underscores in the interface names (the last two
+                fixes already committed earlier).
+                                                                                
+01/19/2004      Make radvd check for forwarding status using procfs on
+                Linux; needed with 2.6 kernels.  Loosely based on
+                a patch by USAGI.
+
+11/21/2003	Add support for Router Preferences and More Specific
+		Routes from Markku Savela <msa@burp.tkv.asdf.org>.
+		NOTE! The specification is not final yet, there will be
+		changes!  (Man page, documentation and radvdump support
+		by Pekka Savola.)
+
+09/11/2003	When starting up, check if the MAC address is all zero
+		(could happen e.g. with bridge interfaces with no attached
+		physical interfaces), and warn if so. For more information,
+		http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=103469
+
+06/10/2003	When chrooting, check the possible return code 
+		from chdir("/").
+
+03/08/2003	Add patch from MAEDA Naoaki <maeda.naoaki@jp.fujitsu.com>
+		to discard RS's from the unspecied source address with
+		link-layer address option, as required by RFC2461.
+
+10/28/2002	Release 0.7.2:
+		 - add support for VLANs (from USAGI)
+		 - make it compile better on newer NetBSD's (NetBSD)
+		 - fix a syntax error in radvd.conf(5) sample documentation
+		 - use IPV6_RECV{HOPLIMIT,PKTINFO} not 
+                       IPV6_{HOPLIMIT,PKTINFO} if supported
+		 - (in Red Hat spec file) don't create radvd gid explicitly
+		 - a lot of coding style cleanups
+
+01/16/2002	Release 0.7.1.
+
+01/12/2002	Update config.{guess,sub} from ftp.gnu.org; update INTRO.
+		Marko Myllynen and Debian bug #115992.
+
+01/02/2002	Ensure NULL-termination with strncpy.
+
+12/31/2001	Radvdump fixes: eliminate a warning of Prefix Information
+		sections with '-d -f'; add a note that
+		{Min,Max}RtrAdvInterval cannot be obtained with '-f';
+		implement '-e' to be used with '-f' which omits all
+		advertised default settings. Mostly by Marko Myllynen.
+
+12/28/2001	Small cleanups.  AdvSendAdvert is implicitly off by
+		default.  Check configuration file permissions; must
+		not be writable by others, and if non-root,
+		not by self/own group.  By Marko Myllynen.
+
+12/21/2001	Check via sysctl that IPv6 forwarding is enabled;
+		exit unless debugging is enabled.  Triggered by
+		Marko Myllynen.
+
+11/22/2001	MinRtrAdvInterval for MIPv6 is 0.05 seconds, not 0.5.
+		(Note: untested).
+
+11/20/2001	Rework BSD device memory management a bit, minor cleanups.
+		Version bumped to 0.7.0.
+
+11/14/2001	Maintainership of radvd transferred from Lars Fenneberg
+		to Pekka Savola and Nathan Lutchansky.  Lars' CVS
+		repository adopted, and changes merged from the -pX
+		branch.
+
+08/29/2001	Minor change for NetBSD 1.5.1 compatibility.
+		(Nathan Lutchansky)
+
+07/20/2001	Support for non-multicast links, like ISATAP.
+		(Nathan Lutchansky)
+
+07/03/2001	Minimum MTU has been changed to 1280 in the latest RFC's.
+		(Pekka Savola)
+
+06/30/2001	Check for possible buffer overflows; replace strcpy with
+		strncpy.  No fatals found.  Remove redunant radvd -t check.
+		(Pekka Savola)
+
+06/24/2001	Fix 1-byte overflow in /proc/net/igmp6 handling,
+                clean out possible memory garbage when sending RA's
+		(patch from <yoshfuji@linux-ipv6.org>).
+
+06/19/2001	When dropping root, also set up supplementary groups
+		properly.  On Linux, when sending RA's, check that the
+		interface has joined all-routers multicast group.  Add a few
+		RFC2461 MUST sanity checks when receiving datagrams.  Clean
+		out non-EUI64 addressing scheme and other minor bits.
+		(Pekka Savola)
+
+04/28/2001	Misc cleanup and bugfixes, automake support.
+
+03/28/2001	Grammar cleanup. Integrated 6to4 support through
+		"Base6to4Interface" option in prefix configuration. Signal
+		handling fixed by blocking on select() rather than recvmsg()
+		so SIGTERM/HUP take effect immediately now. (Nathan Lutchansky)
+
+03/27/2001	Security fixes: close stdin/out and chdir("/") via
+		daemon() to prevent possible exploits, and a flag to allow
+		radvd to set[ug]id to an unprivileged user (from Pekka Savola).
+
+02/01/2001	scope_id is not supported in glibc2.1. So it is now
+		compiled conditionally.
+
+01/31/2001	Add CC variable to Makefile. Fix bug with IPV6_ADD_MEMBERSHIP
+		handling. Set scope_id when sending packets.
+
+12/02/2000	man pages update, rewritten pid file handling, rewritten
+		signal handling (SIGHUP and SIGTERM), gcc warnings cleanup,
+		new radvdump option -f: print received RAs in config file
+		format (by Marko)
+
+11/19/2000	integrated the last two change entries into the main source
+		(patches by Marko Myllynen), fixed bug in log.c, fixed file
+		description leak in readin_config, rewrote code in timer.c,
+		updated man pages again (from Marko Myllynen, too), PID
+		file support (patch from Marko Myllynen, based on a patch
+		from Tommi.Komulainen@iki.fi)
+
+15/08/2000	RFC 2461 updates, Mobile IPv6 extensions added
+
+14/07/2000 	added RA interval option and modified some default values
+		for timers
+
+06/15/99	changed to run with glibc 2.1 on RedHat 6.0.
+
+03/03/98	radvd now joins ipv6-allrouters on Linux.  Fix contributed
+		by A.N.Kuznetsov <kuznet@ms2.inr.ac.ru>.
+
+10/23/97	radvd will now accept any prefix length in its config
+		file but will warn about unusual ones
+
+10/19/97	removed backwards compatibility code in recv.c.
+		IPV6_HOPLIMIT support is now assumed to exist.
+
+10/19/97	fixed alignment problems in recv.c and send.c.
+
+10/16/97	the Makefile install target now uses mkinstalldirs.
+
+10/16/97	changed all u_int*_t to uint*_t for better POSIX
+		compliance and portability. Needs 2.1.57-CVS or glibc.
+		BSD seems to need patches.
+
+10/16/97	more intelligent configure; tries to figure out
+		where the IPv6 libraries and inclues are (if not in
+		the standard places). Searches in /usr/inet6 and /usr/ipv6.
+
+10/15/97	integrated small patches for glibc and BSD from Craig and
+		Philip
+
+09/14/97	EUI-64 "support"
+
+09/01/97	centralized all includes into includes.h for easier
+		maintainance
+
+08/25/97	changed all occurences of IPV6_TXINFO/IPV6_RXINFO
+		to IPV6_PKTINFO
+
+08/25/97	removed some compatibility stuff for older Linux kernels
+
+03/17/97	changed linux/if_arp.h to net/if_arp.h in device-linux.c
+		and configure.in (for glibc compatibility)
+
+03/17/97	integrated patch from Philip Blundell <pjb27@cam.ac.uk>
+		into configure.in to check for inet_* in libc first and
+		then for libinet6 (for glibc compatibility).
+
+03/16/97	corrected small error in radvd.conf(5) man page and other
+		small changes
+
+03/16/97	removed linklocal.c source file from the distribution
+		because it wasn't used anymore
+
+03/16/97	added html version of the INTRO, removed ascii version.
+
+02/12/97	missing directories are now created on make install
+
+01/19/97	now also the rest of a line followed by a '#' is treated
+		as a comment in the config file
+
+01/16/97	added IPPROTO_IPV6/IPV6_HOPLIMIT support, so now incoming
+		RS' and RAs are checked if there hoplimit is 255 (on Linux
+		this only works with kernel version 2.1.21 and above)
+
+01/15/97	lots of portability cleanups; radvd is now using autoconf
+		for automatic configuration; removed support for the
+		in. prefix
+
+01/05/97	integrated BSD 4.4 patches from Craig <cmetz@inner.net>
+
+12/21/96	release of version 0.3
+
+12/15/96	the AdvSendAdvert flag works now
+
+12/14/96	added radvdump, dumps all received RAs in a human
+		readable form	
+
+12/13/96	rewrote radvd to use new advanced API headers
+
+12/08/96	added radvd.conf(5) man page
+
+12/03/96	changed RAW_CHECKSUM to IPV6_CHECKSUM for kernels
+		2.1.14 and above
+
+11/24/96	added checking of received RAs according to RFC 1970
+
+11/20/96	rewrote the default handling, now it should conform
+		to RFC 1970
+
+11/17/96	release of version 0.2
+	
+11/17/96	added -h (--help) and -f (--facility) option
+
+11/17/96	added setsockopt(..., SOL_IPV6, IPV6_MULTICAST_HOPS), so
+	 	that radvd works for kernel versions >2.1.7 (without this
+	 	you get "NDISC: fake router advertisment received" on your
+	 	hosts)
+	
+11/17/96	added a man page for radvd(8)
+
+11/17/96	some minor filename changes
+
+11/13/96	first release of this version of in.radvd (0.1)

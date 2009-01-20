@@ -47,7 +47,7 @@ enum {
 #endif
   BUFSIZE = 256,
   MTU = 256,
-  ACK_TIMEOUT = 1000000, /* in us */
+  ACK_TIMEOUT = 100000, /* in us */
   SYNC_BYTE = SERIAL_HDLC_FLAG_BYTE,
   ESCAPE_BYTE = SERIAL_HDLC_CTLESC_BYTE,
 
