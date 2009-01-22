@@ -50,7 +50,7 @@ enum
 /**
  * This is the timer type of the RF230 alarm interface
  */
-typedef TOne TRF230;
+typedef TOne TRadio;
 
 
 /**

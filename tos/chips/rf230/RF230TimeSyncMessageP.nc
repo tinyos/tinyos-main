@@ -28,11 +28,11 @@ module RF230TimeSyncMessageP
 {
 	provides
 	{
-		interface TimeSyncAMSend<TRF230, uint32_t> as TimeSyncAMSendRadio[uint8_t id];
+		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[uint8_t id];
 		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[uint8_t id];
 		interface Packet;
 
-		interface TimeSyncPacket<TRF230, uint32_t> as TimeSyncPacketRadio;
+		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
 		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
 	}
 
@@ -41,10 +41,10 @@ module RF230TimeSyncMessageP
 		interface AMSend as SubSend[uint8_t id];
 		interface Packet as SubPacket;
 
-		interface PacketTimeStamp<TRF230, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 
-		interface LocalTime<TRF230> as LocalTimeRadio;
+		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface LocalTime<TMilli> as LocalTimeMilli;
 
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;

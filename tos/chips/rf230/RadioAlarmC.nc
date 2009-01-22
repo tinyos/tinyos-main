@@ -30,7 +30,7 @@ configuration RadioAlarmC
 
 	uses
 	{
-		interface Alarm<TRF230, uint16_t> @exactlyonce();
+		interface Alarm<TRadio, uint16_t> @exactlyonce();
 	}
 }
 

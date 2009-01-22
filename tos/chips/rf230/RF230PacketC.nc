@@ -36,7 +36,7 @@ configuration RF230PacketC
 		interface PacketField<uint16_t> as PacketSleepInterval;
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 
-		interface PacketTimeStamp<TRF230, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
 }

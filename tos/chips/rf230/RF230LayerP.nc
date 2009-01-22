@@ -60,8 +60,8 @@ module RF230LayerP
 		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 
-		interface PacketTimeStamp<TRF230, uint32_t>;
-		interface LocalTime<TRF230>;
+		interface PacketTimeStamp<TRadio, uint32_t>;
+		interface LocalTime<TRadio>;
 
 		interface RF230Config;
 		interface Tasklet;

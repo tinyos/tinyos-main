@@ -33,7 +33,7 @@ module RadioAlarmP
 
 	uses
 	{
-		interface Alarm<TRF230, uint16_t>;
+		interface Alarm<TRadio, uint16_t>;
 		interface Tasklet;
 	}
 }

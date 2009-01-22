@@ -36,7 +36,7 @@ module RF230PacketP
 		interface PacketField<uint16_t> as PacketSleepInterval;
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 
-		interface PacketTimeStamp<TRF230, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
 
@@ -44,7 +44,7 @@ module RF230PacketP
 	{
 		interface IEEE154Packet;
 
-		interface LocalTime<TRF230> as LocalTimeRadio;
+		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface LocalTime<TMilli> as LocalTimeMilli;
 	}
 }

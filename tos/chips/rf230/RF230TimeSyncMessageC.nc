@@ -36,8 +36,8 @@ configuration RF230TimeSyncMessageC
 		interface Packet;
 		interface AMPacket;
 
-		interface TimeSyncAMSend<TRF230, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
-		interface TimeSyncPacket<TRF230, uint32_t> as TimeSyncPacketRadio;
+		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
+		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
 
 		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
 		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;

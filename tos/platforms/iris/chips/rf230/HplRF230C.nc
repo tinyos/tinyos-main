@@ -35,7 +35,7 @@ configuration HplRF230C
 		interface GeneralIO as RSTN;
 
 		interface GpioCapture as IRQ;
-		interface Alarm<TRF230, uint16_t> as Alarm;
+		interface Alarm<TRadio, uint16_t> as Alarm;
 
 		interface HplRF230;
 	}

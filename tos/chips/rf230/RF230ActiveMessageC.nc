@@ -42,7 +42,7 @@ configuration RF230ActiveMessageC
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
 
-		interface PacketTimeStamp<TRF230, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
 }
