@@ -1,8 +1,12 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: mib510.extra,v 1.7 2008-06-18 20:22:51 razvanm Exp $
+#$Id: mib510.extra,v 1.8 2009-01-26 19:40:38 sallai Exp $
 
 ifeq ($(MIB510),)
 $(error MIB510 must be defined, try "make $(TARGETS) help")
+endif
+
+ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+  MIB510 := '\\.\$(MIB510)'
 endif
 
 PROGRAM = mib510
