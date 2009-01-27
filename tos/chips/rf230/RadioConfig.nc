@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2009, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,40 +21,18 @@
  * Author: Miklos Maroti
  */
 
-configuration MessageBufferLayerC
+interface RadioConfig
 {
-	provides
-	{
-		interface SplitControl;
-		interface Send;
-		interface Receive;
-		interface RadioConfig;
-	}
-	uses
-	{
-		interface RadioState;
-		interface RadioSend;
-		interface RadioReceive;
+	/**
+	 * Sets the current channel. Returns EBUSY if the stack is unable
+	 * to change the channel this time (some other operation is in progress),
+	 * EALREADY if the selected channel is already set, SUCCESS otherwise.
+	 */
+	command error_t setChannel(uint8_t channel);
 
-		interface Packet;
-	}
-}
-
-implementation
-{
-	components MessageBufferLayerP, MainC, TaskletC;
-
-	MainC.SoftwareInit -> MessageBufferLayerP;
-
-	SplitControl = MessageBufferLayerP;
-	Send = MessageBufferLayerP;
-	Receive = MessageBufferLayerP;
-	RadioConfig = MessageBufferLayerP;
-
-	RadioState = MessageBufferLayerP;
-	MessageBufferLayerP.Tasklet -> TaskletC;
-	RadioSend = MessageBufferLayerP;
-	RadioReceive = MessageBufferLayerP;
-
-	Packet = MessageBufferLayerP;
+	/**
+	 * This event is signaled exactly once for each sucessfully posted state 
+	 * setChannel command when it is completed.
+	 */
+	event void setChannelDone();
 }

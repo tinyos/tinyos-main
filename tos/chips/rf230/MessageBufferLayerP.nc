@@ -33,6 +33,7 @@ module MessageBufferLayerP
 
 		interface Send;
 		interface Receive;
+		interface RadioConfig;
 	}
 	uses
 	{
@@ -58,6 +59,7 @@ implementation
 		STATE_TX_DONE = 3,
 		STATE_TURN_ON = 4,
 		STATE_TURN_OFF = 5,
+		STATE_CHANNEL = 6,
 	};
 
 	command error_t SplitControl.start()
@@ -98,6 +100,25 @@ implementation
 		return error;
 	}
 
+	command error_t RadioConfig.setChannel(uint8_t channel)
+	{
+		error_t error;
+
+		call Tasklet.suspend();
+
+		if( state != STATE_READY )
+			error = EBUSY;
+		else
+			error = call RadioState.setChannel(channel);
+
+		if( error == SUCCESS )
+			state = STATE_CHANNEL;
+
+		call Tasklet.resume();
+
+		return error;
+	}
+
 	task void stateDoneTask()
 	{
 		uint8_t s;
@@ -105,13 +126,16 @@ implementation
 		s = state;
 
 		// change the state before so we can be reentered from the event
-		if( s == STATE_TURN_ON || s == STATE_TURN_OFF )
-			state = STATE_READY;
+		state = STATE_READY;
 
 		if( s == STATE_TURN_ON )
 			signal SplitControl.startDone(SUCCESS);
-		else
+		else if( s == STATE_TURN_OFF )
 			signal SplitControl.stopDone(SUCCESS);
+		else if( s == STATE_CHANNEL )
+			signal RadioConfig.setChannelDone();
+		else	// not our event, ignore it
+			state = s;
 	}
 
 	tasklet_async event void RadioState.done()
@@ -124,6 +148,10 @@ implementation
 	}
 
 	default event void SplitControl.stopDone(error_t error)
+	{
+	}
+
+	default event void RadioConfig.setChannelDone()
 	{
 	}
 
