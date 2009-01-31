@@ -10,8 +10,8 @@ The Link Estimation Exchange Protocol (LEEP)
 :Author: Omprakash Gnawali
 
 :Draft-Created: 05-Feb-2006
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2008-12-06 00:57:31 $
+:Draft-Version: $Revision: 1.9 $
+:Draft-Modified: $Date: 2009-01-31 06:47:08 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -54,7 +54,11 @@ statistics can later be used to make these estimates more accurate.
 In a node pair (A,B), with B as the node of reference, in-bound link
 quality is a value in the range of 0 to 255 that describes the quality
 of the link from A to B estimated by B by counting the successfully
-received packets from A among all the packets transmitted by B.
+received packets from A among all the packets transmitted by A. Thus,
+in-bound link quality is the empirical probability that a packet will
+be successfully received on a given link. A value of 255 represents a
+probability of 1 and a value of 0 represents a probability of 0 of
+successfully receiving a packet on a given link.
 
 2.2 Out-bound Link Quality
 --------------------------------------------------------------------
@@ -65,16 +69,19 @@ determine the out-bound link quality if A advertises its in-bound link
 qualities. LEEP is the protocol that is used to exchange the in-bound
 link qualities.
 
-2.3 Link Quality
+2.3 Bi-directional Link Quality
 --------------------------------------------------------------------
 
-The link quality between a directed node pair (A,B) is the probability
-that a packet transmitted by A will be successfully received and
-acknowledged by B. The bidirectional link quality of an undirected
-node pair (A,B) is the product of the link quality of (A,B) and
-(B,A). This definition assumes independent link losses. It also
-includes the case when the link quality of (A,B) and (B,A) are
-different; this can occur due to local interference or noise.
+LEEP does not define or compute bi-directional link quality. LEEP
+provides a way to exchange sufficient information to compute in-bound
+and out-bound link qualities. These two link qualities can be used to
+compute the bi-directional link quality. One popular way to define the
+bi-directional link quality between a node pair (A,B) as the
+probability that a packet transmitted by A will be successfully
+received and acknowledged by B. This approach computes the
+bi-directional link quality of a node pair (A,B) as the product of the
+link quality of (A,B) and (B,A).
+
 
 2.4 Link Information Entry
 --------------------------------------------------------------------
