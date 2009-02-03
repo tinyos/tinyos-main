@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:57:59 $
-:version: $Revision: 1.10 $
+:date: $Date: 2009-02-03 23:07:32 $
+:version: $Revision: 1.11 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -291,16 +291,16 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
-<td>Draft</td></tr>
-<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
+<td>Final</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">&gt; 2.1</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
 <td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">3-Aug-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.15</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-28</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2009-01-16</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -321,6 +321,18 @@ collection roots in a network.</p>
 </div>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<p>A collection protocol delivers data to one of possibly several data
+sinks, providing a many-to-one network layer. Collection is a
+fundamental component of most sensor network applications. The
+Collection Tree Protocol (CTP) is a reference Collection protocol in
+TinyOS 2.x. The users use Collection interfaces described in TEP 119
+<a class="footnote-reference" href="#id8" id="id1" name="id1">[3]</a> to use CTP in their applications.</p>
+<p>In this TEP, after a brief discussion of Collection and CTP, we
+specify the CTP routing and data frames. CTP uses routing frames to
+update and build collection tree in the network. CTP uses data frames
+to deliver application payload to the sink and to probe topology
+inconsistencies.</p>
+<p>All fields in this specification are in network byte order.</p>
 </div>
 <div class="section">
 <h1><a id="assumptions-and-limitations" name="assumptions-and-limitations">2. Assumptions and Limitations</a></h1>
@@ -337,19 +349,23 @@ a routing gradient.</p>
 <li>Provides synchronous acknowledgments for unicast packets.</li>
 <li>Provides a protocol dispatch field to support multiple higher-level
 protocols.</li>
-<li>Has single-hop source and destination fields.</li>
+<li>Has single-hop 16-bit source and destination fields.</li>
 </ol>
 </blockquote>
 <p>CTP assumes that it has link quality estimates of some number of nearby
 neighbors. These provide an estimate of the number of transmissions it
 takes for the node to send a unicast packet whose acknowledgment is
 successfully received.</p>
-<p>CTP has several mechanisms in order to improve delivery reliability,
-but it does not promise 100% reliable delivery. It is best effort, but
-a best effort that <em>tries very hard.</em></p>
-<p>CTP is designed for relatively low traffic rates. Bandwidth-limited systems
-might benefit from a different protocol, which can, for example, pack
-multiple small frames into a single data-link packet.</p>
+<p>CTP has several mechanisms in order to achieve high delivery
+reliability, but it does not promise 100% reliable delivery. It is a
+best effort protocol.</p>
+<p>CTP is designed for relatively low traffic rates such that there is
+enough space in the channel to transmit and receive routing frames
+even when the network is forwarding collection data
+frames. Bandwidth-limited systems or high data rate applications might
+benefit from a different protocol, which can, for example, pack
+multiple small frames into a single data-link packet or employ rate
+control mechanisms.</p>
 </div>
 <div class="section">
 <h1><a id="collection-and-ctp" name="collection-and-ctp">3. Collection and CTP</a></h1>
@@ -358,9 +374,9 @@ has an ETX of 0.  The ETX of a node is the ETX of its parent plus the
 ETX of its link to its parent. This additive measure assumes that
 nodes use link-level retransmissions.  Given a choice of valid routes,
 CTP SHOULD choose the one with the lowest ETX value. CTP represents
-ETX values as 16-bit fixed-point real numbers with a precision of
-hundredths. An ETX value of 451, for example, represents an ETX of
-4.51, while an ETX value of 109 represents an ETX of 1.09.</p>
+ETX values as 16-bit decimal fixed-point real numbers with a precision
+of tenths. An ETX value of 45, for example, represents an ETX of 4.5,
+while an ETX value of 10 represents an ETX of 1.</p>
 <p>Routing loops are a problem that can emerge in a CTP network. Routing
 loops generally occur when a node choose a new route that has a
 significantly higher ETX than its old one, perhaps in response to
@@ -377,13 +393,17 @@ will form a loop whose ETX increases forever. CTP's second mechanism
 is to not consider routes with an ETX higher than a reasonable constant.
 The value of this constant is implementation dependent.</p>
 <p>Packet duplication is an additional problem that can occur in CTP.
-Packet duplication occurs when a node receives a data frame successfully
-and transmits an ACK, but the ACK is not received. The sender retransmits
-the packet, and the receiver receives it a second time. This can have
-disasterous effects over multiple hops, as the duplication is exponential.
-For example, if each hop on average produces one duplicate, then on the
-first hop there will be two packets, on the second there will be four,
-on the third there will be eight, etc.</p>
+Packet duplication occurs when a node receives a data frame
+successfully and transmits an ACK, but the ACK is not received. The
+sender retransmits the packet, and the receiver receives it a second
+time. This can have disasterous effects over multiple hops, as the
+duplication is exponential.  For example, if each hop on average
+produces one duplicate, then on the first hop there will be two
+packets, on the second there will be four, on the third there will be
+eight, etc. CTP keeps a small cache of packet signature for the
+packets it has seen to detect packet duplicates. When a new packet
+arrives, if its signature results in cache hit, CTP drops the packet
+because it is a duplicate.</p>
 <p>Routing loops complicate duplicate suppression, as a routing loop may
 cause a node to legitimately receive a packet more than once. Therefore,
 if a node suppresses duplicates based solely on originating address and
@@ -398,30 +418,30 @@ to do so.</p>
 <p>The CTP data frame format is as follows:</p>
 <pre class="literal-block">
                      1
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|P|C| reserved  |      THL        |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|              ETX                |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|             origin              |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|     seqno     |   collect_id    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|P|C| reserved  |      THL      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|              ETX              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|             origin            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     seqno     |   collect_id  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |    data ...
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
 <p>Field definitions are as follows:</p>
 <blockquote>
 <ul class="simple">
-<li>P: Routing pull. The P bit allows nodes to request routing information from other nodes. If a node with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future.</li>
+<li>P: Routing pull. The P bit allows nodes to request routing information from other nodes. If the unicast destination of the data frame with a valid route hears a packet with the P bit set, it SHOULD transmit a routing frame in the near future. Nodes other than the link-layer destination of the data frame MAY respond to the P bit in the data frame.</li>
 <li>C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next data frame it transmits.</li>
 <li>THL: Time Has Lived. When a node generates a CTP data frame, it MUST set THL to 0. When a node receives a CTP data frame, it MUST increment the THL. If a node receives a THL of 255, it increments it to 0.</li>
 <li>ETX: The ETX routing metric of the single-hop sender. When a node transmits a CTP data frame, it MUST put the ETX value of its route through the single-hop destination in the ETX field.  If a node receives a packet with a lower gradient than its own, then it MUST schedule a routing frame in the near future.</li>
 <li>origin: The originating address of the packet. A node forwarding a data frame MUST NOT modify the origin field.</li>
 <li>seqno: Origin sequence number. The originating node sets this field, and a node forwarding a data frame MUST NOT modify it.</li>
 <li>collect_id: Higher-level protocol identifier. The origin sets this field, and a node forwarding a data frame MUST NOT modify it.</li>
-<li>data: the data payload, of zero or more bytes. A node forwarding a data frame MUST NOT modify the data payload.</li>
+<li>data: the data payload, of zero or more bytes. A node forwarding a data frame MUST NOT modify the data payload. The length of the data field is computed by subtracting the size of the CTP header from the size of the link layer payload provided by the link layer.</li>
 </ul>
 </blockquote>
 <p>Together, the origin, seqno and collect_id fields denote a unique
@@ -431,7 +451,7 @@ distinction is important for duplicate suppression in the presence
 of routing loops. If a node suppresses origin packets, then if
 asked to forward the same packet twice due to a routing loop, it will
 drop the packet. However, if it suppresses packet instances, then it
-will route succesfully in the presence of transient loops unless the
+will route successfully in the presence of transient loops unless the
 THL happens to wrap around to a forwarded packet instance.</p>
 <p>A node MUST send CTP data frames as unicast messages with link-layer
 acknowledgments enabled.</p>
@@ -441,19 +461,19 @@ acknowledgments enabled.</p>
 <p>The CTP routing frame format is as follows:</p>
 <pre class="literal-block">
                      1
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|P|C| reserved  |      parent     |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|     parent    |       ETX       |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|P|C| reserved  |     parent    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     parent    |      ETX      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |      ETX      |
 +-+-+-+-+-+-+-+-+
 </pre>
 <p>The fields are as follows:</p>
 <blockquote>
 <ul class="simple">
-<li>P: Same as data frame.</li>
+<li>P: Same as data frame with one difference: Routing frames are broadcast so multiple nodes respond to the P bit in the routing frame.</li>
 <li>C: Congestion notification. If a node drops a CTP data frame, it MUST set the C field on the next routing frame it transmits.</li>
 <li>parent: The node's current parent.</li>
 <li>metric: The node's current routing metric value.</li>
@@ -468,6 +488,7 @@ a data packet: a parent can detect when a child's ETX is significantly
 below its own. When a parent hears a child advertise an ETX below its
 own, it MUST schedule a routing frame for transmission in the near
 future.</p>
+<p>A node MUST send CTP routing frames as broadcast messages.</p>
 </div>
 <div class="section">
 <h1><a id="implementation" name="implementation">6. Implementation</a></h1>
@@ -487,23 +508,23 @@ as well as traffic generated on the node.</p>
 <div class="section">
 <h2><a id="link-estimation" name="link-estimation">6.1 Link Estimation</a></h2>
 <p>The implementation uses two mechanisms to estimate the quality of a link:
-periodic LEEP <a class="footnote-reference" href="#id4" id="id1" name="id1">[1]</a> packets and data packets. The implementation sends
+periodic LEEP <a class="footnote-reference" href="#id6" id="id2" name="id2">[1]</a> packets and data packets. The implementation sends
 routing beacons as LEEP packets. These packets seed the neighbor table
 with bidirectional ETX values. The implementation adapts its beaconing
 rate based on network dynamics using an algorithm similar to the
-trickle dissemination protocol <a class="footnote-reference" href="#id5" id="id2" name="id2">[2]</a>. Beacons are sent on an exponentially
+trickle dissemination protocol <a class="footnote-reference" href="#id7" id="id3" name="id3">[2]</a>. Beacons are sent on an exponentially
 increasing randomized timer. The implementation resets the timer to a
 small value when one or more of the following conditions are met:</p>
 <blockquote>
 <ol class="arabic simple">
 <li>The routing table is empty (this also sets the P bit)</li>
-<li>The node's routing ETX increases by &gt;= 1 trasmission</li>
+<li>The node's routing ETX increases by &gt;= 1 transmission</li>
 <li>The node hears a packet with the P bit set</li>
 </ol>
 </blockquote>
 <p>The implementation augments the LEEP link estimates with data
 transmissions. This is a direct measure of ETX. Whenever the data path
-transmits a packet, it tells the link estimator the destimation and
+transmits a packet, it tells the link estimator the destination and
 whether it was successfully acknowledged. The estimator produces an
 ETX estimate every 5 such transmissions, where 0 successes has an ETX
 of 6.</p>
@@ -515,8 +536,9 @@ data estimates will outweigh beacon estimates. Additionally, as
 the rate at which CTP collects data estimates is proportional to
 the transmission rate, then it can quickly detect a broken link and
 switch to another candidate neighbor.</p>
-<p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/le/LinkEstimatorP</span></tt> implements the
-link estimator. It couples LEEP-based and data-based estimates.</p>
+<p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/4bitle/LinkEstimatorP</span></tt> implements the
+link estimator. It couples LEEP-based and data-based estimates as
+described in <a class="footnote-reference" href="#id9" id="id4" name="id4">[4]</a>.</p>
 </div>
 <div class="section">
 <h2><a id="routing-engine" name="routing-engine">6.2 Routing Engine</a></h2>
@@ -531,7 +553,7 @@ implements the routing engine.</p>
 <div class="section">
 <h2><a id="forwarding-engine" name="forwarding-engine">6.3 Forwarding Engine</a></h2>
 <p>The component <tt class="docutils literal"><span class="pre">tos/lib/net/ctp/CtpForwardingEngineP</span></tt> implements the
-forwarding engine. It has five repsonsibilities:</p>
+forwarding engine. It has five responsibilities:</p>
 <blockquote>
 <ol class="arabic simple">
 <li>Transmitting packets to the next hop, retransmitting when necessary, and
@@ -606,23 +628,55 @@ along the path.</p>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
 <div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Alec Woo</div>
+<div class="line">Arch Rock Corporation</div>
+<div class="line">501 2nd St. Ste 410</div>
+<div class="line">San Francisco, CA 94107-4132</div>
+<div class="line"><br /></div>
+<div class="line">email - <a class="reference" href="mailto:awoo&#64;archrock.com">awoo&#64;archrock.com</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Sukun Kim</div>
+<div class="line">Samsung Electronics</div>
+<div class="line">416 Maetan-3-dong, Yeongtong-Gu</div>
+<div class="line">Suwon, Gyeonggi 443-742</div>
+<div class="line">Korea, Republic of</div>
+<div class="line"><br /></div>
+<div class="line">phone - +82 10 3065 6836</div>
+<div class="line">email - <a class="reference" href="mailto:sukun.kim&#64;samsung.com">sukun.kim&#64;samsung.com</a></div>
 </div>
 </div>
 <div class="section">
-<h1><a id="id3" name="id3">8. Citations</a></h1>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
+<h1><a id="id5" name="id5">8. Citations</a></h1>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1" name="id4">[1]</a></td><td>TEP 124: Link Estimation Extension Protocol</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2" name="id6">[1]</a></td><td>TEP 124: Link Estimation Extension Protocol</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id5" rules="none">
+<table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="id5">[2]</a></td><td>Philip Levis, Neil Patel, David Culler and Scott Shenker. &quot;A
+<tr><td class="label"><a class="fn-backref" href="#id3" name="id7">[2]</a></td><td>Philip Levis, Neil Patel, David Culler and Scott Shenker. &quot;A
 Self-Regulating Algorithm for Code Maintenance and Propagation
 in Wireless Sensor Networks.&quot; In Proceedings of the First USENIX
 Conference on Networked Systems Design and Implementation (NSDI), 2004.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1" name="id8">[3]</a></td><td>TEP 119: Collection.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4" name="id9">[4]</a></td><td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis.
+&quot;Four Bit Wireless Link Estimation.&quot; In Proceedings of the Sixth Workshop
+on Hot Topics in Networks (HotNets VI), November 2007.</td></tr>
 </tbody>
 </table>
 </div>

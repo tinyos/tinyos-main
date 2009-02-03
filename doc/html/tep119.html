@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Collection</title>
 <meta name="author" content="Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-08-15 19:14:25 $
-:version: $Revision: 1.14 $
+:date: $Date: 2009-02-03 23:07:32 $
+:version: $Revision: 1.15 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -291,7 +291,7 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
-<td>Draft</td></tr>
+<td>Final</td></tr>
 <tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">&gt; 2.1</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
@@ -312,11 +312,15 @@ TEP 1.</p>
 <div class="section">
 <h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>The memo documents the interfaces, components, and semantics used by
-collection protocol in TinyOS 2.x. Collection provides a best-effort,
-multihop delivery of packets to the root of a tree. There may be
-multiple tree roots in a network, and in this case the semantics
-are <em>anycast</em> delivery to at least one of the roots. A node sending
-a packet does not specify which root the packet is destined to.</p>
+the collection protocols in TinyOS 2.x. Collection provides
+best-effort, multihop delivery of packets to one of a set of
+collection points.  There may be multiple collection points in a
+network, and in this case the semantics are <em>anycast</em> delivery to at
+least one of the collection points. A node sending a packet does not
+specify which of the collection points the packet is destined to.  The
+union of the paths from each node to one or more of the collection
+points forms a set of trees, and in this document we assume that
+collection points are the roots of these trees.</p>
 </div>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
@@ -328,16 +332,16 @@ tree, and it forwards collection data that other nodes send to
 it. Sometimes, depending on the form of data collection, systems need
 to be able to inspect packets as they go by, either to gather
 statistics, compute aggregates, or suppress redundant transmissions.</p>
-<p>Collection provides a best-effort, multihop delivery of packets to one
-of a network's tree roots: it is an <em>anycast</em> protocol. The semantics
-is that the protocol will make a reasonable effort to deliver the
-message to at least one of the roots in the network. By picking a
-parent node, a collection protocol inductively joins the tree its
-parent has joined.  Delivery is best effort, and there can be
-duplicates delivered to one or more roots. Collection provides no
-ordering guarantees. Collection does not provide real-time guarantees,
-although specific implementations may extend the basic functionality
-to do so.</p>
+<p>Collection provides best-effort, multihop delivery of packets to one
+of a network's tree roots: it is an <em>anycast</em> protocol. The
+semantics are that the protocol will make a reasonable effort to
+deliver the message to at least one of the roots in the network. By
+picking a parent node, a node implementing the collection protocol
+inductively joins the tree its parent has joined.  Delivery is best
+effort, and there can be duplicates delivered to one or more roots.
+Collection provides no ordering or real-time guarantees, although
+specific implementations may extend the basic functionality to do
+so.</p>
 <p>Given the limited state that nodes can store and a general need for
 distributed tree building algorithms, collection protocols encounter
 several challenges. These challenges are not unique to collection
@@ -348,8 +352,8 @@ algorithmic edge cases that generally occur in wireless routing:</p>
 <li>Loop detection, for when a node selects one of its descendants as
 a next hop.</li>
 <li>Duplicate suppression, detecting and dealing with lost
-acknowledgments causing packets to replicate in the network,
-wasting capacity.</li>
+acknowledgments that can cause packets to replicate in the
+network, wasting capacity.</li>
 <li>Link estimation, evaluating the link quality to single-hop
 neighbors.</li>
 <li>Self-interference, preventing forwarding packets along the route
@@ -363,14 +367,16 @@ describes a set of components and interfaces for collection services.</p>
 </div>
 <div class="section">
 <h1><a id="collection-interfaces" name="collection-interfaces">2. Collection interfaces</a></h1>
-<p>A node can perform four different roles in collection: sender,
-snooper, in-network processor, and receiver/root. Depending on their
-role, the nodes use different interfaces to interact with the
-collection component.</p>
+<p>A node can perform four different roles in collection: sender (or
+source), snooper, in-network processor, and receiver (or
+root). Depending on their role, the nodes use different interfaces to
+interact with the collection component.</p>
 <p>The collection infrastructure can be multiplexed among independent
-applications, by means of a collection identifier. While data traffic
-in the protocol is multiplexed through these identifiers, control
-traffic is not: all data traffic uses the same routing topology.</p>
+applications, by means of a collection identifier. The collection
+identifier is used to identify different data traffic at the sender,
+intermediate-nodes, or the receiver, much like port number in TCP. All
+data traffic, regardless of the collection identifier, use the same
+routing topology.</p>
 <p>The nodes that generate data to be sent to the root are <em>senders</em>.
 Senders use the Send interface [<a class="reference" href="#id1">1</a>] to send data to the root of
 the collection tree.  The collection identifier is specified as a
@@ -379,7 +385,7 @@ parameter to Send during instantiation.</p>
 snoopers use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a snooped
 message. The collection identifier is specified as a parameter
 to Receive during instantiation.</p>
-<p>The nodes can process a packet that are in transit. These in-network
+<p>The nodes can process a packet that is in transit. These in-network
 <em>processors</em> use the Intercept interface to receive and update a
 packet. The collection identifier is specified as a parameter to
 Intercept during instantiation. The Intercept interface has this
@@ -403,11 +409,11 @@ after the event returns.</p>
 use the Receive interface [<a class="reference" href="#id1">1</a>] to receive a message delivered by
 collection. The collection identifier is specified as a parameter to
 Receive during instantiation.</p>
-<p>The set of all roots and the paths that
-lead to them form the collection routing infrastructure in the network.
-For any connected set of nodes implementing the collection protocol
-there is only one collection infrastructure, <em>i.e.</em>, all roots in this
-set active at the same time are part of the same infrastructure.</p>
+<p>The set of all roots and the paths that lead to them form the
+collection routing infrastructure in the network.  For any connected
+set of nodes implementing the collection protocol there is only one
+collection infrastructure, <em>i.e.</em>, all roots in this set active at the
+same time are part of the same infrastructure.</p>
 <p>The RootControl interface configures whether a node is a
 root:</p>
 <pre class="literal-block">
@@ -417,12 +423,12 @@ interface RootControl {
   command bool isRoot();
 }
 </pre>
-<p>Both commands MUST return SUCCESS if the node is now in the specified
-state, and FAIL otherwise. For example, if a node is already a root
-and an application calls RootControl.setRoot(), the call will
+<p>The first two commands MUST return SUCCESS if the node is now in the
+specified state, and FAIL otherwise. For example, if a node is already
+a root and an application calls RootControl.setRoot(), the call will
 return SUCCESS. If setRoot() returns SUCCESS, then a subsequent call
-to isRoot() MUST return TRUE. If unsetRoot() returns SUCCESS, then
-a subsequent call to isRoot() MUST return FALSE.</p>
+to isRoot() MUST return TRUE. If unsetRoot() returns SUCCESS, then a
+subsequent call to isRoot() MUST return FALSE.</p>
 </div>
 <div class="section">
 <h1><a id="collection-services" name="collection-services">3 Collection Services</a></h1>
@@ -445,10 +451,10 @@ configuration CollectionC {
   }
 }
 </pre>
-<p>CollectionC MAY have additional interfaces. These additional
-interfaces MUST have default functions on all outgoing invocations
-(commands for uses, events for provides) of those interfaces so that
-it can operate properly if they are not wired.</p>
+<p>CollectionC MAY have additional interfaces. All outgoing invocations
+(commands for uses, events for provides) of those interfaces MUST have
+default functions. Those default functions enable CollectionC to
+operate properly even when the additional interfaces are not wired.</p>
 <p>Components SHOULD NOT wire to CollectionC.Send. The generic
 component CollectionSenderC (described in section 3.1) provides
 a virtualized sending interface.</p>
@@ -457,19 +463,23 @@ collection_id_t. Each collection_id_t corresponds to a different
 protocol operating on top of collection, in the same way that
 different am_id_t values represent different protocols operating on
 top of active messages. All packets sent with a particular
-collection_id_t generally have the same payload format, so that
+collection_id_t generally SHOULD have the same payload format, so that
 snoopers, intercepters, and receivers can parse them properly.</p>
 <p>ColletionC MUST NOT signal Receive.receive on non-root
-nodes. CollectionC MAY signal Receive.receive on a root node when a
-data packet successfully arrives at that node. If a root node calls
-Send, CollectionC MUST treat it as it if were a received packet.  Note
-that the buffer swapping semantics of Receive.receive, when combined
-with the pass semantics of Send, require that CollectionC make a copy
-of the buffer if it signals Receive.receive.</p>
+nodes. CollectionC MUST signal Receive.receive on a root node when a
+unique (non-duplicate) data packet successfully arrives at that
+node. It MAY signal Receive.receive when a duplicate data packet
+successfully arrives. If a root node calls Send, CollectionC MUST
+treat it as it if were a received packet.  Note that the buffer
+swapping semantics of Receive.receive, when combined with the pass
+semantics of Send, require that CollectionC make a copy of the buffer
+if it signals Receive.receive.</p>
 <p>If CollectionC receives a data packet to forward and it is not a root
-node, it MAY signal Intercept.forward.</p>
-<p>If CollectionC receives a data packet that a different node
-is supposed to forward, it MAY signal Snoop.receive.</p>
+node, it MAY signal Intercept.forward. CollectionC MAY signal
+Snoop.receive when it hears a packet which a different node is
+supposed to forward. For any given packet it receives, CollectionC
+MUST NOT signal more than one of the Snoop.receive, Receive.receive,
+and Intercept.forward events.</p>
 <p>RootControl allows a node to be made a collection tree root.
 CollectionC SHOULD NOT configure a node as a root by default.</p>
 <p>Packet and CollectionPacket allow components to access collection

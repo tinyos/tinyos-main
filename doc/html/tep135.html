@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-06-20 19:12:21 $
-:version: $Revision: 1.1 $
+:date: $Date: 2009-02-03 23:07:32 $
+:version: $Revision: 1.2 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -288,7 +288,7 @@ ul.auto-toc {
 </tr>
 <tr class="field"><th class="docinfo-name">Group:</th><td class="field-body">Network Protocol Working Group</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
+<tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Informational</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
 <td>Draft</td></tr>
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Omprakash Gnawali</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-June-2008</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.1</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.3</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-06-20</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-06-24</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -315,10 +315,13 @@ of this memo is unlimited. This memo is in full compliance with
 </div>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
-<p>In this TEP, we document the Active Message Type <a class="footnote-reference" href="#id4" id="id3" name="id3">[1]</a> allocations
-in TinyOS 2.1.</p>
+<p>TinyOS network protocols use allocated Active Message Type <a class="citation-reference" href="#tep-116" id="id3" name="id3">[TEP_116]</a>
+to prevent AM ID conflict between different protocols. <a class="citation-reference" href="#tep-4" id="id4" name="id4">[TEP_4]</a>
+describes how AM IDs are allocated for a TinyOS network protocol. In
+this TEP, we document the AM ID allocations in TinyOS 2.1.</p>
+</div>
 <div class="section">
-<h2><a id="unreserved-pool-0x80-0xff" name="unreserved-pool-0x80-0xff">2. Unreserved pool (0x80 - 0xFF)</a></h2>
+<h1><a id="unreserved-pool-128-255-0x80-0xff" name="unreserved-pool-128-255-0x80-0xff">2. Unreserved pool 128-255 (0x80 - 0xFF)</a></h1>
 <p>The unreserved pool is in the range 128-255 (0x80-0xFF). Applications
 distributed with TinyOS use AM IDs in this range. Protocols and
 applications in contrib as well as those developed by the community
@@ -326,40 +329,49 @@ but not included in the distribution or contrib SHOULD use AM IDs in
 this range.</p>
 </div>
 <div class="section">
-<h2><a id="reserved-pool-0x00-0x7f" name="reserved-pool-0x00-0x7f">3. Reserved pool (0x00 - 0x7F)</a></h2>
+<h1><a id="reserved-pool-0-127-0x00-0x7f" name="reserved-pool-0-127-0x00-0x7f">3. Reserved pool 0-127 (0x00 - 0x7F)</a></h1>
 <p>The reserved pool is in the range 0-127 (0x00-0x7F). The AM IDs in
 this range are used by protocols distributed with TinyOS.</p>
 <p>Here is a list of allocations for TinyOS 2.1:</p>
 <pre class="literal-block">
-* 0x70 - 0x7F are reserved for collection protocols maintained by
-  the Network Protocol Working Group.
-
-  0x70 - CTP routing beacon and LEEP (''tos/lib/net/ctp'', TEP 119, 123, and 124)
-  0x71 - CTP data packets (''tos/lib/net/ctp'', TEP 119, 123)
-  0x72 - CTP debug messages (''tos/lib/net/ctp'')
-  0x73 - MultiHopLQI routing beacon (''tos/lib/net/lqi'')
-  0x74 - MultiHopLQI data packets (''tos/lib/net/lqi'')
-  0x75 - MultiHopLQI debug messages (''tos/lib/net/lqi'')
-
-* 0x60 - 0x6F are reserved for dissemination protocols maintained by
-  the Network Protocol Working Group.
-
-  0x60 - Drip (''tos/lib/net/drip'', TEP 118)
-  0x61 - DIP (''tos/lib/net/dip'', TEP 118)
-
-* 0x50 - 0x5F are reserved for Deluge (''tos/lib/net/Deluge'')
+* 0x70 - 0x75 are reserved for collection protocols [TEP_119]_
   maintained by the Network Protocol Working Group.
 
-  0x50 - AM_DELUGEADVMSG (advertisements)
-  0x51 - AM_DELUGEREQMSG (requests)
-  0x52 - AM_DELUGEDATAMSG (data)
-  0x53 - DELUGE_AM_FLASH_VOL_MANAGER (flash volume manager)
-  0x54 - DELUGE_AM_DELUGE_MANAGER (deluge manger)
+  For CTP (''tos/lib/net/ctp'') [TEP_123]_ and LEEP  [TEP_124]_
+  0x70 - AM_CTP_ROUTING CTP (Routing beacon)
+  0x71 - AM_CTP_DATA CTP (Data packets)
+  0x72 - AM_CTP_DEBUG CTP (Debug messages)
 
-* 0x3F - TinyOS NALP code (TEP 125) reserved by the Core Working
+  For MultiHopLQI (''tos/lib/net/lqi'')
+  0x73 - AM_LQI_BEACON_MSG (Routing beacon)
+  0x74 - AM_LQI_DATA_MSG MultiHopLQI (Data packets)
+  0x75 - AM_LQI_DEBUG MultiHopLQI (Debug messages)
+
+* 0x60 - 0x62 are reserved for dissemination protocols [TEP_118]_
+  maintained by the Network Protocol Working Group.
+
+  For Drip (''tos/lib/net/drip'')
+  0x60 - AM_DISSEMINATION_MESSAGE
+  0x61 - AM_DISSEMINATION_PROBE_MESSAGE
+
+  For DIP (''tos/lib/net/dip'')
+  0x62 - AM_DIP
+
+* 0x50 - 0x54 are reserved for Deluge (''tos/lib/net/Deluge'')
+  maintained by the Network Protocol Working Group.
+
+  0x50 - AM_DELUGEADVMSG (Advertisements)
+  0x51 - AM_DELUGEREQMSG (Requests)
+  0x52 - AM_DELUGEDATAMSG (Data)
+  0x53 - DELUGE_AM_FLASH_VOL_MANAGER (Flash volume manager)
+  0x54 - DELUGE_AM_DELUGE_MANAGER (Deluge manger)
+
+* 0x3E - AM_TIMESYNCMSG for FTSP (''tos/lib/ftsp'') reserved by the
+  Core Working Group.
+
+* 0x3F - TinyOS NALP code [TEP_125]_ reserved by the Core Working
   Group.
 </pre>
-</div>
 </div>
 <div class="section">
 <h1><a id="author-s-address" name="author-s-address">4. Author's Address</a></h1>
@@ -384,13 +396,43 @@ this range are used by protocols distributed with TinyOS.</p>
 <table class="docutils citation" frame="void" id="tep-4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="tep-4">[TEP_4]</a></td><td>TEP 4: Active Message ID Allocation for Network Protocols and Applications</td></tr>
+<tr><td class="label"><a name="tep-4">[TEP_4]</a></td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> TEP 4: Active Message ID Allocation for Network Protocols and Applications</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
+<table class="docutils citation" frame="void" id="tep-116" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="id4">[1]</a></td><td>TEP 116: Packet Protocols</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3" name="tep-116">[TEP_116]</a></td><td>TEP 116: Packet Protocols</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep-118" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep-118">[TEP_118]</a></td><td>TEP 118: Dissemination of Small Values</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep-119" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep-119">[TEP_119]</a></td><td>TEP 119: Collection</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep-123" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep-123">[TEP_123]</a></td><td>TEP 123: The Collection Tree Protocol (CTP)</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep-124" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep-124">[TEP_124]</a></td><td>TEP 124: The Link Estimation Exchange Protocol (LEEP)</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep-125" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a name="tep-125">[TEP_125]</a></td><td>TEP 125: TinyOS 802.15.4 Frames</td></tr>
 </tbody>
 </table>
 </div>

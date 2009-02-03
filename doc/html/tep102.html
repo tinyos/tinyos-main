@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.3.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>Timers</title>
 <meta name="author" content="Cory Sharp, Martin Turon, David Gay" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-09-05 20:06:00 $
-:version: $Revision: 1.12 $
+:date: $Date: 2009-02-03 23:07:32 $
+:version: $Revision: 1.13 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -278,6 +278,7 @@ ul.auto-toc {
 </style>
 </head>
 <body>
+<div class="document" id="timers">
 <h1 class="title">Timers</h1>
 <table class="docinfo" frame="void" rules="none">
 <col class="docinfo-name" />
@@ -297,7 +298,6 @@ ul.auto-toc {
 <td>Cory Sharp, Martin Turon, David Gay</td></tr>
 </tbody>
 </table>
-<div class="document" id="timers">
 <div class="note">
 <p class="first admonition-title">Note</p>
 <p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
@@ -305,15 +305,15 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited.  This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section" id="abstract">
-<h1><a name="abstract">Abstract</a></h1>
+<div class="section">
+<h1><a id="abstract" name="abstract">Abstract</a></h1>
 <p>This TEP proposes a Timer design that supports common timing
 requirements both in precision and width across common hardware
 configurations.  This TEP focuses on aligning the Timer abstraction
 with the three-layer Hardware Abstraction Architecture (HAA).</p>
 </div>
-<div class="section" id="introduction">
-<h1><a name="introduction">1. Introduction</a></h1>
+<div class="section">
+<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
 <p>Most microcontrollers offer a rich timer system, with features like:</p>
 <ul class="simple">
 <li>several counters, possibly of different widths, with multiple clocking options</li>
@@ -327,7 +327,7 @@ the timer hardware on some current TinyOS platforms.</p>
 platform-independent fashion. Instead, following the principles of the
 HAA[_tep2], each microcontroller should expose all this functionality
 via components and interfaces at the HPL and, where appropriate, HAL levels.
-However, two aspects of timers are sufficiently common and important 
+However, two aspects of timers are sufficiently common and important
 that they should be made available in a well-defined way: measuring time,
 and triggering (possibly repeating) events at specific times. The rest
 of this TEP specifies:</p>
@@ -336,7 +336,7 @@ of this TEP specifies:</p>
 events (<a class="reference" href="#interfaces">2. Interfaces</a>)</li>
 <li>guidelines on how each microcontroller's HAL SHOULD expose its timer hardware
 in terms of the above interfaces (<a class="reference" href="#hal-guidelines">3. HAL guidelines</a>)</li>
-<li>what components a microcontroller's timer HIL MUST implement 
+<li>what components a microcontroller's timer HIL MUST implement
 (<a class="reference" href="#hil-requirements">4. HIL requirements</a>)</li>
 <li>a set of utility components whose use simplifies building the components
 specified by the HAL guidelines and HIL requirements (<a class="reference" href="#utility-components">5. Utility components</a>)</li>
@@ -344,13 +344,13 @@ specified by the HAL guidelines and HIL requirements (<a class="reference" href=
 <p>This TEP ends with appendices documenting, as an example, the mica2
 timer subsystem implementation.</p>
 </div>
-<div class="section" id="interfaces">
-<h1><a name="interfaces">2. Interfaces</a></h1>
+<div class="section">
+<h1><a id="interfaces" name="interfaces">2. Interfaces</a></h1>
 <p>Before presenting the interfaces (2.2), we start with a general
 discussion of the issues of precision, width and accuracy in
 timer interfaces (2.1).</p>
-<div class="section" id="precision-width-and-accuracy">
-<h2><a name="precision-width-and-accuracy">2.1 Precision, Width and Accuracy</a></h2>
+<div class="section">
+<h2><a id="precision-width-and-accuracy" name="precision-width-and-accuracy">2.1 Precision, Width and Accuracy</a></h2>
 <p>Three fundamental properties of timers are <em>precision</em>, <em>width</em> and
 <em>accuracy</em>.</p>
 <p>Examples of precision are millisecond, a cycle of a 32kHz clock, and
@@ -359,7 +359,7 @@ units with respect to one second.  That is, one second contains 1024
 binary milliseconds, 32768 32kHz ticks, or 1048576 microseconds.
 This TEP emphasizes millisecond and 32kHz tick precisions while
 reasonably accommodating other precisions. The use of &quot;binary&quot; units
-is motivated by the common availability of hardware clocks driven 
+is motivated by the common availability of hardware clocks driven
 by a 32768Hz crystal.</p>
 <p>Examples of widths are 8-bit, 16-bit, 32-bit, and 64-bit.  The width
 for timer interfaces and components SHOULD be 32-bits.  This TEP
@@ -392,8 +392,8 @@ typedef struct { int notUsed; } TMicro; // 1048576 ticks per second
 <p>Note that the precision names are expressed as either frequency or
 period, whichever is convenient.</p>
 </div>
-<div class="section" id="timer-interfaces">
-<h2><a name="timer-interfaces">2.2 Timer interfaces</a></h2>
+<div class="section">
+<h2><a id="timer-interfaces" name="timer-interfaces">2.2 Timer interfaces</a></h2>
 <p>This TEP proposes these timer interfaces:</p>
 <pre class="literal-block">
 interface Counter&lt; precision_tag, size_type &gt;
@@ -407,8 +407,8 @@ applications and use a fixed width of 32-bits.  The Alarm, BusyWait,
 and Counter interfaces are used by the TinyOS timer system and
 advanced user components.</p>
 </div>
-<div class="section" id="counter">
-<h2><a name="counter">Counter</a></h2>
+<div class="section">
+<h2><a id="counter" name="counter">Counter</a></h2>
 <p>The Counter interface returns the current time and provides commands
 and an event for managing overflow conditions.  These overflow
 commands and events are necessary for properly deriving larger width
@@ -423,22 +423,22 @@ interface Counter&lt;precision_tag,size_type&gt;
 }
 </pre>
 <dl class="docutils">
-<dt>get() </dt>
+<dt>get()</dt>
 <dd>return the current time.</dd>
-<dt>isOverflowPending() </dt>
+<dt>isOverflowPending()</dt>
 <dd>return TRUE if the overflow flag is set for this counter, i.e., if and
 only if an overflow event will occur after the outermost atomic
 block exits.  Return FALSE otherwise.  This command only returns the
 state of the overflow flag and causes no side effect.</dd>
-<dt>clearOverflow() </dt>
+<dt>clearOverflow()</dt>
 <dd>cancel the pending overflow event clearing the overflow flag.</dd>
-<dt>overflow() </dt>
+<dt>overflow()</dt>
 <dd>signals that an overflow in the current time.  That is, the current
 time has wrapped around from its maximum value to zero.</dd>
 </dl>
 </div>
-<div class="section" id="alarm">
-<h2><a name="alarm">Alarm</a></h2>
+<div class="section">
+<h2><a id="alarm" name="alarm">Alarm</a></h2>
 <p>Alarm components are extensions of Counters that signal an event
 when their compare register detects the alarm time has been hit.
 All commands and events of the Alarm interface are asynchronous (or
@@ -461,15 +461,15 @@ interface Alarm&lt;precision_tag,size_type&gt;
 }
 </pre>
 <dl class="docutils">
-<dt>start(dt) </dt>
+<dt>start(dt)</dt>
 <dd>cancel any previously running alarm and set to fire in dt time units
 from the time of invocation.  The alarm will only fire once then
 stop.</dd>
-<dt>stop() </dt>
+<dt>stop()</dt>
 <dd>cancel any previously running alarm.</dd>
-<dt>fired() </dt>
+<dt>fired()</dt>
 <dd>signals that the alarm has expired.</dd>
-<dt>isRunning() </dt>
+<dt>isRunning()</dt>
 <dd>return TRUE if the alarm has been started and has not been cancelled
 or has not yet fired.  FALSE is returned otherwise.</dd>
 </dl>
@@ -485,9 +485,9 @@ numerically greater than the current time (returned by <tt class="docutils liter
 represents a time from before the last wraparound.</p>
 </blockquote>
 <dl class="docutils">
-<dt>getNow() </dt>
+<dt>getNow()</dt>
 <dd>return the current time in the precision and width of the alarm.</dd>
-<dt>getAlarm() </dt>
+<dt>getAlarm()</dt>
 <dd>return the time the currently running alarm will fire or the time
 that the previously running alarm was set to fire.  getAlarm can
 be used with startAt to set an alarm from the previous alarm time,
@@ -495,8 +495,8 @@ as in startAt(getAlarm(),dt).  This pattern is used within the
 fired() event to construct periodic alarms.</dd>
 </dl>
 </div>
-<div class="section" id="busywait">
-<h2><a name="busywait">BusyWait</a></h2>
+<div class="section">
+<h2><a id="busywait" name="busywait">BusyWait</a></h2>
 <p>The BusyWait interface allows for very short synchronous delays.
 BusyWait should be used sparingly and when an Alarm would not be
 reasonably efficient or accurate.  The BusyWait interface replaces
@@ -516,8 +516,8 @@ interface BusyWait&lt;precision_tag,size_type&gt;
 <dd>block until at least dt time units have elapsed</dd>
 </dl>
 </div>
-<div class="section" id="localtime">
-<h2><a name="localtime">LocalTime</a></h2>
+<div class="section">
+<h2><a id="localtime" name="localtime">LocalTime</a></h2>
 <p>The LocalTime interface exposes a 32-bit counter without overflow
 utilities.  This is primarily for application code that does not
 care about overflow conditions.</p>
@@ -528,12 +528,12 @@ interface LocalTime&lt;precision_tag&gt;
 }
 </pre>
 <dl class="docutils">
-<dt>get() </dt>
+<dt>get()</dt>
 <dd>return the current time.</dd>
 </dl>
 </div>
-<div class="section" id="timer">
-<h2><a name="timer">Timer</a></h2>
+<div class="section">
+<h2><a id="timer" name="timer">Timer</a></h2>
 <p>All commands and events of the Timer interface are synchronous (or
 in &quot;task context&quot;).  The Timer interface provides a set of &quot;basic&quot;
 commands for common usage and provides a set of &quot;extended&quot; commands
@@ -558,26 +558,26 @@ interface Timer&lt;precision_tag&gt;
 }
 </pre>
 <dl class="docutils">
-<dt>startPeriodic(dt) </dt>
+<dt>startPeriodic(dt)</dt>
 <dd>cancel any previously running timer and set to fire in dt time units
 from the time of invocation.  The timer will fire periodically every
 dt time units until stopped.</dd>
-<dt>startOneShot(dt) </dt>
+<dt>startOneShot(dt)</dt>
 <dd>cancel any previously running timer and set to fire in dt time units
 from the time of invocation.  The timer will only fire once then
 stop.</dd>
-<dt>stop() </dt>
+<dt>stop()</dt>
 <dd>cancel any previously running timer.</dd>
 <dt>fired()</dt>
 <dd>signals that the timer has expired (one-shot) or repeated (periodic).</dd>
-<dt>isRunning() </dt>
+<dt>isRunning()</dt>
 <dd>return TRUE if the timer has been started and has not been cancelled
 and has not fired for the case of one-shot timers.  Once a periodic
 timer is started, isRunning will return TRUE until it is cancelled.</dd>
-<dt>isOneShot() </dt>
+<dt>isOneShot()</dt>
 <dd>return TRUE if the timer is a one-shot timer.  Return FALSE
 otherwise if the timer is a periodic timer.</dd>
-<dt>startPeriodicAt(t0,dt) </dt>
+<dt>startPeriodicAt(t0,dt)</dt>
 <dd><p class="first">cancel any previously running timer and set to fire at time t1 =
 t0+dt.  The timer will fire periodically every dt time units until
 stopped.</p>
@@ -585,23 +585,23 @@ stopped.</p>
 value of <tt class="docutils literal"><span class="pre">t0</span></tt> numerically greater than the current time (returned by
 <tt class="docutils literal"><span class="pre">getNow()</span></tt>) represents a time from before the last wraparound.</p>
 </dd>
-<dt>startOneShotAt(t0,dt) </dt>
+<dt>startOneShotAt(t0,dt)</dt>
 <dd><p class="first">cancel any previously running timer and set to fire at time t1 =
 t0+dt.  The timer will fire once then stop.</p>
 <p class="last"><tt class="docutils literal"><span class="pre">t0</span></tt> is as in <tt class="docutils literal"><span class="pre">startPeriodicAt</span></tt>.</p>
 </dd>
-<dt>getNow() </dt>
+<dt>getNow()</dt>
 <dd>return the current time in the precision and width of the timer.</dd>
-<dt>gett0() </dt>
+<dt>gett0()</dt>
 <dd>return the time anchor for the previously started timer or the time
 of the previous event for periodic timers.</dd>
-<dt>getdt() </dt>
+<dt>getdt()</dt>
 <dd>return the delay or period for the previously started timer.</dd>
 </dl>
 </div>
 </div>
-<div class="section" id="hal-guidelines">
-<h1><a name="hal-guidelines">3. HAL guidelines</a></h1>
+<div class="section">
+<h1><a id="hal-guidelines" name="hal-guidelines">3. HAL guidelines</a></h1>
 <p>Platforms SHOULD expose their relevant timing capabilities using
 standard Alarm and Counter interfaces.  The design pattern presented
 here defines a component naming convention to allow platform
@@ -646,8 +646,8 @@ are mutually incompatible in a single application.  Incompatible
 components SHOULD produce compile-time errors when compiled
 together.</p>
 </div>
-<div class="section" id="hil-requirements">
-<h1><a name="hil-requirements">4. HIL requirements</a></h1>
+<div class="section">
+<h1><a id="hil-requirements" name="hil-requirements">4. HIL requirements</a></h1>
 <p>The following component MUST be provided on all platforms</p>
 <pre class="literal-block">
 HilTimerMilliC
@@ -657,8 +657,8 @@ BusyWaitMicroC
 HilTimerMilliC and 1/1048576s for BusyWaitMicroC. Components using
 other precisions (e.g., regular, non-binary milliseconds) MAY also be
 provided.</p>
-<div class="section" id="hiltimermillic">
-<h2><a name="hiltimermillic">HilTimerMilliC</a></h2>
+<div class="section">
+<h2><a id="hiltimermillic" name="hiltimermillic">HilTimerMilliC</a></h2>
 <pre class="literal-block">
 configuration HilTimerMilliC
 {
@@ -673,8 +673,8 @@ TimerMilli parameterised interface.  UQ_TIMER_MILLI is defined in
 Timer.h.  HilTimerMilliC is used by the LocalTimeMilliC component and the
 TimerMilliC generic component, both found in <tt class="docutils literal"><span class="pre">tos/system/</span></tt></p>
 </div>
-<div class="section" id="busywaitmicroc">
-<h2><a name="busywaitmicroc">BusyWaitMicroC</a></h2>
+<div class="section">
+<h2><a id="busywaitmicroc" name="busywaitmicroc">BusyWaitMicroC</a></h2>
 <pre class="literal-block">
 configuration BusyWaitMicroC
 {
@@ -687,8 +687,8 @@ delay is small and setting a timer or alarm would be impractical,
 inefficient or insufficiently precise.</p>
 </div>
 </div>
-<div class="section" id="utility-components">
-<h1><a name="utility-components">5. Utility components</a></h1>
+<div class="section">
+<h1><a id="utility-components" name="utility-components">5. Utility components</a></h1>
 <p>A number of platform independent generic components are provided to
 help implementers and advanced users of the TinyOS timer system:</p>
 <ul class="simple">
@@ -701,8 +701,8 @@ help implementers and advanced users of the TinyOS timer system:</p>
 </ul>
 <p>Appendices B and C show how these can be used to help implement
 the timer HAL and HIL.</p>
-<div class="section" id="alarmtotimerc">
-<h2><a name="alarmtotimerc">AlarmToTimerC</a></h2>
+<div class="section">
+<h2><a id="alarmtotimerc" name="alarmtotimerc">AlarmToTimerC</a></h2>
 <p>AlarmToTimerC converts a 32-bit Alarm to a Timer.</p>
 <pre class="literal-block">
 generic component AlarmToTimerC( typedef precision_tag )
@@ -712,8 +712,8 @@ generic component AlarmToTimerC( typedef precision_tag )
 }
 </pre>
 </div>
-<div class="section" id="busywaitcounterc">
-<h2><a name="busywaitcounterc">BusyWaitCounterC</a></h2>
+<div class="section">
+<h2><a id="busywaitcounterc" name="busywaitcounterc">BusyWaitCounterC</a></h2>
 <p>BusyWaitCounterC uses a Counter to block until a specified amount of
 time elapses.</p>
 <pre class="literal-block">
@@ -725,8 +725,8 @@ generic component BusyWaitC( typedef precision_tag,
 }
 </pre>
 </div>
-<div class="section" id="countertolocaltimec">
-<h2><a name="countertolocaltimec">CounterToLocalTimeC</a></h2>
+<div class="section">
+<h2><a id="countertolocaltimec" name="countertolocaltimec">CounterToLocalTimeC</a></h2>
 <p>CounterToLocalTimeC converts from a 32-bit Counter to LocalTime.</p>
 <pre class="literal-block">
 generic component CounterToLocalTimeC( precision_tag )
@@ -736,12 +736,12 @@ generic component CounterToLocalTimeC( precision_tag )
 }
 </pre>
 </div>
-<div class="section" id="transformalarmc">
-<h2><a name="transformalarmc">TransformAlarmC</a></h2>
+<div class="section">
+<h2><a id="transformalarmc" name="transformalarmc">TransformAlarmC</a></h2>
 <p>TransformAlarmC decreases precision and/or widens an Alarm.  An
 already widened Counter component is used to help.</p>
 <pre class="literal-block">
-generic component TransformAlarmC( 
+generic component TransformAlarmC(
   typedef to_precision_tag,
   typedef to_size_type &#64;integer(),
   typedef from_precision_tag,
@@ -769,8 +769,8 @@ TransformAlarmC to ensure that all five of its arguments are self
 consistent.  No compile errors are generated if the parameters
 passed to TransformAlarmC are inconsistent.</p>
 </div>
-<div class="section" id="transformcounterc">
-<h2><a name="transformcounterc">TransformCounterC</a></h2>
+<div class="section">
+<h2><a id="transformcounterc" name="transformcounterc">TransformCounterC</a></h2>
 <p>TransformCounterC decreases precision and/or widens a Counter.</p>
 <pre class="literal-block">
 generic component TransformCounterC(
@@ -801,8 +801,8 @@ created:</p>
 new TransformCounterC( TMilli, uint32_t, T32khz, uint16_t, 5, uint32_t )
 </pre>
 </div>
-<div class="section" id="virtualizetimerc">
-<h2><a name="virtualizetimerc">VirtualizeTimerC</a></h2>
+<div class="section">
+<h2><a id="virtualizetimerc" name="virtualizetimerc">VirtualizeTimerC</a></h2>
 <p>VirtualizeTimerC uses a single Timer to create up to 255 virtual
 timers.</p>
 <pre class="literal-block">
@@ -815,8 +815,8 @@ generic component VirtualizeTimerC( typedef precision_tag, int max_timers )
 </pre>
 </div>
 </div>
-<div class="section" id="implementation">
-<h1><a name="implementation">6. Implementation</a></h1>
+<div class="section">
+<h1><a id="implementation" name="implementation">6. Implementation</a></h1>
 <p>The definition of the HIL interfaces are found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/timer</span></tt>:</p>
 <blockquote>
 <ul class="simple">
@@ -856,7 +856,7 @@ generic component VirtualizeTimerC( typedef precision_tag, int max_timers )
 <li><tt class="docutils literal"><span class="pre">CounterMilli16C.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Counter&lt;TMilli,uint16_t&gt;</span></tt></li>
 <li><tt class="docutils literal"><span class="pre">CounterMilli32C.nc</span></tt> provides <tt class="docutils literal"><span class="pre">Counter&lt;TMilli,uint32_t&gt;</span></tt></li>
 <li><tt class="docutils literal"><span class="pre">GpioCaptureC.nc</span></tt></li>
-<li><tt class="docutils literal"><span class="pre">HilTimerMilliC.nc</span></tt> provides <tt class="docutils literal"><span class="pre">LocalTime&lt;TMilli&gt;</span></tt> and 
+<li><tt class="docutils literal"><span class="pre">HilTimerMilliC.nc</span></tt> provides <tt class="docutils literal"><span class="pre">LocalTime&lt;TMilli&gt;</span></tt> and
 <tt class="docutils literal"><span class="pre">Timer&lt;TMilli&gt;</span> <span class="pre">as</span> <span class="pre">TimerMilli[uint8_t</span> <span class="pre">num]</span></tt></li>
 <li><tt class="docutils literal"><span class="pre">Msp430AlarmC.nc</span></tt> is generic and converts an MSP430 timer to a 16-bit Alarm</li>
 <li><tt class="docutils literal"><span class="pre">Msp430Capture.nc</span></tt> HPL interface definition for MSP430 timer captures</li>
@@ -889,8 +889,8 @@ special function registers</li>
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128/timer</span></tt> and
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/pxa27x/timer</span></tt> respectively.</p>
 </div>
-<div class="section" id="author-s-address">
-<h1><a name="author-s-address">7. Author's Address</a></h1>
+<div class="section">
+<h1><a id="author-s-address" name="author-s-address">7. Author's Address</a></h1>
 <div class="line-block">
 <div class="line">Cory Sharp</div>
 <div class="line">Moteiv Corporation</div>
@@ -918,8 +918,8 @@ special function registers</li>
 <div class="line">email - <a class="reference" href="mailto:david.e.gay&#64;intel.com">david.e.gay&#64;intel.com</a></div>
 </div>
 </div>
-<div class="section" id="appendix-a-timer-hardware-on-various-microcontrollers">
-<h1><a name="appendix-a-timer-hardware-on-various-microcontrollers">Appendix A: Timer hardware on various microcontrollers</a></h1>
+<div class="section">
+<h1><a id="appendix-a-timer-hardware-on-various-microcontrollers" name="appendix-a-timer-hardware-on-various-microcontrollers">Appendix A: Timer hardware on various microcontrollers</a></h1>
 <blockquote>
 <ol class="loweralpha simple">
 <li>Atmega128</li>
@@ -995,8 +995,8 @@ output pin, clear counter, generate interrupt, etc)</li>
 </blockquote>
 </blockquote>
 </div>
-<div class="section" id="appendix-b-a-microcontroller-atmega-128-timer-subsystem">
-<h1><a name="appendix-b-a-microcontroller-atmega-128-timer-subsystem">Appendix B: a microcontroller: Atmega 128 timer subsystem</a></h1>
+<div class="section">
+<h1><a id="appendix-b-a-microcontroller-atmega-128-timer-subsystem" name="appendix-b-a-microcontroller-atmega-128-timer-subsystem">Appendix B: a microcontroller: Atmega 128 timer subsystem</a></h1>
 <p>The Atmega128 exposes its four timers through a common set of interfaces:</p>
 <blockquote>
 <ul class="simple">
@@ -1026,7 +1026,7 @@ interface HplAtm128Timer&lt;timer_size&gt;
   async command bool isOn();  //&lt;! Is overflow interrupt on?
 
   /// Clock initialization interface
-  async command void    off();                     //&lt;! Turn off the clock 
+  async command void    off();                     //&lt;! Turn off the clock
   async command void    setScale( uint8_t scale);  //&lt;! Turn on the clock
   async command uint8_t getScale();                //&lt;! Get prescaler setting
 }
@@ -1057,7 +1057,7 @@ interface HplAtm128Capture&lt;size_type&gt;
   /// Interrupt signals
   async event void captured(size_type t);  //&lt;! Signalled on capture int
 
-  /// Interrupt flag utilites: Bit level set/clr  
+  /// Interrupt flag utilites: Bit level set/clr
   async command void reset();          //&lt;! Clear the capture interrupt flag
   async command void start();          //&lt;! Enable the capture interrupt
   async command void stop();           //&lt;! Turn off capture interrupts
@@ -1089,7 +1089,7 @@ interface is only connected for <tt class="docutils literal"><span class="pre">i
 another value cause a compile-time error. This is achieved as follows (code
 from the implementation of <tt class="docutils literal"><span class="pre">HplAtm128Timer1C</span></tt>)</p>
 <pre class="literal-block">
-Compare[0] = HplAtm128Timer1P.CompareA; 
+Compare[0] = HplAtm128Timer1P.CompareA;
 Compare[1] = HplAtm128Timer1P.CompareB;
 Compare[2] = HplAtm128Timer1P.CompareC;
 </pre>
@@ -1133,8 +1133,8 @@ generic configuration Atm128AlarmAsyncC(typedef precision, int divider) {
 <p>which builds a 32-bit alarm and timer over timer 0. divider is used
 to initialise the timer0 scaling factor.</p>
 </div>
-<div class="section" id="appendix-c-a-mote-mica-family-timer-subsystem">
-<h1><a name="appendix-c-a-mote-mica-family-timer-subsystem">Appendix C: a mote: Mica family timer subsystem</a></h1>
+<div class="section">
+<h1><a id="appendix-c-a-mote-mica-family-timer-subsystem" name="appendix-c-a-mote-mica-family-timer-subsystem">Appendix C: a mote: Mica family timer subsystem</a></h1>
 <p>Members of the mica family (mica2, mica2dot, micaz) use the Atmega128
 microprocessor and have external crystals at 4 or 7.37MHz. Additionally,
 they can be run from an internal oscillator at 1, 2, 4, or 8 MHz. The
@@ -1157,13 +1157,13 @@ VirtualizeTimerC and CounterToLocalTimeC utility components.</p>
 <li><p class="first">Timer 1: the 16-bit hardware timer 1 is set to run at 1MHz if possible.
 However, the set of dividers for timer 1 is limited to 1, 8,
 64, 256 and 1024. So, when clocked at 2 or 4MHz, a divider of 1 is
-selected and timer 1 runs at 2 or 4MHz. To reflect this fact, the 
+selected and timer 1 runs at 2 or 4MHz. To reflect this fact, the
 HAL components exposing timer 1 are named <tt class="docutils literal"><span class="pre">CounterOne16C</span></tt> and
 <tt class="docutils literal"><span class="pre">AlarmOne16C</span></tt> (rather than the <tt class="docutils literal"><span class="pre">CounterMicro16C</span></tt> <tt class="docutils literal"><span class="pre">AlarmMicro16C</span></tt>
 as suggested in Section 3).</p>
 <p>32-bit microsecond Counters and Alarms, named <tt class="docutils literal"><span class="pre">CounterMicro32C</span></tt> and
 <tt class="docutils literal"><span class="pre">AlarmMicro32C</span></tt>, are created from <tt class="docutils literal"><span class="pre">CounterOne16C</span></tt> and
-<tt class="docutils literal"><span class="pre">AlarmOne16C</span></tt> using the TransformAlarmC and TransformCounterC 
+<tt class="docutils literal"><span class="pre">AlarmOne16C</span></tt> using the TransformAlarmC and TransformCounterC
 utility components.</p>
 <p>Three compare registers are available on timer1, so up to three instances
 of <tt class="docutils literal"><span class="pre">AlarmOne16C</span></tt> and/or <tt class="docutils literal"><span class="pre">AlarmMicro32C</span></tt> can be created. The timing
@@ -1179,7 +1179,7 @@ accuracy depends on how the mote is clocked:</p>
 <li><p class="first">Timer 3: the 16-bit hardware timer 3 is set to run at a rate close to
 32768Hz, if possible. As with timer 1, the limited set of dividers makes
 this impossible at some clock frequencies, so the 16-bit timer 3 HAL
-components are named <tt class="docutils literal"><span class="pre">CounterThree16C</span></tt> and <tt class="docutils literal"><span class="pre">AlarmThree16C</span></tt>. As 
+components are named <tt class="docutils literal"><span class="pre">CounterThree16C</span></tt> and <tt class="docutils literal"><span class="pre">AlarmThree16C</span></tt>. As
 with timer 1, the rate of timer 3 is adjusted in software to
 build 32-bit counter and 32-bit alarms, giving components
 <tt class="docutils literal"><span class="pre">Counter32khz32C</span></tt> and <tt class="docutils literal"><span class="pre">Alarm32khz32C</span></tt>. As with timer 1, three compare

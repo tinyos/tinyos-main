@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
 <title>TinyOS 802.15.4 Frames</title>
 <meta name="author" content="Jonathan Hui, Philip Levis, and David Moss" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-06-16 23:07:36 $
-:version: $Revision: 1.6 $
+:date: $Date: 2009-02-03 23:07:32 $
+:version: $Revision: 1.7 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Jonathan Hui, Philip Levis, and David Moss</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">2-Feb-2007</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.5</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-06-16</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-06-20</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -361,9 +361,9 @@ for &quot;Interoperable Frame.&quot;</p>
 | 802.15.4 Header   | 6lowpan | AM type |        data        | 802.15.4 CRC |
 +-------------------+---------+------------------------------+--------------+
 </pre>
-<p>AM type is the same as in a T-frame. 6lowpan is the NALP code to identify
-this as a TinyOS packet. NALP codes must be in the range of 0-63.
-TinyOS uses code 63.</p>
+<p>AM type is the same as in a T-frame. 6lowpan is the NALP code to
+identify this as a TinyOS packet. NALP codes must be in the range of
+0-63.  TinyOS uses code 63 (0x3F).</p>
 <p>The AM type 63 is reserved for both T-Frames and I-Frames. A TinyOS
 program MUST NOT use it.</p>
 </div>

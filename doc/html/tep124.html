@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2007-08-14 18:58:00 $
-:version: $Revision: 1.4 $
+:date: $Date: 2009-02-03 23:07:32 $
+:version: $Revision: 1.5 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Omprakash Gnawali</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">05-Feb-2006</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.4</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.9</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-02-28</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2009-01-31</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -327,36 +327,45 @@ link from a neighbor by estimating the ratio of successfully received
 messages and the total transmitted messages. LEEP appends in-bound
 packet reception rate (PRR) estimates to packets. Other nodes hearing
 these packets can combine the in-bound PRR values with their own
-in-bound values to compute bi-directional link quality.</p>
+in-bound values to compute bi-directional link quality. Thus, LEEP is
+a discovery and link table bootstrapping mechanism. The link quality
+is often fine-tuned using different mechanisms.</p>
+<p>Link quality estimates obtained using LEEP are often used as a
+bootstrapping values in the link quality table; data transmission
+statistics can later be used to make these estimates more accurate.</p>
 </div>
 <div class="section">
 <h1><a id="definitions" name="definitions">2. Definitions</a></h1>
 <div class="section">
-<h2><a id="link-quality" name="link-quality">2.1 Link Quality</a></h2>
-<p>The link quality between a directed node pair (A,B) is the probability
-that a packet transmitted by A will be successfully received by B. The
-bidirectional link quality of an undirected node pair (A,B) is the
-product of the link quality of (A,B) and (B,A). This definition
-assumes independent link losses. It also includes the case when
-the link quality of (A,B) and (B,A) are different; this can occur
-due to local interference or noise.</p>
-</div>
-<div class="section">
-<h2><a id="in-bound-link-quality" name="in-bound-link-quality">2.2 In-bound Link Quality</a></h2>
+<h2><a id="in-bound-link-quality" name="in-bound-link-quality">2.1 In-bound Link Quality</a></h2>
 <p>In a node pair (A,B), with B as the node of reference, in-bound link
 quality is a value in the range of 0 to 255 that describes the quality
 of the link from A to B estimated by B by counting the successfully
-received packets from A among all the transmitted packets or using
-link quality indicators such as LQI and RSSI provided by the radio on
-the node B, or some other methods.</p>
+received packets from A among all the packets transmitted by A. Thus,
+in-bound link quality is the empirical probability that a packet will
+be successfully received on a given link. A value of 255 represents a
+probability of 1 and a value of 0 represents a probability of 0 of
+successfully receiving a packet on a given link.</p>
 </div>
 <div class="section">
-<h2><a id="out-bound-link-quality" name="out-bound-link-quality">2.3 Out-bound Link Quality</a></h2>
+<h2><a id="out-bound-link-quality" name="out-bound-link-quality">2.2 Out-bound Link Quality</a></h2>
 <p>In a node pair (A,B), with B as the node of reference, out-bound link
 quality is defined as the quality of the link from B to A. B can
 determine the out-bound link quality if A advertises its in-bound link
 qualities. LEEP is the protocol that is used to exchange the in-bound
 link qualities.</p>
+</div>
+<div class="section">
+<h2><a id="bi-directional-link-quality" name="bi-directional-link-quality">2.3 Bi-directional Link Quality</a></h2>
+<p>LEEP does not define or compute bi-directional link quality. LEEP
+provides a way to exchange sufficient information to compute in-bound
+and out-bound link qualities. These two link qualities can be used to
+compute the bi-directional link quality. One popular way to define the
+bi-directional link quality between a node pair (A,B) as the
+probability that a packet transmitted by A will be successfully
+received and acknowledged by B. This approach computes the
+bi-directional link quality of a node pair (A,B) as the product of the
+link quality of (A,B) and (B,A).</p>
 </div>
 <div class="section">
 <h2><a id="link-information-entry" name="link-information-entry">2.4 Link Information Entry</a></h2>
@@ -385,7 +394,14 @@ link quality from the transmitter. LEEP MUST transmit Link Information
 entries describing the in-bound link qualities for a subset of its
 neighbors. The Link Information entry on the LEEP frame allows the
 receiver node to find the out-bound link quality to the transmitter
-node identified by the data link source address.</p>
+node identified by the data link source address. Thus, LEEP is also a
+way for nodes to discover new nodes and links in the network.</p>
+<p>Link quality estimation is inherently imperfect - data transmission
+and link quality estimation might be done at different timescales. The
+PRR for LEEP frames (broadcast) and data frames (unicast) might be
+different. So LEEP is better used as a link quality bootstrapping
+mechanism. The link quality estimate can be made more accurate later
+using data transmission statistics.</p>
 </div>
 <div class="section">
 <h2><a id="leep-frame" name="leep-frame">3.3 LEEP Frame</a></h2>
@@ -408,10 +424,10 @@ Information entry.</p>
 <p>The following diagram shows the LEEP header format:</p>
 <pre class="literal-block">
                      1
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|nentry | rsrvd |      seqno      |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|nentry | rsrvd |     seqno     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </pre>
 <p>Field definitions:</p>
 <blockquote>
@@ -427,10 +443,10 @@ Information entry.</p>
 <p>The following diagram shows the Link Information Entry format:</p>
 <pre class="literal-block">
                      1
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|             node id             |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|            node id            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 | link quality  |
 +-+-+-+-+-+-+-+-+
 </pre>
@@ -460,8 +476,11 @@ all the neighbors in its neighbor table by sending the largest
 possible data link frame. If there is still not enough room to fit all
 the Link Information entries, it uses a round-robin policy to select
 the entries to be exchanged that could not fit in the previous LEEP
-frame. The LEEP frames are transmitted whenever the CTP <a class="footnote-reference" href="#id4" id="id3" name="id3">[1]</a> beacons,
+frame. The LEEP frames are transmitted whenever the CTP <a class="footnote-reference" href="#id5" id="id3" name="id3">[1]</a> beacons,
 sent as a LEEP payload, are sent.</p>
+<p>Another reference implementation resides in
+<tt class="docutils literal"><span class="pre">tinyos-2.x/tos/lib/net/4bitle</span></tt>. This implementation is described in
+detail in <a class="footnote-reference" href="#id6" id="id4" name="id4">[2]</a>.</p>
 </div>
 <div class="section">
 <h1><a id="author-s-address" name="author-s-address">5. Author's Address</a></h1>
@@ -478,10 +497,18 @@ sent as a LEEP payload, are sent.</p>
 </div>
 <div class="section">
 <h1><a id="citations" name="citations">6. Citations</a></h1>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
+<table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3" name="id4">[1]</a></td><td>TEP 123: The Collection Tree Protocol.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3" name="id5">[1]</a></td><td>TEP 123: The Collection Tree Protocol.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4" name="id6">[2]</a></td><td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, and Philip Levis.
+&quot;Four Bit Wireless Link Estimation.&quot; In Proceedings of the Sixth Workshop
+on Hot Topics in Networks (HotNets VI), November 2007.</td></tr>
 </tbody>
 </table>
 </div>

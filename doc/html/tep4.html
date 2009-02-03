@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2008-06-20 19:12:21 $
-:version: $Revision: 1.1 $
+:date: $Date: 2009-02-03 23:07:32 $
+:version: $Revision: 1.2 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -291,16 +291,16 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Best Current Practice</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
-<td>Draft</td></tr>
-<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
+<td>Final</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">&gt; 2.1</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
 <td>Omprakash Gnawali</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">07-May-2008</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.6</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-06-20</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2008-11-04</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -315,7 +315,7 @@ is in full compliance with <a class="citation-reference" href="#tep-1" id="id1" 
 </div>
 <div class="section">
 <h1><a id="introduction" name="introduction">1. Introduction</a></h1>
-<p>In order to document the Active Message Type <a class="footnote-reference" href="#id3" id="id2" name="id2">[1]</a>, also known as
+<p>In order to document the Active Message Type <a class="citation-reference" href="#tep-116" id="id2" name="id2">[TEP_116]</a>, also known as
 Active Message Identifier (AM ID), used by the protocols and to
 prevent AM ID conflicts between applications and protocols distributed
 with TinyOS 2.x, the application and protocol developers MUST use AM
@@ -357,9 +357,13 @@ protocols maintained by any working group.</p>
 Network Protocol Working Group with the following information:
 * Working Group responsible for the protocol
 * Name of the protocol and relevant TEPs
-* Location of the protocol in TinyOS source tree</p>
-<p>Upon receiving this information, the chair of the Network Protocol
-Working Group will allocate an AM ID and document the allocation.</p>
+* Location of the protocol in TinyOS source tree
+* Number of AM IDs requested and description of each ID
+* Specific AM ID request (only if necessary)</p>
+<p>Upon receiving this request, the chair of the Network Protocol Working
+Group will allocate the AM ID(s) and document the allocation. If the
+request is made for a specific AM ID, the chair of the Network
+Protocol Work Group will try to accommodate that request.</p>
 </div>
 <div class="section">
 <h1><a id="reclaiming-the-am-id-allocation" name="reclaiming-the-am-id-allocation">4. Reclaiming the AM ID Allocation</a></h1>
@@ -373,7 +377,9 @@ Group will document the deallocation.</p>
 <h1><a id="documenting-allocations-and-deallocations" name="documenting-allocations-and-deallocations">5. Documenting allocations and deallocations</a></h1>
 <p>For each TinyOS 2.x release that introduces a new protocol or use of a
 new AM ID, the chair of the Network Protocol Working Group creates a
-new TEP that lists all the AM ID allocations for that release.</p>
+new Informational TEP that lists all the AM ID allocations for that
+release. The TEP is finalized at the time of the release. <a class="citation-reference" href="#tep-135" id="id3" name="id3">[TEP_135]</a>
+documents the AM IDs allocated for TinyOS 2.1.</p>
 </div>
 <div class="section">
 <h1><a id="acknowledgments" name="acknowledgments">6. Acknowledgments</a></h1>
@@ -400,10 +406,16 @@ ID allocation policy.</p>
 <tr><td class="label"><a class="fn-backref" href="#id1" name="tep-1">[TEP_1]</a></td><td>TEP 1: TEP Structure and Keywords</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id3" rules="none">
+<table class="docutils citation" frame="void" id="tep-116" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2" name="id3">[1]</a></td><td>TEP 116: Packet Protocols</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2" name="tep-116">[TEP_116]</a></td><td>TEP 116: Packet Protocols</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tep-135" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3" name="tep-135">[TEP_135]</a></td><td>TEP 135: Active Message ID Allocation in TinyOS 2.1</td></tr>
 </tbody>
 </table>
 </div>
