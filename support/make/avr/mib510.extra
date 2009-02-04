@@ -1,17 +1,16 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: mib510.extra,v 1.8 2009-01-26 19:40:38 sallai Exp $
+#$Id: mib510.extra,v 1.9 2009-02-04 19:38:30 sallai Exp $
 
 ifeq ($(MIB510),)
 $(error MIB510 must be defined, try "make $(TARGETS) help")
 endif
 
-ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
-  MIB510 := '\\.\$(MIB510)'
-endif
-
 PROGRAM = mib510
 
 ifeq ($(PROGRAMMER),avrdude)
+    ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+      MIB510 := '\\.\$(MIB510)'
+    endif
     ifdef BOOTLOADER_IMG
       ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
         BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
