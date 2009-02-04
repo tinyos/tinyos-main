@@ -150,6 +150,8 @@ implementation
         float newSkew = skew;
         uint32_t newLocalAverage;
         int32_t newOffsetAverage;
+        int32_t localAverageRest;
+        int32_t offsetAverageRest;
 
         int64_t localSum;
         int64_t offsetSum;
@@ -169,16 +171,23 @@ implementation
         newOffsetAverage = table[i].timeOffset;
 
         localSum = 0;
+        localAverageRest = 0;
         offsetSum = 0;
+        offsetAverageRest = 0;
 
         while( ++i < MAX_ENTRIES )
             if( table[i].state == ENTRY_FULL ) {
+                /*
+                   This only works because C ISO 1999 defines the signe for modulo the same as for the Dividend!
+                */ 
                 localSum += (int32_t)(table[i].localTime - newLocalAverage) / tableEntries;
+                localAverageRest += (table[i].localTime - newLocalAverage) % tableEntries;
                 offsetSum += (int32_t)(table[i].timeOffset - newOffsetAverage) / tableEntries;
+                offsetAverageRest += (table[i].timeOffset - newOffsetAverage) % tableEntries;
             }
 
-        newLocalAverage += localSum;
-        newOffsetAverage += offsetSum;
+        newLocalAverage += localSum + localAverageRest / tableEntries;
+        newOffsetAverage += offsetSum + offsetAverageRest / tableEntries;
 
         localSum = offsetSum = 0;
         for(i = 0; i < MAX_ENTRIES; ++i)
