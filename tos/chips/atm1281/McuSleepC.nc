@@ -1,4 +1,4 @@
-/// $Id: McuSleepC.nc,v 1.4 2008-07-23 17:25:42 idgay Exp $
+/// $Id: McuSleepC.nc,v 1.5 2009-02-04 19:31:43 sallai Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -51,7 +51,7 @@
  * Szewczyk's 1.x code in HPLPowerManagementM.nc.
  *
  * <pre>
- *  $Id: McuSleepC.nc,v 1.4 2008-07-23 17:25:42 idgay Exp $
+ *  $Id: McuSleepC.nc,v 1.5 2009-02-04 19:31:43 sallai Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -106,10 +106,10 @@ implementation {
       return ATM128_POWER_IDLE;
     }
     // UARTs are active
-    else if (UCSR0B & (1 << TXCIE0 | 1 << RXCIE0)) { // UART
+    else if (UCSR0B & (1 << TXCIE0 | 1 << RXCIE0 | 1 << UDRIE0)) { // UART
       return ATM128_POWER_IDLE;
     }
-    else if (UCSR1B & (1 << TXCIE1 | 1 << RXCIE1)) { // UART
+    else if (UCSR1B & (1 << TXCIE1 | 1 << RXCIE1 | 1 << UDRIE1)) { // UART
       return ATM128_POWER_IDLE;
     }
     // I2C (Two-wire) is active
