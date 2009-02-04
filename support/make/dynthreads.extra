@@ -6,6 +6,7 @@ BUILD_DEPS = dynthreads_all
 
 #Get all the normal include directories for a cthreads build
 $(call TOSMake_include,cthreads.extra)
+PFLAGS += -DDYNTHREADS
 
 #Stuff to build dynamically loadable binary
 DYNLOAD_CFILE = $(TOSTHREAD_MAIN_PATH)
