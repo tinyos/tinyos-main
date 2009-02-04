@@ -54,6 +54,6 @@ map_extfun = {
               "read_tsr_sensor":33, "read_par_sensor":34,
               "read_temperature":35, "read_humidity":36,
 
-              "__divmodhi4":36
+              "__divmodhi4":37
               }
 

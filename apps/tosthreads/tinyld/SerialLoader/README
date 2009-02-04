@@ -12,7 +12,7 @@ Here are the steps:
     make telosb install bsl,<device_port>
     
 2.) Create the loadable code, Blink.tos:
-    tosthread-gen-dynamic-app ../../capps/Blink/Blink.c
+    tosthreads-gen-dynamic-app ../../capps/Blink/Blink.c
 
 3.) Clear the byte array in the mote RAM buffer:
     ./serialloader.py <device_port> 0

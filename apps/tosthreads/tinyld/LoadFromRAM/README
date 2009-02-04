@@ -8,4 +8,4 @@ programs hardcoded in the byte arrays; One program is Blink, and the
 other one is Basestation.
 
 If you would like to generate your own loadable program:
-    tosthread-gen-dynamic-app ../../capps/Blink/Blink.c
+    tosthreads-gen-dynamic-app ../../capps/Blink/Blink.c

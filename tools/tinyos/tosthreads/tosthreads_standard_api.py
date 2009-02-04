@@ -89,5 +89,7 @@ map_extfun = {
 
               "getLeds":107, "setLeds":108,
 
-              "__divmodhi4":109}
+              "__divmodhi4":109,
+              
+              "tosthread_join":110}
 

@@ -106,7 +106,9 @@ struct addr fun[] = {
   
   {getLeds}, {setLeds},
 
-  {div}
+  {div},
+  
+  {tosthread_join}
 };
 
 #endif
