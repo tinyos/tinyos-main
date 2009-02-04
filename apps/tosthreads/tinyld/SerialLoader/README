@@ -1,0 +1,24 @@
+README for SerialLoader
+Author/Contact: Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
+
+Description:
+
+SerialLoader receives loadable programs from the serial port and stores
+it in a byte array. Then, when it receives the command to load the code,
+it makes the call to the dynamic loader.
+
+Here are the steps:
+1.) Load SerialLoader:
+    make telosb install bsl,<device_port>
+    
+2.) Create the loadable code, Blink.tos:
+    tosthread-gen-dynamic-app ../../capps/Blink/Blink.c
+
+3.) Clear the byte array in the mote RAM buffer:
+    ./serialloader.py <device_port> 0
+
+4.) Upload the binary:
+    ./serialloader.py <device_port> 1 Blink.tos
+    
+5.) Run the binary:
+    ./serialloader.py <device_port> 7

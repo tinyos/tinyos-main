@@ -1,0 +1,63 @@
+#!/bin/bash
+
+if [ $# -ne 1 -a $# -ne 2 ]
+then
+  echo "Usage: `basename $0` path_to_cthread_app [options]"
+  echo ""
+  echo "-a --array"
+  echo "     Print out the loadable binary code as a byte array."
+  exit -1
+fi
+
+CFILE=$1
+FLAG=$2
+
+GCC="msp430-gcc"
+OBJCOPY="msp430-objcopy"
+NESCFLAGS="-target=telosb -x nesc -fnesc-target=msp430"
+CFLAGS="-c -gcc=$GCC -mmcu=msp430x1611 -Os -mdisable-hwmul -Wall -Wshadow"
+
+OBJFILE=`basename $CFILE .c`.o
+BINFILE=`basename $CFILE .c`.bin
+TOSFILE=`basename $CFILE .c`.tos
+
+TOS_THREADS_DIR=$TOSDIR/lib/tosthreads
+THREADS_CSYSTEM_DIR=$TOS_THREADS_DIR/csystem
+THREADS_SYSTEM_DIR=$TOS_THREADS_DIR/system
+THREADS_INTERFACES_DIR=$TOS_THREADS_DIR/interfaces
+THREADS_TYPES_DIR=$TOS_THREADS_DIR/types
+THREADS_MSP430_DIR=$TOS_THREADS_DIR/chips/msp430
+THREADS_TMOTE_SENSORS_DIR=$TOS_THREADS_DIR/tos/sensorboards/tmote_onboard
+THREADS_PRINTF_DIR=$TOS_THREADS_DIR/tos/lib/printf
+TOS_TELOSA_DIR=$TOSDIR/platforms/telosa
+TOS_TELOSB_DIR=$TOSDIR/platforms/telosb
+TOS_CC2420_DIR=$TOSDIR/chips/cc2420
+TOS_SERIAL_DIR=$TOSDIR/lib/serial
+TOS_SYSTEM_DIR=$TOSDIR/system
+TOS_TYPES_DIR=$TOSDIR/types
+
+#Set up includes 
+CFLAGS="$CFLAGS -I$THREADS_CSYSTEM_DIR -I$THREADS_SYSTEM_DIR -I$THREADS_INTERFACES_DIR -I$THREADS_TYPES_DIR -I$THREADS_MSP430_DIR"
+CFLAGS="$CFLAGS -I$THREADS_PRINTF_DIR"
+CFLAGS="$CFLAGS -I$THREADS_TMOTE_SENSORS_DIR"
+CFLAGS="$CFLAGS -DTOSTHREAD_EXTERNAL_BINARY"
+
+#Set up the proper scheduler
+NESCFLAGS="$NESCFLAGS -tosscheduler=TinyTaskSchedulerC,TinyTaskSchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask"
+
+rm -rf $OBJFILE
+rm -rf $TOSFILE
+
+COMMAND="ncc $CFLAGS $NESCFLAGS $CFILE"
+echo $COMMAND
+command  $COMMAND
+
+COMMAND="$OBJCOPY --output-target=binary $OBJFILE $BINFILE"
+echo $COMMAND
+command  $COMMAND
+
+COMMAND="tosthreads-dynamic-app $FLAG $OBJFILE $BINFILE $TOSFILE"
+echo $COMMAND
+command $COMMAND
+rm $BINFILE
+rm $OBJFILE
