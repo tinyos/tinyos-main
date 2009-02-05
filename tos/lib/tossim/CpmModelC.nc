@@ -426,7 +426,7 @@ implementation {
 
     while (neighborEntry != NULL) {
       int other = neighborEntry->mote;
-      sim_gain_put(other, msg, endTime, ack && (other == dest), power + sim_gain_value(sim_node(), other), reversePower + sim_gain_value(other, sim_node()));
+      sim_gain_put(other, msg, endTime, ack, power + sim_gain_value(sim_node(), other), reversePower + sim_gain_value(other, sim_node()));
       neighborEntry = sim_gain_next(neighborEntry);
     }
   }
