@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.10 $ $Date: 2008-08-07 00:06:53 $
+ * @version $Revision: 1.11 $ $Date: 2009-02-06 06:38:49 $
  */
 
 #include "CC2420.h"
@@ -236,12 +236,10 @@ implementation {
   }
   
   
-  inline uint32_t time16to32(uint16_t time, uint32_t recent_time)
+  inline uint32_t getTime32(uint16_t time)
   {
-    if ((recent_time&0xFFFF)<time)
-      return ((recent_time-0x10000UL)&0xFFFF0000UL)|time;
-    else
-      return (recent_time&0xFFFF0000UL)|time;
+    uint32_t recent_time=call BackoffTimer.getNow();
+    return recent_time + (int16_t)(time - recent_time);
   }
 
   /**
@@ -258,8 +256,9 @@ implementation {
    * would have picked up and executed had our microcontroller been fast enough.
    */
   async event void CaptureSFD.captured( uint16_t time ) {
-    uint32_t time32 = time16to32(time, call BackoffTimer.getNow());
+    uint32_t time32;
     atomic {
+      time32 = getTime32(time);
       switch( m_state ) {
         
       case S_SFD:
@@ -284,16 +283,11 @@ implementation {
         releaseSpiResource();
         call BackoffTimer.stop();
 
-        
-        if ( ( ( (call CC2420PacketBody.getHeader( m_msg ))->fcf >> IEEE154_FCF_FRAME_TYPE ) & 7 ) == IEEE154_TYPE_DATA ) {
-          call PacketTimeStamp.set(m_msg, time32);
-        }
-        
         if ( call SFD.get() ) {
           break;
         }
         /** Fall Through because the next interrupt was already received */
-        
+
       case S_EFD:
         sfdHigh = FALSE;
         call CaptureSFD.captureRisingEdge();
@@ -311,7 +305,7 @@ implementation {
         /** Fall Through because the next interrupt was already received */
         
       default:
-        if ( !m_receiving ) {
+        if ( !m_receiving && sfdHigh == FALSE ) {
           sfdHigh = TRUE;
           call CaptureSFD.captureFallingEdge();
           call CC2420Receive.sfd( time32 );
@@ -323,16 +317,17 @@ implementation {
           }
         }
         
-        sfdHigh = FALSE;
-        call CaptureSFD.captureRisingEdge();
-        m_receiving = FALSE;
-        if ( time - m_prev_time < 10 ) {
-          call CC2420Receive.sfd_dropped();
-	  if (m_msg)
-	    call PacketTimeStamp.clear(m_msg);
+        if ( sfdHigh == TRUE ) {
+          sfdHigh = FALSE;
+          call CaptureSFD.captureRisingEdge();
+          m_receiving = FALSE;
+          if ( time - m_prev_time < 10 ) {
+            call CC2420Receive.sfd_dropped();
+            if (m_msg)
+              call PacketTimeStamp.clear(m_msg);
+          }
+          break;
         }
-        break;
-      
       }
     }
   }

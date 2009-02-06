@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.17 $ $Date: 2008-12-01 23:51:38 $
+ * @version $Revision: 1.18 $ $Date: 2009-02-06 06:38:49 $
  */
 
 #include "IEEE802154.h"
@@ -285,16 +285,25 @@ implementation {
         call SpiResource.release();
       }
       
-      if ( m_timestamp_size ) {
-        if ( rxFrameLength > 10 ) {
-          call PacketTimeStamp.set(m_p_rx_buf, m_timestamp_queue[ m_timestamp_head ]);
-          m_timestamp_head = ( m_timestamp_head + 1 ) % TIMESTAMP_QUEUE_SIZE;
-          m_timestamp_size--;
-        }
-      } else {
+      //new packet is buffered up, or we don't have timestamp in fifo, or ack
+      if ( ( m_missed_packets && call FIFO.get() ) || !call FIFOP.get()
+            || !m_timestamp_size
+            || rxFrameLength <= 10) {
         call PacketTimeStamp.clear(m_p_rx_buf);
       }
-      
+      else {
+          if (m_timestamp_size==1)
+            call PacketTimeStamp.set(m_p_rx_buf, m_timestamp_queue[ m_timestamp_head ]);
+          m_timestamp_head = ( m_timestamp_head + 1 ) % TIMESTAMP_QUEUE_SIZE;
+          m_timestamp_size--;
+
+          if (m_timestamp_size>0) {
+            call PacketTimeStamp.clear(m_p_rx_buf);
+            m_timestamp_head = 0;
+            m_timestamp_size = 0;
+          }
+      }
+
       // We may have received an ack that should be processed by Transmit
       // buf[rxFrameLength] >> 7 checks the CRC
       if ( ( buf[ rxFrameLength ] >> 7 ) && rx_buf ) {
