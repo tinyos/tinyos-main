@@ -10,8 +10,8 @@ The Link Estimation Exchange Protocol (LEEP)
 :Author: Omprakash Gnawali
 
 :Draft-Created: 05-Feb-2006
-:Draft-Version: $Revision: 1.10 $
-:Draft-Modified: $Date: 2009-02-07 22:55:17 $
+:Draft-Version: $Revision: 1.11 $
+:Draft-Modified: $Date: 2009-02-07 22:57:46 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -53,12 +53,12 @@ statistics can later be used to make these estimates more accurate.
 
 In a node pair (A,B), with B as the node of reference, in-bound link
 quality is a value in the range of 0 to 255 that describes the quality
-of the link from A to B estimated by B as the fraction of successfully
-received packets from A. Thus, in-bound link quality is the empirical
-probability that a packet will be successfully received on a given
-link. A value of 255 represents a probability of 1 and a value of 0
-represents a probability of 0 of successfully receiving a packet on a
-given link.
+of the link from A to B estimated by B as the ratio of successfully
+received and all packets transmitted by A. Thus, in-bound link quality
+is the empirical probability that a packet will be successfully
+received on a given link. A value of 255 represents a probability of 1
+and a value of 0 represents a probability of 0 of successfully
+receiving a packet on a given link.
 
 2.2 Out-bound Link Quality
 --------------------------------------------------------------------
