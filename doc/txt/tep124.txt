@@ -10,8 +10,8 @@ The Link Estimation Exchange Protocol (LEEP)
 :Author: Omprakash Gnawali
 
 :Draft-Created: 05-Feb-2006
-:Draft-Version: $Revision: 1.9 $
-:Draft-Modified: $Date: 2009-01-31 06:47:08 $
+:Draft-Version: $Revision: 1.10 $
+:Draft-Modified: $Date: 2009-02-07 22:55:17 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -41,7 +41,7 @@ in-bound values to compute bi-directional link quality. Thus, LEEP is
 a discovery and link table bootstrapping mechanism. The link quality
 is often fine-tuned using different mechanisms.
 
-Link quality estimates obtained using LEEP are often used as a
+Link quality estimates obtained using LEEP are often used as
 bootstrapping values in the link quality table; data transmission
 statistics can later be used to make these estimates more accurate.
 
@@ -53,12 +53,12 @@ statistics can later be used to make these estimates more accurate.
 
 In a node pair (A,B), with B as the node of reference, in-bound link
 quality is a value in the range of 0 to 255 that describes the quality
-of the link from A to B estimated by B by counting the successfully
-received packets from A among all the packets transmitted by A. Thus,
-in-bound link quality is the empirical probability that a packet will
-be successfully received on a given link. A value of 255 represents a
-probability of 1 and a value of 0 represents a probability of 0 of
-successfully receiving a packet on a given link.
+of the link from A to B estimated by B as the fraction of successfully
+received packets from A. Thus, in-bound link quality is the empirical
+probability that a packet will be successfully received on a given
+link. A value of 255 represents a probability of 1 and a value of 0
+represents a probability of 0 of successfully receiving a packet on a
+given link.
 
 2.2 Out-bound Link Quality
 --------------------------------------------------------------------
@@ -75,12 +75,9 @@ link qualities.
 LEEP does not define or compute bi-directional link quality. LEEP
 provides a way to exchange sufficient information to compute in-bound
 and out-bound link qualities. These two link qualities can be used to
-compute the bi-directional link quality. One popular way to define the
-bi-directional link quality between a node pair (A,B) as the
-probability that a packet transmitted by A will be successfully
-received and acknowledged by B. This approach computes the
-bi-directional link quality of a node pair (A,B) as the product of the
-link quality of (A,B) and (B,A).
+compute the bi-directional link quality. Routing protocols often
+compute the bi-directional link quality of a node pair (A,B) as a
+function (product, min, etc.) of the link quality of (A,B) and (B,A).
 
 
 2.4 Link Information Entry
