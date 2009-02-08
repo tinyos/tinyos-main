@@ -5,13 +5,13 @@ The Link Estimation Exchange Protocol (LEEP)
 :TEP: 124 
 :Group: Network Protocol Working Group 
 :Type: Documentary
-:Status: Draft
-:TinyOS-Version: 2.x
+:Status: Final
+:TinyOS-Version: > 2.1
 :Author: Omprakash Gnawali
 
 :Draft-Created: 05-Feb-2006
-:Draft-Version: $Revision: 1.11 $
-:Draft-Modified: $Date: 2009-02-07 22:57:46 $
+:Draft-Version: $Revision: 1.12 $
+:Draft-Modified: $Date: 2009-02-08 19:54:16 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -34,7 +34,7 @@ links to the neighbors.
 Routing protocols often require bi-directional link qualities to
 compute the routes. Nodes can estimate the quality of the in-bound
 link from a neighbor by estimating the ratio of successfully received
-messages and the total transmitted messages. LEEP appends in-bound
+messages to the total transmitted messages. LEEP appends in-bound
 packet reception rate (PRR) estimates to packets. Other nodes hearing
 these packets can combine the in-bound PRR values with their own
 in-bound values to compute bi-directional link quality. Thus, LEEP is
@@ -54,7 +54,7 @@ statistics can later be used to make these estimates more accurate.
 In a node pair (A,B), with B as the node of reference, in-bound link
 quality is a value in the range of 0 to 255 that describes the quality
 of the link from A to B estimated by B as the ratio of successfully
-received and all packets transmitted by A. Thus, in-bound link quality
+received to all packets transmitted by A. Thus, in-bound link quality
 is the empirical probability that a packet will be successfully
 received on a given link. A value of 255 represents a probability of 1
 and a value of 0 represents a probability of 0 of successfully
