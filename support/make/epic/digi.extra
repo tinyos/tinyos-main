@@ -1,0 +1,1 @@
+MSP_BSL_FLAGS = --slow --swap-reset-test --invert-reset --invert-test
