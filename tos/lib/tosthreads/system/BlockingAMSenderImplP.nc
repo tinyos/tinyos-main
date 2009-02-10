@@ -31,6 +31,7 @@
  
 /**
  * @author Kevin Klues (klueska@cs.stanford.edu)
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
 generic module BlockingAMSenderImplP() {
@@ -55,7 +56,7 @@ implementation {
     error_t    error;
   } params_t;
   
-  syscall_t* send_call;
+  syscall_t* send_call = NULL;
   mutex_t my_mutex;
   
   void sendTask(syscall_t* s) {
@@ -74,13 +75,18 @@ implementation {
     syscall_t s;
     params_t p;
     call Mutex.lock(&my_mutex);
-      send_call = &s;
-    
-      p.addr = addr;
-      p.msg = msg;
-      p.len = len;
-    
-      call SystemCall.start(&sendTask, &s, am_id, &p);
+      if (send_call == NULL) {
+        send_call = &s;
+      
+        p.addr = addr;
+        p.msg = msg;
+        p.len = len;
+      
+        call SystemCall.start(&sendTask, &s, am_id, &p);
+        send_call = NULL;
+      } else {
+        p.error = EBUSY;
+      }
     
     atomic {
       call Mutex.unlock(&my_mutex);
@@ -96,10 +102,14 @@ implementation {
   }
   
   event void AMSend.sendDone[am_id_t am_id](message_t* m, error_t error) {
-    params_t* p;
-    p = send_call->params;
-    p->error = error;
-    call SystemCall.finish(send_call);
+    if (send_call != NULL) {
+      if (send_call->id == am_id) {
+        params_t* p;
+        p = send_call->params;
+        p->error = error;
+        call SystemCall.finish(send_call);
+      }
+    }
   }
   default command error_t AMSend.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len) {
     return FAIL;
