@@ -26,22 +26,59 @@
 
 module BlockingCollectionControlP {
   provides {
-    interface BlockingStdControl; 
+    interface BlockingStdControl;
+    interface Init;
   }
   
   uses {
     interface StdControl as RoutingControl;
+    interface SystemCall;
+    interface Mutex;
   }
 }
 
 implementation {
-  command error_t BlockingStdControl.start()
+  typedef struct params {
+    error_t error;
+  } params_t;
+
+  syscall_t* start_call = NULL;
+  mutex_t my_mutex;
+  
+  command error_t Init.init()
   {
-    return call RoutingControl.start();
+    call Mutex.init(&my_mutex);
+    return SUCCESS;
   }
   
-  command error_t BlockingStdControl.stop()
+  void startTask(syscall_t* s)
   {
+    params_t* p = s->params;
+    p->error = call RoutingControl.start();
+    call SystemCall.finish(s);
+  }
+
+  command error_t BlockingStdControl.start()
+  {
+    syscall_t s;
+    params_t p;
+    
+    call Mutex.lock(&my_mutex);
+      if (start_call == NULL) {
+        start_call = &s;
+        call SystemCall.start(&startTask, &s, INVALID_ID, &p);
+        start_call = NULL;
+      } else {
+        p.error = EBUSY;
+      }
+        
+    atomic {
+      call Mutex.unlock(&my_mutex);
+      return p.error;
+    }
+  }
+  
+  command error_t BlockingStdControl.stop() {
     return call RoutingControl.stop();
   }
 }

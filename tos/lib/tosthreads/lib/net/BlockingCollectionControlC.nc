@@ -32,11 +32,15 @@ configuration BlockingCollectionControlC {
 }
 
 implementation {
-  components BlockingCollectionControlP,
-             CollectionC as Collector;
+  components CollectionC as Collector,
+             SystemCallC,
+             MutexC,
+             BlockingCollectionControlP;
   
   RoutingControl = BlockingCollectionControlP.BlockingStdControl;
   RootControl = Collector;
   
   BlockingCollectionControlP.RoutingControl -> Collector.StdControl;
+  BlockingCollectionControlP.SystemCall -> SystemCallC;
+  BlockingCollectionControlP.Mutex -> MutexC;
 }
