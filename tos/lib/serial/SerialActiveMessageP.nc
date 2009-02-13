@@ -1,4 +1,4 @@
-//$Id: SerialActiveMessageP.nc,v 1.9 2008-06-04 03:43:50 regehr Exp $
+//$Id: SerialActiveMessageP.nc,v 1.10 2009-02-13 01:02:26 razvanm Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -58,6 +58,11 @@ implementation {
 					  message_t* msg,
 					  uint8_t len) {
     serial_header_t* header = getHeader(msg);
+
+    if (len > call Packet.maxPayloadLength()) {
+      return ESIZE;
+    }
+
     header->dest = dest;
     // Do not set the source address or group, as doing so
     // prevents transparent bridging. Need a better long-term
