@@ -311,7 +311,8 @@ implementation
         if( diff < -16 || diff > 16 )
             return msg;
 #endif
-        if( (state & STATE_PROCESSING) == 0 ) {
+        if( (state & STATE_PROCESSING) == 0
+            && call TimeSyncPacket.isValid(msg)) {
             message_t* old = processedMsg;
 
             processedMsg = msg;
