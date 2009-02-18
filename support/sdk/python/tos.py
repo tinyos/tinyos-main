@@ -38,7 +38,7 @@ except ImportError, e:
     print "Please install PySerial first."
     sys.exit(1)
 
-__version__ = "$Id: tos.py,v 1.6 2009-01-09 05:13:57 razvanm Exp $"
+__version__ = "$Id: tos.py,v 1.7 2009-02-18 21:30:07 razvanm Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
@@ -113,6 +113,7 @@ class Serial:
         #print "DEBUG: putBytes:", data
         for b in data:
             self._s.write(struct.pack('B', b))
+            time.sleep(0.000001)
 
     def getTimeout(self):
         return self._s.timeout
