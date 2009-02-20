@@ -38,6 +38,7 @@
 #include <iostream>
 #include <set>
 
+#include <cstring>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -582,7 +583,7 @@ void TCPComm::reportStatus(ostream& os)
 void TCPComm::stuffPipe() 
 {
     char info = 'n';
-    write(pipeWriteFD, &info, 1);
+    if(write(pipeWriteFD, &info, 1) != 1) DEBUG("TCPComm::stuffPipe : lokal pipe is broken");
 }
 
 void TCPComm::clearPipe() {

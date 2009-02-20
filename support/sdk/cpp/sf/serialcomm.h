@@ -38,6 +38,7 @@
 #include "packetbuffer.h"
 #include "sharedinfo.h"
 
+#include <sys/select.h>
 #include <pthread.h>
 #include <termios.h>
 #include <string>
@@ -66,13 +67,13 @@ protected:
     // min serial MTU
     static const int minMTU = 4;
     // byte count of serial header
-    static const int serialHeaderBytes = 6;
+    static const int serialHeaderBytes = 5;
     // byte offset of type field
-    static const int typeOffset = 1;
+    static const int typeOffset = 0;
     // byte offset of sequence number field
-    static const int seqnoOffset = 2;
+    static const int seqnoOffset = 1;
     // byte offset of payload field
-    static const int payloadOffset = 3;
+    static const int payloadOffset = 2;
     // timeout for acks in s
     static const int ackTimeout = 1000 * 1000 * 200;
     // max. reties for packets from pc to node
@@ -80,6 +81,12 @@ protected:
 
     // how many bytes do we attempt to read from the serial line in one go?
     static const int rawReadBytes = 20;
+
+    enum rx_states_t {
+        WAIT_FOR_SYNC,
+        IN_SYNC,
+        ESCAPED
+    };
     
     /** Member vars */
 protected:
@@ -188,6 +195,24 @@ protected:
         crc ^= crc << 12;
         crc ^= (crc & 0xff) << 5;
         return crc;
+    }
+    
+    inline static uint16_t calcCRC(uint8_t *bytes, uint16_t len) {
+        uint16_t crc = 0;
+        for(unsigned i = 0; i < len; i++) {
+            crc = SerialComm::byteCRC(bytes[i], crc);
+        }
+        return crc;
+    }
+
+    inline static uint16_t checkCrc(uint8_t *bytes, uint16_t count) {
+        bool crcOk = false;
+        if(count > 2) {
+            uint16_t crc = calcCRC(bytes, count - 2);
+            uint16_t packetCrc = (bytes[count-1] << 8) | bytes[count-2];
+            if(crc == packetCrc) crcOk = true;
+        }
+        return crcOk;
     }
 
     /* HDLC encode (byte stuff) count bytes from buffer from into buffer to.

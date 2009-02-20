@@ -31,6 +31,7 @@
  */
 
 #include "sfpacket.h"
+#include <cstring>
 
 SFPacket::SFPacket(int pType, int pSeqno) {
     length = 0;

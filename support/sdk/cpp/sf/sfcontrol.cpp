@@ -42,6 +42,8 @@
 #include <fcntl.h>
 
 #include <string>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <fstream>
