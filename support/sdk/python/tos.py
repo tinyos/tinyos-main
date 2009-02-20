@@ -38,7 +38,7 @@ except ImportError, e:
     print "Please install PySerial first."
     sys.exit(1)
 
-__version__ = "$Id: tos.py,v 1.7 2009-02-18 21:30:07 razvanm Exp $"
+__version__ = "$Id: tos.py,v 1.8 2009-02-20 10:06:38 liang_mike Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
@@ -370,6 +370,7 @@ class SimpleAM(object):
     def write(self, packet, amId, timeout=5, blocking=True, inc=1):
         self.seqno = (self.seqno + inc) % 256
         prevTimeout = self._source.getTimeout()
+        ack = None
         end = None
         if timeout: end = time.time() + timeout
         while not end or time.time() < end:
@@ -396,7 +397,7 @@ class SimpleAM(object):
                 break
         self._source.setTimeout(prevTimeout)
         #print 'SimpleAM:write: got an ack:', ack, ack.seqno == self.seqno
-        return ack.seqno == self.seqno
+        return (ack != None and ack.seqno == self.seqno)
 
     def setOobHook(self, oobHook):
         self.oobHook = oobHook
