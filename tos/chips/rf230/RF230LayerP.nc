@@ -324,6 +324,9 @@ implementation
 			readRegister(RF230_IRQ_STATUS); // clear the interrupt register
 			call IRQ.captureRisingEdge();
 
+			// setChannel was ignored in SLEEP because the SPI was not working, so do it here
+			writeRegister(RF230_PHY_CC_CCA, RF230_CCA_MODE_VALUE | channel);
+
 			writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 			state = STATE_TRX_OFF_2_RX_ON;
 		}
