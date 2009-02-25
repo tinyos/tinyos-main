@@ -56,4 +56,9 @@ interface RadioState
 	 * transition and setChannel command when it is completed.
 	 */
 	tasklet_async event void done();
+
+	/**
+	 * Returns the currently selected channel.
+	 */
+	tasklet_async command uint8_t getChannel();
 }

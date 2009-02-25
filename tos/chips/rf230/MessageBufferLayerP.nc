@@ -33,7 +33,7 @@ module MessageBufferLayerP
 
 		interface Send;
 		interface Receive;
-		interface RadioConfig;
+		interface RadioChannel;
 	}
 	uses
 	{
@@ -100,7 +100,7 @@ implementation
 		return error;
 	}
 
-	command error_t RadioConfig.setChannel(uint8_t channel)
+	command error_t RadioChannel.setChannel(uint8_t channel)
 	{
 		error_t error;
 
@@ -119,6 +119,11 @@ implementation
 		return error;
 	}
 
+	command uint8_t RadioChannel.getChannel()
+	{
+		return call RadioState.getChannel();
+	}
+
 	task void stateDoneTask()
 	{
 		uint8_t s;
@@ -133,7 +138,7 @@ implementation
 		else if( s == STATE_TURN_OFF )
 			signal SplitControl.stopDone(SUCCESS);
 		else if( s == STATE_CHANNEL )
-			signal RadioConfig.setChannelDone();
+			signal RadioChannel.setChannelDone();
 		else	// not our event, ignore it
 			state = s;
 	}
@@ -151,7 +156,7 @@ implementation
 	{
 	}
 
-	default event void RadioConfig.setChannelDone()
+	default event void RadioChannel.setChannelDone()
 	{
 	}
 

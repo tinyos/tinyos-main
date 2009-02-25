@@ -268,6 +268,11 @@ implementation
 
 /*----------------- CHANNEL -----------------*/
 
+	tasklet_async command uint8_t RadioState.getChannel()
+	{
+		return channel;
+	}
+
 	tasklet_async command error_t RadioState.setChannel(uint8_t c)
 	{
 		c &= RF230_CHANNEL_MASK;

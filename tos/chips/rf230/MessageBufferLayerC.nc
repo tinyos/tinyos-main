@@ -28,7 +28,7 @@ configuration MessageBufferLayerC
 		interface SplitControl;
 		interface Send;
 		interface Receive;
-		interface RadioConfig;
+		interface RadioChannel;
 	}
 	uses
 	{
@@ -49,7 +49,7 @@ implementation
 	SplitControl = MessageBufferLayerP;
 	Send = MessageBufferLayerP;
 	Receive = MessageBufferLayerP;
-	RadioConfig = MessageBufferLayerP;
+	RadioChannel = MessageBufferLayerP;
 
 	RadioState = MessageBufferLayerP;
 	MessageBufferLayerP.Tasklet -> TaskletC;

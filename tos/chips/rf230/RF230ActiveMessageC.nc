@@ -37,7 +37,7 @@ configuration RF230ActiveMessageC
 		interface AMPacket;
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
-		interface RadioConfig;
+		interface RadioChannel;
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
@@ -69,7 +69,7 @@ implementation
 	PacketTimeStampRadio = RF230PacketC;
 	PacketTimeStampMilli = RF230PacketC;
 	LowPowerListening = LowPowerListeningLayerC;
-	RadioConfig = MessageBufferLayerC;
+	RadioChannel = MessageBufferLayerC;
 
 	components ActiveMessageLayerC;
 #ifdef TFRAMES_ENABLED

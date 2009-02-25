@@ -226,6 +226,11 @@ implementation
 		return call SubState.setChannel(channel);
 	}
 
+	tasklet_async command uint8_t RadioState.getChannel()
+	{
+		return call SubState.getChannel();
+	}
+
 	task void startStopTimer()
 	{
 		if( radioCmd == RADIO_CMD_TURNON )

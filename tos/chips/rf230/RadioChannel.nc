@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-interface RadioConfig
+interface RadioChannel
 {
 	/**
 	 * Sets the current channel. Returns EBUSY if the stack is unable
@@ -35,4 +35,9 @@ interface RadioConfig
 	 * setChannel command when it is completed.
 	 */
 	event void setChannelDone();
+
+	/**
+	 * Returns the currently selected channel.
+	 */
+	command uint8_t getChannel();
 }
