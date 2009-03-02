@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.11 $ $Date: 2009-02-06 06:38:49 $
+ * @version $Revision: 1.12 $ $Date: 2009-03-02 07:02:32 $
  */
 
 #include "CC2420.h"
@@ -257,6 +257,7 @@ implementation {
    */
   async event void CaptureSFD.captured( uint16_t time ) {
     uint32_t time32;
+    uint8_t sfd_state = 0;
     atomic {
       time32 = getTime32(time);
       switch( m_state ) {
@@ -264,6 +265,9 @@ implementation {
       case S_SFD:
         m_state = S_EFD;
         sfdHigh = TRUE;
+        // in case we got stuck in the receive SFD interrupts, we can reset
+        // the state here since we know that we are not receiving anymore
+        m_receiving = FALSE;
         call CaptureSFD.captureFallingEdge();
         call PacketTimeStamp.set(m_msg, time32);
         if (call PacketTimeSyncOffset.isSet(m_msg)) {
@@ -305,9 +309,12 @@ implementation {
         /** Fall Through because the next interrupt was already received */
         
       default:
+        /* this is the SFD for received messages */
         if ( !m_receiving && sfdHigh == FALSE ) {
           sfdHigh = TRUE;
           call CaptureSFD.captureFallingEdge();
+          // safe the SFD pin status for later use
+          sfd_state = call SFD.get();
           call CC2420Receive.sfd( time32 );
           m_receiving = TRUE;
           m_prev_time = time;
@@ -315,13 +322,23 @@ implementation {
             // wait for the next interrupt before moving on
             return;
           }
+          // if SFD.get() = 0, then an other interrupt happened since we
+          // reconfigured CaptureSFD! Fall through
         }
         
         if ( sfdHigh == TRUE ) {
           sfdHigh = FALSE;
           call CaptureSFD.captureRisingEdge();
           m_receiving = FALSE;
-          if ( time - m_prev_time < 10 ) {
+          /* if sfd_state is 1, then we fell through, but at the time of
+           * saving the time stamp the SFD was still high. Thus, the timestamp
+           * is valid.
+           * if the sfd_state is 0, then either we fell through and SFD
+           * was low while we safed the time stamp, or we didn't fall through.
+           * Thus, we check for the time between the two interrupts.
+           * FIXME: Why 10 tics? Seams like some magic number...
+           */
+          if ((sfd_state == 0) && (time - m_prev_time < 10) ) {
             call CC2420Receive.sfd_dropped();
             if (m_msg)
               call PacketTimeStamp.clear(m_msg);
