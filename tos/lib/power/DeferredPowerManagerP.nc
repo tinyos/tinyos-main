@@ -23,8 +23,8 @@
  
 /*
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2007-02-04 19:55:48 $ 
+ * $Revision: 1.6 $
+ * $Date: 2009-03-02 21:05:10 $ 
  * ======================================================================== 
  */
  
@@ -70,7 +70,8 @@ implementation {
     call TimerMilli.stop();
     stopTimer = FALSE;
     call StdControl.start();
-    call SplitControl.start();
+    if (call SplitControl.start()==EALREADY)
+      call ResourceDefaultOwner.release();
   }
 
   task void timerTask() { 
@@ -82,7 +83,7 @@ implementation {
       stopTimer = TRUE;
       post startTask();
     }
-    else atomic requested = TRUE;
+    else requested = TRUE;
   }
 
   async event void ResourceDefaultOwner.immediateRequested() {
@@ -105,11 +106,14 @@ implementation {
   }
 
   event void TimerMilli.fired() {
-    if(stopTimer == FALSE) {
-      stopping = TRUE;
-      call PowerDownCleanup.cleanup();
-      call StdControl.stop();
-      call SplitControl.stop();
+    atomic {
+      if(stopTimer == FALSE) {
+        stopping = TRUE;
+        call PowerDownCleanup.cleanup();
+        call StdControl.stop();
+        if (call SplitControl.stop()==EALREADY)
+          signal SplitControl.stopDone(SUCCESS);
+      }
     }
   }
 
