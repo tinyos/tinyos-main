@@ -27,13 +27,12 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-04 18:31:50 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:39:38 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 #include "TKN154.h"
-#include "TKN154_DEBUG.h"
 configuration Ieee802154NonBeaconEnabledC
 {
   provides
