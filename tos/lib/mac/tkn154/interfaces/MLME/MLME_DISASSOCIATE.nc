@@ -27,17 +27,22 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:42 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * The MLME-SAP disassociation primitives define how a device can
+ * disassociate from a PAN. (IEEE 802.15.4-2006, Sect. 7.1.4)
  */
 
 #include "TKN154.h"
 interface MLME_DISASSOCIATE {
 
   /**
-   * Request disassociation from a PAN.
+   * Requests disassociation from a PAN.
    * 
    * @param DeviceAddrMode The addressing mode of the device to which to send 
    *                       the disassociation notification command.
@@ -50,6 +55,7 @@ interface MLME_DISASSOCIATE {
    *                   indirectly
    * @param security   The security options (NULL means security is 
    *                   disabled)
+   *
    * @return       IEEE154_SUCCESS if the request succeeded and a confirm event
    *               will be signalled, an appropriate error code otherwise 
    *               (no confirm event will be signalled in this case)
@@ -65,7 +71,7 @@ interface MLME_DISASSOCIATE {
                         );
 
   /**
-   * Signals that a device has requested disassociation.
+   * Signals that a device has requested disassociation from this PAN.
    *
    * @param DeviceAddress the 64-bit address of the requesting device
    * @param DisassociateReason Reason for the disassociation
@@ -79,7 +85,7 @@ interface MLME_DISASSOCIATE {
                         );
 
   /**
-   * Confirmation of the disassociation attempt.
+   * Confirmsn a disassociation attempt.
    *
    * @param status The status of the disassociation attempt
    * @param DeviceAddrMode The addressing mode of the device that has either

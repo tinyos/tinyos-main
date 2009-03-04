@@ -27,11 +27,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.6 $
+ * $Date: 2009-03-04 18:31:39 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
+ /** Empty placeholder component for BeaconTransmitP. */
 
 #include "TKN154_MAC.h"
 #include "TKN154_PHY.h"
@@ -39,40 +41,25 @@ module NoBeaconTransmitP
 {
   provides
   {
-    interface Init;
+    interface Init as Reset;
     interface MLME_START;
-    interface WriteBeaconField as SuperframeSpecWrite;
-    interface GetNow<bool> as IsSendingBeacons;
-    interface GetNow<uint32_t> as CapStart; 
-    interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
-    interface GetNow<uint32_t> as CapLen; 
-    interface GetNow<uint32_t> as CapEnd; 
-    interface GetNow<uint32_t> as CfpEnd; 
-    interface GetNow<uint32_t> as CfpLen; 
-    interface GetNow<bool> as IsBLEActive; 
-    interface GetNow<uint16_t> as BLELen; 
-    interface GetNow<uint8_t*> as GtsField; 
-    interface GetNow<uint32_t> as SfSlotDuration; 
-    interface GetNow<uint32_t> as BeaconInterval; 
-    interface GetNow<uint8_t> as FinalCapSlot;
-    interface GetNow<uint8_t> as NumGtsSlots;
-    interface GetNow<bool> as BeaconFramePendingBit;
     interface IEEE154TxBeaconPayload;
+    interface SuperframeStructure as OutgoingSF;
+    interface GetNow<bool> as IsSendingBeacons;
   } uses {
     interface Notify<bool> as GtsSpecUpdated;
     interface Notify<bool> as PendingAddrSpecUpdated;
     interface Notify<const void*> as PIBUpdate[uint8_t attributeID];
-    interface Alarm<TSymbolIEEE802154,uint32_t> as BeaconTxAlarm;
+    interface Alarm<TSymbolIEEE802154,uint32_t> as BeaconSendAlarm;
     interface Timer<TSymbolIEEE802154> as BeaconPayloadUpdateTimer;
     interface RadioOff;
-    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface RadioTx as BeaconTx;
     interface MLME_GET;
     interface MLME_SET;
     interface Resource as Token;
-    interface GetNow<bool> as IsTokenRequested;
-    interface ResourceTransfer as TokenToBroadcast;
     interface ResourceTransferred as TokenTransferred;
+    interface ResourceTransfer as TokenToBroadcast;
+    interface GetNow<bool> as IsTokenRequested;
     interface FrameTx as RealignmentBeaconEnabledTx;
     interface FrameTx as RealignmentNonBeaconEnabledTx;
     interface FrameRx as BeaconRequestRx;
@@ -80,9 +67,7 @@ module NoBeaconTransmitP
     interface WriteBeaconField as PendingAddrWrite;
     interface FrameUtility;
     interface GetNow<bool> as IsTrackingBeacons;
-    interface GetNow<uint32_t> as LastBeaconRxTime;
-    interface GetNow<ieee154_reftime_t*> as LastBeaconRxRefTime; 
-    interface Ieee802154Debug as Debug;
+    interface SuperframeStructure as IncomingSF;
     interface Set<ieee154_macSuperframeOrder_t> as SetMacSuperframeOrder;
     interface Set<ieee154_macBeaconTxTime_t> as SetMacBeaconTxTime;
     interface Set<ieee154_macPanCoordinator_t> as SetMacPanCoordinator;
@@ -94,10 +79,8 @@ module NoBeaconTransmitP
 }
 implementation
 {
-  command error_t Init.init()
-  {
-    return SUCCESS;
-  }
+  command error_t Reset.init() { return SUCCESS; }
+
   command ieee154_status_t MLME_START.request  (
                           uint16_t panID,
                           uint8_t logicalChannel,
@@ -120,17 +103,9 @@ implementation
 
   async event void RadioOff.offDone() { }
 
-  async event void BeaconTxAlarm.fired() {}
+  async event void BeaconSendAlarm.fired() {}
 
-  async event void BeaconTx.loadDone() {}
-
-  async event void BeaconTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime){}
-
-  async event void BeaconTx.transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
-      bool ackPendingFlag, ieee154_csma_t *csmaParameters, error_t result){}
-
-  async event void BeaconTx.transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
-      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParameters, error_t result){}
+  async event void BeaconTx.transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result){}
 
   command error_t IEEE154TxBeaconPayload.setBeaconPayload(void *beaconPayload, uint8_t length) { return ESIZE; }
 
@@ -159,16 +134,6 @@ implementation
   {
   }
 
-  command uint8_t SuperframeSpecWrite.write(uint8_t *superframeSpecField, uint8_t maxlen)
-  {
-    return 0;
-  }
-
-  command uint8_t SuperframeSpecWrite.getLength()
-  {
-    return 0;
-  }
-
   event void RealignmentBeaconEnabledTx.transmitDone(ieee154_txframe_t *frame, ieee154_status_t status)
   {
   }
@@ -182,43 +147,23 @@ implementation
     return frame;
   }
 
-  async command bool IsSendingBeacons.getNow(){ return FALSE;}
+  async command uint32_t OutgoingSF.sfStartTime() {return 0;}
 
-  async command uint32_t CapStart.getNow() { return 0; }
-  async command ieee154_reftime_t* CapStartRefTime.getNow() { return NULL; }
-  async command uint32_t CapLen.getNow() { return 0;}
-  async command uint32_t CapEnd.getNow() 
-  {
-    return 0;
-  }
-  async command uint32_t CfpEnd.getNow() 
-  {
-    return 0;
-  }
-  async command uint32_t CfpLen.getNow()
-  {
-    return 0;
-  }
-  async command bool IsBLEActive.getNow(){ return FALSE;}
-  async command uint16_t BLELen.getNow(){ return 0;}
-  async command bool BeaconFramePendingBit.getNow(){ return FALSE;}
+  async command uint16_t OutgoingSF.sfSlotDuration() {return 0;}
 
-  async command uint8_t* GtsField.getNow() { return NULL; }
-  async command uint32_t SfSlotDuration.getNow() { return 0; }
-  async command uint32_t BeaconInterval.getNow() { return 0; }
-  async command uint8_t FinalCapSlot.getNow() { return 0; }
-  async command uint8_t NumGtsSlots.getNow() { return 0; }
+  async command uint8_t OutgoingSF.numCapSlots() {return 0;}
 
-  default event void MLME_START.confirm    (
-                          ieee154_status_t status
-                        ){}
+  async command uint8_t OutgoingSF.numGtsSlots() {return 0;}
 
-  default event void IEEE154TxBeaconPayload.setBeaconPayloadDone(void *beaconPayload, uint8_t length){}
+  async command uint16_t OutgoingSF.battLifeExtDuration() {return 0;}
 
-  default event void IEEE154TxBeaconPayload.modifyBeaconPayloadDone(uint8_t offset, void *buffer, uint8_t bufferLength){}
+  async command const uint8_t* OutgoingSF.gtsFields() {return NULL;}
 
-  default event void IEEE154TxBeaconPayload.aboutToTransmit(){}
+  async command uint16_t OutgoingSF.guardTime() {return 0;}
 
-  default event void IEEE154TxBeaconPayload.beaconTransmitted(){}
+  async command const ieee154_timestamp_t* OutgoingSF.sfStartTimeRef() {return NULL;}
 
+  async command bool OutgoingSF.isBroadcastPending() {return FALSE;}
+
+  async command bool IsSendingBeacons.getNow() {return FALSE;}
 }

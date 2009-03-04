@@ -34,7 +34,7 @@
  * @author David Moss
  * @author Jung Il Choi
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @version $Revision: 1.2 $ $Date: 2008-11-25 09:35:08 $
+ * @version $Revision: 1.3 $ $Date: 2009-03-04 18:31:06 $
  */
 module CC2420ReceiveP {
 
@@ -59,8 +59,6 @@ module CC2420ReceiveP {
   uses interface FrameUtility;
   uses interface CC2420Config;
   uses interface CC2420Ram as RXFIFO_RAM;
-  
-  uses interface Leds;
 }
 
 implementation {
@@ -82,8 +80,8 @@ implementation {
     SACK_HEADER_LENGTH = 3,
   };
 
-  ieee154_reftime_t m_timestamp_queue[ TIMESTAMP_QUEUE_SIZE ];
-  ieee154_reftime_t m_timestamp;
+  ieee154_timestamp_t m_timestamp_queue[ TIMESTAMP_QUEUE_SIZE ];
+  ieee154_timestamp_t m_timestamp;
   norace bool m_timestampValid;
   
   uint8_t m_timestamp_head;
@@ -156,10 +154,7 @@ implementation {
         // because we don't own the SPI...
         return FAIL; 
       }
-      if (m_state != S_STOPPED){
-        call Leds.led0On();
-        return FAIL;
-      }
+      ASSERT(m_state == S_STOPPED);
       reset_state();
       m_state = S_STARTED;
       call InterruptFIFOP.enableFallingEdge(); // ready!
@@ -209,8 +204,7 @@ implementation {
 
   task void stopContinueTask()
   {
-    if (receivingPacket)
-      call Leds.led0On();
+    ASSERT(receivingPacket != TRUE);
     call SpiResource.release(); // may fail
     atomic m_state = S_STOPPED;
     signal AsyncSplitControl.stopDone(SUCCESS);
@@ -244,13 +238,13 @@ implementation {
    * Start frame delimiter signifies the beginning/end of a packet
    * See the CC2420 datasheet for details.
    */
-  async command void CC2420Receive.sfd( ieee154_reftime_t *time ) {
+  async command void CC2420Receive.sfd( ieee154_timestamp_t *time ) {
     if (m_state == S_STOPPED)
       return;
     if ( m_timestamp_size < TIMESTAMP_QUEUE_SIZE ) {
       uint8_t tail =  ( ( m_timestamp_head + m_timestamp_size ) % 
                         TIMESTAMP_QUEUE_SIZE );
-      memcpy(&m_timestamp_queue[ tail ], time, sizeof(ieee154_reftime_t) );
+      memcpy(&m_timestamp_queue[ tail ], time, sizeof(ieee154_timestamp_t) );
       m_timestamp_size++;
     }
   }
@@ -281,10 +275,7 @@ implementation {
     atomic {
       switch (m_state)
       {
-        case S_STOPPED: // this should never happen!
-                        call Leds.led0On(); 
-                        call SpiResource.release(); 
-                        break;
+        case S_STOPPED: ASSERT(0); break; // this should never happen!
         default: receive();
       }
     }
@@ -408,9 +399,9 @@ implementation {
       }
       
       if ( m_timestamp_size ) {
-        if ( rxFrameLength > 10 ) {
+        if ( rxFrameLength > 4 ) {
           //((ieee154_metadata_t*) m_rxFramePtr->metadata)->timestamp = m_timestamp_queue[ m_timestamp_head ];
-          memcpy(&m_timestamp, &m_timestamp_queue[ m_timestamp_head ], sizeof(ieee154_reftime_t) );
+          memcpy(&m_timestamp, &m_timestamp_queue[ m_timestamp_head ], sizeof(ieee154_timestamp_t) );
           m_timestampValid = TRUE;
           m_timestamp_head = ( m_timestamp_head + 1 ) % TIMESTAMP_QUEUE_SIZE;
           m_timestamp_size--;
@@ -465,12 +456,7 @@ implementation {
     uint8_t payloadLen = ((ieee154_header_t*) m_rxFramePtr->header)->length - m_mhrLen - 2;
     ieee154_metadata_t *metadata = (ieee154_metadata_t*) m_rxFramePtr->metadata;
 
-    atomic {
-      if (m_state == S_STOPPED){
-        call Leds.led0On();
-        return;
-      }
-    }
+    atomic ASSERT(m_state != S_STOPPED);
     ((ieee154_header_t*) m_rxFramePtr->header)->length = m_rxFramePtr->data[payloadLen+1] & 0x7f; // temp. LQI
     metadata->rssi = m_rxFramePtr->data[payloadLen];
     metadata->linkQuality = ((ieee154_header_t*) m_rxFramePtr->header)->length; // copy back

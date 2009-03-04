@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:42 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -49,12 +49,12 @@ interface EnergyDetection
   command error_t start(uint32_t duration);
 
   /**
-   * Signalled in response to a call to <tt>start<\tt>;
+   * Signalled in response to a call to <tt>start</tt>;
    * returns the maximum energy measured on the channel over the
    * specified period of time.
    *
    * @param status SUCCESS if the measurement succeeded
-   * and only then <tt>EnergyLevel<\tt> is valid, FAIL 
+   * and only then <tt>EnergyLevel</tt> is valid, FAIL 
    * otherwise
    * @param EnergyLevel The maximum energy on the channel
    **/

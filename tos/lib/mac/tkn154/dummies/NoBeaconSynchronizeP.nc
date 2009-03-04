@@ -27,12 +27,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2008-10-23 16:09:28 $
+ * $Revision: 1.5 $
+ * $Date: 2009-03-04 18:31:39 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
+ /** Empty placeholder component for BeaconSynchronizeP. */
 
 #include "TKN154_MAC.h"
 
@@ -40,95 +41,87 @@ module NoBeaconSynchronizeP
 {
   provides
   {
-    interface Init;
+    interface Init as Reset;
     interface MLME_SYNC;
     interface MLME_BEACON_NOTIFY;
     interface MLME_SYNC_LOSS;
+    interface SuperframeStructure as IncomingSF;
     interface GetNow<bool> as IsTrackingBeacons;
-    interface Get<uint32_t> as GetLastBeaconRxTime;
-    interface GetNow<uint32_t> as CapStart;
-    interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
-    interface GetNow<uint32_t> as CapLen;
-    interface GetNow<uint32_t> as CapEnd; 
-    interface GetNow<uint32_t> as CfpEnd; 
-    interface GetNow<uint32_t> as CfpLen;
-    interface GetNow<uint32_t> as BeaconInterval; 
-    interface GetNow<bool> as IsBLEActive; 
-    interface GetNow<uint16_t> as BLELen; 
-    interface GetNow<uint8_t*> as GtsField; 
-    interface GetNow<uint32_t> as SfSlotDuration; 
-    interface GetNow<uint8_t> as FinalCapSlot; 
-    interface GetNow<uint8_t> as NumGtsSlots;
-    interface GetNow<bool> as IsRxBroadcastPending; 
+    interface StdControl as TrackSingleBeacon;
   }
   uses
   {
     interface MLME_GET;
     interface MLME_SET;
     interface FrameUtility;
-    interface Notify<bool> as FindBeacon;
     interface IEEE154BeaconFrame as BeaconFrame;
     interface Alarm<TSymbolIEEE802154,uint32_t> as TrackAlarm;
     interface RadioRx as BeaconRx;
     interface RadioOff;
-    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface DataRequest;
     interface FrameRx as CoordRealignmentRx;
     interface Resource as Token;
     interface GetNow<bool> as IsTokenRequested;
-    interface ResourceTransfer as TokenToCap;
     interface ResourceTransferred as TokenTransferred;
-    interface GetNow<bool> as IsSendingBeacons;
+    interface ResourceTransfer as TokenToCap;
     interface TimeCalc;
     interface IEEE154Frame as Frame;
     interface Leds;
-    interface Ieee802154Debug as Debug;
   }
 }
 implementation
 {
+  command error_t Reset.init() { return SUCCESS; }  
 
-  command error_t Init.init() { return SUCCESS; }
-
-  command ieee154_status_t MLME_SYNC.request  (
-      uint8_t logicalChannel,
-      uint8_t channelPage,
-      bool trackBeacon
-      )
+  command ieee154_status_t MLME_SYNC.request  ( uint8_t logicalChannel, uint8_t channelPage, bool trackBeacon)
   {
     return IEEE154_TRANSACTION_OVERFLOW;
   }
 
   event void Token.granted() { }
 
-  async event void TokenTransferred.transferred() { call Token.release(); }
+  async event void TokenTransferred.transferred() { }
 
-  async event void TrackAlarm.fired() {}
+  async event void RadioOff.offDone() { }
 
-  async event void BeaconRx.prepareDone() {}
+  async event void BeaconRx.enableRxDone() { }
 
-  event message_t* BeaconRx.received(message_t* frame, ieee154_reftime_t *timestamp) { return frame;}
+  async event void TrackAlarm.fired() { }
 
-  async event void RadioOff.offDone() {}
+  event message_t* BeaconRx.received(message_t *frame, const ieee154_timestamp_t *timestamp) { return frame; }
 
-  async command bool IsTrackingBeacons.getNow(){ return FALSE;}
-  command uint32_t GetLastBeaconRxTime.get(){ return 0;}
-  async command uint8_t* GtsField.getNow() { return 0; }
-  async command uint32_t SfSlotDuration.getNow() { return 0; }
-  async command uint8_t FinalCapSlot.getNow() { return 0; }
+  command error_t TrackSingleBeacon.start()
+  {
+    return FAIL;
+  }
+
+  command error_t TrackSingleBeacon.stop()
+  {
+    return FAIL;
+  }
+  
+  /* -----------------------  SF Structure, etc. ----------------------- */
+
+  async command uint32_t IncomingSF.sfStartTime() { return 0; }
+  async command uint16_t IncomingSF.sfSlotDuration() { return 0; }
+  async command uint8_t IncomingSF.numCapSlots() { return 0; }
+  async command uint8_t IncomingSF.numGtsSlots() { return 0; }
+  async command uint16_t IncomingSF.battLifeExtDuration() { return 0; }
+  async command const uint8_t* IncomingSF.gtsFields() { return NULL; }
+  async command uint16_t IncomingSF.guardTime() { return 0; }
+  async command const ieee154_timestamp_t* IncomingSF.sfStartTimeRef() { return NULL; }
+  async command bool IncomingSF.isBroadcastPending() { return 0; }
+  async command bool IsTrackingBeacons.getNow() { return 0; }
 
   event void DataRequest.pollDone(){}
-  async command uint32_t CapEnd.getNow() { return 0; }
-  async command uint32_t CapStart.getNow() { return 0; }
-  async command uint32_t CapLen.getNow() { return 0; }
-  async command uint32_t CfpEnd.getNow() { return 0; }
-  async command ieee154_reftime_t* CapStartRefTime.getNow() { return NULL; }
-  async command uint32_t CfpLen.getNow(){ return 0;}
-  async command uint32_t BeaconInterval.getNow(){ return 0;}
-  async command bool IsBLEActive.getNow(){ return 0;}
-  async command uint16_t BLELen.getNow(){ return 0;}
-  async command uint8_t NumGtsSlots.getNow() { return 0; }
-  async command bool IsRxBroadcastPending.getNow() { return FALSE; }
-  event message_t* CoordRealignmentRx.received(message_t* frame) {return frame;}
-  event void FindBeacon.notify( bool val ){}
+
+  default event message_t* MLME_BEACON_NOTIFY.indication (message_t* frame){return frame;}
+  default event void MLME_SYNC_LOSS.indication (
+                          ieee154_status_t lossReason,
+                          uint16_t panID,
+                          uint8_t logicalChannel,
+                          uint8_t channelPage,
+                          ieee154_security_t *security){}
+
+  event message_t* CoordRealignmentRx.received(message_t* frame) { return frame; }
 }

@@ -27,10 +27,16 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * The MCPS-DATA.request primitive requests the transfer of a data SPDU (i.e.,
+ * MSDU) from a local SSCS entity to a single peer SSCS entity. (IEEE
+ * 802.15.4-2006, Sect. 7.1.1)
  */
 
 #include "TKN154.h"
@@ -40,17 +46,15 @@ interface MCPS_DATA
 {
 
   /**
-   * "The MCPS-DATA.request primitive requests the transfer of a data 
-   * SPDU (i.e., MSDU) from a local SSCS entity to a single peer SSCS 
-   * entity." (IEEE 802.15.4-2006, Sec. 7.1.1.1) 
+   * "Requests to transfer a data SPDU (i.e., MSDU) from a local SSCS
+   * entity to a single peer SSCS entity." (IEEE 802.15.4-2006, Sec.
+   * 7.1.1.1) 
    *
-   * The MSDU is the payload portion of a message_t (<tt>frame</tt>
-   * parameter) and can be accessed through the <tt>IEEE154Frame</tt> 
-   * interface. In contrast to the standard interface definition address 
-   * information is not passed as separate parameters; instead, the 
-   * address information is already part of the <tt>frame</tt>, 
-   * i.e. it must have been set (through the <tt>IEEE154Frame</tt> 
-   * interface) before this command is called.
+   * The source/destination addressing mode, destination PAN
+   * identifier, destination address, the payload and (optionally) the
+   * security mode/key are part of the <tt>frame</tt> and must have
+   * been set (through the <tt>IEEE154Frame</tt> interface) before
+   * calling this command.
    * 
    * If this command returns IEEE154_SUCCESS, then the confirm event
    * will be signalled in the future; otherwise, the confirm event
@@ -58,12 +62,12 @@ interface MCPS_DATA
    * 
    * @param frame         The frame to send
    * @param payloadLen    The length of the frame payload
-   * @param msduHandle    Handle associated with the frame to be transmitted
+   * @param msduHandle    Handle associated with the frame
    * @param TxOptions     Bitwised OR transmission options
    *
-   * @return       IEEE154_SUCCESS if the request succeeded and a confirm event
-   *               will be signalled, an appropriate error code otherwise 
-   *               (no confirm event will be signalled in this case)
+   * @return       IEEE154_SUCCESS if the request succeeded and only
+   *               then the <tt>confirm()</tt> event will be signalled;
+   *               an appropriate error code otherwise 
    * @see          confirm
    */
 
@@ -75,14 +79,14 @@ interface MCPS_DATA
                         );
 
   /**
-   * Confirm reports the results of a request to transfer a frame to a 
-   * peer SSCS entity.
+   * Reports the result of a request to transfer a frame to a peer
+   * SSCS entity.
    *
-   * @param frame      The frame which was requested to send
+   * @param frame      The frame which was requested to be sent
    * @param msduHandle The handle associated with the frame
    * @param status     The status of the last MSDU transmission
-   * @param timestamp  Time of transmission (invalid if status is 
-   *                   not IEEE154_SUCCESS)
+   * @param timestamp  Time of transmission (invalid if <tt>status</tt> 
+   *                   is not IEEE154_SUCCESS)
    */
   event void confirm    (  
                           message_t *frame,
@@ -92,8 +96,9 @@ interface MCPS_DATA
                         );
 
   /**
-   * Indicates the arrival of a frame. Address information can be accessed 
-   * through the <tt>IEEE154Frame</tt> interface.
+   * Indicates the arrival of a frame. Use the <tt>IEEE154Frame</tt>
+   * interface to get the payload, source/destination addresses, DSN
+   * and other information associated with this frame.
    * 
    * @return A frame buffer for the stack to use for the next received frame
    */

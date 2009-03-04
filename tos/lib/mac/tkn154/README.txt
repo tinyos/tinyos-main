@@ -1,18 +1,21 @@
 This directory contains "TKN15.4", a platform-independent IEEE 802.15.4-2006
-MAC implementation. The code is in alpha state, under active development, but
-most of the functionality described in the standard is implemented (and
-cursorily tested). The MAC itself is platform-independent, but it requires
-(1) a suitable radio driver, (2) Alarms/Timers with symbol precision and (3)
-some "platform glue" code (defining guard times, etc.). Currently the only
-supported platform is TelosB (however: without additional hardware support on
-TelosB the timing in beacon-enabled mode is not standard compliant).
+MAC implementation. The code is under active development, but most of the 
+functionality described in the standard is implemented (and cursorily tested). 
+The MAC itself is platform-independent, but it requires (1) a suitable radio 
+driver, (2) Alarms/Timers with symbol precision and (3) some "platform glue" 
+code (defining guard times, etc.). Currently the only supported platform is 
+TelosB (but without additional hardware support on TelosB the timing in 
+beacon-enabled mode is not standard compliant).
 
-Status 6/16/08
---------------
+This code is the basis for the implementation of the TinyOS 15.4 WG:
+http://tinyos.stanford.edu:8000/15.4_WG
+
+Status 3/4/09
+-------------
 
 Missing functionality:
-- security (not planned)
-- GTS (not planned)
+- security 
+- GTS 
 - PAN ID conflict resolution
 - multiple indirect transmissions to the same destination
 

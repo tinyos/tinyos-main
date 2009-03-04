@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-11-25 09:35:09 $
+ * $Date: 2009-03-04 18:31:56 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -40,15 +40,17 @@ module Alarm32khzTo62500hzTransformC
 }
 implementation
 {
-/**
- * TelosB lacks a clock with the precision and accuracy 
- * required by the 802.15.4 standard (62500 Hz, 40 ppm).
- * As a workaround, we cast one tick of the 32768 Hz clock to 
- * two 802.15.4 symbols, which introduces a small (5%) error.
- * Thus the channel access in particular in beacon-enabled PANs 
- * (slotted CSMA-CA) is not be standard-compliant!
- */
-#warning "Warning: MAC timing is not standard compliant (the symbol clock is based on the 32768 Hz oscillator)!"
+
+  /**
+   * TelosB lacks a clock that satisfies the precision and accuracy 
+   * requirements of the IEEE 802.15.4 standard (62500 Hz, +-40 ppm).
+   * As a workaround, we cast one tick of the 32768 Hz clock to two
+   * IEEE 802.15.4 symbols, which introduces a small (5%) error.
+   * As a consequence the timing of the beacon interval and slotted 
+   * CSMA-CA algorithm is not standard-compliant anymore.
+   */
+
+#warning "Warning: MAC timing is not standard compliant!"
 
   async command void Alarm.start[ uint8_t num ](uint32_t dt){ call AlarmFrom.start[num](dt >> 1);}
   async command void Alarm.stop[ uint8_t num ](){ call AlarmFrom.stop[num]();}

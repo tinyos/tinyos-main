@@ -27,27 +27,35 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
+/** 
+ * The MLME-SAP beacon notification primitive defines how a device may be
+ * notified when a beacon is received during normal operating conditions. 
+ * (IEEE 802.15.4-2006, Sect. 7.1.5)
+ */
+
 #include "TKN154.h"
 #include <message.h>
+
 interface MLME_BEACON_NOTIFY {
 
   /**
-   * A beacon frame has been received. This event is signalled only if 
-   * either the PIB attribute macAutoRequest is set to FALSE or the 
-   * beacon payload is not empty.
+   * A beacon frame has been received. This event is signalled only if
+   * either the PIB attribute <tt>macAutoRequest</tt> is set to FALSE
+   * or the beacon payload is not empty.
    *
-   * The beacon parameters can be accessed through the 
-   * <tt>IEEE154BeaconFrame<\tt> interface. The 
-   * <tt>IEEE154Frame<\tt> interface can be used to
-   * inspect the addressing fields in the MAC header.
+   * The beacon parameters can be accessed through the
+   * <tt>IEEE154BeaconFrame</tt> interface. The <tt>IEEE154Frame</tt>
+   * interface can be used to inspect the addressing fields in the MAC
+   * header.
    *
    * @param beacon The beacon frame
+   *
    * @return A frame buffer for the stack to use for the next received frame
    */
   event message_t* indication ( message_t *beaconFrame );

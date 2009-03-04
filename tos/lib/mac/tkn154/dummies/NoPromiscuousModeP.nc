@@ -27,11 +27,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
+ /** Empty placeholder component for PromiscuousModeP. */
 
 #include "TKN154_PHY.h"
 #include "TKN154_MAC.h"
@@ -47,7 +49,6 @@ module NoPromiscuousModeP
     interface RadioRx as PromiscuousRx;
     interface RadioOff;
     interface Set<bool> as RadioPromiscuousMode;
-    interface Ieee802154Debug as Debug;
   }
 }
 implementation
@@ -55,7 +56,7 @@ implementation
 
   command error_t Init.init() { return SUCCESS; }
 
-/* ----------------------- Promiscuous Mode ----------------------- */
+  /* ----------------------- Promiscuous Mode ----------------------- */
 
   command bool PromiscuousModeGet.get() { return FALSE; }
 
@@ -65,7 +66,7 @@ implementation
 
   async event void PromiscuousRx.prepareDone() { }
 
-  event message_t* PromiscuousRx.received(message_t *frame, ieee154_reftime_t *timestamp) { return frame; }
+  event message_t* PromiscuousRx.received(message_t *frame, ieee154_timestamp_t *timestamp) { return frame; }
 
   command error_t PromiscuousMode.stop() { return FAIL; }
 

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:22 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -80,8 +80,7 @@ implementation
                           message_t *frame,
                           uint8_t payloadLen,
                           uint8_t msduHandle,
-                          uint8_t txOptions
-                        )
+                          uint8_t txOptions)
   {
     uint8_t srcAddrMode = call Frame.getSrcAddrMode(frame);
     uint8_t dstAddrMode = call Frame.getDstAddrMode(frame);
@@ -123,12 +122,12 @@ implementation
       // coordinator address in the PIB, if they match the frame is
       // sent in the incoming sf otherwise in the outgoing sf
       call Frame.getDstAddr(frame, &dstAddr);
-      if (dstAddrMode == ADDR_MODE_SHORT_ADDRESS){
+      if (dstAddrMode == ADDR_MODE_SHORT_ADDRESS) {
         if (dstAddr.shortAddress == call MLME_GET.macCoordShortAddress())
           sfType = INCOMING_SUPERFRAME;
         else
           sfType = OUTGOING_SUPERFRAME;
-      } else if (dstAddrMode == ADDR_MODE_EXTENDED_ADDRESS){
+      } else if (dstAddrMode == ADDR_MODE_EXTENDED_ADDRESS) {
         if (dstAddr.extendedAddress == call MLME_GET.macCoordExtendedAddress())
           sfType = INCOMING_SUPERFRAME;
         else
@@ -137,7 +136,7 @@ implementation
         sfType = INCOMING_SUPERFRAME;
 
       // GTS?
-      if (txOptions & TX_OPTIONS_GTS){
+      if (txOptions & TX_OPTIONS_GTS) {
         if (sfType == INCOMING_SUPERFRAME)
           txStatus = call DeviceCfpTx.transmit(txFrame);
         else
@@ -146,8 +145,8 @@ implementation
       // indirect transmission?
       } else if ((txOptions & TX_OPTIONS_INDIRECT) && 
           call IsSendingBeacons.getNow() && 
-          (dstAddrMode >= ADDR_MODE_SHORT_ADDRESS)){
-        if (dstAddrMode == ADDR_MODE_SHORT_ADDRESS && dstAddr.shortAddress == 0xFFFF){
+          (dstAddrMode >= ADDR_MODE_SHORT_ADDRESS)) {
+        if (dstAddrMode == ADDR_MODE_SHORT_ADDRESS && dstAddr.shortAddress == 0xFFFF) {
           mhr[MHR_INDEX_FC1] &= ~FC1_ACK_REQUEST;
           txStatus = call BroadcastTx.transmit(txFrame);
         } else
@@ -160,7 +159,7 @@ implementation
         else
           txStatus = call CoordCapTx.transmit(txFrame);
 
-      if (txStatus != IEEE154_SUCCESS){
+      if (txStatus != IEEE154_SUCCESS) {
         call TxFramePool.put(txFrame);
       }
     }
@@ -168,8 +167,7 @@ implementation
   }
 
   command ieee154_status_t MCPS_PURGE.request  (
-                          uint8_t msduHandle
-                        )
+                          uint8_t msduHandle)
   {
     if (call PurgeDirect.purge(msduHandle) == IEEE154_SUCCESS ||
         call PurgeIndirect.purge(msduHandle) == IEEE154_SUCCESS ||
@@ -222,7 +220,7 @@ implementation
 
   message_t* dataReceived(message_t* frame)
   {
-    return signal MCPS_DATA.indication( frame );
+    return signal MCPS_DATA.indication(frame);
   }
 
   void finishTxTransaction(ieee154_txframe_t *txFrame, ieee154_status_t status)
@@ -230,6 +228,7 @@ implementation
     uint8_t handle = txFrame->handle;
     uint32_t txTime = txFrame->metadata->timestamp;
     message_t *msg = (message_t*) ((uint8_t*) txFrame->header - offsetof(message_t, header));
+
     call TxFramePool.put(txFrame);
     signal MCPS_DATA.confirm(msg, handle, status, txTime);
   }
@@ -269,10 +268,9 @@ implementation
                           message_t *msg,
                           uint8_t msduHandle,
                           ieee154_status_t status,
-                          uint32_t Timestamp
-                        ){}
+                          uint32_t Timestamp) {}
 
-  default event message_t* MCPS_DATA.indication ( message_t* frame ){ return frame; }
-  default command ieee154_status_t DeviceCfpTx.transmit(ieee154_txframe_t *data){return IEEE154_INVALID_GTS;}
-  default command ieee154_status_t CoordCfpTx.transmit(ieee154_txframe_t *data){return IEEE154_INVALID_GTS;}
+  default event message_t* MCPS_DATA.indication(message_t* frame) { return frame; }
+  default command ieee154_status_t DeviceCfpTx.transmit(ieee154_txframe_t *data) {return IEEE154_INVALID_GTS;}
+  default command ieee154_status_t CoordCfpTx.transmit(ieee154_txframe_t *data) {return IEEE154_INVALID_GTS;}
 }

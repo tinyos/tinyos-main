@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-11-25 09:35:09 $
+ * $Date: 2009-03-04 18:31:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -37,6 +37,7 @@
 
 #include "TKN154.h"
 #include "TKN154_PHY.h"
+#include "TKN154_platform.h"
 
 /****************************************************
  * IEEE 802.15.4 PAN information base identifiers
@@ -74,9 +75,7 @@ enum {
   IEEE154_macMaxFrameTotalWaitTime   = 0x58,
   IEEE154_macMaxFrameRetries         = 0x59,
   IEEE154_macMinBE                   = 0x4F,
-// no identifier defined in standard
   IEEE154_macMinLIFSPeriod           = 0xA0,
-// no identifier defined in standard
   IEEE154_macMinSIFSPeriod           = 0xA1,
   IEEE154_macPANId                   = 0x50,
   IEEE154_macPromiscuousMode         = 0x51,
@@ -89,7 +88,7 @@ enum {
   IEEE154_macTimestampSupported      = 0x5C,
   IEEE154_macTransactionPersistenceTime = 0x55,
 
-// attributes not present in the standard PIB:
+  // custom attributes (not present in the standard PIB)
   IEEE154_macPanCoordinator = 0xF0,
 };
 
@@ -128,6 +127,7 @@ enum {
   FC2_FRAME_VERSION_MASK      = 0x30,
 };
 
+/** some unique strings */
 #define SYNC_POLL_CLIENT unique("PollP.client")
 #define ASSOCIATE_POLL_CLIENT unique("PollP.client")
 #define CAP_TX_CLIENT "CapQueueP.FrameTx.client"
@@ -138,6 +138,24 @@ enum {
   OUTGOING_SUPERFRAME,
   INCOMING_SUPERFRAME,
 };
+
+/****************************************************
+ * Default time-related constants for beacon-enabled PANs,
+ * these may be overridden by platform-specific constants.
+ * */   
+
+#ifndef IEEE154_MAX_BEACON_JITTER
+  // will start to listen for a beacon MAX_BEACON_JITTER_TIME(BO) symbols  
+  // before its expected arrival, where BO is the current beacon order 
+  // (here --by default-- BO is ignored)
+  #define IEEE154_MAX_BEACON_JITTER(BO) 20
+#endif
+
+#ifndef IEEE154_MAX_BEACON_LISTEN_TIME
+  // maximum time to listen for a beacon after its expected arrival,
+  // before it is declared as missed
+  #define IEEE154_MAX_BEACON_LISTEN_TIME(BO) (128 * IEEE154_SYMBOLS_PER_OCTET + IEEE154_MAX_BEACON_JITTER(BO))
+#endif
 
 typedef struct {
   uint8_t length;   // top bit denotes -> promiscuous mode
@@ -166,7 +184,7 @@ typedef struct
   ieee154_header_t header;
   ieee154_metadata_t metadata;
 } ieee154_txcontrol_t;
-      
+
 typedef struct ieee154_csma {
   uint8_t BE;                 // initial backoff exponent
   uint8_t macMaxBE;           // maximum backoff exponent
@@ -176,7 +194,7 @@ typedef struct ieee154_csma {
 
 typedef struct {
   ieee154_txframe_t *frame;
-  ieee154_csma_t csmaParams;
+  ieee154_csma_t csma;
   uint32_t transactionTime;
 } ieee154_cap_frame_backup_t;
 
@@ -217,8 +235,8 @@ enum {
   // PHY sublayer constants
   IEEE154_aTurnaroundTime              = 12,
 
-  FRAMECTL_LENGTH_MASK                 = 0x7F, // "length" member in ieee154_frame_t
-  FRAMECTL_PROMISCUOUS                 = 0x80, // "length" member in ieee154_frame_t
+  FRAMECTL_LENGTH_MASK                 = 0x7F, // "length" member in ieee154_header_t
+  FRAMECTL_PROMISCUOUS                 = 0x80, // "length" member in ieee154_header_t
 };
 #define IEEE154_SUPPORTED_CHANNELPAGE  (IEEE154_SUPPORTED_CHANNELS >> 27)
 
@@ -240,5 +258,47 @@ enum {
   IEEE154_aUnitBackoffPeriod           = 20,
 };
 
+#ifdef TKN154_DEBUG
+
+  /****************************************************************** 
+   * ATTENTION! Debugging over serial is a lot of overhead. To
+   * keep it simple, here are the rules you have to follow when
+   * using the dbg_serial() command:
+   *
+   * - dbg_serial() is used like dbg(), i.e. you pass it at least
+   *   two strings, the first one describing the component/file,
+   *   the second is a format string (like in printf())
+   * - following the second string, there may be zero up to 
+   *   two parameters -- these must be (cast to) uint32_t! 
+   * - both strings must be constants (pointers always valid)
+   * - no data is sent over serial, unless dbg_serial_flush() is
+   *   called; try to call it when the system is idle or at least
+   *   when no time-critical operations are pending
+   * - on the PC use the printf java client to display the text
+   *   (see tinyos-2.x/apps/tests/TestPrintf/README.txt)
+   *
+   * The ASSERT(X) macro is used to test for errors. If X evaluates 
+   * to zero, then 3 leds start blinking simulataneously (about 2Hz)
+   * and the node *continuously* outputs over serial the filename+line
+   * where the (first) ASSERT has failed. This means, even if your
+   * TelosB was not attached to your PC while the ASSERT failed you
+   * can still pull the information out later.
+   *
+   * All dbg_serial() and ASSERT() statements are removed, if
+   * TKN154_DEBUG is not defined (which is the default).
+   **/
+
+  /* -> functions are defined in DebugP.nc */
+  void tkn154_assert(bool val, const char *filename, uint16_t line, const char *func);
+  void tkn154_dbg_serial(const char *filename, uint16_t line, ...);
+  void tkn154_dbg_serial_flush();
+  #define ASSERT(X) tkn154_assert(X, __FILE__,__LINE__,__FUNCTION__)
+  #define dbg_serial(m, ...) tkn154_dbg_serial(m, __LINE__,__VA_ARGS__)
+  #define dbg_serial_flush() tkn154_dbg_serial_flush()
+#else
+  #define ASSERT(X) if ((X)==0){}
+  #define dbg_serial(m, ...) dbg(m, __VA_ARGS__)
+  #define dbg_serial_flush()
+#endif
 
 #endif // __TKN154_MAC_H

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.6 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -54,14 +54,9 @@ module NoDeviceCfpP
     interface ResourceTransferred as TokenTransferred;
     interface ResourceRequested as TokenRequested;
     interface ResourceTransfer as TokenToBeaconSync;
-    interface GetNow<ieee154_reftime_t*> as CapStartRefTime; 
-    interface GetNow<bool> as IsSendingBeacons; 
-    interface GetNow<uint32_t> as CfpEnd; 
-    interface GetNow<uint8_t*> as GtsField; 
-    interface GetNow<uint32_t> as SfSlotDuration; 
-    interface GetNow<uint8_t> as FinalCapSlot; 
     interface Alarm<TSymbolIEEE802154,uint32_t> as CfpSlotAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as CfpEndAlarm;
+    interface SuperframeStructure as IncomingSF; 
     interface RadioTx;
     interface RadioRx;
     interface RadioOff;
@@ -94,8 +89,6 @@ implementation
     // the CFP has started, this component now owns the token -  
     // because GTS is not implemented we pass it back to the
     // BeaconTransmitP component
-    // Note: this component must not use the Resource
-    // interface to release the token!
     call TokenToBeaconSync.transfer();
   }
 
@@ -105,11 +98,9 @@ implementation
 
   async event void RadioOff.offDone() {}
 
-  async event void RadioTx.loadDone(){}
-  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime){}
-
-  async event void RadioRx.prepareDone(){} 
-  event message_t* RadioRx.received(message_t *frame, ieee154_reftime_t *timestamp){return frame;}
+  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result){}
+  async event void RadioRx.enableRxDone(){} 
+  event message_t* RadioRx.received(message_t *frame, const ieee154_timestamp_t *timestamp){return frame;} 
 
   async event void TokenRequested.requested()
   {
@@ -119,9 +110,4 @@ implementation
   }
 
   async event void TokenRequested.immediateRequested(){ }
-
-  async event void RadioTx.transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
-      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result){}
-  async event void RadioTx.transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
-      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParams, error_t result){} 
 }

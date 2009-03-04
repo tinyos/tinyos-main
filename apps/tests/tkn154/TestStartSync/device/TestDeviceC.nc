@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-07-21 15:18:17 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:00 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -58,7 +58,7 @@ module TestDeviceC
   void startApp();
 
   event void Boot.booted() {
-    call MLME_RESET.request(TRUE, BEACON_ENABLED_PAN);
+    call MLME_RESET.request(TRUE);
   }
   
   event void MLME_RESET.confirm(ieee154_status_t status)
@@ -69,13 +69,14 @@ module TestDeviceC
 
   void startApp()
   {
-    ieee154_phyChannelsSupported_t supportedChannels;
+    ieee154_phyChannelsSupported_t scanChannels;
     uint8_t scanDuration = BEACON_ORDER;
 
     // set the short address to whatever was passed 
     // as a parameter to make system ("make install,X")
     call MLME_SET.macShortAddress(TOS_NODE_ID); 
-    supportedChannels = call MLME_GET.phyChannelsSupported();
+    scanChannels = call MLME_GET.phyChannelsSupported();
+    //scanChannels = (uint32_t) 1 << RADIO_CHANNEL;
 
     // setting the macAutoRequest attribute to TRUE means
     // that during the scan beacons will not be signalled
@@ -83,7 +84,7 @@ module TestDeviceC
     call MLME_SET.macAutoRequest(TRUE);
     call MLME_SCAN.request  (
         PASSIVE_SCAN,           // ScanType
-        supportedChannels,      // ScanChannels
+        scanChannels,           // ScanChannels
         scanDuration,           // ScanDuration
         0x00,                   // ChannelPage
         0,                      // EnergyDetectListNumEntries

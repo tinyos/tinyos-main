@@ -27,10 +27,18 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * The MLME-SAP communication status primitive defines how the MLME
+ * communicates to the next higher layer about transmission status,
+ * when the transmission was instigated by a response primitive, and
+ * about security errors on incoming packets. (IEEE 802.15.4-2006,
+ * Sect. 7.1.12)
  */
 
 #include "TKN154.h"

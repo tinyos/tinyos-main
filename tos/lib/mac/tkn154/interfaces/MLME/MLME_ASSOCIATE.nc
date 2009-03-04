@@ -27,10 +27,15 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * MLME-SAP association primitives define how a device becomes
+ * associated with a PAN. (IEEE 802.15.4-2006, Sect. 7.1.3)
  */
 
 #include "TKN154.h"
@@ -51,6 +56,7 @@ interface MLME_ASSOCIATE {
    *                        of the associating device
    * @param security        The security options (NULL means security is 
    *                        disabled)
+   *
    * @return       IEEE154_SUCCESS if the request succeeded and a confirm event
    *               will be signalled, an appropriate error code otherwise 
    *               (no confirm event will be signalled in this case)
@@ -67,7 +73,7 @@ interface MLME_ASSOCIATE {
                         );
 
   /**
-   * Notification that a device has requested to associate with a PAN.
+   * Notification that a device has requested to associate with this PAN.
    *
    * @param DeviceAddress the 64-bit address of the requesting device
    * @param CapabilityInformation Specifies the operational capabilities
@@ -82,7 +88,7 @@ interface MLME_ASSOCIATE {
                         );
 
   /**
-   * Send a response to a device's request to associate
+   * Sends a response to a device that requested to associate with this PAN.
    *
    * @param DeviceAddress     The 64-bit address of the device to respond to
    * @param AssocShortAddress The short device address allocated by the
@@ -90,9 +96,10 @@ interface MLME_ASSOCIATE {
    * @param status          The status of the association attempt
    * @param security        The security options (NULL means security is 
    *                        disabled)
+   *
    * @return IEEE154_SUCCESS if the request succeeded and an indication event
    *         will be signalled through the MLME_COMM_STATUS interface later,  
-   *         otherwise an appropriate error code (no MLME_COMM_STATUS.indication
+   *         an appropriate error code otherwise (no MLME_COMM_STATUS.indication
    *         event will be signalled in this case)
    */
   command ieee154_status_t response (
@@ -103,7 +110,7 @@ interface MLME_ASSOCIATE {
                         );
 
   /**
-   * Confirmation of the association attempt.
+   * Confirms an association attempt.
    *
    * @param AssocShortAddress The short device address allocated by the
    *                          coordinator on successful association

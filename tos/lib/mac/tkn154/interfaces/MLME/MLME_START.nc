@@ -27,10 +27,18 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:42 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * MLME-SAP start primitives define how an FFD can request to start
+ * using a new superframe configuration in order to initiate a PAN,
+ * begin transmitting beacons on an already existing PAN, thus
+ * facilitating device discovery, or to stop transmitting beacons.
+ * (IEEE 802.15.4-2006, Sect. 7.1.14)
  */
 
 #include "TKN154.h"

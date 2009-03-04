@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:02:40 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:07 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -41,10 +41,13 @@ configuration CC2420TKN154C
     interface SplitControl;
     interface RadioRx;
     interface RadioTx;
+    interface SlottedCsmaCa;
+    interface UnslottedCsmaCa;
     interface EnergyDetection;
     interface RadioOff;
     interface Set<bool> as RadioPromiscuousMode;
     interface Timestamp;
+    interface GetNow<bool> as CCA;
   } uses {
     interface Notify<const void*> as PIBUpdate[uint8_t attributeID];
     interface LocalTime<T62500hz>;
@@ -55,7 +58,6 @@ configuration CC2420TKN154C
     interface ReferenceTime;
     interface ReliableWait;
     interface TimeCalc;
-    interface Leds;
     interface Random;
   }
 } implementation {
@@ -65,6 +67,8 @@ configuration CC2420TKN154C
   SplitControl = PHY;
   RadioRx = PHY;
   RadioTx = PHY;
+  SlottedCsmaCa = PHY;
+  UnslottedCsmaCa = PHY;
   RadioOff = PHY;
   EnergyDetection = PHY;
   PIBUpdate = PHY;
@@ -74,9 +78,9 @@ configuration CC2420TKN154C
   ReliableWait = PHY;
   ReferenceTime = PHY;
   TimeCalc = PHY;
+  CCA = PHY;
 
   PHY.Random = Random;
-  Leds = PHY.Leds;
 
   components CC2420ControlTransmitC;
   PHY.SpiResource -> CC2420ControlTransmitC;
@@ -84,7 +88,6 @@ configuration CC2420TKN154C
   PHY.CC2420Config -> CC2420ControlTransmitC;
   CC2420ControlTransmitC.StartupAlarm = Alarm2;
   FrameUtility = CC2420ControlTransmitC;
-  Leds = CC2420ControlTransmitC;
 
   PHY.TxControl -> CC2420ControlTransmitC;
   PHY.CC2420Tx -> CC2420ControlTransmitC;
@@ -96,7 +99,6 @@ configuration CC2420TKN154C
   PHY.RxControl -> CC2420ReceiveC;
   PHY.CC2420Rx -> CC2420ReceiveC.CC2420Rx;
   ReferenceTime = CC2420ReceiveC;
-  Leds = CC2420ReceiveC;
   FrameUtility = CC2420ReceiveC;
   CC2420ReceiveC.CC2420Config -> CC2420ControlTransmitC;
 }

@@ -11,7 +11,7 @@
 #else
 typedef struct {
   uint8_t control;  // stores length (lower 7 bits), top bit -> promiscuous mode
-  uint8_t mhr[23];
+  uint8_t mhr[23];  // maximum header size without security
 } ieee154_header_t;
 
 typedef struct {
@@ -21,9 +21,9 @@ typedef struct {
 } ieee154_metadata_t;
 #endif
 
-#ifdef TOSH_DATA_LENGTH
-#undef TOSH_DATA_LENGTH
-#endif
+//#ifdef TOSH_DATA_LENGTH
+//#undef TOSH_DATA_LENGTH
+//#endif
 // TOSH_DATA_LENGTH may be smaller than 118, but then we'll
 // not be able to receive/send all IEEE 802.15.4 packets 
 #define TOSH_DATA_LENGTH 118

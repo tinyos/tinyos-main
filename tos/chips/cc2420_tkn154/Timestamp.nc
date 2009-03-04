@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $ $Date: 2008-06-16 18:02:40 $ 
+ * $Revision: 1.2 $ $Date: 2009-03-04 18:31:12 $ 
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -69,7 +69,7 @@ interface Timestamp
   /**
    * Modify (overwrite) the contents of the MAC payload. This command must 
    * only be called in the context of a <code>transmittedSFD()<\code> event and it
-   * should return fast. Note: the smaller offset is the faster 
+   * should return fast. Note: the smaller the offset is the faster 
    * <code>transmittedSFD()<\code> must be finished (offset of zero might not work).
    *
    * @param token   the token signalled by <code>transmittedSFD()<\code>

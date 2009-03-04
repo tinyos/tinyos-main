@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2008-10-23 16:09:28 $
+ * $Revision: 1.5 $
+ * $Date: 2009-03-04 18:31:29 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -39,23 +39,19 @@ module RxEnableP
 {
   provides
   {
-    interface Init;
+    interface Init as Reset;
     interface MLME_RX_ENABLE;
     interface GetNow<bool> as IsRxEnableActive; 
     interface Notify<bool> as RxEnableStateChange;
   }
   uses
   {
-    interface Ieee802154Debug as Debug;
     interface Timer<TSymbolIEEE802154> as RxEnableTimer;
-    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface Get<ieee154_macPanCoordinator_t> as IsMacPanCoordinator;
+    interface SuperframeStructure as IncomingSuperframeStructure;
+    interface SuperframeStructure as OutgoingSuperframeStructure;
     interface GetNow<bool> as IsTrackingBeacons;
-    interface GetNow<uint32_t> as IncomingSfStart; 
-    interface GetNow<uint32_t> as IncomingBeaconInterval; 
     interface GetNow<bool> as IsSendingBeacons;
-    interface GetNow<uint32_t> as OutgoingSfStart; 
-    interface GetNow<uint32_t> as OutgoingBeaconInterval; 
     interface Notify<bool> as WasRxEnabled;
     interface TimeCalc;
   }
@@ -67,12 +63,12 @@ implementation
   uint32_t m_rxOnOffset;
   uint32_t m_rxOnAnchor;
   norace bool m_isRxEnabled;
-  bool m_isRxEnableConfirmPending;
+  bool m_confirmPending;
 
-  command error_t Init.init()
+  command error_t Reset.init()
   {
-    if (m_isRxEnableConfirmPending){
-      m_isRxEnableConfirmPending = FALSE;
+    if (m_confirmPending) {
+      m_confirmPending = FALSE;
       signal MLME_RX_ENABLE.confirm(IEEE154_SUCCESS);
     }
     m_isRxEnabled = FALSE;
@@ -80,70 +76,79 @@ implementation
     return SUCCESS;
   }
 
-/* ----------------------- MLME-RX-ENABLE ----------------------- */
+  /* ----------------------- MLME-RX-ENABLE ----------------------- */
 
   command ieee154_status_t MLME_RX_ENABLE.request  ( 
                           bool DeferPermit,
                           uint32_t RxOnTime,
-                          uint32_t RxOnDuration
-                        )
+                          uint32_t RxOnDuration)
   {
+    ieee154_status_t status = IEEE154_SUCCESS;
     uint32_t lastBeaconTime=0;
     uint32_t beaconInterval=0;
 
-    if (m_isRxEnableConfirmPending)
-      return IEEE154_TRANSACTION_OVERFLOW;
-    if (RxOnTime > 0xFFFFFF || RxOnDuration > 0xFFFFFF)
-      return IEEE154_INVALID_PARAMETER;
-    if (call IsBeaconEnabledPAN.getNow()){
-      if (call IsSendingBeacons.getNow() && call IsMacPanCoordinator.get()){
+    if (m_confirmPending)
+      status = IEEE154_TRANSACTION_OVERFLOW;
+    else if (IEEE154_BEACON_ENABLED_PAN && RxOnTime > 0xFFFFFF)
+      status = IEEE154_INVALID_PARAMETER;
+    else if (RxOnDuration > 0xFFFFFF)
+      status = IEEE154_INVALID_PARAMETER;
+    else if (IEEE154_BEACON_ENABLED_PAN) {
+      if (call IsSendingBeacons.getNow() && call IsMacPanCoordinator.get()) {
         // for OUTGOING SUPERFRAME
-        lastBeaconTime = call OutgoingSfStart.getNow();
-        beaconInterval = call OutgoingBeaconInterval.getNow();
-      } else if (call IsTrackingBeacons.getNow()){
+        lastBeaconTime = call OutgoingSuperframeStructure.sfStartTime();
+        beaconInterval = call OutgoingSuperframeStructure.sfSlotDuration() * 16;
+      } else if (call IsTrackingBeacons.getNow()) {
         // for INCOMING SUPERFRAME 
-        lastBeaconTime = call IncomingSfStart.getNow();
-        beaconInterval = call IncomingBeaconInterval.getNow();
+        lastBeaconTime = call IncomingSuperframeStructure.sfStartTime();
+        beaconInterval = call IncomingSuperframeStructure.sfSlotDuration() * 16;
       }
       if (beaconInterval == 0)
-        return IEEE154_PAST_TIME; // we're not even sending/receiving beacons
-      if (RxOnTime+RxOnDuration >= beaconInterval)
-        return IEEE154_ON_TIME_TOO_LONG;
-      if (call TimeCalc.hasExpired(lastBeaconTime, RxOnTime - IEEE154_aTurnaroundTime)){
+        status = IEEE154_PAST_TIME; // we're not even sending/receiving beacons
+      else if (RxOnTime+RxOnDuration >= beaconInterval)
+        status = IEEE154_ON_TIME_TOO_LONG;
+      else if (call TimeCalc.hasExpired(lastBeaconTime, RxOnTime - IEEE154_aTurnaroundTime)) {
         if (!DeferPermit)
-          return IEEE154_PAST_TIME;
+          status = IEEE154_PAST_TIME;
         else {
           // defer to next beacon
           RxOnTime += beaconInterval;
         }
       }
-      m_rxOnAnchor = lastBeaconTime;
-      m_rxOnOffset = RxOnTime;
+      if (status == IEEE154_SUCCESS) {
+        m_rxOnAnchor = lastBeaconTime;
+        m_rxOnOffset = RxOnTime;
+      }
     } else {
+      // this is a nonbeacon-enabled PAN
       m_rxOnAnchor = call RxEnableTimer.getNow();
       m_rxOnOffset = 0;
     }
-    m_rxOnDuration = RxOnDuration;      
-    m_isRxEnabled = FALSE;
-    m_isRxEnableConfirmPending = TRUE;
-    call RxEnableTimer.startOneShotAt(m_rxOnAnchor, m_rxOnOffset);
-    signal RxEnableStateChange.notify(TRUE);
-    return IEEE154_SUCCESS;
+
+    if (status == IEEE154_SUCCESS) {
+      m_rxOnDuration = RxOnDuration;      
+      m_isRxEnabled = FALSE;
+      m_confirmPending = TRUE;
+      call RxEnableTimer.startOneShotAt(m_rxOnAnchor, m_rxOnOffset);
+      signal RxEnableStateChange.notify(TRUE);
+    }
+    dbg_serial("RxEnableP", "MLME_RX_ENABLE.request -> result: %lu\n", (uint32_t) status);
+    return status;
   }
 
   event void RxEnableTimer.fired()
   {
-    if (!m_isRxEnabled){
+    if (!m_isRxEnabled) {
       m_isRxEnabled = TRUE;
       call RxEnableTimer.startOneShotAt(m_rxOnAnchor, m_rxOnOffset + m_rxOnDuration);
     } else {
       m_isRxEnabled = FALSE;
-      if (m_isRxEnableConfirmPending){
-        // this means we tried to enable rx, but never
-        // succeeded, because there were  "other 
-        // responsibilities" - but is SUCCESS really
+      if (m_confirmPending) {
+        // this means we tried to enable rx, but never succeeded, because
+        // there were  "other responsibilities" - but is SUCCESS really
         // an appropriate error code in this case?
-        m_isRxEnableConfirmPending = FALSE;
+        m_confirmPending = FALSE;
+        dbg_serial("RxEnableP", "never actually managed to switch to Rx mode\n");
         signal MLME_RX_ENABLE.confirm(IEEE154_SUCCESS);
       }
     }
@@ -155,15 +160,23 @@ implementation
     return m_isRxEnabled;
   }
 
-  event void WasRxEnabled.notify( bool val )
+  event void WasRxEnabled.notify(bool val)
   {
-    if (m_isRxEnabled && m_isRxEnableConfirmPending){
-      m_isRxEnableConfirmPending = FALSE;
+    if (m_isRxEnabled && m_confirmPending) {
+      m_confirmPending = FALSE;
+      dbg_serial("RxEnableP", "MLME_RX_ENABLE.confirm, radio is now in Rx mode\n");
       signal MLME_RX_ENABLE.confirm(IEEE154_SUCCESS);
     }
   }
 
-  command error_t RxEnableStateChange.enable(){return FAIL;}
-  command error_t RxEnableStateChange.disable(){return FAIL;}
-  default event void MLME_RX_ENABLE.confirm(ieee154_status_t status){}
+  command error_t RxEnableStateChange.enable() {return FAIL;}
+  command error_t RxEnableStateChange.disable() {return FAIL;}
+  default event void MLME_RX_ENABLE.confirm(ieee154_status_t status) {}
+  default async command uint32_t IncomingSuperframeStructure.sfStartTime() {return 0;}
+  default async command uint16_t IncomingSuperframeStructure.sfSlotDuration() {return 0;}
+  default async command uint32_t OutgoingSuperframeStructure.sfStartTime() {return 0;}
+  default async command uint16_t OutgoingSuperframeStructure.sfSlotDuration() {return 0;}
+  default async command bool IsTrackingBeacons.getNow() { return FALSE;}
+  default async command bool IsSendingBeacons.getNow() { return FALSE;}
+  default command ieee154_macPanCoordinator_t IsMacPanCoordinator.get() { return FALSE;}
 }

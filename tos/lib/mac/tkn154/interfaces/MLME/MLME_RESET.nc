@@ -27,10 +27,15 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:42 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * MLME-SAP reset primitives specify how to reset the MAC sublayer to
+ * its default values. (IEEE 802.15.4-2006, Sect. 7.1.9)
  */
 
 #include "TKN154.h"
@@ -38,11 +43,8 @@ interface MLME_RESET {
 
   /**
    * Allows the next higher layer to request that the MLME performs a
-   * reset operation. This command initializes the MAC and must be called 
-   * before calling any other MAC primitive. It extends the standard  
-   * interface definition by a parameter <tt>PANType</tt>, which defines 
-   * whether the device/coordinator will operate on a beacon-enabled PAN
-   * or on a nonbeacon-enabled PAN.
+   * reset operation. This command initializes the MAC and must be 
+   * called at least once before the MAC can be used.
    *
    * Two things are important:
    * (1) This command will fail while promiscuous mode is enabled 
@@ -58,8 +60,6 @@ interface MLME_RESET {
    *                      FALSE, the MAC sublayer is reset but all MAC PIB
    *                      attributes retain their values prior to the
    *                      generation of the reset primitive.
-   * @param PANType       Either BEACON_ENABLED_PAN for beacon-enabled PANs
-   *                      or NONBEACON_ENABLED_PAN for nonbeacon-enabled PANs
    *
    * @return       IEEE154_SUCCESS if the request succeeded and a confirm event
    *               will be signalled, an appropriate error code otherwise 
@@ -67,8 +67,7 @@ interface MLME_RESET {
    *                      
    */
   command ieee154_status_t request  (
-                          bool SetDefaultPIB,
-                          uint8_t PANType
+                          bool SetDefaultPIB
                         );
 
   /**

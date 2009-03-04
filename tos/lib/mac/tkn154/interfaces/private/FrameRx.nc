@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:33 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:44 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -34,8 +34,7 @@
 interface FrameRx
 {
   /**
-   * Received a frame buffer, returning a buffer for the signaling
-   * component to use for the next reception.
+   * Received a frame.
    *
    * @param   frame     the received frame
    * @return            a buffer to be used by the stack for the next 

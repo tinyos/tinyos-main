@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-11-25 09:35:08 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:24 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -54,7 +54,7 @@ implementation
 
   command error_t Reset.init()
   {
-    while (call Queue.size()){
+    while (call Queue.size()) {
       ieee154_txframe_t *txFrame = call Queue.dequeue();
       signal FrameTx.transmitDone[txFrame->client](txFrame, IEEE154_TRANSACTION_OVERFLOW);
     }
@@ -75,16 +75,16 @@ implementation
 
   task void txTask()
   {
-    if (!m_busy && call Queue.size()){
+    if (!m_busy && call Queue.size()) {
       ieee154_txframe_t *txFrame = call Queue.head();
-      if (txFrame->headerLen == 0){ 
+      if (txFrame->headerLen == 0) { 
         // was purged
         call Queue.dequeue();
         signal Purge.purgeDone(txFrame, IEEE154_SUCCESS);
         post txTask();
       }
       m_client = txFrame->client;
-      if (call FrameTxCsma.transmit(txFrame) == IEEE154_SUCCESS){
+      if (call FrameTxCsma.transmit(txFrame) == IEEE154_SUCCESS) {
         m_busy = TRUE;
       }
     }
@@ -106,16 +106,16 @@ implementation
     return signal FrameExtracted.received[m_client](frame);
   }
 
-  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status){}
+  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status) {}
 
   command ieee154_status_t Purge.purge(uint8_t msduHandle)
   {
     uint8_t qSize = call Queue.size(), i;
-    if (qSize > 1){
-      for (i=0; i<qSize-1; i++){
+    if (qSize > 1) {
+      for (i=0; i<qSize-1; i++) {
         ieee154_txframe_t *txFrame = call Queue.element(i);
         if (((txFrame->header->mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_DATA) &&
-          txFrame->handle == msduHandle){
+          txFrame->handle == msduHandle) {
           txFrame->headerLen = 0; // mark as invalid
           return IEEE154_SUCCESS;
         }
@@ -124,5 +124,5 @@ implementation
     return IEEE154_INVALID_HANDLE;
   }
   
-  default event void Purge.purgeDone(ieee154_txframe_t *txFrame, ieee154_status_t status){}
+  default event void Purge.purgeDone(ieee154_txframe_t *txFrame, ieee154_status_t status) {}
 }

@@ -27,11 +27,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-10-23 16:09:28 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
+ /** Empty placeholder component for RxEnableP. */
 
 #include "TKN154_PHY.h"
 #include "TKN154_MAC.h"
@@ -46,16 +48,12 @@ module NoRxEnableP
   }
   uses
   {
-    interface Ieee802154Debug as Debug;
     interface Timer<TSymbolIEEE802154> as RxEnableTimer;
-    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface Get<ieee154_macPanCoordinator_t> as IsMacPanCoordinator;
     interface GetNow<bool> as IsTrackingBeacons;
-    interface GetNow<uint32_t> as IncomingSfStart; 
-    interface GetNow<uint32_t> as IncomingBeaconInterval; 
     interface GetNow<bool> as IsSendingBeacons;
-    interface GetNow<uint32_t> as OutgoingSfStart; 
-    interface GetNow<uint32_t> as OutgoingBeaconInterval; 
+    interface SuperframeStructure as IncomingSuperframeStructure;
+    interface SuperframeStructure as OutgoingSuperframeStructure;
     interface Notify<bool> as WasRxEnabled;
     interface TimeCalc;
   }
@@ -65,7 +63,7 @@ implementation
 
   command error_t Init.init() { return SUCCESS; }
 
-/* ----------------------- MLME-RX-ENABLE ----------------------- */
+  /* ----------------------- MLME-RX-ENABLE ----------------------- */
 
   command ieee154_status_t MLME_RX_ENABLE.request  ( 
                           bool DeferPermit,

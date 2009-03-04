@@ -37,7 +37,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @version $Revision: 1.2 $ $Date: 2008-11-25 09:35:08 $
+ * @version $Revision: 1.3 $ $Date: 2009-03-04 18:31:04 $
  */
 
 interface CC2420Power {
@@ -99,7 +99,7 @@ interface CC2420Power {
 
   /**
    * Read RSSI from the radio. 
-   * @return SUCCESS if RSSI was read successfulyy, FAIL otherwise.
+   * @return SUCCESS if RSSI was read successfully, FAIL otherwise.
    */
   async command error_t rssi(int8_t *rssi);
  

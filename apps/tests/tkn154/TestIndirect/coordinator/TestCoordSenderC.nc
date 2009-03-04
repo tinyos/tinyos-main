@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-07-21 15:18:16 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:00 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -73,7 +73,7 @@ module TestCoordSenderC
           &deviceShortAddress,     // DstAddr,
           NULL                     // security
           );
-      call MLME_RESET.request(TRUE, BEACON_ENABLED_PAN);
+      call MLME_RESET.request(TRUE);
     }
   }
 

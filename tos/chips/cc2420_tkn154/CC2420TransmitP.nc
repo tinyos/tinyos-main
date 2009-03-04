@@ -42,7 +42,7 @@
  * Note: on TelosB there seems to be a problem if BackoffAlarm
  * is virtualized - i.e. BackoffAlarm should be a dedicated Alarm.
  *
- * @version $Revision: 1.3 $ $Date: 2008-11-25 09:35:08 $
+ * @version $Revision: 1.4 $ $Date: 2009-03-04 18:31:11 $
  */
 
 #include "CC2420.h"
@@ -59,6 +59,8 @@ module CC2420TransmitP {
   uses interface GeneralIO as CCA;
   uses interface GeneralIO as CSN;
   uses interface GeneralIO as SFD;
+  uses interface GeneralIO as FIFO;
+  uses interface GeneralIO as FIFOP;
 
   uses interface ChipSpiResource;
   uses interface CC2420Fifo as TXFIFO;
@@ -101,7 +103,7 @@ implementation {
   };
   
   norace ieee154_txframe_t *m_frame;
-  ieee154_reftime_t m_timestamp;
+  ieee154_timestamp_t m_timestamp;
   
   cc2420_transmit_state_t m_state = S_STOPPED;
   
@@ -230,6 +232,7 @@ implementation {
         return FAIL; // channel busy
       } else {
         m_state = S_SFD;
+        m_frame->metadata->timestamp = IEEE154_INVALID_TIMESTAMP; // pessimistic
         call BackoffAlarm.start(CC2420_ABORT_PERIOD); 
         return SUCCESS;
       }
@@ -259,8 +262,9 @@ implementation {
         sfdHigh = TRUE;
         call CaptureSFD.captureFallingEdge();
         // timestamp denotes time of first bit (chip) of PPDU on the channel
-        call CaptureTime.convert(time, &m_timestamp, -10); // offset: -10 for 5 bytes (preamble+SFD)
-        m_frame->metadata->timestamp = call ReferenceTime.toLocalTime(&m_timestamp);
+        // offset: -10 for 5 bytes (preamble+SFD)
+        if (call CaptureTime.convert(time, &m_timestamp, -10) == SUCCESS) 
+          m_frame->metadata->timestamp = call ReferenceTime.toLocalTime(&m_timestamp);
         call BackoffAlarm.stop();
         if ( call SFD.get() ) {
           break;
@@ -289,6 +293,7 @@ implementation {
         /** Fall Through because the next interrupt was already received */
         
       default:
+        // The CC2420 is in receive mode.
         if ( !m_receiving ) {
           sfdHigh = TRUE;
           call CaptureSFD.captureFallingEdge();
@@ -306,13 +311,8 @@ implementation {
         sfdHigh = FALSE;
         call CaptureSFD.captureRisingEdge();
         m_receiving = FALSE;
-#ifdef TKN154_PIERCEBOARD
-        if ( time - m_prev_time < 10*30 ) {
-#else
-        if ( time - m_prev_time < 10 ) {
-#endif
+        if (!call CaptureTime.isValidTimestamp(m_prev_time, time))
           call CC2420Receive.sfd_dropped();
-        }
         break;
       
       }
@@ -397,8 +397,11 @@ implementation {
   }
 
   void signalDone( bool ackFramePending, error_t err ) {
+    ieee154_timestamp_t *txTime = &m_timestamp;
     atomic m_state = S_STARTED;
-    signal CC2420Tx.sendDone( m_frame, &m_timestamp, ackFramePending, err );
+    if (m_frame->metadata->timestamp == IEEE154_INVALID_TIMESTAMP)
+      txTime = NULL;
+    signal CC2420Tx.sendDone( m_frame, txTime, ackFramePending, err );
     call ChipSpiResource.attemptRelease();
   }
 

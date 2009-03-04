@@ -27,16 +27,17 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 /** 
  * In slotted CSMA-CA frames must be sent on backoff boundaries (slot width:
- * 320 us). The TelosB platform lacks a clock with sufficient precision/
- * accuracy, i.e. for slotted CSMA-CA the timing is *not* standard compliant.
+ * 320 us). The TelosB platform lacks a clock with sufficient precision and
+ * accuracy, i.e. for slotted CSMA-CA the timing is *not* standard compliant
+ * (this code is experimental)
  */
 
 #include "TKN154_platform.h"
@@ -46,6 +47,7 @@ module TKN154TimingP
   provides interface ReliableWait;
   provides interface ReferenceTime;
   uses interface TimeCalc;
+  uses interface GetNow<bool> as CCA;
   uses interface Alarm<T62500hz,uint32_t> as SymbolAlarm;
   uses interface Leds;
 }
@@ -59,14 +61,12 @@ implementation
   };
   uint8_t m_state = S_WAIT_OFF;
 
-  async command void CaptureTime.convert(uint16_t time, ieee154_reftime_t *localTime, int16_t offset)
+  async command error_t CaptureTime.convert(uint16_t time, ieee154_timestamp_t *localTime, int16_t offset)
   {
     // TimerB is used for capturing, it is sourced by ACLK (32768Hz),
-    // we now need to convert the capture "time" into ieee154_reftime_t.
+    // we now need to convert the capture "time" into ieee154_timestamp_t.
     // With the 32768Hz quartz we don't have enough precision anyway,
     // so the code below generates a timestamp that is not accurate
-    // (deviating about +-50 microseconds, which could probably
-    // improved if we don't go through LocalTime)
     uint16_t tbr1, tbr2, delta;
     uint32_t now;
     atomic {
@@ -80,57 +80,51 @@ implementation
       delta = tbr1 - time;
     else
       delta = ~(time - tbr1) + 1;
-    *localTime = now - delta*2 + offset;
+    *localTime = now - delta * 2 + offset; /* one tick of TimerB ~ two symbols */
+    return SUCCESS;
   }
 
-  async command void ReliableWait.busyWait(uint16_t dt)
+  async command bool ReliableWait.ccaOnBackoffBoundary(ieee154_timestamp_t *slot0)
   {
-    uint16_t tbr1, tbr2, tbrVal;
-    atomic {
-      do {
-        tbr1 = TBR;
-        tbr2 = TBR;
-      } while (tbr1 != tbr2); // majority vote required (see msp430 manual)
-    }
-    tbrVal = tbr1 + dt;
-    atomic {
-      do {
-        tbr1 = TBR;
-        tbr2 = TBR;
-      } while (tbr1 != tbr2 || tbr1 != tbrVal); // majority vote required (see msp430 manual)
-    }
+    // There is no point in trying
+    return (call CCA.getNow() ? 20: 0);
   }
 
-  async command void ReliableWait.waitRx(ieee154_reftime_t *t0, uint16_t dt)
+  async command bool CaptureTime.isValidTimestamp(uint16_t risingSFDTime, uint16_t fallingSFDTime)
+  {
+    // smallest packet (ACK) takes 
+    // length field (1) + MPDU (5) = 6 byte => 12 * 16 us = 192 us 
+    return (fallingSFDTime - risingSFDTime) > 5;
+  }
+
+  async command void ReliableWait.waitRx(uint32_t t0, uint32_t dt)
   {
     if (m_state != S_WAIT_OFF){
-      call Leds.led0On();
+      ASSERT(0);
       return;
     }
     m_state = S_WAIT_RX;
-    call SymbolAlarm.startAt(*t0 - 12, dt); // subtract 12 symbols required for Rx calibration
-    //signal SymbolAlarm.fired();
+    call SymbolAlarm.startAt(t0 - 16, dt); // subtract 12 symbols required for Rx calibration
   }
 
-  async command void ReliableWait.waitTx(ieee154_reftime_t *t0, uint16_t dt)
+  async command void ReliableWait.waitTx(ieee154_timestamp_t *t0, uint32_t dt)
   {
     if (m_state != S_WAIT_OFF){
-      call Leds.led0On();
+      ASSERT(0);
       return;
     }
     m_state = S_WAIT_TX;
-    call SymbolAlarm.startAt(*t0 - 12, dt); // subtract 12 symbols required for Tx calibration
+    call SymbolAlarm.startAt(*t0 - 16, dt); // subtract 12 symbols required for Tx calibration
   }
     
-  async command void ReliableWait.waitBackoff(ieee154_reftime_t *t0, uint16_t dt)
+  async command void ReliableWait.waitBackoff(uint32_t dt)
   {
     if (m_state != S_WAIT_OFF){
-      call Leds.led0On();
+      ASSERT(0);
       return;
     }
     m_state = S_WAIT_BACKOFF;
-    call SymbolAlarm.startAt(*t0, dt);
-    //signal SymbolAlarm.fired();
+    call SymbolAlarm.start(dt);
   }
 
   async event void SymbolAlarm.fired() 
@@ -140,26 +134,18 @@ implementation
       case S_WAIT_RX: m_state = S_WAIT_OFF; signal ReliableWait.waitRxDone(); break;
       case S_WAIT_TX: m_state = S_WAIT_OFF; signal ReliableWait.waitTxDone(); break;
       case S_WAIT_BACKOFF: m_state = S_WAIT_OFF; signal ReliableWait.waitBackoffDone(); break;
-      default: call Leds.led0On(); break;
+      default: ASSERT(0); break;
     }
   }
 
-  async command void ReliableWait.busyWaitSlotBoundaryCCA(ieee154_reftime_t *t0, uint16_t *dt) { }
-  async command void ReliableWait.busyWaitSlotBoundaryTx(ieee154_reftime_t *t0, uint16_t dt) 
-  { 
-    // we cannot meet the timing constraints, but there should at least roughly
-    // be 20 symbols between the first and the seconds CCA
-    call ReliableWait.busyWait(20);
+  async command void ReferenceTime.getNow(ieee154_timestamp_t* timestamp, uint16_t dt)
+  {
+    *timestamp = call SymbolAlarm.getNow() + dt;
   }
 
-  async command void ReferenceTime.getNow(ieee154_reftime_t* reftime, uint16_t dt)
+  async command uint32_t ReferenceTime.toLocalTime(const ieee154_timestamp_t* timestamp)
   {
-    *reftime = call SymbolAlarm.getNow() + dt;
-  }
-
-  async command uint32_t ReferenceTime.toLocalTime(ieee154_reftime_t* refTime)
-  {
-    return *refTime;
+    return *timestamp;
   } 
 
 }

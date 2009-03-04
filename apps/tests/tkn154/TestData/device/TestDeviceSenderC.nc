@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-07-21 15:18:16 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:00 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -73,7 +73,7 @@ module TestDeviceSenderC
     payloadRegion = call Packet.getPayload(&m_frame, m_payloadLen);
     if (m_payloadLen <= call Packet.maxPayloadLength()){
       memcpy(payloadRegion, payload, m_payloadLen);
-      call MLME_RESET.request(TRUE, BEACON_ENABLED_PAN);
+      call MLME_RESET.request(TRUE);
     }
   }
 
@@ -110,6 +110,7 @@ module TestDeviceSenderC
                            0                       // security
                         );
   }
+  bool m_ready;
 
   event message_t* MLME_BEACON_NOTIFY.indication (message_t* frame)
   {
@@ -117,6 +118,8 @@ module TestDeviceSenderC
     ieee154_phyCurrentPage_t page = call MLME_GET.phyCurrentPage();
     ieee154_macBSN_t beaconSequenceNumber = call BeaconFrame.getBSN(frame);
 
+    if (m_ready)
+      post packetSendTask();
     if (beaconSequenceNumber & 1)
       call Leds.led2On();
     else
@@ -158,6 +161,7 @@ module TestDeviceSenderC
           NULL                            // security
           );
       post packetSendTask(); 
+      m_ready = TRUE;
     } else
       startApp();
   }
@@ -169,11 +173,12 @@ module TestDeviceSenderC
           &m_frame,                         // frame,
           m_payloadLen,                     // payloadLength,
           0,                                // msduHandle,
-          TX_OPTIONS_ACK                    // TxOptions,
+          TX_OPTIONS_ACK // TxOptions,
           ) == IEEE154_SUCCESS)
       m_sending = TRUE;
   }
 
+  uint8_t m_useLeds = TRUE;
   event void MCPS_DATA.confirm    (
                           message_t *msg,
                           uint8_t msduHandle,
@@ -184,7 +189,8 @@ module TestDeviceSenderC
     m_sending = FALSE;
     if (status == IEEE154_SUCCESS && m_ledCount++ == 20){
       m_ledCount = 0;
-      call Leds.led1Toggle();
+      if (m_useLeds)
+        call Leds.led1Toggle();
     }
     post packetSendTask(); 
   }
@@ -196,7 +202,9 @@ module TestDeviceSenderC
                           uint8_t ChannelPage,
                           ieee154_security_t *security)
   {
-    startApp();
+    m_useLeds = FALSE;
+    call Leds.led1Off();
+    //startApp();
   }
 
   event message_t* MCPS_DATA.indication (message_t* frame)

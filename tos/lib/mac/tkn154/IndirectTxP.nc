@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.4 $
+ * $Date: 2009-03-04 18:31:24 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -53,7 +53,6 @@ module IndirectTxP
     interface Timer<TSymbolIEEE802154> as IndirectTxTimeout;
     interface TimeCalc;
     interface Leds;
-    interface Ieee802154Debug as Debug;
   }
 }
 implementation
@@ -117,11 +116,11 @@ implementation
       return 0;
     pendingAddrField[0] = 0;
     adrPtr = (nxle_uint16_t *) &pendingAddrField[1];
-    for (i=0; i<NUM_MAX_PENDING; i++){
+    for (i=0; i<NUM_MAX_PENDING; i++) {
       if (!m_txFrameTable[i])
         continue;
       txFrame = m_txFrameTable[i];
-      if ((txFrame->header->mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == FC2_DEST_MODE_SHORT){
+      if ((txFrame->header->mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == FC2_DEST_MODE_SHORT) {
         *adrPtr++ = *((nxle_uint16_t*) &txFrame->header->mhr[MHR_INDEX_ADDRESS + sizeof(ieee154_macPANId_t)]);
       } else if ((txFrame->header->mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == FC2_DEST_MODE_EXTENDED)
         longAdrPtr[k++] = &(txFrame->header->mhr[MHR_INDEX_ADDRESS + sizeof(ieee154_macPANId_t)]);
@@ -130,7 +129,6 @@ implementation
       for (j=0; j<8; j++)
         pendingAddrField[1 + 2*m_numShortPending + i*8 + j] = longAdrPtr[i][j];
     pendingAddrField[0] = m_numShortPending | (m_numExtPending << 4);
-    call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_BEACON_ASSEMBLY, len,0,0);
     return len;
   }
 
@@ -143,8 +141,8 @@ implementation
   {
     // send a frame through indirect transmission
     uint8_t i;
-    if (m_numTableEntries >= NUM_MAX_PENDING){
-      call Debug.log(DEBUG_LEVEL_IMPORTANT, IndirectTxP_OVERFLOW, 0,0,0);
+    if (m_numTableEntries >= NUM_MAX_PENDING) {
+      dbg_serial("IndirectTxP", "Overflow\n");
       return IEEE154_TRANSACTION_OVERFLOW;
     }
     txFrame->client = client;
@@ -160,7 +158,7 @@ implementation
       m_numExtPending++;
     if (!call IndirectTxTimeout.isRunning())
       call IndirectTxTimeout.startOneShot(getPersistenceTime());
-    call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_NOTIFIED, 0,0,0);
+    dbg_serial("IndirectTxP", "Preparing a transmission.\n");
     signal PendingAddrSpecUpdated.notify(TRUE);
     return IEEE154_SUCCESS;
   }
@@ -185,7 +183,7 @@ implementation
       src += 10;
     if (!((mhr[0] & FC1_PAN_ID_COMPRESSION) && (mhr[1] & FC2_DEST_MODE_SHORT)))
       src += 2;
-    for (i=0; i<NUM_MAX_PENDING; i++){
+    for (i=0; i<NUM_MAX_PENDING; i++) {
       if (!m_txFrameTable[i])
         continue;
       else {
@@ -204,8 +202,9 @@ implementation
         }
       }
     }
-    call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_REQUESTED, NUM_MAX_PENDING-i,i,*src);
-    if (i != NUM_MAX_PENDING){
+    dbg_serial("IndirectTxP", "Received a request, i=%lu, MAX=%lu\n",
+        (uint32_t) i,(uint32_t) NUM_MAX_PENDING);
+    if (i != NUM_MAX_PENDING) {
       // found a matching frame, mark it for transmission
       m_txFrameTable[i]->client |= SEND_THIS_FRAME;
       post tryCoordCapTxTask();
@@ -220,14 +219,14 @@ implementation
     // iterate over the queued frames and transmit them in the CAP 
     // (if they are marked for transmission)
     uint8_t i;
-    if (m_pendingTxFrame == NULL && m_numTableEntries){
+    if (m_pendingTxFrame == NULL && m_numTableEntries) {
       for (i=0; i<NUM_MAX_PENDING; i++)
-        if (m_txFrameTable[i] && (m_txFrameTable[i]->client & SEND_THIS_FRAME)){
+        if (m_txFrameTable[i] && (m_txFrameTable[i]->client & SEND_THIS_FRAME)) {
           // TODO: set frame pending bit, if there's more data for this destination
           m_pendingTxFrame = m_txFrameTable[i];
           m_client = m_txFrameTable[i]->client;
-          if (call CoordCapTx.transmit(m_txFrameTable[i]) == IEEE154_SUCCESS){
-            call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_SEND_NOW, 0,0,0);
+          if (call CoordCapTx.transmit(m_txFrameTable[i]) == IEEE154_SUCCESS) {
+            dbg_serial("IndirectTxP", "Started a transmission.\n");
           } else {
             m_pendingTxFrame = NULL;
             post tryCoordCapTxTask();
@@ -250,8 +249,8 @@ implementation
     uint8_t i;
 
     for (i=0; i<NUM_MAX_PENDING; i++)
-      if (m_txFrameTable[i] && m_txFrameTable[i] != m_pendingTxFrame){
-        if (call TimeCalc.hasExpired(m_txFrameTable[i]->metadata->timestamp, persistenceTime)){ 
+      if (m_txFrameTable[i] && m_txFrameTable[i] != m_pendingTxFrame) {
+        if (call TimeCalc.hasExpired(m_txFrameTable[i]->metadata->timestamp, persistenceTime)) { 
           ieee154_txframe_t *txFrame = m_txFrameTable[i];
           txFrame->client &= ~SEND_THIS_FRAME;
           m_txFrameTable[i] = NULL;
@@ -262,11 +261,11 @@ implementation
             m_numExtPending--;
           signal FrameTx.transmitDone[txFrame->client](txFrame, IEEE154_TRANSACTION_EXPIRED);
           signal PendingAddrSpecUpdated.notify(TRUE);
-        } else if (call TimeCalc.timeElapsed(m_txFrameTable[i]->metadata->timestamp, now) > dt){
+        } else if (call TimeCalc.timeElapsed(m_txFrameTable[i]->metadata->timestamp, now) > dt) {
           dt = call TimeCalc.timeElapsed(m_txFrameTable[i]->metadata->timestamp, now);
         }
       }
-    if (dt != 0){
+    if (dt != 0) {
       if (dt > persistenceTime)
         dt = persistenceTime;
       call IndirectTxTimeout.startOneShot(persistenceTime - dt);
@@ -278,7 +277,7 @@ implementation
     uint8_t i;
     // TODO: if CSMA-CA algorithm failed, then frame shall still remain in transaction queue
     for (i=0; i<NUM_MAX_PENDING; i++)
-      if (m_txFrameTable[i] == txFrame){
+      if (m_txFrameTable[i] == txFrame) {
         m_txFrameTable[i] = NULL; // slot is now empty
         break;
       }
@@ -293,11 +292,12 @@ implementation
       m_numExtPending--;    
     signal FrameTx.transmitDone[txFrame->client](txFrame, status);
     post tryCoordCapTxTask();
-    call Debug.log(DEBUG_LEVEL_INFO, IndirectTxP_SEND_DONE, status,m_numTableEntries,0);
+    dbg_serial("IndirectTxP", "transmitDone()\n");
   }
 
-  command ieee154_txframe_t* GetIndirectTxFrame.get(){ return m_pendingTxFrame;}
-  command error_t PendingAddrSpecUpdated.enable(){return FAIL;}
-  command error_t PendingAddrSpecUpdated.disable(){return FAIL;}
-  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status){}
+  command ieee154_txframe_t* GetIndirectTxFrame.get() { return m_pendingTxFrame;}
+  command error_t PendingAddrSpecUpdated.enable() {return FAIL;}
+  command error_t PendingAddrSpecUpdated.disable() {return FAIL;}
+  default event void PendingAddrSpecUpdated.notify( bool val ) {return;}
+  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status) {}
 }

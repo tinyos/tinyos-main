@@ -128,7 +128,7 @@ implementation {
   async command error_t ResourceTransferControl.transfer(uint8_t fromClient, uint8_t toClient)
   {
     atomic {
-      if (call ArbiterInfo.userId() == fromClient){
+      if (call ArbiterInfo.userId() == fromClient) {
         call ResourceConfigure.unconfigure[fromClient]();
         call ResourceConfigure.configure[resId]();
         resId = toClient;

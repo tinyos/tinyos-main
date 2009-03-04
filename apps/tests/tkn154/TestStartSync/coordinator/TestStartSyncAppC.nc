@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-07-21 15:18:17 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:00 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -37,14 +37,14 @@ configuration TestStartSyncAppC
 {
 } implementation {
 
-  components MainC, LedsC, Ieee802154MacC as Ieee802154MacC;
+  components MainC, LedsC, Ieee802154BeaconEnabledC as MAC;
   components TestCoordC as App;
 
   MainC.Boot <- App;
-  App.MLME_START -> Ieee802154MacC;
-  App.IEEE154TxBeaconPayload -> Ieee802154MacC;
+  App.MLME_START -> MAC;
+  App.IEEE154TxBeaconPayload -> MAC;
   App.Leds -> LedsC;
-  App.MLME_RESET -> Ieee802154MacC;
-  App.MLME_SET -> Ieee802154MacC;
-  App.MLME_GET -> Ieee802154MacC;
+  App.MLME_RESET -> MAC;
+  App.MLME_SET -> MAC;
+  App.MLME_GET -> MAC;
 }

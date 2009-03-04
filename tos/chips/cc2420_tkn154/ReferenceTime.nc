@@ -25,20 +25,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:02:40 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 interface ReferenceTime
 {
   /** 
-   * Gets current reference time plus dt symbols.
+   * Gets current time and adds dt symbols.
    */
-  async command void getNow(ieee154_reftime_t* reftime, uint16_t dt);
+  async command void getNow(ieee154_timestamp_t* time, uint16_t dt);
 
   /** 
    * Converts reference time to local time.
    */
-  async command uint32_t toLocalTime(ieee154_reftime_t* refTime);
+  async command uint32_t toLocalTime(const ieee154_timestamp_t* time);
 }

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:56 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -38,36 +38,26 @@
 
 /**************************************************** 
  * The following constants define guard times on Tmote Sky / TelosB. 
- * All values are in symbol time (1 symbol = 16 us)
+ * All values are in symbol time (1 symbol = 16 us) and assume the 
+ * default system configuration (MCLK running at 4.6 MHz)
  */
 
 enum {
-  // guard time to give up the token before actual end of CAP/CFP
-  IEEE154_ACTIVE_PERIOD_GUARD_TIME = 300,
+  // the expected maximum time between calling a transmit() operation and
+  // the radio putting the first byte on the channel assuming no CSMA-CA
+  IEEE154_RADIO_TX_DELAY = 400,
 
-  // the expected time for a RadioTx.prepare() operation to execute (return)
-  IEEE154_RADIO_TX_PREPARE_DELAY = 220,
+  // the expected maximum time between calling a receive() operation and the 
+  // the radio actually being put in receive mode
+  IEEE154_RADIO_RX_DELAY = 400,
 
-  // the *guaranteed maximum* time between calling a RadioTx.transmit() and the
-  // first PPDU bit being put onto the channel, assuming that RadioTx.transmit() 
-  // is called inside an atomic block
-  IEEE154_RADIO_TX_SEND_DELAY = 100,
-
-  // the expected time for a RadioRx.prepare() operation to execute (return)
-  IEEE154_RADIO_RX_PREPARE_DELAY = 300,
-
-  // the *guaranteed maximum* time between calling a RadioTx.transmit() and the
-  // first PPDU bit being put onto the channel, assuming that RadioTx.transmit() 
-  // is called inside an atomic block
-  IEEE154_RADIO_RX_DELAY = 100,
-
-  // defines at what time the MAC payload for a beacon frame is assembled prior
-  // to the next scheduled beacon transmission time; must be smaller than both
-  // the beacon interval and IEEE154_RADIO_TX_PREPARE_DELAY
+  // defines at what time the MAC payload for a beacon frame is assembled before
+  // the next scheduled beacon transmission time; the value must be smaller than 
+  // the beacon interval plus the time for preparing the Tx operation
   BEACON_PAYLOAD_UPDATE_INTERVAL = 2500, 
 };
 
-typedef uint32_t ieee154_reftime_t;
+typedef uint32_t ieee154_timestamp_t;
 
 #endif
 

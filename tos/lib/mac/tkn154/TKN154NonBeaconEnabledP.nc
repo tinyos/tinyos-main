@@ -1,0 +1,341 @@
+/*
+ * Copyright (c) 2008, Technische Universitaet Berlin
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions 
+ * are met:
+ * - Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright 
+ *   notice, this list of conditions and the following disclaimer in the 
+ *   documentation and/or other materials provided with the distribution.
+ * - Neither the name of the Technische Universitaet Berlin nor the names 
+ *   of its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+ * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
+ * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * - Revision -------------------------------------------------------------
+ * $Revision: 1.1 $
+ * $Date: 2009-03-04 18:31:37 $
+ * @author Jan Hauer <hauer@tkn.tu-berlin.de>
+ * ========================================================================
+ */
+
+#include "TKN154_PHY.h"
+#include "TKN154_MAC.h"
+#include "TKN154_PIB.h"
+
+#define IEEE154_BEACON_ENABLED_PAN FALSE
+
+// TODO: check the wiring!!
+
+configuration TKN154NonBeaconEnabledP
+{
+  provides
+  {
+    /* MCPS-SAP */
+    interface MCPS_DATA;
+    interface MCPS_PURGE;
+    interface Packet;
+
+    /* MLME-SAP */
+    interface MLME_ASSOCIATE;
+    interface MLME_BEACON_NOTIFY;
+    interface MLME_COMM_STATUS;
+    interface MLME_DISASSOCIATE;
+    interface MLME_GET;
+    interface MLME_ORPHAN;
+    interface MLME_POLL;
+    interface MLME_RESET;
+    interface MLME_RX_ENABLE;
+    interface MLME_SCAN;
+    interface MLME_SET;
+    interface MLME_START;
+
+    interface Notify<const void*> as PIBUpdate[uint8_t attributeID];
+    interface IEEE154Frame;
+    interface IEEE154BeaconFrame;
+    interface SplitControl as PromiscuousMode;
+    interface Get<uint64_t> as GetLocalExtendedAddress;
+    interface TimeCalc;
+    interface FrameUtility;
+
+  } uses {
+
+    interface RadioRx;
+    interface RadioTx;
+    interface RadioOff;
+    interface UnslottedCsmaCa;
+    interface EnergyDetection;
+    interface SplitControl as PhySplitControl;
+    interface Set<bool> as RadioPromiscuousMode;
+
+    interface Timer<TSymbolIEEE802154> as Timer1;
+    interface Timer<TSymbolIEEE802154> as Timer2;
+    interface Timer<TSymbolIEEE802154> as Timer3;
+    interface Timer<TSymbolIEEE802154> as Timer4;
+    interface Timer<TSymbolIEEE802154> as Timer5;
+
+    interface LocalTime<TSymbolIEEE802154>;
+    interface Random;
+    interface Leds;
+  }
+}
+implementation
+{
+  components DataP,
+             PibP,
+             RadioControlP,
+             IndirectTxP,
+             PollP,
+
+#ifndef IEEE154_SCAN_DISABLED
+             ScanP,
+#else
+             NoScanP as ScanP,
+#endif
+
+#ifndef IEEE154_ASSOCIATION_DISABLED
+             AssociateP,
+#else
+             NoAssociateP as AssociateP,
+#endif
+
+#ifndef IEEE154_DISASSOCIATION_DISABLED
+             DisassociateP,
+#else
+             NoDisassociateP as DisassociateP,
+#endif
+             new FrameDispatchQueueP() as FrameDispatchQueueP,
+             UnslottedFrameDispatchP as FrameDispatchP,
+
+#ifndef IEEE154_RXENABLE_DISABLED
+             RxEnableP,
+#else
+             NoRxEnableP as RxEnableP,
+#endif
+
+
+#ifndef IEEE154_PROMISCUOUS_MODE_DISABLED
+             PromiscuousModeP,
+#else
+             NoPromiscuousModeP as PromiscuousModeP,
+#endif
+
+#ifndef IEEE154_COORD_REALIGNMENT_DISABLED
+             CoordRealignmentP,
+#else
+             NoCoordRealignmentP as CoordRealignmentP,
+#endif
+
+             new PoolC(ieee154_txframe_t, TXFRAME_POOL_SIZE) as TxFramePoolP,
+             new PoolC(ieee154_txcontrol_t, TXCONTROL_POOL_SIZE) as TxControlPoolP,
+             new QueueC(ieee154_txframe_t*, CAP_TX_QUEUE_SIZE) as FrameDispatchQueueC;
+
+  components MainC;
+
+  /* MCPS */
+  MCPS_DATA = DataP; 
+  MCPS_PURGE = DataP; 
+
+  /* MLME */
+  MLME_START = FrameDispatchP;
+  MLME_ASSOCIATE = AssociateP;
+  MLME_DISASSOCIATE = DisassociateP;
+  MLME_BEACON_NOTIFY = ScanP;
+  MLME_COMM_STATUS = AssociateP;
+  MLME_COMM_STATUS = CoordRealignmentP;
+  MLME_GET = PibP;
+  MLME_ORPHAN = CoordRealignmentP;
+  MLME_POLL = PollP;
+  MLME_RESET = PibP;
+  MLME_RX_ENABLE = RxEnableP;
+  MLME_SCAN = ScanP;
+  MLME_SET = PibP;
+  IEEE154Frame = PibP;
+  IEEE154BeaconFrame = PibP;
+  PromiscuousMode = PromiscuousModeP;
+  GetLocalExtendedAddress = PibP.GetLocalExtendedAddress;
+  Packet = PibP; 
+  TimeCalc = PibP;
+  FrameUtility = PibP;
+  
+  /* ----------------------- Scanning (MLME-SCAN) ----------------------- */
+
+  components new RadioClientC() as ScanRadioClient;
+  PibP.MacReset -> ScanP;
+  ScanP.MLME_GET -> PibP;
+  ScanP.MLME_SET -> PibP.MLME_SET;
+  ScanP.EnergyDetection = EnergyDetection;
+  ScanP.RadioRx -> ScanRadioClient;
+  ScanP.RadioTx -> ScanRadioClient;
+  ScanP.Frame -> PibP;
+  ScanP.BeaconFrame -> PibP;
+  ScanP.RadioOff -> ScanRadioClient;
+  ScanP.ScanTimer = Timer1;
+  ScanP.TxFramePool -> TxFramePoolP;
+  ScanP.TxControlPool -> TxControlPoolP;
+  ScanP.Token -> ScanRadioClient;
+  ScanP.Leds = Leds;
+  ScanP.FrameUtility -> PibP;
+
+  /* -------------------- Association (MLME-ASSOCIATE) -------------------- */
+
+  PibP.MacReset -> AssociateP;
+  AssociateP.AssociationRequestRx -> FrameDispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_ASSOCIATION_REQUEST];
+  AssociateP.AssociationRequestTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  AssociateP.AssociationResponseExtracted -> FrameDispatchP.FrameExtracted[FC1_FRAMETYPE_CMD + CMD_FRAME_ASSOCIATION_RESPONSE];
+  AssociateP.AssociationResponseTx -> IndirectTxP.FrameTx[unique(INDIRECT_TX_CLIENT)];
+  AssociateP.DataRequest -> PollP.DataRequest[ASSOCIATE_POLL_CLIENT];
+  AssociateP.ResponseTimeout = Timer2;
+  AssociateP.TxFramePool -> TxFramePoolP;
+  AssociateP.TxControlPool -> TxControlPoolP;
+  AssociateP.MLME_GET -> PibP;
+  AssociateP.MLME_SET -> PibP.MLME_SET;
+  AssociateP.FrameUtility -> PibP;
+  AssociateP.Frame -> PibP;
+  AssociateP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;
+
+  /* --------------- Disassociation (MLME-DISASSOCIATE) --------------- */
+
+  PibP.MacReset -> DisassociateP;
+  DisassociateP.DisassociationIndirectTx -> IndirectTxP.FrameTx[unique(INDIRECT_TX_CLIENT)];
+  DisassociateP.DisassociationDirectTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  DisassociateP.DisassociationToCoord -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  DisassociateP.DisassociationExtractedFromCoord -> 
+    FrameDispatchP.FrameExtracted[FC1_FRAMETYPE_CMD + CMD_FRAME_DISASSOCIATION_NOTIFICATION];
+  DisassociateP.DisassociationRxFromDevice -> 
+    FrameDispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_DISASSOCIATION_NOTIFICATION];
+  DisassociateP.TxFramePool -> TxFramePoolP;
+  DisassociateP.TxControlPool -> TxControlPoolP;
+  DisassociateP.MLME_GET -> PibP;
+  DisassociateP.FrameUtility -> PibP;
+  DisassociateP.Frame -> PibP;
+  DisassociateP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;
+
+  /* ------------------ Data Transmission (MCPS-DATA) ------------------- */
+
+  DataP.DeviceCapTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  DataP.CoordCapTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  DataP.DeviceCapRx -> PollP.DataRx;                          
+  DataP.DeviceCapRx -> PromiscuousModeP.FrameRx;              
+  DataP.TxFramePool -> TxFramePoolP;
+  DataP.IndirectTx -> IndirectTxP.FrameTx[unique(INDIRECT_TX_CLIENT)];
+  DataP.FrameUtility -> PibP;
+  DataP.Frame -> PibP;
+  DataP.PurgeDirect -> FrameDispatchQueueP;
+  DataP.PurgeIndirect -> IndirectTxP;
+  DataP.MLME_GET -> PibP;
+  DataP.Packet -> PibP;
+  DataP.Leds = Leds;
+
+  /* ------------------------ Polling (MLME-POLL) ----------------------- */
+
+  PibP.MacReset -> PollP;
+  PollP.PollTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  PollP.DataExtracted -> FrameDispatchP.FrameExtracted[FC1_FRAMETYPE_DATA];
+  PollP.FrameUtility -> PibP;
+  PollP.TxFramePool -> TxFramePoolP;
+  PollP.TxControlPool -> TxControlPoolP;
+  PollP.MLME_GET -> PibP;
+  PollP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;
+
+  /* ---------------------- Indirect transmission ----------------------- */
+
+  PibP.MacReset -> IndirectTxP;
+  IndirectTxP.CoordCapTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  IndirectTxP.DataRequestRx -> FrameDispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_DATA_REQUEST];
+  IndirectTxP.MLME_GET -> PibP;
+  IndirectTxP.FrameUtility -> PibP;
+  IndirectTxP.IndirectTxTimeout = Timer3;
+  IndirectTxP.TimeCalc -> PibP;
+  IndirectTxP.Leds = Leds;
+
+  /* ---------------------------- Realignment --------------------------- */
+
+  PibP.MacReset -> CoordRealignmentP;
+  CoordRealignmentP.CoordRealignmentTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  CoordRealignmentP.OrphanNotificationRx -> FrameDispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_ORPHAN_NOTIFICATION];
+  CoordRealignmentP.FrameUtility -> PibP;
+  CoordRealignmentP.Frame -> PibP;
+  CoordRealignmentP.TxFramePool -> TxFramePoolP;
+  CoordRealignmentP.TxControlPool -> TxControlPoolP;
+  CoordRealignmentP.MLME_GET -> PibP;
+  CoordRealignmentP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;
+
+  /* --------------------- FrameDispatchP -------------------- */
+
+  PibP.FrameDispatchReset -> FrameDispatchP;
+  PibP.FrameDispatchQueueReset -> FrameDispatchQueueP;
+  FrameDispatchQueueP.Queue -> FrameDispatchQueueC;
+  FrameDispatchQueueP.FrameTxCsma -> FrameDispatchP;
+  
+  components new RadioClientC() as FrameDispatchRadioClient;
+  PibP.FrameDispatchReset -> FrameDispatchP;
+  FrameDispatchP.IndirectTxWaitTimer = Timer4;
+  FrameDispatchP.Token -> FrameDispatchRadioClient;
+  FrameDispatchP.SetMacSuperframeOrder -> PibP.SetMacSuperframeOrder;
+  FrameDispatchP.SetMacPanCoordinator -> PibP.SetMacPanCoordinator;
+  FrameDispatchP.IsTokenRequested -> FrameDispatchRadioClient;
+  FrameDispatchP.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
+  FrameDispatchP.GetIndirectTxFrame -> IndirectTxP;
+  FrameDispatchP.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
+  FrameDispatchP.FrameUtility -> PibP;
+  FrameDispatchP.UnslottedCsmaCa -> FrameDispatchRadioClient;
+  FrameDispatchP.RadioRx -> FrameDispatchRadioClient;
+  FrameDispatchP.RadioOff -> FrameDispatchRadioClient;
+  FrameDispatchP.MLME_GET -> PibP;
+  FrameDispatchP.MLME_SET -> PibP.MLME_SET;
+  FrameDispatchP.TimeCalc -> PibP;
+  FrameDispatchP.Leds = Leds;
+
+  /* -------------------------- promiscuous mode ------------------------ */
+
+  components new RadioClientC() as PromiscuousModeRadioClient;
+  PibP.MacReset -> PromiscuousModeP;
+  PromiscuousModeP.Token -> PromiscuousModeRadioClient;
+  PromiscuousModeP.PromiscuousRx -> PromiscuousModeRadioClient;
+  PromiscuousModeP.RadioOff -> PromiscuousModeRadioClient;
+  PromiscuousModeP.RadioPromiscuousMode = RadioPromiscuousMode;
+
+  /* --------------------------- MLME-RX-ENABLE  ------------------------ */
+
+  PibP.MacReset -> RxEnableP;
+  RxEnableP.TimeCalc -> PibP.TimeCalc;
+  RxEnableP.WasRxEnabled -> FrameDispatchP.WasRxEnabled;
+  RxEnableP.WasRxEnabled -> FrameDispatchP.WasRxEnabled;
+  RxEnableP.RxEnableTimer = Timer5;
+
+  /* ------------------------------- PIB -------------------------------- */
+
+  components new RadioClientC() as PibRadioClient;
+  PIBUpdate = PibP;
+  MainC.SoftwareInit -> PibP.LocalInit;
+  PibP.RadioControl = PhySplitControl;
+  PibP.Random = Random; 
+  PibP.PromiscuousModeGet -> PromiscuousModeP; 
+  PibP.LocalTime = LocalTime;
+  PibP.Token -> PibRadioClient;
+  PibP.RadioOff -> PibRadioClient;
+
+  /* ------------------------- Radio Control ---------------------------- */
+
+  RadioControlP.PhyTx = RadioTx;
+  RadioControlP.PhyUnslottedCsmaCa = UnslottedCsmaCa;
+  RadioControlP.PhyRx = RadioRx;
+  RadioControlP.PhyRadioOff = RadioOff;
+  RadioControlP.RadioPromiscuousMode -> PromiscuousModeP;
+  RadioControlP.Leds = Leds;
+}

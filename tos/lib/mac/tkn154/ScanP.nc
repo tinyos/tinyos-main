@@ -27,10 +27,14 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:31 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * This module is responsible for channel scanning.
  */
 
 #include "TKN154_MAC.h"
@@ -82,6 +86,7 @@ implementation
   bool m_busy = FALSE;
 
   void nextIteration();
+  void continueScanRequest();
   task void startTimerTask();
   task void nextIterationTask();
 
@@ -89,22 +94,22 @@ implementation
   {
     // triggered by MLME_RESET; remember: Init will not be called
     // while this component owns the Token, so the worst case is 
-    // that a MLME_SCAN was accepted (returned IEEE154_SUCCESS)
-    // but the Token.granted() has not been signalled 
-    if (m_busy){
+    // that a MLME_SCAN was accepted (returned IEEE154_SUCCESS)  
+    // but the Token.granted() has not been signalled            
+    if (m_busy) {
       m_currentChannelNum = 27;
       nextIteration(); // signals confirm and resets state
     }
     return SUCCESS;
   }
 
-/* ----------------------- MLME-SCAN ----------------------- */
-/* "The MLME-SCAN.request primitive is used to initiate a channel scan over a
- * given list of channels. A device can use a channel scan to measure the
- * energy on the channel, search for the coordinator with which it associated,
- * or search for all coordinators transmitting beacon frames within the POS of
- * the scanning device." (IEEE 802.15.4-2006 Sect. 7.1.11.1) 
- **/
+  /* ----------------------- MLME-SCAN ----------------------- */
+  /* "The MLME-SCAN.request primitive is used to initiate a channel scan over a
+   * given list of channels. A device can use a channel scan to measure the
+   * energy on the channel, search for the coordinator with which it associated,
+   * or search for all coordinators transmitting beacon frames within the POS of
+   * the scanning device." (IEEE 802.15.4-2006 Sect. 7.1.11.1) 
+   **/
 
   command ieee154_status_t MLME_SCAN.request  (
                           uint8_t ScanType,
@@ -115,24 +120,23 @@ implementation
                           int8_t* EnergyDetectList,
                           uint8_t PANDescriptorListNumEntries,
                           ieee154_PANDescriptor_t* PANDescriptorList,
-                          ieee154_security_t *security
-                        )
+                          ieee154_security_t *security)
   {
     ieee154_status_t status = IEEE154_SUCCESS;
     ieee154_phyChannelsSupported_t supportedChannels = call MLME_GET.phyChannelsSupported();
     ieee154_txcontrol_t *txControl = NULL;
 
-    if (m_busy){
+    if (m_busy) {
       status = IEEE154_SCAN_IN_PROGRESS;
-    } else if (security && security->SecurityLevel){
+    } else if (security && security->SecurityLevel) {
       status = IEEE154_UNSUPPORTED_SECURITY;
-    } if ( (ScanType > 3) || (ScanType < 3 && ScanDuration > 14) || 
-            (ChannelPage != IEEE154_SUPPORTED_CHANNELPAGE) ||
-            !(supportedChannels & ScanChannels) ||
-            (EnergyDetectListNumEntries && PANDescriptorListNumEntries) ||
-            (EnergyDetectList != NULL && PANDescriptorList != NULL) ||
-            (EnergyDetectListNumEntries && EnergyDetectList == NULL) ||
-            (PANDescriptorListNumEntries && PANDescriptorList == NULL)) {
+    } if ((ScanType > 3) || (ScanType < 3 && ScanDuration > 14) || 
+          (ChannelPage != IEEE154_SUPPORTED_CHANNELPAGE) ||
+          !(supportedChannels & ScanChannels) ||
+          (EnergyDetectListNumEntries && PANDescriptorListNumEntries) ||
+          (EnergyDetectList != NULL && PANDescriptorList != NULL) ||
+          (EnergyDetectListNumEntries && EnergyDetectList == NULL) ||
+          (PANDescriptorListNumEntries && PANDescriptorList == NULL)) {
       status = IEEE154_INVALID_PARAMETER;
     } else if (ScanType != ENERGY_DETECTION_SCAN &&
         !(m_txFrame = call TxFramePool.get())) { 
@@ -156,7 +160,7 @@ implementation
       m_currentChannelBit = 1;
       m_currentChannelNum = 0;
       m_resultIndex = 0;
-      if (ScanType == ENERGY_DETECTION_SCAN){
+      if (ScanType == ENERGY_DETECTION_SCAN) {
         m_resultList = EnergyDetectList;
         m_resultListNumEntries = EnergyDetectListNumEntries;
       } else {
@@ -167,20 +171,35 @@ implementation
         m_resultListNumEntries = 0;
       call Token.request();
     }
+    dbg_serial("ScanP", "MLME_SCAN.request -> result: %lu\n", (uint32_t) status);
     return status;
   }
 
   event void Token.granted()
   {
+    if (call RadioOff.isOff())
+      continueScanRequest();
+    else 
+      ASSERT(call RadioOff.off() == SUCCESS);
+    // will continue in continueScanRequest()
+  }
+
+  task void continueScanRequestTask() 
+  { 
+    continueScanRequest(); 
+  }
+
+  void continueScanRequest()
+  {
     uint8_t i;
     ieee154_macPANId_t bcastPANID = 0xFFFF;
     ieee154_macDSN_t dsn = call MLME_GET.macDSN();
 
-    if (!m_busy){
+    if (!m_busy) {
       call Token.release();
       return;
     }
-    switch (m_scanType){
+    switch (m_scanType) {
       case ACTIVE_SCAN:
         // beacon request frame
         m_txFrame->header->mhr[MHR_INDEX_FC1] = FC1_FRAMETYPE_CMD;
@@ -219,7 +238,7 @@ implementation
     error_t radioStatus = SUCCESS;
     uint32_t supportedChannels = IEEE154_SUPPORTED_CHANNELS;
     atomic {
-      while (!(m_scanChannels & m_currentChannelBit & supportedChannels) && m_currentChannelNum < 27){
+      while (!(m_scanChannels & m_currentChannelBit & supportedChannels) && m_currentChannelNum < 27) {
         m_unscannedChannels |= m_currentChannelBit;
         m_currentChannelBit <<= 1;
         m_currentChannelNum++;
@@ -227,26 +246,25 @@ implementation
     }
     if (m_currentChannelNum < 27) {
       call MLME_SET.phyCurrentChannel(m_currentChannelNum);
-      switch (m_scanType){
+      dbg_serial("ScanP", "Scanning channel %lu...\n", (uint32_t) m_currentChannelNum);
+      switch (m_scanType) {
         case PASSIVE_SCAN:
-          radioStatus = call RadioRx.prepare();
+          radioStatus = call RadioRx.enableRx(0, 0);
           break;
-        case ACTIVE_SCAN:
+        case ACTIVE_SCAN: // fall through
         case ORPHAN_SCAN:
-          radioStatus = call RadioTx.load(m_txFrame);
+          radioStatus = call RadioTx.transmit(m_txFrame, NULL, 0);
           break;
         case ENERGY_DETECTION_SCAN:
           radioStatus = call EnergyDetection.start(m_scanDuration);
           break;
       }
-      if (radioStatus != SUCCESS){
-        call Leds.led0On();
-      }
+      ASSERT(radioStatus == SUCCESS);
     } else {
-      ieee154_status_t result = IEEE154_SUCCESS;
       // we're done
+      ieee154_status_t result = IEEE154_SUCCESS;
       m_currentChannelBit <<= 1; 
-      while (m_currentChannelBit){
+      while (m_currentChannelBit) {
         m_unscannedChannels |= m_currentChannelBit;
         m_currentChannelBit <<= 1;
       }
@@ -255,7 +273,7 @@ implementation
         result = IEEE154_NO_BEACON;
       if (m_scanType == PASSIVE_SCAN || m_scanType == ACTIVE_SCAN) 
         call MLME_SET.macPANId(m_PANID);
-      if (m_txFrame != NULL){
+      if (m_txFrame != NULL) {
         call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) m_txFrame->header - offsetof(ieee154_txcontrol_t, header)));
         call TxFramePool.put(m_txFrame);
       }
@@ -263,6 +281,7 @@ implementation
       if (call Token.isOwner())
         call Token.release();
       m_busy = FALSE;
+      dbg_serial("ScanP", "MLME_SCAN.confirm()\n");
       signal MLME_SCAN.confirm (
           result,
           m_scanType,
@@ -273,12 +292,16 @@ implementation
           ((m_scanType == ACTIVE_SCAN ||
            m_scanType == PASSIVE_SCAN) && m_macAutoRequest) ? m_resultIndex : 0,
           ((m_scanType == ACTIVE_SCAN ||
-           m_scanType == PASSIVE_SCAN) && m_macAutoRequest) ? (ieee154_PANDescriptor_t*) m_resultList : NULL
-          );
+           m_scanType == PASSIVE_SCAN) && m_macAutoRequest) ? (ieee154_PANDescriptor_t*) m_resultList : NULL);
     }
   }
+  
+  async event void RadioRx.enableRxDone()
+  {
+    post startTimerTask();
+  }
 
-/* ----------------------- EnergyDetection ----------------------- */
+  /* ----------------------- EnergyDetection ----------------------- */
 
   event void EnergyDetection.done(error_t status, int8_t EnergyLevel)
   {
@@ -293,37 +316,26 @@ implementation
     call RadioOff.off();
   }
 
-/* ----------------------- Active/Orphan scan ----------------------- */
-
-  async event void RadioTx.loadDone()
-  {
-    call RadioTx.transmit(NULL, 0); // transmit immediately
-  }
+  /* ----------------------- Active/Orphan scan ----------------------- */
   
-  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime)
+  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result)
   {
-    if (call RadioRx.prepare() != SUCCESS) // must succeed
-      call Leds.led0On();
+    ASSERT(call RadioRx.enableRx(0, 0) == SUCCESS);
   }
 
-/* -------- Receive events (for  Active/Passive/Orphan scan) -------- */
+  /* -------- Receive events (for  Active/Passive/Orphan scan) -------- */
 
-  async event void RadioRx.prepareDone()
-  {
-    call RadioRx.receive(NULL, 0);
-    post startTimerTask();
-  }
-
-  event message_t* RadioRx.received(message_t *frame, ieee154_reftime_t *timestamp)
+  event message_t* RadioRx.received(message_t *frame, const ieee154_timestamp_t *timestamp)
   {
     atomic {
       if (!m_busy)
         return frame;
-      if (m_scanType == ORPHAN_SCAN){
+      if (m_scanType == ORPHAN_SCAN) {
         if (!m_resultIndex)
           if ((MHR(frame)[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_CMD &&
-              ((uint8_t*)call Frame.getPayload(frame))[0] == CMD_FRAME_COORDINATOR_REALIGNMENT){
+              ((uint8_t*)call Frame.getPayload(frame))[0] == CMD_FRAME_COORDINATOR_REALIGNMENT) {
             m_resultIndex++; 
+            dbg_serial("ScanP", "Received coordinator realignment frame.\n");
             m_currentChannelNum = 27; // terminate scan
             call RadioOff.off();
           }
@@ -336,34 +348,36 @@ implementation
               frame, 
               m_currentChannelNum, 
               IEEE154_SUPPORTED_CHANNELPAGE,
-              &((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex]) == SUCCESS){
+              &((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex]) == SUCCESS) {
+
           // check uniqueness: both PAN ID and source address must not be in a previously received beacon
           uint8_t i;
+          ieee154_PANDescriptor_t* descriptor = (ieee154_PANDescriptor_t*) m_resultList;
           if (m_resultIndex)
             for (i=0; i<m_resultIndex; i++)
-              if ( ((ieee154_PANDescriptor_t*) m_resultList)[i].CoordPANId == 
-                   ((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex].CoordPANId &&
-                   ((ieee154_PANDescriptor_t*) m_resultList)[i].CoordAddrMode == 
-                   ((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex].CoordAddrMode)
-                if ( (((ieee154_PANDescriptor_t*) m_resultList)[i].CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
-                      ((ieee154_PANDescriptor_t*) m_resultList)[i].CoordAddress.shortAddress ==
-                      ((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex].CoordAddress.shortAddress) ||
-                     (((ieee154_PANDescriptor_t*) m_resultList)[i].CoordAddrMode == ADDR_MODE_EXTENDED_ADDRESS &&
-                      ((ieee154_PANDescriptor_t*) m_resultList)[i].CoordAddress.extendedAddress ==
-                      ((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex].CoordAddress.extendedAddress) )
+              if (descriptor[i].CoordPANId == descriptor[m_resultIndex].CoordPANId &&
+                   descriptor[i].CoordAddrMode == descriptor[m_resultIndex].CoordAddrMode)
+                if ((descriptor[i].CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
+                      descriptor[i].CoordAddress.shortAddress ==
+                      descriptor[m_resultIndex].CoordAddress.shortAddress) ||
+                     (descriptor[i].CoordAddrMode == ADDR_MODE_EXTENDED_ADDRESS &&
+                      descriptor[i].CoordAddress.extendedAddress ==
+                      descriptor[m_resultIndex].CoordAddress.extendedAddress))
                   return frame; // not unique
+          dbg_serial("ScanP", "Received beacon, source: 0x%lx, channel: %lu.\n", 
+              (uint32_t) descriptor[m_resultIndex].CoordAddress.shortAddress, (uint32_t) m_currentChannelNum);
           m_resultIndex++;
-          if (m_resultIndex == m_resultListNumEntries){
+          if (m_resultIndex == m_resultListNumEntries) {
             m_currentChannelNum = 27; // terminate scan
             call RadioOff.off();
           }
         }
-      }
+      } //  PASSIVE_SCAN / ACTIVE_SCAN
     }
     return frame;
   }
 
-/* ----------------------- Common ----------------------- */
+  /* ----------------------- Common ----------------------- */
 
   task void startTimerTask() 
   { 
@@ -377,9 +391,13 @@ implementation
 
   async event void RadioOff.offDone()
   {
-    m_currentChannelBit <<= 1;
-    m_currentChannelNum++;    
-    post nextIterationTask();
+    if (m_currentChannelNum == 0)
+      post continueScanRequestTask();
+    else {
+      m_currentChannelBit <<= 1;
+      m_currentChannelNum++;    
+      post nextIterationTask();
+    }
   }
 
   task void nextIterationTask()
@@ -387,13 +405,7 @@ implementation
     nextIteration();
   }
 
-  async event void RadioTx.transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
-      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result){}
-
-  async event void RadioTx.transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
-      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParams, error_t result){}  
-
-  default event message_t* MLME_BEACON_NOTIFY.indication ( message_t *beaconFrame ){return beaconFrame;}
+  default event message_t* MLME_BEACON_NOTIFY.indication (message_t *beaconFrame) {return beaconFrame;}
   default event void MLME_SCAN.confirm    (
                           ieee154_status_t status,
                           uint8_t ScanType,
@@ -402,6 +414,5 @@ implementation
                           uint8_t EnergyDetectListNumEntries,
                           int8_t* EnergyDetectList,
                           uint8_t PANDescriptorListNumEntries,
-                          ieee154_PANDescriptor_t* PANDescriptorList
-                        ){}
+                          ieee154_PANDescriptor_t* PANDescriptorList) {}
 }

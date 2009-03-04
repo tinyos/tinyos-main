@@ -35,7 +35,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @version $Revision: 1.1 $ $Date: 2008-06-16 18:02:40 $
+ * @version $Revision: 1.2 $ $Date: 2009-03-04 18:31:06 $
  */
 
 interface CC2420Receive {
@@ -45,7 +45,7 @@ interface CC2420Receive {
    *
    * @param time at which the capture happened.
    */
-  async command void sfd( ieee154_reftime_t *time );
+  async command void sfd( ieee154_timestamp_t *time );
 
   /**
    * Notification that the packet has been dropped by the radio

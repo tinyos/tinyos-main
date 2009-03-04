@@ -27,10 +27,16 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:42 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * MLME-SAP orphan notification primitives define how a coordinator
+ * can issue a notification of an orphaned device. (IEEE 802.15.4-2006,
+ * Sect. 7.1.8)
  */
 
 #include "TKN154.h" 

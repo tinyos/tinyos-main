@@ -27,10 +27,17 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:31 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:42 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
+ */
+
+/** 
+ * The MLME-SAP GTS management primitives define how GTSs are
+ * requested and maintained. A device wishing to use these primitives
+ * and GTSs in general will already be tracking the beacons of its PAN
+ * coordinator. (IEEE 802.15.4-2006, Sect. 7.1.7)
  */
 
 #include "TKN154.h"

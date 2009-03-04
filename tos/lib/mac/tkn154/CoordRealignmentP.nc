@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:00:27 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:22 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -67,6 +67,7 @@ implementation
     ORPHAN_RESPONSE,
     BEACON_REALIGNMENT,
   };
+
   uint8_t m_payload[9];
   bool m_busy = FALSE;
   void destroyRealignmentFrame(ieee154_txframe_t *frame);
@@ -96,8 +97,7 @@ implementation
         call Frame.getSrcAddr(frame, &srcAddress) == SUCCESS)    
       signal MLME_ORPHAN.indication (
                           srcAddress.extendedAddress,
-                          NULL // security
-                        );
+                          NULL);
     return frame;
   }
 
@@ -105,8 +105,7 @@ implementation
                           uint64_t OrphanAddress,
                           uint16_t ShortAddress,
                           bool AssociatedMember,
-                          ieee154_security_t *security
-                        )
+                          ieee154_security_t *security)
   {
     ieee154_txframe_t *txFrame;
     ieee154_status_t txStatus;
@@ -125,7 +124,7 @@ implementation
       txFrame->payload[5] = call MLME_GET.phyCurrentChannel();
       *((nxle_uint16_t*) &txFrame->payload[6]) = ShortAddress;
       txFrame->payloadLen = 8;
-      if ((txStatus = call CoordRealignmentTx.transmit(txFrame)) != IEEE154_SUCCESS){
+      if ((txStatus = call CoordRealignmentTx.transmit(txFrame)) != IEEE154_SUCCESS) {
         m_busy = FALSE;
         destroyRealignmentFrame(txFrame);
       }
@@ -140,8 +139,8 @@ implementation
     uint8_t dstAddrMode;
     ieee154_address_t srcAddress;
 
-    if ((txFrame = call TxFramePool.get()) != NULL){
-      if ((txControl = call TxControlPool.get()) == NULL){
+    if ((txFrame = call TxFramePool.get()) != NULL) {
+      if ((txControl = call TxControlPool.get()) == NULL) {
         call TxFramePool.put(txFrame);
         txFrame = NULL;
       } else {
@@ -150,7 +149,7 @@ implementation
         txFrame->payload = m_payload;
         txFrame->header->mhr[MHR_INDEX_FC1] = FC1_FRAMETYPE_CMD;
         txFrame->header->mhr[MHR_INDEX_FC2] = FC2_SRC_MODE_EXTENDED;
-        if (type == ORPHAN_RESPONSE){
+        if (type == ORPHAN_RESPONSE) {
           txFrame->header->mhr[MHR_INDEX_FC2] |= FC2_DEST_MODE_EXTENDED;
           dstAddrMode = ADDR_MODE_EXTENDED_ADDRESS;
           txFrame->header->mhr[MHR_INDEX_FC1] |= FC1_ACK_REQUEST;
@@ -185,7 +184,8 @@ implementation
     uint8_t *mhr = MHR(txFrame);
     ieee154_address_t dstAddr;
     ieee154_address_t srcAddr;
-    if (m_busy){
+
+    if (m_busy) {
       call FrameUtility.convertToNative(&dstAddr.extendedAddress, &mhr[MHR_INDEX_ADDRESS+2]);
       call FrameUtility.convertToNative(&srcAddr.extendedAddress, &mhr[MHR_INDEX_ADDRESS+2+8+2]);
       signal MLME_COMM_STATUS.indication (
@@ -195,8 +195,7 @@ implementation
           ADDR_MODE_EXTENDED_ADDRESS, // DstAddrMode
           dstAddr,
           status,
-          NULL  //security
-          );
+          NULL);
       call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) txFrame->header - offsetof(ieee154_txcontrol_t, header)));
       call TxFramePool.put(txFrame);
       m_busy = FALSE;
@@ -210,11 +209,9 @@ implementation
                           uint8_t DstAddrMode,
                           ieee154_address_t DstAddr,
                           ieee154_status_t status,
-                          ieee154_security_t *security
-                        ){}
+                          ieee154_security_t *security) {}
 
   default event void MLME_ORPHAN.indication (
                           uint64_t OrphanAddress,
-                          ieee154_security_t *security
-                        ){}
+                          ieee154_security_t *security) {}
 }

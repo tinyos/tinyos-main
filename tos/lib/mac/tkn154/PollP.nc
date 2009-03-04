@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:26 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -52,7 +52,6 @@ module PollP
     interface FrameUtility;
     interface Pool<ieee154_txframe_t> as TxFramePool;
     interface Pool<ieee154_txcontrol_t> as TxControlPool;
-    interface Ieee802154Debug as Debug;
     interface MLME_GET;
     interface Get<uint64_t> as LocalExtendedAddress;
   }
@@ -78,25 +77,24 @@ implementation
                           uint8_t coordAddrMode,
                           uint16_t coordPANID,
                           ieee154_address_t coordAddress,
-                          ieee154_security_t *security      
-                        )
+                          ieee154_security_t *security)
   {
     ieee154_txframe_t *txFrame;
     ieee154_txcontrol_t *txControl;
     uint8_t srcAddrMode = 2;
-    ieee154_status_t txStatus = IEEE154_SUCCESS;
+    ieee154_status_t status = IEEE154_SUCCESS;
     uint8_t coordAddressLE[8]; // little endian is what we want
 
     if (security && security->SecurityLevel)
-      txStatus = IEEE154_UNSUPPORTED_SECURITY;
+      status = IEEE154_UNSUPPORTED_SECURITY;
     else if (coordAddrMode < 2 || coordAddrMode > 3 || coordPANID == 0xFFFF)
-      txStatus = IEEE154_INVALID_PARAMETER; 
+      status = IEEE154_INVALID_PARAMETER; 
     else if (!(txFrame = call TxFramePool.get()))
       // none of the predefined return value really fits
-      txStatus = IEEE154_TRANSACTION_OVERFLOW; 
-    else if (!(txControl = call TxControlPool.get())){
+      status = IEEE154_TRANSACTION_OVERFLOW; 
+    else if (!(txControl = call TxControlPool.get())) {
       call TxFramePool.put(txFrame);
-      txStatus = IEEE154_TRANSACTION_OVERFLOW;
+      status = IEEE154_TRANSACTION_OVERFLOW;
     } else {
       txFrame->header = &txControl->header;
       txFrame->metadata = &txControl->metadata;
@@ -108,14 +106,16 @@ implementation
       if (call MLME_GET.macShortAddress() >= 0xFFFE)
         srcAddrMode = 3;
       buildDataRequestFrame(coordAddrMode, coordPANID, coordAddressLE, srcAddrMode, txFrame);
-      if ((txStatus = call PollTx.transmit(txFrame)) != IEEE154_SUCCESS){
+      if ((status = call PollTx.transmit(txFrame)) != IEEE154_SUCCESS) {
         call TxFramePool.put(txFrame);
         call TxControlPool.put(txControl);
-        call Debug.log(DEBUG_LEVEL_IMPORTANT, PollP_ALLOC_FAIL1, 0, 0, 0);
+        status = IEEE154_TRANSACTION_OVERFLOW;
       } else 
         m_numPending++;
     }
-    return txStatus;
+
+    dbg_serial("PollP", "MLME_POLL.request -> result: %lu\n", (uint32_t) status);
+    return status;
   }
 
   command ieee154_status_t DataRequest.poll[uint8_t client](uint8_t CoordAddrMode, 
@@ -124,12 +124,13 @@ implementation
     ieee154_txframe_t *txFrame;
     ieee154_txcontrol_t *txControl;
     ieee154_status_t status = IEEE154_TRANSACTION_OVERFLOW;
-    call Debug.log(DEBUG_LEVEL_INFO, PollP_INTERNAL_POLL, CoordAddrMode, client, m_numPending);
-    if (client == SYNC_POLL_CLIENT && m_numPending != 0){
+
+    dbg_serial("PollP", "InternalPoll\n");
+    if (client == SYNC_POLL_CLIENT && m_numPending != 0) {
       // no point in auto-requesting if user request is pending
       signal DataRequest.pollDone[client]();
       return IEEE154_SUCCESS;
-    } else if ((txFrame = call TxFramePool.get())){
+    } else if ((txFrame = call TxFramePool.get())) {
       if (!(txControl = call TxControlPool.get()))
         call TxFramePool.put(txFrame);
       else {
@@ -138,10 +139,10 @@ implementation
         txFrame->handle = client;
         buildDataRequestFrame(CoordAddrMode, CoordPANId, 
             CoordAddressLE, srcAddrMode, txFrame);
-        if ((status = call PollTx.transmit(txFrame)) != IEEE154_SUCCESS){
+        if ((status = call PollTx.transmit(txFrame)) != IEEE154_SUCCESS) {
           call TxControlPool.put(txControl);
           call TxFramePool.put(txFrame);
-          call Debug.log(DEBUG_LEVEL_IMPORTANT, PollP_ALLOC_FAIL2, 0, 0, 0);
+          dbg_serial("PollP", "Overflow\n");
         } else 
           m_numPending++;
       }
@@ -187,26 +188,25 @@ implementation
 
   event message_t* DataExtracted.received(message_t* frame, ieee154_txframe_t *txFrame)
   {
-    if (!txFrame){
-      call Debug.log(DEBUG_LEVEL_CRITICAL, PollP_INTERNAL_ERROR, 0, 0, 0);
+    if (!txFrame) {
+      dbg_serial("PollP", "Internal error\n");
       return frame;
     } else
-      call Debug.log(DEBUG_LEVEL_INFO, PollP_SUCCESS, 0, 0, 0);
+      dbg_serial("PollP", "Extracted data successfully\n");
     if (txFrame->handle == HANDLE_MLME_POLL_REQUEST)
       signal MLME_POLL.confirm(IEEE154_SUCCESS);
     else
       signal DataRequest.pollDone[txFrame->handle]();
     txFrame->handle = HANDLE_MLME_POLL_SUCCESS; // mark as processed
     // TODO: check if pending bit is set (then initiate another POLL)
-    call Debug.log(DEBUG_LEVEL_IMPORTANT, PollP_RX, txFrame->handle, 0, 0);
     return signal DataRx.received(frame);
   }
 
   event void PollTx.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
   {
-    call Debug.log(DEBUG_LEVEL_IMPORTANT, PollP_TXDONE, status, txFrame->handle, 0);
+    dbg_serial("PollP", "transmitDone()\n");
     m_numPending--;
-    if (txFrame->handle != HANDLE_MLME_POLL_SUCCESS){
+    if (txFrame->handle != HANDLE_MLME_POLL_SUCCESS) {
       // didn't receive a DATA frame from the coordinator
       if (status == IEEE154_SUCCESS) // TODO: can this happen if a frame other than DATA was extracted?
         status = IEEE154_NO_DATA;
@@ -218,6 +218,6 @@ implementation
     call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) txFrame->header - offsetof(ieee154_txcontrol_t, header)));
     call TxFramePool.put(txFrame);
   }
-  default event void MLME_POLL.confirm(ieee154_status_t status){}
-  default event void DataRequest.pollDone[uint8_t client](){}
+  default event void MLME_POLL.confirm(ieee154_status_t status) {}
+  default event void DataRequest.pollDone[uint8_t client]() {}
 }

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2008-11-25 09:35:08 $
+ * $Revision: 1.5 $
+ * $Date: 2009-03-04 18:31:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -60,7 +60,6 @@ module AssociateP
     interface FrameUtility;
     interface IEEE154Frame as Frame;
     interface Get<uint64_t> as LocalExtendedAddress;
-    interface Ieee802154Debug as Debug;
   }
 }
 implementation
@@ -87,7 +86,7 @@ implementation
     return SUCCESS;
   }
 
-/* ------------------- MLME_ASSOCIATE Request ------------------- */
+  /* ------------------- MLME_ASSOCIATE Request ------------------- */
 
   command ieee154_status_t MLME_ASSOCIATE.request  (
                           uint8_t LogicalChannel,
@@ -96,8 +95,7 @@ implementation
                           uint16_t CoordPANID,
                           ieee154_address_t CoordAddress,
                           ieee154_CapabilityInformation_t CapabilityInformation,
-                          ieee154_security_t *security
-                        )
+                          ieee154_security_t *security)
   {
     ieee154_status_t status = IEEE154_SUCCESS;
     ieee154_txframe_t *txFrame=0;
@@ -112,11 +110,11 @@ implementation
       status = IEEE154_INVALID_PARAMETER;
     else if (m_associationOngoing || !(txFrame = call TxFramePool.get()))
       status = IEEE154_TRANSACTION_OVERFLOW;
-    else if (!(txControl = call TxControlPool.get())){
+    else if (!(txControl = call TxControlPool.get())) {
       call TxFramePool.put(txFrame);
       status = IEEE154_TRANSACTION_OVERFLOW;
     }
-    if (status == IEEE154_SUCCESS){
+    if (status == IEEE154_SUCCESS) {
       m_assocRespStatus = IEEE154_NO_DATA;
       m_shortAddress = 0xFFFF;
       call MLME_SET.phyCurrentChannel(LogicalChannel);
@@ -146,13 +144,13 @@ implementation
       txFrame->payload = m_payloadAssocRequest;
       txFrame->payloadLen = 2;
       m_associationOngoing = TRUE;
-      if ((status = call AssociationRequestTx.transmit(txFrame)) != IEEE154_SUCCESS){
+      if ((status = call AssociationRequestTx.transmit(txFrame)) != IEEE154_SUCCESS) {
         m_associationOngoing = FALSE;
         call TxFramePool.put(txFrame);
         call TxControlPool.put(txControl);
       }
     }
-    call Debug.log(DEBUG_LEVEL_INFO, AssociateP_REQUEST, status, 0, 0);
+    dbg_serial("AssociationP", "MLME_ASSOCIATE.request -> result: %lu\n", (uint32_t) status);
     return status;
   }
 
@@ -160,15 +158,15 @@ implementation
   {
     call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) txFrame->header - offsetof(ieee154_txcontrol_t, header)));
     call TxFramePool.put(txFrame);
-    if (status != IEEE154_SUCCESS){
+    if (status != IEEE154_SUCCESS) {
+      dbg_serial("AssociationP", "transmitDone() failed!\n");
       m_associationOngoing = FALSE;
       signal MLME_ASSOCIATE.confirm(0xFFFF, status, 0);
     } else {
       call ResponseTimeout.startOneShot(call MLME_GET.macResponseWaitTime()*IEEE154_aBaseSuperframeDuration);
-      call Debug.log(DEBUG_LEVEL_INFO, AssociateP_SETTIMER, 
-          call MLME_GET.macResponseWaitTime()*IEEE154_aBaseSuperframeDuration, 0, 0);
+      dbg_serial("AssociationP", "transmitDone() ok, waiting for %lu\n", 
+          (uint32_t) (call MLME_GET.macResponseWaitTime() * IEEE154_aBaseSuperframeDuration));
     }
-    call Debug.log(DEBUG_LEVEL_INFO, AssociateP_TXDONE, status, 0, 0);
   }
   
   event void ResponseTimeout.fired()
@@ -182,7 +180,7 @@ implementation
     else
       call FrameUtility.copyCoordExtendedAddressLE(coordAddress);
     if (call DataRequest.poll(m_coordAddrMode, call MLME_GET.macPANId(), 
-          coordAddress, ADDR_MODE_EXTENDED_ADDRESS) != IEEE154_SUCCESS){
+          coordAddress, ADDR_MODE_EXTENDED_ADDRESS) != IEEE154_SUCCESS) {
       m_shortAddress = 0xFFFF;
       m_assocRespStatus = IEEE154_TRANSACTION_OVERFLOW;
       signal DataRequest.pollDone();
@@ -192,7 +190,7 @@ implementation
   event message_t* AssociationResponseExtracted.received(message_t* frame, ieee154_txframe_t *txFrame)
   {
     uint8_t *payload = (uint8_t *) &frame->data;
-    if (m_associationOngoing){
+    if (m_associationOngoing) {
       m_shortAddress =  *((nxle_uint16_t*) (payload + 1));
       m_assocRespStatus = *(payload + 3);
     }
@@ -201,15 +199,16 @@ implementation
 
   event void DataRequest.pollDone()
   {
-    if (m_associationOngoing){
-      call Debug.log(DEBUG_LEVEL_INFO, AssociateP_POLL_DONE, m_payloadAssocRequest[0], m_assocRespStatus, 0);
+    if (m_associationOngoing) {
       call ResponseTimeout.stop();
       m_associationOngoing = FALSE;
       signal MLME_ASSOCIATE.confirm(m_shortAddress, m_assocRespStatus, 0);
+      dbg_serial("AssociationP", "confirm: %lx, %lu\n", 
+          (uint32_t) m_shortAddress, (uint32_t) m_assocRespStatus);
     }
   }
 
-/* ------------------- MLME_ASSOCIATE Response ------------------- */
+  /* ------------------- MLME_ASSOCIATE Response ------------------- */
 
   event message_t* AssociationRequestRx.received(message_t* frame)
   {
@@ -226,8 +225,7 @@ implementation
                           uint64_t deviceAddress,
                           uint16_t assocShortAddress,
                           ieee154_association_status_t status,
-                          ieee154_security_t *security
-                        )
+                          ieee154_security_t *security)
   {
     uint8_t i;
     ieee154_status_t txStatus = IEEE154_SUCCESS;
@@ -240,7 +238,7 @@ implementation
         break;    
     if (i == MAX_PENDING_ASSOC_RESPONSES || !(txFrame = call TxFramePool.get()))
       txStatus = IEEE154_TRANSACTION_OVERFLOW;
-    else if (!(txControl = call TxControlPool.get())){
+    else if (!(txControl = call TxControlPool.get())) {
       call TxFramePool.put(txFrame);
       txStatus = IEEE154_TRANSACTION_OVERFLOW;
     } else {
@@ -263,7 +261,7 @@ implementation
       *((nxle_uint16_t*) &txFrame->payload[1]) = assocShortAddress;
       txFrame->payload[3] = status;
       txFrame->payloadLen = 4;
-      if ((txStatus = call AssociationResponseTx.transmit(txFrame)) != IEEE154_SUCCESS){
+      if ((txStatus = call AssociationResponseTx.transmit(txFrame)) != IEEE154_SUCCESS) {
         txFrame->payload[0] = S_IDLE;
         call TxFramePool.put(txFrame);
         call TxControlPool.put(txControl);
@@ -288,18 +286,16 @@ implementation
                           status, 0);
   }
 
-/* ------------------- Defaults ------------------- */
+  /* ------------------- Defaults ------------------- */
 
   default event void MLME_ASSOCIATE.indication (
                           uint64_t DeviceAddress,
                           ieee154_CapabilityInformation_t CapabilityInformation,
-                          ieee154_security_t *security
-                        ){}
+                          ieee154_security_t *security) {}
   default event void MLME_ASSOCIATE.confirm    (
                           uint16_t AssocShortAddress,
                           uint8_t status,
-                          ieee154_security_t *security
-                        ){}
+                          ieee154_security_t *security) {}
   default event void MLME_COMM_STATUS.indication (
                           uint16_t PANId,
                           uint8_t SrcAddrMode,
@@ -307,6 +303,5 @@ implementation
                           uint8_t DstAddrMode,
                           ieee154_address_t DstAddr,
                           ieee154_status_t status,
-                          ieee154_security_t *security
-                        ){}
+                          ieee154_security_t *security) {}
 }

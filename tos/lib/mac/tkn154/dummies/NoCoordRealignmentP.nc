@@ -27,11 +27,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
+ /** Empty placeholder component for CoordRealignmentP. */
 
 #include "TKN154_MAC.h"
 module NoCoordRealignmentP

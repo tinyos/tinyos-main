@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-10-21 17:29:00 $
+ * $Date: 2009-03-04 18:31:37 $
  * @author Torsten Halbhuebner <hhuebner@tkn.tu-berlin.de>
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
@@ -41,11 +41,9 @@
  */
 
 
-typedef struct ieee154_PIB_t {
+typedef struct ieee154_PIB {
 
-  /**************/
-  /* bool types */
-  /**************/
+  /** bool types */
    
   // 0x41
   ieee154_macAssociationPermit_t macAssociationPermit;
@@ -63,11 +61,10 @@ typedef struct ieee154_PIB_t {
   ieee154_macAssociatedPANCoord_t macAssociatedPANCoord;
   // 0x5D
   ieee154_macSecurityEnabled_t macSecurityEnabled;
-  // no standard attribute
+  // custom attribute
   ieee154_macPanCoordinator_t macPanCoordinator;
-  /*****************/
-  /* uint8_t types */
-  /*****************/
+
+  /** uint8_t types */
 
   // 0x00
   ieee154_phyCurrentChannel_t phyCurrentChannel;
@@ -100,9 +97,7 @@ typedef struct ieee154_PIB_t {
   // 0x5a
   ieee154_macResponseWaitTime_t macResponseWaitTime;
 
-  /*****************************/
-  /* larger than uint8_t types */
-  /*****************************/
+  /** larger than uint8_t types */
 
   // 0x4B
   ieee154_macCoordShortAddress_t macCoordShortAddress;

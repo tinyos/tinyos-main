@@ -27,23 +27,23 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:42 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 
 /** 
- * This interface can be used to set attribute values in the PHY/MAC PIB.
+ * This interface allows to set attribute values in the PHY/MAC PIB.
  * Instead of passing the PIB attribute identifier, there is a separate
  * command per attribute (and there are no confirm events). 
  *
- * NOTE: for the attributes macBeaconPayload (0x45) and
- * macBeaconPayloadLength (0x46) use the <tt>IEEE154TxBeaconPayload <\tt> 
- * interface; for promiscuous mode there is a separate (SplitControl)
- * interface. 
- **/
+ * NOTE: for the attributes <tt>macBeaconPayload</tt> (0x45) and
+ * <tt>macBeaconPayloadLength</tt> (0x46) use the
+ * <tt>IEEE154TxBeaconPayload</tt> interface; for promiscuous mode
+ * there is a separate (SplitControl) interface. 
+ */
 
 #include "TKN154.h" 
 interface MLME_SET {
@@ -90,7 +90,7 @@ interface MLME_SET {
   command ieee154_status_t macBattLifeExtPeriods(ieee154_macBattLifeExtPeriods_t value);
 
   /* macBeaconPayload (0x45) and macBeaconPayloadLength (0x46) are set
-   * through the <tt>IEEE154TxBeaconPayload<\tt> interface. */
+   * through the <tt>IEEE154TxBeaconPayload</tt> interface. */
 
   /** @param value new PIB attribute value for macBeaconOrder (0x47) 
    *  @returns IEEE154_SUCCESS if PIB attribute was updated, INVALID_PARAMETER if 
@@ -138,7 +138,7 @@ interface MLME_SET {
   command ieee154_status_t macPANId(ieee154_macPANId_t value);
 
   /* macPromiscuousMode (0x51) is (re-)set through the 
-   * <tt>PromiscuousMode<\tt> (SplitControl) interface. */
+   * <tt>PromiscuousMode</tt> (SplitControl) interface. */
 
   /** @param value new PIB attribute value for macRxOnWhenIdle (0x52) 
    *  @returns IEEE154_SUCCESS if PIB attribute was updated, INVALID_PARAMETER if 

@@ -27,13 +27,15 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2008-10-23 16:09:28 $
+ * $Date: 2009-03-04 18:31:24 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
-/* This component maintains the PIB (PAN Information Base) attributes and
- * provides interfaces for accessing fields in a MAC frame. */
+/** 
+ * This component maintains the PIB (PAN Information Base) attributes and
+ * provides interfaces for accessing fields in a MAC frame. 
+ */
 
 #include "TKN154.h"
 #include "TKN154_PIB.h"
@@ -49,8 +51,6 @@ module PibP {
     interface Set<ieee154_macSuperframeOrder_t> as SetMacSuperframeOrder;
     interface Set<ieee154_macBeaconTxTime_t> as SetMacBeaconTxTime;
     interface Set<ieee154_macPanCoordinator_t> as SetMacPanCoordinator;
-    interface Get<ieee154_macPanCoordinator_t> as IsMacPanCoordinator;
-    interface GetNow<bool> as IsBeaconEnabledPAN;
     interface FrameUtility;
     interface IEEE154Frame as Frame;
     interface IEEE154BeaconFrame as BeaconFrame;
@@ -62,8 +62,8 @@ module PibP {
   uses
   {
     interface Get<bool> as PromiscuousModeGet;
-    interface Init as CapReset;
-    interface Init as CapQueueReset;
+    interface Init as FrameDispatchReset;
+    interface Init as FrameDispatchQueueReset;
     interface Init as MacReset;
     interface SplitControl as RadioControl;
     interface Random;
@@ -77,8 +77,6 @@ implementation
   ieee154_PIB_t m_pib;
   uint8_t m_numResetClientPending;
   bool m_setDefaultPIB;
-  norace uint8_t m_panType;
-  uint8_t m_updatePANType;
   uint8_t m_resetSpin;
 
 #ifdef IEEE154_EXTENDED_ADDRESS
@@ -152,7 +150,7 @@ implementation
     waitTime = (((uint16_t) 1 << macMaxBE) - 1) * (macMaxCSMABackoffs - m);
     if (m) {
       k = 0;
-      while (k != m){
+      while (k != m) {
         waitTime += ((uint16_t) 1 << (macMaxBE+k));
         k += 1;
       }
@@ -162,7 +160,7 @@ implementation
     m_pib.macMaxFrameTotalWaitTime = waitTime;
   }
 
-  command ieee154_status_t MLME_RESET.request(bool SetDefaultPIB, uint8_t PANType) 
+  command ieee154_status_t MLME_RESET.request(bool SetDefaultPIB) 
   {
     // resetting the complete stack is not so easy...
     // first we acquire the Token (get exclusive radio access), then we switch off 
@@ -172,21 +170,22 @@ implementation
     // Alarms!), but there can still be pending Timers/tasks -> we stop all Timers
     // through MacReset.init() and then spin a few tasks in between to get 
     // everything "flushed out"
-    if (PANType != BEACON_ENABLED_PAN && PANType != NONBEACON_ENABLED_PAN)
-      return IEEE154_INVALID_PARAMETER;
+    ieee154_status_t status = IEEE154_SUCCESS;
     if (call PromiscuousModeGet.get())
-      return IEEE154_TRANSACTION_OVERFLOW; // must first cancel promiscuous mode!
-    m_setDefaultPIB = SetDefaultPIB;
-    m_updatePANType = PANType; 
-    if (!call Token.isOwner())
-      call Token.request();
-    return IEEE154_SUCCESS;
+      status = IEEE154_TRANSACTION_OVERFLOW; // must first cancel promiscuous mode!
+    else {
+      m_setDefaultPIB = SetDefaultPIB;
+      if (!call Token.isOwner())
+        call Token.request();
+    }   
+    dbg_serial("PibP", "MLME_RESET.request(%lu) -> result: %lu\n", 
+        (uint32_t) SetDefaultPIB, (uint32_t) status);
+    return status;
   }
 
   event void Token.granted()
   {
-    error_t error = call RadioOff.off();
-    if (error != SUCCESS) // either it is already off or driver has not been started
+    if (call RadioOff.off() != SUCCESS)
       signal RadioOff.offDone();
   }
 
@@ -197,15 +196,18 @@ implementation
 
   task void radioControlStopTask()
   {
-    if (call RadioControl.stop() == EALREADY)
+    error_t result = call RadioControl.stop();
+    if (result == EALREADY)
       signal RadioControl.stopDone(SUCCESS);
+    else
+      ASSERT(result == SUCCESS);
   }
 
-  event void RadioControl.stopDone(error_t error)
+  event void RadioControl.stopDone(error_t result)
   {
-    m_panType = m_updatePANType;
-    call CapReset.init();       // resets the CAP component(s), spool out frames
-    call CapQueueReset.init();  // resets the CAP queue component(s), spool out frames
+    ASSERT(result == SUCCESS);
+    call FrameDispatchReset.init();       // resets the CAP component(s), spool out frames
+    call FrameDispatchQueueReset.init();  // resets the CAP queue component(s), spool out frames
     call MacReset.init();       // resets the remaining components
     m_resetSpin = 5;
     post resetSpinTask();
@@ -213,18 +215,17 @@ implementation
 
   task void resetSpinTask()
   {
-    if (m_resetSpin == 2){
+    if (m_resetSpin == 2) {
       // just to be safe...
-      call CapReset.init();       
-      call CapQueueReset.init();  
+      call FrameDispatchReset.init();       
+      call FrameDispatchQueueReset.init();  
       call MacReset.init();       
     }
-    if (m_resetSpin--){
+    if (m_resetSpin--) {
       post resetSpinTask();
       return;
     }
-    if (call RadioControl.start() == EALREADY)
-      signal RadioControl.startDone(SUCCESS);
+    ASSERT(call RadioControl.start() == SUCCESS);
   }
 
   event void RadioControl.startDone(error_t error)
@@ -245,90 +246,92 @@ implementation
     signal MLME_RESET.confirm(IEEE154_SUCCESS);
   }
   
-/* ----------------------- MLME-GET ----------------------- */
+  /* ----------------------- MLME-GET ----------------------- */
 
-  command ieee154_phyCurrentChannel_t MLME_GET.phyCurrentChannel(){ return m_pib.phyCurrentChannel;}
+  command ieee154_phyCurrentChannel_t MLME_GET.phyCurrentChannel() { return m_pib.phyCurrentChannel;}
 
-  command ieee154_phyChannelsSupported_t MLME_GET.phyChannelsSupported(){ return IEEE154_SUPPORTED_CHANNELS;}
+  command ieee154_phyChannelsSupported_t MLME_GET.phyChannelsSupported() { return IEEE154_SUPPORTED_CHANNELS;}
 
-  command ieee154_phyTransmitPower_t MLME_GET.phyTransmitPower(){ return m_pib.phyTransmitPower;}
+  command ieee154_phyTransmitPower_t MLME_GET.phyTransmitPower() { return m_pib.phyTransmitPower;}
 
-  command ieee154_phyCCAMode_t MLME_GET.phyCCAMode(){ return m_pib.phyCCAMode;}
+  command ieee154_phyCCAMode_t MLME_GET.phyCCAMode() { return m_pib.phyCCAMode;}
 
-  command ieee154_phyCurrentPage_t MLME_GET.phyCurrentPage(){ return m_pib.phyCurrentPage;}
+  command ieee154_phyCurrentPage_t MLME_GET.phyCurrentPage() { return m_pib.phyCurrentPage;}
 
-  command ieee154_phyMaxFrameDuration_t MLME_GET.phyMaxFrameDuration(){ return IEEE154_MAX_FRAME_DURATION;}
+  command ieee154_phyMaxFrameDuration_t MLME_GET.phyMaxFrameDuration() { return IEEE154_MAX_FRAME_DURATION;}
 
-  command ieee154_phySHRDuration_t MLME_GET.phySHRDuration(){ return IEEE154_SHR_DURATION;}
+  command ieee154_phySHRDuration_t MLME_GET.phySHRDuration() { return IEEE154_SHR_DURATION;}
 
-  command ieee154_phySymbolsPerOctet_t MLME_GET.phySymbolsPerOctet(){ return IEEE154_SYMBOLS_PER_OCTET;}
+  command ieee154_phySymbolsPerOctet_t MLME_GET.phySymbolsPerOctet() { return IEEE154_SYMBOLS_PER_OCTET;}
 
-  command ieee154_macAckWaitDuration_t MLME_GET.macAckWaitDuration(){ return IEEE154_ACK_WAIT_DURATION;}
+  command ieee154_macAckWaitDuration_t MLME_GET.macAckWaitDuration() { return IEEE154_ACK_WAIT_DURATION;}
 
-  command ieee154_macAssociationPermit_t MLME_GET.macAssociationPermit(){ return m_pib.macAssociationPermit;}
+  command ieee154_macAssociationPermit_t MLME_GET.macAssociationPermit() { return m_pib.macAssociationPermit;}
 
-  command ieee154_macAutoRequest_t MLME_GET.macAutoRequest(){ return m_pib.macAutoRequest;}
+  command ieee154_macAutoRequest_t MLME_GET.macAutoRequest() { return m_pib.macAutoRequest;}
 
-  command ieee154_macBattLifeExt_t MLME_GET.macBattLifeExt(){ return m_pib.macBattLifeExt;}
+  command ieee154_macBattLifeExt_t MLME_GET.macBattLifeExt() { return m_pib.macBattLifeExt;}
 
-  command ieee154_macBattLifeExtPeriods_t MLME_GET.macBattLifeExtPeriods(){ return IEEE154_BATT_LIFE_EXT_PERIODS;}
+  command ieee154_macBattLifeExtPeriods_t MLME_GET.macBattLifeExtPeriods() { return IEEE154_BATT_LIFE_EXT_PERIODS;}
 
-  command ieee154_macBeaconOrder_t MLME_GET.macBeaconOrder(){ return m_pib.macBeaconOrder;}
+  command ieee154_macBeaconOrder_t MLME_GET.macBeaconOrder() { return m_pib.macBeaconOrder;}
 
-  command ieee154_macBeaconTxTime_t MLME_GET.macBeaconTxTime(){ return m_pib.macBeaconTxTime;}
+  command ieee154_macBeaconTxTime_t MLME_GET.macBeaconTxTime() { return m_pib.macBeaconTxTime;}
 
-  command ieee154_macBSN_t MLME_GET.macBSN(){ return m_pib.macBSN;}
+  command ieee154_macBSN_t MLME_GET.macBSN() { return m_pib.macBSN;}
 
-  command ieee154_macCoordExtendedAddress_t MLME_GET.macCoordExtendedAddress(){ return m_pib.macCoordExtendedAddress;}
+  command ieee154_macCoordExtendedAddress_t MLME_GET.macCoordExtendedAddress() { return m_pib.macCoordExtendedAddress;}
 
-  command ieee154_macCoordShortAddress_t MLME_GET.macCoordShortAddress(){ return m_pib.macCoordShortAddress;}
+  command ieee154_macCoordShortAddress_t MLME_GET.macCoordShortAddress() { return m_pib.macCoordShortAddress;}
 
-  command ieee154_macDSN_t MLME_GET.macDSN(){ return m_pib.macDSN;}
+  command ieee154_macDSN_t MLME_GET.macDSN() { return m_pib.macDSN;}
 
-  command ieee154_macGTSPermit_t MLME_GET.macGTSPermit(){ return m_pib.macGTSPermit;}
+  command ieee154_macGTSPermit_t MLME_GET.macGTSPermit() { return m_pib.macGTSPermit;}
 
-  command ieee154_macMaxCSMABackoffs_t MLME_GET.macMaxCSMABackoffs(){ return m_pib.macMaxCSMABackoffs;}
+  command ieee154_macMaxCSMABackoffs_t MLME_GET.macMaxCSMABackoffs() { return m_pib.macMaxCSMABackoffs;}
 
-  command ieee154_macMinBE_t MLME_GET.macMinBE(){ return m_pib.macMinBE;}
+  command ieee154_macMinBE_t MLME_GET.macMinBE() { return m_pib.macMinBE;}
 
-  command ieee154_macPANId_t MLME_GET.macPANId(){ return m_pib.macPANId;}
+  command ieee154_macPANId_t MLME_GET.macPANId() { return m_pib.macPANId;}
 
-  command ieee154_macPromiscuousMode_t MLME_GET.macPromiscuousMode(){ return call PromiscuousModeGet.get();}
+  command ieee154_macPromiscuousMode_t MLME_GET.macPromiscuousMode() { return call PromiscuousModeGet.get();}
 
-  command ieee154_macRxOnWhenIdle_t MLME_GET.macRxOnWhenIdle(){ return m_pib.macRxOnWhenIdle;}
+  command ieee154_macRxOnWhenIdle_t MLME_GET.macRxOnWhenIdle() { return m_pib.macRxOnWhenIdle;}
 
-  command ieee154_macShortAddress_t MLME_GET.macShortAddress(){ return m_pib.macShortAddress;}
+  command ieee154_macShortAddress_t MLME_GET.macShortAddress() { return m_pib.macShortAddress;}
 
-  command ieee154_macSuperframeOrder_t MLME_GET.macSuperframeOrder(){ return m_pib.macSuperframeOrder;}
+  command ieee154_macSuperframeOrder_t MLME_GET.macSuperframeOrder() { return m_pib.macSuperframeOrder;}
 
-  command ieee154_macTransactionPersistenceTime_t MLME_GET.macTransactionPersistenceTime(){ return m_pib.macTransactionPersistenceTime;}
+  command ieee154_macTransactionPersistenceTime_t MLME_GET.macTransactionPersistenceTime() { return m_pib.macTransactionPersistenceTime;}
 
-  command ieee154_macAssociatedPANCoord_t MLME_GET.macAssociatedPANCoord(){ return m_pib.macAssociatedPANCoord;}
+  command ieee154_macAssociatedPANCoord_t MLME_GET.macAssociatedPANCoord() { return m_pib.macAssociatedPANCoord;}
 
-  command ieee154_macMaxBE_t MLME_GET.macMaxBE(){ return m_pib.macMaxBE;}
+  command ieee154_macMaxBE_t MLME_GET.macMaxBE() { return m_pib.macMaxBE;}
 
-  command ieee154_macMaxFrameTotalWaitTime_t MLME_GET.macMaxFrameTotalWaitTime(){ return m_pib.macMaxFrameTotalWaitTime;}
+  command ieee154_macMaxFrameTotalWaitTime_t MLME_GET.macMaxFrameTotalWaitTime() { return m_pib.macMaxFrameTotalWaitTime;}
 
-  command ieee154_macMaxFrameRetries_t MLME_GET.macMaxFrameRetries(){ return m_pib.macMaxFrameRetries;}
+  command ieee154_macMaxFrameRetries_t MLME_GET.macMaxFrameRetries() { return m_pib.macMaxFrameRetries;}
 
-  command ieee154_macResponseWaitTime_t MLME_GET.macResponseWaitTime(){ return m_pib.macResponseWaitTime;}
+  command ieee154_macResponseWaitTime_t MLME_GET.macResponseWaitTime() { return m_pib.macResponseWaitTime;}
 
-  command ieee154_macSyncSymbolOffset_t MLME_GET.macSyncSymbolOffset(){ return IEEE154_SYNC_SYMBOL_OFFSET;}
+  command ieee154_macSyncSymbolOffset_t MLME_GET.macSyncSymbolOffset() { return IEEE154_SYNC_SYMBOL_OFFSET;}
 
-  command ieee154_macTimestampSupported_t MLME_GET.macTimestampSupported(){ return IEEE154_TIMESTAMP_SUPPORTED;}
+  command ieee154_macTimestampSupported_t MLME_GET.macTimestampSupported() { return IEEE154_TIMESTAMP_SUPPORTED;}
 
-  command ieee154_macSecurityEnabled_t MLME_GET.macSecurityEnabled(){ return m_pib.macSecurityEnabled;}
+  command ieee154_macSecurityEnabled_t MLME_GET.macSecurityEnabled() { return m_pib.macSecurityEnabled;}
 
-  command ieee154_macMinLIFSPeriod_t MLME_GET.macMinLIFSPeriod(){ return IEEE154_MIN_LIFS_PERIOD;}
+  command ieee154_macMinLIFSPeriod_t MLME_GET.macMinLIFSPeriod() { return IEEE154_MIN_LIFS_PERIOD;}
 
-  command ieee154_macMinSIFSPeriod_t MLME_GET.macMinSIFSPeriod(){ return IEEE154_MIN_SIFS_PERIOD;}
+  command ieee154_macMinSIFSPeriod_t MLME_GET.macMinSIFSPeriod() { return IEEE154_MIN_SIFS_PERIOD;}
 
-/* ----------------------- MLME-SET ----------------------- */
+  command ieee154_macPanCoordinator_t MLME_GET.macPanCoordinator() { return m_pib.macPanCoordinator;}
 
-  command ieee154_status_t MLME_SET.phyCurrentChannel(ieee154_phyCurrentChannel_t value){
+  /* ----------------------- MLME-SET ----------------------- */
+
+  command ieee154_status_t MLME_SET.phyCurrentChannel(ieee154_phyCurrentChannel_t value) {
     uint32_t i = 1;
     uint8_t k = value;
-    while (i && k){
+    while (i && k) {
       i <<= 1;
       k -= 1;
     }
@@ -339,13 +342,13 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.phyTransmitPower(ieee154_phyTransmitPower_t value){
+  command ieee154_status_t MLME_SET.phyTransmitPower(ieee154_phyTransmitPower_t value) {
     m_pib.phyTransmitPower = (value & 0x3F);
     signal PIBUpdate.notify[IEEE154_phyTransmitPower](&m_pib.phyTransmitPower);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.phyCCAMode(ieee154_phyCCAMode_t value){
+  command ieee154_status_t MLME_SET.phyCCAMode(ieee154_phyCCAMode_t value) {
     if (value < 1 || value > 3)
       return IEEE154_INVALID_PARAMETER;
     m_pib.phyCCAMode = value;
@@ -353,7 +356,7 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.phyCurrentPage(ieee154_phyCurrentPage_t value){
+  command ieee154_status_t MLME_SET.phyCurrentPage(ieee154_phyCurrentPage_t value) {
     if (value > 31)
       return IEEE154_INVALID_PARAMETER;
     m_pib.phyCurrentPage = value;
@@ -361,25 +364,25 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macAssociationPermit(ieee154_macAssociationPermit_t value){
+  command ieee154_status_t MLME_SET.macAssociationPermit(ieee154_macAssociationPermit_t value) {
     m_pib.macAssociationPermit = value;
     signal PIBUpdate.notify[IEEE154_macAssociationPermit](&m_pib.macAssociationPermit);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macAutoRequest(ieee154_macAutoRequest_t value){
+  command ieee154_status_t MLME_SET.macAutoRequest(ieee154_macAutoRequest_t value) {
     m_pib.macAutoRequest = value;
     signal PIBUpdate.notify[IEEE154_macAutoRequest](&m_pib.macAutoRequest);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macBattLifeExt(ieee154_macBattLifeExt_t value){
+  command ieee154_status_t MLME_SET.macBattLifeExt(ieee154_macBattLifeExt_t value) {
     m_pib.macBattLifeExt = value;
     signal PIBUpdate.notify[IEEE154_macBattLifeExt](&m_pib.macBattLifeExt);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macBattLifeExtPeriods(ieee154_macBattLifeExtPeriods_t value){
+  command ieee154_status_t MLME_SET.macBattLifeExtPeriods(ieee154_macBattLifeExtPeriods_t value) {
     if (value < 6 || value > 41)
       return IEEE154_INVALID_PARAMETER;
     m_pib.macBattLifeExtPeriods = value;
@@ -387,7 +390,7 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macBeaconOrder(ieee154_macBeaconOrder_t value){
+  command ieee154_status_t MLME_SET.macBeaconOrder(ieee154_macBeaconOrder_t value) {
     if (value > 15)
       return IEEE154_INVALID_PARAMETER;
     m_pib.macBeaconOrder = value;
@@ -395,37 +398,37 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macBSN(ieee154_macBSN_t value){
+  command ieee154_status_t MLME_SET.macBSN(ieee154_macBSN_t value) {
     m_pib.macBSN = value;
     signal PIBUpdate.notify[IEEE154_macBSN](&m_pib.macBSN);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macCoordExtendedAddress(ieee154_macCoordExtendedAddress_t value){
+  command ieee154_status_t MLME_SET.macCoordExtendedAddress(ieee154_macCoordExtendedAddress_t value) {
     m_pib.macCoordExtendedAddress = value;
     signal PIBUpdate.notify[IEEE154_macCoordExtendedAddress](&m_pib.macCoordExtendedAddress);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macCoordShortAddress(ieee154_macCoordShortAddress_t value){
+  command ieee154_status_t MLME_SET.macCoordShortAddress(ieee154_macCoordShortAddress_t value) {
     m_pib.macCoordShortAddress = value;
     signal PIBUpdate.notify[IEEE154_macCoordShortAddress](&m_pib.macCoordShortAddress);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macDSN(ieee154_macDSN_t value){
+  command ieee154_status_t MLME_SET.macDSN(ieee154_macDSN_t value) {
     m_pib.macDSN = value;
     signal PIBUpdate.notify[IEEE154_macDSN](&m_pib.macDSN);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macGTSPermit(ieee154_macGTSPermit_t value){
+  command ieee154_status_t MLME_SET.macGTSPermit(ieee154_macGTSPermit_t value) {
     m_pib.macGTSPermit = value;
     signal PIBUpdate.notify[IEEE154_macGTSPermit](&m_pib.macGTSPermit);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macMaxCSMABackoffs(ieee154_macMaxCSMABackoffs_t value){
+  command ieee154_status_t MLME_SET.macMaxCSMABackoffs(ieee154_macMaxCSMABackoffs_t value) {
     if (value > 5)
       return IEEE154_INVALID_PARAMETER;
     m_pib.macMaxCSMABackoffs = value;
@@ -434,7 +437,7 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macMinBE(ieee154_macMinBE_t value){
+  command ieee154_status_t MLME_SET.macMinBE(ieee154_macMinBE_t value) {
     if (value > m_pib.macMaxBE)
       return IEEE154_INVALID_PARAMETER;
     m_pib.macMinBE = value;
@@ -443,37 +446,37 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macPANId(ieee154_macPANId_t value){
+  command ieee154_status_t MLME_SET.macPANId(ieee154_macPANId_t value) {
     m_pib.macPANId = value;
     signal PIBUpdate.notify[IEEE154_macPANId](&m_pib.macPANId);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macRxOnWhenIdle(ieee154_macRxOnWhenIdle_t value){
+  command ieee154_status_t MLME_SET.macRxOnWhenIdle(ieee154_macRxOnWhenIdle_t value) {
     m_pib.macRxOnWhenIdle = value;
     signal PIBUpdate.notify[IEEE154_macRxOnWhenIdle](&m_pib.macRxOnWhenIdle);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macShortAddress(ieee154_macShortAddress_t value){
+  command ieee154_status_t MLME_SET.macShortAddress(ieee154_macShortAddress_t value) {
     m_pib.macShortAddress = value;
     signal PIBUpdate.notify[IEEE154_macShortAddress](&m_pib.macShortAddress);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macTransactionPersistenceTime(ieee154_macTransactionPersistenceTime_t value){
+  command ieee154_status_t MLME_SET.macTransactionPersistenceTime(ieee154_macTransactionPersistenceTime_t value) {
     m_pib.macTransactionPersistenceTime = value;
     signal PIBUpdate.notify[IEEE154_macTransactionPersistenceTime](&m_pib.macTransactionPersistenceTime);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macAssociatedPANCoord(ieee154_macAssociatedPANCoord_t value){
+  command ieee154_status_t MLME_SET.macAssociatedPANCoord(ieee154_macAssociatedPANCoord_t value) {
     m_pib.macAssociatedPANCoord = value;
     signal PIBUpdate.notify[IEEE154_macAssociatedPANCoord](&m_pib.macAssociatedPANCoord);
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macMaxBE(ieee154_macMaxBE_t value){
+  command ieee154_status_t MLME_SET.macMaxBE(ieee154_macMaxBE_t value) {
     if (value < 3 || value > 8)
       return IEEE154_INVALID_PARAMETER;
     m_pib.macMaxBE = value;
@@ -482,7 +485,7 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macMaxFrameTotalWaitTime(ieee154_macMaxFrameTotalWaitTime_t value){
+  command ieee154_status_t MLME_SET.macMaxFrameTotalWaitTime(ieee154_macMaxFrameTotalWaitTime_t value) {
     // equation 14 on page 160 defines how macMaxFrameTotalWaitTime is calculated;
     // its value depends only on other PIB attributes and constants - why does the standard 
     // allow setting it by the next higher layer ??
@@ -491,7 +494,7 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macMaxFrameRetries(ieee154_macMaxFrameRetries_t value){
+  command ieee154_status_t MLME_SET.macMaxFrameRetries(ieee154_macMaxFrameRetries_t value) {
     if (value > 7)
       return IEEE154_INVALID_PARAMETER;
     m_pib.macMaxFrameRetries = value;
@@ -499,7 +502,7 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macResponseWaitTime(ieee154_macResponseWaitTime_t value){
+  command ieee154_status_t MLME_SET.macResponseWaitTime(ieee154_macResponseWaitTime_t value) {
     if (value < 2 || value > 64)
       return IEEE154_INVALID_PARAMETER;
     m_pib.macResponseWaitTime = value;
@@ -507,31 +510,27 @@ implementation
     return IEEE154_SUCCESS;
   }
 
-  command ieee154_status_t MLME_SET.macSecurityEnabled(ieee154_macSecurityEnabled_t value){
+  command ieee154_status_t MLME_SET.macSecurityEnabled(ieee154_macSecurityEnabled_t value) {
     return IEEE154_UNSUPPORTED_ATTRIBUTE;
   }
   
   // Read-only attributes (writable only by MAC components)
-  command void SetMacSuperframeOrder.set( ieee154_macSuperframeOrder_t value ){
+  command void SetMacSuperframeOrder.set( ieee154_macSuperframeOrder_t value) {
     m_pib.macSuperframeOrder = value;
     signal PIBUpdate.notify[IEEE154_macSuperframeOrder](&m_pib.macSuperframeOrder);
   }
 
-  command void SetMacBeaconTxTime.set( ieee154_macBeaconTxTime_t value ){
+  command void SetMacBeaconTxTime.set( ieee154_macBeaconTxTime_t value) {
     m_pib.macBeaconTxTime = value;
     signal PIBUpdate.notify[IEEE154_macBeaconTxTime](&m_pib.macBeaconTxTime);
   }
 
-  command void SetMacPanCoordinator.set( ieee154_macPanCoordinator_t value ){
+  command void SetMacPanCoordinator.set( ieee154_macPanCoordinator_t value) {
     m_pib.macPanCoordinator = value;
     signal PIBUpdate.notify[IEEE154_macPanCoordinator](&m_pib.macPanCoordinator);
   }
 
-  command ieee154_macPanCoordinator_t IsMacPanCoordinator.get(){
-    return m_pib.macPanCoordinator;
-  }
-
-/* ----------------------- TimeCalc ----------------------- */
+  /* ----------------------- TimeCalc ----------------------- */
 
   async command uint32_t TimeCalc.timeElapsed(uint32_t t0, uint32_t t1)
   {
@@ -553,7 +552,7 @@ implementation
     return (elapsed >= dt);
   }
 
-/* ----------------------- Frame Access ----------------------- */
+  /* ----------------------- Frame Access ----------------------- */
 
   command void Packet.clear(message_t* msg)
   {
@@ -595,10 +594,10 @@ implementation
       bool PANIDCompression)      
   {
     uint8_t offset = MHR_INDEX_ADDRESS;
-    if (DstAddrMode == ADDR_MODE_SHORT_ADDRESS || DstAddrMode == ADDR_MODE_EXTENDED_ADDRESS){
+    if (DstAddrMode == ADDR_MODE_SHORT_ADDRESS || DstAddrMode == ADDR_MODE_EXTENDED_ADDRESS) {
       *((nxle_uint16_t*) &mhr[offset]) = DstPANId;
       offset += 2;
-      if (DstAddrMode == ADDR_MODE_SHORT_ADDRESS){
+      if (DstAddrMode == ADDR_MODE_SHORT_ADDRESS) {
         *((nxle_uint16_t*) &mhr[offset]) = DstAddr->shortAddress;
         offset += 2;
       } else {
@@ -606,12 +605,12 @@ implementation
         offset += 8; 
       }
     }
-    if (SrcAddrMode == ADDR_MODE_SHORT_ADDRESS || SrcAddrMode == ADDR_MODE_EXTENDED_ADDRESS){
-      if (DstPANId != SrcPANId || !PANIDCompression){
+    if (SrcAddrMode == ADDR_MODE_SHORT_ADDRESS || SrcAddrMode == ADDR_MODE_EXTENDED_ADDRESS) {
+      if (DstPANId != SrcPANId || !PANIDCompression) {
         *((nxle_uint16_t*) &mhr[offset]) = SrcPANId;
         offset += 2;
       }
-      if (SrcAddrMode == ADDR_MODE_SHORT_ADDRESS){
+      if (SrcAddrMode == ADDR_MODE_SHORT_ADDRESS) {
         *((nxle_uint16_t*) &mhr[offset]) = SrcAddr->shortAddress;
         offset += 2;
       } else {
@@ -636,10 +635,10 @@ implementation
     if ((*(nxle_uint16_t*) (&mhr[offset])) != m_pib.macPANId)
       return FALSE; // wrong PAN ID
     offset += 2;         
-    if ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) == FC2_SRC_MODE_SHORT){
+    if ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) == FC2_SRC_MODE_SHORT) {
       if ((*(nxle_uint16_t*) (&mhr[offset])) != m_pib.macCoordShortAddress)
         return FALSE;
-    } else if ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) == FC2_SRC_MODE_EXTENDED){
+    } else if ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) == FC2_SRC_MODE_EXTENDED) {
       if (!isCoordExtendedAddress(mhr + offset))
         return FALSE;
     }
@@ -654,12 +653,12 @@ implementation
     if (fcf1 & FC1_SECURITY_ENABLED)
       return FAIL; // not supported 
     idCompression = (fcf1 & FC1_PAN_ID_COMPRESSION);
-    if (fcf2 & 0x08){ // short or ext. address
+    if (fcf2 & 0x08) { // short or ext. address
       offset += 4; // pan id + short address
       if (fcf2 & 0x04) // ext. address
         offset += 6; // diff to short address
     }
-    if (fcf2 & 0x80){ // short or ext. address
+    if (fcf2 & 0x80) { // short or ext. address
       offset += 2;
       if (!idCompression)
         offset += 2;
@@ -790,7 +789,7 @@ implementation
     if ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) == FC2_SRC_MODE_SHORT)
       address->shortAddress = *((nxle_uint16_t*) (&(mhr[offset])));
     else
-      call FrameUtility.convertToNative(&address->extendedAddress, (&(mhr[offset]) ));
+      call FrameUtility.convertToNative(&address->extendedAddress, (&(mhr[offset])));
     return SUCCESS;
   }
 
@@ -849,20 +848,19 @@ implementation
   command bool Frame.hasStandardCompliantHeader(message_t* frame)
   {
     uint8_t *mhr = MHR(frame);
-    if ( ((mhr[0] & FC1_FRAMETYPE_MASK) > 0x03) ||
+    if (((mhr[0] & FC1_FRAMETYPE_MASK) > 0x03) ||
          ((mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == 0x04) || 
          ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) == 0x40) || 
 #ifndef IEEE154_SECURITY_ENABLED
          ((mhr[0] & FC1_SECURITY_ENABLED)) || 
 #endif
-         (mhr[MHR_INDEX_FC2] & FC2_FRAME_VERSION_2)
-        )
+         (mhr[MHR_INDEX_FC2] & FC2_FRAME_VERSION_2))
       return FALSE;
     else
       return TRUE;
   }
 
-/* ----------------------- Beacon Frame Access ----------------------- */
+  /* ----------------------- Beacon Frame Access ----------------------- */
 
   uint8_t getPendAddrSpecOffset(uint8_t *macPayloadField)
   {
@@ -892,11 +890,11 @@ implementation
     uint8_t pendAddrSpec = payload[pendAddrSpecOffset], i;
     if (((mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) != FC1_FRAMETYPE_BEACON))
       return FAIL;
-    if (addrMode == ADDR_MODE_SHORT_ADDRESS){
+    if (addrMode == ADDR_MODE_SHORT_ADDRESS) {
       for (i=0; i<(pendAddrSpec & PENDING_ADDRESS_SHORT_MASK) && i<bufferSize; i++)
         buffer[i].shortAddress = *((nxle_uint16_t*) (payload + pendAddrSpecOffset + 1 + 2*i));
       return SUCCESS;
-    } else if (addrMode == ADDR_MODE_EXTENDED_ADDRESS){
+    } else if (addrMode == ADDR_MODE_EXTENDED_ADDRESS) {
       for (i=0; i<((pendAddrSpec & PENDING_ADDRESS_EXT_MASK) >> 4) && i<bufferSize; i++)
         call FrameUtility.convertToNative(&(buffer[i].extendedAddress),
             ((payload + pendAddrSpecOffset +
@@ -929,7 +927,7 @@ implementation
   {
     uint8_t *mhr = MHR(frame);
     uint8_t *payload = (uint8_t *) frame->data;
-    if ((mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON){
+    if ((mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON) {
       uint8_t pendAddrSpecOffset = getPendAddrSpecOffset(payload);
       uint8_t pendAddrSpec = payload[pendAddrSpecOffset];
       payload += (pendAddrSpecOffset + 1);
@@ -945,7 +943,7 @@ implementation
   {
     uint8_t *mhr = MHR(frame);
     uint8_t len = ((ieee154_header_t*) frame->header)->length & FRAMECTL_LENGTH_MASK;
-    if ((mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON){
+    if ((mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON) {
       uint8_t *payload = call Frame.getPayload(frame);
       len = len - (payload - (uint8_t *) frame->data);
     } 
@@ -961,25 +959,27 @@ implementation
       message_t *frame,
       uint8_t LogicalChannel,
       uint8_t ChannelPage,
-      ieee154_PANDescriptor_t *PANDescriptor
-      )
+      ieee154_PANDescriptor_t *PANDescriptor)
   {
     uint8_t *mhr = MHR(frame);
     uint8_t offset;
     ieee154_metadata_t *metadata = (ieee154_metadata_t*) frame->metadata;
 
-    if ( (mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) != FC1_FRAMETYPE_BEACON ||
+    if ((mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) != FC1_FRAMETYPE_BEACON ||
          (((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) != FC2_SRC_MODE_SHORT) && 
-          ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) != FC2_SRC_MODE_EXTENDED)) )
+          ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) != FC2_SRC_MODE_EXTENDED)))
       return FAIL;
+
     PANDescriptor->CoordAddrMode = (mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) >> FC2_SRC_MODE_OFFSET;
     offset = MHR_INDEX_ADDRESS;
     PANDescriptor->CoordPANId = *((nxle_uint16_t*) &mhr[offset]);
     offset += sizeof(ieee154_macPANId_t);
+
     if ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) == FC2_SRC_MODE_SHORT)
       PANDescriptor->CoordAddress.shortAddress = *((nxle_uint16_t*) &mhr[offset]);
     else
       call FrameUtility.convertToNative(&PANDescriptor->CoordAddress.extendedAddress, &mhr[offset]);
+
     PANDescriptor->LogicalChannel = LogicalChannel;
     PANDescriptor->ChannelPage = ChannelPage;
     ((uint8_t*) &PANDescriptor->SuperframeSpec)[0] = frame->data[BEACON_INDEX_SF_SPEC1]; // little endian
@@ -994,12 +994,12 @@ implementation
     PANDescriptor->KeySource = 0;
     PANDescriptor->KeyIndex = 0;    
 #else
-#error Implementation of BeaconFrame.parsePANDescriptor() needs adaptation !
+#error Implementation of BeaconFrame.parsePANDescriptor() needs to be adapted!
 #endif
     return SUCCESS;   
   }
 
-/* ----------------------- FrameUtility, etc. ----------------------- */
+  /* ----------------------- FrameUtility, etc. ----------------------- */
 
   command uint64_t GetLocalExtendedAddress.get()
   {
@@ -1010,7 +1010,7 @@ implementation
   {
     uint8_t i;
     uint64_t srcCopy = *src;
-    for (i=0; i<8; i++){
+    for (i=0; i<8; i++) {
       destLE[i] = srcCopy;
       srcCopy >>= 8;
     }
@@ -1049,12 +1049,7 @@ implementation
     return dest == m_pib.macCoordExtendedAddress;
   }
 
-  async command bool IsBeaconEnabledPAN.getNow()
-  {
-    return (m_panType == BEACON_ENABLED_PAN);
-  }
-
-  default event void PIBUpdate.notify[uint8_t PIBAttributeID](const void* PIBAttributeValue){}
-  command error_t PIBUpdate.enable[uint8_t PIBAttributeID](){return FAIL;}
-  command error_t PIBUpdate.disable[uint8_t PIBAttributeID](){return FAIL;}
+  default event void PIBUpdate.notify[uint8_t PIBAttributeID](const void* PIBAttributeValue) {}
+  command error_t PIBUpdate.enable[uint8_t PIBAttributeID]() {return FAIL;}
+  command error_t PIBUpdate.disable[uint8_t PIBAttributeID]() {return FAIL;}
 }

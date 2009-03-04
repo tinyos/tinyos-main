@@ -27,11 +27,14 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:40 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
+ /** Empty placeholder component for FrameDispatchQueueP. */
+
 #include "TKN154_MAC.h"
 generic module NoFrameDispatchQueueP() {
   provides

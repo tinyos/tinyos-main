@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-08-02 16:56:21 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -39,6 +39,8 @@ configuration RadioControlP
   {
     interface RadioRx as RadioRx[uint8_t client];
     interface RadioTx as RadioTx[uint8_t client];
+    interface SlottedCsmaCa as SlottedCsmaCa[uint8_t client];
+    interface UnslottedCsmaCa as UnslottedCsmaCa[uint8_t client];
     interface RadioOff as RadioOff[uint8_t client];
     interface Resource as Token[uint8_t client];
     interface ResourceRequested as TokenRequested[uint8_t client];
@@ -48,10 +50,11 @@ configuration RadioControlP
   } uses {
     interface RadioRx as PhyRx;
     interface RadioTx as PhyTx;
+    interface SlottedCsmaCa as PhySlottedCsmaCa;
+    interface UnslottedCsmaCa as PhyUnslottedCsmaCa;
     interface RadioOff as PhyRadioOff;
     interface Get<bool> as RadioPromiscuousMode;
     interface Leds;
-    interface Ieee802154Debug as Debug;
   }
 }
 implementation
@@ -59,13 +62,16 @@ implementation
   components RadioControlImplP;
   RadioRx = RadioControlImplP.MacRx;
   RadioTx = RadioControlImplP.MacTx;
+  SlottedCsmaCa = RadioControlImplP.SlottedCsmaCa;
+  UnslottedCsmaCa = RadioControlImplP.UnslottedCsmaCa;
   RadioOff = RadioControlImplP.MacRadioOff;
   PhyRx = RadioControlImplP.PhyRx;
   PhyTx = RadioControlImplP.PhyTx;
+  PhySlottedCsmaCa = RadioControlImplP.PhySlottedCsmaCa;
+  PhyUnslottedCsmaCa = RadioControlImplP.PhyUnslottedCsmaCa;
   PhyRadioOff = RadioControlImplP.PhyRadioOff;
   RadioPromiscuousMode = RadioControlImplP;
   Leds = RadioControlImplP;
-  Debug = RadioControlImplP;
   LedsRadioClient = Leds;
 
   components new SimpleRoundRobinTransferArbiterC(IEEE802154_RADIO_RESOURCE) as Arbiter;

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:08 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:22 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -58,7 +58,6 @@ module DisassociateP
     interface FrameUtility;
     interface IEEE154Frame as Frame;
     interface Get<uint64_t> as LocalExtendedAddress;
-    interface Ieee802154Debug as Debug;
   }
 }
 implementation
@@ -78,7 +77,7 @@ implementation
     return SUCCESS;
   }
 
-/* ------------------- MLME_DISASSOCIATE (initiating) ------------------- */
+  /* ------------------- MLME_DISASSOCIATE (initiating) ------------------- */
 
   command ieee154_status_t MLME_DISASSOCIATE.request  (
                           uint8_t DeviceAddrMode,
@@ -86,8 +85,7 @@ implementation
                           ieee154_address_t DeviceAddress,
                           ieee154_disassociation_reason_t DisassociateReason,
                           bool TxIndirect,
-                          ieee154_security_t *security
-                        )
+                          ieee154_security_t *security)
   {
     ieee154_status_t status = IEEE154_SUCCESS;
     ieee154_txframe_t *txFrame=0;
@@ -101,11 +99,11 @@ implementation
       status = IEEE154_INVALID_PARAMETER;
     else if (m_disAssociationOngoing || !(txFrame = call TxFramePool.get()))
       status = IEEE154_TRANSACTION_OVERFLOW;
-    else if (!(txControl = call TxControlPool.get())){
+    else if (!(txControl = call TxControlPool.get())) {
       call TxFramePool.put(txFrame);
       status = IEEE154_TRANSACTION_OVERFLOW;
     } 
-    if (status == IEEE154_SUCCESS){
+    if (status == IEEE154_SUCCESS) {
       txFrame->header = &txControl->header;
       txFrame->metadata = &txControl->metadata;
       srcAddress.extendedAddress = call LocalExtendedAddress.get();
@@ -129,20 +127,20 @@ implementation
       if ((DeviceAddrMode == ADDR_MODE_SHORT_ADDRESS &&
             DeviceAddress.shortAddress == call MLME_GET.macCoordShortAddress()) ||
           (DeviceAddrMode == ADDR_MODE_EXTENDED_ADDRESS &&
-           DeviceAddress.extendedAddress == call MLME_GET.macCoordExtendedAddress())){
+           DeviceAddress.extendedAddress == call MLME_GET.macCoordExtendedAddress())) {
         status = call DisassociationToCoord.transmit(txFrame);
       } else if (TxIndirect) {
         status = call DisassociationIndirectTx.transmit(txFrame);
       } else {
         status = call DisassociationDirectTx.transmit(txFrame);
       }
-      if (status != IEEE154_SUCCESS){
+      if (status != IEEE154_SUCCESS) {
         m_disAssociationOngoing = FALSE;
         call TxFramePool.put(txFrame);
         call TxControlPool.put(txControl);
       }
     }
-    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_REQUEST, status, 0, 0);
+    dbg_serial("DisassociateP", "MLME_DISASSOCIATE.request -> result: %lu\n", (uint32_t) status);
     return status;
   }
 
@@ -158,7 +156,7 @@ implementation
     call FrameUtility.convertToNative(&DeviceAddress.extendedAddress, &mhr[srcAddrOffset]);
     call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) data->header - offsetof(ieee154_txcontrol_t, header)));
     call TxFramePool.put(data);
-    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 2, 0);
+    dbg_serial("DisassociateP", "transmitDone() -> result: %lu\n", (uint32_t) status);
     m_disAssociationOngoing = FALSE;
     signal MLME_DISASSOCIATE.confirm(status, DeviceAddrMode, DevicePANID, DeviceAddress);
   }
@@ -176,15 +174,14 @@ implementation
     uint16_t DevicePANID = *((nxle_uint16_t*) (&(mhr[MHR_INDEX_ADDRESS])));
     ieee154_address_t DeviceAddress;
     call FrameUtility.convertToNative(&DeviceAddress.extendedAddress, &mhr[dstAddrOffset]);
-    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 1, 0);
     call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) data->header - offsetof(ieee154_txcontrol_t, header)));
     call TxFramePool.put(data);
-    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_TXDONE, status, 2, 0);
+    dbg_serial("DisassociateP", "transmitDone() -> result: %lu\n", (uint32_t) status);
     m_disAssociationOngoing = FALSE;
     signal MLME_DISASSOCIATE.confirm(status, DeviceAddrMode, DevicePANID, DeviceAddress);
   }
 
-/* ------------------- MLME_DISASSOCIATE (receiving) ------------------- */
+  /* ------------------- MLME_DISASSOCIATE (receiving) ------------------- */
 
   event message_t* DisassociationDirectRxFromCoord.received(message_t* frame)
   {
@@ -205,25 +202,24 @@ implementation
   {
     // received a disassociation notification from the device
     ieee154_address_t address;
-    call Debug.log(DEBUG_LEVEL_INFO, DISSASSOCIATE_RX, 0, 0, 0);
     if (call Frame.getSrcAddrMode(frame) == ADDR_MODE_EXTENDED_ADDRESS && 
         call Frame.getSrcAddr(frame, &address) == SUCCESS)
       signal MLME_DISASSOCIATE.indication(address.extendedAddress, frame->data[1], NULL);
+    dbg_serial("DisassociateP", "Received disassociation request from %lx\n", (uint32_t) address.shortAddress);
     return frame;
   }
 
-/* ------------------- Defaults ------------------- */
+  /* ------------------- Defaults ------------------- */
 
   default event void MLME_DISASSOCIATE.indication (
                           uint64_t DeviceAddress,
                           ieee154_disassociation_reason_t DisassociateReason,
-                          ieee154_security_t *security
-                        ){}
+                          ieee154_security_t *security) {}
+
   default event void MLME_DISASSOCIATE.confirm    (
                           ieee154_status_t status,
                           uint8_t DeviceAddrMode,
                           uint16_t DevicePANID,
-                          ieee154_address_t DeviceAddress
-                        ){}
+                          ieee154_address_t DeviceAddress) {}
 
 }

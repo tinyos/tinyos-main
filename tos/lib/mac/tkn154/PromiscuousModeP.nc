@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:26 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -47,80 +47,66 @@ module PromiscuousModeP
     interface RadioRx as PromiscuousRx;
     interface RadioOff;
     interface Set<bool> as RadioPromiscuousMode;
-    interface Ieee802154Debug as Debug;
   }
 }
 implementation
 {
-  enum promiscuous_state {
-    S_IDLE,
+  norace enum promiscuous_state {
+    S_STOPPING,
+    S_STOPPED,
     S_STARTING,
     S_STARTED,
-    S_STOPPING,
-  } m_promiscuousState;
-
-  task void prepareDoneTask();
-  task void radioOffDoneTask();
+  } m_state;
 
   command error_t Init.init()
   {
-    m_promiscuousState = S_IDLE;
+    m_state = S_STOPPED;
     return SUCCESS;
   }
 
-/* ----------------------- Promiscuous Mode ----------------------- */
+  /* ----------------------- Promiscuous Mode ----------------------- */
 
   command bool PromiscuousModeGet.get()
   {
-    return (m_promiscuousState == S_STARTED);
+    return (m_state == S_STARTED);
   }
 
   command error_t PromiscuousMode.start()
   {
-    if (m_promiscuousState != S_IDLE)
-      return FAIL;
-    m_promiscuousState = S_STARTING;
-    call Token.request();
-    call Debug.log(DEBUG_LEVEL_INFO, EnableRxP_PROMISCUOUS_REQUEST, m_promiscuousState, 0, 0);
-    call Debug.flush();
-    return SUCCESS;
+    error_t result = FAIL;
+    if (m_state == S_STOPPED) {
+      m_state = S_STARTING;
+      call Token.request();
+      result = SUCCESS;
+    }
+    dbg_serial("PromiscuousModeP", "PromiscuousMode.start -> result: %lu\n", (uint32_t) result);
+    return result;
   }
 
   event void Token.granted()
   {
-    if (m_promiscuousState != S_STARTING){
-      call Token.release();
-      return;
-    }
     call RadioPromiscuousMode.set(TRUE);
-    if (call PromiscuousRx.prepare() != IEEE154_SUCCESS){
-      m_promiscuousState = S_IDLE;
-      call Token.release();
-      call Debug.log(DEBUG_LEVEL_IMPORTANT, EnableRxP_RADIORX_ERROR, 0, 0, 0);
-      signal PromiscuousMode.startDone(FAIL);
-    }
+    if (call RadioOff.isOff())
+      signal RadioOff.offDone();
+    else
+      call RadioOff.off();
   }
 
-  async event void PromiscuousRx.prepareDone()
+  task void signalStartDoneTask()
   {
-    post prepareDoneTask();
-  }
-
-  task void prepareDoneTask()
-  {
-    if (m_promiscuousState != S_STARTING){
-      call Token.release();
-      return;
-    }    
-    m_promiscuousState = S_STARTED;
-    call PromiscuousRx.receive(NULL, 0);
+    m_state = S_STARTED;
+    dbg_serial("PromiscuousModeP", "Promiscuous mode enabled.\n");
     signal PromiscuousMode.startDone(SUCCESS);
-    call Debug.log(DEBUG_LEVEL_INFO, EnableRxP_PROMISCUOUS_ON, m_promiscuousState, 0, 0);
   }
 
-  event message_t* PromiscuousRx.received(message_t *frame, ieee154_reftime_t *timestamp)
+  async event void PromiscuousRx.enableRxDone()
   {
-    if (m_promiscuousState == S_STARTED){
+    post signalStartDoneTask();
+  }
+
+  event message_t* PromiscuousRx.received(message_t *frame, const ieee154_timestamp_t *timestamp)
+  {
+    if (m_state == S_STARTED) {
       ((ieee154_header_t*) frame->header)->length |= FRAMECTL_PROMISCUOUS;
       return signal FrameRx.received(frame);
     } else
@@ -129,31 +115,33 @@ implementation
 
   command error_t PromiscuousMode.stop()
   {
-    if (m_promiscuousState != S_STARTED)
-      return FAIL;
-    m_promiscuousState = S_STOPPING;
-    call RadioOff.off();
-    return SUCCESS;
+    error_t result = FAIL;
+    if (m_state == S_STARTED) {
+      m_state = S_STOPPING;
+      call RadioOff.off();
+      result = SUCCESS;
+    }
+    dbg_serial("PromiscuousModeP", "PromiscuousMode.stop -> result: %lu\n", (uint32_t) result);
+    return result;
+  }
+
+  task void continueStopTask()
+  {
+    call RadioPromiscuousMode.set(FALSE);
+    m_state = S_STOPPED;
+    call Token.release();
+    dbg_serial("PromiscuousModeP", "Promiscuous mode disabled.\n");
+    signal PromiscuousMode.stopDone(SUCCESS);
   }
 
   async event void RadioOff.offDone()
   {
-    post radioOffDoneTask();
+    if (m_state == S_STARTING) {
+      call PromiscuousRx.enableRx(0, 0);
+    } else
+      post continueStopTask();
   }
 
-  task void radioOffDoneTask()
-  {
-    if (m_promiscuousState != S_STOPPING){
-      call Token.release();
-      return;
-    }
-    m_promiscuousState = S_IDLE;
-    call RadioPromiscuousMode.set(FALSE);
-    call Token.release();
-    signal PromiscuousMode.stopDone(SUCCESS);
-    call Debug.log(DEBUG_LEVEL_INFO, EnableRxP_PROMISCUOUS_OFF, m_promiscuousState, 0, 0);
-  }
-
-  default event void PromiscuousMode.startDone(error_t error){}
-  default event void PromiscuousMode.stopDone(error_t error){}
+  default event void PromiscuousMode.startDone(error_t error) {}
+  default event void PromiscuousMode.stopDone(error_t error) {}
 }

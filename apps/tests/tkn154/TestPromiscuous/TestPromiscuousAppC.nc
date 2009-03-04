@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-07-21 15:18:16 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-04 18:31:00 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -37,16 +37,16 @@ configuration TestPromiscuousAppC
 {
 } implementation {
  components MainC, TestPromiscuousC as App, LedsC, 
-            Ieee802154MacC as Ieee802154MacC;
+            Ieee802154BeaconEnabledC as MAC;
 
   MainC.Boot <- App;
   App.Leds -> LedsC;
 
-  App.MLME_RESET -> Ieee802154MacC;
-  App.MLME_SET -> Ieee802154MacC;
-  App.MLME_GET -> Ieee802154MacC;
-  App.MCPS_DATA -> Ieee802154MacC;
-  App.Frame -> Ieee802154MacC;
-  App.BeaconFrame -> Ieee802154MacC;
-  App.PromiscuousMode -> Ieee802154MacC;
+  App.MLME_RESET -> MAC;
+  App.MLME_SET -> MAC;
+  App.MLME_GET -> MAC;
+  App.MCPS_DATA -> MAC;
+  App.Frame -> MAC;
+  App.BeaconFrame -> MAC;
+  App.PromiscuousMode -> MAC;
 }

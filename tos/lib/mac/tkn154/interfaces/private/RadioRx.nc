@@ -27,55 +27,47 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:44 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
 #include "TKN154_platform.h"
 interface RadioRx
 {
   /** 
-   * Prepares the radio for receive mode. This command will fail, if the radio
-   * is not in the state RADIO_OFF. The actual receive operation will be
-   * triggered through a call to <tt>receive()</tt>.  
+   * Switches the radio to receive mode at time <tt>t0 + dt</tt> or immediately
+   * if <tt>t0 + dt</tt> lies in the past. Analogous to the <tt>Timer</tt>
+   * interface <tt>t0</tt> is interpreted as a time in the past. Consequently,
+   * if <tt>dt = 0</tt> then the radio is always switched to receive mode
+   * immediately. This command will fail, if the radio is currently not in
+   * state RADIO_OFF. Once the radio is in receive mode an event
+   * <tt>enableRxDone</tt> will be signalled.
    *
-   * @return SUCCESS if the command was accepted and <tt>prepareDone()</tt>
-   * will be signalled; EALREADY if the radio is already in state RX_PREPARED,
-   * FAIL otherwise
-   **/ 
-  async command error_t prepare();
-
-  /** 
-   * Signalled in response to a successful call to <tt>prepare()</tt>. This  
-   * event is completing the preparation of a receive operation, the radio is
-   * now in the state RX_PREPARED. The actual receive operation will be
-   * triggered through a call to <tt>receive()</tt>.
-   **/    
-  async event void prepareDone(); 
-
-  /** 
-   * Tells whether the radio is in state RX_PREPARED.
-   * @return TRUE if the radio is in the state RX_PREPARED, FALSE otherwise 
-   */
-  async command bool isPrepared();
-
-  /** 
-   * Switches the radio to receive mode at time <tt>t0 + dt</tt>.  If
-   * <tt>t0</tt> is NULL, then the callee interprets <tt>t0</tt> as now. 
-   *
-   * @param t0 Reference time for receive operation (NULL means now)  
+   * @param t0 Reference time for receive operation  
    *
    * @param dt A positive offset relative to <tt>t0</tt>.  
    *
-   * @return SUCCESS if the the command was accepted and the radio will be 
-   * switched to receive mode; FAIL, if the radio is not in the state 
-   * RX_PREPARED
+   * @return SUCCESS if the command was accepted and only then the
+   * <tt>enableRxDone()</tt> event will be signalled; FAIL, if the command was
+   * not accepted, because the radio is currently not in the state RADIO_OFF.
    */
-  async command error_t receive(ieee154_reftime_t *t0, uint32_t dt); 
-  
+  async command error_t enableRx(uint32_t t0, uint32_t dt);
+
+  /** 
+   * Signalled in response to a successful call to <tt>enableRx()</tt>. This
+   * event is completing the <tt>enableRx()</tt> operation, the radio is now in
+   * the state RECEIVING. It will stay in receive mode until it is switched off
+   * through the <tt>RadioOff</tt> interface. Received frames will be signalled
+   * through the <tt>received()</tt> event.
+   **/    
+  async event void enableRxDone(); 
+
   /**
-   * Tells whether the radio is in state RECEIVING.
+   * Tells whether the radio is in state RECEIVING, i.e. in receive
+   * mode.
+   *
    * @return TRUE if the radio is in the state RECEIVING, FALSE otherwise 
    */
   async command bool isReceiving();
@@ -84,14 +76,19 @@ interface RadioRx
    * A frame was received and passed the filters described in 
    * IEEE 802.15.4-2006 Sec. 7.5.6.2 ("Reception and rejection").
    *
-   * @param timestamp The point in time when the first bit of the PPDU
-   * was received or NULL if timestamp is not available.
+   * @param timestamp The point in time when the first bit of the PPDU was
+   * received or NULL if a timestamp is not available. The timestamp's data
+   * type is platform-specific, you can use the
+   * <tt>IEEE154Frame.getTimestamp()</tt> command to get a platform-
+   * independent variant (uint32_t) of the timestamp. This pointer is only
+   * valid while the event is signalled and no reference must be kept to it
+   * afterwards.
    *
    * @param frame The received frame  
    *
    * @return            a buffer to be used by the driver for the next 
    *                    incoming frame 
    */
-  event message_t* received(message_t *frame, ieee154_reftime_t *timestamp); 
+  event message_t* received(message_t *frame, const ieee154_timestamp_t *timestamp); 
 }
 

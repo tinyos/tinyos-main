@@ -27,71 +27,55 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-11-25 09:35:09 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-04 18:31:28 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
 #include "TKN154_MAC.h"
-#include "TKN154_DEBUG.h"
+
 module RadioControlImplP 
 {
   provides
   {
     interface RadioRx as MacRx[uint8_t client];
     interface RadioTx as MacTx[uint8_t client];
+    interface SlottedCsmaCa as SlottedCsmaCa[uint8_t client];
+    interface UnslottedCsmaCa as UnslottedCsmaCa[uint8_t client];
     interface RadioOff as MacRadioOff[uint8_t client];
   } uses {
     interface ArbiterInfo;
     interface RadioRx as PhyRx;
     interface RadioTx as PhyTx;
+    interface SlottedCsmaCa as PhySlottedCsmaCa;
+    interface UnslottedCsmaCa as PhyUnslottedCsmaCa;
     interface RadioOff as PhyRadioOff;
     interface Get<bool> as RadioPromiscuousMode;
     interface Leds;
-    interface Ieee802154Debug as Debug;
   }
 }
 implementation
 {
 
-/* ----------------------- RadioRx ----------------------- */
+  /* ----------------------- RadioRx ----------------------- */
 
-  async command error_t MacRx.prepare[uint8_t client]()
-  {
-    if (client == call ArbiterInfo.userId())
-      return call PhyRx.prepare();
-    else {
-      call Leds.led0On();
-      return FAIL;
-    } 
-  }
-    
-  async event void PhyRx.prepareDone()
-  {
-    signal MacRx.prepareDone[call ArbiterInfo.userId()]();
-  }
-
-  async command bool MacRx.isPrepared[uint8_t client]()
-  {
-    if (client == call ArbiterInfo.userId())
-      return call PhyRx.isPrepared();
-    else {
-      call Leds.led0On();
-      return FAIL;
-    } 
-  }
-
-  async command error_t MacRx.receive[uint8_t client](ieee154_reftime_t *t0, uint32_t dt)
+  async command error_t MacRx.enableRx[uint8_t client](uint32_t t0, uint32_t dt)
   {
     if (client == call ArbiterInfo.userId()) 
-      return call PhyRx.receive(t0, dt);
+      return call PhyRx.enableRx(t0, dt);
     else {
-      call Leds.led0On();
+      ASSERT(0);
       return IEEE154_TRANSACTION_OVERFLOW;
     }
   }
 
-  event message_t* PhyRx.received(message_t *msg, ieee154_reftime_t *timestamp)
+  async event void PhyRx.enableRxDone()
+  {
+    signal MacRx.enableRxDone[call ArbiterInfo.userId()]();
+  }
+
+  event message_t* PhyRx.received(message_t *msg, const ieee154_timestamp_t *timestamp)
   {
     uint8_t *mhr = MHR(msg);
     if (((mhr[1] & FC2_FRAME_VERSION_MASK) > FC2_FRAME_VERSION_1)
@@ -110,96 +94,103 @@ implementation
     if (client == call ArbiterInfo.userId())
       return call PhyRx.isReceiving();
     else {
-      call Leds.led0On();
+      ASSERT(0);
       return FAIL;
     } 
   }
 
-/* ----------------------- RadioTx ----------------------- */
+  default async event void MacRx.enableRxDone[uint8_t client]() { ASSERT(0); }
 
-  async command error_t MacTx.load[uint8_t client](ieee154_txframe_t *frame)
+  default event message_t* MacRx.received[uint8_t client](message_t *frame, const ieee154_timestamp_t *timestamp)
+  {
+    ASSERT(0);
+    return frame;
+  }
+
+  /* ----------------------- RadioTx ----------------------- */
+
+  async command error_t MacTx.transmit[uint8_t client](ieee154_txframe_t *frame, 
+      const ieee154_timestamp_t *t0, uint32_t dt)
   {
     if (client == call ArbiterInfo.userId())
-      return call PhyTx.load(frame);
+      return call PhyTx.transmit(frame, t0, dt);
     else {
-      call Leds.led0On();
-      return IEEE154_TRANSACTION_OVERFLOW;
-    }
-  }
-    
-  async event void PhyTx.loadDone()
-  {
-    signal MacTx.loadDone[call ArbiterInfo.userId()]();
-  }
-
-  async command ieee154_txframe_t* MacTx.getLoadedFrame[uint8_t client]()
-  {
-    if (client == call ArbiterInfo.userId())
-      return call PhyTx.getLoadedFrame();
-    else {
-      call Leds.led0On();
-      return NULL;
-    }
-  }
-
-  async command error_t MacTx.transmit[uint8_t client](ieee154_reftime_t *t0, uint32_t dt)
-  {
-    if (client == call ArbiterInfo.userId()) 
-      return call PhyTx.transmit(t0, dt);
-    else {
-      call Leds.led0On();
+      ASSERT(0);
       return IEEE154_TRANSACTION_OVERFLOW;
     }
   }
   
-  async event void PhyTx.transmitDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime)
+  async event void PhyTx.transmitDone(ieee154_txframe_t *frame, 
+      const ieee154_timestamp_t *timestamp, error_t result)
   {
-    signal MacTx.transmitDone[call ArbiterInfo.userId()](frame, txTime);
+    signal MacTx.transmitDone[call ArbiterInfo.userId()](frame, timestamp, result);
   }
 
-  async command error_t MacTx.transmitUnslottedCsmaCa[uint8_t client](ieee154_csma_t *csmaParams)
+  default async event void MacTx.transmitDone[uint8_t client](ieee154_txframe_t *frame, 
+      const ieee154_timestamp_t *timestamp, error_t result) 
+  {
+    ASSERT(0);
+  }
+
+  /* ----------------------- Unslotted CSMA ----------------------- */
+
+  async command error_t UnslottedCsmaCa.transmit[uint8_t client](ieee154_txframe_t *frame, ieee154_csma_t *csma)
   {
     if (client == call ArbiterInfo.userId()) 
-      return call PhyTx.transmitUnslottedCsmaCa(csmaParams);
+      return call PhyUnslottedCsmaCa.transmit(frame, csma);
     else {
-      call Leds.led0On();
+      ASSERT(0);
       return IEEE154_TRANSACTION_OVERFLOW;
     }
   }
 
-  async event void PhyTx.transmitUnslottedCsmaCaDone(ieee154_txframe_t *frame,
-      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result)
+  async event void PhyUnslottedCsmaCa.transmitDone(ieee154_txframe_t *frame, ieee154_csma_t *csma, bool ackPendingFlag, error_t result)
   {
-    signal MacTx.transmitUnslottedCsmaCaDone[call ArbiterInfo.userId()](
-        frame, ackPendingFlag, csmaParams, result);
+    signal UnslottedCsmaCa.transmitDone[call ArbiterInfo.userId()](
+        frame, csma, ackPendingFlag, result);
   }
 
-  async command error_t MacTx.transmitSlottedCsmaCa[uint8_t client](ieee154_reftime_t *slot0Time, uint32_t dtMax, 
-      bool resume, uint16_t remainingBackoff, ieee154_csma_t *csmaParams)
+  default async event void UnslottedCsmaCa.transmitDone[uint8_t client](
+      ieee154_txframe_t *frame, ieee154_csma_t *csma, bool ackPendingFlag, error_t result)
+  {
+    ASSERT(0);
+  }
+
+  /* ----------------------- Slotted CSMA ----------------------- */
+
+  async command error_t SlottedCsmaCa.transmit[uint8_t client](ieee154_txframe_t *frame, ieee154_csma_t *csma,
+      const ieee154_timestamp_t *slot0Time, uint32_t dtMax, bool resume, uint16_t remainingBackoff)
   {
     if (client == call ArbiterInfo.userId()) 
-      return call PhyTx.transmitSlottedCsmaCa(slot0Time, dtMax, resume, remainingBackoff, csmaParams);
+      return call PhySlottedCsmaCa.transmit(frame, csma, slot0Time, dtMax, resume, remainingBackoff);
     else {
-      call Leds.led0On();
+      ASSERT(0);
       return IEEE154_TRANSACTION_OVERFLOW;
     }
   }
 
-  async event void PhyTx.transmitSlottedCsmaCaDone(ieee154_txframe_t *frame, ieee154_reftime_t *txTime, 
-      bool ackPendingFlag, uint16_t remainingBackoff, ieee154_csma_t *csmaParams, error_t result)
+  async event void PhySlottedCsmaCa.transmitDone(ieee154_txframe_t *frame, ieee154_csma_t *csma, 
+      bool ackPendingFlag,  uint16_t remainingBackoff, error_t result)
   {
-    signal MacTx.transmitSlottedCsmaCaDone[call ArbiterInfo.userId()](
-        frame, txTime, ackPendingFlag, remainingBackoff, csmaParams, result);
+    signal SlottedCsmaCa.transmitDone[call ArbiterInfo.userId()](
+        frame, csma, ackPendingFlag, remainingBackoff, result);
   }
 
-/* ----------------------- RadioOff ----------------------- */
+  default async event void SlottedCsmaCa.transmitDone[uint8_t client](
+      ieee154_txframe_t *frame, ieee154_csma_t *csma, 
+      bool ackPendingFlag,  uint16_t remainingBackoff, error_t result)
+  {
+    ASSERT(0);
+  }
+
+  /* ----------------------- RadioOff ----------------------- */
 
   async command error_t MacRadioOff.off[uint8_t client]()
   {
     if (client == call ArbiterInfo.userId())
       return call PhyRadioOff.off();
     else {
-      call Leds.led0On();
+      ASSERT(0);
       return EBUSY;
     }
   }
@@ -218,38 +209,8 @@ implementation
       return EBUSY;
   }
 
-/* ----------------------- Defaults ----------------------- */
-
-  default async event void MacTx.loadDone[uint8_t client]()
-  {
-    call Debug.log(DEBUG_LEVEL_CRITICAL, 0, 0, 0, 0);
-  }
-  default async event void MacTx.transmitDone[uint8_t client](ieee154_txframe_t *frame, ieee154_reftime_t *txTime) 
-  {
-    call Debug.log(DEBUG_LEVEL_CRITICAL, 1, 0, 0, 0);
-  }
-  default async event void MacRx.prepareDone[uint8_t client]()
-  {
-    call Debug.log(DEBUG_LEVEL_CRITICAL, 2, 0, 0, 0);
-  }
-  default event message_t* MacRx.received[uint8_t client](message_t *frame, ieee154_reftime_t *timestamp)
-  {
-    call Debug.log(DEBUG_LEVEL_IMPORTANT, 3, client, call ArbiterInfo.userId(), 0xff);
-    return frame;
-  }
   default async event void MacRadioOff.offDone[uint8_t client]()
   {
-    call Debug.log(DEBUG_LEVEL_CRITICAL, 4, 0, 0, 0);
-  }
-  default async event void MacTx.transmitUnslottedCsmaCaDone[uint8_t client](ieee154_txframe_t *frame,
-      bool ackPendingFlag, ieee154_csma_t *csmaParams, error_t result)
-  {
-    call Debug.log(DEBUG_LEVEL_CRITICAL, 5, 0, 0, 0);
-  }
-  default async event void MacTx.transmitSlottedCsmaCaDone[uint8_t client](ieee154_txframe_t *frame, 
-      ieee154_reftime_t *txTime, bool ackPendingFlag, uint16_t remainingBackoff, 
-      ieee154_csma_t *csmaParams, error_t result)
-  {
-    call Debug.log(DEBUG_LEVEL_CRITICAL, 6, 0, 0, 0);
+    ASSERT(0);
   }
 }
