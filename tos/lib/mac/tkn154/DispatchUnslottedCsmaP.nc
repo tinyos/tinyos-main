@@ -28,7 +28,7 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2009-03-04 18:31:39 $
+ * $Date: 2009-03-05 10:07:11 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -50,7 +50,7 @@
 #error "The IEEE154_BEACON_ENABLED_PAN macro MUST NOT be set when using this component!"
 #endif
 
-module UnslottedFrameDispatchP
+module DispatchUnslottedCsmaP
 {
   provides
   {
@@ -187,7 +187,7 @@ implementation
   {
     if (m_currentFrame != NULL) {
       // we've not finished transmitting the current frame yet
-      dbg_serial("UnslottedFrameDispatchP", "Overflow\n");
+      dbg_serial("DispatchUnslottedCsmaP", "Overflow\n");
       return IEEE154_TRANSACTION_OVERFLOW;
     } else {
       setCurrentFrame(frame);
@@ -263,7 +263,7 @@ implementation
         if (call RadioOff.isOff()) {
           // nothing more to do... just release the Token
           m_lock = FALSE; // unlock
-          dbg_serial("UnslottedFrameDispatchP", "Token requested: releasing it.\n");
+          dbg_serial("DispatchUnslottedCsmaP", "Token requested: releasing it.\n");
           call Token.release();
           return;
         } else 
@@ -292,7 +292,7 @@ implementation
         if (next == DO_NOTHING) {
           // nothing more to do... just release the Token
           m_lock = FALSE; // unlock
-          dbg_serial("UnslottedFrameDispatchP", "Releasing token\n");
+          dbg_serial("DispatchUnslottedCsmaP", "Releasing token\n");
           call Token.release();
           return;
         }
@@ -323,7 +323,7 @@ implementation
     else {
       error_t res;
       res = call UnslottedCsmaCa.transmit(m_currentFrame, &m_csma);
-      dbg("UnslottedFrameDispatchP", "UnslottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
+      dbg("DispatchUnslottedCsmaP", "UnslottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
       next = WAIT_FOR_TXDONE; // this will NOT clear the lock
     }
     return next;
@@ -378,7 +378,7 @@ implementation
       ieee154_csma_t *csma, bool ackPendingFlag, error_t result)
   {
     bool done = TRUE;
-    dbg("UnslottedFrameDispatchP", "UnslottedCsmaCa.transmitDone() -> %lu\n", (uint32_t) result);
+    dbg("DispatchUnslottedCsmaP", "UnslottedCsmaCa.transmitDone() -> %lu\n", (uint32_t) result);
     m_resume = FALSE;
 
     switch (result)
@@ -444,7 +444,7 @@ implementation
     m_indirectTxPending = FALSE;
     m_lastFrame = NULL; // only now the next transmission can begin 
     if (lastFrame) {
-      dbg("UnslottedFrameDispatchP", "Transmit done, DSN: %lu, result: 0x%lx\n", 
+      dbg("DispatchUnslottedCsmaP", "Transmit done, DSN: %lu, result: 0x%lx\n", 
           (uint32_t) MHR(lastFrame)[MHR_INDEX_SEQNO], (uint32_t) status);
       signal FrameTx.transmitDone(lastFrame, status);
     }

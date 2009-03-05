@@ -28,7 +28,7 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2009-03-04 18:31:32 $
+ * $Date: 2009-03-05 10:07:11 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -60,7 +60,7 @@
 #error "The IEEE154_BEACON_ENABLED_PAN macro MUST be defined when using this component!"
 #endif
 
-generic module SlottedFrameDispatchP(uint8_t sfDirection)
+generic module DispatchSlottedCsmaP(uint8_t sfDirection)
 {
   provides
   {
@@ -167,7 +167,7 @@ implementation
   void dbg_flush_state() {
     m_dbgStr[HEADER_STR_LEN + m_dbgNumEntries++] = '\n'; 
     m_dbgStr[HEADER_STR_LEN + m_dbgNumEntries++] = 0; 
-    dbg_serial("SlottedFrameDispatchP",m_dbgStr);
+    dbg_serial("DispatchSlottedCsmaP",m_dbgStr);
     m_dbgNumEntries = 0;
   }
 #else 
@@ -195,7 +195,7 @@ implementation
       (uint32_t) call SuperframeStructure.sfSlotDuration();
     uint16_t guardTime = call SuperframeStructure.guardTime();
 
-    dbg_serial("SlottedFrameDispatchP", "Got token, remaining CAP time: %lu\n", 
+    dbg_serial("DispatchSlottedCsmaP", "Got token, remaining CAP time: %lu\n", 
         call SuperframeStructure.sfStartTime() + capDuration - guardTime - call CapEndAlarm.getNow());
     if (DEVICE_ROLE && !call IsTrackingBeacons.getNow()) {
       // very rare case: 
@@ -206,12 +206,12 @@ implementation
       m_lastFrame = m_currentFrame;
       m_currentFrame = NULL;
       m_txStatus = IEEE154_NO_BEACON;
-      dbg_serial("SlottedFrameDispatchP", "CAP component got token, remaining time: %lu\n");
+      dbg_serial("DispatchSlottedCsmaP", "CAP component got token, remaining time: %lu\n");
       post signalTxDoneTask();
       return;
     } else if (capDuration < guardTime) {
       // CAP is too short to do anything practical
-      dbg_serial("SlottedFrameDispatchP", "CAP too short!\n");
+      dbg_serial("DispatchSlottedCsmaP", "CAP too short!\n");
       call TokenToCfp.transfer();
       return;
     } else {
@@ -227,7 +227,7 @@ implementation
           // in task context and then continue
           m_lock = TRUE;
           post setupTxBroadcastTask(); 
-          dbg_serial("SlottedFrameDispatchP", "Preparing broadcast.\n");
+          dbg_serial("DispatchSlottedCsmaP", "Preparing broadcast.\n");
         }
       }
       call CapEndAlarm.startAt(call SuperframeStructure.sfStartTime(), capDuration);
@@ -241,15 +241,15 @@ implementation
   {
     if (m_currentFrame != NULL) {
       // we've not finished transmitting the current frame yet
-      dbg_serial("SlottedFrameDispatchP", "Overflow\n");
+      dbg_serial("DispatchSlottedCsmaP", "Overflow\n");
       return IEEE154_TRANSACTION_OVERFLOW;
     } else {
       setCurrentFrame(frame);
-      dbg("SlottedFrameDispatchP", "New frame to transmit, DSN: %lu\n", (uint32_t) MHR(frame)[MHR_INDEX_SEQNO]);
+      dbg("DispatchSlottedCsmaP", "New frame to transmit, DSN: %lu\n", (uint32_t) MHR(frame)[MHR_INDEX_SEQNO]);
       // a beacon must be found before transmitting in a beacon-enabled PAN
       if (DEVICE_ROLE && !call IsTrackingBeacons.getNow()) {
         call TrackSingleBeacon.start();
-        dbg_serial("SlottedFrameDispatchP", "Tracking single beacon now\n");
+        dbg_serial("DispatchSlottedCsmaP", "Tracking single beacon now\n");
         // we'll receive the Token  after a beacon was found or after
         // aBaseSuperframeDuration*(2n+1) symbols if none was found  
       }
@@ -368,7 +368,7 @@ implementation
           }
           m_lock = FALSE; // unlock
           dbg_flush_state();
-          dbg_serial("SlottedFrameDispatchP", "Handing over to CFP.\n");
+          dbg_serial("DispatchSlottedCsmaP", "Handing over to CFP.\n");
           call TokenToCfp.transfer();
           return;
         } else 
@@ -400,7 +400,7 @@ implementation
           stopAllAlarms();  // may still fire, but is locked through isOwner()
           // nothing more to do... just release the Token
           m_lock = FALSE; // unlock
-          dbg_serial("SlottedFrameDispatchP", "Token requested: Handing over to CFP.\n");
+          dbg_serial("DispatchSlottedCsmaP", "Token requested: Handing over to CFP.\n");
           call TokenToCfp.transfer();
           return;
         } else 
@@ -443,7 +443,7 @@ implementation
           // nothing more to do... just release the Token
           stopAllAlarms();  // may still fire, but is locked through isOwner()
           m_lock = FALSE; // unlock
-          dbg_serial("SlottedFrameDispatchP", "Releasing token\n");
+          dbg_serial("DispatchSlottedCsmaP", "Releasing token\n");
           call Token.release();
           return;
         }
@@ -491,7 +491,7 @@ implementation
         error_t res;
         res = call SlottedCsmaCa.transmit(m_currentFrame, &m_csma, 
                    call SuperframeStructure.sfStartTimeRef(), dtMax, m_resume, m_remainingBackoff);
-        dbg("SlottedFrameDispatchP", "SlottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
+        dbg("DispatchSlottedCsmaP", "SlottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
         next = WAIT_FOR_TXDONE; // this will NOT clear the lock
       }
     }
@@ -532,7 +532,7 @@ implementation
   async event void RadioRx.enableRxDone() { m_lock = FALSE; updateState();}
 
   async event void CapEndAlarm.fired() { 
-    dbg_serial("SlottedFrameDispatchP", "CapEndAlarm.fired()\n");
+    dbg_serial("DispatchSlottedCsmaP", "CapEndAlarm.fired()\n");
     updateState();
   }
   async event void BLEAlarm.fired() { updateState();}
@@ -553,7 +553,7 @@ implementation
       bool ackPendingFlag,  uint16_t remainingBackoff, error_t result)
   {
     bool done = TRUE;
-    dbg("SlottedFrameDispatchP", "SlottedCsmaCa.transmitDone() -> %lu\n", (uint32_t) result);
+    dbg("DispatchSlottedCsmaP", "SlottedCsmaCa.transmitDone() -> %lu\n", (uint32_t) result);
     m_resume = FALSE;
 
     switch (result)
@@ -598,12 +598,12 @@ implementation
           m_txStatus = IEEE154_NO_ACK;
         break;
       case EINVAL: // DEBUG!!!
-        dbg_serial("SlottedFrameDispatchP", "EINVAL returned by transmitDone()!\n");
+        dbg_serial("DispatchSlottedCsmaP", "EINVAL returned by transmitDone()!\n");
         // fall through
       case ERETRY:
         // frame was not transmitted, because the transaction does not
         // fit in the remaining CAP (in beacon-enabled PANs only)
-        dbg_serial("SlottedFrameDispatchP", "Transaction didn't fit, current BE: %lu\n", (uint32_t) csma->BE);
+        dbg_serial("DispatchSlottedCsmaP", "Transaction didn't fit, current BE: %lu\n", (uint32_t) csma->BE);
         m_resume = TRUE;
         m_remainingBackoff = remainingBackoff;
         done = FALSE;
@@ -639,7 +639,7 @@ implementation
     m_indirectTxPending = FALSE;
     m_lastFrame = NULL; // only now can the next transmission can begin 
     if (lastFrame) {
-      dbg("SlottedFrameDispatchP", "Transmit done, DSN: %lu, result: 0x%lx\n", 
+      dbg("DispatchSlottedCsmaP", "Transmit done, DSN: %lu, result: 0x%lx\n", 
           (uint32_t) MHR(lastFrame)[MHR_INDEX_SEQNO], (uint32_t) status);
       signal FrameTx.transmitDone(lastFrame, status);
     }

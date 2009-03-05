@@ -28,17 +28,17 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2009-03-04 18:31:40 $
+ * $Date: 2009-03-05 10:07:14 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
- /** Empty placeholder component for SlottedFrameDispatchP. */
+ /** Empty placeholder component for DispatchSlottedCsmaP. */
 
 #include "TKN154_PHY.h"
 #include "TKN154_MAC.h"
 
-generic module NoSlottedFrameDispatchP(uint8_t superframeDirection)
+generic module NoDispatchSlottedCsmaP(uint8_t superframeDirection)
 {
   provides
   {

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-04 18:31:37 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-05 10:07:13 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -118,8 +118,8 @@ implementation
 #else
              NoDisassociateP as DisassociateP,
 #endif
-             new FrameDispatchQueueP() as FrameDispatchQueueP,
-             UnslottedFrameDispatchP as FrameDispatchP,
+             new DispatchQueueP() as DispatchQueueP,
+             DispatchUnslottedCsmaP as DispatchP,
 
 #ifndef IEEE154_RXENABLE_DISABLED
              RxEnableP,
@@ -142,7 +142,7 @@ implementation
 
              new PoolC(ieee154_txframe_t, TXFRAME_POOL_SIZE) as TxFramePoolP,
              new PoolC(ieee154_txcontrol_t, TXCONTROL_POOL_SIZE) as TxControlPoolP,
-             new QueueC(ieee154_txframe_t*, CAP_TX_QUEUE_SIZE) as FrameDispatchQueueC;
+             new QueueC(ieee154_txframe_t*, CAP_TX_QUEUE_SIZE) as DispatchQueueC;
 
   components MainC;
 
@@ -151,7 +151,7 @@ implementation
   MCPS_PURGE = DataP; 
 
   /* MLME */
-  MLME_START = FrameDispatchP;
+  MLME_START = DispatchP;
   MLME_ASSOCIATE = AssociateP;
   MLME_DISASSOCIATE = DisassociateP;
   MLME_BEACON_NOTIFY = ScanP;
@@ -194,9 +194,9 @@ implementation
   /* -------------------- Association (MLME-ASSOCIATE) -------------------- */
 
   PibP.MacReset -> AssociateP;
-  AssociateP.AssociationRequestRx -> FrameDispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_ASSOCIATION_REQUEST];
-  AssociateP.AssociationRequestTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
-  AssociateP.AssociationResponseExtracted -> FrameDispatchP.FrameExtracted[FC1_FRAMETYPE_CMD + CMD_FRAME_ASSOCIATION_RESPONSE];
+  AssociateP.AssociationRequestRx -> DispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_ASSOCIATION_REQUEST];
+  AssociateP.AssociationRequestTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  AssociateP.AssociationResponseExtracted -> DispatchP.FrameExtracted[FC1_FRAMETYPE_CMD + CMD_FRAME_ASSOCIATION_RESPONSE];
   AssociateP.AssociationResponseTx -> IndirectTxP.FrameTx[unique(INDIRECT_TX_CLIENT)];
   AssociateP.DataRequest -> PollP.DataRequest[ASSOCIATE_POLL_CLIENT];
   AssociateP.ResponseTimeout = Timer2;
@@ -212,12 +212,12 @@ implementation
 
   PibP.MacReset -> DisassociateP;
   DisassociateP.DisassociationIndirectTx -> IndirectTxP.FrameTx[unique(INDIRECT_TX_CLIENT)];
-  DisassociateP.DisassociationDirectTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
-  DisassociateP.DisassociationToCoord -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  DisassociateP.DisassociationDirectTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  DisassociateP.DisassociationToCoord -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
   DisassociateP.DisassociationExtractedFromCoord -> 
-    FrameDispatchP.FrameExtracted[FC1_FRAMETYPE_CMD + CMD_FRAME_DISASSOCIATION_NOTIFICATION];
+    DispatchP.FrameExtracted[FC1_FRAMETYPE_CMD + CMD_FRAME_DISASSOCIATION_NOTIFICATION];
   DisassociateP.DisassociationRxFromDevice -> 
-    FrameDispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_DISASSOCIATION_NOTIFICATION];
+    DispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_DISASSOCIATION_NOTIFICATION];
   DisassociateP.TxFramePool -> TxFramePoolP;
   DisassociateP.TxControlPool -> TxControlPoolP;
   DisassociateP.MLME_GET -> PibP;
@@ -227,15 +227,15 @@ implementation
 
   /* ------------------ Data Transmission (MCPS-DATA) ------------------- */
 
-  DataP.DeviceCapTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
-  DataP.CoordCapTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  DataP.DeviceCapTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  DataP.CoordCapTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
   DataP.DeviceCapRx -> PollP.DataRx;                          
   DataP.DeviceCapRx -> PromiscuousModeP.FrameRx;              
   DataP.TxFramePool -> TxFramePoolP;
   DataP.IndirectTx -> IndirectTxP.FrameTx[unique(INDIRECT_TX_CLIENT)];
   DataP.FrameUtility -> PibP;
   DataP.Frame -> PibP;
-  DataP.PurgeDirect -> FrameDispatchQueueP;
+  DataP.PurgeDirect -> DispatchQueueP;
   DataP.PurgeIndirect -> IndirectTxP;
   DataP.MLME_GET -> PibP;
   DataP.Packet -> PibP;
@@ -244,8 +244,8 @@ implementation
   /* ------------------------ Polling (MLME-POLL) ----------------------- */
 
   PibP.MacReset -> PollP;
-  PollP.PollTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
-  PollP.DataExtracted -> FrameDispatchP.FrameExtracted[FC1_FRAMETYPE_DATA];
+  PollP.PollTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  PollP.DataExtracted -> DispatchP.FrameExtracted[FC1_FRAMETYPE_DATA];
   PollP.FrameUtility -> PibP;
   PollP.TxFramePool -> TxFramePoolP;
   PollP.TxControlPool -> TxControlPoolP;
@@ -255,8 +255,8 @@ implementation
   /* ---------------------- Indirect transmission ----------------------- */
 
   PibP.MacReset -> IndirectTxP;
-  IndirectTxP.CoordCapTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
-  IndirectTxP.DataRequestRx -> FrameDispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_DATA_REQUEST];
+  IndirectTxP.CoordCapTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  IndirectTxP.DataRequestRx -> DispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_DATA_REQUEST];
   IndirectTxP.MLME_GET -> PibP;
   IndirectTxP.FrameUtility -> PibP;
   IndirectTxP.IndirectTxTimeout = Timer3;
@@ -266,8 +266,8 @@ implementation
   /* ---------------------------- Realignment --------------------------- */
 
   PibP.MacReset -> CoordRealignmentP;
-  CoordRealignmentP.CoordRealignmentTx -> FrameDispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
-  CoordRealignmentP.OrphanNotificationRx -> FrameDispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_ORPHAN_NOTIFICATION];
+  CoordRealignmentP.CoordRealignmentTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
+  CoordRealignmentP.OrphanNotificationRx -> DispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_ORPHAN_NOTIFICATION];
   CoordRealignmentP.FrameUtility -> PibP;
   CoordRealignmentP.Frame -> PibP;
   CoordRealignmentP.TxFramePool -> TxFramePoolP;
@@ -275,31 +275,31 @@ implementation
   CoordRealignmentP.MLME_GET -> PibP;
   CoordRealignmentP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;
 
-  /* --------------------- FrameDispatchP -------------------- */
+  /* --------------------- DispatchP -------------------- */
 
-  PibP.FrameDispatchReset -> FrameDispatchP;
-  PibP.FrameDispatchQueueReset -> FrameDispatchQueueP;
-  FrameDispatchQueueP.Queue -> FrameDispatchQueueC;
-  FrameDispatchQueueP.FrameTxCsma -> FrameDispatchP;
+  PibP.DispatchReset -> DispatchP;
+  PibP.DispatchQueueReset -> DispatchQueueP;
+  DispatchQueueP.Queue -> DispatchQueueC;
+  DispatchQueueP.FrameTxCsma -> DispatchP;
   
-  components new RadioClientC() as FrameDispatchRadioClient;
-  PibP.FrameDispatchReset -> FrameDispatchP;
-  FrameDispatchP.IndirectTxWaitTimer = Timer4;
-  FrameDispatchP.Token -> FrameDispatchRadioClient;
-  FrameDispatchP.SetMacSuperframeOrder -> PibP.SetMacSuperframeOrder;
-  FrameDispatchP.SetMacPanCoordinator -> PibP.SetMacPanCoordinator;
-  FrameDispatchP.IsTokenRequested -> FrameDispatchRadioClient;
-  FrameDispatchP.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
-  FrameDispatchP.GetIndirectTxFrame -> IndirectTxP;
-  FrameDispatchP.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
-  FrameDispatchP.FrameUtility -> PibP;
-  FrameDispatchP.UnslottedCsmaCa -> FrameDispatchRadioClient;
-  FrameDispatchP.RadioRx -> FrameDispatchRadioClient;
-  FrameDispatchP.RadioOff -> FrameDispatchRadioClient;
-  FrameDispatchP.MLME_GET -> PibP;
-  FrameDispatchP.MLME_SET -> PibP.MLME_SET;
-  FrameDispatchP.TimeCalc -> PibP;
-  FrameDispatchP.Leds = Leds;
+  components new RadioClientC() as DispatchRadioClient;
+  PibP.DispatchReset -> DispatchP;
+  DispatchP.IndirectTxWaitTimer = Timer4;
+  DispatchP.Token -> DispatchRadioClient;
+  DispatchP.SetMacSuperframeOrder -> PibP.SetMacSuperframeOrder;
+  DispatchP.SetMacPanCoordinator -> PibP.SetMacPanCoordinator;
+  DispatchP.IsTokenRequested -> DispatchRadioClient;
+  DispatchP.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
+  DispatchP.GetIndirectTxFrame -> IndirectTxP;
+  DispatchP.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
+  DispatchP.FrameUtility -> PibP;
+  DispatchP.UnslottedCsmaCa -> DispatchRadioClient;
+  DispatchP.RadioRx -> DispatchRadioClient;
+  DispatchP.RadioOff -> DispatchRadioClient;
+  DispatchP.MLME_GET -> PibP;
+  DispatchP.MLME_SET -> PibP.MLME_SET;
+  DispatchP.TimeCalc -> PibP;
+  DispatchP.Leds = Leds;
 
   /* -------------------------- promiscuous mode ------------------------ */
 
@@ -314,8 +314,8 @@ implementation
 
   PibP.MacReset -> RxEnableP;
   RxEnableP.TimeCalc -> PibP.TimeCalc;
-  RxEnableP.WasRxEnabled -> FrameDispatchP.WasRxEnabled;
-  RxEnableP.WasRxEnabled -> FrameDispatchP.WasRxEnabled;
+  RxEnableP.WasRxEnabled -> DispatchP.WasRxEnabled;
+  RxEnableP.WasRxEnabled -> DispatchP.WasRxEnabled;
   RxEnableP.RxEnableTimer = Timer5;
 
   /* ------------------------------- PIB -------------------------------- */

@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-03-04 18:31:24 $
+ * $Date: 2009-03-05 10:07:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -62,8 +62,8 @@ module PibP {
   uses
   {
     interface Get<bool> as PromiscuousModeGet;
-    interface Init as FrameDispatchReset;
-    interface Init as FrameDispatchQueueReset;
+    interface Init as DispatchReset;
+    interface Init as DispatchQueueReset;
     interface Init as MacReset;
     interface SplitControl as RadioControl;
     interface Random;
@@ -206,9 +206,9 @@ implementation
   event void RadioControl.stopDone(error_t result)
   {
     ASSERT(result == SUCCESS);
-    call FrameDispatchReset.init();       // resets the CAP component(s), spool out frames
-    call FrameDispatchQueueReset.init();  // resets the CAP queue component(s), spool out frames
-    call MacReset.init();       // resets the remaining components
+    call DispatchReset.init();       // resets the dispatch component(s), spools out frames
+    call DispatchQueueReset.init();  // resets the dispatch queue component(s), spools out frames
+    call MacReset.init();            // resets the remaining components
     m_resetSpin = 5;
     post resetSpinTask();
   }
@@ -217,8 +217,8 @@ implementation
   {
     if (m_resetSpin == 2) {
       // just to be safe...
-      call FrameDispatchReset.init();       
-      call FrameDispatchQueueReset.init();  
+      call DispatchReset.init();       
+      call DispatchQueueReset.init();  
       call MacReset.init();       
     }
     if (m_resetSpin--) {

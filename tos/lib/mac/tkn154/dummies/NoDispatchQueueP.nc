@@ -27,13 +27,16 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:24 $
+ * $Revision: 1.1 $
+ * $Date: 2009-03-05 10:07:14 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
+ /** Empty placeholder component for DispatchQueueP. */
+
 #include "TKN154_MAC.h"
-generic module FrameDispatchQueueP() {
+generic module NoDispatchQueueP() {
   provides
   {
     interface Init as Reset;
@@ -48,81 +51,23 @@ generic module FrameDispatchQueueP() {
 }
 implementation
 {
-  task void txTask();
-  bool m_busy;
-  uint8_t m_client;
-
-  command error_t Reset.init()
-  {
-    while (call Queue.size()) {
-      ieee154_txframe_t *txFrame = call Queue.dequeue();
-      signal FrameTx.transmitDone[txFrame->client](txFrame, IEEE154_TRANSACTION_OVERFLOW);
-    }
-    m_busy = FALSE;
-    return SUCCESS;
-  }
+  command error_t Reset.init() { return SUCCESS; }
 
   command ieee154_status_t FrameTx.transmit[uint8_t client](ieee154_txframe_t *txFrame)
   {
-    txFrame->client = client;
-    if (call Queue.enqueue(txFrame) != SUCCESS)
-      return IEEE154_TRANSACTION_OVERFLOW;
-    else {
-      post txTask();
-      return IEEE154_SUCCESS;
-    }
+    return IEEE154_TRANSACTION_OVERFLOW;
   }
 
-  task void txTask()
-  {
-    if (!m_busy && call Queue.size()) {
-      ieee154_txframe_t *txFrame = call Queue.head();
-      if (txFrame->headerLen == 0) { 
-        // was purged
-        call Queue.dequeue();
-        signal Purge.purgeDone(txFrame, IEEE154_SUCCESS);
-        post txTask();
-      }
-      m_client = txFrame->client;
-      if (call FrameTxCsma.transmit(txFrame) == IEEE154_SUCCESS) {
-        m_busy = TRUE;
-      }
-    }
-  }
+  event void FrameTxCsma.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status) { }
 
-  event void FrameTxCsma.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
-  {
-    call Queue.dequeue();
-    m_busy = FALSE;
-    signal FrameTx.transmitDone[txFrame->client](txFrame, status);
-    post txTask();
-  }
+  event message_t* SubFrameExtracted.received(message_t* frame) { return frame; }
 
-  event message_t* SubFrameExtracted.received(message_t* frame)
-  {
-    // this event is signalled when a frame has been received
-    // in response to a data request command frame. The transmitDone 
-    // event will be signalled later
-    return signal FrameExtracted.received[m_client](frame);
-  }
-
-  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status) {}
+  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status){}
 
   command ieee154_status_t Purge.purge(uint8_t msduHandle)
   {
-    uint8_t qSize = call Queue.size(), i;
-    if (qSize > 1) {
-      for (i=0; i<qSize-1; i++) {
-        ieee154_txframe_t *txFrame = call Queue.element(i);
-        if (((txFrame->header->mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_DATA) &&
-          txFrame->handle == msduHandle) {
-          txFrame->headerLen = 0; // mark as invalid
-          return IEEE154_SUCCESS;
-        }
-      }
-    }
     return IEEE154_INVALID_HANDLE;
   }
   
-  default event void Purge.purgeDone(ieee154_txframe_t *txFrame, ieee154_status_t status) {}
+  default event void Purge.purgeDone(ieee154_txframe_t *txFrame, ieee154_status_t status){}
 }

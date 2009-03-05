@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-04 18:31:32 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-05 10:07:13 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -136,23 +136,23 @@ implementation
 
 #ifndef IEEE154_BEACON_SYNC_DISABLED
              BeaconSynchronizeP,
-             new FrameDispatchQueueP() as DeviceCapQueue,
-             new SlottedFrameDispatchP(INCOMING_SUPERFRAME) as DeviceCap,
+             new DispatchQueueP() as DeviceCapQueue,
+             new DispatchSlottedCsmaP(INCOMING_SUPERFRAME) as DeviceCap,
 #else
              NoBeaconSynchronizeP as BeaconSynchronizeP,
-             new NoFrameDispatchQueueP() as DeviceCapQueue,
-             new NoSlottedFrameDispatchP(INCOMING_SUPERFRAME) as DeviceCap,
+             new NoDispatchQueueP() as DeviceCapQueue,
+             new NoDispatchSlottedCsmaP(INCOMING_SUPERFRAME) as DeviceCap,
 #endif
              NoDeviceCfpP as DeviceCfp,
 
 #ifndef IEEE154_BEACON_TX_DISABLED
              BeaconTransmitP,
-             new FrameDispatchQueueP() as CoordCapQueue,
-             new SlottedFrameDispatchP(OUTGOING_SUPERFRAME) as CoordCap,
+             new DispatchQueueP() as CoordCapQueue,
+             new DispatchSlottedCsmaP(OUTGOING_SUPERFRAME) as CoordCap,
 #else
              NoBeaconTransmitP as BeaconTransmitP,
-             new NoFrameDispatchQueueP() as CoordCapQueue,
-             new NoSlottedFrameDispatchP(OUTGOING_SUPERFRAME) as CoordCap,
+             new NoDispatchQueueP() as CoordCapQueue,
+             new NoDispatchSlottedCsmaP(OUTGOING_SUPERFRAME) as CoordCap,
 #endif
              NoCoordCfpP as CoordCfp,
 
@@ -402,16 +402,16 @@ implementation
 
   /* --------------------- CAP (incoming superframe) -------------------- */
 
-  PibP.FrameDispatchQueueReset -> DeviceCapQueue;
+  PibP.DispatchQueueReset -> DeviceCapQueue;
   DeviceCapQueue.Queue -> DeviceCapQueueC;
   DeviceCapQueue.FrameTxCsma -> DeviceCap;
 
-  PibP.FrameDispatchQueueReset -> CoordCapQueue;
+  PibP.DispatchQueueReset -> CoordCapQueue;
   CoordCapQueue.Queue -> CoordCapQueueC;
   CoordCapQueue.FrameTxCsma -> CoordCap;
   
   components new RadioClientC() as DeviceCapRadioClient;
-  PibP.FrameDispatchReset -> DeviceCap;
+  PibP.DispatchReset -> DeviceCap;
   DeviceCap.CapEndAlarm = Alarm3;
   DeviceCap.BLEAlarm = Alarm4;
   DeviceCap.IndirectTxWaitAlarm = Alarm5;
@@ -440,7 +440,7 @@ implementation
 
   components new RadioClientC() as CoordCapRadioClient, 
              new BackupP(ieee154_cap_frame_backup_t);
-  PibP.FrameDispatchReset -> CoordCap;
+  PibP.DispatchReset -> CoordCap;
   CoordCap.CapEndAlarm = Alarm7;
   CoordCap.BLEAlarm = Alarm8;
   CoordCap.Token -> CoordCapRadioClient;
