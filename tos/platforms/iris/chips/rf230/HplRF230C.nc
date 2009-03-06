@@ -29,7 +29,7 @@ configuration HplRF230C
 	{
 		interface GeneralIO as SELN;
 		interface Resource as SpiResource;
-		interface SpiByte;
+		interface FastSpiByte;
 
 		interface GeneralIO as SLP_TR;
 		interface GeneralIO as RSTN;
@@ -51,9 +51,9 @@ implementation
 	
 	components Atm128SpiC as SpiC;
 	SpiResource = SpiC.Resource[unique("Atm128SpiC.Resource")];
-	SpiByte = SpiC;
 
 	HplRF230 = HplRF230P;
+	FastSpiByte = HplRF230P;
 
 	components HplAtm128GeneralIOC as IO;
 	SLP_TR = IO.PortB7;

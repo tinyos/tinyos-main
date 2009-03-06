@@ -59,7 +59,7 @@ implementation
 
 	RF230LayerP.SELN -> HplRF230C.SELN;
 	RF230LayerP.SpiResource -> HplRF230C.SpiResource;
-	RF230LayerP.SpiByte -> HplRF230C;
+	RF230LayerP.FastSpiByte -> HplRF230C;
 	RF230LayerP.HplRF230 -> HplRF230C;
 
 	RF230LayerP.SLP_TR -> HplRF230C.SLP_TR;

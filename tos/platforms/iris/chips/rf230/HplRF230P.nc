@@ -31,6 +31,7 @@ module HplRF230P
 		interface GpioCapture as IRQ;
 		interface Init as PlatformInit;
 
+		interface FastSpiByte;
 		interface HplRF230;
 	}
 
@@ -91,7 +92,7 @@ implementation
 		return _crc_ccitt_update(crc, data);
 	}
 
-	inline async command void HplRF230.spiSplitWrite(uint8_t data)
+	inline async command void FastSpiByte.splitWrite(uint8_t data)
 	{
 		// the SPI must have been started, so do not waste time here
 		// SET_BIT(SPCR, SPE);
@@ -99,14 +100,14 @@ implementation
 		SPDR = data;
 	}
 
-	inline async command uint8_t HplRF230.spiSplitRead()
+	inline async command uint8_t FastSpiByte.splitRead()
 	{
 	    while( !( SPSR & 0x80 ) )
 			;
 		return SPDR;
 	}
 
-	inline async command uint8_t HplRF230.spiSplitReadWrite(uint8_t data)
+	inline async command uint8_t FastSpiByte.splitReadWrite(uint8_t data)
 	{
 		uint8_t b;
 
@@ -118,7 +119,7 @@ implementation
 		return b;
 	}
 
-	inline async command uint8_t HplRF230.spiWrite(uint8_t data)
+	inline async command uint8_t FastSpiByte.write(uint8_t data)
 	{
 		// the SPI must have been started, so do not waste time here
 		// SET_BIT(SPCR, SPE);

@@ -45,7 +45,7 @@ module RF230LayerP
 		interface GeneralIO as SELN;
 		interface Resource as SpiResource;
 
-		interface SpiByte;
+		interface FastSpiByte;
 		interface HplRF230;
 
 		interface GeneralIO as SLP_TR;
@@ -126,9 +126,9 @@ implementation
 		ASSERT( reg == (reg & RF230_CMD_REGISTER_MASK) );
 
 		call SELN.clr();
-		call HplRF230.spiSplitWrite(RF230_CMD_REGISTER_WRITE | reg);
-		call HplRF230.spiSplitReadWrite(value);
-		call HplRF230.spiSplitRead();
+		call FastSpiByte.splitWrite(RF230_CMD_REGISTER_WRITE | reg);
+		call FastSpiByte.splitReadWrite(value);
+		call FastSpiByte.splitRead();
 		call SELN.set();
 	}
 
@@ -138,9 +138,9 @@ implementation
 		ASSERT( reg == (reg & RF230_CMD_REGISTER_MASK) );
 
 		call SELN.clr();
-		call HplRF230.spiSplitWrite(RF230_CMD_REGISTER_READ | reg);
-		call HplRF230.spiSplitReadWrite(0);
-		reg = call HplRF230.spiSplitRead();
+		call FastSpiByte.splitWrite(RF230_CMD_REGISTER_READ | reg);
+		call FastSpiByte.splitReadWrite(0);
+		reg = call FastSpiByte.splitRead();
 		call SELN.set();
 
 		return reg;
@@ -444,13 +444,13 @@ implementation
 		ASSERT( ! radioIrq );
 
 		call SELN.clr();
-		call HplRF230.spiSplitWrite(RF230_CMD_FRAME_WRITE);
+		call FastSpiByte.splitWrite(RF230_CMD_FRAME_WRITE);
 
 		length = call RF230Config.getLength(msg);
 		data = call RF230Config.getPayload(msg);
 
 		// length | data[0] ... data[length-3] | automatically generated FCS
-		call HplRF230.spiSplitReadWrite(length);
+		call FastSpiByte.splitReadWrite(length);
 
 		// the FCS is atomatically generated (2 bytes)
 		length -= 2;
@@ -463,7 +463,7 @@ implementation
 
 		// first upload the header to gain some time
 		do {
-			call HplRF230.spiSplitReadWrite(*(data++));
+			call FastSpiByte.splitReadWrite(*(data++));
 		}
 		while( --header != 0 );
 
@@ -473,12 +473,12 @@ implementation
 			*(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time32;
 
 		do {
-			call HplRF230.spiSplitReadWrite(*(data++));
+			call FastSpiByte.splitReadWrite(*(data++));
 		}
 		while( --length != 0 );
 
 		// wait for the SPI transfer to finish
-		call HplRF230.spiSplitRead();
+		call FastSpiByte.splitRead();
 		call SELN.set();
 
 		/*
@@ -552,10 +552,10 @@ implementation
 		uint16_t crc;
 
 		call SELN.clr();
-		call HplRF230.spiWrite(RF230_CMD_FRAME_READ);
+		call FastSpiByte.write(RF230_CMD_FRAME_READ);
 
 		// read the length byte
-		length = call HplRF230.spiWrite(0);
+		length = call FastSpiByte.write(0);
 
 		// if correct length
 		if( length >= 3 && length <= call RF230Config.getMaxLength() )
@@ -564,7 +564,7 @@ implementation
 			uint8_t* data;
 
 			// initiate the reading
-			call HplRF230.spiSplitWrite(0);
+			call FastSpiByte.splitWrite(0);
 
 			call RF230Config.setLength(rxMsg, length);
 			data = call RF230Config.getPayload(rxMsg);
@@ -580,19 +580,19 @@ implementation
 			length -= read;
 
 			do {
-				crc = call HplRF230.crcByte(crc, *(data++) = call HplRF230.spiSplitReadWrite(0));
+				crc = call HplRF230.crcByte(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
 			}
 			while( --read != 0  );
 
 			if( signal RadioReceive.header(rxMsg) )
 			{
 				while( length-- != 0 )
-					crc = call HplRF230.crcByte(crc, *(data++) = call HplRF230.spiSplitReadWrite(0));
+					crc = call HplRF230.crcByte(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
 
-				crc = call HplRF230.crcByte(crc, call HplRF230.spiSplitReadWrite(0));
-				crc = call HplRF230.crcByte(crc, call HplRF230.spiSplitReadWrite(0));
+				crc = call HplRF230.crcByte(crc, call FastSpiByte.splitReadWrite(0));
+				crc = call HplRF230.crcByte(crc, call FastSpiByte.splitReadWrite(0));
 
-				call PacketLinkQuality.set(rxMsg, call HplRF230.spiSplitRead());
+				call PacketLinkQuality.set(rxMsg, call FastSpiByte.splitRead());
 			}
 			else
 				crc = 1;

@@ -21,9 +21,6 @@
  * Author: Miklos Maroti
  */
 
-/**
- * There should be standard interfaces/commands for these
-*/
 interface HplRF230
 {
 	/**
@@ -31,30 +28,4 @@ interface HplRF230
 	 * tinyos crcByte command swiches endianness.
 	 */
 	async command uint16_t crcByte(uint16_t crc, uint8_t data);
-
-	/**
-	 * Starts a split-phase SPI data transfer with the given data.
-	 * A spiSplitRead command must follow this command even if the
-	 * result is unimportant. The SpiByte interface should be 
-	 * extended with this protocol.
-	 */
-	async command void spiSplitWrite(uint8_t data);
-
-	/**
-	 * Finishes the split-phase SPI data transfer by waiting till 
-	 * the write command comletes and returning the received data.
-	 */
-	async command uint8_t spiSplitRead();
-
-	/**
-	 * This command first reads the SPI register and then writes
-	 * there the new data, then returns
-	 */
-	async command uint8_t spiSplitReadWrite(uint8_t data);
-
-	/**
-	 * This is the standard SpiByte.write command but a little
-	 * faster as we shuold not need to adjust the power state there.
-	 */
-	async command uint8_t spiWrite(uint8_t data);
 }
