@@ -50,7 +50,7 @@ module TrafficMonitorLayerP
 		interface Neighborhood;
 		interface NeighborhoodFlag;
 		interface Tasklet;
-#ifdef RF230_DEBUG
+#ifdef RF2XX_DEBUG
 		interface DiagMsg;
 #endif
 	}
