@@ -21,9 +21,9 @@
  * Author: Miklos Maroti
  */
 
-#include <HplRF230.h>
+#include <RadioAlarm.h>
 
-configuration HplRF230C
+configuration HplRF2xxC
 {
 	provides
 	{
@@ -41,16 +41,16 @@ configuration HplRF230C
 
 implementation
 {
-	components HplRF230P;
-	IRQ = HplRF230P.IRQ;
+	components HplRF2xxP;
+	IRQ = HplRF2xxP.IRQ;
 
-	HplRF230P.PortCLKM -> IO.PortD6;
-	HplRF230P.PortIRQ -> IO.PortD4;
+	HplRF2xxP.PortCLKM -> IO.PortD6;
+	HplRF2xxP.PortIRQ -> IO.PortD4;
 	
 	components Atm128SpiC as SpiC;
 	SpiResource = SpiC.Resource[unique("Atm128SpiC.Resource")];
 
-	FastSpiByte = HplRF230P;
+	FastSpiByte = HplRF2xxP;
 
 	components HplAtm128GeneralIOC as IO;
 	SLP_TR = IO.PortB7;
@@ -58,11 +58,11 @@ implementation
 	SELN = IO.PortB0;
 
 	components HplAtm128Timer1C as TimerC;
-	HplRF230P.Capture -> TimerC.Capture;
+	HplRF2xxP.Capture -> TimerC.Capture;
 
 	components new AlarmOne16C() as AlarmC;
 	Alarm = AlarmC;
 
 	components RealMainP;
-	RealMainP.PlatformInit -> HplRF230P.PlatformInit;
+	RealMainP.PlatformInit -> HplRF2xxP.PlatformInit;
 }

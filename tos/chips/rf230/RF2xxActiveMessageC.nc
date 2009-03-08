@@ -23,7 +23,7 @@
 
 #include <RadioAlarm.h>
 
-configuration RF230ActiveMessageC
+configuration RF2xxActiveMessageC
 {
 	provides 
 	{
@@ -50,24 +50,24 @@ configuration RF230ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageP, RF230PacketC, IEEE154PacketC, RadioAlarmC;
+	components RF2xxActiveMessageP, RF2xxPacketC, IEEE154PacketC, RadioAlarmC;
 
-#ifdef RF230_DEBUG
+#ifdef RF2XX_DEBUG
 	components AssertC;
 #endif
 
-	RF230ActiveMessageP.IEEE154Packet -> IEEE154PacketC;
-	RF230ActiveMessageP.Packet -> RF230PacketC;
-	RF230ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
+	RF2xxActiveMessageP.IEEE154Packet -> IEEE154PacketC;
+	RF2xxActiveMessageP.Packet -> RF2xxPacketC;
+	RF2xxActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 
-	Packet = RF230PacketC;
-	AMPacket = RF230PacketC;
-	PacketAcknowledgements = RF230PacketC;
-	PacketLinkQuality = RF230PacketC.PacketLinkQuality;
-	PacketTransmitPower = RF230PacketC.PacketTransmitPower;
-	PacketRSSI = RF230PacketC.PacketRSSI;
-	PacketTimeStampRadio = RF230PacketC;
-	PacketTimeStampMilli = RF230PacketC;
+	Packet = RF2xxPacketC;
+	AMPacket = RF2xxPacketC;
+	PacketAcknowledgements = RF2xxPacketC;
+	PacketLinkQuality = RF2xxPacketC.PacketLinkQuality;
+	PacketTransmitPower = RF2xxPacketC.PacketTransmitPower;
+	PacketRSSI = RF2xxPacketC.PacketRSSI;
+	PacketTimeStampRadio = RF2xxPacketC;
+	PacketTimeStampMilli = RF2xxPacketC;
 	LowPowerListening = LowPowerListeningLayerC;
 	RadioChannel = MessageBufferLayerC;
 
@@ -85,21 +85,21 @@ implementation
 	components MessageBufferLayerC;
 	components UniqueLayerC;
 	components TrafficMonitorLayerC;
-#ifdef RF230_SLOTTED_MAC
+#ifdef RF2XX_SLOTTED_MAC
 	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
 #else
 	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
 #endif
 	components SoftwareAckLayerC;
 	components new DummyLayerC() as CsmaLayerC;
-	components RF230LayerC;
+	components RF2xxDriverLayerC;
 
 	SplitControl = LowPowerListeningLayerC;
 	AMSend = ActiveMessageLayerC;
 	Receive = ActiveMessageLayerC.Receive;
 	Snoop = ActiveMessageLayerC.Snoop;
 
-	ActiveMessageLayerC.Config -> RF230ActiveMessageP;
+	ActiveMessageLayerC.Config -> RF2xxActiveMessageP;
 	ActiveMessageLayerC.AMPacket -> IEEE154PacketC;
 	ActiveMessageLayerC.SubSend -> IEEE154NetworkLayerC;
 	ActiveMessageLayerC.SubReceive -> IEEE154NetworkLayerC;
@@ -108,41 +108,41 @@ implementation
 	IEEE154NetworkLayerC.SubReceive -> LowPowerListeningLayerC;
 
 	// the UniqueLayer is wired at two points
-	UniqueLayerC.Config -> RF230ActiveMessageP;
+	UniqueLayerC.Config -> RF2xxActiveMessageP;
 	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
 
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
 #ifdef LOW_POWER_LISTENING
-	LowPowerListeningLayerC.PacketSleepInterval -> RF230PacketC;
+	LowPowerListeningLayerC.PacketSleepInterval -> RF2xxPacketC;
 	LowPowerListeningLayerC.IEEE154Packet -> IEEE154PacketC;
-	LowPowerListeningLayerC.PacketAcknowledgements -> RF230PacketC;
+	LowPowerListeningLayerC.PacketAcknowledgements -> RF2xxPacketC;
 #endif
 
-	MessageBufferLayerC.Packet -> RF230PacketC;
+	MessageBufferLayerC.Packet -> RF2xxPacketC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
 
 	UniqueLayerC.SubReceive -> TrafficMonitorLayerC;
 
-	TrafficMonitorLayerC.Config -> RF230ActiveMessageP;
+	TrafficMonitorLayerC.Config -> RF2xxActiveMessageP;
 	TrafficMonitorLayerC.SubSend -> CollisionAvoidanceLayerC;
 	TrafficMonitorLayerC.SubReceive -> CollisionAvoidanceLayerC;
-	TrafficMonitorLayerC.SubState -> RF230LayerC;
+	TrafficMonitorLayerC.SubState -> RF2xxDriverLayerC;
 
-	CollisionAvoidanceLayerC.Config -> RF230ActiveMessageP;
+	CollisionAvoidanceLayerC.Config -> RF2xxActiveMessageP;
 	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
 	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
 
-	SoftwareAckLayerC.Config -> RF230ActiveMessageP;
+	SoftwareAckLayerC.Config -> RF2xxActiveMessageP;
 	SoftwareAckLayerC.SubSend -> CsmaLayerC;
-	SoftwareAckLayerC.SubReceive -> RF230LayerC;
+	SoftwareAckLayerC.SubReceive -> RF2xxDriverLayerC;
 
-	CsmaLayerC.Config -> RF230ActiveMessageP;
-	CsmaLayerC -> RF230LayerC.RadioSend;
-	CsmaLayerC -> RF230LayerC.RadioCCA;
+	CsmaLayerC.Config -> RF2xxActiveMessageP;
+	CsmaLayerC -> RF2xxDriverLayerC.RadioSend;
+	CsmaLayerC -> RF2xxDriverLayerC.RadioCCA;
 
-	RF230LayerC.RF230Config -> RF230ActiveMessageP;
+	RF2xxDriverLayerC.RF2xxDriverConfig -> RF2xxActiveMessageP;
 }

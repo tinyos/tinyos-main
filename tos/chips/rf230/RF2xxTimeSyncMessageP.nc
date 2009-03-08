@@ -24,7 +24,7 @@
 #include <TimeSyncMessage.h>
 #include <RadioAlarm.h>
 
-module RF230TimeSyncMessageP
+module RF2xxTimeSyncMessageP
 {
 	provides
 	{

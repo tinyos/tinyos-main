@@ -43,7 +43,7 @@ configuration ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageC as MAC;
+	components RF2xxActiveMessageC as MAC;
 
 	SplitControl = MAC;
 	AMSend       = MAC;

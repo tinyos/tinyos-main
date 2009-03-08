@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-configuration RF230PacketC
+configuration RF2xxPacketC
 {
 	provides
 	{
@@ -41,22 +41,22 @@ configuration RF230PacketC
 
 implementation
 {
-	components RF230PacketP, IEEE154PacketC, LocalTimeMicroC, LocalTimeMilliC;
+	components RF2xxPacketP, IEEE154PacketC, LocalTimeMicroC, LocalTimeMilliC;
 
-	RF230PacketP.IEEE154Packet -> IEEE154PacketC;
-	RF230PacketP.LocalTimeRadio -> LocalTimeMicroC;
-	RF230PacketP.LocalTimeMilli -> LocalTimeMilliC;
+	RF2xxPacketP.IEEE154Packet -> IEEE154PacketC;
+	RF2xxPacketP.LocalTimeRadio -> LocalTimeMicroC;
+	RF2xxPacketP.LocalTimeMilli -> LocalTimeMilliC;
 
-	Packet = RF230PacketP;
+	Packet = RF2xxPacketP;
 	AMPacket = IEEE154PacketC;
 
-	PacketAcknowledgements	= RF230PacketP;
-	PacketLinkQuality	= RF230PacketP.PacketLinkQuality;
-	PacketTransmitPower	= RF230PacketP.PacketTransmitPower;
-	PacketRSSI		= RF230PacketP.PacketRSSI;
-	PacketSleepInterval	= RF230PacketP.PacketSleepInterval;
-	PacketTimeSyncOffset	= RF230PacketP.PacketTimeSyncOffset;
+	PacketAcknowledgements	= RF2xxPacketP;
+	PacketLinkQuality	= RF2xxPacketP.PacketLinkQuality;
+	PacketTransmitPower	= RF2xxPacketP.PacketTransmitPower;
+	PacketRSSI		= RF2xxPacketP.PacketRSSI;
+	PacketSleepInterval	= RF2xxPacketP.PacketSleepInterval;
+	PacketTimeSyncOffset	= RF2xxPacketP.PacketTimeSyncOffset;
 
-	PacketTimeStampRadio	= RF230PacketP;
-	PacketTimeStampMilli	= RF230PacketP;
+	PacketTimeStampRadio	= RF2xxPacketP;
+	PacketTimeStampMilli	= RF2xxPacketP;
 }

@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <RF230Packet.h>
+#include <RF2xxPacket.h>
 #include <Tasklet.h>
 #include <message.h>
 

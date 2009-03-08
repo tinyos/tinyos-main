@@ -21,19 +21,19 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __RF230PACKET_H__
-#define __RF230PACKET_H__
+#ifndef __RF2XXPACKET_H__
+#define __RF2XXPACKET_H__
 
 #include <IEEE154Packet.h>
 
-typedef ieee154_header_t rf230packet_header_t;
+typedef ieee154_header_t rf2xxpacket_header_t;
 
-typedef nx_struct rf230packet_footer_t
+typedef nx_struct rf2xxpacket_footer_t
 {
 	// the time stamp is not recorded here, time stamped messaged cannot have max length
-} rf230packet_footer_t;
+} rf2xxpacket_footer_t;
 
-typedef struct rf230packet_metadata_t
+typedef struct rf2xxpacket_metadata_t
 {
 	uint8_t flags;
 	uint8_t lqi;
@@ -42,18 +42,18 @@ typedef struct rf230packet_metadata_t
 	uint16_t lpl_sleepint;
 #endif
 	uint32_t timestamp;
-} rf230packet_metadata_t;
+} rf2xxpacket_metadata_t;
 
-enum rf230packet_metadata_flags
+enum rf2xxpacket_metadata_flags
 {
-	RF230PACKET_WAS_ACKED = 0x01,		// PacketAcknowledgements
-	RF230PACKET_TIMESTAMP = 0x02,		// PacketTimeStamp
-	RF230PACKET_TXPOWER = 0x04,		// PacketTransmitPower
-	RF230PACKET_RSSI = 0x08,		// PacketRSSI
-	RF230PACKET_TIMESYNC = 0x10,		// PacketTimeSync (update timesync_footer)
-	RF230PACKET_LPL_SLEEPINT = 0x20,	// LowPowerListening
+	RF2XXPACKET_WAS_ACKED = 0x01,		// PacketAcknowledgements
+	RF2XXPACKET_TIMESTAMP = 0x02,		// PacketTimeStamp
+	RF2XXPACKET_TXPOWER = 0x04,		// PacketTransmitPower
+	RF2XXPACKET_RSSI = 0x08,		// PacketRSSI
+	RF2XXPACKET_TIMESYNC = 0x10,		// PacketTimeSync (update timesync_footer)
+	RF2XXPACKET_LPL_SLEEPINT = 0x20,	// LowPowerListening
 
-	RF230PACKET_CLEAR_METADATA = 0x00,
+	RF2XXPACKET_CLEAR_METADATA = 0x00,
 };
 
-#endif//__RF230PACKET_H__
+#endif//__RF2XXPACKET_H__

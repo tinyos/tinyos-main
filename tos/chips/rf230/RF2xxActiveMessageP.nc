@@ -21,15 +21,16 @@
  * Author: Miklos Maroti
  */
 
-#include <RF230Packet.h>
+#include <RF2xxPacket.h>
 #include <RadioAlarm.h>
 #include <Tasklet.h>
+#include <HplRF2xx.h>
 
-module RF230ActiveMessageP
+module RF2xxActiveMessageP
 {
 	provides
 	{
-		interface RF230Config;
+		interface RF2xxDriverConfig;
 		interface SoftwareAckConfig;
 		interface UniqueConfig;
 		interface CsmaConfig;
@@ -50,46 +51,46 @@ module RF230ActiveMessageP
 
 implementation
 {
-/*----------------- RF230Config -----------------*/
+/*----------------- RF2xxDriverConfig -----------------*/
 
-	async command uint8_t RF230Config.getLength(message_t* msg)
+	async command uint8_t RF2xxDriverConfig.getLength(message_t* msg)
 	{
 		return call IEEE154Packet.getLength(msg);
 	}
 
-	async command void RF230Config.setLength(message_t* msg, uint8_t len)
+	async command void RF2xxDriverConfig.setLength(message_t* msg, uint8_t len)
 	{
 		call IEEE154Packet.setLength(msg, len);
 	}
 
-	async command uint8_t* RF230Config.getPayload(message_t* msg)
+	async command uint8_t* RF2xxDriverConfig.getPayload(message_t* msg)
 	{
 		return ((uint8_t*)(call IEEE154Packet.getHeader(msg))) + 1;
 	}
 
-	inline rf230packet_metadata_t* getMeta(message_t* msg)
+	inline rf2xxpacket_metadata_t* getMeta(message_t* msg)
 	{
-		return (rf230packet_metadata_t*)(msg->metadata);
+		return (rf2xxpacket_metadata_t*)(msg->metadata);
 	}
 
-	async command uint8_t RF230Config.getHeaderLength()
+	async command uint8_t RF2xxDriverConfig.getHeaderLength()
 	{
 		// we need the fcf, dsn, destpan and dest
 		return 7;
 	}
 
-	async command uint8_t RF230Config.getMaxLength()
+	async command uint8_t RF2xxDriverConfig.getMaxLength()
 	{
 		// note, that the ieee154_footer_t is not stored, but we should include it here
-		return sizeof(rf230packet_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
+		return sizeof(rf2xxpacket_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
 	}
 
-	async command uint8_t RF230Config.getDefaultChannel()
+	async command uint8_t RF2xxDriverConfig.getDefaultChannel()
 	{
-		return RF230_DEF_CHANNEL;
+		return RF2XX_DEF_CHANNEL;
 	}
 
-	async command bool RF230Config.requiresRssiCca(message_t* msg)
+	async command bool RF2xxDriverConfig.requiresRssiCca(message_t* msg)
 	{
 		return call IEEE154Packet.isDataFrame(msg);
 	}
@@ -124,9 +125,9 @@ implementation
 	async command void SoftwareAckConfig.setAckReceived(message_t* msg, bool acked)
 	{
 		if( acked )
-			getMeta(msg)->flags |= RF230PACKET_WAS_ACKED;
+			getMeta(msg)->flags |= RF2XXPACKET_WAS_ACKED;
 		else
-			getMeta(msg)->flags &= ~RF230PACKET_WAS_ACKED;
+			getMeta(msg)->flags &= ~RF2XXPACKET_WAS_ACKED;
 	}
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()

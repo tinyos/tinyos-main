@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <HplRF230.h>
+#include <RadioAlarm.h>
 
 configuration TimeSyncMessageC
 {
@@ -44,17 +44,17 @@ configuration TimeSyncMessageC
 
 implementation
 {
-	components RF230TimeSyncMessageC;
+	components RF2xxTimeSyncMessageC;
   
-	SplitControl = RF230TimeSyncMessageC;
+	SplitControl = RF2xxTimeSyncMessageC;
   
-	Receive		= RF230TimeSyncMessageC.Receive;
-	Snoop		= RF230TimeSyncMessageC.Snoop;
-	Packet		= RF230TimeSyncMessageC;
-	AMPacket	= RF230TimeSyncMessageC;
+	Receive		= RF2xxTimeSyncMessageC.Receive;
+	Snoop		= RF2xxTimeSyncMessageC.Snoop;
+	Packet		= RF2xxTimeSyncMessageC;
+	AMPacket	= RF2xxTimeSyncMessageC;
 
-	TimeSyncAMSendRadio = RF230TimeSyncMessageC;
-	TimeSyncPacketRadio = RF230TimeSyncMessageC;
-	TimeSyncAMSendMilli = RF230TimeSyncMessageC;
-	TimeSyncPacketMilli = RF230TimeSyncMessageC;
+	TimeSyncAMSendRadio = RF2xxTimeSyncMessageC;
+	TimeSyncPacketRadio = RF2xxTimeSyncMessageC;
+	TimeSyncAMSendMilli = RF2xxTimeSyncMessageC;
+	TimeSyncPacketMilli = RF2xxTimeSyncMessageC;
 }

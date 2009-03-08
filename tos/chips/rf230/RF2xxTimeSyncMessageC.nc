@@ -25,7 +25,7 @@
 #include <AM.h>
 #include <RadioAlarm.h>
 
-configuration RF230TimeSyncMessageC
+configuration RF2xxTimeSyncMessageC
 {
 	provides
 	{
@@ -46,27 +46,27 @@ configuration RF230TimeSyncMessageC
 
 implementation
 {
-	components RF230TimeSyncMessageP, RF230ActiveMessageC, LocalTimeMilliC, LocalTimeMicroC as LocalTimeRadioC, RF230PacketC;
+	components RF2xxTimeSyncMessageP, RF2xxActiveMessageC, LocalTimeMilliC, LocalTimeMicroC as LocalTimeRadioC, RF2xxPacketC;
 
-	TimeSyncAMSendRadio = RF230TimeSyncMessageP;
-	TimeSyncPacketRadio = RF230TimeSyncMessageP;
+	TimeSyncAMSendRadio = RF2xxTimeSyncMessageP;
+	TimeSyncPacketRadio = RF2xxTimeSyncMessageP;
 
-	TimeSyncAMSendMilli = RF230TimeSyncMessageP;
-	TimeSyncPacketMilli = RF230TimeSyncMessageP;
+	TimeSyncAMSendMilli = RF2xxTimeSyncMessageP;
+	TimeSyncPacketMilli = RF2xxTimeSyncMessageP;
 
-	Packet = RF230TimeSyncMessageP;
-	RF230TimeSyncMessageP.SubSend -> RF230ActiveMessageC.AMSend;
-	RF230TimeSyncMessageP.SubPacket -> RF230ActiveMessageC.Packet;
+	Packet = RF2xxTimeSyncMessageP;
+	RF2xxTimeSyncMessageP.SubSend -> RF2xxActiveMessageC.AMSend;
+	RF2xxTimeSyncMessageP.SubPacket -> RF2xxActiveMessageC.Packet;
 
-	RF230TimeSyncMessageP.PacketTimeStampRadio -> RF230ActiveMessageC;
-	RF230TimeSyncMessageP.PacketTimeStampMilli -> RF230ActiveMessageC;
-	RF230TimeSyncMessageP.LocalTimeRadio -> LocalTimeRadioC;
-	RF230TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
+	RF2xxTimeSyncMessageP.PacketTimeStampRadio -> RF2xxActiveMessageC;
+	RF2xxTimeSyncMessageP.PacketTimeStampMilli -> RF2xxActiveMessageC;
+	RF2xxTimeSyncMessageP.LocalTimeRadio -> LocalTimeRadioC;
+	RF2xxTimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
 
-	RF230TimeSyncMessageP.PacketTimeSyncOffset -> RF230PacketC.PacketTimeSyncOffset;
+	RF2xxTimeSyncMessageP.PacketTimeSyncOffset -> RF2xxPacketC.PacketTimeSyncOffset;
 
-	SplitControl = RF230ActiveMessageC;
-	Receive	= RF230ActiveMessageC.Receive;
-	Snoop = RF230ActiveMessageC.Snoop;
-	AMPacket = RF230ActiveMessageC;
+	SplitControl = RF2xxActiveMessageC;
+	Receive	= RF2xxActiveMessageC.Receive;
+	Snoop = RF2xxActiveMessageC.Snoop;
+	AMPacket = RF2xxActiveMessageC;
 }

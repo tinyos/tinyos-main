@@ -23,9 +23,9 @@
 
 /**
  * This interface needs to be implemented by the MAC to control the behaviour 
- * of the RF230LayerC component.
+ * of the RF2xxDriverLayerC component.
  */
-interface RF230Config
+interface RF2xxDriverConfig
 {
 	/**
 	 * Returns the length of the PHY payload (including the FCF field).

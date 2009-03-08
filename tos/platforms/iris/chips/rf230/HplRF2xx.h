@@ -21,31 +21,36 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __HPLRF230_H__
-#define __HPLRF230_H__
+#ifndef __HPLRF2XX_H__
+#define __HPLRF2XX_H__
 
-#include <RF230.h>
+#include <RF2xx.h>
 #include <util/crc16.h>
 
 enum
 {
 	/**
+	 * This is an RF230 chip
+	 */
+	RF2XX_CHIPSET = RF230_CHIPSET,
+
+	/**
 	 * This is the value of the TRX_CTRL_0 register
 	 * which configures the output pin currents and the CLKM clock
 	 */
-	RF230_TRX_CTRL_0_VALUE = 0,
+	RF2XX_TRX_CTRL_0_VALUE = 0,
 
 	/**
 	 * This is the default value of the CCA_MODE field in the PHY_CC_CCA register
 	 * which is used to configure the default mode of the clear channel assesment
 	 */
-	RF230_CCA_MODE_VALUE = RF230_CCA_MODE_3,
+	RF2XX_CCA_MODE_VALUE = RF2XX_CCA_MODE_3,
 
 	/**
 	 * This is the value of the CCA_THRES register that controls the
 	 * energy levels used for clear channel assesment
 	 */
-	RF230_CCA_THRES_VALUE = 0xC7,
+	RF2XX_CCA_THRES_VALUE = 0xC7,
 };
 
 /* This is the default value of the TX_PWR field of the PHY_TX_PWR register. */
@@ -53,15 +58,22 @@ enum
 #define RF230_DEF_RFPOWER	0
 #endif
 
+#define RF2XX_DEF_RFPOWER	RF230_DEF_RFPOWER
+
 /* This is the default value of the CHANNEL field of the PHY_CC_CCA register. */
 #ifndef RF230_DEF_CHANNEL
 #define RF230_DEF_CHANNEL	11
 #endif
 
-// TODO: Check why the default crcByte implementation is in a different endianness
-inline uint16_t RF230_CRCBYTE_COMMAND(uint16_t crc, uint8_t data)
+#define RF2XX_DEF_CHANNEL	RF230_DEF_CHANNEL
+
+/*
+ * This is the command used to calculate the CRC for the RF230 chip. 
+ * TODO: Check why the default crcByte implementation is in a different endianness
+ */
+inline uint16_t RF2XX_CRCBYTE_COMMAND(uint16_t crc, uint8_t data)
 {
 	return _crc_ccitt_update(crc, data);
 }
 
-#endif//__HPLRF230_H__
+#endif//__HPLRF2XX_H__

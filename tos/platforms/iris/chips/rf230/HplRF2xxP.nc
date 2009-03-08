@@ -21,10 +21,9 @@
  * Author: Miklos Maroti
  */
 
-#include <util/crc16.h>
 #include "Atm128Spi.h"
 
-module HplRF230P
+module HplRF2xxP
 {
 	provides
 	{
