@@ -153,7 +153,7 @@ implementation
 
 		call Tasklet.resume();
 
-#ifdef RF230_DEBUG
+#ifdef RF2XX_DEBUG
 		if( ++debugCounter >= 10 && call DiagMsg.record() )
 		{
 			debugCounter = 0;

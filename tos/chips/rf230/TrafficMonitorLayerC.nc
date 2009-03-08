@@ -57,7 +57,7 @@ implementation
 	TrafficMonitorLayerP.NeighborhoodFlag -> NeighborhoodFlagC;
 	TrafficMonitorLayerP.Tasklet -> TaskletC;
 
-#ifdef RF230_DEBUG
+#ifdef RF2XX_DEBUG
 	components DiagMsgC;
 	TrafficMonitorLayerP.DiagMsg -> DiagMsgC;
 #endif

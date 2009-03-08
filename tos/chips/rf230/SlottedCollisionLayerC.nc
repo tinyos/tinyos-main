@@ -50,7 +50,7 @@ implementation
 	SlottedCollisionLayerP.Random -> RandomC;
 	MainC.SoftwareInit -> SlottedCollisionLayerP;
 
-#ifdef RF230_DEBUG
+#ifdef RF2XX_DEBUG
 	components DiagMsgC;
 	SlottedCollisionLayerP.DiagMsg -> DiagMsgC;
 #endif

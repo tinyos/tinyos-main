@@ -24,7 +24,7 @@
 #ifndef __RADIOASSERT_H__
 #define __RADIOASSERT_H__
 
-#ifdef RF230_DEBUG
+#ifdef RF2XX_DEBUG
 
 	void assert(bool condition, const char* file, uint16_t line);
 	#define ASSERT(COND) assert(COND, __FILE__, __LINE__)
