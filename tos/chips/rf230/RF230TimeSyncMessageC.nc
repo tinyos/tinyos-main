@@ -23,7 +23,7 @@
 
 #include <Timer.h>
 #include <AM.h>
-#include <HplRF230.h>
+#include <RadioAlarm.h>
 
 configuration RF230TimeSyncMessageC
 {

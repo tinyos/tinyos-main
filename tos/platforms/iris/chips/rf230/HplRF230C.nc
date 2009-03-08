@@ -36,8 +36,6 @@ configuration HplRF230C
 
 		interface GpioCapture as IRQ;
 		interface Alarm<TRadio, uint16_t> as Alarm;
-
-		interface HplRF230;
 	}
 }
 
@@ -52,7 +50,6 @@ implementation
 	components Atm128SpiC as SpiC;
 	SpiResource = SpiC.Resource[unique("Atm128SpiC.Resource")];
 
-	HplRF230 = HplRF230P;
 	FastSpiByte = HplRF230P;
 
 	components HplAtm128GeneralIOC as IO;

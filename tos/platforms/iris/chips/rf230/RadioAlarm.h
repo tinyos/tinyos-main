@@ -21,11 +21,20 @@
  * Author: Miklos Maroti
  */
 
-interface HplRF230
-{
-	/**
-	 * Calculates the crc. For some unknown reason the standard
-	 * tinyos crcByte command swiches endianness.
-	 */
-	async command uint16_t crcByte(uint16_t crc, uint8_t data);
-}
+#ifndef __RADIOALARM_H__
+#define __RADIOALARM_H__
+
+#include <MicaTimer.h>
+
+/**
+ * This is the timer type of the radio alarm interface
+ */
+typedef TOne TRadio;
+
+/**
+ * The number of radio alarm ticks per one microsecond (0.9216). We use integers 
+ * and no  parentheses just to make deputy happy.
+ */
+#define RADIO_ALARM_MICROSEC	(7372800UL / MHZ / 32) * (1 << MICA_DIVIDE_ONE_FOR_32KHZ_LOG2) / 1000000UL
+
+#endif//__RADIOALARM_H__

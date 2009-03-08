@@ -22,7 +22,7 @@
  */
 
 #include <TimeSyncMessage.h>
-#include <HplRF230.h>
+#include <RadioAlarm.h>
 
 module RF230TimeSyncMessageP
 {

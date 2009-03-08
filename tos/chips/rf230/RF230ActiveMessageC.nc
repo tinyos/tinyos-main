@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <HplRF230.h>
+#include <RadioAlarm.h>
 
 configuration RF230ActiveMessageC
 {

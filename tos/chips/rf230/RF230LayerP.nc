@@ -26,6 +26,7 @@
 #include <Tasklet.h>
 #include <RadioAssert.h>
 #include <TimeSyncMessage.h>
+#include <RadioAlarm.h>
 
 module RF230LayerP
 {
@@ -46,7 +47,6 @@ module RF230LayerP
 		interface Resource as SpiResource;
 
 		interface FastSpiByte;
-		interface HplRF230;
 
 		interface GeneralIO as SLP_TR;
 		interface GeneralIO as RSTN;
@@ -150,11 +150,11 @@ implementation
 
 	enum
 	{
-		SLEEP_WAKEUP_TIME = (uint16_t)(880 * RF230_ALARM_SEC / 1000000UL),
-		CCA_REQUEST_TIME = (uint16_t)(140 * RF230_ALARM_SEC / 1000000UL),
+		SLEEP_WAKEUP_TIME = (uint16_t)(880 * RADIO_ALARM_MICROSEC),
+		CCA_REQUEST_TIME = (uint16_t)(140 * RADIO_ALARM_MICROSEC),
 
-		TX_SFD_DELAY = (uint16_t)(176 * RF230_ALARM_SEC / 1000000UL),
-		RX_SFD_DELAY = (uint16_t)(8 * RF230_ALARM_SEC / 1000000UL),
+		TX_SFD_DELAY = (uint16_t)(176 * RADIO_ALARM_MICROSEC),
+		RX_SFD_DELAY = (uint16_t)(8 * RADIO_ALARM_MICROSEC),
 	};
 
 	tasklet_async event void RadioAlarm.fired()
@@ -580,17 +580,17 @@ implementation
 			length -= read;
 
 			do {
-				crc = call HplRF230.crcByte(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
+				crc = RF230_CRCBYTE_COMMAND(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
 			}
 			while( --read != 0  );
 
 			if( signal RadioReceive.header(rxMsg) )
 			{
 				while( length-- != 0 )
-					crc = call HplRF230.crcByte(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
+					crc = RF230_CRCBYTE_COMMAND(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
 
-				crc = call HplRF230.crcByte(crc, call FastSpiByte.splitReadWrite(0));
-				crc = call HplRF230.crcByte(crc, call FastSpiByte.splitReadWrite(0));
+				crc = RF230_CRCBYTE_COMMAND(crc, call FastSpiByte.splitReadWrite(0));
+				crc = RF230_CRCBYTE_COMMAND(crc, call FastSpiByte.splitReadWrite(0));
 
 				call PacketLinkQuality.set(rxMsg, call FastSpiByte.splitRead());
 			}

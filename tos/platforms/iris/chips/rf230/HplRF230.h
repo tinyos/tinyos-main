@@ -25,6 +25,7 @@
 #define __HPLRF230_H__
 
 #include <RF230.h>
+#include <util/crc16.h>
 
 enum
 {
@@ -47,22 +48,6 @@ enum
 	RF230_CCA_THRES_VALUE = 0xC7,
 };
 
-/**
- * This is the timer type of the RF230 alarm interface
- */
-typedef TOne TRadio;
-
-
-/**
- * The number of alarm ticks per one second (921600)
- */
-#define RF230_ALARM_SEC	((7372800UL / MHZ / 32) * (1 << MICA_DIVIDE_ONE_FOR_32KHZ_LOG2))
-
-/**
- * The number of alarm ticks per one microsecond (0.9216)
- */
-#define RF230_ALARM_MICROSEC	(RF230_ALARM_SEC / 1000000.0)
-
 /* This is the default value of the TX_PWR field of the PHY_TX_PWR register. */
 #ifndef RF230_DEF_RFPOWER
 #define RF230_DEF_RFPOWER	0
@@ -72,5 +57,11 @@ typedef TOne TRadio;
 #ifndef RF230_DEF_CHANNEL
 #define RF230_DEF_CHANNEL	11
 #endif
+
+// TODO: Check why the default crcByte implementation is in a different endianness
+inline uint16_t RF230_CRCBYTE_COMMAND(uint16_t crc, uint8_t data)
+{
+	return _crc_ccitt_update(crc, data);
+}
 
 #endif//__HPLRF230_H__

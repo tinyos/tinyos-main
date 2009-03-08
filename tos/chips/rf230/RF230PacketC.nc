@@ -21,8 +21,6 @@
  * Author: Miklos Maroti
  */
 
-#include <HplRF230.h>
-
 configuration RF230PacketC
 {
 	provides
@@ -53,10 +51,10 @@ implementation
 	AMPacket = IEEE154PacketC;
 
 	PacketAcknowledgements	= RF230PacketP;
-	PacketLinkQuality		= RF230PacketP.PacketLinkQuality;
-	PacketTransmitPower		= RF230PacketP.PacketTransmitPower;
-	PacketRSSI				= RF230PacketP.PacketRSSI;
-	PacketSleepInterval		= RF230PacketP.PacketSleepInterval;
+	PacketLinkQuality	= RF230PacketP.PacketLinkQuality;
+	PacketTransmitPower	= RF230PacketP.PacketTransmitPower;
+	PacketRSSI		= RF230PacketP.PacketRSSI;
+	PacketSleepInterval	= RF230PacketP.PacketSleepInterval;
 	PacketTimeSyncOffset	= RF230PacketP.PacketTimeSyncOffset;
 
 	PacketTimeStampRadio	= RF230PacketP;

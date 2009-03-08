@@ -32,7 +32,6 @@ module HplRF230P
 		interface Init as PlatformInit;
 
 		interface FastSpiByte;
-		interface HplRF230;
 	}
 
 	uses
@@ -84,12 +83,6 @@ implementation
 	async command void IRQ.disable()
 	{
 		call Capture.stop();
-	}
-
-	// TODO: Check why the default crcByte implementation is in a different endianness
-	inline async command uint16_t HplRF230.crcByte(uint16_t crc, uint8_t data)
-	{
-		return _crc_ccitt_update(crc, data);
 	}
 
 	inline async command void FastSpiByte.splitWrite(uint8_t data)

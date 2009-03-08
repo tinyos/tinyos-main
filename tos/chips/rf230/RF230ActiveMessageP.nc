@@ -22,7 +22,7 @@
  */
 
 #include <RF230Packet.h>
-#include <HplRF230.h>
+#include <RadioAlarm.h>
 #include <Tasklet.h>
 
 module RF230ActiveMessageP
@@ -131,7 +131,7 @@ implementation
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()
 	{
-		return (uint16_t)(800 * RF230_ALARM_MICROSEC);
+		return (uint16_t)(800 * RADIO_ALARM_MICROSEC);
 	}
 
 	tasklet_async command void SoftwareAckConfig.reportChannelError()
@@ -228,17 +228,17 @@ implementation
 
 	async command uint16_t RandomCollisionConfig.getMinimumBackoff()
 	{
-		return (uint16_t)(320 * RF230_ALARM_MICROSEC);
+		return (uint16_t)(320 * RADIO_ALARM_MICROSEC);
 	}
 
 	async command uint16_t RandomCollisionConfig.getInitialBackoff(message_t* msg)
 	{
-		return (uint16_t)(9920 * RF230_ALARM_MICROSEC);
+		return (uint16_t)(9920 * RADIO_ALARM_MICROSEC);
 	}
 
 	async command uint16_t RandomCollisionConfig.getCongestionBackoff(message_t* msg)
 	{
-		return (uint16_t)(2240 * RF230_ALARM_MICROSEC);
+		return (uint16_t)(2240 * RADIO_ALARM_MICROSEC);
 	}
 
 	async command uint16_t RandomCollisionConfig.getTransmitBarrier(message_t* msg)
@@ -250,9 +250,9 @@ implementation
 
 		// estimated response time (download the message, etc) is 5-8 bytes
 		if( call IEEE154Packet.requiresAckReply(msg) )
-			time += (uint16_t)(32 * (-5 + 16 + 11 + 5) * RF230_ALARM_MICROSEC);
+			time += (uint16_t)(32 * (-5 + 16 + 11 + 5) * RADIO_ALARM_MICROSEC);
 		else
-			time += (uint16_t)(32 * (-5 + 5) * RF230_ALARM_MICROSEC);
+			time += (uint16_t)(32 * (-5 + 5) * RADIO_ALARM_MICROSEC);
 
 		return time;
 	}
@@ -280,12 +280,12 @@ implementation
 	async command uint16_t SlottedCollisionConfig.getCollisionWindowStart(message_t* msg)
 	{
 		// the preamble (4 bytes), SFD (1 byte), plus two extra for safety
-		return getMeta(msg)->timestamp - (uint16_t)(7 * 32 * RF230_ALARM_MICROSEC);
+		return getMeta(msg)->timestamp - (uint16_t)(7 * 32 * RADIO_ALARM_MICROSEC);
 	}
 
 	async command uint16_t SlottedCollisionConfig.getCollisionWindowLength(message_t* msg)
 	{
-		return (uint16_t)(2 * 7 * 32 * RF230_ALARM_MICROSEC);
+		return (uint16_t)(2 * 7 * 32 * RADIO_ALARM_MICROSEC);
 	}
 
 	default tasklet_async event void SlottedCollisionConfig.timerTick() { }
