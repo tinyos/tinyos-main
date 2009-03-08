@@ -45,8 +45,8 @@ configuration RssiBaseAppC {
   components CC2420ActiveMessageC;
   App -> CC2420ActiveMessageC.CC2420Packet;
 #elif  defined(PLATFORM_IRIS)
-  components  RF230ActiveMessageC;
-  App -> RF230ActiveMessageC.PacketRSSI;
+  components  RF2xxActiveMessageC;
+  App -> RF2xxActiveMessageC.PacketRSSI;
 #elif defined(TDA5250_MESSAGE_H)
   components Tda5250ActiveMessageC;
   App -> Tda5250ActiveMessageC.Tda5250Packet;
