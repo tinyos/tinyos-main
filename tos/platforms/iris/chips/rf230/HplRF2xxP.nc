@@ -29,8 +29,6 @@ module HplRF2xxP
 	{
 		interface GpioCapture as IRQ;
 		interface Init as PlatformInit;
-
-		interface FastSpiByte;
 	}
 
 	uses
@@ -82,44 +80,5 @@ implementation
 	async command void IRQ.disable()
 	{
 		call Capture.stop();
-	}
-
-	inline async command void FastSpiByte.splitWrite(uint8_t data)
-	{
-		// the SPI must have been started, so do not waste time here
-		// SET_BIT(SPCR, SPE);
-
-		SPDR = data;
-	}
-
-	inline async command uint8_t FastSpiByte.splitRead()
-	{
-	    while( !( SPSR & 0x80 ) )
-			;
-		return SPDR;
-	}
-
-	inline async command uint8_t FastSpiByte.splitReadWrite(uint8_t data)
-	{
-		uint8_t b;
-
-	    while( !( SPSR & 0x80 ) )
-			;
-		b = SPDR;
-		SPDR = data;
-
-		return b;
-	}
-
-	inline async command uint8_t FastSpiByte.write(uint8_t data)
-	{
-		// the SPI must have been started, so do not waste time here
-		// SET_BIT(SPCR, SPE);
-
-		SPDR = data;
-	    while( !( SPSR & 0x80 ) )
-			;
-
-		return SPDR;
 	}
 }

@@ -1,4 +1,4 @@
-/// $Id: Atm128SpiP.nc,v 1.9 2008-06-23 20:25:15 regehr Exp $
+/// $Id: Atm128SpiP.nc,v 1.10 2009-03-09 18:12:59 mmaroti Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -63,7 +63,7 @@
  *
  *
  * <pre>
- *  $Id: Atm128SpiP.nc,v 1.9 2008-06-23 20:25:15 regehr Exp $
+ *  $Id: Atm128SpiP.nc,v 1.10 2009-03-09 18:12:59 mmaroti Exp $
  * </pre>
  *
  * @author Philip Levis
@@ -76,6 +76,7 @@ module Atm128SpiP @safe() {
   provides {
     interface Init;
     interface SpiByte;
+    interface FastSpiByte;
     interface SpiPacket;
     interface Resource[uint8_t id];
   }
@@ -125,13 +126,42 @@ implementation {
   }
 
   async command uint8_t SpiByte.write( uint8_t tx ) {
-    call Spi.enableSpi(TRUE);
-    call McuPowerState.update();
+    /* no need to enable the SPI bus since that must have been done 
+       when the resource was granted */
+    // call Spi.enableSpi(TRUE);
+    // call McuPowerState.update();
     call Spi.write( tx );
     while ( !( SPSR & 0x80 ) );
     return call Spi.read();
   }
 
+  inline async command void FastSpiByte.splitWrite(uint8_t data) {
+    call Spi.write(data);
+  }
+
+  inline async command uint8_t FastSpiByte.splitRead() {
+    while( !( SPSR & 0x80 ) )
+      ;
+    return call Spi.read();
+  }
+
+  inline async command uint8_t FastSpiByte.splitReadWrite(uint8_t data) {
+    uint8_t b;
+
+    while( !( SPSR & 0x80 ) )
+	;
+    b = call Spi.read();
+    call Spi.write(data);
+
+    return b;
+  }
+
+  inline async command uint8_t FastSpiByte.write(uint8_t data) {
+    call Spi.write(data);
+    while( !( SPSR & 0x80 ) )
+      ;
+    return call Spi.read();
+  }
 
   /**
    * This component sends SPI packets in chunks of size SPI_ATOMIC_SIZE

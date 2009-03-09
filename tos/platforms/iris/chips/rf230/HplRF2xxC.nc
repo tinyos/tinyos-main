@@ -49,8 +49,7 @@ implementation
 	
 	components Atm128SpiC as SpiC;
 	SpiResource = SpiC.Resource[unique("Atm128SpiC.Resource")];
-
-	FastSpiByte = HplRF2xxP;
+	FastSpiByte = SpiC;
 
 	components HplAtm128GeneralIOC as IO;
 	SLP_TR = IO.PortB7;

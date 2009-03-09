@@ -1,4 +1,4 @@
-/// $Id: Atm128SpiC.nc,v 1.5 2008-04-24 22:31:25 mmaroti Exp $
+/// $Id: Atm128SpiC.nc,v 1.6 2009-03-09 18:12:58 mmaroti Exp $
 
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
@@ -52,7 +52,7 @@
  * The HAL of the SPI bus on the atm128.
  *
  * <pre>
- *  $Id: Atm128SpiC.nc,v 1.5 2008-04-24 22:31:25 mmaroti Exp $
+ *  $Id: Atm128SpiC.nc,v 1.6 2009-03-09 18:12:58 mmaroti Exp $
  * </pre>
  *
  *
@@ -65,6 +65,7 @@
 configuration Atm128SpiC {
   provides interface Init;
   provides interface SpiByte;
+  provides interface FastSpiByte;
   provides interface SpiPacket;
   provides interface Resource[uint8_t id];
 }
@@ -76,6 +77,7 @@ implementation {
   Init         = SpiMaster;
   
   SpiByte      = SpiMaster;
+  FastSpiByte  = SpiMaster;
   SpiPacket    = SpiMaster;
   Resource     = SpiMaster;
 
