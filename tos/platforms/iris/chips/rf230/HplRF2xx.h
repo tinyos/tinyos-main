@@ -30,11 +30,6 @@
 enum
 {
 	/**
-	 * This is an RF230 chip
-	 */
-	RF2XX_CHIPSET = RF230_CHIPSET,
-
-	/**
 	 * This is the value of the TRX_CTRL_0 register
 	 * which configures the output pin currents and the CLKM clock
 	 */
@@ -66,6 +61,8 @@ enum
 #endif
 
 #define RF2XX_DEF_CHANNEL	RF230_DEF_CHANNEL
+
+#define RF2XX_CHIPSET		RF230_CHIPSET
 
 /*
  * This is the command used to calculate the CRC for the RF230 chip. 

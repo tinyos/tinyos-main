@@ -24,11 +24,9 @@
 #ifndef __RF2XX_H__
 #define __RF2XX_H__
 
-enum rf2xx_chipsets_enum
-{
-	RF230_CHIPSET = 0,
-	RF212_CHIPSET = 1,
-};
+/* Set RF2XX_CHIPSET to one of these to enable specific features */
+#define RF230_CHIPSET	0
+#define RF212_CHIPSET	1
 
 enum rf2xx_registers_enum
 {
