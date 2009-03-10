@@ -1,14 +1,9 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: iris.target,v 1.4 2008-07-09 15:36:50 sallai Exp $
+#$Id: iris.target,v 1.5 2009-03-10 15:09:55 sallai Exp $
 
 PLATFORM = iris
 SENSORBOARD ?= micasb
 PROGRAMMER ?= avrdude
-
-AVRGCC_SUPPORTS_ATM1281 = $(shell avr-gcc --target-help 2>&1 | grep -c atmega1281)
-ifneq ($(AVRGCC_SUPPORTS_ATM1281),1)
-  $(error Found avr-gcc with no ATMega1281 support. For details on upgrading your toolchain, please see "http://www.isis.vanderbilt.edu/projects/NEST/tinyos-2.x-iris/doc/html/install-tinyos-iris.html")
-endif
 
 ifeq ($(PROGRAMMER),avrdude)
   PROGRAMMER_PART ?= -pm1281 -U efuse:w:0xff:m
