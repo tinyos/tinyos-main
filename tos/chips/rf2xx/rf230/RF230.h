@@ -96,7 +96,6 @@ enum rf230_phy_register_enums
 {
 	RF230_TX_AUTO_CRC_ON = 1 << 7,
 	RF230_TX_PWR_MASK = 0x0F,
-	RF230_TX_PWR_DEFAULT = 0,
 	RF230_RSSI_MASK = 0x1F,
 	RF230_CCA_REQUEST = 1 << 7,
 	RF230_CCA_MODE_0 = 0 << 5,
