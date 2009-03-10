@@ -21,33 +21,62 @@
  * Author: Miklos Maroti
  */
 
-configuration IEEE154NetworkLayerC
+module HplRF230P
 {
 	provides
 	{
-		interface SplitControl;
-		interface Send;
-		interface Receive;
+		interface GpioCapture as IRQ;
+		interface Init as PlatformInit;
 	}
+
 	uses
 	{
-		interface SplitControl as SubControl;
-		interface Send as SubSend;
-		interface Receive as SubReceive;
+		interface HplAtm128Capture<uint16_t> as Capture;
+		interface GeneralIO as PortCLKM;
+		interface GeneralIO as PortIRQ;
 	}
 }
 
 implementation
 {
-	components IEEE154NetworkLayerP, IEEE154PacketC;
+	command error_t PlatformInit.init()
+	{
+		call PortCLKM.makeInput();
+		call PortCLKM.clr();
+		call PortIRQ.makeInput();
+		call PortIRQ.clr();
+		call Capture.stop();
 
-	SplitControl = SubControl;
+		return SUCCESS;
+	}
 
-	Send = IEEE154NetworkLayerP;
-	Receive = IEEE154NetworkLayerP;
+	async event void Capture.captured(uint16_t time)
+	{
+		time = call Capture.get();	// TODO: ask Cory why time is not the captured time
+		signal IRQ.captured(time);
+	}
 
-	SubSend = IEEE154NetworkLayerP;
-	SubReceive = IEEE154NetworkLayerP;
+	default async event void IRQ.captured(uint16_t time)
+	{
+	}
 
-	IEEE154NetworkLayerP.IEEE154Packet -> IEEE154PacketC;
+	async command error_t IRQ.captureRisingEdge()
+	{
+		call Capture.setEdge(TRUE);
+		call Capture.reset();
+		call Capture.start();
+	
+		return SUCCESS;
+	}
+
+	async command error_t IRQ.captureFallingEdge()
+	{
+		// falling edge comes when the IRQ_STATUS register of the RF230 is read
+		return FAIL;	
+	}
+
+	async command void IRQ.disable()
+	{
+		call Capture.stop();
+	}
 }

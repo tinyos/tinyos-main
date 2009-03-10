@@ -43,7 +43,7 @@ configuration ActiveMessageC
 
 implementation
 {
-	components RF2xxActiveMessageC as MAC;
+	components RF230ActiveMessageC as MAC;
 
 	SplitControl = MAC;
 	AMSend       = MAC;
@@ -53,7 +53,7 @@ implementation
 	AMPacket     = MAC;
 
 	PacketAcknowledgements	= MAC;
-	LowPowerListening		= MAC;
+	LowPowerListening	= MAC;
 	PacketTimeStampMilli	= MAC;
 	PacketTimeStampMicro	= MAC;
 }

@@ -21,18 +21,47 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __RADIOASSERT_H__
-#define __RADIOASSERT_H__
+#include <RadioConfig.h>
 
-#ifdef RF2XX_DEBUG
+configuration HplRF230C
+{
+	provides
+	{
+		interface GeneralIO as SELN;
+		interface Resource as SpiResource;
+		interface FastSpiByte;
 
-	void assert(bool condition, const char* file, uint16_t line);
-	#define ASSERT(COND) assert(COND, __FILE__, __LINE__)
+		interface GeneralIO as SLP_TR;
+		interface GeneralIO as RSTN;
 
-#else
+		interface GpioCapture as IRQ;
+		interface Alarm<TRadio, uint16_t> as Alarm;
+	}
+}
 
-	#define ASSERT(COND) for(;0;)
+implementation
+{
+	components HplRF230P;
+	IRQ = HplRF230P.IRQ;
 
-#endif
+	HplRF230P.PortCLKM -> IO.PortD6;
+	HplRF230P.PortIRQ -> IO.PortD4;
+	
+	components Atm128SpiC as SpiC;
+	SpiResource = SpiC.Resource[unique("Atm128SpiC.Resource")];
+	FastSpiByte = SpiC;
 
-#endif//__RADIOASSERT_H__
+	components HplAtm128GeneralIOC as IO;
+	SLP_TR = IO.PortB7;
+	RSTN = IO.PortA6;
+	SELN = IO.PortB0;
+
+	components HplAtm128Timer1C as TimerC;
+	HplRF230P.Capture -> TimerC.Capture;
+
+	components new AlarmOne16C() as AlarmC;
+	Alarm = AlarmC;
+
+	components RealMainP;
+	RealMainP.PlatformInit -> HplRF230P.PlatformInit;
+}

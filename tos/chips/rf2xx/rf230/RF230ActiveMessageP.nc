@@ -268,7 +268,7 @@ implementation
 
 	async command uint8_t SlottedCollisionConfig.getScheduleExponent()
 	{
-		return 11;
+		return 1 + RADIO_ALARM_MILLI_EXP;
 	}
 
 	async command uint16_t SlottedCollisionConfig.getTransmitTime(message_t* msg)

@@ -21,62 +21,39 @@
  * Author: Miklos Maroti
  */
 
-module HplRF2xxP
+#ifndef __RF230PACKET_H__
+#define __RF230PACKET_H__
+
+#include <IEEE154Packet.h>
+
+typedef ieee154_header_t rf230packet_header_t;
+
+typedef nx_struct rf230packet_footer_t
 {
-	provides
-	{
-		interface GpioCapture as IRQ;
-		interface Init as PlatformInit;
-	}
+	// the time stamp is not recorded here, time stamped messaged cannot have max length
+} rf230packet_footer_t;
 
-	uses
-	{
-		interface HplAtm128Capture<uint16_t> as Capture;
-		interface GeneralIO as PortCLKM;
-		interface GeneralIO as PortIRQ;
-	}
-}
-
-implementation
+typedef struct rf230packet_metadata_t
 {
-	command error_t PlatformInit.init()
-	{
-		call PortCLKM.makeInput();
-		call PortCLKM.clr();
-		call PortIRQ.makeInput();
-		call PortIRQ.clr();
-		call Capture.stop();
+	uint8_t flags;
+	uint8_t lqi;
+	uint8_t power;				// shared between TXPOWER and RSSI
+#ifdef LOW_POWER_LISTENING
+	uint16_t lpl_sleepint;
+#endif
+	uint32_t timestamp;
+} rf230packet_metadata_t;
 
-		return SUCCESS;
-	}
+enum rf230packet_metadata_flags
+{
+	RF230PACKET_WAS_ACKED = 0x01,		// PacketAcknowledgements
+	RF230PACKET_TIMESTAMP = 0x02,		// PacketTimeStamp
+	RF230PACKET_TXPOWER = 0x04,		// PacketTransmitPower
+	RF230PACKET_RSSI = 0x08,		// PacketRSSI
+	RF230PACKET_TIMESYNC = 0x10,		// PacketTimeSync (update timesync_footer)
+	RF230PACKET_LPL_SLEEPINT = 0x20,	// LowPowerListening
 
-	async event void Capture.captured(uint16_t time)
-	{
-		time = call Capture.get();	// TODO: ask Cory why time is not the captured time
-		signal IRQ.captured(time);
-	}
+	RF230PACKET_CLEAR_METADATA = 0x00,
+};
 
-	default async event void IRQ.captured(uint16_t time)
-	{
-	}
-
-	async command error_t IRQ.captureRisingEdge()
-	{
-		call Capture.setEdge(TRUE);
-		call Capture.reset();
-		call Capture.start();
-	
-		return SUCCESS;
-	}
-
-	async command error_t IRQ.captureFallingEdge()
-	{
-		// falling edge comes when the IRQ_STATUS register of the RF230 is read
-		return FAIL;	
-	}
-
-	async command void IRQ.disable()
-	{
-		call Capture.stop();
-	}
-}
+#endif//__RF230PACKET_H__

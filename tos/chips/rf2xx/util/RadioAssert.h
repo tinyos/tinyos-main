@@ -21,13 +21,18 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __TIMESYNCMESSAGE_H__
-#define __TIMESYNCMESSAGE_H__
+#ifndef __RADIOASSERT_H__
+#define __RADIOASSERT_H__
 
-// this value is sent in the air
-typedef nx_int32_t timesync_relative_t;
+#ifdef RADIO_DEBUG
 
-// this value is stored in memory
-typedef uint32_t timesync_absolute_t;
+	void assert(bool condition, const char* file, uint16_t line);
+	#define ASSERT(COND) assert(COND, __FILE__, __LINE__)
 
-#endif//__TIMESYNCMESSAGE_H__
+#else
+
+	#define ASSERT(COND) for(;0;)
+
+#endif
+
+#endif//__RADIOASSERT_H__

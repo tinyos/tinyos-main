@@ -21,14 +21,13 @@
  * Author: Miklos Maroti
  */
 
-#include <RF2xx.h>
-#include <HplRF2xx.h>
+#include <RF230.h>
 #include <Tasklet.h>
 #include <RadioAssert.h>
-#include <TimeSyncMessage.h>
-#include <RadioAlarm.h>
+#include <GenericTimeSyncMessage.h>
+#include <RadioConfig.h>
 
-module RF2xxDriverLayerP
+module RF230DriverLayerP
 {
 	provides
 	{
@@ -63,11 +62,11 @@ module RF2xxDriverLayerP
 		interface PacketTimeStamp<TRadio, uint32_t>;
 		interface LocalTime<TRadio>;
 
-		interface RF2xxDriverConfig;
+		interface RF230DriverConfig;
 		interface Tasklet;
 		interface RadioAlarm;
 
-#ifdef RF2XX_DEBUG
+#ifdef RADIO_DEBUG
 		interface DiagMsg;
 #endif
 	}
@@ -123,10 +122,10 @@ implementation
 	inline void writeRegister(uint8_t reg, uint8_t value)
 	{
 		ASSERT( call SpiResource.isOwner() );
-		ASSERT( reg == (reg & RF2XX_CMD_REGISTER_MASK) );
+		ASSERT( reg == (reg & RF230_CMD_REGISTER_MASK) );
 
 		call SELN.clr();
-		call FastSpiByte.splitWrite(RF2XX_CMD_REGISTER_WRITE | reg);
+		call FastSpiByte.splitWrite(RF230_CMD_REGISTER_WRITE | reg);
 		call FastSpiByte.splitReadWrite(value);
 		call FastSpiByte.splitRead();
 		call SELN.set();
@@ -135,10 +134,10 @@ implementation
 	inline uint8_t readRegister(uint8_t reg)
 	{
 		ASSERT( call SpiResource.isOwner() );
-		ASSERT( reg == (reg & RF2XX_CMD_REGISTER_MASK) );
+		ASSERT( reg == (reg & RF230_CMD_REGISTER_MASK) );
 
 		call SELN.clr();
-		call FastSpiByte.splitWrite(RF2XX_CMD_REGISTER_READ | reg);
+		call FastSpiByte.splitWrite(RF230_CMD_REGISTER_READ | reg);
 		call FastSpiByte.splitReadWrite(0);
 		reg = call FastSpiByte.splitRead();
 		call SELN.set();
@@ -168,11 +167,11 @@ implementation
 			ASSERT( state == STATE_RX_ON );
 
 			cmd = CMD_NONE;
-			cca = readRegister(RF2XX_TRX_STATUS);
+			cca = readRegister(RF230_TRX_STATUS);
 
-			ASSERT( (cca & RF2XX_TRX_STATUS_MASK) == RF2XX_RX_ON );
+			ASSERT( (cca & RF230_TRX_STATUS_MASK) == RF230_RX_ON );
 
-			signal RadioCCA.done( (cca & RF2XX_CCA_DONE) ? ((cca & RF2XX_CCA_STATUS) ? SUCCESS : EBUSY) : FAIL );
+			signal RadioCCA.done( (cca & RF230_CCA_DONE) ? ((cca & RF230_CCA_STATUS) ? SUCCESS : EBUSY) : FAIL );
 		}
 		else
 			ASSERT(FALSE);
@@ -216,18 +215,18 @@ implementation
 		call BusyWait.wait(6);
 		call RSTN.set();
 
-		writeRegister(RF2XX_TRX_CTRL_0, RF2XX_TRX_CTRL_0_VALUE);
-		writeRegister(RF2XX_TRX_STATE, RF2XX_TRX_OFF);
+		writeRegister(RF230_TRX_CTRL_0, RF230_TRX_CTRL_0_VALUE);
+		writeRegister(RF230_TRX_STATE, RF230_TRX_OFF);
 
 		call BusyWait.wait(510);
 
-		writeRegister(RF2XX_IRQ_MASK, RF2XX_IRQ_TRX_UR | RF2XX_IRQ_PLL_LOCK | RF2XX_IRQ_TRX_END | RF2XX_IRQ_RX_START);
-		writeRegister(RF2XX_CCA_THRES, RF2XX_CCA_THRES_VALUE);
-		writeRegister(RF2XX_PHY_TX_PWR, RF2XX_TX_AUTO_CRC_ON | RF2XX_TX_PWR_DEFAULT);
+		writeRegister(RF230_IRQ_MASK, RF230_IRQ_TRX_UR | RF230_IRQ_PLL_LOCK | RF230_IRQ_TRX_END | RF230_IRQ_RX_START);
+		writeRegister(RF230_CCA_THRES, RF230_CCA_THRES_VALUE);
+		writeRegister(RF230_PHY_TX_PWR, RF230_TX_AUTO_CRC_ON | RF230_TX_PWR_DEFAULT);
 
-		txPower = RF2XX_TX_PWR_DEFAULT;
-		channel = call RF2xxDriverConfig.getDefaultChannel() & RF2XX_CHANNEL_MASK;
-		writeRegister(RF2XX_PHY_CC_CCA, RF2XX_CCA_MODE_VALUE | channel);
+		txPower = RF230_TX_PWR_DEFAULT;
+		channel = call RF230DriverConfig.getDefaultChannel() & RF230_CHANNEL_MASK;
+		writeRegister(RF230_PHY_CC_CCA, RF230_CCA_MODE_VALUE | channel);
 
 		call SLP_TR.set();
 		state = STATE_SLEEP;
@@ -275,7 +274,7 @@ implementation
 
 	tasklet_async command error_t RadioState.setChannel(uint8_t c)
 	{
-		c &= RF2XX_CHANNEL_MASK;
+		c &= RF230_CHANNEL_MASK;
 
 		if( cmd != CMD_NONE )
 			return EBUSY;
@@ -296,7 +295,7 @@ implementation
 
 		if( isSpiAcquired() )
 		{
-			writeRegister(RF2XX_PHY_CC_CCA, RF2XX_CCA_MODE_VALUE | channel);
+			writeRegister(RF230_PHY_CC_CCA, RF230_CCA_MODE_VALUE | channel);
 
 			if( state == STATE_RX_ON )
 				state = STATE_TRX_OFF_2_RX_ON;
@@ -321,19 +320,19 @@ implementation
 		{
 			ASSERT( ! radioIrq );
 
-			readRegister(RF2XX_IRQ_STATUS); // clear the interrupt register
+			readRegister(RF230_IRQ_STATUS); // clear the interrupt register
 			call IRQ.captureRisingEdge();
 
 			// setChannel was ignored in SLEEP because the SPI was not working, so do it here
-			writeRegister(RF2XX_PHY_CC_CCA, RF2XX_CCA_MODE_VALUE | channel);
+			writeRegister(RF230_PHY_CC_CCA, RF230_CCA_MODE_VALUE | channel);
 
-			writeRegister(RF2XX_TRX_STATE, RF2XX_RX_ON);
+			writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 			state = STATE_TRX_OFF_2_RX_ON;
 		}
 		else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY) 
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
-			writeRegister(RF2XX_TRX_STATE, RF2XX_FORCE_TRX_OFF);
+			writeRegister(RF230_TRX_STATE, RF230_FORCE_TRX_OFF);
 
 			call IRQ.disable();
 			radioIrq = FALSE;
@@ -407,28 +406,28 @@ implementation
 			return EBUSY;
 
 		length = (call PacketTransmitPower.isSet(msg) ?
-			call PacketTransmitPower.get(msg) : RF2XX_DEF_RFPOWER) & RF2XX_TX_PWR_MASK;
+			call PacketTransmitPower.get(msg) : RF230_DEF_RFPOWER) & RF230_TX_PWR_MASK;
 
 		if( length != txPower )
 		{
 			txPower = length;
-			writeRegister(RF2XX_PHY_TX_PWR, RF2XX_TX_AUTO_CRC_ON | txPower);
+			writeRegister(RF230_PHY_TX_PWR, RF230_TX_AUTO_CRC_ON | txPower);
 		}
 
-		if( call RF2xxDriverConfig.requiresRssiCca(msg) 
-				&& (readRegister(RF2XX_PHY_RSSI) & RF2XX_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
+		if( call RF230DriverConfig.requiresRssiCca(msg) 
+				&& (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
 			return EBUSY;
 
-		writeRegister(RF2XX_TRX_STATE, RF2XX_PLL_ON);
+		writeRegister(RF230_TRX_STATE, RF230_PLL_ON);
 
 		// do something useful, just to wait a little
 		time32 = call LocalTime.get();
 		timesync = call PacketTimeSyncOffset.isSet(msg) ? msg->data + call PacketTimeSyncOffset.get(msg) : 0;
 
 		// we have missed an incoming message in this short amount of time
-		if( (readRegister(RF2XX_TRX_STATUS) & RF2XX_TRX_STATUS_MASK) != RF2XX_PLL_ON )
+		if( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) != RF230_PLL_ON )
 		{
-			ASSERT( (readRegister(RF2XX_TRX_STATUS) & RF2XX_TRX_STATUS_MASK) == RF2XX_BUSY_RX );
+			ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_BUSY_RX );
 
 			state = STATE_PLL_ON_2_RX_ON;
 			return EBUSY;
@@ -444,10 +443,10 @@ implementation
 		ASSERT( ! radioIrq );
 
 		call SELN.clr();
-		call FastSpiByte.splitWrite(RF2XX_CMD_FRAME_WRITE);
+		call FastSpiByte.splitWrite(RF230_CMD_FRAME_WRITE);
 
-		length = call RF2xxDriverConfig.getLength(msg);
-		data = call RF2xxDriverConfig.getPayload(msg);
+		length = call RF230DriverConfig.getLength(msg);
+		data = call RF230DriverConfig.getPayload(msg);
 
 		// length | data[0] ... data[length-3] | automatically generated FCS
 		call FastSpiByte.splitReadWrite(length);
@@ -455,7 +454,7 @@ implementation
 		// the FCS is atomatically generated (2 bytes)
 		length -= 2;
 
-		header = call RF2xxDriverConfig.getHeaderLength();
+		header = call RF230DriverConfig.getHeaderLength();
 		if( header > length )
 			header = length;
 
@@ -482,7 +481,7 @@ implementation
 		call SELN.set();
 
 		/*
-		 * There is a very small window (~1 microsecond) when the RF2xx went 
+		 * There is a very small window (~1 microsecond) when the RF230 went 
 		 * into PLL_ON state but was somehow not properly initialized because 
 		 * of an incoming message and could not go into BUSY_TX. I think the
 		 * radio can even receive a message, and generate a TRX_UR interrupt
@@ -494,12 +493,12 @@ implementation
 		 */
 
 		// go back to RX_ON state when finished
-		writeRegister(RF2XX_TRX_STATE, RF2XX_RX_ON);
+		writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 
-#ifdef RF2XX_DEBUG_MESSAGES
+#ifdef RADIO_DEBUG_MESSAGES
 		if( call DiagMsg.record() )
 		{
-			length = call RF2xxDriverConfig.getLength(msg);
+			length = call RF230DriverConfig.getLength(msg);
 
 			call DiagMsg.str("tx");
 			call DiagMsg.uint16(time);
@@ -532,10 +531,10 @@ implementation
 			return EBUSY;
 
 		// see Errata B7 of the datasheet
-		// writeRegister(RF2XX_TRX_STATE, RF2XX_PLL_ON);
-		// writeRegister(RF2XX_TRX_STATE, RF2XX_RX_ON);
+		// writeRegister(RF230_TRX_STATE, RF230_PLL_ON);
+		// writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 
-		writeRegister(RF2XX_PHY_CC_CCA, RF2XX_CCA_REQUEST | RF2XX_CCA_MODE_VALUE | channel);
+		writeRegister(RF230_PHY_CC_CCA, RF230_CCA_REQUEST | RF230_CCA_MODE_VALUE | channel);
 		call RadioAlarm.wait(CCA_REQUEST_TIME);
 		cmd = CMD_CCA;
 		
@@ -552,13 +551,13 @@ implementation
 		uint16_t crc;
 
 		call SELN.clr();
-		call FastSpiByte.write(RF2XX_CMD_FRAME_READ);
+		call FastSpiByte.write(RF230_CMD_FRAME_READ);
 
 		// read the length byte
 		length = call FastSpiByte.write(0);
 
 		// if correct length
-		if( length >= 3 && length <= call RF2xxDriverConfig.getMaxLength() )
+		if( length >= 3 && length <= call RF230DriverConfig.getMaxLength() )
 		{
 			uint8_t read;
 			uint8_t* data;
@@ -566,31 +565,31 @@ implementation
 			// initiate the reading
 			call FastSpiByte.splitWrite(0);
 
-			call RF2xxDriverConfig.setLength(rxMsg, length);
-			data = call RF2xxDriverConfig.getPayload(rxMsg);
+			call RF230DriverConfig.setLength(rxMsg, length);
+			data = call RF230DriverConfig.getPayload(rxMsg);
 			crc = 0;
 
 			// we do not store the CRC field
 			length -= 2;
 
-			read = call RF2xxDriverConfig.getHeaderLength();
+			read = call RF230DriverConfig.getHeaderLength();
 			if( length < read )
 				read = length;
 
 			length -= read;
 
 			do {
-				crc = RF2XX_CRCBYTE_COMMAND(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
+				crc = RF230_CRCBYTE_COMMAND(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
 			}
 			while( --read != 0  );
 
 			if( signal RadioReceive.header(rxMsg) )
 			{
 				while( length-- != 0 )
-					crc = RF2XX_CRCBYTE_COMMAND(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
+					crc = RF230_CRCBYTE_COMMAND(crc, *(data++) = call FastSpiByte.splitReadWrite(0));
 
-				crc = RF2XX_CRCBYTE_COMMAND(crc, call FastSpiByte.splitReadWrite(0));
-				crc = RF2XX_CRCBYTE_COMMAND(crc, call FastSpiByte.splitReadWrite(0));
+				crc = RF230_CRCBYTE_COMMAND(crc, call FastSpiByte.splitReadWrite(0));
+				crc = RF230_CRCBYTE_COMMAND(crc, call FastSpiByte.splitReadWrite(0));
 
 				call PacketLinkQuality.set(rxMsg, call FastSpiByte.splitRead());
 			}
@@ -603,17 +602,17 @@ implementation
 		call SELN.set();
 		state = STATE_RX_ON;
 
-#ifdef RF2XX_DEBUG_MESSAGES
+#ifdef RADIO_DEBUG_MESSAGES
 		if( call DiagMsg.record() )
 		{
-			length = call RF2xxDriverConfig.getLength(rxMsg);
+			length = call RF230DriverConfig.getLength(rxMsg);
 
 			call DiagMsg.str("rx");
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.uint8(crc != 0);
 			call DiagMsg.uint8(length);
-			call DiagMsg.hex8s(call RF2xxDriverConfig.getPayload(rxMsg), length - 2);
+			call DiagMsg.hex8s(call RF230DriverConfig.getPayload(rxMsg), length - 2);
 			call DiagMsg.send();
 		}
 #endif
@@ -651,18 +650,18 @@ implementation
 			
 			atomic time = capturedTime;
 			radioIrq = FALSE;
-			irq = readRegister(RF2XX_IRQ_STATUS);
+			irq = readRegister(RF230_IRQ_STATUS);
 
-#ifdef RF2XX_DEBUG
+#ifdef RADIO_DEBUG
 			// TODO: handle this interrupt
-			if( irq & RF2XX_IRQ_TRX_UR )
+			if( irq & RF230_IRQ_TRX_UR )
 			{
 				if( call DiagMsg.record() )
 				{
 					call DiagMsg.str("assert ur");
 					call DiagMsg.uint16(call RadioAlarm.getNow());
-					call DiagMsg.hex8(readRegister(RF2XX_TRX_STATUS));
-					call DiagMsg.hex8(readRegister(RF2XX_TRX_STATE));
+					call DiagMsg.hex8(readRegister(RF230_TRX_STATUS));
+					call DiagMsg.hex8(readRegister(RF230_TRX_STATE));
 					call DiagMsg.hex8(irq);
 					call DiagMsg.uint8(state);
 					call DiagMsg.uint8(cmd);
@@ -671,7 +670,7 @@ implementation
 			}
 #endif
 
-			if( irq & RF2XX_IRQ_PLL_LOCK )
+			if( irq & RF230_IRQ_PLL_LOCK )
 			{
 				if( cmd == CMD_TURNON || cmd == CMD_CHANNEL )
 				{
@@ -688,7 +687,7 @@ implementation
 					ASSERT(FALSE);
 			}
 
-			if( irq & RF2XX_IRQ_RX_START )
+			if( irq & RF230_IRQ_RX_START )
 			{
 				if( cmd == CMD_CCA )
 				{
@@ -701,11 +700,11 @@ implementation
 					ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
 
 					// the most likely place for busy channel, with no TRX_END interrupt
-					if( irq == RF2XX_IRQ_RX_START )
+					if( irq == RF230_IRQ_RX_START )
 					{
-						temp = readRegister(RF2XX_PHY_RSSI) & RF2XX_RSSI_MASK;
+						temp = readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK;
 						rssiBusy += temp - (rssiBusy >> 2);
-#ifndef RF2XX_RSSI_ENERGY
+#ifndef RF230_RSSI_ENERGY
 						call PacketRSSI.set(rxMsg, temp);
 					}
 					else
@@ -722,7 +721,7 @@ implementation
 					 * we could not be after a transmission, because then cmd = 
 					 * CMD_TRANSMIT.
 					 */
-					if( irq == RF2XX_IRQ_RX_START ) // just to be cautious
+					if( irq == RF230_IRQ_RX_START ) // just to be cautious
 					{
 						time32 = call LocalTime.get();
 						time32 += (int16_t)(time - RX_SFD_DELAY) - (int16_t)(time32);
@@ -737,7 +736,7 @@ implementation
 					ASSERT( cmd == CMD_TURNOFF );
 			}
 
-			if( irq & RF2XX_IRQ_TRX_END )
+			if( irq & RF230_IRQ_TRX_END )
 			{
 				if( cmd == CMD_TRANSMIT )
 				{
@@ -748,28 +747,28 @@ implementation
 					signal RadioSend.sendDone(SUCCESS);
 
 					// TODO: we could have missed a received message
-					ASSERT( ! (irq & RF2XX_IRQ_RX_START) );
+					ASSERT( ! (irq & RF230_IRQ_RX_START) );
 				}
 				else if( cmd == CMD_RECEIVE )
 				{
 					ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
-#ifdef RF2XX_RSSI_ENERGY
-					if( irq == RF2XX_IRQ_TRX_END )
-						call PacketRSSI.set(rxMsg, readRegister(RF2XX_PHY_ED_LEVEL));
+#ifdef RF230_RSSI_ENERGY
+					if( irq == RF230_IRQ_TRX_END )
+						call PacketRSSI.set(rxMsg, readRegister(RF230_PHY_ED_LEVEL));
 					else
 						call PacketRSSI.clear(rxMsg);
 #endif
 					if( state == STATE_PLL_ON_2_RX_ON )
 					{
-						ASSERT( (readRegister(RF2XX_TRX_STATUS) & RF2XX_TRX_STATUS_MASK) == RF2XX_PLL_ON );
+						ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_PLL_ON );
 
-						writeRegister(RF2XX_TRX_STATE, RF2XX_RX_ON);
+						writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 						state = STATE_RX_ON;
 					}
 					else
 					{
 						// the most likely place for clear channel (hope to avoid acks)
-						rssiClear += (readRegister(RF2XX_PHY_RSSI) & RF2XX_RSSI_MASK) - (rssiClear >> 2);
+						rssiClear += (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) - (rssiClear >> 2);
 					}
 
 					cmd = CMD_DOWNLOAD;

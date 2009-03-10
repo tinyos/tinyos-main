@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <RadioAlarm.h>
+#include <RadioConfig.h>
 
 configuration TimeSyncMessageC
 {
@@ -44,17 +44,19 @@ configuration TimeSyncMessageC
 
 implementation
 {
-	components RF2xxTimeSyncMessageC;
+	components GenericTimeSyncMessageC as MAC, LocalTimeMicroC, RF230PacketC;
   
-	SplitControl = RF2xxTimeSyncMessageC;
-  
-	Receive		= RF2xxTimeSyncMessageC.Receive;
-	Snoop		= RF2xxTimeSyncMessageC.Snoop;
-	Packet		= RF2xxTimeSyncMessageC;
-	AMPacket	= RF2xxTimeSyncMessageC;
+	SplitControl	= MAC;
+  	Receive		= MAC.Receive;
+	Snoop		= MAC.Snoop;
+	Packet		= MAC;
+	AMPacket	= MAC;
 
-	TimeSyncAMSendRadio = RF2xxTimeSyncMessageC;
-	TimeSyncPacketRadio = RF2xxTimeSyncMessageC;
-	TimeSyncAMSendMilli = RF2xxTimeSyncMessageC;
-	TimeSyncPacketMilli = RF2xxTimeSyncMessageC;
+	TimeSyncAMSendRadio	= MAC;
+	TimeSyncPacketRadio	= MAC;
+	TimeSyncAMSendMilli	= MAC;
+	TimeSyncPacketMilli	= MAC;
+
+	MAC.PacketTimeSyncOffset -> RF230PacketC.PacketTimeSyncOffset;
+	MAC.LocalTimeRadio -> LocalTimeMicroC;
 }

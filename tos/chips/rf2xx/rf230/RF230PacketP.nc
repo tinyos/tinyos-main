@@ -21,10 +21,11 @@
  * Author: Miklos Maroti
  */
 
-#include <RF2xxPacket.h>
-#include <TimeSyncMessage.h>
+#include <RF230Packet.h>
+#include <GenericTimeSyncMessage.h>
+#include <RadioConfig.h>
 
-module RF2xxPacketP
+module RF230PacketP
 {
 	provides
 	{
@@ -54,13 +55,13 @@ implementation
 	enum
 	{
 		PACKET_LENGTH_INCREASE = 
-			sizeof(rf2xxpacket_header_t) - 1	// the 8-bit length field is not counted
+			sizeof(rf230packet_header_t) - 1	// the 8-bit length field is not counted
 			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
 	};
 
-	inline rf2xxpacket_metadata_t* getMeta(message_t* msg)
+	inline rf230packet_metadata_t* getMeta(message_t* msg)
 	{
-		return (rf2xxpacket_metadata_t*)(msg->metadata);
+		return (rf230packet_metadata_t*)(msg->metadata);
 	}
 
 /*----------------- Packet -----------------*/
@@ -69,7 +70,7 @@ implementation
 	{
 		call IEEE154Packet.createDataFrame(msg);
 
-		getMeta(msg)->flags = RF2XXPACKET_CLEAR_METADATA;
+		getMeta(msg)->flags = RF230PACKET_CLEAR_METADATA;
 	}
 
 	inline command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
@@ -113,7 +114,7 @@ implementation
 
 	async command bool PacketAcknowledgements.wasAcked(message_t* msg)
 	{
-		return getMeta(msg)->flags & RF2XXPACKET_WAS_ACKED;
+		return getMeta(msg)->flags & RF230PACKET_WAS_ACKED;
 	}
 
 /*----------------- PacketLinkQuality -----------------*/
@@ -141,7 +142,7 @@ implementation
 
 	async command bool PacketTimeStampRadio.isValid(message_t* msg)
 	{
-		return getMeta(msg)->flags & RF2XXPACKET_TIMESTAMP;
+		return getMeta(msg)->flags & RF230PACKET_TIMESTAMP;
 	}
 
 	async command uint32_t PacketTimeStampRadio.timestamp(message_t* msg)
@@ -151,12 +152,12 @@ implementation
 
 	async command void PacketTimeStampRadio.clear(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~RF2XXPACKET_TIMESTAMP;
+		getMeta(msg)->flags &= ~RF230PACKET_TIMESTAMP;
 	}
 
 	async command void PacketTimeStampRadio.set(message_t* msg, uint32_t value)
 	{
-		getMeta(msg)->flags |= RF2XXPACKET_TIMESTAMP;
+		getMeta(msg)->flags |= RF230PACKET_TIMESTAMP;
 		getMeta(msg)->timestamp = value;
 	}
 
@@ -171,8 +172,7 @@ implementation
 	{
 		int32_t offset = call PacketTimeStampRadio.timestamp(msg) - call LocalTimeRadio.get();
 
-		// TODO: Make the shift constant configurable
-		return (offset >> 10) + call LocalTimeMilli.get();
+		return (offset >> RADIO_ALARM_MILLI_EXP) + call LocalTimeMilli.get();
 	}
 
 	async command void PacketTimeStampMilli.clear(message_t* msg)
@@ -182,8 +182,7 @@ implementation
 
 	async command void PacketTimeStampMilli.set(message_t* msg, uint32_t value)
 	{
-		// TODO: Make the shift constant configurable
-		int32_t offset = (value - call LocalTimeMilli.get()) << 10;
+		int32_t offset = (value - call LocalTimeMilli.get()) << RADIO_ALARM_MILLI_EXP;
 
 		call PacketTimeStampRadio.set(msg, offset + call LocalTimeRadio.get());
 	}
@@ -192,7 +191,7 @@ implementation
 
 	async command bool PacketTransmitPower.isSet(message_t* msg)
 	{
-		return getMeta(msg)->flags & RF2XXPACKET_TXPOWER;
+		return getMeta(msg)->flags & RF230PACKET_TXPOWER;
 	}
 
 	async command uint8_t PacketTransmitPower.get(message_t* msg)
@@ -202,13 +201,13 @@ implementation
 
 	async command void PacketTransmitPower.clear(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~RF2XXPACKET_TXPOWER;
+		getMeta(msg)->flags &= ~RF230PACKET_TXPOWER;
 	}
 
 	async command void PacketTransmitPower.set(message_t* msg, uint8_t value)
 	{
-		getMeta(msg)->flags &= ~RF2XXPACKET_RSSI;
-		getMeta(msg)->flags |= RF2XXPACKET_TXPOWER;
+		getMeta(msg)->flags &= ~RF230PACKET_RSSI;
+		getMeta(msg)->flags |= RF230PACKET_TXPOWER;
 		getMeta(msg)->power = value;
 	}
 
@@ -216,7 +215,7 @@ implementation
 
 	async command bool PacketRSSI.isSet(message_t* msg)
 	{
-		return getMeta(msg)->flags & RF2XXPACKET_RSSI;
+		return getMeta(msg)->flags & RF230PACKET_RSSI;
 	}
 
 	async command uint8_t PacketRSSI.get(message_t* msg)
@@ -226,13 +225,13 @@ implementation
 
 	async command void PacketRSSI.clear(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~RF2XXPACKET_RSSI;
+		getMeta(msg)->flags &= ~RF230PACKET_RSSI;
 	}
 
 	async command void PacketRSSI.set(message_t* msg, uint8_t value)
 	{
-		getMeta(msg)->flags &= ~RF2XXPACKET_TXPOWER;
-		getMeta(msg)->flags |= RF2XXPACKET_RSSI;
+		getMeta(msg)->flags &= ~RF230PACKET_TXPOWER;
+		getMeta(msg)->flags |= RF230PACKET_RSSI;
 		getMeta(msg)->power = value;
 	}
 
@@ -240,7 +239,7 @@ implementation
 
 	async command bool PacketTimeSyncOffset.isSet(message_t* msg)
 	{
-		return getMeta(msg)->flags & RF2XXPACKET_TIMESYNC;
+		return getMeta(msg)->flags & RF230PACKET_TIMESYNC;
 	}
 
 	async command uint8_t PacketTimeSyncOffset.get(message_t* msg)
@@ -250,20 +249,20 @@ implementation
 
 	async command void PacketTimeSyncOffset.clear(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~RF2XXPACKET_TIMESYNC;
+		getMeta(msg)->flags &= ~RF230PACKET_TIMESYNC;
 	}
 
 	async command void PacketTimeSyncOffset.set(message_t* msg, uint8_t value)
 	{
 		// the value is ignored, the offset always points to the timesync footer at the end of the payload
-		getMeta(msg)->flags |= RF2XXPACKET_TIMESYNC;
+		getMeta(msg)->flags |= RF230PACKET_TIMESYNC;
 	}
 
 /*----------------- PacketSleepInterval -----------------*/
 
 	async command bool PacketSleepInterval.isSet(message_t* msg)
 	{
-		return getMeta(msg)->flags & RF2XXPACKET_LPL_SLEEPINT;
+		return getMeta(msg)->flags & RF230PACKET_LPL_SLEEPINT;
 	}
 
 	async command uint16_t PacketSleepInterval.get(message_t* msg)
@@ -277,12 +276,12 @@ implementation
 
 	async command void PacketSleepInterval.clear(message_t* msg)
 	{
-		getMeta(msg)->flags &= ~RF2XXPACKET_LPL_SLEEPINT;
+		getMeta(msg)->flags &= ~RF230PACKET_LPL_SLEEPINT;
 	}
 
 	async command void PacketSleepInterval.set(message_t* msg, uint16_t value)
 	{
-		getMeta(msg)->flags |= RF2XXPACKET_LPL_SLEEPINT;
+		getMeta(msg)->flags |= RF230PACKET_LPL_SLEEPINT;
 
 #ifdef LOW_POWER_LISTENING
 		getMeta(msg)->lpl_sleepint = value;
