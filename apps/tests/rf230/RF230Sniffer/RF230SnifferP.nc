@@ -21,9 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <RF2xxPacket.h>
 #include <Tasklet.h>
-#include <message.h>
 
 module RF230SnifferP
 {

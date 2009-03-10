@@ -37,8 +37,8 @@ implementation
 	RF230TestM.SplitControl -> SerialActiveMessageC;
 	RF230TestM.Timer -> TimerMilliC;
 
-	components RF2xxDriverLayerC, RF2xxActiveMessageC;
+	components RF230DriverLayerC, RF230ActiveMessageC;
 
-	RF230TestM.RadioState -> RF2xxDriverLayerC;
-	RF230TestM.AMSend -> RF2xxActiveMessageC;
+	RF230TestM.RadioState -> RF230DriverLayerC;
+	RF230TestM.AMSend -> RF230ActiveMessageC;
 }

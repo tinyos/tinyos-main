@@ -27,15 +27,15 @@ configuration RF230SnifferC
 
 implementation
 {
-	components RF230SnifferP, MainC, SerialActiveMessageC, RF2xxDriverLayerC, RF2xxActiveMessageP, IEEE154PacketC, AssertC;
+	components RF230SnifferP, MainC, SerialActiveMessageC, RF230DriverLayerC, RF230ActiveMessageP, IEEE154PacketC, AssertC;
 	
 	RF230SnifferP.Boot -> MainC;
 	RF230SnifferP.SplitControl -> SerialActiveMessageC;
-	RF230SnifferP.RadioState -> RF2xxDriverLayerC;
+	RF230SnifferP.RadioState -> RF230DriverLayerC;
 
-	RF2xxDriverLayerC.RF2xxDriverConfig -> RF2xxActiveMessageP;
+	RF230DriverLayerC.RF230DriverConfig -> RF230ActiveMessageP;
 
-	RF2xxActiveMessageP.IEEE154Packet -> IEEE154PacketC;
+	RF230ActiveMessageP.IEEE154Packet -> IEEE154PacketC;
 
 	// just to avoid a timer compilation bug
 	components new TimerMilliC();
