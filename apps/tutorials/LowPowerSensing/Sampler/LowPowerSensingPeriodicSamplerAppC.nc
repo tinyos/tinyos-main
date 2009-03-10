@@ -71,7 +71,7 @@ implementation {
 #endif
 
 #if defined(PLATFORM_IRIS)
-  components RF2xxActiveMessageC as LPLProvider;
+  components ActiveMessageC as LPLProvider;
   App.LPL -> LPLProvider;
 #endif
 
