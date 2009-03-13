@@ -1,4 +1,4 @@
-// $Id: Atm128I2C.h,v 1.4 2006-12-12 18:23:03 vlahan Exp $
+// $Id: Atm128I2C.h,v 1.5 2009-03-13 19:15:35 idgay Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -46,5 +46,9 @@ enum {
     ATM128_I2C_MR_DATA_ACK      = 0x50,
     ATM128_I2C_MR_DATA_NACK     = 0x58
 };
+
+#ifndef ATM128_I2C_EXTERNAL_PULLDOWN
+#define ATM128_I2C_EXTERNAL_PULLDOWN FALSE
+#endif
 
 #endif // _H_Atm128I2C_h

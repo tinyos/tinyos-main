@@ -38,7 +38,7 @@
  *
  * @author Philip Levis
  *
- * @version $Id: Atm128I2CMasterPacketP.nc,v 1.7 2007-11-01 18:10:36 fredjiang Exp $
+ * @version $Id: Atm128I2CMasterPacketP.nc,v 1.8 2009-03-13 19:15:35 idgay Exp $
  */
 
 generic module Atm128I2CMasterPacketP() {
@@ -93,7 +93,7 @@ implementation {
   async command error_t AsyncStdControl.start() {
     atomic {
       if (state == I2C_OFF) {
-	call I2C.init(FALSE);
+	call I2C.init(ATM128_I2C_EXTERNAL_PULLDOWN);
 	call I2C.readCurrent();
 	call I2C.enable(TRUE);
 	call I2C.enableInterrupt(FALSE);
