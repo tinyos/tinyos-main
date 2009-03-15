@@ -82,6 +82,6 @@ typedef TOne TRadio;
 /**
  * The base two logarithm of the number of radio alarm ticks per one millisecond
  */
-#define RADIO_ALARM_MILLI_EXP	10
+#define RADIO_ALARM_MILLI_EXP	(5 + MICA_DIVIDE_ONE_FOR_32KHZ_LOG2)
 
 #endif//__RADIOCONFIG_H__
