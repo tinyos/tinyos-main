@@ -227,8 +227,6 @@ implementation
         uint32_t age, oldestTime = 0;
         int32_t timeError;
 
-        tableEntries = 0;
-
         // clear table if the received entry's been inconsistent for some time
         timeError = msg->localTime;
         call GlobalTime.local2Global((uint32_t*)(&timeError));
@@ -238,10 +236,11 @@ implementation
         {
             if (++numErrors>3)
                 clearTable();
+            return; // don't incorporate a bad reading
         }
-        else
-            numErrors = 0;
 
+        tableEntries = 0; // don't reset table size unless you're recounting
+        numErrors = 0;
 
         for(i = 0; i < MAX_ENTRIES; ++i) {
             age = msg->localTime - table[i].localTime;
