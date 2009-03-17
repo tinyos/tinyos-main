@@ -38,7 +38,7 @@ except ImportError, e:
     print "Please install PySerial first."
     sys.exit(1)
 
-__version__ = "$Id: tos.py,v 1.8 2009-02-20 10:06:38 liang_mike Exp $"
+__version__ = "$Id: tos.py,v 1.9 2009-03-17 19:30:26 razvanm Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
@@ -67,15 +67,16 @@ class Timeout(Exception):
 def getSource(comm):
     source = comm.split('@')
     params = source[1].split(':')
+    debug = '--debug' in sys.argv
     if source[0] == 'serial':
         try:
-            return Serial(params[0], int(params[1]), flush=True, debug=('--debug' in sys.argv))
+            return Serial(params[0], int(params[1]), flush=True, debug=debug)
         except:
             print "ERROR: Unable to initialize a serial connection to", comm
             raise Exception
     elif source[0] == 'network':
         try:
-            return SerialMIB600(params[0], int(params[1]), debug=False)
+            return SerialMIB600(params[0], int(params[1]), debug=debug)
         except:
             print "ERROR: Unable to initialize a network connection to", comm
             print "ERROR:", traceback.format_exc()
@@ -122,7 +123,7 @@ class Serial:
         self._s.timeout = timeout
 
 class SerialMIB600:
-    def __init__(self, host, port=10002, debug=False, readTimeout=None, ackTimeout=0.05):
+    def __init__(self, host, port=10002, debug=False, readTimeout=None, ackTimeout=0.5):
         self.debug = debug
         self.readTimeout = readTimeout
         self.ackTimeout = ackTimeout
