@@ -15,7 +15,7 @@ fi
 
 if [[ $# -ne 3 ]]; then
   echo "Usage: $0 <prog_source> <comm_source> <platform>"
-  echo "  <prog_source> bsl,PORT | mib510,PORT | eprb,PORT"
+  echo "  <prog_source> bsl,PORT | mib510,PORT | eprb,HOST"
   echo "  <comm_source> serial@PORT:SPEED | network@HOST:PORT"
   echo "  <platform>    micaz | telosb | iris | epic"
   exit 2

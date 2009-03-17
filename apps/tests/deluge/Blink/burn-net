@@ -44,7 +44,7 @@ ID=0
 
 function burn_one() {
     ID=`expr $ID + 1`
-    echo -n ">>> Please plug mote $ID and type the programming sorce (bsl,PORT | mib510,PORT | eprb,PORT): "
+    echo -n ">>> Please plug mote $ID and type the programming sorce (bsl,PORT | mib510,PORT | eprb,HOST): "
     read PORT
 
     CFLAGS=$1 make ${PLATFORM} install,$ID ${PORT}
