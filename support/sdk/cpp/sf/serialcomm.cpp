@@ -442,8 +442,10 @@ bool SerialComm::readPacket(SFPacket &pPacket)
                         case SF_ACK:
                             break;
                         case SF_PACKET_NO_ACK:
-                        case SF_PACKET_ACK:
                             pPacket.setPayload((char *)(&buffer[payloadOffset]-1), count+1+1 - serialHeaderBytes);
+                            break;
+                        case SF_PACKET_ACK:
+                            pPacket.setPayload((char *)(&buffer[payloadOffset]), count+1 - serialHeaderBytes);
                             break;
                         default:
                             DEBUG("SerialComm::readPacket : unknown packet type = " \
