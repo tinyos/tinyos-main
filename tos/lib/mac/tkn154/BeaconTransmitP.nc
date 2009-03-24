@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009-03-04 18:31:17 $
+ * $Revision: 1.8 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -59,10 +59,7 @@ module BeaconTransmitP
     interface RadioTx as BeaconTx;
     interface MLME_GET;
     interface MLME_SET;
-    interface Resource as Token;
-    interface ResourceTransferred as TokenTransferred;
-    interface ResourceTransfer as TokenToBroadcast;
-    interface GetNow<bool> as IsTokenRequested;
+    interface TransferableResource as RadioToken;
     interface FrameTx as RealignmentBeaconEnabledTx;
     interface FrameTx as RealignmentNonBeaconEnabledTx;
     interface FrameRx as BeaconRequestRx;
@@ -154,7 +151,8 @@ implementation
   /* function/task prototypes */
   task void txDoneTask();
   task void signalStartConfirmSuccessTask();
-  void prepareNextBeaconTransmission();
+  void nextRound();
+  void prepareBeaconTransmission();
   void continueStartRequest();
   void finishRealignment(ieee154_txframe_t *frame, ieee154_status_t status);
 
@@ -242,7 +240,7 @@ implementation
       if (m_beaconOrder == 15) {
         // We're not already transmitting beacons, i.e. we have to request the token
         // (otherwise we'd get the token "automatically" for the next scheduled beacon).
-        call Token.request();
+        call RadioToken.request();
       }
       // We'll continue the MLME_START operation in continueStartRequest() once we have the token
     }
@@ -373,59 +371,61 @@ implementation
     }
   }
 
-  task void grantedTask()
+  task void signalGrantedTask()
   {
-    signal Token.granted();
+    signal RadioToken.granted();
   }
 
-  event void Token.granted()
+  event void RadioToken.granted()
   {
-    dbg_serial("BeaconSynchronizeP","Got token, will Tx beacon in %lu\n",
-        (uint32_t) ((m_lastBeaconTxTime + m_dt) - call BeaconSendAlarm.getNow())); 
+    dbg_serial("BeaconSynchronizeP","Token granted.\n");
     if (m_requestBitmap & REQUEST_REALIGNMENT_DONE_PENDING) {
-      // unlikely to occur: we have not yet received a done()
+      // very unlikely: we have not yet received a done()
       // event after sending out a realignment frame 
       dbg_serial("BeaconTransmitP", "Realignment pending (request: %lu) !\n", (uint32_t) m_requestBitmap);
-      post grantedTask(); // spin
+      post signalGrantedTask(); // spin
       return;
     } else if (m_requestBitmap & REQUEST_UPDATE_SF) {
       dbg_serial("BeaconTransmitP","Putting new superframe spec into operation\n"); 
       m_requestBitmap &= ~REQUEST_UPDATE_SF;
       continueStartRequest();
     }
-    if (call RadioOff.isOff())
-      prepareNextBeaconTransmission();
-    else
-      ASSERT(call RadioOff.off() == SUCCESS); // will continue in prepareNextBeaconTransmission()
+    nextRound();
   }
 
-  async event void TokenTransferred.transferred()
+  void nextRound()
   {
-    if (call IsTokenRequested.getNow()) {
-      // some other component needs the token - we give it up for now, 
-      // but before make another request to get it back afterwards     
-      dbg_serial("BeaconTransmitP", "Token is requested, releasing it now.\n");
-      call Token.request();
-      call Token.release();
-    } else
-      post grantedTask();
+    if (call RadioOff.isOff())
+      prepareBeaconTransmission();
+    else
+      ASSERT(call RadioOff.off() == SUCCESS); // will continue in prepareBeaconTransmission()
+  }
+
+  async event void RadioToken.transferredFrom(uint8_t fromClientID)
+  {
+    dbg_serial("BeaconSynchronizeP","Token transferred, will Tx beacon in %lu\n",
+        (uint32_t) ((m_lastBeaconTxTime + m_dt) - call BeaconSendAlarm.getNow())); 
+    if (m_requestBitmap & (REQUEST_REALIGNMENT_DONE_PENDING | REQUEST_UPDATE_SF))
+      post signalGrantedTask(); // need to be in sync context
+    else
+      nextRound();
   }  
 
   async event void RadioOff.offDone()
   {
-    prepareNextBeaconTransmission();
+    prepareBeaconTransmission();
   }
 
-  void prepareNextBeaconTransmission()
+  void prepareBeaconTransmission()
   {
     if (m_txState == S_TX_LOCKED) {
       // have not had time to finish processing the last sent beacon
       dbg_serial("BeaconTransmitP", "Token was returned too fast!\n");
-      post grantedTask();
+      post signalGrantedTask();
     } else if (m_beaconOrder == 15) {
       // we're not sending any beacons!?
       dbg_serial("BeaconTransmitP", "Stop sending beacons.\n");
-      call Token.release();
+      call RadioToken.release();
     } else {
       // get ready for next beacon transmission
       atomic {
@@ -516,12 +516,12 @@ implementation
       dbg_serial("BeaconTransmitP", "Beacon Tx success at %lu\n", (uint32_t) m_lastBeaconTxTime);
     } else {
       // Timestamp is invalid; this is bad. We need the beacon timestamp for the 
-      // slotted CSMA-CA, because it defines slot reference time. We can't use this superframe
+      // slotted CSMA-CA, because it defines the slot reference time. We can't use this superframe
       // TODO: check if this was the initial beacon (then m_lastBeaconTxRefTime is invalid)
       dbg_serial("BeaconTransmitP", "Invalid timestamp!\n");
       m_dt += m_beaconInterval;
-      call Token.request();
-      call Token.release();      
+      call RadioToken.request();
+      call RadioToken.release();      
       return;
     }
 
@@ -547,7 +547,11 @@ implementation
       m_battLifeExtDuration = m_battLifeExtDuration + m_battLifeExtPeriods * 20;
     } else
       m_battLifeExtDuration = 0;
-    call TokenToBroadcast.transfer(); 
+
+    // we pass on the token now, but make a reservation to get it back 
+    // to transmit the next beacon (at the start of the next superframe)
+    call RadioToken.request();  
+    call RadioToken.transferTo(RADIO_CLIENT_COORDBROADCAST); 
     post txDoneTask();
   }
 

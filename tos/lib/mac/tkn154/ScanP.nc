@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:31 $
+ * $Revision: 1.4 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -45,6 +45,7 @@ module ScanP
     interface Init;
     interface MLME_SCAN;
     interface MLME_BEACON_NOTIFY;
+    interface GetNow<token_requested_t> as IsRadioTokenRequested;
   }
   uses
   {
@@ -59,7 +60,7 @@ module ScanP
     interface Timer<TSymbolIEEE802154> as ScanTimer;
     interface Pool<ieee154_txframe_t> as TxFramePool;
     interface Pool<ieee154_txcontrol_t> as TxControlPool;
-    interface Resource as Token;
+    interface TransferableResource as RadioToken;
     interface FrameUtility;
     interface Leds;
   }
@@ -83,7 +84,7 @@ implementation
   uint8_t m_resultIndex;
   ieee154_macPANId_t m_PANID;
   norace uint32_t m_scanDuration;
-  bool m_busy = FALSE;
+  norace bool m_busy = FALSE;
 
   void nextIteration();
   void continueScanRequest();
@@ -92,10 +93,10 @@ implementation
 
   command error_t Init.init()
   {
-    // triggered by MLME_RESET; remember: Init will not be called
-    // while this component owns the Token, so the worst case is 
+    // triggered by MLME_RESET; Note: Init will not be called
+    // while this component owns the RadioToken, so the worst case is 
     // that a MLME_SCAN was accepted (returned IEEE154_SUCCESS)  
-    // but the Token.granted() has not been signalled            
+    // but the RadioToken.granted() has not been signalled            
     if (m_busy) {
       m_currentChannelNum = 27;
       nextIteration(); // signals confirm and resets state
@@ -169,13 +170,13 @@ implementation
       }
       if (m_resultList == NULL)
         m_resultListNumEntries = 0;
-      call Token.request();
+      call RadioToken.request();
     }
     dbg_serial("ScanP", "MLME_SCAN.request -> result: %lu\n", (uint32_t) status);
     return status;
   }
 
-  event void Token.granted()
+  event void RadioToken.granted()
   {
     if (call RadioOff.isOff())
       continueScanRequest();
@@ -196,7 +197,7 @@ implementation
     ieee154_macDSN_t dsn = call MLME_GET.macDSN();
 
     if (!m_busy) {
-      call Token.release();
+      call RadioToken.release();
       return;
     }
     switch (m_scanType) {
@@ -278,8 +279,8 @@ implementation
         call TxFramePool.put(m_txFrame);
       }
       m_txFrame = NULL;
-      if (call Token.isOwner())
-        call Token.release();
+      if (call RadioToken.isOwner())
+        call RadioToken.release();
       m_busy = FALSE;
       dbg_serial("ScanP", "MLME_SCAN.confirm()\n");
       signal MLME_SCAN.confirm (
@@ -288,12 +289,13 @@ implementation
           IEEE154_SUPPORTED_CHANNELPAGE,
           m_unscannedChannels,
           (m_scanType == ENERGY_DETECTION_SCAN) ? m_resultIndex : 0,
-          (m_scanType == ENERGY_DETECTION_SCAN) ? (uint8_t*) m_resultList : NULL,
+          (m_scanType == ENERGY_DETECTION_SCAN) ? (int8_t*) m_resultList : NULL,
           ((m_scanType == ACTIVE_SCAN ||
            m_scanType == PASSIVE_SCAN) && m_macAutoRequest) ? m_resultIndex : 0,
           ((m_scanType == ACTIVE_SCAN ||
            m_scanType == PASSIVE_SCAN) && m_macAutoRequest) ? (ieee154_PANDescriptor_t*) m_resultList : NULL);
     }
+    dbg_serial_flush();
   }
   
   async event void RadioRx.enableRxDone()
@@ -405,6 +407,8 @@ implementation
     nextIteration();
   }
 
+  async command token_requested_t IsRadioTokenRequested.getNow(){ return m_busy;}
+  async event void RadioToken.transferredFrom(uint8_t id){ ASSERT(0);}
   default event message_t* MLME_BEACON_NOTIFY.indication (message_t *beaconFrame) {return beaconFrame;}
   default event void MLME_SCAN.confirm    (
                           ieee154_status_t status,

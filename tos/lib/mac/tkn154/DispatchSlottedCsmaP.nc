@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-05 10:07:11 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -77,11 +77,9 @@ generic module DispatchSlottedCsmaP(uint8_t sfDirection)
     interface Alarm<TSymbolIEEE802154,uint32_t> as BLEAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as IndirectTxWaitAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as BroadcastAlarm;
-    interface Resource as Token;
-    interface GetNow<bool> as IsTokenRequested;
-    interface ResourceTransfer as TokenToCfp;
-    interface ResourceTransferred as TokenTransferred;
+    interface TransferableResource as RadioToken;
     interface SuperframeStructure; 
+    interface GetNow<token_requested_t> as IsRadioTokenRequested;
     interface GetNow<bool> as IsRxEnableActive; 
     interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
     interface Notify<bool> as RxEnableStateChange;
@@ -117,6 +115,7 @@ implementation
   enum {
     COORD_ROLE = (sfDirection == OUTGOING_SUPERFRAME),
     DEVICE_ROLE = !COORD_ROLE,
+    RADIO_CLIENT_CFP = COORD_ROLE ? RADIO_CLIENT_COORDCFP : RADIO_CLIENT_DEVICECFP,
   };
 
   /* state / frame management */
@@ -188,7 +187,7 @@ implementation
     return SUCCESS;
   }
 
-  async event void TokenTransferred.transferred()
+  async event void RadioToken.transferredFrom(uint8_t fromClient)
   {
     // we got the token, i.e. CAP has just started
     uint32_t capDuration = (uint32_t) call SuperframeStructure.numCapSlots() * 
@@ -212,7 +211,7 @@ implementation
     } else if (capDuration < guardTime) {
       // CAP is too short to do anything practical
       dbg_serial("DispatchSlottedCsmaP", "CAP too short!\n");
-      call TokenToCfp.transfer();
+      call RadioToken.transferTo(RADIO_CLIENT_CFP);
       return;
     } else {
       capDuration -= guardTime;
@@ -343,7 +342,7 @@ implementation
     atomic {
       // long atomics are bad... but in this block, once the/ current state has
       // been determined only one branch will/ be taken (there are no loops)
-      if (m_lock || !call Token.isOwner())
+      if (m_lock || !call RadioToken.isOwner())
         return;
       m_lock = TRUE; // lock
       capDuration = (uint32_t) call SuperframeStructure.numCapSlots() * 
@@ -369,7 +368,7 @@ implementation
           m_lock = FALSE; // unlock
           dbg_flush_state();
           dbg_serial("DispatchSlottedCsmaP", "Handing over to CFP.\n");
-          call TokenToCfp.transfer();
+          call RadioToken.transferTo(RADIO_CLIENT_CFP);
           return;
         } else 
           next = SWITCH_OFF;
@@ -394,14 +393,14 @@ implementation
       }
 
       // Check 4: is some other operation (like MLME-SCAN or MLME-RESET) pending? 
-      else if (call IsTokenRequested.getNow()) {
+      else if (call IsRadioTokenRequested.getNow()) {
         dbg_push_state(4);
         if (call RadioOff.isOff()) {
           stopAllAlarms();  // may still fire, but is locked through isOwner()
           // nothing more to do... just release the Token
           m_lock = FALSE; // unlock
           dbg_serial("DispatchSlottedCsmaP", "Token requested: Handing over to CFP.\n");
-          call TokenToCfp.transfer();
+          call RadioToken.release();
           return;
         } else 
           next = SWITCH_OFF;
@@ -439,14 +438,6 @@ implementation
       else {
         dbg_push_state(8);
         next = trySwitchOff();
-        if (next == DO_NOTHING && (DEVICE_ROLE && capDuration == 0)) {
-          // nothing more to do... just release the Token
-          stopAllAlarms();  // may still fire, but is locked through isOwner()
-          m_lock = FALSE; // unlock
-          dbg_serial("DispatchSlottedCsmaP", "Releasing token\n");
-          call Token.release();
-          return;
-        }
       }
 
       // if there is nothing to do, then we must clear the lock
@@ -697,7 +688,7 @@ implementation
     // only once per CAP (max. one broadcast is allowed after a beacon
     // transmission)
     atomic {
-      if (!call Token.isOwner() && m_bcastFrame == NULL) {
+      if (!call RadioToken.isOwner() && m_bcastFrame == NULL) {
         m_bcastFrame = frame;
         return IEEE154_SUCCESS;
       } else {
@@ -717,7 +708,7 @@ implementation
     signal WasRxEnabled.notify(TRUE);
   }
 
-  event void Token.granted()
+  event void RadioToken.granted()
   {
     ASSERT(0); // should never happen
   }

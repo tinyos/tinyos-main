@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:26 $
+ * $Revision: 1.4 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,8 +42,9 @@ module PromiscuousModeP
     interface SplitControl as PromiscuousMode;
     interface Get<bool> as PromiscuousModeGet;
     interface FrameRx;
+    interface GetNow<token_requested_t> as IsRadioTokenRequested;
   } uses {
-    interface Resource as Token;
+    interface TransferableResource as RadioToken;
     interface RadioRx as PromiscuousRx;
     interface RadioOff;
     interface Set<bool> as RadioPromiscuousMode;
@@ -76,14 +77,14 @@ implementation
     error_t result = FAIL;
     if (m_state == S_STOPPED) {
       m_state = S_STARTING;
-      call Token.request();
+      call RadioToken.request();
       result = SUCCESS;
     }
     dbg_serial("PromiscuousModeP", "PromiscuousMode.start -> result: %lu\n", (uint32_t) result);
     return result;
   }
 
-  event void Token.granted()
+  event void RadioToken.granted()
   {
     call RadioPromiscuousMode.set(TRUE);
     if (call RadioOff.isOff())
@@ -129,7 +130,7 @@ implementation
   {
     call RadioPromiscuousMode.set(FALSE);
     m_state = S_STOPPED;
-    call Token.release();
+    call RadioToken.release();
     dbg_serial("PromiscuousModeP", "Promiscuous mode disabled.\n");
     signal PromiscuousMode.stopDone(SUCCESS);
   }
@@ -142,6 +143,8 @@ implementation
       post continueStopTask();
   }
 
+  async command token_requested_t IsRadioTokenRequested.getNow(){ return m_state == S_STARTING; }
   default event void PromiscuousMode.startDone(error_t error) {}
   default event void PromiscuousMode.stopDone(error_t error) {}
+  async event void RadioToken.transferredFrom(uint8_t clientFrom){ASSERT(0);}
 }

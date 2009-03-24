@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:40 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-24 12:56:47 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -44,6 +44,7 @@ module NoPromiscuousModeP
     interface SplitControl as PromiscuousMode;
     interface Get<bool> as PromiscuousModeGet;
     interface FrameRx;
+    interface GetNow<token_requested_t> as IsRadioTokenRequested;
   } uses {
     interface Resource as Token;
     interface RadioRx as PromiscuousRx;
@@ -74,4 +75,5 @@ implementation
 
   default event void PromiscuousMode.startDone(error_t error){}
   default event void PromiscuousMode.stopDone(error_t error){}
+  async command token_requested_t IsRadioTokenRequested.getNow(){ return FALSE;}
 }

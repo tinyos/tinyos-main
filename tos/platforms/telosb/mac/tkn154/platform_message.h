@@ -11,7 +11,7 @@
 #else
 typedef struct {
   uint8_t control;  // stores length (lower 7 bits), top bit -> promiscuous mode
-  uint8_t mhr[23];  // maximum header size without security
+  uint8_t mhr[MHR_MAX_LEN];  // maximum header size without security
 } ieee154_header_t;
 
 typedef struct {

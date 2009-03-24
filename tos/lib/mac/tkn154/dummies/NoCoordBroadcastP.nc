@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:39 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-24 12:56:47 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -47,8 +47,7 @@ module NoCoordBroadcastP
   } uses {
     interface Queue<ieee154_txframe_t*>; 
     interface FrameTxNow as CapTransmitNow;
-    interface ResourceTransfer as TokenToCap;
-    interface ResourceTransferred as TokenTransferred;
+    interface TransferableResource as RadioToken;
     interface GetNow<bool> as BeaconFramePendingBit;
     interface SuperframeStructure as OutgoingSF;
     interface Leds;
@@ -74,12 +73,13 @@ implementation
     return FALSE;
   }
 
-  async event void TokenTransferred.transferred()
+  async event void RadioToken.transferredFrom(uint8_t fromClient)
   {
-    call TokenToCap.transfer();
+    call RadioToken.transferTo(RADIO_CLIENT_COORDCAP);
   }
 
   async event void CapTransmitNow.transmitNowDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
   {
   }
+  event void RadioToken.granted(){ }
 }

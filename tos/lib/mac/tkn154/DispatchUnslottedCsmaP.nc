@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-05 10:07:11 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -64,8 +64,8 @@ module DispatchUnslottedCsmaP
   uses
   {
     interface Timer<TSymbolIEEE802154> as IndirectTxWaitTimer;
-    interface Resource as Token;
-    interface GetNow<bool> as IsTokenRequested;
+    interface TransferableResource as RadioToken;
+    interface GetNow<token_requested_t> as IsRadioTokenRequested;
     interface GetNow<bool> as IsRxEnableActive; 
     interface Set<ieee154_macSuperframeOrder_t> as SetMacSuperframeOrder;
     interface Set<ieee154_macPanCoordinator_t> as SetMacPanCoordinator;     
@@ -191,12 +191,12 @@ implementation
       return IEEE154_TRANSACTION_OVERFLOW;
     } else {
       setCurrentFrame(frame);
-      call Token.request();
+      call RadioToken.request();
       return IEEE154_SUCCESS;
     }
   }
 
-  event void Token.granted()
+  event void RadioToken.granted()
   {
     updateState();
   }
@@ -248,7 +248,7 @@ implementation
       // long atomics are bad... but in this block, once the
       // current state has been determined only one branch will
       // be taken (there are no loops)
-      if (m_lock || !call Token.isOwner())
+      if (m_lock || !call RadioToken.isOwner())
         return;
       m_lock = TRUE; // lock
 
@@ -259,12 +259,12 @@ implementation
       }
 
       // Check 2: is some other operation (like MLME-SCAN or MLME-RESET) pending? 
-      else if (call IsTokenRequested.getNow()) {
+      else if (call IsRadioTokenRequested.getNow()) {
         if (call RadioOff.isOff()) {
           // nothing more to do... just release the Token
           m_lock = FALSE; // unlock
           dbg_serial("DispatchUnslottedCsmaP", "Token requested: releasing it.\n");
-          call Token.release();
+          call RadioToken.release();
           return;
         } else 
           next = SWITCH_OFF;
@@ -286,14 +286,14 @@ implementation
         }
       }
 
-      // Check 6: just make sure the radio is switched off  
+      // Check 5: just make sure the radio is switched off  
       else {
         next = trySwitchOff();
         if (next == DO_NOTHING) {
           // nothing more to do... just release the Token
           m_lock = FALSE; // unlock
           dbg_serial("DispatchUnslottedCsmaP", "Releasing token\n");
-          call Token.release();
+          call RadioToken.release();
           return;
         }
       }
@@ -357,7 +357,12 @@ implementation
 
   async event void RadioOff.offDone() { m_lock = FALSE; updateState();}
   async event void RadioRx.enableRxDone() { m_lock = FALSE; updateState();}
-  event void RxEnableStateChange.notify(bool whatever) { updateState();}
+  event void RxEnableStateChange.notify(bool whatever) { 
+    if (!call RadioToken.isOwner())
+      call RadioToken.request();
+    else
+      updateState();
+  }
 
   event void IndirectTxWaitTimer.fired() 
   { 
@@ -458,6 +463,8 @@ implementation
     uint8_t *payload = (uint8_t *) frame->data;
     uint8_t *mhr = MHR(frame);
     uint8_t frameType = mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK;
+
+    dbg("DispatchUnslottedCsmaP", "Received frame, DSN: %lu, result: 0x%lx\n", (uint32_t) mhr[MHR_INDEX_SEQNO]);
     if (frameType == FC1_FRAMETYPE_CMD)
       frameType += payload[0];
     atomic {
@@ -494,4 +501,5 @@ implementation
   command error_t WasRxEnabled.enable() {return FAIL;}
   command error_t WasRxEnabled.disable() {return FAIL;}
   default event void MLME_START.confirm(ieee154_status_t status) {}
+  async event void RadioToken.transferredFrom(uint8_t fromClientID) {ASSERT(0);}
 }

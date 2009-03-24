@@ -34,7 +34,7 @@
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @version $Revision: 1.3 $ $Date: 2009-03-04 18:31:03 $
+ * @version $Revision: 1.4 $ $Date: 2009-03-24 12:56:46 $
  */
 
 #include "Timer.h"
@@ -447,10 +447,6 @@ implementation {
   /***************** StartupAlarm Events ****************/
   async event void StartupAlarm.fired() {
     if ( m_state == S_VREG_STARTING ) {
-      cc2420_status_t status;
-      do {
-       status = call SNOP.strobe();  
-      } while (!(status & CC2420_STATUS_XOSC16M_STABLE));
       m_state = S_VREG_STARTED;
       call RSTN.clr();
       call RSTN.set();

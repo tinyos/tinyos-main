@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-03-04 18:31:32 $
+ * $Date: 2009-03-24 12:56:47 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -135,6 +135,27 @@ enum {
 #define IEEE802154_RADIO_RESOURCE "RadioRxTxP.resource"
 
 enum {
+  // The following identfiers map to components that access the radio
+  // via RadioClientC(). They are used as parameters for RadioClientC(),
+  // the TransferableResource.transferTo() command and in
+  // the TransferableResource.transferredFrom() event
+
+  RADIO_CLIENT_SCAN = unique(IEEE802154_RADIO_RESOURCE),
+  RADIO_CLIENT_PIB = unique(IEEE802154_RADIO_RESOURCE),
+  RADIO_CLIENT_PROMISCUOUSMODE = unique(IEEE802154_RADIO_RESOURCE),
+
+  RADIO_CLIENT_BEACONTRANSMIT = unique(IEEE802154_RADIO_RESOURCE),
+  RADIO_CLIENT_COORDBROADCAST = unique(IEEE802154_RADIO_RESOURCE),
+  RADIO_CLIENT_COORDCAP = unique(IEEE802154_RADIO_RESOURCE),
+  RADIO_CLIENT_COORDCFP = unique(IEEE802154_RADIO_RESOURCE),
+
+  RADIO_CLIENT_BEACONSYNCHRONIZE = unique(IEEE802154_RADIO_RESOURCE),
+  RADIO_CLIENT_DEVICECAP = unique(IEEE802154_RADIO_RESOURCE),
+  RADIO_CLIENT_DEVICECFP = unique(IEEE802154_RADIO_RESOURCE),
+};
+
+enum {
+  // parameter for the generic DispatchSlottedCsmaP
   OUTGOING_SUPERFRAME,
   INCOMING_SUPERFRAME,
 };
@@ -257,6 +278,13 @@ enum {
   IEEE154_aMinCAPLength                = 440,
   IEEE154_aUnitBackoffPeriod           = 20,
 };
+
+// combine function for IsRadioTokenRequested (GetNow) interface
+typedef bool token_requested_t __attribute__((combine(rcombine)));
+token_requested_t rcombine(token_requested_t r1, token_requested_t r2)
+{
+  return r1 && r2;
+}
 
 #ifdef TKN154_DEBUG
 

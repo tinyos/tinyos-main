@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:22 $
+ * $Revision: 1.4 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -272,5 +272,7 @@ implementation
 
   default event message_t* MCPS_DATA.indication(message_t* frame) { return frame; }
   default command ieee154_status_t DeviceCfpTx.transmit(ieee154_txframe_t *data) {return IEEE154_INVALID_GTS;}
+  default command ieee154_status_t BroadcastTx.transmit(ieee154_txframe_t *data) {return IEEE154_INVALID_PARAMETER;}
   default command ieee154_status_t CoordCfpTx.transmit(ieee154_txframe_t *data) {return IEEE154_INVALID_GTS;}
+  default async command bool IsSendingBeacons.getNow() {return FALSE;}
 }

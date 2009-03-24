@@ -27,14 +27,14 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:26 $
+ * $Revision: 1.4 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
 #include "TKN154_MAC.h"
-generic configuration RadioClientC() 
+generic configuration RadioClientC(uint8_t clientID) 
 {
   provides
   {
@@ -43,38 +43,17 @@ generic configuration RadioClientC()
     interface RadioTx;
     interface SlottedCsmaCa;
     interface UnslottedCsmaCa;
-    interface Resource as Token;
-    interface ResourceRequested as TokenRequested;
-    interface ResourceTransfer;
-    interface ResourceTransferred;
-    interface ResourceTransferConnector as TransferFrom;
-    interface GetNow<bool> as IsResourceRequested;
-  } uses {
-    interface ResourceTransferConnector as TransferTo;
+    interface TransferableResource as RadioToken;
   }
 }
 implementation
 {
-  enum {
-    CLIENT = unique(IEEE802154_RADIO_RESOURCE),
-  };
-
   components RadioControlP;
-  RadioRx = RadioControlP.RadioRx[CLIENT];
-  RadioTx = RadioControlP.RadioTx[CLIENT];
-  RadioOff = RadioControlP.RadioOff[CLIENT];
-  SlottedCsmaCa = RadioControlP.SlottedCsmaCa[CLIENT];
-  UnslottedCsmaCa = RadioControlP.UnslottedCsmaCa[CLIENT];
-  Token = RadioControlP.Token[CLIENT];
-  IsResourceRequested = RadioControlP.IsResourceRequested;
-  TokenRequested = RadioControlP.TokenRequested[CLIENT];
-
-  components new TransferClientP(CLIENT);
-  ResourceTransfer = TransferClientP;
-  ResourceTransferred = TransferClientP;
-  TransferTo = TransferClientP;
-  TransferFrom = TransferClientP;
-  TransferClientP.ResourceTransferControl -> RadioControlP;
-  TransferClientP.Leds -> RadioControlP;
+  RadioRx = RadioControlP.RadioRx[clientID];
+  RadioTx = RadioControlP.RadioTx[clientID];
+  RadioOff = RadioControlP.RadioOff[clientID];
+  SlottedCsmaCa = RadioControlP.SlottedCsmaCa[clientID];
+  UnslottedCsmaCa = RadioControlP.UnslottedCsmaCa[clientID];
+  RadioToken = RadioControlP.TransferableResource[clientID];
 }
 

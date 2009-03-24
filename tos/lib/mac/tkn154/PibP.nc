@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-03-05 10:07:12 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -55,6 +55,7 @@ module PibP {
     interface IEEE154Frame as Frame;
     interface IEEE154BeaconFrame as BeaconFrame;
     interface Get<uint64_t> as GetLocalExtendedAddress;
+    interface GetNow<token_requested_t> as IsRadioTokenRequested;
     interface Notify<const void*> as PIBUpdate[uint8_t PIBAttributeID];
     interface Packet;
     interface TimeCalc;
@@ -67,7 +68,7 @@ module PibP {
     interface Init as MacReset;
     interface SplitControl as RadioControl;
     interface Random;
-    interface Resource as Token;
+    interface TransferableResource as RadioToken;
     interface RadioOff;
     interface LocalTime<TSymbolIEEE802154>;
   }
@@ -77,7 +78,7 @@ implementation
   ieee154_PIB_t m_pib;
   uint8_t m_numResetClientPending;
   bool m_setDefaultPIB;
-  uint8_t m_resetSpin;
+  norace uint8_t m_resetSpin;
 
 #ifdef IEEE154_EXTENDED_ADDRESS
   const uint64_t m_aExtendedAddressLE = IEEE154_EXTENDED_ADDRESS;
@@ -95,9 +96,7 @@ implementation
   command error_t LocalInit.init()
   {
 #ifndef IEEE154_EXTENDED_ADDRESS
-    uint32_t *p = (uint32_t*) &m_aExtendedAddressLE;
-    *p++ = call Random.rand32();
-    *p = call Random.rand32();
+    m_aExtendedAddressLE = (((uint64_t) call Random.rand32() ) << 32 ) | call Random.rand32(); 
 #endif
     resetAttributesToDefault();
     return SUCCESS;
@@ -175,15 +174,15 @@ implementation
       status = IEEE154_TRANSACTION_OVERFLOW; // must first cancel promiscuous mode!
     else {
       m_setDefaultPIB = SetDefaultPIB;
-      if (!call Token.isOwner())
-        call Token.request();
+      m_resetSpin = 5;
+      call RadioToken.request();
     }   
     dbg_serial("PibP", "MLME_RESET.request(%lu) -> result: %lu\n", 
         (uint32_t) SetDefaultPIB, (uint32_t) status);
     return status;
   }
 
-  event void Token.granted()
+  event void RadioToken.granted()
   {
     if (call RadioOff.off() != SUCCESS)
       signal RadioOff.offDone();
@@ -209,24 +208,20 @@ implementation
     call DispatchReset.init();       // resets the dispatch component(s), spools out frames
     call DispatchQueueReset.init();  // resets the dispatch queue component(s), spools out frames
     call MacReset.init();            // resets the remaining components
-    m_resetSpin = 5;
     post resetSpinTask();
   }
 
   task void resetSpinTask()
   {
-    if (m_resetSpin == 2) {
-      // just to be safe...
-      call DispatchReset.init();       
-      call DispatchQueueReset.init();  
-      call MacReset.init();       
-    }
-    if (m_resetSpin--) {
+    m_resetSpin -= 1;
+    if (m_resetSpin != 0) {
       post resetSpinTask();
       return;
     }
     ASSERT(call RadioControl.start() == SUCCESS);
   }
+
+  async command token_requested_t IsRadioTokenRequested.getNow(){ return m_resetSpin != 0; }
 
   event void RadioControl.startDone(error_t error)
   {
@@ -242,7 +237,7 @@ implementation
       signal PIBUpdate.notify[IEEE154_macShortAddress](&m_pib.macShortAddress);
       signal PIBUpdate.notify[IEEE154_macPanCoordinator](&m_pib.macPanCoordinator);
     }
-    call Token.release();
+    call RadioToken.release();
     signal MLME_RESET.confirm(IEEE154_SUCCESS);
   }
   
@@ -1052,4 +1047,5 @@ implementation
   default event void PIBUpdate.notify[uint8_t PIBAttributeID](const void* PIBAttributeValue) {}
   command error_t PIBUpdate.enable[uint8_t PIBAttributeID]() {return FAIL;}
   command error_t PIBUpdate.disable[uint8_t PIBAttributeID]() {return FAIL;}
+  async event void RadioToken.transferredFrom(uint8_t fromClient){ASSERT(0);}
 }

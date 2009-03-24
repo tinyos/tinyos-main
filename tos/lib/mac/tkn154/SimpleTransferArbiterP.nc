@@ -44,16 +44,14 @@
  * 
  * @author Kevin Klues (klues@tkn.tu-berlin.de)
  * @author Philip Levis
- * @author: Jan Hauer <hauer@tkn.tu-berlin.de> (added resource transfer)
+ * @author: Jan Hauer <hauer@tkn.tu-berlin.de> (added TransferableResource interface)
  */
  
 generic module SimpleTransferArbiterP() {
   provides {
-    interface Resource[uint8_t id];
+    interface TransferableResource as Resource[uint8_t id];
     interface ResourceRequested[uint8_t id];
-    interface ResourceTransferControl;
     interface ArbiterInfo;
-    interface GetNow<bool> as IsResourceRequested;
   }
   uses {
     interface ResourceConfigure[uint8_t id];
@@ -120,18 +118,14 @@ implementation {
     return FAIL;
   }
 
-  async command bool IsResourceRequested.getNow()
-  {
-    return !(call Queue.isEmpty());
-  }
-
-  async command error_t ResourceTransferControl.transfer(uint8_t fromClient, uint8_t toClient)
+  async command error_t Resource.transferTo[uint8_t fromID](uint8_t toID)
   {
     atomic {
-      if (call ArbiterInfo.userId() == fromClient) {
-        call ResourceConfigure.unconfigure[fromClient]();
+      if (call ArbiterInfo.userId() == fromID) {
+        call ResourceConfigure.unconfigure[fromID]();
         call ResourceConfigure.configure[resId]();
-        resId = toClient;
+        resId = toID;
+        signal Resource.transferredFrom[toID](fromID); // consider moving this outside the atomic
         return SUCCESS;
       }
     }
@@ -191,5 +185,7 @@ implementation {
   default async command void ResourceConfigure.configure[uint8_t id]() {
   }
   default async command void ResourceConfigure.unconfigure[uint8_t id]() {
+  }
+  default async event void Resource.transferredFrom[uint8_t id](uint8_t c) {
   }
 }

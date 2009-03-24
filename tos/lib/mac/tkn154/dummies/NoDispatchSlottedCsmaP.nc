@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-05 10:07:14 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-24 12:56:47 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -38,7 +38,7 @@
 #include "TKN154_PHY.h"
 #include "TKN154_MAC.h"
 
-generic module NoDispatchSlottedCsmaP(uint8_t superframeDirection)
+generic module NoDispatchSlottedCsmaP(uint8_t sfDirection)
 {
   provides
   {
@@ -55,10 +55,8 @@ generic module NoDispatchSlottedCsmaP(uint8_t superframeDirection)
     interface Alarm<TSymbolIEEE802154,uint32_t> as BLEAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as IndirectTxWaitAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as BroadcastAlarm;
-    interface Resource as Token;
-    interface GetNow<bool> as IsTokenRequested;
-    interface ResourceTransfer as TokenToCfp;
-    interface ResourceTransferred as TokenTransferred;
+    interface GetNow<token_requested_t> as IsRadioTokenRequested;
+    interface TransferableResource as RadioToken;
     interface SuperframeStructure; 
     interface GetNow<bool> as IsRxEnableActive; 
     interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
@@ -79,9 +77,15 @@ generic module NoDispatchSlottedCsmaP(uint8_t superframeDirection)
 }
 implementation
 {
+  enum {
+    COORD_ROLE = (sfDirection == OUTGOING_SUPERFRAME),
+    DEVICE_ROLE = !COORD_ROLE,
+    RADIO_CLIENT_CFP = COORD_ROLE ? RADIO_CLIENT_COORDCFP : RADIO_CLIENT_DEVICECFP,
+  };  
+
   command error_t Reset.init() { return SUCCESS; }
 
-  async event void TokenTransferred.transferred() { }
+  async event void RadioToken.transferredFrom(uint8_t c) { call RadioToken.transferTo(RADIO_CLIENT_CFP); }
 
   command ieee154_status_t FrameTx.transmit(ieee154_txframe_t *frame) { return IEEE154_TRANSACTION_OVERFLOW; }
 
@@ -104,9 +108,9 @@ implementation
 
   event message_t* RadioRx.received(message_t* frame, const ieee154_timestamp_t *timestamp) { return frame; }
 
-  async command ieee154_status_t BroadcastTx.transmitNow(ieee154_txframe_t *frame) { }
+  async command ieee154_status_t BroadcastTx.transmitNow(ieee154_txframe_t *frame) { return IEEE154_TRANSACTION_OVERFLOW;}
 
-  event void Token.granted() { }
+  event void RadioToken.granted() { }
 
   command error_t WasRxEnabled.enable(){return FAIL;}
   command error_t WasRxEnabled.disable(){return FAIL;}

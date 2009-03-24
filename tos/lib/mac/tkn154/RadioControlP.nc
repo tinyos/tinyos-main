@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:28 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,11 +42,8 @@ configuration RadioControlP
     interface SlottedCsmaCa as SlottedCsmaCa[uint8_t client];
     interface UnslottedCsmaCa as UnslottedCsmaCa[uint8_t client];
     interface RadioOff as RadioOff[uint8_t client];
-    interface Resource as Token[uint8_t client];
-    interface ResourceRequested as TokenRequested[uint8_t client];
-    interface ResourceTransferControl as TokenTransferControl;
-    interface GetNow<bool> as IsResourceRequested;
-    interface Leds as LedsRadioClient;
+    interface TransferableResource[uint8_t id];
+    interface ResourceRequested[uint8_t id];
   } uses {
     interface RadioRx as PhyRx;
     interface RadioTx as PhyTx;
@@ -54,6 +51,7 @@ configuration RadioControlP
     interface UnslottedCsmaCa as PhyUnslottedCsmaCa;
     interface RadioOff as PhyRadioOff;
     interface Get<bool> as RadioPromiscuousMode;
+    interface ResourceConfigure[uint8_t id];
     interface Leds;
   }
 }
@@ -72,12 +70,17 @@ implementation
   PhyRadioOff = RadioControlImplP.PhyRadioOff;
   RadioPromiscuousMode = RadioControlImplP;
   Leds = RadioControlImplP;
-  LedsRadioClient = Leds;
 
-  components new SimpleRoundRobinTransferArbiterC(IEEE802154_RADIO_RESOURCE) as Arbiter;
-  Token = Arbiter;  
-  TokenRequested = Arbiter;
-  TokenTransferControl = Arbiter;
-  IsResourceRequested = Arbiter;
+  components MainC;
+  components new RoundRobinResourceQueueC(uniqueCount(IEEE802154_RADIO_RESOURCE)) as Queue;
+  components new SimpleTransferArbiterP() as Arbiter;
+
+  MainC.SoftwareInit -> Queue;
+
+  TransferableResource = Arbiter;
+  ResourceRequested = Arbiter;
   RadioControlImplP.ArbiterInfo -> Arbiter;
+  ResourceConfigure = Arbiter;
+
+  Arbiter.Queue -> Queue;
 }

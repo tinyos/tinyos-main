@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-03-04 18:31:18 $
+ * $Revision: 1.5 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -49,10 +49,8 @@ module CoordBroadcastP
   } uses {
     interface Queue<ieee154_txframe_t*>; 
     interface FrameTxNow as CapTransmitNow;
-    interface ResourceTransfer as TokenToCap;
-    interface ResourceTransferred as TokenTransferred;
+    interface TransferableResource as RadioToken;
     interface SuperframeStructure as OutgoingSF;
-    interface Leds;
   }
 }
 implementation
@@ -106,7 +104,7 @@ implementation
       return (m_realignmentFrame != NULL || m_queueHead != NULL);
   }
 
-  async event void TokenTransferred.transferred()
+  async event void RadioToken.transferredFrom(uint8_t fromClient)
   {
     // CAP has started - are there any broadcast frames to be transmitted?
     if (call OutgoingSF.isBroadcastPending()) {
@@ -117,7 +115,7 @@ implementation
       m_lock = TRUE;
       call CapTransmitNow.transmitNow(broadcastFrame);
     }
-    call TokenToCap.transfer();
+    call RadioToken.transferTo(RADIO_CLIENT_COORDCAP);
   }
 
   async event void CapTransmitNow.transmitNowDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
@@ -141,4 +139,6 @@ implementation
     }
     m_lock = FALSE;
   }
+
+  event void RadioToken.granted(){ ASSERT(0); }
 }

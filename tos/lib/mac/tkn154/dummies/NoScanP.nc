@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:40 $
+ * $Revision: 1.4 $
+ * $Date: 2009-03-24 12:56:47 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -44,6 +44,7 @@ module NoScanP
     interface Init;
     interface MLME_SCAN;
     interface MLME_BEACON_NOTIFY;
+    interface GetNow<token_requested_t> as IsRadioTokenRequested;
   }
   uses
   {
@@ -58,7 +59,7 @@ module NoScanP
     interface Timer<TSymbolIEEE802154> as ScanTimer;
     interface Pool<ieee154_txframe_t> as TxFramePool;
     interface Pool<ieee154_txcontrol_t> as TxControlPool;
-    interface Resource as Token;
+    interface TransferableResource as RadioToken;
     interface FrameUtility;
     interface Leds;
   }
@@ -83,9 +84,9 @@ implementation
     return IEEE154_TRANSACTION_OVERFLOW;
   }
 
-  event void Token.granted()
+  event void RadioToken.granted()
   {
-    call Token.release();
+    ASSERT(0);
   }
 
   event void EnergyDetection.done(error_t status, int8_t EnergyLevel){}
@@ -103,4 +104,6 @@ implementation
   event void ScanTimer.fired() { }
 
   async event void RadioOff.offDone() { }
+  async event void RadioToken.transferredFrom(uint8_t fromClient){ASSERT(0);}
+  async command token_requested_t IsRadioTokenRequested.getNow(){ return FALSE;}
 }

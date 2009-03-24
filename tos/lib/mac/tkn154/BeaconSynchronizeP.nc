@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2009-03-04 18:31:14 $
+ * $Revision: 1.9 $
+ * $Date: 2009-03-24 12:56:46 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -63,10 +63,7 @@ module BeaconSynchronizeP
     interface RadioOff;
     interface DataRequest;
     interface FrameRx as CoordRealignmentRx;
-    interface Resource as Token;
-    interface GetNow<bool> as IsTokenRequested;
-    interface ResourceTransferred as TokenTransferred;
-    interface ResourceTransfer as TokenToCap;
+    interface TransferableResource as RadioToken;
     interface TimeCalc;
     interface IEEE154Frame as Frame;
     interface Leds;
@@ -160,10 +157,10 @@ implementation
         m_updateTrackBeacon = trackBeacon;
         m_updatePending = TRUE;
         atomic {
-          // if we are tracking then we'll get the Token automatically,
+          // if we are tracking then we'll get the RadioToken automatically,
           // otherwise request it now
-          if (!m_tracking && !call Token.isOwner())
-            call Token.request();  
+          if (!m_tracking && !call RadioToken.isOwner())
+            call RadioToken.request();  
         }
       }
     }
@@ -171,7 +168,7 @@ implementation
     return status;
   }
 
-  event void Token.granted()
+  event void RadioToken.granted()
   {
     dbg_serial("BeaconSynchronizeP","Got token, expecting beacon in %lu\n",
         (uint32_t) ((m_lastBeaconRxTime + m_dt) - call TrackAlarm.getNow())); 
@@ -191,17 +188,11 @@ implementation
     trackNextBeacon();
   }
 
-  async event void TokenTransferred.transferred()
+  async event void RadioToken.transferredFrom(uint8_t clientFrom)
   {
     dbg_serial("BeaconSynchronizeP","Token.transferred(), expecting beacon in %lu symbols.\n",
         (uint32_t) ((m_lastBeaconRxTime + m_dt) - call TrackAlarm.getNow())); 
-    if (call IsTokenRequested.getNow()) {
-      // some other component needs the token - we give it up for now,  
-      // but make another request to get it back later
-      dbg_serial("BeaconSynchronizeP", "Token is requested, releasing it now.\n");
-      call Token.request();
-      call Token.release();
-    } else if (m_updatePending)
+    if (m_updatePending)
       post signalGrantedTask();
     else
       trackNextBeacon();
@@ -210,7 +201,7 @@ implementation
 
   task void signalGrantedTask()
   {
-    signal Token.granted();
+    signal RadioToken.granted();
   }
 
   void trackNextBeacon()
@@ -218,14 +209,16 @@ implementation
     bool missed = FALSE;
 
     if (m_state != S_INITIAL_SCAN) {
-      // we have received at least one previous beacon
-      m_state = S_PREPARE;
+
       if (!m_tracking) {
         // nothing to do, just give up the token
         dbg_serial("BeaconSynchronizeP", "Stop tracking.\n");
-        call Token.release();
+        call RadioToken.release();
         return;
       }
+
+      // we have received at least one previous beacon
+      m_state = S_PREPARE;
       while (call TimeCalc.hasExpired(m_lastBeaconRxTime, m_dt)) { // missed a beacon!
         dbg_serial("BeaconSynchronizeP", "Missed a beacon, expected it: %lu, now: %lu\n", 
             m_lastBeaconRxTime + m_dt, call TrackAlarm.getNow());
@@ -233,19 +226,22 @@ implementation
         m_dt += m_beaconInterval;
         m_numBeaconsLost++;
       }
+
       if (m_numBeaconsLost >= IEEE154_aMaxLostBeacons) {
         dbg_serial("BeaconSynchronizeP", "Missed too many beacons.\n");
         post processBeaconTask();
         return;
       }
+
       if (missed) {
         // let other components get a chance to use the radio
-        call Token.request();
+        call RadioToken.request();
         dbg_serial("BeaconSynchronizeP", "Allowing other components to get the token.\n");
-        call Token.release();
+        call RadioToken.release();
         return;
       }
     }
+
     if (call RadioOff.isOff())
       signal RadioOff.offDone();
     else
@@ -350,9 +346,9 @@ implementation
               call MLME_GET.phyCurrentPage(), 
               NULL);
       } else
-        call Token.request(); // make another request again (before giving the token up)
+        call RadioToken.request(); // make another request again (before giving the token up)
 
-      call Token.release();
+      call RadioToken.release();
     } else { 
       // got the beacon!
       uint8_t *payload = (uint8_t *) m_beaconPtr->data;
@@ -398,11 +394,14 @@ implementation
         m_tracking = FALSE;
         dbg_serial("BeaconSynchronizeP", "Stop tracking.\n");
         if (m_updatePending) // there is already a new request ...
-          call Token.request();
-        call Token.release();
+          call RadioToken.request();
+        call RadioToken.release();
       } else {
         dbg_serial("BeaconSynchronizeP", "Handing over to CAP.\n");
-        call TokenToCap.transfer(); 
+        // we pass on the token now, but make a reservation to get it back 
+        // to receive the next beacon (at the start of the next superframe)
+        call RadioToken.request();  
+        call RadioToken.transferTo(RADIO_CLIENT_DEVICECAP); 
       }
       
       if (pendAddrSpec & PENDING_ADDRESS_SHORT_MASK)
@@ -442,13 +441,13 @@ implementation
   command error_t TrackSingleBeacon.start()
   {
     // Track a single beacon now
-    if (!m_tracking && !m_updatePending && !call Token.isOwner()) {
+    if (!m_tracking && !m_updatePending && !call RadioToken.isOwner()) {
       // find a single beacon now (treat this like a user request)
       m_updateLogicalChannel = call MLME_GET.phyCurrentChannel();
       m_updateTrackBeacon = FALSE;
       m_stopTracking = TRUE;
       m_updatePending = TRUE;
-      call Token.request();
+      call RadioToken.request();
     }
     return SUCCESS;
   }

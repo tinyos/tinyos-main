@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-05 10:07:13 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-24 12:56:47 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -174,7 +174,7 @@ implementation
   
   /* ----------------------- Scanning (MLME-SCAN) ----------------------- */
 
-  components new RadioClientC() as ScanRadioClient;
+  components new RadioClientC(RADIO_CLIENT_SCAN) as ScanRadioClient;
   PibP.MacReset -> ScanP;
   ScanP.MLME_GET -> PibP;
   ScanP.MLME_SET -> PibP.MLME_SET;
@@ -187,7 +187,7 @@ implementation
   ScanP.ScanTimer = Timer1;
   ScanP.TxFramePool -> TxFramePoolP;
   ScanP.TxControlPool -> TxControlPoolP;
-  ScanP.Token -> ScanRadioClient;
+  ScanP.RadioToken -> ScanRadioClient;
   ScanP.Leds = Leds;
   ScanP.FrameUtility -> PibP;
 
@@ -282,14 +282,16 @@ implementation
   DispatchQueueP.Queue -> DispatchQueueC;
   DispatchQueueP.FrameTxCsma -> DispatchP;
   
-  components new RadioClientC() as DispatchRadioClient;
+  components new RadioClientC(unique(IEEE802154_RADIO_RESOURCE)) as DispatchRadioClient;
   PibP.DispatchReset -> DispatchP;
   DispatchP.IndirectTxWaitTimer = Timer4;
-  DispatchP.Token -> DispatchRadioClient;
+  DispatchP.RadioToken -> DispatchRadioClient;
   DispatchP.SetMacSuperframeOrder -> PibP.SetMacSuperframeOrder;
   DispatchP.SetMacPanCoordinator -> PibP.SetMacPanCoordinator;
-  DispatchP.IsTokenRequested -> DispatchRadioClient;
   DispatchP.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
+  DispatchP.IsRadioTokenRequested -> PibP.IsRadioTokenRequested; // fan out...
+  DispatchP.IsRadioTokenRequested -> PromiscuousModeP.IsRadioTokenRequested;
+  DispatchP.IsRadioTokenRequested -> ScanP.IsRadioTokenRequested;
   DispatchP.GetIndirectTxFrame -> IndirectTxP;
   DispatchP.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
   DispatchP.FrameUtility -> PibP;
@@ -303,9 +305,9 @@ implementation
 
   /* -------------------------- promiscuous mode ------------------------ */
 
-  components new RadioClientC() as PromiscuousModeRadioClient;
+  components new RadioClientC(RADIO_CLIENT_PROMISCUOUSMODE) as PromiscuousModeRadioClient;
   PibP.MacReset -> PromiscuousModeP;
-  PromiscuousModeP.Token -> PromiscuousModeRadioClient;
+  PromiscuousModeP.RadioToken -> PromiscuousModeRadioClient;
   PromiscuousModeP.PromiscuousRx -> PromiscuousModeRadioClient;
   PromiscuousModeP.RadioOff -> PromiscuousModeRadioClient;
   PromiscuousModeP.RadioPromiscuousMode = RadioPromiscuousMode;
@@ -320,14 +322,14 @@ implementation
 
   /* ------------------------------- PIB -------------------------------- */
 
-  components new RadioClientC() as PibRadioClient;
+  components new RadioClientC(RADIO_CLIENT_PIB) as PibRadioClient;
   PIBUpdate = PibP;
   MainC.SoftwareInit -> PibP.LocalInit;
   PibP.RadioControl = PhySplitControl;
   PibP.Random = Random; 
   PibP.PromiscuousModeGet -> PromiscuousModeP; 
   PibP.LocalTime = LocalTime;
-  PibP.Token -> PibRadioClient;
+  PibP.RadioToken -> PibRadioClient;
   PibP.RadioOff -> PibRadioClient;
 
   /* ------------------------- Radio Control ---------------------------- */

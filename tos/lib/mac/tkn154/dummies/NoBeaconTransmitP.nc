@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2009-03-04 18:31:39 $
+ * $Revision: 1.7 $
+ * $Date: 2009-03-24 12:56:47 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -56,10 +56,7 @@ module NoBeaconTransmitP
     interface RadioTx as BeaconTx;
     interface MLME_GET;
     interface MLME_SET;
-    interface Resource as Token;
-    interface ResourceTransferred as TokenTransferred;
-    interface ResourceTransfer as TokenToBroadcast;
-    interface GetNow<bool> as IsTokenRequested;
+    interface TransferableResource as RadioToken;
     interface FrameTx as RealignmentBeaconEnabledTx;
     interface FrameTx as RealignmentNonBeaconEnabledTx;
     interface FrameRx as BeaconRequestRx;
@@ -97,9 +94,9 @@ implementation
     return IEEE154_TRANSACTION_OVERFLOW;
   }
 
-  event void Token.granted() { }
+  event void RadioToken.granted() { }
 
-  async event void TokenTransferred.transferred() { call Token.release(); }
+  async event void RadioToken.transferredFrom(uint8_t from) { call RadioToken.transferTo(RADIO_CLIENT_BEACONSYNCHRONIZE); }
 
   async event void RadioOff.offDone() { }
 

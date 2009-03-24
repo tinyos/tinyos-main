@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2009-03-04 18:31:40 $
+ * $Revision: 1.7 $
+ * $Date: 2009-03-24 12:56:47 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -51,9 +51,7 @@ module NoDeviceCfpP
     interface FrameTx as CfpTx;
     interface Purge;
   } uses {
-    interface ResourceTransferred as TokenTransferred;
-    interface ResourceRequested as TokenRequested;
-    interface ResourceTransfer as TokenToBeaconSync;
+    interface TransferableResource as RadioToken;
     interface Alarm<TSymbolIEEE802154,uint32_t> as CfpSlotAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as CfpEndAlarm;
     interface SuperframeStructure as IncomingSF; 
@@ -84,12 +82,15 @@ implementation
     return IEEE154_INVALID_HANDLE; 
   } 
 
-  async event void TokenTransferred.transferred()
+  async event void RadioToken.transferredFrom(uint8_t fromClient)
   { 
     // the CFP has started, this component now owns the token -  
-    // because GTS is not implemented we pass it back to the
-    // BeaconTransmitP component
-    call TokenToBeaconSync.transfer();
+    // because GTS is not implemented we pass it on
+#ifndef IEEE154_BEACON_TX_DISABLED
+    call RadioToken.transferTo(RADIO_CLIENT_BEACONTRANSMIT);
+#else
+    call RadioToken.transferTo(RADIO_CLIENT_BEACONSYNCHRONIZE);
+#endif
   }
 
   async event void CfpEndAlarm.fired() {}
@@ -102,12 +103,8 @@ implementation
   async event void RadioRx.enableRxDone(){} 
   event message_t* RadioRx.received(message_t *frame, const ieee154_timestamp_t *timestamp){return frame;} 
 
-  async event void TokenRequested.requested()
+  event void RadioToken.granted()
   {
-    // someone (e.g. SCAN component) requested access to the radio, we 
-    // should pass the token back to BeaconSynchronizeP, which can release it
-    // call TokenToBeaconSync.transfer();
-  }
-
-  async event void TokenRequested.immediateRequested(){ }
+    ASSERT(0); // should never happen, because we never call RadioToken.request()
+  }   
 }
