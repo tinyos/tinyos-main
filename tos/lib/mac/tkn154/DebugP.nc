@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-04 18:31:22 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-25 16:47:49 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -40,9 +40,18 @@
 #else
 #include <varargs.h>
 #endif
+#if defined(PLATFORM_TELOSB)
+#include <UserButton.h>
+#endif
 
 module DebugP {
-  uses interface Leds;
+  uses {
+    interface Boot;
+    interface Leds;
+#if defined(PLATFORM_TELOSB)
+    interface Notify<button_state_t> as ButtonPressed;
+#endif
+  }
 }
 implementation {
 
@@ -69,6 +78,19 @@ implementation {
   norace uint16_t m_assertLine;
   norace char m_assertFilename[MAX_LEN_FILENAME];
   norace char m_assertFunction[MAX_LEN_FUNNAME];
+
+  event void Boot.booted() {
+#if defined(PLATFORM_TELOSB)
+    call ButtonPressed.enable();
+#endif
+  }
+
+#if defined(PLATFORM_TELOSB)
+  event void ButtonPressed.notify( button_state_t val )
+  {
+    dbg_serial_flush();
+  }
+#endif
 
   task void assertFailTask()
   {

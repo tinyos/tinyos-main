@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-24 12:56:46 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-25 16:47:49 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -175,6 +175,7 @@ implementation
       post signalStartConfirmTask();
       status = IEEE154_SUCCESS;
     }      
+    dbg_serial("DispatchUnslottedCsmaP", "MLME_START.request -> result: %lu\n", (uint32_t) status);
     return status;
   }
 
@@ -191,7 +192,10 @@ implementation
       return IEEE154_TRANSACTION_OVERFLOW;
     } else {
       setCurrentFrame(frame);
-      call RadioToken.request();
+      if (call RadioToken.isOwner())
+        updateState();
+      else
+        call RadioToken.request();      
       return IEEE154_SUCCESS;
     }
   }

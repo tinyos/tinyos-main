@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-03-04 18:31:24 $
+ * $Revision: 1.5 $
+ * $Date: 2009-03-25 16:47:49 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -276,6 +276,7 @@ implementation
   {
     uint8_t i;
     // TODO: if CSMA-CA algorithm failed, then frame shall still remain in transaction queue
+    dbg_serial("IndirectTxP", "transmitDone(), status: %lu\n", (uint32_t) status);
     for (i=0; i<NUM_MAX_PENDING; i++)
       if (m_txFrameTable[i] == txFrame) {
         m_txFrameTable[i] = NULL; // slot is now empty
@@ -292,7 +293,6 @@ implementation
       m_numExtPending--;    
     signal FrameTx.transmitDone[txFrame->client](txFrame, status);
     post tryCoordCapTxTask();
-    dbg_serial("IndirectTxP", "transmitDone()\n");
   }
 
   command ieee154_txframe_t* GetIndirectTxFrame.get() { return m_pendingTxFrame;}

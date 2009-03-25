@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-04 18:31:22 $
+ * $Revision: 1.2 $
+ * $Date: 2009-03-25 16:47:49 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -36,7 +36,13 @@
 configuration DebugC {
 }
 implementation {
-  components DebugP, LedsC;
+  components DebugP, LedsC, MainC;
+  DebugP.Boot -> MainC;
   DebugP.Leds -> LedsC;
+
+#if defined(PLATFORM_TELOSB)
+  components UserButtonC;
+  DebugP.ButtonPressed -> UserButtonC;
+#endif
 }
 
