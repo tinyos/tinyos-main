@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-03-24 12:56:47 $
+ * $Date: 2009-03-25 09:27:26 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -291,7 +291,7 @@ token_requested_t rcombine(token_requested_t r1, token_requested_t r2)
   /****************************************************************** 
    * ATTENTION! Debugging over serial is a lot of overhead. To
    * keep it simple, here are the rules you have to follow when
-   * using the dbg_serial() command:
+   * using the dbg_serial() macro:
    *
    * - dbg_serial() is used like dbg(), i.e. you pass it at least
    *   two strings, the first one describing the component/file,
@@ -302,18 +302,20 @@ token_requested_t rcombine(token_requested_t r1, token_requested_t r2)
    * - no data is sent over serial, unless dbg_serial_flush() is
    *   called; try to call it when the system is idle or at least
    *   when no time-critical operations are pending
-   * - on the PC use the printf java client to display the text
-   *   (see tinyos-2.x/apps/tests/TestPrintf/README.txt)
+   * - on the PC use the printf java client to display the debug
+   *   output (see tinyos-2.x/apps/tests/TestPrintf/README.txt)
    *
    * The ASSERT(X) macro is used to test for errors. If X evaluates 
    * to zero, then 3 leds start blinking simulataneously (about 2Hz)
-   * and the node *continuously* outputs over serial the filename+line
+   * and the node *continuously* outputs over serial the filename/line
    * where the (first) ASSERT has failed. This means, even if your
    * TelosB was not attached to your PC while the ASSERT failed you
-   * can still pull the information out later.
+   * can typically still pull the information out later.
    *
-   * All dbg_serial() and ASSERT() statements are removed, if
-   * TKN154_DEBUG is not defined (which is the default).
+   * If TKN154_DEBUG is not defined (which is the default), then
+   * dbg_serial() maps to dbg(), i.e. is completely removed unless 
+   * the platform is TOSSIM, and in the ASSERT(X) statement X is 
+   * evaluated/executed, but the result is ignored. 
    **/
 
   /* -> functions are defined in DebugP.nc */
@@ -324,7 +326,8 @@ token_requested_t rcombine(token_requested_t r1, token_requested_t r2)
   #define dbg_serial(m, ...) tkn154_dbg_serial(m, __LINE__,__VA_ARGS__)
   #define dbg_serial_flush() tkn154_dbg_serial_flush()
 #else
-  #define ASSERT(X) if ((X)==0){}
+  // Note: in an ASSERT(X) the X must always be evaluated/executed!
+  #define ASSERT(X) while(!(X)){ break;}
   #define dbg_serial(m, ...) dbg(m, __VA_ARGS__)
   #define dbg_serial_flush()
 #endif
