@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:56 $
+ * $Revision: 1.4 $
+ * $Date: 2009-03-26 17:50:44 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -39,7 +39,7 @@
 /**************************************************** 
  * The following constants define guard times on Tmote Sky / TelosB. 
  * All values are in symbol time (1 symbol = 16 us) and assume the 
- * default system configuration (MCLK running at 4.6 MHz)
+ * default system configuration (MCLK running at 4 MHz)
  */
 
 enum {
