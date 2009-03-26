@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:00 $
+ * $Revision: 1.3 $
+ * $Date: 2009-03-26 17:17:50 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -102,37 +102,37 @@ module TestPromiscuousC
       printf("SrcAddrMode: %d\n", SrcAddrMode);
       printf("SrcAddr: ");
       if (SrcAddrMode == ADDR_MODE_SHORT_ADDRESS){
-        printf("0x%hx\n", SrcAddress.shortAddress);
-        printf("SrcPANId: 0x%x\n", SrcPANId);
+        printf("0x%02X\n", SrcAddress.shortAddress);
+        printf("SrcPANId: 0x%02X\n", SrcPANId);
       } else if (SrcAddrMode == ADDR_MODE_EXTENDED_ADDRESS){
         for (i=0; i<8; i++)
-          printf("0x%hx ", ((uint8_t*) &(SrcAddress.extendedAddress))[i]);
+          printf("0x%02X ", ((uint8_t*) &(SrcAddress.extendedAddress))[i]);
         printf("\n");
-        printf("SrcPANId: 0x%x\n", SrcPANId);
+        printf("SrcPANId: 0x%02X\n", SrcPANId);
       } else printf("\n");
       printf("DstAddrMode: %d\n", DstAddrMode);
       printf("DstAddr: ");
       if ( DstAddrMode == ADDR_MODE_SHORT_ADDRESS){
-        printf("0x%hx\n", DstAddress.shortAddress);
-        printf("DestPANId: 0x%x\n", DstPANId);
+        printf("0x%02X\n", DstAddress.shortAddress);
+        printf("DestPANId: 0x%02X\n", DstPANId);
       } else if  ( DstAddrMode == ADDR_MODE_EXTENDED_ADDRESS) {
         for (i=0; i<8; i++)
-          printf("0x%hx ", ((uint8_t*) &(DstAddress.extendedAddress))[i]);
+          printf("0x%02X ", ((uint8_t*) &(DstAddress.extendedAddress))[i]);
         printf("\n");    
-        printf("DestPANId: 0x%x\n", DstPANId);
+        printf("DestPANId: 0x%02X\n", DstPANId);
       } else printf("\n");
 
       printf("DSN: %d\n", call Frame.getDSN(frame));
       printf("MHRLen: %d\n", headerLen);
       printf("MHR: ");
       for (i=0; i<headerLen; i++){
-        printf("0x%hx ", header[i]);
+        printf("0x%02X ", header[i]);
       }
       printf("\n");      
       printf("PayloadLen: %d\n", payloadLen);
       printf("Payload: ");
       for (i=0; i<payloadLen; i++){
-        printf("0x%hx ", payload[i]);
+        printf("0x%02X ", payload[i]);
       }
       printf("\n");
       printf("MpduLinkQuality: %d\n", call Frame.getLinkQuality(frame));
