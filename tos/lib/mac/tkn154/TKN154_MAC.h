@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-03-25 09:27:26 $
+ * $Date: 2009-03-26 15:29:23 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -297,13 +297,17 @@ token_requested_t rcombine(token_requested_t r1, token_requested_t r2)
    *   two strings, the first one describing the component/file,
    *   the second is a format string (like in printf())
    * - following the second string, there may be zero up to 
-   *   two parameters -- these must be (cast to) uint32_t! 
+   *   two parameters -- these must be (cast to) uint32_t and
+   *   the format specifier must be "%lu", e.g.
+   *   dbg_serial("MyComponentP", "Value: %lu\n", (uint32_t) val);
    * - both strings must be constants (pointers always valid)
    * - no data is sent over serial, unless dbg_serial_flush() is
    *   called; try to call it when the system is idle or at least
-   *   when no time-critical operations are pending
+   *   when no time-critical operations are pending; on TelosB
+   *   you can also press the user button to trigger a flush
    * - on the PC use the printf java client to display the debug
-   *   output (see tinyos-2.x/apps/tests/TestPrintf/README.txt)
+   *   output (see tinyos-2.x/apps/tests/TestPrintf/README.txt);
+   *   the output format is component:line-in-source-code:text
    *
    * The ASSERT(X) macro is used to test for errors. If X evaluates 
    * to zero, then 3 leds start blinking simulataneously (about 2Hz)
@@ -312,10 +316,10 @@ token_requested_t rcombine(token_requested_t r1, token_requested_t r2)
    * TelosB was not attached to your PC while the ASSERT failed you
    * can typically still pull the information out later.
    *
-   * If TKN154_DEBUG is not defined (which is the default), then
+   * When TKN154_DEBUG is not defined (which is the default), then
    * dbg_serial() maps to dbg(), i.e. is completely removed unless 
    * the platform is TOSSIM, and in the ASSERT(X) statement X is 
-   * evaluated/executed, but the result is ignored. 
+   * evaluated/executed, but the result is ignored.
    **/
 
   /* -> functions are defined in DebugP.nc */
