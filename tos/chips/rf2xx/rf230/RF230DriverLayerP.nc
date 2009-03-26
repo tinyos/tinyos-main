@@ -433,12 +433,14 @@ implementation
 			return EBUSY;
 		}
 
+#ifndef RF230_SLOW_SPI
 		atomic
 		{
 			call SLP_TR.set();
 			time = call RadioAlarm.getNow() + TX_SFD_DELAY;
 		}
 		call SLP_TR.clr();
+#endif
 
 		ASSERT( ! radioIrq );
 
@@ -465,6 +467,15 @@ implementation
 			call FastSpiByte.splitReadWrite(*(data++));
 		}
 		while( --header != 0 );
+
+#ifdef RF230_SLOW_SPI
+		atomic
+		{
+			call SLP_TR.set();
+			time = call RadioAlarm.getNow() + TX_SFD_DELAY;
+		}
+		call SLP_TR.clr();
+#endif
 
 		time32 += (int16_t)(time) - (int16_t)(time32);
 
