@@ -84,11 +84,6 @@ implementation
 		return sizeof(rf230packet_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
 	}
 
-	async command uint8_t RF230DriverConfig.getDefaultChannel()
-	{
-		return RF230_DEF_CHANNEL;
-	}
-
 	async command bool RF230DriverConfig.requiresRssiCca(message_t* msg)
 	{
 		return call IEEE154Packet.isDataFrame(msg);

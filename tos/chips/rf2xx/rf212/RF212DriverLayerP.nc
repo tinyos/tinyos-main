@@ -225,7 +225,7 @@ implementation
 		writeRegister(RF212_PHY_TX_PWR, RF212_DEF_RFPOWER);
 
 		txPower = RF212_DEF_RFPOWER;
-		channel = call RF212DriverConfig.getDefaultChannel() & RF212_CHANNEL_MASK;
+		channel = RF212_DEF_CHANNEL & RF212_CHANNEL_MASK;
 		writeRegister(RF212_PHY_CC_CCA, RF212_CCA_MODE_VALUE | channel);
 
 		call SLP_TR.set();

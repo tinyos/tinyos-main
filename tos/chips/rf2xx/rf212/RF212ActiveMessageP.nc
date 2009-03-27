@@ -84,11 +84,6 @@ implementation
 		return sizeof(rf212packet_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
 	}
 
-	async command uint8_t RF212DriverConfig.getDefaultChannel()
-	{
-		return RF212_DEF_CHANNEL;
-	}
-
 	async command bool RF212DriverConfig.requiresRssiCca(message_t* msg)
 	{
 		return call IEEE154Packet.isDataFrame(msg);

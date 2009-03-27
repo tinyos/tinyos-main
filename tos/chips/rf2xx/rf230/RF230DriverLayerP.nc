@@ -225,7 +225,7 @@ implementation
 		writeRegister(RF230_PHY_TX_PWR, RF230_TX_AUTO_CRC_ON | (RF230_DEF_RFPOWER & RF230_TX_PWR_MASK));
 
 		txPower = RF230_DEF_RFPOWER & RF230_TX_PWR_MASK;
-		channel = call RF230DriverConfig.getDefaultChannel() & RF230_CHANNEL_MASK;
+		channel = RF230_DEF_CHANNEL & RF230_CHANNEL_MASK;
 		writeRegister(RF230_PHY_CC_CCA, RF230_CCA_MODE_VALUE | channel);
 
 		call SLP_TR.set();

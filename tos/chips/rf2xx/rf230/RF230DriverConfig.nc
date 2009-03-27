@@ -58,12 +58,6 @@ interface RF230DriverConfig
 	async command uint8_t getMaxLength();
 
 	/**
-	 * This command is used at power up to set the default channel.
-	 * The default CC2420 channel is 26.
-	 */
-	async command uint8_t getDefaultChannel();
-
-	/**
 	 * Returns TRUE if before sending this message we should make sure that
 	 * the channel is clear via a very basic (and quick) RSSI check.
 	 */
