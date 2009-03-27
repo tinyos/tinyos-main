@@ -1,0 +1,61 @@
+
+The radio driver interfaces have a set of generic configuration options. 
+Some of these are set in the platforms/xxx/chips/rf230/RadioConfig.h header 
+file, see the IRIS platform for example, others can be set in your 
+Makefile.
+
+TFRAMES_ENABLED:
+
+If enabled, then tinyos frames are enabled, so 6lowpan will not work. See 
+TEP125 for the details.
+
+LOW_POWER_LISTENING:
+
+If enabled, then the radio will duty cycle the radio (turn it off and on). 
+See TEP105 for the details.
+
+SLOTTED_MAC:
+
+There are two CA (collision avoidance) algorithms: one is the simple random 
+backoff  just like the one used in the CC2420 driver. The other one is a 
+slotted time sync based version where each node makes a guarantee that only 
+at a given time within a time slot (e.g. 1 ms) they will ever start to 
+transmit. This value is monitored by nearby motes (no payload overhead) and 
+they preemptively avoid these time instances. This greatly reduces the 
+chance that two motes will start to transmit within 50-100 microsecs to 
+each other, so the CCA (clear channel assessment) will become much more 
+efficient. This slotted behavior can enabled by defining SLOTTED_MAC.
+
+RADIO_DEBUG:
+
+If enabled, then every component in the radio stack will make sure that 
+everything goes as intended via asserts. For example, we check that certain 
+calls are not made in certain states, the radio hardware responds according 
+to the datasheet, etc. Use the ASSERT macro defined in the RadioAssert.h
+and make sure that the AssertC from lib/diagmsg is included in your 
+application. All assert violations are reported over the serial interface. 
+You can use the net.tinyos.util.DiagMsg java application to display 
+diagnostic messages.
+
+RADIO_DEBUG_MESSAGES:
+
+If enabled, then the radio driver will print out all received and 
+transmitted messages via the DiagMsg interface. This feature is used in the 
+RF230Sniffer appliaction.
+
+typedef TRadio:
+
+The radio stack uses a single hardware alarm/counter. The resolution of 
+this counter is platform specific and should be set just like the T32khz or 
+TMilli time resolution types. All time stamps and time related information 
+are recorded in this resolution within the driver.
+
+RADIO_ALARM_MICROSEC:
+
+This should be set to the number of radio alarm ticks per one microsecond. 
+
+RADIO_ALARM_MILLI_EXP:
+
+The base two logarithm of the number of radio alarm ticks per one 
+millisecond.
+
