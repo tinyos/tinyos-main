@@ -1,7 +1,7 @@
 
 The RF230 radio driver has the following configuration options. Some of 
-these are set in the platforms/xxx/chips/rf230/RadioConfig.h header file. 
-For example see the IRIS platform.
+these are set in the platforms/xxx/chips/rf230/RadioConfig.h header file, 
+see the IRIS platform for example, others can be set in your Makefile.
 
 RF230_TRX_CTRL_0_VALUE:
 
