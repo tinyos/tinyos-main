@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <IEEE154Packet.h>
+#include <IEEE154Packet2.h>
 #include <message.h>
 
 /**
@@ -31,7 +31,7 @@
  * Note, that this interface does not support the CRC-16 value, which
  * should be verified before the data can be trusted.
  */
-interface IEEE154Packet
+interface IEEE154Packet2
 {
 	/**
 	 * Returns the IEEE 802.15.4 header including the length field.

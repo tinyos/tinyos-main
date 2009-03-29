@@ -21,13 +21,13 @@
  * Author: Miklos Maroti
  */
 
-#include <IEEE154Packet.h>
+#include <IEEE154Packet2.h>
 
-module IEEE154PacketP
+module IEEE154Packet2P
 {
 	provides 
 	{
-		interface IEEE154Packet;
+		interface IEEE154Packet2;
 		interface AMPacket;
 	}
 
@@ -60,47 +60,47 @@ implementation
 		return (ieee154_header_t*)(msg->data - sizeof(ieee154_header_t));
 	}
 
-	inline async command ieee154_header_t* IEEE154Packet.getHeader(message_t* msg)
+	inline async command ieee154_header_t* IEEE154Packet2.getHeader(message_t* msg)
 	{
 		return getHeader(msg);
 	}
 
-	inline async command uint8_t IEEE154Packet.getLength(message_t* msg)
+	inline async command uint8_t IEEE154Packet2.getLength(message_t* msg)
 	{
 		return getHeader(msg)->length;
 	}
 
-	inline async command void IEEE154Packet.setLength(message_t* msg, uint8_t length)
+	inline async command void IEEE154Packet2.setLength(message_t* msg, uint8_t length)
 	{
 		getHeader(msg)->length = length;
 	}
 
-	inline async command uint16_t IEEE154Packet.getFCF(message_t* msg)
+	inline async command uint16_t IEEE154Packet2.getFCF(message_t* msg)
 	{
 		return getHeader(msg)->fcf;
 	}
 
-	inline async command void IEEE154Packet.setFCF(message_t* msg, uint16_t fcf)
+	inline async command void IEEE154Packet2.setFCF(message_t* msg, uint16_t fcf)
 	{
 		getHeader(msg)->fcf = fcf;
 	}
 
-	inline async command bool IEEE154Packet.isDataFrame(message_t* msg)
+	inline async command bool IEEE154Packet2.isDataFrame(message_t* msg)
 	{
 		return (getHeader(msg)->fcf & IEEE154_DATA_FRAME_MASK) == IEEE154_DATA_FRAME_VALUE;
 	}
 
-	inline async command void IEEE154Packet.createDataFrame(message_t* msg)
+	inline async command void IEEE154Packet2.createDataFrame(message_t* msg)
 	{
 		getHeader(msg)->fcf = IEEE154_DATA_FRAME_VALUE;
 	}
 
-	inline async command bool IEEE154Packet.isAckFrame(message_t* msg)
+	inline async command bool IEEE154Packet2.isAckFrame(message_t* msg)
 	{
 		return (getHeader(msg)->fcf & IEEE154_ACK_FRAME_MASK) == IEEE154_ACK_FRAME_VALUE;
 	}
 
-	inline async command void IEEE154Packet.createAckFrame(message_t* msg)
+	inline async command void IEEE154Packet2.createAckFrame(message_t* msg)
 	{
 		ieee154_header_t* header = getHeader(msg);
 
@@ -108,7 +108,7 @@ implementation
 		header->fcf = IEEE154_ACK_FRAME_VALUE;
 	}
 
-	inline async command void IEEE154Packet.createAckReply(message_t* data, message_t* ack)
+	inline async command void IEEE154Packet2.createAckReply(message_t* data, message_t* ack)
 	{
 		ieee154_header_t* header = getHeader(ack);
 
@@ -117,7 +117,7 @@ implementation
 		header->dsn = getHeader(data)->dsn;
 	}
 
-	inline async command bool IEEE154Packet.verifyAckReply(message_t* data, message_t* ack)
+	inline async command bool IEEE154Packet2.verifyAckReply(message_t* data, message_t* ack)
 	{
 		ieee154_header_t* header = getHeader(ack);
 
@@ -125,12 +125,12 @@ implementation
 			&& (header->fcf & IEEE154_ACK_FRAME_MASK) == IEEE154_ACK_FRAME_VALUE;
 	}
 
-	inline async command bool IEEE154Packet.getAckRequired(message_t* msg)
+	inline async command bool IEEE154Packet2.getAckRequired(message_t* msg)
 	{
 		return getHeader(msg)->fcf & (1 << IEEE154_FCF_ACK_REQ);
 	}
 
-	inline async command void IEEE154Packet.setAckRequired(message_t* msg, bool ack)
+	inline async command void IEEE154Packet2.setAckRequired(message_t* msg, bool ack)
 	{
 		if( ack )
 			getHeader(msg)->fcf |= (1 << IEEE154_FCF_ACK_REQ);
@@ -138,12 +138,12 @@ implementation
 			getHeader(msg)->fcf &= ~(uint16_t)(1 << IEEE154_FCF_ACK_REQ);
 	}
 
-	inline async command bool IEEE154Packet.getFramePending(message_t* msg)
+	inline async command bool IEEE154Packet2.getFramePending(message_t* msg)
 	{
 		return getHeader(msg)->fcf & (1 << IEEE154_FCF_FRAME_PENDING);
 	}
 
-	inline async command void IEEE154Packet.setFramePending(message_t* msg, bool pending)
+	inline async command void IEEE154Packet2.setFramePending(message_t* msg, bool pending)
 	{
 		if( pending )
 			getHeader(msg)->fcf |= (1 << IEEE154_FCF_FRAME_PENDING);
@@ -151,82 +151,82 @@ implementation
 			getHeader(msg)->fcf &= ~(uint16_t)(1 << IEEE154_FCF_FRAME_PENDING);
 	}
 
-	inline async command uint8_t IEEE154Packet.getDSN(message_t* msg)
+	inline async command uint8_t IEEE154Packet2.getDSN(message_t* msg)
 	{
 		return getHeader(msg)->dsn;
 	}
 
-	inline async command void IEEE154Packet.setDSN(message_t* msg, uint8_t dsn)
+	inline async command void IEEE154Packet2.setDSN(message_t* msg, uint8_t dsn)
 	{
 		getHeader(msg)->dsn = dsn;
 	}
 
-	inline async command uint16_t IEEE154Packet.getDestPan(message_t* msg)
+	inline async command uint16_t IEEE154Packet2.getDestPan(message_t* msg)
 	{
 		return getHeader(msg)->destpan;
 	}
 
-	inline async command void IEEE154Packet.setDestPan(message_t* msg, uint16_t pan)
+	inline async command void IEEE154Packet2.setDestPan(message_t* msg, uint16_t pan)
 	{
 		getHeader(msg)->destpan = pan;
 	}
 
-	inline async command uint16_t IEEE154Packet.getDestAddr(message_t* msg)
+	inline async command uint16_t IEEE154Packet2.getDestAddr(message_t* msg)
 	{
 		return getHeader(msg)->dest;
 	}
 
-	inline async command void IEEE154Packet.setDestAddr(message_t* msg, uint16_t addr)
+	inline async command void IEEE154Packet2.setDestAddr(message_t* msg, uint16_t addr)
 	{
 		getHeader(msg)->dest = addr;
 	}
 
-	inline async command uint16_t IEEE154Packet.getSrcAddr(message_t* msg)
+	inline async command uint16_t IEEE154Packet2.getSrcAddr(message_t* msg)
 	{
 		return getHeader(msg)->src;
 	}
 
-	inline async command void IEEE154Packet.setSrcAddr(message_t* msg, uint16_t addr)
+	inline async command void IEEE154Packet2.setSrcAddr(message_t* msg, uint16_t addr)
 	{
 		getHeader(msg)->src = addr;
 	}
 
 #ifndef TFRAMES_ENABLED
 
-	inline async command uint8_t IEEE154Packet.get6LowPan(message_t* msg)
+	inline async command uint8_t IEEE154Packet2.get6LowPan(message_t* msg)
 	{
 		return getHeader(msg)->network;
 	}
 
-	inline async command void IEEE154Packet.set6LowPan(message_t* msg, uint8_t network)
+	inline async command void IEEE154Packet2.set6LowPan(message_t* msg, uint8_t network)
 	{
 		getHeader(msg)->network = network;
 	}
 
 #endif
 
-	inline async command am_id_t IEEE154Packet.getType(message_t* msg)
+	inline async command am_id_t IEEE154Packet2.getType(message_t* msg)
 	{
 		return getHeader(msg)->type;
 	}
 
-	inline async command void IEEE154Packet.setType(message_t* msg, am_id_t type)
+	inline async command void IEEE154Packet2.setType(message_t* msg, am_id_t type)
 	{
 		getHeader(msg)->type = type;
 	}
 
-	async command bool IEEE154Packet.requiresAckWait(message_t* msg)
+	async command bool IEEE154Packet2.requiresAckWait(message_t* msg)
 	{
-		return call IEEE154Packet.getAckRequired(msg)
-			&& call IEEE154Packet.isDataFrame(msg)
-			&& call IEEE154Packet.getDestAddr(msg) != 0xFFFF;
+		return call IEEE154Packet2.getAckRequired(msg)
+			&& call IEEE154Packet2.isDataFrame(msg)
+			&& call IEEE154Packet2.getDestAddr(msg) != 0xFFFF;
 	}
 
-	async command bool IEEE154Packet.requiresAckReply(message_t* msg)
+	async command bool IEEE154Packet2.requiresAckReply(message_t* msg)
 	{
-		return call IEEE154Packet.getAckRequired(msg)
-			&& call IEEE154Packet.isDataFrame(msg)
-			&& call IEEE154Packet.getDestAddr(msg) == call ActiveMessageAddress.amAddress();
+		return call IEEE154Packet2.getAckRequired(msg)
+			&& call IEEE154Packet2.isDataFrame(msg)
+			&& call IEEE154Packet2.getDestAddr(msg) == call ActiveMessageAddress.amAddress();
 	}
 
 	inline async event void ActiveMessageAddress.changed()
@@ -248,22 +248,22 @@ implementation
 
 	inline command am_addr_t AMPacket.destination(message_t* msg)
 	{
-		return call IEEE154Packet.getDestAddr(msg);
+		return call IEEE154Packet2.getDestAddr(msg);
 	}
  
 	inline command am_addr_t AMPacket.source(message_t* msg)
 	{
-		return call IEEE154Packet.getSrcAddr(msg);
+		return call IEEE154Packet2.getSrcAddr(msg);
 	}
 
 	inline command void AMPacket.setDestination(message_t* msg, am_addr_t addr)
 	{
-		call IEEE154Packet.setDestAddr(msg, addr);
+		call IEEE154Packet2.setDestAddr(msg, addr);
 	}
 
 	inline command void AMPacket.setSource(message_t* msg, am_addr_t addr)
 	{
-		call IEEE154Packet.setSrcAddr(msg, addr);
+		call IEEE154Packet2.setSrcAddr(msg, addr);
 	}
 
 	inline command bool AMPacket.isForMe(message_t* msg)
@@ -274,21 +274,21 @@ implementation
 
 	inline command am_id_t AMPacket.type(message_t* msg)
 	{
-		return call IEEE154Packet.getType(msg);
+		return call IEEE154Packet2.getType(msg);
 	}
 
 	inline command void AMPacket.setType(message_t* msg, am_id_t type)
 	{
-		call IEEE154Packet.setType(msg, type);
+		call IEEE154Packet2.setType(msg, type);
 	}
   
 	inline command am_group_t AMPacket.group(message_t* msg) 
 	{
-		return call IEEE154Packet.getDestPan(msg);
+		return call IEEE154Packet2.getDestPan(msg);
 	}
 
 	inline command void AMPacket.setGroup(message_t* msg, am_group_t grp)
 	{
-		call IEEE154Packet.setDestPan(msg, grp);
+		call IEEE154Packet2.setDestPan(msg, grp);
 	}
 }

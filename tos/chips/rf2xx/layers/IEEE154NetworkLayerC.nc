@@ -39,7 +39,7 @@ configuration IEEE154NetworkLayerC
 
 implementation
 {
-	components IEEE154NetworkLayerP, IEEE154PacketC;
+	components IEEE154NetworkLayerP, IEEE154Packet2C;
 
 	SplitControl = SubControl;
 
@@ -49,5 +49,5 @@ implementation
 	SubSend = IEEE154NetworkLayerP;
 	SubReceive = IEEE154NetworkLayerP;
 
-	IEEE154NetworkLayerP.IEEE154Packet -> IEEE154PacketC;
+	IEEE154NetworkLayerP.IEEE154Packet2 -> IEEE154Packet2C;
 }

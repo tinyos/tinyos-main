@@ -43,7 +43,7 @@ module RF230PacketP
 
 	uses
 	{
-		interface IEEE154Packet;
+		interface IEEE154Packet2;
 
 		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface LocalTime<TMilli> as LocalTimeMilli;
@@ -68,19 +68,19 @@ implementation
 
 	command void Packet.clear(message_t* msg) 
 	{
-		call IEEE154Packet.createDataFrame(msg);
+		call IEEE154Packet2.createDataFrame(msg);
 
 		getMeta(msg)->flags = RF230PACKET_CLEAR_METADATA;
 	}
 
 	inline command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
 	{
-		call IEEE154Packet.setLength(msg, len + PACKET_LENGTH_INCREASE);
+		call IEEE154Packet2.setLength(msg, len + PACKET_LENGTH_INCREASE);
 	}
 
 	inline command uint8_t Packet.payloadLength(message_t* msg) 
 	{
-		return call IEEE154Packet.getLength(msg) - PACKET_LENGTH_INCREASE;
+		return call IEEE154Packet2.getLength(msg) - PACKET_LENGTH_INCREASE;
 	}
 
 	inline command uint8_t Packet.maxPayloadLength()
@@ -100,14 +100,14 @@ implementation
 
 	async command error_t PacketAcknowledgements.requestAck(message_t* msg)
 	{
-		call IEEE154Packet.setAckRequired(msg, TRUE);
+		call IEEE154Packet2.setAckRequired(msg, TRUE);
 
 		return SUCCESS;
 	}
 
 	async command error_t PacketAcknowledgements.noAck(message_t* msg)
 	{
-		call IEEE154Packet.setAckRequired(msg, FALSE);
+		call IEEE154Packet2.setAckRequired(msg, FALSE);
 
 		return SUCCESS;
 	}
@@ -244,7 +244,7 @@ implementation
 
 	async command uint8_t PacketTimeSyncOffset.get(message_t* msg)
 	{
-		return call IEEE154Packet.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_absolute_t);
+		return call IEEE154Packet2.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_absolute_t);
 	}
 
 	async command void PacketTimeSyncOffset.clear(message_t* msg)

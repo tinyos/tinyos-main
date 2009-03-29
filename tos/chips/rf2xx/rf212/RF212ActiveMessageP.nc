@@ -42,7 +42,7 @@ module RF212ActiveMessageP
 
 	uses
 	{
-		interface IEEE154Packet;
+		interface IEEE154Packet2;
 		interface Packet;
 		interface RadioAlarm;
 	}
@@ -54,17 +54,17 @@ implementation
 
 	async command uint8_t RF212DriverConfig.getLength(message_t* msg)
 	{
-		return call IEEE154Packet.getLength(msg);
+		return call IEEE154Packet2.getLength(msg);
 	}
 
 	async command void RF212DriverConfig.setLength(message_t* msg, uint8_t len)
 	{
-		call IEEE154Packet.setLength(msg, len);
+		call IEEE154Packet2.setLength(msg, len);
 	}
 
 	async command uint8_t* RF212DriverConfig.getPayload(message_t* msg)
 	{
-		return ((uint8_t*)(call IEEE154Packet.getHeader(msg))) + 1;
+		return ((uint8_t*)(call IEEE154Packet2.getHeader(msg))) + 1;
 	}
 
 	inline rf212packet_metadata_t* getMeta(message_t* msg)
@@ -86,34 +86,34 @@ implementation
 
 	async command bool RF212DriverConfig.requiresRssiCca(message_t* msg)
 	{
-		return call IEEE154Packet.isDataFrame(msg);
+		return call IEEE154Packet2.isDataFrame(msg);
 	}
 
 /*----------------- SoftwareAckConfig -----------------*/
 
 	async command bool SoftwareAckConfig.requiresAckWait(message_t* msg)
 	{
-		return call IEEE154Packet.requiresAckWait(msg);
+		return call IEEE154Packet2.requiresAckWait(msg);
 	}
 
 	async command bool SoftwareAckConfig.isAckPacket(message_t* msg)
 	{
-		return call IEEE154Packet.isAckFrame(msg);
+		return call IEEE154Packet2.isAckFrame(msg);
 	}
 
 	async command bool SoftwareAckConfig.verifyAckPacket(message_t* data, message_t* ack)
 	{
-		return call IEEE154Packet.verifyAckReply(data, ack);
+		return call IEEE154Packet2.verifyAckReply(data, ack);
 	}
 
 	async command bool SoftwareAckConfig.requiresAckReply(message_t* msg)
 	{
-		return call IEEE154Packet.requiresAckReply(msg);
+		return call IEEE154Packet2.requiresAckReply(msg);
 	}
 
 	async command void SoftwareAckConfig.createAckPacket(message_t* data, message_t* ack)
 	{
-		call IEEE154Packet.createAckReply(data, ack);
+		call IEEE154Packet2.createAckReply(data, ack);
 	}
 
 	async command void SoftwareAckConfig.setAckReceived(message_t* msg, bool acked)
@@ -138,17 +138,17 @@ implementation
 
 	async command uint8_t UniqueConfig.getSequenceNumber(message_t* msg)
 	{
-		return call IEEE154Packet.getDSN(msg);
+		return call IEEE154Packet2.getDSN(msg);
 	}
 
 	async command void UniqueConfig.setSequenceNumber(message_t* msg, uint8_t dsn)
 	{
-		call IEEE154Packet.setDSN(msg, dsn);
+		call IEEE154Packet2.setDSN(msg, dsn);
 	}
 
 	async command am_addr_t UniqueConfig.getSender(message_t* msg)
 	{
-		return call IEEE154Packet.getSrcAddr(msg);
+		return call IEEE154Packet2.getSrcAddr(msg);
 	}
 
 	tasklet_async command void UniqueConfig.reportChannelError()
@@ -161,7 +161,7 @@ implementation
 	command error_t ActiveMessageConfig.checkPacket(message_t* msg)
 	{
 		// the user forgot to call clear, we should return EINVAL
-		if( ! call IEEE154Packet.isDataFrame(msg) )
+		if( ! call IEEE154Packet2.isDataFrame(msg) )
 			call Packet.clear(msg);
 
 		return SUCCESS;
@@ -171,7 +171,7 @@ implementation
 
 	async command bool CsmaConfig.requiresSoftwareCCA(message_t* msg)
 	{
-		return call IEEE154Packet.isDataFrame(msg);
+		return call IEEE154Packet2.isDataFrame(msg);
 	}
 
 /*----------------- TrafficMonitorConfig -----------------*/
@@ -196,13 +196,13 @@ implementation
 		 * ack required: 8-16 byte separation, 11 bytes airtime, 5-10 bytes separation
 		 */
 
-		uint8_t len = call IEEE154Packet.getLength(msg);
-		return call IEEE154Packet.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
+		uint8_t len = call IEEE154Packet2.getLength(msg);
+		return call IEEE154Packet2.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
 	}
 
 	async command am_addr_t TrafficMonitorConfig.getSender(message_t* msg)
 	{
-		return call IEEE154Packet.getSrcAddr(msg);
+		return call IEEE154Packet2.getSrcAddr(msg);
 	}
 
 	tasklet_async command void TrafficMonitorConfig.timerTick()
@@ -244,7 +244,7 @@ implementation
 		time = call RadioAlarm.getNow();
 
 		// estimated response time (download the message, etc) is 5-8 bytes
-		if( call IEEE154Packet.requiresAckReply(msg) )
+		if( call IEEE154Packet2.requiresAckReply(msg) )
 			time += (uint16_t)(32 * (-5 + 16 + 11 + 5) * RADIO_ALARM_MICROSEC);
 		else
 			time += (uint16_t)(32 * (-5 + 5) * RADIO_ALARM_MICROSEC);

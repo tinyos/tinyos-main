@@ -41,14 +41,14 @@ configuration RF212PacketC
 
 implementation
 {
-	components RF212PacketP, IEEE154PacketC, LocalTimeMicroC, LocalTimeMilliC;
+	components RF212PacketP, IEEE154Packet2C, LocalTimeMicroC, LocalTimeMilliC;
 
-	RF212PacketP.IEEE154Packet -> IEEE154PacketC;
+	RF212PacketP.IEEE154Packet2 -> IEEE154Packet2C;
 	RF212PacketP.LocalTimeRadio -> LocalTimeMicroC;
 	RF212PacketP.LocalTimeMilli -> LocalTimeMilliC;
 
 	Packet = RF212PacketP;
-	AMPacket = IEEE154PacketC;
+	AMPacket = IEEE154Packet2C;
 
 	PacketAcknowledgements	= RF212PacketP;
 	PacketLinkQuality	= RF212PacketP.PacketLinkQuality;

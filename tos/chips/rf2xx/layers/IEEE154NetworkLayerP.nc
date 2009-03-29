@@ -35,7 +35,7 @@ module IEEE154NetworkLayerP
 		interface Send as SubSend;
 		interface Receive as SubReceive;
 
-		interface IEEE154Packet;
+		interface IEEE154Packet2;
 	}
 }
 
@@ -47,7 +47,7 @@ implementation
 
 	command error_t Send.send(message_t* msg, uint8_t len)
 	{
-		call IEEE154Packet.set6LowPan(msg, TINYOS_6LOWPAN_NETWORK_ID);
+		call IEEE154Packet2.set6LowPan(msg, TINYOS_6LOWPAN_NETWORK_ID);
 		return call SubSend.send(msg, len);
 	}
 
@@ -73,7 +73,7 @@ implementation
   
 	event message_t *SubReceive.receive(message_t *msg, void *payload, uint8_t len)
 	{
-		uint8_t network = call IEEE154Packet.get6LowPan(msg);
+		uint8_t network = call IEEE154Packet2.get6LowPan(msg);
 		if( network == TINYOS_6LOWPAN_NETWORK_ID )
 			return signal Receive.receive(msg, payload, len);
 		else

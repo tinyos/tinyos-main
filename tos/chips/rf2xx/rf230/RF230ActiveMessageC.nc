@@ -50,13 +50,13 @@ configuration RF230ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageP, RF230PacketC, IEEE154PacketC, RadioAlarmC;
+	components RF230ActiveMessageP, RF230PacketC, IEEE154Packet2C, RadioAlarmC;
 
 #ifdef RADIO_DEBUG
 	components AssertC;
 #endif
 
-	RF230ActiveMessageP.IEEE154Packet -> IEEE154PacketC;
+	RF230ActiveMessageP.IEEE154Packet2 -> IEEE154Packet2C;
 	RF230ActiveMessageP.Packet -> RF230PacketC;
 	RF230ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 
@@ -100,7 +100,7 @@ implementation
 	Snoop = ActiveMessageLayerC.Snoop;
 
 	ActiveMessageLayerC.Config -> RF230ActiveMessageP;
-	ActiveMessageLayerC.AMPacket -> IEEE154PacketC;
+	ActiveMessageLayerC.AMPacket -> IEEE154Packet2C;
 	ActiveMessageLayerC.SubSend -> IEEE154NetworkLayerC;
 	ActiveMessageLayerC.SubReceive -> IEEE154NetworkLayerC;
 
@@ -116,7 +116,7 @@ implementation
 	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
 #ifdef LOW_POWER_LISTENING
 	LowPowerListeningLayerC.PacketSleepInterval -> RF230PacketC;
-	LowPowerListeningLayerC.IEEE154Packet -> IEEE154PacketC;
+	LowPowerListeningLayerC.IEEE154Packet2 -> IEEE154Packet2C;
 	LowPowerListeningLayerC.PacketAcknowledgements -> RF230PacketC;
 #endif
 

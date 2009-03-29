@@ -24,7 +24,7 @@
 #ifndef __RF212PACKET_H__
 #define __RF212PACKET_H__
 
-#include <IEEE154Packet.h>
+#include <IEEE154Packet2.h>
 
 typedef ieee154_header_t rf212packet_header_t;
 

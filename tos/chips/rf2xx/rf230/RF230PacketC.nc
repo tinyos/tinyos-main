@@ -41,14 +41,14 @@ configuration RF230PacketC
 
 implementation
 {
-	components RF230PacketP, IEEE154PacketC, LocalTimeMicroC, LocalTimeMilliC;
+	components RF230PacketP, IEEE154Packet2C, LocalTimeMicroC, LocalTimeMilliC;
 
-	RF230PacketP.IEEE154Packet -> IEEE154PacketC;
+	RF230PacketP.IEEE154Packet2 -> IEEE154Packet2C;
 	RF230PacketP.LocalTimeRadio -> LocalTimeMicroC;
 	RF230PacketP.LocalTimeMilli -> LocalTimeMilliC;
 
 	Packet = RF230PacketP;
-	AMPacket = IEEE154PacketC;
+	AMPacket = IEEE154Packet2C;
 
 	PacketAcknowledgements	= RF230PacketP;
 	PacketLinkQuality	= RF230PacketP.PacketLinkQuality;
