@@ -36,6 +36,9 @@ configuration RF212PacketC
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+#ifdef PACKET_LINK
+		interface PacketData<packet_link_metadata_t> as PaketLinkMetadata;
+#endif
 	}
 }
 
@@ -59,4 +62,8 @@ implementation
 
 	PacketTimeStampRadio	= RF212PacketP;
 	PacketTimeStampMilli	= RF212PacketP;
+
+#ifdef PACKET_LINK
+	PaketLinkMetadata	= RF212PacketP;
+#endif
 }

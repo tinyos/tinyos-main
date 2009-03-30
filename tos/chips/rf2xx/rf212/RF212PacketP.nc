@@ -6,12 +6,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -24,6 +24,7 @@
 #include <RF212Packet.h>
 #include <GenericTimeSyncMessage.h>
 #include <RadioConfig.h>
+#include <PacketLinkLayer.h>
 
 module RF212PacketP
 {
@@ -39,6 +40,10 @@ module RF212PacketP
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+
+#ifdef PACKET_LINK
+		interface PacketData<packet_link_metadata_t> as PacketLinkMetadata;
+#endif
 	}
 
 	uses
@@ -54,7 +59,7 @@ implementation
 {
 	enum
 	{
-		PACKET_LENGTH_INCREASE = 
+		PACKET_LENGTH_INCREASE =
 			sizeof(rf212packet_header_t) - 1	// the 8-bit length field is not counted
 			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
 	};
@@ -66,19 +71,19 @@ implementation
 
 /*----------------- Packet -----------------*/
 
-	command void Packet.clear(message_t* msg) 
+	command void Packet.clear(message_t* msg)
 	{
 		call IEEE154Packet2.createDataFrame(msg);
 
 		getMeta(msg)->flags = RF212PACKET_CLEAR_METADATA;
 	}
 
-	inline command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
+	inline command void Packet.setPayloadLength(message_t* msg, uint8_t len)
 	{
 		call IEEE154Packet2.setLength(msg, len + PACKET_LENGTH_INCREASE);
 	}
 
-	inline command uint8_t Packet.payloadLength(message_t* msg) 
+	inline command uint8_t Packet.payloadLength(message_t* msg)
 	{
 		return call IEEE154Packet2.getLength(msg) - PACKET_LENGTH_INCREASE;
 	}
@@ -287,4 +292,14 @@ implementation
 		getMeta(msg)->lpl_sleepint = value;
 #endif
 	}
+
+/*----------------- PacketLinkMetadata -----------------*/
+#ifdef PACKET_LINK
+
+	async command packet_link_metadata_t* PacketLinkMetadata.getData(message_t* msg)
+	{
+		return &(getMeta(msg)->packet_link);
+	}
+
+#endif
 }

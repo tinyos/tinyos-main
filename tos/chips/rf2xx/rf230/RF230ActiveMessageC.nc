@@ -36,7 +36,14 @@ configuration RF230ActiveMessageC
 		interface Packet;
 		interface AMPacket;
 		interface PacketAcknowledgements;
+
+		// we provide a dummy LowPowerListening interface if LOW_POWER_LISTENING is not defined
 		interface LowPowerListening;
+
+#ifdef PACKET_LINK
+		interface PacketLink;
+#endif
+
 		interface RadioChannel;
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
@@ -77,19 +84,35 @@ implementation
 #else
 	components IEEE154NetworkLayerC;
 #endif
+
 #ifdef LOW_POWER_LISTENING
 	components LowPowerListeningLayerC;
+	LowPowerListeningLayerC.PacketSleepInterval -> RF230PacketC;
+	LowPowerListeningLayerC.IEEE154Packet2 -> IEEE154Packet2C;
+	LowPowerListeningLayerC.PacketAcknowledgements -> RF230PacketC;
 #else	
 	components new DummyLayerC() as LowPowerListeningLayerC;
 #endif
+
+#ifdef PACKET_LINK
+	components PacketLinkLayerC;
+	PacketLink = PacketLinkLayerC;
+	PacketLinkLayerC.PacketData -> RF230PacketC;
+	PacketLinkLayerC.PacketAcknowledgements -> RF230PacketC;
+#else
+	components new DummyLayerC() as PacketLinkLayerC;
+#endif
+
 	components MessageBufferLayerC;
 	components UniqueLayerC;
 	components TrafficMonitorLayerC;
+
 #ifdef SLOTTED_MAC
 	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
 #else
 	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
 #endif
+
 	components SoftwareAckLayerC;
 	components new DummyLayerC() as CsmaLayerC;
 	components RF230DriverLayerC;
@@ -112,13 +135,10 @@ implementation
 	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
 
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
-	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubSend -> PacketLinkLayerC;
 	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
-#ifdef LOW_POWER_LISTENING
-	LowPowerListeningLayerC.PacketSleepInterval -> RF230PacketC;
-	LowPowerListeningLayerC.IEEE154Packet2 -> IEEE154Packet2C;
-	LowPowerListeningLayerC.PacketAcknowledgements -> RF230PacketC;
-#endif
+
+	PacketLinkLayerC.SubSend -> MessageBufferLayerC;
 
 	MessageBufferLayerC.Packet -> RF230PacketC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;

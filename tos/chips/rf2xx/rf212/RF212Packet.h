@@ -25,6 +25,7 @@
 #define __RF212PACKET_H__
 
 #include <IEEE154Packet2.h>
+#include <PacketLinkLayer.h>
 
 typedef ieee154_header_t rf212packet_header_t;
 
@@ -40,6 +41,9 @@ typedef struct rf212packet_metadata_t
 	uint8_t power;				// shared between TXPOWER and RSSI
 #ifdef LOW_POWER_LISTENING
 	uint16_t lpl_sleepint;
+#endif
+#ifdef PACKET_LINK
+	packet_link_metadata_t packet_link;
 #endif
 	uint32_t timestamp;
 } rf212packet_metadata_t;
