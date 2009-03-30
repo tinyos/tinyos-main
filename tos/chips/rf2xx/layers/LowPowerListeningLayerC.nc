@@ -40,7 +40,7 @@ configuration LowPowerListeningLayerC
 		interface Receive as SubReceive;
 
 		interface PacketField<uint16_t> as PacketSleepInterval;
-		interface IEEE154Packet;
+		interface IEEE154Packet2;
 		interface PacketAcknowledgements;
 	}
 }
@@ -58,7 +58,7 @@ implementation
 	SubSend = LowPowerListeningLayerP;
 	SubReceive = LowPowerListeningLayerP;
 	PacketSleepInterval = LowPowerListeningLayerP;
-	IEEE154Packet = LowPowerListeningLayerP;
+	IEEE154Packet2 = LowPowerListeningLayerP;
 	PacketAcknowledgements = LowPowerListeningLayerP;
 	
 	LowPowerListeningLayerP.Timer -> TimerMilliC;

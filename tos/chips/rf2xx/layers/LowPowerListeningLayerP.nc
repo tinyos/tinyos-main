@@ -41,7 +41,7 @@ module LowPowerListeningLayerP
 		interface Receive as SubReceive;
 
 		interface PacketField<uint16_t> as PacketSleepInterval;
-		interface IEEE154Packet;
+		interface IEEE154Packet2;
 		interface PacketAcknowledgements;
 		interface Timer<TMilli>;
 	}
@@ -335,7 +335,7 @@ implementation
 		if( error != SUCCESS
 			|| call LowPowerListening.getRxSleepInterval(msg) == 0
 			|| state == SEND_SUBSEND_DONE_LAST
-			|| (call IEEE154Packet.getAckRequired(msg) && call PacketAcknowledgements.wasAcked(msg)) )
+			|| (call IEEE154Packet2.getAckRequired(msg) && call PacketAcknowledgements.wasAcked(msg)) )
 		{
 			call Timer.stop();
 			state = SEND_DONE;
