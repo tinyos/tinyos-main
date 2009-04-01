@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-24 12:56:47 $
+ * $Revision: 1.4 $
+ * $Date: 2009-04-01 08:50:39 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -231,6 +231,7 @@ implementation
   DataP.CoordCapTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
   DataP.DeviceCapRx -> PollP.DataRx;                          
   DataP.DeviceCapRx -> PromiscuousModeP.FrameRx;              
+  DataP.DeviceCapRx -> DispatchP.FrameRx[FC1_FRAMETYPE_DATA]; 
   DataP.TxFramePool -> TxFramePoolP;
   DataP.IndirectTx -> IndirectTxP.FrameTx[unique(INDIRECT_TX_CLIENT)];
   DataP.FrameUtility -> PibP;
