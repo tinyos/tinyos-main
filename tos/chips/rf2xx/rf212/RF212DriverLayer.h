@@ -21,8 +21,18 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __RF212_H__
-#define __RF212_H__
+#ifndef __RF212DRIVERLAYER_H__
+#define __RF212DRIVERLAYER_H__
+
+typedef struct rf212_metadata_t
+{
+	uint8_t lqi;
+	union
+	{
+		uint8_t power;
+		uint8_t rssi;
+	};
+} rf212_metadata_t;
 
 enum rf212_registers_enum
 {
@@ -159,4 +169,4 @@ enum rf212_spi_command_enums
 	RF212_CMD_SRAM_WRITE = 0x40,
 };
 
-#endif//__RF212_H__
+#endif//__RF212DRIVERLAYER_H__

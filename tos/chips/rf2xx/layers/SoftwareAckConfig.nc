@@ -32,15 +32,16 @@ interface SoftwareAckConfig
 	async command uint16_t getAckTimeout();
 
 	/**
+	 * Sets the flag in the message indicating to the receiver whether
+	 * the message should be acknowledged.
+	 */
+	async command void setAckRequired(message_t* msg, bool ack);
+	 
+	/**
 	 * Returns TRUE if the layer should wait for a software acknowledgement
 	 * to be received after this packet was transmitted.
 	 */
 	async command bool requiresAckWait(message_t* msg);
-
-	/**
-	 * Sets for the transmitted message whether it was acknowledged or not.
-	 */
-	async command void setAckReceived(message_t* msg, bool acked);
 
 	/**
 	 * Returns TRUE if the received packet is an acknowledgement packet.

@@ -21,43 +21,55 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __RF212PACKET_H__
-#define __RF212PACKET_H__
+#ifndef __IEEE154PACKETLAYER_H__
+#define __IEEE154PACKETLAYER_H__
 
-#include <IEEE154Packet2.h>
-#include <PacketLinkLayer.h>
-
-typedef ieee154_header_t rf212packet_header_t;
-
-typedef nx_struct rf212packet_footer_t
+typedef nx_struct ieee154_header_t
 {
-	// the time stamp is not recorded here, time stamped messaged cannot have max length
-} rf212packet_footer_t;
+	nxle_uint8_t length;
+	nxle_uint16_t fcf;
+	nxle_uint8_t dsn;
+	nxle_uint16_t destpan;
+	nxle_uint16_t dest;
+	nxle_uint16_t src;
 
-typedef struct rf212packet_metadata_t
-{
-	uint8_t flags;
-	uint8_t lqi;
-	uint8_t power;				// shared between TXPOWER and RSSI
-#ifdef LOW_POWER_LISTENING
-	uint16_t lpl_sleepint;
+// I-Frame 6LowPAN interoperability byte
+#ifndef TFRAMES_ENABLED	
+	nxle_uint8_t network;
 #endif
-#ifdef PACKET_LINK
-	packet_link_metadata_t packet_link;
-#endif
-	uint32_t timestamp;
-} rf212packet_metadata_t;
 
-enum rf212packet_metadata_flags
-{
-	RF212PACKET_WAS_ACKED = 0x01,		// PacketAcknowledgements
-	RF212PACKET_TIMESTAMP = 0x02,		// PacketTimeStamp
-	RF212PACKET_TXPOWER = 0x04,		// PacketTransmitPower
-	RF212PACKET_RSSI = 0x08,		// PacketRSSI
-	RF212PACKET_TIMESYNC = 0x10,		// PacketTimeSync (update timesync_footer)
-	RF212PACKET_LPL_SLEEPINT = 0x20,	// LowPowerListening
+	nxle_uint8_t type;
+} ieee154_header_t;
 
-	RF212PACKET_CLEAR_METADATA = 0x00,
+// the actual radio driver might not use this
+typedef nx_struct ieee154_footer_t
+{ 
+	nxle_uint16_t crc;
+} ieee154_footer_t;
+
+enum ieee154_fcf_enums {
+	IEEE154_FCF_FRAME_TYPE = 0,
+	IEEE154_FCF_SECURITY_ENABLED = 3,
+	IEEE154_FCF_FRAME_PENDING = 4,
+	IEEE154_FCF_ACK_REQ = 5,
+	IEEE154_FCF_INTRAPAN = 6,
+	IEEE154_FCF_DEST_ADDR_MODE = 10,
+	IEEE154_FCF_SRC_ADDR_MODE = 14,
 };
 
-#endif//__RF212PACKET_H__
+enum ieee154_fcf_type_enums {
+	IEEE154_TYPE_BEACON = 0,
+	IEEE154_TYPE_DATA = 1,
+	IEEE154_TYPE_ACK = 2,
+	IEEE154_TYPE_MAC_CMD = 3,
+	IEEE154_TYPE_MASK = 7,
+};
+
+enum iee154_fcf_addr_mode_enums {
+	IEEE154_ADDR_NONE = 0,
+	IEEE154_ADDR_SHORT = 2,
+	IEEE154_ADDR_EXT = 3,
+	IEEE154_ADDR_MASK = 3,
+};
+
+#endif//__IEEE154PACKETLAYER_H__

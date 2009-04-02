@@ -21,6 +21,9 @@
  * Author: Miklos Maroti
  */
 
+#include <RadioConfig.h>
+#include <RF230DriverLayer.h>
+
 configuration RF230DriverLayerC
 {
 	provides
@@ -29,28 +32,53 @@ configuration RF230DriverLayerC
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioCCA;
+
+		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
+		interface PacketField<uint8_t> as PacketTimeSyncOffset;
+		interface PacketField<uint8_t> as PacketLinkQuality;
+
+		interface LocalTime<TRadio> as LocalTimeRadio;
 	}
 
-	uses interface RF230DriverConfig;
+	uses
+	{
+		interface RF230DriverConfig;
+		interface PacketTimeStamp<TRadio, uint32_t>;
+		interface PacketData<rf230_metadata_t> as PacketRF230Metadata;
+	}
 }
 
 implementation
 {
-	components RF230DriverLayerP, HplRF230C, BusyWaitMicroC, TaskletC, MainC, RadioAlarmC, RF230PacketC, LocalTimeMicroC as LocalTimeRadioC;
+	components RF230DriverLayerP, HplRF230C, BusyWaitMicroC, TaskletC, MainC, RadioAlarmC;
 
 	RadioState = RF230DriverLayerP;
 	RadioSend = RF230DriverLayerP;
 	RadioReceive = RF230DriverLayerP;
 	RadioCCA = RF230DriverLayerP;
 
-	RF230DriverConfig = RF230DriverLayerP;
+	LocalTimeRadio = HplRF230C;
 
-	RF230DriverLayerP.PacketLinkQuality -> RF230PacketC.PacketLinkQuality;
-	RF230DriverLayerP.PacketTransmitPower -> RF230PacketC.PacketTransmitPower;
-	RF230DriverLayerP.PacketRSSI -> RF230PacketC.PacketRSSI;
-	RF230DriverLayerP.PacketTimeSyncOffset -> RF230PacketC.PacketTimeSyncOffset;
-	RF230DriverLayerP.PacketTimeStamp -> RF230PacketC;
-	RF230DriverLayerP.LocalTime -> LocalTimeRadioC;
+	RF230DriverConfig = RF230DriverLayerP;
+	PacketRF230Metadata = RF230DriverLayerP;
+
+	PacketTransmitPower = RF230DriverLayerP.PacketTransmitPower;
+	components new MetadataFlagC() as TransmitPowerFlagC;
+	RF230DriverLayerP.TransmitPowerFlag -> TransmitPowerFlagC;
+
+	PacketRSSI = RF230DriverLayerP.PacketRSSI;
+	components new MetadataFlagC() as RSSIFlagC;
+	RF230DriverLayerP.RSSIFlag -> RSSIFlagC;
+
+	PacketTimeSyncOffset = RF230DriverLayerP.PacketTimeSyncOffset;
+	components new MetadataFlagC() as TimeSyncFlagC;
+	RF230DriverLayerP.TimeSyncFlag -> TimeSyncFlagC;
+
+	PacketLinkQuality = RF230DriverLayerP.PacketLinkQuality;
+	PacketTimeStamp = RF230DriverLayerP.PacketTimeStamp;
+
+	RF230DriverLayerP.LocalTime -> HplRF230C;
 
 	RF230DriverLayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 	RadioAlarmC.Alarm -> HplRF230C.Alarm;

@@ -27,6 +27,7 @@ configuration SoftwareAckLayerC
 	{
 		interface RadioSend;
 		interface RadioReceive;
+		interface PacketAcknowledgements;
 	}
 	uses
 	{
@@ -39,13 +40,15 @@ configuration SoftwareAckLayerC
 
 implementation
 {
-	components SoftwareAckLayerP, RadioAlarmC;
+	components SoftwareAckLayerP, RadioAlarmC, new MetadataFlagC();
 
 	RadioSend = SoftwareAckLayerP;
 	RadioReceive = SoftwareAckLayerP;
 	SubSend = SoftwareAckLayerP;
 	SubReceive = SoftwareAckLayerP;
 	Config = SoftwareAckLayerP;
+	PacketAcknowledgements = SoftwareAckLayerP;
 
 	SoftwareAckLayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
+	SoftwareAckLayerP.AckReceivedFlag -> MetadataFlagC;
 }

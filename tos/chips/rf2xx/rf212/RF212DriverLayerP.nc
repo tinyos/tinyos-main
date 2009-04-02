@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <RF212.h>
+#include <RF212DriverLayer.h>
 #include <Tasklet.h>
 #include <RadioAssert.h>
 #include <GenericTimeSyncMessage.h>
@@ -38,6 +38,11 @@ module RF212DriverLayerP
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioCCA;
+
+		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
+		interface PacketField<uint8_t> as PacketTimeSyncOffset;
+		interface PacketField<uint8_t> as PacketLinkQuality;
 	}
 
 	uses
@@ -53,16 +58,17 @@ module RF212DriverLayerP
 		interface GpioCapture as IRQ;
 
 		interface BusyWait<TMicro, uint16_t>;
-
-		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketField<uint8_t> as PacketTransmitPower;
-		interface PacketField<uint8_t> as PacketRSSI;
-		interface PacketField<uint8_t> as PacketTimeSyncOffset;
-
-		interface PacketTimeStamp<TRadio, uint32_t>;
 		interface LocalTime<TRadio>;
 
 		interface RF212DriverConfig;
+
+		interface PacketData<rf212_metadata_t> as PacketRF212Metadata;
+		interface PacketFlag as TransmitPowerFlag;
+		interface PacketFlag as RSSIFlag;
+		interface PacketFlag as TimeSyncFlag;
+
+		interface PacketTimeStamp<TRadio, uint32_t>;
+
 		interface Tasklet;
 		interface RadioAlarm;
 
@@ -548,7 +554,7 @@ implementation
 	inline void downloadMessage()
 	{
 		uint8_t length;
-		uint8_t crc;
+		uint8_t crc = 0;
 
 		call SELN.clr();
 		call FastSpiByte.write(RF212_CMD_FRAME_READ);
@@ -608,7 +614,7 @@ implementation
 			call DiagMsg.str("rx");
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
-			call DiagMsg.uint8(crc != 0);
+			call DiagMsg.uint8(crc == 0);
 			call DiagMsg.uint8(length);
 			call DiagMsg.hex8s(call RF212DriverConfig.getPayload(rxMsg), length - 2);
 			call DiagMsg.send();
@@ -815,5 +821,113 @@ implementation
 
 		if( cmd == CMD_NONE )
 			call SpiResource.release();
+	}
+
+/*----------------- PACKET -----------------*/
+
+	async event void PacketRF212Metadata.clear(message_t* msg)
+	{
+	}
+
+// --- TransmitPower
+
+	async command bool PacketTransmitPower.isSet(message_t* msg)
+	{
+		return call TransmitPowerFlag.get(msg);
+	}
+
+	async command uint8_t PacketTransmitPower.get(message_t* msg)
+	{
+		return (call PacketRF212Metadata.get(msg))->power;
+	}
+
+	async command void PacketTransmitPower.clear(message_t* msg)
+	{
+		call TransmitPowerFlag.clear(msg);
+	}
+
+	async command void PacketTransmitPower.set(message_t* msg, uint8_t value)
+	{
+		call TransmitPowerFlag.set(msg);
+		(call PacketRF212Metadata.get(msg))->power = value;
+	}
+
+// --- RSSI
+
+	async command bool PacketRSSI.isSet(message_t* msg)
+	{
+		return call RSSIFlag.get(msg);
+	}
+
+	async command uint8_t PacketRSSI.get(message_t* msg)
+	{
+		return (call PacketRF212Metadata.get(msg))->rssi;
+	}
+
+	async command void PacketRSSI.clear(message_t* msg)
+	{
+		call RSSIFlag.clear(msg);
+	}
+
+	async command void PacketRSSI.set(message_t* msg, uint8_t value)
+	{
+		// just to be safe if the user fails to clear the packet
+		call TransmitPowerFlag.clear(msg);
+
+		call RSSIFlag.set(msg);
+		(call PacketRF212Metadata.get(msg))->rssi = value;
+	}
+
+// --- TimeSyncOffset
+
+	enum
+	{
+		PACKET_LENGTH_INCREASE =
+			sizeof(rf212packet_header_t) - 1	// the 8-bit length field is not counted
+			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
+	};
+
+	async command bool PacketTimeSyncOffset.isSet(message_t* msg)
+	{
+		return call TimeSyncFlag.get(msg);
+	}
+
+	async command uint8_t PacketTimeSyncOffset.get(message_t* msg)
+	{
+		return call RF212DriverConfig.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_absolute_t);
+	}
+
+	async command void PacketTimeSyncOffset.clear(message_t* msg)
+	{
+		call TimeSyncFlag.clear(msg);
+	}
+
+	async command void PacketTimeSyncOffset.set(message_t* msg, uint8_t value)
+	{
+		// we do not store the value, the time sync field is always the last 4 bytes
+		ASSERT( call RF212DriverConfig.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_absolute_t) == value );
+
+		call TimeSyncFlag.set(msg);
+	}
+
+// --- LinkQuality
+
+	async command bool PacketLinkQuality.isSet(message_t* msg)
+	{
+		return TRUE;
+	}
+
+	async command uint8_t PacketLinkQuality.get(message_t* msg)
+	{
+		return (call PacketRF212Metadata.get(msg))->lqi;
+	}
+
+	async command void PacketLinkQuality.clear(message_t* msg)
+	{
+	}
+
+	async command void PacketLinkQuality.set(message_t* msg, uint8_t value)
+	{
+		(call PacketRF212Metadata.get(msg))->lqi = value;
 	}
 }

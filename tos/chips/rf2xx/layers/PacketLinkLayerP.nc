@@ -69,7 +69,7 @@ module PacketLinkLayerP {
     interface Send as SubSend;
     interface PacketAcknowledgements;
     interface Timer<TMilli> as DelayTimer;
-    interface PacketData<packet_link_metadata_t>;
+    interface PacketData<link_metadata_t> as PacketLinkMetadata;
   }
 }
 
@@ -99,7 +99,7 @@ implementation {
    *     the message
    */
   command void PacketLink.setRetries(message_t *msg, uint16_t maxRetries) {
-    (call PacketData.getData(msg))->maxRetries = maxRetries;
+    (call PacketLinkMetadata.get(msg))->maxRetries = maxRetries;
   }
 
   /**
@@ -108,21 +108,21 @@ implementation {
    * @param retryDelay the delay betweeen retry attempts, in milliseconds
    */
   command void PacketLink.setRetryDelay(message_t *msg, uint16_t retryDelay) {
-    (call PacketData.getData(msg))->retryDelay = retryDelay;
+    (call PacketLinkMetadata.get(msg))->retryDelay = retryDelay;
   }
 
   /**
    * @return the maximum number of retry attempts for this message
    */
   command uint16_t PacketLink.getRetries(message_t *msg) {
-    return (call PacketData.getData(msg))->maxRetries;
+    return (call PacketLinkMetadata.get(msg))->maxRetries;
   }
 
   /**
    * @return the delay between retry attempts in ms for this message
    */
   command uint16_t PacketLink.getRetryDelay(message_t *msg) {
-    return (call PacketData.getData(msg))->retryDelay;
+    return (call PacketLinkMetadata.get(msg))->retryDelay;
   }
 
   /**
@@ -132,8 +132,8 @@ implementation {
     return call PacketAcknowledgements.wasAcked(msg);
   }
 
-  async event void PacketData.clear(packet_link_metadata_t* data) {
-    data->maxRetries = 0;
+  async event void PacketLinkMetadata.clear(message_t* msg) {
+    (call PacketLinkMetadata.get(msg))->maxRetries = 0;
   }
 
   /***************** Send Commands ***************/

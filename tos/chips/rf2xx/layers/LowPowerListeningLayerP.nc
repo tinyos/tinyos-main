@@ -22,6 +22,7 @@
  */
 
 #include <RadioAssert.h>
+#include <LowPowerListeningLayer.h>
 
 module LowPowerListeningLayerP
 {
@@ -40,8 +41,8 @@ module LowPowerListeningLayerP
 		interface Send as SubSend;
 		interface Receive as SubReceive;
 
-		interface PacketField<uint16_t> as PacketSleepInterval;
-		interface IEEE154Packet2;
+		interface PacketData<lpl_metadata_t> as PacketLplMetadata;
+		interface IEEE154PacketLayer;
 		interface PacketAcknowledgements;
 		interface Timer<TMilli>;
 	}
@@ -77,22 +78,22 @@ implementation
 	{
 		OFF = 0,					
 		OFF_SUBSTOP = 1,			// must have consecutive indices
-		OFF_SUBSTOP_DONE = 2,		// must have consecutive indices
+		OFF_SUBSTOP_DONE = 2,			// must have consecutive indices
 		OFF_STOP_END = 3,			// must have consecutive indices
 		OFF_START_END = 4,
 
-		LISTEN_SUBSTART = 5,		// must have consecutive indices
-		LISTEN_SUBSTART_DONE = 6,	// must have consecutive indices
+		LISTEN_SUBSTART = 5,			// must have consecutive indices
+		LISTEN_SUBSTART_DONE = 6,		// must have consecutive indices
 		LISTEN_TIMER = 7,			// must have consecutive indices
-		LISTEN = 8,					// must have consecutive indices
+		LISTEN = 8,				// must have consecutive indices
 
 		SLEEP_SUBSTOP = 9,			// must have consecutive indices
-		SLEEP_SUBSTOP_DONE = 10,	// must have consecutive indices
+		SLEEP_SUBSTOP_DONE = 10,		// must have consecutive indices
 		SLEEP_TIMER = 11,			// must have consecutive indices
-		SLEEP = 12,					// must have consecutive indices
+		SLEEP = 12,				// must have consecutive indices
 
 		SEND_SUBSTART = 13,			// must have consecutive indices
-		SEND_SUBSTART_DONE = 14,	// must have consecutive indices
+		SEND_SUBSTART_DONE = 14,		// must have consecutive indices
 		SEND_TIMER = 15,			// must have consecutive indices
 		SEND_SUBSEND= 16,
 		SEND_SUBSEND_DONE = 17,
@@ -335,7 +336,7 @@ implementation
 		if( error != SUCCESS
 			|| call LowPowerListening.getRxSleepInterval(msg) == 0
 			|| state == SEND_SUBSEND_DONE_LAST
-			|| (call IEEE154Packet2.getAckRequired(msg) && call PacketAcknowledgements.wasAcked(msg)) )
+			|| (call IEEE154PacketLayer.getAckRequired(msg) && call PacketAcknowledgements.wasAcked(msg)) )
 		{
 			call Timer.stop();
 			state = SEND_DONE;
@@ -379,7 +380,7 @@ implementation
 	}
 
 	command void LowPowerListening.setLocalSleepInterval(uint16_t interval)
-    {
+	{
 		if( interval < MIN_SLEEP )
 			interval = 0;
 		else if( interval > MAX_SLEEP )
@@ -396,7 +397,7 @@ implementation
 	}
 
 	command uint16_t LowPowerListening.getLocalSleepInterval()
-    {	
+	{	
 		return sleepInterval;
 	}
 
@@ -418,26 +419,30 @@ implementation
 		else if( interval > MAX_SLEEP )
 			interval = MAX_SLEEP;
 
-		call PacketSleepInterval.set(msg, interval);
+		(call PacketLplMetadata.get(msg))->sleepint = interval;
 	}
 
 	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg)
-    {
-		if( ! call PacketSleepInterval.isSet(msg) )
-			return sleepInterval;
+	{
+		uint16_t sleepint = (call PacketLplMetadata.get(msg))->sleepint;
 
-		return call PacketSleepInterval.get(msg);
+		return sleepint != 0 ? sleepint : sleepInterval;
 	}
 
 	command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t dutyCycle)
-    {
+	{
 		call LowPowerListening.setRxSleepInterval(msg, 
 			call LowPowerListening.dutyCycleToSleepInterval(dutyCycle));
 	}
 
 	command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg)
-    {
+	{
 		return call LowPowerListening.sleepIntervalToDutyCycle(
 			call LowPowerListening.getRxSleepInterval(msg));
+	}
+
+	async event void PacketLplMetadata.clear(message_t* msg)
+	{
+		(call PacketLplMetadata.get(msg))->sleepint = 0;
 	}
 }

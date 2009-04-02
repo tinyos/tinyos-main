@@ -27,11 +27,11 @@ interface PacketData<data_t>
 	 * This command returns a pointer to a set of packet fields (in the header, footer 
 	 * or metadata) with the given data type.
 	 */
-	async command data_t* getData(message_t* msg);
+	async command data_t* get(message_t* msg);
 
 	/**
 	 * This event is signalled, when the these fields should be reset to their default
 	 * value (usually called from Packet.clear)
 	 */
-	async event void clear(data_t* data);
+	async event void clear(message_t* msg);
 }

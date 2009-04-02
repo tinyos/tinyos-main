@@ -21,42 +21,34 @@
  * Author: Miklos Maroti
  */
 
-#include <RadioConfig.h>
+#ifndef __RF212ACTIVEMESSAGE_H__
+#define __RF212ACTIVEMESSAGE_H__
 
-configuration TimeSyncMessageC
+#include <IEEE154PacketLayer.h>
+#include <MetadataFlagsLayer.h>
+#include <RF212DriverLayer.h>
+#include <TimeStampingLayer.h>
+#include <LowPowerListeningLayer.h>
+#include <PacketLinkLayer.h>
+
+typedef ieee154_header_t rf212packet_header_t;
+
+typedef nx_struct rf212packet_footer_t
 {
-	provides
-	{
-		interface SplitControl;
+	// the time stamp is not recorded here, time stamped messaged cannot have max length
+} rf212packet_footer_t;
 
-		interface Receive[uint8_t id];
-		interface Receive as Snoop[am_id_t id];
-		interface Packet;
-		interface AMPacket;
-
-		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
-		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
-
-		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
-		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
-	}
-}
-
-implementation
+typedef struct rf212packet_metadata_t
 {
-	components GenericTimeSyncMessageC as MAC, LocalTimeMicroC, RF230DriverLayerC;
-  
-	SplitControl	= MAC;
-  	Receive		= MAC.Receive;
-	Snoop		= MAC.Snoop;
-	Packet		= MAC;
-	AMPacket	= MAC;
+	flags_metadata_t flags;
+	rf212_metadata_t rf212;
+	timestamp_metadata_t timestamp;
+#ifdef LOW_POWER_LISTENING
+	lpl_metadata_t lpl;
+#endif
+#ifdef PACKET_LINK
+	link_metadata_t link;
+#endif
+} rf212packet_metadata_t;
 
-	TimeSyncAMSendRadio	= MAC;
-	TimeSyncPacketRadio	= MAC;
-	TimeSyncAMSendMilli	= MAC;
-	TimeSyncPacketMilli	= MAC;
-
-	MAC.PacketTimeSyncOffset -> RF230DriverLayerC.PacketTimeSyncOffset;
-	MAC.LocalTimeRadio -> LocalTimeMicroC;
-}
+#endif//__RF212ACTIVEMESSAGE_H__

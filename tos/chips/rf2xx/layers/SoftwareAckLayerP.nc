@@ -30,6 +30,7 @@ module SoftwareAckLayerP
 	{
 		interface RadioSend;
 		interface RadioReceive;
+		interface PacketAcknowledgements;
 	}
 	uses
 	{
@@ -38,6 +39,7 @@ module SoftwareAckLayerP
 		interface RadioAlarm;
 
 		interface SoftwareAckConfig;
+		interface PacketFlag as AckReceivedFlag;
 	}
 }
 
@@ -69,7 +71,7 @@ implementation
 		{
 			if( (error = call SubSend.send(msg)) == SUCCESS )
 			{
-				call SoftwareAckConfig.setAckReceived(msg, FALSE);
+				call AckReceivedFlag.clear(msg);
 				state = STATE_DATA_SEND;
 				txMsg = msg;
 			}
@@ -136,7 +138,7 @@ implementation
 			ASSERT( !ack || call SoftwareAckConfig.verifyAckPacket(txMsg, msg) );
 
 			call RadioAlarm.cancel();
-			call SoftwareAckConfig.setAckReceived(txMsg, ack);
+			call AckReceivedFlag.setValue(txMsg, ack);
 
 			state = STATE_READY;
 			signal RadioSend.sendDone(SUCCESS);
@@ -158,4 +160,27 @@ implementation
 
 		return signal RadioReceive.receive(msg);
 	}
+
+/*----------------- PacketAcknowledgements -----------------*/
+
+	async command error_t PacketAcknowledgements.requestAck(message_t* msg)
+	{
+		call SoftwareAckConfig.setAckRequired(msg, TRUE);
+
+		return SUCCESS;
+	}
+
+	async command error_t PacketAcknowledgements.noAck(message_t* msg)
+	{
+		call SoftwareAckConfig.setAckRequired(msg, FALSE);
+
+		return SUCCESS;
+	}
+
+	async command bool PacketAcknowledgements.wasAcked(message_t* msg)
+	{
+		return call AckReceivedFlag.get(msg);
+	}
+
+
 }

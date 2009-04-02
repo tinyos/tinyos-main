@@ -69,21 +69,19 @@ configuration PacketLinkLayerC {
   
   uses {
     interface Send as SubSend;
-    interface PacketData<packet_link_metadata_t>;
+    interface PacketData<link_metadata_t> as PacketLinkMetadata;
     interface PacketAcknowledgements;
   }
 }
 
 implementation {
-  components PacketLinkLayerP,
-      RF230PacketC,
-      new TimerMilliC() as DelayTimerC;
+  components PacketLinkLayerP, new TimerMilliC() as DelayTimerC;
   
   PacketLink = PacketLinkLayerP;
   Send = PacketLinkLayerP.Send;
   SubSend = PacketLinkLayerP.SubSend;
   PacketAcknowledgements = PacketLinkLayerP;
-  PacketData = PacketLinkLayerP;
-  
+  PacketLinkMetadata = PacketLinkLayerP;
+
   PacketLinkLayerP.DelayTimer -> DelayTimerC;
 }

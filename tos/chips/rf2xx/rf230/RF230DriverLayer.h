@@ -21,8 +21,18 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __RF230_H__
-#define __RF230_H__
+#ifndef __RF230DRIVERLAYER_H__
+#define __RF230DRIVERLAYER_H__
+
+typedef struct rf230_metadata_t
+{
+	uint8_t lqi;
+	union
+	{
+		uint8_t power;
+		uint8_t rssi;
+	};
+} rf230_metadata_t;
 
 enum rf230_registers_enum
 {
@@ -149,4 +159,4 @@ enum rf230_spi_command_enums
 	RF230_CMD_SRAM_WRITE = 0x40,
 };
 
-#endif//__RF230_H__
+#endif//__RF230DRIVERLAYER_H__

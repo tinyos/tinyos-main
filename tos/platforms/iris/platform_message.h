@@ -23,7 +23,7 @@
 #ifndef PLATFORM_MESSAGE_H
 #define PLATFORM_MESSAGE_H
 
-#include <RF230Packet.h>
+#include <RF230ActiveMessage.h>
 #include <Serial.h>
 
 typedef union message_header {

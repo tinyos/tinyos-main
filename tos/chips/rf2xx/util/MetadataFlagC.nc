@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2009, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,30 +21,17 @@
  * Author: Miklos Maroti
  */
 
-module DummyLayerP
+generic configuration MetadataFlagC()
 {
-	provides interface LowPowerListening;
+	provides
+	{
+		interface PacketFlag;
+	}
 }
 
 implementation
 {
-	command void LowPowerListening.setLocalSleepInterval(uint16_t sleepIntervalMs) { }
+	components MetadataFlagsLayerC;
 
-	command uint16_t LowPowerListening.getLocalSleepInterval() { return 0; }
-  
-	command void LowPowerListening.setLocalDutyCycle(uint16_t dutyCycle) { }
-  
-	command uint16_t LowPowerListening.getLocalDutyCycle() { return 10000; }
-  
-	command void LowPowerListening.setRxSleepInterval(message_t *msg, uint16_t sleepIntervalMs) { }
-  
-	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg) { return 0; }
-  
-	command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t dutyCycle) { }
-  
-	command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg) { return 10000; }
-  
-	command uint16_t LowPowerListening.dutyCycleToSleepInterval(uint16_t dutyCycle) { return 0; }
-
-	command uint16_t LowPowerListening.sleepIntervalToDutyCycle(uint16_t sleepInterval) { return 10000; }
+	PacketFlag = MetadataFlagsLayerC.PacketFlag[unique("PacketFlags")];
 }

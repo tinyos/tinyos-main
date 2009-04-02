@@ -28,7 +28,6 @@ generic configuration DummyLayerC()
 		interface SplitControl;
 		interface Send;
 		interface Receive;
-		interface LowPowerListening;
 
 		interface RadioState;
 		interface RadioSend;
@@ -64,7 +63,4 @@ implementation
 	Receive = SubReceive;
 
 	Config = UnconnectedConfig;
-
-	components DummyLayerP;
-	LowPowerListening = DummyLayerP.LowPowerListening;
 }

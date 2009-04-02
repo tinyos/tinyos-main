@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2009, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,20 +21,13 @@
  * Author: Miklos Maroti
  */
 
-configuration IEEE154Packet2C
-{
-	provides
-	{
-		interface IEEE154Packet2;
-		interface AMPacket;
-	}
-}
+#ifndef __METADATAFLAGSLAYER_H__
+#define __METADATAFLAGSLAYER_H__
 
-implementation
+typedef struct flags_metadata_t
 {
-	components IEEE154Packet2P, ActiveMessageAddressC;
-	IEEE154Packet2P.ActiveMessageAddress -> ActiveMessageAddressC;
+	// TODO: make sure that we have no more than 8 flags
+	uint8_t flags;
+} flags_metadata_t;
 
-	IEEE154Packet2 = IEEE154Packet2P;
-	AMPacket = IEEE154Packet2P;
-}
+#endif//__METADATAFLAGSLAYER_H__

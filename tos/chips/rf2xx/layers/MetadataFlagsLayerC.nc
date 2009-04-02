@@ -21,42 +21,53 @@
  * Author: Miklos Maroti
  */
 
-#include <RadioConfig.h>
+#include <MetadataFlagsLayer.h>
+#include <RadioAssert.h>
 
-configuration TimeSyncMessageC
+module MetadataFlagsLayerC
 {
-	provides
+	provides 
 	{
-		interface SplitControl;
+		interface PacketFlag[uint8_t bit];
+	}
 
-		interface Receive[uint8_t id];
-		interface Receive as Snoop[am_id_t id];
-		interface Packet;
-		interface AMPacket;
-
-		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
-		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
-
-		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
-		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
+	uses
+	{
+		interface PacketData<flags_metadata_t> as PacketFlagsMetadata;
 	}
 }
 
 implementation
 {
-	components GenericTimeSyncMessageC as MAC, LocalTimeMicroC, RF230DriverLayerC;
-  
-	SplitControl	= MAC;
-  	Receive		= MAC.Receive;
-	Snoop		= MAC.Snoop;
-	Packet		= MAC;
-	AMPacket	= MAC;
+	async command bool PacketFlag.get[uint8_t bit](message_t* msg)
+	{
+		return (call PacketFlagsMetadata.get(msg))->flags & (1<<bit);
+	}
 
-	TimeSyncAMSendRadio	= MAC;
-	TimeSyncPacketRadio	= MAC;
-	TimeSyncAMSendMilli	= MAC;
-	TimeSyncPacketMilli	= MAC;
+	async command void PacketFlag.set[uint8_t bit](message_t* msg)
+	{
+		ASSERT( bit  < 8 );
 
-	MAC.PacketTimeSyncOffset -> RF230DriverLayerC.PacketTimeSyncOffset;
-	MAC.LocalTimeRadio -> LocalTimeMicroC;
+		(call PacketFlagsMetadata.get(msg))->flags |= (1<<bit);
+	}
+
+	async command void PacketFlag.clear[uint8_t bit](message_t* msg)
+	{
+		ASSERT( bit  < 8 );
+
+		(call PacketFlagsMetadata.get(msg))->flags &= ~(1<<bit);
+	}
+
+	async command void PacketFlag.setValue[uint8_t bit](message_t* msg, bool value)
+	{
+		if( value )
+			call PacketFlag.set[bit](msg);
+		else
+			call PacketFlag.clear[bit](msg);
+	}
+
+	async event void PacketFlagsMetadata.clear(message_t* msg)
+	{
+		(call PacketFlagsMetadata.get(msg))->flags = 0;
+	}
 }

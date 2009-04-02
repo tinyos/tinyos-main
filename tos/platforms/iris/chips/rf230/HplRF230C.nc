@@ -36,6 +36,7 @@ configuration HplRF230C
 
 		interface GpioCapture as IRQ;
 		interface Alarm<TRadio, uint16_t> as Alarm;
+		interface LocalTime<TRadio> as LocalTimeRadio;
 	}
 }
 
@@ -64,4 +65,7 @@ implementation
 
 	components RealMainP;
 	RealMainP.PlatformInit -> HplRF230P.PlatformInit;
+
+	components LocalTimeMicroC;
+	LocalTimeRadio = LocalTimeMicroC;
 }

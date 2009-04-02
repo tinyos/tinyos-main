@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <RF212Packet.h>
+#include <RF212ActiveMessage.h>
 #include <RadioConfig.h>
 #include <Tasklet.h>
 
@@ -38,13 +38,27 @@ module RF212ActiveMessageP
 		interface SlottedCollisionConfig;
 		interface ActiveMessageConfig;
 		interface DummyConfig;
+
+		interface Packet;
+
+		interface PacketData<flags_metadata_t> as PacketFlagsMetadata;
+		interface PacketData<rf212_metadata_t> as PacketRF212Metadata;
+		interface PacketData<timestamp_metadata_t> as PacketTimeStampMetadata;
+
+#ifdef LOW_POWER_LISTENING
+		interface PacketData<lpl_metadata_t> as PacketLplMetadata;
+#endif
+#ifdef PACKET_LINK
+		interface PacketData<link_metadata_t> as PacketLinkMetadata;
+#endif
 	}
 
 	uses
 	{
-		interface IEEE154Packet2;
-		interface Packet;
+		interface IEEE154PacketLayer;
 		interface RadioAlarm;
+
+		interface PacketTimeStamp<TRadio, uint32_t>;
 	}
 }
 
@@ -54,22 +68,17 @@ implementation
 
 	async command uint8_t RF212DriverConfig.getLength(message_t* msg)
 	{
-		return call IEEE154Packet2.getLength(msg);
+		return call IEEE154PacketLayer.getLength(msg);
 	}
 
 	async command void RF212DriverConfig.setLength(message_t* msg, uint8_t len)
 	{
-		call IEEE154Packet2.setLength(msg, len);
+		call IEEE154PacketLayer.setLength(msg, len);
 	}
 
 	async command uint8_t* RF212DriverConfig.getPayload(message_t* msg)
 	{
-		return ((uint8_t*)(call IEEE154Packet2.getHeader(msg))) + 1;
-	}
-
-	inline rf212packet_metadata_t* getMeta(message_t* msg)
-	{
-		return (rf212packet_metadata_t*)(msg->metadata);
+		return ((uint8_t*)(call IEEE154PacketLayer.getHeader(msg))) + 1;
 	}
 
 	async command uint8_t RF212DriverConfig.getHeaderLength()
@@ -86,42 +95,39 @@ implementation
 
 	async command bool RF212DriverConfig.requiresRssiCca(message_t* msg)
 	{
-		return call IEEE154Packet2.isDataFrame(msg);
+		return call IEEE154PacketLayer.isDataFrame(msg);
 	}
 
 /*----------------- SoftwareAckConfig -----------------*/
 
 	async command bool SoftwareAckConfig.requiresAckWait(message_t* msg)
 	{
-		return call IEEE154Packet2.requiresAckWait(msg);
+		return call IEEE154PacketLayer.requiresAckWait(msg);
 	}
 
 	async command bool SoftwareAckConfig.isAckPacket(message_t* msg)
 	{
-		return call IEEE154Packet2.isAckFrame(msg);
+		return call IEEE154PacketLayer.isAckFrame(msg);
 	}
 
 	async command bool SoftwareAckConfig.verifyAckPacket(message_t* data, message_t* ack)
 	{
-		return call IEEE154Packet2.verifyAckReply(data, ack);
+		return call IEEE154PacketLayer.verifyAckReply(data, ack);
+	}
+
+	async command void SoftwareAckConfig.setAckRequired(message_t* msg, bool ack)
+	{
+		call IEEE154PacketLayer.setAckRequired(msg, ack);
 	}
 
 	async command bool SoftwareAckConfig.requiresAckReply(message_t* msg)
 	{
-		return call IEEE154Packet2.requiresAckReply(msg);
+		return call IEEE154PacketLayer.requiresAckReply(msg);
 	}
 
 	async command void SoftwareAckConfig.createAckPacket(message_t* data, message_t* ack)
 	{
-		call IEEE154Packet2.createAckReply(data, ack);
-	}
-
-	async command void SoftwareAckConfig.setAckReceived(message_t* msg, bool acked)
-	{
-		if( acked )
-			getMeta(msg)->flags |= RF212PACKET_WAS_ACKED;
-		else
-			getMeta(msg)->flags &= ~RF212PACKET_WAS_ACKED;
+		call IEEE154PacketLayer.createAckReply(data, ack);
 	}
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()
@@ -138,17 +144,17 @@ implementation
 
 	async command uint8_t UniqueConfig.getSequenceNumber(message_t* msg)
 	{
-		return call IEEE154Packet2.getDSN(msg);
+		return call IEEE154PacketLayer.getDSN(msg);
 	}
 
 	async command void UniqueConfig.setSequenceNumber(message_t* msg, uint8_t dsn)
 	{
-		call IEEE154Packet2.setDSN(msg, dsn);
+		call IEEE154PacketLayer.setDSN(msg, dsn);
 	}
 
 	async command am_addr_t UniqueConfig.getSender(message_t* msg)
 	{
-		return call IEEE154Packet2.getSrcAddr(msg);
+		return call IEEE154PacketLayer.getSrcAddr(msg);
 	}
 
 	tasklet_async command void UniqueConfig.reportChannelError()
@@ -161,7 +167,7 @@ implementation
 	command error_t ActiveMessageConfig.checkPacket(message_t* msg)
 	{
 		// the user forgot to call clear, we should return EINVAL
-		if( ! call IEEE154Packet2.isDataFrame(msg) )
+		if( ! call IEEE154PacketLayer.isDataFrame(msg) )
 			call Packet.clear(msg);
 
 		return SUCCESS;
@@ -171,7 +177,7 @@ implementation
 
 	async command bool CsmaConfig.requiresSoftwareCCA(message_t* msg)
 	{
-		return call IEEE154Packet2.isDataFrame(msg);
+		return call IEEE154PacketLayer.isDataFrame(msg);
 	}
 
 /*----------------- TrafficMonitorConfig -----------------*/
@@ -196,13 +202,13 @@ implementation
 		 * ack required: 8-16 byte separation, 11 bytes airtime, 5-10 bytes separation
 		 */
 
-		uint8_t len = call IEEE154Packet2.getLength(msg);
-		return call IEEE154Packet2.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
+		uint8_t len = call IEEE154PacketLayer.getLength(msg);
+		return call IEEE154PacketLayer.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
 	}
 
 	async command am_addr_t TrafficMonitorConfig.getSender(message_t* msg)
 	{
-		return call IEEE154Packet2.getSrcAddr(msg);
+		return call IEEE154PacketLayer.getSrcAddr(msg);
 	}
 
 	tasklet_async command void TrafficMonitorConfig.timerTick()
@@ -244,7 +250,7 @@ implementation
 		time = call RadioAlarm.getNow();
 
 		// estimated response time (download the message, etc) is 5-8 bytes
-		if( call IEEE154Packet2.requiresAckReply(msg) )
+		if( call IEEE154PacketLayer.requiresAckReply(msg) )
 			time += (uint16_t)(32 * (-5 + 16 + 11 + 5) * RADIO_ALARM_MICROSEC);
 		else
 			time += (uint16_t)(32 * (-5 + 5) * RADIO_ALARM_MICROSEC);
@@ -269,13 +275,13 @@ implementation
 	async command uint16_t SlottedCollisionConfig.getTransmitTime(message_t* msg)
 	{
 		// TODO: check if the timestamp is correct
-		return getMeta(msg)->timestamp;
+		return call PacketTimeStamp.timestamp(msg);
 	}
 
 	async command uint16_t SlottedCollisionConfig.getCollisionWindowStart(message_t* msg)
 	{
 		// the preamble (4 bytes), SFD (1 byte), plus two extra for safety
-		return getMeta(msg)->timestamp - (uint16_t)(7 * 32 * RADIO_ALARM_MICROSEC);
+		return (call PacketTimeStamp.timestamp(msg)) - (uint16_t)(7 * 32 * RADIO_ALARM_MICROSEC);
 	}
 
 	async command uint16_t SlottedCollisionConfig.getCollisionWindowLength(message_t* msg)
@@ -289,5 +295,87 @@ implementation
 
 	async command void DummyConfig.nothing()
 	{
+	}
+
+/*----------------- Metadata -----------------*/
+
+	inline rf212packet_metadata_t* getMeta(message_t* msg)
+	{
+		return (rf212packet_metadata_t*)(msg->metadata);
+	}
+
+	async command flags_metadata_t* PacketFlagsMetadata.get(message_t* msg)
+	{
+		return &(getMeta(msg)->flags);
+	}
+
+	async command rf212_metadata_t* PacketRF212Metadata.get(message_t* msg)
+	{
+		return &(getMeta(msg)->rf212);
+	}
+
+	async command timestamp_metadata_t* PacketTimeStampMetadata.get(message_t* msg)
+	{
+		return &(getMeta(msg)->timestamp);
+	}
+
+#ifdef LOW_POWER_LISTENING
+	async command lpl_metadata_t* PacketLplMetadata.get(message_t* msg)
+	{
+		return &(getMeta(msg)->lpl);
+	}
+#endif
+
+#ifdef PACKET_LINK
+	async command link_metadata_t* PacketLinkMetadata.get(message_t* msg)
+	{
+		return &(getMeta(msg)->link);
+	}
+#endif
+
+/*----------------- Packet -----------------*/
+
+	enum
+	{
+		PACKET_LENGTH_INCREASE =
+			sizeof(rf212packet_header_t) - 1	// the 8-bit length field is not counted
+			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
+	};
+
+	command void Packet.clear(message_t* msg)
+	{
+		signal PacketFlagsMetadata.clear(msg);
+		signal PacketRF212Metadata.clear(msg);
+		signal PacketTimeStampMetadata.clear(msg);
+#ifdef LOW_POWER_LISTENING
+		signal PacketLplMetadata.clear(msg);
+#endif
+#ifdef PACKET_LINK
+		signal PacketLinkMetadata.clear(msg);
+#endif
+		call IEEE154PacketLayer.createDataFrame(msg);
+	}
+
+	inline command void Packet.setPayloadLength(message_t* msg, uint8_t len)
+	{
+		call IEEE154PacketLayer.setLength(msg, len + PACKET_LENGTH_INCREASE);
+	}
+
+	inline command uint8_t Packet.payloadLength(message_t* msg)
+	{
+		return call IEEE154PacketLayer.getLength(msg) - PACKET_LENGTH_INCREASE;
+	}
+
+	inline command uint8_t Packet.maxPayloadLength()
+	{
+		return TOSH_DATA_LENGTH;
+	}
+
+	command void* Packet.getPayload(message_t* msg, uint8_t len)
+	{
+		if( len > TOSH_DATA_LENGTH )
+			return NULL;
+
+		return msg->data;
 	}
 }

@@ -21,6 +21,8 @@
  * Author: Miklos Maroti
  */
 
+#include <LowPowerListeningLayer.h>
+
 #warning "*** USING LOW POWER LISTENING LAYER"
 
 configuration LowPowerListeningLayerC
@@ -39,8 +41,8 @@ configuration LowPowerListeningLayerC
 		interface Send as SubSend;
 		interface Receive as SubReceive;
 
-		interface PacketField<uint16_t> as PacketSleepInterval;
-		interface IEEE154Packet2;
+		interface PacketData<lpl_metadata_t> as PacketLplMetadata;
+		interface IEEE154PacketLayer;
 		interface PacketAcknowledgements;
 	}
 }
@@ -57,8 +59,8 @@ implementation
 	SubControl = LowPowerListeningLayerP;
 	SubSend = LowPowerListeningLayerP;
 	SubReceive = LowPowerListeningLayerP;
-	PacketSleepInterval = LowPowerListeningLayerP;
-	IEEE154Packet2 = LowPowerListeningLayerP;
+	PacketLplMetadata = LowPowerListeningLayerP;
+	IEEE154PacketLayer = LowPowerListeningLayerP;
 	PacketAcknowledgements = LowPowerListeningLayerP;
 	
 	LowPowerListeningLayerP.Timer -> TimerMilliC;

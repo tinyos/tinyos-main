@@ -25,7 +25,7 @@
 #define __RADIOCONFIG_H__
 
 #include <MicaTimer.h>
-#include <RF230.h>
+#include <RF230DriverLayer.h>
 #include <util/crc16.h>
 
 enum

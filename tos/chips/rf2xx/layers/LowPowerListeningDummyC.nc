@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2009, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,42 +21,30 @@
  * Author: Miklos Maroti
  */
 
-#include <RadioConfig.h>
-
-configuration TimeSyncMessageC
+configuration LowPowerListeningDummyC
 {
 	provides
 	{
 		interface SplitControl;
+		interface Send;
+		interface Receive;
 
-		interface Receive[uint8_t id];
-		interface Receive as Snoop[am_id_t id];
-		interface Packet;
-		interface AMPacket;
-
-		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
-		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
-
-		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
-		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
+		interface LowPowerListening;
+	}
+	uses
+	{
+		interface SplitControl as SubControl;
+		interface Send as SubSend;
+		interface Receive as SubReceive;
 	}
 }
 
 implementation
 {
-	components GenericTimeSyncMessageC as MAC, LocalTimeMicroC, RF230DriverLayerC;
-  
-	SplitControl	= MAC;
-  	Receive		= MAC.Receive;
-	Snoop		= MAC.Snoop;
-	Packet		= MAC;
-	AMPacket	= MAC;
+	SplitControl = SubControl;
+	Send = SubSend;
+	Receive = SubReceive;
 
-	TimeSyncAMSendRadio	= MAC;
-	TimeSyncPacketRadio	= MAC;
-	TimeSyncAMSendMilli	= MAC;
-	TimeSyncPacketMilli	= MAC;
-
-	MAC.PacketTimeSyncOffset -> RF230DriverLayerC.PacketTimeSyncOffset;
-	MAC.LocalTimeRadio -> LocalTimeMicroC;
+	components LowPowerListeningDummyP;
+	LowPowerListening = LowPowerListeningDummyP;
 }

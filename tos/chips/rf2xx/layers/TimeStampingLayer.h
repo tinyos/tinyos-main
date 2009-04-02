@@ -21,42 +21,12 @@
  * Author: Miklos Maroti
  */
 
-#include <RadioConfig.h>
+#ifndef __TIMESTAMPINGLAYER_H__
+#define __TIMESTAMPINGLAYER_H__
 
-configuration TimeSyncMessageC
+typedef struct timestamp_metadata_t
 {
-	provides
-	{
-		interface SplitControl;
+	uint32_t timestamp;
+} timestamp_metadata_t;
 
-		interface Receive[uint8_t id];
-		interface Receive as Snoop[am_id_t id];
-		interface Packet;
-		interface AMPacket;
-
-		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
-		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
-
-		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
-		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
-	}
-}
-
-implementation
-{
-	components GenericTimeSyncMessageC as MAC, LocalTimeMicroC, RF230DriverLayerC;
-  
-	SplitControl	= MAC;
-  	Receive		= MAC.Receive;
-	Snoop		= MAC.Snoop;
-	Packet		= MAC;
-	AMPacket	= MAC;
-
-	TimeSyncAMSendRadio	= MAC;
-	TimeSyncPacketRadio	= MAC;
-	TimeSyncAMSendMilli	= MAC;
-	TimeSyncPacketMilli	= MAC;
-
-	MAC.PacketTimeSyncOffset -> RF230DriverLayerC.PacketTimeSyncOffset;
-	MAC.LocalTimeRadio -> LocalTimeMicroC;
-}
+#endif//__TIMESTAMPINGLAYER_H__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2009, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,6 +21,9 @@
  * Author: Miklos Maroti
  */
 
+#include <RadioConfig.h>
+#include <RF212DriverLayer.h>
+
 configuration RF212DriverLayerC
 {
 	provides
@@ -29,28 +32,53 @@ configuration RF212DriverLayerC
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioCCA;
+
+		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
+		interface PacketField<uint8_t> as PacketTimeSyncOffset;
+		interface PacketField<uint8_t> as PacketLinkQuality;
+
+		interface LocalTime<TRadio> as LocalTimeRadio;
 	}
 
-	uses interface RF212DriverConfig;
+	uses
+	{
+		interface RF212DriverConfig;
+		interface PacketTimeStamp<TRadio, uint32_t>;
+		interface PacketData<rf212_metadata_t> as PacketRF212Metadata;
+	}
 }
 
 implementation
 {
-	components RF212DriverLayerP, HplRF212C, BusyWaitMicroC, TaskletC, MainC, RadioAlarmC, RF212PacketC, LocalTimeMicroC as LocalTimeRadioC;
+	components RF212DriverLayerP, HplRF212C, BusyWaitMicroC, TaskletC, MainC, RadioAlarmC;
 
 	RadioState = RF212DriverLayerP;
 	RadioSend = RF212DriverLayerP;
 	RadioReceive = RF212DriverLayerP;
 	RadioCCA = RF212DriverLayerP;
 
-	RF212DriverConfig = RF212DriverLayerP;
+	LocalTimeRadio = HplRF212C;
 
-	RF212DriverLayerP.PacketLinkQuality -> RF212PacketC.PacketLinkQuality;
-	RF212DriverLayerP.PacketTransmitPower -> RF212PacketC.PacketTransmitPower;
-	RF212DriverLayerP.PacketRSSI -> RF212PacketC.PacketRSSI;
-	RF212DriverLayerP.PacketTimeSyncOffset -> RF212PacketC.PacketTimeSyncOffset;
-	RF212DriverLayerP.PacketTimeStamp -> RF212PacketC;
-	RF212DriverLayerP.LocalTime -> LocalTimeRadioC;
+	RF212DriverConfig = RF212DriverLayerP;
+	PacketRF212Metadata = RF212DriverLayerP;
+
+	PacketTransmitPower = RF212DriverLayerP.PacketTransmitPower;
+	components new MetadataFlagC() as TransmitPowerFlagC;
+	RF212DriverLayerP.TransmitPowerFlag -> TransmitPowerFlagC;
+
+	PacketRSSI = RF212DriverLayerP.PacketRSSI;
+	components new MetadataFlagC() as RSSIFlagC;
+	RF212DriverLayerP.RSSIFlag -> RSSIFlagC;
+
+	PacketTimeSyncOffset = RF212DriverLayerP.PacketTimeSyncOffset;
+	components new MetadataFlagC() as TimeSyncFlagC;
+	RF212DriverLayerP.TimeSyncFlag -> TimeSyncFlagC;
+
+	PacketLinkQuality = RF212DriverLayerP.PacketLinkQuality;
+	PacketTimeStamp = RF212DriverLayerP.PacketTimeStamp;
+
+	RF212DriverLayerP.LocalTime -> HplRF212C;
 
 	RF212DriverLayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 	RadioAlarmC.Alarm -> HplRF212C.Alarm;
