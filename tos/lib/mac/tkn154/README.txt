@@ -1,29 +1,37 @@
 This directory contains "TKN15.4", a platform-independent IEEE 802.15.4-2006
-MAC implementation. The code is under active development, but most of the 
-functionality described in the standard is implemented (and cursorily tested). 
-The MAC itself is platform-independent, but it requires (1) a suitable radio 
-driver, (2) Alarms/Timers with symbol precision and (3) some "platform glue" 
-code (defining guard times, etc.). Currently the only supported platform is 
-TelosB (but without additional hardware support on TelosB the timing in 
+MAC implementation. The code is under active development, but most of the
+functionality described in the standard is implemented and tested.
+The MAC itself is platform-independent, but it requires (1) a suitable radio
+driver, (2) Alarms/Timers with symbol precision and (3) some "platform glue"
+code (defining guard times, etc.). Currently the only supported platform is
+TelosB (but without additional hardware support on TelosB the timing in
 beacon-enabled mode is not standard compliant).
 
-This code is the basis for the implementation of the TinyOS 15.4 WG:
-http://tinyos.stanford.edu:8000/15.4_WG
-
-Status 3/4/09
--------------
+Status (last updated 4/2/09)
+----------------------------
 
 Missing functionality:
-- security 
 - GTS 
-- PAN ID conflict resolution
-- multiple indirect transmissions to the same destination
+- security services
+- PAN ID conflict notification/resolution
+- indirect transmissions are incomplete, this is missing:
+  -- returning an empty DATA frame when there is no data for the device
+  -- set pending flag if there are multiple indirect transmissions pending
+  -- purging indirect transmissions on MLME_PURGE.request
+  -- keep frame in transaction queue in case CSMA-CA algorithm fails
+- responding to active scans in nonbeacon-enabled PANs
 
-Documentation
--------------
 
-A technical report on TKN15.4 is under way and will be available at:
-http://www.tkn.tu-berlin.de/publications/reports.jsp
+Known Issues:
+- resetting the MAC during operation (via MLME_RESET) has not been tested
+- if initial beacon Tx timestamp is invalid, then coordinator can hang 
+- frame pending flags are (need to be) always set in the ACK headers
+- transmitting coordinator realignment frames has not been tested
+- using an incoming and outgoing superframe at the same time has not been tested
+- during an ongoing CSMA-CA transmission incoming frames are ignored
+- on a beacon-enabled PAN: if the device cannot find the beacon the DATA frame 
+  is not transmitted (but it should be transmitted using unslotted CSMA-CA, see 
+  Sect. 7.5.6.1 "Transmission")
 
 Implementation 
 --------------
@@ -38,6 +46,15 @@ Note: TEP3 recommends that interface names "should be mixed case, starting
 upper case". To match the syntax used in the IEEE 802.15.4 standard the
 interfaces provided by the MAC to the next higher layer deviate from this
 convention (they are all caps, e.g. MLME_START).
+
+Documentation
+-------------
+
+A technical report on TKN15.4 is available here:
+http://www.tkn.tu-berlin.de/publications/papers/TKN154.pdf
+
+TKN15.4 is the basis for the implementation of the TinyOS 15.4 WG:
+http://tinyos.stanford.edu:8000/15.4_WG
 
 Copyright
 ---------
