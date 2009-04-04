@@ -21,6 +21,8 @@
  * Author: Miklos Maroti
  */
 
+#include <ActiveMessageLayer.h>
+
 interface ActiveMessageConfig
 {
 	/**
@@ -29,4 +31,27 @@ interface ActiveMessageConfig
 	 * forgot to do so (or return EINVAL to be strict).
 	 */
 	command error_t checkPacket(message_t* msg);
+
+	/**
+	 * Returns a pointer to the ActiveMessage header field in the message
+	 */
+	command activemessage_header_t* getHeader(message_t* msg);
+
+	/** Same as AMPacket.destination */
+	command am_addr_t destination(message_t* msg);
+
+	/** Same as AMPacket.setDestination */
+	command void setDestination(message_t* msg, am_addr_t addr);
+
+	/** Same as AMPacket.source */
+	command am_addr_t source(message_t* msg);
+
+	/** Same as AMPacket.setSource */
+	command void setSource(message_t* msg, am_addr_t addr);
+
+	/** Same as AMPacket.group */
+	command am_group_t group(message_t* msg);
+
+	/** Same as AMPacket.setGroup */
+	command void setGroup(message_t* msg, am_group_t grp);
 }

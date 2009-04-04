@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Vanderbilt University
+ * Copyright (c) 2007, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,37 +21,12 @@
  * Author: Miklos Maroti
  */
 
-#include <ActiveMessageLayer.h>
+#ifndef __LOWPANNETWORKLAYER_H__
+#define __LOWPANNETWORKLAYER_H__
 
-configuration ActiveMessageLayerC
+typedef nx_struct lowpan_header_t
 {
-	provides
-	{
-		interface AMPacket;
-		interface AMSend[am_id_t id];
-		interface Receive[am_id_t id];
-		interface Receive as Snoop[am_id_t id];	
-	}
+	nxle_uint8_t network;
+} lowpan_header_t;
 
-	uses
-	{
-		interface Send as SubSend;
-		interface Receive as SubReceive;
-		interface ActiveMessageConfig as Config;
-	}
-}
-
-implementation
-{
-	components ActiveMessageLayerP, ActiveMessageAddressC;
-	ActiveMessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
-
-	AMPacket = ActiveMessageLayerP;
-	AMSend = ActiveMessageLayerP;
-	Receive = ActiveMessageLayerP.Receive;
-	Snoop = ActiveMessageLayerP.Snoop;
-	
-	SubSend = ActiveMessageLayerP;
-	SubReceive = ActiveMessageLayerP;
-	Config = ActiveMessageLayerP;
-}
+#endif//__LOWPANNETWORKLAYER_H__

@@ -21,20 +21,12 @@
  * Author: Miklos Maroti
  */
 
-configuration IEEE154PacketLayerC
-{
-	provides
-	{
-		interface IEEE154PacketLayer;
-		interface AMPacket;
-	}
-}
+#include <LowpanNetworkLayer.h>
 
-implementation
+interface LowpanNetworkConfig
 {
-	components IEEE154PacketLayerP, ActiveMessageAddressC;
-	IEEE154PacketLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
-
-	IEEE154PacketLayer = IEEE154PacketLayerP;
-	AMPacket = IEEE154PacketLayerP;
+	/**
+	 * Returns a pointer to the 6LowPAN header field in the message
+	 */
+	command lowpan_header_t* getHeader(message_t* msg);
 }

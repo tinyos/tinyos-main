@@ -24,14 +24,23 @@
 #ifndef __RF230ACTIVEMESSAGE_H__
 #define __RF230ACTIVEMESSAGE_H__
 
-#include <IEEE154PacketLayer.h>
+#include <IEEE154MessageLayer.h>
+#include <LowpanNetworkLayer.h>
+#include <ActiveMessageLayer.h>
 #include <MetadataFlagsLayer.h>
 #include <RF230DriverLayer.h>
 #include <TimeStampingLayer.h>
 #include <LowPowerListeningLayer.h>
 #include <PacketLinkLayer.h>
 
-typedef ieee154_header_t rf230packet_header_t;
+typedef nx_struct rf230packet_header_t
+{
+	ieee154_header_t ieee154;
+#ifndef TFRAMES_ENABLED
+	lowpan_header_t lowpan;
+#endif
+	activemessage_header_t am;
+} rf230packet_header_t;
 
 typedef nx_struct rf230packet_footer_t
 {

@@ -21,12 +21,13 @@
  * Author: Miklos Maroti
  */
 
-module IEEE154NetworkLayerP
+module LowpanNetworkLayerC
 {
 	provides
 	{
 		interface Send;
 		interface Receive;
+
 		interface Receive as NonTinyosReceive[uint8_t network];
 	}
 
@@ -34,8 +35,7 @@ module IEEE154NetworkLayerP
 	{
 		interface Send as SubSend;
 		interface Receive as SubReceive;
-
-		interface IEEE154PacketLayer;
+		interface LowpanNetworkConfig as Config;
 	}
 }
 
@@ -47,7 +47,7 @@ implementation
 
 	command error_t Send.send(message_t* msg, uint8_t len)
 	{
-		call IEEE154PacketLayer.set6LowPan(msg, TINYOS_6LOWPAN_NETWORK_ID);
+		(call Config.getHeader(msg))->network = TINYOS_6LOWPAN_NETWORK_ID;
 		return call SubSend.send(msg, len);
 	}
 
@@ -73,7 +73,7 @@ implementation
   
 	event message_t *SubReceive.receive(message_t *msg, void *payload, uint8_t len)
 	{
-		uint8_t network = call IEEE154PacketLayer.get6LowPan(msg);
+		uint8_t network = (call Config.getHeader(msg))->network;
 		if( network == TINYOS_6LOWPAN_NETWORK_ID )
 			return signal Receive.receive(msg, payload, len);
 		else

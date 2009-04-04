@@ -41,8 +41,7 @@ configuration LowPowerListeningLayerC
 		interface Send as SubSend;
 		interface Receive as SubReceive;
 
-		interface PacketData<lpl_metadata_t> as PacketLplMetadata;
-		interface IEEE154PacketLayer;
+		interface LowPowerListeningConfig as Config;
 		interface PacketAcknowledgements;
 	}
 }
@@ -59,8 +58,7 @@ implementation
 	SubControl = LowPowerListeningLayerP;
 	SubSend = LowPowerListeningLayerP;
 	SubReceive = LowPowerListeningLayerP;
-	PacketLplMetadata = LowPowerListeningLayerP;
-	IEEE154PacketLayer = LowPowerListeningLayerP;
+	Config = LowPowerListeningLayerP;
 	PacketAcknowledgements = LowPowerListeningLayerP;
 	
 	LowPowerListeningLayerP.Timer -> TimerMilliC;

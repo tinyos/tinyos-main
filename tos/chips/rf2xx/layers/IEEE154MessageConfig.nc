@@ -21,37 +21,12 @@
  * Author: Miklos Maroti
  */
 
-#include <ActiveMessageLayer.h>
+#include <IEEE154MessageLayer.h>
 
-configuration ActiveMessageLayerC
+interface IEEE154MessageConfig
 {
-	provides
-	{
-		interface AMPacket;
-		interface AMSend[am_id_t id];
-		interface Receive[am_id_t id];
-		interface Receive as Snoop[am_id_t id];	
-	}
-
-	uses
-	{
-		interface Send as SubSend;
-		interface Receive as SubReceive;
-		interface ActiveMessageConfig as Config;
-	}
-}
-
-implementation
-{
-	components ActiveMessageLayerP, ActiveMessageAddressC;
-	ActiveMessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
-
-	AMPacket = ActiveMessageLayerP;
-	AMSend = ActiveMessageLayerP;
-	Receive = ActiveMessageLayerP.Receive;
-	Snoop = ActiveMessageLayerP.Snoop;
-	
-	SubSend = ActiveMessageLayerP;
-	SubReceive = ActiveMessageLayerP;
-	Config = ActiveMessageLayerP;
+	/**
+	 * Returns a pointer to the IEEE 802.15.4 header fields in the message
+	 */
+	async command ieee154_header_t* getHeader(message_t* msg);
 }

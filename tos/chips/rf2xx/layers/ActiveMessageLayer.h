@@ -21,33 +21,12 @@
  * Author: Miklos Maroti
  */
 
-configuration IEEE154NetworkLayerC
+#ifndef __ACTIVEMESSAGELAYER_H__
+#define __ACTIVEMESSAGELAYER_H__
+
+typedef nx_struct activemessage_header_t
 {
-	provides
-	{
-		interface SplitControl;
-		interface Send;
-		interface Receive;
-	}
-	uses
-	{
-		interface SplitControl as SubControl;
-		interface Send as SubSend;
-		interface Receive as SubReceive;
-	}
-}
+	nxle_uint8_t type;
+} activemessage_header_t;
 
-implementation
-{
-	components IEEE154NetworkLayerP, IEEE154PacketLayerC;
-
-	SplitControl = SubControl;
-
-	Send = IEEE154NetworkLayerP;
-	Receive = IEEE154NetworkLayerP;
-
-	SubSend = IEEE154NetworkLayerP;
-	SubReceive = IEEE154NetworkLayerP;
-
-	IEEE154NetworkLayerP.IEEE154PacketLayer -> IEEE154PacketLayerC;
-}
+#endif//__ACTIVEMESSAGELAYER_H__

@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-#include <IEEE154PacketLayer.h>
+#include <IEEE154MessageLayer.h>
 #include <message.h>
 
 /**
@@ -31,13 +31,8 @@
  * Note, that this interface does not support the CRC-16 value, which
  * should be verified before the data can be trusted.
  */
-interface IEEE154PacketLayer
+interface IEEE154MessageLayer
 {
-	/**
-	 * Returns the IEEE 802.15.4 header including the length field.
-	 */
-	async command ieee154_header_t* getHeader(message_t* msg);
-
 	/**
 	 * Returns the raw value (unadjusted) of the length field
 	 */
@@ -158,30 +153,6 @@ interface IEEE154PacketLayer
 	 * Sets the source address, valid only for data frames
 	 */
 	async command void setSrcAddr(message_t* msg, uint16_t addr);
-
-#ifndef TFRAMES_ENABLED
-
-	/**
-	 * Returns the value of the 6LowPan network field.
-	 */
-	async command uint8_t get6LowPan(message_t* msg);
-
-	/**
-	 * Sets the value of the 6LowPan network field.
-	 */
-	async command void set6LowPan(message_t* msg, uint8_t network);
-
-#endif
-
-	/**
-	 * Returns the active message type of the message
-	 */
-	async command am_id_t getType(message_t* msg);
-
-	/**
-	 * Sets the active message type
-	 */
-	async command void setType(message_t* msg, am_id_t type);
 
 	/**
 	 * Returns TRUE if the packet is a data packet, the ACK_REQ field

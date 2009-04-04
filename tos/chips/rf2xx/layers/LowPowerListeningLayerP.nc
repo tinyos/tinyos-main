@@ -41,9 +41,8 @@ module LowPowerListeningLayerP
 		interface Send as SubSend;
 		interface Receive as SubReceive;
 
-		interface PacketData<lpl_metadata_t> as PacketLplMetadata;
-		interface IEEE154PacketLayer;
 		interface PacketAcknowledgements;
+		interface LowPowerListeningConfig as Config;
 		interface Timer<TMilli>;
 	}
 }
@@ -336,7 +335,7 @@ implementation
 		if( error != SUCCESS
 			|| call LowPowerListening.getRxSleepInterval(msg) == 0
 			|| state == SEND_SUBSEND_DONE_LAST
-			|| (call IEEE154PacketLayer.getAckRequired(msg) && call PacketAcknowledgements.wasAcked(msg)) )
+			|| (call Config.getAckRequired(msg) && call PacketAcknowledgements.wasAcked(msg)) )
 		{
 			call Timer.stop();
 			state = SEND_DONE;
@@ -419,12 +418,12 @@ implementation
 		else if( interval > MAX_SLEEP )
 			interval = MAX_SLEEP;
 
-		(call PacketLplMetadata.get(msg))->sleepint = interval;
+		(call Config.metadata(msg))->sleepint = interval;
 	}
 
 	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg)
 	{
-		uint16_t sleepint = (call PacketLplMetadata.get(msg))->sleepint;
+		uint16_t sleepint = (call Config.metadata(msg))->sleepint;
 
 		return sleepint != 0 ? sleepint : sleepInterval;
 	}
@@ -441,8 +440,8 @@ implementation
 			call LowPowerListening.getRxSleepInterval(msg));
 	}
 
-	async event void PacketLplMetadata.clear(message_t* msg)
+	async event void Config.clear(message_t* msg)
 	{
-		(call PacketLplMetadata.get(msg))->sleepint = 0;
+		(call Config.metadata(msg))->sleepint = 0;
 	}
 }

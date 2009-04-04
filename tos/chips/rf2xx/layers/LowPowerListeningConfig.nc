@@ -21,37 +21,24 @@
  * Author: Miklos Maroti
  */
 
-#include <ActiveMessageLayer.h>
+#include <LowPowerListeningLayer.h>
 
-configuration ActiveMessageLayerC
+interface LowPowerListeningConfig
 {
-	provides
-	{
-		interface AMPacket;
-		interface AMSend[am_id_t id];
-		interface Receive[am_id_t id];
-		interface Receive as Snoop[am_id_t id];	
-	}
+	/**
+	 * Returns a pointer to the low power listening metadata fields in 
+	 * the message
+	 */
+	async command lpl_metadata_t* metadata(message_t* msg);
 
-	uses
-	{
-		interface Send as SubSend;
-		interface Receive as SubReceive;
-		interface ActiveMessageConfig as Config;
-	}
-}
+	/**
+	 * Clears the low power listening metadata fields in order to disable 
+	 * low power listening for the message
+	 */
+	async event void clear(message_t* msg);
 
-implementation
-{
-	components ActiveMessageLayerP, ActiveMessageAddressC;
-	ActiveMessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
-
-	AMPacket = ActiveMessageLayerP;
-	AMSend = ActiveMessageLayerP;
-	Receive = ActiveMessageLayerP.Receive;
-	Snoop = ActiveMessageLayerP.Snoop;
-	
-	SubSend = ActiveMessageLayerP;
-	SubReceive = ActiveMessageLayerP;
-	Config = ActiveMessageLayerP;
+	/**
+	 * Returns TRUE if an acknowledgement is requested for this message.
+	 */
+	async command bool getAckRequired(message_t* msg);
 }

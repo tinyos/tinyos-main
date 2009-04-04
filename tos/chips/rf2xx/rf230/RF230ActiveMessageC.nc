@@ -56,39 +56,43 @@ configuration RF230ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageP, IEEE154PacketLayerC, RadioAlarmC;
+	components RF230ActiveMessageP, RadioAlarmC;
 
 #ifdef RADIO_DEBUG
 	components AssertC;
 #endif
 
-	RF230ActiveMessageP.IEEE154PacketLayer -> IEEE154PacketLayerC;
+	RF230ActiveMessageP.IEEE154MessageLayer -> IEEE154MessageLayerC;
 	RF230ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 	RF230ActiveMessageP.PacketTimeStamp -> TimeStampingLayerC;
-
 	Packet = RF230ActiveMessageP;
 
-// -------- ActiveMessage
+// -------- Active Message
 
 	components ActiveMessageLayerC;
 	ActiveMessageLayerC.Config -> RF230ActiveMessageP;
-	ActiveMessageLayerC.AMPacket -> IEEE154PacketLayerC;
-	ActiveMessageLayerC.SubSend -> IEEE154NetworkLayerC;
-	ActiveMessageLayerC.SubReceive -> IEEE154NetworkLayerC;
+	ActiveMessageLayerC.SubSend -> LowpanNetworkLayerC;
+	ActiveMessageLayerC.SubReceive -> LowpanNetworkLayerC;
 	AMSend = ActiveMessageLayerC;
 	Receive = ActiveMessageLayerC.Receive;
 	Snoop = ActiveMessageLayerC.Snoop;
-	AMPacket = IEEE154PacketLayerC;
+	AMPacket = ActiveMessageLayerC;
 
-// -------- IEEE154Network
+// -------- Lowpan Network
 
 #ifdef TFRAMES_ENABLED
-	components new DummyLayerC() as IEEE154NetworkLayerC;
+	components new DummyLayerC() as LowpanNetworkLayerC;
 #else
-	components IEEE154NetworkLayerC;
+	components LowpanNetworkLayerC;
+	LowpanNetworkLayerC.Config -> RF230ActiveMessageP;
 #endif
-	IEEE154NetworkLayerC.SubSend -> UniqueLayerC;
-	IEEE154NetworkLayerC.SubReceive -> LowPowerListeningLayerC;
+	LowpanNetworkLayerC.SubSend -> UniqueLayerC;
+	LowpanNetworkLayerC.SubReceive -> LowPowerListeningLayerC;
+
+// -------- IEEE154 Packet
+
+	components IEEE154MessageLayerC;
+	IEEE154MessageLayerC.Config -> RF230ActiveMessageP;
 
 // -------- UniqueLayer Send part (wired twice)
 
@@ -100,8 +104,7 @@ implementation
 
 #ifdef LOW_POWER_LISTENING
 	components LowPowerListeningLayerC;
-	LowPowerListeningLayerC.PacketLplMetadata -> RF230ActiveMessageP;
-	LowPowerListeningLayerC.IEEE154PacketLayer -> IEEE154PacketLayerC;
+	LowPowerListeningLayerC.Config -> RF230ActiveMessageP;
 	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
 #else	
 	components LowPowerListeningDummyC as LowPowerListeningLayerC;

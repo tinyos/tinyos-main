@@ -37,6 +37,8 @@ module RF230ActiveMessageP
 		interface RandomCollisionConfig;
 		interface SlottedCollisionConfig;
 		interface ActiveMessageConfig;
+		interface LowpanNetworkConfig;
+		interface IEEE154MessageConfig;
 		interface DummyConfig;
 
 		interface Packet;
@@ -46,7 +48,7 @@ module RF230ActiveMessageP
 		interface PacketData<timestamp_metadata_t> as PacketTimeStampMetadata;
 
 #ifdef LOW_POWER_LISTENING
-		interface PacketData<lpl_metadata_t> as PacketLplMetadata;
+		interface LowPowerListeningConfig;
 #endif
 #ifdef PACKET_LINK
 		interface PacketData<link_metadata_t> as PacketLinkMetadata;
@@ -55,7 +57,7 @@ module RF230ActiveMessageP
 
 	uses
 	{
-		interface IEEE154PacketLayer;
+		interface IEEE154MessageLayer;
 		interface RadioAlarm;
 
 		interface PacketTimeStamp<TRadio, uint32_t>;
@@ -64,21 +66,31 @@ module RF230ActiveMessageP
 
 implementation
 {
+	rf230packet_header_t* getHeader(message_t* msg)
+	{
+		return (rf230packet_header_t*)(msg->data - sizeof(rf230packet_header_t));
+	}
+
+	rf230packet_metadata_t* getMeta(message_t* msg)
+	{
+		return (rf230packet_metadata_t*)(msg->metadata);
+	}
+
 /*----------------- RF230DriverConfig -----------------*/
 
 	async command uint8_t RF230DriverConfig.getLength(message_t* msg)
 	{
-		return call IEEE154PacketLayer.getLength(msg);
+		return call IEEE154MessageLayer.getLength(msg);
 	}
 
 	async command void RF230DriverConfig.setLength(message_t* msg, uint8_t len)
 	{
-		call IEEE154PacketLayer.setLength(msg, len);
+		call IEEE154MessageLayer.setLength(msg, len);
 	}
 
 	async command uint8_t* RF230DriverConfig.getPayload(message_t* msg)
 	{
-		return ((uint8_t*)(call IEEE154PacketLayer.getHeader(msg))) + 1;
+		return ((uint8_t*)(call IEEE154MessageConfig.getHeader(msg))) + 1;
 	}
 
 	async command uint8_t RF230DriverConfig.getHeaderLength()
@@ -95,39 +107,39 @@ implementation
 
 	async command bool RF230DriverConfig.requiresRssiCca(message_t* msg)
 	{
-		return call IEEE154PacketLayer.isDataFrame(msg);
+		return call IEEE154MessageLayer.isDataFrame(msg);
 	}
 
 /*----------------- SoftwareAckConfig -----------------*/
 
 	async command bool SoftwareAckConfig.requiresAckWait(message_t* msg)
 	{
-		return call IEEE154PacketLayer.requiresAckWait(msg);
+		return call IEEE154MessageLayer.requiresAckWait(msg);
 	}
 
 	async command bool SoftwareAckConfig.isAckPacket(message_t* msg)
 	{
-		return call IEEE154PacketLayer.isAckFrame(msg);
+		return call IEEE154MessageLayer.isAckFrame(msg);
 	}
 
 	async command bool SoftwareAckConfig.verifyAckPacket(message_t* data, message_t* ack)
 	{
-		return call IEEE154PacketLayer.verifyAckReply(data, ack);
+		return call IEEE154MessageLayer.verifyAckReply(data, ack);
 	}
 
 	async command void SoftwareAckConfig.setAckRequired(message_t* msg, bool ack)
 	{
-		call IEEE154PacketLayer.setAckRequired(msg, ack);
+		call IEEE154MessageLayer.setAckRequired(msg, ack);
 	}
 
 	async command bool SoftwareAckConfig.requiresAckReply(message_t* msg)
 	{
-		return call IEEE154PacketLayer.requiresAckReply(msg);
+		return call IEEE154MessageLayer.requiresAckReply(msg);
 	}
 
 	async command void SoftwareAckConfig.createAckPacket(message_t* data, message_t* ack)
 	{
-		call IEEE154PacketLayer.createAckReply(data, ack);
+		call IEEE154MessageLayer.createAckReply(data, ack);
 	}
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()
@@ -144,17 +156,17 @@ implementation
 
 	async command uint8_t UniqueConfig.getSequenceNumber(message_t* msg)
 	{
-		return call IEEE154PacketLayer.getDSN(msg);
+		return call IEEE154MessageLayer.getDSN(msg);
 	}
 
 	async command void UniqueConfig.setSequenceNumber(message_t* msg, uint8_t dsn)
 	{
-		call IEEE154PacketLayer.setDSN(msg, dsn);
+		call IEEE154MessageLayer.setDSN(msg, dsn);
 	}
 
 	async command am_addr_t UniqueConfig.getSender(message_t* msg)
 	{
-		return call IEEE154PacketLayer.getSrcAddr(msg);
+		return call IEEE154MessageLayer.getSrcAddr(msg);
 	}
 
 	tasklet_async command void UniqueConfig.reportChannelError()
@@ -167,17 +179,52 @@ implementation
 	command error_t ActiveMessageConfig.checkPacket(message_t* msg)
 	{
 		// the user forgot to call clear, we should return EINVAL
-		if( ! call IEEE154PacketLayer.isDataFrame(msg) )
+		if( ! call IEEE154MessageLayer.isDataFrame(msg) )
 			call Packet.clear(msg);
 
 		return SUCCESS;
+	}
+
+	command activemessage_header_t* ActiveMessageConfig.getHeader(message_t* msg)
+	{
+		return &(getHeader(msg)->am);
+	}
+
+	command am_addr_t ActiveMessageConfig.destination(message_t* msg)
+	{
+		return call IEEE154MessageLayer.getDestAddr(msg);
+	}
+
+	command void ActiveMessageConfig.setDestination(message_t* msg, am_addr_t addr)
+	{
+		call IEEE154MessageLayer.setDestAddr(msg, addr);
+	}
+
+	command am_addr_t ActiveMessageConfig.source(message_t* msg)
+	{
+		return call IEEE154MessageLayer.getSrcAddr(msg);
+	}
+
+	command void ActiveMessageConfig.setSource(message_t* msg, am_addr_t addr)
+	{
+		call IEEE154MessageLayer.setSrcAddr(msg, addr);
+	}
+
+	command am_group_t ActiveMessageConfig.group(message_t* msg)
+	{
+		return call IEEE154MessageLayer.getDestPan(msg);
+	}
+
+	command void ActiveMessageConfig.setGroup(message_t* msg, am_group_t grp)
+	{
+		call IEEE154MessageLayer.setDestPan(msg, grp);
 	}
 
 /*----------------- CsmaConfig -----------------*/
 
 	async command bool CsmaConfig.requiresSoftwareCCA(message_t* msg)
 	{
-		return call IEEE154PacketLayer.isDataFrame(msg);
+		return call IEEE154MessageLayer.isDataFrame(msg);
 	}
 
 /*----------------- TrafficMonitorConfig -----------------*/
@@ -202,13 +249,13 @@ implementation
 		 * ack required: 8-16 byte separation, 11 bytes airtime, 5-10 bytes separation
 		 */
 
-		uint8_t len = call IEEE154PacketLayer.getLength(msg);
-		return call IEEE154PacketLayer.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
+		uint8_t len = call IEEE154MessageLayer.getLength(msg);
+		return call IEEE154MessageLayer.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
 	}
 
 	async command am_addr_t TrafficMonitorConfig.getSender(message_t* msg)
 	{
-		return call IEEE154PacketLayer.getSrcAddr(msg);
+		return call IEEE154MessageLayer.getSrcAddr(msg);
 	}
 
 	tasklet_async command void TrafficMonitorConfig.timerTick()
@@ -250,7 +297,7 @@ implementation
 		time = call RadioAlarm.getNow();
 
 		// estimated response time (download the message, etc) is 5-8 bytes
-		if( call IEEE154PacketLayer.requiresAckReply(msg) )
+		if( call IEEE154MessageLayer.requiresAckReply(msg) )
 			time += (uint16_t)(32 * (-5 + 16 + 11 + 5) * RADIO_ALARM_MICROSEC);
 		else
 			time += (uint16_t)(32 * (-5 + 5) * RADIO_ALARM_MICROSEC);
@@ -258,7 +305,9 @@ implementation
 		return time;
 	}
 
-	tasklet_async event void RadioAlarm.fired()	{ }
+	tasklet_async event void RadioAlarm.fired()
+	{
+	}
 
 /*----------------- SlottedCollisionConfig -----------------*/
 
@@ -297,12 +346,37 @@ implementation
 	{
 	}
 
-/*----------------- Metadata -----------------*/
+/*----------------- LowpanNetwork -----------------*/
 
-	inline rf230packet_metadata_t* getMeta(message_t* msg)
+	command lowpan_header_t* LowpanNetworkConfig.getHeader(message_t* msg)
 	{
-		return (rf230packet_metadata_t*)(msg->metadata);
+		return &(getHeader(msg)->lowpan);
 	}
+
+/*----------------- IEEE154Message -----------------*/
+
+	async command ieee154_header_t* IEEE154MessageConfig.getHeader(message_t* msg)
+	{
+		return &(getHeader(msg)->ieee154);
+	}
+
+/*----------------- LowPowerListening -----------------*/
+
+#ifdef LOW_POWER_LISTENING
+
+	async command lpl_metadata_t* LowPowerListeningConfig.metadata(message_t* msg)
+	{
+		return &(getMeta(msg)->lpl);
+	}
+
+	async command bool LowPowerListeningConfig.getAckRequired(message_t* msg)
+	{
+		return call IEEE154MessageLayer.getAckRequired(msg);
+	}
+
+#endif
+
+/*----------------- Headers and Metadata -----------------*/
 
 	async command flags_metadata_t* PacketFlagsMetadata.get(message_t* msg)
 	{
@@ -318,13 +392,6 @@ implementation
 	{
 		return &(getMeta(msg)->timestamp);
 	}
-
-#ifdef LOW_POWER_LISTENING
-	async command lpl_metadata_t* PacketLplMetadata.get(message_t* msg)
-	{
-		return &(getMeta(msg)->lpl);
-	}
-#endif
 
 #ifdef PACKET_LINK
 	async command link_metadata_t* PacketLinkMetadata.get(message_t* msg)
@@ -348,25 +415,25 @@ implementation
 		signal PacketRF230Metadata.clear(msg);
 		signal PacketTimeStampMetadata.clear(msg);
 #ifdef LOW_POWER_LISTENING
-		signal PacketLplMetadata.clear(msg);
+		signal LowPowerListeningConfig.clear(msg);
 #endif
 #ifdef PACKET_LINK
 		signal PacketLinkMetadata.clear(msg);
 #endif
-		call IEEE154PacketLayer.createDataFrame(msg);
+		call IEEE154MessageLayer.createDataFrame(msg);
 	}
 
-	inline command void Packet.setPayloadLength(message_t* msg, uint8_t len)
+	command void Packet.setPayloadLength(message_t* msg, uint8_t len)
 	{
-		call IEEE154PacketLayer.setLength(msg, len + PACKET_LENGTH_INCREASE);
+		call IEEE154MessageLayer.setLength(msg, len + PACKET_LENGTH_INCREASE);
 	}
 
-	inline command uint8_t Packet.payloadLength(message_t* msg)
+	command uint8_t Packet.payloadLength(message_t* msg)
 	{
-		return call IEEE154PacketLayer.getLength(msg) - PACKET_LENGTH_INCREASE;
+		return call IEEE154MessageLayer.getLength(msg) - PACKET_LENGTH_INCREASE;
 	}
 
-	inline command uint8_t Packet.maxPayloadLength()
+	command uint8_t Packet.maxPayloadLength()
 	{
 		return TOSH_DATA_LENGTH;
 	}

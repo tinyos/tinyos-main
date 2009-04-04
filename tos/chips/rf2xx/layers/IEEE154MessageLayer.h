@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Vanderbilt University
+ * Copyright (c) 2007, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,37 +21,48 @@
  * Author: Miklos Maroti
  */
 
-#include <ActiveMessageLayer.h>
+#ifndef __IEEE154MESSAGELAYER_H__
+#define __IEEE154MESSAGELAYER_H__
 
-configuration ActiveMessageLayerC
+typedef nx_struct ieee154_header_t
 {
-	provides
-	{
-		interface AMPacket;
-		interface AMSend[am_id_t id];
-		interface Receive[am_id_t id];
-		interface Receive as Snoop[am_id_t id];	
-	}
+	nxle_uint8_t length;
+	nxle_uint16_t fcf;
+	nxle_uint8_t dsn;
+	nxle_uint16_t destpan;
+	nxle_uint16_t dest;
+	nxle_uint16_t src;
+} ieee154_header_t;
 
-	uses
-	{
-		interface Send as SubSend;
-		interface Receive as SubReceive;
-		interface ActiveMessageConfig as Config;
-	}
-}
+// the actual radio driver might not use this
+typedef nx_struct ieee154_footer_t
+{ 
+	nxle_uint16_t crc;
+} ieee154_footer_t;
 
-implementation
-{
-	components ActiveMessageLayerP, ActiveMessageAddressC;
-	ActiveMessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
+enum ieee154_fcf_enums {
+	IEEE154_FCF_FRAME_TYPE = 0,
+	IEEE154_FCF_SECURITY_ENABLED = 3,
+	IEEE154_FCF_FRAME_PENDING = 4,
+	IEEE154_FCF_ACK_REQ = 5,
+	IEEE154_FCF_INTRAPAN = 6,
+	IEEE154_FCF_DEST_ADDR_MODE = 10,
+	IEEE154_FCF_SRC_ADDR_MODE = 14,
+};
 
-	AMPacket = ActiveMessageLayerP;
-	AMSend = ActiveMessageLayerP;
-	Receive = ActiveMessageLayerP.Receive;
-	Snoop = ActiveMessageLayerP.Snoop;
-	
-	SubSend = ActiveMessageLayerP;
-	SubReceive = ActiveMessageLayerP;
-	Config = ActiveMessageLayerP;
-}
+enum ieee154_fcf_type_enums {
+	IEEE154_TYPE_BEACON = 0,
+	IEEE154_TYPE_DATA = 1,
+	IEEE154_TYPE_ACK = 2,
+	IEEE154_TYPE_MAC_CMD = 3,
+	IEEE154_TYPE_MASK = 7,
+};
+
+enum iee154_fcf_addr_mode_enums {
+	IEEE154_ADDR_NONE = 0,
+	IEEE154_ADDR_SHORT = 2,
+	IEEE154_ADDR_EXT = 3,
+	IEEE154_ADDR_MASK = 3,
+};
+
+#endif//__IEEE154MESSAGELAYER_H__
