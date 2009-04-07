@@ -21,8 +21,6 @@
  * Author: Miklos Maroti
  */
 
-#include <LowPowerListeningLayer.h>
-
 #warning "*** USING LOW POWER LISTENING LAYER"
 
 configuration LowPowerListeningLayerC
@@ -32,6 +30,7 @@ configuration LowPowerListeningLayerC
 		interface SplitControl;
 		interface Send;
 		interface Receive;
+		interface RadioPacket;
 
 		interface LowPowerListening;
 	}
@@ -40,6 +39,7 @@ configuration LowPowerListeningLayerC
 		interface SplitControl as SubControl;
 		interface Send as SubSend;
 		interface Receive as SubReceive;
+		interface RadioPacket as SubPacket;
 
 		interface LowPowerListeningConfig as Config;
 		interface PacketAcknowledgements;
@@ -53,11 +53,13 @@ implementation
 	SplitControl = LowPowerListeningLayerP;
 	Send = LowPowerListeningLayerP;
 	Receive = LowPowerListeningLayerP;
+	RadioPacket = LowPowerListeningLayerP;
 	LowPowerListening = LowPowerListeningLayerP;
 
 	SubControl = LowPowerListeningLayerP;
 	SubSend = LowPowerListeningLayerP;
 	SubReceive = LowPowerListeningLayerP;
+	SubPacket = LowPowerListeningLayerP;
 	Config = LowPowerListeningLayerP;
 	PacketAcknowledgements = LowPowerListeningLayerP;
 	

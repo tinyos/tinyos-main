@@ -21,41 +21,31 @@
  * Author: Miklos Maroti
  */
 
-/**
- * This interface needs to be implemented by the MAC to control the behaviour 
- * of the RF230DriverLayerC component.
- */
 interface RF230DriverConfig
 {
 	/**
-	 * Returns the length of the PHY payload (including the FCF field).
-	 * This value must be in the range [3, 127].
+	 * Returns the length of a dummy header to align the payload properly.
 	 */
-	async command uint8_t getLength(message_t* msg);
+	async command uint8_t headerLength(message_t* msg);
 
 	/**
-	 * Sets the length of the PHY payload.
+	 * Returns the maximum length of the PHY payload including the 
+	 * length field but not counting the FCF field.
 	 */
-	async command void setLength(message_t* msg, uint8_t len);
+	async command uint8_t maxPayloadLength();
 
 	/**
-	 * Returns a pointer to the start of the PHY payload that contains 
-	 * getLength()-2 number of bytes. The FCF field (CRC-16) is not stored,
-	 * but automatically appended / verified.
+	 * Returns the length of a dummy metadata section to align the
+	 * metadata section properly.
 	 */
-	async command uint8_t* getPayload(message_t* msg);
+	async command uint8_t metadataLength(message_t* msg);
 
 	/**
 	 * Gets the number of bytes we should read before the RadioReceive.header
 	 * event is fired. If the length of the packet is less than this amount, 
 	 * then that event is fired earlier. The header length must be at least one.
 	 */
-	async command uint8_t getHeaderLength();
-
-	/**
-	 * Returns the maximum PHY length that can be set via the setLength command
-	 */
-	async command uint8_t getMaxLength();
+	async command uint8_t headerPreloadLength();
 
 	/**
 	 * Returns TRUE if before sending this message we should make sure that

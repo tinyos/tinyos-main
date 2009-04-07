@@ -63,13 +63,14 @@ module PacketLinkLayerP {
   provides {
     interface Send;
     interface PacketLink;
+    interface RadioPacket;
   }
 
   uses {
     interface Send as SubSend;
     interface PacketAcknowledgements;
     interface Timer<TMilli> as DelayTimer;
-    interface PacketData<link_metadata_t> as PacketLinkMetadata;
+    interface RadioPacket as SubPacket;
   }
 }
 
@@ -91,6 +92,11 @@ implementation {
 
 
   /***************** PacketLink Commands ***************/
+
+  link_metadata_t* getMeta(message_t* msg) {
+    return ((void*)msg) + sizeof(message_t) - call RadioPacket.metadataLength(msg);
+  }
+
   /**
    * Set the maximum number of times attempt message delivery
    * Default is 0
@@ -99,7 +105,7 @@ implementation {
    *     the message
    */
   command void PacketLink.setRetries(message_t *msg, uint16_t maxRetries) {
-    (call PacketLinkMetadata.get(msg))->maxRetries = maxRetries;
+    getMeta(msg)->maxRetries = maxRetries;
   }
 
   /**
@@ -108,21 +114,21 @@ implementation {
    * @param retryDelay the delay betweeen retry attempts, in milliseconds
    */
   command void PacketLink.setRetryDelay(message_t *msg, uint16_t retryDelay) {
-    (call PacketLinkMetadata.get(msg))->retryDelay = retryDelay;
+    getMeta(msg)->retryDelay = retryDelay;
   }
 
   /**
    * @return the maximum number of retry attempts for this message
    */
   command uint16_t PacketLink.getRetries(message_t *msg) {
-    return (call PacketLinkMetadata.get(msg))->maxRetries;
+    return getMeta(msg)->maxRetries;
   }
 
   /**
    * @return the delay between retry attempts in ms for this message
    */
   command uint16_t PacketLink.getRetryDelay(message_t *msg) {
-    return (call PacketLinkMetadata.get(msg))->retryDelay;
+    return getMeta(msg)->retryDelay;
   }
 
   /**
@@ -130,10 +136,6 @@ implementation {
    */
   command bool PacketLink.wasDelivered(message_t *msg) {
     return call PacketAcknowledgements.wasAcked(msg);
-  }
-
-  async event void PacketLinkMetadata.clear(message_t* msg) {
-    (call PacketLinkMetadata.get(msg))->maxRetries = 0;
   }
 
   /***************** Send Commands ***************/
@@ -236,5 +238,31 @@ implementation {
     call DelayTimer.stop();
     call PacketLink.setRetries(msg, totalRetries);
     signal Send.sendDone(msg, error);
+  }
+
+  /***************** Functions ***************/
+  async command uint8_t RadioPacket.headerLength(message_t* msg) {
+    return call SubPacket.headerLength(msg);
+  }
+
+  async command uint8_t RadioPacket.payloadLength(message_t* msg) {
+    return call SubPacket.payloadLength(msg);
+  }
+
+  async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length) {
+    call SubPacket.setPayloadLength(msg, length);
+  }
+
+  async command uint8_t RadioPacket.maxPayloadLength() {
+    return call SubPacket.maxPayloadLength();
+  }
+
+  async command uint8_t RadioPacket.metadataLength(message_t* msg) {
+    return call SubPacket.metadataLength(msg) + sizeof(link_metadata_t);
+  }
+
+  async command void RadioPacket.clear(message_t* msg) {
+    getMeta(msg)->maxRetries = 0;
+    call SubPacket.clear(msg);
   }
 }

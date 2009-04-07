@@ -37,21 +37,10 @@ module RF230ActiveMessageP
 		interface RandomCollisionConfig;
 		interface SlottedCollisionConfig;
 		interface ActiveMessageConfig;
-		interface LowpanNetworkConfig;
-		interface IEEE154MessageConfig;
 		interface DummyConfig;
-
-		interface Packet;
-
-		interface PacketData<flags_metadata_t> as PacketFlagsMetadata;
-		interface PacketData<rf230_metadata_t> as PacketRF230Metadata;
-		interface PacketData<timestamp_metadata_t> as PacketTimeStampMetadata;
 
 #ifdef LOW_POWER_LISTENING
 		interface LowPowerListeningConfig;
-#endif
-#ifdef PACKET_LINK
-		interface PacketData<link_metadata_t> as PacketLinkMetadata;
 #endif
 	}
 
@@ -59,6 +48,8 @@ module RF230ActiveMessageP
 	{
 		interface IEEE154MessageLayer;
 		interface RadioAlarm;
+		interface RadioPacket as ActiveMessagePacket;
+		interface RadioPacket as RF230Packet;
 
 		interface PacketTimeStamp<TRadio, uint32_t>;
 	}
@@ -66,43 +57,28 @@ module RF230ActiveMessageP
 
 implementation
 {
-	rf230packet_header_t* getHeader(message_t* msg)
-	{
-		return (rf230packet_header_t*)(msg->data - sizeof(rf230packet_header_t));
-	}
-
-	rf230packet_metadata_t* getMeta(message_t* msg)
-	{
-		return (rf230packet_metadata_t*)(msg->metadata);
-	}
 
 /*----------------- RF230DriverConfig -----------------*/
 
-	async command uint8_t RF230DriverConfig.getLength(message_t* msg)
+	async command uint8_t RF230DriverConfig.headerLength(message_t* msg)
 	{
-		return call IEEE154MessageLayer.getLength(msg);
+		return offsetof(message_t, data) - sizeof(rf230packet_header_t);
 	}
 
-	async command void RF230DriverConfig.setLength(message_t* msg, uint8_t len)
+	async command uint8_t RF230DriverConfig.maxPayloadLength()
 	{
-		call IEEE154MessageLayer.setLength(msg, len);
+		return sizeof(rf230packet_header_t) + TOSH_DATA_LENGTH;
 	}
 
-	async command uint8_t* RF230DriverConfig.getPayload(message_t* msg)
+	async command uint8_t RF230DriverConfig.metadataLength(message_t* msg)
 	{
-		return ((uint8_t*)(call IEEE154MessageConfig.getHeader(msg))) + 1;
+		return 0;
 	}
 
-	async command uint8_t RF230DriverConfig.getHeaderLength()
+	async command uint8_t RF230DriverConfig.headerPreloadLength()
 	{
 		// we need the fcf, dsn, destpan and dest
 		return 7;
-	}
-
-	async command uint8_t RF230DriverConfig.getMaxLength()
-	{
-		// note, that the ieee154_footer_t is not stored, but we should include it here
-		return sizeof(rf230packet_header_t) - 1 + TOSH_DATA_LENGTH + sizeof(ieee154_footer_t);
 	}
 
 	async command bool RF230DriverConfig.requiresRssiCca(message_t* msg)
@@ -176,18 +152,9 @@ implementation
 
 /*----------------- ActiveMessageConfig -----------------*/
 
-	command error_t ActiveMessageConfig.checkPacket(message_t* msg)
+	command bool ActiveMessageConfig.forgotToClear(message_t* msg)
 	{
-		// the user forgot to call clear, we should return EINVAL
-		if( ! call IEEE154MessageLayer.isDataFrame(msg) )
-			call Packet.clear(msg);
-
-		return SUCCESS;
-	}
-
-	command activemessage_header_t* ActiveMessageConfig.getHeader(message_t* msg)
-	{
-		return &(getHeader(msg)->am);
+		return ! call IEEE154MessageLayer.isDataFrame(msg);
 	}
 
 	command am_addr_t ActiveMessageConfig.destination(message_t* msg)
@@ -249,7 +216,7 @@ implementation
 		 * ack required: 8-16 byte separation, 11 bytes airtime, 5-10 bytes separation
 		 */
 
-		uint8_t len = call IEEE154MessageLayer.getLength(msg);
+		uint8_t len = call RF230Packet.payloadLength(msg);
 		return call IEEE154MessageLayer.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
 	}
 
@@ -346,28 +313,9 @@ implementation
 	{
 	}
 
-/*----------------- LowpanNetwork -----------------*/
-
-	command lowpan_header_t* LowpanNetworkConfig.getHeader(message_t* msg)
-	{
-		return &(getHeader(msg)->lowpan);
-	}
-
-/*----------------- IEEE154Message -----------------*/
-
-	async command ieee154_header_t* IEEE154MessageConfig.getHeader(message_t* msg)
-	{
-		return &(getHeader(msg)->ieee154);
-	}
-
 /*----------------- LowPowerListening -----------------*/
 
 #ifdef LOW_POWER_LISTENING
-
-	async command lpl_metadata_t* LowPowerListeningConfig.metadata(message_t* msg)
-	{
-		return &(getMeta(msg)->lpl);
-	}
 
 	async command bool LowPowerListeningConfig.getAckRequired(message_t* msg)
 	{
@@ -376,73 +324,4 @@ implementation
 
 #endif
 
-/*----------------- Headers and Metadata -----------------*/
-
-	async command flags_metadata_t* PacketFlagsMetadata.get(message_t* msg)
-	{
-		return &(getMeta(msg)->flags);
-	}
-
-	async command rf230_metadata_t* PacketRF230Metadata.get(message_t* msg)
-	{
-		return &(getMeta(msg)->rf230);
-	}
-
-	async command timestamp_metadata_t* PacketTimeStampMetadata.get(message_t* msg)
-	{
-		return &(getMeta(msg)->timestamp);
-	}
-
-#ifdef PACKET_LINK
-	async command link_metadata_t* PacketLinkMetadata.get(message_t* msg)
-	{
-		return &(getMeta(msg)->link);
-	}
-#endif
-
-/*----------------- Packet -----------------*/
-
-	enum
-	{
-		PACKET_LENGTH_INCREASE =
-			sizeof(rf230packet_header_t) - 1	// the 8-bit length field is not counted
-			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
-	};
-
-	command void Packet.clear(message_t* msg)
-	{
-		signal PacketFlagsMetadata.clear(msg);
-		signal PacketRF230Metadata.clear(msg);
-		signal PacketTimeStampMetadata.clear(msg);
-#ifdef LOW_POWER_LISTENING
-		signal LowPowerListeningConfig.clear(msg);
-#endif
-#ifdef PACKET_LINK
-		signal PacketLinkMetadata.clear(msg);
-#endif
-		call IEEE154MessageLayer.createDataFrame(msg);
-	}
-
-	command void Packet.setPayloadLength(message_t* msg, uint8_t len)
-	{
-		call IEEE154MessageLayer.setLength(msg, len + PACKET_LENGTH_INCREASE);
-	}
-
-	command uint8_t Packet.payloadLength(message_t* msg)
-	{
-		return call IEEE154MessageLayer.getLength(msg) - PACKET_LENGTH_INCREASE;
-	}
-
-	command uint8_t Packet.maxPayloadLength()
-	{
-		return TOSH_DATA_LENGTH;
-	}
-
-	command void* Packet.getPayload(message_t* msg, uint8_t len)
-	{
-		if( len > TOSH_DATA_LENGTH )
-			return NULL;
-
-		return msg->data;
-	}
 }

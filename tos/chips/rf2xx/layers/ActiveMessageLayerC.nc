@@ -21,13 +21,13 @@
  * Author: Miklos Maroti
  */
 
-#include <ActiveMessageLayer.h>
-
 configuration ActiveMessageLayerC
 {
 	provides
 	{
+		interface RadioPacket;
 		interface AMPacket;
+		interface Packet;
 		interface AMSend[am_id_t id];
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];	
@@ -35,6 +35,7 @@ configuration ActiveMessageLayerC
 
 	uses
 	{
+		interface RadioPacket as SubPacket;
 		interface Send as SubSend;
 		interface Receive as SubReceive;
 		interface ActiveMessageConfig as Config;
@@ -46,11 +47,14 @@ implementation
 	components ActiveMessageLayerP, ActiveMessageAddressC;
 	ActiveMessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
 
+	RadioPacket = ActiveMessageLayerP;
 	AMPacket = ActiveMessageLayerP;
+	Packet = ActiveMessageLayerP;
 	AMSend = ActiveMessageLayerP;
 	Receive = ActiveMessageLayerP.Receive;
 	Snoop = ActiveMessageLayerP.Snoop;
 	
+	SubPacket = ActiveMessageLayerP;
 	SubSend = ActiveMessageLayerP;
 	SubReceive = ActiveMessageLayerP;
 	Config = ActiveMessageLayerP;

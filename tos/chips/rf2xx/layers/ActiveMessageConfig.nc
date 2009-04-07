@@ -27,15 +27,10 @@ interface ActiveMessageConfig
 {
 	/**
 	 * This command is called when the message first enters the radio stack
-	 * via the Send.send command. This should clear the packet if the user
-	 * forgot to do so (or return EINVAL to be strict).
+	 * via the Send.send command. This command should return TRUE if the
+	 * packet is deffinitely not cleared, FALSE otherwise.
 	 */
-	command error_t checkPacket(message_t* msg);
-
-	/**
-	 * Returns a pointer to the ActiveMessage header field in the message
-	 */
-	command activemessage_header_t* getHeader(message_t* msg);
+	command bool forgotToClear(message_t* msg);
 
 	/** Same as AMPacket.destination */
 	command am_addr_t destination(message_t* msg);

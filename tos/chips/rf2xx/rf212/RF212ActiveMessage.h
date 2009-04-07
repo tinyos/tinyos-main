@@ -35,6 +35,7 @@
 
 typedef nx_struct rf212packet_header_t
 {
+	rf212_header_t rf212;
 	ieee154_header_t ieee154;
 #ifndef TFRAMES_ENABLED
 	lowpan_header_t lowpan;
@@ -49,15 +50,15 @@ typedef nx_struct rf212packet_footer_t
 
 typedef struct rf212packet_metadata_t
 {
-	flags_metadata_t flags;
-	rf212_metadata_t rf212;
-	timestamp_metadata_t timestamp;
 #ifdef LOW_POWER_LISTENING
 	lpl_metadata_t lpl;
 #endif
 #ifdef PACKET_LINK
 	link_metadata_t link;
 #endif
+	timestamp_metadata_t timestamp;
+	flags_metadata_t flags;
+	rf212_metadata_t rf212;
 } rf212packet_metadata_t;
 
 #endif//__RF212ACTIVEMESSAGE_H__

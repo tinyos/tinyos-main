@@ -24,6 +24,11 @@
 #ifndef __RF230DRIVERLAYER_H__
 #define __RF230DRIVERLAYER_H__
 
+typedef nx_struct rf230_header_t
+{
+	nxle_uint8_t length;
+} rf230_header_t;
+
 typedef struct rf230_metadata_t
 {
 	uint8_t lqi;

@@ -21,12 +21,15 @@
  * Author: Miklos Maroti
  */
 
+#include <LowpanNetworkLayer.h>
+
 module LowpanNetworkLayerC
 {
 	provides
 	{
 		interface Send;
 		interface Receive;
+		interface RadioPacket;
 
 		interface Receive as NonTinyosReceive[uint8_t network];
 	}
@@ -35,7 +38,7 @@ module LowpanNetworkLayerC
 	{
 		interface Send as SubSend;
 		interface Receive as SubReceive;
-		interface LowpanNetworkConfig as Config;
+		interface RadioPacket as SubPacket;
 	}
 }
 
@@ -45,9 +48,14 @@ implementation
 #define TINYOS_6LOWPAN_NETWORK_ID 0x3f
 #endif
 
+	lowpan_header_t* getHeader(message_t* msg)
+	{
+		return ((void*)msg) + call SubPacket.headerLength(msg);
+	}
+
 	command error_t Send.send(message_t* msg, uint8_t len)
 	{
-		(call Config.getHeader(msg))->network = TINYOS_6LOWPAN_NETWORK_ID;
+		getHeader(msg)->network = TINYOS_6LOWPAN_NETWORK_ID;
 		return call SubSend.send(msg, len);
 	}
 
@@ -73,7 +81,7 @@ implementation
   
 	event message_t *SubReceive.receive(message_t *msg, void *payload, uint8_t len)
 	{
-		uint8_t network = (call Config.getHeader(msg))->network;
+		uint8_t network = getHeader(msg)->network;
 		if( network == TINYOS_6LOWPAN_NETWORK_ID )
 			return signal Receive.receive(msg, payload, len);
 		else
@@ -83,5 +91,37 @@ implementation
 	default event message_t *NonTinyosReceive.receive[uint8_t network](message_t *msg, void *payload, uint8_t len)
 	{
 		return msg;
+	}
+
+/*----------------- RadioPacket -----------------*/
+
+	async command uint8_t RadioPacket.headerLength(message_t* msg)
+	{
+		return call SubPacket.headerLength(msg) + sizeof(lowpan_header_t);
+	}
+
+	async command uint8_t RadioPacket.payloadLength(message_t* msg)
+	{
+		return call SubPacket.payloadLength(msg) - sizeof(lowpan_header_t);
+	}
+
+	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
+	{
+		call SubPacket.setPayloadLength(msg, length + sizeof(lowpan_header_t));
+	}
+
+	async command uint8_t RadioPacket.maxPayloadLength()
+	{
+		return call SubPacket.maxPayloadLength() - sizeof(lowpan_header_t);
+	}
+
+	async command uint8_t RadioPacket.metadataLength(message_t* msg)
+	{
+		return call SubPacket.metadataLength(msg);
+	}
+
+	async command void RadioPacket.clear(message_t* msg)
+	{
+		call SubPacket.clear(msg);
 	}
 }

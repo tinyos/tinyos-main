@@ -65,11 +65,12 @@ configuration PacketLinkLayerC {
   provides {
     interface Send;
     interface PacketLink;
+    interface RadioPacket;
   }
   
   uses {
     interface Send as SubSend;
-    interface PacketData<link_metadata_t> as PacketLinkMetadata;
+    interface RadioPacket as SubPacket;
     interface PacketAcknowledgements;
   }
 }
@@ -78,10 +79,11 @@ implementation {
   components PacketLinkLayerP, new TimerMilliC() as DelayTimerC;
   
   PacketLink = PacketLinkLayerP;
-  Send = PacketLinkLayerP.Send;
-  SubSend = PacketLinkLayerP.SubSend;
+  Send = PacketLinkLayerP;
+  SubSend = PacketLinkLayerP;
   PacketAcknowledgements = PacketLinkLayerP;
-  PacketLinkMetadata = PacketLinkLayerP;
+  RadioPacket = PacketLinkLayerP;
+  SubPacket = PacketLinkLayerP;
 
   PacketLinkLayerP.DelayTimer -> DelayTimerC;
 }

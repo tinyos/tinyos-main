@@ -27,8 +27,10 @@ configuration SoftwareAckLayerC
 	{
 		interface RadioSend;
 		interface RadioReceive;
+
 		interface PacketAcknowledgements;
 	}
+
 	uses
 	{
 		interface RadioSend as SubSend;

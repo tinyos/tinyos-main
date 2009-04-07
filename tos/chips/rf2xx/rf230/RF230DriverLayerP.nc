@@ -38,6 +38,7 @@ module RF230DriverLayerP
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioCCA;
+		interface RadioPacket;
 
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
@@ -60,9 +61,8 @@ module RF230DriverLayerP
 		interface BusyWait<TMicro, uint16_t>;
 		interface LocalTime<TRadio>;
 
-		interface RF230DriverConfig;
+		interface RF230DriverConfig as Config;
 
-		interface PacketData<rf230_metadata_t> as PacketRF230Metadata;
 		interface PacketFlag as TransmitPowerFlag;
 		interface PacketFlag as RSSIFlag;
 		interface PacketFlag as TimeSyncFlag;
@@ -80,6 +80,21 @@ module RF230DriverLayerP
 
 implementation
 {
+	rf230_header_t* getHeader(message_t* msg)
+	{
+		return ((void*)msg) + call Config.headerLength(msg);
+	}
+
+	void* getPayload(message_t* msg)
+	{
+		return ((void*)msg) + call RadioPacket.headerLength(msg);
+	}
+
+	rf230_metadata_t* getMeta(message_t* msg)
+	{
+		return ((void*)msg) + sizeof(message_t) - call RadioPacket.metadataLength(msg);
+	}
+
 /*----------------- STATE -----------------*/
 
 	tasklet_norace uint8_t state;
@@ -420,7 +435,7 @@ implementation
 			writeRegister(RF230_PHY_TX_PWR, RF230_TX_AUTO_CRC_ON | txPower);
 		}
 
-		if( call RF230DriverConfig.requiresRssiCca(msg) 
+		if( call Config.requiresRssiCca(msg) 
 				&& (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
 			return EBUSY;
 
@@ -428,7 +443,7 @@ implementation
 
 		// do something useful, just to wait a little
 		time32 = call LocalTime.get();
-		timesync = call PacketTimeSyncOffset.isSet(msg) ? msg->data + call PacketTimeSyncOffset.get(msg) : 0;
+		timesync = call PacketTimeSyncOffset.isSet(msg) ? ((void*)msg) + call PacketTimeSyncOffset.get(msg) : 0;
 
 		// we have missed an incoming message in this short amount of time
 		if( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) != RF230_PLL_ON )
@@ -453,8 +468,8 @@ implementation
 		call SELN.clr();
 		call FastSpiByte.splitWrite(RF230_CMD_FRAME_WRITE);
 
-		length = call RF230DriverConfig.getLength(msg);
-		data = call RF230DriverConfig.getPayload(msg);
+		data = getPayload(msg);
+		length = getHeader(msg)->length;
 
 		// length | data[0] ... data[length-3] | automatically generated FCS
 		call FastSpiByte.splitReadWrite(length);
@@ -462,7 +477,7 @@ implementation
 		// the FCS is atomatically generated (2 bytes)
 		length -= 2;
 
-		header = call RF230DriverConfig.getHeaderLength();
+		header = call Config.headerPreloadLength();
 		if( header > length )
 			header = length;
 
@@ -515,12 +530,12 @@ implementation
 #ifdef RADIO_DEBUG_MESSAGES
 		if( call DiagMsg.record() )
 		{
-			length = call RF230DriverConfig.getLength(msg);
+			length = getHeader(msg)->length;
 
 			call DiagMsg.str("tx");
 			call DiagMsg.uint16(time);
 			call DiagMsg.uint8(length);
-			call DiagMsg.hex8s(data, length - 2);
+			call DiagMsg.hex8s(getPayload(msg), length - 2);
 			call DiagMsg.send();
 		}
 #endif
@@ -574,7 +589,7 @@ implementation
 		length = call FastSpiByte.write(0);
 
 		// if correct length
-		if( length >= 3 && length <= call RF230DriverConfig.getMaxLength() )
+		if( length >= 3 && length <= call RadioPacket.maxPayloadLength() + 2 )
 		{
 			uint8_t read;
 			uint8_t* data;
@@ -582,14 +597,14 @@ implementation
 			// initiate the reading
 			call FastSpiByte.splitWrite(0);
 
-			call RF230DriverConfig.setLength(rxMsg, length);
-			data = call RF230DriverConfig.getPayload(rxMsg);
+			data = getPayload(rxMsg);
+			getHeader(rxMsg)->length = length;
 			crc = 0;
 
 			// we do not store the CRC field
 			length -= 2;
 
-			read = call RF230DriverConfig.getHeaderLength();
+			read = call Config.headerPreloadLength();
 			if( length < read )
 				read = length;
 
@@ -622,14 +637,14 @@ implementation
 #ifdef RADIO_DEBUG_MESSAGES
 		if( call DiagMsg.record() )
 		{
-			length = call RF230DriverConfig.getLength(rxMsg);
+			length = getHeader(rxMsg)->length;
 
 			call DiagMsg.str("rx");
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.uint8(crc != 0);
 			call DiagMsg.uint8(length);
-			call DiagMsg.hex8s(call RF230DriverConfig.getPayload(rxMsg), length - 2);
+			call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
 			call DiagMsg.send();
 		}
 #endif
@@ -836,13 +851,45 @@ implementation
 			call SpiResource.release();
 	}
 
-/*----------------- PACKET -----------------*/
-
-	async event void PacketRF230Metadata.clear(message_t* msg)
+/*----------------- RadioPacket -----------------*/
+	
+	async command uint8_t RadioPacket.headerLength(message_t* msg)
 	{
+		return call Config.headerLength(msg) + sizeof(rf230_header_t);
 	}
 
-// --- TransmitPower
+	async command uint8_t RadioPacket.payloadLength(message_t* msg)
+	{
+		return getHeader(msg)->length - 2;
+	}
+
+	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
+	{
+		ASSERT( 1 <= length && length <= 125 );
+		ASSERT( call RadioPacket.headerLength(msg) + length + call RadioPacket.metadataLength(msg) <= sizeof(message_t) );
+
+		// we add the length of the CRC, which is automatically generated
+		getHeader(msg)->length = length + 2;
+	}
+
+	async command uint8_t RadioPacket.maxPayloadLength()
+	{
+		ASSERT( call Config.maxPayloadLength() <= 125 );
+
+		return call Config.maxPayloadLength() - sizeof(rf230_header_t);
+	}
+
+	async command uint8_t RadioPacket.metadataLength(message_t* msg)
+	{
+		return call Config.metadataLength(msg) + sizeof(rf230_metadata_t);
+	}
+
+	async command void RadioPacket.clear(message_t* msg)
+	{
+		// all flags are automatically cleared
+	}
+
+/*----------------- PacketTransmitPower -----------------*/
 
 	async command bool PacketTransmitPower.isSet(message_t* msg)
 	{
@@ -851,7 +898,7 @@ implementation
 
 	async command uint8_t PacketTransmitPower.get(message_t* msg)
 	{
-		return (call PacketRF230Metadata.get(msg))->power;
+		return getMeta(msg)->power;
 	}
 
 	async command void PacketTransmitPower.clear(message_t* msg)
@@ -862,10 +909,10 @@ implementation
 	async command void PacketTransmitPower.set(message_t* msg, uint8_t value)
 	{
 		call TransmitPowerFlag.set(msg);
-		(call PacketRF230Metadata.get(msg))->power = value;
+		getMeta(msg)->power = value;
 	}
 
-// --- RSSI
+/*----------------- PacketRSSI -----------------*/
 
 	async command bool PacketRSSI.isSet(message_t* msg)
 	{
@@ -874,7 +921,7 @@ implementation
 
 	async command uint8_t PacketRSSI.get(message_t* msg)
 	{
-		return (call PacketRF230Metadata.get(msg))->rssi;
+		return getMeta(msg)->rssi;
 	}
 
 	async command void PacketRSSI.clear(message_t* msg)
@@ -888,17 +935,10 @@ implementation
 		call TransmitPowerFlag.clear(msg);
 
 		call RSSIFlag.set(msg);
-		(call PacketRF230Metadata.get(msg))->rssi = value;
+		getMeta(msg)->rssi = value;
 	}
 
-// --- TimeSyncOffset
-
-	enum
-	{
-		PACKET_LENGTH_INCREASE =
-			sizeof(rf230packet_header_t) - 1	// the 8-bit length field is not counted
-			+ sizeof(ieee154_footer_t),		// the CRC is not stored in memory
-	};
+/*----------------- PacketTimeSyncOffset -----------------*/
 
 	async command bool PacketTimeSyncOffset.isSet(message_t* msg)
 	{
@@ -907,7 +947,7 @@ implementation
 
 	async command uint8_t PacketTimeSyncOffset.get(message_t* msg)
 	{
-		return call RF230DriverConfig.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_absolute_t);
+		return call RadioPacket.headerLength(msg) + call RadioPacket.payloadLength(msg) - sizeof(timesync_absolute_t);
 	}
 
 	async command void PacketTimeSyncOffset.clear(message_t* msg)
@@ -918,12 +958,12 @@ implementation
 	async command void PacketTimeSyncOffset.set(message_t* msg, uint8_t value)
 	{
 		// we do not store the value, the time sync field is always the last 4 bytes
-		ASSERT( call RF230DriverConfig.getLength(msg) - PACKET_LENGTH_INCREASE - sizeof(timesync_absolute_t) == value );
+		ASSERT( call PacketTimeSyncOffset.get(msg) == value );
 
 		call TimeSyncFlag.set(msg);
 	}
 
-// --- LinkQuality
+/*----------------- PacketLinkQuality -----------------*/
 
 	async command bool PacketLinkQuality.isSet(message_t* msg)
 	{
@@ -932,7 +972,7 @@ implementation
 
 	async command uint8_t PacketLinkQuality.get(message_t* msg)
 	{
-		return (call PacketRF230Metadata.get(msg))->lqi;
+		return getMeta(msg)->lqi;
 	}
 
 	async command void PacketLinkQuality.clear(message_t* msg)
@@ -941,6 +981,6 @@ implementation
 
 	async command void PacketLinkQuality.set(message_t* msg, uint8_t value)
 	{
-		(call PacketRF230Metadata.get(msg))->lqi = value;
+		getMeta(msg)->lqi = value;
 	}
 }

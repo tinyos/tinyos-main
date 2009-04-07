@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Vanderbilt University
+ * Copyright (c) 2007, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -32,6 +32,7 @@ configuration RF212DriverLayerC
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioCCA;
+		interface RadioPacket;
 
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
@@ -43,9 +44,8 @@ configuration RF212DriverLayerC
 
 	uses
 	{
-		interface RF212DriverConfig;
+		interface RF212DriverConfig as Config;
 		interface PacketTimeStamp<TRadio, uint32_t>;
-		interface PacketData<rf212_metadata_t> as PacketRF212Metadata;
 	}
 }
 
@@ -57,11 +57,11 @@ implementation
 	RadioSend = RF212DriverLayerP;
 	RadioReceive = RF212DriverLayerP;
 	RadioCCA = RF212DriverLayerP;
+	RadioPacket = RF212DriverLayerP;
 
 	LocalTimeRadio = HplRF212C;
 
-	RF212DriverConfig = RF212DriverLayerP;
-	PacketRF212Metadata = RF212DriverLayerP;
+	Config = RF212DriverLayerP;
 
 	PacketTransmitPower = RF212DriverLayerP.PacketTransmitPower;
 	components new MetadataFlagC() as TransmitPowerFlagC;

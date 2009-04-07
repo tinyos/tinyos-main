@@ -32,6 +32,7 @@ configuration RF230DriverLayerC
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioCCA;
+		interface RadioPacket;
 
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
@@ -43,9 +44,8 @@ configuration RF230DriverLayerC
 
 	uses
 	{
-		interface RF230DriverConfig;
+		interface RF230DriverConfig as Config;
 		interface PacketTimeStamp<TRadio, uint32_t>;
-		interface PacketData<rf230_metadata_t> as PacketRF230Metadata;
 	}
 }
 
@@ -57,11 +57,11 @@ implementation
 	RadioSend = RF230DriverLayerP;
 	RadioReceive = RF230DriverLayerP;
 	RadioCCA = RF230DriverLayerP;
+	RadioPacket = RF230DriverLayerP;
 
 	LocalTimeRadio = HplRF230C;
 
-	RF230DriverConfig = RF230DriverLayerP;
-	PacketRF230Metadata = RF230DriverLayerP;
+	Config = RF230DriverLayerP;
 
 	PacketTransmitPower = RF230DriverLayerP.PacketTransmitPower;
 	components new MetadataFlagC() as TransmitPowerFlagC;

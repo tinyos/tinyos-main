@@ -28,13 +28,17 @@ module IEEE154MessageLayerP
 	provides 
 	{
 		interface IEEE154MessageLayer;
+		interface RadioPacket;
 		interface Ieee154Packet;
+		interface Packet;
+		interface Ieee154Send;
 	}
 
 	uses
 	{
 		interface ActiveMessageAddress;
-		interface IEEE154MessageConfig as Config;
+		interface RadioPacket as SubPacket;
+		interface Send as SubSend;
 	}
 }
 
@@ -54,24 +58,14 @@ implementation
 			| (IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE) 
 			| (IEEE154_ADDR_SHORT << IEEE154_FCF_SRC_ADDR_MODE),
 
-		IEEE154_ACK_FRAME_LENGTH = 5,	// includes the FCF, DSN and FCS
+		IEEE154_ACK_FRAME_LENGTH = 3,	// includes the FCF, DSN
 		IEEE154_ACK_FRAME_MASK = (IEEE154_TYPE_MASK << IEEE154_FCF_FRAME_TYPE), 
 		IEEE154_ACK_FRAME_VALUE = (IEEE154_TYPE_ACK << IEEE154_FCF_FRAME_TYPE),
 	};
 
 	ieee154_header_t* getHeader(message_t* msg)
 	{
-		return call Config.getHeader(msg);
-	}
-
-	async command uint8_t IEEE154MessageLayer.getLength(message_t* msg)
-	{
-		return getHeader(msg)->length;
-	}
-
-	async command void IEEE154MessageLayer.setLength(message_t* msg, uint8_t length)
-	{
-		getHeader(msg)->length = length;
+		return ((void*)msg) + call SubPacket.headerLength(msg);
 	}
 
 	async command uint16_t IEEE154MessageLayer.getFCF(message_t* msg)
@@ -101,17 +95,15 @@ implementation
 
 	async command void IEEE154MessageLayer.createAckFrame(message_t* msg)
 	{
-		ieee154_header_t* header = getHeader(msg);
-
-		header->length = IEEE154_ACK_FRAME_LENGTH;
-		header->fcf = IEEE154_ACK_FRAME_VALUE;
+		call SubPacket.setPayloadLength(msg, IEEE154_ACK_FRAME_LENGTH);
+		getHeader(msg)->fcf = IEEE154_ACK_FRAME_VALUE;
 	}
 
 	async command void IEEE154MessageLayer.createAckReply(message_t* data, message_t* ack)
 	{
 		ieee154_header_t* header = getHeader(ack);
+		call SubPacket.setPayloadLength(ack, IEEE154_ACK_FRAME_LENGTH);
 
-		header->length = IEEE154_ACK_FRAME_LENGTH;
 		header->fcf = IEEE154_ACK_FRAME_VALUE;
 		header->dsn = getHeader(data)->dsn;
 	}
@@ -254,5 +246,108 @@ implementation
 	command ieee154_panid_t Ieee154Packet.localPan()
 	{
 		return call ActiveMessageAddress.amGroup();
+	}
+
+/*----------------- RadioPacket -----------------*/
+
+	async command uint8_t RadioPacket.headerLength(message_t* msg)
+	{
+		return call SubPacket.headerLength(msg) + sizeof(ieee154_header_t);
+	}
+
+	async command uint8_t RadioPacket.payloadLength(message_t* msg)
+	{
+		return call SubPacket.payloadLength(msg) - sizeof(ieee154_header_t);
+	}
+
+	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
+	{
+		call SubPacket.setPayloadLength(msg, length + sizeof(ieee154_header_t));
+	}
+
+	async command uint8_t RadioPacket.maxPayloadLength()
+	{
+		return call SubPacket.maxPayloadLength() - sizeof(ieee154_header_t);
+	}
+
+	async command uint8_t RadioPacket.metadataLength(message_t* msg)
+	{
+		return call SubPacket.metadataLength(msg);
+	}
+
+	async command void RadioPacket.clear(message_t* msg)
+	{
+		call SubPacket.clear(msg);
+		call IEEE154MessageLayer.createDataFrame(msg);
+	}
+
+/*----------------- Packet -----------------*/
+
+	command void Packet.clear(message_t* msg)
+	{
+		call RadioPacket.clear(msg);
+	}
+
+	command uint8_t Packet.payloadLength(message_t* msg)
+	{
+		return call RadioPacket.payloadLength(msg);
+	}
+
+	command void Packet.setPayloadLength(message_t* msg, uint8_t len)
+	{
+		call RadioPacket.setPayloadLength(msg, len);
+	}
+
+	command uint8_t Packet.maxPayloadLength()
+	{
+		return call RadioPacket.maxPayloadLength();
+	}
+
+	command void* Packet.getPayload(message_t* msg, uint8_t len)
+	{
+		if( len > call RadioPacket.maxPayloadLength() )
+			return NULL;
+
+		return ((void*)msg) + call RadioPacket.headerLength(msg);
+	}
+
+/*----------------- Ieee154Send -----------------*/
+
+	command void * Ieee154Send.getPayload(message_t* msg, uint8_t len)
+	{
+		return call Packet.getPayload(msg, len);
+	}
+
+	command uint8_t Ieee154Send.maxPayloadLength()
+	{
+		return call Packet.maxPayloadLength();
+	}
+
+	command error_t Ieee154Send.cancel(message_t* msg)
+	{
+		return call SubSend.cancel(msg);
+	}
+
+	command error_t Ieee154Send.send(ieee154_saddr_t addr, message_t* msg, uint8_t len)
+	{
+		ieee154_header_t* header = getHeader(msg);
+
+		header->dest = addr;
+	    	header->destpan = call Ieee154Packet.localPan();
+	    	header->src = call Ieee154Packet.address();
+		
+		// Notifier (in original ActiveMessage) --> Not used in CC2420
+	    	// signal SendNotifier.aboutToSend(addr, msg);
+    	
+    		return call SubSend.send(msg, len);
+	}
+
+	event void SubSend.sendDone(message_t* msg, error_t error)
+	{
+		signal Ieee154Send.sendDone(msg, error);
+	}
+
+	default event void Ieee154Send.sendDone(message_t* msg, error_t error)
+	{
 	}
 }

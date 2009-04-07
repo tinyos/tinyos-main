@@ -34,16 +34,6 @@
 interface IEEE154MessageLayer
 {
 	/**
-	 * Returns the raw value (unadjusted) of the length field
-	 */
-	async command uint8_t getLength(message_t* msg);
-
-	/**
-	 * Sets the length field
-	 */
-	async command void setLength(message_t* msg, uint8_t length);
-
-	/**
 	 * Returns the frame control field. This method should not be used, 
 	 * isDataFrame and isAckFrame should be used instead.
 	 */

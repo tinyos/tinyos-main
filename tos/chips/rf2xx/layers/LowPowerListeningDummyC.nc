@@ -28,6 +28,7 @@ configuration LowPowerListeningDummyC
 		interface SplitControl;
 		interface Send;
 		interface Receive;
+		interface RadioPacket;
 
 		interface LowPowerListening;
 	}
@@ -36,6 +37,7 @@ configuration LowPowerListeningDummyC
 		interface SplitControl as SubControl;
 		interface Send as SubSend;
 		interface Receive as SubReceive;
+		interface RadioPacket as SubPacket;
 	}
 }
 
@@ -44,6 +46,7 @@ implementation
 	SplitControl = SubControl;
 	Send = SubSend;
 	Receive = SubReceive;
+	RadioPacket = SubPacket;
 
 	components LowPowerListeningDummyP;
 	LowPowerListening = LowPowerListeningDummyP;

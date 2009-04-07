@@ -21,22 +21,8 @@
  * Author: Miklos Maroti
  */
 
-#include <LowPowerListeningLayer.h>
-
 interface LowPowerListeningConfig
 {
-	/**
-	 * Returns a pointer to the low power listening metadata fields in 
-	 * the message
-	 */
-	async command lpl_metadata_t* metadata(message_t* msg);
-
-	/**
-	 * Clears the low power listening metadata fields in order to disable 
-	 * low power listening for the message
-	 */
-	async event void clear(message_t* msg);
-
 	/**
 	 * Returns TRUE if an acknowledgement is requested for this message.
 	 */

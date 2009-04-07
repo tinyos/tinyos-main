@@ -21,11 +21,15 @@
  * Author: Miklos Maroti
  */
 
+#include <ActiveMessageLayer.h>
+
 module ActiveMessageLayerP
 {
 	provides
 	{
+		interface RadioPacket;
 		interface AMPacket;
+		interface Packet;
 		interface AMSend[am_id_t id];
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];	
@@ -33,6 +37,7 @@ module ActiveMessageLayerP
 
 	uses
 	{
+		interface RadioPacket as SubPacket;
 		interface Send as SubSend;
 		interface Receive as SubReceive;
 		interface ActiveMessageConfig as Config;
@@ -42,15 +47,21 @@ module ActiveMessageLayerP
 
 implementation
 {
+
+	activemessage_header_t* getHeader(message_t* msg)
+	{
+		return ((void*)msg) + call SubPacket.headerLength(msg);
+	}
+
 /*----------------- Send -----------------*/
 
 	command error_t AMSend.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len)
 	{
-		error_t error;
-
-		error = call Config.checkPacket(msg);
-		if( error != SUCCESS )
-			return error;
+		if( call Config.forgotToClear(msg) )
+		{
+			// return FAIL;
+			call Packet.clear(msg);
+		}
 
 		call AMPacket.setSource(msg, call AMPacket.address());
 		call AMPacket.setGroup(msg, call AMPacket.localGroup());
@@ -147,12 +158,12 @@ implementation
 
 	inline command am_id_t AMPacket.type(message_t* msg)
 	{
-		return (call Config.getHeader(msg))->type;
+		return getHeader(msg)->type;
 	}
 
 	inline command void AMPacket.setType(message_t* msg, am_id_t type)
 	{
-		(call Config.getHeader(msg))->type = type;
+		getHeader(msg)->type = type;
 	}
   
 	inline command am_group_t AMPacket.group(message_t* msg) 
@@ -167,5 +178,68 @@ implementation
 
 	inline async event void ActiveMessageAddress.changed()
 	{
+	}
+
+/*----------------- RadioPacket -----------------*/
+
+	async command uint8_t RadioPacket.headerLength(message_t* msg)
+	{
+		return call SubPacket.headerLength(msg) + sizeof(activemessage_header_t);
+	}
+
+	async command uint8_t RadioPacket.payloadLength(message_t* msg)
+	{
+		return call SubPacket.payloadLength(msg) - sizeof(activemessage_header_t);
+	}
+
+	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
+	{
+		call SubPacket.setPayloadLength(msg, length + sizeof(activemessage_header_t));
+	}
+
+	async command uint8_t RadioPacket.maxPayloadLength()
+	{
+		return call SubPacket.maxPayloadLength() - sizeof(activemessage_header_t);
+	}
+
+	async command uint8_t RadioPacket.metadataLength(message_t* msg)
+	{
+		return call SubPacket.metadataLength(msg);
+	}
+
+	async command void RadioPacket.clear(message_t* msg)
+	{
+		call SubPacket.clear(msg);
+	}
+
+
+/*----------------- Packet -----------------*/
+
+	command void Packet.clear(message_t* msg)
+	{
+		call RadioPacket.clear(msg);
+	}
+
+	command uint8_t Packet.payloadLength(message_t* msg)
+	{
+		return call RadioPacket.payloadLength(msg);
+	}
+
+	command void Packet.setPayloadLength(message_t* msg, uint8_t len)
+	{
+		call RadioPacket.setPayloadLength(msg, len);
+	}
+
+	command uint8_t Packet.maxPayloadLength()
+	{
+		return call RadioPacket.maxPayloadLength();
+	}
+
+	command void* Packet.getPayload(message_t* msg, uint8_t len)
+	{
+		if( len > call RadioPacket.maxPayloadLength() )
+			return NULL;
+
+		return ((void*)msg) + call RadioPacket.headerLength(msg);
 	}
 }

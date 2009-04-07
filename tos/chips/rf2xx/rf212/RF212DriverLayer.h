@@ -24,6 +24,11 @@
 #ifndef __RF212DRIVERLAYER_H__
 #define __RF212DRIVERLAYER_H__
 
+typedef nx_struct rf212_header_t
+{
+	nxle_uint8_t length;
+} rf212_header_t;
+
 typedef struct rf212_metadata_t
 {
 	uint8_t lqi;

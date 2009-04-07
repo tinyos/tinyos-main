@@ -33,19 +33,22 @@ generic configuration DummyLayerC()
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioCCA;
+		interface RadioPacket;
 
 		interface DummyConfig as UnconnectedConfig;
 	}
 
 	uses 
 	{
+		interface SplitControl as SubControl;
+		interface Send as SubSend;
+		interface Receive as SubReceive;
+
 		interface RadioState as SubState;
 		interface RadioSend as SubRadioSend;
 		interface RadioReceive as SubRadioReceive;
 		interface RadioCCA as SubRadioCCA;
-		interface SplitControl as SubControl;
-		interface Send as SubSend;
-		interface Receive as SubReceive;
+		interface RadioPacket as SubPacket;
 
 		interface DummyConfig as Config;
 	}
@@ -57,6 +60,7 @@ implementation
 	RadioSend = SubRadioSend;
 	RadioReceive = SubRadioReceive;
 	RadioCCA = SubRadioCCA;
+	RadioPacket = SubPacket;
 
 	SplitControl = SubControl;
 	Send = SubSend;

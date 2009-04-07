@@ -31,6 +31,7 @@ module LowPowerListeningLayerP
 		interface SplitControl;
 		interface Send;
 		interface Receive;
+		interface RadioPacket;
 
 		interface LowPowerListening;
 	}
@@ -40,6 +41,7 @@ module LowPowerListeningLayerP
 		interface SplitControl as SubControl;
 		interface Send as SubSend;
 		interface Receive as SubReceive;
+		interface RadioPacket as SubPacket;
 
 		interface PacketAcknowledgements;
 		interface LowPowerListeningConfig as Config;
@@ -358,6 +360,11 @@ implementation
 
 /*----------------- LowPowerListening -----------------*/
 
+	lpl_metadata_t* getMeta(message_t* msg)
+	{
+		return ((void*)msg) + sizeof(message_t) - call RadioPacket.metadataLength(msg);
+	}
+
 	command uint16_t LowPowerListening.dutyCycleToSleepInterval(uint16_t dutyCycle)
 	{
 		if( dutyCycle >= 10000 )
@@ -418,12 +425,12 @@ implementation
 		else if( interval > MAX_SLEEP )
 			interval = MAX_SLEEP;
 
-		(call Config.metadata(msg))->sleepint = interval;
+		getMeta(msg)->sleepint = interval;
 	}
 
 	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg)
 	{
-		uint16_t sleepint = (call Config.metadata(msg))->sleepint;
+		uint16_t sleepint = getMeta(msg)->sleepint;
 
 		return sleepint != 0 ? sleepint : sleepInterval;
 	}
@@ -440,8 +447,36 @@ implementation
 			call LowPowerListening.getRxSleepInterval(msg));
 	}
 
-	async event void Config.clear(message_t* msg)
+/*----------------- RadioPacket -----------------*/
+	
+	async command uint8_t RadioPacket.headerLength(message_t* msg)
 	{
-		(call Config.metadata(msg))->sleepint = 0;
+		return call SubPacket.headerLength(msg);
+	}
+
+	async command uint8_t RadioPacket.payloadLength(message_t* msg)
+	{
+		return call SubPacket.payloadLength(msg);
+	}
+
+	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
+	{
+		call SubPacket.setPayloadLength(msg, length);
+	}
+
+	async command uint8_t RadioPacket.maxPayloadLength()
+	{
+		return call SubPacket.maxPayloadLength();
+	}
+
+	async command uint8_t RadioPacket.metadataLength(message_t* msg)
+	{
+		return call SubPacket.metadataLength(msg) + sizeof(lpl_metadata_t);
+	}
+
+	async command void RadioPacket.clear(message_t* msg)
+	{
+		getMeta(msg)->sleepint = 0;
+		call SubPacket.clear(msg);
 	}
 }

@@ -92,7 +92,7 @@ implementation
 	{
 		*(timesync_absolute_t*)(msg->data + len) = event_time;
 
-		call PacketTimeSyncOffset.set(msg, len);
+		call PacketTimeSyncOffset.set(msg, offsetof(message_t, data) + len);
 
 		return call SubSend.send[id](addr, msg, len + sizeof(timesync_relative_t));
 	}

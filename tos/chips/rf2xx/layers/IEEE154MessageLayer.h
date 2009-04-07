@@ -26,19 +26,12 @@
 
 typedef nx_struct ieee154_header_t
 {
-	nxle_uint8_t length;
 	nxle_uint16_t fcf;
 	nxle_uint8_t dsn;
 	nxle_uint16_t destpan;
 	nxle_uint16_t dest;
 	nxle_uint16_t src;
 } ieee154_header_t;
-
-// the actual radio driver might not use this
-typedef nx_struct ieee154_footer_t
-{ 
-	nxle_uint16_t crc;
-} ieee154_footer_t;
 
 enum ieee154_fcf_enums {
 	IEEE154_FCF_FRAME_TYPE = 0,

@@ -26,11 +26,16 @@ configuration IEEE154MessageLayerC
 	provides
 	{
 		interface IEEE154MessageLayer;
+		interface RadioPacket;
+		interface Ieee154Packet;
+		interface Packet;
+		interface Ieee154Send;
 	}
 
 	uses
 	{
-		interface IEEE154MessageConfig as Config;
+		interface RadioPacket as SubPacket;
+		interface Send as SubSend;
 	}
 }
 
@@ -40,5 +45,10 @@ implementation
 	IEEE154MessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
 
 	IEEE154MessageLayer = IEEE154MessageLayerP;
-	Config = IEEE154MessageLayerP;
+	RadioPacket = IEEE154MessageLayerP;
+	SubPacket = IEEE154MessageLayerP;
+	Ieee154Packet = IEEE154MessageLayerP;
+	Packet = IEEE154MessageLayerP;
+	Ieee154Send = IEEE154MessageLayerP;
+	SubSend = IEEE154MessageLayerP;
 }

@@ -27,12 +27,13 @@ configuration TimeStampingLayerC
 	{
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
+		interface RadioPacket;
 	}
 
 	uses
 	{
 		interface LocalTime<TRadio> as LocalTimeRadio;
-		interface PacketData<timestamp_metadata_t> as PacketTimeStampMetadata;
+		interface RadioPacket as SubPacket;
 	}
 }
 
@@ -42,7 +43,8 @@ implementation
 
 	PacketTimeStampMilli = TimeStampingLayerP;
 	PacketTimeStampRadio = TimeStampingLayerP;
-	PacketTimeStampMetadata = TimeStampingLayerP.PacketTimeStampMetadata;
+	RadioPacket = TimeStampingLayerP.RadioPacket;
+	SubPacket = TimeStampingLayerP.SubPacket;
 
 	LocalTimeRadio = TimeStampingLayerP;
 	TimeStampingLayerP.LocalTimeMilli -> LocalTimeMilliC;

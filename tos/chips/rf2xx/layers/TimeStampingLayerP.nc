@@ -30,6 +30,7 @@ module TimeStampingLayerP
 	{
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
+		interface RadioPacket;
 	}
 
 	uses
@@ -39,12 +40,19 @@ module TimeStampingLayerP
 		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface LocalTime<TMilli> as LocalTimeMilli;
 
-		interface PacketData<timestamp_metadata_t> as PacketTimeStampMetadata;
+		interface RadioPacket as SubPacket;
 	}
 }
 
 implementation
 {
+	timestamp_metadata_t* getMeta(message_t* msg)
+	{
+		return ((void*)msg) + sizeof(message_t) - call RadioPacket.metadataLength(msg);
+	}
+
+/*----------------- PacketTimeStampRadio -----------------*/
+	
 	async command bool PacketTimeStampRadio.isValid(message_t* msg)
 	{
 		return call TimeStampFlag.get(msg);
@@ -52,7 +60,7 @@ implementation
 
 	async command uint32_t PacketTimeStampRadio.timestamp(message_t* msg)
 	{
-		return (call PacketTimeStampMetadata.get(msg))->timestamp;
+		return getMeta(msg)->timestamp;
 	}
 
 	async command void PacketTimeStampRadio.clear(message_t* msg)
@@ -63,12 +71,10 @@ implementation
 	async command void PacketTimeStampRadio.set(message_t* msg, uint32_t value)
 	{
 		call TimeStampFlag.set(msg);
-		(call PacketTimeStampMetadata.get(msg))->timestamp = value;
+		getMeta(msg)->timestamp = value;
 	}
 
-	async event void PacketTimeStampMetadata.clear(message_t* msg)
-	{
-	}
+/*----------------- PacketTimeStampMilli -----------------*/
 
 	async command bool PacketTimeStampMilli.isValid(message_t* msg)
 	{
@@ -92,5 +98,38 @@ implementation
 		int32_t offset = (value - call LocalTimeMilli.get()) << RADIO_ALARM_MILLI_EXP;
 
 		call PacketTimeStampRadio.set(msg, offset + call LocalTimeRadio.get());
+	}
+
+/*----------------- RadioPacket -----------------*/
+	
+	async command uint8_t RadioPacket.headerLength(message_t* msg)
+	{
+		return call SubPacket.headerLength(msg);
+	}
+
+	async command uint8_t RadioPacket.payloadLength(message_t* msg)
+	{
+		return call SubPacket.payloadLength(msg);
+	}
+
+	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
+	{
+		call SubPacket.setPayloadLength(msg, length);
+	}
+
+	async command uint8_t RadioPacket.maxPayloadLength()
+	{
+		return call SubPacket.maxPayloadLength();
+	}
+
+	async command uint8_t RadioPacket.metadataLength(message_t* msg)
+	{
+		return call SubPacket.metadataLength(msg) + sizeof(timestamp_metadata_t);
+	}
+
+	async command void RadioPacket.clear(message_t* msg)
+	{
+		// all flags are automatically cleared
+		call SubPacket.clear(msg);
 	}
 }

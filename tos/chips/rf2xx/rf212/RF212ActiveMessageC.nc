@@ -65,7 +65,8 @@ implementation
 	RF212ActiveMessageP.IEEE154MessageLayer -> IEEE154MessageLayerC;
 	RF212ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 	RF212ActiveMessageP.PacketTimeStamp -> TimeStampingLayerC;
-	Packet = RF212ActiveMessageP;
+	RF212ActiveMessageP.ActiveMessagePacket -> ActiveMessageLayerC;
+	RF212ActiveMessageP.RF212Packet -> RF212DriverLayerC;
 
 // -------- Active Message
 
@@ -73,7 +74,9 @@ implementation
 	ActiveMessageLayerC.Config -> RF212ActiveMessageP;
 	ActiveMessageLayerC.SubSend -> LowpanNetworkLayerC;
 	ActiveMessageLayerC.SubReceive -> LowpanNetworkLayerC;
+	ActiveMessageLayerC.SubPacket ->LowpanNetworkLayerC;
 	AMSend = ActiveMessageLayerC;
+	Packet = ActiveMessageLayerC;
 	Receive = ActiveMessageLayerC.Receive;
 	Snoop = ActiveMessageLayerC.Snoop;
 	AMPacket = ActiveMessageLayerC;
@@ -84,15 +87,15 @@ implementation
 	components new DummyLayerC() as LowpanNetworkLayerC;
 #else
 	components LowpanNetworkLayerC;
-	LowpanNetworkLayerC.Config -> RF212ActiveMessageP;
 #endif
 	LowpanNetworkLayerC.SubSend -> UniqueLayerC;
 	LowpanNetworkLayerC.SubReceive -> LowPowerListeningLayerC;
+	LowpanNetworkLayerC.SubPacket -> IEEE154MessageLayerC;
 
-// -------- IEEE154 Packet
+// -------- IEEE154 Message
 
 	components IEEE154MessageLayerC;
-	IEEE154MessageLayerC.Config -> RF212ActiveMessageP;
+	IEEE154MessageLayerC.SubPacket -> LowPowerListeningLayerC;
 
 // -------- UniqueLayer Send part (wired twice)
 
@@ -112,6 +115,7 @@ implementation
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubSend -> PacketLinkLayerC;
 	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubPacket -> PacketLinkLayerC;
 	SplitControl = LowPowerListeningLayerC;
 	LowPowerListening = LowPowerListeningLayerC;
 
@@ -120,17 +124,17 @@ implementation
 #ifdef PACKET_LINK
 	components PacketLinkLayerC;
 	PacketLink = PacketLinkLayerC;
-	PacketLinkLayerC.PacketLinkMetadata -> RF212ActiveMessageP;
 	PacketLinkLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
 #else
 	components new DummyLayerC() as PacketLinkLayerC;
 #endif
 	PacketLinkLayerC.SubSend -> MessageBufferLayerC;
+	PacketLinkLayerC.SubPacket -> TimeStampingLayerC;
 
 // -------- MessageBuffer
 
 	components MessageBufferLayerC;
-	MessageBufferLayerC.Packet -> RF212ActiveMessageP;
+	MessageBufferLayerC.Packet -> ActiveMessageLayerC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
@@ -174,27 +178,26 @@ implementation
 	CsmaLayerC -> RF212DriverLayerC.RadioSend;
 	CsmaLayerC -> RF212DriverLayerC.RadioCCA;
 
+// -------- TimeStamping
+
+	components TimeStampingLayerC;
+	TimeStampingLayerC.LocalTimeRadio -> RF212DriverLayerC;
+	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
+	PacketTimeStampRadio = TimeStampingLayerC;
+	PacketTimeStampMilli = TimeStampingLayerC;
+
+// -------- MetadataFlags
+
+	components MetadataFlagsLayerC;
+	MetadataFlagsLayerC.SubPacket -> RF212DriverLayerC;
+
 // -------- RF212 Driver
 
 	components RF212DriverLayerC;
-	RF212DriverLayerC.PacketRF212Metadata -> RF212ActiveMessageP;
-	RF212DriverLayerC.RF212DriverConfig -> RF212ActiveMessageP;
+	RF212DriverLayerC.Config -> RF212ActiveMessageP;
 	RF212DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
 	PacketTransmitPower = RF212DriverLayerC.PacketTransmitPower;
 	PacketLinkQuality = RF212DriverLayerC.PacketLinkQuality;
 	PacketRSSI = RF212DriverLayerC.PacketRSSI;
 	LocalTimeRadio = RF212DriverLayerC;
-
-// -------- MetadataFlags
-
-	components MetadataFlagsLayerC;
-	MetadataFlagsLayerC.PacketFlagsMetadata -> RF212ActiveMessageP;
-
-// -------- TimeStamping
-
-	components TimeStampingLayerC;
-	TimeStampingLayerC.LocalTimeRadio -> RF212DriverLayerC;
-	TimeStampingLayerC.PacketTimeStampMetadata -> RF212ActiveMessageP;
-	PacketTimeStampRadio = TimeStampingLayerC;
-	PacketTimeStampMilli = TimeStampingLayerC;
 }
