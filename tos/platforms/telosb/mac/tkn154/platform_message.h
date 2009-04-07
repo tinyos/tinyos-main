@@ -6,27 +6,11 @@
 
 #include <Serial.h>
 
-#ifndef IEEE154_OLD_INTERFACES
+/* The following include pulls in the ieee154_header_t/ieee154_metadata_t definitions */
 #include <TKN154_MAC.h>
-#else
-typedef struct {
-  uint8_t control;  // stores length (lower 7 bits), top bit -> promiscuous mode
-  uint8_t mhr[MHR_MAX_LEN];  // maximum header size without security
-} ieee154_header_t;
 
-typedef struct {
-  uint8_t rssi;
-  uint8_t linkQuality;
-  uint32_t timestamp;
-} ieee154_metadata_t;
-#endif
-
-//#ifdef TOSH_DATA_LENGTH
-//#undef TOSH_DATA_LENGTH
-//#endif
-// TOSH_DATA_LENGTH may be smaller than 118, but then we'll
-// not be able to receive/send all IEEE 802.15.4 packets 
-#define TOSH_DATA_LENGTH 118
+/* TOSH_DATA_LENGTH should be the maximum length of the MAC payload */
+#define TOSH_DATA_LENGTH IEEE154_aMaxMACPayloadSize
 
 typedef union message_header {
   ieee154_header_t ieee154;
