@@ -33,21 +33,29 @@ implementation
 	RF230SnifferP.SplitControl -> SerialActiveMessageC;
 	RF230SnifferP.RadioState -> RF230DriverLayerC;
 
-	components RF230DriverLayerC;
-	RF230DriverLayerC.PacketRF230Metadata -> RF230ActiveMessageP;
-	RF230DriverLayerC.RF230DriverConfig -> RF230ActiveMessageP;
-	RF230DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
+	// just to avoid a timer compilation bug
+	components new TimerMilliC();
 
-	components MetadataFlagsLayerC;
-	MetadataFlagsLayerC.PacketFlagsMetadata -> RF230ActiveMessageP;
+// -------- ActiveMessage
 
-	components RF230ActiveMessageP, IEEE154PacketLayerC;
-	RF230ActiveMessageP.IEEE154PacketLayer -> IEEE154PacketLayerC;
+	components RF230ActiveMessageP, IEEE154MessageLayerC;
+	RF230ActiveMessageP.IEEE154MessageLayer -> IEEE154MessageLayerC;
+
+// -------- TimeStamping
 
 	components TimeStampingLayerC;
 	TimeStampingLayerC.LocalTimeRadio -> RF230DriverLayerC;
-	TimeStampingLayerC.PacketTimeStampMetadata -> RF230ActiveMessageP;
+	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
 
-	// just to avoid a timer compilation bug
-	components new TimerMilliC();
+// -------- MetadataFlags
+
+	components MetadataFlagsLayerC;
+	MetadataFlagsLayerC.SubPacket -> RF230DriverLayerC;
+
+// -------- RF230 Driver
+
+	components RF230DriverLayerC;
+	RF230DriverLayerC.Config -> RF230ActiveMessageP;
+	RF230DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
+
 }
