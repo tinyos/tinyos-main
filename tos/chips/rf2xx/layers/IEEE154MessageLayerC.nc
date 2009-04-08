@@ -30,6 +30,7 @@ configuration IEEE154MessageLayerC
 		interface Ieee154Packet;
 		interface Packet;
 		interface Ieee154Send;
+		interface SendNotifier;
 	}
 
 	uses
@@ -51,4 +52,5 @@ implementation
 	Packet = IEEE154MessageLayerP;
 	Ieee154Send = IEEE154MessageLayerP;
 	SubSend = IEEE154MessageLayerP;
+	SendNotifier = IEEE154MessageLayerP;
 }

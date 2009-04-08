@@ -32,6 +32,7 @@ module IEEE154MessageLayerP
 		interface Ieee154Packet;
 		interface Packet;
 		interface Ieee154Send;
+		interface SendNotifier;
 	}
 
 	uses
@@ -336,8 +337,7 @@ implementation
 	    	header->destpan = call Ieee154Packet.localPan();
 	    	header->src = call Ieee154Packet.address();
 		
-		// Notifier (in original ActiveMessage) --> Not used in CC2420
-	    	// signal SendNotifier.aboutToSend(addr, msg);
+    		signal SendNotifier.aboutToSend(addr, msg);
     	
     		return call SubSend.send(msg, len);
 	}
@@ -348,6 +348,10 @@ implementation
 	}
 
 	default event void Ieee154Send.sendDone(message_t* msg, error_t error)
+	{
+	}
+
+	default event void SendNotifier.aboutToSend(am_addr_t addr, message_t* msg)
 	{
 	}
 }

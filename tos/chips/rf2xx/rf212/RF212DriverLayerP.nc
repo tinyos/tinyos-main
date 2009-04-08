@@ -959,6 +959,10 @@ implementation
 
 	async command uint8_t PacketLinkQuality.get(message_t* msg)
 	{
+		// we have some bug in BLIP, so fix it here
+		if( getMeta(msg)->lqi > 120 )
+			return 120;
+
 		return getMeta(msg)->lqi;
 	}
 

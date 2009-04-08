@@ -32,6 +32,7 @@ configuration RF212ActiveMessageC
 		interface AMSend[am_id_t id];
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];
+		interface SendNotifier[am_id_t id];
 
 		interface Packet;
 		interface AMPacket;
@@ -80,6 +81,7 @@ implementation
 	Receive = ActiveMessageLayerC.Receive;
 	Snoop = ActiveMessageLayerC.Snoop;
 	AMPacket = ActiveMessageLayerC;
+	SendNotifier = ActiveMessageLayerC;
 
 // -------- Lowpan Network
 

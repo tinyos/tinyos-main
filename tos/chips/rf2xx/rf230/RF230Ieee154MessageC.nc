@@ -23,7 +23,7 @@
 
 #include <RadioConfig.h>
 
-configuration RF212Ieee154MessageC
+configuration RF230Ieee154MessageC
 {
 	provides 
 	{
@@ -52,16 +52,16 @@ configuration RF212Ieee154MessageC
 
 implementation
 {
-	components RF212ActiveMessageP, RadioAlarmC;
+	components RF230ActiveMessageP, RadioAlarmC;
 
 #ifdef RADIO_DEBUG
 	components AssertC;
 #endif
 
-	RF212ActiveMessageP.IEEE154MessageLayer -> IEEE154MessageLayerC;
-	RF212ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	RF212ActiveMessageP.PacketTimeStamp -> TimeStampingLayerC;
-	RF212ActiveMessageP.RF212Packet -> RF212DriverLayerC;
+	RF230ActiveMessageP.IEEE154MessageLayer -> IEEE154MessageLayerC;
+	RF230ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
+	RF230ActiveMessageP.PacketTimeStamp -> TimeStampingLayerC;
+	RF230ActiveMessageP.RF230Packet -> RF230DriverLayerC;
 
 // -------- IEEE154 Message
 
@@ -77,14 +77,14 @@ implementation
 // -------- UniqueLayer Send part (wired twice)
 
 	components UniqueLayerC;
-	UniqueLayerC.Config -> RF212ActiveMessageP;
+	UniqueLayerC.Config -> RF230ActiveMessageP;
 	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
 
 // -------- Low Power Listening 
 
 #ifdef LOW_POWER_LISTENING
 	components LowPowerListeningLayerC;
-	LowPowerListeningLayerC.Config -> RF212ActiveMessageP;
+	LowPowerListeningLayerC.Config -> RF230ActiveMessageP;
 	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
 #else	
 	components LowPowerListeningDummyC as LowPowerListeningLayerC;
@@ -120,10 +120,10 @@ implementation
 // -------- Traffic Monitor
 
 	components TrafficMonitorLayerC;
-	TrafficMonitorLayerC.Config -> RF212ActiveMessageP;
+	TrafficMonitorLayerC.Config -> RF230ActiveMessageP;
 	TrafficMonitorLayerC.SubSend -> CollisionAvoidanceLayerC;
 	TrafficMonitorLayerC.SubReceive -> CollisionAvoidanceLayerC;
-	TrafficMonitorLayerC.SubState -> RF212DriverLayerC;
+	TrafficMonitorLayerC.SubState -> RF230DriverLayerC;
 
 // -------- CollisionAvoidance
 
@@ -132,29 +132,29 @@ implementation
 #else
 	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
 #endif
-	CollisionAvoidanceLayerC.Config -> RF212ActiveMessageP;
+	CollisionAvoidanceLayerC.Config -> RF230ActiveMessageP;
 	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
 	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
 
 // -------- SoftwareAcknowledgement
 
 	components SoftwareAckLayerC;
-	SoftwareAckLayerC.Config -> RF212ActiveMessageP;
+	SoftwareAckLayerC.Config -> RF230ActiveMessageP;
 	SoftwareAckLayerC.SubSend -> CsmaLayerC;
-	SoftwareAckLayerC.SubReceive -> RF212DriverLayerC;
+	SoftwareAckLayerC.SubReceive -> RF230DriverLayerC;
 	PacketAcknowledgements = SoftwareAckLayerC;
 
 // -------- Carrier Sense
 
 	components new DummyLayerC() as CsmaLayerC;
-	CsmaLayerC.Config -> RF212ActiveMessageP;
-	CsmaLayerC -> RF212DriverLayerC.RadioSend;
-	CsmaLayerC -> RF212DriverLayerC.RadioCCA;
+	CsmaLayerC.Config -> RF230ActiveMessageP;
+	CsmaLayerC -> RF230DriverLayerC.RadioSend;
+	CsmaLayerC -> RF230DriverLayerC.RadioCCA;
 
 // -------- TimeStamping
 
 	components TimeStampingLayerC;
-	TimeStampingLayerC.LocalTimeRadio -> RF212DriverLayerC;
+	TimeStampingLayerC.LocalTimeRadio -> RF230DriverLayerC;
 	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
 	PacketTimeStampRadio = TimeStampingLayerC;
 	PacketTimeStampMilli = TimeStampingLayerC;
@@ -162,15 +162,15 @@ implementation
 // -------- MetadataFlags
 
 	components MetadataFlagsLayerC;
-	MetadataFlagsLayerC.SubPacket -> RF212DriverLayerC;
+	MetadataFlagsLayerC.SubPacket -> RF230DriverLayerC;
 
-// -------- RF212 Driver
+// -------- RF230 Driver
 
-	components RF212DriverLayerC;
-	RF212DriverLayerC.Config -> RF212ActiveMessageP;
-	RF212DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
-	PacketTransmitPower = RF212DriverLayerC.PacketTransmitPower;
-	PacketLinkQuality = RF212DriverLayerC.PacketLinkQuality;
-	PacketRSSI = RF212DriverLayerC.PacketRSSI;
-	LocalTimeRadio = RF212DriverLayerC;
+	components RF230DriverLayerC;
+	RF230DriverLayerC.Config -> RF230ActiveMessageP;
+	RF230DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
+	PacketTransmitPower = RF230DriverLayerC.PacketTransmitPower;
+	PacketLinkQuality = RF230DriverLayerC.PacketLinkQuality;
+	PacketRSSI = RF230DriverLayerC.PacketRSSI;
+	LocalTimeRadio = RF230DriverLayerC;
 }

@@ -33,6 +33,7 @@ module ActiveMessageLayerP
 		interface AMSend[am_id_t id];
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];	
+		interface SendNotifier[am_id_t id];
 	}
 
 	uses
@@ -68,6 +69,8 @@ implementation
 		call AMPacket.setType(msg, id);
 		call AMPacket.setDestination(msg, addr);
 
+		signal SendNotifier.aboutToSend[id](addr, msg);
+
 		return call SubSend.send(msg, len);
 	}
 
@@ -93,6 +96,10 @@ implementation
 	inline command void* AMSend.getPayload[am_id_t id](message_t* msg, uint8_t len)
 	{
 		return call SubSend.getPayload(msg, len);
+	}
+
+	default event void SendNotifier.aboutToSend[am_id_t id](am_addr_t addr, message_t* msg)
+	{
 	}
 
 /*----------------- Receive -----------------*/

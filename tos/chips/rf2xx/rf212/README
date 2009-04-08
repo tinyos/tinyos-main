@@ -1,0 +1,38 @@
+
+The RF212 radio driver has the following configuration options. Some of 
+these are set in the platforms/xxx/chips/rf212/RadioConfig.h header file, 
+see the meshbean900 platform for example, others can be set in your Makefile.
+
+RF212_TRX_CTRL_0_VALUE:
+
+This is the value of the TRX_CTRL_0 register which configures the output 
+pin currents and the CLKM clock:
+
+RF212_CCA_MODE_VALUE:
+
+This is the default value of the CCA_MODE field in the PHY_CC_CCA register
+which is used to configure the default mode of the clear channel assesment
+
+RF212_CCA_THRES_VALUE:
+
+This is the value of the CCA_THRES register that controls the energy levels 
+used for clear channel assesment.
+
+RF212_DEF_RFPOWER:
+
+This is the default value of the TX_PWR field of the PHY_TX_PWR register. 
+This can be cahanged via the PacketTransmitPower interface provided by the 
+RF212ActiveMessageC.
+
+RF212_DEF_CHANNEL:
+
+This is the default value of the CHANNEL field of the PHY_CC_CCA register.
+This can be cahanged via the RadioChannel interface provided by the 
+RF212ActiveMessageC.
+
+RF212_RSSI_ENERGY:
+
+If you define this, then the content of the RF212_PHY_ED_LEVEL is queried 
+instead of the RSSI value for eahc incoming message. This value can be 
+obtained with the PacketRSSI interface.
+

@@ -31,6 +31,7 @@ configuration ActiveMessageLayerC
 		interface AMSend[am_id_t id];
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];	
+		interface SendNotifier[am_id_t id];
 	}
 
 	uses
@@ -53,6 +54,7 @@ implementation
 	AMSend = ActiveMessageLayerP;
 	Receive = ActiveMessageLayerP.Receive;
 	Snoop = ActiveMessageLayerP.Snoop;
+	SendNotifier = ActiveMessageLayerP;
 	
 	SubPacket = ActiveMessageLayerP;
 	SubSend = ActiveMessageLayerP;
