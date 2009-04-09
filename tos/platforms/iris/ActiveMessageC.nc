@@ -35,6 +35,9 @@ configuration ActiveMessageC
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
+#ifdef PACKET_LINK
+		interface PacketLink;
+#endif
 
 		interface PacketTimeStamp<TMicro, uint32_t> as PacketTimeStampMicro;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -45,12 +48,15 @@ implementation
 {
 	components RF230ActiveMessageC as MAC;
 
-	SplitControl = MAC;
-	AMSend       = MAC;
-	Receive      = MAC.Receive;
-	Snoop        = MAC.Snoop;
-	Packet       = MAC;
-	AMPacket     = MAC;
+	SplitControl	= MAC;
+	AMSend		= MAC;
+	Receive		= MAC.Receive;
+	Snoop		= MAC.Snoop;
+	Packet		= MAC;
+	AMPacket	= MAC;
+#ifdef PACKET_LINK
+	PacketLink	= MAC;
+#endif
 
 	PacketAcknowledgements	= MAC;
 	LowPowerListening	= MAC;

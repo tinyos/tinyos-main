@@ -21,10 +21,9 @@
  * Author: Miklos Maroti
  */
 
-#include <GenericTimeSyncMessage.h>
-#include <RadioConfig.h>
+#include <TimeSyncMessageLayer.h>
 
-module GenericTimeSyncMessageP
+module TimeSyncMessageLayerP
 {
 	provides
 	{

@@ -21,8 +21,8 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __GENERICTIMESYNCMESSAGE_H__
-#define __GENERICTIMESYNCMESSAGE_H__
+#ifndef __TIMESYNCMESSAGELAYER_H__
+#define __TIMESYNCMESSAGELAYER_H__
 
 // this value is sent in the air
 typedef nx_int32_t timesync_relative_t;
@@ -30,4 +30,4 @@ typedef nx_int32_t timesync_relative_t;
 // this value is stored in memory
 typedef uint32_t timesync_absolute_t;
 
-#endif//__GENERICTIMESYNCMESSAGE_H__
+#endif//__TIMESYNCMESSAGELAYER_H__

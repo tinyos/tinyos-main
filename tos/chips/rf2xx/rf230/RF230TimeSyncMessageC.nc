@@ -21,20 +21,18 @@
  * Author: Miklos Maroti
  */
 
-#include <Timer.h>
-#include <AM.h>
 #include <RadioConfig.h>
 
-configuration GenericTimeSyncMessageC
+configuration RF230TimeSyncMessageC
 {
 	provides
 	{
 		interface SplitControl;
-
 		interface Receive[uint8_t id];
 		interface Receive as Snoop[am_id_t id];
-		interface Packet;
 		interface AMPacket;
+
+		interface Packet;
 
 		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
 		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
@@ -42,37 +40,29 @@ configuration GenericTimeSyncMessageC
 		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
 		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
 	}
-
-	uses
-	{
-		interface PacketField<uint8_t> as PacketTimeSyncOffset;
-		interface LocalTime<TRadio> as LocalTimeRadio;
-	}
 }
 
 implementation
 {
-	components GenericTimeSyncMessageP, ActiveMessageC, LocalTimeMilliC;
+	components RF230DriverLayerC, RF230ActiveMessageC, TimeSyncMessageLayerC;
+  
+	SplitControl	= RF230ActiveMessageC;
+  	Receive		= RF230ActiveMessageC.Receive;
+	Snoop		= RF230ActiveMessageC.Snoop;
+	AMPacket	= RF230ActiveMessageC;
+	Packet		= TimeSyncMessageLayerC;
 
-	TimeSyncAMSendRadio = GenericTimeSyncMessageP;
-	TimeSyncPacketRadio = GenericTimeSyncMessageP;
+	TimeSyncAMSendRadio	= TimeSyncMessageLayerC;
+	TimeSyncPacketRadio	= TimeSyncMessageLayerC;
+	TimeSyncAMSendMilli	= TimeSyncMessageLayerC;
+	TimeSyncPacketMilli	= TimeSyncMessageLayerC;
 
-	TimeSyncAMSendMilli = GenericTimeSyncMessageP;
-	TimeSyncPacketMilli = GenericTimeSyncMessageP;
+	TimeSyncMessageLayerC.SubSend -> RF230ActiveMessageC;
+	TimeSyncMessageLayerC.SubPacket -> RF230ActiveMessageC;
 
-	Packet = GenericTimeSyncMessageP;
-	GenericTimeSyncMessageP.SubSend -> ActiveMessageC.AMSend;
-	GenericTimeSyncMessageP.SubPacket -> ActiveMessageC.Packet;
+	TimeSyncMessageLayerC.PacketTimeStampRadio -> RF230ActiveMessageC;
+	TimeSyncMessageLayerC.PacketTimeStampMilli -> RF230ActiveMessageC;
 
-	GenericTimeSyncMessageP.PacketTimeStampRadio -> ActiveMessageC;
-	GenericTimeSyncMessageP.PacketTimeStampMilli -> ActiveMessageC;
-	GenericTimeSyncMessageP.LocalTimeRadio = LocalTimeRadio;
-	GenericTimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
-
-	GenericTimeSyncMessageP.PacketTimeSyncOffset = PacketTimeSyncOffset;
-
-	SplitControl = ActiveMessageC;
-	Receive	= ActiveMessageC.Receive;
-	Snoop = ActiveMessageC.Snoop;
-	AMPacket = ActiveMessageC;
+	TimeSyncMessageLayerC.LocalTimeRadio -> RF230DriverLayerC;
+	TimeSyncMessageLayerC.PacketTimeSyncOffset -> RF230DriverLayerC.PacketTimeSyncOffset;
 }

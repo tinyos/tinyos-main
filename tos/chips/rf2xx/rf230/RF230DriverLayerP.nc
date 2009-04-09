@@ -24,7 +24,7 @@
 #include <RF230DriverLayer.h>
 #include <Tasklet.h>
 #include <RadioAssert.h>
-#include <GenericTimeSyncMessage.h>
+#include <TimeSyncMessageLayer.h>
 #include <RadioConfig.h>
 
 module RF230DriverLayerP

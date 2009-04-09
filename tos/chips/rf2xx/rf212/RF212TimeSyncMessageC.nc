@@ -23,16 +23,16 @@
 
 #include <RadioConfig.h>
 
-configuration TimeSyncMessageC
+configuration RF212TimeSyncMessageC
 {
 	provides
 	{
 		interface SplitControl;
-
 		interface Receive[uint8_t id];
 		interface Receive as Snoop[am_id_t id];
-		interface Packet;
 		interface AMPacket;
+
+		interface Packet;
 
 		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
 		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
@@ -44,16 +44,25 @@ configuration TimeSyncMessageC
 
 implementation
 {
-	components RF230TimeSyncMessageC as MAC;
+	components RF212DriverLayerC, RF212ActiveMessageC, TimeSyncMessageLayerC;
   
-	SplitControl	= MAC;
-  	Receive		= MAC.Receive;
-	Snoop		= MAC.Snoop;
-	Packet		= MAC;
-	AMPacket	= MAC;
+	SplitControl	= RF212ActiveMessageC;
+  	Receive		= RF212ActiveMessageC.Receive;
+	Snoop		= RF212ActiveMessageC.Snoop;
+	AMPacket	= RF212ActiveMessageC;
+	Packet		= TimeSyncMessageLayerC;
 
-	TimeSyncAMSendRadio	= MAC;
-	TimeSyncPacketRadio	= MAC;
-	TimeSyncAMSendMilli	= MAC;
-	TimeSyncPacketMilli	= MAC;
+	TimeSyncAMSendRadio	= TimeSyncMessageLayerC;
+	TimeSyncPacketRadio	= TimeSyncMessageLayerC;
+	TimeSyncAMSendMilli	= TimeSyncMessageLayerC;
+	TimeSyncPacketMilli	= TimeSyncMessageLayerC;
+
+	TimeSyncMessageLayerC.SubSend -> RF212ActiveMessageC;
+	TimeSyncMessageLayerC.SubPacket -> RF212ActiveMessageC;
+
+	TimeSyncMessageLayerC.PacketTimeStampRadio -> RF212ActiveMessageC;
+	TimeSyncMessageLayerC.PacketTimeStampMilli -> RF212ActiveMessageC;
+
+	TimeSyncMessageLayerC.LocalTimeRadio -> RF212DriverLayerC;
+	TimeSyncMessageLayerC.PacketTimeSyncOffset -> RF212DriverLayerC.PacketTimeSyncOffset;
 }

@@ -24,7 +24,7 @@
 #include <RF212DriverLayer.h>
 #include <Tasklet.h>
 #include <RadioAssert.h>
-#include <GenericTimeSyncMessage.h>
+#include <TimeSyncMessageLayer.h>
 #include <RadioConfig.h>
 
 module RF212DriverLayerP
