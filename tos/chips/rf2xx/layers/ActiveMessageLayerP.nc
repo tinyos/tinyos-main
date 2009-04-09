@@ -39,8 +39,8 @@ module ActiveMessageLayerP
 	uses
 	{
 		interface RadioPacket as SubPacket;
-		interface Send as SubSend;
-		interface Receive as SubReceive;
+		interface BareSend as SubSend;
+		interface BareReceive as SubReceive;
 		interface ActiveMessageConfig as Config;
 		interface ActiveMessageAddress;
 	}
@@ -48,22 +48,24 @@ module ActiveMessageLayerP
 
 implementation
 {
-
 	activemessage_header_t* getHeader(message_t* msg)
 	{
 		return ((void*)msg) + call SubPacket.headerLength(msg);
+	}
+
+	void* getPayload(message_t* msg)
+	{
+		return ((void*)msg) + call RadioPacket.headerLength(msg);
 	}
 
 /*----------------- Send -----------------*/
 
 	command error_t AMSend.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len)
 	{
-		if( call Config.forgotToClear(msg) )
-		{
-			// return FAIL;
-			call Packet.clear(msg);
-		}
+		if( len > call Packet.maxPayloadLength() )
+			return EINVAL;
 
+		call Packet.setPayloadLength(msg, len);
 		call AMPacket.setSource(msg, call AMPacket.address());
 		call AMPacket.setGroup(msg, call AMPacket.localGroup());
 		call AMPacket.setType(msg, id);
@@ -71,7 +73,7 @@ implementation
 
 		signal SendNotifier.aboutToSend[id](addr, msg);
 
-		return call SubSend.send(msg, len);
+		return call SubSend.send(msg);
 	}
 
 	inline event void SubSend.sendDone(message_t* msg, error_t error)
@@ -90,12 +92,12 @@ implementation
 
 	inline command uint8_t AMSend.maxPayloadLength[am_id_t id]()
 	{
-		return call SubSend.maxPayloadLength();
+		return call Packet.maxPayloadLength();
 	}
 
 	inline command void* AMSend.getPayload[am_id_t id](message_t* msg, uint8_t len)
 	{
-		return call SubSend.getPayload(msg, len);
+		return call Packet.getPayload(msg, len);
 	}
 
 	default event void SendNotifier.aboutToSend[am_id_t id](am_addr_t addr, message_t* msg)
@@ -104,13 +106,15 @@ implementation
 
 /*----------------- Receive -----------------*/
 
-	event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len)
+	event message_t* SubReceive.receive(message_t* msg)
 	{
-		am_id_t type = call AMPacket.type(msg);
+		am_id_t id = call AMPacket.type(msg);
+		void* payload = getPayload(msg);
+		uint8_t len = call Packet.payloadLength(msg);
 
 		msg = call AMPacket.isForMe(msg) 
-			? signal Receive.receive[type](msg, payload, len)
-			: signal Snoop.receive[type](msg, payload, len);
+			? signal Receive.receive[id](msg, payload, len)
+			: signal Snoop.receive[id](msg, payload, len);
 
 		return msg;
 	}
@@ -219,34 +223,33 @@ implementation
 		call SubPacket.clear(msg);
 	}
 
-
 /*----------------- Packet -----------------*/
 
 	command void Packet.clear(message_t* msg)
 	{
-		call RadioPacket.clear(msg);
+		call SubPacket.clear(msg);
 	}
 
 	command uint8_t Packet.payloadLength(message_t* msg)
 	{
-		return call RadioPacket.payloadLength(msg);
+		return call SubPacket.payloadLength(msg);
 	}
 
 	command void Packet.setPayloadLength(message_t* msg, uint8_t len)
 	{
-		call RadioPacket.setPayloadLength(msg, len);
+		call SubPacket.setPayloadLength(msg, len);
 	}
 
 	command uint8_t Packet.maxPayloadLength()
 	{
-		return call RadioPacket.maxPayloadLength();
+		return call SubPacket.maxPayloadLength();
 	}
 
 	command void* Packet.getPayload(message_t* msg, uint8_t len)
 	{
-		if( len > call RadioPacket.maxPayloadLength() )
+		if( len > call SubPacket.maxPayloadLength() )
 			return NULL;
 
-		return ((void*)msg) + call RadioPacket.headerLength(msg);
+		return ((void*)msg) + call SubPacket.headerLength(msg);
 	}
 }

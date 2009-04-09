@@ -90,7 +90,7 @@ implementation
 #else
 	components LowpanNetworkLayerC;
 #endif
-	LowpanNetworkLayerC.SubSend -> UniqueLayerC;
+	LowpanNetworkLayerC.SubSend -> IEEE154MessageLayerC;
 	LowpanNetworkLayerC.SubReceive -> LowPowerListeningLayerC;
 	LowpanNetworkLayerC.SubPacket -> IEEE154MessageLayerC;
 
@@ -98,6 +98,7 @@ implementation
 
 	components IEEE154MessageLayerC;
 	IEEE154MessageLayerC.SubPacket -> LowPowerListeningLayerC;
+	IEEE154MessageLayerC.SubSend -> UniqueLayerC;
 
 // -------- UniqueLayer Send part (wired twice)
 
@@ -108,6 +109,7 @@ implementation
 // -------- Low Power Listening 
 
 #ifdef LOW_POWER_LISTENING
+	#warning "*** USING LOW POWER LISTENING LAYER"
 	components LowPowerListeningLayerC;
 	LowPowerListeningLayerC.Config -> RF230ActiveMessageP;
 	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
@@ -124,6 +126,7 @@ implementation
 // -------- Packet Link
 
 #ifdef PACKET_LINK
+	#warning "*** USING PACKET LINK LAYER"
 	components PacketLinkLayerC;
 	PacketLink = PacketLinkLayerC;
 	PacketLinkLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
@@ -136,7 +139,6 @@ implementation
 // -------- MessageBuffer
 
 	components MessageBufferLayerC;
-	MessageBufferLayerC.Packet -> ActiveMessageLayerC;
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;

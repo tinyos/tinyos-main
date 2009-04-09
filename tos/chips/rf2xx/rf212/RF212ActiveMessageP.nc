@@ -152,11 +152,6 @@ implementation
 
 /*----------------- ActiveMessageConfig -----------------*/
 
-	command bool ActiveMessageConfig.forgotToClear(message_t* msg)
-	{
-		return ! call IEEE154MessageLayer.isDataFrame(msg);
-	}
-
 	command am_addr_t ActiveMessageConfig.destination(message_t* msg)
 	{
 		return call IEEE154MessageLayer.getDestAddr(msg);

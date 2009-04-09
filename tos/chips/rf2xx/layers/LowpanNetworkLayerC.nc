@@ -27,8 +27,8 @@ module LowpanNetworkLayerC
 {
 	provides
 	{
-		interface Send;
-		interface Receive;
+		interface BareSend as Send;
+		interface BareReceive as Receive;
 		interface RadioPacket;
 
 		interface Receive as NonTinyosReceive[uint8_t network];
@@ -36,27 +36,32 @@ module LowpanNetworkLayerC
 
 	uses
 	{
-		interface Send as SubSend;
-		interface Receive as SubReceive;
+		interface BareSend as SubSend;
+		interface BareReceive as SubReceive;
 		interface RadioPacket as SubPacket;
 	}
 }
 
 implementation
 {
-#ifndef TINYOS_6LOWPAN_NETWORK_ID
-#define TINYOS_6LOWPAN_NETWORK_ID 0x3f
-#endif
-
 	lowpan_header_t* getHeader(message_t* msg)
 	{
 		return ((void*)msg) + call SubPacket.headerLength(msg);
 	}
 
-	command error_t Send.send(message_t* msg, uint8_t len)
+	void* getPayload(message_t* msg)
+	{
+		return ((void*)msg) + call RadioPacket.headerLength(msg);
+	}
+
+#ifndef TINYOS_6LOWPAN_NETWORK_ID
+#define TINYOS_6LOWPAN_NETWORK_ID 0x3f
+#endif
+
+	command error_t Send.send(message_t* msg)
 	{
 		getHeader(msg)->network = TINYOS_6LOWPAN_NETWORK_ID;
-		return call SubSend.send(msg, len);
+		return call SubSend.send(msg);
 	}
 
 	command error_t Send.cancel(message_t* msg)
@@ -64,28 +69,19 @@ implementation
 		return call SubSend.cancel(msg);
 	}
 
-	command uint8_t Send.maxPayloadLength()
-	{
-		return call SubSend.maxPayloadLength();
-	}
-
-	command void* Send.getPayload(message_t* msg, uint8_t len)
-	{
-		return call SubSend.getPayload(msg, len);
-	}
-  
 	event void SubSend.sendDone(message_t* msg, error_t error)
 	{
 		signal Send.sendDone(msg, error);
 	}
   
-	event message_t *SubReceive.receive(message_t *msg, void *payload, uint8_t len)
+	event message_t *SubReceive.receive(message_t *msg)
 	{
 		uint8_t network = getHeader(msg)->network;
 		if( network == TINYOS_6LOWPAN_NETWORK_ID )
-			return signal Receive.receive(msg, payload, len);
+			return signal Receive.receive(msg);
 		else
-			return signal NonTinyosReceive.receive[network](msg, payload, len);
+			return signal NonTinyosReceive.receive[network](msg, 
+				getPayload(msg), call RadioPacket.payloadLength(msg));
 	}
 
 	default event message_t *NonTinyosReceive.receive[uint8_t network](message_t *msg, void *payload, uint8_t len)

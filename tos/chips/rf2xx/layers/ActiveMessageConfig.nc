@@ -25,13 +25,6 @@
 
 interface ActiveMessageConfig
 {
-	/**
-	 * This command is called when the message first enters the radio stack
-	 * via the Send.send command. This command should return TRUE if the
-	 * packet is deffinitely not cleared, FALSE otherwise.
-	 */
-	command bool forgotToClear(message_t* msg);
-
 	/** Same as AMPacket.destination */
 	command am_addr_t destination(message_t* msg);
 

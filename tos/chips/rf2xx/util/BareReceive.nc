@@ -21,33 +21,12 @@
  * Author: Miklos Maroti
  */
 
-configuration LowPowerListeningDummyC
+interface BareReceive
 {
-	provides
-	{
-		interface SplitControl;
-		interface BareSend as Send;
-		interface BareReceive as Receive;
-		interface RadioPacket;
-
-		interface LowPowerListening;
-	}
-	uses
-	{
-		interface SplitControl as SubControl;
-		interface BareSend as SubSend;
-		interface BareReceive as SubReceive;
-		interface RadioPacket as SubPacket;
-	}
-}
-
-implementation
-{
-	SplitControl = SubControl;
-	Send = SubSend;
-	Receive = SubReceive;
-	RadioPacket = SubPacket;
-
-	components LowPowerListeningDummyP;
-	LowPowerListening = LowPowerListeningDummyP;
+	/**
+	 * Signals the reception of a message, but only for those messages for
+	 * which SUCCESS was returned in the header event. The usual owner rules 
+	 * apply to the message pointers.
+	 */
+	event message_t* receive(message_t* msg);
 }

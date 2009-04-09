@@ -29,8 +29,8 @@ module LowPowerListeningLayerP
 	provides
 	{
 		interface SplitControl;
-		interface Send;
-		interface Receive;
+		interface BareSend as Send;
+		interface BareReceive as Receive;
 		interface RadioPacket;
 
 		interface LowPowerListening;
@@ -39,8 +39,8 @@ module LowPowerListeningLayerP
 	uses
 	{
 		interface SplitControl as SubControl;
-		interface Send as SubSend;
-		interface Receive as SubReceive;
+		interface BareSend as SubSend;
+		interface BareReceive as SubReceive;
 		interface RadioPacket as SubPacket;
 
 		interface PacketAcknowledgements;
@@ -70,7 +70,6 @@ implementation
 	uint16_t sleepInterval;
 
 	message_t* txMsg;
-	uint8_t txLen;
 	error_t txError;
 
 /*----------------- state machine -----------------*/
@@ -172,7 +171,7 @@ implementation
 		}
 		else if( state == SEND_SUBSEND)
 		{
-			txError = call SubSend.send(txMsg, txLen);
+			txError = call SubSend.send(txMsg);
 
 			if( txError == SUCCESS )
 				state = SEND_SUBSEND_DONE;
@@ -269,7 +268,7 @@ implementation
 		post transition();
 	}
 
-	event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len)
+	event message_t* SubReceive.receive(message_t* msg)
 	{
 		if( state == SLEEP_SUBSTOP )
 			state = LISTEN;
@@ -277,10 +276,10 @@ implementation
 		if( state == LISTEN && sleepInterval > 0 )
 			call Timer.startOneShot(AFTER_RECEIVE);
 
-		return signal Receive.receive(msg, payload, len);
+		return signal Receive.receive(msg);
 	}
 
-	command error_t Send.send(message_t* msg, uint8_t len)
+	command error_t Send.send(message_t* msg)
 	{
 		if( state == LISTEN || state == SLEEP )
 		{
@@ -298,7 +297,6 @@ implementation
 			return EBUSY;
 
 		txMsg = msg;
-		txLen = len;
 		txError = FAIL;
 
 		return SUCCESS;
@@ -346,16 +344,6 @@ implementation
 			state = SEND_SUBSEND;
 
 		post transition();
-	}
-
-	command uint8_t Send.maxPayloadLength()
-	{
-		return call SubSend.maxPayloadLength();
-	}
-
-	command void* Send.getPayload(message_t* msg, uint8_t len)
-	{
-		return call SubSend.getPayload(msg, len);
 	}
 
 /*----------------- LowPowerListening -----------------*/

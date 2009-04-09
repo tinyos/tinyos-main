@@ -31,8 +31,8 @@ module MessageBufferLayerP
 		interface SplitControl;
 		interface Init as SoftwareInit;
 
-		interface Send;
-		interface Receive;
+		interface BareSend as Send;
+		interface BareReceive as Receive;
 		interface RadioChannel;
 	}
 	uses
@@ -41,8 +41,6 @@ module MessageBufferLayerP
 		interface Tasklet;
 		interface RadioSend;
 		interface RadioReceive;
-
-		interface Packet;
 	}
 }
 
@@ -208,14 +206,10 @@ implementation
 		post sendTask();
 	}
 
-	command error_t Send.send(message_t* msg, uint8_t len)
+	command error_t Send.send(message_t* msg)
 	{
-		if( len > call Packet.maxPayloadLength() )
-			return EINVAL;
-		else if( state != STATE_READY )
+		if( state != STATE_READY )
 			return EBUSY;
-
-		call Packet.setPayloadLength(msg, len);
 
 		txMsg = msg;
 		state = STATE_TX_PENDING;
@@ -248,20 +242,6 @@ implementation
 		}
 		else
 			return FAIL;
-	}
-
-	default event void Send.sendDone(message_t* msg, error_t error)
-	{
-	}
-
-	inline command uint8_t Send.maxPayloadLength()
-	{
-		return call Packet.maxPayloadLength();
-	}
-
-	inline command void* Send.getPayload(message_t* msg, uint8_t len)
-	{
-		return call Packet.getPayload(msg, len);
 	}
 
 /*----------------- Receive -----------------*/
@@ -312,9 +292,7 @@ implementation
 				msg = receiveQueue[receiveQueueHead];
 			}
 
-			msg = signal Receive.receive(msg, 
-				call Packet.getPayload(msg, call Packet.maxPayloadLength()), 
-				call Packet.payloadLength(msg));
+			msg = signal Receive.receive(msg);
 
 			atomic
 			{
@@ -353,8 +331,4 @@ implementation
 		return m;
 	}
 
-	default event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len)
-	{
-		return msg;
-	}
 }

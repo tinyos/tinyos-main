@@ -26,8 +26,8 @@ configuration MessageBufferLayerC
 	provides
 	{
 		interface SplitControl;
-		interface Send;
-		interface Receive;
+		interface BareSend as Send;
+		interface BareReceive as Receive;
 		interface RadioChannel;
 	}
 	uses
@@ -35,8 +35,6 @@ configuration MessageBufferLayerC
 		interface RadioState;
 		interface RadioSend;
 		interface RadioReceive;
-
-		interface Packet;
 	}
 }
 
@@ -55,6 +53,4 @@ implementation
 	MessageBufferLayerP.Tasklet -> TaskletC;
 	RadioSend = MessageBufferLayerP;
 	RadioReceive = MessageBufferLayerP;
-
-	Packet = MessageBufferLayerP;
 }

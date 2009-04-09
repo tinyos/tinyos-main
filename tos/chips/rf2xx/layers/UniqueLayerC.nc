@@ -26,12 +26,12 @@ configuration UniqueLayerC
 	provides
 	{
 		// NOTE, this is a combined layer, should be hooked up at two places
-		interface Send;
+		interface BareSend as Send;
 		interface RadioReceive;
 	}
 	uses
 	{
-		interface Send as SubSend;
+		interface BareSend as SubSend;
 		interface RadioReceive as SubReceive;
 
 		interface UniqueConfig as Config;

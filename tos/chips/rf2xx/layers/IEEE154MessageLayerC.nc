@@ -27,16 +27,25 @@ configuration IEEE154MessageLayerC
 	{
 		interface IEEE154MessageLayer;
 		interface RadioPacket;
+
+		// for passthrough wiring
+		interface BareSend as Send;
+
+		// for gateway wiring
 		interface Ieee154Packet;
 		interface Packet;
 		interface Ieee154Send;
+		interface Receive as Ieee154Receive;
 		interface SendNotifier;
 	}
 
 	uses
 	{
 		interface RadioPacket as SubPacket;
-		interface Send as SubSend;
+		interface BareSend as SubSend;
+
+		// for gateway wiring
+		interface BareReceive as SubReceive;
 	}
 }
 
@@ -48,9 +57,15 @@ implementation
 	IEEE154MessageLayer = IEEE154MessageLayerP;
 	RadioPacket = IEEE154MessageLayerP;
 	SubPacket = IEEE154MessageLayerP;
+
+	// for passthrough
+	Send = IEEE154MessageLayerP;
+	SubSend = IEEE154MessageLayerP;
+
 	Ieee154Packet = IEEE154MessageLayerP;
 	Packet = IEEE154MessageLayerP;
 	Ieee154Send = IEEE154MessageLayerP;
-	SubSend = IEEE154MessageLayerP;
+	Ieee154Receive = IEEE154MessageLayerP;
+	SubReceive = IEEE154MessageLayerP;
 	SendNotifier = IEEE154MessageLayerP;
 }

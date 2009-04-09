@@ -59,17 +59,15 @@
 
 #include <PacketLinkLayer.h>
 
-#warning "*** USING PACKET LINK LAYER"
-
 configuration PacketLinkLayerC {
   provides {
-    interface Send;
+    interface BareSend as Send;
     interface PacketLink;
     interface RadioPacket;
   }
   
   uses {
-    interface Send as SubSend;
+    interface BareSend as SubSend;
     interface RadioPacket as SubPacket;
     interface PacketAcknowledgements;
   }

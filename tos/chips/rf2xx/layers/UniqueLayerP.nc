@@ -28,7 +28,7 @@ module UniqueLayerP
 {
 	provides
 	{
-		interface Send;
+		interface BareSend as Send;
 		interface RadioReceive;
 
 		interface Init;
@@ -36,7 +36,7 @@ module UniqueLayerP
 
 	uses
 	{
-		interface Send as SubSend;
+		interface BareSend as SubSend;
 		interface RadioReceive as SubReceive;
 
 		interface UniqueConfig;
@@ -55,10 +55,10 @@ implementation
 		return SUCCESS;
 	}
 
-	command error_t Send.send(message_t* msg, uint8_t len)
+	command error_t Send.send(message_t* msg)
 	{
 		call UniqueConfig.setSequenceNumber(msg, ++sequenceNumber);
-		return call SubSend.send(msg, len);
+		return call SubSend.send(msg);
 	}
 
 	command error_t Send.cancel(message_t* msg)
@@ -69,16 +69,6 @@ implementation
 	event void SubSend.sendDone(message_t* msg, error_t error)
 	{
 		signal Send.sendDone(msg, error);
-	}
-
-	command uint8_t Send.maxPayloadLength()
-	{
-		return call SubSend.maxPayloadLength();
-	}
-
-	command void* Send.getPayload(message_t* msg, uint8_t len)
-	{
-		return call SubSend.getPayload(msg, len);
 	}
 
 	tasklet_async event bool SubReceive.header(message_t* msg)

@@ -61,13 +61,13 @@
 
 module PacketLinkLayerP {
   provides {
-    interface Send;
+    interface BareSend as Send;
     interface PacketLink;
     interface RadioPacket;
   }
 
   uses {
-    interface Send as SubSend;
+    interface BareSend as SubSend;
     interface PacketAcknowledgements;
     interface Timer<TMilli> as DelayTimer;
     interface RadioPacket as SubPacket;
@@ -78,9 +78,6 @@ implementation {
 
   /** The message currently being sent */
   message_t *currentSendMsg;
-
-  /** Length of the current send message */
-  uint8_t currentSendLen;
 
   /** The length of the current send message */
   uint16_t totalRetries;
@@ -146,7 +143,7 @@ implementation {
    * a broadcast address message, the receiving end does not
    * signal receive() more than once for that message.
    */
-  command error_t Send.send(message_t *msg, uint8_t len) {
+  command error_t Send.send(message_t *msg) {
     error_t error = EBUSY;
     if(currentSendMsg == NULL) {
 
@@ -154,9 +151,8 @@ implementation {
         call PacketAcknowledgements.requestAck(msg);
       }
 
-      if((error = call SubSend.send(msg, len)) == SUCCESS) {
+      if((error = call SubSend.send(msg)) == SUCCESS) {
         currentSendMsg = msg;
-        currentSendLen = len;
         totalRetries = 0;
       }
     }
@@ -170,15 +166,6 @@ implementation {
     }
 
     return FAIL;
-  }
-
-
-  command uint8_t Send.maxPayloadLength() {
-    return call SubSend.maxPayloadLength();
-  }
-
-  command void *Send.getPayload(message_t* msg, uint8_t len) {
-    return call SubSend.getPayload(msg, len);
   }
 
   /***************** SubSend Events ***************/
@@ -222,7 +209,7 @@ implementation {
       call PacketAcknowledgements.requestAck(currentSendMsg);
     }
 
-    if(call SubSend.send(currentSendMsg, currentSendLen) != SUCCESS) {
+    if(call SubSend.send(currentSendMsg) != SUCCESS) {
       post send();
     }
   }

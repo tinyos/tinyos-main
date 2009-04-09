@@ -32,6 +32,8 @@ module IEEE154MessageLayerP
 		interface Ieee154Packet;
 		interface Packet;
 		interface Ieee154Send;
+		interface BareSend as Send;
+		interface Receive as Ieee154Receive;
 		interface SendNotifier;
 	}
 
@@ -39,7 +41,8 @@ module IEEE154MessageLayerP
 	{
 		interface ActiveMessageAddress;
 		interface RadioPacket as SubPacket;
-		interface Send as SubSend;
+		interface BareSend as SubSend;
+		interface BareReceive as SubReceive;
 	}
 }
 
@@ -67,6 +70,11 @@ implementation
 	ieee154_header_t* getHeader(message_t* msg)
 	{
 		return ((void*)msg) + call SubPacket.headerLength(msg);
+	}
+
+	void* getPayload(message_t* msg)
+	{
+		return ((void*)msg) + call RadioPacket.headerLength(msg);
 	}
 
 	async command uint16_t IEEE154MessageLayer.getFCF(message_t* msg)
@@ -179,7 +187,7 @@ implementation
 	}
 
 	async command void IEEE154MessageLayer.setSrcAddr(message_t* msg, uint16_t addr)
-	{
+	{	
 		getHeader(msg)->src = addr;
 	}
 
@@ -279,7 +287,6 @@ implementation
 	async command void RadioPacket.clear(message_t* msg)
 	{
 		call SubPacket.clear(msg);
-		call IEEE154MessageLayer.createDataFrame(msg);
 	}
 
 /*----------------- Packet -----------------*/
@@ -309,7 +316,7 @@ implementation
 		if( len > call RadioPacket.maxPayloadLength() )
 			return NULL;
 
-		return ((void*)msg) + call RadioPacket.headerLength(msg);
+		return getPayload(msg);
 	}
 
 /*----------------- Ieee154Send -----------------*/
@@ -331,20 +338,18 @@ implementation
 
 	command error_t Ieee154Send.send(ieee154_saddr_t addr, message_t* msg, uint8_t len)
 	{
-		ieee154_header_t* header = getHeader(msg);
+		if( len > call Packet.maxPayloadLength() )
+			return EINVAL;
 
-		header->dest = addr;
-	    	header->destpan = call Ieee154Packet.localPan();
-	    	header->src = call Ieee154Packet.address();
+		call IEEE154MessageLayer.createDataFrame(msg);
+		call Packet.setPayloadLength(msg, len);
+	    	call Ieee154Packet.setSource(msg, call Ieee154Packet.address());
+		call Ieee154Packet.setDestination(msg, addr);
+	    	call Ieee154Packet.setPan(msg, call Ieee154Packet.localPan());
 		
     		signal SendNotifier.aboutToSend(addr, msg);
     	
-    		return call SubSend.send(msg, len);
-	}
-
-	event void SubSend.sendDone(message_t* msg, error_t error)
-	{
-		signal Ieee154Send.sendDone(msg, error);
+    		return call SubSend.send(msg);
 	}
 
 	default event void Ieee154Send.sendDone(message_t* msg, error_t error)
@@ -353,5 +358,39 @@ implementation
 
 	default event void SendNotifier.aboutToSend(am_addr_t addr, message_t* msg)
 	{
+	}
+
+/*----------------- Send -----------------*/
+
+	command error_t Send.send(message_t* msg)
+	{
+		// lower leveles can send other frames
+		call IEEE154MessageLayer.createDataFrame(msg);
+
+		return call SubSend.send(msg);
+	}
+
+	command error_t Send.cancel(message_t* msg)
+	{
+		return call SubSend.cancel(msg);
+	}
+
+	event void SubSend.sendDone(message_t* msg, error_t error)
+	{
+		// we signal  both, only one of them should be connected
+		signal Ieee154Send.sendDone(msg, error);
+		signal Send.sendDone(msg, error);
+	}
+
+	default event void Send.sendDone(message_t* msg, error_t error)
+	{
+	}
+
+/*----------------- Receive -----------------*/
+
+	event message_t* SubReceive.receive(message_t* msg)
+	{
+		return signal Ieee154Receive.receive(msg,
+			getPayload(msg), call Packet.payloadLength(msg));
 	}
 }

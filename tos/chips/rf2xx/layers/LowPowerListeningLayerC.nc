@@ -21,15 +21,13 @@
  * Author: Miklos Maroti
  */
 
-#warning "*** USING LOW POWER LISTENING LAYER"
-
 configuration LowPowerListeningLayerC
 {
 	provides
 	{
 		interface SplitControl;
-		interface Send;
-		interface Receive;
+		interface BareSend as Send;
+		interface BareReceive as Receive;
 		interface RadioPacket;
 
 		interface LowPowerListening;
@@ -37,8 +35,8 @@ configuration LowPowerListeningLayerC
 	uses
 	{
 		interface SplitControl as SubControl;
-		interface Send as SubSend;
-		interface Receive as SubReceive;
+		interface BareSend as SubSend;
+		interface BareReceive as SubReceive;
 		interface RadioPacket as SubPacket;
 
 		interface LowPowerListeningConfig as Config;

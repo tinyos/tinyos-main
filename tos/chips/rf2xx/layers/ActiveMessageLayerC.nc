@@ -37,8 +37,8 @@ configuration ActiveMessageLayerC
 	uses
 	{
 		interface RadioPacket as SubPacket;
-		interface Send as SubSend;
-		interface Receive as SubReceive;
+		interface BareSend as SubSend;
+		interface BareReceive as SubReceive;
 		interface ActiveMessageConfig as Config;
 	}
 }
