@@ -149,8 +149,6 @@ implementation
 		call NeighborhoodFlag.clearAll();
 		neighborCount = 0;
 
-		call TrafficMonitorConfig.timerTick();
-
 		call Tasklet.resume();
 
 #ifdef RADIO_DEBUG

@@ -108,22 +108,14 @@ implementation
 // -------- MessageBuffer
 
 	components MessageBufferLayerC;
-	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
+	MessageBufferLayerC.RadioSend -> CollisionAvoidanceLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
-	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
+	MessageBufferLayerC.RadioState -> CollisionAvoidanceLayerC;
 	RadioChannel = MessageBufferLayerC;
 
 // -------- UniqueLayer receive part (wired twice)
 
-	UniqueLayerC.SubReceive -> TrafficMonitorLayerC;
-
-// -------- Traffic Monitor
-
-	components TrafficMonitorLayerC;
-	TrafficMonitorLayerC.Config -> RF230ActiveMessageP;
-	TrafficMonitorLayerC.SubSend -> CollisionAvoidanceLayerC;
-	TrafficMonitorLayerC.SubReceive -> CollisionAvoidanceLayerC;
-	TrafficMonitorLayerC.SubState -> RF230DriverLayerC;
+	UniqueLayerC.SubReceive -> CollisionAvoidanceLayerC;
 
 // -------- CollisionAvoidance
 

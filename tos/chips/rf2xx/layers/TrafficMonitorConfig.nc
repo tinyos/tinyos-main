@@ -71,10 +71,4 @@ interface TrafficMonitorConfig
 	 * Returns the averaged error events during one update period.
 	 */
 	tasklet_async event uint8_t getErrorAverage();
-
-	/**
-	 * This command is periodically called when the timer is fired and
-	 * the averages are updated
-	 */
-	tasklet_async command void timerTick();
 }

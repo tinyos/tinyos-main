@@ -150,11 +150,15 @@ implementation
 
 // -------- Traffic Monitor
 
+#ifdef TRAFFIC_MONITOR
 	components TrafficMonitorLayerC;
+#else
+	components new DummyLayerC() as TrafficMonitorLayerC;
+#endif
 	TrafficMonitorLayerC.Config -> RF212ActiveMessageP;
-	TrafficMonitorLayerC.SubSend -> CollisionAvoidanceLayerC;
-	TrafficMonitorLayerC.SubReceive -> CollisionAvoidanceLayerC;
-	TrafficMonitorLayerC.SubState -> RF212DriverLayerC;
+	TrafficMonitorLayerC -> CollisionAvoidanceLayerC.RadioSend;
+	TrafficMonitorLayerC -> CollisionAvoidanceLayerC.RadioReceive;
+	TrafficMonitorLayerC -> RF212DriverLayerC.RadioState;
 
 // -------- CollisionAvoidance
 

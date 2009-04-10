@@ -52,10 +52,4 @@ interface SlottedCollisionConfig
 	 * Returns the size of the collision window for this received message.
 	 */
 	async command uint16_t getCollisionWindowLength(message_t* msg);
-
-	/**
-	 * This event should be called periodically to indicate the passing of
-	 * time (maybe we should use a timer)
-	 */
-	tasklet_async event void timerTick();
 }

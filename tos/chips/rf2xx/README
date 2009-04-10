@@ -43,6 +43,13 @@ If enabled, then the radio driver will print out all received and
 transmitted messages via the DiagMsg interface. This feature is used in the 
 RF230Sniffer appliaction.
 
+TRAFFIC_MONITOR:
+
+If enabled, the TrafficMonitorLayer is included in the stack which keeps
+track of the average number of bytes sent, bytes received, the number of 
+transmission errors, and the number of neighboors. If RADIO_DEBUG is enabled
+then this information is also printed.
+
 typedef TRadio:
 
 The radio stack uses a single hardware alarm/counter. The resolution of 

@@ -73,6 +73,8 @@ implementation
 
 /* ----- schedule selection ----- */
 
+	void printStats();
+
 	tasklet_async event bool SubReceive.header(message_t* msg)
 	{
 		return signal RadioReceive.header(msg);
@@ -112,11 +114,11 @@ implementation
 		uint16_t start = call Config.getCollisionWindowStart(msg);
 		uint16_t length = call Config.getCollisionWindowLength(msg);
 
-		error1 -= error1 >> ERROR_DECAY;
+		error1 -= (error1 + (1<<ERROR_DECAY) - 1) >> ERROR_DECAY;
 		if( isBetween(exponent, schedule1, start, length) )
 			error1 += ERROR_COLLISION; 
 
-		error2 -= error2 >> ERROR_DECAY;
+		error2 -= (error1 + (1<<ERROR_DECAY) - 1) >> ERROR_DECAY;
 		if( isBetween(exponent, schedule2, start, length) )
 			error2 += ERROR_COLLISION;
 
@@ -133,24 +135,9 @@ implementation
 			schedule2 = getNextRandom();
 		}
 
-		return signal RadioReceive.receive(msg);
-	}
-
-	void printStats();
-
-	tasklet_async event void Config.timerTick()
-	{
-		if( error1 >= (1 << ERROR_DECAY) )
-			error1 -= error1 >> ERROR_DECAY;
-		else if( error1 > 0 )
-			--error1;
-
-		if( error2 >= (1 << ERROR_DECAY) )
-			error2 -= error2 >> ERROR_DECAY;
-		else if( error2 > 0 )
-			--error2;
-
 		printStats();
+
+		return signal RadioReceive.receive(msg);
 	}
 
 /* ------ transmit ------ */
@@ -195,6 +182,8 @@ implementation
 
 		call RadioAlarm.wait(backoff);
 		txTime = time + backoff;
+
+		printStats();
 
 		return SUCCESS;
 	}
@@ -256,7 +245,7 @@ implementation
 	tasklet_norace uint8_t count;
 	void printStats()
 	{
-		if( ++count > 10 && call DiagMsg.record() )
+		if( ++count > 50 && call DiagMsg.record() )
 		{
 			count = 0;
 

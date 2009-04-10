@@ -125,7 +125,9 @@ implementation
 
 	tasklet_async command void SoftwareAckConfig.reportChannelError()
 	{
+#ifdef TRAFFIC_MONITOR
 		signal TrafficMonitorConfig.channelError();
+#endif
 	}
 
 /*----------------- UniqueConfig -----------------*/
@@ -147,7 +149,9 @@ implementation
 
 	tasklet_async command void UniqueConfig.reportChannelError()
 	{
+#ifdef TRAFFIC_MONITOR
 		signal TrafficMonitorConfig.channelError();
+#endif
 	}
 
 /*----------------- ActiveMessageConfig -----------------*/
@@ -218,11 +222,6 @@ implementation
 	async command am_addr_t TrafficMonitorConfig.getSender(message_t* msg)
 	{
 		return call IEEE154MessageLayer.getSrcAddr(msg);
-	}
-
-	tasklet_async command void TrafficMonitorConfig.timerTick()
-	{
-		signal SlottedCollisionConfig.timerTick();
 	}
 
 /*----------------- RandomCollisionConfig -----------------*/
@@ -299,8 +298,6 @@ implementation
 	{
 		return (uint16_t)(2 * 7 * 32 * RADIO_ALARM_MICROSEC);
 	}
-
-	default tasklet_async event void SlottedCollisionConfig.timerTick() { }
 
 /*----------------- Dummy -----------------*/
 
