@@ -1,0 +1,1682 @@
+#!/usr/bin/perl -w
+
+# Copyright (c) 2003 University of Utah and the Flux Group.
+# All rights reserved.
+# 
+# Permission to use, copy, modify, distribute, and sell this software
+# and its documentation is hereby granted without fee, provided that the
+# above copyright notice and this permission/disclaimer notice is
+# retained in all copies or modified versions, and that both notices
+# appear in supporting documentation.  THE COPYRIGHT HOLDERS PROVIDE
+# THIS SOFTWARE "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES,
+# INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE COPYRIGHT
+# HOLDERS DISCLAIM ANY LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER
+# RESULTING FROM THE USE OF THIS SOFTWARE.
+# 
+# Users are requested, but not required, to send to csl-dist@cs.utah.edu
+# any improvements that they make and grant redistribution rights to the
+# University of Utah.
+# 
+# Author: John Regehr (regehr@cs.utah.edu)
+# Revised by: Xuejun Yang on 01/10/2009 
+
+use strict;
+use warnings;
+use Getopt::Long;
+
+# TODO: 
+#   tighten results by keeping track of atomic sections
+#   support overriding the default heuristic for detecting atomic vectors
+#   get rid of hard-coded non-terminating functions, just derive this
+#     when no "ret" is executed
+#   test for tightness / soundness using randprog
+#   read config info from a file
+#     chip parameters
+#     libc information
+#     recursion and interrupt info
+#   support TOSThreads
+#   support msp430
+#   enumerate soundness requirements
+#     stores to SP are direct and use "out"
+#     no indirect stores to registers
+#     no reentrant interrupts
+#     outs to 0x3f are ending atomic blocks, seis are enabling interrupts for real
+#     return instructions go back to their callers' successors
+
+##########################################################################
+
+my %VEC_SIZE = (
+    "mica2" => 4,
+    "micaz" => 4,
+    "iris" => 4,
+    );
+
+my %PC_SIZE = (
+    "mica2" => 2,
+    "micaz" => 2,
+    "iris" => 2,
+    );
+
+my %NUM_VECTORS = (
+    "mica2" => 35,
+    "micaz" => 35,
+    "iris" => 51,
+    );
+
+my %RAM_SIZE = (
+    "mica2" => 4096,
+    "micaz" => 4096,
+    "iris" => 8192,
+    );
+
+my %DEV_SIZE = (
+    "mica2" => 256,
+    "micaz" => 256,
+    "iris" => 512,
+    );
+
+my %NORETURN = (
+    "deputy_fail_noreturn_fast" => 1,
+    );
+
+# any icall in the function on the left is assumed to go to the
+# function on the right
+my %ICALL_TARGETS = (
+    "fputc" => "uart_putchar",
+    "puts" => "uart_putchar",
+    );    
+
+# also look below for __prologue_saves__ and __epilogue_restores__
+my %SPECIAL = (
+
+    # these have icalls
+    #"__eewr_block" => 35,
+    #"__eerd_block" => 35,
+
+    # these peel a return address off the stack before calling into a
+    # function that returns to the caller's caller
+    "__fp_split1" => 0,
+    "__fp_split2" => 0,
+    "__fp_split3" => 0,
+    "__fp_split_a" => 0,
+    );
+
+##########################################################################
+
+my $verbosity = 1;
+
+my $ORIGIN = 0;
+my $ZERO_STACK = -999999;
+
+my $platform;
+my %insns;
+my %args;
+my %addr_to_label;
+my %label_to_addr;
+my %lines;
+my %line_to_addr;
+my %stack_effect;
+my %successors;
+my %call_targets;
+my %insn_size;
+my %diehere;
+my %raw_text;
+my %jump_lists;
+my $initial_stack_depth;
+
+sub bynum {
+    return $a <=> $b;
+}
+
+sub parse_pair ($) {
+    (my $pair) = @_;
+    if ($pair =~ /^([a-zA-Z0-9]+)\, ([a-zA-Z0-9\+]+)$/) {
+	return ($1, $2);
+    } else {
+	die "FAIL: expected 'x, y' got '$pair'";
+    }
+}
+
+sub get_relative_address ($) {
+    (my $addr) = @_;
+    my $code = $args{$addr};
+    die "FAIL" if (!($code =~ /.(\-?[0-9]+)/));
+    return 2+$1;
+}
+
+sub add_insn ($$$$) {
+    (my $addr, my $code, my $size, my $linenum) = @_;
+    if (($code =~ /^([a-zA-Z]+)\s*(.*)?$/)) { 
+	if ($verbosity > 7) {
+	    print "$code\n";
+	}
+	$line_to_addr{$linenum} = $addr; 
+	my $insn = $1;
+	my $arg = $2;
+	$insns{$addr} = $insn;
+	$args{$addr} = $arg;
+	
+	if ($verbosity > 7) {
+	    print "'$insn' '$arg' @ $addr\n";
+	}
+
+	$insn_size{$addr} = $size;
+    } else {
+	if ($verbosity > 7) {
+	    print "???? $code\n";
+	}
+    }
+}
+
+sub disassemble ($) {
+    (my $fn) = @_;
+    open INF, "avr-objdump -zsD $fn |" or die "FAIL: can't open input file $fn";
+    my $linenum = 0;
+    my $text_go = 0;
+    my $raw_text_go = 0;
+    my $raw_addr;
+    
+    while (my $line = <INF>) {
+	chomp $line;
+
+	$linenum++;
+	$lines{$linenum} = $line;
+
+	if ($line =~ m/Disassembly of section \.text/) {
+	    $text_go = 1;
+	    $raw_text_go = 0;
+	    next;
+	}
+
+	if ($line =~ m/Contents of section \.text/) {
+	    $text_go = 0;
+	    $raw_text_go = 1;
+	    next;
+	}
+
+	if ($line =~ m/Contents of section /) {
+	    $text_go = 0;
+	    $raw_text_go = 0;
+	    next;
+	}
+
+	if ($line =~ m/Disassembly of section /) {
+	    $text_go = 0;
+	    $raw_text_go = 0;
+	    next;
+	}
+
+	# skip blank line and obvious junk
+	next if ($line eq "" or $line =~ /^\s*\.*$/);
+	
+	# kill comments
+	($line =~ s/\s*;.*$//);
+	
+	if ($verbosity > 7) {
+	    print "$line\n";
+	}
+
+	if ($raw_text_go) {
+	    $line = substr $line, 0, 43;
+	    $line .= " ";
+	    if ($line =~ /^\s*([0-9a-f]{4}) ((([0-9a-f][0-9a-f]){1,4} ){1,4})\s*$/) {
+		my $address = hex($1);
+		my $bytes = $2;
+		if (!defined($raw_addr)) {
+		    $raw_addr = $address;
+		} else {
+		    die "FAIL" if ($raw_addr != $address);
+		}
+		($bytes =~ s/\s//g);
+		while (length($bytes)>0) {
+		    die "FAIL" if (length($bytes)==1);
+		    my $b = substr $bytes, 0, 2;
+		    $bytes = substr $bytes, 2, length($bytes)-2;
+		    $raw_text{$raw_addr} = $b;
+		    $raw_addr++;
+		}
+	    } else {
+		print "cannot parse raw text: '$line'\n";
+		die "FAIL";
+	    }
+	}
+	
+	if ($text_go) {
+	    # label
+	    if ($line =~ /^0*([0-9a-f]+) <(.+)>:$/) {
+		my $addr = hex($1);
+		my $label = $2;
+		$addr_to_label{$addr} = $label;
+		$label_to_addr{$label} = $addr;
+		next;
+	    }
+	    
+	    # data in code segment
+	    if ($line =~ /^\s+([0-9a-f]+):\s+([0-9a-fA-F][0-9a-fA-F] ){16}\s+/) {
+		next;
+	    }
+	    
+	    # regular code
+	    
+	    my $a;
+	    my $code;
+
+	    if ($line =~ /^\s+([0-9a-f]+):\s+([0-9a-f][0-9a-f]\s){4}\s*(.*)$/) {
+		$a = hex($1);
+		$code = $3;
+		add_insn ($a, $code, 4, $linenum);
+		next;
+	    }
+	    
+	    if ($line =~ /^\s+([0-9a-f]+):\s+([0-9a-f][0-9a-f][ \t]){2}\s*(.*)$/) {
+		$a = hex($1);
+		$code = $3;
+		add_insn ($a, $code, 2, $linenum);
+		next;
+	    }
+	    
+	    # paranoid: don't ignore lines that look funny
+	    die "FAIL: can't understand '$line'";
+	}
+    }
+
+    if ($verbosity >= 2) {
+	print "there are:\n";
+	print "  ".scalar(keys %addr_to_label)." labels\n";
+	print "  ".scalar(keys %insns)." instructions\n";
+    }
+    
+    close INF;
+}
+
+sub is_branch ($) {
+    (my $addr) = @_;
+    my $insn = $insns{$addr};
+    return ($insn eq "breq" || $insn eq "brge" || $insn eq "brne" ||
+	    $insn eq "brcs" || $insn eq "brcc" || $insn eq "brlt" ||
+	    $insn eq "brhc" || $insn eq "brhs" || $insn eq "brid" ||
+	    $insn eq "brie" || $insn eq "brmi" || $insn eq "brpl" ||
+	    $insn eq "brtc" || $insn eq "brts" || $insn eq "brvc" ||
+	    $insn eq "brvs" || $insn eq "brbc" || $insn eq "brbs");
+}
+
+sub is_skip ($) {
+    (my $addr) = @_;
+    my $insn = $insns{$addr};
+    return ($insn eq "sbrs" || $insn eq "sbrc" || $insn eq "cpse" ||
+	    $insn eq "sbic" || $insn eq "sbis");
+}
+
+sub is_fallthrough ($) {
+    (my $addr) = @_;
+    my $insn = $insns{$addr};
+    return (
+	$insn eq "prologue_saves" || $insn eq "epilogue_restores" ||
+	$insn eq "init_sp" || $insn eq "constant_push" || $insn eq "constant_pop" ||
+	$insn eq "adc" || $insn eq "add" || $insn eq "adiw" ||
+	$insn eq "and" || $insn eq "andi" || $insn eq "asr" ||
+	$insn eq "bld" || $insn eq "break" || $insn eq "bst" ||
+	$insn eq "cbi" || $insn eq "clh" || $insn eq "cli" ||
+	$insn eq "cln" || $insn eq "cls" || $insn eq "clt" ||
+	$insn eq "clv" || $insn eq "clz" || $insn eq "com" ||
+	$insn eq "cp" || $insn eq "cpc" || $insn eq "cpi" ||
+	$insn eq "dec" || $insn eq "elpm" || $insn eq "eor" ||
+	$insn eq "fmul" || $insn eq "fmuls" || $insn eq "fmulsu" ||
+	$insn eq "in" || $insn eq "inc" || $insn eq "ldi" ||
+	$insn eq "lpm" || $insn eq "lsr" || $insn eq "mov" ||
+	$insn eq "movw" || $insn eq "mul" || $insn eq "muls" ||
+	$insn eq "mulsu" || $insn eq "neg" || $insn eq "nop" ||
+	$insn eq "or" || $insn eq "ori" || $insn eq "out" ||
+	$insn eq "pop" || $insn eq "push" || $insn eq "ror" ||
+	$insn eq "sbc" || $insn eq "sbci" || $insn eq "sbi" ||
+	$insn eq "sbiw" || $insn eq "seh" || $insn eq "sei" ||
+	$insn eq "sen" || $insn eq "ses" || $insn eq "set" ||
+	$insn eq "sev" || $insn eq "sez" || $insn eq "sleep" ||
+	$insn eq "spm" || $insn eq "sub" || $insn eq "subi" ||
+	$insn eq "swap" || $insn eq "wdr" || $insn eq "ld" ||
+	$insn eq "ldd" || $insn eq "sec" || $insn eq "st" ||
+	$insn eq "std" || $insn eq "lds" || $insn eq "sts"
+	);
+}
+
+sub is_jmp ($) {
+    (my $addr) = @_;
+    my $insn = $insns{$addr};
+    return ($insn eq "jmp" || $insn eq "rjmp");
+}
+
+sub is_direct_call ($) {
+    (my $addr) = @_;
+    my $insn = $insns{$addr};
+    return ($insn eq "call" || $insn eq "rcall");
+}
+
+sub insn_stack_effects () {
+    foreach my $addr (keys %insns) {
+	my $insn = $insns{$addr};
+	if ($insn eq "push") {
+	    $stack_effect{$addr} = 1;
+	} elsif ($insn eq "pop") {
+	    $stack_effect{$addr} = -1;
+	} elsif ($insn eq "ret" || $insn eq "reti") {
+	    $stack_effect{$addr} = -$PC_SIZE{$platform};
+	} else {
+	    $stack_effect{$addr} = 0;
+	}
+    }
+}
+
+sub make16($$) {
+    (my $l, my $h) = @_;
+    return (hex($h) << 8) + hex($l);
+}
+
+sub jmp_call_target ($) {
+    (my $addr) = @_;
+    die "FAIL" if ($insns{$addr} ne "jmp" && $insns{$addr} ne "call");
+    my $code = $args{$addr};
+    die "FAIL" if (!($code =~ /0x([0-9a-f]+)/) && $code != 0);
+    if (($code =~ /0x([0-9a-f]+)/)) {
+	return hex ($1);
+    } else {
+	return 0;
+    }
+}
+
+sub get_target ($) {
+    (my $addr) = @_;
+    my $insn = $insns{$addr};
+    my $hex_addr = sprintf "%x", $addr;
+    
+    if (is_jmp ($addr) || is_direct_call ($addr)) {
+        if ($insn eq "rjmp" || $insn eq "rcall") {
+            return $addr + get_relative_address ($addr);
+        } else {
+	    return jmp_call_target ($addr);
+        }
+    }
+
+    if (is_branch ($addr)) {
+	return $addr + get_relative_address ($addr);
+    }
+
+    # skip size depends on size of subsequent insn
+    if (is_skip ($addr)) {
+	die "FAIL: $hex_addr" if (!defined($insn_size{$addr}));
+	my $next = $addr + $insn_size{$addr};
+	if (!defined($insn_size{$next})) {
+	    return $next + 2;
+	} else {
+	    return $next + $insn_size{$next};
+	}
+    }
+
+    die "FAIL";
+}
+
+sub match_branch ($$) {
+    (my $addr, my $instruction) = @_;
+    if (defined($insns{$addr}) && $insns{$addr} eq $instruction) { 
+	return (1, get_target ($addr));
+    } else {
+	return (0, 0);
+    }
+}
+
+sub match_2args ($$) {
+    (my $addr, my $instruction) = @_;
+    if (defined($insns{$addr}) && $insns{$addr} eq $instruction) { 
+        (my $a, my $b) = parse_pair ($args{$addr});
+	return (1, $a, $b);
+    } else {
+	return (0, 0, 0);
+    }
+}
+
+sub match_0args ($$) {
+    (my $addr, my $instruction) = @_;
+    if (defined($insns{$addr}) && $insns{$addr} eq $instruction) { 
+	return 1;
+    } else {
+	return 0;
+    }
+}
+
+# ldi	r28, 0xFF	; 255
+# ldi	r29, 0x21	; 33
+# out	0x3e, r29	; 62
+# out	0x3d, r28	; 61
+
+sub match_init_sp ($) {
+    (my $addr) = @_;
+    my $match;
+    my $reg;
+    my $immed;
+    ($match, $reg, my $sp_lo) = match_2args ($addr, "ldi");
+    return (0,0,0) if (!$match || $reg ne "r28");
+    ($match, $reg, my $sp_hi) = match_2args ($addr+2, "ldi");
+    return (0,0,0) if (!$match || $reg ne "r29");
+    ($match, $immed, $reg) = match_2args ($addr+4, "out");
+    return (0,0,0) if (!$match || $reg ne "r29" || $immed ne "0x3e");
+    ($match, $immed, $reg) = match_2args ($addr+6, "out");
+    return (0,0,0) if (!$match || $reg ne "r28" || $immed ne "0x3d");
+    my $init = make16($sp_lo,$sp_hi);
+    my $init_stack = $RAM_SIZE{$platform} + $DEV_SIZE{$platform} - $init - 1;
+    if ($verbosity > 3) {
+	print "init = $sp_lo $sp_hi = $init = ${init_stack}\n";
+    }
+    return (1,8,$init_stack);
+}
+
+# cpi	r30, 0x12	; 18
+# cpc	r31, r1
+# brcs	.+2      	; 0x1a88 <SchedulerBasicP_xx_TaskBasic_xx_runTask+0x3e>
+# rjmp	.+2218   	; 0x2332 <SchedulerBasicP_xx_TaskBasic_xx_runTask+0x8e8>
+# subi	r30, 0xBA	; 186
+# sbci	r31, 0xFF	; 255
+# add	r30, r30
+# adc	r31, r31
+# lpm	r0, Z+
+# lpm	r31, Z
+# mov	r30, r0
+# ijmp
+
+# cpi	r16, 0x80	; 128
+# cpc	r17, r1
+# brcs	.+2      	; 0x13ec <__stack+0x2ed>
+# rjmp	.+148    	; 0x1480 <__stack+0x381>
+# subi	r16, 0xBA	; 186
+# sbci	r17, 0xFF	; 255
+# movw	r30, r16
+# add	r30, r30
+# adc	r31, r31
+# lpm	r0, Z+
+# lpm	r31, Z
+# mov	r30, r0
+# ijmp
+
+# cpi	r30, 0x1E	; 30
+# cpc	r31, r1
+# brcc	.+78     	; 0x19ce <main+0x626>
+# subi	r30, 0xBA	; 186
+# sbci	r31, 0xFF	; 255
+# add	r30, r30
+# adc	r31, r31
+# lpm	r0, Z+
+# lpm	r31, Z
+# mov	r30, r0
+# ijmp
+
+# cpi	r26, 0x48	; 72
+# cpc	r27, r1
+# brcc	.+38     	; 0x1954 <__stack+0x855>
+# subi	r26, 0xBA	; 186
+# sbci	r27, 0xFF	; 255
+# movw	r30, r26
+# add	r30, r30
+# adc	r31, r31
+# lpm	r0, Z+
+# lpm	r31, Z
+# mov	r30, r0
+# ijmp
+
+sub match_jump_table_1 ($) {
+    (my $addr) = @_;
+    my $match;
+    my $reg1;
+    my $reg2;
+    my $immed;
+    my $oob_target;
+    my @targets;
+    my $inc = 0;
+
+    ($match, $reg1, my $table_size) = match_2args ($addr+$inc, "cpi");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+    
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "cpc");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+
+    ($match, $immed) = match_branch ($addr+$inc, "brcs");
+    if ($match) {
+	$inc += 2;
+	($match, $oob_target) = match_branch ($addr+$inc, "rjmp");
+	return (0, \@targets, 0) if (!$match);
+	$inc += 2;
+    } else {
+	($match, $oob_target) = match_branch ($addr+$inc, "brcc");
+	return (0, \@targets, 0) if (!$match);	
+	$inc += 2;
+    }
+
+    ($match, $reg1, my $sublo) = match_2args ($addr+$inc, "subi");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+
+    ($match, $reg1, my $subhi) = match_2args ($addr+$inc, "sbci");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "movw");
+    if ($match) {
+	$inc += 2;
+    }
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "add");
+    return (0, \@targets, 0) if (!$match);    
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "adc");
+    return (0, \@targets, 0) if (!$match);    
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "lpm");
+    return (0, \@targets, 0) if (!$match || $reg1 ne "r0" || $reg2 ne "Z+");    
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "lpm");
+    return (0, \@targets, 0) if (!$match || $reg1 ne "r31" || $reg2 ne "Z");    
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "mov");
+    return (0, \@targets, 0) if (!$match || $reg1 ne "r30" || $reg2 ne "r0");    
+    $inc += 2;
+
+    if (match_0args ($addr+$inc, "ijmp")) {
+	$inc += 2;
+	push @targets, $oob_target;
+	if ($verbosity > 3) {
+	    printf "found a jump table of size %d\n", hex($table_size);
+	}
+	for (my $i=0; $i<hex($table_size); $i++) {
+	    my $index = 2*($i+65536-make16($sublo,$subhi));
+	    my $l = $raw_text{$index};
+	    my $h = $raw_text{$index+1};
+	    my $targ = 2*make16($l,$h);
+	    
+	    if ($verbosity > 3) {
+		printf "  entry at %x pointing to %x (%s,%s)\n", $index, $targ, $l, $h;
+	    }
+	    
+	    # this is a strong sanity check-- if we've got something
+	    # wrong it's highly unlikely that all jump table entries
+	    # will point to actual instructions
+	    die "FAIL" if (!defined($insns{$targ}));
+
+	    push @targets, $targ;
+	}
+	return (1, \@targets, $inc);
+    } else {
+	return (0, \@targets, 0);
+    }
+}
+
+# cpi	r30, 0x1D	; 29
+# cpc	r31, r1
+# brcs	.+4      	; 0x39d2 <SchedulerBasicP__TaskBasic__runTask+0x38>
+# jmp	0x547c	; 0x547c <SchedulerBasicP__TaskBasic__runTask+0x1ae2>
+# subi	r30, 0xBA	; 186
+# sbci	r31, 0xFF	; 255
+# add	r30, r30
+# adc	r31, r31
+# lpm	r0, Z+
+# lpm	r31, Z
+# mov	r30, r0
+# ijmp
+
+sub match_jump_table_2 ($) {
+    (my $addr) = @_;
+    my $match;
+    my $reg1;
+    my $reg2;
+    my $immed;
+    my $oob_target;
+    my @targets;
+    my $inc = 0;
+
+    ($match, $reg1, my $table_size) = match_2args ($addr+$inc, "cpi");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+    
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "cpc");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+
+    ($match, $immed) = match_branch ($addr+$inc, "brcs");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+
+    ($match, $oob_target) = match_branch ($addr+$inc, "jmp");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 4;
+
+    ($match, $reg1, my $sublo) = match_2args ($addr+$inc, "subi");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+
+    ($match, $reg1, my $subhi) = match_2args ($addr+$inc, "sbci");
+    return (0, \@targets, 0) if (!$match);
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "movw");
+    if ($match) {
+	$inc += 2;
+    }
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "add");
+    return (0, \@targets, 0) if (!$match);    
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "adc");
+    return (0, \@targets, 0) if (!$match);    
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "lpm");
+    return (0, \@targets, 0) if (!$match || $reg1 ne "r0" || $reg2 ne "Z+");    
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "lpm");
+    return (0, \@targets, 0) if (!$match || $reg1 ne "r31" || $reg2 ne "Z");    
+    $inc += 2;
+
+    ($match, $reg1, $reg2) = match_2args ($addr+$inc, "mov");
+    return (0, \@targets, 0) if (!$match || $reg1 ne "r30" || $reg2 ne "r0");    
+    $inc += 2;
+
+    if (match_0args ($addr+$inc, "ijmp")) {
+	$inc += 2;
+	push @targets, $oob_target;
+	if ($verbosity > 3) {
+	    printf "found a jump table of size %d\n", hex($table_size);
+	}
+	for (my $i=0; $i<hex($table_size); $i++) {
+	    my $index = 2*($i+65536-make16($sublo,$subhi));
+	    my $l = $raw_text{$index};
+	    my $h = $raw_text{$index+1};
+	    my $targ = 2*make16($l,$h);
+	    
+	    if ($verbosity > 3) {
+		printf "  entry at %x pointing to %x (%s,%s)\n", $index, $targ, $l, $h;
+	    }
+	    
+	    # this is a strong sanity check-- if we've got something
+	    # wrong it's highly unlikely that all jump table entries
+	    # will point to actual instructions
+	    die "FAIL" if (!defined($insns{$targ}));
+
+	    push @targets, $targ;
+	}
+	return (1, \@targets, $inc);
+    } else {
+	return (0, \@targets, 0);
+    }
+}
+
+# in	r28, 0x3d	; 61 
+# in	r29, 0x3e	; 62
+# subi	r28, 0x9D	; 157
+# sbci	r29, 0x00	; 0
+# in	r0, 0x3f	; 63
+# cli
+# out	0x3e, r29	; 62
+# out	0x3f, r0	; 63
+# out	0x3d, r28	; 61
+
+# in	r28, 0x3d	; 61
+# in	r29, 0x3e	; 62
+# sbiw	r28, 0x14	; 20
+# in	r0, 0x3f	; 63
+# cli
+# out	0x3e, r29	; 62
+# out	0x3f, r0	; 63
+# out	0x3d, r28	; 61
+
+sub match_constant_push_1 ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $immed;
+    my $dec;
+    my $inc = 0;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0) if (!$match || $reg ne "r28" || $immed ne "0x3d");
+    $inc +=2;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0) if (!$match || $reg ne "r29" || $immed ne "0x3e");
+    $inc +=2;
+
+    ($match, $reg, $dec) = match_2args ($addr+$inc, "sbiw");
+    if ($match && $reg eq "r28") {
+	$dec = hex($dec);
+	$inc +=2;
+    } else {
+	($match, $reg, my $dec1) = match_2args ($addr+$inc, "subi");
+	return (0, 0) if (!$match || $reg ne "r28");
+	$inc +=2;
+
+	($match, $reg, my $dec2) = match_2args ($addr+$inc, "sbci");
+	return (0, 0) if (!$match || $reg ne "r29");	
+	$inc +=2;
+
+	$dec = make16($dec1,$dec2);
+    }
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0) if (!$match || $reg ne "r0" || $immed ne "0x3f");
+    $inc +=2;
+
+    return (0, 0) if (!match_0args($addr+$inc, "cli"));
+    $inc +=2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0) if (!$match || $reg ne "r29" || $immed ne "0x3e");
+    $inc +=2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0) if (!$match || $reg ne "r0" || $immed ne "0x3f");
+    $inc +=2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0) if (!$match || $reg ne "r28" || $immed ne "0x3d");
+    $inc +=2;
+
+    return (1, $dec, $inc);
+}
+
+# in	r28, 0x3d	; 61
+# in	r29, 0x3e	; 62
+# sbiw	r28, 0x05	; 5
+# out	0x3e, r29	; 62
+# out	0x3d, r28	; 61
+
+sub match_constant_push_2 ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $immed;
+    my $dec;
+    my $inc = 0;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0) if (!$match || $reg ne "r28" || $immed ne "0x3d");
+    $inc +=2;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0) if (!$match || $reg ne "r29" || $immed ne "0x3e");
+    $inc +=2;
+
+    ($match, $reg, $dec) = match_2args ($addr+$inc, "sbiw");
+    return (0, 0) if (!$match || $reg ne "r28");
+    $inc +=2;
+    $dec = hex($dec);
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0) if (!$match || $reg ne "r29" || $immed ne "0x3e");
+    $inc +=2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0) if (!$match || $reg ne "r28" || $immed ne "0x3d");
+    $inc +=2;
+
+    return (1, $dec, $inc);
+}
+
+# rcall	.+0      	; 0x2792 <IPP__icmpv6_input+0x1e>
+
+sub match_constant_push_3 ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $immed;
+    my $dec;
+    my $inc = 0;
+
+    ($match, $reg, $immed) = match_0args ($addr+$inc, "rcall");
+    return (0, 0) if (!$match);
+    return (0, 0) if (get_target($addr) != $addr+$PC_SIZE{$platform});
+    $inc +=2;
+
+    return (1, $PC_SIZE{$platform}, $inc);
+}
+
+# adiw	r28, 0x14	; 20
+# in	r0, 0x3f	; 63
+# cli
+# out	0x3e, r29	; 62
+# out	0x3f, r0	; 63
+# out	0x3d, r28	; 61
+
+sub match_constant_pop_1 ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $immed;
+    my $dec;
+    my $inc = 0;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "adiw");
+    return (0, 0, 0) if (!$match || $reg ne "r28");
+    $dec = -hex($immed);
+    $inc += 2;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0, 0) if (!$match || $reg ne "r0" || $immed ne "0x3f");
+    $inc += 2;
+
+    return (0, 0, 0) if (!match_0args($addr+$inc, "cli"));
+    $inc += 2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0, 0) if (!$match || $reg ne "r29" || $immed ne "0x3e");
+    $inc += 2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0, 0) if (!$match || $reg ne "r0" || $immed ne "0x3f");
+    $inc += 2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0, 0) if (!$match || $reg ne "r28" || $immed ne "0x3d");
+    $inc += 2;
+
+    return (1, $dec, $inc);
+}
+
+# adiw	r28, 0x05	; 5
+# out	0x3e, r29	; 62
+# out	0x3d, r28	; 61
+
+sub match_constant_pop_2 ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $immed;
+    my $dec;
+    my $inc = 0;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "adiw");
+    return (0, 0, 0) if (!$match || $reg ne "r28");
+    $dec = -hex($immed);
+    $inc += 2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0, 0) if (!$match || $reg ne "r29" || $immed ne "0x3e");
+    $inc += 2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0, 0) if (!$match || $reg ne "r28" || $immed ne "0x3d");
+    $inc += 2;
+
+    return (1, $dec, $inc);
+}
+
+# in	r28, 0x3d	; 61
+# in	r29, 0x3e	; 62
+# subi	r28, 0x9E	; 158
+# sbci	r29, 0xFF	; 255
+# in	r0, 0x3f	; 63
+# cli
+# out	0x3e, r29	; 62
+# out	0x3f, r0	; 63
+# out	0x3d, r28	; 61
+
+sub match_constant_stack_op ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $immed;
+    my $inc = 0;
+
+    ($match, $reg, my $dec_lo) = match_2args ($addr+$inc, "subi");
+    return (0, 0, 0) if (!$match || $reg ne "r28");
+    $inc += 2;
+
+    ($match, $reg, my $dec_hi) = match_2args ($addr+$inc, "sbci");
+    return (0, 0, 0) if (!$match || $reg ne "r29");
+    $inc += 2;
+    my $dec = make16($dec_lo,$dec_hi);
+    if ($dec > 32768) {
+	$dec = - (65536 - $dec);
+    }
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0, 0) if (!$match || $reg ne "r0" || $immed ne "0x3f");
+    $inc += 2;
+
+    return (0, 0, 0) if (!match_0args($addr+$inc, "cli"));
+    $inc += 2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0, 0) if (!$match || $reg ne "r29" || $immed ne "0x3e");
+    $inc += 2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0, 0) if (!$match || $reg ne "r0" || $immed ne "0x3f");
+    $inc += 2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0, 0) if (!$match || $reg ne "r28" || $immed ne "0x3d");
+    $inc += 2;
+
+    return (1, $dec, $inc);
+}
+
+# in	r24, 0x3d	; 61
+# in	r25, 0x3e	; 62
+# adiw	r24, 0x06	; 6
+# in	r0, 0x3f	; 63
+# cli
+# out	0x3e, r25	; 62
+# out	0x3f, r0	; 63
+# out	0x3d, r24	; 61
+
+sub match_constant_pop_4 ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $immed;
+    my $stack_inc;
+    my $inc = 0;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0) if (!$match || $reg ne "r24" || $immed ne "0x3d");
+    $inc +=2;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0) if (!$match || $reg ne "r25" || $immed ne "0x3e");
+    $inc +=2;
+
+    ($match, $reg, $stack_inc) = match_2args ($addr+$inc, "adiw");
+    return (0, 0) if (!$match || $reg ne "r24");
+    $stack_inc = -hex($stack_inc);
+    $inc +=2;
+
+    ($match, $reg, $immed) = match_2args ($addr+$inc, "in");
+    return (0, 0) if (!$match || $reg ne "r0" || $immed ne "0x3f");
+    $inc +=2;
+
+    return (0, 0) if (!match_0args($addr+$inc, "cli"));
+    $inc +=2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0) if (!$match || $reg ne "r25" || $immed ne "0x3e");
+    $inc +=2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0) if (!$match || $reg ne "r0" || $immed ne "0x3f");
+    $inc +=2;
+
+    ($match, $immed, $reg) = match_2args ($addr+$inc, "out");
+    return (0, 0) if (!$match || $reg ne "r24" || $immed ne "0x3d");
+    $inc +=2;
+
+    return (1, $stack_inc, $inc);
+}
+
+# ldi	r26, 0x00	; 0
+# ldi	r27, 0x00	; 0
+# ldi	r30, 0x97	; 151
+# ldi	r31, 0x06	; 6
+# jmp	0x19dc	; 0x19dc <__prologue_saves__+0x4>
+
+sub match_prologue_saves ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $immed;
+    ($match, $reg, my $im_lo) = match_2args ($addr, "ldi");
+    return (0, 0, 0) if (!$match || $reg ne "r26");
+    ($match, $reg, my $im_hi) = match_2args ($addr+2, "ldi");
+    return (0, 0, 0) if (!$match || $reg ne "r27");
+    ($match, $reg, $immed) = match_2args ($addr+4, "ldi");
+    return (0, 0, 0) if (!$match || $reg ne "r30");
+    ($match, $reg, $immed) = match_2args ($addr+6, "ldi");
+    return (0, 0, 0) if (!$match || $reg ne "r31");
+    ($match, my $target) = match_branch ($addr+8, "jmp");
+    return (0, 0, 0) if (!$match);
+    my $ps = $label_to_addr{"__prologue_saves__"};
+    if (defined($ps) &&
+	$target >= $ps &&
+	$target <= ($ps+38)) {
+	# this is a little conservative since we may jump into the middle
+	my $st = 18+make16($im_lo, $im_hi);
+	return (1, $st, 12);
+    }
+    return (0, 0, 0);
+}
+
+# jmp	0x2598	; 0x2598 <__epilogue_restores__+0x14>
+
+sub match_epilogue_restores ($) {
+    (my $addr) = @_;
+    my $hex_addr = sprintf "%x", $addr;
+    my $match;
+    my $reg;
+    my $inc = 0;
+
+    ($match, my $target) = match_branch ($addr+$inc, "jmp");
+    return (0,0) if (!$match);
+    my $er = $label_to_addr{"__epilogue_restores__"};
+    if (defined($er) &&
+	$target >= $er &&
+	$target <= ($er+38)) {
+	$addr += 4;
+	return (1, $ZERO_STACK, $inc);
+    } else {
+	return (0,0);
+    }
+}
+
+sub replace_insn ($$$$) {
+    (my $addr, my $size, my $se, my $name) = @_;
+    $insns{$addr} = $name;
+    $insn_size{$addr} = $size;
+    $stack_effect{$addr} = $se;
+    for (my $i=1; $i<$size; $i++) {
+	delete ($insns{$addr+$i});
+    }
+}
+
+sub make_macro_insns () {
+    foreach my $addr (keys %insns) {
+
+	my $res;
+	my $stack;
+	my $listref;
+	my $size;
+
+	# todo-- factor this into list of function 
+
+	($res, $size, my $initial_depth) = match_init_sp($addr);
+	if ($res) {
+	    if (defined($initial_stack_depth)) {
+		# FIXME: avr-gcc-412 initializes SP both in
+		# crt0 and in main(), we can believe the second one
+		#die "FAIL: multiple initialization of SP?";
+	    }
+	    die "FAIL" if ($initial_depth < 0 || $initial_depth >= $RAM_SIZE{$platform});
+	    $initial_stack_depth = $initial_depth;
+	    replace_insn ($addr, $size, 0, "init_sp");
+	}
+
+	($res, $listref, $size) = match_jump_table_1($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, 0, "jump_table");
+	    $jump_lists{$addr} = $listref;
+	}	
+
+	($res, $listref, $size) = match_jump_table_2($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, 0, "jump_table");
+	    $jump_lists{$addr} = $listref;
+	}	
+
+	($res, $stack, $size) = match_constant_push_1 ($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, $stack, "constant_push");
+	}
+
+	($res, $stack, $size) = match_constant_push_2 ($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, $stack, "constant_push");
+	}
+
+	($res, $stack, $size) = match_constant_push_3 ($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, $stack, "constant_push");
+	}
+
+	($res, $stack, $size) = match_constant_pop_1($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, $stack, "constant_pop");
+	}
+
+	($res, $stack, $size) = match_constant_pop_2($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, $stack, "constant_pop");
+	}
+
+	($res, $stack, $size) = match_constant_stack_op($addr);
+	if ($res) {
+	    if ($size > 0) {
+		replace_insn ($addr, $size, $stack, "constant_push");
+	    } else {
+		replace_insn ($addr, $size, $stack, "constant_pop");
+	    }
+	}
+
+	($res, $stack, $size) = match_constant_pop_4 ($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, $stack, "constant_pop");
+	}
+
+	($res, $stack, $size) = match_prologue_saves($addr);
+	if ($res) {
+	    replace_insn ($addr, $size, $stack, "prologue_saves");
+	}
+
+	($res, $stack, $size) = match_epilogue_restores($addr);
+	if ($res) {
+	    # here we ignore the stack effect of epilogue_restores
+	    # since the code includes a "ret" that terminates a thread
+	    # of the analysis
+	    replace_insn ($addr, $size, $stack, "ret");
+	}
+    }
+}
+
+sub make_fine_grain_cfg () {
+    my $last_label;
+    foreach my $addr (sort bynum keys %insns) {
+	my $insn = $insns{$addr};
+	my $hex_addr = sprintf "%x", $addr;
+	my @succ = ();
+	my @callees = ();
+
+	# hack-- we're going to assume this is the name of the
+	# function to which this instruction belongs
+	if (defined($addr_to_label{$addr})) {
+	    $last_label = $addr_to_label{$addr};
+	}
+
+	if ($insn eq "ijmp") {
+	    $diehere{$addr} = "cannot process raw ijmp at $hex_addr";
+	} elsif ($insn eq "ret" || $insn eq "reti") {
+	    # no control flow from here in our model
+	} elsif (is_branch ($addr) || is_skip ($addr) || is_jmp ($addr)) {
+	    if (is_jmp ($addr) && get_target ($addr) == $ORIGIN) {
+		# jump to origin-- nothing to do since this resets the stack
+	    } else {
+		push @succ, get_target ($addr);
+		if (!is_jmp($addr)) {
+		    push @succ, ($addr + $insn_size{$addr});
+		}
+	    }
+	} elsif ($insn eq "jump_table") {
+	    my $listref = $jump_lists{$addr};
+	    die "FAIL" if (!defined($listref));
+	    @succ = @{$listref};
+	} elsif (is_fallthrough ($addr)) {
+	    push @succ, ($addr + $insn_size{$addr});
+	    if ($insn eq "out") {
+		(my $immed, my $reg) = parse_pair ($args{$addr});
+		if ($immed eq "0x3d" || $immed eq "0x3e") {
+		    $diehere{$addr} = "cannot process raw store to SP at $hex_addr";
+		}
+	    }
+	} elsif (is_direct_call ($addr) || $insn eq "icall") {
+	    my $target;
+	    if (is_direct_call ($addr)) {
+		$target = get_target ($addr);
+		die "FAIL" if (!defined($target));
+	    } else {
+		my $target_func = $ICALL_TARGETS{$last_label};
+		if (defined($target_func)) {
+		    $target = $label_to_addr{$target_func};
+		    die "FAIL" if (!defined($target));
+		} else {
+		    $diehere{$addr} = "cannot process raw icall at $hex_addr";
+		}
+	    }
+	    if (defined($target)) {
+		push @callees, $target;
+		my $l = $addr_to_label{$target};
+		if (!defined($l) || !$NORETURN{$addr_to_label{$target}}) {
+		    push @succ, ($addr + $insn_size{$addr});
+		}
+	    }
+	} else {
+	    # data interpreted as instruction; this happens sometimes
+	    delete ($insns{$addr})
+	}
+	
+	$successors{$addr} = \@succ;
+	$call_targets{$addr}= \@callees;
+    }
+}
+
+sub compute_global_size($) {
+    (my $fn) = @_;
+    open INF, "avr-objdump -h $fn |" or die "FAIL: can't open input file $fn";
+    my $data_size;
+    my $bss_size;
+
+    while (my $line = <INF>) {
+        chomp $line;
+        if ($line =~ /^\s+[0-9]\s.([a-z]+)\s+([0-9a-f]+)/) {
+            if ($1 eq "bss") {
+                $bss_size = hex($2);
+            }
+            if ($1 eq "data") {
+                $data_size = hex($2);
+            }
+        }
+    }
+    close INF;
+    die "FAIL" if (!defined($data_size));
+    die "FAIL" if (!defined($bss_size));
+    return ($data_size, $bss_size);
+}
+
+sub max ($$) {
+    (my $a, my $b) = @_;
+    if ($a > $b) {
+	return $a;
+    } else {
+	return $b;
+    }
+}
+
+sub min ($$) {
+    (my $a, my $b) = @_;
+    if ($a < $b) {
+	return $a;
+    } else {
+	return $b;
+    }
+}
+
+# $addr is the address of the current instruction
+# $vec is the name of the interrupt vector we're currently looking at
+# $old_depth is the stack depth before executing this instruction
+
+my %stack_map;
+my %max_stack;
+my %visited;
+my %enables_ints;
+
+sub compute_function_stack ($$) {
+    (my $start_addr, my $vec_type) = @_;
+    
+    my $func_name = $addr_to_label{$start_addr};
+    my @worklist = ();
+    my $start_stack;
+    if ($vec_type eq "intr" || $vec_type eq "func") {
+	$start_stack = $PC_SIZE{$platform};
+    } else {
+	die if ($vec_type ne "main");
+	$start_stack = 0;
+    }
+    my @tmpl = ($start_addr, $start_stack);
+    push @worklist, \@tmpl;
+    my %depths;
+    my %callees;
+
+    while (scalar(@worklist) > 0) {
+	my $lref = pop (@worklist);
+	(my $addr, my $old_depth) = @{$lref};
+
+	die "FAIL" if (!defined $addr);
+	my $hex_addr = sprintf "%x", $addr;
+
+	if (!defined($insns{$addr})) {
+	    die "FAIL: no instruction at address $hex_addr";
+	}
+
+	my $insn = $insns{$addr};	
+	my $xxx = $diehere{$addr};
+	if (defined ($xxx)) {
+	    die "FAIL: $xxx";
+	}
+
+	$visited{$addr} = 1;
+
+	# FIXME: nonportable AVR
+	if ($insns{$addr} eq "sei") {
+	    $enables_ints{$start_addr} = 1;
+	}
+
+	my $se = $stack_effect{$addr};
+	die "FAIL: no stack effect for $insn" if (!defined($se));
+	my $new_depth;
+	if ($se == $ZERO_STACK) {
+	    $new_depth = 0;
+	} else {
+	    $new_depth = $old_depth + $se;
+	}
+
+	if ($verbosity > 5) {
+	    print "  $hex_addr $insn $new_depth\n";
+	}
+	
+	# something is very wrong
+	if ($new_depth > $RAM_SIZE{$platform}) {
+	    printf "FAIL: stack depth exceeds RAM size at %x\n", $hex_addr;
+	    die;
+	}
+
+	# require balanced stack #1
+	if ($insn eq "reti") {
+	    die "FAIL" if ($vec_type ne "intr");
+	    die "FAIL" if ($new_depth != 0);
+	    next;
+	}
+
+	# require balanced stack #2
+	if ($insn eq "ret") {
+	    die "FAIL" if ($vec_type ne "func");
+	    die "FAIL -- unbalanced stack on return from $func_name" if ($new_depth != 0);
+	    next;
+	}
+
+	# terminate if we're not learning something new about this address
+	next if (defined($depths{$addr}) && $depths{$addr} >= $new_depth);
+
+	# record new depth
+	$depths{$addr} = $new_depth;
+	if (defined($max_stack{$start_addr})) {
+	    $max_stack{$start_addr} = 
+		max ($new_depth, $max_stack{$start_addr});
+	} else {
+	    $max_stack{$start_addr} = $new_depth;
+	}
+
+	# handle control flow except function calls
+	my $succ_ref = $successors{$addr};
+	my @succ = @{$succ_ref};
+	foreach my $succ_addr (@succ) {
+	    my @ll = ($succ_addr, $new_depth);
+	    push @worklist, \@ll;
+	}
+
+	# handle function calls
+	my $callee_ref = $call_targets{$addr};
+	my @callees = @{$callee_ref};
+	foreach my $callee_addr (@callees) {
+	    $callees{$callee_addr} = 1;
+	    my $my_max;
+	    if (defined($stack_map{$start_addr}{$callee_addr})) {
+		$my_max = max ($stack_map{$start_addr}{$callee_addr}, $new_depth);
+	    } else {
+		$my_max = $new_depth;
+	    }
+	    $stack_map{$start_addr}{$callee_addr} = $my_max;
+	}
+    }
+
+    my @callee_list = keys %callees;
+
+    if ($verbosity > 2) {
+	print "$func_name (max = $max_stack{$start_addr})\n";
+	foreach my $callee (@callee_list) {
+	    print "  -> $addr_to_label{$callee} ";
+	    print "depth $stack_map{$start_addr}{$callee}\n";
+	}
+    }
+    
+    return \@callee_list;
+}
+
+sub analyze_functions () {
+    my @worklist = ();
+    my %seen = ();
+    for (my $vec = 0; $vec < $NUM_VECTORS{$platform}; $vec++) {
+	my $addr = $vec * $VEC_SIZE{$platform};
+	my $label = "vector_$vec";
+	$addr_to_label{$addr} = $label;
+	$label_to_addr{$label} = $addr;
+	my $vec_type;
+	if ($vec == 0) {
+	    $vec_type = "main";
+	} else {
+	    $vec_type = "intr";
+	}
+	my @ll = ($addr, $vec_type);
+	push @worklist, \@ll;
+    }
+    while (scalar(@worklist) > 0) {
+	my $lref = pop @worklist;
+	(my $addr, my $vec_type) = @{$lref};
+	my $hex_addr = sprintf "%x", $addr;
+	next if ($seen{$addr});
+	my $label = $addr_to_label{$addr};
+	if (defined($label) && defined($SPECIAL{$label})) {
+	    $max_stack{$addr} = $SPECIAL{$label};
+	    next;
+	}
+	$seen{$addr} = 1;
+	my $l;
+	my $lab = $addr_to_label{$addr};
+	if (defined($lab)) {
+	    $l = $lab;
+	} else {
+	    $l = "[no label]";
+	}
+
+	my $xlref = compute_function_stack ($addr, $vec_type);
+	my @l = @{$xlref};
+	foreach $addr (@l) {
+	    my @ll = ($addr, "func");
+	    push @worklist, \@ll;
+	}
+    }
+}
+
+# floyd
+sub find_cycles() {
+    my @func_list = keys %max_stack;
+    my %path;
+    my $INFINITY = 9999999;
+    foreach my $x (@func_list) {
+	foreach my $y (@func_list) {
+	    if (defined($stack_map{$x}{$y})) {
+		$path{$x}{$y} = 1;
+	    } else {
+		$path{$x}{$y} = $INFINITY;
+	    }
+	}
+    }
+    foreach my $k (@func_list) {
+	foreach my $i (@func_list) {
+	    foreach my $j(@func_list) {
+		$path{$i}{$j} = 
+		    min ($path{$i}{$j},$path{$i}{$k}+$path{$k}{$j});
+	    }
+	}
+    }
+    my $min_path = $INFINITY;
+    my $min_func;
+    foreach my $z (@func_list) {
+	if ($path{$z}{$z} < $min_path) {
+	    $min_path = $path{$z}{$z};
+	    $min_func = $z;
+	}
+    }
+    if ($min_path != $INFINITY) {
+	print "there is a recursive loop of length $min_path\n";
+	my $f = $min_func;
+	for (my $i=$min_path-1; $i>0; $i--) {
+	    my @next_list = keys (%{$path{$f}});
+	    my $found;
+	    foreach my $n (@next_list) {
+		if ($path{$n}{$min_func} == $i) {
+		    $found = $n;
+		}
+	    }
+	    die "FAIL graph algo bug" if (!$found);
+	    print "  $addr_to_label{$f} $f -> $addr_to_label{$found} $found\n";
+	    $f = $found;
+	}
+	print "  $addr_to_label{$f} $f -> $addr_to_label{$min_func} $min_func\n";
+	die "FAIL";
+    }
+}
+
+my %reachable;
+
+sub find_reachable {
+    (my $addr) = @_;
+    $reachable{$addr} = 1;
+    foreach my $callee (keys (%{$stack_map{$addr}})) {
+	find_reachable($callee);
+    }
+}
+
+my %vector_depth = ();
+my %atomic_vector = ();
+
+sub analyze_vector($$$) {
+    (my $addr, my $vec, my $lref) = @_;
+    my @topo = @{$lref};
+    %reachable = ();
+    $atomic_vector{$vec} = 1;
+    find_reachable ($addr);
+    my %depth = ();
+    my $maxd = 0;
+    my $FAKE = -999;
+    foreach my $v (@topo) {
+	next if (!defined($reachable{$v}));
+	my @edge_list = keys %{$stack_map{$v}};
+	# if any reachable function enables interrupts, the whole vector
+	# in non-atomic
+	if (defined($enables_ints{$v}) && $enables_ints{$v}) {
+	    $atomic_vector{$vec} = 0;
+	}
+	push @edge_list, $FAKE;
+	foreach my $w (@edge_list) {
+	    my $d = $depth{$w};
+	    $d = 0 if (!defined($d));
+	    my $d2 = $depth{$v};
+	    $d2 = 0 if (!defined($d2));
+	    my $edge_weight;
+	    if ($w eq $FAKE) {
+		$edge_weight = $max_stack{$v};
+	    } else {
+		$edge_weight = $stack_map{$v}{$w};
+	    }
+	    $d = max ($d, $d2 + $edge_weight);
+	    $depth{$w} = $d;
+	    $maxd = max ($maxd, $d);
+	}
+	
+    }
+    $vector_depth{$vec} = $maxd;
+}
+
+sub analyze_vectors() {
+    my @topo = ();
+    my %stack_map2 = %stack_map;
+    my @func_list = keys %stack_map2;
+    do {
+        foreach my $f (keys %stack_map2) {
+	    my $in_edges = 0;
+	    foreach my $f2 (keys %stack_map2) {
+		if (defined($stack_map2{$f2}{$f})) {
+		    $in_edges++;
+		}
+	    }
+	    if ($in_edges == 0) {
+		push @topo, $f;
+		delete ($stack_map2{$f});
+	    }
+	}
+    } while (scalar(keys %stack_map2) > 0);
+
+    if ($verbosity > 3) {
+	foreach my $f (@topo) {
+	    my $hex = sprintf "%x", $f;
+	    my $s = $addr_to_label{$f};
+	    print "  $s $hex\n";
+	}
+    }
+    for (my $vec = 0; $vec < $NUM_VECTORS{$platform}; $vec++) {
+	my $addr = $vec * $VEC_SIZE{$platform};
+	analyze_vector ($addr, $vec, \@topo);
+    }
+}
+
+sub analyze_global_stack_usage() {
+    my $max_atomic = 0;
+    my $total_nonatomic = 0;
+    if ($verbosity > 1) {
+	print "\n";
+	print "per-vector results:\n";
+    }
+    for (my $vec = 0; $vec < $NUM_VECTORS{$platform}; $vec++) {
+	my $addr = $vec * $VEC_SIZE{$platform};
+	my $maxd = $vector_depth{$vec};
+	my $s = "";
+	$s .= sprintf "  vector %d max depth = %d", $vec, $maxd;
+	my $atom = $atomic_vector{$vec};
+	if (defined($atom) && $atom) {
+	    $s .= " (atomic)";
+	    $max_atomic = max ($max_atomic, $maxd);
+	} else {
+	    $s .= " (not atomic)";
+	    $total_nonatomic += $maxd;
+	}
+	if ($verbosity > 1 && $maxd != $PC_SIZE{$platform}) {
+	    print "$s\n";
+	}
+    }
+    
+    my $depth = $total_nonatomic + $max_atomic;
+    return $depth;
+}
+
+##########################################################################
+################################ MAIN ####################################
+##########################################################################
+
+# redirect stderr to stdout, don't buffer stdout
+open(STDERR,'>&', STDOUT);
+$|=1;
+
+my $result = GetOptions ("verbosity=i" => \$verbosity);
+die "FAIL" if (!$result);
+
+if (scalar(@ARGV) != 2) {
+    die "usage: ramsize.pl [-verbosity 0-9] mica2|micaz|iris avr_file.elf";
+}
+
+$platform = $ARGV[0];
+die "FAIL: unknown platform '$platform'" if (!defined($RAM_SIZE{$platform}));
+
+my $file = $ARGV[1];
+die "FAIL: '$file' not found" if (!(-f $file));
+
+disassemble ($file);
+insn_stack_effects();
+make_macro_insns();
+make_fine_grain_cfg();
+analyze_functions();
+find_cycles();
+analyze_vectors();
+my $total_depth = analyze_global_stack_usage();
+
+(my $data_size, my $bss_size) = compute_global_size($file);
+my $ramused = $data_size + $bss_size + $total_depth;
+my $free_mem = $RAM_SIZE{$platform} - $ramused;
+
+if ($verbosity > 2) {
+    print "\n";
+    foreach my $addr (sort bynum keys %insns) {
+	if (!$visited{$addr}) {
+	    my $l = $addr_to_label{$addr};
+	    if (defined($l) && !defined($SPECIAL{$l})) {
+		printf "unreachable label: %x %s\n", $addr, $l;
+	    }
+	}
+    }
+}
+
+if ($verbosity > 0) {
+    print "\n";
+    print "BSS segment size is ${bss_size}, data segment size is ${data_size}\n";
+}
+print "The upper bound on stack size is ${total_depth}\n";
+print "The upper bound on RAM usage is $ramused\n";
+print "There are $free_mem unused bytes of RAM\n";
+
+##########################################################################
