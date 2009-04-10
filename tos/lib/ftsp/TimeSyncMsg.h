@@ -32,10 +32,16 @@ typedef nx_struct TimeSyncMsg
 	nx_uint16_t	nodeID;		// the node if of the sender
 	nx_uint8_t	seqNum;		// sequence number for the root
 
-	/* This field is initially set to the offset between global time and local
-	 * time. The TimeStamping component will add the current local time when the
-	 * message is actually transmitted. Thus the receiver will receive the
-	 * global time of the sender when the message is actually sent. */
+	/*
+	* After TEP 133, the message timestamp contains the difference between
+	* event time and the time the message was actually sent out. TimeSyncP
+	* sends the local time associated with this globalTime to the
+	* TimeStamping mechanism, which then calculates the difference.
+	*
+	* On the receiving side, the difference is applied to the local
+	* timestamp. The receiving timestamp thus represents the time on the
+	* receiving clock when the remote globalTime was taken.
+	*/
 	nx_uint32_t	globalTime;
 
 	//just for convenience
