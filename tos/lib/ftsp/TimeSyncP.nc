@@ -408,7 +408,7 @@ implementation
         if (mode == mode_)
             return SUCCESS;
 
-        if (mode_ == TS_USER_MODE){
+        if (mode_ == TS_TIMER_MODE){
             call Timer.startPeriodic((uint32_t)1000 * BEACON_RATE);
         }
         else
