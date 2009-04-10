@@ -68,9 +68,10 @@ implementation
 	components IEEE154MessageLayerC;
 	IEEE154MessageLayerC.SubPacket -> LowPowerListeningLayerC;
 	IEEE154MessageLayerC.SubSend -> UniqueLayerC;
+	IEEE154MessageLayerC.SubReceive -> LowPowerListeningLayerC;
 	Ieee154Send = IEEE154MessageLayerC;
 	Packet = IEEE154MessageLayerC;
-	Ieee154Receive = LowPowerListeningLayerC;
+	Ieee154Receive = IEEE154MessageLayerC;
 	Ieee154Packet = IEEE154MessageLayerC;
 	SendNotifier = IEEE154MessageLayerC;
 
@@ -107,7 +108,6 @@ implementation
 // -------- MessageBuffer
 
 	components MessageBufferLayerC;
-	MessageBufferLayerC.Packet -> IEEE154MessageLayerC;	// to get the payload for the Ieee154Receive.receive
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
