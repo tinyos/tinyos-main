@@ -134,14 +134,14 @@ sub parse_pair ($) {
     if ($pair =~ /^([a-zA-Z0-9]+)\, ([a-zA-Z0-9\+]+)$/) {
 	return ($1, $2);
     } else {
-	die "FAIL: expected 'x, y' got '$pair'";
+	die "tos-ramsize FAIL: expected 'x, y' got '$pair'";
     }
 }
 
 sub get_relative_address ($) {
     (my $addr) = @_;
     my $code = $args{$addr};
-    die "FAIL" if (!($code =~ /.(\-?[0-9]+)/));
+    die "tos-ramsize FAIL" if (!($code =~ /.(\-?[0-9]+)/));
     return 2+$1;
 }
 
@@ -171,7 +171,7 @@ sub add_insn ($$$$) {
 
 sub disassemble ($) {
     (my $fn) = @_;
-    open INF, "avr-objdump -zsD $fn |" or die "FAIL: can't open input file $fn";
+    open INF, "avr-objdump -zsD $fn |" or die "tos-ramsize FAIL: can't open input file $fn";
     my $linenum = 0;
     my $text_go = 0;
     my $raw_text_go = 0;
@@ -226,11 +226,11 @@ sub disassemble ($) {
 		if (!defined($raw_addr)) {
 		    $raw_addr = $address;
 		} else {
-		    die "FAIL" if ($raw_addr != $address);
+		    die "tos-ramsize FAIL" if ($raw_addr != $address);
 		}
 		($bytes =~ s/\s//g);
 		while (length($bytes)>0) {
-		    die "FAIL" if (length($bytes)==1);
+		    die "tos-ramsize FAIL" if (length($bytes)==1);
 		    my $b = substr $bytes, 0, 2;
 		    $bytes = substr $bytes, 2, length($bytes)-2;
 		    $raw_text{$raw_addr} = $b;
@@ -238,7 +238,7 @@ sub disassemble ($) {
 		}
 	    } else {
 		print "cannot parse raw text: '$line'\n";
-		die "FAIL";
+		die "tos-ramsize FAIL";
 	    }
 	}
 	
@@ -277,7 +277,7 @@ sub disassemble ($) {
 	    }
 	    
 	    # paranoid: don't ignore lines that look funny
-	    die "FAIL: can't understand '$line'";
+	    die "tos-ramsize FAIL: can't understand '$line'";
 	}
     }
 
@@ -374,9 +374,9 @@ sub make16($$) {
 
 sub jmp_call_target ($) {
     (my $addr) = @_;
-    die "FAIL" if ($insns{$addr} ne "jmp" && $insns{$addr} ne "call");
+    die "tos-ramsize FAIL" if ($insns{$addr} ne "jmp" && $insns{$addr} ne "call");
     my $code = $args{$addr};
-    die "FAIL" if (!($code =~ /0x([0-9a-f]+)/) && $code != 0);
+    die "tos-ramsize FAIL" if (!($code =~ /0x([0-9a-f]+)/) && $code != 0);
     if (($code =~ /0x([0-9a-f]+)/)) {
 	return hex ($1);
     } else {
@@ -403,7 +403,7 @@ sub get_target ($) {
 
     # skip size depends on size of subsequent insn
     if (is_skip ($addr)) {
-	die "FAIL: $hex_addr" if (!defined($insn_size{$addr}));
+	die "tos-ramsize FAIL: $hex_addr" if (!defined($insn_size{$addr}));
 	my $next = $addr + $insn_size{$addr};
 	if (!defined($insn_size{$next})) {
 	    return $next + 2;
@@ -412,7 +412,7 @@ sub get_target ($) {
 	}
     }
 
-    die "FAIL";
+    die "tos-ramsize FAIL";
 }
 
 sub match_branch ($$) {
@@ -603,7 +603,7 @@ sub match_jump_table_1 ($) {
 	    # this is a strong sanity check-- if we've got something
 	    # wrong it's highly unlikely that all jump table entries
 	    # will point to actual instructions
-	    die "FAIL" if (!defined($insns{$targ}));
+	    die "tos-ramsize FAIL" if (!defined($insns{$targ}));
 
 	    push @targets, $targ;
 	}
@@ -704,7 +704,7 @@ sub match_jump_table_2 ($) {
 	    # this is a strong sanity check-- if we've got something
 	    # wrong it's highly unlikely that all jump table entries
 	    # will point to actual instructions
-	    die "FAIL" if (!defined($insns{$targ}));
+	    die "tos-ramsize FAIL" if (!defined($insns{$targ}));
 
 	    push @targets, $targ;
 	}
@@ -1103,9 +1103,9 @@ sub make_macro_insns () {
 	    if (defined($initial_stack_depth)) {
 		# FIXME: avr-gcc-412 initializes SP both in
 		# crt0 and in main(), we can believe the second one
-		#die "FAIL: multiple initialization of SP?";
+		#die "tos-ramsize FAIL: multiple initialization of SP?";
 	    }
-	    die "FAIL" if ($initial_depth < 0 || $initial_depth >= $RAM_SIZE{$platform});
+	    die "tos-ramsize FAIL" if ($initial_depth < 0 || $initial_depth >= $RAM_SIZE{$platform});
 	    $initial_stack_depth = $initial_depth;
 	    replace_insn ($addr, $size, 0, "init_sp");
 	}
@@ -1205,7 +1205,7 @@ sub make_fine_grain_cfg () {
 	    }
 	} elsif ($insn eq "jump_table") {
 	    my $listref = $jump_lists{$addr};
-	    die "FAIL" if (!defined($listref));
+	    die "tos-ramsize FAIL" if (!defined($listref));
 	    @succ = @{$listref};
 	} elsif (is_fallthrough ($addr)) {
 	    push @succ, ($addr + $insn_size{$addr});
@@ -1219,12 +1219,12 @@ sub make_fine_grain_cfg () {
 	    my $target;
 	    if (is_direct_call ($addr)) {
 		$target = get_target ($addr);
-		die "FAIL" if (!defined($target));
+		die "tos-ramsize FAIL" if (!defined($target));
 	    } else {
 		my $target_func = $ICALL_TARGETS{$last_label};
 		if (defined($target_func)) {
 		    $target = $label_to_addr{$target_func};
-		    die "FAIL" if (!defined($target));
+		    die "tos-ramsize FAIL" if (!defined($target));
 		} else {
 		    $diehere{$addr} = "cannot process raw icall at $hex_addr";
 		}
@@ -1248,9 +1248,9 @@ sub make_fine_grain_cfg () {
 
 sub compute_global_size($) {
     (my $fn) = @_;
-    open INF, "avr-objdump -h $fn |" or die "FAIL: can't open input file $fn";
-    my $data_size;
-    my $bss_size;
+    open INF, "avr-objdump -h $fn |" or die "tos-ramsize FAIL: can't open input file $fn";
+    my $data_size = 0;
+    my $bss_size = 0;
 
     while (my $line = <INF>) {
         chomp $line;
@@ -1264,8 +1264,6 @@ sub compute_global_size($) {
         }
     }
     close INF;
-    die "FAIL" if (!defined($data_size));
-    die "FAIL" if (!defined($bss_size));
     return ($data_size, $bss_size);
 }
 
@@ -1317,17 +1315,17 @@ sub compute_function_stack ($$) {
 	my $lref = pop (@worklist);
 	(my $addr, my $old_depth) = @{$lref};
 
-	die "FAIL" if (!defined $addr);
+	die "tos-ramsize FAIL" if (!defined $addr);
 	my $hex_addr = sprintf "%x", $addr;
 
 	if (!defined($insns{$addr})) {
-	    die "FAIL: no instruction at address $hex_addr";
+	    die "tos-ramsize FAIL: no instruction at address $hex_addr";
 	}
 
 	my $insn = $insns{$addr};	
 	my $xxx = $diehere{$addr};
 	if (defined ($xxx)) {
-	    die "FAIL: $xxx";
+	    die "tos-ramsize FAIL: $xxx";
 	}
 
 	$visited{$addr} = 1;
@@ -1338,7 +1336,7 @@ sub compute_function_stack ($$) {
 	}
 
 	my $se = $stack_effect{$addr};
-	die "FAIL: no stack effect for $insn" if (!defined($se));
+	die "tos-ramsize FAIL: no stack effect for $insn" if (!defined($se));
 	my $new_depth;
 	if ($se == $ZERO_STACK) {
 	    $new_depth = 0;
@@ -1352,21 +1350,21 @@ sub compute_function_stack ($$) {
 	
 	# something is very wrong
 	if ($new_depth > $RAM_SIZE{$platform}) {
-	    printf "FAIL: stack depth exceeds RAM size at %x\n", $hex_addr;
+	    printf "tos-ramsize FAIL: stack depth exceeds RAM size at %x\n", $hex_addr;
 	    die;
 	}
 
 	# require balanced stack #1
 	if ($insn eq "reti") {
-	    die "FAIL" if ($vec_type ne "intr");
-	    die "FAIL" if ($new_depth != 0);
+	    die "tos-ramsize FAIL" if ($vec_type ne "intr");
+	    die "tos-ramsize FAIL" if ($new_depth != 0);
 	    next;
 	}
 
 	# require balanced stack #2
 	if ($insn eq "ret") {
-	    die "FAIL" if ($vec_type ne "func");
-	    die "FAIL -- unbalanced stack on return from $func_name" if ($new_depth != 0);
+	    die "tos-ramsize FAIL" if ($vec_type ne "func");
+	    die "tos-ramsize FAIL -- unbalanced stack on return from $func_name" if ($new_depth != 0);
 	    next;
 	}
 
@@ -1504,12 +1502,12 @@ sub find_cycles() {
 		    $found = $n;
 		}
 	    }
-	    die "FAIL graph algo bug" if (!$found);
+	    die "tos-ramsize FAIL graph algo bug" if (!$found);
 	    print "  $addr_to_label{$f} $f -> $addr_to_label{$found} $found\n";
 	    $f = $found;
 	}
 	print "  $addr_to_label{$f} $f -> $addr_to_label{$min_func} $min_func\n";
-	die "FAIL";
+	die "tos-ramsize FAIL";
     }
 }
 
@@ -1634,17 +1632,21 @@ open(STDERR,'>&', STDOUT);
 $|=1;
 
 my $result = GetOptions ("verbosity=i" => \$verbosity);
-die "FAIL" if (!$result);
+die "tos-ramsize FAIL" if (!$result);
 
 if (scalar(@ARGV) != 2) {
     die "usage: ramsize.pl [-verbosity 0-9] mica2|micaz|iris avr_file.elf";
 }
 
 $platform = $ARGV[0];
-die "FAIL: unknown platform '$platform'" if (!defined($RAM_SIZE{$platform}));
+die "tos-ramsize FAIL: unknown platform '$platform'" if (!defined($RAM_SIZE{$platform}));
 
 my $file = $ARGV[1];
-die "FAIL: '$file' not found" if (!(-f $file));
+die "tos-ramsize FAIL: '$file' not found" if (!(-f $file));
+
+if ($verbosity > 1) {
+    print "analyzing elf file '$file' for platform '$platform'\n";
+}
 
 disassemble ($file);
 insn_stack_effects();
@@ -1660,7 +1662,6 @@ my $ramused = $data_size + $bss_size + $total_depth;
 my $free_mem = $RAM_SIZE{$platform} - $ramused;
 
 if ($verbosity > 2) {
-    print "\n";
     foreach my $addr (sort bynum keys %insns) {
 	if (!$visited{$addr}) {
 	    my $l = $addr_to_label{$addr};
@@ -1672,7 +1673,6 @@ if ($verbosity > 2) {
 }
 
 if ($verbosity > 0) {
-    print "\n";
     print "BSS segment size is ${bss_size}, data segment size is ${data_size}\n";
 }
 print "The upper bound on stack size is ${total_depth}\n";
