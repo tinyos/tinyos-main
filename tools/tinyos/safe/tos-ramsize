@@ -1485,28 +1485,37 @@ sub find_cycles() {
     }
     my $min_path = $INFINITY;
     my $min_func;
+    if ($verbosity > 2) {
+	print "self-path lengths in the callgraph:\n";
+    }
     foreach my $z (@func_list) {
-	if ($path{$z}{$z} < $min_path) {
-	    $min_path = $path{$z}{$z};
+	my $len = $path{$z}{$z};
+	if ($verbosity > 2) {
+	    print "  $addr_to_label{$z} $len\n";
+	}
+	if ($len < $min_path) {
+	    $min_path = $len;
 	    $min_func = $z;
 	}
     }
     if ($min_path != $INFINITY) {
-	print "there is a recursive loop of length $min_path\n";
+	print "cannot estimate stack depth due to recursive loop of length $min_path:\n";
 	my $f = $min_func;
 	for (my $i=$min_path-1; $i>0; $i--) {
 	    my @next_list = keys (%{$path{$f}});
 	    my $found;
 	    foreach my $n (@next_list) {
-		if ($path{$n}{$min_func} == $i) {
+		if ($path{$n}{$min_func} == $i &&
+		    $path{$n}{$n} == $min_path) {
 		    $found = $n;
 		}
 	    }
 	    die "tos-ramsize FAIL graph algo bug" if (!$found);
-	    print "  $addr_to_label{$f} $f -> $addr_to_label{$found} $found\n";
+	    printf "  %s @ %x -> %s @ %x\n", $addr_to_label{$f}, $f, $addr_to_label{$found}, $found;
 	    $f = $found;
 	}
-	print "  $addr_to_label{$f} $f -> $addr_to_label{$min_func} $min_func\n";
+	printf "  %s @ %x -> %s @ %x\n", $addr_to_label{$f}, $f, $addr_to_label{$min_func}, $min_func;
+
 	die "tos-ramsize FAIL";
     }
 }
