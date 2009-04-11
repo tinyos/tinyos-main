@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.22 2009-04-10 22:32:06 regehr Exp $
+#$Id: avr.rules,v 1.23 2009-04-11 05:39:40 regehr Exp $
 
 define AVR_HELP
 
@@ -141,7 +141,7 @@ ifdef WIRING_CHECK_FILE
 endif
 ifdef STACK_CHECK
 	@echo
-	@tos-ramsize $(PLATFORM) $(MAIN_EXE)
+	@-tos-ramsize $(PLATFORM) $(MAIN_EXE)
 	@echo
 endif
 	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
