@@ -26,23 +26,37 @@ use warnings;
 use Getopt::Long;
 
 # TODO: 
-#   tighten results by keeping track of atomic sections
-#   support overriding the default heuristic for detecting atomic vectors
-#   get rid of hard-coded non-terminating functions, just derive this
-#     when no "ret" is executed
-#   test for tightness / soundness using randprog
-#   read config info from a file
-#     chip parameters
-#     libc information
-#     recursion and interrupt info
-#   support TOSThreads
-#   support msp430
-#   enumerate soundness requirements
-#     stores to SP are direct and use "out"
-#     no indirect stores to registers
-#     no reentrant interrupts
-#     outs to 0x3f are ending atomic blocks, seis are enabling interrupts for real
-#     return instructions go back to their callers' successors
+#
+# flesh out the man page
+#
+# make a page on the TinyOS wiki
+#
+# tighten results by keeping track of depths inside and out of
+# atomic sections
+#
+# support overriding the default heuristic for detecting atomic
+# interrupts
+#
+# get rid of hard-coded non-terminating functions, just derive this
+# when no "ret" is executed
+#
+# test for tightness / soundness using randprog and Avrora
+#
+# read config info from a file
+#   chip parameters
+#   libc information
+#   recursion and interrupt info
+#
+# support TOSThreads
+#
+# support msp430
+#
+# enumerate soundness requirements
+#   stores to SP are direct and use "out"
+#   no reentrant interrupts
+#   outs to SREG are for ending atomic blocks, seis are enabling interrupts for real
+#   return instructions go back to their callers' successors
+#   special-cases are correct
 
 ##########################################################################
 

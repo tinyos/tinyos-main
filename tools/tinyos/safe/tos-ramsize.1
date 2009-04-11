@@ -8,4 +8,9 @@ tos-ramsize - Compute RAM usage of a TinyOS application including the stack
 \fBtos-ramsize\fR [-verbosity=n] mica2|micaz|iris elf-file
 .SH DESCRIPTION
 
-Write me.
+This tool disassembles an elf file for AVR-based TinyOS platforms and
+estimates the maximum extent of its call stack.  This number is
+reported, along with the total static and dynamic RAM usage.
+
+The primary documentation for this tool can be found on the TinyOS
+Documentation Wiki.
