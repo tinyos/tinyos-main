@@ -50,13 +50,6 @@ use Getopt::Long;
 # support TOSThreads
 #
 # support msp430
-#
-# enumerate soundness requirements
-#   stores to SP are direct and use "out"
-#   no reentrant interrupts
-#   outs to SREG are for ending atomic blocks, seis are enabling interrupts for real
-#   return instructions go back to their callers' successors
-#   special-cases are correct
 
 ##########################################################################
 
@@ -1205,7 +1198,7 @@ sub make_fine_grain_cfg () {
 	}
 
 	if ($insn eq "ijmp") {
-	    $diehere{$addr} = "cannot process raw ijmp at $hex_addr";
+	    $diehere{$addr} = "cannot process raw indirect jump at $hex_addr";
 	} elsif ($insn eq "ret" || $insn eq "reti") {
 	    # no control flow from here in our model
 	} elsif (is_branch ($addr) || is_skip ($addr) || is_jmp ($addr)) {
@@ -1240,7 +1233,7 @@ sub make_fine_grain_cfg () {
 		    $target = $label_to_addr{$target_func};
 		    die "tos-ramsize FAIL" if (!defined($target));
 		} else {
-		    $diehere{$addr} = "cannot process raw icall at $hex_addr";
+		    $diehere{$addr} = "cannot process raw indirect call at $hex_addr";
 		}
 	    }
 	    if (defined($target)) {
