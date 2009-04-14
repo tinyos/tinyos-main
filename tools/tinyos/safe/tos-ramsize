@@ -27,9 +27,16 @@ use Getopt::Long;
 
 # TODO: 
 #
-# flesh out the man page
+# support TOSThreads
 #
-# make a page on the TinyOS wiki
+# support msp430
+#
+# optionally don't do recursion checking
+#
+# make it possible to specify chips individually
+#
+# make it possible to explicitly specify which interrupts are atomic
+# or not
 #
 # tighten results by keeping track of depths inside and out of
 # atomic sections
@@ -40,16 +47,12 @@ use Getopt::Long;
 # get rid of hard-coded non-terminating functions, just derive this
 # when no "ret" is executed
 #
-# test for tightness / soundness using randprog and Avrora
+# test for tightness / soundness using randprog + Avrora
 #
 # read config info from a file
 #   chip parameters
 #   libc information
 #   recursion and interrupt info
-#
-# support TOSThreads
-#
-# support msp430
 
 ##########################################################################
 
