@@ -27,7 +27,7 @@
  *  of the interface.
  *
  *  @author Kevin Klues <klueska@cs.wustl.edu>
- *  @date   $Date: 2006-12-12 18:23:15 $
+ *  @date   $Date: 2009-04-15 03:01:35 $
  */
  
 #include "Resource.h"
@@ -43,7 +43,7 @@ interface ResourceQueue {
   async command bool isEmpty();
   
   /**
-   * Check to see if a given cleint id has already been enqueued
+   * Check to see if a given client id has already been enqueued
    * and is waiting to be processed.
    *
    * @return TRUE  if the client id is in the queue. <br>
@@ -52,17 +52,17 @@ interface ResourceQueue {
   async command bool isEnqueued(resource_client_id_t id);
   
   /**
-   * Retreive the cleint id of the next resource in the queue. 
+   * Retreive the client id of the next resource in the queue. 
    * If the queue is empty, the return value is undefined.
    *
-   * @return The cleint id at the head of the queue.
+   * @return The client id at the head of the queue.
    */
   async command resource_client_id_t dequeue();
 
   /**
-   * Enqueue a cleint id
+   * Enqueue a client id
    *
-   * @param cleintId - the cleint id to enqueue
+   * @param clientId - the client id to enqueue
    * @return SUCCESS if the client id was enqueued successfully <br>
    *         EBUSY   if it has already been enqueued.
    */
