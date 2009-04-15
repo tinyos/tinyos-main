@@ -220,7 +220,7 @@ void __nesc_atomic_end(__nesc_atomic_t reenable_interrupts);
 
 #ifndef NESC_BUILD_BINARY
 /* @spontaneous() functions should not be included when NESC_BUILD_BINARY
-   is #defined, to avoid duplicate functions definitions wheb binary
+   is #defined, to avoid duplicate functions definitions when binary
    components are used. Such functions do need a prototype in all cases,
    though. */
 __nesc_atomic_t __nesc_atomic_start(void) @spontaneous() @safe()
