@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-03-24 12:56:46 $
+ * $Revision: 1.5 $
+ * $Date: 2009-04-17 14:47:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -69,16 +69,16 @@ implementation
 {
   enum {
     MAX_PAYLOAD_SIZE = 1,
+    LAST_CHANNEL = 26,
   };
+#define INVALID_CHANNEL_BITMASK 0xFC000000L
 
   ieee154_txframe_t *m_txFrame = NULL;
   uint8_t m_payload[MAX_PAYLOAD_SIZE];  
   uint8_t m_scanType;
   uint32_t m_scanChannels;
-  uint32_t m_unscannedChannels;
-  ieee154_macAutoRequest_t m_macAutoRequest;
-  norace uint32_t m_currentChannelBit;
   norace uint8_t m_currentChannelNum;
+  bool m_terminateScan;
   void* m_resultList;
   uint8_t m_resultListNumEntries;
   uint8_t m_resultIndex;
@@ -98,7 +98,7 @@ implementation
     // that a MLME_SCAN was accepted (returned IEEE154_SUCCESS)  
     // but the RadioToken.granted() has not been signalled            
     if (m_busy) {
-      m_currentChannelNum = 27;
+      m_terminateScan = TRUE;
       nextIteration(); // signals confirm and resets state
     }
     return SUCCESS;
@@ -155,11 +155,9 @@ implementation
       m_scanType = ScanType;
       m_scanChannels = ScanChannels;
       m_scanDuration = (((uint32_t) 1 << ScanDuration) + 1) * IEEE154_aBaseSuperframeDuration;
-      m_macAutoRequest = call MLME_GET.macAutoRequest();
       m_PANID = call MLME_GET.macPANId();
-      m_unscannedChannels = 0;
-      m_currentChannelBit = 1;
       m_currentChannelNum = 0;
+      m_terminateScan = FALSE;
       m_resultIndex = 0;
       if (ScanType == ENERGY_DETECTION_SCAN) {
         m_resultList = EnergyDetectList;
@@ -236,16 +234,20 @@ implementation
 
   void nextIteration()
   {
+    ieee154_phyChannelsSupported_t supportedChannels = call MLME_GET.phyChannelsSupported();
+    uint32_t currentChannelBit = (uint32_t) 1 << m_currentChannelNum;
     error_t radioStatus = SUCCESS;
-    uint32_t supportedChannels = IEEE154_SUPPORTED_CHANNELS;
-    atomic {
-      while (!(m_scanChannels & m_currentChannelBit & supportedChannels) && m_currentChannelNum < 27) {
-        m_unscannedChannels |= m_currentChannelBit;
-        m_currentChannelBit <<= 1;
+
+    if (!m_terminateScan){
+      while (m_currentChannelNum <= LAST_CHANNEL &&  
+          !(m_scanChannels & currentChannelBit & supportedChannels)){
         m_currentChannelNum++;
+        currentChannelBit <<= 1;
       }
     }
-    if (m_currentChannelNum < 27) {
+
+    if (m_currentChannelNum <= LAST_CHANNEL && !m_terminateScan) {
+      // scan the next channel
       call MLME_SET.phyCurrentChannel(m_currentChannelNum);
       dbg_serial("ScanP", "Scanning channel %lu...\n", (uint32_t) m_currentChannelNum);
       switch (m_scanType) {
@@ -264,13 +266,23 @@ implementation
     } else {
       // we're done
       ieee154_status_t result = IEEE154_SUCCESS;
-      m_currentChannelBit <<= 1; 
-      while (m_currentChannelBit) {
-        m_unscannedChannels |= m_currentChannelBit;
-        m_currentChannelBit <<= 1;
-      }
-      m_unscannedChannels &= m_scanChannels; // only channels that were requested
-      if (m_scanType != ENERGY_DETECTION_SCAN && !m_resultIndex)
+      uint32_t unscannedChannels = 0;
+
+      if (m_terminateScan){
+        // scan operation terminated prematurely because the max. 
+        // number of PAN descriptors/ED samples was reached
+        result = IEEE154_LIMIT_REACHED;
+
+        // mark the channel on which we received the last beacon
+        // as unscanned, because it was not completely scanned
+        if (m_scanType == PASSIVE_SCAN || m_scanType == ACTIVE_SCAN) 
+          currentChannelBit >>= 1;
+        while (!(currentChannelBit & INVALID_CHANNEL_BITMASK) &&
+               (m_scanChannels & currentChannelBit)){
+          unscannedChannels |= currentChannelBit;
+          currentChannelBit <<= 1;
+        }
+      } else if (m_scanType != ENERGY_DETECTION_SCAN && !m_resultIndex)
         result = IEEE154_NO_BEACON;
       if (m_scanType == PASSIVE_SCAN || m_scanType == ACTIVE_SCAN) 
         call MLME_SET.macPANId(m_PANID);
@@ -287,13 +299,13 @@ implementation
           result,
           m_scanType,
           IEEE154_SUPPORTED_CHANNELPAGE,
-          m_unscannedChannels,
+          unscannedChannels,
           (m_scanType == ENERGY_DETECTION_SCAN) ? m_resultIndex : 0,
           (m_scanType == ENERGY_DETECTION_SCAN) ? (int8_t*) m_resultList : NULL,
           ((m_scanType == ACTIVE_SCAN ||
-           m_scanType == PASSIVE_SCAN) && m_macAutoRequest) ? m_resultIndex : 0,
+           m_scanType == PASSIVE_SCAN) && call MLME_GET.macAutoRequest()) ? m_resultIndex : 0,
           ((m_scanType == ACTIVE_SCAN ||
-           m_scanType == PASSIVE_SCAN) && m_macAutoRequest) ? (ieee154_PANDescriptor_t*) m_resultList : NULL);
+           m_scanType == PASSIVE_SCAN) && call MLME_GET.macAutoRequest()) ? (ieee154_PANDescriptor_t*) m_resultList : NULL);
     }
     dbg_serial_flush();
   }
@@ -309,12 +321,8 @@ implementation
   {
     if (status == SUCCESS && m_resultListNumEntries)
       ((uint8_t*) m_resultList)[m_resultIndex++] = EnergyLevel;
-    else 
-      m_unscannedChannels |= m_currentChannelBit;
     if (m_resultIndex == m_resultListNumEntries)
-      m_currentChannelNum = 27; // done
-    else
-      m_currentChannelNum++;
+      m_terminateScan = TRUE; // done
     call RadioOff.off();
   }
 
@@ -329,53 +337,50 @@ implementation
 
   event message_t* RadioRx.received(message_t *frame, const ieee154_timestamp_t *timestamp)
   {
-    atomic {
-      if (!m_busy)
-        return frame;
-      if (m_scanType == ORPHAN_SCAN) {
-        if (!m_resultIndex)
-          if ((MHR(frame)[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_CMD &&
-              ((uint8_t*)call Frame.getPayload(frame))[0] == CMD_FRAME_COORDINATOR_REALIGNMENT) {
-            m_resultIndex++; 
-            dbg_serial("ScanP", "Received coordinator realignment frame.\n");
-            m_currentChannelNum = 27; // terminate scan
-            call RadioOff.off();
-          }
-      } else if ((((ieee154_header_t*) frame->header)->mhr[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON) {
-        //  PASSIVE_SCAN / ACTIVE_SCAN
-        if (!m_macAutoRequest)
-          return signal MLME_BEACON_NOTIFY.indication (frame);
-        else if (m_resultListNumEntries && m_resultIndex < m_resultListNumEntries &&
-            call BeaconFrame.parsePANDescriptor(
-              frame, 
-              m_currentChannelNum, 
-              IEEE154_SUPPORTED_CHANNELPAGE,
-              &((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex]) == SUCCESS) {
-
-          // check uniqueness: both PAN ID and source address must not be in a previously received beacon
-          uint8_t i;
-          ieee154_PANDescriptor_t* descriptor = (ieee154_PANDescriptor_t*) m_resultList;
-          if (m_resultIndex)
-            for (i=0; i<m_resultIndex; i++)
-              if (descriptor[i].CoordPANId == descriptor[m_resultIndex].CoordPANId &&
-                   descriptor[i].CoordAddrMode == descriptor[m_resultIndex].CoordAddrMode)
-                if ((descriptor[i].CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
-                      descriptor[i].CoordAddress.shortAddress ==
-                      descriptor[m_resultIndex].CoordAddress.shortAddress) ||
-                     (descriptor[i].CoordAddrMode == ADDR_MODE_EXTENDED_ADDRESS &&
-                      descriptor[i].CoordAddress.extendedAddress ==
-                      descriptor[m_resultIndex].CoordAddress.extendedAddress))
-                  return frame; // not unique
-          dbg_serial("ScanP", "Received beacon, source: 0x%lx, channel: %lu.\n", 
-              (uint32_t) descriptor[m_resultIndex].CoordAddress.shortAddress, (uint32_t) m_currentChannelNum);
-          m_resultIndex++;
-          if (m_resultIndex == m_resultListNumEntries) {
-            m_currentChannelNum = 27; // terminate scan
-            call RadioOff.off();
-          }
+    if (!m_busy)
+      return frame;
+    if (m_scanType == ORPHAN_SCAN) {
+      if (!m_resultIndex)
+        if ((MHR(frame)[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_CMD &&
+            ((uint8_t*)call Frame.getPayload(frame))[0] == CMD_FRAME_COORDINATOR_REALIGNMENT) {
+          m_resultIndex++; 
+          dbg_serial("ScanP", "Received coordinator realignment frame.\n");
+          m_terminateScan = TRUE;
+          call RadioOff.off();
         }
-      } //  PASSIVE_SCAN / ACTIVE_SCAN
-    }
+    } else if ((((ieee154_header_t*) frame->header)->mhr[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON) {
+      //  PASSIVE_SCAN / ACTIVE_SCAN
+      if (!call MLME_GET.macAutoRequest())
+        return signal MLME_BEACON_NOTIFY.indication (frame);
+      else if (m_resultIndex >= m_resultListNumEntries) {
+        m_terminateScan = TRUE;
+        call RadioOff.off();
+      } else if (call BeaconFrame.parsePANDescriptor(
+            frame, 
+            m_currentChannelNum, 
+            IEEE154_SUPPORTED_CHANNELPAGE,
+            &((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex]) == SUCCESS) {
+
+        // check uniqueness: both PAN ID and source address must not be in a previously received beacon
+        uint8_t i;
+        ieee154_PANDescriptor_t* descriptor = (ieee154_PANDescriptor_t*) m_resultList;
+
+        dbg_serial("ScanP", "Received beacon, source: 0x%lx, channel: %lu.\n", 
+            (uint32_t) descriptor[m_resultIndex].CoordAddress.shortAddress, (uint32_t) m_currentChannelNum);
+        if (m_resultIndex)
+          for (i=0; i<m_resultIndex; i++)
+            if (descriptor[i].CoordPANId == descriptor[m_resultIndex].CoordPANId &&
+                descriptor[i].CoordAddrMode == descriptor[m_resultIndex].CoordAddrMode)
+              if ((descriptor[i].CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
+                    descriptor[i].CoordAddress.shortAddress ==
+                    descriptor[m_resultIndex].CoordAddress.shortAddress) ||
+                  (descriptor[i].CoordAddrMode == ADDR_MODE_EXTENDED_ADDRESS &&
+                   descriptor[i].CoordAddress.extendedAddress ==
+                   descriptor[m_resultIndex].CoordAddress.extendedAddress))
+                return frame; // not unique
+        m_resultIndex++; // was unique
+      }
+    } //  PASSIVE_SCAN / ACTIVE_SCAN
     return frame;
   }
 
@@ -396,7 +401,6 @@ implementation
     if (m_currentChannelNum == 0)
       post continueScanRequestTask();
     else {
-      m_currentChannelBit <<= 1;
       m_currentChannelNum++;    
       post nextIterationTask();
     }

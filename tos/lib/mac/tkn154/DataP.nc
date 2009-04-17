@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-03-24 12:56:46 $
+ * $Revision: 1.5 $
+ * $Date: 2009-04-17 14:47:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -88,9 +88,10 @@ implementation
     ieee154_status_t txStatus;
     ieee154_txframe_t *txFrame;
     uint8_t sfType=0;
-    uint8_t *mhr;
+    uint8_t *mhr, mhrLen = call Frame.getHeaderLength(frame);
 
-    if (payloadLen > call Packet.maxPayloadLength())
+    if (payloadLen > call Packet.maxPayloadLength() || 
+        mhrLen + payloadLen + 2 > IEEE154_aMaxPHYPacketSize) // extra 2 for MAC footer (CRC)
       txStatus = IEEE154_INVALID_PARAMETER;
     else if ((!srcAddrMode && !dstAddrMode) || 
         (srcAddrMode > ADDR_MODE_EXTENDED_ADDRESS || dstAddrMode > ADDR_MODE_EXTENDED_ADDRESS) ||
@@ -105,7 +106,7 @@ implementation
       txFrame->metadata = &((message_metadata_t*) frame->metadata)->ieee154;
       txFrame->payloadLen = payloadLen;
       mhr = txFrame->header->mhr;
-      txFrame->headerLen = call Frame.getHeaderLength(frame);
+      txFrame->headerLen = mhrLen;
       mhr[MHR_INDEX_FC1] &= ~(FC1_FRAMETYPE_MASK | FC1_FRAME_PENDING | FC1_ACK_REQUEST);
       mhr[MHR_INDEX_FC1] |= FC1_FRAMETYPE_DATA;
       if (txOptions & TX_OPTIONS_ACK)

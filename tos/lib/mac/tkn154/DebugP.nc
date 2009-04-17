@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-25 16:47:49 $
+ * $Revision: 1.3 $
+ * $Date: 2009-04-17 14:47:09 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -119,7 +119,7 @@ implementation {
         // only catch the first failure, output it periodically
         m_assertLine = line;
         strncpy(m_assertFilename, filename, MAX_LEN_FILENAME);
-        strncpy(m_assertFunction, func, MAX_LEN_FILENAME);
+        strncpy(m_assertFunction, func, MAX_LEN_FUNNAME);
         post assertFailTask();
       }
     }

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:42 $
+ * $Revision: 1.3 $
+ * $Date: 2009-04-17 14:47:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -78,7 +78,7 @@ interface MLME_START {
    * @param coordRealignSecurity The security options for the coordinator
    *                         realignment command (NULL means security
    *                         is disabled)
-   * @param coordRealignSecurity The security options for beacon frames
+   * @param beaconSecurity The security options for beacon frames
    *                         (NULL means security is disabled)
    *
    * @return       IEEE154_SUCCESS if the request succeeded and a confirm event
