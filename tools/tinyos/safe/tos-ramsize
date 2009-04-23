@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright (c) 2003 University of Utah and the Flux Group.
+# Copyright (c) 2003-2009 University of Utah and the Flux Group.
 # All rights reserved.
 # 
 # Permission to use, copy, modify, distribute, and sell this software
@@ -21,6 +21,9 @@
 # Author: John Regehr (regehr@cs.utah.edu)
 # Revised by: Xuejun Yang on 01/10/2009 
 
+# For more information:
+#   http://docs.tinyos.net/index.php/Stack_Analysis
+
 use strict;
 use warnings;
 use Getopt::Long;
@@ -40,6 +43,8 @@ use Getopt::Long;
 #
 # tighten results by keeping track of depths inside and out of
 # atomic sections
+#
+# print stack used at thread blocking points
 #
 # support overriding the default heuristic for detecting atomic
 # interrupts
