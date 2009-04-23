@@ -37,7 +37,8 @@ module TimeSyncMessageLayerP
 
 	uses
 	{
-		interface AMSend as SubSend[uint8_t id];
+		interface Send as SubSend;
+		interface AMPacket;
 		interface Packet as SubPacket;
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
@@ -92,13 +93,15 @@ implementation
 		*(timesync_absolute_t*)(msg->data + len) = event_time;
 
 		call PacketTimeSyncOffset.set(msg, offsetof(message_t, data) + len);
+		call AMPacket.setDestination(msg, addr);
+		call AMPacket.setType(msg, id);
 
-		return call SubSend.send[id](addr, msg, len + sizeof(timesync_relative_t));
+		return call SubSend.send(msg, len + sizeof(timesync_relative_t));
 	}
 
 	command error_t TimeSyncAMSendRadio.cancel[am_id_t id](message_t* msg)
 	{
-		return call SubSend.cancel[id](msg);
+		return call SubSend.cancel(msg);
 	}
 
 	default event void TimeSyncAMSendRadio.sendDone[am_id_t id](message_t* msg, error_t error)
@@ -107,12 +110,12 @@ implementation
 
 	command uint8_t TimeSyncAMSendRadio.maxPayloadLength[am_id_t id]()
 	{
-		return call SubSend.maxPayloadLength[id]() - sizeof(timesync_relative_t);
+		return call SubSend.maxPayloadLength() - sizeof(timesync_relative_t);
 	}
 
 	command void* TimeSyncAMSendRadio.getPayload[am_id_t id](message_t* msg, uint8_t len)
 	{
-		return call SubSend.getPayload[id](msg, len + sizeof(timesync_relative_t));
+		return call SubSend.getPayload(msg, len + sizeof(timesync_relative_t));
 	}
 
 /*----------------- TimeSyncAMSendMilli -----------------*/
@@ -146,8 +149,10 @@ implementation
 
 	/*----------------- SubSend.sendDone -------------------*/
 
-	event void SubSend.sendDone[am_id_t id](message_t* msg, error_t error)
+	event void SubSend.sendDone(message_t* msg, error_t error)
 	{
+		am_id_t id = call AMPacket.type(msg);
+
 		signal TimeSyncAMSendRadio.sendDone[id](msg, error);
 		signal TimeSyncAMSendMilli.sendDone[id](msg, error);
 	}

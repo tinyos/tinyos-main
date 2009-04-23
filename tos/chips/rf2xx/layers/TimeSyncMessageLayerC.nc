@@ -45,9 +45,6 @@ configuration TimeSyncMessageLayerC
 
 		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;
-
-		interface AMSend as SubSend[am_id_t id];
-		interface Packet as SubPacket;
 	}
 }
 
@@ -63,8 +60,11 @@ implementation
 	TimeSyncAMSendMilli = TimeSyncMessageLayerP;
 	TimeSyncPacketMilli = TimeSyncMessageLayerP;
 
-	SubSend = TimeSyncMessageLayerP;
-	SubPacket = TimeSyncMessageLayerP;
+	// Ok, we use the AMSenderC infrastructure to avoid concurrent send clashes
+	components AMQueueP, ActiveMessageC;
+	TimeSyncMessageLayerP.SubSend -> AMQueueP.Send[unique(UQ_AMQUEUE_SEND)];
+	TimeSyncMessageLayerP.AMPacket -> ActiveMessageC;
+	TimeSyncMessageLayerP.SubPacket -> ActiveMessageC;
 
 	PacketTimeStampRadio = TimeSyncMessageLayerP;
 	PacketTimeStampMilli = TimeSyncMessageLayerP;

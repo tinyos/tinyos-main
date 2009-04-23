@@ -57,9 +57,6 @@ implementation
 	TimeSyncAMSendMilli	= TimeSyncMessageLayerC;
 	TimeSyncPacketMilli	= TimeSyncMessageLayerC;
 
-	TimeSyncMessageLayerC.SubSend -> RF212ActiveMessageC;
-	TimeSyncMessageLayerC.SubPacket -> RF212ActiveMessageC;
-
 	TimeSyncMessageLayerC.PacketTimeStampRadio -> RF212ActiveMessageC;
 	TimeSyncMessageLayerC.PacketTimeStampMilli -> RF212ActiveMessageC;
 
