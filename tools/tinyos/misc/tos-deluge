@@ -70,7 +70,7 @@ class FMReqPacket(tos.Packet):
         tos.Packet.__init__(self,
                             [('cmd',    'int',  1),
                              ('imgNum', 'int',  1),
-                             ('offset', 'int',  2),
+                             ('offset', 'int',  4),
                              ('length', 'int',  2),
                              ('data',   'blob', None)],
                             packet)

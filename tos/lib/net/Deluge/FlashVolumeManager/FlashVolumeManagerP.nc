@@ -45,7 +45,7 @@ implementation
   typedef nx_struct SerialReqPacket {
     nx_uint8_t cmd;
     nx_uint8_t imgNum;
-    nx_uint16_t offset;
+    nx_uint32_t offset;
     nx_uint16_t len;
     nx_uint8_t data[0];
   } SerialReqPacket;

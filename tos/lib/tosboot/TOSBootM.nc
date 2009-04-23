@@ -96,9 +96,10 @@ implementation {
   }
 
   bool verifyImage(ex_flash_addr_t startAddr) {
-    uint16_t addr;
+    uint32_t addr;
     uint8_t  numPgs;
     uint8_t  i;
+
 
     if (!verifyBlock(startAddr + offsetof(DelugeIdent,crc),
 		     startAddr, offsetof(DelugeIdent,crc)))
@@ -118,9 +119,6 @@ implementation {
     for ( i = 0; i < numPgs; i++ ) {
       if (!verifyBlock(startAddr + i*sizeof(uint16_t),
 		       startAddr + addr, DELUGE_BYTES_PER_PAGE)) {
-	if (i == 0)
-	  while (1)
-	    call Leds.flash(2);
 	return FALSE;
       }
       addr += DELUGE_BYTES_PER_PAGE;
@@ -131,7 +129,7 @@ implementation {
 
   error_t programImage(ex_flash_addr_t startAddr) {
     uint8_t  buf[TOSBOOT_INT_PAGE_SIZE];
-    uint16_t pageAddr, newPageAddr;
+    uint32_t pageAddr, newPageAddr;
     in_flash_addr_t intAddr;
     in_flash_addr_t secLength;
     ex_flash_addr_t curAddr;

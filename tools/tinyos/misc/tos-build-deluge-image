@@ -130,10 +130,11 @@ except:
 all = []
 section = []
 end_addr = None
+offset = 0
 for line in image.split():
     #print "DEBUG:", line
     length = int(line[1:3], 16)
-    addr = int(line[3:7], 16)
+    addr = int(line[3:7], 16) + offset
     rectype = int(line[7:9], 16)
     data = []
     if len(line) > 11:
@@ -155,6 +156,8 @@ for line in image.split():
             start_addr = addr
         section += data
         end_addr = addr + length
+    elif rectype == 0x02:
+        offset = int(line[9:9+4], 16) << 4
     elif rectype == 0x01:
         all.append((start_addr, section))
         section = []
