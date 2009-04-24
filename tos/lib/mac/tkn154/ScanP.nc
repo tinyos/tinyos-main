@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-04-17 14:47:09 $
+ * $Revision: 1.6 $
+ * $Date: 2009-04-24 16:44:55 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -134,10 +134,11 @@ implementation
     } if ((ScanType > 3) || (ScanType < 3 && ScanDuration > 14) || 
           (ChannelPage != IEEE154_SUPPORTED_CHANNELPAGE) ||
           !(supportedChannels & ScanChannels) ||
-          (EnergyDetectListNumEntries && PANDescriptorListNumEntries) ||
+          ((ScanType != ORPHAN_SCAN) &&
+          ((EnergyDetectListNumEntries && PANDescriptorListNumEntries) ||
           (EnergyDetectList != NULL && PANDescriptorList != NULL) ||
           (EnergyDetectListNumEntries && EnergyDetectList == NULL) ||
-          (PANDescriptorListNumEntries && PANDescriptorList == NULL)) {
+          (PANDescriptorListNumEntries && PANDescriptorList == NULL)))) {
       status = IEEE154_INVALID_PARAMETER;
     } else if (ScanType != ENERGY_DETECTION_SCAN &&
         !(m_txFrame = call TxFramePool.get())) { 
