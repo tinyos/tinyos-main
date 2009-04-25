@@ -36,6 +36,8 @@ use Getopt::Long;
 #
 # optionally don't do recursion checking
 #
+# print path to WC stack depth, perhaps graphically
+#
 # make it possible to specify chips individually
 #
 # make it possible to explicitly specify which interrupts are atomic
@@ -104,6 +106,8 @@ my %ICALL_TARGETS = (
 
 # also look below for __prologue_saves__ and __epilogue_restores__
 my %SPECIAL = (
+
+    "TinyThreadSchedulerP__switchThreads" => 10,
 
     # these have icalls
     #"__eewr_block" => 35,
