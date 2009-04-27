@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009-04-27 09:26:18 $
+ * $Revision: 1.8 $
+ * $Date: 2009-04-27 09:42:08 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -132,26 +132,28 @@ implementation
     } else if (security && security->SecurityLevel) {
       status = IEEE154_UNSUPPORTED_SECURITY;
     } if ((ScanType > 3) || (ScanType < 3 && ScanDuration > 14) || 
-          (ChannelPage != IEEE154_SUPPORTED_CHANNELPAGE) ||
-          !(supportedChannels & ScanChannels) ||
-          ((ScanType != ORPHAN_SCAN) &&
-          ((EnergyDetectListNumEntries && PANDescriptorListNumEntries) ||
+        (ChannelPage != IEEE154_SUPPORTED_CHANNELPAGE) ||
+        !(supportedChannels & ScanChannels) ||
+        ((ScanType != ORPHAN_SCAN) &&
+         ((EnergyDetectListNumEntries && PANDescriptorListNumEntries) ||
           (EnergyDetectList != NULL && PANDescriptorList != NULL) ||
           (EnergyDetectListNumEntries && EnergyDetectList == NULL) ||
           (PANDescriptorListNumEntries && PANDescriptorList == NULL)))) {
       status = IEEE154_INVALID_PARAMETER;
-    } else if (ScanType != ENERGY_DETECTION_SCAN &&
-        !(m_txFrame = call TxFramePool.get())) { 
+    } else if ((ScanType == ACTIVE_SCAN || ScanType == ORPHAN_SCAN) &&
+        ((m_txFrame = call TxFramePool.get()) == NULL)) {
       status = IEEE154_TRANSACTION_OVERFLOW;
-    } else if (ScanType != ENERGY_DETECTION_SCAN &&
-        !(txControl = call TxControlPool.get())) { 
+    } else if ((ScanType == ACTIVE_SCAN || ScanType == ORPHAN_SCAN) &&
+        ((txControl = call TxControlPool.get()) == NULL)) { 
       call TxFramePool.put(m_txFrame);
       m_txFrame = NULL;
       status = IEEE154_TRANSACTION_OVERFLOW;
     } else {
-      m_txFrame->header = &txControl->header;
-      m_txFrame->payload = m_payload;
-      m_txFrame->metadata = &txControl->metadata;
+      if (m_txFrame != NULL){
+        m_txFrame->header = &txControl->header;
+        m_txFrame->payload = m_payload;
+        m_txFrame->metadata = &txControl->metadata;
+      }
       m_busy = TRUE;
       m_scanType = ScanType;
       m_scanChannels = ScanChannels;
