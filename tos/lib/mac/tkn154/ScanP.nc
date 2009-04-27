@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2009-04-24 16:44:55 $
+ * $Revision: 1.7 $
+ * $Date: 2009-04-27 09:26:18 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -324,7 +324,8 @@ implementation
       ((uint8_t*) m_resultList)[m_resultIndex++] = EnergyLevel;
     if (m_resultIndex == m_resultListNumEntries)
       m_terminateScan = TRUE; // done
-    call RadioOff.off();
+    if (call RadioOff.off() == EALREADY)
+      signal RadioOff.offDone();
   }
 
   /* ----------------------- Active/Orphan scan ----------------------- */
