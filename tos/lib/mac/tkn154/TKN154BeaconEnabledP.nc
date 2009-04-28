@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-24 12:56:47 $
+ * $Revision: 1.4 $
+ * $Date: 2009-04-28 14:12:04 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -325,7 +325,6 @@ implementation
 
   /* ------------------ Data Transmission (MCPS-DATA) ------------------- */
 
-  DataP.IsSendingBeacons -> BeaconTransmitP.IsSendingBeacons;
   DataP.CoordCapRx -> CoordCap.FrameRx[FC1_FRAMETYPE_DATA]; 
   DataP.DeviceCapTx -> DeviceCapQueue.FrameTx[unique(CAP_TX_CLIENT)];
   DataP.CoordCapTx -> CoordCapQueue.FrameTx[unique(CAP_TX_CLIENT)];

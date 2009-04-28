@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-04-17 14:47:09 $
+ * $Revision: 1.6 $
+ * $Date: 2009-04-28 14:12:04 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -45,10 +45,6 @@
  * algorithm, because due to its timing requirements the CSMA-CA algorithm is
  * not part of the MAC implementation but of the chip-specific radio driver.
  */
-
-#if IEEE154_BEACON_ENABLED_PAN
-#error "The IEEE154_BEACON_ENABLED_PAN macro MUST NOT be set when using this component!"
-#endif
 
 module DispatchUnslottedCsmaP
 {

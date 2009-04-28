@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-04-01 08:50:39 $
+ * $Revision: 1.5 $
+ * $Date: 2009-04-28 14:12:04 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -38,8 +38,6 @@
 #include "TKN154_PIB.h"
 
 #define IEEE154_BEACON_ENABLED_PAN FALSE
-
-// TODO: check the wiring!!
 
 configuration TKN154NonBeaconEnabledP
 {

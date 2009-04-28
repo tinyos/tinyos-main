@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-04-02 14:02:11 $
+ * $Revision: 1.4 $
+ * $Date: 2009-04-28 14:12:03 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -55,10 +55,6 @@
  * typically listen for incoming frames from the devices, and a device will
  * typically switch the radio off unless it has a frame to transmit.
  */
-
-#ifndef IEEE154_BEACON_ENABLED_PAN
-#error "The IEEE154_BEACON_ENABLED_PAN macro MUST be defined when using this component!"
-#endif
 
 generic module DispatchSlottedCsmaP(uint8_t sfDirection)
 {
