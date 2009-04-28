@@ -153,7 +153,7 @@ implementation
 
   event void DelugeMetadata.readDone(uint8_t imgNum, DelugeIdent* ident, error_t error)
   {
-//    printf("readDone 0x%lx imgNum: %d size: %u\n", lastCmd.uidhash, lastCmd.imgNum, lastCmd.size);
+//    printf("readDone 0x%lx imgNum: %d size: %lu\n", lastCmd.uidhash, lastCmd.imgNum, lastCmd.size);
     if (ident->uidhash == lastCmd.uidhash) {
       if (lastCmd.type == DELUGE_CMD_DISSEMINATE_AND_REPROGRAM) {
 	call NetProg.programImageAndReboot(call StorageMap.getPhysicalAddress[imgNum](0));

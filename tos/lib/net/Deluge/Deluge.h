@@ -65,7 +65,7 @@ typedef nx_struct DelugeCmd {
   nx_uint8_t type;
   nx_uint32_t uidhash;  // unique id of image
   nx_uint8_t  imgNum;   // image number
-  nx_uint16_t size;     // size of the image
+  nx_uint32_t size;     // size of the image
 } DelugeCmd;
 
 typedef struct BootArgs {
