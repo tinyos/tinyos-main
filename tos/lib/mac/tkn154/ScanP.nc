@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2009-04-27 09:42:08 $
+ * $Revision: 1.9 $
+ * $Date: 2009-04-30 13:23:48 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -272,21 +272,23 @@ implementation
       uint32_t unscannedChannels = 0;
 
       if (m_terminateScan){
-        // scan operation terminated prematurely because the max. 
-        // number of PAN descriptors/ED samples was reached
-        result = IEEE154_LIMIT_REACHED;
-
-        // mark the channel on which we received the last beacon
-        // as unscanned, because it was not completely scanned
+        // Scan operation terminated because the max. 
+        // number of PAN descriptors/ED samples was reached.
+        // Check if there are channels that were unscanned.
+        // In active/passive scan we consider a channel 
+        // unscanned if it was not completely scanned.
         if (m_scanType == PASSIVE_SCAN || m_scanType == ACTIVE_SCAN) 
-          currentChannelBit >>= 1;
+          currentChannelBit >>= 1; // last (partially) scanned channel
         while (!(currentChannelBit & INVALID_CHANNEL_BITMASK) &&
                (m_scanChannels & currentChannelBit)){
           unscannedChannels |= currentChannelBit;
           currentChannelBit <<= 1;
         }
+        if (unscannedChannels) // some channels were not (completely) scanned
+          result = IEEE154_LIMIT_REACHED;
       } else if (m_scanType != ENERGY_DETECTION_SCAN && !m_resultIndex)
         result = IEEE154_NO_BEACON;
+
       if (m_scanType == PASSIVE_SCAN || m_scanType == ACTIVE_SCAN) 
         call MLME_SET.macPANId(m_PANID);
       if (m_txFrame != NULL) {
