@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2009-04-28 14:12:04 $
+ * $Revision: 1.7 $
+ * $Date: 2009-05-04 09:40:36 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -67,6 +67,7 @@ module DispatchUnslottedCsmaP
     interface Set<ieee154_macPanCoordinator_t> as SetMacPanCoordinator;     
     interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
     interface Notify<bool> as RxEnableStateChange;
+    interface Notify<const void*> as PIBUpdateMacRxOnWhenIdle;
     interface FrameUtility;
     interface UnslottedCsmaCa;
     interface RadioRx;
@@ -96,6 +97,7 @@ implementation
   norace bool m_resume;
   norace ieee154_txframe_t *m_currentFrame;
   norace ieee154_txframe_t *m_lastFrame;
+  norace ieee154_macRxOnWhenIdle_t macRxOnWhenIdle;
 
   /* variables for the unslotted CSMA-CA */
   norace ieee154_csma_t m_csma;
@@ -275,12 +277,11 @@ implementation
       }
 
       // Check 4: should we be in receive mode?
-      else if (call IsRxEnableActive.getNow()) {
+      else if (call IsRxEnableActive.getNow() || macRxOnWhenIdle) {
         next = tryReceive(FALSE);
         if (next == DO_NOTHING) {
-          // this means there is an active MLME_RX_ENABLE.request
-          // and the radio was just switched to Rx mode - signal
-          // a notify event to inform the next higher layer
+          // if there was an active MLME_RX_ENABLE.request then we'll
+          // inform the next higher layer that radio is now in Rx mode
           post wasRxEnabledTask();
         }
       }
@@ -361,6 +362,10 @@ implementation
       call RadioToken.request();
     else
       updateState();
+  }
+  event void PIBUpdateMacRxOnWhenIdle.notify( const void* val ) {
+    atomic macRxOnWhenIdle = *((ieee154_macRxOnWhenIdle_t*) val);
+    signal RxEnableStateChange.notify(TRUE);
   }
 
   event void IndirectTxWaitTimer.fired() 

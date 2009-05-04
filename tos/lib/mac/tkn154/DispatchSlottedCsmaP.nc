@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-04-28 14:12:03 $
+ * $Revision: 1.5 $
+ * $Date: 2009-05-04 09:40:36 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -80,6 +80,7 @@ generic module DispatchSlottedCsmaP(uint8_t sfDirection)
     interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
     interface Notify<bool> as RxEnableStateChange;
     interface GetNow<bool> as IsTrackingBeacons;
+    interface Notify<const void*> as PIBUpdateMacRxOnWhenIdle;
     interface FrameUtility;
     interface SlottedCsmaCa;
     interface RadioRx;
@@ -121,6 +122,7 @@ implementation
   norace ieee154_txframe_t *m_bcastFrame;
   norace ieee154_txframe_t *m_lastFrame;
   norace uint16_t m_remainingBackoff;
+  ieee154_macRxOnWhenIdle_t macRxOnWhenIdle;
 
   /* variables for the slotted CSMA-CA */
   norace ieee154_csma_t m_csma;
@@ -406,7 +408,7 @@ implementation
       else if (call SuperframeStructure.battLifeExtDuration() > 0 &&
           call TimeCalc.hasExpired(call SuperframeStructure.sfStartTime(), 
             call SuperframeStructure.battLifeExtDuration()) &&
-          !call IsRxEnableActive.getNow()) {
+          !call IsRxEnableActive.getNow() && !macRxOnWhenIdle) {
         dbg_push_state(5);
         next = trySwitchOff();
       }
@@ -418,13 +420,12 @@ implementation
       }
 
       // Check 7: should we be in receive mode?
-      else if (COORD_ROLE || call IsRxEnableActive.getNow()) {
+      else if (COORD_ROLE || call IsRxEnableActive.getNow() || macRxOnWhenIdle) {
         dbg_push_state(7);
         next = tryReceive(NO_ALARM);
         if (next == DO_NOTHING) {
-          // this means there is an active MLME_RX_ENABLE.request
-          // and the radio was just switched to Rx mode - signal
-          // a notify event to inform the respective component
+          // if there was an active MLME_RX_ENABLE.request then we'll
+          // inform the next higher layer that radio is now in Rx mode
           post wasRxEnabledTask();
         }
       }
@@ -524,6 +525,10 @@ implementation
   async event void BLEAlarm.fired() { updateState();}
   event void RxEnableStateChange.notify(bool whatever) { updateState();}
   async event void BroadcastAlarm.fired() { m_broadcastRxPending = FALSE; updateState();}
+  event void PIBUpdateMacRxOnWhenIdle.notify( const void* val ) {
+    atomic macRxOnWhenIdle = *((ieee154_macRxOnWhenIdle_t*) val);
+    updateState();
+  }
 
   async event void IndirectTxWaitAlarm.fired() 
   { 

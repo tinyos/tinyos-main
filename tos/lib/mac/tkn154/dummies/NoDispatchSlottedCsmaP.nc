@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-24 12:56:47 $
+ * $Revision: 1.3 $
+ * $Date: 2009-05-04 09:40:37 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -62,6 +62,7 @@ generic module NoDispatchSlottedCsmaP(uint8_t sfDirection)
     interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
     interface Notify<bool> as RxEnableStateChange;
     interface GetNow<bool> as IsTrackingBeacons;
+    interface Notify<const void*> as PIBUpdateMacRxOnWhenIdle;
     interface FrameUtility;
     interface SlottedCsmaCa;
     interface RadioRx;
@@ -114,4 +115,5 @@ implementation
 
   command error_t WasRxEnabled.enable(){return FAIL;}
   command error_t WasRxEnabled.disable(){return FAIL;}
+  event void PIBUpdateMacRxOnWhenIdle.notify( const void* val ) {}
 }

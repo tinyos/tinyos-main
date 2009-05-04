@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-04-28 14:12:04 $
+ * $Revision: 1.6 $
+ * $Date: 2009-05-04 09:40:36 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -293,6 +293,7 @@ implementation
   DispatchP.IsRadioTokenRequested -> ScanP.IsRadioTokenRequested;
   DispatchP.GetIndirectTxFrame -> IndirectTxP;
   DispatchP.RxEnableStateChange -> RxEnableP.RxEnableStateChange;  
+  DispatchP.PIBUpdateMacRxOnWhenIdle -> PibP.PIBUpdate[IEEE154_macRxOnWhenIdle];
   DispatchP.FrameUtility -> PibP;
   DispatchP.UnslottedCsmaCa -> DispatchRadioClient;
   DispatchP.RadioRx -> DispatchRadioClient;
