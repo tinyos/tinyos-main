@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-05-04 09:40:36 $
+ * $Revision: 1.6 $
+ * $Date: 2009-05-05 16:56:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -95,7 +95,6 @@ configuration TKN154BeaconEnabledP
     interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm9;
     interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm10;
     interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm11;
-    interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm12;
 
     interface Timer<TSymbolIEEE802154> as Timer1;
     interface Timer<TSymbolIEEE802154> as Timer2;
@@ -402,8 +401,7 @@ implementation
   PibP.DispatchReset -> DeviceCap;
   DeviceCap.CapEndAlarm = Alarm3;
   DeviceCap.BLEAlarm = Alarm4;
-  DeviceCap.IndirectTxWaitAlarm = Alarm5;
-  DeviceCap.BroadcastAlarm = Alarm6;
+  DeviceCap.RxWaitAlarm = Alarm5;
   DeviceCap.RadioToken -> DeviceCapRadioClient;
   DeviceCap.SuperframeStructure -> BeaconSynchronizeP.IncomingSF;
   DeviceCap.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
@@ -429,8 +427,8 @@ implementation
   components new RadioClientC(RADIO_CLIENT_COORDCAP) as CoordCapRadioClient, 
              new BackupP(ieee154_cap_frame_backup_t);
   PibP.DispatchReset -> CoordCap;
-  CoordCap.CapEndAlarm = Alarm7;
-  CoordCap.BLEAlarm = Alarm8;
+  CoordCap.CapEndAlarm = Alarm6;
+  CoordCap.BLEAlarm = Alarm7;
   CoordCap.RadioToken -> CoordCapRadioClient;
   CoordCap.SuperframeStructure -> BeaconTransmitP.OutgoingSF;
   CoordCap.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
@@ -458,8 +456,8 @@ implementation
   PibP.MacReset -> DeviceCfp;
   DeviceCfp.RadioToken -> DeviceCfpRadioClient;
   DeviceCfp.IncomingSF -> BeaconSynchronizeP.IncomingSF; 
-  DeviceCfp.CfpSlotAlarm = Alarm9;
-  DeviceCfp.CfpEndAlarm = Alarm10;
+  DeviceCfp.CfpSlotAlarm = Alarm8;
+  DeviceCfp.CfpEndAlarm = Alarm9;
   DeviceCfp.RadioTx -> DeviceCfpRadioClient;
   DeviceCfp.RadioRx -> DeviceCfpRadioClient;
   DeviceCfp.RadioOff -> DeviceCfpRadioClient;
@@ -472,8 +470,8 @@ implementation
   PibP.MacReset -> CoordCfp;
   CoordCfp.RadioToken -> CoordCfpRadioClient;
   CoordCfp.OutgoingSF -> BeaconTransmitP.OutgoingSF; 
-  CoordCfp.CfpSlotAlarm = Alarm11;
-  CoordCfp.CfpEndAlarm = Alarm12;
+  CoordCfp.CfpSlotAlarm = Alarm10;
+  CoordCfp.CfpEndAlarm = Alarm11;
   CoordCfp.RadioTx -> CoordCfpRadioClient;
   CoordCfp.RadioRx -> CoordCfpRadioClient;
   CoordCfp.RadioOff -> CoordCfpRadioClient;

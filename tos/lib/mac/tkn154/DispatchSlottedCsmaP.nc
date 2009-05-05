@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-05-04 09:40:36 $
+ * $Revision: 1.6 $
+ * $Date: 2009-05-05 16:56:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -71,8 +71,7 @@ generic module DispatchSlottedCsmaP(uint8_t sfDirection)
   {
     interface Alarm<TSymbolIEEE802154,uint32_t> as CapEndAlarm;
     interface Alarm<TSymbolIEEE802154,uint32_t> as BLEAlarm;
-    interface Alarm<TSymbolIEEE802154,uint32_t> as IndirectTxWaitAlarm;
-    interface Alarm<TSymbolIEEE802154,uint32_t> as BroadcastAlarm;
+    interface Alarm<TSymbolIEEE802154,uint32_t> as RxWaitAlarm;
     interface TransferableResource as RadioToken;
     interface SuperframeStructure; 
     interface GetNow<token_requested_t> as IsRadioTokenRequested;
@@ -138,7 +137,7 @@ implementation
 
   /* function / task prototypes */
   void stopAllAlarms();
-  next_state_t tryReceive(rx_alarm_t alarmType);
+  next_state_t tryReceive();
   next_state_t tryTransmit();
   next_state_t trySwitchOff();
   void backupCurrentFrame();
@@ -181,6 +180,7 @@ implementation
     if (m_bcastFrame)
       signalTxBroadcastDone(m_bcastFrame, IEEE154_TRANSACTION_OVERFLOW);
     m_currentFrame = m_lastFrame = m_bcastFrame = NULL;
+    m_macMaxFrameTotalWaitTime = call MLME_GET.macMaxFrameTotalWaitTime();
     stopAllAlarms();
     return SUCCESS;
   }
@@ -313,10 +313,8 @@ implementation
   void stopAllAlarms()
   {
     call CapEndAlarm.stop();
-    if (DEVICE_ROLE) {
-      call IndirectTxWaitAlarm.stop();
-      call BroadcastAlarm.stop();
-    }
+    if (DEVICE_ROLE)
+      call RxWaitAlarm.stop();
     call BLEAlarm.stop();
   }
 
@@ -354,7 +352,7 @@ implementation
         if (call RadioOff.isOff()) {
           stopAllAlarms();  // may still fire, but is locked through isOwner()
           if (DEVICE_ROLE && m_indirectTxPending)
-            signal IndirectTxWaitAlarm.fired();
+            signal RxWaitAlarm.fired();
           m_broadcastRxPending = FALSE;
           if (COORD_ROLE && m_bcastFrame) {
             // didn't manage to transmit a broadcast
@@ -376,7 +374,7 @@ implementation
       else if (DEVICE_ROLE && m_broadcastRxPending) {
         // receive a broadcast from coordinator
         dbg_push_state(2);
-        next = tryReceive(BROADCAST_ALARM);
+        next = tryReceive();
       } else if (COORD_ROLE && m_bcastFrame) {
         dbg_push_state(2);
         next = tryTransmit();
@@ -386,7 +384,7 @@ implementation
       // and are we now waiting for a frame from the coordinator?
       else if (DEVICE_ROLE && m_indirectTxPending) {
         dbg_push_state(3);
-        next = tryReceive(INDIRECT_TX_ALARM);
+        next = tryReceive();
       }
 
       // Check 4: is some other operation (like MLME-SCAN or MLME-RESET) pending? 
@@ -422,7 +420,7 @@ implementation
       // Check 7: should we be in receive mode?
       else if (COORD_ROLE || call IsRxEnableActive.getNow() || macRxOnWhenIdle) {
         dbg_push_state(7);
-        next = tryReceive(NO_ALARM);
+        next = tryReceive();
         if (next == DO_NOTHING) {
           // if there was an active MLME_RX_ENABLE.request then we'll
           // inform the next higher layer that radio is now in Rx mode
@@ -485,7 +483,7 @@ implementation
     return next;
   }
 
-  next_state_t tryReceive(rx_alarm_t alarmType)
+  next_state_t tryReceive()
   {
     next_state_t next;
     if (call RadioRx.isReceiving())
@@ -494,12 +492,6 @@ implementation
       next = SWITCH_OFF;
     else {
       call RadioRx.enableRx(0, 0);
-      switch (alarmType)
-      {
-        case INDIRECT_TX_ALARM: call IndirectTxWaitAlarm.start(m_macMaxFrameTotalWaitTime); break;
-        case BROADCAST_ALARM: call BroadcastAlarm.start(m_macMaxFrameTotalWaitTime); break;
-        case NO_ALARM: break;
-      }
       next = WAIT_FOR_RXDONE;
     }
     return next;
@@ -515,8 +507,19 @@ implementation
     return next;
   }
 
-  async event void RadioOff.offDone() { m_lock = FALSE; updateState();}
-  async event void RadioRx.enableRxDone() { m_lock = FALSE; updateState();}
+  async event void RadioOff.offDone() 
+  { 
+    m_lock = FALSE; 
+    updateState();
+  }
+
+  async event void RadioRx.enableRxDone() 
+  { 
+    if (DEVICE_ROLE && (m_indirectTxPending || m_broadcastRxPending))
+      call RxWaitAlarm.start(m_macMaxFrameTotalWaitTime);
+    m_lock = FALSE; 
+    updateState();
+  }
 
   async event void CapEndAlarm.fired() { 
     dbg_serial("DispatchSlottedCsmaP", "CapEndAlarm.fired()\n");
@@ -524,20 +527,23 @@ implementation
   }
   async event void BLEAlarm.fired() { updateState();}
   event void RxEnableStateChange.notify(bool whatever) { updateState();}
-  async event void BroadcastAlarm.fired() { m_broadcastRxPending = FALSE; updateState();}
   event void PIBUpdateMacRxOnWhenIdle.notify( const void* val ) {
     atomic macRxOnWhenIdle = *((ieee154_macRxOnWhenIdle_t*) val);
     updateState();
   }
 
-  async event void IndirectTxWaitAlarm.fired() 
+  async event void RxWaitAlarm.fired() 
   { 
-    atomic {
-      if (m_indirectTxPending) {
-        m_indirectTxPending = FALSE; 
-        post signalTxDoneTask(); 
+    if (DEVICE_ROLE && (m_indirectTxPending || m_broadcastRxPending))
+      atomic {
+        if (m_indirectTxPending) {
+          m_indirectTxPending = FALSE; 
+          post signalTxDoneTask(); 
+        } else if (m_broadcastRxPending) {
+          m_broadcastRxPending = FALSE;
+          updateState();
+        }
       }
-    }
   }
 
   async event void SlottedCsmaCa.transmitDone(ieee154_txframe_t *frame, ieee154_csma_t *csma, 
@@ -650,18 +656,20 @@ implementation
     dbg("DispatchSlottedCsmaP", "Received frame, DSN: %lu, type: 0x%lu\n", 
         (uint32_t) mhr[MHR_INDEX_SEQNO], (uint32_t) frameType);
     atomic {
-      if (DEVICE_ROLE && m_indirectTxPending) {
+      if (DEVICE_ROLE && (m_indirectTxPending || m_broadcastRxPending)) {
         message_t* frameBuf;
-        call IndirectTxWaitAlarm.stop();
-        // TODO: check!
-        //if (frame->payloadLen)
-          // is this frame from our coordinator? hmm... we cannot say/ with
-          // certainty, because we might only know either the  coordinator
-          // extended or short address (and the frame could/ have been sent
-          // with the other addressing mode) ??
+        call RxWaitAlarm.stop();
+        // TODO: check the following: 
+        // is this frame from our coordinator? hmm... we cannot say/ with
+        // certainty, because we might only know either the  coordinator
+        // extended or short address (and the frame could/ have been sent
+        // with the other addressing mode) ??
         m_txStatus = IEEE154_SUCCESS;
-        frameBuf = signal FrameExtracted.received[frameType](frame, m_lastFrame);
-        signal IndirectTxWaitAlarm.fired();
+        if (m_indirectTxPending)
+          frameBuf = signal FrameExtracted.received[frameType](frame, m_lastFrame); // indirect tx from coord
+        else
+          frameBuf = signal FrameRx.received[frameType](frame); // broadcast from coordinator
+        signal RxWaitAlarm.fired();
         return frameBuf;
       } else
         return signal FrameRx.received[frameType](frame);
@@ -720,14 +728,10 @@ implementation
   default event message_t* FrameRx.received[uint8_t client](message_t* data) {return data;}
   default async command bool IsRxEnableActive.getNow() {return FALSE;}
 
-  default async command void IndirectTxWaitAlarm.start(uint32_t dt) {ASSERT(0);}
-  default async command void IndirectTxWaitAlarm.stop() {ASSERT(0);}
-  default async command void IndirectTxWaitAlarm.startAt(uint32_t t0, uint32_t dt) {ASSERT(0);}
+  default async command void RxWaitAlarm.start(uint32_t dt) {ASSERT(0);}
+  default async command void RxWaitAlarm.stop() {ASSERT(0);}
+  default async command void RxWaitAlarm.startAt(uint32_t t0, uint32_t dt) {ASSERT(0);}
   
-  default async command void BroadcastAlarm.start(uint32_t dt) {ASSERT(0);}
-  default async command void BroadcastAlarm.stop() {ASSERT(0);}
-  default async command void BroadcastAlarm.startAt(uint32_t t0, uint32_t dt) {ASSERT(0);}
-
   default async command bool SuperframeStructure.isBroadcastPending() { return FALSE;}
   default async event void BroadcastTx.transmitNowDone(ieee154_txframe_t *frame, ieee154_status_t status) {}
   default event message_t* FrameExtracted.received[uint8_t client](message_t* msg, ieee154_txframe_t *txFrame) {return msg;}

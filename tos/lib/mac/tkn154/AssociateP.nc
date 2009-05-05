@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-03-04 18:31:12 $
+ * $Revision: 1.6 $
+ * $Date: 2009-05-05 16:56:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -175,6 +175,7 @@ implementation
     if (!m_associationOngoing)
       return;
     // have not received an AssociationResponse yet, poll the coordinator now
+    dbg_serial("AssociationP", "Polling the coordinator for an AssociationResponse now...\n");
     if (m_coordAddrMode == ADDR_MODE_SHORT_ADDRESS)
       *((nxle_uint16_t*) &coordAddress) = call MLME_GET.macCoordShortAddress();
     else
@@ -184,6 +185,7 @@ implementation
       m_shortAddress = 0xFFFF;
       m_assocRespStatus = IEEE154_TRANSACTION_OVERFLOW;
       signal DataRequest.pollDone();
+      dbg_serial("AssociationP", "Poll failed (locally)...\n");
     }
   }
 

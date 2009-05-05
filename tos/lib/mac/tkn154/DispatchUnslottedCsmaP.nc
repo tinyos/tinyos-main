@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009-05-04 09:40:36 $
+ * $Revision: 1.8 $
+ * $Date: 2009-05-05 16:56:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -97,7 +97,7 @@ implementation
   norace bool m_resume;
   norace ieee154_txframe_t *m_currentFrame;
   norace ieee154_txframe_t *m_lastFrame;
-  norace ieee154_macRxOnWhenIdle_t macRxOnWhenIdle;
+  norace ieee154_macRxOnWhenIdle_t m_macRxOnWhenIdle;
 
   /* variables for the unslotted CSMA-CA */
   norace ieee154_csma_t m_csma;
@@ -108,10 +108,9 @@ implementation
   norace ieee154_status_t m_txStatus;
   norace uint32_t m_transactionTime;
   norace bool m_indirectTxPending = FALSE;
-  norace ieee154_macMaxFrameTotalWaitTime_t m_macMaxFrameTotalWaitTime;
 
   /* function / task prototypes */
-  next_state_t tryReceive(bool startIndirectTxTimer);
+  next_state_t tryReceive();
   next_state_t tryTransmit();
   next_state_t trySwitchOff();
   void backupCurrentFrame();
@@ -227,7 +226,6 @@ implementation
     //  m_transactionTime += call MLME_GET.macMinLIFSPeriod(); 
     // else 
     //  m_transactionTime += call MLME_GET.macMinSIFSPeriod(); 
-    m_macMaxFrameTotalWaitTime = call MLME_GET.macMaxFrameTotalWaitTime();
     m_currentFrame = frame;
   }
 
@@ -256,7 +254,7 @@ implementation
       // Check 1: was an indirect transmission successfully started 
       // and are we now waiting for a frame from the coordinator?
       if (m_indirectTxPending) {
-        next = tryReceive(TRUE);
+        next = tryReceive();
       }
 
       // Check 2: is some other operation (like MLME-SCAN or MLME-RESET) pending? 
@@ -277,8 +275,8 @@ implementation
       }
 
       // Check 4: should we be in receive mode?
-      else if (call IsRxEnableActive.getNow() || macRxOnWhenIdle) {
-        next = tryReceive(FALSE);
+      else if (call IsRxEnableActive.getNow() || m_macRxOnWhenIdle) {
+        next = tryReceive();
         if (next == DO_NOTHING) {
           // if there was an active MLME_RX_ENABLE.request then we'll
           // inform the next higher layer that radio is now in Rx mode
@@ -329,7 +327,7 @@ implementation
     return next;
   }
 
-  next_state_t tryReceive(bool startIndirectTxTimer)
+  next_state_t tryReceive()
   {
     next_state_t next;
     if (call RadioRx.isReceiving())
@@ -338,8 +336,6 @@ implementation
       next = SWITCH_OFF;
     else {
       call RadioRx.enableRx(0, 0);
-      if (startIndirectTxTimer)
-        post startIndirectTxTimerTask();
       next = WAIT_FOR_RXDONE;
     }
     return next;
@@ -355,16 +351,31 @@ implementation
     return next;
   }
 
-  async event void RadioOff.offDone() { m_lock = FALSE; updateState();}
-  async event void RadioRx.enableRxDone() { m_lock = FALSE; updateState();}
-  event void RxEnableStateChange.notify(bool whatever) { 
+  async event void RadioOff.offDone() 
+  { 
+    m_lock = FALSE; 
+    updateState();
+  }
+
+  async event void RadioRx.enableRxDone() 
+  { 
+    if (m_indirectTxPending) // indirect transmission, now waiting for data
+      post startIndirectTxTimerTask();
+    m_lock = FALSE; 
+    updateState();
+  }
+
+  event void RxEnableStateChange.notify(bool whatever) 
+  { 
     if (!call RadioToken.isOwner())
       call RadioToken.request();
     else
       updateState();
   }
-  event void PIBUpdateMacRxOnWhenIdle.notify( const void* val ) {
-    atomic macRxOnWhenIdle = *((ieee154_macRxOnWhenIdle_t*) val);
+
+  event void PIBUpdateMacRxOnWhenIdle.notify( const void* val ) 
+  {
+    atomic m_macRxOnWhenIdle = *((ieee154_macRxOnWhenIdle_t*) val);
     signal RxEnableStateChange.notify(TRUE);
   }
 
@@ -380,7 +391,7 @@ implementation
 
   task void startIndirectTxTimerTask()
   {
-    call IndirectTxWaitTimer.startOneShot(m_macMaxFrameTotalWaitTime); 
+    call IndirectTxWaitTimer.startOneShot(call MLME_GET.macMaxFrameTotalWaitTime()); 
   }
 
   async event void UnslottedCsmaCa.transmitDone(ieee154_txframe_t *frame, 
