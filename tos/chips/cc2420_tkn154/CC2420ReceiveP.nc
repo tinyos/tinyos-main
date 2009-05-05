@@ -34,7 +34,7 @@
  * @author David Moss
  * @author Jung Il Choi
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @version $Revision: 1.3 $ $Date: 2009-03-04 18:31:06 $
+ * @version $Revision: 1.4 $ $Date: 2009-05-05 16:56:49 $
  */
 module CC2420ReceiveP {
 
@@ -210,29 +210,6 @@ implementation {
     signal AsyncSplitControl.stopDone(SUCCESS);
   }
 
-  void switchToUnbufferedMode()
-  {
-    uint16_t mdmctrol1;
-    call CSN.set();
-    call CSN.clr();
-    call MDMCTRL1.read(&mdmctrol1);
-    mdmctrol1 &= ~0x03;
-    mdmctrol1 |= 0x01;
-    call MDMCTRL1.write(mdmctrol1);
-    call CSN.set();
-  }
-
-  void switchToBufferedMode()
-  {
-    uint16_t mdmctrol1;
-    call CSN.set();
-    call CSN.clr();
-    call MDMCTRL1.read(&mdmctrol1);
-    mdmctrol1 &= ~0x03;
-    call MDMCTRL1.write(mdmctrol1);
-    call CSN.set();
-  }
-
   /***************** CC2420Receive Commands ****************/
   /**
    * Start frame delimiter signifies the beginning/end of a packet
@@ -280,30 +257,6 @@ implementation {
       }
     }
   }
-  
-  uint8_t mhrLength(uint8_t *fcf)
-  {
-    uint8_t idCompression;
-    uint8_t len = MHR_INDEX_ADDRESS;
- 
-    if (fcf[MHR_INDEX_FC1] & FC1_SECURITY_ENABLED)
-      return 0xFF; // not supported 
-    idCompression = (fcf[0] & FC1_PAN_ID_COMPRESSION);
-    if (fcf[MHR_INDEX_FC2] & 0x08){ // short or ext. address
-      len += 4; // pan id + short address
-      if (fcf[MHR_INDEX_FC2] & 0x04) // ext. address
-        len += 6; // diff to short address
-    }
-    if (fcf[MHR_INDEX_FC2] & 0x80){ // short or ext. address
-      len += 2;
-      if (!idCompression)
-        len += 2;
-      if (fcf[MHR_INDEX_FC2] & 0x40) // ext. address
-        len += 6; // diff to short address
-    }
-    return len;
-  }
-    
   
   /***************** RXFIFO Events ****************/
   /**

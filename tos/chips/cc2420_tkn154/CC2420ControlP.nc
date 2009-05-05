@@ -34,7 +34,7 @@
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @version $Revision: 1.4 $ $Date: 2009-03-24 12:56:46 $
+ * @version $Revision: 1.5 $ $Date: 2009-05-05 16:56:49 $
  */
 
 #include "Timer.h"
@@ -155,31 +155,6 @@ implementation {
   event void SpiResource.granted() {
 /*    call CSN.clr();*/
     signal Resource.granted();
-  }
-
-  void switchToUnbufferedMode()
-  {
-    uint16_t mdmctrol1;
-    call CSN.set();
-    call CSN.clr();
-    call MDMCTRL1.read(&mdmctrol1);
-    call CSN.set();
-    mdmctrol1 &= ~0x0003;
-    mdmctrol1 |= 0x0000;
-    call CSN.clr();
-    call MDMCTRL1.write(mdmctrol1);
-    call CSN.set();
-  }
-
-  void switchToBufferedMode()
-  {
-    uint16_t mdmctrol1;
-    call CSN.set();
-    call CSN.clr();
-    call MDMCTRL1.read(&mdmctrol1);
-    mdmctrol1 &= ~0x03;
-    call MDMCTRL1.write(mdmctrol1);
-    call CSN.set();
   }
 
   /***************** CC2420Power Commands ****************/
