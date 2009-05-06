@@ -58,7 +58,7 @@ typedef struct {
 #define MAX_DESC_TRANSFER  8184		// max is 8K-1, CIF requires a multiple of 8	//8192
 
 // ----------------------------------------------
-#define DescArray_NBR_DESC         20//8
+#define DescArray_NBR_DESC         100//8
 #define DescArray_BYTE_ALLIGNMENT  16
 #define DescArray_BUFFER_SIZE      (DescArray_NBR_DESC*sizeof(DMADescriptor_t) + DescArray_BYTE_ALLIGNMENT)
 

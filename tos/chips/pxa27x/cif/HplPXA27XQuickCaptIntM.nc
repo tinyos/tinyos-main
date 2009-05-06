@@ -169,11 +169,8 @@ implementation
 
     command error_t HplPXA27XQuickCaptInt.setImageSize(uint16_t sizeX, uint16_t sizeY, uint8_t colorType)
     {
-        //was: if (sizeX > 2048 || sizeY > 2048)
-    if (sizeX > 320 || sizeY > 240) 
-            return FAIL;
-
-    
+    if (sizeX > 2048 || sizeY > 2048)
+      return FAIL;
 
     // (1) - Set the Quick Capture Interface Size
     //was: call HplPXA27XQuickCaptInt.disableQuick();
