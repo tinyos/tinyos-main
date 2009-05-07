@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-03-25 16:47:49 $
+ * $Revision: 1.6 $
+ * $Date: 2009-05-07 12:41:36 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -89,13 +89,19 @@ implementation
     return SUCCESS;
   }
 
-  uint32_t getPersistenceTime()
+  uint32_t getPersistenceTimeSymbols()
   {
-    uint32_t persistenceTime;
-    persistenceTime = call MLME_GET.macTransactionPersistenceTime();
-    persistenceTime *= IEEE154_aBaseSuperframeDuration;
-    persistenceTime *= ((uint16_t) 1) << call MLME_GET.macBeaconOrder();
-    return persistenceTime;
+    // transform macTransactionPersistenceTime PIB attribute
+    // from "unit periods" to symbols (cf. page 166) 
+    uint32_t unitPeriod;
+    ieee154_macBeaconOrder_t BO = call MLME_GET.macBeaconOrder();
+
+    if (BO <= 14) {
+      unitPeriod = IEEE154_aBaseSuperframeDuration;
+      unitPeriod *= ((uint16_t) 1) << BO;
+    } else
+      unitPeriod = IEEE154_aBaseSuperframeDuration;
+    return unitPeriod * call MLME_GET.macTransactionPersistenceTime();
   }
 
   command ieee154_status_t Purge.purge(uint8_t msduHandle)
@@ -157,7 +163,7 @@ implementation
     else if ((txFrame->header->mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == FC2_DEST_MODE_EXTENDED)
       m_numExtPending++;
     if (!call IndirectTxTimeout.isRunning())
-      call IndirectTxTimeout.startOneShot(getPersistenceTime());
+      call IndirectTxTimeout.startOneShot(getPersistenceTimeSymbols());
     dbg_serial("IndirectTxP", "Preparing a transmission.\n");
     signal PendingAddrSpecUpdated.notify(TRUE);
     return IEEE154_SUCCESS;
@@ -245,7 +251,7 @@ implementation
   {
     // a transaction has expired 
     uint32_t now = call IndirectTxTimeout.getNow(), dt=0;
-    uint32_t persistenceTime = getPersistenceTime();
+    uint32_t persistenceTime = getPersistenceTimeSymbols();
     uint8_t i;
 
     for (i=0; i<NUM_MAX_PENDING; i++)

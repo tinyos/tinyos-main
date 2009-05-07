@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-04-07 15:40:12 $
+ * $Date: 2009-05-07 12:41:36 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -150,12 +150,12 @@ implementation
     if (m) {
       k = 0;
       while (k != m) {
-        waitTime += ((uint16_t) 1 << (macMaxBE+k));
+        waitTime += ((uint16_t) 1 << (macMinBE+k));
         k += 1;
       }
     }
     waitTime *= IEEE154_aUnitBackoffPeriod;
-    waitTime += IEEE154_SHR_DURATION;
+    waitTime += call MLME_GET.phyMaxFrameDuration();
     m_pib.macMaxFrameTotalWaitTime = waitTime;
   }
 
