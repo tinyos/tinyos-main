@@ -46,4 +46,3 @@ RF230_RSSI_ENERGY:
 If you define this, then the content of the RF230_PHY_ED_LEVEL is queried 
 instead of the RSSI value for eahc incoming message. This value can be 
 obtained with the PacketRSSI interface.
-

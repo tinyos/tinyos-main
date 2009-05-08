@@ -118,9 +118,13 @@ implementation
 		call IEEE154MessageLayer.createAckReply(data, ack);
 	}
 
+#ifndef SOFTWAREACK_TIMEOUT
+#define SOFTWAREACK_TIMEOUT	1000
+#endif
+
 	async command uint16_t SoftwareAckConfig.getAckTimeout()
 	{
-		return (uint16_t)(800 * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(SOFTWAREACK_TIMEOUT * RADIO_ALARM_MICROSEC);
 	}
 
 	tasklet_async command void SoftwareAckConfig.reportChannelError()

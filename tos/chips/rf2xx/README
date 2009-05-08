@@ -66,3 +66,11 @@ RADIO_ALARM_MILLI_EXP:
 The base two logarithm of the number of radio alarm ticks per one 
 millisecond.
 
+SOFTWAREACK_TIMEOUT:
+
+The number of microseconds the driver should wait for a software 
+acknowledgement on the sender side. If your SPI bus is slow, then it will 
+take more time to download and upload the message from/to the radio chip, 
+so you need to increase this wait period. For example, for IRIS->IRIS 
+communication 800 microsec is enough, but for IRIS->TELOS we need 1600 
+because the TELOS in software ack mode is slow to reply with an ack packet.

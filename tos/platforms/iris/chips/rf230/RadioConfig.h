@@ -59,6 +59,11 @@ enum
 #define RF230_DEF_CHANNEL	11
 #endif
 
+/* The number of microseconds a sending IRIS mote will wait for an acknowledgement */
+#ifndef SOFTWAREACK_TIMEOUT
+#define SOFTWAREACK_TIMEOUT	800
+#endif
+
 /*
  * This is the command used to calculate the CRC for the RF230 chip. 
  * TODO: Check why the default crcByte implementation is in a different endianness
