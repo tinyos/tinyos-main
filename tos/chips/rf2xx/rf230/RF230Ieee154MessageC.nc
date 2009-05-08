@@ -110,7 +110,7 @@ implementation
 	components MessageBufferLayerC;
 	MessageBufferLayerC.RadioSend -> CollisionAvoidanceLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
-	MessageBufferLayerC.RadioState -> CollisionAvoidanceLayerC;
+	MessageBufferLayerC.RadioState -> RF230DriverLayerC;
 	RadioChannel = MessageBufferLayerC;
 
 // -------- UniqueLayer receive part (wired twice)

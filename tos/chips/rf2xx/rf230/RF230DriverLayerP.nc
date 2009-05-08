@@ -503,10 +503,8 @@ implementation
 		if( timesync != 0 )
 			*(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time32;
 
-		do {
+		while( length-- != 0 )
 			call FastSpiByte.splitReadWrite(*(data++));
-		}
-		while( --length != 0 );
 
 		// wait for the SPI transfer to finish
 		call FastSpiByte.splitRead();

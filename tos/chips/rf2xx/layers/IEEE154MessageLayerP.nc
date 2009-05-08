@@ -390,7 +390,10 @@ implementation
 
 	event message_t* SubReceive.receive(message_t* msg)
 	{
-		return signal Ieee154Receive.receive(msg,
-			getPayload(msg), call Packet.payloadLength(msg));
+		if( call Ieee154Packet.isForMe(msg) )
+			return signal Ieee154Receive.receive(msg,
+				getPayload(msg), call Packet.payloadLength(msg));
+		else
+			return msg;
 	}
 }
