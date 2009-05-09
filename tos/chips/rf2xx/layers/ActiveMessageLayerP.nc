@@ -227,29 +227,29 @@ implementation
 
 	command void Packet.clear(message_t* msg)
 	{
-		call SubPacket.clear(msg);
+		call RadioPacket.clear(msg);
 	}
 
 	command uint8_t Packet.payloadLength(message_t* msg)
 	{
-		return call SubPacket.payloadLength(msg);
+		return call RadioPacket.payloadLength(msg);
 	}
 
 	command void Packet.setPayloadLength(message_t* msg, uint8_t len)
 	{
-		call SubPacket.setPayloadLength(msg, len);
+		call RadioPacket.setPayloadLength(msg, len);
 	}
 
 	command uint8_t Packet.maxPayloadLength()
 	{
-		return call SubPacket.maxPayloadLength();
+		return call RadioPacket.maxPayloadLength();
 	}
 
 	command void* Packet.getPayload(message_t* msg, uint8_t len)
 	{
-		if( len > call SubPacket.maxPayloadLength() )
+		if( len > call RadioPacket.maxPayloadLength() )
 			return NULL;
 
-		return ((void*)msg) + call SubPacket.headerLength(msg);
+		return ((void*)msg) + call RadioPacket.headerLength(msg);
 	}
 }
