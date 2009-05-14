@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-03-24 12:56:46 $
+ * $Revision: 1.5 $
+ * $Date: 2009-05-14 13:20:35 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -44,6 +44,7 @@ generic configuration RadioClientC(uint8_t clientID)
     interface SlottedCsmaCa;
     interface UnslottedCsmaCa;
     interface TransferableResource as RadioToken;
+    interface ResourceRequested as RadioTokenRequested;
   }
 }
 implementation
@@ -55,5 +56,6 @@ implementation
   SlottedCsmaCa = RadioControlP.SlottedCsmaCa[clientID];
   UnslottedCsmaCa = RadioControlP.UnslottedCsmaCa[clientID];
   RadioToken = RadioControlP.TransferableResource[clientID];
+  RadioTokenRequested = RadioControlP.ResourceRequested[clientID];
 }
 

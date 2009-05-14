@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-03-26 15:29:23 $
+ * $Date: 2009-05-14 13:20:35 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -283,7 +283,7 @@ enum {
 typedef bool token_requested_t __attribute__((combine(rcombine)));
 token_requested_t rcombine(token_requested_t r1, token_requested_t r2)
 {
-  return r1 && r2;
+  return r1 || r2;
 }
 
 #ifdef TKN154_DEBUG

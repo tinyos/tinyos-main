@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-05-05 16:58:53 $
+ * $Revision: 1.5 $
+ * $Date: 2009-05-14 13:20:35 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -56,6 +56,7 @@ generic module NoDispatchSlottedCsmaP(uint8_t sfDirection)
     interface Alarm<TSymbolIEEE802154,uint32_t> as RxWaitAlarm;
     interface GetNow<token_requested_t> as IsRadioTokenRequested;
     interface TransferableResource as RadioToken;
+    interface ResourceRequested as RadioTokenRequested;
     interface SuperframeStructure; 
     interface GetNow<bool> as IsRxEnableActive; 
     interface Get<ieee154_txframe_t*> as GetIndirectTxFrame; 
@@ -113,4 +114,6 @@ implementation
   command error_t WasRxEnabled.enable(){return FAIL;}
   command error_t WasRxEnabled.disable(){return FAIL;}
   event void PIBUpdateMacRxOnWhenIdle.notify( const void* val ) {}
+  async event void RadioTokenRequested.requested(){ }
+  async event void RadioTokenRequested.immediateRequested(){ }
 }

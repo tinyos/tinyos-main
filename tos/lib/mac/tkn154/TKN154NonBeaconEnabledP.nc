@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2009-05-04 09:40:36 $
+ * $Revision: 1.7 $
+ * $Date: 2009-05-14 13:20:35 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -288,6 +288,7 @@ implementation
   DispatchP.SetMacSuperframeOrder -> PibP.SetMacSuperframeOrder;
   DispatchP.SetMacPanCoordinator -> PibP.SetMacPanCoordinator;
   DispatchP.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
+  DispatchP.RadioTokenRequested -> DispatchRadioClient;
   DispatchP.IsRadioTokenRequested -> PibP.IsRadioTokenRequested; // fan out...
   DispatchP.IsRadioTokenRequested -> PromiscuousModeP.IsRadioTokenRequested;
   DispatchP.IsRadioTokenRequested -> ScanP.IsRadioTokenRequested;
