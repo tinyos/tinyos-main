@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-05-18 12:54:10 $
+ * $Revision: 1.2 $
+ * $Date: 2009-05-18 17:16:25 $
  * @author: Jasper Buesch <buesch@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -94,7 +94,7 @@ implementation
     m_beaconFrame.header->mhr[MHR_INDEX_FC1] = FC1_FRAMETYPE_BEACON;
     m_beaconFrame.header->mhr[MHR_INDEX_FC2] = isShortAddr ? FC2_SRC_MODE_SHORT : FC2_SRC_MODE_EXTENDED;
     offset = MHR_INDEX_ADDRESS;
-    *((nxle_uint16_t*) &m_beaconFrame.header->mhr[offset]) = PAN_ID;
+    *((nxle_uint16_t*) &m_beaconFrame.header->mhr[offset]) = call MLME_GET.macPANId();
     offset += sizeof(ieee154_macPANId_t);
     if (isShortAddr) {
       *((nxle_uint16_t*) &m_beaconFrame.header->mhr[offset]) = shortAddress;
