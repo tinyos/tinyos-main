@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2009-05-14 13:20:35 $
+ * $Revision: 1.10 $
+ * $Date: 2009-05-18 12:54:10 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -204,9 +204,17 @@ implementation
 
   void setCurrentFrame(ieee154_txframe_t *frame)
   {
-    ieee154_macDSN_t dsn = call MLME_GET.macDSN();
-    frame->header->mhr[MHR_INDEX_SEQNO] = dsn++;
-    call MLME_SET.macDSN(dsn);
+    if (frame->header->mhr[MHR_INDEX_FC1] != FC1_FRAMETYPE_BEACON) { 
+      // set the sequence number for command/data frame
+      ieee154_macDSN_t dsn = call MLME_GET.macDSN();
+      frame->header->mhr[MHR_INDEX_SEQNO] = dsn++;
+      call MLME_SET.macDSN(dsn);
+    } else {
+      // set the sequence number for beacon frame
+      ieee154_macBSN_t bsn = call MLME_GET.macBSN(); 
+      frame->header->mhr[MHR_INDEX_SEQNO] = bsn++;
+      call MLME_SET.macBSN(bsn);
+    }    
     m_csma.NB = 0;
     m_csma.macMaxCsmaBackoffs = m_macMaxCSMABackoffs = call MLME_GET.macMaxCSMABackoffs();
     m_csma.macMaxBE = m_macMaxBE = call MLME_GET.macMaxBE();

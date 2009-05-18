@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:39:38 $
+ * $Revision: 1.3 $
+ * $Date: 2009-05-18 12:54:11 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -56,6 +56,7 @@ configuration Ieee802154NonBeaconEnabledC
     interface MLME_START;
     interface IEEE154Frame;
     interface IEEE154BeaconFrame;
+    interface IEEE154TxBeaconPayload;
     interface SplitControl as PromiscuousMode;
     interface Get<uint64_t> as LocalExtendedAddress;
     interface Timestamp;
@@ -82,6 +83,7 @@ implementation
   MLME_ORPHAN = MAC;
   IEEE154Frame = MAC;
   IEEE154BeaconFrame = MAC;
+  IEEE154TxBeaconPayload = MAC;
   LocalExtendedAddress = MAC;
   PromiscuousMode = MAC;
   Packet = MAC;
