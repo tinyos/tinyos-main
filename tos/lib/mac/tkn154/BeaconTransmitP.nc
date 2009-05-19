@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2009-03-24 12:56:46 $
+ * $Revision: 1.9 $
+ * $Date: 2009-05-19 16:53:15 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -214,7 +214,7 @@ implementation
       status =  IEEE154_INVALID_PARAMETER;
     else if (startTime && !call IsTrackingBeacons.getNow())
       status = IEEE154_TRACKING_OFF;
-    else if (startTime && 0xFF000000)
+    else if (startTime & 0xFF000000)
       status = IEEE154_INVALID_PARAMETER;
     else if (m_requestBitmap & (REQUEST_CONFIRM_PENDING | REQUEST_UPDATE_SF))
       status = IEEE154_TRANSACTION_OVERFLOW;
