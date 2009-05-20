@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2009-05-05 16:56:12 $
+ * $Revision: 1.7 $
+ * $Date: 2009-05-20 15:15:44 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -238,7 +238,9 @@ implementation
     for (i=0; i<MAX_PENDING_ASSOC_RESPONSES;i++)
       if (m_payloadAssocResponse[i][0] == S_IDLE)
         break;    
-    if (i == MAX_PENDING_ASSOC_RESPONSES || !(txFrame = call TxFramePool.get()))
+    if (security && security->SecurityLevel)
+      txStatus = IEEE154_UNSUPPORTED_SECURITY;
+    else if (i == MAX_PENDING_ASSOC_RESPONSES || !(txFrame = call TxFramePool.get()))
       txStatus = IEEE154_TRANSACTION_OVERFLOW;
     else if (!(txControl = call TxControlPool.get())) {
       call TxFramePool.put(txFrame);

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2009-04-30 13:23:48 $
+ * $Revision: 1.10 $
+ * $Date: 2009-05-20 15:15:44 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -345,6 +345,7 @@ implementation
   {
     if (!m_busy)
       return frame;
+
     if (m_scanType == ORPHAN_SCAN) {
       if (!m_resultIndex)
         if ((MHR(frame)[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_CMD &&
@@ -355,7 +356,14 @@ implementation
           call RadioOff.off();
         }
     } else if ((((ieee154_header_t*) frame->header)->mhr[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON) {
-      //  PASSIVE_SCAN / ACTIVE_SCAN
+
+      // PASSIVE_SCAN / ACTIVE_SCAN:
+      // A beacon frame containing a non-empty payload is always signalled
+      // to the next higher layer (regardless of the value of macAutoRequest),
+      // but it is unclear whether it should in addition be added to the 
+      // PAN Descriptor list when macAutoRequest is set to TRUE. This is,
+      // anyway, what the implementation currently does ... 
+
       if (!call MLME_GET.macAutoRequest())
         return signal MLME_BEACON_NOTIFY.indication (frame);
       else if (m_resultIndex >= m_resultListNumEntries) {
@@ -367,25 +375,28 @@ implementation
             IEEE154_SUPPORTED_CHANNELPAGE,
             &((ieee154_PANDescriptor_t*) m_resultList)[m_resultIndex]) == SUCCESS) {
 
-        // check uniqueness: both PAN ID and source address must not be in a previously received beacon
+        // check uniqueness: PAN ID and source address must 
+        // not be found in a previously received beacon
         uint8_t i;
         ieee154_PANDescriptor_t* descriptor = (ieee154_PANDescriptor_t*) m_resultList;
 
         dbg_serial("ScanP", "Received beacon, source: 0x%lx, channel: %lu.\n", 
             (uint32_t) descriptor[m_resultIndex].CoordAddress.shortAddress, (uint32_t) m_currentChannelNum);
-        if (m_resultIndex)
-          for (i=0; i<m_resultIndex; i++)
-            if (descriptor[i].CoordPANId == descriptor[m_resultIndex].CoordPANId &&
-                descriptor[i].CoordAddrMode == descriptor[m_resultIndex].CoordAddrMode)
-              if ((descriptor[i].CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
-                    descriptor[i].CoordAddress.shortAddress ==
-                    descriptor[m_resultIndex].CoordAddress.shortAddress) ||
-                  (descriptor[i].CoordAddrMode == ADDR_MODE_EXTENDED_ADDRESS &&
-                   descriptor[i].CoordAddress.extendedAddress ==
-                   descriptor[m_resultIndex].CoordAddress.extendedAddress))
-                return frame; // not unique
-        m_resultIndex++; // was unique
+        for (i=0; i<m_resultIndex; i++)
+          if (descriptor[i].CoordPANId == descriptor[m_resultIndex].CoordPANId &&
+              descriptor[i].CoordAddrMode == descriptor[m_resultIndex].CoordAddrMode)
+            if ((descriptor[i].CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
+                  descriptor[i].CoordAddress.shortAddress ==
+                  descriptor[m_resultIndex].CoordAddress.shortAddress) ||
+                (descriptor[i].CoordAddrMode == ADDR_MODE_EXTENDED_ADDRESS &&
+                 descriptor[i].CoordAddress.extendedAddress ==
+                 descriptor[m_resultIndex].CoordAddress.extendedAddress))
+              break; // not unique
+        if (i == m_resultIndex)
+          m_resultIndex++; // was unique
       }
+      if (call BeaconFrame.getBeaconPayloadLength(frame) > 0)
+        return signal MLME_BEACON_NOTIFY.indication (frame);
     } //  PASSIVE_SCAN / ACTIVE_SCAN
     return frame;
   }
