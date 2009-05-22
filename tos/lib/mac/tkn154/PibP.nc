@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-05-07 12:41:36 $
+ * $Date: 2009-05-22 08:56:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -939,7 +939,7 @@ implementation
     uint8_t *mhr = MHR(frame);
     uint8_t len = ((ieee154_header_t*) frame->header)->length & FRAMECTL_LENGTH_MASK;
     if ((mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON) {
-      uint8_t *payload = call Frame.getPayload(frame);
+      uint8_t *payload = call BeaconFrame.getBeaconPayload(frame);
       len = len - (payload - (uint8_t *) frame->data);
     } 
     return len;

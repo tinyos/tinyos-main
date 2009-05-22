@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.10 $
- * $Date: 2009-05-20 15:15:44 $
+ * $Revision: 1.11 $
+ * $Date: 2009-05-22 08:56:32 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -359,10 +359,9 @@ implementation
 
       // PASSIVE_SCAN / ACTIVE_SCAN:
       // A beacon frame containing a non-empty payload is always signalled
-      // to the next higher layer (regardless of the value of macAutoRequest),
-      // but it is unclear whether it should in addition be added to the 
-      // PAN Descriptor list when macAutoRequest is set to TRUE. This is,
-      // anyway, what the implementation currently does ... 
+      // to the next higher layer (regardless of the value of macAutoRequest);
+      // when macAutoRequest is set to TRUE, then the beacon is always 
+      // stored in the PAN Descriptor list (see 7.1.11.2.1 - Table 68)
 
       if (!call MLME_GET.macAutoRequest())
         return signal MLME_BEACON_NOTIFY.indication (frame);
