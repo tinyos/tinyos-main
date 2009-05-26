@@ -219,17 +219,19 @@ implementation {
   }
 
   double prr_estimate_from_snr(double SNR) {
-    double beta1 = 1.3687;
-    double beta2 = 0.9187;
-    double SNR_lin = pow(10.0, SNR/10.0);
-    double X = fabs(SNR_lin-beta2);
-    double PSE = 0.5*erfc(beta1*sqrt(X/2));
+    // Based on CC2420 measurement by Kannan.
+    // The updated function below fixes the problem of non-zero PRR
+    // at very low SNR. With this function PRR is 0 for SNR <= 3.
+    double beta1 = 0.9794;
+    double beta2 = 2.3851;
+    double X = SNR-beta2;
+    double PSE = 0.5*erfc(beta1*X/sqrt(2));
     double prr_hat = pow(1-PSE, 23*2);
     dbg("CpmModelC,SNR", "SNR is %lf, PRR is %lf\n", SNR, prr_hat);
     if (prr_hat > 1)
-      prr_hat = 1;
+      prr_hat = 1.1;
     else if (prr_hat < 0)
-      prr_hat = 0;
+      prr_hat = -0.1;
 	
     return prr_hat;
   }
@@ -237,7 +239,7 @@ implementation {
   bool shouldReceive(double SNR) {
     double prr = prr_estimate_from_snr(SNR);
     double coin = RandomUniform();
-    if ( (prr != 0) && (prr != 1) ) {
+    if ( (prr >= 0) && (prr <= 1) ) {
       if (coin < prr)
 	prr = 1.0;
       else
