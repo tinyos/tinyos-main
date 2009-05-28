@@ -1,17 +1,19 @@
 This directory contains "TKN15.4", a platform-independent IEEE 802.15.4-2006
 MAC implementation. The code is under active development, but most of the
-functionality described in the standard is implemented and tested.
-The MAC itself is platform-independent, but it requires (1) a suitable radio
-driver, (2) Alarms/Timers with symbol precision and (3) some "platform glue"
-code (defining guard times, etc.). Currently the only supported platform is
-TelosB (but without additional hardware support on TelosB the timing in
-beacon-enabled mode is not standard compliant).
+functionality described in the standard is implemented and tested.  The MAC
+itself is platform-independent, but it requires (1) a suitable radio driver,
+(2) Alarms/Timers with symbol precision and (3) some "platform glue" code
+(defining guard times, etc.). Currently the only supported platforms are TelosB
+and micaZ (note: because they do not have a clock that satisfies the
+precision/accuracy requirements of the IEEE 802.15.4 standard -- 62.500 Hz,
++-40 ppm in the 2.4 GHz band -- the timing in beacon-enabled mode is not
+standard compliant).
 
-Status (last updated 4/2/09)
-----------------------------
+Status (last updated 5/28/09)
+-----------------------------
 
 Missing functionality:
-- GTS 
+- GTS
 - security services
 - PAN ID conflict notification/resolution
 - indirect transmissions are incomplete, this is missing:
@@ -19,12 +21,10 @@ Missing functionality:
   -- set pending flag if there are multiple indirect transmissions pending
   -- purging indirect transmissions on MLME_PURGE.request
   -- keep frame in transaction queue in case CSMA-CA algorithm fails
-- responding to active scans in nonbeacon-enabled PANs
-
 
 Known Issues:
 - resetting the MAC during operation (via MLME_RESET) has not been tested
-- if initial beacon Tx timestamp is invalid, then coordinator can hang 
+- if initial beacon Tx timestamp is invalid, the coordinator will hang 
 - frame pending flags are (need to be) always set in the ACK headers
 - transmitting coordinator realignment frames has not been tested
 - using an incoming and outgoing superframe at the same time has not been tested
@@ -40,6 +40,7 @@ MAC implementation: tinyos-2.x/tos/lib/mac/tkn154
 MAC interfaces: tinyos-2.x/tos/lib/mac/tkn154/interfaces
 CC2420 driver: tinyos-2.x/tos/chips/cc2420_tkn154
 TelosB "platform glue" code: tinyos-2.x/tos/platforms/telosb/mac/tkn154
+micaZ "platform glue" code: tinyos-2.x/tos/platforms/micaz/mac/tkn154
 Example applications: tinyos-2.x/apps/tests/tkn154
 
 Note: TEP3 recommends that interface names "should be mixed case, starting
