@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-05-14 13:20:35 $
+ * $Date: 2009-05-28 09:52:54 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -240,10 +240,19 @@ enum {
   BEACON_INDEX_SF_SPEC2 = 1,
   BEACON_INDEX_GTS_SPEC = 2,
 
+  SF_SPEC1_BO_MASK = 0x0F,
+  SF_SPEC1_BO_OFFSET = 0,
+  SF_SPEC1_SO_MASK = 0xF0,
+  SF_SPEC1_SO_OFFSET = 4,
+
+  SF_SPEC2_FINAL_CAPSLOT_MASK = 0x0F,
+  SF_SPEC2_FINAL_CAPSLOT_OFFSET = 0,
+  SF_SPEC2_BATT_LIFE_EXT = 0x10,
   SF_SPEC2_PAN_COORD = 0x40,
   SF_SPEC2_ASSOCIATION_PERMIT = 0x80,
 
   GTS_DESCRIPTOR_COUNT_MASK = 0x07,
+  GTS_DESCRIPTOR_COUNT_OFFSET = 0,
   GTS_LENGTH_MASK = 0xF0,
   GTS_LENGTH_OFFSET = 4,
   GTS_SPEC_PERMIT = 0x80,

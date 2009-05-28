@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2009-05-19 16:53:15 $
+ * $Revision: 1.10 $
+ * $Date: 2009-05-28 09:52:54 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -526,17 +526,21 @@ implementation
     }
 
     // update superframe-related variables
-    m_numGtsSlots = (frame->payload[2] & 0x07);
+    m_numGtsSlots = 
+      (frame->payload[BEACON_INDEX_GTS_SPEC] & GTS_DESCRIPTOR_COUNT_MASK) >> GTS_DESCRIPTOR_COUNT_OFFSET;
     gtsFieldLength = 1 + ((m_numGtsSlots > 0) ? 1 + m_numGtsSlots * 3: 0);
-    m_numCapSlots = (frame->payload[1] & 0x0F) + 1;
-    m_sfSlotDuration = (((uint32_t) 1) << ((frame->payload[0] & 0xF0) >> 4)) * IEEE154_aBaseSlotDuration;
+    m_numCapSlots = 
+      ((frame->payload[BEACON_INDEX_SF_SPEC2] & SF_SPEC2_FINAL_CAPSLOT_MASK) >> SF_SPEC2_FINAL_CAPSLOT_OFFSET) + 1;
+    m_sfSlotDuration = 
+      (((uint32_t) 1) << ((frame->payload[BEACON_INDEX_SF_SPEC1] & SF_SPEC1_SO_MASK) >> SF_SPEC1_SO_OFFSET)) * 
+      IEEE154_aBaseSlotDuration;
 
-    if (frame->header->mhr[0] & FC1_FRAME_PENDING)
+    if (frame->header->mhr[MHR_INDEX_FC1] & FC1_FRAME_PENDING)
       m_framePendingBit = TRUE;
     else
       m_framePendingBit = FALSE;
-    memcpy(m_gtsField, &frame->payload[2], gtsFieldLength);
-    if (frame->payload[1] & 0x10) {
+    memcpy(m_gtsField, &frame->payload[BEACON_INDEX_GTS_SPEC], gtsFieldLength);
+    if (frame->payload[BEACON_INDEX_SF_SPEC2] & SF_SPEC2_BATT_LIFE_EXT) {
       // BLE is active; calculate the time offset from slot 0
       m_battLifeExtDuration = IEEE154_SHR_DURATION + 
         (frame->headerLen + frame->payloadLen + 2) * IEEE154_SYMBOLS_PER_OCTET; 
@@ -649,7 +653,7 @@ implementation
   uint8_t getNumGtsSlots(uint8_t *gtsInfoField)
   {
     uint8_t i, num=0;
-    for (i=0; i<(gtsInfoField[0] & GTS_DESCRIPTOR_COUNT_MASK); i++)
+    for (i=0; i<((gtsInfoField[0] & GTS_DESCRIPTOR_COUNT_MASK) >> GTS_DESCRIPTOR_COUNT_OFFSET); i++)
       num += ((gtsInfoField[4+i*3] & GTS_LENGTH_MASK) >> GTS_LENGTH_OFFSET);
     return num;
   }
@@ -699,13 +703,15 @@ implementation
       // (3) update SF spec
       beaconSpecs -= 2; // sizeof SF Spec
       if (m_payloadState & MODIFIED_SF_SPEC) {
-        beaconSpecs[0] = m_beaconOrder | (m_superframeOrder << 4);
-        beaconSpecs[1] = 0;
+        beaconSpecs[BEACON_INDEX_SF_SPEC1] = 
+          (m_beaconOrder << SF_SPEC1_BO_OFFSET) | (m_superframeOrder << SF_SPEC1_SO_OFFSET);
+        beaconSpecs[BEACON_INDEX_SF_SPEC2] = 0;
         if (call MLME_GET.macAssociationPermit())
-          beaconSpecs[1] |= SF_SPEC2_ASSOCIATION_PERMIT;        
+          beaconSpecs[BEACON_INDEX_SF_SPEC2] |= SF_SPEC2_ASSOCIATION_PERMIT;        
         if (call MLME_GET.macPanCoordinator())
-          beaconSpecs[1] |= SF_SPEC2_PAN_COORD;
-        beaconSpecs[1] |= ((15-numGtsSlots) & 0x0F); // update FinalCAPSlot field
+          beaconSpecs[BEACON_INDEX_SF_SPEC2] |= SF_SPEC2_PAN_COORD;
+        beaconSpecs[BEACON_INDEX_SF_SPEC2] |= 
+          ((15-numGtsSlots) & SF_SPEC2_FINAL_CAPSLOT_MASK);
       }
       m_beaconFrame.payloadLen = (m_pendingAddrLen + m_pendingGtsLen + 2) + m_beaconPayloadLen;
       m_beaconFrame.payload = beaconSpecs;
