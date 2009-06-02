@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:22 $
+ * $Revision: 1.3 $
+ * $Date: 2009-06-02 08:40:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -114,7 +114,7 @@ implementation
     dstAddress.extendedAddress = OrphanAddress;
     if (!AssociatedMember)
       txStatus = IEEE154_SUCCESS;
-    else if (m_busy || (txFrame = newRealignmentFrame(ORPHAN_RESPONSE, &dstAddress)) != NULL)
+    else if (m_busy || (txFrame = newRealignmentFrame(ORPHAN_RESPONSE, &dstAddress)) == NULL)
       txStatus = IEEE154_TRANSACTION_OVERFLOW;
     else {
       m_busy = TRUE;

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.11 $
- * $Date: 2009-05-22 08:56:32 $
+ * $Revision: 1.12 $
+ * $Date: 2009-06-02 08:40:12 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -219,14 +219,14 @@ implementation
         break;
       case ORPHAN_SCAN:
         // orphan notification frame
-        m_scanDuration = call MLME_GET.macResponseWaitTime();
+        m_scanDuration = call MLME_GET.macResponseWaitTime() * IEEE154_aBaseSuperframeDuration;
         m_txFrame->header->mhr[MHR_INDEX_FC1] = FC1_FRAMETYPE_CMD | FC1_PAN_ID_COMPRESSION;
         m_txFrame->header->mhr[MHR_INDEX_FC2] = FC2_SRC_MODE_EXTENDED | FC2_DEST_MODE_SHORT;
         m_txFrame->header->mhr[MHR_INDEX_SEQNO] = dsn;
         call MLME_SET.macDSN(dsn+1);
         for (i=0; i<4; i++) // broadcast dest PAN ID + broadcast dest addr
           m_txFrame->header->mhr[MHR_INDEX_ADDRESS + i] = 0xFF;
-        call FrameUtility.copyLocalExtendedAddressLE((uint8_t*) &(m_txFrame->header[MHR_INDEX_ADDRESS + i]));
+        call FrameUtility.copyLocalExtendedAddressLE((uint8_t*) &(m_txFrame->header->mhr[MHR_INDEX_ADDRESS + i]));
         m_txFrame->headerLen = 15;
         m_payload[0] = CMD_FRAME_ORPHAN_NOTIFICATION;
         m_txFrame->payloadLen = 1;
@@ -347,9 +347,18 @@ implementation
       return frame;
 
     if (m_scanType == ORPHAN_SCAN) {
+      uint8_t *payload = call Frame.getPayload(frame);
       if (!m_resultIndex)
         if ((MHR(frame)[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_CMD &&
-            ((uint8_t*)call Frame.getPayload(frame))[0] == CMD_FRAME_COORDINATOR_REALIGNMENT) {
+            payload[0] == CMD_FRAME_COORDINATOR_REALIGNMENT) {
+
+          // Sect. 7.5.4.3: "the device shall update its MAC PIB with the PAN  
+          // information contained in the coordinator realignment command"
+           
+          call MLME_SET.macPANId( *((nxle_uint16_t*) &payload[1]) );
+          call MLME_SET.macCoordShortAddress( *((nxle_uint16_t*) &payload[3]) );
+          call MLME_SET.phyCurrentChannel( *((nxle_uint16_t*) &payload[5]) );
+          call MLME_SET.macShortAddress( *((nxle_uint16_t*) &payload[6]) );
           m_resultIndex++; 
           dbg_serial("ScanP", "Received coordinator realignment frame.\n");
           m_terminateScan = TRUE;
