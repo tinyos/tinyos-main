@@ -1,4 +1,4 @@
-// $Id: GainRadioModel.nc,v 1.5 2007-05-21 21:35:54 scipio Exp $
+// $Id: GainRadioModel.nc,v 1.6 2009-06-16 00:49:43 sunheeyoon Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -46,6 +46,7 @@ interface GainRadioModel {
 
   command void setClearValue(double value);
   command bool clearChannel();
+  command void checkPendingTransmission(bool isTransmitting);
   
   event void acked(message_t* msg);
   event void receive(message_t* msg);

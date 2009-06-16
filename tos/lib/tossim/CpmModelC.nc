@@ -50,6 +50,8 @@ implementation {
   message_t* outgoing; // If I'm sending, this is my outgoing packet
   bool requestAck;
   bool receiving = 0;  // Whether or not I think I'm receiving a packet
+  bool transmitting = 0; // Whether or not I think I'm tranmitting a packet
+  sim_time_t TransmissionEndTime; // to check pending transmission
   struct receive_message;
   typedef struct receive_message receive_message_t;
 
@@ -392,6 +394,10 @@ implementation {
       dbg("CpmModelC,SNRLoss", "Lost packet from %i due to %i being mid-reception\n", source, sim_node());
       rcv->lost = 1;
     }
+    else if (transmitting && (rcv->start < TransmissionEndTime) && (TransmissionEndTime <= rcv->end)) {
+      dbg("CpmModelC,SNRLoss", "Lost packet from %i due to %i being mid-transmission, TransmissionEndTime %llu\n", source, sim_node(), TransmissionEndTime);
+      rcv->lost = 1;
+    }
     else {
       receiving = 1;
     }
@@ -421,9 +427,11 @@ implementation {
   }
 
   command void Model.putOnAirTo(int dest, message_t* msg, bool ack, sim_time_t endTime, double power, double reversePower) {
+    receive_message_t* list;
     gain_entry_t* neighborEntry = sim_gain_first(sim_node());
     requestAck = ack;
     outgoing = msg;
+    TransmissionEndTime = endTime;
     dbg("CpmModelC", "Node %i transmitting to %i, finishes at %llu.\n", sim_node(), dest, endTime);
 
     while (neighborEntry != NULL) {
@@ -431,10 +439,21 @@ implementation {
       sim_gain_put(other, msg, endTime, ack, power + sim_gain_value(sim_node(), other), reversePower + sim_gain_value(other, sim_node()));
       neighborEntry = sim_gain_next(neighborEntry);
     }
+
+    list = outstandingReceptionHead;
+    while (list != NULL) {    
+      list->lost = 1;
+      dbg("CpmModelC,SNRLoss", "Lost packet from %i because %i has outstanding reception, startTime %llu endTime %llu\n", list->source, sim_node(), list->start, list->end);
+      list = list->next;
+    }
   }
     
 
-  
+  command void Model.checkPendingTransmission(bool isTransmitting) {
+    transmitting = isTransmitting;
+    dbg("CpmModelC", "checkPendingTransmission: transmitting %i @ %s\n", transmitting, sim_time_string());
+  }
+
   
  default event void Model.receive(message_t* msg) {}
 

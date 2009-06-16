@@ -1,4 +1,4 @@
-// $Id: TossimPacketModelC.nc,v 1.8 2008-02-19 19:51:08 scipio Exp $
+// $Id: TossimPacketModelC.nc,v 1.9 2009-06-16 00:49:43 sunheeyoon Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -214,6 +214,7 @@ implementation {
       delay *= (sim_ticks_per_sec() / sim_csma_symbols_per_sec());
       evt->time += delay;
       transmitting = TRUE;
+      call GainRadioModel.checkPendingTransmission(transmitting);
       evt->handle = send_transmit;
       sim_queue_insert(evt);
     }
