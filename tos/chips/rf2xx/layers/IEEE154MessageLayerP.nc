@@ -286,6 +286,7 @@ implementation
 
 	async command void RadioPacket.clear(message_t* msg)
 	{
+		call IEEE154MessageLayer.createDataFrame(msg);
 		call SubPacket.clear(msg);
 	}
 
@@ -341,7 +342,10 @@ implementation
 		if( len > call Packet.maxPayloadLength() )
 			return EINVAL;
 
-		call IEEE154MessageLayer.createDataFrame(msg);
+		// user forgot to call Packet.clear(), maybe we should return EFAIL
+		if( ! call IEEE154MessageLayer.isDataFrame(msg) )
+			call IEEE154MessageLayer.createDataFrame(msg);
+
 		call Packet.setPayloadLength(msg, len);
 	    	call Ieee154Packet.setSource(msg, call Ieee154Packet.address());
 		call Ieee154Packet.setDestination(msg, addr);
@@ -364,8 +368,9 @@ implementation
 
 	command error_t Send.send(message_t* msg)
 	{
-		// lower leveles can send other frames
-		call IEEE154MessageLayer.createDataFrame(msg);
+		// user forgot to call Packet.clear(), lower levels can send other types
+		if( ! call IEEE154MessageLayer.isDataFrame(msg) )
+			call IEEE154MessageLayer.createDataFrame(msg);
 
 		return call SubSend.send(msg);
 	}
