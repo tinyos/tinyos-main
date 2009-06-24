@@ -435,6 +435,8 @@ bool SerialComm::readPacket(SFPacket &pPacket)
                     count = 0;
                 }
                 else {
+                    bool dobreak = true;
+                    DEBUG("SerialComm::readPacket : frame size = " << count);
                     if(checkCrc(buffer, count)) {
                         pPacket.setType(buffer[typeOffset]);
                         pPacket.setSeqno(buffer[seqnoOffset]);
@@ -448,11 +450,12 @@ bool SerialComm::readPacket(SFPacket &pPacket)
                             pPacket.setPayload((char *)(&buffer[payloadOffset]), count+1 - serialHeaderBytes);
                             break;
                         default:
+                            dobreak = false;
                             DEBUG("SerialComm::readPacket : unknown packet type = " \
                                   << static_cast<uint16_t>(buffer[typeOffset] & 0xff));
                             break;
                         }
-                        break; // leave loop
+                        if(dobreak) break; // leave loop
                     }
                     else {
                         DEBUG("SerialComm::readPacket : bad crc");
