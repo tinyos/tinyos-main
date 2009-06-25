@@ -1,4 +1,4 @@
-/* $Id: QueueC.nc,v 1.6 2008-05-31 20:27:07 regehr Exp $ */
+/* $Id: QueueC.nc,v 1.7 2009-06-25 18:37:24 scipio Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -35,7 +35,7 @@
  *
  *  @author Philip Levis
  *  @author Geoffrey Mainland
- *  @date   $Date: 2008-05-31 20:27:07 $
+ *  @date   $Date: 2009-06-25 18:37:24 $
  */
 
    
@@ -111,7 +111,9 @@ implementation {
   
   command queue_t Queue.element(uint8_t idx) {
     idx += head;
-    idx %= QUEUE_SIZE;
+    if (idx >= QUEUE_SIZE) {
+      idx -= QUEUE_SIZE;
+    }
     return queue[idx];
   }  
 
