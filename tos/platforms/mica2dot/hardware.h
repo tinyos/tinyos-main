@@ -35,7 +35,7 @@
  *  @author Matt Miller <mmiller@xbow.com>
  *  @author Martin Turon <mturon@xbow.com>
  *
- *  $Id: hardware.h,v 1.6 2008-06-11 00:46:26 razvanm Exp $
+ *  $Id: hardware.h,v 1.7 2009-07-01 19:27:00 scipio Exp $
  */
 
 #ifndef HARDWARE_H
@@ -50,6 +50,12 @@
 #include <atm128hardware.h>
 #include <Atm128Adc.h>
 #include <MicaTimer.h>
+
+// enum so components can override power saving,
+// as per TEP 112.
+enum {
+  TOS_SLEEP_NONE = ATM128_POWER_IDLE,
+};
 
 // A/D channels
 enum {

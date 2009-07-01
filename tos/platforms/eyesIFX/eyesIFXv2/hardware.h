@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: hardware.h,v 1.4 2006-12-12 18:23:41 vlahan Exp $
+ * $Id: hardware.h,v 1.5 2009-07-01 19:27:00 scipio Exp $
  *
  */
 
@@ -34,6 +34,12 @@
 #define TOSH_HARDWARE_EYESIFXV2
 
 #include "msp430hardware.h"
+
+// enum so components can override power saving,
+// as per TEP 112.
+enum {
+  TOS_SLEEP_NONE = MSP430_POWER_ACTIVE,
+};
 
 // LED assignments
 TOSH_ASSIGN_PIN(RED_LED, 5, 0); // Compatibility with the mica2

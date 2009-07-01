@@ -100,6 +100,15 @@
 #include "pxa27xhardware.h"
 //#include "AM.h"
 
+// enum so components can override power saving,
+// as per TEP 112.
+// Note that currently the pxa27x does not support
+// McuPowerOverride, so SLEEP_NONE is defined to
+// be 0.
+enum {
+  TOS_SLEEP_NONE = 0,
+};
+
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 /* Watchdog Prescaler

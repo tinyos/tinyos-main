@@ -44,6 +44,11 @@
 
 #include "msp430hardware.h"
 
+// enum so components can override power saving,
+// as per TEP 112.
+enum {
+  TOS_SLEEP_NONE = MSP430_POWER_ACTIVE,
+};
 
 // XE1205 radio
 TOSH_ASSIGN_PIN(NSS_DATA, 1, 0);

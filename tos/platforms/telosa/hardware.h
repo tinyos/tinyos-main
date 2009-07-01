@@ -4,6 +4,12 @@
 
 #include "msp430hardware.h"
 
+// enum so components can override power saving,
+// as per TEP 112.
+enum {
+  TOS_SLEEP_NONE = MSP430_POWER_ACTIVE,
+};
+
 // LEDs
 TOSH_ASSIGN_PIN(RED_LED, 5, 4);
 TOSH_ASSIGN_PIN(GREEN_LED, 5, 5);

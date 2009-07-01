@@ -40,6 +40,12 @@
 
 #define SHIMMER 1
 
+// enum so components can override power saving,
+// as per TEP 112.
+enum {
+  TOS_SLEEP_NONE = MSP430_POWER_ACTIVE,
+};
+
 // LEDs
 TOSH_ASSIGN_PIN(RED_LED,    4, 0);
 TOSH_ASSIGN_PIN(ORANGE_LED, 4, 1);

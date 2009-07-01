@@ -1,4 +1,4 @@
-// $Id: hardware.h,v 1.1 2008-08-07 06:37:05 prabal Exp $
+// $Id: hardware.h,v 1.2 2009-07-01 19:26:59 scipio Exp $
 
 /*
  * "Copyright (c) 2007-2008 The Regents of the University of
@@ -41,6 +41,12 @@
 #define _H_hardware_h
 
 #include "msp430hardware.h"
+
+// enum so components can override power saving,
+// as per TEP 112.
+enum {
+  TOS_SLEEP_NONE = MSP430_POWER_ACTIVE,
+};
 
 // LEDS
 TOSH_ASSIGN_PIN(RED_LED, 4, 0);
