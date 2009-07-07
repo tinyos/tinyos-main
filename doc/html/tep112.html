@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
 <title>Microcontroller Power Management</title>
 <meta name="author" content="Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2009-02-03 23:07:32 $
-:version: $Revision: 1.11 $
+:date: $Date: 2009-07-07 19:03:55 $
+:version: $Revision: 1.12 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -298,9 +298,9 @@ ul.auto-toc {
 <td>Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski</td></tr>
 <tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-Sep-2005</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.7</td>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
 </tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2007-01-10</td>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2009-07-07</td>
 </tr>
 <tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
 </tr>
@@ -567,6 +567,13 @@ TinyOS to behave badly. The presence of a combine function for
 mcu_power_t means that this command can have fan-out calls.</p>
 <p>Section 5 describes one example use of McuPowerOverride, in the
 timer stack for the Atmega128 microcontroller family.</p>
+<p>As part of power state override, a platform MUST define the enum
+TOS_SLEEP_NONE in its hardware.h file. This enum defines the highest
+power state of the platform's microcontroller in a chip-independent
+way. If a component wires to McuPowerOverride and returns TOS_SLEEP_NONE,
+this will cause TinyOS to never put the microcontroller into a power
+saving state. This enum allows a component to prevent sleep in a
+platform-independent way.</p>
 </div>
 <div class="section">
 <h1><a id="peripherals-and-subsystems" name="peripherals-and-subsystems">4. Peripherals and Subsystems</a></h1>
@@ -590,13 +597,23 @@ include power management into shared non-virtualized devices.</p>
 <h1><a id="implementation" name="implementation">5. Implementation</a></h1>
 <p>An implementation of McuSleepC can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128</span></tt>,
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/msp430</span></tt>, and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/px27ax</span></tt>.</p>
-<p>An example of a use of McuPowerOverride can be found in the atmega128 timer
+<p>An example use of McuPowerOverride can be found in the atmega128 timer
 system. Because some low-power states have much longer wakeup latencies than
 others, the timer system does not allow long latencies if it has a timer
 that is going to fire soon.  The implementation can be found in
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128/timer/HplAtm128Timer0AsyncP.nc</span></tt>, and
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128/timer/HplAtm128Timer0AsyncC.nc</span></tt> automatically
 wires it to McuSleepC if it is included.</p>
+<p>For the atmega128 microcontroller, TOS_SLEEP_NONE is the &quot;idle&quot; power
+state.</p>
+<p>A second example use of McuPowerOverride is in the msp430 timer system.
+By default, the msp430 lowest power state is LPM4, which does not keep
+clocks enabled. If <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/msp430/timer/Msp430ClockC.nc''</span>
+<span class="pre">is</span> <span class="pre">included</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">component</span> <span class="pre">graph,</span> <span class="pre">however,</span> <span class="pre">this</span> <span class="pre">configuration</span> <span class="pre">wires</span>
+<span class="pre">the</span> <span class="pre">McuPowerOverride</span> <span class="pre">of</span> <span class="pre">``tinyos-2.x/tos/chips/msp430/timer/Msp430ClockP.nc</span></tt>
+to McuSleepC. This implemementation of McuPowerOverride raises the lowest
+power state to LPM3, which keeps clocks enabled.</p>
+<p>For msp430 microcontrollers, TOS_SLEEP_NONE is the &quot;active&quot; power state.</p>
 </div>
 <div class="section">
 <h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
