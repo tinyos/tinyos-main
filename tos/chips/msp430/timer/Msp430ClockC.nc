@@ -30,9 +30,10 @@ configuration Msp430ClockC
 }
 implementation
 {
-  components Msp430ClockP, Msp430TimerC;
+  components Msp430ClockP, Msp430TimerC, McuSleepC;
 
   Init = Msp430ClockP;
   Msp430ClockInit = Msp430ClockP;
+  McuSleepC.McuPowerOverride -> Msp430ClockP;
 }
 

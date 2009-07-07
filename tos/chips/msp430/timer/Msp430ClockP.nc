@@ -1,4 +1,4 @@
-//$Id: Msp430ClockP.nc,v 1.7 2008-06-24 05:32:31 regehr Exp $
+//$Id: Msp430ClockP.nc,v 1.8 2009-07-07 18:53:40 scipio Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.
  * All rights reserved.
@@ -33,6 +33,7 @@ module Msp430ClockP @safe()
 {
   provides interface Init;
   provides interface Msp430ClockInit;
+  provides interface McuPowerOverride;
 }
 implementation
 {
@@ -48,6 +49,9 @@ implementation
     TARGET_DCO_DELTA = (TARGET_DCO_KHZ / ACLK_KHZ) * ACLK_CALIB_PERIOD,
   };
 
+  async command mcu_power_t McuPowerOverride.lowestState() {
+    return MSP430_POWER_LPM3;
+  }
 
   command void Msp430ClockInit.defaultSetupDcoCalibrate()
   {

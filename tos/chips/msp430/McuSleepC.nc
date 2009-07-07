@@ -64,7 +64,7 @@ implementation {
   };
     
   mcu_power_t getPowerState() {
-    mcu_power_t pState = MSP430_POWER_LPM3;
+    mcu_power_t pState = MSP430_POWER_LPM4;
     // TimerA, USART0, USART1 check
     if ((((TACCTL0 & CCIE) ||
 	  (TACCTL1 & CCIE) ||
