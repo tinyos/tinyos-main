@@ -70,7 +70,7 @@ implementation {
     if(count < newCount) {
       count++;
     }
-    dbg("TestDIPP", "Got an update, %u complete now at %s\n", count, sim_time_string());
+    dbg("TestDipP", "Got an update, %u complete now at %s\n", count, sim_time_string());
     call Leds.led0Toggle();
 
     dipTestMsgPtr = (dip_test_msg_t*) call SerialSend.getPayload(&testMsg, 0);
@@ -81,6 +81,7 @@ implementation {
     
 
     if(newCount == count) {
+      dbg("TestDipP","Dissemination COMPLETE!\n");
       call Leds.set(7);
     }
     
