@@ -50,6 +50,9 @@ implementation {
     dip_summary_msg_t* dsmsg;
 
     dmsg = (dip_msg_t*) call SummarySend.getPayloadPtr();
+    if(dmsg == NULL) {
+      return FAIL;
+    }
     dmsg->type = ID_DIP_SUMMARY;
     dsmsg = (dip_summary_msg_t*) dmsg->content;
 
@@ -105,6 +108,9 @@ implementation {
     for(i = 0; i < unitlen; i += 3) {
       splitRange(dsmsg->info[i], &left, &right);
       myHash = computeHash(left, right, allVers, salt);
+      //dbg("DipSummaryP", "Received Range: %u, %u\n", left, right);
+      //dbg("DipSummaryP", "Received Hash: %08x\n", dsmsg->info[i+1]);
+      //dbg("DipSummaryP", "My Hash: %08x\n", myHash);
       if(myHash != dsmsg->info[i+1]) {
 	// hashes don't match
 	adjustEstimatesDiff(left, right, allVers, salt, dsmsg->info[i+2]);
@@ -148,7 +154,7 @@ implementation {
     // initialize bounds on range
     if(highIndex < len - 1) { LBound = 0; }
     else { LBound = highIndex - len + 1; }
-    if(LBound + len > UQCOUNT_DIP) { RBound = UQCOUNT_DIP; }
+    if(highIndex + len > UQCOUNT_DIP) { RBound = UQCOUNT_DIP; }
     else { RBound = highIndex + len; }
 
     // adjust length if necessary
@@ -166,10 +172,13 @@ implementation {
 
     // iterate through the range
     runEstSum = highEstSum;
-    dbg("DipSummaryP", "Iterating from %u to %u\n", LBound, RBound);
-    for(i = LBound ; i + len <= RBound; i++) {
+    dbg("DipSummaryP", "Iterating from %u to %u with len %u\n", LBound, RBound, len);
+
+    for(i = LBound ; i + len < RBound; i++) {
       est1 = shadowEstimates[i];
       est2 = shadowEstimates[i + len];
+      //dbg("DipSummaryP", "i: %u\n", i);
+      //dbg("DipSummaryP", "i+len: %u\n", i+len);
       runEstSum = runEstSum - est1 + est2;
       // dbg("Dissemination","Next sum: %u\n", runEstSum);
       if(runEstSum > highEstSum) {
@@ -183,6 +192,7 @@ implementation {
     // and finish
     *left = highIndex;
     *right = highIndex + len;
+    dbg("DipSummaryP","Final Range: %u, %u\n", *left, *right);
   }
 
   uint32_t buildRange(dip_index_t left, dip_index_t right) {
@@ -196,12 +206,19 @@ implementation {
 		       dip_version_t* basedata, uint32_t salt) {
     dip_index_t i;
     uint32_t hashValue = salt;
-    uint8_t *sequence; 
+    //uint8_t *sequence;
+    dip_version_t* sequence;
+    uint32_t iterations;
 
     if(right <= left) return 0;
-    sequence = ((uint8_t*) (basedata + left));
+    //sequence = ((uint8_t*) (basedata + left));
+    sequence = (basedata + left);
+    //iterations = (right - left - 1)*sizeof(dip_version_t);
+    iterations = (right - left - 1);
 
-    for(i = 0; i <= (right-left-1)*sizeof(dip_version_t); i++) {
+    //dbg("DipSummaryP","Computing hash for %u, %u for %u iters\n", left, right,  iterations);
+
+    for(i = 0; i <= iterations; i++) {
       hashValue += sequence[i];
       hashValue += (hashValue << 10);
       hashValue ^= (hashValue >> 6);
@@ -224,6 +241,7 @@ implementation {
       indexSeqPair[0] = i;
       indexSeqPair[1] = basedata[i];
       bit = computeHash(0, 2, indexSeqPair, salt) % 32;
+      //dbg("DipSummaryP", "Bloom Hash: %u, %u, %u\n", indexSeqPair[0], indexSeqPair[1], bit);
       returnHash |= (1 << bit);
     }
     return returnHash;

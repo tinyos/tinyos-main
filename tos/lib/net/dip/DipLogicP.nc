@@ -69,7 +69,9 @@ implementation {
 
     dbg("DipLogicP","App notified key %x is new\n", key);
     i = call DipHelp.keyToIndex(key);
+#ifndef DIP_JOINTEST
     estimates[i] = DIP_DATA_ESTIMATE;
+#endif
     call VersionUpdate.change[key](val);
     call DipTrickleTimer.reset();
   }
