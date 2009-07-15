@@ -1,7 +1,13 @@
-These release notes are as of: $Date: 2009-02-05 22:46:50 $
+These release notes are as of: $Date: 2009-07-15 17:26:24 $
 
 Current:
+  Added support for shimmer2 platform
+  Improved MSP430 sleep code to default to LPM4
+  Added platform-indepdent TOS_SLEEP_NONE for McuPowerOverride
+  Improved TOSSIM PRR curve to prevent very low SNR packets
+  Fixed TOSSIM bug where nodes could receive while transmitting
   Fixed TOSSIM ack bug for nodes that change their AM id at runtime
+  Improved Queue performance by changing % to inequality test
 
 2.1:
   Added support for iris platform
