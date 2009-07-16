@@ -46,6 +46,12 @@ generic module TimeSyncP(typedef precision_tag)
         interface Leds;
         interface TimeSyncPacket<precision_tag,uint32_t>;
         interface LocalTime<precision_tag> as LocalTime;
+
+
+#ifdef LOW_POWER_LISTENING
+        interface LowPowerListening;
+#endif
+
     }
 }
 implementation
@@ -61,7 +67,7 @@ implementation
         IGNORE_ROOT_MSG       = 4,              // after becoming the root ignore other roots messages (in send period)
         ENTRY_VALID_LIMIT     = 4,              // number of entries to become synchronized
         ENTRY_SEND_LIMIT      = 3,              // number of entries to send sync messages
-        ENTRY_THROWOUT_LIMIT  = 100,            // if time sync error is bigger than this clear the table
+        ENTRY_THROWOUT_LIMIT  = 500,            // if time sync error is bigger than this clear the table
     };
 
     typedef struct TableItem
@@ -353,6 +359,9 @@ implementation
 
         outgoingMsg->globalTime = globalTime;
 
+#ifdef LOW_POWER_LISTENING
+        call LowPowerListening.setRxSleepInterval(&outgoingMsgBuffer, LPL_INTERVAL);
+#endif
         // we don't send time sync msg, if we don't have enough data
         if( numEntries < ENTRY_SEND_LIMIT && outgoingMsg->rootID != TOS_NODE_ID ){
             ++heartBeats;
