@@ -1,4 +1,4 @@
-// $Id: TrickleTimerImplP.nc,v 1.5 2007-07-30 00:42:00 scipio Exp $
+// $Id: TrickleTimerImplP.nc,v 1.6 2009-07-16 13:00:08 mmaroti Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -262,7 +262,7 @@ implementation {
     rval = call Random.rand16() % (trickles[id].period << (scale - 1));
     newTime += rval;
     
-    trickles[id].remainder = (trickles[id].period << scale) - newTime;
+    trickles[id].remainder = (((uint32_t)trickles[id].period) << scale) - newTime;
     trickles[id].time += newTime;
     dbg("Trickle,TrickleTimes", "Generated time for %hhu with period %hu (%u) is %u (%i + %hu)\n", id, trickles[id].period, (uint32_t)trickles[id].period << scale, trickles[id].time, (trickles[id].period << (scale - 1)), rval);
   }
