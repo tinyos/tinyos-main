@@ -60,8 +60,11 @@ implementation
         TimeSyncPacketMilli = CC2420TimeSyncMessageP;
 
         Packet = CC2420TimeSyncMessageP;
-        CC2420TimeSyncMessageP.SubSend -> CC2420ActiveMessageC.AMSend;
-        CC2420TimeSyncMessageP.SubPacket -> CC2420ActiveMessageC.Packet;
+        // use the AMSenderC infrastructure to avoid concurrent send clashes
+        components AMQueueP, ActiveMessageC;
+        CC2420TimeSyncMessageP.SubSend -> AMQueueP.Send[unique(UQ_AMQUEUE_SEND)];
+        CC2420TimeSyncMessageP.AMPacket -> ActiveMessageC;
+        CC2420TimeSyncMessageP.SubPacket -> ActiveMessageC;
 
         CC2420TimeSyncMessageP.PacketTimeStamp32khz -> CC2420PacketC;
         CC2420TimeSyncMessageP.PacketTimeStampMilli -> CC2420PacketC;

@@ -37,7 +37,8 @@ module CC2420TimeSyncMessageP
 
     uses
     {
-        interface AMSend as SubSend[uint8_t id];
+        interface Send as SubSend;
+        interface AMPacket;
         interface Packet as SubPacket;
 
         interface PacketTimeStamp<T32khz,uint32_t> as PacketTimeStamp32khz;
@@ -93,7 +94,9 @@ implementation
         void * timesync = msg->data + len;
         *(timesync_radio_t*)timesync = event_time;
 
-        err = call SubSend.send[id](addr, msg, len + sizeof(timesync_radio_t));
+        call AMPacket.setDestination(msg, addr);
+        call AMPacket.setType(msg, id);
+        err = call SubSend.send(msg, len + sizeof(timesync_radio_t));
         call PacketTimeSyncOffset.set(msg);
         return err;
     }
@@ -101,19 +104,19 @@ implementation
     command error_t TimeSyncAMSend32khz.cancel[am_id_t id](message_t* msg)
     {
         call PacketTimeSyncOffset.cancel(msg);
-        return call SubSend.cancel[id](msg);
+        return call SubSend.cancel(msg);
     }
 
     default event void TimeSyncAMSend32khz.sendDone[am_id_t id](message_t* msg, error_t error) {}
 
     command uint8_t TimeSyncAMSend32khz.maxPayloadLength[am_id_t id]()
     {
-        return call SubSend.maxPayloadLength[id]() - sizeof(timesync_radio_t);
+        return call SubSend.maxPayloadLength() - sizeof(timesync_radio_t);
     }
 
     command void* TimeSyncAMSend32khz.getPayload[am_id_t id](message_t* msg, uint8_t len)
     {
-        return call SubSend.getPayload[id](msg, len + sizeof(timesync_radio_t));
+        return call SubSend.getPayload(msg, len + sizeof(timesync_radio_t));
     }
 
 /*----------------- TimeSyncAMSendMilli -----------------*/
@@ -142,8 +145,9 @@ implementation
     }
 
 /*----------------- SubSend.sendDone -------------------*/
-    event void SubSend.sendDone[am_id_t id](message_t* msg, error_t error)
+    event void SubSend.sendDone(message_t* msg, error_t error)
     {
+        am_id_t id = call AMPacket.type(msg);
         signal TimeSyncAMSend32khz.sendDone[id](msg, error);
         signal TimeSyncAMSendMilli.sendDone[id](msg, error);
     }
