@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi Initial SACK implementation
- * @version $Revision: 1.12 $ $Date: 2009-03-02 07:02:32 $
+ * @version $Revision: 1.13 $ $Date: 2009-07-16 06:46:08 $
  */
 
 #include "CC2420.h"
@@ -278,6 +278,8 @@ implementation {
            call CSN.clr();
            call TXFIFO_RAM.write( absOffset, (uint8_t*)timesync, sizeof(timesync_radio_t) );
            call CSN.set();
+           //restoring the event time to the original value
+           *timesync  += time32;
         }
 
         if ( (call CC2420PacketBody.getHeader( m_msg ))->fcf & ( 1 << IEEE154_FCF_ACK_REQ ) ) {

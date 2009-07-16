@@ -65,7 +65,7 @@ implementation
       ccis : 0,  // capture/compare input select
       clld : 0,  // TBCL1 loads on write to TBCCR1
       cap : 1,   // compare mode
-      scs : 1,   // synchronous capture mode
+      scs : 0,   // non synchronous capture mode
       ccie : 0,  // capture compare interrupt enable
     };
     return CC2int(x);

@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.8 $ $Date: 2008-12-01 19:56:53 $
+ * @version $Revision: 1.9 $ $Date: 2009-07-16 06:46:07 $
  */
 
 module CC2420CsmaP @safe() {
@@ -143,7 +143,7 @@ implementation {
     metadata->ack = FALSE;
     metadata->rssi = 0;
     metadata->lqi = 0;
-    metadata->timesync = FALSE;
+    //metadata->timesync = FALSE;
     metadata->timestamp = CC2420_INVALID_TIMESTAMP;
 
     ccaOn = TRUE;
