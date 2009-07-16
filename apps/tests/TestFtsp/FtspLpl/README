@@ -1,0 +1,31 @@
+First, program several nodes with this TestFtsp application. In addition,
+you will need one TinyOS Basestation that listens for messages, and one
+beacon node. Program the beacon node with the RadioCountToLed application
+from the TestFtsp32kLplBeaconer directory. This is a special modification of
+the RadioCountToLed code which allows to evaluate a duty-cycled ftsp
+network. The regular RadioCountToLed code doesn't work, since a LPL
+broadcast message gets transmitted more than just once. Thus, there is a
+disambiguity in which precise broadcast message was actually timestamped by
+the TestFtsp application. The modifications take care of this by using the
+TimeSyncAMSend interface and setting an arbitrary event time. Thus, on
+reception, the TestFtsp code can account for this delayed send.
+
+To evaluate the synchronization precision, use the FtspDataLogger.py
+application. First, you will need a serial forwarder that connects to the
+BaseStation node. Then, run the python application like this:
+python FtspDataLogger.py sf@localhost:9002
+
+You should now see messages coming in, one per line. The first value is the
+current time as a unix timestamp. The last line is a binary value indicating
+if there was some missed data, and thus the values are not good (indicated
+by a 1), or if all the nodes are synchronized and we received a value for
+each and every one of them (indicated by a 0).
+
+Note!!!!!
+- the basestation should also define
+    CFLAGS += -DTOSH_DATA_LENGTH=50
+    in the makefile. Else, the reports will not fit into 1 tinyos message, and
+    they will get silently dropped.
+- 32k timesync only works for certain platforms (those that provide 32khz
+    counter), if your platform does not support the counter, LPL still works,
+    but you need to use TMilli timesync
