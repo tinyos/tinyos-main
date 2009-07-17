@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.17 2008-09-29 19:24:37 gnawali Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.18 2009-07-17 21:16:34 scipio Exp $ */
 /*
  * Copyright (c) 2008 Stanford University.
  * All rights reserved.
@@ -31,35 +31,51 @@
  */
 
 /**
- *  The ForwardingEngine is responsible for queueing and scheduling outgoing
- *  packets in a collection protocol. It maintains a pool of forwarding messages 
- *  and a packet send 
- *  queue. A ForwardingEngine with a forwarding message pool of size <i>F</i> 
- *  and <i>C</i> CollectionSenderC clients has a send queue of size
- *  <i>F + C</i>. This implementation has a large number of configuration
- *  constants, which can be found in <code>ForwardingEngine.h</code>.
+ *  This component contains the forwarding path
+ *  of CTP London, the standard CTP implementation packaged with
+ *  TinyOS 2.x. The CTP specification can be found in TEP 123.
+ *  The paper entitled "Collection Tree Protocol," by Omprakash
+ *  Gnawali et al., in SenSys 2009, describes the implementation and
+ *  provides detailed performance results.</p>
+ *
+ *  <p>The CTP London ForwardingEngine is responsible for queueing and scheduling
+ *  outgoing packets. It maintains a pool of
+ *  forwarding messages and a packet send queue. A ForwardingEngine
+ *  with a forwarding message pool of size <i>F</i> and <i>C</i>
+ *  CollectionSenderC clients has a send queue of size <i>F +
+ *  C</i>. This implementation several configuration
+ *  constants, which can be found in <code>ForwardingEngine.h</code>.</p>
  *
  *  <p>Packets in the send queue are sent in FIFO order, with head-of-line
  *  blocking. Because this is a tree collection protocol, all packets are going
  *  to the same destination, and so the ForwardingEngine does not distinguish
- *  packets from one another: packets from CollectionSenderC clients are
- *  treated identically to forwarded packets.</p>
+ *  packets from one another. Packets from CollectionSenderC clients are
+ *  sent identically to forwarded packets: only their buffer handling is
+    different.</p>
  *
  *  <p>If ForwardingEngine is on top of a link layer that supports
  *  synchronous acknowledgments, it enables them and retransmits packets
  *  when they are not acked. It transmits a packet up to MAX_RETRIES times
- *  before giving up and dropping the packet.</p> 
+ *  before giving up and dropping the packet. MAX_RETRIES is typically a
+ *  large number (e.g., >20), as this implementation assumes there is
+ *  link layer feedback on failed packets, such that link costs will go
+ *  up and cause the routing layer to pick a next hop.</p> 
  *
  *  <p>The ForwardingEngine detects routing loops and tries to correct
- *  them. It assumes that the collection tree is based on a gradient,
- *  such as hop count or estimated transmissions. When the ForwardingEngine
+ *  them. Routing is in terms of a cost gradient, where the collection root
+ *  has a cost of zero and a node's cost is the cost of its next hop plus
+ *  the cost of the link to that next hop.
+ *  If there are no loops, then this gradient value decreases monotonically
+ *  along a route. When the ForwardingEngine
  *  sends a packet to the next hop, it puts the local gradient value in
  *  the packet header. If a node receives a packet to forward whose
  *  gradient value is less than its own, then the gradient is not monotonically
  *  decreasing and there may be a routing loop. When the ForwardingEngine
  *  receives such a packet, it tells the RoutingEngine to advertise its
  *  gradient value soon, with the hope that the advertisement will update
- *  the node who just sent a packet and break the loop.
+ *  the node who just sent a packet and break the loop. It also pauses the
+ *  before the next packet transmission, in hopes of giving the routing layer's
+ *  packet a priority.</p>
  *  
  *  <p>ForwardingEngine times its packet transmissions. It differentiates
  *  between four transmission cases: forwarding, success, ack failure, 
@@ -67,64 +83,17 @@
  *  ForwardingEngine waits a randomized period of time before sending the next
  *  packet. This approach assumes that the network is operating at low
  *  utilization; its goal is to prevent correlated traffic -- such as 
- *  nodes along a route forwarding packets -- from interfering with itself.
- *  The values for these constants are defined in CC2420ForwardingEngine.h.
- *  A waiting interval is Base wait plus a random wait in the range of
- *  0 - Wait window.
+ *  nodes along a route forwarding packets -- from interfering with itself.</p>
  *
- *  <table>
- *    <tr>
- *      <td><b>Case</b></td>
- *      <td><b>Base wait</b></td>
- *      <td><b>Wait window</b></td>
- *      <td><b>Description</b></td>
- *    </tr>
- *    <tr>
- *      <td>Forwarding</td>
- *      <td>Immediate</td>
- *      <td>Immediate</td>
- *      <td>When the ForwardingEngine receives a packet to forward and it is not
- *          already sending a packet (queue is empty). In this case, it immediately
- *          forwards the packet.</td>
- *    </tr>
- *    <tr>
- *      <td>Success</td>
- *      <td>SENDDONE_OK_OFFSET</td>
- *      <td>SENDDONE_OK_WINDOW</td>
- *      <td>When the ForwardingEngine successfully sends a packet to the next
- *          hop, it waits this long before sending the next packet in the queue.
- *          </td>
- *    </tr>
- *    <tr>
- *      <td>Ack Failure</td>
- *      <td>SENDDONE_NOACK_OFFSET</td>
- *      <td>SENDDONE_NOACK_WINDOW</td>
- *      <td>If the link layer supports acks and the ForwardingEngine did not
- *          receive an acknowledgment from the next hop, it waits this long before
- *          trying a retransmission. If the packet has exceeded the retransmission
- *          count, ForwardingEngine drops the packet and uses the Success timer instead. </td>
- *    </tr>
- *    <tr>
- *      <td>Loop Detection</td>
- *      <td>LOOPY_OFFSET</td>
- *      <td>LOOPY_WINDOW</td>
- *      <td>If the ForwardingEngine is asked to forward a packet from a node that
- *          believes it is closer to the root, the ForwardingEngine pauses its
- *          transmissions for this interval and triggers the RoutingEngine to 
- *          send an update. The goal is to let the gradient become consistent before
- *          sending packets, in order to prevent routing loops from consuming
- *          bandwidth and energy.</td>
- *    </tr>
- *  </table>  
+ *  <p>While this implementation can work on top of a variety of link estimators,
+ *  it is designed to work with a 4-bit link estimator (4B). Details on 4B can
+ *  be found in the HotNets paper "Four Bit Link Estimation" by Rodrigo Fonseca
+ *  et al. The forwarder provides the "ack" bit for each sent packet, telling the
+ *  estimator whether the packet was acknowledged.</p>
  *
- *  <p>For CC2420-based platforms, SENDDONE_OK_OFFSET and SENDDONE_NOACK_OFFSET are 16ms,
-     LOOPY_OFFSET is 64ms, SENDDONE_OK_WINDOW and SENDDONE_NOACK_WINDOW are 15ms and
-     LOOPY_WINDOW is 63ms. DIfferent radios have different packet timings and so use
-     different constants.</p>
-
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-09-29 19:24:37 $
+ *  @date   $Date: 2009-07-17 21:16:34 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -144,30 +113,48 @@ generic module CtpForwardingEngineP() {
     interface CtpCongestion;
   }
   uses {
+    // These five interfaces are used in the forwarding path
+    //   SubSend is for sending packets
+    //   PacketAcknowledgements is for enabling layer 2 acknowledgments
+    //   RetxmitTimer is for timing packet sends for improved performance
+    //   LinkEstimator is for providing the ack bit to a link estimator
     interface AMSend as SubSend;
-    interface Receive as SubReceive;
-    interface Receive as SubSnoop;
-    interface Packet as SubPacket;
+    interface PacketAcknowledgements;
+    interface Timer<TMilli> as RetxmitTimer;
+    interface LinkEstimator; 
     interface UnicastNameFreeRouting;
-    interface SplitControl as RadioControl;
+    interface Packet as SubPacket;
+
+    // These four data structures are used to manage packets to forward.
+    // SendQueue and QEntryPool are the forwarding queue.
+    // MessagePool is the buffer pool for messages to forward.
+    // SentCache is for suppressing duplicate packet transmissions.
     interface Queue<fe_queue_entry_t*> as SendQueue;
     interface Pool<fe_queue_entry_t> as QEntryPool;
     interface Pool<message_t> as MessagePool;
-    interface Timer<TMilli> as RetxmitTimer;
-
-    interface LinkEstimator;
-
-    // Counts down from the last time we heard from our parent; used
-    // to expire local state about parent congestion.
     interface Cache<message_t*> as SentCache;
+    
+    interface Receive as SubReceive;
+    interface Receive as SubSnoop;
     interface CtpInfo;
-    interface PacketAcknowledgements;
-    interface Random;
     interface RootControl;
     interface CollectionId[uint8_t client];
     interface AMPacket;
-    interface CollectionDebug;
     interface Leds;
+    interface Random;
+
+    // This implementation has extensive debugging instrumentation.
+    // Wiring up the CollectionDebug interface provides information
+    // on important events, such as transmissions, receptions,
+    // and cache checks. The TinyOS release includes scripts for
+    // parsing these messages.
+    interface CollectionDebug;
+
+    
+    // The ForwardingEngine monitors whether the underlying
+    // radio is on or not in order to start/stop forwarding
+    // as appropriate.
+    interface SplitControl as RadioControl;
   }
 }
 implementation {
