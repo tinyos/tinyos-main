@@ -68,6 +68,9 @@ implementation {
     dip_index_t i;
 
     i = call DipHelp.keyToIndex(key);
+    if(i == DIP_UNKNOWN_INDEX) {
+      return DIP_UNKNOWN_VERSION;
+    }
     return versions[i];
   }
 
