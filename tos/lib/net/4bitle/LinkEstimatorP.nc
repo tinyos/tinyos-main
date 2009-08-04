@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.10 2009-03-13 05:13:29 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.11 2009-08-04 21:42:45 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -59,8 +59,6 @@ implementation {
     // If the eetx estimate is below this threshold
     // do not evict a link
     EVICT_EETX_THRESHOLD = 55,
-    // maximum link update rounds before we expire the link
-    MAX_AGE = 6,
     // if received sequence number if larger than the last sequence
     // number by this gap, we reinitialize the link
     MAX_PKT_GAP = 10,
@@ -170,7 +168,6 @@ implementation {
     ne->rcvcnt = 0;
     ne->failcnt = 0;
     ne->flags = (INIT_ENTRY | VALID_ENTRY);
-    ne->inage = MAX_AGE;
     ne->inquality = 0;
     ne->eetx = 0;
   }
@@ -328,33 +325,24 @@ implementation {
       ne = &NeighborTable[i];
       if (ne->ll_addr == n) {
 	if (ne->flags & VALID_ENTRY) {
-	  if (ne->inage > 0)
-	    ne->inage--;
-	  
-	  if (ne->inage == 0) {
-	    ne->flags ^= VALID_ENTRY;
-	    ne->inquality = 0;
-	  } else {
-	    dbg("LI", "Making link: %d mature\n", i);
-	    ne->flags |= MATURE_ENTRY;
-	    totalPkt = ne->rcvcnt + ne->failcnt;
-	    dbg("LI", "MinPkt: %d, totalPkt: %d\n", minPkt, totalPkt);
-	    if (totalPkt < minPkt) {
-	      totalPkt = minPkt;
-	    }
-	    if (totalPkt == 0) {
-	      ne->inquality = (ALPHA * ne->inquality) / 10;
-	    } else {
-	      newEst = (255 * ne->rcvcnt) / totalPkt;
-	      dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10);
-	      ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10;
-	    }
-	    ne->rcvcnt = 0;
-	    ne->failcnt = 0;
+	  dbg("LI", "Making link: %d mature\n", i);
+	  ne->flags |= MATURE_ENTRY;
+	  totalPkt = ne->rcvcnt + ne->failcnt;
+	  dbg("LI", "MinPkt: %d, totalPkt: %d\n", minPkt, totalPkt);
+	  if (totalPkt < minPkt) {
+	    totalPkt = minPkt;
 	  }
+	  if (totalPkt == 0) {
+	    ne->inquality = (ALPHA * ne->inquality) / 10;
+	  } else {
+	    newEst = (255 * ne->rcvcnt) / totalPkt;
+	    dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10);
+	    ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10;
+	  }
+	  ne->rcvcnt = 0;
+	  ne->failcnt = 0;
 	  updateEETX(ne, computeEETX(ne->inquality));
-	}
-	else {
+	} else {
 	  dbg("LI", " - entry %i is invalid.\n", (int)i);
 	}
       }
@@ -379,7 +367,6 @@ implementation {
 	NeighborTable[idx].lastseq, seq, packetGap);
     NeighborTable[idx].lastseq = seq;
     NeighborTable[idx].rcvcnt++;
-    NeighborTable[idx].inage = MAX_AGE;
     if (packetGap > 0) {
       NeighborTable[idx].failcnt += packetGap - 1;
     }
@@ -389,7 +376,7 @@ implementation {
       NeighborTable[idx].inquality = 0;
     }
 
-    if (NeighborTable[idx].rcvcnt >= BLQ_PKT_WINDOW) {
+    if (packetGap >= BLQ_PKT_WINDOW) {
       updateNeighborTableEst(NeighborTable[idx].ll_addr);
     }
 
@@ -404,8 +391,8 @@ implementation {
     for (i = 0; i < NEIGHBOR_TABLE_SIZE; i++) {
       ne = &NeighborTable[i];
       if (ne->flags & VALID_ENTRY) {
-	dbg("LI,LITest", "%d:%d inQ=%d, inA=%d, rcv=%d, fail=%d, Q=%d\n",
-	    i, ne->ll_addr, ne->inquality, ne->inage,
+	dbg("LI,LITest", "%d:%d inQ=%d, rcv=%d, fail=%d, Q=%d\n",
+	    i, ne->ll_addr, ne->inquality, 
 	    ne->rcvcnt, ne->failcnt, computeEETX(ne->inquality));
       }
     }

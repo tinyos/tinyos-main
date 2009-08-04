@@ -1,4 +1,4 @@
-/* $Id: LinkEstimator.h,v 1.1 2007-09-21 06:34:04 gnawali Exp $ */
+/* $Id: LinkEstimator.h,v 1.2 2009-08-04 21:42:45 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -95,9 +95,6 @@ typedef struct neighbor_table_entry {
   uint8_t failcnt;
   // flags to describe the state of this entry
   uint8_t flags;
-  // MAXAGE-inage gives the number of update rounds we haven't been able
-  // update the inbound beacon estimator
-  uint8_t inage;
   // inbound qualities in the range [1..255]
   // 1 bad, 255 good
   uint8_t inquality;
