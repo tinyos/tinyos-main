@@ -113,7 +113,7 @@ void config_print(int fd, int argc, char **argv) { //struct config *c) {
   VTY_printf ("  router address: %s\r\n", buf);
   VTY_printf("  proxy dev: %s\r\n", lastconfig->proxy_dev);
   VTY_printf("  channel: %i\r\n", lastconfig->channel);
-  VTY_printf("  version: %s\r\n", STR($Id: config.c,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $));
+  VTY_printf("  version: %s\r\n", " $Id: config.c,v 1.2 2009/08/09 23:36:05 sdhsdh Exp ");
   VTY_printf("  retries: %i\r\n", lastconfig->retries);
   VTY_flush();
 }
