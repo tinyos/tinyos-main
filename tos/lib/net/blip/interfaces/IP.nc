@@ -14,6 +14,10 @@ interface IP {
    */ 
   command error_t send(struct split_ip_msg *msg);
 
+  command error_t bareSend(struct split_ip_msg *msg, 
+                           struct ip6_route *route,
+                           int flags);
+
   /*
    * indicate that the stack has finished writing data into the
    * receive buffer. 

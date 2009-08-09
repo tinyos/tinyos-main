@@ -82,6 +82,16 @@ typedef struct BootArgs {
 enum {
   NWPROG_CMD_ERASE = 1,
   NWPROG_CMD_WRITE = 2,
+  NWPROG_CMD_READ  = 3,
+  NWPROG_CMD_LIST  = 4,
+  NWPROG_CMD_BOOT  = 5,
+  NWPROG_CMD_REBOOT= 6,
+  NWPROG_CMD_READDONE = 7,
+  NWPROG_CMD_IMAGEIFO = 8,
+};
+
+enum {
+  NWPROG_ERROR_OK = 0,
 };
 
 enum{
@@ -89,15 +99,27 @@ enum{
   PATCH_CMD_COPY   = 17,
 };
 
+nx_struct ShortDelugeIdent {
+  nx_uint8_t   appname[16];
+  nx_uint8_t   username[16];
+  nx_uint8_t   hostname[16];
+  nx_uint32_t  timestamp;
+};
+
 typedef nx_struct prog_req {
   nx_uint8_t cmd;
   nx_uint8_t imgno;
-  nx_uint16_t offset;
+  nx_union {
+    nx_uint16_t offset;
+    nx_uint16_t when;
+    nx_uint16_t nimages;
+  } cmd_data;
   nx_uint8_t data[0];
 } prog_req_t;
 
 typedef nx_struct prog_reply {
   nx_uint8_t error;
+  nx_uint8_t pad;
   nx_struct prog_req req;
 } prog_reply_t;
 

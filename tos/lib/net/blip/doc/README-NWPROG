@@ -1,0 +1,70 @@
+
+ @title Meraki Documentation
+ @author Stephen Dawson-Haggerty stevedh@eecs.berkeley.edu
+ @release public
+---------------------------------------------------------------------
+
+What is it?
+---------------------------------------------------------------------
+nwprog is a method of over-the-air programming.  It uses much of the
+machinery Deluge has developed, like the boot loader and flash layout,
+but substitutes a simpler transport using UDP for Deluge's
+dissemination algorithm.  This means that it is point-to-point, and
+not incredibly appropriate for reprogramming an entire network all at
+once.
+
+How do I get it?
+---------------------------------------------------------------------
+It is included with the b6lowpan stack.  It reuses much of the Deluge
+code directly from the TinyOS tree without shadowing the files.
+
+Differences from Deluge?
+---------------------------------------------------------------------
+ - no dissemination 
+ - no base station or serial port for injection
+
+ The application is very simple: flash is formatted into several
+volumes (a golden image and three application volumes), which are used
+to store application images.  Flash management, boot loading, and
+image formatting are all provided by Deluge.
+
+How to use it?
+---------------------------------------------------------------------
+Build your application with support by include a line in your
+application Makefile, and include the IPDispatchC component.
+== application makefile ==
+BOOTLOADER=tosboot
+== </snip> == 
+Also, it is necessary to include a volumes xml file for your flash
+chip; examples for the stm25p and at45db are present in apps/UDPEcho.
+
+First built the tosboot bootloader for your platform by going to
+tinyos-2.x/tos/lib/tosboot and typing `make <platform>`.
+
+Then just build and install your application like usual.  If
+networking is working, you should have no problem following the rest
+of the instructions.
+
+Interactions with the motes happen using the 'nwprog' tool in a shell.
+Connect the shell with `nc6 -u 2001:470:1f04:56d::65 2000`.
+It has three commands:
+ `nwprog list`: examine the flash and print out information on volumes
+        containing images believed to be valid
+ `nwprog reboot`: reboot into the same image
+ `nwprog boot N`: reboot, and flash the mote with the binary stored in
+        volume N
+
+In order to upload new images, use the tos-nwprog tool, located in
+$LOWPAN_ROOT/tools/tinyos/misc.  This tool provides minimal
+functionality; only erasing and uploading are supported.
+
+ `./tos-nwprog 2001:470:1f04:56d::65 -e 0`: erase image 0 from the
+        mote at the given IP address.
+ `./tos-nwprog 2001:470:1f04:56d::65 -u 0 tos_image.xml`: upload the
+        image in tos_image.xml to volume 0 on the mote at the IP
+        address.  This will erase the volume before uploading it.
+
+To integrate with your own application, there are several internal
+interfaces which can be used to examine the flash.  Looking at the
+example code in UDPShellP component is the best way of finding out
+about these.

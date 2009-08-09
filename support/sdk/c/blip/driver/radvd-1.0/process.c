@@ -1,5 +1,5 @@
 /*
- *   $Id: process.c,v 1.1 2009-01-20 00:28:15 sdhsdh Exp $
+ *   $Id: process.c,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
  *
  *   Authors:
  *    Pedro Roque		<roque@di.fc.ul.pt>
@@ -230,19 +230,19 @@ process_ra(struct Interface *iface, unsigned char *msg, int len,
 	if ((radvert->nd_ra_curhoplimit && iface->AdvCurHopLimit) && 
 	   (radvert->nd_ra_curhoplimit != iface->AdvCurHopLimit))
 	{
-		flog(LOG_WARNING, "our AdvCurHopLimit on %s doesn't agree with %s",
+		dlog(LOG_WARNING, LOG_INFO, "our AdvCurHopLimit on %s doesn't agree with %s",
 			iface->Name, addr_str);
 	}
 
 	if ((radvert->nd_ra_flags_reserved & ND_RA_FLAG_MANAGED) && !iface->AdvManagedFlag)
 	{
-		flog(LOG_WARNING, "our AdvManagedFlag on %s doesn't agree with %s",
+		dlog(LOG_WARNING, LOG_INFO, "our AdvManagedFlag on %s doesn't agree with %s",
 			iface->Name, addr_str);
 	}
 	
 	if ((radvert->nd_ra_flags_reserved & ND_RA_FLAG_OTHER) && !iface->AdvOtherConfigFlag)
 	{
-		flog(LOG_WARNING, "our AdvOtherConfigFlag on %s doesn't agree with %s",
+		dlog(LOG_WARNING, LOG_INFO, "our AdvOtherConfigFlag on %s doesn't agree with %s",
 			iface->Name, addr_str);
 	}
 
@@ -251,14 +251,14 @@ process_ra(struct Interface *iface, unsigned char *msg, int len,
 	if ((radvert->nd_ra_reachable && iface->AdvReachableTime) &&
 	   (ntohl(radvert->nd_ra_reachable) != iface->AdvReachableTime))
 	{
-		flog(LOG_WARNING, "our AdvReachableTime on %s doesn't agree with %s",
+		dlog(LOG_WARNING, LOG_INFO, "our AdvReachableTime on %s doesn't agree with %s",
 			iface->Name, addr_str);
 	}
 	
 	if ((radvert->nd_ra_retransmit && iface->AdvRetransTimer) &&
 	   (ntohl(radvert->nd_ra_retransmit) != iface->AdvRetransTimer))
 	{
-		flog(LOG_WARNING, "our AdvRetransTimer on %s doesn't agree with %s",
+		dlog(LOG_WARNING, LOG_INFO, "our AdvRetransTimer on %s doesn't agree with %s",
 			iface->Name, addr_str);
 	}
 
@@ -332,7 +332,7 @@ process_ra(struct Interface *iface, unsigned char *msg, int len,
 
 					if (valid != prefix->AdvValidLifetime)
 					{
-						flog(LOG_WARNING, "our AdvValidLifetime on"
+                                          dlog(LOG_WARNING, LOG_INFO, "our AdvValidLifetime on"
 						 " %s for %s doesn't agree with %s",
 						 iface->Name,
 						 prefix_str,
@@ -341,7 +341,7 @@ process_ra(struct Interface *iface, unsigned char *msg, int len,
 					}
 					if (preferred != prefix->AdvPreferredLifetime)
 					{
-						flog(LOG_WARNING, "our AdvPreferredLifetime on"
+                                          dlog(LOG_WARNING, LOG_INFO, "our AdvPreferredLifetime on"
 						 " %s for %s doesn't agree with %s",
 						 iface->Name,
 						 prefix_str,

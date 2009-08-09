@@ -1,4 +1,4 @@
-/*l
+/*
  * "Copyright (c) 2008 The Regents of the University  of California.
  * All rights reserved."
  *
@@ -41,7 +41,9 @@ uint8_t *getLinkLocalPrefix() {
 }
 
 uint8_t cmpPfx(ip6_addr_t a, uint8_t *pfx) {
-  return (a[0] == pfx[0] &&
+  return (memcmp(a, pfx, 8) == 0);
+#if 0
+    (a[0] == pfx[0] &&
           a[1] == pfx[1] &&
           a[2] == pfx[2] &&
           a[3] == pfx[3] &&
@@ -49,9 +51,10 @@ uint8_t cmpPfx(ip6_addr_t a, uint8_t *pfx) {
           a[5] == pfx[5] &&
           a[6] == pfx[6] &&
           a[7] == pfx[7]);
+#endif
 }
 
-int ipv6_addr_suffix_is_long(const ip6_addr_t addr) {
+static inline int ipv6_addr_suffix_is_long(const ip6_addr_t addr) {
   return (!(addr[8] == 0 &&
             addr[9] == 0 &&
             addr[10] == 0 &&
@@ -60,6 +63,7 @@ int ipv6_addr_suffix_is_long(const ip6_addr_t addr) {
             addr[13] == 0));
 }
 
+#if LIB6LOWPAN_FULL
 /*
  * return the length of the compressed fields in buf
  */
@@ -114,8 +118,9 @@ int getCompressedLen(packed_lowmsg_t *pkt) {
   len += (buf - pkt->data);
   return len;
 }
+#endif
 
-int decompressShortAddress(uint8_t dispatch, uint8_t *s_addr, uint8_t *dest) {
+static inline int decompressShortAddress(uint8_t dispatch, uint8_t *s_addr, uint8_t *dest) {
   if ((*s_addr & LOWPAN_IPHC_SHORT_MASK) == 0) {
     // simplest case, just use the appropriate prefix.
     if (dispatch == LOWPAN_HC_LOCAL_PATTERN)
@@ -151,8 +156,8 @@ int decompressShortAddress(uint8_t dispatch, uint8_t *s_addr, uint8_t *dest) {
   return 0;
 }
 
-int decompressAddress(uint8_t dispatch, uint16_t src, uint8_t addr_flags, 
-                       uint8_t **buf, uint8_t *dest) {
+static inline int decompressAddress(uint8_t dispatch, uint16_t src, uint8_t addr_flags, 
+                                    uint8_t **buf, uint8_t *dest) {
   uint8_t *prefix;
   uint16_t tmp;
   int rc = 0;
@@ -185,6 +190,17 @@ int decompressAddress(uint8_t dispatch, uint16_t src, uint8_t addr_flags,
   return rc;
 }
 
+void adjustPlen(struct ip6_hdr *ip, unpack_info_t *u_info) {
+  uint16_t adjust_amt = u_info->payload_offset;
+  /*
+  switch (u_info->nxt_hdr) {
+  case IANA_UDP:
+    adjust_amt -= sizeof(struct udp_hdr); break;
+  }
+  */
+  ip->plen = htons(ntohs(ip->plen) - adjust_amt);
+}
+
 /*
  * Unpacks all headers, including any compressed transport headers if
  * there is a compression scheme defined for them.
@@ -204,10 +220,7 @@ uint8_t *unpackHeaders(packed_lowmsg_t *pkt, unpack_info_t *u_info,
   // pointers to fields  we may come back to fill in later
   uint8_t *plen, *prot_len, *nxt_hdr;
 
-  u_info->payload_offset = 0;
-  u_info->rih = NULL;
-  u_info->sh = NULL;
-  u_info->transport_ptr = NULL;
+  ip_memclr((void *)u_info, sizeof(unpack_info_t));
 
   // a buffer we can write addresses prefixes and suffexes into.
   // now we don't need to check sizes until we get to next headers
@@ -321,7 +334,7 @@ uint8_t *unpackHeaders(packed_lowmsg_t *pkt, unpack_info_t *u_info,
       dest += sizeof(struct udp_hdr);
 
       u_info->nxt_hdr = IANA_UDP;
-      u_info->payload_offset += sizeof(struct udp_hdr);
+      // u_info->payload_offset += sizeof(struct udp_hdr);
       u_info->transport_ptr = (uint8_t *)udp;
 
     } else {
@@ -338,30 +351,28 @@ uint8_t *unpackHeaders(packed_lowmsg_t *pkt, unpack_info_t *u_info,
     uint8_t nhdr_len = 0;
     struct ip6_ext *hdr;
     u_info->nxt_hdr = nhdr;
-    while (KNOWN_HEADER(nhdr)) {
+
+    // copy any IPv6 extension headers out of the packet.
+    // the rule is that the extension headers must fit in the first
+    // fragment so we can route on them after only one fragment.
+    while (EXTENSION_HEADER(nhdr)) {
       hdr = (struct ip6_ext *)buf;
-      u_info->nxt_hdr = nhdr;
+
       switch (nhdr) {
-      case IANA_UDP:
-        nhdr = NXTHDR_UNKNOWN;
-        nhdr_len = sizeof(struct udp_hdr);
-        u_info->transport_ptr = dest;
+      case IPV6_HOP:
+        u_info->hdr_hop = (struct ip6_ext *)buf;
         break;
-      case NXTHDR_SOURCE:
-        u_info->sh = (struct source_header *)buf;
-        nhdr = hdr->nxt_hdr; 
-        nhdr_len = hdr->len;
-        u_info->nxt_hdr = nhdr;
+      case IPV6_ROUTING:
+        u_info->hdr_route = (struct ip6_route *)buf;
         break;
-      case NXTHDR_INSTALL:
-        // this is how to handle all ipv6 options headers: should we
-        // use "default" here?
-        u_info->rih = (struct rinstall_header *)buf;
-      default:
-        nhdr = hdr->nxt_hdr;
-        nhdr_len = hdr->len;
-        u_info->nxt_hdr = nhdr;
+      case IPV6_DEST:
+        u_info->hdr_dest = (struct ip6_ext *)buf;
+        break;
       }
+      nhdr = hdr->nxt_hdr;
+      nhdr_len = hdr->len;
+      u_info->nxt_hdr = nhdr;
+
       if (len < nhdr_len) return NULL;
       ip_memcpy(dest, buf, nhdr_len);
       dest += nhdr_len;
@@ -370,6 +381,8 @@ uint8_t *unpackHeaders(packed_lowmsg_t *pkt, unpack_info_t *u_info,
       u_info->payload_offset += nhdr_len;
       extra_header_length += nhdr_len;
     }
+
+    u_info->transport_ptr = dest;
   }
 
   u_info->payload_start = buf;
@@ -407,7 +420,7 @@ uint8_t *unpackHeaders(packed_lowmsg_t *pkt, unpack_info_t *u_info,
  * that was needed.
  * @returns the bit flags indicating which length was used
  */
-uint8_t packAddress(uint8_t dispatch, uint8_t **buf, ip6_addr_t addr) {
+static uint8_t packAddress(uint8_t dispatch, uint8_t **buf, ip6_addr_t addr) {
 
   if ((dispatch == LOWPAN_HC_CRP_PATTERN && globalPrefix &&
       cmpPfx(addr, __my_address.s6_addr)) ||
@@ -581,6 +594,10 @@ uint8_t packHeaders(struct split_ip_msg *msg,
 /* } */
 
 
+
+#ifndef NO_LIB6LOWPAN_ASCII
+
+#define TO_CHAR(X) (((X) < 10) ? ('0' + (X)) : ('a' + ((X) - 10)))
 #define CHAR_VAL(X)  (((X) >= '0' && (X) <= '9') ? ((X) - '0') : \
                       (((X) >= 'A' && (X) <= 'F') ? ((X) - 'A' + 10) : ((X) - 'a' + 10)))
 
@@ -626,3 +643,33 @@ void inet_pton6(char *addr, struct in6_addr *dest) {
     if (*(p + 1) == ':' && *p == ':') break;
   }
 }
+
+
+
+int inet_ntop6(struct in6_addr *addr, char *buf, int cnt) {
+  uint16_t block;
+  char *end = buf + cnt;
+  int i, j, compressed = 0;
+
+  for (j = 0; j < 8; j++) {
+    if (buf > end - 7) return -1;
+
+    block = ntohs(addr->s6_addr16[j]);
+    for (i = 4; i <= 16; i+=4) {
+      if (block > (0xffff >> i) || (compressed == 2 && i == 16)) {
+        *buf++ = TO_CHAR((block >> (16 - i)) & 0xf);
+      }
+    }
+    if (addr->s6_addr16[j] == 0 && compressed == 0) {
+      *buf++ = ':';
+      compressed++;
+    }
+    if (addr->s6_addr16[j] != 0 && compressed == 1) compressed++;
+
+    if (j < 7 && compressed != 1) *buf++ = ':';
+  }
+  *buf++ = '\0';
+  return buf - (end - cnt);
+}
+
+#endif

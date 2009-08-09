@@ -94,10 +94,17 @@ module UDPShellP {
     call UDP.bind(2000);
   }
 
+
+#define DEREF(X)  #X
+#define QUOTE(X)  DEREF(X)
   char reply_buf[MAX_REPLY_LEN];
   char *help_str = "sdsh-0.9\tbuiltins: [help, echo, ping6, uptime, ident]\n";
-  const char *ping_fmt = "%x%02x:%x%02x:%x%02x:%x%02x:%x%02x:%x%02x:%x%02x:%x%02x: icmp_seq=%i ttl=%i time=%i ms\n";
+  const char *ping_fmt = " icmp_seq=%i ttl=%i time=%i ms\n";
   const char *ping_summary = "%i packets transmitted, %i received\n";
+  char *ident_string = "\t[app: "
+    IDENT_APPNAME "]\n\t[user: " IDENT_USERNAME "]\n\t[host: " IDENT_HOSTNAME
+    "]\n\t[time: " QUOTE(IDENT_TIMESTAMP) "]\n";
+  
 
   void action_help(int argc, char **argv) {
     int i = 0;
@@ -179,11 +186,7 @@ module UDPShellP {
   }
 
   void action_ident(int argc, char **argv) {
-    int len;
-    len = snprintf(reply_buf, MAX_REPLY_LEN, 
-                   "\t[app: %s]\n\t[user: %s]\n\t[host: %s]\n\t[time: 0x%lx]\n",
-                   IDENT_APPNAME, IDENT_USERNAME, IDENT_HOSTNAME, IDENT_TIMESTAMP);
-    call UDP.sendto(&session_endpoint, reply_buf, len);
+    call UDP.sendto(&session_endpoint, ident_string, strlen(ident_string));
   }
 
   // commands 
@@ -258,13 +261,12 @@ module UDPShellP {
 
   event void ICMPPing.pingReply(struct in6_addr *source, struct icmp_stats *stats) {
     int len;
-    len = snprintf(reply_buf, MAX_REPLY_LEN, ping_fmt,
-                   source->s6_addr[0],source->s6_addr[1],source->s6_addr[2],source->s6_addr[3],
-                   source->s6_addr[4],source->s6_addr[5],source->s6_addr[6],source->s6_addr[7],
-                   source->s6_addr[8],source->s6_addr[9],source->s6_addr[10],source->s6_addr[11],
-                   source->s6_addr[12],source->s6_addr[13],source->s6_addr[14],source->s6_addr[15],
-                   stats->seq, stats->ttl, stats->rtt);
-    call UDP.sendto(&session_endpoint, reply_buf, len);
+    len = inet_ntop6(source, reply_buf, MAX_REPLY_LEN);
+    if (len > 0) {
+      len += snprintf(reply_buf + len - 1, MAX_REPLY_LEN - len + 1, ping_fmt,
+                      stats->seq, stats->ttl, stats->rtt);
+      call UDP.sendto(&session_endpoint, reply_buf, len);
+    }
   }
 
   event void ICMPPing.pingDone(uint16_t ping_rcv, uint16_t ping_n) {

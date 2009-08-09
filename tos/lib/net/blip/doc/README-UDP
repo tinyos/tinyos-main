@@ -1,0 +1,70 @@
+
+ @title UDP Socket Documentation
+ @author Stephen Dawson-Haggerty
+ @release public
+----------------------------------------------------------------------
+
+ip-stack provides a UDP sockets layer as a basic application transport
+service.  The UDP interface is located in
+tos/lib/net/b6lowpan/interfaces/UDP.nc and is simple:
+
+interface UDP {
+
+  /*
+   * bind a local address.  to cut down memory requirements and handle the 
+   * common case well, you can only bind a port; all local interfaces are 
+   * implicitly bound.  the port should be passed in host byte-order (is 
+   * this confusing?
+   */
+  command error_t bind(uint16_t port);
+
+  /*
+   * send a payload to the socket address indicated
+   * once the call returns, the stack has no claim on the buffer pointed to
+   */ 
+  command error_t sendto(struct sockaddr_in6 *dest, void *payload, 
+                         uint16_t len);
+
+  /*
+   * indicate that the stack has finished writing data into the
+   * receive buffer.  if error is not SUCCESS, the payload does not
+   * contain valid data and the src pointer should not be used.
+   */
+  event void recvfrom(struct sockaddr_in6 *src, void *payload, 
+                      uint16_t len, struct ip_metadata *meta);
+
+}
+
+Usage
+----------------------------------------------------------------------
+
+Each socket must be allocated using the generic component UdpSocketC.
+
+For clients, no initialization is necessary; they may send to a
+destination without calling bind.  The stack will allocate a unique
+ephemeral port number and send out the datagram.
+
+Servers wishing to provide a service using a well-known port should
+call bind() on that port number before generating datagrams.
+
+Example
+----------------------------------------------------------------------
+
+The simplest server is an echo service running on port 7.
+
+Because of the buffer semantics, it is safe to call send directly from
+a receive event handler.
+
+  event void Boot.booted() {
+    call Echo.bind(7);
+  }
+
+  event void Echo.recvfrom(struct sockaddr_in6 *from, void *data,
+                           uint16_t len, struct ip_metadata *meta) {
+    call Echo.sendto(from, data, len);
+  }
+
+The wiring is as follows. 
+
+  components new UdpSocketC();
+  UDPEchoP.Echo -> UdpSocketC;

@@ -1,0 +1,26 @@
+# -*- makefile -*-
+
+PFLAGS +=-DPACKET_LINK -DDEF_MEMCPY
+# PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS
+PFLAGS += -DTOSH_DATA_LENGTH=102
+
+ifndef LOWPAN_ROOT
+  LOWPAN_ROOT=$(TOSROOT)
+endif
+
+PFLAGS+=-DENABLE_SPI0_DMA
+
+PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/include/
+PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/libtcp/
+PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/
+PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/interfaces/ 
+PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/nwprog/
+PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/shell/
+PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/serial/
+
+PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpan.c 
+PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpanIP.c
+PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpanFrag.c
+PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/in_cksum.c
+PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/ip_malloc.c
+

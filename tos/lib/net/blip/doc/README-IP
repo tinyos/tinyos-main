@@ -1,0 +1,56 @@
+
+ @title IP data-structure documentation
+ @author Stephen Dawson-Haggerty
+ @release public
+----------------------------------------------------------------------
+
+The ip-stack provides a bare IP datagram interface to the network
+layer; this is documented in comments in the code.
+
+For the purposes of socket programming, two data structures are most
+important.  The 'struct sockaddr_in6' and the 'struct in6_addr'.  They
+are substantially shared with the linux/bsd versions, and reproduced
+below.
+
+struct in6_addr
+  {
+    union
+      {
+	uint8_t	u6_addr8[16];
+	uint16_t u6_addr16[8];
+	uint32_t u6_addr32[4];
+      } in6_u;
+#define s6_addr			in6_u.u6_addr8
+#define s6_addr16		in6_u.u6_addr16
+#define s6_addr32		in6_u.u6_addr32
+  };
+
+struct sockaddr_in6 {
+  uint16_t sin6_port;
+  struct in6_addr sin6_addr;
+};
+
+void inet_pton6(char *addr, struct in6_addr *dest);
+
+Usage
+----------------------------------------------------------------------
+
+ Example 1: Suppose we want to setup a sockaddr_in6 to point to ff02::5, port 10000:
+ {
+   struct sockaddr_in6 sa6;
+   inet_pton6("ff02::5", &sa6.sin6_addr);
+   sa6.sin6_port = htons(10000);
+ }
+
+ Example 2: Do the same thing, but without the overhead of storing and
+  parsing the string address representation.
+ {
+   struct sockaddr_in6 sa6;
+   memset(&sa6, 0, sizeof(struct sockaddr_in6));
+   sa6.sin6_addr.s6_addr16[0] = htons(0xff02);
+   sa6.sin6_addr.s6_addr[15] = 5;
+   sa6.sin6_port = htons(10000);
+ }
+
+ This code is very unix-y; the second example will work on *nix's.
+

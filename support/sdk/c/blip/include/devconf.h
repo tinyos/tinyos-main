@@ -28,6 +28,7 @@ enum {
   CONFIG_ECHO = 0,       // ping the device for status information
   CONFIG_SET_PARM = 1,   // instruct the device to set its hardware addr
   CONFIG_REBOOT = 2,
+  CONFIG_KEEPALIVE = 3,
 };
 
 enum {
@@ -36,6 +37,11 @@ enum {
   CONFIG_ERROR_BOOTED,
 };
 
+enum {
+  KEEPALIVE_INTERVAL = 500000,
+  KEEPALIVE_TIMEOUT = 5000,
+};
+                                  
 #ifndef PC
 
 
@@ -73,7 +79,7 @@ typedef struct config_cmd {
     uint16_t delay;
   } retx;
   struct {
-    hw_addr_t addr;
+    ieee154_saddr_t addr;
     uint8_t channel;
   } rf;
 } __attribute__((packed)) config_cmd_t;
@@ -82,7 +88,7 @@ typedef struct config_cmd {
 
 typedef struct {
   uint8_t error;
-  hw_addr_t addr;
+  ieee154_saddr_t addr;
   uint16_t serial_read;
   uint16_t radio_read;
   uint16_t serial_fail;

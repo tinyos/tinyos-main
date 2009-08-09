@@ -32,16 +32,36 @@ enum {
   ROUTE_ONEHOP,
   ROUTE_MHOP,
   ROUTE_SOURCE,
+  ROUTE_WORMHOLE,
 };
 
+// the maximum size of a set of topology entries we send out over the network
+#define ROUTMSGSIZ 1400
 
-uint8_t routing_init(struct config *c, char *tun_dev);
+enum {
+  RMSG_TOPOLOGY = 1,
+};
+
+struct routing_message {
+  uint16_t type;
+  uint16_t source;
+  char    data[0];
+};
+
+int routing_init(struct config *c, char *tun_dev);
+
+/* 
+ * handles for  the blocking loop
+ */
+int routing_add_fds(fd_set *fds);
+int routing_process(fd_set *fds);
+
 
 /*
  * @returns: truth value indicating if the destination of the packet
  * is a single hop, and requires no source route.
  */
-uint8_t routing_is_onehop(struct split_ip_msg  *msg);
+int routing_is_onehop(struct split_ip_msg  *msg);
 
 
 /*
@@ -53,19 +73,14 @@ uint8_t routing_insert_route(struct split_ip_msg *orig);
 /*
  * Returns the address of the next router this packet should be send to.
  */
-hw_addr_t routing_get_nexthop(struct split_ip_msg *msg);
+ieee154_saddr_t routing_get_nexthop(struct split_ip_msg *msg);
 
 
 /*
  * Called for all reconstructed packets off serial.
  * allows the router to inpect and remove any extra headers in the message.
  */
-void routing_proc_msg(struct split_ip_msg *msg);
-
-/*
- * Update kernel routing state to reflect a new node
- */
-void routing_add_table_entry(node_id_t id);
+int routing_add_report(node_id_t reporter, struct tlv_hdr *tlv);
 
 
 #endif 

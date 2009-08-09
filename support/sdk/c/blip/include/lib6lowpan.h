@@ -21,44 +21,57 @@
  */
 #ifndef _LIB6LOWPAN_H_
 #define _LIB6LOWPAN_H_
-
 #include <stdint.h>
 #include <stddef.h>
 
 #include "6lowpan.h"
 #include "ip.h"
 
-#ifdef __TARGET_mips__
-// #warning "Using big endian byte order"
-#define ntoh16(X)   (X)
-#define hton16(X)   (X)
-#define ntoh32(X)   (X)
-#define hton32(X)   (X)
+#if defined(PC) || defined(__TARGET_mips__)
+// use library versions if on linux
+#include <netinet/in.h>
+#define ntoh16(X)   ntohs(X)
+#define hton16(X)   htons(X)
+#define ntoh32(X)   ntohl(X)
+#define hton32(X)   htonl(X)
+
+#if defined(PC)
+#define leton16(X)  hton16(X)
+#ifndef htole16
+#define htole16(X)  (X)
+#endif
+#else
 #define leton16(X)  (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
 #define htole16(X)  leton16(X)
-#else
-// #warning "Using little endian byte order"
-#define ntoh16(X)   (((((uint16_t)(X)) >> 8) | ((uint16_t)(X) << 8)) & 0xffff)
-#define hton16(X)   (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
-#define leton16(X)  hton16(X)
-#define htole16(X)  (X)
-#define ntoh32(X)   ((((uint32_t)(X) >> 24) & 0x000000ff)| \
-                     ((((uint32_t)(X) >> 8)) & 0x0000ff00) | \
-                     ((((uint32_t)(X) << 8)) & 0x00ff0000) | \
-                     ((((uint32_t)(X) << 24)) & 0xff000000))
-
-#define hton32(X)   ((((uint32_t)(X) << 24) & 0xff000000)| \
-                     ((((uint32_t)(X) << 8)) & 0x00ff0000) | \
-                     ((((uint32_t)(X) >> 8)) & 0x0000ff00) | \
-                     ((((uint32_t)(X) >> 24)) & 0x000000ff))
 #endif
 
+#else 
+// otherwise have to provide our own 
+
+#define leton16(X)  hton16(X)
+#ifndef htole16
+#define htole16(X)  (X)
+#endif
+
+#define ntoh16(X)   (((((uint16_t)(X)) >> 8) | ((uint16_t)(X) << 8)) & 0xffff)
+#define hton16(X)   (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
+
+/* this is much more efficient since gcc can insert swpb now.  */
+static uint32_t __attribute__((unused))  ntoh32(uint32_t i) {
+  uint16_t lo = (uint16_t)i;
+  uint16_t hi = (uint16_t)(i >> 16);
+  lo = (lo << 8) | (lo >> 8);
+  hi = (hi << 8) | (hi >> 8);
+  return (((uint32_t)lo) << 16) | ((uint32_t)hi);
+}                                                                                                                      
+#define hton32(X) ntoh32(X)
 
 #define ntohs(X) ntoh16(X)
 #define htons(X) hton16(X)
-
 #define ntohl(X) ntoh32(X)
 #define htonl(X) hton32(X)
+
+#endif
 
 
 #ifdef DEF_MEMCPY
@@ -106,10 +119,10 @@ uint8_t setupHeaders(packed_lowmsg_t *packed, uint16_t headers);
 /*
  * Test if various protocol features are enabled
  */
-uint8_t hasMeshHeader(packed_lowmsg_t *msg);
-uint8_t hasBcastHeader(packed_lowmsg_t *msg);
-uint8_t hasFrag1Header(packed_lowmsg_t *msg);
-uint8_t hasFragNHeader(packed_lowmsg_t *msg);
+inline uint8_t hasMeshHeader(packed_lowmsg_t *msg);
+inline uint8_t hasBcastHeader(packed_lowmsg_t *msg);
+inline uint8_t hasFrag1Header(packed_lowmsg_t *msg);
+inline uint8_t hasFragNHeader(packed_lowmsg_t *msg);
 
 /*
  * Mesh header fields
@@ -117,12 +130,12 @@ uint8_t hasFragNHeader(packed_lowmsg_t *msg);
  *  return FAIL if the message doesn't have a mesh header
  */
 uint8_t getMeshHopsLeft(packed_lowmsg_t *msg, uint8_t *hops);
-uint8_t getMeshOriginAddr(packed_lowmsg_t *msg, hw_addr_t *origin);
-uint8_t getMeshFinalAddr(packed_lowmsg_t *msg, hw_addr_t *final);
+uint8_t getMeshOriginAddr(packed_lowmsg_t *msg, ieee154_saddr_t *origin);
+uint8_t getMeshFinalAddr(packed_lowmsg_t *msg, ieee154_saddr_t *final);
 
 uint8_t setMeshHopsLeft(packed_lowmsg_t *msg, uint8_t hops);
-uint8_t setMeshOriginAddr(packed_lowmsg_t *msg, hw_addr_t origin);
-uint8_t setMeshFinalAddr(packed_lowmsg_t *msg, hw_addr_t final);
+uint8_t setMeshOriginAddr(packed_lowmsg_t *msg, ieee154_saddr_t origin);
+uint8_t setMeshFinalAddr(packed_lowmsg_t *msg, ieee154_saddr_t final);
 
 /*
  * Broadcast header fields
@@ -134,19 +147,20 @@ uint8_t setBcastSeqno(packed_lowmsg_t *msg, uint8_t seqno);
 /*
  * Fragmentation header fields
  */
-uint8_t getFragDgramSize(packed_lowmsg_t *msg, uint16_t *size);
-uint8_t getFragDgramTag(packed_lowmsg_t *msg, uint16_t *tag);
-uint8_t getFragDgramOffset(packed_lowmsg_t *msg, uint8_t *size);
+inline uint8_t getFragDgramSize(packed_lowmsg_t *msg, uint16_t *size);
+inline uint8_t getFragDgramTag(packed_lowmsg_t *msg, uint16_t *tag);
+inline uint8_t getFragDgramOffset(packed_lowmsg_t *msg, uint8_t *size);
 
-uint8_t setFragDgramSize(packed_lowmsg_t *msg, uint16_t size);
-uint8_t setFragDgramTag(packed_lowmsg_t *msg, uint16_t tag);
-uint8_t setFragDgramOffset(packed_lowmsg_t *msg, uint8_t size);
+inline uint8_t setFragDgramSize(packed_lowmsg_t *msg, uint16_t size);
+inline uint8_t setFragDgramTag(packed_lowmsg_t *msg, uint16_t tag);
+inline uint8_t setFragDgramOffset(packed_lowmsg_t *msg, uint8_t size);
 
 /*
  * IP header compression functions
  *
  */
-int getCompressedLen(packed_lowmsg_t *pkt);
+
+// int getCompressedLen(packed_lowmsg_t *pkt);
 
 /*
  * Pack the header fields of msg into buffer 'buf'.
@@ -183,12 +197,15 @@ typedef struct {
   //  if it was not, it is the same as header_end
   uint8_t *transport_ptr;
   // points to the source header within the packed fields, IF it contains one.
-  struct source_header *sh;
-  struct rinstall_header *rih;
+  struct ip6_ext   *hdr_hop;
+  struct ip6_route *hdr_route;
+  struct ip6_ext   *hdr_dest;
 } unpack_info_t;
 
 uint8_t *unpackHeaders(packed_lowmsg_t *pkt, unpack_info_t *u_info,
                        uint8_t *dest, uint16_t len);
+
+void adjustPlen(struct ip6_hdr *ip, unpack_info_t *u_info);
 
 /*
  * Fragmentation routines.
@@ -203,6 +220,7 @@ typedef struct {
   uint16_t bytes_rcvd;     /* how many bytes from the packet we have
                               received so far */
   uint8_t timeout;
+  uint8_t nxt_hdr;
   uint8_t *transport_hdr;
   struct ip_metadata metadata;
 } reconstruct_t;

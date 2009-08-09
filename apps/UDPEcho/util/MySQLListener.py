@@ -9,7 +9,7 @@ port = 7000
 
 if __name__ == '__main__':
     conn = MySQLdb.connect (host = "localhost",
-                            user = "root",
+                            user = "b6lowpan",
                             db = "b6lowpan")
     cursor = conn.cursor()
     s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)

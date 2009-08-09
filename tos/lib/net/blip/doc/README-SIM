@@ -1,0 +1,43 @@
+
+ @title blip + TOSSIM documentation
+ @author Stephen Dawson-Haggerty stevedh@eecs.berkeley.edu
+ @release internal
+---------------------------------------------------------------------
+
+The state of blip + TOSSIM
+---------------------------------------------------------------------
+
+TOSSIM and blip have worked reliably together in the not-so-distant
+past.  However, blip makes several assumptions about the radio stack
+which are not (yet) reflected in TOSSIM-cvs.  It expects a PacketLink
+and Unique layer a la the cc2420 stack in order to provide reliable
+transmissions with link duplicate suppression.  Performance without
+these is very poor.  There are also several other minor changes which
+deal with the deliver of serial packets.
+
+Ported versions of those components exist and are present in the blip
+distribution.  However, they require patching an existing tinyos
+stack, so it is probably a good idea to do a sideways checkout of
+tinyos for experimenting on.
+
+Instructions for using TOSSIM with UDPEcho
+---------------------------------------------------------------------
+
+This is completely unsupported right now.  If you really want TOSSIM +
+blip, it ought to work, but there are definitly NO GUARANTEES and NO
+SUPPORT.  It's just too much of a hack at the moment.
+
+ - patch your tossim installation.  The patch is in $LOWPAN_ROOT/tos/lib/tossim.patch, so apply that using
+    * `cd $TOSDIR/tos/lib`
+    * `patch -p0 < $LOWPAN_ROOT/tos/lib/tossim.patch`
+   Then copy $LOWPAN_ROOT/tos/lib/tossim/Packet* to $TOSDIR/tos/lib/tossim
+
+ - I think you should then be able to cd to apps/UDPEcho/sim and type `make`
+    * make sure you have python2.5 and python2.5-dev installed
+ - run `./Sim.py` (or `python2.5 ./Sim.py` if 2.4 is default)
+ - build the driver in support/sdh/c/lib6lowpan/tunnel using `make
+     sim` (probably doing make clean first)
+ - you can then run the driver as usually, except using `./serial_tun
+     localhost 9001` to point it at the serialforwarder running in the simulator.
+
+

@@ -76,9 +76,6 @@
 #include "IPDispatch.h"
 #include "table.h"
 #include "PrintfUART.h"
-#ifdef PRINTF_LIBRARY
-#include "printf.h"
-#endif
 
 /*
  * Provides IP layer reception to applications on motes.
@@ -91,7 +88,15 @@ module IPDispatchP {
     interface SplitControl;
     // interface for protocols not requiring special hand-holding
     interface IP[uint8_t nxt_hdr];
+
     interface Statistics<ip_statistics_t>;
+
+    // IPv6 Extension headers are very useful, but somewhat tricky to
+    // handle in a pretty way.  This is my attempt.
+
+    // for inspecting/modifying extension headers on incomming packets
+    interface IPExtensions;
+
   }
   uses {
     interface Boot;
@@ -101,13 +106,13 @@ module IPDispatchP {
     interface Packet;
 
 #ifndef SIM
-    interface IEEE154Send;
-    interface IEEE154Packet;
+    interface Ieee154Send;
+    interface Ieee154Packet;
 #else
-    interface AMSend as IEEE154Send;
-    interface AMPacket as IEEE154Packet;
+    interface AMSend as Ieee154Send;
+    interface AMPacket as Ieee154Packet;
 #endif
-    interface Receive as IEEE154Receive;
+    interface Receive as Ieee154Receive;
 
     interface PacketLink;
 
@@ -128,13 +133,17 @@ module IPDispatchP {
     
     interface IPAddress;
 
-#ifdef DBG_TRACK_FLOWS
-    command flow_id_t *getFlowID(message_t *);
-#endif
-
+    interface InternalIPExtension;
   }
 } implementation {
   
+#include "table.c"
+
+#ifdef PRINTFUART_ENABLED
+#undef dbg
+#define dbg(X, fmt, args...)  printfUART(fmt, ## args)
+#endif
+
   enum {
     S_RUNNING,
     S_STOPPED,
@@ -142,6 +151,7 @@ module IPDispatchP {
   };
   uint8_t state = S_STOPPED;
   bool radioBusy;
+  uint8_t current_local_label = 0;
   ip_statistics_t stats;
 
   // this in theory could be arbitrarily large; however, it needs to
@@ -169,16 +179,6 @@ module IPDispatchP {
   //
   //
   ////////////////////////////////////////
-
-#ifdef DBG_TRACK_FLOWS
-  uint16_t dbg_flowid = 0;
-#endif
-
-#ifndef SIM
-#define CHECK_NODE_ID if (0) return
-#else
-#define CHECK_NODE_ID if (TOS_NODE_ID == BASESTATION_ID) return 
-#endif
 
   task void sendTask();
 
@@ -227,7 +227,6 @@ module IPDispatchP {
 #define SENDINFO_DECR(X) if (--((X)->refcount) == 0) call SendInfoPool.put(X)
 
   command error_t SplitControl.start() {
-    CHECK_NODE_ID FAIL;
     return call RadioControl.start();
   }
 
@@ -259,7 +258,6 @@ module IPDispatchP {
   }
 
   event void Boot.booted() {
-    CHECK_NODE_ID;
     call Statistics.clear();
 
     ip_malloc_init();
@@ -289,7 +287,8 @@ module IPDispatchP {
    */
   void signalDone(reconstruct_t *recon) {
     struct ip6_hdr *iph = (struct ip6_hdr *)recon->buf;
-    signal IP.recv[iph->nxt_hdr](iph, recon->transport_hdr, &recon->metadata);
+
+    signal IP.recv[recon->nxt_hdr](iph, recon->transport_hdr, &recon->metadata);
     ip_free(recon->buf);
     recon->timeout = T_UNUSED;
     recon->buf = NULL;
@@ -364,7 +363,6 @@ module IPDispatchP {
   }
 
   event void ExpireTimer.fired() {
-    CHECK_NODE_ID;
     table_map(&recon_cache, reconstruct_age);
     table_map(&forward_cache, forward_age);
 
@@ -381,7 +379,7 @@ module IPDispatchP {
    * allocate a structure for recording information about incomming fragments.
    */
 
-  reconstruct_t *get_reconstruct(hw_addr_t src, uint16_t tag) {
+  reconstruct_t *get_reconstruct(ieee154_saddr_t src, uint16_t tag) {
     reconstruct_t *ret = NULL;
     int i;
     for (i = 0; i < N_RECONSTRUCTIONS; i++) {
@@ -418,28 +416,32 @@ module IPDispatchP {
    *  spot, this means we are along the default path and so should invalidate this
    *  source header.
    */
-  void updateSourceRoute(hw_addr_t prev_hop, struct source_header *sh) {
+  void updateSourceRoute(ieee154_saddr_t prev_hop, struct ip6_route *sh) {
     uint16_t my_address = call IPAddress.getShortAddr();
-    if ((sh->dispatch & IP_EXT_SOURCE_INVAL) == IP_EXT_SOURCE_INVAL) return;
-    if (((sh->dispatch & IP_EXT_SOURCE_RECORD) != IP_EXT_SOURCE_RECORD) && 
-        (ntohs(sh->hops[sh->current]) != my_address)) {
-      sh->dispatch |= IP_EXT_SOURCE_INVAL;
-      dbg("IPDispatch", "Invalidating source route!\n");
-      return;
-    } 
-    if (sh->current == SH_NENTRIES(sh)) return;
-    sh->hops[sh->current] = htons(prev_hop);
-    sh->current++;
+    uint16_t target_hop = sh->hops[ROUTE_NENTRIES(sh) - sh->segs_remain];
+    if ((sh->type & ~IP6ROUTE_FLAG_MASK) == IP6ROUTE_TYPE_INVAL || sh->segs_remain == 0) return;
+
+    if (target_hop != htons(my_address)) {
+      printfUART("invalidating source route\n");
+
+      if (ROUTE_NENTRIES(sh) >= 2) {
+        sh->hops[0] = htons(prev_hop);
+        sh->hops[1] = target_hop;
+      }
+      sh->type = (sh->type & IP6ROUTE_FLAG_MASK) | IP6ROUTE_TYPE_INVAL;
+    } else {
+      sh->hops[ROUTE_NENTRIES(sh) - sh->segs_remain] = htons(prev_hop);
+      sh->segs_remain--;
+      printfUART("updating source route with prev: 0x%x remaining: %i\n",
+                 prev_hop, sh->segs_remain);
+    }
   }
-
-    
-
 
   message_t *handle1stFrag(message_t *msg, packed_lowmsg_t *lowmsg) {
     uint8_t *unpack_buf;
     struct ip6_hdr *ip;
 
-    // uint16_t real_payload_length, real_offset = sizeof(struct ip6_hdr);
+    uint16_t real_payload_length;// , real_offset = sizeof(struct ip6_hdr);
 
     unpack_info_t u_info;
 
@@ -458,6 +460,21 @@ module IPDispatchP {
     
     ip = (struct ip6_hdr *)unpack_buf;
 
+
+    if (u_info.hdr_route != NULL) {
+      // this updates the source route in the message_t, if it
+      // exists...
+      updateSourceRoute(call Ieee154Packet.source(msg),
+                        u_info.hdr_route);
+    }
+
+    // we handle the extension headers generically now
+    signal IPExtensions.handleExtensions(current_local_label++,
+                                         ip,
+                                         u_info.hdr_hop,
+                                         u_info.hdr_dest,
+                                         u_info.hdr_route,
+                                         u_info.nxt_hdr);
     
     // first check if we forward or consume it
     if (call IPRouting.isForMe(ip)) {
@@ -468,17 +485,24 @@ module IPDispatchP {
       //   - if fragmented, wait for remaining fragments
       //   - if not, dispatch from here.
 
-      metadata.sender = call IEEE154Packet.source(msg);
+      metadata.sender = call Ieee154Packet.source(msg);
       metadata.lqi = call CC2420Packet.getLqi(msg);
 
-      ip->plen = htons(ntohs(ip->plen) - u_info.payload_offset);
-      switch (ip->nxt_hdr) {
-      case IANA_UDP:
-        ip->plen = htons(ntohs(ip->plen) + sizeof(struct udp_hdr));
-      }
+      real_payload_length = ntohs(ip->plen);
+      adjustPlen(ip, &u_info);
 
       if (!hasFrag1Header(lowmsg)) {
         uint16_t amount_here = lowmsg->len - (u_info.payload_start - lowmsg->data);
+
+#if 0
+        int i;
+        for (i = 0; i < 48; i++)
+          printfUART("0x%x ", ((uint8_t *)ip)[i]);
+        printfUART("\n");
+        for (i = 0; i < 8; i++)
+          printfUART("0x%x ", ((uint8_t *)u_info.payload_start)[i]);
+        printfUART("\n");
+#endif
 
         // we can fill in the data and deliver the packet from here.
         // this is the easy case...
@@ -487,7 +511,9 @@ module IPDispatchP {
         //  buffers.
         // if (rcv_buf == NULL) goto done;
         ip_memcpy(u_info.header_end, u_info.payload_start, amount_here);
-        signal IP.recv[ip->nxt_hdr](ip, u_info.transport_ptr, &metadata);
+
+        printfUART("IP.recv[%i] here: %i\n", amount_here);
+        signal IP.recv[u_info.nxt_hdr](ip, u_info.transport_ptr, &metadata);
       } else {
         // in this case, we need to set up a reconstruction
         // structure so when the next packets come in, they can be
@@ -507,12 +533,13 @@ module IPDispatchP {
         }
         
         // the total size of the IP packet
-        rcv_buf = ip_malloc(ntohs(ip->plen) + sizeof(struct ip6_hdr));
+        rcv_buf = ip_malloc(real_payload_length + sizeof(struct ip6_hdr));
 
         recon->metadata.sender = lowmsg->src;
         recon->tag = tag;
-        recon->size = ntohs(ip->plen) + sizeof(struct ip6_hdr);
+        recon->size = real_payload_length + sizeof(struct ip6_hdr);
         recon->buf = rcv_buf;
+        recon->nxt_hdr = u_info.nxt_hdr;
         recon->transport_hdr = ((uint8_t *)rcv_buf) + (u_info.transport_ptr - unpack_buf);
         recon->bytes_rcvd = u_info.payload_offset + amount_here + sizeof(struct ip6_hdr);
         recon->timeout = T_ACTIVE;
@@ -548,10 +575,13 @@ module IPDispatchP {
       forward_entry_t *fwd;
       message_t *msg_replacement;
       
+      // this is a pointer to the hop-limit field in the packed fragment
       *u_info.hlim = *u_info.hlim - 1;
       if (*u_info.hlim == 0) {
+#ifdef ICMP_TIME_EXCEEDED
         uint16_t amount_here = lowmsg->len - (u_info.payload_start - lowmsg->data);
         call ICMP.sendTimeExceeded(ip, &u_info, amount_here);
+#endif
         // by bailing here and not setting up an entry in the
         // forwarding cache, following fragments will be dropped like
         // they should be.  we don't strictly follow the RFC that says
@@ -572,17 +602,11 @@ module IPDispatchP {
         goto fail;
       }
 
-      if (ip->nxt_hdr == NXTHDR_SOURCE) {
-        // this updates the source route in the message_t, if it
-        // exists...
-        updateSourceRoute(call IEEE154Packet.source(msg),
-                          u_info.sh);
-      }
-
-      if (call IPRouting.getNextHop(ip, u_info.sh, lowmsg->src, &s_info->policy) != SUCCESS)
+      if (call IPRouting.getNextHop(ip, u_info.hdr_route, 
+                                    lowmsg->src, &s_info->policy) != SUCCESS)
         goto fwd_fail;
 
-      dbg("IPDispatch", "next hop is: 0x%x\n", s_info->policy.dest);
+      dbg("IPDispatch", "next hop is: 0x%x\n", s_info->policy.dest[0]);
 
       if (hasFrag1Header(lowmsg)) {
         fwd = table_search(&forward_cache, forward_unused);
@@ -591,7 +615,7 @@ module IPDispatchP {
         }
 
         fwd->timeout = T_ACTIVE;
-        fwd->l2_src = call IEEE154Packet.source(msg);
+        fwd->l2_src = call Ieee154Packet.source(msg);
         getFragDgramTag(lowmsg, &fwd->old_tag);
         fwd->new_tag = ++lib6lowpan_frag_tag;
         // forward table gets a reference
@@ -602,12 +626,15 @@ module IPDispatchP {
 
       // give a reference to the send_entry
       SENDINFO_INCR(s_info);
+      s_info->local_flow_label = current_local_label - 1;
       s_entry->msg = msg;
       s_entry->info = s_info;
 
       if (call SendQueue.enqueue(s_entry) != SUCCESS)
-        stats.encfail++;
+        BLIP_STATS_INCR(stats.encfail);
       post sendTask();
+
+      BLIP_STATS_INCR(stats.forwarded);
 
       // s_info leaves lexical scope;
       SENDINFO_DECR(s_info);
@@ -628,19 +655,21 @@ module IPDispatchP {
     return msg;
   }
 
-  event message_t *IEEE154Receive.receive(message_t *msg, void *msg_payload, uint8_t len) {
+  event message_t *Ieee154Receive.receive(message_t *msg, void *msg_payload, uint8_t len) {
     packed_lowmsg_t lowmsg;
-    CHECK_NODE_ID msg;
 
+    printfUART("p1: %p p2: %p\n", msg_payload, call Packet.getPayload(msg, 0));
     // set up the ip message structaddFragment
     lowmsg.data = msg_payload;
     lowmsg.len  = len;
-    lowmsg.src  = call IEEE154Packet.source(msg);
-    lowmsg.dst  = call IEEE154Packet.destination(msg);
+    lowmsg.src  = call Ieee154Packet.source(msg);
+    lowmsg.dst  = call Ieee154Packet.destination(msg);
 
-    stats.rx_total++;
+    printfUART("receive(): %i\n", len);
 
-    call IPRouting.reportReception(call IEEE154Packet.source(msg),
+    BLIP_STATS_INCR(stats.rx_total);
+
+    call IPRouting.reportReception(call Ieee154Packet.source(msg),
                                    call CC2420Packet.getLqi(msg));
 
     lowmsg.headers = getHeaderBitmap(&lowmsg);
@@ -667,7 +696,7 @@ module IPDispatchP {
       if (getFragDgramOffset(&lowmsg, &offset_cmpr)) goto fail;
 
       forward_lookup_tag = tag;
-      forward_lookup_src = call IEEE154Packet.source(msg);
+      forward_lookup_src = call Ieee154Packet.source(msg);
 
       fwd = table_search(&forward_cache, forward_lookup);
       payload = getLowpanPayload(&lowmsg);
@@ -684,6 +713,7 @@ module IPDispatchP {
         
         recon->bytes_rcvd += amount_here;
         
+        printfUART("sz: %i rcv: %i\n", recon->size, recon->bytes_rcvd);
         if (recon->size == recon->bytes_rcvd) { 
           // signal and free the recon.
           signalDone(recon);
@@ -704,7 +734,7 @@ module IPDispatchP {
           if (s_entry != NULL)
             call SendEntryPool.put(s_entry);
 
-          stats.fw_drop++;
+          BLIP_STATS_INCR(stats.fw_drop);
           fwd->timeout = T_FAILED1;
           goto fail;
         }
@@ -731,7 +761,7 @@ module IPDispatchP {
             fwd->s_info->policy.dest[s_entry->info->policy.current]);
 
         if (call SendQueue.enqueue(s_entry) != SUCCESS) {
-          stats.encfail++;
+          BLIP_STATS_INCR(stats.encfail);
           dbg("Drops", "drops: receive enqueue failed\n");
         }
         post sendTask();
@@ -743,7 +773,7 @@ module IPDispatchP {
 
   fail:
     dbg("Drops", "drops: receive()\n");;
-    stats.rx_drop++;
+    BLIP_STATS_INCR(stats.rx_drop);
   done:
     return msg;
   }
@@ -753,6 +783,8 @@ module IPDispatchP {
    * Send-side functionality
    */
 
+
+
   task void sendTask() {
     send_entry_t *s_entry;
     if (radioBusy || state != S_RUNNING) return;
@@ -761,7 +793,7 @@ module IPDispatchP {
     s_entry = call SendQueue.head();
 
 
-    call IEEE154Packet.setDestination(s_entry->msg, 
+    call Ieee154Packet.setDestination(s_entry->msg, 
                                       s_entry->info->policy.dest[s_entry->info->policy.current]);
     call PacketLink.setRetries(s_entry->msg, s_entry->info->policy.retries);
     call PacketLink.setRetryDelay(s_entry->msg, s_entry->info->policy.delay);
@@ -769,7 +801,7 @@ module IPDispatchP {
     call LowPowerListening.setRxSleepInterval(s_entry->msg, LPL_SLEEP_INTERVAL);
 #endif
 
-    dbg("IPDispatch", "sendTask dest: 0x%x len: 0x%x \n", call IEEE154Packet.destination(s_entry->msg),
+    dbg("IPDispatch", "sendTask dest: 0x%x len: 0x%x \n", call Ieee154Packet.destination(s_entry->msg),
         call Packet.payloadLength(s_entry->msg));
     
     if (s_entry->info->failed) {
@@ -777,7 +809,7 @@ module IPDispatchP {
       goto fail;
     }
           
-    if ((call IEEE154Send.send(call IEEE154Packet.destination(s_entry->msg),
+    if ((call Ieee154Send.send(call Ieee154Packet.destination(s_entry->msg),
                                s_entry->msg,
                                call Packet.payloadLength(s_entry->msg))) != SUCCESS) {
       dbg("Drops", "drops: sendTask: send failed\n");
@@ -791,7 +823,7 @@ module IPDispatchP {
     return;
   fail:
     post sendTask();
-    stats.tx_drop++;
+    BLIP_STATS_INCR(stats.tx_drop);
 
     // deallocate the memory associated with this request.
     // other fragments associated with this packet will get dropped.
@@ -818,6 +850,13 @@ module IPDispatchP {
    * layers.
    */
   command error_t IP.send[uint8_t prot](struct split_ip_msg *msg) {
+    msg->hdr.nxt_hdr = prot;
+    return call IP.bareSend[prot](msg, NULL, 0);
+  }
+
+  command error_t IP.bareSend[uint8_t prot](struct split_ip_msg *msg, 
+                              struct ip6_route *route,
+                              int flags) {
     uint16_t payload_length;
 
     if (state != S_RUNNING) {
@@ -827,14 +866,20 @@ module IPDispatchP {
     if (msg->hdr.hlim != 0xff)
       msg->hdr.hlim = call IPRouting.getHopLimit();
 
-    msg->hdr.nxt_hdr = prot;
+    printfUART("sending...\n");
+
     ip_memclr(msg->hdr.vlfc, 4);
     msg->hdr.vlfc[0] = IPV6_VERSION << 4;
 
-    call IPRouting.insertRoutingHeaders(msg);
+    current_local_label++;
+    if (!(flags & IP_NOHEADERS)) {
+      call InternalIPExtension.addHeaders(msg, prot, current_local_label);
+
+      if (route == NULL)
+        route = call IPRouting.insertRoutingHeader(msg);
+    }
                              
     payload_length = msg->data_len;
-
     {
       struct generic_header *cur = msg->headers;
       while (cur != NULL) {
@@ -844,12 +889,14 @@ module IPDispatchP {
     }
 
     msg->hdr.plen = htons(payload_length);
+    printfUART("sending: total length is: %i\n", payload_length);
     
     // okay, so we ought to have a fully setup chain of headers here,
     // so we ought to be able to compress everything into fragments.
     //
 
     {
+      error_t rc = SUCCESS;
       send_info_t  *s_info;
       send_entry_t *s_entry;
       uint8_t frag_len = 1;
@@ -859,19 +906,19 @@ module IPDispatchP {
       progress.offset = 0;
 
       s_info = getSendInfo();
-      if (s_info == NULL) return ERETRY;
+      if (s_info == NULL) {
+        rc = ERETRY;
+        goto cleanup_outer;
+      }
+      s_info->local_flow_label = current_local_label;
 
       // fill in destination information on outgoing fragments.
       sh = (msg->headers != NULL) ? (struct source_header *)msg->headers->hdr.ext : NULL;
-      if (call IPRouting.getNextHop(&msg->hdr, sh, 0x0,
+      if (call IPRouting.getNextHop(&msg->hdr, route, 0x0,
                                     &s_info->policy) != SUCCESS) {
         dbg("Drops", "drops: IP send: getNextHop failed\n");
         goto done;
       }
-
-#ifdef DBG_TRACK_FLOWS
-      dbg_flowid++;
-#endif
 
       //goto done;
       while (frag_len > 0) {
@@ -890,18 +937,13 @@ module IPDispatchP {
           goto done;
         }
 
-#ifdef DBG_TRACK_FLOWS
-        (call getFlowID(outgoing))->src = TOS_NODE_ID;
-        (call getFlowID(outgoing))->dst = ((uint16_t )msg->hdr.dst_addr[14]) << 8 |
-          (uint16_t)msg->hdr.dst_addr[15];
-        (call getFlowID(outgoing))->id = dbg_flowid;
-        (call getFlowID(outgoing))->seq = 0;
-        (call getFlowID(outgoing))->nxt_hdr = prot;
-#endif
+        // printfUART("getting frag... ");
+        // ip_dump_msg(msg);
 
         frag_len = getNextFrag(msg, &progress, 
                                call Packet.getPayload(outgoing, call Packet.maxPayloadLength()),
                                call Packet.maxPayloadLength());
+        // printfUART("got frag: len: %i\n", frag_len);
         if (frag_len == 0) {
           call FragPool.put(outgoing);
           call SendEntryPool.put(s_entry);
@@ -913,26 +955,30 @@ module IPDispatchP {
         s_entry->info = s_info;
 
         if (call SendQueue.enqueue(s_entry) != SUCCESS) {
-          stats.encfail++;
+          BLIP_STATS_INCR(stats.encfail);
           dbg("Drops", "drops: IP send: enqueue failed\n");
           goto done;
         }
 
         SENDINFO_INCR(s_info);
-        printfUART("enqueue len 0x%x dest: 0x%x retries: 0x%x delay: 0x%x\n",frag_len,
-                   s_info->policy.dest, s_info->policy.retries, s_info->policy.delay);
+//        printfUART("enqueue len 0x%x dest: 0x%x retries: 0x%x delay: 0x%x\n",frag_len,
+//                   s_info->policy.dest, s_info->policy.retries, s_info->policy.delay);
       }
     done:
+      BLIP_STATS_INCR(stats.sent);
       SENDINFO_DECR(s_info);
       post sendTask();
-      return SUCCESS;
+    cleanup_outer:
+      call InternalIPExtension.free();
+
+      return rc;
       
     }
   }
 
-  event void IEEE154Send.sendDone(message_t *msg, error_t error) {
+  event void Ieee154Send.sendDone(message_t *msg, error_t error) {
+    ip_statistics_t stat;
     send_entry_t *s_entry = call SendQueue.head();
-    CHECK_NODE_ID;
 
     radioBusy = FALSE;
 
@@ -974,7 +1020,7 @@ module IPDispatchP {
 
   done:
     s_entry->info->policy.actRetries = call PacketLink.getRetries(msg);
-    call IPRouting.reportTransmission(&s_entry->info->policy);
+    signal IPExtensions.reportTransmission(s_entry->info->local_flow_label, &s_entry->info->policy);
     // kill off any pending fragments
     SENDINFO_DECR(s_entry->info);
     call FragPool.put(s_entry->msg);
@@ -982,9 +1028,20 @@ module IPDispatchP {
     call SendQueue.dequeue();
 
     post sendTask();
+    call Statistics.get(&stat);
   }
 
-
+  command struct tlv_hdr *IPExtensions.findTlv(struct ip6_ext *ext, uint8_t tlv_val) {
+    int len = ext->len - sizeof(struct ip6_ext);
+    struct tlv_hdr *tlv = (struct tlv_hdr *)(ext + 1);
+    while (len > 0) {
+      if (tlv->type == tlv_val) return tlv;
+      if (tlv->len == 0) return NULL;
+      tlv = (struct tlv_hdr *)(((uint8_t *)tlv) + tlv->len);
+      len -= tlv->len;
+    }
+    return NULL;
+  }
 
   event void ICMP.solicitationDone() {
 
@@ -994,12 +1051,21 @@ module IPDispatchP {
    * Statistics interface
    */
   command void Statistics.get(ip_statistics_t *statistics) {
+#ifdef BLIP_STATS_IP_MEM
     stats.fragpool = call FragPool.size();
     stats.sendinfo = call SendInfoPool.size();
     stats.sendentry= call SendEntryPool.size();
     stats.sndqueue = call SendQueue.size();
     stats.heapfree = ip_malloc_freespace();
+    printfUART("frag: %i sendinfo: %i sendentry: %i sendqueue: %i heap: %i\n",
+               stats.fragpool,
+               stats.sendinfo,
+               stats.sendentry,
+               stats.sndqueue,
+               stats.heapfree);
+#endif
     ip_memcpy(statistics, &stats, sizeof(ip_statistics_t));
+
   }
 
   command void Statistics.clear() {

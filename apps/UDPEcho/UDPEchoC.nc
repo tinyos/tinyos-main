@@ -21,6 +21,7 @@
  */
 
 #include <6lowpan.h>
+#include "TestDriver.h"
 
 configuration UDPEchoC {
 
@@ -43,7 +44,9 @@ configuration UDPEchoC {
 
   UDPEchoP.StatusTimer -> TimerMilliC;
 
+  components UdpC;
   UDPEchoP.IPStats -> IPDispatchC.IPStats;
+  UDPEchoP.UDPStats -> UdpC;
   UDPEchoP.RouteStats -> IPDispatchC.RouteStats;
   UDPEchoP.ICMPStats -> IPDispatchC.ICMPStats;
 
@@ -58,14 +61,16 @@ configuration UDPEchoC {
 #ifdef DBG_TRACK_FLOWS
   components TestDriverP, SerialActiveMessageC as Serial;
   components ICMPResponderC, IPRoutingP;
-  components new TimerMilliC() as Mark;
   TestDriverP.Boot -> MainC;
   TestDriverP.SerialControl -> Serial;
   TestDriverP.ICMPPing -> ICMPResponderC.ICMPPing[unique("PING")];
   TestDriverP.CmdReceive -> Serial.Receive[AM_TESTDRIVER_MSG];
   TestDriverP.IPRouting -> IPRoutingP;
   TestDriverP.DoneSend -> Serial.AMSend[AM_TESTDRIVER_MSG];
+  TestDriverP.AckSend -> Serial.AMSend[AM_TESTDRIVER_ACK];
   TestDriverP.RadioControl -> IPDispatchC;
-  TestDriverP.MarkTimer -> Mark;
+#endif
+#ifdef DBG_FLOWS_REPORT
+  components TrackFlowsC;
 #endif
 }

@@ -19,7 +19,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
  */
-//$Id: SerialDevConfC.nc,v 1.1 2009-01-20 00:28:16 sdhsdh Exp $
+//$Id: SerialDevConfC.nc,v 1.2 2009-08-09 23:36:06 sdhsdh Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.

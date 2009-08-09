@@ -7,14 +7,14 @@
 import tinyos.message.Message
 
 # The default size of this message type in bytes.
-DEFAULT_MESSAGE_SIZE = 32
+DEFAULT_MESSAGE_SIZE = 35
 
 # The Active Message type associated with this message.
 AM_TYPE = -1
 
 class UdpReport(tinyos.message.Message.Message):
-    # Create a new UdpReport of size 32.
-    def __init__(self, data="", addr=None, gid=None, base_offset=0, data_length=32):
+    # Create a new UdpReport of size 35.
+    def __init__(self, data="", addr=None, gid=None, base_offset=0, data_length=35):
         tinyos.message.Message.Message.__init__(self, data, addr, gid, base_offset, data_length)
         self.amTypeSet(AM_TYPE)
     
@@ -30,6 +30,66 @@ class UdpReport(tinyos.message.Message.Message):
     #
     def __str__(self):
         s = "Message <UdpReport> \n"
+        try:
+            s += "  [ip.sent=0x%x]\n" % (self.get_ip_sent())
+        except:
+            pass
+        try:
+            s += "  [ip.forwarded=0x%x]\n" % (self.get_ip_forwarded())
+        except:
+            pass
+        try:
+            s += "  [ip.rx_drop=0x%x]\n" % (self.get_ip_rx_drop())
+        except:
+            pass
+        try:
+            s += "  [ip.tx_drop=0x%x]\n" % (self.get_ip_tx_drop())
+        except:
+            pass
+        try:
+            s += "  [ip.fw_drop=0x%x]\n" % (self.get_ip_fw_drop())
+        except:
+            pass
+        try:
+            s += "  [ip.rx_total=0x%x]\n" % (self.get_ip_rx_total())
+        except:
+            pass
+        try:
+            s += "  [ip.real_drop=0x%x]\n" % (self.get_ip_real_drop())
+        except:
+            pass
+        try:
+            s += "  [ip.hlim_drop=0x%x]\n" % (self.get_ip_hlim_drop())
+        except:
+            pass
+        try:
+            s += "  [ip.senddone_el=0x%x]\n" % (self.get_ip_senddone_el())
+        except:
+            pass
+        try:
+            s += "  [ip.fragpool=0x%x]\n" % (self.get_ip_fragpool())
+        except:
+            pass
+        try:
+            s += "  [ip.sendinfo=0x%x]\n" % (self.get_ip_sendinfo())
+        except:
+            pass
+        try:
+            s += "  [ip.sendentry=0x%x]\n" % (self.get_ip_sendentry())
+        except:
+            pass
+        try:
+            s += "  [ip.sndqueue=0x%x]\n" % (self.get_ip_sndqueue())
+        except:
+            pass
+        try:
+            s += "  [ip.encfail=0x%x]\n" % (self.get_ip_encfail())
+        except:
+            pass
+        try:
+            s += "  [ip.heapfree=0x%x]\n" % (self.get_ip_heapfree())
+        except:
+            pass
         try:
             s += "  [udp.total=0x%x]\n" % (self.get_udp_total())
         except:
@@ -51,48 +111,19 @@ class UdpReport(tinyos.message.Message.Message):
         except:
             pass
         try:
-            s += "  [route.parent.flags=0x%x]\n" % (self.get_route_parent_flags())
+            s += "  [route.hop_limit=0x%x]\n" % (self.get_route_hop_limit())
         except:
             pass
         try:
-            s += "  [route.parent.hops=0x%x]\n" % (self.get_route_parent_hops())
+            s += "  [route.parent=0x%x]\n" % (self.get_route_parent())
         except:
             pass
         try:
-            s += "  [route.parent.neighbor=0x%x]\n" % (self.get_route_parent_neighbor())
+            s += "  [route.parent_metric=0x%x]\n" % (self.get_route_parent_metric())
         except:
             pass
         try:
-            s += "  [route.parent.costEstimate=0x%x]\n" % (self.get_route_parent_costEstimate())
-        except:
-            pass
-        try:
-            s += "  [route.parent.linkEstimate=0x%x]\n" % (self.get_route_parent_linkEstimate())
-        except:
-            pass
-        try:
-            s += "  [route.parent.rssiEstimate=0x%x]\n" % (self.get_route_parent_rssiEstimate())
-        except:
-            pass
-        try:
-            s += "  [route.parent.stats.success=";
-            for i in range(0, 2):
-                s += "0x%x " % (self.getElement_route_parent_stats_success(i) & 0xff)
-            s += "]\n";
-        except:
-            pass
-        try:
-            s += "  [route.parent.stats.total=";
-            for i in range(0, 2):
-                s += "0x%x " % (self.getElement_route_parent_stats_total(i) & 0xff)
-            s += "]\n";
-        except:
-            pass
-        try:
-            s += "  [route.parent.stats.receptions=";
-            for i in range(0, 2):
-                s += "0x%x " % (self.getElement_route_parent_stats_receptions(i) & 0xff)
-            s += "]\n";
+            s += "  [route.parent_etx=0x%x]\n" % (self.get_route_parent_etx())
         except:
             pass
         return s
@@ -100,9 +131,834 @@ class UdpReport(tinyos.message.Message.Message):
     # Message-type-specific access methods appear below.
 
     #
-    # Accessor methods for field: udp.total
+    # Accessor methods for field: ip.sent
     #   Field type: int
     #   Offset (bits): 0
+    #   Size (bits): 16
+    #
+
+    #
+    # Return whether the field 'ip.sent' is signed (False).
+    #
+    def isSigned_ip_sent(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.sent' is an array (False).
+    #
+    def isArray_ip_sent(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.sent'
+    #
+    def offset_ip_sent(self):
+        return (0 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.sent'
+    #
+    def offsetBits_ip_sent(self):
+        return 0
+    
+    #
+    # Return the value (as a int) of the field 'ip.sent'
+    #
+    def get_ip_sent(self):
+        return self.getUIntElement(self.offsetBits_ip_sent(), 16, 1)
+    
+    #
+    # Set the value of the field 'ip.sent'
+    #
+    def set_ip_sent(self, value):
+        self.setUIntElement(self.offsetBits_ip_sent(), 16, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.sent'
+    #
+    def size_ip_sent(self):
+        return (16 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.sent'
+    #
+    def sizeBits_ip_sent(self):
+        return 16
+    
+    #
+    # Accessor methods for field: ip.forwarded
+    #   Field type: int
+    #   Offset (bits): 16
+    #   Size (bits): 16
+    #
+
+    #
+    # Return whether the field 'ip.forwarded' is signed (False).
+    #
+    def isSigned_ip_forwarded(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.forwarded' is an array (False).
+    #
+    def isArray_ip_forwarded(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.forwarded'
+    #
+    def offset_ip_forwarded(self):
+        return (16 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.forwarded'
+    #
+    def offsetBits_ip_forwarded(self):
+        return 16
+    
+    #
+    # Return the value (as a int) of the field 'ip.forwarded'
+    #
+    def get_ip_forwarded(self):
+        return self.getUIntElement(self.offsetBits_ip_forwarded(), 16, 1)
+    
+    #
+    # Set the value of the field 'ip.forwarded'
+    #
+    def set_ip_forwarded(self, value):
+        self.setUIntElement(self.offsetBits_ip_forwarded(), 16, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.forwarded'
+    #
+    def size_ip_forwarded(self):
+        return (16 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.forwarded'
+    #
+    def sizeBits_ip_forwarded(self):
+        return 16
+    
+    #
+    # Accessor methods for field: ip.rx_drop
+    #   Field type: short
+    #   Offset (bits): 32
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.rx_drop' is signed (False).
+    #
+    def isSigned_ip_rx_drop(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.rx_drop' is an array (False).
+    #
+    def isArray_ip_rx_drop(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.rx_drop'
+    #
+    def offset_ip_rx_drop(self):
+        return (32 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.rx_drop'
+    #
+    def offsetBits_ip_rx_drop(self):
+        return 32
+    
+    #
+    # Return the value (as a short) of the field 'ip.rx_drop'
+    #
+    def get_ip_rx_drop(self):
+        return self.getUIntElement(self.offsetBits_ip_rx_drop(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.rx_drop'
+    #
+    def set_ip_rx_drop(self, value):
+        self.setUIntElement(self.offsetBits_ip_rx_drop(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.rx_drop'
+    #
+    def size_ip_rx_drop(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.rx_drop'
+    #
+    def sizeBits_ip_rx_drop(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.tx_drop
+    #   Field type: short
+    #   Offset (bits): 40
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.tx_drop' is signed (False).
+    #
+    def isSigned_ip_tx_drop(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.tx_drop' is an array (False).
+    #
+    def isArray_ip_tx_drop(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.tx_drop'
+    #
+    def offset_ip_tx_drop(self):
+        return (40 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.tx_drop'
+    #
+    def offsetBits_ip_tx_drop(self):
+        return 40
+    
+    #
+    # Return the value (as a short) of the field 'ip.tx_drop'
+    #
+    def get_ip_tx_drop(self):
+        return self.getUIntElement(self.offsetBits_ip_tx_drop(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.tx_drop'
+    #
+    def set_ip_tx_drop(self, value):
+        self.setUIntElement(self.offsetBits_ip_tx_drop(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.tx_drop'
+    #
+    def size_ip_tx_drop(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.tx_drop'
+    #
+    def sizeBits_ip_tx_drop(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.fw_drop
+    #   Field type: short
+    #   Offset (bits): 48
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.fw_drop' is signed (False).
+    #
+    def isSigned_ip_fw_drop(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.fw_drop' is an array (False).
+    #
+    def isArray_ip_fw_drop(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.fw_drop'
+    #
+    def offset_ip_fw_drop(self):
+        return (48 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.fw_drop'
+    #
+    def offsetBits_ip_fw_drop(self):
+        return 48
+    
+    #
+    # Return the value (as a short) of the field 'ip.fw_drop'
+    #
+    def get_ip_fw_drop(self):
+        return self.getUIntElement(self.offsetBits_ip_fw_drop(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.fw_drop'
+    #
+    def set_ip_fw_drop(self, value):
+        self.setUIntElement(self.offsetBits_ip_fw_drop(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.fw_drop'
+    #
+    def size_ip_fw_drop(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.fw_drop'
+    #
+    def sizeBits_ip_fw_drop(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.rx_total
+    #   Field type: short
+    #   Offset (bits): 56
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.rx_total' is signed (False).
+    #
+    def isSigned_ip_rx_total(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.rx_total' is an array (False).
+    #
+    def isArray_ip_rx_total(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.rx_total'
+    #
+    def offset_ip_rx_total(self):
+        return (56 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.rx_total'
+    #
+    def offsetBits_ip_rx_total(self):
+        return 56
+    
+    #
+    # Return the value (as a short) of the field 'ip.rx_total'
+    #
+    def get_ip_rx_total(self):
+        return self.getUIntElement(self.offsetBits_ip_rx_total(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.rx_total'
+    #
+    def set_ip_rx_total(self, value):
+        self.setUIntElement(self.offsetBits_ip_rx_total(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.rx_total'
+    #
+    def size_ip_rx_total(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.rx_total'
+    #
+    def sizeBits_ip_rx_total(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.real_drop
+    #   Field type: short
+    #   Offset (bits): 64
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.real_drop' is signed (False).
+    #
+    def isSigned_ip_real_drop(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.real_drop' is an array (False).
+    #
+    def isArray_ip_real_drop(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.real_drop'
+    #
+    def offset_ip_real_drop(self):
+        return (64 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.real_drop'
+    #
+    def offsetBits_ip_real_drop(self):
+        return 64
+    
+    #
+    # Return the value (as a short) of the field 'ip.real_drop'
+    #
+    def get_ip_real_drop(self):
+        return self.getUIntElement(self.offsetBits_ip_real_drop(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.real_drop'
+    #
+    def set_ip_real_drop(self, value):
+        self.setUIntElement(self.offsetBits_ip_real_drop(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.real_drop'
+    #
+    def size_ip_real_drop(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.real_drop'
+    #
+    def sizeBits_ip_real_drop(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.hlim_drop
+    #   Field type: short
+    #   Offset (bits): 72
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.hlim_drop' is signed (False).
+    #
+    def isSigned_ip_hlim_drop(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.hlim_drop' is an array (False).
+    #
+    def isArray_ip_hlim_drop(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.hlim_drop'
+    #
+    def offset_ip_hlim_drop(self):
+        return (72 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.hlim_drop'
+    #
+    def offsetBits_ip_hlim_drop(self):
+        return 72
+    
+    #
+    # Return the value (as a short) of the field 'ip.hlim_drop'
+    #
+    def get_ip_hlim_drop(self):
+        return self.getUIntElement(self.offsetBits_ip_hlim_drop(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.hlim_drop'
+    #
+    def set_ip_hlim_drop(self, value):
+        self.setUIntElement(self.offsetBits_ip_hlim_drop(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.hlim_drop'
+    #
+    def size_ip_hlim_drop(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.hlim_drop'
+    #
+    def sizeBits_ip_hlim_drop(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.senddone_el
+    #   Field type: short
+    #   Offset (bits): 80
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.senddone_el' is signed (False).
+    #
+    def isSigned_ip_senddone_el(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.senddone_el' is an array (False).
+    #
+    def isArray_ip_senddone_el(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.senddone_el'
+    #
+    def offset_ip_senddone_el(self):
+        return (80 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.senddone_el'
+    #
+    def offsetBits_ip_senddone_el(self):
+        return 80
+    
+    #
+    # Return the value (as a short) of the field 'ip.senddone_el'
+    #
+    def get_ip_senddone_el(self):
+        return self.getUIntElement(self.offsetBits_ip_senddone_el(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.senddone_el'
+    #
+    def set_ip_senddone_el(self, value):
+        self.setUIntElement(self.offsetBits_ip_senddone_el(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.senddone_el'
+    #
+    def size_ip_senddone_el(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.senddone_el'
+    #
+    def sizeBits_ip_senddone_el(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.fragpool
+    #   Field type: short
+    #   Offset (bits): 88
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.fragpool' is signed (False).
+    #
+    def isSigned_ip_fragpool(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.fragpool' is an array (False).
+    #
+    def isArray_ip_fragpool(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.fragpool'
+    #
+    def offset_ip_fragpool(self):
+        return (88 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.fragpool'
+    #
+    def offsetBits_ip_fragpool(self):
+        return 88
+    
+    #
+    # Return the value (as a short) of the field 'ip.fragpool'
+    #
+    def get_ip_fragpool(self):
+        return self.getUIntElement(self.offsetBits_ip_fragpool(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.fragpool'
+    #
+    def set_ip_fragpool(self, value):
+        self.setUIntElement(self.offsetBits_ip_fragpool(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.fragpool'
+    #
+    def size_ip_fragpool(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.fragpool'
+    #
+    def sizeBits_ip_fragpool(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.sendinfo
+    #   Field type: short
+    #   Offset (bits): 96
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.sendinfo' is signed (False).
+    #
+    def isSigned_ip_sendinfo(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.sendinfo' is an array (False).
+    #
+    def isArray_ip_sendinfo(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.sendinfo'
+    #
+    def offset_ip_sendinfo(self):
+        return (96 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.sendinfo'
+    #
+    def offsetBits_ip_sendinfo(self):
+        return 96
+    
+    #
+    # Return the value (as a short) of the field 'ip.sendinfo'
+    #
+    def get_ip_sendinfo(self):
+        return self.getUIntElement(self.offsetBits_ip_sendinfo(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.sendinfo'
+    #
+    def set_ip_sendinfo(self, value):
+        self.setUIntElement(self.offsetBits_ip_sendinfo(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.sendinfo'
+    #
+    def size_ip_sendinfo(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.sendinfo'
+    #
+    def sizeBits_ip_sendinfo(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.sendentry
+    #   Field type: short
+    #   Offset (bits): 104
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.sendentry' is signed (False).
+    #
+    def isSigned_ip_sendentry(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.sendentry' is an array (False).
+    #
+    def isArray_ip_sendentry(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.sendentry'
+    #
+    def offset_ip_sendentry(self):
+        return (104 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.sendentry'
+    #
+    def offsetBits_ip_sendentry(self):
+        return 104
+    
+    #
+    # Return the value (as a short) of the field 'ip.sendentry'
+    #
+    def get_ip_sendentry(self):
+        return self.getUIntElement(self.offsetBits_ip_sendentry(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.sendentry'
+    #
+    def set_ip_sendentry(self, value):
+        self.setUIntElement(self.offsetBits_ip_sendentry(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.sendentry'
+    #
+    def size_ip_sendentry(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.sendentry'
+    #
+    def sizeBits_ip_sendentry(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.sndqueue
+    #   Field type: short
+    #   Offset (bits): 112
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.sndqueue' is signed (False).
+    #
+    def isSigned_ip_sndqueue(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.sndqueue' is an array (False).
+    #
+    def isArray_ip_sndqueue(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.sndqueue'
+    #
+    def offset_ip_sndqueue(self):
+        return (112 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.sndqueue'
+    #
+    def offsetBits_ip_sndqueue(self):
+        return 112
+    
+    #
+    # Return the value (as a short) of the field 'ip.sndqueue'
+    #
+    def get_ip_sndqueue(self):
+        return self.getUIntElement(self.offsetBits_ip_sndqueue(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.sndqueue'
+    #
+    def set_ip_sndqueue(self, value):
+        self.setUIntElement(self.offsetBits_ip_sndqueue(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.sndqueue'
+    #
+    def size_ip_sndqueue(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.sndqueue'
+    #
+    def sizeBits_ip_sndqueue(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.encfail
+    #   Field type: short
+    #   Offset (bits): 120
+    #   Size (bits): 8
+    #
+
+    #
+    # Return whether the field 'ip.encfail' is signed (False).
+    #
+    def isSigned_ip_encfail(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.encfail' is an array (False).
+    #
+    def isArray_ip_encfail(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.encfail'
+    #
+    def offset_ip_encfail(self):
+        return (120 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.encfail'
+    #
+    def offsetBits_ip_encfail(self):
+        return 120
+    
+    #
+    # Return the value (as a short) of the field 'ip.encfail'
+    #
+    def get_ip_encfail(self):
+        return self.getUIntElement(self.offsetBits_ip_encfail(), 8, 1)
+    
+    #
+    # Set the value of the field 'ip.encfail'
+    #
+    def set_ip_encfail(self, value):
+        self.setUIntElement(self.offsetBits_ip_encfail(), 8, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.encfail'
+    #
+    def size_ip_encfail(self):
+        return (8 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.encfail'
+    #
+    def sizeBits_ip_encfail(self):
+        return 8
+    
+    #
+    # Accessor methods for field: ip.heapfree
+    #   Field type: int
+    #   Offset (bits): 128
+    #   Size (bits): 16
+    #
+
+    #
+    # Return whether the field 'ip.heapfree' is signed (False).
+    #
+    def isSigned_ip_heapfree(self):
+        return False
+    
+    #
+    # Return whether the field 'ip.heapfree' is an array (False).
+    #
+    def isArray_ip_heapfree(self):
+        return False
+    
+    #
+    # Return the offset (in bytes) of the field 'ip.heapfree'
+    #
+    def offset_ip_heapfree(self):
+        return (128 / 8)
+    
+    #
+    # Return the offset (in bits) of the field 'ip.heapfree'
+    #
+    def offsetBits_ip_heapfree(self):
+        return 128
+    
+    #
+    # Return the value (as a int) of the field 'ip.heapfree'
+    #
+    def get_ip_heapfree(self):
+        return self.getUIntElement(self.offsetBits_ip_heapfree(), 16, 1)
+    
+    #
+    # Set the value of the field 'ip.heapfree'
+    #
+    def set_ip_heapfree(self, value):
+        self.setUIntElement(self.offsetBits_ip_heapfree(), 16, value, 1)
+    
+    #
+    # Return the size, in bytes, of the field 'ip.heapfree'
+    #
+    def size_ip_heapfree(self):
+        return (16 / 8)
+    
+    #
+    # Return the size, in bits, of the field 'ip.heapfree'
+    #
+    def sizeBits_ip_heapfree(self):
+        return 16
+    
+    #
+    # Accessor methods for field: udp.total
+    #   Field type: int
+    #   Offset (bits): 144
     #   Size (bits): 16
     #
 
@@ -122,13 +978,13 @@ class UdpReport(tinyos.message.Message.Message):
     # Return the offset (in bytes) of the field 'udp.total'
     #
     def offset_udp_total(self):
-        return (0 / 8)
+        return (144 / 8)
     
     #
     # Return the offset (in bits) of the field 'udp.total'
     #
     def offsetBits_udp_total(self):
-        return 0
+        return 144
     
     #
     # Return the value (as a int) of the field 'udp.total'
@@ -157,7 +1013,7 @@ class UdpReport(tinyos.message.Message.Message):
     #
     # Accessor methods for field: udp.failed
     #   Field type: int
-    #   Offset (bits): 16
+    #   Offset (bits): 160
     #   Size (bits): 16
     #
 
@@ -177,13 +1033,13 @@ class UdpReport(tinyos.message.Message.Message):
     # Return the offset (in bytes) of the field 'udp.failed'
     #
     def offset_udp_failed(self):
-        return (16 / 8)
+        return (160 / 8)
     
     #
     # Return the offset (in bits) of the field 'udp.failed'
     #
     def offsetBits_udp_failed(self):
-        return 16
+        return 160
     
     #
     # Return the value (as a int) of the field 'udp.failed'
@@ -212,7 +1068,7 @@ class UdpReport(tinyos.message.Message.Message):
     #
     # Accessor methods for field: udp.seqno
     #   Field type: int
-    #   Offset (bits): 32
+    #   Offset (bits): 176
     #   Size (bits): 16
     #
 
@@ -232,13 +1088,13 @@ class UdpReport(tinyos.message.Message.Message):
     # Return the offset (in bytes) of the field 'udp.seqno'
     #
     def offset_udp_seqno(self):
-        return (32 / 8)
+        return (176 / 8)
     
     #
     # Return the offset (in bits) of the field 'udp.seqno'
     #
     def offsetBits_udp_seqno(self):
-        return 32
+        return 176
     
     #
     # Return the value (as a int) of the field 'udp.seqno'
@@ -267,7 +1123,7 @@ class UdpReport(tinyos.message.Message.Message):
     #
     # Accessor methods for field: udp.sender
     #   Field type: int
-    #   Offset (bits): 48
+    #   Offset (bits): 192
     #   Size (bits): 16
     #
 
@@ -287,13 +1143,13 @@ class UdpReport(tinyos.message.Message.Message):
     # Return the offset (in bytes) of the field 'udp.sender'
     #
     def offset_udp_sender(self):
-        return (48 / 8)
+        return (192 / 8)
     
     #
     # Return the offset (in bits) of the field 'udp.sender'
     #
     def offsetBits_udp_sender(self):
-        return 48
+        return 192
     
     #
     # Return the value (as a int) of the field 'udp.sender'
@@ -322,7 +1178,7 @@ class UdpReport(tinyos.message.Message.Message):
     #
     # Accessor methods for field: icmp.rx
     #   Field type: int
-    #   Offset (bits): 64
+    #   Offset (bits): 208
     #   Size (bits): 16
     #
 
@@ -342,13 +1198,13 @@ class UdpReport(tinyos.message.Message.Message):
     # Return the offset (in bytes) of the field 'icmp.rx'
     #
     def offset_icmp_rx(self):
-        return (64 / 8)
+        return (208 / 8)
     
     #
     # Return the offset (in bits) of the field 'icmp.rx'
     #
     def offsetBits_icmp_rx(self):
-        return 64
+        return 208
     
     #
     # Return the value (as a int) of the field 'icmp.rx'
@@ -375,677 +1231,222 @@ class UdpReport(tinyos.message.Message.Message):
         return 16
     
     #
-    # Accessor methods for field: route.parent.flags
+    # Accessor methods for field: route.hop_limit
     #   Field type: short
-    #   Offset (bits): 80
+    #   Offset (bits): 224
     #   Size (bits): 8
     #
 
     #
-    # Return whether the field 'route.parent.flags' is signed (False).
+    # Return whether the field 'route.hop_limit' is signed (False).
     #
-    def isSigned_route_parent_flags(self):
+    def isSigned_route_hop_limit(self):
         return False
     
     #
-    # Return whether the field 'route.parent.flags' is an array (False).
+    # Return whether the field 'route.hop_limit' is an array (False).
     #
-    def isArray_route_parent_flags(self):
+    def isArray_route_hop_limit(self):
         return False
     
     #
-    # Return the offset (in bytes) of the field 'route.parent.flags'
+    # Return the offset (in bytes) of the field 'route.hop_limit'
     #
-    def offset_route_parent_flags(self):
-        return (80 / 8)
+    def offset_route_hop_limit(self):
+        return (224 / 8)
     
     #
-    # Return the offset (in bits) of the field 'route.parent.flags'
+    # Return the offset (in bits) of the field 'route.hop_limit'
     #
-    def offsetBits_route_parent_flags(self):
-        return 80
+    def offsetBits_route_hop_limit(self):
+        return 224
     
     #
-    # Return the value (as a short) of the field 'route.parent.flags'
+    # Return the value (as a short) of the field 'route.hop_limit'
     #
-    def get_route_parent_flags(self):
-        return self.getUIntElement(self.offsetBits_route_parent_flags(), 8, 0)
+    def get_route_hop_limit(self):
+        return self.getUIntElement(self.offsetBits_route_hop_limit(), 8, 1)
     
     #
-    # Set the value of the field 'route.parent.flags'
+    # Set the value of the field 'route.hop_limit'
     #
-    def set_route_parent_flags(self, value):
-        self.setUIntElement(self.offsetBits_route_parent_flags(), 8, value, 0)
+    def set_route_hop_limit(self, value):
+        self.setUIntElement(self.offsetBits_route_hop_limit(), 8, value, 1)
     
     #
-    # Return the size, in bytes, of the field 'route.parent.flags'
+    # Return the size, in bytes, of the field 'route.hop_limit'
     #
-    def size_route_parent_flags(self):
+    def size_route_hop_limit(self):
         return (8 / 8)
     
     #
-    # Return the size, in bits, of the field 'route.parent.flags'
+    # Return the size, in bits, of the field 'route.hop_limit'
     #
-    def sizeBits_route_parent_flags(self):
+    def sizeBits_route_hop_limit(self):
         return 8
     
     #
-    # Accessor methods for field: route.parent.hops
-    #   Field type: short
-    #   Offset (bits): 88
-    #   Size (bits): 8
-    #
-
-    #
-    # Return whether the field 'route.parent.hops' is signed (False).
-    #
-    def isSigned_route_parent_hops(self):
-        return False
-    
-    #
-    # Return whether the field 'route.parent.hops' is an array (False).
-    #
-    def isArray_route_parent_hops(self):
-        return False
-    
-    #
-    # Return the offset (in bytes) of the field 'route.parent.hops'
-    #
-    def offset_route_parent_hops(self):
-        return (88 / 8)
-    
-    #
-    # Return the offset (in bits) of the field 'route.parent.hops'
-    #
-    def offsetBits_route_parent_hops(self):
-        return 88
-    
-    #
-    # Return the value (as a short) of the field 'route.parent.hops'
-    #
-    def get_route_parent_hops(self):
-        return self.getUIntElement(self.offsetBits_route_parent_hops(), 8, 0)
-    
-    #
-    # Set the value of the field 'route.parent.hops'
-    #
-    def set_route_parent_hops(self, value):
-        self.setUIntElement(self.offsetBits_route_parent_hops(), 8, value, 0)
-    
-    #
-    # Return the size, in bytes, of the field 'route.parent.hops'
-    #
-    def size_route_parent_hops(self):
-        return (8 / 8)
-    
-    #
-    # Return the size, in bits, of the field 'route.parent.hops'
-    #
-    def sizeBits_route_parent_hops(self):
-        return 8
-    
-    #
-    # Accessor methods for field: route.parent.neighbor
+    # Accessor methods for field: route.parent
     #   Field type: int
-    #   Offset (bits): 96
+    #   Offset (bits): 232
     #   Size (bits): 16
     #
 
     #
-    # Return whether the field 'route.parent.neighbor' is signed (False).
+    # Return whether the field 'route.parent' is signed (False).
     #
-    def isSigned_route_parent_neighbor(self):
+    def isSigned_route_parent(self):
         return False
     
     #
-    # Return whether the field 'route.parent.neighbor' is an array (False).
+    # Return whether the field 'route.parent' is an array (False).
     #
-    def isArray_route_parent_neighbor(self):
+    def isArray_route_parent(self):
         return False
     
     #
-    # Return the offset (in bytes) of the field 'route.parent.neighbor'
+    # Return the offset (in bytes) of the field 'route.parent'
     #
-    def offset_route_parent_neighbor(self):
-        return (96 / 8)
+    def offset_route_parent(self):
+        return (232 / 8)
     
     #
-    # Return the offset (in bits) of the field 'route.parent.neighbor'
+    # Return the offset (in bits) of the field 'route.parent'
     #
-    def offsetBits_route_parent_neighbor(self):
-        return 96
+    def offsetBits_route_parent(self):
+        return 232
     
     #
-    # Return the value (as a int) of the field 'route.parent.neighbor'
+    # Return the value (as a int) of the field 'route.parent'
     #
-    def get_route_parent_neighbor(self):
-        return self.getUIntElement(self.offsetBits_route_parent_neighbor(), 16, 0)
+    def get_route_parent(self):
+        return self.getUIntElement(self.offsetBits_route_parent(), 16, 1)
     
     #
-    # Set the value of the field 'route.parent.neighbor'
+    # Set the value of the field 'route.parent'
     #
-    def set_route_parent_neighbor(self, value):
-        self.setUIntElement(self.offsetBits_route_parent_neighbor(), 16, value, 0)
+    def set_route_parent(self, value):
+        self.setUIntElement(self.offsetBits_route_parent(), 16, value, 1)
     
     #
-    # Return the size, in bytes, of the field 'route.parent.neighbor'
+    # Return the size, in bytes, of the field 'route.parent'
     #
-    def size_route_parent_neighbor(self):
+    def size_route_parent(self):
         return (16 / 8)
     
     #
-    # Return the size, in bits, of the field 'route.parent.neighbor'
+    # Return the size, in bits, of the field 'route.parent'
     #
-    def sizeBits_route_parent_neighbor(self):
+    def sizeBits_route_parent(self):
         return 16
     
     #
-    # Accessor methods for field: route.parent.costEstimate
+    # Accessor methods for field: route.parent_metric
     #   Field type: int
-    #   Offset (bits): 112
+    #   Offset (bits): 248
     #   Size (bits): 16
     #
 
     #
-    # Return whether the field 'route.parent.costEstimate' is signed (False).
+    # Return whether the field 'route.parent_metric' is signed (False).
     #
-    def isSigned_route_parent_costEstimate(self):
+    def isSigned_route_parent_metric(self):
         return False
     
     #
-    # Return whether the field 'route.parent.costEstimate' is an array (False).
+    # Return whether the field 'route.parent_metric' is an array (False).
     #
-    def isArray_route_parent_costEstimate(self):
+    def isArray_route_parent_metric(self):
         return False
     
     #
-    # Return the offset (in bytes) of the field 'route.parent.costEstimate'
+    # Return the offset (in bytes) of the field 'route.parent_metric'
     #
-    def offset_route_parent_costEstimate(self):
-        return (112 / 8)
+    def offset_route_parent_metric(self):
+        return (248 / 8)
     
     #
-    # Return the offset (in bits) of the field 'route.parent.costEstimate'
+    # Return the offset (in bits) of the field 'route.parent_metric'
     #
-    def offsetBits_route_parent_costEstimate(self):
-        return 112
+    def offsetBits_route_parent_metric(self):
+        return 248
     
     #
-    # Return the value (as a int) of the field 'route.parent.costEstimate'
+    # Return the value (as a int) of the field 'route.parent_metric'
     #
-    def get_route_parent_costEstimate(self):
-        return self.getUIntElement(self.offsetBits_route_parent_costEstimate(), 16, 0)
+    def get_route_parent_metric(self):
+        return self.getUIntElement(self.offsetBits_route_parent_metric(), 16, 1)
     
     #
-    # Set the value of the field 'route.parent.costEstimate'
+    # Set the value of the field 'route.parent_metric'
     #
-    def set_route_parent_costEstimate(self, value):
-        self.setUIntElement(self.offsetBits_route_parent_costEstimate(), 16, value, 0)
+    def set_route_parent_metric(self, value):
+        self.setUIntElement(self.offsetBits_route_parent_metric(), 16, value, 1)
     
     #
-    # Return the size, in bytes, of the field 'route.parent.costEstimate'
+    # Return the size, in bytes, of the field 'route.parent_metric'
     #
-    def size_route_parent_costEstimate(self):
+    def size_route_parent_metric(self):
         return (16 / 8)
     
     #
-    # Return the size, in bits, of the field 'route.parent.costEstimate'
+    # Return the size, in bits, of the field 'route.parent_metric'
     #
-    def sizeBits_route_parent_costEstimate(self):
+    def sizeBits_route_parent_metric(self):
         return 16
     
     #
-    # Accessor methods for field: route.parent.linkEstimate
+    # Accessor methods for field: route.parent_etx
     #   Field type: int
-    #   Offset (bits): 128
+    #   Offset (bits): 264
     #   Size (bits): 16
     #
 
     #
-    # Return whether the field 'route.parent.linkEstimate' is signed (False).
+    # Return whether the field 'route.parent_etx' is signed (False).
     #
-    def isSigned_route_parent_linkEstimate(self):
+    def isSigned_route_parent_etx(self):
         return False
     
     #
-    # Return whether the field 'route.parent.linkEstimate' is an array (False).
+    # Return whether the field 'route.parent_etx' is an array (False).
     #
-    def isArray_route_parent_linkEstimate(self):
+    def isArray_route_parent_etx(self):
         return False
     
     #
-    # Return the offset (in bytes) of the field 'route.parent.linkEstimate'
+    # Return the offset (in bytes) of the field 'route.parent_etx'
     #
-    def offset_route_parent_linkEstimate(self):
-        return (128 / 8)
+    def offset_route_parent_etx(self):
+        return (264 / 8)
     
     #
-    # Return the offset (in bits) of the field 'route.parent.linkEstimate'
+    # Return the offset (in bits) of the field 'route.parent_etx'
     #
-    def offsetBits_route_parent_linkEstimate(self):
-        return 128
+    def offsetBits_route_parent_etx(self):
+        return 264
     
     #
-    # Return the value (as a int) of the field 'route.parent.linkEstimate'
+    # Return the value (as a int) of the field 'route.parent_etx'
     #
-    def get_route_parent_linkEstimate(self):
-        return self.getUIntElement(self.offsetBits_route_parent_linkEstimate(), 16, 0)
+    def get_route_parent_etx(self):
+        return self.getUIntElement(self.offsetBits_route_parent_etx(), 16, 1)
     
     #
-    # Set the value of the field 'route.parent.linkEstimate'
+    # Set the value of the field 'route.parent_etx'
     #
-    def set_route_parent_linkEstimate(self, value):
-        self.setUIntElement(self.offsetBits_route_parent_linkEstimate(), 16, value, 0)
+    def set_route_parent_etx(self, value):
+        self.setUIntElement(self.offsetBits_route_parent_etx(), 16, value, 1)
     
     #
-    # Return the size, in bytes, of the field 'route.parent.linkEstimate'
+    # Return the size, in bytes, of the field 'route.parent_etx'
     #
-    def size_route_parent_linkEstimate(self):
+    def size_route_parent_etx(self):
         return (16 / 8)
     
     #
-    # Return the size, in bits, of the field 'route.parent.linkEstimate'
+    # Return the size, in bits, of the field 'route.parent_etx'
     #
-    def sizeBits_route_parent_linkEstimate(self):
+    def sizeBits_route_parent_etx(self):
         return 16
-    
-    #
-    # Accessor methods for field: route.parent.rssiEstimate
-    #   Field type: int
-    #   Offset (bits): 144
-    #   Size (bits): 16
-    #
-
-    #
-    # Return whether the field 'route.parent.rssiEstimate' is signed (False).
-    #
-    def isSigned_route_parent_rssiEstimate(self):
-        return False
-    
-    #
-    # Return whether the field 'route.parent.rssiEstimate' is an array (False).
-    #
-    def isArray_route_parent_rssiEstimate(self):
-        return False
-    
-    #
-    # Return the offset (in bytes) of the field 'route.parent.rssiEstimate'
-    #
-    def offset_route_parent_rssiEstimate(self):
-        return (144 / 8)
-    
-    #
-    # Return the offset (in bits) of the field 'route.parent.rssiEstimate'
-    #
-    def offsetBits_route_parent_rssiEstimate(self):
-        return 144
-    
-    #
-    # Return the value (as a int) of the field 'route.parent.rssiEstimate'
-    #
-    def get_route_parent_rssiEstimate(self):
-        return self.getUIntElement(self.offsetBits_route_parent_rssiEstimate(), 16, 0)
-    
-    #
-    # Set the value of the field 'route.parent.rssiEstimate'
-    #
-    def set_route_parent_rssiEstimate(self, value):
-        self.setUIntElement(self.offsetBits_route_parent_rssiEstimate(), 16, value, 0)
-    
-    #
-    # Return the size, in bytes, of the field 'route.parent.rssiEstimate'
-    #
-    def size_route_parent_rssiEstimate(self):
-        return (16 / 8)
-    
-    #
-    # Return the size, in bits, of the field 'route.parent.rssiEstimate'
-    #
-    def sizeBits_route_parent_rssiEstimate(self):
-        return 16
-    
-    #
-    # Accessor methods for field: route.parent.stats.success
-    #   Field type: int[]
-    #   Offset (bits): 0
-    #   Size of each element (bits): 16
-    #
-
-    #
-    # Return whether the field 'route.parent.stats.success' is signed (False).
-    #
-    def isSigned_route_parent_stats_success(self):
-        return False
-    
-    #
-    # Return whether the field 'route.parent.stats.success' is an array (True).
-    #
-    def isArray_route_parent_stats_success(self):
-        return True
-    
-    #
-    # Return the offset (in bytes) of the field 'route.parent.stats.success'
-    #
-    def offset_route_parent_stats_success(self, index1):
-        offset = 0
-        if index1 < 0 or index1 >= 2:
-            raise IndexError
-        offset += 160 + index1 * 48
-        return (offset / 8)
-    
-    #
-    # Return the offset (in bits) of the field 'route.parent.stats.success'
-    #
-    def offsetBits_route_parent_stats_success(self, index1):
-        offset = 0
-        if index1 < 0 or index1 >= 2:
-            raise IndexError
-        offset += 160 + index1 * 48
-        return offset
-    
-    #
-    # Return the entire array 'route.parent.stats.success' as a int[]
-    #
-    def get_route_parent_stats_success(self):
-        tmp = [None]*2
-        for index0 in range (0, self.numElements_route_parent_stats_success(0)):
-                tmp[index0] = self.getElement_route_parent_stats_success(index0)
-        return tmp
-    
-    #
-    # Set the contents of the array 'route.parent.stats.success' from the given int[]
-    #
-    def set_route_parent_stats_success(self, value):
-        for index0 in range(0, len(value)):
-            self.setElement_route_parent_stats_success(index0, value[index0])
-
-    #
-    # Return an element (as a int) of the array 'route.parent.stats.success'
-    #
-    def getElement_route_parent_stats_success(self, index1):
-        return self.getUIntElement(self.offsetBits_route_parent_stats_success(index1), 16, 0)
-    
-    #
-    # Set an element of the array 'route.parent.stats.success'
-    #
-    def setElement_route_parent_stats_success(self, index1, value):
-        self.setUIntElement(self.offsetBits_route_parent_stats_success(index1), 16, value, 0)
-    
-    #
-    # Return the total size, in bytes, of the array 'route.parent.stats.success'
-    #
-    def totalSize_route_parent_stats_success(self):
-        return (96 / 8)
-    
-    #
-    # Return the total size, in bits, of the array 'route.parent.stats.success'
-    #
-    def totalSizeBits_route_parent_stats_success(self):
-        return 96
-    
-    #
-    # Return the size, in bytes, of each element of the array 'route.parent.stats.success'
-    #
-    def elementSize_route_parent_stats_success(self):
-        return (16 / 8)
-    
-    #
-    # Return the size, in bits, of each element of the array 'route.parent.stats.success'
-    #
-    def elementSizeBits_route_parent_stats_success(self):
-        return 16
-    
-    #
-    # Return the number of dimensions in the array 'route.parent.stats.success'
-    #
-    def numDimensions_route_parent_stats_success(self):
-        return 1
-    
-    #
-    # Return the number of elements in the array 'route.parent.stats.success'
-    #
-    def numElements_route_parent_stats_success():
-        return 2
-    
-    #
-    # Return the number of elements in the array 'route.parent.stats.success'
-    # for the given dimension.
-    #
-    def numElements_route_parent_stats_success(self, dimension):
-        array_dims = [ 2,  ]
-        if dimension < 0 or dimension >= 1:
-            raise IndexException
-        if array_dims[dimension] == 0:
-            raise IndexError
-        return array_dims[dimension]
-    
-    #
-    # Accessor methods for field: route.parent.stats.total
-    #   Field type: int[]
-    #   Offset (bits): 16
-    #   Size of each element (bits): 16
-    #
-
-    #
-    # Return whether the field 'route.parent.stats.total' is signed (False).
-    #
-    def isSigned_route_parent_stats_total(self):
-        return False
-    
-    #
-    # Return whether the field 'route.parent.stats.total' is an array (True).
-    #
-    def isArray_route_parent_stats_total(self):
-        return True
-    
-    #
-    # Return the offset (in bytes) of the field 'route.parent.stats.total'
-    #
-    def offset_route_parent_stats_total(self, index1):
-        offset = 16
-        if index1 < 0 or index1 >= 2:
-            raise IndexError
-        offset += 160 + index1 * 48
-        return (offset / 8)
-    
-    #
-    # Return the offset (in bits) of the field 'route.parent.stats.total'
-    #
-    def offsetBits_route_parent_stats_total(self, index1):
-        offset = 16
-        if index1 < 0 or index1 >= 2:
-            raise IndexError
-        offset += 160 + index1 * 48
-        return offset
-    
-    #
-    # Return the entire array 'route.parent.stats.total' as a int[]
-    #
-    def get_route_parent_stats_total(self):
-        tmp = [None]*2
-        for index0 in range (0, self.numElements_route_parent_stats_total(0)):
-                tmp[index0] = self.getElement_route_parent_stats_total(index0)
-        return tmp
-    
-    #
-    # Set the contents of the array 'route.parent.stats.total' from the given int[]
-    #
-    def set_route_parent_stats_total(self, value):
-        for index0 in range(0, len(value)):
-            self.setElement_route_parent_stats_total(index0, value[index0])
-
-    #
-    # Return an element (as a int) of the array 'route.parent.stats.total'
-    #
-    def getElement_route_parent_stats_total(self, index1):
-        return self.getUIntElement(self.offsetBits_route_parent_stats_total(index1), 16, 0)
-    
-    #
-    # Set an element of the array 'route.parent.stats.total'
-    #
-    def setElement_route_parent_stats_total(self, index1, value):
-        self.setUIntElement(self.offsetBits_route_parent_stats_total(index1), 16, value, 0)
-    
-    #
-    # Return the total size, in bytes, of the array 'route.parent.stats.total'
-    #
-    def totalSize_route_parent_stats_total(self):
-        return (96 / 8)
-    
-    #
-    # Return the total size, in bits, of the array 'route.parent.stats.total'
-    #
-    def totalSizeBits_route_parent_stats_total(self):
-        return 96
-    
-    #
-    # Return the size, in bytes, of each element of the array 'route.parent.stats.total'
-    #
-    def elementSize_route_parent_stats_total(self):
-        return (16 / 8)
-    
-    #
-    # Return the size, in bits, of each element of the array 'route.parent.stats.total'
-    #
-    def elementSizeBits_route_parent_stats_total(self):
-        return 16
-    
-    #
-    # Return the number of dimensions in the array 'route.parent.stats.total'
-    #
-    def numDimensions_route_parent_stats_total(self):
-        return 1
-    
-    #
-    # Return the number of elements in the array 'route.parent.stats.total'
-    #
-    def numElements_route_parent_stats_total():
-        return 2
-    
-    #
-    # Return the number of elements in the array 'route.parent.stats.total'
-    # for the given dimension.
-    #
-    def numElements_route_parent_stats_total(self, dimension):
-        array_dims = [ 2,  ]
-        if dimension < 0 or dimension >= 1:
-            raise IndexException
-        if array_dims[dimension] == 0:
-            raise IndexError
-        return array_dims[dimension]
-    
-    #
-    # Accessor methods for field: route.parent.stats.receptions
-    #   Field type: int[]
-    #   Offset (bits): 32
-    #   Size of each element (bits): 16
-    #
-
-    #
-    # Return whether the field 'route.parent.stats.receptions' is signed (False).
-    #
-    def isSigned_route_parent_stats_receptions(self):
-        return False
-    
-    #
-    # Return whether the field 'route.parent.stats.receptions' is an array (True).
-    #
-    def isArray_route_parent_stats_receptions(self):
-        return True
-    
-    #
-    # Return the offset (in bytes) of the field 'route.parent.stats.receptions'
-    #
-    def offset_route_parent_stats_receptions(self, index1):
-        offset = 32
-        if index1 < 0 or index1 >= 2:
-            raise IndexError
-        offset += 160 + index1 * 48
-        return (offset / 8)
-    
-    #
-    # Return the offset (in bits) of the field 'route.parent.stats.receptions'
-    #
-    def offsetBits_route_parent_stats_receptions(self, index1):
-        offset = 32
-        if index1 < 0 or index1 >= 2:
-            raise IndexError
-        offset += 160 + index1 * 48
-        return offset
-    
-    #
-    # Return the entire array 'route.parent.stats.receptions' as a int[]
-    #
-    def get_route_parent_stats_receptions(self):
-        tmp = [None]*2
-        for index0 in range (0, self.numElements_route_parent_stats_receptions(0)):
-                tmp[index0] = self.getElement_route_parent_stats_receptions(index0)
-        return tmp
-    
-    #
-    # Set the contents of the array 'route.parent.stats.receptions' from the given int[]
-    #
-    def set_route_parent_stats_receptions(self, value):
-        for index0 in range(0, len(value)):
-            self.setElement_route_parent_stats_receptions(index0, value[index0])
-
-    #
-    # Return an element (as a int) of the array 'route.parent.stats.receptions'
-    #
-    def getElement_route_parent_stats_receptions(self, index1):
-        return self.getUIntElement(self.offsetBits_route_parent_stats_receptions(index1), 16, 0)
-    
-    #
-    # Set an element of the array 'route.parent.stats.receptions'
-    #
-    def setElement_route_parent_stats_receptions(self, index1, value):
-        self.setUIntElement(self.offsetBits_route_parent_stats_receptions(index1), 16, value, 0)
-    
-    #
-    # Return the total size, in bytes, of the array 'route.parent.stats.receptions'
-    #
-    def totalSize_route_parent_stats_receptions(self):
-        return (96 / 8)
-    
-    #
-    # Return the total size, in bits, of the array 'route.parent.stats.receptions'
-    #
-    def totalSizeBits_route_parent_stats_receptions(self):
-        return 96
-    
-    #
-    # Return the size, in bytes, of each element of the array 'route.parent.stats.receptions'
-    #
-    def elementSize_route_parent_stats_receptions(self):
-        return (16 / 8)
-    
-    #
-    # Return the size, in bits, of each element of the array 'route.parent.stats.receptions'
-    #
-    def elementSizeBits_route_parent_stats_receptions(self):
-        return 16
-    
-    #
-    # Return the number of dimensions in the array 'route.parent.stats.receptions'
-    #
-    def numDimensions_route_parent_stats_receptions(self):
-        return 1
-    
-    #
-    # Return the number of elements in the array 'route.parent.stats.receptions'
-    #
-    def numElements_route_parent_stats_receptions():
-        return 2
-    
-    #
-    # Return the number of elements in the array 'route.parent.stats.receptions'
-    # for the given dimension.
-    #
-    def numElements_route_parent_stats_receptions(self, dimension):
-        array_dims = [ 2,  ]
-        if dimension < 0 or dimension >= 1:
-            raise IndexException
-        if array_dims[dimension] == 0:
-            raise IndexError
-        return array_dims[dimension]
     

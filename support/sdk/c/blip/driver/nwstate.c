@@ -24,11 +24,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+#include <time.h>
+#include <sys/time.h>
 #include "nwstate.h"
 #include "hashtable.h"
 #include "logging.h"
 #include "lib6lowpan.h"
 #include "routing.h"
+#include "vty.h"
 
 struct hashtable *links;
 struct hashtable *routers;
@@ -100,44 +103,112 @@ int nw_print_dotfile(char *filename) {
 }
 
 
-void nw_print_routes() {
+void nw_print_routes(int fd, int argc, char **argv) {
+  VTY_HEAD;
   router_t *r,*s;
   for (r = router_list; r != NULL; r = r->next) {
-    log_clear(LOGLVL_INFO, "  0x%x: ", r->id);
+    VTY_printf("  0x%x: ", r->id);
     for (s = r->sp.prev; s != NULL; s = s->sp.prev) {
-      log_clear(LOGLVL_INFO, "0x%x ", s->id);
+      VTY_printf("0x%x", s->id);
+      if (r->isController) VTY_printf("[C] ");
+      else VTY_printf(" ");
     }
-    log_clear(LOGLVL_INFO, "\n");
+    VTY_printf("\r\n");
+    VTY_flush();
   }
 }
 
-void nw_test_routes() {
+void nw_test_routes(int fd, int argc, char **argv) {
   node_id_t dest = ntohs(__my_address.s6_addr16[7]);
   debug("nwstate: computing new routes (root: 0x%x)\n", ntohs(__my_address.s6_addr16[7]));
   compute_routes(dest);
 }
 
-void nw_print_links() {
+void nw_print_links(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  struct tm *ltime;
+  int target = -1;
   router_t *r;
   link_t *l;
+
+  if (argc == 2)
+    target = atoi(argv[1]);
+
   for (r = router_list; r != NULL; r = r->next) {
-    log_clear(LOGLVL_INFO, " 0x%x: dist: %.1f\n", r->id, r->sp.dist);
+    char flags[16]; int pos = 0;
+    if (target >= 0 && r->id != target) continue;
+
+    flags[0] = '\0';
+    if (r->isProxying || r->isController) {
+      flags[pos++] = '['; 
+      if (r->isController) flags[pos++] = 'C';
+      if (r->isProxying) flags[pos++] = 'P';
+      flags[pos++] = ']';
+      flags[pos++] = '\0';
+    }
+
+    VTY_printf(" 0x%x%s: dist: ", r->id, flags);
+    if (r->sp.dist == FLT_MAX)
+      VTY_printf("Inf");
+    else
+      VTY_printf("%.1f", r->sp.dist);
+    if (!r->isController) {
+      ltime = localtime(&r->lastReport.tv_sec);
+      VTY_printf(" reported: " ISO8601_FMT(ltime, &r->lastReport));
+    }
+
+    VTY_printf("\r\n");
     for (l = r->links; l != NULL; l = (r == l->n1) ? l->next1 : l->next2) {
       if (r == l->n1) {
-        log_clear(LOGLVL_INFO, "  --> 0x%x [%.1f]\n", l->n2->id, l->qual);
+        VTY_printf("  --> 0x%x [%.1f]\r\n", l->n2->id, l->qual);
       }
     }
-    log_clear(LOGLVL_INFO, "\n");
+    VTY_printf("\r\n");
+    VTY_flush();
   }
 }
 
+void nw_add_sticky_edge(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  int v1, v2;
+  if (argc == 3) {
+    link_t *l;
+    struct topology_entry te;
+    v1 = atoi(argv[1]);
+    v2 = atoi(argv[2]);
+    VTY_printf("adding sticky edge between %i and %i\r\n", v1, v2);
+    te.etx = 10;
+    te.conf = 255;
+    te.hwaddr = htons(v2);
+    l = nw_add_incr_edge(v1, &te);
+    l->marked = L_STICKY;
+  } else {
+    VTY_printf("add a link: 'a <n1> <n2>'\r\n");
+  }
+  VTY_flush();
+}
+
+void nw_inval_node_sh(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  int int_arg;
+  if (argc == 2) {
+    int_arg = atoi(argv[1]);
+    VTY_printf("invalidating node 0x%x\n", int_arg);
+    nw_inval_node(int_arg);
+  }
+  VTY_flush();
+}
 //
 // helpers
 // 
 
+router_t *nw_get_router(node_id_t rid) {
+  return hashtable_search(routers, &rid);
+}
+
 router_t *get_insert_router(node_id_t rid) {
   router_key_t *key;
-  router_t *ret = hashtable_search(routers, &rid);
+  router_t *ret = nw_get_router(rid);
   if (ret == NULL) {
     key = (router_key_t *)malloc(sizeof(router_key_t));
     ret = (router_t *)malloc(sizeof(router_t));
@@ -147,6 +218,10 @@ router_t *get_insert_router(node_id_t rid) {
     ret->next = router_list;
 
     ret->reports = 0;
+    ret->lastSeqno = -1;
+
+    ret->isProxying = FALSE;
+    ret->isController = FALSE;
 
     ret->sp.dist = FLT_MAX;
     ret->sp.prev = NULL;
@@ -155,7 +230,6 @@ router_t *get_insert_router(node_id_t rid) {
 
     *key = rid;
     hashtable_insert(routers, key, ret);
-    routing_add_table_entry(rid);
   }
   return ret;
 }
@@ -166,8 +240,11 @@ router_t *get_insert_router(node_id_t rid) {
 //
 
 int nw_init() {
+  router_t *r;
   links   = create_hashtable(16, hash_link,   link_equal);
   routers = create_hashtable(16, hash_router, router_equal);
+  r = get_insert_router(ntohs(__my_address.s6_addr16[7]));
+  r->isController = TRUE;
   return 0;
 }
 
@@ -175,7 +252,7 @@ int nw_init() {
  * Adds an observation of the link (v1, v2) to the database.  This
  * implicitly adds the reverse edge for now, as well.
  */
-int nw_add_incr_edge(node_id_t v1, struct topology_entry *te) {
+link_t *nw_add_incr_edge(node_id_t v1, struct topology_entry *te) {
   link_key_t key;
   link_t *link_str;
   node_id_t v2 = ntoh16(te->hwaddr);
@@ -212,7 +289,7 @@ int nw_add_incr_edge(node_id_t v1, struct topology_entry *te) {
 
   } 
 
-  link_str->marked = 1;
+  link_str->marked = L_REPORTED;
   link_str->qual = ((float)(te->etx)) / 10.0;
   link_str->conf = te->conf;
   debug("nw_add_incr_edge [%i -> %i]: qual: %f conf: %i\n", 
@@ -220,7 +297,7 @@ int nw_add_incr_edge(node_id_t v1, struct topology_entry *te) {
   (v1 == link_str->n1->id) ? link_str->n1_reportcount++ :
     link_str->n2_reportcount++;
 
-  return 0;
+  return link_str;
 }
 
 /*
@@ -343,6 +420,8 @@ path_t *nw_get_route(node_id_t v1, node_id_t v2) {
     debug("nw_get_route: computing new routes\n");
     compute_routes(v1);
   }
+  if (to->sp.prev == NULL) return NULL;
+
   // now the routes should be valid;
   for (r = to; r != NULL; r = r->sp.prev) {
     // this both constructs the return value and reverses the path,
@@ -355,6 +434,7 @@ path_t *nw_get_route(node_id_t v1, node_id_t v2) {
       new->node = r->id;
       new->next = ret;
       new->length = (ret == NULL) ? 1 : ret->length + 1;
+      new->isController = r->isController;
       ret = new;
     }
   }
@@ -382,6 +462,25 @@ void remove_link(router_t *r, link_t *link) {
     prev = (r == l->n1) ? &l->next1 : &l->next2;
   }
   warn("link_remove: link not removed (inconsistent state)?\n");
+}
+
+void nw_remove_link(node_id_t n1, node_id_t n2) {
+  router_t *r1 = nw_get_router(n1);
+  router_t *r2 = nw_get_router(n2);
+  link_t *link;
+  link_key_t key;
+
+  key.r1 = n1;
+  key.r2 = n2;
+  link = hashtable_search(links, &key);
+  if (link != NULL) {
+    routes_out_of_date = 1;
+
+    remove_link(r1, link);
+    remove_link(r2, link);
+    hashtable_remove(links, &key);
+    free(link);
+  }
 }
 
 void nw_inval_node(node_id_t v) {
@@ -432,7 +531,7 @@ void nw_unmark_links(node_id_t v) {
   if (cur == NULL) return;
 
   for (l = cur->links; l != NULL; l = (cur == l->n1) ? l->next1 : l->next2) {
-    l->marked = 0;
+    if (l->marked == L_REPORTED) l->marked = L_UNREPORTED;
   }
 
 }
@@ -463,7 +562,7 @@ void nw_clear_unmarked(node_id_t v) {
   if (cur == NULL) return;
 
   for (l = cur->links; l != NULL; l = (cur == l->n1) ? l->next1 : l->next2) {
-    if (l->marked == 0) {
+    if (l->marked == L_UNREPORTED) {
       // it's not marked, so it wasn't contained in the topology report
       if (((cur == l->n1) ? l->n2_reportcount : l->n1_reportcount) == 0) {
         // it has never been reported by the router on the other end, so we
@@ -479,7 +578,7 @@ void nw_clear_unmarked(node_id_t v) {
         // observation count to zero.
         if (cur == l->n1)  l->n1_reportcount = 0 ;
         else l->n2_reportcount = 0;
-        l->marked = 1;
+        l->marked = L_REPORTED;
         // router_t *otherguy = (cur == l->n1) ? l->n2 : l->n1;
         //debug("unseting obs count on 0x%x -> 0x%x\n", cur->id, otherguy->id);
       }
@@ -500,4 +599,24 @@ void nw_clear_unmarked(node_id_t v) {
 
 
   age_routers();
+}
+
+
+void nw_add_controller(node_id_t node) {
+  router_t *r, *thisController;
+
+  struct topology_entry te;
+  te.etx = 1;
+  te.conf = 255;
+
+  thisController = nw_get_router(node);
+  if (!thisController) return;
+
+  thisController->isController = TRUE;
+  for (r = router_list; r != NULL; r = r->next) {
+    if (r->isController && r != thisController) {
+      te.hwaddr = htons(r->id);
+      nw_add_incr_edge(node, &te);
+    }
+  }
 }

@@ -29,7 +29,7 @@
 #include "UDPReport.h"
 #include "PrintfUART.h"
 
-#define REPORT_PERIOD 45L
+#define REPORT_PERIOD 75L
 
 module UDPEchoP {
   uses {
@@ -44,6 +44,7 @@ module UDPEchoP {
     interface Timer<TMilli> as StatusTimer;
    
     interface Statistics<ip_statistics_t> as IPStats;
+    interface Statistics<udp_statistics_t> as UDPStats;
     interface Statistics<route_statistics_t> as RouteStats;
     interface Statistics<icmp_statistics_t> as ICMPStats;
 
@@ -53,17 +54,10 @@ module UDPEchoP {
 } implementation {
 
   bool timerStarted;
-  udp_statistics_t stats;
+  nx_struct udp_report stats;
   struct sockaddr_in6 route_dest;
 
-#ifndef SIM
-#define CHECK_NODE_ID
-#else
-#define CHECK_NODE_ID if (TOS_NODE_ID == BASESTATION_ID) return
-#endif
-
   event void Boot.booted() {
-    CHECK_NODE_ID;
     call RadioControl.start();
     timerStarted = FALSE;
 
@@ -72,12 +66,9 @@ module UDPEchoP {
     call ICMPStats.clear();
     printfUART_init();
 
-    stats.total = 0;
-    stats.failed = 0;
-
 #ifdef REPORT_DEST
     route_dest.sin6_port = hton16(7000);
-    inet6_aton(REPORT_DEST, &route_dest.sin6_addr);
+    inet_pton6(REPORT_DEST, &route_dest.sin6_addr);
     call StatusTimer.startOneShot(call Random.rand16() % (1024 * REPORT_PERIOD));
 #endif
 
@@ -101,39 +92,24 @@ module UDPEchoP {
 
   event void Echo.recvfrom(struct sockaddr_in6 *from, void *data, 
                            uint16_t len, struct ip_metadata *meta) {
-    CHECK_NODE_ID;
     call Echo.sendto(from, data, len);
   }
 
-  enum {
-    STATUS_SIZE = // sizeof(ip_statistics_t) + 
-    sizeof(route_statistics_t) +
-    sizeof(icmp_statistics_t) + sizeof(udp_statistics_t),
-  };
-
-
   event void StatusTimer.fired() {
-    uint8_t status[STATUS_SIZE];
-    nx_struct udp_report *payload;
-    CHECK_NODE_ID;
 
-    stats.total++;
-    
     if (!timerStarted) {
       call StatusTimer.startPeriodic(1024 * REPORT_PERIOD);
       timerStarted = TRUE;
     }
 
-    payload = (nx_struct udp_report *)status;
-    
     stats.seqno++;
     stats.sender = TOS_NODE_ID;
 
-    // memcpy(&payload->ip,    call IPStats.get(),    sizeof(ip_statistics_t));
-    call RouteStats.get(&payload->route);
-    call ICMPStats.get(&payload->icmp);
-    memcpy(&payload->udp,   &stats,                sizeof(udp_statistics_t));
+    call IPStats.get(&stats.ip);
+    call UDPStats.get(&stats.udp);
+    call ICMPStats.get(&stats.icmp);
+    call RouteStats.get(&stats.route);
 
-    call Status.sendto(&route_dest, status, STATUS_SIZE);
+    call Status.sendto(&route_dest, &stats, sizeof(stats));
   }
 }

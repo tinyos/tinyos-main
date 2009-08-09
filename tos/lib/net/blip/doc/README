@@ -1,0 +1,104 @@
+
+ @title blip documentation
+ @author Stephen Dawson-Haggerty stevedh@eecs.berkeley.edu
+ @release public
+---------------------------------------------------------------------
+
+ 1. Installation
+
+ - This is only going to work on linux.
+
+ - The recommended version of TinyOS is a recent CVS checkout.  This
+   is necessary for appropriate radio stack support.
+
+ - Make sure the c serial tools are built in
+   $TOS_ROOT/support/sdk/c/sf.  You may need to run ./bootstrap,
+   ./configure, and make in that folder to generate libmote.a.
+
+ - Add two environment variables to your startup scripts:
+     export LOWPAN_ROOT=~/svn/code/b6lowpan/
+     export TOSMAKE_PATH="$LOWPAN_ROOT/support/make"
+   where LOWPAN_ROOT is replaced with the path to the blip top
+   level directory.
+
+ - Optionally, have a look at $TOS_ROOT/support/sdk/c/sf/serialsource.c.  
+   There is an enum which defines ACK_TIMEOUT = 1000000 (one second in
+   usecs).  This is much too long and will cause a lot of jitter when
+   (not if) serial writes fail.  Changing it to 100000 is worthwhile.
+   You will need to rebuild libmote.a by typing 'make' in that folder
+   after making this change.  (SDH : this was true up to a little past 
+   version 2.1.  It is now false.)
+
+ 2. Building
+
+ - Build a test app:
+      * cd to $LOWPAN_ROOT/apps/UDPEcho/ and try typing `make <platform> blip`
+ - Build the IEEE802.15.4 bridge to your computer
+      * cd to $LOWPAN_ROOT/apps/IPBaseStation/ and `make <platform> blip`
+ - Build the driver 
+      * cd to $LOWPAN_ROOT/support/sdk/c/blip and type `make`
+
+ 3. Running
+
+ - Install IPBaseStation on a mote.  This will be your
+       computer's interface to the world of low-power radio.
+
+ - Start the driver (once you've built it)
+      * cd $LOWPAN_ROOT/support/sdk/c/blip
+      * edit the config file $LOWPAN_ROOT/support/sdk/c/blip/serial_tun.conf
+         * set 'addr' you would like your computer's interface to use on the PAN
+         * set 'proxy' to the network device you would like to proxy
+                neighbor advertisements on
+      * sudo ./ip-driver /dev/ttyUSB0 telosb
+           (replace the device and baud with whatever you're using)
+   The config file is assumed to be in the CWD when ip-driver starts;
+       if this is not the case it may be specified using '-c <config file>'
+
+ - The driver registers itself on the 2001:470:1f04:56d::/64
+       subnet (or whatever you have specified in the config file).
+
+ - If you program a few motes with UDPEcho, their addresses are formed
+       with octets 15 and 16 of the IPv6 address comming from the
+       802.15.4 short address you programmed them with.  Octets 9-14
+       are zero, so the address formed is:
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+       |  network prefix       |     zero        | id  | 
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+       ICMPv6 DAD is not performed.
+
+ - For instance, if you program a mote with ID 101 (0x65), you can try
+       ping6 2001:470:1f04:56d::65
+       tracert6 2001:470:1f04:56d::65
+       nc6 -u 2001:470:1f04:56d::65 7
+       nc6 -u 2001:470:1f04:56d::65 2000
+       
+       UDPEcho runs an echo service on port 7, and a simple shell on
+       port 2000; type 'help' for a list of commands.
+
+ - The motes can also report back statistics every 15 seconds over
+       UDP.  They will send these reports to an address specified in the
+       application make file; however these reports are disabled by default.
+       You can observe these statistics using the Listener.py
+       script in $LOWPAN_ROOT/apps/UDPEcho/: `python Listener.py`.
+
+ - The driver provides a simple console when running, which allows you
+       to inspect and manipulates routes, and view statistics.  The
+       console runs as a telnet service on port 6106.
+
+ - A good way of understanding what is happening is to start wireshark
+       on tun0; you should be able to observe the neighbor discovery
+       process as motes boot.  You may also notice messages sent to
+       ff05::1; these are routing updates.  They are sent from a
+       binary exponential timer with a maximum period of 5 minutes to
+       inform the router of mote's presence; however, they are
+       suppressed by data traffic since the routing updates will be
+       piggybacked on it.
+
+ - Further reading: doc/ contains a numbers of README's related to
+       pieces of blip such as the socket interface, the shell, and
+       network programming support.  For more technical details on
+       IPv6, please see any reference on the subject.  Many of the
+       documents produced by the IETF ROLL and 6lowpan working groups
+       are relevent to this design space.  

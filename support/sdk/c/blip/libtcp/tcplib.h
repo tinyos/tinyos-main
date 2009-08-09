@@ -1,5 +1,33 @@
+/*
+ * "Copyright (c) 2008, 2009 The Regents of the University  of California.
+ * All rights reserved."
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without written agreement is
+ * hereby granted, provided that the above copyright notice, the following
+ * two paragraphs and the author appear in all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+ * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
+ * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
+ *
+ */
 #ifndef TCPLIB_H_
 #define TCPLIB_H_
+
+/* 
+ * tcplib: a simple tcp implemented in a library
+ * @author Stephen Dawson-Haggerty <stevedh@eecs.berkeley.edu>
+ *
+ *
+ */
 
 // #include <netinet/in.h>
 #include "ip.h"
@@ -28,12 +56,19 @@ enum {
   TCP_ACKPENDING  = 0x3,
   TCP_DUPACKS     = 0x3c,
   TCP_DUPACKS_OFF = 2,
+  TCP_ACKSENT     = 0x80,
+};
+
+enum {
+  /* how many timer tics to stay in TIME_WAIT */
+  TCPLIB_TIMEWAIT_LEN = 12,
+  /* how many un-acked retransmissions before we give up the connection */
+  TCPLIB_GIVEUP = 6,
 };
 
 #define GET_ACK_COUNT(X)    (((X) & TCP_DUPACKS) >> TCP_DUPACKS_OFF)
 #define UNSET_ACK_COUNT(X)  ((X) &= ~TCP_DUPACKS)
 #define INCR_ACK_COUNT(X)   ((X) += 1 << TCP_DUPACKS_OFF)
-#define ACK_COUNT_IS_3(X)   (((X) & TCP_DUPACKS) == TCP_DUPACKS)
 
 struct tcplib_sock {
   uint8_t flags;
@@ -45,10 +80,6 @@ struct tcplib_sock {
   /* current connection state */
   tcplib_sock_state_t state;
 
-  /* a buffer allocated for data on this connection */
-  void    *rx_buf;
-  uint16_t rx_buf_len;
-
   void    *tx_buf;
   uint16_t tx_buf_len;
 
@@ -56,6 +87,8 @@ struct tcplib_sock {
      we didn't bother to pull it out
      of the options field */
   uint16_t mss;
+
+  uint16_t my_wind;
   /* the window the other end is
      reporting */
   uint16_t r_wind;
@@ -63,28 +96,31 @@ struct tcplib_sock {
   uint16_t ssthresh;
 
   // the current next sequence number for ourgoing data.
-  // the ack number is stored in the receive buffer.
   uint32_t seqno;
-  // uint32_t ackno;
+  // and the index of the last byte we've ACKed
+  uint32_t ackno;
 
   struct {
     int8_t retx;
   } timer;
 
+  /* retransmission counter */
+  uint16_t retxcnt;
+
   /* callbacks for this connection */
-  struct {
-    /* a previous connection request has finished */
-    void (*connect_done)(struct tcplib_sock *sock, int error);
+/*   struct { */
+/*     /\* a previous connection request has finished *\/ */
+/*     void (*connect_done)(struct tcplib_sock *sock, int error); */
 
-    /* a callback to signal new data is ready */
-    void (*recvfrom)(struct tcplib_sock *sock, void *data, int len);
+/*     /\* a callback to signal new data is ready *\/ */
+/*     void (*recvfrom)(struct tcplib_sock *sock, void *data, int len); */
 
-    /* the connection was closed by the other party */
-    void (*closed)(struct tcplib_sock *sock);
+/*     /\* the connection was closed by the other party *\/ */
+/*     void (*closed)(struct tcplib_sock *sock); */
 
-    /* you called close(); we've finished closing the socket. */
-    void (*close_done)(struct tcplib_sock *sock);
-  } ops;
+/*     /\* you called close(); we've finished closing the socket. *\/ */
+/*     void (*close_done)(struct tcplib_sock *sock); */
+/*   } ops; */
 
   /* this needs to be at the end so
      we can call init() on a socket
@@ -158,5 +194,12 @@ int tcplib_send(struct tcplib_sock *sock,
 
 int tcplib_close(struct tcplib_sock *sock);
 
-
+/* abort a connection 
+ *
+ * This will send a RST segment if the connection has been opened and
+ * immediately return the socket to the CLOSED, uninitialized state,
+ * although buffer pointers are maintained.
+ *
+ */
+int tcplib_abort(struct tcplib_sock *sock);
 #endif

@@ -67,6 +67,7 @@
 
 #include "lib6lowpan.h"
 #include "tun_dev.h"
+#include "logging.h"
 
 
 /*
@@ -104,7 +105,7 @@ int tun_open(char *dev)
     return fd;
 
   failed:
-    perror("tun_open");
+    log_fatal_perror("tun_open");
     close(fd);
     return -1;
 }
@@ -122,19 +123,19 @@ int tun_setup(char *dev, struct in6_addr *addr) {
 
   /* set the interface up */
   if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0) {
-    perror("SIOCGIFFLAGS");
+    log_fatal_perror("SIOCGIFFLAGS");
     return -1;
   }
   ifr.ifr_flags |= IFF_UP;
   if (ioctl(fd, SIOCSIFFLAGS, &ifr) < 0) {
-    perror("SIOCSIFFLAGS");
+    log_fatal_perror("SIOCSIFFLAGS");
     return -1;
   }
 
   /* MTU */
   ifr.ifr_mtu = 1280;
   if (ioctl(fd, SIOCSIFMTU, &ifr) < 0) {
-    perror("SIOCSIFMTU");
+    log_fatal_perror("SIOCSIFMTU");
     return -1;
   }
 
@@ -142,14 +143,14 @@ int tun_setup(char *dev, struct in6_addr *addr) {
   memset(&ifr6, 0, sizeof(struct in6_ifreq));
   memcpy(&ifr6.ifr6_addr, addr, 16);
   if (ioctl(fd, SIOGIFINDEX, &ifr) < 0) {
-    perror("SIOGIFINDEX");
+    log_fatal_perror("SIOGIFINDEX");
     return -1;
   }
 
   ifr6.ifr6_ifindex = ifr.ifr_ifindex;
-  ifr6.ifr6_prefixlen = 64;
+  ifr6.ifr6_prefixlen = 128;
   if (ioctl(fd, SIOCSIFADDR, &ifr6) < 0) {
-    perror("SIOCSIFADDR (global)");
+    log_fatal_perror("SIOCSIFADDR (global)");
     return -1;
   }
 
@@ -158,7 +159,7 @@ int tun_setup(char *dev, struct in6_addr *addr) {
   ifr6.ifr6_addr.s6_addr16[7] = addr->s6_addr16[7];
   
   if (ioctl(fd, SIOCSIFADDR, &ifr6) < 0) {
-    perror("SIOCSIFADDR (local)");
+    log_fatal_perror("SIOCSIFADDR (local)");
     return -1;
   }
 

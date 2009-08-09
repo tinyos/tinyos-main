@@ -20,6 +20,8 @@
  *
  */
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include <time.h>
 #include <sys/time.h>
 #include <stdarg.h>
@@ -30,20 +32,20 @@ loglevel_t log_level;
 FILE *log_dest;
 
 
-char *log_names[5] = {"DEBUG",
-                      "INFO",
-                      "WARN",
-                      "ERROR",
-                      "FATAL"};
+const char *log_names[5] = {"DEBUG",
+                            "INFO",
+                            "WARN",
+                            "ERROR",
+                            "FATAL"};
 
 static void timestamp(){
   struct timeval tv;
-  struct timezone tz;
   struct tm *ltime;
-  gettimeofday(&tv, &tz);
+  gettimeofday(&tv, NULL);
+  // automatically calls tzset()
   ltime = localtime(&tv.tv_sec);
-  fprintf(log_dest, "%02d:%02d:%02d.%03d: ", 
-          ltime->tm_hour, ltime->tm_min, ltime->tm_sec, (int)tv.tv_usec);
+  fprintf(log_dest, ISO8601_FMT(ltime, &tv));
+  fprintf(log_dest, ": ");
 }
 
 loglevel_t log_setlevel(loglevel_t l) {
@@ -69,6 +71,15 @@ void log_log  (loglevel_t level, const char *fmt, ...) {
     fprintf(log_dest, "%s: ", log_names[level]);
     vfprintf(log_dest, fmt, ap);
     va_end(ap);
+}
+
+void log_fatal_perror(const char *msg) {
+  int in_errno = errno;
+  if (in_errno < 0) return;
+  timestamp();
+  fprintf(log_dest, "%s: ", log_names[LOGLVL_FATAL]);
+  if (msg != NULL) fprintf(log_dest, "%s: ", msg);
+  fprintf(log_dest, "%s\n", strerror(in_errno));
 }
 
 void log_clear (loglevel_t level, const char *fmt, ...) {

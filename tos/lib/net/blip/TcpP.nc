@@ -29,43 +29,40 @@ module TcpP {
     return i;
   }
 
-  void conn_d(struct tcplib_sock *sock, int error) {
+  void tcplib_extern_connectdone(struct tcplib_sock *sock, int error) {
     int cid = find_client(sock);
     if (cid < N_CLIENTS)
       signal Tcp.connectDone[cid](error == 0);
   }
 
-  void rx(struct tcplib_sock *sock, void *data, int len) {
+  void tcplib_extern_recv(struct tcplib_sock *sock, void *data, int len) {
     int cid = find_client(sock);
     if (cid < N_CLIENTS)
       signal Tcp.recv[cid](data, len);
   }
 
-  void cl(struct tcplib_sock *sock) {
+  void tcplib_extern_closed(struct tcplib_sock *sock) {
     tcplib_close(sock);
   }
 
-  void cd(struct tcplib_sock *sock) {
+  void tcplib_extern_closedone(struct tcplib_sock *sock) {
     int cid = find_client(sock);
     tcplib_init_sock(sock);
     if (cid < N_CLIENTS)
       signal Tcp.closed[cid](0);
   }
 
-  void init_ops(struct tcplib_sock *sock) {
-    sock->ops.connect_done = conn_d;
-    sock->ops.recvfrom = rx;
-    sock->ops.closed = cl;
-    sock->ops.close_done = cd;
+  void tcplib_extern_acked(struct tcplib_sock *sock) {
+    int cid = find_client(sock);
+    if (cid < N_CLIENTS)
+      signal Tcp.acked[cid]();
   }
-
-
+#include "circ.c"
+#include "tcplib.c"
 
   void setSrcAddr(struct split_ip_msg *msg) {
     if (msg->hdr.ip6_dst.s6_addr16[0] == htons(0xff02) ||
         msg->hdr.ip6_dst.s6_addr16[0] == htons(0xfe80)) {
-//         (msg->hdr.dst_addr[0] == 0xff && (msg->hdr.dst_addr[1] & 0xf) == 0x2) ||
-//         (msg->hdr.dst_addr[0] == 0xfe && msg->hdr.dst_addr[2] == 0x80)) {
       call IPAddress.getLLAddr(&msg->hdr.ip6_src);
     } else {
       call IPAddress.getIPAddr(&msg->hdr.ip6_src);
@@ -76,21 +73,13 @@ module TcpP {
 
   struct tcplib_sock *tcplib_accept(struct tcplib_sock *conn,
                                     struct sockaddr_in6 *from) {
-    void *rx_buf = NULL, *tx_buf = NULL;
-    int rx_buf_len, tx_buf_len;
     int cid = find_client(conn);
 
     printfUART("tcplib_accept: cid: %i\n", cid);
 
     if (cid == N_CLIENTS) return NULL;
-    if (signal Tcp.accept[cid](from, &rx_buf, &rx_buf_len,
-                               &tx_buf, &tx_buf_len)) {
-      if (rx_buf == NULL || tx_buf == NULL) return NULL;
-      conn->rx_buf = rx_buf;
-      conn->rx_buf_len = rx_buf_len;
-      conn->tx_buf = tx_buf;
-      conn->tx_buf_len = tx_buf_len;
-      init_ops(conn);
+    if (signal Tcp.accept[cid](from, &conn->tx_buf, &conn->tx_buf_len)) {
+      if (conn->tx_buf == NULL) return NULL;
       return conn;
     }
     return NULL;
@@ -102,9 +91,6 @@ module TcpP {
     tcph->chksum = htons(msg_cksum(msg, IANA_TCP));
     call IP.send(msg);
   }
-
-#include "circ.c"
-#include "tcplib.c"
 
   command error_t Init.init() {
     int i;
@@ -140,17 +126,14 @@ module TcpP {
   }
 
   command error_t Tcp.connect[uint8_t client](struct sockaddr_in6 *dest,
-                                              void *rx_buf, int rx_buf_len,
                                               void *tx_buf, int tx_buf_len) {
-    socks[client].rx_buf;
-    socks[client].rx_buf_len = rx_buf_len;
     socks[client].tx_buf = tx_buf;
     socks[client].tx_buf_len = tx_buf_len;
     tcplib_connect(&socks[client], dest);
   }
 
   command error_t Tcp.send[uint8_t client](void *payload, uint16_t len) {
-    tcplib_send(&socks[client], payload, len);
+    if (tcplib_send(&socks[client], payload, len) < 0) return FAIL;
     return SUCCESS;
   }
   
@@ -160,8 +143,12 @@ module TcpP {
     return FAIL;
   }
 
+  command error_t Tcp.abort[uint8_t client]() {
+    if (tcplib_abort(&socks[client]) < 0) return FAIL;
+    return SUCCESS;
+  }
+
   default event bool Tcp.accept[uint8_t cid](struct sockaddr_in6 *from, 
-                                             void **rx_buf, int *rx_buf_len,
                                              void **tx_buf, int *tx_buf_len) {
     return FALSE;
   }
@@ -169,9 +156,6 @@ module TcpP {
  default event void Tcp.connectDone[uint8_t cid](error_t e) {}
  default event void Tcp.recv[uint8_t cid](void *payload, uint16_t len) {  }
  default event void Tcp.closed[uint8_t cid](error_t e) { }
+ default event void Tcp.acked[uint8_t cid]() { }
  
-
-
-
-  
 }

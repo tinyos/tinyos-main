@@ -28,5 +28,5 @@ clean:
 	$(CC) -c -fPIC -o $@ $<
 
 msg:	
-	mig -DMIG -I$(LOWPAN_ROOT)/tos/lib/net/b6lowpan -I$(LOWPAN_ROOT)/support/sdk/c/lib6lowpan  python -python-classname=UdpReport UDPReport.h udp_report -o UdpReport.py
-	mig -DMIG -I$(LOWPAN_ROOT)/tos/lib/net/b6lowpan -I$(LOWPAN_ROOT)/support/sdk/c/lib6lowpan  python -python-classname=TestDriverMsg TestDriver.h testdriver_msg -o TestDriverMsg.py
+	mig -DMIG -I$(LOWPAN_ROOT)/tos/lib/net/blip -I$(TOSROOT)/tos/chips/cc2420 -I$(LOWPAN_ROOT)/support/sdk/c/blip/include  python -python-classname=UdpReport UDPReport.h udp_report -o util/UdpReport.py
+	mig -DMIG -I$(LOWPAN_ROOT)/tos/lib/net/blip -I$(TOSROOT)/tos/chips/cc2420 -I$(LOWPAN_ROOT)/support/sdk/c/blip/include  python -python-classname=TestDriverMsg TestDriver.h testdriver_msg -o util/TestDriverMsg.py

@@ -1,0 +1,55 @@
+ 
+ @title UDPShell Documentation
+ @author Stephen Dawson-Haggerty
+ @release public
+----------------------------------------------------------------------
+
+UDPShell is a simple text-based command processor which comes with the
+ip-stack.  It is an optional, although convenient way of
+implementating debugging commands on a mote.
+
+Usage
+----------------------------------------------------------------------
+
+By default, the shell contains only a few simple commands: help, echo,
+uptime, ping, and ident.  It is designed to be very easy to extend by
+adding your own commands.
+
+To include just the basic shell, include the UDPShellC component in
+your application.  To augment the shell with a new shell command, use
+the generic component ShellCommandC.
+
+Example
+----------------------------------------------------------------------
+
+Suppose we want to implement `expr`, a simple arithmetic evaluator.
+First, bind the 'expr' command string in your application configuration.
+
+configuration App {} implementation {
+  components AppImplP;
+  components new ShellCommandC("expr") as Expr;
+  AppImplP.Expr -> Expr;
+}
+
+Within AppImplP, you must implement the ShellCommand interface.  The
+interface has only one event, 'eval' which has the same prototype as
+main() in a typical c program.
+
+event char *Expr.eval(int argc, char **argv) {
+  static char ret[10];
+  return ret;
+}
+
+If expr returns a non-null value, it is assumed to be a
+null-terminated string which will be echoed back to a connected
+client.  The buffer returned must obviously not be allocated on the
+stack.  The shell does maintain a single buffer which components can
+use to print their reply to; it can be requested with a call to
+Expr.getBuffer(uint16_t len).
+
+More running code
+----------------------------------------------------------------------
+
+Fully fleshed out examples of code using this interface are available
+within the stack; see tos/lib/net/b6lowpan/shell/FlashShell[CP].nc and
+tos/lib/net/b6lowpan/nwprog/NWProg[CP].nc

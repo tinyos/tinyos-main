@@ -63,6 +63,10 @@
 #include <termios.h>
 #include <errno.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include "TrackFlows.h"
 
 #include "tun_dev.h"
 #include "serialsource.h"
@@ -79,41 +83,48 @@
 #include "logging.h"
 #include "config.h"
 #include "nwstate.h"
+#include "vty.h"
 
 #define min(a,b) ( (a>b) ? b : a )
 #define max(a,b) ( (a>b) ? a : b )
 
-int tun_fd, radvd_fd = -1;
+int tun_fd, radvd_fd = -1, fifo_fd = -1, keepalive_needed = 1;
+int opt_listenonly = 0, opt_trackflows = 0;
+
 int radvd_init(char *ifname, struct config *c);
 void radvd_process();
 
-#ifndef SIM
+#ifndef SF_SRC
 serial_source ser_src;
 #define write_pan_packet(DATA, LEN) write_serial_packet(ser_src, DATA, LEN)
 #define read_pan_packet(LENP) read_serial_packet(ser_src, LENP)
+#define close_pan()   close_serial_source(ser_src);
 #else
 int sf_fd;
 #define write_pan_packet(DATA, LEN) write_sf_packet(sf_fd, DATA, LEN)
 #define read_pan_packet(LENP) read_sf_packet(sf_fd, LENP)
+#define close_pan()           close(sf_fd)
 #endif
+
+sig_atomic_t do_shutdown = 0;
+
+void driver_shutdown() {
+  do_shutdown = 1;
+}
+
 
 enum {
   N_RECONSTRUCTIONS = 10,
 };
 
 /*
- * This is not the right way to detect we're on that platform, but I
- * can't find a better macro.
  */ 
 #ifdef __TARGET_mips__
-char *def_configfile = "/etc/lowpan/serial_tun.conf";
+const char *def_configfile = "/etc/lowpan/serial_tun.conf";
 #else
-char *def_configfile = "serial_tun.conf";
+const char *def_configfile = "serial_tun.conf";
 #endif
 
-#ifdef DBG_TRACK_FLOWS
-FILE *dbg_file;
-#endif
 
 
 extern struct in6_addr __my_address;
@@ -132,6 +143,11 @@ struct {
   unsigned long rx_bytes;
   unsigned long fw_pkts;
 } stats = {0, 0, 0, 0, 0, 0, 0, 0};
+
+#ifdef CENTRALIZED_ROUTING
+void install_route(struct split_ip_msg *amsg, uint8_t flags);
+void uninstall_route(uint16_t n1, uint16_t n2);
+#endif
 
 
 /* ------------------------------------------------------------------------- */
@@ -177,6 +193,77 @@ void print_ip_packet(struct split_ip_msg *msg) {
   printf("\n");
 }
 
+
+const char *fifo_name = "/var/run/ip-driver/flows";
+void fifo_open() {
+  struct stat stat_buf;
+
+  if (opt_trackflows) {
+    if (stat(fifo_name, &stat_buf) < 0) {
+      error("fifo does not exist -- track flows will be diabled\n");
+      return;
+    }
+    fifo_fd = open(fifo_name, O_WRONLY | O_NONBLOCK );
+    if (fifo_fd < 0) {
+      error("unable to open fifo %i %s: is a reader connected?\n", fifo_fd, fifo_name);
+      fifo_fd = -1;
+      return;
+    }
+  }
+}
+void fifo_close() {
+  if (fifo_fd >= 0) {
+    close(fifo_fd);
+  }
+}
+
+enum { N_OUTGOING_CACHE = 10, }; int outgoing_cache_idx = 0;
+struct flow_id_msg outgoing_cache[N_OUTGOING_CACHE];
+
+void fifo_report(struct split_ip_msg *msg, uint16_t dest, int nxt_hdr) {
+  if (fifo_fd >= 0) {
+    outgoing_cache_idx = (outgoing_cache_idx + 1) % N_OUTGOING_CACHE;
+    outgoing_cache[outgoing_cache_idx].flow = msg->flow_id;
+    outgoing_cache[outgoing_cache_idx].src  = ntohs(msg->hdr.ip6_src.s6_addr16[7]);
+    outgoing_cache[outgoing_cache_idx].dst  = ntohs(msg->hdr.ip6_dst.s6_addr16[7]);
+    outgoing_cache[outgoing_cache_idx].local_address = ntohs(__my_address.s6_addr16[7]);
+    outgoing_cache[outgoing_cache_idx].nxt_hdr = nxt_hdr;
+    outgoing_cache[outgoing_cache_idx].n_attempts = 1;
+    outgoing_cache[outgoing_cache_idx].attempts[0].next_hop = (dest);
+    debug("adding cache entry: %i %i\n",  outgoing_cache[outgoing_cache_idx].src,
+          outgoing_cache[outgoing_cache_idx].flow);
+  }
+}
+
+void flow_insert_label(struct split_ip_msg *msg) {
+  uint8_t *buf;
+  struct generic_header *g_hdr;
+
+
+  if (opt_trackflows) {
+    buf = malloc(sizeof(struct ip6_ext) + sizeof(struct tlv_hdr) + sizeof(struct flow_id));
+    g_hdr = (struct generic_header *)malloc(sizeof(struct generic_header));
+    struct ip6_ext *ext = (struct ip6_ext *)buf;
+    struct tlv_hdr *tlv = (struct tlv_hdr *)(ext + 1);
+    struct flow_id *id  = (struct flow_id *)(tlv + 1);
+
+    ext->nxt_hdr = msg->hdr.nxt_hdr;
+    msg->hdr.nxt_hdr = IPV6_HOP;
+    ext->len = sizeof(struct ip6_ext) + sizeof(struct tlv_hdr) + sizeof(struct flow_id);
+    tlv->type = TLV_TYPE_FLOW;
+    tlv->len = ext->len - sizeof(struct ip6_ext);
+    id->id = msg->flow_id;
+  
+    g_hdr->payload_malloced = 1;
+    g_hdr->hdr.ext = ext;
+    g_hdr->len = ext->len;
+    g_hdr->next = msg->headers;
+    msg->headers = g_hdr;
+    
+    msg->hdr.plen = htons(ntohs(msg->hdr.plen) + ext->len);
+  }
+}
+
 /*
  * frees the linked list structs, and their payloads if we have
  * malloc'ed them at some other point.
@@ -217,15 +304,15 @@ void configure_reboot() {
   alarm(5);
 }
 
-void configure_setparms(struct config *c) {
+void configure_setparms(struct config *c, int cmdno) {
   uint8_t buf[sizeof(config_cmd_t) + 1];
   config_cmd_t *cmd = (config_cmd_t *)(&buf[1]);
   memset(buf, 0, sizeof(config_cmd_t) + 1);
   buf[0] = TOS_SERIAL_DEVCONF;
-  cmd->cmd = CONFIG_SET_PARM;
+  cmd->cmd = cmdno;
   cmd->rf.addr = c->router_addr.s6_addr16[7]; // is network byte-order
   cmd->rf.channel = c->channel;
-  cmd->retx.retries = htons(10);
+  cmd->retx.retries = htons(c->retries);
   cmd->retx.delay = htons(30);
 
   write_pan_packet(buf, CONFIGURE_MSG_SIZE + 1);
@@ -246,7 +333,7 @@ void handle_other_pkt(uint8_t *data, int len) {
     debug("interface configured (0x%x) addr: 0x%x\n", rep->error, ntohs(rep->addr));
     switch (rep->error) {
     case CONFIG_ERROR_BOOTED:
-      configure_setparms(&driver_config);
+      configure_setparms(&driver_config, CONFIG_SET_PARM);
       break;
     default:
       info("interface device successfully initialized\n");
@@ -254,10 +341,10 @@ void handle_other_pkt(uint8_t *data, int len) {
 
       /* put this here because we already use SIGALRM for the
          configure timeout, and radvd needs it for its own timer. */
-      if ((radvd_fd = radvd_init(dev, &driver_config)) < 0) {
+      if (radvd_fd < 0 && (radvd_fd = radvd_init(dev, &driver_config)) < 0) {
         fatal("radvd init failed!\n");
         exit(1);
-      }
+      } 
     }
     break;
   default:
@@ -269,15 +356,10 @@ void handle_other_pkt(uint8_t *data, int len) {
 
 /* ------------------------------------------------------------------------- */
 /* handling of data arriving on the tun interface */
-void write_radio_header(uint8_t *serial, hw_addr_t dest, uint16_t payload_len) {
-#ifndef SIM
+void write_radio_header(uint8_t *serial, ieee154_saddr_t dest, uint16_t payload_len) {
   IEEE154_header_t *radioPacket = (IEEE154_header_t *)(serial + 1);
-  radioPacket->length = payload_len + MAC_HEADER_SIZE + MAC_FOOTER_SIZE 
-#ifdef DBG_TRACK_FLOWS
-    + sizeof(struct flow_id);
-#else
-  ;
-#endif
+  radioPacket->length = payload_len + MAC_HEADER_SIZE + MAC_FOOTER_SIZE;
+
   // don't include the length byte
   radioPacket->fcf = htons(0x4188);
   // dsn will get set on mote
@@ -286,62 +368,25 @@ void write_radio_header(uint8_t *serial, hw_addr_t dest, uint16_t payload_len) {
   // src will get set on mote 
   
   serial[0] = SERIAL_TOS_SERIAL_802_15_4_ID;
-#else
-  serial_header_t *serialHeader = (serial_header_t *)(serial + 1);
-  serialHeader->length = payload_len
-#ifdef DBG_TRACK_FLOWS
-    + sizeof(struct flow_id);
-#else
-  ;
-#endif
-  serialHeader->dest = htons(dest);
-  serialHeader->type = 0;
-
-  serial[0] = 0;
-#endif
 }
 
-void send_fragments (struct split_ip_msg *msg, hw_addr_t dest) {
+void send_fragments (struct split_ip_msg *msg, ieee154_saddr_t dest) {
   int result;
   uint16_t frag_len;
   fragment_t progress;
   uint8_t serial[LOWPAN_LINK_MTU + 1];
-#ifndef SIM
   IEEE154_header_t *radioPacket = (IEEE154_header_t *)(serial + 1);
 #define PKTLEN(X) ((X)->length + 2)
-#else
-  serial_header_t *radioPacket = (serial_header_t *)(serial + 1);
-#define PKTLEN(X) ((X)->length + sizeof(serial_header_t) + 1)
-#endif
 
   uint8_t *lowpan = (uint8_t *)(radioPacket + 1);
 
-#ifdef DBG_TRACK_FLOWS
-#define LOWPAN_PAYLOAD_LENGTH (LOWPAN_LINK_MTU - MAC_HEADER_SIZE \
-                              - MAC_FOOTER_SIZE - sizeof(struct flow_id))
-  lowpan += sizeof(struct flow_id);
-#else 
 #define LOWPAN_PAYLOAD_LENGTH (LOWPAN_LINK_MTU - MAC_HEADER_SIZE \
                               - MAC_FOOTER_SIZE)
-#endif
 
   progress.offset = 0;
 
   // and IEEE 802.15.4 header
   // write_radio_header(serial, dest, frag_len);
-#ifdef DBG_TRACK_FLOWS
-#ifndef SIM
-  ip_memcpy(serial + 1 + sizeof(IEEE154_header_t), &msg->id, sizeof(struct flow_id));
-#else
-  ip_memcpy(serial + 1 + sizeof(serial_header_t), &msg->id, sizeof(struct flow_id));
-#endif
-  if (dest != 0xffff) {
-    fprintf(dbg_file, "DEBUG (%i): %i\t%i\t%i\t%i\t%i\t%i\t%i\n",
-            100, msg->id.src, msg->id.dst, msg->id.id, msg->id.seq,
-            msg->id.nxt_hdr, 100, dest);
-    fflush(dbg_file);
-  }
-#endif
 
   while ((frag_len = getNextFrag(msg, &progress, lowpan, 
                                  LOWPAN_PAYLOAD_LENGTH)) > 0) {
@@ -372,6 +417,7 @@ void send_fragments (struct split_ip_msg *msg, hw_addr_t dest) {
     stats.tx_frags++;
     stats.tx_bytes += PKTLEN(radioPacket);
   }
+  keepalive_needed = 0;
   stats.tx_pkts++;
 }
 
@@ -386,27 +432,36 @@ void icmp_unreachable(struct split_ip_msg *msg) {
  *
  */ 
 uint8_t ip_to_pan(struct split_ip_msg *msg) {
+  int nxt_hdr = msg->hdr.nxt_hdr;
   uint16_t dest;
 
   debug("ip_to_pan\n");
   print_ip_packet(msg);
-
   // if this packet has a source route (rinstall header, or prexisting
   // source header, we don't want to mess with it
   switch (routing_is_onehop(msg)) {
   case ROUTE_MHOP:
-    debug("Multihop packet");
+    debug("Multihop packet\n");
     if (routing_insert_route(msg)) goto fail;
     break;
     
+  case ROUTE_WORMHOLE:
+    debug("Wormhole packet\n");
+
+    // fall through
   case ROUTE_NO_ROUTE:
-    info("destination unreachable: 0x%x: dropping\n", ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
+    tun_write(tun_fd, msg);
+    // info("destination unreachable: 0x%x: dropping\n", ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
     return 0;
   }
 
-
   dest = routing_get_nexthop(msg);
   debug("next hop: 0x%x\n", dest);
+  flow_insert_label(msg);
+  print_ip_packet(msg);
+
+  fifo_report(msg, dest, nxt_hdr);
+
   send_fragments(msg, dest);
   return 0;
  fail:
@@ -414,15 +469,138 @@ uint8_t ip_to_pan(struct split_ip_msg *msg) {
   return 1;
 }
 
-void upd_source_route(struct source_header *sh, hw_addr_t addr) {
-  if (sh->current < SH_NENTRIES(sh)) {
-    sh->hops[sh->current] = leton16(addr);
-    sh->current++;
+void upd_source_route(struct ip6_route *sh, ieee154_saddr_t addr) {
+  if (sh->segs_remain > 0) {
+    sh->hops[ROUTE_NENTRIES(sh) - sh->segs_remain] = leton16(addr);
+    sh->segs_remain--;
   }
 }
 
+int process_dest_tlv(struct ip6_hdr *iph, struct ip6_ext *hdr, int len) {
+  struct tlv_hdr *tlv = (struct tlv_hdr *)(hdr + 1);
+  node_id_t reporter = ntohs(iph->ip6_src.s6_addr16[7]);
+
+  if (len != hdr-> len) return 1;
+  len -= sizeof(struct ip6_ext);
+
+  while (tlv != NULL && len > 0) {
+    if (tlv->len == 0) return 1;
+
+    switch(tlv->type) {
+    case TLV_TYPE_TOPOLOGY:
+      routing_add_report(reporter, tlv);
+      break;
+    }
+    
+    len -= tlv->len;
+    tlv = (struct tlv_hdr *)(((uint8_t *)tlv) + tlv->len);
+  }
+  return 0;
+}
+
+int process_hop_tlv(struct split_ip_msg *msg, struct ip6_ext *hdr, int len) {
+  struct tlv_hdr *tlv = (struct tlv_hdr *)(hdr + 1);
+  uint16_t *fl;
+
+  if (len != hdr-> len) return 1;
+  len -= sizeof(struct ip6_ext);
+
+  while (tlv != NULL && len > 0) {
+    if (tlv->len == 0) return 1;
+
+    switch(tlv->type) {
+    case TLV_TYPE_FLOW:
+      fl = (uint16_t *)(tlv + 1);
+      msg->flow_id = *fl;
+      debug("process_hop_tlv: flow 0x%x\n", msg->flow_id);
+      break;
+    }
+
+    len -= tlv->len;
+    tlv = (struct tlv_hdr *)(((uint8_t *)tlv) + tlv->len);
+  }
+  return 0;
+}
+
+int process_extensions(struct split_ip_msg *msg) {
+  struct generic_header *prev = NULL, *cur = msg->headers;
+  struct ip6_route *route;
+  uint8_t nxt_hdr = msg->hdr.nxt_hdr;
+  int lendelta = 0;
+
+  while (cur != NULL && EXTENSION_HEADER(nxt_hdr)) {
+    debug("dropping header type 0x%x, len %i\n", nxt_hdr, cur->len);
+    msg->headers = cur->next;
+    msg->hdr.nxt_hdr = cur->hdr.ext->nxt_hdr;
+    lendelta += cur->len;
+
+    switch (nxt_hdr) {
+    case IPV6_DEST:
+      if (process_dest_tlv(&msg->hdr, cur->hdr.ext, cur->len)) 
+        return 1;
+      break;
+    case IPV6_HOP:
+      if (process_hop_tlv(msg, cur->hdr.ext, cur->len)) {
+        warn("dropping packet due to hop tlv\n");
+        return 1;
+      }
+      break;
+    case IPV6_ROUTING:
+
+      route = cur->hdr.sh;
+
+      if ((route->type & ~IP6ROUTE_FLAG_MASK) == IP6ROUTE_TYPE_INVAL || route->segs_remain == 0) {
+/*         if (route->type == IP6ROUTE_TYPE_INVAL) { */
+/*           if (route->hops[0] == __my_address.s6_addr16[7]) { */
+/*             warn("dropping packet since it has an invalid source route and I sent it\n"); */
+/*             return 1; */
+/*           } */
+/*         } */
+      } else {
+        uint16_t target_hop = ntohs(route->hops[ROUTE_NENTRIES(route) - route->segs_remain]);
+        // if this is actually a valid source route, maybe update it
+        // (even though we're going to delete it shortly)
+        if (target_hop != __my_address.s6_addr16[7]) {
+          if (ROUTE_NENTRIES(route) >= 2) {
+            route->hops[0] = htons(msg->prev_hop);
+            route->hops[1] = htons(target_hop);
+          }
+          route->type = (route->type & IP6ROUTE_FLAG_MASK) | IP6ROUTE_TYPE_INVAL;
+        } else {
+          route->hops[ROUTE_NENTRIES(route) - route->segs_remain] = htons(msg->prev_hop);
+          route->segs_remain--;
+        }
+      }
+      
+      if ((route->type & ~IP6ROUTE_FLAG_MASK) == IP6ROUTE_TYPE_INVAL && ROUTE_NENTRIES(route) >= 2) {
+        node_id_t n1 = ntohs(route->hops[0]);
+        node_id_t n2 = ntohs(route->hops[1]);
+        warn ("broken link was %i -> %i\n", n1, n2);
+        nw_remove_link(n1, n2);
+        if (route->type & IP6ROUTE_FLAG_CONTROLLER) {
+          warn("dropping packet since it has an invalid source route and I sent it\n");
+          return 1;
+        } else {
+          warn("received broken source route based on installed route-- uninstalling\n");
+/*           uninstall_route(ntohs(msg->hdr.ip6_src.s6_addr16[7]), */
+/*                           ntohs(msg->hdr.ip6_dst.s6_addr16[7])); */
+        }
+      }
+    }
+
+    nxt_hdr = cur->hdr.ext->nxt_hdr;
+    prev = cur;
+    cur = cur->next;
+    free(prev);
+  }
+
+  msg->hdr.plen = htons(ntohs(msg->hdr.plen) - lendelta);
+  return 0;
+}
+
+#if 0
 int remove_sourceroute(struct split_ip_msg *msg) {
-  struct source_header *sh;
+  struct source_header *s;
   struct rinstall_header *rih;
   struct generic_header *g_hdr;
   uint8_t removeSource = 1;
@@ -470,12 +648,12 @@ int remove_sourceroute(struct split_ip_msg *msg) {
   }
   return 0;
 }
-
+#endif
 
 void handle_serial_packet(struct split_ip_msg *msg) {
   path_t* tPath;
   path_t* i;
-#ifdef DBG_TRACK_FLOWS
+#ifdef CENTRALIZED_ROUTING
   uint8_t flags = 0x00;
 #endif
   if (ntohs(msg->hdr.plen) > INET_MTU - sizeof(struct ip6_hdr)) {
@@ -484,34 +662,29 @@ void handle_serial_packet(struct split_ip_msg *msg) {
   }
 
   // print_ip_packet(msg);
-  // if this packet has a source route that we inserted, we need to
-  // drop it to prevent loops.
-  if (remove_sourceroute(msg))
+  print_ip_packet(msg);
+  if (process_extensions(msg))
     return;
-  routing_proc_msg(msg);
-  remove_sourceroute(msg);
 
   if (cmpPfx(msg->hdr.ip6_dst.s6_addr, __my_address.s6_addr) && 
       msg->hdr.ip6_dst.s6_addr16[7] != __my_address.s6_addr16[7]) {
-/*       ((msg->hdr.ip6_dst.s6_addr[14] != __my_address[14] || */
-/*         msg->hdr.ip6_dst.s6_addr[15] != __my_address[15]))) { */
-      info("Received packet destined to 0x%x\n", msg->hdr.ip6_dst.s6_addr[15]);
-     
+      debug("Received packet destined to 0x%x\n", msg->hdr.ip6_dst.s6_addr[15]); 
+      stats.fw_pkts++;
+    
      // If this packet is not source routed, check to see if we're on the best path before
      //  issuing a route install
-     if (msg->hdr.nxt_hdr != NXTHDR_SOURCE) { 
        tPath = nw_get_route(ntohs(msg->hdr.ip6_src.s6_addr16[7]), ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
         for (i = tPath; i != NULL; i = i->next) {
           if (i->node == ntohs(__my_address.s6_addr16[7])) {
-	    info("Not installing route for packet from 0x%x to 0x%x (on best path)\n", 
-                 ntohs(msg->hdr.ip6_src.s6_addr16[7]), ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
+            debug("Not installing route for packet from 0x%x to 0x%x (on best path)\n", 
+                  ntohs(msg->hdr.ip6_src.s6_addr16[7]), ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
             nw_free_path(tPath);
             ip_to_pan(msg);
             return;
           }
         }
         nw_free_path(tPath);
-      }
+        // }
       
       // We send the route installation packet before forwarding the actual
       //  packet, with the thinking being that the route can be set up, in
@@ -521,13 +694,20 @@ void handle_serial_packet(struct split_ip_msg *msg) {
      
       //  At this point, if it's not source routed, then this packet
       //  shouldn't be coming through us so we install a route
-      if (msg->hdr.nxt_hdr != NXTHDR_SOURCE) {
-        info("installing route for packet from 0x%x to 0x%x\n", 
-             ntohs(msg->hdr.ip6_src.s6_addr16[7]), ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
-      } else {
-        info("Packet had a source header so no route install\n"); 
-      }
-      stats.fw_pkts++;
+        // if (msg->hdr.nxt_hdr != NXTHDR_SOURCE) {
+        debug("installing route for packet from 0x%x to 0x%x\n", 
+              ntohs(msg->hdr.ip6_src.s6_addr16[7]), ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
+#ifdef CENTRALIZED_ROUTING
+#ifndef FULL_PATH_INSTALL
+        flags = HYDRO_METHOD_SOURCE | HYDRO_INSTALL_REVERSE;
+#else
+        flags = HYDRO_METHOD_HOP | HYDRO_INSTALL_REVERSE;
+#endif
+        //        install_route(msg, flags);
+#endif
+        // } else {
+        // info("Packet had a source header so no route install\n"); 
+        // }
       ip_to_pan(msg);
       // do routing
   } else {
@@ -544,11 +724,11 @@ void add_header_list(struct split_ip_msg *msg) {
   struct generic_header *g_hdr, **g_list;
   struct ip6_ext *ext = (struct ip6_ext *)msg->next;
   uint16_t hdr_len = 0;
-  debug("add_header_list for message destined to 0x%x\n", ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
+  // debug("add_header_list for message destined to 0x%x\n", ntohs(msg->hdr.ip6_dst.s6_addr16[7]));
   nxt_hdr = msg->hdr.nxt_hdr;
   msg->headers = NULL;
   g_list = &(msg->headers);
-  while (KNOWN_HEADER(nxt_hdr)) {
+  while (EXTENSION_HEADER(nxt_hdr)) {
     g_hdr = (struct generic_header *)malloc(sizeof(struct generic_header));
     g_hdr->payload_malloced = 0;
     g_hdr->hdr.ext = ext;
@@ -556,34 +736,165 @@ void add_header_list(struct split_ip_msg *msg) {
     *g_list = g_hdr;
     g_list = &g_hdr->next;
 
-    switch(nxt_hdr) {
-    case IANA_UDP:
-      // a UDP header terminates a chain of headers we can compress...
-      g_hdr->len = sizeof(struct udp_hdr);
-      ext = (struct ip6_ext *)(((uint8_t *)ext) + sizeof(struct udp_hdr));
-      nxt_hdr = NXTHDR_UNKNOWN;
-      break;
-      // XXX : SDH : these are all "ip extension" headers and so can be treated genericlly.
-    case NXTHDR_INSTALL:
-      info("inserted NXTHDR_INSTALL\n");
-    case NXTHDR_TOPO:
-    case NXTHDR_SOURCE:
-      g_hdr->len = ext->len;
-      
-      nxt_hdr = ext->nxt_hdr;
-      ext = (struct ip6_ext *)(((uint8_t *)ext) + ext->len);
-      break;
-    default:
-      // TODO : SDH : discard the packet here since we can get in a
-      // bad place with invalid header types.  this isn't all that
-      // likely, but you never know.
-      break;
-    }
+    g_hdr->len = ext->len;
+    
+    nxt_hdr = ext->nxt_hdr;
+    ext = (struct ip6_ext *)(((uint8_t *)ext) + ext->len);
+    
     hdr_len += g_hdr->len;
   }
+  if (COMPRESSIBLE_TRANSPORT(nxt_hdr)) {
+      int transport_len;
+      switch (nxt_hdr) {
+      case IANA_UDP:
+        transport_len = sizeof(struct udp_hdr); break;
+      }
+
+      g_hdr = (struct generic_header *)malloc(sizeof(struct generic_header));
+      g_hdr->payload_malloced = 0;
+      g_hdr->hdr.ext = ext;
+      g_hdr->next = NULL;
+      *g_list = g_hdr;
+      g_list = &g_hdr->next;
+
+      g_hdr->len = transport_len;
+      ext = (struct ip6_ext *)(((uint8_t *)ext) + transport_len);
+      hdr_len += transport_len;
+  }
+
   msg->data = (uint8_t *)ext;
   msg->data_len = ntohs(msg->hdr.plen) - hdr_len;
 }
+
+#ifdef CENTRALIZED_ROUTING
+/*
+ * Given a source and destination, send a source-routed route install message
+ * that will install the correct routes.
+ *
+ * NOTE: Make sure that this is the correct way to create a new packet
+ */
+time_t last_install;
+void install_route(struct split_ip_msg *amsg, uint8_t flags) {
+  uint8_t buf[sizeof(struct split_ip_msg) + INET_MTU];
+  struct split_ip_msg *msg = (struct split_ip_msg *)buf;
+  int offset = 0;
+
+
+  struct ip6_ext *ext = (struct ip6_ext *)(msg->next);
+  struct tlv_hdr *tlv = (struct tlv_hdr *)(ext + 1);
+  struct rinstall_header *rih = (struct rinstall_header *)(tlv + 1);
+
+  path_t* path = nw_get_route(ntohs(amsg->hdr.ip6_src.s6_addr16[7]), ntohs(amsg->hdr.ip6_dst.s6_addr16[7]));
+  path_t* i;
+  time_t current_time;
+
+#if 0
+  time(&current_time);
+
+  if (current_time < last_install + 2) {
+    debug("Not sending install\n");
+    return;
+  }
+  time(&last_install);
+#endif 
+
+
+  if (path == NULL || path->isController) return;
+  fprintf(stderr, "install_route for src: 0x%x, dest: 0x%x, flags: %x\n", 
+          ntohs(amsg->hdr.ip6_src.s6_addr16[7]), ntohs(amsg->hdr.ip6_dst.s6_addr16[7]), path->length);
+  if (path->length > 10) return;
+
+  memset((uint8_t *)&msg->hdr, 0, sizeof(struct ip6_hdr));
+
+  // Set IP Header options
+  msg->hdr.hlim = 0x64; // CHECK THIS
+  msg->hdr.nxt_hdr = IPV6_DEST;
+  msg->hdr.vlfc[0] = IPV6_VERSION << 4;
+  msg->flow_id = local_seqno++;
+
+  memcpy(&msg->hdr.ip6_src, &__my_address, sizeof(struct in6_addr));
+  memcpy(&msg->hdr.ip6_dst, &amsg->hdr.ip6_src, sizeof(struct in6_addr));
+  msg->headers = NULL;
+
+  ext->nxt_hdr = IPV6_NONEXT;
+  ext->len = sizeof(struct ip6_ext) + sizeof(struct tlv_hdr) + sizeof(struct rinstall_header)
+    + (path->length * sizeof(uint16_t));
+
+  tlv->len = ext->len - sizeof(struct ip6_ext);
+  tlv->type = TLV_TYPE_INSTALL;
+
+  // Setup rinstall_header
+ // Size is longer because we put the src in there
+  rih->flags = flags;
+  rih->match.src = htons(T_INVAL_NEIGH);
+  rih->match.dest = amsg->hdr.ip6_dst.s6_addr16[7]; 
+  rih->path_len = path->length;
+
+  // Convert to host so add_headers_list works
+  msg->hdr.plen = htons(ext->len); 
+
+  info("install_route len: 0x%x\n", rih->path_len);
+
+  fprintf(stderr, "from 0x%x to 0x%x [%i]: ", 
+          ntohs(amsg->hdr.ip6_src.s6_addr16[7]), ntohs(amsg->hdr.ip6_dst.s6_addr16[7]), path->length);
+  // rih->path[0] = amsg->hdr.ip6_src.s6_addr16[7]; //htons(l2fromIP(amsg->hdr.ip6_src.s6_addr));
+  for (i = path; i != NULL; i = i->next) {
+    fprintf(stderr, "0x%x ", i->node);
+    rih->path[offset++] = htons(i->node);
+  }
+
+  nw_free_path(path);
+
+  add_header_list(msg);
+  print_ip_packet(msg);
+  loglevel_t old_lvl = log_setlevel(LOGLVL_DEBUG);
+  ip_to_pan(msg);
+  log_setlevel(old_lvl);
+  free_split_msg(msg);
+}
+
+void uninstall_route(uint16_t n1, uint16_t n2) {
+  uint8_t buf[sizeof(struct split_ip_msg) + INET_MTU];
+  struct split_ip_msg *msg = (struct split_ip_msg *)buf;
+  struct ip6_ext *ext = (struct ip6_ext *)(msg->next);
+  struct tlv_hdr *tlv = (struct tlv_hdr *)(ext + 1);
+  struct rinstall_header *rih = (struct rinstall_header *)(tlv + 1);
+
+  // Set IP Header options
+  msg->hdr.hlim = 0x64; // CHECK THIS
+  msg->hdr.nxt_hdr = IPV6_DEST;
+  msg->hdr.vlfc[0] = IPV6_VERSION << 4;
+  msg->flow_id = local_seqno++;
+
+  memcpy(&msg->hdr.ip6_src, &__my_address, sizeof(struct in6_addr));
+  memcpy(&msg->hdr.ip6_dst, &__my_address, sizeof(struct in6_addr));
+  msg->hdr.ip6_dst.s6_addr16[7] = htons(n1);
+  msg->headers = NULL;
+
+  ext->nxt_hdr = IPV6_NONEXT;
+  ext->len = sizeof(struct ip6_ext) + sizeof(struct tlv_hdr) + sizeof(struct rinstall_header);
+
+  tlv->len = ext->len - sizeof(struct ip6_ext);
+  tlv->type = TLV_TYPE_INSTALL;
+
+  // Convert to host so add_headers_list works
+  msg->hdr.plen = htons(ext->len); 
+
+  rih->flags = HYDRO_INSTALL_UNINSTALL_MASK | HYDRO_METHOD_SOURCE;
+  rih->match.src = htons(n1);
+  rih->match.dest = htons(n2);
+  rih->path_len = 0;
+    
+
+  add_header_list(msg);
+  print_ip_packet(msg);
+  loglevel_t old_lvl = log_setlevel(LOGLVL_DEBUG);
+  ip_to_pan(msg);
+  log_setlevel(old_lvl);
+  free_split_msg(msg);
+}
+
+#endif
 
 /*
  * read data from the tun device and send it to the serial port
@@ -616,13 +927,7 @@ int tun_input()
   }
   
   add_header_list(msg);
-#ifdef DBG_TRACK_FLOWS
-  msg->id.src = 100;
-  msg->id.dst = ntohs(msg->hdr.ip6_dst.s6_addr16[7]); //l2fromIP(msg->hdr.dst_addr);
-  msg->id.id = local_seqno++;
-  msg->id.seq = 0;
-  msg->id.nxt_hdr = msg->hdr.nxt_hdr;
-#endif
+  msg->flow_id = local_seqno++;
 
   ip_to_pan(msg);
 
@@ -697,73 +1002,40 @@ int serial_input() {
     packed_lowmsg_t pkt;
     reconstruct_t *recon;
     struct split_ip_msg *msg;
-#ifndef SIM
     IEEE154_header_t *mac_hdr;
-#else
-    serial_header_t *mac_hdr;
-#endif
     
     uint8_t *ser_data = NULL;	        /* data read from serial port */
     int ser_len = 0;                    /* length of data read from serial port */
     uint8_t shortMsg[INET_MTU];
     uint8_t *payload;
-#ifdef DBG_TRACK_FLOWS
-    struct flow_id *fl_id;
-#endif
 
+#ifdef SF_SRC
+    int rv = 0;
+#else
     int rv = 1;
+#endif
 
     /* read data from serial port */
     ser_data = (uint8_t *)read_pan_packet(&ser_len);
 
     /* process the packet we have received */
     if (ser_len && ser_data) {
-#ifndef SIM
       if (ser_data[0] != TOS_SERIAL_802_15_4_ID) {
         handle_other_pkt(ser_data, ser_len);
         goto discard_packet;
       }
       mac_hdr = (IEEE154_header_t *)(ser_data + 1);
 
-#ifdef DBG_TRACK_FLOWS
-      fl_id = (struct flow_id *)(ser_data + 1 + sizeof(IEEE154_header_t));
-
-      // size is  one for the length byte, minus two for the checksum
-      pkt.len = mac_hdr->length - MAC_HEADER_SIZE - MAC_FOOTER_SIZE - sizeof(struct flow_id);
-      // add one for the dispatch byte.
-      pkt.data = ser_data + 1 + sizeof(IEEE154_header_t) + sizeof(struct flow_id);
-#else 
       // size is  one for the length byte, minus two for the checksum
       pkt.len = mac_hdr->length - MAC_HEADER_SIZE - MAC_FOOTER_SIZE;
       // add one for the dispatch byte.
       pkt.data = ser_data + 1 + sizeof(IEEE154_header_t);
-#endif // DBG_TRACK_FLOWS
 
       // for some reason these are little endian so we don't do any conversion.
       pkt.src = mac_hdr->src;
       pkt.dst = mac_hdr->dest;
-#else
-      mac_hdr = (serial_header_t *)(ser_data + 1);
 
-      if (mac_hdr->type != 0) {
-        goto discard_packet;
-      }
-
-#ifdef DBG_TRACK_FLOWS
-      fl_id = (struct flow_id *)(ser_data + 1 + sizeof(serial_header_t));
-      pkt.len = mac_hdr->length - sizeof(struct flow_id);
-      pkt.data = ser_data + 1 + sizeof(serial_header_t) + sizeof(struct flow_id);
-#else
-      pkt.len = mac_hdr->length;;
-      pkt.data = ser_data + 1 + sizeof(serial_header_t);
-#endif // DBG_TRACK_FLOWS
-
-      // except in serial packets, they __are__ little endian...
-      pkt.src = ntohs(mac_hdr->src);
-      pkt.dst = ntohs(mac_hdr->dest);
-#endif
-
-      debug("serial_input: read 0x%x bytes\n", ser_len);
+      log_dump_serial_packet(ser_data, ser_len);
 
       pkt.headers = getHeaderBitmap(&pkt);
       if (pkt.headers == LOWPAN_NALP_PATTERN) goto discard_packet;
@@ -777,11 +1049,14 @@ int serial_input() {
         recon = getReassembly(&pkt);
         if (recon == NULL || recon->buf == NULL) goto discard_packet;
         msg = (struct split_ip_msg *)recon->buf;
+        msg->prev_hop = pkt.src;
 
         if (hasFrag1Header(&pkt)) {
           if (unpackHeaders(&pkt, &u_info,
                             (uint8_t *)&msg->hdr, recon->size) == NULL) goto discard_packet;
           amount_here = pkt.len - (u_info.payload_start - pkt.data);
+          // adjustPlen(&msg->hdr, &u_info);
+
           ip_memcpy(u_info.header_end, u_info.payload_start, amount_here);
           recon->bytes_rcvd = sizeof(struct ip6_hdr) + u_info.payload_offset + amount_here;
         } else {
@@ -813,21 +1088,21 @@ int serial_input() {
 
       } else {
         unpack_info_t u_info;
-        u_info.rih = NULL;
+        // u_info.rih = NULL;
         msg = (struct split_ip_msg *)shortMsg;
+        msg->prev_hop = pkt.src;
+
         if (unpackHeaders(&pkt, &u_info,
                           (uint8_t *)&msg->hdr, INET_MTU) == NULL) goto discard_packet;
         if (ntohs(msg->hdr.plen) > INET_MTU - sizeof(struct ip6_hdr)) goto discard_packet;
+        // adjustPlen(&msg->hdr, &u_info);
 
         msg->metadata.sender = pkt.src;
-        if (u_info.rih != NULL)
-          info("Has a rinstall_header for src 0x%x with match: 0x%x\n", 
-               pkt.src, ntohs(u_info.rih->match.dest));;
+/*         if (u_info.rih != NULL) */
+/*           info("Has a rinstall_header for src 0x%x with match: 0x%x\n",  */
+/*                pkt.src, ntohs(u_info.rih->match.dest));; */
 
         ip_memcpy(u_info.header_end, u_info.payload_start, ntohs(msg->hdr.plen));
-#ifdef DBG_TRACK_FLOWS
-        ip_memcpy(&msg->id, fl_id, sizeof(struct flow_id));
-#endif
 
         add_header_list(msg);
         
@@ -844,156 +1119,237 @@ int serial_input() {
     return rv;
 }
 
-void print_stats() {
-  printf("Up since %s", ctime(&stats.boot_time));
-  printf("  receive  packets: %lu fragments: %lu bytes: %lu\n",
-         stats.tx_pkts, stats.tx_frags, stats.tx_bytes);
-  printf("  transmit packets: %lu fragments: %lu bytes: %lu\n",
-         stats.rx_pkts, stats.rx_frags, stats.rx_bytes);
-  printf("  forward  packets: %lu\n", stats.fw_pkts);
+void print_stats(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  
+  VTY_printf("Up since %s", ctime(&stats.boot_time));
+  VTY_printf("  receive  packets: %lu fragments: %lu bytes: %lu\n",
+             stats.rx_pkts, stats.rx_frags, stats.rx_bytes);
+  VTY_printf("  transmit packets: %lu fragments: %lu bytes: %lu\n",
+             stats.tx_pkts, stats.tx_frags, stats.tx_bytes);
+  VTY_printf("  forward  packets: %lu\n", stats.fw_pkts);
+  VTY_flush();
 }
 
-int eval_cmd(char *cmd) {
-  char arg[1024];
-  int int_arg;
-  switch (cmd[0]) {
-  case 'c':
-    config_print(&driver_config);
-    return 0;
-  case 'd':
-    if (sscanf(cmd, "d %s\n", arg) == 1) {
-      nw_print_dotfile(arg);
-    } else {
-      printf("error: include a filename!\n");
+void print_help(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  VTY_printf("ip-driver console\r\n");
+  VTY_printf("  conf      : print configuration info\r\n");
+  VTY_printf("  stats     : print statistics\r\n");
+  VTY_printf("  shutdown  : shutdown the driver\r\n");
+  VTY_printf("  chan <c>  : switch to channel 'c'\r\n");
+  VTY_printf("  dot <dotfile>: print dot-file of topology\r\n");
+  VTY_printf("  log {DEBUG INFO WARN ERROR FATAL}: set loglevel\r\n");
+  
+  VTY_printf("\r\n Routing commands:\r\n");
+  VTY_printf("  inval <nodeid> : invalidate a router\r\n");
+  VTY_printf("  add <n1> <n2>  : add a persistent link between n1 and n2\r\n");
+  VTY_printf("  links          : print link detail\r\n");
+  VTY_printf("  routes         : print routes\r\n");
+  VTY_printf("  newroutes      : recalculate routes\r\n");
+  VTY_printf("  controller <n> : add a new controller\r\n");
+#ifdef CENTRALIZED_ROUTING
+  VTY_printf("  install <HOP | SRC> <n1> <n2> [reverse]: install a route between n1 and n2\r\n");
+  VTY_printf("  uninstall <n1> <n2>: uninstall a route between n1 and n2\r\n");
+#endif
+  
+  VTY_printf("\r\n");
+  VTY_printf("  help: print this help\r\n");
+  VTY_flush();
+}
+
+void sh_loglevel(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  int i;
+
+  if (argc != 2) return;
+  for (i = 0; i < 5; i++) {
+    if (strcmp(log_names[i], argv[1]) == 0) {
+      VTY_printf("setting verbosity to %s\r\n", log_names[i]);
+      log_setlevel(i);
     }
-    return 0;
-  case 'i':
-    if (sscanf(cmd, "i %i\n", &int_arg) == 1) {
-      info("invalidating node 0x%x\n", int_arg);
-      nw_inval_node(int_arg);
-    }
-    return 0;
-  case 'l':
-    nw_print_links();
-    return 0;
-  case 'p':
-    nw_print_routes();
-    return 0;
-  case 's':
-    print_stats();
-    return 0;
-  case 't':
-    nw_test_routes();
-    return 0;
-  case 'v':
-    if (sscanf(cmd, "v %s\n", arg) == 1) {
-      int i;
-      for (i = 0; i < 5; i++) {
-        if (strcmp(log_names[i], arg) == 0) {
-          printf("setting verbosity to %s\n", log_names[i]);
-          log_setlevel(i);
-        }
-      }
-    }
-    return 0;
-  case 'h':
-  default:
-    printf("ip-driver console\n");
-    printf("  c: print configuration info\n");
-    printf("  d <dotfile>: print dot-file of topology\n");
-    printf("  i <nodeid>: invalidate a router\n");
-    printf("  l: print link detail\n");
-    printf("  p: print routes\n");
-    printf("  t: recalculate routes\n");
-    printf("  v {DEBUG INFO WARN ERROR FATAL}: set verbosity\n");
-    printf("  s: print statistics\n");
-    printf("\n");
-    printf("  h: print this help\n");           
   }
-
-  return 0;
+  VTY_flush();
 }
+
+void sh_dotfile(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  if (argc == 2) {
+    VTY_printf("writing topology to %s\r\n", argv[1]);
+    nw_print_dotfile(argv[1]);
+  } else {
+    VTY_printf("error: include a filename!\r\n");
+  }
+  VTY_flush();
+}
+
+void sh_chan(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  if (argc != 2) {
+    VTY_printf("%s <channel>\r\n", argv[0]);
+  } else {
+    int channel = atoi(argv[1]);
+    if (channel < 11 || channel > 26) {
+      VTY_printf("channel must be in [11:26]\r\n");
+    } else {
+      driver_config.channel = channel;
+      VTY_printf("setting channel to %i\r\n", channel);
+      configure_setparms(&driver_config, CONFIG_SET_PARM);
+    }
+  }
+  VTY_flush();
+}
+
+#ifdef CENTRALIZED_ROUTING
+void sh_install(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  int flags = 0;
+  struct split_ip_msg msg;
+  if (argc < 4) {
+    goto usage;
+  } 
+  if (strcmp("HOP", argv[1]) == 0) 
+    flags |= HYDRO_METHOD_HOP;
+  else if (strcmp("SRC", argv[1]) == 0) {
+    flags |= HYDRO_METHOD_SOURCE;
+  } else goto usage;
+
+  argc -= 4;
+  while (argc > 0) {
+    if (argv[argc+3][0] == 'R') {
+      flags |= HYDRO_INSTALL_REVERSE;
+    } else goto usage;
+    argc--;
+  }
+  memset(&msg, 0, sizeof(struct split_ip_msg));
+  memcpy(msg.hdr.ip6_src.s6_addr, __my_address.s6_addr, 8);
+  memcpy(msg.hdr.ip6_dst.s6_addr, __my_address.s6_addr, 8);
+  msg.hdr.ip6_src.s6_addr16[7] = htons(atoi(argv[2]));
+  msg.hdr.ip6_dst.s6_addr16[7] = htons(atoi(argv[3]));
+
+  VTY_printf("installing route between 0x%x and 0x%x\r\n", atoi(argv[2]), atoi(argv[3]));
+  install_route(&msg, flags);
+
+  VTY_flush();
+  return;
+ usage:
+  VTY_printf("%s <HOP | SRC> <n1> <n2> [REV]\r\n", argv[0]);
+  VTY_flush();
+}
+
+void sh_uninstall(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  if (argc != 3) {
+    VTY_printf("%s <n1> <n2>\r\n", argv[0]);
+    VTY_flush();
+    return;
+  }
+  int n1 = atoi(argv[1]);
+  int n2 = atoi(argv[2]);
+  VTY_printf("uninstalling route from 0x%x to 0x%x\r\n", n1, n2);
+  uninstall_route(n1, n2);
+  VTY_flush();
+}
+#endif
+
+void sh_controller(int fd, int argc, char **argv) {
+  VTY_HEAD;
+  if (argc != 2) {
+    VTY_printf("%s <cid>\r\n", argv[0]);
+  } else {
+    int n = atoi(argv[1]);
+    get_insert_router(n);
+    nw_add_controller(n);
+  }
+  VTY_flush();
+}
+
+struct vty_cmd vty_cmd_list[] = {{"help", print_help},
+                                 {"stats",  print_stats},
+                                 {"links", nw_print_links},
+                                 {"route", nw_print_routes},
+                                 {"newroutes", nw_test_routes},
+                                 {"add", nw_add_sticky_edge},
+                                 {"inval", nw_inval_node_sh},
+                                 {"conf", config_print},
+                                 {"log", sh_loglevel},
+                                 {"dot", sh_dotfile},
+                                 {"chan", sh_chan},
+#ifdef CENTRALIZED_ROUTING
+                                 {"install", sh_install},
+                                 {"uninstall", sh_uninstall},
+#endif
+                                 {"controller", sh_controller},
+                                 {"shutdown", (void(*)(int,int,char**))driver_shutdown}};
 
 /* shifts data between the serial port and the tun interface */
 int serial_tunnel(int tun_fd) {
-  char cmd_buf[2][1024], *cmd_cur;
-  int cur_buf = 0;
   fd_set fs;
-  int maxfd = 0;
+  int maxfd = -1;
+  int usecs_remain = KEEPALIVE_INTERVAL;
   time_t last_aging, current_time;
   time(&last_aging);
-#ifndef SIM
-  int pan_fd = serial_source_fd(ser_src);
+#ifndef SF_SRC
+  int pan_fd = opt_listenonly ? -1 : serial_source_fd(ser_src);
 #else
-  int pan_fd = sf_fd;
+  int pan_fd = opt_listenonly ? -1 : sf_fd;
 #endif
-  cmd_cur = cmd_buf[0];
-
-  /* disable input buffering on stdin since we're going to accumulate
-     the input outselves, and don't want to block */
-  if (isatty(fileno(stdin))) {
-    struct termios tio;
-    /* disable it on the fd */
-    if (tcgetattr(fileno(stdin), &tio))
-      return -1;
-    tio.c_lflag &= ~ICANON;
-    if (tcsetattr(fileno(stdin), TCSANOW, &tio))
-      return -1;
-    /* and also in libc */
-    setbuf(stdin, NULL);
-  }
 
   while (1) {
-    FD_ZERO(&fs);
-    FD_SET(tun_fd, &fs);
-    FD_SET(pan_fd, &fs);
+    int n_fds;
+    struct timeval tv;
+    if (do_shutdown) return 0;
 
-    maxfd = max(tun_fd, pan_fd);
-    if (isatty(fileno(stdin))) {
-      FD_SET(fileno(stdin), &fs);
-      maxfd = max(fileno(stdin), maxfd);
+    FD_ZERO(&fs);
+
+    if (opt_listenonly) {
+      maxfd = -1;
+    } else {
+      FD_SET(tun_fd, &fs);
+      FD_SET(pan_fd, &fs);
+
+      maxfd = max(tun_fd, pan_fd);
     }
+
     if (radvd_fd >= 0) {
       FD_SET(radvd_fd, &fs);
       maxfd = max(radvd_fd, maxfd);
     }
 
-    if (select(maxfd + 1, &fs, NULL, NULL, NULL) < 0)
+    maxfd = max(vty_add_fds(&fs), maxfd);
+    maxfd = max(routing_add_fds(&fs), maxfd);
+
+    // having a timeout also means that we poll for new packets every
+    // so often, which is apparently A Good Thing
+    tv.tv_sec  = 0;
+    tv.tv_usec = KEEPALIVE_TIMEOUT;
+    if ((n_fds = select(maxfd + 1, &fs, NULL, NULL, &tv)) < 0) {
       continue;
+    }
+    usecs_remain -= (KEEPALIVE_TIMEOUT - tv.tv_usec);
+    if (usecs_remain <= 0) {
+      if (keepalive_needed) {
+        configure_setparms(&driver_config, CONFIG_KEEPALIVE);
+      } else keepalive_needed = 1;
 
-    
-    /* data available on tunnel device */
-    if (FD_ISSET(tun_fd, &fs))
-      while(tun_input());
-
-    if (FD_ISSET(pan_fd, &fs))
-      while(serial_input());
-    
-    if (FD_ISSET(fileno(stdin), &fs)) {
-      *cmd_cur++ = getc(stdin);
-      if (*(cmd_cur - 1) == '\n' || 
-          cmd_cur - cmd_buf[cur_buf] == 1024) {
-        *cmd_cur = '\0';
-        if (cmd_cur == cmd_buf[cur_buf] + 1) {
-          eval_cmd(cmd_buf[(cur_buf + 1) % 2]);
-        } else {
-          eval_cmd(cmd_buf[cur_buf]);
-          cur_buf = (cur_buf + 1) % 2;
-        }
-        cmd_cur = cmd_buf[cur_buf];
-      }
+      usecs_remain = KEEPALIVE_INTERVAL;
     }
     
+    if (!opt_listenonly) {
+      int more_data;
+      /* check for data */
+      do {
+        more_data = tun_input();
+        more_data = serial_input() || more_data ;
+      } while (more_data);
+    }
+
+    vty_process(&fs);
+    routing_process(&fs);
+
     if (radvd_fd >= 0 && FD_ISSET(radvd_fd, &fs)) {
       radvd_process();
     }
-
-#ifndef SIM
-/*     if (tcdrain(pan_fd) < 0) { */
-/*       fatal("tcdrain error: %i\n", errno); */
-/*       exit(3); */
-/*     } */
-#endif
 
     /* end of data available */
     time(&current_time);
@@ -1003,14 +1359,7 @@ int serial_tunnel(int tun_fd) {
     }
   }
 
-  return 0;
 }
-
-#ifdef DBG_TRACK_FLOWS
-void truncate_dbg() {
-  ftruncate(fileno(dbg_file), 0);
-}
-#endif
 
 int main(int argc, char **argv) {
   int i, c;
@@ -1018,10 +1367,17 @@ int main(int argc, char **argv) {
   time(&stats.boot_time);
 
   log_init();
-  while ((c = getopt(argc, argv, "c:")) != -1) {
+  while ((c = getopt(argc, argv, "c:lt")) != -1) {
     switch (c) {
     case 'c':
       def_configfile = optarg;
+      break;
+    case 'l':
+      opt_listenonly = 1;
+      break;
+    case 't':
+      info("TrackFlows: will insert flow id on outgoing packets\n");
+      opt_trackflows = 1;
       break;
     default:
       fatal("Invalid command line argument.\n");
@@ -1030,22 +1386,16 @@ int main(int argc, char **argv) {
   }
 
   if (argc - optind != 2) {
-#ifndef SIM
-    fatal("usage: %s [-c config] <device> <rate>\n", argv[0]);
+#ifndef SF_SRC
+    fatal("usage: %s [-c config] [-n] <device> <rate>\n", argv[0]);
 #else
     fatal("usage: %s [-c config] <host> <port>\n", argv[0]);
 #endif
     exit(2);
   }
     
-#ifdef DBG_TRACK_FLOWS
-  dbg_file = fopen("dbg.txt", "w");
-  if (dbg_file == NULL) {
-    perror("main: opening dbg file:");
-    exit(1);
-  }
-  signal(SIGUSR2, truncate_dbg);
-#endif
+  fifo_open();
+  signal(SIGINT,  driver_shutdown);
 
   if (config_parse(def_configfile, &driver_config) != 0) {
     fatal ("config parse of %s failed!\n", def_configfile);
@@ -1053,56 +1403,83 @@ int main(int argc, char **argv) {
   }
   globalPrefix = 1;
   memcpy(&__my_address, &driver_config.router_addr, sizeof(struct in6_addr));
-  
-  /* create the tunnel device */
-  dev[0] = 0;
-  tun_fd = tun_open(dev);
-  if (tun_fd < 1) {
-    fatal("Could not create tunnel device. Fatal.\n");
-    return 1;
+
+
+  struct vty_cmd_table t;
+  short vty_port = 6106;
+  t.n = sizeof(vty_cmd_list) / sizeof(struct vty_cmd);
+  t.table = vty_cmd_list;
+  if (vty_init(&t, vty_port) < 0) {
+    error("could not start debug console server\n");
+    error("the console will be available only on stdin\n");
   } else {
-    info("created tun device: %s\n", dev);
-  }
-  if (tun_setup(dev, &__my_address) < 0) {
-    fatal("configuring the tun failed; aborting\n");
-    perror("tun_setup");
-    return 1;
+    info("telnet console server running on port %i\n", vty_port);
   }
 
 
-  for (i = 0; i < N_RECONSTRUCTIONS; i++) {
-    reconstructions[i].timeout = T_UNUSED;
-  }
+  dev[0] = 0;
+  if (opt_listenonly) {
+    tun_fd = -1;
+#ifndef SF_SRC
+    ser_src = NULL;
+#endif
+  } else {
+    /* create the tunnel device */
+    tun_fd = tun_open(dev);
+    if (tun_fd < 1) {
+      fatal("Could not create tunnel device. Fatal.\n");
+      return 1;
+    } else {
+      info("created tun device: %s\n", dev);
+    }
+    if (tun_setup(dev, &__my_address) < 0) {
+      fatal("configuring the tun failed; aborting\n");
+      perror("tun_setup");
+      return 1;
+    }
+    
+    
+    for (i = 0; i < N_RECONSTRUCTIONS; i++) {
+      reconstructions[i].timeout = T_UNUSED;
+    }
 
-  /* open the serial port */
-#ifndef SIM
-  ser_src = open_serial_source(argv[optind], platform_baud_rate(argv[optind + 1]),
-                               1, stderr_msg);
-  if (!ser_src) {
-    fatal("Couldn't open serial port at %s:%s\n", argv[optind], argv[optind + 1]);
-    exit(1);
-  }
+    /* open the serial port */
+#ifndef SF_SRC
+    ser_src = open_serial_source(argv[optind], platform_baud_rate(argv[optind + 1]),
+                                 1, stderr_msg);
+    if (!ser_src) {
+      fatal("Couldn't open serial port at %s:%s\n", argv[optind], argv[optind + 1]);
+      exit(1);
+    }
 #else
-  sf_fd = open_sf_source(argv[optind], atoi(argv[optind + 1]));
-  if (sf_fd < 0) {
-    fatal("Couldn't connect to serial forwarder sf@%s:%s\n", argv[optind], argv[optind + 1]);
-    exit(1);
-  }
+    sf_fd = open_sf_source(argv[optind], atoi(argv[optind + 1]));
+    if (sf_fd < 0) {
+      fatal("Couldn't connect to serial forwarder sf@%s:%s\n", argv[optind], argv[optind + 1]);
+      exit(1);
+    }
 #endif
 
-  info("Press 'h' for help\n");
-
-  routing_init(&driver_config, dev);
 #ifndef SIM
   configure_reboot();
 #endif
+
+  }
+
+  if (routing_init(&driver_config, dev) < 0) {
+    fatal("could not start routing engine!\n");
+    exit(1);
+  }
 
   /* start tunneling */
   serial_tunnel(tun_fd);
 
   /* clean up */
-  // close_serial_source(ser_src);
-  // close(ser_fd);
-  tun_close(tun_fd, dev);
+  info("driver shutting down\n");
+  vty_shutdown();
+  if (!opt_listenonly)  {
+    tun_close(tun_fd, dev);
+    close_pan();
+  }
+  fifo_close();
   return 0;
 }

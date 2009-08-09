@@ -1,0 +1,53 @@
+
+ @title Meraki Documentation
+ @author Stephen Dawson-Haggerty stevedh@eecs.berkeley.edu
+ @release internal
+---------------------------------------------------------------------
+
+This README explains how to use a Meraki Mini programmed with
+OpenWRT/kamikaze as a border router.  This document and the code make
+the following assumptions:
+
+ - The Meraki has a public IP address or is in a DMZ such that the
+        6over4 tunneling protocol will work.
+ - The Meraki is the sole router for a prefix
+
+Background
+---------------------------------------------------------------------
+
+To ease configuration, the important parameters are stored in a
+database.  When the meraki waits up, it hits the database and
+downloads a few config files which it then uses.  To grab new
+configuration, you can either log in and manually restart the router
+daemon, or just reboot.  The parameters stored are:
+ prefix : the one received from the hurricane electric tunnel broker
+ short addr : the address of this device on the network
+ channel : which channel to use
+
+Install
+---------------------------------------------------------------------
+
+ 1. Install the router daemon on the meraki using either the provided
+ipkg, or your own if you've built a version.  Building the package is
+very easy but not covered here.
+   'ipkg update'
+   'ipkg install lowpan-bridge_1.2-855_mips.ipk' 
+In order for the dependancies to be automatically installed, you must
+do the update first so that the package system downloads the directory
+with the necessary packages.
+ 2. Set up the configuration parameters in the database.  The key used
+is the hostname; precisely, whatever 'uname -n' prints.  If no key is
+found in the database the meraki will just use defaults.
+ 3. Start the daemon with '/etc/init.d/lowpan-bridge start' This will
+run automatically when the meraki boots.
+
+... I think that's it.  Pretty easy!
+
+Bugs/Notes
+---------------------------------------------------------------------
+
+There seems to be an issue with the serial port on the meraki.  The
+effect is that packets are dropped when you send too quickly.  This
+mostly effects fragmentation.  As a stopgap, I've inserted a timeout
+between fragments, but this means the performance is somewhat worse
+then on a PC and a micaz.

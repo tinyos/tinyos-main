@@ -837,7 +837,7 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "scanner.l"
 /*
- *   $Id: scanner.c,v 1.1 2009-01-20 00:28:15 sdhsdh Exp $
+ *   $Id: scanner.c,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
  *
  *   Authors:
  *    Pedro Roque		<roque@di.fc.ul.pt>

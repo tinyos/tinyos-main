@@ -45,9 +45,9 @@ interface IPRouting {
    *     and spacing between them.
    *
    */ 
-  command error_t getNextHop(struct ip6_hdr *hdr, 
-                             struct source_header *sh,
-                             hw_addr_t prev_hop,
+  command error_t getNextHop(struct ip6_hdr   *hdr, 
+                             struct ip6_route *routing_hdr,
+                             ieee154_saddr_t prev_hop,
                              send_policy_t *ret);
 
 
@@ -63,7 +63,7 @@ interface IPRouting {
    * 
    *
    */
-  command void reportAdvertisement(hw_addr_t neigh, uint8_t hops, 
+  command void reportAdvertisement(ieee154_saddr_t neigh, uint8_t hops, 
                                              uint8_t lqi, uint16_t cost);
 
   /*
@@ -71,22 +71,17 @@ interface IPRouting {
    *  the rssi of the received packet.
    *
    */
-  command void reportReception(hw_addr_t neigh, uint8_t lqi);
-
-  /*
-   * the result of sending to a neighbor.
-   */
-  command void reportTransmission(send_policy_t *send);
+  command void reportReception(ieee154_saddr_t neigh, uint8_t lqi);
 
   /*
    * @returns TRUE if the routing engine has established a default route.
    */
   command bool hasRoute();
 
-  command void insertRoutingHeaders(struct split_ip_msg *msg);
+  command struct ip6_route *insertRoutingHeader(struct split_ip_msg *msg);
   
 #ifdef CENTRALIZED_ROUTING
-  command error_t installFlowEntry(struct rinstall_header* rih, bool isMine);
+  // command error_t installFlowEntry(struct rinstall_header* rih, bool isMine);
 
   command void clearFlows();
 #endif

@@ -7,6 +7,8 @@
 #include <string.h>
 #include <math.h>
 
+#define iceil(X)  ((unsigned int)((X) + 1))
+
 /*
 Credit for primes table: Aaron Krowne
  http://br.endernet.org/~akrowne/
@@ -48,7 +50,7 @@ create_hashtable(unsigned int minsize,
     h->entrycount   = 0;
     h->hashfn       = hashf;
     h->eqfn         = eqf;
-    h->loadlimit    = (unsigned int) ceil(size * max_load_factor);
+    h->loadlimit    = (unsigned int) iceil(size * max_load_factor);
     return h;
 }
 
@@ -121,7 +123,7 @@ hashtable_expand(struct hashtable *h)
         }
     }
     h->tablelength = newsize;
-    h->loadlimit   = (unsigned int) ceil(newsize * max_load_factor);
+    h->loadlimit   = (unsigned int) iceil(newsize * max_load_factor);
     return -1;
 }
 

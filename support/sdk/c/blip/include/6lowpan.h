@@ -38,7 +38,7 @@
 typedef uint8_t ip6_addr_t [16];
 typedef uint16_t cmpr_ip6_addr_t;
 #ifdef PC
-typedef uint16_t hw_addr_t;
+typedef uint16_t ieee154_saddr_t;
 typedef uint16_t hw_pan_t;
 enum {
   HW_BROADCAST_ADDR = 0xffff,
@@ -72,8 +72,8 @@ typedef struct packed_lowmsg {
   uint8_t headers;
   uint8_t len;
   // we preprocess the headers bitmap for easy processing.
-  hw_addr_t src;
-  hw_addr_t dst;
+  ieee154_saddr_t src;
+  ieee154_saddr_t dst;
   uint8_t *data;
 } packed_lowmsg_t;
 
@@ -127,22 +127,6 @@ enum {
 };
 
 /*
- * IP protocol numbers
- */
-enum {
-  IANA_ICMP = 58,
-  IANA_UDP = 17,
-  IANA_TCP = 6,
-
-  NXTHDR_SOURCE = 0,
-  NXTHDR_INSTALL   = 253, // Use for experimentation and testing(IANA.org)
-  NXTHDR_TOPO      = 252,
-  NXTHDR_UNKNOWN = 0xff,
-};
-
-#define KNOWN_HEADER(X)  ((X) == NXTHDR_SOURCE || (X) == IANA_UDP || (X) == NXTHDR_INSTALL || (X) == NXTHDR_TOPO)
-
-/*
  * constants to unpack HC-packed headers
  */
 enum {
@@ -181,60 +165,31 @@ enum {
 };
 
 
-/*
- * nonstandard source routing header fields
- */
-enum {
-  IP_EXT_SOURCE_DISPATCH    = 0x40,
-  IP_EXT_SOURCE_MASK        = 0xc0,
-
-  // dispatch values
-  IP_EXT_SOURCE_RECORD      = 0x01,
-  IP_EXT_SOURCE_RECORD_MASK = 0x01,
-  IP_EXT_SOURCE_INVAL       = 0x02,
-  IP_EXT_SOURCE_INVAL_MASK  = 0x02,
-  IP_EXT_SOURCE_CONTROLLER  = 0x04,
-
-  // dispatch values for route installation if this flag is set, the
-  // source_header must be immediately followed by a
-  // source_install_opt struct.
-  IP_EXT_SOURCE_INSTALL     = 0x10,
-  IP_EXT_SOURCE_INSTALL_MASK= 0x10,
-
-  // indicates weather the forward and reverse paths should be
-  // installed.  Are these needed?  the only case when we don't want
-  // to install the reverse path is when the destination is a
-  // multicast?
-  IP_EXT_SOURCE_INST_SRC    = 0x20,
-  IP_EXT_SOURCE_INST_DST    = 0x40,
-};
-
-#define SH_NENTRIES(SH)   ((sh->len - (sizeof(struct source_header))) / (sizeof(uint16_t)))
-
-struct source_header {
-  uint8_t nxt_hdr;
-  uint8_t len;
-  // the equalivent of the "routing type" field
-  uint8_t dispatch;
-  uint8_t current;
-  uint16_t hops[0];
-};
 
 // AT: These are really 16 bit values, but after a certain point the numbers
 //  beyond 255 aren't important to us, or rather no different than 255
 struct topology_entry {
   uint8_t etx;
   uint8_t conf;
-  hw_addr_t hwaddr;
+  ieee154_saddr_t hwaddr;
 };
 struct topology_header {
-  uint8_t nxt_hdr;
-  uint8_t len;
+  uint16_t seqno;
+  struct topology_entry topo[0];
+};
+struct topology_header_package {
+  uint16_t reporter;
+  uint16_t len;
+  uint16_t seqno;
   struct topology_entry topo[0];
 };
 
 enum {
   IP_NUMBER_FRAGMENTS = 12,
 };
+
+#ifndef BLIP_L2_RETRIES
+#define BLIP_L2_RETRIES 10
+#endif
 
 #endif

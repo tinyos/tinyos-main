@@ -37,11 +37,11 @@ module IPAddressP {
 } implementation {
 
 
-  command hw_addr_t IPAddress.getShortAddr() {
+  command ieee154_saddr_t IPAddress.getShortAddr() {
     return TOS_NODE_ID;
   }
 
-  command void IPAddress.setShortAddr(hw_addr_t newAddr) {
+  command void IPAddress.setShortAddr(ieee154_saddr_t newAddr) {
     TOS_NODE_ID = newAddr;
 #ifndef SIM
     call ActiveMessageAddress.setAddress(call ActiveMessageAddress.amGroup(), newAddr);
@@ -51,6 +51,7 @@ module IPAddressP {
   }
 
   command void IPAddress.getLLAddr(struct in6_addr *addr) {
+    __my_address.s6_addr16[7] = htons(TOS_NODE_ID);
     memcpy(addr->s6_addr, linklocal_prefix, 8);
     memcpy(&addr->s6_addr[8], &__my_address.s6_addr[8], 8);
   }

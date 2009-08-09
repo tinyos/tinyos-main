@@ -34,7 +34,7 @@ typedef enum {
   LOGLVL_FATAL = 4,
 } loglevel_t;
 
-extern char *log_names[5];
+extern const char *log_names[5];
 extern loglevel_t log_level;
 extern FILE *log_dest;
 
@@ -44,6 +44,7 @@ loglevel_t log_setlevel(loglevel_t l);
 loglevel_t log_getlevel();
 
 void log_log  (loglevel_t level, const char *fmt, ...);
+void log_fatal_perror(const char *msg);
 void log_clear (loglevel_t level, const char *fmt, ...);
 
 #define debug(fmt, args...) \
@@ -58,6 +59,12 @@ void log_clear (loglevel_t level, const char *fmt, ...);
            log_log(LOGLVL_FATAL, fmt, ## args)
 
 #define log_fprintf(X, FMT, ...) ;
+
+
+#define ISO8601_FMT(ltime, tv) "%04d-%02d-%02dT%02d:%02d:%02d.%03d%s",   \
+    (ltime)->tm_year+1900, (ltime)->tm_mon+1, (ltime)->tm_mday,               \
+    (ltime)->tm_hour, (ltime)->tm_min, (ltime)->tm_sec, (int)(tv)->tv_usec/ 1000, \
+    tzname[0]
 
 void log_dump_serial_packet(unsigned char *packet, const int len);
 

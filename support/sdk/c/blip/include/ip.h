@@ -92,6 +92,78 @@ struct ip6_ext {
   uint8_t data[0];
 };
 
+struct tlv_hdr {
+  uint8_t type;
+  uint8_t len;
+};
+/*
+ * IP protocol numbers
+ */
+enum {
+  IANA_ICMP = 58,
+  IANA_UDP = 17,
+  IANA_TCP = 6,
+
+  // IPV6 defined extention header types.  All other next header
+  // values are supposed to be transport protocols, with TLVs used
+  IPV6_HOP = 0,
+  IPV6_DEST = 60,
+  IPV6_ROUTING = 43,
+  IPV6_FRAG = 44,
+  IPV6_AUTH = 51,
+  IPV6_SEC = 50,
+  IPV6_MOBILITY = 135,
+  IPV6_NONEXT = 59,
+};
+#define EXTENSION_HEADER(X) ((X) == IPV6_HOP || (X) == IPV6_ROUTING || (X) == IPV6_DEST)
+#define COMPRESSIBLE_TRANSPORT(X) ((X) == IANA_UDP)
+
+/*
+ * nonstandard source routing header fields
+ */
+enum {
+  IP6ROUTE_TYPE_SOURCE  = 0,
+  IP6ROUTE_TYPE_INVAL   = 1,
+  IP6ROUTE_FLAG_CONTROLLER = 0x8,
+  IP6ROUTE_FLAG_MASK = IP6ROUTE_FLAG_CONTROLLER,
+
+  IP_EXT_SOURCE_DISPATCH    = 0x40,
+  IP_EXT_SOURCE_MASK        = 0xc0,
+
+  // dispatch values
+  IP_EXT_SOURCE_CONTROLLER  = 0x40,
+
+  // dispatch values for route installation if this flag is set, the
+  // source_header must be immediately followed by a
+  // source_install_opt struct.
+  IP_EXT_SOURCE_INSTALL     = 0x10,
+  IP_EXT_SOURCE_INSTALL_MASK= 0x10,
+
+  // indicates weather the forward and reverse paths should be
+  // installed.  Are these needed?  the only case when we don't want
+  // to install the reverse path is when the destination is a
+  // multicast?
+  IP_EXT_SOURCE_INST_SRC    = 0x20,
+  IP_EXT_SOURCE_INST_DST    = 0x40,
+
+  // a topology TLV inside a destination option
+  TLV_TYPE_TOPOLOGY = 0x0a,
+  // a route install message, inside a hop-by-hop or destination
+  // option message.
+  TLV_TYPE_INSTALL  = 0x0b,
+  TLV_TYPE_FLOW     = 0x0c,
+};
+
+struct ip6_route {
+  uint8_t nxt_hdr;
+  uint8_t len;
+  uint8_t type;
+  uint8_t segs_remain;
+  uint16_t hops[0];
+};
+#define ROUTE_NENTRIES(SH)   (((SH)->len - (sizeof(struct ip6_route))) / (sizeof(uint16_t)))
+
+
 /*
  * icmp
  */
@@ -158,7 +230,7 @@ struct tcp_hdr {
  * IP metadata and routing structures
  */
 struct ip_metadata {
-  hw_addr_t sender;
+  ieee154_saddr_t sender;
   uint8_t   lqi;
   uint8_t   padding[1];
 };
@@ -166,49 +238,32 @@ struct ip_metadata {
 struct flow_match {
   cmpr_ip6_addr_t src;
   cmpr_ip6_addr_t dest; // Need to make this more extensible at some point
-  cmpr_ip6_addr_t prev_hop;
 };
 
 struct rinstall_header {
-  struct ip6_ext ext;
-  uint16_t flags;
   struct flow_match match;
+  uint8_t flags;
   uint8_t path_len;
-  uint8_t current;
   cmpr_ip6_addr_t path[0];
 };
 
 enum {
-  R_SRC_FULL_PATH_INSTALL_MASK = 0x01,
-  R_DEST_FULL_PATH_INSTALL_MASK = 0x02,
-  R_HOP_BY_HOP_PATH_INSTALL_MASK = 0x04,
-  R_REVERSE_PATH_INSTALL_MASK = 0x08,
-  R_SRC_FULL_PATH_UNINSTALL_MASK = 0x10,
-  R_DEST_FULL_PATH_UNINSTALL_MASK = 0x20,
-  R_HOP_BY_HOP_PATH_UNINSTALL_MASK = 0x40,
-  R_REVERSE_PATH_UNINSTALL_MASK = 0x80,
-};
+  // is this a hop-by-hop or source install command
+  HYDRO_INSTALL_METHOD_MASK    = 0x03,
+  HYDRO_METHOD_HOP             = 0x01,
+  HYDRO_METHOD_SOURCE          = 0x02,
 
-#define IS_FULL_SRC_INSTALL(r) (((r)->flags & R_SRC_FULL_PATH_INSTALL_MASK) == R_SRC_FULL_PATH_INSTALL_MASK)
-#define IS_FULL_DST_INSTALL(r) (((r)->flags & R_DEST_FULL_PATH_INSTALL_MASK) == R_DEST_FULL_PATH_INSTALL_MASK)
-#define IS_HOP_INSTALL(r) (((r)->flags & R_HOP_BY_HOP_PATH_INSTALL_MASK) == R_HOP_BY_HOP_PATH_INSTALL_MASK)
-#define IS_REV_INSTALL(r) (((r)->flags & R_REVERSE_PATH_INSTALL_MASK) == R_REVERSE_PATH_INSTALL_MASK)
-#define IS_FULL_SRC_UNINSTALL(r) (((r)->flags & R_SRC_FULL_PATH_UNINSTALL_MASK) == R_SRC_FULL_PATH_UNINSTALL_MASK)
-#define IS_FULL_DST_UNINSTALL(r) (((r)->flags & R_DEST_FULL_PATH_UNINSTALL_MASK) == R_DEST_FULL_PATH_UNINSTALL_MASK)
-#define IS_HOP_UNINSTALL(r) (((r)->flags & R_HOP_BY_HOP_PATH_UNINSTALL_MASK) == R_HOP_BY_HOP_PATH_UNINSTALL_MASK)
-#define IS_REV_UNINSTALL(r) (((r)->flags & R_REVERSE_PATH_UNINSTALL_MASK) == R_REVERSE_PATH_UNINSTALL_MASK)
+  // should we also apply the action to the reverse path?
+  HYDRO_INSTALL_REVERSE        = 0x04,
+
+  // is this an uninstallation?
+  HYDRO_INSTALL_UNINSTALL_MASK = 0x08,
+
+};
 
 enum {
   T_INVAL_NEIGH =  0xef,
   T_SET_NEIGH = 0xee,
-};
-
-struct flow_id {
-  uint16_t src;
-  uint16_t dst;
-  uint16_t id;
-  uint16_t seq;
-  uint16_t nxt_hdr;
 };
 
 
@@ -235,14 +290,15 @@ struct generic_header {
   union {
     // this could be an eumeration of all the valid headers we can have here.
     struct ip6_ext *ext;
-    struct source_header *sh;
+    struct ip6_route *sh;
     struct udp_hdr *udp;
-    struct tcp_hdr *tcp;
-    struct rinstall_header *rih;
-    struct topology_header *th;
     uint8_t *data;
   } hdr;
   struct generic_header *next;
+};
+
+enum {
+  IP_NOHEADERS = 1,
 };
 
 struct split_ip_msg {
@@ -250,10 +306,10 @@ struct split_ip_msg {
   uint16_t data_len;
   uint8_t *data;
 #ifdef PC
+  uint16_t foo;
+  uint16_t flow_id;
+  uint16_t prev_hop;
   struct ip_metadata metadata;
-#ifdef DBG_TRACK_FLOWS
-  struct flow_id id;
-#endif
   // this must be last so we can read() straight into the end of the buffer.
   struct tun_pi pi;
 #endif
@@ -261,9 +317,12 @@ struct split_ip_msg {
   uint8_t next[0];
 };
 
+#ifndef NO_LIB6LOWPAN_ASCII
 /*
  * parse a string representation of an IPv6 address
  */ 
 void inet_pton6(char *addr, struct in6_addr *dest);
+int  inet_ntop6(struct in6_addr *addr, char *buf, int cnt);
+#endif
 
 #endif

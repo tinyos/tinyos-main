@@ -1,3 +1,24 @@
+/*
+ * "Copyright (c) 2008, 2009 The Regents of the University  of California.
+ * All rights reserved."
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without written agreement is
+ * hereby granted, provided that the above copyright notice, the following
+ * two paragraphs and the author appear in all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+ * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
+ * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
+ *
+ */
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,6 +30,7 @@
 #include <linux/if.h>
 #include <signal.h>
 #include <string.h>
+#include <limits.h>
 
 
 #include "ip.h"
@@ -17,13 +39,13 @@
 #include "ip_malloc.h"
 
 
-#define BUFSZ 1024
-#define LOSS_RATE_RECPR 100
+#define BUFSZ 1000
+#define LOSS_RATE_RECPR 200
+#define LOSS_RATE_TRANS 200
 
 int sock = 0;
-uint8_t iface_addr[16] = {0x20, 0x01, 0x00, 0x00, 0xde, 0xad, 0xbe, 0xef,
-                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
-
+struct in6_addr iface_addr[16] = {{{0x20, 0x05, 0x00, 0x00, 0x00, 0x0, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}};
 struct sockaddr_in6 laddr;
 
 
@@ -40,28 +62,32 @@ void printBuf(uint8_t *buf, uint16_t len) {
 void print_split_msg(struct split_ip_msg *msg) {
   int i;
   printf("src_addr: ");
-  for (i = 0; i < 16; i++) printf("0x%x ", msg->hdr.src_addr[i]);
+  for (i = 0; i < 16; i++) printf("0x%x ", msg->hdr.ip6_src.s6_addr[i]);
   printf("\ndst_addr: ");
-  for (i = 0; i < 16; i++) printf("0x%x ", msg->hdr.dst_addr[i]);
+  for (i = 0; i < 16; i++) printf("0x%x ", msg->hdr.ip6_dst.s6_addr[i]);
   printf("\nplen: %i hlim: %i\n", ntohs(msg->hdr.plen), msg->hdr.hlim);
 
   printBuf(msg->data, msg->data_len);
 }
 
-void rx(struct tcplib_sock *sock, void *data, int len) {
+void tcplib_extern_recv(struct tcplib_sock *sock, void *data, int len) {
   // printBuf(data, len);
   if (tcplib_send(sock, data, len) < 0)
     printf("tcplib_send: fail\n");
+
+  if (strncmp((char *)data, "close", 5) == 0) {
+    printf("Server closing sock\n");
+    tcplib_close(sock);
+  }
 }
 
-void cl(struct tcplib_sock *sock) {
+void tcplib_extern_closed(struct tcplib_sock *sock) {
   printf("remote conn closed\n");
   tcplib_close(sock);
 }
 
-void cd(struct tcplib_sock *sock) {
-  printf("local close done\n");
-  free(sock->rx_buf);
+void tcplib_extern_closedone(struct tcplib_sock *sock) {
+  printf("close done\n");
   free(sock->tx_buf);
   tcplib_init_sock(sock);
 /*   printf("rebinding...\n"); */
@@ -76,36 +102,40 @@ void cd(struct tcplib_sock *sock) {
 struct tcplib_sock *tcplib_accept(struct tcplib_sock *conn,
                                   struct sockaddr_in6 *from) {
   printf("tcplib_accept\n");
-  conn->rx_buf = malloc(BUFSZ);
-  conn->rx_buf_len = BUFSZ;
   
   conn->tx_buf = malloc(BUFSZ);
   conn->tx_buf_len = BUFSZ;
 
-  conn->ops.recvfrom = rx;
-  conn->ops.closed = cl;
-  conn->ops.close_done = cd;
 
   return conn;
 }
 
 void tcplib_send_out(struct split_ip_msg *msg, struct tcp_hdr *tcph) {
   uint8_t buf[8192];
+  struct timespec tv;
   if (sock <= 0) return;
 
-  memcpy(msg->hdr.src_addr, iface_addr, 16);
-  msg->hdr.src_addr[15] = 2;
+  // printf("sending message\n");
+
+  memcpy(msg->hdr.ip6_src.s6_addr, iface_addr, 16);
+  msg->hdr.ip6_src.s6_addr[15] = 2;
   msg->hdr.hlim = 64;
 
   memset(msg->hdr.vlfc, 0, 4);
   msg->hdr.vlfc[0] = 6 << 4;
 
-  tcph->chksum = msg_cksum(msg, IANA_TCP);
+  tcph->chksum = htons(msg_cksum(msg, IANA_TCP));
   
+  tv.tv_sec = 0;
+  // sleep for a ms to give up the cpu...
+  tv.tv_nsec = 1000000;
+  nanosleep(&tv);
+
   // print_split_msg(msg);
-  if (rand() % LOSS_RATE_RECPR == 0) {
+  if (rand() % LOSS_RATE_TRANS == 0) {
     printf("dropping packet on write\n");
   } else {
+    printf("tun_write\n");
     tun_write(sock, msg);
   }
 }
@@ -143,6 +173,7 @@ int main(int argg, char **argv) {
   struct timeval timeout;
   FD_ZERO(&fds);
   FD_SET(sock, &fds);
+  FD_SET(fileno(stdin), &fds);
 
   timeout.tv_sec = 0;
   timeout.tv_usec = 500000;
@@ -150,14 +181,32 @@ int main(int argg, char **argv) {
   while (select(sock + 1, &fds, NULL, NULL, &timeout) >= 0) {
     if (FD_ISSET(sock, &fds)) {
       if ((len = read(sock, buf, 8192)) <= 0) break;
+      // printf("read %i bytes\n", len);
       struct ip6_hdr *iph = (struct ip6_hdr *)payload;
       if (iph->nxt_hdr == IANA_TCP) {
         if (rand() % LOSS_RATE_RECPR == 0) {
           printf("dropping packet on rx\n");
         } else {
-          if (tcplib_process(payload, len - sizeof(struct tun_pi)))
+          void *p = buf + sizeof(struct tun_pi) + sizeof(struct ip6_hdr);
+          // printBuf(p, len - sizeof(struct tun_pi) - sizeof(struct tcp_hdr));
+          if (tcplib_process(iph, p)) // len - sizeof(struct tun_pi)))
             printf("TCPLIB_PROCESS: ERROR!\n");
         }
+      }
+    } else if (FD_ISSET(fileno(stdin), &fds)) {
+      char c = getchar();
+      switch (c) {
+      case 'a':
+        printf("ABORTING CONNETION\n");
+        tcplib_abort(&srv_sock);
+        break;
+      case 'c':
+        printf("CLOSING CONNETION\n");
+        tcplib_close(&srv_sock);
+        break;
+      case 's':
+        printf("connection state: %i\n", srv_sock.state);
+        break;
       }
     } else {
       timeout.tv_sec = 0;
@@ -170,6 +219,7 @@ int main(int argg, char **argv) {
 
     FD_ZERO(&fds);
     FD_SET(sock, &fds);
+    FD_SET(fileno(stdin), &fds);
   }
   tun_close(sock, dev);
 }

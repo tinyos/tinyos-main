@@ -27,6 +27,7 @@ enum {
   ICMP_EXT_TYPE_BEACON = 17,
 };
 
+#ifndef LOW_POWER_LISTENING     /* parameters for CSMA MAC */
 enum {
   // jitter start requests by 10 seconds
   TRICKLE_JITTER = 10240,
@@ -37,6 +38,18 @@ enum {
   TRICKLE_MAX = (TRICKLE_PERIOD << 5),
   
 };
+#else  /* parameters for LPL */
+enum {
+  // have a trickle timer with a period of 4
+  TRICKLE_PERIOD = 16384L, 
+  // jitter start requests by 10 seconds
+  TRICKLE_JITTER = TRICKLE_PERIOD,
+
+  // send a maximum of three trickle messages
+  TRICKLE_MAX = (TRICKLE_PERIOD << 5),
+  
+};
+#endif
 
 typedef nx_struct icmp6_echo_hdr {
   nx_uint8_t        type;     /* type field */
@@ -80,6 +93,7 @@ typedef nx_struct {
   nx_uint8_t type;
   nx_uint8_t length;
   nx_uint16_t metric;
+  nx_uint8_t pad[4];
 } rqual_t;
 
 struct icmp_stats {

@@ -1,3 +1,27 @@
+/*
+ * "Copyright (c) 2008 The Regents of the University  of California.
+ * All rights reserved."
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without written agreement is
+ * hereby granted, provided that the above copyright notice, the following
+ * two paragraphs and the author appear in all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+ * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
+ * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
+ *
+ */
+/*
+ * @author Stephen Dawson-Haggerty <stevedh@eecs.berkeley.edu>
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +33,10 @@
 #include "ip.h"
 #include "config.h"
 #include "logging.h"
+#include "vty.h"
 
 #define BUF_LEN 200
+struct config *lastconfig;
 
 void rm_comment (char *buf) {
   while (*buf != '#' && *buf != '\0')
@@ -28,6 +54,9 @@ int config_parse(const char *file, struct config *c) {
   FILE *fp = fopen(file, "r");
   int gotargs = 0;
   if (fp == NULL) return 1;
+
+  // defaults
+  c->retries = BLIP_L2_RETRIES;
 
   while (fgets(real_buf, BUF_LEN, fp) != NULL) {
     buf = real_buf;
@@ -53,6 +82,10 @@ int config_parse(const char *file, struct config *c) {
           break;
         }
       }
+    } else if (sscanf(buf, "retry %i\n", &c->retries) > 0) {
+      if (c->retries <= 0 || c->retries > 25) {
+        warn("retry value set to %i: outside of the recommended range (0,25]\n", c->retries);
+      }
     } else if (*buf != '\0') {
       // anything else indicates that there's invalid input.
       return 1;
@@ -62,18 +95,25 @@ int config_parse(const char *file, struct config *c) {
 
   if (gotargs != 3) return 1;
 
-  info("Read config from '%s'\n", file);
-  info("\tProxying neighbor advertisements to %s\n", c->proxy_dev);
-  info("\tUsing channel %i\n", c->channel);
+  info("Read config from '%s'\r\n", file);
+  info("Proxying neighbor advertisements to %s\r\n", c->proxy_dev);
+  info("Using channel %i\r\n", c->channel);
+  info("Retries: %i\r\n", c->retries);
+  lastconfig = c;
   return 0;
 }
 
-int config_print(struct config *c) {
+#define STR(X) #X
+
+void config_print(int fd, int argc, char **argv) { //struct config *c) {
+  VTY_HEAD;
   char buf[64];
-  printf ("configuration:\n");
-  inet_ntop(AF_INET6, &c->router_addr, buf, 64);
-  printf ("  router address: %s\n", buf);
-  printf("  proxy dev: %s\n", c->proxy_dev);
-  printf("  channel: %i\n", c->channel);
-  return 0;
+  VTY_printf ("configuration:\r\n");
+  inet_ntop(AF_INET6, &lastconfig->router_addr, buf, 64);
+  VTY_printf ("  router address: %s\r\n", buf);
+  VTY_printf("  proxy dev: %s\r\n", lastconfig->proxy_dev);
+  VTY_printf("  channel: %i\r\n", lastconfig->channel);
+  VTY_printf("  version: %s\r\n", STR($Id: config.c,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $));
+  VTY_printf("  retries: %i\r\n", lastconfig->retries);
+  VTY_flush();
 }

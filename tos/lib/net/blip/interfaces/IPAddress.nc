@@ -22,8 +22,8 @@
 #include <6lowpan.h>
 
 interface IPAddress {
-  command hw_addr_t getShortAddr();
-  command void setShortAddr(hw_addr_t newaddr);
+  command ieee154_saddr_t getShortAddr();
+  command void setShortAddr(ieee154_saddr_t newaddr);
 
   command struct in6_addr *getPublicAddr();
   command void getLLAddr(struct in6_addr *addr);

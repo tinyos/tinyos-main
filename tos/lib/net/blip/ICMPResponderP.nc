@@ -23,6 +23,7 @@
 #include <lib6lowpan.h>
 #include <6lowpan.h>
 #include <ip_malloc.h>
+#include <Statistics.h>
 #include "in_cksum.h"
 #include "PrintfUART.h"
 #include "ICMP.h"
@@ -137,7 +138,7 @@ module ICMPResponderP {
 
     msg->hdr.nxt_hdr = IANA_ICMP;
 
-    i_hdr->cksum = call ICMP.cksum(msg, IANA_ICMP);
+    i_hdr->cksum = htons(call ICMP.cksum(msg, IANA_ICMP));
 
     call IP.send(msg);
 
@@ -153,7 +154,7 @@ module ICMPResponderP {
     if (ipmsg == NULL) return;
 
     dbg("ICMPResponder", "Solicitation\n");
-    //stats.sol_tx++;
+    //BLIP_STATS_INCR(stats.sol_tx);
 
     msg->type = ICMP_TYPE_ROUTER_SOL;
     msg->code = 0;
@@ -169,7 +170,9 @@ module ICMPResponderP {
 
 
     call IPAddress.getLLAddr(&ipmsg->hdr.ip6_src);
-    inet_pton6("ff02::2", &ipmsg->hdr.ip6_dst);
+    ip_memclr((uint8_t *)&ipmsg->hdr.ip6_dst, 16);
+    ipmsg->hdr.ip6_dst.s6_addr16[0] = htons(0xff02);
+    ipmsg->hdr.ip6_dst.s6_addr16[7] = htons(2);
 
     msg->cksum = call ICMP.cksum(ipmsg, IANA_ICMP);
 
@@ -263,17 +266,20 @@ module ICMPResponderP {
     if (globalPrefix) {
       len += sizeof(pfx_t);
       p->type = ICMP_EXT_TYPE_PREFIX;
-      p->length = 8;
+      p->length = sizeof(pfx_t) >> 3;
+      p->pfx_len = 64;
       memcpy(p->prefix, call IPAddress.getPublicAddr(), 8);
     }
 
     len += sizeof(rqual_t);
     q->type = ICMP_EXT_TYPE_BEACON;
-    q->length = 2;
+    q->length = sizeof(rqual_t) >> 3;;
     q->metric = call IPRouting.getQuality();
 
     call IPAddress.getLLAddr(&ipmsg->hdr.ip6_src);
-    inet_pton6("ff02::1", &ipmsg->hdr.ip6_dst);
+    ip_memclr((uint8_t *)&ipmsg->hdr.ip6_dst, 16);
+    ipmsg->hdr.ip6_dst.s6_addr16[0] = htons(0xff02);
+    ipmsg->hdr.ip6_dst.s6_addr16[7] = htons(1);
 
     //dbg("ICMPResponder", "My Address: [0x%x] [0x%x] [0x%x] [0x%x]\n", ipmsg->hdr.src_addr[12], ipmsg->hdr.src_addr[13], ipmsg->hdr.src_addr[14], ipmsg->hdr.src_addr[15]);
     dbg("ICMPResponder", "adv hop limit: 0x%x\n", r->hlim);
@@ -300,7 +306,7 @@ module ICMPResponderP {
                      struct ip_metadata *meta) {
     icmp_echo_hdr_t *req = (icmp_echo_hdr_t *)payload;
     uint16_t len = ntohs(iph->plen);
-    stats.rx++;
+    BLIP_STATS_INCR(stats.rx);
   
     // for checksum calculation
     printfUART ("icmp type: 0x%x code: 0x%x cksum: 0x%x ident: 0x%x seqno: 0x%x len: 0x%x\n",
@@ -309,7 +315,7 @@ module ICMPResponderP {
     switch (req->type) {
     case ICMP_TYPE_ROUTER_ADV:
         handleRouterAdv(payload, len, meta);
-        //stats.adv_rx++;
+        //BLIP_STATS_INCR(stats.adv_rx);
         break;
     case ICMP_TYPE_ROUTER_SOL:
       // only reply to solicitations if we have established a default route.
@@ -322,7 +328,7 @@ module ICMPResponderP {
         nx_uint32_t *sendTime = (nx_uint32_t *)(req + 1);
         struct icmp_stats p_stat;
         p_stat.seq = req->seqno;
-        p_stat.ttl = 0;// buf->hdr.hlim;
+        p_stat.ttl = iph->hlim;
         p_stat.rtt = (call LocalTime.get()) - (*sendTime);
         signal ICMPPing.pingReply[req->ident](&iph->ip6_src, &p_stat);
         ping_rcv++;

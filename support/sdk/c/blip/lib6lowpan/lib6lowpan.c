@@ -50,7 +50,7 @@
  * Return the length (in bytes) of the buffer required to pack lowmsg
  * into a buffer.
  */
-uint8_t *getLowpanPayload(packed_lowmsg_t *lowmsg) {
+inline uint8_t *getLowpanPayload(packed_lowmsg_t *lowmsg) {
   uint8_t len = 0;
 #if LIB6LOWPAN_FULL
   if (lowmsg->headers & LOWMSG_MESH_HDR)
@@ -70,7 +70,7 @@ uint8_t *getLowpanPayload(packed_lowmsg_t *lowmsg) {
  *  present in the message pointed to by lowmsg.
  *
  */
-uint16_t getHeaderBitmap(packed_lowmsg_t *lowmsg) {
+inline uint16_t getHeaderBitmap(packed_lowmsg_t *lowmsg) {
   uint16_t headers = 0;
   uint8_t *buf = lowmsg->data;
   uint16_t len = lowmsg->len;
@@ -114,7 +114,7 @@ uint16_t getHeaderBitmap(packed_lowmsg_t *lowmsg) {
 /*
  * Fill in dispatch values
  */
-uint8_t setupHeaders(packed_lowmsg_t *packed, uint16_t headers) {
+inline uint8_t setupHeaders(packed_lowmsg_t *packed, uint16_t headers) {
   uint8_t *buf = packed->data;
   uint16_t len = packed->len;
   if (packed == NULL) return 1;
@@ -181,7 +181,7 @@ inline uint8_t getMeshHopsLeft(packed_lowmsg_t *msg, uint8_t *hops) {
   *hops = (*buf) & LOWPAN_MESH_HOPS_MASK;
   return 0;
 }
-inline uint8_t getMeshOriginAddr(packed_lowmsg_t *msg, hw_addr_t *origin) {
+inline uint8_t getMeshOriginAddr(packed_lowmsg_t *msg, ieee154_saddr_t *origin) {
   uint8_t *buf = msg->data;
   if (!hasMeshHeader(msg) || msg->data == NULL || origin == NULL) return 1;
   // skip 64-bit addresses
@@ -190,7 +190,7 @@ inline uint8_t getMeshOriginAddr(packed_lowmsg_t *msg, hw_addr_t *origin) {
   *origin = ntoh16(*((uint16_t *)buf));
   return 0;
 }
-inline uint8_t getMeshFinalAddr(packed_lowmsg_t *msg, hw_addr_t *final) {
+inline uint8_t getMeshFinalAddr(packed_lowmsg_t *msg, ieee154_saddr_t *final) {
   uint8_t *buf = msg->data;
   if (!hasMeshHeader(msg) || msg->data == NULL || final == NULL) return 1;
   // skip 64-bit addresses
@@ -209,7 +209,7 @@ inline uint8_t setMeshHopsLeft(packed_lowmsg_t *msg, uint8_t hops) {
   *buf |= hops & LOWPAN_MESH_HOPS_MASK;
   return 0;
 }
-inline uint8_t setMeshOriginAddr(packed_lowmsg_t *msg, hw_addr_t origin) {
+inline uint8_t setMeshOriginAddr(packed_lowmsg_t *msg, ieee154_saddr_t origin) {
   uint8_t *buf = msg->data;
   if (!hasMeshHeader(msg) || msg->data == NULL) return 1;
   // skip 64-bit addresses
@@ -218,7 +218,7 @@ inline uint8_t setMeshOriginAddr(packed_lowmsg_t *msg, hw_addr_t origin) {
   *((uint16_t *)buf) = hton16(origin);
   return 0;
 }
-inline uint8_t setMeshFinalAddr(packed_lowmsg_t *msg, hw_addr_t final) {
+inline uint8_t setMeshFinalAddr(packed_lowmsg_t *msg, ieee154_saddr_t final) {
   uint8_t *buf = msg->data;
   if (!hasMeshHeader(msg) || msg->data == NULL) return 1;
   // skip 64-bit addresses

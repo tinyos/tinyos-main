@@ -1,4 +1,4 @@
-// $Id: Reset.nc,v 1.1 2009-01-20 00:33:22 sdhsdh Exp $
+// $Id: Reset.nc,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  

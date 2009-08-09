@@ -29,11 +29,17 @@
  *
  */
 
+enum {
+  L_UNREPORTED,
+  L_REPORTED,
+  L_STICKY,
+};
+
 typedef uint16_t node_id_t;
 
 struct route_path {
   uint16_t len;
-  hw_addr_t path[0];
+  ieee154_saddr_t path[0];
 };
 
 typedef struct {
@@ -72,7 +78,15 @@ typedef struct router {
   node_id_t id;
   link_t *links;
   struct router *next;
+
   int reports;
+  int lastSeqno;
+  struct timeval lastReport;
+
+  bool_t isProxying;
+  bool_t isController;
+
+  
 
   // fields for shortest path
   // computation
@@ -91,22 +105,29 @@ typedef struct router {
 typedef struct path {
   node_id_t node;
   int length;
+  bool_t isController;
   struct path *next;
 } path_t;
 
 int nw_init();
-int nw_add_incr_edge(node_id_t v1, struct topology_entry *v2);
+link_t *nw_add_incr_edge(node_id_t v1, struct topology_entry *v2);
 void nw_report_node(node_id_t v);
 path_t *nw_get_route(node_id_t v1, node_id_t v2);
 void nw_free_path(path_t *path);
 void nw_inval_node(node_id_t v);
+router_t *nw_get_router(node_id_t rid);
+router_t *get_insert_router(node_id_t rid);
+void nw_add_controller(node_id_t node);
+void nw_remove_link(node_id_t n1, node_id_t n2);
 
 void nw_unmark_links(node_id_t v);
 void nw_clear_unmarked(node_id_t v);
 
 int  nw_print_dotfile(char *filename);
-void nw_print_routes();
-void nw_print_links();
-void nw_test_routes();
+void nw_print_routes(int fd, int argc, char **argv);
+void nw_print_links(int fd, int argc, char **argv);
+void nw_test_routes(int fd, int argc, char **argv);
+void nw_add_sticky_edge(int fd, int argc, char **argv);
+void nw_inval_node_sh(int fd, int argc, char **argv);
 
 #endif
