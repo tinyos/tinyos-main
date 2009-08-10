@@ -1,4 +1,4 @@
-/* $Id: Ctp.h,v 1.6 2008-07-10 18:59:47 idgay Exp $ */
+/* $Id: Ctp.h,v 1.7 2009-08-10 23:50:06 scipio Exp $ */
 
 /*
  * Copyright (c) 2006 Stanford University.
@@ -37,7 +37,7 @@
  *  Collection Tree Protocol (CTP), as documented in TEP 123.
  *
  *  @author Philip Levis
- *  @date   $Date: 2008-07-10 18:59:47 $
+ *  @date   $Date: 2009-08-10 23:50:06 $
  */
 
 #ifndef CTP_H
@@ -57,6 +57,7 @@ enum {
     // CTP Options:
     CTP_OPT_PULL      = 0x80, // TEP 123: P field
     CTP_OPT_ECN       = 0x40, // TEP 123: C field
+    CTP_OPT_ALL       = 0xff
 };
 
 typedef nx_uint8_t nx_ctp_options_t;
