@@ -21,7 +21,6 @@
  */
 
 #include <6lowpan.h>
-#include "TestDriver.h"
 
 configuration TCPEchoC {
 
