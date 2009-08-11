@@ -380,7 +380,9 @@ implementation {
     }
 
     command void Packet.clear(message_t* msg) {
-	memset(msg, 0, sizeof(message_t));
+      memset(getHeader(msg), 0, sizeof(xe1205_header_t));
+      memset(getFooter(msg), 0, sizeof(xe1205_footer_t));
+      memset(getMetadata(msg), 0, sizeof(xe1205_metadata_t));
     }
 
     command uint8_t Packet.payloadLength(message_t* msg) {
