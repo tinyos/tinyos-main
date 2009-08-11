@@ -1,4 +1,4 @@
-//$Id: SerialDispatcherP.nc,v 1.7 2008-06-04 03:43:53 regehr Exp $
+//$Id: SerialDispatcherP.nc,v 1.8 2009-08-11 20:17:44 scipio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -186,7 +186,7 @@ implementation {
   }
 
   bool isCurrentBufferLocked() {
-    return (receiveState.which)? receiveState.bufZeroLocked : receiveState.bufOneLocked;
+    return (receiveState.which)? receiveState.bufOneLocked : receiveState.bufZeroLocked;
   }
 
   void lockCurrentBuffer() {
