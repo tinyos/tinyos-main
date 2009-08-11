@@ -1,6 +1,6 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.20 2009-08-10 23:50:07 scipio Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.21 2009-08-11 23:43:31 scipio Exp $ */
 /*
- * Copyright (c) 2008 Stanford University.
+ * Copyright (c) 2008-9 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,12 +31,12 @@
  */
 
 /**
- *  This component contains the forwarding path
- *  of the standard CTP implementation packaged with
- *  TinyOS 2.x. The CTP specification can be found in TEP 123.
- *  The paper entitled "Collection Tree Protocol," by Omprakash
- *  Gnawali et al., in SenSys 2009, describes the implementation and
- *  provides detailed performance results.</p>
+ *  This component contains the forwarding path of CTP Noe, the
+ *  standard CTP implementation packaged with TinyOS 2.x. The CTP
+ *  specification can be found in TEP 123.  The paper entitled
+ *  "Collection Tree Protocol," by Omprakash Gnawali et al., in SenSys
+ *  2009, describes the implementation and provides detailed
+ *  performance results of CTP Noe.</p>
  *
  *  <p>The CTP ForwardingEngine is responsible for queueing and
  *  scheduling outgoing packets. It maintains a pool of forwarding
@@ -46,12 +46,13 @@
  *  C</i>. This implementation several configuration constants, which
  *  can be found in <code>ForwardingEngine.h</code>.</p>
  *
- *  <p>Packets in the send queue are sent in FIFO order, with head-of-line
- *  blocking. Because this is a tree collection protocol, all packets are going
- *  to the same destination, and so the ForwardingEngine does not distinguish
- *  packets from one another. Packets from CollectionSenderC clients are
- *  sent identically to forwarded packets: only their buffer handling is
-    different.</p>
+ *  <p>Packets in the send queue are sent in FIFO order, with
+ *  head-of-line blocking. Because this is a tree collection protocol,
+ *  all packets are going to the same destination, and so the
+ *  ForwardingEngine does not distinguish packets from one
+ *  another. Packets from CollectionSenderC clients are sent
+ *  identically to forwarded packets: only their buffer handling is
+ *  different.</p>
  *
  *  <p>If ForwardingEngine is on top of a link layer that supports
  *  synchronous acknowledgments, it enables them and retransmits packets
@@ -59,41 +60,45 @@
  *  before giving up and dropping the packet. MAX_RETRIES is typically a
  *  large number (e.g., >20), as this implementation assumes there is
  *  link layer feedback on failed packets, such that link costs will go
- *  up and cause the routing layer to pick a next hop.</p> 
+ *  up and cause the routing layer to pick a next hop. If the underlying
+ *  link layer does not support acknowledgments, ForwardingEngine sends
+ *  a packet only once.</p> 
  *
  *  <p>The ForwardingEngine detects routing loops and tries to correct
- *  them. Routing is in terms of a cost gradient, where the collection root
- *  has a cost of zero and a node's cost is the cost of its next hop plus
- *  the cost of the link to that next hop.
- *  If there are no loops, then this gradient value decreases monotonically
- *  along a route. When the ForwardingEngine
- *  sends a packet to the next hop, it puts the local gradient value in
- *  the packet header. If a node receives a packet to forward whose
- *  gradient value is less than its own, then the gradient is not monotonically
- *  decreasing and there may be a routing loop. When the ForwardingEngine
- *  receives such a packet, it tells the RoutingEngine to advertise its
- *  gradient value soon, with the hope that the advertisement will update
- *  the node who just sent a packet and break the loop. It also pauses the
- *  before the next packet transmission, in hopes of giving the routing layer's
- *  packet a priority.</p>
+ *  them. Routing is in terms of a cost gradient, where the collection
+ *  root has a cost of zero and a node's cost is the cost of its next
+ *  hop plus the cost of the link to that next hop.  If there are no
+ *  loops, then this gradient value decreases monotonically along a
+ *  route. When the ForwardingEngine sends a packet to the next hop,
+ *  it puts the local gradient value in the packet header. If a node
+ *  receives a packet to forward whose gradient value is less than its
+ *  own, then the gradient is not monotonically decreasing and there
+ *  may be a routing loop. When the ForwardingEngine receives such a
+ *  packet, it tells the RoutingEngine to advertise its gradient value
+ *  soon, with the hope that the advertisement will update the node
+ *  who just sent a packet and break the loop. It also pauses the
+ *  before the next packet transmission, in hopes of giving the
+ *  routing layer's packet a priority.</p>
  *  
- *  <p>ForwardingEngine times its packet transmissions. It differentiates
- *  between four transmission cases: forwarding, success, ack failure, 
- *  and loop detection. In each case, the
- *  ForwardingEngine waits a randomized period of time before sending the next
- *  packet. This approach assumes that the network is operating at low
- *  utilization; its goal is to prevent correlated traffic -- such as 
- *  nodes along a route forwarding packets -- from interfering with itself.</p>
+ *  <p>ForwardingEngine times its packet transmissions. It
+ *  differentiates between four transmission cases: forwarding,
+ *  success, ack failure, and loop detection. In each case, the
+ *  ForwardingEngine waits a randomized period of time before sending
+ *  the next packet. This approach assumes that the network is
+ *  operating at low utilization; its goal is to prevent correlated
+ *  traffic -- such as nodes along a route forwarding packets -- from
+ *  interfering with itself.</p>
  *
- *  <p>While this implementation can work on top of a variety of link estimators,
- *  it is designed to work with a 4-bit link estimator (4B). Details on 4B can
- *  be found in the HotNets paper "Four Bit Link Estimation" by Rodrigo Fonseca
- *  et al. The forwarder provides the "ack" bit for each sent packet, telling the
- *  estimator whether the packet was acknowledged.</p>
+ *  <p>While this implementation can work on top of a variety of link
+ *  estimators, it is designed to work with a 4-bit link estimator
+ *  (4B). Details on 4B can be found in the HotNets paper "Four Bit
+ *  Link Estimation" by Rodrigo Fonseca et al. The forwarder provides
+ *  the "ack" bit for each sent packet, telling the estimator whether
+ *  the packet was acknowledged.</p>
  *
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2009-08-10 23:50:07 $
+ *  @date   $Date: 2009-08-11 23:43:31 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -481,6 +486,50 @@ implementation {
    * 
    */
 
+  void packetComplete(fe_queue_entry_t* qe, message_t* msg, bool success) {
+    // Four cases:
+    // Local packet: success or failure
+    // Forwarded packet: success or failure
+    if (qe->client < CLIENT_COUNT) { 
+      clientPtrs[qe->client] = qe;
+      signal Send.sendDone[qe->client](msg, SUCCESS);
+      if (success) {
+	dbg("CtpForwarder", "%s: packet %hu.%hhu for client %hhu acknowledged.\n", __FUNCTION__, call CollectionPacket.getOrigin(msg), call CollectionPacket.getSequenceNumber(msg), qe->client);
+	call CollectionDebug.logEventMsg(NET_C_FE_SENT_MSG, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+                                         call AMPacket.destination(msg));
+      } else {
+	dbg("CtpForwarder", "%s: packet %hu.%hhu for client %hhu dropped.\n", __FUNCTION__, call CollectionPacket.getOrigin(msg), call CollectionPacket.getSequenceNumber(msg), qe->client);
+	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+					 call AMPacket.destination(msg));
+      }
+    }
+    else { 
+      if (success) {
+	call SentCache.insert(qe->msg);
+	dbg("CtpForwarder", "%s: forwarded packet %hu.%hhu acknowledged: insert in transmit queue.\n", __FUNCTION__, call CollectionPacket.getOrigin(msg), call CollectionPacket.getSequenceNumber(msg));
+	call CollectionDebug.logEventMsg(NET_C_FE_FWD_MSG, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+                                         call AMPacket.destination(msg));
+      }
+      else {
+	dbg("CtpForwarder", "%s: forwarded packet %hu.%hhu dropped.\n", __FUNCTION__, call CollectionPacket.getOrigin(msg), call CollectionPacket.getSequenceNumber(msg));
+	call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_FWD, 
+					 call CollectionPacket.getSequenceNumber(msg), 
+					 call CollectionPacket.getOrigin(msg), 
+					 call AMPacket.destination(msg));
+      }
+      if (call MessagePool.put(qe->msg) != SUCCESS)
+	call CollectionDebug.logEvent(NET_C_FE_PUT_MSGPOOL_ERR);
+      if (call QEntryPool.put(qe) != SUCCESS)
+	call CollectionDebug.logEvent(NET_C_FE_PUT_QEPOOL_ERR);
+    }
+  }
+  
   event void SubSend.sendDone(message_t* msg, error_t error) {
     fe_queue_entry_t *qe = call SendQueue.head();
     dbg("Forwarder", "%s to %hu and %hhu\n", __FUNCTION__, call AMPacket.destination(msg), error);
@@ -495,40 +544,23 @@ implementation {
       startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
     }
     else if (hasState(ACK_PENDING) && !call PacketAcknowledgements.wasAcked(msg)) {
-      /* Retransmission for unacked packet. Might drop the packet. */
+      /* No ack: if countdown is not 0, retransmit, else drop the packet. */
       call LinkEstimator.txNoAck(call AMPacket.destination(msg));
       call CtpInfo.recomputeRoutes();
       if (--qe->retries) { 
-        dbg("Forwarder", "%s: not acked\n", __FUNCTION__);
+        dbg("Forwarder", "%s: not acked, retransmit\n", __FUNCTION__);
         call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_WAITACK, 
 					 call CollectionPacket.getSequenceNumber(msg), 
 					 call CollectionPacket.getOrigin(msg), 
                                          call AMPacket.destination(msg));
         startRetxmitTimer(SENDDONE_NOACK_WINDOW, SENDDONE_NOACK_OFFSET);
       } else {
-	// <Max retries reached, dropping packet: first case is a client packet,
-	// second case is a forwarded packet. Memory management for the
-	// two is different.
-        if (qe->client < CLIENT_COUNT) { // Client packet
-	  clientPtrs[qe->client] = qe;
-	  signal Send.sendDone[qe->client](msg, SUCCESS);
-	  call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_SEND, 
-					   call CollectionPacket.getSequenceNumber(msg), 
-					   call CollectionPacket.getOrigin(msg), 
-					   call AMPacket.destination(msg));
-        } else { // Forwarded packet
-	  if (call MessagePool.put(qe->msg) != SUCCESS)
-	    call CollectionDebug.logEvent(NET_C_FE_PUT_MSGPOOL_ERR);
-	  if (call QEntryPool.put(qe) != SUCCESS)
-	    call CollectionDebug.logEvent(NET_C_FE_PUT_QEPOOL_ERR);
-	  call CollectionDebug.logEventMsg(NET_C_FE_SENDDONE_FAIL_ACK_FWD, 
-					   call CollectionPacket.getSequenceNumber(msg), 
-					   call CollectionPacket.getOrigin(msg), 
-					   call AMPacket.destination(msg));
-        }
-        call SendQueue.dequeue();
+	/* Hit max retransmit threshold: drop the packet. */
+	call SendQueue.dequeue();
         clearState(SENDING);
         startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
+	
+	packetComplete(qe, msg, FALSE);
       }
     }
     else {
@@ -539,33 +571,7 @@ implementation {
       clearState(SENDING);
       startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
       call LinkEstimator.txAck(call AMPacket.destination(msg));
-      
-      if (qe->client < CLIENT_COUNT) {
-	call CollectionDebug.logEventMsg(NET_C_FE_SENT_MSG, 
-					 call CollectionPacket.getSequenceNumber(msg), 
-					 call CollectionPacket.getOrigin(msg), 
-                                         call AMPacket.destination(msg));
-	signal Send.sendDone[qe->client](msg, SUCCESS);
-	dbg("Forwarder", "%s: our packet for client %hhu, remove %p from queue\n", 
-	    __FUNCTION__, client, qe);
-	clientPtrs[qe->client] = qe;
-      }
-      else if (call MessagePool.size() < call MessagePool.maxSize()) {
-	// A successfully forwarded packet.
-	dbg("Forwarder,Route", "%s: successfully forwarded packet (client: %hhu), message pool is %hhu/%hhu.\n", __FUNCTION__, qe->client, call MessagePool.size(), call MessagePool.maxSize());
-	call CollectionDebug.logEventMsg(NET_C_FE_FWD_MSG, 
-					 call CollectionPacket.getSequenceNumber(msg), 
-					 call CollectionPacket.getOrigin(msg), 
-                                         call AMPacket.destination(msg));
-	call SentCache.insert(qe->msg);
-	if (call MessagePool.put(qe->msg) != SUCCESS)
-	  call CollectionDebug.logEvent(NET_C_FE_PUT_MSGPOOL_ERR);
-	if (call QEntryPool.put(qe) != SUCCESS)
-	  call CollectionDebug.logEvent(NET_C_FE_PUT_QEPOOL_ERR);
-      }
-      else {
-	dbg("Forwarder", "%s: BUG: we have a pool entry, but the pool is full, client is %hhu.\n", __FUNCTION__, qe->client);
-      }
+      packetComplete(qe, msg, TRUE);
     }
   }
 
