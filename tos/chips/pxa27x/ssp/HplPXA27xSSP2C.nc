@@ -55,5 +55,5 @@ implementation
 
   HplPXA27xSSPP.Init[2] <- PlatformP.InitL1;
 
-  HplPXA27xSSPP.SSP2Irq -> HplPXA27xInterrupM.PXA27xIrq[PPID_SSP2];
+  HplPXA27xSSPP.SSP2Irq -> HplPXA27xInterruptM.PXA27xIrq[PPID_SSP2];
 }
