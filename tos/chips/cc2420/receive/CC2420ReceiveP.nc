@@ -33,7 +33,9 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.18 $ $Date: 2009-02-06 06:38:49 $
+ * @author JeongGil Ko
+ * @author Razvan Musaloiu-E
+ * @version $Revision: 1.19 $ $Date: 2009-08-14 20:33:43 $
  */
 
 #include "IEEE802154.h"
@@ -62,6 +64,15 @@ module CC2420ReceiveP @safe() {
   uses interface CC2420Config;
   uses interface PacketTimeStamp<T32khz,uint32_t>;
 
+  uses interface CC2420Strobe as SRXDEC;
+  uses interface CC2420Register as SECCTRL0;
+  uses interface CC2420Register as SECCTRL1;
+  uses interface CC2420Ram as KEY0;
+  uses interface CC2420Ram as KEY1;
+  uses interface CC2420Ram as RXNONCE;
+  uses interface CC2420Ram as RXFIFO_RAM;
+  uses interface CC2420Strobe as SNOP;
+
   uses interface Leds;
 }
 
@@ -71,6 +82,8 @@ implementation {
     S_STOPPED,
     S_STARTED,
     S_RX_LENGTH,
+    S_RX_DEC,
+    S_RX_DEC_WAIT,
     S_RX_FCF,
     S_RX_PAYLOAD,
   } cc2420_receive_state_t;
@@ -88,8 +101,12 @@ implementation {
   uint8_t m_timestamp_size;
   
   /** Number of packets we missed because we were doing something else */
+#ifdef CC2420_HW_SECURITY
+  norace uint8_t m_missed_packets;
+#else
   uint8_t m_missed_packets;
-  
+#endif
+
   /** TRUE if we are receiving a valid packet into the stack */
   bool receivingPacket;
   
@@ -101,9 +118,22 @@ implementation {
   norace message_t* ONE_NOK m_p_rx_buf;
 
   message_t m_rx_buf;
-  
+#ifdef CC2420_HW_SECURITY
+  norace cc2420_receive_state_t m_state;
+#else
   cc2420_receive_state_t m_state;
-  
+#endif
+  norace uint8_t packetLength = 0;
+  norace uint8_t pos = 0;
+  norace uint8_t secHdrPos = 0;
+  uint8_t nonceValue[16] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+  norace uint8_t skip;
+  norace uint8_t securityOn = 0;
+  norace uint8_t authentication = 0;
+  norace uint8_t micLength = 0;
+  uint8_t flush_flag = 0;
+  uint16_t startTime = 0;
+
   /***************** Prototypes ****************/
   void reset_state();
   void beginReceive();
@@ -111,9 +141,11 @@ implementation {
   void waitForNextPacket();
   void flush();
   bool passesAddressCheck(message_t * ONE msg);
-  
+  void beginDec();
+  void dec();
+
   task void receiveDone_task();
-  
+
   /***************** Init Commands ****************/
   command error_t Init.init() {
     m_p_rx_buf = &m_rx_buf;
@@ -178,17 +210,310 @@ implementation {
   /***************** InterruptFIFOP Events ****************/
   async event void InterruptFIFOP.fired() {
     if ( m_state == S_STARTED ) {
+#ifndef CC2420_HW_SECURITY
+      m_state = S_RX_LENGTH;
       beginReceive();
-      
+#else
+      m_state = S_RX_DEC;
+      atomic receivingPacket = TRUE;
+      beginDec();
+#endif
     } else {
       m_missed_packets++;
     }
   }
+
+  /*****************Decryption Options*********************/
+#ifdef CC2420_HW_SECURITY
+  task void waitTask(){
+
+    if(SECURITYLOCK == 1){
+      post waitTask();
+    }else{
+      m_state = S_RX_DEC;
+      beginDec();
+    }
+  }
+
+  void beginDec(){
+    if(call SpiResource.isOwner()) {
+      dec();
+    } else if (call SpiResource.immediateRequest() == SUCCESS) {
+      dec();
+    } else {
+      call SpiResource.request();
+    }
+  }
+
+  norace uint8_t decLoopCount = 0;
+
+  task void waitDecTask(){
+
+    cc2420_status_t status;
+
+    call CSN.clr();
+    status = call SNOP.strobe();
+    call CSN.set();
+
+    atomic decLoopCount ++;
+
+    if(decLoopCount > 10){
+      call CSN.clr();
+      atomic call SECCTRL0.write((0 << CC2420_SECCTRL0_SEC_MODE) |
+				 (0 << CC2420_SECCTRL0_SEC_M) |
+				 (0 << CC2420_SECCTRL0_SEC_RXKEYSEL) |
+				 (1 << CC2420_SECCTRL0_SEC_CBC_HEAD) |
+				 (1 << CC2420_SECCTRL0_RXFIFO_PROTECTION)) ;
+      call CSN.set();
+      SECURITYLOCK = 0;
+      call SpiResource.release();
+      atomic flush_flag = 1;
+      beginReceive();
+    }else if(status & CC2420_STATUS_ENC_BUSY){
+      post waitDecTask();
+    }else{
+      call CSN.clr();
+      atomic call SECCTRL0.write((0 << CC2420_SECCTRL0_SEC_MODE) |
+				 (0 << CC2420_SECCTRL0_SEC_M) |
+				 (0 << CC2420_SECCTRL0_SEC_RXKEYSEL) |
+				 (1 << CC2420_SECCTRL0_SEC_CBC_HEAD) |
+				 (1 << CC2420_SECCTRL0_RXFIFO_PROTECTION)) ;
+      call CSN.set();
+      SECURITYLOCK = 0;
+      call SpiResource.release();
+      beginReceive();
+    }
+
+  }
+
+  void waitDec(){
+    cc2420_status_t status;
+    call CSN.clr();
+    status = call SNOP.strobe();
+    call CSN.set();
+
+    if(status & CC2420_STATUS_ENC_BUSY){
+      atomic decLoopCount = 1;
+      post waitDecTask();
+    }else{
+      call CSN.clr();
+      atomic call SECCTRL0.write((0 << CC2420_SECCTRL0_SEC_MODE) |
+				 (0 << CC2420_SECCTRL0_SEC_M) |
+				 (0 << CC2420_SECCTRL0_SEC_RXKEYSEL) |
+				 (1 << CC2420_SECCTRL0_SEC_CBC_HEAD) |
+				 (1 << CC2420_SECCTRL0_RXFIFO_PROTECTION)) ;
+      call CSN.set();
+      SECURITYLOCK = 0;
+      call SpiResource.release();
+      beginReceive();
+    }
+  }
+
+  void dec(){
+    cc2420_header_t header;
+    security_header_t secHdr;
+    uint8_t mode, key, temp, crc;
+
+    atomic pos = (packetLength+pos)%RXFIFO_SIZE;
+    atomic secHdrPos = (pos+10)%RXFIFO_SIZE;
+
+    if (pos + 3 > RXFIFO_SIZE){
+      temp = RXFIFO_SIZE - pos;
+      call CSN.clr();
+      atomic call RXFIFO_RAM.read(pos,(uint8_t*)&header, temp);
+      call CSN.set();
+      call CSN.clr();
+      atomic call RXFIFO_RAM.read(0,(uint8_t*)&header+temp, 3-temp);
+      call CSN.set();
+    }else{
+      call CSN.clr();
+      atomic call RXFIFO_RAM.read(pos,(uint8_t*)&header, 3);
+      call CSN.set();
+    }
+
+    packetLength = header.length+1;
+
+    if(packetLength == 6){ // ACK packet
+      m_state = S_RX_LENGTH;
+      call SpiResource.release();
+      beginReceive();
+      return;
+    }
+
+    if (pos + sizeof(cc2420_header_t) > RXFIFO_SIZE){
+      temp = RXFIFO_SIZE - pos;
+      call CSN.clr();
+      atomic call RXFIFO_RAM.read(pos,(uint8_t*)&header, temp);
+      call CSN.set();
+      call CSN.clr();
+      atomic call RXFIFO_RAM.read(0,(uint8_t*)&header+temp, sizeof(cc2420_header_t)-temp);
+      call CSN.set();
+    }else{
+      call CSN.clr();
+      atomic call RXFIFO_RAM.read(pos,(uint8_t*)&header, sizeof(cc2420_header_t));
+      call CSN.set();
+    }
+
+    if (pos+header.length+1 > RXFIFO_SIZE){
+      temp = header.length - (RXFIFO_SIZE - pos);
+      call CSN.clr();
+      atomic call RXFIFO_RAM.read(temp,&crc, 1);
+      call CSN.set();
+    }else{
+      call CSN.clr();
+      atomic call RXFIFO_RAM.read(pos+header.length,&crc, 1);
+      call CSN.set();
+    }
+
+    if(header.length+1 > RXFIFO_SIZE || !(crc << 7)){
+      atomic flush_flag = 1;
+      m_state = S_RX_LENGTH;
+      call SpiResource.release();
+      beginReceive();
+      return;
+    }
+    if( (header.fcf & (1 << IEEE154_FCF_SECURITY_ENABLED)) && (crc << 7) ){
+      if(call CC2420Config.isAddressRecognitionEnabled()){
+	if(!(header.dest==call CC2420Config.getShortAddr() || header.dest==AM_BROADCAST_ADDR)){
+	  packetLength = header.length + 1;
+	  m_state = S_RX_LENGTH;
+	  call SpiResource.release();
+	  beginReceive();
+	  return;
+	}
+      }
+      if(SECURITYLOCK == 1){
+	call SpiResource.release();
+	post waitTask();
+	return;
+      }else{
+	//We are going to decrypt so lock the registers
+	atomic SECURITYLOCK = 1;
+
+	if (secHdrPos + sizeof(security_header_t) > RXFIFO_SIZE){
+	  temp = RXFIFO_SIZE - secHdrPos;
+	  call CSN.clr();
+	  atomic call RXFIFO_RAM.read(secHdrPos,(uint8_t*)&secHdr, temp);
+	  call CSN.set();
+	  call CSN.clr();
+	  atomic call RXFIFO_RAM.read(0,(uint8_t*)&secHdr+temp, sizeof(security_header_t) - temp);
+	  call CSN.set();
+	} else {
+	  call CSN.clr();
+	  atomic call RXFIFO_RAM.read(secHdrPos,(uint8_t*)&secHdr, sizeof(security_header_t));
+	  call CSN.set();
+	}
+
+	key = secHdr.keyID[0];
+
+	if (secHdr.secLevel == NO_SEC){
+	  mode = CC2420_NO_SEC;
+	  micLength = 0;
+	}else if (secHdr.secLevel == CBC_MAC_4){
+	  mode = CC2420_CBC_MAC;
+	  micLength = 4;
+	}else if (secHdr.secLevel == CBC_MAC_8){
+	  mode = CC2420_CBC_MAC;
+	  micLength = 8;
+	}else if (secHdr.secLevel == CBC_MAC_16){
+	  mode = CC2420_CBC_MAC;
+	  micLength = 16;
+	}else if (secHdr.secLevel == CTR){
+	  mode = CC2420_CTR;
+	  micLength = 0;
+	}else if (secHdr.secLevel == CCM_4){
+	  mode = CC2420_CCM;
+	  micLength = 4;
+	}else if (secHdr.secLevel == CCM_8){
+	  mode = CC2420_CCM;
+	  micLength = 8;
+	}else if (secHdr.secLevel == CCM_16){
+	  mode = CC2420_CCM;
+	  micLength = 16;
+	}else{
+	  atomic SECURITYLOCK = 0;
+	  packetLength = header.length + 1;
+	  m_state = S_RX_LENGTH;
+	  call SpiResource.release();
+	  beginReceive();
+	  return;
+	}
+
+	if(mode < 4 && mode > 0) { // if mode is valid
   
-  
+	  securityOn = 1;
+
+	  memcpy(&nonceValue[3], &(secHdr.frameCounter), 4);
+	  skip = secHdr.reserved;
+
+	  if(mode == CC2420_CBC_MAC || mode == CC2420_CCM){
+	    authentication = 1;
+	    call CSN.clr();
+	    atomic call SECCTRL0.write((mode << CC2420_SECCTRL0_SEC_MODE) |
+				       ((micLength-2)/2 << CC2420_SECCTRL0_SEC_M) |
+				       (key << CC2420_SECCTRL0_SEC_RXKEYSEL) |
+				       (1 << CC2420_SECCTRL0_SEC_CBC_HEAD) |
+				       (1 << CC2420_SECCTRL0_RXFIFO_PROTECTION)) ;
+	    call CSN.set();
+	  }else{
+	    call CSN.clr();
+	    atomic call SECCTRL0.write((mode << CC2420_SECCTRL0_SEC_MODE) |
+				       (1 << CC2420_SECCTRL0_SEC_M) |
+				       (key << CC2420_SECCTRL0_SEC_RXKEYSEL) |
+				       (1 << CC2420_SECCTRL0_SEC_CBC_HEAD) |
+				       (1 << CC2420_SECCTRL0_RXFIFO_PROTECTION)) ;
+	    call CSN.set();
+	  }
+
+	  call CSN.clr();
+#ifndef TFRAMES_ENABLED
+	  atomic call SECCTRL1.write(skip+11+sizeof(security_header_t))+((skip+11+sizeof(security_header_t))<<8);
+#else
+	  atomic call SECCTRL1.write(skip+10+sizeof(security_header_t))+((skip+10+sizeof(security_header_t))<<8);
+#endif
+	  call CSN.set();
+
+	  call CSN.clr();
+	  atomic call RXNONCE.write(0, nonceValue, 16);
+	  call CSN.set();
+
+	  call CSN.clr();
+	  atomic call SRXDEC.strobe();
+	  call CSN.set();
+
+	  atomic decLoopCount = 0;
+	  post waitDecTask();
+	  return;
+
+	}else{
+	  atomic SECURITYLOCK = 0;
+	  packetLength = header.length + 1;
+	  m_state = S_RX_LENGTH;
+	  call SpiResource.release();
+	  beginReceive();
+	  return;
+	}
+      }
+    }else{
+      packetLength = header.length + 1;
+      m_state = S_RX_LENGTH;
+      call SpiResource.release();
+      beginReceive();
+      return;
+    }
+  }
+#endif
   /***************** SpiResource Events ****************/
   event void SpiResource.granted() {
+#ifdef CC2420_HW_SECURITY
+    if(m_state == S_RX_DEC){
+      dec();
+    }else{
+      receive();
+    }
+#else
     receive();
+#endif
   }
   
   /***************** RXFIFO Events ****************/
@@ -207,7 +532,8 @@ implementation {
 
     case S_RX_LENGTH:
       m_state = S_RX_FCF;
-      if ( rxFrameLength + 1 > m_bytes_left ) {
+      packetLength = rxFrameLength+1;
+      if ( rxFrameLength + 1 > m_bytes_left || flush_flag == 1) {
         // Length of this packet is bigger than the RXFIFO, flush it out.
         flush();
         
@@ -266,20 +592,19 @@ implementation {
           call SACK.strobe();
           call CSN.set();
           call CSN.clr();
-          call RXFIFO.beginRead(buf + 1 + SACK_HEADER_LENGTH, 
-              rxFrameLength - SACK_HEADER_LENGTH);
+	  call RXFIFO.beginRead(buf + 1 + SACK_HEADER_LENGTH,
+				rxFrameLength - SACK_HEADER_LENGTH);
           return;
         }
       }
-      
       // Didn't flip CSn, we're ok to continue reading.
       call RXFIFO.continueRead(buf + 1 + SACK_HEADER_LENGTH, 
-          rxFrameLength - SACK_HEADER_LENGTH);
+			       rxFrameLength - SACK_HEADER_LENGTH);
       break;
-    
+
     case S_RX_PAYLOAD:
+
       call CSN.set();
-      
       if(!m_missed_packets) {
         // Release the SPI only if there are no more frames to download
         call SpiResource.release();
@@ -342,20 +667,32 @@ implementation {
     uint8_t length = header->length;
     uint8_t tmpLen __DEPUTY_UNUSED__ = sizeof(message_t) - (offsetof(message_t, data) - sizeof(cc2420_header_t));
     uint8_t* COUNT(tmpLen) buf = TCAST(uint8_t* COUNT(tmpLen), header);
-    
+
     metadata->crc = buf[ length ] >> 7;
     metadata->lqi = buf[ length ] & 0x7f;
     metadata->rssi = buf[ length - 1 ];
-    
+
     if (passesAddressCheck(m_p_rx_buf) && length >= CC2420_SIZE) {
+#ifdef CC2420_HW_SECURITY
+      if(securityOn == 1){
+	if(m_missed_packets > 0){
+	  m_missed_packets --;
+	}
+	if(authentication){
+	  length -= micLength;
+	}
+      }
+      micLength = 0;
+      securityOn = 0;
+      authentication = 0;
+#endif
       m_p_rx_buf = signal Receive.receive( m_p_rx_buf, m_p_rx_buf->data, 
 					   length - CC2420_SIZE);
     }
-    
     atomic receivingPacket = FALSE;
     waitForNextPacket();
   }
-  
+
   /****************** CC2420Config Events ****************/
   event void CC2420Config.syncDone( error_t error ) {
   }
@@ -366,7 +703,6 @@ implementation {
    */
   void beginReceive() { 
     m_state = S_RX_LENGTH;
-    
     atomic receivingPacket = TRUE;
     if(call SpiResource.isOwner()) {
       receive();
@@ -383,7 +719,14 @@ implementation {
    * Flush out the Rx FIFO
    */
   void flush() {
+    flush_flag = 0;
+    pos =0;
+    packetLength =0;
+    micLength = 0;
+    securityOn = 0;
+    authentication = 0;
     reset_state();
+
     call CSN.set();
     call CSN.clr();
     call SFLUSHRX.strobe();
@@ -427,14 +770,20 @@ implementation {
        * If the line stays low without generating an interrupt, that means
        * there's still more data to be received.
        */
+
       if ( ( m_missed_packets && call FIFO.get() ) || !call FIFOP.get() ) {
         // A new packet is buffered up and ready to go
         if ( m_missed_packets ) {
           m_missed_packets--;
         }
-        
-        beginReceive();
-        
+#ifdef CC2420_HW_SECURITY
+	call SpiResource.release();
+	m_state = S_RX_DEC;
+	beginDec();
+#else
+	beginReceive();
+#endif
+
       } else {
         // Wait for the next packet to arrive
         m_state = S_STARTED;
@@ -468,4 +817,5 @@ implementation {
     return (header->dest == call CC2420Config.getShortAddr()
         || header->dest == AM_BROADCAST_ADDR);
   }
+
 }

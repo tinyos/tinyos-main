@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.9 $ $Date: 2009-07-16 06:46:07 $
+ * @version $Revision: 1.10 $ $Date: 2009-08-14 20:33:43 $
  */
 
 module CC2420CsmaP @safe() {
@@ -134,7 +134,11 @@ implementation {
     }
 
     header->length = len + CC2420_SIZE;
+#ifdef CC2420_HW_SECURITY
+    header->fcf &= ((1 << IEEE154_FCF_ACK_REQ)|(1 << IEEE154_FCF_SECURITY_ENABLED));
+#else
     header->fcf &= 1 << IEEE154_FCF_ACK_REQ;
+#endif
     header->fcf |= ( ( IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE ) |
 		     ( 1 << IEEE154_FCF_INTRAPAN ) |
 		     ( IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE ) |

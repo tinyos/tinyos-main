@@ -31,7 +31,7 @@
  *
  * @author Philip Levis
  * @author David Moss
- * @version $Revision: 1.12 $ $Date: 2008-06-11 00:46:23 $
+ * @version $Revision: 1.13 $ $Date: 2009-08-14 20:33:43 $
  */
 
 #include "CC2420.h"
@@ -114,5 +114,4 @@ implementation {
   AM.CC2420Config -> CC2420ControlC;
   
   AM.SubBackoff -> CsmaC;
-  
 }

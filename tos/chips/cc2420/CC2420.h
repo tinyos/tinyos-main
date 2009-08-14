@@ -30,7 +30,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
- * @version $Revision: 1.13 $ $Date: 2008-09-05 20:39:00 $
+ * @version $Revision: 1.14 $ $Date: 2009-08-14 20:33:43 $
  */
 
 #ifndef __CC2420_H__
@@ -81,6 +81,17 @@ typedef uint8_t cc2420_status_t;
  * All of these fields will be filled in automatically by the radio stack 
  * when you attempt to send a message.
  */
+/**
+ * CC2420 Security Header
+ */
+typedef nx_struct security_header_t {
+  nx_uint8_t secLevel:3;
+  nx_uint8_t keyMode:2;
+  nx_uint8_t reserved:3;
+  nx_uint32_t frameCounter;
+  nx_uint8_t keyID[1]; // One byte for now
+} security_header_t;
+
 typedef nx_struct cc2420_header_t {
   nxle_uint8_t length;
   nxle_uint16_t fcf;
@@ -88,6 +99,10 @@ typedef nx_struct cc2420_header_t {
   nxle_uint16_t destpan;
   nxle_uint16_t dest;
   nxle_uint16_t src;
+
+#ifdef CC2420_HW_SECURITY
+  security_header_t secHdr;
+#endif
   
   /** I-Frame 6LowPAN interoperability byte */
 #ifdef CC2420_IFRAME_TYPE
@@ -99,7 +114,7 @@ typedef nx_struct cc2420_header_t {
 #endif
 
 } cc2420_header_t;
-  
+
 /**
  * CC2420 Packet Footer
  */
@@ -406,6 +421,22 @@ enum cc2420_sfdmux_enums {
   CC2420_SFDMUX_SFD = 0,
   CC2420_SFDMUX_XOSC16M_STABLE = 24,
 };
+
+enum cc2420_security_enums{
+  CC2420_NO_SEC = 0,
+  CC2420_CBC_MAC = 1,
+  CC2420_CTR = 2,
+  CC2420_CCM = 3,
+  NO_SEC = 0,
+  CBC_MAC_4 = 1,
+  CBC_MAC_8 = 2,
+  CBC_MAC_16 = 3,
+  CTR = 4,
+  CCM_4 = 5,
+  CCM_8 = 6,
+  CCM_16 = 7
+};
+norace uint8_t SECURITYLOCK = 0;
 
 enum
 {

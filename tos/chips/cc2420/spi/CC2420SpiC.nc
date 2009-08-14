@@ -33,7 +33,7 @@
  * Implementation of basic SPI primitives for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2008-11-26 10:13:31 $
+ * @version $Revision: 1.4 $ $Date: 2009-08-14 20:33:43 $
  */
 
 generic configuration CC2420SpiC() {
@@ -86,6 +86,12 @@ generic configuration CC2420SpiC() {
   provides interface CC2420Ram as PANID;
   provides interface CC2420Ram as SHORTADR;
   provides interface CC2420Ram as TXFIFO_RAM;
+  provides interface CC2420Ram as RXFIFO_RAM;
+  provides interface CC2420Ram as KEY0;
+  provides interface CC2420Ram as KEY1;
+  provides interface CC2420Ram as SABUF;
+  provides interface CC2420Ram as TXNONCE;
+  provides interface CC2420Ram as RXNONCE;
 
   // fifos
   provides interface CC2420Fifo as RXFIFO;
@@ -150,6 +156,12 @@ implementation {
   PANID = Spi.Ram[ CC2420_RAM_PANID ];
   SHORTADR = Spi.Ram[ CC2420_RAM_SHORTADR ];
   TXFIFO_RAM = Spi.Ram[ CC2420_RAM_TXFIFO ];
+  RXFIFO_RAM = Spi.Ram[ CC2420_RAM_RXFIFO ];
+  KEY0 = Spi.Ram[ CC2420_RAM_KEY0 ];
+  KEY1 = Spi.Ram[ CC2420_RAM_KEY1 ];
+  SABUF = Spi.Ram[ CC2420_RAM_SABUF ];
+  TXNONCE = Spi.Ram[ CC2420_RAM_TXNONCE ];
+  RXNONCE = Spi.Ram[ CC2420_RAM_RXNONCE ];
 
   // fifos
   RXFIFO = Spi.Fifo[ CC2420_RXFIFO ];

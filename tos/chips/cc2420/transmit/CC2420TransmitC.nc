@@ -33,7 +33,7 @@
  * Implementation of the transmit path for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2008-06-17 07:28:24 $
+ * @version $Revision: 1.3 $ $Date: 2009-08-14 20:33:43 $
  */
 
 #include "IEEE802154.h"
@@ -84,6 +84,12 @@ implementation {
   CC2420TransmitP.TXFIFO      -> Spi.TXFIFO;
   CC2420TransmitP.TXFIFO_RAM  -> Spi.TXFIFO_RAM;
   CC2420TransmitP.MDMCTRL1    -> Spi.MDMCTRL1;
+  CC2420TransmitP.SECCTRL0 -> Spi.SECCTRL0;
+  CC2420TransmitP.SECCTRL1 -> Spi.SECCTRL1;
+  CC2420TransmitP.STXENC -> Spi.STXENC;
+  CC2420TransmitP.TXNONCE -> Spi.TXNONCE;
+  CC2420TransmitP.KEY0 -> Spi.KEY0;
+  CC2420TransmitP.KEY1 -> Spi.KEY1;
   
   components CC2420ReceiveC;
   CC2420TransmitP.CC2420Receive -> CC2420ReceiveC;
@@ -96,4 +102,5 @@ implementation {
 
   components LedsC;
   CC2420TransmitP.Leds -> LedsC;
+
 }
