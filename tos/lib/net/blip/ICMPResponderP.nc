@@ -53,6 +53,7 @@ module ICMPResponderP {
   icmp_statistics_t stats;
   uint32_t solicitation_period;
   uint32_t advertisement_period;
+  uint16_t nd_seqno = 0;
 
   uint16_t ping_seq, ping_n, ping_rcv, ping_ident;
   struct in6_addr ping_dest;
@@ -77,6 +78,8 @@ module ICMPResponderP {
   }
 
   command void ICMP.sendAdvertisements() {
+
+
     uint16_t jitter = (call Random.rand16()) % TRICKLE_JITTER;
     CHECK_NODE_ID;
     if (call Advertisement.isRunning()) return;
@@ -216,18 +219,25 @@ module ICMPResponderP {
     
     radv_t *r = (radv_t *)payload;
     pfx_t  *pfx = (pfx_t *)(r->options);
-    uint16_t cost = 0;
     rqual_t *beacon = (rqual_t *)(pfx + 1);
 
     if (len > sizeof(radv_t) + sizeof(pfx_t) && 
         beacon->type == ICMP_EXT_TYPE_BEACON) {
-      cost = beacon->metric;
-      dbg("ICMPResponder", " * beacon cost: 0x%x\n", cost);
-    } else 
-        dbg("ICMPResponder", " * no beacon cost\n");
 
-    call IPRouting.reportAdvertisement(meta->sender, r->hlim,
-                                       meta->lqi, cost);
+      if (beacon->seqno > nd_seqno || (nd_seqno > 0 && beacon->seqno == 0)) {
+        call IPRouting.reset();
+      }
+
+      nd_seqno = beacon->seqno;
+      call IPRouting.reportAdvertisement(meta->sender, r->hlim,
+                                         meta->lqi, beacon->metric);
+
+
+
+      dbg("ICMPResponder", " * beacon cost: 0x%x\n", cost);
+    } else {
+        dbg("ICMPResponder", " * no beacon cost\n");
+    }
 
     if (pfx->type != ICMP_EXT_TYPE_PREFIX) return;
 

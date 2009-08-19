@@ -192,12 +192,11 @@ static inline int decompressAddress(uint8_t dispatch, uint16_t src, uint8_t addr
 
 void adjustPlen(struct ip6_hdr *ip, unpack_info_t *u_info) {
   uint16_t adjust_amt = u_info->payload_offset;
-  /*
-  switch (u_info->nxt_hdr) {
+  
+  switch (ip->nxt_hdr) {
   case IANA_UDP:
     adjust_amt -= sizeof(struct udp_hdr); break;
   }
-  */
   ip->plen = htons(ntohs(ip->plen) - adjust_amt);
 }
 
@@ -334,7 +333,7 @@ uint8_t *unpackHeaders(packed_lowmsg_t *pkt, unpack_info_t *u_info,
       dest += sizeof(struct udp_hdr);
 
       u_info->nxt_hdr = IANA_UDP;
-      // u_info->payload_offset += sizeof(struct udp_hdr);
+      u_info->payload_offset += sizeof(struct udp_hdr);
       u_info->transport_ptr = (uint8_t *)udp;
 
     } else {

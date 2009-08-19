@@ -93,7 +93,8 @@ typedef nx_struct {
   nx_uint8_t type;
   nx_uint8_t length;
   nx_uint16_t metric;
-  nx_uint8_t pad[4];
+  nx_uint16_t seqno;
+  nx_uint8_t pad[2];
 } rqual_t;
 
 struct icmp_stats {

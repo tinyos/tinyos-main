@@ -40,6 +40,7 @@
 #include "netlink.h"
 
 static ieee154_saddr_t my_short_addr;
+static uint16_t current_seqno;
 extern struct in6_addr  __my_address;
 
 char proxy_dev[IFNAMSIZ], tun_dev[IFNAMSIZ];
@@ -78,6 +79,13 @@ int routing_init(struct config *c, char *tun_name) {
     warn("unable to enable IPv6 ND proxy on %s\n", proxy_dev);
   } else {
     fprintf(fd, "1");
+    fclose(fd);
+  }
+
+  if ((fd = fopen("/var/run/ip-driver.seq", "r")) != NULL) {
+    if (fscanf(fd, "%hi\n", &current_seqno) != 1) {
+      current_seqno = 0;
+    }
     fclose(fd);
   }
 
@@ -397,4 +405,18 @@ ieee154_saddr_t routing_get_nexthop(struct split_ip_msg *msg) {
   nw_free_path(path);
 
   return ret;
+}
+
+uint16_t routing_get_seqno() {
+  return current_seqno;
+}
+
+uint16_t routing_incr_seqno() {
+  FILE *fd;
+  ++current_seqno;
+  if ((fd = fopen("/var/run/ip-driver.seq", "w")) != NULL) {
+    fprintf(fd, "%hi\n", current_seqno);
+    fclose(fd);
+  }
+  return current_seqno;
 }

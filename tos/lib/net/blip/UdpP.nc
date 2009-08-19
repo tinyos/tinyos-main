@@ -117,7 +117,7 @@ module UdpP {
       printfUART("rx cksum: %x calc: %x\n", rx_cksum, my_cksum);
       if (rx_cksum != my_cksum) {
         BLIP_STATS_INCR(cksum);
-        return;
+        // return;
       }
     }
 

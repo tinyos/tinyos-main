@@ -148,7 +148,7 @@ int tun_setup(char *dev, struct in6_addr *addr) {
   }
 
   ifr6.ifr6_ifindex = ifr.ifr_ifindex;
-  ifr6.ifr6_prefixlen = 128;
+  ifr6.ifr6_prefixlen = 64;//128;
   if (ioctl(fd, SIOCSIFADDR, &ifr6) < 0) {
     log_fatal_perror("SIOCSIFADDR (global)");
     return -1;

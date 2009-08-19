@@ -59,8 +59,6 @@ module IPRoutingP {
   uint8_t last_hops;
   uint16_t reportSeqno;
 
-  uint8_t num_low_neigh;
-
   bool soliciting;
 
   // pointer into the neighbor table of the current entry that is our
@@ -158,8 +156,9 @@ module IPRoutingP {
 
   }
 
-  event void Boot.booted() {
+  command void IPRouting.reset() {
     int i;
+    printfUART("ROUTING RESET\n");
 
     for (i = 0; i < N_NEIGH; i++) {
       neigh_table[i].flags = 0;
@@ -174,7 +173,10 @@ module IPRoutingP {
 #endif
 
     // current_epoch = 0;
-    soliciting = FALSE;
+    if (!soliciting) {
+      call ICMP.sendSolicitations();
+      soliciting = TRUE;
+    }
     //reRouting = FALSE;
     default_route_failures = 0;
     default_route = &neigh_table[0];
@@ -182,14 +184,18 @@ module IPRoutingP {
     // associated from us when it gets the first packet.
     last_qual = 0xffff;
     last_hops = 0xff;
-    num_low_neigh = 0;
+
+    traffic_sent = FALSE;
+    restartTrafficGen();
+  }
+
+  event void Boot.booted() {
+    call IPRouting.reset();
     reportSeqno = call Random.rand16();
 
     call Statistics.clear();
     call SortTimer.startPeriodic(1024L * 60);
 
-    traffic_sent = FALSE;
-    restartTrafficGen();
   }
   
   command bool IPRouting.isForMe(struct ip6_hdr *hdr) {
@@ -911,8 +917,7 @@ module IPRoutingP {
     //bool recount = FALSE;
     struct neigh_entry *neigh_slot =  NULL;
     dbg("IPRouting", "report adv: 0x%x 0x%x 0x%x 0x%x\n", neigh, hops, lqi, cost);
-    dbg("IPRouting", "my Cost: 0x%x, num_low_neigh: 0x%x, N_LOW_NEIGH: 0x%x\n", 
-               getMetric(&(neigh_table[0])), num_low_neigh, N_LOW_NEIGH);
+    dbg("IPRouting", "my Cost: 0x%x\n", getMetric(&(neigh_table[0])));
    
     // If neighbor does not exist in table 
     if ((neigh_slot = getNeighEntry(neigh)) == NULL) {

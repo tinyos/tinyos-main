@@ -80,6 +80,8 @@ interface IPRouting {
 
   command struct ip6_route *insertRoutingHeader(struct split_ip_msg *msg);
   
+  command void reset();
+
 #ifdef CENTRALIZED_ROUTING
   // command error_t installFlowEntry(struct rinstall_header* rih, bool isMine);
 

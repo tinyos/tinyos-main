@@ -1,5 +1,5 @@
 /*
- *   $Id: send.c,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
+ *   $Id: send.c,v 1.3 2009-08-19 17:09:00 sdhsdh Exp $
  *
  *   Authors:
  *    Pedro Roque		<roque@di.fc.ul.pt>
@@ -17,6 +17,21 @@
 #include <config.h>
 #include <includes.h>
 #include <radvd.h>
+
+
+uint16_t routing_get_seqno();
+
+#define ICMP_EXT_TYPE_BEACON 17
+
+/* SDH : copied from ICMP.h */
+struct AdvMetric {
+  uint8_t type;
+  uint8_t length;
+  uint16_t metric;
+  uint16_t seqno;
+  uint8_t pad[2];
+};
+
 
 void
 send_ra(int sock, struct Interface *iface, struct in6_addr *dest)
@@ -291,6 +306,19 @@ send_ra(int sock, struct Interface *iface, struct in6_addr *dest)
 		memcpy(buff + len, &ha_info, sizeof(ha_info));
 		len += sizeof(ha_info);
 	}
+
+  {
+    /* add routing metric */
+    struct AdvMetric metric;
+    metric.type = ICMP_EXT_TYPE_BEACON;
+    metric.length = 1;
+    metric.metric = htons(0);
+    metric.seqno = htons(routing_get_seqno());
+    memset(metric.pad, 0, sizeof(metric.pad));
+
+    memcpy(buff + len, &metric, sizeof(struct AdvMetric));
+    len += sizeof(struct AdvMetric);
+  }
 	
 	iov.iov_len  = len;
 	iov.iov_base = (caddr_t) buff;
