@@ -23,8 +23,8 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.5 $
- * @date $Date: 2008-06-24 05:32:32 $
+ * @version $Revision: 1.6 $
+ * @date $Date: 2009-08-19 17:52:10 $
  */
  
 #include "Resource.h"
@@ -48,11 +48,11 @@ implementation {
   }  
   
   async command bool FcfsQueue.isEmpty() {
-    return (qHead == NO_ENTRY);
+    atomic return (qHead == NO_ENTRY);
   }
   	
   async command bool FcfsQueue.isEnqueued(resource_client_id_t id) {
-  	return resQ[id] != NO_ENTRY || qTail == id; 
+  	atomic return resQ[id] != NO_ENTRY || qTail == id; 
   }
 
   async command resource_client_id_t FcfsQueue.dequeue() {
