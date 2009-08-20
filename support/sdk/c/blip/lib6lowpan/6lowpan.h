@@ -44,7 +44,7 @@ enum {
   HW_BROADCAST_ADDR = 0xffff,
 };
 #else
-#include <IEEE802154.h>
+#include <Ieee154.h>
 #endif
 
 /*

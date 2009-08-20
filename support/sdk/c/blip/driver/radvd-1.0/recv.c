@@ -1,5 +1,5 @@
 /*
- *   $Id: recv.c,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
+ *   $Id: recv.c,v 1.3 2009-08-20 17:03:05 sdhsdh Exp $
  *
  *   Authors:
  *    Pedro Roque		<roque@di.fc.ul.pt>
@@ -14,9 +14,9 @@
  *
  */
 
-#include <config.h>
-#include <includes.h>
-#include <radvd.h>
+#include "config.h"
+#include "includes.h"
+#include "radvd.h"
 
 int
 recv_rs_ra(int sock, unsigned char *msg, struct sockaddr_in6 *addr,

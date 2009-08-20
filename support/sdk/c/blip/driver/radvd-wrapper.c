@@ -45,9 +45,9 @@
  */
 
 
-#include <includes.h>
-#include <radvd.h>
-#include <pathnames.h>
+#include "radvd-1.0/includes.h"
+#include "radvd-1.0/radvd.h"
+#include "radvd-1.0/pathnames.h"
 
 #include "logging.h"
 #include "config.h"

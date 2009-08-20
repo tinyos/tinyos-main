@@ -56,7 +56,9 @@ struct vty_client {
   struct vty_client  *next;
   
   int                 buf_off;
-  unsigned char       buf[1024];
+  unsigned char       buf[2][1024];
+  int                 argc;
+  char                *argv[N_ARGS];
 };
 
 static int sock = -1;
@@ -141,7 +143,7 @@ static void vty_print_string(struct vty_client *c, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   len = vsnprintf(buf, 1024, fmt, ap);
-  write(c->writefd, buf, len);
+  len = write(c->writefd, buf, len);
 }
 
 static void prompt(struct vty_client *c) {
@@ -162,6 +164,7 @@ static void vty_new_connection() {
     return;
   }
   c->buf_off = 0;
+  memset(c->buf, 0, sizeof(c->buf));
 
   info("VTY: new connection accepted from %s\n", inet_ntoa(c->ep.sin_addr));
   vty_print_string(c, "Welcome to the blip console!\r\n");
@@ -180,22 +183,23 @@ void vty_close_connection(struct vty_client *c) {
 
 
 void vty_dispatch_command(struct vty_client *c) {
-  int   argc, i;
-  char *argv[N_ARGS];
-  init_argv((char *)c->buf, c->buf_off, argv, &argc);
+  int i;
 
-  if (argc > 0) {
+  if (c->argc > 0) {
     for (i = 0; i < cmd_tab->n; i++) {
-      if (strncmp(argv[0], cmd_tab->table[i].name, 
-                  strlen(cmd_tab->table[i].name)) == 0) {
-        cmd_tab->table[i].fn(c->writefd, argc, argv);
+      if (strncmp(c->argv[0], cmd_tab->table[i].name, 
+                  strlen(cmd_tab->table[i].name) + 1) == 0) {
+        cmd_tab->table[i].fn(c->writefd, c->argc, c->argv);
         break;
       }
       
-      if (strncmp(argv[0], "quit", 4) == 0) {
+      if (strncmp(c->argv[0], "quit", 4) == 0) {
         vty_close_connection(c);
         return;
       }
+    }
+    if (i == cmd_tab->n) {
+      vty_print_string(c, "vty: %s: command not found\r\n", c->argv[0]);
     }
   }
   prompt(c);
@@ -204,7 +208,7 @@ void vty_dispatch_command(struct vty_client *c) {
 void vty_handle_data(struct vty_client *c) {
   int len, i;
   bool prompt_pending = FALSE;
-  len = read(c->readfd, c->buf + c->buf_off, sizeof(c->buf) - c->buf_off);
+  len = read(c->readfd, c->buf[0] + c->buf_off, sizeof(c->buf) - c->buf_off);
   if (len <= 0) {
     warn("Invalid read on connection from %s: closing\n", 
          inet_ntoa(c->ep.sin_addr));
@@ -213,57 +217,65 @@ void vty_handle_data(struct vty_client *c) {
   c->buf_off += len;
   // try to scan the whole line we're building up and remove/process
   // any telnet escapes in there
+  
   for (i = 0; i < c->buf_off; i++) {
     int escape_len;
 
-    if (c->buf[i] == 255) {
+    if (c->buf[0][i] == 255) {
       escape_len = 2;
       // process and remove a command;
       // the command code is in buf[i+1]
-      switch (c->buf[i+1]) {
+      switch (c->buf[0][i+1]) {
       case TELNET_INTERRUPT:
         // ignore the command buffer we've accumulated
-        memmove(&c->buf[0], &c->buf[i+2], c->buf_off - i - 2);
+        memmove(&c->buf[0][0], &c->buf[0][i+2], c->buf_off - i - 2);
         c->buf_off -= i + 2;
         i = -1;
         prompt_pending = TRUE;
         continue;
       }
-      if (c->buf[i+1] >= 250) {
+      if (c->buf[0][i+1] >= 250) {
         unsigned char response[3];
         // we don't do __anything__
         response[0] = 255;
         response[1] = TELNET_WONT;
-        response[2] = c->buf[i+2];
-        write(c->writefd, response, 3);
+        response[2] = c->buf[0][i+2];
+        len = write(c->writefd, response, 3);
         escape_len++;
       }
 
       // this isn't like the most efficient parser ever, but since we
       // don't ask for anything and reply to everyone with DONT it seems okay.
-      memmove(&c->buf[i], &c->buf[i+escape_len], 
+      memmove(&c->buf[0][i], &c->buf[0][i+escape_len], 
               c->buf_off - (i + escape_len));
       c->buf_off -= escape_len;
       // restart processing at the same place
       i--;
-    } else if (c->buf[i] == 4) {
+    } else if (c->buf[0][i] == 4) {
       // EOT : make C-d work
       vty_close_connection(c);
     }
     // technically, clients are supposed to send \r\n as a newline.
     // however, the client in busybox (an important one) doesn't
     // escape the terminal input and so only sends \n.
-    if (/* i > 0 && c->buf[i-1] == '\r' && */ c->buf[i] == '\n') {
-      c->buf[i] = '\0';
+    if (/* i > 0 && c->buf[i-1] == '\r' && */ c->buf[0][i] == '\n') {
+
+      if (!(i <= 1 && (c->buf[0][i] == '\n' || c->buf[0][i] == '\r'))) {
+        c->buf[0][i] = '\0';
+        memcpy(c->buf[1], c->buf[0], i + 1);
+        init_argv((char *)c->buf[1], i + 1, c->argv, &c->argc);
+      }
+
       prompt_pending = FALSE;
       vty_dispatch_command(c);
 
       // start a new command at the head of the buffer
-      memmove(&c->buf[0], &c->buf[i+1], c->buf_off - i - 1);
+      memmove(&c->buf[0][0], &c->buf[0][i+1], c->buf_off - i - 1);
       c->buf_off -= i + 1;
       i = -1;
     }
   }
+
   
   if (prompt_pending) {
     vty_print_string(c, "\r\n");

@@ -41,7 +41,7 @@
 #define VTY_HEAD                  char __vty_buf[4096]; int __vty_len = 0
 #define VTY_printf(fmt, args...)  __vty_len += snprintf(__vty_buf + __vty_len, 4096 - __vty_len, \
                                                         fmt, ## args)
-#define VTY_flush()               write(fd, __vty_buf, __vty_len); __vty_len = 0
+#define VTY_flush()               __vty_len = write(fd, __vty_buf, __vty_len); __vty_len = 0
 
 #define VTYNAMSIZ 16
 

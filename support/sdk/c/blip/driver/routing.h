@@ -22,7 +22,7 @@
 #ifndef __ROUTING_H_
 #define __ROUTING_H_
 
-#include <ip.h>
+#include <lib6lowpan/ip.h>
 #include <string.h>
 #include "nwstate.h"
 #include "config.h"

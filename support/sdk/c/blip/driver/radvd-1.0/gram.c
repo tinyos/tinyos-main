@@ -229,7 +229,7 @@ typedef union YYSTYPE
 	struct AdvRDNSS		*rdnssinfo;
 }
 /* Line 187 of yacc.c.  */
-#line 233 "y.tab.c"
+#line 233 "gram.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -242,7 +242,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 246 "y.tab.c"
+#line 246 "gram.c"
 
 #ifdef short
 # undef short
@@ -2148,7 +2148,7 @@ skip_interface:
 
 
 /* Line 1267 of yacc.c.  */
-#line 2152 "y.tab.c"
+#line 2152 "gram.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);

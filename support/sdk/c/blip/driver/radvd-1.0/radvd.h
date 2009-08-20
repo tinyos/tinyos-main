@@ -1,5 +1,5 @@
 /*
- *   $Id: radvd.h,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
+ *   $Id: radvd.h,v 1.3 2009-08-20 17:03:05 sdhsdh Exp $
  *
  *   Authors:
  *    Pedro Roque		<roque@di.fc.ul.pt>
@@ -17,9 +17,9 @@
 #ifndef RADV_H
 #define RADV_H
 
-#include <config.h>
-#include <includes.h>
-#include <defaults.h>
+#include "config.h"
+#include "includes.h"
+#include "defaults.h"
 
 #define CONTACT_EMAIL	"Pekka Savola <pekkas@netcore.fi>"
 

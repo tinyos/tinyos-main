@@ -1,5 +1,5 @@
 /*
- *   $Id: defaults.h,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
+ *   $Id: defaults.h,v 1.3 2009-08-20 17:03:05 sdhsdh Exp $
  *
  *   Authors:
  *    Lars Fenneberg		<lf@elemental.net>	 
@@ -16,9 +16,9 @@
 #ifndef DEFAULTS_H
 #define DEFAULTS_H
 
-#include <config.h>
-#include <includes.h>
-#include <radvd.h>
+#include "config.h"
+#include "includes.h"
+#include "radvd.h"
 
 /* maximum message size for incoming and outgoing RSs and RAs */
 

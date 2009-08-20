@@ -30,10 +30,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#include "ip.h"
+#include <lib6lowpan/ip.h>
 #include "config.h"
 #include "logging.h"
-#include "vty.h"
+#include "vty/vty.h"
 
 #define BUF_LEN 200
 struct config *lastconfig;

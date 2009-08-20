@@ -149,7 +149,7 @@ typedef union YYSTYPE
 	struct AdvRDNSS		*rdnssinfo;
 }
 /* Line 1489 of yacc.c.  */
-#line 153 "y.tab.h"
+#line 153 "gram.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

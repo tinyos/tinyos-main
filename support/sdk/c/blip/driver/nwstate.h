@@ -22,7 +22,7 @@
 #ifndef NWSTATE_H
 #define NWSTATE_H
 
-#include <6lowpan.h>
+#include <lib6lowpan/6lowpan.h>
 /*
  * Defines a programatic representation of the link state of the network.
  * Also tracks observable statistics about the links present.

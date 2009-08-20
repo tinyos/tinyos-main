@@ -26,6 +26,7 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
+#include <netinet/in.h>
 #include <net/if.h>
 
 struct config {

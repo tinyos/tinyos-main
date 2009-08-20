@@ -30,8 +30,8 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 
-#include <6lowpan.h>
-#include <lib6lowpan.h>
+#include <lib6lowpan/6lowpan.h>
+#include <lib6lowpan/lib6lowpan.h>
 #include "routing.h"
 #include "nwstate.h"
 #include "logging.h"

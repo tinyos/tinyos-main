@@ -53,7 +53,7 @@
 #ifndef _TUN_DEV_H
 #define _TUN_DEV_H
 
-#include <ip.h>
+#include <lib6lowpan/ip.h>
 
 int tun_open(char *dev);
 int tun_close(int fd, char *dev);
