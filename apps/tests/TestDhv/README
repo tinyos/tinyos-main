@@ -1,0 +1,59 @@
+
+Title: TestDhv Application
+Author: Thanh Dang, Sweungweon Park 
+adopted from TestDip
+
+1. SETTING UP THE TEST
+
+You need to first generate the code for compilation. The gentest.py
+script reads in the Master files and creates TestDhvC.nc (the
+configuration) and TestDhvP.nc (the module). It takes two parameters,
+the total number of items and the number of new items. The items that
+are random are chosen randomly.
+
+If you want 128 total items in the dissemination set, where 96 of
+those 128 items are new, you would type:
+
+python gentest.py 128 96
+
+After the configuration and module have been generated, you can use
+the normal compilation method (e.g. make telosb).
+
+2, READING THE LEDS
+
+When an node receives a new item, it toggles LED0. When a node
+completes all items, it turns all LEDs on.
+
+3. SERIAL MESSAGES
+
+typedef nx_struct dhv_test_msg_t {
+  nx_am_addr_t id;
+  nx_uint8_t count;
+  nx_uint8_t isOk;
+} dhv_test_msg_t;
+
+When a node receives a new item, it sends a dhv_test_msg_t through the
+serial interface.
+
+id is the node id
+count is how many new items it has received so far
+isOk will be true if the data value was as expected
+
+4. PACKET INJECTOR
+
+You can also use the injector to send data packets via a
+basestation. The syntax to do that is:
+
+java DhvInject [key] [version] [data in quotes delimited by space]
+
+key is the data key in hexadecimal
+version is the version number in decimal
+data is the actual data in quotes delimited by space
+
+For example, if you want to send key 10, version 2, and data "ab cd
+ef". You would type:
+
+java DipInject 0a 2 "ab cd ef"
+
+For this specific test application, your data needs to be "ef be". You
+will need a SerialForwarder running for this work.
