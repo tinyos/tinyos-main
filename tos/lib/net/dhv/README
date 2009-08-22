@@ -1,0 +1,29 @@
+
+Title: Dhv
+Author: Thanh Dang, Seungweon Park
+------------------
+
+DHV is a code consistency maintenance protocol to ensure that every node
+in a network will eventually have the same code. DHV is based on the
+simple observation that if two code versions are different, their
+corresponding version numbers often differ in only a few least significant
+bits of their binary representation. DHV allows nodes to carefully select
+and transmit only necessary bit level information to detect a newer code version
+in the network. Detail of the protocol can be found here
+
+Thanh Dang, Nirupama Bulusu, Wu-chi Feng, and Seungweon Park, 
+"DHV: A Code Consistent Maintenance Protocol for Wireless Sensor Networks.", 
+In Proceedings of EWSN 2009, Cork, Ireland, Feb 2009.
+
+Usage:
+------
+
+To use include the following in your Makefile:
+
+CFLAGS += -I$(TOSDIR)/lib/net
+CFLAGS += -I$(TOSDIR)/lib/net/dhv
+CFLAGS += -I$(TOSDIR)/lib/net/dhv/interfaces
+
+* add a following line when use BaseStation
+CFLAGS += -DTOSH_DATA_LENGTH=32
+ 
