@@ -57,11 +57,16 @@
  */
  
 #include "CC2420.h"
+#include "Ieee154.h"
 
 configuration CC2420TinyosNetworkC {
   provides {
+    interface Resource[uint8_t clientId];
     interface Send;
     interface Receive;
+
+    interface Send as ActiveSend;
+    interface Receive as ActiveReceive;
   }
   
   uses {
@@ -72,21 +77,27 @@ configuration CC2420TinyosNetworkC {
 
 implementation {
 
-#ifdef CC2420_IFRAME_TYPE
+  enum {
+    TINYOS_N_NETWORKS = uniqueCount(IEEE154_SEND_CLIENT),
+  };
+
+  components MainC;
   components CC2420TinyosNetworkP;
   components CC2420PacketC;
-  
-  CC2420TinyosNetworkP.Send = Send;
-  CC2420TinyosNetworkP.Receive = Receive;
+  components new FcfsResourceQueueC(TINYOS_N_NETWORKS);
+
+  CC2420TinyosNetworkP.BareSend = Send;
+  CC2420TinyosNetworkP.BareReceive = Receive;
   CC2420TinyosNetworkP.SubSend = SubSend;
   CC2420TinyosNetworkP.SubReceive = SubReceive;
-  
+  CC2420TinyosNetworkP.Resource = Resource;
+  CC2420TinyosNetworkP.ActiveSend = ActiveSend;
+  CC2420TinyosNetworkP.ActiveReceive = ActiveReceive;
+
+  CC2420TinyosNetworkP.CC2420Packet -> CC2420PacketC;
   CC2420TinyosNetworkP.CC2420PacketBody -> CC2420PacketC;
+  CC2420TinyosNetworkP.Queue -> FcfsResourceQueueC;
 
-#else
-  Send = SubSend;
-  Receive = SubReceive;
-#endif
-
+  MainC.SoftwareInit -> FcfsResourceQueueC;
 }
 

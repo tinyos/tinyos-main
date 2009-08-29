@@ -37,62 +37,179 @@
  *
  * @author David Moss
  */
- 
+
 #include "CC2420.h"
+#include "Ieee154.h"
 
 module CC2420TinyosNetworkP @safe() {
   provides {
-    interface Send;
-    interface Receive;
-    
-    interface Receive as NonTinyosReceive[uint8_t networkId];
+    interface Resource[uint8_t client];
+
+    interface Send as BareSend;
+    interface Receive as BareReceive;
+
+    interface Send as ActiveSend;
+    interface Receive as ActiveReceive;
   }
   
   uses {
     interface Send as SubSend;
     interface Receive as SubReceive;
+    interface CC2420Packet;
     interface CC2420PacketBody;
+    interface ResourceQueue as Queue;
   }
 }
 
 implementation {
 
+  enum {
+    OWNER_NONE = 0xff,
+    TINYOS_N_NETWORKS = uniqueCount(IEEE154_SEND_CLIENT),
+  } state;
+
+  norace uint8_t resource_owner = OWNER_NONE, next_owner;
+
+  command error_t ActiveSend.send(message_t* msg, uint8_t len) {
+    call CC2420Packet.setNetwork(msg, TINYOS_6LOWPAN_NETWORK_ID);
+    return call BareSend.send(msg, len + AM_OVERHEAD);
+  }
+
+  command error_t ActiveSend.cancel(message_t* msg) {
+    return call BareSend.cancel(msg);
+  }
+
+  command uint8_t ActiveSend.maxPayloadLength() {
+    return call BareSend.maxPayloadLength() - AM_OVERHEAD;
+  }
+
+  command void* ActiveSend.getPayload(message_t* msg, uint8_t len) {
+    if (len <= call ActiveSend.maxPayloadLength()) {
+      return msg->data;
+    } else {
+      return NULL;
+    }
+  }
+
   /***************** Send Commands ****************/
-  command error_t Send.send(message_t* msg, uint8_t len) {
-    (call CC2420PacketBody.getHeader(msg))->network = TINYOS_6LOWPAN_NETWORK_ID;
+  command error_t BareSend.send(message_t* msg, uint8_t len) {
     return call SubSend.send(msg, len);
   }
 
-  command error_t Send.cancel(message_t* msg) {
+  command error_t BareSend.cancel(message_t* msg) {
     return call SubSend.cancel(msg);
   }
 
-  command uint8_t Send.maxPayloadLength() {
+  command uint8_t BareSend.maxPayloadLength() {
     return call SubSend.maxPayloadLength();
   }
 
-  command void* Send.getPayload(message_t* msg, uint8_t len) {
+  command void* BareSend.getPayload(message_t* msg, uint8_t len) {
     return call SubSend.getPayload(msg, len);
   }
   
   /***************** SubSend Events *****************/
   event void SubSend.sendDone(message_t* msg, error_t error) {
-    signal Send.sendDone(msg, error);
+    if (call CC2420Packet.getNetwork(msg) == TINYOS_6LOWPAN_NETWORK_ID) {
+      signal ActiveSend.sendDone(msg, error);
+    } else {
+      signal BareSend.sendDone(msg, error);
+    }
   }
   
   /***************** SubReceive Events ***************/
   event message_t *SubReceive.receive(message_t *msg, void *payload, uint8_t len) {
-    if((call CC2420PacketBody.getHeader(msg))->network == TINYOS_6LOWPAN_NETWORK_ID) {
-      return signal Receive.receive(msg, payload, len);
-      
+
+    if(!(call CC2420PacketBody.getMetadata(msg))->crc) {
+      return msg;
+    }
+
+    if (call CC2420Packet.getNetwork(msg) == TINYOS_6LOWPAN_NETWORK_ID) {
+      return signal ActiveReceive.receive(msg, msg->data, len - AM_OVERHEAD);
     } else {
-      return signal NonTinyosReceive.receive[(call CC2420PacketBody.getHeader(msg))->network](msg, payload, len);
+      return signal BareReceive.receive(msg, payload, len);
     }
   }
-  
+
+  /***************** Resource ****************/
+  // SDH : 8-7-2009 : testing if there's more then one client allows
+  // the compiler to eliminate most of the logic when there's only one
+  // client.
+  task void grantTask() {
+
+
+    if (TINYOS_N_NETWORKS > 1) {
+      if (resource_owner == OWNER_NONE && !(call Queue.isEmpty())) {
+        resource_owner = call Queue.dequeue();
+
+        if (resource_owner != OWNER_NONE) {
+          signal Resource.granted[resource_owner]();
+        }
+      }
+    } else {
+      if (next_owner != resource_owner) {
+        resource_owner = next_owner;
+        signal Resource.granted[resource_owner]();
+      }
+    }
+  }
+
+  async command error_t Resource.request[uint8_t id]() {
+
+    post grantTask();
+
+    if (TINYOS_N_NETWORKS > 1) {
+      return call Queue.enqueue(id);
+    } else {
+      if (id == resource_owner) {
+        return EALREADY;
+      } else {
+        next_owner = id;
+        return SUCCESS;
+      }
+    }
+  }
+
+  async command error_t Resource.immediateRequest[uint8_t id]() {
+    if (resource_owner == id) return EALREADY;
+
+    if (TINYOS_N_NETWORKS > 1) {
+      if (resource_owner == OWNER_NONE && call Queue.isEmpty()) {
+        resource_owner = id;
+        return SUCCESS;
+      }
+      return FAIL;
+    } else {
+      resource_owner = id;
+      return SUCCESS;
+    }
+  }
+  async command error_t Resource.release[uint8_t id]() {
+    if (TINYOS_N_NETWORKS > 1) {
+      post grantTask();
+    }
+    resource_owner = OWNER_NONE;
+    return SUCCESS;
+  }
+  async command bool Resource.isOwner[uint8_t id]() {
+    return (id == resource_owner);
+  }
+
   /***************** Defaults ****************/
-  default event message_t *NonTinyosReceive.receive[uint8_t networkId](message_t *msg, void *payload, uint8_t len) {
+  default event message_t *BareReceive.receive(message_t *msg, void *payload, uint8_t len) {
     return msg;
   }
-  
+  default event void BareSend.sendDone(message_t *msg, error_t error) {
+
+  }
+  default event message_t *ActiveReceive.receive(message_t *msg, void *payload, uint8_t len) {
+    return msg;
+  }
+  default event void ActiveSend.sendDone(message_t *msg, error_t error) {
+
+  }
+  default event void Resource.granted[uint8_t client]() {
+    call Resource.release[client]();
+  }
+
 }

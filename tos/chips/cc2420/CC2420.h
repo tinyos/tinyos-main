@@ -30,7 +30,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
- * @version $Revision: 1.14 $ $Date: 2009-08-14 20:33:43 $
+ * @version $Revision: 1.15 $ $Date: 2009-08-29 00:06:42 $
  */
 
 #ifndef __CC2420_H__
@@ -38,8 +38,12 @@
 
 typedef uint8_t cc2420_status_t;
 
-#ifndef TFRAMES_ENABLED
+#if !defined(TFRAMES_ENABLED) && !defined(IEEE154FRAMES_ENABLED)
 #define CC2420_IFRAME_TYPE
+#endif
+
+#if defined(TFRAMES_ENABLED) && defined(IEEE154FRAMES_ENABLED)
+#error "Both TFRAMES and IEEE154FRAMES enabled!"
 #endif
 
 /**
@@ -99,18 +103,19 @@ typedef nx_struct cc2420_header_t {
   nxle_uint16_t destpan;
   nxle_uint16_t dest;
   nxle_uint16_t src;
-
-#ifdef CC2420_HW_SECURITY
-  security_header_t secHdr;
-#endif
+  /** CC2420 802.15.4 header ends here */
   
-  /** I-Frame 6LowPAN interoperability byte */
 #ifdef CC2420_IFRAME_TYPE
+  /** I-Frame 6LowPAN interoperability byte */
   nxle_uint8_t network;
 #endif
 
-#ifndef TINYOS_IP
+#if defined(TFRAMES_ENABLED) || defined(CC2420_IFRAME_TYPE)
   nxle_uint8_t type;
+#endif
+
+#ifdef CC2420_HW_SECURITY
+  security_header_t secHdr;
 #endif
 
 } cc2420_header_t;
@@ -143,7 +148,6 @@ typedef nx_struct cc2420_metadata_t {
   nx_uint16_t maxRetries;
   nx_uint16_t retryDelay;
 #endif
-
 } cc2420_metadata_t;
 
 
@@ -180,7 +184,6 @@ typedef nx_struct cc2420_packet_t {
 #define TINYOS_6LOWPAN_NETWORK_ID 0x3f
 #endif
 
-
 enum {
   // size of the header not including the length byte
   MAC_HEADER_SIZE = sizeof( cc2420_header_t ) - 1,
@@ -189,8 +192,19 @@ enum {
   // MDU
   MAC_PACKET_SIZE = MAC_HEADER_SIZE + TOSH_DATA_LENGTH + MAC_FOOTER_SIZE,
 
-  CC2420_SIZE = MAC_HEADER_SIZE + MAC_FOOTER_SIZE,
+  AM_OVERHEAD = 0
+#if defined(TFRAMES_ENABLED) || defined(CC2420_IFRAME_TYPE)
+  + 1 // add one for the AM byte
+#if defined(CC2420_IFRAME_TYPE)
+  + 1 // and one for the network byte
+#endif
+#endif    
+  ,
+
+  CC2420_SIZE = MAC_HEADER_SIZE + MAC_FOOTER_SIZE - AM_OVERHEAD,
 };
+
+#define CC2420_PAYLOAD(mbuf)  (((uint8_t *)(mbuf)->data) - AM_OVERHEAD)
 
 enum cc2420_enums {
   CC2420_TIME_ACK_TURNAROUND = 7, // jiffies

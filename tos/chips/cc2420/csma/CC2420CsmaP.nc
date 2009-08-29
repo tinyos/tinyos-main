@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.10 $ $Date: 2009-08-14 20:33:43 $
+ * @version $Revision: 1.11 $ $Date: 2009-08-29 00:06:42 $
  */
 
 module CC2420CsmaP @safe() {
@@ -160,7 +160,7 @@ implementation {
 
   command void* Send.getPayload(message_t* m, uint8_t len) {
     if (len <= call Send.maxPayloadLength()) {
-      return (void* COUNT_NOK(len))m->data;
+      return (void* COUNT_NOK(len ))(CC2420_PAYLOAD(m));
     }
     else {
       return NULL;
@@ -168,7 +168,7 @@ implementation {
   }
 
   command uint8_t Send.maxPayloadLength() {
-    return TOSH_DATA_LENGTH;
+    return TOSH_DATA_LENGTH + AM_OVERHEAD;
   }
 
   /**************** RadioBackoff Commands ****************/

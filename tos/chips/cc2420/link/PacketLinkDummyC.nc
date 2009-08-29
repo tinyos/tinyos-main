@@ -48,12 +48,12 @@ configuration PacketLinkDummyC {
 
 implementation {
   components PacketLinkDummyP,
-      ActiveMessageC;
+      CC2420RadioC;
   
   PacketLink = PacketLinkDummyP;
   Send = SubSend;
   
-  PacketLinkDummyP.PacketAcknowledgements -> ActiveMessageC;
+  PacketLinkDummyP.PacketAcknowledgements -> CC2420RadioC;
   
 }
 

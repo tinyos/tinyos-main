@@ -51,7 +51,6 @@ configuration PacketLinkC {
 implementation {
 
   components PacketLinkP,
-      ActiveMessageC,
       CC2420PacketC,
       RandomC,
       new StateC() as SendStateC,
@@ -63,8 +62,7 @@ implementation {
   
   PacketLinkP.SendState -> SendStateC;
   PacketLinkP.DelayTimer -> DelayTimerC;
-  PacketLinkP.PacketAcknowledgements -> ActiveMessageC;
-  PacketLinkP.AMPacket -> ActiveMessageC;
+  PacketLinkP.PacketAcknowledgements -> CC2420PacketC;
   PacketLinkP.CC2420PacketBody -> CC2420PacketC;
 
 }

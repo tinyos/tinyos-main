@@ -48,7 +48,6 @@ module PacketLinkP {
     interface State as SendState;
     interface PacketAcknowledgements;
     interface Timer<TMilli> as DelayTimer;
-    interface AMPacket;
     interface CC2420PacketBody;
   }
 }
@@ -221,6 +220,7 @@ implementation {
   void signalDone(error_t error) {
     call DelayTimer.stop();
     call SendState.toIdle();
+    (call CC2420PacketBody.getMetadata(currentSendMsg))->maxRetries = totalRetries;
     signal Send.sendDone(currentSendMsg, error);
   }
 }

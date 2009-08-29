@@ -35,7 +35,7 @@
  * @author Jung Il Choi
  * @author JeongGil Ko
  * @author Razvan Musaloiu-E
- * @version $Revision: 1.19 $ $Date: 2009-08-14 20:33:43 $
+ * @version $Revision: 1.20 $ $Date: 2009-08-29 00:06:42 $
  */
 
 #include "IEEE802154.h"
@@ -120,9 +120,6 @@ implementation {
   message_t m_rx_buf;
 #ifdef CC2420_HW_SECURITY
   norace cc2420_receive_state_t m_state;
-#else
-  cc2420_receive_state_t m_state;
-#endif
   norace uint8_t packetLength = 0;
   norace uint8_t pos = 0;
   norace uint8_t secHdrPos = 0;
@@ -134,6 +131,12 @@ implementation {
   uint8_t flush_flag = 0;
   uint16_t startTime = 0;
 
+  void beginDec();
+  void dec();
+#else
+  cc2420_receive_state_t m_state;
+#endif
+
   /***************** Prototypes ****************/
   void reset_state();
   void beginReceive();
@@ -141,8 +144,6 @@ implementation {
   void waitForNextPacket();
   void flush();
   bool passesAddressCheck(message_t * ONE msg);
-  void beginDec();
-  void dec();
 
   task void receiveDone_task();
 
@@ -532,8 +533,14 @@ implementation {
 
     case S_RX_LENGTH:
       m_state = S_RX_FCF;
+#ifdef CC2420_HW_SECURITY
       packetLength = rxFrameLength+1;
-      if ( rxFrameLength + 1 > m_bytes_left || flush_flag == 1) {
+#endif
+      if ( rxFrameLength + 1 > m_bytes_left
+#ifdef CC2420_HW_SECURITY
+           || flush_flag == 1
+#endif
+           ) {
         // Length of this packet is bigger than the RXFIFO, flush it out.
         flush();
         
@@ -686,7 +693,7 @@ implementation {
       securityOn = 0;
       authentication = 0;
 #endif
-      m_p_rx_buf = signal Receive.receive( m_p_rx_buf, m_p_rx_buf->data, 
+      m_p_rx_buf = signal Receive.receive( m_p_rx_buf, CC2420_PAYLOAD(m_p_rx_buf),
 					   length - CC2420_SIZE);
     }
     atomic receivingPacket = FALSE;
@@ -719,12 +726,14 @@ implementation {
    * Flush out the Rx FIFO
    */
   void flush() {
+#ifdef CC2420_HW_SECURITY
     flush_flag = 0;
     pos =0;
     packetLength =0;
     micLength = 0;
     securityOn = 0;
     authentication = 0;
+#endif
     reset_state();
 
     call CSN.set();

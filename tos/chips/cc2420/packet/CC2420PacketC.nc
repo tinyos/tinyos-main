@@ -60,9 +60,6 @@ implementation {
   PacketTimeStampMilli = CC2420PacketP;
   PacketTimeSyncOffset = CC2420PacketP;
 
-  components CC2420ActiveMessageC;
-  CC2420PacketP.Packet -> CC2420ActiveMessageC;
-
   components Counter32khz32C, new CounterToLocalTimeC(T32khz);
   CounterToLocalTimeC.Counter -> Counter32khz32C;
   CC2420PacketP.LocalTime32khz -> CounterToLocalTimeC;

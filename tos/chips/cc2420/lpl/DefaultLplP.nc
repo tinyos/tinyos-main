@@ -56,7 +56,6 @@ module DefaultLplP {
     interface CC2420Transmit as Resend;
     interface RadioBackoff;
     interface Receive as SubReceive;
-    interface AMPacket;
     interface SplitControl as SubControl;
     interface PowerCycle;
     interface CC2420PacketBody;
@@ -484,7 +483,7 @@ implementation {
     if(call LowPowerListening.getRxSleepInterval(currentSendMsg) 
       > ONE_MESSAGE) {
     
-      if(call AMPacket.destination(currentSendMsg) == AM_BROADCAST_ADDR) {
+      if((call CC2420PacketBody.getHeader(currentSendMsg))->dest == IEEE154_BROADCAST_ADDR) {
         call PacketAcknowledgements.noAck(currentSendMsg);
       } else {
         // Send it repetitively within our transmit window

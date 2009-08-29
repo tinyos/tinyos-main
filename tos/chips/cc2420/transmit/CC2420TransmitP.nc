@@ -35,7 +35,7 @@
  * @author Jung Il Choi Initial SACK implementation
  * @author JeongGil Ko
  * @author Razvan Musaloiu-E
- * @version $Revision: 1.14 $ $Date: 2009-08-14 20:33:43 $
+ * @version $Revision: 1.15 $ $Date: 2009-08-29 00:06:42 $
  */
 
 #include "CC2420.h"
@@ -106,11 +106,16 @@ implementation {
     CC2420_ABORT_PERIOD = 320
   };
 
+#ifdef CC2420_HW_SECURITY
   uint16_t startTime = 0;
   norace uint8_t secCtrlMode = 0;
   norace uint8_t nonceValue[16] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
   norace uint8_t skip;
   norace uint16_t CTR_SECCTRL0, CTR_SECCTRL1;
+  uint8_t securityChecked = 0;
+  
+  void securityCheck();
+#endif
   
   norace message_t * ONE_NOK m_msg;
   
@@ -120,8 +125,6 @@ implementation {
   
   cc2420_transmit_state_t m_state = S_STOPPED;
 
-  uint8_t securityChecked = 0;
-  
   bool m_receiving = FALSE;
   
   uint16_t m_prev_time;
@@ -147,7 +150,6 @@ implementation {
   error_t resend( bool cca );
   void loadTXFIFO();
   void attemptSend();
-  void securityCheck();
   void congestionBackoff();
   error_t acquireSpiResource();
   error_t releaseSpiResource();
@@ -550,7 +552,9 @@ implementation {
         return FAIL;
       }
       
+#ifdef CC2420_HW_SECURITY
       securityChecked = 0;
+#endif
       m_state = S_LOAD;
       m_cca = cca;
       m_msg = p_msg;

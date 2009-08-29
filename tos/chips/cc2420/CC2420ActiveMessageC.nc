@@ -31,11 +31,16 @@
  *
  * @author Philip Levis
  * @author David Moss
- * @version $Revision: 1.13 $ $Date: 2009-08-14 20:33:43 $
+ * @version $Revision: 1.14 $ $Date: 2009-08-29 00:06:42 $
  */
 
 #include "CC2420.h"
 #include "AM.h"
+#include "Ieee154.h"
+
+#ifdef IEEE154FRAMES_ENABLED
+#error "CC2420 AM layer cannot work when IEEE 802.15.4 frames only are used"
+#endif
 
 configuration CC2420ActiveMessageC {
   provides {
@@ -55,29 +60,18 @@ configuration CC2420ActiveMessageC {
   }
 }
 implementation {
+  enum {
+    CC2420_AM_SEND_ID     = unique(IEEE154_SEND_CLIENT),
+  };
 
+  components CC2420RadioC as Radio;
   components CC2420ActiveMessageP as AM;
-  components CC2420CsmaC as CsmaC;
   components ActiveMessageAddressC;
-  components UniqueSendC;
-  components UniqueReceiveC;
-  components CC2420TinyosNetworkC;
-  components CC2420PacketC;
+  components CC2420CsmaC as CsmaC;
   components CC2420ControlC;
+  components CC2420PacketC;
   
-#if defined(LOW_POWER_LISTENING) || defined(ACK_LOW_POWER_LISTENING)
-  components DefaultLplC as LplC;
-#else
-  components DummyLplC as LplC;
-#endif
-
-#if defined(PACKET_LINK)
-  components PacketLinkC as LinkC;
-#else
-  components PacketLinkDummyC as LinkC;
-#endif
-
-  
+  SplitControl = Radio;
   RadioBackoff = AM;
   Packet = AM;
   AMSend = AM;
@@ -85,28 +79,16 @@ implementation {
   Receive = AM.Receive;
   Snoop = AM.Snoop;
   AMPacket = AM;
-  PacketLink = LinkC;
-  LowPowerListening = LplC;
-  CC2420Packet = CC2420PacketC;
-  PacketAcknowledgements = CC2420PacketC;
-  LinkPacketMetadata = CC2420PacketC;
+  PacketLink = Radio;
+  LowPowerListening = Radio;
+  CC2420Packet = Radio;
+  PacketAcknowledgements = Radio;
+  LinkPacketMetadata = Radio;
   
-  // SplitControl Layers
-  SplitControl = LplC;
-  LplC.SubControl -> CsmaC;
-  
-  // Send Layers
-  AM.SubSend -> UniqueSendC;
-  UniqueSendC.SubSend -> LinkC;
-  LinkC.SubSend -> LplC.Send;
-  LplC.SubSend -> CC2420TinyosNetworkC.Send;
-  CC2420TinyosNetworkC.SubSend -> CsmaC;
-  
-  // Receive Layers
-  AM.SubReceive -> LplC;
-  LplC.SubReceive -> UniqueReceiveC.Receive;
-  UniqueReceiveC.SubReceive -> CC2420TinyosNetworkC.Receive;
-  CC2420TinyosNetworkC.SubReceive -> CsmaC;
+  // Radio resource for the AM layer
+  AM.RadioResource -> Radio.Resource[CC2420_AM_SEND_ID];
+  AM.SubSend -> Radio.ActiveSend;
+  AM.SubReceive -> Radio.ActiveReceive;
 
   AM.ActiveMessageAddress -> ActiveMessageAddressC;
   AM.CC2420Packet -> CC2420PacketC;
@@ -114,4 +96,7 @@ implementation {
   AM.CC2420Config -> CC2420ControlC;
   
   AM.SubBackoff -> CsmaC;
+
+  components LedsC;
+  AM.Leds -> LedsC;
 }
