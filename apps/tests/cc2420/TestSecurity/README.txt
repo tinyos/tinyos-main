@@ -48,12 +48,9 @@ enabled. The first application, RadioCountToLeds1, is a modification
 of RadioCountToLeds in the TinyOS 2.x repository. It dedicates one
 node (TOS_NODE_ID 1) to be the transmitting node and other nodes to
 receive its broadcast packets. Node 1 can use any of the three options
-enabled. The second application, RadioCountToLeds2, is a modification
-of the previous RadioCountToLeds1. Instead of only sending packets
-with security enabled, node 1 sends each secured and un-secured
-packets one at a time. The receivers distinguish between secured and
-un-secured packets and process the un-secured ones through the normal
-receive path and the secured ones through the secured receive path.
+enabled. The second application is the BaseStation application with
+the security extentions. Modifications were made to the Makefile by
+adding CFLAGS += -DCC2420_HW_SECURITY and a longer TOSH_DATA_LENGTH.
 
 Known bugs/limitations:
 
