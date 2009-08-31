@@ -224,14 +224,24 @@ module ICMPResponderP {
     if (len > sizeof(radv_t) + sizeof(pfx_t) && 
         beacon->type == ICMP_EXT_TYPE_BEACON) {
 
+      printfUART("beacon seqno: %i my seqno: %i\n", beacon->seqno, nd_seqno);
+
       if (beacon->seqno > nd_seqno || (nd_seqno > 0 && beacon->seqno == 0)) {
         call IPRouting.reset();
+        nd_seqno = beacon->seqno;
       }
 
-      nd_seqno = beacon->seqno;
-      call IPRouting.reportAdvertisement(meta->sender, r->hlim,
-                                         meta->lqi, beacon->metric);
+      if (beacon->seqno == nd_seqno) {
+        call IPRouting.reportAdvertisement(meta->sender, r->hlim,
+                                           meta->lqi, beacon->metric);
+        // push out the seqno update
+        call Advertisement.stop();
+        call ICMP.sendAdvertisements();
 
+        if (pfx->type != ICMP_EXT_TYPE_PREFIX) return;
+
+        call IPAddress.setPrefix((uint8_t *)pfx->prefix);
+      }
 
 
       dbg("ICMPResponder", " * beacon cost: 0x%x\n", cost);
@@ -239,9 +249,6 @@ module ICMPResponderP {
         dbg("ICMPResponder", " * no beacon cost\n");
     }
 
-    if (pfx->type != ICMP_EXT_TYPE_PREFIX) return;
-
-    call IPAddress.setPrefix((uint8_t *)pfx->prefix);
 
     // TODO : get short address here...
   }
@@ -285,6 +292,7 @@ module ICMPResponderP {
     q->type = ICMP_EXT_TYPE_BEACON;
     q->length = sizeof(rqual_t) >> 3;;
     q->metric = call IPRouting.getQuality();
+    q->seqno = nd_seqno;
 
     call IPAddress.getLLAddr(&ipmsg->hdr.ip6_src);
     ip_memclr((uint8_t *)&ipmsg->hdr.ip6_dst, 16);

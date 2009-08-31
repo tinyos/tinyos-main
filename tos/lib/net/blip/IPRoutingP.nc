@@ -119,6 +119,7 @@ module IPRoutingP {
     traffic_interval += (call Random.rand16()) % (TGEN_BASE_TIME);
     if (call TrafficGenTimer.isRunning())
       call TrafficGenTimer.stop();
+    traffic_sent = FALSE;
 
     call TrafficGenTimer.startOneShot(traffic_interval);
   }
@@ -158,7 +159,6 @@ module IPRoutingP {
 
   command void IPRouting.reset() {
     int i;
-    printfUART("ROUTING RESET\n");
 
     for (i = 0; i < N_NEIGH; i++) {
       neigh_table[i].flags = 0;

@@ -659,8 +659,6 @@ module IPDispatchP {
     packed_lowmsg_t lowmsg;
 
     printfUART("p1: %p p2: %p\n", msg_payload, call Packet.getPayload(msg, 0));
-    printfUART("l1: %i l2: %i\n", len, call Packet.payloadLength(msg));
-
     // set up the ip message structaddFragment
     lowmsg.data = msg_payload;
     lowmsg.len  = len;
