@@ -9,5 +9,12 @@ AC_CONFIG_FILES([
  lib6lowpan/Makefile
  driver/Makefile
 ])
+
+AC_ARG_ENABLE([lpl],
+        [AS_HELP_STRING([--enable-lpl], [assume LPL is in use])],
+        AC_DEFINE([BLIP_L2_RETRIES], [1], [Number of link-layer retransmissions])
+        [])
+
+
 AC_CONFIG_SUBDIRS([driver/radvd-1.0])
 AC_OUTPUT

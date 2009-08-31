@@ -132,8 +132,13 @@ void nw_print_links(int fd, int argc, char **argv) {
   router_t *r;
   link_t *l;
 
-  if (argc == 2)
-    target = atoi(argv[1]);
+  if (argc == 2) {
+    if (sscanf(argv[1], "%i", &target) == 0) {
+      VTY_printf("invalid node\r\n");
+      VTY_flush();
+      return;
+    }
+  }
 
   for (r = router_list; r != NULL; r = r->next) {
     char flags[16]; int pos = 0;
