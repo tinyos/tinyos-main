@@ -16,6 +16,9 @@
 #include "nwk_func.h"
 #include "UserButton.h"
 
+#include "Test_APL.h"
+
+
 configuration Test_APL {
 }
 implementation {

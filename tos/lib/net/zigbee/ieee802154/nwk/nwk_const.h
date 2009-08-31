@@ -12,12 +12,12 @@
 
 //SELECTED DEVICE TYPE
 
-#define TYPE_DEVICE END_DEVICE
+//#define TYPE_DEVICE END_DEVICE
 //#define TYPE_DEVICE ROUTER
-//#define TYPE_DEVICE COORDINATOR
+#define TYPE_DEVICE COORDINATOR
 
 //test definitions
-#define DEVICE_DEPTH 0x01
+#define DEVICE_DEPTH 0x00
 
 //used to operate in a fixed channel
 #define LOGICAL_CHANNEL 0x15

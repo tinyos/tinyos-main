@@ -52,17 +52,27 @@ implementation {
   components LedsC;
   components NWKM;
        
-  components Mac;
-  
+  //components Mac;
+
+//////////
+  components WrapperC;
+
+/////////////
+
+
+
   NWKM.Leds -> LedsC;
    
    
 	components RandomC;
 	NWKM.Random -> RandomC;
    
-   
-  //MAC interfaces
   
+
+
+ 
+  //MAC interfaces
+  /*
   NWKM.MLME_START -> Mac.MLME_START;
   
   NWKM.MLME_GET ->Mac.MLME_GET;
@@ -77,12 +87,40 @@ implementation {
   NWKM.MLME_ORPHAN->Mac.MLME_ORPHAN;
   NWKM.MLME_SYNC->Mac.MLME_SYNC;
   NWKM.MLME_SYNC_LOSS->Mac.MLME_SYNC_LOSS;
-  NWKM.MLME_RESET->Mac.MLME_RESET;
-  
+ NWKM.MLME_RESET->Mac.MLME_RESET;
   NWKM.MLME_SCAN->Mac.MLME_SCAN;
   
-  
   NWKM.MCPS_DATA->Mac.MCPS_DATA;
+*/
+
+///////////
+NWKM.MLME_RESET->WrapperC;
+NWKM.MLME_START -> WrapperC;
+  
+  NWKM.MLME_GET ->WrapperC;
+  NWKM.MLME_SET ->WrapperC;
+  
+  NWKM.MLME_BEACON_NOTIFY ->WrapperC;
+  NWKM.MLME_GTS -> WrapperC;
+  
+  NWKM.MLME_ASSOCIATE->WrapperC;
+  NWKM.MLME_DISASSOCIATE->WrapperC;
+  
+  NWKM.MLME_ORPHAN->WrapperC;
+  NWKM.MLME_SYNC->WrapperC;
+  NWKM.MLME_SYNC_LOSS->WrapperC;
+  NWKM.MLME_SCAN->WrapperC;
+  
+  NWKM.MCPS_DATA->WrapperC;
+
+
+
+
+///////////////
+  
+
+
+
 	
 	
 	

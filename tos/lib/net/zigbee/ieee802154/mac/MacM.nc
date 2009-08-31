@@ -738,7 +738,7 @@ async event error_t TimerAsync.sd_fired()
 	}
 	else
 	{
-	//temporariamente aqui //atenção quando for para o cluster-tree é preciso mudar para fora
+	//temporariamente aqui //atenï¿½ï¿½o quando for para o cluster-tree ï¿½ preciso mudar para fora
 	//e necessario destinguir ZC de ZR (que tem que manter a sync com o respectivo pai)
 	if (on_sync == 0)
 	{
@@ -2019,7 +2019,7 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 											
 											if ( PANCoordinator==0 )
 											{
-												////////////printfUART("i´m not a pan\n", ""); 
+												////////////printfUART("iï¿½m not a pan\n", ""); 
 												return;
 											}
 									atomic{

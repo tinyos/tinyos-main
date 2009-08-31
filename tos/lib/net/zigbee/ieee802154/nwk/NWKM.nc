@@ -870,7 +870,7 @@ command error_t NLME_NETWORK_FORMATION.request(uint32_t ScanChannels, uint8_t Sc
 	call MLME_SET.request(MACBEACONPAYLOAD,v_temp);
 	
 
-	////printfUART("NLME_NETWORK_FORMATION.request\n", "");
+	printfUART("NLME_NETWORK_FORMATION.request\n", "");
 	//perform an energydetection scan
 	//perform an active scan
 	//and select a suitable channel
@@ -931,6 +931,14 @@ command error_t NLME_NETWORK_FORMATION.request(uint32_t ScanChannels, uint8_t Sc
 	
 	call MLME_START.request(PANId, LOGICAL_CHANNEL,BeaconOrder ,SuperframeOrder,1,0,0,0,0);
 	
+
+
+
+call MLME_RESET.request(1);
+
+
+
+
 	return SUCCESS;
 }
 	
@@ -1017,7 +1025,7 @@ command error_t NLME_JOIN.request(uint16_t PANId, bool JoinAsRouter, bool Rejoin
 				
 		//destinaddress[0]=neighbortable[parent_index].Extended_Address0;
 		//destinaddress[1]=neighbortable[parent_index].Extended_Address1;
-		//verificar o endereço do pan coordinator
+		//verificar o endereï¿½o do pan coordinator
 		destinaddress[0]=0x00000000;
 		
 		

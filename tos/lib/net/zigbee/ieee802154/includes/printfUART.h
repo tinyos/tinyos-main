@@ -72,7 +72,7 @@
 //#include <stdio.h>
 
 // Comment out the line below to DISABLE printf statements.
-//#define PRINTFUART_ENABLED
+#define PRINTFUART_ENABLED
 
 
 // -------------------------------------------------------------------

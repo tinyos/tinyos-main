@@ -1,3 +1,5 @@
+//#define OPEN_ZB_MAC
+
 /*
  * @author IPP HURRAY http://www.hurray.isep.ipp.pt/art-wise
  * @author Andre Cunha
@@ -607,18 +609,24 @@ implementation {
     //printfUART("Timer fired\n", "");
 	if (TYPE_DEVICE == COORDINATOR)
 	{	
-		//printfUART("coordinator procedure\n", "");
+		
+
+
+//printfUART("coordinator procedure\n", "");
 		//start forming a PAN
 		//command result_t request(uint32_t ScanChannels, uint8_t ScanDuration, uint8_t BeaconOrder, uint8_t SuperframeOrder, uint16_t PANId, bool BatteryLifeExtension);
 		call NLME_NETWORK_FORMATION.request(0x000000ff, 8, BEACON_ORDER, SUPERFRAME_ORDER, MAC_PANID,0);
 		
 		//call Leds.redOff();
-		call Leds.led0Off();
+		//call Leds.led0Off();
 		//call Test_timer.start(TIMER_REPEAT, 8000); 
 	}
 	else
 	{	
-		//printfUART("child procedure\n", "");
+		
+
+
+//printfUART("child procedure\n", "");
 		
 		//call NLME_NETWORK_FORMATION.request(0x000000ff, 8, BEACON_ORDER, SUPERFRAME_ORDER, PANID,0);
 		
@@ -740,7 +748,9 @@ event error_t NLME_NETWORK_DISCOVERY.confirm(uint8_t NetworkCount,networkdescrip
 
 event error_t NLME_NETWORK_FORMATION.confirm(uint8_t Status)
 {	
-	//printfUART("NLME_NETWORK_FORMATION.confirm\n", ""); 
+	
+
+//printfUART("NLME_NETWORK_FORMATION.confirm\n", ""); 
 
 	return SUCCESS;
 }
@@ -860,7 +870,7 @@ return SUCCESS;
 event void Notify.notify( button_state_t state)
 {
 	if (state == BUTTON_PRESSED) {
-		call Leds.led0On();
+		//call Leds.led0On();
 		call T_init.startOneShot(5000);
 
 	}
