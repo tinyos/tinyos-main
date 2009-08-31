@@ -13,7 +13,9 @@ PFLAGS += 	-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/includes \
 			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/interfaces/phy \
 			-I$(TOSROOT)/tos/lib/net/zigbee/cc2420 \
 			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/interfaces/nwk \
-			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/nwk
+			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/nwk\
+
+
 
 else
 
