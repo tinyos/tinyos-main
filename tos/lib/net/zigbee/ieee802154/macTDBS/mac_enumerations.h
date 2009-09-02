@@ -105,13 +105,18 @@ enum{
 };
 
 //channel scan enumerations
+#ifndef TKN154_MAC
 enum{
 	ED_SCAN = 0x00,
 	ACTIVE_SCAN = 0x01,
 	PASSIVE_SCAN = 0x02,
 	ORPHAN_SCAN = 0x03
 };
-
-
+#else
+enum{
+	ED_SCAN = 0x00
+}
+#endif
+//
 #endif
 

@@ -17,7 +17,8 @@
 #include "mac_func.h"
 
 module MacM {
- 
+
+#ifndef TKN154_MAC 
 	provides interface Init;
 	
 	provides interface MLME_START;
@@ -42,6 +43,7 @@ module MacM {
 	//MCPS
 	provides interface MCPS_DATA;
 	provides interface MCPS_PURGE;
+#endif
 		
 	
 	uses interface Timer<TMilli> as T_ackwait;	
@@ -515,6 +517,7 @@ on top of this file*/
 
 
    atomic{
+
 	//inicialize the mac PIB
 	init_MacPIB();
 	

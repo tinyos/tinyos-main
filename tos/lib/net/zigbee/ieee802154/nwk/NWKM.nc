@@ -8,11 +8,11 @@
 
 module NWKM {
 	
-//uses
-	uses interface Leds;
 
-	//MAC interfaces
+	uses interface Leds;
 	
+	//MAC interfaces
+#ifndef TKN154_MAC
 	uses interface MLME_START;
 	
 	uses interface MLME_GET;
@@ -35,6 +35,33 @@ module NWKM {
 	
 	
 	uses interface MCPS_DATA;
+
+#else
+	uses interface OPENZB_MLME_START as MLME_START;
+	
+	uses interface OPENZB_MLME_GET as MLME_GET;
+	uses interface OPENZB_MLME_SET as MLME_SET;
+	
+	uses interface OPENZB_MLME_BEACON_NOTIFY as MLME_BEACON_NOTIFY;
+	uses interface OPENZB_MLME_GTS as MLME_GTS;
+	
+	uses interface OPENZB_MLME_ASSOCIATE as MLME_ASSOCIATE;
+	uses interface OPENZB_MLME_DISASSOCIATE as MLME_DISASSOCIATE;
+	
+	uses interface OPENZB_MLME_ORPHAN as MLME_ORPHAN;
+	
+	uses interface OPENZB_MLME_SYNC as MLME_SYNC;
+	uses interface OPENZB_MLME_SYNC_LOSS as MLME_SYNC_LOSS;
+	
+	uses interface OPENZB_MLME_RESET as MLME_RESET;
+	
+	uses interface OPENZB_MLME_SCAN as MLME_SCAN;
+	
+	
+	uses interface OPENZB_MCPS_DATA as MCPS_DATA;
+
+
+#endif
 
 
 	uses interface Random;
@@ -934,7 +961,7 @@ command error_t NLME_NETWORK_FORMATION.request(uint32_t ScanChannels, uint8_t Sc
 
 
 
-call MLME_RESET.request(1);
+    
 
 
 
