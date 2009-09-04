@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.4 2008-06-17 22:45:29 kusy Exp $
+// $Id: ActiveMessageC.nc,v 1.5 2009-09-04 18:21:11 ayer1 Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -31,11 +31,11 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: ActiveMessageC.nc,v 1.4 2008-06-17 22:45:29 kusy Exp $
+ * Date last modified:  $Id: ActiveMessageC.nc,v 1.5 2009-09-04 18:21:11 ayer1 Exp $
  *
  */
 /**
- * The Active Message layer on the SHIMER platform. This is a naming wrapper
+ * The Active Message layer on the SHIMMER platform. This is a naming wrapper
  * around the CC2420 Active Message layer.
  *
  * @author Konrad Lorincz
