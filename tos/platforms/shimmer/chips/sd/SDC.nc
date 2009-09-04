@@ -32,21 +32,25 @@
  */
 /**                                   
  * @author Steve Ayer
+ * @date   July 2006
+ * @date   July 2009 (reworked, updated to maintained version)
  * @author Konrad Lorincz
  * @date March 25, 2008 - ported to TOS 2.x
  */
 
-configuration SDC 
-{
-    provides interface SD;
+configuration SDC {
+  provides {
+    interface SD;
+    interface StdControl;
+  }
 }
-implementation 
-{
-    components MainC, SDP;
-    SDP -> MainC.Boot;
-    SD = SDP;
+implementation {
+  components SDP, new Msp430Usart0C(), HplMsp430InterruptP, LedsC;
+  
+  SD = SDP;
+  StdControl = SDP;
 
-    components HplMsp430Usart0C;
-    SDP.HplMsp430Usart -> HplMsp430Usart0C;
-    SDP.HplMsp430UsartInterrupts -> HplMsp430Usart0C;
+  SDP.Usart -> Msp430Usart0C;
+  SDP.DockInterrupt  -> HplMsp430InterruptP.Port25;
+  SDP.Leds       -> LedsC;
 }
