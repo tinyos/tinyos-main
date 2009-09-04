@@ -36,31 +36,41 @@
  */                      
 #include "SD.h"
 
-interface SD 
-{
-    /**
-     * Returns the card size in bytes.
-     *
-     * @return the card size in bytes.
-     */
-    command uint32_t readCardSize();
+interface SD {
+  /**
+   * Returns the card size in bytes.
+   *
+   * @return the card size in bytes.
+   */
+  command uint32_t readCardSize();
 
-    /**
-     * Reads 512 bytes from the SD at sector and copies it to bufferPtr
-     *
-     * @param sector the sector on the SD card (in multiples of 512 bytes).
-     * @param bufferPtr pointer to where the SD will copy the data to.  Must be 512 bytes.
-     * @return <code>SUCCESS<code> if it was read successfully; <code>FAIL<code> otherwise
-    */
-    command error_t readBlock(const uint32_t sector, void *bufferPtr);
+  /**
+   * Reads 512 bytes from the SD at sector and copies it to bufferPtr
+   *
+   * @param sector the sector on the SD card (in multiples of 512 bytes).
+   * @param bufferPtr pointer to where the SD will copy the data to.  Must be 512 bytes.
+   * @return <code>SUCCESS<code> if it was read successfully; <code>FAIL<code> otherwise
+   */
+  command error_t readBlock(const uint32_t sector, uint8_t * buffer);
 
-    /**
-     * Writes 512 bytes from the bufferPtr to the SD card
-     *
-     * @param sector the sector on the SD card (in multiples of 512 bytes
-     *                       where to write the data to).
-     * @param bufferPtr pointer to data to be added.  Must be 512 bytes.
-     * @return <code>SUCCESS<code> if it was written successfully; <code>FAIL<code> otherwise
-     */
-    command error_t writeBlock(const uint32_t sector, void *bufferPtr);
+  /**
+   * Writes 512 bytes from the bufferPtr to the SD card
+   *
+   * @param sector the sector on the SD card (in multiples of 512 bytes
+   *                       where to write the data to).
+   * @param bufferPtr pointer to data to be added.  Must be 512 bytes.
+   * @return <code>SUCCESS<code> if it was written successfully; <code>FAIL<code> otherwise
+   */
+  command error_t writeBlock(const uint32_t sector, uint8_t * buffer);
+
+  /**
+   * the device has control over the sd card
+   */
+  async event void available();     
+
+  /**
+   * the device has lost control of the sd and should cease 
+   * attempts to talk to the card
+   */
+  async event void unavailable();
 }
