@@ -1,0 +1,17 @@
+PLATFORM = shimmer2
+
+# Disable MSP430 hardware multiply because it makes MSPGCC die
+PFLAGS += -mdisable-hwmul
+OPTFLAGS += -O
+
+MSP_BSL ?= tos-bsl
+MSP_BSL_FLAGS = --invert-test --invert-reset
+
+ifdef CC2420_CHANNEL
+PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)
+endif
+
+$(call TOSMake_include_platform,msp)
+
+shimmer2: $(BUILD_DEPS)
+	@:
