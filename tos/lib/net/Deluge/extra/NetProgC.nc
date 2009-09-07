@@ -53,7 +53,11 @@ implementation {
   components LedsC;
   NetProgM.Leds -> LedsC;
   
-  components CC2420ControlP, ActiveMessageAddressC;
-  NetProgM.CC2420Config -> CC2420ControlP;
+  components ActiveMessageAddressC;
   NetProgM.setAmAddress -> ActiveMessageAddressC;
+
+#if !defined(PLATFORM_MULLE)
+  components CC2420ControlP;
+  NetProgM.CC2420Config -> CC2420ControlP;
+#endif
 }
