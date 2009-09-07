@@ -1,4 +1,4 @@
-// $Id: ExtFlashC.nc,v 1.2 2008-06-11 00:46:25 razvanm Exp $
+// $Id: ExtFlashC.nc,v 1.3 2009-09-07 13:56:58 r-studio Exp $
 
 /*
  *
@@ -92,10 +92,17 @@ implementation {
 
     addr = newAddr;
 
+#if defined(PLATFORM_MULLE)
+    cmdBuf[0] = 0x68;
+    cmdBuf[1] = (addr >> 15);
+    cmdBuf[2] = ((addr >> 7) & 0xFC) + ((addr >> 8) & 0x1);
+    cmdBuf[3] = addr & 0xff;
+#else
     cmdBuf[0] = 0x68;
     cmdBuf[1] = (addr >> 15) & 0xff;
     cmdBuf[2] = (addr >> 7) & 0xfe;
     cmdBuf[3] = addr & 0xff;
+#endif
     
     TOSH_CLR_FLASH_CLK_PIN();
     TOSH_CLR_FLASH_CS_PIN();
@@ -111,7 +118,11 @@ implementation {
   }
 
   command uint8_t ExtFlash.readByte() {
+#if defined(PLATFORM_MULLE)
+    if (!(addr & 0x1ff)) {
+#else
     if (!(addr & 0xff)) {
+#endif
       call ExtFlash.stopRead();
       call ExtFlash.startRead(addr);
     }
