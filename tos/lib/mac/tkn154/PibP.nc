@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-05-22 08:56:32 $
+ * $Date: 2009-09-07 15:29:20 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -112,6 +112,7 @@ implementation
     m_pib.macAssociationPermit = IEEE154_DEFAULT_ASSOCIATIONPERMIT;
     m_pib.macAutoRequest = IEEE154_DEFAULT_AUTOREQUEST;
     m_pib.macBattLifeExt = IEEE154_DEFAULT_BATTLIFEEXT;
+    m_pib.macBattLifeExtPeriods = IEEE154_DEFAULT_MAC_BATT_LIFE_EXT_PERIODS;
     m_pib.macBeaconPayloadLength = IEEE154_DEFAULT_BEACONPAYLOADLENGTH;
     m_pib.macBeaconOrder = IEEE154_DEFAULT_BEACONORDER;
     m_pib.macBeaconTxTime = IEEE154_DEFAULT_BEACONTXTIME;
@@ -267,7 +268,7 @@ implementation
 
   command ieee154_macBattLifeExt_t MLME_GET.macBattLifeExt() { return m_pib.macBattLifeExt;}
 
-  command ieee154_macBattLifeExtPeriods_t MLME_GET.macBattLifeExtPeriods() { return IEEE154_BATT_LIFE_EXT_PERIODS;}
+  command ieee154_macBattLifeExtPeriods_t MLME_GET.macBattLifeExtPeriods() { return m_pib.macBattLifeExtPeriods;}
 
   command ieee154_macBeaconOrder_t MLME_GET.macBeaconOrder() { return m_pib.macBeaconOrder;}
 
@@ -954,7 +955,7 @@ implementation
       message_t *frame,
       uint8_t LogicalChannel,
       uint8_t ChannelPage,
-      ieee154_PANDescriptor_t *PANDescriptor)
+      ieee154_PANDescriptor_t *pdescriptor)
   {
     uint8_t *mhr = MHR(frame);
     uint8_t offset;
@@ -965,29 +966,29 @@ implementation
           ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) != FC2_SRC_MODE_EXTENDED)))
       return FAIL;
 
-    PANDescriptor->CoordAddrMode = (mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) >> FC2_SRC_MODE_OFFSET;
+    pdescriptor->CoordAddrMode = (mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) >> FC2_SRC_MODE_OFFSET;
     offset = MHR_INDEX_ADDRESS;
-    PANDescriptor->CoordPANId = *((nxle_uint16_t*) &mhr[offset]);
+    pdescriptor->CoordPANId = *((nxle_uint16_t*) &mhr[offset]);
     offset += sizeof(ieee154_macPANId_t);
 
     if ((mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) == FC2_SRC_MODE_SHORT)
-      PANDescriptor->CoordAddress.shortAddress = *((nxle_uint16_t*) &mhr[offset]);
+      pdescriptor->CoordAddress.shortAddress = *((nxle_uint16_t*) &mhr[offset]);
     else
-      call FrameUtility.convertToNative(&PANDescriptor->CoordAddress.extendedAddress, &mhr[offset]);
+      call FrameUtility.convertToNative(&pdescriptor->CoordAddress.extendedAddress, &mhr[offset]);
 
-    PANDescriptor->LogicalChannel = LogicalChannel;
-    PANDescriptor->ChannelPage = ChannelPage;
-    ((uint8_t*) &PANDescriptor->SuperframeSpec)[0] = frame->data[BEACON_INDEX_SF_SPEC1]; // little endian
-    ((uint8_t*) &PANDescriptor->SuperframeSpec)[1] = frame->data[BEACON_INDEX_SF_SPEC2];
-    PANDescriptor->GTSPermit = (frame->data[BEACON_INDEX_GTS_SPEC] & GTS_SPEC_PERMIT) ? 1 : 0;
-    PANDescriptor->LinkQuality = metadata->linkQuality;
-    PANDescriptor->TimeStamp = metadata->timestamp;
+    pdescriptor->LogicalChannel = LogicalChannel;
+    pdescriptor->ChannelPage = ChannelPage;
+    ((uint8_t*) &pdescriptor->SuperframeSpec)[0] = frame->data[BEACON_INDEX_SF_SPEC1]; // little endian
+    ((uint8_t*) &pdescriptor->SuperframeSpec)[1] = frame->data[BEACON_INDEX_SF_SPEC2];
+    pdescriptor->GTSPermit = (frame->data[BEACON_INDEX_GTS_SPEC] & GTS_SPEC_PERMIT) ? 1 : 0;
+    pdescriptor->LinkQuality = metadata->linkQuality;
+    pdescriptor->TimeStamp = metadata->timestamp;
 #ifndef IEEE154_SECURITY_ENABLED
-    PANDescriptor->SecurityFailure = IEEE154_SUCCESS;
-    PANDescriptor->SecurityLevel = 0;
-    PANDescriptor->KeyIdMode = 0;
-    PANDescriptor->KeySource = 0;
-    PANDescriptor->KeyIndex = 0;    
+    pdescriptor->SecurityFailure = IEEE154_SUCCESS;
+    pdescriptor->SecurityLevel = 0;
+    pdescriptor->KeyIdMode = 0;
+    pdescriptor->KeySource = 0;
+    pdescriptor->KeyIndex = 0;    
 #else
 #error Implementation of BeaconFrame.parsePANDescriptor() needs to be adapted!
 #endif

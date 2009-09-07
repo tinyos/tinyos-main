@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:46 $
+ * $Revision: 1.3 $
+ * $Date: 2009-09-07 15:29:20 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -104,7 +104,7 @@ interface IEEE154BeaconFrame
    *                       otherwise
    */
   command error_t parsePANDescriptor(message_t *frame, uint8_t LogicalChannel,
-      uint8_t ChannelPage, ieee154_PANDescriptor_t *PANDescriptor);  
+      uint8_t ChannelPage, ieee154_PANDescriptor_t *pdescriptor);  
 
  /**
    * Returns a pointer to the beacon payload.
