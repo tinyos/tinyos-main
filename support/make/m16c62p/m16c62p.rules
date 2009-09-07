@@ -1,0 +1,126 @@
+#-#-Makefile-#- vim:syntax=make
+
+define M16C62P_HELP
+
+ M16C/62P extras:
+
+   debug    : compile with minimal optimization and debug symbols
+   debugopt : compile with debug symbols
+
+ Programmer options:
+
+   sm16cf : use SM16CF programmer on port '/dev/ttyUSB0'.
+   sm16cf,<dev> : use SM16CF programmer on port <dev>.
+
+endef
+HELP += $(M16C62P_HELP)
+THIS_FOLDER = m16c62p
+
+#ifdef MAKE_DEPUTY_FLAG
+#        NCC_SAFE_TINYOS_FLAGS = -DSAFE_TINYOS -fnesc-deputy -fnesc-deputy-args='-I$(TOSDIR)/lib/safe/include --FLIDs=build/$(PLATFORM)/flids.txt --envmachine -DSAFE_TINYOS --nolib ' $(TOSDIR)/lib/safe/avr/fail.c 
+#else
+#        NCC_SAFE_TINYOS_FLAGS =
+#endif
+
+OBJCOPY = m32c-elf-objcopy
+OBJDUMP = m32c-elf-objdump
+SET_ID = tos-set-symbols
+NCC = ncc
+LIBS = -lm -lc -lgcc
+
+AMADDR = _ActiveMessageAddressC\$$addr
+# Uncomment the next two lines if you have a toolchain without the dollar sign
+# patch. This needs nesc 1.2.8 or newer (1.2.9 is recommended).
+#PFLAGS += -fnesc-separator=__
+#AMADDR = ActiveMessageAddressC__addr
+BUILDDIR ?= build/$(PLATFORM)
+MAIN_EXE = $(BUILDDIR)/main.exe
+MAIN_SREC = $(BUILDDIR)/main.srec
+MAIN_IHEX = $(BUILDDIR)/main.ihex
+INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
+
+PFLAGS += -Wshadow $(NESC_FLAGS)
+PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c -board=$(SENSORBOARD)
+ifdef MSG_SIZE
+PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+ifdef DEFAULT_LOCAL_GROUP
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
+endif
+
+# We need a different start address for the flash in the linker script when building TOSBoot.
+# Also program the boot_args address bytes with 0xFF so that we know if they are reprogrammable.
+ifeq ($(COMPONENT),TOSBoot)
+$(shell sed -e "s/0x00a0000/0x00e0000/ig" $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c.x > $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader.x)
+$(shell sed -e "s/\/\*boot_args_address\*\//0x00f0000/ig" $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader.x > $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader_args.x)
+LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader_args.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt.S
+else
+LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt.S
+endif
+
+DEFAULT_PROGRAM ?= sm16cf
+
+# Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
+# out with call in there.  I don't know why.
+$(if $(PROGRAM),,$(call TOSMake_include,$(THIS_FOLDER)/$(DEFAULT_PROGRAM).extra))
+
+# Build storage file if volumes.xml present
+ifneq ($(wildcard $(VOLUMEFILE)), )
+build_storage: $(BUILDDIR)/StorageVolumes.h
+
+exe0: build_storage
+
+VOLUME_ALLOCATOR_FLAGS ?= 
+$(BUILDDIR)/StorageVolumes.h: $(VOLUMEFILE)
+	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUMEFILE) >$@ || rm -f $@
+
+PFLAGS += -I$(BUILDDIR)
+else
+
+build_storage:
+
+endif
+
+ifndef BUILD_DEPS
+  ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
+    BUILD_DEPS = srec bytes tosimage $(POST_BUILD_EXTRA_DEPS)
+  endif
+endif
+
+setid: FORCE
+	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd cp $(MAIN_SREC) $(INSTALL_SREC); else cmd $(SET_ID) $(MAIN_SREC) $(INSTALL_SREC) _TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID) ; fi
+
+delsetid: FORCE
+	rm -f $(subst .srec.,.exe.,$(INSTALL_SREC)) $(INSTALL_SREC) 
+
+srec: exe FORCE
+	$(OBJCOPY) --output-target=srec $(MAIN_EXE) $(MAIN_SREC)
+
+tos_buildinfo: ihex build_buildinfo FORCE
+  @:
+  
+	# TODO(henrik) Remove interrupt vector table from the image.
+tosimage: ihex build_tosimage FORCE
+	@:
+
+ihex: exe FORCE
+	$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
+
+exe: exe0 FORCE bytes
+	@:
+
+
+exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
+	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
+	$(NCC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+ifdef WIRING_CHECK_FILE
+	@nescc-wiring $(WIRING_CHECK_FILE)
+endif
+	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
+
+builddir: FORCE
+	mkdir -p $(BUILDDIR)
+# bug fix 2009-3-11 by ZHF, here display the ROM and RAM consumption information.
+bytes: FORCE
+	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+

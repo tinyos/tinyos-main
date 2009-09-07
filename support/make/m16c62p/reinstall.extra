@@ -1,0 +1,6 @@
+#-*-Makefile-*- vim:syntax=make
+
+NODEID = $(REINSTALL)
+BUILD_DEPS = setid program
+
+

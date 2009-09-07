@@ -1,0 +1,71 @@
+/*
+ * Copyright (c) 2009 Communication Group and Eislab at
+ * Lulea University of Technology
+ *
+ * Contact: Laurynas Riliskis, LTU
+ * Mail: laurynas.riliskis@ltu.se
+ * All rights reserved.
+ *
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ * - Neither the name of Communication Group at Lulea University of Technology
+ *   nor the names of its contributors may be used to endorse or promote
+ *    products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL STANFORD
+ * UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+ 
+/**
+ * Interface to access the program flash of the M16c/62p mcu.
+ * 
+ * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
+ */
+interface HplM16c62pFlash
+{
+  /**
+   * Erases a block in the program flash.
+   *
+   * @param block The block that should be erased.
+   * @return False if the erase failed.
+   */
+  command bool FlashRead(unsigned long flash_addr_in);
+  
+  /**
+   * Writes bytes into the program flash.
+   *
+   * @param flash_addr The program flash address where the write should begin. This MUST be an EVEN address.
+   * @param buffer_addr The bytes that should be written to the address.
+   * @param bytes The number of bytes that should be written. This MUST be an EVEN number.
+   * @return 1 if the flash control register reported an error. 2 if the parameters that where passed contained an error.
+   */
+  command uint8_t FlashErase(unsigned char block);
+  
+  /**
+   * Reads the byte at am address using a LDE instruction.
+   *
+   * @param address The address that a byte should be read from.
+   * @return Byte read.
+   */
+  command uint8_t FlashWrite(unsigned long flash_addr_in,
+                              unsigned int* buffer_addr,
+                              unsigned int bytes);
+}

@@ -1,0 +1,10 @@
+#-#-Makefile-#- vim:syntax=make
+
+NODEID = $(INSTALL)
+BUILD_DEPS = srec tosimage bytes $(POST_BUILD_EXTRA_DEPS) setid program delsetid
+
+ifdef BOOTLOADER
+  ifeq ($(BOOTLOADER),tosboot)
+    BUILD_DEPS += program_bl
+  endif
+endif

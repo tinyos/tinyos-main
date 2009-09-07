@@ -1,0 +1,36 @@
+push( @includes, qw(
+  %T/platforms/mulle
+  %T/platforms/mulle/chips/rf230
+  %T/chips/rf2xx/rf230
+  %T/chips/rf2xx/layers
+  %T/chips/rf2xx/util
+  %T/chips/at45db
+  %T/platforms/mulle/softwarei2c
+  %T/platforms/mulle/softwarespi
+  %T/platforms/mulle/chips/rv8564
+  %T/platforms/mulle/chips/at45db
+  %T/platforms/mulle/chips/m16c62p
+  %T/platforms/mulle/debug
+  %T/platforms/mulle/system
+  %T/platforms/mulle/timers
+  %T/platforms/mulle/timers/stop
+  %T/platforms/mulle/timers/wait
+  %T/platforms/mulle/timers/rf230
+  %T/chips/m16c62p
+  %T/chips/m16c62p/control
+  %T/chips/m16c62p/adc
+  %T/chips/m16c62p/pins
+  %T/chips/m16c62p/timer
+  %T/chips/m16c62p/uart
+  %T/chips/ds2745
+  %T/lib/power
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/diagmsg
+) );
+
+@opts = qw(
+  -gcc=m32c-elf-gcc
+  -mcpu=m16c
+);
+
