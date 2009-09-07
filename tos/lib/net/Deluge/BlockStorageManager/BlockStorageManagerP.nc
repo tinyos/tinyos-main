@@ -37,7 +37,7 @@ generic module BlockStorageManagerP(uint8_t clients)
     interface VolumeId[uint8_t client];
 #if defined(PLATFORM_TELOSB)
     interface StorageMap as SubStorageMap[volume_id_t volume_id];
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_EPIC)
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_EPIC) || defined(PLATFORM_MULLE)
     interface At45dbVolume[volume_id_t volume_id];
 #endif
   }
