@@ -35,6 +35,8 @@
   #include "extra/telosb/TOSBoot_platform.h"
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
   #include "extra/micaz/TOSBoot_platform.h"
+#elif defined(PLATFORM_MULLE)
+  #include "extra/mulle/TOSBoot_platform.h"
 #else
   #error "Target platform is not currently supported by Deluge T2"
 #endif
