@@ -27,7 +27,7 @@ PFLAGS += -I$(TOSROOT)/tos/lib/mac/tkn154 \
 \
 -I$(TOSROOT)/tos/lib/net/zigbee/wrapper\
 -I$(TOSROOT)/tos/lib/net/zigbee/wrapper/interfaces/mac\
--I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/includes \
+-I$(TOSROOT)/tos/lib/net/zigbee/wrapper/includes \
 -I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/interfaces/nwk \
  -I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/nwk
 

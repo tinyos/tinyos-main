@@ -47,7 +47,7 @@ implementation
   WrapperM.MLME_SET -> MAC;
   
   WrapperM.MLME_BEACON_NOTIFY -> MAC;
-  WrapperM.MLME_GTS -> MAC;
+  //WrapperM.MLME_GTS -> MAC;
   
   WrapperM.MLME_ASSOCIATE -> MAC;
   WrapperM.MLME_DISASSOCIATE -> MAC;
