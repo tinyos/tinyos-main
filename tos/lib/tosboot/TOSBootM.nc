@@ -149,6 +149,8 @@ implementation {
     if (intAddr != TOSBOOT_END) {
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
     if (intAddr != 0) {
+#elif defined(PLATFORM_MULLE)
+    if (intAddr != 0xA0000) {
 #else
   #error "Target platform is not currently supported by Deluge T2"
 #endif
