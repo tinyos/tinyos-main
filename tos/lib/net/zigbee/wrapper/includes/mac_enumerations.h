@@ -6,6 +6,8 @@
  
 #ifndef __MAC_ENUMERATIONS__
 #define __MAC_ENUMERATIONS__
+
+#include "TKN154.h"
  
 //Mac enumerations standard pag 110
 
@@ -108,14 +110,9 @@ enum{
 
 enum{
 	ED_SCAN = 0x00,
-	ACTIVE_SCAN = 0x01,
-	PASSIVE_SCAN = 0x02,
-	ORPHAN_SCAN = 0x03
 };
 
 
 
-#endif
-//
 #endif
 
