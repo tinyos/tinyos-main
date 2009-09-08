@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2008-06-16 18:02:40 $
+ * $Revision: 1.2 $
+ * $Date: 2009-09-08 09:04:42 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -51,11 +51,7 @@ enum {
   IEEE154_MIN_LIFS_PERIOD     = 40,
   IEEE154_MIN_SIFS_PERIOD     = 12,
   IEEE154_ACK_WAIT_DURATION   = (20 + 12 + IEEE154_SHR_DURATION + 6 * IEEE154_SYMBOLS_PER_OCTET),
-  // TODO: check BATT_LIFE_EXT
-  IEEE154_BATT_LIFE_EXT_PERIODS      = 1,
-  IEEE154_BATT_LIFE_EXT_PERIOD_TERM3 = 1,
-  IEEE154_TIMESTAMP_SUPPORTED        = TRUE,
-
+  IEEE154_TIMESTAMP_SUPPORTED = TRUE,
 };
 
 #include "Timer62500hz.h"

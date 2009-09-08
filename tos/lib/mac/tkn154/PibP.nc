@@ -27,7 +27,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-09-07 15:29:20 $
+ * $Date: 2009-09-08 09:04:43 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -112,7 +112,7 @@ implementation
     m_pib.macAssociationPermit = IEEE154_DEFAULT_ASSOCIATIONPERMIT;
     m_pib.macAutoRequest = IEEE154_DEFAULT_AUTOREQUEST;
     m_pib.macBattLifeExt = IEEE154_DEFAULT_BATTLIFEEXT;
-    m_pib.macBattLifeExtPeriods = IEEE154_DEFAULT_MAC_BATT_LIFE_EXT_PERIODS;
+    m_pib.macBattLifeExtPeriods = IEEE154_DEFAULT_BATTLIFEEXTPERIODS;
     m_pib.macBeaconPayloadLength = IEEE154_DEFAULT_BEACONPAYLOADLENGTH;
     m_pib.macBeaconOrder = IEEE154_DEFAULT_BEACONORDER;
     m_pib.macBeaconTxTime = IEEE154_DEFAULT_BEACONTXTIME;
