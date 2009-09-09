@@ -418,9 +418,7 @@ implementation
 
 	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg)
 	{
-		uint16_t sleepint = getMeta(msg)->sleepint;
-
-		return sleepint != 0 ? sleepint : sleepInterval;
+		return getMeta(msg)->sleepint;
 	}
 
 	command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t dutyCycle)
