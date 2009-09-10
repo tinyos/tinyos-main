@@ -108,7 +108,10 @@ struct addr fun[] = {
 
   {div},
   
-  {tosthread_join}
+  {tosthread_join},
+  
+  {volumeConfigMount}, {volumeConfigRead}, {volumeConfigWrite},
+  {volumeConfigCommit}, {volumeConfigGetSize}, {volumeConfigValid}
 };
 
 #endif

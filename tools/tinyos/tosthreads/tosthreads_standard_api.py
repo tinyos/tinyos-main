@@ -91,5 +91,8 @@ map_extfun = {
 
               "__divmodhi4":109,
               
-              "tosthread_join":110}
+              "tosthread_join":110,
+              
+              "volumeConfigMount":111, "volumeConfigRead":112, "volumeConfigWrite":113,
+              "volumeConfigCommit":114, "volumeConfigGetSize":115, "volumeConfigValid":116}
 
