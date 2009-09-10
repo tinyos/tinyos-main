@@ -5,6 +5,8 @@
  * ========================================================================
  */ 
 
+// move to a header file?
+#define WRAPPER_MESSAGE_QUEUE_SIZE 5
 
 configuration WrapperC
 {
@@ -58,8 +60,12 @@ implementation
   WrapperM.MLME_SCAN -> MAC;
     
   WrapperM.MCPS_DATA -> MAC;
+  WrapperM.IEEE154Frame -> MAC;
+  WrapperM.IEEE154BeaconFrame -> MAC;
+  WrapperM.Packet -> MAC;
 
-
+  components new PoolC(message_t, WRAPPER_MESSAGE_QUEUE_SIZE) as MessagePool;
+  WrapperM.MessagePool -> MessagePool;
 
 
   OPENZB_MLME_RESET = WrapperM;
