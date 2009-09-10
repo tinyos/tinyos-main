@@ -31,6 +31,7 @@
  
 /**
  * @author Kevin Klues <klueska@cs.stanford.edu>
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
  
 #include "tosthread.h"
@@ -67,6 +68,9 @@ implementation {
   #if defined(TOSTHREAD_LOGSTORAGE_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
     components CLogStorageC;
   #endif 
+  #if defined(TOSTHREAD_CONFIGSTORAGE_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
+    components CConfigStorageC;
+  #endif
   #if defined(TOSTHREAD_COLLECTION_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
     components CCollectionC;
   #endif 

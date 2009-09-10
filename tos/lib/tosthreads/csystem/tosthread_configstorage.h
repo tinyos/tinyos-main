@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Johns Hopkins University.
+ * Copyright (c) 2009 RWTH Aachen University.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,29 +21,19 @@
 */
 
 /**
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  * @author J— çgila Bitsch Link <jo.bitsch@cs.rwth-aachen.de>
  */
 
-configuration VolumeMapC { 
-  provides { 
-    interface BlockRead[uint8_t volume_id]; 
-    interface BlockWrite[uint8_t volume_id];
-    interface LogRead[uint8_t volume_id];
-    interface LogWrite[uint8_t volume_id];
-    interface ConfigStorage[uint8_t volume_id];
-    interface Mount[uint8_t volume_id];
-  }
-} 
+#ifndef TOSTHREAD_CONFIGSTORAGE_H
+#define TOSTHREAD_CONFIGSTORAGE_H
 
-implementation { 
-  components VolumeMapP;
-  
-  BlockRead = VolumeMapP; 
-  BlockWrite = VolumeMapP;
-  LogRead = VolumeMapP;
-  LogWrite = VolumeMapP;
-  
-  ConfigStorage = VolumeMapP;
-  Mount = VolumeMapP;
-} 
+#include "Storage.h"
+
+extern error_t volumeConfigMount(uint8_t volumeId);
+extern error_t volumeConfigRead(uint8_t volumeId, storage_addr_t addr, void* buf, storage_len_t* len);
+extern error_t volumeConfigWrite(uint8_t volumeId, storage_addr_t addr, void* buf, storage_len_t* len);
+extern error_t volumeConfigCommit(uint8_t volumeId);
+extern storage_len_t volumeConfigGetSize(uint8_t volumeId);
+extern bool volumeConfigValid(uint8_t volumeId);
+
+#endif   // TOSTHREAD_CONFIGSTORAGE_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Johns Hopkins University.
+ * Copyright (c) 2009 RWTH Aachen University.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,29 +21,19 @@
 */
 
 /**
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  * @author J— çgila Bitsch Link <jo.bitsch@cs.rwth-aachen.de>
  */
 
-configuration VolumeMapC { 
-  provides { 
-    interface BlockRead[uint8_t volume_id]; 
-    interface BlockWrite[uint8_t volume_id];
-    interface LogRead[uint8_t volume_id];
-    interface LogWrite[uint8_t volume_id];
-    interface ConfigStorage[uint8_t volume_id];
-    interface Mount[uint8_t volume_id];
-  }
-} 
+configuration CConfigStorageC {}
 
-implementation { 
-  components VolumeMapP;
-  
-  BlockRead = VolumeMapP; 
-  BlockWrite = VolumeMapP;
-  LogRead = VolumeMapP;
-  LogWrite = VolumeMapP;
-  
-  ConfigStorage = VolumeMapP;
-  Mount = VolumeMapP;
-} 
+implementation {
+  components CConfigStorageP,
+             BlockingConfigStorageP,
+             VolumeMapC;
+
+  CConfigStorageP.BlockingConfig -> BlockingConfigStorageP;
+  CConfigStorageP.BlockingMount -> BlockingConfigStorageP;
+
+  BlockingConfigStorageP.ConfigMount -> VolumeMapC.ConfigMount;
+  BlockingConfigStorageP.ConfigStorage -> VolumeMapC.ConfigStorage;
+}

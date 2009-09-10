@@ -22,6 +22,7 @@
 
 /**
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
+ * @author J— çgila Bitsch Link <jo.bitsch@cs.rwth-aachen.de>
  */
 
 module VolumeMapP {
@@ -30,6 +31,8 @@ module VolumeMapP {
     interface BlockWrite[uint8_t volume_id];
     interface LogRead[uint8_t volume_id];
     interface LogWrite[uint8_t volume_id];
+    interface ConfigStorage[uint8_t volume_id];
+    interface Mount[uint8_t volume_id];
   }
   
   uses { 
@@ -37,6 +40,8 @@ module VolumeMapP {
     interface BlockWrite as SubBlockWrite[uint8_t volume_id]; 
     interface LogRead as SubLogRead[uint8_t volume_id];
     interface LogWrite as SubLogWrite[uint8_t volume_id];
+    interface ConfigStorage as SubConfigStorage[uint8_t volume_id];
+    interface Mount as SubMount[uint8_t volume_id];
   }
 }
 
@@ -204,4 +209,73 @@ implementation {
   default event void LogWrite.appendDone[uint8_t volume_id](void* buf, storage_len_t len, bool recordsLost, error_t error) {}
   default event void LogWrite.eraseDone[uint8_t volume_id](error_t error) {}
   default event void LogWrite.syncDone[uint8_t volume_id](error_t error) {}
+  
+  command error_t ConfigStorage.read[uint8_t volume_id](storage_addr_t addr, void* buf, storage_len_t len) {
+    return call SubConfigStorage.read[volume_id](addr, buf, len);
+  }
+  
+  event void SubConfigStorage.readDone[uint8_t volume_id](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {
+    signal ConfigStorage.readDone[volume_id](addr, buf, len, error);
+  }
+  
+  command error_t ConfigStorage.write[uint8_t volume_id](storage_addr_t addr, void* buf, storage_len_t len) {
+    return call SubConfigStorage.write[volume_id](addr, buf, len);
+  }
+  
+  event void SubConfigStorage.writeDone[uint8_t volume_id](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {
+    signal ConfigStorage.writeDone[volume_id](addr, buf, len, error);
+  }
+  
+  command error_t ConfigStorage.commit[uint8_t volume_id]() {
+    return call SubConfigStorage.commit[volume_id]();
+  }
+  
+  event void SubConfigStorage.commitDone[uint8_t volume_id](error_t error) {
+    signal ConfigStorage.commitDone[volume_id](error);
+  }
+
+  command storage_len_t ConfigStorage.getSize[uint8_t volume_id]() {
+    return call SubConfigStorage.getSize[volume_id]();
+  }
+  
+  command bool ConfigStorage.valid[uint8_t volume_id]() {
+    return call SubConfigStorage.valid[volume_id]();
+  }
+  
+  command error_t Mount.mount[uint8_t volume_id]() {
+    return call SubMount.mount[volume_id]();
+  }
+  
+  event void SubMount.mountDone[uint8_t volume_id](error_t error) {
+    signal Mount.mountDone[volume_id](error);
+  }
+  
+  default command error_t SubConfigStorage.read[uint8_t volume_id](storage_addr_t addr, void* buf, storage_len_t len) {
+    return FAIL;
+  }
+
+  default command error_t SubConfigStorage.write[uint8_t volume_id](storage_addr_t addr, void* buf, storage_len_t len) {
+    return FAIL;
+  }
+  
+  default command error_t SubConfigStorage.commit[uint8_t volume_id]() {
+    return FAIL;
+  }
+
+  default command storage_len_t SubConfigStorage.getSize[uint8_t volume_id]() {
+    return FAIL;
+  }
+  
+  default command bool SubConfigStorage.valid[uint8_t volume_id]() {
+    return FAIL;
+  }
+  
+  default command error_t SubMount.mount[uint8_t volume_id]() {
+    return FAIL;
+  }
+
+  default event void ConfigStorage.commitDone[uint8_t volume_id](error_t error) {}
+  default event void ConfigStorage.writeDone[uint8_t volume_id](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {}  
+  default event void ConfigStorage.readDone[uint8_t volume_id](storage_addr_t addr, void* buf, storage_len_t len, error_t error) {}
+  default event void Mount.mountDone[uint8_t volume_id](error_t error) {}
 }

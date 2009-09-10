@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Johns Hopkins University.
+ * Copyright (c) 2009 RWTH Aachen University.
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,29 +21,39 @@
 */
 
 /**
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  * @author J— çgila Bitsch Link <jo.bitsch@cs.rwth-aachen.de>
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
-configuration VolumeMapC { 
-  provides { 
-    interface BlockRead[uint8_t volume_id]; 
-    interface BlockWrite[uint8_t volume_id];
-    interface LogRead[uint8_t volume_id];
-    interface LogWrite[uint8_t volume_id];
-    interface ConfigStorage[uint8_t volume_id];
-    interface Mount[uint8_t volume_id];
+module CConfigStorageP {
+  uses {
+    interface BlockingConfig[uint8_t volume_id];
+    interface BlockingMount[uint8_t volume_id];
   }
-} 
+}
 
-implementation { 
-  components VolumeMapP;
+implementation {
+  error_t volumeConfigMount(uint8_t volumeId) @C() AT_SPONTANEOUS {
+    return call BlockingMount.mount[volumeId]();
+  }
   
-  BlockRead = VolumeMapP; 
-  BlockWrite = VolumeMapP;
-  LogRead = VolumeMapP;
-  LogWrite = VolumeMapP;
+  error_t volumeConfigRead(uint8_t volumeId, storage_addr_t addr, void* buf, storage_len_t* len) @C() AT_SPONTANEOUS {
+    return call BlockingConfig.read[volumeId](addr, buf, len);
+  }
   
-  ConfigStorage = VolumeMapP;
-  Mount = VolumeMapP;
-} 
+  error_t volumeConfigWrite(uint8_t volumeId, storage_addr_t addr, void* buf, storage_len_t* len) @C() AT_SPONTANEOUS {
+    return call BlockingConfig.write[volumeId](addr, buf, len);
+  }
+  
+  error_t volumeConfigCommit(uint8_t volumeId) @C() AT_SPONTANEOUS {
+    return call BlockingConfig.commit[volumeId]();
+  }
+  
+  storage_len_t volumeConfigGetSize(uint8_t volumeId) @C() AT_SPONTANEOUS {
+    return call BlockingConfig.getSize[volumeId]();
+  }
+  
+  bool volumeConfigValid(uint8_t volumeId) @C() AT_SPONTANEOUS {
+    return call BlockingConfig.valid[volumeId]();
+  }
+}
