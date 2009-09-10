@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-06-10 09:23:45 $
+ * $Revision: 1.2 $
+ * $Date: 2009-09-10 12:00:50 $
  * @author: Jasper Buesch <buesch@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -64,6 +64,7 @@ module TestIndirectDataDeviceC
 
   void startApp()
   {
+    call MLME_SET.phyCurrentChannel(RADIO_CHANNEL);
     call MLME_SET.macAutoRequest(FALSE);
     call MLME_SET.macPANId(PAN_ID);
     call MLME_SET.macCoordShortAddress(COORDINATOR_ADDRESS);  

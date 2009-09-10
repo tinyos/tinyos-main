@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-05-18 17:13:02 $
+ * $Revision: 1.2 $
+ * $Date: 2009-09-10 12:00:49 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -74,6 +74,7 @@ module TestDeviceC
     ieee154_address_t coordAdr;
 
     coordAdr.shortAddress = COORDINATOR_ADDRESS;
+    call MLME_SET.phyCurrentChannel(RADIO_CHANNEL);
     call MLME_SET.macAutoRequest(FALSE);
     call MLME_SET.macPANId(PAN_ID);
     call MLME_SET.macCoordShortAddress(COORDINATOR_ADDRESS);
