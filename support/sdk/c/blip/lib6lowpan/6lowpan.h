@@ -38,6 +38,7 @@
 typedef uint8_t ip6_addr_t [16];
 typedef uint16_t cmpr_ip6_addr_t;
 #ifdef PC
+#include "../config.h"
 typedef uint16_t ieee154_saddr_t;
 typedef uint16_t hw_pan_t;
 enum {
@@ -189,7 +190,11 @@ enum {
 };
 
 #ifndef BLIP_L2_RETRIES
-#define BLIP_L2_RETRIES 10
+#define BLIP_L2_RETRIES 5
+#endif
+
+#ifndef BLIP_L2_DELAY
+#define BLIP_L2_DELAY 15
 #endif
 
 #endif

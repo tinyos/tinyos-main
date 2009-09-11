@@ -21,7 +21,9 @@
  */
 
 #include <6lowpan.h>
+#ifdef DBG_TRACK_FLOWS
 #include "TestDriver.h"
+#endif
 
 configuration UDPEchoC {
 

@@ -10,7 +10,8 @@ endif
 
 PFLAGS+=-DENABLE_SPI0_DMA
 
-PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/include/
+PFLAGS+=-I$(TOSROOT)/tos/lib/net/
+PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/
 PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/libtcp/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/interfaces/ 

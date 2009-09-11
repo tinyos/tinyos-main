@@ -44,8 +44,8 @@ module IPRoutingP {
 } implementation {
 
 #ifdef PRINTFUART_ENABLED
-/* #undef dbg */
-/* #define dbg(X, fmt, args...)  printfUART(fmt, ## args) */
+// #undef dbg
+// #define dbg(X, fmt, args...)  printfUART(fmt, ## args)
 #endif
 
   enum {
@@ -127,9 +127,12 @@ module IPRoutingP {
   event void TrafficGenTimer.fired() {
     struct split_ip_msg *msg;
     if (traffic_sent) goto done;
-    traffic_sent = FALSE;
     msg = (struct split_ip_msg *)ip_malloc(sizeof(struct split_ip_msg));
-    if (msg == NULL) goto done;
+    if (msg == NULL) {
+      printfUART("malloc fail\n");
+      goto done;
+    }
+    traffic_sent = FALSE;
 
     ip_memclr((uint8_t *)&msg->hdr, sizeof(struct ip6_hdr));
     inet_pton6("ff05::1", &msg->hdr.ip6_dst);
@@ -204,9 +207,11 @@ module IPRoutingP {
     // me.
     struct in6_addr *my_address = call IPAddress.getPublicAddr();
     return (((cmpPfx(my_address->s6_addr, hdr->ip6_dst.s6_addr) || 
-              cmpPfx(linklocal_prefix, hdr->ip6_dst.s6_addr)) 
-             && cmpPfx(&my_address->s6_addr[8], &hdr->ip6_dst.s6_addr[8])) 
-            || cmpPfx(multicast_prefix, hdr->ip6_dst.s6_addr));
+              cmpPfx(linklocal_prefix, hdr->ip6_dst.s6_addr)) &&
+             cmpPfx(&my_address->s6_addr[8], &hdr->ip6_dst.s6_addr[8])) ||
+            (hdr->ip6_dst.s6_addr[0] == 0xff && 
+             (hdr->ip6_dst.s6_addr[1] & 0x0f) <= 3))
+;
   }
 
 #ifdef CENTRALIZED_ROUTING
@@ -783,8 +788,8 @@ module IPRoutingP {
     struct flow_entry *r = getFlowEntry_Header(hdr);
 #endif
     prev_hop = 0;
-    ret->retries = N_RETRIES;;
-    ret->delay = 30;
+    ret->retries = BLIP_L2_RETRIES;
+    ret->delay = (BLIP_L2_DELAY % (call Random.rand16())) + BLIP_L2_DELAY;
     ret->current = 0;
     ret->nchoices = 0;
  
@@ -808,7 +813,8 @@ module IPRoutingP {
       ret->dest[0] = ntohs(sh->hops[ROUTE_NENTRIES(sh) - sh->segs_remain]);
       ret->nchoices = 1;
 
-    } else if (hdr->ip6_dst.s6_addr16[0] == htons(0xff02)) {
+    } else if (hdr->ip6_dst.s6_addr[0] == 0xff &&
+               (hdr->ip6_dst.s6_addr[1] & 0xf) <= 0x03) {
       //hdr->dst_addr[0] == 0xff && (hdr->dst_addr[1] & 0xf) == 0x2) {
       // if it's multicast, for now, we send it to the local broadcast
       ret->dest[0] = 0xffff;
@@ -1165,6 +1171,11 @@ module IPRoutingP {
     tlv->len = sizeof(struct tlv_hdr) + sizeof(struct topology_header);
     tlv->type = TLV_TYPE_TOPOLOGY;
 
+    if (iph->ip6_dst.s6_addr[0] == 0xff &&
+        (iph->ip6_dst.s6_addr[1] & 0xf) <= 3) {
+      return NULL;
+    }
+
     printfUART("inserting destination options header\n");
 
     // AT: We theoretically only want to attach this topology header if we're
@@ -1175,7 +1186,8 @@ module IPRoutingP {
     // only attach the topology information if we are.  This still isn't
     // perfect since somebody further down the tree may have a route and the
     // packet might not get to the controller.
-    if (iph->nxt_hdr == IANA_UDP || iph->nxt_hdr == IPV6_NONEXT) {
+    if (iph->nxt_hdr == IANA_UDP || 
+        iph->nxt_hdr == IPV6_NONEXT) {
       int i,j = 0;
       if (iph->ip6_dst.s6_addr16[0] == htons(0xff02)) return NULL;
       if (traffic_sent) return NULL;

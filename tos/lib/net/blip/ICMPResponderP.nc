@@ -58,10 +58,9 @@ module ICMPResponderP {
   uint16_t ping_seq, ping_n, ping_rcv, ping_ident;
   struct in6_addr ping_dest;
 
-#ifndef SIM
-#define CHECK_NODE_ID
-#else
-#define CHECK_NODE_ID if (TOS_NODE_ID == BASESTATION_ID) return
+#ifdef PRINTFUART_ENABLED
+#undef dbg
+#define dbg(X, fmt, args ...) printfUART(fmt, ## args)
 #endif
 
   command uint16_t ICMP.cksum(struct split_ip_msg *msg, uint8_t nxt_hdr) {
@@ -71,7 +70,6 @@ module ICMPResponderP {
 
   command void ICMP.sendSolicitations() {
     uint16_t jitter = (call Random.rand16()) % TRICKLE_JITTER;
-    CHECK_NODE_ID;
     if (call Solicitation.isRunning()) return;
     solicitation_period = TRICKLE_PERIOD;
     call Solicitation.startOneShot(jitter);
@@ -81,7 +79,6 @@ module ICMPResponderP {
 
 
     uint16_t jitter = (call Random.rand16()) % TRICKLE_JITTER;
-    CHECK_NODE_ID;
     if (call Advertisement.isRunning()) return;
     advertisement_period = TRICKLE_PERIOD;
     call Advertisement.startOneShot(jitter);
@@ -156,8 +153,7 @@ module ICMPResponderP {
 
     if (ipmsg == NULL) return;
 
-    dbg("ICMPResponder", "Solicitation\n");
-    //BLIP_STATS_INCR(stats.sol_tx);
+    BLIP_STATS_INCR(stats.sol_tx);
 
     msg->type = ICMP_TYPE_ROUTER_SOL;
     msg->code = 0;
@@ -244,7 +240,7 @@ module ICMPResponderP {
       }
 
 
-      dbg("ICMPResponder", " * beacon cost: 0x%x\n", cost);
+      dbg("ICMPResponder", " * beacon cost: 0x%x\n", beacon->metric);
     } else {
         dbg("ICMPResponder", " * no beacon cost\n");
     }
@@ -269,6 +265,7 @@ module ICMPResponderP {
       ip_free(ipmsg);
       return;
     }
+    BLIP_STATS_INCR(stats.adv_tx);
 
     r->type = ICMP_TYPE_ROUTER_ADV;
     r->code = 0;
@@ -332,14 +329,15 @@ module ICMPResponderP {
 
     switch (req->type) {
     case ICMP_TYPE_ROUTER_ADV:
-        handleRouterAdv(payload, len, meta);
-        //BLIP_STATS_INCR(stats.adv_rx);
-        break;
+      handleRouterAdv(payload, len, meta);
+      BLIP_STATS_INCR(stats.adv_rx);
+      break;
     case ICMP_TYPE_ROUTER_SOL:
       // only reply to solicitations if we have established a default route.
       if (call IPRouting.hasRoute()) {
           call ICMP.sendAdvertisements();
       }
+      BLIP_STATS_INCR(stats.sol_rx);
       break;
     case ICMP_TYPE_ECHO_REPLY:
       {
@@ -350,6 +348,7 @@ module ICMPResponderP {
         p_stat.rtt = (call LocalTime.get()) - (*sendTime);
         signal ICMPPing.pingReply[req->ident](&iph->ip6_src, &p_stat);
         ping_rcv++;
+        BLIP_STATS_INCR(stats.echo_rx);
       }
       break;
     case ICMP_TYPE_ECHO_REQUEST:
@@ -359,7 +358,11 @@ module ICMPResponderP {
         msg.headers = NULL;
         msg.data = payload;
         msg.data_len = len;
-        call IPAddress.getIPAddr(&msg.hdr.ip6_src);
+        if (iph->ip6_src.s6_addr[0] == 0xfe) {
+          call IPAddress.getLLAddr(&msg.hdr.ip6_src);
+        } else {
+          call IPAddress.getIPAddr(&msg.hdr.ip6_src);
+        }
         memcpy(&msg.hdr.ip6_dst, &iph->ip6_src, 16);      
         
         req->type = ICMP_TYPE_ECHO_REPLY;
@@ -369,15 +372,18 @@ module ICMPResponderP {
         
         // remember, this can't really fail in a way we care about
         call IP.send(&msg);
+        BLIP_STATS_INCR(stats.echo_tx);
         break;
       }
+    default:
+      BLIP_STATS_INCR(stats.unk_rx);
     }
   }
 
 
   event void Solicitation.fired() {
     sendSolicitation();
-    dbg("ICMPResponder", "solicitation period: 0x%x max: 0x%x\n", solicitation_period, TRICKLE_MAX);
+    dbg("ICMPResponder", "solicitation period: 0x%x max: 0x%x seq: %i\n", solicitation_period, TRICKLE_MAX, nd_seqno);
     solicitation_period <<= 1;
     if (solicitation_period < TRICKLE_MAX) {
       call Solicitation.startOneShot(solicitation_period);
@@ -423,7 +429,7 @@ module ICMPResponderP {
 
 
   command void Statistics.get(icmp_statistics_t *statistics) {
-    statistics = &stats;
+    memcpy(statistics, &stats, sizeof(icmp_statistics_t));
   }
   
   command void Statistics.clear() {

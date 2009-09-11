@@ -152,6 +152,7 @@ enum {
   // option message.
   TLV_TYPE_INSTALL  = 0x0b,
   TLV_TYPE_FLOW     = 0x0c,
+  TLV_TYPE_MCASTSEQ = 0x0d,
 };
 
 struct ip6_route {
@@ -298,7 +299,8 @@ struct generic_header {
 };
 
 enum {
-  IP_NOHEADERS = 1,
+  IP_NOHEADERS = 1 << 0,
+  IP_MCAST     = 1 << 1,
 };
 
 struct split_ip_msg {

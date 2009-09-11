@@ -1,5 +1,5 @@
 /*
- *   $Id: device.c,v 1.3 2009-08-31 18:06:39 sdhsdh Exp $
+ *   $Id: device.c,v 1.4 2009-09-11 21:44:25 sdhsdh Exp $
  *
  *   Authors:
  *    Lars Fenneberg		<lf@elemental.net>	 
