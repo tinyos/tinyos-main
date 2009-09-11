@@ -1,4 +1,4 @@
-// $Id: BaseStationC.nc,v 1.1 2009-08-29 05:41:57 jgko Exp $
+// $Id: BaseStationC.nc,v 1.2 2009-09-11 21:20:20 jgko Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -69,6 +69,7 @@ configuration BaseStationC {
 implementation {
   components MainC, BaseStationP, LedsC;
   components ActiveMessageC as Radio, SerialActiveMessageC as Serial;
+  components CC2420KeysC;
   
   MainC.Boot <- BaseStationP;
 
@@ -87,4 +88,5 @@ implementation {
   BaseStationP.RadioAMPacket -> Radio;
   
   BaseStationP.Leds -> LedsC;
+  BaseStationP.CC2420Keys -> CC2420KeysC;
 }
