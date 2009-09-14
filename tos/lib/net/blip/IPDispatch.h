@@ -32,7 +32,6 @@ enum {
   N_EPOCHS_COUNTED = 1,
   N_RECONSTRUCTIONS = 2,
   N_FORWARD_ENT = IP_NUMBER_FRAGMENTS,
-  N_RETRIES = 5,
 };
 
 enum {
@@ -60,8 +59,8 @@ enum {
 };
 #else
 enum {
+  TGEN_BASE_TIME = 16384L,
   TGEN_MAX_INTERVAL = 60L * 1024L * 5L,
-  TGEN_BASE_TIME = TGEN_MAX_INTERVAL,
 };
 #endif
 
@@ -113,7 +112,7 @@ typedef struct {
   uint8_t   nchoices:4;
   uint8_t   retries;
   uint8_t   actRetries;
-  uint8_t   delay;
+  uint16_t  delay;
 } send_policy_t;
 
 typedef struct {

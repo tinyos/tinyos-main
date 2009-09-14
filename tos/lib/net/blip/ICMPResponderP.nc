@@ -222,7 +222,9 @@ module ICMPResponderP {
 
       printfUART("beacon seqno: %i my seqno: %i\n", beacon->seqno, nd_seqno);
 
-      if (beacon->seqno > nd_seqno || (nd_seqno > 0 && beacon->seqno == 0)) {
+      if (beacon->seqno > nd_seqno || 
+          (nd_seqno > 0 && beacon->seqno == 0) ||
+          !call IPRouting.hasRoute()) {
         call IPRouting.reset();
         nd_seqno = beacon->seqno;
       }

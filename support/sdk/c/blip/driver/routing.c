@@ -230,7 +230,8 @@ int routing_is_onehop(struct split_ip_msg *msg) {
   path_t *path;
   int ret = ROUTE_NO_ROUTE;
 
-  if (cmpPfx(msg->hdr.ip6_dst.s6_addr, multicast_prefix))
+  if (msg->hdr.ip6_dst.s6_addr[0] == 0xff &&
+      (msg->hdr.ip6_dst.s6_addr[1] & 0xf) <= 0x2)
     return ROUTE_ONEHOP;
 
 
@@ -386,8 +387,10 @@ uint8_t routing_insert_route(struct split_ip_msg *orig) {
 ieee154_saddr_t routing_get_nexthop(struct split_ip_msg *msg) {
   ieee154_saddr_t ret = 0xffff;;
   path_t * path;
-  if (cmpPfx(msg->hdr.ip6_dst.s6_addr, multicast_prefix))
+  if (msg->hdr.ip6_dst.s6_addr[0] == 0xff &&
+      (msg->hdr.ip6_dst.s6_addr[1] & 0xf) <= 0x2) {
     return ret;
+  }
 
   // If it's source routed, just grab the next hop out of the header 
 #if 0
