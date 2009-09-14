@@ -306,5 +306,35 @@ msp430_i2c_union_config_t msp430_i2c_default_config = {
   } 
 };
 
+typedef uint8_t uart_speed_t;
+typedef uint8_t uart_parity_t;
+typedef uint8_t uart_duplex_t;
+
+enum {
+  TOS_UART_1200   = 0,
+  TOS_UART_1800   = 1,
+  TOS_UART_2400   = 2,
+  TOS_UART_4800   = 3,
+  TOS_UART_9600   = 4,
+  TOS_UART_19200  = 5,
+  TOS_UART_38400  = 6,
+  TOS_UART_57600  = 7,
+  TOS_UART_76800  = 8,
+  TOS_UART_115200 = 9,
+  TOS_UART_230400 = 10
+};
+
+enum {
+  TOS_UART_OFF,
+  TOS_UART_RONLY,
+  TOS_UART_TONLY,
+  TOS_UART_DUPLEX
+};
+
+enum {
+  TOS_UART_PARITY_NONE,
+  TOS_UART_PARITY_EVEN,
+  TOS_UART_PARITY_ODD
+};
 
 #endif//_H_Msp430Usart_h

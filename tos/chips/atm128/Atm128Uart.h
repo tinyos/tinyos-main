@@ -1,4 +1,4 @@
-// $Id: Atm128Uart.h,v 1.4 2006-12-12 18:23:02 vlahan Exp $
+// $Id: Atm128Uart.h,v 1.5 2009-09-14 00:25:59 scipio Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -127,6 +127,28 @@ typedef uint8_t Atm128_UBRR0H_t;  //!< UART 0 Baud Register (High)
 typedef uint8_t Atm128_UBRR1L_t;  //!< UART 1 Baud Register (Low)
 typedef uint8_t Atm128_UBRR1H_t;  //!< UART 1 Baud Register (High)
 
+typedef uint8_t uart_parity_t;
+typedef uint8_t uart_speed_t;
+typedef uint8_t uart_duplex_t;
+
+enum {
+  TOS_UART_PARITY_NONE = 0,
+  TOS_UART_PARITY_EVEN = 1,
+  TOS_UART_PARITY_ODD  = 2,
+};
+
+enum {
+  TOS_UART_19200  = 0,
+  TOS_UART_38400  = 1,
+  TOS_UART_57600  = 2,
+};
+
+enum {
+  TOS_UART_OFF    = 0,
+  TOS_UART_RONLY  = 1,
+  TOS_UART_TONLY  = 2,
+  TOS_UART_DUPLEX = 3,
+};
 
 #endif //_H_Atm128UART_h
 

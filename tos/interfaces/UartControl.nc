@@ -1,4 +1,4 @@
-/* $Id: UartControl.nc,v 1.1 2009-09-13 23:55:32 scipio Exp $ */
+/* $Id: UartControl.nc,v 1.2 2009-09-14 00:25:59 scipio Exp $ */
 /*
  * Copyright (c) 2009 Stanford University.
  * All rights reserved.
@@ -39,7 +39,7 @@
  *  error.
  *
  *  @author Philip Levis
- *  @date   $Date: 2009-09-13 23:55:32 $
+ *  @date   $Date: 2009-09-14 00:25:59 $
  */
 
 
@@ -86,7 +86,8 @@ interface UartControl {
     * only be called when both the receive and transmit paths
     * are disabled, either through a power control interface
     * or setDuplexMode. Valid parity settings are
-    * TOS_PARITY_NONE, TOS_PARITY_EVEN, and TOS_PARITY_ODD.
+    * TOS_UART_PARITY_NONE, TOS_UART_PARITY_EVEN, 
+    * and TOS_UART_PARITY_ODD.
     *
     *  @param parity The parity mode to change to.
     */
