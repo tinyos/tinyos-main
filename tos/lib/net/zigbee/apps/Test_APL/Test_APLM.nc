@@ -24,9 +24,9 @@ module Test_APLM {
 	
 	/*
 	uses interface NLME_PERMIT_JOINING;
-	uses interface NLME_DIRECT_JOIN;
+	uses interface NLME_DIRECT_JOIN;*/
 	uses interface NLME_RESET;
-	*/
+	
 	
 	uses interface NLME_GET;
 	uses interface NLME_SET;
@@ -605,7 +605,7 @@ implementation {
 
 /*******************T_init**************************/
   event void T_init.fired() {
-    
+ 
     //printfUART("Timer fired\n", "");
 	if (TYPE_DEVICE == COORDINATOR)
 	{	
@@ -623,17 +623,13 @@ implementation {
 	}
 	else
 	{	
-		
-
 
 //printfUART("child procedure\n", "");
-		
-		//call NLME_NETWORK_FORMATION.request(0x000000ff, 8, BEACON_ORDER, SUPERFRAME_ORDER, PANID,0);
-		
+	
+	
 		call NLME_NETWORK_DISCOVERY.request(0x000000ff, 8);
-		
-		//call Test_timer.start(TIMER_REPEAT,9000);
-		
+	
+			
 	}
 	return;
   }
@@ -865,13 +861,18 @@ event error_t NLME_GET.confirm(uint8_t Status, uint8_t NIBAttribute, uint16_t NI
 return SUCCESS;
 }
 
+event error_t NLME_RESET.confirm(uint8_t status){
 
+call T_init.startOneShot(5000);
+return SUCCESS;
+}
 
 event void Notify.notify( button_state_t state)
 {
 	if (state == BUTTON_PRESSED) {
 		//call Leds.led0On();
-		call T_init.startOneShot(5000);
+		
+		call NLME_RESET.request();
 
 	}
     
