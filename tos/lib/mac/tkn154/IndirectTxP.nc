@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009-09-14 12:17:18 $
+ * $Revision: 1.8 $
+ * $Date: 2009-09-14 14:15:09 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * @author: Jasper Buesch <buesch@tkn.tu-berlin.de>
  * ========================================================================
@@ -241,7 +241,6 @@ implementation
       post tryCoordCapTxTask();
     } else {
       dbg_serial("IndirectTxP", "We don't have data for this device, sending an empty frame...");
-      call Leds.led0Toggle();
       transmitEmptyDataFrame(frame);
     }
     return frame;

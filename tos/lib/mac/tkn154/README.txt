@@ -1,5 +1,5 @@
 This directory contains "TKN15.4", a platform-independent IEEE 802.15.4-2006
-MAC implementation. The code is under active development, but most of the
+MAC implementation. The code is under active development and most of the
 functionality described in the standard is implemented and tested.  The MAC
 itself is platform-independent, but it requires (1) a suitable radio driver,
 (2) Alarms/Timers with symbol precision and (3) some "platform glue" code
@@ -9,18 +9,15 @@ precision/accuracy requirements of the IEEE 802.15.4 standard -- 62.500 Hz,
 +-40 ppm in the 2.4 GHz band -- the timing in beacon-enabled mode is not
 standard compliant).
 
-Status (last updated 5/28/09)
+Status (last updated 9/14/09)
 -----------------------------
 
 Missing functionality:
 - GTS
 - security services
 - PAN ID conflict notification/resolution
-- indirect transmissions are incomplete, this is missing:
-  -- returning an empty DATA frame when there is no data for the device
-  -- set pending flag if there are multiple indirect transmissions pending
-  -- purging indirect transmissions on MLME_PURGE.request
-  -- keep frame in transaction queue in case CSMA-CA algorithm fails
+- indirect transmissions: frames are not kept in transaction queue 
+  in case CSMA-CA algorithm fails
 
 Known Issues:
 - resetting the MAC during operation (via MLME_RESET) has not been tested
@@ -60,13 +57,14 @@ http://tinyos.stanford.edu:8000/15.4_WG
 Copyright
 ---------
 
-This work was supported by the the European Commision within the 6th Framework
-Project 2005-IST-5-033406-STP (ANGEL project)
+This work was supported by the European Commision within the 6th Framework
+Programme ICT Project ANGEL (Reference: 033506) and within the 7th Framework
+Programme ICT Project CONET (Reference: 224053).
 
 Author: Jan-Hinrich Hauer <hauer@tkn.tu-berlin.de>
 
 /*
- * Copyright (c) 2008, Technische Universitaet Berlin
+ * Copyright (c) 2009, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
