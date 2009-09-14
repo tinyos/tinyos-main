@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2008-10-21 17:29:00 $
+ * $Revision: 1.3 $
+ * $Date: 2009-09-14 12:17:18 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -78,6 +78,7 @@ typedef enum ieee154_status
   IEEE154_UNSUPPORTED_ATTRIBUTE   = 0xF4,
   IEEE154_UNSUPPORTED_LEGACY      = 0xDE,
   IEEE154_UNSUPPORTED_SECURITY    = 0xDF,
+  IEEE154_PURGED                  = 0xDA, // custom attribute
 } ieee154_status_t;
 
 typedef enum ieee154_association_status 

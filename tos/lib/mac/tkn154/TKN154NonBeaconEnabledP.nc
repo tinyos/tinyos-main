@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2009-05-18 12:54:10 $
+ * $Revision: 1.9 $
+ * $Date: 2009-09-14 12:17:18 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -269,7 +269,7 @@ implementation
   IndirectTxP.CoordCapTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
   IndirectTxP.DataRequestRx -> DispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_DATA_REQUEST];
   IndirectTxP.MLME_GET -> PibP;
-  IndirectTxP.FrameUtility -> PibP;
+  IndirectTxP.IEEE154Frame -> PibP;
   IndirectTxP.IndirectTxTimeout = Timer3;
   IndirectTxP.TimeCalc -> PibP;
   IndirectTxP.Leds = Leds;

@@ -27,9 +27,10 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.6 $
- * $Date: 2009-05-07 12:41:36 $
+ * $Revision: 1.7 $
+ * $Date: 2009-09-14 12:17:18 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
+ * @author: Jasper Buesch <buesch@tkn.tu-berlin.de>
  * ========================================================================
  */
 
@@ -49,7 +50,7 @@ module IndirectTxP
     interface FrameTx as CoordCapTx;
     interface FrameRx as DataRequestRx;
     interface MLME_GET;
-    interface FrameUtility;
+    interface IEEE154Frame;
     interface Timer<TSymbolIEEE802154> as IndirectTxTimeout;
     interface TimeCalc;
     interface Leds;
@@ -68,8 +69,13 @@ implementation
   uint8_t m_numTableEntries;
   uint8_t m_numShortPending;
   uint8_t m_numExtPending;
+  ieee154_txframe_t m_emptyDataFrame;
+  ieee154_metadata_t m_emptyDataFrameMetadata;
+  ieee154_header_t m_emptyDataFrameHeader;
+
   task void tryCoordCapTxTask();
   void tryCoordCapTx();
+  void transmitEmptyDataFrame(message_t* dataRequestFrame);
 
   command error_t Reset.init()
   {
@@ -86,6 +92,12 @@ implementation
     m_numTableEntries = 0;
     m_numShortPending = 0;
     m_numExtPending = 0;
+
+    m_emptyDataFrame.header = &m_emptyDataFrameHeader;
+    m_emptyDataFrame.metadata = &m_emptyDataFrameMetadata;
+    m_emptyDataFrame.payload = &m_numExtPending; // dummy (payloadLen is always 0)
+    m_emptyDataFrame.payloadLen = 0;
+    m_emptyDataFrame.client = 0; // unlock
     return SUCCESS;
   }
 
@@ -106,12 +118,23 @@ implementation
 
   command ieee154_status_t Purge.purge(uint8_t msduHandle)
   {
-    return IEEE154_INVALID_HANDLE; // TODO
+    uint8_t i = 0;
+    for (i=0; i<NUM_MAX_PENDING; i++) {
+      if ((m_txFrameTable[i]->handle == msduHandle) && (m_client != m_txFrameTable[i]->client) ){
+        ieee154_txframe_t *purgedFrame;
+        purgedFrame = m_txFrameTable[i];
+        m_txFrameTable[i] = NULL;
+        m_numTableEntries -= 1;
+        signal Purge.purgeDone(purgedFrame, IEEE154_PURGED);
+        return IEEE154_SUCCESS;
+      }
+    }
+    return IEEE154_INVALID_HANDLE;
   }
 
   command uint8_t PendingAddrWrite.write(uint8_t *pendingAddrField, uint8_t maxlen)
   {
-    // write the pending addr field (inside the beacon frame)
+    // writes the pending addr field (inside the beacon frame)
     uint8_t i, j, k=0;
     uint8_t *longAdrPtr[NUM_MAX_PENDING];
     nxle_uint16_t *adrPtr;
@@ -145,7 +168,7 @@ implementation
 
   command ieee154_status_t FrameTx.transmit[uint8_t client](ieee154_txframe_t *txFrame)
   {
-    // send a frame through indirect transmission
+    // sends a frame using indirect transmission
     uint8_t i;
     if (m_numTableEntries >= NUM_MAX_PENDING) {
       dbg_serial("IndirectTxP", "Overflow\n");
@@ -173,13 +196,12 @@ implementation
   {
     uint8_t i, j, srcAddressMode, dstAddressMode, *src;
     uint8_t *mhr = MHR(frame);
-    uint8_t destMode = (mhr[1] & FC2_DEST_MODE_MASK);
+    uint8_t destMode = (mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK);
+    ieee154_txframe_t *dataResponseFrame = NULL;
 
     // received a data request frame from a device
     // have we got some pending data for it ?
-    if (!m_numTableEntries)
-      return frame;
-    srcAddressMode = (mhr[1] & FC2_SRC_MODE_MASK);
+    srcAddressMode = (mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK);
     if (!(srcAddressMode & FC2_SRC_MODE_SHORT))
       return frame;  // no source address
     src = mhr + MHR_INDEX_ADDRESS;
@@ -187,13 +209,13 @@ implementation
       src += 4;
     else if (destMode == FC2_DEST_MODE_EXTENDED)
       src += 10;
-    if (!((mhr[0] & FC1_PAN_ID_COMPRESSION) && (mhr[1] & FC2_DEST_MODE_SHORT)))
+    if (!((mhr[MHR_INDEX_FC1] & FC1_PAN_ID_COMPRESSION) && (mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_SHORT)))
       src += 2;
     for (i=0; i<NUM_MAX_PENDING; i++) {
-      if (!m_txFrameTable[i])
+      if (m_txFrameTable[i] == NULL)
         continue;
       else {
-        dstAddressMode = (m_txFrameTable[i]->header->mhr[1] & FC2_DEST_MODE_MASK);
+        dstAddressMode = (m_txFrameTable[i]->header->mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK);
         if ((dstAddressMode << 4) != srcAddressMode)
           continue;
         else {
@@ -201,23 +223,55 @@ implementation
           uint8_t *dst = &(m_txFrameTable[i]->header->mhr[MHR_INDEX_ADDRESS]) + 2;
           uint8_t len = ((srcAddressMode == FC2_SRC_MODE_SHORT) ? 2 : 8);
           for (j=0; j<len; j++)
-            if (*dst != *src)
-              break;
-          if (j==len)
-            break; // match! break from outer loop
+            if (dst[j] != src[j])
+              break;  // no match!
+          if (j==len) { // match!
+            if (dataResponseFrame == NULL)
+              dataResponseFrame = m_txFrameTable[i];
+            else // got even more than one frame for this device: set pending flag
+              dataResponseFrame->header->mhr[MHR_INDEX_FC1] |= FC1_FRAME_PENDING;
+          }
         }
       }
     }
-    dbg_serial("IndirectTxP", "Received a request, i=%lu, MAX=%lu\n",
-        (uint32_t) i,(uint32_t) NUM_MAX_PENDING);
-    if (i != NUM_MAX_PENDING) {
+    if (dataResponseFrame != NULL) {
       // found a matching frame, mark it for transmission
-      m_txFrameTable[i]->client |= SEND_THIS_FRAME;
+      dbg_serial("IndirectTxP", "We have data for this device, trying to transmit...");
+      dataResponseFrame->client |= SEND_THIS_FRAME;
       post tryCoordCapTxTask();
     } else {
-      // TODO: send an empty data frame to the device
+      dbg_serial("IndirectTxP", "We don't have data for this device, sending an empty frame...");
+      call Leds.led0Toggle();
+      transmitEmptyDataFrame(frame);
     }
     return frame;
+  }
+
+  void transmitEmptyDataFrame(message_t* dataRequestFrame)
+  {
+    // the cast in the next line is dangerous -> this is only a temporary workaround!
+    // (until the new T2 message buffer abstraction is available)
+    message_t *emptyDataMsg = (message_t *) m_emptyDataFrame.header;
+    ieee154_address_t dstAddr;
+    uint16_t dstPanID;
+
+    if (m_emptyDataFrame.client != 0)
+      return; // locked (already transmitting an empty data frame)
+    if (call IEEE154Frame.getSrcAddr(dataRequestFrame, &dstAddr) != IEEE154_SUCCESS ||
+        call IEEE154Frame.getSrcPANId(dataRequestFrame, &dstPanID) != IEEE154_SUCCESS)
+      return;
+    call IEEE154Frame.setAddressingFields(emptyDataMsg,
+        call IEEE154Frame.getDstAddrMode(dataRequestFrame), // will become srcAddrMode
+        call IEEE154Frame.getSrcAddrMode(dataRequestFrame), // will become dstAddrMode
+        dstPanID,
+        &dstAddr,
+        NULL //security
+        );
+    MHR(&m_emptyDataFrame)[MHR_INDEX_FC1] |= FC1_FRAMETYPE_DATA;
+    m_emptyDataFrame.headerLen = 9;
+    m_emptyDataFrame.client = 1; // lock
+    if (call CoordCapTx.transmit(&m_emptyDataFrame) != IEEE154_SUCCESS)
+      m_emptyDataFrame.client = 0; // unlock
   }
 
   void tryCoordCapTx()
@@ -228,7 +282,6 @@ implementation
     if (m_pendingTxFrame == NULL && m_numTableEntries) {
       for (i=0; i<NUM_MAX_PENDING; i++)
         if (m_txFrameTable[i] && (m_txFrameTable[i]->client & SEND_THIS_FRAME)) {
-          // TODO: set frame pending bit, if there's more data for this destination
           m_pendingTxFrame = m_txFrameTable[i];
           m_client = m_txFrameTable[i]->client;
           if (call CoordCapTx.transmit(m_txFrameTable[i]) == IEEE154_SUCCESS) {
@@ -283,6 +336,11 @@ implementation
     uint8_t i;
     // TODO: if CSMA-CA algorithm failed, then frame shall still remain in transaction queue
     dbg_serial("IndirectTxP", "transmitDone(), status: %lu\n", (uint32_t) status);
+
+    if (txFrame == &m_emptyDataFrame) {
+      m_emptyDataFrame.client = 0; // unlock
+      return;
+    }
     for (i=0; i<NUM_MAX_PENDING; i++)
       if (m_txFrameTable[i] == txFrame) {
         m_txFrameTable[i] = NULL; // slot is now empty
