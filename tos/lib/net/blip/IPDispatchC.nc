@@ -39,7 +39,7 @@ configuration IPDispatchC {
   }
 } implementation {
   
-  components Ieee154MessageC as MessageC;
+  components Ieee154MessageC as MessageC, ResourceSendP;
   components MainC, IPDispatchP, IPAddressC, IPRoutingP; 
   components NoLedsC as LedsC;
   components RandomC;
@@ -50,7 +50,10 @@ configuration IPDispatchC {
 
   IPDispatchP.Boot -> MainC;
 
-  IPDispatchP.Ieee154Send -> MessageC;
+  ResourceSendP.SubSend -> MessageC;
+  ResourceSendP.Resource -> MessageC.SendResource[unique(IEEE154_SEND_CLIENT)];
+  IPDispatchP.Ieee154Send -> ResourceSendP.Ieee154Send;
+
   IPDispatchP.Ieee154Receive -> MessageC.Ieee154Receive;
   IPDispatchP.Packet -> MessageC.Packet;
 #ifdef LOW_POWER_LISTENING

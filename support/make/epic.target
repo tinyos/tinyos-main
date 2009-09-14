@@ -1,11 +1,11 @@
 #-*-Makefile-*-
-#$Id: epic.target,v 1.2 2008-08-25 16:48:45 razvanm Exp $
+#$Id: epic.target,v 1.3 2009-09-14 22:57:45 sdhsdh Exp $
 
 PLATFORM ?= epic
 
 # Disable MSP430 hardware multiply because it makes MSPGCC die
 PFLAGS += -mdisable-hwmul
-OPTFLAGS += -O
+# OPTFLAGS += -O
 
 # Default BSL assumes telosb-like programming interface
 MSP_BSL ?= tos-bsl
