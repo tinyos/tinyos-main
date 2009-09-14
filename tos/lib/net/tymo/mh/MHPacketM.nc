@@ -36,7 +36,7 @@ implementation {
   }
 
   command void * Packet.getPayload(message_t *msg, uint8_t len){
-    nx_uint8_t * p = call SubPacket.getPayload(msg, len + sizeof(mhpacket_header_t);
+    nx_uint8_t * p = call SubPacket.getPayload(msg, len + sizeof(mhpacket_header_t));
     return (void *)(p + sizeof(mhpacket_header_t));
   }
 
