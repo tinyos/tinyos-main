@@ -76,6 +76,30 @@ module IPAddressP {
     return globalPrefix;
   }
 
+  command void IPAddress.setSource(struct ip6_hdr *hdr) {
+    enum { LOCAL, GLOBAL } type = GLOBAL;
+      
+    if (hdr->ip6_dst.s6_addr[0] == 0xff) {
+      // link-local multicast sent from local address
+      if ((hdr->ip6_dst.s6_addr[1] & 0x0f) <= 0x2) {
+        type = LOCAL;
+      }
+    } else if (hdr->ip6_dst.s6_addr[0] == 0xfe) {
+      // link-local destinations sent from link-local
+      if ((hdr->ip6_dst.s6_addr[1] & 0xf0) <= 0x80) {
+        type = LOCAL;
+      }
+    }
+
+    if (type == GLOBAL && call IPAddress.haveAddress()) {
+      call IPAddress.getIPAddr(&hdr->ip6_src);
+    } else {
+      call IPAddress.getLLAddr(&hdr->ip6_src);
+    }
+
+  }
+
+
 #ifndef SIM
   async event void ActiveMessageAddress.changed() {
 

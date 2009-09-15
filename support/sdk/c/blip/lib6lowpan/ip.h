@@ -301,6 +301,7 @@ struct generic_header {
 enum {
   IP_NOHEADERS = 1 << 0,
   IP_MCAST     = 1 << 1,
+  IP_NOADDRESS = 1 << 2,
 };
 
 struct split_ip_msg {

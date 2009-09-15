@@ -29,6 +29,8 @@ interface IPAddress {
   command void getLLAddr(struct in6_addr *addr);
   command void getIPAddr(struct in6_addr *addr);
 
+  command void setSource(struct ip6_hdr *hdr);
+
   command void setPrefix(uint8_t *prefix);
 
   command bool haveAddress();

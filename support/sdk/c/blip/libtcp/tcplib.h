@@ -61,7 +61,7 @@ enum {
 
 enum {
   /* how many timer tics to stay in TIME_WAIT */
-  TCPLIB_TIMEWAIT_LEN = 12,
+  TCPLIB_TIMEWAIT_LEN = 1,
   /* how many un-acked retransmissions before we give up the connection */
   TCPLIB_GIVEUP = 6,
 };

@@ -60,15 +60,6 @@ module TcpP {
 #include "circ.c"
 #include "tcplib.c"
 
-  void setSrcAddr(struct split_ip_msg *msg) {
-    if (msg->hdr.ip6_dst.s6_addr16[0] == htons(0xff02) ||
-        msg->hdr.ip6_dst.s6_addr16[0] == htons(0xfe80)) {
-      call IPAddress.getLLAddr(&msg->hdr.ip6_src);
-    } else {
-      call IPAddress.getIPAddr(&msg->hdr.ip6_src);
-    }
-  }
-
   struct tcplib_sock socks[uniqueCount("TCP_CLIENT")];
 
   struct tcplib_sock *tcplib_accept(struct tcplib_sock *conn,
@@ -87,7 +78,7 @@ module TcpP {
 
   void tcplib_send_out(struct split_ip_msg *msg, struct tcp_hdr *tcph) {
     printfUART("tcp output\n");
-    setSrcAddr(msg);
+    call IPAddress.setSource(&msg->hdr);
     tcph->chksum = htons(msg_cksum(msg, IANA_TCP));
     call IP.send(msg);
   }

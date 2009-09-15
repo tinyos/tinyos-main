@@ -53,16 +53,6 @@ module UdpP {
     return SUCCESS;
   }
 
-  void setSrcAddr(struct split_ip_msg *msg) {
-    if (msg->hdr.ip6_dst.s6_addr16[7] == htons(0xff02) ||
-        msg->hdr.ip6_dst.s6_addr16[7] == htons(0xfe80)) {
-      call IPAddress.getLLAddr(&msg->hdr.ip6_src);
-    } else {
-      call IPAddress.getIPAddr(&msg->hdr.ip6_src);
-    }
-  }
-
-
   command error_t UDP.bind[uint8_t clnt](uint16_t port) {
     int i;
     port = htons(port);
@@ -157,7 +147,7 @@ module UdpP {
     ip_memclr((uint8_t *)msg, sizeof(struct split_ip_msg));
     ip_memclr((uint8_t *)udp, sizeof(struct udp_hdr));
     
-    setSrcAddr(msg);
+    call IPAddress.setSource(&msg->hdr);
     memcpy(&msg->hdr.ip6_dst, dest->sin6_addr.s6_addr, 16);
     
     if (local_ports[clnt] == 0 && (local_ports[clnt] = alloc_lport(clnt)) == 0) {
