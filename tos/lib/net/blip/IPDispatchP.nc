@@ -105,13 +105,8 @@ module IPDispatchP {
     interface ReadLqi;
     interface Packet;
 
-#ifndef SIM
     interface Ieee154Send;
     interface Ieee154Packet;
-#else
-    interface AMSend as Ieee154Send;
-    interface AMPacket as Ieee154Packet;
-#endif
     interface Receive as Ieee154Receive;
 
     interface PacketLink;
@@ -137,8 +132,6 @@ module IPDispatchP {
   }
 } implementation {
   
-#include "table.c"
-
 #ifdef PRINTFUART_ENABLED
 #undef dbg
 #define dbg(X, fmt, args...)  printfUART(fmt, ## args)
@@ -798,7 +791,7 @@ module IPDispatchP {
     call PacketLink.setRetries(s_entry->msg, s_entry->info->policy.retries);
     call PacketLink.setRetryDelay(s_entry->msg, s_entry->info->policy.delay);
 #ifdef LPL_SLEEP_INTERVAL
-    call LowPowerListening.setRxSleepInterval(s_entry->msg, LPL_SLEEP_INTERVAL);
+    call LowPowerListening.setRxSleepInterval(s_entry->msg, call LowPowerListening.getLocalSleepInterval());
 #endif
 
     dbg("IPDispatch", "sendTask dest: 0x%x len: 0x%x \n", call Ieee154Packet.destination(s_entry->msg),
@@ -977,7 +970,6 @@ module IPDispatchP {
   }
 
   event void Ieee154Send.sendDone(message_t *msg, error_t error) {
-    ip_statistics_t stat;
     send_entry_t *s_entry = call SendQueue.head();
 
     radioBusy = FALSE;
@@ -1017,6 +1009,7 @@ module IPDispatchP {
     s_entry->info->failed = TRUE;
     if (s_entry->info->policy.dest[0] != 0xffff)
       dbg("Drops", "drops: sendDone: frag was not delivered\n");
+    BLIP_STATS_INCR(stats.tx_drop);
 
   done:
     s_entry->info->policy.actRetries = call PacketLink.getRetries(msg);
@@ -1028,7 +1021,6 @@ module IPDispatchP {
     call SendQueue.dequeue();
 
     post sendTask();
-    call Statistics.get(&stat);
   }
 
   command struct tlv_hdr *IPExtensions.findTlv(struct ip6_ext *ext, uint8_t tlv_val) {

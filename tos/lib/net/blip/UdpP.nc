@@ -56,9 +56,11 @@ module UdpP {
   command error_t UDP.bind[uint8_t clnt](uint16_t port) {
     int i;
     port = htons(port);
-    for (i = 0; i < N_CLIENTS; i++)
-      if (i != clnt && local_ports[i] == port)
-        return FAIL;
+    if (port > 0) {
+      for (i = 0; i < N_CLIENTS; i++)
+        if (i != clnt && local_ports[i] == port)
+          return FAIL;
+    }
     local_ports[clnt] = port;
     return SUCCESS;
   }
@@ -106,12 +108,12 @@ module UdpP {
       my_cksum = in_cksum(cksum_vec, 4);
       printfUART("rx cksum: %x calc: %x\n", rx_cksum, my_cksum);
       if (rx_cksum != my_cksum) {
-        BLIP_STATS_INCR(cksum);
+        BLIP_STATS_INCR(stats.cksum);
         // return;
       }
     }
 
-    BLIP_STATS_INCR(rcvd);
+    BLIP_STATS_INCR(stats.rcvd);
     signal UDP.recvfrom[i](&addr, (void *)(udph + 1), ntohs(iph->plen) - sizeof(struct udp_hdr), meta);
   }
 
@@ -147,8 +149,8 @@ module UdpP {
     ip_memclr((uint8_t *)msg, sizeof(struct split_ip_msg));
     ip_memclr((uint8_t *)udp, sizeof(struct udp_hdr));
     
-    call IPAddress.setSource(&msg->hdr);
     memcpy(&msg->hdr.ip6_dst, dest->sin6_addr.s6_addr, 16);
+    call IPAddress.setSource(&msg->hdr);
     
     if (local_ports[clnt] == 0 && (local_ports[clnt] = alloc_lport(clnt)) == 0) {
       ip_free(msg);
@@ -166,11 +168,12 @@ module UdpP {
     msg->headers = g_udp;
     msg->data_len = len;
     msg->data = payload;
+    msg->hdr.plen = udp->len;
 
     udp->chksum = htons(msg_cksum(msg, IANA_UDP)); 
 
     rc = call IP.send(msg);
-    BLIP_STATS_INCR(sent);
+    BLIP_STATS_INCR(stats.sent);
 
     ip_free(msg);
     return rc;

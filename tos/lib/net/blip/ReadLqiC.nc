@@ -14,7 +14,7 @@ configuration ReadLqiC {
   
 #if defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB)  || \
     defined(PLATFORM_EPIC)  || defined(PLATFORM_SHIMMER) || \
-    defined(PLATFORM_INTELMOTE2)
+    defined(PLATFORM_SHIMMER2) || defined(PLATFORM_INTELMOTE2)
   // cc2420 platforms
   components CC2420ReadLqiC, CC2420PacketC;
   ReadLqi = CC2420ReadLqiC;

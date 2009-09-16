@@ -1,14 +1,19 @@
 # -*- makefile -*-
 
-PFLAGS +=-DPACKET_LINK -DDEF_MEMCPY
-# PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS
-PFLAGS += -DTOSH_DATA_LENGTH=102
+# radio stack defs
+PFLAGS += -DPACKET_LINK -DDEF_MEMCPY
+PFLAGS += -DENABLE_SPI0_DMA -DBLIP_MULTICAST
+PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS
+
+ifdef BLIP_L2_MTU
+	PFLAGS += -DTOSH_DATA_LENGTH=$(BLIP_L2_MTU)
+else
+	PFLAGS += -DTOSH_DATA_LENGTH=102
+endif
 
 ifndef LOWPAN_ROOT
   LOWPAN_ROOT=$(TOSROOT)
 endif
-
-PFLAGS+=-DENABLE_SPI0_DMA
 
 PFLAGS+=-I$(TOSROOT)/tos/lib/net/
 PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/
@@ -25,4 +30,4 @@ PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpanIP.c
 PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpanFrag.c
 PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/in_cksum.c
 PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/ip_malloc.c
-
+PFLAGS+=$(LOWPAN_ROOT)/tos/lib/net/blip/table.c

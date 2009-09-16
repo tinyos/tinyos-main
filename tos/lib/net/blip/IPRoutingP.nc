@@ -85,13 +85,6 @@ module IPRoutingP {
   void evictNeighbor(struct neigh_entry *neigh);
   uint16_t getMetric(struct neigh_entry *neigh);
 
-  uint16_t adjustLQI(uint8_t val) {
-    uint16_t result = (80 - (val - 50));
-    result = (((result * result) >> 3) * result) >> 3;  // result = (result ^ 3) / 64
-    dbg("Lqi", "adjustLqi in: 0x%x out: 0x%x\n", val, result);
-    return result;
-  }
-
   void clearStats(struct neigh_entry *r) {
     ip_memclr((uint8_t *)r->stats, sizeof(struct epoch_stats) * N_EPOCHS);
 #if 0
