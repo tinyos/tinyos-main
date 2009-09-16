@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.7 2008-06-17 22:45:29 kusy Exp $
+// $Id: ActiveMessageC.nc,v 1.8 2009-09-16 00:51:51 razvanm Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -31,17 +31,17 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: ActiveMessageC.nc,v 1.7 2008-06-17 22:45:29 kusy Exp $
+ * Date last modified:  $Id: ActiveMessageC.nc,v 1.8 2009-09-16 00:51:51 razvanm Exp $
  *
  */
 
 /**
  *
- * The Active Message layer on the micaZ platform. This is a naming wrapper
+ * The Active Message layer on the Telos platform. This is a naming wrapper
  * around the CC2420 Active Message layer.
  *
  * @author Philip Levis
- * @date June 19 2005
+ * @version $Revision: 1.8 $ $Date: 2009-09-16 00:51:51 $
  */
 #include "Timer.h"
 
@@ -58,11 +58,12 @@ configuration ActiveMessageC {
     interface PacketAcknowledgements;
     interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+    interface LowPowerListening;
   }
 }
 implementation {
   components CC2420ActiveMessageC as AM;
-  
+
   SplitControl = AM;
   
   AMSend       = AM;
@@ -71,6 +72,7 @@ implementation {
   Packet       = AM;
   AMPacket     = AM;
   PacketAcknowledgements = AM;
+  LowPowerListening = AM;
 
   components CC2420PacketC;
   PacketTimeStamp32khz = CC2420PacketC;

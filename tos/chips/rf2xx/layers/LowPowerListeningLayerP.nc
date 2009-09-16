@@ -46,6 +46,7 @@ module LowPowerListeningLayerP
 		interface PacketAcknowledgements;
 		interface LowPowerListeningConfig as Config;
 		interface Timer<TMilli>;
+		interface SystemLowPowerListening;
 	}
 }
 
@@ -56,18 +57,12 @@ implementation
 		// minimum wakeup time to catch a transmission in milliseconds
 		LISTEN_WAKEUP = 6U,	// use xxxL if LISTEN_WAKEUP * 10000 > 65535
 
-		// extra wakeup time after receiving a message in milliseconds
-		AFTER_RECEIVE = 10U,
-
-		// extra wakeup time after transmitting a message in milliseconds
-		AFTER_TRANSMIT = 10U,
-
 		MIN_SLEEP = 2,		// the minimum sleep interval in milliseconds
 		MAX_SLEEP = 30000,	// the maximum sleep interval in milliseconds
 		MIN_DUTY = 2,		// the minimum duty cycle
 	};
 
-	uint16_t sleepInterval;
+	uint16_t sleepInterval = LPL_DEF_LOCAL_WAKEUP;
 
 	message_t* txMsg;
 	error_t txError;
@@ -161,7 +156,7 @@ implementation
 		}
 		else if( state == SEND_TIMER )
 		{
-			transmitInterval = call LowPowerListening.getRxSleepInterval(txMsg);
+			transmitInterval = call LowPowerListening.getRemoteWakeupInterval(txMsg);
 
 			if( transmitInterval > 0 )
 				call Timer.startOneShot(transmitInterval);
@@ -185,7 +180,7 @@ implementation
 		{
 			state = LISTEN;
 			if( sleepInterval > 0 )
-				call Timer.startOneShot(AFTER_TRANSMIT);
+				call Timer.startOneShot(call SystemLowPowerListening.getDelayAfterReceive());
 
 			signal Send.sendDone(txMsg, txError);
 		}
@@ -274,7 +269,7 @@ implementation
 			state = LISTEN;
 
 		if( state == LISTEN && sleepInterval > 0 )
-			call Timer.startOneShot(AFTER_RECEIVE);
+			call Timer.startOneShot(call SystemLowPowerListening.getDelayAfterReceive());
 
 		return signal Receive.receive(msg);
 	}
@@ -333,7 +328,7 @@ implementation
 
 		// TODO: extend the PacketAcknowledgements interface with getAckRequired
 		if( error != SUCCESS
-			|| call LowPowerListening.getRxSleepInterval(msg) == 0
+			|| call LowPowerListening.getRemoteWakeupInterval(msg) == 0
 			|| state == SEND_SUBSEND_DONE_LAST
 			|| (call Config.getAckRequired(msg) && call PacketAcknowledgements.wasAcked(msg)) )
 		{
@@ -353,27 +348,7 @@ implementation
 		return ((void*)msg) + sizeof(message_t) - call RadioPacket.metadataLength(msg);
 	}
 
-	command uint16_t LowPowerListening.dutyCycleToSleepInterval(uint16_t dutyCycle)
-	{
-		if( dutyCycle >= 10000 )
-			return 0;
-		else if( dutyCycle <= MIN_DUTY  )
-			return MAX_SLEEP;
-
-		return ((10000U * LISTEN_WAKEUP) / dutyCycle) - LISTEN_WAKEUP;
-	}
-
-	command uint16_t LowPowerListening.sleepIntervalToDutyCycle(uint16_t interval)
-	{
-		if( interval < MIN_SLEEP )
-			return 10000;
-		else if( interval >= MAX_SLEEP )
-			return MIN_DUTY;
-
-		return (10000U * LISTEN_WAKEUP) / (LISTEN_WAKEUP + interval);
-	}
-
-	command void LowPowerListening.setLocalSleepInterval(uint16_t interval)
+	command void LowPowerListening.setLocalWakeupInterval(uint16_t interval)
 	{
 		if( interval < MIN_SLEEP )
 			interval = 0;
@@ -390,23 +365,12 @@ implementation
 		}
 	}
 
-	command uint16_t LowPowerListening.getLocalSleepInterval()
+	command uint16_t LowPowerListening.getLocalWakeupInterval()
 	{	
 		return sleepInterval;
 	}
 
-	command void LowPowerListening.setLocalDutyCycle(uint16_t dutyCycle)
-	{
-		call LowPowerListening.setLocalSleepInterval(
-			call LowPowerListening.dutyCycleToSleepInterval(dutyCycle));
-	}
-
-	command uint16_t LowPowerListening.getLocalDutyCycle()
-	{
-		return call LowPowerListening.sleepIntervalToDutyCycle(sleepInterval);
-	}
-
-	command void LowPowerListening.setRxSleepInterval(message_t *msg, uint16_t interval)
+	command void LowPowerListening.setRemoteWakeupInterval(message_t *msg, uint16_t interval)
 	{
 		if( interval < MIN_SLEEP )
 			interval = 0;
@@ -416,21 +380,9 @@ implementation
 		getMeta(msg)->sleepint = interval;
 	}
 
-	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg)
+	command uint16_t LowPowerListening.getRemoteWakeupInterval(message_t *msg)
 	{
 		return getMeta(msg)->sleepint;
-	}
-
-	command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t dutyCycle)
-	{
-		call LowPowerListening.setRxSleepInterval(msg, 
-			call LowPowerListening.dutyCycleToSleepInterval(dutyCycle));
-	}
-
-	command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg)
-	{
-		return call LowPowerListening.sleepIntervalToDutyCycle(
-			call LowPowerListening.getRxSleepInterval(msg));
 	}
 
 /*----------------- RadioPacket -----------------*/

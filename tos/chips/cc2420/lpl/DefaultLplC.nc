@@ -66,6 +66,7 @@ implementation {
       new StateC() as SendStateC,
       new TimerMilliC() as OffTimerC,
       new TimerMilliC() as SendDoneTimerC,
+      SystemLowPowerListeningC,
       LedsC;
   
   LowPowerListening = DefaultLplP;
@@ -94,5 +95,5 @@ implementation {
   DefaultLplP.RadioBackoff -> CC2420CsmaC;
   DefaultLplP.Random -> RandomC;
   DefaultLplP.Leds -> LedsC;
-  
+  DefaultLplP.SystemLowPowerListening -> SystemLowPowerListeningC;
 }

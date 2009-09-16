@@ -7,7 +7,7 @@
  * See TEP118: Dissemination and TEP 119: Collection for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.9 $ $Date: 2008-04-28 04:29:37 $
+ * @version $Revision: 1.10 $ $Date: 2009-09-16 00:51:50 $
  */
 
 #include <Timer.h>
@@ -20,7 +20,7 @@ module TestNetworkC {
   uses interface SplitControl as SerialControl;
   uses interface StdControl as RoutingControl;
   uses interface StdControl as DisseminationControl;
-  uses interface DisseminationValue<uint16_t> as DisseminationPeriod;
+  uses interface DisseminationValue<uint32_t> as DisseminationPeriod;
   uses interface Send;
   uses interface Leds;
   uses interface Read<uint16_t> as ReadSensor;
@@ -87,7 +87,7 @@ implementation {
   void sendMessage() {
     TestNetworkMsg* msg = (TestNetworkMsg*)call Send.getPayload(&packet, sizeof(TestNetworkMsg));
     uint16_t metric;
-    am_addr_t parent;
+    am_addr_t parent = 0;
 
     call CtpInfo.getParent(&parent);
     call CtpInfo.getEtx(&metric);
@@ -113,10 +113,10 @@ implementation {
 
  
   event void Timer.fired() {
-    uint16_t nextInt;
+    uint32_t nextInt;
     call Leds.led0Toggle();
     dbg("TestNetworkC", "TestNetworkC: Timer fired.\n");
-    nextInt = call Random.rand16() % SEND_INTERVAL;
+    nextInt = call Random.rand32() % SEND_INTERVAL;
     nextInt += SEND_INTERVAL >> 1;
     call Timer.startOneShot(nextInt);
     if (!sendBusy)
@@ -132,7 +132,7 @@ implementation {
   }
   
   event void DisseminationPeriod.changed() {
-    const uint16_t* newVal = call DisseminationPeriod.get();
+    const uint32_t* newVal = call DisseminationPeriod.get();
     call Timer.stop();
     call Timer.startPeriodic(*newVal);
   }

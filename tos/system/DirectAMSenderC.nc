@@ -1,4 +1,4 @@
-// $Id: AMSenderC.nc,v 1.5 2009-09-16 00:51:51 razvanm Exp $
+// $Id: DirectAMSenderC.nc,v 1.1 2009-09-16 00:51:51 razvanm Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -36,7 +36,7 @@
 
 #include "AM.h"
 
-generic configuration AMSenderC(am_id_t AMId) {
+generic configuration DirectAMSenderC(am_id_t AMId) {
   provides {
     interface AMSend;
     interface Packet;
@@ -46,15 +46,14 @@ generic configuration AMSenderC(am_id_t AMId) {
 }
 
 implementation {
+  components new AMQueueEntryP(AMId) as AMQueueEntryP;
+  components AMQueueP, ActiveMessageC;
 
-#if defined(LOW_POWER_LISTENING)
-  components new LplAMSenderC(AMId) as SenderC;
-#else
-  components new DirectAMSenderC(AMId) as SenderC;
-#endif
-
-  AMSend = SenderC;
-  Packet = SenderC;
-  AMPacket = SenderC;
-  Acks = SenderC;
+  AMQueueEntryP.Send -> AMQueueP.Send[unique(UQ_AMQUEUE_SEND)];
+  AMQueueEntryP.AMPacket -> ActiveMessageC;
+  
+  AMSend = AMQueueEntryP;
+  Packet = ActiveMessageC;
+  AMPacket = ActiveMessageC;
+  Acks = ActiveMessageC;
 }

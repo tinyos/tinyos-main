@@ -76,7 +76,6 @@ implementation {
   PowerCycleP.SplitControlState -> SplitControlStateC;
   PowerCycleP.OnTimer -> OnTimerC;
   PowerCycleP.Leds -> LedsC;
-    
 }
 
 

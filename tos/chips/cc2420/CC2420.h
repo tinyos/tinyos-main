@@ -30,7 +30,7 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
- * @version $Revision: 1.16 $ $Date: 2009-08-29 04:21:37 $
+ * @version $Revision: 1.17 $ $Date: 2009-09-16 00:51:50 $
  */
 
 #ifndef __CC2420_H__
@@ -181,6 +181,17 @@ typedef nx_struct cc2420_packet_t {
  */
 #ifndef TINYOS_6LOWPAN_NETWORK_ID
 #define TINYOS_6LOWPAN_NETWORK_ID 0x3f
+#endif
+
+/**
+ * The LPL defaults to stay-on.
+ */
+#ifndef LPL_DEF_LOCAL_WAKEUP
+#define LPL_DEF_LOCAL_WAKEUP 0
+#endif
+
+#ifndef LPL_DEF_REMOTE_WAKEUP
+#define LPL_DEF_REMOTE_WAKEUP 0
 #endif
 
 enum {

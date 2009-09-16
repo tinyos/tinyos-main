@@ -47,6 +47,7 @@ configuration LowPowerListeningLayerC
 implementation
 {
 	components LowPowerListeningLayerP, new TimerMilliC();
+	components SystemLowPowerListeningC;
 
 	SplitControl = LowPowerListeningLayerP;
 	Send = LowPowerListeningLayerP;
@@ -62,4 +63,5 @@ implementation
 	PacketAcknowledgements = LowPowerListeningLayerP;
 	
 	LowPowerListeningLayerP.Timer -> TimerMilliC;
+	LowPowerListeningLayerP.SystemLowPowerListening -> SystemLowPowerListeningC;
 }

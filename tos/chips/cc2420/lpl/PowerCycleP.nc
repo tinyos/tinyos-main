@@ -75,7 +75,7 @@ module PowerCycleP {
 implementation {
   
   /** The current period of the duty cycle, equivalent of wakeup interval */
-  uint16_t sleepInterval = 0;
+  uint16_t sleepInterval = LPL_DEF_LOCAL_WAKEUP;
   
   /** The number of times the CCA has been sampled in this wakeup period */
   uint16_t ccaChecks;
@@ -98,7 +98,6 @@ implementation {
   
   bool finishSplitControlRequests();
   bool isDutyCycling();
-  
   
   /***************** PowerCycle Commands ****************/
   /**

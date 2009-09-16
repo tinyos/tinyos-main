@@ -28,23 +28,11 @@ module LowPowerListeningDummyP
 
 implementation
 {
-	command void LowPowerListening.setLocalSleepInterval(uint16_t sleepIntervalMs) { }
+	command void LowPowerListening.setLocalWakeupInterval(uint16_t intervalMs) { }
 
-	command uint16_t LowPowerListening.getLocalSleepInterval() { return 0; }
+	command uint16_t LowPowerListening.getLocalWakeupInterval() { return 0; }
   
-	command void LowPowerListening.setLocalDutyCycle(uint16_t dutyCycle) { }
+	command void LowPowerListening.setRemoteWakeupInterval(message_t *msg, uint16_t intervalMs) { }
   
-	command uint16_t LowPowerListening.getLocalDutyCycle() { return 10000; }
-  
-	command void LowPowerListening.setRxSleepInterval(message_t *msg, uint16_t sleepIntervalMs) { }
-  
-	command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg) { return 0; }
-  
-	command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t dutyCycle) { }
-  
-	command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg) { return 10000; }
-  
-	command uint16_t LowPowerListening.dutyCycleToSleepInterval(uint16_t dutyCycle) { return 0; }
-
-	command uint16_t LowPowerListening.sleepIntervalToDutyCycle(uint16_t sleepInterval) { return 10000; }
+	command uint16_t LowPowerListening.getRemoteWakeupInterval(message_t *msg) { return 0; }
 }

@@ -67,6 +67,7 @@ module DefaultLplP {
     interface Timer<TMilli> as SendDoneTimer;
     interface Random;
     interface Leds;
+    interface SystemLowPowerListening;
   }
 }
 
@@ -111,7 +112,6 @@ implementation {
   
   void initializeSend();
   void startOffTimer();
-  uint16_t getActualDutyCycle(uint16_t dutyCycle);
   
   /***************** Init Commands ***************/
   command error_t Init.init() {
@@ -121,133 +121,41 @@ implementation {
   
   /***************** LowPowerListening Commands ***************/
   /**
-   * Set this this node's radio sleep interval, in milliseconds.
+   * Set this this node's radio wakeup interval, in milliseconds.
    * Once every interval, the node will sleep and perform an Rx check 
-   * on the radio.  Setting the sleep interval to 0 will keep the radio
+   * on the radio.  Setting the wakeup interval to 0 will keep the radio
    * always on.
    *
-   * This is the equivalent of setting the local duty cycle rate.
-   *
-   * @param sleepIntervalMs the length of this node's Rx check interval, in [ms]
+   * @param intervalMs the length of this node's wakeup interval, in [ms]
    */
-  command void LowPowerListening.setLocalSleepInterval(
-      uint16_t sleepIntervalMs) {
-    call PowerCycle.setSleepInterval(sleepIntervalMs);
+  command void LowPowerListening.setLocalWakeupInterval(uint16_t intervalMs) {
+    call PowerCycle.setSleepInterval(intervalMs);
   }
   
   /**
-   * @return the local node's sleep interval, in [ms]
+   * @return the local node's wakeup interval, in [ms]
    */
-  command uint16_t LowPowerListening.getLocalSleepInterval() {
+  command uint16_t LowPowerListening.getLocalWakeupInterval() {
     return call PowerCycle.getSleepInterval();
   }
   
   /**
-   * Set this node's radio duty cycle rate, in units of [percentage*100].
-   * For example, to get a 0.05% duty cycle,
-   * <code>
-   *   call LowPowerListening.setDutyCycle(5);
-   * </code>
-   *
-   * For a 100% duty cycle (always on),
-   * <code>
-   *   call LowPowerListening.setDutyCycle(10000);
-   * </code>
-   *
-   * This is the equivalent of setting the local sleep interval explicitly.
-   * 
-   * @param dutyCycle The duty cycle percentage, in units of [percentage*100]
-   */
-  command void LowPowerListening.setLocalDutyCycle(uint16_t dutyCycle) {
-    call PowerCycle.setSleepInterval(
-        call LowPowerListening.dutyCycleToSleepInterval(dutyCycle));
-  }
-  
-  /**
-   * @return this node's radio duty cycle rate, in units of [percentage*100]
-   */
-  command uint16_t LowPowerListening.getLocalDutyCycle() {
-    return call LowPowerListening.sleepIntervalToDutyCycle(
-        call PowerCycle.getSleepInterval());
-  }
-  
-  
-  /**
    * Configure this outgoing message so it can be transmitted to a neighbor mote
-   * with the specified Rx sleep interval.
+   * with the specified wakeup interval.
    * @param msg Pointer to the message that will be sent
-   * @param sleepInterval The receiving node's sleep interval, in [ms]
+   * @param intervalMs The receiving node's wakeup interval, in [ms]
    */
-  command void LowPowerListening.setRxSleepInterval(message_t *msg, 
-      uint16_t sleepIntervalMs) {
-    (call CC2420PacketBody.getMetadata(msg))->rxInterval = sleepIntervalMs;
+  command void LowPowerListening.setRemoteWakeupInterval(message_t *msg, 
+      uint16_t intervalMs) {
+    (call CC2420PacketBody.getMetadata(msg))->rxInterval = intervalMs;
   }
   
   /**
-   * @return the destination node's sleep interval configured in this message
+   * @return the destination node's wakeup interval configured in this message
    */
-  command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg) {
+  command uint16_t LowPowerListening.getRemoteWakeupInterval(message_t *msg) {
     return (call CC2420PacketBody.getMetadata(msg))->rxInterval;
   }
-  
-  /**
-   * Configure this outgoing message so it can be transmitted to a neighbor mote
-   * with the specified Rx duty cycle rate.
-   * Duty cycle is in units of [percentage*100], i.e. 0.25% duty cycle = 25.
-   * 
-   * @param msg Pointer to the message that will be sent
-   * @param dutyCycle The duty cycle of the receiving mote, in units of 
-   *     [percentage*100]
-   */
-  command void LowPowerListening.setRxDutyCycle(message_t *msg, 
-      uint16_t dutyCycle) {
-    (call CC2420PacketBody.getMetadata(msg))->rxInterval =
-        call LowPowerListening.dutyCycleToSleepInterval(dutyCycle);
-  }
-  
-    
-  /**
-   * @return the destination node's duty cycle configured in this message
-   *     in units of [percentage*100]
-   */
-  command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg) {
-    return call LowPowerListening.sleepIntervalToDutyCycle(
-        (call CC2420PacketBody.getMetadata(msg))->rxInterval);
-  }
-  
-  /**
-   * Convert a duty cycle, in units of [percentage*100], to
-   * the sleep interval of the mote in milliseconds
-   * @param dutyCycle The duty cycle in units of [percentage*100]
-   * @return The equivalent sleep interval, in units of [ms]
-   */
-  command uint16_t LowPowerListening.dutyCycleToSleepInterval(
-      uint16_t dutyCycle) {
-    dutyCycle = getActualDutyCycle(dutyCycle);
-    
-    if(dutyCycle == 10000) {
-      return 0;
-    }
-    
-    return ((uint32_t)DUTY_ON_TIME * (10000 - dutyCycle)) / dutyCycle;
-  }
-  
-  /**
-   * Convert a sleep interval, in units of [ms], to a duty cycle
-   * in units of [percentage*100]
-   * @param sleepInterval The sleep interval in units of [ms]
-   * @return The duty cycle in units of [percentage*100]
-   */
-  command uint16_t LowPowerListening.sleepIntervalToDutyCycle(
-      uint16_t sleepInterval) {
-    if(sleepInterval == 0) {
-      return 10000;
-    }
-    
-    return getActualDutyCycle(((uint32_t)DUTY_ON_TIME * 10000) 
-        / (sleepInterval + DUTY_ON_TIME));
-  }
-
   
   /***************** Send Commands ***************/
   /**
@@ -480,7 +388,7 @@ implementation {
   
   /***************** Functions ***************/
   void initializeSend() {
-    if(call LowPowerListening.getRxSleepInterval(currentSendMsg) 
+    if(call LowPowerListening.getRemoteWakeupInterval(currentSendMsg) 
       > ONE_MESSAGE) {
     
       if((call CC2420PacketBody.getHeader(currentSendMsg))->dest == IEEE154_BROADCAST_ADDR) {
@@ -491,7 +399,7 @@ implementation {
       }
 
       call SendDoneTimer.startOneShot(
-          call LowPowerListening.getRxSleepInterval(currentSendMsg) + 20);
+          call LowPowerListening.getRemoteWakeupInterval(currentSendMsg) + 20);
     }
         
     post send();
@@ -499,21 +407,8 @@ implementation {
   
   
   void startOffTimer() {
-    call OffTimer.startOneShot(DELAY_AFTER_RECEIVE);
+    call OffTimer.startOneShot(call SystemLowPowerListening.getDelayAfterReceive());
   }
   
-  /**
-   * Check the bounds on a given duty cycle
-   * We're never over 100%, and we're never at 0%
-   */
-  uint16_t getActualDutyCycle(uint16_t dutyCycle) {
-    if(dutyCycle > 10000) {
-      return 10000;
-    } else if(dutyCycle == 0) {
-      return 1;
-    }
-    
-    return dutyCycle;
-  }  
 }
 
