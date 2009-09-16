@@ -19,7 +19,7 @@ z * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
  */
-// $Id: BaseStationC.nc,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
+// $Id: BaseStationC.nc,v 1.3 2009-09-16 00:18:05 sdhsdh Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -84,10 +84,19 @@ z * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * @author Philip Levis
  * @date August 10 2005
  */
+#include <Ieee154.h>
 
 configuration BaseStationC {
 }
 implementation {
+
+  enum {
+    // becasue we're the only one's using the radio, we're lazy and
+    // don't acquire the resource.  For some reason, it seems to crash
+    // occasionally if we don't do this.
+    RESOURCE_IDX = unique(IEEE154_SEND_CLIENT),
+  };
+
   components MainC, BaseStationP, LedsC;
   components Ieee154MessageC as Radio;
   components SerialDispatcherC as SerialControl, Serial802_15_4C as Serial;

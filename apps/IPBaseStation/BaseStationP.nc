@@ -19,7 +19,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
  */
-// $Id: BaseStationP.nc,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
+// $Id: BaseStationP.nc,v 1.3 2009-09-16 00:18:05 sdhsdh Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -54,7 +54,7 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.3 2009-09-16 00:18:05 sdhsdh Exp $
  */
   
 /* 
@@ -111,7 +111,7 @@ implementation
   };
 
   uint16_t radioRetries = BLIP_L2_RETRIES;
-  uint16_t radioDelay   = 30;
+  uint16_t radioDelay   = BLIP_L2_DELAY;
 
   uint16_t serial_read;
   uint16_t radio_read;
@@ -306,7 +306,6 @@ implementation
 #if defined(PLATFORM_TELOS) || defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
     WDTCTL = WDT_ARST_1000;
 #endif
-
     atomic
       if (!radioFull)
 	{
