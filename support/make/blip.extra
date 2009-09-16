@@ -18,6 +18,7 @@ PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/interfaces/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/nwprog/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/shell/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/serial/
+PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/platform/
 
 PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpan.c 
 PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpanIP.c

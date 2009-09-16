@@ -102,7 +102,7 @@ module IPDispatchP {
     interface Boot;
     interface SplitControl as RadioControl;
 
-    interface CC2420Packet;
+    interface ReadLqi;
     interface Packet;
 
 #ifndef SIM
@@ -486,7 +486,7 @@ module IPDispatchP {
       //   - if not, dispatch from here.
 
       metadata.sender = call Ieee154Packet.source(msg);
-      metadata.lqi = call CC2420Packet.getLqi(msg);
+      metadata.lqi = call ReadLqi.read(msg);
 
       real_payload_length = ntohs(ip->plen);
       adjustPlen(ip, &u_info);
@@ -670,7 +670,7 @@ module IPDispatchP {
     BLIP_STATS_INCR(stats.rx_total);
 
     call IPRouting.reportReception(call Ieee154Packet.source(msg),
-                                   call CC2420Packet.getLqi(msg));
+                                   call ReadLqi.read(msg));
 
     lowmsg.headers = getHeaderBitmap(&lowmsg);
     if (lowmsg.headers == LOWPAN_NALP_PATTERN) {
