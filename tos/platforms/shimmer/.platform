@@ -8,10 +8,13 @@
 
 push( @includes, qw(
 
+      .
   %T/platforms/shimmer
   %T/platforms/shimmer/chips/cc2420
   %T/platforms/shimmer/chips/mma7260
   %T/platforms/shimmer/chips/sd
+  %T/platforms/shimmer/chips/bluetooth
+  %T/platforms/shimmer/chips/msp430
   %T/chips/cc2420
   %T/chips/cc2420/alarm
   %T/chips/cc2420/control
