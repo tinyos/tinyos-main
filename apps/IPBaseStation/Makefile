@@ -12,9 +12,6 @@ CFLAGS += -DNO_IP_MALLOC
 # memmove.  This doesn't mean that motes running blip also need this--
 # they can use IFRAMES or IEEE154FRAMES
 CFLAGS += -DIEEE154FRAMES_ENABLED
-# when using IEEE154Frames, the maximum payload size is 2 larger,
-# since the header is two smaller.
-BLIP_L2_MTU = 104
 
 # if you're worried about your interface mote crashing, enable this to
 # turn on a hardware watchdog that will reset it if it does.  CFLAGS

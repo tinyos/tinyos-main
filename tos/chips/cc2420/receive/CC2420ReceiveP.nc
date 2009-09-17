@@ -35,7 +35,7 @@
  * @author Jung Il Choi
  * @author JeongGil Ko
  * @author Razvan Musaloiu-E
- * @version $Revision: 1.20 $ $Date: 2009-08-29 00:06:42 $
+ * @version $Revision: 1.21 $ $Date: 2009-09-17 23:36:36 $
  */
 
 #include "IEEE802154.h"
@@ -693,7 +693,7 @@ implementation {
       securityOn = 0;
       authentication = 0;
 #endif
-      m_p_rx_buf = signal Receive.receive( m_p_rx_buf, CC2420_PAYLOAD(m_p_rx_buf),
+      m_p_rx_buf = signal Receive.receive( m_p_rx_buf, m_p_rx_buf->data,
 					   length - CC2420_SIZE);
     }
     atomic receivingPacket = FALSE;

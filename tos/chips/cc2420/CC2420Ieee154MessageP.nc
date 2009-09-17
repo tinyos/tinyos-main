@@ -46,7 +46,7 @@
 /**
  *
  * @author Stephen Dawson-Haggerty
- * @version $Revision: 1.1 $ $Date: 2009-08-20 01:37:44 $
+ * @version $Revision: 1.2 $ $Date: 2009-09-17 23:36:36 $
  */
  
 #include "CC2420.h"
@@ -144,11 +144,11 @@ implementation {
   }
   
   command uint8_t Packet.payloadLength(message_t* msg) {
-    return (call CC2420PacketBody.getHeader(msg))->length - CC2420_SIZE;
+    return (call CC2420PacketBody.getHeader(msg))->length - CC2420_SIZE + AM_OVERHEAD;
   }
   
   command void Packet.setPayloadLength(message_t* msg, uint8_t len) {
-    (call CC2420PacketBody.getHeader(msg))->length  = len + CC2420_SIZE;
+    (call CC2420PacketBody.getHeader(msg))->length  = len + CC2420_SIZE - AM_OVERHEAD;
   }
   
   command uint8_t Packet.maxPayloadLength() {

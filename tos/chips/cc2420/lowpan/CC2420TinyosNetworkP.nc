@@ -72,15 +72,15 @@ implementation {
 
   command error_t ActiveSend.send(message_t* msg, uint8_t len) {
     call CC2420Packet.setNetwork(msg, TINYOS_6LOWPAN_NETWORK_ID);
-    return call BareSend.send(msg, len + AM_OVERHEAD);
+    return call SubSend.send(msg, len);
   }
 
   command error_t ActiveSend.cancel(message_t* msg) {
-    return call BareSend.cancel(msg);
+    return call SubSend.cancel(msg);
   }
 
   command uint8_t ActiveSend.maxPayloadLength() {
-    return call BareSend.maxPayloadLength() - AM_OVERHEAD;
+    return call SubSend.maxPayloadLength();
   }
 
   command void* ActiveSend.getPayload(message_t* msg, uint8_t len) {
@@ -93,7 +93,7 @@ implementation {
 
   /***************** Send Commands ****************/
   command error_t BareSend.send(message_t* msg, uint8_t len) {
-    return call SubSend.send(msg, len);
+    return call SubSend.send(msg, len - AM_OVERHEAD);
   }
 
   command error_t BareSend.cancel(message_t* msg) {
@@ -101,11 +101,16 @@ implementation {
   }
 
   command uint8_t BareSend.maxPayloadLength() {
-    return call SubSend.maxPayloadLength();
+    return call SubSend.maxPayloadLength() + AM_OVERHEAD;
   }
 
   command void* BareSend.getPayload(message_t* msg, uint8_t len) {
-    return call SubSend.getPayload(msg, len);
+#ifndef TFRAMES_ENABLED                      
+    cc2420_header_t *hdr = call CC2420PacketBody.getHeader(msg);
+    return &hdr->network;
+#else
+    // you really can't use BareSend with TFRAMES
+#endif
   }
   
   /***************** SubSend Events *****************/
@@ -116,19 +121,23 @@ implementation {
       signal BareSend.sendDone(msg, error);
     }
   }
-  
+
   /***************** SubReceive Events ***************/
   event message_t *SubReceive.receive(message_t *msg, void *payload, uint8_t len) {
 
     if(!(call CC2420PacketBody.getMetadata(msg))->crc) {
       return msg;
     }
-
+#ifndef TFRAMES_ENABLED
     if (call CC2420Packet.getNetwork(msg) == TINYOS_6LOWPAN_NETWORK_ID) {
-      return signal ActiveReceive.receive(msg, msg->data, len - AM_OVERHEAD);
+      return signal ActiveReceive.receive(msg, payload, len);
     } else {
-      return signal BareReceive.receive(msg, payload, len);
+      cc2420_header_t *hdr = call CC2420PacketBody.getHeader(msg);
+      return signal BareReceive.receive(msg, &hdr->network, len + AM_OVERHEAD);
     }
+#else
+    return signal ActiveReceive.receive(msg, payload, len);
+#endif
   }
 
   /***************** Resource ****************/

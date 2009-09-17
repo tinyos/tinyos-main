@@ -30,17 +30,13 @@
  *
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
- * @version $Revision: 1.18 $ $Date: 2009-09-17 23:35:02 $
+ * @version $Revision: 1.19 $ $Date: 2009-09-17 23:36:36 $
  */
 
 #ifndef __CC2420_H__
 #define __CC2420_H__
 
 typedef uint8_t cc2420_status_t;
-
-#if !defined(TFRAMES_ENABLED) && !defined(IEEE154FRAMES_ENABLED)
-#define CC2420_IFRAME_TYPE
-#endif
 
 #if defined(TFRAMES_ENABLED) && defined(IEEE154FRAMES_ENABLED)
 #error "Both TFRAMES and IEEE154FRAMES enabled!"
@@ -108,15 +104,12 @@ typedef nx_struct cc2420_header_t {
   security_header_t secHdr;
 #endif
   
-#ifdef CC2420_IFRAME_TYPE
+#ifndef TFRAMES_ENABLED
   /** I-Frame 6LowPAN interoperability byte */
   nxle_uint8_t network;
 #endif
 
-#if defined(TFRAMES_ENABLED) || defined(CC2420_IFRAME_TYPE)
   nxle_uint8_t type;
-#endif
-
 } cc2420_header_t;
 
 /**
@@ -191,19 +184,10 @@ enum {
   // MDU
   MAC_PACKET_SIZE = MAC_HEADER_SIZE + TOSH_DATA_LENGTH + MAC_FOOTER_SIZE,
 
-  AM_OVERHEAD = 0
-#if defined(TFRAMES_ENABLED) || defined(CC2420_IFRAME_TYPE)
-  + 1 // add one for the AM byte
-#if defined(CC2420_IFRAME_TYPE)
-  + 1 // and one for the network byte
-#endif
-#endif    
-  ,
+  CC2420_SIZE = MAC_HEADER_SIZE + MAC_FOOTER_SIZE,
 
-  CC2420_SIZE = MAC_HEADER_SIZE + MAC_FOOTER_SIZE - AM_OVERHEAD,
+  AM_OVERHEAD = 2,
 };
-
-#define CC2420_PAYLOAD(mbuf)  (((uint8_t *)(mbuf)->data) - AM_OVERHEAD)
 
 enum cc2420_enums {
   CC2420_TIME_ACK_TURNAROUND = 7, // jiffies

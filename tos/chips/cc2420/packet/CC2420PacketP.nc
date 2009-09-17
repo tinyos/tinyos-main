@@ -96,17 +96,15 @@ implementation {
   }
 
   async command uint8_t CC2420Packet.getNetwork( message_t* p_msg ) {
-#if defined(CC2420_IFRAME_TYPE)
-    return (call CC2420PacketBody.getHeader( p_msg ))->network;
-#elif defined(IEEE154FRAMES_ENABLED)
-    return 0;
-#else
+#if defined(TFRAMES_ENABLED)
     return TINYOS_6LOWPAN_NETWORK_ID;
+#else
+    return (call CC2420PacketBody.getHeader( p_msg ))->network;
 #endif
   }
 
   async command void CC2420Packet.setNetwork( message_t* p_msg , uint8_t networkId ) {
-#if defined(CC2420_IFRAME_TYPE)
+#if ! defined(TFRAMES_ENABLED)
     (call CC2420PacketBody.getHeader( p_msg ))->network = networkId;
 #endif
   }    
