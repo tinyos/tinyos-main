@@ -68,7 +68,7 @@ implementation
 		else
 		{
 #ifdef LOW_POWER_LISTENING
-			call LowPowerListening.setLocalSleepInterval(SLEEP_INTERVAL);
+			call LowPowerListening.setLocalWakeupInterval(SLEEP_INTERVAL);
 #endif		
 			call SendTimer.startPeriodic(SEND_PERIOD);
 			call ReportTimer.startPeriodic(1000);
@@ -144,7 +144,7 @@ implementation
 		call Packet.clear(&txMsg);
 		call PacketAcknowledgements.requestAck(&txMsg);
 #ifdef LOW_POWER_LISTENING
-		call LowPowerListening.setRxSleepInterval(&txMsg, SLEEP_INTERVAL);
+		call LowPowerListening.setRemoteWakeupInterval(&txMsg, SLEEP_INTERVAL);
 #endif
 
 		addr = call ActiveMessageAddress.amAddress();
