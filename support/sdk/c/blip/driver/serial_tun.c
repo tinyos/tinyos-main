@@ -398,19 +398,22 @@ void send_fragments (struct split_ip_msg *msg, ieee154_saddr_t dest) {
 
     // if this is sent too fast, the base station can't keep up.  The effect of this is
     // we send incomplete fragment.  25ms seems to work pretty well.
-    // usleep(30000);
     //   6-9-08 : SDH : this is a bad fix that does not address the
     //   problem.  
     //   at the very least, the serial ack's seem to be
     //   working, so we should be retrying if the ack is failing
     //   because the hardware cannot keep up.
+    //   9-17-09 : SDH : it seems we've tracked this down to packets
+    //   arriving too fast to enqueue, especially at higher baud rates
+    //   (115200).  reenabled to prevent retries, which are very slow.
 #ifdef __TARGET_mips__
     usleep(50000);
+#else
+    usleep(25000);
 #endif
-
     log_dump_serial_packet(serial, PKTLEN(radioPacket));
     result = write_pan_packet(serial, PKTLEN(radioPacket));
-    if (result != 0)
+    if (result != 0) 
       result = write_pan_packet(serial, PKTLEN(radioPacket));
 
     debug("send_fragments: result: 0x%x len: 0x%x\n", result, frag_len);

@@ -15,6 +15,10 @@ CFLAGS += -DIEEE154FRAMES_ENABLED
 # when using IEEE154Frames, the maximum payload size is 2 larger,
 # since the header is two smaller.
 BLIP_L2_MTU = 104
+
+# if you're worried about your interface mote crashing, enable this to
+# turn on a hardware watchdog that will reset it if it does.  CFLAGS
+# += -DBLIP_WATCHDOG
 #
 # debugging
 #
