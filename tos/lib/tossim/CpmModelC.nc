@@ -51,7 +51,7 @@ implementation {
   bool requestAck;
   bool receiving = 0;  // Whether or not I think I'm receiving a packet
   bool transmitting = 0; // Whether or not I think I'm tranmitting a packet
-  sim_time_t TransmissionEndTime; // to check pending transmission
+  sim_time_t transmissionEndTime; // to check pending transmission
   struct receive_message;
   typedef struct receive_message receive_message_t;
 
@@ -394,8 +394,8 @@ implementation {
       dbg("CpmModelC,SNRLoss", "Lost packet from %i due to %i being mid-reception\n", source, sim_node());
       rcv->lost = 1;
     }
-    else if (transmitting && (rcv->start < TransmissionEndTime) && (TransmissionEndTime <= rcv->end)) {
-      dbg("CpmModelC,SNRLoss", "Lost packet from %i due to %i being mid-transmission, TransmissionEndTime %llu\n", source, sim_node(), TransmissionEndTime);
+    else if (transmitting && (rcv->start < transmissionEndTime) && (transmissionEndTime <= rcv->end)) {
+      dbg("CpmModelC,SNRLoss", "Lost packet from %i due to %i being mid-transmission, transmissionEndTime %llu\n", source, sim_node(), transmissionEndTime);
       rcv->lost = 1;
     }
     else {
@@ -431,7 +431,7 @@ implementation {
     gain_entry_t* neighborEntry = sim_gain_first(sim_node());
     requestAck = ack;
     outgoing = msg;
-    TransmissionEndTime = endTime;
+    transmissionEndTime = endTime;
     dbg("CpmModelC", "Node %i transmitting to %i, finishes at %llu.\n", sim_node(), dest, endTime);
 
     while (neighborEntry != NULL) {
@@ -449,9 +449,9 @@ implementation {
   }
     
 
-  command void Model.checkPendingTransmission(bool isTransmitting) {
-    transmitting = isTransmitting;
-    dbg("CpmModelC", "checkPendingTransmission: transmitting %i @ %s\n", transmitting, sim_time_string());
+  command void Model.setPendingTransmission() {
+    transmitting = TRUE;
+    dbg("CpmModelC", "setPendingTransmission: transmitting %i @ %s\n", transmitting, sim_time_string());
   }
 
   
