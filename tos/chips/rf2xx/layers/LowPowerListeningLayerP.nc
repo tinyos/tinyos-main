@@ -52,14 +52,16 @@ module LowPowerListeningLayerP
 
 implementation
 {
+#ifndef LPL_DEF_LOCAL_WAKEUP
+#define LPL_DEF_LOCAL_WAKEUP 0
+#endif
+
 	enum
 	{
 		// minimum wakeup time to catch a transmission in milliseconds
 		LISTEN_WAKEUP = 6U,	// use xxxL if LISTEN_WAKEUP * 10000 > 65535
 
 		MIN_SLEEP = 2,		// the minimum sleep interval in milliseconds
-		MAX_SLEEP = 30000,	// the maximum sleep interval in milliseconds
-		MIN_DUTY = 2,		// the minimum duty cycle
 	};
 
 	uint16_t sleepInterval = LPL_DEF_LOCAL_WAKEUP;
@@ -352,8 +354,6 @@ implementation
 	{
 		if( interval < MIN_SLEEP )
 			interval = 0;
-		else if( interval > MAX_SLEEP )
-			interval = MAX_SLEEP;
 
 		sleepInterval = interval;
 
@@ -374,8 +374,6 @@ implementation
 	{
 		if( interval < MIN_SLEEP )
 			interval = 0;
-		else if( interval > MAX_SLEEP )
-			interval = MAX_SLEEP;
 
 		getMeta(msg)->sleepint = interval;
 	}
