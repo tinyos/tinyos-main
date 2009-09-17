@@ -1,3 +1,5 @@
+#include "Lpl.h"
+
 module SystemLowPowerListeningP
 {
   provides interface SystemLowPowerListening;

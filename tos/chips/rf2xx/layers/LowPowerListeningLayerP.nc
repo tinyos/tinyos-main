@@ -52,10 +52,6 @@ module LowPowerListeningLayerP
 
 implementation
 {
-#ifndef LPL_DEF_LOCAL_WAKEUP
-#define LPL_DEF_LOCAL_WAKEUP 0
-#endif
-
 	enum
 	{
 		// minimum wakeup time to catch a transmission in milliseconds

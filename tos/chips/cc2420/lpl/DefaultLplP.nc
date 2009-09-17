@@ -40,6 +40,7 @@
  * @author David Moss
  */
 
+#include "Lpl.h"
 #include "DefaultLpl.h"
 #include "AM.h"
 

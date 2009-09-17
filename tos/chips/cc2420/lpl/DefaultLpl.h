@@ -48,14 +48,6 @@ typedef enum {
 
 
 /**
- * Amount of time, in milliseconds, to keep the radio on after
- * a successful receive addressed to this node
- */
-#ifndef DELAY_AFTER_RECEIVE
-#define DELAY_AFTER_RECEIVE 100
-#endif
-
-/**
  * This is a measured value of the time in ms the radio is actually on
  * We round this up to err on the side of better performance ratios
  * This includes the acknowledgement wait period and backoffs,
