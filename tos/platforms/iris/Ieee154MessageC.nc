@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2009, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -27,19 +27,16 @@ configuration ActiveMessageC
 	{
 		interface SplitControl;
 
-		interface AMSend[uint8_t id];
-		interface Receive[uint8_t id];
-		interface Receive as Snoop[uint8_t id];
-		interface SendNotifier[am_id_t id];
+		interface Ieee154Send;
+		interface Receive as Ieee154Receive;
+		interface SendNotifier;
 
 		interface Packet;
-		interface AMPacket;
+		interface Ieee154Packet;
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
-#ifdef PACKET_LINK
 		interface PacketLink;
-#endif
 
 		interface PacketTimeStamp<TMicro, uint32_t> as PacketTimeStampMicro;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -48,23 +45,20 @@ configuration ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageC as MAC;
+	components RF230Ieee154MessageC as MAC;
 
 	SplitControl	= MAC;
 
-	AMSend		= MAC;
-	Receive		= MAC.Receive;
-	Snoop		= MAC.Snoop;
+	Ieee154Send	= MAC;
+	Ieee154Receive	= MAC.Receive;
 	SendNotifier	= MAC;
 
 	Packet		= MAC;
-	AMPacket	= MAC;
+	Ieee154Packet	= MAC;
 
 	PacketAcknowledgements	= MAC;
 	LowPowerListening	= MAC;
-#ifdef PACKET_LINK
 	PacketLink	= MAC;
-#endif
 
 	PacketTimeStampMilli	= MAC;
 	PacketTimeStampMicro	= MAC;
