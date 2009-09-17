@@ -1,4 +1,4 @@
-//$Id: SerialDispatcherP.nc,v 1.8 2009-08-11 20:17:44 scipio Exp $
+//$Id: SerialDispatcherP.nc,v 1.9 2009-09-17 17:58:02 sdhsdh Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -294,6 +294,9 @@ implementation {
         receiveTaskSize = recvIndex;
         receiveBufferSwap();
         receiveState.state = RECV_STATE_IDLE;
+      } else {
+        // we can't deliver the packet, better free the current buffer.
+        unlockBuffer(receiveState.which);
       }
     }
     if (postsignalreceive){
