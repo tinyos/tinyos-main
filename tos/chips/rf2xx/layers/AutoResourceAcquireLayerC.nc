@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2009, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -21,51 +21,57 @@
  * Author: Miklos Maroti
  */
 
-configuration IEEE154MessageLayerC
+generic module AutoResourceAcquireLayerC()
 {
 	provides
 	{
-		interface IEEE154MessageLayer;
-		interface RadioPacket;
-
-		// for passthrough wiring
-		interface BareSend as Send;
-
-		// for gateway wiring
-		interface Ieee154Packet;
-		interface Packet;
-		interface Ieee154Send;
-		interface Receive as Ieee154Receive;
-		interface SendNotifier;
+		interface BareSend;
 	}
 
 	uses
 	{
-		interface RadioPacket as SubPacket;
 		interface BareSend as SubSend;
-
-		// for gateway wiring
-		interface BareReceive as SubReceive;
+		interface Resource;
 	}
 }
 
 implementation
 {
-	components IEEE154MessageLayerP, ActiveMessageAddressC;
-	IEEE154MessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
+	message_t *pending;
 
-	IEEE154MessageLayer = IEEE154MessageLayerP;
-	RadioPacket = IEEE154MessageLayerP;
-	SubPacket = IEEE154MessageLayerP;
+	command error_t BareSend.send(message_t* msg)
+	{
+		if( call Resource.immediateRequest() == SUCCESS )
+		{
+			error_t result = call SubSend.send(msg);
+			if( result != SUCCESS )
+				call Resource.release();
 
-	// for passthrough
-	Send = IEEE154MessageLayerP;
-	SubSend = IEEE154MessageLayerP;
+			return result;
+		}
 
-	Ieee154Packet = IEEE154MessageLayerP;
-	Packet = IEEE154MessageLayerP;
-	Ieee154Send = IEEE154MessageLayerP;
-	Ieee154Receive = IEEE154MessageLayerP;
-	SubReceive = IEEE154MessageLayerP;
-	SendNotifier = IEEE154MessageLayerP;
+		pending = msg;
+		return call Resource.request();
+	}
+
+	event void Resource.granted()
+	{
+		error_t result = call SubSend.send(pending);
+		if( result != SUCCESS )
+		{
+			call Resource.release();
+			signal BareSend.sendDone(pending, result);
+		}
+	}
+
+	event void SubSend.sendDone(message_t* msg, error_t result)
+	{
+		call Resource.release();
+		signal BareSend.sendDone(msg, result);
+	}
+
+	command error_t BareSend.cancel(message_t* msg)
+	{
+		return call SubSend.cancel(msg);
+	}
 }

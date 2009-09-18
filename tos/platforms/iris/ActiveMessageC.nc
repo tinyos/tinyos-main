@@ -48,24 +48,24 @@ configuration ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageC as MAC;
+	components RF230ActiveMessageC as MessageC;
 
-	SplitControl	= MAC;
+	SplitControl = MessageC;
 
-	AMSend		= MAC;
-	Receive		= MAC.Receive;
-	Snoop		= MAC.Snoop;
-	SendNotifier	= MAC;
+	AMSend = MessageC;
+	Receive = MessageC.Receive;
+	Snoop = MessageC.Snoop;
+	SendNotifier = MessageC;
 
-	Packet		= MAC;
-	AMPacket	= MAC;
+	Packet = MessageC;
+	AMPacket = MessageC;
 
-	PacketAcknowledgements	= MAC;
-	LowPowerListening	= MAC;
+	PacketAcknowledgements = MessageC;
+	LowPowerListening = MessageC;
 #ifdef PACKET_LINK
-	PacketLink	= MAC;
+	PacketLink = MessageC;
 #endif
 
-	PacketTimeStampMilli	= MAC;
-	PacketTimeStampMicro	= MAC;
+	PacketTimeStampMilli = MessageC;
+	PacketTimeStampMicro = MessageC;
 }

@@ -21,11 +21,11 @@
  * Author: Miklos Maroti
  */
 
-#include <RF230ActiveMessage.h>
+#include <RF230Radio.h>
 #include <RadioConfig.h>
 #include <Tasklet.h>
 
-module RF230ActiveMessageP
+module RF230RadioP
 {
 	provides
 	{
@@ -46,9 +46,8 @@ module RF230ActiveMessageP
 
 	uses
 	{
-		interface IEEE154MessageLayer;
+		interface Ieee154PacketLayer;
 		interface RadioAlarm;
-		interface RadioPacket as ActiveMessagePacket;
 		interface RadioPacket as RF230Packet;
 
 		interface PacketTimeStamp<TRadio, uint32_t>;
@@ -83,39 +82,39 @@ implementation
 
 	async command bool RF230DriverConfig.requiresRssiCca(message_t* msg)
 	{
-		return call IEEE154MessageLayer.isDataFrame(msg);
+		return call Ieee154PacketLayer.isDataFrame(msg);
 	}
 
 /*----------------- SoftwareAckConfig -----------------*/
 
 	async command bool SoftwareAckConfig.requiresAckWait(message_t* msg)
 	{
-		return call IEEE154MessageLayer.requiresAckWait(msg);
+		return call Ieee154PacketLayer.requiresAckWait(msg);
 	}
 
 	async command bool SoftwareAckConfig.isAckPacket(message_t* msg)
 	{
-		return call IEEE154MessageLayer.isAckFrame(msg);
+		return call Ieee154PacketLayer.isAckFrame(msg);
 	}
 
 	async command bool SoftwareAckConfig.verifyAckPacket(message_t* data, message_t* ack)
 	{
-		return call IEEE154MessageLayer.verifyAckReply(data, ack);
+		return call Ieee154PacketLayer.verifyAckReply(data, ack);
 	}
 
 	async command void SoftwareAckConfig.setAckRequired(message_t* msg, bool ack)
 	{
-		call IEEE154MessageLayer.setAckRequired(msg, ack);
+		call Ieee154PacketLayer.setAckRequired(msg, ack);
 	}
 
 	async command bool SoftwareAckConfig.requiresAckReply(message_t* msg)
 	{
-		return call IEEE154MessageLayer.requiresAckReply(msg);
+		return call Ieee154PacketLayer.requiresAckReply(msg);
 	}
 
 	async command void SoftwareAckConfig.createAckPacket(message_t* data, message_t* ack)
 	{
-		call IEEE154MessageLayer.createAckReply(data, ack);
+		call Ieee154PacketLayer.createAckReply(data, ack);
 	}
 
 #ifndef SOFTWAREACK_TIMEOUT
@@ -138,17 +137,17 @@ implementation
 
 	async command uint8_t UniqueConfig.getSequenceNumber(message_t* msg)
 	{
-		return call IEEE154MessageLayer.getDSN(msg);
+		return call Ieee154PacketLayer.getDSN(msg);
 	}
 
 	async command void UniqueConfig.setSequenceNumber(message_t* msg, uint8_t dsn)
 	{
-		call IEEE154MessageLayer.setDSN(msg, dsn);
+		call Ieee154PacketLayer.setDSN(msg, dsn);
 	}
 
 	async command am_addr_t UniqueConfig.getSender(message_t* msg)
 	{
-		return call IEEE154MessageLayer.getSrcAddr(msg);
+		return call Ieee154PacketLayer.getSrcAddr(msg);
 	}
 
 	tasklet_async command void UniqueConfig.reportChannelError()
@@ -162,39 +161,39 @@ implementation
 
 	command am_addr_t ActiveMessageConfig.destination(message_t* msg)
 	{
-		return call IEEE154MessageLayer.getDestAddr(msg);
+		return call Ieee154PacketLayer.getDestAddr(msg);
 	}
 
 	command void ActiveMessageConfig.setDestination(message_t* msg, am_addr_t addr)
 	{
-		call IEEE154MessageLayer.setDestAddr(msg, addr);
+		call Ieee154PacketLayer.setDestAddr(msg, addr);
 	}
 
 	command am_addr_t ActiveMessageConfig.source(message_t* msg)
 	{
-		return call IEEE154MessageLayer.getSrcAddr(msg);
+		return call Ieee154PacketLayer.getSrcAddr(msg);
 	}
 
 	command void ActiveMessageConfig.setSource(message_t* msg, am_addr_t addr)
 	{
-		call IEEE154MessageLayer.setSrcAddr(msg, addr);
+		call Ieee154PacketLayer.setSrcAddr(msg, addr);
 	}
 
 	command am_group_t ActiveMessageConfig.group(message_t* msg)
 	{
-		return call IEEE154MessageLayer.getDestPan(msg);
+		return call Ieee154PacketLayer.getDestPan(msg);
 	}
 
 	command void ActiveMessageConfig.setGroup(message_t* msg, am_group_t grp)
 	{
-		call IEEE154MessageLayer.setDestPan(msg, grp);
+		call Ieee154PacketLayer.setDestPan(msg, grp);
 	}
 
 /*----------------- CsmaConfig -----------------*/
 
 	async command bool CsmaConfig.requiresSoftwareCCA(message_t* msg)
 	{
-		return call IEEE154MessageLayer.isDataFrame(msg);
+		return call Ieee154PacketLayer.isDataFrame(msg);
 	}
 
 /*----------------- TrafficMonitorConfig -----------------*/
@@ -220,12 +219,12 @@ implementation
 		 */
 
 		uint8_t len = call RF230Packet.payloadLength(msg);
-		return call IEEE154MessageLayer.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
+		return call Ieee154PacketLayer.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
 	}
 
 	async command am_addr_t TrafficMonitorConfig.getSender(message_t* msg)
 	{
-		return call IEEE154MessageLayer.getSrcAddr(msg);
+		return call Ieee154PacketLayer.getSrcAddr(msg);
 	}
 
 /*----------------- RandomCollisionConfig -----------------*/
@@ -262,7 +261,7 @@ implementation
 		time = call RadioAlarm.getNow();
 
 		// estimated response time (download the message, etc) is 5-8 bytes
-		if( call IEEE154MessageLayer.requiresAckReply(msg) )
+		if( call Ieee154PacketLayer.requiresAckReply(msg) )
 			time += (uint16_t)(32 * (-5 + 16 + 11 + 5) * RADIO_ALARM_MICROSEC);
 		else
 			time += (uint16_t)(32 * (-5 + 5) * RADIO_ALARM_MICROSEC);
@@ -315,7 +314,7 @@ implementation
 
 	async command bool LowPowerListeningConfig.getAckRequired(message_t* msg)
 	{
-		return call IEEE154MessageLayer.getAckRequired(msg);
+		return call Ieee154PacketLayer.getAckRequired(msg);
 	}
 
 #endif

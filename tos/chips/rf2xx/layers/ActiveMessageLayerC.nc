@@ -25,7 +25,6 @@ configuration ActiveMessageLayerC
 {
 	provides
 	{
-		interface RadioPacket;
 		interface AMPacket;
 		interface Packet;
 		interface AMSend[am_id_t id];
@@ -48,7 +47,6 @@ implementation
 	components ActiveMessageLayerP, ActiveMessageAddressC;
 	ActiveMessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
 
-	RadioPacket = ActiveMessageLayerP;
 	AMPacket = ActiveMessageLayerP;
 	Packet = ActiveMessageLayerP;
 	AMSend = ActiveMessageLayerP;

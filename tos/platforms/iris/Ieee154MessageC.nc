@@ -21,7 +21,7 @@
  * Author: Miklos Maroti
  */
 
-configuration ActiveMessageC
+configuration Ieee154MessageC
 {
 	provides
 	{
@@ -33,6 +33,7 @@ configuration ActiveMessageC
 
 		interface Packet;
 		interface Ieee154Packet;
+		interface Resource as RadioSendResource[uint8_t clint];
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
@@ -45,21 +46,22 @@ configuration ActiveMessageC
 
 implementation
 {
-	components RF230Ieee154MessageC as MAC;
+	components RF230Ieee154MessageC as MessageC;
 
-	SplitControl	= MAC;
+	SplitControl = MessageC;
 
-	Ieee154Send	= MAC;
-	Ieee154Receive	= MAC.Receive;
-	SendNotifier	= MAC;
+	Ieee154Send = MessageC;
+	Ieee154Receive = MessageC;
+	SendNotifier = MessageC;
 
-	Packet		= MAC;
-	Ieee154Packet	= MAC;
+	Packet = MessageC;
+	Ieee154Packet = MessageC;
+	RadioSendResource = MessageC;
 
-	PacketAcknowledgements	= MAC;
-	LowPowerListening	= MAC;
-	PacketLink	= MAC;
+	PacketAcknowledgements = MessageC;
+	LowPowerListening = MessageC;
+	PacketLink = MessageC;
 
-	PacketTimeStampMilli	= MAC;
-	PacketTimeStampMicro	= MAC;
+	PacketTimeStampMilli = MessageC;
+	PacketTimeStampMicro = MessageC;
 }

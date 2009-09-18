@@ -23,6 +23,10 @@
 
 #include <RadioConfig.h>
 
+#ifdef IEEE154FRAMES_ENABLED
+#error "You cannot use ActiveMessageC with IEEE154FRAMES_ENABLED defined"
+#endif
+
 configuration RF230ActiveMessageC
 {
 	provides 
@@ -36,9 +40,9 @@ configuration RF230ActiveMessageC
 
 		interface Packet;
 		interface AMPacket;
+
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
-
 #ifdef PACKET_LINK
 		interface PacketLink;
 #endif
@@ -57,155 +61,31 @@ configuration RF230ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageP, RadioAlarmC;
+	components RF230RadioC;
 
-#ifdef RADIO_DEBUG
-	components AssertC;
-#endif
+	SplitControl = RF230RadioC;
 
-	RF230ActiveMessageP.IEEE154MessageLayer -> IEEE154MessageLayerC;
-	RF230ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	RF230ActiveMessageP.PacketTimeStamp -> TimeStampingLayerC;
-	RF230ActiveMessageP.ActiveMessagePacket -> ActiveMessageLayerC;
-	RF230ActiveMessageP.RF230Packet -> RF230DriverLayerC;
+	AMSend = RF230RadioC;
+	Receive = RF230RadioC.Receive;
+	Snoop = RF230RadioC.Snoop;
+	SendNotifier = RF230RadioC;
 
-// -------- Active Message
+	Packet = RF230RadioC.PacketForActiveMessage;
+	AMPacket = RF230RadioC;
 
-	components ActiveMessageLayerC;
-	ActiveMessageLayerC.Config -> RF230ActiveMessageP;
-	ActiveMessageLayerC.SubSend -> LowpanNetworkLayerC;
-	ActiveMessageLayerC.SubReceive -> LowpanNetworkLayerC;
-	ActiveMessageLayerC.SubPacket ->LowpanNetworkLayerC;
-	AMSend = ActiveMessageLayerC;
-	Packet = ActiveMessageLayerC;
-	Receive = ActiveMessageLayerC.Receive;
-	Snoop = ActiveMessageLayerC.Snoop;
-	AMPacket = ActiveMessageLayerC;
-	SendNotifier = ActiveMessageLayerC;
-
-// -------- Lowpan Network
-
-#ifdef TFRAMES_ENABLED
-	components new DummyLayerC() as LowpanNetworkLayerC;
-#else
-	components LowpanNetworkLayerC;
-#endif
-	LowpanNetworkLayerC.SubSend -> IEEE154MessageLayerC;
-	LowpanNetworkLayerC.SubReceive -> LowPowerListeningLayerC;
-	LowpanNetworkLayerC.SubPacket -> IEEE154MessageLayerC;
-
-// -------- IEEE154 Message
-
-	components IEEE154MessageLayerC;
-	IEEE154MessageLayerC.SubPacket -> LowPowerListeningLayerC;
-	IEEE154MessageLayerC.SubSend -> UniqueLayerC;
-
-// -------- UniqueLayer Send part (wired twice)
-
-	components UniqueLayerC;
-	UniqueLayerC.Config -> RF230ActiveMessageP;
-	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
-
-// -------- Low Power Listening 
-
-#ifdef LOW_POWER_LISTENING
-	#warning "*** USING LOW POWER LISTENING LAYER"
-	components LowPowerListeningLayerC;
-	LowPowerListeningLayerC.Config -> RF230ActiveMessageP;
-	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
-#else	
-	components LowPowerListeningDummyC as LowPowerListeningLayerC;
-#endif
-	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
-	LowPowerListeningLayerC.SubSend -> PacketLinkLayerC;
-	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
-	LowPowerListeningLayerC.SubPacket -> PacketLinkLayerC;
-	SplitControl = LowPowerListeningLayerC;
-	LowPowerListening = LowPowerListeningLayerC;
-
-// -------- Packet Link
-
+	PacketAcknowledgements = RF230RadioC;
+	LowPowerListening = RF230RadioC;
 #ifdef PACKET_LINK
-	#warning "*** USING PACKET LINK LAYER"
-	components PacketLinkLayerC;
-	PacketLink = PacketLinkLayerC;
-	PacketLinkLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
-#else
-	components new DummyLayerC() as PacketLinkLayerC;
+	PacketLink = RF230RadioC;
 #endif
-	PacketLinkLayerC.SubSend -> MessageBufferLayerC;
-	PacketLinkLayerC.SubPacket -> TimeStampingLayerC;
 
-// -------- MessageBuffer
+	RadioChannel = RF230RadioC;
 
-	components MessageBufferLayerC;
-	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
-	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
-	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
-	RadioChannel = MessageBufferLayerC;
+	PacketLinkQuality = RF230RadioC.PacketLinkQuality;
+	PacketTransmitPower = RF230RadioC.PacketTransmitPower;
+	PacketRSSI = RF230RadioC.PacketRSSI;
 
-// -------- UniqueLayer receive part (wired twice)
-
-	UniqueLayerC.SubReceive -> TrafficMonitorLayerC;
-
-// -------- Traffic Monitor
-
-#ifdef TRAFFIC_MONITOR
-	components TrafficMonitorLayerC;
-#else
-	components new DummyLayerC() as TrafficMonitorLayerC;
-#endif
-	TrafficMonitorLayerC.Config -> RF230ActiveMessageP;
-	TrafficMonitorLayerC -> CollisionAvoidanceLayerC.RadioSend;
-	TrafficMonitorLayerC -> CollisionAvoidanceLayerC.RadioReceive;
-	TrafficMonitorLayerC -> RF230DriverLayerC.RadioState;
-
-// -------- CollisionAvoidance
-
-#ifdef SLOTTED_MAC
-	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
-#else
-	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
-#endif
-	CollisionAvoidanceLayerC.Config -> RF230ActiveMessageP;
-	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
-	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
-
-// -------- SoftwareAcknowledgement
-
-	components SoftwareAckLayerC;
-	SoftwareAckLayerC.Config -> RF230ActiveMessageP;
-	SoftwareAckLayerC.SubSend -> CsmaLayerC;
-	SoftwareAckLayerC.SubReceive -> RF230DriverLayerC;
-	PacketAcknowledgements = SoftwareAckLayerC;
-
-// -------- Carrier Sense
-
-	components new DummyLayerC() as CsmaLayerC;
-	CsmaLayerC.Config -> RF230ActiveMessageP;
-	CsmaLayerC -> RF230DriverLayerC.RadioSend;
-	CsmaLayerC -> RF230DriverLayerC.RadioCCA;
-
-// -------- TimeStamping
-
-	components TimeStampingLayerC;
-	TimeStampingLayerC.LocalTimeRadio -> RF230DriverLayerC;
-	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
-	PacketTimeStampRadio = TimeStampingLayerC;
-	PacketTimeStampMilli = TimeStampingLayerC;
-
-// -------- MetadataFlags
-
-	components MetadataFlagsLayerC;
-	MetadataFlagsLayerC.SubPacket -> RF230DriverLayerC;
-
-// -------- RF230 Driver
-
-	components RF230DriverLayerC;
-	RF230DriverLayerC.Config -> RF230ActiveMessageP;
-	RF230DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
-	PacketTransmitPower = RF230DriverLayerC.PacketTransmitPower;
-	PacketLinkQuality = RF230DriverLayerC.PacketLinkQuality;
-	PacketRSSI = RF230DriverLayerC.PacketRSSI;
-	LocalTimeRadio = RF230DriverLayerC;
+	LocalTimeRadio = RF230RadioC;
+	PacketTimeStampMilli = RF230RadioC;
+	PacketTimeStampRadio = RF230RadioC;
 }

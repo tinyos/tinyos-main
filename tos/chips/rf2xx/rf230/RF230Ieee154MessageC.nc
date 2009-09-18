@@ -23,6 +23,10 @@
 
 #include <RadioConfig.h>
 
+#ifdef TFRAMES_ENABLED
+#error "You cannot use Ieee154MessageC with TFRAMES_ENABLED defined"
+#endif
+
 configuration RF230Ieee154MessageC
 {
 	provides 
@@ -31,12 +35,15 @@ configuration RF230Ieee154MessageC
 
 		interface Ieee154Send;
 		interface Receive as Ieee154Receive;
+		interface SendNotifier;
+
 		interface Ieee154Packet;
 		interface Packet;
+		interface Resource as RadioSendResource[uint8_t clint];
+
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
 		interface PacketLink;
-		interface SendNotifier;
 
 		interface RadioChannel;
 
@@ -52,117 +59,29 @@ configuration RF230Ieee154MessageC
 
 implementation
 {
-	components RF230ActiveMessageP, RadioAlarmC;
+	components RF230RadioC;
 
-#ifdef RADIO_DEBUG
-	components AssertC;
-#endif
+	SplitControl = RF230RadioC;
 
-	RF230ActiveMessageP.IEEE154MessageLayer -> IEEE154MessageLayerC;
-	RF230ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	RF230ActiveMessageP.PacketTimeStamp -> TimeStampingLayerC;
-	RF230ActiveMessageP.RF230Packet -> RF230DriverLayerC;
+	Ieee154Send = RF230RadioC.Ieee154Send;
+	Ieee154Receive = RF230RadioC.Ieee154Receive;
+	SendNotifier = RF230RadioC.Ieee154Notifier;
 
-// -------- IEEE154 Message
+	Packet = RF230RadioC.PacketForIeee154Message;
+	Ieee154Packet = RF230RadioC;
+	RadioSendResource = RF230RadioC;
 
-	components IEEE154MessageLayerC;
-	IEEE154MessageLayerC.SubPacket -> LowPowerListeningLayerC;
-	IEEE154MessageLayerC.SubSend -> UniqueLayerC;
-	IEEE154MessageLayerC.SubReceive -> LowPowerListeningLayerC;
-	Ieee154Send = IEEE154MessageLayerC;
-	Packet = IEEE154MessageLayerC;
-	Ieee154Receive = IEEE154MessageLayerC;
-	Ieee154Packet = IEEE154MessageLayerC;
-	SendNotifier = IEEE154MessageLayerC;
+	PacketAcknowledgements = RF230RadioC;
+	LowPowerListening = RF230RadioC;
+	PacketLink = RF230RadioC;
 
-// -------- UniqueLayer Send part (wired twice)
+	RadioChannel = RF230RadioC;
 
-	components UniqueLayerC;
-	UniqueLayerC.Config -> RF230ActiveMessageP;
-	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
+	PacketLinkQuality = RF230RadioC.PacketLinkQuality;
+	PacketTransmitPower = RF230RadioC.PacketTransmitPower;
+	PacketRSSI = RF230RadioC.PacketRSSI;
 
-// -------- Low Power Listening 
-
-#ifdef LOW_POWER_LISTENING
-	components LowPowerListeningLayerC;
-	LowPowerListeningLayerC.Config -> RF230ActiveMessageP;
-	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
-#else	
-	components LowPowerListeningDummyC as LowPowerListeningLayerC;
-#endif
-	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
-	LowPowerListeningLayerC.SubSend -> PacketLinkLayerC;
-	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
-	LowPowerListeningLayerC.SubPacket -> PacketLinkLayerC;
-	SplitControl = LowPowerListeningLayerC;
-	LowPowerListening = LowPowerListeningLayerC;
-
-// -------- Packet Link
-
-	components PacketLinkLayerC;
-	PacketLink = PacketLinkLayerC;
-	PacketLinkLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
-	PacketLinkLayerC.SubSend -> MessageBufferLayerC;
-	PacketLinkLayerC.SubPacket -> TimeStampingLayerC;
-
-// -------- MessageBuffer
-
-	components MessageBufferLayerC;
-	MessageBufferLayerC.RadioSend -> CollisionAvoidanceLayerC;
-	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
-	MessageBufferLayerC.RadioState -> RF230DriverLayerC;
-	RadioChannel = MessageBufferLayerC;
-
-// -------- UniqueLayer receive part (wired twice)
-
-	UniqueLayerC.SubReceive -> CollisionAvoidanceLayerC;
-
-// -------- CollisionAvoidance
-
-#ifdef SLOTTED_MAC
-	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
-#else
-	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
-#endif
-	CollisionAvoidanceLayerC.Config -> RF230ActiveMessageP;
-	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
-	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
-
-// -------- SoftwareAcknowledgement
-
-	components SoftwareAckLayerC;
-	SoftwareAckLayerC.Config -> RF230ActiveMessageP;
-	SoftwareAckLayerC.SubSend -> CsmaLayerC;
-	SoftwareAckLayerC.SubReceive -> RF230DriverLayerC;
-	PacketAcknowledgements = SoftwareAckLayerC;
-
-// -------- Carrier Sense
-
-	components new DummyLayerC() as CsmaLayerC;
-	CsmaLayerC.Config -> RF230ActiveMessageP;
-	CsmaLayerC -> RF230DriverLayerC.RadioSend;
-	CsmaLayerC -> RF230DriverLayerC.RadioCCA;
-
-// -------- TimeStamping
-
-	components TimeStampingLayerC;
-	TimeStampingLayerC.LocalTimeRadio -> RF230DriverLayerC;
-	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
-	PacketTimeStampRadio = TimeStampingLayerC;
-	PacketTimeStampMilli = TimeStampingLayerC;
-
-// -------- MetadataFlags
-
-	components MetadataFlagsLayerC;
-	MetadataFlagsLayerC.SubPacket -> RF230DriverLayerC;
-
-// -------- RF230 Driver
-
-	components RF230DriverLayerC;
-	RF230DriverLayerC.Config -> RF230ActiveMessageP;
-	RF230DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
-	PacketTransmitPower = RF230DriverLayerC.PacketTransmitPower;
-	PacketLinkQuality = RF230DriverLayerC.PacketLinkQuality;
-	PacketRSSI = RF230DriverLayerC.PacketRSSI;
-	LocalTimeRadio = RF230DriverLayerC;
+	LocalTimeRadio = RF230RadioC;
+	PacketTimeStampMilli = RF230RadioC;
+	PacketTimeStampRadio = RF230RadioC;
 }
