@@ -21,11 +21,11 @@
  * Author: Miklos Maroti
  */
 
-#ifndef __RF212ACTIVEMESSAGE_H__
-#define __RF212ACTIVEMESSAGE_H__
+#ifndef __RF212RADIO_H__
+#define __RF212RADIO_H__
 
-#include <IEEE154MessageLayer.h>
-#include <LowpanNetworkLayer.h>
+#include <TinyosNetworkLayer.h>
+#include <Ieee154PacketLayer.h>
 #include <ActiveMessageLayer.h>
 #include <MetadataFlagsLayer.h>
 #include <RF212DriverLayer.h>
@@ -38,9 +38,11 @@ typedef nx_struct rf212packet_header_t
 	rf212_header_t rf212;
 	ieee154_header_t ieee154;
 #ifndef TFRAMES_ENABLED
-	lowpan_header_t lowpan;
+	network_header_t network;
 #endif
+#ifndef IEEE154FRAMES_ENABLED
 	activemessage_header_t am;
+#endif
 } rf212packet_header_t;
 
 typedef nx_struct rf212packet_footer_t
@@ -61,4 +63,4 @@ typedef struct rf212packet_metadata_t
 	rf212_metadata_t rf212;
 } rf212packet_metadata_t;
 
-#endif//__RF212ACTIVEMESSAGE_H__
+#endif//__RF212RADIO_H__
