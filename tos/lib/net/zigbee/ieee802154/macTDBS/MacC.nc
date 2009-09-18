@@ -6,7 +6,7 @@
 
 #include <Timer.h>
 
-configuration Mac {
+configuration MacC {
 
 
 		//MLME  

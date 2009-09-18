@@ -1154,7 +1154,7 @@ atomic{
 											return SUCCESS;
 									}
 									
-									/*
+									
 									
 									if ( mac_PIB.macShortAddress != 0xffff)
 									{
@@ -1163,8 +1163,8 @@ atomic{
 											printfUART("pb %x %x\n", beacon_addr_short_ptr->source_address,mac_PIB.macCoordShortAddress);
 											return SUCCESS;
 										}
-									}*/
-					/*
+									}
+					
 					break;
 					case TYPE_DATA:
 					case TYPE_CMD:
