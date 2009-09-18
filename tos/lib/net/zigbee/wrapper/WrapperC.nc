@@ -1,6 +1,6 @@
  /*
  * 
- * 
+ * Wrapper layer to use the TKN 154 MAC
  * @author: Ricardo Severino <rars@isep.ipp.pt>
  * ========================================================================
  */ 
@@ -40,52 +40,52 @@ implementation
 {
 
   components Ieee802154BeaconEnabledC as MAC; 
-  components WrapperM;
+  components WrapperP;
 
-  WrapperM.MLME_RESET -> MAC;
-  WrapperM.MLME_START -> MAC;
+  WrapperP.MLME_RESET -> MAC;
+  WrapperP.MLME_START -> MAC;
   
-  WrapperM.MLME_GET -> MAC;
-  WrapperM.MLME_SET -> MAC;
+  WrapperP.MLME_GET -> MAC;
+  WrapperP.MLME_SET -> MAC;
   
-  WrapperM.MLME_BEACON_NOTIFY -> MAC;
-  //WrapperM.MLME_GTS -> MAC;
+  WrapperP.MLME_BEACON_NOTIFY -> MAC;
+  //WrapperP.MLME_GTS -> MAC;
   
-  WrapperM.MLME_ASSOCIATE -> MAC;
-  WrapperM.MLME_DISASSOCIATE -> MAC;
+  WrapperP.MLME_ASSOCIATE -> MAC;
+  WrapperP.MLME_DISASSOCIATE -> MAC;
   
-  WrapperM.MLME_ORPHAN -> MAC;
-  WrapperM.MLME_SYNC -> MAC;
-  WrapperM.MLME_SYNC_LOSS -> MAC;
-  WrapperM.MLME_SCAN -> MAC;
+  WrapperP.MLME_ORPHAN -> MAC;
+  WrapperP.MLME_SYNC -> MAC;
+  WrapperP.MLME_SYNC_LOSS -> MAC;
+  WrapperP.MLME_SCAN -> MAC;
     
-  WrapperM.MCPS_DATA -> MAC;
-  WrapperM.IEEE154Frame -> MAC;
-  WrapperM.IEEE154BeaconFrame -> MAC;
-  WrapperM.Packet -> MAC;
+  WrapperP.MCPS_DATA -> MAC;
+  WrapperP.IEEE154Frame -> MAC;
+  WrapperP.IEEE154BeaconFrame -> MAC;
+  WrapperP.Packet -> MAC;
 
   components new PoolC(message_t, WRAPPER_MESSAGE_QUEUE_SIZE) as MessagePool;
-  WrapperM.MessagePool -> MessagePool;
+  WrapperP.MessagePool -> MessagePool;
 
 
-  OPENZB_MLME_RESET = WrapperM;
-  OPENZB_MLME_START = WrapperM;
+  OPENZB_MLME_RESET = WrapperP;
+  OPENZB_MLME_START = WrapperP;
 
-  OPENZB_MLME_GET = WrapperM;
-  OPENZB_MLME_SET = WrapperM;
+  OPENZB_MLME_GET = WrapperP;
+  OPENZB_MLME_SET = WrapperP;
 
-  OPENZB_MLME_BEACON_NOTIFY = WrapperM;
-  OPENZB_MLME_GTS = WrapperM;
+  OPENZB_MLME_BEACON_NOTIFY = WrapperP;
+  OPENZB_MLME_GTS = WrapperP;
 
-  OPENZB_MLME_ASSOCIATE = WrapperM;
-  OPENZB_MLME_DISASSOCIATE = WrapperM;
+  OPENZB_MLME_ASSOCIATE = WrapperP;
+  OPENZB_MLME_DISASSOCIATE = WrapperP;
 
-  OPENZB_MLME_ORPHAN = WrapperM;
-  OPENZB_MLME_SYNC = WrapperM;
-  OPENZB_MLME_SYNC_LOSS = WrapperM;
-  OPENZB_MLME_SCAN = WrapperM;
+  OPENZB_MLME_ORPHAN = WrapperP;
+  OPENZB_MLME_SYNC = WrapperP;
+  OPENZB_MLME_SYNC_LOSS = WrapperP;
+  OPENZB_MLME_SCAN = WrapperP;
 
-  OPENZB_MCPS_DATA = WrapperM;
+  OPENZB_MCPS_DATA = WrapperP;
 
 
 

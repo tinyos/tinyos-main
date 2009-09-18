@@ -7,7 +7,7 @@
 #include "CC2420.h"
 #include "IEEE802154.h"
 
-configuration Phy {
+configuration PhyC {
 
   provides interface SplitControl;
   
@@ -27,49 +27,49 @@ configuration Phy {
 
 implementation {
 
-	components PhyM;
+	components PhyP;
 	
 	components MainC;
-	MainC.SoftwareInit -> PhyM;
+	MainC.SoftwareInit -> PhyP;
 	
 	
-	SplitControl = PhyM;
+	SplitControl = PhyP;
 	
-	//Test_send = PhyM;
+	//Test_send = PhyP;
 	
 	components CC2420ControlC;
-	PhyM.Resource -> CC2420ControlC;
-	PhyM.CC2420Power -> CC2420ControlC;
-	PhyM.CC2420Config ->CC2420ControlC;
+	PhyP.Resource -> CC2420ControlC;
+	PhyP.CC2420Power -> CC2420ControlC;
+	PhyP.CC2420Config ->CC2420ControlC;
 	
 	components CC2420TransmitC;
-	PhyM.SubControl -> CC2420TransmitC;
+	PhyP.SubControl -> CC2420TransmitC;
 	
-	PhyM.Sendframe ->CC2420TransmitC;
+	PhyP.Sendframe ->CC2420TransmitC;
 	
 	components CC2420ReceiveC;
 	
 	//Receive = CC2420ReceiveC;
 	
 	
-	PhyM.SubControl -> CC2420ReceiveC;
+	PhyP.SubControl -> CC2420ReceiveC;
 	
 	
-	PhyM.Receiveframe ->CC2420ReceiveC;
+	PhyP.Receiveframe ->CC2420ReceiveC;
 	
 	
 	components RandomC;
-	PhyM.Random -> RandomC;
+	PhyP.Random -> RandomC;
 	
 	components LedsC as Leds;
-	PhyM.Leds -> Leds;
+	PhyP.Leds -> Leds;
 	
 	
-	PD_DATA=PhyM;
+	PD_DATA=PhyP;
 	
-	PLME_ED=PhyM;
-	PLME_CCA=PhyM;
-	PLME_GET = PhyM;
-	PLME_SET=PhyM;
-	PLME_SET_TRX_STATE=PhyM;
+	PLME_ED=PhyP;
+	PLME_CCA=PhyP;
+	PLME_GET = PhyP;
+	PLME_SET=PhyP;
+	PLME_SET_TRX_STATE=PhyP;
 }

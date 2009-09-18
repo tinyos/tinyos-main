@@ -10,7 +10,7 @@
 #include "phy_enumerations.h"
  
 
-module PhyM {
+module PhyP {
 
 	provides interface SplitControl;
 	// provides interface Test_send;

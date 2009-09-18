@@ -1,5 +1,6 @@
-Title: open-zb protocol stack implementation for TinyOS v2.0
-Author: André Cunha - IPP-HURRAY! http://www.open-zb.net
+Title: open-zb protocol stack implementation for TinyOS v2.x
+Author: Ricardo Severino - IPP-HURRAY! http://www.open-zb.net
+Author: Andrï¿½ Cunha - IPP-HURRAY! http://www.open-zb.net
 ----------------------------------------------
 
 Implementation of the ZigBee and the beacon-enabled mode of the IEEE 802.15.4.
@@ -10,12 +11,12 @@ mode of the IEEE 802.15.4 with the ZigBee network layer supporting the Cluster-t
 
 The current version of the implementation of the IEEE 802.15.4 beacon enabled mode supports the following functionalities:
 
--CSMA/CA algorithm – slotted version;
+-CSMA/CA algorithm ï¿½ slotted version;
 -GTS Mechanism;
 -Indirect transmission mechanism;
 -Direct / Indirect / GTS Data Transmission;
 -Beacon Management;
--Frame construction – Short Addressing Fields only and extended addressing
+-Frame construction ï¿½ Short Addressing Fields only and extended addressing
 fields in the association request;
 -Association/Disassociation Mechanism;
 -MAC PIB Management;
@@ -30,7 +31,7 @@ version of the implementation
 -Active and Orphan channel Scan;
 -Orphan Devices;
 -Frame Reception Conditions (Verify Conditions);
--Security – Out of the scope of this implementation;
+-Security ï¿½ Out of the scope of this implementation;
 
 The current version of the ZigBee Network Layer, besides the above functionalities, supports
 
@@ -67,16 +68,16 @@ devices have a depth of 1 and the coordinator a depth of 0).
 - ZigBee Network Layer with the TDBS
 	
 	-Test_APL
-This application uses the interfaces provided by the NWKM component and currently is customized
+This application uses the interfaces provided by the NWKP component and currently is customized
 to use with the TELOSB mote due to the interfacing with the mote user button. The TELOSB mote needs to
-“warmup” before entering into normal operational behaviour, so, the user button is used to start the mote
+ï¿½warmupï¿½ before entering into normal operational behaviour, so, the user button is used to start the mote
 operation either by starting to send beacons, in the case of the ZigBee Coordinator, or to associate to a
 network in the case of ZigBee Routers or End Devices.
 In order to test the cluster-tree approach we have forced the association to a specific parent device by
 assigning some static parameters to the device. These parameters are located in the nwk_const.h file under
 the lib.nwk and are the following:
--TYPE_DEVICE – selecting the role of the device in the network;
--DEVICE_DEPTH – selecting the depth of the device in the network. This parameter in be used in
+-TYPE_DEVICE ï¿½ selecting the role of the device in the network;
+-DEVICE_DEPTH ï¿½ selecting the depth of the device in the network. This parameter in be used in
 computing the cskip functions used for the address assignment and for the tree-routing. This value
 will also be used to select the appropriate parent selected for the association.
 Depending of the selected depth the device will select the statically defined parent. The parent values are

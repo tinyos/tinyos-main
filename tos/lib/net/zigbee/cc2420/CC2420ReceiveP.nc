@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Jung Il Choi
- * @version $Revision: 1.1 $ $Date: 2008-02-11 17:41:25 $
+ * @version $Revision: 1.2 $ $Date: 2009-09-18 16:35:40 $
  */
  
 #include "printfUART.h"
@@ -786,7 +786,7 @@ typedef enum{
     case S_RX_FCF:
       m_state = S_RX_PAYLOAD;
       
-      /*
+      
        * The destination address check here is not completely optimized. If you 
        * are seeing issues with dropped acknowledgements, try removing
        * the address check and decreasing SACK_HEADER_LENGTH to 2.

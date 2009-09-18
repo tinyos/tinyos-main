@@ -27,13 +27,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Date: 2009-09-10 15:48:26 $
+ * $Date: 2009-09-18 16:41:20 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * @author: Ricardo Severino <rars@isep.ipp.pt>
  * ========================================================================
  */
 
-module WrapperM
+module WrapperP
 {
   uses {
     interface MLME_START;
@@ -110,6 +110,7 @@ implementation
   {
     ieee154_CapabilityInformation_t capabilityInformation;
     ieee154_address_t coordAddress;
+
     if (securityenable)
       return IEEE154_UNSUPPORTED_SECURITY;
     memcpy(&coordAddress, CoordAddress, 8);
@@ -138,6 +139,7 @@ implementation
       uint16_t AssocShortAddress, uint8_t status, bool securityenable)
   {
     uint64_t deviceAddress;
+
     if (securityenable)
       return IEEE154_UNSUPPORTED_SECURITY;
     memcpy(&deviceAddress, DeviceAddress, 8);
