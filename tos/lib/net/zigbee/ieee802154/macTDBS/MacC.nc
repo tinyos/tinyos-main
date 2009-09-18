@@ -37,74 +37,80 @@ configuration Mac {
 implementation {
 
 	components MainC;
-	MainC.SoftwareInit -> MacM;
+	MainC.SoftwareInit -> MacP;
 
 	components LedsC;
-	components MacM;
+	components MacP;
 
-	components Phy;
+	components PhyC;
 
 	components TimerAsyncC;
 	
-	MacM.TimerAsync ->TimerAsyncC;
+	MacP.TimerAsync ->TimerAsyncC;
 
-	MacM.Leds -> LedsC;
+	MacP.Leds -> LedsC;
 	
 	
-	MacM.AMControl ->Phy.SplitControl;
+	MacP.AMControl ->PhyC.SplitControl;
 	
 	components HplCC2420PinsC as Pins;
-	MacM.CCA -> Pins.CCA;
+	MacP.CCA -> Pins.CCA;
 	
 	components RandomC;
-	MacM.Random -> RandomC;
+	MacP.Random -> RandomC;
 
 	components new TimerMilliC() as T_ackwait;
-	MacM.T_ackwait -> T_ackwait;
+	MacP.T_ackwait -> T_ackwait;
 	
 	components new TimerMilliC() as T_ResponseWaitTime;
-	MacM.T_ResponseWaitTime -> T_ResponseWaitTime;
+	MacP.T_ResponseWaitTime -> T_ResponseWaitTime;
 	
 	components new TimerMilliC() as T_ScanDuration;
-	MacM.T_ScanDuration -> T_ScanDuration;
+	MacP.T_ScanDuration -> T_ScanDuration;
+
 
 	components CC2420ReceiveC;
-	MacM.AddressFilter -> CC2420ReceiveC;
+	MacP.AddressFilter -> CC2420ReceiveC;
+
+	//
+	//components CC2420ControlC;
+	//MacP.CC2420Config ->CC2420ControlC;
+
 
 	/*****************************************************/
 	/*				INTERFACES         					 */
 	/*****************************************************/  
-	MacM.PD_DATA -> Phy.PD_DATA;
-	MacM.PLME_ED ->Phy.PLME_ED;
-	MacM.PLME_CCA -> Phy.PLME_CCA;
-	MacM.PLME_SET -> Phy.PLME_SET;
-	MacM.PLME_GET -> Phy.PLME_GET;
-	MacM.PLME_SET_TRX_STATE -> Phy.PLME_SET_TRX_STATE;
+	MacP.PD_DATA -> PhyC.PD_DATA;
+	MacP.PLME_ED ->PhyC.PLME_ED;
+	MacP.PLME_CCA -> PhyC.PLME_CCA;
+	MacP.PLME_SET -> PhyC.PLME_SET;
+	MacP.PLME_GET -> PhyC.PLME_GET;
+	MacP.PLME_SET_TRX_STATE -> PhyC.PLME_SET_TRX_STATE;
 
 
 	//MLME interfaces
-	MLME_START=MacM;
+	MLME_START=MacP;
 
-	MLME_SET=MacM;
-	MLME_GET=MacM;
+	MLME_SET=MacP;
+	MLME_GET=MacP;
 	
-	MLME_ASSOCIATE=MacM;
-	MLME_DISASSOCIATE=MacM;
+	MLME_ASSOCIATE=MacP;
+	MLME_DISASSOCIATE=MacP;
 	
-	MLME_BEACON_NOTIFY = MacM;
-	MLME_GTS=MacM;
+	MLME_BEACON_NOTIFY = MacP;
+	MLME_GTS=MacP;
 	
-	MLME_ORPHAN=MacM;
+	MLME_ORPHAN=MacP;
 	
-	MLME_SYNC=MacM;
-	MLME_SYNC_LOSS=MacM;
+	MLME_SYNC=MacP;
+	MLME_SYNC_LOSS=MacP;
 	
-	MLME_RESET=MacM;
+	MLME_RESET=MacP;
 	
-	MLME_SCAN=MacM;
+	MLME_SCAN=MacP;
 	
-	MCPS_DATA=MacM;
-	MCPS_PURGE=MacM;
+	MCPS_DATA=MacP;
+	MCPS_PURGE=MacP;
 	
 	
 	

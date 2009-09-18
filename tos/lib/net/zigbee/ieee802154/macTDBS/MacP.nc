@@ -16,8 +16,9 @@
 
 #include "mac_func.h"
 
-module MacM {
- 
+module MacP {
+
+#ifndef TKN154_MAC 
 	provides interface Init;
 	
 	provides interface MLME_START;
@@ -42,6 +43,7 @@ module MacM {
 	//MCPS
 	provides interface MCPS_DATA;
 	provides interface MCPS_PURGE;
+#endif
 		
 	
 	uses interface Timer<TMilli> as T_ackwait;	
@@ -58,6 +60,11 @@ module MacM {
 	
 	uses interface GeneralIO as CCA;
 	
+	
+	//uses interface CC2420Config;
+	
+	uses interface AddressFilter;
+	
 	//uses interface Test_send;
 	
 	uses interface TimerAsync;
@@ -70,8 +77,6 @@ module MacM {
 	uses interface PLME_GET;
 	uses interface PLME_SET_TRX_STATE;
 
-
-	uses interface AddressFilter;
 
   
 }
@@ -456,16 +461,32 @@ implementation {
 	
 
 /*****************************************************/
-/*				Fault tolerance functions            */
+/*	 Fault tolerance functions            */
 /*****************************************************/ 
-	
+//FAULT-TOLERANCE	
 	void create_coordinator_realignment_cmd(uint32_t device_extended0, uint32_t device_extended1, uint16_t device_short_address);
 
 	void create_orphan_notification();
 	
-	
-
 	void process_coordinator_realignment(MPDU *pdu);
+
+	/*******************************************/
+	/*******BEACON SCHEDULING IMPLEMENTATION****/
+	/*******************************************/
+	
+	//bolean that checks if the device is in the parent active period
+	uint8_t I_AM_IN_PARENT_CAP = 0;
+	
+	
+	//upstream buffer
+	norace MPDUBuffer upstream_buffer[UPSTREAM_BUFFER_SIZE];
+	uint8_t upstream_buffer_count=0;
+	uint8_t upstream_buffer_msg_in=0;
+	uint8_t upstream_buffer_msg_out=0;
+
+	uint8_t sending_upstream_frame=0;
+	
+	task void send_frame_csma_upstream();
 
 /***************************DEBUG FUNCTIONS******************************/
 /* This function are list functions with the purpose of debug, to use then uncomment the declatarion
@@ -496,6 +517,7 @@ on top of this file*/
 
 
    atomic{
+
 	//inicialize the mac PIB
 	init_MacPIB();
 	
@@ -510,14 +532,14 @@ on top of this file*/
 	aExtendedAddress0=TOS_NODE_ID;
 	aExtendedAddress1=TOS_NODE_ID;
 	
-	
+
+
 	call AddressFilter.set_address(mac_PIB.macShortAddress, aExtendedAddress0, aExtendedAddress1);
 
 	call AddressFilter.set_coord_address(mac_PIB.macCoordShortAddress, mac_PIB.macPANId);
 	
-	
-	
-	
+
+											
 	init_indirect_trans_buffer();
 
 
@@ -582,7 +604,7 @@ printfUART_init();
 
 async event error_t TimerAsync.before_bi_fired()
 {
-	////printfUART("bbi %i\n",call TimerAsync.get_current_ticks());
+	//printfUART("bbi %i\n",call TimerAsync.get_current_ticks());
 		
 	if (mac_PIB.macBeaconOrder != mac_PIB.macSuperframeOrder )
 	{
@@ -617,7 +639,7 @@ async event error_t TimerAsync.bi_fired()
 	I_AM_IN_CAP = 1;
 	I_AM_IN_IP = 0;
 	
-	////printfUART("bi\n","");
+	//printfUART("bi\n","");
 	
 	
 	if ( Beacon_enabled_PAN == 1 )
@@ -662,7 +684,7 @@ async event error_t TimerAsync.sd_fired()
 {
 	call Leds.led2Off();
 
-	////printfUART("sd\n","");
+	//printfUART("sd\n","");
 
 	I_AM_IN_CFP = 0;
 	I_AM_IN_IP = 1;
@@ -748,11 +770,11 @@ async event error_t TimerAsync.sd_fired()
 		if (missed_beacons == aMaxLostBeacons)
 		{
 		
-			//printfUART("sync_loss %i\n",missed_beacons);
+			printfUART("sync_loss %i\n",missed_beacons);
 			//out of sync
 			post signal_loss();
 		}
-		////printfUART("out_sync %i\n",missed_beacons);
+		//printfUART("out_sync %i\n",missed_beacons);
 		missed_beacons++;
 		call Leds.led1Off();
 		
@@ -810,7 +832,7 @@ async event error_t TimerAsync.time_slot_fired()
 	if(PANCoordinator == 1 && GTS_db[15-number_time_slot].direction == 1 && GTS_db[15-number_time_slot].gts_id != 0)
 	{
 		//COORDINATOR SEND DATA
-		////////////printfUART("bbck%i:%i:%i\n", (15-number_time_slot),GTS_db[15-number_time_slot].direction,gts_slot_list[15-number_time_slot].element_count);
+		//////////printfUART("bbck%i:%i:%i\n", (15-number_time_slot),GTS_db[15-number_time_slot].direction,gts_slot_list[15-number_time_slot].element_count);
 		
 		post start_coordinator_gts_send();
 				
@@ -829,7 +851,7 @@ async event error_t TimerAsync.time_slot_fired()
 	next_on_s_GTS=0;
 	
 	
-	////printfUART("ts%i %i %i\n", number_time_slot,s_GTSss,r_GTSss);
+	//printfUART("ts%i %i %i\n", number_time_slot,s_GTSss,r_GTSss);
 	
 	
 	//verification if the time slot is entering the CAP
@@ -840,7 +862,7 @@ async event error_t TimerAsync.time_slot_fired()
 		I_AM_IN_CAP = 0;
 		I_AM_IN_CFP = 1;
 		
-		////printfUART("bts %i\n",I_AM_IN_CAP, number_time_slot); 
+		//printfUART("bts %i\n",I_AM_IN_CAP, number_time_slot); 
 	
 	atomic{
 		
@@ -865,10 +887,10 @@ async event error_t TimerAsync.time_slot_fired()
 		//device verification of the next time slot
 			if( (number_time_slot +1) == s_GTSss || (number_time_slot +1) == r_GTSss )
 			{
-				////printfUART("s_GTSss: %i r_GTSss: %i\n", s_GTSss,r_GTSss);
+				//printfUART("s_GTSss: %i r_GTSss: %i\n", s_GTSss,r_GTSss);
 				if((number_time_slot + 1) == s_GTSss)
 				{	
-					////printfUART("MY SEND SLOT \n", "");
+					//printfUART("MY SEND SLOT \n", "");
 					next_on_s_GTS =1;
 					s_GTS_length --;
 					if (s_GTS_length != 0 )
@@ -878,7 +900,7 @@ async event error_t TimerAsync.time_slot_fired()
 				}
 				else			
 				{
-					//////////////printfUART("MY RECEIVE SLOT \n", "");
+					////////////printfUART("MY RECEIVE SLOT \n", "");
 					next_on_r_GTS =1;
 					r_GTS_length --;
 					if (r_GTS_length != 0 )
@@ -936,6 +958,9 @@ async event error_t TimerAsync.backoff_fired()
 			
 			csma_delay=1;
 		}
+		
+		
+		
 		if( csma_cca_backoff_boundary == 1 )
 			post perform_csma_ca_slotted();
 	}
@@ -966,7 +991,7 @@ return SUCCESS;
 /*******************T_ackwait**************************/
   event void T_ackwait.fired() {
   
-  //////////printfUART("Tfd \n", "");
+  ////////printfUART("Tfd \n", "");
 	
 	//call Leds.redToggle();
 
@@ -980,14 +1005,14 @@ return SUCCESS;
 				/*
 				if (associating == 1)
 				{
-					//printfUART("af ack\n", "");
+					printfUART("af ack\n", "");
 					associating=0;
 					signal MLME_ASSOCIATE.confirm(0x0000,MAC_NO_ACK);
 				}
 				*/
 				
 			atomic{	
-				////////////printfUART("TRANSMISSION FAIL\n",""); 
+				//////////printfUART("TRANSMISSION FAIL\n",""); 
 				//stardard procedure, if fail discard the packet
 				atomic send_buffer_count --;
 				send_buffer_msg_out++;
@@ -1016,7 +1041,7 @@ return SUCCESS;
 				}
 		}
 		
-		////////////printfUART("RETRY\n",""); 
+		//////////printfUART("RETRY\n",""); 
 		//retransmissions
 		post send_frame_csma();
 	}
@@ -1026,17 +1051,56 @@ return SUCCESS;
 /*******************T_ResponseWaitTime**************************/
   event void T_ResponseWaitTime.fired() {
   	//command response wait time
-	////////////printfUART("T_ResponseWaitTime.fired\n", "");
+	//////////printfUART("T_ResponseWaitTime.fired\n", "");
 
 	if (associating == 1)
 	{
-		//printfUART("af rwt\n", "");
+		printfUART("af rwt\n", "");
 		associating=0;
 		signal MLME_ASSOCIATE.confirm(0x0000,MAC_NO_DATA);
 		
 	}
   
   }
+
+/*******************TDBS Implementation Timers**************************/
+async event error_t TimerAsync.before_start_track_beacon_fired()
+{
+	I_AM_IN_PARENT_CAP = 1;
+
+return SUCCESS;
+}
+
+
+
+//track beacon events timers
+async event error_t TimerAsync.start_track_beacon_fired()
+{
+	I_AM_IN_PARENT_CAP = 1;
+
+	//printfUART("fi\n","");
+	
+	if (upstream_buffer_count > 0)
+		post send_frame_csma_upstream();
+
+
+
+return SUCCESS;
+}
+async event error_t TimerAsync.end_track_beacon_fired()
+{
+
+	I_AM_IN_PARENT_CAP = 0;
+	
+	//printfUART("unfi\n","");
+	//call Leds.greenOff();
+
+return SUCCESS;
+}
+
+
+
+
 
 /*****************************************************
 ****************PD_DATA EVENTS***********************
@@ -1052,17 +1116,111 @@ return SUCCESS;
 ******************************************************/ 
 
 async event error_t PD_DATA.indication(uint8_t psduLenght,uint8_t* psdu, int8_t ppduLinkQuality){
- 
+/*
+MPDU *packet;
+
+uint8_t destination_address=0;
+
+dest_short *dest_short_ptr;
+dest_long *dest_long_ptr;
+	
+beacon_addr_short *beacon_addr_short_ptr;
+
+*/
+atomic{
 		//if(I_AM_IN_CAP == 1 || I_AM_IN_CFP == 1 || mac_PIB.macShortAddress==0xffff || scanning_channels ==1 || findabeacon == 1)
 		//{
 			if (buffer_count > RECEIVE_BUFFER_SIZE)
 			{
 				//call Leds.redToggle();
-				//printfUART("full\n","");
+				printfUART("full\n","");
 			}
 			else
 			{
 		
+				/*
+				packet = (MPDU*)psdu;
+							
+				
+				switch ((packet->frame_control1 & 0x7))
+				{
+					case TYPE_BEACON:
+									beacon_addr_short_ptr = (beacon_addr_short *) &packet->data[0];
+									
+									//avoid VERIFY static assignment of coordinator parent
+									if (beacon_addr_short_ptr->source_address != mac_PIB.macCoordShortAddress)
+									{
+											printfUART("pb %x %x\n", beacon_addr_short_ptr->source_address,mac_PIB.macCoordShortAddress);
+											return SUCCESS;
+									}
+									
+									/*
+									
+									if ( mac_PIB.macShortAddress != 0xffff)
+									{
+										if ( beacon_addr_short_ptr->source_address != mac_PIB.macCoordShortAddress)
+										{
+											printfUART("pb %x %x\n", beacon_addr_short_ptr->source_address,mac_PIB.macCoordShortAddress);
+											return SUCCESS;
+										}
+									}*/
+					/*
+					break;
+					case TYPE_DATA:
+					case TYPE_CMD:
+									//VALIDATION OF DESTINATION ADDRESSES - NOT TO OVERLOAD THE PROCESSOR
+									destination_address=get_fc2_dest_addr(packet->frame_control2);
+				
+									if (destination_address > 1)
+									{
+										switch(destination_address)
+										{
+											case SHORT_ADDRESS: 
+																dest_short_ptr = (dest_short *) &packet->data[0];
+																
+																if ( dest_short_ptr->destination_address != 0xffff && dest_short_ptr->destination_address != mac_PIB.macShortAddress)
+																{
+																	printfUART("nsm %x %x\n", dest_short_ptr->destination_address,mac_PIB.macShortAddress); 
+																	return SUCCESS;
+																}
+																//If a destination PAN identifier is included in the frame, it shall match macPANId or shall be the
+																//broadcast PAN identifier (0 x ffff).
+																if(dest_short_ptr->destination_PAN_identifier != 0xffff && dest_short_ptr->destination_PAN_identifier != mac_PIB.macPANId )
+																{
+																	printfUART("wsP %x %x \n", dest_short_ptr->destination_PAN_identifier,mac_PIB.macPANId); 
+																	return SUCCESS;
+																}
+																break;
+											
+											case LONG_ADDRESS: 
+																dest_long_ptr = (dest_long *) &packet->data[0];
+																
+																if ( dest_long_ptr->destination_address0 !=aExtendedAddress0 && dest_long_ptr->destination_address1 !=aExtendedAddress1 )
+																{
+																	printfUART("nlm %x %x \n",dest_long_ptr->destination_address0,dest_long_ptr->destination_address1); 
+																	return SUCCESS;
+																}
+																//If a destination PAN identifier is included in the frame, it shall match macPANId or shall be the
+																//broadcast PAN identifier (0 x ffff).
+																if(dest_long_ptr->destination_PAN_identifier != 0xffff && dest_long_ptr->destination_PAN_identifier != mac_PIB.macPANId )
+																{
+																	printfUART("wLP %x %x\n", dest_long_ptr->destination_PAN_identifier,mac_PIB.macPANId); 
+																	return SUCCESS;
+																}
+																
+																break;
+										}
+									}
+					
+
+					
+									break;
+					case TYPE_ACK:
+				
+									break;
+				}
+						
+				*/
 				memcpy(&buffer_msg[current_msg_in],psdu,sizeof(MPDU));
 
 				atomic{
@@ -1091,9 +1249,9 @@ async event error_t PD_DATA.indication(uint8_t psduLenght,uint8_t* psdu, int8_t 
 		//}
 		//else
 		//{
-		//	//printfUART("drop\n","");
+		//	printfUART("drop\n","");
 		//}
-
+}
 return SUCCESS;
 }
 
@@ -1108,15 +1266,15 @@ task void data_indication()
 	
 	atomic link_qual = link_quality;
 
-	////printfUART("data_indication\n","");
-	//////////printfUART("buf  %i %i\n",buffer_count,indirect_trans_count);
+	//printfUART("data_indication\n","");
+	////////printfUART("buf  %i %i\n",buffer_count,indirect_trans_count);
 
 	//Although the receiver of the device is enabled during the channel assessment portion of this algorithm, the
 	//device shall discard any frames received during this time.
-	//////////////printfUART("performing_csma_ca: %i\n",performing_csma_ca);
+	////////////printfUART("performing_csma_ca: %i\n",performing_csma_ca);
 	if (performing_csma_ca == 1)
 	{	
-		//////////////printfUART("REJ CSMA\n","");
+		////////////printfUART("REJ CSMA\n","");
 		atomic{ 
 			buffer_count--;
 		
@@ -1142,29 +1300,29 @@ task void data_indication()
 	}	
 atomic{
 
-    //////printfUART("data ind %x %x %i\n",buffer_msg[current_msg_out].frame_control1,buffer_msg[current_msg_out].frame_control2,(buffer_msg[current_msg_out].frame_control2 & 0x7));
+    ////printfUART("data ind %x %x %i\n",buffer_msg[current_msg_out].frame_control1,buffer_msg[current_msg_out].frame_control2,(buffer_msg[current_msg_out].frame_control2 & 0x7));
 	
 	//check the frame type of the received packet
 	switch( (buffer_msg[current_msg_out].frame_control1 & 0x7) )
 	{
 		
-			case TYPE_DATA: ////printfUART("rd %i\n",buffer_msg[current_msg_out].seq_num);
+			case TYPE_DATA: //printfUART("rd %i\n",buffer_msg[current_msg_out].seq_num);
 							indication_data(&buffer_msg[current_msg_out],link_qual);
 							break;
 							
-			case TYPE_ACK: ////printfUART("ra\n","");
+			case TYPE_ACK: //printfUART("ra\n","");
 							//ack_received = 1;
 							indication_ack(&buffer_msg[current_msg_out],link_qual);
 							
 							break;
 							
-			case TYPE_CMD:  ////printfUART("rc\n","");
+			case TYPE_CMD:  //printfUART("rc\n","");
 							indication_cmd(&buffer_msg[current_msg_out],link_qual);
 							break;
 			
 			case TYPE_BEACON:
 							
-							////printfUART("rb %i\n",buffer_msg[current_msg_out].seq_num);
+							//printfUART("rb %i\n",buffer_msg[current_msg_out].seq_num);
 							if (mac_PIB.macShortAddress == 0x0000) 
 							{
 								buffer_count--;
@@ -1178,7 +1336,7 @@ atomic{
 							break;
 			default: 
 						atomic buffer_count--;
-						//////printfUART("Invalid frame type\n","");
+						////printfUART("Invalid frame type\n","");
 
 						break;
 	}
@@ -1286,16 +1444,16 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 		//decrement buffer count
 	atomic buffer_count --;
 	
-	////printfUART("Received Beacon\n","");
-	////printfUART("rb panid: %x %x \n",beacon_ptr->source_address,mac_PIB.macCoordShortAddress);
-	////////printfUART("My macPANID: %x\n",mac_PIB.macPANId);
-	
+	//printfUART("Received Beacon\n","");
+	//printfUART("rb panid: %x %x \n",beacon_ptr->source_address,mac_PIB.macCoordShortAddress);
+	//////printfUART("My macPANID: %x\n",mac_PIB.macPANId);
+	printfUART("rb %x %x\n",beacon_ptr->source_address,mac_PIB.macCoordShortAddress);
 	if( beacon_ptr->source_address != mac_PIB.macCoordShortAddress)
 	{
-		//
+		printfUART("nmp \n","");
 		return;
 	}
-	////printfUART("bea %i\n",call TimerAsync.get_current_ticks());
+	//printfUART("bea %i\n",call TimerAsync.get_current_ticks());
 	
 	/**********************************************************************************/
 	/*					PROCESSING THE SUPERFRAME STRUCTURE							  */
@@ -1308,7 +1466,7 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 		
 		//mac_PIB.macCoordShortAddress = beacon_ptr->source_address;
 		
-		////printfUART("BO,SO:%i %i\n",mac_PIB.macBeaconOrder,mac_PIB.macSuperframeOrder);
+		//printfUART("BO,SO:%i %i\n",mac_PIB.macBeaconOrder,mac_PIB.macSuperframeOrder);
 		
 		//mac_PIB.macPANId = beacon_ptr->source_PAN_identifier;
 		
@@ -1374,20 +1532,20 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 		
 			gts_directions = packet->data[9];
 			
-			////printfUART("gts_directions:%x\n",gts_directions);
+			//printfUART("gts_directions:%x\n",gts_directions);
 			
 			for(i=0; i< gts_des_count; i++)
 			{	
 				gts_descriptor_addr = (uint16_t) packet->data[data_count];
 					
-				////printfUART("gts_des_addr:%x mac short:%x\n",gts_descriptor_addr,mac_PIB.macShortAddress);
+				//printfUART("gts_des_addr:%x mac short:%x\n",gts_descriptor_addr,mac_PIB.macShortAddress);
 				
 				data_count = data_count+2;
 				//check if it concerns me
 				if (gts_descriptor_addr == mac_PIB.macShortAddress)
 				{
 					//confirm the gts request
-					//////////////printfUART("packet->data[data_count]: %x\n",packet->data[data_count]);
+					////////////printfUART("packet->data[data_count]: %x\n",packet->data[data_count]);
 					//gts_ss = 15 - get_gts_descriptor_ss(packet->data[data_count]);
 					gts_ss = get_gts_descriptor_ss(packet->data[data_count]);
 					gts_l = get_gts_descriptor_len(packet->data[data_count]);
@@ -1401,7 +1559,7 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 					
 							dir_mask = powf(2,i);
 					}
-					//////////////printfUART("dir_mask: %x i: %x gts_directions: %x \n",dir_mask,i,gts_directions);
+					////////////printfUART("dir_mask: %x i: %x gts_directions: %x \n",dir_mask,i,gts_directions);
 					dir = ( gts_directions & dir_mask);
 					if (dir == 0)
 					{
@@ -1415,8 +1573,8 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 						r_GTS_length=gts_l;
 					}
 					
-					////printfUART("PB gts_ss: %i gts_l: %i dir: %i \n",gts_ss,gts_l,dir);
-					//////////////printfUART("PB send_s_GTSss: %i send_s_GTS_len: %i\n",send_s_GTSss,send_s_GTS_len);
+					//printfUART("PB gts_ss: %i gts_l: %i dir: %i \n",gts_ss,gts_l,dir);
+					////////////printfUART("PB send_s_GTSss: %i send_s_GTS_len: %i\n",send_s_GTSss,send_s_GTS_len);
 					
 					if ( gts_l == 0 )
 					{
@@ -1426,14 +1584,14 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 					if (gts_confirm == 1 && gts_l != 0)
 					{
 						//signal ok
-						////printfUART("gts confirm \n","");
+						//printfUART("gts confirm \n","");
 						gts_confirm =0;
 						signal MLME_GTS.confirm(GTS_specification,MAC_SUCCESS);
 					}
 					else
 					{
 						//signal not ok
-						//////////////printfUART("gts not confirm \n","");
+						////////////printfUART("gts not confirm \n","");
 						gts_confirm =0;
 						signal MLME_GTS.confirm(GTS_specification,MAC_DENIED);
 					}
@@ -1452,7 +1610,7 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 		short_addr_pending=get_number_short(packet->data[data_count]);
 		long_addr_pending=get_number_extended(packet->data[data_count]);
 		
-		////////////printfUART("ADD COUNT %i %i\n",short_addr_pending,long_addr_pending);
+		//////////printfUART("ADD COUNT %i %i\n",short_addr_pending,long_addr_pending);
 		
 		data_count++;
 		
@@ -1460,7 +1618,7 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 		{
 			for(i=0;i < short_addr_pending;i++)
 			{
-				////////////printfUART("PB %i %i\n",(uint16_t)packet->data[data_count],short_addr_pending);
+				//////////printfUART("PB %i %i\n",(uint16_t)packet->data[data_count],short_addr_pending);
 				
 				//if(packet->data[data_count] == (uint8_t)mac_PIB.macShortAddress && packet->data[data_count+1] == (uint8_t)(mac_PIB.macShortAddress >> 8) )
 				if((uint16_t)packet->data[data_count] == mac_PIB.macShortAddress)
@@ -1533,7 +1691,7 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 			
 			if(findabeacon == 1)
 			{
-				////printfUART("findabeacon\n", "");
+				//printfUART("findabeacon\n", "");
 				call TimerAsync.set_timers_enable(1);
 				findabeacon =0;
 			}
@@ -1550,8 +1708,24 @@ void process_beacon(MPDU *packet,uint8_t ppduLinkQuality)
 			//#endif
 			on_sync=1;
 			
-			////printfUART("sED\n", "");
+			printfUART("sE\n", "");
 	}
+	else
+	{
+		I_AM_IN_PARENT_CAP = 1;
+		
+		call TimerAsync.set_track_beacon(1);
+		
+		//#ifdef PLATFORM_MICAZ
+		//	call TimerAsync.set_track_beacon_start_ticks(parent_offset,0x00001E00,(start_reset_ct+process_tick_counter+18));
+		//#else
+			call TimerAsync.set_track_beacon_start_ticks(parent_offset,0x00001E00,4);//(start_reset_ct)
+		//#endif
+		
+		printfUART("sP \n", "");
+	}
+	
+	call Leds.led1Toggle();
 	signal MLME_BEACON_NOTIFY.indication((uint8_t)packet->seq_num,pan_descriptor,0, 0, mac_PIB.macBeaconPayloadLenght, packet->data);
 		
 return;
@@ -1630,7 +1804,7 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 	DstAddr[1]=0x00000000;
 
 
-	////printfUART("id %i %i \n",source_address,destination_address);
+	//printfUART("id %i %i \n",source_address,destination_address);
 
 
 	if ( get_fc1_intra_pan(pdu->frame_control1)== 0 )
@@ -1649,14 +1823,14 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 				//shall match aExtendedAddress.
 				if ( dest_long_ptr->destination_address0 !=aExtendedAddress0 && dest_long_ptr->destination_address1 !=aExtendedAddress1 )
 				{
-					////////////printfUART("data rejected, ext destination not for me\n", ""); 
+					//////////printfUART("data rejected, ext destination not for me\n", ""); 
 					return;
 				}
 				//If a destination PAN identifier is included in the frame, it shall match macPANId or shall be the
 				//broadcast PAN identifier (0 x ffff).
 				if(dest_long_ptr->destination_PAN_identifier != 0xffff && dest_long_ptr->destination_PAN_identifier != mac_PIB.macPANId )
 				{
-					////////////printfUART("data rejected, wrong destination PAN\n", ""); 
+					//////////printfUART("data rejected, wrong destination PAN\n", ""); 
 					return;
 				}
 				data_len = 20;
@@ -1687,14 +1861,14 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 				//shall match aExtendedAddress.
 				if ( dest_short_ptr->destination_address != 0xffff && dest_short_ptr->destination_address != mac_PIB.macShortAddress)
 				{
-					////////////printfUART("data rejected, short destination not for me\n", ""); 
+					//////////printfUART("data rejected, short destination not for me\n", ""); 
 					return;
 				}
 				//If a destination PAN identifier is included in the frame, it shall match macPANId or shall be the
 				//broadcast PAN identifier (0 x ffff).
 				if(dest_short_ptr->destination_PAN_identifier != 0xffff && dest_short_ptr->destination_PAN_identifier != mac_PIB.macPANId )
 				{
-					////////////printfUART("data rejected, wrong destination PAN\n", ""); 
+					//////////printfUART("data rejected, wrong destination PAN\n", ""); 
 					return;
 				}
 				
@@ -1723,14 +1897,14 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 				//shall match aExtendedAddress.
 				if ( dest_long_ptr->destination_address0 !=aExtendedAddress0 && dest_long_ptr->destination_address1 !=aExtendedAddress1 )
 				{
-					////////////printfUART("data rejected, ext destination not for me\n", ""); 
+					//////////printfUART("data rejected, ext destination not for me\n", ""); 
 					return;
 				}
 				//If a destination PAN identifier is included in the frame, it shall match macPANId or shall be the
 				//broadcast PAN identifier (0 x ffff).
 				if(dest_long_ptr->destination_PAN_identifier != 0xffff && dest_long_ptr->destination_PAN_identifier != mac_PIB.macPANId )
 				{
-					////////////printfUART("data rejected, wrong destination PAN\n", ""); 
+					//////////printfUART("data rejected, wrong destination PAN\n", ""); 
 					return;
 				}
 				
@@ -1762,14 +1936,14 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 				//shall match aExtendedAddress.
 				if ( dest_short_ptr->destination_address != 0xffff && dest_short_ptr->destination_address != mac_PIB.macShortAddress)
 				{
-					////printfUART("data rejected, short destination not for me\n", ""); 
+					//printfUART("data rejected, short destination not for me\n", ""); 
 					return;
 				}
 				//If a destination PAN identifier is included in the frame, it shall match macPANId or shall be the
 				//broadcast PAN identifier (0 x ffff).
 				if(dest_short_ptr->destination_PAN_identifier != 0xffff && dest_short_ptr->destination_PAN_identifier != mac_PIB.macPANId )
 				{
-					////printfUART("SH SH data rejected, wrong destination PAN %x\n",mac_PIB.macPANId ); 
+					//printfUART("SH SH data rejected, wrong destination PAN %x\n",mac_PIB.macPANId ); 
 					return;
 				}
 				
@@ -1807,7 +1981,7 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 				//accepted only if the device is a PAN coordinator and the source PAN identifier matches macPANId.
 				if ( PANCoordinator==0 || source_long_ptr->source_PAN_identifier != mac_PIB.macPANId )
 				{
-					////////////printfUART("data rejected, im not pan\n", ""); 
+					//////////printfUART("data rejected, im not pan\n", ""); 
 					return;
 				}
 				
@@ -1831,7 +2005,7 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 				//accepted only if the device is a PAN coordinator and the source PAN identifier matches macPANId.
 				if ( PANCoordinator==0 || source_short_ptr->source_PAN_identifier != mac_PIB.macPANId )
 				{
-					////////////printfUART("data rejected, im not pan\n", ""); 
+					//////////printfUART("data rejected, im not pan\n", ""); 
 					return;
 				}
 				
@@ -1861,14 +2035,14 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 				//shall match aExtendedAddress.
 				if ( dest_long_ptr->destination_address0 !=aExtendedAddress0 && dest_long_ptr->destination_address1 !=aExtendedAddress1 )
 				{
-					////////////printfUART("data rejected, ext destination not for me\n", ""); 
+					//////////printfUART("data rejected, ext destination not for me\n", ""); 
 					return;
 				}
 				//If a destination PAN identifier is included in the frame, it shall match macPANId or shall be the
 				//broadcast PAN identifier (0 x ffff).
 				if(dest_long_ptr->destination_PAN_identifier != 0xffff && dest_long_ptr->destination_PAN_identifier != mac_PIB.macPANId )
 				{
-					////////////printfUART("data rejected, wrong destination PAN\n", ""); 
+					//////////printfUART("data rejected, wrong destination PAN\n", ""); 
 					return;
 				}
 				
@@ -1893,14 +2067,14 @@ void indication_data(MPDU *pdu, int8_t ppduLinkQuality)
 				//shall match aExtendedAddress.
 				if ( dest_short_ptr->destination_address != 0xffff && dest_short_ptr->destination_address != mac_PIB.macShortAddress)
 				{
-					////////////printfUART("data rejected, short destination not for me\n", ""); 
+					//////////printfUART("data rejected, short destination not for me\n", ""); 
 					return;
 				}
 				//If a destination PAN identifier is included in the frame, it shall match macPANId or shall be the
 				//broadcast PAN identifier (0 x ffff).
 				if(dest_short_ptr->destination_PAN_identifier != 0xffff && dest_short_ptr->destination_PAN_identifier != mac_PIB.macPANId )
 				{
-					////////////printfUART("data rejected, wrong destination PAN\n", ""); 
+					//////////printfUART("data rejected, wrong destination PAN\n", ""); 
 					return;
 				}
 				
@@ -1971,7 +2145,7 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 								dest_long_ptr = (dest_long *) &pdu->data[0];
 								if(dest_long_ptr->destination_address0 !=aExtendedAddress0 && dest_long_ptr->destination_address1 !=aExtendedAddress1)
 								{
-									//printfUART("NOT FOR ME","");
+									printfUART("NOT FOR ME","");
 									return;
 								}
 								
@@ -1981,8 +2155,8 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 								//destination command not for me
 								if (dest_short_ptr->destination_address != mac_PIB.macShortAddress && dest_short_ptr->destination_address !=0xffff)
 								{
-									//printfUART("NOT FOR ME","");
-									////////////printfUART("NOT FOR ME %x me %e\n", dest_short_ptr->destination_address,mac_PIB.macShortAddress); 
+									printfUART("NOT FOR ME","");
+									//////////printfUART("NOT FOR ME %x me %e\n", dest_short_ptr->destination_address,mac_PIB.macShortAddress); 
 									return;
 								}
 								break;
@@ -2004,12 +2178,12 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 		case CMD_ASSOCIATION_REQUEST: 	
 									//check if association is allowed, if not discard the frame		
 									
-									////////printfUART("CMD_ASSOCIATION_REQUEST \n", "");
+									//////printfUART("CMD_ASSOCIATION_REQUEST \n", "");
 									
 										
 											if (mac_PIB.macAssociationPermit == 0 )
 											{
-												////////////printfUART("Association not alowed\n", "");
+												//////////printfUART("Association not alowed\n", "");
 												if ( get_fc1_ack_request(pdu->frame_control1) == 1 ) 
 												{
 													build_ack(pdu->seq_num,0);
@@ -2019,7 +2193,7 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 											
 											if ( PANCoordinator==0 )
 											{
-												////////////printfUART("i�m not a pan\n", ""); 
+												//////////printfUART("i�m not a pan\n", ""); 
 												return;
 											}
 									atomic{
@@ -2042,7 +2216,7 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 									break;
 		
 		case CMD_ASSOCIATION_RESPONSE: atomic{
-												//printfUART("CMD_ASSOCIATION_RESPONSE\n", ""); 
+												printfUART("CMD_ASSOCIATION_RESPONSE\n", ""); 
 												
 												associating =0;
 												call T_ResponseWaitTime.stop();
@@ -2056,7 +2230,7 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 												}
 										break;
 
-		case CMD_DISASSOCIATION_NOTIFICATION: 	////////////printfUART("Received CMD_DISASSOCIATION_NOTIFICATION\n", ""); 
+		case CMD_DISASSOCIATION_NOTIFICATION: 	//////////printfUART("Received CMD_DISASSOCIATION_NOTIFICATION\n", ""); 
 												
 												if ( get_fc1_ack_request(pdu->frame_control1) == 1 ) 
 												{
@@ -2066,14 +2240,14 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 												process_dissassociation_notification(pdu);
 												break;
 		case CMD_DATA_REQUEST: 
-								////printfUART("CMD_DATA_REQUEST\n", ""); 
-									////////printfUART("DR\n", "");
+								//printfUART("CMD_DATA_REQUEST\n", ""); 
+									//////printfUART("DR\n", "");
 									if ( get_fc1_ack_request(pdu->frame_control1) == 1 ) 
 									{
 										//TODO
 										//Problems with consecutive reception of messages
 										
-										//build_ack(pdu->seq_num,0);
+										build_ack(pdu->seq_num,0);
 									}
 									
 									//cmd_data_request_0_3_reception = (cmd_data_request_0_3 *) pdu->data;
@@ -2090,7 +2264,7 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 								break;
 								
 		case CMD_ORPHAN_NOTIFICATION:
-									////printfUART("CMD_ORPHAN_NOTIFICATION\n", ""); 
+									//printfUART("CMD_ORPHAN_NOTIFICATION\n", ""); 
 									
 									source_long_ptr = (source_long *) &pdu->data[DEST_SHORT_LEN];
 											
@@ -2104,13 +2278,13 @@ void indication_cmd(MPDU *pdu, int8_t ppduLinkQuality)
 		case CMD_BEACON_REQUEST:
 								break;
 		case CMD_COORDINATOR_REALIGNMENT:
-									//printfUART("CMD_COORDINATOR_REALIGNMENT\n", ""); 
+									printfUART("CMD_COORDINATOR_REALIGNMENT\n", ""); 
 									
 									process_coordinator_realignment(pdu);
 									
 								break;
 		case CMD_GTS_REQUEST: 	
-								//////////////printfUART("Received CMD_GTS_REQUEST\n", ""); 
+								////////////printfUART("Received CMD_GTS_REQUEST\n", ""); 
 								if ( get_fc1_ack_request(pdu->frame_control1) == 1 ) 
 								{
 									build_ack(pdu->seq_num,0);
@@ -2130,7 +2304,7 @@ void indication_ack(MPDU *pdu, int8_t ppduLinkQuality)
 
 	atomic buffer_count --;
 
-	//////////////printfUART("ACK Received\n",""); 
+	////////////printfUART("ACK Received\n",""); 
 	
 	atomic{
 			if (send_ack_check == 1 && ack_sequence_number_check == pdu->seq_num)
@@ -2155,7 +2329,7 @@ void indication_ack(MPDU *pdu, int8_t ppduLinkQuality)
 				//received an ack for the association request
 				if( associating == 1 && association_cmd_seq_num == pdu->seq_num )
 				{
-					////////////printfUART("ASSOC ACK\n",""); 
+					//////////printfUART("ASSOC ACK\n",""); 
 					call T_ResponseWaitTime.startOneShot(response_wait_time);
 					//call T_ResponseWaitTime.start(TIMER_ONE_SHOT, response_wait_time);
 				}
@@ -2167,14 +2341,14 @@ void indication_ack(MPDU *pdu, int8_t ppduLinkQuality)
 					//call T_ResponseWaitTime.start(TIMER_ONE_SHOT, response_wait_time);
 				}
 				
-				////////////printfUART("TRANSMISSION SUCCESS\n",""); 
+				//////////printfUART("TRANSMISSION SUCCESS\n",""); 
 
 				if (send_indirect_transmission > 0 )
 				{	//the message send was indirect
 					//remove the message from the indirect transmission queue
 					indirect_trans_queue[send_indirect_transmission-1].handler=0x00;
 					indirect_trans_count--;
-					////////////printfUART("SU id:%i ct:%i\n", send_indirect_transmission,indirect_trans_count);
+					//////////printfUART("SU id:%i ct:%i\n", send_indirect_transmission,indirect_trans_count);
 				}
 				
 				send_ack_check=0;
@@ -2192,7 +2366,7 @@ void indication_ack(MPDU *pdu, int8_t ppduLinkQuality)
 			//CHECK
 		if (get_fc1_frame_pending(pdu->frame_control1) == 1 && pending_request_data ==1)// && associating == 1
 		{		
-				////////////printfUART("Frame_pending\n",""); 
+				//////////printfUART("Frame_pending\n",""); 
 				pending_request_data=0;
 				create_data_request_cmd();
 		}
@@ -2253,7 +2427,7 @@ atomic{
 	mac_PIB.macShortAddress = cmd_realignment->short_address;
 	
 	
-	//printfUART("PCR %i %i\n",mac_PIB.macCoordShortAddress,mac_PIB.macShortAddress); 
+	printfUART("PCR %i %i\n",mac_PIB.macCoordShortAddress,mac_PIB.macShortAddress); 
 	
 	}
 return;
@@ -2339,17 +2513,17 @@ task void create_beacon()
 				{
 					
 					mac_beacon_txmpdu_ptr->data[data_count] = GTS_db[i].DevAddressType;
-					//////////////printfUART("B gts %i\n", (GTS_db[i].DevAddressType >> 8 ) ); 
+					////////////printfUART("B gts %i\n", (GTS_db[i].DevAddressType >> 8 ) ); 
 					
 					data_count++;
 					mac_beacon_txmpdu_ptr->data[data_count] = (GTS_db[i].DevAddressType >> 8 );
-					//////////////printfUART("B gts %i\n",  GTS_db[i].DevAddressType ); 
+					////////////printfUART("B gts %i\n",  GTS_db[i].DevAddressType ); 
 					
 					data_count++;
 					
 					mac_beacon_txmpdu_ptr->data[data_count] = set_gts_descriptor(15-i,GTS_db[i].length);
 					data_count++;
-					//////printfUART("B gts %i\n", set_gts_descriptor(GTS_db[i].starting_slot,GTS_db[i].length) ); 
+					////printfUART("B gts %i\n", set_gts_descriptor(GTS_db[i].starting_slot,GTS_db[i].length) ); 
 					
 					packet_length = packet_length + 3;
 					
@@ -2361,7 +2535,7 @@ task void create_beacon()
 					{
 						gts_directions = gts_directions | (0 << i); 
 					}
-					//////printfUART("dir %i\n", gts_directions); 
+					////printfUART("dir %i\n", gts_directions); 
 				}
 			}
 			mac_beacon_txmpdu_ptr->data[9] = gts_directions;
@@ -2375,14 +2549,14 @@ task void create_beacon()
 					if( GTS_null_db[i].DevAddressType != 0x0000) 
 					{
 						mac_beacon_txmpdu_ptr->data[data_count] = GTS_null_db[i].DevAddressType;
-						//////////////printfUART("B gts %i\n", (GTS_db[i].DevAddressType >> 8 ) ); 
+						////////////printfUART("B gts %i\n", (GTS_db[i].DevAddressType >> 8 ) ); 
 						data_count++;
 						mac_beacon_txmpdu_ptr->data[data_count] = (GTS_null_db[i].DevAddressType >> 8 );
-						//////////////printfUART("B gts %i\n",  GTS_db[i].DevAddressType ); 
+						////////////printfUART("B gts %i\n",  GTS_db[i].DevAddressType ); 
 						data_count++;
 						mac_beacon_txmpdu_ptr->data[data_count] = 0x00;
 						data_count++;
-						//////////////printfUART("B gts %i\n", set_gts_descriptor(GTS_db[i].starting_slot,GTS_db[i].length) ); 
+						////////////printfUART("B gts %i\n", set_gts_descriptor(GTS_db[i].starting_slot,GTS_db[i].length) ); 
 						packet_length = packet_length +3;
 					}
 				}
@@ -2453,7 +2627,7 @@ task void create_beacon()
 		}
 		mac_beacon_txmpdu_ptr->data[pending_data_index] = set_pending_address_specification(short_addr_pending,long_addr_pending);
 		
-		
+		/*
 		//adding the beacon payload
 		if (mac_PIB.macBeaconPayloadLenght > 0 )
 		{
@@ -2466,6 +2640,13 @@ task void create_beacon()
 		
 		
 		}
+		*/
+		mac_beacon_txmpdu_ptr->data[data_count] = 0x12;
+		data_count++;
+		packet_length++;
+		mac_beacon_txmpdu_ptr->data[data_count] = 0x34;
+		data_count++;
+		packet_length++;
 		
 		//short_addr_pending=0;
 		//long_addr_pending=0;
@@ -2503,7 +2684,7 @@ void create_data_frame(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32_t SrcAddr[
 	
 	uint16_t frame_control;
 	
-	////printfUART("create df\n","");
+	//printfUART("create df\n","");
 	
 	//decision of the buffer where to store de packet creation
 	if (on_gts_slot > 0 )
@@ -2516,11 +2697,11 @@ void create_data_frame(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32_t SrcAddr[
 			//get the number of frames in the gts_slot_list
 			atomic current_gts_element_count = gts_slot_list[15-on_gts_slot].element_count;
 			
-			////////////printfUART("element count %i\n",gts_slot_list[15-on_gts_slot].element_count);
+			//////////printfUART("element count %i\n",gts_slot_list[15-on_gts_slot].element_count);
 			
 			if (current_gts_element_count  == GTS_SEND_BUFFER_SIZE || available_gts_index_count == 0)
 			{
-				////////////printfUART("FULL\n","");
+				//////////printfUART("FULL\n","");
 				signal MCPS_DATA.confirm(0x00, MAC_TRANSACTION_OVERFLOW);
 				return;
 			}
@@ -2533,7 +2714,7 @@ void create_data_frame(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32_t SrcAddr[
 		else
 		{
 		//setting the device gts frame pointer
-			//////////////printfUART("start creation %i %i %i \n",gts_send_buffer_count,gts_send_buffer_msg_in,gts_send_buffer_msg_out);
+			////////////printfUART("start creation %i %i %i \n",gts_send_buffer_count,gts_send_buffer_msg_in,gts_send_buffer_msg_out);
 		
 			if(gts_send_buffer_count == GTS_SEND_BUFFER_SIZE)
 			{
@@ -2558,7 +2739,7 @@ void create_data_frame(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32_t SrcAddr[
 			if (indirect_trans_count == INDIRECT_BUFFER_SIZE)
 			{
 				signal MCPS_DATA.confirm(0x00, MAC_TRANSACTION_OVERFLOW);
-				////////////printfUART("buffer full %i\n", indirect_trans_count);
+				//////////printfUART("buffer full %i\n", indirect_trans_count);
 				return;
 			}
 			
@@ -2576,8 +2757,28 @@ void create_data_frame(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32_t SrcAddr[
 		else
 		{
 			//CREATE NORMAL TRANSMISSION PACKET POINTER
-				//////printfUART("sb  %i\n", send_buffer_count);
+				////printfUART("sb  %i\n", send_buffer_count);
 			atomic{
+			
+			//TDBS Implementation
+			if (get_txoptions_upstream_buffer(TxOptions) == 1)
+			{
+				////printfUART("sel up\n", "");
+				
+				if (upstream_buffer_count > UPSTREAM_BUFFER_SIZE)
+					return;
+				
+				if(upstream_buffer_msg_in == UPSTREAM_BUFFER_SIZE)
+					upstream_buffer_msg_in=0;
+				
+				frame_pkt = (MPDU *) &upstream_buffer[upstream_buffer_msg_in];
+				
+			}
+			else
+			{
+
+				////printfUART("sb  %i\n", send_buffer_count);
+			
 				if ((send_buffer_count +1) > SEND_BUFFER_SIZE)	
 					return;
 			
@@ -2585,7 +2786,11 @@ void create_data_frame(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32_t SrcAddr[
 					send_buffer_msg_in=0;
 		
 				frame_pkt = (MPDU *) &send_buffer[send_buffer_msg_in];
-				}
+			}
+			
+			}
+			
+
 		}
 	}
 	
@@ -2721,7 +2926,7 @@ atomic{
 		{
 			//preparing a GTS transmission
 			
-			//////////////printfUART("GTS send slt: %i count %i %u\n",on_gts_slot,gts_slot_list[15-on_gts_slot].element_count,mac_PIB.macDSN);
+			////////////printfUART("GTS send slt: %i count %i %u\n",on_gts_slot,gts_slot_list[15-on_gts_slot].element_count,mac_PIB.macDSN);
 			frame_pkt->length = data_len + msduLength + MPDU_HEADER_LEN;
 			
 			frame_control = set_frame_control(TYPE_DATA,0,0,1,intra_pan,DstAddrMode,SrcAddrMode);
@@ -2752,13 +2957,13 @@ atomic{
 					{
 						gts_send_buffer_count++;
 						gts_send_buffer_msg_in++;
-						//////////////printfUART("end c %i %i %i \n",gts_send_buffer_count,gts_send_buffer_msg_in,gts_send_buffer_msg_out);
+						////////////printfUART("end c %i %i %i \n",gts_send_buffer_count,gts_send_buffer_msg_in,gts_send_buffer_msg_out);
 					}
 			}
 		}
 		else
 		{
-			////////////printfUART("CSMA send %i\n", get_txoptions_ack(TxOptions));
+			//////////printfUART("CSMA send %i\n", get_txoptions_ack(TxOptions));
 			frame_pkt->length = data_len + msduLength + MPDU_HEADER_LEN;
 			//frame_pkt->frame_control = set_frame_control(TYPE_DATA,0,0,get_txoptions_ack(TxOptions),intra_pan,DstAddrMode,SrcAddrMode);
 			
@@ -2768,7 +2973,7 @@ atomic{
 			
 			frame_pkt->seq_num = mac_PIB.macDSN;
 			
-			////////printfUART("sqn %i\n", mac_PIB.macDSN);
+			//////printfUART("sqn %i\n", mac_PIB.macDSN);
 			
 			mac_PIB.macDSN++;
 			
@@ -2779,10 +2984,26 @@ atomic{
 	
 					indirect_trans_count++;
 	
-					////////////printfUART("ADDED HDL: %i ADDR: %i\n",indirect_trans_count,DstAddr[1]); 
+					//////////printfUART("ADDED HDL: %i ADDR: %i\n",indirect_trans_count,DstAddr[1]); 
 			}
 			else
 			{
+				if (get_txoptions_upstream_buffer(TxOptions) == 1)
+				{
+					upstream_buffer[upstream_buffer_msg_in].retransmission =0;
+					upstream_buffer[upstream_buffer_msg_in].indirect =0;
+				
+					upstream_buffer_count++;
+					
+					upstream_buffer_msg_in++;
+					
+					//printfUART("up bc %i\n", upstream_buffer_count);
+					post send_frame_csma_upstream();
+					
+				}
+				else
+				{
+				
 					//enable retransmissions
 					send_buffer[send_buffer_msg_in].retransmission = 1;
 					send_buffer[send_buffer_msg_in].indirect = 0;
@@ -2792,6 +3013,8 @@ atomic{
 					send_buffer_msg_in++;
 					
 					post send_frame_csma();
+				}
+					
 			}
 			
 		}
@@ -2825,7 +3048,7 @@ error_t create_association_response_cmd(uint32_t DeviceAddress[],uint16_t shorta
 	//check if the is enough space to store the indirect transaction
 	if (indirect_trans_count == INDIRECT_BUFFER_SIZE)
 	{
-		//printfUART("i full","");
+		printfUART("i full","");
 		return MAC_TRANSACTION_OVERFLOW;
 	}
 	
@@ -2835,7 +3058,7 @@ error_t create_association_response_cmd(uint32_t DeviceAddress[],uint16_t shorta
 		{
 			//memcpy(&indirect_trans_queue[i].frame,frame_ptr,sizeof(MPDU));
 			frame_pkt = (MPDU *) &indirect_trans_queue[i].frame;
-			//printfUART("found slot","");
+			printfUART("found slot","");
 			break;
 		}
 	}
@@ -2883,7 +3106,7 @@ error_t create_association_response_cmd(uint32_t DeviceAddress[],uint16_t shorta
 			}	
 		post send_frame_csma();
 */
-	//printfUART("ASS RESP S: %i\n",shortaddress); 
+	printfUART("ASS RESP S: %i\n",shortaddress); 
 
 	indirect_trans_queue[i].handler = indirect_trans_count+1;
 
@@ -2891,7 +3114,7 @@ error_t create_association_response_cmd(uint32_t DeviceAddress[],uint16_t shorta
 	
 	indirect_trans_count++;
 	
-	//printfUART("IAD\n", "");
+	printfUART("IAD\n", "");
 
 return MAC_SUCCESS;
 }
@@ -2966,7 +3189,7 @@ atomic{
 		
 		pending_request_data=1;
 		
-		//////printfUART("Association request %i %i \n", send_buffer_count,send_buffer_msg_in);
+		////printfUART("Association request %i %i \n", send_buffer_count,send_buffer_msg_in);
 		
 		
 		post send_frame_csma();
@@ -2977,7 +3200,7 @@ return;
 
 void create_data_request_cmd()
 {
-	////////////printfUART("create_data_request_cmd\n", ""); 
+	//////////printfUART("create_data_request_cmd\n", ""); 
 
 atomic{
 		//dest_short *dest_short_ptr;
@@ -3228,7 +3451,7 @@ atomic{
 		MPDU *frame_pkt;
 		
 		uint16_t frame_control;
-		//////printfUART("create_gts_request_cmd\n", "");
+		////printfUART("create_gts_request_cmd\n", "");
 		
 		
 		if (send_buffer_msg_in == SEND_BUFFER_SIZE)
@@ -3385,7 +3608,7 @@ task void data_channel_scan_indication()
 	
 	beacon_addr_short *beacon_ptr;
 	
-	////printfUART("data_channel_scan_indication\n","");
+	//printfUART("data_channel_scan_indication\n","");
 
 	atomic link_qual = link_quality;
 
@@ -3404,7 +3627,7 @@ task void data_channel_scan_indication()
 							switch( (buffer_msg[current_msg_out].frame_control1 & 0x7) )
 							{
 								case TYPE_BEACON:
-								printfUART("3 ps rb\n","");
+								////////////printfUART("Received Beacon\n","");
 								beacon_ptr = (beacon_addr_short*) (&buffer_msg[current_msg_out].data);
 
 								//Beacon NOTIFICATION
@@ -3423,19 +3646,19 @@ task void data_channel_scan_indication()
 								
 								default: break;
 							//atomic buffer_count--;
-							//////////////printfUART("Invalid frame type\n","");
+							////////////printfUART("Invalid frame type\n","");
 
 							}
 							break;
 		case ORPHAN_SCAN: 
-							////printfUART("osrm\n","");
+							//printfUART("osrm\n","");
 							switch( (buffer_msg[current_msg_out].frame_control1 & 0x7) )
 							{
 								case TYPE_CMD:
-										////printfUART("received cmd\n","");
+										//printfUART("received cmd\n","");
 										if (buffer_msg[current_msg_out].data[SOURCE_SHORT_LEN+ DEST_LONG_LEN] == CMD_COORDINATOR_REALIGNMENT)
 										{	
-											//printfUART("pf\n","");
+											printfUART("pf\n","");
 											atomic scanning_channels = 0;
 											call T_ScanDuration.stop();
 											process_coordinator_realignment(&buffer_msg[current_msg_out]);
@@ -3470,7 +3693,7 @@ event void T_ScanDuration.fired() {
 
 	if (current_scanning == 16 )
 	{
-		////printfUART("scan end\n","");
+		//printfUART("scan end\n","");
 		
 		atomic scanning_channels = 0;
 		
@@ -3490,7 +3713,7 @@ event void T_ScanDuration.fired() {
 			case ORPHAN_SCAN: 
 							//orphan scan
 							//send opphan command on every channel directed to the current PAN coordinator
-							//printfUART("oph s end not found\n","");
+							printfUART("oph s end not found\n","");
 							signal MLME_SCAN.confirm(MAC_SUCCESS,scan_type, 0x00, 16 , 0x00, scan_pans);
 							
 							break;
@@ -3500,7 +3723,7 @@ event void T_ScanDuration.fired() {
 	{
 		switch(scan_type)
 		{
-			case ORPHAN_SCAN:	//printfUART("con\n","");
+			case ORPHAN_SCAN:	printfUART("con\n","");
 								create_orphan_notification();
 								break;
 		}
@@ -3515,7 +3738,7 @@ event void T_ScanDuration.fired() {
 command error_t MLME_SCAN.request(uint8_t ScanType, uint32_t ScanChannels, uint8_t ScanDuration)
 {
 //pag 93
-	//printfUART("MLME_SCAN.request\n", ""); 
+	printfUART("MLME_SCAN.request\n", ""); 
 		
 	atomic scanning_channels = 1;
 	scan_type = ScanType;
@@ -3538,7 +3761,7 @@ command error_t MLME_SCAN.request(uint8_t ScanType, uint32_t ScanChannels, uint8
 					channels_to_scan = ScanChannels;
 					scan_duration = ((aBaseSuperframeDuration * pow(2,ScanDuration)) * 4.0) / 250.0;
 					
-					////////////printfUART("channels_to_scan %y scan_duration %y\n", channels_to_scan,scan_duration); 
+					//////////printfUART("channels_to_scan %y scan_duration %y\n", channels_to_scan,scan_duration); 
 					
 					call T_ed_scan.start(TIMER_REPEAT,1);
 					
@@ -3556,7 +3779,7 @@ command error_t MLME_SCAN.request(uint8_t ScanType, uint32_t ScanChannels, uint8
 					
 					call T_ScanDuration.startOneShot(scan_duration);
 					
-					////printfUART("channels_to_scan %y scan_duration %y\n", channels_to_scan,scan_duration); 
+					//printfUART("channels_to_scan %y scan_duration %y\n", channels_to_scan,scan_duration); 
 					break;
 		//active scan only FFD
 		case ACTIVE_SCAN:
@@ -3577,11 +3800,11 @@ command error_t MLME_SCAN.request(uint8_t ScanType, uint32_t ScanChannels, uint8
 					//defines the time (miliseconds) that the device listen in each channel
 					scan_duration = 2000;
 					
-					//printfUART("channels_to_scan %y scan_duration %i\n", channels_to_scan,scan_duration); 
+					printfUART("channels_to_scan %y scan_duration %i\n", channels_to_scan,scan_duration); 
 					
 					call T_ScanDuration.startOneShot(scan_duration);
 					
-					////printfUART("channels_to_scan %y scan_duration %i\n", channels_to_scan,scan_duration); 
+					//printfUART("channels_to_scan %y scan_duration %i\n", channels_to_scan,scan_duration); 
 					
 					//atomic trx_status = PHY_RX_ON;
 					//call PLME_SET_TRX_STATE.request(PHY_RX_ON); 
@@ -3596,7 +3819,7 @@ command error_t MLME_SCAN.request(uint8_t ScanType, uint32_t ScanChannels, uint8
 					
 				    scan_duration = 4000;
 					
-					//printfUART("orphan cts %y sdur %i\n", channels_to_scan,scan_duration); 
+					printfUART("orphan cts %y sdur %i\n", channels_to_scan,scan_duration); 
 					
 					call T_ScanDuration.startOneShot(scan_duration);
 
@@ -3633,13 +3856,11 @@ return SUCCESS;
 
 command error_t MLME_SYNC.request(uint8_t logical_channel,uint8_t track_beacon)
 {
-
-call PLME_SET.request(PHYCURRENTCHANNEL,LOGICAL_CHANNEL);	
-	//call PLME_SET.request(PHYCURRENTCHANNEL,logical_channel);	
+	call PLME_SET.request(PHYCURRENTCHANNEL,logical_channel);	
 	
 	call TimerAsync.set_timers_enable(0x01);
 	
-	//printfUART("sync req\n", ""); 
+	printfUART("sync req\n", ""); 
 	
 	atomic findabeacon = 1;
 
@@ -3653,7 +3874,7 @@ return SUCCESS;
 
 command error_t MLME_RESET.request(uint8_t set_default_PIB)
 {
-
+printfUART("MLME_RESET.request\n", "");
 
 return SUCCESS;
 }
@@ -3690,7 +3911,7 @@ command error_t MLME_START.request(uint32_t PANId, uint8_t LogicalChannel, uint8
 	uint32_t BO_EXPONENT;
 	uint32_t SO_EXPONENT;
 
-	//////////printfUART("MLME_START.request\n", "");
+	printfUART("MLME_START.request\n", "");
 	//pag 102
 	atomic {
 	PANCoordinator=1;
@@ -3767,6 +3988,22 @@ command error_t MLME_START.request(uint32_t PANId, uint8_t LogicalChannel, uint8
 		call TimerAsync.reset();
 		
 	}
+	
+	////////////////////////////////////////////////////
+	/////////////////TDBS IMPLEMENTATION////////////////
+	////////////////////////////////////////////////////
+	if(TYPE_DEVICE == ROUTER)
+	{
+		atomic parent_offset = StartTime;
+	
+		call TimerAsync.set_track_beacon(1);
+		//initialization of the timer that shedules the beacon transmission offset
+		call TimerAsync.set_track_beacon_start_ticks(StartTime,0x00001E00,0x00000000);
+	}
+	else
+	{
+		atomic I_AM_IN_PARENT_CAP = 1;
+	}
 		
 	signal MLME_START.confirm(MAC_SUCCESS);
 
@@ -3782,31 +4019,28 @@ command error_t MLME_ASSOCIATE.request(uint8_t LogicalChannel,uint8_t CoordAddrM
 	//update current channel
 	//call PLME_SET.request(PHYCURRENTCHANNEL,LogicalChannel);
 	
+	//printfUART("MLME_ASSOCIATE.request\n", "");
 	
-	printfUART("MLME_ASSOCIATE.request %x %x\n", mac_PIB.macPANId,mac_PIB.macCoordShortAddress);
 	//updates the PAN ID
 	atomic{ 
 		mac_PIB.macPANId = CoordPANId;
 		mac_PIB.macCoordShortAddress = (uint16_t)(CoordAddress[1] & 0x000000ff);
 		}
 		
-		
 	associating=1; //boolean variable stating that the device is trying to associate
 	
 	call TimerAsync.set_timers_enable(1);
 	
-	//the channel selection is made during the SynC procedure
 	//call PLME_SET.request(PHYCURRENTCHANNEL, LogicalChannel);
 
 	current_channel = LogicalChannel;
 	
-	////printfUART("SELECTED cord id %i\n", mac_PIB.macPANId);
-	////printfUART("CoordAddress %i\n", mac_PIB.macCoordShortAddress);
-	////printfUART("LogicalChannel %i\n", LogicalChannel);
-	////printfUART("Cordaddr %i\n",CoordAddress[0]);
-	////printfUART("Cordaddr %i\n",CoordAddress[1]);
+	//printfUART("SELECTED cord id %i\n", mac_PIB.macPANId);
+	//printfUART("CoordAddress %i\n", mac_PIB.macCoordShortAddress);
+	//printfUART("LogicalChannel %i\n", LogicalChannel);
+	//printfUART("Cordaddr %i\n",CoordAddress[0]);
+	//printfUART("Cordaddr %i\n",CoordAddress[1]);
 	/*
-
 	a_CoordAddrMode = CoordAddrMode;
 	a_CoordPANId=CoordPANId;
 	a_CoordAddress[0]=CoordAddress[0];
@@ -3824,10 +4058,10 @@ command error_t MLME_ASSOCIATE.response(uint32_t DeviceAddress[], uint16_t Assoc
 	
 	error_t status_response;
 	
-	////////printfUART("MAR\n", "");
+	//////printfUART("MAR\n", "");
 	
 	status_response = create_association_response_cmd(DeviceAddress,AssocShortAddress,status);
-	//////////////printfUART("MLME_ASSOCIATE.response\n", "");
+	////////////printfUART("MLME_ASSOCIATE.response\n", "");
 
 
 return SUCCESS;
@@ -3911,7 +4145,7 @@ command error_t MLME_SET.request(uint8_t PIBAttribute,uint8_t PIBAttributeValue[
 
 //int i;
 
-////printfUART("set %i\n",PIBAttribute);
+//printfUART("set %i\n",PIBAttribute);
 
 atomic{
 
@@ -3920,7 +4154,7 @@ atomic{
 	
 	
 		case MACACKWAITDURATION :		mac_PIB.macAckWaitDuration = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macAckWaitDuration: %x\n",mac_PIB.macAckWaitDuration);
+										//////////printfUART("mac_PIB.macAckWaitDuration: %x\n",mac_PIB.macAckWaitDuration);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 									
@@ -3932,21 +4166,21 @@ atomic{
 										{
 											mac_PIB.macAssociationPermit = 0x01;
 										}
-										//////////printfUART("mac_PIB.macAssociationPermit: %i %y\n",mac_PIB.macAssociationPermit,PIBAttributeValue[1]);
+										////////printfUART("mac_PIB.macAssociationPermit: %i %y\n",mac_PIB.macAssociationPermit,PIBAttributeValue[1]);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 										
 		case MACAUTOREQUEST : 			mac_PIB.macAutoRequest = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macAutoRequest: %i\n",mac_PIB.macAutoRequest);
+										//////////printfUART("mac_PIB.macAutoRequest: %i\n",mac_PIB.macAutoRequest);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 										
 		case MACBATTLIFEEXT:			mac_PIB.macBattLifeExt = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macBattLifeExt %i\n",mac_PIB.macBattLifeExt);
+										//////////printfUART("mac_PIB.macBattLifeExt %i\n",mac_PIB.macBattLifeExt);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		case MACBATTLIFEEXTPERIODS:		mac_PIB.macBattLifeExtPeriods = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macBattLifeExtPeriods %i\n",mac_PIB.macBattLifeExtPeriods);
+										//////////printfUART("mac_PIB.macBattLifeExtPeriods %i\n",mac_PIB.macBattLifeExtPeriods);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 										
@@ -3961,57 +4195,61 @@ atomic{
 										break;
 				
 		case MACMAXBEACONPAYLOADLENGTH:	mac_PIB.macBeaconPayloadLenght = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macBeaconPayloadLenght %i\n",mac_PIB.macBeaconPayloadLenght);
+										//////////printfUART("mac_PIB.macBeaconPayloadLenght %i\n",mac_PIB.macBeaconPayloadLenght);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 										
 		case MACBEACONORDER:			mac_PIB.macBeaconOrder = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macBeaconOrder %i\n",mac_PIB.macBeaconOrder);
+										//////////printfUART("mac_PIB.macBeaconOrder %i\n",mac_PIB.macBeaconOrder);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		case MACBEACONTXTIME:			mac_PIB.macBeaconTxTime =PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macBeaconTxTime %i\n",mac_PIB.macBeaconTxTime);
+										//////////printfUART("mac_PIB.macBeaconTxTime %i\n",mac_PIB.macBeaconTxTime);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		case MACBSN:					mac_PIB.macBSN = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macBSN %i\n",mac_PIB.macBSN);
+										//////////printfUART("mac_PIB.macBSN %i\n",mac_PIB.macBSN);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 
 		case MACCOORDEXTENDEDADDRESS:	//mac_PIB.macCoordExtendedAddress0 = ((PIBAttributeValue[0] >> 24) | (PIBAttributeValue[1] >> 16) | (PIBAttributeValue[2] >> 8) | (PIBAttributeValue[3])) ;
 										//mac_PIB.macCoordExtendedAddress1 = ((PIBAttributeValue[4] >> 24) | (PIBAttributeValue[5] >> 16) | (PIBAttributeValue[6] >> 8) | (PIBAttributeValue[7]));
 
-										////////////printfUART("mac_PIB.macCoordExtendedAddress0 %y\n",mac_PIB.macCoordExtendedAddress0);
-										////////////printfUART("mac_PIB.macCoordExtendedAddress1 %y\n",mac_PIB.macCoordExtendedAddress1);
+										//////////printfUART("mac_PIB.macCoordExtendedAddress0 %y\n",mac_PIB.macCoordExtendedAddress0);
+										//////////printfUART("mac_PIB.macCoordExtendedAddress1 %y\n",mac_PIB.macCoordExtendedAddress1);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 										
 									
 		case MACCOORDSHORTADDRESS:		mac_PIB.macCoordShortAddress= ((PIBAttributeValue[0] << 8) |PIBAttributeValue[1]);
-										////printfUART("mac_PIB.macCoordShortAddress: %x\n",mac_PIB.macCoordShortAddress);
+										//printfUART("mac_PIB.macCoordShortAddress: %x\n",mac_PIB.macCoordShortAddress);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		
 		case MACDSN:					mac_PIB.macDSN = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macDSN: %x\n",mac_PIB.macDSN);
+										//////////printfUART("mac_PIB.macDSN: %x\n",mac_PIB.macDSN);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		case MACGTSPERMIT:				mac_PIB.macGTSPermit = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macGTSPermit: %x\n",mac_PIB.macGTSPermit);
+										//////////printfUART("mac_PIB.macGTSPermit: %x\n",mac_PIB.macGTSPermit);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		case MACMAXCSMABACKOFFS:		mac_PIB.macMaxCSMABackoffs = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macMaxCSMABackoffs: %x\n",mac_PIB.macMaxCSMABackoffs);
+										//////////printfUART("mac_PIB.macMaxCSMABackoffs: %x\n",mac_PIB.macMaxCSMABackoffs);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		case MACMINBE:					mac_PIB.macMinBE = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macMinBE: %x\n",mac_PIB.macMinBE);
+										//////////printfUART("mac_PIB.macMinBE: %x\n",mac_PIB.macMinBE);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		
 		case MACPANID:					mac_PIB.macPANId = ((PIBAttributeValue[0] << 8)| PIBAttributeValue[1]);
-										////printfUART("mac_PIB.macPANId: %x\n",mac_PIB.macPANId);
+										printfUART("mac_PIB.macPANId: %x\n",mac_PIB.macPANId);
 										
+										//TODO ENABLE HARDWARE VERIFICATION
+										//call CC2420Config.setPanAddr(mac_PIB.macPANId);
+										//call CC2420Config.setAddressRecognition(TRUE);
+										//call CC2420Config.sync(); 
 										
 										call AddressFilter.set_coord_address(mac_PIB.macCoordShortAddress, mac_PIB.macPANId);
 										
@@ -4020,17 +4258,24 @@ atomic{
 										break;
 		
 		case MACPROMISCUOUSMODE:		mac_PIB.macPromiscuousMode = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macPromiscuousMode: %x\n",mac_PIB.macPromiscuousMode);
+										//////////printfUART("mac_PIB.macPromiscuousMode: %x\n",mac_PIB.macPromiscuousMode);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 		case MACRXONWHENIDLE:			mac_PIB.macRxOnWhenIdle = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macRxOnWhenIdle: %x\n",mac_PIB.macRxOnWhenIdle);
+										//////////printfUART("mac_PIB.macRxOnWhenIdle: %x\n",mac_PIB.macRxOnWhenIdle);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 										
 										
 		case MACSHORTADDRESS:			mac_PIB.macShortAddress = ((PIBAttributeValue[0] << 8) |PIBAttributeValue[1]);
-										////printfUART("mac_PIB.macShortAddress: %y\n",mac_PIB.macShortAddress);
+										
+										printfUART("mac_PIB.macShortAddress: %y\n",mac_PIB.macShortAddress);
+																			
+										//TODO ENABLE HARDWARE VERIFICATION
+										//call CC2420Config.setPanAddr(0x0000);
+										//call CC2420Config.setShortAddr(0x0001);
+										//call CC2420Config.setAddressRecognition(TRUE);
+										//call CC2420Config.sync(); 
 										
 										call AddressFilter.set_address(mac_PIB.macShortAddress, aExtendedAddress0, aExtendedAddress0);
 										
@@ -4039,12 +4284,12 @@ atomic{
 										break;
 										
 		case MACSUPERFRAMEORDER:		mac_PIB.macSuperframeOrder = PIBAttributeValue[0];
-										////////////printfUART("mac_PIB.macSuperframeOrder: %x\n",mac_PIB.macSuperframeOrder);
+										//////////printfUART("mac_PIB.macSuperframeOrder: %x\n",mac_PIB.macSuperframeOrder);
 										signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 										break;
 										
 		case MACTRANSACTIONPERSISTENCETIME:	 mac_PIB.macTransactionPersistenceTime = PIBAttributeValue[0];
-											 ////////////printfUART("mac_PIB.macTransactionPersistenceTime: %y\n",mac_PIB.macTransactionPersistenceTime);
+											 //////////printfUART("mac_PIB.macTransactionPersistenceTime: %y\n",mac_PIB.macTransactionPersistenceTime);
 											 signal MLME_SET.confirm(MAC_SUCCESS,PIBAttribute);
 											 break;
 											
@@ -4068,23 +4313,23 @@ command error_t MCPS_DATA.request(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32
 	//uint8_t valid_gts=0;
 	uint32_t total_ticks;
 	
-	////////printfUART("MCPS_DATA.request\n", ""); 
+	//////printfUART("MCPS_DATA.request\n", ""); 
 	//check conditions on page 58
 	
 	//atomic mac_PIB.macShortAddress = TOS_LOCAL_ADDRESS;
 	
 	/*
-	////printfUART("SrcAddrMode %x\n", SrcAddrMode);
-	////printfUART("SrcPANId %x\n", SrcPANId);
-	////printfUART("SrcAddr %x\n", SrcAddr[0]);
-	////printfUART("SrcAddr %x\n", SrcAddr[1]);
-	////printfUART("DstAddrMode %x\n", DstAddrMode);
-	////printfUART("DestPANId %x\n", DestPANId);
-	////printfUART("DstAddr %x\n", DstAddr[0]);
-	////printfUART("DstAddr %x\n", DstAddr[1]);
-	////printfUART("msduLength %x\n", msduLength);
-	////printfUART("msduHandle %x\n", msduHandle);
-	////printfUART("TxOptions %x\n", TxOptions);
+	//printfUART("SrcAddrMode %x\n", SrcAddrMode);
+	//printfUART("SrcPANId %x\n", SrcPANId);
+	//printfUART("SrcAddr %x\n", SrcAddr[0]);
+	//printfUART("SrcAddr %x\n", SrcAddr[1]);
+	//printfUART("DstAddrMode %x\n", DstAddrMode);
+	//printfUART("DestPANId %x\n", DestPANId);
+	//printfUART("DstAddr %x\n", DstAddr[0]);
+	//printfUART("DstAddr %x\n", DstAddr[1]);
+	//printfUART("msduLength %x\n", msduLength);
+	//printfUART("msduHandle %x\n", msduHandle);
+	//printfUART("TxOptions %x\n", TxOptions);
 		*/
 	
 	atomic{
@@ -4096,7 +4341,7 @@ command error_t MCPS_DATA.request(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32
 	if(PANCoordinator == 1)
 	{
 	//PAN COORDINATOR OPERATION
-		//////////////printfUART("GTS TRANS: %i TxOptions: %u dest:%u\n", get_txoptions_gts(TxOptions),TxOptions,DstAddr[1]); 
+		////////////printfUART("GTS TRANS: %i TxOptions: %u dest:%u\n", get_txoptions_gts(TxOptions),TxOptions,DstAddr[1]); 
 		
 		if (get_txoptions_gts(TxOptions) == 1)
 		{
@@ -4108,7 +4353,7 @@ command error_t MCPS_DATA.request(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32
 				{
 					
 				//atomic{
-						//////////////printfUART("BUFFER UNTIL GTS SLOT n: %i ss: %i\n",number_time_slot,GTS_db[valid_gts].starting_slot);
+						////////////printfUART("BUFFER UNTIL GTS SLOT n: %i ss: %i\n",number_time_slot,GTS_db[valid_gts].starting_slot);
 						create_data_frame(SrcAddrMode, SrcPANId, SrcAddr, DstAddrMode, DestPANId, DstAddr, msduLength, msdu, msduHandle, TxOptions,GTS_db[i].starting_slot,1);
 					//}
 					return SUCCESS;
@@ -4122,13 +4367,13 @@ command error_t MCPS_DATA.request(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32
 		{
 		//NORMAL/INDIRECT TRANSMISSION
 		
-			//////////////printfUART("IND TRANS: %i TxOptions: %u\n", get_txoptions_indirect_transmission(TxOptions),TxOptions);
+			////////////printfUART("IND TRANS: %i TxOptions: %u\n", get_txoptions_indirect_transmission(TxOptions),TxOptions);
 			//check if its an indirect transmission
 			//if ( get_txoptions_indirect_transmission(TxOptions) == 1)
 			//{
 				//INDIRECT TRANSMISSION
 				
-				//////////////printfUART("CREATE INDIRECT TRANSMISSION\n","");
+				////////////printfUART("CREATE INDIRECT TRANSMISSION\n","");
 				
 				
 				
@@ -4137,7 +4382,7 @@ command error_t MCPS_DATA.request(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32
 			//else
 			//{
 				//NORMAL TRANSMISSION
-				////printfUART("SEND NO GTS NO IND\n","");
+				//printfUART("SEND NO GTS NO IND\n","");
 				create_data_frame(SrcAddrMode, SrcPANId, SrcAddr, DstAddrMode, DestPANId, DstAddr, msduLength, msdu, msduHandle, TxOptions,0,0);
 			//}
 		}
@@ -4147,14 +4392,14 @@ command error_t MCPS_DATA.request(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32
 	//NON PAN COORDINATOR OPERATION
 		atomic{
 				
-				//////////////printfUART("sslot: %i ini %i\n",s_GTSss,init_s_GTSss);
+				////////////printfUART("sslot: %i ini %i\n",s_GTSss,init_s_GTSss);
 				//check if it a gts transmission
 				if (get_txoptions_gts(TxOptions) == 1)
 				{
 				//GTS TRANSMISSION
 					if (s_GTSss == 0x00)
 					{
-						//////////////printfUART("NO VALID GTS \n","");
+						////////////printfUART("NO VALID GTS \n","");
 						signal MCPS_DATA.confirm(msduHandle, MAC_INVALID_GTS);
 					}
 					else
@@ -4172,7 +4417,7 @@ command error_t MCPS_DATA.request(uint8_t SrcAddrMode, uint16_t SrcPANId, uint32
 				else
 				{
 				//NORMAL TRANSMISSION
-					//printfUART("TRnsm\n","");
+					printfUART("TRnsm\n","");
 					create_data_frame(SrcAddrMode, SrcPANId, SrcAddr, DstAddrMode, DestPANId, DstAddr, msduLength, msdu, msduHandle, TxOptions,0,0);
 				}
 			}
@@ -4277,7 +4522,7 @@ atomic{
 	
 	mac_PIB.macCoordShortAddress = 0x0000; //16bits address of the coordinator with witch the device is associated
 	
-	/*
+	
 	if (DEVICE_DEPTH == 0x01)
 		mac_PIB.macCoordShortAddress =D1_PAN_SHORT;
 	if (DEVICE_DEPTH == 0x02)
@@ -4286,7 +4531,7 @@ atomic{
 		mac_PIB.macCoordShortAddress =D3_PAN_SHORT;
 	if (DEVICE_DEPTH == 0x04)
 		mac_PIB.macCoordShortAddress =D4_PAN_SHORT;
-	*/
+	
 	
 	mac_PIB.macDSN=call Random.rand16(); //sequence number of the transmited data or MAC command frame
 	
@@ -4326,17 +4571,43 @@ atomic{
 /*				SEND FRAME FUNCTION   			 */
 /*****************************************************/ 
 
+task void send_frame_csma_upstream()
+{//used in TDBS
+	atomic{
+	
+		////////printfUART("sf %i, %i \n",send_buffer_count,upstream_buffer_count);
+		////////printfUART("I_AM_IN_IP %i \n",I_AM_IN_IP);
+		////printfUART("send up IPCAP %i %i \n",I_AM_IN_PARENT_CAP,upstream_buffer_count);
+	
+		//beacon synchronization
+		if(upstream_buffer_count > 0 && I_AM_IN_PARENT_CAP == 1)
+		{
+		
+			////////printfUART("s up\n","");
+			sending_upstream_frame =1;
+			
+			performing_csma_ca = 1;
+
+			perform_csma_ca();
+		}
+		
+		
+	}
+	
+}
+
+
 task void send_frame_csma()
 {
 	atomic{
 	
 		//
-		/////printfUART("I_AM_IN_IP %i %i\n",I_AM_IN_IP,send_buffer_count);
+		///printfUART("I_AM_IN_IP %i %i\n",I_AM_IN_IP,send_buffer_count);
 	
 		if ((send_buffer_count > 0 && send_buffer_count <= SEND_BUFFER_SIZE && performing_csma_ca == 0) || I_AM_IN_IP != 0)
 		{
-			//////printfUART("sf %i\n",send_buffer_count);
-			////////printfUART("peform\n","");
+			////printfUART("sf %i\n",send_buffer_count);
+			//////printfUART("peform\n","");
 			
 			performing_csma_ca = 1;
 
@@ -4344,7 +4615,7 @@ task void send_frame_csma()
 		}
 		else
 		{
-			////printfUART("NOT SEND\n","");
+			//printfUART("NOT SEND\n","");
 		}
 
 		
@@ -4372,19 +4643,24 @@ task void perform_csma_ca_slotted()
 		}
 		
 	atomic{
-		////printfUART("CCA: %i\n", call CCA.get()) ;
+		//printfUART("CCA: %i\n", call CCA.get()) ;
 	
 		if(call CCA.get() == CCA_BUSY )
 		{
-			//////////////printfUART("CCA: 1\n", "") ;
+			////////////printfUART("CCA: 1\n", "") ;
 			//STEP 5
 			CW--;
 			if (CW == 0 )
 			{
 				//send functions
 				csma_cca_backoff_boundary =0;
-					
-					////////printfUART("rts %i\n",get_ack_request(send_buffer[send_buffer_msg_out].frame_control));
+				
+				////////printfUART("s_up_f %i\n",sending_upstream_frame);
+				//TDBS Implementation
+				if(sending_upstream_frame == 0)
+				{
+				
+					//////printfUART("rts %i\n",get_ack_request(send_buffer[send_buffer_msg_out].frame_control));
 
 						//verify if the message must be ack
 						if ( get_fc1_ack_request(send_buffer[send_buffer_msg_out].frame_control1) == 1 )
@@ -4398,7 +4674,7 @@ task void perform_csma_ca_slotted()
 							//SEND WITH ACK_REQUEST
 							call PD_DATA.request(send_buffer[send_buffer_msg_out].length,(uint8_t *)&send_buffer[send_buffer_msg_out]);
 							
-							////////printfUART("out ck\n","");
+							//////printfUART("out ck\n","");
 							
 							
 							call T_ackwait.startOneShot(ackwait_period);
@@ -4425,11 +4701,26 @@ task void perform_csma_ca_slotted()
 							if (send_buffer_count > 0 && send_buffer_count <= SEND_BUFFER_SIZE)
 								post send_frame_csma();
 							
-							////printfUART("sk %i\n",send_buffer_count);
+							//printfUART("sk %i\n",send_buffer_count);
 							
-							//////////printfUART("%i %i %i\n",send_buffer_count,send_buffer_msg_in,send_buffer_msg_out);
+							////////printfUART("%i %i %i\n",send_buffer_count,send_buffer_msg_in,send_buffer_msg_out);
 						}
+						
+				}
+				else
+				{
+					//TDBS Implementation
+						
+						call PD_DATA.request(upstream_buffer[upstream_buffer_msg_out].length,(uint8_t *)&upstream_buffer[upstream_buffer_msg_out]);
+						
+						upstream_buffer_count --;
+						upstream_buffer_msg_out++;
 					
+						if (upstream_buffer_msg_out == UPSTREAM_BUFFER_SIZE)
+							upstream_buffer_msg_out=0;
+							
+						sending_upstream_frame=0;
+				}		
 				performing_csma_ca = 0;
 			}
 		}
@@ -4441,7 +4732,7 @@ task void perform_csma_ca_slotted()
 
 			if (NB < mac_PIB.macMaxCSMABackoffs)
 			{
-				////////////printfUART("NB:%i BE:%i L CW: %i\n",NB,BE,CW);
+				//////////printfUART("NB:%i BE:%i L CW: %i\n",NB,BE,CW);
 				//STEP 4
 				CW = 2;
 				NB++;
@@ -4471,7 +4762,7 @@ task void perform_csma_ca_slotted()
 				
 				//delay_backoff_period=0;
 				
-				////printfUART("delay_backoff_period:%i\n",delay_backoff_period);
+				//printfUART("delay_backoff_period:%i\n",delay_backoff_period);
 				csma_delay=1;
 			}
 			else
@@ -4499,7 +4790,7 @@ task void perform_csma_ca_slotted()
 					
 				performing_csma_ca = 0;
 				
-				////printfUART("SLOTTED FAIL\n","");
+				//printfUART("SLOTTED FAIL\n","");
 				/*
 				if(associating == 1)
 				{
@@ -4521,13 +4812,13 @@ task void perform_csma_ca_unslotted()
 		{
 			//STEP 3
 			//perform CCA
-			////////////printfUART("CCA: %i\n", TOSH_READ_CC_CCA_PIN()) ;
+			//////////printfUART("CCA: %i\n", TOSH_READ_CC_CCA_PIN()) ;
 			
 			//if CCA is clear send message
 			if(call CCA.get() == CCA_BUSY)
 			{
 				//send functions
-				////////////printfUART("UNSLOTTED SUCCESS\n","");
+				//////////printfUART("UNSLOTTED SUCCESS\n","");
 				atomic{
 				csma_delay =0;
 				
@@ -4566,7 +4857,7 @@ task void perform_csma_ca_unslotted()
 			NB++;
 			BE = min(BE+1,aMaxBE);
 		
-			////////////printfUART("NB:%i BE:%i\n",NB,BE);
+			//////////printfUART("NB:%i BE:%i\n",NB,BE);
 			
 			//STEP 2
 			//#ifdef PLATFORM_MICAZ
@@ -4578,12 +4869,12 @@ task void perform_csma_ca_unslotted()
 			//delay_backoff_period=1;
 			csma_delay=1;
 			
-			//////////////printfUART("delay_backoff_period:%i\n",delay_backoff_period);
+			////////////printfUART("delay_backoff_period:%i\n",delay_backoff_period);
 		}
 		else
 		{
 			atomic csma_delay=0;
-			////////////printfUART("UNSLOTTED FAIL\n","");
+			//////////printfUART("UNSLOTTED FAIL\n","");
 		}
 	}
 return;
@@ -4605,7 +4896,7 @@ void perform_csma_ca()
 			delay_backoff_period = (call Random.rand16() & random_interval );
 			
 			csma_delay=1;
-			////////////printfUART("delay_backoff_period:%i\n",delay_backoff_period);
+			//////////printfUART("delay_backoff_period:%i\n",delay_backoff_period);
 		}
 		return;
 	}
@@ -4657,7 +4948,7 @@ void init_csma_ca(bool slotted)
 {
 
 //initialization of the CSMA/CA protocol variables
-	//////////////printfUART("init_csma_ca\n", "") ;
+	////////////printfUART("init_csma_ca\n", "") ;
 	
 	csma_delay=0;
 	
@@ -4700,7 +4991,7 @@ uint32_t calculate_gts_expiration()
 		//	exp_res= powf(2,(8-mac_PIB.macBeaconOrder));
 		//#endif
 	}	
-	////////////printfUART("alculat %i\n",exp_res ) ;
+	//////////printfUART("alculat %i\n",exp_res ) ;
 	return exp_res;
 }
 
@@ -4715,7 +5006,7 @@ uint8_t check_csma_ca_send_conditions(uint8_t frame_length,uint8_t frame_control
 	//wait_ifs=1;
 	//call TimerAsync.set_ifs_symbols(ifs_symbols);
 	
-	//////////////printfUART("ifs_symbols %i\n",ifs_symbols ) ;
+	////////////printfUART("ifs_symbols %i\n",ifs_symbols ) ;
 	
 	if (get_fc1_ack_request(frame_control1) == 1 )
 		frame_tx_time =  frame_length + ACK_LENGTH + aTurnaroundTime + ifs_symbols;
@@ -4724,7 +5015,7 @@ uint8_t check_csma_ca_send_conditions(uint8_t frame_length,uint8_t frame_control
 		
 	atomic remaining_gts_duration = time_slot - ( call TimerAsync.get_current_number_backoff_on_time_slot() * aUnitBackoffPeriod);
 	
-	//////////////printfUART("frame_tx %d remaing %d\n",frame_tx_time,remaining_gts_duration ) ;
+	////////////printfUART("frame_tx %d remaing %d\n",frame_tx_time,remaining_gts_duration ) ;
 	
 	if (frame_tx_time < remaining_gts_duration)
 		return 1;
@@ -4770,13 +5061,13 @@ uint8_t check_gts_send_conditions(uint8_t frame_length)
 	//wait_ifs=1;
 	//call TimerAsync.set_ifs_symbols(ifs_symbols);
 	
-	//////////////printfUART("ifs_symbols %i\n",ifs_symbols ) ;
+	////////////printfUART("ifs_symbols %i\n",ifs_symbols ) ;
 	
 	frame_tx_time =  frame_length + ACK_LENGTH + aTurnaroundTime + ifs_symbols;
 	
 	remaining_gts_duration = time_slot - ( call TimerAsync.get_current_number_backoff_on_time_slot() * aUnitBackoffPeriod);
 	
-	//////////////printfUART("frame_tx %d remaing %d\n",frame_tx_time,remaining_gts_duration ) ;
+	////////////printfUART("frame_tx %d remaing %d\n",frame_tx_time,remaining_gts_duration ) ;
 	
 	if (frame_tx_time < remaining_gts_duration)
 		return 1;
@@ -4828,7 +5119,7 @@ error_t remove_gts_entry(uint16_t DevAddressType)
 				GTS_db[i].DevAddressType=0x0000;
 				GTS_db[i].expiration=0x00;
 				
-				//////////////printfUART("GTS Entry removed dev:%i len:%i pos %i\n", DevAddressType,r_lenght,i);
+				////////////printfUART("GTS Entry removed dev:%i len:%i pos %i\n", DevAddressType,r_lenght,i);
 				GTS_startslot = GTS_startslot + r_lenght;
 				GTS_descriptor_count--;
 				final_CAP_slot = final_CAP_slot + r_lenght;
@@ -4853,7 +5144,7 @@ error_t remove_gts_entry(uint16_t DevAddressType)
 					GTS_db[i].DevAddressType=0x0000;
 					GTS_db[i].expiration=0x00;
 					
-					//////////////printfUART("UPDATED\n","" );
+					////////////printfUART("UPDATED\n","" );
 				}
 			}
 		}
@@ -4864,14 +5155,14 @@ return SUCCESS;
 error_t add_gts_entry(uint8_t gts_length,bool direction,uint16_t DevAddressType)
 {
 	int i;
-	//////////////printfUART("ADDING gts_length: %i\n", gts_length); 
-	//////////////printfUART("dir: %i\n", direction); 
-	//////////////printfUART("addr: %i\n", DevAddressType);
+	////////////printfUART("ADDING gts_length: %i\n", gts_length); 
+	////////////printfUART("dir: %i\n", direction); 
+	////////////printfUART("addr: %i\n", DevAddressType);
 
 	//check aMinCAPLength
 	if ( (GTS_startslot - gts_length) < 5 )
 	{
-		//////////////printfUART("ADD FAIL%i\n", ""); 
+		////////////printfUART("ADD FAIL%i\n", ""); 
 		
 	}
 	
@@ -4886,12 +5177,12 @@ error_t add_gts_entry(uint8_t gts_length,bool direction,uint16_t DevAddressType)
 	{
 		if ( GTS_db[i].DevAddressType == DevAddressType && GTS_db[i].direction == direction && GTS_db[i].gts_id > 0)
 		{
-			//////////////printfUART("ALREADY ADDED\n", ""); 
+			////////////printfUART("ALREADY ADDED\n", ""); 
 			return FAIL;
 		}
 		if ( GTS_null_db[i].DevAddressType == DevAddressType && GTS_null_db[i].gts_id > 0)
 		{
-			//////////////printfUART("REJECTED\n", ""); 
+			////////////printfUART("REJECTED\n", ""); 
 			return FAIL;
 		}
 		
@@ -4900,7 +5191,7 @@ error_t add_gts_entry(uint8_t gts_length,bool direction,uint16_t DevAddressType)
 	
 atomic{	
 	
-	//////////////printfUART("GTS_startslot: %i\n", GTS_startslot); 
+	////////////printfUART("GTS_startslot: %i\n", GTS_startslot); 
 	GTS_startslot = GTS_startslot - gts_length;
 
 	GTS_db[15-GTS_startslot].gts_id=GTS_id;
@@ -4910,7 +5201,7 @@ atomic{
 	GTS_db[15-GTS_startslot].DevAddressType=DevAddressType;
 	GTS_db[15-GTS_startslot].expiration=0x00;
 
-	//////////////printfUART("GTS Entry added start:%i len:%i\n", GTS_startslot,gts_length); 
+	////////////printfUART("GTS Entry added start:%i len:%i\n", GTS_startslot,gts_length); 
 	
 	GTS_id++;
 	GTS_descriptor_count++;
@@ -4951,7 +5242,7 @@ error_t add_gts_null_entry(uint8_t gts_length,bool direction,uint16_t DevAddress
 	{
 		if ( GTS_null_db[i].DevAddressType == DevAddressType && GTS_null_db[i].gts_id > 0)
 		{
-			//////////////printfUART("ALREADY ADDED null\n", ""); 
+			////////////printfUART("ALREADY ADDED null\n", ""); 
 			return FAIL;
 		}
 	}
@@ -4968,7 +5259,7 @@ error_t add_gts_null_entry(uint8_t gts_length,bool direction,uint16_t DevAddress
 			GTS_null_db[i].persistencetime=0x00;
 			
 			
-			//////////////printfUART("GTS null Entry added addr:%x\n", DevAddressType); 
+			////////////printfUART("GTS null Entry added addr:%x\n", DevAddressType); 
 			
 			GTS_id++;
 			GTS_null_descriptor_count++;
@@ -4985,13 +5276,13 @@ task void increment_gts_null()
 {
 	int i;
 	
-	//////////////printfUART("init inc\n",""); 
+	////////////printfUART("init inc\n",""); 
 atomic{
 	for (i=0 ; i < 7 ; i++)
 	{
 		if ( GTS_null_db[i].DevAddressType != 0x0000 && GTS_null_db[i].gts_id != 0x00)
 		{
-			//////////////printfUART("increm %x\n", GTS_null_db[i].DevAddressType); 
+			////////////printfUART("increm %x\n", GTS_null_db[i].DevAddressType); 
 			GTS_null_db[i].persistencetime++;
 		
 		}
@@ -5005,7 +5296,7 @@ atomic{
 			GTS_null_db[i].DevAddressType=0x0000;
 			GTS_null_db[i].persistencetime=0x00;
 			
-			//////////////printfUART("GTS null removed addr:%x\n", GTS_null_db[i].DevAddressType); 
+			////////////printfUART("GTS null removed addr:%x\n", GTS_null_db[i].DevAddressType); 
 		
 			atomic GTS_null_descriptor_count--;
 		}
@@ -5013,19 +5304,19 @@ atomic{
 	}
 	
 	}
-//////////////printfUART("end inc\n",""); 
+////////////printfUART("end inc\n",""); 
 return;
 }
 
 task void check_gts_expiration()
 {
 	int i;
-//////////////printfUART("init exp\n",""); 
+////////////printfUART("init exp\n",""); 
 atomic{	
 	atomic gts_expiration=calculate_gts_expiration();
-	//////////////printfUART("gts_expiration:%i\n", gts_expiration); 
+	////////////printfUART("gts_expiration:%i\n", gts_expiration); 
 	atomic gts_expiration=2;
-	//////////////printfUART("gts_expiration:%i\n", gts_expiration); 
+	////////////printfUART("gts_expiration:%i\n", gts_expiration); 
 	
 	for (i=0 ; i < 7 ; i++)
 	{
@@ -5034,7 +5325,7 @@ atomic{
 		{
 			if( GTS_db[i].expiration == (gts_expiration + 1) && GTS_db[i].direction ==0x00)
 			{
-				//////////////printfUART("GTS expired addr:%x\n", GTS_null_db[i].DevAddressType); 
+				////////////printfUART("GTS expired addr:%x\n", GTS_null_db[i].DevAddressType); 
 				//remove gts, indicate on the gts null list
 				atomic{
 				
@@ -5052,7 +5343,7 @@ atomic{
 	
 	
 	}
-	//////////////printfUART("end exp\n",""); 
+	////////////printfUART("end exp\n",""); 
 return;
 }
 
@@ -5137,7 +5428,7 @@ task void start_gts_send()
 			if (gts_send_buffer_msg_out == GTS_SEND_BUFFER_SIZE)
 				gts_send_buffer_msg_out=0;
 
-			//////////////printfUART("after send %i %i %i \n",gts_send_buffer_count,gts_send_buffer_msg_in,gts_send_buffer_msg_out);
+			////////////printfUART("after send %i %i %i \n",gts_send_buffer_count,gts_send_buffer_msg_in,gts_send_buffer_msg_out);
 			
 			if (gts_send_buffer_count > 0)
 				gts_send_pending_data = 1;	
@@ -5219,7 +5510,7 @@ void send_ind_trans_addr(uint32_t DeviceAddress[])
 	int i=0;
 	MPDU *frame_ptr=0;
 	
-	////printfUART("send_ind_trans_addr DeviceAddress0: %y DeviceAddress1: %y \n",DeviceAddress[0],DeviceAddress[1]);
+	//printfUART("send_ind_trans_addr DeviceAddress0: %y DeviceAddress1: %y \n",DeviceAddress[0],DeviceAddress[1]);
 
     //list_indirect_trans_buffer();
 
@@ -5239,7 +5530,6 @@ void send_ind_trans_addr(uint32_t DeviceAddress[])
 				}
 				
 				//check the full address
-				
 				if ( (dest_long_ptr->destination_address0 == DeviceAddress[1] && dest_long_ptr->destination_address1 == DeviceAddress[0]) || ( dest_short_ptr->destination_address == (uint16_t)DeviceAddress[0] ))
 				{
 					
@@ -5267,17 +5557,27 @@ void send_ind_trans_addr(uint32_t DeviceAddress[])
 			
 					post send_frame_csma();
 					
-					////printfUART("i send\n","");
+					//printfUART("i send\n","");
 					
 					return;
 				}
 			}
 		}
-		////printfUART("i not found","");
+		//printfUART("i not found","");
 
 	
 return;
 } 
+/*
+  event void CC2420Config.syncDone( error_t error )
+  {
+  
+	//printfUART("CC2420Config %i p %x sa %x\n",call CC2420Config.isAddressRecognitionEnabled(),call CC2420Config.getPanAddr(), call CC2420Config.getShortAddr()); 
+  
+  return;
+  }
+
+*/
 
 /***************************DEBUG FUNCTIONS******************************/
 /* This function are list functions with the purpose of debug, to use then uncomment the declatarion
@@ -5286,29 +5586,29 @@ on top of this file*/
 
 void list_mac_pib()
 {
-////////////printfUART("mac_PIB.macAckWaitDuration: %x\n",mac_PIB.macAckWaitDuration);
-////////////printfUART("mac_PIB.macAssociationPermit: %i\n",mac_PIB.macAssociationPermit);
-////////////printfUART("mac_PIB.macAutoRequest: %i\n",mac_PIB.macAutoRequest);
-////////////printfUART("mac_PIB.macBattLifeExt %i\n",mac_PIB.macBattLifeExt);
-////////////printfUART("mac_PIB.macBattLifeExtPeriods %i\n",mac_PIB.macBattLifeExtPeriods);
+//////////printfUART("mac_PIB.macAckWaitDuration: %x\n",mac_PIB.macAckWaitDuration);
+//////////printfUART("mac_PIB.macAssociationPermit: %i\n",mac_PIB.macAssociationPermit);
+//////////printfUART("mac_PIB.macAutoRequest: %i\n",mac_PIB.macAutoRequest);
+//////////printfUART("mac_PIB.macBattLifeExt %i\n",mac_PIB.macBattLifeExt);
+//////////printfUART("mac_PIB.macBattLifeExtPeriods %i\n",mac_PIB.macBattLifeExtPeriods);
 //beacon payload
-////////////printfUART("mac_PIB.macBeaconPayloadLenght %i\n",mac_PIB.macBeaconPayloadLenght);
-////////////printfUART("mac_PIB.macBeaconOrder %i\n",mac_PIB.macBeaconOrder);
-////////////printfUART("mac_PIB.macBeaconTxTime %i\n",mac_PIB.macBeaconTxTime);
-////////////printfUART("mac_PIB.macBSN %i\n",mac_PIB.macBSN);
-////////////printfUART("mac_PIB.macCoordExtendedAddress0 %y\n",mac_PIB.macCoordExtendedAddress0);
-////////////printfUART("mac_PIB.macCoordExtendedAddress1 %y\n",mac_PIB.macCoordExtendedAddress1);
-////////////printfUART("mac_PIB.macCoordShortAddress: %x\n",mac_PIB.macCoordShortAddress);
-////////////printfUART("mac_PIB.macDSN: %x\n",mac_PIB.macDSN);
-////////////printfUART("mac_PIB.macGTSPermit: %x\n",mac_PIB.macGTSPermit);
-////////////printfUART("mac_PIB.macMaxCSMABackoffs: %x\n",mac_PIB.macMaxCSMABackoffs);
-////////////printfUART("mac_PIB.macMinBE: %x\n",mac_PIB.macMinBE);
-////////////printfUART("mac_PIB.macPANId: %x\n",mac_PIB.macPANId);
-////////////printfUART("mac_PIB.macPromiscuousMode: %x\n",mac_PIB.macPromiscuousMode);
-////////////printfUART("mac_PIB.macRxOnWhenIdle: %x\n",mac_PIB.macRxOnWhenIdle);
-////////////printfUART("mac_PIB.macShortAddress: %y\n",mac_PIB.macShortAddress);
-////////////printfUART("mac_PIB.macSuperframeOrder: %x\n",mac_PIB.macSuperframeOrder);
-////////////printfUART("mac_PIB.macTransactionPersistenceTime: %y\n",mac_PIB.macTransactionPersistenceTime);
+//////////printfUART("mac_PIB.macBeaconPayloadLenght %i\n",mac_PIB.macBeaconPayloadLenght);
+//////////printfUART("mac_PIB.macBeaconOrder %i\n",mac_PIB.macBeaconOrder);
+//////////printfUART("mac_PIB.macBeaconTxTime %i\n",mac_PIB.macBeaconTxTime);
+//////////printfUART("mac_PIB.macBSN %i\n",mac_PIB.macBSN);
+//////////printfUART("mac_PIB.macCoordExtendedAddress0 %y\n",mac_PIB.macCoordExtendedAddress0);
+//////////printfUART("mac_PIB.macCoordExtendedAddress1 %y\n",mac_PIB.macCoordExtendedAddress1);
+//////////printfUART("mac_PIB.macCoordShortAddress: %x\n",mac_PIB.macCoordShortAddress);
+//////////printfUART("mac_PIB.macDSN: %x\n",mac_PIB.macDSN);
+//////////printfUART("mac_PIB.macGTSPermit: %x\n",mac_PIB.macGTSPermit);
+//////////printfUART("mac_PIB.macMaxCSMABackoffs: %x\n",mac_PIB.macMaxCSMABackoffs);
+//////////printfUART("mac_PIB.macMinBE: %x\n",mac_PIB.macMinBE);
+//////////printfUART("mac_PIB.macPANId: %x\n",mac_PIB.macPANId);
+//////////printfUART("mac_PIB.macPromiscuousMode: %x\n",mac_PIB.macPromiscuousMode);
+//////////printfUART("mac_PIB.macRxOnWhenIdle: %x\n",mac_PIB.macRxOnWhenIdle);
+//////////printfUART("mac_PIB.macShortAddress: %y\n",mac_PIB.macShortAddress);
+//////////printfUART("mac_PIB.macSuperframeOrder: %x\n",mac_PIB.macSuperframeOrder);
+//////////printfUART("mac_PIB.macTransactionPersistenceTime: %y\n",mac_PIB.macTransactionPersistenceTime);
 
 return;
 }
@@ -5316,16 +5616,16 @@ return;
 void list_gts()
 {
 	int i;
-	////////////printfUART("GTS list%i\n", GTS_descriptor_count); 
+	//////////printfUART("GTS list%i\n", GTS_descriptor_count); 
 	
 	for (i=0; i< 7;i++)
 	{
-		////////////printfUART("GTSID: %i",GTS_db[i].gts_id); 	
-		////////////printfUART("start slot: %i",GTS_db[i].starting_slot);
-		////////////printfUART("lenght: %i",GTS_db[i].length); 	
-		////////////printfUART("dir: %i",GTS_db[i].direction); 	
-		////////////printfUART("DevAddressType: %i",GTS_db[i].DevAddressType);
-	 	////////////printfUART("expiration: %i \n",GTS_db[i].expiration);
+		//////////printfUART("GTSID: %i",GTS_db[i].gts_id); 	
+		//////////printfUART("start slot: %i",GTS_db[i].starting_slot);
+		//////////printfUART("lenght: %i",GTS_db[i].length); 	
+		//////////printfUART("dir: %i",GTS_db[i].direction); 	
+		//////////printfUART("DevAddressType: %i",GTS_db[i].DevAddressType);
+	 	//////////printfUART("expiration: %i \n",GTS_db[i].expiration);
 	}
 	
 }
@@ -5333,9 +5633,9 @@ void list_gts()
 void list_my_gts()
 {
 atomic{
-		////////////printfUART("SEND GTS s_GTSss: %i s_GTS_length: %i\n",s_GTSss,s_GTS_length); 	
+		//////////printfUART("SEND GTS s_GTSss: %i s_GTS_length: %i\n",s_GTSss,s_GTS_length); 	
 		
-		////////////printfUART("RECEIVE GTS r_GTSss: %i r_GTS_length: %i\n",r_GTSss,r_GTS_length); 
+		//////////printfUART("RECEIVE GTS r_GTSss: %i r_GTS_length: %i\n",r_GTSss,r_GTS_length); 
 }
 }
 */
@@ -5343,13 +5643,13 @@ atomic{
 void list_indirect_trans_buffer()
 {
 	int i;
-	//printfUART("indirect_trans_count %i\n", indirect_trans_count); 
+	printfUART("indirect_trans_count %i\n", indirect_trans_count); 
 	
 	for (i=0; i< INDIRECT_BUFFER_SIZE;i++)
 	{
-		//printfUART("hand: %i \n",indirect_trans_queue[i].handler); 
+		printfUART("hand: %i \n",indirect_trans_queue[i].handler); 
 		
-		////printfUART("start slot: %i",GTS_db[i].starting_slot);
+		//printfUART("start slot: %i",GTS_db[i].starting_slot);
 
 	}
 	
@@ -5358,16 +5658,16 @@ void list_indirect_trans_buffer()
 void list_gts_null()
 {
 	int i;
-	////////////printfUART("GTS null list%i\n", GTS_null_descriptor_count); 
+	//////////printfUART("GTS null list%i\n", GTS_null_descriptor_count); 
 	
 	for (i=0; i< GTS_null_descriptor_count;i++)
 	{
-		//////////////printfUART("GTSID: %i",GTS_null_db[i].gts_id); 	
-		////////////printfUART("start slot: %i",GTS_null_db[i].starting_slot);
-		////////////printfUART("lenght: %i",GTS_null_db[i].length); 	
-		//////////////printfUART("dir: %i",GTS_null_db[i].direction); 	
-		////////////printfUART("DevAddressType: %i \n",GTS_null_db[i].DevAddressType); 
-		////////////printfUART("persistencetime: %i \n",GTS_null_db[i].persistencetime); 
+		////////////printfUART("GTSID: %i",GTS_null_db[i].gts_id); 	
+		//////////printfUART("start slot: %i",GTS_null_db[i].starting_slot);
+		//////////printfUART("lenght: %i",GTS_null_db[i].length); 	
+		////////////printfUART("dir: %i",GTS_null_db[i].direction); 	
+		//////////printfUART("DevAddressType: %i \n",GTS_null_db[i].DevAddressType); 
+		//////////printfUART("persistencetime: %i \n",GTS_null_db[i].persistencetime); 
 	}
 	
 }
