@@ -23,7 +23,7 @@
 
 #include <message.h>
 
-module DiagMsgM
+module DiagMsgP
 {
 	provides 
 	{
