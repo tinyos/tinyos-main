@@ -23,6 +23,7 @@
 
 #include <RadioAssert.h>
 #include <LowPowerListeningLayer.h>
+#include <Lpl.h>
 
 module LowPowerListeningLayerP
 {
