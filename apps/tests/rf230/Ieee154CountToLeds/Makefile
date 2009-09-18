@@ -1,0 +1,3 @@
+COMPONENT=RadioCountToLedsAppC
+
+include $(MAKERULES)
