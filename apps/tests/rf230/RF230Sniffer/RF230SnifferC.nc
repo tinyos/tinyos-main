@@ -38,8 +38,8 @@ implementation
 
 // -------- ActiveMessage
 
-	components RF230ActiveMessageP, IEEE154MessageLayerC;
-	RF230ActiveMessageP.IEEE154MessageLayer -> IEEE154MessageLayerC;
+	components RF230RadioP, Ieee154PacketLayerC;
+	RF230RadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
 
 // -------- TimeStamping
 
@@ -55,7 +55,7 @@ implementation
 // -------- RF230 Driver
 
 	components RF230DriverLayerC;
-	RF230DriverLayerC.Config -> RF230ActiveMessageP;
+	RF230DriverLayerC.Config -> RF230RadioP;
 	RF230DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
 
 }
