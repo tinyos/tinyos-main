@@ -1,4 +1,4 @@
-COMPONENT=GTSManagementExample
+COMPONENT=GTSManagementExampleC
 
 PFLAGS += 	-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/includes \
 			-I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/mac \

@@ -4,15 +4,11 @@
  * @author Andre Cunha
  *
  */
-/*
- * @author IPP HURRAY http://www.hurray.isep.ipp.pt/art-wise
- * @author Andre Cunha
- *
- */
+
 #include <Timer.h>
 #include "printfUART.h"
 
-module GTSManagementExampleM {
+module SimpleRoutingExampleP {
 
 	uses interface Boot;
 	uses interface Leds;
@@ -47,37 +43,37 @@ module GTSManagementExampleM {
 }
 implementation {
 
-
-	uint8_t beacon_present=0;
-	uint8_t on_sync=0;
-	uint8_t gts_allocated=0;
-	
-	uint8_t gts_superframe_count=0;
-	
 	PANDescriptor pan_des;
 	
 	uint32_t my_short_address=0x00000000;
-	uint32_t my_pan_id=0x00000001;
+
+	uint32_t DestinationMote[2];
+	uint32_t SourceMoteAddr[2];
 	
+	//number of routed packet (coordinator)
+	uint8_t routed_packets = 0x00;
 	
 
   event void Boot.booted() {
     	
 	printfUART_init();
 	
+	printfUART("i_am_pan: %i\n", TYPE_DEVICE);
+	
+	DestinationMote[0]=0x00000000;
+	DestinationMote[1]=0x00000002;
+	
 	if (TYPE_DEVICE == COORDINATOR)
 	{
-		//assign the short address of the device
 		my_short_address = 0x0000;
-		call Timer0.startOneShot(5000);
+		call Timer0.startOneShot(4000);
 	}
 	else
 	{
-		call Timer0.startOneShot(8000);
+		call Timer0.startOneShot(4000);
 	}
 
   }
-
  
 
   event void Timer0.fired() {
@@ -85,10 +81,28 @@ implementation {
 	uint8_t v_temp[2];
 	
 	
-
-	if (TYPE_DEVICE == COORDINATOR)
+	if (TYPE_DEVICE == END_DEVICE)
 	{
 	
+		my_short_address = TOS_NODE_ID;
+		
+		//set the MAC short address variable
+		v_temp[0] = (uint8_t)(my_short_address >> 8);
+		v_temp[1] = (uint8_t)(my_short_address );
+		
+		call MLME_SET.request(MACSHORTADDRESS,v_temp);
+	
+		//set the MAC PANID variable
+		v_temp[0] = (uint8_t)(MAC_PANID >> 8);
+		v_temp[1] = (uint8_t)(MAC_PANID );
+		
+		call MLME_SET.request(MACPANID,v_temp);
+		
+		call Timer_Send.startPeriodic(3000);
+
+	}
+	else
+	{
 		//set the MAC short address variable
 		v_temp[0] = (uint8_t)(my_short_address >> 8);
 		v_temp[1] = (uint8_t)(my_short_address );
@@ -104,70 +118,34 @@ implementation {
 		//start sending beacons
 		call MLME_START.request(MAC_PANID, LOGICAL_CHANNEL, BEACON_ORDER, SUPERFRAME_ORDER,1,0,0,0,0);
 		
-		//call Timer_Send.startPeriodic(3000);
+		//call Timer_send.start(TIMER_REPEAT,8000);
 	}
-	else
-	{
-		my_short_address = TOS_NODE_ID;
-		v_temp[0] = (uint8_t)(my_short_address >> 8);
-		v_temp[1] = (uint8_t)(my_short_address );
 		
-		call MLME_SET.request(MACSHORTADDRESS,v_temp);
-		
-		//call Leds.greenOn();
-		gts_superframe_count=0;
-		
-		
-		printfUART("GTS req: %i\n", TYPE_DEVICE);
-		
-		
-		//allocate a transmission GTS - enables a GTS time slot allocation for the device transmission to the PAN Coordinator
-		call MLME_GTS.request(set_gts_characteristics(1, GTS_TX_ONLY,1),0x00);
-		
-		//allocate a transmission GTS - enables a GTS time slot allocation for the PAN coordinator transmission to the device
-		//call MLME_GTS.request(set_gts_characteristics(1, GTS_RX_ONLY,1),0x00);
-		
-		
-		//enable the transmission of the device to the PAN coordinator in the allocated transmit GTS
-		call Timer_Send.startPeriodic(1000);
-
-	}
-	
   }
   
 event void Timer_Send.fired() {
 	
 	
-	uint32_t SrcAddr[2];
-	uint32_t DstAddr[2];
 	uint8_t msdu_payload[4];
 	
-	if (TYPE_DEVICE == COORDINATOR)
+	DestinationMote[0]=0x00000000;
+	DestinationMote[1]=0x00000000;
+	
+	//NKL destination address, coordinator will route packet to this address
+	msdu_payload[0] = 0x00;
+	msdu_payload[1] = 0x03;
+	
+	SourceMoteAddr[0]=0x00000000;
+	SourceMoteAddr[1]=TOS_NODE_ID;
+	
+	if (TOS_NODE_ID == 0x02)
 	{
-		SrcAddr[0]=0x00000000;
-		SrcAddr[1]=TOS_NODE_ID;
-	
-		DstAddr[0]=0x00000000;
-		DstAddr[1]=0x00000002;
-	
-		call MCPS_DATA.request(SHORT_ADDRESS, MAC_PANID, SrcAddr, SHORT_ADDRESS, MAC_PANID, DstAddr, 4, msdu_payload,1,set_txoptions(1,1,0,0));
+		call Leds.led2Toggle();																									//set_txoptions(ack, gts, indirect_transmission, security)
+		call MCPS_DATA.request(SHORT_ADDRESS, MAC_PANID, SourceMoteAddr, SHORT_ADDRESS, MAC_PANID, DestinationMote, 2, msdu_payload,1,set_txoptions(1,0,0,0));
 	}
-	else
-	{
-	    call Leds.led1Toggle();
-		
-		
-		SrcAddr[0]=0x00000000;
-		SrcAddr[1]=TOS_NODE_ID;
-	
-		DstAddr[0]=0x00000000;
-		DstAddr[1]=0x00000000;
-	
-		call MCPS_DATA.request(SHORT_ADDRESS, MAC_PANID, SrcAddr, SHORT_ADDRESS, MAC_PANID, DstAddr, 4, msdu_payload,1,set_txoptions(1,1,0,0));
-	}
-	
-}
 
+	
+	}
 
 /*****************************************************************************************************/  
 /**************************************MLME-SCAN*******************************************************/
@@ -204,37 +182,13 @@ event error_t MLME_SYNC_LOSS.indication(uint8_t LossReason)
 
 	return SUCCESS;
 }
-  
+   
 /*****************************************************************************************************/  
 /**************************************MLME-GTS*******************************************************/
 /*****************************************************************************************************/ 
-
 event error_t MLME_GTS.confirm(uint8_t GTSCharacteristics, uint8_t status)
 {
-	switch(status)
-	{
-		case MAC_SUCCESS:  gts_allocated=1;
-							call Leds.led1Toggle();
-							break;
-		
-		case MAC_DENIED: gts_allocated=0;
-							break;
-		
-		case MAC_NO_SHORT_ADDRESS: gts_allocated=0;
-									break;
-		
-		case MAC_CHANNEL_ACCESS_FAILURE: gts_allocated=0;
-									break;
-		
-		case MAC_NO_ACK: gts_allocated=0;break;
-		
-		case MAC_NO_DATA: gts_allocated=0;break;
-						
-		
-		default: break;
 	
-	}
-
 	return SUCCESS;
 }
 
@@ -242,51 +196,45 @@ event error_t MLME_GTS.indication(uint16_t DevAddress, uint8_t GTSCharacteristic
 {
 	return SUCCESS;
 }
-  /*****************************************************************************************************/  
+/*****************************************************************************************************/  
 /**************************************MLME-BEACON NOTIFY*********************************************/
 /*****************************************************************************************************/ 
-
 event error_t MLME_BEACON_NOTIFY.indication(uint8_t BSN,PANDescriptor pan_descriptor, uint8_t PenAddrSpec, uint8_t AddrList, uint8_t sduLength, uint8_t sdu[])
 {
-	gts_superframe_count++;
-	if (gts_superframe_count==30)
-	{
-		//call Leds.greenOff();
-		call MLME_GTS.request(set_gts_characteristics(1, GTS_TX_ONLY,0),0x00);
-	}
+
 	return SUCCESS;
 }
 /*****************************************************************************************************/  
 /**************************************MLME-START*****************************************************/
 /*****************************************************************************************************/ 
-    event error_t MLME_START.confirm(uint8_t status)
-	{
-	
-	
-	return SUCCESS;
-	}
-  /*****************************************************************************************************/  
+event error_t MLME_START.confirm(uint8_t status)
+{
+
+
+return SUCCESS;
+}
+ /*****************************************************************************************************/  
 /**********************				  MLME-SET		  	    ******************************************/
 /*****************************************************************************************************/ 
   
-      event error_t MLME_SET.confirm(uint8_t status,uint8_t PIBAttribute)
-	{
-	
-	
-	return SUCCESS;
-	}
-	/*****************************************************************************************************/  
+event error_t MLME_SET.confirm(uint8_t status,uint8_t PIBAttribute)
+{
+
+
+return SUCCESS;
+}
+/*****************************************************************************************************/  
 /*************************			MLME-GET			    ******************************************/
 /*****************************************************************************************************/ 
-	    event error_t MLME_GET.confirm(uint8_t status,uint8_t PIBAttribute, uint8_t PIBAttributeValue[])
-	{
+event error_t MLME_GET.confirm(uint8_t status,uint8_t PIBAttribute, uint8_t PIBAttributeValue[])
+{
+
+
+return SUCCESS;
+}
 	
 	
-	return SUCCESS;
-	}
-	
-	
-	/*****************************************************************************************************/  
+/*****************************************************************************************************/  
 /**************************************MLME-ASSOCIATE*************************************************/
 /*****************************************************************************************************/ 
 event error_t MLME_ASSOCIATE.indication(uint32_t DeviceAddress[], uint8_t CapabilityInformation, bool SecurityUse, uint8_t ACLEntry)
@@ -329,6 +277,27 @@ return SUCCESS;
 }  
 event error_t MCPS_DATA.indication(uint16_t SrcAddrMode, uint16_t SrcPANId, uint32_t SrcAddr[2], uint16_t DstAddrMode, uint16_t DestPANId, uint32_t DstAddr[2], uint16_t msduLength,uint8_t msdu[100],uint16_t mpduLinkQuality, uint16_t SecurityUse, uint16_t ACLEntry)
 {
+
+//routing procedure, the short address of the destination device is the first 2 bytes of the data payload
+		if (TYPE_DEVICE == COORDINATOR)
+		{
+			
+			//route to the desired address
+			DestinationMote[0]=0x00000000;
+			DestinationMote[1]=(uint32_t) msdu[1];
+			
+			routed_packets++;
+			msdu[0] = routed_packets;
+																										//set_txoptions(ack, gts, indirect_transmission, security)
+			call MCPS_DATA.request(SHORT_ADDRESS, MAC_PANID, SrcAddr, SHORT_ADDRESS, MAC_PANID, DestinationMote, 1, msdu,1,set_txoptions(1,0,0,0));
+		}
+		else
+		{
+		
+			call Leds.led1Toggle();
+		
+		}
+		
 	
 	
 return SUCCESS;

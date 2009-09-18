@@ -1,6 +1,7 @@
 /*
  * @author IPP HURRAY http://www.hurray.isep.ipp.pt/art-wise
  * @author Andre Cunha
+ * @author Ricardo Severino <rars@isep.ipp.pt>
  *
  */
 #include <Timer.h>

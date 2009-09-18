@@ -8,7 +8,7 @@
 #include <Timer.h>
 #include "printfUART.h"
 
-module DataSendExampleM {
+module DataSendExampleP {
 
 	uses interface Boot;
 	uses interface Leds;
