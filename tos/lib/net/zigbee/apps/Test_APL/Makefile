@@ -1,4 +1,4 @@
-COMPONENT=Test_APL
+COMPONENT=Test_APLC
 
 TKN154_PLATFORM_INCLUDE=$(TOSROOT)/tos/platforms/telosb/mac/tkn154/Makefile.include
 
@@ -32,6 +32,8 @@ PFLAGS += -I$(TOSROOT)/tos/lib/mac/tkn154 \
  -I$(TOSROOT)/tos/lib/net/zigbee/ieee802154/nwk
 
   include $(TKN154_PLATFORM_INCLUDE)	
+
+
 
 endif
 

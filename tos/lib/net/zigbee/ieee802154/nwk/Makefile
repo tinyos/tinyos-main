@@ -1,4 +1,4 @@
-COMPONENT=NWK
+COMPONENT=NWKC
 
 PFLAGS += 	-I$(TOSROOT)/tos/ieee802154/includes \
 			-I$(TOSROOT)/tos/ieee802154/mac \

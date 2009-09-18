@@ -8,7 +8,7 @@
 #include <Timer.h>
 #include "printfUART.h"
 
-module Test_APLM {
+module Test_APLP {
 
 	uses interface Boot;
 	uses interface Leds;
@@ -734,6 +734,7 @@ event error_t NLME_NETWORK_DISCOVERY.confirm(uint8_t NetworkCount,networkdescrip
 	else
 	{
 		//printfUART("go join non router\n", ""); 
+		call NLME_SYNC.request(1);
 		call NLME_JOIN.request(networkdescriptorlist[0].PANId, 0x00, 0, 0x000000ff, 8, 0, 0, 0);
 	}	
 	return SUCCESS;

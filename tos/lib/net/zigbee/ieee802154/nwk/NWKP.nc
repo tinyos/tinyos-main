@@ -9,7 +9,7 @@
 
 
 
-module NWKM {
+module NWKP {
 	
 
 	uses interface Leds;
@@ -84,9 +84,9 @@ module NWKM {
  
 	/*  
 	provides interface NLME_PERMIT_JOINING;
-	provides interface NLME_DIRECT_JOIN;
+	provides interface NLME_DIRECT_JOIN;*/
 	provides interface NLME_RESET;
-*/	
+	
 	provides interface NLME_GET;
 	provides interface NLME_SET;
 
@@ -332,9 +332,9 @@ event error_t MLME_ORPHAN.indication(uint32_t OrphanAddress[1], uint8_t Security
 event error_t MLME_RESET.confirm(uint8_t status)
 {
 
+  signal NLME_RESET.confirm(status);
 
-
-	return SUCCESS;
+  return SUCCESS;
 }
 /*****************************************************************************************************/  
 /**************************************MLME-SYNC-LOSS*************************************************/
@@ -803,6 +803,15 @@ command error_t NLDE_DATA.request(uint16_t DstAddr, uint16_t NsduLength, uint8_t
 /*******************NLME IMPLEMENTATION***********************/
 /*************************************************************/
 
+
+/*************************************************************
+******************* NLME-RESET********************************
+**************************************************************/
+ command error_t NLME_RESET.request(){
+
+  call MLME_RESET.request(TRUE);
+return SUCCESS;
+}
 /*************************************************************/
 /*******************NLME - START - ROUTER*********************/
 /*************************************************************/
@@ -877,6 +886,10 @@ command error_t NLME_NETWORK_FORMATION.request(uint32_t ScanChannels, uint8_t Sc
 
 	uint8_t v_temp[6];
 
+call Leds.led0On();
+call Leds.led1On();
+call Leds.led2On();
+   
 	v_temp[0] = 0x06;
 	
 	device_type = COORDINATOR;
@@ -986,17 +999,17 @@ command error_t NLME_NETWORK_DISCOVERY.request(uint32_t ScanChannels, uint8_t Sc
 	//Channel Scan is not working properly
 	//manually assign the network descriptor
 	
-	/*
+	
 	networkdescriptor networkdescriptorlist[1];
-*/
+
 	printfUART("2 lauch passive scan\n", "");
 	//The networkdescriptorlist must contain information about every network that was heard
 	
 	//make NetworkDescriptorList out of the PanDescriptorList
-
+#ifndef TKN154_MAC
     call MLME_SCAN.request(PASSIVE_SCAN,0xFFFFFFFF,7);
+#else
 
-/*
 
 	networkdescriptorlist[0].PANId=0x1234;
 	networkdescriptorlist[0].LogicalChannel=LOGICAL_CHANNEL;
@@ -1015,11 +1028,10 @@ command error_t NLME_NETWORK_DISCOVERY.request(uint32_t ScanChannels, uint8_t Sc
 		add_neighbortableentry(networkdescriptorlist[0].PANId,D3_PAN_EXT0,D3_PAN_EXT1,D3_PAN_SHORT,COORDINATOR,NEIGHBOR_IS_PARENT);
 	if (DEVICE_DEPTH == 0x04)
 		add_neighbortableentry(networkdescriptorlist[0].PANId,D4_PAN_EXT0,D4_PAN_EXT1,D4_PAN_SHORT,COORDINATOR,NEIGHBOR_IS_PARENT);
-	
-	
-	
+#endif	
+		
 	signal NLME_NETWORK_DISCOVERY.confirm(1,networkdescriptorlist, NWK_SUCCESS);
-*/
+
 	return SUCCESS;
 }
 
@@ -1060,8 +1072,8 @@ command error_t NLME_JOIN.request(uint16_t PANId, bool JoinAsRouter, bool Rejoin
 		
 		
 		destinaddress[1] = neighbortable[parent_index].Network_Address;
+#ifdef TKN154_MAC		
 		
-		/*
 		if (DEVICE_DEPTH == 0x01)
 			destinaddress[1]=D1_PAN_SHORT;
 		if (DEVICE_DEPTH == 0x02)
@@ -1070,8 +1082,8 @@ command error_t NLME_JOIN.request(uint16_t PANId, bool JoinAsRouter, bool Rejoin
 			destinaddress[1]=D3_PAN_SHORT;
 		if (DEVICE_DEPTH == 0x04)
 			destinaddress[1]=D4_PAN_SHORT;
-		*/	
 			
+#endif			
 		printfUART("10 associate to %i\n", destinaddress[1]);	
 		//set_capability_information(uint8_t alternate_PAN_coordinator, uint8_t device_type, uint8_t power_source, uint8_t receiver_on_when_idle, uint8_t security, uint8_t allocate_address)
 		
@@ -1103,8 +1115,11 @@ command error_t NLME_JOIN.request(uint16_t PANId, bool JoinAsRouter, bool Rejoin
 	
 			received_beacon_count=0;
 			go_associate=1;
+#ifdef TKN154_MAC
+
 			
 			//call MLME_ASSOCIATE.request(LOGICAL_CHANNEL,SHORT_ADDRESS,PANId,destinaddress, set_capability_information(JoinAsRouter,0x00,PowerSource,RxOnWhenIdle,MACSecurity,0x01),0);
+#endif
 		}
 	}
 	
@@ -1161,7 +1176,11 @@ command error_t NLME_LEAVE.request(uint32_t DeviceAddress[],bool RemoveChildren,
 //page 186-187
 command error_t NLME_SYNC.request(bool Track)
 {
+//call MLME_SET.request(0x00,0x15);
+ // call MLME_SET.request(MACCOORDSHORTADDRESS, 0x0000);
+  //   call MLME_SET.request(0x50,0x1234);
 
+  call MLME_SYNC.request(LOGICAL_CHANNEL,1);
 	return SUCCESS;
 }
   
@@ -1336,6 +1355,7 @@ command error_t NLME_GET.request(uint8_t NIBAttribute)
 	
 	return SUCCESS;
 }
+
 
 /*************************************************************/
 /**************neighbor table management functions************/
