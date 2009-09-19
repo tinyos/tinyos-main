@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.19 2008-10-29 07:34:55 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.20 2009-09-19 13:26:59 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2008-10-29 07:34:55 $
+ *  @date   $Date: 2009-09-19 13:26:59 $
  *  @see Net2-WG
  */
 
@@ -242,7 +242,6 @@ implementation {
     /* Is this quality measure better than the minimum threshold? */
     // Implemented assuming quality is EETX
     bool passLinkEtxThreshold(uint16_t etx) {
-	return TRUE;
         return (etx < ETX_THRESHOLD);
     }
 
