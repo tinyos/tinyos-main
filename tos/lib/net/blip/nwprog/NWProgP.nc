@@ -1,7 +1,6 @@
 
 #include <Storage.h>
 #include <Shell.h>
-#include <BinaryShell.h>
 #include "imgNum2volumeId.h"
 #include "Deluge.h"
 #include "PrintfUART.h"
@@ -20,11 +19,7 @@ module NWProgP {
 
     event void storageReady();
 
-#ifdef BINARY_SHELL
-    interface BinaryCommand as ShellCommand;
-#else
     interface ShellCommand;
-#endif
   }
 } implementation {
 
@@ -278,45 +273,21 @@ module NWProgP {
     char *reply_buf = call ShellCommand.getBuffer(MAX_REPLY_LEN);
     if (error == SUCCESS) {
       if (ident->uidhash != DELUGE_INVALID_UID) {
-#ifdef BINARY_SHELL
-        nx_struct cmd_payload *payload = (nx_struct cmd_payload *)reply_buf;
-        prog_req_t *rep = (prog_req_t *)payload->data;
-        nx_struct ShortDelugeIdent *i = (nx_struct ShortDelugeIdent *)rep->data;
-        rep->cmd = NWPROG_CMD_IMAGEIFO;
-        rep->imgno = volumeID2imgNum(imgNum);
-        memcpy(i->appname, ident->appname, 16);
-        memcpy(i->username, ident->username, 16);
-        memcpy(i->hostname, ident->hostname, 16);
-        i->timestamp = ident->timestamp;
-        nwprog_validvols++;
-        call ShellCommand.write(payload, sizeof(nx_struct cmd_payload) + 
-                                sizeof(prog_reply_t) + sizeof(nx_struct ShortDelugeIdent));
-
-#else
         len = snprintf(reply_buf, MAX_REPLY_LEN,
                        "image: %i\n\t[size: %li]\n\t[app: %s]\n\t[user: %s]\n\t[host: %s]\n\t[arch: %s]\n\t[time: 0x%lx]\n",
                        volumeID2imgNum(imgNum), ident->size, (char *)ident->appname, (char *) ident->username,
                        (char *)ident->hostname, (char *)ident->platform, (uint32_t)ident->timestamp);
         nwprog_validvols++;
         call ShellCommand.write(reply_buf, len);
-#endif
       }
       
     }
     if (++nwprog_currentvol < DELUGE_NUM_VOLUMES) {
       call DelugeMetadata.read(imgNum2volumeId(nwprog_currentvol));
     } else {
-#ifdef BINARY_SHELL
-      nx_struct cmd_payload *payload = (nx_struct cmd_payload *)reply_buf;
-      prog_req_t *rep = (prog_req_t *)payload->data; 
-      rep->cmd = NWPROG_CMD_READDONE;
-      rep->cmd_data.nimages = nwprog_validvols;
-      call ShellCommand.write(payload, sizeof(nx_struct cmd_payload) + sizeof(prog_req_t));
-#else
       len = snprintf(reply_buf, MAX_REPLY_LEN,
                      "%i valid image(s)\n", nwprog_validvols);
       call ShellCommand.write(reply_buf, len);
-#endif
     }
   }
 
@@ -324,32 +295,6 @@ module NWProgP {
     call BootImage.boot(boot_image);
   }
 
-#ifdef BINARY_SHELL
-  event void ShellCommand.dispatch(nx_struct cmd_payload *data, int len) {
-    nx_struct prog_req *req = (nx_struct prog_req *)data->data;
-    nx_struct cmd_payload *rep;
-    prog_reply_t *rc;
-    int error = NWPROG_ERROR_OK;
-
-    switch (req->cmd) {
-    case NWPROG_CMD_LIST:
-      nwprog_currentvol = 0;
-      nwprog_validvols = 0;
-      call DelugeMetadata.read(imgNum2volumeId(nwprog_currentvol));
-      return;
-      break;
-    case NWPROG_CMD_BOOT:
-      call ShellCommand.write(data, len);
-
-      boot_image = imgNum2volumeId(req->imgno);
-      call RebootTimer.startOneShot(req->cmd_data.when);
-      break;
-    case NWPROG_CMD_REBOOT:
-      call BootImage.reboot();
-      break;
-    }
-  }
-#else
   event char *ShellCommand.eval(int argc, char **argv) {
     char *nwprog_help_str = "nwprog [list | boot <imgno> [when] | reboot]\n";
     if (argc >= 2) {
@@ -381,7 +326,6 @@ module NWProgP {
     }
     return nwprog_help_str;
   }
-#endif
 
   default command error_t BlockWrite.write[uint8_t imgNum](storage_addr_t addr, void* buf, storage_len_t len) { return FAIL; }
   default command error_t BlockWrite.erase[uint8_t imgNum]() { return FAIL; }

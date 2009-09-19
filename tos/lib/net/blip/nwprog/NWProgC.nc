@@ -1,5 +1,4 @@
 
-#include <BinaryShell.h>
 #include "StorageVolumes.h"
 #include "Deluge.h"
 
@@ -41,13 +40,8 @@ configuration NWProgC {
   NWProgP.BlockRead[VOLUME_DELUGE2] -> BlockReaderDeluge2;
   NWProgP.BlockRead[VOLUME_DELUGE3] -> BlockReaderDeluge3;
 
-#ifdef BINARY_SHELL
-  components BinaryShellC;
-  NWProgP.ShellCommand -> BinaryShellC.BinaryCommand[BSHELL_NWPROG];
-#else
   components new ShellCommandC("nwprog");
   NWProgP.ShellCommand -> ShellCommandC;
-#endif
 
   components new TimerMilliC();
   NWProgP.RebootTimer -> TimerMilliC;

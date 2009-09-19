@@ -50,10 +50,14 @@ configuration IPDispatchC {
 
   IPDispatchP.Boot -> MainC;
 
+#ifdef IEEE154FRAMES_ENABLED
+  IPDispatchP.Ieee154Send -> MessageC;
+#else
   components ResourceSendP;
   ResourceSendP.SubSend -> MessageC;
-  ResourceSendP.Resource -> MessageC.SendResource[unique(IEEE154_SEND_CLIENT)];
+  ResourceSendP.Resource -> MessageC.SendResource[unique("RADIO_SEND_RESOURCE")];
   IPDispatchP.Ieee154Send -> ResourceSendP.Ieee154Send;
+#endif
 
   IPDispatchP.Ieee154Receive -> MessageC.Ieee154Receive;
   IPDispatchP.Packet -> MessageC.Packet;
