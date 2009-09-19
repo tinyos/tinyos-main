@@ -237,7 +237,7 @@ module IPDispatchP {
 
   event void RadioControl.startDone(error_t error) {
 #ifdef LPL_SLEEP_INTERVAL
-    call LowPowerListening.setLocalSleepInterval(LPL_SLEEP_INTERVAL);
+    call LowPowerListening.setLocalWakeupInterval(LPL_SLEEP_INTERVAL);
 #endif
     if (error == SUCCESS) {
       call ICMP.sendSolicitations();
@@ -791,10 +791,12 @@ module IPDispatchP {
     call PacketLink.setRetries(s_entry->msg, s_entry->info->policy.retries);
     call PacketLink.setRetryDelay(s_entry->msg, s_entry->info->policy.delay);
 #ifdef LPL_SLEEP_INTERVAL
-    call LowPowerListening.setRxSleepInterval(s_entry->msg, call LowPowerListening.getLocalSleepInterval());
+    call LowPowerListening.setRemoteWakeupInterval(s_entry->msg, 
+            call LowPowerListening.getLocalWakeupInterval());
 #endif
 
-    dbg("IPDispatch", "sendTask dest: 0x%x len: 0x%x \n", call Ieee154Packet.destination(s_entry->msg),
+    dbg("IPDispatch", "sendTask dest: 0x%x len: 0x%x \n", 
+        call Ieee154Packet.destination(s_entry->msg),
         call Packet.payloadLength(s_entry->msg));
     
     if (s_entry->info->failed) {

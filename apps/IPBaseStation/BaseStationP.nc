@@ -19,7 +19,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
  */
-// $Id: BaseStationP.nc,v 1.4 2009-09-17 18:20:13 sdhsdh Exp $
+// $Id: BaseStationP.nc,v 1.5 2009-09-19 21:13:26 sdhsdh Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -54,7 +54,7 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.4 2009-09-17 18:20:13 sdhsdh Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.5 2009-09-19 21:13:26 sdhsdh Exp $
  */
   
 /* 
@@ -358,7 +358,7 @@ implementation
       call PacketLink.setRetries(msg, 0);
     }
 #ifdef LPL_SLEEP_INTERVAL
-    call LowPowerListening.setRxSleepInterval(msg, LPL_SLEEP_INTERVAL);
+    call LowPowerListening.setRemoteWakeupInterval(msg, LPL_SLEEP_INTERVAL);
 #endif
     dbg("base", "radio send to: 0x%x len: %i\n", addr, len);
     if (call RadioSend.send(addr, msg, len) == SUCCESS)
