@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.12 2009-08-14 18:09:43 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.13 2009-09-19 13:24:39 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -335,7 +335,7 @@ implementation {
 	  if (totalPkt == 0) {
 	    ne->inquality = (ALPHA * ne->inquality) / 10;
 	  } else {
-	    newEst = (255 * ne->rcvcnt) / totalPkt;
+	    newEst = (255UL * ne->rcvcnt) / totalPkt;
 	    dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10);
 	    ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10;
 	  }
