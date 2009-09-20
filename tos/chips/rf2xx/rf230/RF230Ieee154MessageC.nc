@@ -39,7 +39,7 @@ configuration RF230Ieee154MessageC
 
 		interface Ieee154Packet;
 		interface Packet;
-		interface Resource as RadioSendResource[uint8_t clint];
+		interface Resource as SendResource[uint8_t clint];
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
@@ -69,7 +69,7 @@ implementation
 
 	Packet = RF230RadioC.PacketForIeee154Message;
 	Ieee154Packet = RF230RadioC;
-	RadioSendResource = RF230RadioC;
+	SendResource = RF230RadioC;
 
 	PacketAcknowledgements = RF230RadioC;
 	LowPowerListening = RF230RadioC;

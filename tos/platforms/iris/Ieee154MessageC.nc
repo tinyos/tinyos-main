@@ -33,7 +33,7 @@ configuration Ieee154MessageC
 
 		interface Packet;
 		interface Ieee154Packet;
-		interface Resource as RadioSendResource[uint8_t clint];
+		interface Resource as SendResource[uint8_t clint];
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
@@ -56,7 +56,7 @@ implementation
 
 	Packet = MessageC;
 	Ieee154Packet = MessageC;
-	RadioSendResource = MessageC;
+	SendResource = MessageC;
 
 	PacketAcknowledgements = MessageC;
 	LowPowerListening = MessageC;

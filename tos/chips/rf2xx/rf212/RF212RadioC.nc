@@ -48,7 +48,7 @@ configuration RF212RadioC
 		interface Receive as Ieee154Receive;
 		interface SendNotifier as Ieee154Notifier;
 
-		interface Resource as RadioSendResource[uint8_t clint];
+		interface Resource as SendResource[uint8_t clint];
 
 		interface Ieee154Packet;
 		interface Packet as PacketForIeee154Message;
@@ -108,7 +108,7 @@ implementation
 #ifndef IEEE154FRAMES_ENABLED
 #ifndef TFRAMES_ENABLED
 	components new AutoResourceAcquireLayerC();
-	AutoResourceAcquireLayerC.Resource -> RadioSendResourceC.Resource[unique("RADIO_SEND_RESOURCE")];
+	AutoResourceAcquireLayerC.Resource -> SendResourceC.Resource[unique("RADIO_SEND_RESOURCE")];
 #else
 	components new DummyLayerC() as AutoResourceAcquireLayerC;
 #endif
@@ -118,8 +118,8 @@ implementation
 // -------- RadioSend Resource
 
 #ifndef TFRAMES_ENABLED
-	components new SimpleFcfsArbiterC("RADIO_SEND_RESOURCE") as RadioSendResourceC;
-	RadioSendResource = RadioSendResourceC;
+	components new SimpleFcfsArbiterC("RADIO_SEND_RESOURCE") as SendResourceC;
+	SendResource = SendResourceC;
 
 // -------- Ieee154 Message
 

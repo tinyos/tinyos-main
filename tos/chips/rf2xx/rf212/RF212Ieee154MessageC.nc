@@ -39,7 +39,7 @@ configuration RF212Ieee154MessageC
 
 		interface Ieee154Packet;
 		interface Packet;
-		interface Resource as RadioSendResource[uint8_t clint];
+		interface Resource as SendResource[uint8_t clint];
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
@@ -69,7 +69,7 @@ implementation
 
 	Packet = RF212RadioC.PacketForIeee154Message;
 	Ieee154Packet = RF212RadioC;
-	RadioSendResource = RF212RadioC;
+	SendResource = RF212RadioC;
 
 	PacketAcknowledgements = RF212RadioC;
 	LowPowerListening = RF212RadioC;
