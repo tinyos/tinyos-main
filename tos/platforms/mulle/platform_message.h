@@ -41,7 +41,8 @@
 #define __PLATFORM_MESSAGE_H__
 
 #include "Serial.h"
-#include <RF230ActiveMessage.h>
+#include <RF230Radio.h>
+
 
 typedef union message_header {
 	rf230packet_header_t rf230;
