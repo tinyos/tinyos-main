@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.20 2009-09-19 13:26:59 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.21 2009-09-21 02:19:42 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2009-09-19 13:26:59 $
+ *  @date   $Date: 2009-09-21 02:19:42 $
  *  @see Net2-WG
  */
 
@@ -808,7 +808,7 @@ implementation {
     command uint16_t      CtpRoutingPacket.getEtx(message_t* msg) {
       return getHeader(msg)->etx;
     }
-    command void          CtpRoutingPacket.setEtx(message_t* msg, uint8_t etx) {
+    command void          CtpRoutingPacket.setEtx(message_t* msg, uint16_t etx) {
       getHeader(msg)->etx = etx;
     }
 

@@ -1,4 +1,4 @@
-/* $Id: CtpRoutingPacket.nc,v 1.5 2008-06-04 04:30:41 regehr Exp $ */
+/* $Id: CtpRoutingPacket.nc,v 1.6 2009-09-21 02:19:42 gnawali Exp $ */
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -35,7 +35,7 @@
  *
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2008-06-04 04:30:41 $
+ *  @date   $Date: 2009-09-21 02:19:42 $
  */
 
 #include <AM.h>
@@ -54,5 +54,5 @@ interface CtpRoutingPacket {
   command void          setParent(message_t* ONE msg, am_addr_t addr);
 
   command uint16_t      getEtx(message_t* ONE msg);
-  command void          setEtx(message_t* ONE msg, uint8_t etx);
+  command void          setEtx(message_t* ONE msg, uint16_t etx);
 }
