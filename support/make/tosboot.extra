@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: tosboot.extra,v 1.2 2008-08-25 16:48:45 razvanm Exp $
+#$Id: tosboot.extra,v 1.3 2009-09-21 08:31:45 r-studio Exp $
 
 DELUGE_DIR ?= $(TOSDIR)/lib/net/Deluge
 DELUGE_EXTRA ?= $(DELUGE_DIR)/extra
@@ -32,6 +32,11 @@ ifeq ($(BOOTLOADER),tosboot)
     CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/avr -I$(DELUGE_EXTRA)/micaz -I$(DELUGE_EXTRA)/mica2
     BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/micaz/main.ihex
     AVR_FUSE_H ?= 0xda
+  endif
+
+  ifeq ($(TARGETS),mulle)
+    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/mulle -I$(DELUGE_EXTRA)/m16c62p
+    BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/mulle/main.srec
   endif
 
   ifeq ($(TARGETS),iris)
