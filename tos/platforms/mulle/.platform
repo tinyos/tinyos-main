@@ -10,6 +10,7 @@ push( @includes, qw(
   %T/platforms/mulle/chips/rv8564
   %T/platforms/mulle/chips/at45db
   %T/platforms/mulle/chips/m16c62p
+  %T/platforms/mulle/chips/mma7261qt
   %T/platforms/mulle/debug
   %T/platforms/mulle/system
   %T/platforms/mulle/timers
@@ -22,6 +23,7 @@ push( @includes, qw(
   %T/chips/m16c62p/pins
   %T/chips/m16c62p/timer
   %T/chips/m16c62p/uart
+  %T/chips/mma7261qt
   %T/chips/ds2745
   %T/lib/power
   %T/lib/timer

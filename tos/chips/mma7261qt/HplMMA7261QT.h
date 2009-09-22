@@ -35,47 +35,20 @@
  */
 
 /**
- * MMA7261QT control.
+ * MMA7261QT gSelect defines.
  *
  * @author Henrik Makitaavola
  */
-#include "HplMMA7261QT.h"
 
-module HplMMA7261QTControlP
-{
-  provides interface HplMMA7261QTControl;
-  
-  uses interface GeneralIO as Sleep;
-  uses interface GeneralIO as GSelect1;
-  uses interface GeneralIO as GSelect2;
-}
-implementation
-{
-  async command void HplMMA7261QTControl.on()
-  {
-    call Sleep.set();
-    call GSelect1.clr();
-    call GSelect2.clr();
+#ifndef __HPLMMA7261QT_H__
+#define  __HPLMMA7261QT_H__
 
-  }
-  
-  async command void HplMMA7261QTControl.off()
-  {
-    call GSelect1.clr();
-    call GSelect2.clr();
-    call Sleep.clr();
-  }
-  
-  async command void HplMMA7261QTControl.gSelect( mm7261qt_gselect_t val)
-  {
-    if(val & 1)
-      call GSelect1.set();
-    else 
-      call GSelect1.clr();
+typedef enum mm7261qt_gselect {
+  MMA7261QT_GSELECT_2_5G=0, //most sensitive
+  MMA7261QT_GSELECT_3_3G=1,
+  MMA7261QT_GSELECT_6_7G=2,
+  MMA7261QT_GSELECT_10_0G=3, //least sensitive
+} mm7261qt_gselect_t;
 
-    if(val & 2)
-      call GSelect2.set();
-    else
-      call GSelect2.clr();
-  }
-}
+#endif
+

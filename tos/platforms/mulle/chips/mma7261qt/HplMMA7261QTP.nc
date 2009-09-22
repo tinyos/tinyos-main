@@ -35,47 +35,97 @@
  */
 
 /**
- * MMA7261QT control.
+ * MMA7261QT implementation.
  *
  * @author Henrik Makitaavola
  */
-#include "HplMMA7261QT.h"
 
-module HplMMA7261QTControlP
+module HplMMA7261QTP
 {
-  provides interface HplMMA7261QTControl;
+  provides
+  {
+    interface Init;
+    interface M16c62pAdcConfig as AccelXConf;
+    interface M16c62pAdcConfig as AccelYConf;
+    interface M16c62pAdcConfig as AccelZConf;
+  }
   
-  uses interface GeneralIO as Sleep;
-  uses interface GeneralIO as GSelect1;
-  uses interface GeneralIO as GSelect2;
+  uses
+  {
+    interface GeneralIO as VCC;
+    interface GeneralIO as Sleep;
+    interface GeneralIO as GSelect1;
+    interface GeneralIO as GSelect2;
+    interface GeneralIO as AccelXPort;
+    interface GeneralIO as AccelYPort;
+    interface GeneralIO as AccelZPort;
+  }
 }
 implementation
 {
-  async command void HplMMA7261QTControl.on()
+  command error_t Init.init()
   {
-    call Sleep.set();
-    call GSelect1.clr();
-    call GSelect2.clr();
-
-  }
-  
-  async command void HplMMA7261QTControl.off()
-  {
-    call GSelect1.clr();
-    call GSelect2.clr();
+    call VCC.makeOutput();
+    call VCC.set();
+    call Sleep.makeOutput();
     call Sleep.clr();
+    call GSelect1.makeOutput();
+    call GSelect1.clr();
+    call GSelect2.makeOutput();
+    call GSelect2.clr();
+    call AccelXPort.makeInput();
+    call AccelXPort.clr();
+    call AccelYPort.makeInput();
+    call AccelYPort.clr();
+    call AccelZPort.makeInput();
+    call AccelZPort.clr();
   }
   
-  async command void HplMMA7261QTControl.gSelect( mm7261qt_gselect_t val)
+  inline uint8_t prescaler() { return M16c62p_ADC_PRESCALE_4; }
+  inline uint8_t precision() { return M16c62p_ADC_PRECISION_8BIT; }
+  
+  async command uint8_t AccelXConf.getChannel()
   {
-    if(val & 1)
-      call GSelect1.set();
-    else 
-      call GSelect1.clr();
+    return M16c62p_ADC_CHL_AN5;
+  }
 
-    if(val & 2)
-      call GSelect2.set();
-    else
-      call GSelect2.clr();
+  async command uint8_t AccelXConf.getPrecision()
+  {
+    return precision();
+  }
+
+  async command uint8_t AccelXConf.getPrescaler()
+  {
+    return prescaler();
+  }
+  
+    async command uint8_t AccelYConf.getChannel()
+  {
+    return M16c62p_ADC_CHL_AN4;
+  }
+
+  async command uint8_t AccelYConf.getPrecision()
+  {
+    return precision();
+  }
+
+  async command uint8_t AccelYConf.getPrescaler()
+  {
+    return prescaler();
+  }
+  
+  async command uint8_t AccelZConf.getChannel()
+  {
+    return M16c62p_ADC_CHL_AN3;
+  }
+
+  async command uint8_t AccelZConf.getPrecision()
+  {
+    return precision();
+  }
+
+  async command uint8_t AccelZConf.getPrescaler()
+  {
+    return prescaler();
   }
 }

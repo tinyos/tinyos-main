@@ -35,47 +35,50 @@
  */
 
 /**
- * MMA7261QT control.
+ * MMA7261QT configuration.
  *
  * @author Henrik Makitaavola
  */
-#include "HplMMA7261QT.h"
 
-module HplMMA7261QTControlP
+configuration HplMMA7261QTC
 {
-  provides interface HplMMA7261QTControl;
+  provides interface Read<uint16_t> as AccelX;
+  provides interface Read<uint16_t> as AccelY;
+  provides interface Read<uint16_t> as AccelZ;
   
-  uses interface GeneralIO as Sleep;
-  uses interface GeneralIO as GSelect1;
-  uses interface GeneralIO as GSelect2;
+  provides interface GeneralIO as Sleep;
+  provides interface GeneralIO as GSelect1;
+  provides interface GeneralIO as GSelect2;
 }
 implementation
 {
-  async command void HplMMA7261QTControl.on()
-  {
-    call Sleep.set();
-    call GSelect1.clr();
-    call GSelect2.clr();
-
-  }
+  components new AdcReadClientC() as _AccelX, 
+             new AdcReadClientC() as _AccelY,
+             new AdcReadClientC() as _AccelZ,
+             HplM16c62pGeneralIOC as IOs,
+             HplMMA7261QTP;
+             
+  HplMMA7261QTP.VCC -> IOs.PortP76;
+  HplMMA7261QTP.Sleep -> IOs.PortP12;
+  HplMMA7261QTP.GSelect1 -> IOs.PortP30;
+  HplMMA7261QTP.GSelect2 -> IOs.PortP31;
+  HplMMA7261QTP.AccelXPort -> IOs.PortP105;
+  HplMMA7261QTP.AccelYPort -> IOs.PortP104;
+  HplMMA7261QTP.AccelZPort -> IOs.PortP103;
   
-  async command void HplMMA7261QTControl.off()
-  {
-    call GSelect1.clr();
-    call GSelect2.clr();
-    call Sleep.clr();
-  }
+  Sleep = IOs.PortP12;
+  GSelect1 = IOs.PortP30;
+  GSelect2 = IOs.PortP31;
   
-  async command void HplMMA7261QTControl.gSelect( mm7261qt_gselect_t val)
-  {
-    if(val & 1)
-      call GSelect1.set();
-    else 
-      call GSelect1.clr();
-
-    if(val & 2)
-      call GSelect2.set();
-    else
-      call GSelect2.clr();
-  }
+  _AccelX.M16c62pAdcConfig -> HplMMA7261QTP.AccelXConf;
+  _AccelY.M16c62pAdcConfig -> HplMMA7261QTP.AccelYConf;
+  _AccelZ.M16c62pAdcConfig -> HplMMA7261QTP.AccelZConf;
+  
+  AccelX = _AccelX;
+  AccelY = _AccelY;
+  AccelZ = _AccelZ;
+  
+  components RealMainP;
+  RealMainP.PlatformInit -> HplMMA7261QTP.Init;
+  
 }
