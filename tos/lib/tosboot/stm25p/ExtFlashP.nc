@@ -1,4 +1,4 @@
-// $Id: ExtFlashM.nc,v 1.1 2008-08-25 16:48:47 razvanm Exp $
+// $Id: ExtFlashP.nc,v 1.1 2009-09-23 18:29:24 razvanm Exp $
 
 /*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -23,28 +23,26 @@
 
 /**
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-module ExtFlashM {
+module ExtFlashP {
   provides {
     interface StdControl;
     interface Init;
     interface ExtFlash;
   }
   uses {
-    interface HPLUSARTControl as USARTControl;
+    interface HplUsartControl as UsartControl;
   }
 }
 
 implementation {
 
-  uint32_t addr;
-
   command error_t Init.init() {
+    TOSH_MAKE_FLASH_HOLD_OUTPUT();
     TOSH_MAKE_FLASH_CS_OUTPUT();
-    TOSH_SET_FLASH_CS_PIN();
-    call USARTControl.setModeSPI();
+    TOSH_SET_FLASH_HOLD_PIN();
+    call UsartControl.setModeSPI();
     return SUCCESS;
   }
 
@@ -53,42 +51,60 @@ implementation {
   }
 
   command error_t StdControl.stop() { 
-    call USARTControl.disableSPI();
+
+    TOSH_CLR_FLASH_CS_PIN();
+    
+    call UsartControl.tx(0xb9);
+    while(call UsartControl.isTxEmpty() != SUCCESS);
+
+    TOSH_SET_FLASH_CS_PIN();
+
+    call UsartControl.disableSPI();
+
     return SUCCESS; 
+
   }
 
-  command void ExtFlash.startRead(uint32_t newAddr) {
+  void powerOnFlash() {
 
-    uint8_t cmd[4];
     uint8_t i;
-    uint32_t page = newAddr / 512;
-    uint32_t offset = newAddr % 512;
-
-    addr = newAddr;
-
-    cmd[0] = 0x03;
-    cmd[1] = page >> 6;
-    cmd[2] = (page << 2) | (offset >> 8);
-    cmd[3] = offset;
 
     TOSH_CLR_FLASH_CS_PIN();
 
-    for ( i = 0; i < sizeof(cmd); i++ ) {
-      call USARTControl.tx(cmd[i]);
-      while(call USARTControl.isTxEmpty() != SUCCESS);
+    // command byte + 3 dummy bytes + signature
+    for ( i = 0; i < 5; i++ ) {
+      call UsartControl.tx(0xab);
+      while(call UsartControl.isTxIntrPending() != SUCCESS);
     }
+    
+    TOSH_SET_FLASH_CS_PIN();
+
+  }
+
+  command void ExtFlash.startRead(uint32_t addr) {
+
+    uint8_t i;
+    
+    powerOnFlash();
+    
+    TOSH_CLR_FLASH_CS_PIN();
+    
+    // add command byte to address
+    addr |= (uint32_t)0x3 << 24;
+
+    // address
+    for ( i = 4; i > 0; i-- ) {
+      call UsartControl.tx((addr >> (i-1)*8) & 0xff);
+      while(call UsartControl.isTxIntrPending() != SUCCESS);
+    }    
+
   }
 
   command uint8_t ExtFlash.readByte() {
-    if (!(addr & 0x1ff)) {
-      call ExtFlash.stopRead();
-      call ExtFlash.startRead(addr);
-    }
-    addr++;
-    call USARTControl.rx();
-    call USARTControl.tx(0);
-    while(call USARTControl.isRxIntrPending() != SUCCESS);
-    return call USARTControl.rx();
+    call UsartControl.rx();
+    call UsartControl.tx(0);
+    while(call UsartControl.isRxIntrPending() != SUCCESS);
+    return call UsartControl.rx();
   }
 
   command void ExtFlash.stopRead() {

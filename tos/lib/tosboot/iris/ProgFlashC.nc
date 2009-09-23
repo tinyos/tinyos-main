@@ -1,4 +1,4 @@
-// $Id: ProgFlashM.nc,v 1.2 2008-06-11 00:46:25 razvanm Exp $
+// $Id: ProgFlashC.nc,v 1.1 2009-09-23 18:29:22 razvanm Exp $
 
 /*
  *
@@ -29,7 +29,7 @@
  */
 #include <avr/boot.h>
 
-module ProgFlashM {
+module ProgFlashC {
   provides {
     interface ProgFlash;
   }

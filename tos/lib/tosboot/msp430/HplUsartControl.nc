@@ -1,9 +1,9 @@
-// $Id: PowerOffM.nc,v 1.1 2008-08-25 16:48:47 razvanm Exp $
+// $Id: HplUsartControl.nc,v 1.1 2009-09-23 18:29:24 razvanm Exp $
 
 /*
  *
  *
- * "Copyright (c) 2000-2004 The Regents of the University  of California.  
+ * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -27,59 +27,20 @@
 /**
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
+ 
+#include <msp430usart.h>
 
-module PowerOffM {
-  provides {
-    interface Init;
-    interface StdControl;
-  }
-  uses {
-    interface Leds;
-    interface StdControl as SubControl;
-  }
-}
+interface HplUsartControl {
 
-implementation {
-
-  void haltsystem() {
-
-    uint16_t _lpmreg;
-
-    TOSH_SET_PIN_DIRECTIONS();
-
-    call SubControl.stop();
-
-    call Leds.glow(0x7, 0x0);
-
-    _lpmreg = LPM4_bits;
-    _lpmreg |= SR_GIE;
-
-    __asm__ __volatile__( "bis  %0, r2" : : "m" ((uint16_t)_lpmreg) );
-
-  }
-
-  command error_t Init.init() {
-    return SUCCESS;
-  }
-
-  command error_t StdControl.start() {
-
-    int i;
-
-    // wait a short period for things to stabilize
-    for ( i = 0; i < 4; i++ )
-      wait(0xffff);
-
-    // if user button is pressed, power down
-    if (!TOSH_READ_USERINT_PIN())
-      haltsystem();
-
-    return SUCCESS;
-
-  }
-
-  command error_t StdControl.stop() {
-    return SUCCESS;
-  }
+  command void disableSPI();
+  command void setModeSPI();
+  command void disableI2C();
+  command void setModeI2C();
+  command error_t isTxEmpty();
+  command error_t isTxIntrPending();
+  command error_t isRxIntrPending();
+  command void tx(uint8_t data);
+  command uint8_t rx();
 
 }
+

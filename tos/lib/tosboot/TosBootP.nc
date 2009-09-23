@@ -29,10 +29,10 @@
  * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-includes crc;
-includes hardware;
+#include "crc.h"
+#include <hardware.h>
 
-module TOSBootM {
+module TosBootP {
   uses {
     interface Exec;
     interface ExtFlash;

@@ -1,4 +1,4 @@
-// $Id: ProgFlashM.nc,v 1.2 2008-06-11 00:46:25 razvanm Exp $
+// $Id: TosBootC.nc,v 1.1 2009-09-23 18:29:21 razvanm Exp $
 
 /*
  *
@@ -28,43 +28,35 @@
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-module ProgFlashM {
-  provides {
-    interface ProgFlash;
-  }
-}
+#include <Deluge.h>
+#include <DelugePageTransfer.h>
+#include "TosBoot.h"
 
+configuration TosBootC {
+}
 implementation {
 
-  enum {
-    RESET_ADDR = 0xfffe,
-  };
+  components
+    TosBootP,
+    ExecC,
+    ExtFlashC,
+    HardwareC,
+    InternalFlashC as IntFlash,
+    LedsC,
+    PluginC,
+    ProgFlashC as ProgFlash,
+    VoltageC;
 
-  command error_t ProgFlash.write(in_flash_addr_t addr, uint8_t* buf, uint16_t len) {
+  TosBootP.SubInit -> ExtFlashC;
+  TosBootP.SubControl -> ExtFlashC.StdControl;
+  TosBootP.SubControl -> PluginC;
 
-    volatile uint16_t *flashAddr = (uint16_t*)(uint16_t)addr;
-    uint16_t *wordBuf = (uint16_t*)buf;
-    uint16_t i = 0;
-
-    // len is 16 bits so it can't be larger than 0xffff
-    // make sure we can't wrap around
-    if (addr < (0xffff - (len >> 1))) {
-      FCTL2 = FWKEY + FSSEL1 + FN2;
-      FCTL3 = FWKEY;
-      FCTL1 = FWKEY + ERASE;
-      *flashAddr = 0;
-      FCTL1 = FWKEY + WRT;
-      for (i = 0; i < (len >> 1); i++, flashAddr++) {
-	if ((uint16_t)flashAddr != RESET_ADDR)
-	  *flashAddr = wordBuf[i];
-	else
-	  *flashAddr = TOSBOOT_START;
-      }
-      FCTL1 = FWKEY;
-      FCTL3 = FWKEY + LOCK;
-      return SUCCESS;
-    }
-    return FAIL;
-  }
+  TosBootP.Exec -> ExecC;
+  TosBootP.ExtFlash -> ExtFlashC;
+  TosBootP.Hardware -> HardwareC;
+  TosBootP.IntFlash -> IntFlash;
+  TosBootP.Leds -> LedsC;
+  TosBootP.ProgFlash -> ProgFlash;
+  TosBootP.Voltage -> VoltageC;
 
 }

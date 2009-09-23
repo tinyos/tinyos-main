@@ -1,4 +1,4 @@
-// $Id: PluginC.nc,v 1.1 2008-08-25 16:48:47 razvanm Exp $
+// $Id: PluginC.nc,v 1.2 2009-09-23 18:29:24 razvanm Exp $
 
 /*
  *
@@ -36,11 +36,11 @@ configuration PluginC {
 
 implementation {
 
-  components ExtFlashC, LedsC, PowerOffM;
+  components ExtFlashC, LedsC, PowerOffC;
 
-  StdControl = PowerOffM;
+  StdControl = PowerOffC;
 
-  PowerOffM.Leds -> LedsC;
-  PowerOffM.SubControl -> ExtFlashC;
+  PowerOffC.Leds -> LedsC;
+  PowerOffC.SubControl -> ExtFlashC;
 
 }

@@ -1,4 +1,4 @@
-// $Id: InternalFlashC.nc,v 1.2 2008-06-11 00:46:25 razvanm Exp $
+// $Id: InternalFlashC.nc,v 1.3 2009-09-23 18:29:22 razvanm Exp $
 
 /*
  *
@@ -28,7 +28,7 @@
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-includes InternalFlash;
+#include <InternalFlash.h>
 
 module InternalFlashC {
   provides interface InternalFlash;

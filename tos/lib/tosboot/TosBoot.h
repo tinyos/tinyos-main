@@ -1,8 +1,6 @@
-// $Id: TOSBoot.nc,v 1.3 2008-06-11 00:46:25 razvanm Exp $
+// $Id: TosBoot.h,v 1.1 2009-09-23 18:29:21 razvanm Exp $
 
 /*
- *
- *
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
  *
@@ -21,42 +19,15 @@
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
- *
  */
 
 /**
- * @author Jonathan Hui <jwhui@cs.berkeley.edu>
+ * @author  Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-includes Deluge;
-includes DelugePageTransfer;
-includes TOSBoot;
+#ifndef __TOSBOOT_H__
+#define __TOSBOOT_H__
 
-configuration TOSBoot {
-}
-implementation {
+#include "TOSBoot_platform.h"
 
-  components
-    TOSBootM,
-    ExecC,
-    ExtFlashC,
-    HardwareC,
-    InternalFlashC as IntFlash,
-    LedsC,
-    PluginC,
-    ProgFlashM as ProgFlash,
-    VoltageC;
-
-  TOSBootM.SubInit -> ExtFlashC;
-  TOSBootM.SubControl -> ExtFlashC.StdControl;
-  TOSBootM.SubControl -> PluginC;
-
-  TOSBootM.Exec -> ExecC;
-  TOSBootM.ExtFlash -> ExtFlashC;
-  TOSBootM.Hardware -> HardwareC;
-  TOSBootM.IntFlash -> IntFlash;
-  TOSBootM.Leds -> LedsC;
-  TOSBootM.ProgFlash -> ProgFlash;
-  TOSBootM.Voltage -> VoltageC;
-
-}
+#endif

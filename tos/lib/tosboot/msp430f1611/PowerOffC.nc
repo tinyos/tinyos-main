@@ -1,9 +1,9 @@
-// $Id: ProgFlashM.nc,v 1.4 2008-07-15 23:36:36 razvanm Exp $
+// $Id: PowerOffC.nc,v 1.1 2009-09-23 18:29:24 razvanm Exp $
 
 /*
  *
  *
- * "Copyright (c) 2000-2005 The Regents of the University  of California.  
+ * "Copyright (c) 2000-2004 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -28,38 +28,58 @@
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-module ProgFlashM {
+module PowerOffC {
   provides {
-    interface ProgFlash;
+    interface Init;
+    interface StdControl;
+  }
+  uses {
+    interface Leds;
+    interface StdControl as SubControl;
   }
 }
 
 implementation {
 
-#include <avr/boot.h>
+  void haltsystem() {
 
-  command error_t ProgFlash.write(in_flash_addr_t addr, uint8_t* buf, in_flash_addr_t len) {
+    uint16_t _lpmreg;
 
-    uint16_t* wordBuf = (uint16_t*)buf;
-    uint32_t i;
+    TOSH_SET_PIN_DIRECTIONS();
 
-    if ( addr + len > TOSBOOT_START )
-      return FAIL;    
+    call SubControl.stop();
 
-    boot_page_erase_safe( addr );
-    while( boot_rww_busy() )
-      boot_rww_enable_safe();
-    
-    for ( i = 0; i < len; i += 2 )
-      boot_page_fill_safe( addr + i, *wordBuf++ );
+    call Leds.glow(0x7, 0x0);
 
-    boot_page_write_safe( addr );
-    
-    while ( boot_rww_busy() )
-      boot_rww_enable_safe();
-    
+    _lpmreg = LPM4_bits;
+    _lpmreg |= SR_GIE;
+
+    __asm__ __volatile__( "bis  %0, r2" : : "m" ((uint16_t)_lpmreg) );
+
+  }
+
+  command error_t Init.init() {
     return SUCCESS;
-    
+  }
+
+  command error_t StdControl.start() {
+
+    int i;
+
+    // wait a short period for things to stabilize
+    for ( i = 0; i < 4; i++ )
+      wait(0xffff);
+
+    // if user button is pressed, power down
+    if (!TOSH_READ_USERINT_PIN())
+      haltsystem();
+
+    return SUCCESS;
+
+  }
+
+  command error_t StdControl.stop() {
+    return SUCCESS;
   }
 
 }

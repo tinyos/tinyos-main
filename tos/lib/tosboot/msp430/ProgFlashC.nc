@@ -1,4 +1,4 @@
-// $Id: HPLUSARTControl.nc,v 1.2 2008-06-11 00:46:25 razvanm Exp $
+// $Id: ProgFlashC.nc,v 1.1 2009-09-23 18:29:24 razvanm Exp $
 
 /*
  *
@@ -27,20 +27,44 @@
 /**
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
- 
-includes msp430usart;
 
-interface HPLUSARTControl {
-
-  command void disableSPI();
-  command void setModeSPI();
-  command void disableI2C();
-  command void setModeI2C();
-  command error_t isTxEmpty();
-  command error_t isTxIntrPending();
-  command error_t isRxIntrPending();
-  command void tx(uint8_t data);
-  command uint8_t rx();
-
+module ProgFlashC {
+  provides {
+    interface ProgFlash;
+  }
 }
 
+implementation {
+
+  enum {
+    RESET_ADDR = 0xfffe,
+  };
+
+  command error_t ProgFlash.write(in_flash_addr_t addr, uint8_t* buf, uint16_t len) {
+
+    volatile uint16_t *flashAddr = (uint16_t*)(uint16_t)addr;
+    uint16_t *wordBuf = (uint16_t*)buf;
+    uint16_t i = 0;
+
+    // len is 16 bits so it can't be larger than 0xffff
+    // make sure we can't wrap around
+    if (addr < (0xffff - (len >> 1))) {
+      FCTL2 = FWKEY + FSSEL1 + FN2;
+      FCTL3 = FWKEY;
+      FCTL1 = FWKEY + ERASE;
+      *flashAddr = 0;
+      FCTL1 = FWKEY + WRT;
+      for (i = 0; i < (len >> 1); i++, flashAddr++) {
+	if ((uint16_t)flashAddr != RESET_ADDR)
+	  *flashAddr = wordBuf[i];
+	else
+	  *flashAddr = TOSBOOT_START;
+      }
+      FCTL1 = FWKEY;
+      FCTL3 = FWKEY + LOCK;
+      return SUCCESS;
+    }
+    return FAIL;
+  }
+
+}

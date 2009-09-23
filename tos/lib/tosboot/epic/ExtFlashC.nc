@@ -1,4 +1,4 @@
-// $Id: ExtFlashC.nc,v 1.1 2008-08-25 16:48:47 razvanm Exp $
+// $Id: ExtFlashC.nc,v 1.2 2009-09-23 18:29:22 razvanm Exp $
 
 /*
  *
@@ -39,13 +39,13 @@ configuration ExtFlashC {
 implementation {
 
   components 
-    ExtFlashM,
-    HPLUSART0M;
+    ExtFlashP,
+    HplUsart0C;
 
-  Init = ExtFlashM;
-  StdControl = ExtFlashM;
-  ExtFlash = ExtFlashM;
+  Init = ExtFlashP;
+  StdControl = ExtFlashP;
+  ExtFlash = ExtFlashP;
 
-  ExtFlashM.USARTControl -> HPLUSART0M;
+  ExtFlashP.UsartControl -> HplUsart0C;
 
 }

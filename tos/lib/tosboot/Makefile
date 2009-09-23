@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2008-08-25 16:48:47 razvanm Exp $
+# $Id: Makefile,v 1.5 2009-09-23 18:29:20 razvanm Exp $
 
 #
 #
@@ -28,7 +28,7 @@
 # @author Jonathan Hui <jwhui@cs.berkeley.edu>
 #
 
-COMPONENT=TOSBoot
+COMPONENT=TosBootC
 TINYOS_NP=
 
 PFLAGS += -DNESC_BUILD_BINARY

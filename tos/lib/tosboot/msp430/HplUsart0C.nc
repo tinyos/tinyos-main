@@ -1,4 +1,4 @@
-// $Id: HPLUSART0M.nc,v 1.2 2008-06-11 00:46:25 razvanm Exp $
+// $Id: HplUsart0C.nc,v 1.1 2009-09-23 18:29:24 razvanm Exp $
 
 /*
  *
@@ -28,12 +28,12 @@
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
  */
 
-module HPLUSART0M {
-  provides interface HPLUSARTControl;
+module HplUsart0C {
+  provides interface HplUsartControl;
 }
 implementation {
 
-  command void HPLUSARTControl.disableSPI() {
+  command void HplUsartControl.disableSPI() {
     // USART0 SPI module disable
     //ME1 &= ~USPIE0;
 
@@ -44,7 +44,7 @@ implementation {
     U0RCTL = 0;
   }
   
-  command void HPLUSARTControl.setModeSPI() {
+  command void HplUsartControl.setModeSPI() {
 
     //U0CTL = SWRST;
 
@@ -68,7 +68,7 @@ implementation {
 
   }
 
-  command void HPLUSARTControl.disableI2C() {
+  command void HplUsartControl.disableI2C() {
     /*
     U0CTL = 1;
     U0TCTL = 1;
@@ -77,10 +77,10 @@ implementation {
     U0CTL &= ~I2CEN;
     U0CTL &= ~I2C;
     I2CTCTL = 0;
-    call HPLUSARTControl.disableSPI();
+    call HplUsartControl.disableSPI();
   }
 
-  command void HPLUSARTControl.setModeI2C() {
+  command void HplUsartControl.setModeI2C() {
    
     // Recommended init procedure
     U0CTL = I2C + SYNC + MST;
@@ -94,14 +94,14 @@ implementation {
     return;
   }
 
-  command error_t HPLUSARTControl.isTxEmpty(){
+  command error_t HplUsartControl.isTxEmpty(){
     if (U0TCTL & TXEPT) {
       return SUCCESS;
     }
     return FAIL;
   }
   
-  command error_t HPLUSARTControl.isTxIntrPending(){
+  command error_t HplUsartControl.isTxIntrPending(){
     if (IFG1 & UTXIFG0){
       IFG1 &= ~UTXIFG0;
       return SUCCESS;
@@ -109,7 +109,7 @@ implementation {
     return FAIL;
   }
 
-  command error_t HPLUSARTControl.isRxIntrPending(){
+  command error_t HplUsartControl.isRxIntrPending(){
     if (IFG1 & URXIFG0){
       IFG1 &= ~URXIFG0;
       return SUCCESS;
@@ -117,11 +117,11 @@ implementation {
     return FAIL;
   }
 
-  command void HPLUSARTControl.tx(uint8_t data){
+  command void HplUsartControl.tx(uint8_t data){
     U0TXBUF = data;
   }
   
-  command uint8_t HPLUSARTControl.rx(){
+  command uint8_t HplUsartControl.rx(){
     return U0RXBUF;
   }
 

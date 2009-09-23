@@ -40,7 +40,7 @@
  * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-configuration ProgFlashM
+configuration ProgFlashC
 {
   provides interface ProgFlash;
 }
