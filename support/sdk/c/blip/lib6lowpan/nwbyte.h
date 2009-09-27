@@ -1,17 +1,10 @@
 #ifndef _NWBYTE_H
 #define _NWBYTE_H_
 
-#if !defined(PC)
-// if we're not on a pc, assume little endian for now
-#define __LITTLE_ENDIAN 1234
-#define __BYTE_ORDER __LITTLE_ENDIAN
-#endif
+#include "blip-platform.h"
 
 /* define normal network byte-orders routines  */
 #if defined(PC) 
-// use library versions if on linux
-#include <netinet/in.h>
-#include <endian.h>
 
 #define ntoh16(X)   ntohs(X)
 #define hton16(X)   htons(X)
@@ -25,7 +18,7 @@
 #define hton16(X)   (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
 
 /* this is much more efficient since gcc can insert swpb now.  */
-static uint32_t __attribute__((unused))  ntoh32(uint32_t i) {
+static inline uint32_t __attribute__((unused))  ntoh32(uint32_t i) {
   uint16_t lo = (uint16_t)i;
   uint16_t hi = (uint16_t)(i >> 16);
   lo = (lo << 8) | (lo >> 8);
@@ -53,8 +46,8 @@ static uint32_t __attribute__((unused))  ntoh32(uint32_t i) {
 #endif
 
 #else
-// assume big-endian byte-order
-#define leton16(X) (X)
+//  big-endian byte-order
+#define leton16(X) (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
 #define htole16(X) (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
 #endif
 

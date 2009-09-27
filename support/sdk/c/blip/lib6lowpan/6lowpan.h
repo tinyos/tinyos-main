@@ -32,6 +32,8 @@
 #define __6LOWPAN_H__
 
 #include <stdint.h>
+
+#include "blip-platform.h"
 /*
  * Typedefs and static library data.
  */
@@ -184,17 +186,5 @@ struct topology_header_package {
   uint16_t seqno;
   struct topology_entry topo[0];
 };
-
-enum {
-  IP_NUMBER_FRAGMENTS = 12,
-};
-
-#ifndef BLIP_L2_RETRIES
-#define BLIP_L2_RETRIES 5
-#endif
-
-#ifndef BLIP_L2_DELAY
-#define BLIP_L2_DELAY 15
-#endif
 
 #endif

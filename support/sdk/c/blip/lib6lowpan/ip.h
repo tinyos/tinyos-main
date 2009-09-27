@@ -33,6 +33,7 @@
 #endif
 
 #include "6lowpan.h"
+#include "blip-platform.h"
 
 enum {
   /*

@@ -19,31 +19,44 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
  */
-#ifndef NO_IP_MALLOC
-#ifndef IP_MALLOC_H_
-#define IP_MALLOC_H_
+#ifndef _BLIP_PLATFORM_H
+#define _BLIP_PLATFORM_H
 
-#include <stdint.h>
-#include <blip-platform.h>
+/* this file has platform-specific configuration settings that don't
+   belong anywhere else */
 
-// align on this number of byte boundarie#s
-#define IP_MALLOC_ALIGN   2
-#define IP_MALLOC_LEN     0x0fff
-#define IP_MALLOC_FLAGS   0x7000
-#define IP_MALLOC_INUSE   0x8000
-
-extern uint8_t heap[IP_MALLOC_HEAP_SIZE];
-typedef uint16_t bndrt_t;
-
-void ip_malloc_init();
-void *ip_malloc(uint16_t sz);
-void ip_free(void *ptr);
-uint16_t ip_malloc_freespace();
-
-#ifndef PC
-#define malloc(X) ip_malloc(X)
-#define free(X)   ip_free(X)
+/* bring in  */
+#if defined(PC)
+// use library versions if on linux
+#include <netinet/in.h>
+#include <endian.h>
+#else
+// if we're not on a pc, assume little endian for now
+#define __LITTLE_ENDIAN 1234
+#define __BYTE_ORDER __LITTLE_ENDIAN
 #endif
 
+/* buffer sizes are defined here. */
+#if !defined(PLATFORM_MICAZ)
+#define IP_MALLOC_HEAP_SIZE 1500
+enum {
+  IP_NUMBER_FRAGMENTS = 14,
+};
+#else
+#define IP_MALLOC_HEAP_SIZE 500
+enum {
+  IP_NUMBER_FRAGMENTS = 4,
+};
 #endif
+
+
+#ifndef BLIP_L2_RETRIES
+#define BLIP_L2_RETRIES 5
+#endif
+
+#ifndef BLIP_L2_DELAY
+#define BLIP_L2_DELAY 15
+#endif
+
+
 #endif
