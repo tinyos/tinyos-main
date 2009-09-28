@@ -55,7 +55,7 @@ configuration IPDispatchC {
 #else
   components ResourceSendP;
   ResourceSendP.SubSend -> MessageC;
-  ResourceSendP.Resource -> MessageC.SendResource[unique("RADIO_SEND_RESOURCE")];
+  ResourceSendP.Resource -> MessageC.SendResource[unique(RADIO_SEND_RESOURCE)];
   IPDispatchP.Ieee154Send -> ResourceSendP.Ieee154Send;
 #endif
 

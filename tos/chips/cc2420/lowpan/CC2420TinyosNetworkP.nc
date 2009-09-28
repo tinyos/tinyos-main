@@ -65,7 +65,7 @@ implementation {
 
   enum {
     OWNER_NONE = 0xff,
-    TINYOS_N_NETWORKS = uniqueCount("RADIO_SEND_RESOURCE"),
+    TINYOS_N_NETWORKS = uniqueCount(RADIO_SEND_RESOURCE),
   } state;
 
   norace uint8_t resource_owner = OWNER_NONE, next_owner;

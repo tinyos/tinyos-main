@@ -108,7 +108,7 @@ implementation
 #ifndef IEEE154FRAMES_ENABLED
 #ifndef TFRAMES_ENABLED
 	components new AutoResourceAcquireLayerC();
-	AutoResourceAcquireLayerC.Resource -> SendResourceC.Resource[unique("RADIO_SEND_RESOURCE")];
+	AutoResourceAcquireLayerC.Resource -> SendResourceC.Resource[unique(RADIO_SEND_RESOURCE)];
 #else
 	components new DummyLayerC() as AutoResourceAcquireLayerC;
 #endif
@@ -118,7 +118,7 @@ implementation
 // -------- RadioSend Resource
 
 #ifndef TFRAMES_ENABLED
-	components new SimpleFcfsArbiterC("RADIO_SEND_RESOURCE") as SendResourceC;
+	components new SimpleFcfsArbiterC(RADIO_SEND_RESOURCE) as SendResourceC;
 	SendResource = SendResourceC;
 
 // -------- Ieee154 Message

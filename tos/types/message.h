@@ -18,4 +18,11 @@ typedef nx_struct message_t {
   nx_uint8_t metadata[sizeof(message_metadata_t)];
 } message_t;
 
+/*
+ * This resource is used to arbitrate access between ActiveMessageC,
+ * Ieee154MessageC and possibly future MessageC components to the 
+ * underlying radio driver.
+ */
+#define RADIO_SEND_RESOURCE "RADIO_SEND_RESOURCE"
+
 #endif
