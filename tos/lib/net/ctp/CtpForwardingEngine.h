@@ -91,19 +91,6 @@ enum {
 };
 
 /*
- * The network header that the ForwardingEngine introduces.
- * This header will change for the TinyOS 2.0 full release 
- * (it needs several optimizations).
- */
-typedef nx_struct {
-  nx_uint8_t control;
-  nx_am_addr_t origin;
-  nx_uint8_t seqno;
-  nx_uint8_t collectid;
-  nx_uint16_t gradient;
-} network_header_t;
-
-/*
  * An element in the ForwardingEngine send queue.
  * The client field keeps track of which send client 
  * submitted the packet or if the packet is being forwarded
