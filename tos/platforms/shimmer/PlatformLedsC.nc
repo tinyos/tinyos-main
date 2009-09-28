@@ -1,4 +1,4 @@
-// $Id: PlatformLedsC.nc,v 1.1 2008-05-21 22:07:24 konradlorincz Exp $
+// $Id: PlatformLedsC.nc,v 1.2 2009-09-28 18:24:51 ayer1 Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -22,14 +22,19 @@
 
 /**
  * @author Joe Polastre
- * @version $Revision: 1.1 $ $Date: 2008-05-21 22:07:24 $
+ * @version $Revision: 1.2 $ $Date: 2009-09-28 18:24:51 $
+ *
+ * @author Mike Healy
+ * @date April 20, 2009 - added support for 4th (green) LED on SHIMMER
  */
+
 #include "hardware.h"
 
 configuration PlatformLedsC {
   provides interface GeneralIO as Led0;
   provides interface GeneralIO as Led1;
   provides interface GeneralIO as Led2;
+  provides interface GeneralIO as Led3;
   uses interface Init;
 }
 implementation
@@ -39,6 +44,7 @@ implementation
     , new Msp430GpioC() as Led0Impl
     , new Msp430GpioC() as Led1Impl
     , new Msp430GpioC() as Led2Impl
+    , new Msp430GpioC() as Led3Impl
     ;
   components PlatformP;
 
@@ -52,6 +58,9 @@ implementation
 
   Led2 = Led2Impl;
   Led2Impl -> GeneralIOC.Port42;
+
+  Led3 = Led3Impl;
+  Led3Impl -> GeneralIOC.Port43;
 
 }
 
