@@ -23,10 +23,6 @@
 
 #include <RadioConfig.h>
 
-#ifndef TFRAMES_ENABLED
-#define PACKET_LINK
-#endif
-
 configuration RF230RadioC
 {
 	provides 

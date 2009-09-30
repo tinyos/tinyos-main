@@ -21,6 +21,8 @@
  * Author: Miklos Maroti
  */
 
+#include <RadioConfig.h>
+
 configuration ActiveMessageC
 {
 	provides

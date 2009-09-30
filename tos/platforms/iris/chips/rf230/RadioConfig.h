@@ -89,4 +89,11 @@ typedef TOne TRadio;
  */
 #define RADIO_ALARM_MILLI_EXP	(5 + MICA_DIVIDE_ONE_FOR_32KHZ_LOG2)
 
+/**
+ * Make PACKET_LINK automaticaly enabled for Ieee154MessageC
+ */
+#if !defined(TFRAMES_ENABLED) && !defined(PACKET_LINK)
+#define PACKET_LINK
+#endif
+
 #endif//__RADIOCONFIG_H__
