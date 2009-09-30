@@ -86,6 +86,7 @@ enum
 	 */
 	RF230_CCA_THRES_VALUE = 0xC7,
 };
+
 /* This is the default value of the TX_PWR field of the PHY_TX_PWR register. 0-15*/
 #ifndef RF230_DEF_RFPOWER
 #define RF230_DEF_RFPOWER	0
@@ -95,7 +96,6 @@ enum
 #ifndef RF230_DEF_CHANNEL
 #define RF230_DEF_CHANNEL	11
 #endif
-
 
 /*
  * This is the command used to calculate the CRC for the RF230 chip. 
@@ -110,14 +110,13 @@ inline uint16_t RF230_CRCBYTE_COMMAND(uint16_t crc, uint8_t data)
 
     return ((((uint16_t)data << 8) | hi8 /*hi8 (crc)*/) ^ (uint8_t)(data >> 4) 
         ^ ((uint16_t)data << 3));
-
 }
 
 /**
  * This is the timer type of the radio alarm interface
  */
-
 typedef TMicro TRadio;
+
 /**
  * The number of alarm ticks per one second
  */
@@ -129,5 +128,12 @@ typedef TMicro TRadio;
  * The base two logarithm of the number of radio alarm ticks per one millisecond
  */
 #define RADIO_ALARM_MILLI_EXP	11
+
+/**
+ * Make PACKET_LINK automaticaly enabled for Ieee154MessageC
+ */
+#if !defined(TFRAMES_ENABLED) && !defined(PACKET_LINK)
+#define PACKET_LINK
+#endif
 
 #endif  //__RADIOCONFIG_H__

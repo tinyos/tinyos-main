@@ -34,9 +34,11 @@ configuration TimeSyncMessageC
 		interface Packet;
 		interface AMPacket;
 
+		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
 		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
 
+		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
 		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
 	}
@@ -44,20 +46,25 @@ configuration TimeSyncMessageC
 
 implementation
 {
-	components RF230TimeSyncMessageC as MAC,
-	    RF230SplitControlP;
+	components RF230TimeSyncMessageC as MessageC,
+		RF230SplitControlP,
+		new SystemClockControlC();
   
-    RF230SplitControlP.SplitControlOrig -> MAC;
-    RF230SplitControlP.SystemClockControl -> SystemClockControlC;
+	RF230SplitControlP.SplitControlOrig -> MessageC;
+	RF230SplitControlP.SystemClockControl -> SystemClockControlC;
   
-	SplitControl	= RF230SplitControlP.SplitControl;
-  	Receive		= MAC.Receive;
-	Snoop		= MAC.Snoop;
-	Packet		= MAC;
-	AMPacket	= MAC;
+	SplitControl = RF230SplitControlP.SplitControl;
 
-	TimeSyncAMSendRadio	= MAC;
-	TimeSyncPacketRadio	= MAC;
-	TimeSyncAMSendMilli	= MAC;
-	TimeSyncPacketMilli	= MAC;
+  	Receive		= MessageC.Receive;
+	Snoop		= MessageC.Snoop;
+	Packet		= MessageC;
+	AMPacket	= MessageC;
+
+	PacketTimeStampRadio	= MessageC;
+	TimeSyncAMSendRadio	= MessageC;
+	TimeSyncPacketRadio	= MessageC;
+
+	PacketTimeStampMilli	= MessageC;
+	TimeSyncAMSendMilli	= MessageC;
+	TimeSyncPacketMilli	= MessageC;
 }
