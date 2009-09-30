@@ -233,8 +233,8 @@ module ICMPResponderP {
         call IPRouting.reportAdvertisement(meta->sender, r->hlim,
                                            meta->lqi, beacon->metric);
         // push out the seqno update
-        call Advertisement.stop();
-        call ICMP.sendAdvertisements();
+        // call Advertisement.stop();
+        // call ICMP.sendAdvertisements();
 
         if (pfx->type != ICMP_EXT_TYPE_PREFIX) return;
 
