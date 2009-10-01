@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.6: http://docutils.sourceforge.net/" />
+<title>Traffic Control</title>
+<meta name="author" content="David Moss, Mark Hays, and Mark Siner" />
+<style type="text/css">
+
+/*
+:Author: David Goodger
+:Contact: goodger@users.sourceforge.net
+:date: $Date: 2009-10-01 21:09:49 $
+:version: $Revision: 1.1 $
+:copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+*/
+body {
+  font-family: Times;
+  font-size: 16px;
+}
+
+.first {
+  margin-top: 0 ! important }
+
+.last {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dd {
+  margin-bottom: 0.5em }
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning, div.admonition {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.hint p.admonition-title, div.important p.admonition-title,
+div.note p.admonition-title, div.tip p.admonition-title,
+div.admonition p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em }
+
+div.footer, div.header {
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin-left: 1em ;
+  border: medium outset ;
+  padding: 0em 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
+
+h1.title {
+ text-align: center;
+ font-size: 32px;
+}
+
+h2 {
+ font-size: 16px;
+ font-family: Arial, sans-serif;
+}
+
+h2.subtitle {
+  text-align: center }
+
+h3 {
+ font-size: 12px;
+ font-family: Arial, sans-serif;
+}
+
+hr {
+  width: 75% }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font-family: serif ;
+  font-size: 100% }
+
+pre.line-block {
+  font-family: serif ;
+  font-size: 100% }
+
+pre.literal-block, pre.doctest-block {
+  margin-left: 2em ;
+  margin-right: 2em ;
+  background-color: #eeeeee;
+  border-color: #000000;
+  border-width: thin; 
+  font-size: 14px
+}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.option-argument {
+  font-style: italic }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+table {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.citation {
+  border-left: solid thin gray ;
+  padding-left: 0.5ex }
+
+table.docinfo {
+  margin: 2em 4em;
+}
+
+table.footnote {
+  border-left: solid thin black ;
+  padding-left: 0.5ex }
+
+td, th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+th.docinfo-name, th.field-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap;
+  }
+
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+  font-size: 100% }
+
+tt {}
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="traffic-control">
+<h1 class="title">Traffic Control</h1>
+<table class="docinfo" frame="void" rules="none">
+<col class="docinfo-name" />
+<col class="docinfo-content" />
+<tbody valign="top">
+<tr class="field"><th class="docinfo-name">TEP:</th><td class="field-body">137</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Group:</th><td class="field-body">Core Working Group</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
+</tr>
+<tr><th class="docinfo-name">Status:</th>
+<td>Draft</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
+</tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>David Moss, Mark Hays, and Mark Siner</td></tr>
+<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">3-Sept-2009</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.0</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2009-09-30</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p class="first admonition-title">Note</p>
+<p class="last">This memo documents a part of TinyOS for the TinyOS Community, and
+requests discussion and suggestions for improvements.  Distribution
+of this memo is unlimited. This memo is in full compliance with
+TEP 1.</p>
+</div>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
+<p>This memo proposes traffic control interfaces to be provided by an optional
+traffic control layer integrated at the highest levels of communication
+stacks. These traffic control mechanisms are targeted to help improve acknowledgment
+success rate, energy efficiency, fairness, and routing reliability on
+any wireless platform. The available reference implementation is a platform
+independent radio stack layer designed to consume a very small memory footprint.</p>
+</div>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
+<p>As the traffic rate of a wireless sensor network increases, the probability
+of collision, dropped packets, and missed acknowledgments also increases,
+even with sophisticated CSMA/CA implementations.</p>
+<p>It is important, especially in the case mesh networks, for packets to be
+delivered reliably and acknowledgments to be returned successfully on a hop-by-
+hop basis. One method to improve reliability is to reduce the rate of
+transmissions from each node within the network.</p>
+<p>Traffic Control has been in use for years in many different wired and wireless
+applications[1]_,[2]_,[3]_.  TinyOS already has traffic control
+mechanisms integrated directly into some networking libraries, such as CTP[4]_
+and Dissemination[5]_.  The use of Trickle[6]_ algorithms, also used
+within CTP and Dissemination, further reduces the rate of traffic throughout a
+network to improve delivery performance and prevent livelock. There has
+yet to be a centralized method of traffic control that throttles traffic
+generated from any component of a user's application.</p>
+<p>The traffic control interfaces proposed in this TEP are very basic, and are
+intended to support many different traffic control implementations.
+Two interfaces assist the application layer in controlling behavior:
+TrafficControl and TrafficPriority.</p>
+<p>The reference implementation presented here is integrated as a optional and
+generic radio stack layer (providing a Send and using a SubSend interface) and
+uses acknowledgments to dynamically adjust the transmit throttle. Other traffic
+control implementations could employ more sophisticated techniques to control
+throughput, but likely at the cost of a larger memory footprint.</p>
+<p>The ultimate goal is to allow developers to use mesh networking protocols and/or
+their own protocols without having to worry about implementing any kind of
+traffic control timer mechanism for each separate component.</p>
+</div>
+<div class="section" id="desired-behavior">
+<h1>2. Desired Behavior</h1>
+<p>Ideally, a traffic control layer SHOULD attempt to balance the rate of
+transmissions from a single node with the channel throughput capacity.
+This implies an adaptive control mechanism. If the channel is
+busy, nodes should add delay between packets to let other nodes transmit.
+Similarly, if the channel is not busy, a node should be allowed access to
+the channel more often to prevent inefficient channel downtime.  Traffic
+control SHOULD NOT listen to the channel for long periods of time to determine
+the appropriate access rates, because that defeats the purpose of low power
+communications layers used elsewhere.</p>
+<p>The traffic control implementation SHOULD have the option to be activated or
+deactivated on a system-wide level as well as a packet level. This allows for
+individual high or low priority packets. Traffic control SHOULD be deactivated
+by default, until the application or networking layers explicitly enable it.</p>
+<p>Finally, the traffic control mechanism SHOULD be small in code size to fit
+on the limited program memory available on most wireless platforms. There
+SHOULD NOT be additions or modifications to a packet's metadata structure
+that enables or disables traffic control on a per-packet basis;
+instead, per-packet priorities SHOULD be performed with a request/call back
+procedure. This keeps RAM requirements low and can be optimized out at compile
+time if those functions are not used.</p>
+<p>We also recommend any traffic control layer be implemented as an optional
+compile time add-on to a core radio stack or within the ActiveMessageC platform
+communication stack definition. This allows applications that do not require
+traffic control to remove its memory footprint from the system.</p>
+</div>
+<div class="section" id="trafficcontrolc-component-signature">
+<h1>3. TrafficControlC Component Signature</h1>
+<p>The signature of TrafficControlC is RECOMMENDED as follows:</p>
+<pre class="literal-block">
+configuration TrafficControlC {
+  provides {
+    interface Send;
+    interface TrafficControl;
+    interface TrafficPriority[am_id_t amId];
+  }
+
+  uses {
+    interface Send as SubSend;
+  }
+}
+</pre>
+<p>The Send interface provided on top and SubSend interface used underneath
+allow the TrafficControlC component to be integrated as a generic layer
+within any radio stack.</p>
+</div>
+<div class="section" id="trafficcontrol-interface">
+<h1>4. TrafficControl Interface</h1>
+<p>The TrafficControl interface allows the application layer to enable or
+disable traffic control from a system-wide level.  It also
+allows an application to set and get the current delay between packets.
+For most systems, we expect that the setDelay() and getDelay() commands may not be
+used often and will most likely get optimized out at compile time; however, some
+systems may care to explicitly increase or decrease the delay between packets or
+collect statistics on how the traffic control layer is performing.</p>
+<p>The TEP proposes the following TrafficControl interface:</p>
+<pre class="literal-block">
+interface TrafficControl {
+
+  command void enable(bool active);
+
+  command void setDelay(uint16_t delay);
+
+  command uint16_t getDelay();
+
+}
+</pre>
+</div>
+<div class="section" id="trafficpriority-interface">
+<h1>5. TrafficPriority Interface</h1>
+<p>The TrafficPriority interface is parameterized by active message ID.  It is a
+simple request / call back interface that allows components in the application layer to
+configure individual packets for priorities on a scale from 0 (lowest priority, default) to
+5 (highest priority, get the packet out immediately). There are several advantages
+to this call back method. Metadata does not need to be added
+to the end of every message_t. Additionally, a component that captures a requestPriority(...)
+event is not required to adjust the priority as it would if the event returned
+a value.</p>
+<p>When a packet enters the traffic control layer, and traffic control is
+enabled, the TrafficPriority interface MUST signal out the event
+requestPriority(...).  This event, with all the extra information it provides,
+allows the application layer to decide whether the packet is a high priority
+packet or not.  Calling the setPriority(uint8_t priority) command within the
+requestPriority(...) event MAY adjust the traffic control mechanisms applied
+to the current packet.  To aid in the definition of priority, two definitions
+are available in TrafficControl.h:</p>
+<pre class="literal-block">
+enum {
+  TRAFFICPRIORITY_LOWEST = 0,
+  TRAFFICPRIORITY_HIGHEST = 5,
+};
+</pre>
+<p>It is up to the traffic control implementation to define the meaning of each priority
+level. In the reference implementation, a priority of 0
+is the default low priority level that employs the full traffic control delays.
+Anything above 0 in the reference implementation is considered to be at the
+highest priority.</p>
+<p>If no areas of the application layer care to change the
+packet's priority, a default event handler will capture the requestPriority(...)
+event and do nothing. This would result in all packets being sent at a low
+priority with full traffic control mechanisms enforced.</p>
+<p>The TEP proposes the following TrafficPriority interface, to be provided as an
+interface parameterized by AM type:</p>
+<pre class="literal-block">
+interface TrafficPriority {
+
+  event void requestPriority(am_addr_t destination, message_t \*msg);
+
+  command void setPriority(uint8_t priority);
+
+}
+</pre>
+</div>
+<div class="section" id="reference-implementation">
+<h1>6. Reference Implementation</h1>
+<p>An implementation of the proposed traffic control layer can be found in the
+CCxx00 radio stack in
+tinyos-2.x-contrib/blaze/tos/chips/ccxx00_addons/trafficcontrol, with
+interfaces located in
+tinyos-2.x-contrib/blaze/tos/chips/ccxx00_single/interfaces and a dummy
+implementation located in
+tinyos-2.x-contrib/blaze/tos/chips/ccxx00_single/traffic.</p>
+<p>In this implementation, the default core radio stack (ccxx00_single) includes
+an empty stub for traffic control. Users that wish to include the
+traffic control implementation in their systems simply override the default
+stub component with the ccxx00_addons/trafficcontrol directory.</p>
+<p>The reference implementation works as follows. All nodes start with a default
+of 4 seconds between each packet. Changes are made to the time between outbound
+packets only when a unicast packet is sent with the request for acknowledgment
+flag set.  The reception of an acknowledgment is used as a basic indicator of
+channel activity.  For each acknowledgment received, the amount of time between
+packets is decreased so the next packet will get sent faster.  For each dropped
+acknowledgment, the amount of time between packets increases, causing the
+next packet to be sent later.</p>
+<p>When the transmission rate reaches a boundary (1 second per packet per node
+fastest, 10 seconds per packet per node slowest), it is reset to the default
+rate of 4 seconds per packet per node. This prevents nodes from unfairly
+capturing the channel.</p>
+<p>Testing this traffic control layer in a congested test bed setting of 16 nodes
+with multiple hidden terminals resulted in the acknowledgment success rate
+moving from 27-50% without traffic control to 90-100% with traffic control.
+The memory footprint increased by 260 bytes ROM / 16 bytes RAM with the
+inclusion of the traffic control layer.</p>
+</div>
+<div class="section" id="author-addresses">
+<h1>5. Author Addresses</h1>
+<div class="line-block">
+<div class="line">David Moss</div>
+<div class="line">Rincon Research Corporation</div>
+<div class="line">101 N. Wilmot Suite 101</div>
+<div class="line">Tucson AZ  85750</div>
+<div class="line">email: mossmoss at gmail dot com</div>
+<div class="line"><br /></div>
+<div class="line">Mark Hays</div>
+<div class="line">Rincon Research Corporation</div>
+<div class="line">101 N. Wilmot Suite 101</div>
+<div class="line">Tucson AZ  85750</div>
+<div class="line">email: mhh at rincon dot com</div>
+<div class="line"><br /></div>
+<div class="line">Mark Siner</div>
+<div class="line">Rincon Research Corporation</div>
+<div class="line">101 N. Wilmot, Suite 101</div>
+<div class="line">Tucson, AZ  85750</div>
+<div class="line">email: mks at rincon dot com</div>
+</div>
+</div>
+<div class="section" id="citations">
+<h1>6. Citations</h1>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Bret Hull, Kyle Jamieson, Hari Balakrishnan. &quot;Mitigating Congestion in Wireless Sensor Networks.&quot; In the Proceedings of the ACM Sensys Conference 2004</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Wan, C.-Y., Eisenman, S., and Campbell, A. &quot;CODA: Congestion Detection and Avoidance in Sensor Networks.&quot; In the Proceedings of the ACM Sensys Conference 2003</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td>Woo, A., and Culler, D. &quot;A Transmission Control Scheme for Media Access in Sensor Networks.&quot; In ACM MOBICOM 2001</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td>Rodrigo Fonseca, Omprakash Gnawali, Kyle Jamieson, Sukun Kim, Philip Levis, and Alec Woo.. &quot;TEP123: Collection Tree Protocol&quot;</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[5]</td><td>Philip Levis and Gilman Tolle. &quot;TEP118: Dissemination of Small Values.&quot;</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[6]</td><td>Philip Levis, Neil Patel, David Culler, and Scott Shenker. &quot;Trickle: A Self-Regulating Algorithm for Code Maintenance and Propagation in Wireless Sensor Networks.&quot; In Proceedings of the First USENIX/ACM Symposium on Networked Systems Design and Implementation (NSDI 2004).</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</body>
+</html>

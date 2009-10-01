@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.6: http://docutils.sourceforge.net/" />
+<title>Roadmap to an IP Stack in TinyOS</title>
+<meta name="author" content="Stephen Dawson-Haggerty, Matus Harvan, and Omprakash Gnawali" />
+<style type="text/css">
+
+/*
+:Author: David Goodger
+:Contact: goodger@users.sourceforge.net
+:date: $Date: 2009-10-01 21:09:49 $
+:version: $Revision: 1.1 $
+:copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+*/
+body {
+  font-family: Times;
+  font-size: 16px;
+}
+
+.first {
+  margin-top: 0 ! important }
+
+.last {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dd {
+  margin-bottom: 0.5em }
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning, div.admonition {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.hint p.admonition-title, div.important p.admonition-title,
+div.note p.admonition-title, div.tip p.admonition-title,
+div.admonition p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em }
+
+div.footer, div.header {
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin-left: 1em ;
+  border: medium outset ;
+  padding: 0em 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+}
+
+h1.title {
+ text-align: center;
+ font-size: 32px;
+}
+
+h2 {
+ font-size: 16px;
+ font-family: Arial, sans-serif;
+}
+
+h2.subtitle {
+  text-align: center }
+
+h3 {
+ font-size: 12px;
+ font-family: Arial, sans-serif;
+}
+
+hr {
+  width: 75% }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font-family: serif ;
+  font-size: 100% }
+
+pre.line-block {
+  font-family: serif ;
+  font-size: 100% }
+
+pre.literal-block, pre.doctest-block {
+  margin-left: 2em ;
+  margin-right: 2em ;
+  background-color: #eeeeee;
+  border-color: #000000;
+  border-width: thin; 
+  font-size: 14px
+}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.option-argument {
+  font-style: italic }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+table {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.citation {
+  border-left: solid thin gray ;
+  padding-left: 0.5ex }
+
+table.docinfo {
+  margin: 2em 4em;
+}
+
+table.footnote {
+  border-left: solid thin black ;
+  padding-left: 0.5ex }
+
+td, th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+th.docinfo-name, th.field-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap;
+  }
+
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+  font-size: 100% }
+
+tt {}
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="roadmap-to-an-ip-stack-in-tinyos">
+<h1 class="title">Roadmap to an IP Stack in TinyOS</h1>
+<table class="docinfo" frame="void" rules="none">
+<col class="docinfo-name" />
+<col class="docinfo-content" />
+<tbody valign="top">
+<tr class="field"><th class="docinfo-name">TEP:</th><td class="field-body">136</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Group:</th><td class="field-body">Network Protocol Working Group</td>
+</tr>
+<tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Informational</td>
+</tr>
+<tr><th class="docinfo-name">Status:</th>
+<td>Draft</td></tr>
+<tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">&gt; 2.1</td>
+</tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Stephen Dawson-Haggerty, Matus Harvan, and Omprakash Gnawali</td></tr>
+</tbody>
+</table>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
+<p>Recently, there has been renewed interest in the applicability of Internet
+Protocol-based networking for low power, embedded devices.  This interest is
+being driven by several sources.  One, emerging standards from the IETF are
+beginning to make it possible to design efficient, compatible
+implementations of IP for this class of resource-constrained device.  Two,
+there has been an emergence of a significant number of both open and closed IP
+embedded IP stacks which demonstrate the applicability of this model of
+networking.  Third, a set of recent academic papers have made the case that
+this network architecture is a significant research enabler and shown in more
+detail the structure of a full stack.</p>
+<p>In this TEP, we briefly explain how IP mechanisms map onto the well-studied
+problems of the sensor network community like collection routing and local
+aggregation.  Next, we discuss the current &quot;state of the standards.&quot;  Finally,
+we propose a path for the adoption of IP within TinyOS.</p>
+</div>
+<div class="section" id="ip-requirements-and-mechanisms">
+<h1>1. IP Requirements and Mechanisms</h1>
+<p>There are two versions of IP: IPv4 (RFCXXX) and IPv6 (RFCXXX).  Previous
+studies have indicated that IPv6 is more applicable to the low-power, embedded
+space then IPv4 for various reasons; most standardization efforts have focused
+on adapting IPv6 to these devices.  Therefore, we consider only IPv6.</p>
+<div class="section" id="ipv6-routing">
+<h2>1.1 IPv6 Routing</h2>
+<p>A central question for implementing IPv6 in sensor networks is what has become
+know as &quot;route over&quot; vs. &quot;mesh under&quot; in the IETF.  In mesh under networking,
+routing is done on layer two addresses, and every host is one hop from every
+other.  Although this is the most compatible with existing assumptions about
+subnet design, it leads to significant redundancies and inefficiencies in this
+space.  The alternative, so called route-over exposes the radio topology at
+the IP layer.  While not strictly compatible with some IPv6 mechanisms, this
+is becomming the favored approach since a single set of tools can be used to
+debug.  For the rest of this TEP we assume that route over is the model.</p>
+<p>There are a number of existing routing protocols for IPv6, some targeted at
+wireless links.  However, IPv6 itself does not require any particular routing
+protocol to be used with a domain; common choices in wired networks are OSPF
+and IS-IS.  Recent study in the IETF has indicated that existing protocols are
+probably not appropriate for this space [draft-ietf-roll-protocols-02], and so
+further work is needed on this point.  Existing protocols with TinyOS
+implementations such as DYMO or S4 may be appropriate for this task;
+collection and dissemination protocols like CTP or Drip are probably not
+directly applicable since they are address-free, although the insight gained
+from their implementations may be transferable.</p>
+</div>
+<div class="section" id="addressing">
+<h2>1.2 Addressing</h2>
+<p>The most well-known property of IPv6 is probably it's address length.  An IPv6
+address is 128 bits long.  Within this space, IPv6 defines unicast, anycast,
+and multicast address ranges; each of these ranges further have properties of
+their own.  For a full explaination of IPv6 addressing we refer the reader to,
+for example, [OReilly, RFC], we cover briefly some of the important details.</p>
+<div class="section" id="unicast-addressing">
+<h3>1.2.1 Unicast Addressing</h3>
+<p>Unicast addresses in IPv6 consist of two parts: the network identifier (the
+first 64 bits), and the interface identifier (the second).  The interface
+identifier is a flat space, and may be derived from the interface's MAC
+address, a random number, or other mechanism.  IPv6 contains mechanisms to
+ensure that the interface ID is unique within the subnet.  The network
+may be assigned using many different mechanisms, but some network identifiers
+are special.</p>
+<p>Unlike IPv4, each interface in IPv6 is multihomed: it is expected to have
+multiple IPv6 addresses.  When an interface is brought up, IPv6 contains
+mechanisms to configure the interface with a locally unique, non-routable
+address known as the link-local address.  This address has the network
+identifier fe80::, and can be used for communication between hosts in the same
+subnet.</p>
+<p>In a TinyOS IPv6 stack, this address range might be used to allow TinyOS nodes
+to communicate locally without routing, for instance to enable local
+aggregation.  If the TinyOS hosts can assign themselves link-local addresses
+derived from their IEEE802.15.4 16-bit short id, or full 64-bit EUID.  For
+instance, a node with short ID 16 might assign the address fe80::10 to its
+802.15.4 interface.  These addresses would not be routed; an IP stack would
+send directly to the short id 0x10 contained in the address.</p>
+<p>IPv6 also contains several mechanisms to allow a host to obtain a
+publicly-routable network identifier.  TinyOS hosts communicating with these
+addresses could contact nodes in other sensor networks or on the internet; the
+fact that they are multihomed allows them to use both public and link-local
+addresses simultaneously.</p>
+</div>
+<div class="section" id="multicast-addressing">
+<h3>1.2.2 Multicast Addressing</h3>
+<p>IPv6 contains a multicast address range; addresses beginning with the byte
+containing all ones (0xff) are multicast addresses.  Following this byte are
+four bits of flags and four bits of &quot;scope&quot;.  For instance, scope 1 is
+node-local, and scope 2 is link local.  IPv6 defines many well-known multicast
+groups [<a class="reference external" href="http://www.iana.org/assignments/ipv6-multicast-addresses">http://www.iana.org/assignments/ipv6-multicast-addresses</a>]; of most interest here are the &quot;link-local all nodes&quot; and &quot;link
+local all-routers&quot; addresses: ff02::1 and ff02::2, respectively.  Depending on
+weather TinyOS IP hosts are also IP routers, these addresses are effecitvely
+link-local broadcast addresses which might be mapped into the layer 2
+broadcast address (0xffff).  Thus IPv6 contains mechanisms for local
+broadcast.</p>
+<p>There is also a site-local scope defined in IPv6 (5) with a similar ff05::2
+address.  &quot;Site local&quot; is an administratively defined scope in IPv6, and might
+naturally consist of an entire sensor network.  Thus, sending to this address
+would correspond to disseminating a value to each node in the network and
+could be implemented with a trickle-based algorithm.</p>
+<p>Futhermore, the TinyOS community could develop additional conventions to
+provide and address for scoped flooding or delivery to nodes with particular
+capabilities.  A full IP multicast implementation within the sensor network
+could be used for many things including control applications or
+publish-subscribe network layers which have previously been special purpose.</p>
+</div>
+<div class="section" id="anycast-addressing">
+<h3>1.2.3 Anycast Addressing</h3>
+<p>Anycast addresses indicate that the packet should be delivered to at least one
+host with the anycast address.  This seems initially similar to the model for
+collection routing such as MultiHopLQI or CTP, in that a collection report is
+delivered to a single root.  However, it is more likeley that those
+&quot;collection roots&quot; in an IP-based infrastructure are not actually the final
+destination for the data; they are likely to only be intermediate routers who
+send the data on to a final destination.  Therefore, while there may be
+applications for anycast addressing, we do not believe this addressing mode to
+be appropriate in the common case.</p>
+</div>
+</div>
+<div class="section" id="ipv6-configuration-mechanisms">
+<h2>1.3 IPv6 Configuration Mechanisms</h2>
+<p>As alluded to earlier, IPv6 contains two mechanisms to allow internet hosts to
+become associated with a public network identifier.  These methods are
+stateless autoconfiguration and DHCPv6.  Stateless autoconfiguration defines
+Router Solicitations and Router Advertisements.  A host joining a network
+sends router solicitations to the link-local all-routers address (ff02::2)
+using his link-local address as the source address.  Routers respond with a
+Router Advertisement containing, among other things, a public network
+identifier which the host may use.</p>
+<p>In a TinyOS IP implementation, router solicitations and advertisements might
+be used for default route selection on the hosts, as well as neighbor
+discovery.</p>
+</div>
+<div class="section" id="extension-mechanisms">
+<h2>1.4 Extension Mechanisms</h2>
+<p>A common idiom in TinyOS is to provide &quot;stacked&quot; headers by implementing a
+series of components, all of which implement the Packet interface.  IPv6
+supports this a more flexible way with options headers.  These headers fall
+into one of two categories: hop-by-hop options headers and destination option
+headers.  These headers are chained together with small, two-octet common
+header fields which identifiy the header type of the next header, and the
+length of that options header.  This allows hosts to process a header chain
+even if they do not know how to interpret all of the options headers.</p>
+<p>These headers are commonly used for protocol options, or to piggyback data on
+outgoing packets.  For instance, a link estimator component could add an extra
+&quot;link options&quot; header to occasional outgoing packets as an options header,
+while avoiding the overhead when it is not necessary to do so.  This header
+architecture is significantly more flexible then the existing TinyOS packet
+architecture, although it does come at the slight cost of complexity.</p>
+</div>
+</div>
+<div class="section" id="the-state-of-the-standards">
+<h1>2. The State of the Standards</h1>
+<p>All of the previously defined mechanisms are well defined for IPv6 in various
+RFCs.  However, most nodes running TinyOS are significantly more
+resource-constrained then typical IPv6 hosts.  Thus, there is ongoing work on
+adapting these mechanisms to the characteristics of embedded devices.</p>
+<div class="section" id="header-compression">
+<h2>2.1 Header Compression</h2>
+<p>The first issue which must be addressed is the sheer size of the IPv6 header:
+40 octets.  Of this, 32 octets are the source and destination addresses of the
+packet.  The IETF has published RFC4944 which describes a header compression
+technique known as HC1.  However, this scheme has significant problems, most
+importantly the inability to take advantage of 16-bit short identifiers when
+available.  There have been a sequence of internet drafts proposing improved
+techinques such as HC1g, and HC.  The most recent version of these drafts is
+draft-hui-6lowpan-hc-02, and there are strong indications that the working
+group will depreciate HC1 from RFC4944 in the future.</p>
+</div>
+<div class="section" id="mtu">
+<h2>2.2 MTU</h2>
+<p>IPv6 requires a minimum link MTU of 1280 octets in RFCXXX.  Clearly, this is
+much larger then the IEEE802.15.4 link MTU of 127 octets.  RFC4944 defines
+&quot;layer 2.5&quot; fragmentation which allow packets up to this MTU to be transfered
+over small MTU links.  While there are some issues have been raised with this
+scheme, it seems likely to remain relatively unaltered.</p>
+</div>
+<div class="section" id="autoconfiguration">
+<h2>2.3 Autoconfiguration</h2>
+<p>IPv6 stateless autoconfiguration as originally defined has some problems,
+expecially once a &quot;route over&quot; network topology is established; for instance,
+Duplicate Address Detection is likely to require some changes.  A subcomittee
+of the 6lowpan working group is currently investigating these issues is is
+likely to propose adaptation mechanisms but they are currently in flux.</p>
+</div>
+<div class="section" id="routing">
+<h2>2.4 Routing</h2>
+<p>It is currently not possible to develop a standards-compliant routing layer,
+as the relevant standards do not exist.  Work in this direction is occuring in
+the Roll working group, but a full specification is likely some way off.</p>
+</div>
+</div>
+<div class="section" id="the-tinyos-way">
+<h1>3. The TinyOS Way</h1>
+<p>As the previous sections have shown, many sensor network abstractions map well
+into IPv6 mechanisms, with a significant gain in clarity of abstraction.
+However, standards are currently unavailable to specifiy exactly how this
+should be accomplished.  Therefor, our position is that TinyOS should move
+quickly to incorporate existing techinques and standards into an IPv6 stack
+where possible, while taking liberties with the standards when doing so
+improves performance or simplifies implementation.  Given that the standards
+themselves are in a state of flux, having an open implementation which
+demonstrates challenges and feasible mechaninisms is likely to be of
+significant value.</p>
+<p>The most important places where it may be necessary to move ahead of the
+standards are the routing; an IPv6 stack with no routing will not be as useful
+as one with it.  One open question is weather we choose a routing algorithm
+which functions in a completly decentralized fashion like AODV, OLSR, DYMO,
+S4, or many existing protocols or choose one which imposes more hierarchy on
+deployments.  We do note that existing standards like Zigbee and WirelessHART
+both contain multi-tier architectures with devices of differing capabilities.
+This has also been a common deployment model in many applications, but it
+limits the utility to places where this is possible.  The correct long-term
+answer is probably to support both types of routing.</p>
+</div>
+<div class="section" id="conclusion">
+<h1>4. Conclusion</h1>
+<p>This document is meant to introduce readers to the ways in which IPv6
+mechanisms can be used in a TinyOS-based sensor network deployment, and how
+they relate to previous work.  It does not address any implementation issues,
+which will be presented in a later TEP.</p>
+</div>
+<div class="section" id="authors">
+<h1>5. Authors</h1>
+<div class="line-block">
+<div class="line">Stephen Dawson-Haggerty</div>
+<div class="line">Computer Science Division</div>
+<div class="line">University of California, Berkeley</div>
+<div class="line">410 Soda Hall</div>
+<div class="line">Berkeley, CA 94701</div>
+<div class="line"><br /></div>
+<div class="line"><a class="reference external" href="mailto:stevedh&#64;eecs.berkeley.edu">stevedh&#64;eecs.berkeley.edu</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Matus Harvan</div>
+<div class="line">Information Security</div>
+<div class="line">IFW C 48.1</div>
+<div class="line">ETH Zentrum</div>
+<div class="line">Haldeneggsteig 4</div>
+<div class="line">8092 Zurich</div>
+<div class="line">Switzerland</div>
+<div class="line"><br /></div>
+<div class="line">phone - +41 44 63 26876</div>
+<div class="line">email - <a class="reference external" href="mailto:mharvan&#64;inf.ethz.ch">mharvan&#64;inf.ethz.ch</a></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line">Omprakash Gnawali</div>
+<div class="line">Ronald Tutor Hall (RTH) 418</div>
+<div class="line">3710 S. McClintock Avenue</div>
+<div class="line">Los Angeles, CA 90089</div>
+<div class="line"><br /></div>
+<div class="line">phone - +1 213 821-5627</div>
+<div class="line">email - <a class="reference external" href="mailto:gnawali&#64;usc.edu">gnawali&#64;usc.edu</a></div>
+</div>
+</div>
+<div class="section" id="references">
+<h1>6. References</h1>
+</div>
+</div>
+</body>
+</html>
