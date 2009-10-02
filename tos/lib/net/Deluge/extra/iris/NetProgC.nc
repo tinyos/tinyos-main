@@ -40,13 +40,13 @@ configuration NetProgC {
 
 implementation {
 
-  components MainC, InternalFlashC as IFlash, CrcP, NetProgM;
+  components MainC, InternalFlashC as IFlash, CrcC, NetProgM;
 
   NetProg = NetProgM;
 
   MainC.SoftwareInit -> NetProgM.Init;
   NetProgM.IFlash -> IFlash;
-  NetProgM.Crc -> CrcP;
+  NetProgM.Crc -> CrcC;
 
   components LedsC;
   NetProgM.Leds -> LedsC;

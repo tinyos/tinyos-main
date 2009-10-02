@@ -40,13 +40,13 @@ configuration ObjectTransferC
 implementation
 {
   components ObjectTransferP, DelugePageTransferC;
-  components CrcP;
+  components CrcC;
   
   ObjectTransfer = ObjectTransferP;
   DelugePageTransferC.BlockRead = BlockRead;
   DelugePageTransferC.BlockWrite = BlockWrite;
   ObjectTransferP.DelugePageTransfer -> DelugePageTransferC.DelugePageTransfer;
-  ObjectTransferP.Crc -> CrcP.Crc;
+  ObjectTransferP.Crc -> CrcC.Crc;
   
   components new AMSenderC(AM_DELUGEADVMSG) as SendAdvMsg, 
              new AMReceiverC(AM_DELUGEADVMSG) as ReceiveAdvMsg,
