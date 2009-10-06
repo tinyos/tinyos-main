@@ -65,6 +65,9 @@ implementation
 		if( len > call Packet.maxPayloadLength() )
 			return EINVAL;
 
+		if( call Config.checkFrame(msg) != SUCCESS )
+			return FAIL;
+
 		call Packet.setPayloadLength(msg, len);
 		call AMPacket.setSource(msg, call AMPacket.address());
 		call AMPacket.setGroup(msg, call AMPacket.localGroup());

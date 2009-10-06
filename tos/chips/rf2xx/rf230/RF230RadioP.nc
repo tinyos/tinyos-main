@@ -189,6 +189,14 @@ implementation
 		call Ieee154PacketLayer.setDestPan(msg, grp);
 	}
 
+	command error_t ActiveMessageConfig.checkFrame(message_t* msg)
+	{
+		if( ! call Ieee154PacketLayer.isDataFrame(msg) )
+			call Ieee154PacketLayer.createDataFrame(msg);
+
+		return SUCCESS;
+	}
+
 /*----------------- CsmaConfig -----------------*/
 
 	async command bool CsmaConfig.requiresSoftwareCCA(message_t* msg)

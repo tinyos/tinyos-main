@@ -42,4 +42,12 @@ interface ActiveMessageConfig
 
 	/** Same as AMPacket.setGroup */
 	command void setGroup(message_t* msg, am_group_t grp);
+
+	/**
+	 * Check if the packet is properly formatted, and if the user 
+	 * forgot to call Packet.clear then format it properly.
+	 * Return SUCCESS if the frame is now properly set up, 
+	 * or FAIL of the send operation should be aborted.
+	 */
+	command error_t checkFrame(message_t* msg);
 }
