@@ -24,6 +24,7 @@
 #ifndef __RF230RADIO_H__
 #define __RF230RADIO_H__
 
+#include <RadioConfig.h>
 #include <TinyosNetworkLayer.h>
 #include <Ieee154PacketLayer.h>
 #include <ActiveMessageLayer.h>
