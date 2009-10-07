@@ -290,6 +290,9 @@ implementation
 		else
 			return EBUSY;
 
+		if( call Config.needsAutoAckRequest(msg) )
+			call PacketAcknowledgements.requestAck(msg);
+
 		txMsg = msg;
 		txError = FAIL;
 
@@ -329,7 +332,7 @@ implementation
 		if( error != SUCCESS
 			|| call LowPowerListening.getRemoteWakeupInterval(msg) == 0
 			|| state == SEND_SUBSEND_DONE_LAST
-			|| (call Config.getAckRequired(msg) && call PacketAcknowledgements.wasAcked(msg)) )
+			|| (call Config.ackRequested(msg) && call PacketAcknowledgements.wasAcked(msg)) )
 		{
 			call Timer.stop();
 			state = SEND_DONE;

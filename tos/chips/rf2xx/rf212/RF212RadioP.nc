@@ -320,7 +320,12 @@ implementation
 
 #ifdef LOW_POWER_LISTENING
 
-	async command bool LowPowerListeningConfig.getAckRequired(message_t* msg)
+	command bool LowPowerListeningConfig.needsAutoAckRequest(message_t* msg)
+	{
+		return call Ieee154PacketLayer.getDestAddr(msg) != TOS_BCAST_ADDR;
+	}
+
+	command bool LowPowerListeningConfig.ackRequested(message_t* msg)
 	{
 		return call Ieee154PacketLayer.getAckRequired(msg);
 	}
