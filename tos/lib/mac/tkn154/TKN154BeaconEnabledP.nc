@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2009-09-14 12:17:18 $
+ * $Revision: 1.9 $
+ * $Date: 2009-10-16 12:25:45 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -318,6 +318,7 @@ implementation
   DisassociateP.TxFramePool -> TxFramePoolP;
   DisassociateP.TxControlPool -> TxControlPoolP;
   DisassociateP.MLME_GET -> PibP;
+  DisassociateP.MLME_SET -> PibP;
   DisassociateP.FrameUtility -> PibP;
   DisassociateP.Frame -> PibP;
   DisassociateP.LocalExtendedAddress -> PibP.GetLocalExtendedAddress;

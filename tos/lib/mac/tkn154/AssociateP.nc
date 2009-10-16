@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009-05-20 15:15:44 $
+ * $Revision: 1.8 $
+ * $Date: 2009-10-16 12:25:45 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -204,6 +204,8 @@ implementation
     if (m_associationOngoing) {
       call ResponseTimeout.stop();
       m_associationOngoing = FALSE;
+      if (m_assocRespStatus == IEEE154_ASSOCIATION_SUCCESSFUL)
+        call MLME_SET.macShortAddress(m_shortAddress);
       signal MLME_ASSOCIATE.confirm(m_shortAddress, m_assocRespStatus, 0);
       dbg_serial("AssociationP", "confirm: %lx, %lu\n", 
           (uint32_t) m_shortAddress, (uint32_t) m_assocRespStatus);

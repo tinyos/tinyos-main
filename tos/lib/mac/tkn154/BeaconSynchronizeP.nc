@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2009-03-24 12:56:46 $
+ * $Revision: 1.10 $
+ * $Date: 2009-10-16 12:25:45 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -244,8 +244,8 @@ implementation
 
     if (call RadioOff.isOff())
       signal RadioOff.offDone();
-    else
-      ASSERT(call RadioOff.off() == SUCCESS);
+    else if (call RadioOff.off() != SUCCESS) 
+      ASSERT(0);
   }
 
   async event void RadioOff.offDone()
@@ -267,18 +267,29 @@ implementation
 
   async event void BeaconRx.enableRxDone()
   {
+    uint32_t dt;
+
     switch (m_state)
     {
       case S_INITIAL_SCAN: 
+        // "To acquire beacon synchronization, a device shall enable its 
+        // receiver and search for at most [aBaseSuperframeDuration * (2^n + 1)]
+        // symbols, where n is the value of macBeaconOrder [...] Once the number
+        // of missed beacons reaches aMaxLostBeacons, the MLME shall notify the 
+        // next higher layer." (Sect. 7.5.4.1)
         m_state = S_RECEIVING;
-        call TrackAlarm.start((((uint32_t) 1 << m_beaconOrder) + (uint32_t) 1) * 
-          (uint32_t) IEEE154_aBaseSuperframeDuration * (uint32_t) IEEE154_aMaxLostBeacons);
+        dt = (((uint32_t) 1 << m_beaconOrder) + (uint32_t) 1) * 
+          (uint32_t) IEEE154_aBaseSuperframeDuration * 
+          (uint32_t) IEEE154_aMaxLostBeacons;
+        call TrackAlarm.start(dt);
+        dbg_serial("BeaconSynchronizeP","Rx enabled, expecting beacon within %lu symbols.\n", dt);
         break;
       case S_PREPARE:
         m_state = S_RECEIVING;
-        dbg_serial("BeaconSynchronizeP","Rx enabled, expecting beacon in %lu symbols.\n",
-            (uint32_t) ((m_lastBeaconRxTime + m_dt) - call TrackAlarm.getNow())); 
-        call TrackAlarm.startAt(m_lastBeaconRxTime, m_dt + IEEE154_MAX_BEACON_LISTEN_TIME(m_beaconOrder));
+        dt = m_dt + IEEE154_MAX_BEACON_LISTEN_TIME(m_beaconOrder);
+        call TrackAlarm.startAt(m_lastBeaconRxTime, dt);
+        dbg_serial("BeaconSynchronizeP","Rx enabled, expecting beacon within %lu symbols.\n",
+            (uint32_t) ((m_lastBeaconRxTime + dt) - call TrackAlarm.getNow())); 
         break;
       default:
         ASSERT(0);

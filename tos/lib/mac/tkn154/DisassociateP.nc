@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:22 $
+ * $Revision: 1.4 $
+ * $Date: 2009-10-16 12:25:45 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -55,6 +55,7 @@ module DisassociateP
     interface Pool<ieee154_txframe_t> as TxFramePool;
     interface Pool<ieee154_txcontrol_t> as TxControlPool;
     interface MLME_GET;
+    interface MLME_SET;
     interface FrameUtility;
     interface IEEE154Frame as Frame;
     interface Get<uint64_t> as LocalExtendedAddress;
@@ -68,6 +69,7 @@ implementation
   uint8_t m_payloadDisassocRequest[2];
   uint8_t m_coordAddrMode;
   bool m_disAssociationOngoing;
+  void resetPanValuesInPib();
 
   command error_t Init.init()
   {
@@ -151,6 +153,7 @@ implementation
     uint8_t DeviceAddrMode = (mhr[MHR_INDEX_FC2] & FC2_SRC_MODE_MASK) >> FC2_SRC_MODE_OFFSET;
     uint16_t DevicePANID = *((nxle_uint16_t*) (&(mhr[MHR_INDEX_ADDRESS])));
     ieee154_address_t DeviceAddress;
+
     if ((mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == FC2_DEST_MODE_EXTENDED)
       srcAddrOffset += 6;
     call FrameUtility.convertToNative(&DeviceAddress.extendedAddress, &mhr[srcAddrOffset]);
@@ -158,6 +161,11 @@ implementation
     call TxFramePool.put(data);
     dbg_serial("DisassociateP", "transmitDone() -> result: %lu\n", (uint32_t) status);
     m_disAssociationOngoing = FALSE;
+
+    // "[...] even if the acknowledgment is not received, 
+    // the device should consider itself disassociated."  (Sect. 7.5.3.2)
+    if (status == IEEE154_SUCCESS || status == IEEE154_NO_ACK)
+      resetPanValuesInPib();  
     signal MLME_DISASSOCIATE.confirm(status, DeviceAddrMode, DevicePANID, DeviceAddress);
   }
 
@@ -173,11 +181,17 @@ implementation
     uint8_t DeviceAddrMode = (mhr[1] & FC2_DEST_MODE_MASK) >> FC2_DEST_MODE_OFFSET;
     uint16_t DevicePANID = *((nxle_uint16_t*) (&(mhr[MHR_INDEX_ADDRESS])));
     ieee154_address_t DeviceAddress;
+
     call FrameUtility.convertToNative(&DeviceAddress.extendedAddress, &mhr[dstAddrOffset]);
     call TxControlPool.put((ieee154_txcontrol_t*) ((uint8_t*) data->header - offsetof(ieee154_txcontrol_t, header)));
     call TxFramePool.put(data);
     dbg_serial("DisassociateP", "transmitDone() -> result: %lu\n", (uint32_t) status);
     m_disAssociationOngoing = FALSE;
+
+    // "[...] even if the acknowledgment is not received, 
+    // the device should consider itself disassociated." (Sect. 7.5.3.2)
+    if (status == IEEE154_SUCCESS || status == IEEE154_NO_ACK)
+      resetPanValuesInPib();      
     signal MLME_DISASSOCIATE.confirm(status, DeviceAddrMode, DevicePANID, DeviceAddress);
   }
 
@@ -187,6 +201,7 @@ implementation
   {
     // received a disassociation notification from the coordinator (direct tx)
     ieee154_address_t address;
+
     address.extendedAddress = call LocalExtendedAddress.get();
     signal MLME_DISASSOCIATE.indication(address.extendedAddress, frame->data[1], NULL);
     return frame;
@@ -202,11 +217,25 @@ implementation
   {
     // received a disassociation notification from the device
     ieee154_address_t address;
+
     if (call Frame.getSrcAddrMode(frame) == ADDR_MODE_EXTENDED_ADDRESS && 
         call Frame.getSrcAddr(frame, &address) == SUCCESS)
       signal MLME_DISASSOCIATE.indication(address.extendedAddress, frame->data[1], NULL);
     dbg_serial("DisassociateP", "Received disassociation request from %lx\n", (uint32_t) address.shortAddress);
     return frame;
+  }
+
+  void resetPanValuesInPib()
+  {
+    // "An associated device shall disassociate itself by removing 
+    // all references to the PAN; the MLME shall set macPANId, 
+    // macShortAddress, macAssociatedPANCoord, macCoordShortAddress 
+    // and macCoordExtended- Address to the default values." (Sect. 7.5.3.2) 
+    call MLME_SET.macPANId(IEEE154_DEFAULT_PANID);
+    call MLME_SET.macShortAddress(IEEE154_DEFAULT_SHORTADDRESS);
+    call MLME_SET.macAssociatedPANCoord(IEEE154_DEFAULT_ASSOCIATEDPANCOORD);
+    call MLME_SET.macCoordShortAddress(IEEE154_DEFAULT_COORDSHORTADDRESS);
+    call MLME_SET.macCoordExtendedAddress(0);
   }
 
   /* ------------------- Defaults ------------------- */
