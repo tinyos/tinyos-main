@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:31:40 $
+ * $Revision: 1.3 $
+ * $Date: 2009-10-16 16:18:29 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -56,6 +56,7 @@ module NoDisassociateP
     interface Pool<ieee154_txframe_t> as TxFramePool;
     interface Pool<ieee154_txcontrol_t> as TxControlPool;
     interface MLME_GET;
+    interface MLME_SET;
     interface FrameUtility;
     interface IEEE154Frame as Frame;
     interface Get<uint64_t> as LocalExtendedAddress;
