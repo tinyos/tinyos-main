@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2008-06-20 10:30:28 $
+ * $Revision: 1.9 $
+ * $Date: 2009-10-17 11:48:33 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -54,46 +54,43 @@ implementation
   MSP430REG_NORACE(ADC12IE);
   MSP430REG_NORACE(ADC12IV);
 
-  // SFRs are accessed directly or cast to a pointer, both works fine
-  // (we don't access all SFRs directly, because that would result in
-  // much higher memory footprint)
+  DEFINE_UNION_CAST(int2adc12ctl0,adc12ctl0_t,uint16_t)
+  DEFINE_UNION_CAST(int2adc12ctl1,adc12ctl1_t,uint16_t)
+  DEFINE_UNION_CAST(adc12ctl0cast2int,uint16_t,adc12ctl0_t)
+  DEFINE_UNION_CAST(adc12ctl1cast2int,uint16_t,adc12ctl1_t)
+  DEFINE_UNION_CAST(adc12memctl2int,uint8_t,adc12memctl_t)
+  DEFINE_UNION_CAST(int2adc12memctl,adc12memctl_t,uint8_t)
   
   async command void HplAdc12.setCtl0(adc12ctl0_t control0){
-    ADC12CTL0 = *((uint16_t*) &control0); 
+    ADC12CTL0 = adc12ctl0cast2int(control0); 
   }
   
   async command void HplAdc12.setCtl1(adc12ctl1_t control1){
-    ADC12CTL1 = *((uint16_t*) &control1); 
+    ADC12CTL1 = adc12ctl1cast2int(control1); 
   }
   
   async command adc12ctl0_t HplAdc12.getCtl0(){ 
-    return *((adc12ctl0_t*) &ADC12CTL0); 
+    return int2adc12ctl0(ADC12CTL0); 
   }
   
   async command adc12ctl1_t HplAdc12.getCtl1(){
-    return *((adc12ctl1_t*) &ADC12CTL1); 
+    return int2adc12ctl1(ADC12CTL1); 
   }
   
-  async command void HplAdc12.setMCtl(uint8_t i, adc12memctl_t memControl){
-    uint8_t *memCtlPtr = (uint8_t*) ADC12MCTL;
-    memCtlPtr += i;
-    *memCtlPtr = *(uint8_t*)&memControl; 
+  async command void HplAdc12.setMCtl(uint8_t i, adc12memctl_t memCtl){
+    ADC12MCTL[i] = adc12memctl2int(memCtl);
   }
    
   async command adc12memctl_t HplAdc12.getMCtl(uint8_t i){
-    adc12memctl_t x = {inch: 0, sref: 0, eos: 0 };    
-    uint8_t *memCtlPtr = (uint8_t*) ADC12MCTL;
-    memCtlPtr += i;
-    x = *(adc12memctl_t*) memCtlPtr;
-    return x;
+    return int2adc12memctl(ADC12MCTL[i]);
   }  
   
   async command uint16_t HplAdc12.getMem(uint8_t i){
-    return *((uint16_t*) ADC12MEM + i);
+    return ADC12MEM[i];
   }
 
   async command void HplAdc12.setIEFlags(uint16_t mask){ ADC12IE = mask; } 
-  async command uint16_t HplAdc12.getIEFlags(){ return (uint16_t) ADC12IE; } 
+  async command uint16_t HplAdc12.getIEFlags(){ return ADC12IE; } 
   
   async command void HplAdc12.resetIFGs(){ 
     ADC12IV = 0; 
@@ -118,7 +115,7 @@ implementation
     ADC12CTL0 |= ENC; 
   }
     
-  async command bool HplAdc12.isBusy(){ return ADC12CTL1 & ADC12BUSY; }
+  async command bool HplAdc12.isBusy(){ return (ADC12CTL1 & ADC12BUSY); }
 
   TOSH_SIGNAL(ADC_VECTOR) {
     signal HplAdc12.conversionDone(ADC12IV);
