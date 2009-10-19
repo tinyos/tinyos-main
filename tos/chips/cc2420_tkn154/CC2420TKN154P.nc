@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:07 $
+ * $Revision: 1.4 $
+ * $Date: 2009-10-19 14:16:09 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -121,6 +121,7 @@ module CC2420TKN154P
   task void energyDetectionTask();
   task void startDoneTask();
   task void rxControlStopDoneTask();
+  task void configSyncTask();
 
   /* function prototypes */
   uint8_t dBmToPA_LEVEL(int dbm);
@@ -275,6 +276,17 @@ module CC2420TKN154P
         call CC2420Config.setCCAMode(*((ieee154_phyCCAMode_t*) PIBAttributeValue));
         break;
     }
+    if (m_state == S_RECEIVING || m_state == S_RX_PENDING)
+      post configSyncTask();
+  }
+
+  task void configSyncTask()
+  {
+    if (call SpiResource.immediateRequest() == SUCCESS) {
+      call CC2420Config.sync(); /* put PIB changes into operation */
+      call SpiResource.release();
+    } else
+      post configSyncTask(); // spin (should be short time, until packet is received)
   }
 
   command void RadioPromiscuousMode.set( bool val )
@@ -331,6 +343,7 @@ module CC2420TKN154P
 
   async command error_t RadioOff.off()
   {
+    error_t result;
     atomic {
       if (m_state == S_RADIO_OFF)
         return EALREADY;
@@ -338,8 +351,9 @@ module CC2420TKN154P
         return FAIL;
       m_state = S_OFF_PENDING;
     }
-    ASSERT(call RxControl.stop() == SUCCESS);
-    return SUCCESS;
+    result = call RxControl.stop();
+    ASSERT(result == SUCCESS);
+    return result;
   }
   
   void offStopRxDone()
@@ -370,6 +384,7 @@ module CC2420TKN154P
 
   async command error_t RadioRx.enableRx(uint32_t t0, uint32_t dt)
   {
+    error_t result;
     atomic {
       if (m_state != S_RADIO_OFF)
         return FAIL;
@@ -377,21 +392,23 @@ module CC2420TKN154P
     }
     m_t0.regular = t0;
     m_dt = dt;
-    ASSERT(call RxControl.start() == SUCCESS);
-    if (call SpiResource.immediateRequest() == SUCCESS)
-      rxSpiReserved();
-    else
-      call SpiResource.request();   /* will continue in rxSpiReserved()  */
-    return SUCCESS; 
+    result = call RxControl.start(); 
+    ASSERT(result == SUCCESS);
+    if (result == SUCCESS)
+      if (call SpiResource.immediateRequest() == SUCCESS)
+        rxSpiReserved();
+      else
+        call SpiResource.request();   /* will continue in rxSpiReserved()  */
+    return result; 
   }
 
   void rxSpiReserved()
   {
+    m_state = S_RX_PENDING;
     call CC2420Config.sync(); /* put any pending PIB changes into operation      */
     call TxControl.stop();    /* reset Tx logic for timestamping (SFD interrupt) */
     call TxControl.start();   
     atomic {
-      m_state = S_RX_PENDING;
       if (call TimeCalc.hasExpired(m_t0.regular, m_dt))
         signal ReliableWait.waitRxDone();
       else
@@ -401,10 +418,12 @@ module CC2420TKN154P
 
   async event void ReliableWait.waitRxDone()
   {
+    error_t result;
     atomic {
       m_state = S_RECEIVING;
-      ASSERT(call CC2420Power.rxOn() == SUCCESS);
+      result = call CC2420Power.rxOn(); 
     }
+    ASSERT(result == SUCCESS);
     call CC2420Tx.lockChipSpi();
     call SpiResource.release();
     signal RadioRx.enableRxDone();
@@ -462,12 +481,14 @@ module CC2420TKN154P
 
   async event void ReliableWait.waitTxDone()
   {
+    error_t result;
+    ASSERT(m_state == S_TX_PENDING);
     atomic {
-      ASSERT(m_state == S_TX_PENDING);
       m_state = S_TX_ACTIVE_NO_CSMA;
-      ASSERT(call CC2420Tx.send(FALSE) == SUCCESS); /* transmit without CCA, this must succeed */
+      result = call CC2420Tx.send(FALSE); /* transmit without CCA, this must succeed */ 
       checkEnableRxForACK();
     }
+    ASSERT(result == SUCCESS); 
   }
 
   inline void txDoneRadioTx(ieee154_txframe_t *frame, ieee154_timestamp_t *timestamp, error_t result)
@@ -714,9 +735,11 @@ module CC2420TKN154P
 
   void txSpiReserved()
   {
+    error_t result;
     call CC2420Config.sync();
     call TxControl.start();
-    ASSERT(call CC2420Tx.loadTXFIFO(m_txframe) == SUCCESS);
+    result = call CC2420Tx.loadTXFIFO(m_txframe);
+    ASSERT(result == SUCCESS);
   }
 
   async event void CC2420Tx.loadTXFIFODone(ieee154_txframe_t *data, error_t error)
@@ -737,12 +760,15 @@ module CC2420TKN154P
     /* A frame is currently being transmitted, check if we  */
     /* need the Rx logic ready for the ACK                  */
     bool ackRequest = (m_txframe->header->mhr[MHR_INDEX_FC1] & FC1_ACK_REQUEST) ? TRUE : FALSE;
+    error_t result = SUCCESS;
+
     if (ackRequest) {
       /* release SpiResource and start Rx logic, so the latter  */
       /* can take over after Tx is finished to receive the ACK */
       call SpiResource.release();
-      ASSERT(call RxControl.start() == SUCCESS);
+      result = call RxControl.start();
     }
+    ASSERT(result == SUCCESS);
   }
 
   async event void CC2420Tx.sendDone(ieee154_txframe_t *frame, 
@@ -755,7 +781,8 @@ module CC2420TKN154P
       /* this means an ACK was requested and during the transmission */
       /* we released the Spi to allow the Rx part to take over */
       ASSERT((frame->header->mhr[MHR_INDEX_FC1] & FC1_ACK_REQUEST));
-      ASSERT(call RxControl.stop() == SUCCESS); /* will continue in txDoneRxControlStopped() */
+      result = call RxControl.stop();
+      ASSERT(result == SUCCESS); /* will continue in txDoneRxControlStopped() */
     } else
       sendDoneSpiReserved();
   }
