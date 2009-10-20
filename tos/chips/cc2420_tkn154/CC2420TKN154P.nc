@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-10-19 14:16:09 $
+ * $Revision: 1.5 $
+ * $Date: 2009-10-20 09:21:39 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -283,7 +283,12 @@ module CC2420TKN154P
   task void configSyncTask()
   {
     if (call SpiResource.immediateRequest() == SUCCESS) {
-      call CC2420Config.sync(); /* put PIB changes into operation */
+      call CC2420Config.sync(); 
+      if (m_state == S_RECEIVING) {
+        // need to toggle radio state to make changes effective now
+        call CC2420Power.rfOff();
+        call CC2420Power.rxOn();
+      }
       call SpiResource.release();
     } else
       post configSyncTask(); // spin (should be short time, until packet is received)
