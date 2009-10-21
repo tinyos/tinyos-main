@@ -42,6 +42,9 @@ implementation {
     dhv_summary_msg_t* dsmsg;
 
     dmsg = (dhv_msg_t*) call SummarySend.getPayloadPtr();
+    if(dmsg == NULL)
+        return FAIL;
+
     dmsg->type = ID_DHV_SUMMARY;
     dsmsg = (dhv_summary_msg_t*) dmsg->content;
 

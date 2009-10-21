@@ -37,6 +37,9 @@ implementation{
     error_t sendResult;
 
     dmsg = call HSumSend.getPayloadPtr();
+    if(dmsg == NULL)
+        return FAIL;
+
     dmsg->type = ID_DHV_HSUM;
     dhsmsg = (dhv_hsum_msg_t*) dmsg->content;
 
