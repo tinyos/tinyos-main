@@ -4,7 +4,7 @@ Author/Contact: tinyos-help@millennium.berkeley.edu
 Description:
 
 A simple low-power-listening test app, which cycles through different
-low-power-listening settings every ~32s, repeating every ~256s. 
+low-power-listening settings every ~32s, repeating every ~192s. 
 
 This application currently runs on motes using the CC1000, CC2420 and
 RF230 radios. To compile for motes with CC2420 or RF230 radios, you
@@ -36,16 +36,10 @@ Its low-power-listening settings are as follows (repeating every 256s):
 160-192s:  receive: low-power-listening with 2000ms interval
 	   send: every 7 seconds, to low-power-listeners with 2000ms interval
 
-192-224s:  receive: low-power-listening with 1% duty cycle
-	   send: every 7 seconds, to low-power-listeners with 1% duty cycle
-
-224-256s:  receive: low-power-listening with 0.1% duty cycle
-	   send: every 7 seconds, to low-power-listeners with 0.1% duty cycle
-
 Whether two motes running TestLPL can receive each others messages depends
 on their current send and receive low-power-listening settings. If you reset
 two such motes at the same time, they will be able to receive each other's
-messages in the following intervals: 0-96s and 128-256s.
+messages in the following intervals: 0-96s and 128-192s.
 
 Tools:
 

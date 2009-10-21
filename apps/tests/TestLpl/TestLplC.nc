@@ -1,4 +1,4 @@
-// $Id: TestLplC.nc,v 1.1 2008-07-02 17:42:42 idgay Exp $
+// $Id: TestLplC.nc,v 1.2 2009-10-21 19:11:51 razvanm Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -68,31 +68,25 @@ implementation
     case 0:
       sendSkip = 0;
       sendInterval = 0;
-      call LowPowerListening.setLocalSleepInterval(0);
+      call LowPowerListening.setLocalWakeupInterval(0);
       break;
     case 1:
       sendInterval = 100; /* Send to sleepy listener */
       break;
     case 2:
       sendInterval = -1; /* Send to listener like us */
-      call LowPowerListening.setLocalSleepInterval(250);
+      call LowPowerListening.setLocalWakeupInterval(250);
       break;
     case 3:
       sendInterval = 0; /* Send to awake listener */
       break;
     case 4:
       sendInterval = -1; /* Send to listener like us */
-      call LowPowerListening.setLocalSleepInterval(10);
+      call LowPowerListening.setLocalWakeupInterval(10);
       break;
     case 5:
       sendSkip = 7; /* Send every 7s */
-      call LowPowerListening.setLocalSleepInterval(2000);
-      break;
-    case 6:
-      call LowPowerListening.setLocalDutyCycle(100);
-      break;
-    case 7:
-      call LowPowerListening.setLocalDutyCycle(10);
+      call LowPowerListening.setLocalWakeupInterval(2000);
       break;
     }
   }
@@ -106,7 +100,7 @@ implementation
     if (!locked && ((counter & sendSkip) == sendSkip))
       {
 	if (sendInterval >= 0)
-	  call LowPowerListening.setRxSleepInterval(&packet, sendInterval);
+	  call LowPowerListening.setRemoteWakeupInterval(&packet, sendInterval);
 	if (call AMSend.send(AM_BROADCAST_ADDR, &packet, 0) == SUCCESS)
 	  {
 	    call Leds.led0On();
