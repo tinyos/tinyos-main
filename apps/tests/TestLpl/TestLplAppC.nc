@@ -1,4 +1,4 @@
-// $Id: TestLplAppC.nc,v 1.2 2008-07-23 08:08:10 andreaskoepke Exp $
+// $Id: TestLplAppC.nc,v 1.3 2009-10-21 19:29:50 ayer1 Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -45,7 +45,7 @@ implementation {
   components new TimerMilliC();
 #if defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT)
   components CC1000CsmaRadioC as LplRadio;
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_INTELMOTE2)
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2) || defined(PLATFORM_INTELMOTE2)
   components CC2420ActiveMessageC as LplRadio;
 #elif defined(PLATFORM_IRIS)
   components RF230ActiveMessageC as LplRadio;
