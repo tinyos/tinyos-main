@@ -43,8 +43,6 @@ implementation {
 
   command error_t Init.init() {
     
-    register uint8_t i;
-    
     // have to tell mux to connect path from msp430 to sd
     TOSH_SEL_DOCK_N_IOFUNC();
     TOSH_MAKE_DOCK_N_OUTPUT();
