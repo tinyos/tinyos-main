@@ -1,4 +1,4 @@
-// $Id: TestLplAppC.nc,v 1.3 2009-10-21 19:29:50 ayer1 Exp $
+// $Id: TestLplAppC.nc,v 1.4 2009-10-22 13:17:14 r-studio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -47,7 +47,7 @@ implementation {
   components CC1000CsmaRadioC as LplRadio;
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2) || defined(PLATFORM_INTELMOTE2)
   components CC2420ActiveMessageC as LplRadio;
-#elif defined(PLATFORM_IRIS)
+#elif defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
   components RF230ActiveMessageC as LplRadio;
 #elif defined(PLATFORM_EYESIFXV1) || defined(PLATFORM_EYESIFXV2)
   components LplC as LplRadio;
