@@ -1,4 +1,4 @@
-// $Id: RadioCountToLedsC.nc,v 1.3 2008-06-24 18:05:48 idgay Exp $
+// $Id: RadioCountToLedsC.nc,v 1.4 2009-10-22 18:37:41 razvanm Exp $
 
 /*                                                                        tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -71,7 +71,7 @@ implementation {
   event void AMControl.startDone(error_t err) {
     if (err == SUCCESS) {
       // Note we can setup LPL before or after the radio turns on
-      call LowPowerListening.setLocalSleepInterval(1000);
+      call LowPowerListening.setLocalWakeupInterval(1000);
       call MilliTimer.startOneShot(1500);
     }
     else {
@@ -96,7 +96,7 @@ implementation {
       }
 
       rcm->counter = counter;
-      call LowPowerListening.setRxSleepInterval(&packet, 1000);
+      call LowPowerListening.setRemoteWakeupInterval(&packet, 1000);
       if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(radio_count_msg_t)) == SUCCESS) {
         dbg("RadioCountToLedsC", "RadioCountToLedsC: packet sent.\n", counter);        
         locked = TRUE;

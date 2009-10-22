@@ -68,7 +68,7 @@ implementation {
   }
   
   void sendSampleMsg() {
-    call LPL.setRxSleepInterval(&sample_msg, 0);
+    call LPL.setRemoteWakeupInterval(&sample_msg, 0);
     if(call SampleSend.send(BASE_STATION_ADDR, &sample_msg, sizeof(nx_sensor_sample_t)) != SUCCESS)
       post sendSampleMsgTask();
     else call Leds.led2On();
@@ -78,7 +78,7 @@ implementation {
   task void sendSampleMsgTask() { sendSampleMsg(); }
 	
   event void Boot.booted() {
-    call LPL.setLocalSleepInterval(LPL_INTERVAL);
+    call LPL.setLocalWakeupInterval(LPL_INTERVAL);
     call AMControl.start();
   }
   

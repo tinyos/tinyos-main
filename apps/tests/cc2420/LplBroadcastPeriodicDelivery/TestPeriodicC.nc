@@ -71,7 +71,7 @@ implementation {
     transmitter = (call AMPacket.address() == 1);
     count = 0;
     
-    call LowPowerListening.setLocalSleepInterval(1000);
+    call LowPowerListening.setLocalWakeupInterval(1000);
     call SplitControl.start();
   }
   
@@ -124,7 +124,7 @@ implementation {
   task void send() {
     TestPeriodicMsg *periodicMsg = (TestPeriodicMsg *) call Packet.getPayload(&fullMsg, sizeof(TestPeriodicMsg));
     periodicMsg->count = count;
-    call LowPowerListening.setRxSleepInterval(&fullMsg, 1000);
+    call LowPowerListening.setRemoteWakeupInterval(&fullMsg, 1000);
     if(call AMSend.send(AM_BROADCAST_ADDR, &fullMsg, sizeof(TestPeriodicMsg)) != SUCCESS) {
       post send();
     } else {

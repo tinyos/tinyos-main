@@ -1,4 +1,4 @@
-// $Id: RadioCountToLedsC.nc,v 1.1 2009-07-16 06:59:38 kusy Exp $
+// $Id: RadioCountToLedsC.nc,v 1.2 2009-10-22 18:37:41 razvanm Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -101,7 +101,7 @@ implementation {
 
       rcm->counter = counter;
 #ifdef LOW_POWER_LISTENING
-      call LowPowerListening.setRxSleepInterval(&packet, LPL_INTERVAL);
+      call LowPowerListening.setRemoteWakeupInterval(&packet, LPL_INTERVAL);
 #endif
       
       if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(radio_count_msg_t), time) == SUCCESS) {

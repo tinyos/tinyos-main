@@ -85,7 +85,7 @@ implementation {
   event message_t* SerialRequestSampleMsgsReceive.receive(message_t* msg, void* payload, uint8_t len) {
     serial_request_samples_msg_t* request_msg = payload;
     call Leds.led0On();
-    call LPL.setRxSleepInterval(&request_samples_msg, LPL_INTERVAL+100);
+    call LPL.setRemoteWakeupInterval(&request_samples_msg, LPL_INTERVAL+100);
     call RadioRequestSampleMsgsSend.send(request_msg->addr, &request_samples_msg, sizeof(request_samples_msg_t));
     return msg;
   }
