@@ -1,4 +1,4 @@
-// $Id: BlinkAppC.nc,v 1.4 2006-12-12 18:22:48 vlahan Exp $
+// $Id: BlinkAppC.nc,v 1.5 2009-10-26 07:34:10 vlahan Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -30,7 +30,7 @@
  */
 
 /**
- * Blink is a basic application that toggles the a mote LED periodically.
+ * Blink is a basic application that toggles a mote's LED periodically.
  * It does so by starting a Timer that fires every second. It uses the
  * OSKI TimerMilli service to achieve this goal.
  *
