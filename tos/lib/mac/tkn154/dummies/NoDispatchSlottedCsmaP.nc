@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-05-14 13:20:35 $
+ * $Revision: 1.6 $
+ * $Date: 2009-10-27 11:29:15 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -74,6 +74,7 @@ generic module NoDispatchSlottedCsmaP(uint8_t sfDirection)
     interface SetNow<ieee154_cap_frame_backup_t*> as FrameBackup;
     interface GetNow<ieee154_cap_frame_backup_t*> as FrameRestore;
     interface StdControl as TrackSingleBeacon;
+    interface MLME_SYNC_LOSS;
   }
 }
 implementation
@@ -116,4 +117,12 @@ implementation
   event void PIBUpdateMacRxOnWhenIdle.notify( const void* val ) {}
   async event void RadioTokenRequested.requested(){ }
   async event void RadioTokenRequested.immediateRequested(){ }
+ 
+  event void MLME_SYNC_LOSS.indication (
+                          ieee154_status_t lossReason,
+                          uint16_t PANId,
+                          uint8_t LogicalChannel,
+                          uint8_t ChannelPage,
+                          ieee154_security_t *security
+                        ){ }
 }
