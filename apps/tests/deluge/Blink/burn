@@ -17,7 +17,7 @@ if [[ $# -ne 3 ]]; then
   echo "Usage: $0 <prog_source> <comm_source> <platform>"
   echo "  <prog_source> bsl,PORT | mib510,PORT | eprb,HOST"
   echo "  <comm_source> serial@PORT:SPEED | network@HOST:PORT"
-  echo "  <platform>    micaz | telosb | iris | epic"
+  echo "  <platform>    micaz | telosb | iris | epic | mulle"
   exit 2
 fi
 
@@ -28,6 +28,7 @@ PLATFORM=$3
 if [ ${PLATFORM} != 'micaz' -a \
      ${PLATFORM} != 'telosb' -a \
      ${PLATFORM} != 'iris' -a \
+     ${PLATFORM} != 'mulle' -a \
      ${PLATFORM} != 'epic' ]
 then
   echo "\"${PLATFORM}\" is not a supported platform"

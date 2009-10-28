@@ -15,7 +15,7 @@ fi
 
 if [ $# -ne 2 ]; then
   echo "Usage: $0 <platform> <number of motes>"
-  echo "  <platform>         micaz, telosb or iris"
+  echo "  <platform>         micaz, telosb or iris or mulle"
   echo "  <number of motes>  how many motes will be used in the test"
   exit 2
 fi
@@ -26,6 +26,8 @@ NO_MOTES=$2
 if [ ${PLATFORM} != 'micaz' -a \
      ${PLATFORM} != 'telosb' -a \
      ${PLATFORM} != 'iris' \
+     ${PLATFORM} != 'iris' -a \
+     ${PLATFORM} != 'mulle' -a \
      ${PLATFORM} != 'epic' ]
 then
   echo "\"${PLAFTORM}\" is not a supported platform"
