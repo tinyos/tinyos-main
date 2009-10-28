@@ -64,7 +64,7 @@
 #define __RADIOCONFIG_H__
 
 #include <RF230DriverLayer.h>
-
+#include "Timer.h"
 
 enum
 {

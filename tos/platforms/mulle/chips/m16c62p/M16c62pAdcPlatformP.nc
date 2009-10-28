@@ -35,29 +35,25 @@
  */
 
 /**
- * Configuration of the RV-8564 Real-time Clock on the Mulle platform.
+ * Mulle specific implementation of the M16c62pAdcPlatform interface.
  * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-
-configuration RV8564C
+module M16c62pAdcPlatformP
 {
-  provides interface RV8564 as RTC;
+  provides interface M16c62pAdcPlatform;
+  uses interface GeneralIO VRef;
 }
 implementation
 {
-  components RV8564P as RTCP,
-    new SoftI2CBatteryMonitorRTCC() as I2C,
-    HplM16c62pGeneralIOC as IOs,
-    HplM16c62pInterruptC as Irqs,
-    new M16c62pInterruptC() as Irq;
-
-  Irq.HplM16c62pInterrupt -> Irqs.Int0;
-
-  RTC = RTCP;
-  RTCP.CLKOE -> IOs.PortP47;
-  RTCP.CLKOUT -> IOs.PortP92;
-  RTCP.GpioInterrupt -> Irq;
-  RTCP.I2C -> I2C;
-  RTCP.I2CResource -> I2C;
+  async command void M16c62pAdcPlatform.adcOn()
+  {
+    call VRef.makeOutput();
+    call VRef.set();
+  }
+  
+  async command void M16c62pAdcPlatform.adcOff()
+  {
+    call VRef.clr();
+  }
 }

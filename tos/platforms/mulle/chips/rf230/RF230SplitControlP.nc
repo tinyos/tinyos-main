@@ -50,16 +50,20 @@ implementation
 {
   command error_t SplitControl.start()
   {
+#ifndef RF230_SLOW_SPI
     call SystemClockControl.minSpeed(M16C62P_PLL_CLOCK);
+#endif
     return call SplitControlOrig.start();
   }
 
   event void SplitControlOrig.startDone(error_t error)
   {
+#ifndef RF230_SLOW_SPI
     if (error != SUCCESS)
     {
       call SystemClockControl.minSpeed(M16C62P_DONT_CARE);
     }
+#endif
     signal SplitControl.startDone(error);
   }
 
@@ -70,10 +74,12 @@ implementation
 
   event void SplitControlOrig.stopDone(error_t error)
   {
+#ifndef RF230_SLOW_SPI
     if (error == SUCCESS)
     {
       call SystemClockControl.minSpeed(M16C62P_DONT_CARE);
     }
+#endif
     signal SplitControl.stopDone(error);
   }
 }
