@@ -12,7 +12,7 @@ ifneq ($(filter telosb tmote tinynode shimmer iris clean,$(MAKECMDGOALS)),)
   include $(MAKERULES)
 else
 %:
-	@echo "    Sorry, this application only works on platforms with >8kB of RAM (telos, iris)"
+	@echo "    Sorry, this application only works on platforms with >8kB of RAM (telos, iris, etc.)"
 cthreads:
 	@:
 dynthreads:

@@ -2,7 +2,7 @@ COMPONENT=TestBasicsbSensorsAppC
 CFLAGS += -I$(TOSDIR)/sensorboards/basicsb
 CFLAGS += -I$(TOSDIR)/lib/tosthreads/sensorboards/basicsb
 
-ifneq ($(filter mica2 micaz iris clean,$(MAKECMDGOALS)),)
+ifneq ($(filter mica2 mica2dot micaz iris clean,$(MAKECMDGOALS)),)
   include $(MAKERULES)
 else
 %:
