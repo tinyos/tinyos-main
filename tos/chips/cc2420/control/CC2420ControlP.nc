@@ -33,7 +33,7 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.7 $ $Date: 2008-06-24 04:07:28 $
+ * @version $Revision: 1.8 $ $Date: 2009-10-28 16:18:44 $
  */
 
 #include "Timer.h"
@@ -393,7 +393,7 @@ implementation {
   }
 
   event void RssiResource.granted() { 
-    uint16_t data;
+    uint16_t data = 0;
     call CSN.clr();
     call RSSI.read(&data);
     call CSN.set();
