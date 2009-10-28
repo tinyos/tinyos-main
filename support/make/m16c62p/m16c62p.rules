@@ -50,7 +50,7 @@ endif
 
 # We need a different start address for the flash in the linker script when building TOSBoot.
 # Also program the boot_args address bytes with 0xFF so that we know if they are reprogrammable.
-ifeq ($(COMPONENT),TOSBoot)
+ifeq ($(COMPONENT),TosBootC)
 $(shell sed -e "s/0x00a0000/0x00e0000/ig" $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c.x > $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader.x)
 $(shell sed -e "s/\/\*boot_args_address\*\//0x00f0000/ig" $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader.x > $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader_args.x)
 LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader_args.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt.S
