@@ -1,4 +1,4 @@
-// $Id: AntiTheftC.nc,v 1.6 2008-06-23 23:42:46 idgay Exp $
+// $Id: AntiTheftC.nc,v 1.7 2009-10-28 19:11:15 razvanm Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -138,13 +138,13 @@ implementation
   }
 
   /* Radio started. Now start the collection protocol and set the
-     radio to a 2% low-power-listening duty cycle */
+     wakeup interval for low-power-listening wakeup to half a second. */
   event void RadioControl.startDone(error_t ok) {
     if (ok == SUCCESS)
       {
 	call DisseminationControl.start();
 	call CollectionControl.start();
-	call LowPowerListening.setLocalDutyCycle(200);
+	call LowPowerListening.setLocalWakeupInterval(512);
       }
     else
       errorLed();

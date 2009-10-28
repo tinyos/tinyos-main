@@ -1,4 +1,4 @@
-// $Id: AntiTheftRootC.nc,v 1.4 2007-09-13 23:10:19 scipio Exp $
+// $Id: AntiTheftRootC.nc,v 1.5 2009-10-28 19:11:15 razvanm Exp $
 /*
  * Copyright (c) 2007 Intel Corporation
  * All rights reserved.
@@ -55,7 +55,7 @@ implementation
        tree */
     if (error == SUCCESS)
       {
-	call LowPowerListening.setLocalDutyCycle(200);
+	call LowPowerListening.setLocalWakeupInterval(512);
 	call DisseminationControl.start();
 	call CollectionControl.start();
 	call RootControl.setRoot();
