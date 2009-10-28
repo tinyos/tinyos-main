@@ -29,7 +29,7 @@
  * of the data payload.
  *
  * @author Philip Levis
- * @version $Revision: 1.1 $ $Date: 2008-07-12 02:25:59 $
+ * @version $Revision: 1.2 $ $Date: 2009-10-28 05:29:02 $
  */
  
 #include "CC2420.h"
@@ -55,23 +55,57 @@ module CC2420ActiveMessageP @safe() {
     interface CC2420Config;
     interface ActiveMessageAddress;
     interface RadioBackoff as SubBackoff;
+
+    interface Resource as RadioResource;
+    interface Leds;
   }
 }
 implementation {
+  uint16_t pending_length;
+  message_t *pending_message = NULL;
+  /***************** Resource event  ****************/
+  event void RadioResource.granted() {
+    uint8_t rc;
+    cc2420_header_t* header = call CC2420PacketBody.getHeader( pending_message );
+
+    signal SendNotifier.aboutToSend[header->type](header->dest, pending_message);
+    rc = call SubSend.send( pending_message, pending_length );
+    if (rc != SUCCESS) {
+      call RadioResource.release();
+      signal AMSend.sendDone[header->type]( pending_message, rc );
+    }
+  }
 
   /***************** AMSend Commands ****************/
   command error_t AMSend.send[am_id_t id](am_addr_t addr,
 					  message_t* msg,
 					  uint8_t len) {
     cc2420_header_t* header = call CC2420PacketBody.getHeader( msg );
+    
+    if (len > call Packet.maxPayloadLength()) {
+      return ESIZE;
+    }
+    
     header->type = id;
     header->dest = addr;
     header->destpan = call CC2420Config.getPanAddr();
     header->src = call AMPacket.address();
     
-    signal SendNotifier.aboutToSend[id](addr, msg);
-    
-    return call SubSend.send( msg, len );
+    if (call RadioResource.immediateRequest() == SUCCESS) {
+      error_t rc;
+      signal SendNotifier.aboutToSend[id](addr, msg);
+      
+      rc = call SubSend.send( msg, len );
+      if (rc != SUCCESS) {
+        call RadioResource.release();
+      }
+
+      return rc;
+    } else {
+      pending_length  = len;
+      pending_message = msg;
+      return call RadioResource.request();
+    }
   }
 
   command error_t AMSend.cancel[am_id_t id](message_t* msg) {
@@ -155,7 +189,7 @@ implementation {
   }
   
   command uint8_t Packet.maxPayloadLength() {
-    return TOSH_DATA_LENGTH;
+    return call SubSend.maxPayloadLength();
   }
   
   command void* Packet.getPayload(message_t* msg, uint8_t len) {
@@ -165,16 +199,13 @@ implementation {
   
   /***************** SubSend Events ****************/
   event void SubSend.sendDone(message_t* msg, error_t result) {
+    call RadioResource.release();
     signal AMSend.sendDone[call AMPacket.type(msg)](msg, result);
   }
 
   
   /***************** SubReceive Events ****************/
   event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len) {
-    
-    if(!(call CC2420PacketBody.getMetadata(msg))->crc) {
-      return msg;
-    }
     
     if (call AMPacket.isForMe(msg)) {
       return signal Receive.receive[call AMPacket.type(msg)](msg, payload, len);
@@ -232,8 +263,6 @@ implementation {
   async command void RadioBackoff.setCca[am_id_t amId](bool useCca) {
     call SubBackoff.setCca(useCca);
   }
-
-
   
   /***************** Defaults ****************/
   default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) {
@@ -251,13 +280,13 @@ implementation {
   default event message_t* SnoopDefault.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) {
     return msg;
   }
-  
+
   default event void AMSend.sendDone[uint8_t id](message_t* msg, error_t err) {
+    call RadioResource.release();
   }
 
   default event void SendNotifier.aboutToSend[am_id_t amId](am_addr_t addr, message_t *msg) {
   }
-  
   default async event void RadioBackoff.requestInitialBackoff[am_id_t id](
       message_t *msg) {
   }
