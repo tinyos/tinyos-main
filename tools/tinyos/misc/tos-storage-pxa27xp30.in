@@ -32,8 +32,8 @@
 # @author Jonathan Hui <jhui@archedrock.com>
 # @author Kaisen Lin
 #
-# $Revision: 1.6 $
-# $Date: 2009-09-10 19:18:09 $
+# $Revision: 1.7 $
+# $Date: 2009-10-28 04:19:20 $
 #
                                   
 from re import match
@@ -200,8 +200,8 @@ if cthreads == True:
   outFile.write("    interface BlockWrite[uint8_t volume_id]; \n")
   outFile.write("    interface LogRead[uint8_t volumeId]; \n")
   outFile.write("    interface LogWrite[uint8_t volumeId]; \n")
-  outFile.write("    interface Mount as ConfigMount[uint8_t volumeId]; \n")
-  outFile.write("    interface ConfigStorage[uint8_t volumeId]; \n")
+   outFile.write("    interface Mount[uint8_t volumeId]; \n")
+   outFile.write("    interface ConfigStorage[uint8_t volumeId]; \n")
   outFile.write("  } \n")
   outFile.write("} \n")
   outFile.write("\n")
@@ -212,6 +212,8 @@ if cthreads == True:
   outFile.write("  BlockWrite = VolumeMapP; \n")
   outFile.write("  LogRead = VolumeMapP; \n")
   outFile.write("  LogWrite = VolumeMapP; \n")
+  outFile.write("  Mount = VolumeMapP; \n")
+  outFile.write("  ConfigStorage = VolumeMapP; \n")
 
   for i in range(len(volumeNames)):
     if volumeTypes[volumeNames[i]] == "block":
@@ -228,8 +230,8 @@ if cthreads == True:
       outFile.write("  VolumeMapP.SubLogWrite[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
       outFile.write("\n")
 
-    elif volumeTypes[volumeNames[i]] == "config":
-      outFile.write("  components new ConfigStorageC(" + volumeNames[i] + ") as ConfigStorageC_" + volumeNames[i] + "; \n")
-      outFile.write("  ConfigMount[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
-      outFile.write("  ConfigStorage[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
+     elif volumeTypes[volumeNames[i]] == "config":
+       outFile.write("  components new ConfigStorageC(" + volumeNames[i] + ") as ConfigStorageC_" + volumeNames[i] + "; \n")
+       outFile.write("  Mount[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
+       outFile.write("  ConfigStorage[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
   outFile.write("} \n")

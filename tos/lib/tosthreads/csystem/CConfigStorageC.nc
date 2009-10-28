@@ -34,6 +34,6 @@ implementation {
   CConfigStorageP.BlockingConfig -> BlockingConfigStorageP;
   CConfigStorageP.BlockingMount -> BlockingConfigStorageP;
 
-  BlockingConfigStorageP.ConfigMount -> VolumeMapC.ConfigMount;
+  BlockingConfigStorageP.ConfigMount -> VolumeMapC.Mount;
   BlockingConfigStorageP.ConfigStorage -> VolumeMapC.ConfigStorage;
 }

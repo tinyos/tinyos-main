@@ -64,6 +64,9 @@ implementation {
   #if defined(TOSTHREAD_BLOCKSTORAGE_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
     components CBlockStorageC;
   #endif 
+  #if defined(TOSTHREAD_BLOCKSTORAGE_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
+    components CConfigStorageC;
+  #endif 
   #if defined(TOSTHREAD_LOGSTORAGE_H) || defined(TOSTHREAD_DYNAMIC_LOADER)
     components CLogStorageC;
   #endif 
