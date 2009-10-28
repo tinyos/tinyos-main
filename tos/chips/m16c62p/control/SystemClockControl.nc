@@ -46,5 +46,5 @@ interface SystemClockControl
    *
    * @param speed The allowed minimum speed.
    */
-  async command error_t minSpeed(M16c62pSystemClock speed);
+  command error_t minSpeed(M16c62pSystemClock speed);
 }

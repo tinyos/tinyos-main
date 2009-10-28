@@ -149,8 +149,7 @@ configuration HplM16c62pGeneralIOC
     interface GeneralIO as PortP82;
     interface GeneralIO as PortP83;
     interface GeneralIO as PortP84;
-    // TODO(henrik) What should be done with PortP85?
-//    interface GeneralIO as PortP85;
+    interface GeneralIO as PortP85;
     interface GeneralIO as PortP86;
     interface GeneralIO as PortP87;
   
@@ -266,17 +265,37 @@ implementation
   PortP82 = PortP8.Pin2;
   PortP83 = PortP8.Pin3;
   PortP84 = PortP8.Pin4;
+  PortP85 = PortP8.Pin5;
   PortP86 = PortP8.Pin6;
   PortP87 = PortP8.Pin7;
+  
+  components 
+    new HplM16c62pGeneralIOPinPRC2P() as PortP90W,
+    new HplM16c62pGeneralIOPinPRC2P() as PortP91W,
+    new HplM16c62pGeneralIOPinPRC2P() as PortP92W,
+    new HplM16c62pGeneralIOPinPRC2P() as PortP93W,
+    new HplM16c62pGeneralIOPinPRC2P() as PortP94W,
+    new HplM16c62pGeneralIOPinPRC2P() as PortP95W,
+    new HplM16c62pGeneralIOPinPRC2P() as PortP96W,
+    new HplM16c62pGeneralIOPinPRC2P() as PortP97W;
 
-  PortP90 = PortP9.Pin0;
-  PortP91 = PortP9.Pin1;
-  PortP92 = PortP9.Pin2;
-  PortP93 = PortP9.Pin3;
-  PortP94 = PortP9.Pin4;
-  PortP95 = PortP9.Pin5;
-  PortP96 = PortP9.Pin6;
-  PortP97 = PortP9.Pin7;
+  PortP90W -> PortP9.Pin0;
+  PortP91W -> PortP9.Pin1;
+  PortP92W -> PortP9.Pin2;
+  PortP93W -> PortP9.Pin3;
+  PortP94W -> PortP9.Pin4;
+  PortP95W -> PortP9.Pin5;
+  PortP96W -> PortP9.Pin6;
+  PortP97W -> PortP9.Pin7;
+  
+  PortP90 = PortP90W;
+  PortP91 = PortP91W;
+  PortP92 = PortP92W;
+  PortP93 = PortP93W;
+  PortP94 = PortP94W;
+  PortP95 = PortP95W;
+  PortP96 = PortP96W;
+  PortP97 = PortP97W;
 
   PortP100 = PortP_10.Pin0;
   PortP101 = PortP_10.Pin1;

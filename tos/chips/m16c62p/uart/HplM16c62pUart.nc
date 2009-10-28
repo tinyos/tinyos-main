@@ -72,8 +72,18 @@
  * @author Alec Woo <awoo@archrock.com>
  * @author Jonathan Hui <jhui@archrock.com>
  */
+ 
+#include "M16c62pUart.h"
+ 
 interface HplM16c62pUart {
-  
+  async command void on();
+  async command void off();
+  async command error_t setSpeed(uart_speed_t speed);
+  async command uart_speed_t getSpeed();
+  async command void setParity(uart_parity_t parity);
+  async command uart_parity_t getParity();
+  async command void setStopBits(uart_stop_bits_t stop_bits);
+  async command uart_stop_bits_t getStopBits();
   async command error_t enableTxInterrupt();
   async command error_t disableTxInterrupt();
   async command error_t enableRxInterrupt();

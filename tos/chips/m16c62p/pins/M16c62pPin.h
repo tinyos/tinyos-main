@@ -35,38 +35,26 @@
  */
 
 /**
- * M16c62p UART typedefs.
+ * M16c62p pin defines and enums.
  * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
 
-#ifndef __M16C62P_UART_H__
-#define __M16C62P_UART_H__
 
+#ifndef __M16C62P_PIN_H__
+#define __M16C62P_PIN_H__
 
-typedef enum {
-  TOS_UART_1200,
-  TOS_UART_9600,
-  TOS_UART_57600,
-} uart_speed_t;
+enum
+{
+  M16C_PIN_INACTIVE_DONT_CARE = 0,
+  M16C_PIN_INACTIVE_OUTPUT_LOW = 1,
+  M16C_PIN_INACTIVE_OUTPUT_HIGH = 2,
+  M16C_PIN_INACTIVE_INPUT = 3
+};
 
-typedef enum {
-  TOS_UART_OFF,
-  TOS_UART_RONLY,
-  TOS_UART_TONLY,
-  TOS_UART_DUPLEX
-} uart_duplex_t;
+#define M16C_PORT_INACTIVE_STATE(p0, p1, p2, p3, p4, p5, p6, p7) p0 | (p1 << 2) | \
+                                                          (p2 << 4) | (p3 << 6) | \
+                                                          (p4 << 8) | (p5 << 10) | \
+                                                         (p6 << 12) | (p7 << 14)
 
-typedef enum {
-  TOS_UART_PARITY_NONE,
-  TOS_UART_PARITY_EVEN,
-  TOS_UART_PARITY_ODD
-}uart_parity_t;
-
-typedef enum {
-  TOS_UART_STOP_BITS_1,
-  TOS_UART_STOP_BITS_2
-} uart_stop_bits_t;
-
-
-#endif  // __M16C62P_UART_H__
+#endif  // __M16C62P_PIN_H__ 

@@ -76,67 +76,37 @@
  */
 
 #include <Timer.h>
+#include "M16c62pUart.h"
 
 generic module M16c62pUartP()
 {  
-  provides interface Init;
-  provides interface StdControl;
   provides interface UartByte;
   provides interface UartStream;
+  provides interface UartControl;
   
-  uses interface StdControl as HplUartTxControl;
-  uses interface StdControl as HplUartRxControl;
+  uses interface AsyncStdControl as HplUartTxControl;
+  uses interface AsyncStdControl as HplUartRxControl;
   uses interface HplM16c62pUart as HplUart;
   uses interface Counter<TMicro, uint16_t>;
   
 }
 implementation
-{
-  
+{ 
   norace uint16_t m_tx_len, m_rx_len;
   norace uint8_t *m_tx_buf, *m_rx_buf;
   norace uint16_t m_tx_pos, m_rx_pos;
-  norace uint16_t m_byte_time;
+  norace uint16_t m_byte_time = 68;
   norace uint8_t m_rx_intr;
   norace uint8_t m_tx_intr;
-  
-  command error_t Init.init()
-  {
-    // TODO(henrik) fix this for the different uarts.
-    /*if (PLATFORM_BAUDRATE == 19200UL)
-      m_byte_time = 200; // 1 TMicor ~= 2.12 us, one byte = 417us ~= 200
-    else if (PLATFORM_BAUDRATE == 57600UL)
-      m_byte_time = 68;  // 1 TMicor ~= 2.12 us, one byte = 138us ~= 65*/
-    m_byte_time = 68;
-    return SUCCESS;
-  }
-  
-  command error_t StdControl.start()
-  {
-    /* make sure interrupts are off and set flags */
-    call HplUart.disableTxInterrupt();
-    call HplUart.disableRxInterrupt();
-    m_rx_intr = 0;
-    m_tx_intr = 0;
-
-    /* enable tx/rx */
-    call HplUartTxControl.start();
-    call HplUartRxControl.start();
-
-    // Bug fix: pal 11/26/07: RX interrupts should be enabled on start
-    call HplUart.enableRxInterrupt();
-    return SUCCESS;
-  }
-
-  command error_t StdControl.stop()
-  {
-    call HplUartTxControl.stop();
-    call HplUartRxControl.stop();
-    return SUCCESS;
-  }
+  uart_duplex_t mode = TOS_UART_OFF;
 
   async command error_t UartStream.enableReceiveInterrupt()
   {
+    if (mode == TOS_UART_TONLY)
+    {
+      return FAIL;
+    }
+    
     atomic
     {
       m_rx_intr = 3;
@@ -147,6 +117,10 @@ implementation
 
   async command error_t UartStream.disableReceiveInterrupt()
   {
+    if (mode == TOS_UART_TONLY)
+    {
+      return FAIL;
+    }
     atomic
     {
       call HplUart.disableRxInterrupt();
@@ -157,6 +131,10 @@ implementation
 
   async command error_t UartStream.receive( uint8_t* buf, uint16_t len )
   {
+    if (mode == TOS_UART_TONLY)
+    {
+      return FAIL;
+    }
     
     if ( len == 0 )
       return FAIL;
@@ -204,7 +182,10 @@ implementation
 
   async command error_t UartStream.send( uint8_t *buf, uint16_t len)
   {
-    
+    if (mode == TOS_UART_RONLY)
+    {
+      return FAIL;
+    }
     if ( len == 0 )
       return FAIL;
     else if ( m_tx_buf )
@@ -241,6 +222,10 @@ implementation
 
   async command error_t UartByte.send( uint8_t byte )
   {
+    if (mode == TOS_UART_RONLY)
+    {
+      return FAIL;
+    }
     if(m_tx_intr)
       return FAIL;
 
@@ -251,9 +236,13 @@ implementation
   
   async command error_t UartByte.receive( uint8_t * byte, uint8_t timeout)
   {
-
     uint16_t timeout_micro = m_byte_time * timeout + 1;
     uint16_t start;
+    
+    if (mode == TOS_UART_TONLY)
+    {
+      return FAIL;
+    }
     
     if(m_rx_intr)
       return FAIL;
@@ -269,6 +258,115 @@ implementation
     return SUCCESS;
     
   }
+  
+  async command error_t UartControl.setSpeed(uart_speed_t speed)
+  {
+    return call HplUart.setSpeed(speed);
+  }
+
+  async command uart_speed_t UartControl.speed()
+  {
+    return call HplUart.getSpeed();
+  }
+  
+  async command error_t UartControl.setDuplexMode(uart_duplex_t duplex)
+  {
+    if (mode == TOS_UART_OFF)
+    {
+      call HplUart.disableTxInterrupt();
+      call HplUart.disableRxInterrupt();
+      m_rx_intr = 0;
+      m_tx_intr = 0;
+    }
+    switch (duplex)
+    {
+      case TOS_UART_OFF:
+        call HplUart.disableTxInterrupt();
+        call HplUart.disableRxInterrupt();
+        call HplUartTxControl.stop();
+        call HplUartRxControl.stop();
+        call HplUart.off();
+        return SUCCESS;
+        break;
+      case TOS_UART_RONLY:
+        call HplUart.disableTxInterrupt();
+        call HplUartTxControl.stop();
+        call HplUart.on();
+        call HplUartRxControl.start();
+        call HplUart.enableRxInterrupt();
+        break;
+      case TOS_UART_TONLY:
+        call HplUart.disableRxInterrupt();
+        call HplUartRxControl.stop();
+        call HplUart.on();
+        call HplUartTxControl.start();
+        break;
+      case TOS_UART_DUPLEX:
+        call HplUart.on();
+        call HplUartTxControl.start();
+        call HplUartRxControl.start();
+        call HplUart.enableRxInterrupt();
+        break;
+      default:
+        break;
+    }
+    
+    return SUCCESS;
+  }
+
+  async command uart_duplex_t UartControl.duplexMode()
+  {
+    atomic return mode;
+  }
+  
+  async command error_t UartControl.setParity(uart_parity_t parity)
+  {
+    if (mode != TOS_UART_OFF)
+    {
+      return FAIL;
+    }
+    call HplUart.setParity(parity);
+    return SUCCESS;
+  }
+
+  async command uart_parity_t UartControl.parity()
+  {
+    return call HplUart.getParity();
+  }
+  
+  async command error_t UartControl.setStop()
+  {
+    if (mode != TOS_UART_OFF)
+    {
+      return FAIL;
+    }
+    call HplUart.setStopBits(TOS_UART_STOP_BITS_2);
+    return SUCCESS;
+  }
+
+  async command error_t UartControl.setNoStop()
+  {
+    if (mode != TOS_UART_OFF)
+    {
+      return FAIL;
+    }
+    call HplUart.setStopBits(TOS_UART_STOP_BITS_1);
+    return SUCCESS;
+  }
+
+  async command bool UartControl.stopBits()
+  {
+    if (call HplUart.getStopBits() == TOS_UART_STOP_BITS_2)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  
+  
   
   async event void Counter.overflow() {}
 

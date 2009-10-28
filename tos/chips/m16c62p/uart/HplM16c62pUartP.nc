@@ -101,6 +101,9 @@
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
+ 
+#include "M16c62pUart.h"
+ 
 generic module HplM16c62pUartP(uint8_t uartNr,
                                uint16_t tx_addr,
                                uint16_t rx_addr,
@@ -111,9 +114,8 @@ generic module HplM16c62pUartP(uint8_t uartNr,
                                uint16_t txInterrupt_addr,
                                uint16_t rxInterrupt_addr)
 {
-  provides interface Init as UartInit;
-  provides interface StdControl as UartTxControl;
-  provides interface StdControl as UartRxControl;
+  provides interface AsyncStdControl as UartTxControl;
+  provides interface AsyncStdControl as UartRxControl;
   provides interface HplM16c62pUart as HplUart;
   
   uses interface GeneralIO as TxIO;
@@ -133,39 +135,167 @@ implementation
 #define ctrl0 (*TCAST(volatile uint8_t* ONE, ctrl0_addr))
 #define ctrl1 (*TCAST(volatile uint8_t* ONE, ctrl1_addr))
 
-  command error_t UartInit.init()
+  enum {
+    ON,
+    OFF
+  };
+
+  uint8_t state = OFF;
+  uart_speed_t current_speed = TOS_UART_57600;
+  
+  async command void HplUart.on()
   {
-    // Divide the mainclock get baudrate.
-    brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 57600.0))+ 0.5) - 1.0);
-    mode = BIT0 | BIT2;  // Set 8 bit transfer length, 1 stop bit, no parity.
-    ctrl0 = BIT4;        // set f1, no cts/rts.
- 
-    return SUCCESS;
+    // Set 8 bit transfer
+    SET_BIT(mode, 0);
+    SET_BIT(mode, 2);
+    
+    //no cts/rts.
+    SET_BIT(ctrl0, 4);
+    atomic switch (current_speed)
+    {
+      case TOS_UART_1200:
+        SET_BIT(ctrl0, 0);
+        CLR_BIT(ctrl0, 1);
+        break;
+      case TOS_UART_9600:
+      case TOS_UART_57600:
+        CLR_BIT(ctrl0, 0);
+        CLR_BIT(ctrl0, 1);
+        break;
+      default:
+        break;
+    }
+    call StopModeControl.allowStopMode(false);
+    atomic state = ON;
+  }
+  
+  async command void HplUart.off()
+  {
+    CLR_BIT(mode, 0);
+    CLR_BIT(mode, 2);
+    call StopModeControl.allowStopMode(true);
+    atomic state = OFF;
   }
 
-  command error_t UartTxControl.start()
+
+  async command error_t HplUart.setSpeed(uart_speed_t speed)
+  {
+    atomic if (state != OFF)
+    {
+      return FAIL;
+    }
+    
+    switch (speed)
+    {
+      // TODO(henrik) These values are based on a mcu that runs on MAIN_CRYSTAL_SPEED and doesn't
+      //              consider if the PLL is on which they should.
+      case TOS_UART_1200:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 1200.0))+ 0.5) - 1.0);
+        break;
+      case TOS_UART_9600:
+      	brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 9600.0))+ 0.5) - 1.0);
+      	break;
+      case TOS_UART_57600:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 57600.0))+ 0.5) - 1.0);
+        break;
+      default:
+        break;
+    }
+    atomic current_speed = speed;
+    return SUCCESS;
+  }
+  
+  async command uart_speed_t HplUart.getSpeed()
+  {
+    atomic return current_speed;
+  }
+  
+  async command void HplUart.setParity(uart_parity_t parity)
+  {
+    switch (parity)
+    {
+      case TOS_UART_PARITY_NONE:
+        CLR_BIT(mode, 6);
+        break;
+      case TOS_UART_PARITY_EVEN:
+        SET_BIT(mode, 6);
+        SET_BIT(mode, 5);
+        break;
+      case TOS_UART_PARITY_ODD:
+        SET_BIT(mode, 6);
+        CLR_BIT(mode, 5);
+        break;
+      default:
+        break;
+    }
+  }
+  
+  async command uart_parity_t HplUart.getParity()
+  {
+    if (READ_BIT(mode, 6) && READ_BIT(mode, 5))
+    {
+      return TOS_UART_PARITY_EVEN;
+    }
+    else if (READ_BIT(mode, 6))
+    {
+      return TOS_UART_PARITY_ODD;
+    }
+    else
+    {
+      return TOS_UART_PARITY_NONE;
+    }
+  }
+  
+  async command void HplUart.setStopBits(uart_stop_bits_t stop_bits)
+  {
+    switch (stop_bits)
+    {
+      case TOS_UART_STOP_BITS_1:
+        CLR_BIT(mode, 4);
+        break;
+      case TOS_UART_STOP_BITS_2:
+        SET_BIT(mode, 4);
+        break;
+      default:
+        break;
+    }
+  }
+  
+  async command uart_stop_bits_t HplUart.getStopBits()
+  {
+    if (READ_BIT(mode, 4))
+    {
+      return TOS_UART_STOP_BITS_2;
+    }
+    else
+    {
+      return TOS_UART_STOP_BITS_1;
+    }
+  }
+    
+
+  async command error_t UartTxControl.start()
   {
     call TxIO.makeOutput();
     SET_BIT(ctrl1, 0);
-    call StopModeControl.allowStopMode(false);
     return SUCCESS;
   }
 
-  command error_t UartTxControl.stop()
+  async command error_t UartTxControl.stop()
   {
     call TxIO.makeInput();
     CLR_BIT(ctrl1, 0);
-    call StopModeControl.allowStopMode(true);
     return SUCCESS;
   }
 
-  command error_t UartRxControl.start()
+  async command error_t UartRxControl.start()
   {
+    call RxIO.makeInput();
     SET_BIT(ctrl1, 2);
     return SUCCESS;
   }
 
-  command error_t UartRxControl.stop()
+  async command error_t UartRxControl.stop()
   {
     CLR_BIT(ctrl1, 2);
     return SUCCESS;

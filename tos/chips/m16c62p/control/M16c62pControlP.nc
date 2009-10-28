@@ -166,10 +166,63 @@ implementation
     }
   }
 
+  void initPin(volatile uint8_t *port, volatile uint8_t *port_d, uint8_t pin, uint16_t state)
+  {
+    uint8_t inactive = (state >> (pin*2)) & 0x3;
+    // Turn off protection of PD9
+    PRCR.BYTE = BIT2;
+    switch (inactive)
+    {
+      case M16C_PIN_INACTIVE_DONT_CARE:
+        break;
+      case M16C_PIN_INACTIVE_OUTPUT_LOW:
+        SET_BIT((*port_d), pin);
+        CLR_BIT((*port), pin);
+        break;
+      case M16C_PIN_INACTIVE_OUTPUT_HIGH:
+        SET_BIT((*port_d), pin);
+        SET_BIT((*port), pin);
+        break;
+      case M16C_PIN_INACTIVE_INPUT:
+        CLR_BIT((*port_d), pin);
+        CLR_BIT((*port), pin);
+        break;
+    }
+    PRCR.BYTE = 0;
+  }
+  
+  void initPort(volatile uint8_t *port, volatile uint8_t *port_d, uint16_t state)
+  {
+    initPin(port, port_d, 0, state);
+    initPin(port, port_d, 1, state);
+    initPin(port, port_d, 2, state);
+    initPin(port, port_d, 3, state);
+    initPin(port, port_d, 4, state);
+    initPin(port, port_d, 5, state);
+    initPin(port, port_d, 6, state);
+    initPin(port, port_d, 7, state);
+  }
+  
+  void initPins()
+  {
+    initPort(&P0.BYTE, &PD0.BYTE, PORT_P0_INACTIVE_STATE);
+    initPort(&P1.BYTE, &PD1.BYTE, PORT_P1_INACTIVE_STATE);
+    initPort(&P2.BYTE, &PD2.BYTE, PORT_P2_INACTIVE_STATE);
+    initPort(&P3.BYTE, &PD3.BYTE, PORT_P3_INACTIVE_STATE);
+    initPort(&P4.BYTE, &PD4.BYTE, PORT_P4_INACTIVE_STATE);
+    initPort(&P5.BYTE, &PD5.BYTE, PORT_P5_INACTIVE_STATE);
+    initPort(&P6.BYTE, &PD6.BYTE, PORT_P6_INACTIVE_STATE);
+    initPort(&P7.BYTE, &PD7.BYTE, PORT_P7_INACTIVE_STATE);
+    initPort(&P8.BYTE, &PD8.BYTE, PORT_P8_INACTIVE_STATE);
+    initPort(&P9.BYTE, &PD9.BYTE, PORT_P9_INACTIVE_STATE);
+    initPort(&P10.BYTE, &PD10.BYTE, PORT_P_10_INACTIVE_STATE);
+  }
+  
   command error_t M16c62pControl.init()
   {
     uint8_t i;
     uint8_t tmp;
+    initPins();
     PRCR.BYTE = BIT1 | BIT0; // Turn off protection for cpu & clock register.
 
     PM0.BYTE = BIT7;         // Single Chip mode. No BCLK output.
@@ -194,7 +247,7 @@ implementation
     return setSystemClock(M16C62P_DONT_CARE);
   }
 
-  async command error_t M16c62pControl.defaultSystemClock(
+  command error_t M16c62pControl.defaultSystemClock(
       M16c62pSystemClock def)
   {
     if (def == M16C62P_DONT_CARE)
@@ -234,25 +287,25 @@ implementation
 
   void stopMode()
   {
-    asm("nop");
-    asm("nop");
-    asm("nop");
-    asm("nop");
-    asm("nop");
+    uint8_t cm0_tmp, cm1_tmp;
     __nesc_enable_interrupt();
     PRCR.BYTE = 1; // Turn off protection of system clock control registers
-    CM1.BYTE &= ~16; // Xin low drive capacity 
-    CM1.BYTE |= 1; // Enter stop mode
-    PRCR.BYTE = 0;
+    cm0_tmp = CM0.BYTE;
+    cm1_tmp = CM1.BYTE;
+    CM0.BYTE = 0b00001000;
+    asm("bset 0,0x0007"); // Enter stop mode
+    asm("jmp.b MAIN_A");
+    asm("MAIN_A:");
     asm("nop");
     asm("nop");
     asm("nop");
     asm("nop");
-    asm("nop");
+    PRCR.BYTE = 0; // Turn off protection of system clock control registers
     asm volatile ("" : : : "memory");
     __nesc_disable_interrupt();
+    CM0.BYTE = cm0_tmp;
+    CM1.BYTE = cm1_tmp;
     PRCR.BIT.PRC0 = 0; // Turn on protection of system clock control registers
-    atomic setSystemClock(system_clock);
   }
 
   async command void M16c62pControl.sleep()
@@ -283,7 +336,7 @@ implementation
     }
   }
 
-  async command error_t SystemClockControl.minSpeed[uint8_t client](
+  command error_t SystemClockControl.minSpeed[uint8_t client](
       M16c62pSystemClock speed)
   {
     atomic client_system_clock[client] = speed;

@@ -68,16 +68,16 @@ configuration HplM16c62pUartC
 {
   provides
   {
-    interface StdControl as Uart0TxControl;
-    interface StdControl as Uart0RxControl;
+    interface AsyncStdControl as Uart0TxControl;
+    interface AsyncStdControl as Uart0RxControl;
     interface HplM16c62pUart as HplUart0;
     
-    interface StdControl as Uart1TxControl;
-    interface StdControl as Uart1RxControl;
+    interface AsyncStdControl as Uart1TxControl;
+    interface AsyncStdControl as Uart1RxControl;
     interface HplM16c62pUart as HplUart1;
 
-    interface StdControl as Uart2TxControl;
-    interface StdControl as Uart2RxControl;
+    interface AsyncStdControl as Uart2TxControl;
+    interface AsyncStdControl as Uart2RxControl;
     interface HplM16c62pUart as HplUart2;
   }
 }
@@ -141,10 +141,5 @@ implementation
   HplUart2P.RxIO -> IOs.PortP71;
   HplUart2P.Irq -> Irqs.Uart2;
   HplUart2P.StopModeControl -> Uart2StopModeControl;
-  
-  components MainC;
-  MainC.SoftwareInit -> HplUart0P.UartInit;
-  MainC.SoftwareInit -> HplUart1P.UartInit;
-  MainC.SoftwareInit -> HplUart2P.UartInit;
   
 }

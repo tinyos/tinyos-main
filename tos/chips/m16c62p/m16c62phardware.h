@@ -47,6 +47,8 @@
 #include "interrupts.h"
 #include "iom16c62p.h"
 #include "bits.h"
+#include "uart/M16c62pUart.h"
+#include "pins/M16c62pPin.h"
 
 #define true 1
 #define false 0
@@ -145,6 +147,51 @@ inline void __nesc_atomic_end(__nesc_atomic_t original_FLG) @spontaneous()
 // If the PLL_MULTIPLIER is not defined it will be default to M16C62P_PLL_2.
 #ifndef PLL_MULTIPLIER
 #define PLL_MULTIPLIER M16C62P_PLL_2
+#endif
+
+// Default inactive pin states
+#ifndef PORT_P0_INACTIVE_STATE
+#define PORT_P0_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P1_INACTIVE_STATE
+#define PORT_P1_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P2_INACTIVE_STATE
+#define PORT_P2_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P3_INACTIVE_STATE
+#define PORT_P3_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P4_INACTIVE_STATE
+#define PORT_P4_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P5_INACTIVE_STATE
+#define PORT_P5_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P6_INACTIVE_STATE
+#define PORT_P6_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P7_INACTIVE_STATE
+#define PORT_P7_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P8_INACTIVE_STATE
+#define PORT_P8_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P9_INACTIVE_STATE
+#define PORT_P9_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
+#endif
+
+#ifndef PORT_P_10_INACTIVE_STATE
+#define PORT_P_10_INACTIVE_STATE M16C_PIN_INACTIVE_DONT_CARE
 #endif
 
 #endif  // __M16C62PHARDWARE_H__

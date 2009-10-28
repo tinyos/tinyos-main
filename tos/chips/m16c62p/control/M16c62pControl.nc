@@ -54,7 +54,7 @@ interface M16c62pControl
    *
    * @param def Default system speed ( != M16C62P_DONT_CARE)
    */
-  async command error_t defaultSystemClock(M16c62pSystemClock def);
+  command error_t defaultSystemClock(M16c62pSystemClock def);
   
   /**
    * Put the mcu to sleep.
