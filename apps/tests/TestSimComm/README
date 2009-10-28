@@ -30,29 +30,34 @@ quality links (-60 dBm) to node 2, but the reverse links (2 to 1 and
 like test-equal.py but few acknowledgements.
 
 The ./run script runs all the three tests and counts the number of
-ACKed and non-ACKed send packets. The output look like this:
+ACKed and non-ACKed send packets. The output will look something
+like this:
 
-test-asym.log
-           ACK           NOACK   total
-         1 4930          35923   40853
-         3 4983          35870   40853
 test-equal.log
            ACK           NOACK   total
          1 21197         19666   40863
          3 21320         19543   40863
+test-asym.log
+           ACK           NOACK   total
+         1 4930          35923   40853
+         3 4983          35870   40853
 test-unequal.log
            ACK           NOACK   total
          1 27619         12966   40585
          3 21040         19545   40585
 
-This output shows several this:
-- the number of ACKs in the asymmetric links case is much less than in
-  the equal case which proves the fact that the reverse links are indeed
-  poor.
-- in the unequal case the number on ACKs for node 1 is higher than
-  node 3 which is expected because node 1 has a better link to 2 than 3.
-- in the equal case both nodes perform similar, each of them loosing
-  about half of their packets.
+ACK is the number of acknowledged packets from that node to node 2;
+NOACK is the number of unacknowledged packets. Total is the sum.
+The output should show three things:
+
+  1) In test-equal, both node 1 and node 3 have very
+  similar delivery ratios, losing about half of their packets.
+
+  2) In test-asym, the number of ACKs is much less than in
+  test-equal because the reverse links are poor.
+
+  3) In test-unequal, node 1 has more acknowledged packets
+  than node 3, because it has a higher SNR link.
 
 Philip Levis
 

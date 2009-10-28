@@ -2,7 +2,7 @@
 
 make micaz sim
 
-for t in test*.py
+for t in test-equal.py test-asym.py test-unequal.py
 do
  echo Running $t...
  python $t > `basename $t .py`.log
@@ -10,7 +10,7 @@ done
 
 make clean
 
-for l in test*.log
+for l in test-equal.log test-asym.log test-unequal.log
 do
     echo $l
     echo -e '\t   ACK \t\t NOACK \t total'
