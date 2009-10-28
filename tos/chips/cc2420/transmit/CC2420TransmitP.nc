@@ -35,7 +35,7 @@
  * @author Jung Il Choi Initial SACK implementation
  * @author JeongGil Ko
  * @author Razvan Musaloiu-E
- * @version $Revision: 1.15 $ $Date: 2009-08-29 00:06:42 $
+ * @version $Revision: 1.16 $ $Date: 2009-10-28 21:09:52 $
  */
 
 #include "CC2420.h"
@@ -601,13 +601,6 @@ implementation {
   }
 #ifdef CC2420_HW_SECURITY
 
-  /*
-  inline void uwait(uint16_t u) {
-    uint16_t t0 = TAR;
-    while((TAR - t0) <= u);
-  }
-  */
-
   task void waitTask(){
     call Leds.led2Toggle();
     if(SECURITYLOCK == 1){
@@ -625,11 +618,21 @@ implementation {
     uint8_t mode;
     uint8_t key;
     uint8_t micLength;
-    uint16_t currentStatus;
 
     msg_header = call CC2420PacketBody.getHeader( m_msg );
 
     if(!(msg_header->fcf & (1 << IEEE154_FCF_SECURITY_ENABLED))){
+      // Security is not used for this packet
+      // Make sure to set mode to 0 and the others to the default values
+      CTR_SECCTRL0 = ((0 << CC2420_SECCTRL0_SEC_MODE) |
+		      (1 << CC2420_SECCTRL0_SEC_M) |
+		      (1 << CC2420_SECCTRL0_SEC_TXKEYSEL) |
+		      (1 << CC2420_SECCTRL0_SEC_CBC_HEAD)) ;
+      
+      call CSN.clr();
+      call SECCTRL0.write(CTR_SECCTRL0);
+      call CSN.set();
+
       return;
     }
 
@@ -678,9 +681,9 @@ implementation {
 		      (key << CC2420_SECCTRL0_SEC_TXKEYSEL) |
 		      (1 << CC2420_SECCTRL0_SEC_CBC_HEAD)) ;
 #ifndef TFRAMES_ENABLED
-      CTR_SECCTRL1 = (skip+11+sizeof(security_header_t))+((skip+11+sizeof(security_header_t))<<8);
+      CTR_SECCTRL1 = (skip+11+sizeof(security_header_t)+((skip+11+sizeof(security_header_t))<<8));
 #else
-      CTR_SECCTRL1 = (skip+10+sizeof(security_header_t))+((skip+10+sizeof(security_header_t))<<8);
+      CTR_SECCTRL1 = (skip+10+sizeof(security_header_t)+((skip+10+sizeof(security_header_t))<<8));
 #endif
 
       call CSN.clr();
@@ -700,23 +703,12 @@ implementation {
       call CSN.set();
 
       while(status & CC2420_STATUS_ENC_BUSY){
-	//uwait(1*1024);
 	call CSN.clr();
 	status = call SNOP.strobe();
 	call CSN.set();
       }
-
-      call CSN.clr();
-      call STXENC.strobe();
-      call CSN.set();
-
-      call CSN.clr();
-      call SECCTRL0.read(&currentStatus);
-      call CSN.set();
-
-      call CSN.clr();
-      call SECCTRL0.write(currentStatus && ~(3 << CC2420_SECCTRL0_SEC_MODE));
-      call CSN.set();
+      
+      // Inline security will be activated by STXON or STXONCCA strobes
 
       atomic SECURITYLOCK = 0;
 
@@ -736,6 +728,9 @@ implementation {
    *
    * If the packet got sent, we should expect an SFD interrupt to take
    * over, signifying the packet is getting sent.
+   * 
+   * If security is enabled, STXONCCA or STXON will perform inline security
+   * options before transmitting the packet.
    */
   void attemptSend() {
     uint8_t status;

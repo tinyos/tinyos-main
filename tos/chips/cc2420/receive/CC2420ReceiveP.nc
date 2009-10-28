@@ -35,7 +35,7 @@
  * @author Jung Il Choi
  * @author JeongGil Ko
  * @author Razvan Musaloiu-E
- * @version $Revision: 1.21 $ $Date: 2009-09-17 23:36:36 $
+ * @version $Revision: 1.22 $ $Date: 2009-10-28 21:09:52 $
  */
 
 #include "IEEE802154.h"
@@ -468,9 +468,9 @@ implementation {
 
 	  call CSN.clr();
 #ifndef TFRAMES_ENABLED
-	  atomic call SECCTRL1.write(skip+11+sizeof(security_header_t))+((skip+11+sizeof(security_header_t))<<8);
+	  atomic call SECCTRL1.write(skip+11+sizeof(security_header_t)+((skip+11+sizeof(security_header_t))<<8));
 #else
-	  atomic call SECCTRL1.write(skip+10+sizeof(security_header_t))+((skip+10+sizeof(security_header_t))<<8);
+	  atomic call SECCTRL1.write(skip+10+sizeof(security_header_t)+((skip+10+sizeof(security_header_t))<<8));
 #endif
 	  call CSN.set();
 
