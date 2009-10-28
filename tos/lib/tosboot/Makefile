@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2009-09-23 18:29:20 razvanm Exp $
+# $Id: Makefile,v 1.6 2009-10-28 07:20:04 r-studio Exp $
 
 #
 #
@@ -77,6 +77,13 @@ ifeq ($(MAKECMDGOALS),epic)
   CFLAGS += -Imsp430 -Imsp430f1611 -Iepic -Ilib
   CFLAGS += -I../net/Deluge
   POST_BUILD_EXTRA_DEPS += strip_iv
+endif
+
+ifeq ($(MAKECMDGOALS),mulle)
+  CFLAGS += -DTOSBOOT_START=0xe0000 -DTOSBOOT_END=0xeffff
+  CFLAGS += -Iat45db -Imulle -Im16c62p -Ilib
+  CFLAGS += -I../net/Deluge -I../net/Deluge/extra/mulle
+  CFLAGS += -I../net/Deluge/extra/m16c62p
 endif
 
 strip_iv: FORCE
