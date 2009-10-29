@@ -134,6 +134,7 @@ implementation {
     // BSL Prog Pins tristate em
     TOSH_MAKE_PROG_IN_OUTPUT();
     TOSH_MAKE_PROG_OUT_OUTPUT();
+    TOSH_SET_PROG_OUT_PIN();    // some expansion boards have enable low
     TOSH_SEL_PROG_IN_IOFUNC();
     TOSH_SEL_PROG_OUT_IOFUNC();
 
@@ -209,15 +210,6 @@ implementation {
     TOSH_SEL_SOMI1_IOFUNC();
     TOSH_MAKE_SOMI1_INPUT();
 
-    /*
-     * sd pins are raised as part of power-cyling card
-     * and, they have pullups.
-     *
-  
-    for (i = 0; i < 20; i++)
-      TOSH_uwait(1000);		// one millisecond
-    */
-  
     TOSH_SET_SD_CS_N_PIN();
     TOSH_SET_SD_DI_PIN();
     TOSH_SET_SD_CLK_PIN();
