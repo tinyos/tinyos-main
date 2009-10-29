@@ -6,12 +6,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- *
+ * 
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * 
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -21,29 +21,47 @@
  * Author: Miklos Maroti
  */
 
-#include <HplRF230.h>
+/*
+ * Make active message TOSThreads-compatible by exposing default interfaces
+ *
+ * Author: Chieh-Jan Mike Liang
+ */
+
+#include <RadioConfig.h>
+
+#ifdef IEEE154FRAMES_ENABLED
+#error "You cannot use ActiveMessageC with IEEE154FRAMES_ENABLED defined"
+#endif
 
 configuration RF230ActiveMessageC
 {
-	provides
+	provides 
 	{
 		interface SplitControl;
 
 		interface AMSend[am_id_t id];
-    interface Receive[am_id_t id];
+		interface Receive[am_id_t id];
     interface Receive as ReceiveDefault[am_id_t id];
     interface Receive as Snoop[am_id_t id];
     interface Receive as SnoopDefault[am_id_t id];
+		interface SendNotifier[am_id_t id];
 
 		interface Packet;
 		interface AMPacket;
+
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
+#ifdef PACKET_LINK
+		interface PacketLink;
+#endif
+
+		interface RadioChannel;
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
 
+		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
@@ -51,100 +69,33 @@ configuration RF230ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageP, RF230PacketC, IEEE154PacketC, RadioAlarmC;
+	components RF230RadioC;
 
-#ifdef RF230_DEBUG
-	components AssertC;
+	SplitControl = RF230RadioC;
+
+	AMSend = RF230RadioC;
+	Receive = RF230RadioC.Receive;
+  ReceiveDefault = RF230RadioC.ReceiveDefault;
+  Snoop = RF230RadioC.Snoop;
+  SnoopDefault = RF230RadioC.SnoopDefault;
+	SendNotifier = RF230RadioC;
+
+	Packet = RF230RadioC.PacketForActiveMessage;
+	AMPacket = RF230RadioC;
+
+	PacketAcknowledgements = RF230RadioC;
+	LowPowerListening = RF230RadioC;
+#ifdef PACKET_LINK
+	PacketLink = RF230RadioC;
 #endif
 
-	RF230ActiveMessageP.IEEE154Packet -> IEEE154PacketC;
-	RF230ActiveMessageP.Packet -> RF230PacketC;
-	RF230ActiveMessageP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
+	RadioChannel = RF230RadioC;
 
-	Packet = RF230PacketC;
-	AMPacket = RF230PacketC;
-	PacketAcknowledgements = RF230PacketC;
-	PacketLinkQuality = RF230PacketC.PacketLinkQuality;
-	PacketTransmitPower = RF230PacketC.PacketTransmitPower;
-	PacketRSSI = RF230PacketC.PacketRSSI;
-	PacketTimeStampRadio = RF230PacketC;
-	PacketTimeStampMilli = RF230PacketC;
-	LowPowerListening = LowPowerListeningLayerC;
+	PacketLinkQuality = RF230RadioC.PacketLinkQuality;
+	PacketTransmitPower = RF230RadioC.PacketTransmitPower;
+	PacketRSSI = RF230RadioC.PacketRSSI;
 
-	components ActiveMessageLayerC;
-#ifdef TFRAMES_ENABLED
-	components new DummyLayerC() as IEEE154NetworkLayerC;
-#else
-	components IEEE154NetworkLayerC;
-#endif
-#ifdef LOW_POWER_LISTENING
-	components LowPowerListeningLayerC;
-#else
-	components new DummyLayerC() as LowPowerListeningLayerC;
-#endif
-	components MessageBufferLayerC;
-	components UniqueLayerC;
-	components TrafficMonitorLayerC;
-#ifdef RF230_SLOTTED_MAC
-	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
-#else
-	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
-#endif
-	components SoftwareAckLayerC;
-	components new DummyLayerC() as CsmaLayerC;
-	components RF230LayerC;
-
-	SplitControl = LowPowerListeningLayerC;
-	AMSend = ActiveMessageLayerC;
-  Receive = ActiveMessageLayerC.Receive;
-  ReceiveDefault = ActiveMessageLayerC.ReceiveDefault;
-  Snoop = ActiveMessageLayerC.Snoop;
-  SnoopDefault = ActiveMessageLayerC.SnoopDefault;
-
-	ActiveMessageLayerC.Config -> RF230ActiveMessageP;
-	ActiveMessageLayerC.AMPacket -> IEEE154PacketC;
-	ActiveMessageLayerC.SubSend -> IEEE154NetworkLayerC;
-	ActiveMessageLayerC.SubReceive -> IEEE154NetworkLayerC;
-
-	IEEE154NetworkLayerC.SubSend -> UniqueLayerC;
-	IEEE154NetworkLayerC.SubReceive -> LowPowerListeningLayerC;
-
-	// the UniqueLayer is wired at two points
-	UniqueLayerC.Config -> RF230ActiveMessageP;
-	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
-
-	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
-	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
-	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
-#ifdef LOW_POWER_LISTENING
-	LowPowerListeningLayerC.PacketSleepInterval -> RF230PacketC;
-	LowPowerListeningLayerC.IEEE154Packet -> IEEE154PacketC;
-	LowPowerListeningLayerC.PacketAcknowledgements -> RF230PacketC;
-#endif
-
-	MessageBufferLayerC.Packet -> RF230PacketC;
-	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
-	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
-	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
-
-	UniqueLayerC.SubReceive -> TrafficMonitorLayerC;
-
-	TrafficMonitorLayerC.Config -> RF230ActiveMessageP;
-	TrafficMonitorLayerC.SubSend -> CollisionAvoidanceLayerC;
-	TrafficMonitorLayerC.SubReceive -> CollisionAvoidanceLayerC;
-	TrafficMonitorLayerC.SubState -> RF230LayerC;
-
-	CollisionAvoidanceLayerC.Config -> RF230ActiveMessageP;
-	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
-	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
-
-	SoftwareAckLayerC.Config -> RF230ActiveMessageP;
-	SoftwareAckLayerC.SubSend -> CsmaLayerC;
-	SoftwareAckLayerC.SubReceive -> RF230LayerC;
-
-	CsmaLayerC.Config -> RF230ActiveMessageP;
-	CsmaLayerC -> RF230LayerC.RadioSend;
-	CsmaLayerC -> RF230LayerC.RadioCCA;
-
-	RF230LayerC.RF230Config -> RF230ActiveMessageP;
+	LocalTimeRadio = RF230RadioC;
+	PacketTimeStampMilli = RF230RadioC;
+	PacketTimeStampRadio = RF230RadioC;
 }

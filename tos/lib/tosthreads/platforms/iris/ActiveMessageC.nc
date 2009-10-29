@@ -6,12 +6,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- *
+ * 
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * 
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -20,6 +20,14 @@
  *
  * Author: Miklos Maroti
  */
+
+/*
+ * Make active message TOSThreads-compatible by exposing default interfaces
+ *
+ * Author: Chieh-Jan Mike Liang
+ */
+
+#include <RadioConfig.h>
 
 configuration ActiveMessageC
 {
@@ -32,11 +40,16 @@ configuration ActiveMessageC
     interface Receive as ReceiveDefault[am_id_t id];
 		interface Receive as Snoop[uint8_t id];
     interface Receive as SnoopDefault[am_id_t id];
+		interface SendNotifier[am_id_t id];
+
 		interface Packet;
 		interface AMPacket;
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
+#ifdef PACKET_LINK
+		interface PacketLink;
+#endif
 
 		interface PacketTimeStamp<TMicro, uint32_t> as PacketTimeStampMicro;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -45,19 +58,26 @@ configuration ActiveMessageC
 
 implementation
 {
-	components RF230ActiveMessageC as MAC;
+	components RF230ActiveMessageC as MessageC;
 
-	SplitControl = MAC;
-	AMSend       = MAC;
-  Receive      = MAC.Receive;
-  ReceiveDefault = MAC.ReceiveDefault;
-  Snoop        = MAC.Snoop;
-  SnoopDefault = MAC.SnoopDefault;
-	Packet       = MAC;
-	AMPacket     = MAC;
+	SplitControl = MessageC;
 
-	PacketAcknowledgements	= MAC;
-	LowPowerListening		= MAC;
-	PacketTimeStampMilli	= MAC;
-	PacketTimeStampMicro	= MAC;
+	AMSend = MessageC;
+	Receive = MessageC.Receive;
+  ReceiveDefault = MessageC.ReceiveDefault;
+  Snoop        = MessageC.Snoop;
+  SnoopDefault = MessageC.SnoopDefault;
+	SendNotifier = MessageC;
+
+	Packet = MessageC;
+	AMPacket = MessageC;
+
+	PacketAcknowledgements = MessageC;
+	LowPowerListening = MessageC;
+#ifdef PACKET_LINK
+	PacketLink = MessageC;
+#endif
+
+	PacketTimeStampMilli = MessageC;
+	PacketTimeStampMicro = MessageC;
 }
