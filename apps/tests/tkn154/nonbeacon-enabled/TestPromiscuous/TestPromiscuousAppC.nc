@@ -28,7 +28,7 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2009-05-18 16:21:55 $
+ * $Date: 2009-10-29 17:42:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -37,7 +37,7 @@ configuration TestPromiscuousAppC
 {
 } implementation {
  components MainC, TestPromiscuousC as App, LedsC, 
-            Ieee802154BeaconEnabledC as MAC;
+            Ieee802154NonBeaconEnabledC as MAC;
 
   MainC.Boot <- App;
   App.Leds -> LedsC;

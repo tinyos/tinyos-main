@@ -10,6 +10,17 @@ signalled to the upper layer. The application uses the TinyOS printf library
 every received frame over the serial port. The second (TelosB: green) LED is
 toggled whenever a frame is received.
 
+Criteria for a successful test:
+
+A successful test means that for every received frame the second LED is toggled
+and the java application outputs some text. To see this effect you need a
+second node sending a packet. The TestPromiscuous application does not send
+packets, but you can, for example, use the
+../../beacon-enabled/TestStartSync/coordinator application to send periodic
+beacon packets. In this case you should see some new text and the second LED
+should toggle every half second.
+
+
 Tools: The printf java client in $TOSDIR/../apps/tests/TestPrintf
 
 Usage: 
@@ -28,5 +39,5 @@ Known bugs/limitations:
 
 - The timestamps for ACKs are incorrect
 
-$Id: README.txt,v 1.1 2009-05-18 16:21:55 janhauer Exp $
+$Id: README.txt,v 1.1 2009-10-29 17:42:56 janhauer Exp $
 
