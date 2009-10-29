@@ -127,6 +127,7 @@ TOSH_ASSIGN_PIN(URXD1, 3, 7);
 
 TOSH_ASSIGN_PIN(GIO0, 2, 0);
 TOSH_ASSIGN_PIN(GIO1, 2, 1);
+TOSH_ASSIGN_PIN(GIO2, 2, 5);  // second internal expansion gpio
 
 // 1-Wire
 TOSH_ASSIGN_PIN(ONEWIRE, 4, 7);
