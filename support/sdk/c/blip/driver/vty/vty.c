@@ -52,7 +52,7 @@ struct vty_client {
   int                 flags;
   int                 readfd;
   int                 writefd;
-  struct sockaddr_in  ep;
+  struct sockaddr_in6 ep;
   struct vty_client  *next;
   
   int                 buf_off;
@@ -67,7 +67,11 @@ static struct vty_cmd_table *cmd_tab;
 static char prompt_str[40];
 
 int vty_init(struct vty_cmd_table * cmds, short port) {
-  struct sockaddr_in si_me;
+  struct sockaddr_in6 si_me = {
+    .sin6_family = AF_INET6,
+    .sin6_port = htons(port),
+    .sin6_addr = IN6ADDR_ANY_INIT,
+  };
   struct vty_client *tty_client;
   int len, yes = 1;
 
@@ -92,7 +96,7 @@ int vty_init(struct vty_cmd_table * cmds, short port) {
     conns = tty_client;
   }
 
-  sock = socket(PF_INET, SOCK_STREAM, 0);
+  sock = socket(PF_INET6, SOCK_STREAM, 0);
   if (sock < 0) {
     log_fatal_perror("vty: socket");
     return -1;
@@ -103,9 +107,6 @@ int vty_init(struct vty_cmd_table * cmds, short port) {
     goto abort;
   }
 
-  si_me.sin_family = AF_INET;
-  si_me.sin_port = htons(port);
-  si_me.sin_addr.s_addr = htonl(INADDR_ANY);
   if (bind(sock, (struct sockaddr *)&si_me, sizeof(si_me)) < 0) {
     log_fatal_perror("vty: bind");
     goto abort;
@@ -151,11 +152,12 @@ static void prompt(struct vty_client *c) {
 }
 
 static void vty_new_connection() {
+  char addr_buf[512];
   struct vty_client * c = malloc(sizeof(struct vty_client));
   socklen_t len;
   if (c == NULL) return;
 
-  len = sizeof(struct sockaddr_in);
+  len = sizeof(struct sockaddr_in6);
   c->readfd = c->writefd = accept(sock, (struct sockaddr *)&c->ep, &len);
   if (c->readfd < 0) {
     error("Accept failed!\n");
@@ -166,7 +168,8 @@ static void vty_new_connection() {
   c->buf_off = 0;
   memset(c->buf, 0, sizeof(c->buf));
 
-  info("VTY: new connection accepted from %s\n", inet_ntoa(c->ep.sin_addr));
+  inet_ntop(AF_INET6, c->ep.sin6_addr.s6_addr, addr_buf, 512);
+  info("VTY: new connection accepted from %s\n", addr_buf);
   vty_print_string(c, "Welcome to the blip console!\r\n");
   vty_print_string(c, " type 'help' to print the command options\r\n");
   prompt(c);
@@ -207,11 +210,12 @@ void vty_dispatch_command(struct vty_client *c) {
 
 void vty_handle_data(struct vty_client *c) {
   int len, i;
+  char addr_buf[512];
   bool prompt_pending = FALSE;
   len = read(c->readfd, c->buf[0] + c->buf_off, sizeof(c->buf) - c->buf_off);
   if (len <= 0) {
-    warn("Invalid read on connection from %s: closing\n", 
-         inet_ntoa(c->ep.sin_addr));
+    inet_ntop(AF_INET6, c->ep.sin6_addr.s6_addr, addr_buf, 512);
+    warn("Invalid read on connection from %s: closing\n", addr_buf);
     vty_close_connection(c);
   }
   c->buf_off += len;
@@ -300,8 +304,9 @@ int vty_process(fd_set *fds) {
   while (cur != NULL) {
     next = cur->next;
     if (cur->flags & VTY_REMOVE_PENDING) {
-      info("VTY: removing connection with endpoint %s\n", 
-           inet_ntoa(cur->ep.sin_addr));
+      char addr_buf[512];
+      inet_ntop(AF_INET6, cur->ep.sin6_addr.s6_addr, addr_buf, 512);
+      info("VTY: removing connection with endpoint %s\n", addr_buf);
       free(cur);
       if (cur == conns) conns = next;
       if (prev != NULL) prev->next = next;
