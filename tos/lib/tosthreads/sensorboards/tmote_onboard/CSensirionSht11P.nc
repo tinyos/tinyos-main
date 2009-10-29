@@ -54,4 +54,20 @@ implementation {
   uint8_t sensirionSht11_temperature_getNumBits() @C() AT_SPONTANEOUS {
     return call TemperatureMetadata.getSignificantBits();
   }
+  
+  default command error_t Humidity.read(uint16_t* val) {
+    return FAIL;
+  }
+
+  default command uint8_t HumidityMetadata.getSignificantBits() {
+    return 0;
+  }
+  
+  default command error_t Temperature.read(uint16_t* val) {
+    return FAIL;
+  }
+
+  default command uint8_t TemperatureMetadata.getSignificantBits() {
+    return 0;
+  }
 }

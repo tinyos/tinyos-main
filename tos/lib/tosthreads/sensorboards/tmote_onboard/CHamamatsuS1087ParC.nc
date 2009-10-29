@@ -36,9 +36,11 @@
 configuration CHamamatsuS1087ParC {}
 implementation {
   components CHamamatsuS1087ParP;
+#ifdef PLATFORM_TELOSB
   components new BlockingHamamatsuS1087ParC();
              
   CHamamatsuS1087ParP.DeviceMetadata -> BlockingHamamatsuS1087ParC.DeviceMetadata;
   CHamamatsuS1087ParP.Read -> BlockingHamamatsuS1087ParC.Read;
   CHamamatsuS1087ParP.ReadStream -> BlockingHamamatsuS1087ParC.ReadStream;
+#endif
 }

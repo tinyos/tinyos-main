@@ -36,9 +36,11 @@
 configuration CHamamatsuS10871TsrC {}
 implementation {
   components CHamamatsuS10871TsrP;
+#ifdef PLATFORM_TELOSB
   components new BlockingHamamatsuS10871TsrC();
              
   CHamamatsuS10871TsrP.DeviceMetadata -> BlockingHamamatsuS10871TsrC.DeviceMetadata;
   CHamamatsuS10871TsrP.Read -> BlockingHamamatsuS10871TsrC.Read;
   CHamamatsuS10871TsrP.ReadStream -> BlockingHamamatsuS10871TsrC.ReadStream;
+#endif
 }

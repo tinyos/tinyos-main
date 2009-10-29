@@ -31,9 +31,12 @@
 #include "tosthread_leds.h"
 #include "tosthread_amradio.h"
 #include "tosthread_blockstorage.h"
+#include "tosthread_logstorage.h"
+#include "tosthread_configstorage.h"
 #include "tosthread_threadsync.h"
 #include "tosthread_amserial.h"
 #include "tosthread_queue.h"
+
 #include "tosthread_sensirionSht11.h"
 #include "tosthread_hamamatsuS10871.h"
 #include "tosthread_hamamatsuS1087.h"

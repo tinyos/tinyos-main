@@ -51,4 +51,16 @@ implementation {
   uint8_t hamamatsuS1087_par_getNumBits() @C() AT_SPONTANEOUS {
     return call DeviceMetadata.getSignificantBits();
   }
+  
+  default command error_t Read.read(uint16_t* val) {
+    return FAIL;
+  }
+  
+  default command error_t ReadStream.read(uint32_t* usPeriod, uint16_t* buf, uint16_t count) {
+    return FAIL;
+  }
+  
+  default command uint8_t DeviceMetadata.getSignificantBits() {
+    return 0;
+  }
 }

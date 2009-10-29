@@ -27,23 +27,7 @@
 #ifndef _TOSTHREAD_SLCS_TYPES_H
 #define _TOSTHREAD_SLCS_TYPES_H
 
-#include "tosthread.h"
-#include "tosthread_leds.h"
-#include "tosthread_amradio.h"
-#include "tosthread_blockstorage.h"
-#include "tosthread_logstorage.h"
-#include "tosthread_configstorage.h"
-#include "tosthread_threadsync.h"
-#include "tosthread_amserial.h"
-#include "tosthread_queue.h"
-#include "tosthread_sensirionSht11.h"
-#include "tosthread_hamamatsuS10871.h"
-#include "tosthread_hamamatsuS1087.h"
-
-
-/*******************************/
 #include "slcs_types.h"
-
 
 struct addr fun[] = {
   
@@ -91,7 +75,7 @@ struct addr fun[] = {
   {queue_init}, {queue_clear}, {queue_enqueue},
   {queue_dequeue}, {queue_remove}, {queue_size},
   {queue_is_empty},
-   
+
   {sensirionSht11_humidity_read}, {sensirionSht11_humidity_getNumBits}, {sensirionSht11_temperature_read},
   {sensirionSht11_temperature_getNumBits},
   

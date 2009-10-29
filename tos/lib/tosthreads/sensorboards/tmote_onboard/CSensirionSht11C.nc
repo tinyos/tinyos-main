@@ -36,10 +36,12 @@
 configuration CSensirionSht11C {}
 implementation {
   components CSensirionSht11P;
+#ifdef PLATFORM_TELOSB
   components new BlockingSensirionSht11C();
              
   CSensirionSht11P.Temperature -> BlockingSensirionSht11C.Temperature;
   CSensirionSht11P.TemperatureMetadata -> BlockingSensirionSht11C.TemperatureMetadata;
   CSensirionSht11P.Humidity -> BlockingSensirionSht11C.Humidity;
   CSensirionSht11P.HumidityMetadata -> BlockingSensirionSht11C.HumidityMetadata;
+#endif
 }
