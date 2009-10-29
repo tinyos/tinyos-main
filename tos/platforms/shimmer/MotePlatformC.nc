@@ -106,12 +106,13 @@ implementation {
     TOSH_SEL_BT_RXD_MODFUNC();
 
     // BSL Prog Pins tristate em
-    /*
-      TOSH_MAKE_PROG_IN_OUTPUT();
-      TOSH_MAKE_PROG_OUT_OUTPUT();
-      TOSH_SEL_PROG_IN_IOFUNC();
-      TOSH_SEL_PROG_OUT_IOFUNC();
-    */
+
+    TOSH_MAKE_PROG_IN_OUTPUT();
+    TOSH_MAKE_PROG_OUT_OUTPUT();
+    TOSH_SET_PROG_OUT_PIN();    // some expansion boards have enable low
+    TOSH_SEL_PROG_IN_IOFUNC();
+    TOSH_SEL_PROG_OUT_IOFUNC();
+
     // USART lines, attached to a pullup
     TOSH_SEL_UCLK0_IOFUNC();
     TOSH_MAKE_UCLK0_OUTPUT();
