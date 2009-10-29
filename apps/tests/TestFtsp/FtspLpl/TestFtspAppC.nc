@@ -46,6 +46,8 @@ implementation {
   App.AMSend -> ActiveMessageC.AMSend[AM_TEST_FTSP_MSG];
   App.Packet -> ActiveMessageC;
   App.PacketTimeStamp -> ActiveMessageC;
+  App.LowPowerListening -> ActiveMessageC;
+
 
   components RandomC;
   App.Random -> RandomC;
@@ -58,10 +60,5 @@ implementation {
   App.GlobalTime -> TimeSync32kC;
   App.TimeSyncInfo -> TimeSync32kC;
   App.Leds -> LedsC;
-
-#ifdef LOW_POWER_LISTENING
-  components CC2420ActiveMessageC;
-  App.LowPowerListening -> CC2420ActiveMessageC;
-#endif
-
+  
 }

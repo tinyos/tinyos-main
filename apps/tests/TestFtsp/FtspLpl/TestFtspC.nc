@@ -44,9 +44,7 @@ module TestFtspC
 
         interface TimeSyncPacket<T32khz,uint32_t>;
 
-#ifdef LOW_POWER_LISTENING
         interface LowPowerListening;
-#endif
 
     }
 }
@@ -116,9 +114,7 @@ implementation
     }
 
     event void RadioControl.startDone(error_t err) {
-#ifdef LOW_POWER_LISTENING
         call LowPowerListening.setLocalWakeupInterval(LPL_INTERVAL);
-#endif
     }
     event void RadioControl.stopDone(error_t error){}
 }
