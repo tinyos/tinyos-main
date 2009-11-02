@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.16 2008-09-06 21:22:33 regehr Exp $
+#$Id: msp.rules,v 1.17 2009-11-02 16:48:04 vlahan Exp $
 
 define MSP_HELP
 
@@ -38,6 +38,11 @@ OBJDUMP = msp430-objdump
 SET_ID = tos-set-symbols
 NCC = ncc
 LIBS = -lm
+
+# Use __ as the separator - requires nesC 1.2.9 or later
+ifneq ($(filter sim,$(GOALS)),sim)
+        PFLAGS += -fnesc-separator=__
+endif
 
 AMADDR = ActiveMessageAddressC\$$addr
 BUILDDIR ?= build/$(PLATFORM)
