@@ -38,7 +38,7 @@ except ImportError, e:
     print "Please install PySerial first."
     sys.exit(1)
 
-__version__ = "$Id: tos.py,v 1.9 2009-03-17 19:30:26 razvanm Exp $"
+__version__ = "$Id: tos.py,v 1.10 2009-11-02 21:28:49 razvanm Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
@@ -89,6 +89,11 @@ class Serial:
         self.readTimeout = readTimeout
         self.ackTimeout = ackTimeout
         self._ts = None
+
+        if port.startswith('COM') or port.startswith('com'):
+            port = int(port[3:]) - 1
+        elif port.isdigit():
+            port = int(port) - 1
 
         self._s = serial.Serial(port, int(baudrate), rtscts=0, timeout=0.5)
         self._s.flushInput()
