@@ -18,15 +18,22 @@ import string
 import commands
 #New way of handling arguments........
 try:
-  opts, args = getopt(argv[1:], "t", [])
+  opts, args = getopt(argv[1:], "ts:f:", [])
 except GetoptError, err:
   print str(err) # will print something like "option -a not recognized"
-  stderr.write("Usage: tos-storage-at45db [-t] <platform directory>\n")
+  stderr.write("Usage: tos-storage-at45db [-t] [-s <sector size>] [-f <flash size in sectors>] <platform directory>\n")
   
+sector_size = 256
+flash_size = 2048 # in sectors
+
 cthreads = False
 for o, a in opts:
   if o == "-t":
     cthreads = True
+  elif o == "-s":
+    sector_size = int(a)
+  elif o == "-f":
+    flash_size = int(a)
   else:
     assert False, "unhandled option"
 
@@ -44,9 +51,6 @@ else:
 def nfail(s):
   stderr.write(s + "\n")
   exit(2)
-
-sector_size = 256
-flash_size = 2048 # in sectors
 
 volumes = {}
 volmap = []
@@ -229,7 +233,7 @@ if cthreads == True:
   outFile.write("    interface BlockWrite[uint8_t volume_id]; \n")
   outFile.write("    interface LogRead[uint8_t volumeId]; \n")
   outFile.write("    interface LogWrite[uint8_t volumeId]; \n")
-  outFile.write("    interface Mount[uint8_t volumeId]; \n")
+  outFile.write("    interface Mount as ConfigMount[uint8_t volumeId]; \n")
   outFile.write("    interface ConfigStorage[uint8_t volumeId]; \n")
   outFile.write("  } \n")
   outFile.write("} \n")
@@ -241,9 +245,6 @@ if cthreads == True:
   outFile.write("  BlockWrite = VolumeMapP; \n")
   outFile.write("  LogRead = VolumeMapP; \n")
   outFile.write("  LogWrite = VolumeMapP; \n")
-  outFile.write("  Mount = VolumeMapP; \n")
-  outFile.write("  ConfigStorage = VolumeMapP; \n")
-
 
   for i in range(len(volumeNames)):
     if volumeTypes[volumeNames[i]] == "block":
@@ -260,9 +261,9 @@ if cthreads == True:
       outFile.write("  VolumeMapP.SubLogWrite[" + volumeNames[i] + "] -> LogStorageC_" + volumeNames[i] + "; \n")
       outFile.write("\n")
 
-     elif volumeTypes[volumeNames[i]] == "config":
-       outFile.write("  components new ConfigStorageC(" + volumeNames[i] + ") as ConfigStorageC_" + volumeNames[i] + "; \n")
-       outFile.write("  Mount[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
-       outFile.write("  ConfigStorage[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
+    elif volumeTypes[volumeNames[i]] == "config":
+      outFile.write("  components new ConfigStorageC(" + volumeNames[i] + ") as ConfigStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  ConfigMount[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
+      outFile.write("  ConfigStorage[" + volumeNames[i] + "] = ConfigStorageC_" + volumeNames[i] + "; \n")
   outFile.write("} \n")
 

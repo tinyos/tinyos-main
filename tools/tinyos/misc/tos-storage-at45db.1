@@ -5,7 +5,7 @@
 tos-storage-at45db - Generate storage volume description code
 .SH SYNOPSIS
 
-\fBtos-storage-at45db\fR [\fB-t\fR] \fIplatform-directory\fR
+\fBtos-storage-at45db\fR [\fB-t\fR] [\fB-s\fR <sector size>] [\fB-f\fR <flash size in sectors>] \fIplatform-directory\fR
 .SH DESCRIPTION
 
 \fBtos-storage-at45db\fR reads a user specification describing the layout
@@ -15,6 +15,8 @@ user specification is in XML and is read from standard input. With all options,
 the code for a header file is written to standard output.  With the 
 optional \fB-t\fR flag specified, a VolumeMapC.nc file is generated that provides 
 interfaces to all the storage volume abstractions defined in the XML file.
+The optional \fB-s\fR flag specifies the sector size on the flash, the default is 256.
+The optional \fB-f\fR flag specifies the total number of sectors on the flash, the default is 2048.
 
 The mandatory \fIplatform-directory\fR argument should specify the platform 
 directory for the current compilation target; this is necessary for the correct 
