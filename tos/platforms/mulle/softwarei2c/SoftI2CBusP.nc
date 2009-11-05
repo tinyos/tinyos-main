@@ -98,9 +98,9 @@ implementation
   async command void I2C.off()
   {
     // TODO(henrik): Exactly what should be set if I2C bus should be turned off?
-    call I2CData.makeInput();
-    call I2CClk.makeInput();
-    call I2CCtrl.makeInput();
+    call I2CData.makeOutput();
+    call I2CClk.makeOutput();
+    call I2CCtrl.makeOutput();
     call I2CCtrl.clr();
     call I2CClk.clr();
     call I2CData.clr();

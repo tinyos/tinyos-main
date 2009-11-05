@@ -44,6 +44,10 @@
 #define MAIN_CRYSTAL_SPEED 10 /*MHz*/
 #define PLL_MULTIPLIER M16C62P_PLL_2
 
+#ifndef PLL_ON
+#define RF230_SLOW_SPI
+#endif
+
 #include "m16c62phardware.h" // Header file for the MCU
 
 #endif  // __HARDWARE_H__

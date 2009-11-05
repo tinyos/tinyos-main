@@ -62,9 +62,13 @@ implementation
   PlatformP.M16c62pControl -> M16c62pControlC;
 
   PlatformP.StopModeControl -> StopModeControlC;
+
 #ifdef ENABLE_STOP_MODE
-  components RV8564C;
+  components RV8564C, DS2782InternalC, MainC;
+  PlatformP.Boot -> MainC;
   PlatformP.RTC -> RV8564C;
+  PlatformP.HplDS2782 -> DS2782InternalC;
+  PlatformP.DS2782Control -> DS2782InternalC;
 #endif
 }
 

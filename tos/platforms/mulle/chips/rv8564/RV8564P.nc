@@ -136,8 +136,8 @@ implementation
       return FAIL;
     }
     state = WRITING;
-    write_buffer[0] = reg;
-    write_buffer[1] = value;
+    atomic write_buffer[0] = reg;
+    atomic write_buffer[1] = value;
     call I2CResource.request();
     return SUCCESS;
   }

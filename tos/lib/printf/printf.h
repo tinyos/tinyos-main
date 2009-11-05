@@ -23,8 +23,8 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.12 $
- * @date $Date: 2008-12-29 23:49:31 $
+ * @version $Revision: 1.13 $
+ * @date $Date: 2009-11-05 12:25:51 $
  */
 
 #ifndef PRINTF_H
@@ -47,6 +47,9 @@
 #endif
 #ifdef _H_atmega128hardware_H
   #include "avr_stdio.h"
+#endif
+#ifdef __M16C62PHARDWARE_H__ 
+#include "m16c62p_printf.h"
 #endif
 #include "message.h"
 int printfflush();

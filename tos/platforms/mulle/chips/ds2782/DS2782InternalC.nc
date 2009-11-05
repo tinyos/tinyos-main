@@ -35,36 +35,23 @@
  */
 
 /**
- * Implementation of the HIL required micro busy wait.
- * For more information see TEP 102.
- *
+ * The DS2782 wiring on the Mulle.
+ * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-module BusyWaitMicroC
-{
-  provides interface BusyWait<TMicro, uint16_t>;
+configuration DS2782InternalC {
+  provides interface StdControl;
+  provides interface HplDS2782;
 }
-implementation
-{
-  // TODO(henrik) This will now only work on 10Mhz speed, easy to
-  //              add a signal from the control module of the mcu
-  //              to signal the change of speed and the wait function
-  //              can adjust to it.
-  inline async command void BusyWait.wait(uint16_t dt)
-  {
-    atomic {
-      asm volatile (
-          // The call and return of the Busywait takes about 1us
-          "sub.w #1,%[t]\n\t"
-          "1:\n\t"
-          "nop\n\t"
-          "add.w #1,%[t]\n\t"
-          "sub.w #1,%[t]\n\t"
-          "sub.w #1,%[t]\n\t"
-          "jgtu 1b"
-          :
-          : [t] "r" (dt)
-          );
-    }
-  }
+
+implementation {
+  components new SoftI2CBatteryMonitorRTCC() as I2C;
+  components new HplDS2782LogicP(0x68) as Logic;
+  
+  Logic.I2CPacket -> I2C;
+  Logic.I2CResource -> I2C;
+  HplDS2782 = Logic;
+
+  StdControl = Logic;
+
 }

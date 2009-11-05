@@ -59,9 +59,9 @@ implementation
 
     async command void Spi.off()
     {
-        call SCLK.makeInput();
-        call MISO.makeInput();
-        call MOSI.makeInput();
+        call SCLK.makeOutput();
+        call MISO.makeOutput();
+        call MOSI.makeOutput();
         call SCLK.clr();
         call MISO.clr();
         call MOSI.clr();

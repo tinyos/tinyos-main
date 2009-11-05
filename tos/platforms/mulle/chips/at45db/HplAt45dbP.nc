@@ -69,7 +69,6 @@
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-
 module HplAt45dbP
 {
   provides
@@ -89,11 +88,15 @@ module HplAt45dbP
 }
 implementation
 {
+  // TODO(Henrik) Move init code to a SplitControl interface and
+  //              change the busy wait into a TimerMilli.startOneShot.
   command error_t Init.init() {
     call Select.makeOutput();
     call Select.set();
     call VCC.makeOutput();
     call VCC.clr();
+  	// The device needs 20ms before is accepts a write.
+  	call BusyWait.wait(20000);
     return SUCCESS;
   }
 
