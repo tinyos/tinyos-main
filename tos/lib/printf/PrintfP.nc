@@ -80,9 +80,6 @@ static FILE atm128_stdout =
 	FDEV_SETUP_STREAM(TCAST(int (*)(char c, FILE *stream), uart_putchar), 
 	NULL, _FDEV_SETUP_WRITE);
 #endif
-#ifdef __M16C62PHARDWARE_H__
-	#include "m16c62p_printf.h"
-#endif
 
 module PrintfP @safe() {
   provides {
