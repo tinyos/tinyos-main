@@ -53,7 +53,6 @@ implementation
 {
   components new M16c62pAlarm16C(TMicro) as AlarmFrom;
   components new M16c62pTimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_PREV, 0, false, false, false) as AlarmInit;
-  components McuSleepC;
 
   components HplM16c62pTimerC as Timers,
       CounterMicro16C,
@@ -61,7 +60,6 @@ implementation
 
   AlarmFrom -> Timers.ALARM_MICRO16;
   AlarmFrom.Counter -> CounterMicro16C;
-  AlarmFrom.McuPowerState -> McuSleepC;
 
   AlarmInit -> Timers.ALARM_MICRO16;
   AlarmInit -> Timers.ALARM_MICRO16_CTRL;

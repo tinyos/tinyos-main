@@ -5,13 +5,14 @@ push( @includes, qw(
   %T/chips/rf2xx/layers
   %T/chips/rf2xx/util
   %T/chips/at45db
+  %T/platforms/mulle/button
   %T/platforms/mulle/softwarei2c
   %T/platforms/mulle/softwarespi
   %T/platforms/mulle/chips/rv8564
   %T/platforms/mulle/chips/at45db
   %T/platforms/mulle/chips/m16c62p
   %T/platforms/mulle/chips/mma7261qt
-  %T/platforms/mulle/debug
+  %T/platforms/mulle/chips/ds2745
   %T/platforms/mulle/system
   %T/platforms/mulle/timers
   %T/platforms/mulle/timers/stop
@@ -23,6 +24,7 @@ push( @includes, qw(
   %T/chips/m16c62p/pins
   %T/chips/m16c62p/timer
   %T/chips/m16c62p/uart
+  %T/chips/m16c62p/printf
   %T/chips/mma7261qt
   %T/chips/ds2745
   %T/lib/power

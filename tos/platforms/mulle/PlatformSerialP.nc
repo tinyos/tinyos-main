@@ -35,32 +35,38 @@
  */
 
 /**
- * The wiring of the Serial interface used to communicate with the Mulle
- * platform.
+ * Initialization of the PlatformSerial uart and a StdControl implementation
+ * for it.
  * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-configuration PlatformSerialC {
-  
-  provides interface StdControl;
-  provides interface UartStream;
-  provides interface UartByte;
-  
-}
-implementation {
 
-  components M16c62pUartC as Uart,
-      PlatformSerialP, CounterMicro16C;
-      
-  StdControl = PlatformSerialP;
-  PlatformSerialP -> Uart.Uart1Control;
-  UartStream = Uart.Uart1Stream;
-  UartByte = Uart.Uart1Byte;
+module PlatformSerialP
+{
+  provides interface StdControl;
+  provides interface Init;
   
-  Uart.Counter -> CounterMicro16C;
+  uses interface UartControl;
+}
+implementation
+{
+  command error_t Init.init() {
+    call UartControl.setParity(TOS_UART_PARITY_NONE);
+    call UartControl.setNoStop();
+    call UartControl.setSpeed(TOS_UART_57600);
+    return SUCCESS;
+  }
   
-  components MainC;
   
-  MainC.SoftwareInit -> PlatformSerialP;
-  
+  command error_t StdControl.start()
+  {
+    call UartControl.setDuplexMode(TOS_UART_DUPLEX);
+    return SUCCESS;
+  }
+
+  command error_t StdControl.stop()
+  {
+    call UartControl.setDuplexMode(TOS_UART_OFF);
+    return SUCCESS;
+  }
 }

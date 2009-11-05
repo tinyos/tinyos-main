@@ -187,14 +187,14 @@ command uint8_t HplM16c62pFlash.FlashWrite( unsigned long flash_addr,
         "mov.w %[low], a0\n\t"
         "mov.w %[high], a1\n\t"
 
-        "mov.w #0x0040, r0\n\t" // Send write command
-        "ste.w r0, [a1a0]\n\t"
+        "mov.w #0x0040, r1\n\t" // Send write command
+        "ste.w r1, [a1a0]\n\t"
 
-        "mov.w %[data], r0\n\t" // Write data
-        "ste.w r0, [a1a0]\n\t"
+        "mov.w %[data], r1\n\t" // Write data
+        "ste.w r1, [a1a0]\n\t"
         :
         :[low] "r" (low), [high] "r" (high), [data] "r" (*buffer_addr)
-        : "memory", "r0", "a1", "a0");
+        : "memory", "a1", "a0", "r1");
 
     // Note: In EW1 Mode, the MCU is suspended until the operation completed
 

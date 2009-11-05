@@ -33,34 +33,48 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+  
 /**
- * The wiring of the Serial interface used to communicate with the Mulle
- * platform.
- * 
+ * Generic pin access for pins on the P9 port. The PD9 register
+ * is locked by the PRC2 bit in the PRCR register so it needs
+ * to be unlocked before each access.
+ *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-configuration PlatformSerialC {
-  
-  provides interface StdControl;
-  provides interface UartStream;
-  provides interface UartByte;
-  
-}
-implementation {
 
-  components M16c62pUartC as Uart,
-      PlatformSerialP, CounterMicro16C;
-      
-  StdControl = PlatformSerialP;
-  PlatformSerialP -> Uart.Uart1Control;
-  UartStream = Uart.Uart1Stream;
-  UartByte = Uart.Uart1Byte;
-  
-  Uart.Counter -> CounterMicro16C;
-  
-  components MainC;
-  
-  MainC.SoftwareInit -> PlatformSerialP;
-  
+generic module HplM16c62pGeneralIOPinPRC2P()
+{
+  provides interface GeneralIO as IO;
+ 
+  uses interface GeneralIO as Wrap;
 }
+implementation
+{
+
+  inline async command bool IO.get()        { return call Wrap.get(); }
+  inline async command void IO.set()        { call Wrap.set(); }
+  inline async command void IO.clr()        { call Wrap.clr(); }
+  inline async command void IO.toggle()     { call Wrap.toggle(); }
+    
+  inline async command void IO.makeInput() 
+  {
+    atomic
+    {
+  	  PRCR.BYTE = BIT2;
+  	  call Wrap.makeInput();
+    }
+  }
+  
+  inline async command bool IO.isInput()    { return call Wrap.isInput(); }
+  inline async command void IO.makeOutput()
+  {
+    atomic
+    {
+      PRCR.BYTE = BIT2;
+  	  call Wrap.makeOutput();
+    }
+  }
+  
+  inline async command bool IO.isOutput()   { return call Wrap.isOutput(); }
+}
+

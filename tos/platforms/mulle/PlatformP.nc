@@ -65,6 +65,7 @@ implementation
     call StopModeControl.allowStopMode(true);
     // Activate the RTC and set it to output 1024 tics on the CLKOUT pin.
     call RTC.on();
+    call RTC.enableCLKOUT();
     call RTC.writeRegister(RV8564_CLKF, 0x81);
 #else
     call StopModeControl.allowStopMode(false);
@@ -79,5 +80,7 @@ implementation
   }
 #ifdef ENABLE_STOP_MODE
   async event void RTC.fired() {}
+  async event void RTC.readRegisterDone(uint8_t val, uint8_t reg) {}
+  async event void RTC.writeRegisterDone(uint8_t reg) {}
 #endif
 }

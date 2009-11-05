@@ -35,29 +35,28 @@
  */
 
 /**
- * A dumb demo sensor used for testing.
+ * Demo sensor that connects to the AN0 channel on the MCU. This can
+ * easily be used together with the potentiometer on the Mulle
+ * expansionboard.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-generic module DemoSensorC()
+generic configuration DemoSensorC()
 {
   provides interface Read<uint16_t>;
 }
 implementation
 {
-  uint8_t counter = 0;
-  
-  task void signalReadDone()
-  {
-    atomic uint8_t tmp = counter;
-    atomic counter++;
-    
-    signal Read.readDone(SUCCESS, tmp);
-  } 
-    
-  command error_t Read.read()
-  {
-    return SUCCESS;
-  }
-  default event void Read.readDone( error_t result, uint16_t val ) {}
+  components new AdcReadClientC(), DemoSensorP,
+             HplM16c62pGeneralIOC as IOs,
+             RealMainP;
+
+  DemoSensorP.Pin -> IOs.PortP100;
+  DemoSensorP.AVcc -> IOs.PortP76;
+
+  Read = AdcReadClientC;
+
+  AdcReadClientC.M16c62pAdcConfig -> DemoSensorP;
+
+  RealMainP.PlatformInit -> DemoSensorP;
 }
