@@ -40,9 +40,7 @@ module NetProgM {
     interface InternalFlash as IFlash;
     interface Crc;
     interface Leds;
-#if !defined(PLATFORM_MULLE)
     interface CC2420Config;
-#endif
     async command void setAmAddress(am_addr_t a);
     interface ReprogramGuard;
   }
