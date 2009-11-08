@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.25 2009-11-08 08:42:43 razvanm Exp $
+#$Id: avr.rules,v 1.26 2009-11-08 08:47:19 razvanm Exp $
 
 define AVR_HELP
 
@@ -37,7 +37,7 @@ LIBS = -lm
 
 # Use __ as the separator - requires nesC 1.2.9 or later
 ifneq ($(filter sim,$(GOALS)),sim)
-ifneq ($(filter sim-sim,$(GOALS)),sim-sim)
+ifneq ($(filter sim-sf,$(GOALS)),sim-sf)
 	PFLAGS += -fnesc-separator=__
 endif
 endif
