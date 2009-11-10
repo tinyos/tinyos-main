@@ -34,12 +34,13 @@ libtoscomm.jnilib:  $(libtoscomm_jnilib_SOURCES)
 	 -o $@ NativeSerial_darwin.cpp
 
 libtoscomm-32.so: $(libtoscomm_so_SOURCES)
-	$(CXX) -m32 $(SOFLAGS) -o $@ NativeSerial_linux.cpp
+	$(CXX) -m32 $(SOFLAGS) -o $@ NativeSerial_linux.cpp || \
+	(echo 32-bit libtoscomm.so NOT GENERATED - DO NOT USE THIS RUN TO BUILD AN RPM; echo Press return to continue; read; rm -f $@)
 
 libtoscomm-64.so: $(libtoscomm_so_SOURCES)
 	@echo $(CXX) -m64 $(SOFLAGS) -o $@ NativeSerial_linux.cpp
 	@$(CXX) -m64 $(SOFLAGS) -o $@ NativeSerial_linux.cpp || \
-	(echo 64-bit libtoscomm.so NOT GENERATED - DO NOT USE THIS RUN TO BUILD AN RPM; echo Press return to continue; read; rm -f libtoscomm-64.so)
+	(echo 64-bit libtoscomm.so NOT GENERATED - DO NOT USE THIS RUN TO BUILD AN RPM; echo Press return to continue; read; rm -f $@)
 
 toscomm.dll: $(toscomm_dll_SOURCES)
 	$(CXX) -O2 -s -mno-cygwin -shared "-I$(JDK)/include" "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at \

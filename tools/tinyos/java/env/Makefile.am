@@ -14,12 +14,13 @@ libgetenv_32_so_SOURCES = net_tinyos_util_Env.h net_tinyos_util_Env.c
 libgetenv_64_so_SOURCES = $(libgetenv_32_so_SOURCES)
 
 libgetenv-32.so : net_tinyos_util_Env.h net_tinyos_util_Env.c
-	$(CC) $(SOFLAGS) -m32 net_tinyos_util_Env.c -o$@
+	$(CC) $(SOFLAGS) -m32 net_tinyos_util_Env.c -o$@ || \
+	(echo 32-bit libgetenv.so NOT GENERATED - DO NOT USE THIS RUN TO BUILD AN RPM; echo Press return to continue; read; rm -f $@)
 
 libgetenv-64.so : net_tinyos_util_Env.h net_tinyos_util_Env.c
 	@echo $(CC) $(SOFLAGS) -m64 net_tinyos_util_Env.c -o$@
 	@$(CC) $(SOFLAGS) -m64 net_tinyos_util_Env.c -o$@ || \
-	(echo 64-bit libgetenv.so NOT GENERATED - DO NOT USE THIS RUN TO BUILD AN RPM; echo Press return to continue; read; rm -f libtoscomm-64.so)
+	(echo 64-bit libgetenv.so NOT GENERATED - DO NOT USE THIS RUN TO BUILD AN RPM; echo Press return to continue; read; rm -f $@)
 
 getenv.dll: net_tinyos_util_Env.h net_tinyos_util_Env.c
 	gcc -shared -o$@ -mno-cygwin "-I$(JDK)/include" "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at net_tinyos_util_Env.c
