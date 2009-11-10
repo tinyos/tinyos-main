@@ -29,6 +29,7 @@ if [ ${PLATFORM} != 'micaz' -a \
      ${PLATFORM} != 'telosb' -a \
      ${PLATFORM} != 'iris' -a \
      ${PLATFORM} != 'mulle' -a \
+     ${PLATFORM} != 'tinynode' -a \
      ${PLATFORM} != 'epic' ]
 then
   echo "\"${PLATFORM}\" is not a supported platform"

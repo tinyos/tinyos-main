@@ -1,0 +1,15 @@
+Deluge T2 for TinyNode
+----------------------------------
+
+
+These files are needed by Deluge T2 to compile for the TinyNode platform. 
+
+Note: 
+
+Reprogramming fails if the voltage of the node is not above a given 
+threshold. Currently, this is set to 2.7V, which may be too high if 
+you run your mote on batteries. In this case, set the value of
+VTHRESH in the hardware.h file to a different value. 
+
+In case you wish not to test the voltage at all, modify VoltageC.nc
+s.t. the command Voltage.okToProgram() returns always TRUE. 

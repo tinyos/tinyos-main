@@ -40,7 +40,9 @@ module NetProgM {
     interface InternalFlash as IFlash;
     interface Crc;
     interface Leds;
+#if !defined(PLATFORM_TINYNODE)
     interface CC2420Config;
+#endif
     async command void setAmAddress(am_addr_t a);
     interface ReprogramGuard;
   }
@@ -60,9 +62,10 @@ implementation {
       TOS_NODE_ID = bootArgs.address;
       call setAmAddress(bootArgs.address);
     }
+#if !defined(PLATFORM_TINYNODE)
     call CC2420Config.setShortAddr(bootArgs.address);
     call CC2420Config.sync();
-    
+#endif    
     return SUCCESS;
   }
   
@@ -113,5 +116,7 @@ implementation {
     }
   }
 
+#if !defined(PLATFORM_TINYNODE)
   event void CC2420Config.syncDone(error_t error) {}
+#endif
 }

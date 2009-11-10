@@ -37,6 +37,8 @@
   #include "extra/micaz/TOSBoot_platform.h"
 #elif defined(PLATFORM_MULLE)
   #include "extra/mulle/TOSBoot_platform.h"
+#elif defined(PLATFORM_TINYNODE)
+  #include "extra/tinynode/TOSBoot_platform.h"
 #else
   #error "Target platform is not currently supported by Deluge T2"
 #endif

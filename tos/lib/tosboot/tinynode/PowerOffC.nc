@@ -1,5 +1,9 @@
+// $Id: PowerOffC.nc,v 1.1 2009-11-10 07:03:34 rflury Exp $
+
 /*
- * "Copyright (c) 2000-2005 The Regents of the University  of California.  
+ *
+ *
+ * "Copyright (c) 2000-2004 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -18,46 +22,68 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2007 Johns Hopkins University.
- * All rights reserved.
- *
  */
 
 /**
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-includes NetProg;
-includes TOSBoot;
-
-configuration NetProgC {
+module PowerOffC {
   provides {
-    interface NetProg;
+    interface Init;
+    interface StdControl;
+  }
+  uses {
+    interface Leds;
+    interface StdControl as SubControl;
   }
 }
 
 implementation {
 
-  components MainC, InternalFlashC as IFlash, CrcC;
-  components NetProgM, ReprogramGuardC;
+  void haltsystem() {
 
-  NetProg = NetProgM;
+    uint16_t _lpmreg;
 
-  MainC.SoftwareInit -> NetProgM.Init;
-  NetProgM.IFlash -> IFlash;
-  NetProgM.Crc -> CrcC;
-  NetProgM.ReprogramGuard -> ReprogramGuardC;
+    TOSH_SET_PIN_DIRECTIONS();
 
-  components LedsC;
-  NetProgM.Leds -> LedsC;
-  
-  components ActiveMessageAddressC;
-  NetProgM.setAmAddress -> ActiveMessageAddressC;
+    call SubControl.stop();
 
-#if !defined(PLATFORM_TINYNODE)
-  components CC2420ControlP;
-  NetProgM.CC2420Config -> CC2420ControlP;
-#endif
+    call Leds.glow(0x7, 0x0);
+
+    _lpmreg = LPM4_bits;
+    _lpmreg |= SR_GIE;
+
+    __asm__ __volatile__( "bis  %0, r2" : : "m" ((uint16_t)_lpmreg) );
+
+  }
+
+  command error_t Init.init() {
+    return SUCCESS;
+  }
+
+  command error_t StdControl.start() {
+
+    int i;
+
+    // wait a short period for things to stabilize
+    for ( i = 0; i < 4; i++ ) {
+      wait(0xffff);
+		}
+
+		// TinyNode: we don't have a user button
+
+    // if user button is pressed, power down
+    //if (!TOSH_READ_USERINT_PIN()) {
+		//haltsystem(); 
+		//}
+
+    return SUCCESS;
+
+  }
+
+  command error_t StdControl.stop() {
+    return SUCCESS;
+  }
+
 }

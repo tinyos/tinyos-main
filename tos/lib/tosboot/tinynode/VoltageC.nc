@@ -1,5 +1,9 @@
+// $Id: VoltageC.nc,v 1.1 2009-11-10 07:03:34 rflury Exp $
+
 /*
- * "Copyright (c) 2000-2005 The Regents of the University  of California.  
+ *
+ *
+ * "Copyright (c) 2000-2004 The Regents of the University  of California.  
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -18,46 +22,47 @@
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
- * Copyright (c) 2007 Johns Hopkins University.
- * All rights reserved.
- *
  */
 
 /**
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-includes NetProg;
-includes TOSBoot;
-
-configuration NetProgC {
+module VoltageC {
   provides {
-    interface NetProg;
+    interface Voltage;
   }
 }
 
 implementation {
 
-  components MainC, InternalFlashC as IFlash, CrcC;
-  components NetProgM, ReprogramGuardC;
+  command bool Voltage.okToProgram() {
 
-  NetProg = NetProgM;
+		/** original code form the msp430 folder */
+    int i;
 
-  MainC.SoftwareInit -> NetProgM.Init;
-  NetProgM.IFlash -> IFlash;
-  NetProgM.Crc -> CrcC;
-  NetProgM.ReprogramGuard -> ReprogramGuardC;
+    // Turn on and set up ADC12 with REF_1_5V
+    ADC12CTL0 = ADC12ON | SHT0_2 | REFON;
+    // Use sampling timer
+    ADC12CTL1 = SHP;
+    // Set up to sample voltage
+    ADC12MCTL0 = EOS | SREF_1 | INCH_11;
+    // Delay for reference start-up
+    for ( i=0; i<0x3600; i++ );
 
-  components LedsC;
-  NetProgM.Leds -> LedsC;
-  
-  components ActiveMessageAddressC;
-  NetProgM.setAmAddress -> ActiveMessageAddressC;
+    // Enable conversions
+    ADC12CTL0 |= ENC;
+    // Start conversion
+    ADC12CTL0 |= ADC12SC;
+    // Wait for completion
+    while ((ADC12IFG & BIT0) == 0);
 
-#if !defined(PLATFORM_TINYNODE)
-  components CC2420ControlP;
-  NetProgM.CC2420Config -> CC2420ControlP;
-#endif
+    // Turn off ADC12
+    ADC12CTL0 &= ~ENC;
+    ADC12CTL0 = 0;
+
+    // Check if voltage is greater than 2.7V
+    return ( ADC12MEM0 > VTHRESH );
+  }
+
 }

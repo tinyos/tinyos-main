@@ -1,3 +1,5 @@
+// $Id: ExecC.nc,v 1.1 2009-11-10 07:03:34 rflury Exp $
+
 /*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -17,47 +19,27 @@
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
- *
- * Copyright (c) 2007 Johns Hopkins University.
- * All rights reserved.
- *
  */
 
-/**
+/*
  * @author Jonathan Hui <jwhui@cs.berkeley.edu>
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
- * @author Razvan Musaloiu-E. <razvanm@cs.jhu.edu>
  */
 
-includes NetProg;
-includes TOSBoot;
-
-configuration NetProgC {
+module ExecC {
   provides {
-    interface NetProg;
+    interface Exec;
   }
 }
 
 implementation {
 
-  components MainC, InternalFlashC as IFlash, CrcC;
-  components NetProgM, ReprogramGuardC;
+  command void Exec.exec() {
 
-  NetProg = NetProgM;
+    //goto *(void*)(TOSBOOT_END);
 
-  MainC.SoftwareInit -> NetProgM.Init;
-  NetProgM.IFlash -> IFlash;
-  NetProgM.Crc -> CrcC;
-  NetProgM.ReprogramGuard -> ReprogramGuardC;
+    typedef void __attribute__((noreturn)) (*tosboot_exec)();
+    ((tosboot_exec)TOSBOOT_END)();
 
-  components LedsC;
-  NetProgM.Leds -> LedsC;
-  
-  components ActiveMessageAddressC;
-  NetProgM.setAmAddress -> ActiveMessageAddressC;
+  }
 
-#if !defined(PLATFORM_TINYNODE)
-  components CC2420ControlP;
-  NetProgM.CC2420Config -> CC2420ControlP;
-#endif
 }
