@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.18 2009-11-06 05:24:35 razvanm Exp $
+#$Id: msp.rules,v 1.19 2009-11-12 20:40:06 razvanm Exp $
 
 define MSP_HELP
 
@@ -7,7 +7,6 @@ define MSP_HELP
 
    debug    : compile with minimal optimization and debug symbols
    debugopt : compile with debug symbols
-   xnp      : compile for network programming
 
  Programmer options:
 
