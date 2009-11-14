@@ -7,7 +7,7 @@
 # by ncc.  And because of that, the current platform's include directory
 # must be specified, otherwise its search order is last instead of first.
 #
-# $Id: .platform,v 1.5 2007-05-14 15:37:57 scipio Exp $
+# $Id: .platform,v 1.6 2009-11-14 02:12:39 razvanm Exp $
 #
 push( @includes, qw(
 
@@ -28,11 +28,15 @@ push( @includes, qw(
 
 @opts = qw(
 
-  -gcc=gcc
   -fnesc-no-debug
   -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
 
 );
 
+if (defined($ENV{"GCC"})) {
+  push @opts, "-gcc=$ENV{'GCC'}";
+} else {
+  push @opts, "-gcc=gcc";
+}
 push @opts, "-mingw-gcc" if $cygwin;
 
