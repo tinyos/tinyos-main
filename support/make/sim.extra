@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: sim.extra,v 1.13 2009-11-14 02:12:39 razvanm Exp $
+#$Id: sim.extra,v 1.14 2009-11-14 02:14:18 razvanm Exp $
 
 export GCC=gcc
 GPP=g++
@@ -50,7 +50,7 @@ endif
 endif
 endif 
 ifdef SIM_DARWIN
-  PLATFORM_FLAGS=-fPIC
+  PLATFORM_FLAGS=-fPIC -D_FORTIFY_SOURCE=0
   PLATFORM_CC_FLAGS=-bundle
   SHARED_OBJECT=_TOSSIMmodule.so
   PLATFORM_BUILD_FLAGS=-flat_namespace -undefined suppress 
