@@ -118,7 +118,7 @@ implementation
 	}
 
 #ifndef SOFTWAREACK_TIMEOUT
-#define SOFTWAREACK_TIMEOUT	1000
+#define SOFTWAREACK_TIMEOUT	20000
 #endif
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()
