@@ -58,6 +58,10 @@ else
 LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt.S
 endif
 
+# This is needed so that we know that the BusyWaitMicroC.BusyWait.wait()
+# function always gets aligned.
+CFLAGS += -falign-functions=2
+
 DEFAULT_PROGRAM ?= sm16cf
 
 # Use the 'if' function instead of the 'ifdef' construct because ifdef freaks

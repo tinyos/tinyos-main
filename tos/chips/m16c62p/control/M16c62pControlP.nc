@@ -290,6 +290,7 @@ implementation
     uint8_t cm0_tmp, cm1_tmp;
     __nesc_enable_interrupt();
     PRCR.BYTE = 1; // Turn off protection of system clock control registers
+    CLR_BIT(CM2.BYTE, 0);
     cm0_tmp = CM0.BYTE;
     cm1_tmp = CM1.BYTE;
     CM0.BYTE = 0b00001000;
@@ -300,7 +301,6 @@ implementation
     asm("nop");
     asm("nop");
     asm("nop");
-    PRCR.BYTE = 0; // Turn off protection of system clock control registers
     asm volatile ("" : : : "memory");
     __nesc_disable_interrupt();
     CM0.BYTE = cm0_tmp;

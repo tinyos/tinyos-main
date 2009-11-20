@@ -86,8 +86,8 @@ implementation
   HplRF230P.Alarm -> AlarmRF230;
   Alarm = AlarmRF230;
 
-  components RealMainP;
-  RealMainP.PlatformInit -> HplRF230P.PlatformInit;
+  components PlatformP;
+  PlatformP.SubInit -> HplRF230P.PlatformInit;
     
   components LocalTimeMicroC;
   LocalTimeRadio = LocalTimeMicroC;
