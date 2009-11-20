@@ -6,12 +6,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -27,9 +27,13 @@ module TimeSyncMessageLayerP
 {
 	provides
 	{
-		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[uint8_t id];
-		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[uint8_t id];
+		interface Receive[am_id_t id];
+		interface Receive as Snoop[am_id_t id];
+		interface AMPacket;
 		interface Packet;
+
+		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
+		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
 
 		interface TimeSyncPacket<TRadio, uint32_t> as TimeSyncPacketRadio;
 		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
@@ -37,8 +41,10 @@ module TimeSyncMessageLayerP
 
 	uses
 	{
-		interface Send as SubSend;
-		interface AMPacket;
+		interface AMSend as SubAMSend;
+		interface Receive as SubReceive;
+		interface Receive as SubSnoop;
+		interface AMPacket as SubAMPacket;
 		interface Packet as SubPacket;
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
@@ -53,55 +59,112 @@ module TimeSyncMessageLayerP
 
 implementation
 {
-	inline void* getFooter(message_t* msg)
+	inline timesync_footer_t* getFooter(message_t* msg)
 	{
 		// we use the payload length that we export (the smaller one)
-		return msg->data + call Packet.payloadLength(msg);
+		return (timesync_footer_t*)(msg->data + call Packet.payloadLength(msg));
 	}
 
 /*----------------- Packet -----------------*/
 
-	command void Packet.clear(message_t* msg) 
+	command void Packet.clear(message_t* msg)
 	{
 		call SubPacket.clear(msg);
 	}
 
-	command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
+	command void Packet.setPayloadLength(message_t* msg, uint8_t len)
 	{
-		call SubPacket.setPayloadLength(msg, len + sizeof(timesync_relative_t));
+		call SubPacket.setPayloadLength(msg, len + sizeof(timesync_footer_t));
 	}
 
-	command uint8_t Packet.payloadLength(message_t* msg) 
+	command uint8_t Packet.payloadLength(message_t* msg)
 	{
-		return call SubPacket.payloadLength(msg) - sizeof(timesync_relative_t);
+		return call SubPacket.payloadLength(msg) - sizeof(timesync_footer_t);
 	}
 
 	command uint8_t Packet.maxPayloadLength()
 	{
-		return call SubPacket.maxPayloadLength() - sizeof(timesync_relative_t);
+		return call SubPacket.maxPayloadLength() - sizeof(timesync_footer_t);
 	}
 
 	command void* Packet.getPayload(message_t* msg, uint8_t len)
 	{
-		return call SubPacket.getPayload(msg, len + sizeof(timesync_relative_t));
+		return call SubPacket.getPayload(msg, len + sizeof(timesync_footer_t));
+	}
+
+/*----------------- AMPacket -----------------*/
+
+	inline command am_addr_t AMPacket.address()
+	{
+		return call SubAMPacket.address();
+	}
+ 
+	inline command am_group_t AMPacket.localGroup()
+	{
+		return call SubAMPacket.localGroup();
+	}
+
+	inline command bool AMPacket.isForMe(message_t* msg)
+	{
+		return call SubAMPacket.isForMe(msg) && call SubAMPacket.type(msg) == TIMESYNC_AMTYPE;
+	}
+
+	inline command am_addr_t AMPacket.destination(message_t* msg)
+	{
+		return call SubAMPacket.destination(msg);
+	}
+ 
+	inline command void AMPacket.setDestination(message_t* msg, am_addr_t addr)
+	{
+		call SubAMPacket.setDestination(msg, addr);
+	}
+
+	inline command am_addr_t AMPacket.source(message_t* msg)
+	{
+		return call SubAMPacket.source(msg);
+	}
+
+	inline command void AMPacket.setSource(message_t* msg, am_addr_t addr)
+	{
+		call SubAMPacket.setSource(msg, addr);
+	}
+
+	inline command am_id_t AMPacket.type(message_t* msg)
+	{
+		return getFooter(msg)->type;
+	}
+
+	inline command void AMPacket.setType(message_t* msg, am_id_t type)
+	{
+		getFooter(msg)->type = type;
+	}
+  
+	inline command am_group_t AMPacket.group(message_t* msg) 
+	{
+		return call SubAMPacket.group(msg);
+	}
+
+	inline command void AMPacket.setGroup(message_t* msg, am_group_t grp)
+	{
+		call SubAMPacket.setGroup(msg, grp);
 	}
 
 /*----------------- TimeSyncAMSendRadio -----------------*/
 
 	command error_t TimeSyncAMSendRadio.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len, uint32_t event_time)
 	{
-		*(timesync_absolute_t*)(msg->data + len) = event_time;
+		timesync_footer_t* footer = (timesync_footer_t*)(msg->data + len);
 
-		call PacketTimeSyncOffset.set(msg, offsetof(message_t, data) + len);
-		call AMPacket.setDestination(msg, addr);
-		call AMPacket.setType(msg, id);
+		footer->type = id;
+		footer->absolute = event_time;
+		call PacketTimeSyncOffset.set(msg, offsetof(message_t, data) + len + offsetof(timesync_footer_t, absolute));
 
-		return call SubSend.send(msg, len + sizeof(timesync_relative_t));
+		return call SubAMSend.send(addr, msg, len + sizeof(timesync_footer_t));
 	}
 
 	command error_t TimeSyncAMSendRadio.cancel[am_id_t id](message_t* msg)
 	{
-		return call SubSend.cancel(msg);
+		return call SubAMSend.cancel(msg);
 	}
 
 	default event void TimeSyncAMSendRadio.sendDone[am_id_t id](message_t* msg, error_t error)
@@ -110,12 +173,12 @@ implementation
 
 	command uint8_t TimeSyncAMSendRadio.maxPayloadLength[am_id_t id]()
 	{
-		return call SubSend.maxPayloadLength() - sizeof(timesync_relative_t);
+		return call SubAMSend.maxPayloadLength() - sizeof(timesync_footer_t);
 	}
 
 	command void* TimeSyncAMSendRadio.getPayload[am_id_t id](message_t* msg, uint8_t len)
 	{
-		return call SubSend.getPayload(msg, len + sizeof(timesync_relative_t));
+		return call SubAMSend.getPayload(msg, len + sizeof(timesync_footer_t));
 	}
 
 /*----------------- TimeSyncAMSendMilli -----------------*/
@@ -147,9 +210,9 @@ implementation
 		return call TimeSyncAMSendRadio.getPayload[id](msg, len);
 	}
 
-	/*----------------- SubSend.sendDone -------------------*/
+/*----------------- SubSend.sendDone -------------------*/
 
-	event void SubSend.sendDone(message_t* msg, error_t error)
+	event void SubAMSend.sendDone(message_t* msg, error_t error)
 	{
 		am_id_t id = call AMPacket.type(msg);
 
@@ -157,35 +220,47 @@ implementation
 		signal TimeSyncAMSendMilli.sendDone[id](msg, error);
 	}
 
-	/*----------------- TimeSyncPacketRadio -----------------*/
+/*----------------- SubReceive and SubSnoop -------------------*/
+
+	event message_t* SubReceive.receive(message_t* msg, void* payload, uint8_t len)
+	{
+		am_id_t id = call AMPacket.type(msg);
+
+		return signal Receive.receive[id](msg, payload, len - sizeof(timesync_footer_t));
+	}
+
+	default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) { return msg; }
+
+	event message_t* SubSnoop.receive(message_t* msg, void* payload, uint8_t len)
+	{
+		am_id_t id = call AMPacket.type(msg);
+
+		return signal Snoop.receive[id](msg, payload, len - sizeof(timesync_footer_t));
+	}
+
+	default event message_t* Snoop.receive[am_id_t id](message_t* msg, void* payload, uint8_t len) { return msg; }
+
+/*----------------- TimeSyncPacketRadio -----------------*/
 
 	command bool TimeSyncPacketRadio.isValid(message_t* msg)
 	{
-		timesync_relative_t* timesync = getFooter(msg);
-
-		return call PacketTimeStampRadio.isValid(msg) && *timesync != 0x80000000L;
+		return call PacketTimeStampRadio.isValid(msg) && getFooter(msg)->relative != 0x80000000L;
 	}
 
 	command uint32_t TimeSyncPacketRadio.eventTime(message_t* msg)
 	{
-		timesync_relative_t* timesync = getFooter(msg);
-
-		return (*timesync) + call PacketTimeStampRadio.timestamp(msg);
+		return getFooter(msg)->relative + call PacketTimeStampRadio.timestamp(msg);
 	}
 
-	/*----------------- TimeSyncPacketMilli -----------------*/
+/*----------------- TimeSyncPacketMilli -----------------*/
 
 	command bool TimeSyncPacketMilli.isValid(message_t* msg)
 	{
-		timesync_relative_t* timesync = getFooter(msg);
-
-		return call PacketTimeStampMilli.isValid(msg) && *timesync != 0x80000000L;
+		return call PacketTimeStampMilli.isValid(msg) && getFooter(msg)->relative != 0x80000000L;
 	}
 
 	command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg)
 	{
-		timesync_relative_t* timesync = getFooter(msg);
-
-		return ((int32_t)(*timesync) >> RADIO_ALARM_MILLI_EXP) + call PacketTimeStampMilli.timestamp(msg);
+		return ((int32_t)(getFooter(msg)->relative) >> RADIO_ALARM_MILLI_EXP) + call PacketTimeStampMilli.timestamp(msg);
 	}
 }

@@ -24,11 +24,15 @@
 #include <Timer.h>
 #include <AM.h>
 #include <RadioConfig.h>
+#include <TimeSyncMessageLayer.h>
 
 configuration TimeSyncMessageLayerC
 {
 	provides
 	{
+		interface Receive[uint8_t id];
+		interface Receive as Snoop[am_id_t id];
+		interface AMPacket;
 		interface Packet;
 
 		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
@@ -52,7 +56,11 @@ implementation
 {
 	components TimeSyncMessageLayerP, LocalTimeMilliC;
 
+	AMPacket = TimeSyncMessageLayerP;
 	Packet = TimeSyncMessageLayerP;
+
+	Receive = TimeSyncMessageLayerP.Receive;
+	Snoop = TimeSyncMessageLayerP.Snoop;
 
 	TimeSyncAMSendRadio = TimeSyncMessageLayerP;
 	TimeSyncPacketRadio = TimeSyncMessageLayerP;
@@ -61,10 +69,14 @@ implementation
 	TimeSyncPacketMilli = TimeSyncMessageLayerP;
 
 	// Ok, we use the AMSenderC infrastructure to avoid concurrent send clashes
-	components AMQueueP, ActiveMessageC;
-	TimeSyncMessageLayerP.SubSend -> AMQueueP.Send[unique(UQ_AMQUEUE_SEND)];
-	TimeSyncMessageLayerP.AMPacket -> ActiveMessageC;
-	TimeSyncMessageLayerP.SubPacket -> ActiveMessageC;
+	components new AMSenderC(TIMESYNC_AMTYPE);
+	TimeSyncMessageLayerP.SubAMSend -> AMSenderC;
+	TimeSyncMessageLayerP.SubAMPacket -> AMSenderC;
+	TimeSyncMessageLayerP.SubPacket -> AMSenderC;
+
+	components ActiveMessageC;
+	TimeSyncMessageLayerP.SubReceive -> ActiveMessageC.Receive[TIMESYNC_AMTYPE];
+	TimeSyncMessageLayerP.SubSnoop -> ActiveMessageC.Snoop[TIMESYNC_AMTYPE];;
 
 	PacketTimeStampRadio = TimeSyncMessageLayerP;
 	PacketTimeStampMilli = TimeSyncMessageLayerP;

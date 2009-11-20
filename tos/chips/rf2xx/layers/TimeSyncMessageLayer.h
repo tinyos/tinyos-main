@@ -24,10 +24,26 @@
 #ifndef __TIMESYNCMESSAGELAYER_H__
 #define __TIMESYNCMESSAGELAYER_H__
 
-// this value is sent in the air
+#include <AM.h>
+
+#ifndef TIMESYNC_AMTYPE
+#define TIMESYNC_AMTYPE 0x3D
+#endif
+
+// this is sent over the air
 typedef nx_int32_t timesync_relative_t;
 
-// this value is stored in memory
+// this is stored in memory
 typedef uint32_t timesync_absolute_t;
+
+typedef struct timesync_footer_t
+{
+	nx_am_id_t type;
+	union
+	{
+		timesync_relative_t relative;
+		timesync_absolute_t absolute;
+	};
+} timesync_footer_t;
 
 #endif//__TIMESYNCMESSAGELAYER_H__

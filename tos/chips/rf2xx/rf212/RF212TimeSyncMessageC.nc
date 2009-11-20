@@ -49,9 +49,9 @@ implementation
 	components RF212DriverLayerC, RF212ActiveMessageC, TimeSyncMessageLayerC;
   
 	SplitControl	= RF212ActiveMessageC;
-  	Receive		= RF212ActiveMessageC.Receive;
-	Snoop		= RF212ActiveMessageC.Snoop;
-	AMPacket	= RF212ActiveMessageC;
+	AMPacket	= TimeSyncMessageLayerC;
+  	Receive		= TimeSyncMessageLayerC.Receive;
+	Snoop		= TimeSyncMessageLayerC.Snoop;
 	Packet		= TimeSyncMessageLayerC;
 
 	PacketTimeStampRadio	= RF212ActiveMessageC;
