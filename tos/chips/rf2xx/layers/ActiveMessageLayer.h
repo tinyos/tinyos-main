@@ -24,9 +24,11 @@
 #ifndef __ACTIVEMESSAGELAYER_H__
 #define __ACTIVEMESSAGELAYER_H__
 
+#include "AM.h"
+
 typedef nx_struct activemessage_header_t
 {
-	nxle_uint8_t type;
+	nx_am_id_t type;
 } activemessage_header_t;
 
 #endif//__ACTIVEMESSAGELAYER_H__
