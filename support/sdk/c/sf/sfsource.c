@@ -70,7 +70,7 @@ int open_sf_source(const char *host, int port)
     }      
 
   addr.sin_family = entry->h_addrtype;
-  memcpy(&addr.sin_addr, entry->h_addr, entry->h_length);
+  memcpy(&addr.sin_addr, entry->h_addr_list[0], entry->h_length);
   addr.sin_port = htons(port);
   if (connect(fd, (struct sockaddr *)&addr, sizeof addr) < 0)
     {
