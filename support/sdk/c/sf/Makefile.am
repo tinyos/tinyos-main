@@ -1,7 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 
-CFLAGS = -D_POSIX_C_SOURCE
-
+MIGFLAGS = -D_POSIX_C_SOURCE
 TOS=$(shell ncc -print-tosdir)
 SERIAL_H = $(TOS)/lib/serial/Serial.h
 
@@ -36,7 +35,7 @@ libmote_a_SOURCES = \
 	sfsource.c
 
 serialpacket.c serialpacket.h: $(SERIAL_H)
-	mig -o serialpacket.h -c-prefix=spacket c $(SERIAL_H) serial_packet $(CFLAGS)
+	mig -o serialpacket.h -c-prefix=spacket c $(SERIAL_H) serial_packet $(MIGFLAGS)
 
 serialprotocol.h: $(SERIAL_H)
-	ncg -o $@ -c-prefix=SERIAL c $(SERIAL_H) Serial.h $(CFLAGS)
+	ncg -o $@ -c-prefix=SERIAL c $(SERIAL_H) Serial.h $(MIGFLAGS)
