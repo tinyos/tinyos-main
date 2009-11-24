@@ -27,7 +27,7 @@ configuration RadioCountToDiagC
 
 implementation
 {
-	components MainC, RadioCountToDiagP, DiagMsgC;
+	components MainC, RadioCountToDiagP, DiagMsgC, LedsC;
 	components ActiveMessageC, SerialActiveMessageC;
 	components new TimerMilliC() as SendTimerC;
 	components new TimerMilliC() as ReportTimerC;
@@ -50,4 +50,6 @@ implementation
 	RadioCountToDiagP.ActiveMessageAddress -> ActiveMessageAddressC;
 
 	RadioCountToDiagP.LowPowerListening -> ActiveMessageC;
+
+	RadioCountToDiagP.Leds -> LedsC;
 }

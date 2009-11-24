@@ -42,11 +42,13 @@ module RadioCountToDiagP
 
 		interface ActiveMessageAddress;
 		interface LowPowerListening;
+
+		interface Leds;
 	}
 }
 
 #ifndef SEND_PERIOD
-#define SEND_PERIOD 10
+#define SEND_PERIOD 20
 #endif
 
 #ifndef SLEEP_INTERVAL
@@ -116,6 +118,8 @@ implementation
 
 	event void ReportTimer.fired()
 	{
+		call Leds.led0Toggle();
+
 		if( call DiagMsg.record() )
 		{
 			call DiagMsg.uint16(sendCount);
@@ -141,6 +145,8 @@ implementation
 	{
 		uint16_t addr;
 
+		call Leds.led1Toggle();
+		
 		call Packet.clear(&txMsg);
 		call PacketAcknowledgements.requestAck(&txMsg);
 #ifdef LOW_POWER_LISTENING
