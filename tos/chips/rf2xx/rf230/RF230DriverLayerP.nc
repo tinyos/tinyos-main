@@ -525,23 +525,24 @@ implementation
 		// go back to RX_ON state when finished
 		writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 
+		if( timesync != 0 )
+			*(timesync_absolute_t*)timesync = (*(timesync_relative_t*)timesync) + time32;
+
+		call PacketTimeStamp.set(msg, time32);
+
 #ifdef RADIO_DEBUG_MESSAGES
 		if( call DiagMsg.record() )
 		{
 			length = getHeader(msg)->length;
 
-			call DiagMsg.str("tx");
-			call DiagMsg.uint16(time);
-			call DiagMsg.uint8(length);
+			call DiagMsg.str("t");
+			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
+			call DiagMsg.uint16(call RadioAlarm.getNow());
+			call DiagMsg.int8(length);
 			call DiagMsg.hex8s(getPayload(msg), length - 2);
 			call DiagMsg.send();
 		}
 #endif
-
-		if( timesync != 0 )
-			*(timesync_absolute_t*)timesync = (*(timesync_relative_t*)timesync) + time32;
-
-		call PacketTimeStamp.set(msg, time32);
 
 		// wait for the TRX_END interrupt
 		state = STATE_BUSY_TX_2_RX_ON;
@@ -637,11 +638,10 @@ implementation
 		{
 			length = getHeader(rxMsg)->length;
 
-			call DiagMsg.str("rx");
+			call DiagMsg.str("r");
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
-			call DiagMsg.uint8(crc != 0);
-			call DiagMsg.uint8(length);
+			call DiagMsg.int8(crc == 0 ? length : -length);
 			call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
 			call DiagMsg.send();
 		}
