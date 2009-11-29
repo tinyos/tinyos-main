@@ -535,7 +535,7 @@ implementation
 		{
 			length = getHeader(msg)->length;
 
-			call DiagMsg.str("t");
+			call DiagMsg.chr('t');
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.int8(length);
@@ -638,11 +638,13 @@ implementation
 		{
 			length = getHeader(rxMsg)->length;
 
-			call DiagMsg.str("r");
+			call DiagMsg.chr('r');
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.int8(crc == 0 ? length : -length);
 			call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
+			call DiagMsg.int8(call PacketRSSI.isSet(rxMsg) ? call PacketRSSI.get(rxMsg) : -1);
+			call DiagMsg.uint8(call PacketLinkQuality.isSet(rxMsg) ? call PacketLinkQuality.get(rxMsg) : 0);
 			call DiagMsg.send();
 		}
 #endif
