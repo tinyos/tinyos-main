@@ -24,6 +24,10 @@
 #ifndef __TINYOSNETWORKLAYER_H__
 #define __TINYOSNETWORKLAYER_H__
 
+#ifndef TINYOS_6LOWPAN_NETWORK_ID
+#define TINYOS_6LOWPAN_NETWORK_ID 0x3f
+#endif
+
 typedef nx_struct network_header_t
 {
 	nxle_uint8_t network;

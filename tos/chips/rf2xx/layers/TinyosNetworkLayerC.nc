@@ -23,10 +23,6 @@
 
 #include <TinyosNetworkLayer.h>
 
-#ifndef TINYOS_6LOWPAN_NETWORK_ID
-#define TINYOS_6LOWPAN_NETWORK_ID 0x3f
-#endif
-
 /*
    If TFRAMES_ENABLED is defined, then only TinyOS frames will be supported
    (with no network byte). If IEEE154FRAMES_ENABLED, then only IEEE 802.15.4 
