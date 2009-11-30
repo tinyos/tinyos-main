@@ -30,6 +30,7 @@
 
 #include <Timer.h>
 #include <AM.h>
+#include "CC2420TimeSyncMessage.h"
 
 configuration CC2420TimeSyncMessageC
 {
@@ -40,7 +41,9 @@ configuration CC2420TimeSyncMessageC
         interface Receive as Snoop[am_id_t id];
         interface Packet;
         interface AMPacket;
-
+        interface PacketAcknowledgements;
+        interface LowPowerListening;
+    
         interface TimeSyncAMSend<T32khz, uint32_t> as TimeSyncAMSend32khz[am_id_t id];
         interface TimeSyncPacket<T32khz, uint32_t> as TimeSyncPacket32khz;
 
@@ -61,10 +64,10 @@ implementation
 
         Packet = CC2420TimeSyncMessageP;
         // use the AMSenderC infrastructure to avoid concurrent send clashes
-        components AMQueueP, ActiveMessageC;
-        CC2420TimeSyncMessageP.SubSend -> AMQueueP.Send[unique(UQ_AMQUEUE_SEND)];
-        CC2420TimeSyncMessageP.AMPacket -> ActiveMessageC;
-        CC2420TimeSyncMessageP.SubPacket -> ActiveMessageC;
+        components new AMSenderC(AM_TIMESYNCMSG);
+        CC2420TimeSyncMessageP.SubSend -> AMSenderC;
+      	CC2420TimeSyncMessageP.SubAMPacket -> AMSenderC;
+        CC2420TimeSyncMessageP.SubPacket -> AMSenderC;
 
         CC2420TimeSyncMessageP.PacketTimeStamp32khz -> CC2420PacketC;
         CC2420TimeSyncMessageP.PacketTimeStampMilli -> CC2420PacketC;
@@ -75,8 +78,14 @@ implementation
         CC2420TimeSyncMessageP.LocalTimeMilli -> LocalTimeMilliC;
         CC2420TimeSyncMessageP.Leds -> LedsC;
 
+        components ActiveMessageC;
         SplitControl = CC2420ActiveMessageC;
-        Receive = CC2420ActiveMessageC.Receive;
-        Snoop = CC2420ActiveMessageC.Snoop;
-        AMPacket = CC2420ActiveMessageC;
+        PacketAcknowledgements = CC2420ActiveMessageC;
+        LowPowerListening = CC2420ActiveMessageC;
+        
+        Receive = CC2420TimeSyncMessageP.Receive;
+        Snoop = CC2420TimeSyncMessageP.Snoop;
+        AMPacket = CC2420TimeSyncMessageP;
+        CC2420TimeSyncMessageP.SubReceive -> ActiveMessageC.Receive[AM_TIMESYNCMSG];
+        CC2420TimeSyncMessageP.SubSnoop -> ActiveMessageC.Snoop[AM_TIMESYNCMSG];
 }
