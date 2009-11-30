@@ -10,8 +10,8 @@ Active Message ID Allocation in TinyOS 2.1
 :Author: Omprakash Gnawali
 
 :Draft-Created: 19-June-2008
-:Draft-Version: $Revision: 1.3 $
-:Draft-Modified: $Date: 2008-06-24 02:12:26 $
+:Draft-Version: $Revision: 1.4 $
+:Draft-Modified: $Date: 2009-11-30 20:40:33 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -79,6 +79,9 @@ Here is a list of allocations for TinyOS 2.1::
     0x53 - DELUGE_AM_FLASH_VOL_MANAGER (Flash volume manager)
     0x54 - DELUGE_AM_DELUGE_MANAGER (Deluge manger)
 
+  * 0x3D - TIMESYNC_AMTYPE for Packet Level Time Synchronization
+    (''TimeSyncMessageC'') reserved by the Core Working Group.
+
   * 0x3E - AM_TIMESYNCMSG for FTSP (''tos/lib/ftsp'') reserved by the
     Core Working Group.
 
@@ -90,12 +93,13 @@ Here is a list of allocations for TinyOS 2.1::
 ====================================================================
 
 | Omprakash Gnawali
-| Ronald Tutor Hall (RTH) 418 
-| 3710 S. McClintock Avenue
-| Los Angeles, CA 90089 
+| 318 Campus Drive, S255
+| Computer Science Department
+| Stanford University
+| Stanford, CA 94305
 |
-| phone - +1 213 821-5627
-| email - gnawali@usc.edu
+| phone - +1 650 725 6086
+| email - gnawali@cs.stanford.edu
 
 5. Citations
 ====================================================================
