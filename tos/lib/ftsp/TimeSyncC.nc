@@ -52,8 +52,8 @@ implementation
 
   components TimeSyncMessageC as ActiveMessageC;
   TimeSyncP.RadioControl    ->  ActiveMessageC;
-  TimeSyncP.Send            ->  ActiveMessageC.TimeSyncAMSendMilli[AM_TIMESYNCMSG];
-  TimeSyncP.Receive         ->  ActiveMessageC.Receive[AM_TIMESYNCMSG];
+  TimeSyncP.Send            ->  ActiveMessageC.TimeSyncAMSendMilli[TIMESYNC_AM_FTSP];
+  TimeSyncP.Receive         ->  ActiveMessageC.Receive[TIMESYNC_AM_FTSP];
   TimeSyncP.TimeSyncPacket  ->  ActiveMessageC;
 
   components HilTimerMilliC;
@@ -61,6 +61,9 @@ implementation
 
   components new TimerMilliC() as TimerC;
   TimeSyncP.Timer ->  TimerC;
+
+  components RandomC;
+  TimeSyncP.Random -> RandomC;
 
 #if defined(TIMESYNC_LEDS)
   components LedsC;

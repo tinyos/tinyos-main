@@ -43,6 +43,7 @@ generic module TimeSyncP(typedef precision_tag)
         interface TimeSyncAMSend<precision_tag,uint32_t> as Send;
         interface Receive;
         interface Timer<TMilli>;
+        interface Random;
         interface Leds;
         interface TimeSyncPacket<precision_tag,uint32_t>;
         interface LocalTime<precision_tag> as LocalTime;
@@ -316,6 +317,7 @@ implementation
         if( diff < -16 || diff > 16 )
             return msg;
 #endif
+
         if( (state & STATE_PROCESSING) == 0
             && call TimeSyncPacket.isValid(msg)) {
             message_t* old = processedMsg;
@@ -358,7 +360,6 @@ implementation
         }
 
         outgoingMsg->globalTime = globalTime;
-
 #ifdef LOW_POWER_LISTENING
         call LowPowerListening.setRemoteWakeupInterval(&outgoingMsgBuffer, LPL_INTERVAL);
 #endif
@@ -414,11 +415,8 @@ implementation
     }
 
     command error_t TimeSyncMode.setMode(uint8_t mode_){
-        if (mode == mode_)
-            return SUCCESS;
-
         if (mode_ == TS_TIMER_MODE){
-            call Timer.startPeriodic((uint32_t)1000 * BEACON_RATE);
+            call Timer.startPeriodic((uint32_t)(896U+(call Random.rand16()&0xFF)) * BEACON_RATE);
         }
         else
             call Timer.stop();
@@ -466,10 +464,9 @@ implementation
 
     command error_t StdControl.start()
     {
-        mode = TS_TIMER_MODE;
         heartBeats = 0;
         outgoingMsg->nodeID = TOS_NODE_ID;
-        call Timer.startPeriodic((uint32_t)1000 * BEACON_RATE);
+        call TimeSyncMode.setMode(TS_TIMER_MODE);
 
         return SUCCESS;
     }
