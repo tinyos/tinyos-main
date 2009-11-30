@@ -571,7 +571,7 @@ module IPDispatchP {
       // this is a pointer to the hop-limit field in the packed fragment
       *u_info.hlim = *u_info.hlim - 1;
       if (*u_info.hlim == 0) {
-#ifdef ICMP_TIME_EXCEEDED
+#ifndef NO_ICMP_TIME_EXCEEDED
         uint16_t amount_here = lowmsg->len - (u_info.payload_start - lowmsg->data);
         call ICMP.sendTimeExceeded(ip, &u_info, amount_here);
 #endif
