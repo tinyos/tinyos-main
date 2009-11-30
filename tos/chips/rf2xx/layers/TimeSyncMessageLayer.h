@@ -26,8 +26,8 @@
 
 #include <AM.h>
 
-#ifndef TIMESYNC_AMTYPE
-#define TIMESYNC_AMTYPE 0x3D
+#ifndef AM_TIMESYNCMSG
+#define AM_TIMESYNCMSG 0x3D
 #endif
 
 // this is sent over the air

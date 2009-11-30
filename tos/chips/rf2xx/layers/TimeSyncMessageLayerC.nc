@@ -69,14 +69,14 @@ implementation
 	TimeSyncPacketMilli = TimeSyncMessageLayerP;
 
 	// Ok, we use the AMSenderC infrastructure to avoid concurrent send clashes
-	components new AMSenderC(TIMESYNC_AMTYPE);
+	components new AMSenderC(AM_TIMESYNCMSG);
 	TimeSyncMessageLayerP.SubAMSend -> AMSenderC;
 	TimeSyncMessageLayerP.SubAMPacket -> AMSenderC;
 	TimeSyncMessageLayerP.SubPacket -> AMSenderC;
 
 	components ActiveMessageC;
-	TimeSyncMessageLayerP.SubReceive -> ActiveMessageC.Receive[TIMESYNC_AMTYPE];
-	TimeSyncMessageLayerP.SubSnoop -> ActiveMessageC.Snoop[TIMESYNC_AMTYPE];;
+	TimeSyncMessageLayerP.SubReceive -> ActiveMessageC.Receive[AM_TIMESYNCMSG];
+	TimeSyncMessageLayerP.SubSnoop -> ActiveMessageC.Snoop[AM_TIMESYNCMSG];;
 
 	PacketTimeStampRadio = TimeSyncMessageLayerP;
 	PacketTimeStampMilli = TimeSyncMessageLayerP;
