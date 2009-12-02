@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.27 2009-11-30 20:39:12 razvanm Exp $
+#$Id: avr.rules,v 1.28 2009-12-02 17:48:21 razvanm Exp $
 
 define AVR_HELP
 
@@ -68,7 +68,7 @@ else
 endif
 
 ifeq ($(PROGRAMMER),avrdude)
-  ifeq ($(findstring darwin, $(OSTYPE)), darwin)
+  ifeq ($(findstring Darwin, $(shell uname)), Darwin)
     AVRDUDE_CONF ?= /opt/local/etc/avrdude.conf
   endif
   AVRDUDE_CONF ?= /etc/avrdude/avrdude.conf
