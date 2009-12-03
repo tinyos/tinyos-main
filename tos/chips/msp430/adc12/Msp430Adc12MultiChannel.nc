@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2008-04-07 09:41:55 $
+ * $Revision: 1.4 $
+ * $Date: 2009-12-03 17:36:13 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -75,7 +75,9 @@ interface Msp430Adc12MultiChannel
    * numSamples = (numMemctl+1) * 2
    *
    * @param jiffies Sampling period in terms of clock ticks of "sampcon_ssel"
-   * and input divider "sampcon_id".
+   * and input divider "sampcon_id". Samples are taken equally-spaced in
+   * time iterating round-robin over the channels (different channels are  
+   * not sampled simultaneously but one after another).
    *
    * @return SUCCESS means that the ADC was configured successfully and
    * <code>getData()</code> can be called to start the conversion.
