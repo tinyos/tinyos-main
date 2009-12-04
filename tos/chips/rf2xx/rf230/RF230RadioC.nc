@@ -158,7 +158,11 @@ implementation
 	#warning "*** USING LOW POWER LISTENING LAYER"
 	components LowPowerListeningLayerC;
 	LowPowerListeningLayerC.Config -> RF230RadioP;
+#ifdef RF230_HARDWARE_ACK
+	LowPowerListeningLayerC.PacketAcknowledgements -> RF230DriverLayerC;
+#else
 	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
+#endif
 #else	
 	components LowPowerListeningDummyC as LowPowerListeningLayerC;
 #endif
@@ -174,7 +178,11 @@ implementation
 #ifdef PACKET_LINK
 	components PacketLinkLayerC;
 	PacketLink = PacketLinkLayerC;
+#ifdef RF230_HARDWARE_ACK
+	PacketLinkLayerC.PacketAcknowledgements -> RF230DriverLayerC;
+#else
 	PacketLinkLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
+#endif
 #else
 	components new DummyLayerC() as PacketLinkLayerC;
 #endif
@@ -213,16 +221,23 @@ implementation
 	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
 #endif
 	CollisionAvoidanceLayerC.Config -> RF230RadioP;
+#ifdef RF230_HARDWARE_ACK
+	CollisionAvoidanceLayerC.SubSend -> CsmaLayerC;
+	CollisionAvoidanceLayerC.SubReceive -> RF230DriverLayerC;
+#else
 	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
 	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
+#endif
 
 // -------- SoftwareAcknowledgement
 
+#ifndef RF230_HARDWARE_ACK
 	components SoftwareAckLayerC;
 	SoftwareAckLayerC.Config -> RF230RadioP;
 	SoftwareAckLayerC.SubSend -> CsmaLayerC;
 	SoftwareAckLayerC.SubReceive -> RF230DriverLayerC;
 	PacketAcknowledgements = SoftwareAckLayerC;
+#endif
 
 // -------- Carrier Sense
 
@@ -246,7 +261,13 @@ implementation
 
 // -------- RF230 Driver
 
+#ifdef RF230_HARDWARE_ACK
+	components RF230DriverHwAckC as RF230DriverLayerC;
+	PacketAcknowledgements = RF230DriverLayerC;
+	RF230DriverLayerC.Ieee154PacketLayer -> Ieee154PacketLayerC;
+#else
 	components RF230DriverLayerC;
+#endif
 	RF230DriverLayerC.Config -> RF230RadioP;
 	RF230DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
 	PacketTransmitPower = RF230DriverLayerC.PacketTransmitPower;

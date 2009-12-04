@@ -33,7 +33,7 @@ RF230ActiveMessageC.
 RF230_CRCBYTE_COMMAND:
 
 This is the command used to calculate the CRC for the RF230 chip, since it 
-does not support hardware CRC checking (in rev A)
+does not support hardware CRC checking (in rev A).
 
 RF230_SLOW_SPI:
 
@@ -46,3 +46,11 @@ RF230_RSSI_ENERGY:
 If you define this, then the content of the RF230_PHY_ED_LEVEL is queried 
 instead of the RSSI value for eahc incoming message. This value can be 
 obtained with the PacketRSSI interface.
+
+RF230_HARDWARE_ACK
+
+If you define this, then the radio stack will use hardware acknowledgements
+and address recognition. In particular, you will not be able to snoop on
+onther messages. The load on the CPU is reduced, you should be able to send
+more messages under heavy load. Note, that the PacketRSSI interface will
+return the energy level (and not the rssi value) of received packet.
