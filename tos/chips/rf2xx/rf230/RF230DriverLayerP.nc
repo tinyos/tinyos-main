@@ -458,7 +458,7 @@ implementation
 		atomic
 		{
 			call SLP_TR.set();
-			time = call RadioAlarm.getNow() + TX_SFD_DELAY;
+			time = call RadioAlarm.getNow();
 		}
 		call SLP_TR.clr();
 #endif
@@ -493,12 +493,12 @@ implementation
 		atomic
 		{
 			call SLP_TR.set();
-			time = call RadioAlarm.getNow() + TX_SFD_DELAY;
+			time = call RadioAlarm.getNow();
 		}
 		call SLP_TR.clr();
 #endif
 
-		time32 += (int16_t)(time) - (int16_t)(time32);
+		time32 += (int16_t)(time + TX_SFD_DELAY) - (int16_t)(time32);
 
 		if( timesync != 0 )
 			*(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time32;

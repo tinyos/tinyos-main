@@ -457,7 +457,7 @@ implementation
 		atomic
 		{
 			call SLP_TR.set();
-			time = call RadioAlarm.getNow() + TX_SFD_DELAY;
+			time = call RadioAlarm.getNow();
 		}
 		call SLP_TR.clr();
 
@@ -487,7 +487,7 @@ implementation
 		}
 		while( --header != 0 );
 
-		time32 += (int16_t)(time) - (int16_t)(time32);
+		time32 += (int16_t)(time + TX_SFD_DELAY) - (int16_t)(time32);
 
 		if( timesync != 0 )
 			*(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time32;
@@ -568,7 +568,7 @@ implementation
 	inline void downloadMessage()
 	{
 		uint8_t length;
-		uint8_t crc = 0;
+		bool crcValid = FALSE;
 
 		call SELN.clr();
 		call FastSpiByte.write(RF212_CMD_FRAME_READ);
@@ -587,7 +587,6 @@ implementation
 
 			data = getPayload(rxMsg);
 			getHeader(rxMsg)->length = length;
-			crc = 0;
 
 			// we do not store the CRC field
 			length -= 2;
@@ -613,7 +612,7 @@ implementation
 
 				call PacketLinkQuality.set(rxMsg, call FastSpiByte.splitReadWrite(0));
 				call FastSpiByte.splitReadWrite(0);	// ED
-				crc = call FastSpiByte.splitRead() & RF212_RX_CRC_VALID;	// RX_STATUS
+				crcValid = call FastSpiByte.splitRead() & RF212_RX_CRC_VALID;	// RX_STATUS
 			}
 		}
 
@@ -628,7 +627,7 @@ implementation
 			call DiagMsg.str('r');
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
-			call DiagMsg.int8(crc != 0 ? length : -length);
+			call DiagMsg.int8(crcValid ? length : -length);
 			call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
 			call DiagMsg.int8(call PacketRSSI.isSet(rxMsg) ? call PacketRSSI.get(rxMsg) : -1);
 			call DiagMsg.uint8(call PacketLinkQuality.isSet(rxMsg) ? call PacketLinkQuality.get(rxMsg) : 0);
@@ -639,7 +638,7 @@ implementation
 		cmd = CMD_NONE;
 
 		// signal only if it has passed the CRC check
-		if( crc != 0 )
+		if( crcValid )
 			rxMsg = signal RadioReceive.receive(rxMsg);
 	}
 
