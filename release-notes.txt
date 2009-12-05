@@ -1,14 +1,17 @@
-These release notes are as of: $Date: 2009-09-18 05:38:07 $
+These release notes are as of: $Date: 2009-12-05 00:15:09 $
 
 Current:
-  Refactored AM layer to better support 6lowpan
-  Added support for shimmer2 platform
-  Improved MSP430 sleep code to default to LPM4
+  Added support for automatic default LPL interval
   Added platform-indepdent TOS_SLEEP_NONE for McuPowerOverride
+  Added support for mulle platform
+  Added support for shimmer2 platform
+  Improved CTP forwarder code to save code and RAM
+  Improved MSP430 sleep code to default to LPM4
   Improved TOSSIM PRR curve to prevent very low SNR packets
+  Improved Queue performance by changing % to inequality test
+  Refactored AM layer to better support 6lowpan
   Fixed TOSSIM bug where nodes could receive while transmitting
   Fixed TOSSIM ack bug for nodes that change their AM id at runtime
-  Improved Queue performance by changing % to inequality test
 
 2.1:
   Added support for iris platform
