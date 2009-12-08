@@ -10,8 +10,8 @@ Active Message ID Allocation in TinyOS 2.1
 :Author: Omprakash Gnawali
 
 :Draft-Created: 19-June-2008
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2009-11-30 20:40:33 $
+:Draft-Version: $Revision: 1.5 $
+:Draft-Modified: $Date: 2009-12-08 20:43:46 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -60,7 +60,7 @@ Here is a list of allocations for TinyOS 2.1::
     0x74 - AM_LQI_DATA_MSG MultiHopLQI (Data packets)
     0x75 - AM_LQI_DEBUG MultiHopLQI (Debug messages)
 
-  * 0x60 - 0x62 are reserved for dissemination protocols [TEP_118]_
+  * 0x60 - 0x63 are reserved for dissemination protocols [TEP_118]_
     maintained by the Network Protocol Working Group.
 
     For Drip (''tos/lib/net/drip'')
@@ -69,6 +69,9 @@ Here is a list of allocations for TinyOS 2.1::
 
     For DIP (''tos/lib/net/dip'')
     0x62 - AM_DIP 
+
+    For DHV (''tos/lib/net/dhv'')
+    0x63 - AM_DHV
 
   * 0x50 - 0x54 are reserved for Deluge (''tos/lib/net/Deluge'')
     maintained by the Network Protocol Working Group.
