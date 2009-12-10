@@ -284,7 +284,7 @@ implementation
 
         if( msg->rootID < outgoingMsg->rootID &&
             // jw: after becoming the root ignore other roots messages (in send period)
-            ~(heartBeats < IGNORE_ROOT_MSG && outgoingMsg->rootID == TOS_NODE_ID) ){
+            !(heartBeats < IGNORE_ROOT_MSG && outgoingMsg->rootID == TOS_NODE_ID) ){
             outgoingMsg->rootID = msg->rootID;
             outgoingMsg->seqNum = msg->seqNum;
         }
