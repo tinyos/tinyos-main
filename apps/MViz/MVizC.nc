@@ -218,7 +218,7 @@ implementation {
     }
     local.reading = data;
     call CtpInfo.getEtx(&val);
-    local.link_route_value = val;
+    local.etx = val;
     call CtpInfo.getParent(&val);
     local.link_route_addr = val;
     local.link_route_value = call LinkEstimator.getLinkQuality(local.link_route_addr);
