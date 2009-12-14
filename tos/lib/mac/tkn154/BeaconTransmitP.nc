@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.10 $
- * $Date: 2009-05-28 09:52:54 $
+ * $Revision: 1.11 $
+ * $Date: 2009-12-14 16:46:49 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -74,6 +74,7 @@ module BeaconTransmitP
     interface GetSet<ieee154_txframe_t*> as GetSetRealignmentFrame;
     interface GetNow<bool> as IsBroadcastReady; 
     interface TimeCalc;
+    interface Random;
     interface Leds;
   }
 }
@@ -92,7 +93,6 @@ implementation
   norace uint32_t m_beaconInterval;
   norace uint32_t m_previousBeaconInterval;
   norace uint32_t m_dt;
-  norace uint8_t m_bsn;
   norace uint32_t m_lastBeaconTxTime;
   norace ieee154_timestamp_t m_lastBeaconTxRefTime;
   norace ieee154_macBattLifeExtPeriods_t m_battLifeExtPeriods;
@@ -160,6 +160,8 @@ implementation
   {
     // reset this component, will only be called while we're not owning the token
     // TODO: check to signal MLME_START.confirm ?
+
+    call MLME_SET.macBSN(call Random.rand16());
     m_beaconFrame.header = &m_header;
     m_beaconFrame.headerLen = 0;
     m_beaconFrame.payload = m_payload;
@@ -329,7 +331,6 @@ implementation
     }
     m_dt = m_beaconInterval;
     m_txState = S_TX_IDLE;
-    m_bsn = call MLME_GET.macBSN()+1;
     m_battLifeExtPeriods = call MLME_GET.macBattLifeExtPeriods();
 
     // (3) update PIB
@@ -346,6 +347,7 @@ implementation
     isShortAddr = (shortAddress != 0xFFFE);
     m_beaconFrame.header->mhr[MHR_INDEX_FC1] = FC1_FRAMETYPE_BEACON;
     m_beaconFrame.header->mhr[MHR_INDEX_FC2] = isShortAddr ? FC2_SRC_MODE_SHORT : FC2_SRC_MODE_EXTENDED;
+    m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] = call MLME_GET.macBSN();
     offset = MHR_INDEX_ADDRESS;
     *((nxle_uint16_t*) &m_beaconFrame.header->mhr[offset]) = m_updatePANId;
     offset += sizeof(ieee154_macPANId_t);
@@ -492,7 +494,6 @@ implementation
     else
       m_beaconFrame.header->mhr[MHR_INDEX_FC1] &= ~FC1_FRAME_PENDING;
 
-    m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] = m_bsn; // update beacon seqno
     if (m_txOneBeaconImmediately) {
       m_txOneBeaconImmediately = FALSE;
       timestamp = NULL;
@@ -561,7 +562,8 @@ implementation
 
   task void txDoneTask()
   {
-    call MLME_SET.macBSN(m_bsn++);
+    call MLME_SET.macBSN(m_beaconFrame.header->mhr[MHR_INDEX_SEQNO]+1);
+    m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] += 1; // may be overwritten by the next higher layer
     call SetMacBeaconTxTime.set(m_lastBeaconTxTime); // start of slot0, ie. first preamble byte of beacon
     call BeaconPayloadUpdateTimer.startOneShotAt(m_lastBeaconTxTime, 
         (m_beaconInterval>BEACON_PAYLOAD_UPDATE_INTERVAL) ? (m_beaconInterval - BEACON_PAYLOAD_UPDATE_INTERVAL): 0);
@@ -719,6 +721,7 @@ implementation
     } // end atomic (give BeaconSendAlarm.fired() the chance to execute)
 
     signal IEEE154TxBeaconPayload.aboutToTransmit();
+    m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] = call MLME_GET.macBSN();
 
     atomic {
       // (4) try to update beacon payload 

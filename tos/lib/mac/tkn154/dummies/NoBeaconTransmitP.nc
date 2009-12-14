@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009-03-24 12:56:47 $
+ * $Revision: 1.8 $
+ * $Date: 2009-12-14 16:46:49 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -71,6 +71,7 @@ module NoBeaconTransmitP
     interface GetSet<ieee154_txframe_t*> as GetSetRealignmentFrame;
     interface GetNow<bool> as IsBroadcastReady; 
     interface TimeCalc;
+    interface Random;
     interface Leds;
   }
 }

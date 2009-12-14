@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.10 $
- * $Date: 2009-12-14 12:50:06 $
+ * $Revision: 1.11 $
+ * $Date: 2009-12-14 16:46:49 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -266,6 +266,7 @@ implementation
   BeaconTransmitP.GetSetRealignmentFrame -> CoordRealignmentP;
   BeaconTransmitP.IsBroadcastReady -> CoordBroadcastP.IsBroadcastReady;
   BeaconTransmitP.TimeCalc -> PibP;
+  BeaconTransmitP.Random = Random;
   BeaconTransmitP.Leds = Leds;
 
   /* ------------------ Beacon Tracking (MLME-SYNC) ------------------ */
