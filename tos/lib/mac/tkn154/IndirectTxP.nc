@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.8 $
- * $Date: 2009-09-14 14:15:09 $
+ * $Revision: 1.9 $
+ * $Date: 2009-12-14 12:50:06 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * @author: Jasper Buesch <buesch@tkn.tu-berlin.de>
  * ========================================================================
@@ -236,11 +236,11 @@ implementation
     }
     if (dataResponseFrame != NULL) {
       // found a matching frame, mark it for transmission
-      dbg_serial("IndirectTxP", "We have data for this device, trying to transmit...");
+      dbg_serial("IndirectTxP", "We have data for this device, trying to transmit...\n");
       dataResponseFrame->client |= SEND_THIS_FRAME;
       post tryCoordCapTxTask();
     } else {
-      dbg_serial("IndirectTxP", "We don't have data for this device, sending an empty frame...");
+      dbg_serial("IndirectTxP", "We don't have data for this device, sending an empty frame...\n");
       transmitEmptyDataFrame(frame);
     }
     return frame;

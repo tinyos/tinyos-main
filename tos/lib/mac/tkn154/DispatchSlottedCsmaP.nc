@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2009-05-14 13:20:35 $
+ * $Revision: 1.8 $
+ * $Date: 2009-12-14 12:50:06 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -91,7 +91,8 @@ generic module DispatchSlottedCsmaP(uint8_t sfDirection)
     interface Leds;
     interface SetNow<ieee154_cap_frame_backup_t*> as FrameBackup;
     interface GetNow<ieee154_cap_frame_backup_t*> as FrameRestore;
-    interface StdControl as TrackSingleBeacon;
+    interface SplitControl as TrackSingleBeacon;
+    interface MLME_SYNC_LOSS;
   }
 }
 implementation
@@ -172,18 +173,37 @@ implementation
 #define dbg_flush_state()
 #endif
 
-  command error_t Reset.init()
+  error_t reset(error_t error)
   {
+    if (call RadioToken.isOwner()) // internal error! this must not happen!
+      return FAIL;
     if (m_currentFrame)
-      signal FrameTx.transmitDone(m_currentFrame, IEEE154_TRANSACTION_OVERFLOW);
+      signal FrameTx.transmitDone(m_currentFrame, error);
     if (m_lastFrame)
-      signal FrameTx.transmitDone(m_lastFrame, IEEE154_TRANSACTION_OVERFLOW);
+      signal FrameTx.transmitDone(m_lastFrame, error);
     if (m_bcastFrame)
-      signalTxBroadcastDone(m_bcastFrame, IEEE154_TRANSACTION_OVERFLOW);
+      signalTxBroadcastDone(m_bcastFrame, error);
     m_currentFrame = m_lastFrame = m_bcastFrame = NULL;
     m_macMaxFrameTotalWaitTime = call MLME_GET.macMaxFrameTotalWaitTime();
     stopAllAlarms();
     return SUCCESS;
+  }
+
+  command error_t Reset.init()
+  {
+    return reset(IEEE154_TRANSACTION_OVERFLOW);
+  }
+
+  event void MLME_SYNC_LOSS.indication (
+                          ieee154_status_t lossReason,
+                          uint16_t PANId,
+                          uint8_t LogicalChannel,
+                          uint8_t ChannelPage,
+                          ieee154_security_t *security
+                        )
+  {
+    // we lost sync to the coordinator -> spool out current packet
+    reset(IEEE154_NO_BEACON);
   }
 
   async event void RadioToken.transferredFrom(uint8_t fromClient)
@@ -195,19 +215,9 @@ implementation
 
     dbg_serial("DispatchSlottedCsmaP", "Got token, remaining CAP time: %lu\n", 
         call SuperframeStructure.sfStartTime() + capDuration - guardTime - call CapEndAlarm.getNow());
-    if (DEVICE_ROLE && !call IsTrackingBeacons.getNow()) {
-      // very rare case: 
-      // this can only happen, if we're on a beacon-enabled PAN, not tracking beacons,   
-      // and searched but didn't find a beacon for aBaseSuperframeDuration*(2n+1) symbols
-      // we'd actually have to transmit the current frame using unslotted CSMA-CA        
-      // but we don't have that functionality available... signal FAIL...                
-      m_lastFrame = m_currentFrame;
-      m_currentFrame = NULL;
-      m_txStatus = IEEE154_NO_BEACON;
-      post signalTxDoneTask();
-      return;
-    } else if (capDuration < guardTime) {
-      // CAP is too short to do anything practical
+
+    if (capDuration < guardTime) {
+      // CAP is too short to do anything useful
       dbg_serial("DispatchSlottedCsmaP", "CAP too short!\n");
       call RadioToken.transferTo(RADIO_CLIENT_CFP);
       return;
@@ -224,7 +234,7 @@ implementation
           // in task context and then continue
           m_lock = TRUE;
           post setupTxBroadcastTask(); 
-          dbg_serial("DispatchSlottedCsmaP", "Preparing broadcast.\n");
+          dbg_serial("DispatchSlottedCsmaP", "Preparing broadcast...\n");
         }
       }
       call CapEndAlarm.startAt(call SuperframeStructure.sfStartTime(), capDuration);
@@ -247,12 +257,19 @@ implementation
       if (DEVICE_ROLE && !call IsTrackingBeacons.getNow()) {
         call TrackSingleBeacon.start();
         dbg_serial("DispatchSlottedCsmaP", "Tracking single beacon now\n");
-        // we'll receive the Token  after a beacon was found or after
-        // aBaseSuperframeDuration*(2n+1) symbols if none was found  
+        // we'll get the Token after a beacon was found or a SYNC_LOSS event
+        // if none was found during the next aBaseSuperframeDuration*(2n+1) symbols  
       }
       updateState();
       return IEEE154_SUCCESS;
     }
+  }
+
+  event void TrackSingleBeacon.startDone(error_t error)
+  {
+    if (error != SUCCESS) // beacon could not be tracked
+      reset(IEEE154_NO_BEACON);
+    // else: we'll get the RadioToken and continue as usual ...
   }
 
   task void setupTxBroadcastTask()
@@ -345,8 +362,7 @@ implementation
                (uint32_t) call SuperframeStructure.sfSlotDuration();
 
       // Check 1: has the CAP finished?
-      if ((COORD_ROLE || call IsTrackingBeacons.getNow()) && 
-          (call TimeCalc.hasExpired(call SuperframeStructure.sfStartTime(), 
+      if ((call TimeCalc.hasExpired(call SuperframeStructure.sfStartTime(), 
                 capDuration - call SuperframeStructure.guardTime()) ||
           !call CapEndAlarm.isRunning())) {
         dbg_push_state(1);
@@ -738,7 +754,8 @@ implementation
   default event message_t* FrameExtracted.received[uint8_t client](message_t* msg, ieee154_txframe_t *txFrame) {return msg;}
   default async command error_t FrameBackup.setNow(ieee154_cap_frame_backup_t* val) {return FAIL;}
   default async command ieee154_cap_frame_backup_t* FrameRestore.getNow() {return NULL;}
-  default command error_t TrackSingleBeacon.start() {return FAIL;}
+  event void TrackSingleBeacon.stopDone(error_t error){}
+  default command error_t TrackSingleBeacon.start() {if (DEVICE_ROLE) ASSERT(0); return SUCCESS;}
 
   command error_t WasRxEnabled.enable() {return FAIL;}
   command error_t WasRxEnabled.disable() {return FAIL;}

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2009-10-16 12:25:45 $
+ * $Revision: 1.10 $
+ * $Date: 2009-12-14 12:50:06 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -423,6 +423,7 @@ implementation
   DeviceCap.TimeCalc -> PibP;
   DeviceCap.Leds = Leds;
   DeviceCap.TrackSingleBeacon -> BeaconSynchronizeP.TrackSingleBeacon;
+  DeviceCap.MLME_SYNC_LOSS -> BeaconSynchronizeP;
 
   /* ---------------------- CAP (outgoing superframe) ------------------- */
 

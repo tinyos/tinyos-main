@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-05 10:07:11 $
+ * $Revision: 1.2 $
+ * $Date: 2009-12-14 12:50:06 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -49,23 +49,37 @@ generic module DispatchQueueP() {
 implementation
 {
   task void txTask();
-  bool m_busy;
+  bool m_state;
   uint8_t m_client;
+
+  enum {
+    TX_DONE_PENDING = 0x01,
+    RESET_PENDING = 0x02,
+  };
+
+  bool isTxDonePending() { return (m_state & TX_DONE_PENDING) ? TRUE : FALSE; }
+  void setTxDonePending() { m_state |= TX_DONE_PENDING; }
+  void resetTxDonePending() { m_state &= ~TX_DONE_PENDING; }
+
+  bool isResetPending() { return (m_state & RESET_PENDING) ? TRUE : FALSE; }
+  void setResetPending() { m_state |= RESET_PENDING; }
+  void resetResetPending() { m_state &= ~RESET_PENDING; }
 
   command error_t Reset.init()
   {
+    setResetPending();
     while (call Queue.size()) {
       ieee154_txframe_t *txFrame = call Queue.dequeue();
       signal FrameTx.transmitDone[txFrame->client](txFrame, IEEE154_TRANSACTION_OVERFLOW);
     }
-    m_busy = FALSE;
+    resetResetPending();
     return SUCCESS;
   }
 
   command ieee154_status_t FrameTx.transmit[uint8_t client](ieee154_txframe_t *txFrame)
   {
     txFrame->client = client;
-    if (call Queue.enqueue(txFrame) != SUCCESS)
+    if (isResetPending() || call Queue.enqueue(txFrame) != SUCCESS)
       return IEEE154_TRANSACTION_OVERFLOW;
     else {
       post txTask();
@@ -75,7 +89,7 @@ implementation
 
   task void txTask()
   {
-    if (!m_busy && call Queue.size()) {
+    if (!isTxDonePending() && call Queue.size()) {
       ieee154_txframe_t *txFrame = call Queue.head();
       if (txFrame->headerLen == 0) { 
         // was purged
@@ -84,17 +98,26 @@ implementation
         post txTask();
       }
       m_client = txFrame->client;
-      if (call FrameTxCsma.transmit(txFrame) == IEEE154_SUCCESS) {
-        m_busy = TRUE;
-      }
+      setTxDonePending();
+      if (call FrameTxCsma.transmit(txFrame) != IEEE154_SUCCESS)
+        resetTxDonePending();
     }
   }
 
   event void FrameTxCsma.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
   {
+    resetTxDonePending();
+    if (!call Queue.size())
+      return; // all frames were spooled out (reset)
     call Queue.dequeue();
-    m_busy = FALSE;
     signal FrameTx.transmitDone[txFrame->client](txFrame, status);
+    if (IEEE154_BEACON_ENABLED_PAN && status == IEEE154_NO_BEACON) {
+      // this means that we lost sync -> spool out all queued frames 
+      while (call Queue.size()) {
+        ieee154_txframe_t *frame = call Queue.dequeue();
+        signal FrameTx.transmitDone[frame->client](frame, IEEE154_NO_BEACON);
+      }
+    }
     post txTask();
   }
 

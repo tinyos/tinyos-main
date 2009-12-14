@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.10 $
- * $Date: 2009-10-16 12:25:45 $
+ * $Revision: 1.11 $
+ * $Date: 2009-12-14 12:50:06 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -50,7 +50,7 @@ module BeaconSynchronizeP
     interface MLME_SYNC_LOSS;
     interface SuperframeStructure as IncomingSF;
     interface GetNow<bool> as IsTrackingBeacons;
-    interface StdControl as TrackSingleBeacon;
+    interface SplitControl as TrackSingleBeacon;
   }
   uses
   {
@@ -72,23 +72,18 @@ module BeaconSynchronizeP
 implementation
 {
   /* state variables */
-  norace bool m_tracking;
-  bool m_stopTracking ;
-  norace uint8_t m_numBeaconsLost;
   norace uint8_t m_state;
-  norace bool m_bufferBusy;
+  norace uint8_t m_numBeaconsMissed;
 
-  /* buffers for the parameters of the MLME-SYNC request */
-  norace bool m_updatePending;
+  /* temporary buffers for the MLME-SYNC parameters */
   uint8_t m_updateLogicalChannel;
   bool m_updateTrackBeacon;
 
-  /* variables that describe the current configuration */
-  norace uint32_t m_beaconInterval;
+  /* variables that describe the current beacon configuration */
+  norace ieee154_macBeaconOrder_t m_beaconOrder;
   norace uint32_t m_dt;
   norace uint32_t m_lastBeaconRxTime;
   norace ieee154_timestamp_t m_lastBeaconRxRefTime;
-  norace uint8_t m_beaconOrder;
   message_t m_beacon;
   norace message_t *m_beaconPtr = &m_beacon;
 
@@ -101,31 +96,64 @@ implementation
   uint8_t m_gtsField[1+1+3*7];
   
   enum {
-    S_PREPARE = 0,
-    S_RECEIVING = 1,
-    S_RADIO_OFF = 2,
-    S_INITIAL_SCAN= 3,
+    RX_PREPARE = 0x00,
+    RX_RECEIVING = 0x01,
+    RX_RADIO_OFF = 0x02,
+    RX_FIRST_SCAN= 0x03,
+    RX_MASK = 0x03,
 
+    MODE_INACTIVE = 0x00,
+    MODE_TRACK_SINGLE = 0x04,
+    MODE_TRACK_CONTINUOUS = 0x08,
+    MODE_MASK = 0x0C,
+
+    BEACON_RECEIVED = 0x10,
+    UPDATE_PENDING = 0x20,
+    INTERNAL_REQUEST = 0x40,
+    EXTERNAL_REQUEST = 0x80,
   };
 
-
   /* function/task prototypes */
-  task void processBeaconTask();
   void trackNextBeacon();
+  uint32_t getBeaconInterval(ieee154_macBeaconOrder_t BO);
+  task void processBeaconTask();
   task void signalGrantedTask();
 
+  /* accessing/manipulating the current state */
+  void setBeaconReceived() { m_state |= BEACON_RECEIVED; }
+  void resetBeaconReceived() { m_state &= ~BEACON_RECEIVED; }
+  bool wasBeaconReceived() { return (m_state & BEACON_RECEIVED) ? TRUE : FALSE; }
+  void setUpdatePending() { m_state |= UPDATE_PENDING; }
+  void resetUpdatePending() { m_state &= ~UPDATE_PENDING; }
+  bool isUpdatePending() { return (m_state & UPDATE_PENDING) ? TRUE : FALSE; }
+  void setInternalRequest() { m_state |= INTERNAL_REQUEST; }
+  void resetInternalRequest() { m_state &= ~INTERNAL_REQUEST; }
+  bool isInternalRequest() { return (m_state & INTERNAL_REQUEST) ? TRUE : FALSE; }
+  void setExternalRequest() { m_state |= EXTERNAL_REQUEST; }
+  void resetExternalRequest() { m_state &= ~EXTERNAL_REQUEST; }
+  bool isExternalRequest() { return (m_state & EXTERNAL_REQUEST) ? TRUE : FALSE; }
+  uint8_t getMode() { return (m_state & MODE_MASK); }
+  void setMode(uint8_t mode) { m_state &= ~MODE_MASK; m_state |= (mode & MODE_MASK); }
+  uint8_t getRxState() { return (m_state & RX_MASK); }
+  void setRxState(uint8_t state) { m_state &= ~RX_MASK; m_state |= (state & RX_MASK); }  
+  
   command error_t Reset.init()
   {
-    // reset this component. will only be called 
-    // while we're not owning the token           
-    if (m_tracking || m_updatePending)
+    // Reset this component - will only be called while we're not owning the token
+    if (call IsTrackingBeacons.getNow() || 
+        (isUpdatePending() && isExternalRequest() && m_updateTrackBeacon))
       signal MLME_SYNC_LOSS.indication(
           IEEE154_BEACON_LOSS,
           call MLME_GET.macPANId(),
           call MLME_GET.phyCurrentChannel(),
           call MLME_GET.phyCurrentPage(),
           NULL);
-    m_updatePending = m_stopTracking = m_tracking = FALSE;
+    if (isInternalRequest())
+      signal TrackSingleBeacon.startDone(FAIL);
+    resetUpdatePending();
+    resetInternalRequest();
+    resetExternalRequest();
+    setMode(MODE_INACTIVE); 
     return SUCCESS;
   }  
 
@@ -148,56 +176,43 @@ implementation
         (channelPage != IEEE154_SUPPORTED_CHANNELPAGE) || !IEEE154_BEACON_ENABLED_PAN)
       status = IEEE154_INVALID_PARAMETER;
     else {
-      if (!trackBeacon && m_tracking) {
-        // stop tracking after next received beacon
-        m_stopTracking = TRUE;
-      } else {
-        m_stopTracking = FALSE;
-        m_updateLogicalChannel = logicalChannel;
-        m_updateTrackBeacon = trackBeacon;
-        m_updatePending = TRUE;
-        atomic {
-          // if we are tracking then we'll get the RadioToken automatically,
-          // otherwise request it now
-          if (!m_tracking && !call RadioToken.isOwner())
-            call RadioToken.request();  
-        }
-      }
+      m_updateTrackBeacon = trackBeacon;
+      m_updateLogicalChannel = logicalChannel;
+      setExternalRequest();
+      setUpdatePending();
+      call RadioToken.request();
     }
+
     dbg_serial("BeaconSynchronizeP", "MLME_SYNC.request -> result: %lu\n", (uint32_t) status);
     return status;
   }
 
   event void RadioToken.granted()
   {
-    dbg_serial("BeaconSynchronizeP","Got token, expecting beacon in %lu\n",
-        (uint32_t) ((m_lastBeaconRxTime + m_dt) - call TrackAlarm.getNow())); 
-    if (m_updatePending) {
-      dbg_serial("BeaconSynchronizeP", "Preparing initial scan\n"); 
-      m_state = S_INITIAL_SCAN;
-      m_updatePending = FALSE;      
-      m_beaconOrder = call MLME_GET.macBeaconOrder();
-      if (m_beaconOrder >= 15)
-        m_beaconOrder = 14;
+    if (isUpdatePending()) {
+      dbg_serial("BeaconSynchronizeP", "Updating configuration...\n"); 
+      if (m_updateTrackBeacon)
+        setMode(MODE_TRACK_CONTINUOUS);
+      else
+        setMode(MODE_TRACK_SINGLE);
       call MLME_SET.phyCurrentChannel(m_updateLogicalChannel);
-      m_tracking = m_updateTrackBeacon;
-      m_beaconInterval = ((uint32_t) 1 << m_beaconOrder) * (uint32_t) IEEE154_aBaseSuperframeDuration; 
-      m_dt = m_beaconInterval;
-      m_numBeaconsLost = IEEE154_aMaxLostBeacons;  // will be reset when beacon is received
-    }
+      m_beaconOrder = call MLME_GET.macBeaconOrder();
+      m_dt = getBeaconInterval(m_beaconOrder);
+      m_numBeaconsMissed = IEEE154_aMaxLostBeacons;  // will be reset when first beacon is received
+      resetUpdatePending();
+      setRxState(RX_FIRST_SCAN);
+    } 
     trackNextBeacon();
   }
 
   async event void RadioToken.transferredFrom(uint8_t clientFrom)
   {
-    dbg_serial("BeaconSynchronizeP","Token.transferred(), expecting beacon in %lu symbols.\n",
-        (uint32_t) ((m_lastBeaconRxTime + m_dt) - call TrackAlarm.getNow())); 
-    if (m_updatePending)
+    dbg_serial("BeaconSynchronizeP", "Got token (transferred).\n");
+    if (isUpdatePending())
       post signalGrantedTask();
     else
       trackNextBeacon();
   }
-
 
   task void signalGrantedTask()
   {
@@ -208,26 +223,30 @@ implementation
   {
     bool missed = FALSE;
 
-    if (m_state != S_INITIAL_SCAN) {
+    if (getMode() == MODE_INACTIVE) {
+      // nothing to do, just give up the token
+      dbg_serial("BeaconSynchronizeP", "Stop tracking.\n");
+      call RadioToken.release();
+      return;
+    }
 
-      if (!m_tracking) {
-        // nothing to do, just give up the token
-        dbg_serial("BeaconSynchronizeP", "Stop tracking.\n");
-        call RadioToken.release();
-        return;
-      }
+    if (getRxState() != RX_FIRST_SCAN) {
 
-      // we have received at least one previous beacon
-      m_state = S_PREPARE;
+      dbg_serial("BeaconSynchronizeP","Token.transferred(), expecting beacon in %lu symbols.\n",
+        (uint32_t) ((m_lastBeaconRxTime + m_dt) - call TrackAlarm.getNow())); 
+
+      // we have received at least one previous beacon, get ready for the next
+      setRxState(RX_PREPARE);
+
       while (call TimeCalc.hasExpired(m_lastBeaconRxTime, m_dt)) { // missed a beacon!
         dbg_serial("BeaconSynchronizeP", "Missed a beacon, expected it: %lu, now: %lu\n", 
             m_lastBeaconRxTime + m_dt, call TrackAlarm.getNow());
         missed = TRUE;
-        m_dt += m_beaconInterval;
-        m_numBeaconsLost++;
+        m_dt += getBeaconInterval(m_beaconOrder);
+        m_numBeaconsMissed++;
       }
 
-      if (m_numBeaconsLost >= IEEE154_aMaxLostBeacons) {
+      if (m_numBeaconsMissed >= IEEE154_aMaxLostBeacons) {
         dbg_serial("BeaconSynchronizeP", "Missed too many beacons.\n");
         post processBeaconTask();
         return;
@@ -236,7 +255,7 @@ implementation
       if (missed) {
         // let other components get a chance to use the radio
         call RadioToken.request();
-        dbg_serial("BeaconSynchronizeP", "Allowing other components to get the token.\n");
+        dbg_serial("BeaconSynchronizeP", "Skipping a beacon.\n");
         call RadioToken.release();
         return;
       }
@@ -252,10 +271,10 @@ implementation
   {
     uint32_t delay = IEEE154_RADIO_RX_DELAY + IEEE154_MAX_BEACON_JITTER(m_beaconOrder);
 
-    if (m_state == S_INITIAL_SCAN) {
-      // initial scan
+    if (getRxState() == RX_FIRST_SCAN) {
+      // initial scan: switch to Rx immediately
       call BeaconRx.enableRx(0, 0);
-    } else if (m_state == S_PREPARE) {
+    } else if (getRxState() == RX_PREPARE) {
       if (!call TimeCalc.hasExpired(m_lastBeaconRxTime - delay, m_dt))
         call TrackAlarm.startAt(m_lastBeaconRxTime - delay, m_dt);
       else
@@ -268,27 +287,28 @@ implementation
   async event void BeaconRx.enableRxDone()
   {
     uint32_t dt;
+    uint8_t previousState = getRxState();
 
-    switch (m_state)
+    setRxState(RX_RECEIVING);
+
+    switch (previousState)
     {
-      case S_INITIAL_SCAN: 
+      case RX_FIRST_SCAN: 
         // "To acquire beacon synchronization, a device shall enable its 
         // receiver and search for at most [aBaseSuperframeDuration * (2^n + 1)]
         // symbols, where n is the value of macBeaconOrder [...] Once the number
         // of missed beacons reaches aMaxLostBeacons, the MLME shall notify the 
         // next higher layer." (Sect. 7.5.4.1)
-        m_state = S_RECEIVING;
         dt = (((uint32_t) 1 << m_beaconOrder) + (uint32_t) 1) * 
           (uint32_t) IEEE154_aBaseSuperframeDuration * 
           (uint32_t) IEEE154_aMaxLostBeacons;
         call TrackAlarm.start(dt);
-        dbg_serial("BeaconSynchronizeP","Rx enabled, expecting beacon within %lu symbols.\n", dt);
+        dbg_serial("BeaconSynchronizeP","Rx enabled, expecting first beacon within next %lu symbols.\n", dt);
         break;
-      case S_PREPARE:
-        m_state = S_RECEIVING;
+      case RX_PREPARE:
         dt = m_dt + IEEE154_MAX_BEACON_LISTEN_TIME(m_beaconOrder);
         call TrackAlarm.startAt(m_lastBeaconRxTime, dt);
-        dbg_serial("BeaconSynchronizeP","Rx enabled, expecting beacon within %lu symbols.\n",
+        dbg_serial("BeaconSynchronizeP","Rx enabled, expecting beacon within next %lu symbols.\n",
             (uint32_t) ((m_lastBeaconRxTime + dt) - call TrackAlarm.getNow())); 
         break;
       default:
@@ -299,32 +319,32 @@ implementation
 
   async event void TrackAlarm.fired()
   {
-    if (m_state == S_PREPARE) {
+    if (getRxState() == RX_PREPARE) { // enable Rx
       uint32_t maxBeaconJitter = IEEE154_MAX_BEACON_JITTER(m_beaconOrder);
       if (maxBeaconJitter > m_dt)
         maxBeaconJitter = m_dt; // receive immediately
       call BeaconRx.enableRx(m_lastBeaconRxTime, m_dt - maxBeaconJitter);
-    } else {
-      ASSERT(m_state == S_RECEIVING && call RadioOff.off() == SUCCESS); 
+    } else { // disable Rx
+      error_t error = call RadioOff.off();
+      ASSERT(getRxState() == RX_RECEIVING && error == SUCCESS); 
     }
   }
 
   event message_t* BeaconRx.received(message_t *frame, const ieee154_timestamp_t *timestamp)
   {
-    if (m_bufferBusy || !call FrameUtility.isBeaconFromCoord(frame))
-    {
-      if (m_bufferBusy) {
-        dbg_serial("BeaconSynchronizeP", "Got another beacon, dropping it.\n");}
-      else
-        dbg_serial("BeaconSynchronizeP", "Got a beacon, but not from my coordinator.\n");
+    if (wasBeaconReceived()) {
+      dbg_serial("BeaconSynchronizeP", "Got another beacon! -> ignoring it ...\n");
+      return frame;
+    } else if (!call FrameUtility.isBeaconFromCoord(frame)) {
+      dbg_serial("BeaconSynchronizeP", "Got a beacon, but not from my coordinator.\n");
       return frame;
     } else {
       message_t *tmp = m_beaconPtr;
-      m_bufferBusy = TRUE;
+      setBeaconReceived();
       m_beaconPtr = frame;
       if (timestamp != NULL)
         memcpy(&m_lastBeaconRxRefTime, timestamp, sizeof(ieee154_timestamp_t));
-      if (m_state == S_RECEIVING) { 
+      if (getRxState() == RX_RECEIVING) { 
         call TrackAlarm.stop(); // may fail
         call RadioOff.off();    // may fail
       }
@@ -332,36 +352,55 @@ implementation
     }
   }
 
+
+
   task void processBeaconTask()
   {
-    // if we received a beacon from our coordinator then it is processed now
-    if (!m_bufferBusy || !call Frame.isTimestampValid(m_beaconPtr)) {
-      // missed a beacon or received a beacon with invalid timestamp
-      if (!m_bufferBusy)
-        dbg_serial("BeaconSynchronizeP", "No beacon received!\n");
-      else
-        dbg_serial("BeaconSynchronizeP", "Beacon has invalid timestamp!\n");
+    // task will be executed after every (un)successful attempt to track a beacon
+    bool wasInternalRequest = isInternalRequest();
+    
+    if (wasBeaconReceived() && !call Frame.isTimestampValid(m_beaconPtr)) {
+      dbg_serial("BeaconSynchronizeP", "Received beacon has invalid timestamp, discarding it!\n");
+      resetBeaconReceived();
+    }
 
-      m_numBeaconsLost += 1;
-      m_dt += m_beaconInterval;
-      m_bufferBusy = FALSE;
+    if (getMode() == MODE_TRACK_SINGLE)
+      setMode(MODE_INACTIVE); // we're done with a single shot
+    resetInternalRequest();
 
-      if (m_numBeaconsLost >= IEEE154_aMaxLostBeacons) {
-        // lost too many beacons, give up!
-        m_tracking = FALSE;
+    // whether we next release the token or pass it to the CAP 
+    // component, we want it back (because we decide later
+    // whether we'll actually stop tracking the beacon in future)
+    call RadioToken.request();  
+
+    if (!wasBeaconReceived()) {
+
+      resetBeaconReceived(); // buffer ready
+      m_numBeaconsMissed += 1;
+      m_dt += getBeaconInterval(m_beaconOrder);
+      dbg_serial("BeaconSynchronizeP", "Missed a beacon (total missed: %lu).\n", (uint32_t) m_numBeaconsMissed);
+
+      if (wasInternalRequest) {
+        // note: if it only was an internal request, the
+        // mode was reset above already (SINGLE_SHOT)
+        signal TrackSingleBeacon.startDone(FAIL);
+      } 
+      if (isExternalRequest() && m_numBeaconsMissed >= IEEE154_aMaxLostBeacons) {
+        resetExternalRequest();
+        setMode(MODE_INACTIVE);
         dbg_serial("BeaconSynchronizeP", "MLME_SYNC_LOSS!\n");
-        signal MLME_SYNC_LOSS.indication(
-              IEEE154_BEACON_LOSS, 
-              call MLME_GET.macPANId(),
-              call MLME_GET.phyCurrentChannel(),
-              call MLME_GET.phyCurrentPage(), 
-              NULL);
-      } else
-        call RadioToken.request(); // make another request again (before giving the token up)
+        signal MLME_SYNC_LOSS.indication( 
+            IEEE154_BEACON_LOSS, 
+            call MLME_GET.macPANId(),
+            call MLME_GET.phyCurrentChannel(),
+            call MLME_GET.phyCurrentPage(), 
+            NULL);
+      }
 
       call RadioToken.release();
+    
     } else { 
-      // got the beacon!
+      // received the beacon!
       uint8_t *payload = (uint8_t *) m_beaconPtr->data;
       ieee154_macAutoRequest_t autoRequest = call MLME_GET.macAutoRequest();
       uint8_t pendAddrSpecOffset = 3 + (((payload[2] & 7) > 0) ? 1 + (payload[2] & 7) * 3: 0); // skip GTS
@@ -369,7 +408,6 @@ implementation
       uint8_t *beaconPayload = payload + pendAddrSpecOffset + 1;
       uint8_t beaconPayloadSize = call BeaconFrame.getBeaconPayloadLength(m_beaconPtr);
       uint8_t pendingAddrMode = ADDR_MODE_NOT_PRESENT;
-      uint8_t coordBeaconOrder;
       uint8_t *mhr = MHR(m_beaconPtr);
       uint8_t frameLen = ((uint8_t*) m_beaconPtr)[0] & FRAMECTL_LENGTH_MASK;
       uint8_t gtsFieldLength;
@@ -378,6 +416,7 @@ implementation
       dbg_serial("BeaconSynchronizeP", "Got beacon, timestamp: %lu, offset to previous: %lu\n", 
         (uint32_t) timestamp, (uint32_t) (timestamp - m_lastBeaconRxTime));
 
+      m_numBeaconsMissed = 0;
       m_numGtsSlots = (payload[2] & 7);
       gtsFieldLength = 1 + ((m_numGtsSlots > 0) ? 1 + m_numGtsSlots * 3: 0);
       m_lastBeaconRxTime = timestamp;
@@ -398,22 +437,11 @@ implementation
         m_battLifeExtDuration = 0;
 
       m_framePendingBit = mhr[MHR_INDEX_FC1] & FC1_FRAME_PENDING ? TRUE : FALSE;
-      coordBeaconOrder = (payload[0] & 0x0F); 
-      m_dt = m_beaconInterval = ((uint32_t) 1 << coordBeaconOrder) * (uint32_t) IEEE154_aBaseSuperframeDuration; 
+      m_beaconOrder = (payload[0] & 0x0F); 
+      m_dt = getBeaconInterval(m_beaconOrder);
 
-      if (m_stopTracking) {
-        m_tracking = FALSE;
-        dbg_serial("BeaconSynchronizeP", "Stop tracking.\n");
-        if (m_updatePending) // there is already a new request ...
-          call RadioToken.request();
-        call RadioToken.release();
-      } else {
-        dbg_serial("BeaconSynchronizeP", "Handing over to CAP.\n");
-        // we pass on the token now, but make a reservation to get it back 
-        // to receive the next beacon (at the start of the next superframe)
-        call RadioToken.request();  
-        call RadioToken.transferTo(RADIO_CLIENT_DEVICECAP); 
-      }
+      dbg_serial("BeaconSynchronizeP", "Handing over to CAP.\n");
+      call RadioToken.transferTo(RADIO_CLIENT_DEVICECAP); 
       
       if (pendAddrSpec & PENDING_ADDRESS_SHORT_MASK)
         beaconPayload += (pendAddrSpec & PENDING_ADDRESS_SHORT_MASK) * 2;
@@ -439,12 +467,9 @@ implementation
         call DataRequest.poll(CoordAddrMode, CoordPANId, CoordAddress, SrcAddrMode);
       }
 
-      // Beacon Tracking: update state
-      m_numBeaconsLost = 0;
-      // TODO: check PAN ID conflict here?
       if (!autoRequest || beaconPayloadSize)
         m_beaconPtr = signal MLME_BEACON_NOTIFY.indication(m_beaconPtr);
-      m_bufferBusy = FALSE;
+      resetBeaconReceived(); // buffer ready
     }
     dbg_serial_flush();
   }
@@ -452,20 +477,20 @@ implementation
   command error_t TrackSingleBeacon.start()
   {
     // Track a single beacon now
-    if (!m_tracking && !m_updatePending && !call RadioToken.isOwner()) {
-      // find a single beacon now (treat this like a user request)
+    dbg_serial("BeaconSynchronizeP", "Internal request.\n");
+    setInternalRequest();
+    call RadioToken.request();
+    if (!isUpdatePending()) {
       m_updateLogicalChannel = call MLME_GET.phyCurrentChannel();
       m_updateTrackBeacon = FALSE;
-      m_stopTracking = TRUE;
-      m_updatePending = TRUE;
-      call RadioToken.request();
+      setUpdatePending();
     }
     return SUCCESS;
   }
 
   command error_t TrackSingleBeacon.stop()
   {
-    // will stop automatically after beacon was tracked/not found
+    // we will stop automatically after beacon was tracked/not found
     return FAIL;
   }
   
@@ -518,7 +543,14 @@ implementation
 
   async command bool IsTrackingBeacons.getNow()
   { 
-    return m_tracking;
+    return (getMode() == MODE_TRACK_CONTINUOUS);
+  }
+
+  uint32_t getBeaconInterval(ieee154_macBeaconOrder_t BO)
+  {
+    if (BO >= 15)
+      BO = 14;
+    return (((uint32_t) 1 << BO) * (uint32_t) IEEE154_aBaseSuperframeDuration);
   }
 
   event void DataRequest.pollDone() {}

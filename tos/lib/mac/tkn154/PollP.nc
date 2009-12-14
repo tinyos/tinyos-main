@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:26 $
+ * $Revision: 1.4 $
+ * $Date: 2009-12-14 12:50:06 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -125,13 +125,13 @@ implementation
     ieee154_txcontrol_t *txControl;
     ieee154_status_t status = IEEE154_TRANSACTION_OVERFLOW;
 
-    dbg_serial("PollP", "InternalPoll\n");
+    dbg_serial("PollP", "Internal Poll\n");
     if (client == SYNC_POLL_CLIENT && m_numPending != 0) {
       // no point in auto-requesting if user request is pending
       signal DataRequest.pollDone[client]();
       return IEEE154_SUCCESS;
-    } else if ((txFrame = call TxFramePool.get())) {
-      if (!(txControl = call TxControlPool.get()))
+    } else if ((txFrame = call TxFramePool.get()) != NULL) {
+      if ((txControl = call TxControlPool.get()) != NULL)
         call TxFramePool.put(txFrame);
       else {
         txFrame->header = &txControl->header;
@@ -149,6 +149,7 @@ implementation
     }
     if (status != IEEE154_SUCCESS)
       signal DataRequest.pollDone[client]();
+    dbg_serial("PollP", "Status %lu, numPending: %lu\n", (uint32_t) status, (uint32_t) m_numPending);
     return status;
   }
 
