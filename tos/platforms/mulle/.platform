@@ -21,6 +21,7 @@ push( @includes, qw(
   %T/chips/m16c62p
   %T/chips/m16c62p/control
   %T/chips/m16c62p/adc
+  %T/chips/m16c62p/dac
   %T/chips/m16c62p/pins
   %T/chips/m16c62p/timer
   %T/chips/m16c62p/uart
