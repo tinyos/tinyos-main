@@ -75,7 +75,8 @@ With 128 items or more, MicaZ nodes don't receive anything. Memory limitation?
 
 If you are using the Basestation application to sniff what packets are
 being sent in the air, you will need to adjust the packet size to match
-the test application. For this specific application, you will need to
-add the following to your Makefile:
+the test application. You can add the following to your Makefile:
 
-CFLAGS += -DTOSH_DATA_LENGTH=32
+CFLAGS += -DTOSH_DATA_LENGTH=XX
+
+where XX is your payload size

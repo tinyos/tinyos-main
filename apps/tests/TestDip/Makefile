@@ -5,7 +5,14 @@ CFLAGS += -I$(TOSDIR)/lib/net/dip -I$(TOSDIR)/lib/net/dip/interfaces
 #CFLAGS += -I$(TOSDIR)/lib/net/drip
 
 CONSTANTS += -DTOSH_DATA_LENGTH=32
+#CONSTANTS += -DDIP_JOINTEST
 CFLAGS += $(CONSTANTS)
+
+# LPL FLAGS
+#CFLAGS += -DLOW_POWER_LISTENING
+#CFLAGS += -DLPL_DEF_LOCAL_WAKEUP=512
+#CFLAGS += -DLPL_DEF_REMOTE_WAKEUP=512
+#CFLAGS += -DDELAY_AFTER_RECEIVE=20
 
 CLEAN_EXTRA += DipMsg.py DipDataMsg.py DipData.py DipMsg.java DipDataMsg.java DipData.java DipMsg.class DipDataMsg.class DipData.class DipInject.class
 

@@ -10,27 +10,11 @@ module AMDipP {
   uses interface AMSend as NetAMSend;
   uses interface Receive as NetReceive;
 
-  uses interface SplitControl as AMSplitControl;
-  uses interface Boot;
 }
 
 implementation {
   message_t am_msg;
   bool busy;
-
-  event void Boot.booted() {
-    call AMSplitControl.start();
-  }
-
-  event void AMSplitControl.startDone(error_t err) {
-    if(err != SUCCESS) {
-      call AMSplitControl.start();
-      return;
-    }
-    dbg("AMDipP", "ActiveMessageC started!\n");
-  }
-
-  event void AMSplitControl.stopDone(error_t err) { }
 
   command error_t Init.init() {
     busy = FALSE;

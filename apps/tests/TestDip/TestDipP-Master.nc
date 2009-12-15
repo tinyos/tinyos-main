@@ -13,6 +13,7 @@ module TestDipP {
   uses interface Boot;
   uses interface AMSend as SerialSend;
   uses interface SplitControl as SerialControl;
+  uses interface SplitControl as AMControl;
 }
 
 implementation {
@@ -35,8 +36,20 @@ implementation {
   void bookkeep();
 
   event void SerialControl.startDone(error_t err) {
+    if(err != SUCCESS) {
+      call SerialControl.start();
+      return;
+    }
+    call AMControl.start();
+  }
+
+  event void AMControl.startDone(error_t err) {
+    if(err != SUCCESS) {
+      call AMControl.start();
+      return;
+    }
     call StdControl.start();
-    if(TOS_NODE_ID == 0) {
+    if(TOS_NODE_ID == 1) {
       data = 0xBEEF;
       dbg("TestDipP","Updating data items\n");
       /*
@@ -46,14 +59,14 @@ implementation {
     }
   }
   
-  event void SerialControl.stopDone(error_t err) {
-    
-  }
+  event void SerialControl.stopDone(error_t err) { }
+  event void AMControl.stopDone(error_t err) { }
 
   event void Boot.booted() {
     call SerialControl.start();
     dbg("TestDipP", "Booted at %s\n", sim_time_string());
   }
+
   /*
   event void DisseminationValue1.changed() {
     uint16_t val = *(uint16_t*) call DisseminationValue1.get();

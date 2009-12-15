@@ -17,10 +17,6 @@ implementation {
 
   components MainC;
   MainC.SoftwareInit -> AMDipP.Init;
-  AMDipP.Boot -> MainC;
-
-  components ActiveMessageC;
-  AMDipP.AMSplitControl -> ActiveMessageC;
 
   DipSend = AMDipP.DipSend;
   DataReceive = AMDipP.DipDataReceive;

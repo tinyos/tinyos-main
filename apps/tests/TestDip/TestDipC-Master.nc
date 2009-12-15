@@ -26,4 +26,7 @@ implementation {
   components new SerialAMSenderC(AM_TESTDIP);
   TestDipP.SerialSend -> SerialAMSenderC;
   TestDipP.SerialControl -> SerialActiveMessageC;
+
+  components ActiveMessageC;
+  TestDipP.AMControl -> ActiveMessageC;
 }
