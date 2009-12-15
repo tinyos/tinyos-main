@@ -41,7 +41,7 @@ PLATFORM = mulle
 # Flash settings
 VOLUMEFILE = volumes-at45db.xml
 VOLUME_ALLOCATOR ?= tos-storage-at45db
-VOLUME_ALLOCATOR_FLAGS ?=
+VOLUME_ALLOCATOR_FLAGS ?= -s 512 -f 4096
 
 $(call TOSMake_include_platform,m16c62p)
 
