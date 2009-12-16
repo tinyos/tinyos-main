@@ -30,12 +30,7 @@ configuration TestFtspAppC {
 }
 
 implementation {
-  components MainC, TimeSync32kC;
-
-  MainC.SoftwareInit -> TimeSync32kC;
-  TimeSync32kC.Boot -> MainC;
-
-  components TestFtspC as App;
+  components MainC, TestFtspC as App;
   App.Boot -> MainC;
 
   components ActiveMessageC;
@@ -57,8 +52,15 @@ implementation {
 
   components LedsC;
 
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB)
+  components TimeSync32kC;
+  MainC.SoftwareInit -> TimeSync32kC;
+  TimeSync32kC.Boot -> MainC;
   App.GlobalTime -> TimeSync32kC;
   App.TimeSyncInfo -> TimeSync32kC;
+#else
+#error "LPL timesync is not available for your platform"
+#endif
   App.Leds -> LedsC;
   
 }
