@@ -307,6 +307,7 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
     // TODO : this should be after we detect out-of-sequence ACK
     // numbers!
     this_conn->r_wind = ntohs(tcph->window);
+    printf("State: %i\n", this_conn->state);
 
     switch (this_conn->state) {
     case TCP_LAST_ACK:
@@ -318,6 +319,7 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
         break;
       }
     case TCP_FIN_WAIT_1:
+      printf("IN FIN_WAIT_1, %i\n", (tcph->flags & TCP_FLAG_FIN));
       if (tcph->flags & TCP_FLAG_ACK && 
           hdr_ackno == this_conn->seqno + 1) {
         if (tcph->flags & TCP_FLAG_FIN) {
@@ -328,13 +330,20 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
           // resources while we're in it...
           this_conn->timer.retx = TCPLIB_TIMEWAIT_LEN;
         } else {
+          this_conn->timer.retx = TCPLIB_2MSL;
           this_conn->state = TCP_FIN_WAIT_2;
         }
-        // this generate the ACK we need here
-        goto ESTABLISHED;
       }
+      // this generate the ACK we need here
+      goto ESTABLISHED;
     case TCP_FIN_WAIT_2:
-
+      if (tcph->flags & TCP_FLAG_FIN) {
+        this_conn->seqno++;
+        this_conn->state = TCP_TIME_WAIT;
+        
+        this_conn->timer.retx = TCPLIB_TIMEWAIT_LEN;
+        tcplib_send_ack(this_conn, 0, TCP_FLAG_ACK);
+      }
       break;
 
     case TCP_SYN_SENT:
@@ -485,6 +494,7 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
             this_conn->flags |= TCP_ACKSENT;
           }
         } else { // (hdr_seqno == this_conn->ackno) {
+          printf("receive data\n");
           receive_data(this_conn, tcph, len - sizeof(struct ip6_hdr));
 
           if (this_conn->flags & TCP_ACKSENT) {
@@ -500,10 +510,10 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
     case TCP_TIME_WAIT:
       if ((payload_len > 0 && (this_conn->flags & TCP_ACKPENDING) >= 1) 
           || tcph->flags & TCP_FLAG_FIN) {
-        tcplib_send_ack(this_conn, (payload_len == 0 && tcph->flags & TCP_FLAG_FIN), TCP_FLAG_ACK);
+        tcplib_send_ack(this_conn, (payload_len == 0 && (tcph->flags & TCP_FLAG_FIN)), TCP_FLAG_ACK);
         /* only close the connection if we've gotten all the data */
         if (this_conn->state == TCP_ESTABLISHED 
-            && tcph->flags & TCP_FLAG_FIN
+            && (tcph->flags & TCP_FLAG_FIN)
             && hdr_seqno  == this_conn->ackno) {
           this_conn->state = TCP_CLOSE_WAIT;
           tcplib_extern_closed(this_conn);
@@ -619,8 +629,9 @@ void tcplib_retx_expire(struct tcplib_sock *sock) {
   case TCP_LAST_ACK:
   case TCP_FIN_WAIT_1:
     tcplib_send_ack(sock, 1, TCP_FLAG_ACK | TCP_FLAG_FIN);
-    sock->timer.retx = 6;
+    sock->timer.retx = TCPLIB_2MSL;
     break;
+  case TCP_FIN_WAIT_2:
   case TCP_TIME_WAIT:
     sock->state = TCP_CLOSED;
     // exit TIME_WAIT
@@ -674,7 +685,7 @@ int tcplib_close(struct tcplib_sock *sock) {
   case TCP_ESTABLISHED:
     // kick off the close
     tcplib_send_ack(sock, 0, TCP_FLAG_ACK | TCP_FLAG_FIN);
-    sock->timer.retx = 6;
+    sock->timer.retx = TCPLIB_2MSL;
     sock->state = TCP_FIN_WAIT_1;
     break;
   case TCP_SYN_SENT:
