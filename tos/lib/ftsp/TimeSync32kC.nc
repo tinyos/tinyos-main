@@ -41,6 +41,12 @@ configuration TimeSync32kC
 
 implementation
 {
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB)
+;
+#else
+#error "LPL timesync is not available for your platform"
+#endif
+
   components new TimeSyncP(T32khz) as TimeSyncP;
 
   GlobalTime      =   TimeSyncP;
@@ -53,8 +59,8 @@ implementation
 
   components TimeSyncMessageC as ActiveMessageC;
   TimeSyncP.RadioControl    ->  ActiveMessageC;
-  TimeSyncP.Send            ->  ActiveMessageC.TimeSyncAMSend32khz[AM_TIMESYNCMSG];
-  TimeSyncP.Receive         ->  ActiveMessageC.Receive[AM_TIMESYNCMSG];
+  TimeSyncP.Send            ->  ActiveMessageC.TimeSyncAMSend32khz[TIMESYNC_AM_FTSP];
+  TimeSyncP.Receive         ->  ActiveMessageC.Receive[TIMESYNC_AM_FTSP];
   TimeSyncP.TimeSyncPacket  ->  ActiveMessageC;
 
   components Counter32khz32C, new CounterToLocalTimeC(T32khz) as LocalTime32khzC;
@@ -64,6 +70,9 @@ implementation
   components new TimerMilliC() as TimerC;
   TimeSyncP.Timer ->  TimerC;
 
+  components RandomC;
+  TimeSyncP.Random -> RandomC;
+  
 #if defined(TIMESYNC_LEDS)
   components LedsC;
 #else
