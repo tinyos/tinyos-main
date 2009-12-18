@@ -26,7 +26,8 @@ node IDs to receive the decrypted packets
 >EXPECTATIONS
 
 LEDs on the receiver nodes will blink their LEDs sequentially like the
-original RadioCountToLeds/ application.
+original RadioCountToLeds/ application. The LEDs on the transmitter
+will stay off.
 
 
 2. Basestation/
