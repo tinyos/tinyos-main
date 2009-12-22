@@ -1,6 +1,6 @@
 README for TestFcfsArbiter
 Author/Contact: tinyos-help@millennium.berkeley.edu
-@author Kevin Klues <klues@tkn.tu-berlin.de>
+@author Kevin Klues <klueska@cs.berkeley.edu>
 
 Description:
 

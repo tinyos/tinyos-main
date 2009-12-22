@@ -56,9 +56,9 @@
  * <li> Led 2 -> Resource 2
  * <br>
  *
- * @author Kevin Klues <klues@tkn.tu-berlin.de>
- * @version  $Revision: 1.1 $
- * @date $Date: 2007-07-10 19:55:30 $
+ * @author Kevin Klues <klueska@cs.berkeley.edu>
+ * @version  $Revision: 1.2 $
+ * @date $Date: 2009-12-22 08:34:10 $
  */
 
 module TestRoundRobinArbiterC {
