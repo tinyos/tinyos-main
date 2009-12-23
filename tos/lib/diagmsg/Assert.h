@@ -24,8 +24,6 @@
 #ifndef __ASSERT_H__
 #define __ASSERT_H__
 
-#define NOASSERT(COND) for(;0;)
-
 #ifdef ASSERT_NONE
 
 	#define ASSERT(COND) for(;0;)
