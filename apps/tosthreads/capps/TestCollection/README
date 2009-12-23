@@ -65,9 +65,4 @@ Notes:
   set it to 57600.
 
 Known bugs/limitations:
-  Warnings are issued about fan out on the 'Snoop.receive' and 'Receive.receive'
-  events.  These warnings are harmless and are the result of providing a C based
-  API in which all events for receiving and snooping must be handled even if not
-  used by a particular application.  The warnings occur because the underlying
-  CTP or MultihopLQI stacks wire up to particular AM ids, which are also wired
-  into the C API for handling message reception.
+  None

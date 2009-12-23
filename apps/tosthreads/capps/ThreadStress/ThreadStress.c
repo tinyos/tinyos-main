@@ -30,6 +30,18 @@
  */
  
 /**
+ * This application stresses the creation and destruction of dynamic threads by
+ * spawning lots and lots of threads over and over again and letting them run to
+ * completion.  Three different thread start functions are used, each toggling one
+ * of LED0, LED1, and LED2 every 256 spawnings. The time at which each LED is
+ * toggled is offset so that the three LEDS do not come on in unison.
+ * 
+ * Successful running of this application will result in all three leds flashing at
+ * a rate determined by how long it takes to spawn a thread on a given platform. 
+ * All three LEDs should flash at this rate in an infinite loop forever.  Given the
+ * dynamics on the mote the rate may vary over time, but the important thing is
+ * that all three LEDs continue to toggle at a reasonably visible rate.  
+ *
  * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 

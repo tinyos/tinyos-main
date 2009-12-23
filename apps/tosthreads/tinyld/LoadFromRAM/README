@@ -7,5 +7,16 @@ LoadFromRAM is a simple program that dynamically loads two loadable
 programs hardcoded in the byte arrays; One program is Blink, and the
 other one is Basestation.
 
-If you would like to generate your own loadable program:
-    tosthreads-gen-dynamic-app ../../capps/Blink/Blink.c
+You can install LoadFromRAM on a mote via the following command:
+  make <platform> install
+
+If you would like to generate your own loadable program run, for example:
+  cd ../../capps/Blink
+  make telosb dynthreads
+  (the output file needed is ../../capps/Blink/build/telosb/dynthreads/main.tos)	
+  
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.

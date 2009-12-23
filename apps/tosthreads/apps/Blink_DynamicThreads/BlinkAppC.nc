@@ -21,9 +21,13 @@
 */
 
 /**
- * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
+ * Blink is a simple application used to test the basic functionality of
+ * TOSThreads using dynamic threads rather than static threads.
  *
- * This is the dynamic thread implementation of Blink.
+ * Upon a successful burn, you should see LED0 flashing with a period of every
+ * 200ms, and LED1 and LED2 flashing in unison with a period of 1000ms.
+ *
+ * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 
 configuration BlinkAppC {}

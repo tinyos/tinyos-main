@@ -30,6 +30,33 @@
  */
 
 /**
+ * BaseStation is a reimplementation of the standard BaseStation application using
+ * the TOSThreads thread library.  It transparently forwards any AM messages it
+ * receives from its radio interface to its serial interface and vice versa.
+ *
+ * <p>On the serial link, BaseStation sends and receives simple active
+ * messages (not particular radio packets): on the radio link, it
+ * sends radio active messages, whose format depends on the network
+ * stack being used. BaseStation will copy its compiled-in group ID to
+ * messages moving from the serial link to the radio, and will filter
+ * out incoming radio messages that do not contain that group ID.</p>
+ *
+ * <p>BaseStation includes queues in both directions, with a guarantee
+ * that once a message enters a queue, it will eventually leave on the
+ * other interface. The queues allow the BaseStation to handle load
+ * spikes.</p>
+ *
+ * <p>BaseStation acknowledges a message arriving over the serial link
+ * only if that message was successfully enqueued for delivery to the
+ * radio link.</p>
+ *
+ * <p>The LEDS are programmed to toggle as follows:</p>
+ * <ul>
+ * <li><b>LED0:</b> Message bridged from serial to radio</li>
+ * <li><b>LED1:</b> Message bridged from radio to serial</li>
+ * <li><b>LED2:</b> Dropped message due to queue overflow in either direction</li>
+ * </ul>
+ *
  * @author Kevin Klues <klueska@cs.stanford.edu>
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */

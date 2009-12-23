@@ -30,6 +30,30 @@
  */
 
 /**
+ * TestLogStorage is a threaded implementation of an application that takes a dummy
+ * sensor readings of a counter, logs it flash, and then sends it out over the
+ * serial port at some later time. In the current implementation, each sensor reading is
+ * taken once every 3000ms, and records containing a set of readings from each
+ * iteration are batched out over the radio every 10000ms.  This application is
+ * very similar to the SenseStoreAndForward application contained in this same
+ * directory, except that it is written using a dummy sensor value instead of
+ * sensors specific to the tmote onboard suite. In this way, the LogStorage
+ * functionality can be tested in conjunction with the sending facility in a
+ * platform independent way.
+ * 
+ * Readings are taken from the dummy sensor and logged to flash as one record in an
+ * infinite loop. Records are then read out of flash and and sent out over the
+ * serial interface in separate infinite loop.  Before the application starts
+ * running, the entire contents of the flash drive are erased.
+ * 
+ * A successful test will result in LED0 remaining solid for approximately 6s while
+ * the flash is being erased.  After that LED0 will toggle with each successful
+ * sensor readings logged to flash, at a rate of 3000ms.  Also, LED1 will begin
+ * toggling in rapid succession once every 10000ms as records are successfully read
+ * from flash and sent out over the serial port.  Once all of the records currently
+ * recorded to flash since the last batch of sends have been sent out, LED2 Toggles
+ * to indicate completion.  This process continues in an infinite loop forever.
+ *
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
 

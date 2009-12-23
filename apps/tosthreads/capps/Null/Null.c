@@ -21,6 +21,12 @@
 */
 
 /**
+ * Null is an empty skeleton application for testing the basic compilation and
+ * runtime of a c-based tosthreads application.  It is useful to test that the build
+ * environment is functional in its most minimal sense, i.e., you can correctly
+ * compile an application. It is also useful to test the minimum power consumption
+ * of a node when it has absolutely no interrupts or resources active.
+ *
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 

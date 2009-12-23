@@ -12,14 +12,23 @@ Here are the steps:
 1.) Load SerialLoader:
     make telosb install bsl,<device_port>
     
-2.) Create the loadable code, Blink.tos:
-    tosthreads-gen-dynamic-app ../../capps/Blink/Blink.c
+2.) Create the loadable code, main.tos:
+	cd ../../capps/Blink
+	make telosb dynthreads
+	(the output file needed is ../../capps/Blink/build/telosb/dynthreads/main.tos)	
 
 3.) Erase the external flash:
     ./serialloader.py <device_port> 0
 
 4.) Upload the binary:
-    ./serialloader.py <device_port> 1 Blink.tos
+    ./serialloader.py <device_port> 1 main.tos
     
 5.) Run the binary:
     ./serialloader.py <device_port> 7
+
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.
+

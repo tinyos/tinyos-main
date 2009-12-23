@@ -21,6 +21,10 @@
 */
 
 /**
+ * LoadFromRAM is a simple program that dynamically loads two loadable
+ * programs hardcoded in the byte arrays; One program is Blink, and the
+ * other one is Basestation.
+ *
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 

@@ -30,6 +30,12 @@
  */
  
 /**
+ * Blink is a simple application used to test the basic functionality of
+ * TOSThreads.
+ *
+ * Upon a successful burn, you should see LED0 flashing with a period of every
+ * 200ms, and LED1 and LED2 flashing in unison with a period of 1000ms.
+ *
  * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 

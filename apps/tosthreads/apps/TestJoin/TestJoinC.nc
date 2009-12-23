@@ -30,6 +30,14 @@
  */
  
 /**
+ * TestJoin is a simple application used to test the basic functionality of
+ * the join() system call for waiting on a set of threads in a TOSThreads 
+ * based application.
+ * 
+ * Upon a successful burn, you should first see LED0 flash twice with a period of
+ * 1s and LED1 flash 4 times with a period of 1s. After these are done,
+ * LED2 should come on and stay on.
+ *
  * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 
@@ -39,7 +47,6 @@ module TestJoinC {
     interface Thread as NullThread;
     interface Thread as TinyThread0;
     interface Thread as TinyThread1;
-    interface Thread as TinyThread2;
     interface Leds;
   }
 }
@@ -53,10 +60,9 @@ implementation {
     for(;;){
       call TinyThread0.start(NULL);
       call TinyThread1.start(NULL);
-      call TinyThread2.start(NULL);
-      call TinyThread1.join();
       call TinyThread0.join();
-      call TinyThread2.join();
+      call TinyThread1.join();
+      call Leds.led2Toggle();
     }
   }  
   event void TinyThread0.run(void* arg) {
@@ -71,13 +77,6 @@ implementation {
     for(i=0; i<4; i++){ 
       call Leds.led1Toggle();
       call TinyThread1.sleep(1000);
-    }
-  }
-  event void TinyThread2.run(void* arg) {
-    int i;
-    for(i=0; i<6; i++){
-      call Leds.led2Toggle();
-      call TinyThread2.sleep(1000);
     }
   }
 }

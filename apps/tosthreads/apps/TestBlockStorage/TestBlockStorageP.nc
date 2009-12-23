@@ -21,6 +21,18 @@
 */
 
 /**
+ * This application is used to test the threaded version of the API for performing
+ * block storage.
+ * 
+ * This application first checks the size of the block storage volume, and
+ * erases it. Then, it randomly writes records, followed by a verification
+ * with read.
+ * 
+ * Successful running of this application results in LED0 being ON
+ * throughout the duration of the erase, write, and read sequence. Finally,
+ * if all tests pass, LED1 is turned ON. Otherwise, all three LEDs are
+ * turned ON to indicate problems.
+ *
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */
 

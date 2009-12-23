@@ -30,6 +30,14 @@
  */
  
 /**
+ * TestJoin is a simple application used to test the basic functionality of
+ * the join() system call for waiting on a set of threads in a TOSThreads 
+ * based application.
+ * 
+ * Upon a successful burn, you should first see LED0 flash twice with a period of
+ * 1s and LED1 flash 4 times with a period of 1s. After these are done,
+ * LED2 should come on and stay on.
+ *
  * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 
@@ -40,13 +48,11 @@ implementation {
   components new ThreadC(100) as NullThread;
   components new ThreadC(100) as TinyThread0;
   components new ThreadC(100) as TinyThread1;
-  components new ThreadC(100) as TinyThread2;
 
   MainC.Boot <- TestJoinC;
   TestJoinC.NullThread -> NullThread;
   TestJoinC.TinyThread0 -> TinyThread0;
   TestJoinC.TinyThread1 -> TinyThread1; 
-  TestJoinC.TinyThread2 -> TinyThread2;
 
   TestJoinC.Leds -> LedsC;
 }

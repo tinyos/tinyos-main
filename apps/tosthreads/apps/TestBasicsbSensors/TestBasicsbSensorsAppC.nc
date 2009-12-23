@@ -30,6 +30,22 @@
  */
  
 /**
+ * This application is used to test the threaded version of the API for accessing
+ * sensors on the basicsb sensor board.
+ * 
+ * This application simply takes sensor readings in an infinite loop from the
+ * Photo and Temperature sensors on the basicsb sensor board and forwards them
+ * over the serial interface.  Upon successful transmission, LED0 is toggled.
+ * 
+ * A successful test will result in the TestBasicsbSensors mote constantly
+ * flickering LED0. Additionally, messages containing the sensor readings should
+ * be forwarded over the serial interface as verified by running the following
+ * for the platform of interest:
+ *   java net.tinyos.tools.Listen -comm serial@/dev/ttyUSBXXX:<baud_rate>
+ * 
+ * Once this java application is running, you should see output containing the
+ * sensor readings being streamed to your terminal.
+ *
  * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 

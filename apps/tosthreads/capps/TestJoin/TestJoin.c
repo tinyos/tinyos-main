@@ -30,6 +30,14 @@
  */
  
 /**
+ * TestJoin is a simple application used to test the basic functionality of
+ * the join() system call for waiting on a set of threads in a TOSThreads 
+ * based application.
+ * 
+ * Upon a successful burn, you should first see LED0 flash twice with a period of
+ * 1s and LED1 flash 4 times with a period of 1s. After these are done,
+ * LED2 should come on and stay on.
+ *
  * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 
@@ -41,12 +49,10 @@
 tosthread_t init;
 tosthread_t blink0;
 tosthread_t blink1;
-tosthread_t blink2;
 
 void init_thread(void* arg);
 void blink0_thread(void* arg);
 void blink1_thread(void* arg);
-void blink2_thread(void* arg);
 
 void tosthread_main(void* arg) {
   //Use stack estimator to calculate maximum stack size
@@ -58,10 +64,9 @@ void init_thread(void* arg) {
   for(;;) {
     tosthread_create(&blink0, blink0_thread, NULL, BLINK0_STACK_SIZE);
     tosthread_create(&blink1, blink1_thread, NULL, BLINK1_STACK_SIZE);
-    tosthread_create(&blink2, blink2_thread, NULL, BLINK2_STACK_SIZE);
-    tosthread_join(&blink2);
     tosthread_join(&blink0);
     tosthread_join(&blink1);
+    led2Toggle();
   }
 }
 
@@ -81,10 +86,3 @@ void blink1_thread(void* arg) {
   }
 }
 
-void blink2_thread(void* arg) {
-  int i;
-  for(i=0; i<6; i++) {
-    led2Toggle();
-    tosthread_sleep(1000);
-  }
-}

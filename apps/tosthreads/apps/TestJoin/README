@@ -1,0 +1,24 @@
+README for TOSThreads TestJoin
+Author/Contact: tinyos-help@millennium.berkeley.edu
+Author: Kevin Klues <klueska@cs.stanford.edu>
+
+Description:
+
+TestJoin is a simple application used to test the basic functionality of
+the join() system call for waiting on a set of threads in a TOSThreads 
+based application.
+
+You can install TestJoin on a mote via the following command:
+  make <platform> threads install
+  
+Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+
+Upon a successful burn, you should first see LED0 flash twice with a period of
+1s and LED1 flash 4 times with a period of 1s. After these are done,
+LED2 should come on and stay on.
+
+Tools:
+  None.
+
+Known bugs/limitations:
+  None.

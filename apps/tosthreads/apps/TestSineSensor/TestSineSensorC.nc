@@ -30,6 +30,13 @@
  */
  
 /**
+ * This application is used to test the threaded version of the API for accessing
+ * the software based SineSensor usable by any platform for demonstration purposes.
+ * 
+ * This application simply takes sensor readings in an infinite loop from the
+ * SineSensor and forwards them over the serial interface.  Upon successful
+ * transmission, LED0 is toggled.
+ *
  * @author Kevin Klues (klueska@cs.stanford.edu)
  */
 

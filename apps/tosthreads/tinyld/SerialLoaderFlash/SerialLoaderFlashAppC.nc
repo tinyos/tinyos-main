@@ -30,6 +30,11 @@
  */
  
 /**
+ * SerialLoaderFlash is similar to SerialLoader in that it receives
+ * loadable programs from the serial port. However, SerialLoaderFlash
+ * stores them on the external flash. Then, when it receives the command to
+ * load the code, it makes the call to the dynamic loader.
+ * 
  * @author Kevin Klues (klueska@cs.stanford.edu)
  * @author Chieh-Jan Mike Liang <cliang4@cs.jhu.edu>
  */

@@ -30,6 +30,23 @@
  */
 
 /**
+ * SenseAndSend is a threaded implementation of an application that takes various
+ * sensor readings in parallel (by dedicating one thread to each reading), and
+ * assembling them into a packet to be sent out over the radio.  It is written
+ * specifically for use with the tmote onboard sensor package, and will not compile
+ * for any other platforms.
+ * 
+ * Readings are taken from each of the 4 oboard sensors and sent out over the radio
+ * interface in an infinite loop.  Upon successful transmission, LED0 is toggled,
+ * and the process starts over again.
+ * 
+ * A successful test will result in LED0 toggling periodically at a rate of
+ * approximately 220ms (the time it takes to take a humidity + temperature sensor
+ * reading since they share the same hardware and cannot be taken in parallel). 
+ * 
+ * Additionally, a base station application should be run to verify the reception
+ * of packets sent from a SenseAndSend mote, with reasonable looking sensor data.
+ *
  * @author Kevin Klues <klueska@cs.stanford.edu>
  */
 
