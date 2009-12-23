@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.8 $ $Date: 2008-09-04 17:20:59 $
+ * @version $Revision: 1.9 $ $Date: 2009-12-23 02:28:47 $
  */
 
 #include <Stm25p.h>
@@ -161,7 +161,7 @@ implementation {
     
     // don't allow appends larger than maximum record size
     if ( len > MAX_RECORD_SIZE )
-      return ESIZE;
+      return EINVAL;
     
     // move to next block if current block doesn't have enough space
     if ( sizeof( m_header ) + len > bytes_left )
