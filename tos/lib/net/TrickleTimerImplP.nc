@@ -1,4 +1,4 @@
-// $Id: TrickleTimerImplP.nc,v 1.6 2009-07-16 13:00:08 mmaroti Exp $
+// $Id: TrickleTimerImplP.nc,v 1.7 2009-12-28 23:12:13 scipio Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -168,7 +168,7 @@ implementation {
   event void Timer.fired() {
     uint8_t i;
     uint32_t dt = call Timer.getdt();
-
+    dbg("Trickle", "Trickle Sub-timer fired\n");
     for (i = 0; i < count; i++) {
       uint32_t remaining = trickles[i].time;
       if (remaining != 0) {
@@ -176,11 +176,12 @@ implementation {
 	if (remaining == 0) {
 	  if (trickles[i].count < k) {
 	    atomic {
+	      dbg("Trickle", "Trickle: mark timer %hhi as pending\n", i);
 	      call Pending.set(i);
 	    }
 	    post timerTask();
 	  }
-
+	  call Changed.set(i);
 	  generateTime(i);
 	    
 	  /* Note that this logic is not the exact trickle algorithm.
@@ -190,9 +191,6 @@ implementation {
 	   * range [tau/2, tau]. 
 	   */
 	  trickles[i].count = 0;
-	}
-	else {
-	  trickles[i].time = remaining;
 	}
       }
     }
@@ -213,26 +211,42 @@ implementation {
 	
     for (i = 0; i < count; i++) {
       uint32_t timeRemaining = trickles[i].time;
-      if (timeRemaining != 0) {
-	atomic {
-	  if (!call Changed.get(i)) {
-	    call Changed.clear(i);
+      dbg("Trickle", "Adjusting: timer %hhi (%u)\n", i, timeRemaining);
+
+      if (timeRemaining == 0) { // Not running, go to next timer
+	continue;
+      }
+      
+      atomic {
+	if (!call Changed.get(i)) {
+	  if (timeRemaining > elapsed) {
+	    dbg("Trickle", "  not changed, elapse time remaining to %u.\n", trickles[i].time - elapsed);
 	    timeRemaining -= elapsed;
+	    trickles[i].time -= elapsed;
+	  }
+	  else { // Time has already passed, so fire immediately
+	    dbg("Trickle", "  not changed, ready to elapse, fire immediately\n");
+	    timeRemaining = 1;
+	    trickles[i].time = 1;
 	  }
 	}
-	if (!set) {
-	  lowest = timeRemaining;
-	  set = TRUE;
-	}
-	else if (timeRemaining < lowest) {
-	  lowest = timeRemaining;
+	else {
+	  dbg("Trickle", "  changed, fall through.\n");
+	  call Changed.clear(i);
 	}
       }
+      if (!set) {
+	lowest = timeRemaining;
+	set = TRUE;
+      }
+      else if (timeRemaining < lowest) {
+	lowest = timeRemaining;
+      }
     }
+    
     if (set) {
       uint32_t timerVal = lowest;
-      timerVal = timerVal;
-      dbg("Trickle", "Starting time with time %u.\n", timerVal);
+      dbg("Trickle", "Starting sub-timer with interval %u.\n", timerVal);
       call Timer.startOneShot(timerVal);
     }
     else {
