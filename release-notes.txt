@@ -1,4 +1,4 @@
-These release notes are as of: $Date: 2009-12-29 00:14:23 $
+These release notes are as of: $Date: 2009-12-29 00:42:36 $
 
 Current:
   Added support for automatic default LPL interval
@@ -6,6 +6,8 @@ Current:
   Added support for mulle platform
   Added support for epic platform
   Added support for shimmer2 platform
+  Added DHV dissemination protocol in lib/net/dhv
+  Added 6lowpan/IP support in lib/net/blip
   Improved CTP forwarder code to save code and RAM
   Improved MSP430 sleep code to default to LPM4
   Improved TOSSIM PRR curve to prevent very low SNR packets
