@@ -1,4 +1,4 @@
-// $Id: TestTrickleTimerAppP.nc,v 1.4 2006-12-12 18:22:51 vlahan Exp $
+// $Id: TestTrickleTimerAppP.nc,v 1.5 2009-12-29 00:15:55 scipio Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -36,6 +36,7 @@ module TestTrickleTimerAppP {
     interface TrickleTimer as TimerB;
     interface TrickleTimer as TimerC;
     interface TrickleTimer as TimerD;
+    interface Random;
   }
 }
 implementation {
@@ -82,17 +83,17 @@ implementation {
     }
   }
 
-  uint8_t i = 0;
+  uint16_t i = 0;
   event void TimerD.fired() {
     dbg("TestTrickle", "Timer D fired at %s\n", sim_time_string());
-    i++;
-    i = i % 3;
+    i = call Random.rand16();
+    i = i % 4;
     switch (i) {
     case 0:
-      //      call TimerA.reset();
+      call TimerA.reset();
       break;
     case 1:
-      //      call TimerB.reset();
+      call TimerB.reset();
       break;
     case 2:
       call TimerC.reset();

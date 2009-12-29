@@ -1,4 +1,4 @@
-// $Id: TestTrickleTimerAppC.nc,v 1.4 2006-12-12 18:22:51 vlahan Exp $
+// $Id: TestTrickleTimerAppC.nc,v 1.5 2009-12-29 00:15:55 scipio Exp $
 /*
  * "Copyright (c) 2006 Stanford University. All rights reserved.
  *
@@ -39,7 +39,7 @@ implementation {
   components new TimerMilliC();
   components new BitVectorC(1) as PendingVector;
   components new BitVectorC(1) as ChangeVector;
-
+  
   //  Timer.Timer -> TimerMilliC;
   //Timer.Random -> RandomC;
   //Timer.Changed -> ChangeVector;
@@ -52,7 +52,7 @@ implementation {
   TestTrickleTimerAppP.TimerB -> TimerB;
   TestTrickleTimerAppP.TimerC -> TimerC;
   TestTrickleTimerAppP.TimerD -> TimerD;
-  
+  TestTrickleTimerAppP.Random -> RandomC;
 }
 
   
