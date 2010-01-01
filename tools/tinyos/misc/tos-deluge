@@ -185,9 +185,20 @@ def read(imgNum, offset, length):
     return r
 
 def erase(imgNum):
-    sreqpkt = FMReqPacket((FM_CMD_ERASE, imgNum, 0, 0, []))
+    # Note: the normal erase doesn't work properly on AT45DB. A
+    # workaroud is to overwrite the metadata of the Deluge image.
+    #
+    #sreqpkt = FMReqPacket((FM_CMD_ERASE, imgNum, 0, 0, []))
+    #success = am.write(sreqpkt, FM_AMID)
+    #return handleResponse(success, "ERROR: Unable to erase the flash volume")
+
+    sreqpkt = FMReqPacket((FM_CMD_WRITE, imgNum, 0, 0, []))
+    sreqpkt.data = [0xFF] * DELUGE_IDENT_SIZE
+    sreqpkt.length = DELUGE_IDENT_SIZE
     success = am.write(sreqpkt, FM_AMID)
-    return handleResponse(success, "ERROR: Unable to erase the flash volume")
+    result = handleResponse(success, "ERROR: Unable to erase the flash volume")
+    if not result: return False;
+    return sync(imgNum)
 
 def sync(imgNum):
     sreqpkt = FMReqPacket((FM_CMD_SYNC, imgNum, 0, 0, []))
