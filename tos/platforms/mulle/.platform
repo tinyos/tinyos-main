@@ -32,6 +32,7 @@ push( @includes, qw(
   %T/lib/timer
   %T/lib/serial
   %T/lib/diagmsg
+  %T/lib/printf
 ) );
 
 @opts = qw(
