@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-04 18:31:28 $
+ * $Revision: 1.4 $
+ * $Date: 2010-01-05 16:41:16 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -78,9 +78,14 @@ implementation
   event message_t* PhyRx.received(message_t *msg, const ieee154_timestamp_t *timestamp)
   {
     uint8_t *mhr = MHR(msg);
+
+    dbg("RadioControlImplP", "Received frame, DSN: %lu, type: 0x%lu\n", 
+        (uint32_t) mhr[MHR_INDEX_SEQNO], (uint32_t) mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK);
+
     if (((mhr[1] & FC2_FRAME_VERSION_MASK) > FC2_FRAME_VERSION_1)
         && (!call RadioPromiscuousMode.get()))
       return msg;
+
 #ifndef IEEE154_SECURITY_ENABLED
     if ((mhr[0] & FC1_SECURITY_ENABLED)
         && (!call RadioPromiscuousMode.get()))

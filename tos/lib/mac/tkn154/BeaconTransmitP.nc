@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.11 $
- * $Date: 2009-12-14 16:46:49 $
+ * $Revision: 1.12 $
+ * $Date: 2010-01-05 16:41:16 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -347,7 +347,7 @@ implementation
     isShortAddr = (shortAddress != 0xFFFE);
     m_beaconFrame.header->mhr[MHR_INDEX_FC1] = FC1_FRAMETYPE_BEACON;
     m_beaconFrame.header->mhr[MHR_INDEX_FC2] = isShortAddr ? FC2_SRC_MODE_SHORT : FC2_SRC_MODE_EXTENDED;
-    m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] = call MLME_GET.macBSN();
+    m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] = call MLME_GET.macBSN() + 1;
     offset = MHR_INDEX_ADDRESS;
     *((nxle_uint16_t*) &m_beaconFrame.header->mhr[offset]) = m_updatePANId;
     offset += sizeof(ieee154_macPANId_t);
@@ -562,7 +562,7 @@ implementation
 
   task void txDoneTask()
   {
-    call MLME_SET.macBSN(m_beaconFrame.header->mhr[MHR_INDEX_SEQNO]+1);
+    call MLME_SET.macBSN(m_beaconFrame.header->mhr[MHR_INDEX_SEQNO]);
     m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] += 1; // may be overwritten by the next higher layer
     call SetMacBeaconTxTime.set(m_lastBeaconTxTime); // start of slot0, ie. first preamble byte of beacon
     call BeaconPayloadUpdateTimer.startOneShotAt(m_lastBeaconTxTime, 
@@ -721,7 +721,7 @@ implementation
     } // end atomic (give BeaconSendAlarm.fired() the chance to execute)
 
     signal IEEE154TxBeaconPayload.aboutToTransmit();
-    m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] = call MLME_GET.macBSN();
+    m_beaconFrame.header->mhr[MHR_INDEX_SEQNO] = call MLME_GET.macBSN() + 1;
 
     atomic {
       // (4) try to update beacon payload 

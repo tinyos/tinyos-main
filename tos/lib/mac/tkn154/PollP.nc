@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2009-12-14 12:50:06 $
+ * $Revision: 1.5 $
+ * $Date: 2010-01-05 16:41:16 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -64,7 +64,7 @@ implementation
   };
   int m_numPending;
   uint8_t m_dataRequestCmdID = CMD_FRAME_DATA_REQUEST;
-  void buildDataRequestFrame( uint8_t destAddrMode, uint16_t destPANId,
+  void assembleDataRequestFrame( uint8_t destAddrMode, uint16_t destPANId,
       uint8_t* DstAddr, uint8_t srcAddrMode, ieee154_txframe_t *txFrame);
 
   command error_t Init.init()
@@ -105,7 +105,7 @@ implementation
       txFrame->handle = HANDLE_MLME_POLL_REQUEST;
       if (call MLME_GET.macShortAddress() >= 0xFFFE)
         srcAddrMode = 3;
-      buildDataRequestFrame(coordAddrMode, coordPANID, coordAddressLE, srcAddrMode, txFrame);
+      assembleDataRequestFrame(coordAddrMode, coordPANID, coordAddressLE, srcAddrMode, txFrame);
       if ((status = call PollTx.transmit(txFrame)) != IEEE154_SUCCESS) {
         call TxFramePool.put(txFrame);
         call TxControlPool.put(txControl);
@@ -131,29 +131,29 @@ implementation
       signal DataRequest.pollDone[client]();
       return IEEE154_SUCCESS;
     } else if ((txFrame = call TxFramePool.get()) != NULL) {
-      if ((txControl = call TxControlPool.get()) != NULL)
-        call TxFramePool.put(txFrame);
-      else {
+      if ((txControl = call TxControlPool.get()) != NULL) {
         txFrame->header = &txControl->header;
         txFrame->metadata = &txControl->metadata;
         txFrame->handle = client;
-        buildDataRequestFrame(CoordAddrMode, CoordPANId, 
+        assembleDataRequestFrame(CoordAddrMode, CoordPANId, 
             CoordAddressLE, srcAddrMode, txFrame);
         if ((status = call PollTx.transmit(txFrame)) != IEEE154_SUCCESS) {
           call TxControlPool.put(txControl);
           call TxFramePool.put(txFrame);
-          dbg_serial("PollP", "Overflow\n");
+          dbg_serial("PollP", "Tx Overflow\n");
         } else 
           m_numPending++;
-      }
+      } else {
+        call TxFramePool.put(txFrame);
+      } 
     }
+    dbg_serial("PollP", "Status %lu, numPending: %lu\n", (uint32_t) status, (uint32_t) m_numPending);
     if (status != IEEE154_SUCCESS)
       signal DataRequest.pollDone[client]();
-    dbg_serial("PollP", "Status %lu, numPending: %lu\n", (uint32_t) status, (uint32_t) m_numPending);
     return status;
   }
 
-  void buildDataRequestFrame(uint8_t destAddrMode, uint16_t destPANId,
+  void assembleDataRequestFrame(uint8_t destAddrMode, uint16_t destPANId,
       uint8_t* destAddrPtrLE, uint8_t srcAddrMode, ieee154_txframe_t *txFrame)
   {
     // destAddrPtrLE points to an address in little-endian format !
