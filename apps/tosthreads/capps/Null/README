@@ -1,14 +1,15 @@
 README for TOSTHREADS Null
 Author/Contact: tinyos-help@millennium.berkeley.edu
-Author: Kevin Klues <klueska@cs.stanford.edu>
+Author: Kevin Klues <klueska@cs.berkeley.edu>
 
 Description:
 
 Null is an empty skeleton application for testing the basic compilation and
-runtime of a c-based tosthreads application.  It is useful to test that the build
-environment is functional in its most minimal sense, i.e., you can correctly
+runtime of a c-based tosthreads application.  It is useful to test that the build environment is functional in its most minimal sense, i.e., you can correctly
 compile an application. It is also useful to test the minimum power consumption
 of a node when it has absolutely no interrupts or resources active.
+
+Successful running of this application is that it simply compiles and installs.  No LEDs should be flashed.
 
 Tools:
   None.
