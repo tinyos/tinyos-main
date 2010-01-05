@@ -34,14 +34,13 @@ section.
 
 Tools:
 
-The Java application displays readings it receives from motes running the
-MultihopOscilloscope demo via a serial forwarder. To run it, change to the
-TestCollection/java subdirectory and type:
+The Java application displays readings it receives from motes via a
+serial forwarder. To run it, change to the java subdirectory and type:
 
   make
   java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<baud_rate>
-  # e.g., java net.tinyps.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
-  # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:57600
+  # e.g., java net.tinyos.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
+  # or java net.tinyos.sf.SerialForwarder -comm serial@COM2:57600
   ./run
 
 NOTE::  The baud rate 57600 must be used telos based motes, as its configuration
