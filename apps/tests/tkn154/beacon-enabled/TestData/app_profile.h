@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-05-18 16:21:55 $
+ * $Revision: 1.2 $
+ * $Date: 2010-01-05 17:12:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -42,7 +42,7 @@ enum {
   COORDINATOR_ADDRESS = 0x4331,
   BEACON_ORDER = 5,
   SUPERFRAME_ORDER = 5,
+  TX_POWER = -20, // in dBm
 };
-//#define IEEE154_DEFAULT_TRANSMITPOWER_dBm -25
 
 #endif

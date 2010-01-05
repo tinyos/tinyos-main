@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-05-18 16:21:55 $
+ * $Revision: 1.2 $
+ * $Date: 2010-01-05 17:12:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -55,7 +55,7 @@ module TestDeviceReceiverC
   uint8_t m_coordAddressMode;
   ieee154_macPANId_t m_coordPANID;
   ieee154_PANDescriptor_t m_PANDescriptor;
-  bool m_isPANDescriptorValid;
+  bool m_wasScanSuccessful;
   void startApp();
 
   event void Boot.booted() {
@@ -82,6 +82,7 @@ module TestDeviceReceiverC
     // through the MLME_BEACON_NOTIFY interface, i.e.
     // we set the macAutoRequest attribute to FALSE
     call MLME_SET.macAutoRequest(FALSE);
+    m_wasScanSuccessful = FALSE;
     call MLME_SCAN.request  (
                            PASSIVE_SCAN,           // ScanType
                            channel,                // ScanChannels
@@ -99,21 +100,15 @@ module TestDeviceReceiverC
   {
     // received a beacon frame during SCAN
     ieee154_phyCurrentPage_t page = call MLME_GET.phyCurrentPage();
-    ieee154_macBSN_t beaconSequenceNumber = call BeaconFrame.getBSN(frame);
 
-    if (beaconSequenceNumber & 1)
-      call Leds.led2On();
-    else
-      call Leds.led2Off();   
-
-    if (!m_isPANDescriptorValid && call BeaconFrame.parsePANDescriptor(
+    if (!m_wasScanSuccessful && call BeaconFrame.parsePANDescriptor(
           frame, RADIO_CHANNEL, page, &m_PANDescriptor) == SUCCESS){
       // let's see if the beacon is from our coordinator...
       if (m_PANDescriptor.CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
           m_PANDescriptor.CoordPANId == PAN_ID &&
           m_PANDescriptor.CoordAddress.shortAddress == COORDINATOR_ADDRESS){
         // wait until SCAN is finished, then syncronize to beacons
-        m_isPANDescriptorValid = TRUE;
+        m_wasScanSuccessful = TRUE;
       }
     }
     return frame;
@@ -130,7 +125,7 @@ module TestDeviceReceiverC
                           ieee154_PANDescriptor_t* PANDescriptorList
                         )
   {
-    if (m_isPANDescriptorValid){
+    if (m_wasScanSuccessful){
       // set the macAutoRequest attribute to TRUE, so indirect
       // transmissions are automatically carried through
       call MLME_SET.macAutoRequest(TRUE);
@@ -158,7 +153,6 @@ module TestDeviceReceiverC
                           ieee154_security_t *security)
   {
     call Leds.led1Off();
-    startApp();
   }
 
   event message_t* MCPS_DATA.indication (message_t* frame)

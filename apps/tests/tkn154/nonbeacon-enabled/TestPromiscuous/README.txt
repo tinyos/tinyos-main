@@ -1,5 +1,5 @@
 README for TestPromiscuous
-Author/Contact: tinyos-help@millennium.berkeley.edu
+Author/Contact: Jan Hauer <hauer@tkn.tu-berlin.de>
 
 Description:
 
@@ -12,13 +12,12 @@ toggled whenever a frame is received.
 
 Criteria for a successful test:
 
-A successful test means that for every received frame the second LED is toggled
+A successful test means that for every received frame LED1 is toggled
 and the java application outputs some text. To see this effect you need a
-second node sending a packet. The TestPromiscuous application does not send
-packets, but you can, for example, use the
+second node sending a packet, for example, use the
 ../../beacon-enabled/TestStartSync/coordinator application to send periodic
-beacon packets. In this case you should see some new text and the second LED
-should toggle every half second.
+beacon packets. In this case LED1 should toggle every half second and
+printf java client should output some text on the frame content.
 
 
 Tools: The printf java client in $TOSDIR/../apps/tests/TestPrintf
@@ -39,5 +38,5 @@ Known bugs/limitations:
 
 - The timestamps for ACKs are incorrect
 
-$Id: README.txt,v 1.1 2009-10-29 17:42:56 janhauer Exp $
+$Id: README.txt,v 1.2 2010-01-05 17:12:56 janhauer Exp $
 

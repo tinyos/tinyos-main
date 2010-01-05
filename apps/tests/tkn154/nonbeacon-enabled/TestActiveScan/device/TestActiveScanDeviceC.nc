@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-06-10 09:38:41 $
+ * $Revision: 1.2 $
+ * $Date: 2010-01-05 17:12:56 $
  * @author: Jasper Buesch <buesch@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -105,8 +105,8 @@ module TestActiveScanDeviceC
       }
     }
     if(rightCoordFound == FALSE) {
-      call Leds.led0On();
-      call Led0Timer.startOneShot(62500U); 
+      // call Leds.led0On();
+      // call Led0Timer.startOneShot(62500U); 
     }
   }
 

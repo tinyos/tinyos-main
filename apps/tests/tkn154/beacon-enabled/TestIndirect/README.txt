@@ -1,5 +1,5 @@
 README for TestIndirect
-Author/Contact: tinyos-help@millennium.berkeley.edu
+Author/Contact: Jan Hauer <hauer@tkn.tu-berlin.de>
 
 Description:
 
@@ -14,8 +14,8 @@ DATA frame from the coordinator.
 
 Criteria for a successful test:
 
-Both nodes should simultaneously toggle (only) the second LED, about once every
-half second.
+Both nodes should toggle the LED1 in unison, about once every half second. 
+The coordinator should also toggle LED2 with the same frequency.
 
 
 Tools: NONE
@@ -39,5 +39,5 @@ Known bugs/limitations:
   62.500 Hz, +-40 ppm in the 2.4 GHz band); in this case the MAC timing 
   is not standard compliant
 
-$Id: README.txt,v 1.2 2009-10-29 17:42:55 janhauer Exp $
+$Id: README.txt,v 1.3 2010-01-05 17:12:56 janhauer Exp $
 

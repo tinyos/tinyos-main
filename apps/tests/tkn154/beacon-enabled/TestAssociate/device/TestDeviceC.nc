@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-05-18 16:21:55 $
+ * $Revision: 1.2 $
+ * $Date: 2010-01-05 17:12:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -56,7 +56,7 @@ module TestDeviceC
 
   ieee154_CapabilityInformation_t m_capabilityInformation;
   ieee154_PANDescriptor_t m_PANDescriptor;
-  bool m_isPANDescriptorValid;
+  bool m_wasScanSuccessful;
   void startApp();
 
   event void Boot.booted() {
@@ -81,16 +81,14 @@ module TestDeviceC
     ieee154_phyChannelsSupported_t channel;
     uint8_t scanDuration = BEACON_ORDER; 
 
-    m_isPANDescriptorValid = FALSE;
-
-    // scan only one channel
+    // scan only one channel (to save time)
     channel = ((uint32_t) 1) << RADIO_CHANNEL;
 
     // we want all received beacons to be signalled 
     // through the MLME_BEACON_NOTIFY interface, i.e.
     // we set the macAutoRequest attribute to FALSE
     call MLME_SET.macAutoRequest(FALSE);
-    m_isPANDescriptorValid = FALSE;
+    m_wasScanSuccessful = FALSE;
     call MLME_SCAN.request  (
                            PASSIVE_SCAN,           // ScanType
                            channel,                // ScanChannels
@@ -108,22 +106,20 @@ module TestDeviceC
   {
     // received a beacon frame
     ieee154_phyCurrentPage_t page = call MLME_GET.phyCurrentPage();
-    ieee154_macBSN_t beaconSequenceNumber = call BeaconFrame.getBSN(frame);
 
-    if (beaconSequenceNumber & 1)
-      call Leds.led2On();
-    else
-      call Leds.led2Off();   
-    if (!m_isPANDescriptorValid && call BeaconFrame.parsePANDescriptor(
-          frame, RADIO_CHANNEL, page, &m_PANDescriptor) == SUCCESS){
-      // let's see if the beacon is from the coordinator we expect...
-      if (m_PANDescriptor.CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
-          m_PANDescriptor.CoordPANId == PAN_ID &&
-          m_PANDescriptor.CoordAddress.shortAddress == COORDINATOR_ADDRESS){
-        // yes - wait until SCAN is finished, then syncronize to beacons
-        m_isPANDescriptorValid = TRUE;
+    if (!m_wasScanSuccessful) {
+      if (call BeaconFrame.parsePANDescriptor(
+            frame, RADIO_CHANNEL, page, &m_PANDescriptor) == SUCCESS){
+        // let's see if the beacon is from the coordinator we expect...
+        if (m_PANDescriptor.CoordAddrMode == ADDR_MODE_SHORT_ADDRESS &&
+            m_PANDescriptor.CoordPANId == PAN_ID &&
+            m_PANDescriptor.CoordAddress.shortAddress == COORDINATOR_ADDRESS){
+          // yes - wait until SCAN is finished, then syncronize to beacons
+          m_wasScanSuccessful = TRUE;
+        }
       }
     }
+
     return frame;
   }
 
@@ -138,7 +134,7 @@ module TestDeviceC
                           ieee154_PANDescriptor_t* PANDescriptorList
                         )
   {
-    if (m_isPANDescriptorValid){
+    if (m_wasScanSuccessful) {
       call MLME_SET.macPANId(m_PANDescriptor.CoordPANId);
       call MLME_SET.macCoordShortAddress(m_PANDescriptor.CoordAddress.shortAddress);
       call MLME_SYNC.request(m_PANDescriptor.LogicalChannel, m_PANDescriptor.ChannelPage, TRUE);
@@ -161,7 +157,7 @@ module TestDeviceC
                           ieee154_security_t *security
                         )
   {
-    if ( status == IEEE154_SUCCESS ){
+    if ( status == IEEE154_SUCCESS ) {
       // we are now associated - set a timer for disassociation 
       call Leds.led1On();
       call DisassociateTimer.startOneShot(312500U);

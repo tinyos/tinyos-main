@@ -1,5 +1,5 @@
 README for TestStartSync
-Author/Contact: tinyos-help@millennium.berkeley.edu
+Author/Contact: Jan Hauer <hauer@tkn.tu-berlin.de>
 
 Description:
 
@@ -11,7 +11,8 @@ a beacon it tries to synchronize to and track all future beacons.
 
 Criteria for a successful test:
 
-After a few seconds all nodes should have (only) their second LED turned on.
+After a few seconds all nodes should have the LED1 turned on and LED2
+toggling in unison every second.
 
 
 Tools: NONE
@@ -35,5 +36,5 @@ Known bugs/limitations:
   62.500 Hz, +-40 ppm in the 2.4 GHz band); in this case the MAC timing 
   is not standard compliant
 
-$Id: README.txt,v 1.2 2009-10-29 17:42:55 janhauer Exp $
+$Id: README.txt,v 1.3 2010-01-05 17:12:56 janhauer Exp $
 

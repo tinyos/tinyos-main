@@ -1,5 +1,5 @@
 README for TestActiveScan
-Author/Contact: tinyos-help@millennium.berkeley.edu
+Author/Contact: Jan Hauer <hauer@tkn.tu-berlin.de>
 
 Description:
 
@@ -11,10 +11,8 @@ the predefined channel and expects beacon frames in return.
 
 Criteria for a successful test:
 
-On the coordinator node (only) the second LED should toggle once every 2 
-seconds. On the device the second and third LED should toggle once every 2 
-seconds, but with a small offset of half a second. On the device the first
-LED may toggle, but this should happen very rarely.
+The coordinator should toggle LED1 once every 2 seconds. The device should
+toggle LED1 and LED2 every 2 seconds (not necessarily simultaneously).
 
 
 Tools: NONE
@@ -38,5 +36,5 @@ Known bugs/limitations:
   62.500 Hz, +-40 ppm in the 2.4 GHz band); in this case the MAC timing 
   is not standard compliant
 
-$Id: README.txt,v 1.2 2009-10-29 17:42:55 janhauer Exp $o
+$Id: README.txt,v 1.3 2010-01-05 17:12:56 janhauer Exp $o
 

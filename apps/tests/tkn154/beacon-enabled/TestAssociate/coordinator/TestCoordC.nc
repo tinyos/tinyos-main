@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-05-18 16:21:55 $
+ * $Revision: 1.2 $
+ * $Date: 2010-01-05 17:12:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -52,8 +52,7 @@ module TestCoordC
   }
 } implementation {
 
-  ieee154_address_t m_lastDevice;
-  uint16_t m_shortAddress;
+  uint16_t m_assignedShortAddress;
 
   event void Boot.booted() {
     call MLME_RESET.request(TRUE);
@@ -88,7 +87,7 @@ module TestCoordC
                           ieee154_security_t *security
                         )
   {
-    call MLME_ASSOCIATE.response(DeviceAddress, m_shortAddress++, IEEE154_ASSOCIATION_SUCCESSFUL, 0);
+    call MLME_ASSOCIATE.response(DeviceAddress, m_assignedShortAddress++, IEEE154_ASSOCIATION_SUCCESSFUL, 0);
   }
 
   event void MLME_DISASSOCIATE.indication (
@@ -114,7 +113,6 @@ module TestCoordC
     if (status == IEEE154_SUCCESS){
       // association was successful
       call Leds.led1On();
-      m_lastDevice.extendedAddress = DstAddr.extendedAddress;
     } else {
       call Leds.led1Off();
     }

@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-05-18 16:21:55 $
+ * $Revision: 1.2 $
+ * $Date: 2010-01-05 17:12:56 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -60,6 +60,7 @@ module TestCoordReceiverC
   {
     if (status != IEEE154_SUCCESS)
       return;
+    call MLME_SET.phyTransmitPower(TX_POWER);
     call MLME_SET.macShortAddress(COORDINATOR_ADDRESS);
     call MLME_SET.macAssociationPermit(FALSE);
     call MLME_START.request(
