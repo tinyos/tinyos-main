@@ -7,6 +7,9 @@ Install the application to two nodes with the following ID's:
   Node 0 (Receiver node): id = 0
   Node 1 (Transmitter node): id = 1
 
+Do this at compile time by adding the flag NODEID=<id>, thus:
+
+make <platform> NODEID=<id> ...
 
 This app sends a message from Transmitter node to 
 AM_BROADCAST_ADDR and waits 1000 ms between each 
@@ -46,4 +49,4 @@ Known bugs/limitations:
 None.
 
 
-$Id: README.txt,v 1.6 2008-07-26 02:32:44 klueska Exp $
+$Id: README.txt,v 1.7 2010-01-06 18:57:20 ayer1 Exp $
