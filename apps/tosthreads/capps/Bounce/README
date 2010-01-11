@@ -15,7 +15,7 @@ You can install Bounce on a mote via the following command:
   make <platform> cthreads install.0
   make <platform> cthreads install.1
   
-Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
 
 Three different threads run that each contain an infinite loop that first sends
 a message and then waits to receive a message before returning to the top of the

@@ -13,7 +13,7 @@ toggled is offset so that the three LEDS do not come on in unison.
 You can install ThreadStress on a mote via the following command:
   make <platform> cthreads install
   
-Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
 
 Successful running of this application will result in all three leds flashing at
 a rate determined by how long it takes to spawn a thread on a given platform. 

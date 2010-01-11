@@ -8,7 +8,7 @@ CFLAGS += -I$(TOSDIR)/lib/net/
 CFLAGS += -I$(TOSDIR)/lib/tosthreads/lib/net/ctp
 CFLAGS += -I$(TOSDIR)/lib/net/ctp  -I$(TOSDIR)/lib/net/4bitle
 
-ifneq ($(filter telosb tmote tinynode shimmer iris clean,$(MAKECMDGOALS)),) 
+ifneq ($(filter telosb tmote tinynode shimmer iris epic clean,$(MAKECMDGOALS)),) 
   include $(MAKERULES)
 else
 %:

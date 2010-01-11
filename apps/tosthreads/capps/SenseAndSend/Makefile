@@ -1,7 +1,7 @@
 TOSTHREAD_MAIN=SenseAndSend.c
 CFLAGS += -I$(TOSDIR)/lib/tosthreads/sensorboards/tmote_onboard
 
-ifneq ($(filter telosb tmote clean,$(MAKECMDGOALS)),) 
+ifneq ($(filter telosb tmote epic clean,$(MAKECMDGOALS)),) 
   include $(MAKERULES)
 else
 %:

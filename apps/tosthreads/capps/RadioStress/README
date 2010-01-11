@@ -12,7 +12,7 @@ You can install RadioStress on a mote via the following command:
   make <platform> cthreads install.0
   make <platform> cthreads install.1
   
-Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
 
 The application burned with NODE_ID 0 will be programmed as a Receiver and will
 wait for messages from the sender programmed with NODE_ID 1.  In the case of the

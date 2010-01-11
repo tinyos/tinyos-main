@@ -18,7 +18,7 @@ platform independent way.
 To run this application install it on a mote via the command:
   make <platform> cthreads install
   
-Valid platforms are currently: tmote, telosb, iris, mica2, and micaz
+Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
 
 Readings are taken from the dummy sensor and logged to flash as one record in an
 infinite loop. Records are then read out of flash and and sent out over the
