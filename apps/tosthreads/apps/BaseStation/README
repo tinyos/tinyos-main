@@ -13,7 +13,7 @@ forwarding, LED1 is toggled.  If there are any errors, LED2 is toggled.
 To run this application install it on a mote via the command:
   make <platform> threads install.45
   
-Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
 
 Installing with NODE_ID 45 (i.e. AM_ADDRESS 45) is just to verify that the
 application forwards packets with an arbitrarily chosen id, which it should.
