@@ -14,7 +14,7 @@ application.
 You can install TestCollection on a mote via the following command:
   make <platform> threads install
 
-Valid platforms are currently: tmote, telosb, mica2, micaz and iris
+Valid platforms are currently: tmote, telosb, mica2, micaz, iris, and epic
 
 At least two motes must be used by this application, with one of them installed
 as a base station.  Base station motes can be created by installing them with

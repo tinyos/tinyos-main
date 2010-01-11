@@ -9,7 +9,7 @@ Blink_DynamicThreads is the dynamic-thread version of Blink.
 You can install Blink_DynamicThread on a mote via the following command:
   make <platform> threads install
   
-Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
 
 Upon a successful burn, you should see LED0 flashing with a period of every
 200ms, and LED1 and LED2 flashing in unison with a period of 1000ms.

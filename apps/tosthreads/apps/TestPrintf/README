@@ -11,7 +11,7 @@ prints.
 You can install TestPrintf on a mote via the following command:
   make <platform> threads install
   
-Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
 
 Once burned on a mote, the java based PrintfClient must be ran to verify
 proper operation of the application. For example, to connect PrintfClient

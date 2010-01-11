@@ -10,7 +10,7 @@ the software based SineSensor usable by any platform for demonstration purposes.
 You can install TestSineSensor on a mote via the following command:
   make <platform> threads install
   
-Valid platforms are currently: tmote, telosb, iris, mica2, and micaz 
+Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
 
 This application simply takes sensor readings in an infinite loop from the
 SineSensor and forwards them over the serial interface.  Upon successful
