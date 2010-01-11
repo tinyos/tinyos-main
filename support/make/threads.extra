@@ -77,6 +77,9 @@ THREADS_EYES_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/eyesIFX
 #Shimmer specific include directories
 THREADS_SHIMMER_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/shimmer
 
+#Epic specific include directories
+THREADS_EPIC_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/epic
+
 #Add CFLAGS for supported platforms
 ifneq ($(filter telos telosa telosb tmote,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
@@ -88,6 +91,11 @@ ifneq ($(filter telos telosa telosb tmote,$(MAKECMDGOALS)),)
   ifneq ($(filter telosb,$(MAKECMDGOALS)),)
     CFLAGS += -DPLATFORM_TELOSB
   endif
+endif
+ifneq ($(filter epic,$(MAKECMDGOALS)),)
+  CFLAGS += $(THREADS_MSP430_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_CC2420_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_EPIC_INCLUDE_DIRS)
 endif
 ifneq ($(filter mica2,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_ATM128_INCLUDE_DIRS)
