@@ -53,7 +53,7 @@ configuration TestBasicsbSensorsAppC {
 }
 implementation {
   components MainC, TestBasicsbSensorsC;
-  components new ThreadC(100) as MainThread;
+  components new ThreadC(125) as MainThread;
   
   components new BlockingPhotoC();
   components new BlockingTempC();
