@@ -139,7 +139,7 @@ implementation {
     TOSH_CLR_SD_DO_PIN();
     TOSH_CLR_SD_CLK_PIN();
 
-    TOSH_uwait(20000);  
+    TOSH_uwait(60000);  
 
     TOSH_SET_SD_CS_N_PIN();             
     TOSH_CLR_SW_SD_PWR_N_PIN();    
