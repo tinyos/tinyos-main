@@ -1,4 +1,4 @@
-// $Id: ActiveMessageC.nc,v 1.5 2008-06-11 00:46:26 razvanm Exp $
+// $Id: ActiveMessageC.nc,v 1.6 2010-01-13 18:43:02 sallai Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.  
@@ -31,7 +31,7 @@
 /*
  *
  * Authors:		Philip Levis
- * Date last modified:  $Id: ActiveMessageC.nc,v 1.5 2008-06-11 00:46:26 razvanm Exp $
+ * Date last modified:  $Id: ActiveMessageC.nc,v 1.6 2010-01-13 18:43:02 sallai Exp $
  *
  */
 
@@ -54,6 +54,8 @@ configuration ActiveMessageC {
     interface Packet;
     interface AMPacket;
     interface PacketAcknowledgements;
+    interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli; 
+    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz; 
   }
 }
 implementation {
@@ -67,4 +69,6 @@ implementation {
   Packet       = AM;
   AMPacket     = AM;
   PacketAcknowledgements = AM;
+  PacketTimeStampMilli   = AM;
+  PacketTimeStamp32khz   = AM;
 }
