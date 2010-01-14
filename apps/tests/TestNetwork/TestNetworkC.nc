@@ -7,7 +7,7 @@
  * See TEP118: Dissemination and TEP 119: Collection for details.
  * 
  * @author Philip Levis
- * @version $Revision: 1.10 $ $Date: 2009-09-16 00:51:50 $
+ * @version $Revision: 1.11 $ $Date: 2010-01-14 21:53:58 $
  */
 
 #include <Timer.h>
@@ -114,7 +114,6 @@ implementation {
  
   event void Timer.fired() {
     uint32_t nextInt;
-    call Leds.led0Toggle();
     dbg("TestNetworkC", "TestNetworkC: Timer fired.\n");
     nextInt = call Random.rand32() % SEND_INTERVAL;
     nextInt += SEND_INTERVAL >> 1;
@@ -125,7 +124,7 @@ implementation {
 
   event void Send.sendDone(message_t* m, error_t err) {
     if (err != SUCCESS) {
-	//      call Leds.led0On();
+      call Leds.led0On();
     }
     sendBusy = FALSE;
     dbg("TestNetworkC", "Send completed.\n");
@@ -137,13 +136,26 @@ implementation {
     call Timer.startPeriodic(*newVal);
   }
 
+
+  uint8_t prevSeq = 0;
+  uint8_t firstMsg = 0;
+
   event message_t* 
   Receive.receive(message_t* msg, void* payload, uint8_t len) {
     dbg("TestNetworkC", "Received packet at %s from node %hhu.\n", sim_time_string(), call CollectionPacket.getOrigin(msg));
-    call Leds.led1Toggle();    
-    if (!call Pool.size() <= (TEST_NETWORK_QUEUE_SIZE < 4)? 1:3)  {
-      //      call CtpCongestion.setClientCongested(TRUE);
+    call Leds.led1Toggle();
+
+    if (call CollectionPacket.getOrigin(msg) == 1) {
+      if (firstMsg == 1) {
+	if (call CollectionPacket.getSequenceNumber(msg) - prevSeq > 1) {
+	  call Leds.led2On();
+	}
+      } else {
+	firstMsg = 1;
+      }
+      prevSeq = call CollectionPacket.getSequenceNumber(msg);
     }
+
     if (!call Pool.empty() && call Queue.size() < call Queue.maxSize()) {
       message_t* tmp = call Pool.get();
       call Queue.enqueue(msg);
