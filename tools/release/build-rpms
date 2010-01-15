@@ -1,48 +1,24 @@
 #!/bin/bash
-## NOTE: This is for MY rpm setup. Don't expect it to work for you...
 
-# For linux, change to /usr/src/redhat
-# For my cygwin: /cygdrive/c/rpmsrc
-if [ -z $RPMS ]; then #test to see if RPMS is overridden by the environment
-		RPMS=/usr/src/rpm
-fi		
-TINYOS_VERSION=2.1.0
-TINYOS_TOOLS_VERSION=1.3.0
-TINYOS_DEPUTY_VERREL=1.1-1
+RPMS="`rpm --eval=\"%_topdir\"`"
+
+TOS_NAME="tinyos"
+TOS_VERSION=2.1.1
+
+TOS_TOOLS_NAME="tinyos-tools"
+TOS_TOOLS_VERSION=1.3.1
+
+TOS_DEPUTY_NAME="tinyos-deputy"
+TOS_DEPUTY_VERSION=1.1-1
+
 echo "*** Building tarballs"
-#rm ../../../*.tar.gz
-sh tinyos.files
-sh tinyos-tools.files
+sh tinyos.files $TOS_NAME $TOS_VERSION $RPMS/SOURCES/$TOS_NAME-$TOS_VERSION.tar.gz
+sh tinyos-tools.files $TOS_TOOLS_NAME $TOS_TOOLS_VERSION $RPMS/SOURCES/$TOS_TOOLS_NAME-$TOS_TOOLS_VERSION.tar.gz
 sh deputy.files
-#sh contrib/contrib.files
-#sh vm/vm.files
-#sh task-tinydb/task-tinydb.files
-
-HERE=$PWD
-
-echo "*** Removing old srcs and rpms"
-cd $RPMS
-#rm -f $RPMS/SOURCES/*.tar.gz
-#rm -f $RPMS/RPMS/noarch/*.rpm
-#rm -f $RPMS/RPMS/i386/*.rpm
-
-echo "*** Installing new tarballs"
-cd $HERE/../../..
-cp tinyos-$TINYOS_VERSION.tar.gz $RPMS/SOURCES
-cp tinyos-tools-$TINYOS_TOOLS_VERSION.tar.gz $RPMS/SOURCES
-cp tinyos-deputy-$TINYOS_DEPUTY_VERREL.tar.gz $RPMS/SOURCES
-cp tinyos-deputy-$TINYOS_DEPUTY_VERREL.patch $RPMS/SOURCES
-#cp tinyos-vm-$VM_VERSION.tar.gz $RPMS/SOURCES
-#cp tinyos-contrib-$CONTRIB_VERSION.tar.gz $RPMS/SOURCES
-#cp task-tinydb-$TINYDB_VERSION.tar.gz $RPMS/SOURCES
 
 echo "*** Creating rpms"
-cd $RPMS
-rpmbuild -bb $HERE/tinyos.spec
-rpmbuild -bb $HERE/tinyos-tools.spec
-rpmbuild -bb $HERE/deputy.spec
-#rpmbuild -bb $HERE/task-tinydb/task-tinydb.spec
-#rpmbuild -bb $HERE/contrib/contrib.spec
-#rpmbuild -bb $HERE/vm/vm.spec
+rpmbuild -bb tinyos.spec
+rpmbuild -bb tinyos-tools.spec
+rpmbuild -bb deputy.spec
 
 

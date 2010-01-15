@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 $name = $ARGV[0];
+$file_path = $ARGV[1];
 
 @files = split /\n/, `find .`;
 @result = @files;
@@ -20,7 +21,7 @@ mkdir $name;
 open TAR, "|tar cf - -T - --no-recursion | tar xf - -C $name";
 print TAR join("\n", @result);
 close TAR;
-#print join("\n", @result);
-system("tar cf - $name");
+system("tar cfz $file_path $name");
+system("rm -rf $name");
 
 

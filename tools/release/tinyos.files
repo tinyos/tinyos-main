@@ -1,9 +1,9 @@
-NAME=tinyos
-VERSION=2.1.0
+NAME="$1"
+VERSION="$2"
+OUTPUT_FILE="$3"
 
-cd ../..
-rm -rf $NAME-$VERSION
-tools/release/extractor $NAME-$VERSION <<'EOF' | gzip >../$NAME-$VERSION.tar.gz
+pushd ../../
+./tools/release/extractor $NAME-$VERSION $OUTPUT_FILE <<'EOF' 
 !^./apps/tests/(eyesIFX|mica2|msp430|rf230|mts300|telosb)
 !^./apps/tests/(RadioStress|TestAlarm|TestAM|TestAMOnOff|TestAMService|TestBroadcast|TestCollection|TestLocalTime|TestMultihopLqi|TestOscilloscopeLQI|TestPowerManager|TestPowerup|TestPrintf|TestRadioPM|TestScheduler|TestSerialBandwidth|TestSharedResource|TestSimTimers|TestSleep|TestTimerSync|TestTreeRouting|TestTrickleTimer|TestTymo)
 !^/apps/(BlinkAlarm|BlinkMSP430|BlinkTask|BlinkToRadio|Test|TestADC|TestArbiter|TestCC2420|TestRadio|TestSPI|TestScheduler|TestSchedulerTemp|TestSerial)
@@ -45,4 +45,4 @@ tools/release/extractor $NAME-$VERSION <<'EOF' | gzip >../$NAME-$VERSION.tar.gz
 ./tests/TestSerial/TestSerial.class
 ./RadioCountToLeds/RadioCountMsg.class
 EOF
-rm -rf $NAME-$VERSION
+popd
