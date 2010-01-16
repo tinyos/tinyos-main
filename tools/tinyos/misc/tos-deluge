@@ -186,7 +186,7 @@ def read(imgNum, offset, length):
 
 def erase(imgNum):
     # Note: the normal erase doesn't work properly on AT45DB. A
-    # workaround is to do the normal erase (to make happy STM45P)
+    # workaround is to do the normal erase (to make happy STM25P)
     # and then overwrite the metadata (to make happy AT45DB).
 
     sreqpkt = FMReqPacket((FM_CMD_ERASE, imgNum, 0, 0, []))
