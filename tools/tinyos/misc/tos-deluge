@@ -186,12 +186,15 @@ def read(imgNum, offset, length):
 
 def erase(imgNum):
     # Note: the normal erase doesn't work properly on AT45DB. A
-    # workaroud is to overwrite the metadata of the Deluge image.
-    #
-    #sreqpkt = FMReqPacket((FM_CMD_ERASE, imgNum, 0, 0, []))
-    #success = am.write(sreqpkt, FM_AMID)
-    #return handleResponse(success, "ERROR: Unable to erase the flash volume")
+    # workaround is to do the normal erase (to make happy STM45P)
+    # and then overwrite the metadata (to make happy AT45DB).
 
+    sreqpkt = FMReqPacket((FM_CMD_ERASE, imgNum, 0, 0, []))
+    success = am.write(sreqpkt, FM_AMID)
+    result = handleResponse(success, "ERROR: Unable to erase the flash volume")
+    if result: return True;
+
+    print 'Attempt the workaround for AT45DB...'
     sreqpkt = FMReqPacket((FM_CMD_WRITE, imgNum, 0, 0, []))
     sreqpkt.data = [0xFF] * DELUGE_IDENT_SIZE
     sreqpkt.length = DELUGE_IDENT_SIZE

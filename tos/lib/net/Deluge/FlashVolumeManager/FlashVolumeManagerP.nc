@@ -200,7 +200,11 @@ implementation
 	switch (request->cmd) {
         case CMD_ERASE:    // === Erases a volume ===
           state = S_ERASE;
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_EPIC)
+          error = FAIL;
+#else
           error = call BlockWrite.erase[imgNum]();
+#endif
           break;
         case CMD_WRITE:    // === Writes to a volume ===
           state = S_WRITE;
