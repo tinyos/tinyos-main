@@ -620,8 +620,10 @@ void inet_pton6(char *addr, struct in6_addr *dest) {
       cur = 0;
     }
     p++;
-    if (*p == '\0')
+    if (*p == '\0') {
+      dest->s6_addr16[block++] = hton16(cur);
       return;
+    }
     if (*(p - 1) == ':' && *p == ':') {
       break;
     }
