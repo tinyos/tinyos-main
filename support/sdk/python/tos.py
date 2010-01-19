@@ -38,7 +38,7 @@ except ImportError, e:
     print "Please install PySerial first."
     sys.exit(1)
 
-__version__ = "$Id: tos.py,v 1.10 2009-11-02 21:28:49 razvanm Exp $"
+__version__ = "$Id: tos.py,v 1.11 2010-01-19 00:45:53 razvanm Exp $"
 
 __all__ = ['Serial', 'AM',
            'Packet', 'RawPacket',
@@ -448,6 +448,8 @@ class AM(SimpleAM):
         r = super(AM, self).write(packet, amId, timeout, blocking)
         while not r:
             r = super(AM, self).write(packet, amId, timeout, blocking, inc=0)
+            if timeout and not r:
+               raise Timeout
         return True
 
 

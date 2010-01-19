@@ -416,7 +416,7 @@ if len(sys.argv) >= 3:
 
     try:
         print "Checking if node is a Deluge T2 base station ..."
-        ident(timeout=5)
+        ident(timeout=1)
     except tos.Timeout:
         print "ERROR: Timeout. Is the node a Deluge T2 base station?"
         sys.exit(-1)
