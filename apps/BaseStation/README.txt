@@ -48,7 +48,7 @@ Other combinations can be defined to meet your application's needs:
 
 Tools:
 
-tools/java/net/tinyos/sf/SerialForwarder.  
+support/sdk/java/net/tinyos/sf/SerialForwarder  
 
 See the TinyOS Tutorial on Mote-PC serial communication and
 SerialForwarder on docs.tinyos.net for more details.
