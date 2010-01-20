@@ -34,7 +34,7 @@
  * CC2420 radio connected to a TI MSP430 processor.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2009-10-21 18:13:22 $
+ * @version $Revision: 1.2 $ $Date: 2010-01-20 17:55:39 $
  */
 /**
  * Ported to the SHIMMER platform. 
@@ -46,6 +46,8 @@
 configuration HplCC2420InterruptsC {
 
   provides interface GpioCapture as CaptureSFD;
+  provides interface GpioInterrupt as InterruptSFD;
+
   provides interface GpioInterrupt as InterruptCCA;
   provides interface GpioInterrupt as InterruptFIFOP;
 
@@ -53,20 +55,26 @@ configuration HplCC2420InterruptsC {
 
 implementation {
 
-  components HplMsp430GeneralIOC as GeneralIOC;
-  components Msp430TimerC;
-  components new GpioCaptureC() as CaptureSFDC;
-  CaptureSFDC.Msp430TimerControl -> Msp430TimerC.ControlA1;
-  CaptureSFDC.Msp430Capture -> Msp430TimerC.CaptureA1;
-  CaptureSFDC.GeneralIO -> GeneralIOC.Port10;
-
   components HplMsp430InterruptC;
   components new Msp430InterruptC() as InterruptCCAC;
   components new Msp430InterruptC() as InterruptFIFOPC;
+  components new Msp430InterruptC() as InterruptSFDC;
+
   InterruptCCAC.HplInterrupt -> HplMsp430InterruptC.Port27;
   InterruptFIFOPC.HplInterrupt -> HplMsp430InterruptC.Port12;
+  InterruptSFDC.HplInterrupt -> HplMsp430InterruptC.Port10;
 
-  CaptureSFD = CaptureSFDC.Capture;
+  components HplCC2420InterruptsP;
+  components LocalTimeMilliC;
+  components new GpioCaptureC() as CaptureSFDC;
+  components HplCC2420PinsC;
+
+  CaptureSFD = HplCC2420InterruptsP.CaptureSFD;
+
+  HplCC2420InterruptsP.InterruptSFD ->  InterruptSFDC.Interrupt;
+  HplCC2420InterruptsP.LocalTime     -> LocalTimeMilliC;
+
   InterruptCCA = InterruptCCAC.Interrupt;
   InterruptFIFOP = InterruptFIFOPC.Interrupt;
+  InterruptSFD = InterruptSFDC.Interrupt;
 }
