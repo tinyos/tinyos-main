@@ -1,4 +1,4 @@
-These release notes are as of: $Date: 2009-12-29 00:42:36 $
+These release notes are as of: $Date: 2010-01-20 20:00:48 $
 
 Current:
   Added support for automatic default LPL interval
@@ -13,10 +13,12 @@ Current:
   Improved TOSSIM PRR curve to prevent very low SNR packets
   Improved Queue performance by changing % to inequality test
   Improved TOSThreads tutorials and documentation
+  Improved python sdk
   Refactored AM layer to better support 6lowpan
   Fixed TOSSIM bug where nodes could receive while transmitting
   Fixed TOSSIM ack bug for nodes that change their AM id at runtime
   Fixed Trickle bugs that could cause timers to fire slightly off 
+  Fixed Pool bug that did not allow large (> 127 element) pools
 
 2.1:
   Added support for iris platform
