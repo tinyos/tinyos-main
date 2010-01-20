@@ -34,13 +34,17 @@
  * CC2420 radio connected to a TI MSP430 processor.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.2 $ $Date: 2010-01-20 17:55:39 $
+ * @version $Revision: 1.3 $ $Date: 2010-01-20 18:17:32 $
  */
 /**
  * Ported to the SHIMMER platform. 
  *
  * @author Konrad Lorincz
  * @date May 14, 2008
+ * re-written to use interrupt-driven sfd capture; 
+ * shimmer2 does not have sfd wired to a timer pin
+ * @author Steve Ayer
+ * @date January, 2010
  */
 
 configuration HplCC2420InterruptsC {
