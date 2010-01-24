@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2007-09-13 23:10:17 $
+ * $Revision: 1.8 $
+ * $Date: 2010-01-24 23:01:32 $
  * ========================================================================
  */
 
@@ -48,7 +48,6 @@
 
 module PacketSerializerP {
   provides {
-    interface Init;
     interface PhySend;
     interface PhyReceive;
     interface Packet;
@@ -58,16 +57,28 @@ module PacketSerializerP {
     interface RadioByteComm;
     interface PhyPacketTx;
     interface PhyPacketRx;
+#ifdef PACKETSERIALIZER_DEBUG
+    interface SerialDebug;
+#endif
   }
 }
 implementation {
+    
+#ifdef PACKETSERIALIZER_DEBUG
+    void sdDebug(uint16_t p) {
+        call SerialDebug.putPlace(p);
+    }
+#else
+    void sdDebug(uint16_t p) {};
+#endif
+
   /* Module Global Variables */
 
-  message_t *txBufPtr;  // pointer to tx buffer
-  message_t *rxBufPtr;  // pointer to rx buffer
-  message_t rxMsg;      // rx message buffer
-  uint16_t crc;         // CRC value of either the current incoming or outgoing packet
-  uint8_t byteCnt;      // index into current datapacket
+    message_t rxMsg;      // rx message buffer
+  message_t *rxBufPtr = &rxMsg;  // pointer to rx buffer
+  message_t *txBufPtr = NULL;  // pointer to tx buffer
+  uint16_t crc = 0;         // CRC value of either the current incoming or outgoing packet
+  uint8_t byteCnt = 0;      // index into current datapacket
       
   /* Local Function Declarations */
   void TransmitNextByte();
@@ -77,17 +88,6 @@ implementation {
       SFD_OFFSET = sizeof(message_header_t) - sizeof(message_radio_header_t) + 2
   } pserializer_constants_t;
   
-  /* Radio Init  */
-  command error_t Init.init(){
-    atomic {
-      crc = 0;
-      txBufPtr = NULL;
-      rxBufPtr = &rxMsg;
-      byteCnt = 0;
-    }
-    return SUCCESS;
-  }
-
   /*- Radio Send */
   async command error_t PhySend.send(message_t* msg, uint8_t len) {
     message_radio_header_t* header = getHeader(msg);
@@ -116,22 +116,22 @@ implementation {
 
   void TransmitNextByte() {
     message_radio_header_t* header = getHeader((message_t*) txBufPtr);
-    if (byteCnt < header->length + sizeof(message_header_t) ) {  // send (data + header), compute crc
+    if (byteCnt < header->length + sizeof(message_radio_header_t) ) {  // send (data + header), compute crc
         if(byteCnt == SFD_OFFSET) {
             signal RadioTimeStamping.transmittedSFD(0, (message_t*)txBufPtr);
         }
         crc = crcByte(crc, ((uint8_t *)(txBufPtr))[byteCnt]);
         call RadioByteComm.txByte(((uint8_t *)(txBufPtr))[byteCnt++]);
     }
-    else if (byteCnt == (header->length + sizeof(message_header_t))) {
+    else if (byteCnt == (header->length + sizeof(message_radio_header_t))) {
       ++byteCnt;
       call RadioByteComm.txByte((uint8_t)crc);
     }
-    else if  (byteCnt == (header->length + sizeof(message_header_t)+1)) {
+    else if  (byteCnt == (header->length + sizeof(message_radio_header_t)+1)) {
       ++byteCnt;
       call RadioByteComm.txByte((uint8_t)(crc >> 8));
     }
-    else { /* (byteCnt > (header->length + sizeof(message_header_t)+1)) */
+    else { /* (byteCnt > (header->length + sizeof(message_radio_header_t)+1)) */
         call PhyPacketTx.sendFooter();
     }
   }
@@ -158,7 +158,7 @@ implementation {
     message_radio_header_t* header = getHeader((message_t*)(rxBufPtr));
     message_radio_footer_t* footer = getFooter((message_t*)rxBufPtr);
     // we care about wrong crc in this layer
-    if (footer->crc != 1) error = FAIL;
+    if(!footer->crc) error = FAIL;
     rxBufPtr = signal PhyReceive.receiveDone((message_t*)rxBufPtr, ((message_t*)rxBufPtr)->data, header->length, error);
   }
 
@@ -176,11 +176,13 @@ implementation {
         footer->crc = 0;
         call PhyPacketRx.recvFooter();
       }
-    } else if (byteCnt == (getHeader(rxBufPtr)->length + sizeof(message_radio_header_t))) {
-      crc = crcByte(crc, data);
+    }
+    else if (byteCnt == (getHeader(rxBufPtr)->length + sizeof(message_radio_header_t))) {
+        crc = crcByte(crc, data);
       byteCnt = offsetof(message_t, footer) + offsetof(message_radio_footer_t, crc);
-    } else if (byteCnt == (offsetof(message_t, footer) + sizeof(message_radio_footer_t))) {
-      footer->crc = (footer->crc == crc);
+    }
+    else if (byteCnt == (offsetof(message_t, footer) + sizeof(message_radio_footer_t))) {
+        footer->crc = (footer->crc == crc);
       call PhyPacketRx.recvFooter();
     }
   }
