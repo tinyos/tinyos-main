@@ -2,14 +2,16 @@
 #ifndef __DIP_H__
 #define __DIP_H__
 
-#define DIP_TAU_LOW (1024L)
-#define DIP_TAU_HIGH (65535L)
 
 #define UQ_DIP unique("DIP")
 #define UQCOUNT_DIP uniqueCount("DIP")
 
-#define DIP_UNKNOWN_VERSION 0xFFFFFFFF
-#define DIP_UNKNOWN_INDEX 0xFFFF
+enum {
+  DIP_TAU_LOW = 1024L,
+  DIP_TAU_HIGH = 65535L,
+  DIP_UNKNOWN_VERSION = 0xFFFFFFFF,
+  DIP_UNKNOWN_INDEX = 0xFFFF
+};
 
 typedef enum {
   ID_DIP_INVALID = 0x0,
@@ -71,7 +73,9 @@ typedef nx_struct dip_data {
   nx_uint8_t data[16];
 } dip_data_t;
 
-#define DIP_SUMMARY_VALUES_PER_PACKET 2
-#define DIP_VECTOR_VALUES_PER_PACKET 2
+enum {
+  DIP_SUMMARY_VALUES_PER_PACKET = 2,
+  DIP_VECTOR_VALUES_PER_PACKET = 2
+};
 
 #endif
