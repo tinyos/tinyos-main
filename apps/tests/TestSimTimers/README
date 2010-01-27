@@ -23,10 +23,14 @@ DEBUG (0): Timer A is good @ 0:10:1.837925167.
 DEBUG (0): Timer A is good @ 0:10:2.837925167.
 DEBUG (0): Timer A is good @ 0:10:3.837925167.
 
-If there is a timer bug, then the output will read
+If a timer is off, then the output will read
 
 DEBUG (0): Timer A is off. Should have fired in X, fired in Y @ Z.
 
+Note that if a timer is off by 1, the timer is still operating
+correctly. The way the atm128 counter registers work mean that you
+can't schedule very short timers, so sometimes the code needs to
+make it one tick longer.
 
 Tools:
 
