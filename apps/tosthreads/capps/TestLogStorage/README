@@ -4,21 +4,20 @@ Author: Kevin Klues <klueska@cs.stanford.edu>
 
 Description:
 
-TestLogStorage is a threaded implementation of an application that takes a dummy
-sensor readings of a counter, logs it flash, and then sends it out over the
-serial port at some later time. In the current implementation, each sensor reading is
-taken once every 3000ms, and records containing a set of readings from each
-iteration are batched out over the radio every 10000ms.  This application is
-very similar to the SenseStoreAndForward application contained in this same
-directory, except that it is written using a dummy sensor value instead of
-sensors specific to the tmote onboard suite. In this way, the LogStorage
-functionality can be tested in conjunction with the sending facility in a
-platform independent way.
+TestLogStorage is a threaded application that takes dummy sensor readings of a
+counter, logs them to flash, and then sends out over the serial port at some
+later time. In the current implementation, each sensor reading is taken once
+every 3000ms, and records containing a set of readings from each iteration are
+batched out over the radio every 10000ms.  This application is very similar to
+the SenseStoreAndForward application contained in this same directory, except
+that it uses a dummy sensor instead of sensors specific to the tmote onboard
+suite.  In this way, the LogStorage functionality can be tested in conjunction
+with the sending facility in a platform independent way.
 
 To run this application install it on a mote via the command:
   make <platform> cthreads install
   
-Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
+Valid platforms are currently:  tmote, telosb, iris, mica2, micaz, and epic
 
 Readings are taken from the dummy sensor and logged to flash as one record in an
 infinite loop. Records are then read out of flash and and sent out over the
@@ -35,14 +34,19 @@ to indicate completion.  This process continues in an infinite loop forever.
 
 Since the TestLogStorage mote writes its records out to the serial
 port, you can test that the application is working properly by reading these
-packets (e.g., through seriallisten) and checking that they have reasonable
-values, counting up from 0. E.g.:
+packets (e.g., through seriallisten):
 
-00 ff ff 00 00 06 00 25 00 00 00 9f 00 9f 
-00 ff ff 00 00 06 00 25 00 00 00 a0 00 a0 
-00 ff ff 00 00 06 00 25 00 00 00 a1 00 a1 
-00 ff ff 00 00 06 00 25 00 00 00 a2 00 a2 
-00 ff ff 00 00 06 00 25 00 00 00 a3 00 a3 
+  java net.tinyos.tools.Listen -comm serial@/dev/ttyUSBXXX:<baud_rate>
+
+Once this java application is running, you should see output containing
+the sensor readings being streamed to your terminal.  Check that the
+output has reasonable values, counting up from 0. E.g.:
+
+  00 ff ff 00 00 06 00 25 00 00 00 9f 00 9f 
+  00 ff ff 00 00 06 00 25 00 00 00 a0 00 a0 
+  00 ff ff 00 00 06 00 25 00 00 00 a1 00 a1 
+  00 ff ff 00 00 06 00 25 00 00 00 a2 00 a2 
+  00 ff ff 00 00 06 00 25 00 00 00 a3 00 a3 
 
 NOTE:  The baud rate 57600 must be used telos based motes, as its configuration
 has been changed to work with this baud rate when compiled for tosthreads. I.e.
