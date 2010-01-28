@@ -1,4 +1,4 @@
-//$Id: Msp430Timer32khzMapC.nc,v 1.1 2009-09-04 18:27:46 ayer1 Exp $
+//$Id: Msp430Timer32khzMapC.nc,v 1.2 2010-01-28 15:15:15 ayer1 Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -31,7 +31,7 @@
  * available for allocation on that platform.
  *
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
- * @version $Revision: 1.1 $ $Date: 2009-09-04 18:27:46 $
+ * @version $Revision: 1.2 $ $Date: 2010-01-28 15:15:15 $
  */
 
 configuration Msp430Timer32khzMapC
@@ -48,28 +48,28 @@ implementation
   Msp430TimerControl[0] = Msp430TimerC.ControlB0;
   Msp430Compare[0] = Msp430TimerC.CompareB0;
 
-  // Timer pin B1 is used by the CC2420 radio's SFD pin
-  // this is the only difference between the default 32khz map
-  // and the map on telos
-
   Msp430Timer[1] = Msp430TimerC.TimerB;
-  Msp430TimerControl[1] = Msp430TimerC.ControlB2;
-  Msp430Compare[1] = Msp430TimerC.CompareB2;
+  Msp430TimerControl[1] = Msp430TimerC.ControlB1;
+  Msp430Compare[1] = Msp430TimerC.CompareB1;
 
   Msp430Timer[2] = Msp430TimerC.TimerB;
-  Msp430TimerControl[2] = Msp430TimerC.ControlB3;
-  Msp430Compare[2] = Msp430TimerC.CompareB3;
+  Msp430TimerControl[2] = Msp430TimerC.ControlB2;
+  Msp430Compare[2] = Msp430TimerC.CompareB2;
 
   Msp430Timer[3] = Msp430TimerC.TimerB;
-  Msp430TimerControl[3] = Msp430TimerC.ControlB4;
-  Msp430Compare[3] = Msp430TimerC.CompareB4;
+  Msp430TimerControl[3] = Msp430TimerC.ControlB3;
+  Msp430Compare[3] = Msp430TimerC.CompareB3;
 
   Msp430Timer[4] = Msp430TimerC.TimerB;
-  Msp430TimerControl[4] = Msp430TimerC.ControlB5;
-  Msp430Compare[4] = Msp430TimerC.CompareB5;
+  Msp430TimerControl[4] = Msp430TimerC.ControlB4;
+  Msp430Compare[4] = Msp430TimerC.CompareB4;
 
   Msp430Timer[5] = Msp430TimerC.TimerB;
-  Msp430TimerControl[5] = Msp430TimerC.ControlB6;
-  Msp430Compare[5] = Msp430TimerC.CompareB6;
+  Msp430TimerControl[5] = Msp430TimerC.ControlB5;
+  Msp430Compare[5] = Msp430TimerC.CompareB5;
+
+  Msp430Timer[6] = Msp430TimerC.TimerB;
+  Msp430TimerControl[6] = Msp430TimerC.ControlB6;
+  Msp430Compare[6] = Msp430TimerC.CompareB6;
 }
 
