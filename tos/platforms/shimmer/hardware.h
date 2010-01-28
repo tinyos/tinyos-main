@@ -74,7 +74,7 @@ TOSH_ASSIGN_PIN(SD_CLK, 3, 3);
 TOSH_ASSIGN_PIN(SD_DO, 3, 2);
 TOSH_ASSIGN_PIN(SD_DI, 3, 1);
 
-// Don't think these are needed
+// this happens in hplcc2420pinsc
 TOSH_ASSIGN_PIN(CC_FIFOP, 2, 6);
 TOSH_ASSIGN_PIN(CC_FIFO, 1, 0);
 TOSH_ASSIGN_PIN(CC_SFD, 1, 2);
