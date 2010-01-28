@@ -1,4 +1,4 @@
-//$Id: Msp430Timer32khzMapC.nc,v 1.2 2010-01-28 15:06:58 ayer1 Exp $
+//$Id: Msp430Timer32khzMapC.nc,v 1.3 2010-01-28 15:09:18 ayer1 Exp $
 
 /* "Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
@@ -31,7 +31,7 @@
  * available for allocation on that platform.
  *
  * @author Cory Sharp <cssharp@eecs.berkeley.edu>
- * @version $Revision: 1.2 $ $Date: 2010-01-28 15:06:58 $
+ * @version $Revision: 1.3 $ $Date: 2010-01-28 15:09:18 $
  */
 
 configuration Msp430Timer32khzMapC
@@ -47,10 +47,6 @@ implementation
   Msp430Timer[0] = Msp430TimerC.TimerB;
   Msp430TimerControl[0] = Msp430TimerC.ControlB0;
   Msp430Compare[0] = Msp430TimerC.CompareB0;
-
-  // Timer pin B1 is used by the CC2420 radio's SFD pin
-  // this is the only difference between the default 32khz map
-  // and the map on telos
 
   Msp430Timer[1] = Msp430TimerC.TimerB;
   Msp430TimerControl[1] = Msp430TimerC.ControlB1;
