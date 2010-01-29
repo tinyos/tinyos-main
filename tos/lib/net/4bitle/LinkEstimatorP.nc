@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.14 2009-12-05 02:59:49 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.15 2010-01-29 19:03:43 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -29,7 +29,7 @@
  @ Created: April 24, 2006
  */
 
-#include "LinkEstimator.h"
+#include "./LinkEstimator.h"
 
 module LinkEstimatorP {
   provides {
@@ -56,18 +56,18 @@ implementation {
 
   // configure the link estimator and some constants
   enum {
-    // If the eetx estimate is below this threshold
+    // If the etx estimate is below this threshold
     // do not evict a link
-    EVICT_EETX_THRESHOLD = 55,
+    EVICT_ETX_THRESHOLD = 65,
     // if received sequence number if larger than the last sequence
     // number by this gap, we reinitialize the link
     MAX_PKT_GAP = 10,
-    BEST_EETX = 0,
+    BEST_ETX = 10,
     INVALID_RVAL = 0xff,
     INVALID_NEIGHBOR_ADDR = 0xff,
     // if we don't know the link quality, we need to return a value so
     // large that it will not be used to form paths
-    VERY_LARGE_EETX_VALUE = 0xff,
+    VERY_LARGE_ETX_VALUE = 0xff,
     // decay the link estimate using this alpha
     // we use a denominator of 10, so this corresponds to 0.2
     ALPHA = 9,
@@ -77,10 +77,10 @@ implementation {
     // number of beacons to wait before computing a new
     // BLQ (Beacon-driven Link Quality)
     BLQ_PKT_WINDOW = 3,
-    // largest EETX value that we feed into the link quality EWMA
-    // a value of 60 corresponds to having to make six transmissions
+    // largest ETX value that we feed into the link quality EWMA
+    // a value of 70 corresponds to having to make six transmissions
     // to successfully receive one acknowledgement
-    LARGE_EETX_VALUE = 60
+    LARGE_ETX_VALUE = 70
   };
 
   // keep information about links from the neighbors
@@ -169,7 +169,7 @@ implementation {
     ne->failcnt = 0;
     ne->flags = (INIT_ENTRY | VALID_ENTRY);
     ne->inquality = 0;
-    ne->eetx = 0;
+    ne->etx = 0;
   }
 
   // find the index to the entry for neighbor ll_addr
@@ -199,12 +199,12 @@ implementation {
 
   // find the index to the worst neighbor if the eetx
   // estimate is greater than the given threshold
-  uint8_t findWorstNeighborIdx(uint8_t thresholdEETX) {
+  uint8_t findWorstNeighborIdx(uint8_t thresholdETX) {
     uint8_t i, worstNeighborIdx;
-    uint16_t worstEETX, thisEETX;
+    uint16_t worstETX, thisETX;
 
     worstNeighborIdx = INVALID_RVAL;
-    worstEETX = 0;
+    worstETX = 0;
     for (i = 0; i < NEIGHBOR_TABLE_SIZE; i++) {
       if (!(NeighborTable[i].flags & VALID_ENTRY)) {
 	dbg("LI", "Invalid so continuing\n");
@@ -218,13 +218,13 @@ implementation {
 	dbg("LI", "Pinned entry, so continuing\n");
 	continue;
       }
-      thisEETX = NeighborTable[i].eetx;
-      if (thisEETX >= worstEETX) {
+      thisETX = NeighborTable[i].etx;
+      if (thisETX >= worstETX) {
 	worstNeighborIdx = i;
-	worstEETX = thisEETX;
+	worstETX = thisETX;
       }
     }
-    if (worstEETX >= thresholdEETX) {
+    if (worstETX >= thresholdETX) {
       return worstNeighborIdx;
     } else {
       return INVALID_RVAL;
@@ -269,45 +269,44 @@ implementation {
   }
 
 
-  // update the EETX estimator
+  // update the ETX estimator
   // called when new beacon estimate is done
   // also called when new DEETX estimate is done
-  void updateEETX(neighbor_table_entry_t *ne, uint16_t newEst) {
-    ne->eetx = (ALPHA * ne->eetx + (10 - ALPHA) * newEst + 5)/10;
+  void updateETX(neighbor_table_entry_t *ne, uint16_t newEst) {
+    ne->etx = (ALPHA * ne->etx + (10 - ALPHA) * newEst + 5)/10;
   }
 
 
-  // update data driven EETX
-  void updateDEETX(neighbor_table_entry_t *ne) {
+  // update data driven ETX
+  void updateDETX(neighbor_table_entry_t *ne) {
     uint16_t estETX;
 
     if (ne->data_success == 0) {
       // if there were no successful packet transmission in the
       // last window, our current estimate is the number of failed
       // transmissions
-      estETX = (ne->data_total - 1)* 10;
+      estETX = ne->data_total * 10;
     } else {
-      estETX = (10 * ne->data_total) / ne->data_success - 10;
+      estETX = (10 * ne->data_total + 5) / ne->data_success;
       ne->data_success = 0;
       ne->data_total = 0;
     }
-    updateEETX(ne, estETX);
+    updateETX(ne, estETX);
   }
 
 
-  // EETX (Extra Expected number of Transmission)
-  // EETX = ETX - 1
-  // computeEETX returns EETX*10
-  uint8_t computeEETX(uint8_t q1) {
+  // ETX (Extra Expected number of Transmission)
+  // computeETX returns ETX*10
+  uint8_t computeETX(uint8_t q1) {
     uint16_t q;
     if (q1 > 0) {
-      q =  2550 / q1 - 10;
-      if (q > 255) {
-	q = VERY_LARGE_EETX_VALUE;
+      q =  2500 / q1;
+      if (q > 250) {
+	q = VERY_LARGE_ETX_VALUE;
       }
       return (uint8_t)q;
     } else {
-      return VERY_LARGE_EETX_VALUE;
+      return VERY_LARGE_ETX_VALUE;
     }
   }
 
@@ -333,15 +332,15 @@ implementation {
 	    totalPkt = minPkt;
 	  }
 	  if (totalPkt == 0) {
-	    ne->inquality = (ALPHA * ne->inquality) / 10;
+	    ne->inquality = (ALPHA * ne->inquality + 5) / 10;
 	  } else {
-	    newEst = (255UL * ne->rcvcnt) / totalPkt;
+	    newEst = (250UL * ne->rcvcnt + 5) / totalPkt;
 	    dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10);
 	    ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10;
 	  }
 	  ne->rcvcnt = 0;
 	  ne->failcnt = 0;
-	  updateEETX(ne, computeEETX(ne->inquality));
+	  updateETX(ne, computeETX(ne->inquality));
 	} else {
 	  dbg("LI", " - entry %i is invalid.\n", (int)i);
 	}
@@ -397,7 +396,7 @@ implementation {
       if (ne->flags & VALID_ENTRY) {
 	dbg("LI,LITest", "%d:%d inQ=%d, rcv=%d, fail=%d, Q=%d\n",
 	    i, ne->ll_addr, ne->inquality, 
-	    ne->rcvcnt, ne->failcnt, computeEETX(ne->inquality));
+	    ne->rcvcnt, ne->failcnt, computeETX(ne->inquality));
       }
     }
   }
@@ -443,12 +442,12 @@ implementation {
     uint8_t idx;
     idx = findIdx(neighbor);
     if (idx == INVALID_RVAL) {
-      return VERY_LARGE_EETX_VALUE;
+      return VERY_LARGE_ETX_VALUE;
     } else {
       if (NeighborTable[idx].flags & MATURE_ENTRY) {
-	return NeighborTable[idx].eetx;
+	return NeighborTable[idx].etx;
       } else {
-	return VERY_LARGE_EETX_VALUE;
+	return VERY_LARGE_ETX_VALUE;
       }
     }
   }
@@ -470,7 +469,7 @@ implementation {
       initNeighborIdx(nidx, neighbor);
       return SUCCESS;
     } else {
-      nidx = findWorstNeighborIdx(BEST_EETX);
+      nidx = findWorstNeighborIdx(BEST_ETX);
       if (nidx != INVALID_RVAL) {
 	dbg("LI", "insert: inserted by replacing an entry for neighbor: %d\n",
 	    NeighborTable[nidx].ll_addr);
@@ -515,7 +514,7 @@ implementation {
     ne->data_success++;
     ne->data_total++;
     if (ne->data_total >= DLQ_PKT_WINDOW) {
-      updateDEETX(ne);
+      updateDETX(ne);
     }
     return SUCCESS;
   }
@@ -532,7 +531,7 @@ implementation {
     ne = &NeighborTable[nidx];
     ne->data_total++;
     if (ne->data_total >= DLQ_PKT_WINDOW) {
-      updateDEETX(ne);
+      updateDETX(ne);
     }
     return SUCCESS;
   }
@@ -627,7 +626,7 @@ implementation {
 	  initNeighborIdx(nidx, ll_addr);
 	  updateNeighborEntryIdx(nidx, hdr->seq);
 	} else {
-	  nidx = findWorstNeighborIdx(EVICT_EETX_THRESHOLD);
+	  nidx = findWorstNeighborIdx(EVICT_ETX_THRESHOLD);
 	  if (nidx != INVALID_RVAL) {
 	    dbg("LI", "Evicted neighbor %d at idx %d\n",
 		NeighborTable[nidx].ll_addr, nidx);

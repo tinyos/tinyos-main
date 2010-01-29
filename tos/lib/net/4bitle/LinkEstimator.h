@@ -1,4 +1,4 @@
-/* $Id: LinkEstimator.h,v 1.2 2009-08-04 21:42:45 gnawali Exp $ */
+/* $Id: LinkEstimator.h,v 1.3 2010-01-29 19:03:43 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -98,9 +98,9 @@ typedef struct neighbor_table_entry {
   // inbound qualities in the range [1..255]
   // 1 bad, 255 good
   uint8_t inquality;
-  // EETX for the link to this neighbor. This is the quality returned to
+  // ETX for the link to this neighbor. This is the quality returned to
   // the users of the link estimator
-  uint16_t eetx;
+  uint16_t etx;
   // Number of data packets successfully sent (ack'd) to this neighbor
   // since the last data estimator update round. This update happens
   // every DLQ_PKT_WINDOW data packets
