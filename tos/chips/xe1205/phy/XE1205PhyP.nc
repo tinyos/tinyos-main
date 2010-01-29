@@ -73,7 +73,11 @@ implementation {
     uint8_t rxFrameLen = 0;
     uint8_t nextTxLen=0;
     uint8_t nextRxLen;
-    char rxFrame[xe1205_mtu];
+    // Bugfix 29.1.2010: Plus 2 Bytes for the xe1205_phy_header_t 
+    // defined in XE1205SendReceiveP.nc
+    // This is just a hack to make it work, this entire code needs
+    // to be cleaned up & documented!
+    char rxFrame[xe1205_mtu + 2];
     uint8_t headerLen = 4;
 
     uint16_t stats_rxOverruns;
