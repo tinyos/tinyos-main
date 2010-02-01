@@ -27,8 +27,35 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
+ * Copyright (c) 2009, Distributed Computing Group (DCG), ETH Zurich.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holders nor the names of
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
+ * OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * */
+  
 #include "Atm128I2C.h"
 
 /**
@@ -37,8 +64,12 @@
  * two-wire-interface (TWI) hardware subsystem.
  *
  * @author Philip Levis
+ * @author Philipp Sommer, ETH Zurich, sommer@tik.ee.ethz.ch
+ * @author Roland Flury, ETH Zurich, rflury@tik.ee.ethz.ch
+ * @author Thomas Fahrni, ETH Zurich, tfahrni@ee.ethz.ch
+ * @author Richard Huber, ETH Zurich, rihuber@ee.ethz.ch
+ * @author Lars Schor, ETH Zurich, lschor@ee.ethz.ch
  *
- * @version $Id: Atm128I2CMasterPacketP.nc,v 1.8 2009-03-13 19:15:35 idgay Exp $
  */
 
 generic module Atm128I2CMasterPacketP() {
@@ -60,6 +91,7 @@ implementation {
     I2C_DATA         = 4,
     I2C_STARTING     = 5,
     I2C_STOPPING     = 6,
+    I2C_SLAVE_ACK	 = 7
   } atm128_i2c_state_t;
 
   uint8_t state = I2C_OFF;
@@ -254,81 +286,95 @@ implementation {
   async event void I2C.commandComplete() {
     call I2C.readCurrent();
     atomic {
-      if (state == I2C_DATA) {
-	if (reading == TRUE) {
-	  if (index < packetLen) {
-	    packetPtr[index] = call I2C.read();
-	    if (index == packetLen - 1 &&
-                !(packetFlags & I2C_ACK_END)) { 
-              call I2C.enableAck(FALSE);
-            }
-          }
-	  else {
-	    call I2C.enableInterrupt(FALSE);
-	    if (packetFlags & I2C_STOP) {
-	      packetFlags &= ~I2C_STOP;
-	      call I2C.setStop(TRUE);
-	      call I2C.status();
-	    }
-	    else {
-	      call I2C.setInterruptPending(FALSE);
-	    }
-	    call I2C.sendCommand();
-	    state = I2C_IDLE;
-	    signal I2CPacket.readDone(SUCCESS, packetAddr, packetLen, packetPtr);
-	    return;
-	  }
-	  index++;
-	  call I2C.sendCommand();
-	  return;
+      if (state == I2C_SLAVE_ACK) {        
+        if (reading == TRUE) {        	
+        	state = I2C_DATA;
+        	call I2C.setInterruptPending(TRUE);
+        	call I2C.enableAck(TRUE);
+        	call I2C.sendCommand();
+        }                        	      	
+      } else if (state == I2C_DATA) {
+		
+		if (reading == TRUE) {
+			if (index < packetLen) {
+	    		packetPtr[index] = call I2C.read();
+	    		if (index == packetLen - 1 &&
+	    		    !(packetFlags & I2C_ACK_END)) { 
+          		  call I2C.enableAck(FALSE);
+        		}
+        		//state = I2C_SLAVE_ACK;
+      		}
+      		else {
+	    		call I2C.enableInterrupt(FALSE);
+	    		if (packetFlags & I2C_STOP) {
+	      			packetFlags &= ~I2C_STOP;
+	      			call I2C.setStop(TRUE);
+	      			call I2C.status();
+	    		}
+	    		else {
+	      			call I2C.setInterruptPending(FALSE);
+	    		}
+	    		
+	    		call I2C.sendCommand();
+	    		state = I2C_IDLE;
+	    		signal I2CPacket.readDone(SUCCESS, packetAddr, packetLen, packetPtr);
+	    		return;
+	  		}
+	  		index++;
+	  		call I2C.sendCommand();
+	  		return;
         }
         else { // Writing
-	  if (index < packetLen) {
-	    call I2C.write(packetPtr[index]);
-	    index++;
-	    call I2C.sendCommand();
-	  }
-	  else {
-	    call I2C.enableInterrupt(FALSE);
-	    if (packetFlags & I2C_STOP) {
-	      packetFlags &= ~I2C_STOP;
-	      call I2C.setStop(TRUE);
-	      call WriteDebugLeds.led1On();
-	    }
-	    else {
-	      call I2C.setInterruptPending(FALSE);
-	    }
-	    call I2C.sendCommand();
-	    state = I2C_IDLE;
-	    call WriteDebugLeds.led2On();
-	    signal I2CPacket.writeDone(SUCCESS, packetAddr, packetLen, packetPtr);
-	    return;
-	  }
-	}
-      }
-      else if (state == I2C_STARTING) {
-	packetFlags &= ~I2C_START;
-	call I2C.setStart(FALSE);
-	if (call I2C.status() != ATM128_I2C_START &&
-	    call I2C.status() != ATM128_I2C_RSTART) {
-	  if (reading) {
-	    //call ReadDebugLeds.set(call I2C.status() >> 4);
-	  }
-	  //call ReadDebugLeds.led2On();
-	  i2c_abort(FAIL);
-	  return;
-	}
-	state = I2C_ADDR;
-	call I2C.enableAck(TRUE);
+	  		if (index < packetLen) {
+	    		call I2C.write(packetPtr[index]);
+	    		index++;
+	    		call I2C.sendCommand();
+	  		}
+	  		else {
+	    		call I2C.enableInterrupt(FALSE);
+	    		if (packetFlags & I2C_STOP) {
+	      			packetFlags &= ~I2C_STOP;
+	      			call I2C.setStop(TRUE);
+	      			call WriteDebugLeds.led1On();
+	   			 }
+	    		else {
+	      			call I2C.setInterruptPending(FALSE);
+	    		}
+	    		call I2C.sendCommand();
+	    		state = I2C_IDLE;
+	    		call WriteDebugLeds.led2On();
+	    		signal I2CPacket.writeDone(SUCCESS, packetAddr, packetLen, packetPtr);
+	    		return;
+	  		}
+		}
+  	}
+    else if (state == I2C_STARTING) {
+		packetFlags &= ~I2C_START;
+		call I2C.setStart(FALSE);
+		if (call I2C.status() != ATM128_I2C_START &&
+		    call I2C.status() != ATM128_I2C_RSTART) {
+	  		if (reading) {
+	    		//call ReadDebugLeds.set(call I2C.status() >> 4);
+	  		}
+	  		//call ReadDebugLeds.led2On();
+	  		i2c_abort(FAIL);
+	  		return;
+		}
+		state = I2C_ADDR;
+		call I2C.enableAck(TRUE);
       }
       if (state == I2C_ADDR) {
-	if (reading == TRUE) {
-	  call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_READ);
-	}
-	else
-	  call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_WRITE);
-	state = I2C_DATA;
-	call I2C.sendCommand();
+		if (reading == TRUE) {
+	  		call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_READ);
+	  		state = I2C_SLAVE_ACK;
+	  		//state = I2C_DATA;
+		}
+		else {
+	  		call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_WRITE);
+			state = I2C_DATA;
+		}
+	
+		call I2C.sendCommand();
       }
     }
   }
