@@ -24,7 +24,7 @@ NODE_ID % 500 == 0.
        make <platform> cthreads install.1000
 
 All other nodes can be installed with arbitrary NODE_IDs.
-  make <platform> threads install.123
+  make <platform> cthreads install.123
 
 Successful running of this application is verified by all NON-base station motes
 periodically flashing LED0 upon sending a message, and the base station mote,
