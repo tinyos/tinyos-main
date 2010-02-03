@@ -1,4 +1,4 @@
-// $Id: CC1000CsmaP.nc,v 1.9 2008-07-24 03:43:11 regehr Exp $
+// $Id: CC1000CsmaP.nc,v 1.10 2010-02-03 16:50:27 sallai Exp $
 
 /*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -507,51 +507,27 @@ implementation
     return (1000 * CC1K_LPL_CHECK_TIME) / sleepInterval;
   }
 
-  command void LowPowerListening.setLocalSleepInterval(uint16_t s) {
+  command void LowPowerListening.setLocalWakeupInterval(uint16_t s) {
     sleepTime = validateSleepInterval(s);
   }
 
-  command uint16_t LowPowerListening.getLocalSleepInterval() {
+  command uint16_t LowPowerListening.getLocalWakeupInterval() {
     return sleepTime;
   }
 
-  command void LowPowerListening.setLocalDutyCycle(uint16_t d) {
-    call LowPowerListening.setLocalSleepInterval(dutyToSleep(d));
-  }
-
-  command uint16_t LowPowerListening.getLocalDutyCycle() {
-    return sleepToDuty(call LowPowerListening.getLocalSleepInterval());
-  }
-
-  command void LowPowerListening.setRxSleepInterval(message_t *msg, uint16_t sleepIntervalMs) {
+  command void LowPowerListening.setRemoteWakeupInterval(message_t *msg, uint16_t sleepIntervalMs) {
     cc1000_metadata_t *meta = getMetadata(msg);
 
     meta->strength_or_preamble = -(int16_t)validateSleepInterval(sleepIntervalMs) - 1;
   }
 
-  command uint16_t LowPowerListening.getRxSleepInterval(message_t *msg) {
+  command uint16_t LowPowerListening.getRemoteWakeupInterval(message_t *msg) {
     cc1000_metadata_t *meta = getMetadata(msg);
 
     if (meta->strength_or_preamble >= 0)
       return sleepTime;
     else
       return -(meta->strength_or_preamble + 1);
-  }
-
-  command void LowPowerListening.setRxDutyCycle(message_t *msg, uint16_t d) {
-    return call LowPowerListening.setRxSleepInterval(msg, dutyToSleep(d));
-  }
-
-  command uint16_t LowPowerListening.getRxDutyCycle(message_t *msg) {
-    return sleepToDuty(call LowPowerListening.getRxSleepInterval(msg));
-  }
-
-  command uint16_t LowPowerListening.dutyCycleToSleepInterval(uint16_t d) {
-    return dutyToSleep(d);
-  }
-
-  command uint16_t LowPowerListening.sleepIntervalToDutyCycle(uint16_t s) {
-    return sleepToDuty(s);
   }
 
   void setPreambleLength(message_t * ONE msg) {

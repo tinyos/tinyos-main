@@ -53,6 +53,7 @@ configuration CC1000ActiveMessageC {
     interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
     interface PacketTimeSyncOffset;
+    interface LowPowerListening;
   }
 }
 implementation {
@@ -78,4 +79,5 @@ implementation {
   PacketTimeStamp32khz = Radio;
   PacketTimeStampMilli = Radio;
   PacketTimeSyncOffset = Radio;
+  LowPowerListening    = Radio;
 }
