@@ -1,4 +1,4 @@
-/* $Id: CtpInfo.nc,v 1.6 2007-11-28 19:18:07 rincon Exp $ */
+/* $Id: CtpInfo.nc,v 1.7 2010-02-04 07:31:46 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -24,7 +24,7 @@
 /*
  *  @author Rodrigo Fonseca
  *  @author Philip Levis
- *  @date   $Date: 2007-11-28 19:18:07 $
+ *  @date   $Date: 2010-02-04 07:31:46 $
  *  @see Net2-WG
  */
 
@@ -81,7 +81,7 @@ interface CtpInfo {
   command bool isNeighborCongested(am_addr_t n);
 
   command uint8_t numNeighbors();
-  command uint16_t getNeighborLinkQuality(uint8_t neighbor);
-  command uint16_t getNeighborRouteQuality(uint8_t neighbor);
-  command am_addr_t getNeighborAddr(uint8_t neighbor);
+  command uint16_t getNeighborLinkQuality(uint8_t n);
+  command uint16_t getNeighborRouteQuality(uint8_t n);
+  command am_addr_t getNeighborAddr(uint8_t n);
 }

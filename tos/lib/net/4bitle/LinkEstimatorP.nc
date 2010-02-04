@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.15 2010-01-29 19:03:43 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.16 2010-02-04 07:31:46 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -67,7 +67,7 @@ implementation {
     INVALID_NEIGHBOR_ADDR = 0xff,
     // if we don't know the link quality, we need to return a value so
     // large that it will not be used to form paths
-    VERY_LARGE_ETX_VALUE = 0xff,
+    VERY_LARGE_ETX_VALUE = 0xffff,
     // decay the link estimate using this alpha
     // we use a denominator of 10, so this corresponds to 0.2
     ALPHA = 9,
@@ -273,7 +273,7 @@ implementation {
   // called when new beacon estimate is done
   // also called when new DEETX estimate is done
   void updateETX(neighbor_table_entry_t *ne, uint16_t newEst) {
-    ne->etx = (ALPHA * ne->etx + (10 - ALPHA) * newEst + 5)/10;
+    ne->etx = (ALPHA * ne->etx + (10 - ALPHA) * newEst)/10;
   }
 
 
@@ -287,7 +287,7 @@ implementation {
       // transmissions
       estETX = ne->data_total * 10;
     } else {
-      estETX = (10 * ne->data_total + 5) / ne->data_success;
+      estETX = (10 * ne->data_total) / ne->data_success;
       ne->data_success = 0;
       ne->data_total = 0;
     }
@@ -295,9 +295,9 @@ implementation {
   }
 
 
-  // ETX (Extra Expected number of Transmission)
+  // ETX (Expected number of Transmission)
   // computeETX returns ETX*10
-  uint8_t computeETX(uint8_t q1) {
+  uint16_t computeETX(uint8_t q1) {
     uint16_t q;
     if (q1 > 0) {
       q =  2500 / q1;
@@ -332,11 +332,11 @@ implementation {
 	    totalPkt = minPkt;
 	  }
 	  if (totalPkt == 0) {
-	    ne->inquality = (ALPHA * ne->inquality + 5) / 10;
+	    ne->inquality = (ALPHA * ne->inquality) / 10;
 	  } else {
-	    newEst = (250UL * ne->rcvcnt + 5) / totalPkt;
-	    dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10);
-	    ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst + 5)/10;
+	    newEst = (250UL * ne->rcvcnt) / totalPkt;
+	    dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10);
+	    ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10;
 	  }
 	  ne->rcvcnt = 0;
 	  ne->failcnt = 0;
