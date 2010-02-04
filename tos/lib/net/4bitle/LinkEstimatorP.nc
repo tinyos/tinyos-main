@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.16 2010-02-04 07:31:46 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.17 2010-02-04 07:36:52 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -304,7 +304,7 @@ implementation {
       if (q > 250) {
 	q = VERY_LARGE_ETX_VALUE;
       }
-      return (uint8_t)q;
+      return q;
     } else {
       return VERY_LARGE_ETX_VALUE;
     }
