@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2009-12-14 12:50:06 $
+ * $Revision: 1.10 $
+ * $Date: 2010-02-04 16:31:15 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * @author: Jasper Buesch <buesch@tkn.tu-berlin.de>
  * ========================================================================
@@ -267,7 +267,7 @@ implementation
         NULL //security
         );
     MHR(&m_emptyDataFrame)[MHR_INDEX_FC1] |= FC1_FRAMETYPE_DATA;
-    m_emptyDataFrame.headerLen = 9;
+    m_emptyDataFrame.headerLen = call IEEE154Frame.getHeaderLength(emptyDataMsg);
     m_emptyDataFrame.client = 1; // lock
     if (call CoordCapTx.transmit(&m_emptyDataFrame) != IEEE154_SUCCESS)
       m_emptyDataFrame.client = 0; // unlock

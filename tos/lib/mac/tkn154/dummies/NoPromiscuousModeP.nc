@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2009-03-24 12:56:47 $
+ * $Revision: 1.4 $
+ * $Date: 2010-02-04 16:31:15 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -46,7 +46,7 @@ module NoPromiscuousModeP
     interface FrameRx;
     interface GetNow<token_requested_t> as IsRadioTokenRequested;
   } uses {
-    interface Resource as Token;
+    interface TransferableResource as RadioToken;
     interface RadioRx as PromiscuousRx;
     interface RadioOff;
     interface Set<bool> as RadioPromiscuousMode;
@@ -63,11 +63,11 @@ implementation
 
   command error_t PromiscuousMode.start() { return FAIL; }
 
-  event void Token.granted() { call Token.release(); }
+  event void RadioToken.granted() { ASSERT(0);}
 
-  async event void PromiscuousRx.prepareDone() { }
+  event message_t* PromiscuousRx.received(message_t *frame, const ieee154_timestamp_t *timestamp) { return frame; }
 
-  event message_t* PromiscuousRx.received(message_t *frame, ieee154_timestamp_t *timestamp) { return frame; }
+  async event void PromiscuousRx.enableRxDone(){}
 
   command error_t PromiscuousMode.stop() { return FAIL; }
 
@@ -76,4 +76,5 @@ implementation
   default event void PromiscuousMode.startDone(error_t error){}
   default event void PromiscuousMode.stopDone(error_t error){}
   async command token_requested_t IsRadioTokenRequested.getNow(){ return FALSE;}
+  async event void RadioToken.transferredFrom(uint8_t clientFrom){ASSERT(0);}
 }
