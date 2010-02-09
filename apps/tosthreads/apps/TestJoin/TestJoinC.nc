@@ -34,10 +34,17 @@
  * the join() system call for waiting on a set of threads in a TOSThreads 
  * based application.
  * 
- * Upon a successful burn, you should see LED2 toggles at the end of each time
- * period. In addition, during each time period, LED0 should toggle twice, and LED1
- * toggles four times (with an interval of 1 sec). This LED behavior repeats in the
- * next time period.
+ * Upon a successful burn, you should see all LEDs toggle in the following pattern,
+ * repeating every 8 seconds:
+ * 
+ * 0s: (110) LED0  ON, LED1  ON, LED2 OFF  <br>
+ * 1s: (000) LED0 OFF, LED1 OFF, LED2 OFF  <br>
+ * 2s: (010) LED0 OFF, LED1  ON, LED2 OFF  <br>
+ * 3s: (000) LED0 OFF, LED1 OFF, LED2 OFF  <br>
+ * 4s: (111) LED0  ON, LED1  ON, LED2  ON  <br>
+ * 5s: (001) LED0 OFF, LED1 OFF, LED2  ON  <br>
+ * 6s: (011) LED0 OFF, LED1  ON, LED2  ON  <br>
+ * 7s: (001) LED0 OFF, LED1 OFF, LED2  ON  <br>
  *
  * @author Kevin Klues (klueska@cs.stanford.edu)
  */
