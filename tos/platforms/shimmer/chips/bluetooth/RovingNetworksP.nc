@@ -65,11 +65,11 @@ implementation {
 
   uint8_t radioMode, charsSent, setupStep;
   bool discoverable, authenticate, encrypt, setNameRequest, setPINRequest, runDiscoveryRequest, resetDefaultsRequest,
-    setSvcClassRequest, setDevClassRequest, setSvcNameRequest, setCustomBaudrate, disableRemoteConfig, newMode,
+    setSvcClassRequest, setDevClassRequest, setSvcNameRequest, setRawBaudrate, setBaudrate, disableRemoteConfig, newMode,
     setCustomInquiryTime, setCustomPagingTime;
   norace bool transmissionOverflow, messageInProgress;
-  char expectedCommandResponse[8], newName[17], newPIN[17], newSvcClass[5], newDevClass[5], newSvcName[17], newBaudrate[5],
-    newInquiryTime[5], newPagingTime[5];
+  char expectedCommandResponse[8], newName[17], newPIN[17], newSvcClass[5], newDevClass[5], newSvcName[17], newRawBaudrate[5],
+    newBaudrate[5], newInquiryTime[5], newPagingTime[5];
   
   norace struct Message outgoingMsg;
   norace struct Message incomingMsg;
@@ -134,12 +134,23 @@ implementation {
 						   ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1,listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie: 0, 
 						   urxwie: 0, utxe : 1, urxe :1} };
 
+    call UARTControl.setModeUart(&RN_uart_config); // set to UART mode
 #ifdef USE_8MHZ_CRYSTAL           // we need exact divisors, else the thing acts unpredictably
     call UARTControl.setUbr(0x08);
     call UARTControl.setUmctl(0xee);
 #endif
-    call UARTControl.setModeUart(&RN_uart_config); // set to UART mode
 
+    /*
+     * to run the bt module at 230k, first the application must configure it
+     * using its default uart speed of 115200, then reset the uart to 230k here
+     * see accompanying bluetoothBaudrateConfiguration.pdf doc for details
+     * yes, doc is written for tos-1.x, but setClockRate() is just broken into
+     * two calls here in tos-2.x
+     *
+     call UARTControl.setUbr(0x04);
+     call UARTControl.setUmctl(0x82);
+    */
+    
     call UARTControl.enableTxIntr();
     call UARTControl.enableRxIntr();
   }
@@ -209,9 +220,22 @@ implementation {
    * the supplied "rate_factor" is the baudrate * 0.004096
    * this factor must be an integer value...
    */
-  command void Bluetooth.setBaudrate(char * rate_factor){
-    setCustomBaudrate = TRUE;
-    snprintf(newBaudrate, 5, "%s", rate_factor);
+  command void Bluetooth.setRawBaudrate(char * rate_factor){
+    setRawBaudrate = TRUE;
+    snprintf(newRawBaudrate, 5, "%s", rate_factor);
+  }    
+
+  /* 
+   * to set the baudrate of the BT to MSP serial interface 
+   * as per RovingNetworks command spec EG "SU,96" or "SU,230"
+   * SU,<rate> - Baudrate, {1200, 2400, 4800, 9600, 19.2, 
+   * 38.4, 57.6, 115K, 230K, 460K, 921K },
+   * BUT, the MSP USARTS will not run at > 230K in UART mode, 
+   * see MSP user guide
+   */
+  command void Bluetooth.setBaudrate(char * new_baud){
+    setBaudrate = TRUE;
+    snprintf(newBaudrate, 5, "%s", new_baud);
   }    
 
   command void Bluetooth.setPIN(char * PIN){
@@ -334,9 +358,9 @@ implementation {
       }
     case 11:
       setupStep++;
-      if(setCustomBaudrate){
+      if(setRawBaudrate){
 	// set the baudrate to suit the MSP430 running at 8Mhz
-	sprintf(commandbuf, "SZ,%s\r", newBaudrate);
+	sprintf(commandbuf, "SZ,%s\r", newRawBaudrate);
 	writeCommand(commandbuf, "AOK");
 	break;
       }
@@ -375,6 +399,15 @@ implementation {
       break;
     case 15:
       setupStep++;
+      if(setBaudrate){
+        // set the baudrate to suit the MSP430 running at 8Mhz
+        sprintf(commandbuf, "SU,%s\r", newBaudrate);
+        writeCommand(commandbuf, "AOK");
+        break;
+      }
+
+    case 16:
+      setupStep++;
       // exit command mode
       writeCommand("---\r", "END");
       break;
@@ -407,11 +440,12 @@ implementation {
     setSvcClassRequest = FALSE;
     setSvcNameRequest = FALSE;
     setDevClassRequest = FALSE;
-    setCustomBaudrate = FALSE;
+    setRawBaudrate = FALSE;
     disableRemoteConfig = FALSE;
     setCustomInquiryTime = FALSE;
     setCustomPagingTime = FALSE;
-    
+    setBaudrate = FALSE;
+
     setupStep = 0;
     atomic *expectedCommandResponse = 0;   // NULL pointer
     transmissionOverflow = FALSE, messageInProgress = FALSE;

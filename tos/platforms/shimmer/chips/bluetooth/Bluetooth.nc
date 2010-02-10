@@ -71,7 +71,17 @@ interface Bluetooth {
    command void setServiceName(char * name);         // max 16 chars 
    command void setDeviceClass(char * class);         // max 4 chars (hex word)
    command void disableRemoteConfig(bool disableConfig);
-   command void setBaudrate(char * rate_factor);      // max 4 chars, must be integer
+   /*
+    * rate_factor is baudrate * 0.004096, e.g. to set 115200, pass in "472"
+    */
+   command void setRawBaudrate(char * rate_factor);      // max 4 chars, must be integer
+
+   /* 
+    * provide one of the following as a string argument:  
+    * { 1200, 2400, 4800, 9600, 19.2, 38.4, 57.6, 115K, 230K, 460K, 921K } 
+    */
+   command void setBaudrate(char * new_baud); 
+
    /* save power by minimising time Inquiry/Page scanning, call these commands from */
    /* your StdControl.init() - module reset necessary for changes to take effect */
    command void setPagingTime(char * hexval_time); // max 4 chars (hex word)
