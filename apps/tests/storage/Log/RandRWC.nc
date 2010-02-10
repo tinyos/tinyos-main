@@ -1,4 +1,4 @@
-/* $Id: RandRWC.nc,v 1.7 2008-06-25 01:29:44 konradlorincz Exp $
+/* $Id: RandRWC.nc,v 1.8 2010-02-10 19:13:06 scipio Exp $
  * Copyright (c) 2005 Intel Corporation
  * All rights reserved.
  *
@@ -138,8 +138,16 @@ implementation {
       scheck(call LogWrite.sync());
     else
       {
+	error_t result;
 	setParameters();
-	scheck(call LogWrite.append(data + offset, len));
+	result = call LogWrite.append(data + offset, len);
+	if (result == ESIZE) {
+	  // We have reached the end of the log, sync it
+	  scheck(call LogWrite.sync());
+	}
+	else {
+	  scheck(result);
+	}
       }
   }
 
