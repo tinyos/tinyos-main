@@ -31,7 +31,7 @@
  *
  * @author Philip Levis
  * @author David Moss
- * @version $Revision: 1.14 $ $Date: 2009-08-29 00:06:42 $
+ * @version $Revision: 1.15 $ $Date: 2010-02-11 04:39:46 $
  */
 
 #include "CC2420.h"
@@ -61,7 +61,7 @@ configuration CC2420ActiveMessageC {
 }
 implementation {
   enum {
-    CC2420_AM_SEND_ID     = unique(IEEE154_SEND_CLIENT),
+    CC2420_AM_SEND_ID     = unique(RADIO_SEND_RESOURCE),
   };
 
   components CC2420RadioC as Radio;

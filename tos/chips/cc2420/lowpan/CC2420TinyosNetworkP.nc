@@ -110,6 +110,7 @@ implementation {
     return &hdr->network;
 #else
     // you really can't use BareSend with TFRAMES
+#error "BareSend is not supported with TFRAMES: only the ActiveMessage layer is supported"
 #endif
   }
   
@@ -168,6 +169,7 @@ implementation {
     post grantTask();
 
     if (TINYOS_N_NETWORKS > 1) {
+
       return call Queue.enqueue(id);
     } else {
       if (id == resource_owner) {
