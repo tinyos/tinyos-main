@@ -178,25 +178,31 @@ implementation
 		return ret;
 	}
 
-#define IMPLEMENT(NAME, TYPE, TYPE2) \
-	async command void DiagMsg.NAME(TYPE value) \
-	{ \
-		int8_t start = allocate(sizeof(TYPE), TYPE2); \
-		if( start >= 0 ) \
-			*(TYPE*)((uint8_t*) &(recording->data) + start) = value; \
-	} \
-	async command void DiagMsg.NAME##s(const TYPE *value, uint8_t len) \
-	{ \
-		int8_t start; \
-		if( len > 15 ) len = 15; \
-		start = allocate(sizeof(TYPE)*len + 1, TYPE_ARRAY); \
-		if( start >= 0 ) \
-		{ \
-			((uint8_t*) &(recording->data))[start++] = (TYPE2 << 4) + len; \
-			while( len-- != 0 ) \
-				((TYPE*)((uint8_t*) &(recording->data) + start))[len] = value[len]; \
-		} \
+	void copyData(uint8_t size, uint8_t type2, const void* data)
+	{
+		int8_t start = allocate(size, type2);
+		if( start >= 0 )
+			memcpy(&(recording->data[start]), data, size);
 	}
+
+	void copyArray(uint8_t size, uint8_t type2, const void* data, uint8_t len)
+	{
+		int8_t start;
+
+		if( len > 15 )
+			len = 15;
+
+		start = allocate(size*len + 1, TYPE_ARRAY);
+		if( start >= 0 )
+		{
+			recording->data[start] = (type2 << 4) + len;
+			memcpy(&(recording->data[start + 1]), data, size*len);
+		}
+	}
+	
+#define IMPLEMENT(NAME, TYPE, TYPE2) \
+	async command void DiagMsg.NAME(TYPE value) { copyData(sizeof(TYPE), TYPE2, &value); } \
+	async command void DiagMsg.NAME##s(const TYPE *value, uint8_t len) { copyArray(sizeof(TYPE), TYPE2, value, len); }
 
 	IMPLEMENT(int8, int8_t, TYPE_INT8)
 	IMPLEMENT(uint8, uint8_t, TYPE_UINT8)
