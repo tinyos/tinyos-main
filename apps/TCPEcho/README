@@ -3,6 +3,10 @@ A simple application which verifies the 6loWPAN stack is functioning
 correctly.  A mote running this will respond to ICMP Echo requests
 (0x80), and provide a UDP echo service on port 7 (a la rfc862).
 
+It also provides a TCP echo service on port 7, and a simple HTTP
+server on port 80.  The only resource supported is '/read/leds'.  This
+functionality can be used to verify that the TCP stack is functional.
+
 To build, use the 'blip' make target extra.  IE, 
 
 $ make <platform> blip ...

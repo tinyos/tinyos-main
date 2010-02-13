@@ -11,6 +11,10 @@ to use a mote attached to a computer as an 802.15.4 interface rather
 then an actual mote.  The actual queuing logic for copying packets is
 mostly unchanged, and it continues to make use of serial ACKs.
 
+To build, add the 'blip' make extra.  IE,
+
+$ make <platform> blip ...
+
 Description of BaseStation:
 
 BaseStation is an application that acts as a simple Active Message
