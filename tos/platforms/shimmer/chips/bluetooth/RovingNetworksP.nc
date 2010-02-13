@@ -42,7 +42,7 @@
 
 
 #include "RovingNetworks.h"
-#include "Message.h"
+#include "shimmerMessage.h"
 
 module RovingNetworksP {
   provides {
