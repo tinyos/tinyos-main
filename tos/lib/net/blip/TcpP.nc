@@ -65,12 +65,14 @@ module TcpP {
   struct tcplib_sock *tcplib_accept(struct tcplib_sock *conn,
                                     struct sockaddr_in6 *from) {
     int cid = find_client(conn);
+    int buf_len;
 
     printfUART("tcplib_accept: cid: %i\n", cid);
 
     if (cid == N_CLIENTS) return NULL;
-    if (signal Tcp.accept[cid](from, &conn->tx_buf, &conn->tx_buf_len)) {
+    if (signal Tcp.accept[cid](from, &conn->tx_buf, &buf_len)) {
       if (conn->tx_buf == NULL) return NULL;
+      conn->tx_buf_len = buf_len;
       return conn;
     }
     return NULL;
