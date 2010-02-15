@@ -23,8 +23,8 @@
 /**
  *
  * @author Kevin Klues (klueska@cs.wustl.edu)
- * @version $Revision: 1.14 $
- * @date $Date: 2009-11-05 12:43:00 $
+ * @version $Revision: 1.15 $
+ * @date $Date: 2010-02-15 03:16:14 $
  */
 
 #ifndef PRINTF_H
@@ -42,14 +42,17 @@
   #define PrintfQueue	Queue
 #endif
 
-#ifdef _H_msp430hardware_h
-  #include <stdio.h>
-#endif
 #ifdef _H_atmega128hardware_H
   #include "avr_stdio.h"
-#endif
+#else
 #ifdef __M16C62PHARDWARE_H__ 
-#include "m16c62p_printf.h"
+  #include "m16c62p_printf.h"
+#else
+  #include <stdio.h>
+#endif
+#endif
+#ifdef PXA27X_HARDWARE_H
+  #undef putchar
 #endif
 #include "message.h"
 int printfflush();

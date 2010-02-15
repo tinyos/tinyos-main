@@ -161,9 +161,9 @@ implementation {
     else post retrySend();
   }
   
-#ifdef _H_msp430hardware_h
+//#ifdef _H_msp430hardware_h
   int putchar(int c) __attribute__((noinline)) @C() @spontaneous() {
-#endif
+//#endif
 #ifdef _H_atmega128hardware_H
   int uart_putchar(char c, FILE *stream) __attribute__((noinline)) @C() @spontaneous() {
 #endif
