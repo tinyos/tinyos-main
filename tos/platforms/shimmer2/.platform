@@ -15,6 +15,7 @@ push( @includes, qw(
   %T/platforms/shimmer2/chips/mma7260
   %T/platforms/shimmer2/chips/sd
   %T/platforms/shimmer2/chips/bluetooth
+  %T/platforms/shimmer2/chips/tilt
   %T/platforms/shimmer
   %T/platforms/shimmer/chips/msp430
   %T/platforms/shimmer/chips/mma7260
