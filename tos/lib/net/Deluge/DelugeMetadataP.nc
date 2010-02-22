@@ -71,7 +71,7 @@ implementation
   {
     return DELUGE_IDENT_SIZE + currentPage * sizeof(uint16_t);
   }
-  
+
   uint32_t calcPageAddr()
   {
     return DELUGE_IDENT_SIZE + DELUGE_CRC_BLOCK_SIZE + currentPage * DELUGE_BYTES_PER_PAGE;
@@ -87,7 +87,7 @@ implementation
     state = S_READ_IDENT;
     currentImageIdx = 0;
     currentVolume = _imgNum2volumeId[currentImageIdx];
-    nextImage();    
+    nextImage();
   }
 
   command error_t DelugeMetadata.read[uint8_t client](uint8_t imgNum)
@@ -117,6 +117,7 @@ implementation
           call BlockRead.read[currentVolume](calcCrcAddr(), &currentCrc, sizeof(currentCrc));
         } else {
           currentImageIdx++;
+          currentVolume = _imgNum2volumeId[currentImageIdx];
           nextImage();
         }
       }
@@ -143,7 +144,7 @@ implementation
           call BlockRead.read[currentVolume](calcCrcAddr(), &currentCrc, sizeof(currentCrc));
         } else {
           currentImageIdx++;
-	  currentVolume = _imgNum2volumeId[currentImageIdx];
+          currentVolume = _imgNum2volumeId[currentImageIdx];
           nextImage();
         }
       }
