@@ -15,6 +15,9 @@ To build, add the 'blip' make extra.  IE,
 
 $ make <platform> blip ...
 
+For more information on setting up an IPv6 network, please see the tutorial:
+http://docs.tinyos.net/index.php/BLIP_Tutorial
+
 Description of BaseStation:
 
 BaseStation is an application that acts as a simple Active Message

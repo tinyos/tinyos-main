@@ -6,3 +6,6 @@ correctly.  A mote running this will respond to ICMP Echo requests
 To build, use the 'blip' make target extra.  IE, 
 
 $ make <platform> blip ...
+
+For more information on setting up an IPv6 network, please see the tutorial:
+http://docs.tinyos.net/index.php/BLIP_Tutorial
