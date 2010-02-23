@@ -11,6 +11,7 @@ push( @includes, qw(
 
   %T/platforms/epic
   %T/platforms/epic/chips/at45db
+  %T/platforms/epic/chips/ds2411
   %T/platforms/telosa
   %T/platforms/telosa/chips/cc2420
   %T/chips/cc2420
@@ -35,6 +36,7 @@ push( @includes, qw(
   %T/chips/msp430/usart
   %T/chips/msp430/sensors
   %T/chips/at45db
+  %T/chips/ds2401
   %T/lib/timer
   %T/lib/serial
   %T/lib/adc

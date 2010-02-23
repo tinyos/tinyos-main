@@ -1,5 +1,6 @@
 module MotePlatformC @safe() {
   provides interface Init;
+  uses interface Init as SubInit;
 }
 implementation {
 
@@ -40,6 +41,8 @@ implementation {
 	// directions using the TOSH_SET/CLR macros
 
       }//atomic
-    return SUCCESS;
+    return call SubInit.init();
   }
+
+ default command error_t SubInit.init() { return SUCCESS; }
 }
