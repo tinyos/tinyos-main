@@ -179,29 +179,30 @@ static void tcplib_send_ack(struct tcplib_sock *sock, int fin_seqno, uint8_t fla
 
 static void tcplib_send_rst(struct ip6_hdr *iph, struct tcp_hdr *tcph) {
   struct split_ip_msg *msg = get_ipmsg(0);
+  struct tcp_hdr *tcp_rep;
       
-  if (msg != NULL) {
-    struct tcp_hdr *tcp_rep = (struct tcp_hdr *)(msg + 1);
-
-    memcpy(&msg->hdr.ip6_dst, &iph->ip6_src, 16);
-
-    tcp_rep->flags = TCP_FLAG_RST | TCP_FLAG_ACK;
-
-    tcp_rep->ackno = htonl(ntohl(tcph->seqno) + 1);
-    tcp_rep->seqno = tcph->ackno;;
-
-    tcp_rep->srcport = tcph->dstport;
-    tcp_rep->dstport = tcph->srcport;
-    tcp_rep->offset = sizeof(struct tcp_hdr) * 4;
-    tcp_rep->window = 0;
-    tcp_rep->chksum = 0;
-    tcp_rep->urgent = 0;
-
-    tcplib_send_out(msg, tcp_rep);
-
-    ip_free(msg);
-    
+  if (msg == NULL) {
+    return;
   }  
+ 
+  tcp_rep = (struct tcp_hdr *)(msg + 1);
+
+  tcp_rep->flags = TCP_FLAG_RST | TCP_FLAG_ACK;
+
+  tcp_rep->ackno = htonl(ntohl(tcph->seqno) + 1);
+  tcp_rep->seqno = tcph->ackno;;
+
+  tcp_rep->srcport = tcph->dstport;
+  tcp_rep->dstport = tcph->srcport;
+  tcp_rep->offset = sizeof(struct tcp_hdr) * 4;
+  tcp_rep->window = 0;
+  tcp_rep->chksum = 0;
+  tcp_rep->urgent = 0;
+
+  memcpy(&msg->hdr.ip6_dst, &iph->ip6_src, 16);
+  
+  tcplib_send_out(msg, tcp_rep);
+  ip_free(msg);
 }
 
 /* send all the data in the tx buffer, starting at sseqno */
