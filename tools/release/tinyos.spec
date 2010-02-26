@@ -1,7 +1,7 @@
 Summary: An event-based operating environment designed for use with embedded networked sensors.
 Name: tinyos
 BuildArchitectures: noarch
-Version: 2.1.0
+Version: 2.1.1
 Release: 1%{dist}
 License: Please see source
 Packager: TinyOS Group, UC Berkeley
@@ -10,7 +10,7 @@ URL: www.tinyos.net
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
 Prefix: /opt
-Requires: tinyos-tools >= 1.3, nesc >= 1.3
+Requires: tinyos-tools >= 1.4, nesc >= 1.3
 
 %description
 TinyOS is an event based operating environment designed for use with 
