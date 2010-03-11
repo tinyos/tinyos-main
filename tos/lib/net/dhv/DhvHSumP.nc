@@ -78,6 +78,7 @@ implementation{
       local_hash = call DhvHelp.computeHash(0, UQCOUNT_DHV, salt);
       if(rcv_hash == local_hash) {
         call VBitLogic.setSameSummary();
+        commRate = commRate + 1;
       }else{
         call VBitLogic.setVBitState(1);
       }

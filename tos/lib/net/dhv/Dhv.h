@@ -26,7 +26,7 @@
 #define DHV_VERSION_LENGTH 4
 
 #define VBIT_LENGTH 8
-
+#define INFO_THRESHOLD 1
 enum {
   AM_DHV_TEST_MSG = 0xAB
 };

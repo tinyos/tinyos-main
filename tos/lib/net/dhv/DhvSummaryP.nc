@@ -60,7 +60,6 @@ implementation {
     dhv_summary_msg_t* dsmsg;
     uint32_t salt, myHash;
 
-    commRate = commRate + 1;
 
     dsmsg = (dhv_summary_msg_t*) payload;
     salt = dsmsg->salt;
@@ -73,6 +72,7 @@ implementation {
     }
       else {
 				call StateLogic.setSameSummary();
+        commRate = commRate + 1;
         dbg("DhvSummaryP", "Hashes match\n");
     }
   }

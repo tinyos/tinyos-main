@@ -139,7 +139,7 @@ implementation {
 		dhv_index_t i;
 
 		i = call DhvHelp.keyToIndex(key);
-		vector_to_send[i] = ID_DHV_REQ;
+		vector_to_send[i] = ID_DHV_ADS;
 		
 		dbg("DhvVersionP", "Add Item to vector_to_send index %d\n", i);
 		printVectorStatus();

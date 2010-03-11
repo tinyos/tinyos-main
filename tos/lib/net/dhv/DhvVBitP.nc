@@ -104,7 +104,7 @@ implementation{
         dbg("DhvVBitP", "bindex %d vbit %d:  0x%02x  0x%02x \n",bindex, i, dvbmsg->vbit[i], versionPtr[i]);
       }
 
-      dbg("DhvVBitP", "Sending vbit of index %d size %d \n", bindex, sizeof(dhv_msg_t) + sizeof(dhv_vbit_msg_t) + msg_size );
+      //dbg("DhvVBitP", "Sending vbit of index %d size %d \n", bindex, sizeof(dhv_msg_t) + sizeof(dhv_vbit_msg_t) + msg_size );
 
       for(i = 0; i < msg_size; i++){
         dbg("DhvVBitP", "vbit to send %d, 0x%02x \n", i, dvbmsg->vbit[i]);
@@ -140,7 +140,6 @@ implementation{
     uint32_t bitIndexValue;
 
     isDiff = FALSE;
-    commRate = 1;
 
     maxDataLength = TOSH_DATA_LENGTH - sizeof(dhv_msg_t) - sizeof(dhv_vbit_msg_t);
     if(UQCOUNT_DHV != 0)
@@ -168,7 +167,7 @@ implementation{
       //some duplicates
       dbg("DhvVBitP", "same summary\n");
       call VBitLogic.setSameSummary();
-
+      commRate = commRate + 1;
     }else{
       vbit = call DhvHelp.getVBits(bindex);	
       if(vindex == numMsg-1){

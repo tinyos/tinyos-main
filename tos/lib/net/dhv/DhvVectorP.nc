@@ -81,7 +81,7 @@ implementation {
 		dvmsg->unitLen = i;
 
 		//TODO: need to fix
-		dbg("DhvVectorP", "Sending vector message out ...unitLen 0x%02x \n", dvmsg->unitLen);
+	//	dbg("DhvVectorP", "Sending vector message out ...unitLen 0x%02x \n", dvmsg->unitLen);
     status = call VectorSend.send(sizeof(dhv_msg_t) + sizeof(dhv_vector_msg_t) +
 				(i*sizeof(uint32_t)));
 
@@ -124,8 +124,7 @@ implementation {
     uint32_t vectorver;
     uint32_t myver;
 
-    commRate = commRate + 1;
-
+    commRate  = commRate + 1;        	
 		dmsg  = (dhv_msg_t*) payload; 
 		type = dmsg->type;
 
@@ -140,23 +139,18 @@ implementation {
       myver = call DhvHelp.keyToVersion(vectorkey);
 			dbg("DhvVectorP", "key 0x%08x  version 0x%08x myver 0x%08x \n", vectorkey, vectorver, myver);
       // TODO: handle the invalid versions
+
       if(myver < vectorver) {
-					dbg("DhvVectorP", "I have an older version -> setReqItem \n");
-					call VectorLogic.setReqItem(vectorkey);
+					dbg("DhvVectorP", "I have an older version -> setItem \n");
+					call VectorLogic.setItem(vectorkey);
       }
       else if(myver > vectorver) {
 					dbg("DhvVectorP", "I have a newer version -> Data.setItem \n");
 					call DataLogic.setItem(vectorkey);
       }
       else{
-					if(type == ID_DHV_VECTOR_REQ){
-						dbg("DhvVectorP", "Request msg and I have that version -> Data.setItem \n");
-						call DataLogic.setItem(vectorkey);		
-					}else{
-							
 						dbg("DhvVectorP", "Request msg and I have the same version -> keep quite \n");
-						call VectorLogic.unsetItem(vectorkey);		
-					}				
+						call VectorLogic.unsetItem(vectorkey);					
       }
     }
   }

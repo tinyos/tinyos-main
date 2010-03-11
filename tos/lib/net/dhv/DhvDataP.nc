@@ -83,7 +83,6 @@ implementation {
     dhv_version_t msgVer;
     dhv_data_msg_t* ddmsg;
 
-    commRate = commRate + 1;
     ddmsg = (dhv_data_msg_t*) payload;
     key = ddmsg->key;
     msgVer = ddmsg->version;
@@ -112,6 +111,7 @@ implementation {
       //keep quite
       call DataLogic.unsetItem(key);
       call VectorLogic.unsetItem(key);
+      commRate = commRate + 1;
       //set bindex to 0
     }
   }
