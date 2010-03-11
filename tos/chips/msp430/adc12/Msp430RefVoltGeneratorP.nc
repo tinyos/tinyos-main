@@ -27,8 +27,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2009-08-19 11:06:42 $
+ * $Revision: 1.6 $
+ * $Date: 2010-03-11 09:42:25 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -129,10 +129,9 @@ implementation {
     if (m_state == GENERATOR_OFF)
       result = EALREADY;
     else if (m_state == REFERENCE_1_5V_STABLE || m_state == REFERENCE_2_5V_STABLE) {
-      if ((result = switchOff()) == SUCCESS) {
-        m_state = nextState; // m_state becomes a "XXX_OFF_PENDING" state 
-        call SwitchOffTimer.startOneShot(SWITCHOFF_INTERVAL);
-      }
+      result = SUCCESS;
+      m_state = nextState; // m_state becomes a "XXX_OFF_PENDING" state
+      call SwitchOffTimer.startOneShot(SWITCHOFF_INTERVAL);
     } else if (m_state == REFERENCE_1_5V_ON_PENDING || m_state == REFERENCE_2_5V_ON_PENDING) {
       if ((result = switchOff()) == SUCCESS) {
         // there is a pending start() call
@@ -184,7 +183,7 @@ implementation {
     
   event void SwitchOffTimer.fired() {
     switch (m_state) {
-      case REFERENCE_1_5V_STABLE:
+      case REFERENCE_1_5V_OFF_PENDING:
         if (switchOff() == SUCCESS){
           m_state = GENERATOR_OFF;
           signal RefVolt_1_5V.stopDone(SUCCESS);
@@ -194,7 +193,7 @@ implementation {
         }
         break;
         
-      case REFERENCE_2_5V_STABLE:
+      case REFERENCE_2_5V_OFF_PENDING:
         if (switchOff() == SUCCESS) {
           m_state = GENERATOR_OFF;
           signal RefVolt_2_5V.stopDone(SUCCESS);
