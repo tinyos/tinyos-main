@@ -1,0 +1,57 @@
+The FatFs implementation is a direct port of the ChaN FatFs project
+(http://elm-chan.org/fsw/ff/00index_e.html) to TinyOS.  
+
+During testing of the initial port, Victor Cionca at University of
+Limerick discovered a great deal of overhead in the filesystem's
+cluster window operations, and devised an improved method to handle
+these without compromising the integrity of the fs.  These are
+incorporated here.
+
+First note:  Your app must call mount before proceeding with any other file
+operations.  Boot.booted is a good place to do this.
+
+Application developers should note that FatFs development used the IP
+stack and NTP updates in order to provide accurate timestamps.
+tinyos-1.x/contrib/handhelds/swtest/TestFATLogging shows how to do this.
+
+Without these mechanisms, an application will need another method to
+seed the app's time value with something realistic (not
+1/1/1980-relative) at compile time, or devise a way to provide a
+runtime update from a host.
+
+One way:
+-------
+copy the simple python script timeSec.py in tinyos-2.x-contrib/shimmer/apps/JustFATLogging to your
+app directory.
+
+add these lines to your app's Makefile, which will provide a hook for
+the the compile time variable CURRENT_TIME.  TimeP uses this to set the
+runtime g_current_time that sets the baseline for reporting localtime
+on the device:
+
+ifdef CURRENT_TIME
+PFLAGS += -DCURRENT_TIME=$(CURRENT_TIME)
+endif
+
+then, at compile-time, add CURRENT_TIME=`python ./timeSec.py` to the
+build line.
+
+unfortunately, this seed will be restored if you reset the board.
+
+Another way:
+-----------
+add a mechanism to provide the current time from a host machine via
+serial line.  one example of how to do this is in
+tinyos-1.x/contrib/handhelds/apps/ThreeAxisRecorder.
+
+Yet Another way:
+---------------
+use the bluetooth radio to do similar (don't know why this would be
+easier than using the built-in access point-ip stack
+infrastructure...).
+
+
+
+
+
+
