@@ -64,6 +64,15 @@ implementation {
     addNewChannels(new_chans, 3);
     
     initADC12MEMCTLx();
+
+    TOSH_MAKE_ADC_5_INPUT();         
+    TOSH_SEL_ADC_5_MODFUNC();
+
+    TOSH_MAKE_ADC_4_INPUT();         
+    TOSH_SEL_ADC_4_MODFUNC();
+
+    TOSH_MAKE_ADC_3_INPUT();         
+    TOSH_SEL_ADC_3_MODFUNC();
   }
 
   command void shimmerAnalogSetup.addGyroInputs() {
@@ -71,6 +80,15 @@ implementation {
     addNewChannels(new_chans, 3);
     
     initADC12MEMCTLx();
+
+    TOSH_MAKE_ADC_1_INPUT();         
+    TOSH_SEL_ADC_1_MODFUNC();
+
+    TOSH_MAKE_ADC_6_INPUT();         
+    TOSH_SEL_ADC_6_MODFUNC();
+
+    TOSH_MAKE_ADC_2_INPUT();         
+    TOSH_SEL_ADC_2_MODFUNC();
   }
 
   command void shimmerAnalogSetup.addECGInputs() {
@@ -78,6 +96,12 @@ implementation {
     addNewChannels(new_chans, 2);
     
     initADC12MEMCTLx();
+
+    TOSH_MAKE_ADC_1_INPUT();         
+    TOSH_SEL_ADC_1_MODFUNC();
+
+    TOSH_MAKE_ADC_2_INPUT();         
+    TOSH_SEL_ADC_2_MODFUNC();
   }
 
   command void shimmerAnalogSetup.addUVInputs() {
@@ -85,6 +109,15 @@ implementation {
     addNewChannels(new_chans, 3);
     
     initADC12MEMCTLx();
+
+    TOSH_MAKE_ADC_1_INPUT();         
+    TOSH_SEL_ADC_1_MODFUNC();
+
+    TOSH_MAKE_ADC_2_INPUT();         
+    TOSH_SEL_ADC_2_MODFUNC();
+
+    TOSH_MAKE_ADC_6_INPUT();         
+    TOSH_SEL_ADC_6_MODFUNC();
   }
 
   command void shimmerAnalogSetup.addGSRInput() { 
@@ -92,6 +125,9 @@ implementation {
     addNewChannels(new_chans, 1);
     
     initADC12MEMCTLx();
+
+    TOSH_MAKE_ADC_1_INPUT();         
+    TOSH_SEL_ADC_1_MODFUNC();
   }
 
   command void shimmerAnalogSetup.addAnExInput() { 
@@ -99,6 +135,12 @@ implementation {
     addNewChannels(new_chans, 2);
     
     initADC12MEMCTLx();
+
+    TOSH_MAKE_ADC_0_INPUT();         
+    TOSH_SEL_ADC_0_MODFUNC();
+
+    TOSH_MAKE_ADC_7_INPUT();         
+    TOSH_SEL_ADC_7_MODFUNC();
   }
 
   command void shimmerAnalogSetup.finishADCSetup(uint16_t * buffer){

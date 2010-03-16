@@ -53,7 +53,6 @@ implementation {
   
   components LedsC;
   shimmerAnalogSetupP.Leds -> LedsC;
-  
 }
   
   
