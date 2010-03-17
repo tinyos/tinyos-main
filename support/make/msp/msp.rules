@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: msp.rules,v 1.19 2009-11-12 20:40:06 razvanm Exp $
+#$Id: msp.rules,v 1.20 2010-03-17 00:38:05 klueska Exp $
 
 define MSP_HELP
 
@@ -70,7 +70,7 @@ $(if $(PROGRAM),,$(call TOSMake_include,msp/$(DEFAULT_PROGRAM).extra))
 ifneq ($(wildcard $(VOLUME_FILE)), )
 build_storage: $(BUILDDIR)/StorageVolumes.h
 
-exe0: build_storage
+exe0: build_storage 
 
 VOLUME_ALLOCATOR_FLAGS ?= 
 $(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
@@ -104,7 +104,7 @@ ihex: exe FORCE
 exe: exe0 bytes FORCE
 	@:
 
-exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
+exe0: builddir $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
 	$(NCC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 ifdef WIRING_CHECK_FILE

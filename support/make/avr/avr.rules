@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: avr.rules,v 1.28 2009-12-02 17:48:21 razvanm Exp $
+#$Id: avr.rules,v 1.29 2010-03-17 00:38:04 klueska Exp $
 
 define AVR_HELP
 
@@ -100,7 +100,7 @@ $(if $(PROGRAM),,$(call TOSMake_include,avr/$(DEFAULT_PROGRAM).extra))
 ifneq ($(wildcard $(VOLUMEFILE)), )
 build_storage: $(BUILDDIR)/StorageVolumes.h
 
-exe0: build_storage
+exe0: build_storage 
 
 VOLUME_ALLOCATOR_FLAGS ?= 
 $(BUILDDIR)/StorageVolumes.h: $(VOLUMEFILE)
@@ -140,7 +140,7 @@ ihex: exe FORCE
 exe: exe0 bytes FORCE
 	@:
 
-exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
+exe0: builddir $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
 	$(NCC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 ifdef WIRING_CHECK_FILE

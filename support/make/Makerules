@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makerules,v 1.6 2008-09-26 20:13:58 klueska Exp $
+#$Id: Makerules,v 1.7 2010-03-17 00:38:04 klueska Exp $
 
 # @author Cory Sharp <cssharp@eecs.berkeley.edu>
 
@@ -187,6 +187,9 @@ endef
 $(error $(USAGE)Thank you)
 endif
 
+$(COMPONENT).nc:
+	@echo "ERROR: You need to create a top level file called $(COMPONENT).nc, or modify your local Makefile to point to the real name of your top level component."
+	@false
 
 .PHONY: FORCE
 

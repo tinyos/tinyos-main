@@ -38,7 +38,7 @@ pathlocate () {
 case `uname` in
     CYGWIN*)
     # Hopefully this will always work on cygwin with Sun's Java
-    jversion=`regtool -q get '\\HKLM\\SOFTWARE\\JavaSoft\\Java Development Kit\\CurrentVersion'`
+	jversion=`regtool -q -w get '\\HKLM\\SOFTWARE\\JavaSoft\\Java Development Kit\\CurrentVersion'`
     if [ $? != 0 ]; then
 	exit 1
     fi

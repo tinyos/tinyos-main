@@ -1335,7 +1335,7 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-            "hc:P:wf:m:eEpvrg:UDudsxbITNB:S:V14",
+            "hc:P:wf:m:eEpvrg:UDu:ds:xbITNB:S:V14",
             ["help", "comport=", "password=", "wait", "framesize=",
              "erasecycles=", "masserase", "erasecheck", "program",
              "verify", "reset", "go=", "unpatched", "debug",
