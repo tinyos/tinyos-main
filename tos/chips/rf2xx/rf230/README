@@ -54,3 +54,9 @@ and address recognition. In particular, you will not be able to snoop on
 onther messages. The load on the CPU is reduced, you should be able to send
 more messages under heavy load. Note, that the PacketRSSI interface will
 return the energy level (and not the rssi value) of received packet.
+
+RF230_HWACK_SLOPPY_TIMESTAMP
+
+If you define this, then the code that calculates the time stamp of the SFD
+from a single interrupt at the end of the message reception will not use
+floating point computation, which will be faster but less precise.
