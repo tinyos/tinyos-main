@@ -886,7 +886,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 	async command uint8_t RadioPacket.maxPayloadLength()
 	{
-		ASSERT( call Config.maxPayloadLength() <= 125 );
+		ASSERT( call Config.maxPayloadLength() - sizeof(rf230_header_t) <= 125 );
 
 		return call Config.maxPayloadLength() - sizeof(rf230_header_t);
 	}
