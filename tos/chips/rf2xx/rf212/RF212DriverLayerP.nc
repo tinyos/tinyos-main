@@ -866,7 +866,7 @@ implementation
 
 	async command uint8_t RadioPacket.maxPayloadLength()
 	{
-		ASSERT( call Config.maxPayloadLength() - sizeof(rf230_header_t) <= 125 );
+		ASSERT( call Config.maxPayloadLength() - sizeof(rf212_header_t) <= 125 );
 
 		return call Config.maxPayloadLength() - sizeof(rf212_header_t);
 	}
