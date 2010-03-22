@@ -1,4 +1,4 @@
-// $Id: BaseStationP.nc,v 1.10 2008-06-23 20:25:14 regehr Exp $
+// $Id: BaseStationP.nc,v 1.11 2010-03-22 00:37:42 mmaroti Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -33,13 +33,13 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.10 2008-06-23 20:25:14 regehr Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.11 2010-03-22 00:37:42 mmaroti Exp $
  */
   
 /* 
  * BaseStationP bridges packets between a serial channel and the radio.
  * Messages moving from serial to radio will be tagged with the group
- * ID compiled into the TOSBase, and messages moving from radio to
+ * ID compiled into the BaseStation, and messages moving from radio to
  * serial will be filtered by that same group id.
  */
 
@@ -179,6 +179,7 @@ implementation
     am_id_t id;
     am_addr_t addr, src;
     message_t* msg;
+    am_group_t grp;
     atomic
       if (uartIn == uartOut && !uartFull)
 	{
@@ -191,8 +192,10 @@ implementation
     id = call RadioAMPacket.type(msg);
     addr = call RadioAMPacket.destination(msg);
     src = call RadioAMPacket.source(msg);
+    grp = call RadioAMPacket.group(msg);
     call UartPacket.clear(msg);
     call UartAMPacket.setSource(msg, src);
+    call UartAMPacket.setGroup(msg, grp);
 
     if (call UartSend.send[id](addr, uartQueue[uartOut], len) == SUCCESS)
       call Leds.led1Toggle();
