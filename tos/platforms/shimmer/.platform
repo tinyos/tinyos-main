@@ -17,6 +17,7 @@ push( @includes, qw(
   %T/platforms/shimmer/chips/bluetooth
   %T/platforms/shimmer/chips/msp430
   %T/platforms/shimmer/chips/ds2411
+  %T/platforms/shimmer2/chips/gyro
   %T/chips/cc2420
   %T/chips/cc2420/alarm
   %T/chips/cc2420/control
