@@ -104,7 +104,14 @@ implementation {
   }
 
   command error_t StdControl.start(){
-    TOSH_CLR_SER0_CTS_PIN();     // enable analog signals
+    /*
+     * adding a redundant power-up for apps that power cycle the gyro mid-course to save current
+     * since we're past the initial on-dock programming, gyro should power back up gracefully
+     */
+    TOSH_CLR_PROG_OUT_PIN();     
+
+    // enable analog signal path
+    TOSH_CLR_SER0_CTS_PIN();     
 
     return SUCCESS;
   }
@@ -116,6 +123,7 @@ implementation {
 
     // kill the led
     call GyroBoard.ledOff();
+    call buttonNotify.disable();
 
     return SUCCESS;
   }

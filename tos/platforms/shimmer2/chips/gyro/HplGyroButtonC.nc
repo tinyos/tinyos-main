@@ -33,13 +33,13 @@
  * Implementation of the user button for the telos platform
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * (not much to) port to shimmer2 gyro
  * @author Steve Ayer
  * @date March, 2010
  */
 
-configuration HplUserButtonC {
+configuration HplGyroButtonC {
   provides interface GeneralIO;
   provides interface GpioInterrupt;
 }
