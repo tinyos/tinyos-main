@@ -1,4 +1,4 @@
-//$Id: SerialPacketInfo802_15_4P.nc,v 1.5 2008-05-13 00:15:21 vlahan Exp $
+//$Id: SerialPacketInfo802_15_4P.nc,v 1.6 2010-03-27 21:52:41 mmaroti Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -34,13 +34,25 @@ module SerialPacketInfo802_15_4P {
   provides interface SerialPacketInfo as Info;
 }
 implementation {
+#ifdef PLATFORM_IRIS
+  enum {
+    HEADER_SIZE = sizeof(rf230packet_header_t),
+    FOOTER_SIZE = sizeof(rf230packet_footer_t),
+  };
+#else
+  enum {
+    HEADER_SIZE = sizeof(cc2420_header_t),
+    FOOTER_SIZE = sizeof(cc2420_footer_t),
+  };
+#endif
+
   async command uint8_t Info.offset() {
-    return sizeof(message_header_t)-sizeof(cc2420_header_t);
+    return sizeof(message_header_t)-HEADER_SIZE;
   }
   async command uint8_t Info.dataLinkLength(message_t* msg, uint8_t upperLen) {
-    return upperLen + sizeof(cc2420_header_t) + sizeof(cc2420_footer_t);
+    return upperLen + HEADER_SIZE + FOOTER_SIZE;
   }
   async command uint8_t Info.upperLength(message_t* msg, uint8_t dataLinkLen) {
-    return dataLinkLen - (sizeof(cc2420_header_t) + sizeof(cc2420_footer_t));
+    return dataLinkLen - (HEADER_SIZE + FOOTER_SIZE);
   }
 }
