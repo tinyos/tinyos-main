@@ -1,4 +1,4 @@
-// $Id: MeasureClockC.nc,v 1.5 2008-06-26 03:38:27 regehr Exp $
+// $Id: MeasureClockC.nc,v 1.6 2010-03-27 21:29:20 mmaroti Exp $
 /*
  * Copyright (c) 2006 Intel Corporation
  * All rights reserved.
@@ -93,11 +93,11 @@ implementation
   }
 
   async command uint32_t Atm128Calibrate.calibrateMicro(uint32_t n) {
-    return scale32(n + MAGIC / 2, cycles, MAGIC);
+    return scale32(n, cycles, MAGIC);
   }
 
   async command uint32_t Atm128Calibrate.actualMicro(uint32_t n) {
-    return scale32(n + (cycles >> 1), MAGIC, cycles);
+    return scale32(n, MAGIC, cycles);
   }
 
   async command uint8_t Atm128Calibrate.adcPrescaler() {

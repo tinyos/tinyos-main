@@ -8,7 +8,7 @@
  * @param x Number to scale
  * @param a Numerator of scaling value
  * @param b Denominator of scaling value
- * @return x * a/b
+ * @return round(x * a/b)
  */
 inline uint32_t scale32(uint32_t x, uint32_t a, uint32_t b) 
 {
@@ -16,7 +16,7 @@ inline uint32_t scale32(uint32_t x, uint32_t a, uint32_t b)
   uint32_t x_mod_b = x % b;
 
   x_mod_b *= a; // on a separate line just in case some compiler goes weird
-  return x_over_b * a + x_mod_b / b;
+  return x_over_b * a + (x_mod_b + (b>>1)) / b;
 }
 
 #endif
