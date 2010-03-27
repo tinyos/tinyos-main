@@ -1,4 +1,4 @@
-// $Id: Reset.h,v 1.2 2009-08-09 23:36:05 sdhsdh Exp $
+// $Id: Reset.h,v 1.3 2010-03-27 22:03:27 mmaroti Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -44,7 +44,7 @@
 
 void resetMote()
 {
-#if defined(PLATFORM_MICA) || defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT) || defined(PLATFORM_MICAZ)
+#if defined(PLATFORM_MICA) || defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT) || defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
     	cli(); 
   	wdt_enable(0); 
   	while (1) { 

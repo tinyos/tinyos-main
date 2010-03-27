@@ -19,7 +19,7 @@ z * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
  */
-// $Id: BaseStationC.nc,v 1.3 2009-09-16 00:18:05 sdhsdh Exp $
+// $Id: BaseStationC.nc,v 1.4 2010-03-27 22:03:27 mmaroti Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -133,6 +133,10 @@ implementation {
   components IPAddressC;
   BaseStationP.IPAddress -> IPAddressC;
 
+#ifdef PLATFORM_IRIS
+  BaseStationP.RadioChannel -> Radio;
+#else
   components CC2420ControlC;
   BaseStationP.CC2420Config -> CC2420ControlC;
+#endif
 }
