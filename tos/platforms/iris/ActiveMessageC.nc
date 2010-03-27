@@ -42,6 +42,7 @@ configuration ActiveMessageC
 #ifdef PACKET_LINK
 		interface PacketLink;
 #endif
+		interface RadioChannel;
 
 		interface PacketTimeStamp<TMicro, uint32_t> as PacketTimeStampMicro;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -67,6 +68,7 @@ implementation
 #ifdef PACKET_LINK
 	PacketLink = MessageC;
 #endif
+	RadioChannel = MessageC;
 
 	PacketTimeStampMilli = MessageC;
 	PacketTimeStampMicro = MessageC;
