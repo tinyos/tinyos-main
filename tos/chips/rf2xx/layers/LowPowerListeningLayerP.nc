@@ -48,6 +48,8 @@ module LowPowerListeningLayerP
 		interface LowPowerListeningConfig as Config;
 		interface Timer<TMilli>;
 		interface SystemLowPowerListening;
+
+		interface Leds;
 	}
 }
 
@@ -55,9 +57,6 @@ implementation
 {
 	enum
 	{
-		// minimum wakeup time to catch a transmission in milliseconds
-		LISTEN_WAKEUP = 6U,	// use xxxL if LISTEN_WAKEUP * 10000 > 65535
-
 		MIN_SLEEP = 2,		// the minimum sleep interval in milliseconds
 	};
 
@@ -108,7 +107,10 @@ implementation
 			ASSERT( error == SUCCESS || error == EBUSY );
 
 			if( error == SUCCESS )
+			{
+				call Leds.led2On();
 				++state;
+			}
 			else
 				post transition();
 		}
@@ -118,7 +120,10 @@ implementation
 			ASSERT( error == SUCCESS || error == EBUSY );
 
 			if( error == SUCCESS )
+			{
 				++state;
+				call Leds.led2Off();
+			}
 			else
 				post transition();
 		}
@@ -138,7 +143,7 @@ implementation
 		{
 			state = LISTEN;
 			if( sleepInterval > 0 )
-				call Timer.startOneShot(LISTEN_WAKEUP);
+				call Timer.startOneShot(call Config.getListenLength());
 		}
 		else if( state == SLEEP_TIMER )
 		{
@@ -158,7 +163,8 @@ implementation
 			transmitInterval = call LowPowerListening.getRemoteWakeupInterval(txMsg);
 
 			if( transmitInterval > 0 )
-				call Timer.startOneShot(transmitInterval);
+				call Timer.startOneShot(transmitInterval 
+					+ 2 * call Config.getListenLength());
 
 			state = SEND_SUBSEND;
 			post transition();
@@ -264,6 +270,8 @@ implementation
 
 	event message_t* SubReceive.receive(message_t* msg)
 	{
+		call Leds.led0Toggle();
+
 		if( state == SLEEP_SUBSTOP )
 			state = LISTEN;
 
@@ -341,6 +349,9 @@ implementation
 			state = SEND_SUBSEND;
 
 		post transition();
+
+		if( error == SUCCESS )
+			call Leds.led1Toggle();
 	}
 
 /*----------------- LowPowerListening -----------------*/
