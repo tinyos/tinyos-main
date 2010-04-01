@@ -74,6 +74,11 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
     return SUCCESS;
   }
 
+  command void Time.setCurrentTime(time_t current_time){
+    atomic g_current_time = current_time;
+    g_local_time = call LocalTime64.get();
+  }
+
   void dotick(int force) {
     time_t tick = call LocalTime64.get();
     if (force || tick >= (g_tick_local_time + 32768L*10)) {

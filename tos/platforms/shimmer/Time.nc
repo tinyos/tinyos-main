@@ -37,5 +37,6 @@ interface Time {
   command error_t localtime(const time_t *timer, struct tm *tm);
   command error_t asctime(const struct tm *tm, char *buf, int buflen);
   command error_t time(time_t *timer);
+  command void setCurrentTime(time_t current_time);
   event void tick();
 }
