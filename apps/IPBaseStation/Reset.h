@@ -1,4 +1,4 @@
-// $Id: Reset.h,v 1.3 2010-03-27 22:03:27 mmaroti Exp $
+// $Id: Reset.h,v 1.4 2010-04-06 13:23:25 ayer1 Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -50,7 +50,7 @@ void resetMote()
   	while (1) { 
   		__asm__ __volatile__("nop" "\n\t" ::);
   	}
-#elif defined(PLATFORM_TELOS) || defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
+#elif defined(PLATFORM_TELOS) || defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2)
         WDTCTL = 0;
 #else
 #error "Reset.h not defined/supported for your platform, aborting..."
