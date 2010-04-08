@@ -136,6 +136,7 @@ implementation
 	data = 0xffff;
 	report_problem();
       }
-    local.readings[reading++] = data;
+    if (reading < NREADINGS) 
+      local.readings[reading++] = data;
   }
 }
