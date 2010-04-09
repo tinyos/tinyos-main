@@ -19,7 +19,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
  */
-// $Id: BaseStationP.nc,v 1.6 2010-03-27 22:03:27 mmaroti Exp $
+// $Id: BaseStationP.nc,v 1.7 2010-04-09 15:01:33 r-studio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -54,7 +54,7 @@
  * @author Phil Buonadonna
  * @author Gilman Tolle
  * @author David Gay
- * Revision:	$Id: BaseStationP.nc,v 1.6 2010-03-27 22:03:27 mmaroti Exp $
+ * Revision:	$Id: BaseStationP.nc,v 1.7 2010-04-09 15:01:33 r-studio Exp $
  */
   
 /* 
@@ -95,7 +95,7 @@ module BaseStationP {
     interface PacketLink;
     interface LowPowerListening;
 
-#ifdef PLATFORM_IRIS
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
     interface RadioChannel;
 #else
     interface CC2420Config;
@@ -414,7 +414,7 @@ implementation
     case CONFIG_ECHO:
       break;
     case CONFIG_SET_PARM:
-#ifdef PLATFORM_IRIS
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
       // we should check the return value, hope it works
       call RadioChannel.setChannel(cmd->rf.channel);
       call IPAddress.setShortAddr(cmd->rf.addr);
@@ -440,7 +440,7 @@ implementation
     return msg;
   }
 
-#ifdef PLATFORM_IRIS
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
   event void RadioChannel.setChannelDone() { }
 #else
   event void CC2420Config.syncDone(error_t error) {

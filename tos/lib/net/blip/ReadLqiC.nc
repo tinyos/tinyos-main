@@ -19,7 +19,7 @@ configuration ReadLqiC {
   components CC2420ReadLqiC, CC2420PacketC;
   ReadLqi = CC2420ReadLqiC;
   CC2420ReadLqiC.CC2420Packet -> CC2420PacketC;
-#elif defined(PLATFORM_IRIS) 
+#elif defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE) 
   components RF230ReadLqiC, RF230Ieee154MessageC;
   ReadLqi = RF230ReadLqiC;
   RF230ReadLqiC.SubLqi -> RF230Ieee154MessageC.PacketLinkQuality;

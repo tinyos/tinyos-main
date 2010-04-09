@@ -93,7 +93,6 @@ implementation
   // TODO(Henrik) Move init code to a SplitControl interface and
   //              change the busy wait into a TimerMilli.startOneShot.
   command error_t Init.init() {
-  	printf("Ad45db init\n");
   	call WP.makeOutput();
   	call WP.set();
   	call RESET.makeOutput();

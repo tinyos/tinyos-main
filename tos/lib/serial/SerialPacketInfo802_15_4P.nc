@@ -1,4 +1,4 @@
-//$Id: SerialPacketInfo802_15_4P.nc,v 1.6 2010-03-27 21:52:41 mmaroti Exp $
+//$Id: SerialPacketInfo802_15_4P.nc,v 1.7 2010-04-09 15:01:34 r-studio Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -34,7 +34,7 @@ module SerialPacketInfo802_15_4P {
   provides interface SerialPacketInfo as Info;
 }
 implementation {
-#ifdef PLATFORM_IRIS
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
   enum {
     HEADER_SIZE = sizeof(rf230packet_header_t),
     FOOTER_SIZE = sizeof(rf230packet_footer_t),

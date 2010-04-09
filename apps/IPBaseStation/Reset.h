@@ -1,4 +1,4 @@
-// $Id: Reset.h,v 1.5 2010-04-06 13:25:37 ayer1 Exp $
+// $Id: Reset.h,v 1.6 2010-04-09 15:01:33 r-studio Exp $
 
 /*									tab:4
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -52,6 +52,15 @@ void resetMote()
   	}
 #elif defined(PLATFORM_TELOS) || defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2) || defined(PLATFORM_SPAN)
         WDTCTL = 0;
+#elif defined(PLATFORM_MULLE)
+            PRCR.BIT.PRC0 = 1; // Turn off protection on CM registers.
+            PRCR.BIT.PRC1 = 1; // Turn off protection on PM registers.
+            CM0.BIT.CM0_6 = 1;  
+            PM1.BIT.PM1_2 = 1; // Reset on WDT underflow.
+            WDTS = 1; // Start watchdog timer.
+            PRCR.BIT.PRC0 = 0; // Turn on protection on CM registers.
+            PRCR.BIT.PRC1 = 0; // Turn on protection on PM registers.
+            while (1); // Wait for underflow in the watchdog timer.
 #else
 #error "Reset.h not defined/supported for your platform, aborting..."
 #endif
