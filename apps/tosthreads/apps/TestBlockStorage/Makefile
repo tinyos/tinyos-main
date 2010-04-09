@@ -1,11 +1,11 @@
 COMPONENT=TestBlockStorageAppC
-THIS_SUPPORTED_PLATFORMS=tmote telos telosb eyesIFXv1 eyesIFXv2 mica2 mica2dot telosa eyesIFX micaz iris tinynode
+THIS_SUPPORTED_PLATFORMS=tmote telos telosb eyesIFXv1 eyesIFXv2 mica2 mica2dot telosa eyesIFX micaz iris tinynode mulle
 
 ifneq ($(filter $(THIS_SUPPORTED_PLATFORMS) clean,$(MAKECMDGOALS)),)
 	ifneq ($(filter tmote telos telosb eyesIFXv1,$(MAKECMDGOALS)),)
 		CFLAGS+=-DUSE_STM25P
 	endif
-	ifneq ($(filter mica2 telosa mica2dot eyesIFX eyesIFXv2 micaz iris tinynode,$(MAKECMDGOALS)),)
+	ifneq ($(filter mica2 telosa mica2dot eyesIFX eyesIFXv2 micaz iris tinynode mulle,$(MAKECMDGOALS)),)
 		CFLAGS+=-DUSE_AT45DB
 	endif
 

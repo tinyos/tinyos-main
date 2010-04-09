@@ -142,4 +142,9 @@ implementation
   HplUart2P.Irq -> Irqs.Uart2;
   HplUart2P.StopModeControl -> Uart2StopModeControl;
   
+  
+#ifdef THREADS
+  components PlatformInterruptC;
+    Irqs.PlatformInterrupt -> PlatformInterruptC;
+#endif
 }

@@ -100,5 +100,9 @@ implementation
   IntPin3.IrqSignal -> IrqVector.IntSig3;
   IntPin4.IrqSignal -> IrqVector.IntSig4;
   IntPin5.IrqSignal -> IrqVector.IntSig5;
+#ifdef THREADS
+  components PlatformInterruptC;
+    IrqVector.PlatformInterrupt -> PlatformInterruptC;
+#endif
 }
 

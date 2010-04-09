@@ -69,6 +69,8 @@
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
+ 
+#include "m16c62p_printf.h"
 module HplAt45dbP
 {
   provides
@@ -91,6 +93,11 @@ implementation
   // TODO(Henrik) Move init code to a SplitControl interface and
   //              change the busy wait into a TimerMilli.startOneShot.
   command error_t Init.init() {
+  	printf("Ad45db init\n");
+  	call WP.makeOutput();
+  	call WP.set();
+  	call RESET.makeOutput();
+  	call RESET.set();
     call Select.makeOutput();
     call Select.set();
     call VCC.makeOutput();

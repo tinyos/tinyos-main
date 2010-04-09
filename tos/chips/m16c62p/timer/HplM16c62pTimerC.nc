@@ -165,4 +165,9 @@ implementation
   TimerB3Ctrl = TimerB3Ctrl_;
   TimerB4Ctrl = TimerB4Ctrl_;
   TimerB5Ctrl = TimerB5Ctrl_;
+
+#ifdef THREADS
+  components PlatformInterruptC;
+    IrqVector.PlatformInterrupt -> PlatformInterruptC;
+#endif
 }

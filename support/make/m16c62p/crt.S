@@ -62,8 +62,11 @@ _start:
 
 	/* Setup the FLG register to some sane defaults. */
 	ldc		#0, flg
-	fset	u
-	ldc	#_ustack, sp
+  /* Clear the U flag. This sets the stack pointer to the interrupt stack.
+     This is done so that only one stack is used by both interrupt routines
+     and other code. There would else be a problem when threads are changed
+     in interrupt routines in the tosthread library. */
+	fclr u
 
 	/* Setup interrupt vector. */
 	ldc		#%hi16(_vectors_variable), intbh

@@ -10,7 +10,7 @@ block storage.
 You can install TestBlockStorage on a mote via the following command:
   make <platform> threads install
 
-Valid platforms are currently: tmote, telosb, mica2, micaz and iris
+Valid platforms are currently: tmote, telosb, mica2, micaz, iris and mulle
 
 This application first checks the size of the block storage volume, and
 erases it. Then, it randomly writes records, followed by a verification

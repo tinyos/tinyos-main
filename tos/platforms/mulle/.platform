@@ -1,4 +1,5 @@
 push( @includes, qw(
+  %T/platforms/mulle/fix
   %T/platforms/mulle
   %T/platforms/mulle/chips/rf230
   %T/chips/rf2xx/rf230

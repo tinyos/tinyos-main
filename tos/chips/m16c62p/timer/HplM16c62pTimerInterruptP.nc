@@ -41,6 +41,8 @@
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
 
+#include "m16c62p_printf.h"
+
 module HplM16c62pTimerInterruptP
 {
   provides interface HplM16c62pTimerInterrupt as TimerA0;
@@ -54,6 +56,12 @@ module HplM16c62pTimerInterruptP
   provides interface HplM16c62pTimerInterrupt as TimerB3;
   provides interface HplM16c62pTimerInterrupt as TimerB4;
   provides interface HplM16c62pTimerInterrupt as TimerB5;
+#ifdef THREADS
+  uses interface PlatformInterrupt;
+#define POST_AMBLE() call PlatformInterrupt.postAmble()
+#else 
+#define POST_AMBLE()
+#endif 
 }
 implementation
 {
@@ -61,66 +69,77 @@ implementation
   M16C_INTERRUPT_HANDLER(M16C_TMRA0)
   {
     signal TimerA0.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerA1.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRA1)
   {
     signal TimerA1.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerA2.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRA2)
   {
     signal TimerA2.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerA3.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRA3)
   {
     signal TimerA3.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerA4.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRA4)
   {
     signal TimerA4.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerB0.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRB0)
   {
     signal TimerB0.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerB1.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRB1)
   {
     signal TimerB1.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerB2.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRB2)
   {
     signal TimerB2.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerB3.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRB3)
   {
     signal TimerB3.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerB4.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRB4)
   {
     signal TimerB4.fired();
+    POST_AMBLE();
   }
 
   default async event void TimerB5.fired() { } 
   M16C_INTERRUPT_HANDLER(M16C_TMRB5)
   {
     signal TimerB5.fired();
+    POST_AMBLE();
   }
 
 }

@@ -1,4 +1,4 @@
-/// $Id: HplM16c62pAdcP.nc,v 1.1 2009-09-07 14:12:25 r-studio Exp $
+/// $Id: HplM16c62pAdcP.nc,v 1.2 2010-04-09 09:31:53 r-studio Exp $
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
@@ -34,6 +34,13 @@ module HplM16c62pAdcP
 {
   provides interface HplM16c62pAdc;
   uses interface McuPowerState;
+  
+#ifdef THREADS
+  uses interface PlatformInterrupt;
+#define POST_AMBLE() call PlatformInterrupt.postAmble()
+#else 
+#define POST_AMBLE()
+#endif 
 }
 implementation
 {
@@ -140,6 +147,7 @@ implementation
     
     __nesc_enable_interrupt();
     signal HplM16c62pAdc.dataReady(data);
+    POST_AMBLE();
   }
 
   async command bool HplM16c62pAdc.cancel() { 

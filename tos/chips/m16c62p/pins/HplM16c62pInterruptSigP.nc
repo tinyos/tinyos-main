@@ -73,6 +73,12 @@ module HplM16c62pInterruptSigP
   provides interface HplM16c62pInterruptSig as IntSig3;
   provides interface HplM16c62pInterruptSig as IntSig4;
   provides interface HplM16c62pInterruptSig as IntSig5;
+#ifdef THREADS
+  uses interface PlatformInterrupt;
+#define POST_AMBLE() call PlatformInterrupt.postAmble()
+#else 
+#define POST_AMBLE()
+#endif 
 }
 implementation
 {
@@ -80,36 +86,42 @@ implementation
   M16C_INTERRUPT_HANDLER(M16C_INT0)
   {
     signal IntSig0.fired();
+    POST_AMBLE();
   }
 
   default async event void IntSig1.fired() { }
   M16C_INTERRUPT_HANDLER(M16C_INT1)
   {
     signal IntSig1.fired();
+    POST_AMBLE();
   }
 
   default async event void IntSig2.fired() { }
   M16C_INTERRUPT_HANDLER(M16C_INT2)
   {
     signal IntSig2.fired();
+    POST_AMBLE();
   }
 
   default async event void IntSig3.fired() { }
   M16C_INTERRUPT_HANDLER(M16C_INT3)
   {
     signal IntSig3.fired();
+    POST_AMBLE();
   }
 
   default async event void IntSig4.fired() { }
   M16C_INTERRUPT_HANDLER(M16C_INT4)
   {
     signal IntSig4.fired();
+    POST_AMBLE();
   }
 
   default async event void IntSig5.fired() { }
   M16C_INTERRUPT_HANDLER(M16C_INT5)
   {
     signal IntSig5.fired();
+    POST_AMBLE();
   }
 
 }
