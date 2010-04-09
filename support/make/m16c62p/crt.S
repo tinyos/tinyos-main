@@ -47,7 +47,7 @@
 
 .text
 	.global __vector_default
-
+	.global m32c_jsri16
 	.extern _main
 
 .section .init0,"ax",@progbits
@@ -87,6 +87,25 @@ _start:
 
 	/* In case we return, should realy generate a reset :/ */
 	jmp.b	0
+
+m32c_jsri16:
+    add.w    #-1, sp
+    /* Read the address (16 bits) and return address (24 bits) off
+    the stack.  */
+    mov.w    4[sp], r0
+    mov.w    1[sp], r3
+    mov.b    3[sp], a0 /* This zero-extends, so the high byte has
+                          zero in it.  */
+    /* Write the return address, then new address, to the stack.  */
+    mov.w    a0, 1[sp] /* Just to get the zero in 2[sp].  */
+    mov.w    r0, 0[sp]
+    mov.w    r3, 3[sp]
+    mov.b    a0, 5[sp]
+
+    /* This "returns" to the target address, leaving the pending
+    return address on the stack.  */
+    rts
+
 
 /* We should probably not get here. */
 __vector_default:

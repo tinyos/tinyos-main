@@ -33,7 +33,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 /**
  * Implementation of the time capture on RF230 interrupt and the
  * FastSpiBus interface.
@@ -53,7 +53,7 @@ module HplRF230P
   uses
   {
     interface GeneralIO as PortIRQ;
-	interface GeneralIO as PortVCC;
+    interface GeneralIO as PortVCC;
     interface GpioInterrupt as GIRQ;
     interface SoftSpiBus as Spi;
     interface Alarm<TRadio, uint16_t> as Alarm;
@@ -97,30 +97,159 @@ implementation
     call GIRQ.disable();
   }
 
+  /**
+   * Faster software implementation of the SPI bus for communication
+   * with the RF230 chip.
+   */
+  uint8_t fastWrite(uint8_t byte)
+  {
+#define fwMOSIset() P1.BIT.P1_1 = 1
+#define fwMOSIclr() P1.BIT.P1_1 = 0
+#define fwSCLKset() P3.BIT.P3_3 = 1
+#define fwSCLKclr() P3.BIT.P3_3 = 0
+#define fwMISOget() P1.BIT.P1_0
+    uint8_t data = 0;
+    uint8_t mask = 0x80;
+    atomic {
+      if (byte & mask)
+      {
+        fwMOSIset();
+      }
+      else
+      {
+        fwMOSIclr();
+      }
+      fwSCLKclr();
+      if( fwMISOget() )
+        data |= mask;
+      fwSCLKset();
+      mask >>= 1;
+
+      if (byte & mask)
+      {
+        fwMOSIset();
+      }
+      else
+      {
+        fwMOSIclr();
+      }
+      fwSCLKclr();
+      if( fwMISOget() )
+        data |= mask;
+      fwSCLKset();
+      mask >>= 1;
+
+      if (byte & mask)
+      {
+        fwMOSIset();
+      }
+      else
+      {
+        fwMOSIclr();
+      }
+      fwSCLKclr();
+      if( fwMISOget() )
+        data |= mask;
+      fwSCLKset();
+      mask >>= 1;
+
+      if (byte & mask)
+      {
+        fwMOSIset();
+      }
+      else
+      {
+        fwMOSIclr();
+      }
+      fwSCLKclr();
+      if( fwMISOget() )
+        data |= mask;
+      fwSCLKset();
+      mask >>= 1;
+
+      if (byte & mask)
+      {
+        fwMOSIset();
+      }
+      else
+      {
+        fwMOSIclr();
+      }
+      fwSCLKclr();
+      if( fwMISOget() )
+        data |= mask;
+      fwSCLKset();
+      mask >>= 1;
+
+      if (byte & mask)
+      {
+        fwMOSIset();
+      }
+      else
+      {
+        fwMOSIclr();
+      }
+      fwSCLKclr();
+      if( fwMISOget() )
+        data |= mask;
+      fwSCLKset();
+      mask >>= 1;
+
+      if (byte & mask)
+      {
+        fwMOSIset();
+      }
+      else
+      {
+        fwMOSIclr();
+      }
+      fwSCLKclr();
+      if( fwMISOget() )
+        data |= mask;
+      fwSCLKset();
+      mask >>= 1;
+
+      if (byte & mask)
+      {
+        fwMOSIset();
+      }
+      else
+      {
+        fwMOSIclr();
+      }
+      fwSCLKclr();
+      if( fwMISOget() )
+        data |= mask;
+      fwSCLKset();
+      mask >>= 1;
+    }
+    return data;
+  }
+
   uint8_t tmp_data;
-  async command void FastSpiByte.splitWrite(uint8_t data)
+  inline async command void FastSpiByte.splitWrite(uint8_t data)
   {
-    atomic tmp_data = data;
+    atomic tmp_data = fastWrite(data);
   }
 
-  async command uint8_t FastSpiByte.splitRead()
+  inline async command uint8_t FastSpiByte.splitRead()
   {
-    atomic return call Spi.write(tmp_data);
+    atomic return tmp_data;
   }
 
-  async command uint8_t FastSpiByte.splitReadWrite(uint8_t data)
+  inline async command uint8_t FastSpiByte.splitReadWrite(uint8_t data)
   {
     uint8_t b;
     atomic
     {
-      b = call Spi.write(tmp_data);
-      tmp_data = data;
+      b = tmp_data;
+      tmp_data = fastWrite(data);
     }
     return b;
   }
 
-  async command uint8_t FastSpiByte.write(uint8_t data)
+  inline async command uint8_t FastSpiByte.write(uint8_t data)
   {
-    return call Spi.write(data);
+    return fastWrite(data);
   }
 }

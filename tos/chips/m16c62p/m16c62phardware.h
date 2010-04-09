@@ -119,10 +119,10 @@ typedef uint16_t __nesc_atomic_t;
 inline __nesc_atomic_t __nesc_atomic_start(void) @spontaneous()
 {
   __nesc_atomic_t result;
-  // Disable interrupts
-  __nesc_disable_interrupt();
   // Save the flag register (FLG)
   asm volatile ("stc flg, %0": "=r"(result): : "%flg");
+  // Disable interrupts
+  __nesc_disable_interrupt();
   asm volatile("" : : : "memory"); // ensure atomic section effect visibility
   return result;
 }

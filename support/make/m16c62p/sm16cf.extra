@@ -15,13 +15,13 @@ ifdef BOOTLOADER
 	@echo "    installing $(PLATFORM) with bootloader using sm16cf"
 	srec_cat $(BOOTLOADER_IMG) $(INSTALL_SREC) -exclude 0x000FFFDC 0x00100000 -o $(BUILDDIR)/main_boot.srec -CRLF
 	sed '/S5/d' $(BUILDDIR)/main_boot.srec > $(BUILDDIR)/main_boot2.srec
-	$(PROGRAMMER) --device=$(SM16CF) --input-file=$(BUILDDIR)/main_boot2.srec --flash-program
+	$(PROGRAMMER) --baud-rate=57600 --device=$(SM16CF) --input-file=$(BUILDDIR)/main_boot2.srec --flash-program
 	rm $(BUILDDIR)/main_boot.srec
 	rm $(BUILDDIR)/main_boot2.srec
 else
 program: FORCE
 	@echo "    installing $(PLATFORM) using sm16cf"
-	$(PROGRAMMER) --device=$(SM16CF) --input-file=$(INSTALL_SREC) --flash-program
+	$(PROGRAMMER) --baud-rate=57600 --device=$(SM16CF) --input-file=$(INSTALL_SREC) --flash-program
 endif
 
 program_bl: FORCE
