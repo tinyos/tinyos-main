@@ -1,0 +1,12 @@
+This folder contains fixes in system files and chips that are currently not committed to the source tree, are Mulle specific or doesn't have any good or general solution. Any file put in this folder should be commented in this file; the reason the file is here should be stated and a plan how to fix (be able to remove it from here) the problem should be outlined.
+
+The files here need to be overlooked regularly to include changes made in the original file.
+
+The intention is to never have any files in this folder and if a file is put in this folder there should be a very good reason for it!
+
+
+------FILES------:
+
+tos/chips/at45db/At45dbP.nc: After a erase is done the buffer should be invalidated in some way. In the fix the buffer page member is set to AT45_MAX_PAGES, because the indexes of the pages are 0-(AT45_MAX_PAGES-1) thus AT45_MAX_PAGES indicates an invalid page number. Have spoken to David Gay about this. No fix seems to be committed, commit it our selfs?
+
+tos/chips/at45db/LogStorageP.nc: in struct pageinfo there is a member lastRecordOffset which is a uint8_t in the original file. Mulle and platforms using At45DB chips with 10 bit offset addresses need a larger storage unit than uint8_t and is thus changed to uint16_t. This should maybe be typedefed in every platform specific implementation of the at45db. We cant just change it to uint16_t because that would break backwards compatibility for old platforms. Have spoken with David Gay about this to, but nothing has happened.
