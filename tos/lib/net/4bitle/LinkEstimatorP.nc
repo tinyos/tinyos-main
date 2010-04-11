@@ -1,4 +1,4 @@
-/* $Id: LinkEstimatorP.nc,v 1.17 2010-02-04 07:36:52 gnawali Exp $ */
+/* $Id: LinkEstimatorP.nc,v 1.18 2010-04-11 23:25:28 gnawali Exp $ */
 /*
  * "Copyright (c) 2006 University of Southern California.
  * All rights reserved.
@@ -328,16 +328,9 @@ implementation {
 	  ne->flags |= MATURE_ENTRY;
 	  totalPkt = ne->rcvcnt + ne->failcnt;
 	  dbg("LI", "MinPkt: %d, totalPkt: %d\n", minPkt, totalPkt);
-	  if (totalPkt < minPkt) {
-	    totalPkt = minPkt;
-	  }
-	  if (totalPkt == 0) {
-	    ne->inquality = (ALPHA * ne->inquality) / 10;
-	  } else {
-	    newEst = (250UL * ne->rcvcnt) / totalPkt;
-	    dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10);
-	    ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10;
-	  }
+	  newEst = (250UL * ne->rcvcnt) / totalPkt;
+	  dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10);
+	  ne->inquality = (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10;
 	  ne->rcvcnt = 0;
 	  ne->failcnt = 0;
 	  updateETX(ne, computeETX(ne->inquality));
@@ -357,7 +350,6 @@ implementation {
 
     if (NeighborTable[idx].flags & INIT_ENTRY) {
       dbg("LI", "Init entry update\n");
-      NeighborTable[idx].lastseq = seq;
       NeighborTable[idx].flags &= ~INIT_ENTRY;
     }
     
@@ -370,19 +362,15 @@ implementation {
       NeighborTable[idx].failcnt += packetGap - 1;
     }
 
-    // The or with packetGap >= BLQ_PKT_WINDOW is needed in case
-    // failcnt gets reset above
-
-    if (((NeighborTable[idx].rcvcnt + NeighborTable[idx].failcnt) >= BLQ_PKT_WINDOW)
-	|| (packetGap >= BLQ_PKT_WINDOW)) {
-      updateNeighborTableEst(NeighborTable[idx].ll_addr);
-    }
-
     if (packetGap > MAX_PKT_GAP) {
       initNeighborIdx(idx, NeighborTable[idx].ll_addr);
       NeighborTable[idx].lastseq = seq;
       NeighborTable[idx].rcvcnt = 1;
+    } else if (((NeighborTable[idx].rcvcnt + NeighborTable[idx].failcnt) >= BLQ_PKT_WINDOW)
+	       || (packetGap >= BLQ_PKT_WINDOW)) {
+      updateNeighborTableEst(NeighborTable[idx].ll_addr);
     }
+
   }
 
 
