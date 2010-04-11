@@ -1,7 +1,7 @@
 #include <Timer.h>
 #include <TreeRouting.h>
 #include <CollectionDebugMsg.h>
-/* $Id: CtpRoutingEngineP.nc,v 1.23 2010-02-04 07:31:46 gnawali Exp $ */
+/* $Id: CtpRoutingEngineP.nc,v 1.24 2010-04-11 23:26:35 gnawali Exp $ */
 /*
  * "Copyright (c) 2005 The Regents of the University  of California.  
  * All rights reserved.
@@ -89,7 +89,7 @@
  *  @author Philip Levis (added trickle-like updates)
  *  Acknowledgment: based on MintRoute, MultiHopLQI, BVR tree construction, Berkeley's MTree
  *                           
- *  @date   $Date: 2010-02-04 07:31:46 $
+ *  @date   $Date: 2010-04-11 23:26:35 $
  *  @see Net2-WG
  */
 
@@ -157,6 +157,16 @@ implementation {
     error_t routingTableUpdateEntry(am_addr_t, am_addr_t , uint16_t);
     error_t routingTableEvict(am_addr_t neighbor);
 
+
+
+  /* 
+     For each interval t, you set a timer to fire between t/2 and t
+     (chooseAdvertiseTime), and you wait until t (remainingInterval). Once
+     you are at t, you double the interval (decayInterval) if you haven't
+     reached the max. For reasons such as topological inconsistency, you
+     reset the timer to a small value (resetInterval).
+  */
+
     uint32_t currentInterval = minInterval;
     uint32_t t; 
     bool tHasPassed;
@@ -166,7 +176,6 @@ implementation {
        t /= 2;
        t += call Random.rand32() % t;
        tHasPassed = FALSE;
-       call BeaconTimer.stop();
        call BeaconTimer.startOneShot(t);
     }
 
@@ -230,7 +239,6 @@ implementation {
             uint16_t nextInt;
             nextInt = call Random.rand16() % BEACON_INTERVAL;
             nextInt += BEACON_INTERVAL >> 1;
-            call BeaconTimer.startOneShot(nextInt);
         }
     } 
 
