@@ -1,4 +1,4 @@
-/* $Id: CtpForwardingEngineP.nc,v 1.23 2009-08-15 18:11:30 gnawali Exp $ */
+/* $Id: CtpForwardingEngineP.nc,v 1.24 2010-04-11 23:27:30 gnawali Exp $ */
 /*
  * Copyright (c) 2008-9 Stanford University.
  * All rights reserved.
@@ -98,7 +98,7 @@
  *
  *  @author Philip Levis
  *  @author Kyle Jamieson
- *  @date   $Date: 2009-08-15 18:11:30 $
+ *  @date   $Date: 2010-04-11 23:27:30 $
  */
 
 #include <CtpForwardingEngine.h>
@@ -703,8 +703,8 @@ implementation {
     }
     //... and in the queue for duplicates
     if (call SendQueue.size() > 0) {
-      for (i = call SendQueue.size(); --i;) {
-	qe = call SendQueue.element(i);
+      for (i = call SendQueue.size(); i >0; i--) {
+	qe = call SendQueue.element(i-1);
 	if (call CtpPacket.matchInstance(qe->msg, msg)) {
 	  duplicate = TRUE;
 	  break;
@@ -736,16 +736,12 @@ implementation {
 
   event message_t* 
   SubSnoop.receive(message_t* msg, void *payload, uint8_t len) {
-    //am_addr_t parent = call UnicastNameFreeRouting.nextHop();
-    am_addr_t proximalSrc = call AMPacket.source(msg);
-
     // Check for the pull bit (P) [TEP123] and act accordingly.  This
     // check is made for all packets, not just ones addressed to us.
     if (call CtpPacket.option(msg, CTP_OPT_PULL)) {
       call CtpInfo.triggerRouteUpdate();
     }
 
-    call CtpInfo.setNeighborCongested(proximalSrc, call CtpPacket.option(msg, CTP_OPT_ECN));
     return signal Snoop.receive[call CtpPacket.getType(msg)] 
       (msg, payload + sizeof(ctp_data_header_t), 
        len - sizeof(ctp_data_header_t));
