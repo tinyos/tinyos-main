@@ -35,7 +35,7 @@
  * @author Jung Il Choi Initial SACK implementation
  * @author JeongGil Ko
  * @author Razvan Musaloiu-E
- * @version $Revision: 1.16 $ $Date: 2009-10-28 21:09:52 $
+ * @version $Revision: 1.17 $ $Date: 2010-04-12 09:21:20 $
  */
 
 #include "CC2420.h"
@@ -258,8 +258,10 @@ implementation {
   
   inline uint32_t getTime32(uint16_t time)
   {
-    uint32_t recent_time=call BackoffTimer.getNow();
-    return recent_time + (int16_t)(time - recent_time);
+    uint32_t recent_time = call BackoffTimer.getNow();
+
+    // time is always in the past
+    return recent_time - (uint16_t)(recent_time - time);
   }
 
   /**
