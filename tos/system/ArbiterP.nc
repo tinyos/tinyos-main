@@ -81,6 +81,9 @@ implementation {
         state = RES_GRANTING;
         reqResId = id;
       }
+      else if (reqResId == id) {
+      	return SUCCESS;
+      }
       else return call Queue.enqueue(id);
     }
     signal ResourceDefaultOwner.requested();
