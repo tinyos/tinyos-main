@@ -42,11 +42,11 @@
 
 #include "rv8564.h"
 #include "I2C.h"
-module RV8564P
+module HplRV8564P
 {
-  provides interface RV8564 as RTC;
-  // TODO(henrik) Exactly how is the RTC connected to mulle, what is the functionallity of GeneralIO?
-  //              Maybe there is only a init needed because the chip is always on?
+  provides interface HplRV8564 as RTC;
+  provides interface Init;
+
   uses interface GeneralIO as CLKOE;
   uses interface GeneralIO as CLKOUT;
   uses interface GeneralIO;
@@ -59,53 +59,30 @@ implementation
 
   enum
   {
-    OFF,
-    IDLE,
-    READING,
-    WRITING
+    S_IDLE,
+    S_READING,
+    S_WRITING
   };
-  norace uint8_t state = OFF;
-  norace uint8_t read_register;
-  uint8_t read_register_value;
-  uint8_t write_buffer[2];
+  norace uint8_t m_state = S_IDLE;
+  uint8_t m_buf[2];
 
-  command error_t RTC.on()
+  command error_t Init.init()
   {
-    if (state != OFF)
-    {
-      return SUCCESS;
-    }
-    state = IDLE;
-    return SUCCESS;
-  }
-
-  command error_t RTC.off()
-  {
-    if  (state == OFF)
-    {
-      return SUCCESS;
-    }
-    else if (state != IDLE)
-    {
-      return FAIL;
-    }
+    call CLKOUT.makeInput();
     call CLKOE.clr();
-    call CLKOUT.clr();
-    return SUCCESS;
-  }
-
-  command bool RTC.isOn()
-  {
-    return ((state != OFF) ? true : false);
+    call CLKOE.makeOutput();
   }
 
   command void RTC.enableCLKOUT()
   {
-  	call CLKOUT.makeInput();
-  	call CLKOUT.clr();
-  	call CLKOE.makeOutput();
-  	call CLKOE.set();
+    call CLKOE.set();
   }
+
+  command void RTC.disableCLKOUT()
+  {
+    call CLKOE.clr();
+  }
+
   command void RTC.enableInterrupt()
   {
     call GpioInterrupt.enableFallingEdge();
@@ -118,40 +95,55 @@ implementation
 
   command error_t RTC.readRegister(uint8_t reg)
   {
-    uint8_t val;
-    if (state != IDLE)
+    if (m_state != S_IDLE)
     {	
+      return EBUSY;
+    }
+    m_state = S_READING;
+    m_buf[0] = reg;
+    if (call I2CResource.request() == SUCCESS)
+    {
+      return SUCCESS;
+    }
+    else
+    {
+      m_state = S_IDLE;
       return FAIL;
     }
-    state = READING;
-    read_register = reg;
-    call I2CResource.request();
     return SUCCESS;
   }
 
   command error_t RTC.writeRegister(uint8_t reg, uint8_t value)
   { 
-    if (state != IDLE)
+    if (m_state != S_IDLE)
     {
       return FAIL;
     }
-    state = WRITING;
-    atomic write_buffer[0] = reg;
-    atomic write_buffer[1] = value;
-    call I2CResource.request();
-    return SUCCESS;
+    m_state = S_WRITING;
+    atomic m_buf[0] = reg;
+    atomic m_buf[1] = value;
+    if (call I2CResource.request() == SUCCESS)
+    {
+      return SUCCESS;
+    }
+    else
+    {
+      m_state = S_IDLE;
+      return FAIL;
+    }
   }
 
   event void I2CResource.granted()
   {
-    atomic {
-      if (state == READING)
+    atomic
+    {
+      if (m_state == S_READING)
       {
-        call I2C.write(I2C_START | I2C_STOP, RV8564_ADDR, 1, &read_register);
+        call I2C.write(I2C_START | I2C_STOP, RV8564_ADDR, 1, m_buf);
       }
-      else if (state == WRITING)
+      else if (m_state == S_WRITING)
       {
-        call I2C.write(I2C_START | I2C_STOP, RV8564_ADDR, 2, write_buffer);    
+        call I2C.write(I2C_START | I2C_STOP, RV8564_ADDR, 2, m_buf);    
       }
     }	
   }
@@ -165,30 +157,36 @@ implementation
   {
     atomic
     {
-      if (state == READING && data == &read_register_value)
+      if (m_state == S_READING && data == m_buf)
       {
-        state = IDLE;
         call I2CResource.release();
-        signal RTC.readRegisterDone(read_register_value, read_register);
+        m_state = S_IDLE;
+        signal RTC.readRegisterDone(error, m_buf[0], m_buf[1]);
       }	
     }
   }
 
   async event void I2C.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data)
   {
-    if (state == READING)
+    if (m_state == S_READING)
     {
-      call I2C.read(I2C_START | I2C_STOP, RV8564_ADDR, 1, &read_register_value);
+      if (error != SUCCESS)
+      {
+        call I2CResource.release();
+        m_state = S_IDLE;
+        signal RTC.readRegisterDone(error, m_buf[0], 0);
+        return;
+      }
+      else
+      {
+        call I2C.read(I2C_START | I2C_STOP, RV8564_ADDR, 1, m_buf + 1);
+      }
     }
-    else if (state == WRITING)
+    else if (m_state == S_WRITING)
     {
-      state = IDLE;
       call I2CResource.release();
-      signal RTC.writeRegisterDone(write_buffer[0]);
+      m_state = S_IDLE;
+      signal RTC.writeRegisterDone(error, m_buf[0]);
     }
   }
-
-  default async event void RTC.readRegisterDone(uint8_t val, uint8_t reg) {}
-  default async event void RTC.writeRegisterDone(uint8_t reg) {}
-  default async event void RTC.fired() { }
 }
