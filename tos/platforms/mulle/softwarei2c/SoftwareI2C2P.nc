@@ -35,29 +35,39 @@
  */
 
 /**
- * The basic client abstraction of the software I2C on Mulle used
- * by the RTC and battery monitor.
- * The device drivers should instantiate one of these to ensure
- * exclusive access to the I2C bus.
+ * The wiring of the I2C bus nr 2 on Mulle and creation of it into a
+ * shared abstraction.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
 
 #include "MulleI2C.h"
 #include "I2C.h"
-generic configuration SoftI2CBatteryMonitorRTCC()
+configuration SoftwareI2C2P
 {
-  provides interface Resource;
-  provides interface I2CPacket<TI2CBasicAddr>;
+  provides interface Resource[uint8_t client];
+  provides interface I2CPacket<TI2CBasicAddr>[uint8_t client];
 }
 implementation
 {
-  enum
-  {
-    CLIENT_ID = unique(UQ_MULLE_SOFTI2C_BATTERY_RTC),
-  };
+  components new SoftwareI2CPacketC(1000),
+      HplM16c62pGeneralIOC as IOs,
+      BusyWaitMicroC,
+      new SharedI2CPacketC(UQ_MULLE_SOFTWAREI2C_2),
+      SoftwareI2C2InitP,
+      PlatformP;
   
-  components SoftI2CBatteryMonitorRTCP as I2C; 
-  Resource = I2C.Resource[CLIENT_ID];
-  I2CPacket = I2C.I2CPacket[CLIENT_ID]; 
+  // Wire the software I2C bus
+  SoftwareI2CPacketC.SCL -> IOs.PortP71;
+  SoftwareI2CPacketC.SDA -> IOs.PortP70;
+  SoftwareI2CPacketC.BusyWait -> BusyWaitMicroC;
+
+  Resource  = SharedI2CPacketC;
+  I2CPacket = SharedI2CPacketC.I2CPacket;
+  SharedI2CPacketC -> SoftwareI2CPacketC.I2CPacket;
+
+  // Init the bus
+  SoftwareI2C2InitP.Pullup -> IOs.PortP75;
+  PlatformP.SubInit -> SoftwareI2C2InitP;
 }
+

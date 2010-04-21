@@ -33,7 +33,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+ 
 /*
  * Copyright (c) 2006 Stanford University.
  * All rights reserved.
@@ -68,36 +68,107 @@
  */
  
 /**
- * The configuration that takes the underlying software I2C driver 
- * Mulle and turns it into a shared abstraction.
+ * The module implements the logic when creating a I2C bus with 7-bit addressing
+ * into a shared abstraction.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-
-#include "MulleI2C.h"
 #include "I2C.h"
-generic configuration SoftI2CMasterP(char resourceName[])
+generic module SharedI2CPacketP()
 {
   provides interface Resource[uint8_t client];
   provides interface I2CPacket<TI2CBasicAddr>[uint8_t client];
-  uses interface SoftI2CBus;
+  uses interface Resource as SubResource[uint8_t];
+  uses interface I2CPacket<TI2CBasicAddr> as SubPacket;
 }
 implementation
 {
-  components new FcfsArbiterC(resourceName) as Arbiter;
-  components new AsyncPowerManagerP() as Power;
-  components new SoftI2CMasterImplP() as I2C;
-  components new SoftI2CMasterPacketP() as Master;
-    
-  Resource  = I2C;
-  I2CPacket = I2C;
+  enum
+  {
+    NO_CLIENT = 0xff
+  };
   
-  I2C.SubResource -> Arbiter;
-  I2C.SubPacket   -> Master;
-  
-  Power.AsyncStdControl -> Master;
-  Power.ResourceDefaultOwner -> Arbiter;
+  uint8_t currentClient = NO_CLIENT;
 
-  Master.I2C = SoftI2CBus;
+  async command error_t Resource.request[uint8_t id]()
+  {
+    return call SubResource.request[id]();
+  }
+
+  async command error_t Resource.immediateRequest[uint8_t id]()
+  {
+    error_t rval = call SubResource.immediateRequest[id]();
+    if (rval == SUCCESS)
+    {
+      atomic currentClient = id;
+    }
+    return rval;
+  }
+
+  event void SubResource.granted[uint8_t id]()
+  {
+    atomic currentClient = id;
+    signal Resource.granted[id]();
+  }
+
+  async command error_t Resource.release[uint8_t id]()
+  {
+    return call SubResource.release[id]();
+  }
+
+  async command bool Resource.isOwner[uint8_t id]()
+  {
+    return call SubResource.isOwner[id]();
+  }
+  
+  async command error_t I2CPacket.write[uint8_t id](i2c_flags_t flags,
+                                                        uint16_t addr,
+                                                        uint8_t len,
+                                                        uint8_t* data)
+  {
+    atomic
+    {
+      if (currentClient != id)
+      {
+	return FAIL;
+      }
+    }
+    return call SubPacket.write(flags, addr, len, data);
+  }
+  
+  async command error_t I2CPacket.read[uint8_t id](i2c_flags_t flags,
+                                                       uint16_t addr,
+                                                       uint8_t len,
+                                                       uint8_t* data)
+  {
+    atomic
+    {
+      if (currentClient != id)
+      {
+	return FAIL;
+      }
+    }
+    return call SubPacket.read(flags, addr, len, data);
+  }
+
+  default event void Resource.granted[uint8_t id]() {}
+
+  async event void  SubPacket.readDone(
+      error_t error, uint16_t addr, uint8_t length, uint8_t* data)
+  {
+    signal  I2CPacket.readDone[currentClient](error, addr, length, data);
+  }
+
+  async event void SubPacket.writeDone(
+      error_t error, uint16_t addr, uint8_t length, uint8_t* data)
+  {
+    signal I2CPacket.writeDone[currentClient]( error, addr, length,  data);
+  }
+
+  default async event void  I2CPacket.readDone[uint8_t id](
+      error_t error, uint16_t addr, uint8_t length, uint8_t* data) {  }
+
+  default async event void I2CPacket.writeDone[uint8_t id](
+      error_t error, uint16_t addr, uint8_t length, uint8_t* data) {  }
+
 }
-

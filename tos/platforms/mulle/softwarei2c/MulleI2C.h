@@ -40,6 +40,6 @@
 #ifndef __MULLEI2C_H__
 #define __MULLEI2C_H__
 
-#define UQ_MULLE_SOFTI2C_BATTERY_RTC "SoftI2CMasterC.Battery_RTC"
+#define UQ_MULLE_SOFTWAREI2C_2 "UQ_MULLE_SOFTWAREI2C_2"
 
 #endif // __MULLEI2C_H__
