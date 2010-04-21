@@ -110,9 +110,9 @@ typedef nx_struct prog_req {
   nx_uint8_t cmd;
   nx_uint8_t imgno;
   nx_union {
-    nx_uint16_t offset;
-    nx_uint16_t when;
-    nx_uint16_t nimages;
+    nx_uint32_t offset;
+    nx_uint32_t when;
+    nx_uint32_t nimages;
   } cmd_data;
   nx_uint8_t data[0];
 } prog_req_t;
