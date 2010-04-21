@@ -47,7 +47,7 @@ configuration RV8564C
 implementation
 {
   components RV8564P as RTCP,
-    new SoftI2CBatteryMonitorRTCC() as I2C,
+    new SoftwareI2C2C() as I2C,
     HplM16c62pGeneralIOC as IOs,
     HplM16c62pInterruptC as Irqs,
     new M16c62pInterruptC() as Irq;

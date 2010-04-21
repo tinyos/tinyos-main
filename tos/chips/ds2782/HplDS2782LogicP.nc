@@ -247,9 +247,9 @@ implementation {
 
   event void I2CResource.granted() {
     if (read) {
-      call I2CPacket.write(I2C_START,devAddr,1,mI2CBuffer);
+      call I2CPacket.write(I2C_START | I2C_STOP,devAddr,1,mI2CBuffer);
     } else {
-      call I2CPacket.write((I2C_START | I2C_STOP),devAddr,2,mI2CBuffer);
+      call I2CPacket.write(I2C_START | I2C_STOP,devAddr,2,mI2CBuffer);
     }
   }
 

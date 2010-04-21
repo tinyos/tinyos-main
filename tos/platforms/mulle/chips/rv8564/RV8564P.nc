@@ -147,7 +147,7 @@ implementation
     atomic {
       if (state == READING)
       {
-        call I2C.write(I2C_START, RV8564_ADDR, 1, &read_register);
+        call I2C.write(I2C_START | I2C_STOP, RV8564_ADDR, 1, &read_register);
       }
       else if (state == WRITING)
       {

@@ -45,7 +45,7 @@ configuration DS2782InternalC {
 }
 
 implementation {
-  components new SoftI2CBatteryMonitorRTCC() as I2C;
+  components new SoftwareI2C2C() as I2C;
   components new HplDS2782LogicP(0x68) as Logic;
   
   Logic.I2CPacket -> I2C;
