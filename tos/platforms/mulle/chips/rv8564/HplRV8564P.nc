@@ -46,6 +46,7 @@ module HplRV8564P
 {
   provides interface HplRV8564 as RTC;
   provides interface Init;
+  provides interface Init as Startup;
 
   uses interface GeneralIO as CLKOE;
   uses interface GeneralIO as CLKOUT;
@@ -53,6 +54,7 @@ module HplRV8564P
   uses interface GpioInterrupt;
   uses interface I2CPacket<TI2CBasicAddr> as I2C;
   uses interface Resource as I2CResource;
+  uses interface BusyWait<TMicro, uint16_t>;
 }
 implementation
 {
@@ -64,13 +66,25 @@ implementation
     S_WRITING
   };
   norace uint8_t m_state = S_IDLE;
-  uint8_t m_buf[2];
+  norace uint8_t m_buf[2];
 
   command error_t Init.init()
   {
     call CLKOUT.makeInput();
     call CLKOE.clr();
     call CLKOE.makeOutput();
+    return SUCCESS;
+  }
+
+  command error_t Startup.init()
+  {
+    int i;
+    // The RTC needs a maximum of 500ms to startup
+    for (i = 0; i < 10; ++i)
+    {
+      call BusyWait.wait(50000);
+    }
+    return SUCCESS;
   }
 
   command void RTC.enableCLKOUT()
@@ -145,7 +159,7 @@ implementation
       {
         call I2C.write(I2C_START | I2C_STOP, RV8564_ADDR, 2, m_buf);    
       }
-    }	
+    }
   }
 
   async event void GpioInterrupt.fired()
@@ -157,12 +171,12 @@ implementation
   {
     atomic
     {
-      if (m_state == S_READING && data == m_buf)
+      if (m_state == S_READING)
       {
         call I2CResource.release();
         m_state = S_IDLE;
         signal RTC.readRegisterDone(error, m_buf[0], m_buf[1]);
-      }	
+      }
     }
   }
 

@@ -35,29 +35,35 @@
  */
 
 /**
- * The DS2782 wiring on the Mulle.
+ * The DS2782 only goes to sleep if SDA and SCL are pulled low.
+ * So everytime the default owner of the resource becomes the
+ * owner of the I2C bus the pins are pulled low.
  * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-configuration DS2782InternalC
+module DS2782InternalP
 {
-  provides interface StdControl;
-  provides interface HplDS2782;
+  uses interface ResourceDefaultOwner;
+  uses interface GeneralIO as SDA;
+  uses interface GeneralIO as SCL;
 }
-
 implementation
 {
-  components new SoftwareI2C2C() as I2C,
-             new HplDS2782LogicP(0x68) as Logic,
-             DS2782InternalP,
-             HplM16c62pGeneralIOC as IOs;
+  async event void ResourceDefaultOwner.granted()
+  {
+    call SDA.clr();
+    call SDA.makeOutput();
+    call SCL.clr();
+    call SCL.makeOutput();
+  }
 
-  Logic.I2CPacket -> I2C;
-  Logic.I2CResource -> I2C;
-  HplDS2782 = Logic;
-  StdControl = Logic;
+  async event void ResourceDefaultOwner.requested()
+  {
+    call ResourceDefaultOwner.release();
+  }
 
-  DS2782InternalP.SDA -> IOs.PortP70;
-  DS2782InternalP.SCL -> IOs.PortP71;
-  DS2782InternalP.ResourceDefaultOwner -> I2C;
+  async event void ResourceDefaultOwner.immediateRequested()
+  {
+    call ResourceDefaultOwner.release();
+  }
 }

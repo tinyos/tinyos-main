@@ -50,6 +50,7 @@ generic configuration SoftwareI2C2C()
 {
   provides interface Resource;
   provides interface I2CPacket<TI2CBasicAddr>;
+  provides interface ResourceDefaultOwner;
 }
 implementation
 {
@@ -61,4 +62,5 @@ implementation
   components SoftwareI2C2P as I2C; 
   Resource = I2C.Resource[CLIENT_ID];
   I2CPacket = I2C.I2CPacket[CLIENT_ID];
+  ResourceDefaultOwner = I2C;
 }

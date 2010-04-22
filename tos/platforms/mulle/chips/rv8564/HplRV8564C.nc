@@ -47,10 +47,11 @@ configuration HplRV8564C
 implementation
 {
   components HplRV8564P as RTCP,
-    new SoftwareI2C2C() as I2C,
-    HplM16c62pGeneralIOC as IOs,
-    HplM16c62pInterruptC as Irqs,
-    new M16c62pInterruptC() as Irq;
+             new SoftwareI2C2C() as I2C,
+             HplM16c62pGeneralIOC as IOs,
+             HplM16c62pInterruptC as Irqs,
+             new M16c62pInterruptC() as Irq,
+             BusyWaitMicroC;
 
   Irq.HplM16c62pInterrupt -> Irqs.Int0;
 
@@ -60,7 +61,9 @@ implementation
   RTCP.GpioInterrupt -> Irq;
   RTCP.I2C -> I2C;
   RTCP.I2CResource -> I2C;
+  RTCP.BusyWait -> BusyWaitMicroC;
 
-  components PlatformC;
+  components PlatformC, RealMainP;
   PlatformC.SubInit -> RTCP.Init;
+  RealMainP.SoftwareInit -> RTCP.Startup;
 }

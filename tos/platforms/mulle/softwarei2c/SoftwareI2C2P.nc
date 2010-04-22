@@ -47,16 +47,17 @@ configuration SoftwareI2C2P
 {
   provides interface Resource[uint8_t client];
   provides interface I2CPacket<TI2CBasicAddr>[uint8_t client];
+  provides interface ResourceDefaultOwner;
 }
 implementation
 {
   components new SoftwareI2CPacketC(1000),
-      HplM16c62pGeneralIOC as IOs,
-      BusyWaitMicroC,
-      new SharedI2CPacketC(UQ_MULLE_SOFTWAREI2C_2),
-      SoftwareI2C2InitP,
-      PlatformP;
-  
+             HplM16c62pGeneralIOC as IOs,
+             BusyWaitMicroC,
+             new SharedI2CPacketC(UQ_MULLE_SOFTWAREI2C_2),
+             SoftwareI2C2InitP,
+             PlatformP;
+
   // Wire the software I2C bus
   SoftwareI2CPacketC.SCL -> IOs.PortP71;
   SoftwareI2CPacketC.SDA -> IOs.PortP70;
@@ -64,6 +65,7 @@ implementation
 
   Resource  = SharedI2CPacketC;
   I2CPacket = SharedI2CPacketC.I2CPacket;
+  ResourceDefaultOwner = SharedI2CPacketC;
   SharedI2CPacketC -> SoftwareI2CPacketC.I2CPacket;
 
   // Init the bus

@@ -80,6 +80,8 @@ generic configuration SharedI2CPacketC(char resourceName[])
 {
   provides interface Resource[uint8_t client];
   provides interface I2CPacket<TI2CBasicAddr>[uint8_t client];
+  provides interface ResourceDefaultOwner;
+  
   uses interface I2CPacket<TI2CBasicAddr> as SubPacket;
 }
 implementation
@@ -89,6 +91,7 @@ implementation
     
   Resource  = I2C.Resource;
   I2CPacket = I2C.I2CPacket;
+  ResourceDefaultOwner = Arbiter;
   
   I2C.SubResource -> Arbiter;
   I2C.SubPacket   = SubPacket;
