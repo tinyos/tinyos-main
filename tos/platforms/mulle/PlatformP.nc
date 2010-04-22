@@ -50,10 +50,11 @@ module PlatformP
   uses interface M16c62pControl;
   uses interface StopModeControl;
 #ifdef ENABLE_STOP_MODE
-  uses interface RV8564 as RTC;
+  provides interface Init as StopModeInit;
+  
+  uses interface HplRV8564 as RTC;
   uses interface HplDS2782;
   uses interface StdControl as DS2782Control;
-  uses interface Boot;
 #endif
 }
 
@@ -78,26 +79,34 @@ implementation
 
 
 #ifdef ENABLE_STOP_MODE
+  task void enableStopMode();
+  
+  command error_t StopModeInit.init()
+  {
+  	// The task is needed so we can be sure that all underlying components 
+    // have been initialized, for example the I2C resource.
+	post enableStopMode();
+  }
+  
+  task void enableStopMode()
+  {
+    call StopModeControl.allowStopMode(true);
+    // Allow the DS2782 to enter sleep
+    call DS2782Control.start();
+    call HplDS2782.allowSleep(true);
+    // Activate the RTC and set it to output 1024 tics on the CLKOUT pin
+    call RTC.enableCLKOUT();
+    call RTC.writeRegister(RV8564_CLKF, 0x81);  
+  }
+  
   task void stopDS2782()
   {
     call DS2782Control.stop();
   }
-  // The Boot event is needed so we can be sure that all underlying components 
-  // have been initialized, for example the I2C resource.
-  event void Boot.booted()
-  {
-    call StopModeControl.allowStopMode(true);
-    // Activate the RTC and set it to output 1024 tics on the CLKOUT pin
-    call DS2782Control.start();
-    call HplDS2782.allowSleep(true);
-    call RTC.on();
-    call RTC.enableCLKOUT();
-    call RTC.writeRegister(RV8564_CLKF, 0x81);
-  }
 
   async event void RTC.fired() {}
-  async event void RTC.readRegisterDone(uint8_t val, uint8_t reg) {}
-  async event void RTC.writeRegisterDone(uint8_t reg) {}
+  async event void RTC.readRegisterDone(error_t error, uint8_t val, uint8_t reg) {}
+  async event void RTC.writeRegisterDone(error_t error, uint8_t reg) {}
 
   async event void HplDS2782.setConfigDone(error_t error) {return; }
   async event void HplDS2782.allowSleepDone( error_t error ) { post stopDS2782(); }
