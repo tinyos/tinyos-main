@@ -44,26 +44,24 @@
 module DS2782InternalP
 {
   uses interface ResourceDefaultOwner;
-  uses interface GeneralIO as SDA;
-  uses interface GeneralIO as SCL;
+  uses interface GeneralIO as Pullup;
 }
 implementation
 {
   async event void ResourceDefaultOwner.granted()
   {
-    call SDA.clr();
-    call SDA.makeOutput();
-    call SCL.clr();
-    call SCL.makeOutput();
+    call Pullup.clr();
   }
 
   async event void ResourceDefaultOwner.requested()
   {
+    call Pullup.set(); 
     call ResourceDefaultOwner.release();
   }
 
   async event void ResourceDefaultOwner.immediateRequested()
   {
+    call Pullup.set();
     call ResourceDefaultOwner.release();
   }
 }

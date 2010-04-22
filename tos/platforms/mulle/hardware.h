@@ -51,6 +51,10 @@
 You should not remove this fix unless you are totaly sure of what you are doing!
 #endif
 
+#ifdef ENABLE_STOP_MODE
+#include "pin_configuration.h"
+#endif
+
 #include "m16c62phardware.h" // Header file for the MCU
 
 #endif  // __HARDWARE_H__

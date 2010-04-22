@@ -57,7 +57,6 @@ implementation
   HplDS2782 = Logic;
   StdControl = Logic;
 
-  DS2782InternalP.SDA -> IOs.PortP70;
-  DS2782InternalP.SCL -> IOs.PortP71;
+  DS2782InternalP.Pullup -> IOs.PortP75;
   DS2782InternalP.ResourceDefaultOwner -> I2C;
 }
