@@ -41,7 +41,7 @@
  */
 
 #include "hardware.h"
-#
+
 configuration PlatformC
 {
   provides interface Init;

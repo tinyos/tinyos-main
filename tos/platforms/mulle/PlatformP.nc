@@ -51,7 +51,7 @@ module PlatformP
   uses interface StopModeControl;
 #ifdef ENABLE_STOP_MODE
   provides interface Init as StopModeInit;
-  
+
   uses interface HplRV8564 as RTC;
   uses interface HplDS2782;
   uses interface StdControl as DS2782Control;
@@ -80,14 +80,14 @@ implementation
 
 #ifdef ENABLE_STOP_MODE
   task void enableStopMode();
-  
+
   command error_t StopModeInit.init()
   {
-  	// The task is needed so we can be sure that all underlying components 
+    // The task is needed so we can be sure that all underlying components 
     // have been initialized, for example the I2C resource.
-	post enableStopMode();
+    post enableStopMode();
   }
-  
+
   task void enableStopMode()
   {
     call StopModeControl.allowStopMode(true);
@@ -98,7 +98,7 @@ implementation
     call RTC.enableCLKOUT();
     call RTC.writeRegister(RV8564_CLKF, 0x81);  
   }
-  
+
   task void stopDS2782()
   {
     call DS2782Control.stop();
