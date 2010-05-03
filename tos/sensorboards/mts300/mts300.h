@@ -1,4 +1,4 @@
-/* $Id: mts300.h,v 1.4 2007-03-14 04:14:14 pipeng Exp $ */
+/* $Id: mts300.h,v 1.5 2010-05-03 15:33:48 mmaroti Exp $ */
 /*
  * Copyright (c) 2005-2006 Crossbow Technology, Inc.  All rights reserved.
  *
@@ -23,7 +23,7 @@
 /**
  * 
  * @author Hu Siquan <husq@xbow.com>
- * Revision: $Revision: 1.4 $
+ * Revision: $Revision: 1.5 $
  *
  */
 
@@ -44,8 +44,8 @@
 
 enum
 {
-  TOS_MIC_POT_ADDR = 0x5A,
-  TOS_MAG_POT_ADDR = 0x58,
+  TOS_MIC_POT_ADDR = 0x2D,
+  TOS_MAG_POT_ADDR = 0x2C,
 };
 
 // debug leds
