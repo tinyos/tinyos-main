@@ -19,7 +19,7 @@ module MagP
 
 implementation
 {
-  uint8_t gainData[2];
+  norace uint8_t gainData[2];
 
   command error_t SplitControl.start()
   {
@@ -75,18 +75,22 @@ implementation
     return ;
   }
 
+  task void signalAdjustDone()
+  {
+    if (gainData[0] == 1)
+      signal Mag.gainAdjustXDone(gainData[1]);
+    else
+      signal Mag.gainAdjustYDone(gainData[1]);
+  }
+
   async event void I2CPacket.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data)
   {
     call I2CResource.release();
-    if (gainData[0] ==1)
-    {
-      signal Mag.gainAdjustXDone(error);
-    }
-    if (gainData[0] ==0)
-    {
-      signal Mag.gainAdjustYDone(error);
-    }
-    return ;
+
+    gainData[1] = error;
+    post signalAdjustDone();
+
+    return;
   }
 
   async command uint8_t ConfigX.getChannel() {
@@ -113,12 +117,6 @@ implementation
     return ATM128_ADC_PRESCALE;
   }
 
-   default event error_t Mag.gainAdjustXDone(bool result)
-   {
-     return result;
-   }
-   default event error_t Mag.gainAdjustYDone(bool result)
-   {
-     return result;
-   }
+   default event void Mag.gainAdjustXDone(error_t result) { }
+   default event void Mag.gainAdjustYDone(error_t result) { }
 }

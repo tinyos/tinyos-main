@@ -1,4 +1,4 @@
-// $Id: Mag.nc,v 1.3 2008-06-11 00:46:27 razvanm Exp $
+// $Id: Mag.nc,v 1.4 2010-05-03 15:31:25 mmaroti Exp $
 
 /*
  * "Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -60,12 +60,10 @@ interface Mag {
   command error_t gainAdjustY(uint8_t val);
 
   /* Pot adjustment on the X axis of the magnetometer is finished.
-   * Returns:  return SUCCESS.
    */
-  event error_t gainAdjustXDone(bool result);
+  event void gainAdjustXDone(error_t result);
 
   /* Pot adjustment on the Y axis of the magnetometer is finished.
-   * Returns:  return SUCCESS.
    */
-  event error_t gainAdjustYDone(bool result);
+  event void gainAdjustYDone(error_t result);
 }
