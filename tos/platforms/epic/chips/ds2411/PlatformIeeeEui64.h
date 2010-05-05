@@ -1,4 +1,4 @@
-// $Id: PlatformIeeeEui64.h,v 1.1 2010-02-23 06:45:38 sdhsdh Exp $
+// $Id: PlatformIeeeEui64.h,v 1.2 2010-05-05 23:37:00 sdhsdh Exp $
 /*
  * Copyright (c) 2007, Vanderbilt University
  * All rights reserved.
@@ -27,9 +27,10 @@
 #define PLATFORMIEEEEUI64_H
  
 enum {
-  IEEE_EUI64_COMPANY_ID_0 = 'U',
-  IEEE_EUI64_COMPANY_ID_1 = 'C',
-  IEEE_EUI64_COMPANY_ID_2 = 'B',
+  // SDH : this is UCB's EUI.  It is registed with the IEEE.
+  IEEE_EUI64_COMPANY_ID_0 = 0x00,
+  IEEE_EUI64_COMPANY_ID_1 = 0x12,
+  IEEE_EUI64_COMPANY_ID_2 = 0x6d,
   IEEE_EUI64_SERIAL_ID_0 = 'E',
   IEEE_EUI64_SERIAL_ID_1 = 'P',
 };
