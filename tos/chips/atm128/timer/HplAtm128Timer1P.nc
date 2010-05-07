@@ -1,4 +1,4 @@
-/// $Id: HplAtm128Timer1P.nc,v 1.6 2008-06-23 20:25:15 regehr Exp $
+/// $Id: HplAtm128Timer1P.nc,v 1.7 2010-05-07 04:32:15 sallai Exp $
 
 /*
  * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
@@ -205,7 +205,7 @@ implementation
   }
   default async event void Capture.captured(uint16_t time) { }
   AVR_NONATOMIC_HANDLER(SIG_INPUT_CAPTURE1) {
-    signal Capture.captured(call Timer.get());
+    signal Capture.captured(call Capture.get());
   }
   default async event void Timer.overflow() { }
   AVR_NONATOMIC_HANDLER(SIG_OVERFLOW1) {

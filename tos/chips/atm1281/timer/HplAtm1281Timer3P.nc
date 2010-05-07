@@ -216,7 +216,7 @@ implementation
   }
   default async event void Capture.captured(uint16_t time) { }
   AVR_NONATOMIC_HANDLER(SIG_INPUT_CAPTURE3) {
-    signal Capture.captured(call Timer.get());
+    signal Capture.captured(call Capture.get());
   }
   default async event void Timer.overflow() { }
   AVR_NONATOMIC_HANDLER(SIG_OVERFLOW3) {
