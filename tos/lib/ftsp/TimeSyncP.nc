@@ -283,7 +283,8 @@ implementation
         TimeSyncMsg* msg = (TimeSyncMsg*)(call Send.getPayload(processedMsg, sizeof(TimeSyncMsg)));
 
         if( msg->rootID < outgoingMsg->rootID &&
-            // jw: after becoming the root ignore other roots messages (in send period)
+            //after becoming the root, a node ignores messages that advertise the old root (it may take
+            //some time for all nodes to timeout and discard the old root) 
             !(heartBeats < IGNORE_ROOT_MSG && outgoingMsg->rootID == TOS_NODE_ID) ){
             outgoingMsg->rootID = msg->rootID;
             outgoingMsg->seqNum = msg->seqNum;
