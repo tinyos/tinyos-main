@@ -1,4 +1,4 @@
-// $Id: MicaBusC.nc,v 1.5 2007-02-08 17:53:19 idgay Exp $
+// $Id: MicaBusC.nc,v 1.6 2010-05-14 13:23:57 mmaroti Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -25,10 +25,21 @@ configuration MicaBusC {
     interface GeneralIO as PW5;
     interface GeneralIO as PW6;
     interface GeneralIO as PW7;
+
     interface GeneralIO as Int0;
     interface GeneralIO as Int1;
     interface GeneralIO as Int2;
     interface GeneralIO as Int3;
+
+    /* INT lines used as interrupt source */
+    interface GpioInterrupt as Int0_Interrupt;
+    interface GpioInterrupt as Int1_Interrupt;
+    interface GpioInterrupt as Int2_Interrupt;
+    interface GpioInterrupt as Int3_Interrupt;
+    
+    interface GeneralIO as UART_CLK;
+    interface GeneralIO as UART_RXD;
+    interface GeneralIO as UART_TXD;
 
     /* Separate interfaces to allow inlining to occur */
     interface MicaBusAdc as Adc0;
@@ -43,6 +54,7 @@ configuration MicaBusC {
 }
 implementation {
   components HplAtm128GeneralIOC as Pins, MicaBusP;
+  components HplAtm128InterruptC;
 
   PW0 = Pins.PortC0;
   PW1 = Pins.PortC1;
@@ -56,6 +68,26 @@ implementation {
   Int1 = Pins.PortE5;
   Int2 = Pins.PortE6;
   Int3 = Pins.PortE7;
+  
+  UART_CLK = Pins.PortD5;
+  UART_RXD = Pins.PortD2;
+  UART_TXD = Pins.PortD3;
+
+  components new Atm128GpioInterruptC() as Atm128GpioInterrupt0C;
+  Atm128GpioInterrupt0C.Atm128Interrupt->HplAtm128InterruptC.Int4;
+  Int0_Interrupt=Atm128GpioInterrupt0C.Interrupt;
+
+  components new Atm128GpioInterruptC() as Atm128GpioInterrupt1C;
+  Atm128GpioInterrupt1C.Atm128Interrupt->HplAtm128InterruptC.Int5;
+  Int1_Interrupt=Atm128GpioInterrupt1C.Interrupt;
+
+  components new Atm128GpioInterruptC() as Atm128GpioInterrupt2C;
+  Atm128GpioInterrupt2C.Atm128Interrupt->HplAtm128InterruptC.Int6;
+  Int2_Interrupt=Atm128GpioInterrupt2C.Interrupt;
+
+  components new Atm128GpioInterruptC() as Atm128GpioInterrupt3C;
+  Atm128GpioInterrupt3C.Atm128Interrupt->HplAtm128InterruptC.Int7;
+  Int3_Interrupt=Atm128GpioInterrupt3C.Interrupt;
 
   Adc0 = MicaBusP.Adc0;
   Adc1 = MicaBusP.Adc1;
