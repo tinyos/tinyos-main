@@ -1,4 +1,4 @@
-/// $Id: Atm128GpioInterruptC.nc,v 1.5 2008-06-26 04:39:03 regehr Exp $
+/// $Id: Atm128GpioInterruptC.nc,v 1.6 2010-05-14 13:16:55 mmaroti Exp $
 
 /**
  * @author Phil Levis
@@ -39,4 +39,5 @@ implementation {
     signal Interrupt.fired();
   }
 
+  default async event void Interrupt.fired() { }
 }
