@@ -26,4 +26,7 @@ implementation {
   components new SerialAMSenderC(AM_DHV_TEST_MSG);
   TestDhvP.SerialSend -> SerialAMSenderC;
   TestDhvP.SerialControl -> SerialActiveMessageC;
+
+  components ActiveMessageC;
+  TestDhvP.AMControl -> ActiveMessageC;
 }
