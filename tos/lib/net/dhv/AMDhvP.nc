@@ -22,7 +22,6 @@ module AMDhvP {
 
   uses interface AMSend as NetAMSend;
   uses interface Receive as NetReceive;
-  uses interface SplitControl as AMSplitControl;
   uses interface Boot;
 }
 
@@ -33,18 +32,8 @@ implementation {
 
   event void Boot.booted() {
     send_count = 0;
-    call AMSplitControl.start();
   }
 
-  event void AMSplitControl.startDone(error_t err) {
-    if(err != SUCCESS) {
-      call AMSplitControl.start();
-      return;
-    }
-    dbg("AMDhvP", "ActiveMessageC started!\n");
-  }
-
-  event void AMSplitControl.stopDone(error_t err) { }
 
   command error_t Init.init() {
     busy = FALSE;

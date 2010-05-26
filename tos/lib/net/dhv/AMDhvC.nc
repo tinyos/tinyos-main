@@ -33,8 +33,6 @@ implementation {
   MainC.SoftwareInit -> AMDhvP.Init;
   AMDhvP.Boot -> MainC;
 
-  components ActiveMessageC;
-  AMDhvP.AMSplitControl -> ActiveMessageC;
 
   DhvSend = AMDhvP.DhvSend;
   DataReceive = AMDhvP.DhvDataReceive;
