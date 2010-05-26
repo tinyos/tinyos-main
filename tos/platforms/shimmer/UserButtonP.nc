@@ -33,7 +33,7 @@
  * Implementation of the user button for the telosb platform
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * port to shimmer-style
  * @author Steve Ayer
  * @date   February, 2010
@@ -62,7 +62,7 @@ implementation {
   }
 
   task void debounce() {
-    call debounceTimer.startOneShot(125);
+    call debounceTimer.startOneShot(250);
   }
 
   event void NotifyLower.notify( bool val ) {
