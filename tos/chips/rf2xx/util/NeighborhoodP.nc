@@ -51,14 +51,14 @@ implementation
 		return SUCCESS;
 	}
 
-	inline tasklet_async command am_addr_t Neighborhood.getNode(uint8_t index)
+	inline tasklet_async command am_addr_t Neighborhood.getNode(uint8_t idx)
 	{
-		return nodes[index];
+		return nodes[idx];
 	}
 
-	inline tasklet_async command uint8_t Neighborhood.getAge(uint8_t index)
+	inline tasklet_async command uint8_t Neighborhood.getAge(uint8_t idx)
 	{
-		return time - ages[index];
+		return time - ages[idx];
 	}
 
 	tasklet_async uint8_t command Neighborhood.getIndex(am_addr_t node)
@@ -144,19 +144,19 @@ implementation
 		return last;
 	}
 
-	inline tasklet_async command bool NeighborhoodFlag.get[uint8_t bit](uint8_t index)
+	inline tasklet_async command bool NeighborhoodFlag.get[uint8_t bit](uint8_t idx)
 	{
-		return flags[index] & (1 << bit);
+		return flags[idx] & (1 << bit);
 	}
 
-	inline tasklet_async command void NeighborhoodFlag.set[uint8_t bit](uint8_t index)
+	inline tasklet_async command void NeighborhoodFlag.set[uint8_t bit](uint8_t idx)
 	{
-		flags[index] |= (1 << bit);
+		flags[idx] |= (1 << bit);
 	}
 
-	inline tasklet_async command void NeighborhoodFlag.clear[uint8_t bit](uint8_t index)
+	inline tasklet_async command void NeighborhoodFlag.clear[uint8_t bit](uint8_t idx)
 	{
-		flags[index] &= ~(1 << bit);
+		flags[idx] &= ~(1 << bit);
 	}
 
 	tasklet_async command void NeighborhoodFlag.clearAll[uint8_t bit]()

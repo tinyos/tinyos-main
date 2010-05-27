@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2010, Vanderbilt University
  * All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software and its
@@ -20,7 +20,7 @@
  *
  * Author: Miklos Maroti
  */
-
+ 
 #ifndef __TIMESYNCMESSAGELAYER_H__
 #define __TIMESYNCMESSAGELAYER_H__
 
@@ -34,16 +34,16 @@
 typedef nx_int32_t timesync_relative_t;
 
 // this is stored in memory
-typedef uint32_t timesync_absolute_t;
+typedef nx_uint32_t timesync_absolute_t;
 
-typedef struct timesync_footer_t
+typedef nx_struct timesync_footer_t
 {
-	nx_am_id_t type;
-	union
+	nx_am_id_t type;	
+	nx_union timestamp_t
 	{
 		timesync_relative_t relative;
 		timesync_absolute_t absolute;
-	};
+	} timestamp;
 } timesync_footer_t;
 
 #endif//__TIMESYNCMESSAGELAYER_H__

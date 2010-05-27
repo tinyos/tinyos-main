@@ -43,12 +43,12 @@ interface Neighborhood
 	 * is not already at the very end. If the age would get too large to
 	 * fit into a byte, then it is periodically reset to a smaller value.
 	 */
-	tasklet_async command uint8_t getAge(uint8_t index);
+	tasklet_async command uint8_t getAge(uint8_t idx);
 
 	/**
 	 * Returns the node address for the given entry.
 	 */
-	tasklet_async command am_addr_t getNode(uint8_t index);
+	tasklet_async command am_addr_t getNode(uint8_t idx);
 
 	/**
 	 * Adds a new node into the neighborhood table. If this node was already
@@ -66,5 +66,5 @@ interface Neighborhood
 	 * After this event is fired, all flags for this entry are cleared
 	 * (see the NeighborhoodFlag interface)
 	 */
-	tasklet_async event void evicted(uint8_t index);
+	tasklet_async event void evicted(uint8_t idx);
 }

@@ -316,12 +316,12 @@ implementation
 				m = msg;
 			else
 			{
-				uint8_t index = receiveQueueHead + receiveQueueSize;
-				if( index >= RECEIVE_QUEUE_SIZE )
-					index -= RECEIVE_QUEUE_SIZE;
+				uint8_t idx = receiveQueueHead + receiveQueueSize;
+				if( idx >= RECEIVE_QUEUE_SIZE )
+					idx -= RECEIVE_QUEUE_SIZE;
 
-				m = receiveQueue[index];
-				receiveQueue[index] = msg;
+				m = receiveQueue[idx];
+				receiveQueue[idx] = msg;
 
 				++receiveQueueSize;
 				post deliverTask();

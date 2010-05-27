@@ -81,12 +81,12 @@ implementation
 
 	tasklet_async event message_t* SubReceive.receive(message_t* msg)
 	{
-		uint8_t index = call Neighborhood.insertNode(call UniqueConfig.getSender(msg));
+		uint8_t idx = call Neighborhood.insertNode(call UniqueConfig.getSender(msg));
 		uint8_t dsn = call UniqueConfig.getSequenceNumber(msg);
 
-		if( call NeighborhoodFlag.get(index) )
+		if( call NeighborhoodFlag.get(idx) )
 		{
-			uint8_t diff = dsn - receivedNumbers[index];
+			uint8_t diff = dsn - receivedNumbers[idx];
 
 			if( diff == 0 )
 			{
@@ -95,12 +95,12 @@ implementation
 			}
 		}
 		else
-			call NeighborhoodFlag.set(index);
+			call NeighborhoodFlag.set(idx);
 
-		receivedNumbers[index] = dsn;
+		receivedNumbers[idx] = dsn;
 
 		return signal RadioReceive.receive(msg);
 	}
 
-	tasklet_async event void Neighborhood.evicted(uint8_t index) { }
+	tasklet_async event void Neighborhood.evicted(uint8_t idx) { }
 }

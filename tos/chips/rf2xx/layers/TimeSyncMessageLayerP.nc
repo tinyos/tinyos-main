@@ -156,8 +156,8 @@ implementation
 		timesync_footer_t* footer = (timesync_footer_t*)(msg->data + len);
 
 		footer->type = id;
-		footer->absolute = event_time;
-		call PacketTimeSyncOffset.set(msg, offsetof(message_t, data) + len + offsetof(timesync_footer_t, absolute));
+		footer->timestamp.absolute = event_time;
+		call PacketTimeSyncOffset.set(msg, offsetof(message_t, data) + len + offsetof(timesync_footer_t, timestamp.absolute));
 
 		return call SubAMSend.send(addr, msg, len + sizeof(timesync_footer_t));
 	}
@@ -244,23 +244,23 @@ implementation
 
 	command bool TimeSyncPacketRadio.isValid(message_t* msg)
 	{
-		return call PacketTimeStampRadio.isValid(msg) && getFooter(msg)->relative != 0x80000000L;
+		return call PacketTimeStampRadio.isValid(msg) && getFooter(msg)->timestamp.relative != 0x80000000L;
 	}
 
 	command uint32_t TimeSyncPacketRadio.eventTime(message_t* msg)
 	{
-		return getFooter(msg)->relative + call PacketTimeStampRadio.timestamp(msg);
+		return getFooter(msg)->timestamp.relative + call PacketTimeStampRadio.timestamp(msg);
 	}
 
 /*----------------- TimeSyncPacketMilli -----------------*/
 
 	command bool TimeSyncPacketMilli.isValid(message_t* msg)
 	{
-		return call PacketTimeStampMilli.isValid(msg) && getFooter(msg)->relative != 0x80000000L;
+		return call PacketTimeStampMilli.isValid(msg) && getFooter(msg)->timestamp.relative != 0x80000000L;
 	}
 
 	command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg)
 	{
-		return ((int32_t)(getFooter(msg)->relative) >> RADIO_ALARM_MILLI_EXP) + call PacketTimeStampMilli.timestamp(msg);
+		return ((int32_t)(getFooter(msg)->timestamp.relative) >> RADIO_ALARM_MILLI_EXP) + call PacketTimeStampMilli.timestamp(msg);
 	}
 }
