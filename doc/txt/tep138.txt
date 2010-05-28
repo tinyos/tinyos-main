@@ -1,0 +1,158 @@
+============================
+Source Routing
+============================
+
+:TEP: 138
+:Group: Net2 Working Group
+:Type: Documentary
+:Status: Draft
+:TinyOS-Version: > 2.1
+:Author: Chieh-Jan (Mike) Liang, Doug Carlson, and Omprakash Gnawali
+
+:Draft-Created: 28-May-2010
+:Draft-Version: $Revision: 1.1 $
+:Draft-Modified: $Date: 2010-05-28 18:01:24 $
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This memo documents a part of TinyOS for the TinyOS Community, and
+   requests discussion and suggestions for improvements.  Distribution
+   of this memo is unlimited. This memo is in full compliance with
+   TEP 1.
+
+Abstract
+====================================================================
+
+The memo documents the interfaces and components used for source
+routing in TinyOS 2.x. Source routing allows its users to specify the
+path a packet must take to reach the destination.
+
+1. Introduction
+====================================================================
+
+Source routes are paths explicitly provided by its users. These
+routes, often in the form of a list of nodes to be traversed on the
+way to the destination, are carried in the packet header. When a node
+receives a source-routed packet, it looks up the next hop in the
+source routing packet header, and forwards the packet to that node.
+
+A complete source routing system comprises of two sets of
+functionalities: setting up and looking up source routes and
+forwarding based on source routes.
+
+A source routing system may be directly used by applications. This can
+be useful as a light-weight routing system for debugging or for
+environments that are static enough that the routes are known ahead of
+time. It can also be used by routing systems that compute the path at
+a given node based on topology information from the network. For
+example, given the link state information of a network, a node can
+source route a packet to any node in the network. Another scenario
+where source routing is useful when we need to route a packet back to
+the source of a packet when the forward path of a packet from the
+source to the current node is known.
+
+Our approach is to provide the most basic source routing system as an
+example of a light-weight end-to-end protocol and also so that it can
+be used in conjunction with other routing and forwarding systems. The
+rest of this document describes the source routing interfaces and
+components.
+
+2. Source Routing Interfaces
+====================================================================
+
+A node can perform three different roles in source routing:
+
+  * Sender: Configuring the source route and sending the packet
+
+  * Forwarder: Receive a source routed packet and forward it to the next hop
+
+  * Receiver: Receive a source routed packet at the destination
+
+Multiple senders can use the source routing system. These senders are
+uniquely identified by sourceroute identifiers. These identifiers work
+like collection identifiers in collection protocols[1_].
+
+The sender uses the SrcRouteSend interface to set the route and to
+send the message.
+
+  interface SrcRouteSend
+  {
+    command error_t clearRoute(message_t *msg);
+    command error_t setRoute(message_t *msg, uint8_t hopIdx, uint16_t nodeId);
+    command nx_am_addr_t* getRoute(message_t *msg);
+  
+    command uint8_t getRouteLen(message_t *msg);
+    command error_t setRouteLen(message_t *msg, uint8_t len);
+    command error_t send(message_t *msg);
+  }
+
+
+The forwarder uses the SrcRoutePacket interface to lookup source route
+information and update the header as it forwards the packet to the
+next hop:
+
+  interface SrcRoutePacket
+  {
+    command am_addr_t getNextHop(message_t *msg);
+    command am_addr_t getDest(message_t *msg);
+  
+    command uint8_t getCurHop(message_t *msg);
+    command error_t setCurHop(message_t *msg, uint8_t hop);
+  
+    command uint8_t getRouteLen(message_t *msg);
+    command uint8_t setRouteLen(message_t *msg, uint8_t len);
+  
+    command nx_am_addr_t* getRoute(message_t *msg);
+  }
+
+
+3 Source Routing Services
+====================================================================
+
+A source routing service MUST provide one SourceRoutingC,
+which has the following signature::
+
+  configuration SourceRoutingC {
+    provides {
+      interface StdControl;
+      interface SrcRouteSend;
+      interface SrcRoutePacket;
+      interface Receive[sourceroute_id_t id];
+    }
+    uses {
+      interface SrcRouteIdId[uint8_t client];
+    }
+  }
+
+
+
+  
+4. Implementation
+====================================================================
+
+An implementation of source routing service can be found in
+``tinyos-2.x/tos/lib/net/sourceroute``.
+
+5. Author Addresses
+====================================================================
+
+| Chieh-Jan (Mike) Liang
+| JHU
+|
+| Doug Carlson
+| JHU
+|
+| Omprakash Gnawali
+| S255 Clark Center, 318 Campus Drive
+| Stanford University
+| Stanford, CA  94305
+|
+| phone - +1 650 725 6086
+| email - gnawali@cs.stanford.edu
+
+
+6. Citations
+====================================================================
+
+.. [1] TEP 119: Collection
