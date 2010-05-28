@@ -50,13 +50,11 @@ module ProgFlashP
   
   uses interface HplM16c62pFlash as Flash;
 }
-
 implementation
 {
 
   command error_t ProgFlash.write(in_flash_addr_t addr, uint8_t* buf, in_flash_addr_t len)
   {
-    
     // We dont need to rewrite the hw interrupt vector
     if (addr >= 0xFFE00L)
     {
@@ -71,7 +69,7 @@ implementation
     if (addr == 0xA0000L)
     {
       // Erase Block 10
-      if (call Flash.FlashErase(BLOCK_10) != 0 )
+      if (call Flash.erase(M16C62P_BLOCK_10) != SUCCESS )
       {
         return FAIL;
       }
@@ -79,7 +77,7 @@ implementation
     else if ( addr == 0xB0000L )
     {
       // Erase Block 9
-      if (call Flash.FlashErase(BLOCK_9) != 0 )
+      if (call Flash.erase(M16C62P_BLOCK_9) != SUCCESS )
       {
         return FAIL;
       }
@@ -87,7 +85,7 @@ implementation
     else if ( addr == 0xC0000L )
     {
       // Erase Block 8
-      if (call Flash.FlashErase(BLOCK_8) != 0 )
+      if (call Flash.erase(M16C62P_BLOCK_8) != SUCCESS )
       {
         return FAIL;
       }
@@ -95,13 +93,13 @@ implementation
     else if ( addr == 0xD0000L )
     {
       // Erase Block 7
-      if (call Flash.FlashErase(BLOCK_7) != 0 )
+      if (call Flash.erase(M16C62P_BLOCK_7) != SUCCESS )
       {
         return FAIL;
       }
     }
 
-    if (call Flash.FlashWrite(addr, (unsigned int*) buf, len) != 0)
+    if (call Flash.write(addr, (unsigned int*) buf, len) != SUCCESS)
     {
       return FAIL;
     }

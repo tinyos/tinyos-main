@@ -151,10 +151,6 @@ SECTIONS {
 		*(.vectors_variable);
 	} > flash
 
-        .bootargs /*boot_args_address*/ : {
-                *(.boot_args);
-        } > flash
-
 	PROVIDE(_end = __bss_start + __bss_size);
 	
 	/* User Stack Pointer */

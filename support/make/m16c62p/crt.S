@@ -132,18 +132,6 @@ _vectors_fixed:
 .long	0 /* NMI. */
 .long	_start /* Reset. */
 
-
-/* Boot args for tosboot. */
-.section .boot_args, "a",@progbits
-
-.size	_boot_args, 8
-.type	_boot_args, @object
-
-_boot_args:
-
-.long	0xFFFFFFFF 
-.long	0xFFFFFFFF
-
 /* Variable vector table. */
 .section .vectors_variable
 

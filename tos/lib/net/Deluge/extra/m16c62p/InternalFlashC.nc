@@ -46,7 +46,7 @@ configuration InternalFlashC
 }
 implementation
 {
-  components HplM16c62pFlashC, InternalFlashP;
+  components HplM16c62pFlashC, new InternalFlashP(M16C62P_BLOCK_2, M16C62P_BLOCK_3);
   InternalFlashP.Flash -> HplM16c62pFlashC;
   InternalFlash = InternalFlashP;
 }
