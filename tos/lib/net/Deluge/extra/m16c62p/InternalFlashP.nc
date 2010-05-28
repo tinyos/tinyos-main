@@ -151,7 +151,7 @@ implementation
 
   command error_t InternalFlash.write(void* addr, void* buf, uint16_t size)
   {
-    uint8_t wbuf[sizeof(BootArgs)];
+    uint8_t wbuf[sizeof(BootArgs)+2];
     unsigned long address;
 
     sanityCheck(size);
