@@ -258,7 +258,7 @@ implementation {
     vectorCommRate = call DipVectorDecision.getCommRate();
     summaryCommRate = call DipSummaryDecision.getCommRate();
 
-    if(dataCommRate > 1) {
+    if(dataCommRate >= DIP_DATA_SUPPRESSION) {
       dbg("DipLogicP", "Heard data\n");
       return ID_DIP_INVALID;
     }
@@ -271,7 +271,7 @@ implementation {
     }
 
     // didn't send or hear data at this point
-    if(vectorCommRate + summaryCommRate > 1) {
+    if(vectorCommRate + summaryCommRate >= DIP_ADV_SUPPRESSION) {
       dbg("DipLogicP", "Heard an advertisement\n");
       return ID_DIP_INVALID;
     }
