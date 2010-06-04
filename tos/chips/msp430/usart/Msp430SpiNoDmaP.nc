@@ -29,10 +29,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
+/*
+ * Copyright (c) 2010, Vanderbilt University
+ * All rights reserved.
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without written agreement is
+ * hereby granted, provided that the above copyright notice, the following
+ * two paragraphs and the author appear in all copies of this software.
+ * 
+ * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+ * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
+ * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE VANDERBILT UNIVERSITY HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ * Author: Janos Sallai
+ */ 
+
 /**
  * @author Jonathan Hui <jhui@archedrock.com>
  * @author Jan Hauer <hauer@tkn.tu-berlin.de> (bugfix in continueOp())
- * @version $Revision: 1.6 $ $Date: 2008-06-16 07:31:21 $
+ * @version $Revision: 1.7 $ $Date: 2010-06-04 22:31:21 $
  */
 
 
@@ -41,6 +64,7 @@ generic module Msp430SpiNoDmaP() {
   provides interface Resource[ uint8_t id ];
   provides interface ResourceConfigure[ uint8_t id ];
   provides interface SpiByte;
+  provides interface FastSpiByte;
   provides interface SpiPacket[ uint8_t id ];
 
   uses interface Resource as UsartResource[ uint8_t id ];
@@ -106,6 +130,33 @@ implementation {
     byte = call Usart.rx();
     //call Usart.enableRxIntr();
     return byte;
+  }
+
+  inline async command void FastSpiByte.splitWrite(uint8_t data) {
+    call Usart.tx( data );
+  }
+
+  inline async command uint8_t FastSpiByte.splitRead() {
+    while( !call Usart.isRxIntrPending() );
+    return call Usart.rx();
+  }
+
+  inline async command uint8_t FastSpiByte.splitReadWrite(uint8_t data) {
+    uint8_t b;
+
+    while( !call Usart.isTxIntrPending() );
+    atomic {
+      call Usart.tx( data );
+      while( !call Usart.isRxIntrPending() );
+      b = call Usart.rx();
+    }
+
+    return b;
+  }
+
+  inline async command uint8_t FastSpiByte.write(uint8_t data) {
+    call FastSpiByte.splitWrite( data );
+    return call FastSpiByte.splitRead();
   }
 
   default async command error_t UsartResource.isOwner[ uint8_t id ]() { return FAIL; }

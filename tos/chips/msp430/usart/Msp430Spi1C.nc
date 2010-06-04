@@ -29,6 +29,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE
  */
 
+/*
+ * Copyright (c) 2010, Vanderbilt University
+ * All rights reserved.
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without written agreement is
+ * hereby granted, provided that the above copyright notice, the following
+ * two paragraphs and the author appear in all copies of this software.
+ * 
+ * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+ * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
+ * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE VANDERBILT UNIVERSITY HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ * Author: Janos Sallai
+ */ 
+
 /**
  * An implementation of the SPI on USART0 for the MSP430. The current
  * implementation defaults not using the DMA and performing the SPI
@@ -37,7 +60,7 @@
  *
  * @author Jonathan Hui <jhui@archedrock.com>
  * @author Mark Hays
- * @version $Revision: 1.7 $ $Date: 2008-05-22 20:25:28 $
+ * @version $Revision: 1.8 $ $Date: 2010-06-04 22:31:21 $
  */
 
 #include "msp430usart.h"
@@ -47,6 +70,9 @@ generic configuration Msp430Spi1C() {
   provides interface Resource;
   provides interface ResourceRequested;
   provides interface SpiByte;
+#ifndef ENABLE_SPI1_DMA
+  provides interface FastSpiByte;
+#endif  
   provides interface SpiPacket;
 
   uses interface Msp430SpiConfigure;
@@ -67,6 +93,9 @@ implementation {
 
   Resource = SpiP.Resource[ CLIENT_ID ];
   SpiByte = SpiP.SpiByte;
+#ifndef ENABLE_SPI1_DMA
+  FastSpiByte = SpiP.FastSpiByte;
+#endif  
   SpiPacket = SpiP.SpiPacket[ CLIENT_ID ];
   Msp430SpiConfigure = SpiP.Msp430SpiConfigure[ CLIENT_ID ];
 
