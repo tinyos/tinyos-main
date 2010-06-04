@@ -67,7 +67,7 @@
  * @author: Jonathan Hui <jhui@archedrock.com>
  * @author: Vlado Handziski <handzisk@tkn.tu-berlin.de>
  * @author: Joe Polastre
- * @version $Revision: 1.6 $ $Date: 2008-05-15 23:57:13 $
+ * @version $Revision: 1.7 $ $Date: 2010-06-04 22:30:21 $
  */
 
 module HplMsp430Usart1P {
@@ -382,13 +382,11 @@ implementation
   }
 
   async command void Usart.tx(uint8_t data) {
-    atomic U1TXBUF = data;
+    U1TXBUF = data;
   }
 
   async command uint8_t Usart.rx() {
-    uint8_t value;
-    atomic value = U1RXBUF;
-    return value;
+    return U1RXBUF;
   }
 
 }

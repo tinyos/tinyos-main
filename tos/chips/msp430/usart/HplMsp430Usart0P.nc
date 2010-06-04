@@ -68,7 +68,7 @@
  * @author: Vlado Handziski <handzisk@tkn.tu-berlin.de>
  * @author: Joe Polastre
  * @author: Philipp Huppertz <huppertz@tkn.tu-berlin.de>
- * @version $Revision: 1.7 $ $Date: 2008-06-24 05:32:31 $
+ * @version $Revision: 1.8 $ $Date: 2010-06-04 22:30:21 $
  */
 
 module HplMsp430Usart0P @safe() {
@@ -380,13 +380,11 @@ implementation
   }
 
   async command void Usart.tx(uint8_t data) {
-    atomic U0TXBUF = data;
+    U0TXBUF = data;
   }
 
   async command uint8_t Usart.rx() {
-    uint8_t value;
-    atomic value = U0RXBUF;
-    return value;
+    return U0RXBUF;
   }
 
   default async event void I2CInterrupts.fired() {}
