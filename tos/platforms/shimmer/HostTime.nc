@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 Hewlett-Packard Company
+ * Copyright (c) 2010, Shimmer Research, Ltd.
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +12,7 @@
  *       copyright notice, this list of conditions and the following
  *       disclaimer in the documentation and/or other materials provided
  *       with the distribution.
- *     * Neither the name of the Hewlett-Packard Company nor the names of its
+ *     * Neither the name of Shimmer Research, Ltd. nor the names of its
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
 
@@ -28,20 +28,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * @author Steve Ayer
+ * @date   June 2010
  */
 
-#include "Time.h"
+interface HostTime {
+  /*
+   * this should be used to begin execution of applications 
+   * that require a host-based timestamp sent via serial line
+   */
+  event void timeAndZoneSet(char * g_timestring);
 
-interface Time {
-  command error_t gmtime(const time_t *timer, struct tm *tm);
-  command error_t localtime(const time_t *timer, struct tm *tm);
-  command error_t asctime(const struct tm *tm, char *buf, int buflen);
-  command error_t time(time_t *timer);
-  command void setCurrentTime(time_t current_time);
-  command void setZoneInfo(uint16_t g_year, 
-			   time_t g_year_time, 
-			   uint8_t g_zero_day, 
-			   uint16_t g_dst_fday, 
-			   uint16_t g_dst_lday);
-  event void tick();
 }

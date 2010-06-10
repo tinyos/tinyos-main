@@ -1,4 +1,4 @@
-// $Id: TimeSyncMessageC.nc,v 1.4 2009-11-30 21:22:17 kusy Exp $
+// $Id: TimeSyncMessageC.nc,v 1.5 2010-06-10 18:25:45 ayer1 Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.

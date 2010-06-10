@@ -42,6 +42,19 @@ implementation {
 #define HAVE_DST
 extern int snprintf(char *str, size_t len, const char *format, ...) __attribute__ ((C));
 
+  struct y_info{
+    time_t year_seconds; /* time_t value for beginning of year */
+    int8_t wday_offset;   /* tm_day of first day of the year */
+    int8_t isleap;
+    int16_t dst_first_yday;
+    int16_t dst_last_yday;
+  };
+  time_t g_seconds;
+  time_t g_year_seconds;
+  time_t g_seconds_from_year;
+  uint16_t g_days;
+  time_t g_seconds_from_day;
+
   //#define TZNAME_MAX 7
   //#define LONG_MAX 0x7fffffffL
   time_t g_tick_local_time;
@@ -50,6 +63,26 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
 #else
   time_t g_current_time;
 #endif
+
+#ifndef HOST_TIME
+#define NUM_YEARS 4
+  const int16_t g_first_year = 2009;
+  struct y_info year_info[NUM_YEARS] = {
+    /* unix time start jan 1 1970 */
+    // from 2007, dst begins 2nd sunday in march, ends first sunday in november
+    { 0x495c4dd0, 3, 0, 67, 305},
+    { 0x4B3D8150, 4, 0, 73, 311},
+    { 0x4D1EB4D0, 5, 0, 72, 310},
+    { 0x4EFFE850, 6, 1, 71, 309}
+  };
+
+#else
+#define NUM_YEARS 1
+  // these will be set by setZoneInfo()
+  int16_t g_first_year = 0;
+  struct y_info year_info[NUM_YEARS];
+#endif
+
   //  time_t g_local_time; /* from LocalTime.read() */
   uint64_t g_local_time; /* from LocalTime.read(), now 64 bits to handle */
 
@@ -65,6 +98,7 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
 
   rule_struct _time_tzinfo[1];
 
+  // gmt_offset can stay zero, because any CURRENT_TIME we get is from a local source
   command error_t Init.init() {
     _time_tzinfo[0].gmt_offset = 60L * 0L;
 
@@ -77,6 +111,25 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
   command void Time.setCurrentTime(time_t current_time){
     atomic g_current_time = current_time;
     g_local_time = call LocalTime64.get();
+  }
+
+  command void Time.setZoneInfo(uint16_t g_year, 
+				time_t g_year_time, 
+				uint8_t g_zero_day, 
+				uint16_t g_dst_fday, 
+				uint16_t g_dst_lday){
+    g_first_year = g_year;
+    
+    year_info[0].year_seconds = g_year_time;
+    year_info[0].wday_offset = g_zero_day;
+
+    if(!(g_year % 4))
+      year_info[0].isleap = 1;
+    else
+      year_info[0].isleap = 0;
+
+    year_info[0].dst_first_yday = g_dst_fday;
+    year_info[0].dst_last_yday = g_dst_lday;
   }
 
   void dotick(int force) {
@@ -107,11 +160,6 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
    * It time_t is > 32 bits, this needs to be adjusted to deal with overflow.
    */
 
-  /* Note: offset is the correction in _days_ to *timer! */
-  static const uint16_t vals[] = {
-    60, 60, 24, 7 /* special */, 36524u, 1461, 365, 0
-  };
-
   static const int8_t days_per_month[] = {
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, /* non-leap */
     29,
@@ -121,7 +169,6 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
   static const char utc_string[] = "UTC";
 #endif
 
-  #define NUM_YEARS 4
   /*
     import time
     for y in range(2004,2008):
@@ -150,27 +197,6 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
     
   */
 
-  const int16_t g_first_year = 2009;
-  const struct {
-    time_t year_seconds; /* time_t value for beginning of year */
-    int8_t wday_offset;   /* tm_day of first day of the year */
-    int8_t isleap;
-    int16_t dst_first_yday;
-    int16_t dst_last_yday;
-  } year_info[NUM_YEARS] = {
-    /* unix time start jan 1 1970 */
-    // from 2007, dst begins 2nd sunday in march, ends first sunday in november
-    { 0x495c4dd0, 3, 0, 67, 305},
-    { 0x4B3D8150, 4, 0, 73, 311},
-    { 0x4D1EB4D0, 5, 0, 72, 310},
-    { 0x4EFFE850, 6, 1, 71, 309}
-  };
-  time_t g_seconds;
-  time_t g_year_seconds;
-  time_t g_seconds_from_year;
-  uint16_t g_days;
-  time_t g_seconds_from_day;
-
   struct tm *_time_t2tm(const time_t *timer, int localtime, struct tm *result)
   {
     uint16_t seconds16;
@@ -194,13 +220,22 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
       memset(result, 0, sizeof(struct tm));
       return NULL;
     }
-    for (i = 0; i < NUM_YEARS-1; i++) {
-      if (seconds < year_info[i+1].year_seconds) {
-	seconds -= year_info[i].year_seconds;
-	result->tm_year = g_first_year + i;
-	isleap = year_info[i].isleap;
-	break;
+    
+    if(NUM_YEARS > 1){
+      for (i = 0; i < NUM_YEARS-1; i++) {
+	if (seconds < year_info[i+1].year_seconds) {
+	  seconds -= year_info[i].year_seconds;
+	  result->tm_year = g_first_year + i;
+	  isleap = year_info[i].isleap;
+	  break;
+	}
       }
+    }
+    else{
+      i = 0;
+      seconds -= year_info[i].year_seconds;
+      result->tm_year = g_first_year + i;
+      isleap = year_info[i].isleap;
     }
     g_year_seconds = year_info[i].year_seconds;
     g_seconds_from_year = seconds;
@@ -255,12 +290,6 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
 
     return SUCCESS;
   }
-
-  static const unsigned char day_cor[] = { /* non-leap */
-    31, 31, 34, 34, 35, 35, 36, 36, 36, 37, 37, 38, 38
-    /* 	 0,  0,  3,  3,  4,  4,  5,  5,  5,  6,  6,  7,  7 */
-    /*	    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 */
-  };
 
   /* Note: timezone locking is done by localtime_r. */
 
