@@ -32,68 +32,26 @@
  * @date August 2006
  * @author Konrad Lorincz
  * ported to TOS 2
+ * @author Steve Ayer
+ * @date   May, 2010
+ * name abstraction to cover other accel chipsets
  */
 
-#include "Mma_Accel.h"
-
-module Mma7260P 
+interface Mma_Accel
 {
-    provides interface Init;
-    provides interface Mma_Accel as Accel;
-}
-implementation 
-{
-    command error_t Init.init()
-    {
-        // configure pins
-        TOSH_MAKE_ACCEL_SLEEP_N_OUTPUT();         // sleep for accel
-        TOSH_SEL_ACCEL_SLEEP_N_IOFUNC();
-        
-        TOSH_MAKE_ADC_ACCELZ_INPUT();         
-        TOSH_SEL_ADC_ACCELZ_MODFUNC();
+    /**
+     * Turns the accelerometer on or off.
+     *
+     * @param wakeup if <code>TRUE</code> turns it on; if <code>FALSE</code> turns it off
+     */
+    command void wake(bool wakeup);
 
-        TOSH_MAKE_ADC_ACCELY_INPUT();         
-        TOSH_SEL_ADC_ACCELY_MODFUNC();
-
-        TOSH_MAKE_ADC_ACCELX_INPUT();         
-        TOSH_SEL_ADC_ACCELX_MODFUNC();
-
-        // by default wake up accelerometer
-        call Accel.wake(TRUE);
-
-        return SUCCESS;
-    }
-
-    
-    command void Accel.wake(bool wakeup) 
-    {
-        if(wakeup)
-            TOSH_SET_ACCEL_SLEEP_N_PIN();    // wakes up accel board
-        else
-            TOSH_CLR_ACCEL_SLEEP_N_PIN();    // puts accel board to sleep
-    }
-
-    command void Accel.setSensitivity(uint8_t sensitivity) 
-    {
-        switch(sensitivity) {
-        case RANGE_1_5G:
-            TOSH_CLR_ACCEL_SEL0_PIN();
-            TOSH_CLR_ACCEL_SEL1_PIN();
-            break;
-        case RANGE_2_0G:
-            TOSH_SET_ACCEL_SEL0_PIN();
-            TOSH_CLR_ACCEL_SEL1_PIN();
-            break;
-        case RANGE_4_0G:
-            TOSH_CLR_ACCEL_SEL0_PIN();
-            TOSH_SET_ACCEL_SEL1_PIN();
-            break;
-        case RANGE_6_0G:
-            TOSH_SET_ACCEL_SEL0_PIN();
-            TOSH_SET_ACCEL_SEL1_PIN();
-            break;
-        }
-    }
+    /**
+     * Sets the sensitivity (gain) of the sensors.
+     *
+     * @param sensitivity the sensitivity (gain)
+     */
+    command void setSensitivity(uint8_t sensitivity);
 }
 
 
