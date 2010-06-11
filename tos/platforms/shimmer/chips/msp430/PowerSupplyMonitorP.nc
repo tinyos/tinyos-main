@@ -58,7 +58,7 @@ implementation {
    * no reset, 15 minute polling 
    */
   void init() {
-    threshold = THREE_7V;
+    threshold = THREE_2V;
     monitor_interval = 900000;  
 
     SVSCTL = 0;
