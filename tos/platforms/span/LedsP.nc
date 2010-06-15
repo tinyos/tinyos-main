@@ -1,4 +1,4 @@
-// $Id: LedsP.nc,v 1.1 2010-03-24 17:42:14 ayer1 Exp $
+// $Id: LedsP.nc,v 1.2 2010-06-15 14:43:04 ayer1 Exp $
 
 /*
  * "Copyright (c) 2000-2005 The Regents of the University  of California.  
@@ -28,7 +28,9 @@
  * @author Philip Levis
  *
  * @date   March 21, 2005
- *
+ */
+/*
+ * one-led hacks for span, sma 6/2010
  */
 
 module LedsP @safe() {
@@ -38,6 +40,8 @@ module LedsP @safe() {
   }
   uses {
     interface GeneralIO as Led0;
+    interface GeneralIO as Led1;
+    interface GeneralIO as Led2;
   }
 }
 implementation {
@@ -70,12 +74,30 @@ implementation {
     DBGLED(0);
   }
 
+  async command void Leds.led1On() {
+  }
+
+  async command void Leds.led1Off() {
+  }
+
+  async command void Leds.led1Toggle() {
+  }
+
+  async command void Leds.led2On() {
+  }
+
+  async command void Leds.led2Off() {
+  }
+
+  async command void Leds.led2Toggle() {
+  }
+
   async command uint8_t Leds.get() {
     uint8_t rval;
     atomic {
       rval = 0;
       if (!call Led0.get()) {
-	      rval |= LEDS_LED0;
+	rval |= LEDS_LED0;
       }
     }
     return rval;
@@ -84,10 +106,10 @@ implementation {
   async command void Leds.set(uint8_t val) {
     atomic {
       if (val & LEDS_LED0) {
-	      call Leds.led0On();
+	call Leds.led0On();
       }
       else {
-	      call Leds.led0Off();
+	call Leds.led0Off();
       }
     }
   }

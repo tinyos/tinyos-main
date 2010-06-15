@@ -1,4 +1,4 @@
-// $Id: PlatformLedsC.nc,v 1.1 2010-03-24 17:42:14 ayer1 Exp $
+// $Id: PlatformLedsC.nc,v 1.2 2010-06-15 14:43:04 ayer1 Exp $
 
 /* "Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
@@ -22,16 +22,17 @@
 
 /**
  * @author Joe Polastre
- * @version $Revision: 1.1 $ $Date: 2010-03-24 17:42:14 $
- *
- * @author Steve Ayer
- * @date December, 2009, reducing down to one led
+ * @version $Revision: 1.2 $ $Date: 2010-06-15 14:43:04 $
  */
-
+/*
+ * one-led hacks for span, sma 6/2010
+ */
 #include "hardware.h"
 
 configuration PlatformLedsC {
   provides interface GeneralIO as Led0;
+  provides interface GeneralIO as Led1;
+  provides interface GeneralIO as Led2;
   uses interface Init;
 }
 implementation
@@ -39,6 +40,8 @@ implementation
   components 
       HplMsp430GeneralIOC as GeneralIOC
     , new Msp430GpioC() as Led0Impl
+    , new Msp430GpioC() as Led1Impl
+    , new Msp430GpioC() as Led2Impl
     ;
   components PlatformP;
 
@@ -46,5 +49,10 @@ implementation
 
   Led0 = Led0Impl;
   Led0Impl -> GeneralIOC.Port43;
+
+  Led1 = Led1Impl;
+
+  Led2 = Led2Impl;
+
 }
 
