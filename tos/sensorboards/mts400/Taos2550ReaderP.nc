@@ -40,11 +40,13 @@ generic module Taos2550ReaderP()
 	uses interface Resource as IRResource;
 	uses interface Read<uint16_t> as VLRead;
 	uses interface Read<uint16_t> as IRRead;
+	
+	uses interface DiagMsg;
 }
 implementation
 {
 	command error_t VisibleLight.read() {
-		return call VLResource.request();
+		return call VLResource.request();;
 	}
 
 	event void VLResource.granted() {

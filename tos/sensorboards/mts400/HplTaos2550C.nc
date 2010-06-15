@@ -32,6 +32,7 @@
 */
 
 #include"Taos2550.h"
+#include"Adg715.h"
 
 configuration HplTaos2550C {
   provides interface Resource[ uint8_t id ];
@@ -46,9 +47,10 @@ implementation {
 	SplitControlPowerManagerC.ArbiterInfo -> Arbiter.ArbiterInfo;
 	SplitControlPowerManagerC.ResourceDefaultOwner -> Arbiter.ResourceDefaultOwner;
 	
-	components Adg715PowerC;
-	HplTaos2550P.ChannelLightPower -> Adg715PowerC.ChannelLightPower;
-
+	components Adg715C;
+	HplTaos2550P.ChannelLightPower -> Adg715C.ChannelLightPower;
+	HplTaos2550P.Resource -> Adg715C.Resource[ unique(UQ_ADG715)];
+	
 	components new TimerMilliC()as Timer;
 	HplTaos2550P.Timer -> Timer;
 

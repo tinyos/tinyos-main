@@ -30,7 +30,7 @@
  *
  * Authors:		Joe Polastre
  *
- * $Id: Calibration.nc,v 1.1 2010-05-14 13:33:14 mmaroti Exp $
+ * $Id: Calibration.nc,v 1.2 2010-06-15 21:19:52 mmaroti Exp $
  */
 
 interface Calibration {

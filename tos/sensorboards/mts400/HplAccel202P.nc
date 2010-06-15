@@ -37,19 +37,46 @@ module HplAccel202P {
 	uses interface Channel as ChannelAccelPower;
 	uses interface Channel as ChannelAccel_X;
 	uses interface Channel as ChannelAccel_Y;
+	uses interface Resource;
 }
 implementation {
 
+	enum{
+		IDLE=0,
+		START,
+		STOP,
+	};
+	uint8_t state=IDLE;
+	
 	command error_t SplitControl.start() {
-		return  call DcDcBoost33Channel.open();
+		state=START;
+		return call Resource.request();
 	}
-  
+	
+	event void Resource.granted(){
+		error_t err;
+		if(state==START){
+			if((err=call DcDcBoost33Channel.open())==SUCCESS){
+				return;
+			}
+		}else{
+			if((err=call DcDcBoost33Channel.close())==SUCCESS){
+				return;
+			}
+		}
+		state=IDLE;
+		call Resource.release();
+		signal SplitControl.startDone(err);
+	}
+	  
 	event void DcDcBoost33Channel.openDone(error_t err){
 		if(err==SUCCESS){
 			if((err=call ChannelAccelPower.open())==SUCCESS){
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone(err);
 	}
 	
@@ -59,6 +86,8 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone(err);
 	}
 	
@@ -68,15 +97,20 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone(err);
 	}
 	
 	event void ChannelAccel_Y.openDone(error_t err){
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone(err);
 	}
 	
 	command error_t SplitControl.stop() {
-		return  call DcDcBoost33Channel.close();
+		state=STOP;
+		return  call Resource.request();
 	}
 	
 	event void DcDcBoost33Channel.closeDone(error_t err){
@@ -85,6 +119,8 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 	
@@ -94,6 +130,8 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 	
@@ -103,10 +141,14 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 	
 	event void ChannelAccel_Y.closeDone(error_t err){
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 }

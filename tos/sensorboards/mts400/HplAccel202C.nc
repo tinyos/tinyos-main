@@ -32,6 +32,7 @@
 */
 
 #include"Accel202.h"
+#include"Adg715.h"
 
 configuration HplAccel202C {
   provides interface Resource[ uint8_t id ];
@@ -46,15 +47,12 @@ implementation {
 	SplitControlPowerManagerC.ArbiterInfo -> Arbiter.ArbiterInfo;
 	SplitControlPowerManagerC.ResourceDefaultOwner -> Arbiter.ResourceDefaultOwner;
 	
-	components Adg715PowerC;
-	HplAccel202P.DcDcBoost33Channel -> Adg715PowerC.DcDcBoost33Channel;
-	HplAccel202P.ChannelAccelPower -> Adg715PowerC.ChannelAccelPower;
-	
-	components Adg715CommC;
-	
-	HplAccel202P.ChannelAccel_X -> Adg715CommC.ChannelAccel_X;
-	HplAccel202P.ChannelAccel_Y -> Adg715CommC.ChannelAccel_Y;
-	
+	components Adg715C;
+	HplAccel202P.DcDcBoost33Channel -> Adg715C.DcDcBoost33Channel;
+	HplAccel202P.ChannelAccelPower -> Adg715C.ChannelAccelPower;
+	HplAccel202P.ChannelAccel_X -> Adg715C.ChannelAccel_X;
+	HplAccel202P.ChannelAccel_Y -> Adg715C.ChannelAccel_Y;
+	HplAccel202P.Resource -> Adg715C.Resource[ unique(UQ_ADG715)];
 }
 
 

@@ -39,7 +39,9 @@
  * @author Danny Park
  */
  
-configuration Adg715CommC {
+#include"Adg715.h" 
+ 
+configuration Adg715C {
 	provides {
 		/** Connects UART_TXD to GPS_RX */
 		//interface Channel as ChannelGpsRx;
@@ -76,18 +78,60 @@ configuration Adg715CommC {
 
 		/** Connects INT3 to Humidity_DATA */
 		interface Channel as ChannelHumidityData;
+		
+		/** Connects VCC to Light_Power */
+		interface Channel as ChannelLightPower;
+    
+		/** Pins not connected for channel 2 on this chip  */
+		interface Channel as Channel2PowerNull;
+    
+		/** Connects VCC to Pressure_Power */
+		interface Channel as ChannelPressurePower;
+    
+		/** Connects VCC to Humidity_Power */
+		interface Channel as ChannelHumidityPower;
+	
+		/** Connects VCC to EEPROM_Power */
+		interface Channel as ChannelEepromPower;
+    
+		/** Connects VCC to Accel_Power */
+		interface Channel as ChannelAccelPower;
+    
+		/** Connect 33VDCDCBOOST to GND (switch on)*/
+		interface Channel as DcDcBoost33Channel;
+		/** Connects VCC to GPS_PWR */
+		//interface Channel as ChannelGpsPower;
+	
+		/** Connect 5VDCDCBOOST_SHUTDOWN to GND (switch on)*/
+		interface Channel as DcDcBoost5Channel;
+		/** Connects VCC to GPS_ENA */
+		//interface Channel as ChannelGpsEnable;
+	
+		interface Resource[ uint8_t id ];
 	}
 }
 implementation {
-	components new HplAdg715C(FALSE, TRUE);
-  
-	ChannelAccel_X       = HplAdg715C.Channel1;
-	ChannelAccel_Y       = HplAdg715C.Channel2;
-	ChannelPressureClock = HplAdg715C.Channel3;
-	ChannelPressureDin   = HplAdg715C.Channel4;
-	ChannelPressureDout  = HplAdg715C.Channel5;
-//	Channel6CommNull     = HplAdg715C.Channel6;
-	ChannelThermopile_Select_Cnt = HplAdg715C.Channel6;
-	ChannelHumidityClock = HplAdg715C.Channel7;
-	ChannelHumidityData  = HplAdg715C.Channel8;
+	components new FcfsArbiterC( UQ_ADG715 );
+	Resource = FcfsArbiterC;
+	components new HplAdg715C(FALSE, TRUE) as Comm;
+	ChannelAccel_X       = Comm.Channel1;
+	ChannelAccel_Y       = Comm.Channel2;
+	ChannelPressureClock = Comm.Channel3;
+	ChannelPressureDin   = Comm.Channel4;
+	ChannelPressureDout  = Comm.Channel5;
+//	Channel6CommNull     = Comm.Channel6;
+	ChannelThermopile_Select_Cnt = Comm.Channel6;
+	ChannelHumidityClock = Comm.Channel7;
+	ChannelHumidityData  = Comm.Channel8;
+	components new HplAdg715C(FALSE, FALSE) as Power;
+	ChannelLightPower    = Power.Channel1;
+	Channel2PowerNull    = Power.Channel2;
+	ChannelPressurePower = Power.Channel3;
+	ChannelHumidityPower = Power.Channel4;
+	ChannelEepromPower   = Power.Channel5;
+	ChannelAccelPower    = Power.Channel6;
+	DcDcBoost33Channel  = Power.Channel7;
+//	ChannelGpsEnable     = Power.Channel8;
+	DcDcBoost5Channel   = Power.Channel8;
+//	ChannelGpsPower      = Power.Channel7;
 }

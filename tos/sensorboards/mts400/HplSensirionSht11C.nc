@@ -37,9 +37,11 @@
  * Sensirion SHT11 driver.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2010-05-14 13:33:14 $
+ * @version $Revision: 1.2 $ $Date: 2010-06-15 21:19:52 $
  */
 
+#include"Adg715.h" 
+ 
 configuration HplSensirionSht11C {
   provides interface Resource[ uint8_t id ];
   provides interface GeneralIO as DATA;
@@ -71,9 +73,9 @@ implementation {
 	SplitControlPowerManagerC.ArbiterInfo -> Arbiter.ArbiterInfo;
 	SplitControlPowerManagerC.ResourceDefaultOwner -> Arbiter.ResourceDefaultOwner;
 	
-	components Adg715CommC;
-	HplSensirionSht11P.ChannelHumidityClock->Adg715CommC.ChannelHumidityClock;
-	HplSensirionSht11P.ChannelHumidityData->Adg715CommC.ChannelHumidityData;
-	components Adg715PowerC; 
-	HplSensirionSht11P.ChannelHumidityPower->Adg715PowerC.ChannelHumidityPower;
+	components Adg715C;
+	HplSensirionSht11P.ChannelHumidityClock->Adg715C.ChannelHumidityClock;
+	HplSensirionSht11P.ChannelHumidityData->Adg715C.ChannelHumidityData;
+	HplSensirionSht11P.ChannelHumidityPower->Adg715C.ChannelHumidityPower;
+	HplSensirionSht11P.Resource->Adg715C.Resource[ unique(UQ_ADG715)];
 }

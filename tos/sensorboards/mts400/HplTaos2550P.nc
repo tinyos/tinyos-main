@@ -39,9 +39,16 @@ module HplTaos2550P {
 	uses interface Timer<TMilli> as Timer;
 	uses interface I2CPacket<TI2CBasicAddr>;
 	uses interface Resource as I2CResource;
+	uses interface Resource;
 }
 implementation {
 
+	enum{
+		IDLE=0,
+		START,
+		STOP,
+	};
+	norace uint8_t state=IDLE;
 	uint8_t cmd=TAOS_START;
 	
 	task void failTask();
@@ -49,27 +56,50 @@ implementation {
 	
 	
 	command error_t SplitControl.start() {
-		return call ChannelLightPower.open();
+		state=START;
+		return call Resource.request();
 	}
-  
+	
+	event void Resource.granted(){
+		error_t err;
+		if(state==START){
+			if((err=call ChannelLightPower.open())==SUCCESS){
+				return;
+			}
+		}else{
+			if((err=call ChannelLightPower.close())==SUCCESS){
+				return;
+			}
+		}
+		state=IDLE;
+		call Resource.release();
+		signal SplitControl.startDone(err);
+	}
+	
 	event void ChannelLightPower.openDone(error_t err){
 		if(err==SUCCESS){
 			if((err=call I2CResource.request())==SUCCESS){
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone(err);
 	}
 	
 	event void I2CResource.granted(){
 		error_t err;
 		if((err=call I2CPacket.write(0x03,TAOS_I2C_ADDR,1,&cmd))!=SUCCESS){
+			state=IDLE;
+			call Resource.release();
 			call I2CResource.release();
 			signal SplitControl.startDone(err);
 		}
 	}
 	
 	async event void I2CPacket.writeDone(error_t error, uint16_t addr,uint8_t length, uint8_t* data){
+		state=IDLE;
+		call Resource.release();
 		call I2CResource.release();
 		if(error!=SUCCESS){
 			post failTask();
@@ -83,10 +113,13 @@ implementation {
 	}
 	
 	command error_t SplitControl.stop() {
-		return  call ChannelLightPower.close(); 
+		state=STOP;
+		return  call Resource.request();
 	}
 	
 	event void ChannelLightPower.closeDone(error_t err)	{
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 	

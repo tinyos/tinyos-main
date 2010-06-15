@@ -51,4 +51,7 @@ enum {
   ADG715_CH_CLOSE = 0,
 };
 
+#define UQ_ADG715 "Adg715.Resource"
+
+
 #endif //ADG715_H

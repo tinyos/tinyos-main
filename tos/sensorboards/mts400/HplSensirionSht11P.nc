@@ -36,7 +36,7 @@
  * the Sensirion SHT11 sensor on the telosb platform.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $ $Date: 2010-05-14 13:33:14 $
+ * @version $Revision: 1.2 $ $Date: 2010-06-15 21:19:52 $
  */
 
 module HplSensirionSht11P {
@@ -47,18 +47,49 @@ module HplSensirionSht11P {
 	uses interface Channel as ChannelHumidityPower;
 	uses interface GeneralIO as DATA;
 	uses interface GeneralIO as SCK;
+	uses interface Resource;
 }
 implementation {
 
+	enum{
+		IDLE=0,
+		START,
+		STOP,
+	};
+	uint8_t state=IDLE;
+	
 	command error_t SplitControl.start() {
-		return call ChannelHumidityClock.open();
+		state=START;
+		return call Resource.request();
 	}
-  
+	
+	event void Resource.granted(){
+		error_t err;
+		if(state==START){
+			if((err=call ChannelHumidityClock.open())==SUCCESS){
+				return;
+			}
+		}else{
+			call SCK.makeInput();
+			call SCK.clr();
+			call DATA.makeInput();
+			call DATA.clr();
+			if((err=call ChannelHumidityClock.close())==SUCCESS){
+				return;
+			}
+		}
+		state=IDLE;
+		call Resource.release();
+		signal SplitControl.startDone(err);
+	}
+
 	event void ChannelHumidityClock.openDone(error_t err){
 		if (err==SUCCESS){
 			call ChannelHumidityData.open();
 			return;
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone( err );
 	}
   
@@ -67,10 +98,14 @@ implementation {
 			call ChannelHumidityPower.open();
 			return;
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone( err );
 	}
 	
 	event void ChannelHumidityPower.openDone(error_t err){
+		state=IDLE;
+		call Resource.release();
 		if (err==SUCCESS){
 			call Timer.startOneShot(11);
 			return;
@@ -83,11 +118,8 @@ implementation {
 	}
 
 	command error_t SplitControl.stop(){
-		call SCK.makeInput();
-		call SCK.clr();
-		call DATA.makeInput();
-		call DATA.clr();
-		return call ChannelHumidityClock.close();
+		state=STOP;
+		return call Resource.request();
 	}
 	
 	event void ChannelHumidityClock.closeDone(error_t err){
@@ -95,6 +127,8 @@ implementation {
 			call ChannelHumidityData.close();
 			return;
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone( err );
 	}
   
@@ -103,10 +137,14 @@ implementation {
 			call ChannelHumidityPower.close();
 			return;
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone( err );
 	}
 	
 	event void ChannelHumidityPower.closeDone(error_t err){
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone( err );
 	}
 }
