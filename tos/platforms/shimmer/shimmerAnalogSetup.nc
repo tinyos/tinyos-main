@@ -57,6 +57,9 @@ interface shimmerAnalogSetup {
   // one channels
   command void addGSRInput();
   
+  // one channels
+  command void addEMGInput();
+  
   // two channels
   command void addAnExInput();
   
