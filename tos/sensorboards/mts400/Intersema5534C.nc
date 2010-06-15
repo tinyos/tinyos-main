@@ -31,20 +31,20 @@
 * Author: Zoltan Kincses
 */
 
-#include "Intersema5543.h"
+#include "Intersema5534.h"
 
-generic configuration Intersema5543C() {
+generic configuration Intersema5534C() {
 	provides interface Intersema;
 
 }
 implementation {
-	components new Intersema5543ReaderP();
-	Intersema = Intersema5543ReaderP.Intersema;
+	components new Intersema5534ReaderP();
+	Intersema = Intersema5534ReaderP.Intersema;
 	
-	components HalIntersema5543C;
+	components HalIntersema5534C;
 	
-	Intersema5543ReaderP.Resource -> HalIntersema5543C.Resource[ unique(UQ_INTERSEMA5543)];
-	Intersema5543ReaderP.TempRead -> HalIntersema5543C.Temp;
-	Intersema5543ReaderP.PressRead -> HalIntersema5543C.Press;
-	Intersema5543ReaderP.Cal -> HalIntersema5543C.Cal;
+	Intersema5534ReaderP.Resource -> HalIntersema5534C.Resource[ unique(UQ_INTERSEMA5534)];
+	Intersema5534ReaderP.TempRead -> HalIntersema5534C.Temp;
+	Intersema5534ReaderP.PressRead -> HalIntersema5534C.Press;
+	Intersema5534ReaderP.Cal -> HalIntersema5534C.Cal;
 }

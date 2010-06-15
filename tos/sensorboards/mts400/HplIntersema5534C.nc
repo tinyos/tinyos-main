@@ -31,37 +31,38 @@
 * Author: Zoltan Kincses
 */
 
-#include"Intersema5543.h"
+#include"Intersema5534.h"
+#include"Adg715.h"
 
-configuration HplIntersema5543C {
+configuration HplIntersema5534C {
   provides interface Resource[ uint8_t id ];
 }
 implementation {
-	components HplIntersema5543P;
-	components new FcfsArbiterC( UQ_INTERSEMA5543 ) as Arbiter;
+	components HplIntersema5534P;
+	components new FcfsArbiterC( UQ_INTERSEMA5534 ) as Arbiter;
 	Resource = Arbiter;
   
 	components new SplitControlPowerManagerC();
-	SplitControlPowerManagerC.SplitControl -> HplIntersema5543P;
+	SplitControlPowerManagerC.SplitControl -> HplIntersema5534P;
 	SplitControlPowerManagerC.ArbiterInfo -> Arbiter.ArbiterInfo;
 	SplitControlPowerManagerC.ResourceDefaultOwner -> Arbiter.ResourceDefaultOwner;
 	
-	components Adg715PowerC;
-	HplIntersema5543P.ChannelPressurePower -> Adg715PowerC.ChannelPressurePower;
+	components Adg715C;
+	HplIntersema5534P.ChannelPressurePower -> Adg715C.ChannelPressurePower;
+	HplIntersema5534P.ChannelPressureClock -> Adg715C.ChannelPressureClock;
+	HplIntersema5534P.ChannelPressureDin -> Adg715C.ChannelPressureDin;
+	HplIntersema5534P.ChannelPressureDout -> Adg715C.ChannelPressureDout;
 	
-	components Adg715CommC;
-	HplIntersema5543P.ChannelPressureClock -> Adg715CommC.ChannelPressureClock;
-	HplIntersema5543P.ChannelPressureDin -> Adg715CommC.ChannelPressureDin;
-	HplIntersema5543P.ChannelPressureDout -> Adg715CommC.ChannelPressureDout;
-	
-	components HplAtm128GeneralIOC;
+	HplIntersema5534P.Resource -> Adg715C.Resource[ unique(UQ_ADG715)];
+		
+	components MicaBusC;
     
-	HplIntersema5543P.SPI_CLK -> HplAtm128GeneralIOC.PortD5;
-	HplIntersema5543P.SPI_SI -> HplAtm128GeneralIOC.PortD2;
-	HplIntersema5543P.SPI_SO -> HplAtm128GeneralIOC.PortD3;
+	HplIntersema5534P.SPI_CLK -> MicaBusC.USART1_CLK;
+	HplIntersema5534P.SPI_SI -> MicaBusC.USART1_RXD;
+	HplIntersema5534P.SPI_SO -> MicaBusC.USART1_TXD;
 	
 	components new TimerMilliC() as Timer;
 	
-	HplIntersema5543P.Timer -> Timer;
+	HplIntersema5534P.Timer -> Timer;
 	 
 }

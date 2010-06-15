@@ -31,7 +31,7 @@
 * Author: Zoltan Kincses
 */
 
-module HplIntersema5543P {
+module HplIntersema5534P {
 	provides interface SplitControl;
 	uses interface Channel as ChannelPressurePower;
 	uses interface Channel as ChannelPressureClock;
@@ -41,11 +41,36 @@ module HplIntersema5543P {
 	uses interface GeneralIO as SPI_CLK;
 	uses interface GeneralIO as SPI_SI;
 	uses interface GeneralIO as SPI_SO;
+	uses interface Resource;
 }
 implementation {
 
+	enum{
+		IDLE=0,
+		START,
+		STOP,
+	};
+	uint8_t state=IDLE;
+	
 	command error_t SplitControl.start() {
-		return call ChannelPressurePower.open();
+		state=START;
+		return call Resource.request();
+	}
+	
+	event void Resource.granted(){
+		error_t err;
+		if(state==START){
+			if((err=call ChannelPressurePower.open())==SUCCESS){
+				return;
+			}
+		}else{
+			if((err=call ChannelPressurePower.close())==SUCCESS){
+				return;
+			}
+		}
+		state=IDLE;
+		call Resource.release();
+		signal SplitControl.startDone(err);
 	}
   
 	event void ChannelPressurePower.openDone(error_t err){
@@ -54,6 +79,8 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone(err);
 	}
 	
@@ -63,6 +90,8 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone(err);
 	}
 	
@@ -72,10 +101,14 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.startDone(err);
 	}
 	
 	event void ChannelPressureDout.openDone(error_t err){
+		state=IDLE;
+		call Resource.release();
 		if(err==SUCCESS){
 			call SPI_CLK.makeOutput();
 			call SPI_SI.makeInput();
@@ -92,15 +125,18 @@ implementation {
 	}
 	
 	command error_t SplitControl.stop() {
-		return call ChannelPressurePower.close();
+		state=STOP;
+		return call Resource.request();
 	}
-  
+	
 	event void ChannelPressurePower.closeDone(error_t err){
 		if(err==SUCCESS){
 			if((err=call ChannelPressureClock.close())==SUCCESS){
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 	
@@ -110,6 +146,8 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 	
@@ -119,10 +157,14 @@ implementation {
 				return;
 			}
 		}
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 	
 	event void ChannelPressureDout.closeDone(error_t err){
+		state=IDLE;
+		call Resource.release();
 		signal SplitControl.stopDone(err);
 	}
 }

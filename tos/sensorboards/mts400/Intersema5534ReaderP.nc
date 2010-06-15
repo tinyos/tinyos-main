@@ -31,7 +31,7 @@
 * Author: Zoltan Kincses
 */
 
-generic module Intersema5543ReaderP()
+generic module Intersema5534ReaderP()
 {
 	provides interface Intersema;
 	

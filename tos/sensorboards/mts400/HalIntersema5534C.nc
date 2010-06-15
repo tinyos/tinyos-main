@@ -31,15 +31,28 @@
 * Author: Zoltan Kincses
 */
 
-#ifndef INTERSEMA5543_H
-#define INTERSEMA5543_H
+configuration HalIntersema5534C {
+	provides interface Resource[ uint8_t client ];
+  	provides interface Read<uint16_t> as Temp;
+  	provides interface Read<uint16_t> as Press;
+  	provides interface Calibration as Cal; 
+}
+implementation {
+	components new Intersema5534LogicP();
+	Temp = Intersema5534LogicP.Temp;
+	Press = Intersema5534LogicP.Press;
+	Cal = Intersema5534LogicP.Cal;
+ 
+	components HplIntersema5534C;
+	Resource = HplIntersema5534C.Resource;
+
+	components MicaBusC;
 	
-#define UQ_INTERSEMA5543 "Intersema5543.Resource"
-#define PRESSURE_TIMEOUT_TRIES	5
+	Intersema5534LogicP.SPI_CLK -> MicaBusC.USART1_CLK;
+	Intersema5534LogicP.SPI_SI -> MicaBusC.USART1_RXD;
+	Intersema5534LogicP.SPI_SO -> MicaBusC.USART1_TXD;
+	
+	components new TimerMilliC() as Timer;
+	Intersema5534LogicP.Timer->Timer;
+}
 
-
-void inline TOSH_wait() {
-	asm volatile  ("nop" ::);
-}  
-
-#endif
