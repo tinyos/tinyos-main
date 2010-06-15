@@ -1,4 +1,4 @@
-// $Id: MicaBusC.nc,v 1.6 2010-05-14 13:23:57 mmaroti Exp $
+// $Id: MicaBusC.nc,v 1.7 2010-06-15 21:24:16 mmaroti Exp $
 /*
  * Copyright (c) 2005-2006 Intel Corporation
  * All rights reserved.
@@ -37,9 +37,9 @@ configuration MicaBusC {
     interface GpioInterrupt as Int2_Interrupt;
     interface GpioInterrupt as Int3_Interrupt;
     
-    interface GeneralIO as UART_CLK;
-    interface GeneralIO as UART_RXD;
-    interface GeneralIO as UART_TXD;
+    interface GeneralIO as USART1_CLK;
+    interface GeneralIO as USART1_RXD;
+    interface GeneralIO as USART1_TXD;
 
     /* Separate interfaces to allow inlining to occur */
     interface MicaBusAdc as Adc0;
@@ -69,9 +69,9 @@ implementation {
   Int2 = Pins.PortE6;
   Int3 = Pins.PortE7;
   
-  UART_CLK = Pins.PortD5;
-  UART_RXD = Pins.PortD2;
-  UART_TXD = Pins.PortD3;
+  USART1_CLK = Pins.PortD5;
+  USART1_RXD = Pins.PortD2;
+  USART1_TXD = Pins.PortD3;
 
   components new Atm128GpioInterruptC() as Atm128GpioInterrupt0C;
   Atm128GpioInterrupt0C.Atm128Interrupt->HplAtm128InterruptC.Int4;
