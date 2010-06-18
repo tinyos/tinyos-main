@@ -1,0 +1,180 @@
+==============================================================================
+The Source Routing Protocol (SRP)
+==============================================================================
+
+:TEP: 139
+:Group: Network Working Group 
+:Type: Documentary
+:Status: Draft
+:TinyOS-Version: > 2.1
+:Author: Chieh-Jan (Mike) Liang, Eric Decker, and Omprakash Gnawali
+
+:Draft-Created: 18-Jun-2010
+:Draft-Version: $Revision: 1.1 $
+:Draft-Modified: $Date: 2010-06-18 19:18:36 $
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This memo documents a part of TinyOS for the TinyOS Community, and
+   requests discussion and suggestions for improvements.  Distribution
+   of this memo is unlimited. This memo is in full compliance with
+   TEP 1.
+
+Abstract
+==============================================================================
+
+This memo documents the Source Routing Protocol (SRP), which provides
+best-effort point-to-point datagram communication in a network.
+
+1. Introduction
+==============================================================================
+
+A source routing protocol delivers data from the source node to the
+destination node. The Source Routing Protocol (SRP) is a reference
+source routing protocol in TinyOS 2.x. The users use the source
+routing interfaces described in TEP 137 [1]_ to use SRP in their
+applications.
+
+In this TEP, after a brief discussion of source routing and SRP, we
+specify the packet format used by SRP. There are no control frames in
+SRP; all information necessary for source routing is carried in the
+data frame.
+
+All fields in this specification are in network byte order.
+
+2. Source routing and SRP
+==============================================================================
+
+Source routing relies on its user to provide the list of nodes that
+constitute the path along which a packet must be forwarded. Source
+routing may be used by applications when the routing paths are
+static. For example, two nodes on a desk might be in range to talk to
+each other directly during an experiment. Source routing may also be
+used by other protocols that can compute the source route
+dynamically. Such a protocol might collect link state information from
+the network and compute source routes to a node in the network when it
+needs to send a data packet to that node.
+
+When the user provides the source route, or the list of nodes on the
+path, SRP stores this information in the data packet header. SRP looks
+up the next hop in the source route in the packet header and transmits
+the packet to the next hop. On each hop, SRP buffers the packets as
+required and forwards the packet to the next hop. Once the packet
+reaches the destination, the packet is delivered.
+
+SRP is a best-effort protocol. When a node transmits or forwards a
+packet to the next hop, it waits for an acknowledgment. If the node
+does not receive an acknowledgment even after some retransmissions,
+SRP drops the packet. SRP does not notify the sender when it drops the
+packet.
+
+
+4. Packet Format
+==============================================================================
+
+SRP does not have control packets. All the information necessary for
+routing is contained in the data packet header.
+
+The SRP data frame consists of the header, the payload, and the footer
+with the source routing entries (SR Entry) as shown below::
+
+  -------------------------------------------------------------
+  |   SRP    | Payload | SR Entry | SR Entry | ... | SR Entry |
+  |  Header  |         |     1    |     2    |     |     n    |
+  -------------------------------------------------------------
+
+SR Entry 1 corresponds to the first hop node on the path. SR Entry 2
+corresponds to the second hop node on the path. The last SR Entry, or
+SR Entry n, corresponds to the destination of the packet. The number
+of source route entries is equal to the number of hops on the path.
+
+SR Entry MUST NOT repeat. Repeated SR Entry can cause loops.
+
+
+4.1 SRP header
+--------------------------------------------------------------------
+
+                           1            
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |    path_len   |     cur_hop   |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |             origin            |                 
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |     seqno     |  srouting_id  |    
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+Field definitions are as follows:
+
+  * path_len. The length of the path in hops. The number of source
+    route entries in the footer is equal to path_len.
+
+  * cur_hop. The current distance (in hops) to the destination. Each
+    node MUST decrement this field when it forwards the packet. It is
+    0 at the destination.
+
+  * origin: The address of the node that originated this packet. A
+    node forwarding a data frame MUST NOT modify the origin field.
+
+  * seqno: The value of the sequence number counter maintained by the
+    origin. The originating node sets this field, and a node
+    forwarding a data frame MUST NOT modify it. The originating node
+    SHOULD use increasing sequence numbers with wraparound.
+
+  * srouting_id: Higher-level protocol identifier. The origin sets
+    this field, and a node forwarding a data frame MUST NOT modify it.
+
+4.1 Source Routing Entry
+--------------------------------------------------------------------
+
+The following diagram shows the format of the Source Routing Entry::
+
+                           1
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |            node id            |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Field definition:
+
+  * node id: the link layer address of a node on the path to the
+    destination.
+
+
+6. Implementation
+==============================================================================
+
+An implementation of SRP can be found in the ``tos/lib/net/srp`` directory
+of TinyOS 2.x source tree.
+
+7. Authors
+====================================================================
+
+| Chieh-Jan (Mike) Liang
+| 213 NEB, 3400 N Charles St
+| Johns Hopkins University
+| Baltimore, MD 21211
+|
+| email - cliang4@cs.jhu.edu
+|
+| Eric Decker
+| info about Eric Decker
+|
+| email - mariakaz@cs.stanford.edu
+|
+| Omprakash Gnawali
+| S255 Clark Center, 318 Campus Drive
+| Stanford University
+| Stanford, CA  94305
+|
+| phone - +1 650 725 6086
+| email - gnawali@cs.stanford.edu
+
+
+
+8. Citations
+====================================================================
+
+.. [1] TEP 137: Source Routing
