@@ -60,3 +60,10 @@ RF230_HWACK_SLOPPY_TIMESTAMP
 If you define this, then the code that calculates the time stamp of the SFD
 from a single interrupt at the end of the message reception will not use
 floating point computation, which will be faster but less precise.
+
+RF230_BACKOFF_MIN
+RF230_BACKOFF_INIT
+RF230_BACKOFF_CONG
+
+The minimum backoff time, the initial backoff time, and the cognestion backoff
+time in microseconds for the random CSMA/CA algorithm. See the RF230RadioP.nc.
