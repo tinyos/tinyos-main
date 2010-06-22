@@ -1,4 +1,4 @@
-// $Id: TossimActiveMessageC.nc,v 1.5 2007-10-08 20:10:09 idgay Exp $
+// $Id: TossimActiveMessageC.nc,v 1.6 2010-06-22 20:55:06 scipio Exp $
 /*
  * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
@@ -72,7 +72,7 @@ implementation {
     header->dest = addr;
     header->src = call AMPacket.address();
     header->length = len;
-    err = call Model.send((int)addr, amsg, len + sizeof(tossim_header_t));
+    err = call Model.send((int)addr, amsg, len + sizeof(tossim_header_t) + sizeof(tossim_footer_t));
     return err;
   }
 
