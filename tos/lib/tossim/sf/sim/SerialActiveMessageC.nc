@@ -1,4 +1,4 @@
-// $Id: SerialActiveMessageC.nc,v 1.2 2007-12-03 02:17:49 hiro Exp $
+// $Id: SerialActiveMessageC.nc,v 1.3 2010-06-22 20:50:43 scipio Exp $
 /*
  * Copyright (c) 2007 Toilers Research Group - Colorado School of Mines
  * All rights reserved.
@@ -141,7 +141,11 @@ implementation {
         void* payload;
 
         memcpy(bufferPointer, msg, sizeof(message_t));
-
+	
+	if (msg != NULL) {
+	  free(msg);
+	}
+	
         payload = call Packet.getPayload(bufferPointer, call Packet.maxPayloadLength());
         len = call Packet.payloadLength(bufferPointer);
 
@@ -272,13 +276,16 @@ implementation {
 
     sim_event_t* allocate_serial_deliver_event(int node, message_t* msg, sim_time_t t) {
         sim_event_t* evt = (sim_event_t*)malloc(sizeof(sim_event_t));
+	message_t* newMsg = (message_t*)malloc(sizeof(message_t));
+	memcpy(newMsg, msg, sizeof(message_t));
+	
         evt->mote = node;
         evt->time = t;
         evt->handle = serial_active_message_deliver_handle;
         evt->cleanup = sim_queue_cleanup_event;
         evt->cancelled = 0;
         evt->force = 0;
-        evt->data = msg;
+        evt->data = newMsg;
         return evt;
     }
 
