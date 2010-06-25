@@ -10,8 +10,8 @@ The Source Routing Protocol (SRP)
 :Author: Chieh-Jan (Mike) Liang, Eric Decker, and Omprakash Gnawali
 
 :Draft-Created: 18-Jun-2010
-:Draft-Version: $Revision: 1.1 $
-:Draft-Modified: $Date: 2010-06-18 19:18:36 $
+:Draft-Version: $Revision: 1.2 $
+:Draft-Modified: $Date: 2010-06-25 03:55:58 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -31,30 +31,34 @@ best-effort point-to-point datagram communication in a network.
 ==============================================================================
 
 A source routing protocol delivers data from the source node to the
-destination node. The Source Routing Protocol (SRP) is a reference
-source routing protocol in TinyOS 2.x. The users use the source
-routing interfaces described in TEP 137 [1]_ to use SRP in their
-applications.
+destination node, and it is viewed as one implementation of the
+forwarding engine in network protocols. The Source Routing Protocol
+(SRP) is a reference source routing protocol in TinyOS 2.x. The users
+use the source routing interfaces described in TEP 138 [1]_ to interact
+with SRP.
 
 In this TEP, after a brief discussion of source routing and SRP, we
-specify the packet format used by SRP. There are no control frames in
-SRP; all information necessary for source routing is carried in the
-data frame.
+specify the packet format used by SRP, and how fields in the packet are
+used to deliver packets in the network. There are no control frames in
+SRP; all information necessary for source routing is carried in the data
+frame.
 
 All fields in this specification are in network byte order.
 
 2. Source routing and SRP
 ==============================================================================
 
-Source routing relies on its user to provide the list of nodes that
-constitute the path along which a packet must be forwarded. Source
-routing may be used by applications when the routing paths are
+Source routing relies on the sourcing node to specify the list of nodes
+that a packet should traverse to reach the destination node. Mechanisms
+for path determination is beyond the scope of this specification.
+
+Source routing may be used by applications when the routing paths are
 static. For example, two nodes on a desk might be in range to talk to
 each other directly during an experiment. Source routing may also be
-used by other protocols that can compute the source route
-dynamically. Such a protocol might collect link state information from
-the network and compute source routes to a node in the network when it
-needs to send a data packet to that node.
+used by other protocols that can compute the source route dynamically.
+Such a protocol might collect link state information from the network
+and compute source routes to a node in the network when it needs to send
+a data packet to that node.
 
 When the user provides the source route, or the list of nodes on the
 path, SRP stores this information in the data packet header. SRP looks
@@ -111,9 +115,9 @@ Field definitions are as follows:
   * path_len. The length of the path in hops. The number of source
     route entries in the footer is equal to path_len.
 
-  * cur_hop. The current distance (in hops) to the destination. Each
-    node MUST decrement this field when it forwards the packet. It is
-    0 at the destination.
+  * cur_hop. The remaining distance (in hops) towards the
+    destination. Each node MUST decrement this field when it forwards the
+    packet. It is 0 at the destination.
 
   * origin: The address of the node that originated this packet. A
     node forwarding a data frame MUST NOT modify the origin field.
@@ -177,4 +181,4 @@ of TinyOS 2.x source tree.
 8. Citations
 ====================================================================
 
-.. [1] TEP 137: Source Routing
+.. [1] TEP 138: Source Routing
