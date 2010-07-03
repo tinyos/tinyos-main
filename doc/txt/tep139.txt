@@ -10,8 +10,8 @@ The Source Routing Protocol (SRP)
 :Author: Chieh-Jan Mike Liang, Eric Decker, Doug Carlson, and Omprakash Gnawali
 
 :Draft-Created: 18-Jun-2010
-:Draft-Version: $Revision: 1.3 $
-:Draft-Modified: $Date: 2010-06-30 20:32:43 $
+:Draft-Version: $Revision: 1.4 $
+:Draft-Modified: $Date: 2010-07-03 14:38:55 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -30,12 +30,17 @@ best-effort point-to-point datagram communication in a network.
 1. Introduction
 ==============================================================================
 
-A source routing protocol delivers data from the source node to the
-destination node, and it is viewed as one implementation of the
-forwarding engine in network protocols. The Source Routing Protocol
-(SRP) is a reference source routing protocol in TinyOS 2.x. The users
-use the source routing interfaces described in TEP 138 [1]_ to interact
-with SRP.
+A source routing protocol delivers packets from the origin node to the
+destination node. Specifically, source routing allows the origin node to
+specify the route the packet should take in the network. In this
+respect, source routing is considered as one implementation of the
+forwarding engine in network protocols.
+
+The Source Routing Protocol (SRP) is a reference implementation of
+source routing in TinyOS 2.x. SRP is a network-level protocol built on top of 
+the TinyOS Active Message (AM) Layer which provides unreliable delivery over 
+multi-link routes.  Users interact with SRP through the source routing interfaces
+described in TEP 138 [1]_.
 
 In this TEP, after a brief discussion of source routing and SRP, we
 specify the packet format used by SRP, and how fields in the packet are
@@ -73,7 +78,7 @@ acknowledgement), SRP drops the packet and does not need to notify the
 origin node.
 
 
-4. Packet Format
+3. Packet Format
 ==============================================================================
 
 SRP does not have control packets. All the information necessary for
@@ -92,10 +97,10 @@ the first-hop node on the path. Similarly, SR Entry n corresponds to the
 destination of the packet. The number of source route entries is equal
 to the number of nodes on the path.
 
-SR Entry MUST NOT repeat. Repeated SR Entry can cause loops.
+SR Entries SHOULD NOT repeat. Repeated SR Entries can cause loops.
 
 
-4.1 SRP header
+3.1 SRP header
 --------------------------------------------------------------------
 
                            1            
@@ -109,10 +114,10 @@ SR Entry MUST NOT repeat. Repeated SR Entry can cause loops.
 
 Field definitions are as follows:
 
-  * sr_len. The length of the path in hops. This is equal to the number
+  * sr_len: The length of the path in hops. This is equal to the number
     of source route entries following the SRC header.
   
-  * cur_hop. The remaining distance (in hops) towards the
+  * cur_hop: The remaining distance (in hops) towards the
     destination. Each node MUST decrement this field when it forwards the
     packet. It is 0 at the destination.
 
@@ -124,7 +129,8 @@ Field definitions are as follows:
   * payload_id: Higher-level protocol identifier. The origin sets this
     field, and a node forwarding a data frame MUST NOT modify it.
 
-4.1 Source Routing Entry
+
+3.2 Source Routing Entry
 --------------------------------------------------------------------
 
 The following diagram shows the format of the Source Routing Entry::
@@ -141,14 +147,14 @@ Field definition:
     destination.
 
 
-6. Implementation
+4. Implementation
 ==============================================================================
 
 An implementation of SRP can be found in the ``tos/lib/net/srp`` directory
 of TinyOS 2.x source tree.
 
 
-7. Authors
+5. Authors
 ====================================================================
 
 | Chieh-Jan Mike Liang
@@ -180,7 +186,8 @@ of TinyOS 2.x source tree.
 | email - gnawali@cs.stanford.edu
 
 
-8. Citations
+6. Citations
 ====================================================================
 
 .. [1] TEP 138: Source Routing
+
