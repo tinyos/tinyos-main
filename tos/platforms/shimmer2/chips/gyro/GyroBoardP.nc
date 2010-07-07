@@ -104,6 +104,7 @@ implementation {
   }
 
   command error_t StdControl.start(){
+    call buttonNotify.enable();
     /*
      * adding a redundant power-up for apps that power cycle the gyro mid-course to save current
      * since we're past the initial on-dock programming, gyro should power back up gracefully
