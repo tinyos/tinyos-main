@@ -30,6 +30,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Author: Miklos Maroti
+ *         Andreas Huber <huberan@ee.ethz.ch>
  */
 
 #include <Tasklet.h>
@@ -59,16 +60,17 @@ implementation
 {
 /*----------------- State -----------------*/
 
-	norace uint8_t state;	// written only from tasks
+	tasklet_norace uint8_t state;
 	enum
 	{
 		STATE_READY = 0,
 		STATE_TX_PENDING = 1,
-		STATE_TX_SEND = 2,
-		STATE_TX_DONE = 3,
-		STATE_TURN_ON = 4,
-		STATE_TURN_OFF = 5,
-		STATE_CHANNEL = 6,
+		STATE_TX_RETRY = 2,
+		STATE_TX_SEND = 3,
+		STATE_TX_DONE = 4,
+		STATE_TURN_ON = 5,
+		STATE_TURN_OFF = 6,
+		STATE_CHANNEL = 7,
 	};
 
 	command error_t SplitControl.start()
@@ -80,10 +82,12 @@ implementation
 		if( state != STATE_READY )
 			error = EBUSY;
 		else
+		{
 			error = call RadioState.turnOn();
 
-		if( error == SUCCESS )
-			state = STATE_TURN_ON;
+			if( error == SUCCESS )
+				state = STATE_TURN_ON;
+		}
 
 		call Tasklet.resume();
 
@@ -99,10 +103,12 @@ implementation
 		if( state != STATE_READY )
 			error = EBUSY;
 		else
+		{
 			error = call RadioState.turnOff();
 
-		if( error == SUCCESS )
-			state = STATE_TURN_OFF;
+			if( error == SUCCESS )
+				state = STATE_TURN_OFF;
+		}
 
 		call Tasklet.resume();
 
@@ -118,10 +124,12 @@ implementation
 		if( state != STATE_READY )
 			error = EBUSY;
 		else
+		{
 			error = call RadioState.setChannel(channel);
 
-		if( error == SUCCESS )
-			state = STATE_CHANNEL;
+			if( error == SUCCESS )
+				state = STATE_CHANNEL;
+		}
 
 		call Tasklet.resume();
 
@@ -172,7 +180,7 @@ implementation
 /*----------------- Send -----------------*/
 
 	message_t* txMsg;
-	error_t txError;
+	tasklet_norace error_t txError;
 	uint8_t retries;
 
 	// Many EBUSY replies from RadioSend are normal if the channel is cognested
@@ -180,60 +188,74 @@ implementation
 
 	task void sendTask()
 	{
-		error_t error;
+		bool done = FALSE;
 
-		ASSERT( state == STATE_TX_PENDING || state == STATE_TX_SEND );
+		call Tasklet.suspend();
 
-		atomic error = txError;
-		if( (state == STATE_TX_SEND && error == SUCCESS) || ++retries > MAX_RETRIES )
-			state = STATE_TX_DONE;
+		ASSERT( state == STATE_TX_PENDING || state == STATE_TX_DONE );
+
+		if( state == STATE_TX_PENDING && ++retries <= MAX_RETRIES )
+		{
+			txError = call RadioSend.send(txMsg);
+			if( txError == SUCCESS )
+				state = STATE_TX_SEND;
+			else
+				state = STATE_TX_RETRY;
+		}
 		else
 		{
-			call Tasklet.suspend();
-
-			error = call RadioSend.send(txMsg);
-			if( error == SUCCESS )
-				state = STATE_TX_SEND;
-			else if( retries == MAX_RETRIES )
-				state = STATE_TX_DONE;
-			else
-				state = STATE_TX_PENDING;
-
-			call Tasklet.resume();
-		}
-
-		if( state == STATE_TX_DONE )
-		{
 			state = STATE_READY;
-			signal Send.sendDone(txMsg, error);
+			done = TRUE;
 		}
+
+		call Tasklet.resume();
+
+		if( done )
+			signal Send.sendDone(txMsg, txError);
 	}
 
 	tasklet_async event void RadioSend.sendDone(error_t error)
 	{
 		ASSERT( state == STATE_TX_SEND );
 
-		atomic txError = error;
+		txError = error;
+		if( error == SUCCESS )
+			state = STATE_TX_DONE;
+		else
+			state = STATE_TX_PENDING;
+
 		post sendTask();
 	}
 
 	command error_t Send.send(message_t* msg)
 	{
+		error_t result;
+
+		call Tasklet.suspend();
+
 		if( state != STATE_READY )
-			return EBUSY;
+			result = EBUSY;
+		else
+		{
+			txMsg = msg;
+			state = STATE_TX_PENDING;
+			retries = 0;
+			post sendTask();
+			result = SUCCESS;
+		}
 
-		txMsg = msg;
-		state = STATE_TX_PENDING;
-		retries = 0;
-		post sendTask();
+		call Tasklet.resume();
 
-		return SUCCESS;
+		return result;
 	}
 
 	tasklet_async event void RadioSend.ready()
 	{
-		if( state == STATE_TX_PENDING )
+		if( state == STATE_TX_RETRY )
+		{
+			state = STATE_TX_PENDING;
 			post sendTask();
+		}
 	}
 
 	tasklet_async event void Tasklet.run()
@@ -242,17 +264,26 @@ implementation
 
 	command error_t Send.cancel(message_t* msg)
 	{
-		if( state == STATE_TX_PENDING )
+		error_t result;
+
+		call Tasklet.suspend();
+
+		ASSERT( msg == txMsg );
+
+		if( state == STATE_TX_PENDING || state == STATE_TX_RETRY )
 		{
-			state = STATE_READY;
+			state = STATE_TX_DONE;
+			txError = ECANCEL;
+			result = SUCCESS;
 
-			// TODO: check if sendDone can be called before cancel returns
-			signal Send.sendDone(msg, ECANCEL);
-
-			return SUCCESS;
+			post sendTask();
 		}
 		else
-			return FAIL;
+			result = EBUSY;
+
+		call Tasklet.resume();
+
+		return result;
 	}
 
 /*----------------- Receive -----------------*/
