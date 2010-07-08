@@ -10,8 +10,8 @@ The Source Routing Protocol (SRP)
 :Author: Chieh-Jan Mike Liang, Eric Decker, Doug Carlson, and Omprakash Gnawali
 
 :Draft-Created: 18-Jun-2010
-:Draft-Version: $Revision: 1.4 $
-:Draft-Modified: $Date: 2010-07-03 14:38:55 $
+:Draft-Version: $Revision: 1.5 $
+:Draft-Modified: $Date: 2010-07-08 18:36:12 $
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
@@ -89,11 +89,11 @@ The SRP data frame consists of the header, the source routing entries
 
   -------------------------------------------------------------
   |   SRP    | SR Entry | SR Entry | ... | SR Entry | Payload |
-  |  Header  |     n    |   n - 1  |     |     0    |         |
+  |  Header  |     0    |     1    |     |    n-1   |         |
   -------------------------------------------------------------
 
 SR Entry 0 corresponds to the origin node, and SR Entry 1 corresponds to
-the first-hop node on the path. Similarly, SR Entry n corresponds to the
+the first-hop node on the path. Similarly, SR Entry n-1 corresponds to the
 destination of the packet. The number of source route entries is equal
 to the number of nodes on the path.
 
@@ -106,7 +106,7 @@ SR Entries SHOULD NOT repeat. Repeated SR Entries can cause loops.
                            1            
        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |     sr_len    |     cur_hop   |
+      |     sr_len    |   hops_left   |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       |     seqno     |   payload_id  |    
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -114,12 +114,12 @@ SR Entries SHOULD NOT repeat. Repeated SR Entries can cause loops.
 
 Field definitions are as follows:
 
-  * sr_len: The length of the path in hops. This is equal to the number
+  * sr_len: (n) The length of the path in hops. This is equal to the number
     of source route entries following the SRC header.
   
-  * cur_hop: The remaining distance (in hops) towards the
+  * hops_left: The remaining distance (in hops) towards the
     destination. Each node MUST decrement this field when it forwards the
-    packet. It is 0 at the destination.
+    packet. It is 0 at the destination.  Must be less than sr_len (0..n-1).
 
   * seqno: The value of the sequence number counter maintained by the
     origin node. The origin node sets this field, and a node
