@@ -1,0 +1,221 @@
+==============================================================================
+The Net2 Protocol Benchmark
+==============================================================================
+
+:TEP: 140
+:Group: Network Working Group 
+:Type: Informational
+:Status: Draft
+:TinyOS-Version: > 2.1
+:Author: Thanh Dang, Kaisen Lin, Chieh-Jan Mike Liang, and Omprakash Gnawali
+
+:Draft-Created: 12-Jul-2010
+:Draft-Version: $Revision: 1.1 $
+:Draft-Modified: $Date: 2010-07-12 22:40:39 $
+:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
+
+.. Note::
+
+   This memo documents a part of TinyOS for the TinyOS Community, and
+   requests discussion and suggestions for improvements.  Distribution
+   of this memo is unlimited. This memo is in full compliance with
+   TEP 1.
+
+Abstract
+==============================================================================
+
+The memo describes the metrics, test scenarios, test test
+applications, and analysis tools for testing collection and
+dissemination protocols in TinyOS 2.x. Our goal is to design
+benchmarks for network protocols.
+
+
+1. Introduction
+==============================================================================
+
+TinyOS 2.x comes with a number of collection and dissemination
+protocols. Collection is a network-layer best-effort protocol that
+forms routes from all the nodes in a network to the collection roots
+or sinks [1]_. CTP [2]_ and MultihopLQI collection protocols are available
+in TinyOS 2.x. Dissemination is a network-layer reliable protocol that
+allows dissemination of key-value pairs to the entire network
+[3]_. Drip, DIP, and DHV dissemination protocols are available in
+TinyOS 2.x. Although a large number of mature protocols are available,
+we lack standard performance tests to evaluate these protocols.
+
+In this document, we describe benchmarks that allow us to
+systematically compare the performance of these protocols. Benchmarks
+also enable us to compare improvements to these protocols using a
+standard set of test cases, scenarios, and tools. We hope the
+community will adopt these benchmarks so that the results from
+different research projects can be more directly compared.
+
+
+2. The Net2 Protocol Benchmark Overview
+==============================================================================
+
+There are two components in this benchmark. First, a description of a
+series of tests to run to evaluate the protocols. We describe the
+topologies in which to test the protocols, the protocol use scenarios,
+and protocol parameters to vary across the experiments. The second
+component of the net2 protocol benchmark is the metrics that describe
+the performance of the protocols when we run them on the series of
+scenarios included int he benchmark.
+
+
+3. Topologies
+==============================================================================
+
+
+Focus on simulations. We want to say a few things about testbed
+topologies as well.
+
+Network topologies 
+  + Single-hop : star, clique
+  + Multi-hop  : chain (line), grid, star-chain, random, real-trace 
+
+Network density : average number of neighbours
+
+Network dynamic : rate at which nodes join and leave a network
+
+
+
+4. Protocol Use Scenarios
+==============================================================================
+
+We will have different scenarios for collection and dissemination.
+
+Scenario 1: A node disseminating new items to a stable network 
+	(Example application: programming a network)
+
+Scenario 2: A node joining an updated network  
+	(Example application: updating an intermittent node) 
+
+Scenario 3: Multiple nodes joining and leaving a network at a specified rate
+        (Example application: updating a dynamic network)
+
+Scenario 4: Multiple items with different versions are injected into
+the network from different nodes
+        (Example application: multiple users (eg. scientist, high school
+         students, public) use a shared sensor network)
+
+
+5. Protocol Parameters
+==============================================================================
+
+We will have different parameters for collection and dissemination.
+
+Link layer 
+   + Link quality (TOSSIM only) 
+   + LPL/not LPL
+
+Network layer 
+   + Trickle Suppression constant (if protocols is trickle-based)
+
+Application layer
+   + Item size (within a TOS message for now)
+   + Total number of items
+   + Total number of new items
+
+
+The following are meaningful values for each paraters
+ + (20) Link layer   
+	- (10) link quality
+        - (2)  LPL/not LPL
+
+ + (3) Network layer
+	- (3) suppression constant : 1,2,3
+
+ + (450) Application layer
+	- (2) Item size                  : 2, 10 (Bytes)
+        - (15) Total number of items     : 8, 16,..., 128
+        - (15) Total number of new items : 8, 16,..., 128
+ 
+ + (7) Network topologies
+	- (2) Single-hop : star, clique
+        - (5) Multi-hop  : chain, grid, star-chain, random, real-trace
+
+ + (3) Network desity
+	- (3) Network density : sparse, medium, dense
+ 
+ + (5) Network dynamic
+	- joining/leaving rate : 1%, 5%, 10%, 15%, 20%
+
+
+6. Running the Benchmark
+==============================================================================
+
+
+Total number of test cases : 4*20*3*450*7*3*5 = 8505000
+
+Each test case should be repeated 10 times. Total number of experiments are 85050000
+
+
+Note: Experimental design techniques can be used to reduce the number of experiments 
+      depending on what metrics are being compared. 
+
+
+Generic testing application to cover all test cases are to be developed
+and released (in apps/tests?)
+
+
+7. Metrics
+==============================================================================
+
+There are different metrics for collection and dissemination protcols.
+
+Total number of transmitted messages
+
+Updating latency for a network
+
+Updating latency for a node
+
+Fraction of the network that is updated
+
+Energy consumption 
+
+
+
+
+8. Result Analysis Tools
+==============================================================================
+
+Analysis scripts (eg. python, shell, matlab) are to be developed and
+released (in tinyos-2.x/support?)
+
+
+9. Authors
+====================================================================
+
+| Thanh Dang
+| PSU
+| email - dangtx@pdx.edu
+|
+| Kaisen Lin
+| UCSD
+| email - kaisenl@cs.ucsd.edu
+|
+| Chieh-Jan Mike Liang
+| 213 NEB, 3400 N Charles St
+| Johns Hopkins University
+| Baltimore, MD 21211
+|
+| email - cliang4@cs.jhu.edu
+|
+| Omprakash Gnawali
+| S255 Clark Center, 318 Campus Drive
+| Stanford University
+| Stanford, CA  94305
+|
+| phone - +1 650 725 6086
+| email - gnawali@cs.stanford.edu
+
+
+10. Citations
+====================================================================
+
+.. [1] TEP 119: Collection
+
+.. [2] TEP 123: The Collection Tree Protocol (CTP) 
+
+.. [2] TEP 118: Dissemination of Small Values
