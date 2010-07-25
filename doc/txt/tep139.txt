@@ -10,14 +10,14 @@ The Source Routing Protocol (SRP)
 :Author: Chieh-Jan Mike Liang, Eric Decker, Doug Carlson, and Omprakash Gnawali
 
 :Draft-Created: 18-Jun-2010
-:Draft-Version: $Revision: 1.5 $
-:Draft-Modified: $Date: 2010-07-08 18:36:12 $
+:Draft-Version: $Revision$
+:Draft-Modified: $Date$
 :Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 
    This memo documents a part of TinyOS for the TinyOS Community, and
-   requests discussion and suggestions for improvements.  Distribution
+   requests discussion and suggestions for improvements. Distribution
    of this memo is unlimited. This memo is in full compliance with
    TEP 1.
 
@@ -37,10 +37,10 @@ respect, source routing is considered as one implementation of the
 forwarding engine in network protocols.
 
 The Source Routing Protocol (SRP) is a reference implementation of
-source routing in TinyOS 2.x. SRP is a network-level protocol built on top of 
-the TinyOS Active Message (AM) Layer which provides unreliable delivery over 
-multi-link routes.  Users interact with SRP through the source routing interfaces
-described in TEP 138 [1]_.
+source routing in TinyOS 2.x. SRP is a network-level protocol built on
+top of the TinyOS Active Message (AM) Layer which provides unreliable
+delivery over multi-link routes. Users interact with SRP through the
+source routing interfaces described in TEP 138 [1]_.
 
 In this TEP, after a brief discussion of source routing and SRP, we
 specify the packet format used by SRP, and how fields in the packet are
@@ -57,19 +57,18 @@ Source routing relies on the origin node to specify the list of nodes
 that a packet should traverse to reach the destination node. Mechanisms
 for path determination are beyond the scope of this specification.
 
-Source routing is useful in many cases. First, it may be used by
-applications when the routing paths are static. For example, two nodes
-on a desk might be in range to talk to each other directly during an
-experiment. Second, source routing may also be used by protocols that
-can compute the source route dynamically. Such protocols might collect
-link state information from the network, and then protocols compute the
-routes to nodes that they have pending packets for.
+Source routing is useful in many cases. First, source routing may be
+used by protocols that compute routes centrally on more capable nodes.
+Such protocols might first collect link state information from the
+network, and then compute the routes to destination nodes of pending
+packets. Second, during experiments, applications can use source routing
+to fix the route that data packets traverse in the network.
 
 When the user of SRP provides the source route, or the list of nodes on
 the path, SRP stores this information in the data packet header. SRP
 looks up the next hop in the source route in the data packet header and
-forwards the packet to the next hop. Once the packet reaches the
-destination, the packet is considered as being successfully delivered.
+forwards the data packet to the next hop. Once the data packet reaches
+the destination, it is considered as being successfully delivered.
 
 SRP is a best-effort protocol. During packet forwarding, if the
 underlying MAC layer indicates a failure in delivering packets to the
@@ -97,7 +96,7 @@ the first-hop node on the path. Similarly, SR Entry n-1 corresponds to the
 destination of the packet. The number of source route entries is equal
 to the number of nodes on the path.
 
-SR Entries SHOULD NOT repeat. Repeated SR Entries can cause loops.
+SR Entries SHOULD NOT repeat as this can cause unwanted loops.
 
 
 3.1 SRP header
@@ -119,7 +118,7 @@ Field definitions are as follows:
   
   * hops_left: The remaining distance (in hops) towards the
     destination. Each node MUST decrement this field when it forwards the
-    packet. It is 0 at the destination.  Must be less than sr_len (0..n-1).
+    packet. It is 0 at the destination. Must be less than sr_len (0..n-1).
 
   * seqno: The value of the sequence number counter maintained by the
     origin node. The origin node sets this field, and a node
