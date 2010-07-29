@@ -66,18 +66,38 @@ scenarios included in the benchmark.
 3. Topologies
 ==============================================================================
 
+To make sure the experiments can be repeatable, the network topologies 
+should remain the same when the experiments are repeated for different 
+protocols. Due to the dynamic nature of testbeds, it is difficult to
+repeat an exact experiment on testbeds. We therefore focus on only 
+specifying topologies for simulations in this benchmark.
 
-Focus on simulations. We want to say a few things about testbed
-topologies as well.
 
-Network topologies 
-  + Single-hop : star, clique
-  + Multi-hop  : chain (line), grid, star-chain, random, real-trace 
+Topologies used in simulations can be created by either duplicating topologies 
+of testbeds or by artificial generation. For testbed topologies, there are 
+available topologies from  Motelab, Mirage,...?, which can be accessible at
+urls..?. For artificial topologies, we recommend using the following topologies.
 
-Network density : average number of neighbours
+a) Single-hop star topology
+b) Single-hop clique topology
+c) Multi-hop chain tolology
+d) Multi-hop grid topology
+e) Multi-hop random topology
+                                              
+               ____                  __ __
+ \ | /        /\  /\                |  |  |
+__\|/__      /__\/__\     _ _ _ _   |__|__|          
+  /|\        \  /\  /               |  |  | 
+ / | \        \/__\/                |__|__| 
+  a)            b)          c)        d)                  e)
 
-Network dynamic : rate at which nodes join and leave a network
+The network size (total number of nodes) and the network density (average number
+of neighbors) can be varied but should remain the same for the same set of 
+experiments.
 
+The network dynamic, which is defined by the rate at which nodes join and leave
+a network (eg. unreliable or mobile sensor networks) should also remain the same
+for the same set of experiments.
 
 
 4. Protocol Use Scenarios
