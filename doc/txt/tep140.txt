@@ -60,7 +60,7 @@ topologies in which to test the protocols, the protocol use scenarios,
 and protocol parameters to vary across the experiments. The second
 component of the net2 protocol benchmark is the metrics that describe
 the performance of the protocols when we run them on the series of
-scenarios included int he benchmark.
+scenarios included in the benchmark.
 
 
 3. Topologies
