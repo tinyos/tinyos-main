@@ -129,43 +129,48 @@ network to perform different tasks at the same time.
 The following scenarios SHOULD be considered in evaluating collection 
 protocols:
 
+...[for Mike]
+
 5. Protocol Parameters
 ==============================================================================
 
 There are a number of parameters affecting the performance of collection
 and dissemination protocols. Protocol performance MUST be described with 
-the parameters' values.
+the parameters' values. The parameters are organized in order based on the
+network stack. 
 
 
-Link layer 
+[TODO: put all in one table]
+
+Link layer: 
    + Link quality (TOSSIM only) 
-   + LPL/not LPL
+   + LPL/no LPL
 
 Network layer 
    + Trickle Suppression constant (if protocols is trickle-based)
 
 Application layer
-   + Item size (within a TOS message for now)
+   + Item size (within a TOS message)
    + Total number of items
    + Total number of new items
 
 
-The following are meaningful values for each paraters
- + (20) Link layer   
+
+The following are the  meaningful values for each parater.
+
+ + (20) Link layer  
 	- (10) link quality
-        - (2)  LPL/not LPL
+        - (2)  LPL/no LPL
 
  + (3) Network layer
 	- (3) suppression constant : 1,2,3
 
  + (450) Application layer
 	- (2) Item size                  : 2, 10 (Bytes)
-        - (15) Total number of items     : 8, 16,..., 128
-        - (15) Total number of new items : 8, 16,..., 128
+  - (15) Total number of items     : 8, 16,..., 128
+  - (15) Total number of new items : 8, 16,..., 128
  
- + (7) Network topologies
-	- (2) Single-hop : star, clique
-        - (5) Multi-hop  : chain, grid, star-chain, random, real-trace
+
 
  + (3) Network desity
 	- (3) Network density : sparse, medium, dense
@@ -173,41 +178,44 @@ The following are meaningful values for each paraters
  + (5) Network dynamic
 	- joining/leaving rate : 1%, 5%, 10%, 15%, 20%
 
-
 6. Running the Benchmark
 ==============================================================================
 
+The complete benchmark requires considering all possible parameter settings for
+all network topologies. The total number of test cases is 11,340,000.
+ 
+To remove randomness factor, each test case SHOULD be repeated 10 times. 
+Hence, the total number of experiments are 113,400,000.
 
-Total number of test cases : 4*20*3*450*7*3*5 = 8505000
-
-Each test case should be repeated 10 times. Total number of experiments are 85050000
-
-
-Note: Experimental design techniques can be used to reduce the number of experiments 
-      depending on what metrics are being compared. 
-
-
-Generic testing application to cover all test cases are to be developed
-and released (in apps/tests?)
+Depending on which metrics are being compared, experimental design techniques 
+SHOULD be used to reduce the number of experiments. 
 
 
 7. Metrics
 ==============================================================================
 
-There are different metrics for collection and dissemination protcols.
+The following metrics SHOULD be considered for dissemination protocol 
+comparisions.
+ 
+Total number of transmitted messages: The messages are counted from the time
+new items are disseminated to the time the network is completely updated (or
+stable in the dynamic network case). 
+ 
+Updating latency for a node: The latency is calculated from the time new items 
+are disseminated or the time the node is active (whichever later) to the time 
+the node is updated.
 
-Total number of transmitted messages
+Update latency for the whole network: The latency is calculated from the time new 
+items are disseminated to the time the network is completely updated (or stable 
+in dynamic network case).
 
-Updating latency for a network
+Fraction of the network that is updated: In the dynamic network case, it is 
+impossible to achieve 100% of the network updated because there are always new 
+nodes joining the network and nodes leaving the network. It is suitable to 
+consider the fraction of the network that is updated. This fraction is 
+measured when it is stable.
 
-Updating latency for a node
-
-Fraction of the network that is updated
-
-Energy consumption 
-
-
-
+[Energy consumption: remove?]
 
 8. Result Analysis Tools
 ==============================================================================
@@ -220,7 +228,10 @@ released (in tinyos-2.x/support?)
 ====================================================================
 
 | Thanh Dang
-| PSU
+| 135 FAB, 1900 SW 4th Ave
+| Portland State University
+| Portland, OR 97201
+|
 | email - dangtx@pdx.edu
 |
 | Kaisen Lin
