@@ -76,7 +76,7 @@ specifying topologies for simulations in this benchmark.
 Topologies used in simulations can be created by either duplicating topologies 
 of testbeds or by artificial generation. For testbed topologies, there are 
 available topologies from  Motelab, Mirage,...?, which can be accessible at
-urls..?. For artificial topologies, we recommend using the following topologies.
+urls..?. For artificial topologies, experiments SHOULD use the following topologies.
 
 a) Single-hop star topology
 b) Single-hop clique topology
@@ -103,27 +103,39 @@ for the same set of experiments.
 4. Protocol Use Scenarios
 ==============================================================================
 
-We will have different scenarios for collection and dissemination.
+The following scenarios SHOULD be considered in evaluating dissemination 
+protocols:
 
-Scenario 1: A node disseminating new items to a stable network 
-	(Example application: programming a network)
+Scenario 1: A node disseminates one or more new items to a stable network.
+This scenario occurs in practice when a node or a basestation reprograms a 
+network or disseminates a events to all nodes in a network.
 
-Scenario 2: A node joining an updated network  
-	(Example application: updating an intermittent node) 
+Scenario 2: A node joins an updated network. This scenario occurs in
+practice when one or more items have been disseminated to the network. 
+However, there are new nodes (eg. mobile nodes moving into the region,
+or intermitent nodes that were off during the dissemination) join 
+the network.
 
-Scenario 3: Multiple nodes joining and leaving a network at a specified rate
-        (Example application: updating a dynamic network)
+Scenario 3: Multiple nodes joining and leaving a network at a specified rate.
+This scenario occurs in practice where mobile nodes moving in and out a
+region under dissemination.
 
 Scenario 4: Multiple items with different versions are injected into
-the network from different nodes
-        (Example application: multiple users (eg. scientist, high school
-         students, public) use a shared sensor network)
+the network from different nodes. This scenario occurs in practice where 
+multiple users accessing a shared sensing network and commanding the
+network to perform different tasks at the same time. 
 
+
+The following scenarios SHOULD be considered in evaluating collection 
+protocols:
 
 5. Protocol Parameters
 ==============================================================================
 
-We will have different parameters for collection and dissemination.
+There are a number of parameters affecting the performance of collection
+and dissemination protocols. Protocol performance MUST be described with 
+the parameters' values.
+
 
 Link layer 
    + Link quality (TOSSIM only) 
