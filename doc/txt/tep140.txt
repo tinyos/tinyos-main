@@ -67,16 +67,17 @@ scenarios included in the benchmark.
 ==============================================================================
 
 To make sure the experiments can be repeatable, the network topologies 
-should remain the same when the experiments are repeated for different 
+MUST remain the same when the experiments are repeated for different 
 protocols. Due to the dynamic nature of testbeds, it is difficult to
-repeat an exact experiment on testbeds. We therefore focus on only 
-specifying topologies for simulations in this benchmark.
+repeat an experiment with an exact topology on testbeds. We therefore focus 
+on only specifying topologies for simulations in this benchmark.
 
 
 Topologies used in simulations can be created by either duplicating topologies 
 of testbeds or by artificial generation. For testbed topologies, there are 
 available topologies from  Motelab, Mirage,...?, which can be accessible at
-urls..?. For artificial topologies, experiments SHOULD use the following topologies.
+urls..?. For artificial topologies, experiments SHOULD use the following 
+topologies.
 
 a) Single-hop star topology
 b) Single-hop clique topology
@@ -91,13 +92,13 @@ __\|/__      /__\/__\     _ _ _ _   |__|__|
  / | \        \/__\/                |__|__| 
   a)            b)          c)        d)                  e)
 
-The network size (total number of nodes) and the network density (average number
-of neighbors) can be varied but should remain the same for the same set of 
-experiments.
+The network size (total number of nodes) and the network density (average 
+number of neighbors) can be varied but should remain the same for the same 
+set of experiments.
 
-The network dynamic, which is defined by the rate at which nodes join and leave
-a network (eg. unreliable or mobile sensor networks) should also remain the same
-for the same set of experiments.
+The network dynamic, which is defined by the rate at which nodes 
+(eg. unreliable or mobile nodes) join and leave a network MUST also remain 
+the same for the same set of experiments.
 
 
 4. Protocol Use Scenarios
@@ -108,19 +109,19 @@ protocols:
 
 Scenario 1: A node disseminates one or more new items to a stable network.
 This scenario occurs in practice when a node or a basestation reprograms a 
-network or disseminates a events to all nodes in a network.
+network or disseminates events to all nodes in the network.
 
 Scenario 2: A node joins an updated network. This scenario occurs in
 practice when one or more items have been disseminated to the network. 
-However, there are new nodes (eg. mobile nodes moving into the region,
-or intermitent nodes that were off during the dissemination) join 
+However, there are new nodes (eg. mobile nodes moving into the network 
+region, or intermitent nodes that were off during the dissemination) join 
 the network.
 
 Scenario 3: Multiple nodes joining and leaving a network at a specified rate.
 This scenario occurs in practice where mobile nodes moving in and out a
 region under dissemination.
 
-Scenario 4: Multiple items with different versions are injected into
+Scenario 4: Multiple items with different versions are disseminated to
 the network from different nodes. This scenario occurs in practice where 
 multiple users accessing a shared sensing network and commanding the
 network to perform different tasks at the same time. 
@@ -135,9 +136,9 @@ protocols:
 ==============================================================================
 
 There are a number of parameters affecting the performance of collection
-and dissemination protocols. Protocol performance MUST be described with 
-the parameters' values. The parameters are organized in order based on the
-network stack. 
+and dissemination protocols. Protocol performance MUST be described together 
+with the parameters' values. The parameters are organized in order based on 
+the network stack. 
 
 
 [TODO: put all in one table]
@@ -184,7 +185,7 @@ The following are the  meaningful values for each parater.
 The complete benchmark requires considering all possible parameter settings for
 all network topologies. The total number of test cases is 11,340,000.
  
-To remove randomness factor, each test case SHOULD be repeated 10 times. 
+To remove randomness factors, each test case SHOULD be repeated 10 times. 
 Hence, the total number of experiments are 113,400,000.
 
 Depending on which metrics are being compared, experimental design techniques 
@@ -205,16 +206,19 @@ Updating latency for a node: The latency is calculated from the time new items
 are disseminated or the time the node is active (whichever later) to the time 
 the node is updated.
 
-Update latency for the whole network: The latency is calculated from the time new 
-items are disseminated to the time the network is completely updated (or stable 
-in dynamic network case).
+Update latency for the whole network: The latency is calculated from the time 
+new items are disseminated to the time the network is completely updated 
+(or stable in dynamic network case).
 
 Fraction of the network that is updated: In the dynamic network case, it is 
 impossible to achieve 100% of the network updated because there are always new 
 nodes joining the network and nodes leaving the network. It is suitable to 
-consider the fraction of the network that is updated. This fraction is 
-measured when it is stable.
+consider the fraction of the networki (number of updated nodes/total number 
+of nodes) that is updated. This fraction is measured when it is stable.
 
+ROM and RAM usage: 
+
+ 
 [Energy consumption: remove?]
 
 8. Result Analysis Tools
