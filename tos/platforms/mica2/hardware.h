@@ -70,8 +70,10 @@ enum {
   CHANNEL_BATTERY    = ATM128_ADC_SNGL_ADC7,
 };
 
+#ifndef PLATFORM_BAUDRATE
 enum {
   PLATFORM_BAUDRATE = 57600L
 };
+#endif
 
 #endif //HARDWARE_H

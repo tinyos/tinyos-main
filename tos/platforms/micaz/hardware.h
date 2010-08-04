@@ -68,8 +68,10 @@ enum {
   CHANNEL_THERMISTOR = ATM128_ADC_SNGL_ADC1    // normally unpopulated
 };
 
+#ifndef PLATFORM_BAUDRATE
 enum {
   PLATFORM_BAUDRATE = 57600L
 };
+#endif
 
 #endif //HARDWARE_H
