@@ -50,14 +50,20 @@ components NoDiagMsgC;
 	{
 		AM_DIAG_MSG = 0xB1,
 	};
-
-	components DiagMsgP, MainC, SerialActiveMessageC;
+	
+	components DiagMsgP, MainC;
 
 	DiagMsg = DiagMsgP.DiagMsg;
-
 	MainC.SoftwareInit -> DiagMsgP.Init;
-	DiagMsgP.AMSend -> SerialActiveMessageC.AMSend[AM_DIAG_MSG];
-	DiagMsgP.Packet -> SerialActiveMessageC;
+
+#ifdef DIAGMSG_RADIO
+	components new AMSenderC(AM_DIAG_MSG);
+#else
+	components new SerialAMSenderC(AM_DIAG_MSG) as AMSenderC;
+#endif
+
+	DiagMsgP.AMSend -> AMSenderC;
+	DiagMsgP.Packet -> AMSenderC;
 
 #endif
 }

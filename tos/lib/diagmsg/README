@@ -8,13 +8,14 @@ The DiagMsg component allows messages to be sent back to the base station
 containing several diagnostic or debugging values together with their type 
 information. The base station must run the GenericBase or TOSBase application 
 which forwards all messages to a PC connected to the base station. A java 
-programm (PrintDiagMsgs) displays the messages on the screen according to 
-the formating rules contained in the message.
+programm (java net.tinyos.util.DiagMsg) displays the messages on the screen 
+according to the formating rules contained in the message.
 
-The following data types are supported: 1,2, 4 and 8 byte long signed, unsigned and 
-hexadecimal integers, characters, floating point numbers, strings and arrays 
+The following data types are supported: 1,2, 4 and 8 byte long signed, unsigned
+and hexadecimal integers, characters, floating point numbers, strings and arrays 
 of the previous types (of length up to 15). Each field requires an additional 
 4 bit type descriptor.
+
 
 USAGE:
 
@@ -42,15 +43,30 @@ message above, for example, uses
 that is 22 bytes. If the message cannot hold more fields, then additional 
 fields will be silently ignored. 
 
+
 THE JAVA PROGRAM:
 
 The java program (DiagMsgs) displays each DiagMsg in a line. The program 
 can connect to a SerialForward application, or can use the serial port directly.
 
+
+ASSERT:
+
+A separate component (AssertC) provides an ASSERT macro that can be used to
+signal error conditions with a DiagMsg. You have to include the AssertC
+component only once in your application, and where ever you want to use
+the ASSERT macro you need to include only the Assert.h header file.
+
+
 TUNABLE PARAMETERS:
 
 The DiagMsg component can be configured by defining the following values in 
 your make file:
+
+DIAGMSG_NONE: Turns off sending diagmessage completely
+
+DIAGMSG_RADIO: By default all diag messages are sent over the serial line,
+this will reroute them to the radio
 
 DIAGMSG_BASE_STATION: The node ID of the base station or 0xFFFF to broadcast
 the message. The default value is to broadcast the message.
@@ -62,3 +78,7 @@ automatically).
 DIAGMSG_RECORDED_MSGS: The DiagMsg component keeps an internal buffer of this 
 many messages. This allows sending several small messages without waiting for 
 their completion.
+
+ASSERT_NONE: Disables assertion checking
+
+ASSERT_LEDON: Turns on LED0 when an assert fails.

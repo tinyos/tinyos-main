@@ -40,8 +40,9 @@ implementation
 {
 #ifndef ASSERT_NONE
 
-	components AssertP, DiagMsgC;
+	components AssertP, DiagMsgC, LedsC;
 	AssertP.DiagMsg -> DiagMsgC;
+	AssertP.Leds -> LedsC;
 
 #endif
 }
