@@ -73,7 +73,7 @@ ifeq ($(PROGRAMMER),avrdude)
   endif
   AVRDUDE_CONF ?= /etc/avrdude/avrdude.conf
   ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
-    AVRDUDE_CONF := $(shell cygpath -m $(AVRDUDE_CONF))
+    AVRDUDE_CONF := $(shell cygpath -ms $(AVRDUDE_CONF))
   endif
   PROGRAMMER_EXTRA_FLAGS += -C$(AVRDUDE_CONF)
 #  PROGRAMMER_EXTRA_FLAGS += -v -v
