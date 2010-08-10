@@ -1,5 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
-#$Id: Makerules,v 1.7 2010-03-17 00:38:04 klueska Exp $
+#$Id: Makerules,v 1.6 2008/09/26 20:13:58 klueska Exp $
 
 # @author Cory Sharp <cssharp@eecs.berkeley.edu>
 
@@ -49,9 +49,7 @@ TINYOS_MAKELOCAL ?= $(TINYOS_MAKE_PATH)/Makelocal
 TINYOS_MAKEDEFAULTS ?= $(TINYOS_MAKE_PATH)/Makedefaults
 
 #  Allow users to specify additional directories to find TOSMake files.
-TOSMAKE_TEMP_PATH := $(TOSMAKE_PATH)
-TOSMAKE_PATH = $(TINYOS_MAKE_PATH) 
-TOSMAKE_PATH += $(TOSMAKE_TEMP_PATH)
+TOSMAKE_PATH += $(TINYOS_MAKE_PATH)
 
 #  Save makecmdgoals (a read only var) to goals so that we can modify it.
 GOALS += $(MAKECMDGOALS)
@@ -116,6 +114,14 @@ $(eval OTHERS = $(filter-out $(EXTRAS) $(TARGETS),$(GOALS)))
 $(foreach file,$(NEW_EXTRAS) $(NEW_TARGETS),$(if $(filter $(call names,$(file)),$(GOALS)),$(eval include $(file))))
 endef
 
+TOSMake_accum_dir = $(eval $(call TOSMake_accum_dir_define,$(1)))
+define TOSMake_accum_dir_define
+$(eval NEW_EXTRAS := $(call TOSMake_makelist,$(1),extra))
+$(eval NEW_TARGETS := $(call TOSMake_makelist,$(1),target))
+$(eval VALID_EXTRAS += $(NEW_EXTRAS))
+$(eval VALID_TARGETS += $(NEW_TARGETS))
+endef
+
 #  TOSMake_include_platform(dir)
 #    Pull in a directory as a new TOSMake platform, which MUST be a subdir of
 #    TOSMAKE_PATH.  A platform directory must also have a .rules file, which
@@ -138,7 +144,10 @@ endef
 PLATFORMDIR ?= $(TOSDIR)/platforms/$(PLATFORM)
 
 #  Mark TOSMAKE_PATH with a + so that they're not searched for by TOSMake_find.
-$(foreach incdir,$(addprefix +,$(TOSMAKE_PATH)),$(call TOSMake_include_dir,$(incdir)))
+$(foreach incdir,$(addprefix +,$(TOSMAKE_PATH)),$(call TOSMake_accum_dir,$(incdir)))
+
+$(foreach file,$(VALID_EXTRAS),$(if $(filter $(call names,$(file)),$(GOALS)),$(eval include $(file))))
+$(foreach file,$(VALID_TARGETS),$(if $(filter $(call names,$(file)),$(GOALS)),$(eval include $(file))))
 
 #  Make default rules for each extra with full argument
 $(foreach goal,$(MAKECMDGOALS),$(if $(filter-out $(TARGETS) help,$(goal)),$(eval $(call TOSMake_extra_targets,$(goal)))))
