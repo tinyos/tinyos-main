@@ -39,7 +39,7 @@
  * @date February, 2010
  */
 
-configuration HplUserButtonC {
+configuration HplTiltDetectorC {
   provides interface GeneralIO;
   provides interface GpioInterrupt;
 }
