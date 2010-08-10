@@ -1,4 +1,4 @@
-// $Id: TimeSyncMessageC.nc,v 1.1 2010/06/10 17:33:33 ayer Exp $
+// $Id: TimeSyncMessageC.nc,v 1.2 2010/05/17 13:12:21 ayer Exp $
 
 /*
  * "Copyright (c) 2004-2005 The Regents of the University  of California.
@@ -47,6 +47,8 @@ configuration TimeSyncMessageC {
     interface Receive as Snoop[am_id_t id];
     interface Packet;
     interface AMPacket;
+    interface PacketAcknowledgements;
+    interface LowPowerListening;
 
     interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -67,6 +69,8 @@ implementation {
   Snoop        = AM.Snoop;
   Packet       = AM;
   AMPacket     = AM;
+  PacketAcknowledgements = AM;
+  LowPowerListening = AM;
 
   TimeSyncAMSend32khz       = AM;
   TimeSyncAMSendMilli       = AM;
