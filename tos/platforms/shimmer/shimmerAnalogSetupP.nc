@@ -131,13 +131,7 @@ implementation {
   }
 
   command void shimmerAnalogSetup.addEMGInput() { 
-    uint8_t new_chans[] = { 1 };
-    addNewChannels(new_chans, 1);
-    
-    initADC12MEMCTLx();
-
-    TOSH_MAKE_ADC_1_INPUT();         
-    TOSH_SEL_ADC_1_MODFUNC();
+    call shimmerAnalogSetup.addECGInputs();
   }
 
   command void shimmerAnalogSetup.addAnExInput() { 
