@@ -170,7 +170,6 @@ implementation {
       signal SD.available();
     }
 
-
     call DockInterrupt.enable();
     call DockInterrupt.clear();
     
