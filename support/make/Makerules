@@ -120,6 +120,7 @@ $(eval NEW_EXTRAS := $(call TOSMake_makelist,$(1),extra))
 $(eval NEW_TARGETS := $(call TOSMake_makelist,$(1),target))
 $(eval VALID_EXTRAS += $(NEW_EXTRAS))
 $(eval VALID_TARGETS += $(NEW_TARGETS))
+$(eval TARGETS = $(filter $(call names,$(VALID_TARGETS)),$(GOALS)))
 endef
 
 #  TOSMake_include_platform(dir)
