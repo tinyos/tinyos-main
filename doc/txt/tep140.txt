@@ -63,7 +63,19 @@ the performance of the protocols when we run them on the series of
 scenarios included in the benchmark.
 
 
-3. Topologies
+3. Definitions
+
+Update time : duration from the time the first item is sent out to the 
+time every nodes receive the last item.
+
+Stablize time : 
+
+Testbed topology : 
+
+Network density : 
+
+
+4. Topologies
 ==============================================================================
 
 To make sure the experiments can be repeatable, the network topologies 
@@ -86,10 +98,10 @@ d) Multi-hop grid topology
 e) Multi-hop random topology
                                               
                ____                  __ __
- \ | /        /\  /\                |  |  |
-__\|/__      /__\/__\     _ _ _ _   |__|__|          
-  /|\        \  /\  /               |  |  | 
- / | \        \/__\/                |__|__| 
+ \ | /        /\  /\                |  |  |		 \ | /\	
+__\|/__      /__\/__\     _ _ _ _   |__|__|             \|/__\
+  /|\        \  /\  /               |  |  | 		   |\	 /
+ / | \        \/__\/                |__|__|              |_\/
   a)            b)          c)        d)                  e)
 
 The network size (total number of nodes) and the network density (average 
@@ -101,7 +113,7 @@ The network dynamic, which is defined by the rate at which nodes
 the same for the same set of experiments.
 
 
-4. Protocol Use Scenarios
+5. Protocol Use Scenarios
 ==============================================================================
 
 The following scenarios SHOULD be considered in evaluating dissemination 
@@ -132,7 +144,7 @@ protocols:
 
 ...[for Mike]
 
-5. Protocol Parameters
+6. Protocol Parameters
 ==============================================================================
 
 There are a number of parameters affecting the performance of collection
@@ -140,67 +152,56 @@ and dissemination protocols. Protocol performance MUST be described together
 with the parameters' values. The parameters are organized in order based on 
 the network stack. 
 
-
-[TODO: put all in one table]
-+------------------------------------------------------------------------------+
-|  
-|
-+------------------------------------------------------------------------------+
-|  Application 
-|
-|
-|
-|
-|
-|
-|
-|
-+-----------------------------------------------------------------------------+
-
-
-
-
-
-Link layer: 
-   + Link quality (TOSSIM only) 
-   + LPL/no LPL
-
-Network layer 
-   + Trickle Suppression constant (if protocols is trickle-based)
-
-Application layer
-   + Item size (within a TOS message)
-   + Total number of items
-   + Total number of new items
-
-
-
-The following are the  meaningful values for each parater.
-
- + (20) Link layer  
-	- (10) link quality
-        - (2)  LPL/no LPL
-
- + (3) Network layer
-	- (3) suppression constant : 1,2,3
-
- + (450) Application layer
-	- (2) Item size                  : 2, 10 (Bytes)
-  - (15) Total number of items     : 8, 16,..., 128
-  - (15) Total number of new items : 8, 16,..., 128
++--------------------------------------------------------+---------------------+
+|  			|			|			   |				 |
+|  Layer          |   Parameter     |   Description      |   Value(s)          |    
++-----------------+--------------------------------------+---------------------+
+|  Application    | Item size       |  size of data item | 2 or 10 bytes       | 
+|			+-----------------+--------------------+---------------------+	
+|			| Number of items |                    | 2 to 128            |
+|			+-----------------+--------------------+---------------------+
+|			| Number of new 	| number of items	   | 2 to 128            |	
+|			| items           | to be disseminated |                     |
+|-----------------+-----------------+--------------------+---------------------+
+| Network layer	| suppression     | number of messages | 1,2,3               |
+|			|			| a node heard before|                     |
+|			|			| suppressing its own|				 |	
+|			|			| transmission       |                     | 
+|			|			| (trickle-based     |                     |
+|                 | constant        | protocol only, )   |                     |
+|-----------------+-----------------+--------------------+---------------------+
+|Link layer       | link quality    | can be gain, PRR   |                     |
+|			|		      | ETX,...            |                     |
+|                 |-----------------+--------------------+---------------------+
+|                 | Duty cycle      | can simply be duty | 				 |
+|                 | or LPL          | cycle of the nodes |				 |
+|                 |                 | or LPL parameters  |                     |
++-----------------+-----------------+--------------------+---------------------+
  
 
+In addition, the following parameters that characterise a network MUST also be 
+considered.
 
- + (3) Network desity
-	- (3) Network density : sparse, medium, dense
- 
- + (5) Network dynamic
-	- joining/leaving rate : 1%, 5%, 10%, 15%, 20%
++----------------+---------------------------------------+---------------------+
+|  Parameter     |      Description                      |     Value(s)        |
+|                |                                       |                     |
++----------------+---------------------------------------+---------------------+
+|  density       |  can be the average number            | 3,4,5,6 neighbors or|
+|                | of neighbors or the average gain      |                     |
++----------------+---------------------------------------+---------------------+
+| network size   | total number of nodes                 |                     |
+|                |                                       |                     |
++----------------+---------------------------------------+---------------------+
+| network        |  rates at which nodes are joining     | 1%,5%,10%,15%       |
+| dynamic        |  and leaving a network (eg. due to    |                     |
+|                |  mobility)                            |                     |
++----------------+---------------------------------------+---------------------+
 
-6. Running the Benchmark
+
+7. Running the Benchmark
 ==============================================================================
 
-The complete benchmark requires considering all possible parameter settings for
+A complete benchmark requires considering all possible parameter settings for
 all network topologies. The total number of test cases is 11,340,000.
  
 To remove randomness factors, each test case SHOULD be repeated 10 times. 
@@ -210,7 +211,7 @@ Depending on which metrics are being compared, experimental design techniques
 SHOULD be used to reduce the number of experiments. 
 
 
-7. Metrics
+8. Metrics
 ==============================================================================
 
 The following metrics SHOULD be considered for dissemination protocol 
@@ -220,7 +221,7 @@ Total number of transmitted messages: The messages are counted from the time
 new items are disseminated to the time the network is completely updated (or
 stable in the dynamic network case). 
  
-Updating latency for a node: The latency is calculated from the time new items 
+Update latency for a node: The latency is calculated from the time new items 
 are disseminated or the time the node is active (whichever later) to the time 
 the node is updated.
 
@@ -234,19 +235,18 @@ nodes joining the network and nodes leaving the network. It is suitable to
 consider the fraction of the networki (number of updated nodes/total number 
 of nodes) that is updated. This fraction is measured when it is stable.
 
-ROM and RAM usage: 
+ROM and RAM usage: The memory usage of a simple program providing only 
+dissemination or collection services.  
 
- 
-[Energy consumption: remove?]
 
-8. Result Analysis Tools
+9. Result Analysis Tools
 ==============================================================================
 
 Analysis scripts (eg. python, shell, matlab) are to be developed and
-released (in tinyos-2.x/support?)
+released (in tinyos-2.x/benchmark/tools?)
 
 
-9. Authors
+10. Authors
 ====================================================================
 
 | Thanh Dang
@@ -276,7 +276,7 @@ released (in tinyos-2.x/support?)
 | email - gnawali@cs.stanford.edu
 
 
-10. Citations
+11. Citations
 ====================================================================
 
 .. [1] TEP 119: Collection
