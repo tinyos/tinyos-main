@@ -160,7 +160,7 @@ the network stack.
 |                 +-----------------+--------------------+---------------------+	
 |                 | Number of items |                    | 2 to 128            |
 |                 +-----------------+--------------------+---------------------+
-|                 | Number of new   | number of items	   | 2 to 128            |	
+|                 | Number of new   | number of items    | 2 to 128            |	
 |                 | items           | to be disseminated |                     |
 |-----------------+-----------------+--------------------+---------------------+
 | Network layer   | suppression     | number of messages | 1,2,3               |
