@@ -153,21 +153,21 @@ with the parameters' values. The parameters are organized in order based on
 the network stack. 
 
 +--------------------------------------------------------+---------------------+
-|  			|			|			   |				 |
+|  		      |                 |                    |                     |
 |  Layer          |   Parameter     |   Description      |   Value(s)          |    
 +-----------------+--------------------------------------+---------------------+
 |  Application    | Item size       |  size of data item | 2 or 10 bytes       | 
-|			+-----------------+--------------------+---------------------+	
-|			| Number of items |                    | 2 to 128            |
-|			+-----------------+--------------------+---------------------+
-|			| Number of new 	| number of items	   | 2 to 128            |	
-|			| items           | to be disseminated |                     |
+|		      +-----------------+--------------------+---------------------+	
+|		      | Number of items |                    | 2 to 128            |
+|		      +-----------------+--------------------+---------------------+
+|			| Number of new   | number of items	   | 2 to 128            |	
+|		      | items           | to be disseminated |                     |
 |-----------------+-----------------+--------------------+---------------------+
-| Network layer	| suppression     | number of messages | 1,2,3               |
-|			|			| a node heard before|                     |
-|			|			| suppressing its own|				 |	
-|			|			| transmission       |                     | 
-|			|			| (trickle-based     |                     |
+| Network layer   | suppression     | number of messages | 1,2,3               |
+|		      |			| a node heard before|                     |
+|		      |			| suppressing its own|				 |	
+|		      |			| transmission       |                     | 
+|		      |			| (trickle-based     |                     |
 |                 | constant        | protocol only, )   |                     |
 |-----------------+-----------------+--------------------+---------------------+
 |Link layer       | link quality    | can be gain, PRR   |                     |
