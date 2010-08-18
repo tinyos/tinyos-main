@@ -261,7 +261,10 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
 
     result->tm_yday = days; 
 #ifdef HAVE_WDAY
-    result->tm_wday = (result->tm_yday + year_info[i+1].wday_offset) % 7;
+    if(NUM_YEARS > 1)
+      result->tm_wday = (result->tm_yday + year_info[i+1].wday_offset) % 7;
+    else
+      result->tm_wday = (result->tm_yday + year_info[0].wday_offset) % 7;
 #endif
 
     for (i = 0; i < 12; i++) {
