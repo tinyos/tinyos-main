@@ -188,6 +188,8 @@ implementation {
 
   async event void DockInterrupt.fired() {
     if (call DockInterrupt.getValue() == TRUE){      // off the dock
+      powerCycle();
+
       cardInit();
 
       call DockInterrupt.edge(FALSE);
@@ -213,10 +215,16 @@ implementation {
 
     /*
      * set the clock to 115200 for sd init, default is smclk / 2
-     * cardInit raises speed back to 512k at end of init routine
+     * cardInit raises speed back to smclk / 2 at end of init routine
      */
+
+#ifndef SMCLK_4MHZ
     call Usart.setUbr(UBR_1MHZ_115200);
     call Usart.setUmctl(UMCTL_1MHZ_115200);
+#else
+    call Usart.setUbr(0x0024);
+    call Usart.setUmctl(0x0029);
+#endif
 
     call Usart.enableRxIntr();
 
