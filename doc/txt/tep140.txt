@@ -66,14 +66,14 @@ scenarios included in the benchmark.
 3. Definitions
 
 Update time : duration from the time the first item is sent out to the 
-time every nodes receive the last item.
+network to the time every nodes receive the last item.
 
-Stablize time : 
+Stablizing time : duration from the time every nodes receive the last item
+to the time the number of transmissions in the network is stable.
 
 Testbed topology : 
 
 Network density : 
-
 
 4. Topologies
 ==============================================================================
@@ -86,9 +86,9 @@ on only specifying topologies for simulations in this benchmark.
 
 
 Topologies used in simulations can be created by either duplicating topologies 
-of testbeds or by artificial generation. For testbed topologies, there are 
+of testbeds or by simulation. For testbed topologies, there are 
 available topologies from  Motelab, Mirage,...?, which can be accessible at
-urls..?. For artificial topologies, experiments SHOULD use the following 
+urls..?. For simulated topologies, experiments SHOULD use the following 
 topologies.
 
 a) Single-hop star topology
@@ -204,7 +204,7 @@ considered.
 A complete benchmark requires considering all possible parameter settings for
 all network topologies. The total number of test cases is 11,340,000.
  
-To remove randomness factors, each test case SHOULD be repeated 10 times. 
+To remove random factors, each test case SHOULD be repeated 10 times. 
 Hence, the total number of experiments are 113,400,000.
 
 Depending on which metrics are being compared, experimental design techniques 
