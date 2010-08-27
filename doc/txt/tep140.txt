@@ -24,112 +24,123 @@ The Net2 Protocol Benchmark
 Abstract
 ==============================================================================
 
-The memo describes the metrics, test scenarios, test test
-applications, and analysis tools for testing collection and
-dissemination protocols in TinyOS 2.x. Our goal is to design
-benchmarks for network protocols.
+The memo describes the metrics, test scenarios, test applications, and
+analysis tools for testing collection and dissemination protocols in
+TinyOS 2.x. Our goal is to design benchmark suites for network protocols.
 
 
 1. Introduction
 ==============================================================================
 
-TinyOS 2.x comes with a number of collection and dissemination
-protocols. Collection is a network-layer best-effort protocol that
-forms routes from all the nodes in a network to the collection roots
-or sinks [1]_. CTP [2]_ and MultihopLQI collection protocols are available
-in TinyOS 2.x. Dissemination is a network-layer reliable protocol that
-allows dissemination of key-value pairs to the entire network
-[3]_. Drip, DIP, and DHV dissemination protocols are available in
-TinyOS 2.x. Although a large number of mature protocols are available,
-we lack standard performance tests to evaluate these protocols.
+TinyOS 2.x has a number of collection and dissemination protocols.
+Collection is a network-layer best-effort protocol that forms routes
+from all the nodes in a network to one or more collection roots or sinks
+[1]_. CTP [2]_ and MultihopLQI are examples of collection protocols
+available in TinyOS 2.x. Dissemination is a network-layer reliable
+protocol that provides the eventual delivery of key-value pairs to all
+the nodes in a network [3]_. Drip, DIP, and DHV are examples of
+dissemination protocols available in the TinyOS 2.x distribution.
+Although a large number of mature protocols are available, the community
+lacks standard performance tests to evaluate these protocols.
 
-In this document, we describe benchmarks that allow us to
-systematically compare the performance of these protocols. Benchmarks
-also enable us to compare improvements to these protocols using a
-standard set of test cases, scenarios, and tools. We hope the
-community will adopt these benchmarks so that the results from
-different research projects can be more directly compared.
+In this document, we describe benchmark suites (i.e., test cases,
+scenarios, metrics, and tools) designed with the following two goals.
+First, benchmark suites should allow us to systematically compare the
+performance of protocols of the same category. Second, benchmark suites
+should enable us to quantify the performance difference from the
+different versions of a protocol. We hope the community will adopt these
+benchmark suites so that the evaluation results from different research
+projects can be more meaningfully compared.
 
 
 2. The Net2 Protocol Benchmark Overview
 ==============================================================================
 
-There are two components in this benchmark. First, a description of a
-series of tests to run to evaluate the protocols. We describe the
-topologies in which to test the protocols, the protocol use scenarios,
-and protocol parameters to vary across the experiments. The second
-component of the net2 protocol benchmark is the metrics that describe
-the performance of the protocols when we run them on the series of
-scenarios included in the benchmark.
+There are two components in the benchmark test cases. First, test cases
+need to specify the topologies, scenarios, and protocol parameters to
+vary across the experiments. Second, we need to define a set of metrics
+to interpret the results and logs collected from running test cases.
 
 
 3. Definitions
-
-Update time : duration from the time the first item is sent out to the 
-network to the time every nodes receive the last item.
-
-Stablizing time : duration from the time every nodes receive the last item
-to the time the number of transmissions in the network is stable.
-
-Testbed topology : 
-
-Network density : 
-
-4. Topologies
 ==============================================================================
 
-To make sure the experiments can be repeatable, the network topologies 
-MUST remain the same when the experiments are repeated for different 
-protocols. Due to the dynamic nature of testbeds, it is difficult to
-repeat an experiment with an exact topology on testbeds. We therefore focus 
-on only specifying topologies for simulations in this benchmark.
+Update time : For dissemination protocols, this is the duration from the
+first of a set of items being disseminated until all nodes receive all
+items.
+
+Stabilizing time : duration from the time every nodes receive the last
+item to the time the number of transmissions in the network is stable???
+
+Testbed topology : This refers to the connectivity graph of a testbed.
+
+Network density : This defines the average number of neighborhood size
+in the network.
 
 
-Topologies used in simulations can be created by either duplicating topologies 
-of testbeds or by simulation. For testbed topologies, there are 
-available topologies from  Motelab, Mirage,...?, which can be accessible at
-urls..?. For simulated topologies, experiments SHOULD use the following 
-topologies.
+4. Test Case Topologies
+==============================================================================
+
+To promote experiment repeatability and fair comparisons, the network
+topologies MUST remain the same when the same experiment is repeated for
+several runs. However, due to the dynamic nature of testbeds, it is
+difficult to repeat experiments with an exact topology on testbeds. We
+therefore focus on only specifying topologies for simulations in this
+document.
+
+Topologies used in simulations can be either created by duplicating
+topologies of real-world testbeds or from synthesizing topologies as
+outlined later in this section. For testbed topologies, there are
+available topologies from  Motelab, Mirage,...?, which can be accessible
+at urls..?. For synthesized topologies, experiments SHOULD use the
+following topologies.
 
 a) Single-hop star topology
 b) Single-hop clique topology
-c) Multi-hop chain tolology
+c) Multi-hop chain topology
 d) Multi-hop grid topology
 e) Multi-hop random topology
+f) Multi-hop binary tree topology
                                               
-               ____                  __ __
- \ | /        /\  /\                |  |  |		 \ | /\	
-__\|/__      /__\/__\     _ _ _ _   |__|__|             \|/__\
-  /|\        \  /\  /               |  |  | 		   |\	 /
- / | \        \/__\/                |__|__|              |_\/
-  a)            b)          c)        d)                  e)
+               ____                    __ __
+ \ | /        /\  /\                  |  |  |     \ | /\	
+__\|/__      /__\/__\     _ _ _ _     |__|__|             \|/__\
+  /|\        \  /\  /                 |  |  | 		   |\	 /
+ / | \        \/__\/                  |__|__|              |_\/
+   a)           b)           c)          d)            e)
 
-The network size (total number of nodes) and the network density (average 
-number of neighbors) can be varied but should remain the same for the same 
-set of experiments.
+   /\
+  /\/\
+ /\../\
+/\/\/\/\
+   f)
 
-The network dynamic, which is defined by the rate at which nodes 
-(eg. unreliable or mobile nodes) join and leave a network MUST also remain 
+The network size (total number of nodes) and the network density
+(average number of neighbors) can be varied but should remain the same
+for the same set of experiments.
+
+The network dynamics, which are defined by the rate at which nodes (e.g.,
+unreliable or mobile nodes) join and leave a network MUST also remain
 the same for the same set of experiments.
 
 
-5. Protocol Use Scenarios
+5. Test Case Scenarios
 ==============================================================================
 
 The following scenarios SHOULD be considered in evaluating dissemination 
 protocols:
 
 Scenario 1: A node disseminates one or more new items to a stable network.
-This scenario occurs in practice when a node or a basestation reprograms a 
+This scenario occurs in practice when a node or a base station reprograms a 
 network or disseminates events to all nodes in the network.
 
 Scenario 2: A node joins an updated network. This scenario occurs in
 practice when one or more items have been disseminated to the network. 
 However, there are new nodes (eg. mobile nodes moving into the network 
-region, or intermitent nodes that were off during the dissemination) join 
+region, or intermittent nodes that were off during the dissemination) join 
 the network.
 
-Scenario 3: Multiple nodes joining and leaving a network at a specified rate.
+Scenario 3: Multiple nodes join and leave a network at a specified rate.
 This scenario occurs in practice where mobile nodes moving in and out a
 region under dissemination.
 
@@ -142,101 +153,140 @@ network to perform different tasks at the same time.
 The following scenarios SHOULD be considered in evaluating collection 
 protocols:
 
-...[for Mike]
+Scenario 1: All nodes periodically generate one data packet in a network
+with only one sink. Nodes can start sampling at different time to mimic
+deployments where nodes boot at different time instances.
 
-6. Protocol Parameters
+Scenario 2: All nodes periodically generate one data packet in a network
+with multiple sinks. This exercises the case where the network leverages
+multiple sinks to increase the overall network capacity.
+
+Scenario 3: Multiple nodes join and leave a network at a specified rate.
+
+Scenario 4: Links go down and come up at a specified order and rate.
+
+6. Test Case Parameters
 ==============================================================================
 
 There are a number of parameters affecting the performance of collection
-and dissemination protocols. Protocol performance MUST be described together 
-with the parameters' values. The parameters are organized in order based on 
-the network stack. 
+and dissemination protocols. Protocol test cases MUST be described
+together with the parameters' values. The parameters are organized in
+the order of stack layers.
 
-+--------------------------------------------------------+---------------------+
++------------------------------------------------------------------------------+
+|      Layer      |    Parameter    |    Description     |      Value(s)       |
 |                 |                 |                    |                     |
-|  Layer          |   Parameter     |   Description      |   Value(s)          |    
-+-----------------+--------------------------------------+---------------------+
-|  Application    | Item size       |  size of data item | 2 or 10 bytes       | 
-|                 +-----------------+--------------------+---------------------+	
+|-----------------+--------------------------------------+---------------------|
+| Application     | Item size       | Size of data item  | 2 or 10 bytes       |
+|                 |-----------------+--------------------+---------------------|
 |                 | Number of items |                    | 2 to 128            |
-|                 +-----------------+--------------------+---------------------+
-|                 | Number of new   | number of items    | 2 to 128            |	
+|                 |-----------------+--------------------+---------------------|
+|                 | Number of new   | Number of items    | 2 to 128            |
 |                 | items           | to be disseminated |                     |
-|-----------------+-----------------+--------------------+---------------------+
-| Network layer   | suppression     | number of messages | 1,2,3               |
-|                 |                 | a node heard before|                     |
+|-----------------+-----------------+--------------------+---------------------|
+| Network layer   | Suppression     | Number of messages | 1, 2, 3             |
+|                 | constant        | a node heard before|                     |
 |                 |                 | suppressing its own|                     |
 |                 |                 | transmission       |                     | 
 |                 |                 | (trickle-based     |                     |
-|                 | constant        | protocol only, )   |                     |
-|-----------------+-----------------+--------------------+---------------------+
-|Link layer       | link quality    | can be gain, PRR   |                     |
+|                 |                 | protocol only)     |                     |
+|-----------------+-----------------+--------------------+---------------------|
+| Link layer      | Link quality    | Can be gain, PRR   |                     |
 |                 |                 | ETX,...            |                     |
-|                 |-----------------+--------------------+---------------------+
-|                 | Duty cycle      | can simply be duty |                     |
+|                 |-----------------+--------------------+---------------------|
+|                 | Duty cycle      | Can simply be duty |                     |
 |                 | or LPL          | cycle of the nodes |                     |
 |                 |                 | or LPL parameters  |                     |
-+-----------------+-----------------+--------------------+---------------------+
- 
++------------------------------------------------------------------------------+
 
-In addition, the following parameters that characterise a network MUST also be 
+In addition, the following parameters that characterize a network MUST also be 
 considered.
 
-+----------------+---------------------------------------+---------------------+
-|  Parameter     |      Description                      |     Value(s)        |
++------------------------------------------------------------------------------+
+|   Parameters   |               Description             |      Value(s)       |
 |                |                                       |                     |
-+----------------+---------------------------------------+---------------------+
-|  density       |  can be the average number            | 3,4,5,6 neighbors or|
+|----------------+---------------------------------------+---------------------|
+| Density        | Can be the average number             | 3,4,5,6 neighbors or|
 |                | of neighbors or the average gain      |                     |
-+----------------+---------------------------------------+---------------------+
-| network size   | total number of nodes                 |                     |
+|----------------+---------------------------------------+---------------------|
+| Network size   | Total number of nodes                 |                     |
 |                |                                       |                     |
-+----------------+---------------------------------------+---------------------+
-| network        |  rates at which nodes are joining     | 1%,5%,10%,15%       |
-| dynamic        |  and leaving a network (eg. due to    |                     |
-|                |  mobility)                            |                     |
-+----------------+---------------------------------------+---------------------+
+|----------------+---------------------------------------+---------------------|
+| Network        | Rates at which nodes are joining      | 1%, 5%, 10%, 15%    |
+| Dynamics       | and leaving a network (eg. due to     |                     |
+|                | mobility)                             |                     |
++------------------------------------------------------------------------------+
 
 
-7. Running the Benchmark
+7. Running the Test Cases
 ==============================================================================
 
-A complete benchmark requires considering all possible parameter settings for
-all network topologies. The total number of test cases is 11,340,000.
- 
-To remove random factors, each test case SHOULD be repeated 10 times. 
-Hence, the total number of experiments are 113,400,000.
+A complete benchmark requires considering all possible parameter
+settings for all network topologies. The total number of test cases is
+11,340,000. To remove random factors, each test case SHOULD be repeated
+10 times. Hence, the total number of experiments are 113,400,000.
 
-Depending on which metrics are being compared, experimental design techniques 
-SHOULD be used to reduce the number of experiments. 
+Depending on which metrics are being compared, experimental design
+techniques SHOULD be used to reduce the number of experiments.
 
+Each experiment should be ran sufficiently long for the interested
+comparison metrics to reach stability. For collection protocols, the
+could refer to observing stability in the data latency of the whole
+network.
 
-8. Metrics
+While there are various methods of logging the node behavior during
+experiments, nodes SHOULD not broadcast any log packets on the radio
+until the experiment finishes. Instead, nodes can use the external flash
+or dump log data to the serial port, if available.
+
+8. Comparison Metrics
 ==============================================================================
 
 The following metrics SHOULD be considered for dissemination protocol 
-comparisions.
+comparisons.
  
-Total number of transmitted messages: The messages are counted from the time
-new items are disseminated to the time the network is completely updated (or
-stable in the dynamic network case). 
+Total number of transmitted messages:
+
+  * For dissemination protocols, this defines the number of messages
+  transmitted from the time new items are disseminated to the time the
+  network is completely updated (or stable in the case of dynamic
+  network topologies).
+  
+  * For collection protocols, this defines the total number of messages
+  and acknowledgements exchanged for the entire test case duration.
  
-Update latency for a node: The latency is calculated from the time new items 
-are disseminated or the time the node is active (whichever later) to the time 
-the node is updated.
+Data latency for a node:
 
-Update latency for the whole network: The latency is calculated from the time 
-new items are disseminated to the time the network is completely updated 
-(or stable in dynamic network case).
+  * For dissemination protocols, this defines the latency calculated
+  from the time new items are disseminated or the time the node is
+  active (whichever later) to the time the node is updated.
+  
+  * For collection protocols, this defines the latency of a payload
+  calculated from the time it is generated on the node until it is
+  successfully delivered to any sink.
 
-Fraction of the network that is updated: In the dynamic network case, it is 
-impossible to achieve 100% of the network updated because there are always new 
-nodes joining the network and nodes leaving the network. It is suitable to 
-consider the fraction of the networki (number of updated nodes/total number 
-of nodes) that is updated. This fraction is measured when it is stable.
+Data latency for the whole network:
 
-ROM and RAM usage: The memory usage of a simple program providing only 
-dissemination or collection services.  
+  * For dissemination protocols, this defines the latency calculated
+  from the time new items are disseminated to the time the network is
+  completely updated (or stable in dynamic network case).
+
+  * For collection protocols, this is calculated by averaging the data
+  latency for each node in the network.
+
+Fraction of the network that is updated:
+
+  * This applies to dissemination protocols only. In the dynamic network
+  case, it is impossible to achieve 100% of the network updated because
+  there are always new nodes joining the network and nodes leaving the
+  network. It is suitable to consider the fraction of the network
+  (number of updated nodes/total number of nodes) that is updated. This
+  fraction is measured when it is stable.
+
+ROM and RAM usage:
+
+  * The memory usage of a simple program providing only the
+  dissemination or collection service.
 
 
 9. Result Analysis Tools
@@ -247,7 +297,7 @@ released (in tinyos-2.x/benchmark/tools?)
 
 
 10. Authors
-====================================================================
+==============================================================================
 
 | Thanh Dang
 | 135 FAB, 1900 SW 4th Ave
