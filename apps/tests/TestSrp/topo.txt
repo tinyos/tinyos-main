@@ -1,0 +1,13 @@
+#            3
+#            |
+#	     2
+#          / | \
+#         1  4  5
+gain    1       2       0
+gain    2       1       0
+gain	3	2	0
+gain	2	3	0
+gain	4	2	0
+gain	2	4	0
+gain	5	2	0
+gain	2	5	0

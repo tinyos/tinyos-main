@@ -1,6 +1,6 @@
 // $Id: LqiForwardingEngineP.nc,v 1.16 2010-06-29 22:07:50 scipio Exp $
 
-/* Copyright (c) 2007 Stanford University.
+/* Copyright (c) 2010 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 
     command error_t clearRoute(message_t *msg);
 
+    //NOTE: mismatch with SrcRouteSend.send (nx_am_addr_t vs. am_addr_t)
     command error_t setRoute(message_t *msg, nx_am_addr_t *path, uint8_t len);
     command nx_am_addr_t* getRoute(message_t *msg);
 
@@ -54,5 +55,7 @@
 
     command uint8_t getCurHop(message_t *msg);
     command error_t setCurHop(message_t *msg, uint8_t hop);
+    
+    //NOTE: might be good to add getSource and getSeqNo commands
 
   }

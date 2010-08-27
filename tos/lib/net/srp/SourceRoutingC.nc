@@ -35,15 +35,24 @@
  */
 
 
-/* applications use this interface to send packet using the interface */
-#include "SrcRouting.h"
+configuration SourceRoutingC {
+  provides {
+    interface StdControl;
+    interface SrcRouteSend[uint8_t client];
+    interface SrcRoutePacket;
+    interface Receive[sourceroute_id_t id];
+  }
+  uses {
+    interface SrcRouteId[uint8_t client];
+  }
+}
+implementation{
+  components new SrcRouteEngineC(AM_SRP) as Engine;
 
-interface SrcRouteSend {
+  StdControl = Engine;
+  SrcRouteSend = Engine;
+  SrcRoutePacket = Engine;
+  Receive = Engine;
 
-  //TODO: Mismatch with SrcRoutePacket.getPath
-  command error_t send(am_addr_t *path, uint8_t pathLen, message_t* msg, uint8_t len);
-  command error_t cancel(message_t* msg);
-  event void sendDone(message_t* msg, error_t error);
-  command uint8_t maxPayloadLength();
-  command void* getPayload(message_t* msg, uint8_t len);
+  Engine.SrcRouteId = SrcRouteId;
 }
