@@ -11,7 +11,7 @@ package net.tinyos.comm;
 
 class TOSCommJNI {
 
-  static { TOSCommLibraryLoader.load(); }
+  static { net.tinyos.util.TOSLibraryLoader.load("toscomm"); }
 
   public final static native void NativeSerial_setSerialPortParams(long jarg1, int jarg2, int jarg3, int jarg4, boolean jarg5);
   public final static native int NativeSerial_getBaudRate(long jarg1);

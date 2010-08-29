@@ -1,5 +1,7 @@
 <project name="tinyos-2.x support sdk java" default="all">
 
+	<property environment="env"/>
+	
 	<target name="all" >
 		<echo message = "Building support sdk java" />
 		<exec executable="make" failonerror="true">
@@ -18,6 +20,47 @@
 		<exec executable="make" failonerror="true">
 			<arg line="javadoc" />
 		</exec>
+	</target>
+	
+	<target name="init">
+		<echo message="Generating TinyOS message classes" />
+		<exec executable="mig" failonerror="true">
+			<arg value="-o" />
+			<arg path="net/tinyos/message/SerialPacket.java" />
+			<arg value="-java-classname=net.tinyos.message.SerialPacket" />
+			<arg value="java" />
+			<arg path="${env.TOSDIR}/lib/serial/Serial.h" />
+			<arg value="serial_packet" />
+			<arg prefix="-I" path="${env.TOSDIR}/types" />
+		</exec>
+		<exec executable="mig" failonerror="true">
+			<arg value="-o" />
+			<arg path="net/tinyos/tools/PrintfMsg.java" />
+			<arg value="-java-classname=net.tinyos.tools.PrintfMsg" />
+			<arg value="java" />
+			<arg path="${env.TOSDIR}/lib/printf/printf.h" />
+			<arg value="printf_msg" />
+		</exec>
+	</target>
+	
+	<target name="compile" depends="init">
+		<javac srcdir="." classpath="" includeAntRuntime="false" />
+	</target>
+	
+	<target name="jar" depends="compile">
+		<jar destfile="tinyos.jar">
+			<fileset dir="." includes="**/*.class" />
+			<fileset dir="." includes="**/*.lib" />
+		</jar>
+	</target>
+	
+	<target name="clean">
+		<echo message="Removing generated files" />
+		<delete file="net/tinyos/message/SerialPacket.java" />
+		<delete file="net/tinyos/tools/PrintfMsg.java" />
+		<delete>
+			<fileset dir="." includes="**/*.class"/>
+		</delete>
 	</target>
 	
 </project>

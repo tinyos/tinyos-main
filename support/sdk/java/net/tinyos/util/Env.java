@@ -17,7 +17,7 @@ public class Env {
     static private boolean loaded;
     static {
 	try {
-	    java.lang.System.loadLibrary("getenv");
+	    net.tinyos.util.TOSLibraryLoader.load("getenv");
 	    loaded = true;
 	}
 	catch (Throwable t) {
