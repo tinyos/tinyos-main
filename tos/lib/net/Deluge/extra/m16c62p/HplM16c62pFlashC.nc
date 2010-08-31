@@ -62,7 +62,6 @@ implementation
   unsigned char pm0_saved; // For saving the Processor Mode 0 register
   unsigned char pm1_saved; // For saving the Processor Mode 1 register
   unsigned char prcr_saved; //  Save Protection register
-  __nesc_atomic_t flg_saved; 
 
   /**   
    * Sets the processor mode for programming flash and saves current
@@ -105,19 +104,20 @@ implementation
     *((char *)0xA) = prcr_saved;  // Protection back on
   }
 
-  void disableInterrupt()
-  {
-    // Save the flag register (FLG)
-    asm volatile ("stc flg, %0": "=r"(flg_saved): : "%flg");
-    // Disable interrupts
-    asm("fclr i");
-    asm volatile("" : : : "memory"); // ensure atomic section effect visibility
-  }
+/**
+ * Disable and enable interrups macros. A call to
+ * disableInterrupt must be followed by a call to RestoreInterrupt.
+ */
+#define disableInterrupt() \
+    { \
+		__nesc_atomic_t flg_saved; \
+		asm volatile ("stc flg, %0": "=r"(flg_saved): : "%flg"); \
+		asm("fclr i"); \
+		asm volatile("" : : : "memory");
 
-  void restoreInterrupt()
-  {
-    asm volatile("" : : : "memory"); // ensure atomic section effect visibility
-    asm volatile ("ldc %0, flg": : "r"(flg_saved): "%flg");
+#define restoreInterrupt() \
+    asm volatile("" : : : "memory"); \
+    asm volatile ("ldc %0, flg": : "r"(flg_saved): "%flg"); \
   }
 
   void clearStatus(unsigned long addr)
@@ -126,14 +126,11 @@ implementation
     unsigned int high = (unsigned int)( addr >> 16);
 
     asm volatile (
-        "mov.w %[low], a0\n\t"
-        "mov.w %[high], a1\n\t"
-
-        "mov.w #0x0050, r0\n\t"
-        "ste.w r0, [a1a0]\n\t"
+        "mov.w #0x0050, r3\n\t"
+        "ste.w r3, [a1a0]\n\t"
         :
-        :[low] "r" (low), [high] "r" (high)
-        : "memory", "r0", "a1", "a0");
+        : "Ra0"(low), "Ra1"(high)
+        : "memory", "r3");
   }
 
   bool writeWord(unsigned long addr, unsigned int word)
@@ -142,17 +139,12 @@ implementation
     unsigned int high = (unsigned int)( addr >> 16);
 
     asm volatile (
-        "mov.w %[low], a0\n\t"
-        "mov.w %[high], a1\n\t"
-
-        "mov.w #0x0040, r1\n\t" // Send write command
-        "ste.w r1, [a1a0]\n\t"
-
-        "mov.w %[data], r1\n\t" // Write data
-        "ste.w r1, [a1a0]\n\t"
+        "mov.w #0x0040, r3\n\t" // Send write command
+        "ste.w r3, [a1a0]\n\t"
+        "ste.w %[data], [a1a0]\n\t"
         :
-        :[low] "r" (low), [high] "r" (high), [data] "r" (word)
-        : "memory", "a1", "a0", "r1");
+        :"Ra0"(low), "Ra1" (high), [data] "r" (word)
+        : "memory", "r3");
     return !FMR0.BIT.FMR06;
   }
 
@@ -172,20 +164,17 @@ implementation
     FMR0.BIT.FMR02 = 1;
 
     asm volatile (
-        "mov.w %[low], a0\n\t"
-        "mov.w %[high], a1\n\t"
+        "mov.w #0x0050, r3\n\t" // Clear status register
+        "ste.w r3, [a1a0]\n\t"
 
-        "mov.w #0x0050, r0\n\t"
-        "ste.w r0, [a1a0]\n\t"
+        "mov.w #0x0020, r3\n\t" // Block Erase 1(2)
+        "ste.w r3, [a1a0]\n\t"
 
-        "mov.w #0x0020, r0\n\t"
-        "ste.w r0, [a1a0]\n\t"
-
-        "mov.w #0x00D0, r0\n\t"
-        "ste.w r0, [a1a0]\n\t"
+        "mov.w #0x00D0, r3\n\t" // Block Erase 2(2)
+        "ste.w r3, [a1a0]\n\t"
         :
-        :[low] "r" (low), [high] "r" (high)
-        : "memory", "r0", "a0", "a1");
+        : "Ra0"(low), "Ra1"(high)
+        : "memory", "r3");
 
     // Note: In EW1 Mode, the MCU is suspended until the operation is completed.
     while (!FMR0.BIT.FMR00);
@@ -246,7 +235,7 @@ implementation
         if (fail)
         {
           ret_value = FAIL; // Signal that we had got an error
-          break; // Break out of while loop
+          break; // Break out of for loop
         }
       }
 
@@ -264,13 +253,15 @@ implementation
     unsigned int high = (unsigned int)(address >> 16);
     unsigned int data;
     disableInterrupt();
-    asm volatile ("mov.w %[low], a0\n\t"
-        "mov.w %[high], a1\n\t"
-        "ste.w 0x00FF, [a1a0]\n\t"
+    asm volatile (
+    	"mov.w #0x00FF, r3\n\t" // Read Array Command, once is enough but to be certain that
+    							// a Read Array Command has been executed do it before every
+    							// read for now.
+        "ste.w r3, [a1a0]\n\t"
         "lde.w [a1a0], %[data]"
         :[data] "=r" (data)
-        :[low] "r" (low), [high] "r" (high)
-        : "memory", "a0", "a1");
+        :"Ra0"(low), "Ra1"(high)
+        : "memory", "r3");
     restoreInterrupt();
     return data;
   }
