@@ -679,7 +679,7 @@ implementation
 
     if (security && security->SecurityLevel)
       return FAIL; // not implemented
-    mhr[MHR_INDEX_FC2] &= (FC2_DEST_MODE_MASK | FC2_SRC_MODE_MASK);
+    mhr[MHR_INDEX_FC2] &= ~(FC2_DEST_MODE_MASK | FC2_SRC_MODE_MASK);
     mhr[MHR_INDEX_FC2] |= dstAddrMode << FC2_DEST_MODE_OFFSET;
     mhr[MHR_INDEX_FC2] |= srcAddrMode << FC2_SRC_MODE_OFFSET;
     if (srcAddrMode == ADDR_MODE_SHORT_ADDRESS)
