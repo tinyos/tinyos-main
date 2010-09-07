@@ -163,52 +163,70 @@ implementation
       m_associationOngoing = FALSE;
       signal MLME_ASSOCIATE.confirm(0xFFFF, status, 0);
     } else {
+      // we expect a response from the coordinator within "macResponseWaitTime"
       call ResponseTimeout.startOneShot(call MLME_GET.macResponseWaitTime()*IEEE154_aBaseSuperframeDuration);
       dbg_serial("AssociationP", "transmitDone() ok, waiting for %lu\n", 
           (uint32_t) (call MLME_GET.macResponseWaitTime() * IEEE154_aBaseSuperframeDuration));
     }
   }
-  
+ 
+  event message_t* AssociationResponseExtracted.received(message_t* frame, ieee154_txframe_t *txFrame)
+  {
+    uint8_t *payload = (uint8_t *) &frame->data;
+    ieee154_macShortAddress_t shortAddress = *((nxle_uint16_t*) (payload + 1));
+    ieee154_status_t assocRespStatus = *(payload + 3);
+
+    if (m_associationOngoing) {
+      call ResponseTimeout.stop();
+      m_associationOngoing = FALSE;
+      if (assocRespStatus == IEEE154_ASSOCIATION_SUCCESSFUL) {
+        call MLME_SET.macShortAddress(shortAddress);
+        if ((call MLME_GET.macCoordShortAddress() != IEEE154_DEFAULT_COORDSHORTADDRESS) &&
+            (call Frame.getSrcAddrMode(frame) == ADDR_MODE_EXTENDED_ADDRESS)) {
+          ieee154_address_t coordExtendedAddress;
+          call Frame.getSrcAddr(frame, &coordExtendedAddress);
+          call MLME_SET.macCoordExtendedAddress(coordExtendedAddress.extendedAddress);
+        }
+      } else
+        call MLME_SET.macPANId(0xFFFF);
+      signal MLME_ASSOCIATE.confirm( call MLME_GET.macShortAddress(), assocRespStatus, NULL);
+      dbg_serial("AssociationP", "confirm, status:  %lu, my new address: 0x%lx\n", 
+          (uint32_t) assocRespStatus, (uint32_t) shortAddress);
+    }
+    return frame;
+  } 
+
   event void ResponseTimeout.fired()
   {
     uint8_t coordAddress[8];
+
     if (!m_associationOngoing)
       return;
-    // have not received an AssociationResponse yet, poll the coordinator now
+
+    // have not yet received an AssociationResponse within "macResponseWaitTime", 
+    // -> we explicitly poll the coordinator now
     dbg_serial("AssociationP", "Polling the coordinator for an AssociationResponse now...\n");
     if (m_coordAddrMode == ADDR_MODE_SHORT_ADDRESS)
       *((nxle_uint16_t*) &coordAddress) = call MLME_GET.macCoordShortAddress();
     else
       call FrameUtility.copyCoordExtendedAddressLE(coordAddress);
+
     if (call DataRequest.poll(m_coordAddrMode, call MLME_GET.macPANId(), 
           coordAddress, ADDR_MODE_EXTENDED_ADDRESS) != IEEE154_SUCCESS) {
-      m_shortAddress = 0xFFFF;
-      m_assocRespStatus = IEEE154_TRANSACTION_OVERFLOW;
-      signal DataRequest.pollDone();
+      signal DataRequest.pollDone(); // this will signal FAIL to the next higher layer
       dbg_serial("AssociationP", "Poll failed (locally)...\n");
     }
-  }
-
-  event message_t* AssociationResponseExtracted.received(message_t* frame, ieee154_txframe_t *txFrame)
-  {
-    uint8_t *payload = (uint8_t *) &frame->data;
-    if (m_associationOngoing) {
-      m_shortAddress =  *((nxle_uint16_t*) (payload + 1));
-      m_assocRespStatus = *(payload + 3);
-    }
-    return frame;
   }
 
   event void DataRequest.pollDone()
   {
     if (m_associationOngoing) {
+      // our explicit poll did not result in an AssociationResponse, give up...
       call ResponseTimeout.stop();
       m_associationOngoing = FALSE;
-      if (m_assocRespStatus == IEEE154_ASSOCIATION_SUCCESSFUL)
-        call MLME_SET.macShortAddress(m_shortAddress);
-      signal MLME_ASSOCIATE.confirm(m_shortAddress, m_assocRespStatus, 0);
-      dbg_serial("AssociationP", "confirm, status:  %lu, my new address: 0x%lx\n", 
-          (uint32_t) m_assocRespStatus, (uint32_t) m_shortAddress);
+      call MLME_SET.macPANId(0xFFFF);
+      signal MLME_ASSOCIATE.confirm(0xFFFF, IEEE154_NO_DATA, 0);
+      dbg_serial("AssociationP", "No AssociationResponse after polling...\n");
     }
   }
 
