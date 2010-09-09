@@ -28,7 +28,7 @@
  *
  * - Revision -------------------------------------------------------------
  * $Revision: 1.5 $
- * $Date: 2009-10-20 09:21:39 $
+ * $Date: 2009/10/20 09:21:39 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
@@ -452,7 +452,7 @@ module CC2420TKN154P
   async command error_t RadioTx.transmit( ieee154_txframe_t *frame, const ieee154_timestamp_t *t0, uint32_t dt )
   {
     if( frame == NULL || frame->header == NULL || 
-        frame->payload == NULL || frame->metadata == NULL || 
+        ((frame->payload == NULL) && (frame->payloadLen != 0)) || frame->metadata == NULL || 
         (frame->headerLen + frame->payloadLen + 2) > IEEE154_aMaxPHYPacketSize )
       return EINVAL;
 
@@ -507,7 +507,7 @@ module CC2420TKN154P
   async command error_t UnslottedCsmaCa.transmit(ieee154_txframe_t *frame, ieee154_csma_t *csma)
   {
     if( frame == NULL || frame->header == NULL || 
-        frame->payload == NULL || frame->metadata == NULL || 
+        ((frame->payload == NULL) && (frame->payloadLen != 0)) || frame->metadata == NULL || 
         (frame->headerLen + frame->payloadLen + 2) > IEEE154_aMaxPHYPacketSize )
       return EINVAL;
     atomic {
@@ -597,7 +597,7 @@ module CC2420TKN154P
       const ieee154_timestamp_t *slot0Time, uint32_t dtMax, bool resume, uint16_t remainingBackoff)
   {
     if( frame == NULL || frame->header == NULL || slot0Time == NULL ||
-        frame->payload == NULL || frame->metadata == NULL || 
+        ((frame->payload == NULL) && (frame->payloadLen != 0)) || frame->metadata == NULL || 
         (frame->headerLen + frame->payloadLen + 2) > IEEE154_aMaxPHYPacketSize)
       return EINVAL;
     atomic {
