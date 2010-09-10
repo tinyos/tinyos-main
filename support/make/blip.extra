@@ -3,12 +3,12 @@
 # radio stack defs
 PFLAGS += -DPACKET_LINK -DDEF_MEMCPY
 PFLAGS += -DENABLE_SPI0_DMA -DBLIP_MULTICAST
-PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS
+PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS -DCC2420_HW_ADDRESS_RECOGNITION
 
 ifdef BLIP_L2_MTU
 	PFLAGS += -DTOSH_DATA_LENGTH=$(BLIP_L2_MTU)
 else
-	PFLAGS += -DTOSH_DATA_LENGTH=102
+	PFLAGS += -DTOSH_DATA_LENGTH=114
 endif
 
 ifndef LOWPAN_ROOT
@@ -25,9 +25,11 @@ PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/shell/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/serial/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/platform/
 
-PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpan.c 
-PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpanIP.c
-PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpanFrag.c
+# PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpan.c 
+# PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpan_4944.c
+# PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/lib6lowpan_frag.c
+PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/iovec.c
 PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/in_cksum.c
 PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/ip_malloc.c
+PFLAGS+=$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan/utility.c
 PFLAGS+=$(LOWPAN_ROOT)/tos/lib/net/blip/table.c
