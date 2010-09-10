@@ -44,4 +44,3 @@ typedef struct ieee_eui64 {
 } ieee_eui64_t;
 
 #endif // IEEEEUI64_H
- 
