@@ -1,0 +1,101 @@
+
+ @title TCP Socket Documentation
+ @author Stephen Dawson-Haggerty
+ @release internal
+ @target 2.1.1
+----------------------------------------------------------------------
+
+TCP is the standard  Internet protocol for reliable, in-order delivery
+of data across the  network.  Although inefficient, its ubiquity makes
+it impossible to ignore; thus, blip provides a very simple TCP stack.
+TCP is considerably more complicated then UDP, and requires careful
+use in the embedded setting to prevent resource exhaustion.  It is
+essential that one understand the BSD sockets API; this brief README
+does not cover many details.
+
+For memory-constrained operation, blip's TCP does not do any
+receive-side buffering.  Instead, it will immediately dispatch
+new, in-order data to the application and otherwise drop the segment.
+Blip does provide send-buffering so that it can automatically
+retransmit missing segments; this buffer may be of any size and is
+provided by the application.  
+
+Important parameters:
+
+MSS: Maximum Segment Size: the maximum amount of data that a TCP packet
+will contain.  Since blip immediately delivers new data, this is also
+greater then or equal to the maximum amount of data which will ever be
+delivered in a recv() call.
+
+Window: TCP keeps the other side informed about how much buffer is
+available for new data.  Since blip does not have a receive buffer,
+this parameter is not adjusted by blip; only set to a reasonable
+value.  Applications using TCP may wish to dynamically control this
+value for various reasons.
+
+Notes
+----------------------------------------------------------------------
+
+The TCP interface is located in
+$LOWPAN_ROOT/tos/lib/net/blip/interfaces/Tcp.nc.  For the most part,
+it should be familier.
+
+Since the application is responsible for buffering, both accept() and
+connect() require the implementer to include a buffer for the stack's
+use.  Once passed to the stack, the buffer is reserved until a
+closed() event is signaled on that socket.
+
+A few of the most important caveats/brokeness:
+
+ - there is no listen().  calling bind() on a socket also begins to listen.
+
+ - there is no way to accept() multiple sockets like you can in Unix.
+   More precisely, all the code would support it but then there is
+   dynamic allocation since you have to allocate a new socket struct
+   on the fly.
+
+ - (sort of) as a result of these, if the socket is closed, you have
+   to call bind() if you want to continue listening.
+
+ - you'll need to carefully manage buffer and window sized by hand if
+   you want to be sure of correct operation.  Make sure you check
+   return codes from send() since it will fail if there is not enough
+   local buffer for the entire request.
+
+
+Example
+----------------------------------------------------------------------
+
+
+configuration {
+  components new TcpSocketC() as TcpEcho;
+  TCPEchoP.TcpEcho -> TcpEcho;
+}
+
+module {} implementation {
+  // allocate a send buffer
+  char tcp_buf[150];
+
+  // accept connections from anyone.  no need to save the endpoint,
+  // but this is the only time its available (add an API call?)
+  event bool TcpEcho.accept(struct sockaddr_in6 *from, 
+                            void **tx_buf, int *tx_buf_len) {
+    *tx_buf = tcp_buf;
+    *tx_buf_len = 150;
+    // indicates we are accepting the connection
+    return TRUE;
+  }
+  // potentially useful?
+  event void TcpEcho.connectDone(error_t e) {}
+
+  // just echo the data back.
+  event void TcpEcho.recv(void *payload, uint16_t len) {
+    call TcpEcho.send(payload,len);
+  }
+
+  // rebind to accept other connections.
+  event void TcpEcho.closed(error_t e) {
+    call Leds.led0Toggle();
+    call TcpEcho.bind(7);
+  }
+}

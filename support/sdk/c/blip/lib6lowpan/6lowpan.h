@@ -1,0 +1,143 @@
+/*
+ * "Copyright (c) 2008,2010 The Regents of the University  of California.
+ * All rights reserved."
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without written agreement is
+ * hereby granted, provided that the above copyright notice, the following
+ * two paragraphs and the author appear in all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+ * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF
+ * CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
+ *
+ */
+/*
+ * Header file for the 6lowpan/IPv6 stack.
+ *
+ * @author Stephen Dawson-Haggerty
+ * 
+ */
+
+#ifndef __6LOWPAN_H__
+#define __6LOWPAN_H__
+
+/*
+ * lengths of different lowpan headers
+ */
+enum {
+  LOWMSG_MESH_LEN = 5,
+  LOWMSG_BCAST_LEN = 2,
+  LOWMSG_FRAG1_LEN = 4,
+  LOWMSG_FRAGN_LEN = 5,
+};
+
+enum {
+  INET_MTU = 1280,
+  LIB6LOWPAN_MAX_LEN = 100,
+  LOWPAN_LINK_MTU = 109,
+  /*
+   * The time, in binary milliseconds, after which we stop waiting for
+   * fragments and report a failed receive.  We 
+   */
+  FRAG_EXPIRE_TIME = 4096,
+};
+
+/*
+ * magic numbers from rfc4944; some of them shifted: mostly dispatch values.
+ */
+enum {
+  LOWPAN_NALP_PATTERN = 0x0,
+  LOWPAN_MESH_PATTERN = 0x2,
+  LOWPAN_FRAG1_PATTERN = 0x18,
+  LOWPAN_FRAGN_PATTERN = 0x1c,
+  LOWPAN_BCAST_PATTERN = 0x50,
+};
+
+enum {
+  LOWPAN_MESH_V_MASK = 0x20,
+  LOWPAN_MESH_F_MASK = 0x10,
+  LOWPAN_MESH_HOPS_MASK = 0x0f,
+};
+
+/* 
+ * values for LOWPAN_IPHC from draft-ietf-6lowpan-hc-06
+ */
+enum {
+  LOWPAN_DISPATCH_BYTE_MASK = 0xe0,
+  LOWPAN_DISPATCH_BYTE_VAL  = 0x60,
+
+  LOWPAN_IPHC_TF_MASK = 0x18,
+  LOWPAN_IPHC_TF_NONE = 0x18,
+  LOWPAN_IPHC_TF_ECN_DSCP = 0x10,
+  LOWPAN_IPHC_TF_ECN_FL   = 0x08,
+  LOWPAN_IPHC_TF_ECN_DSCP_FL = 0x00,
+
+  LOWPAN_IPHC_NH_MASK = 0x04,
+  LOWPAN_IPHC_NH_INLINE = 0,
+
+  LOWPAN_IPHC_HLIM_MASK = 0x03,
+  LOWPAN_IPHC_HLIM_NONE = 0x00,
+  LOWPAN_IPHC_HLIM_1  = 0x01,
+  LOWPAN_IPHC_HLIM_64 = 0x02,
+  LOWPAN_IPHC_HLIM_255 = 0x03,
+
+  LOWPAN_IPHC_CID_MASK = 0x80,
+  LOWPAN_IPHC_CID_PRESENT = 0x80,
+
+  LOWPAN_IPHC_SAM_SHIFT = 4,
+  LOWPAN_IPHC_M = 0x08,
+  LOWPAN_IPHC_DAM_SHIFT = 0,
+
+  LOWPAN_IPHC_AC_CONTEXT = 0x04,
+  LOWPAN_IPHC_AM_MASK = 0x3,
+  LOWPAN_IPHC_AM_128 = 0x0,
+  LOWPAN_IPHC_AM_64  = 0x1,
+  LOWPAN_IPHC_AM_16  = 0x2,
+  LOWPAN_IPHC_AM_0   = 0x3,
+
+  LOWPAN_IPHC_AM_M     = 0x08,
+  LOWPAN_IPHC_AM_M_128 = 0x0,
+  LOWPAN_IPHC_AM_M_48  = 0x1,
+  LOWPAN_IPHC_AM_M_32  = 0x2,
+  LOWPAN_IPHC_AM_M_8   = 0x3,
+};
+
+/* 
+ * values for LOWPAN_IPNH from draft-ietf-6lowpan-hc-06
+ */
+enum {
+  LOWPAN_NHC_IPV6_MASK    = 0xf0,
+  LOWPAN_NHC_IPV6_PATTERN = 0xe0,
+
+  LOWPAN_NHC_EID_SHIFT  = 0x1,
+  LOWPAN_NHC_EID_MASK   = 0xe,
+  LOWPAN_NHC_EID_HOP     = 0x0 << LOWPAN_NHC_EID_SHIFT,
+  LOWPAN_NHC_EID_ROUTING = 0x1 << LOWPAN_NHC_EID_SHIFT,
+  LOWPAN_NHC_EID_FRAG    = 0x2 << LOWPAN_NHC_EID_SHIFT,
+  LOWPAN_NHC_EID_DEST    = 0x3 << LOWPAN_NHC_EID_SHIFT,
+  LOWPAN_NHC_EID_MOBILE  = 0x4 << LOWPAN_NHC_EID_SHIFT,
+  LOWPAN_NHC_EID_IPV6    = 0x7 << LOWPAN_NHC_EID_SHIFT,
+
+  LOWPAN_NHC_NH          = 0x1,
+
+  LOWPAN_NHC_UDP_MASK    = 0xf8,
+  LOWPAN_NHC_UDP_PATTERN = 0xf0,
+
+  LOWPAN_NHC_UDP_CKSUM      = 0x4,
+
+  LOWPAN_NHC_UDP_PORT_MASK  = 0x3,
+  LOWPAN_NHC_UDP_PORT_FULL  = 0x0,
+  LOWPAN_NHC_UDP_PORT_SRC_FULL = 0x1,
+  LOWPAN_NHC_UDP_PORT_DST_FULL = 0x2,
+  LOWPAN_NHC_UDP_PORT_SHORT = 0x3,
+};
+
+#endif
