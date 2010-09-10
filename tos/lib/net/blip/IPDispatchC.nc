@@ -25,6 +25,7 @@
  *
  */
 #include "IPDispatch.h"
+#include "BlipStatistics.h"
 
 configuration IPDispatchC {
   provides {
