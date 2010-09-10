@@ -33,7 +33,7 @@
  * Implementation for configuring a ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2008-05-14 21:33:07 $
+ * @version $Revision: 1.3 $ $Date: 2008/05/14 21:33:07 $
  */
 
 #include "CC2420.h"
@@ -82,6 +82,7 @@ implementation {
   CC2420ControlP.MDMCTRL0 -> Spi.MDMCTRL0;
   CC2420ControlP.MDMCTRL1 -> Spi.MDMCTRL1;
   CC2420ControlP.PANID -> Spi.PANID;
+  CC2420ControlP.IEEEADR -> Spi.IEEEADR;
   CC2420ControlP.RXCTRL1 -> Spi.RXCTRL1;
   CC2420ControlP.RSSI  -> Spi.RSSI;
 
@@ -93,6 +94,9 @@ implementation {
   
   components ActiveMessageAddressC;
   CC2420ControlP.ActiveMessageAddress -> ActiveMessageAddressC;
+
+  components LocalIeeeEui64C;
+  CC2420ControlP.LocalIeeeEui64 -> LocalIeeeEui64C;
 
 }
 

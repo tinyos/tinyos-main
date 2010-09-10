@@ -33,9 +33,10 @@
  * @author Jonathan Hui <jhui@archrock.com>
  * @author David Moss
  * @author Urs Hunkeler (ReadRssi implementation)
- * @version $Revision: 1.8 $ $Date: 2009-10-28 16:18:44 $
+ * @version $Revision: 1.7 $ $Date: 2008/06/24 04:07:28 $
  */
 
+#include <Ieee154.h>
 #include "Timer.h"
 
 module CC2420ControlP @safe() {
@@ -46,6 +47,8 @@ module CC2420ControlP @safe() {
   provides interface CC2420Power;
   provides interface Read<uint16_t> as ReadRssi;
 
+  uses interface LocalIeeeEui64;
+
   uses interface Alarm<T32khz,uint32_t> as StartupTimer;
   uses interface GeneralIO as CSN;
   uses interface GeneralIO as RSTN;
@@ -53,6 +56,7 @@ module CC2420ControlP @safe() {
   uses interface GpioInterrupt as InterruptCCA;
   uses interface ActiveMessageAddress;
 
+  uses interface CC2420Ram as IEEEADR;
   uses interface CC2420Ram as PANID;
   uses interface CC2420Register as FSCTRL;
   uses interface CC2420Register as IOCFG0;
@@ -91,6 +95,8 @@ implementation {
   uint16_t m_pan;
   
   uint16_t m_short_addr;
+
+  ieee_eui64_t m_ext_addr;
   
   bool m_sync_busy;
   
@@ -124,6 +130,7 @@ implementation {
     call VREN.makeOutput();
     
     m_short_addr = call ActiveMessageAddress.amAddress();
+    m_ext_addr = call LocalIeeeEui64.getId();
     m_pan = call ActiveMessageAddress.amGroup();
     m_tx_power = CC2420_DEF_RFPOWER;
     m_channel = CC2420_DEF_CHANNEL;
@@ -276,6 +283,10 @@ implementation {
     atomic m_channel = channel;
   }
 
+  command ieee_eui64_t CC2420Config.getExtAddr() {
+    return call LocalIeeeEui64.getId();
+  }
+
   async command uint16_t CC2420Config.getShortAddr() {
     atomic return m_short_addr;
   }
@@ -393,7 +404,7 @@ implementation {
   }
 
   event void RssiResource.granted() { 
-    uint16_t data = 0;
+    uint16_t data;
     call CSN.clr();
     call RSSI.read(&data);
     call CSN.set();
@@ -473,7 +484,7 @@ implementation {
   void writeMdmctrl0() {
     atomic {
       call MDMCTRL0.write( ( 1 << CC2420_MDMCTRL0_RESERVED_FRAME_MODE ) |
-          ( (addressRecognition && hwAddressRecognition) << CC2420_MDMCTRL0_ADR_DECODE ) |
+          ( (hwAddressRecognition ? 1 : 1) << CC2420_MDMCTRL0_ADR_DECODE ) |
           ( 2 << CC2420_MDMCTRL0_CCA_HYST ) |
           ( 3 << CC2420_MDMCTRL0_CCA_MOD ) |
           ( 1 << CC2420_MDMCTRL0_AUTOCRC ) |
@@ -490,14 +501,15 @@ implementation {
    * Write the PANID register
    */
   void writeId() {
-    nxle_uint16_t id[ 2 ];
+    nxle_uint16_t id[ 6 ];
 
     atomic {
-      id[ 0 ] = m_pan;
-      id[ 1 ] = m_short_addr;
+      *((ieee_eui64_t *)&id[0]) = m_ext_addr;
+      id[ 4 ] = m_pan;
+      id[ 5 ] = m_short_addr;
     }
-    
-    call PANID.write(0, (uint8_t*)&id, sizeof(id));
+
+    call IEEEADR.write(0, (uint8_t *)&id, 12);
   }
 
 

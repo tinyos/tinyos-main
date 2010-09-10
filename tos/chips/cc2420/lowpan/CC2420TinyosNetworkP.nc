@@ -50,6 +50,8 @@ module CC2420TinyosNetworkP @safe() {
 
     interface Send as ActiveSend;
     interface Receive as ActiveReceive;
+
+    interface Packet as BarePacket;
   }
   
   uses {
@@ -65,13 +67,19 @@ implementation {
 
   enum {
     OWNER_NONE = 0xff,
-    TINYOS_N_NETWORKS = uniqueCount(RADIO_SEND_RESOURCE),
+    TINYOS_N_NETWORKS = uniqueCount("RADIO_SEND_RESOURCE"),
   } state;
+
+  enum {
+    CLIENT_AM,
+    CLIENT_BARE,
+  } m_busy_client;
 
   norace uint8_t resource_owner = OWNER_NONE, next_owner;
 
   command error_t ActiveSend.send(message_t* msg, uint8_t len) {
     call CC2420Packet.setNetwork(msg, TINYOS_6LOWPAN_NETWORK_ID);
+    m_busy_client = CLIENT_AM;
     return call SubSend.send(msg, len);
   }
 
@@ -90,10 +98,33 @@ implementation {
       return NULL;
     }
   }
+  /***************** BarePacket Commands ****************/
+  command void BarePacket.clear(message_t *msg) {
+    memset(msg, 0, sizeof(message_t));
+  }
 
+  command uint8_t BarePacket.payloadLength(message_t *msg) {
+    cc2420_header_t *hdr = call CC2420PacketBody.getHeader(msg);
+    return hdr->length + 1 - MAC_FOOTER_SIZE;
+  }
+
+  command void BarePacket.setPayloadLength(message_t* msg, uint8_t len) {
+    cc2420_header_t *hdr = call CC2420PacketBody.getHeader(msg);
+    hdr->length = len - 1 + MAC_FOOTER_SIZE;
+  }
+
+  command uint8_t BarePacket.maxPayloadLength() {
+    return TOSH_DATA_LENGTH + sizeof(cc2420_header_t);
+  }
+
+  command void* BarePacket.getPayload(message_t* msg, uint8_t len) {
+
+  }
   /***************** Send Commands ****************/
   command error_t BareSend.send(message_t* msg, uint8_t len) {
-    return call SubSend.send(msg, len - AM_OVERHEAD);
+    call BarePacket.setPayloadLength(msg, len);
+    m_busy_client = CLIENT_BARE;
+    return call SubSend.send(msg, 0);
   }
 
   command error_t BareSend.cancel(message_t* msg) {
@@ -101,22 +132,21 @@ implementation {
   }
 
   command uint8_t BareSend.maxPayloadLength() {
-    return call SubSend.maxPayloadLength() + AM_OVERHEAD;
+    return call BarePacket.maxPayloadLength();
   }
 
   command void* BareSend.getPayload(message_t* msg, uint8_t len) {
 #ifndef TFRAMES_ENABLED                      
     cc2420_header_t *hdr = call CC2420PacketBody.getHeader(msg);
-    return &hdr->network;
+    return hdr;
 #else
     // you really can't use BareSend with TFRAMES
-#error "BareSend is not supported with TFRAMES: only the ActiveMessage layer is supported"
 #endif
   }
   
   /***************** SubSend Events *****************/
   event void SubSend.sendDone(message_t* msg, error_t error) {
-    if (call CC2420Packet.getNetwork(msg) == TINYOS_6LOWPAN_NETWORK_ID) {
+    if (m_busy_client == CLIENT_AM) {
       signal ActiveSend.sendDone(msg, error);
     } else {
       signal BareSend.sendDone(msg, error);
@@ -125,16 +155,18 @@ implementation {
 
   /***************** SubReceive Events ***************/
   event message_t *SubReceive.receive(message_t *msg, void *payload, uint8_t len) {
+    uint8_t network = call CC2420Packet.getNetwork(msg);
 
     if(!(call CC2420PacketBody.getMetadata(msg))->crc) {
       return msg;
     }
 #ifndef TFRAMES_ENABLED
-    if (call CC2420Packet.getNetwork(msg) == TINYOS_6LOWPAN_NETWORK_ID) {
+    if (network == TINYOS_6LOWPAN_NETWORK_ID) {
       return signal ActiveReceive.receive(msg, payload, len);
     } else {
-      cc2420_header_t *hdr = call CC2420PacketBody.getHeader(msg);
-      return signal BareReceive.receive(msg, &hdr->network, len + AM_OVERHEAD);
+      return signal BareReceive.receive(msg, 
+                                        call BareSend.getPayload(msg, len), 
+                                        len + sizeof(cc2420_header_t));
     }
 #else
     return signal ActiveReceive.receive(msg, payload, len);
@@ -169,7 +201,6 @@ implementation {
     post grantTask();
 
     if (TINYOS_N_NETWORKS > 1) {
-
       return call Queue.enqueue(id);
     } else {
       if (id == resource_owner) {

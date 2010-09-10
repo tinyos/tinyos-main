@@ -47,6 +47,7 @@ module CC2420PacketP @safe() {
     interface PacketAcknowledgements as Acks;
     interface CC2420PacketBody;
     interface LinkPacketMetadata;
+    interface Ieee154Packet;
 
     interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -77,6 +78,27 @@ implementation {
   }
 
   /***************** CC2420Packet Commands ****************/
+  
+  int getAddressLength(int type) {
+    switch (type) {
+    case IEEE154_ADDR_SHORT: return 2;
+    case IEEE154_ADDR_EXT: return 8;
+    case IEEE154_ADDR_NONE: return 0;
+    default: return -100;
+    }
+  }
+  
+  uint8_t *getNetwork(message_t *msg) {
+    cc2420_header_t *hdr = (call CC2420PacketBody.getHeader( msg ));
+    int offset;
+    
+    offset = getAddressLength((hdr->fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 0x3) +
+      getAddressLength((hdr->fcf >> IEEE154_FCF_SRC_ADDR_MODE) & 0x3) + 
+      offsetof(cc2420_header_t, dest);
+
+    return ((uint8_t *)hdr) + offset;
+  }
+
   async command void CC2420Packet.setPower( message_t* p_msg, uint8_t power ) {
     if ( power > 31 )
       power = 31;
@@ -99,13 +121,15 @@ implementation {
 #if defined(TFRAMES_ENABLED)
     return TINYOS_6LOWPAN_NETWORK_ID;
 #else
-    return (call CC2420PacketBody.getHeader( p_msg ))->network;
+    atomic 
+      return *(getNetwork(p_msg));
 #endif
   }
 
   async command void CC2420Packet.setNetwork( message_t* p_msg , uint8_t networkId ) {
 #if ! defined(TFRAMES_ENABLED)
-    (call CC2420PacketBody.getHeader( p_msg ))->network = networkId;
+    atomic 
+      *(getNetwork(p_msg)) = networkId;
 #endif
   }    
 
@@ -113,6 +137,17 @@ implementation {
   /***************** CC2420PacketBody Commands ****************/
   async command cc2420_header_t * ONE CC2420PacketBody.getHeader( message_t* ONE msg ) {
     return TCAST(cc2420_header_t* ONE, (uint8_t *)msg + offsetof(message_t, data) - sizeof( cc2420_header_t ));
+  }
+
+  async command uint8_t * CC2420PacketBody.getPayload( message_t* msg) {
+    cc2420_header_t *hdr = (call CC2420PacketBody.getHeader( msg ));
+    int offset;
+    
+    offset = getAddressLength((hdr->fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 0x3) +
+      getAddressLength((hdr->fcf >> IEEE154_FCF_SRC_ADDR_MODE) & 0x3) + 
+      offsetof(cc2420_header_t, dest);
+
+    return ((uint8_t *)hdr) + offset;
   }
 
   async command cc2420_metadata_t *CC2420PacketBody.getMetadata( message_t* msg ) {
@@ -198,5 +233,37 @@ implementation {
   async command void PacketTimeSyncOffset.cancel(message_t* msg)
   {
     (call CC2420PacketBody.getMetadata( msg ))->timesync = FALSE;
+  }
+
+
+  /********************* Ieee154Packet *********************/
+
+  command error_t Ieee154Packet.destination(message_t *msg, ieee154_addr_t *addr) {
+    cc2420_header_t *hdr = (call CC2420PacketBody.getHeader( msg ));
+    int length, offset;
+
+    addr->ieee_mode = (hdr->fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 0x3;
+    offset = offsetof(cc2420_header_t, dest);
+    length = getAddressLength(addr->ieee_mode);
+
+    if (length < 0 || offset < 0) return FAIL;
+
+    memcpy(addr->i_laddr.data, ((uint8_t *)hdr) + offset, length);
+    return SUCCESS;
+  }
+
+  command error_t Ieee154Packet.source(message_t *msg, ieee154_addr_t *addr) {
+    cc2420_header_t *hdr = (call CC2420PacketBody.getHeader( msg ));
+    int length, offset;
+
+    addr->ieee_mode = (hdr->fcf >> IEEE154_FCF_SRC_ADDR_MODE) & 0x3;
+    offset = offsetof(cc2420_header_t, dest) + 
+      getAddressLength((hdr->fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 0x3);
+    length = getAddressLength(addr->ieee_mode);
+
+    if (length < 0 || offset < 0) return FAIL;
+
+    memcpy(addr->i_laddr.data, ((uint8_t *)hdr) + offset, length);
+    return SUCCESS;
   }
 }

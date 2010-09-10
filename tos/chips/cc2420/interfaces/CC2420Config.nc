@@ -38,7 +38,7 @@
  * before calling sync().
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.3 $ $Date: 2008-06-16 15:33:32 $
+ * @version $Revision: 1.3 $ $Date: 2008/06/16 15:33:32 $
  */
 
 interface CC2420Config {
@@ -57,6 +57,11 @@ interface CC2420Config {
    */
   command uint8_t getChannel();
   command void setChannel( uint8_t channel );
+
+  /**
+   * Get the long address of the radio: set in hardware
+   */
+  command ieee_eui64_t getExtAddr();
 
   /**
    * Change the short address of the radio.

@@ -42,6 +42,7 @@ configuration CC2420PacketC {
     interface PacketAcknowledgements as Acks;
     interface CC2420PacketBody;
     interface LinkPacketMetadata;
+    interface Ieee154Packet;
 
     interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -59,6 +60,7 @@ implementation {
   PacketTimeStamp32khz = CC2420PacketP;
   PacketTimeStampMilli = CC2420PacketP;
   PacketTimeSyncOffset = CC2420PacketP;
+  Ieee154Packet        = CC2420PacketP;
 
   components Counter32khz32C, new CounterToLocalTimeC(T32khz);
   CounterToLocalTimeC.Counter -> Counter32khz32C;

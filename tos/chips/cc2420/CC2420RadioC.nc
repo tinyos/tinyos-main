@@ -1,32 +1,24 @@
 /*
- * Copyright (c) 2005 Stanford University. All rights reserved.
+ * "Copyright (c) 2005 Stanford University. All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * - Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the
- *   distribution.
- * - Neither the name of the copyright holder nor the names of
- *   its contributors may be used to endorse or promote products derived
- *   from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Permission to use, copy, modify, and distribute this software and
+ * its documentation for any purpose, without fee, and without written
+ * agreement is hereby granted, provided that the above copyright
+ * notice, the following two paragraphs and the author appear in all
+ * copies of this software.
+ * 
+ * IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF STANFORD UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
+ * 
+ * STANFORD UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE
+ * PROVIDED HEREUNDER IS ON AN "AS IS" BASIS, AND STANFORD UNIVERSITY
+ * HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
+ * ENHANCEMENTS, OR MODIFICATIONS."
  */
 
 /**
@@ -41,7 +33,7 @@
  * @author Philip Levis
  * @author David Moss
  * @author Stephen Dawson-Haggerty
- * @version $Revision: 1.3 $ $Date: 2010-06-29 22:07:44 $
+ * @version $Revision: 1.2 $ $Date: 2009/08/20 01:37:44 $
  */
 
 #include "CC2420.h"
@@ -51,13 +43,15 @@ configuration CC2420RadioC {
     interface SplitControl;
 
     interface Resource[uint8_t clientId];
-    interface Send;
-    interface Receive;
+    interface Send as BareSend;
+    interface Receive as BareReceive;
+    interface Packet as BarePacket;
 
-    interface Send as ActiveSend;
+    interface Send    as ActiveSend;
     interface Receive as ActiveReceive;
 
     interface CC2420Packet;
+    interface Ieee154Packet;
     interface PacketAcknowledgements;
     interface LinkPacketMetadata;
     interface LowPowerListening;
@@ -89,12 +83,15 @@ implementation {
   PacketLink = LinkC;
   LowPowerListening = LplC;
   CC2420Packet = CC2420PacketC;
+  Ieee154Packet = CC2420PacketC;
   PacketAcknowledgements = CC2420PacketC;
   LinkPacketMetadata = CC2420PacketC;
   
   Resource = CC2420TinyosNetworkC;
-  Send = CC2420TinyosNetworkC.Send;
-  Receive = CC2420TinyosNetworkC.Receive;
+  BareSend = CC2420TinyosNetworkC.Send;
+  BareReceive = CC2420TinyosNetworkC.Receive;
+  BarePacket = CC2420TinyosNetworkC.BarePacket;
+  
   ActiveSend = CC2420TinyosNetworkC.ActiveSend;
   ActiveReceive = CC2420TinyosNetworkC.ActiveReceive;
 
