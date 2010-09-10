@@ -35,7 +35,7 @@
  * @author Jung Il Choi
  * @author JeongGil Ko
  * @author Razvan Musaloiu-E
- * @version $Revision: 1.22 $ $Date: 2009-10-28 21:09:52 $
+ * @version $Revision: 1.21 $ $Date: 2009/09/17 23:36:36 $
  */
 
 #include "IEEE802154.h"
@@ -818,13 +818,24 @@ implementation {
    */
   bool passesAddressCheck(message_t *msg) {
     cc2420_header_t *header = call CC2420PacketBody.getHeader( msg );
-    
+    int mode = (header->fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 3;
+    ieee_eui64_t *ext_addr;  
+
     if(!(call CC2420Config.isAddressRecognitionEnabled())) {
       return TRUE;
     }
-    
-    return (header->dest == call CC2420Config.getShortAddr()
-        || header->dest == AM_BROADCAST_ADDR);
+
+    if (mode == IEEE154_ADDR_SHORT) {
+      return (header->dest == call CC2420Config.getShortAddr()
+              || header->dest == IEEE154_BROADCAST_ADDR);
+    } else if (mode == IEEE154_ADDR_EXT) {
+      ieee_eui64_t local_addr = (call CC2420Config.getExtAddr());
+      ext_addr = (ieee_eui64_t *)&header->dest;
+      return (memcmp(ext_addr->data, local_addr.data, IEEE_EUI64_LENGTH) == 0);
+    } else {
+      /* reject frames with either no address or invalid type */
+      return FALSE;
+    }
   }
 
 }

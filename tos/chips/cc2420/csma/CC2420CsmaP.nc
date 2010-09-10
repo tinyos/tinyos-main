@@ -31,7 +31,7 @@
 
 /**
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.12 $ $Date: 2009-09-17 23:36:36 $
+ * @version $Revision: 1.12 $ $Date: 2009/09/17 23:36:36 $
  */
 
 module CC2420CsmaP @safe() {
@@ -133,16 +133,19 @@ implementation {
       m_msg = p_msg;
     }
 
-    header->length = len + CC2420_SIZE;
+    // header->length = len + CC2420_SIZE;
 #ifdef CC2420_HW_SECURITY
-    header->fcf &= ((1 << IEEE154_FCF_ACK_REQ)|(1 << IEEE154_FCF_SECURITY_ENABLED));
+    header->fcf &= ((1 << IEEE154_FCF_ACK_REQ)|
+                    (1 << IEEE154_FCF_SECURITY_ENABLED)
+                    (0x3 << IEEE154_FCF_SRC_ADDR_MODE) |
+                    (0x3 << IEEE154_FCF_DEST_ADDR_MODE));
 #else
-    header->fcf &= 1 << IEEE154_FCF_ACK_REQ;
+    header->fcf &= ((1 << IEEE154_FCF_ACK_REQ) | 
+                    (0x3 << IEEE154_FCF_SRC_ADDR_MODE) |
+                    (0x3 << IEEE154_FCF_DEST_ADDR_MODE));
 #endif
     header->fcf |= ( ( IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE ) |
-		     ( 1 << IEEE154_FCF_INTRAPAN ) |
-		     ( IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE ) |
-		     ( IEEE154_ADDR_SHORT << IEEE154_FCF_SRC_ADDR_MODE ) );
+		     ( 1 << IEEE154_FCF_INTRAPAN ) ); 
 
     metadata->ack = FALSE;
     metadata->rssi = 0;
