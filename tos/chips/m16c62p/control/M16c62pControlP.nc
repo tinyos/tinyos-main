@@ -79,8 +79,8 @@ implementation
     //               use timers or busy waiting.
     //               Tried busy waiting but tosboot started to include alot of
     //               things that it shouldn't which lead to compile errors.
-    for (i = 0; i < 50000 * MAIN_CRYSTAL_SPEED; ++i)
-      asm("nop");
+    for (i = 0; i < 50000UL * MAIN_CRYSTAL_SPEED; ++i)
+      asm volatile("nop");
     CM1.BYTE = 0x22; // PLL as system clock.
     call PlatformCtrl.PLLOn();
   }
@@ -297,10 +297,10 @@ implementation
     asm("bset 0,0x0007"); // Enter stop mode
     asm("jmp.b MAIN_A");
     asm("MAIN_A:");
-    asm("nop");
-    asm("nop");
-    asm("nop");
-    asm("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
     asm volatile ("" : : : "memory");
     __nesc_disable_interrupt();
     CM0.BYTE = cm0_tmp;
