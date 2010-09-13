@@ -36,12 +36,30 @@
 #ifndef REFVOLTGENERATOR_H
 #define REFVOLTGENERATOR_H
 
-// Time for generator to become stable (don't change).
-#define STABILIZE_INTERVAL 17
+// Time for generator to become stable (in ms) - don't change.
+#define MSP430_REFVOLT_STABILIZE_INTERVAL 17
 
-// Delay before generator is switched off after it has been stopped (in ms). 
-// This avoids having to wait the 17ms in case the generator is needed again
-// shortly after it has been stopped (value may be modified).
-#define SWITCHOFF_INTERVAL 20
+// Delay before generator is actually switched off after it has been stopped 
+// (in ms). This avoids having to wait another 17 ms in case the generator is
+// needed again shortly after it has been stopped.
+#ifndef MSP430_REFVOLT_SWITCHOFF_INTERVAL
+#define MSP430_REFVOLT_SWITCHOFF_INTERVAL 20
+#endif
+
+
+// The two values below depend on the external capacitor CVREF+ (cf. msp430fxxx 
+// datasheet). The values have been measured on the tinynode platform, which
+// applies the TI's reference design (platforms that don't follow this design
+// may want to update the values).
+
+// Time (in ms) for reference voltage to drop from 2.5v to 1.5v
+#ifndef MSP430_REFVOLT_SWITCH_2_5_TO_1_5_INTERVAL
+#define MSP430_REFVOLT_SWITCH_2_5_TO_1_5_INTERVAL 70
+#endif
+
+// Time (in ms) for reference voltage to drop from 2.5v to 1.5v after being disabled
+#ifndef MSP430_REFVOLT_DROP_2_5_TO_1_5_INTERVAL
+#define MSP430_REFVOLT_DROP_2_5_TO_1_5_INTERVAL 2048
+#endif
 
 #endif
