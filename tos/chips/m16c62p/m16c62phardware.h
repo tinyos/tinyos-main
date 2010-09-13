@@ -50,8 +50,8 @@
 #include "uart/M16c62pUart.h"
 #include "pins/M16c62pPin.h"
 
-#define true 1
-#define false 0
+#define true TRUE
+#define false FALSE
 
 //Bit operators using bit number
 #define _BV(bit)  (1 << bit)

@@ -74,7 +74,6 @@
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
 
-#include "iom16c62p.h"
 
 configuration HplM16c62pGeneralIOC
 {

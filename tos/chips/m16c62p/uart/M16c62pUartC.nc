@@ -87,19 +87,18 @@ configuration M16c62pUartC
   provides interface UartByte as Uart2Byte;
   provides interface UartStream as Uart2Stream;
   provides interface UartControl as Uart2Control;
-  
-  uses interface Counter<TMicro, uint16_t>;
 }
 
 implementation
 {
-  components HplM16c62pUartC as HplUartC;
+  components HplM16c62pUartC as HplUartC,
+             M16c62pUartCounterPlatformC as Counter;
   
   components new M16c62pUartP() as Uart0P;
   Uart0Byte = Uart0P;
   Uart0Stream = Uart0P;
   Uart0Control = Uart0P;
-  Uart0P.Counter = Counter;
+  Uart0P.Counter -> Counter;
   
   Uart0P.HplUartTxControl -> HplUartC.Uart0TxControl;
   Uart0P.HplUartRxControl -> HplUartC.Uart0RxControl;
@@ -109,7 +108,7 @@ implementation
   Uart1Byte = Uart1P;
   Uart1Stream = Uart1P;
   Uart1Control = Uart1P;
-  Uart1P.Counter = Counter;
+  Uart1P.Counter -> Counter;
   
   Uart1P.HplUartTxControl -> HplUartC.Uart1TxControl;
   Uart1P.HplUartRxControl -> HplUartC.Uart1RxControl;
@@ -119,7 +118,7 @@ implementation
   Uart2Byte = Uart2P;
   Uart2Stream = Uart2P;
   Uart2Control = Uart2P;
-  Uart2P.Counter = Counter;
+  Uart2P.Counter -> Counter;
   
   Uart2P.HplUartTxControl -> HplUartC.Uart2TxControl;
   Uart2P.HplUartRxControl -> HplUartC.Uart2RxControl;

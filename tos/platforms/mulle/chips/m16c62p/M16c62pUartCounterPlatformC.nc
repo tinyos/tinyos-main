@@ -35,30 +35,17 @@
  */
 
 /**
- * The wiring of the Serial interface used to communicate with the Mulle
- * platform.
+ * Micro counter provided by Mulle for the M16c62p uart implementation.
  * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-configuration PlatformSerialC {
-  
-  provides interface StdControl;
-  provides interface UartStream;
-  provides interface UartByte;
-  
+configuration M16c62pUartCounterPlatformC
+{
+  provides interface Counter<TMicro, uint16_t>;
 }
-implementation {
+implementation
+{
+  components CounterMicro16C;
 
-  components M16c62pUartC as Uart,
-      PlatformSerialP;
-      
-  StdControl = PlatformSerialP;
-  PlatformSerialP -> Uart.Uart1Control;
-  UartStream = Uart.Uart1Stream;
-  UartByte = Uart.Uart1Byte;
-  
-  components MainC;
-  
-  MainC.SoftwareInit -> PlatformSerialP;
-  
+  Counter = CounterMicro16C;
 }
