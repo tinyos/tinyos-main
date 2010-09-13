@@ -167,6 +167,7 @@ implementation
         CLR_BIT(ctrl0, 1);
         break;
       case TOS_UART_9600:
+      case TOS_UART_19200:
       case TOS_UART_57600:
         CLR_BIT(ctrl0, 0);
         CLR_BIT(ctrl0, 1);
@@ -204,6 +205,9 @@ implementation
       case TOS_UART_9600:
       	brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 9600.0))+ 0.5) - 1.0);
       	break;
+	  case TOS_UART_19200:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 19200.0))+ 0.5) - 1.0);
+        break;
       case TOS_UART_57600:
         brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 57600.0))+ 0.5) - 1.0);
         break;

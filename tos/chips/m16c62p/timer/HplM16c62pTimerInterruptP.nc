@@ -41,8 +41,6 @@
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
 
-#include "m16c62p_printf.h"
-
 module HplM16c62pTimerInterruptP
 {
   provides interface HplM16c62pTimerInterrupt as TimerA0;

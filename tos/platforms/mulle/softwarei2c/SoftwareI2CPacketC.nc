@@ -305,7 +305,7 @@ implementation
         error = ecombine(error, i2cStartCond());
       }
 
-      i2cTx(addr); 
+      error = ecombine(error, i2cTx(addr));
 
       // Send the data to the device.
       for (i = 0; i < length; ++i)

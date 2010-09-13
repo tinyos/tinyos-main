@@ -52,6 +52,7 @@ You should not remove this fix unless you are totaly sure of what you are doing!
 #endif
 
 #ifdef ENABLE_STOP_MODE
+#warning Stop mode enabled!
 #include "pin_configuration.h"
 #endif
 
