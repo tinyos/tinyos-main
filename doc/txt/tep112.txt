@@ -5,14 +5,9 @@ Microcontroller Power Management
 :TEP: 112
 :Group: Core Working Group 
 :Type: Documentary
-:Status: Draft
+:Status: Final
 :TinyOS-Version: 2.x
 :Author: Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski
-
-:Draft-Created: 19-Sep-2005
-:Draft-Version: $Revision: 1.8 $
-:Draft-Modified: $Date: 2009-07-07 19:03:33 $
-:Draft-Discuss: TinyOS Developer List <tinyos-devel at mail.millennium.berkeley.edu>
 
 .. Note::
 

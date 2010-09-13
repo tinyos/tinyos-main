@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.4.1: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.6: http://docutils.sourceforge.net/" />
 <title>Microcontroller Power Management</title>
 <meta name="author" content="Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski" />
 <style type="text/css">
@@ -11,8 +11,8 @@
 /*
 :Author: David Goodger
 :Contact: goodger@users.sourceforge.net
-:date: $Date: 2009-07-07 19:03:55 $
-:version: $Revision: 1.12 $
+:date: $Date: 2007-08-14 18:58:01 $
+:version: $Revision: 1.6 $
 :copyright: This stylesheet has been placed in the public domain.
 
 Default cascading style sheet for the HTML output of Docutils.
@@ -291,19 +291,11 @@ ul.auto-toc {
 <tr class="field"><th class="docinfo-name">Type:</th><td class="field-body">Documentary</td>
 </tr>
 <tr><th class="docinfo-name">Status:</th>
-<td>Draft</td></tr>
+<td>Final</td></tr>
 <tr class="field"><th class="docinfo-name">TinyOS-Version:</th><td class="field-body">2.x</td>
 </tr>
 <tr><th class="docinfo-name">Author:</th>
 <td>Robert Szewczyk, Philip Levis, Martin Turon, Lama Nachman, Philip Buonadonna, Vlado Handziski</td></tr>
-<tr class="field"><th class="docinfo-name">Draft-Created:</th><td class="field-body">19-Sep-2005</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Version:</th><td class="field-body">1.8</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Modified:</th><td class="field-body">2009-07-07</td>
-</tr>
-<tr class="field"><th class="docinfo-name">Draft-Discuss:</th><td class="field-body">TinyOS Developer List &lt;tinyos-devel at mail.millennium.berkeley.edu&gt;</td>
-</tr>
 </tbody>
 </table>
 <div class="note">
@@ -313,13 +305,13 @@ requests discussion and suggestions for improvements.  Distribution
 of this memo is unlimited. This memo is in full compliance with
 TEP 1.</p>
 </div>
-<div class="section">
-<h1><a id="abstract" name="abstract">Abstract</a></h1>
+<div class="section" id="abstract">
+<h1>Abstract</h1>
 <p>This memo documents how TinyOS manages the lower power state of a
 microcontroller.</p>
 </div>
-<div class="section">
-<h1><a id="introduction" name="introduction">1. Introduction</a></h1>
+<div class="section" id="introduction">
+<h1>1. Introduction</h1>
 <p>Microcontrollers often have several power states, with varying power
 draws, wakeup latencies, and peripheral support. The microcontroller
 should always be in the lowest possible power state that can satisfy
@@ -335,9 +327,9 @@ bit, and a power state override. This memo documents these mechanisms
 and how they work, as well as the basics of subsystem power
 management.</p>
 </div>
-<div class="section">
-<h1><a id="background" name="background">2. Background</a></h1>
-<p>The TinyOS scheduler[<a class="reference" href="#id3">2</a>] puts a processor into a sleep state when
+<div class="section" id="background">
+<h1>2. Background</h1>
+<p>The TinyOS scheduler[<a class="reference internal" href="#id3">2</a>] puts a processor into a sleep state when
 the task queue is empty. However, processors can have a spectrum of
 power states. For example, the MSP430 has one active mode (issuing
 instructions) and five low-power modes. The low power modes range from
@@ -388,8 +380,8 @@ to give the TinyOS microcontroller power manager information on their
 requirements, which it considers when calculating the right low power
 state.</p>
 </div>
-<div class="section">
-<h1><a id="id1" name="id1">3. Microcontroller Power Management</a></h1>
+<div class="section" id="id1">
+<h1>3. Microcontroller Power Management</h1>
 <p>TinyOS 2.x uses three basic mechanisms to manage and control
 microcontroller power states: a dirty bit, a chip-specific low power
 state calculation function, and a power state override function.  The
@@ -398,23 +390,23 @@ state, the function performs the calculation, and the override allows
 higher level components to introduce additional requirements, if
 needed.</p>
 <p>These three mechanisms all operate in the TinyOS core scheduling loop,
-described in TEP 106: Schedulers and Tasks[<a class="reference" href="#id3">2</a>]. This loop is
+described in TEP 106: Schedulers and Tasks[<a class="reference internal" href="#id3">2</a>]. This loop is
 called from the boot sequence, which is described in TEP 107: Boot
-Sequence[<a class="reference" href="#id4">3</a>]. The command in question is
-<tt class="docutils literal"><span class="pre">Scheduler.taskLoop()</span></tt>, when microcontroller sleeping is enabled.</p>
+Sequence[<a class="reference internal" href="#id4">3</a>]. The command in question is
+<tt class="docutils literal">Scheduler.taskLoop()</tt>, when microcontroller sleeping is enabled.</p>
 <p>If this command is called when the task queue is empty, the TinyOS
 scheduler puts the microcontroller to sleep. It does so through
-the <tt class="docutils literal"><span class="pre">McuSleep</span></tt> interface:</p>
+the <tt class="docutils literal">McuSleep</tt> interface:</p>
 <div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">McuSleep</span> <span class="pre">{</span></tt></div>
+<div class="line"><tt class="docutils literal">interface McuSleep {</tt></div>
 <div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">async</span> <span class="pre">command</span> <span class="pre">void</span> <span class="pre">sleep();</span></tt></div>
+<div class="line"><tt class="docutils literal">async command void <span class="pre">sleep();</span></tt></div>
 </div>
-<div class="line"><tt class="docutils literal"><span class="pre">}</span></tt></div>
+<div class="line"><tt class="docutils literal">}</tt></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">McuSleep.sleep()</span></tt> puts the microcontroller into a low power sleep
+<p><tt class="docutils literal">McuSleep.sleep()</tt> puts the microcontroller into a low power sleep
 state, to be woken by an interrupt. This command deprecates the
-<tt class="docutils literal"><span class="pre">__nesc_atomic_sleep()</span></tt> call of TinyOS 1.x. Note that, as the 1.x
+<tt class="docutils literal">__nesc_atomic_sleep()</tt> call of TinyOS 1.x. Note that, as the 1.x
 call suggests, putting the microcontroller to sleep MUST have certain
 atomicity properties. The command is called from within an atomic
 section, and MUST atomically re-enable interrupts and go to sleep. An
@@ -422,40 +414,40 @@ issue arises if the system handles an interrupt after it re-enables
 interrupts but before it sleeps: the interrupt may post a task, but
 the task will not be run until the microcontroller wakes up from sleep.</p>
 <p>Microcontrollers generally have hardware mechanisms to support this
-requirement. For example, on the Atmega128, the <tt class="docutils literal"><span class="pre">sei</span></tt> instruction
+requirement. For example, on the Atmega128, the <tt class="docutils literal">sei</tt> instruction
 does not re-enable interrupts until two cycles after it is issued (so
-the sequence <tt class="docutils literal"><span class="pre">sei</span> <span class="pre">sleep</span></tt> runs atomically).</p>
-<p>A component named <tt class="docutils literal"><span class="pre">McuSleepC</span></tt> provides the McuSleep interface, and
-<tt class="docutils literal"><span class="pre">TinySchedulerC</span></tt> MUST automatically wire it to the scheduler
+the sequence <tt class="docutils literal">sei sleep</tt> runs atomically).</p>
+<p>A component named <tt class="docutils literal">McuSleepC</tt> provides the McuSleep interface, and
+<tt class="docutils literal">TinySchedulerC</tt> MUST automatically wire it to the scheduler
 implementation. McuSleepC is a chip- or platform-specific component,
 whose signature MUST include the following interfaces:</p>
 <div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">component</span> <span class="pre">McuSleepC</span> <span class="pre">{</span></tt></div>
+<div class="line"><tt class="docutils literal">component McuSleepC {</tt></div>
 <div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">provides</span> <span class="pre">interface</span> <span class="pre">McuSleep;</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">provides</span> <span class="pre">interface</span> <span class="pre">PowerState;</span></tt></div>
-<div class="line"><tt class="docutils literal"><span class="pre">uses</span> <span class="pre">interface</span> <span class="pre">PowerOverride;</span></tt></div>
+<div class="line"><tt class="docutils literal">provides interface McuSleep;</tt></div>
+<div class="line"><tt class="docutils literal">provides interface PowerState;</tt></div>
+<div class="line"><tt class="docutils literal">uses interface PowerOverride;</tt></div>
 </div>
-<div class="line"><tt class="docutils literal"><span class="pre">}</span></tt></div>
+<div class="line"><tt class="docutils literal">}</tt></div>
 <div class="line"><br /></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">McuPowerState</span> <span class="pre">{</span></tt></div>
+<div class="line"><tt class="docutils literal">interface McuPowerState {</tt></div>
 <div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">async</span> <span class="pre">command</span> <span class="pre">void</span> <span class="pre">update();</span></tt></div>
+<div class="line"><tt class="docutils literal">async command void <span class="pre">update();</span></tt></div>
 </div>
-<div class="line"><tt class="docutils literal"><span class="pre">}</span></tt></div>
+<div class="line"><tt class="docutils literal">}</tt></div>
 <div class="line"><br /></div>
-<div class="line"><tt class="docutils literal"><span class="pre">interface</span> <span class="pre">McuPowerOverride</span> <span class="pre">{</span></tt></div>
+<div class="line"><tt class="docutils literal">interface McuPowerOverride {</tt></div>
 <div class="line-block">
-<div class="line"><tt class="docutils literal"><span class="pre">async</span> <span class="pre">command</span> <span class="pre">mcu_power_t</span> <span class="pre">lowestState();</span></tt></div>
+<div class="line"><tt class="docutils literal">async command mcu_power_t <span class="pre">lowestState();</span></tt></div>
 </div>
-<div class="line"><tt class="docutils literal"><span class="pre">}</span></tt></div>
+<div class="line"><tt class="docutils literal">}</tt></div>
 </div>
 <p>McuSleepC MAY have additional interfaces.</p>
 </div>
-<div class="section">
-<h1><a id="the-dirty-bit" name="the-dirty-bit">3.1 The Dirty Bit</a></h1>
+<div class="section" id="the-dirty-bit">
+<h1>3.1 The Dirty Bit</h1>
 <p>Whenever a Hardware Presentation Layer (HPL, see TEP 2: Hardware
-Abstraction Architecture[<a class="reference" href="#id2">1</a>]) component changes an aspect of
+Abstraction Architecture[<a class="reference internal" href="#id2">1</a>]) component changes an aspect of
 hardware configuration that might change the possible low power state
 of the microcontroller, it MUST call McuPowerState.update(). This is
 the first power management mechanism, a <em>dirty bit</em>. If
@@ -463,8 +455,8 @@ McuPowerState.update() is called, then McuSleepC MUST recompute the
 low power state before the next time it goes to sleep as a result of
 McuSleep.sleep() being called.</p>
 </div>
-<div class="section">
-<h1><a id="low-power-state-calculation" name="low-power-state-calculation">3.2 Low Power State Calculation</a></h1>
+<div class="section" id="low-power-state-calculation">
+<h1>3.2 Low Power State Calculation</h1>
 <p>McuSleepC is responsible for calculating the lowest power state that
 it can safely put the microcontroller into without disrupting the
 operation of TinyOS subsystems. McuSleepC SHOULD minimize how often it
@@ -473,7 +465,7 @@ and so if performed very often (e.g., on every interrupt) can
 introduce significant overhead and jitter.</p>
 <p>MCU power states MUST be represented as an enum in the standard chip
 implementation header file. This file MUST also define a type
-<tt class="docutils literal"><span class="pre">mcu_power_t</span></tt> and a combine function that given two power state
+<tt class="docutils literal">mcu_power_t</tt> and a combine function that given two power state
 values returns one that provides the union of their functionality.</p>
 <p>For example, consider a hypothetical microcontroller with three low
 power states, (LPM0, LPM1, LPM2) and two hardware resources such as
@@ -544,13 +536,13 @@ combine function would look like this:</p>
 </tbody>
 </table>
 </div>
-<div class="section">
-<h1><a id="power-state-override" name="power-state-override">3.3 Power State Override</a></h1>
+<div class="section" id="power-state-override">
+<h1>3.3 Power State Override</h1>
 <p>When McuSleepC computes the best low power state, it MUST call
 <tt class="docutils literal"><span class="pre">PowerOverride.lowestState().</span></tt> McuSleepC SHOULD have a default
 implementation of this command, which returns the lowest power state
 the MCU is capable of. The return value of this command is a
-<tt class="docutils literal"><span class="pre">mcu_power_t.</span></tt> McuSleepC MUST respect the requirements of the return
+<tt class="docutils literal">mcu_power_t.</tt> McuSleepC MUST respect the requirements of the return
 of this call and combine it properly with the low power state it
 computes.</p>
 <p>The PowerOverride functionality exists in case higher-level components
@@ -575,26 +567,26 @@ this will cause TinyOS to never put the microcontroller into a power
 saving state. This enum allows a component to prevent sleep in a
 platform-independent way.</p>
 </div>
-<div class="section">
-<h1><a id="peripherals-and-subsystems" name="peripherals-and-subsystems">4. Peripherals and Subsystems</a></h1>
+<div class="section" id="peripherals-and-subsystems">
+<h1>4. Peripherals and Subsystems</h1>
 <p>At the HIL level, TinyOS subsystems generally have a simple,
 imperative power management interface. Depending on the latencies
-involved, this interface is either <tt class="docutils literal"><span class="pre">StdControl</span></tt>, <tt class="docutils literal"><span class="pre">SplitControl</span></tt>,
-or <tt class="docutils literal"><span class="pre">AsyncStdControl</span></tt>.
+involved, this interface is either <tt class="docutils literal">StdControl</tt>, <tt class="docutils literal">SplitControl</tt>,
+or <tt class="docutils literal">AsyncStdControl</tt>.
 These interfaces are imperative in that when any component calls
-<tt class="docutils literal"><span class="pre">stop</span></tt> on another component, it causes the subsystem that
+<tt class="docutils literal">stop</tt> on another component, it causes the subsystem that
 component represents to enter an inactive, low-power state.</p>
 <p>From the perspective of MCU power management, this transition causes a
 change in status and control registers (e.g., a clock is
 disabled). Following the requirements in 3.1, the MCU power management
 subsystem will be notified of a significant change and act
-appropriately when the system next goes to sleep. TEP 115[<a class="reference" href="#id6">5</a>]
+appropriately when the system next goes to sleep. TEP 115[<a class="reference internal" href="#id6">5</a>]
 describes the power management of non-virtualized devices in
-greater detail, and TEP 108[<a class="reference" href="#id5">4</a>] describes how TinyOS can automatically
+greater detail, and TEP 108[<a class="reference internal" href="#id5">4</a>] describes how TinyOS can automatically
 include power management into shared non-virtualized devices.</p>
 </div>
-<div class="section">
-<h1><a id="implementation" name="implementation">5. Implementation</a></h1>
+<div class="section" id="implementation">
+<h1>5. Implementation</h1>
 <p>An implementation of McuSleepC can be found in <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/atm128</span></tt>,
 <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/msp430</span></tt>, and <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/px27ax</span></tt>.</p>
 <p>An example use of McuPowerOverride can be found in the atmega128 timer
@@ -609,21 +601,21 @@ state.</p>
 <p>A second example use of McuPowerOverride is in the msp430 timer system.
 By default, the msp430 lowest power state is LPM4, which does not keep
 clocks enabled. If <tt class="docutils literal"><span class="pre">tinyos-2.x/tos/chips/msp430/timer/Msp430ClockC.nc''</span>
-<span class="pre">is</span> <span class="pre">included</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">component</span> <span class="pre">graph,</span> <span class="pre">however,</span> <span class="pre">this</span> <span class="pre">configuration</span> <span class="pre">wires</span>
-<span class="pre">the</span> <span class="pre">McuPowerOverride</span> <span class="pre">of</span> <span class="pre">``tinyos-2.x/tos/chips/msp430/timer/Msp430ClockP.nc</span></tt>
+is included in the component graph, however, this configuration wires
+the McuPowerOverride of <span class="pre">``tinyos-2.x/tos/chips/msp430/timer/Msp430ClockP.nc</span></tt>
 to McuSleepC. This implemementation of McuPowerOverride raises the lowest
 power state to LPM3, which keeps clocks enabled.</p>
 <p>For msp430 microcontrollers, TOS_SLEEP_NONE is the &quot;active&quot; power state.</p>
 </div>
-<div class="section">
-<h1><a id="author-s-address" name="author-s-address">6. Author's Address</a></h1>
+<div class="section" id="author-s-address">
+<h1>6. Author's Address</h1>
 <div class="line-block">
 <div class="line">Robert Szewczyk</div>
 <div class="line">Moteiv Corporation</div>
 <div class="line">2168 Shattuck Ave, Floor 2</div>
 <div class="line">Berkeley, CA 94704</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:rob&#64;moteiv.com">rob&#64;moteiv.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:rob&#64;moteiv.com">rob&#64;moteiv.com</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Philip Levis</div>
@@ -633,7 +625,7 @@ power state to LPM3, which keeps clocks enabled.</p>
 <div class="line">Stanford, CA 94305</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 650 725 9046</div>
-<div class="line">email - <a class="reference" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pal&#64;cs.stanford.edu">pal&#64;cs.stanford.edu</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Martin Turon</div>
@@ -641,7 +633,7 @@ power state to LPM3, which keeps clocks enabled.</p>
 <div class="line">Berkeley, CA 94707</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 408 965 3355</div>
-<div class="line">email - <a class="reference" href="mailto:mturon&#64;xbow.com">mturon&#64;xbow.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:mturon&#64;xbow.com">mturon&#64;xbow.com</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Lama Nachman</div>
@@ -649,7 +641,7 @@ power state to LPM3, which keeps clocks enabled.</p>
 <div class="line">Intel Research</div>
 <div class="line">Santa Clara, CA 95052</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:lama.nachman&#64;intel.com">lama.nachman&#64;intel.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:lama.nachman&#64;intel.com">lama.nachman&#64;intel.com</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Phil Buonadonna</div>
@@ -658,7 +650,7 @@ power state to LPM3, which keeps clocks enabled.</p>
 <div class="line">Berkeley, CA 94704</div>
 <div class="line"><br /></div>
 <div class="line">phone - +1 510 981 8714</div>
-<div class="line">email - <a class="reference" href="mailto:pbuonadonna&#64;archedrock.com">pbuonadonna&#64;archedrock.com</a></div>
+<div class="line">email - <a class="reference external" href="mailto:pbuonadonna&#64;archedrock.com">pbuonadonna&#64;archedrock.com</a></div>
 <div class="line"><br /></div>
 <div class="line"><br /></div>
 <div class="line">Vlado Handziski</div>
@@ -667,40 +659,40 @@ power state to LPM3, which keeps clocks enabled.</p>
 <div class="line">10587 Berlin</div>
 <div class="line">GERMANY</div>
 <div class="line"><br /></div>
-<div class="line">email - <a class="reference" href="mailto:handzisk&#64;tkn.tu-berlin.de">handzisk&#64;tkn.tu-berlin.de</a></div>
+<div class="line">email - <a class="reference external" href="mailto:handzisk&#64;tkn.tu-berlin.de">handzisk&#64;tkn.tu-berlin.de</a></div>
 <div class="line"><br /></div>
 </div>
 </div>
-<div class="section">
-<h1><a id="citations" name="citations">6. Citations</a></h1>
+<div class="section" id="citations">
+<h1>6. Citations</h1>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id2">[1]</a></td><td>TEP 2: Hardware Abstraction Architecture</td></tr>
+<tr><td class="label">[1]</td><td>TEP 2: Hardware Abstraction Architecture</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id3">[2]</a></td><td>TEP 106: Schedulers and Tasks.</td></tr>
+<tr><td class="label">[2]</td><td>TEP 106: Schedulers and Tasks.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id4">[3]</a></td><td>TEP 107: TinyOS 2.x Boot Sequence.</td></tr>
+<tr><td class="label">[3]</td><td>TEP 107: TinyOS 2.x Boot Sequence.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id5">[4]</a></td><td>TEP 108: Resource Arbitration</td></tr>
+<tr><td class="label">[4]</td><td>TEP 108: Resource Arbitration</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a name="id6">[5]</a></td><td>TEP 115: Power Management of Non-Virtualised Devices</td></tr>
+<tr><td class="label">[5]</td><td>TEP 115: Power Management of Non-Virtualised Devices</td></tr>
 </tbody>
 </table>
 </div>
