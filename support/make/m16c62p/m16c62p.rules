@@ -24,7 +24,7 @@ THIS_FOLDER = m16c62p
 
 OBJCOPY = m32c-elf-objcopy
 OBJDUMP = m32c-elf-objdump
-SET_ID = tos-set-symbols
+SET_ID = tos-set-symbols --objcopy $(OBJCOPY) --objdump $(OBJDUMP)
 NCC = ncc
 LIBS = #-lm -lc -lgcc
 
