@@ -38,7 +38,7 @@
  * The M16c/62p hardware timer configuration used by Mulle.
  * 
  * STOP MODE ENABLED:
- *   TB0 bridges its tics from the RV8564 to TB2 in TMilli speed.
+ *   TB2 generates TMilli tics from the RV8564 chip.
  *   TA0 and TA1 are used to create a 32 bit counter. TA0 counts
  *   tics from TB2 and TA1 counts TA0 underflows.
  *   TB0 and TB1 are used to create a 32 bit Alarm. TB0 counts
