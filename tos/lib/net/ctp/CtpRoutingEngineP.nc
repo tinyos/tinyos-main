@@ -309,10 +309,8 @@ implementation {
                 dbg("TreeRouting", "   already parent.\n");
                 currentEtx = pathEtx;
                 /* update routeInfo with parent's current info */
-                atomic {
-                    routeInfo.etx = entry->info.etx;
-                    routeInfo.congested = entry->info.congested;
-                }
+		routeInfo.etx = entry->info.etx;
+		routeInfo.congested = entry->info.congested;
                 continue;
             }
             /* Ignore links that are congested */
@@ -360,11 +358,9 @@ implementation {
                 call LinkEstimator.pinNeighbor(best->neighbor);
                 call LinkEstimator.clearDLQ(best->neighbor);
 
-		atomic {
-                    routeInfo.parent = best->neighbor;
-                    routeInfo.etx = best->info.etx;
-                    routeInfo.congested = best->info.congested;
-                }
+		routeInfo.parent = best->neighbor;
+		routeInfo.etx = best->info.etx;
+		routeInfo.congested = best->info.congested;
 		if (currentEtx - minEtx > 20) {
 		  call CtpInfo.triggerRouteUpdate();
 		}
@@ -605,11 +601,10 @@ implementation {
     command error_t RootControl.setRoot() {
         bool route_found = FALSE;
         route_found = (routeInfo.parent == INVALID_ADDR);
-        atomic {
-            state_is_root = 1;
-            routeInfo.parent = my_ll_addr; //myself
-            routeInfo.etx = 0;
-        }
+	state_is_root = 1;
+	routeInfo.parent = my_ll_addr; //myself
+	routeInfo.etx = 0;
+
         if (route_found) 
             signal Routing.routeFound();
         dbg("TreeRouting","%s I'm a root now!\n",__FUNCTION__);
@@ -618,13 +613,12 @@ implementation {
     }
 
     command error_t RootControl.unsetRoot() {
-        atomic {
-            state_is_root = 0;
-            routeInfoInit(&routeInfo);
-        }
-        dbg("TreeRouting","%s I'm not a root now!\n",__FUNCTION__);
-        post updateRouteTask();
-        return SUCCESS;
+      state_is_root = 0;
+      routeInfoInit(&routeInfo);
+
+      dbg("TreeRouting","%s I'm not a root now!\n",__FUNCTION__);
+      post updateRouteTask();
+      return SUCCESS;
     }
 
     command bool RootControl.isRoot() {
@@ -732,27 +726,23 @@ implementation {
         else if (idx == routingTableActive) {
             //not found and there is space
             if (passLinkEtxThreshold(linkEtx)) {
-                atomic {
-                    routingTable[idx].neighbor = from;
-                    routingTable[idx].info.parent = parent;
-                    routingTable[idx].info.etx = etx;
-                    routingTable[idx].info.haveHeard = 1;
-                    routingTable[idx].info.congested = FALSE;
-                    routingTableActive++;
-                }
-                dbg("TreeRouting", "%s OK, new entry\n", __FUNCTION__);
+	      routingTable[idx].neighbor = from;
+	      routingTable[idx].info.parent = parent;
+	      routingTable[idx].info.etx = etx;
+	      routingTable[idx].info.haveHeard = 1;
+	      routingTable[idx].info.congested = FALSE;
+	      routingTableActive++;
+	      dbg("TreeRouting", "%s OK, new entry\n", __FUNCTION__);
             } else {
                 dbg("TreeRouting", "%s Fail, link quality (%hu) below threshold\n", __FUNCTION__, linkEtx);
             }
         } else {
             //found, just update
-            atomic {
-                routingTable[idx].neighbor = from;
-                routingTable[idx].info.parent = parent;
-                routingTable[idx].info.etx = etx;
-		        routingTable[idx].info.haveHeard = 1;
-            }
-            dbg("TreeRouting", "%s OK, updated entry\n", __FUNCTION__);
+	  routingTable[idx].neighbor = from;
+	  routingTable[idx].info.parent = parent;
+	  routingTable[idx].info.etx = etx;
+	  routingTable[idx].info.haveHeard = 1;
+	  dbg("TreeRouting", "%s OK, updated entry\n", __FUNCTION__);
         }
         return SUCCESS;
     }
