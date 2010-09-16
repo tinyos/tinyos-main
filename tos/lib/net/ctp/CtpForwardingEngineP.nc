@@ -183,11 +183,6 @@ implementation {
   // Start with all states false
   uint8_t forwardingState = 0; 
   
-  /* Keep track of the last parent address we sent to, so that
-     unacked packets to an old parent are not incorrectly attributed
-     to a new parent. */
-  am_addr_t lastParent;
-  
   /* Network-level sequence number, so that receivers
    * can distinguish retransmissions from different packets. */
   uint8_t seqno;
@@ -220,7 +215,6 @@ implementation {
       dbg("Forwarder", "clientPtrs[%hhu] = %p\n", i, clientPtrs[i]);
     }
     loopbackMsgPtr = &loopbackMsg;
-    lastParent = call AMPacket.address();
     seqno = 0;
     return SUCCESS;
   }
