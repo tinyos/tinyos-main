@@ -218,7 +218,6 @@ implementation {
         state_is_root = 0;
         routeInfoInit(&routeInfo);
         routingTableInit();
-        my_ll_addr = call AMPacket.address();
         beaconMsg = call BeaconSend.getPayload(&beaconMsgBuffer, call BeaconSend.maxPayloadLength());
         maxLength = call BeaconSend.maxPayloadLength();
         dbg("TreeRoutingCtl","TreeRouting initialized. (used payload:%d max payload:%d!\n", 
@@ -227,6 +226,7 @@ implementation {
     }
 
     command error_t StdControl.start() {
+      my_ll_addr = call AMPacket.address();
       //start will (re)start the sending of messages
       if (!running) {
 	running = TRUE;
