@@ -45,14 +45,8 @@
 #define __NETPROG_PLATFORM_H__
 
 void netprog_reboot() {
-    PRCR.BIT.PRC0 = 1; // Turn off protection on CM registers.
-    PRCR.BIT.PRC1 = 1; // Turn off protection on PM registers.
-    CM0.BIT.CM0_6 = 1;  
-    PM1.BIT.PM1_2 = 1; // Reset on WDT underflow.
-    WDTS = 1; // Start watchdog timer.
-    PRCR.BIT.PRC0 = 0; // Turn on protection on CM registers.
-    PRCR.BIT.PRC1 = 0; // Turn on protection on PM registers.
-    while (1); // Wait for underflow in the watchdog timer.
+  PRCR.BIT.PRC1 = 1; // Turn off protection on PM registers.
+  PM0.BIT.PM03 = 1;
 }
 
 #endif  // __NETPROG_PLATFORM_H__
