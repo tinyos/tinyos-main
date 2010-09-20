@@ -72,7 +72,7 @@ enum
 
 /* The number of microseconds a sending IRIS mote will wait for an acknowledgement */
 #ifndef SOFTWAREACK_TIMEOUT
-#define SOFTWAREACK_TIMEOUT	800
+#define SOFTWAREACK_TIMEOUT	1000
 #endif
 
 /*
