@@ -82,7 +82,7 @@ implementation
     // The RTC needs a maximum of 500ms to startup
     for (i = 0; i < 10; ++i)
     {
-      call BusyWait.wait(50000);
+      call BusyWait.wait(50000UL);
     }
     return SUCCESS;
   }
