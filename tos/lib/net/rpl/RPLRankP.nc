@@ -482,13 +482,13 @@ implementation {
     newPoint = (uint8_t*)(struct dio_base_t*)(dio + 1);
     dio_body = (struct dio_body_t*) newPoint;
 
-    if(dio_body->type == 2){ // this is metric
+    if(dio_body->type == 2){ // this contains a metric
       trackLength -= sizeof(struct dio_body_t);
       newPoint = (uint8_t*)(struct dio_body_t*)(dio_body + 1);
       dio_metric_header = (struct dio_metric_header_t*) newPoint;
       trackLength -= sizeof(struct dio_metric_header_t);
-      if(dio_metric_header->routing_obj_type){
-	// etx metric
+      if(dio_metric_header->routing_obj_type == 7){
+	// in this implementation this is the etx metric
 	newPoint = (uint8_t*)(struct dio_metric_header_t*)(dio_metric_header + 1);
 	dio_etx = (struct dio_etx_t*) newPoint;
 	trackLength -= sizeof(struct dio_etx_t);
@@ -496,6 +496,9 @@ implementation {
 	//printfUART("ETX RECV %d \n", etx);
 	typeID = 7;
 	newPoint = (uint8_t*)(struct dio_etx_t*)(dio_etx + 1);
+	leafState = FALSE;
+      }else{
+	leafState = TRUE;
       }
     }
 
@@ -685,13 +688,13 @@ implementation {
     if(next == IANA_ICMP){
       if(code == ICMPV6_CODE_DIS){
 	signal IPLower.recv(iph, payload, meta);
-      }else if(code == ICMPV6_CODE_DIO/* && dio->dagRank != 1*/){
+      }else if(code == ICMPV6_CODE_DIO){
 	prev_iph = iph;
 	prev_payload = payload;
 	prev_meta = meta;
 	prev_dio = dio;
 	computeRank();
-	leafState = FALSE;
+	//leafState = FALSE;
 	if(nodeRank > dio->dagRank){
 	  if(!ignore){
 	    signal IPLower.recv(iph, payload, meta);
