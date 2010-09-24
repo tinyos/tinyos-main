@@ -60,6 +60,9 @@ Here is a list of allocations for TinyOS 2.1::
     0x74 - AM_LQI_DATA_MSG MultiHopLQI (Data packets)
     0x75 - AM_LQI_DEBUG MultiHopLQI (Debug messages)
 
+    For SRP(''tos/lib/net/srp'')
+    0x76 - AM_SRP (Data packets)
+
   * 0x60 - 0x63 are reserved for dissemination protocols [TEP_118]_
     maintained by the Network Protocol Working Group.
 
