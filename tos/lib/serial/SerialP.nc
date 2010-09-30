@@ -6,7 +6,8 @@
  *
  *  Intel Open Source License 
  *
- *  Copyright (c) 2002 Intel Corporation 
+ *  Copyright (c) 2002 Intel Corporation.
+ *  Copyright (c) 2010 Stanford University.
  *  All rights reserved. 
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -50,7 +51,8 @@
  * @author Phil Buonadonna
  * @author Lewis Girod
  * @author Ben Greenstein
- * @date   August 7 2005
+ * @author Philip Levis
+ * @date   September 30 2010
  */
 
 
@@ -151,13 +153,13 @@ implementation {
 
   /* Transmit State */
 
-  norace uint8_t  txState;
-  norace uint8_t  txByteCnt;
-  norace uint8_t  txProto;
-  norace uint8_t  txSeqno;
-  norace uint16_t txCRC;
+  uint8_t  txState;
+  uint8_t  txByteCnt;
+  uint8_t  txProto;
+  uint8_t  txSeqno;
+  uint16_t txCRC;
   uint8_t  txPending;
-  norace uint8_t txIndex;
+  uint8_t txIndex;
   
   /* Ack Queue */
   ack_queue_t ackQ;
@@ -566,13 +568,15 @@ implementation {
     
     /* if done, call the send done */
     if (done || fail) {
-      txSeqno++;
-      if (txProto == SERIAL_PROTO_ACK){
-        ack_queue_pop();
-      }
-      else {
-        result = done ? SUCCESS : FAIL;
-        send_completed = TRUE;
+      atomic {
+	txSeqno++;
+	if (txProto == SERIAL_PROTO_ACK){
+	  ack_queue_pop();
+	}
+	else {
+	  result = done ? SUCCESS : FAIL;
+	  send_completed = TRUE;
+	}
       }
       idle = TRUE;
     }
@@ -596,15 +600,18 @@ implementation {
           atomic {
             txBuf[TX_ACK_INDEX].state = BUFFER_COMPLETE;
             txBuf[TX_ACK_INDEX].buf = ack_queue_top();
-          }
-          txProto = SERIAL_PROTO_ACK;
-          txIndex = TX_ACK_INDEX;
-          start_it = TRUE;
+
+	    txProto = SERIAL_PROTO_ACK;
+	    txIndex = TX_ACK_INDEX;
+	    start_it = TRUE;
+	  }
         }
         else if (myDataState == BUFFER_FILLING || myDataState == BUFFER_COMPLETE){
-          txProto = SERIAL_PROTO_PACKET_NOACK;
-          txIndex = TX_DATA_INDEX;
-          start_it = TRUE;
+	  atomic {
+	    txProto = SERIAL_PROTO_PACKET_NOACK;
+	    txIndex = TX_DATA_INDEX;
+	    start_it = TRUE;
+	  }
         }
         else {
           /* nothing to send now.. */
@@ -618,10 +625,11 @@ implementation {
     if (send_completed){
       signal SendBytePacket.sendCompleted(result);
     }
-    
-    if (txState == TXSTATE_INACTIVE) {
-      testOff();
-      return;
+    atomic {
+      if (txState == TXSTATE_INACTIVE) {
+	testOff();
+	return;
+      }
     }
     
     if (start_it){
@@ -642,72 +650,73 @@ implementation {
   async event void SerialFrameComm.putDone() {
     {
       error_t txResult = SUCCESS;
-      
-      switch (txState) {
-        
-      case TXSTATE_PROTO:
-
-         txResult = call SerialFrameComm.putData(txProto);
+      atomic {
+	switch (txState) {
+	  
+	case TXSTATE_PROTO:
+	  
+	  txResult = call SerialFrameComm.putData(txProto);
 #ifdef NO_TX_SEQNO
-        txState = TXSTATE_INFO;
+	  txState = TXSTATE_INFO;
 #else
-        txState = TXSTATE_SEQNO;
+	  txState = TXSTATE_SEQNO;
 #endif
-        txCRC = crcByte(txCRC,txProto);
-        break;
+	  txCRC = crcByte(txCRC,txProto);
+	  break;
         
-      case TXSTATE_SEQNO:
-        txResult = call SerialFrameComm.putData(txSeqno);
-        txState = TXSTATE_INFO;
-        txCRC = crcByte(txCRC,txSeqno);
-        break;
-        
-      case TXSTATE_INFO:
-        atomic {
-          txResult = call SerialFrameComm.putData(txBuf[txIndex].buf);
-          txCRC = crcByte(txCRC,txBuf[txIndex].buf);
-          ++txByteCnt;
-          
-          if (txIndex == TX_DATA_INDEX){
-            uint8_t nextByte;
-            nextByte = signal SendBytePacket.nextByte();
-            if (txBuf[txIndex].state == BUFFER_COMPLETE || txByteCnt >= SERIAL_MTU){
-              txState = TXSTATE_FCS1;
-            }
-            else { /* never called on ack b/c ack is BUFFER_COMPLETE initially */
-              txBuf[txIndex].buf = nextByte;
-            }
-          }
-          else { // TX_ACK_INDEX
-            txState = TXSTATE_FCS1;
-          }
-        }
-        break;
-        
-      case TXSTATE_FCS1:
-        txResult = call SerialFrameComm.putData(txCRC & 0xff);
-        txState = TXSTATE_FCS2;
-        break;
-        
-      case TXSTATE_FCS2:
-        txResult = call SerialFrameComm.putData((txCRC >> 8) & 0xff);
-        txState = TXSTATE_ENDFLAG;
-        break;
-        
-      case TXSTATE_ENDFLAG:
-        txResult = call SerialFrameComm.putDelimiter();
-        txState = TXSTATE_ENDWAIT;
-        break;
-        
-      case TXSTATE_ENDWAIT:
-        txState = TXSTATE_FINISH;
-      case TXSTATE_FINISH:
-        MaybeScheduleTx();
-        break;
-      case TXSTATE_ERROR:
-      default:
-        txResult = FAIL; 
-        break;
+	case TXSTATE_SEQNO:
+	  txResult = call SerialFrameComm.putData(txSeqno);
+	  txState = TXSTATE_INFO;
+	  txCRC = crcByte(txCRC,txSeqno);
+	  break;
+	  
+	case TXSTATE_INFO:
+	  atomic {
+	    txResult = call SerialFrameComm.putData(txBuf[txIndex].buf);
+	    txCRC = crcByte(txCRC,txBuf[txIndex].buf);
+	    ++txByteCnt;
+	    
+	    if (txIndex == TX_DATA_INDEX){
+	      uint8_t nextByte;
+	      nextByte = signal SendBytePacket.nextByte();
+	      if (txBuf[txIndex].state == BUFFER_COMPLETE || txByteCnt >= SERIAL_MTU){
+		txState = TXSTATE_FCS1;
+	      }
+	      else { /* never called on ack b/c ack is BUFFER_COMPLETE initially */
+		txBuf[txIndex].buf = nextByte;
+	      }
+	    }
+	    else { // TX_ACK_INDEX
+	      txState = TXSTATE_FCS1;
+	    }
+	  }
+	  break;
+	  
+	case TXSTATE_FCS1:
+	  txResult = call SerialFrameComm.putData(txCRC & 0xff);
+	  txState = TXSTATE_FCS2;
+	  break;
+	  
+	case TXSTATE_FCS2:
+	  txResult = call SerialFrameComm.putData((txCRC >> 8) & 0xff);
+	  txState = TXSTATE_ENDFLAG;
+	  break;
+	  
+	case TXSTATE_ENDFLAG:
+	  txResult = call SerialFrameComm.putDelimiter();
+	  txState = TXSTATE_ENDWAIT;
+	  break;
+	  
+	case TXSTATE_ENDWAIT:
+	  txState = TXSTATE_FINISH;
+	case TXSTATE_FINISH:
+	  MaybeScheduleTx();
+	  break;
+	case TXSTATE_ERROR:
+	default:
+	  txResult = FAIL; 
+	  break;
+	}
       }
       
       if (txResult != SUCCESS) {

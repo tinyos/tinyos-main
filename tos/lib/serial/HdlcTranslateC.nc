@@ -1,6 +1,7 @@
 //$Id: HdlcTranslateC.nc,v 1.6 2010-06-29 22:07:50 scipio Exp $
 
-/* Copyright (c) 2000-2005 The Regents of the University of California.  
+/* Copyright (c) 2000-2005 The Regents of the University of California.
+ * Copyright (c) 2010 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +38,7 @@
  *
  * @author Philip Levis
  * @author Ben Greenstein
- * @date August 7 2005
+ * @date September 30 2010
  *
  */
 
@@ -58,9 +59,9 @@ implementation {
   } HdlcState;
   
   //norace uint8_t debugCnt = 0;
-  norace HdlcState state = {0,0};
-  norace uint8_t txTemp;
-  norace uint8_t m_data;
+  HdlcState state = {0,0};
+  uint8_t txTemp;
+  uint8_t m_data;
   
   // TODO: add reset for when SerialM goes no-sync.
   async command void SerialFrameComm.resetReceive(){
@@ -95,8 +96,10 @@ implementation {
   }
 
   async command error_t SerialFrameComm.putDelimiter() {
-    state.sendEscape = 0;
-    m_data = HDLC_FLAG_BYTE;
+    atomic {
+      state.sendEscape = 0;
+      m_data = HDLC_FLAG_BYTE;
+    }
     return call UartStream.send(&m_data, 1);
   }
   
