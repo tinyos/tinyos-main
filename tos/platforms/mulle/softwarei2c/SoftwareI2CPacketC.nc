@@ -134,8 +134,11 @@ implementation
   error_t i2cStartCond(void)
   {
     READSCL();
+    READSDA();
+    i2cDelay(speed/2);
     if (READSDA() == 0)
       return FAIL;
+
     /* SCL is high, set SDA from 1 to 0 */
     CLRSDA();
     i2cDelay(speed/2);
@@ -148,12 +151,18 @@ implementation
     /* set SDA to 0 */
     CLRSDA();
     i2cDelay(speed/2);
+
     /* Clock stretching */
-    while (READSCL() == 0);
+    while (READSCL() == 0); /* Release SCL, wait for done */
+
     /* SCL is high, set SDA from 0 to 1 */
+    i2cDelay(speed/2);
+    READSDA(); /* Release SDA */
+
+    /* Verify, give some time to settle first */
+    i2cDelay(speed/2);
     if (READSDA() == 0)
       return FAIL;
-    i2cDelay(speed/2);
     return SUCCESS;
   }
 
@@ -245,7 +254,7 @@ implementation
       if (flags & I2C_START)
       {
         error = ecombine(error, i2cStartCond());
-        error = ecombine(error, i2cTx(addr+1)); 
+        error = ecombine(error, i2cTx((addr<<1)|1)); 
       }
 
       // Only read data from the device if length is >0.
@@ -305,10 +314,10 @@ implementation
         error = ecombine(error, i2cStartCond());
       }
 
-      error = ecombine(error, i2cTx(addr));
+      error = ecombine(error, i2cTx(addr<<1));
 
-      // Send the data to the device.
-      for (i = 0; i < length; ++i)
+      // Send the data to the device (stop on error).
+      for (i = 0; error == SUCCESS && i < length; ++i)
       {
         error = ecombine(error, i2cTx(data[i]));
       }

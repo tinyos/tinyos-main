@@ -45,7 +45,7 @@
 #define __RV8564_H__
 
 /* constants */
-#define RV8564_ADDR	0xa2  //slave address   
+#define RV8564_ADDR	0x51  //slave address   
 
 
 #define RV8564_CS1    0x00
