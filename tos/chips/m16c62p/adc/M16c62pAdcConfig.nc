@@ -25,9 +25,9 @@ interface M16c62pAdcConfig {
   async command uint8_t getChannel();
 
   /**
-   * Obtain precision setting
-   * @return The reference voltage to use. Must be one of the 
-   *   M16c62p_ADC_CHL_ANxx values from M16c62pAdc.h.
+   * Obtain precision setting.
+   * @return The number of bits, valid values are 8 (M16c62p_ADC_PRECISION_8BIT)
+   *   or 10 (M16c62p_ADC_PRECISION_10BIT)
    */
   async command uint8_t getPrecision();
 

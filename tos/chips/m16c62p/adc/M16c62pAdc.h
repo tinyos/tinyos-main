@@ -126,8 +126,8 @@ enum {
 
 /* ADC Precision Settings */
 enum {
-    M16c62p_ADC_PRECISION_10BIT = 0,
-    M16c62p_ADC_PRECISION_8BIT,
+    M16c62p_ADC_PRECISION_10BIT = 10,
+    M16c62p_ADC_PRECISION_8BIT = 8,
 };
 
 /* ADC operation mode select bit */
