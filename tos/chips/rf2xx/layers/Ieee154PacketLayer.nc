@@ -166,4 +166,20 @@ interface Ieee154PacketLayer
 	 * is set and the destionation address is this node.
 	 */
 	async command bool requiresAckReply(message_t* msg);
+
+	/**
+	 * Returns the local pan id (AM group)
+	 */
+	async command ieee154_panid_t localPan();
+
+	/**
+	 * Returns the local address of the node (AM address)
+	 */
+	async command ieee154_saddr_t localAddr();
+
+	/**
+	 * Returns TRUE if the destionation of this message is either 0xFFFF
+	 * or is the local address of the node.
+	 */
+	async command bool isForMe(message_t* msg);
 }

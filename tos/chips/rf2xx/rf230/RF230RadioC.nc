@@ -132,7 +132,6 @@ implementation
 
 	components Ieee154MessageLayerC;
 	Ieee154MessageLayerC.Ieee154PacketLayer -> Ieee154PacketLayerC;
-	Ieee154MessageLayerC.Ieee154Packet -> Ieee154PacketLayerC;
 	Ieee154MessageLayerC.SubSend -> TinyosNetworkLayerC.Ieee154Send;
 	Ieee154MessageLayerC.SubReceive -> TinyosNetworkLayerC.Ieee154Receive;
 	Ieee154MessageLayerC.RadioPacket -> TinyosNetworkLayerC.Ieee154Packet;

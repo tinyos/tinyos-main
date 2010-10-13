@@ -45,7 +45,6 @@ module Ieee154MessageLayerC
 	uses
 	{
 		interface Ieee154PacketLayer;
-		interface Ieee154Packet;
 		interface RadioPacket;
 		interface BareSend as SubSend;
 		interface BareReceive as SubReceive;
@@ -116,9 +115,9 @@ implementation
 			call Ieee154PacketLayer.createDataFrame(msg);
 
 		call Packet.setPayloadLength(msg, len);
-	    	call Ieee154Packet.setSource(msg, call Ieee154Packet.address());
-		call Ieee154Packet.setDestination(msg, addr);
-	    	call Ieee154Packet.setPan(msg, call Ieee154Packet.localPan());
+	    	call Ieee154PacketLayer.setSrcAddr(msg, call Ieee154PacketLayer.localAddr());
+		call Ieee154PacketLayer.setDestAddr(msg, addr);
+	    	call Ieee154PacketLayer.setDestPan(msg, call Ieee154PacketLayer.localPan());
 		
     		signal SendNotifier.aboutToSend(addr, msg);
     	
@@ -142,7 +141,7 @@ implementation
 
 	event message_t* SubReceive.receive(message_t* msg)
 	{
-		if( call Ieee154Packet.isForMe(msg) )
+		if( call Ieee154PacketLayer.isForMe(msg) )
 			return signal Ieee154Receive.receive(msg,
 				getPayload(msg), call Packet.payloadLength(msg));
 		else
