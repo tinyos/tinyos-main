@@ -1,8 +1,8 @@
 
 The radio driver interfaces have a set of generic configuration options. 
-Some of these are set in the platforms/xxx/chips/rf230/RadioConfig.h header 
-file, see the IRIS platform for example, others can be set in your 
-Makefile.
+Some of these are set in the platforms/xxx/chips/yyy/RadioConfig.h header 
+file (see the platforms/iris/chips/rf230/RadioConfig.h for example), others 
+can be set in your Makefile.
 
 TFRAMES_ENABLED:
 
