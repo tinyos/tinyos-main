@@ -53,11 +53,12 @@ interface CtpInfo {
   command error_t getParent(am_addr_t* parent);
   
   /**
-   * Get the path quality metric for the current path to the root
-   * through the current parent.  The pointer is allocated by the
-   * caller.  If the parent is invalid, return FAIL (no info).  The
-   * caller MUST NOT use the value in parent if the return is not
-   * SUCCESS. Calling getEtx at the root will set the etx argument to 0.
+   * Get the ETX for the current path to the root through the current
+   * parent. Sets etx argument to ETX*10.  The pointer is allocated by
+   * the caller.  If the parent is invalid, return FAIL (no info).
+   * The caller MUST NOT use the value in parent if the return is not
+   * SUCCESS. Calling getEtx at the root will set the etx argument to
+   * 0.
    */
   
   command error_t getEtx(uint16_t* etx);
