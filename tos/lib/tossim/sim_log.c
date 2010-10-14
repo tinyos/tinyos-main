@@ -102,7 +102,7 @@ static void fillInOutput(int id, char* name) {
       newName[termination - namePos] = 0;
     }
     
-    channel = hashtable_search(channelTable, namePos);
+    channel = hashtable_search(channelTable, newName);
     if (channel != NULL) {
       count += channel->numOutputs;
     }
@@ -132,7 +132,7 @@ static void fillInOutput(int id, char* name) {
       newName[termination - namePos] = 0;
     }
     
-    channel = hashtable_search(channelTable, namePos);
+    channel = hashtable_search(channelTable, newName);
     if (channel != NULL) {
       int i, j;
       for (i = 0; i < channel->numOutputs; i++) {
