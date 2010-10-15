@@ -447,7 +447,13 @@ implementation {
             if (rx_current_crc() == rxCRC) {
               signal ReceiveBytePacket.endPacket(SUCCESS);
               ack_queue_push(rxSeqno);
-              goto nosync;
+	      rxInit();
+	      call SerialFrameComm.resetReceive();
+	      if (offPending) {
+		rxState = RXSTATE_INACTIVE;
+		testOff();
+	      }
+              goto done;
             }
             else {
               goto nosync;
