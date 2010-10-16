@@ -49,7 +49,7 @@ configuration RandomCollisionLayerC
 
 implementation
 {
-	components RandomCollisionLayerP, RadioAlarmC, RandomC;
+	components new RandomCollisionLayerP(), RadioAlarmC, RandomC;
 
 	RadioSend = RandomCollisionLayerP;
 	SubSend = RandomCollisionLayerP;

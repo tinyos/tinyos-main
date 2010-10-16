@@ -49,7 +49,7 @@ configuration SlottedCollisionLayerC
 
 implementation
 {
-	components SlottedCollisionLayerP, MainC, RadioAlarmC, RandomC;
+	components new SlottedCollisionLayerP(), MainC, RadioAlarmC, RandomC;
 
 	RadioSend = SlottedCollisionLayerP;
 	RadioReceive = SlottedCollisionLayerP;

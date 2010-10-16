@@ -52,7 +52,7 @@ configuration TrafficMonitorLayerC
 
 implementation
 {
-	components TrafficMonitorLayerP, new TimerMilliC() as UpdateTimerC; 
+	components new TrafficMonitorLayerP(), new TimerMilliC() as UpdateTimerC; 
 	components NeighborhoodC, new NeighborhoodFlagC(), TaskletC;
 
 	RadioSend = TrafficMonitorLayerP;

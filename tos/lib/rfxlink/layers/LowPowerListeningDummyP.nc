@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-module LowPowerListeningDummyP
+generic module LowPowerListeningDummyP()
 {
 	provides interface LowPowerListening;
 }

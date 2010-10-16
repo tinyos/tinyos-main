@@ -35,7 +35,7 @@
 #include <Tasklet.h>
 #include <Neighborhood.h>
 
-module UniqueLayerP
+generic module UniqueLayerP()
 {
 	provides
 	{

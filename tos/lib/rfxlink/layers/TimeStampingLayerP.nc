@@ -35,7 +35,7 @@
 #include <RadioConfig.h>
 #include <TimeStampingLayer.h>
 
-module TimeStampingLayerP
+generic module TimeStampingLayerP()
 {
 	provides
 	{

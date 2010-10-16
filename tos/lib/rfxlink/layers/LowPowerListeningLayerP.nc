@@ -36,7 +36,7 @@
 #include <LowPowerListeningLayer.h>
 #include <Lpl.h>
 
-module LowPowerListeningLayerP
+generic module LowPowerListeningLayerP()
 {
 	provides
 	{

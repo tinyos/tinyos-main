@@ -65,7 +65,7 @@ configuration TimeSyncMessageLayerC
 
 implementation
 {
-	components TimeSyncMessageLayerP, LocalTimeMilliC;
+	components new TimeSyncMessageLayerP(), LocalTimeMilliC;
 
 	AMPacket = TimeSyncMessageLayerP;
 	Packet = TimeSyncMessageLayerP;

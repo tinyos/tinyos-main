@@ -34,7 +34,7 @@
 
 #include <TimeSyncMessageLayer.h>
 
-module TimeSyncMessageLayerP
+generic module TimeSyncMessageLayerP()
 {
 	provides
 	{

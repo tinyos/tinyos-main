@@ -35,7 +35,7 @@
 #include <Tasklet.h>
 #include <RadioAssert.h>
 
-module SoftwareAckLayerP
+generic module SoftwareAckLayerP()
 {
 	provides
 	{

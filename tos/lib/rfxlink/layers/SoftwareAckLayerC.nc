@@ -53,7 +53,7 @@ configuration SoftwareAckLayerC
 
 implementation
 {
-	components SoftwareAckLayerP, RadioAlarmC, new MetadataFlagC();
+	components new SoftwareAckLayerP(), RadioAlarmC, new MetadataFlagC();
 
 	RadioSend = SoftwareAckLayerP;
 	RadioReceive = SoftwareAckLayerP;

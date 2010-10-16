@@ -70,7 +70,7 @@
 
 #include <PacketLinkLayer.h>
 
-module PacketLinkLayerP {
+generic module PacketLinkLayerP() {
   provides {
     interface BareSend as Send;
     interface PacketLink;

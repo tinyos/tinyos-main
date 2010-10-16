@@ -50,7 +50,7 @@ configuration TimeStampingLayerC
 
 implementation
 {
-	components TimeStampingLayerP, LocalTimeMilliC;
+	components new TimeStampingLayerP(), LocalTimeMilliC;
 
 	PacketTimeStampMilli = TimeStampingLayerP;
 	PacketTimeStampRadio = TimeStampingLayerP;

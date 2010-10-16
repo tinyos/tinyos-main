@@ -49,7 +49,7 @@ configuration CsmaLayerC
 
 implementation
 {
-	components CsmaLayerP;
+	components new CsmaLayerP();
 
 	RadioSend = CsmaLayerP;
 	SubSend = CsmaLayerP;

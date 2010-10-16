@@ -42,7 +42,7 @@
 #define TRAFFIC_MONITOR_DECAY	3
 #endif
 
-module TrafficMonitorLayerP
+generic module TrafficMonitorLayerP()
 {
 	provides
 	{

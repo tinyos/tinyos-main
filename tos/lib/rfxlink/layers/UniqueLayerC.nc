@@ -51,7 +51,7 @@ configuration UniqueLayerC
 
 implementation
 {
-	components UniqueLayerP, MainC, NeighborhoodC, new NeighborhoodFlagC();
+	components new UniqueLayerP(), MainC, NeighborhoodC, new NeighborhoodFlagC();
 
 	MainC.SoftwareInit -> UniqueLayerP;
 	UniqueLayerP.Neighborhood -> NeighborhoodC;

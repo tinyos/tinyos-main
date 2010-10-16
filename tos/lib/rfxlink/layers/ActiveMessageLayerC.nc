@@ -55,7 +55,7 @@ configuration ActiveMessageLayerC
 
 implementation
 {
-	components ActiveMessageLayerP, ActiveMessageAddressC;
+	components new ActiveMessageLayerP(), ActiveMessageAddressC;
 	ActiveMessageLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
 
 	AMPacket = ActiveMessageLayerP;

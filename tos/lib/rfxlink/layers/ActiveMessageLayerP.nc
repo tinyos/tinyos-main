@@ -34,7 +34,7 @@
 
 #include <ActiveMessageLayer.h>
 
-module ActiveMessageLayerP
+generic module ActiveMessageLayerP()
 {
 	provides
 	{

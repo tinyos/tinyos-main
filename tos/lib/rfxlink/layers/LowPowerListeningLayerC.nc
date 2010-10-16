@@ -57,7 +57,7 @@ configuration LowPowerListeningLayerC
 
 implementation
 {
-	components LowPowerListeningLayerP, new TimerMilliC();
+	components new LowPowerListeningLayerP(), new TimerMilliC();
 	components SystemLowPowerListeningC;
 
 	SplitControl = LowPowerListeningLayerP;

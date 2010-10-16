@@ -85,7 +85,7 @@ configuration PacketLinkLayerC {
 }
 
 implementation {
-  components PacketLinkLayerP, new TimerMilliC() as DelayTimerC;
+  components new PacketLinkLayerP(), new TimerMilliC() as DelayTimerC;
   
   PacketLink = PacketLinkLayerP;
   Send = PacketLinkLayerP;

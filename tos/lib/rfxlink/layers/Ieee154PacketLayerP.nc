@@ -34,7 +34,7 @@
 
 #include <Ieee154PacketLayer.h>
 
-module Ieee154PacketLayerP
+generic module Ieee154PacketLayerP()
 {
 	provides 
 	{

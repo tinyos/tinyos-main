@@ -59,6 +59,6 @@ implementation
 	Receive = SubReceive;
 	RadioPacket = SubPacket;
 
-	components LowPowerListeningDummyP;
+	components new LowPowerListeningDummyP();
 	LowPowerListening = LowPowerListeningDummyP;
 }

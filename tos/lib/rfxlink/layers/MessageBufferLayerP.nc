@@ -36,7 +36,7 @@
 #include <Tasklet.h>
 #include <RadioAssert.h>
 
-module MessageBufferLayerP
+generic module MessageBufferLayerP()
 {
 	provides
 	{

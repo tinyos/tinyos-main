@@ -49,7 +49,7 @@ configuration Ieee154PacketLayerC
 
 implementation
 {
-	components Ieee154PacketLayerP, ActiveMessageAddressC;
+	components new Ieee154PacketLayerP(), ActiveMessageAddressC;
 	Ieee154PacketLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
 
 	Ieee154PacketLayer = Ieee154PacketLayerP;
