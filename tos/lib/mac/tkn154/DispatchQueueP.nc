@@ -134,14 +134,15 @@ implementation
   command ieee154_status_t Purge.purge(uint8_t msduHandle)
   {
     uint8_t qSize = call Queue.size(), i;
-    if (qSize > 1) {
-      for (i=0; i<qSize-1; i++) {
-        ieee154_txframe_t *txFrame = call Queue.element(i);
-        if (((txFrame->header->mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_DATA) &&
+
+    // must never purge the first element (element 0), because it was already handed down to
+    // the dispatcher (we don't own it anymore), all others may be purged.
+    for (i=1; i<qSize; i++) {
+      ieee154_txframe_t *txFrame = call Queue.element(i);
+      if (((txFrame->header->mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_DATA) &&
           txFrame->handle == msduHandle) {
-          txFrame->headerLen = 0; // mark as invalid
-          return IEEE154_SUCCESS;
-        }
+        txFrame->headerLen = 0; // mark as invalid
+        return IEEE154_SUCCESS;
       }
     }
     return IEEE154_INVALID_HANDLE;
