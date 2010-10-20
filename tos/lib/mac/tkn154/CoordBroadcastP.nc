@@ -134,7 +134,10 @@ implementation
       signal RealignmentTx.transmitDone(m_transmittedFrame, m_status);
     } else if (m_transmittedFrame == m_queueHead) {
       call Queue.dequeue();
-      m_queueHead = call Queue.head();
+      if (call Queue.empty())
+        m_queueHead = NULL;
+      else
+        m_queueHead = call Queue.head();
       signal BroadcastDataFrame.transmitDone(m_transmittedFrame, m_status);
     }
     m_lock = FALSE;
