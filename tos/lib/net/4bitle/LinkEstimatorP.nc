@@ -333,8 +333,16 @@ implementation {
       if (ne->ll_addr == n) {
 	if (ne->flags & VALID_ENTRY) {
 	  dbg("LI", "Making link: %d mature\n", i);
-	  ne->flags |= MATURE_ENTRY;
 	  totalPkt = ne->rcvcnt + ne->failcnt;
+
+	  if (!(ne->flags & MATURE_ENTRY)) {
+	    newEst = (250UL * ne->rcvcnt) / totalPkt;
+	    ne->inquality = newEst;
+	    ne->etx =
+	      computeETX(ne->inquality);
+	  }
+
+	  ne->flags |= MATURE_ENTRY;
 	  dbg("LI", "MinPkt: %d, totalPkt: %d\n", minPkt, totalPkt);
 	  newEst = (250UL * ne->rcvcnt) / totalPkt;
 	  dbg("LI,LITest", "  %hu: %hhu -> %hhu", ne->ll_addr, ne->inquality, (ALPHA * ne->inquality + (10-ALPHA) * newEst)/10);
@@ -620,6 +628,7 @@ implementation {
 	if (nidx != INVALID_RVAL) {
 	  dbg("LI", "Found an empty entry\n");
 	  initNeighborIdx(nidx, ll_addr);
+	  NeighborTable[nidx].lastseq = hdr->seq;
 	  updateNeighborEntryIdx(nidx, hdr->seq);
 	} else {
 	  nidx = findWorstNeighborIdx(EVICT_ETX_THRESHOLD);
