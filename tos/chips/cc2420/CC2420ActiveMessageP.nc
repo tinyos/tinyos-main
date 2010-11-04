@@ -39,7 +39,8 @@
  * @author Philip Levis
  * @version $Revision: 1.22 $ $Date: 2010-06-29 22:07:44 $
  */
- 
+
+#include <Ieee154.h> 
 #include "CC2420.h"
 
 module CC2420ActiveMessageP @safe() {
@@ -73,6 +74,9 @@ implementation {
   event void RadioResource.granted() {
     uint8_t rc;
     cc2420_header_t* header = call CC2420PacketBody.getHeader( pending_message );
+    header->fcf = ( 1 << IEEE154_FCF_INTRAPAN ) |
+      ( IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE ) |
+      ( IEEE154_ADDR_SHORT << IEEE154_FCF_SRC_ADDR_MODE ) ;
 
     signal SendNotifier.aboutToSend[header->type](header->dest, pending_message);
     rc = call SubSend.send( pending_message, pending_length );
