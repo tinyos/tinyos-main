@@ -208,7 +208,7 @@ implementation {
       adc12busy: 0,                    // no operation is active
       conseq: 1,                       // conversion mode: sequence of chans
       adc12ssel: SHT_SOURCE_SMCLK,     // SHT_SOURCE_SMCLK=3; ADC12 clocl source
-      adc12div: SHT_CLOCK_DIV_8,       // SHT_CLOCK_DIV_8=7; ADC12 clock div 1
+      adc12div: SHT_CLOCK_DIV_1,       // SHT_CLOCK_DIV_8=0; ADC12 clock div 1
       issh: 0,                         // sample-input signal not inverted
       shp: 1,                          // Sample-and-hold pulse-mode select: SAMPCON signal is sourced from the sampling timer
       shs: 0,                          // Sample-and-hold source select= ADC12SC bit
