@@ -176,8 +176,12 @@ implementation
 		{
 			if( state == STATE_READY )
 			{
-				call RadioAlarm.wait(delay);
-				state = STATE_BARRIER;
+				// disregard the barrier for now, this needs a better solution
+				if( call RadioAlarm.isFree() )
+				{
+					call RadioAlarm.wait(delay);
+					state = STATE_BARRIER;
+				}
 			}
 			else
 				state |= STATE_BARRIER;
