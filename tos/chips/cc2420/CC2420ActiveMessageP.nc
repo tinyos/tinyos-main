@@ -74,9 +74,6 @@ implementation {
   event void RadioResource.granted() {
     uint8_t rc;
     cc2420_header_t* header = call CC2420PacketBody.getHeader( pending_message );
-    header->fcf = ( 1 << IEEE154_FCF_INTRAPAN ) |
-      ( IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE ) |
-      ( IEEE154_ADDR_SHORT << IEEE154_FCF_SRC_ADDR_MODE ) ;
 
     signal SendNotifier.aboutToSend[header->type](header->dest, pending_message);
     rc = call SubSend.send( pending_message, pending_length );
@@ -100,6 +97,10 @@ implementation {
     header->dest = addr;
     header->destpan = call CC2420Config.getPanAddr();
     header->src = call AMPacket.address();
+    header->fcf = ( 1 << IEEE154_FCF_INTRAPAN ) |
+      ( IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE ) |
+      ( IEEE154_ADDR_SHORT << IEEE154_FCF_SRC_ADDR_MODE ) ;
+    header->length = len + CC2420_SIZE;
     
     if (call RadioResource.immediateRequest() == SUCCESS) {
       error_t rc;
