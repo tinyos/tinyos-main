@@ -132,38 +132,58 @@ implementation
     return IEEE154_INVALID_HANDLE;
   }
 
-  command uint8_t PendingAddrWrite.write(uint8_t *pendingAddrField, uint8_t maxlen)
+  command uint8_t PendingAddrWrite.write(uint8_t *lastBytePtr, uint8_t maxlen)
   {
     // writes the pending addr field (inside the beacon frame)
-    uint8_t i, j, k=0;
-    uint8_t *longAdrPtr[NUM_MAX_PENDING];
-    nxle_uint16_t *adrPtr;
+    // we go "backwards", i.e. start with the extended addresses,
+    // then the short addresses, then the "Pending Address Specification" 
+    uint8_t i, j, k;
+    uint8_t numShort, numExt;
+    nxle_uint16_t *shortAddrPtr;
     ieee154_txframe_t *txFrame;
-    uint8_t len = call PendingAddrWrite.getLength();
+    
+    numExt = 0;
+    for (i=0; i<NUM_MAX_PENDING && numExt <= 7; i++) {
+      if (m_txFrameTable[i] == NULL)
+        continue;
+      txFrame = m_txFrameTable[i];
+      if ((txFrame->header->mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == FC2_DEST_MODE_EXTENDED) {
+        uint8_t *curExtAddrPtr = &(txFrame->header->mhr[MHR_INDEX_ADDRESS + sizeof(ieee154_macPANId_t)]);
+        k = 0;
+        // search for duplicate dest. address
+        for (j=0; j<numExt && k!=8; j++) {
+          for (k=0; k<8; k++)
+            if (curExtAddrPtr[k] != lastBytePtr[-7-j*8+k])
+              break;
+        }
+        if (k == 8)
+          break; // was a duplicate dest address
+        numExt += 1;
+        for (j=0; j<8; j++)
+          lastBytePtr[-numExt*8+1+j] = curExtAddrPtr[j];
+      }
+    }
 
-    if (len > maxlen)
-      return 0;
-    pendingAddrField[0] = 0;
-    adrPtr = (nxle_uint16_t *) &pendingAddrField[1];
-    for (i=0; i<NUM_MAX_PENDING; i++) {
-      if (!m_txFrameTable[i])
+    shortAddrPtr = (nxle_uint16_t *) &lastBytePtr[-numExt*8+1];
+    numShort = 0;
+    for (i=0; i<NUM_MAX_PENDING && numShort < 7; i++) {
+      if (m_txFrameTable[i] == NULL)
         continue;
       txFrame = m_txFrameTable[i];
       if ((txFrame->header->mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == FC2_DEST_MODE_SHORT) {
-        *adrPtr++ = *((nxle_uint16_t*) &txFrame->header->mhr[MHR_INDEX_ADDRESS + sizeof(ieee154_macPANId_t)]);
-      } else if ((txFrame->header->mhr[MHR_INDEX_FC2] & FC2_DEST_MODE_MASK) == FC2_DEST_MODE_EXTENDED)
-        longAdrPtr[k++] = &(txFrame->header->mhr[MHR_INDEX_ADDRESS + sizeof(ieee154_macPANId_t)]);
+        nxle_uint16_t shortAddr;
+        shortAddr = *((nxle_uint16_t*) &txFrame->header->mhr[MHR_INDEX_ADDRESS + sizeof(ieee154_macPANId_t)]);
+        for (j=0; j<numShort; j++)
+          if (shortAddr == shortAddrPtr[-j-1])
+            break;
+        if (j != numShort)
+          break; // was a duplicate dest address
+        numShort += 1;
+        shortAddrPtr[-numShort] = shortAddr;
+      }
     }
-    for (i=0; i<m_numExtPending; i++)
-      for (j=0; j<8; j++)
-        pendingAddrField[1 + 2*m_numShortPending + i*8 + j] = longAdrPtr[i][j];
-    pendingAddrField[0] = m_numShortPending | (m_numExtPending << 4);
-    return len;
-  }
-
-  command uint8_t PendingAddrWrite.getLength()
-  {
-    return 1 + m_numShortPending * 2 + m_numExtPending * 8;
+    lastBytePtr[-(numShort*2+numExt*8)] = numShort | (numExt << 4); // writes the pendingAddrField
+    return 1 + numExt * 8 + numShort * 2;
   }
 
   command ieee154_status_t FrameTx.transmit[uint8_t client](ieee154_txframe_t *txFrame)

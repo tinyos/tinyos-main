@@ -99,22 +99,16 @@ implementation
   async event void CfpSlotAlarm.fired() {}
 
   async event void RadioOff.offDone() {}
-    
-  command uint8_t GtsInfoWrite.write(uint8_t *gtsSpecField, uint8_t maxlen)
-  {
-    // write the current GTS spec at the given address
-    if (call GtsInfoWrite.getLength() > maxlen)
-      return 0; 
-    gtsSpecField[0] = 0;
-    return 1;
-  }
 
-  command uint8_t GtsInfoWrite.getLength()
+  command uint8_t GtsInfoWrite.write(uint8_t *lastBytePtr, uint8_t maxlen)
   {
-    // returns the length of the current GTS spec
-    // must return the same value as GtsInfoWrite.write
-    return 1;
-  }  
+    if (maxlen == 0)
+      return 0;
+    else {
+      lastBytePtr[0] = 0; // GTS Specificationtos2
+      return 1;
+    }
+  }
 
   async event void RadioTx.transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result){}
 

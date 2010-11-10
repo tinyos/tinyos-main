@@ -32,8 +32,20 @@
  */
 interface WriteBeaconField
 {
-  // returns length of bytes written
-  command uint8_t write(uint8_t *dest, uint8_t maxlen);
-  // *current* length in byte
-  command uint8_t getLength();
+  /** 
+   * Writes a field inside a beacon frame (either "GTS fields" 
+   * or "Pending address field", see Fig. 44). IMPORTANT:
+   * the pointer <tt>lastBytePtr</tt> points to the address of
+   * the last byte that the callee may write. E.g. assume
+   * we want to write a GTS information field of total 4 byte, 
+   * the "GTS Specification" byte would be written at lastBytePtr[-3],
+   * the "GTS Directions" field at at lastBytePtr[-2] and so on.
+   *
+   * @param lastBytePtr Address of last byte to write
+   *
+   * @param maxlen Maximum number of bytes that may be written
+   * 
+   * @return The number of bytes that have actually been written
+   */  
+  command uint8_t write(uint8_t *lastBytePtr, uint8_t maxlen);
 }

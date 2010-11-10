@@ -679,9 +679,8 @@ implementation
 
       // (1) update pending addresses
       if (m_payloadState & MODIFIED_PENDING_ADDR_FIELD) {
-        len = call PendingAddrWrite.getLength();
+        len = call PendingAddrWrite.write(beaconSpecs-1, beaconSpecs-m_payload);
         beaconSpecs -= len;
-        call PendingAddrWrite.write(beaconSpecs, len);
         if (len != m_pendingAddrLen) {
           m_pendingAddrLen = len;
           m_payloadState |= MODIFIED_SPECS_MASK; // need to rewrite specs before
@@ -691,9 +690,8 @@ implementation
       
       // (2) update GTS spec
       if (m_payloadState & MODIFIED_GTS_FIELD) {
-        len = call GtsInfoWrite.getLength();
+        len = call GtsInfoWrite.write(beaconSpecs-1, beaconSpecs-m_payload);
         beaconSpecs -= len;
-        call GtsInfoWrite.write(beaconSpecs, len);
         numGtsSlots = getNumGtsSlots(beaconSpecs);
         if (len != m_pendingGtsLen || ((15-numGtsSlots) != m_numCapSlots-1)) {
           m_pendingGtsLen = len;
