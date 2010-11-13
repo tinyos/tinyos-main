@@ -86,23 +86,24 @@ implementation
 		OFF_STOP_END = 3,			// must have consecutive indices
 		OFF_START_END = 4,
 
-		LISTEN_SUBSTART = 5,			// must have consecutive indices
-		LISTEN_SUBSTART_DONE = 6,		// must have consecutive indices
-		LISTEN_TIMER = 7,			// must have consecutive indices
-		LISTEN = 8,				// must have consecutive indices
+		LISTEN_SUBSTART = 10,			// must have consecutive indices
+		LISTEN_SUBSTART_DONE = 11,		// must have consecutive indices
+		LISTEN_TIMER = 12,			// must have consecutive indices
+		LISTEN = 13,				// must have consecutive indices
 
-		SLEEP_SUBSTOP = 9,			// must have consecutive indices
-		SLEEP_SUBSTOP_DONE = 10,		// must have consecutive indices
-		SLEEP_TIMER = 11,			// must have consecutive indices
-		SLEEP = 12,				// must have consecutive indices
+		SLEEP_SUBSTOP = 20,			// must have consecutive indices
+		SLEEP_SUBSTOP_DONE = 21,		// must have consecutive indices
+		SLEEP_TIMER = 22,			// must have consecutive indices
+		SLEEP = 23,				// must have consecutive indices
 
-		SEND_SUBSTART = 13,			// must have consecutive indices
-		SEND_SUBSTART_DONE = 14,		// must have consecutive indices
-		SEND_TIMER = 15,			// must have consecutive indices
-		SEND_SUBSEND= 16,
-		SEND_SUBSEND_DONE = 17,
-		SEND_SUBSEND_DONE_LAST = 18,
-		SEND_DONE = 19,
+		SLEEP_SUBSTOP_DONE_TOSEND = 29,		// must have consecutive indices
+		SEND_SUBSTART = 30,			// must have consecutive indices
+		SEND_SUBSTART_DONE = 31,		// must have consecutive indices
+		SEND_TIMER = 32,			// must have consecutive indices
+		SEND_SUBSEND= 33,
+		SEND_SUBSEND_DONE = 34,
+		SEND_SUBSEND_DONE_LAST = 35,
+		SEND_DONE = 36,
 	};
 
 	uint8_t state;
@@ -253,20 +254,20 @@ implementation
 	event void SubControl.stopDone(error_t error)
 	{
 		ASSERT( error == SUCCESS || error == EBUSY );
-		ASSERT( state == SLEEP_SUBSTOP_DONE || state == OFF_SUBSTOP_DONE );
+		ASSERT( state == SLEEP_SUBSTOP_DONE || state == OFF_SUBSTOP_DONE || state == SLEEP_SUBSTOP_DONE_TOSEND );
 
 		if( error == SUCCESS )
 			++state;
-		else
+		else if( state != SLEEP_SUBSTOP_DONE_TOSEND )
 			--state;
+		else
+			state = SEND_TIMER;
 
 		post transition();
 	}
 
 	event void Timer.fired()
 	{
-		ASSERT( state == LISTEN || state == SLEEP || state == SEND_SUBSEND || state == SEND_SUBSEND_DONE );
-
 		if( state == LISTEN )
 			state = SLEEP_SUBSTOP;
 		else if( state == SLEEP )
@@ -275,6 +276,8 @@ implementation
 			state = SEND_SUBSEND_DONE_LAST;
 		else if( state == SEND_SUBSEND)
 			state = SEND_DONE;
+		else
+			ASSERT(FALSE);
 
 		post transition();
 	}
@@ -306,6 +309,8 @@ implementation
 			state = SEND_SUBSTART_DONE;
 		else if( state == LISTEN_TIMER || state == SLEEP_SUBSTOP || state == LISTEN )
 			state = SEND_TIMER;
+		else if( state == SLEEP_SUBSTOP_DONE )
+			state = SLEEP_SUBSTOP_DONE_TOSEND;
 		else
 			return EBUSY;
 
