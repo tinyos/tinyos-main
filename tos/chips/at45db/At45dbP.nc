@@ -392,9 +392,13 @@ implementation
       selected = !selected; // LRU with 2 buffers...
 
 #ifdef CHECKARGS
-    if (page >= AT45_MAX_PAGES || offset >= AT45_PAGE_SIZE ||
-	n > AT45_PAGE_SIZE || offset + n > AT45_PAGE_SIZE)
+    if (page >= AT45_MAX_PAGES ||
+	n > AT45_PAGE_SIZE ||
+	(req != R_COPY && offset >= AT45_PAGE_SIZE) ||
+	(req != R_COPY && offset + n > AT45_PAGE_SIZE) ||
+	(req == R_COPY && offset >= AT45_MAX_PAGES)) {
       post taskFail();
+    }
     else
 #endif
       handleRWRequest();
