@@ -12,6 +12,7 @@ push( @includes, qw(
 
   %T/platforms/mica
   %T/platforms/micaz/chips/cc2420
+  %T/platforms/micaz/chips/cc2420x
   %T/chips/cc2420
   %T/chips/cc2420/alarm
   %T/chips/cc2420/control
@@ -26,6 +27,9 @@ push( @includes, qw(
   %T/chips/cc2420/transmit
   %T/chips/cc2420/unique
   %T/chips/cc2420/security
+  %T/chips/cc2420x
+  %T/lib/rfxlink/layers
+  %T/lib/rfxlink/util  
   %T/platforms/mica2/chips/at45db
   %T/platforms/mica/chips/at45db
   %T/chips/at45db
