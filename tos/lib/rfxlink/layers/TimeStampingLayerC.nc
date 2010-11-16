@@ -32,6 +32,8 @@
  * Author: Miklos Maroti
  */
 
+#include "RadioConfig.h"
+
 configuration TimeStampingLayerC
 {
 	provides

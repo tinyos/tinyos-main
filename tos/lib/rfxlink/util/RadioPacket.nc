@@ -44,7 +44,7 @@ interface RadioPacket
 
 	/**
 	 * Returns the length of the payload. The payload starts right
-	 * after th header.
+	 * after the header.
 	 */
 	async command uint8_t payloadLength(message_t* msg);
 

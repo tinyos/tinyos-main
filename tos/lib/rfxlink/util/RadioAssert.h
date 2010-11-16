@@ -38,10 +38,16 @@
 #ifdef RADIO_DEBUG
 
 	void assert(bool condition, const char* file, uint16_t line);
+	#define RADIO_ASSERT(COND) assert(COND, __FILE__, __LINE__)
+
+	// deprecated
 	#define ASSERT(COND) assert(COND, __FILE__, __LINE__)
 
 #else
 
+	#define RADIO_ASSERT(COND) for(;0;)
+
+	// deprecated
 	#define ASSERT(COND) for(;0;)
 
 #endif

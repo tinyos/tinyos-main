@@ -32,8 +32,8 @@
  * Author: Miklos Maroti
  */
 
-#include <Ieee154PacketLayer.h>
-#include <message.h>
+#include "Ieee154.h"
+#include "message.h"
 
 /**
  * This interface encapsulates IEEE 802.15.4 intrapan data frames with 

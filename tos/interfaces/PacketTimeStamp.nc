@@ -46,7 +46,7 @@ interface PacketTimeStamp<precision_tag, size_type>
 	 * value should not be used. It is recommended that the isValid command be
 	 * called from the receive or sendDone event handler.
 	 */
-  async command bool isValid(message_t* msg);
+	async command bool isValid(message_t* msg);
 
 	/**
 	 * @param 'message_t *ONE msg' Message to get timestamp from.
@@ -60,14 +60,14 @@ interface PacketTimeStamp<precision_tag, size_type>
 	 * the timestamp command be called only from the receive or sendDone event
 	 * handler.
 	 */
-  async command size_type timestamp(message_t* msg);
+	async command size_type timestamp(message_t* msg);
 
 	/**
 	 * @param 'message_t *ONE msg' Message to modify.
 	 *
 	 * Sets the isValid flag to FALSE.
 	 */
-  async command void clear(message_t* msg);
+	async command void clear(message_t* msg);
 
 	/**
 	 * @param 'message_t *ONE msg' Message to modify.
@@ -75,5 +75,5 @@ interface PacketTimeStamp<precision_tag, size_type>
 	 * Sets the isValid flag to TRUE and the time stamp value to the
 	 * specified value.
 	 */
-  async command void set(message_t* msg, size_type value);
+	async command void set(message_t* msg, size_type value);
 }
