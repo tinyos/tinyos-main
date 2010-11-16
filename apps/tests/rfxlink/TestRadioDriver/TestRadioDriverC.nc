@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2010, University of Szeged
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,41 +32,51 @@
  * Author: Miklos Maroti
  */
 
-configuration RF230SnifferC
+configuration TestRadioDriverC
 {
 }
 
 implementation
 {
-	components RF230SnifferP, MainC, SerialActiveMessageC, AssertC;
+	components TestRadioDriverP, MainC, SerialActiveMessageC, AssertC, LedsC;
 	
-	RF230SnifferP.Boot -> MainC;
-	RF230SnifferP.SplitControl -> SerialActiveMessageC;
-	RF230SnifferP.RadioState -> RF230DriverLayerC;
+	TestRadioDriverP.Boot -> MainC;
+	TestRadioDriverP.SplitControl -> SerialActiveMessageC;
+	TestRadioDriverP.RadioState -> RadioDriverLayerC;
+	TestRadioDriverP.RadioSend -> RadioDriverLayerC;
+	TestRadioDriverP.RadioPacket -> Ieee154PacketLayerC;
+	TestRadioDriverP.Leds -> LedsC;
 
 	// just to avoid a timer compilation bug
 	components new TimerMilliC();
 
 // -------- ActiveMessage
 
-	components RF230RadioP, Ieee154PacketLayerC;
-	RF230RadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
+	components Ieee154PacketLayerC;
+	Ieee154PacketLayerC.SubPacket -> TimeStampingLayerC;
 
 // -------- TimeStamping
 
 	components TimeStampingLayerC;
-	TimeStampingLayerC.LocalTimeRadio -> RF230DriverLayerC;
+	TimeStampingLayerC.LocalTimeRadio -> RadioDriverLayerC;
 	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
 
 // -------- MetadataFlags
 
 	components MetadataFlagsLayerC;
-	MetadataFlagsLayerC.SubPacket -> RF230DriverLayerC;
+	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
 
-// -------- RF230 Driver
+// -------- RadioDriver
 
-	components RF230DriverLayerC;
-	RF230DriverLayerC.Config -> RF230RadioP;
-	RF230DriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
+	components RF230DriverLayerC as RadioDriverLayerC;
+	components RF230RadioP as RadioP;
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSA) || defined(PLATFORM_TELOSB)
+	components CC2420XDriverLayerC as RadioDriverLayerC;
+	components CC2420XRadioP as RadioP;
+#endif
 
+	RadioDriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
+	RadioDriverLayerC.Config -> RadioP;
+	RadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
 }

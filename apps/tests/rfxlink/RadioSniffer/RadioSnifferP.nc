@@ -34,7 +34,7 @@
 
 #include <Tasklet.h>
 
-module RF230SnifferP
+module RadioSnifferP
 {
 	uses
 	{

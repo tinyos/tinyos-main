@@ -32,24 +32,48 @@
  * Author: Miklos Maroti
  */
 
-configuration RF230TestC
+configuration RadioSnifferC
 {
 }
 
 implementation
 {
-	components MainC, RF230TestM, LedsC;
-	components DiagMsgC, SerialActiveMessageC;
+	components RadioSnifferP, MainC, SerialActiveMessageC, AssertC;
+	
+	RadioSnifferP.Boot -> MainC;
+	RadioSnifferP.SplitControl -> SerialActiveMessageC;
+	RadioSnifferP.RadioState -> RadioDriverLayerC;
+
+	// just to avoid a timer compilation bug
 	components new TimerMilliC();
 
-	RF230TestM.Boot -> MainC;
-	RF230TestM.Leds -> LedsC;
-	RF230TestM.DiagMsg -> DiagMsgC;
-	RF230TestM.SplitControl -> SerialActiveMessageC;
-	RF230TestM.Timer -> TimerMilliC;
+// -------- ActiveMessage
 
-	components RF230DriverLayerC, RF230ActiveMessageC;
+	components Ieee154PacketLayerC;
+	Ieee154PacketLayerC.SubPacket -> TimeStampingLayerC;
 
-	RF230TestM.RadioState -> RF230DriverLayerC;
-	RF230TestM.AMSend -> RF230ActiveMessageC;
+// -------- TimeStamping
+
+	components TimeStampingLayerC;
+	TimeStampingLayerC.LocalTimeRadio -> RadioDriverLayerC;
+	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
+
+// -------- MetadataFlags
+
+	components MetadataFlagsLayerC;
+	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
+
+// -------- RadioDriver
+
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
+	components RF230DriverLayerC as RadioDriverLayerC;
+	components RF230RadioP as RadioP;
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSA) || defined(PLATFORM_TELOSB)
+	components CC2420XDriverLayerC as RadioDriverLayerC;
+	components CC2420XRadioP as RadioP;
+#endif
+
+	RadioDriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
+	RadioDriverLayerC.Config -> RadioP;
+	RadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
 }
