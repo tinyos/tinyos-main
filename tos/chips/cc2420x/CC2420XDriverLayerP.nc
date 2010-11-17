@@ -1103,6 +1103,11 @@ implementation
 
 /*----------------- TASKLET -----------------*/
 
+	task void releaseSpi()
+	{
+		call SpiResource.release();
+	}
+
 	tasklet_async event void Tasklet.run()
 	{
 #ifdef RADIO_DEBUG_TASKLET
@@ -1150,7 +1155,7 @@ implementation
 			signal RadioSend.ready();
 
 		if( cmd == CMD_NONE )
-			call SpiResource.release();
+			post releaseSpi();
 			
 #ifdef RADIO_DEBUG_TASKLET
 		if( call DiagMsg.record() )

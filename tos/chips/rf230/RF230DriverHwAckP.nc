@@ -835,6 +835,11 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 /*----------------- TASKLET -----------------*/
 
+	task void releaseSpi()
+	{
+		call SpiResource.release();
+	}
+
 	tasklet_async event void Tasklet.run()
 	{
 		if( radioIrq )
@@ -860,7 +865,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 			signal RadioSend.ready();
 
 		if( cmd == CMD_NONE )
-			call SpiResource.release();
+			post releaseSpi();
 	}
 
 /*----------------- RadioPacket -----------------*/

@@ -826,6 +826,11 @@ implementation
 
 /*----------------- TASKLET -----------------*/
 
+	task void releaseSpi()
+	{
+		call SpiResource.release();
+	}
+
 	tasklet_async event void Tasklet.run()
 	{
 		if( radioIrq )
@@ -851,7 +856,7 @@ implementation
 			signal RadioSend.ready();
 
 		if( cmd == CMD_NONE )
-			call SpiResource.release();
+			post releaseSpi();
 	}
 
 /*----------------- RadioPacket -----------------*/
