@@ -1,0 +1,19 @@
+TestTransmit:
+
+This application sends a very short message (2 bytes) every 2000 ticks
+without checking for other traffic. We want to test if the radio driver
+locks up because we want to transmit while receiving another message.
+
+It blinks the 0th LED (red) when 256 times RadioSend.send() returns with
+an error. It blinks the 1st LED (green) when 256 times the RadioSend.send()
+returns with success. It blinks the 2nd LED (yellow) when 256 times the
+RadioAlarm fires. 
+
+Program two or more motes with this application, then start them. You 
+should see the 2nd LED (yellow) blink continuously, and the 1st and 0th
+LED (green and red) blink too. If both the 0th and 1st LED stops blinking
+the the radio driver locked up.
+
+You can also connect one of your motes to your PC and run there the
+java.net.tinyos.util.DiagMsg application. This should print out ASSERTS
+of the radio driver.
