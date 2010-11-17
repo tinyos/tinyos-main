@@ -723,11 +723,11 @@ implementation {
 	  txResult = FAIL; 
 	  break;
 	}
-      }
       
-      if (txResult != SUCCESS) {
-        txState = TXSTATE_ERROR;
-        MaybeScheduleTx();
+	if (txResult != SUCCESS) {
+	  txState = TXSTATE_ERROR;
+	  MaybeScheduleTx();
+	}
       }
     }
   }

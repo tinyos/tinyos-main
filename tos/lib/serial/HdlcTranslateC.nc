@@ -117,13 +117,15 @@ implementation {
 
   async event void UartStream.sendDone( uint8_t* buf, uint16_t len, 
 					error_t error ) {
-    if (state.sendEscape) {
-      state.sendEscape = 0;
-      m_data = txTemp;
-      call UartStream.send(&m_data, 1);
-    }
-    else {
-      signal SerialFrameComm.putDone();
+    atomic {
+      if (state.sendEscape) {
+	state.sendEscape = 0;
+	m_data = txTemp;
+	call UartStream.send(&m_data, 1);
+      }
+      else {
+	signal SerialFrameComm.putDone();
+      }
     }
   }
 
