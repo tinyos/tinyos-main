@@ -111,7 +111,7 @@ int Throttle::simSleep(double seconds) {
 
 void Throttle::printStatistics() {
 
-    printf("Number of throttle events %d\n", throttleCount);
+    printf("Number of throttle events %lu\n", throttleCount);
 
     if (simEndTime > 0.0) {
         printf("Total Sim Time: %.6f\n", simEndTime - simStartTime);

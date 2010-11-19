@@ -123,8 +123,8 @@ variable_string_t Variable::getData() {
     memcpy(data, ptr, len);
   }
   else {
-    str.ptr = "<no such variable>";
-    str.type = "<no such variable>";
+    str.ptr = (char*)"<no such variable>";
+    str.type = (char*)"<no such variable>";
     str.len = strlen("<no such variable>");
     str.isArray = 0;
   }

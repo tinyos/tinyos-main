@@ -246,7 +246,9 @@ PyObject* listFromArray(char* type, char* ptr, int len) {
 %include SerialForwarder.i
 %include Throttle.i
 
-%typemap(python,in) FILE * {
+#if defined(SWIGPYTHON)
+
+%typemap(in) FILE * {
   if (!PyFile_Check($input)) {
     PyErr_SetString(PyExc_TypeError, "Requires a file as a parameter.");
     return NULL;
@@ -254,7 +256,7 @@ PyObject* listFromArray(char* type, char* ptr, int len) {
   $1 = PyFile_AsFile($input);
 }
 
-%typemap(python,out) variable_string_t {
+%typemap(out) variable_string_t {
   if ($1.isArray) {
     //printf("Generating array %s\n", $1.type);
     $result = listFromArray  ($1.type, $1.ptr, $1.len);
@@ -269,7 +271,7 @@ PyObject* listFromArray(char* type, char* ptr, int len) {
 }
 
 
-%typemap(python,in) nesc_app_t* {
+%typemap(in) nesc_app_t* {
   if (!PyList_Check($input)) {
     PyErr_SetString(PyExc_TypeError, "Requires a list as a parameter.");
     return NULL;
@@ -312,14 +314,16 @@ PyObject* listFromArray(char* type, char* ptr, int len) {
         }
       }
       else {
-        app->variableNames[i] = "<bad string>";
-        app->variableTypes[i] = "<bad string>";
+        app->variableNames[i] = (char*)"<bad string>";
+        app->variableTypes[i] = (char*)"<bad string>";
       }
     }
 
     $1 = app;
   }
 }
+
+#endif
 
 typedef struct var_string {
   char* type;
