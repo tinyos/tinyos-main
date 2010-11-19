@@ -54,7 +54,7 @@ configuration Counter32khz64C
 implementation
 {
   components Msp430Counter32khzC as CounterFrom;
-  components new TransformCounterC(T32khz,uint64_t,T32khz,uint16_t,0,uint32_t) as Transform;
+  components new TransformCounterC(T32khz,uint64_t,T32khz,uint16_t,0,uint64_t) as Transform;
 
   Counter = Transform;
 
