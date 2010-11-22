@@ -45,7 +45,7 @@ module HplCC2420InterruptsP @safe() {
 
   uses{
     interface GpioInterrupt as InterruptSFD;
-    interface LocalTime<TMilli>;
+    interface Counter<T32khz,uint16_t>;
   }
 }
 
@@ -65,9 +65,11 @@ implementation {
   }
 
   async event void InterruptSFD.fired() {
-    uint32_t t = call LocalTime.get();
+    uint16_t t = call Counter.get();
 
-    signal CaptureSFD.captured((uint16_t)(t & 0x0000ffff));
+    signal CaptureSFD.captured(t);
   }
+
+  async event void Counter.overflow() { }
 }
 

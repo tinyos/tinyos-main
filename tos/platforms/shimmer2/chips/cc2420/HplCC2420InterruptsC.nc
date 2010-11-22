@@ -69,14 +69,14 @@ implementation {
   InterruptSFDC.HplInterrupt -> HplMsp430InterruptC.Port10;
 
   components HplCC2420InterruptsP;
-  components LocalTimeMilliC;
+  components Counter32khz16C;
   components new GpioCaptureC() as CaptureSFDC;
   components HplCC2420PinsC;
 
   CaptureSFD = HplCC2420InterruptsP.CaptureSFD;
 
   HplCC2420InterruptsP.InterruptSFD ->  InterruptSFDC.Interrupt;
-  HplCC2420InterruptsP.LocalTime     -> LocalTimeMilliC;
+  HplCC2420InterruptsP.Counter      -> Counter32khz16C;
 
   InterruptCCA = InterruptCCAC.Interrupt;
   InterruptFIFOP = InterruptFIFOPC.Interrupt;
