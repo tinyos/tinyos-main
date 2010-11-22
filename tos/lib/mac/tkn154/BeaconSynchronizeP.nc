@@ -342,8 +342,12 @@ implementation
       message_t *tmp = m_beaconPtr;
       setBeaconReceived();
       m_beaconPtr = frame;
+/*      dbg_serial("BeaconSynchronizeP", "Got beacon, timestamp: %lu, now: %lu\n", */
+/*          (uint32_t) *timestamp, (uint32_t) call TrackAlarm.getNow());*/
       if (timestamp != NULL)
         memcpy(&m_lastBeaconRxRefTime, timestamp, sizeof(ieee154_timestamp_t));
+      else
+        dbg_serial("BeaconSynchronizeP", "Beacon timestamp invalid!\n");
       if (getRxState() == RX_RECEIVING) { 
         call TrackAlarm.stop(); // may fail
         call RadioOff.off();    // may fail
@@ -413,8 +417,8 @@ implementation
       uint8_t gtsFieldLength;
       uint32_t timestamp = call Frame.getTimestamp(m_beaconPtr);
 
-      dbg_serial("BeaconSynchronizeP", "Got beacon, timestamp: %lu, offset to previous: %lu\n", 
-        (uint32_t) timestamp, (uint32_t) (timestamp - m_lastBeaconRxTime));
+      dbg_serial("BeaconSynchronizeP", "Got beacon - bsn: %lu, offset to last: %lu\n", 
+        (uint32_t) mhr[MHR_INDEX_SEQNO], (uint32_t) (timestamp - m_lastBeaconRxTime));
 
       m_numBeaconsMissed = 0;
       m_numGtsSlots = (payload[2] & 7);

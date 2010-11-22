@@ -499,7 +499,7 @@ implementation
       timestamp = NULL;
     }
     call BeaconTx.transmit(&m_beaconFrame, timestamp, m_dt);
-    dbg_serial("BeaconTransmitP","Beacon Tx scheduled for %lu.\n", (uint32_t) (*timestamp + m_dt));
+    dbg_serial("BeaconTransmitP","Beacon Tx scheduled for %lu\n", (uint32_t) (*timestamp + m_dt));
   }
 
   async event void BeaconTx.transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result)
@@ -514,7 +514,8 @@ implementation
       m_lastBeaconTxTime = frame->metadata->timestamp;
       memcpy(&m_lastBeaconTxRefTime, timestamp, sizeof(ieee154_timestamp_t));
       m_dt = m_beaconInterval; // transmit the next beacon at m_lastBeaconTxTime + m_dt 
-      dbg_serial("BeaconTransmitP", "Beacon Tx success at %lu\n", (uint32_t) m_lastBeaconTxTime);
+      dbg_serial("BeaconTransmitP", "Beacon Tx (bsn: %lu) success at %lu\n", 
+          (uint32_t) frame->header->mhr[MHR_INDEX_SEQNO], (uint32_t) m_lastBeaconTxTime);
     } else {
       // Timestamp is invalid; this is bad. We need the beacon timestamp for the 
       // slotted CSMA-CA, because it defines the slot reference time. We can't use this superframe

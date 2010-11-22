@@ -227,11 +227,17 @@ implementation {
   }
 
   async command void CC2420Receive.sfd_dropped() {
-    if (m_state == S_STOPPED)
-      return;    
-    if ( m_timestamp_size ) {
-      m_timestamp_size--;
-    }
+    // be conservative about timestamps: if SFD is dropped, e.g.
+    // because system is too unresponsive, then we clear the
+    // complete timestamping queue (the previous code sometimes 
+    // resulted in incorrect timestamps).
+    m_timestamp_size = 0; 
+    return;
+/*    if (m_state == S_STOPPED)*/
+/*      return;    */
+/*    if ( m_timestamp_size ) {*/
+/*      m_timestamp_size--;*/
+/*    }*/
   }
   
   /***************** InterruptFIFOP Events ****************/
