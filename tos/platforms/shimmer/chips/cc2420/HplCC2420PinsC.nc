@@ -71,7 +71,7 @@ implementation {
   FIFOM -> GeneralIOC.Port10;
   FIFOPM -> GeneralIOC.Port26;
   RSTNM -> GeneralIOC.Port57;
-  SFDM -> GeneralIOC.Port50;
+  SFDM -> GeneralIOC.Port12;
   VRENM -> GeneralIOC.Port56;
 
   CCA = CCAM;
