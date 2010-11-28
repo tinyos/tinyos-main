@@ -32,6 +32,8 @@
  * Author: Miklos Maroti
  */
 
+#include "RadioConfig.h"
+
 configuration RadioAlarmC
 {
 	provides
@@ -41,7 +43,7 @@ configuration RadioAlarmC
 
 	uses
 	{
-		interface Alarm<TRadio, uint16_t> @exactlyonce();
+		interface Alarm<TRadio, tradio_size> @exactlyonce();
 	}
 }
 

@@ -88,6 +88,7 @@ inline uint16_t RF230_CRCBYTE_COMMAND(uint16_t crc, uint8_t data)
  * This is the timer type of the radio alarm interface
  */
 typedef TOne TRadio;
+typedef uint16_t tradio_size;
 
 /**
  * The number of radio alarm ticks per one microsecond (0.9216). 

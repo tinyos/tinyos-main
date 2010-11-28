@@ -33,6 +33,7 @@
  */
 
 #include <Tasklet.h>
+#include "RadioConfig.h"
 
 interface RadioAlarm
 {
@@ -46,7 +47,7 @@ interface RadioAlarm
 	/**
 	 * Waits till the specified timeout period expires. The alarm must be free.
 	 */
-	tasklet_async command void wait(uint16_t timeout);
+	tasklet_async command void wait(tradio_size timeout);
 
 	/**
 	 * Cancels the running alarm. The alarm must be pending.
@@ -61,5 +62,5 @@ interface RadioAlarm
 	/**
 	 * Returns the current time as measured by the radio stack.
 	 */
-	async command uint16_t getNow();
+	async command tradio_size getNow();
 }
