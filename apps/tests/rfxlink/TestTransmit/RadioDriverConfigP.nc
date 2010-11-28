@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, University of Szeged
+ * Copyright (c) 2007, Vanderbilt University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,48 +32,49 @@
  * Author: Miklos Maroti
  */
 
-configuration TestRadioDriverC
+#include "Tasklet.h"
+#include "RadioAssert.h"
+#include "message.h"
+#include "RadioConfig.h"
+
+module RadioDriverConfigP
 {
+	provides
+	{
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
+		interface RF230DriverConfig as RadioDriverConfig;
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSA) || defined(PLATFORM_TELOSB)
+		interface CC2420DriverConfig as RadioDriverConfig;
+#elif defined(PLATFORM_UCMINI)
+		interface RFA1DriverConfig as RadioDriverConfig;
+#endif
+	}
 }
 
 implementation
 {
-	components TestRadioDriverP, MainC, SerialActiveMessageC, AssertC, LedsC, RadioAlarmC;
-	
-	TestRadioDriverP.Boot -> MainC;
-	TestRadioDriverP.SplitControl -> SerialActiveMessageC;
-	TestRadioDriverP.RadioState -> RadioDriverLayerC;
-	TestRadioDriverP.RadioSend -> RadioDriverLayerC;
-	TestRadioDriverP.RadioReceive -> RadioDriverLayerC;
-	TestRadioDriverP.RadioPacket -> TimeStampingLayerC;
-	TestRadioDriverP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	TestRadioDriverP.Leds -> LedsC;
+	async command uint8_t RadioDriverConfig.headerLength(message_t* msg)
+	{
+		return 0;
+	}
 
-	// just to avoid a timer compilation bug
-	components new TimerMilliC();
+	async command uint8_t RadioDriverConfig.maxPayloadLength()
+	{
+		return sizeof(message_header_t) + TOSH_DATA_LENGTH;
+	}
 
-// -------- TimeStamping
+	async command uint8_t RadioDriverConfig.metadataLength(message_t* msg)
+	{
+		return 0;
+	}
 
-	components TimeStampingLayerC;
-	TimeStampingLayerC.LocalTimeRadio -> RadioDriverLayerC;
-	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
+	async command uint8_t RadioDriverConfig.headerPreloadLength()
+	{
+		return 7;
+	}
 
-// -------- MetadataFlags
-
-	components MetadataFlagsLayerC;
-	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
-
-// -------- RadioDriver
-
-#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
-	components RF230DriverLayerC as RadioDriverLayerC;
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSA) || defined(PLATFORM_TELOSB)
-	components CC2420XDriverLayerC as RadioDriverLayerC;
-#elif defined(PLATFORM_UCMINI)
-	components RFA1DriverLayerC as RadioDriverLayerC;
-#endif
-
-	components RadioDriverConfigP;
-	RadioDriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
-	RadioDriverLayerC.Config -> RadioDriverConfigP;
+	async command bool RadioDriverConfig.requiresRssiCca(message_t* msg)
+	{
+		return FALSE;
+	}
 }

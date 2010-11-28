@@ -49,11 +49,7 @@ module TestRadioDriverP
 		interface RadioPacket;
 		interface RadioAlarm;
 		interface RadioSend;
-	}
-
-	provides
-	{
-		interface RF230DriverConfig;
+		interface RadioReceive;
 	}
 }
 
@@ -61,6 +57,7 @@ implementation
 {
 	tasklet_norace uint8_t failureCount;
 	tasklet_norace uint8_t successCount;
+	tasklet_norace uint8_t receiveCount;
 	tasklet_norace uint8_t timerCount;
 
 	message_t msgbuffer;
@@ -102,7 +99,7 @@ implementation
 		uint8_t *payload;
 		error_t error;
 
-		next += 2000;
+		next += 2000 * RADIO_ALARM_MICROSEC;
 		atomic
 		{
 			call RadioAlarm.wait(next - call RadioAlarm.getNow());
@@ -111,10 +108,7 @@ implementation
 		payload = ((void*)&msgbuffer) + call RadioPacket.headerLength(&msgbuffer);
 
 		payload[0] = TOS_NODE_ID;
-		payload[1] = timerCount;
-
-		if( ++timerCount == 0 )
-			call Leds.led2Toggle();
+		payload[1] = ++timerCount;
 
 		error = call RadioSend.send(&msgbuffer);
 		if( error != SUCCESS )
@@ -138,31 +132,16 @@ implementation
 	{
 	}
 
-/*----------------- RF230DriverConfig -----------------*/
-
-	async command uint8_t RF230DriverConfig.headerLength(message_t* msg)
+	tasklet_async event bool RadioReceive.header(message_t* msg)
 	{
-		return 0;
+		return TRUE;
 	}
 
-	async command uint8_t RF230DriverConfig.maxPayloadLength()
+	tasklet_async event message_t* RadioReceive.receive(message_t* msg)
 	{
-		return sizeof(message_header_t) + TOSH_DATA_LENGTH;
-	}
+		if( ++receiveCount == 0 )
+			call Leds.led2Toggle();
 
-	async command uint8_t RF230DriverConfig.metadataLength(message_t* msg)
-	{
-		return 0;
+		return msg;
 	}
-
-	async command uint8_t RF230DriverConfig.headerPreloadLength()
-	{
-		return 7;
-	}
-
-	async command bool RF230DriverConfig.requiresRssiCca(message_t* msg)
-	{
-		return FALSE;
-	}
-
 }
