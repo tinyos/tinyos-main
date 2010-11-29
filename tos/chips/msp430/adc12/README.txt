@@ -133,13 +133,14 @@ follows:
   TimerA). See "sampcon_ssel".
 
 
-Example: Assuming that SMCLK runs at 1 MHz the following code snippet
-performs 2000 ADC conversions on channel A2 with a sampling period of 4000 Hz.
+Example: Assuming that SMCLK runs at 1 (binary) MHz the following code snippet
+performs 2048 ADC conversions on channel A2 with a sampling frequency of 4096 Hz.
 The sampling period is defined by the combination of SAMPCON_SOURCE_SMCLK,
-SAMPCON_CLOCK_DIV_1 and a "jiffies" parameter of (1000000 / 4000) = 250. 
+SAMPCON_CLOCK_DIV_1 and a "jiffies" parameter of (2^20 / 4096) = (1048576 / 4096) =
+= 256 jiffies. 
 
  
-   #define NUM_SAMPLES 2000
+   #define NUM_SAMPLES 2048
    uint16_t buffer[NUM_SAMPLES];
    
    const msp430adc12_channel_config_t config = {
@@ -156,7 +157,7 @@ SAMPCON_CLOCK_DIV_1 and a "jiffies" parameter of (1000000 / 4000) = 250.
   event void Resource.granted()
   {
     error_t result;
-    result = call SingleChannel.configureMultiple(&config, buffer, BUFFER_SIZE, 250);
+    result = call SingleChannel.configureMultiple(&config, buffer, NUM_SAMPLES, 256);
     if (result == SUCCESS)
       call SingleChannel.getData();
   }
@@ -177,6 +178,6 @@ tinyos-2.x/apps/tests/msp430/Adc12.
 
 -----
 
-$Date: 2008-04-07 09:41:55 $
+$Date: 2008/04/07 09:41:55 $
 @author: Jan Hauer <hauer@tkn.tu-berlin.de>
 

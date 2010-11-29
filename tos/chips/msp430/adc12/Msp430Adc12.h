@@ -130,7 +130,7 @@ enum sht_enum
    SAMPLE_HOLD_32_CYCLES = 3,         
    SAMPLE_HOLD_64_CYCLES = 4,         
    SAMPLE_HOLD_96_CYCLES = 5,        
-   SAMPLE_HOLD_123_CYCLES = 6,        
+   SAMPLE_HOLD_128_CYCLES = 6,        
    SAMPLE_HOLD_192_CYCLES = 7,        
    SAMPLE_HOLD_256_CYCLES = 8,        
    SAMPLE_HOLD_384_CYCLES = 9,        
@@ -151,8 +151,8 @@ enum sampcon_id_enum
 {
    SAMPCON_CLOCK_DIV_1 = 0,             // SAMPCON clock divider of 1
    SAMPCON_CLOCK_DIV_2 = 1,             // SAMPCON clock divider of 2
-   SAMPCON_CLOCK_DIV_3 = 2,             // SAMPCON clock divider of 3
-   SAMPCON_CLOCK_DIV_4 = 3,             // SAMPCON clock divider of 4
+   SAMPCON_CLOCK_DIV_4 = 2,             // SAMPCON clock divider of 4
+   SAMPCON_CLOCK_DIV_8 = 3,             // SAMPCON clock divider of 8
 };
 
 // The unique string for allocating ADC resource interfaces
