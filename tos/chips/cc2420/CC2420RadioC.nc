@@ -51,7 +51,6 @@ configuration CC2420RadioC {
     interface Receive as ActiveReceive;
 
     interface CC2420Packet;
-    interface Ieee154Packet;
     interface PacketAcknowledgements;
     interface LinkPacketMetadata;
     interface LowPowerListening;
@@ -83,7 +82,6 @@ implementation {
   PacketLink = LinkC;
   LowPowerListening = LplC;
   CC2420Packet = CC2420PacketC;
-  Ieee154Packet = CC2420PacketC;
   PacketAcknowledgements = CC2420PacketC;
   LinkPacketMetadata = CC2420PacketC;
   

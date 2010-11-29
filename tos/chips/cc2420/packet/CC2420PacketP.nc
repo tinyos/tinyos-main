@@ -47,7 +47,6 @@ module CC2420PacketP @safe() {
     interface PacketAcknowledgements as Acks;
     interface CC2420PacketBody;
     interface LinkPacketMetadata;
-    interface Ieee154Packet;
 
     interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -235,35 +234,4 @@ implementation {
     (call CC2420PacketBody.getMetadata( msg ))->timesync = FALSE;
   }
 
-
-  /********************* Ieee154Packet *********************/
-
-  command error_t Ieee154Packet.destination(message_t *msg, ieee154_addr_t *addr) {
-    cc2420_header_t *hdr = (call CC2420PacketBody.getHeader( msg ));
-    int length, offset;
-
-    addr->ieee_mode = (hdr->fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 0x3;
-    offset = offsetof(cc2420_header_t, dest);
-    length = getAddressLength(addr->ieee_mode);
-
-    if (length < 0 || offset < 0) return FAIL;
-
-    memcpy(addr->i_laddr.data, ((uint8_t *)hdr) + offset, length);
-    return SUCCESS;
-  }
-
-  command error_t Ieee154Packet.source(message_t *msg, ieee154_addr_t *addr) {
-    cc2420_header_t *hdr = (call CC2420PacketBody.getHeader( msg ));
-    int length, offset;
-
-    addr->ieee_mode = (hdr->fcf >> IEEE154_FCF_SRC_ADDR_MODE) & 0x3;
-    offset = offsetof(cc2420_header_t, dest) + 
-      getAddressLength((hdr->fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 0x3);
-    length = getAddressLength(addr->ieee_mode);
-
-    if (length < 0 || offset < 0) return FAIL;
-
-    memcpy(addr->i_laddr.data, ((uint8_t *)hdr) + offset, length);
-    return SUCCESS;
-  }
 }

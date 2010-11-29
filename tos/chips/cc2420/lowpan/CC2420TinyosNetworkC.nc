@@ -80,7 +80,7 @@ configuration CC2420TinyosNetworkC {
 implementation {
 
   enum {
-    TINYOS_N_NETWORKS = uniqueCount("RADIO_SEND_RESOURCE"),
+    TINYOS_N_NETWORKS = uniqueCount(RADIO_SEND_RESOURCE),
   };
 
   components MainC;
