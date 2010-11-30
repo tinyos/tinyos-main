@@ -30,6 +30,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Author: Miklos Maroti
+ * Author: Branislav Kusy (bugfixes)
  */
 
 #include <RF230DriverLayer.h>
@@ -118,7 +119,6 @@ implementation
 		STATE_TRX_OFF_2_RX_ON = 4,
 		STATE_RX_ON = 5,
 		STATE_BUSY_TX_2_RX_ON = 6,
-		STATE_PLL_ON_2_RX_ON = 7,
 	};
 
 	tasklet_norace uint8_t cmd;
@@ -473,7 +473,7 @@ implementation
 		{
 			ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_BUSY_RX );
 
-			state = STATE_PLL_ON_2_RX_ON;
+			writeRegister(RF230_TRX_STATE, RF230_RX_ON);
 			return EBUSY;
 		}
 
@@ -736,21 +736,19 @@ implementation
 			}
 #endif
 
-			if( irq & RF230_IRQ_PLL_LOCK )
+			// sometimes we miss a PLL lock interrupt after turn on
+			if( cmd == CMD_TURNON || cmd == CMD_CHANNEL )
 			{
-				if( cmd == CMD_TURNON || cmd == CMD_CHANNEL )
-				{
-					ASSERT( state == STATE_TRX_OFF_2_RX_ON );
+				ASSERT( irq & RF230_IRQ_PLL_LOCK );
+				ASSERT( state == STATE_TRX_OFF_2_RX_ON );
 
-					state = STATE_RX_ON;
-					cmd = CMD_SIGNAL_DONE;
-				}
-				else if( cmd == CMD_TRANSMIT )
-				{
-					ASSERT( state == STATE_BUSY_TX_2_RX_ON );
-				}
-				else
-					ASSERT(FALSE);
+				state = STATE_RX_ON;
+				cmd = CMD_SIGNAL_DONE;
+			}
+			else if( irq & RF230_IRQ_PLL_LOCK )
+			{
+				ASSERT( cmd == CMD_TRANSMIT );
+				ASSERT( state == STATE_BUSY_TX_2_RX_ON );
 			}
 
 			if( irq & RF230_IRQ_RX_START )
@@ -763,7 +761,7 @@ implementation
 
 				if( cmd == CMD_NONE )
 				{
-					ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
+					ASSERT( state == STATE_RX_ON );
 
 					// the most likely place for busy channel, with no TRX_END interrupt
 					if( irq == RF230_IRQ_RX_START )
@@ -817,20 +815,10 @@ implementation
 				}
 				else if( cmd == CMD_RECEIVE )
 				{
-					ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
+					ASSERT( state == STATE_RX_ON );
 
-					if( state == STATE_PLL_ON_2_RX_ON )
-					{
-						ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_PLL_ON );
-
-						writeRegister(RF230_TRX_STATE, RF230_RX_ON);
-						state = STATE_RX_ON;
-					}
-					else
-					{
-						// the most likely place for clear channel (hope to avoid acks)
-						rssiClear += (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) - (rssiClear >> 2);
-					}
+					// the most likely place for clear channel (hope to avoid acks)
+					rssiClear += (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) - (rssiClear >> 2);
 
 					cmd = CMD_DOWNLOAD;
 				}
