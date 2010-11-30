@@ -231,24 +231,49 @@ implementation
 
 /*----------------- Ieee154Packet -----------------*/
 
-	command error_t Ieee154Packet.destination(message_t* msg, ieee154_addr_t *addr)
+	command ieee154_saddr_t Ieee154Packet.address()
 	{
-		if( ! call Ieee154PacketLayer.isDataFrame(msg) )
-			return FAIL;
-
-		addr->ieee_mode = IEEE154_ADDR_SHORT;
-		addr->ieee_addr.saddr = call Ieee154PacketLayer.getDestAddr(msg);
-		return SUCCESS;
+		return call Ieee154PacketLayer.localAddr();
 	}
  
-	command error_t Ieee154Packet.source(message_t* msg, ieee154_addr_t *addr)
+	command ieee154_saddr_t Ieee154Packet.destination(message_t* msg)
 	{
-		if( ! call Ieee154PacketLayer.isDataFrame(msg) )
-			return FAIL;
+		return call Ieee154PacketLayer.getDestAddr(msg);
+	}
+ 
+	command ieee154_saddr_t Ieee154Packet.source(message_t* msg)
+	{
+		return call Ieee154PacketLayer.getSrcAddr(msg);
+	}
 
-		addr->ieee_mode = IEEE154_ADDR_SHORT;
-		addr->ieee_addr.saddr = call Ieee154PacketLayer.getSrcAddr(msg);
-		return SUCCESS;
+	command void Ieee154Packet.setDestination(message_t* msg, ieee154_saddr_t addr)
+	{
+		call Ieee154PacketLayer.setDestAddr(msg, addr);
+	}
+
+	command void Ieee154Packet.setSource(message_t* msg, ieee154_saddr_t addr)
+	{
+		call Ieee154PacketLayer.setSrcAddr(msg, addr);
+	}
+
+	command bool Ieee154Packet.isForMe(message_t* msg)
+	{
+		return call Ieee154PacketLayer.isForMe(msg);
+	}
+
+	command ieee154_panid_t Ieee154Packet.pan(message_t* msg)
+	{
+		return call Ieee154PacketLayer.getDestPan(msg);
+	}
+
+	command void Ieee154Packet.setPan(message_t* msg, ieee154_panid_t grp)
+	{
+		call Ieee154PacketLayer.setDestPan(msg, grp);
+	}
+
+	command ieee154_panid_t Ieee154Packet.localPan()
+	{
+		return call Ieee154PacketLayer.localPan();
 	}
 
 /*----------------- RadioPacket -----------------*/
