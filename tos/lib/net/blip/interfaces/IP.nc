@@ -1,5 +1,5 @@
 
-#include <ip.h>
+#include <lib6lowpan/ip.h>
 
 interface IP {
 
@@ -20,6 +20,7 @@ interface IP {
    * indicate that the stack has finished writing data into the
    * receive buffer. 
    */
-  event void recv(void *headers, void *payload, size_t len, struct ip6_metadata *meta);
+  event void recv(struct ip6_hdr *hdr, void *packet, 
+                  size_t len, struct ip6_metadata *meta);
 
 }

@@ -72,14 +72,16 @@
 #ifndef RPL_H
 #define RPL_H
 
+#include <iprouting.h>
+
 #define ETX_THRESHOLD 200
 #define MAX_ETX 200
 #define MAX_PARENT 3
 #define MAX_HOPCOUNT 30
-#define DWT_SIZE 30
-#define QUEUE_SIZE 5
+#define RPL_QUEUE_SIZE 5
 #define minHopRankIncrease 1
 #define INIT_ETX 20
+#define RPL_MAX_SOURCEROUTE 10
 
 enum {
   RPL_DODAG_METRIC_CONTAINER_TYPE = 2,
@@ -89,6 +91,10 @@ enum {
   RPL_MOP_No_Storing = 1,
   RPL_MOP_Storing_No_Multicast = 2,
   RPL_MOP_Storing_With_Multicast = 3,
+};
+
+enum {
+  RPL_IFACE = ROUTE_IFACE_154,
 };
 
 struct icmpv6_header_t {
@@ -225,7 +231,7 @@ struct rpl_route {
   uint8_t pad   : 4;
   uint8_t reserved;
   uint16_t reserved1;
-  struct in6_addr addr[10];
+  struct in6_addr addr[RPL_MAX_SOURCEROUTE];
 };
 
 /* Necessary constants for RPL*/
@@ -307,12 +313,10 @@ typedef struct {
 } parentTableEntryDAO;
 
 typedef struct {
-  struct in6_addr prefix;
-  uint8_t route_length;
+  route_key_t key;
   uint32_t lifetime;
-  //struct in6_addr route;
-  struct in6_addr route[1];
 } downwards_table_t;
+
 
 typedef struct {
   uint8_t o_bit  : 1;
@@ -322,7 +326,7 @@ typedef struct {
   uint8_t reserved : 5;
   struct rpl_instance_id instance_id; // used to be instanceID 
   uint16_t senderRank;
-} ip_first_hdr_t;
+} __attribute__((packed)) ip_first_hdr_t ;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

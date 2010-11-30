@@ -6,11 +6,11 @@ configuration UdpC {
   provides interface BlipStatistics<udp_statistics_t>;
 } implementation {
 
-  components MainC, IPDispatchC, UdpP, IPAddressC;
+  components MainC, IPStackC, UdpP, IPAddressC;
   UDP = UdpP;
   BlipStatistics = UdpP;
 
   MainC -> UdpP.Init;
-  UdpP.IP -> IPDispatchC.IP[IANA_UDP];
+  UdpP.IP -> IPStackC.IP[IANA_UDP];
   UdpP.IPAddress -> IPAddressC;
 }

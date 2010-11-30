@@ -1,16 +1,22 @@
 
+#include <lib6lowpan/ip.h>
+#include <PrintfUART.h>
+
 module IPProtocolsP {
   provides {
     interface IP[uint8_t nxt_hdr];
   }
   uses {
     interface IPAddress;
-    interface IPLower as SubIP;
+    interface IP as SubIP;
   }
 } implementation {
 
-  event void SubIP.recv(struct ip6_hdr *iph, void *payload, struct ip6_metadata *meta) {
-    struct ip6_ext *cur = (struct ip6_ext *)payload;
+  event void SubIP.recv(struct ip6_hdr *iph, 
+                        void *payload, 
+                        size_t len, 
+                        struct ip6_metadata *meta) {
+    struct ip6_ext *cur = (struct ip6_ext *)(iph + 1);
     uint8_t nxt = iph->ip6_nxt;
 
     while (nxt == IPV6_HOP  || nxt == IPV6_ROUTING  || nxt == IPV6_FRAG ||
@@ -19,30 +25,18 @@ module IPProtocolsP {
       cur = cur + cur->ip6e_len;
     }
 
-    signal IP.recv[nxt](iph,
-                        cur,
-                        ntohs(iph->ip6_plen) - ((void *)cur - payload),
-                        meta);
+    len -= POINTER_DIFF(cur, payload);
+    signal IP.recv[nxt](iph, cur, len, meta);
   }
-                        
 
   command error_t IP.send[uint8_t nxt_hdr](struct ip6_packet *msg) {
-    struct ieee154_frame_addr fr_addr;
-
-    msg->ip6_hdr.ip6_hlim = 100;
-
-    if (call IPAddress.resolveAddress(&msg->ip6_hdr.ip6_src, &fr_addr.ieee_src) != SUCCESS) {
-      printfUART("resolve failed: src\n");
-    }
-    if (call IPAddress.resolveAddress(&msg->ip6_hdr.ip6_dst, &fr_addr.ieee_dst) != SUCCESS) {
-      printfUART("resolve failed: src\n");
-    }
-    fr_addr.ieee_dstpan = TOS_AM_GROUP;
-
-    return call SubIP.send(&fr_addr, msg, NULL);
+    msg->ip6_hdr.ip6_vfc = IPV6_VERSION;
+    msg->ip6_hdr.ip6_hops = 16;
+    printfUART("IP Protocol send - nxt_hdr: %i\n", nxt_hdr);
+    return call SubIP.send(msg);
   }
 
-  event void SubIP.sendDone(struct send_info *si) {}
-
- default event void IP.recv[uint8_t nxt_hdr](void *iph, void *payload, size_t len, struct ip6_metadata *meta) {}
+  default event void IP.recv[uint8_t nxt_hdr](struct ip6_hdr *iph, void *payload, 
+                                              size_t len, struct ip6_metadata *meta) {}
+  event void IPAddress.changed(bool global_valid) {}
 }

@@ -1,5 +1,5 @@
 
-#include <ip.h>
+#include <lib6lowpan/ip.h>
 #include "IPDispatch.h"
 
 interface IPLower {

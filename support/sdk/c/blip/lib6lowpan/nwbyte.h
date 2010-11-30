@@ -15,6 +15,7 @@
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 // otherwise have to provide our own 
 
+#ifndef WITH_OSHAN
 #define ntohs(X)   (((((uint16_t)(X)) >> 8) | ((uint16_t)(X) << 8)) & 0xffff)
 #define htons(X)   (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
 
@@ -22,6 +23,10 @@
 /* moved to utility.c */
 uint32_t ntohl(uint32_t i);
 #define htonl(X) ntohl(X)
+#else 
+#include <arpa/inet.h>
+#endif
+
 
 #else 
 #error "No byte-order conversions defined!"

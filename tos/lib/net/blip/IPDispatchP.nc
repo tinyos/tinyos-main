@@ -20,12 +20,12 @@
  *
  */
 
-#include <blip-tinyos-includes.h>
-#include <6lowpan.h>
-#include <lib6lowpan.h>
-#include <ip.h>
-#include <in_cksum.h>
-#include <ip_malloc.h>
+#include <lib6lowpan/blip-tinyos-includes.h>
+#include <lib6lowpan/6lowpan.h>
+#include <lib6lowpan/lib6lowpan.h>
+#include <lib6lowpan/ip.h>
+#include <lib6lowpan/in_cksum.h>
+#include <lib6lowpan/ip_malloc.h>
 #include <PrintfUART.h>
 
 #include "IPDispatch.h"
@@ -58,6 +58,9 @@ module IPDispatchP {
     interface Send as Ieee154Send;
     interface Receive as Ieee154Receive;
 
+    /* context lookup */
+    interface NeighborDiscovery;
+
     interface ReadLqi;
     interface PacketLink;
     interface LowPowerListening;
@@ -76,9 +79,24 @@ module IPDispatchP {
   }
 } implementation {
 
-#include <lib6lowpan.c>
-#include <lib6lowpan_4944.c>
-#include <lib6lowpan_frag.c>
+#undef printfUART
+#undef printfUART_buf
+#define printfUART(FMT, args ...)
+#define printfUART_buf(buf, len)
+
+#define HAVE_LOWPAN_EXTERN_MATCH_CONTEXT
+int lowpan_extern_read_context(struct in6_addr *addr, int context) {
+  return call NeighborDiscovery.getContext(context, addr);
+}
+
+int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id) {
+  return call NeighborDiscovery.matchContext(addr, ctx_id);
+}
+
+
+#include <lib6lowpan/lib6lowpan.c>
+#include <lib6lowpan/lib6lowpan_4944.c>
+#include <lib6lowpan/lib6lowpan_frag.c>
 
   enum {
     S_RUNNING,
@@ -133,7 +151,6 @@ module IPDispatchP {
 #define SENDINFO_INCR(X) ((X)->_refcount)++
 void SENDINFO_DECR(struct send_info *si) {
   if (--(si->_refcount) == 0) {
-    signal IPLower.sendDone(si);
     call SendInfoPool.put(si);
   }
 }
@@ -190,13 +207,9 @@ void SENDINFO_DECR(struct send_info *si) {
    */ 
   void deliver(struct lowpan_reconstruct *recon) {
     struct ip6_hdr *iph = (struct ip6_hdr *)recon->r_buf;
-    int i;
 
     printfUART("deliver [%i]: ", recon->r_bytes_rcvd);
-    for (i = 0; i < recon->r_bytes_rcvd; i++)  {
-      printfUART("%x ", recon->r_buf[i]);
-    }
-    printfUART("\n");
+    printfUART_buf(recon->r_buf, recon->r_bytes_rcvd);
 
     /* the payload length field is always compressed, have to put it back here */
     iph->ip6_plen = htons(recon->r_bytes_rcvd - sizeof(struct ip6_hdr));
@@ -259,7 +272,7 @@ void SENDINFO_DECR(struct send_info *si) {
 #ifdef PRINTFUART_ENABLED
     bndrt_t *cur = (bndrt_t *)heap;
     while (((uint8_t *)cur)  - heap < IP_MALLOC_HEAP_SIZE) {
-      printfUART ("heap region start: 0x%x length: %i used: %i\n", 
+      printfUART ("heap region start: %p length: %u used: %u\n", 
                   cur, (*cur & IP_MALLOC_LEN), (*cur & IP_MALLOC_INUSE) >> 15);
       cur = (bndrt_t *)(((uint8_t *)cur) + ((*cur) & IP_MALLOC_LEN));
     }
@@ -399,7 +412,6 @@ void SENDINFO_DECR(struct send_info *si) {
    * Send-side functionality
    */
   task void sendTask() {
-    error_t rv = SUCCESS;
     struct send_entry *s_entry;
 
     // printfUART("sendTask() - sending\n");
@@ -409,9 +421,6 @@ void SENDINFO_DECR(struct send_info *si) {
     // this does not dequeue
     s_entry = call SendQueue.head();
 
-    /* configure the L2 */
-    call PacketLink.setRetries(s_entry->msg, 3);
-    call PacketLink.setRetryDelay(s_entry->msg, 103);
 /* #ifdef LPL_SLEEP_INTERVAL */
 /*     call LowPowerListening.setRemoteWakeupInterval(s_entry->msg,  */
 /*             call LowPowerListening.getLocalWakeupInterval()); */
@@ -432,7 +441,7 @@ void SENDINFO_DECR(struct send_info *si) {
 
     return;
   fail:
-    printfUART("SEND FAIL (%i)\n", rv);
+    printfUART("SEND FAIL\n");
     post sendTask();
     BLIP_STATS_INCR(stats.tx_drop);
 
@@ -533,8 +542,17 @@ void SENDINFO_DECR(struct send_info *si) {
       s_entry->msg = outgoing;
       s_entry->info = s_info;
 
-      SENDINFO_INCR(s_info);
-    }
+      /* configure the L2 */
+      if (frame_addr->ieee_dst.ieee_mode == IEEE154_ADDR_SHORT &&
+          frame_addr->ieee_dst.i_saddr == IEEE154_BROADCAST_ADDR) {
+        call PacketLink.setRetries(s_entry->msg, 0);
+      } else {
+        call PacketLink.setRetries(s_entry->msg, 3);
+      }
+      call PacketLink.setRetryDelay(s_entry->msg, 103);
+
+      SENDINFO_INCR(s_info);}
+       
     // printfUART("got %i frags\n", s_info->link_fragments);
   done:
     BLIP_STATS_INCR(stats.sent);
@@ -558,7 +576,7 @@ void SENDINFO_DECR(struct send_info *si) {
     }
     
     s_entry->info->link_transmissions += (call PacketLink.getRetries(msg));
-    // printfUART("link transmissions: %i\n", (call PacketLink.getRetries(msg)));
+    signal IPLower.sendDone(s_entry->info);
 
     if (!call PacketLink.wasDelivered(msg)) {
       printfUART("sendDone: was not delivered! (%i tries)\n", 

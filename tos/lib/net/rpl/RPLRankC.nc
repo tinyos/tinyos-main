@@ -72,25 +72,28 @@
 
 configuration RPLRankC{
   provides {
-    interface IPLower;
+    interface IP as IP_DIO_Filter;
     interface RPLRank;
     interface StdControl;
-    interface RPLForwardingSend;
-    interface DAOSend;
+  }
+  uses {
+    interface IP as ICMP_RA[uint8_t code];
   }
 }
 implementation {
-  components RPLRankP, IPDispatchP, IPAddressC;
+  components RPLRankP, IPAddressC;
   components RPLRoutingEngineC;
+  components IPStackC;
   components LedsC;
-  IPLower = RPLRankP.IPLower;
+
   RPLRank = RPLRankP;
   StdControl = RPLRankP;
-  DAOSend = RPLRankP;
-  RPLForwardingSend = RPLRankP;
+  IP_DIO_Filter = RPLRankP.IP_DIO_Filter;
+  RPLRankP.IP_DIO = ICMP_RA[ICMPV6_CODE_DIO];
 
   RPLRankP.Leds -> LedsC;
-  RPLRankP.SubIPLower -> IPDispatchP.IPLower;
   RPLRankP.RouteInfo -> RPLRoutingEngineC;
   RPLRankP.IPAddress -> IPAddressC;
+  RPLRankP.ForwardingTable -> IPStackC;
+  RPLRankP.ForwardingEvents -> IPStackC.ForwardingEvents[RPL_IFACE];
 }

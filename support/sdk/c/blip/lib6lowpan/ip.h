@@ -31,7 +31,8 @@
  *
  */
 
-#if ! HAVE_NETINET_IN_H
+//#if ! HAVE_NETINET_IN_H || WITH_OSHAN
+#ifndef WITH_OSHAN
 // update to use netinet/in definition of an IPv6 address; this is a
 //  lot more elegent.
 struct in6_addr
@@ -51,6 +52,8 @@ struct sockaddr_in6 {
   uint16_t       sin6_port;
   struct in6_addr sin6_addr;
 };
+#else 
+#include <netinet/in.h>
 #endif
 
 /*
@@ -219,13 +222,7 @@ struct ip6_metadata {
  * cases.
  */
 
-enum{
-  IP6_STATIC_VECS = 3,
-};
-
 struct ip6_packet {
-  int _ip6_curvec;
-  struct ip_iovec _ip6_vecs[IP6_STATIC_VECS];
   struct ip_iovec  *ip6_data;
   struct ip6_hdr ip6_hdr;
 };
@@ -248,6 +245,10 @@ struct ip6_packet_headers {
 void inet_pton6(char *addr, struct in6_addr *dest);
 int  inet_ntop6(struct in6_addr *addr, char *buf, int cnt);
 #endif
+
+
+#define POINTER_DIFF(AP, BP) (((char *)AP) - ((char *)BP))
+#define POINTER_SUM(AP, B) (((char *)AP) + (B))
 
 #endif
 

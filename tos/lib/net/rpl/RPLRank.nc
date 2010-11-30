@@ -78,24 +78,21 @@ interface RPLRank {
   command void cancelRoot();
   
   // return the rank of the specified IP addr
-  command uint8_t getRank(struct in6_addr node);
+  command uint8_t getRank(struct in6_addr *node);
 
   // return if IP is in parent set
-  command bool isParent(struct in6_addr node);
+  command bool isParent(struct in6_addr *node);
   
   // new iteration has begun
   //command void notifyNewIteration();
   
   // inconsistency is seen for the link with IP
   // record this as part of entry in table as well
-  command void inconsistencyDetected(struct in6_addr node);
-
-  command void linkResult(struct in6_addr node, uint8_t etx_now);
+  command void inconsistencyDetected(struct in6_addr *node);
 
   /*new adding*/ 
   // ping rank component if there are parents
   command uint8_t hasParent();
-  command struct in6_addr nextHop(struct in6_addr destination);
   command bool isLeaf();
 
   command uint16_t getEtx();
@@ -109,5 +106,7 @@ interface RPLRank {
   ///////////////////////////////////////////////////////////////
 
   command void setQueuingDelay(uint32_t delay);    
+
+  command error_t getDefaultRoute(struct in6_addr *next_hop);
 
 }

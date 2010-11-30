@@ -20,7 +20,7 @@
  *
  */
 
-#include <6lowpan.h>
+#include <lib6lowpan/6lowpan.h>
 
 configuration UDPShellC {
 
@@ -33,8 +33,8 @@ configuration UDPShellC {
   UDPShellP.UDP -> UdpSocketC;
 
   UDPShellP.Leds -> LedsC;
-  // components ICMPResponderC;
-  // UDPShellP.ICMPPing -> ICMPResponderC.ICMPPing[unique("PING")];
+  components ICMPPingC;
+  UDPShellP.ICMPPing -> ICMPPingC.ICMPPing[unique("PING")];
 
 #if defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
   components CounterMilli32C;
@@ -43,5 +43,4 @@ configuration UDPShellC {
 
   components MainC;
   UDPShellP.Boot -> MainC;
-
 }

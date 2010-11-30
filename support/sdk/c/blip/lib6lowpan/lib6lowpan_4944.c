@@ -264,7 +264,7 @@ inline uint8_t getFragDgramSize(struct packed_lowmsg *msg, uint16_t *size) {
   s[0] = *buf & 0x7;
   buf++;
   s[1] = *buf;
-  *size = ntohs( *(uint16_t *)s);
+  *size = ((uint16_t)s[0]) << 8 | s[1];
   return 0;
 }
 inline uint8_t getFragDgramTag(struct packed_lowmsg *msg, uint16_t *tag) {

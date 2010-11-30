@@ -35,17 +35,19 @@
  */
 
 #include <RPL.h>
-#include <ip_malloc.h>
-#include <in_cksum.h>
-#include <ip.h>
+#include <lib6lowpan/ip_malloc.h>
+#include <lib6lowpan/in_cksum.h>
+#include <lib6lowpan/ip.h>
 
 configuration RPLDAORoutingEngineC{
   provides {
+    interface StdControl;
     interface RPLDAORoutingEngine;
   }
-}
-
-implementation{
+  uses {
+    interface IP as ICMP_RA[uint8_t code];
+  }
+} implementation{
   components new RPLDAORoutingEngineP() as DAORouting;
   components MainC, RandomC;
   components new TimerMilliC() as DelayDAOTimer;
@@ -54,21 +56,30 @@ implementation{
   components IPAddressC;
   components RPLRankC;
   components RPLRoutingEngineC;
+  components IPStackC;
 
+  StdControl = DAORouting;
   RPLDAORoutingEngine = DAORouting;
+  DAORouting.IP_DAO = ICMP_RA[ICMPV6_CODE_DAO];
 
   DAORouting.DelayDAOTimer -> DelayDAOTimer;
   DAORouting.GenerateDAOTimer -> GenerateDAOTimer;
   DAORouting.RemoveTimer -> RemoveTimer;
   DAORouting.Random -> RandomC;
   DAORouting.IPAddress -> IPAddressC;
-  DAORouting.DAOSend -> RPLRankC;
   DAORouting.RPLRouteInfo -> RPLRoutingEngineC;
+  DAORouting.RootControl -> RPLRoutingEngineC;
+  DAORouting.ForwardingTable -> IPStackC;
 
-  components new QueueC(dao_entry_t*, QUEUE_SIZE) as SendQueueP;
+  components new QueueC(dao_entry_t*, RPL_QUEUE_SIZE) as SendQueueP;
   DAORouting.SendQueue -> SendQueueP;
 
-  components new PoolC(dao_entry_t, QUEUE_SIZE) as SendPoolP;
+  components new PoolC(dao_entry_t, RPL_QUEUE_SIZE) as SendPoolP;
   DAORouting.SendPool -> SendPoolP;
 
+  components IPPacketP;
+  DAORouting.IPPacket -> IPPacketP;
+
+  components LedsC;
+  DAORouting.Leds -> LedsC;
 }

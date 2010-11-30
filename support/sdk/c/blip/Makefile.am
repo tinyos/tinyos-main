@@ -1,3 +1,3 @@
 
-SUBDIRS = lib6lowpan interface
+SUBDIRS = lib6lowpan 
 

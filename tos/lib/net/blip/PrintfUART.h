@@ -346,22 +346,51 @@ void writedebug()
 #endif  // PRINTFUART_ENABLED
 // -------------------------------------------------------------------
 
-#if 0
+#if 1
 // --------------------------------------------------------------
 #define assertUART(x) if (!(x)) { __assertUART(__FILE__, __LINE__); }
 void __assertUART(const char* file, int line)
 {
     printfUART("ASSERT FAILED: file= %s, lineNbr= %i\n", file, line);
     // for some reason, CLR means on
-    TOSH_MAKE_RED_LED_OUTPUT();
-    TOSH_MAKE_YELLOW_LED_OUTPUT();
-    TOSH_MAKE_GREEN_LED_OUTPUT();
-    TOSH_CLR_RED_LED_PIN();
-    TOSH_CLR_YELLOW_LED_PIN();
-    TOSH_CLR_GREEN_LED_PIN();
-    exit(1);
+    for (;;);
 }
 // --------------------------------------------------------------
+#endif
+
+#ifdef PRINTFUART_ENABLED
+void printfUART_buf(char *buf, int len) {
+  int i;
+  for (i = 0; i < len; i++) {
+    printfUART("%02hhx ", buf[i]);
+  }
+  printfUART("\n");
+}
+
+#include <lib6lowpan/iovec.h>
+#include <lib6lowpan/ip.h>
+void iov_print(struct ip_iovec *iov) {
+  struct ip_iovec *cur = iov;
+  while (cur != NULL) {
+    int i;
+    printfUART("iovec (%p, %i) ", cur, cur->iov_len);
+    for (i = 0; i < cur->iov_len; i++) {
+      printfUART("%02hhx ", (uint8_t)cur->iov_base[i]);
+    }
+    printfUART("\n");
+    cur = cur->iov_next;
+  }
+}
+void printfUART_in6addr(struct in6_addr *a) {
+  static char print_buf[64];
+  inet_ntop6(a, print_buf, 64);
+  printfUART(print_buf);
+}
+
+#else
+#define printfUART_buf(x, y) ;
+#define iov_print(X) ;
+#define printfUART_in6addr(X) ;
 #endif
 
 #endif  // PRINTFUART_H

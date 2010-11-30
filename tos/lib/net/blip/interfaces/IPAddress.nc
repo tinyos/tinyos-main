@@ -19,7 +19,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
  *
  */
-#include <6lowpan.h>
+#include <lib6lowpan/6lowpan.h>
 
 interface IPAddress {
 
@@ -39,14 +39,20 @@ interface IPAddress {
   command bool setSource(struct ip6_hdr *hdr);
 
   /**
-   * Map the IPv6 address to a link-layer address.
-   * @return FAIL if the address cannot be resolved, either becasue 
-   * it is not known or because the given IPv6 address is not on the link.
-   */
-  command error_t resolveAddress(struct in6_addr *addr, ieee154_addr_t *link_addr);
-
-  /**
    * @return TRUE if the address is assigned to a local interface
    */
   command bool isLocalAddress(struct in6_addr *addr);
+
+  /**
+   * @return TRUE of the address is a link local address not requiring
+   * routing.
+   */
+  command bool isLLAddress(struct in6_addr *addr);
+
+  command error_t setAddress(struct in6_addr *addr);
+
+  command error_t removeAddress();
+
+  event void changed(bool valid);
+
 }

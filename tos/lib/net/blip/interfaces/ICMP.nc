@@ -24,14 +24,6 @@ interface ICMP {
 
   command uint16_t cksum(struct split_ip_msg *msg, uint8_t nxt_hdr);
 
-  // called to start sending router solicitations
-  command void sendSolicitations();
-
-  // called when we are done sending router solicitations
-  event void solicitationDone();
-
-  command void sendAdvertisements();
-
   command void sendTimeExceeded(struct ip6_hdr *hdr, unpack_info_t *u_info, uint16_t amount_here);
 
 }

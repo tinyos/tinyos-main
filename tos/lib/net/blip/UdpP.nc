@@ -1,6 +1,5 @@
 
-#include <ip_malloc.h>
-#include <in_cksum.h>
+#include <lib6lowpan/in_cksum.h>
 #include <BlipStatistics.h>
 
 module UdpP {
@@ -65,17 +64,16 @@ module UdpP {
     return SUCCESS;
   }
 
-  event void IP.recv(void *headers,
-                     void *payload,
-                     size_t len,
-                     struct ip6_metadata *meta) {
-    int i;
+  event void IP.recv(struct ip6_hdr *iph, void *packet, size_t len, struct ip6_metadata *meta) {
+    uint8_t i;
     struct sockaddr_in6 addr;
-    struct ip6_hdr *iph = (struct ip6_hdr *)headers;
-    struct udp_hdr *udph = (struct udp_hdr *)payload;
+    struct udp_hdr *udph = (struct udp_hdr *)packet;
+    uint16_t my_cksum, rx_cksum = ntohs(udph->chksum);
+    struct ip_iovec v;
 
-    dbg("UDP", "UDP - IP.recv: len: %i srcport: %i dstport: %i\n",
-        ntohs(iph->ip6_plen), ntohs(udph->srcport), ntohs(udph->dstport));
+    dbg("UDP", "UDP - IP.recv: len: %i (%i, %i) srcport: %i dstport: %i\n",
+        ntohs(iph->ip6_plen), len, ntohs(udph->len),
+        ntohs(udph->srcport), ntohs(udph->dstport));
 
     for (i = 0; i < N_CLIENTS; i++)
       if (local_ports[i] == udph->dstport)
@@ -87,34 +85,28 @@ module UdpP {
     }
     memcpy(&addr.sin6_addr, &iph->ip6_src, 16);
     addr.sin6_port = udph->srcport;
-    /* we have to set this here because it is alway elided by the
-       hc-06 encoding, and not (currently) recomputed when
-       uncompressed. */
-    udph->len = htons(len);
 
-    {
-      uint16_t my_cksum, rx_cksum = ntohs(udph->chksum);
-      struct ip_iovec v;
+    udph->chksum = 0;
+    v.iov_base = packet;
+    v.iov_len  = len;
+    v.iov_next = NULL;
 
-      udph->chksum = 0;
-      v.iov_base = payload;
-      v.iov_len  = len;
-      v.iov_next = NULL;
-
-      my_cksum = msg_cksum(iph, &v, IANA_UDP);
-      if (rx_cksum != my_cksum) {
-        BLIP_STATS_INCR(stats.cksum);
-        printfUART("udp ckecksum computation failed: mine: 0x%x theirs: 0x%x\n", 
-                   my_cksum, rx_cksum);
-        // drop
-      }
+    my_cksum = msg_cksum(iph, &v, IANA_UDP);
+    if (rx_cksum != my_cksum) {
+      BLIP_STATS_INCR(stats.cksum);
+      printfUART("udp ckecksum computation failed: mine: 0x%x theirs: 0x%x [0x%x]\n", 
+                 my_cksum, rx_cksum, len);
+      printfUART_buf((void *)iph, sizeof(struct ip6_hdr));
+      iov_print(&v);
+      // drop
+      return;
     }
 
     BLIP_STATS_INCR(stats.rcvd);
     signal UDP.recvfrom[i](&addr, (void *)(udph + 1), len - sizeof(struct udp_hdr), meta);
   }
 
-  /*
+  /**
    * Injection point of IP datagrams.  This is only called for packets
    * being sent from this mote; packets which are being forwarded
    * never lave the stack and so never use this entry point.
@@ -124,20 +116,29 @@ module UdpP {
    */
   command error_t UDP.sendto[uint8_t clnt](struct sockaddr_in6 *dest, void *payload, 
                                            uint16_t len) {
+    struct ip_iovec v[1];
+    v[0].iov_base = payload;
+    v[0].iov_len  = len;
+    v[0].iov_next = NULL;
+    return call UDP.sendtov[clnt](dest, &v[0]);
+  }
+
+  command error_t UDP.sendtov[uint8_t clnt](struct sockaddr_in6 *dest, 
+                                            struct ip_iovec *iov) {
     error_t rc;
     struct ip6_packet pkt;
     struct udp_hdr    udp;
-    struct ip_iovec   v[2];
+    struct ip_iovec   v[1];
+    size_t len = iov_len(iov);
 
     // fill in all the packet fields
     memclr((uint8_t *)&pkt.ip6_hdr, sizeof(pkt));
     memclr((uint8_t *)&udp, sizeof(udp));
-
-    
     memcpy(&pkt.ip6_hdr.ip6_dst, dest->sin6_addr.s6_addr, 16);
     call IPAddress.setSource(&pkt.ip6_hdr);
     
-    if (local_ports[clnt] == 0 && (local_ports[clnt] = alloc_lport(clnt)) == 0) {
+    if (local_ports[clnt] == 0 && 
+        (local_ports[clnt] = alloc_lport(clnt)) == 0) {
       return FAIL;
     }
     /* udp fields */
@@ -154,19 +155,17 @@ module UdpP {
     // set up the pointers
     v[0].iov_base = (uint8_t *)&udp;
     v[0].iov_len  = sizeof(struct udp_hdr);
-    v[0].iov_next = &v[1];
-    v[1].iov_base = payload;
-    v[1].iov_len  = len;
-    v[1].iov_next = NULL;
+    v[0].iov_next = iov;
     pkt.ip6_data = &v[0];
     
     udp.chksum = htons(msg_cksum(&pkt.ip6_hdr, v, IANA_UDP));
 
-
     rc = call IP.send(&pkt);
     BLIP_STATS_INCR(stats.sent);
     return rc;
+    
   }
+
 
   command void BlipStatistics.clear() {
 #ifdef BLIP_STATS
@@ -184,4 +183,6 @@ module UdpP {
                                                uint16_t len, struct ip6_metadata *meta) {
 
  }
+
+  event void IPAddress.changed(bool global_valid) {}
 }

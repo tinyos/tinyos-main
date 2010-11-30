@@ -37,23 +37,30 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
     recon->r_size = LIB6LOWPAN_MAX_LEN + LOWPAN_LINK_MTU;
   }
   recon->r_buf = malloc(recon->r_size);
-  if (!recon->r_buf) return -1;
+  if (!recon->r_buf) return -2;
   memset(recon->r_buf, 0, recon->r_size);
+  recon->r_app_len = NULL;
 
   /* unpack the first fragment */
-  unpack_end = lowpan_unpack_headers(recon->r_buf, recon->r_size,
+  unpack_end = lowpan_unpack_headers(recon, 
                                      frame_addr,
                                      unpack_point, len);
   if (!unpack_end) {
     free(recon->r_buf);
-    return -1;
+    return -3;
   }
 
   if (!hasFrag1Header(&msg)) {
     recon->r_size = (unpack_end - recon->r_buf);
   }
   recon->r_bytes_rcvd = unpack_end - recon->r_buf;
-  ((struct ip6_hdr *)(recon->r_buf))->ip6_plen = htons(recon->r_size - sizeof(struct ip6_hdr));
+  ((struct ip6_hdr *)(recon->r_buf))->ip6_plen = 
+    htons(recon->r_size - sizeof(struct ip6_hdr));
+  /* fill in any elided app data length fields */
+  if (recon->r_app_len) {
+    *recon->r_app_len = 
+      (((struct ip6_hdr *)(recon->r_buf))->ip6_plen);
+  }
   
   /* done, updated all the fields */
   /* reconstruction is complete if r_bytes_rcvd == r_size */
@@ -99,7 +106,6 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
   if (ctx->offset == 0) {
     int offset;
 
-
     /* pack the IPv6 header */
     buf = lowpan_pack_headers(packet, frame, buf, len - (buf - frag));
     if (!buf) return -1;
@@ -115,8 +121,8 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
     if (extra_payload > len - (buf - ieee_buf)) {
       struct packed_lowmsg lowmsg;
       memmove(lowpan_buf + LOWMSG_FRAG1_LEN, 
-              lowpan_buf,
-              buf - lowpan_buf);
+                lowpan_buf,
+                buf - lowpan_buf);
 
       lowmsg.data = lowpan_buf;
       lowmsg.len  = LOWMSG_FRAG1_LEN;
@@ -130,6 +136,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
 
       extra_payload = len - (buf - ieee_buf);
       extra_payload -= (extra_payload % 8);
+
     }
     
     if (iov_read(packet->ip6_data, offset, extra_payload, buf) != extra_payload) {

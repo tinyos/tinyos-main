@@ -37,8 +37,6 @@
 #include <RPL.h>
 
 interface RPLDAORoutingEngine{
-  command struct in6_addr getNextHop(uint8_t nxt_hdr, struct in6_addr destination, struct rpl_route *routing_hdr, void* paylaod, uint16_t *plen);
   command void startDAO();
   command bool getStoreState();
-  command uint8_t hasPrefix(struct in6_addr* addr);
 }

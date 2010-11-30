@@ -1,5 +1,5 @@
 
-#include <ICMP.h>
+#include <icmp6.h>
 
 interface ICMPPing {
 

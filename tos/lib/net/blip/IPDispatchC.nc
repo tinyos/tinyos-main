@@ -20,8 +20,8 @@
  *
  */
 
-/*
- * Provides message dispatch based on the next header field of IP packets.
+/**
+ * 
  *
  */
 #include "IPDispatch.h"
@@ -29,9 +29,9 @@
 
 configuration IPDispatchC {
   provides {
-    interface BlipStatistics<ip_statistics_t>;
     interface SplitControl;
-    interface IP[uint8_t nxt_hdr];
+    interface IPLower;
+    interface BlipStatistics<ip_statistics_t>;
   }
 } implementation {
   
@@ -45,6 +45,8 @@ configuration IPDispatchC {
   components new TimerMilliC();
 
   SplitControl = IPDispatchP.SplitControl;
+  IPLower = IPDispatchP;
+  BlipStatistics    = IPDispatchP;
 
   IPDispatchP.Boot -> MainC;
 /* #else */
@@ -63,13 +65,9 @@ configuration IPDispatchC {
 /*   IPDispatchP.LowPowerListening -> MessageC; */
 /* #endif */
 
-/*   IPDispatchP.Ieee154Packet -> MessageC; */
   IPDispatchP.PacketLink -> MessageC;
   IPDispatchP.ReadLqi -> ReadLqiC;
   IPDispatchP.Leds -> LedsC;
-
-/*   IPDispatchP.IPAddress -> IPAddressC; */
-
   IPDispatchP.ExpireTimer -> TimerMilliC;
 
   components new PoolC(message_t, N_FRAGMENTS) as FragPool;
@@ -82,51 +80,10 @@ configuration IPDispatchC {
   IPDispatchP.SendInfoPool  -> SendInfoPool;
   IPDispatchP.SendQueue -> QueueC;
 
-  BlipStatistics    = IPDispatchP;
-
-  /* wiring up of the IP stack */
-  /* SDH : this potentially should be in a seperate component so this
-     one only provides the low-level fragmentation reassembly. */
-  components IPAddressC, IPAddressFilterP, IPProtocolsP;
-  IP = IPProtocolsP;
-  IPProtocolsP.SubIP -> IPAddressFilterP.LocalIP;
-  IPProtocolsP.IPAddress -> IPAddressC;
-
-  IPAddressFilterP.SubIP -> IPDispatchP;
-  IPAddressFilterP.IPAddress -> IPAddressC;
-
-  components ICMPCoreP;
-  ICMPCoreP.IP -> IPProtocolsP.IP[IANA_ICMP];
-
+  components IPNeighborDiscoveryP;
+  IPDispatchP.NeighborDiscovery -> IPNeighborDiscoveryP;
 
 /*   components ICMPResponderC; */
-/*   components new TimerMilliC() as TGenTimer; */
-/*   IPDispatchP.ICMP -> ICMPResponderC; */
-/*   IPRoutingP.ICMP  -> ICMPResponderC; */
-
-/*   components IPExtensionP; */
-/*   MainC.SoftwareInit -> IPExtensionP.Init; */
-/*   IPDispatchP.InternalIPExtension -> IPExtensionP; */
-
-/*   IPDispatchP.IPRouting -> IPRoutingP; */
-/*   IPRoutingP.Boot -> MainC; */
-/*   IPRoutingP.Leds -> LedsC; */
-/*   IPRoutingP.IPAddress -> IPAddressC; */
-/*   IPRoutingP.Random -> RandomC; */
-/*   IPRoutingP.TrafficGenTimer -> TGenTimer; */
-/*   IPRoutingP.TGenSend -> IPDispatchP.IP[IPV6_NONEXT]; */
-
-/*   IPRoutingP.IPExtensions -> IPDispatchP; */
-/*   IPRoutingP.DestinationExt -> IPExtensionP.DestinationExt[0]; */
-  
-
-/*   RouteStats = IPRoutingP; */
-/*   ICMPStats  = ICMPResponderC; */
-
-/*   components new TimerMilliC() as RouteTimer; */
-/*   IPRoutingP.SortTimer -> RouteTimer; */
-
-  // multicast wiring
 /* #ifdef BLIP_MULTICAST */
 /*   components MulticastP; */
 /*   components new TrickleTimerMilliC(2, 30, 2, 1); */

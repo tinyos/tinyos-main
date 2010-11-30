@@ -264,7 +264,8 @@ int pack_udp(uint8_t *buf, size_t cnt, struct ip6_packet *packet, int offset) {
     return -1;
   }
   
-  if (iov_read(packet->ip6_data, offset, sizeof(struct udp_hdr), (void *)&udp) != sizeof(struct udp_hdr)) {
+  if (iov_read(packet->ip6_data, offset, sizeof(struct udp_hdr), (void *)&udp) != 
+      sizeof(struct udp_hdr)) {
     return -1;
   }
 
@@ -659,7 +660,6 @@ uint8_t *unpack_udp(uint8_t *dest, uint8_t *nxt_hdr, uint8_t *buf) {
  *  padding options.
  */
 uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf) {
-
   if (((*buf) & LOWPAN_NHC_IPV6_MASK) == LOWPAN_NHC_IPV6_PATTERN) {
     struct ip6_ext *ext = (struct ip6_ext *)dest;
     uint8_t length;
@@ -668,7 +668,7 @@ uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf) 
     // fill in the next header field of the previous header
     switch ((*buf) & LOWPAN_NHC_EID_MASK) {
     case LOWPAN_NHC_EID_HOP:
-      *nxt_hdr = IPV6_HOP; break;
+     *nxt_hdr = IPV6_HOP; break;
     case LOWPAN_NHC_EID_ROUTING:
       *nxt_hdr = IPV6_ROUTING; break;
     case LOWPAN_NHC_EID_FRAG:
@@ -707,7 +707,9 @@ uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf) 
   return NULL;
 }
 
-uint8_t *unpack_nhc_chain(uint8_t **dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf) {
+uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
+                          uint8_t **dest, size_t cnt, 
+                          uint8_t *nxt_hdr, uint8_t *buf) {
   uint8_t *dispatch;
   int has_nhc = 1;
 
@@ -729,6 +731,8 @@ uint8_t *unpack_nhc_chain(uint8_t **dest, size_t cnt, uint8_t *nxt_hdr, uint8_t 
         has_nhc = 0; 
       }
     } else if (((*dispatch) & LOWPAN_NHC_UDP_MASK) == LOWPAN_NHC_UDP_PATTERN) {
+      struct udp_hdr *udp = (struct udp_hdr *)*dest;
+      recon->r_app_len = &udp->len;
       *nxt_hdr = IANA_UDP;
       has_nhc = 0;
       *dest += sizeof(struct udp_hdr);
@@ -737,11 +741,13 @@ uint8_t *unpack_nhc_chain(uint8_t **dest, size_t cnt, uint8_t *nxt_hdr, uint8_t 
   return buf;
 }
 
-uint8_t *lowpan_unpack_headers(uint8_t *dest, size_t dst_cnt,
+uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
                                struct ieee154_frame_addr *frame,
                                uint8_t *buf, size_t cnt) {
   uint8_t *dispatch, *unpack_start = buf, *unpack_end;
   int contexts[2] = {0, 0};
+  uint8_t *dest = recon->r_buf;
+  size_t dst_cnt = recon->r_size;
   struct ip6_hdr *hdr = (struct ip6_hdr *)dest;
 
   dispatch = buf;
@@ -771,7 +777,9 @@ uint8_t *lowpan_unpack_headers(uint8_t *dest, size_t dst_cnt,
                        buf,
                        &frame->ieee_src,
                        frame->ieee_dstpan);
-  if (!buf) return NULL;
+  if (!buf) {
+    return NULL;
+  }
 
   /* destination address may use multicast address compression */
   if (*(dispatch + 1) & LOWPAN_IPHC_M) {
@@ -789,17 +797,23 @@ uint8_t *lowpan_unpack_headers(uint8_t *dest, size_t dst_cnt,
                          &frame->ieee_dst,
                          frame->ieee_dstpan);
   }
-  if (!buf) return NULL;
+  if (!buf) {
+    return NULL;
+  }
 
   /* IPv6 header is complete */
-  /*   at this point, (might) need to decompress a chain of headers compressed with LOWPAN_NHC */
+  /*   at this point, (might) need to decompress a chain of headers
+       compressed with LOWPAN_NHC */
   unpack_end = (uint8_t *)(hdr + 1);
   if ((*dispatch) & LOWPAN_IPHC_NH_MASK) {
-    buf = unpack_nhc_chain(&unpack_end, 
+    buf = unpack_nhc_chain(recon,
+                           &unpack_end, 
                            dst_cnt - sizeof(struct ip6_hdr),
                            &hdr->ip6_nxt, 
                            buf);
-    if (!buf) return NULL;
+    if (!buf) {
+      return NULL;
+    }
   }
 
 

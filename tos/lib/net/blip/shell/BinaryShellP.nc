@@ -22,7 +22,7 @@
 
 #include <ip.h>
 #include <IPDispatch.h>
-#include <ICMP.h>
+#include <icmp6.h>
 #include "Shell.h"
 #include "BinaryShell.h"
 

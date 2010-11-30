@@ -34,13 +34,13 @@
  * @ author JeongGil Ko (John) <jgko@cs.jhu.edu>
  */
 
-#include <ip.h>
-#include <6lowpan.h>
+#include <lib6lowpan/ip.h>
+#include <lib6lowpan/6lowpan.h>
 
 interface RPLRoutingEngine{
   command void resetTrickle();
   command bool hasDODAG();
-  command struct in6_addr getNextHop(struct in6_addr destination);
+  command error_t getDefaultRoute(struct in6_addr *next_hop);
   command uint8_t getRank();
   command uint8_t getInstanceID();
   command bool validInstance(uint8_t instanceID);
@@ -54,5 +54,4 @@ interface RPLRoutingEngine{
   command uint8_t getDTSN();
 
   command void inconsistency();
-
 }

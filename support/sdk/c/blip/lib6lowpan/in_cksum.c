@@ -60,6 +60,7 @@
 #include <stdlib.h>
 #include "in_cksum.h"
 #include "lib6lowpan.h"
+#include "nwbyte.h"
 
 
 #define ADDCARRY(x)  (x > 65535 ? x -= 65535 : x)

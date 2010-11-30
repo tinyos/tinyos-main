@@ -25,9 +25,9 @@ configuration IPAddressC {
   provides interface IPAddress;
 
 } implementation {
-  components IPAddressP, CC2420ControlC, LocalIeeeEui64C;
+  components IPAddressP, Ieee154AddressC;
 
   IPAddress = IPAddressP;
-  IPAddressP.CC2420Config -> CC2420ControlC;
-  IPAddressP.LocalIeeeEui64 -> LocalIeeeEui64C;
+  IPAddressP.Ieee154Address -> Ieee154AddressC;
 }
+

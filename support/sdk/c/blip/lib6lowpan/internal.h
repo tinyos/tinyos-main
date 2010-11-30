@@ -40,9 +40,8 @@ uint8_t *unpack_multicast(struct in6_addr *addr, uint8_t dispatch,
                           int context, uint8_t *buf);
 uint8_t *unpack_udp(uint8_t *dest, uint8_t *nxt_hdr, uint8_t *buf);
 uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf);
-uint8_t *unpack_nhc_chain(uint8_t **dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf);
-uint8_t *lowpan_unpack_headers(uint8_t *dest, size_t dst_cnt,
-                               struct ieee154_frame_addr *frame,
-                               uint8_t *buf, size_t cnt);
+uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
+                          uint8_t **dest, size_t cnt, 
+                          uint8_t *nxt_hdr, uint8_t *buf);
 
 #endif

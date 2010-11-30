@@ -80,6 +80,8 @@ int inet_ntop6(struct in6_addr *addr, char *buf, int cnt) {
 
     if (j < 7 && compressed != 1) *buf++ = ':';
   }
+  if (compressed == 1)
+    *buf++ = ':';
   *buf++ = '\0';
   return buf - (end - cnt);
 }

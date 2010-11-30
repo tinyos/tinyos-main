@@ -20,9 +20,9 @@
  *
  */
 
-#include <ip.h>
+#include <lib6lowpan/ip.h>
 #include <IPDispatch.h>
-#include <ICMP.h>
+#include <icmp6.h>
 #include "Shell.h"
 
 module UDPShellP {
@@ -35,7 +35,7 @@ module UDPShellP {
     interface UDP;
     interface Leds;
     
-    // interface ICMPPing;
+    interface ICMPPing;
 #if defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
     interface Counter<TMilli, uint32_t> as Uptime;
 #endif
@@ -92,6 +92,7 @@ module UDPShellP {
       externals[i].c_len = strlen(externals[i].c_name);
     }
     call UDP.bind(2000);
+
   }
 
 
@@ -169,7 +170,7 @@ module UDPShellP {
 
     if (argc < 2) return;
         inet_pton6(argv[1], &dest);
-        //call ICMPPing.ping(&dest, 1024, 10);
+        call ICMPPing.ping(&dest, 1024, 10);
   }
 
 
@@ -259,21 +260,22 @@ module UDPShellP {
     }
   }
 
-/*   event void ICMPPing.pingReply(struct in6_addr *source, struct icmp_stats *stats) { */
-/*     int len; */
-/*     len = inet_ntop6(source, reply_buf, MAX_REPLY_LEN); */
-/*     if (len > 0) { */
-/*       len += snprintf(reply_buf + len - 1, MAX_REPLY_LEN - len + 1, ping_fmt, */
-/*                       stats->seq, stats->ttl, stats->rtt); */
-/*       call UDP.sendto(&session_endpoint, reply_buf, len); */
-/*     } */
-/*   } */
+  event void ICMPPing.pingReply(struct in6_addr *source, struct icmp_stats *stats) {
+    int len;
+    len = inet_ntop6(source, reply_buf, MAX_REPLY_LEN);
+    if (len > 0) {
+      len += snprintf(reply_buf + len - 1, MAX_REPLY_LEN - len + 1, ping_fmt,
+                      stats->seq, stats->ttl, stats->rtt);
+      reply_buf[len] = '\0';
+      call UDP.sendto(&session_endpoint, reply_buf, len);
+    }
+  }
 
-/*   event void ICMPPing.pingDone(uint16_t ping_rcv, uint16_t ping_n) { */
-/*     int len; */
-/*     len = snprintf(reply_buf, MAX_REPLY_LEN, ping_summary, ping_n, ping_rcv); */
-/*     call UDP.sendto(&session_endpoint, reply_buf, len); */
-/*   } */
+  event void ICMPPing.pingDone(uint16_t ping_rcv, uint16_t ping_n) {
+    int len;
+    len = snprintf(reply_buf, MAX_REPLY_LEN, ping_summary, ping_n, ping_rcv);
+    call UDP.sendto(&session_endpoint, reply_buf, len);
+  }
 
 #if  defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
   async event void Uptime.overflow() {

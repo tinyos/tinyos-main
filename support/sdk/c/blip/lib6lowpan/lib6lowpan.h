@@ -36,7 +36,7 @@
 #ifndef PC
 #define memclr(ptr, len) memset((ptr), 0, (len))
 #define memcpy(dst, src, len) ip_memcpy((uint8_t *)dst, (uint8_t *)src, len)
-#define memmove(dst, src, len) ip_memcpy(dst, src, len)
+// #define memmove(dst, src, len) ip_memcpy(dst, src, len)
 uint8_t *ip_memcpy(uint8_t *dst0, const uint8_t *src0, uint16_t len) ;
 #endif
 
@@ -60,6 +60,7 @@ struct lowpan_reconstruct {
   uint16_t r_bytes_rcvd;     /* how many bytes from the packet we have
                               received so far */
   uint8_t  r_timeout;
+  uint16_t*r_app_len;
   struct ip6_metadata       r_meta;
 };
 
@@ -157,7 +158,8 @@ uint8_t *lowpan_pack_headers(struct ip6_packet *packet,
                              struct ieee154_frame_addr *frame,
                              uint8_t *buf, size_t cnt);
 
-uint8_t *lowpan_unpack_headers(uint8_t *dest, size_t dst_cnt,
+
+uint8_t *lowpan_unpack_headers(struct lowpan_reconstruct *recon,
                                struct ieee154_frame_addr *frame,
                                uint8_t *buf, size_t cnt);
 
