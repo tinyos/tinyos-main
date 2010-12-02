@@ -43,6 +43,7 @@ generic module Atm128I2CMasterImplP() {
   uses interface Resource as SubResource[uint8_t];
   uses interface I2CPacket<TI2CBasicAddr> as SubPacket;
   uses interface Atm128I2C;
+  uses interface Leds;
 }
 implementation {
 
@@ -57,7 +58,7 @@ implementation {
   }
 
   async command error_t Resource.immediateRequest[uint8_t id]() {
-    error_t rval = call SubResource.request[id]();
+    error_t rval = call SubResource.immediateRequest[id]();
     if (rval == SUCCESS) {
       atomic currentClient = id;
     }
