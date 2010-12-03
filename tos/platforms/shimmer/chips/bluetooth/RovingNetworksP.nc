@@ -55,6 +55,7 @@ module RovingNetworksP {
     interface HplMsp430UsartInterrupts as UARTData;
     interface HplMsp430Interrupt as RTSInterrupt;
     interface HplMsp430Interrupt as ConnectionInterrupt;
+
     interface Leds;
   }
 }
@@ -67,13 +68,18 @@ implementation {
   bool discoverable, authenticate, encrypt, setNameRequest, setPINRequest, runDiscoveryRequest, resetDefaultsRequest,
     setSvcClassRequest, setDevClassRequest, setSvcNameRequest, setRawBaudrate, setBaudrate, disableRemoteConfig, newMode,
     setCustomInquiryTime, setCustomPagingTime;
+
+  /* master mode stuff */
+  int masterStep;
+  bool deviceConn, btConnected, runningMasterCommands;
+  char targetBt[16];
+
   norace bool transmissionOverflow, messageInProgress;
   char expectedCommandResponse[8], newName[17], newPIN[17], newSvcClass[5], newDevClass[5], newSvcName[17], newRawBaudrate[5],
     newBaudrate[5], newInquiryTime[5], newPagingTime[5];
   
   norace struct Message outgoingMsg;
   norace struct Message incomingMsg;
-   
 
   task void sendNextChar() {
     if(charsSent < outgoingMsg.length) {
@@ -135,9 +141,11 @@ implementation {
 						   urxwie: 0, utxe : 1, urxe :1} };
 
     call UARTControl.setModeUart(&RN_uart_config); // set to UART mode
+
 #ifdef USE_8MHZ_CRYSTAL           // we need exact divisors, else the thing acts unpredictably
     call UARTControl.setUbr(0x08);
     call UARTControl.setUmctl(0xee);
+
 #endif
 
     /*
@@ -164,6 +172,17 @@ implementation {
 
   error_t writeCommand(char * cmd, char * response) {
     atomic strcpy(expectedCommandResponse, response);
+    if(call Bluetooth.write(cmd, strlen(cmd)) == FAIL)
+      return FAIL;
+
+    return SUCCESS;
+  }
+
+  /* 
+   * Connect and Disconnect commands are exceptional commands in that 
+   * they automatically return to data mode once they are issued 
+   */
+  error_t writeCommandNoRsp(char * cmd) {
     if(call Bluetooth.write(cmd, strlen(cmd)) == FAIL)
       return FAIL;
 
@@ -264,6 +283,79 @@ implementation {
     setCustomPagingTime = TRUE;
     snprintf(newPagingTime, 5, "%s", hexval_time);
   }    
+
+  /* 
+   * IMPORTANT: Connect and Disconnect commands are exceptional commands 
+   * in that they automatically return to data mode once they are issued
+   * so no response and no "---" needed to return to data mode 
+   */
+  task void runMasterCommands()
+  {
+    char commandbuf[32];
+    switch(masterStep){
+    case 0:
+      masterStep++;
+      writeCommand("$$$", "CMD");
+      break;
+    case 1:
+      masterStep++;
+      // Connect
+      if(deviceConn && (!btConnected)){
+	masterStep = -1;
+	sprintf(commandbuf, "C,%s\r", targetBt);
+	writeCommandNoRsp(commandbuf);
+	runningMasterCommands = FALSE;
+	break;
+      }
+    case 2:
+      masterStep++;
+      // Disconnect
+      if((!deviceConn) && (btConnected)) {
+	masterStep = -1;
+	writeCommandNoRsp("K,\r");
+	runningMasterCommands = FALSE;          
+	break;
+      }
+    case 3:
+      /* not needed for connect and disconnect commands */
+      masterStep++;
+      // exit command mode
+      writeCommand("---\r", "END");
+      break;
+    default:
+      deviceConn = FALSE;
+      runningMasterCommands = FALSE;
+      break;
+    }
+  }
+
+  command error_t Bluetooth.connect(uint8_t *addr)
+  {
+    masterStep = 0;
+    deviceConn = runningMasterCommands = TRUE;
+    strcpy(targetBt, addr);
+    post runMasterCommands();
+    return SUCCESS;
+  }
+
+  command error_t Bluetooth.disconnect()
+  {
+    register uint16_t i;
+    /*
+     * Delay: If any bytes are seen before or after $$$ in a 1 
+     * second window, command mode will not be entered and these 
+     * bytes will be passed on to other side 
+     */
+    for(i = 0; i < 1600 ; i++)
+      TOSH_uwait(5000);
+
+    masterStep = 0;
+    deviceConn = FALSE;
+    runningMasterCommands = TRUE;
+    post runMasterCommands();
+    
+    return SUCCESS;
+  }
 
   /*
    * this one is weird.  we need to do one at a time; the only way
@@ -446,11 +538,15 @@ implementation {
     setCustomPagingTime = FALSE;
     setBaudrate = FALSE;
 
-    setupStep = 0;
+    /* connect/disconnect commands */
+    deviceConn = btConnected = runningMasterCommands = FALSE;
+    masterStep = setupStep = 0;
+
     atomic *expectedCommandResponse = 0;   // NULL pointer
     transmissionOverflow = FALSE, messageInProgress = FALSE;
 
     initRN();
+    
     setupUART();
 
     return SUCCESS;
@@ -474,11 +570,6 @@ implementation {
     
     return SUCCESS;
   }
-  
-  /* after this command is called there will be no link to the connected device */
-  command error_t Bluetooth.disconnect(){
-    call Bluetooth.write("K,\r", 3);
-  }
 
   /* commands useful for Master(client) applications only */
   /* do an BT Inquiry to discover all listening devices within range */
@@ -489,14 +580,6 @@ implementation {
     runDiscoveryRequest = TRUE;
   }    
 
-  /* connect to a specific device that was previously discovered */
-  command error_t Bluetooth.connect(uint8_t * addr) {
-    char buffer[64];
-
-    sprintf(buffer, "C,%s\r", addr);
-    return writeCommand(buffer, "AOK");
-  }
-     
   async event void UARTData.rxDone(uint8_t data) {        
     if(!*expectedCommandResponse){
       signal Bluetooth.dataAvailable(data);
@@ -511,6 +594,8 @@ implementation {
 	  msg_clear(&incomingMsg);	
 	  if(!strcmp(expectedCommandResponse, "END"))
 	    signal Bluetooth.commandModeEnded();  //call Leds.greenOn();
+	  else if(runningMasterCommands)  
+	    post runMasterCommands();
 	  else
 	    post runSetCommands();
 	  atomic *expectedCommandResponse = '\0';
