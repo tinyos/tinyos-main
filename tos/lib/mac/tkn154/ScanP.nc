@@ -181,8 +181,10 @@ implementation
   {
     if (call RadioOff.isOff())
       continueScanRequest();
-    else 
-      ASSERT(call RadioOff.off() == SUCCESS);
+    else {
+      error_t e = call RadioOff.off();
+      ASSERT(e == SUCCESS);
+    }
     // will continue in continueScanRequest()
   }
 
@@ -336,7 +338,8 @@ implementation
   
   async event void RadioTx.transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result)
   {
-    ASSERT(call RadioRx.enableRx(0, 0) == SUCCESS);
+    error_t e = call RadioRx.enableRx(0, 0);
+    ASSERT(e == SUCCESS);
   }
 
   /* -------- Receive events (for  Active/Passive/Orphan scan) -------- */
@@ -362,6 +365,7 @@ implementation
           m_resultIndex++; 
           dbg_serial("ScanP", "Received coordinator realignment frame.\n");
           m_terminateScan = TRUE;
+          call ScanTimer.stop();
           call RadioOff.off();
         }
     } else if ((((ieee154_header_t*) frame->header)->mhr[0] & FC1_FRAMETYPE_MASK) == FC1_FRAMETYPE_BEACON) {
@@ -376,6 +380,7 @@ implementation
         return signal MLME_BEACON_NOTIFY.indication (frame);
       else if (m_resultIndex >= m_resultListNumEntries) {
         m_terminateScan = TRUE;
+        call ScanTimer.stop();
         call RadioOff.off();
       } else if (call BeaconFrame.parsePANDescriptor(
             frame, 
@@ -418,7 +423,8 @@ implementation
 
   event void ScanTimer.fired()
   {
-    call RadioOff.off();
+    if (call RadioToken.isOwner())
+      call RadioOff.off();
   }
 
   async event void RadioOff.offDone()
