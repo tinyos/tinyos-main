@@ -65,11 +65,4 @@ typedef uint16_t tradio_size;
  */
 #define RADIO_ALARM_MILLI_EXP	(5 + MICA_DIVIDE_THREE_FOR_MICRO_LOG2)
 
-/**
- * Make PACKET_LINK automaticaly enabled for Ieee154MessageC
- */
-#if !defined(TFRAMES_ENABLED) && !defined(PACKET_LINK)
-#define PACKET_LINK
-#endif
-
 #endif//__RADIOCONFIG_H__
