@@ -66,6 +66,9 @@ implementation
 			| (IEEE154_ADDR_SHORT << IEEE154_FCF_DEST_ADDR_MODE) 
 			| (IEEE154_ADDR_SHORT << IEEE154_FCF_SRC_ADDR_MODE),
 
+		IEEE154_DATA_FRAME_PRESERVE = (1 << IEEE154_FCF_ACK_REQ) 
+			| (1 << IEEE154_FCF_FRAME_PENDING),
+
 		IEEE154_ACK_FRAME_LENGTH = 3,	// includes the FCF, DSN
 		IEEE154_ACK_FRAME_MASK = (IEEE154_TYPE_MASK << IEEE154_FCF_FRAME_TYPE), 
 		IEEE154_ACK_FRAME_VALUE = (IEEE154_TYPE_ACK << IEEE154_FCF_FRAME_TYPE),
@@ -98,7 +101,9 @@ implementation
 
 	async command void Ieee154PacketLayer.createDataFrame(message_t* msg)
 	{
-		getHeader(msg)->fcf = IEEE154_DATA_FRAME_VALUE;
+		// keep the ack requested and frame pending bits
+		getHeader(msg)->fcf = (getHeader(msg)->fcf & IEEE154_DATA_FRAME_PRESERVE)
+			| IEEE154_DATA_FRAME_VALUE;
 	}
 
 	async command bool Ieee154PacketLayer.isAckFrame(message_t* msg)
@@ -131,7 +136,7 @@ implementation
 
 	async command bool Ieee154PacketLayer.getAckRequired(message_t* msg)
 	{
-		return getHeader(msg)->fcf & (1 << IEEE154_FCF_ACK_REQ);
+		return getHeader(msg)->fcf & (1 << IEEE154_FCF_ACK_REQ) ? TRUE : FALSE;
 	}
 
 	async command void Ieee154PacketLayer.setAckRequired(message_t* msg, bool ack)
@@ -144,7 +149,7 @@ implementation
 
 	async command bool Ieee154PacketLayer.getFramePending(message_t* msg)
 	{
-		return getHeader(msg)->fcf & (1 << IEEE154_FCF_FRAME_PENDING);
+		return getHeader(msg)->fcf & (1 << IEEE154_FCF_FRAME_PENDING) ? TRUE : FALSE;
 	}
 
 	async command void Ieee154PacketLayer.setFramePending(message_t* msg, bool pending)
