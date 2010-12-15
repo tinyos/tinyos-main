@@ -145,8 +145,10 @@ implementation {
        However there seems to be a bug somewhere in the radio driver for 
        the MicaZ platform so we cannot remove the following two lines 
        before that problem is resolved. (Miklos Maroti) */
+#ifdef PLATFORM_MICAZ
     call Spi.enableSpi(TRUE);
     call McuPowerState.update();
+#endif
 
     call Spi.write( tx );
     while ( !( SPSR & 0x80 ) );
