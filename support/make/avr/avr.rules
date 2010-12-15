@@ -47,7 +47,7 @@ MAIN_EXE = $(BUILDDIR)/main.exe
 MAIN_SREC = $(BUILDDIR)/main.srec
 MAIN_IHEX = $(BUILDDIR)/main.ihex
 INSTALL_SREC = $(MAIN_SREC).out$(if $(NODEID),-$(NODEID),)
-VOLUMEFILE = volumes-at45db.xml
+VOLUMEFILE ?= volumes-at45db.xml
 VOLUME_ALLOCATOR ?= tos-storage-at45db
 VOLUME_ALLOCATOR_FLAGS ?=
 
