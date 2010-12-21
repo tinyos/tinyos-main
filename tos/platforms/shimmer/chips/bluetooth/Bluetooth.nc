@@ -47,7 +47,8 @@
 interface Bluetooth {
 
    /* write SPP (Serial Port Profile) data to the connected BT device */
-   command error_t write(const uint8_t *buf, uint16_t len);
+  // note: max message length is 128 bytes, beyond that msg_append_buf wraps
+   command error_t write(const uint8_t *buf, uint8_t len);
 
    /* after this command is called there will be no link to the connected device */
    command error_t disconnect();

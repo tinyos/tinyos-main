@@ -93,7 +93,8 @@ implementation {
     }	    
   }
   
-  command error_t Bluetooth.write(const uint8_t * buf, uint16_t len) { 
+  // note max message length is 128 bytes, beyond that msg_append_buf wraps
+  command error_t Bluetooth.write(const uint8_t * buf, uint8_t len) { 
     if(messageInProgress)
       return FAIL;
 
