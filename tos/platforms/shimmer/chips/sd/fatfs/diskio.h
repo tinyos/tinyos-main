@@ -53,7 +53,7 @@
 #define _READONLY	0	/* 1: Read-only mode */
 #define _USE_IOCTL	1
 
-#include "integer.h"
+#include <integer.h>
 
 /* Status of Disk Functions */
 typedef BYTE	DSTATUS;

@@ -51,7 +51,7 @@
  * @date January, 2010
  */
 
-#include "integer.h"
+#include <integer.h>
 
 /*---------------------------------------------------------------------------/
 /  FatFs - FAT file system module configuration file  R0.07e  (C)ChaN, 2009
