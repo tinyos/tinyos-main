@@ -176,7 +176,7 @@ void Mote::setID(unsigned long val) {
 }
 
 Variable* Mote::getVariable(char* name) {
-  char* typeStr = "";
+  char* typeStr = (char*)"";
   int isArray;
   Variable* var;
   
