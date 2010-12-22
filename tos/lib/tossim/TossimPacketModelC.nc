@@ -312,5 +312,13 @@ implementation {
       return FALSE;
     }
   }
+
+  default event void Control.startDone(error_t err) {
+    return;
+  }
+ 
+  default event void Control.stopDone(error_t err) {
+    return;
+  }
 }
 
