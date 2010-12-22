@@ -277,7 +277,8 @@ implementation {
     sim_event_t* allocate_serial_deliver_event(int node, message_t* msg, sim_time_t t) {
         sim_event_t* evt = (sim_event_t*)malloc(sizeof(sim_event_t));
 	message_t* newMsg = (message_t*)malloc(sizeof(message_t));
-	memcpy(newMsg, msg, sizeof(message_t));
+        uint8_t payloadLength = ((serial_header_t*)msg->header)->length;
+        memcpy(getHeader(newMsg), msg, sizeof(serial_header_t) + payloadLength);
 	
         evt->mote = node;
         evt->time = t;
