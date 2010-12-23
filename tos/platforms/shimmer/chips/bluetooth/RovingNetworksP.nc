@@ -629,10 +629,12 @@ implementation {
   
   async event void ConnectionInterrupt.fired() {
     if(call ConnectionInterrupt.getValue() == TRUE){
+      btConnected = TRUE;
       call ConnectionInterrupt.edge(FALSE);
       signal Bluetooth.connectionMade(SUCCESS);
     }
     else{
+      btConnected = FALSE;
       call ConnectionInterrupt.edge(TRUE);
       signal Bluetooth.connectionClosed(0);
     }
