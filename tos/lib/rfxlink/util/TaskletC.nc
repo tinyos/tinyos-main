@@ -85,7 +85,7 @@ implementation
 					return;
 				}
 
-				ASSERT( state == 0x81 );
+				RADIO_ASSERT( state == 0x81 );
 				state = 1;
 			}
 		}

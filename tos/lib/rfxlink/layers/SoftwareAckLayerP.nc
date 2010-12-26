@@ -99,14 +99,14 @@ implementation
 		if( state == STATE_ACK_SEND )
 		{
 			// TODO: what if error != SUCCESS
-			ASSERT( error == SUCCESS );
+			RADIO_ASSERT( error == SUCCESS );
 
 			state = STATE_READY;
 		}
 		else
 		{
-			ASSERT( state == STATE_DATA_SEND );
-			ASSERT( call RadioAlarm.isFree() );
+			RADIO_ASSERT( state == STATE_DATA_SEND );
+			RADIO_ASSERT( call RadioAlarm.isFree() );
 
 			if( error == SUCCESS && call SoftwareAckConfig.requiresAckWait(txMsg) && call RadioAlarm.isFree() )
 			{
@@ -123,7 +123,7 @@ implementation
 
 	tasklet_async event void RadioAlarm.fired()
 	{
-		ASSERT( state == STATE_ACK_WAIT );
+		RADIO_ASSERT( state == STATE_ACK_WAIT );
 
 		call SoftwareAckConfig.reportChannelError();
 
@@ -143,11 +143,11 @@ implementation
 	{
 		bool ack = call SoftwareAckConfig.isAckPacket(msg);
 
-		ASSERT( state == STATE_ACK_WAIT || state == STATE_READY );
+		RADIO_ASSERT( state == STATE_ACK_WAIT || state == STATE_READY );
 
 		if( state == STATE_ACK_WAIT )
 		{
-			ASSERT( !ack || call SoftwareAckConfig.verifyAckPacket(txMsg, msg) );
+			RADIO_ASSERT( !ack || call SoftwareAckConfig.verifyAckPacket(txMsg, msg) );
 
 			call RadioAlarm.cancel();
 			call AckReceivedFlag.setValue(txMsg, ack);
@@ -167,7 +167,7 @@ implementation
 			if( call SubSend.send(&ackMsg) == SUCCESS )
 				state = STATE_ACK_SEND;
 			else
-				ASSERT(FALSE);
+				RADIO_ASSERT(FALSE);
 		}
 
 		return signal RadioReceive.receive(msg);

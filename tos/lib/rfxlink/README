@@ -31,7 +31,7 @@ RADIO_DEBUG:
 If enabled, then every component in the radio stack will make sure that 
 everything goes as intended via asserts. For example, we check that certain 
 calls are not made in certain states, the radio hardware responds according 
-to the datasheet, etc. Use the ASSERT macro defined in the RadioAssert.h
+to the datasheet, etc. Use the RADIO_ASSERT macro defined in the RadioAssert.h
 and make sure that the AssertC from lib/diagmsg is included in your 
 application. All assert violations are reported over the serial interface. 
 You can use the net.tinyos.util.DiagMsg java application to display 

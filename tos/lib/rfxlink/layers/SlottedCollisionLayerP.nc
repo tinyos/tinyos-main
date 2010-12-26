@@ -203,7 +203,7 @@ implementation
 	{
 		error_t error;
 
-		ASSERT( state == STATE_PENDING );
+		RADIO_ASSERT( state == STATE_PENDING );
 
 		error = call SubSend.send(txMsg);
 		if( error == SUCCESS )
@@ -227,13 +227,13 @@ implementation
 
 	tasklet_async event void SubSend.sendDone(error_t error)
 	{
-		ASSERT( state == STATE_SENDING );
+		RADIO_ASSERT( state == STATE_SENDING );
 
 		if( error == SUCCESS )
 		{
 			txDelay += (call Config.getTransmitTime(txMsg) - txTime) - (txDelay >> DELAY_DECAY);
 
-			ASSERT( (txDelay >> DELAY_DECAY) < (1 << call Config.getScheduleExponent()) );
+			RADIO_ASSERT( (txDelay >> DELAY_DECAY) < (1 << call Config.getScheduleExponent()) );
 		}
 
 		state = STATE_READY;

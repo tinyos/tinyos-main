@@ -93,7 +93,7 @@ implementation
 
 	tasklet_async event void SubCCA.done(error_t error)
 	{
-		ASSERT( state == STATE_CCA_WAIT );
+		RADIO_ASSERT( state == STATE_CCA_WAIT );
 
 		if( error == SUCCESS && (error = call SubSend.send(txMsg)) == SUCCESS )
 			state = STATE_SEND;
@@ -106,7 +106,7 @@ implementation
 
 	tasklet_async event void SubSend.sendDone(error_t error)
 	{
-		ASSERT( state == STATE_SEND );
+		RADIO_ASSERT( state == STATE_SEND );
 
 		state = STATE_READY;
 		signal RadioSend.sendDone(error);

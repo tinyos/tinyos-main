@@ -75,7 +75,7 @@ implementation
 		RADIO_ASSERT( error == SUCCESS );
 
 		error = call RadioState.turnOn();
-		ASSERT( error == SUCCESS );
+		RADIO_ASSERT( error == SUCCESS );
 	}
 
 	event void SplitControl.stopDone(error_t error)

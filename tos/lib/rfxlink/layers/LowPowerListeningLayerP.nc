@@ -116,7 +116,7 @@ implementation
 		if( state == LISTEN_SUBSTART || state == SEND_SUBSTART )
 		{
 			error = call SubControl.start();
-			ASSERT( error == SUCCESS || error == EBUSY );
+			RADIO_ASSERT( error == SUCCESS || error == EBUSY );
 
 			if( error == SUCCESS )
 			{
@@ -129,7 +129,7 @@ implementation
 		else if( state == SLEEP_SUBSTOP || state == OFF_SUBSTOP )
 		{
 			error = call SubControl.stop();
-			ASSERT( error == SUCCESS || error == EBUSY );
+			RADIO_ASSERT( error == SUCCESS || error == EBUSY );
 
 			if( error == SUCCESS )
 			{
@@ -218,8 +218,8 @@ implementation
 
 	event void SubControl.startDone(error_t error)
 	{
-		ASSERT( error == SUCCESS || error == EBUSY );
-		ASSERT( state == LISTEN_SUBSTART_DONE || state == SEND_SUBSTART_DONE );
+		RADIO_ASSERT( error == SUCCESS || error == EBUSY );
+		RADIO_ASSERT( state == LISTEN_SUBSTART_DONE || state == SEND_SUBSTART_DONE );
 
 		if( error == SUCCESS )
 			++state;
@@ -253,8 +253,8 @@ implementation
 
 	event void SubControl.stopDone(error_t error)
 	{
-		ASSERT( error == SUCCESS || error == EBUSY );
-		ASSERT( state == SLEEP_SUBSTOP_DONE || state == OFF_SUBSTOP_DONE || state == SLEEP_SUBSTOP_DONE_TOSEND );
+		RADIO_ASSERT( error == SUCCESS || error == EBUSY );
+		RADIO_ASSERT( state == SLEEP_SUBSTOP_DONE || state == OFF_SUBSTOP_DONE || state == SLEEP_SUBSTOP_DONE_TOSEND );
 
 		if( error == SUCCESS )
 			++state;
@@ -277,7 +277,7 @@ implementation
 		else if( state == SEND_SUBSEND)
 			state = SEND_DONE;
 		else
-			ASSERT(FALSE);
+			RADIO_ASSERT(FALSE);
 
 		post transition();
 	}
@@ -347,8 +347,8 @@ implementation
 
 	event void SubSend.sendDone(message_t* msg, error_t error)
 	{
-		ASSERT( state == SEND_SUBSEND_DONE || state == SEND_SUBSEND_DONE_LAST );
-		ASSERT( msg == txMsg );
+		RADIO_ASSERT( state == SEND_SUBSEND_DONE || state == SEND_SUBSEND_DONE_LAST );
+		RADIO_ASSERT( msg == txMsg );
 
 		txError = error;
 

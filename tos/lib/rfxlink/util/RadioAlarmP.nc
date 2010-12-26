@@ -98,7 +98,7 @@ implementation
 
 	tasklet_async command void RadioAlarm.wait[uint8_t id](tradio_size timeout)
 	{
-		ASSERT( state == STATE_READY );
+		RADIO_ASSERT( state == STATE_READY );
 
 		alarm = id;
 		state = STATE_WAIT;
@@ -107,8 +107,8 @@ implementation
 
 	tasklet_async command void RadioAlarm.cancel[uint8_t id]()
 	{
-		ASSERT( alarm == id );
-		ASSERT( state != STATE_READY );
+		RADIO_ASSERT( alarm == id );
+		RADIO_ASSERT( state != STATE_READY );
 
 		call Alarm.stop();
 		state = STATE_READY;

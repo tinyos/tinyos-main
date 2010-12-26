@@ -154,8 +154,8 @@ implementation
 
 	inline void writeRegister(uint8_t reg, uint8_t value)
 	{
-		ASSERT( call SpiResource.isOwner() );
-		ASSERT( reg == (reg & RF230_CMD_REGISTER_MASK) );
+		RADIO_ASSERT( call SpiResource.isOwner() );
+		RADIO_ASSERT( reg == (reg & RF230_CMD_REGISTER_MASK) );
 
 		call SELN.clr();
 		call FastSpiByte.splitWrite(RF230_CMD_REGISTER_WRITE | reg);
@@ -166,8 +166,8 @@ implementation
 
 	inline uint8_t readRegister(uint8_t reg)
 	{
-		ASSERT( call SpiResource.isOwner() );
-		ASSERT( reg == (reg & RF230_CMD_REGISTER_MASK) );
+		RADIO_ASSERT( call SpiResource.isOwner() );
+		RADIO_ASSERT( reg == (reg & RF230_CMD_REGISTER_MASK) );
 
 		call SELN.clr();
 		call FastSpiByte.splitWrite(RF230_CMD_REGISTER_READ | reg);
@@ -199,7 +199,7 @@ implementation
 			state = STATE_TRX_OFF;
 		else if( state == STATE_TRX_OFF_2_RX_ON )
 		{
-			ASSERT( cmd == CMD_TURNON || cmd == CMD_CHANNEL );
+			RADIO_ASSERT( cmd == CMD_TURNON || cmd == CMD_CHANNEL );
 
 			state = STATE_RX_ON;
 			cmd = CMD_SIGNAL_DONE;
@@ -208,17 +208,17 @@ implementation
 		{
 			uint8_t cca;
 
-			ASSERT( state == STATE_RX_ON );
+			RADIO_ASSERT( state == STATE_RX_ON );
 
 			cmd = CMD_NONE;
 			cca = readRegister(RF230_TRX_STATUS);
 
-			ASSERT( (cca & RF230_TRX_STATUS_MASK) == RF230_RX_AACK_ON );
+			RADIO_ASSERT( (cca & RF230_TRX_STATUS_MASK) == RF230_RX_AACK_ON );
 
 			signal RadioCCA.done( (cca & RF230_CCA_DONE) ? ((cca & RF230_CCA_STATUS) ? SUCCESS : EBUSY) : FAIL );
 		}
 		else
-			ASSERT(FALSE);
+			RADIO_ASSERT(FALSE);
 
 		// make sure the rest of the command processing is called
 		call Tasklet.schedule();
@@ -339,8 +339,8 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 	inline void changeChannel()
 	{
-		ASSERT( cmd == CMD_CHANNEL );
-		ASSERT( state == STATE_SLEEP || state == STATE_TRX_OFF || state == STATE_RX_ON );
+		RADIO_ASSERT( cmd == CMD_CHANNEL );
+		RADIO_ASSERT( state == STATE_SLEEP || state == STATE_TRX_OFF || state == STATE_RX_ON );
 
 		if( isSpiAcquired() && call RadioAlarm.isFree() )
 		{
@@ -373,7 +373,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 		{
 			uint16_t temp;
 	
-			ASSERT( ! radioIrq );
+			RADIO_ASSERT( ! radioIrq );
 
 			readRegister(RF230_IRQ_STATUS); // clear the interrupt register
 			call IRQ.captureRisingEdge();
@@ -506,7 +506,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 		// we have missed an incoming message in this short amount of time
 		if( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) != RF230_TX_ARET_ON )
 		{
-			ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_BUSY_RX_AACK );
+			RADIO_ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_BUSY_RX_AACK );
 
 			writeRegister(RF230_TRX_STATE, RF230_RX_AACK_ON);
 			return EBUSY;
@@ -521,7 +521,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 		call SLP_TR.clr();
 #endif
 
-		ASSERT( ! radioIrq );
+		RADIO_ASSERT( ! radioIrq );
 
 		call SELN.clr();
 		call FastSpiByte.splitWrite(RF230_CMD_FRAME_WRITE);
@@ -735,7 +735,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 	async event void IRQ.captured(uint16_t time)
 	{
-		ASSERT( ! radioIrq );
+		RADIO_ASSERT( ! radioIrq );
 
 		atomic
 		{
@@ -781,7 +781,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 			{
 				if( cmd == CMD_TRANSMIT )
 				{
-					ASSERT( state == STATE_BUSY_TX_2_RX_ON );
+					RADIO_ASSERT( state == STATE_BUSY_TX_2_RX_ON );
 
 					temp = readRegister(RF230_TRX_STATE) & RF230_TRAC_STATUS_MASK;
 
@@ -794,11 +794,11 @@ tasklet_async command uint8_t RadioState.getChannel()
 					signal RadioSend.sendDone(temp != RF230_TRAC_CHANNEL_ACCESS_FAILURE ? SUCCESS : EBUSY);
 
 					// TODO: we could have missed a received message
-					ASSERT( ! (irq & RF230_IRQ_RX_START) );
+					RADIO_ASSERT( ! (irq & RF230_IRQ_RX_START) );
 				}
 				else if( cmd == CMD_NONE )
 				{
-					ASSERT( state == STATE_RX_ON );
+					RADIO_ASSERT( state == STATE_RX_ON );
 
 					if( irq == RF230_IRQ_TRX_END )
 					{
@@ -818,7 +818,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 					cmd = CMD_DOWNLOAD;
 				}
 				else
-					ASSERT(FALSE);
+					RADIO_ASSERT(FALSE);
 			}
 		}
 	}
@@ -882,8 +882,8 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
 	{
-		ASSERT( 1 <= length && length <= 125 );
-		ASSERT( call RadioPacket.headerLength(msg) + length + call RadioPacket.metadataLength(msg) <= sizeof(message_t) );
+		RADIO_ASSERT( 1 <= length && length <= 125 );
+		RADIO_ASSERT( call RadioPacket.headerLength(msg) + length + call RadioPacket.metadataLength(msg) <= sizeof(message_t) );
 
 		// we add the length of the CRC, which is automatically generated
 		getHeader(msg)->length = length + 2;
@@ -891,7 +891,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 	async command uint8_t RadioPacket.maxPayloadLength()
 	{
-		ASSERT( call Config.maxPayloadLength() - sizeof(rf230_header_t) <= 125 );
+		RADIO_ASSERT( call Config.maxPayloadLength() - sizeof(rf230_header_t) <= 125 );
 
 		return call Config.maxPayloadLength() - sizeof(rf230_header_t);
 	}
@@ -975,7 +975,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 	async command void PacketTimeSyncOffset.set(message_t* msg, uint8_t value)
 	{
 		// we do not store the value, the time sync field is always the last 4 bytes
-		ASSERT( call PacketTimeSyncOffset.get(msg) == value );
+		RADIO_ASSERT( call PacketTimeSyncOffset.get(msg) == value );
 
 		call TimeSyncFlag.set(msg);
 	}

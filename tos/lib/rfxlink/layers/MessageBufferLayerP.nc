@@ -192,7 +192,7 @@ implementation
 
 		call Tasklet.suspend();
 
-		ASSERT( state == STATE_TX_PENDING || state == STATE_TX_DONE );
+		RADIO_ASSERT( state == STATE_TX_PENDING || state == STATE_TX_DONE );
 
 		if( state == STATE_TX_PENDING && ++retries <= MAX_RETRIES )
 		{
@@ -216,7 +216,7 @@ implementation
 
 	tasklet_async event void RadioSend.sendDone(error_t error)
 	{
-		ASSERT( state == STATE_TX_SEND );
+		RADIO_ASSERT( state == STATE_TX_SEND );
 
 		txError = error;
 		if( error == SUCCESS )
@@ -268,7 +268,7 @@ implementation
 
 		call Tasklet.suspend();
 
-		ASSERT( msg == txMsg );
+		RADIO_ASSERT( msg == txMsg );
 
 		if( state == STATE_TX_PENDING || state == STATE_TX_RETRY )
 		{

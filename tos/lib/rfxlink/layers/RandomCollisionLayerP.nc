@@ -112,7 +112,7 @@ implementation
 		error_t error;
 		int16_t delay;
 
-		ASSERT( state != STATE_READY );
+		RADIO_ASSERT( state != STATE_READY );
 
 		delay = (int16_t)txBarrier - call RadioAlarm.getNow();
 
@@ -154,7 +154,7 @@ implementation
 
 	tasklet_async event void SubSend.sendDone(error_t error)
 	{
-		ASSERT( state == STATE_TX_SENDING );
+		RADIO_ASSERT( state == STATE_TX_SENDING );
 
 		state = STATE_READY;
 		signal RadioSend.sendDone(error);
