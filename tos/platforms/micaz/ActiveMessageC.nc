@@ -73,7 +73,11 @@ configuration ActiveMessageC {
   }
 }
 implementation {
+#ifdef RFXLINK
+  components CC2420XActiveMessageC as AM;
+#else
   components CC2420ActiveMessageC as AM;
+#endif
 
   SplitControl = AM;
   
@@ -85,7 +89,12 @@ implementation {
   PacketAcknowledgements = AM;
   LowPowerListening = AM;
 
+#ifdef RFXLINK
+  PacketTimeStamp32khz = AM;
+  PacketTimeStampMilli = AM;
+#else
   components CC2420PacketC;
   PacketTimeStamp32khz = CC2420PacketC;
   PacketTimeStampMilli = CC2420PacketC;
+#endif
 }

@@ -56,6 +56,13 @@ configuration CC2420XActiveMessageC
 		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+
+		interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+	}
+
+	uses
+	{
+		interface PacketTimeStamp<T32khz, uint32_t> as UnimplementedPacketTimeStamp32khz;
 	}
 }
 
@@ -88,4 +95,6 @@ implementation
 	LocalTimeRadio = RadioC;
 	PacketTimeStampMilli = RadioC;
 	PacketTimeStampRadio = RadioC;
+
+	PacketTimeStamp32khz = UnimplementedPacketTimeStamp32khz;
 }
