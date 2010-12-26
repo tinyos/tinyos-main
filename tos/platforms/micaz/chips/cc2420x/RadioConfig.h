@@ -24,12 +24,9 @@
 #ifndef __RADIOCONFIG_H__
 #define __RADIOCONFIG_H__
 
-
 #include <Timer.h>
-#include <message.h>
 #include <MicaTimer.h>
 #include <CC2420XDriverLayer.h>
-#include <util/crc16.h>
 
 /* This is the default value of the PA_POWER field of the TXCTL register. */
 #ifndef CC2420X_DEF_RFPOWER
