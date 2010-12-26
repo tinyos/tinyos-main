@@ -37,7 +37,7 @@
 #include <RadioConfig.h>
 #include <TimeSyncMessageLayer.h>
 
-configuration TimeSyncMessageLayerC
+generic configuration TimeSyncMessageLayerC()
 {
 	provides
 	{

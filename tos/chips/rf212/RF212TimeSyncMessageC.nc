@@ -57,7 +57,7 @@ configuration RF212TimeSyncMessageC
 
 implementation
 {
-	components RF212DriverLayerC, RF212ActiveMessageC, TimeSyncMessageLayerC;
+	components RF212DriverLayerC, RF212ActiveMessageC, new TimeSyncMessageLayerC();
   
 	SplitControl	= RF212ActiveMessageC;
 	AMPacket	= TimeSyncMessageLayerC;

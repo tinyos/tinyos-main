@@ -47,7 +47,7 @@
 #error You cannot specify both TFRAMES_ENABLED and IEEE154FRAMES_ENABLED at the same time
 #endif
 
-module TinyosNetworkLayerC
+generic module TinyosNetworkLayerC()
 {
 	provides
 	{

@@ -46,6 +46,10 @@ configuration CC2420XDriverLayerC
 	{
 		interface CC2420XDriverConfig as Config;
 		interface PacketTimeStamp<TRadio, uint32_t>;
+
+		interface PacketFlag as TransmitPowerFlag;
+		interface PacketFlag as RSSIFlag;
+		interface PacketFlag as TimeSyncFlag;
 	}
 }
 
@@ -79,18 +83,14 @@ implementation
 	DriverLayerP.FIFOP -> HplC.FIFOP;
 	DriverLayerP.SFD -> HplC.SFD;
 
-
 	PacketTransmitPower = DriverLayerP.PacketTransmitPower;
-	components new MetadataFlagC() as TransmitPowerFlagC;
-	DriverLayerP.TransmitPowerFlag -> TransmitPowerFlagC;
+	TransmitPowerFlag = DriverLayerP.TransmitPowerFlag;
 
 	PacketRSSI = DriverLayerP.PacketRSSI;
-	components new MetadataFlagC() as RSSIFlagC;
-	DriverLayerP.RSSIFlag -> RSSIFlagC;
+	RSSIFlag = DriverLayerP.RSSIFlag;
 
 	PacketTimeSyncOffset = DriverLayerP.PacketTimeSyncOffset;
-	components new MetadataFlagC() as TimeSyncFlagC;
-	DriverLayerP.TimeSyncFlag -> TimeSyncFlagC;
+	TimeSyncFlag = DriverLayerP.TimeSyncFlag;
 
 	PacketLinkQuality = DriverLayerP.PacketLinkQuality;
 	PacketTimeStamp = DriverLayerP.PacketTimeStamp;

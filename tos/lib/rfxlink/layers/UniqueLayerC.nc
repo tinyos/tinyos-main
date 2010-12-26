@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration UniqueLayerC
+generic configuration UniqueLayerC()
 {
 	provides
 	{

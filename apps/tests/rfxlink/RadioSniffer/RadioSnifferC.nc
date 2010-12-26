@@ -38,6 +38,8 @@ configuration RadioSnifferC
 
 implementation
 {
+	#define UQ_METADATA_FLAGS "UQ_METADATA_FLAGS"
+
 	components RadioSnifferP, MainC, SerialActiveMessageC, AssertC;
 	
 	RadioSnifferP.Boot -> MainC;
@@ -49,31 +51,42 @@ implementation
 
 // -------- ActiveMessage
 
-	components Ieee154PacketLayerC;
+	components new Ieee154PacketLayerC();
 	Ieee154PacketLayerC.SubPacket -> TimeStampingLayerC;
 
 // -------- TimeStamping
 
-	components TimeStampingLayerC;
+	components new TimeStampingLayerC();
 	TimeStampingLayerC.LocalTimeRadio -> RadioDriverLayerC;
 	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
+	TimeStampingLayerC.TimeStampFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 
 // -------- MetadataFlags
 
-	components MetadataFlagsLayerC;
+	components new MetadataFlagsLayerC();
 	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
 
 // -------- RadioDriver
 
-#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE) || defined(PLATFORM_MESHBEAN)
 	components RF230DriverLayerC as RadioDriverLayerC;
 	components RF230RadioP as RadioP;
+#elif defined(PLATFORM_MESHBEAN900)
+	components RF212DriverLayerC as RadioDriverLayerC;
+	components RF212RadioP as RadioP;
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSA) || defined(PLATFORM_TELOSB)
 	components CC2420XDriverLayerC as RadioDriverLayerC;
 	components CC2420XRadioP as RadioP;
+#elif defined(PLATFORM_UCMINI)
+	components RFA1DriverLayerC as RadioDriverLayerC;
+	components RFA1RadioP as RadioP;
 #endif
 
 	RadioDriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
 	RadioDriverLayerC.Config -> RadioP;
 	RadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
+
+	RadioDriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RadioDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RadioDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 }

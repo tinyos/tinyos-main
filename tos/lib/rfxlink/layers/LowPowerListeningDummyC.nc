@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration LowPowerListeningDummyC
+generic configuration LowPowerListeningDummyC()
 {
 	provides
 	{

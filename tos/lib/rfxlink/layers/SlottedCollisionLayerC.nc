@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration SlottedCollisionLayerC
+generic configuration SlottedCollisionLayerC()
 {
 	provides
 	{

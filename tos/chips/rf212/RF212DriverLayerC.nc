@@ -57,6 +57,10 @@ configuration RF212DriverLayerC
 	{
 		interface RF212DriverConfig as Config;
 		interface PacketTimeStamp<TRadio, uint32_t>;
+
+		interface PacketFlag as TransmitPowerFlag;
+		interface PacketFlag as RSSIFlag;
+		interface PacketFlag as TimeSyncFlag;
 	}
 }
 
@@ -75,16 +79,13 @@ implementation
 	Config = RF212DriverLayerP;
 
 	PacketTransmitPower = RF212DriverLayerP.PacketTransmitPower;
-	components new MetadataFlagC() as TransmitPowerFlagC;
-	RF212DriverLayerP.TransmitPowerFlag -> TransmitPowerFlagC;
+	TransmitPowerFlag = RF212DriverLayerP.TransmitPowerFlag;
 
 	PacketRSSI = RF212DriverLayerP.PacketRSSI;
-	components new MetadataFlagC() as RSSIFlagC;
-	RF212DriverLayerP.RSSIFlag -> RSSIFlagC;
+	RSSIFlag = RF212DriverLayerP.RSSIFlag;
 
 	PacketTimeSyncOffset = RF212DriverLayerP.PacketTimeSyncOffset;
-	components new MetadataFlagC() as TimeSyncFlagC;
-	RF212DriverLayerP.TimeSyncFlag -> TimeSyncFlagC;
+	TimeSyncFlag = RF212DriverLayerP.TimeSyncFlag;
 
 	PacketLinkQuality = RF212DriverLayerP.PacketLinkQuality;
 	PacketTimeStamp = RF212DriverLayerP.PacketTimeStamp;

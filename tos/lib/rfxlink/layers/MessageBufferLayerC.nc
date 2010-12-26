@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration MessageBufferLayerC
+generic configuration MessageBufferLayerC()
 {
 	provides
 	{

@@ -37,8 +37,8 @@ generic configuration DummyLayerC()
 	provides
 	{
 		interface SplitControl;
-		interface BareSend as Send;
-		interface BareReceive as Receive;
+		interface BareSend;
+		interface BareReceive;
 
 		interface RadioState;
 		interface RadioSend;
@@ -52,12 +52,12 @@ generic configuration DummyLayerC()
 	uses 
 	{
 		interface SplitControl as SubControl;
-		interface BareSend as SubSend;
-		interface BareReceive as SubReceive;
+		interface BareSend as SubBareSend;
+		interface BareReceive as SubBareReceive;
 
 		interface RadioState as SubState;
-		interface RadioSend as SubRadioSend;
-		interface RadioReceive as SubRadioReceive;
+		interface RadioSend as SubSend;
+		interface RadioReceive as SubReceive;
 		interface RadioCCA as SubRadioCCA;
 		interface RadioPacket as SubPacket;
 
@@ -68,14 +68,14 @@ generic configuration DummyLayerC()
 implementation
 {
 	RadioState = SubState;
-	RadioSend = SubRadioSend;
-	RadioReceive = SubRadioReceive;
+	RadioSend = SubSend;
+	RadioReceive = SubReceive;
 	RadioCCA = SubRadioCCA;
 	RadioPacket = SubPacket;
 
 	SplitControl = SubControl;
-	Send = SubSend;
-	Receive = SubReceive;
+	BareSend = SubBareSend;
+	BareReceive = SubBareReceive;
 
 	Config = UnconnectedConfig;
 }

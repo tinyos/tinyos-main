@@ -71,6 +71,8 @@ configuration CC2420XRadioC
 
 implementation
 {
+	#define UQ_METADATA_FLAGS "UQ_CC2420X_METADATA_FLAGS"
+
 	components CC2420XRadioP, RadioAlarmC;
 
 #ifdef RADIO_DEBUG
@@ -85,7 +87,7 @@ implementation
 // -------- Active Message
 
 #ifndef IEEE154FRAMES_ENABLED
-	components ActiveMessageLayerC;
+	components new ActiveMessageLayerC();
 	ActiveMessageLayerC.Config -> CC2420XRadioP;
 	ActiveMessageLayerC.SubSend -> AutoResourceAcquireLayerC;
 	ActiveMessageLayerC.SubReceive -> TinyosNetworkLayerC.TinyosReceive;
@@ -108,7 +110,7 @@ implementation
 #else
 	components new DummyLayerC() as AutoResourceAcquireLayerC;
 #endif
-	AutoResourceAcquireLayerC.SubSend -> TinyosNetworkLayerC.TinyosSend;
+	AutoResourceAcquireLayerC -> TinyosNetworkLayerC.TinyosSend;
 #endif
 
 // -------- RadioSend Resource
@@ -119,9 +121,8 @@ implementation
 
 // -------- Ieee154 Message
 
-	components Ieee154MessageLayerC;
+	components new Ieee154MessageLayerC();
 	Ieee154MessageLayerC.Ieee154PacketLayer -> Ieee154PacketLayerC;
-
 	Ieee154MessageLayerC.SubSend -> TinyosNetworkLayerC.Ieee154Send;
 	Ieee154MessageLayerC.SubReceive -> TinyosNetworkLayerC.Ieee154Receive;
 	Ieee154MessageLayerC.RadioPacket -> TinyosNetworkLayerC.Ieee154Packet;
@@ -135,7 +136,7 @@ implementation
 
 // -------- Tinyos Network
 
-	components TinyosNetworkLayerC;
+	components new TinyosNetworkLayerC();
 
 	TinyosNetworkLayerC.SubSend -> UniqueLayerC;
 	TinyosNetworkLayerC.SubReceive -> LowPowerListeningLayerC;
@@ -143,12 +144,12 @@ implementation
 
 // -------- IEEE 802.15.4 Packet
 
-	components Ieee154PacketLayerC;
+	components new Ieee154PacketLayerC();
 	Ieee154PacketLayerC.SubPacket -> LowPowerListeningLayerC;
 
 // -------- UniqueLayer Send part (wired twice)
 
-	components UniqueLayerC;
+	components new UniqueLayerC();
 	UniqueLayerC.Config -> CC2420XRadioP;
 	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
 
@@ -156,19 +157,15 @@ implementation
 
 #ifdef LOW_POWER_LISTENING
 	#warning "*** USING LOW POWER LISTENING LAYER"
-	components LowPowerListeningLayerC;
+	components new LowPowerListeningLayerC();
 	LowPowerListeningLayerC.Config -> CC2420XRadioP;
-#ifdef CC2420X_HARDWARE_ACK
-	LowPowerListeningLayerC.PacketAcknowledgements -> CC2420XDriverLayerC;
-#else
 	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
-#endif
 #else	
-	components LowPowerListeningDummyC as LowPowerListeningLayerC;
+	components new LowPowerListeningDummyC() as LowPowerListeningLayerC;
 #endif
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubSend -> PacketLinkLayerC;
-	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubReceive -> PacketLinkLayerC;
 	LowPowerListeningLayerC.SubPacket -> PacketLinkLayerC;
 	SplitControl = LowPowerListeningLayerC;
 	LowPowerListening = LowPowerListeningLayerC;
@@ -176,22 +173,19 @@ implementation
 // -------- Packet Link
 
 #ifdef PACKET_LINK
-	components PacketLinkLayerC;
+	components new PacketLinkLayerC();
 	PacketLink = PacketLinkLayerC;
-#ifdef CC2420X_HARDWARE_ACK
-	PacketLinkLayerC.PacketAcknowledgements -> CC2420XDriverLayerC;
-#else
 	PacketLinkLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
-#endif
 #else
 	components new DummyLayerC() as PacketLinkLayerC;
 #endif
-	PacketLinkLayerC.SubSend -> MessageBufferLayerC;
-	PacketLinkLayerC.SubPacket -> TimeStampingLayerC;
+	PacketLinkLayerC -> MessageBufferLayerC.Send;
+	PacketLinkLayerC -> MessageBufferLayerC.Receive;
+	PacketLinkLayerC -> TimeStampingLayerC.RadioPacket;
 
 // -------- MessageBuffer
 
-	components MessageBufferLayerC;
+	components new MessageBufferLayerC();
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
@@ -204,7 +198,7 @@ implementation
 // -------- Traffic Monitor
 
 #ifdef TRAFFIC_MONITOR
-	components TrafficMonitorLayerC;
+	components new TrafficMonitorLayerC();
 #else
 	components new DummyLayerC() as TrafficMonitorLayerC;
 #endif
@@ -216,62 +210,56 @@ implementation
 // -------- CollisionAvoidance
 
 #ifdef SLOTTED_MAC
-	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
+	components new SlottedCollisionLayerC() as CollisionAvoidanceLayerC;
 #else
-	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
+	components new RandomCollisionLayerC() as CollisionAvoidanceLayerC;
 #endif
 	CollisionAvoidanceLayerC.Config -> CC2420XRadioP;
-#ifdef CC2420X_HARDWARE_ACK
-	CollisionAvoidanceLayerC.SubSend -> CsmaLayerC;
-	CollisionAvoidanceLayerC.SubReceive -> CC2420XDriverLayerC;
-#else
 	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
 	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
-#endif
 
 // -------- SoftwareAcknowledgement
 
-#ifndef CC2420X_HARDWARE_ACK
-	components SoftwareAckLayerC;
+	components new SoftwareAckLayerC();
+	SoftwareAckLayerC.AckReceivedFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	PacketAcknowledgements = SoftwareAckLayerC;
 	SoftwareAckLayerC.Config -> CC2420XRadioP;
 	SoftwareAckLayerC.SubSend -> CsmaLayerC;
-	SoftwareAckLayerC.SubReceive -> CC2420XDriverLayerC;
-	PacketAcknowledgements = SoftwareAckLayerC;
-#endif
+	SoftwareAckLayerC.SubReceive -> CsmaLayerC;
 
 // -------- Carrier Sense
 
 	components new DummyLayerC() as CsmaLayerC;
 	CsmaLayerC.Config -> CC2420XRadioP;
 	CsmaLayerC -> CC2420XDriverLayerC.RadioSend;
+	CsmaLayerC -> CC2420XDriverLayerC.RadioReceive;
 	CsmaLayerC -> CC2420XDriverLayerC.RadioCCA;
 
 // -------- TimeStamping
 
-	components TimeStampingLayerC;
+	components new TimeStampingLayerC();
 	TimeStampingLayerC.LocalTimeRadio -> CC2420XDriverLayerC;
 	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
 	PacketTimeStampRadio = TimeStampingLayerC;
 	PacketTimeStampMilli = TimeStampingLayerC;
+	TimeStampingLayerC.TimeStampFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 
 // -------- MetadataFlags
 
-	components MetadataFlagsLayerC;
+	components new MetadataFlagsLayerC();
 	MetadataFlagsLayerC.SubPacket -> CC2420XDriverLayerC;
 
 // -------- CC2420X Driver
 
-#ifdef CC2420X_HARDWARE_ACK
-	components CC2420XDriverHwAckC as CC2420XDriverLayerC;
-	PacketAcknowledgements = CC2420XDriverLayerC;
-	CC2420XDriverLayerC.Ieee154PacketLayer -> Ieee154PacketLayerC;
-#else
 	components CC2420XDriverLayerC;
-#endif
 	CC2420XDriverLayerC.Config -> CC2420XRadioP;
 	CC2420XDriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
 	PacketTransmitPower = CC2420XDriverLayerC.PacketTransmitPower;
 	PacketLinkQuality = CC2420XDriverLayerC.PacketLinkQuality;
 	PacketRSSI = CC2420XDriverLayerC.PacketRSSI;
 	LocalTimeRadio = CC2420XDriverLayerC;
+
+	CC2420XDriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	CC2420XDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	CC2420XDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 }

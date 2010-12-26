@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration TrafficMonitorLayerC
+generic configuration TrafficMonitorLayerC()
 {
 	provides
 	{

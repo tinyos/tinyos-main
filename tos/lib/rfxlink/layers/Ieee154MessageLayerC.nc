@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-module Ieee154MessageLayerC
+generic module Ieee154MessageLayerC()
 {
 	provides 
 	{

@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration ActiveMessageLayerC
+generic configuration ActiveMessageLayerC()
 {
 	provides
 	{

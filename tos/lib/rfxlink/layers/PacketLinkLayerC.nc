@@ -70,15 +70,17 @@
 
 #include <PacketLinkLayer.h>
 
-configuration PacketLinkLayerC {
+generic configuration PacketLinkLayerC() {
   provides {
     interface BareSend as Send;
+    interface BareReceive as Receive;
     interface PacketLink;
     interface RadioPacket;
   }
   
   uses {
     interface BareSend as SubSend;
+    interface BareReceive as SubReceive;
     interface RadioPacket as SubPacket;
     interface PacketAcknowledgements;
   }
@@ -95,4 +97,6 @@ implementation {
   SubPacket = PacketLinkLayerP;
 
   PacketLinkLayerP.DelayTimer -> DelayTimerC;
+
+  Receive = SubReceive;
 }

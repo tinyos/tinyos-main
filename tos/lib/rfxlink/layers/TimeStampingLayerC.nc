@@ -34,7 +34,7 @@
 
 #include "RadioConfig.h"
 
-configuration TimeStampingLayerC
+generic configuration TimeStampingLayerC()
 {
 	provides
 	{
@@ -47,6 +47,7 @@ configuration TimeStampingLayerC
 	{
 		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface RadioPacket as SubPacket;
+		interface PacketFlag as TimeStampFlag;
 	}
 }
 
@@ -62,6 +63,5 @@ implementation
 	LocalTimeRadio = TimeStampingLayerP;
 	TimeStampingLayerP.LocalTimeMilli -> LocalTimeMilliC;
 
-	components new MetadataFlagC() as TimeStampFlagC;
-	TimeStampingLayerP.TimeStampFlag -> TimeStampFlagC;
+	TimeStampFlag = TimeStampingLayerP.TimeStampFlag;
 }

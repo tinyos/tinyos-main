@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration RandomCollisionLayerC
+generic configuration RandomCollisionLayerC()
 {
 	provides
 	{

@@ -41,10 +41,12 @@ module RadioDriverConfigP
 {
 	provides
 	{
-#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE) || defined(PLATFORM_MESHBEAN)
 		interface RF230DriverConfig as RadioDriverConfig;
+#elif defined(PLATFORM_MESHBEAN900)
+		interface RF212DriverConfig as RadioDriverConfig;
 #elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSA) || defined(PLATFORM_TELOSB)
-		interface CC2420DriverConfig as RadioDriverConfig;
+		interface CC2420XDriverConfig as RadioDriverConfig;
 #elif defined(PLATFORM_UCMINI)
 		interface RFA1DriverConfig as RadioDriverConfig;
 #endif

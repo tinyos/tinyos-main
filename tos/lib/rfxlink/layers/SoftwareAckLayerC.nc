@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration SoftwareAckLayerC
+generic configuration SoftwareAckLayerC()
 {
 	provides
 	{
@@ -48,12 +48,13 @@ configuration SoftwareAckLayerC
 		interface RadioReceive as SubReceive;
 
 		interface SoftwareAckConfig as Config;
+		interface PacketFlag as AckReceivedFlag;
 	}
 }
 
 implementation
 {
-	components new SoftwareAckLayerP(), RadioAlarmC, new MetadataFlagC();
+	components new SoftwareAckLayerP(), RadioAlarmC;
 
 	RadioSend = SoftwareAckLayerP;
 	RadioReceive = SoftwareAckLayerP;
@@ -63,5 +64,5 @@ implementation
 	PacketAcknowledgements = SoftwareAckLayerP;
 
 	SoftwareAckLayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	SoftwareAckLayerP.AckReceivedFlag -> MetadataFlagC;
+	AckReceivedFlag = SoftwareAckLayerP.AckReceivedFlag;
 }

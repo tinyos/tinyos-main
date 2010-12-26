@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration Ieee154PacketLayerC
+generic configuration Ieee154PacketLayerC()
 {
 	provides
 	{

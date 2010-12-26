@@ -46,7 +46,7 @@ configuration CC2420XTimeSyncMessageC
 
 implementation
 {
-	components CC2420XActiveMessageC as ActiveMessageC, TimeSyncMessageLayerC;
+	components CC2420XActiveMessageC as ActiveMessageC, new TimeSyncMessageLayerC();
   
 	SplitControl	= ActiveMessageC;
 	AMPacket	= TimeSyncMessageLayerC;

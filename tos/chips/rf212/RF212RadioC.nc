@@ -82,6 +82,8 @@ configuration RF212RadioC
 
 implementation
 {
+	#define UQ_METADATA_FLAGS "UQ_RF212_METADATA_FLAGS"
+
 	components RF212RadioP, RadioAlarmC;
 
 #ifdef RADIO_DEBUG
@@ -96,7 +98,7 @@ implementation
 // -------- Active Message
 
 #ifndef IEEE154FRAMES_ENABLED
-	components ActiveMessageLayerC;
+	components new ActiveMessageLayerC();
 	ActiveMessageLayerC.Config -> RF212RadioP;
 	ActiveMessageLayerC.SubSend -> AutoResourceAcquireLayerC;
 	ActiveMessageLayerC.SubReceive -> TinyosNetworkLayerC.TinyosReceive;
@@ -119,7 +121,7 @@ implementation
 #else
 	components new DummyLayerC() as AutoResourceAcquireLayerC;
 #endif
-	AutoResourceAcquireLayerC.SubSend -> TinyosNetworkLayerC.TinyosSend;
+	AutoResourceAcquireLayerC -> TinyosNetworkLayerC.TinyosSend;
 #endif
 
 // -------- RadioSend Resource
@@ -130,7 +132,7 @@ implementation
 
 // -------- Ieee154 Message
 
-	components Ieee154MessageLayerC;
+	components new Ieee154MessageLayerC();
 	Ieee154MessageLayerC.Ieee154PacketLayer -> Ieee154PacketLayerC;
 	Ieee154MessageLayerC.SubSend -> TinyosNetworkLayerC.Ieee154Send;
 	Ieee154MessageLayerC.SubReceive -> TinyosNetworkLayerC.Ieee154Receive;
@@ -145,7 +147,7 @@ implementation
 
 // -------- Tinyos Network
 
-	components TinyosNetworkLayerC;
+	components new TinyosNetworkLayerC();
 
 	TinyosNetworkLayerC.SubSend -> UniqueLayerC;
 	TinyosNetworkLayerC.SubReceive -> LowPowerListeningLayerC;
@@ -153,12 +155,12 @@ implementation
 
 // -------- IEEE 802.15.4 Packet
 
-	components Ieee154PacketLayerC;
+	components new Ieee154PacketLayerC();
 	Ieee154PacketLayerC.SubPacket -> LowPowerListeningLayerC;
 
 // -------- UniqueLayer Send part (wired twice)
 
-	components UniqueLayerC;
+	components new UniqueLayerC();
 	UniqueLayerC.Config -> RF212RadioP;
 	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
 
@@ -166,15 +168,15 @@ implementation
 
 #ifdef LOW_POWER_LISTENING
 	#warning "*** USING LOW POWER LISTENING LAYER"
-	components LowPowerListeningLayerC;
+	components new LowPowerListeningLayerC();
 	LowPowerListeningLayerC.Config -> RF212RadioP;
 	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
 #else	
-	components LowPowerListeningDummyC as LowPowerListeningLayerC;
+	components new LowPowerListeningDummyC() as LowPowerListeningLayerC;
 #endif
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubSend -> PacketLinkLayerC;
-	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubReceive -> PacketLinkLayerC;
 	LowPowerListeningLayerC.SubPacket -> PacketLinkLayerC;
 	SplitControl = LowPowerListeningLayerC;
 	LowPowerListening = LowPowerListeningLayerC;
@@ -182,18 +184,19 @@ implementation
 // -------- Packet Link
 
 #ifdef PACKET_LINK
-	components PacketLinkLayerC;
+	components new PacketLinkLayerC();
 	PacketLink = PacketLinkLayerC;
 	PacketLinkLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
 #else
 	components new DummyLayerC() as PacketLinkLayerC;
 #endif
-	PacketLinkLayerC.SubSend -> MessageBufferLayerC;
-	PacketLinkLayerC.SubPacket -> TimeStampingLayerC;
+	PacketLinkLayerC -> MessageBufferLayerC.Send;
+	PacketLinkLayerC -> MessageBufferLayerC.Receive;
+	PacketLinkLayerC -> TimeStampingLayerC.RadioPacket;
 
 // -------- MessageBuffer
 
-	components MessageBufferLayerC;
+	components new MessageBufferLayerC();
 	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
@@ -206,7 +209,7 @@ implementation
 // -------- Traffic Monitor
 
 #ifdef TRAFFIC_MONITOR
-	components TrafficMonitorLayerC;
+	components new TrafficMonitorLayerC();
 #else
 	components new DummyLayerC() as TrafficMonitorLayerC;
 #endif
@@ -218,9 +221,9 @@ implementation
 // -------- CollisionAvoidance
 
 #ifdef SLOTTED_MAC
-	components SlottedCollisionLayerC as CollisionAvoidanceLayerC;
+	components new SlottedCollisionLayerC() as CollisionAvoidanceLayerC;
 #else
-	components RandomCollisionLayerC as CollisionAvoidanceLayerC;
+	components new RandomCollisionLayerC() as CollisionAvoidanceLayerC;
 #endif
 	CollisionAvoidanceLayerC.Config -> RF212RadioP;
 	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
@@ -228,30 +231,33 @@ implementation
 
 // -------- SoftwareAcknowledgement
 
-	components SoftwareAckLayerC;
+	components new SoftwareAckLayerC();
+	SoftwareAckLayerC.AckReceivedFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	PacketAcknowledgements = SoftwareAckLayerC;
 	SoftwareAckLayerC.Config -> RF212RadioP;
 	SoftwareAckLayerC.SubSend -> CsmaLayerC;
-	SoftwareAckLayerC.SubReceive -> RF212DriverLayerC;
-	PacketAcknowledgements = SoftwareAckLayerC;
+	SoftwareAckLayerC.SubReceive -> CsmaLayerC;
 
 // -------- Carrier Sense
 
 	components new DummyLayerC() as CsmaLayerC;
 	CsmaLayerC.Config -> RF212RadioP;
 	CsmaLayerC -> RF212DriverLayerC.RadioSend;
+	CsmaLayerC -> RF212DriverLayerC.RadioReceive;
 	CsmaLayerC -> RF212DriverLayerC.RadioCCA;
 
 // -------- TimeStamping
 
-	components TimeStampingLayerC;
+	components new TimeStampingLayerC();
 	TimeStampingLayerC.LocalTimeRadio -> RF212DriverLayerC;
 	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
 	PacketTimeStampRadio = TimeStampingLayerC;
 	PacketTimeStampMilli = TimeStampingLayerC;
+	TimeStampingLayerC.TimeStampFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 
 // -------- MetadataFlags
 
-	components MetadataFlagsLayerC;
+	components new MetadataFlagsLayerC();
 	MetadataFlagsLayerC.SubPacket -> RF212DriverLayerC;
 
 // -------- RF212 Driver
@@ -263,4 +269,8 @@ implementation
 	PacketLinkQuality = RF212DriverLayerC.PacketLinkQuality;
 	PacketRSSI = RF212DriverLayerC.PacketRSSI;
 	LocalTimeRadio = RF212DriverLayerC;
+
+	RF212DriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RF212DriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RF212DriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 }

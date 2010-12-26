@@ -535,7 +535,7 @@ implementation
 		{
 			length = getHeader(msg)->length;
 
-			call DiagMsg.str('t');
+			call DiagMsg.chr('t');
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.int8(length);
@@ -635,7 +635,7 @@ implementation
 		{
 			length = getHeader(rxMsg)->length;
 
-			call DiagMsg.str('r');
+			call DiagMsg.chr('r');
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.int8(crcValid ? length : -length);

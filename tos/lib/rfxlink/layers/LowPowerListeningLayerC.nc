@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-configuration LowPowerListeningLayerC
+generic configuration LowPowerListeningLayerC()
 {
 	provides
 	{

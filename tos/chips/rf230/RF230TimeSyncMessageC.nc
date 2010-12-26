@@ -57,7 +57,7 @@ configuration RF230TimeSyncMessageC
 
 implementation
 {
-	components RF230ActiveMessageC, TimeSyncMessageLayerC;
+	components RF230ActiveMessageC, new TimeSyncMessageLayerC();
   
 	SplitControl	= RF230ActiveMessageC;
 	AMPacket	= TimeSyncMessageLayerC;

@@ -35,7 +35,7 @@
 #include <MetadataFlagsLayer.h>
 #include <RadioAssert.h>
 
-module MetadataFlagsLayerC
+generic module MetadataFlagsLayerC()
 {
 	provides 
 	{
