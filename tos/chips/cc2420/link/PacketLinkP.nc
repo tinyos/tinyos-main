@@ -220,7 +220,11 @@ implementation {
   void signalDone(error_t error) {
     call DelayTimer.stop();
     call SendState.toIdle();
-    (call CC2420PacketBody.getMetadata(currentSendMsg))->maxRetries = totalRetries;
+
+    // update only if retries were explicitly asked for
+    if((call CC2420PacketBody.getMetadata(currentSendMsg))->maxRetries > 0)
+	    (call CC2420PacketBody.getMetadata(currentSendMsg))->maxRetries = totalRetries;
+
     signal Send.sendDone(currentSendMsg, error);
   }
 }
