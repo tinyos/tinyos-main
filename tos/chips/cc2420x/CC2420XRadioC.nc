@@ -35,6 +35,10 @@ configuration CC2420XRadioC
 		interface Receive as Snoop[am_id_t id];
 		interface SendNotifier[am_id_t id];
 
+		// for TOSThreads
+		interface Receive as ReceiveDefault[am_id_t id];
+		interface Receive as SnoopDefault[am_id_t id];
+
 		interface AMPacket;
 		interface Packet as PacketForActiveMessage;
 #endif
@@ -99,6 +103,9 @@ implementation
 	SendNotifier = ActiveMessageLayerC;
 	AMPacket = ActiveMessageLayerC;
 	PacketForActiveMessage = ActiveMessageLayerC;
+
+	ReceiveDefault = ActiveMessageLayerC.ReceiveDefault;
+	SnoopDefault = ActiveMessageLayerC.SnoopDefault;
 #endif
 
 // -------- Automatic RadioSend Resource

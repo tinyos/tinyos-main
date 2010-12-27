@@ -49,6 +49,10 @@ configuration RF212ActiveMessageC
 		interface Receive as Snoop[am_id_t id];
 		interface SendNotifier[am_id_t id];
 
+		// for TOSThreads
+		interface Receive as ReceiveDefault[am_id_t id];
+		interface Receive as SnoopDefault[am_id_t id];
+
 		interface Packet;
 		interface AMPacket;
 
@@ -72,31 +76,34 @@ configuration RF212ActiveMessageC
 
 implementation
 {
-	components RF212RadioC;
+	components RF212RadioC as RadioC;
 
-	SplitControl = RF212RadioC;
+	SplitControl = RadioC;
 
-	AMSend = RF212RadioC;
-	Receive = RF212RadioC.Receive;
-	Snoop = RF212RadioC.Snoop;
-	SendNotifier = RF212RadioC;
+	AMSend = RadioC;
+	Receive = RadioC.Receive;
+	Snoop = RadioC.Snoop;
+	SendNotifier = RadioC;
 
-	Packet = RF212RadioC.PacketForActiveMessage;
-	AMPacket = RF212RadioC;
+	ReceiveDefault = RadioC.ReceiveDefault;
+	SnoopDefault = RadioC.SnoopDefault;
 
-	PacketAcknowledgements = RF212RadioC;
-	LowPowerListening = RF212RadioC;
+	Packet = RadioC.PacketForActiveMessage;
+	AMPacket = RadioC;
+
+	PacketAcknowledgements = RadioC;
+	LowPowerListening = RadioC;
 #ifdef PACKET_LINK
-	PacketLink = RF212RadioC;
+	PacketLink = RadioC;
 #endif
 
-	RadioChannel = RF212RadioC;
+	RadioChannel = RadioC;
 
-	PacketLinkQuality = RF212RadioC.PacketLinkQuality;
-	PacketTransmitPower = RF212RadioC.PacketTransmitPower;
-	PacketRSSI = RF212RadioC.PacketRSSI;
+	PacketLinkQuality = RadioC.PacketLinkQuality;
+	PacketTransmitPower = RadioC.PacketTransmitPower;
+	PacketRSSI = RadioC.PacketRSSI;
 
-	LocalTimeRadio = RF212RadioC;
-	PacketTimeStampMilli = RF212RadioC;
-	PacketTimeStampRadio = RF212RadioC;
+	LocalTimeRadio = RadioC;
+	PacketTimeStampMilli = RadioC;
+	PacketTimeStampRadio = RadioC;
 }
