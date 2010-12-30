@@ -40,6 +40,7 @@ configuration CC2420XDriverLayerC
 		interface PacketField<uint8_t> as PacketLinkQuality;
 
 		interface LocalTime<TRadio> as LocalTimeRadio;
+		interface Alarm<TRadio, tradio_size>;
 	}
 
 	uses
@@ -50,6 +51,7 @@ configuration CC2420XDriverLayerC
 		interface PacketFlag as TransmitPowerFlag;
 		interface PacketFlag as RSSIFlag;
 		interface PacketFlag as TimeSyncFlag;
+		interface RadioAlarm;
 	}
 }
 
@@ -59,9 +61,7 @@ implementation
 		BusyWaitMicroC,
 		TaskletC,
 		MainC,
-		RadioAlarmC,
 		HplCC2420XC as HplC;
-
 
 	MainC.SoftwareInit -> DriverLayerP.SoftwareInit;
 	MainC.SoftwareInit -> HplC.Init;
@@ -95,8 +95,8 @@ implementation
 	PacketLinkQuality = DriverLayerP.PacketLinkQuality;
 	PacketTimeStamp = DriverLayerP.PacketTimeStamp;
 
-	DriverLayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	RadioAlarmC.Alarm -> HplC.Alarm;
+	Alarm = HplC.Alarm;
+	RadioAlarm = DriverLayerP.RadioAlarm;
 
 	DriverLayerP.SpiResource -> HplC.SpiResource;
 	DriverLayerP.FastSpiByte -> HplC;

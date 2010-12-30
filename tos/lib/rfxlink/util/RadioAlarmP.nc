@@ -36,7 +36,7 @@
 #include <RadioAssert.h>
 #include "RadioConfig.h"
 
-module RadioAlarmP
+generic module RadioAlarmP()
 {
 	provides
 	{

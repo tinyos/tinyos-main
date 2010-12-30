@@ -86,18 +86,26 @@ configuration RF212RadioC
 
 implementation
 {
-	#define UQ_METADATA_FLAGS "UQ_RF212_METADATA_FLAGS"
+	#define UQ_METADATA_FLAGS	"UQ_RF212_METADATA_FLAGS"
+	#define UQ_RADIO_ALARM		"UQ_RF212_RADIO_ALARM"
 
-	components RF212RadioP, RadioAlarmC;
+// -------- RF212 RadioP
+
+	components RF212RadioP;
 
 #ifdef RADIO_DEBUG
 	components AssertC;
 #endif
 
 	RF212RadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
-	RF212RadioP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
+	RF212RadioP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 	RF212RadioP.PacketTimeStamp -> TimeStampingLayerC;
 	RF212RadioP.RF212Packet -> RF212DriverLayerC;
+
+// -------- RadioAlarm
+
+	components new RadioAlarmC();
+	RadioAlarmC.Alarm -> RF212DriverLayerC;
 
 // -------- Active Message
 
@@ -235,11 +243,13 @@ implementation
 	CollisionAvoidanceLayerC.Config -> RF212RadioP;
 	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
 	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
+	CollisionAvoidanceLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 
 // -------- SoftwareAcknowledgement
 
 	components new SoftwareAckLayerC();
 	SoftwareAckLayerC.AckReceivedFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	SoftwareAckLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 	PacketAcknowledgements = SoftwareAckLayerC;
 	SoftwareAckLayerC.Config -> RF212RadioP;
 	SoftwareAckLayerC.SubSend -> CsmaLayerC;
@@ -280,4 +290,5 @@ implementation
 	RF212DriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RF212DriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RF212DriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RF212DriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 }

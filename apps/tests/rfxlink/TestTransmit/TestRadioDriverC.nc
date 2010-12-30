@@ -38,9 +38,10 @@ configuration TestRadioDriverC
 
 implementation
 {
-	#define UQ_METADATA_FLAGS "UQ_METADATA_FLAGS"
+	#define UQ_METADATA_FLAGS	"UQ_METADATA_FLAGS"
+	#define UQ_RADIO_ALARM		"UQ_RADIO_ALARM"
 
-	components TestRadioDriverP, MainC, SerialActiveMessageC, AssertC, LedsC, RadioAlarmC;
+	components TestRadioDriverP, MainC, SerialActiveMessageC, AssertC, LedsC;
 	
 	TestRadioDriverP.Boot -> MainC;
 	TestRadioDriverP.SplitControl -> SerialActiveMessageC;
@@ -48,7 +49,7 @@ implementation
 	TestRadioDriverP.RadioSend -> RadioDriverLayerC;
 	TestRadioDriverP.RadioReceive -> RadioDriverLayerC;
 	TestRadioDriverP.RadioPacket -> TimeStampingLayerC;
-	TestRadioDriverP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
+	TestRadioDriverP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 	TestRadioDriverP.Leds -> LedsC;
 
 	// just to avoid a timer compilation bug
@@ -65,6 +66,11 @@ implementation
 
 	components new MetadataFlagsLayerC();
 	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
+
+// -------- RadioAlarm
+
+	components new RadioAlarmC();
+	RadioAlarmC.Alarm -> RadioDriverLayerC;
 
 // -------- RadioDriver
 
@@ -89,4 +95,5 @@ implementation
 	RadioDriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RadioDriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 }

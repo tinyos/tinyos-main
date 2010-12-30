@@ -38,7 +38,8 @@ configuration RadioSnifferC
 
 implementation
 {
-	#define UQ_METADATA_FLAGS "UQ_METADATA_FLAGS"
+	#define UQ_METADATA_FLAGS	"UQ_METADATA_FLAGS"
+	#define UQ_RADIO_ALARM		"UQ_RADIO_ALARM"
 
 	components RadioSnifferP, MainC, SerialActiveMessageC, AssertC;
 	
@@ -66,6 +67,11 @@ implementation
 	components new MetadataFlagsLayerC();
 	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
 
+// -------- RadioAlarm
+
+	components new RadioAlarmC();
+	RadioAlarmC.Alarm -> RadioDriverLayerC;
+
 // -------- RadioDriver
 
 #if defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE) || defined(PLATFORM_MESHBEAN)
@@ -89,4 +95,5 @@ implementation
 	RadioDriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RadioDriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 }

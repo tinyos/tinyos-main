@@ -43,21 +43,23 @@ generic configuration SlottedCollisionLayerC()
 	{
 		interface RadioSend as SubSend;
 		interface RadioReceive as SubReceive;
+		interface RadioAlarm;
+
 		interface SlottedCollisionConfig as Config;
 	}
 }
 
 implementation
 {
-	components new SlottedCollisionLayerP(), MainC, RadioAlarmC, RandomC;
+	components new SlottedCollisionLayerP(), MainC, RandomC;
 
 	RadioSend = SlottedCollisionLayerP;
 	RadioReceive = SlottedCollisionLayerP;
 	SubSend = SlottedCollisionLayerP;
 	SubReceive = SlottedCollisionLayerP;
 	Config = SlottedCollisionLayerP;
+	RadioAlarm = SlottedCollisionLayerP;
 	
-	SlottedCollisionLayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
 	SlottedCollisionLayerP.Random -> RandomC;
 	MainC.SoftwareInit -> SlottedCollisionLayerP;
 

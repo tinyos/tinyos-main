@@ -34,11 +34,11 @@
 
 #include "RadioConfig.h"
 
-configuration RadioAlarmC
+generic configuration RadioAlarmC()
 {
 	provides
 	{
-		interface RadioAlarm[uint8_t id]; // use unique("RadioAlarm")
+		interface RadioAlarm[uint8_t id]; // use unique
 	}
 
 	uses
@@ -49,7 +49,7 @@ configuration RadioAlarmC
 
 implementation
 {
-	components RadioAlarmP, TaskletC;
+	components new RadioAlarmP(), TaskletC;
 
 	RadioAlarm = RadioAlarmP;
 	Alarm = RadioAlarmP;

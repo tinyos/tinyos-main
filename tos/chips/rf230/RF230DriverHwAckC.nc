@@ -51,6 +51,7 @@ configuration RF230DriverHwAckC
 		interface PacketField<uint8_t> as PacketLinkQuality;
 
 		interface LocalTime<TRadio> as LocalTimeRadio;
+		interface Alarm<TRadio, tradio_size>;
 
 		interface PacketAcknowledgements;
 	}
@@ -65,12 +66,13 @@ configuration RF230DriverHwAckC
 		interface PacketFlag as RSSIFlag;
 		interface PacketFlag as TimeSyncFlag;
 		interface PacketFlag as AckReceivedFlag;
+		interface RadioAlarm;
 	}
 }
 
 implementation
 {
-	components RF230DriverHwAckP, HplRF230C, BusyWaitMicroC, TaskletC, MainC, RadioAlarmC, ActiveMessageAddressC;
+	components RF230DriverHwAckP, HplRF230C, BusyWaitMicroC, TaskletC, MainC, ActiveMessageAddressC;
 
 	RadioState = RF230DriverHwAckP;
 	RadioSend = RF230DriverHwAckP;
@@ -96,8 +98,8 @@ implementation
 
 	RF230DriverHwAckP.LocalTime -> HplRF230C;
 
-	RF230DriverHwAckP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	RadioAlarmC.Alarm -> HplRF230C.Alarm;
+	Alarm = HplRF230C.Alarm;
+	RadioAlarm = RF230DriverHwAckP.RadioAlarm;
 
 	RF230DriverHwAckP.SELN -> HplRF230C.SELN;
 	RF230DriverHwAckP.SpiResource -> HplRF230C.SpiResource;
