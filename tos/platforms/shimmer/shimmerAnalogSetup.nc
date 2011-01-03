@@ -60,9 +60,12 @@ interface shimmerAnalogSetup {
   // one channels
   command void addEMGInput();
   
-  // two channels
-  command void addAnExInput();
-  
+  // either of two channels
+  command void addAnExInput(uint8_t channel);
+
+  // sets number of channels back to zero
+  command void reset();
+
   /*
    * call this after adding devices.
    * pass in a buffer to hold the sampling results

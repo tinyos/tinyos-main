@@ -131,20 +131,39 @@ implementation {
   }
 
   command void shimmerAnalogSetup.addEMGInput() { 
-    call shimmerAnalogSetup.addECGInputs();
-  }
-
-  command void shimmerAnalogSetup.addAnExInput() { 
-    uint8_t new_chans[] = { 0, 7 };
-    addNewChannels(new_chans, 2);
+    uint8_t new_chans[] = { 1 };  // ecg_lall, ecg_rall
+    addNewChannels(new_chans, 1);
     
     initADC12MEMCTLx();
 
-    TOSH_MAKE_ADC_0_INPUT();         
-    TOSH_SEL_ADC_0_MODFUNC();
+    TOSH_MAKE_ADC_1_INPUT();         
+    TOSH_SEL_ADC_1_MODFUNC();
 
-    TOSH_MAKE_ADC_7_INPUT();         
-    TOSH_SEL_ADC_7_MODFUNC();
+    // this channel is identical to adc1, so we we don't read it, but make it an input to avoid pushing against the signal
+    TOSH_MAKE_ADC_2_INPUT();         
+  }
+
+  command void shimmerAnalogSetup.addAnExInput(uint8_t channel) { 
+    uint8_t new_chans[1];
+
+    if(channel == 0){
+      new_chans[0] = 0;
+      addNewChannels(new_chans, 1);
+
+      initADC12MEMCTLx();
+
+      TOSH_MAKE_ADC_0_INPUT();         
+      TOSH_SEL_ADC_0_MODFUNC();
+    }
+    else if(channel == 7) {
+      new_chans[0] = 7;
+      addNewChannels(new_chans, 1);
+
+      initADC12MEMCTLx();
+
+      TOSH_MAKE_ADC_7_INPUT();         
+      TOSH_SEL_ADC_7_MODFUNC();
+    }
   }
 
   command void shimmerAnalogSetup.finishADCSetup(uint16_t * buffer){
@@ -164,6 +183,10 @@ implementation {
     
   command uint8_t shimmerAnalogSetup.getNumberOfChannels() {
     return NUM_ADC_CHANS;
+  }
+
+  command void shimmerAnalogSetup.reset() {
+    NUM_ADC_CHANS = 0;
   }
 
   command error_t Init.init() {
@@ -208,7 +231,7 @@ implementation {
       adc12busy: 0,                    // no operation is active
       conseq: 1,                       // conversion mode: sequence of chans
       adc12ssel: SHT_SOURCE_SMCLK,     // SHT_SOURCE_SMCLK=3; ADC12 clocl source
-      adc12div: SHT_CLOCK_DIV_1,       // SHT_CLOCK_DIV_8=0; ADC12 clock div 1
+      adc12div: SHT_CLOCK_DIV_1,       // SHT_CLOCK_DIV_1=0; ADC12 clock div 1
       issh: 0,                         // sample-input signal not inverted
       shp: 1,                          // Sample-and-hold pulse-mode select: SAMPCON signal is sourced from the sampling timer
       shs: 0,                          // Sample-and-hold source select= ADC12SC bit
