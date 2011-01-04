@@ -38,8 +38,8 @@ module TestSrpP {
   uses {
     interface Boot;
     interface Timer<TMilli>;
-    interface SrcRouteSend;
-    interface SrcRoutePacket;
+    interface SourceRouteSend;
+    interface SourceRoutePacket;
     interface Receive;
     interface Random;
     interface SplitControl as RadioSplitControl;
@@ -80,17 +80,17 @@ implementation {
     error_t err;
 
     myCount++;
-    payload = ((test_payload_t*) call SrcRouteSend.getPayload(&myMsg, sizeof(test_payload_t)));
+    payload = ((test_payload_t*) call SourceRouteSend.getPayload(&myMsg, sizeof(test_payload_t)));
     payload -> count = myCount;
 
     //NOTE we don't want space allocated for the route outside of the header, so this is kind of awkward.
     //NOTE it seems bad that the sender needs to specify themselves, and also that the user needs to remember that a 1-hop path has 2 nodes in it.
-    err = call SrcRouteSend.send(routes[TOS_NODE_ID].route, routes[TOS_NODE_ID].len , &myMsg, sizeof(test_payload_t));
+    err = call SourceRouteSend.send(routes[TOS_NODE_ID].route, routes[TOS_NODE_ID].len , &myMsg, sizeof(test_payload_t));
 
     dbg("TestSrpP", "Sending %d : %d\n",myCount, err);
   }
 
-  event void SrcRouteSend.sendDone(message_t* msg, error_t error) {
+  event void SourceRouteSend.sendDone(message_t* msg, error_t error) {
     //dbg("TestSrpP", "SendDone: %d\n", error);
     if (myCount < SEND_COUNT) {
       call Timer.startOneShot(call Random.rand16() % SEND_INTERVAL);
@@ -101,7 +101,7 @@ implementation {
     test_payload_t* tPayload;
     //dbg("TestSrpP", "Receive msg %p payload %p\n", msg, payload);
     tPayload = (test_payload_t*) payload;
-    dbg("TestSrpP","Receive p->count %d from %d \n", tPayload->count, (call SrcRoutePacket.getRoute(msg))[0]);
+    dbg("TestSrpP","Receive p->count %d from %d \n", tPayload->count, (call SourceRoutePacket.getRoute(msg))[0]);
     return msg;
   }
 

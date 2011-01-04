@@ -73,10 +73,10 @@ Multiple sender applications can use the source routing system. These senders
 are uniquely identified by sourceroute identifiers. These identifiers work
 like collection identifiers in collection protocols[1_]. 
 
-The sender uses the SrcRouteSend interface to set the contents of a packet.
-The sender uses the SrcRouteSend interface to introduce a packet into the network.
+The sender uses the SourceRouteSend interface to set the contents of a packet.
+The sender uses the SourceRouteSend interface to introduce a packet into the network.
 
-  interface SrcRouteSend {
+  interface SourceRouteSend {
     command error_t send(am_addr_t *path, uint8_t pathLen, message_t* msg, uint8_t len);
     command error_t cancel(message_t* msg);
     event void sendDone(message_t* msg, error_t error);
@@ -85,10 +85,10 @@ The sender uses the SrcRouteSend interface to introduce a packet into the networ
   }
 
 
-The forwarder uses the SrcRoutePacket interface to update the header as it 
+The forwarder uses the SourceRoutePacket interface to update the header as it 
 forwards the packet:
 
-  interface SrcRoutePacket
+  interface SourceRoutePacket
   {
     command am_addr_t address();
   
@@ -118,12 +118,12 @@ which has the following signature:
   configuration SourceRoutingC {
     provides {
       interface StdControl;
-      interface SrcRouteSend[uint8_t client];
-      interface SrcRoutePacket;
+      interface SourceRouteSend[uint8_t client];
+      interface SourceRoutePacket;
       interface Receive[sourceroute_id_t id];
     }
     uses {
-      interface SrcRouteId[uint8_t client];
+      interface SourceRouteId[uint8_t client];
     }
   }
 

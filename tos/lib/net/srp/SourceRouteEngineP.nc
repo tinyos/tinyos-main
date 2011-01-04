@@ -34,18 +34,18 @@
  * @author Doug Carlson
  */
 
-#include "SrcRouteEngine.h"
+#include "SourceRouteEngine.h"
 
-module SrcRouteEngineP {
+module SourceRouteEngineP {
   provides {
     interface StdControl;
-    interface SrcRouteSend[uint8_t client];
-    interface SrcRoutePacket;
+    interface SourceRouteSend[uint8_t client];
+    interface SourceRoutePacket;
     interface Receive[sourceroute_id_t id];
     interface Init;
   }
   uses {
-    interface SrcRouteId[uint8_t client];
+    interface SourceRouteId[uint8_t client];
     interface AMSend as SubSend;
     interface Receive as SubReceive;
     
@@ -127,8 +127,8 @@ implementation {
         state = S_SENDING;
         qe = call SendQueue.head();
         printQE(qe);
-        dbg("SRPInfo", "Sending QE %p msg %p to %d. src %d dest %d seqno %d\n", qe, qe->msg, call SrcRoutePacket.getNextHop(qe->msg), (call SrcRoutePacket.getRoute(qe->msg))[0], call SrcRoutePacket.getDest(qe->msg), getSRPHeader(qe->msg)->seqno);
-        err = call SubSend.send(call SrcRoutePacket.getNextHop(qe->msg), qe -> msg, qe->len);
+        dbg("SRPInfo", "Sending QE %p msg %p to %d. src %d dest %d seqno %d\n", qe, qe->msg, call SourceRoutePacket.getNextHop(qe->msg), (call SourceRoutePacket.getRoute(qe->msg))[0], call SourceRoutePacket.getDest(qe->msg), getSRPHeader(qe->msg)->seqno);
+        err = call SubSend.send(call SourceRoutePacket.getNextHop(qe->msg), qe -> msg, qe->len);
         if ( err == SUCCESS ) {
           dbg("SRPDebug", "sendTask subsend OK\n"); 
         } else {
@@ -137,7 +137,7 @@ implementation {
           state = S_IDLE;
           if (qe->client != FORWARD_CLIENT) {
             clientStatus[qe->client] = SC_IDLE;
-            signal SrcRouteSend.sendDone[qe->client](qe->msg, FAIL);
+            signal SourceRouteSend.sendDone[qe->client](qe->msg, FAIL);
           }
           call SendQueue.dequeue();
         }
@@ -148,11 +148,11 @@ implementation {
   }
 
   /**
-   * SrcRouteSend commands
+   * SourceRouteSend commands
    */
-  command error_t SrcRouteSend.send[uint8_t client](am_addr_t *path, uint8_t pathLen, message_t* msg, uint8_t len) {
+  command error_t SourceRouteSend.send[uint8_t client](am_addr_t *path, uint8_t pathLen, message_t* msg, uint8_t len) {
     sr_header_t* hdr; 
-    //NOTE this is only here for the workaround required due to nx_am_addr v. am_addr in SrcRoutePacket
+    //NOTE this is only here for the workaround required due to nx_am_addr v. am_addr in SourceRoutePacket
     nx_am_addr_t nxPath[SRP_MAX_PATHLEN];
     uint8_t i;
     dbg("SRPDebug", "Send from %d %p\n", client, msg);
@@ -170,15 +170,15 @@ implementation {
 
     //NOTE: setting route is unsafe with memcpy as-is (am_addr_t vs nx_am_addr_t)
     //would like to do:
-    //  call SrcRoutePacket.setRoute(msg, path, pathLen);
-    //this is the workaround until SrcRoutePacket.setRoute signature changes
+    //  call SourceRoutePacket.setRoute(msg, path, pathLen);
+    //this is the workaround until SourceRoutePacket.setRoute signature changes
     for (i = 0; i < pathLen; i++) {
       nxPath[i] = path[i];
     }
-    call SrcRoutePacket.setRoute(msg, nxPath, pathLen);
+    call SourceRoutePacket.setRoute(msg, nxPath, pathLen);
 
     hdr = getSRPHeader(msg);
-    hdr -> payload_id = call SrcRouteId.fetch[client]();
+    hdr -> payload_id = call SourceRouteId.fetch[client]();
     hdr -> seqno = seqno++;
     
     //set hops_left to path length - 2 (NOTE e.g. one-hop path has S, D is of length 2. when a packet is received with hops_left = 0, it is at the destination)
@@ -198,20 +198,20 @@ implementation {
     }
   }
 
-  command void* SrcRouteSend.getPayload[uint8_t client](message_t* msg, uint8_t len) {
-    if (len > call SrcRouteSend.maxPayloadLength[client]()) {
+  command void* SourceRouteSend.getPayload[uint8_t client](message_t* msg, uint8_t len) {
+    if (len > call SourceRouteSend.maxPayloadLength[client]()) {
       return NULL;
     } else {
       return call SubSend.getPayload(msg, len + sizeof(sr_header_t)) + sizeof(sr_header_t);
     }
   }
 
-  command uint8_t SrcRouteSend.maxPayloadLength[uint8_t client]() {
+  command uint8_t SourceRouteSend.maxPayloadLength[uint8_t client]() {
     return call SubSend.maxPayloadLength() - sizeof(sr_header_t);
   }
 
-  command error_t SrcRouteSend.cancel[uint8_t client](message_t* msg) {
-    //TODO: SrcRouteSend.cancel: find msg in queue and remove it if possible
+  command error_t SourceRouteSend.cancel[uint8_t client](message_t* msg) {
+    //TODO: SourceRouteSend.cancel: find msg in queue and remove it if possible
     return FAIL;
   }
 
@@ -245,7 +245,7 @@ implementation {
       } else {
         dbg("SRPDebug", "Finished sending for %d\n", qe->client);
         clientStatus[qe->client] = SC_IDLE;
-        signal SrcRouteSend.sendDone[qe->client](msg, err);
+        signal SourceRouteSend.sendDone[qe->client](msg, err);
       } 
     } 
     dbg("SRPInfo","After SendDone: state %d SendQueue len %d, QEPool size %d, MsgPool size %d\n", state, call SendQueue.size(), call QEntryPool.size(), call MessagePool.size());
@@ -259,13 +259,11 @@ implementation {
      srf_queue_entry_t* qe;
 
      dbg("SRPDebug", "receive m %p p %p l %d\n", msg, payload, len);
-     //NOTE hops_left is not exposed in SrcRoutePacket interface at the moment
      hdr = getSRPHeader(msg);
      printSRPHeader(hdr);
      //remove header/signal up
      if (hdr -> hops_left == 0) {
-       //QUESTION this seems a little weird: is the parameterized call to SrcRouteSend[0] kosher?
-       return signal Receive.receive[hdr -> payload_id](msg, call SrcRouteSend.getPayload[0](msg, len - sizeof(sr_header_t)), len - sizeof(sr_header_t));
+       return signal Receive.receive[hdr -> payload_id](msg, call SourceRouteSend.getPayload[0](msg, len - sizeof(sr_header_t)), len - sizeof(sr_header_t));
      } else {
        dbg("SRPDebug", "forwarding %p\n", msg);
        if ( call SendQueue.size() < call SendQueue.maxSize() 
@@ -288,40 +286,36 @@ implementation {
 
 
   /**
-   * SrcRoutePacket commands
+   * SourceRoutePacket commands
    */
   sr_header_t* getSRPHeader(message_t* msg) {
     sr_header_t* ret = (sr_header_t*)call SubSend.getPayload(msg, sizeof(sr_header_t));
     return ret;
   }
 
-  command am_addr_t SrcRoutePacket.address() {
-    //QUESTION is SrcRoutePacket.address still relevant? what's it supposed to mean?
-    return 0;
-  }
-  
-  command error_t SrcRoutePacket.clearRoute(message_t *msg) {
-    //QUESTION is SrcRoutePacket.clearRoute relevant? just set path length to 0?
+  command error_t SourceRoutePacket.clearRoute(message_t *msg) {
     //NOTE that if the route goes in the footer or is variable-length, we can't safely overwrite the values in it (space might be used for payload). 
-    return FAIL;
+    memset(getSRPHeader(msg)->route, 0, sizeof(nx_am_addr_t)*SRP_MAX_PATHLEN);
+    getSRPHeader(msg)->sr_len = 0; 
+    return SUCCESS;
   }
 
-  command error_t SrcRoutePacket.setRoute(message_t *msg, nx_am_addr_t *path, uint8_t len) {
+  command error_t SourceRoutePacket.setRoute(message_t *msg, nx_am_addr_t *path, uint8_t len) {
     sr_header_t* hdr = getSRPHeader(msg);
     hdr -> sr_len = len;
     memcpy(hdr->route, path, len * sizeof(nx_am_addr_t));
     return FAIL;
   }
 
-  command nx_am_addr_t* SrcRoutePacket.getRoute(message_t *msg) {
+  command nx_am_addr_t* SourceRoutePacket.getRoute(message_t *msg) {
     return getSRPHeader(msg) -> route;
   }
   
-  command uint8_t SrcRoutePacket.getRouteLen(message_t *msg) {
+  command uint8_t SourceRoutePacket.getRouteLen(message_t *msg) {
     return getSRPHeader(msg) -> sr_len;
   }
 
-  command error_t SrcRoutePacket.setRouteLen(message_t *msg, uint8_t len) {
+  command error_t SourceRoutePacket.setRouteLen(message_t *msg, uint8_t len) {
     getSRPHeader(msg) -> sr_len = len;
     return SUCCESS;
   }
@@ -329,38 +323,46 @@ implementation {
   //NOTE: The hops_left field is decremented when the packet is enqueued (i.e. at forward, not at sendTask)
   //NOTE: When a packet reaches the destination, hops_left is 0.
   //NOTE: So, getNextHop should return the destination addr when hops_left is 0.
-  command am_addr_t SrcRoutePacket.getNextHop(message_t *msg) {
+  command am_addr_t SourceRoutePacket.getNextHop(message_t *msg) {
     sr_header_t* hdr = getSRPHeader(msg);
-    return (call SrcRoutePacket.getRoute(msg))[hdr->sr_len - 1 - hdr->hops_left ];
+    return (call SourceRoutePacket.getRoute(msg))[hdr->sr_len - 1 - hdr->hops_left ];
   }
 
-  command am_addr_t SrcRoutePacket.getDest(message_t *msg) {
+  command am_addr_t SourceRoutePacket.getDest(message_t *msg) {
     sr_header_t* hdr = getSRPHeader(msg);
-    return (call SrcRoutePacket.getRoute(msg))[hdr->sr_len - 1];
+    return (call SourceRoutePacket.getRoute(msg))[hdr->sr_len - 1];
   }
   
-  command uint8_t SrcRoutePacket.getCurHop(message_t *msg) {
-    //QUESTION: This seems like it should be replaced with getHopsLeft
+  command am_addr_t SourceRoutePacket.getSource(message_t *msg) {
     sr_header_t* hdr = getSRPHeader(msg);
-    return hdr->hops_left + 2 - hdr->sr_len;
+    return (call SourceRoutePacket.getRoute(msg))[0];
+  }
+  
+  command uint8_t SourceRoutePacket.getHopsLeft(message_t *msg) {
+    sr_header_t* hdr = getSRPHeader(msg);
+    return hdr->hops_left ;
   }
 
-  command error_t SrcRoutePacket.setCurHop(message_t *msg, uint8_t hop) {
-    //QUESTION: This seems like it should be replaced with setHopsLeft. not sure what it would mean now.
-    return FAIL;
+  command error_t SourceRoutePacket.setHopsLeft(message_t *msg, uint8_t hopsLeft) {
+    getSRPHeader(msg) -> hops_left = hopsLeft;
+    return SUCCESS;
+  }
+  
+  command uint8_t SourceRoutePacket.getSeqNo(message_t *msg) {
+    return getSRPHeader(msg) -> seqno;
   }
 
   /**
    * StdControl commands. should it be splitcontrol?
    */
   command error_t StdControl.start() {
-    //QUESTION StdControl start: should it be splitcontrol/operate radio, or should this just change the state of the routing logic?
-    return FAIL;
+    setState(S_IDLE);
+    return SUCCESS;
   }
 
   command error_t StdControl.stop() {
-    //QUESTION StdControl stop: should it be splitcontrol/operate radio, or should this just change the state of the routing logic?
-    return FAIL;
+    setState(S_OFF);
+    return SUCCESS;
   }
 
   /**
@@ -379,7 +381,7 @@ implementation {
   /** 
    *  Defaults
    */
-  default event void SrcRouteSend.sendDone[uint8_t client](message_t *msg, error_t error) {
+  default event void SourceRouteSend.sendDone[uint8_t client](message_t *msg, error_t error) {
   }
 	  
   default event message_t *
@@ -387,7 +389,7 @@ implementation {
     return msg;
   }
 
-  default command sourceroute_id_t SrcRouteId.fetch[uint8_t client]() {
+  default command sourceroute_id_t SourceRouteId.fetch[uint8_t client]() {
     return 0;
   }
 

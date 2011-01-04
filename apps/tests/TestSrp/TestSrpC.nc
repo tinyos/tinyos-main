@@ -46,16 +46,16 @@ configuration TestSrpC {
   components ActiveMessageC;
 
   components SourceRoutingC;
-  components new SrcRouteSenderC(1);
-  components new SrcRouteReceiverC(1);
+  components new SourceRouteSenderC(1);
+  components new SourceRouteReceiverC(1);
 
   TestSrpP.Boot = Boot;
   TestSrpP.RadioSplitControl -> ActiveMessageC.SplitControl;
   
   TestSrpP.Timer -> Timer;
   TestSrpP.Random -> RandomC;
-  TestSrpP.SrcRouteSend -> SrcRouteSenderC.SrcRouteSend;
-  TestSrpP.Receive -> SrcRouteReceiverC;
-  TestSrpP.SrcRoutePacket -> SrcRouteSenderC.SrcRoutePacket;
+  TestSrpP.SourceRouteSend -> SourceRouteSenderC.SourceRouteSend;
+  TestSrpP.Receive -> SourceRouteReceiverC;
+  TestSrpP.SourceRoutePacket -> SourceRouteSenderC.SourceRoutePacket;
 
 }

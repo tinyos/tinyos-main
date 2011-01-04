@@ -37,13 +37,11 @@
 
 /* applications use this interface to get/set metadata for source routing */
 
-  interface SrcRoutePacket
+  interface SourceRoutePacket
   {
-    command am_addr_t address();
-
     command error_t clearRoute(message_t *msg);
 
-    //NOTE: mismatch with SrcRouteSend.send (nx_am_addr_t vs. am_addr_t)
+    //NOTE: mismatch with SourceRouteSend.send (nx_am_addr_t vs. am_addr_t)
     command error_t setRoute(message_t *msg, nx_am_addr_t *path, uint8_t len);
     command nx_am_addr_t* getRoute(message_t *msg);
 
@@ -52,10 +50,10 @@
 
     command am_addr_t getNextHop(message_t *msg);
     command am_addr_t getDest(message_t *msg);
+    command am_addr_t getSource(message_t *msg);
 
-    command uint8_t getCurHop(message_t *msg);
-    command error_t setCurHop(message_t *msg, uint8_t hop);
+    command uint8_t getHopsLeft(message_t *msg);
+    command error_t setHopsLeft(message_t *msg, uint8_t hopsLeft);
     
-    //NOTE: might be good to add getSource and getSeqNo commands
-
+    command uint8_t getSeqNo(message_t *msg);
   }

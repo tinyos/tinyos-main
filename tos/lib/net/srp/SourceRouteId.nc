@@ -34,6 +34,6 @@
  * @author Doug Carlson
  */
 
-interface SrcRouteId {
+interface SourceRouteId {
   command sourceroute_id_t fetch();
 }

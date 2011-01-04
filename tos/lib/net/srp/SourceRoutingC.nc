@@ -38,21 +38,21 @@
 configuration SourceRoutingC {
   provides {
     interface StdControl;
-    interface SrcRouteSend[uint8_t client];
-    interface SrcRoutePacket;
+    interface SourceRouteSend[uint8_t client];
+    interface SourceRoutePacket;
     interface Receive[sourceroute_id_t id];
   }
   uses {
-    interface SrcRouteId[uint8_t client];
+    interface SourceRouteId[uint8_t client];
   }
 }
 implementation{
-  components new SrcRouteEngineC(AM_SRP) as Engine;
+  components new SourceRouteEngineC(AM_SRP) as Engine;
 
   StdControl = Engine;
-  SrcRouteSend = Engine;
-  SrcRoutePacket = Engine;
+  SourceRouteSend = Engine;
+  SourceRoutePacket = Engine;
   Receive = Engine;
 
-  Engine.SrcRouteId = SrcRouteId;
+  Engine.SourceRouteId = SourceRouteId;
 }

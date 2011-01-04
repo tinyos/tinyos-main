@@ -7,7 +7,7 @@ r = t.radio()
 t.init()
 
 t.addChannel("TestSrpP", sys.stdout)
-#t.addChannel("SrcRouteEngineP", sys.stdout)
+#t.addChannel("SourceRouteEngineP", sys.stdout)
 #t.addChannel("SRPDebug", sys.stdout)
 #t.addChannel("SRPInfo", sys.stdout)
 t.addChannel("SRPError", sys.stdout)

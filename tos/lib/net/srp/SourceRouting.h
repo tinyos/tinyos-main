@@ -28,19 +28,31 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+*/
+#ifndef SOURCEROUTING_H
+#define SOURCEROUTING_H
 
-/**
- * @author Doug Carlson
- */
+#include "AM.h"
+#include "message.h"
 
-generic module SrcRouteIdP(sourceroute_id_t id) {
-  provides {
-    interface SrcRouteId;
-  }
-}
-implementation {
-  command sourceroute_id_t SrcRouteId.fetch() {
-    return id;
-  }
-}
+#define UQ_SRP_CLIENT "SRP.client"
+
+
+enum {
+ SRP_MAX_PATHLEN = 10,
+ AM_SRP = 0x76,
+};
+
+typedef uint8_t sourceroute_id_t;
+typedef nx_uint8_t nx_sourceroute_id_t;
+
+//TODO: for generic sub-layers, route should be a nx_uint8_t[]
+typedef nx_struct {
+  nx_uint8_t sr_len;
+  nx_uint8_t hops_left;
+  nx_uint8_t seqno;
+  nx_sourceroute_id_t payload_id;
+  nx_am_addr_t route[SRP_MAX_PATHLEN];
+} sr_header_t;
+
+#endif

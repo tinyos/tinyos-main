@@ -28,36 +28,19 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-#ifndef SOURCEROUTING_H
-#define SOURCEROUTING_H
+ */
 
-#include "AM.h"
-#include "message.h"
+/**
+ * @author Doug Carlson
+ */
 
-#define UQ_SRP_CLIENT "SRP.client"
+generic configuration SourceRouteReceiverC(sourceroute_id_t srID) {
+  provides {
+    interface Receive;
+  }
+}
+implementation {
+  components SourceRoutingC;
 
-//TODO: pick new/reserved AM ID
-
-enum {
- SRP_MAX_PATHLEN = 10,
- AM_SRP = 23,
-};
-
-typedef uint8_t sourceroute_id_t;
-typedef nx_uint8_t nx_sourceroute_id_t;
-
-//NOTE it would be good to make the sub-layer address type a little more flexible. The easiest thing is probably to typedef it, but I guess it could also be a type parameter so that a node could run multiple SRP components (for different underlying protocols)
-//TODO: should typedef nx_am_addr_t to nx_sr_sub_addr_t or something like that
-//TODO: should typedef am_addr_t to sr_sub_addr_t
-//NOTE: resolve payload_id vs. sourceroute_id: should be consistent
-
-typedef nx_struct {
-  nx_uint8_t sr_len;
-  nx_uint8_t hops_left;
-  nx_uint8_t seqno;
-  nx_sourceroute_id_t payload_id;
-  nx_am_addr_t route[SRP_MAX_PATHLEN];
-} sr_header_t;
-
-#endif
+  Receive = SourceRoutingC.Receive[srID];
+}

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2010 Johns Hopkins University.
  * All rights reserved.
  *
@@ -34,50 +34,22 @@
  * @author Doug Carlson
  */
 
-#include "SrcRouteEngine.h"
-
-generic configuration SrcRouteEngineC(am_id_t AMId) {
+generic configuration SourceRouteSenderC(sourceroute_id_t srID) {
   provides {
-    interface StdControl;
-    interface SrcRouteSend[uint8_t client];
-    interface SrcRoutePacket;
-    interface Receive[sourceroute_id_t id];
-  }
-  uses {
-    interface SrcRouteId[uint8_t client];
+    interface SourceRouteSend;
+    interface SourceRoutePacket;
   }
 }
 implementation {
   enum {
-    CLIENT_COUNT = uniqueCount(UQ_SRP_CLIENT),
-    FORWARD_COUNT = 12,
-    QUEUE_SIZE = CLIENT_COUNT + FORWARD_COUNT,
+    CLIENT_ID = unique(UQ_SRP_CLIENT),
   };
-  components MainC;
 
-  components new AMSenderC(AMId) as SubSend;
-  components new AMReceiverC(AMId) as SubReceive;
-  components ActiveMessageC; 
-
-  components SrcRouteEngineP as Engine;
+  components SourceRoutingC;
+  components new SourceRouteIdP(srID);
   
-  components new QueueC(srf_queue_entry_t*, QUEUE_SIZE) as SendQueue;
-  components new PoolC(srf_queue_entry_t, FORWARD_COUNT) as QEntryPool;
-  components new PoolC(message_t, FORWARD_COUNT) as MessagePool;
+  SourceRoutingC.SourceRouteId[CLIENT_ID] -> SourceRouteIdP;
 
-  Engine.SubReceive -> SubReceive;
-  Engine.SubSend -> SubSend;
-  Engine.SubControl -> ActiveMessageC;
-  Engine.SendQueue -> SendQueue;
-  Engine.QEntryPool -> QEntryPool;
-  Engine.MessagePool -> MessagePool;
-  MainC.SoftwareInit -> Engine.Init;
-
-  StdControl = Engine;
-  SrcRouteSend = Engine;
-  SrcRoutePacket = Engine;
-  Receive = Engine;
-
-  Engine.SrcRouteId = SrcRouteId;
-
+  SourceRouteSend = SourceRoutingC.SourceRouteSend[CLIENT_ID];
+  SourceRoutePacket = SourceRoutingC;
 }
