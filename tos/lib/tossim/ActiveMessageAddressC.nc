@@ -50,27 +50,51 @@
  * Accessor methods for Active Messages.
  *
  * @author Philip Levis
+ * @author Morten Tranberg Hansen (added ActiveMessageAddress)
  * @date June 19 2005
  */
 
 module ActiveMessageAddressC  {
-  provides async command am_addr_t amAddress();
-  provides async command void setAmAddress(am_addr_t a);
+  provides {
+    interface ActiveMessageAddress;
+    async command am_addr_t amAddress();
+    async command void setAmAddress(am_addr_t a);
+  }
 }
 implementation {
   bool set = FALSE;
   am_addr_t addr;
+  am_group_t group = TOS_AM_GROUP;
 
-  async command am_addr_t amAddress() {
-    if (!set) {
+  async command void ActiveMessageAddress.setAddress(am_group_t myGroup, am_addr_t myAddr) {
+    addr = myAddr;
+    group = myGroup;
+    set = TRUE;
+    signal ActiveMessageAddress.changed();
+  }
+
+  async command am_addr_t ActiveMessageAddress.amAddress() {
+    if(!set) {
       addr = TOS_NODE_ID;
       set = TRUE;
     }
     return addr;
   }
 
-  async command void setAmAddress(am_addr_t a) {
-    set = TRUE;
-    addr = a;
+  async command am_group_t ActiveMessageAddress.amGroup() {
+    return group;
   }
+
+  async command am_addr_t amAddress() {
+    return call ActiveMessageAddress.amAddress();
+  }
+
+  async command void setAmAddress(am_addr_t a) {
+    addr = a;
+    set = TRUE;
+    signal ActiveMessageAddress.changed();
+  }
+
+  default async event void ActiveMessageAddress.changed() {}
+
 }
