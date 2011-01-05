@@ -7,7 +7,7 @@ OPTFLAGS = -g -O3
 LIBS = -lm -lstdc++ 
 PFLAGS += -tossim -fnesc-nido-tosnodes=1000 -fnesc-simulate -fnesc-nido-motenumber=sim_node\(\) -DTOSSIM_NO_DEBUG
 WFLAGS = -Wno-nesc-data-race
-PYTHON_VERSION=2.5
+PYTHON_VERSION ?= 2.5
 
 BUILDDIR   = simbuild/$(PLATFORM)
 CFILE    = $(BUILDDIR)/sim.c
