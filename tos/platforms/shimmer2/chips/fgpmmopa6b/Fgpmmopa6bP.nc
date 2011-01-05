@@ -69,6 +69,8 @@ implementation {
   command error_t Init.init() {
     TOSH_CLR_PROG_OUT_PIN();
 
+    TOSH_MAKE_ADC_7_INPUT();
+
     transmissionComplete = FALSE;
 
     post setupUART();
