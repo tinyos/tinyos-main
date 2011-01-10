@@ -37,6 +37,6 @@
 #include <RPL.h>
 
 interface RPLDAORoutingEngine{
-  command void startDAO();
+  command error_t startDAO();
   command bool getStoreState();
 }

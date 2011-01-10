@@ -88,7 +88,7 @@ interface RPLRank {
   
   // inconsistency is seen for the link with IP
   // record this as part of entry in table as well
-  command void inconsistencyDetected(struct in6_addr *node);
+  command void inconsistencyDetected();
 
   /*new adding*/ 
   // ping rank component if there are parents

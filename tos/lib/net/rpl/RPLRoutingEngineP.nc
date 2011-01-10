@@ -58,10 +58,16 @@ generic module RPLRoutingEngineP(){
     interface IPAddress;
     interface Leds;
     interface StdControl as RankControl;
+    interface RPLDAORoutingEngine;
   }
 }
 
 implementation{
+
+#define RPL_GLOBALADDR
+#undef printfUART
+#define printfUART(X, args ...) ;
+
   /* Declare Global Variables */
   uint32_t tricklePeriod;
   uint32_t randomTime;
@@ -78,7 +84,7 @@ implementation{
   uint8_t RPLInstanceID = 1; 
   struct in6_addr DODAGID;
   uint8_t DODAGVersionNumber = 0;
-  uint8_t MOP = RPL_MOP_No_Storing;
+  uint8_t MOP = RPL_MOP_Storing_No_Multicast;
   uint8_t DAG_PREF = 1;
 	
   uint8_t redunCounter = 0xFF;
@@ -121,7 +127,11 @@ implementation{
     MOP = RPL_MOP_No_Storing;
 #endif
 
+#ifdef RPL_GLOBALADDR
     call IPAddress.getGlobalAddr(&ADDR_MY_IP);
+#else
+    call IPAddress.getLLAddr(&ADDR_MY_IP);
+#endif
 
     /* SDH : FF02::2 -- link-local all-routers group? */
     memset(MULTICAST_ADDR.s6_addr, 0, 16);
@@ -130,7 +140,11 @@ implementation{
     MULTICAST_ADDR.s6_addr[15] = 0x1A;
 
     if (I_AM_ROOT) {
+#ifdef RPL_GLOBALADDR
       call IPAddress.getGlobalAddr(&DODAGID);
+#else
+      call IPAddress.getLLAddr(&DODAGID);
+#endif
       post initDIO();
     } else {
       call InitDISTimer.startPeriodic(DIS_INTERVAL);
@@ -157,6 +171,7 @@ implementation{
     struct dio_etx_t etx_value;
     struct dio_dodag_config_t dodag_config;
     uint16_t length;
+
 /*     struct in6_addr next_hop; */
 
 /*     if ((call RPLRankInfo.nextHop(&DEF_PREFIX, &next_hop)) != SUCCESS) */
@@ -167,23 +182,30 @@ implementation{
       return; 
     }
 
+    call RPLDAORoutingEngine.startDAO();
     // call IPAddress.setSource(&pkt.ip6_hdr);
 
     length = sizeof(struct dio_base_t) + sizeof(struct dio_body_t) + 
       sizeof(struct dio_metric_header_t) + sizeof(struct dio_etx_t) + 
       sizeof(struct dio_dodag_config_t);
 
-    msg.icmpv6.type = ICMP_TYPE_ROUTER_ADV; // Is this type correct?
+    msg.icmpv6.type = 155;//ICMP_TYPE_ROUTER_ADV; // Is this type correct?
     msg.icmpv6.code = ICMPV6_CODE_DIO;
     msg.icmpv6.checksum = 0;
-    msg.version = DODAGVersionNumber;
-    msg.instance_id.id = RPLInstanceID;
-    memcpy(&msg.dodagID, &DODAGID, sizeof(struct in6_addr));
     msg.grounded = GROUND_STATE;
     msg.mop = MOP;
     msg.dag_preference = DAG_PREF;
+    msg.version = DODAGVersionNumber;
+    msg.instance_id.id = RPLInstanceID;
+    msg.dtsn = DTSN;
+    memcpy(&msg.dodagID, &DODAGID, sizeof(struct in6_addr));
     
     if (I_AM_ROOT) {
+#ifdef RPL_GLOBALADDR
+      call IPAddress.getGlobalAddr(&DODAGID);
+#else
+      call IPAddress.getLLAddr(&DODAGID);
+#endif
       msg.dagRank = ROOT_RANK;
     } else {
       msg.dagRank = call RPLRankInfo.getRank(&ADDR_MY_IP);
@@ -249,7 +271,7 @@ implementation{
       pkt.ip6_data = &v[0];		
     }
 
-    printfUART("TxDIO etx %d %d %d %lu \n", call RPLRankInfo.getEtx(),  \
+    printfUART("\n >>>>>> TxDIO etx %d %d %d %lu \n", call RPLRankInfo.getEtx(),  \
                ntohs(DODAGID.s6_addr16[7]), msg.dagRank, tricklePeriod);
 
     if (UNICAST_DIO) {
@@ -259,6 +281,7 @@ implementation{
       memcpy(&pkt.ip6_hdr.ip6_dst, &MULTICAST_ADDR, 16);
     }
     call IPAddress.getLLAddr(&pkt.ip6_hdr.ip6_src);
+    //call IPAddress.getGlobalAddr(&pkt.ip6_hdr.ip6_src);
     // memcpy(&pkt.ip6_hdr.ip6_src, &ADDR_MY_IP, 16);
 
     call IP_DIO.send(&pkt);
@@ -274,7 +297,7 @@ implementation{
       return;
     
     length = sizeof(struct dis_base_t);
-    msg.icmpv6.type = ICMP_TYPE_ROUTER_SOL; // router soicitation
+    msg.icmpv6.type = 155;//ICMP_TYPE_ROUTER_SOL; // router soicitation
     msg.icmpv6.code = ICMPV6_CODE_DIS;
     msg.icmpv6.checksum = 0;
 
@@ -289,6 +312,9 @@ implementation{
 
     memcpy(&pkt.ip6_hdr.ip6_dst, &MULTICAST_ADDR, 16);
     call IPAddress.getLLAddr(&pkt.ip6_hdr.ip6_src);
+    //call IPAddress.getGlobalAddr(&pkt.ip6_hdr.ip6_src);
+
+    printfUART("\n >>>>>> TxDIS\n");
 
     call IP_DIS.send(&pkt);
   }
@@ -298,7 +324,7 @@ implementation{
   void inconsistencyDetected(){
     // when inconsistency detected, reset trickle
     INCONSISTENCY_COUNT ++;
-    call RPLRankInfo.inconsistencyDetected(&ADDR_MY_IP); // inconsistency on my on node detected?
+    call RPLRankInfo.inconsistencyDetected(/*&ADDR_MY_IP*/); // inconsistency on my on node detected?
 
     call RPLRouteInfo.resetTrickle();
   }

@@ -87,6 +87,8 @@ enum {
   RPL_DODAG_METRIC_CONTAINER_TYPE = 2,
   RPL_DST_PREFIX_TYPE = 3,
   RPL_DODAG_CONFIG_TYPE = 4,
+  RPL_TARGET_TYPE = 5,
+  RPL_TRANSIT_INFORMATION_TYPE = 6,
   RPL_MOP_No_Downward = 0,
   RPL_MOP_No_Storing = 1,
   RPL_MOP_Storing_No_Multicast = 2,
@@ -108,8 +110,8 @@ struct dis_base_t {
   uint16_t reserved;
 };
 
-
 struct rpl_instance_id {
+  /* Global RPLInstance ID */
   uint8_t reserved  : 1;
   uint8_t id        : 7;
 };
@@ -141,17 +143,6 @@ struct dao_base_t {
   struct in6_addr dodagID;
   struct target_option_t target_option;
   struct transit_info_option_t transit_info_option;
-  /*
-  uint16_t DAOrank;
-  uint8_t routeTag;
-  uint8_t prefixLength;
-  uint8_t RRCount;
-  uint32_t DAOlifetime;
-  struct in6_addr destPrefix;
-  struct in6_addr RRStack;
-  //uint8_t* RRStack;
-  uint8_t* data;
-  */
 };
 
 struct dio_base_t {
@@ -170,7 +161,6 @@ struct dio_base_t {
 
 struct dio_body_t{ // type 2 ; contains metrics
   uint8_t type;
-  //uint8_t PAD1;
   uint16_t container_len;
   uint8_t *metric_data;
 };
@@ -320,13 +310,12 @@ typedef struct {
 
 typedef struct {
   uint8_t o_bit  : 1;
-  //uint8_t s_flag  : 1;
   uint8_t r_bit  : 1;
   uint8_t f_bit  : 1;
   uint8_t reserved : 5;
   struct rpl_instance_id instance_id; // used to be instanceID 
   uint16_t senderRank;
-} __attribute__((packed)) ip_first_hdr_t ;
+} __attribute__((packed)) rpl_data_hdr_t ;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

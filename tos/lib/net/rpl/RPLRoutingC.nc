@@ -13,10 +13,11 @@ configuration RPLRoutingC {
   /* we receive routing messages through the ICMP component, which
      recieves all packets with the ICMP  */
   components IPStackC;
-  components new ICMPCodeDispatchC(ICMP_TYPE_ROUTER_ADV) as ICMP_RA;
+  components new ICMPCodeDispatchC(155) as ICMP_RA;
 
   StdControl = RPLRoutingEngineC;
   StdControl = RPLRankC;
+  /* Cancel below for no-downstream messages */
   StdControl = RPLDAORoutingEngineC;
   RootControl = RPLRoutingEngineC;
 

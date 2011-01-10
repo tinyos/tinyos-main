@@ -167,13 +167,15 @@ implementation {
     struct in6_addr my_addr;
     call IPAddress.getLLAddr(&my_addr);
     if(compare_ipv6(&my_addr, node)){
+      printfUART("Myself\n");
       return nodeRank;
     }
     indexset = getParent(node);
     if (indexset != MAX_PARENT){
+      printfUART("Not myself\n");
       return parentSet[indexset].rank;
     }
-
+    printfUART("Myself\n");
     return nodeRank;
   }
 
@@ -231,7 +233,7 @@ implementation {
   // inconsistency is seen for the link with IP
   // record this as part of entry in table as well
   // Other layers will report this information
-  command void RPLRankInfo.inconsistencyDetected(struct in6_addr *node){ //done
+  command void RPLRankInfo.inconsistencyDetected(){ //done
     parentNum = 0;
     nodeRank = INFINITE_RANK;
     minMetric = MAX_ETX;
@@ -314,17 +316,56 @@ implementation {
     }
   }
 
+  event error_t ForwardingEvents.deleteHeader(struct ip6_hdr *iph, void* payload){
+    uint16_t len;
+    /* Reconfigure length */
+    len = ntohs(iph->ip6_plen);
+    printfUART("delete header %d \n",len);
+    len = len - sizeof(rpl_data_hdr_t);;
+    iph->ip6_plen = htons(len);
+
+    /* Move data back up */
+    memcpy(payload, (uint8_t*)payload + sizeof(rpl_data_hdr_t), len);
+
+    /* configure length*/
+    //&length -= sizeof(sizeof(rpl_data_hdr_t));
+
+    return SUCCESS;
+  }
+
+
   event bool ForwardingEvents.initiate(struct ip6_packet *pkt,
                                        struct in6_addr *next_hop) {
-    //uint32_t flow = 0;
-    // ip_first_hdr_t *flow_hdr = (ip_first_hdr_t*) &iph->ip6_flow;
-    // printfUART("Initiating: %i %i\n", flow_hdr->senderRank, flow_hdr->instance_id.id);
-    // flow_hdr->senderRank = nodeRank;
-    // flow_hdr->instance_id.id = call RouteInfo.getInstanceID();
-    // flow = nodeRank | ((uint32_t)(call RouteInfo.getInstanceID())) << 20;
-    // printfUART("set flow label to %lx\n", flow);
-    // iph->ip6_flow |= htonl(flow);
+
+    struct ip_iovec v;
+    uint16_t len; 
+    rpl_data_hdr_t data_hdr;
+
+    printfUART("make header %d\n", pkt->ip6_hdr.ip6_nxt);
+
+    data_hdr.o_bit = 0;
+    data_hdr.r_bit = 0;
+    data_hdr.f_bit = 0;
+    data_hdr.reserved = 0;
+    data_hdr.instance_id.id = call RouteInfo.getInstanceID();
+    data_hdr.senderRank = nodeRank;
+
+    printfUART("set data header to %d %d\n", data_hdr.instance_id.id, data_hdr.senderRank);
+
+    len = ntohs(pkt->ip6_hdr.ip6_plen);
+
+    /* add the header */
+    v.iov_base = (uint8_t*) &data_hdr;
+    v.iov_len = sizeof(rpl_data_hdr_t);
+    v.iov_next = pkt->ip6_data; // original upper layer goes here!
+    
+    /* increase length in ipv6 header and relocate beginning*/
+    pkt->ip6_data = &v;
+    len = len + v.iov_len;
+    pkt->ip6_hdr.ip6_plen = htons(len);
+
     return TRUE;
+
   }
 
   /**
@@ -336,36 +377,49 @@ implementation {
    */
   event bool ForwardingEvents.approve(struct ip6_hdr *iph, struct ip6_route *route,
                                       struct in6_addr *next_hop) {
-    ip_first_hdr_t *flow_hdr = (ip_first_hdr_t*) &iph->ip6_flow;
+    rpl_data_hdr_t* data_hdr;
     bool inconsistent = FALSE;
-    return TRUE;
+
+    data_hdr = (rpl_data_hdr_t*) route;
+
+    printfUART("approve test: %d %d %d %d %d \n", data_hdr->senderRank, data_hdr->instance_id.id, nodeRank, data_hdr->o_bit, call RPLRankInfo.getRank(next_hop));
+
     /* SDH : we'd want to dispatch on the instance id if there are
        multiple dags */
 
-    if (flow_hdr->senderRank == 0)
+    if (data_hdr->senderRank == 1){
+      data_hdr->o_bit = 1;
       goto approve;
+    }
 
-    if (flow_hdr->o_bit && flow_hdr->senderRank > nodeRank) {
+    if (data_hdr->o_bit && data_hdr->senderRank > nodeRank) {
       /* loop */
       inconsistent = TRUE;
-    } else if (!flow_hdr->o_bit && flow_hdr->senderRank < nodeRank) {
+    } else if (!data_hdr->o_bit && data_hdr->senderRank < nodeRank) {
       inconsistent = TRUE;
     }
 
+    if (call RPLRankInfo.getRank(next_hop) >= nodeRank){
+      /* Packet is heading down if the next_hop rank is not smaller than the current one (not in the parent set) */
+      /* By the time I am here, it means that there is a next hop but if this is not in my parent set, then it should be downward*/
+      data_hdr->o_bit = 1;
+    }
+
     if (inconsistent) {
-      if (flow_hdr->r_bit) {
+      if (data_hdr->r_bit) {
         /*  this is not the first time  */
         /*  ditch this packet! */
+	call RouteInfo.inconsistency();
         return FALSE;
       } else {
         /* just mark it */
-        flow_hdr->r_bit = 1;
+        data_hdr->r_bit = 1;
       }
     }
 
   approve:
-    flow_hdr->senderRank = nodeRank;
-    printfUART("Approving: %i %i\n", flow_hdr->senderRank, flow_hdr->instance_id.id);
+    printfUART("Approving: %d %d %d\n", data_hdr->senderRank, data_hdr->instance_id.id, inconsistent);
+    data_hdr->senderRank = nodeRank;
     return TRUE;
   }
 
@@ -429,7 +483,10 @@ implementation {
     minMetric = minDesired;
     desiredParent = min;
     /* set the new default route */
-    call ForwardingTable.addRoute(NULL, 0, &parentSet[desiredParent].parentIP, RPL_IFACE);
+    /* set one of the below of maybe set both? */
+    //call ForwardingTable.addRoute((const uint8_t*)&DODAGID, 128, &parentSet[desiredParent].parentIP, RPL_IFACE);
+    call ForwardingTable.addRoute(NULL, 0, &parentSet[desiredParent].parentIP, RPL_IFACE); // will this give me the default path?
+
   }
   
   bool checkConstraint(uint32_t latency, uint32_t lateCon, 
@@ -770,7 +827,8 @@ implementation {
     dio = (struct dio_base_t *) payload;
 
     printfUART("I GOT %d %d!!\n", iph->ip6_nxt, dio->icmpv6.code);
-    if (!m_running) return;
+
+    if (!m_running/* || dio->dagRank == 1*/) return;
 
     computeRank(iph, dio);
     leafState = FALSE;
