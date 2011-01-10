@@ -122,9 +122,9 @@ module IPForwardingEngineP {
     int i;
     for (i = 0; i < ROUTE_TABLE_SZ; i++) {
       if (routing_table[i].valid &&
-          ((routing_table[i].prefixlen == 0) || 
-           memcmp(prefix, routing_table[i].prefix.s6_addr,
-                  min(prefix_len_bits, routing_table[i].prefixlen) / 8) == 0)) {
+	  ((routing_table[i].prefixlen == 0) || 
+	   (memcmp(prefix, routing_table[i].prefix.s6_addr, 
+		   min(prefix_len_bits, routing_table[i].prefixlen) / 8) == 0 && prefix_len_bits))) {
         /* match! */
         return &routing_table[i];
       }
@@ -177,9 +177,12 @@ module IPForwardingEngineP {
                                                   (void *)ROUTE_INVAL_KEY);
     } else if (next_hop_entry) {
       printfUART("Forwarding -- got from routing table\n");
-      if (!(signal ForwardingEvents.initiate[next_hop_entry->ifindex](pkt,
+
+      /* control messages do not need routing headers */
+      if(pkt->ip6_hdr.ip6_nxt != IANA_ICMP)
+	if (!(signal ForwardingEvents.initiate[next_hop_entry->ifindex](pkt,
                                              &next_hop_entry->next_hop)))
-        return FAIL;
+	  return FAIL;
 
       return call IPForward.send[next_hop_entry->ifindex](&next_hop_entry->next_hop, pkt, 
                                                           (void *)next_hop_entry->key);
@@ -206,6 +209,13 @@ module IPForwardingEngineP {
     if (call IPAddress.isLocalAddress(&iph->ip6_dst)) {
       /* local delivery */
       printfUART("Local delivery\n");
+#ifdef RPL_ROUTING
+      if(iph->ip6_nxt != IANA_ICMP)
+	signal ForwardingEvents.deleteHeader[RPL_IFACE](iph, payload);
+      //len = len - sizeof(rpl_data_hdr_t);
+      len = ntohs(iph->ip6_plen);
+      //payload = (uint8_t*) payload + sizeof(rpl_data_hdr_t);
+#endif
       signal IP.recv(iph, payload, len, meta);
     } else {
       /* forwarding */
@@ -245,7 +255,7 @@ module IPForwardingEngineP {
       /* give the routing protocol a chance to do data-path validation
          on this packet. */
       /* RPL uses this to update the flow label fields */
-      if (!(signal ForwardingEvents.approve[next_hop_ifindex](iph, NULL, next_hop)))
+      if (!(signal ForwardingEvents.approve[next_hop_ifindex](iph, (struct ip6_route*) payload, next_hop)))
         return;
 
       call IPForward.send[next_hop_ifindex](next_hop, &pkt, (void *)next_hop_key);
@@ -267,7 +277,7 @@ module IPForwardingEngineP {
 
   event void PrintTimer.fired() {
     int i;
-   printfUART("\ndestination                 gateway            interface\n");
+    printfUART("\ndestination                 gateway            interface\n");
     for (i = 0; i < ROUTE_TABLE_SZ; i++) {
       if (routing_table[i].valid) {
         printfUART_in6addr(&routing_table[i].prefix);
@@ -278,6 +288,11 @@ module IPForwardingEngineP {
     }
     printfUART("\n");
   }
+
+ default event error_t ForwardingEvents.deleteHeader[uint8_t idx](struct ip6_hdr *iph, 
+								  void* payload){
+   return SUCCESS;
+ }
 
   default event bool ForwardingEvents.approve[uint8_t idx](struct ip6_hdr *iph,
                                                           struct ip6_route *rhdr,

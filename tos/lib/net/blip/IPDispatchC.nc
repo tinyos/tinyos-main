@@ -36,7 +36,7 @@ configuration IPDispatchC {
 } implementation {
   
   components MainC;
-  components LedsC as LedsC;
+  components NoLedsC as LedsC;
 
   /* IPDispatchP wiring -- fragment rassembly and lib6lowpan bindings */
   components IPDispatchP;
