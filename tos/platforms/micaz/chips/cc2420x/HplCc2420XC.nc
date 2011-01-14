@@ -71,7 +71,7 @@ implementation {
 	components LocalTimeMicroC;
 	LocalTimeRadio = LocalTimeMicroC.LocalTime; 			 	
 
-	components new AlarmThree16C() as AlarmC;
+	components new AlarmOne16C() as AlarmC;
 	Alarm = AlarmC; 
 	
 }
