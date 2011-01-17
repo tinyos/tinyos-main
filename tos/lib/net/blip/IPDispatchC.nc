@@ -61,9 +61,9 @@ configuration IPDispatchC {
   IPDispatchP.Ieee154Send -> MessageC.BareSend;
   IPDispatchP.Ieee154Receive -> MessageC.BareReceive;
 
-/* #ifdef LOW_POWER_LISTENING */
-/*   IPDispatchP.LowPowerListening -> MessageC; */
-/* #endif */
+#ifdef LOW_POWER_LISTENING
+   IPDispatchP.LowPowerListening -> MessageC;
+#endif
 
   IPDispatchP.PacketLink -> MessageC;
   IPDispatchP.ReadLqi -> ReadLqiC;
