@@ -6,12 +6,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -19,7 +19,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Author: Janos Sallai
- */ 
+ */
 
 configuration HplCC2420XC {
 	provides {
@@ -31,47 +31,47 @@ configuration HplCC2420XC {
 		interface GeneralIO as FIFOP;
 		interface GeneralIO as RSTN;
 		interface GeneralIO as SFD;
-		interface GeneralIO as VREN; 
-		interface GpioCapture as SfdCapture;	
+		interface GeneralIO as VREN;
+		interface GpioCapture as SfdCapture;
 		interface GpioInterrupt as FifopInterrupt;
 		interface LocalTime<TRadio> as LocalTimeRadio;
-		interface Init;		
+		interface Init;
 		interface Alarm<TRadio,uint16_t>;
 	}
 }
 implementation {
 
 	components Atm128SpiC, MotePlatformC, HplCC2420XSpiP, HplAtm128GeneralIOC as IO;
-	
-	Init = Atm128SpiC; 
+
+	Init = Atm128SpiC;
 
 	SpiResource = HplCC2420XSpiP.Resource;
 	HplCC2420XSpiP.SubResource -> Atm128SpiC.Resource[ unique("Atm128SpiC.Resource") ];
 	HplCC2420XSpiP.SS -> IO.PortB0;
-	FastSpiByte = Atm128SpiC; 
-	
+	FastSpiByte = Atm128SpiC;
+
 	CCA    = IO.PortD6;
 	CSN    = IO.PortB0;
 	FIFO   = IO.PortB7;
 	FIFOP  = IO.PortE6;
 	RSTN   = IO.PortA6;
 	SFD    = IO.PortD4;
-	VREN   = IO.PortA5;	 	
-	 	
+	VREN   = IO.PortA5;
+
 	components new Atm128GpioCaptureC() as SfdCaptureC;
 	components HplAtm128Timer1C as Timer1C;
 	SfdCapture = SfdCaptureC;
-	SfdCaptureC.Atm128Capture -> Timer1C.Capture; 
+	SfdCaptureC.Atm128Capture -> Timer1C.Capture;
 
 	components new Atm128GpioInterruptC() as FifopInterruptC;
   	components HplAtm128InterruptC as Interrupts;
   	FifopInterrupt= FifopInterruptC;
-  	FifopInterruptC.Atm128Interrupt -> Interrupts.Int6; 	
+  	FifopInterruptC.Atm128Interrupt -> Interrupts.Int6;
 
 	components LocalTimeMicroC;
-	LocalTimeRadio = LocalTimeMicroC.LocalTime; 			 	
+	LocalTimeRadio = LocalTimeMicroC.LocalTime; 			
 
 	components new AlarmOne16C() as AlarmC;
-	Alarm = AlarmC; 
-	
+	Alarm = AlarmC;
+
 }
