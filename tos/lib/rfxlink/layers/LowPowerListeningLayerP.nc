@@ -384,7 +384,7 @@ implementation
 
 		sleepInterval = interval;
 
-		if( (state == LISTEN && sleepInterval == 0) || state == SLEEP_WAIT )
+		if( state == LISTEN || state == SLEEP_WAIT )
 		{
 			call Timer.stop();
 			--state;
