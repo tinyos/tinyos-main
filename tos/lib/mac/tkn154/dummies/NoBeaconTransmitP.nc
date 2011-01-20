@@ -163,5 +163,7 @@ implementation
 
   async command bool OutgoingSF.isBroadcastPending() {return FALSE;}
 
+  async command uint32_t OutgoingSF.beaconInterval() { return 0;}
+
   async command bool IsSendingBeacons.getNow() {return FALSE;}
 }

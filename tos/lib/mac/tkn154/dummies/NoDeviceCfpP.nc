@@ -86,11 +86,7 @@ implementation
   { 
     // the CFP has started, this component now owns the token -  
     // because GTS is not implemented we pass it on
-#ifndef IEEE154_BEACON_TX_DISABLED
-    call RadioToken.transferTo(RADIO_CLIENT_BEACONTRANSMIT);
-#else
-    call RadioToken.transferTo(RADIO_CLIENT_BEACONSYNCHRONIZE);
-#endif
+    call RadioToken.transferTo(RADIO_CLIENT_DEVICE_INACTIVE_PERIOD);
   }
 
   async event void CfpEndAlarm.fired() {}

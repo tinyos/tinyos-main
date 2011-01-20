@@ -238,8 +238,10 @@ implementation
         }
       }
       call CapEndAlarm.startAt(call SuperframeStructure.sfStartTime(), capDuration);
-      if (call SuperframeStructure.battLifeExtDuration() > 0)
+      if (call SuperframeStructure.battLifeExtDuration() > 0) {
+        dbg_serial("DispatchSlottedCsmaP", "battLifeExtDuration enabled!\n");
         call BLEAlarm.startAt(call SuperframeStructure.sfStartTime(), call SuperframeStructure.battLifeExtDuration());
+      }
     }
     updateState();
   }

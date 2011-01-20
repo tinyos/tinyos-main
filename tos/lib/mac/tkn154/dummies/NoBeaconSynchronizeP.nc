@@ -108,6 +108,7 @@ implementation
   async command uint16_t IncomingSF.guardTime() { return 0; }
   async command const ieee154_timestamp_t* IncomingSF.sfStartTimeRef() { return NULL; }
   async command bool IncomingSF.isBroadcastPending() { return 0; }
+  async command uint32_t IncomingSF.beaconInterval() { return 0;}
   async command bool IsTrackingBeacons.getNow() { return 0; }
 
   event void DataRequest.pollDone(){}

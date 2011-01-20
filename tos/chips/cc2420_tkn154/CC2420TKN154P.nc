@@ -171,13 +171,10 @@ module CC2420TKN154P
 
   task void startDoneTask() 
   {
-    call CC2420Config.setChannel(IEEE154_DEFAULT_CURRENTCHANNEL);
-    call CC2420Config.setShortAddr(IEEE154_DEFAULT_SHORTADDRESS);
-    call CC2420Config.setPanAddr(IEEE154_DEFAULT_PANID);
-    call CC2420Config.setPanCoordinator(FALSE);  
-    call CC2420Config.setPromiscuousMode(FALSE);
-    call CC2420Config.setCCAMode(IEEE154_DEFAULT_CCAMODE);
-    call CC2420Config.setTxPower(dBmToPA_LEVEL(IEEE154_DEFAULT_TRANSMITPOWER_dBm));
+    // in case this is a restart: we just set the channel to the same value
+    // it had before  in order to set m_needsSync to TRUE and then call sync
+    // to populate the registers on the chip with the values already in memory
+    call CC2420Config.setChannel(call CC2420Config.getChannel());
     call CC2420Config.sync();
     call SpiResource.release();
     m_state = S_RADIO_OFF;

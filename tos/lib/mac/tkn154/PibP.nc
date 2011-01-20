@@ -133,6 +133,7 @@ implementation
     m_pib.macShortAddress = IEEE154_DEFAULT_SHORTADDRESS;
     m_pib.macSuperframeOrder = IEEE154_DEFAULT_SUPERFRAMEORDER;
     m_pib.macTransactionPersistenceTime = IEEE154_DEFAULT_TRANSACTIONPERSISTENCETIME;
+    m_pib.macPanCoordinator = IEEE154_DEFAULT_MACPANCOORDINATOR;
     updateMacMaxFrameTotalWaitTime();
   }
 
@@ -205,11 +206,17 @@ implementation
 
   event void RadioControl.stopDone(error_t result)
   {
-    ASSERT(result == SUCCESS);
-    call DispatchReset.init();       // resets the dispatch component(s), spools out frames
-    call DispatchQueueReset.init();  // resets the dispatch queue component(s), spools out frames
-    call MacReset.init();            // resets the remaining components
-    post resetSpinTask();
+    // NOTE: RadioControl is fanning out, so we have to check if we
+    // are the actual client that is owning the radio (or if someone
+    // else has called RadioControl.stop).
+
+    if (call RadioToken.isOwner()) {
+      ASSERT(result == SUCCESS);
+      call DispatchReset.init();       // resets the dispatch component(s), spools out frames
+      call DispatchQueueReset.init();  // resets the dispatch queue component(s), spools out frames
+      call MacReset.init();            // resets the remaining components
+      post resetSpinTask();
+    }
   }
 
   task void resetSpinTask()
@@ -226,22 +233,24 @@ implementation
 
   event void RadioControl.startDone(error_t error)
   {
-    if (m_setDefaultPIB)
-      resetAttributesToDefault();
-    else {
-      // restore previous PHY attributes
+    // comment at RadioControl.stopDone() applies here as well
+    if (call RadioToken.isOwner()) {
+      if (m_setDefaultPIB)
+        resetAttributesToDefault();
+
       signal PIBUpdate.notify[IEEE154_phyCurrentChannel](&m_pib.phyCurrentChannel);
-      signal PIBUpdate.notify[IEEE154_phyTransmitPower](&m_pib.phyTransmitPower);
-      signal PIBUpdate.notify[IEEE154_phyCCAMode](&m_pib.phyCCAMode);
-      signal PIBUpdate.notify[IEEE154_phyCurrentPage](&m_pib.phyCurrentPage);
-      signal PIBUpdate.notify[IEEE154_macPANId](&m_pib.macPANId);
       signal PIBUpdate.notify[IEEE154_macShortAddress](&m_pib.macShortAddress);
+      signal PIBUpdate.notify[IEEE154_macPANId](&m_pib.macPANId);
+      signal PIBUpdate.notify[IEEE154_phyCCAMode](&m_pib.phyCCAMode);
+      signal PIBUpdate.notify[IEEE154_phyTransmitPower](&m_pib.phyTransmitPower);
+      signal PIBUpdate.notify[IEEE154_phyCurrentPage](&m_pib.phyCurrentPage);
       signal PIBUpdate.notify[IEEE154_macPanCoordinator](&m_pib.macPanCoordinator);
+
+      call RadioToken.release();
+      signal MLME_RESET.confirm(IEEE154_SUCCESS);
     }
-    call RadioToken.release();
-    signal MLME_RESET.confirm(IEEE154_SUCCESS);
   }
-  
+
   /* ----------------------- MLME-GET ----------------------- */
 
   command ieee154_phyCurrentChannel_t MLME_GET.phyCurrentChannel() { return m_pib.phyCurrentChannel;}

@@ -95,6 +95,8 @@ configuration TKN154BeaconEnabledP
     interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm9;
     interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm10;
     interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm11;
+    interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm12;
+    interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm13;
 
     interface Timer<TSymbolIEEE802154> as Timer1;
     interface Timer<TSymbolIEEE802154> as Timer2;
@@ -154,6 +156,9 @@ implementation
              new NoDispatchSlottedCsmaP(OUTGOING_SUPERFRAME) as CoordCap,
 #endif
              NoCoordCfpP as CoordCfp,
+
+             new InactivePeriodP(INCOMING_SUPERFRAME) as DeviceInactivePeriod,
+             new InactivePeriodP(OUTGOING_SUPERFRAME) as CoordInactivePeriod,
 
 #ifndef IEEE154_RXENABLE_DISABLED
              RxEnableP,
@@ -483,6 +488,28 @@ implementation
   CoordCfp.MLME_GET -> PibP;
   CoordCfp.MLME_SET -> PibP.MLME_SET;
 
+  /* --------------- Inactive Period (incoming superframe) -------------- */
+
+   components new RadioClientC(RADIO_CLIENT_DEVICE_INACTIVE_PERIOD) as DeviceInactivePeriodClient;
+   DeviceInactivePeriod.RadioToken -> DeviceInactivePeriodClient;
+   DeviceInactivePeriod.Alarm = Alarm12;
+   DeviceInactivePeriod.RadioControl = PhySplitControl;
+   DeviceInactivePeriod.SF -> BeaconSynchronizeP.IncomingSF;
+   DeviceInactivePeriod.RadioOff -> DeviceInactivePeriodClient;
+   DeviceInactivePeriod.MLME_GET -> PibP;
+   DeviceInactivePeriod.TimeCalc -> PibP;
+
+  /* --------------- Inactive Period (outgoing superframe) -------------- */
+
+   components new RadioClientC(RADIO_CLIENT_COORD_INACTIVE_PERIOD) as CoordInactivePeriodClient;
+   CoordInactivePeriod.RadioToken -> CoordInactivePeriodClient;
+   CoordInactivePeriod.Alarm = Alarm13;
+   CoordInactivePeriod.RadioControl = PhySplitControl;
+   CoordInactivePeriod.SF -> BeaconTransmitP.OutgoingSF;
+   CoordInactivePeriod.RadioOff -> CoordInactivePeriodClient;
+   CoordInactivePeriod.MLME_GET -> PibP;
+   CoordInactivePeriod.TimeCalc -> PibP;
+
   /* -------------------------- promiscuous mode ------------------------ */
 
   components new RadioClientC(RADIO_CLIENT_PROMISCUOUSMODE) as PromiscuousModeRadioClient;
@@ -524,4 +551,5 @@ implementation
   RadioControlP.PhyRadioOff = RadioOff;
   RadioControlP.RadioPromiscuousMode -> PromiscuousModeP;
   RadioControlP.Leds = Leds;
+
 }

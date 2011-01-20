@@ -836,6 +836,11 @@ implementation
     return m_framePendingBit;
   }
 
+  async command uint32_t OutgoingSF.beaconInterval()
+  {
+    return ((uint32_t) 1 << m_beaconOrder) * IEEE154_aBaseSuperframeDuration;
+  }
+
   async command bool IsSendingBeacons.getNow()
   { 
     return (m_beaconOrder < 15) || ((m_requestBitmap & REQUEST_CONFIRM_PENDING) && m_updateBeaconOrder < 15);
