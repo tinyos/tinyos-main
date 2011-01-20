@@ -78,7 +78,7 @@ interface RPLRank {
   command void cancelRoot();
   
   // return the rank of the specified IP addr
-  command uint8_t getRank(struct in6_addr *node);
+  command uint16_t getRank(struct in6_addr *node);
 
   // return if IP is in parent set
   command bool isParent(struct in6_addr *node);

@@ -163,7 +163,7 @@ implementation {
   uint8_t getParent(struct in6_addr *node);
   
   // return the rank of the specified IP addr
-  command uint8_t RPLRankInfo.getRank(struct in6_addr *node){ //done
+  command uint16_t RPLRankInfo.getRank(struct in6_addr *node){ //done
     uint8_t indexset;
     struct in6_addr my_addr;
     call IPAddress.getLLAddr(&my_addr);

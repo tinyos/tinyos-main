@@ -437,7 +437,7 @@ implementation{
       chooseAdvertiseTime();
   }
 
-  command uint8_t RPLRouteInfo.getRank(){
+  command uint16_t RPLRouteInfo.getRank(){
     return call RPLRankInfo.getRank(&ADDR_MY_IP);
   }
 

@@ -41,7 +41,7 @@ interface RPLRoutingEngine{
   command void resetTrickle();
   command bool hasDODAG();
   command error_t getDefaultRoute(struct in6_addr *next_hop);
-  command uint8_t getRank();
+  command uint16_t getRank();
   command uint8_t getInstanceID();
   command bool validInstance(uint8_t instanceID);
   command struct in6_addr* getDodagId(); // returns the default dodagid
