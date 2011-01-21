@@ -1,5 +1,3 @@
-#include <DisseminationEngine.h>
-
 /*
  * Copyright (c) 2006 Arch Rock Corporation
  * All rights reserved.
@@ -41,6 +39,8 @@
  * @author Gilman Tolle <gtolle@archrock.com>
  * @version $Revision: 1.1 $ $Date: 2007-09-14 00:22:18 $
  */
+
+#include <DisseminationEngine.h>
 
 module DisseminationEngineImplP {
   provides interface StdControl;
@@ -100,16 +100,17 @@ implementation {
   }
 
   event void DisseminationCache.newData[ uint16_t key ]() {
-
-    if ( !m_running || m_bufBusy ) { return; }
-
     sendObject( key );
+    // Note we reset even if not running. This means that if Drip is
+    // off and new data is received, it will reset the timer but not
+    // send the object. This means that the timer continues properly,
+    // but transmissions are suppressed. This is a better approach than
+    // just leaving the timer in its prior state.
+    
     call TrickleTimer.reset[ key ]();
   }
 
   event void TrickleTimer.fired[ uint16_t key ]() {
-
-    if ( !m_running || m_bufBusy ) { return; }
 
     sendObject( key );
   }
@@ -130,7 +131,12 @@ implementation {
   void sendObject( uint16_t key ) {
     void* object;
     uint8_t objectSize = 0;
-    
+
+    // If Drip is not running or if the Drip buffer
+    // is busy, do not send. This fixes Issue #12 in the
+    // Google code tracker. -pal
+    if ( !m_running || m_bufBusy ) { return; }
+
     dissemination_message_t* dMsg = 
       (dissemination_message_t*) call AMSend.getPayload( &m_buf, sizeof(dissemination_message_t) );
     if (dMsg != NULL) {
