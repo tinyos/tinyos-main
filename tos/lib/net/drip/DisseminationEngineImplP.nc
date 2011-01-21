@@ -131,13 +131,14 @@ implementation {
   void sendObject( uint16_t key ) {
     void* object;
     uint8_t objectSize = 0;
-
+    dissemination_message_t* dMsg;
+    
     // If Drip is not running or if the Drip buffer
     // is busy, do not send. This fixes Issue #12 in the
     // Google code tracker. -pal
     if ( !m_running || m_bufBusy ) { return; }
 
-    dissemination_message_t* dMsg = 
+    dMsg = 
       (dissemination_message_t*) call AMSend.getPayload( &m_buf, sizeof(dissemination_message_t) );
     if (dMsg != NULL) {
       m_bufBusy = TRUE;
