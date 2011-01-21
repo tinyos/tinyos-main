@@ -65,7 +65,6 @@ module CC2420TKN154P
     interface Random;
     interface Leds;
     interface ReliableWait;
-    interface ReferenceTime;
     interface TimeCalc;
   }
 
@@ -104,12 +103,8 @@ module CC2420TKN154P
   bool m_pibUpdated;
 
   /* timing */
-  norace ieee154_timestamp_t *m_timestamp;
   norace uint32_t m_dt;
-  norace union {
-    uint32_t regular;
-    ieee154_timestamp_t native;
-  } m_t0;
+  norace uint32_t m_t0;
 
 
   /* energy detection */
@@ -392,7 +387,7 @@ module CC2420TKN154P
         return FAIL;
       m_state = S_RESERVE_RX_SPI;
     }
-    m_t0.regular = t0;
+    m_t0 = t0;
     m_dt = dt;
     result = call RxControl.start(); 
     ASSERT(result == SUCCESS);
@@ -411,10 +406,10 @@ module CC2420TKN154P
     call TxControl.stop();    /* reset Tx logic for timestamping (SFD interrupt) */
     call TxControl.start();   
     atomic {
-      if (call TimeCalc.hasExpired(m_t0.regular, m_dt))
+      if (call TimeCalc.hasExpired(m_t0, m_dt))
         signal ReliableWait.waitRxDone();
       else
-        call ReliableWait.waitRx(m_t0.regular, m_dt); /* will signal waitRxDone() just in time */
+        call ReliableWait.waitRx(m_t0, m_dt); /* will signal waitRxDone() just in time */
     }
   }
 
@@ -431,10 +426,10 @@ module CC2420TKN154P
     signal RadioRx.enableRxDone();
   }
 
-  event message_t* CC2420Rx.received(message_t *frame, ieee154_timestamp_t *timestamp) 
+  event message_t* CC2420Rx.received(message_t *frame) 
   {
     if (m_state == S_RECEIVING)
-      return signal RadioRx.received(frame, timestamp);
+      return signal RadioRx.received(frame);
     else
       return frame;
   }
@@ -446,7 +441,7 @@ module CC2420TKN154P
 
   /* ----------------------- RadioTx ----------------------- */
 
-  async command error_t RadioTx.transmit( ieee154_txframe_t *frame, const ieee154_timestamp_t *t0, uint32_t dt )
+  async command error_t RadioTx.transmit( ieee154_txframe_t *frame, uint32_t t0, uint32_t dt )
   {
     if( frame == NULL || frame->header == NULL || 
         ((frame->payload == NULL) && (frame->payloadLen != 0)) || frame->metadata == NULL || 
@@ -459,12 +454,8 @@ module CC2420TKN154P
       m_state = S_LOAD_TXFIFO_NO_CSMA;
     }
     m_txframe = frame;
-    if( t0 == NULL )
-      m_dt = 0;
-    else {
-      memcpy( &m_t0.native, t0, sizeof(ieee154_timestamp_t) );
-      m_dt = dt;
-    }
+    m_t0 = t0;
+    m_dt = dt;
     loadTxFrame(frame); /* will continue in loadDoneRadioTx() */
     return SUCCESS;
   }
@@ -477,7 +468,7 @@ module CC2420TKN154P
       if (m_dt == 0)
         signal ReliableWait.waitTxDone();
       else
-        call ReliableWait.waitTx(&m_t0.native, m_dt); /* will signal waitTxDone() just in time */
+        call ReliableWait.waitTx(m_t0, m_dt); /* will signal waitTxDone() just in time */
     }
   }
 
@@ -493,10 +484,10 @@ module CC2420TKN154P
     ASSERT(result == SUCCESS); 
   }
 
-  inline void txDoneRadioTx(ieee154_txframe_t *frame, ieee154_timestamp_t *timestamp, error_t result)
+  inline void txDoneRadioTx(ieee154_txframe_t *frame, error_t result)
   {
     /* transmission completed */
-    signal RadioTx.transmitDone(frame, timestamp, result);
+    signal RadioTx.transmitDone(frame, result);
   }
 
   /* ----------------------- UnslottedCsmaCa ----------------------- */
@@ -591,9 +582,9 @@ module CC2420TKN154P
      * the "SlottedCsmaCa"-code below as experimental. */
 
   async command error_t SlottedCsmaCa.transmit(ieee154_txframe_t *frame, ieee154_csma_t *csma,
-      const ieee154_timestamp_t *slot0Time, uint32_t dtMax, bool resume, uint16_t remainingBackoff)
+      uint32_t slot0Time, uint32_t dtMax, bool resume, uint16_t remainingBackoff)
   {
-    if( frame == NULL || frame->header == NULL || slot0Time == NULL ||
+    if( frame == NULL || frame->header == NULL || 
         ((frame->payload == NULL) && (frame->payloadLen != 0)) || frame->metadata == NULL || 
         (frame->headerLen + frame->payloadLen + 2) > IEEE154_aMaxPHYPacketSize)
       return EINVAL;
@@ -604,7 +595,7 @@ module CC2420TKN154P
     }
     m_txframe = frame;
     m_csma = csma;
-    memcpy( &m_t0.native, slot0Time, sizeof(ieee154_timestamp_t) );
+    m_t0 = slot0Time;
     m_dt = dtMax;
     m_resume = resume;
     m_remainingBackoff = remainingBackoff;
@@ -625,7 +616,7 @@ module CC2420TKN154P
         m_resume = FALSE;
       } else
         backoff = getRandomBackoff(m_csma->BE);
-      dtTxTarget = call TimeCalc.timeElapsed(call ReferenceTime.toLocalTime(&m_t0.native), call LocalTime.get());
+      dtTxTarget = call TimeCalc.timeElapsed(m_t0, call LocalTime.get());
       dtTxTarget += backoff;
       if (dtTxTarget > m_dt) {
         /* frame doesn't fit into remaining CAP */
@@ -671,7 +662,7 @@ module CC2420TKN154P
       /* perform CCA on slot boundary (i.e. 8 symbols after backoff bounday);    */
       /* this platform-specific command is supposed to return just in time, so   */
       /* that the frame will be transmitted exactly on the next backoff boundary */
-      if (call ReliableWait.ccaOnBackoffBoundary(&m_t0.native)) {
+      if (call ReliableWait.ccaOnBackoffBoundary(m_t0)) {
         /* first CCA succeeded */
         if (call CC2420Tx.send(TRUE) == SUCCESS) {
           /* frame is being sent now, do we need Rx logic ready for an ACK? */
@@ -773,10 +764,8 @@ module CC2420TKN154P
     ASSERT(result == SUCCESS);
   }
 
-  async event void CC2420Tx.sendDone(ieee154_txframe_t *frame, 
-      ieee154_timestamp_t *timestamp, bool ackPendingFlag, error_t result)
+  async event void CC2420Tx.sendDone(ieee154_txframe_t *frame, bool ackPendingFlag, error_t result)
   {
-    m_timestamp = timestamp;
     m_ackFramePending = ackPendingFlag;
     m_txResult = result;
     if (!call SpiResource.isOwner()) {
@@ -813,7 +802,7 @@ module CC2420TKN154P
     m_state = S_RADIO_OFF;
 
     if (state == S_TX_ACTIVE_NO_CSMA)
-      txDoneRadioTx(frame, m_timestamp, m_txResult); 
+      txDoneRadioTx(frame, m_txResult); 
     else if (state == S_TX_ACTIVE_UNSLOTTED_CSMA)
       txDoneUnslottedCsma(frame, csma, m_ackFramePending, m_txResult);
     else if (state == S_TX_ACTIVE_SLOTTED_CSMA)

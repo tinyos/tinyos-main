@@ -39,9 +39,9 @@ interface RadioTx
 {
   /** 
    * Transmits a frame at time <tt>t0 + dt</tt> or immediately if <tt>t0 +
-   * dt</tt> lies in the past. The frame is transmitted in any case (without
-   * prior CCA). Analogous to the <tt>Timer</tt> interface <tt>t0</tt> is
-   * interpreted as a time in the past. If <tt>t0</tt> is NULL or if
+   * dt</tt> lies in the past. The frame is transmitted regardless of the
+   * channel condition (without prior CCA). Analogous to the <tt>Timer</tt> 
+   * interface <tt>t0</tt> is interpreted as a time in the past. If 
    * <tt>dt</tt> is zero then the frame is transmitted immediately. This
    * command will fail, if the radio is currently not in state RADIO_OFF.
    *
@@ -53,11 +53,9 @@ interface RadioTx
    *
    * @param frame The frame to transmit
    *
-   * @param t0 Reference time for transmission, NULL means frame will be 
-   * transmitted immediately
+   * @param t0 Reference time for transmission
    *
-   * @param dt A positive offset relative to <tt>t0</tt>, ignored
-   * if <tt>t0</tt> is NULL
+   * @param dt A positive offset relative to <tt>t0</tt>
    * 
    * @return SUCCESS if the transmission was triggered successfully and only
    * then <tt>transmitDone()</tt> will be signalled; FAIL, if the command was
@@ -65,7 +63,7 @@ interface RadioTx
    * EINVAL if <tt>frame</tt> or a pointer therein is invalid, or the length
    * of the frame is invalid
    */
-  async command error_t transmit(ieee154_txframe_t *frame, const ieee154_timestamp_t *t0, uint32_t dt);
+  async command error_t transmit(ieee154_txframe_t *frame, uint32_t t0, uint32_t dt);
 
   /**
    * Signalled in response to a call to <tt>transmit()</tt> and completing 
@@ -77,18 +75,10 @@ interface RadioTx
    *
    * @param frame The frame that was transmitted.  
    *
-   * @param timestamp The point in time when the first bit of the PPDU
-   * was received or NULL if a timestamp is not available. The 
-   * timestamp's data type is platform-specific, you can use the 
-   * <tt>IEEE154Frame.getTimestamp()</tt> command to get a platform-
-   * independent variant (uint32_t) of the timestamp. This pointer
-   * is only valid while the event is signalled and no reference must
-   * be kept to it afterwards.
-   *
    * @param result SUCCESS if the frame was transmitted (and a matching
    * acknowledgement was received, if requested); ENOACK if the frame was 
    * transmitted, but no matching acknowledgement was received although one
    * was requested     
    **/
-  async event void transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result);
+  async event void transmitDone(ieee154_txframe_t *frame, error_t result);
 }

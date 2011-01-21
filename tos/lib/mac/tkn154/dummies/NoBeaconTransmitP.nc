@@ -103,7 +103,7 @@ implementation
 
   async event void BeaconSendAlarm.fired() {}
 
-  async event void BeaconTx.transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result){}
+  async event void BeaconTx.transmitDone(ieee154_txframe_t *frame, error_t result){}
 
   command error_t IEEE154TxBeaconPayload.setBeaconPayload(void *beaconPayload, uint8_t length) { return ESIZE; }
 
@@ -158,8 +158,6 @@ implementation
   async command const uint8_t* OutgoingSF.gtsFields() {return NULL;}
 
   async command uint16_t OutgoingSF.guardTime() {return 0;}
-
-  async command const ieee154_timestamp_t* OutgoingSF.sfStartTimeRef() {return NULL;}
 
   async command bool OutgoingSF.isBroadcastPending() {return FALSE;}
 

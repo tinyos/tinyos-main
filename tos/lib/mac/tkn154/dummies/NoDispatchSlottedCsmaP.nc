@@ -106,7 +106,7 @@ implementation
   async event void SlottedCsmaCa.transmitDone(ieee154_txframe_t *frame, ieee154_csma_t *csma, 
       bool ackPendingFlag,  uint16_t remainingBackoff, error_t result) { }
 
-  event message_t* RadioRx.received(message_t* frame, const ieee154_timestamp_t *timestamp) { return frame; }
+  event message_t* RadioRx.received(message_t* frame) { return frame; }
 
   async command ieee154_status_t BroadcastTx.transmitNow(ieee154_txframe_t *frame) { return IEEE154_TRANSACTION_OVERFLOW;}
 

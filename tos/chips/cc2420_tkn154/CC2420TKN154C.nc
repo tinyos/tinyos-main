@@ -54,8 +54,6 @@ configuration CC2420TKN154C
     interface Alarm<T62500hz,uint32_t> as Alarm1;
     interface Alarm<T62500hz,uint32_t> as Alarm2;
     interface FrameUtility;
-    interface CaptureTime;
-    interface ReferenceTime;
     interface ReliableWait;
     interface TimeCalc;
     interface Random;
@@ -76,7 +74,6 @@ configuration CC2420TKN154C
   Timestamp = PHY;
   LocalTime = PHY;
   ReliableWait = PHY;
-  ReferenceTime = PHY;
   TimeCalc = PHY;
   CCA = PHY;
 
@@ -92,13 +89,10 @@ configuration CC2420TKN154C
   PHY.TxControl -> CC2420ControlTransmitC;
   PHY.CC2420Tx -> CC2420ControlTransmitC;
   CC2420ControlTransmitC.AckAlarm = Alarm1;
-  CC2420ControlTransmitC.CaptureTime = CaptureTime;
-  CC2420ControlTransmitC.ReferenceTime = ReferenceTime;
 
   components CC2420ReceiveC;
   PHY.RxControl -> CC2420ReceiveC;
   PHY.CC2420Rx -> CC2420ReceiveC.CC2420Rx;
-  ReferenceTime = CC2420ReceiveC;
   FrameUtility = CC2420ReceiveC;
   CC2420ReceiveC.CC2420Config -> CC2420ControlTransmitC;
 }

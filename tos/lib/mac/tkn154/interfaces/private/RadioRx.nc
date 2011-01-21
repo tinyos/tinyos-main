@@ -76,19 +76,11 @@ interface RadioRx
    * A frame was received and passed the filters described in 
    * IEEE 802.15.4-2006 Sec. 7.5.6.2 ("Reception and rejection").
    *
-   * @param timestamp The point in time when the first bit of the PPDU was
-   * received or NULL if a timestamp is not available. The timestamp's data
-   * type is platform-specific, you can use the
-   * <tt>IEEE154Frame.getTimestamp()</tt> command to get a platform-
-   * independent variant (uint32_t) of the timestamp. This pointer is only
-   * valid while the event is signalled and no reference must be kept to it
-   * afterwards.
-   *
    * @param frame The received frame  
    *
    * @return            a buffer to be used by the driver for the next 
    *                    incoming frame 
    */
-  event message_t* received(message_t *frame, const ieee154_timestamp_t *timestamp); 
+  event message_t* received(message_t *frame); 
 }
 

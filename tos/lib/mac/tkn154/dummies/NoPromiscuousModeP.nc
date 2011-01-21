@@ -65,7 +65,7 @@ implementation
 
   event void RadioToken.granted() { ASSERT(0);}
 
-  event message_t* PromiscuousRx.received(message_t *frame, const ieee154_timestamp_t *timestamp) { return frame; }
+  event message_t* PromiscuousRx.received(message_t *frame, const uint32_t *timestamp) { return frame; }
 
   async event void PromiscuousRx.enableRxDone(){}
 

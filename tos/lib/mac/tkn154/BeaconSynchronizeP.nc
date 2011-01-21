@@ -83,7 +83,6 @@ implementation
   norace ieee154_macBeaconOrder_t m_beaconOrder;
   norace uint32_t m_dt;
   norace uint32_t m_lastBeaconRxTime;
-  norace ieee154_timestamp_t m_lastBeaconRxRefTime;
   message_t m_beacon;
   norace message_t *m_beaconPtr = &m_beacon;
 
@@ -330,7 +329,7 @@ implementation
     }
   }
 
-  event message_t* BeaconRx.received(message_t *frame, const ieee154_timestamp_t *timestamp)
+  event message_t* BeaconRx.received(message_t *frame)
   {
     if (wasBeaconReceived()) {
       dbg_serial("BeaconSynchronizeP", "Got another beacon! -> ignoring it ...\n");
@@ -342,12 +341,8 @@ implementation
       message_t *tmp = m_beaconPtr;
       setBeaconReceived();
       m_beaconPtr = frame;
-/*      dbg_serial("BeaconSynchronizeP", "Got beacon, timestamp: %lu, now: %lu\n", */
-/*          (uint32_t) *timestamp, (uint32_t) call TrackAlarm.getNow());*/
-      if (timestamp != NULL)
-        memcpy(&m_lastBeaconRxRefTime, timestamp, sizeof(ieee154_timestamp_t));
-      else
-        dbg_serial("BeaconSynchronizeP", "Beacon timestamp invalid!\n");
+      dbg_serial("BeaconSynchronizeP", "Got beacon, timestamp: %lu, now: %lu\n", 
+          ((ieee154_metadata_t*) m_beaconPtr->metadata)->timestamp, (uint32_t) call TrackAlarm.getNow());
       if (getRxState() == RX_RECEIVING) { 
         call TrackAlarm.stop(); // may fail
         call RadioOff.off();    // may fail
@@ -533,11 +528,6 @@ implementation
   async command uint16_t IncomingSF.guardTime()
   {
     return IEEE154_MAX_BEACON_JITTER(m_beaconOrder) + IEEE154_RADIO_RX_DELAY;
-  }
-
-  async command const ieee154_timestamp_t* IncomingSF.sfStartTimeRef()
-  {
-    return &m_lastBeaconRxRefTime;
   }
 
   async command bool IncomingSF.isBroadcastPending()

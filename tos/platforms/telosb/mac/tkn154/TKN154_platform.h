@@ -66,7 +66,5 @@ enum {
 // during inactive period, but always stay in idle (which consumes more energy).
 #define IEEE154_RADIO_POWERUP_TIME 200
 
-typedef uint32_t ieee154_timestamp_t;
-
 #endif
 

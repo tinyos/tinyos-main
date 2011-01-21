@@ -494,7 +494,7 @@ implementation
       else {
         error_t res;
         res = call SlottedCsmaCa.transmit(m_currentFrame, &m_csma, 
-                   call SuperframeStructure.sfStartTimeRef(), dtMax, m_resume, m_remainingBackoff);
+                   call SuperframeStructure.sfStartTime(), dtMax, m_resume, m_remainingBackoff);
         dbg("DispatchSlottedCsmaP", "SlottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
         next = WAIT_FOR_TXDONE; // this will NOT clear the lock
       }
@@ -662,7 +662,7 @@ implementation
     updateState();
   }
 
-  event message_t* RadioRx.received(message_t* frame, const ieee154_timestamp_t *timestamp)
+  event message_t* RadioRx.received(message_t* frame)
   {
     // received a frame -> find out frame type and
     // signal it to responsible client component

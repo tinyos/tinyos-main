@@ -40,7 +40,7 @@ interface CaptureTime
    * @param   offset time in symbols (16 us) to add to capture time
    * @return  SUCCESS if conversion was made successfully, FAIL otherwise
    */
-  async command error_t convert(uint16_t time, ieee154_timestamp_t *localTime, int16_t offset);
+  async command error_t convert(uint16_t time, uint32_t *localTime, int16_t offset);
 
   /**
    * Tells whether the timestamp is valid. On the CC2420 an SFD transition

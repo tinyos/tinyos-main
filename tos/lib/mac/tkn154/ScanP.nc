@@ -261,7 +261,7 @@ implementation
           break;
         case ACTIVE_SCAN: // fall through
         case ORPHAN_SCAN:
-          radioStatus = call RadioTx.transmit(m_txFrame, NULL, 0);
+          radioStatus = call RadioTx.transmit(m_txFrame, 0, 0);
           break;
         case ENERGY_DETECTION_SCAN:
           radioStatus = call EnergyDetection.start(m_scanDuration);
@@ -336,7 +336,7 @@ implementation
 
   /* ----------------------- Active/Orphan scan ----------------------- */
   
-  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, const ieee154_timestamp_t *timestamp, error_t result)
+  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, error_t result)
   {
     error_t e = call RadioRx.enableRx(0, 0);
     ASSERT(e == SUCCESS);
@@ -344,7 +344,7 @@ implementation
 
   /* -------- Receive events (for  Active/Passive/Orphan scan) -------- */
 
-  event message_t* RadioRx.received(message_t *frame, const ieee154_timestamp_t *timestamp)
+  event message_t* RadioRx.received(message_t *frame)
   {
     if (!m_busy)
       return frame;

@@ -481,7 +481,7 @@ implementation
     updateState();
   }
 
-  event message_t* RadioRx.received(message_t* frame, const ieee154_timestamp_t *timestamp)
+  event message_t* RadioRx.received(message_t* frame)
   {
     // received a frame -> find out frame type and
     // signal it to responsible client component

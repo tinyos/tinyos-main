@@ -56,7 +56,5 @@ enum {
   BEACON_PAYLOAD_UPDATE_INTERVAL = 2500, 
 };
 
-typedef uint32_t ieee154_timestamp_t;
-
 #endif
 

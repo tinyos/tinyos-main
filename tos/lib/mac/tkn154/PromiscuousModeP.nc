@@ -105,7 +105,7 @@ implementation
     post signalStartDoneTask();
   }
 
-  event message_t* PromiscuousRx.received(message_t *frame, const ieee154_timestamp_t *timestamp)
+  event message_t* PromiscuousRx.received(message_t *frame)
   {
     if (m_state == S_STARTED) {
       ((ieee154_header_t*) frame->header)->length |= FRAMECTL_PROMISCUOUS;

@@ -100,14 +100,6 @@ interface SuperframeStructure
   async command uint16_t guardTime();
 
   /**
-   * Platform-specific representation of "sfStartTime" marking
-   * the reception/tranmission time of a beacon.
-   * 
-   * @returns reception/tranmission time of the beacon
-   **/
-  async command const ieee154_timestamp_t* sfStartTimeRef();
-
-  /**
    * Tells whether the frame pending bit is set in the header
    * of the beacon frame.
    * 

@@ -82,7 +82,7 @@ interface SlottedCsmaCa
    * EINVAL if <tt>frame</tt> or a pointer therein is invalid; FAIL otherwise.
    */
   async command error_t transmit(ieee154_txframe_t *frame, ieee154_csma_t *csma,
-      const ieee154_timestamp_t *slot0Time, uint32_t dtMax, bool resume, uint16_t remainingBackoff);
+      uint32_t slot0Time, uint32_t dtMax, bool resume, uint16_t remainingBackoff);
 
   /**
    * Signalled in response to a call to <tt>transmit()</tt>. This event

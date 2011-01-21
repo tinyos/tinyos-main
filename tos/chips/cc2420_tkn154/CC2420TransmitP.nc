@@ -76,7 +76,6 @@ module CC2420TransmitP {
   uses interface CC2420Strobe as SACKPEND;
   uses interface CC2420Register as MDMCTRL1;
   uses interface CaptureTime;
-  uses interface ReferenceTime;
 
   uses interface CC2420Receive;
   uses interface Leds;
@@ -103,7 +102,6 @@ implementation {
   };
   
   norace ieee154_txframe_t *m_frame;
-  ieee154_timestamp_t m_timestamp;
   
   cc2420_transmit_state_t m_state = S_STOPPED;
   
@@ -116,14 +114,6 @@ implementation {
   
   /** Let the CC2420 driver keep a lock on the SPI while waiting for an ack */
   norace bool abortSpiRelease;
-  
-  /** The initial backoff period */
-  norace uint16_t myInitialBackoff;
-  
-  /** The congestion backoff period */
-  norace uint16_t myCongestionBackoff;
-  norace uint32_t alarmStartTime;
-  
 
   /***************** Prototypes ****************/
   void signalDone( bool ackFramePending, error_t err );
@@ -238,6 +228,16 @@ implementation {
       }
     }
   }
+    // this method converts a 16-bit timestamp into a 32-bit one
+  inline uint32_t getTime32(uint16_t captured_time)
+  {
+    uint32_t now = call BackoffAlarm.getNow();
+
+    // the captured_time is always in the past
+    // We assume that capture_time from the 32 KHz quartz, in
+    // order to transform it to symbols we multiply by 2
+    return now - (uint16_t)(now - captured_time * 2);
+  }
   
   /**
    * The CaptureSFD event is actually an interrupt from the capture pin
@@ -253,72 +253,88 @@ implementation {
    * would have picked up and executed had our microcontroller been fast enough.
    */
   async event void CaptureSFD.captured( uint16_t time ) {
-    //P2OUT &= ~0x40;      // debug: P2.6 low
+    uint32_t time32;
+    uint8_t sfd_state = 0;
     atomic {
+      // Our timestamp represents time of first bit (chip) of PPDU on the channel
+      // (not SFD!), so we apply an offset: -10 for 5 bytes (preamble+SFD)
+      time32 = getTime32(time) - 10;
       switch( m_state ) {
-        
-      case S_SFD:
-        m_state = S_EFD;
-        sfdHigh = TRUE;
-        call CaptureSFD.captureFallingEdge();
-        // timestamp denotes time of first bit (chip) of PPDU on the channel
-        // offset: -10 for 5 bytes (preamble+SFD)
-        if (call CaptureTime.convert(time, &m_timestamp, -10) == SUCCESS) 
-          m_frame->metadata->timestamp = call ReferenceTime.toLocalTime(&m_timestamp);
-        call BackoffAlarm.stop();
-        if ( call SFD.get() ) {
-          break;
-        }
-        /** Fall Through because the next interrupt was already received */
-        
-      case S_EFD:
-        sfdHigh = FALSE;
-        call CaptureSFD.captureRisingEdge();
-        signal CC2420Tx.transmissionStarted(m_frame);
-        if ( (m_frame->header->mhr)[0] & ( 1 << IEEE154_FCF_ACK_REQ ) ) {
-          // wait for the ACK
-          m_state = S_ACK_WAIT;
-          alarmStartTime = call BackoffAlarm.getNow();
-          // we need to have *completely* received the ACK, 32+22 symbols
-          // should theroretically be enough, but there can be delays in 
-          // servicing the FIFOP interrupt, so we use 100 symbols here
-          call BackoffAlarm.start( 100 ); 
-        } else {
-          signalDone(FALSE, SUCCESS);
-        }
-        
-        if ( !call SFD.get() ) {
-          break;
-        }
-        /** Fall Through because the next interrupt was already received */
-        
-      default:
-        // The CC2420 is in receive mode.
-        if ( !m_receiving ) {
+
+        case S_SFD:
+          m_state = S_EFD;
           sfdHigh = TRUE;
+          // in case we got stuck in the receive SFD interrupts, we can reset
+          // the state here since we know that we are not receiving anymore
+          m_receiving = FALSE;
           call CaptureSFD.captureFallingEdge();
-          call CaptureTime.convert(time, &m_timestamp, -10);
-          call CC2420Receive.sfd( &m_timestamp );
-          m_receiving = TRUE;
-          m_prev_time = time;
+          m_frame->metadata->timestamp = time32; 
+
+          call BackoffAlarm.stop();
+
           if ( call SFD.get() ) {
-            // wait for the next interrupt before moving on
-            return;
+            break;
           }
-          // if we move on, then the timestamp will be invalid!
-        }
-        
-        sfdHigh = FALSE;
-        call CaptureSFD.captureRisingEdge();
-        m_receiving = FALSE;
-        if (!call CaptureTime.isValidTimestamp(m_prev_time, time))
-          call CC2420Receive.sfd_dropped();
-        break;
-      
+          /** Fall Through because the next interrupt was already received */
+
+        case S_EFD:
+          sfdHigh = FALSE;
+          call CaptureSFD.captureRisingEdge();
+
+          signal CC2420Tx.transmissionStarted(m_frame);
+          if ( (m_frame->header->mhr)[0] & ( 1 << IEEE154_FCF_ACK_REQ ) ) {
+            // wait for the ACK
+            m_state = S_ACK_WAIT;
+            // we need to have *completely* received the ACK, 32+22 symbols
+            // should theroretically be enough, but there can be delays in 
+            // servicing the FIFOP interrupt, so we use 100 symbols here
+            call BackoffAlarm.start( 100 ); 
+          } else {
+            signalDone(FALSE, SUCCESS);
+          }
+
+          if ( !call SFD.get() ) {
+            break;
+          }
+          /** Fall Through because the next interrupt was already received */
+
+        default:
+          /* this is the SFD for received messages */
+          if ( !m_receiving && sfdHigh == FALSE ) {
+            sfdHigh = TRUE;
+            call CaptureSFD.captureFallingEdge();
+            // safe the SFD pin status for later use
+            sfd_state = call SFD.get();
+
+            call CC2420Receive.sfd(time32);
+            m_receiving = TRUE;
+            m_prev_time = time;
+            if ( call SFD.get() ) {
+              // wait for the next interrupt before moving on
+              return;
+            }
+          }
+
+          if ( sfdHigh == TRUE ) {
+            sfdHigh = FALSE;
+            call CaptureSFD.captureRisingEdge();
+            m_receiving = FALSE;
+            /* if sfd_state is 1, then we fell through, but at the time of
+             * saving the time stamp the SFD was still high. Thus, the timestamp
+             * is valid.
+             * if the sfd_state is 0, then either we fell through and SFD
+             * was low while we safed the time stamp, or we didn't fall through.
+             * Thus, we check for the time between the two interrupts.
+             * FIXME: Why 10 tics? Seems like some magic number...
+              */
+            if ((sfd_state == 0) && (time - m_prev_time < 10) )
+              call CC2420Receive.sfd_dropped();
+            break;
+          }
       }
     }
   }
-   
+
   async command bool CC2420Tx.cca()
   {
     return call CCA.get();
@@ -397,11 +413,8 @@ implementation {
   }
 
   void signalDone( bool ackFramePending, error_t err ) {
-    ieee154_timestamp_t *txTime = &m_timestamp;
     atomic m_state = S_STARTED;
-    if (m_frame->metadata->timestamp == IEEE154_INVALID_TIMESTAMP)
-      txTime = NULL;
-    signal CC2420Tx.sendDone( m_frame, txTime, ackFramePending, err );
+    signal CC2420Tx.sendDone( m_frame, ackFramePending, err );
     call ChipSpiResource.attemptRelease();
   }
 

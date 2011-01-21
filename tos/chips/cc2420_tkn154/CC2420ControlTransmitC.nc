@@ -62,8 +62,6 @@ configuration CC2420ControlTransmitC {
 
     // CC2420TransmitC
     interface Alarm<T62500hz,uint32_t> as AckAlarm;
-    interface CaptureTime;
-    interface ReferenceTime;
   }
 }
 
@@ -115,8 +113,6 @@ implementation {
   TxControl = CC2420TransmitP;
   CC2420Tx = CC2420TransmitP;
   AckAlarm = CC2420TransmitP;
-  CaptureTime = CC2420TransmitP;
-  ReferenceTime = CC2420TransmitP;
 
   MainC.SoftwareInit -> CC2420TransmitP;
   CC2420TransmitP.CCA -> Pins.CCA;

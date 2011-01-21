@@ -106,9 +106,7 @@ implementation
   PHY.Alarm1 -> PHYAlarm1;
   PHY.Alarm2 -> PHYAlarm2;
   PHY.LocalTime -> LocalTime62500hzC;
-  PHY.CaptureTime -> TKN154TimingP;
   PHY.ReliableWait -> TKN154TimingP;
-  PHY.ReferenceTime -> TKN154TimingP;
   PHY.TimeCalc -> MAC;
   TKN154TimingP.TimeCalc -> MAC;
   TKN154TimingP.Leds -> LedsC;

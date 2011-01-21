@@ -93,13 +93,12 @@ implementation
 
   async event void RadioRx.enableRxDone(){}
 
-  event message_t* RadioRx.received(message_t *frame, const ieee154_timestamp_t *timestamp)
+  event message_t* RadioRx.received(message_t *frame)
   {
     return frame;
   }
 
-  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, 
-      const ieee154_timestamp_t *timestamp, error_t result){}
+  async event void RadioTx.transmitDone(ieee154_txframe_t *frame, error_t result){}
 
   event void ScanTimer.fired() { }
 

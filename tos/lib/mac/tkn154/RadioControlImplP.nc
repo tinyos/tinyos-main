@@ -75,7 +75,7 @@ implementation
     signal MacRx.enableRxDone[call ArbiterInfo.userId()]();
   }
 
-  event message_t* PhyRx.received(message_t *msg, const ieee154_timestamp_t *timestamp)
+  event message_t* PhyRx.received(message_t *msg)
   {
     uint8_t *mhr = MHR(msg);
 
@@ -91,7 +91,7 @@ implementation
         && (!call RadioPromiscuousMode.get()))
       return msg;
 #endif
-    return signal MacRx.received[call ArbiterInfo.userId()](msg, timestamp);
+    return signal MacRx.received[call ArbiterInfo.userId()](msg);
   }
 
   async command bool MacRx.isReceiving[uint8_t client]()
@@ -106,7 +106,7 @@ implementation
 
   default async event void MacRx.enableRxDone[uint8_t client]() { ASSERT(0); }
 
-  default event message_t* MacRx.received[uint8_t client](message_t *frame, const ieee154_timestamp_t *timestamp)
+  default event message_t* MacRx.received[uint8_t client](message_t *frame)
   {
     ASSERT(0);
     return frame;
@@ -114,8 +114,7 @@ implementation
 
   /* ----------------------- RadioTx ----------------------- */
 
-  async command error_t MacTx.transmit[uint8_t client](ieee154_txframe_t *frame, 
-      const ieee154_timestamp_t *t0, uint32_t dt)
+  async command error_t MacTx.transmit[uint8_t client](ieee154_txframe_t *frame, uint32_t t0, uint32_t dt)
   {
     if (client == call ArbiterInfo.userId())
       return call PhyTx.transmit(frame, t0, dt);
@@ -125,14 +124,12 @@ implementation
     }
   }
   
-  async event void PhyTx.transmitDone(ieee154_txframe_t *frame, 
-      const ieee154_timestamp_t *timestamp, error_t result)
+  async event void PhyTx.transmitDone(ieee154_txframe_t *frame, error_t result)
   {
-    signal MacTx.transmitDone[call ArbiterInfo.userId()](frame, timestamp, result);
+    signal MacTx.transmitDone[call ArbiterInfo.userId()](frame, result);
   }
 
-  default async event void MacTx.transmitDone[uint8_t client](ieee154_txframe_t *frame, 
-      const ieee154_timestamp_t *timestamp, error_t result) 
+  default async event void MacTx.transmitDone[uint8_t client](ieee154_txframe_t *frame, error_t result) 
   {
     ASSERT(0);
   }
@@ -164,7 +161,7 @@ implementation
   /* ----------------------- Slotted CSMA ----------------------- */
 
   async command error_t SlottedCsmaCa.transmit[uint8_t client](ieee154_txframe_t *frame, ieee154_csma_t *csma,
-      const ieee154_timestamp_t *slot0Time, uint32_t dtMax, bool resume, uint16_t remainingBackoff)
+      uint32_t slot0Time, uint32_t dtMax, bool resume, uint16_t remainingBackoff)
   {
     if (client == call ArbiterInfo.userId()) 
       return call PhySlottedCsmaCa.transmit(frame, csma, slot0Time, dtMax, resume, remainingBackoff);

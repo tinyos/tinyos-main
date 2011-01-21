@@ -55,7 +55,6 @@ module CC2420ReceiveP {
   uses interface CC2420Strobe as SRXON;
   uses interface CC2420Strobe as SACKPEND; 
   uses interface CC2420Register as MDMCTRL1;
-  uses interface ReferenceTime;
   uses interface FrameUtility;
   uses interface CC2420Config;
   uses interface CC2420Ram as RXFIFO_RAM;
@@ -80,10 +79,7 @@ implementation {
     SACK_HEADER_LENGTH = 3,
   };
 
-  ieee154_timestamp_t m_timestamp_queue[ TIMESTAMP_QUEUE_SIZE ];
-  ieee154_timestamp_t m_timestamp;
-  norace bool m_timestampValid;
-  
+  uint32_t m_timestamp_queue[ TIMESTAMP_QUEUE_SIZE ];
   uint8_t m_timestamp_head;
   
   uint8_t m_timestamp_size;
@@ -215,29 +211,22 @@ implementation {
    * Start frame delimiter signifies the beginning/end of a packet
    * See the CC2420 datasheet for details.
    */
-  async command void CC2420Receive.sfd( ieee154_timestamp_t *time ) {
+  async command void CC2420Receive.sfd( uint32_t time ) {
     if (m_state == S_STOPPED)
       return;
     if ( m_timestamp_size < TIMESTAMP_QUEUE_SIZE ) {
-      uint8_t tail =  ( ( m_timestamp_head + m_timestamp_size ) % 
-                        TIMESTAMP_QUEUE_SIZE );
-      memcpy(&m_timestamp_queue[ tail ], time, sizeof(ieee154_timestamp_t) );
+      uint8_t tail =  ( ( m_timestamp_head + m_timestamp_size ) % TIMESTAMP_QUEUE_SIZE );
+      m_timestamp_queue[ tail ] = time;
       m_timestamp_size++;
     }
   }
 
   async command void CC2420Receive.sfd_dropped() {
-    // be conservative about timestamps: if SFD is dropped, e.g.
-    // because system is too unresponsive, then we clear the
-    // complete timestamping queue (the previous code sometimes 
-    // resulted in incorrect timestamps).
-    m_timestamp_size = 0; 
-    return;
-/*    if (m_state == S_STOPPED)*/
-/*      return;    */
-/*    if ( m_timestamp_size ) {*/
-/*      m_timestamp_size--;*/
-/*    }*/
+    if (m_state == S_STOPPED)
+      return;    
+    if ( m_timestamp_size ) {
+      m_timestamp_size--;
+    }
   }
   
   /***************** InterruptFIFOP Events ****************/
@@ -359,16 +348,12 @@ implementation {
       
       if ( m_timestamp_size ) {
         if ( rxFrameLength > 4 ) {
-          //((ieee154_metadata_t*) m_rxFramePtr->metadata)->timestamp = m_timestamp_queue[ m_timestamp_head ];
-          memcpy(&m_timestamp, &m_timestamp_queue[ m_timestamp_head ], sizeof(ieee154_timestamp_t) );
-          m_timestampValid = TRUE;
+          ((ieee154_metadata_t*) m_rxFramePtr->metadata)->timestamp = m_timestamp_queue[ m_timestamp_head ];
           m_timestamp_head = ( m_timestamp_head + 1 ) % TIMESTAMP_QUEUE_SIZE;
           m_timestamp_size--;
         }
       } else {
-/*        metadata->time = 0xffff;*/
-        m_timestampValid = FALSE;
-        //((ieee154_metadata_t*) m_rxFramePtr->metadata)->timestamp = IEEE154_INVALID_TIMESTAMP;
+        ((ieee154_metadata_t*) m_rxFramePtr->metadata)->timestamp = IEEE154_INVALID_TIMESTAMP;
       }
       
       // We may have received an ack that should be processed by Transmit
@@ -420,11 +405,7 @@ implementation {
     metadata->rssi = m_rxFramePtr->data[payloadLen];
     metadata->linkQuality = ((ieee154_header_t*) m_rxFramePtr->header)->length; // copy back
     ((ieee154_header_t*) m_rxFramePtr->header)->length = payloadLen;
-    if (m_timestampValid)
-      metadata->timestamp = call ReferenceTime.toLocalTime(&m_timestamp);
-    else
-      metadata->timestamp = IEEE154_INVALID_TIMESTAMP;
-    m_rxFramePtr = signal CC2420Rx.received(m_rxFramePtr, &m_timestamp);
+    m_rxFramePtr = signal CC2420Rx.received(m_rxFramePtr);
 
 /*    cc2420_metadata_t* metadata = call CC2420PacketBody.getMetadata( m_p_rx_buf );*/
 /*    uint8_t* buf = (uint8_t*) call CC2420PacketBody.getHeader( m_p_rx_buf );;*/

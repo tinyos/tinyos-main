@@ -42,7 +42,7 @@ interface CC2420Rx {
    * Receive a packet buffer, returning a buffer for the signaling
    * component to use for the next reception. 
    */
-  event message_t* received(message_t *data, ieee154_timestamp_t *timestamp);
+  event message_t* received(message_t *data);
 
 }
 
