@@ -76,6 +76,7 @@ enum {
   LOWMSG_FRAGN_HDR = (1 << 3),
   LOWMSG_NALP      = (1 << 4),
   LOWMSG_IPNH_HDR  = (1 << 5),
+  LOWMSG_IPV6      = (1 << 6),
 };
 
 uint16_t getHeaderBitmap(struct packed_lowmsg *lowmsg);

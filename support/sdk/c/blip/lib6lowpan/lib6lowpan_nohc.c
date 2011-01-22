@@ -21,6 +21,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
 
   /* pack 802.15.4 */
   buf = lowpan_buf = pack_ieee154_header(frag, len, frame);
+  *buf++ = LOWPAN_IPV6_PATTERN;
   
   if (sizeof(struct ip6_hdr) + iov_len(packet->ip6_data) > len - (buf - frag))
     return -1;
@@ -35,6 +36,10 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
 int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
                        struct lowpan_reconstruct *recon,
                        uint8_t *pkt, size_t len) {
+  if (len <= 1 || *pkt++ != LOWPAN_IPV6_PATTERN)
+    return -2;
+  len --;
+
   recon->r_size = len;
   recon->r_buf = malloc(len);
   recon->r_app_len = NULL;
