@@ -10,63 +10,57 @@ module OneWireMasterC {
     }
     uses {
         interface GeneralIO as Pin;
+        interface BusyWait<TMicro, uint16_t>;
     }
 }
 implementation {
     
     typedef enum {
-        DELAY_5US = 6,                              // calibrated for tmote at 4MHz, iterations of busyWait
-        RESET_LOW_TIME = 560/5*DELAY_5US,           // min: 480us, max: 640 us
-        DELAY_60US = 60/5*DELAY_5US,                // min: 15us, max: 60us
-        PRESENCE_DETECT_LOW_TIME = 240/5*DELAY_5US, // min: 60us, max: 240us
-        PRESENCE_RESET_HIGH_TIME = 480/5*DELAY_5US, // maximum recommended value
-        SLOT_TIME   =  65/5*DELAY_5US
+        DELAY_5US = 5,                              
+        RESET_LOW_TIME = 560,                       // min: 480us, max: 640 us
+        DELAY_60US = 60,                            // min: 15us, max: 60us
+        PRESENCE_DETECT_LOW_TIME = 240,             // min: 60us, max: 240us
+        PRESENCE_RESET_HIGH_TIME = 480,             // maximum recommended value
+        SLOT_TIME   =  65,
     } onewiretimes_t;
 
-    void busyWait(uint16_t ticks) {
-        uint16_t i;
-        for(i = 0; i < ticks; i++) {
-            asm volatile  ("nop" ::);
-        }
-    }
-    
     bool reset() {
         uint16_t i;
         call Pin.makeInput();
         call Pin.clr();
         call Pin.makeOutput();
-        busyWait(RESET_LOW_TIME);
+        call BusyWait.wait(RESET_LOW_TIME);
         call Pin.makeInput();
-        busyWait(DELAY_60US);
-        for(i = 0; (i < PRESENCE_DETECT_LOW_TIME) && (call Pin.get()); i++) {
-            // wait until either the pin goes low or the timer expires
-        }
-        busyWait(PRESENCE_RESET_HIGH_TIME - DELAY_60US);
+        call BusyWait.wait(DELAY_60US);
+        // wait until either the pin goes low or the timer expires
+        for(i = 0; i < PRESENCE_DETECT_LOW_TIME; i += DELAY_5US, call BusyWait.wait(DELAY_5US))
+          if (!call Pin.get()) break;
+        call BusyWait.wait(PRESENCE_RESET_HIGH_TIME - DELAY_60US);
         return i < PRESENCE_DETECT_LOW_TIME;
     }
 
     void writeOne() {
         call Pin.makeOutput();
-        busyWait(DELAY_5US);
+        call BusyWait.wait(DELAY_5US);
         call Pin.makeInput();
-        busyWait(SLOT_TIME);
+        call BusyWait.wait(SLOT_TIME);
     }
     
     void writeZero() {
         call Pin.makeOutput();
-        busyWait(DELAY_60US);
+        call BusyWait.wait(DELAY_60US);
         call Pin.makeInput();
-        busyWait(DELAY_5US);
+        call BusyWait.wait(DELAY_5US);
     }
     
     bool readBit() {
         bool bit;
         call Pin.makeOutput();
-        busyWait(DELAY_5US);
+        call BusyWait.wait(DELAY_5US);
         call Pin.makeInput();
-        busyWait(DELAY_5US);
+        call BusyWait.wait(DELAY_5US);
         bit = call Pin.get();
-        busyWait(SLOT_TIME);
+        call BusyWait.wait(SLOT_TIME);
         return bit;
     }
     

@@ -10,6 +10,13 @@ configuration PlatformOneWireLowLevelC {
     provides interface GeneralIO as OneWirePin;
 }
 implementation{
-    components PlatformOneWireLowLevelP as Pins;
-    OneWirePin = Pins;
+  components HplMsp430GeneralIOC;
+  components new Msp430GpioC();
+  Msp430GpioC.HplGeneralIO -> HplMsp430GeneralIOC.Port24;
+
+  OneWirePin = Msp430GpioC;
+
+  // SDH : this seemed to break with mspgcc4...
+  // components PlatformOneWireLowLevelP as Pins;
+
 }

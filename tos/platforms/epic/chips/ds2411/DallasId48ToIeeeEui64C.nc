@@ -8,7 +8,10 @@ module DallasId48ToIeeeEui64C {
   command ieee_eui64_t LocalIeeeEui64.getId() {
     uint8_t id[6];
     ieee_eui64_t eui;
-    call ReadId48.read(id);
+    if (call ReadId48.read(id) != SUCCESS) {
+      memset(eui.data, 0, 8);
+      goto done;
+    }
 
     eui.data[0] = IEEE_EUI64_COMPANY_ID_0;
     eui.data[1] = IEEE_EUI64_COMPANY_ID_1;
@@ -24,6 +27,7 @@ module DallasId48ToIeeeEui64C {
     eui.data[6] = id[1];
     eui.data[7] = id[0];
 
+  done:
     return eui;
   }
 }
