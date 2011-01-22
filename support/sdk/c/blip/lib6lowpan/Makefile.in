@@ -54,7 +54,8 @@ lib6lowpan_a_AR = $(AR) $(ARFLAGS)
 lib6lowpan_a_LIBADD =
 am_lib6lowpan_a_OBJECTS = lib6lowpan.$(OBJEXT) \
 	lib6lowpan_4944.$(OBJEXT) lib6lowpan_frag.$(OBJEXT) \
-	iovec.$(OBJEXT) utility.$(OBJEXT) in_cksum.$(OBJEXT)
+	iovec.$(OBJEXT) utility.$(OBJEXT) in_cksum.$(OBJEXT) \
+	ieee154_header.$(OBJEXT)
 lib6lowpan_a_OBJECTS = $(am_lib6lowpan_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -199,7 +200,7 @@ noinst_lib6lowpan_HEADERS = 6lowpan.h in_cksum.h  \
 	ip.h ip_malloc.h lib6lowpan.h nwbyte.h 
 
 lib6lowpan_a_SOURCES = lib6lowpan.c lib6lowpan_4944.c lib6lowpan_frag.c \
-	iovec.c utility.c in_cksum.c $(lib6lowpan_HEADERS)
+	iovec.c utility.c in_cksum.c ieee154_header.c $(lib6lowpan_HEADERS)
 
 all: all-am
 
@@ -249,6 +250,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ieee154_header.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/in_cksum.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iovec.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib6lowpan.Po@am__quote@

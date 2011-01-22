@@ -5,7 +5,6 @@
 #include <stdlib.h>
 
 #include "lib6lowpan-includes.h"
-#include "lib6lowpan.h"
 #include "ip.h"
 
 #define TO_CHAR(X) (((X) < 10) ? ('0' + (X)) : ('a' + ((X) - 10)))

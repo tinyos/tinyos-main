@@ -168,12 +168,6 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
       extra_payload -= (extra_payload % 8);
     }
 
-/*     { */
-/*       int i; */
-/*       for (i = 0; i < extra_payload; i++) { */
-/*         buf[i] = i; */
-/*       } */
-/*     } */
     if (iov_read(packet->ip6_data, ctx->offset - sizeof(struct ip6_hdr), extra_payload, buf) != extra_payload) {
       return -4;
     }

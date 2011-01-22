@@ -5,8 +5,6 @@
 #include "config.h"
 #endif
 
-#include <Ieee154.h>
-
 #ifdef PC
 #include "blip-pc-includes.h"
 // typedef uint16_t ieee154_saddr_t;
@@ -17,6 +15,8 @@ enum {
 #else
 #include "blip-tinyos-includes.h"
 #endif
+
+#include <Ieee154.h>
 
 #include "nwbyte.h"
 #include "iovec.h"

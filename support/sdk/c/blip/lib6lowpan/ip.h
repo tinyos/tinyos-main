@@ -31,8 +31,7 @@
  *
  */
 
-//#if ! HAVE_NETINET_IN_H || WITH_OSHAN
-#ifndef WITH_OSHAN
+#if ! HAVE_NETINET_IN_H 
 // update to use netinet/in definition of an IPv6 address; this is a
 //  lot more elegent.
 struct in6_addr

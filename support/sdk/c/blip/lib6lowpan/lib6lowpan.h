@@ -42,7 +42,6 @@ uint8_t *ip_memcpy(uint8_t *dst0, const uint8_t *src0, uint16_t len) ;
 
 uint16_t ieee154_hashaddr(ieee154_addr_t *addr);
 
-
 /*
  * Fragmentation routines.
  */
@@ -135,9 +134,6 @@ inline uint8_t setFragDgramOffset(struct packed_lowmsg *msg, uint8_t size);
 int lowpan_extern_match_context(struct in6_addr *addr, UNUSED uint8_t *ctx_id);
 int lowpan_extern_read_context(struct in6_addr *addr, int context);
 
-
-uint8_t *pack_ieee154_header(uint8_t *buf, size_t cnt, struct ieee154_frame_addr *frame) ;
-uint8_t *unpack_ieee154_hdr(uint8_t *buf, struct ieee154_frame_addr *frame);
 
 int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet);
 /*
