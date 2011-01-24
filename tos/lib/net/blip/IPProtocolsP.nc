@@ -22,7 +22,7 @@ module IPProtocolsP {
     while (nxt == IPV6_HOP  || nxt == IPV6_ROUTING  || nxt == IPV6_FRAG ||
            nxt == IPV6_DEST || nxt == IPV6_MOBILITY || nxt == IPV6_IPV6) {
       nxt = cur->ip6e_nxt;
-      cur = cur + cur->ip6e_len;
+      cur = (struct ip6_ext *)((uint8_t *)cur + cur->ip6e_len);
     }
 
     len -= POINTER_DIFF(cur, payload);
