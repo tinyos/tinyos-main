@@ -360,6 +360,7 @@ implementation {
     }
   }
 
+#if 0
   event error_t ForwardingEvents.deleteHeader(struct ip6_hdr *iph, void* payload){
     uint16_t len;
     /* Reconfigure length */
@@ -376,6 +377,7 @@ implementation {
 
     return SUCCESS;
   }
+#endif
 
 
   event bool ForwardingEvents.initiate(struct ip6_packet *pkt,
@@ -386,7 +388,13 @@ implementation {
     rpl_data_hdr_t data_hdr;
 
     printfUART("make header %d\n", pkt->ip6_hdr.ip6_nxt);
+    if(pkt->ip6_hdr.ip6_nxt == IANA_ICMP)
+      return TRUE;
 
+    data_hdr.ip6_ext_outer.ip6e_nxt = pkt->ip6_hdr.ip6_nxt;
+    data_hdr.ip6_ext_outer.ip6e_len = sizeof(rpl_data_hdr_t);
+    data_hdr.ip6_ext_inner.ip6e_nxt = RPL_HBH_RANK_TYPE; /* well, this is actually the type */
+    data_hdr.ip6_ext_inner.ip6e_len = sizeof(rpl_data_hdr_t) - sizeof(struct ip6_ext);
     data_hdr.o_bit = 0;
     data_hdr.r_bit = 0;
     data_hdr.f_bit = 0;
@@ -394,6 +402,7 @@ implementation {
     data_hdr.instance_id.id = call RouteInfo.getInstanceID();
     data_hdr.senderRank = nodeRank;
 
+    pkt->ip6_hdr.ip6_nxt = IPV6_HOP;
     printfUART("set data header to %d %d\n", data_hdr.instance_id.id, data_hdr.senderRank);
 
     len = ntohs(pkt->ip6_hdr.ip6_plen);

@@ -97,6 +97,7 @@ enum {
 
 enum {
   RPL_IFACE = ROUTE_IFACE_154,
+  RPL_HBH_RANK_TYPE = 243,
 };
 
 struct icmpv6_header_t {
@@ -315,6 +316,8 @@ typedef struct {
 
 
 typedef struct {
+  struct ip6_ext ip6_ext_outer;
+  struct ip6_ext ip6_ext_inner;
   uint8_t o_bit  : 1;
   uint8_t r_bit  : 1;
   uint8_t f_bit  : 1;
