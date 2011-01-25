@@ -50,6 +50,7 @@ generic module InactivePeriodP(uint8_t sfDirection)
     interface Alarm<TSymbolIEEE802154,uint32_t> as Alarm;
     interface SplitControl as RadioControl;
     interface SuperframeStructure as SF;
+    interface GetNow<bool> as IsEmbedded;
     interface RadioOff;
     interface MLME_GET;
     interface TimeCalc;
@@ -97,7 +98,14 @@ implementation {
 
   bool tooLate()
   {
-    return call TimeCalc.hasExpired(call SF.sfStartTime(), maxDt());
+    if (call IsEmbedded.getNow()) {
+      // we have a situation where there is an incoming and outgoing superframe 
+      // (scenario as indicated in 802.15.4-2006 Fig. 67), so the inactive period 
+      // is not "inactive", we should not power down (TODO: we might power down
+      // for a smaller amount of time, the time in between two superframes)
+      return TRUE;
+    } else
+      return call TimeCalc.hasExpired(call SF.sfStartTime(), maxDt());
   }
 
   async event void RadioToken.transferredFrom(uint8_t fromClient) 

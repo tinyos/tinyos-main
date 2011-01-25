@@ -495,6 +495,7 @@ implementation
    DeviceInactivePeriod.Alarm = Alarm12;
    DeviceInactivePeriod.RadioControl = PhySplitControl;
    DeviceInactivePeriod.SF -> BeaconSynchronizeP.IncomingSF;
+   DeviceInactivePeriod.IsEmbedded -> BeaconTransmitP.IsSendingBeacons;
    DeviceInactivePeriod.RadioOff -> DeviceInactivePeriodClient;
    DeviceInactivePeriod.MLME_GET -> PibP;
    DeviceInactivePeriod.TimeCalc -> PibP;
@@ -506,6 +507,7 @@ implementation
    CoordInactivePeriod.Alarm = Alarm13;
    CoordInactivePeriod.RadioControl = PhySplitControl;
    CoordInactivePeriod.SF -> BeaconTransmitP.OutgoingSF;
+   CoordInactivePeriod.IsEmbedded -> BeaconSynchronizeP.IsTrackingBeacons;
    CoordInactivePeriod.RadioOff -> CoordInactivePeriodClient;
    CoordInactivePeriod.MLME_GET -> PibP;
    CoordInactivePeriod.TimeCalc -> PibP;
