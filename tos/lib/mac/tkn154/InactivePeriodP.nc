@@ -57,7 +57,7 @@ generic module InactivePeriodP(uint8_t sfDirection)
 }
 implementation {
 
-#ifndef IEEE154_RADIO_POWERUP_TIME
+#ifndef IEEE154_RADIO_POWERUP_TIME  
 
   async event void RadioToken.transferredFrom(uint8_t fromClient) 
   {
@@ -107,7 +107,7 @@ implementation {
       transferToken();
     } else {
       error_t error = call RadioOff.off();
-      dbg_serial("InactivePeriodP", "Got token, switching radio off: %lu\n", error);
+      dbg_serial("InactivePeriodP", "Got token, switching radio off: %lu (%lu)\n", (uint32_t) error, call Alarm.getNow());
       if (error == EALREADY) 
         signal RadioOff.offDone();
       else if (error != SUCCESS) 

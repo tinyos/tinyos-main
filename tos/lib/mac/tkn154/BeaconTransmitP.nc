@@ -403,7 +403,7 @@ implementation
 
   async event void RadioToken.transferredFrom(uint8_t fromClientID)
   {
-    dbg_serial("BeaconSynchronizeP","Token transferred, will Tx beacon in %lu\n",
+    dbg_serial("BeaconTransmitP","Token transferred, will Tx beacon in %lu\n",
         (uint32_t) ((m_lastBeaconTxTime + m_dt) - call BeaconSendAlarm.getNow())); 
     if (m_requestBitmap & (REQUEST_REALIGNMENT_DONE_PENDING | REQUEST_UPDATE_SF))
       post signalGrantedTask(); // need to be in sync context
@@ -531,7 +531,7 @@ implementation
       ((frame->payload[BEACON_INDEX_SF_SPEC2] & SF_SPEC2_FINAL_CAPSLOT_MASK) >> SF_SPEC2_FINAL_CAPSLOT_OFFSET) + 1;
     m_sfSlotDuration = 
       (((uint32_t) 1) << ((frame->payload[BEACON_INDEX_SF_SPEC1] & SF_SPEC1_SO_MASK) >> SF_SPEC1_SO_OFFSET)) * 
-      IEEE154_aBaseSlotDuration;
+      (uint32_t) IEEE154_aBaseSlotDuration;
 
     if (frame->header->mhr[MHR_INDEX_FC1] & FC1_FRAME_PENDING)
       m_framePendingBit = TRUE;
@@ -792,7 +792,7 @@ implementation
     return m_lastBeaconTxTime; 
   }
 
-  async command uint16_t OutgoingSF.sfSlotDuration()
+  async command uint32_t OutgoingSF.sfSlotDuration()
   { 
     return m_sfSlotDuration;
   }

@@ -147,7 +147,7 @@ implementation
 
   async command uint32_t OutgoingSF.sfStartTime() {return 0;}
 
-  async command uint16_t OutgoingSF.sfSlotDuration() {return 0;}
+  async command uint32_t OutgoingSF.sfSlotDuration() {return 0;}
 
   async command uint8_t OutgoingSF.numCapSlots() {return 0;}
 

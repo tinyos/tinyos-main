@@ -173,9 +173,9 @@ implementation
   command error_t RxEnableStateChange.disable() {return FAIL;}
   default event void MLME_RX_ENABLE.confirm(ieee154_status_t status) {}
   default async command uint32_t IncomingSuperframeStructure.sfStartTime() {return 0;}
-  default async command uint16_t IncomingSuperframeStructure.sfSlotDuration() {return 0;}
+  default async command uint32_t IncomingSuperframeStructure.sfSlotDuration() {return 0;}
   default async command uint32_t OutgoingSuperframeStructure.sfStartTime() {return 0;}
-  default async command uint16_t OutgoingSuperframeStructure.sfSlotDuration() {return 0;}
+  default async command uint32_t OutgoingSuperframeStructure.sfSlotDuration() {return 0;}
   default async command bool IsTrackingBeacons.getNow() { return FALSE;}
   default async command bool IsSendingBeacons.getNow() { return FALSE;}
   default command ieee154_macPanCoordinator_t IsMacPanCoordinator.get() { return FALSE;}

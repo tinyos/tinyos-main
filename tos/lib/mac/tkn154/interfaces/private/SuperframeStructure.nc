@@ -57,7 +57,7 @@ interface SuperframeStructure
    * 
    * @returns  superframe slot duration
    **/
-  async command uint16_t sfSlotDuration();
+  async command uint32_t sfSlotDuration();
 
   /**
    * Number of CAP slots.

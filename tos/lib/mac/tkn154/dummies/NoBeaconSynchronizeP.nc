@@ -100,7 +100,7 @@ implementation
   /* -----------------------  SF Structure, etc. ----------------------- */
 
   async command uint32_t IncomingSF.sfStartTime() { return 0; }
-  async command uint16_t IncomingSF.sfSlotDuration() { return 0; }
+  async command uint32_t IncomingSF.sfSlotDuration() { return 0; }
   async command uint8_t IncomingSF.numCapSlots() { return 0; }
   async command uint8_t IncomingSF.numGtsSlots() { return 0; }
   async command uint16_t IncomingSF.battLifeExtDuration() { return 0; }

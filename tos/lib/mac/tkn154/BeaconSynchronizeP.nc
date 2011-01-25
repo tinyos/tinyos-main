@@ -500,7 +500,7 @@ implementation
     return m_lastBeaconRxTime; 
   }
 
-  async command uint16_t IncomingSF.sfSlotDuration()
+  async command uint32_t IncomingSF.sfSlotDuration()
   { 
     return m_sfSlotDuration;
   }
