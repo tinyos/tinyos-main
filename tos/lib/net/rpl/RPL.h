@@ -248,9 +248,9 @@ enum {
 };
 
 enum {
-  ICMPV6_CODE_DIS = 0x01,
-  ICMPV6_CODE_DIO = 0x02,
-  ICMPV6_CODE_DAO = 0x03,
+  ICMPV6_CODE_DIS = 0x00,
+  ICMPV6_CODE_DIO = 0x01,
+  ICMPV6_CODE_DAO = 0x02,
 };
 
 enum {
