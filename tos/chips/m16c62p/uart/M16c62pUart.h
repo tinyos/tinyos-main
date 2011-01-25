@@ -45,9 +45,14 @@
 
 
 typedef enum {
+  TOS_UART_300,
+  TOS_UART_600,
   TOS_UART_1200,
+  TOS_UART_2400,
+  TOS_UART_4800,
   TOS_UART_9600,
   TOS_UART_19200,
+  TOS_UART_38400,
   TOS_UART_57600,
 } uart_speed_t;
 

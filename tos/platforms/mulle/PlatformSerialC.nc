@@ -56,9 +56,4 @@ implementation {
   PlatformSerialP -> Uart.Uart1Control;
   UartStream = Uart.Uart1Stream;
   UartByte = Uart.Uart1Byte;
-  
-  components MainC;
-  
-  MainC.SoftwareInit -> PlatformSerialP;
-  
 }

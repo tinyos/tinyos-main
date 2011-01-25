@@ -44,22 +44,16 @@
 module PlatformSerialP
 {
   provides interface StdControl;
-  provides interface Init;
   
   uses interface UartControl;
 }
 implementation
 {
-  command error_t Init.init() {
+  command error_t StdControl.start()
+  {
     call UartControl.setParity(TOS_UART_PARITY_NONE);
     call UartControl.setNoStop();
     call UartControl.setSpeed(TOS_UART_57600);
-    return SUCCESS;
-  }
-  
-  
-  command error_t StdControl.start()
-  {
     call UartControl.setDuplexMode(TOS_UART_DUPLEX);
     return SUCCESS;
   }

@@ -141,7 +141,7 @@ implementation
     atomic
     {
       if ( m_rx_buf )
-	return EBUSY;
+        return EBUSY;
       m_rx_buf = buf;
       m_rx_len = len;
       m_rx_pos = 0;
@@ -155,23 +155,22 @@ implementation
 
   async event void HplUart.rxDone( uint8_t data ) 
   {
-
     if ( m_rx_buf ) 
     {
       m_rx_buf[ m_rx_pos++ ] = data;
       if ( m_rx_pos >= m_rx_len ) 
       {
-	    uint8_t* buf = m_rx_buf;
-	    atomic
+        uint8_t* buf = m_rx_buf;
+        atomic
         {
-	      m_rx_buf = NULL;
-	      if(m_rx_intr != 3)
+          m_rx_buf = NULL;
+          if(m_rx_intr != 3)
           {
-	        call HplUart.disableRxInterrupt();
-	        m_rx_intr = 0;
-	      }
-	    }  
-	    signal UartStream.receiveDone( buf, m_rx_len, SUCCESS );
+            call HplUart.disableRxInterrupt();
+            m_rx_intr = 0;
+          }
+        }  
+        signal UartStream.receiveDone( buf, m_rx_len, SUCCESS );
       }
     }
     else 
@@ -251,7 +250,7 @@ implementation
     while ( call HplUart.isRxEmpty() ) 
     {
       if ( ( (uint16_t)call Counter.get() - start ) >= timeout_micro )
-	    return FAIL;
+        return FAIL;
     }
     *byte = call HplUart.rx();
     

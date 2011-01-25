@@ -162,12 +162,17 @@ implementation
     SET_BIT(ctrl0, 4);
     atomic switch (current_speed)
     {
+      case TOS_UART_300:
+      case TOS_UART_600:
       case TOS_UART_1200:
+      case TOS_UART_2400:
+      case TOS_UART_4800:
         SET_BIT(ctrl0, 0);
         CLR_BIT(ctrl0, 1);
         break;
       case TOS_UART_9600:
       case TOS_UART_19200:
+      case TOS_UART_38400:
       case TOS_UART_57600:
         CLR_BIT(ctrl0, 0);
         CLR_BIT(ctrl0, 1);
@@ -199,14 +204,33 @@ implementation
     {
       // TODO(henrik) These values are based on a mcu that runs on MAIN_CRYSTAL_SPEED and doesn't
       //              consider if the PLL is on which they should.
+
+      // Use Main clock divided by 8 for these
+      case TOS_UART_300:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 300.0))+ 0.5) - 1.0);
+        break;
+      case TOS_UART_600:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 600.0))+ 0.5) - 1.0);
+        break;
       case TOS_UART_1200:
         brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 1200.0))+ 0.5) - 1.0);
         break;
+      case TOS_UART_2400:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 2400.0))+ 0.5) - 1.0);
+        break;
+      case TOS_UART_4800:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 4800.0))+ 0.5) - 1.0);
+        break;
+
+      // Use Main clock without division for these
       case TOS_UART_9600:
-      	brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 9600.0))+ 0.5) - 1.0);
-      	break;
-	  case TOS_UART_19200:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 9600.0))+ 0.5) - 1.0);
+        break;
+      case TOS_UART_19200:
         brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 19200.0))+ 0.5) - 1.0);
+        break;
+      case TOS_UART_38400:
+        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 38400.0))+ 0.5) - 1.0);
         break;
       case TOS_UART_57600:
         brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 57600.0))+ 0.5) - 1.0);
