@@ -151,8 +151,8 @@ Scenario 1: A node disseminates one or more new items to a stable network.
 This scenario occurs in practice when a node or a base station reprograms a 
 network or disseminates events to all nodes in the network.
 
-Scenario 2: A node joins an updated network. This scenario occurs in
-practice when one or more items have been disseminated to the network. 
+Scenario 2: A node with old items joins an updated network. This scenario 
+occurs in practice when one or more items have been disseminated to the network. 
 However, there are new nodes (eg. mobile nodes moving into the network 
 region, or intermittent nodes that were off during the dissemination) join 
 the network.
@@ -247,7 +247,7 @@ Depending on which metrics are being compared, experimental design
 techniques SHOULD be used to reduce the number of experiments.
 
 Each experiment should be ran sufficiently long for the interested
-comparison metrics to reach stability. For collection protocols, the
+comparison metrics to reach stability. For collection protocols, the stability
 could refer to observing stability in the data latency of the whole
 network.
 
