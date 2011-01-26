@@ -141,7 +141,7 @@ int ieee154_parse(char *in, ieee154_addr_t *out) {
   long val;
   char *endp = in;
   long saddr = strtol(in,  &endp, 16);
-  printf("ieee154_parse: %s, %c\n", in, *endp);
+  fprintf(stderr, "ieee154_parse: %s, %c\n", in, *endp);
 
   if (*endp == ':') {
     endp = in;
@@ -180,17 +180,27 @@ int ieee154_print(ieee154_addr_t *in, char *out, size_t cnt) {
   return 0;
 }
 
-void print_buffer(uint8_t *buf, int len) {
+void fprint_buffer(FILE *fp, uint8_t *buf, int len) {
   int i;
   for (i = 0; i < len; i++) {
     if ((i % 16) == 0 && i > 0) 
-      printf("\n");
+      fprintf(fp, "\n");
     if (i % 16 == 0) {
-      printf("%i:\t", i);
+      fprintf(fp, "%i:\t", i);
     }
-    printf("%02x ", buf[i]);
+    fprintf(fp, "%02x ", buf[i]);
   }
-  printf("\n");
+  fprintf(fp, "\n");
+}
+
+void print_buffer(uint8_t *buf, int len) {
+  fprint_buffer(stdout, buf, len);
+}
+
+void print_buffer_bare(uint8_t *buf, int len) {
+  while (len--) {
+    printf("%02x ", *buf++);
+  }
 }
 
 void scribble(uint8_t *buf, int len) {
@@ -199,7 +209,6 @@ void scribble(uint8_t *buf, int len) {
     buf[i] = rand();
   }
 }
-
 
 void iov_print(struct ip_iovec *iov) {
   struct ip_iovec *cur = iov;

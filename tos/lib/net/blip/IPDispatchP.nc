@@ -95,13 +95,9 @@ int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id) {
 
 
 #include <lib6lowpan/ieee154_header.c>
-#if LIB6LOWPAN_HC_VERSION == -1
-#include <lib6lowpan/lib6lowpan_nohc.c>
-#elif !defined(LIB6LOWPAN_HC_VERSION) || LIB6LOWPAN_HC_VERSION == 6
 #include <lib6lowpan/lib6lowpan.c>
 #include <lib6lowpan/lib6lowpan_4944.c>
 #include <lib6lowpan/lib6lowpan_frag.c>
-#endif
 
   enum {
     S_RUNNING,

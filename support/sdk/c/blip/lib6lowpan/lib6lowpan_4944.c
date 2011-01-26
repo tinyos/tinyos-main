@@ -68,7 +68,7 @@ inline uint8_t *getLowpanPayload(struct packed_lowmsg *lowmsg) {
 inline uint16_t getHeaderBitmap(struct packed_lowmsg *lowmsg) {
   uint16_t headers = 0;
   uint8_t *buf = lowmsg->data;
-  uint16_t len = lowmsg->len;
+  int16_t len = lowmsg->len;
   if (buf == NULL) return headers;
 
   if (len > 0 && ((*buf) >> 6) == LOWPAN_NALP_PATTERN) {

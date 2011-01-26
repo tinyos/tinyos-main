@@ -4,8 +4,13 @@ EXTRA_O=$(EXTRA:.c=.o) ../lib6lowpan.a
 
 CFLAGS += -I.. -I../.. -I$(TOSROOT)/tos/types -DPC -DHAVE_CONFIG_H
 
+all: compress decompress
+
+compress: compress.o $(EXTRA_O)
+	$(CC) -o $@ compress.o $(EXTRA_O)
+
 decompress: decompress.o $(EXTRA_O)
 	$(CC) -o $@ decompress.o $(EXTRA_O)
 
 clean:
-	rm -rf *.o decompress
+	rm -rf *.o decompress compress

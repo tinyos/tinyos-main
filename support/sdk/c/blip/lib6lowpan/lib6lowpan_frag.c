@@ -10,6 +10,7 @@
 #include "nwbyte.h"
 #include "ip_malloc.h"
 #include "iovec.h"
+#include "ieee154_header.h"
 
 int lowpan_recon_complete(struct lowpan_reconstruct *recon,
                           struct ip6_packet_headers *hdrs);
@@ -41,10 +42,18 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
   memset(recon->r_buf, 0, recon->r_size);
   recon->r_app_len = NULL;
 
-  /* unpack the first fragment */
-  unpack_end = lowpan_unpack_headers(recon, 
-                                     frame_addr,
-                                     unpack_point, len);
+  if (*unpack_point == LOWPAN_IPV6_PATTERN) {
+    /* uncompressed header... no need to un-hc */
+    unpack_point++; len --;
+    memcpy(recon->r_buf, unpack_point, len);
+    unpack_end = recon->r_buf + len;
+  } else {
+    /* unpack the first fragment */
+    unpack_end = lowpan_unpack_headers(recon, 
+                                       frame_addr,
+                                       unpack_point, len);
+  }
+
   if (!unpack_end) {
     free(recon->r_buf);
     return -3;
@@ -102,10 +111,15 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
 
   /* pack 802.15.4 */
   buf = lowpan_buf = pack_ieee154_header(frag, len, frame);
-
   if (ctx->offset == 0) {
-    int offset;
+    int offset = 0;
 
+#if LIB6LOWPAN_HC_VERSION == -1
+    /* just copy the ipv6 header around... */
+    *buf++ = LOWPAN_IPV6_PATTERN;
+    memcpy(buf, &packet->ip6_hdr, sizeof(struct ip6_hdr));
+    buf += sizeof(struct ip6_hdr);
+#elif !defined(LIB6LOWPAN_HC_VERSION) || LIB6LOWPAN_HC_VERSION == 6
     /* pack the IPv6 header */
     buf = lowpan_pack_headers(packet, frame, buf, len - (buf - frag));
     if (!buf) return -1;
@@ -113,6 +127,7 @@ int lowpan_frag_get(uint8_t *frag, size_t len,
     /* pack the next headers */
     offset = pack_nhc_chain(&buf, len - (buf - ieee_buf), packet);
     if (offset < 0) return -2;
+#endif
 
     /* copy the rest of the payload into this fragment */
     extra_payload = ntohs(packet->ip6_hdr.ip6_plen) - offset;

@@ -299,6 +299,10 @@ int pack_ipnh(uint8_t *dest, size_t cnt, uint8_t *type, struct ip6_packet *packe
       ext.ip6e_nxt == IPV6_DEST || ext.ip6e_nxt == IPV6_MOBILITY || ext.ip6e_nxt == IPV6_IPV6 ||
       ext.ip6e_nxt == IANA_UDP) {
     *dest |= LOWPAN_NHC_NH;
+  } else {
+    /* include the next header value if it's not compressible */
+    dest++;
+    *dest = ext.ip6e_nxt;
   }
 
   dest ++;
