@@ -36,7 +36,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
  Makefile
  lib6lowpan/Makefile
- interface/Makefile
+ lib6lowpan/trace/Makefile
 ])
 dnl  driver/Makefile
 
@@ -99,7 +99,7 @@ AC_ARG_ENABLE([lpl],
         AC_DEFINE([BLIP_L2_RETRIES], [1], [Number of link-layer retransmissions])
         [])
 
-AC_LINK_FILES(interface/tun_dev_${arch}.c, interface/tun_dev.c)
+dnl AC_LINK_FILES(interface/tun_dev_${arch}.c, interface/tun_dev.c)
 dnl AC_LINK_FILES(driver/routing-${arch}.c, driver/routing-platform.c)
 dnl AC_LINK_FILES(driver/netlink-${arch}.c, driver/netlink.c)
 dnl AC_CONFIG_SUBDIRS([driver/radvd-1.0])

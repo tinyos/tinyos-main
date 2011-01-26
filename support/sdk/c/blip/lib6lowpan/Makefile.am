@@ -1,4 +1,6 @@
 
+SUBDIRS = . trace
+
 AM_CFLAGS = -DPC -I../../../../../tos/types
 noinst_LIBRARIES = lib6lowpan.a
 
