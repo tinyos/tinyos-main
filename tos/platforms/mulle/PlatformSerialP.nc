@@ -46,6 +46,7 @@ module PlatformSerialP
   provides interface StdControl;
   
   uses interface UartControl;
+  uses interface UartStream;
 }
 implementation
 {
@@ -55,6 +56,7 @@ implementation
     call UartControl.setNoStop();
     call UartControl.setSpeed(TOS_UART_57600);
     call UartControl.setDuplexMode(TOS_UART_DUPLEX);
+    call UartStream.enableReceiveInterrupt();
     return SUCCESS;
   }
 
@@ -63,4 +65,8 @@ implementation
     call UartControl.setDuplexMode(TOS_UART_OFF);
     return SUCCESS;
   }
+
+  async event void UartStream.sendDone( uint8_t* buf, uint16_t len, error_t error ){}
+  async event void UartStream.receivedByte( uint8_t byte ){}
+  async event void UartStream.receiveDone( uint8_t* buf, uint16_t len, error_t error ){}
 }

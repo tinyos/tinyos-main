@@ -95,14 +95,14 @@ implementation
   norace uint16_t m_tx_len, m_rx_len;
   norace uint8_t *m_tx_buf, *m_rx_buf;
   norace uint16_t m_tx_pos, m_rx_pos;
-  norace uint16_t m_byte_time = 68;
+  norace uint16_t m_byte_time;
   norace uint8_t m_rx_intr;
   norace uint8_t m_tx_intr;
-  uart_duplex_t mode = TOS_UART_OFF;
+  norace uart_duplex_t mode = TOS_UART_OFF;
 
   async command error_t UartStream.enableReceiveInterrupt()
   {
-    if (mode == TOS_UART_TONLY)
+    if (mode == TOS_UART_TONLY || mode == TOS_UART_OFF)
     {
       return FAIL;
     }
@@ -117,7 +117,7 @@ implementation
 
   async command error_t UartStream.disableReceiveInterrupt()
   {
-    if (mode == TOS_UART_TONLY)
+    if (mode == TOS_UART_TONLY || mode == TOS_UART_OFF)
     {
       return FAIL;
     }
@@ -131,17 +131,21 @@ implementation
 
   async command error_t UartStream.receive( uint8_t* buf, uint16_t len )
   {
-    if (mode == TOS_UART_TONLY)
+    if (mode == TOS_UART_TONLY || mode == TOS_UART_OFF)
     {
       return FAIL;
     }
     
     if ( len == 0 )
+    {
       return FAIL;
+    }
     atomic
     {
       if ( m_rx_buf )
+      {
         return EBUSY;
+      }
       m_rx_buf = buf;
       m_rx_len = len;
       m_rx_pos = 0;
@@ -181,7 +185,7 @@ implementation
 
   async command error_t UartStream.send( uint8_t *buf, uint16_t len)
   {
-    if (mode == TOS_UART_RONLY)
+    if (mode == TOS_UART_RONLY || mode == TOS_UART_OFF)
     {
       return FAIL;
     }
@@ -198,12 +202,10 @@ implementation
     call HplUart.tx( buf[ m_tx_pos++ ] );
     
     return SUCCESS;
-    
   }
 
   async event void HplUart.txDone() 
   {
-    
     if ( m_tx_pos < m_tx_len ) 
     {
       call HplUart.tx( m_tx_buf[ m_tx_pos++ ] );
@@ -216,12 +218,11 @@ implementation
       call HplUart.disableTxInterrupt();
       signal UartStream.sendDone( buf, m_tx_len, SUCCESS );
     }
-    
   }
 
   async command error_t UartByte.send( uint8_t byte )
   {
-    if (mode == TOS_UART_RONLY)
+    if (mode == TOS_UART_RONLY || mode == TOS_UART_OFF)
     {
       return FAIL;
     }
@@ -235,16 +236,32 @@ implementation
   
   async command error_t UartByte.receive( uint8_t * byte, uint8_t timeout)
   {
-    uint16_t timeout_micro = m_byte_time * timeout + 1;
+    uint32_t timeout_micro32 = m_byte_time * timeout + 1;
+    uint16_t timeout_micro;
     uint16_t start;
     
-    if (mode == TOS_UART_TONLY)
+    if (mode == TOS_UART_TONLY || mode == TOS_UART_OFF)
     {
       return FAIL;
     }
     
     if(m_rx_intr)
+    {
       return FAIL;
+    }
+    
+    // The timeout clock is 16 bits and counts in TMicro. So a check to test that
+    // the total timeout value is smaller than 0xffff - <safty margin> is needed.
+    // TODO(henrik) Resolve this by lovering the clock speed used by the uart module
+    //              or make it 32 bits.
+    if(timeout_micro32 > 0xFFF0)
+    {
+      timeout_micro = 0xFFF0;
+    }
+    else
+    {
+      timeout_micro = (uint16_t) timeout_micro32;
+    }
 
     start = call Counter.get();
     while ( call HplUart.isRxEmpty() ) 
@@ -260,6 +277,49 @@ implementation
   
   async command error_t UartControl.setSpeed(uart_speed_t speed)
   {
+    if (mode != TOS_UART_OFF)
+    {
+      return FAIL;
+    }
+    switch (speed)
+    {
+      // TODO(henrik): This is not that good because we are repeating the
+      //               the switch statement over the baud rates here and in
+      //               two places in the HplM16c62pUartP.nc file. Which means
+      //               that if adding a new baudrate changes needs to be done in 3
+      //               places.
+      // 138us/byte @ 57600
+      case TOS_UART_300:
+        m_byte_time = 138 * 192;
+        break;
+      case TOS_UART_600:
+        m_byte_time = 138 * 96;
+        break;
+      case TOS_UART_1200:
+        m_byte_time = 138 * 48;
+        break;
+      case TOS_UART_2400:
+        m_byte_time = 138 * 24;
+        break;
+      case TOS_UART_4800:
+        m_byte_time = 138 * 12;
+        break;
+      case TOS_UART_9600:
+        m_byte_time = 138 * 6;
+        break;
+      case TOS_UART_19200:
+        m_byte_time = 138 * 3;
+        break;
+      case TOS_UART_38400:
+        m_byte_time = 138 * 1.5;
+        break;
+      case TOS_UART_57600:
+        m_byte_time = 138;
+        break;
+      default:
+        m_byte_time = 0xFFFF; // Set maximum value as default.
+        break;
+    }
     return call HplUart.setSpeed(speed);
   }
 
@@ -270,33 +330,25 @@ implementation
   
   async command error_t UartControl.setDuplexMode(uart_duplex_t duplex)
   {
-    if (mode == TOS_UART_OFF)
-    {
-      call HplUart.disableTxInterrupt();
-      call HplUart.disableRxInterrupt();
-      m_rx_intr = 0;
-      m_tx_intr = 0;
-    }
+    // Turn everything off
+    call HplUart.disableTxInterrupt();
+    call HplUart.disableRxInterrupt();
+    call HplUartTxControl.stop();
+    call HplUartRxControl.stop();
+    m_rx_intr = 0;
+    m_tx_intr = 0;
+
+    mode = duplex;
     switch (duplex)
     {
       case TOS_UART_OFF:
-        call HplUart.disableTxInterrupt();
-        call HplUart.disableRxInterrupt();
-        call HplUartTxControl.stop();
-        call HplUartRxControl.stop();
         call HplUart.off();
-        return SUCCESS;
         break;
       case TOS_UART_RONLY:
-        call HplUart.disableTxInterrupt();
-        call HplUartTxControl.stop();
         call HplUart.on();
         call HplUartRxControl.start();
-        call HplUart.enableRxInterrupt();
         break;
       case TOS_UART_TONLY:
-        call HplUart.disableRxInterrupt();
-        call HplUartRxControl.stop();
         call HplUart.on();
         call HplUartTxControl.start();
         break;
@@ -304,7 +356,6 @@ implementation
         call HplUart.on();
         call HplUartTxControl.start();
         call HplUartRxControl.start();
-        call HplUart.enableRxInterrupt();
         break;
       default:
         break;
@@ -355,17 +406,8 @@ implementation
 
   async command bool UartControl.stopBits()
   {
-    if (call HplUart.getStopBits() == TOS_UART_STOP_BITS_2)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return (call HplUart.getStopBits() == TOS_UART_STOP_BITS_2);
   }
-  
-  
   
   async event void Counter.overflow() {}
 

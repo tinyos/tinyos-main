@@ -320,6 +320,7 @@ implementation
 
   async command error_t UartTxControl.stop()
   {
+    while (!READ_BIT(ctrl0, 3)); // If transmitting, wait for it to finish
     call TxIO.makeInput();
     CLR_BIT(ctrl1, 0);
     return SUCCESS;
