@@ -49,6 +49,7 @@
 #include "bits.h"
 #include "uart/M16c62pUart.h"
 #include "pins/M16c62pPin.h"
+#include "adc/M16c62pAdc.h"
 
 #define true TRUE
 #define false FALSE
