@@ -35,23 +35,26 @@
  */
 
 /**
- * Demo sensor that connects to the AN0 channel on the MCU. This can
- * easily be used together with the potentiometer on the Mulle
- * expansionboard.
+ * Wiring for the MultiUserStdControl module.
+ * A StdControl used by many different components, eg a StdControl for AVcc,
+ * can be turned into a shared resource.
+ *
+ * @param name The name of the unique count variable used to indicate the
+ *             number of users for this shared StdControl.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-generic configuration DemoSensorC()
+generic configuration MultiUserStdControlC(char name[])
 {
-  provides interface Read<uint16_t>;
+  provides interface StdControl[uint8_t client];
+  uses interface StdControl as SharedStdControl;
 }
 implementation
 {
-  components new AdcReadC(M16c62p_ADC_CHL_AN0,
-                          M16c62p_ADC_PRECISION_10BIT,
-                          M16c62p_ADC_PRESCALE_4);
-  components HplM16c62pGeneralIOC as IOs;
+  components new MultiUserStdControlP(),
+             new BitVectorC(uniqueCount(name));
 
-  AdcReadC.Pin -> IOs.PortP100;
-  Read = AdcReadC;
+  MultiUserStdControlP.BitVector -> BitVectorC;
+  MultiUserStdControlP.SharedStdControl = SharedStdControl;
+  StdControl = MultiUserStdControlP;
 }

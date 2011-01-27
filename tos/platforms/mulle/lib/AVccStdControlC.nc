@@ -35,23 +35,49 @@
  */
 
 /**
- * Demo sensor that connects to the AN0 channel on the MCU. This can
- * easily be used together with the potentiometer on the Mulle
- * expansionboard.
+ * Implementation of a StdControl for the AVcc on Mulle.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-generic configuration DemoSensorC()
+
+module AVccStdControlC
 {
-  provides interface Read<uint16_t>;
+  provides interface StdControl;
+  uses interface GeneralIO as AVccPin;
 }
 implementation
 {
-  components new AdcReadC(M16c62p_ADC_CHL_AN0,
-                          M16c62p_ADC_PRECISION_10BIT,
-                          M16c62p_ADC_PRESCALE_4);
-  components HplM16c62pGeneralIOC as IOs;
+  enum
+  {
+    S_OFF,
+    S_ON,
+  };
 
-  AdcReadC.Pin -> IOs.PortP100;
-  Read = AdcReadC;
+  uint8_t m_state = S_OFF;
+
+  command error_t StdControl.start()
+  {
+    if (m_state != S_OFF)
+    {
+      return EALREADY;
+    }
+    call AVccPin.makeOutput();
+    call AVccPin.set();
+
+    m_state = S_ON;
+    return SUCCESS;
+  }
+
+  command error_t StdControl.stop()
+  {
+    if (m_state == S_OFF)
+    {
+      return EALREADY;
+    }
+    call AVccPin.makeOutput();
+    call AVccPin.clr();
+    
+    m_state = S_OFF;
+    return SUCCESS;
+  }
 }

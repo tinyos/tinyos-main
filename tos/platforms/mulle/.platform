@@ -7,6 +7,7 @@ push( @includes, qw(
   %T/lib/rfxlink/util
   %T/chips/at45db
   %T/platforms/mulle/button
+  %T/platforms/mulle/lib
   %T/platforms/mulle/softwarei2c
   %T/platforms/mulle/softwarespi
   %T/platforms/mulle/chips/rv8564

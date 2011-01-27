@@ -35,23 +35,34 @@
  */
 
 /**
- * Demo sensor that connects to the AN0 channel on the MCU. This can
- * easily be used together with the potentiometer on the Mulle
- * expansionboard.
+ * Generic configuration for creating a Read interface for a AD converter
+ * on the Mulle platform. The Read interface provided will handle the 
+ * turning on and off of the VRef pin provided by AVcc.
+ *
+ * For a example of use see tos/platform/mulle/DemoSensorC.nc.
+ *
+ * NOTE: The VRef pin can still be handled manually if needed by using
+ *       the StdControl provided by AVccClientC.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-generic configuration DemoSensorC()
+
+generic configuration AdcReadC(uint8_t channel, uint8_t precision, uint8_t prescaler)
 {
   provides interface Read<uint16_t>;
+
+  uses interface GeneralIO as Pin;
 }
 implementation
 {
-  components new AdcReadC(M16c62p_ADC_CHL_AN0,
-                          M16c62p_ADC_PRECISION_10BIT,
-                          M16c62p_ADC_PRESCALE_4);
-  components HplM16c62pGeneralIOC as IOs;
+  components new AdcReadP(channel, precision, prescaler),
+      RealMainP, new AdcReadClientC(), new AVccClientC();
 
-  AdcReadC.Pin -> IOs.PortP100;
-  Read = AdcReadC;
+  AdcReadP.Pin = Pin;
+  AdcReadP.ReadAdc -> AdcReadClientC;
+  AdcReadP.AVccControl -> AVccClientC;
+
+  AdcReadClientC.M16c62pAdcConfig -> AdcReadP;
+
+  Read = AdcReadP;
 }

@@ -35,23 +35,13 @@
  */
 
 /**
- * Demo sensor that connects to the AN0 channel on the MCU. This can
- * easily be used together with the potentiometer on the Mulle
- * expansionboard.
+ * Unique count variable for the AVcc MultipleStdControl.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-generic configuration DemoSensorC()
-{
-  provides interface Read<uint16_t>;
-}
-implementation
-{
-  components new AdcReadC(M16c62p_ADC_CHL_AN0,
-                          M16c62p_ADC_PRECISION_10BIT,
-                          M16c62p_ADC_PRESCALE_4);
-  components HplM16c62pGeneralIOC as IOs;
+#ifndef __MULLE_AVCC_H__
+#define __MULLE_AVCC_H__
 
-  AdcReadC.Pin -> IOs.PortP100;
-  Read = AdcReadC;
-}
+#define AVCC_CLIENTS "mulle.avcc.clients"
+
+#endif // __MULLE_AVCC_H__

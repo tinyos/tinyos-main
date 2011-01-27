@@ -35,23 +35,75 @@
  */
 
 /**
- * Demo sensor that connects to the AN0 channel on the MCU. This can
- * easily be used together with the potentiometer on the Mulle
- * expansionboard.
+ * Implementation of a Read interface that can be used to read a AD port
+ * on Mulle. It will switch VRef on and off automatically and also set
+ * the AD port as input.
+ *
+ * NOTE: The state of the AD port will not be changed from input on a
+ *       readDone event.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-generic configuration DemoSensorC()
+
+generic module AdcReadP(uint8_t channel, uint8_t precision, uint8_t prescaler)
 {
+  provides interface M16c62pAdcConfig;
   provides interface Read<uint16_t>;
+
+  uses interface GeneralIO as Pin;
+  uses interface Read<uint16_t> as ReadAdc;
+  uses interface StdControl as AVccControl;
 }
 implementation
 {
-  components new AdcReadC(M16c62p_ADC_CHL_AN0,
-                          M16c62p_ADC_PRECISION_10BIT,
-                          M16c62p_ADC_PRESCALE_4);
-  components HplM16c62pGeneralIOC as IOs;
+  async command uint8_t M16c62pAdcConfig.getChannel()
+  {
+    return channel;
+  }
 
-  AdcReadC.Pin -> IOs.PortP100;
-  Read = AdcReadC;
+  async command uint8_t M16c62pAdcConfig.getPrecision()
+  {
+    return precision;
+  }
+
+  async command uint8_t M16c62pAdcConfig.getPrescaler()
+  {
+    return prescaler;
+  }
+
+  enum
+  {
+    S_IDLE,
+    S_READING,
+  };
+
+  uint8_t m_state = S_IDLE;
+
+  command error_t Read.read()
+  {
+    if (m_state != S_IDLE)
+    {
+      return EBUSY;
+    }
+    call AVccControl.start();
+    call Pin.makeInput();
+
+    if (call ReadAdc.read() != SUCCESS)
+    {
+      call AVccControl.stop();
+    }
+    m_state = S_READING;
+    return SUCCESS;
+  }
+
+  event void ReadAdc.readDone(error_t e, uint16_t val)
+  {
+    m_state = S_IDLE;
+    // The control of the off state for the pin should be
+    // handled from somewhere else.
+    call AVccControl.stop();
+    signal Read.readDone(e, val);
+  }
+
+  default async command void Pin.makeInput() {}
 }

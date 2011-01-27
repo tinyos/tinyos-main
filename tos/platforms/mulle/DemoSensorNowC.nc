@@ -1,5 +1,5 @@
 /**
- * Demo sensor for the mica2 platform.
+ * Demo sensor for the Mulle platform.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */

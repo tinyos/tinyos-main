@@ -35,23 +35,42 @@
  */
 
 /**
- * Demo sensor that connects to the AN0 channel on the MCU. This can
- * easily be used together with the potentiometer on the Mulle
- * expansionboard.
+ * A module creating multiple StdControls from one shared StdControl.
+ * The shared StdControl will only be turned off once all of the
+ * StdControls provided by this module are turned off.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-generic configuration DemoSensorC()
+generic module MultiUserStdControlP()
 {
-  provides interface Read<uint16_t>;
+  provides interface StdControl[uint8_t client];
+
+  uses interface StdControl as SharedStdControl;
+  uses interface BitVector;
 }
 implementation
 {
-  components new AdcReadC(M16c62p_ADC_CHL_AN0,
-                          M16c62p_ADC_PRECISION_10BIT,
-                          M16c62p_ADC_PRESCALE_4);
-  components HplM16c62pGeneralIOC as IOs;
 
-  AdcReadC.Pin -> IOs.PortP100;
-  Read = AdcReadC;
+  command error_t StdControl.start[uint8_t client]()
+  {
+    call BitVector.set(client);
+    return call SharedStdControl.start();
+  }
+
+  command error_t StdControl.stop[uint8_t client]()
+  {
+    uint16_t i;
+    call BitVector.clear(client);
+    for (i = 0; i < call BitVector.size(); ++i)
+    {
+      if (call BitVector.get(i))
+      {
+        // There is some other resource that still is
+        // using the module controlled by this StdControl.
+        // We cant turn off now, so return SUCCESS.
+        return SUCCESS;
+      }
+    }
+    return call SharedStdControl.stop();
+  }
 }

@@ -35,23 +35,23 @@
  */
 
 /**
- * Demo sensor that connects to the AN0 channel on the MCU. This can
- * easily be used together with the potentiometer on the Mulle
- * expansionboard.
+ * Wiring for the shared AVcc StdControl.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-generic configuration DemoSensorC()
+
+#include "MulleAVcc.h"
+
+configuration AVccClientP
 {
-  provides interface Read<uint16_t>;
+  provides interface StdControl[uint8_t client];
 }
 implementation
 {
-  components new AdcReadC(M16c62p_ADC_CHL_AN0,
-                          M16c62p_ADC_PRECISION_10BIT,
-                          M16c62p_ADC_PRESCALE_4);
-  components HplM16c62pGeneralIOC as IOs;
+  components new MultiUserStdControlC(AVCC_CLIENTS), AVccStdControlC,
+             HplM16c62pGeneralIOC as IOs;
 
-  AdcReadC.Pin -> IOs.PortP100;
-  Read = AdcReadC;
+  AVccStdControlC.AVccPin -> IOs.PortP76;
+  MultiUserStdControlC -> AVccStdControlC.StdControl;
+  StdControl = MultiUserStdControlC;
 }
