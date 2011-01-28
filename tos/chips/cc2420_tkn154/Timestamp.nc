@@ -67,10 +67,12 @@ interface Timestamp
   async event void transmittedSFD(uint32_t time, uint8_t frameType, uint8_t msduHandle, uint8_t *payload, uint8_t token);
 
   /**
-   * Modify (overwrite) the contents of the MAC payload. This command must 
-   * only be called in the context of a <code>transmittedSFD()<\code> event and it
-   * should return fast. Note: the smaller the offset is the faster 
-   * <code>transmittedSFD()<\code> must be finished (offset of zero might not work).
+   * Modify (overwrite) the contents of the MAC payload. This command must only
+   * be called in an <code>transmittedSFD()<\code> eventhandler, which should
+   * return fast. Note: the smaller the offset, the faster the
+   * <code>transmittedSFD()<\code> eventhandler must be finished (offset of
+   * zero might not work), because you are modifying a packet, whose first 
+   * bytes have already been transmitted.
    *
    * @param token   the token signalled by <code>transmittedSFD()<\code>
    * @param offset  the offset in the frame's payload to start modifying; 

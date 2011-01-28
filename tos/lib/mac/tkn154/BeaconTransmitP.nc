@@ -509,10 +509,10 @@ implementation
 
     ASSERT(result == SUCCESS); // must succeed, we're sending without CCA or ACK request
     if (timestamp != IEEE154_INVALID_TIMESTAMP) {
+      dbg_serial("BeaconTransmitP", "Beacon Tx (bsn: %lu), offset to last %lu\n", 
+          (uint32_t) frame->header->mhr[MHR_INDEX_SEQNO], (uint32_t) (timestamp - m_lastBeaconTxTime));
       m_lastBeaconTxTime = timestamp;
       m_dt = m_beaconInterval; // transmit the next beacon at m_lastBeaconTxTime + m_dt 
-      dbg_serial("BeaconTransmitP", "Beacon Tx (bsn: %lu) success at %lu\n", 
-          (uint32_t) frame->header->mhr[MHR_INDEX_SEQNO], (uint32_t) m_lastBeaconTxTime);
     } else {
       // Timestamp is invalid; this is bad. We need the beacon timestamp for the 
       // slotted CSMA-CA, because it defines the slot reference time. We can't use this superframe

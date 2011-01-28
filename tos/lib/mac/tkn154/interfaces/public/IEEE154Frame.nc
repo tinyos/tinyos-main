@@ -159,14 +159,18 @@ interface IEEE154Frame
     */
   command uint8_t getPayloadLength(message_t* frame);
 
- /**
-   * Returns the point in time when the frame was received. If 
-   * <tt>isTimestampValid()</tt> returns FALSE then the 
-   * timestamp is not valid and must be ignored.
-   *
-   * @param frame     the frame
-   * @return          timestamp of the frame
-   */
+ /** 
+  * Returns the point in time when the first bit (of the PHY preamble) of the
+  * frame was received or transmitted. Time is expressed in symbols as local
+  * time (which can also be accessed via the LocalTime<T62500hz> interface
+  * provided by your platform, e.g.
+  * tos/platforms/telosb/mac/tkn154/timer/LocalTime62500hzC).  If
+  * <tt>isTimestampValid()</tt> returns FALSE then the timestamp is not valid
+  * and must be ignored.
+  *
+  * @param frame     the frame 
+  * @return          timestamp of the frame
+  */
   command uint32_t getTimestamp(message_t* frame);  
 
  /**
