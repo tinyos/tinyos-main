@@ -88,7 +88,7 @@ implementation {
     //call RoutingControl.start();
     call SplitControl.start();
 
-    call RPLUDP.bind(7001);
+    call RPLUDP.bind(10210);
   }
 
   uint32_t countrx = 0;
@@ -107,7 +107,8 @@ implementation {
   event void SplitControl.startDone(error_t err){
     while( call RPLDAO.startDAO() != SUCCESS );
     
-    call Timer.startOneShot((call Random.rand16()%2)*1024U);
+    if(TOS_NODE_ID != RPL_ROOT_ADDR)
+      call Timer.startOneShot((call Random.rand16()%2)*1024U);
   }
 
   event void Timer.fired(){
@@ -132,7 +133,7 @@ implementation {
     if(dest.sin6_addr.s6_addr[15] != 0) // destination is set as root!
       ++counttx;
 
-    dest.sin6_port = htons(7001);
+    dest.sin6_port = htons(10210);
 
     printfUART("Generate Packet at %d \n", TOS_NODE_ID);
     call Leds.led0Toggle();
