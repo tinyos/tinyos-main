@@ -91,8 +91,8 @@ implementation{
   uint8_t redunCounter = 0xFF;
   uint8_t doubleCounter = 0;
 
-  uint8_t DIOIntDouble = 12;
-  uint8_t DIOIntMin = 255;
+  uint8_t DIOIntDouble = 11;
+  uint8_t DIOIntMin = 8;
   uint8_t DIORedun = 0xFF;
   uint8_t MaxRankInc = 3;
   uint8_t MinHopRankInc = 1;
@@ -170,7 +170,8 @@ implementation{
 
   task void sendDIOTask(){
     struct ip6_packet pkt;
-    struct ip_iovec   v[5];
+    struct ip_iovec   v[1];
+    uint8_t data[60];
     struct dio_base_t msg;
     struct dio_body_t body;
     struct dio_metric_header_t metric_header;
@@ -191,9 +192,6 @@ implementation{
     call RPLDAORoutingEngine.startDAO();
     // call IPAddress.setSource(&pkt.ip6_hdr);
 
-    length = sizeof(struct dio_base_t) + sizeof(struct dio_body_t) + 
-      sizeof(struct dio_metric_header_t) + sizeof(struct dio_etx_t) + 
-      sizeof(struct dio_dodag_config_t);
 
     msg.icmpv6.type = 155;//ICMP_TYPE_ROUTER_ADV; // Is this type correct?
     msg.icmpv6.code = ICMPV6_CODE_DIO;
@@ -222,7 +220,11 @@ implementation{
       dodag_config.length = 14;
       dodag_config.A = 0; // no auth
       dodag_config.PCS = 0;
+#ifdef RPL_OF_MRHOF
+      dodag_config.ocp = 1; //MRHOF
+#else
       dodag_config.ocp = 0; //OF0
+#endif
       dodag_config.default_lifetime = 6;  // six
       dodag_config.lifetime_unit = 3600; // hours
       dodag_config.DIOIntDoubl = DIOIntDouble;
@@ -246,33 +248,30 @@ implementation{
       body.type = RPL_DODAG_METRIC_CONTAINER_TYPE; // metric container
       body.container_len = 5;
 
-      pkt.ip6_hdr.ip6_nxt = IANA_ICMP;
-      pkt.ip6_hdr.ip6_plen = htons(length);
-	
-      v[0].iov_base = (uint8_t *)&msg;
-      v[0].iov_len  = sizeof(struct dio_base_t);
-      v[0].iov_next = &v[1];
-      //v[0].iov_next = &v[4]; // this is the ContikiRPL style + decrease length
-
-      v[1].iov_base = (uint8_t*)&body;
-      v[1].iov_len  = sizeof(struct dio_body_t);
-      v[1].iov_next = &v[2];
-
-      v[2].iov_base = (uint8_t*)&metric_header;
-      v[2].iov_len  = sizeof(struct dio_metric_header_t);
-      v[2].iov_next = &v[3];
-
-      v[3].iov_base = (uint8_t*)&etx_value;
-      v[3].iov_len  = sizeof(struct dio_etx_t);
-      v[3].iov_next = &v[4];
-
-      v[4].iov_base = (uint8_t*)&dodag_config;
-      v[4].iov_len  = sizeof(struct dio_dodag_config_t);
-      v[4].iov_next = NULL;
+#ifdef RPL_OF_MRHOF
+      length = sizeof(struct dio_base_t) + sizeof(struct dio_body_t) + sizeof(struct dio_metric_header_t) + sizeof(struct dio_etx_t) + sizeof(struct dio_dodag_config_t);
+      memcpy(&data, &msg, sizeof(struct dio_base_t));
+      memcpy(&data+sizeof(struct dio_base_t), &body, sizeof(struct dio_body_t));
+      memcpy(&data+sizeof(struct dio_base_t)+sizeof(struct dio_body_t), &metric_header, sizeof(struct dio_metric_header_t));
+      memcpy(&data+sizeof(struct dio_base_t)+sizeof(struct dio_body_t)+sizeof(struct dio_metric_header_t), &etx_value, sizeof(struct dio_etx_t));
+      memcpy(&data+sizeof(struct dio_base_t)+sizeof(struct dio_body_t)+sizeof(struct dio_metric_header_t)+sizeof(struct dio_etx_t), &dodag_config, sizeof(struct dio_dodag_config_t));
+#else
+      length = sizeof(struct dio_base_t) + sizeof(struct dio_dodag_config_t); 
+      memcpy(&data, &msg, sizeof(struct dio_base_t));
+      memcpy(&data+sizeof(struct dio_base_t), &dodag_config, sizeof(struct dio_dodag_config_t));
+#endif
 
       // TODO: add prefix info (optional)
+      v[0].iov_base = (uint8_t*)&data;
+      v[0].iov_len = length;
+      v[0].iov_next = NULL;
+
+      pkt.ip6_hdr.ip6_nxt = IANA_ICMP;
+      pkt.ip6_hdr.ip6_plen = htons(length);
 
       pkt.ip6_data = &v[0];		
+
+      //iov_print(&v[0]);
 
     } else {
       length = sizeof(struct dio_base_t);
@@ -355,7 +354,7 @@ implementation{
 
   void resetTrickleTime(){
     call TrickleTimer.stop();
-    tricklePeriod = DIOIntMin;
+    tricklePeriod = 2 << (DIOIntMin-1);
     redunCounter = 0;
     doubleCounter = 0;
   }

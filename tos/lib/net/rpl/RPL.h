@@ -162,13 +162,13 @@ struct dio_base_t {
 
 struct dio_body_t{ // type 2 ; contains metrics
   uint8_t type;
-  uint16_t container_len;
+  uint8_t container_len;
   //uint8_t *metric_data;
 };
 
 struct dio_dodag_config_t{ // type 4 ; contains DODAG configuration
   uint8_t type;
-  uint16_t length;
+  uint8_t length;
   uint8_t flags : 4;
   uint8_t A     : 1;
   uint8_t PCS   : 3;
@@ -181,8 +181,6 @@ struct dio_dodag_config_t{ // type 4 ; contains DODAG configuration
   uint8_t reserved;
   uint8_t default_lifetime;
   uint16_t lifetime_unit;
-  //uint8_t PAD2;
-  //uint8_t *data; // connect with any additional information
 };
 
 struct dio_metric_header_t{ 
@@ -194,13 +192,10 @@ struct dio_metric_header_t{
   uint8_t O_flag      :  1;
   uint8_t C_flag      :  1;
   uint16_t object_len;
-  //uint8_t *metric_body;
 };
 
 struct dio_etx_t{
   uint16_t etx;
-  //uint8_t PAD1;
-  //uint8_t *data;
 };
 
 struct dio_latency_t{
@@ -354,6 +349,7 @@ struct padN_t{
   uint8_t *padN_data;
 };
 */
+parent_t parentSet[MAX_PARENT];
 
 
 #endif
