@@ -85,8 +85,6 @@ implementation {
   components RPLRoutingEngineC;
   components IPStackC;
   components LedsC;
-  components RPLMRHOFP;
-  components RPLOF0P;
 
   RPLRank = RPLRankP;
   StdControl = RPLRankP;
@@ -100,11 +98,13 @@ implementation {
   RPLRankP.ForwardingEvents -> IPStackC.ForwardingEvents[RPL_IFACE];
 
 #ifdef RPL_OF_MRHOF
+  components RPLMRHOFP;
   RPLRankP.RPLOF -> RPLMRHOFP;
+  RPLMRHOFP.ForwardingTable -> IPStackC;
 #else
+  components RPLOF0P;
   RPLRankP.RPLOF -> RPLOF0P;
+  RPLOF0P.ForwardingTable -> IPStackC;
 #endif
 
-  RPLMRHOFP.ForwardingTable -> IPStackC;
-  RPLOF0P.ForwardingTable -> IPStackC;
 }
