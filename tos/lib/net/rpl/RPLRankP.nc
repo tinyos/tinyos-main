@@ -369,7 +369,6 @@ implementation {
     uint16_t len; 
     rpl_data_hdr_t data_hdr;
 
-    return TRUE;
 
     if(pkt->ip6_hdr.ip6_nxt == IANA_ICMP)
       return TRUE;
