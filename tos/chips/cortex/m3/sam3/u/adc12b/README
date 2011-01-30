@@ -1,0 +1,10 @@
+12 bit ADC implementation for SAM3U 
+
+@author JeongGil Ko <jgko@cs.jhu.edu>
+
+The implementation is based on the preliminary specifications and the MSP430 implementations.
+
+- Supported Interfaces
+--- Read Interface
+--- ReadNow Interface
+--- ReadStream Interface

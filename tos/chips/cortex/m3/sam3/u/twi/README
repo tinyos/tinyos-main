@@ -1,0 +1,12 @@
+Twi Wire Interface (I2C) Implementation for SAM3U
+
+@author JeongGil Ko <jgko@cs.jhu.edu>
+
+The implementations are based on the preliminary specifications.
+
+- The internal address features are not enabled due to the fact that
+  the T2 interfaces do not support these as parameters. It can be
+  easily implemented with Hpl commands.
+
+- Needs testing with onboard temperature sensor. The temperature
+  sensor's address is 0x48. 
