@@ -1,0 +1,41 @@
+#-*-Makefile-*- vim:syntax=make
+
+PROGRAM = samba-program.py
+SAM-BA ?= /dev/ttyUSB10
+START_ADDR ?= 0x400000
+
+PROGRAMMER ?= $(PROGRAM)
+
+DELUGE_BASE_EXE=$(BUILDDIR)/deluge-base.exe
+DELUGE_BASE_BIN=$(BUILDDIR)/deluge-base.bin
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using $(PROGRAM)"
+	$(PROGRAMMER) -b $(INSTALL_BIN) -s $(START_ADDR) -t at91sam3s4-ek -p $(SAM-BA) -r -c
+
+deluge_base_bin: FORCE
+	@echo "Compiling $(PLATFORM) deluge base station"
+	@$(NCC) -o $(DELUGE_BASE_EXE) $(OPTFLAGS) $(PFLAGS) -DDELUGE_BASESTATION $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+	@$(OBJCOPY) --output-target=binary $(DELUGE_BASE_EXE) $(DELUGE_BASE_BIN)
+
+program_gi: deluge_base_bin FORCE
+	@echo "Installing $(PLATFORM) deluge base station using $(PROGRAM)"
+	$(PROGRAMMER) -b $(DELUGE_BASE_BIN) -s $(TOSBOOT_REALPROG_START) -t at91sam3s4-ek -p $(SAM-BA) -c
+	@echo "Installing $(PLATFORM) bootloader using $(PROGRAM)"
+	$(PROGRAMMER) -b $(BOOTLOADER_IMG) -s $(TOSBOOT_START) -t at91sam3s4-ek -p $(SAM-BA) -r -c
+	@echo "Injecting $(PLATFORM) golden image"
+	@sleep 5
+	tos-deluge $(INSTALL_GOLDENIMAGE) -i 0 $(BUILDDIR)/tos_image.xml 
+	@echo "Rebooting into $(PLATFORM) golden image"
+	@sleep 1
+	tos-deluge $(INSTALL_GOLDENIMAGE) -r 0 
+
+program_ngi: FORCE
+	@echo "Installing $(PLATFORM) binary using $(PROGRAM)"
+	$(PROGRAMMER) -b $(INSTALL_BIN) -s $(TOSBOOT_REALPROG_START) -t at91sam3s4-ek -p $(SAM-BA) -c
+	@echo "Installing $(PLATFORM) bootloader using $(PROGRAM)"
+	$(PROGRAMMER) -b $(BOOTLOADER_IMG) -s $(TOSBOOT_START) -t at91sam3s4-ek -p $(SAM-BA) -r -c
+
+program_input: bin
+	@:
+

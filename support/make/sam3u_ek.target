@@ -1,0 +1,11 @@
+#-*-Makefile-*- vim:syntax=make
+PLATFORM = sam3u_ek
+
+ifdef CC2420_CHANNEL
+PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)
+endif
+
+$(call TOSMake_include_platform,sam3)
+
+sam3u_ek: $(BUILD_DEPS)
+	@:

@@ -1,0 +1,106 @@
+#-*-Makefile-*- vim:syntax=make
+define SAM3_HELP
+
+SAM3 extras:
+  None available at the moment.
+
+endef
+
+HELP += $(SAM3_HELP)
+
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+SET_ID = tos-set-symbols
+NCC = ncc
+LIBS = -lm
+
+AMADDR = ActiveMessageAddressC\$$addr
+BUILDDIR ?= build/$(PLATFORM)
+MAIN_EXE = $(BUILDDIR)/main.exe
+MAIN_BIN = $(BUILDDIR)/main.bin
+MAIN_IHEX = $(BUILDDIR)/main.ihex
+INSTALL_BIN = $(MAIN_BIN).out$(if $(NODEID),-$(NODEID),)
+INCLUDE_DIRS ?= $(TOSDIR)/platforms/$(PLATFORM)
+EXTRA_MODULES ?= $(TOSDIR)/platforms/$(PLATFORM)/vectors.c
+
+OPTFLAGS ?= -O3 -g
+CFLAGS += -mcpu=cortex-m3 -mthumb -fno-strict-aliasing
+PFLAGS += $(EXTRA_MODULES)
+PFLAGS += -I$(INCLUDE_DIRS)
+PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
+PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c
+PFLAGS += -finline-limit=100000
+PFLAGS += -board=$(SENSORBOARD)
+
+# can be overridden by MP-enabled linker file (see mpu.extra)
+LINKERFILE_PREFIX ?= sam3u-ek-flash
+LINKERFILE ?= $(LINKERFILE_PREFIX).x
+LDFLAGS += -L$(INCLUDE_DIRS) -T $(LINKERFILE)
+
+BUILDLESS_DEPS += bytes
+
+# Build storage file if volumes.xml present
+ifneq ($(wildcard $(VOLUME_FILE)), )
+build_storage: $(BUILDDIR)/StorageVolumes.h
+
+exe0: build_storage 
+
+VOLUME_ALLOCATOR_FLAGS ?= 
+$(BUILDDIR)/StorageVolumes.h: $(VOLUME_FILE)
+	$(VOLUME_ALLOCATOR) $(VOLUME_ALLOCATOR_FLAGS) $(PLATFORMDIR) <$(VOLUME_FILE) >$@ || rm -f $@
+
+PFLAGS += -I$(BUILDDIR)
+else
+
+build_storage:
+
+endif
+
+ifndef BUILD_DEPS
+  ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
+    BUILD_DEPS = bin tosimage bytes $(POST_BUILD_EXTRA_DEPS)
+  endif
+endif
+
+ifdef MSG_SIZE
+PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+ifdef DEFAULT_LOCAL_GROUP
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
+endif
+
+
+DEFAULT_PROGRAM ?= sam-ba
+
+# Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
+# out with call in there.  I don't know why.
+$(if $(PROGRAM),,$(call TOSMake_include,sam3/$(DEFAULT_PROGRAM).extra))
+
+exe: exe0 bytes FORCE
+	@:
+
+exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
+	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
+	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+ifdef WIRING_CHECK_FILE
+	@nescc-wiring $(WIRING_CHECK_FILE)
+endif
+	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
+
+builddir: FORCE
+	mkdir -p $(BUILDDIR)
+
+setid: FORCE
+	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd $(OBJCOPY) --output-target=binary $(MAIN_EXE) $(INSTALL_BIN); else cmd $(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target binary $(MAIN_EXE) $(INSTALL_BIN) TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID); fi
+
+tosimage: ihex build_tosimage FORCE
+	@:
+
+bin: exe FORCE
+	$(OBJCOPY) --output-target=binary $(MAIN_EXE) $(MAIN_BIN)
+
+ihex: exe FORCE
+	$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
+
+bytes: FORCE
+	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'

@@ -1,0 +1,16 @@
+#-*-Makefile-*- vim:syntax=make
+PLATFORM = sam3s_ek
+
+LINKERFILE_PREFIX?=sam3s-ek-flash
+SAM-BA?=/dev/ttyUSB10
+START_ADDR?=0x400000
+BOARD?=at91sam3s4-ek
+
+ifdef CC2420_CHANNEL
+PFLAGS += -DCC2420_DEF_CHANNEL=$(CC2420_CHANNEL)
+endif
+
+$(call TOSMake_include_platform,sam3)
+
+sam3s_ek: $(BUILD_DEPS)
+	@:

@@ -1,0 +1,17 @@
+#-*-Makefile-*- vim:syntax=make
+#$Id: install.extra,v 1.4 2006/12/12 18:22:59 vlahan Exp $
+
+NODEID = $(INSTALL)
+BUILD_DEPS = bin tosimage bytes setid 
+
+ifdef BOOTLOADER
+  ifeq ($(BOOTLOADER),tosboot)
+    ifdef INSTALL_GOLDENIMAGE
+      BUILD_DEPS += program_gi
+    else
+      BUILD_DEPS += program_ngi
+    endif
+  endif
+else
+ BUILD_DEPS += program
+endif
