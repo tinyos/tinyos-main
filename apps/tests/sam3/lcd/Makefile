@@ -1,0 +1,2 @@
+COMPONENT=TestLcdAppC
+include $(MAKERULES)

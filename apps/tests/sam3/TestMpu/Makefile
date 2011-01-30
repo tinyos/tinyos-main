@@ -1,0 +1,2 @@
+COMPONENT=TestMpuAppC
+include $(MAKERULES)

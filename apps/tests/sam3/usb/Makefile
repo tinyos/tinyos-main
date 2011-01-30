@@ -1,0 +1,3 @@
+COMPONENT=MoteAppC
+
+include $(MAKERULES)

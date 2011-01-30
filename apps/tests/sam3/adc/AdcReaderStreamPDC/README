@@ -1,0 +1,9 @@
+12 bit ADC test program for SAM3U with PDC
+
+@author JeongGil Ko <jgko@cs.jhu.edu>
+
+To use PDC with ADC, the sampling rate MUST be controlled by properly
+setting the startup, prescal and lowres registers.
+
+Setting the sam3u_adc12_channel_config_t config can properly set these
+registers.
