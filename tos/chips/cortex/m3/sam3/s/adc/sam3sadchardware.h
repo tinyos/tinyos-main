@@ -506,8 +506,8 @@ typedef union
     uint32_t flat;
     struct
     {
-        uint32_t data     : 10; // converted Data
-        uint32_t reserved : 22;
+        uint32_t data     : 12; // converted Data
+        uint32_t reserved : 20;
     } __attribute__((__packed__)) bits;
 } adc_cdr_t;
 
