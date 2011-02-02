@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 Johns Hopkins University.
+ * Copyright (c) 2011 University of Utah. 
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,41 +31,31 @@
  */
 
 /**
- * ADC configuration settings (part of test application) for SAM3U's 12 bit ADC
- * @author JeongGil Ko
+ * @author Thomas Schmid
  */
 
 #include "sam3sadchardware.h"
-
-module AdcReaderP
-{
-  provides interface AdcConfigure<const sam3s_adc_channel_config_t*>;
-}
+generic configuration AdcReadNowClientC() 
+{ 
+  provides {
+    interface ReadNow<uint16_t>;
+    interface Resource;
+  }
+  uses interface AdcConfigure<const sam3s_adc_channel_config_t*>;
+} 
 
 implementation {
-      const sam3s_adc_channel_config_t config = 
-      {
-         channel  : 5,
-         trgen    : 0, // 0: trigger disabled
-         trgsel   : 0, // 0: external trigger
-         lowres   : 0, // 0: 12-bit
-         sleep    : 0, // 0: normal, adc core and vref are kept on between conversions
-         fwup     : 0, // 0: normal, sleep mode is defined by sleep bit
-         freerun  : 0, // 0: normal mode, wait for trigger
-         prescal  : 2, // ADCClock = MCK / ((prescal + 1)*2)
-         startup  : 7, // 112 periods of ADCClock
-         settling : 1, // 5 periods of ADCClock
-         anach    : 0, // 0: no analog changed on channel switching
-         tracktim : 1, // Tracking Time = (tracktim + 1) * ADCClock periods
-         transfer : 1, // Transfer Period = (transfer*1+3) * ADCClock periods
-         useq     : 0, // 0: normal, converts channel in sequence
-         ibctl    : 1,
-         diff     : 0,
-         gain     : 0,
-         offset   : 0,
-      };
+  components AdcP;
+  components new Sam3sAdcClientC();
 
-  async command const sam3s_adc_channel_config_t* AdcConfigure.getConfiguration() {
-    return &config;
-  }
+  enum {
+    CLIENT = unique(ADCC_SERVICE),
+  };
+
+  ReadNow = AdcP.ReadNow[CLIENT];
+  AdcConfigure = AdcP.Config[CLIENT];
+  Resource = AdcP.ResourceReadNow[CLIENT];
+
+  AdcP.GetAdc[CLIENT] -> Sam3sAdcClientC.Sam3sGetAdc;
+  AdcP.SubResourceReadNow[CLIENT] -> Sam3sAdcClientC.Resource;
 }

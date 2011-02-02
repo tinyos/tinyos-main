@@ -36,7 +36,7 @@
  * @author JeongGil Ko
  */
 
-#include "sam3uDmahardware.h"
+//#include "sam3uDmahardware.h"
 #include <color.h>
 #include <lcd.h>
 
