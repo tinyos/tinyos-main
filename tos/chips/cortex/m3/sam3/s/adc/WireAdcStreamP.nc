@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2003 The Regents of the University of California.
+ * Copyright (c) 2009 Johns Hopkins University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,31 +30,45 @@
  */
 
 /**
- * HilSam3TCCounterTMicroC provides the an approximate TMicro counter for the
- * SAM3U.
- *
+ * @author JeongGil Ko
  * @author Thomas Schmid
- * @see  Please refer to TEP 102 for more information about this component and its
- *          intended use.
  */
 
-configuration HilSam3TCCounterTMicroC
-{
-  provides {
-      interface Counter<TMicro,uint16_t> as HilSam3TCCounterTMicro;
-      interface HplSam3TCChannel;
-      interface HplSam3TCCompare;
+#include "sam3sadchardware.h"
+
+configuration WireAdcStreamP {
+  provides interface ReadStream<uint16_t>[uint8_t client];
+  uses {
+    interface AdcConfigure<const sam3s_adc_channel_config_t*>[uint8_t client];
+    interface Sam3sGetAdc[uint8_t client];
+    interface Resource[uint8_t client];
   }
 }
-implementation
-{
-  components HplSam3TCC;
-  components new HilSam3TCCounterC(TMicro) as Counter;
+implementation {
+#ifndef SAM3S_ADC_PDC
+  components AdcStreamP;
+#else
+  components AdcStreamPDCP as AdcStreamP;
+#endif
+  components MainC, new AlarmTMicro16C() as Alarm,
+    new ArbitratedReadStreamC(uniqueCount(ADCC_READ_STREAM_SERVICE), uint16_t) as ArbitrateReadStream;
 
-  HilSam3TCCounterTMicro = Counter;
-  Counter.HplSam3TCChannel -> HplSam3TCC.TCH2;
+  ReadStream = ArbitrateReadStream;
+  AdcConfigure = AdcStreamP;
+  Resource = ArbitrateReadStream;
 
-  HplSam3TCChannel = HplSam3TCC.TCH2;
-  HplSam3TCCompare = HplSam3TCC.TC2CompareC;
+  ArbitrateReadStream.Service -> AdcStreamP;
+
+#ifdef SAM3S_ADC_PDC
+  components HplSam3sPdcC;
+  AdcStreamP.HplPdc -> HplSam3sPdcC.AdcPdcControl;
+#else
+  AdcStreamP.Alarm -> Alarm;
+#endif
+
+  AdcStreamP.Init <- MainC;
+  Sam3sGetAdc = AdcStreamP.GetAdc;
+
+  components LedsC, NoLedsC;
+  AdcStreamP.Leds -> LedsC;
 }
-

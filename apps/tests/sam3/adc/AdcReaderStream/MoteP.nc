@@ -39,7 +39,7 @@
 #include <color.h>
 #include <lcd.h>
 
-#define SAMPLE_BUFFER_SIZE 10000
+#define SAMPLE_BUFFER_SIZE BOARD_LCD_WIDTH
 #define NUM_SAMPLES_PER_PACKET (TOSH_DATA_LENGTH / sizeof(uint16_t))
 
 module MoteP
@@ -108,7 +108,7 @@ implementation
     call Draw.drawString(10,50,start,COLOR_RED);
  
     call ReadStream.postBuffer(buf, SAMPLE_BUFFER_SIZE);
-    call ReadStream.read(100);
+    call ReadStream.read(10000);
   }
 
   event void ReadStream.readDone(error_t result, uint32_t usActualPeriod)
@@ -126,9 +126,15 @@ implementation
     if (result != SUCCESS) {
       call Draw.drawString(10,70,fail,COLOR_BLACK);
     }else{
+      uint16_t i;
       call Draw.drawString(10,70,good,COLOR_BLACK);
       call Draw.drawInt(100,100,buffer[0],1,COLOR_BLACK);
-      call Draw.drawInt(100,160,count,1,COLOR_BLACK);
+      call Draw.drawInt(200,100,count,1,COLOR_BLACK);
+
+      for(i=0; i<count; i++)
+      {
+        call Draw.drawPixel(i, buffer[i]*(BOARD_LCD_HEIGHT-100)/(1<<12)+100, COLOR_BLACK);
+      }
     }
   }
 
