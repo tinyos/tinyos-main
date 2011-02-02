@@ -77,8 +77,8 @@ implementation
   /** Read.read - TEP 114 **/
   command error_t Read.read[uint8_t client]()
   {
-    call Leds.led0On();
     state = S_READ;
+    call Leds.led1Toggle();
     return call ResourceRead.request[client]();
   }
 
@@ -87,14 +87,10 @@ implementation
 
     error_t result = configureAdcRegisters(client);
 
-    call Leds.led0Off();
-
     if(result == SUCCESS){
-      call Leds.led1On();
       //call actual read!
       call GetAdc.getData[client]();
     }else{
-      call Leds.led2On();
       //configure failed!
       call ResourceRead.release[client]();
       signal Read.readDone[client](result, 0);

@@ -62,6 +62,8 @@ implementation
 
   norace uint8_t state;
 
+  norace uint8_t channel;
+
   enum{
     S_ADC,
     S_IDLE,
@@ -72,12 +74,14 @@ implementation
     /* Enable clock */
     call AdcClockControl.enable();
 
+    ADC->idr.flat = 0x1f00ffff; // disable all interrupt sources
+    ADC->idr.flat = 0x1f00ffff; // disable all interrupt sources
+
     /* Reset ADC */
     ADC->cr.flat = 0x1;
 
     /* Enable interrupts */
     call ADCInterrupt.configure(IRQ_PRIO_ADC);
-    call ADCInterrupt.enable();
 
     /* Set IO line */
     call AdcPin.disablePioControl(); // Disable whatever is set currently
@@ -101,12 +105,16 @@ implementation
     adc_cher_t cher;
     adc_ier_t ier;
 
-    cher.flat = ADC->chsr.flat; // read from status
-    ier.flat = ADC->isr.flat;   // read from status to see who is enabled
+    channel = config->channel;
+
+    //cher.flat = ADC->chsr.flat; // read from status
+    cher.flat = 0;
+    //ier.flat = ADC->imr.flat;   // read from mask to see who is enabled
+    ier.flat = 0;
 
     chdr.flat = 0x0000FFFF;
     ADC->chdr = chdr; // disable all channels during setup
-    idr.flat = 0x0000FFFF;
+    idr.flat = 0x1f00FFFF;
     ADC->idr = idr; // disable all interrupts during setup
 
     cher.flat |= (1 << config->channel);
@@ -157,6 +165,8 @@ implementation
     ADC->cgr  = cgr;
     ADC->cor  = cor;
 
+    call Leds.led0Toggle();
+
     return SUCCESS;
   }
 
@@ -165,6 +175,8 @@ implementation
     cr.flat = 0;
 
     call AdcClockControl.enable();
+    call ADCInterrupt.enable();
+    call ADCInterrupt.clearPending();
 
     atomic clientID = id;
     if(state != S_IDLE){
@@ -173,6 +185,7 @@ implementation
       cr.bits.start = 1; // enable software trigger
       ADC->cr = cr;
       atomic state = S_ADC;
+      call Leds.led1Toggle();
       return SUCCESS;
     }
   }
@@ -184,14 +197,17 @@ implementation
     adc_cr_t cr;
     adc_isr_t isr = ADC->isr;
 
+
     uint16_t data = 0;
 
+    call ADCInterrupt.disable();
+    call Leds.led2Toggle();
+
 #ifndef SAM3S_ADC_PDC
-    // Read LCDR
-    adc_lcdr_t lcdr = ADC->lcdr;
     
-    if(isr.bits.drdy){
-      data = lcdr.bits.ldata;
+    // read eoc for the current channel
+    if(isr.flat & (1 << channel)){
+      data = ADC->cdr[channel].bits.data;
       cr.bits.start = 0; // disable software trigger
       ADC->cr = cr;
       //get data from register
@@ -220,6 +236,7 @@ implementation
 
   void AdcIrqHandler() @C() @spontaneous() {
     call AdcInterruptWrapper.preamble();
+    call ADCInterrupt.clearPending();
     handler();
     call AdcInterruptWrapper.postamble();
   }

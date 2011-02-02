@@ -64,13 +64,13 @@ implementation
   event void Lcd.initializeDone(error_t err)
   {
     if(err != SUCCESS)
-      {
-      }
+    {
+    }
     else
-      {
-	call Draw.fill(COLOR_RED);
-	call Lcd.start();
-      }
+    {
+      call Draw.fill(COLOR_RED);
+      call Lcd.start();
+    }
   }
 
   event void Lcd.startDone(){
@@ -81,13 +81,13 @@ implementation
     if (error != SUCCESS) {
       while (call SerialSplitControl.start() != SUCCESS);
     }else{
-      call Timer.startPeriodic(512);
+      call Timer.startPeriodic(256);
     }
   }
-  
+
   event void SerialSplitControl.stopDone(error_t error) {}
-  
-  
+
+
   task void sample()
   {
     const char *start = "Start Sampling";
@@ -96,12 +96,12 @@ implementation
     call Draw.drawString(10,50,start,COLOR_RED);
     if(call Read.read() != SUCCESS)
     {
-        const char *fail = "Read Failed";
-        call Draw.drawString(10,70, fail, COLOR_RED);
+      const char *fail = "Read Failed";
+      call Draw.drawString(10,70, fail, COLOR_RED);
     }
 
   }
-  
+
   event void Read.readDone(error_t result, uint16_t value)
   {
     const char *fail = "Read done error";
@@ -114,7 +114,7 @@ implementation
       call Draw.drawInt(100,100,value,1,COLOR_BLACK);
     }
   }
-  
+
   event void Timer.fired() {
     post sample();
   }

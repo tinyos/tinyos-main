@@ -584,22 +584,7 @@ typedef struct adc
     volatile adc_cwr_t   cwr;   // Compare Window Register
     volatile adc_cgr_t   cgr;   // Channel Gain Register
     volatile adc_cor_t   cor;   // Channel Offset Register
-    volatile adc_cdr_t   cdr0;  // Channel Data Register x
-    volatile adc_cdr_t   cdr1;  // Channel Data Register x
-    volatile adc_cdr_t   cdr2;  // Channel Data Register x
-    volatile adc_cdr_t   cdr3;  // Channel Data Register x
-    volatile adc_cdr_t   cdr4;  // Channel Data Register x
-    volatile adc_cdr_t   cdr5;  // Channel Data Register x
-    volatile adc_cdr_t   cdr6;  // Channel Data Register x
-    volatile adc_cdr_t   cdr7;  // Channel Data Register x
-    volatile adc_cdr_t   cdr8;  // Channel Data Register x
-    volatile adc_cdr_t   cdr9;  // Channel Data Register x
-    volatile adc_cdr_t   cdr10; // Channel Data Register x
-    volatile adc_cdr_t   cdr11; // Channel Data Register x
-    volatile adc_cdr_t   cdr12; // Channel Data Register x
-    volatile adc_cdr_t   cdr13; // Channel Data Register x
-    volatile adc_cdr_t   cdr14; // Channel Data Register x
-    volatile adc_cdr_t   cdr15; // Channel Data Register x
+    volatile adc_cdr_t   cdr[16];  // Channel Data Register x
     uint32_t reserved3;
     volatile adc_acr_t   acr;   // Analog Control Register
     uint32_t reserved4[76];

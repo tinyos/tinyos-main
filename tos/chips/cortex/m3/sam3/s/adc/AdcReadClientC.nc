@@ -57,6 +57,6 @@ implementation {
   AdcP.GetAdc[CLIENT] -> Sam3sAdcClientC.Sam3sGetAdc;
   AdcP.ResourceRead[CLIENT] -> Sam3sAdcClientC.Resource;  
 
-  components LedsC;
-  AdcP.Leds -> LedsC;
+  components NoLedsC as Leds;
+  AdcP.Leds -> Leds;
 }
