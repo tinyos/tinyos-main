@@ -1,0 +1,8 @@
+These test applications generate a tone on the two DAC outputs. The tone can
+be observed on PB13 and PB14, or on the headset output with a
+loudspeaker/headphones. Carefull, some of the tones are LOUD!
+
+timer: This application uses a timer to trigger the samples being sent to
+the DAC.
+
+fast: This application writes as fast as it can to the DAC in a busy loop.

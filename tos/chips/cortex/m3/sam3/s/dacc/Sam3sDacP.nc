@@ -96,7 +96,7 @@ implementation
       bool fastWakeUp,
       uint8_t refreshPeriod,
       uint8_t userSel,    // select channel
-      bool tagSelection,  // 1: bits 15-13 in data select channel
+      bool tagSelection,  // 1: bits 13-12 in data select channel
       bool maxSpeed,      // 1: max speed mode enabled
       uint8_t startupTime)
   {

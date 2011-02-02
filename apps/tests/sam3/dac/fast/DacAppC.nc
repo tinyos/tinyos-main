@@ -31,47 +31,25 @@
  */
 
 /**
+ * DACC Demo application for the Sam3s. We generate a sine wave that can be
+ * observed on both DAC0 (PB13) and DAC1 (PB14).
+ *
  * @author Thomas Schmid
  */
 
-interface Sam3sDac
+configuration DacAppC
 {
-  /**
-   * triggerEn: enable external trigger mode
-   * triggerSel: select trigger source
-   * wordTransfer: 1: word transfer, 0: half-word
-   * sleep: 1: sleep mode, 0: normal mode
-   * userSel: select channel
-   * tagSelection: 1: bits 13-12 in data select channel
-   * maxSpeed: 1: max speed mode enabled
-   */
-  command error_t configure(
-      bool triggerEn,     
-      uint8_t triggerSel, 
-      bool wordTransfer,  
-      bool sleep,         
-      bool fastWakeUp,
-      uint8_t refreshPeriod,
-      uint8_t userSel,    
-      bool tagSelection,  
-      bool maxSpeed,      
-      uint8_t startupTime);
-
-
-  async command error_t enable(uint8_t channel);
-
-  async command error_t disable(uint8_t channel);
-
-  /**
-   * Sets the DAC value. If wordTransfer is selected in the configuration,
-   * then the lower half-word of data is one conversion value, and the upper
-   * half-word a second. The DAC has a FIFO of up to 4 conversion values.
-   *
-   * If tagSelection is set, then the upper 15-13 bits of each half-word
-   * indicate the channel.
-   *
-   * @return SUCCESS if ok, EBUSY if the DAC if the FIFO is full.
-   */
-  async command error_t set(uint32_t data);
-
 }
+implementation
+{
+  components MainC, DacC, LedsC, NoLedsC;
+
+  DacC -> MainC.Boot;
+
+  DacC.Leds -> LedsC;
+
+  components Sam3sDacC;
+  DacC.DacControl -> Sam3sDacC;
+  DacC.Dac -> Sam3sDacC;
+}
+
