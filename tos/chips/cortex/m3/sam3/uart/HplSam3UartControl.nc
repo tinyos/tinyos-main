@@ -30,23 +30,18 @@
  */
 
 /**
+ * Interface to control the SAM3U UART.
+ *
  * @author Wanja Hofer <wanja@cs.fau.de>
  */
 
-configuration PlatformSerialC
+interface HplSam3UartControl
 {
-	provides
-	{
-		interface StdControl;
-		interface UartStream;
-		interface UartByte;
-	}
-}
-implementation
-{
-	components HilSam3UartC;
-
-	StdControl = HilSam3UartC;
-	UartStream = HilSam3UartC;
-	UartByte = HilSam3UartC;
+	async command void resetReceiver();
+	async command void resetTransmitter();
+	async command void enableReceiver();
+	async command void disableReceiver();
+	async command void enableTransmitter();
+	async command void disableTransmitter();
+	async command void resetStatusBits();
 }

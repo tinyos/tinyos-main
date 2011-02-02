@@ -30,23 +30,27 @@
  */
 
 /**
+ * Definitions specific to the SAM3S UART chip.
+ *
  * @author Wanja Hofer <wanja@cs.fau.de>
+ * @author Thomas Schmid
  */
 
-configuration PlatformSerialC
-{
-	provides
-	{
-		interface StdControl;
-		interface UartStream;
-		interface UartByte;
-	}
-}
-implementation
-{
-	components HilSam3UartC;
+#ifndef SAM3SUARTHARDWARE_H
+#define SAM3SUARTHARDWARE_H
 
-	StdControl = HilSam3UartC;
-	UartStream = HilSam3UartC;
-	UartByte = HilSam3UartC;
-}
+#include "uarthardware.h"
+
+// Defined in AT91 ARM Cortex-M3 based Microcontrollers, SAM3S Series, Preliminary, p. 663
+volatile uint32_t*    UART_BASE = (volatile uint32_t *)   0x400e0600;
+volatile uart_cr_t*   UART_CR   = (volatile uart_cr_t*)   0x400e0600; // control, wo
+volatile uart_mr_t*   UART_MR   = (volatile uart_mr_t*)   0x400e0604; // mode, rw, reset 0x0
+volatile uart_ier_t*  UART_IER  = (volatile uart_ier_t*)  0x400e0608; // interrupt enable, wo
+volatile uart_idr_t*  UART_IDR  = (volatile uart_idr_t*)  0x400e060c; // interrupt disable, wo
+volatile uart_imr_t*  UART_IMR  = (volatile uart_imr_t*)  0x400e0610; // interrupt mask, ro, reset 0x0
+volatile uart_sr_t*   UART_SR   = (volatile uart_sr_t*)   0x400e0614; // status, ro
+volatile uart_rhr_t*  UART_RHR  = (volatile uart_rhr_t*)  0x400e0618; // receive holding, ro, reset 0x0
+volatile uart_thr_t*  UART_THR  = (volatile uart_thr_t*)  0x400e061c; // transmit holding, wo
+volatile uart_brgr_t* UART_BRGR = (volatile uart_brgr_t*) 0x400e0620; // baud rate generator, rw, reset 0x0
+
+#endif // SAM3SUARTHARDWARE_H

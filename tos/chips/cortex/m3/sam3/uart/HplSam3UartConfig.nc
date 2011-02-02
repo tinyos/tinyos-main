@@ -29,36 +29,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "sam3uuarthardware.h"
-
 /**
- * The hardware presentation layer for the SAM3U UART.
+ * Interface to configure the SAM3U UART.
  *
  * @author Wanja Hofer <wanja@cs.fau.de>
  */
 
-configuration HplSam3uUartC {
-  provides {
-    interface HplSam3uUartConfig;
-    interface HplSam3uUartControl;
-    interface HplSam3uUartInterrupts;
-    interface HplSam3uUartStatus;
-  }
-#ifdef THREADS
-  uses interface PlatformInterrupt;
-#endif
-}
-implementation
+interface HplSam3UartConfig
 {
-  components HplSam3uUartP;
-  HplSam3uUartConfig = HplSam3uUartP;
-  HplSam3uUartControl = HplSam3uUartP;
-  HplSam3uUartInterrupts = HplSam3uUartP;
-  HplSam3uUartStatus = HplSam3uUartP;
-#ifdef THREADS
-  PlatformInterrupt = HplSam3uUartP;
-#endif
+	/**
+	 * cd = 0: baud rate generator disabled
+	 * cd = 0: baud rate = MCK
+	 * cd = 2--65535: baud rate = MCK / (cd * 16)
+	 */
+	async command error_t setClockDivisor(uint16_t cd);
 
-  components McuSleepC;
-  HplSam3uUartP.UartInterruptWrapper -> McuSleepC;
+	/**
+	 * Have to be set together since they are in the same register.
+	 *
+	 * chmode = 0x0/UART_MR_CHMODE_NORMAL: normal
+	 * chmode = 0x1/UART_MR_CHMODE_AUTOECHO: automatic echo
+	 * chmode = 0x2/UART_MR_CHMODE_LOCALLOOP: local loopback
+	 * chmode = 0x3/UART_MR_CHMODE_REMOTELOOP: remote loopback
+	 *
+	 * par = 0x0/UART_MR_PAR_EVEN: even
+	 * par = 0x1/UART_MR_PAR_ODD: odd
+	 * par = 0x2/UART_MR_PAR_SPACE: space (forced to 0)
+	 * par = 0x3/UART_MR_PAR_MARK: mark (forced to 1)
+	 * par = 0x4/UART_MR_PAR_NONE: none
+	 */
+	async command error_t setChannelModeAndParityType(uint8_t chmode, uint8_t par);
 }

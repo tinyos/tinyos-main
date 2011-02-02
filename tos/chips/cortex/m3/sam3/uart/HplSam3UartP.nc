@@ -29,7 +29,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "sam3uuarthardware.h"
+#include "sam3uarthardware.h"
 
 /**
  * The hardware presentation layer for the SAM3U UART.
@@ -37,14 +37,14 @@
  * @author Wanja Hofer <wanja@cs.fau.de>
  */
 
-module HplSam3uUartP
+module HplSam3UartP
 {
 	provides
 	{
-		interface HplSam3uUartConfig;
-		interface HplSam3uUartControl;
-		interface HplSam3uUartInterrupts;
-		interface HplSam3uUartStatus;
+		interface HplSam3UartConfig;
+		interface HplSam3UartControl;
+		interface HplSam3UartInterrupts;
+		interface HplSam3UartStatus;
 	}
         uses {
 		interface FunctionWrapper as UartInterruptWrapper;
@@ -60,7 +60,7 @@ implementation
 	 * cd = 0: baud rate = MCK
 	 * cd = 2--65535: baud rate = MCK / (cd * 16)
 	 */
-	async command error_t HplSam3uUartConfig.setClockDivisor(uint16_t cd)
+	async command error_t HplSam3UartConfig.setClockDivisor(uint16_t cd)
 	{
 		UART_BRGR->bits.cd = cd;
 		return SUCCESS;
@@ -78,7 +78,7 @@ implementation
 	 * par = 0x3/UART_MR_PAR_MARK: mark (forced to 1)
 	 * par = 0x4/UART_MR_PAR_NONE: none
 	 */
-	async command error_t HplSam3uUartConfig.setChannelModeAndParityType(uint8_t chmode, uint8_t par)
+	async command error_t HplSam3UartConfig.setChannelModeAndParityType(uint8_t chmode, uint8_t par)
 	{
 		uart_mr_t reg;
 
@@ -93,45 +93,45 @@ implementation
 		return SUCCESS;
 	}
 
-	async command void HplSam3uUartInterrupts.disableAllUartIrqs()
+	async command void HplSam3UartInterrupts.disableAllUartIrqs()
 	{
-		call HplSam3uUartInterrupts.disableRxrdyIrq();
-		call HplSam3uUartInterrupts.disableTxrdyIrq();
-		call HplSam3uUartInterrupts.disableEndrxIrq();
-		call HplSam3uUartInterrupts.disableEndtxIrq();
-		call HplSam3uUartInterrupts.disableOvreIrq();
-		call HplSam3uUartInterrupts.disableFrameIrq();
-		call HplSam3uUartInterrupts.disablePareIrq();
-		call HplSam3uUartInterrupts.disableTxemptyIrq();
-		call HplSam3uUartInterrupts.disableTxbufeIrq();
-		call HplSam3uUartInterrupts.disableRxbuffIrq();
+		call HplSam3UartInterrupts.disableRxrdyIrq();
+		call HplSam3UartInterrupts.disableTxrdyIrq();
+		call HplSam3UartInterrupts.disableEndrxIrq();
+		call HplSam3UartInterrupts.disableEndtxIrq();
+		call HplSam3UartInterrupts.disableOvreIrq();
+		call HplSam3UartInterrupts.disableFrameIrq();
+		call HplSam3UartInterrupts.disablePareIrq();
+		call HplSam3UartInterrupts.disableTxemptyIrq();
+		call HplSam3UartInterrupts.disableTxbufeIrq();
+		call HplSam3UartInterrupts.disableRxbuffIrq();
 	}
 
-	async command void HplSam3uUartControl.resetReceiver()
+	async command void HplSam3UartControl.resetReceiver()
 	{
 		UART_CR->bits.rstrx = 1;
 	}
-	async command void HplSam3uUartControl.resetTransmitter()
+	async command void HplSam3UartControl.resetTransmitter()
 	{
 		UART_CR->bits.rsttx = 1;
 	}
-	async command void HplSam3uUartControl.enableReceiver()
+	async command void HplSam3UartControl.enableReceiver()
 	{
 		UART_CR->bits.rxen = 1;
 	}
-	async command void HplSam3uUartControl.disableReceiver()
+	async command void HplSam3UartControl.disableReceiver()
 	{
 		UART_CR->bits.rxdis = 1;
 	}
-	async command void HplSam3uUartControl.enableTransmitter()
+	async command void HplSam3UartControl.enableTransmitter()
 	{
 		UART_CR->bits.txen = 1;
 	}
-	async command void HplSam3uUartControl.disableTransmitter()
+	async command void HplSam3UartControl.disableTransmitter()
 	{
 		UART_CR->bits.txdis = 1;
 	}
-	async command void HplSam3uUartControl.resetStatusBits()
+	async command void HplSam3UartControl.resetStatusBits()
 	{
 		UART_CR->bits.rststa = 1;
 	}
@@ -139,14 +139,14 @@ implementation
 	__attribute__((interrupt)) void UartIrqHandler() @C() @spontaneous()
 	{
 		call UartInterruptWrapper.preamble();
-		if ((call HplSam3uUartInterrupts.isEnabledRxrdyIrq() == TRUE) &&
-				(call HplSam3uUartStatus.isReceiverReady() == TRUE)) {
-			uint8_t data = call HplSam3uUartStatus.getReceivedChar();
-			signal HplSam3uUartInterrupts.receivedByte(data);
+		if ((call HplSam3UartInterrupts.isEnabledRxrdyIrq() == TRUE) &&
+				(call HplSam3UartStatus.isReceiverReady() == TRUE)) {
+			uint8_t data = call HplSam3UartStatus.getReceivedChar();
+			signal HplSam3UartInterrupts.receivedByte(data);
 		}
-		if ((call HplSam3uUartInterrupts.isEnabledTxrdyIrq() == TRUE) &&
-				(call HplSam3uUartStatus.isTransmitterReady() == TRUE)) {
-			signal HplSam3uUartInterrupts.transmitterReady();
+		if ((call HplSam3UartInterrupts.isEnabledTxrdyIrq() == TRUE) &&
+				(call HplSam3UartStatus.isTransmitterReady() == TRUE)) {
+			signal HplSam3UartInterrupts.transmitterReady();
 		}
 		call UartInterruptWrapper.postamble();
 #ifdef THREADS
@@ -155,191 +155,191 @@ implementation
 	}
 
 	// Rxrdy
-	async command void HplSam3uUartInterrupts.enableRxrdyIrq()
+	async command void HplSam3UartInterrupts.enableRxrdyIrq()
 	{
 		UART_IER->bits.rxrdy = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableRxrdyIrq()
+	async command void HplSam3UartInterrupts.disableRxrdyIrq()
 	{
 		UART_IDR->bits.rxrdy = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledRxrdyIrq()
+	async command bool HplSam3UartInterrupts.isEnabledRxrdyIrq()
 	{
 		return (UART_IMR->bits.rxrdy == 0x1);
 	}
 
 	// Txrdy
-	async command void HplSam3uUartInterrupts.enableTxrdyIrq()
+	async command void HplSam3UartInterrupts.enableTxrdyIrq()
 	{
 		UART_IER->bits.txrdy = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableTxrdyIrq()
+	async command void HplSam3UartInterrupts.disableTxrdyIrq()
 	{
 		UART_IDR->bits.txrdy = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledTxrdyIrq()
+	async command bool HplSam3UartInterrupts.isEnabledTxrdyIrq()
 	{
 		return (UART_IMR->bits.txrdy == 0x1);
 	}
 
 	// Endrx
-	async command void HplSam3uUartInterrupts.enableEndrxIrq()
+	async command void HplSam3UartInterrupts.enableEndrxIrq()
 	{
 		UART_IER->bits.endrx = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableEndrxIrq()
+	async command void HplSam3UartInterrupts.disableEndrxIrq()
 	{
 		UART_IDR->bits.endrx = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledEndrxIrq()
+	async command bool HplSam3UartInterrupts.isEnabledEndrxIrq()
 	{
 		return (UART_IMR->bits.endrx == 0x1);
 	}
 
 	// Endtx
-	async command void HplSam3uUartInterrupts.enableEndtxIrq()
+	async command void HplSam3UartInterrupts.enableEndtxIrq()
 	{
 		UART_IER->bits.endtx = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableEndtxIrq()
+	async command void HplSam3UartInterrupts.disableEndtxIrq()
 	{
 		UART_IDR->bits.endtx = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledEndtxIrq()
+	async command bool HplSam3UartInterrupts.isEnabledEndtxIrq()
 	{
 		return (UART_IMR->bits.endtx == 0x1);
 	}
 
 	// Ovre
-	async command void HplSam3uUartInterrupts.enableOvreIrq()
+	async command void HplSam3UartInterrupts.enableOvreIrq()
 	{
 		UART_IER->bits.ovre = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableOvreIrq()
+	async command void HplSam3UartInterrupts.disableOvreIrq()
 	{
 		UART_IDR->bits.ovre = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledOvreIrq()
+	async command bool HplSam3UartInterrupts.isEnabledOvreIrq()
 	{
 		return (UART_IMR->bits.ovre == 0x1);
 	}
 
 	// Frame
-	async command void HplSam3uUartInterrupts.enableFrameIrq()
+	async command void HplSam3UartInterrupts.enableFrameIrq()
 	{
 		UART_IER->bits.frame = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableFrameIrq()
+	async command void HplSam3UartInterrupts.disableFrameIrq()
 	{
 		UART_IDR->bits.frame = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledFrameIrq()
+	async command bool HplSam3UartInterrupts.isEnabledFrameIrq()
 	{
 		return (UART_IMR->bits.frame == 0x1);
 	}
 
 	// Pare
-	async command void HplSam3uUartInterrupts.enablePareIrq()
+	async command void HplSam3UartInterrupts.enablePareIrq()
 	{
 		UART_IER->bits.pare = 1;
 	}
-	async command void HplSam3uUartInterrupts.disablePareIrq()
+	async command void HplSam3UartInterrupts.disablePareIrq()
 	{
 		UART_IDR->bits.pare = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledPareIrq()
+	async command bool HplSam3UartInterrupts.isEnabledPareIrq()
 	{
 		return (UART_IMR->bits.pare == 0x1);
 	}
 
 	// Txempty
-	async command void HplSam3uUartInterrupts.enableTxemptyIrq()
+	async command void HplSam3UartInterrupts.enableTxemptyIrq()
 	{
 		UART_IER->bits.txempty = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableTxemptyIrq()
+	async command void HplSam3UartInterrupts.disableTxemptyIrq()
 	{
 		UART_IDR->bits.txempty = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledTxemptyIrq()
+	async command bool HplSam3UartInterrupts.isEnabledTxemptyIrq()
 	{
 		return (UART_IMR->bits.txempty == 0x1);
 	}
 
 	// Txbufe
-	async command void HplSam3uUartInterrupts.enableTxbufeIrq()
+	async command void HplSam3UartInterrupts.enableTxbufeIrq()
 	{
 		UART_IER->bits.txbufe = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableTxbufeIrq()
+	async command void HplSam3UartInterrupts.disableTxbufeIrq()
 	{
 		UART_IDR->bits.txbufe = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledTxbufeIrq()
+	async command bool HplSam3UartInterrupts.isEnabledTxbufeIrq()
 	{
 		return (UART_IMR->bits.txbufe == 0x1);
 	}
 
 	// Rxbuff
-	async command void HplSam3uUartInterrupts.enableRxbuffIrq()
+	async command void HplSam3UartInterrupts.enableRxbuffIrq()
 	{
 		UART_IER->bits.rxbuff = 1;
 	}
-	async command void HplSam3uUartInterrupts.disableRxbuffIrq()
+	async command void HplSam3UartInterrupts.disableRxbuffIrq()
 	{
 		UART_IDR->bits.rxbuff = 1;
 	}
-	async command bool HplSam3uUartInterrupts.isEnabledRxbuffIrq()
+	async command bool HplSam3UartInterrupts.isEnabledRxbuffIrq()
 	{
 		return (UART_IMR->bits.rxbuff == 0x1);
 	}
 
-	async command uint8_t HplSam3uUartStatus.getReceivedChar()
+	async command uint8_t HplSam3UartStatus.getReceivedChar()
 	{
 		return UART_RHR->bits.rxchr;
 	}
-	async command void HplSam3uUartStatus.setCharToTransmit(uint8_t txchr)
+	async command void HplSam3UartStatus.setCharToTransmit(uint8_t txchr)
 	{
 		UART_THR->bits.txchr = txchr;
 	}
 
-	async command bool HplSam3uUartStatus.isReceiverReady()
+	async command bool HplSam3UartStatus.isReceiverReady()
 	{
 		return (UART_SR->bits.rxrdy == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isTransmitterReady()
+	async command bool HplSam3UartStatus.isTransmitterReady()
 	{
 		return (UART_SR->bits.txrdy == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isEndOfReceiverTransfer()
+	async command bool HplSam3UartStatus.isEndOfReceiverTransfer()
 	{
 		return (UART_SR->bits.endrx == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isEndOfTransmitterTransfer()
+	async command bool HplSam3UartStatus.isEndOfTransmitterTransfer()
 	{
 		return (UART_SR->bits.endtx == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isOverrunError()
+	async command bool HplSam3UartStatus.isOverrunError()
 	{
 		return (UART_SR->bits.ovre == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isFramingError()
+	async command bool HplSam3UartStatus.isFramingError()
 	{
 		return (UART_SR->bits.frame == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isParityError()
+	async command bool HplSam3UartStatus.isParityError()
 	{
 		return (UART_SR->bits.pare == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isTransmitterEmpty()
+	async command bool HplSam3UartStatus.isTransmitterEmpty()
 	{
 		return (UART_SR->bits.txempty == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isTransmissionBufferEmpty()
+	async command bool HplSam3UartStatus.isTransmissionBufferEmpty()
 	{
 		return (UART_SR->bits.txbufe == 0x1);
 	}
-	async command bool HplSam3uUartStatus.isReceiveBufferFull()
+	async command bool HplSam3UartStatus.isReceiveBufferFull()
 	{
 		return (UART_SR->bits.rxbuff == 0x1);
 	}

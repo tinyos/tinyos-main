@@ -36,9 +36,9 @@
  * @author Wanja Hofer <wanja@cs.fau.de>
  */
 
-#include "sam3uuarthardware.h"
+#include "sam3uarthardware.h"
 
-module HilSam3uUartP
+module HilSam3UartP
 {
 	provides
 	{
@@ -49,15 +49,15 @@ module HilSam3uUartP
 	}
 	uses
 	{
-		interface HplSam3uUartControl;
-		interface HplSam3uUartInterrupts;
-		interface HplSam3uUartStatus;
-		interface HplSam3uUartConfig;
+		interface HplSam3UartControl;
+		interface HplSam3UartInterrupts;
+		interface HplSam3UartStatus;
+		interface HplSam3UartConfig;
 		interface HplNVICInterruptCntl as UartIrqControl;
-		interface HplSam3uGeneralIOPin as UartPin1;
-		interface HplSam3uGeneralIOPin as UartPin2;
-		interface HplSam3uPeripheralClockCntl as UartClockControl;
-		interface HplSam3uClock as ClockConfig;
+		interface HplSam3GeneralIOPin as UartPin1;
+		interface HplSam3GeneralIOPin as UartPin2;
+		interface HplSam3PeripheralClockCntl as UartClockControl;
+		interface HplSam3Clock as ClockConfig;
 	}
 }
 implementation
@@ -83,14 +83,14 @@ implementation
 		// here: cd = mck / 16 * 1000 / baudrate
 		cd = (uint16_t) (((mck / 16) * 1000) / PLATFORM_BAUDRATE);
 
-		//call HplSam3uUartConfig.setClockDivisor(312); // 9,600 baud with MCK = 48 MHz
-		call HplSam3uUartConfig.setClockDivisor(cd);
+		//call HplSam3UartConfig.setClockDivisor(312); // 9,600 baud with MCK = 48 MHz
+		call HplSam3UartConfig.setClockDivisor(cd);
 	}
 
 	command error_t Init.init()
 	{
 		// turn off all UART IRQs
-		call HplSam3uUartInterrupts.disableAllUartIrqs();
+		call HplSam3UartInterrupts.disableAllUartIrqs();
 
 		// configure NVIC
 		call UartIrqControl.configure(IRQ_PRIO_UART);
@@ -103,7 +103,7 @@ implementation
 		call UartPin2.selectPeripheralA();
 
 		// configure mode and parity
-		call HplSam3uUartConfig.setChannelModeAndParityType(UART_MR_CHMODE_NORMAL, UART_MR_PAR_NONE);
+		call HplSam3UartConfig.setChannelModeAndParityType(UART_MR_CHMODE_NORMAL, UART_MR_PAR_NONE);
 
 		// configure baud rate
 		setClockDivisor();
@@ -128,11 +128,11 @@ implementation
 		call UartClockControl.enable();
 
 		// enable receiver and transmitter
-		call HplSam3uUartControl.enableReceiver();
-		call HplSam3uUartControl.enableTransmitter();
+		call HplSam3UartControl.enableReceiver();
+		call HplSam3UartControl.enableTransmitter();
 
 		// enable receive IRQ
-		call HplSam3uUartInterrupts.enableRxrdyIrq();
+		call HplSam3UartInterrupts.enableRxrdyIrq();
 
 		return SUCCESS;
 	}
@@ -140,8 +140,8 @@ implementation
 	command error_t StdControl.stop()
 	{
 		// will finish any ongoing receptions and transmissions
-		call HplSam3uUartControl.disableReceiver();
-		call HplSam3uUartControl.disableTransmitter();
+		call HplSam3UartControl.disableReceiver();
+		call HplSam3UartControl.disableTransmitter();
 
 		// disable peripheral clock
 		call UartClockControl.disable();
@@ -151,13 +151,13 @@ implementation
 
 	async command error_t UartStream.enableReceiveInterrupt()
 	{
-		call HplSam3uUartInterrupts.enableRxrdyIrq();
+		call HplSam3UartInterrupts.enableRxrdyIrq();
 		return SUCCESS;
 	}
 
 	async command error_t UartStream.disableReceiveInterrupt()
 	{
-		call HplSam3uUartInterrupts.disableRxrdyIrq();
+		call HplSam3UartInterrupts.disableRxrdyIrq();
 		return SUCCESS;
 	}
 
@@ -174,13 +174,13 @@ implementation
 				receiveBufferLength = length;
 				receiveBufferPosition = 0;
 
-				call HplSam3uUartInterrupts.enableRxrdyIrq();
+				call HplSam3UartInterrupts.enableRxrdyIrq();
 			}
 		}
 		return SUCCESS;
 	}
 
-	async event void HplSam3uUartInterrupts.receivedByte(uint8_t data)
+	async event void HplSam3UartInterrupts.receivedByte(uint8_t data)
 	{
 		atomic {
 			if (receiveBuffer != NULL) {
@@ -193,7 +193,7 @@ implementation
 					uint8_t *bufferToSignal = receiveBuffer;
 					atomic {
 						receiveBuffer = NULL;
-						call HplSam3uUartInterrupts.disableRxrdyIrq();
+						call HplSam3UartInterrupts.disableRxrdyIrq();
 					}
 
 					// signal reception of complete buffer
@@ -220,26 +220,26 @@ implementation
 				transmitBufferPosition = 0;
 
 				// enable ready-to-transmit IRQ
-				call HplSam3uUartInterrupts.enableTxrdyIrq();
+				call HplSam3UartInterrupts.enableTxrdyIrq();
 
 				return SUCCESS;
 			}
 		}
 	}
 
-	async event void HplSam3uUartInterrupts.transmitterReady()
+	async event void HplSam3UartInterrupts.transmitterReady()
 	{
 		atomic {
 			if (transmitBufferPosition < transmitBufferLength) {
 				// characters to transfer in the buffer
-				call HplSam3uUartStatus.setCharToTransmit(transmitBuffer[transmitBufferPosition]);
+				call HplSam3UartStatus.setCharToTransmit(transmitBuffer[transmitBufferPosition]);
 				transmitBufferPosition++;
 			} else {
 				// all characters transmitted
 				uint8_t *bufferToSignal = transmitBuffer;
 
 				transmitBuffer = NULL;
-				call HplSam3uUartInterrupts.disableTxrdyIrq();
+				call HplSam3UartInterrupts.disableTxrdyIrq();
 				signal UartStream.sendDone(bufferToSignal, transmitBufferLength, SUCCESS);
 			}
 		}
@@ -247,13 +247,13 @@ implementation
 
 	async command error_t UartByte.send(uint8_t byte)
 	{
-		if (call HplSam3uUartInterrupts.isEnabledTxrdyIrq() == TRUE) {
+		if (call HplSam3UartInterrupts.isEnabledTxrdyIrq() == TRUE) {
 			return FAIL; // in the middle of a stream transmission
 		}
 
 		// transmit synchronously
-		call HplSam3uUartStatus.setCharToTransmit(byte);
-		while (call HplSam3uUartStatus.isTransmitterReady() == FALSE);
+		call HplSam3UartStatus.setCharToTransmit(byte);
+		while (call HplSam3UartStatus.isTransmitterReady() == FALSE);
 
 		return SUCCESS;
 	}
@@ -261,13 +261,13 @@ implementation
 	async command error_t UartByte.receive(uint8_t *byte, uint8_t timeout)
 	{
 		// FIXME timeout currently ignored
-		if (call HplSam3uUartInterrupts.isEnabledRxrdyIrq() == TRUE) {
+		if (call HplSam3UartInterrupts.isEnabledRxrdyIrq() == TRUE) {
 			return FAIL; // in the middle of a stream reception
 		}
 
 		// receive synchronously
-		while (call HplSam3uUartStatus.isReceiverReady() == FALSE);
-		*byte = call HplSam3uUartStatus.getReceivedChar();
+		while (call HplSam3UartStatus.isReceiverReady() == FALSE);
+		*byte = call HplSam3UartStatus.getReceivedChar();
 
 		return SUCCESS;
 	}

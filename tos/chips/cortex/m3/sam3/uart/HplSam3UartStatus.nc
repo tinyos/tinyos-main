@@ -30,23 +30,24 @@
  */
 
 /**
+ * Interface to query the status of the SAM3U UART.
+ *
  * @author Wanja Hofer <wanja@cs.fau.de>
  */
 
-configuration PlatformSerialC
+interface HplSam3UartStatus
 {
-	provides
-	{
-		interface StdControl;
-		interface UartStream;
-		interface UartByte;
-	}
-}
-implementation
-{
-	components HilSam3UartC;
+	async command uint8_t getReceivedChar();
+	async command void setCharToTransmit(uint8_t txchr);
 
-	StdControl = HilSam3UartC;
-	UartStream = HilSam3UartC;
-	UartByte = HilSam3UartC;
+	async command bool isReceiverReady();
+	async command bool isTransmitterReady();
+	async command bool isEndOfReceiverTransfer();
+	async command bool isEndOfTransmitterTransfer();
+	async command bool isOverrunError();
+	async command bool isFramingError();
+	async command bool isParityError();
+	async command bool isTransmitterEmpty();
+	async command bool isTransmissionBufferEmpty();
+	async command bool isReceiveBufferFull();
 }

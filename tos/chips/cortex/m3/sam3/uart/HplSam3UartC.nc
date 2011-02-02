@@ -29,25 +29,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "sam3uarthardware.h"
+
 /**
- * Interface to query the status of the SAM3U UART.
+ * The hardware presentation layer for the SAM3U UART.
  *
  * @author Wanja Hofer <wanja@cs.fau.de>
  */
 
-interface HplSam3uUartStatus
+configuration HplSam3UartC {
+  provides {
+    interface HplSam3UartConfig;
+    interface HplSam3UartControl;
+    interface HplSam3UartInterrupts;
+    interface HplSam3UartStatus;
+  }
+#ifdef THREADS
+  uses interface PlatformInterrupt;
+#endif
+}
+implementation
 {
-	async command uint8_t getReceivedChar();
-	async command void setCharToTransmit(uint8_t txchr);
+  components HplSam3UartP;
+  HplSam3UartConfig = HplSam3UartP;
+  HplSam3UartControl = HplSam3UartP;
+  HplSam3UartInterrupts = HplSam3UartP;
+  HplSam3UartStatus = HplSam3UartP;
+#ifdef THREADS
+  PlatformInterrupt = HplSam3UartP;
+#endif
 
-	async command bool isReceiverReady();
-	async command bool isTransmitterReady();
-	async command bool isEndOfReceiverTransfer();
-	async command bool isEndOfTransmitterTransfer();
-	async command bool isOverrunError();
-	async command bool isFramingError();
-	async command bool isParityError();
-	async command bool isTransmitterEmpty();
-	async command bool isTransmissionBufferEmpty();
-	async command bool isReceiveBufferFull();
+  components McuSleepC;
+  HplSam3UartP.UartInterruptWrapper -> McuSleepC;
 }

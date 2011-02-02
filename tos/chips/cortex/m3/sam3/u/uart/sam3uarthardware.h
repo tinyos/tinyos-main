@@ -30,47 +30,26 @@
  */
 
 /**
+ * Definitions specific to the SAM3U UART chip.
+ *
  * @author Wanja Hofer <wanja@cs.fau.de>
  */
 
-configuration HilSam3uUartC
-{
-	provides
-	{
-		interface StdControl;
-		interface UartByte;
-		interface UartStream;
-	}
-}
-implementation
-{
-	components HilSam3uUartP;
-	StdControl = HilSam3uUartP;
-	UartByte = HilSam3uUartP;
-	UartStream = HilSam3uUartP;
+#ifndef SAM3UUARTHARDWARE_H
+#define SAM3UUARTHARDWARE_H
 
-	components HplSam3uUartC;
-	HilSam3uUartP.HplSam3uUartInterrupts -> HplSam3uUartC;
-	HilSam3uUartP.HplSam3uUartStatus -> HplSam3uUartC;
-	HilSam3uUartP.HplSam3uUartControl -> HplSam3uUartC;
-	HilSam3uUartP.HplSam3uUartConfig -> HplSam3uUartC;
+#include "uarthardware.h"
 
-#ifdef THREADS
-	components PlatformInterruptC;
-	HplSam3uUartC.PlatformInterrupt -> PlatformInterruptC;
-#endif
+// Defined in AT91 ARM Cortex-M3 based Microcontrollers, SAM3U Series, Preliminary, p. 667
+volatile uint32_t*    UART_BASE = (volatile uint32_t *)   0x400e0600;
+volatile uart_cr_t*   UART_CR   = (volatile uart_cr_t*)   0x400e0600; // control, wo
+volatile uart_mr_t*   UART_MR   = (volatile uart_mr_t*)   0x400e0604; // mode, rw, reset 0x0
+volatile uart_ier_t*  UART_IER  = (volatile uart_ier_t*)  0x400e0608; // interrupt enable, wo
+volatile uart_idr_t*  UART_IDR  = (volatile uart_idr_t*)  0x400e060c; // interrupt disable, wo
+volatile uart_imr_t*  UART_IMR  = (volatile uart_imr_t*)  0x400e0610; // interrupt mask, ro, reset 0x0
+volatile uart_sr_t*   UART_SR   = (volatile uart_sr_t*)   0x400e0614; // status, ro
+volatile uart_rhr_t*  UART_RHR  = (volatile uart_rhr_t*)  0x400e0618; // receive holding, ro, reset 0x0
+volatile uart_thr_t*  UART_THR  = (volatile uart_thr_t*)  0x400e061c; // transmit holding, wo
+volatile uart_brgr_t* UART_BRGR = (volatile uart_brgr_t*) 0x400e0620; // baud rate generator, rw, reset 0x0
 
-	components MainC;
-	MainC.SoftwareInit -> HilSam3uUartP.Init;
-
-	components HplNVICC;
-	HilSam3uUartP.UartIrqControl -> HplNVICC.DBGUInterrupt;
-
-	components HplSam3uGeneralIOC;
-	HilSam3uUartP.UartPin1 -> HplSam3uGeneralIOC.HplPioA11;
-	HilSam3uUartP.UartPin2 -> HplSam3uGeneralIOC.HplPioA12;
-
-	components HplSam3uClockC;
-	HilSam3uUartP.UartClockControl -> HplSam3uClockC.DBGUPPCntl;
-	HilSam3uUartP.ClockConfig -> HplSam3uClockC;
-}
+#endif // SAM3UUARTHARDWARE_H

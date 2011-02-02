@@ -30,56 +30,47 @@
  */
 
 /**
- * Interface to control and query SAM3U UART interrupts.
- *
  * @author Wanja Hofer <wanja@cs.fau.de>
  */
 
-interface HplSam3uUartInterrupts
+configuration HilSam3UartC
 {
-	async event void receivedByte(uint8_t data);
+	provides
+	{
+		interface StdControl;
+		interface UartByte;
+		interface UartStream;
+	}
+}
+implementation
+{
+	components HilSam3UartP;
+	StdControl = HilSam3UartP;
+	UartByte = HilSam3UartP;
+	UartStream = HilSam3UartP;
 
-	async event void transmitterReady();
+	components HplSam3UartC;
+	HilSam3UartP.HplSam3UartInterrupts -> HplSam3UartC;
+	HilSam3UartP.HplSam3UartStatus -> HplSam3UartC;
+	HilSam3UartP.HplSam3UartControl -> HplSam3UartC;
+	HilSam3UartP.HplSam3UartConfig -> HplSam3UartC;
 
-	async command void disableAllUartIrqs();
+#ifdef THREADS
+	components PlatformInterruptC;
+	HplSam3UartC.PlatformInterrupt -> PlatformInterruptC;
+#endif
 
-	async command void enableRxrdyIrq();
-	async command void disableRxrdyIrq();
-	async command bool isEnabledRxrdyIrq();
+	components MainC;
+	MainC.SoftwareInit -> HilSam3UartP.Init;
 
-	async command void enableTxrdyIrq();
-	async command void disableTxrdyIrq();
-	async command bool isEnabledTxrdyIrq();
+	components HplNVICC;
+	HilSam3UartP.UartIrqControl -> HplNVICC.DBGUInterrupt;
 
-	async command void enableEndrxIrq();
-	async command void disableEndrxIrq();
-	async command bool isEnabledEndrxIrq();
+	components HplSam3uGeneralIOC;
+	HilSam3UartP.UartPin1 -> HplSam3uGeneralIOC.HplPioA11;
+	HilSam3UartP.UartPin2 -> HplSam3uGeneralIOC.HplPioA12;
 
-	async command void enableEndtxIrq();
-	async command void disableEndtxIrq();
-	async command bool isEnabledEndtxIrq();
-
-	async command void enableOvreIrq();
-	async command void disableOvreIrq();
-	async command bool isEnabledOvreIrq();
-
-	async command void enableFrameIrq();
-	async command void disableFrameIrq();
-	async command bool isEnabledFrameIrq();
-
-	async command void enablePareIrq();
-	async command void disablePareIrq();
-	async command bool isEnabledPareIrq();
-
-	async command void enableTxemptyIrq();
-	async command void disableTxemptyIrq();
-	async command bool isEnabledTxemptyIrq();
-
-	async command void enableTxbufeIrq();
-	async command void disableTxbufeIrq();
-	async command bool isEnabledTxbufeIrq();
-
-	async command void enableRxbuffIrq();
-	async command void disableRxbuffIrq();
-	async command bool isEnabledRxbuffIrq();
+	components HplSam3uClockC;
+	HilSam3UartP.UartClockControl -> HplSam3uClockC.DBGUPPCntl;
+	HilSam3UartP.ClockConfig -> HplSam3uClockC;
 }

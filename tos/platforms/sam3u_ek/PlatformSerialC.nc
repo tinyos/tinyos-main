@@ -44,9 +44,9 @@ configuration PlatformSerialC
 }
 implementation
 {
-	components HilSam3uUartC;
+	components HilSam3UartC;
 
-	StdControl = HilSam3uUartC;
-	UartStream = HilSam3uUartC;
-	UartByte = HilSam3uUartC;
+	StdControl = HilSam3UartC;
+	UartStream = HilSam3UartC;
+	UartByte = HilSam3UartC;
 }

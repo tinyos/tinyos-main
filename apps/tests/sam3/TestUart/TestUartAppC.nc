@@ -46,10 +46,14 @@ implementation
 	TestUartC.Leds -> LedsC;
 
 	components HplNVICC;
+#if defined(PLATFORM_SAM3U_EK)
 	TestUartC.UartIrqControl -> HplNVICC.DBGUInterrupt;
+#else
+	TestUartC.UartIrqControl -> HplNVICC.UART0Interrupt;
+#endif
 
-	components HilSam3uUartC;
-	TestUartC.UartControl -> HilSam3uUartC;
-	TestUartC.UartByte -> HilSam3uUartC;
-	TestUartC.UartStream -> HilSam3uUartC;
+	components HilSam3UartC;
+	TestUartC.UartControl -> HilSam3UartC;
+	TestUartC.UartByte -> HilSam3UartC;
+	TestUartC.UartStream -> HilSam3UartC;
 }
