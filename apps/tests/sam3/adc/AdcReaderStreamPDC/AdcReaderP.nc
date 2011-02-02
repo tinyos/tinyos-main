@@ -35,28 +35,37 @@
  * @author JeongGil Ko
  */
 
-#include "sam3uadc12bhardware.h"
+#include "sam3sadchardware.h"
 
 module AdcReaderP
 {
-  provides interface AdcConfigure<const sam3u_adc12_channel_config_t*>;
+  provides interface AdcConfigure<const sam3s_adc_channel_config_t*>;
 }
 
 implementation {
-  const sam3u_adc12_channel_config_t config = {
-  channel: 0,
-  diff: 0,
-  prescal: 4,
-  lowres: 0,
-  shtim: 15,
-  ibctl: 1,
-  sleep: 0,
-  startup: 104,
-  trgen: 0,
-  trgsel: 0
-  };
+      const sam3s_adc_channel_config_t config = 
+      {
+         channel  : 5,
+         trgen    : 0, // 0: trigger disabled
+         trgsel   : 0, // 0: external trigger
+         lowres   : 0, // 0: 12-bit
+         sleep    : 0, // 0: normal, adc core and vref are kept on between conversions
+         fwup     : 0, // 0: normal, sleep mode is defined by sleep bit
+         freerun  : 0, // 0: normal mode, wait for trigger
+         prescal  : 2, // ADCClock = MCK / ((prescal + 1)*2)
+         startup  : 7, // 112 periods of ADCClock
+         settling : 1, // 5 periods of ADCClock
+         anach    : 0, // 0: no analog changed on channel switching
+         tracktim : 1, // Tracking Time = (tracktim + 1) * ADCClock periods
+         transfer : 1, // Transfer Period = (transfer*1+3) * ADCClock periods
+         useq     : 0, // 0: normal, converts channel in sequence
+         ibctl    : 1,
+         diff     : 0,
+         gain     : 0,
+         offset   : 0,
+      };
 
-  async command const sam3u_adc12_channel_config_t* AdcConfigure.getConfiguration() {
+  async command const sam3s_adc_channel_config_t* AdcConfigure.getConfiguration() {
     return &config;
   }
 }

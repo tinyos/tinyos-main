@@ -595,7 +595,8 @@ typedef struct adc
 /**
  * Memory mapping for the ADC
  */
-volatile adc_t* ADC = (volatile adc_t *) 0x40038000; // ADC Base Address
+#define ADC_BASE_ADDRESS 0x40038000
+volatile adc_t* ADC = (volatile adc_t *) ADC_BASE_ADDRESS; // ADC Base Address
 
 #define SAM3SADC_RESOURCE "Sam3AdcC.Resource"
 #define ADCC_SERVICE "AdcC.Service"

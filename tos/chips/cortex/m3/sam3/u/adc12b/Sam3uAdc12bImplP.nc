@@ -48,7 +48,7 @@ module Sam3uAdc12bImplP
     interface HplSam3Clock as ClockConfig;
     interface FunctionWrapper as Adc12bInterruptWrapper;
 #ifdef SAM3U_ADC12B_PDC
-    interface HplSam3uPdc as HplPdc;
+    interface HplSam3Pdc as HplPdc;
 #endif
     interface Leds;
   }

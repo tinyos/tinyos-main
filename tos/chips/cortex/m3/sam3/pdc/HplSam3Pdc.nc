@@ -33,40 +33,38 @@
  * @author JeongGil Ko
  */
 
-#include "sam3uadc12bhardware.h"
- 
-configuration Sam3uAdc12bP 
-{ 
-  provides {
-    interface Resource[uint8_t id]; 
-    interface Sam3uGetAdc12b[uint8_t id]; 
-  }
-} 
+interface HplSam3Pdc {
 
-implementation {
-  components Sam3uAdc12bImplP as Adc12bImpl;
-  components MainC;
-  components HplNVICC, HplSam3uClockC, HplSam3uGeneralIOC;
-  //components new Resource[uint8_t id];
-  components new SimpleRoundRobinArbiterC(SAM3UADC12_RESOURCE) as Arbiter;
+  /* Pointer Registers */
+  async command void setRxPtr(void* addr);
+  async command void setTxPtr(void* addr);
+  async command void setNextRxPtr(void* addr);
+  async command void setNextTxPtr(void* addr);
 
-  Adc12bImpl.ADC12BInterrupt -> HplNVICC.ADC12BInterrupt;
+  async command uint32_t getRxPtr();
+  async command uint32_t getTxPtr();
+  async command uint32_t getNextRxPtr();
+  async command uint32_t getNextTxPtr();
 
-  Adc12bImpl.Adc12bPin -> HplSam3uGeneralIOC.HplPioA2;
-  Adc12bImpl.Adc12bClockControl -> HplSam3uClockC.ADC12BPPCntl;
-  Resource = Arbiter; // set this!?!
-  Sam3uGetAdc12b = Adc12bImpl.Sam3uAdc12b;
+  /* Counter Registers */
+  async command void setRxCounter(uint16_t counter);
+  async command void setTxCounter(uint16_t counter);
+  async command void setNextRxCounter(uint16_t counter);
+  async command void setNextTxCounter(uint16_t counter);
 
-  MainC.SoftwareInit -> Adc12bImpl.Init;
-  components LedsC, NoLedsC;
-  Adc12bImpl.Leds -> NoLedsC;
+  async command uint16_t getRxCounter();
+  async command uint16_t getTxCounter();
+  async command uint16_t getNextRxCounter();
+  async command uint16_t getNextTxCounter();
 
-  components McuSleepC;
-  Adc12bImpl.Adc12bInterruptWrapper -> McuSleepC;
+  /* Enable / Disable Register */
+  async command void enablePdcRx();
+  async command void enablePdcTx();
+  async command void disablePdcRx();
+  async command void disablePdcTx();
 
-#ifdef SAM3U_ADC12B_PDC
-  components HplSam3uPdcC;
-  Adc12bImpl.HplPdc -> HplSam3uPdcC.Adc12bPdcControl;
-#endif
+  /* Status Registers  - Checks status */
+  async command bool rxEnabled();
+  async command bool txEnabled();
 
 }

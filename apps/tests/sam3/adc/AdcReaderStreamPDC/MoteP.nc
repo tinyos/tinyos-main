@@ -39,7 +39,7 @@
 #include <color.h>
 #include <lcd.h>
 
-#define SAMPLE_BUFFER_SIZE 10000
+#define SAMPLE_BUFFER_SIZE BOARD_LCD_WIDTH
 #define NUM_SAMPLES_PER_PACKET (TOSH_DATA_LENGTH / sizeof(uint16_t))
 
 module MoteP
@@ -90,26 +90,28 @@ implementation
   event void Lcd.startDone(){
   }
 
-  event void SerialSplitControl.startDone(error_t error)
-  {
-    if (error != SUCCESS) {
-      while (call SerialSplitControl.start() != SUCCESS);
-    }else{
-      call Timer.startPeriodic(3*1024);
-    }
-  }
-  
-  event void SerialSplitControl.stopDone(error_t error) {}
-
   task void sample()
   {
     const char *start = "Start Sampling";
     call Draw.fill(COLOR_BLUE);
     call Draw.drawString(10,50,start,COLOR_RED);
-    //call Leds.led1Toggle();   
+ 
     call ReadStream.postBuffer(buf, SAMPLE_BUFFER_SIZE);
-    call ReadStream.read(100);
+    call ReadStream.read(10000);
   }
+
+  event void SerialSplitControl.startDone(error_t error)
+  {
+    if (error != SUCCESS) {
+      while (call SerialSplitControl.start() != SUCCESS);
+    }else{
+      //call Timer.startPeriodic(5*1024U);
+      post clear();
+      post sample();
+    }
+  }
+  
+  event void SerialSplitControl.stopDone(error_t error) {}
 
   event void ReadStream.readDone(error_t result, uint32_t usActualPeriod)
   {
@@ -121,19 +123,26 @@ implementation
   event void ReadStream.bufferDone(error_t result, uint16_t* buffer, uint16_t count) {
     const char *fail = "Read done error";
     const char *good = "Read done success";
+    call Leds.led1Toggle();
     call Draw.fill(COLOR_GREEN);
     if (result != SUCCESS) {
       call Draw.drawString(10,70,fail,COLOR_BLACK);
     }else{
+      uint16_t i;
       call Draw.drawString(10,70,good,COLOR_BLACK);
       call Draw.drawInt(100,100,buffer[0],1,COLOR_BLACK);
-      call Draw.drawInt(100,120,buffer[9],1,COLOR_BLACK);
-      call Draw.drawInt(100,160,count,1,COLOR_BLACK);
+      call Draw.drawInt(200,100,count,1,COLOR_BLACK);
+
+      for(i=0; i<count; i++)
+      {
+        call Draw.drawPixel(i, buffer[i]*(BOARD_LCD_HEIGHT-100)/(1<<12)+100, COLOR_BLACK);
+      }
     }
+    call Leds.led0Toggle();
+    post clear();
+    post sample();
   }
 
   event void Timer.fired() {
-    post clear();
-    post sample();
   }
 }

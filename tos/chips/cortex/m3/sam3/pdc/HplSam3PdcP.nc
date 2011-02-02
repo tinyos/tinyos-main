@@ -33,10 +33,10 @@
  * @author JeongGil Ko
  */
 
-#include "sam3updchardware.h"
+#include "pdchardware.h"
 
-generic module HplSam3uPdcP(uint32_t BASE_ADDR){
-  provides interface HplSam3uPdc as Pdc;
+generic module HplSam3PdcP(uint32_t BASE_ADDR){
+  provides interface HplSam3Pdc as Pdc;
 }
 implementation{
 

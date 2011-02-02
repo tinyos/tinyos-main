@@ -49,7 +49,7 @@ implementation {
 #else
   components AdcStreamPDCP as AdcStreamP;
 #endif
-  components MainC, new AlarmTMicro32C() as Alarm,
+  components MainC, new AlarmTMicro16C() as Alarm,
     new ArbitratedReadStreamC(uniqueCount(ADCC_READ_STREAM_SERVICE), uint16_t) as ArbitrateReadStream;
 
   ReadStream = ArbitrateReadStream;

@@ -31,40 +31,19 @@
 
 /**
  * @author JeongGil Ko
+ * @author Thomas Schmid
  */
 
-interface HplSam3uPdc {
+configuration HplSam3sPdcC {
+  provides 
+  {
+    interface HplSam3Pdc as AdcPdcControl;
+  }
+}
 
-  /* Pointer Registers */
-  async command void setRxPtr(void* addr);
-  async command void setTxPtr(void* addr);
-  async command void setNextRxPtr(void* addr);
-  async command void setNextTxPtr(void* addr);
+implementation {
 
-  async command uint32_t getRxPtr();
-  async command uint32_t getTxPtr();
-  async command uint32_t getNextRxPtr();
-  async command uint32_t getNextTxPtr();
+  components new HplSam3PdcP(ADC_BASE_ADDRESS) as AdcPdc;
 
-  /* Counter Registers */
-  async command void setRxCounter(uint16_t counter);
-  async command void setTxCounter(uint16_t counter);
-  async command void setNextRxCounter(uint16_t counter);
-  async command void setNextTxCounter(uint16_t counter);
-
-  async command uint16_t getRxCounter();
-  async command uint16_t getTxCounter();
-  async command uint16_t getNextRxCounter();
-  async command uint16_t getNextTxCounter();
-
-  /* Enable / Disable Register */
-  async command void enablePdcRx();
-  async command void enablePdcTx();
-  async command void disablePdcRx();
-  async command void disablePdcTx();
-
-  /* Status Registers  - Checks status */
-  async command bool rxEnabled();
-  async command bool txEnabled();
-
+  AdcPdcControl = AdcPdc;
 }

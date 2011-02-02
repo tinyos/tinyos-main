@@ -90,26 +90,28 @@ implementation
   event void Lcd.startDone(){
   }
 
+  task void sample()
+  {
+    //const char *start = "Start Sampling";
+    //call Draw.fill(COLOR_BLUE);
+    //call Draw.drawString(10,50,start,COLOR_RED);
+ 
+    call ReadStream.postBuffer(buf, SAMPLE_BUFFER_SIZE);
+    call ReadStream.read(10000);
+  }
+
   event void SerialSplitControl.startDone(error_t error)
   {
     if (error != SUCCESS) {
       while (call SerialSplitControl.start() != SUCCESS);
     }else{
-      call Timer.startPeriodic(5*1024U);
+      //call Timer.startPeriodic(5*1024U);
+      post sample();
     }
   }
   
   event void SerialSplitControl.stopDone(error_t error) {}
 
-  task void sample()
-  {
-    const char *start = "Start Sampling";
-    call Draw.fill(COLOR_BLUE);
-    call Draw.drawString(10,50,start,COLOR_RED);
- 
-    call ReadStream.postBuffer(buf, SAMPLE_BUFFER_SIZE);
-    call ReadStream.read(10000);
-  }
 
   event void ReadStream.readDone(error_t result, uint32_t usActualPeriod)
   {
@@ -136,6 +138,9 @@ implementation
         call Draw.drawPixel(i, buffer[i]*(BOARD_LCD_HEIGHT-100)/(1<<12)+100, COLOR_BLACK);
       }
     }
+    call Leds.led0Toggle();
+    post clear();
+    post sample();
   }
 
   event void Timer.fired() {

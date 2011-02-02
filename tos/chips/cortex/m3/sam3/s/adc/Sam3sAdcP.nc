@@ -60,14 +60,14 @@ implementation {
 
   MainC.SoftwareInit -> AdcImpl.Init;
   components LedsC, NoLedsC;
-  AdcImpl.Leds -> NoLedsC;
+  AdcImpl.Leds -> LedsC;
 
   components McuSleepC;
   AdcImpl.AdcInterruptWrapper -> McuSleepC;
 
 #ifdef SAM3S_ADC_PDC
-  components HplSam3PdcC;
-  AdcImpl.HplPdc -> HplSam3PdcC.AdcPdcControl;
+  components HplSam3sPdcC;
+  AdcImpl.HplPdc -> HplSam3sPdcC.AdcPdcControl;
 #endif
 
 

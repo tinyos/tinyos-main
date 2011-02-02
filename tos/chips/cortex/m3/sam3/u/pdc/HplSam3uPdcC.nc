@@ -34,14 +34,14 @@
  */
 
 configuration HplSam3uPdcC {
-  provides interface HplSam3uPdc as UartPdcControl;
-  provides interface HplSam3uPdc as Usart0PdcControl;
-  provides interface HplSam3uPdc as Usart1PdcControl;
-  provides interface HplSam3uPdc as Usart2PdcControl;
-  provides interface HplSam3uPdc as Usart3PdcControl;
-  provides interface HplSam3uPdc as Twi0PdcControl;
-  provides interface HplSam3uPdc as Twi1PdcControl;
-  provides interface HplSam3uPdc as PwmPdcControl;
+  provides interface HplSam3Pdc as UartPdcControl;
+  provides interface HplSam3Pdc as Usart0PdcControl;
+  provides interface HplSam3Pdc as Usart1PdcControl;
+  provides interface HplSam3Pdc as Usart2PdcControl;
+  provides interface HplSam3Pdc as Usart3PdcControl;
+  provides interface HplSam3Pdc as Twi0PdcControl;
+  provides interface HplSam3Pdc as Twi1PdcControl;
+  provides interface HplSam3Pdc as PwmPdcControl;
 }
 
 implementation {
@@ -57,14 +57,14 @@ implementation {
     PWM_BASE = 0x4008C000
   };
 
-  components new HplSam3uPdcP(UART_BASE) as UartPdc;
-  components new HplSam3uPdcP(USART0_BASE) as Usart0Pdc;
-  components new HplSam3uPdcP(USART1_BASE) as Usart1Pdc;
-  components new HplSam3uPdcP(USART2_BASE) as Usart2Pdc;
-  components new HplSam3uPdcP(USART3_BASE) as Usart3Pdc;
-  components new HplSam3uPdcP(TWI0_BASE) as Twi0Pdc;
-  components new HplSam3uPdcP(TWI1_BASE) as Twi1Pdc;
-  components new HplSam3uPdcP(PWM_BASE) as PwmPdc;
+  components new HplSam3PdcP(UART_BASE) as UartPdc;
+  components new HplSam3PdcP(USART0_BASE) as Usart0Pdc;
+  components new HplSam3PdcP(USART1_BASE) as Usart1Pdc;
+  components new HplSam3PdcP(USART2_BASE) as Usart2Pdc;
+  components new HplSam3PdcP(USART3_BASE) as Usart3Pdc;
+  components new HplSam3PdcP(TWI0_BASE) as Twi0Pdc;
+  components new HplSam3PdcP(TWI1_BASE) as Twi1Pdc;
+  components new HplSam3PdcP(PWM_BASE) as PwmPdc;
 
   UartPdcControl = UartPdc;
   Usart0PdcControl = Usart0Pdc;

@@ -80,7 +80,7 @@ implementation
     /* Reset ADC */
     ADC->cr.flat = 0x1;
 
-    /* Enable interrupts */
+    /* Configure interrupts */
     call ADCInterrupt.configure(IRQ_PRIO_ADC);
 
     /* Set IO line */
@@ -118,7 +118,13 @@ implementation
     ADC->idr = idr; // disable all interrupts during setup
 
     cher.flat |= (1 << config->channel);
+#ifndef SAM3S_ADC_PDC 
+    // enable channel interrupt
     ier.flat |= (1 << config->channel);
+#else
+    // enable PDC channel interrupt
+    ier.bits.rxbuff = 1;
+#endif
 
     cr.bits.swrst = 0;
     cr.bits.start = 0; // disable start bit for the configuration stage
@@ -155,15 +161,19 @@ implementation
         cor.flat &= ~ (1 << config->channel);
     }
 
+    call ADCInterrupt.enable();
+    call ADCInterrupt.clearPending();
+
     // We have now locally modified all the register values
     // Write the register back in its respective memory space
     ADC->cher = cher;
-    ADC->ier  = ier;
     ADC->cr   = cr;
     ADC->mr   = mr;
     ADC->acr  = acr;
     ADC->cgr  = cgr;
     ADC->cor  = cor;
+
+    ADC->ier  = ier;
 
     call Leds.led0Toggle();
 
@@ -175,8 +185,8 @@ implementation
     cr.flat = 0;
 
     call AdcClockControl.enable();
-    call ADCInterrupt.enable();
-    call ADCInterrupt.clearPending();
+    //call ADCInterrupt.enable();
+    //call ADCInterrupt.clearPending();
 
     atomic clientID = id;
     if(state != S_IDLE){
@@ -200,10 +210,10 @@ implementation
 
     uint16_t data = 0;
 
-    call ADCInterrupt.disable();
     call Leds.led2Toggle();
 
 #ifndef SAM3S_ADC_PDC
+    call ADCInterrupt.disable();
     
     // read eoc for the current channel
     if(isr.flat & (1 << channel)){
@@ -216,7 +226,8 @@ implementation
       signal Sam3sAdc.dataReady[clientID](data);
     }
 #else
-    if(isr.bits.endrx){
+    if(isr.bits.rxbuff){
+      //call ADCInterrupt.disable();
       atomic {
           state = S_IDLE;
           cr.bits.start = 0; // enable software trigger
@@ -236,7 +247,6 @@ implementation
 
   void AdcIrqHandler() @C() @spontaneous() {
     call AdcInterruptWrapper.preamble();
-    call ADCInterrupt.clearPending();
     handler();
     call AdcInterruptWrapper.postamble();
   }

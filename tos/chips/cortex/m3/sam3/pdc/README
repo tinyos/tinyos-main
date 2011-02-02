@@ -1,6 +1,7 @@
-Generic PDC implementation for SAM3U 
+Generic PDC implementation for SAM3 
 
 @author JeongGil Ko <jgko@cs.jhu.edu>
+@author Thomas Schmid
 
 The implementation is based on the preliminary specifications and the
 MSP430 implementations.

@@ -46,9 +46,9 @@ configuration HplSam3TCC
 
 	interface HplSam3TC as TC;
 
-        interface HplSam3TCChannel as TC0;
-        interface HplSam3TCChannel as TC1;
-        interface HplSam3TCChannel as TC2;
+        interface HplSam3TCChannel as TCH0;
+        interface HplSam3TCChannel as TCH1;
+        interface HplSam3TCChannel as TCH2;
 
         interface HplSam3TCCapture as TC0Capture;
         interface HplSam3TCCompare as TC0CompareA;
@@ -81,9 +81,9 @@ implementation
     HplSam3TCEventP.TC1InterruptWrapper -> McuSleepC;
     HplSam3TCEventP.TC2InterruptWrapper -> McuSleepC;
 
-    TC0 = TCCH0;
-    TC1 = TCCH1;
-    TC2 = TCCH2;
+    TCH0 = TCCH0;
+    TCH1 = TCCH1;
+    TCH2 = TCCH2;
 
     TCCH0.NVICTCInterrupt -> HplNVICC.TC0Interrupt;
     TCCH0.TimerEvent -> HplSam3TCEventP.TC0Event;

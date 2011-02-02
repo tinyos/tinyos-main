@@ -35,8 +35,8 @@
  * @author JeongGil Ko
  */
 
-#ifndef _SAM3UPDCHARDWARE_H
-#define _SAM3UPDCHARDWARE_H
+#ifndef _PDCHARDWARE_H
+#define _PDCHARDWARE_H
 
 /**
  *  PDC Received Pointer Register, AT91 ARM Cortex-M3 based Microcontrollers
@@ -206,4 +206,4 @@ typedef struct pdc
 } periph_t;
 
 
-#endif // _SAM3UPDCHARDWARE_H
+#endif // _PDCHARDWARE_H

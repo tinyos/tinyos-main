@@ -30,20 +30,19 @@
  */
 
 /**
- * Implementation for ReadStream interface with PDC in Sam3u
+ * Implementation for ReadStream interface with PDC in Sam3
  * @author JeongGil Ko
  */
 
-#include "sam3uadc12bhardware.h"
+#include "sam3sadchardware.h"
 module AdcStreamPDCP {
   provides {
     interface Init @atleastonce();
     interface ReadStream<uint16_t>[uint8_t client];
   }
   uses {
-    interface Sam3uGetAdc12b as GetAdc[uint8_t client];
-    interface AdcConfigure<const sam3u_adc12_channel_config_t*> as Config[uint8_t client];
-    //interface Alarm<TMicro, uint32_t>;
+    interface Sam3sGetAdc as GetAdc[uint8_t client];
+    interface AdcConfigure<const sam3s_adc_channel_config_t*> as Config[uint8_t client];
     interface HplSam3Pdc as HplPdc;
     interface Leds;
   }
@@ -54,8 +53,7 @@ implementation {
   };
 
   norace uint8_t client = NSTREAM;
-  volatile adc12b_cr_t *CR = (volatile adc12b_cr_t *) 0x400A8000;
-  adc12b_cr_t cr;
+  adc_cr_t cr;
 
   struct list_entry_t {
     uint16_t count;
@@ -91,7 +89,8 @@ implementation {
     // switch this to pdc enable
     call HplPdc.enablePdcRx();
     atomic cr.bits.start = 1; // enable software trigger
-    atomic *CR = cr;  
+    atomic ADC->cr = cr;  
+
   }
 
   command error_t ReadStream.postBuffer[uint8_t c](uint16_t *buf, uint16_t n) {
@@ -110,7 +109,9 @@ implementation {
     client = c;
     call GetAdc.configureAdc[c](call Config.getConfiguration[c]());
     state = S_READ;
-    samplePdc();
+    //samplePdc();
+    call GetAdc.getData[c]();
+    call HplPdc.enablePdcRx();
     return SUCCESS;
   }
 
@@ -133,10 +134,10 @@ implementation {
     return SUCCESS;
   }
 
-  const sam3u_adc12_channel_config_t defaultConfig = {
+  const sam3s_adc_channel_config_t defaultConfig = {
   };
 
-  default async command const sam3u_adc12_channel_config_t* Config.getConfiguration[uint8_t c]()
+  default async command const sam3s_adc_channel_config_t* Config.getConfiguration[uint8_t c]()
   { 
     return &defaultConfig;
   }
@@ -146,5 +147,5 @@ implementation {
     return FAIL;
   }  
   default async command error_t GetAdc.configureAdc[uint8_t c](
-      const sam3u_adc12_channel_config_t *config){ return FAIL; }
+      const sam3s_adc_channel_config_t *config){ return FAIL; }
 }
