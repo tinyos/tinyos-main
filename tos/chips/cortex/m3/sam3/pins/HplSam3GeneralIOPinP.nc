@@ -185,6 +185,11 @@ implementation
 		currentport &= ~ (1 << bit);
 		/* Write back to register */
 		*((volatile uint32_t *) (pio_addr + 0x070)) = currentport;
+#ifdef CHIP_SAM3_HAS_PERIPHERAL_CD
+		currentport = *((volatile uint32_t *) (pio_addr + 0x074));
+		currentport &= ~ (1 << bit);
+		*((volatile uint32_t *) (pio_addr + 0x074)) = currentport;
+#endif
 	}
 
 	async command void HplPin.selectPeripheralB()
@@ -195,14 +200,59 @@ implementation
 		currentport |= (1 << bit);
 		/* Write back to register */
 		*((volatile uint32_t *) (pio_addr + 0x070)) = currentport;
+#ifdef CHIP_SAM3_HAS_PERIPHERAL_CD
+		currentport = *((volatile uint32_t *) (pio_addr + 0x074));
+		/* clear bit */
+		currentport &= ~(1 << bit);
+		/* Write back to register */
+		*((volatile uint32_t *) (pio_addr + 0x074)) = currentport;
+#endif
 	}
+
+#ifdef CHIP_SAM3_HAS_PERIPHERAL_CD
+	async command void HplPin.selectPeripheralC()
+	{
+		/* Read in Peripheral AB Select Register */
+		uint32_t currentport = *((volatile uint32_t *) (pio_addr + 0x070));
+		/* clear bit */
+		currentport &= ~(1 << bit);
+		/* Write back to register */
+		*((volatile uint32_t *) (pio_addr + 0x070)) = currentport;
+		currentport = *((volatile uint32_t *) (pio_addr + 0x074));
+		/* set bit */
+		currentport |= (1 << bit);
+		/* Write back to register */
+		*((volatile uint32_t *) (pio_addr + 0x074)) = currentport;
+	}
+
+	async command void HplPin.selectPeripheralD()
+	{
+		/* Read in Peripheral AB Select Register */
+		uint32_t currentport = *((volatile uint32_t *) (pio_addr + 0x070));
+		/* set bit */
+		currentport |= (1 << bit);
+		/* Write back to register */
+		*((volatile uint32_t *) (pio_addr + 0x070)) = currentport;
+		currentport = *((volatile uint32_t *) (pio_addr + 0x074));
+		/* set bit */
+		currentport |= (1 << bit);
+		/* Write back to register */
+		*((volatile uint32_t *) (pio_addr + 0x074)) = currentport;
+	}
+#endif
 
 	async command bool HplPin.isSelectedPeripheralA()
 	{
 		/* Read bit from Peripheral AB Select Register */
-		uint32_t currentport = *((volatile uint32_t *) (pio_addr + 0x068));
+		uint32_t currentport = *((volatile uint32_t *) (pio_addr + 0x070));
 		uint32_t currentpin = (currentport & (1 << bit)) >> bit;
+#ifdef CHIP_SAM3_HAS_PERIPHERAL_CD
+		uint32_t currentport2 = *((volatile uint32_t *) (pio_addr + 0x074));
+        uint32_t currentpin2 = (currentport2 & (1 << bit)) >> bit;
+        return (((currentpin & 1) == 0) && (currentpin2 & 1) == 0);
+#else
 		return ((currentpin & 1) == 0);
+#endif
 	}
 
     // interrupt

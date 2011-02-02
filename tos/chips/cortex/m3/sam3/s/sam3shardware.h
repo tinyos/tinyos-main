@@ -40,6 +40,9 @@
 
 #include <cortexm3hardware.h>
 
+// The Sam3s has more I/O Muxing than the Sam3u.
+#define CHIP_SAM3_HAS_PERIPHERAL_CD 1
+
 // Peripheral ID definitions for the SAM3S
 //  Defined in AT91 ARM Cortex-M3 based Microcontrollers, SAM3S Series, Preliminary, p. 34
 #define AT91C_ID_SUPC   ( 0) // SUPPLY CONTROLLER

@@ -53,6 +53,11 @@ interface HplSam3GeneralIOPin
 
 	async command void selectPeripheralA();
 	async command void selectPeripheralB();
+#ifdef CHIP_SAM3_HAS_PERIPHERAL_CD
+	async command void selectPeripheralC();
+	async command void selectPeripheralD();
+#endif
+
 	/**
 	 * Returns TRUE if peripheral A is selected, returns FALSE if
 	 * peripheral B is selected.

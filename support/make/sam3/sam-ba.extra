@@ -12,7 +12,7 @@ DELUGE_BASE_BIN=$(BUILDDIR)/deluge-base.bin
 
 program: FORCE
 	@echo "    installing $(PLATFORM) binary using $(PROGRAM)"
-	$(PROGRAMMER) -b $(INSTALL_BIN) -s $(START_ADDR) -t $(BOARD) -p $(SAM-BA) -r -c
+	$(PROGRAMMER) -b $(INSTALL_BIN) -s $(START_ADDR) -t $(BOARD) -p $(SAM-BA) -r
 
 deluge_base_bin: FORCE
 	@echo "Compiling $(PLATFORM) deluge base station"

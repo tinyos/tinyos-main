@@ -612,6 +612,31 @@ typedef struct adc
  */
 volatile adc_t* ADC = (volatile adc_t *) 0x40038000; // ADC Base Address
 
+#define SAM3SADC_RESOURCE "Sam3AdcC.Resource"
+#define ADCC_SERVICE "AdcC.Service"
+#define ADCC_READ_STREAM_SERVICE "AdcC.ReadStream.Client"
+
+typedef struct { 
+  uint32_t channel  : 4;
+  uint32_t trgen    : 1;
+  uint32_t trgsel   : 3;
+  uint32_t lowres   : 1;
+  uint32_t sleep    : 1;
+  uint32_t fwup     : 1;
+  uint32_t freerun  : 1;
+  uint32_t prescal  : 8;
+  uint32_t startup  : 4;
+  uint32_t settling : 2;
+  uint32_t anach    : 1;
+  uint32_t tracktim : 4;
+  uint32_t transfer : 2;
+  uint32_t useq     : 1; 
+  uint32_t ibctl    : 2;
+  uint32_t diff     : 1;
+  uint32_t gain     : 2;
+  uint32_t offset   : 1;
+} sam3s_adc_channel_config_t;
+
 #endif //SAM3SADCHARDWARE_H
 
 

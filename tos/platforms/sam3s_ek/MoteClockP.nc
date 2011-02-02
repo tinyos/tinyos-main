@@ -61,15 +61,20 @@ implementation
 {
 
     command error_t Init.init(){
+        wdtc_mr_t mr = WDTC->mr;
+        eefc_fmr_t fmr = EEFC0->fmr;
+
         // Set 2 WS for Embedded Flash Access
-        EEFC0->fmr.bits.fws = 2;
+        fmr.bits.fws = 3;
+        EEFC0->fmr = fmr;
 
         // Disable Watchdog
-        WDTC->mr.bits.wddis = 1;
+        mr.bits.wddis = 1;
+        WDTC->mr = mr;
 
         // Select external slow clock
         call HplSam3Clock.slckExternalOsc();
-	//call HplSam3Clock.slckRCOsc();
+        //call HplSam3Clock.slckRCOsc();
 
         // Initialize main oscillator
         call HplSam3Clock.mckInit48();

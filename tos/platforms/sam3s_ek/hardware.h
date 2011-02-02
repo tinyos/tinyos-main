@@ -54,7 +54,7 @@
 #define IRQ_PRIO_TWI1     (0x82)
 #define IRQ_PRIO_TWI0     (0x83)
 #define IRQ_PRIO_DMAC     (0x84)
-#define IRQ_PRIO_ADC12B   (0x85)
+#define IRQ_PRIO_ADC      (0x85)
 #define IRQ_PRIO_PIO      (0x86)
 #define IRQ_PRIO_SPI      (0x87)
 #define IRQ_PRIO_UART     (0x88)

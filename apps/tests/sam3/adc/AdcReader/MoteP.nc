@@ -94,7 +94,12 @@ implementation
     call Leds.led0Toggle();
     call Draw.fill(COLOR_BLUE);
     call Draw.drawString(10,50,start,COLOR_RED);
-    call Read.read();
+    if(call Read.read() != SUCCESS)
+    {
+        const char *fail = "Read Failed";
+        call Draw.drawString(10,70, fail, COLOR_RED);
+    }
+
   }
   
   event void Read.readDone(error_t result, uint16_t value)
