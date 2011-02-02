@@ -60,6 +60,16 @@ int lowpan_extern_match_context(struct in6_addr *addr, UNUSED uint8_t *ctx_id) {
 
 #endif
 
+int iid_eui_cmp(uint8_t *iid, uint8_t *eui) {
+  return (iid[0] == (eui[7] ^ 0x2) &&
+          iid[1] == eui[6] &&
+          iid[2] == eui[5] &&
+          iid[3] == eui[4] &&
+          iid[4] == eui[3] &&
+          iid[5] == eui[2] &&
+          iid[6] == eui[1] &&
+          iid[7] == eui[0]);
+}
 
 /* @return 0 if all bits in the range [start,end) are zero */
 /*    -1 otherwise */
@@ -177,7 +187,7 @@ uint8_t *pack_address(uint8_t *buf, struct in6_addr *addr, int context_match_len
                   addr->s6_addr16[7] == htons(letohs(l2addr->i_saddr))))) ||
                /* no?  Maybe it's just a straight-up 64-bit EUI64 */
                  ((l2addr->ieee_mode == IEEE154_ADDR_EXT) && 
-                  (memcmp(&addr->s6_addr[8], &l2addr->i_laddr.data, 8) == 0))) {
+                  (iid_eui_cmp(&addr->s6_addr[8], l2addr->i_laddr.data)))) {
       /* in either case we can elide the addressing from the packet. */
       *flags |= LOWPAN_IPHC_AM_0;
       return buf;
@@ -324,12 +334,16 @@ int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet) {
   
   while (nxt == IPV6_HOP  || nxt == IPV6_ROUTING  || nxt == IPV6_FRAG ||
          nxt == IPV6_DEST || nxt == IPV6_MOBILITY || nxt == IPV6_IPV6) {
+    int extra;
     rv = pack_ipnh(*dest, cnt, &nxt,  packet, offset);
 
     if (rv < 0) return -1;
     /* it just so happens that LOWPAN_IPNH doesn't change the length
        of the headers */
-    *dest  += rv;
+    /* SDH : right... it actually can change the length depending on
+       whether the next header value is elided or not.*/
+    extra = (**dest & LOWPAN_NHC_NH) ? 0 : 1;
+    *dest  += rv + extra;
     offset += rv;
     cnt    -= rv;
   }
@@ -478,7 +492,10 @@ uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
     default:
       addr->s6_addr16[0] = htons(0xfe80);
       if (frame->ieee_mode == IEEE154_ADDR_EXT) {
-        memcpy(&addr->s6_addr[8], frame->i_laddr.data, 8);
+        int i;
+        for (i = 0; i < 8; i++)
+          addr->s6_addr[i+8] = frame->i_laddr.data[7-i];
+        addr->s6_addr[8] ^= 0x2;
       } else {
         addr->s6_addr16[4] = leton16(pan);
         addr->s6_addr[11] = 0xff;
@@ -504,6 +521,15 @@ uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
       case LOWPAN_IPHC_AM_0:
         // not clear how to use this:
         //  "and 'possibly' link-layer addresses"
+        if (frame->ieee_mode == IEEE154_ADDR_EXT) {
+          int i;
+          for (i = 0; i < 8; i++)
+            addr->s6_addr[i+8] = frame->i_laddr.data[7-i];
+          addr->s6_addr[8] ^= 0x2;
+        } else {
+          memset(&addr->s6_addr[8], 0, 8);
+          addr->s6_addr16[7] = leton16(frame->i_saddr);
+        }
         return buf;
       }
     }
@@ -655,6 +681,7 @@ uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
   int has_nhc = 1;
 
   do {
+    recon->r_transport_header = *dest;
     dispatch = buf;
     buf = unpack_ipnh(*dest, cnt, nxt_hdr, buf);
 

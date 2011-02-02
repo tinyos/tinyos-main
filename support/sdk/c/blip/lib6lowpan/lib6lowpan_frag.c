@@ -68,7 +68,7 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
   /* fill in any elided app data length fields */
   if (recon->r_app_len) {
     *recon->r_app_len = 
-      (((struct ip6_hdr *)(recon->r_buf))->ip6_plen);
+      htons(recon->r_size - (recon->r_transport_header - recon->r_buf));
   }
   
   /* done, updated all the fields */
@@ -87,13 +87,13 @@ int lowpan_recon_add(struct lowpan_reconstruct *recon,
   if (msg.headers == LOWMSG_NALP) return -1;
 
   if (!hasFragNHeader(&msg)) {
-    return -1;
+    return -2;
   }
 
   buf = getLowpanPayload(&msg);
   len -= (buf - pkt);
 
-  if (recon->r_size < recon->r_bytes_rcvd + len) return -1;
+  if (recon->r_size < recon->r_bytes_rcvd + len) return -3;
 
   /* just need to copy the new payload in and return */
   memcpy(recon->r_buf + recon->r_bytes_rcvd, buf, len);

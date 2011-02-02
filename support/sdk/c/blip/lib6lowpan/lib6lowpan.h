@@ -59,7 +59,8 @@ struct lowpan_reconstruct {
   uint16_t r_bytes_rcvd;     /* how many bytes from the packet we have
                               received so far */
   uint8_t  r_timeout;
-  uint16_t*r_app_len;
+  uint16_t *r_app_len;
+  uint8_t  *r_transport_header;
   struct ip6_metadata       r_meta;
 };
 

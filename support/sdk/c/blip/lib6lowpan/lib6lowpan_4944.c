@@ -93,6 +93,8 @@ inline uint16_t getHeaderBitmap(struct packed_lowmsg *lowmsg) {
   }
 #endif 
 
+  // printf("dispatch: 0x%02x\n", *buf);
+
   if (len > 0 && ((*buf) >> 3) == LOWPAN_FRAG1_PATTERN) {
     headers |= LOWMSG_FRAG1_HDR;
     buf += LOWMSG_FRAG1_LEN;
