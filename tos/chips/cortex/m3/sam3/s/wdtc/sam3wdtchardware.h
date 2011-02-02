@@ -42,7 +42,9 @@
 
 /**
  * Memory mapping for the WDTC
+ * Note that it is NOT 0x400e1440 as mentioned in sam3s preliminary from
+ * Aug-10
  */
-volatile wdtc_t* WDTC = (volatile wdtc_t *) 0x400E1440; // WDTC Base Address
+volatile wdtc_t* WDTC = (volatile wdtc_t *) 0x400E1450; // WDTC Base Address
 
 #endif // _SAM3SWDTCHARDWARE_H
