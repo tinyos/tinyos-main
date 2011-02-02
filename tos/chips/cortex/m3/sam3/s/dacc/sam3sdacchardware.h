@@ -128,7 +128,7 @@ typedef union
     {
         uint32_t data    : 32; // Data to Convert
     } __attribute__((__packed__)) bits;
-} dacc_data_t;
+} dacc_cdr_t;
 
 /**
  * DACC Interrupt Enable Register
@@ -270,7 +270,10 @@ typedef struct dacc
 /**
  * Memory mapping for the DACC
  */
-volatile dacc_t* DACC = (volatile adc_t *) 0x4003C000; // DACC Base Address
+#define DACC_BASE_ADDRESS 0x4003C000
+volatile dacc_t* DACC = (volatile dacc_t *) DACC_BASE_ADDRESS; // DACC Base Address
+
+#define DACC_MAX_CHANNELS 2
 
 #endif //SAM3SADCHARDWARE_H
 

@@ -34,16 +34,22 @@
  * @author Thomas Schmid
  */
 
+#include "sam3sadchardware.h"
+#include "sam3sdacchardware.h"
+
 configuration HplSam3sPdcC {
   provides 
   {
     interface HplSam3Pdc as AdcPdcControl;
+    interface HplSam3Pdc as DacPdcControl;
   }
 }
 
 implementation {
 
   components new HplSam3PdcP(ADC_BASE_ADDRESS) as AdcPdc;
+  components new HplSam3PdcP(DACC_BASE_ADDRESS) as DacPdc;
 
   AdcPdcControl = AdcPdc;
+  DacPdcControl = DacPdc;
 }

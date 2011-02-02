@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2010 University of Utah.
+ * Copyright (c) 2011 University of Utah. 
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ * are met:  
+ *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
@@ -18,8 +19,8 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL STANFORD
- * UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -30,38 +31,38 @@
  */
 
 /**
- * Definitions of stuff specific to the SAM3S-EK board.
- * Includes definitions for the SAM3S MCU.
- *
  * @author Thomas Schmid
  */
 
-#ifndef HARDWARE_H
-#define HARDWARE_H
+configuration Sam3sDacC
+{
+  provides
+  {
+    interface StdControl;
+    interface Sam3sDac;
+  }
+}
+implementation
+{
+  components Sam3sDacP as DacP,
+             LedsC, NoLedsC,
+             HplNVICC,
+             HplSam3sClockC,
+             HplSam3sGeneralIOC;
 
-#include "sam3shardware.h"
+  StdControl = DacP;
+  Sam3sDac = DacP;
 
-// #define this so we don't doubly define time_t with conflicting types
-// in SD card implementation Time.h file
-#define __time_t_defined
-#include <sys/types.h>
+  DacP.DacInterrupt -> HplNVICC.DACCInterrupt;
+  DacP.DacPin0 -> HplSam3sGeneralIOC.HplPioB13;
+  DacP.DacPin1 -> HplSam3sGeneralIOC.HplPioB14;
+  DacP.DacClockControl -> HplSam3sClockC.DACCCntl;
+  DacP.ClockConfig -> HplSam3sClockC;
 
-#ifndef PLATFORM_BAUDRATE
-#define PLATFORM_BAUDRATE (9600)
-#endif
+  components McuSleepC;
+  DacP.DacInterruptWrapper -> McuSleepC;
 
-#define IRQ_PRIO_UDPHS    (0x81)
-#define IRQ_PRIO_TWI1     (0x82)
-#define IRQ_PRIO_TWI0     (0x83)
-#define IRQ_PRIO_DMAC     (0x84)
-#define IRQ_PRIO_ADC      (0x85)
-#define IRQ_PRIO_DAC      (0x85)
-#define IRQ_PRIO_PIO      (0x86)
-#define IRQ_PRIO_SPI      (0x87)
-#define IRQ_PRIO_UART     (0x88)
-#define IRQ_PRIO_USART0   (0x89)
-#define IRQ_PRIO_USART1   (0x90)
-#define IRQ_PRIO_USART2   (0x91)
-#define IRQ_PRIO_HSMCI    (0x92)
+  components HplSam3sPdcC;
+  DacP.HplPdc -> HplSam3sPdcC.DacPdcControl;
 
-#endif // HARDWARE_H
+}
