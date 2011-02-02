@@ -33,7 +33,7 @@
  * Heavily inspired by the at91 library.
  * @author Thomas Schmid
  **/
-#include <sam3usmchardware.h>
+#include <sam3smchardware.h>
 #include "lcd.h"
 #include "color.h"
 #include "font.h"
@@ -44,30 +44,30 @@ module LcdP
     uses {
         interface Hx8347;
 
-        interface HplSam3uGeneralIOPin as DB0;
-        interface HplSam3uGeneralIOPin as DB1;
-        interface HplSam3uGeneralIOPin as DB2;
-        interface HplSam3uGeneralIOPin as DB3;
-        interface HplSam3uGeneralIOPin as DB4;
-        interface HplSam3uGeneralIOPin as DB5;
-        interface HplSam3uGeneralIOPin as DB6;
-        interface HplSam3uGeneralIOPin as DB7;
-        interface HplSam3uGeneralIOPin as DB8;
-        interface HplSam3uGeneralIOPin as DB9;
-        interface HplSam3uGeneralIOPin as DB10;
-        interface HplSam3uGeneralIOPin as DB11;
-        interface HplSam3uGeneralIOPin as DB12;
-        interface HplSam3uGeneralIOPin as DB13;
-        interface HplSam3uGeneralIOPin as DB14;
-        interface HplSam3uGeneralIOPin as DB15;
-        interface HplSam3uGeneralIOPin as LCD_RS;
-        interface HplSam3uGeneralIOPin as NRD;
-        interface HplSam3uGeneralIOPin as NWE;
-        interface HplSam3uGeneralIOPin as NCS2;
+        interface HplSam3GeneralIOPin as DB0;
+        interface HplSam3GeneralIOPin as DB1;
+        interface HplSam3GeneralIOPin as DB2;
+        interface HplSam3GeneralIOPin as DB3;
+        interface HplSam3GeneralIOPin as DB4;
+        interface HplSam3GeneralIOPin as DB5;
+        interface HplSam3GeneralIOPin as DB6;
+        interface HplSam3GeneralIOPin as DB7;
+        interface HplSam3GeneralIOPin as DB8;
+        interface HplSam3GeneralIOPin as DB9;
+        interface HplSam3GeneralIOPin as DB10;
+        interface HplSam3GeneralIOPin as DB11;
+        interface HplSam3GeneralIOPin as DB12;
+        interface HplSam3GeneralIOPin as DB13;
+        interface HplSam3GeneralIOPin as DB14;
+        interface HplSam3GeneralIOPin as DB15;
+        interface HplSam3GeneralIOPin as LCD_RS;
+        interface HplSam3GeneralIOPin as NRD;
+        interface HplSam3GeneralIOPin as NWE;
+        interface HplSam3GeneralIOPin as NCS2;
 
         interface GeneralIO as Backlight;
 
-        interface HplSam3uPeripheralClockCntl as HSMC4ClockControl;
+        interface HplSam3PeripheralClockCntl as HSMC4ClockControl;
     }
     provides 
     {

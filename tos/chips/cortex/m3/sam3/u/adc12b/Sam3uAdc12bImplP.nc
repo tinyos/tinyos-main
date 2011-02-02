@@ -43,9 +43,9 @@ module Sam3uAdc12bImplP
 
   uses {
     interface HplNVICInterruptCntl as ADC12BInterrupt;
-    interface HplSam3uGeneralIOPin as Adc12bPin;
-    interface HplSam3uPeripheralClockCntl as Adc12bClockControl;
-    interface HplSam3uClock as ClockConfig;
+    interface HplSam3GeneralIOPin as Adc12bPin;
+    interface HplSam3PeripheralClockCntl as Adc12bClockControl;
+    interface HplSam3Clock as ClockConfig;
     interface FunctionWrapper as Adc12bInterruptWrapper;
 #ifdef SAM3U_ADC12B_PDC
     interface HplSam3uPdc as HplPdc;
