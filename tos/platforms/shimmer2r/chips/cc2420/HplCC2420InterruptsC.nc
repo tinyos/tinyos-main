@@ -58,10 +58,18 @@ implementation {
 
   components HplMsp430GeneralIOC as GeneralIOC;
   components Msp430TimerC;
-  components new GpioCaptureC() as CaptureSFDC;
+  components new CC2420GpioCaptureC() as CaptureSFDC;
   CaptureSFDC.Msp430TimerControl -> Msp430TimerC.ControlA1;
   CaptureSFDC.Msp430Capture -> Msp430TimerC.CaptureA1;
   CaptureSFDC.GeneralIO -> GeneralIOC.Port12;
+
+  components Counter32khz32C as Counter, new CounterToLocalTimeC(T32khz);
+  CounterToLocalTimeC.Counter -> Counter;
+  CaptureSFDC.LocalTime32khz -> CounterToLocalTimeC;
+
+  components CounterMicro32C, new CounterToLocalTimeC(TMicro) as CounterMicroToLocalTime;
+  CounterMicroToLocalTime.Counter -> CounterMicro32C;
+  CaptureSFDC.LocalTimeMicro -> CounterMicroToLocalTime;
 
   components HplMsp430InterruptC;
   components new Msp430InterruptC() as InterruptCCAC;
