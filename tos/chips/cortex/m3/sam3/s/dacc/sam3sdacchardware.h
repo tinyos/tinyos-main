@@ -38,6 +38,8 @@
 #ifndef SAM3SDACCHARDWARE_H
 #define SAM3SDACCHARDWARE_H
 
+#include "pdchardware.h"
+
 /**
  * DACC Control Register
  */
@@ -265,6 +267,17 @@ typedef struct dacc
     uint32_t reserved4[19];
     volatile dacc_wpmr_t wpmr; // Write Protect Mode Register
     volatile dacc_wpsr_t wpsr; // Write Protect Status Register
+    uint32_t reserved5[5];
+    volatile periph_rpr_t rpr;
+    volatile periph_rcr_t rcr;
+    volatile periph_tpr_t tpr;
+    volatile periph_tcr_t tcr;
+    volatile periph_rnpr_t rnpr;
+    volatile periph_rncr_t rncr;
+    volatile periph_tnpr_t tnpr;
+    volatile periph_tncr_t tncr;
+    volatile periph_ptcr_t ptcr;
+    volatile periph_ptsr_t ptsr;
 } dacc_t;
 
 /**

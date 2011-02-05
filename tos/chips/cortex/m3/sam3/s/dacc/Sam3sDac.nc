@@ -99,14 +99,23 @@ interface Sam3sDac
   async command error_t setBuffer(uint32_t *buffer, uint16_t length);
 
   /**
+   * Start the PDC transfers.
+   */
+  async command void startPdc();
+
+  /**
+   * Stop the PDC transfers.
+   */
+  async command void stopPdc();
+
+  /**
    * Signals that a buffer has been completely sent out. This is an indication
    * that the next buffer can be sent to the PDC.
    *
    * @param error SUCCESS if the buffer was sent out without errors.
    * @param buffer Pointer to the buffer structure that was sent out.
-   * @param nextBuffer Pointer to the next buffer that will be sent out or
-   *                   NULL if there is none.
+   * @param length Size of the finished buffer
    */
-  event void bufferDone(error_t error, uint32_t *buffer, uint32_t *nextBuffer);
+  async event void bufferDone(error_t error, uint32_t *buffer, uint16_t length);
 
 }

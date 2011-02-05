@@ -34,6 +34,7 @@
  */
 
 #include "sam3sdacchardware.h"
+#include "sam3spwmhardware.h"
 
 module Sam3sDacP
 {
@@ -53,10 +54,18 @@ module Sam3sDacP
     interface FunctionWrapper as DacInterruptWrapper;
     interface HplSam3Pdc as HplPdc;
     interface Leds;
+
+    interface StdControl as PwmControl;
+    interface Sam3sPwm as Pwm;
   }
 }
 implementation
 {
+
+  norace uint16_t currentLength;
+  norace uint32_t *currentBuffer;
+  norace uint16_t nextLength;
+  norace uint32_t *nextBuffer;
 
   command error_t StdControl.start()
   {
@@ -74,6 +83,8 @@ implementation
 
       call DacPin1.disablePioControl(); // Disable whatever is set currently
       call DacPin1.selectPeripheralD();
+
+      call Sam3sDac.stopPdc();
     }
     return SUCCESS;
   }
@@ -84,6 +95,7 @@ implementation
     {
       call DacClockControl.disable();
       call DacInterrupt.disable();
+      call PwmControl.stop();
     }
     return SUCCESS;
   }
@@ -148,20 +160,140 @@ implementation
 
   async event void ClockConfig.mainClockChanged(){}
 
-  async command uint32_t setFrequency(uint32_t frequency)
+  async command uint32_t Sam3sDac.setFrequency(uint32_t frequency)
   {
+    uint32_t pwmFreq;
+
+    dacc_mr_t mr = DACC->mr;
+
+    if(frequency > 1000000)
+    {
+      // DAC doesn't support this
+      return 0;
+    }
+
+    call PwmControl.start();
+
+    pwmFreq = frequency * (1<<15)/1000;
+
+    if(call Pwm.configure(pwmFreq, 1<<15) != SUCCESS)
+    {
+      return 0;
+    }
+
+    call Pwm.enableCompare(PWM_COMPARE_DAC, 1);
+    call Pwm.setEventCompares(PWM_EVENT_DAC, (1 << PWM_COMPARE_DAC));
+
+    // setup the DAC to be triggered from external triggers
+    mr.bits.trgen = 1;
+    mr.bits.trgsel = 4 + PWM_EVENT_DAC; // select the right event
+
+    DACC->mr = mr;
+
+    return call Pwm.getFrequency() * 1000 / (1 << 15);
+  }
+
+  async command error_t Sam3sDac.setBuffer(uint32_t *buffer, uint16_t length)
+  {
+    if(call HplPdc.getTxCounter() == 0)
+    {
+      call HplPdc.setTxPtr(buffer);
+      call HplPdc.setTxCounter(length);
+      atomic
+      {
+        currentBuffer = buffer;
+        currentLength = length;
+      }
+      call Sam3sDac.startPdc();
+    } else 
+    {
+      if(call HplPdc.getNextTxCounter() == 0)
+      {
+        call HplPdc.setNextTxPtr(buffer);
+        call HplPdc.setNextTxCounter(length);
+        atomic
+        {
+          nextBuffer = buffer;
+          nextLength = length;
+        }
+      } else {
+        // PDC busy
+        return EBUSY;
+      }
+    }
+    return SUCCESS;
+  }
+
+  async command void Sam3sDac.startPdc()
+  {
+    dacc_ier_t ier;
+    call DacInterrupt.disable();
+    call DacInterrupt.clearPending();
+    call DacInterrupt.enable();
+
+    ier.flat = 0;
+    ier.bits.endtx = 1;
+    ier.bits.txbufe = 1;
+    DACC->ier = ier;
+    
+    call HplPdc.enablePdcTx();
 
   }
 
-  async command error_t setBuffer(uint32_t *buffer, uint16_t length)
+  async command void Sam3sDac.stopPdc()
   {
+    dacc_idr_t idr;
+    call DacInterrupt.disable();
+
+    idr.bits.endtx = 1;
+    idr.bits.txbufe = 1;
+    DACC->idr = idr;
+
+    call HplPdc.disablePdcTx();
+  }
+
+  task void signalDone()
+  {
+    signal Sam3sDac.bufferDone(SUCCESS, currentBuffer, currentLength);
+    atomic
+    {
+      currentBuffer = nextBuffer;
+      currentLength = nextLength;
+    }
+  }
+
+
+  void handler() @spontaneous()
+  {
+    dacc_isr_t isr = DACC->isr;
+    call Leds.led2Toggle();
+
+    if(isr.bits.txbufe)
+    {
+      // PDC done. Disable interrupts.
+      dacc_idr_t idr;
+      idr.flat = 0;
+      idr.bits.txbufe = 1;
+      idr.bits.endtx = 1;
+      DACC->idr = idr;
+      call HplPdc.disablePdcTx();
+    }
+
+    if(isr.bits.endtx)
+    {
+      post signalDone();
+    }
+  }
+
+  void DaccIrqHandler() @C() @spontaneous() 
+  {
+    call DacInterruptWrapper.preamble();
+    handler();
+    call DacInterruptWrapper.postamble();
 
   }
 
-  event void bufferDone(error_t error, uint32_t *buffer, uint32_t *nextBuffer)
-  {
-
-  }
+  default async event void Sam3sDac.bufferDone(error_t error, uint32_t *buffer, uint16_t length) { }
 
 }
 

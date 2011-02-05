@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2010 University of Utah.
+ * Copyright (c) 2011 University of Utah. 
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ * are met:  
+ *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright
@@ -18,8 +19,8 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL STANFORD
- * UNIVERSITY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -30,39 +31,36 @@
  */
 
 /**
- * Definitions of stuff specific to the SAM3S-EK board.
- * Includes definitions for the SAM3S MCU.
- *
  * @author Thomas Schmid
  */
 
-#ifndef HARDWARE_H
-#define HARDWARE_H
+configuration Sam3sPwmC
+{
+  provides
+  {
+    interface StdControl;
+    interface Sam3sPwm;
+  }
+}
+implementation
+{
+  components Sam3sPwmP as PwmP,
+             LedsC, NoLedsC,
+             HplNVICC,
+             HplSam3sClockC,
+             HplSam3sGeneralIOC;
 
-#include "sam3shardware.h"
+  StdControl = PwmP;
+  Sam3sPwm = PwmP;
 
-// #define this so we don't doubly define time_t with conflicting types
-// in SD card implementation Time.h file
-#define __time_t_defined
-#include <sys/types.h>
+  PwmP.PwmInterrupt -> HplNVICC.PWMInterrupt;
+  PwmP.PwmClockControl -> HplSam3sClockC.PWMCntl;
+  PwmP.ClockConfig -> HplSam3sClockC;
 
-#ifndef PLATFORM_BAUDRATE
-#define PLATFORM_BAUDRATE (9600)
-#endif
+  components McuSleepC;
+  PwmP.PwmInterruptWrapper -> McuSleepC;
 
-#define IRQ_PRIO_UDPHS    (0x81)
-#define IRQ_PRIO_TWI1     (0x82)
-#define IRQ_PRIO_TWI0     (0x83)
-#define IRQ_PRIO_DMAC     (0x84)
-#define IRQ_PRIO_ADC      (0x85)
-#define IRQ_PRIO_DAC      (0x85)
-#define IRQ_PRIO_PWM      (0x85)
-#define IRQ_PRIO_PIO      (0x86)
-#define IRQ_PRIO_SPI      (0x87)
-#define IRQ_PRIO_UART     (0x88)
-#define IRQ_PRIO_USART0   (0x89)
-#define IRQ_PRIO_USART1   (0x90)
-#define IRQ_PRIO_USART2   (0x91)
-#define IRQ_PRIO_HSMCI    (0x92)
+  components HplSam3sPdcC;
+  PwmP.HplPdc -> HplSam3sPdcC.PwmPdcControl;
 
-#endif // HARDWARE_H
+}

@@ -55,6 +55,7 @@ module Sam3sPwmP
 }
 implementation
 {
+  norace uint32_t actualFrequency = 0;
 
   command error_t StdControl.start()
   {
@@ -80,33 +81,152 @@ implementation
 
   command error_t Sam3sPwm.configure(uint32_t frequency, uint16_t period)
   {
+    uint8_t i;
+
+    // get the main clock speed in khz
+    uint32_t mck = call ClockConfig.getMainClockSpeed();
+
+    uint32_t divider = mck / frequency;
+
+    pwm_clk_t clk = PWM->clk;
+    volatile pwm_channel_t *ch0 = &(PWM->channel[0]);
+    pwm_cmr_t cmr = ch0->cmr;
+    pwm_cdty_t cdty = ch0->cdty;
+    pwm_cprd_t cprd = ch0->cprd;
+
+    // disable channel 0
+    PWM->dis.flat = 1;
+
+    if(divider == 0)
+    {
+      // mck is too slow for requested frequency.
+      return FAIL;
+    }
+
+    // check if we can use modulo counter clocks
+    for(i=0; i<11; i++)
+    {
+      if(divider == (1 << i))
+      {
+        // GREAT!
+        break;
+      }
+    }
+
+    if(i < 11)
+    {
+      // we can use the modulo counter
+      cmr.bits.cpre = i;
+      actualFrequency = (mck >> i);
+    } else {
+      // we have to use the divider too
+      cmr.bits.cpre = PWM_CMR_CPRE_CLKA;
+
+      // find the right combination of modulo counter and divider that matches
+      // the requested frequency the closest.
+      for(i=0; i<11; i++)
+      {
+        divider = (mck >> i) / frequency;
+
+        if(divider < 255)
+        {
+          clk.bits.diva = divider;
+          clk.bits.prea = i;
+          actualFrequency = (mck >> i) / divider;
+          break;
+        }
+      }
+      if(i >= 11)
+      {
+        // we couldn't find a combination of modulo counter and divider that
+        // works.
+        return FAIL;
+      }
+    }
+
+    // clock setup done.
+    // setup rest of the channel.
+    cdty.bits.cdty = period / 2; // 50% duty cycle
+    cprd.bits.cprd = period; // count at which counter resets to 0
+
+    PWM->clk = clk;
+    ch0->cmr = cmr;
+    ch0->cdty = cdty;
+    ch0->cprd = cprd;
+
+    // enable channel 0
+    PWM->ena.flat = 1;
+
     return SUCCESS;
   }
 
-  async command uint32_t getFrequency()
+  async command uint32_t Sam3sPwm.getFrequency()
   {
-
+    return actualFrequency;
   }
 
-  async command error_t enableCompare(uint8_t compareNumber, uint16_t compareValue)
+  async command error_t Sam3sPwm.enableCompare(uint8_t compareNumber, uint16_t compareValue)
   {
+    volatile pwm_comparison_t *compare;
+    pwm_cmpm_t cmpm;
+    pwm_cmpv_t cmpv;
 
+    if(compareNumber < 8)
+    {
+      compare = &(PWM->comparison[compareNumber]);
+      cmpm = compare->cmpm;
+      cmpv = compare->cmpv;
+    } else {
+      return FAIL;
+    }
+    // turn of comparison
+    compare->cmpm.flat = 0;
+
+    cmpv.bits.cv = compareValue;
+
+    cmpm.bits.cen = 1;
+
+    compare->cmpv = cmpv;
+    compare->cmpm = cmpm;
+
+    return SUCCESS;
   }
 
 
-  async command error_t disableCompare(uint8_t compareNumber)
+  async command error_t Sam3sPwm.disableCompare(uint8_t compareNumber)
   {
+    volatile pwm_comparison_t *compare;
 
+    if(compareNumber < 8)
+    {
+      compare = &(PWM->comparison[compareNumber]);
+    } else {
+      return FAIL;
+    }
+    // turn of comparison
+    compare->cmpm.flat = 0;
+
+    return SUCCESS;
   }
 
-  async command error_t enableEvent(uint8_t eventNumber, uint8_t compares)
+  async command error_t Sam3sPwm.setEventCompares(uint8_t eventNumber, uint8_t compares)
   {
+    switch(eventNumber)
+    {
+      case 0:
+        PWM->elm0r.flat = compares;
+        break;
 
+      case 1:
+        PWM->elm1r.flat = compares;
+        break;
+
+      default:
+        return FAIL;
+    }
+    return SUCCESS;
   }
 
-  async command error_t disableEvent(uint8_t eventNumber)
-  {
-
-  }
+  async event void ClockConfig.mainClockChanged(){}
 }
 

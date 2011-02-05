@@ -38,6 +38,11 @@
 #ifndef SAM3SPWMHARDWARE_H
 #define SAM3SPWMHARDWARE_H
 
+#define PWM_COMPARE_DAC 0
+#define PWM_COMPARE_ADC 1
+#define PWM_EVENT_DAC 0
+#define PWM_EVENT_ADC 1
+
 /**
  * PWM Clock Register
  */
@@ -500,9 +505,9 @@ typedef union
         uint32_t oscuph3     :  1;
         uint32_t reserved0   : 12;
         uint32_t oscupl0     :  1;
-        uint32_t oscuph1     :  1;
-        uint32_t oscuph2     :  1;
-        uint32_t oscuph3     :  1;
+        uint32_t oscupl1     :  1;
+        uint32_t oscupl2     :  1;
+        uint32_t oscupl3     :  1;
         uint32_t reserved1   : 12;
     } __attribute__((__packed__)) bits;
 } pwm_oscupd_t;
@@ -755,6 +760,9 @@ typedef union
     } __attribute__((__packed__)) bits;
 } pwm_cmr_t;
 
+#define PWM_CMR_CPRE_CLKA 11
+#define PWM_CMR_CPRE_CLKB 12
+
 /**
  * PWM Channel Duty Cycle Register
  */
@@ -848,25 +856,23 @@ typedef union
 
 typedef struct pwm_comparison
 {
-    volatile pwm_cmpv_t    cmpv;
-    volatile pwm_cmpvupd_t cmpvupd;
-    volatile pwm_cmpm_t    cmpm;
-    volatile pwm_cmpmupd_t cmpmupd;
+    pwm_cmpv_t    cmpv;
+    pwm_cmpvupd_t cmpvupd;
+    pwm_cmpm_t    cmpm;
+    pwm_cmpmupd_t cmpmupd;
 } pwm_comparison_t;
 
 typedef struct pwm_channel
 {
-    volatile pwm_cmr_t     cmr;
-    volatile pwm_cdty_t    cdty;
-    volatile pwm_cdtyupd_t cdtyupd;
-    volatile pwm_cprd_t    cprd;
-    volatile pwm_cprdupd_t cprdupd;
-    volatile pwm_ccnt_t    ccnt;
-    volatile pwm_dt_t      dt;
-    volatile pwm_dtupd_t   dtupd;
+    pwm_cmr_t     cmr;
+    pwm_cdty_t    cdty;
+    pwm_cdtyupd_t cdtyupd;
+    pwm_cprd_t    cprd;
+    pwm_cprdupd_t cprdupd;
+    pwm_ccnt_t    ccnt;
+    pwm_dt_t      dt;
+    pwm_dtupd_t   dtupd;
 } pwm_channel_t;
-    } __attribute__((__packed__)) bits;
-} pwm__t;
 
 /**
  * PWM Register definitions, AT91 ARM Cortex-M3 based Microcontrollers SAM3S
@@ -874,14 +880,14 @@ typedef struct pwm_channel
  */
 typedef struct pwm
 {
-    volatile pwm_clk_t       clk;
-    volatile pwm_ena_t       ena;
-    volatile pwm_dis_t       dis;
-    volatile pwm_sr_t        sr;
-    volatile pwm_ier1_t      ier1;
-    volatile pwm_idr1_t      idr1;
-    volatile pwm_imr1_t      imr1;
-    volatile pwm_isr1_t      isr1;
+    volatile pwm_clk_t        clk;
+    volatile pwm_ena_t        ena;
+    volatile pwm_dis_t        dis;
+    volatile pwm_sr_t         sr;
+    volatile pwm_ier1_t       ier1;
+    volatile pwm_idr1_t       idr1;
+    volatile pwm_imr1_t       imr1;
+    volatile pwm_isr1_t       isr1;
     volatile pwm_scm_t        scm;
     uint32_t reserved0;
     volatile pwm_scuc_t       scuc;
@@ -889,7 +895,7 @@ typedef struct pwm
     volatile pwm_scupupd_t    scupupd;
     volatile pwm_ier2_t       ier2;
     volatile pwm_idr2_t       idr2;
-    volatile pwm_imr2_t       imr2:
+    volatile pwm_imr2_t       imr2;
     volatile pwm_isr2_t       isr2;
     volatile pwm_oov_t        oov;
     volatile pwm_os_t         os;
@@ -902,7 +908,7 @@ typedef struct pwm
     volatile pwm_fcr_t        fcr;
     volatile pwm_fpv_t        fpv;
     volatile pwm_fpe_t        fpe;
-    uint32_t reserved1[3]
+    uint32_t reserved1[3];
     volatile pwm_elmr_t       elm0r;
     volatile pwm_elmr_t       elm1r;
     uint32_t reserved2[11];

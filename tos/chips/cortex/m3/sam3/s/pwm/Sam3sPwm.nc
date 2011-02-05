@@ -67,7 +67,5 @@ interface Sam3sPwm
    * @param eventNumber indicates which event channel should be enabled
    * @param compares Indicates which compares this event is sensitive to.
    */
-  async command error_t enableEvent(uint8_t eventNumber, uint8_t comparers);
-
-  async command error_t disableEvent(uint8_t eventNumber);
+  async command error_t setEventCompares(uint8_t eventNumber, uint8_t comparers);
 }

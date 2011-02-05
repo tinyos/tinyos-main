@@ -65,4 +65,9 @@ implementation
   components HplSam3sPdcC;
   DacP.HplPdc -> HplSam3sPdcC.DacPdcControl;
 
+  components Sam3sPwmC;
+  DacP.PwmControl -> Sam3sPwmC;
+  DacP.Pwm -> Sam3sPwmC;
+
+  DacP.Leds -> LedsC;
 }

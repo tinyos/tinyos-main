@@ -36,12 +36,14 @@
 
 #include "sam3sadchardware.h"
 #include "sam3sdacchardware.h"
+#include "sam3spwmhardware.h"
 
 configuration HplSam3sPdcC {
   provides 
   {
     interface HplSam3Pdc as AdcPdcControl;
     interface HplSam3Pdc as DacPdcControl;
+    interface HplSam3Pdc as PwmPdcControl;
   }
 }
 
@@ -49,7 +51,9 @@ implementation {
 
   components new HplSam3PdcP(ADC_BASE_ADDRESS) as AdcPdc;
   components new HplSam3PdcP(DACC_BASE_ADDRESS) as DacPdc;
+  components new HplSam3PdcP(PWM_BASE_ADDRESS) as PwmPdc;
 
   AdcPdcControl = AdcPdc;
   DacPdcControl = DacPdc;
+  PwmPdcControl = PwmPdc;
 }
