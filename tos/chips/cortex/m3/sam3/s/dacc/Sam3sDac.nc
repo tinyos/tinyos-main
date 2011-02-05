@@ -74,4 +74,39 @@ interface Sam3sDac
    */
   async command error_t set(uint32_t data);
 
+  /**
+   * Set the requested frequency at which the samples in a buffer should be
+   * played out. Not all frequencies are possible. The return value will
+   * indicate the actual frequency set.
+   *
+   * @param frequency The requested frequency in Hz
+   * @return The set frequency in Hz
+   */
+  async command uint32_t setFrequency(uint32_t frequency);
+
+  /**
+   * Set the buffer to be sent out on the DAC using the PDC. Depending on the
+   * configuration, the buffer can contain word or half-word data, and bit
+   * 13-12 of each half-word can indicate the channel.
+   *
+   * The PDC can hold up to two buffers. The function will return EBUSY if
+   * both slots are currently full.
+   *
+   * @param buffer A pointer to the memory location of the buffer
+   * @param length Size of the buffer
+   * @return SUCCESS if the buffer was added, EBUSY if the PDC is full.
+   */
+  async command error_t setBuffer(uint32_t *buffer, uint16_t length);
+
+  /**
+   * Signals that a buffer has been completely sent out. This is an indication
+   * that the next buffer can be sent to the PDC.
+   *
+   * @param error SUCCESS if the buffer was sent out without errors.
+   * @param buffer Pointer to the buffer structure that was sent out.
+   * @param nextBuffer Pointer to the next buffer that will be sent out or
+   *                   NULL if there is none.
+   */
+  event void bufferDone(error_t error, uint32_t *buffer, uint32_t *nextBuffer);
+
 }

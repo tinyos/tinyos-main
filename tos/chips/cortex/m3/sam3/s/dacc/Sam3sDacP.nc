@@ -148,5 +148,20 @@ implementation
 
   async event void ClockConfig.mainClockChanged(){}
 
+  async command uint32_t setFrequency(uint32_t frequency)
+  {
+
+  }
+
+  async command error_t setBuffer(uint32_t *buffer, uint16_t length)
+  {
+
+  }
+
+  event void bufferDone(error_t error, uint32_t *buffer, uint32_t *nextBuffer)
+  {
+
+  }
+
 }
 
