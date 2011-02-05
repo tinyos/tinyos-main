@@ -260,9 +260,9 @@ typedef struct dacc
     volatile dacc_idr_t  idr;  // Interrupt Disable Register
     volatile dacc_imr_t  imr;  // Interrupt Mask Register
     volatile dacc_isr_t  isr;  // Interrupt Status Register
-    uint32_t reserved3[96];
+    uint32_t reserved3[24];
     volatile dacc_acr_t  acr;  // Analog current Register
-    uint32_t reserved4[76];
+    uint32_t reserved4[19];
     volatile dacc_wpmr_t wpmr; // Write Protect Mode Register
     volatile dacc_wpsr_t wpsr; // Write Protect Status Register
 } dacc_t;
