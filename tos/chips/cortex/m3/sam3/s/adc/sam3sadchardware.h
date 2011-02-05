@@ -587,7 +587,7 @@ typedef struct adc
     volatile adc_cdr_t   cdr[16];  // Channel Data Register x
     uint32_t reserved3;
     volatile adc_acr_t   acr;   // Analog Control Register
-    uint32_t reserved4[76];
+    uint32_t reserved4[19];
     volatile adc_wpmr_t  wpmr;  // Write Protect Mode Register
     volatile adc_wpsr_t  wpsr;  // Write Protect Status Register
 } adc_t;
