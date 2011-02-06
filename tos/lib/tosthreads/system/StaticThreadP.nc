@@ -73,11 +73,11 @@ implementation {
   }
   
   command error_t Thread.pause[uint8_t id]() {
-    return call ThreadScheduler.stopThread(id);
+    return call ThreadScheduler.suspendCurrentThread();
   }
   
   command error_t Thread.resume[uint8_t id]() {
-    return call ThreadScheduler.startThread(id);
+    return call ThreadScheduler.wakeupThread(id);
   }
   
   command error_t Thread.stop[uint8_t id]() {
