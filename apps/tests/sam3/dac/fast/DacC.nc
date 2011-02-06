@@ -110,5 +110,8 @@ implementation
       }
     }
   }
+
+  async event void Dac.bufferDone(error_t error, uint32_t* buffer, uint16_t length) {}
+
 }
 

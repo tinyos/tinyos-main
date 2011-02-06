@@ -101,23 +101,21 @@ implementation
     call Dac.enable(0);
     call Dac.enable(1);
 
-    call Dac.setFrequency(6000);
+    call Dac.setFrequency(12000); // for some reason, we currently have to double the DAC frequency
     call Dac.setBuffer(sine, SAMPLES);
     call Dac.startPdc();
     
     while(call Dac.setBuffer(sine, SAMPLES) == SUCCESS)
     {
-      call Leds.led1Toggle();
     }
   }
 
   async event void Dac.bufferDone(error_t error, uint32_t *buffer, uint16_t length)
   {
-      call Leds.led0Toggle();
-      if(call Dac.setBuffer(sine, SAMPLES) == SUCCESS)
-      {
-        call Leds.led1Toggle();
-      }
+    call Leds.led2Toggle();
+    while(call Dac.setBuffer(sine, SAMPLES) == SUCCESS)
+    {
+    }
   }
 }
 

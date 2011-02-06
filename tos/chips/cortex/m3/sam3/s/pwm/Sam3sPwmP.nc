@@ -79,7 +79,7 @@ implementation
     return SUCCESS;
   }
 
-  command error_t Sam3sPwm.configure(uint32_t frequency, uint16_t period)
+  async command error_t Sam3sPwm.configure(uint32_t frequency)
   {
     uint8_t i;
 
@@ -91,8 +91,6 @@ implementation
     pwm_clk_t clk = PWM->clk;
     volatile pwm_channel_t *ch0 = &(PWM->channel[0]);
     pwm_cmr_t cmr = ch0->cmr;
-    pwm_cdty_t cdty = ch0->cdty;
-    pwm_cprd_t cprd = ch0->cprd;
 
     // disable channel 0
     PWM->dis.flat = 1;
@@ -145,19 +143,29 @@ implementation
     }
 
     // clock setup done.
-    // setup rest of the channel.
-    cdty.bits.cdty = period / 2; // 50% duty cycle
-    cprd.bits.cprd = period; // count at which counter resets to 0
 
     PWM->clk = clk;
     ch0->cmr = cmr;
-    ch0->cdty = cdty;
-    ch0->cprd = cprd;
 
     // enable channel 0
     PWM->ena.flat = 1;
 
     return SUCCESS;
+  }
+
+  async command void Sam3sPwm.setPeriod(uint16_t period)
+  {
+
+    volatile pwm_channel_t *ch0 = &(PWM->channel[0]);
+    pwm_cdtyupd_t cdtyupd = ch0->cdtyupd;
+    pwm_cprdupd_t cprdupd = ch0->cprdupd;
+
+    // setup period and duty-cycle.
+    cdtyupd.bits.cdtyupd = period / 2; // 50% duty cycle
+    cprdupd.bits.cprdupd = period; // count at which counter resets to 0
+    ch0->cdtyupd = cdtyupd;
+    ch0->cprdupd = cprdupd;
+
   }
 
   async command uint32_t Sam3sPwm.getFrequency()

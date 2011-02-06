@@ -160,7 +160,7 @@ implementation
 
   async event void ClockConfig.mainClockChanged(){}
 
-  async command uint32_t Sam3sDac.setFrequency(uint32_t frequency)
+  command uint32_t Sam3sDac.setFrequency(uint32_t frequency)
   {
     uint32_t pwmFreq;
 
@@ -174,12 +174,16 @@ implementation
 
     call PwmControl.start();
 
-    pwmFreq = frequency * (1<<15)/1000;
+    pwmFreq = 1200; // set it at about 1 MHz
 
-    if(call Pwm.configure(pwmFreq, 1<<15) != SUCCESS)
+    if(call Pwm.configure(pwmFreq) != SUCCESS)
     {
       return 0;
     }
+    // get the actual frequency
+    pwmFreq = call Pwm.getFrequency();
+    // now, calculate the period we really need
+    call Pwm.setPeriod(pwmFreq * 1000 / frequency);
 
     call Pwm.enableCompare(PWM_COMPARE_DAC, 1);
     call Pwm.setEventCompares(PWM_EVENT_DAC, (1 << PWM_COMPARE_DAC));
@@ -190,7 +194,7 @@ implementation
 
     DACC->mr = mr;
 
-    return call Pwm.getFrequency() * 1000 / (1 << 15);
+    return pwmFreq * 1000 / (pwmFreq * 1000 / frequency);
   }
 
   async command error_t Sam3sDac.setBuffer(uint32_t *buffer, uint16_t length)
@@ -209,12 +213,17 @@ implementation
     {
       if(call HplPdc.getNextTxCounter() == 0)
       {
+        dacc_ier_t ier;
+        ier.flat = 0;
         call HplPdc.setNextTxPtr(buffer);
         call HplPdc.setNextTxCounter(length);
         atomic
         {
           nextBuffer = buffer;
           nextLength = length;
+          // enable endtx interrupt again
+          ier.bits.endtx = 1;
+          DACC->ier = ier;
         }
       } else {
         // PDC busy
@@ -266,23 +275,31 @@ implementation
   void handler() @spontaneous()
   {
     dacc_isr_t isr = DACC->isr;
-    call Leds.led2Toggle();
+    dacc_idr_t idr;
+    idr.flat = 0;
 
     if(isr.bits.txbufe)
     {
       // PDC done. Disable interrupts.
-      dacc_idr_t idr;
       idr.flat = 0;
       idr.bits.txbufe = 1;
       idr.bits.endtx = 1;
-      DACC->idr = idr;
       call HplPdc.disablePdcTx();
-    }
-
-    if(isr.bits.endtx)
-    {
+      call Leds.led0Toggle();
       post signalDone();
-    }
+    } else if(isr.bits.endtx)
+    {
+      // Disable endtx. If this was the second last buffer, txbufe will be the
+      // next interrupt. Else the next set buffer will set this interrupt
+      // again.
+      idr.bits.endtx = 1; 
+      call Leds.led1Toggle();
+
+      post signalDone();
+    } 
+
+    DACC->idr = idr;
+
   }
 
   void DaccIrqHandler() @C() @spontaneous() 

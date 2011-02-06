@@ -69,5 +69,5 @@ implementation
   DacP.PwmControl -> Sam3sPwmC;
   DacP.Pwm -> Sam3sPwmC;
 
-  DacP.Leds -> LedsC;
+  DacP.Leds -> NoLedsC;
 }

@@ -82,7 +82,7 @@ interface Sam3sDac
    * @param frequency The requested frequency in Hz
    * @return The set frequency in Hz
    */
-  async command uint32_t setFrequency(uint32_t frequency);
+  command uint32_t setFrequency(uint32_t frequency);
 
   /**
    * Set the buffer to be sent out on the DAC using the PDC. Depending on the

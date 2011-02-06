@@ -42,12 +42,15 @@ interface Sam3sPwm
 {
   /**
    * @param frequency Frequency in Herz at which the counter should count.
+   */
+  async command error_t configure(
+          uint32_t frequency
+      );
+
+  /**
    * @param period Interval period in tics at which the channel 0 will reset.
    */
-  command error_t configure(
-          uint32_t frequency,
-          uint16_t period
-      );
+  async command void setPeriod(uint16_t period);
 
   /**
    * This command returns the actual frequency that the counter is set to. Not
