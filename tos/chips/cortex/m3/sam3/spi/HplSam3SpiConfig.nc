@@ -30,12 +30,12 @@
  */
 
 /**
- * Interface to configure the SAM3U SPI.
+ * Interface to configure the SAM3 SPI.
  *
  * @author Thomas Schmid
  */
 
-interface HplSam3uSpiConfig
+interface HplSam3SpiConfig
 {
     /**
      * Set the SPI interface to Master mode (default).

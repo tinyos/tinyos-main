@@ -30,67 +30,53 @@
  */
 
 /**
- * Interface to configure the Chip Selects of the SAM3U SPI.
+ * The hardware presentation layer for the SAM3U SPI.
  *
  * @author Thomas Schmid
  */
 
-interface HplSam3uSpiChipSelConfig
+#include "sam3spihardware.h"
+
+configuration HplSam3SpiC
 {
-    /**
-     * Set the Clock polarity
-     * 0: inactive state is logic zero
-     * 1: inactive state is logic one
-     */
-    async command error_t setClockPolarity(uint8_t p);
-
-    /**
-     * Set the Clock Phase
-     * 0: changed on leading edge, and captured on following edge
-     * 1: captured on leading edge, and changed on following edge
-     */
-    async command error_t setClockPhase(uint8_t p);
-
-    /**
-     * Disable automatic Chip Select rising between consecutive transmits
-     * (default)
-     */
-    async command error_t disableAutoCS();
-
-    /**
-     * enable automatic Chip Select rising between consecutive transmits.
-     */
-    async command error_t enableAutoCS();
-
-    /**
-     * Enable Chip Select active after transfer (default).
-     */
-    async command error_t enableCSActive();
-
-    /**
-     * Disable Chip Select active after transfer.
-     */
-    async command error_t disableCSActive();
-
-    /**
-     * Set the total amount of bits per transfer. Range is from 8 to 16.
-     */
-    async command error_t setBitsPerTransfer(uint8_t b);
-
-    /**
-     * Set the serial clock baud rate by defining the MCK devider, i.e., baud
-     * rate = MCK/divider.
-     * Acceptable values range from 1 to 255.
-     */
-    async command error_t setBaud(uint8_t divider);
-
-    /**
-     * Set the delay between NPCS ready to first valid SPCK.
-     */
-    async command error_t setClkDelay(uint8_t delay);
-
-    /**
-     * Set the delay between consecutive transfers.
-     */
-    async command error_t setTxDelay(uint8_t delay);
+    provides
+    {
+       interface AsyncStdControl;
+       interface HplSam3SpiConfig; 
+       interface HplSam3SpiControl; 
+       interface HplSam3SpiInterrupts; 
+       interface HplSam3SpiStatus; 
+       interface HplSam3SpiChipSelConfig as HplSam3SpiChipSelConfig0;
+       interface HplSam3SpiChipSelConfig as HplSam3SpiChipSelConfig1;
+       interface HplSam3SpiChipSelConfig as HplSam3SpiChipSelConfig2;
+       interface HplSam3SpiChipSelConfig as HplSam3SpiChipSelConfig3;
+    }
 }
+implementation
+{
+    components HplSam3SpiP;
+    AsyncStdControl = HplSam3SpiP;
+    HplSam3SpiConfig = HplSam3SpiP;
+    HplSam3SpiControl = HplSam3SpiP;
+    HplSam3SpiInterrupts = HplSam3SpiP;
+    HplSam3SpiStatus = HplSam3SpiP;
+    
+    components
+        new HplSam3SpiChipSelP(0x40008030) as CS0,
+        new HplSam3SpiChipSelP(0x40008034) as CS1,
+        new HplSam3SpiChipSelP(0x40008038) as CS2,
+        new HplSam3SpiChipSelP(0x4000803C) as CS3;
+
+    HplSam3SpiChipSelConfig0 = CS0;
+    HplSam3SpiChipSelConfig1 = CS1;
+    HplSam3SpiChipSelConfig2 = CS2;
+    HplSam3SpiChipSelConfig3 = CS3;
+
+    components HplSam3sClockC;
+    HplSam3SpiP.SpiClockControl -> HplSam3sClockC.SPICntl;
+    HplSam3SpiP.ClockConfig -> HplSam3sClockC;
+
+    components McuSleepC;
+    HplSam3SpiP.SpiInterruptWrapper -> McuSleepC;
+}
+

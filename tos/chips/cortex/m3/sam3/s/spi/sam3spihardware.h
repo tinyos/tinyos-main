@@ -30,25 +30,19 @@
  */
 
 /**
- * Interface to query the status of the SAM3U SPI.
+ * Serial Peripheral Interface (SPI) register definitions.
  *
  * @author Thomas Schmid
  */
 
-interface HplSam3uSpiStatus
-{
-    async command uint16_t getReceivedData();
-    async command void setDataToTransmit(uint16_t txchr);
-    async command error_t setDataToTransmitCS(uint16_t txchr, uint8_t pcs, bool lastXfer);
+#ifndef _SAM3SPIHARDWARE_H
+#define _SAM3SPIHARDWARE_H
 
-    async command bool isRxFull();
-    async command bool isTxDataEmpty();
-    async command bool isModeFault();
-    async command bool isOverrunError();
-    async command bool isNssRising();
-    async command bool isTxEmpty();
-    async command bool isUnderrunError();
-    async command bool isSpiEnabled();
-}
+#include "spihardware.h"
 
+/**
+ * Memory mapping for the SPI
+ */
+volatile spi_t* SPI = (volatile spi_t *) 0x40008000; // SPI Base Address
 
+#endif // _SPIHARDWARE_H

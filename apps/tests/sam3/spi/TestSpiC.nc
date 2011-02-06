@@ -36,92 +36,90 @@
 
 module TestSpiC
 {
-	uses interface Leds;
-	uses interface Boot;
-	uses interface StdControl as SpiControl;
-	uses interface SpiByte;
-    uses interface SpiPacket;
-    uses interface GeneralIO as CSN;
-    uses interface HplSam3uSpiConfig as SpiConfig;
+  uses interface Leds;
+  uses interface Boot;
+  uses interface SpiByte;
+  uses interface SpiPacket;
+  uses interface HplSam3SpiConfig as SpiConfig;
+  uses interface Resource as SpiResource;
+
 }
 implementation
 {
-    task void transferPacketTask()
+  task void transferPacketTask()
+  {
+    uint8_t tx_buf[10];
+    uint8_t rx_buf[10];
+    uint8_t i;
+
+    for(i=0; i<10; i++)
     {
-        uint8_t tx_buf[10];
-        uint8_t rx_buf[10];
-        uint8_t i;
-
-        for(i=0; i<10; i++)
-        {
-            tx_buf[i] = 0xCD;
-            rx_buf[i] = 0;
-        }
-
-        call SpiControl.start();
-
-        call CSN.clr();
-        call SpiPacket.send(tx_buf, rx_buf, 10);
+      tx_buf[i] = 0xA0 + i;
+      rx_buf[i] = 0;
     }
 
-	task void transferTask()
-	{
-		uint8_t byte;
 
-		call SpiControl.start();
-        call CSN.clr();
-        
-        byte = call SpiByte.write(0xCD);
-        if(byte == 0xCD)
-        {
-            call Leds.led0Toggle();
-        } else {
-            call Leds.led1Toggle();
-        }
-        byte = call SpiByte.write(0xAB);
-        if(byte == 0xAB)
-        {
-            call Leds.led0Toggle();
-        } else {
-            call Leds.led1Toggle();
-        }
-        call CSN.set();
+    call SpiPacket.send(tx_buf, rx_buf, 10);
+  }
 
-        call SpiControl.stop();
+  task void transferTask()
+  {
+    uint8_t byte;
 
-        post transferPacketTask();
-        //post transferTask();
-	}
 
-	event void Boot.booted()
-	{
-
-        call SpiConfig.enableLoopBack();
-        call CSN.makeOutput();
-
-		post transferTask();
-	}
-
-    async event void SpiPacket.sendDone(uint8_t* tx_buf, uint8_t* rx_buf, uint16_t len, error_t error)
+    byte = call SpiByte.write(0xCD);
+    if(byte == 0xCD)
     {
-        uint8_t i;
-
-        if(error == SUCCESS)
-        {
-            if(len == 10)
-            {
-                for(i=0; i<10; i++){
-                    if(rx_buf[i] != 0xCD)
-                    {
-                        call Leds.led1Toggle();
-                        return;
-                    }
-                }
-                call Leds.led0Toggle();
-                return;
-            }
-        }
-        call Leds.led1Toggle();
-        //call CSN.set();
+      call Leds.led0Toggle();
+    } else {
+      call Leds.led1Toggle();
     }
+    byte = call SpiByte.write(0xAB);
+    if(byte == 0xAB)
+    {
+      call Leds.led0Toggle();
+    } else {
+      call Leds.led1Toggle();
+    }
+
+    post transferPacketTask();
+    //post transferTask();
+  }
+
+  event void Boot.booted()
+  {
+    call SpiResource.request();
+
+  }
+
+  event void SpiResource.granted()
+  {
+    call SpiConfig.enableLoopBack();
+
+    post transferTask();
+    //post transferPacketTask();
+
+  }
+
+  async event void SpiPacket.sendDone(uint8_t* tx_buf, uint8_t* rx_buf, uint16_t len, error_t error)
+  {
+    uint8_t i;
+
+    if(error == SUCCESS)
+    {
+      if(len == 10)
+      {
+        for(i=0; i<10; i++){
+          if(rx_buf[i] != 0xCD)
+          {
+            call Leds.led1Toggle();
+          } else {
+            call Leds.led2Toggle();
+          }
+        }
+        call Leds.led0Toggle();
+      }
+    }
+    call Leds.led1Toggle();
+  }
 }

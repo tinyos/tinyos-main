@@ -33,17 +33,17 @@
  * @author Kevin Klues
  */
 
-#include <sam3uspihardware.h>
+#include <sam3spihardware.h>
 
-generic configuration Sam3uSpi3C()
+generic configuration Sam3Spi0C()
 {
     provides
     {
         interface Resource;
         interface SpiByte;
-	interface FastSpiByte;
+        interface FastSpiByte;
         interface SpiPacket;
-	interface HplSam3uSpiChipSelConfig;
+        interface HplSam3SpiChipSelConfig;
     }
     uses {
         interface Init as SpiInit;
@@ -53,20 +53,20 @@ generic configuration Sam3uSpi3C()
 implementation
 {
     enum {
-      CLIENT_ID = unique(SAM3U_SPI_BUS),
+      CLIENT_ID = unique(SAM3_SPI_BUS),
     };
 
-    components HilSam3uSpiC as SpiC;
+    components HilSam3SpiC as SpiC;
     SpiC.SpiChipInit = SpiInit;
     Resource = SpiC.Resource[CLIENT_ID];
     SpiByte = SpiC.SpiByte[CLIENT_ID];
     FastSpiByte = SpiC.FastSpiByte[CLIENT_ID];
     SpiPacket = SpiC.SpiPacket[CLIENT_ID];
-    HplSam3uSpiChipSelConfig = SpiC.HplSam3uSpiChipSelConfig[3];
+    HplSam3SpiChipSelConfig = SpiC.HplSam3SpiChipSelConfig[0];
     
-    components new Sam3uSpiP(3);
-    ResourceConfigure = Sam3uSpiP.ResourceConfigure;
-    Sam3uSpiP.SubResourceConfigure <- SpiC.ResourceConfigure[CLIENT_ID];
-    Sam3uSpiP.HplSam3uSpiConfig -> SpiC.HplSam3uSpiConfig;
+    components new Sam3SpiP(0);
+    ResourceConfigure = Sam3SpiP.ResourceConfigure;
+    Sam3SpiP.SubResourceConfigure <- SpiC.ResourceConfigure[CLIENT_ID];
+    Sam3SpiP.HplSam3SpiConfig -> SpiC.HplSam3SpiConfig;
 }
 

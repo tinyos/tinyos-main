@@ -35,11 +35,11 @@
  * @author Thomas Schmid
  */
 
-#ifndef _SAM3USPIHARDWARE_H
-#define _SAM3USPIHARDWARE_H
+#ifndef _SPIHARDWARE_H
+#define _SPIHARDWARE_H
 
-#define SAM3U_HPLSPI_RESOURCE "Sam3uHplSpi.Resource"
-#define SAM3U_SPI_BUS "Sam3uSpi.Bus"
+#define SAM3_HPLSPI_RESOURCE "Sam3HplSpi.Resource"
+#define SAM3_SPI_BUS "Sam3Spi.Bus"
 
 /**
  *  SPI Control Register, AT91 ARM Cortex-M3 based Microcontrollers
@@ -308,9 +308,5 @@ typedef struct
     uint32_t reserved2[5];
 } spi_t;
 
-/**
- * Memory mapping for the SPI
- */
-volatile spi_t* SPI = (volatile spi_t *) 0x40008000; // SPI Base Address
 
-#endif // _SAM3USPIHARDWARE_H
+#endif // _SPIHARDWARE_H

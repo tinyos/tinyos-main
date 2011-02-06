@@ -30,43 +30,43 @@
  */
 
 /**
- * @author Kevin Klues
+ * Interface to control and query the SAM3 SPI interrupts.
+ *
+ * @author Thomas Schmid
  */
 
-#include <sam3uspihardware.h>
-
-generic configuration Sam3uSpi0C()
+interface HplSam3SpiInterrupts
 {
-    provides
-    {
-        interface Resource;
-        interface SpiByte;
-	interface FastSpiByte;
-        interface SpiPacket;
-	interface HplSam3uSpiChipSelConfig;
-    }
-    uses {
-        interface Init as SpiInit;
-        interface ResourceConfigure;
-    }
-}
-implementation
-{
-    enum {
-      CLIENT_ID = unique(SAM3U_SPI_BUS),
-    };
+    async event void receivedData(uint16_t data);
 
-    components HilSam3uSpiC as SpiC;
-    SpiC.SpiChipInit = SpiInit;
-    Resource = SpiC.Resource[CLIENT_ID];
-    SpiByte = SpiC.SpiByte[CLIENT_ID];
-    FastSpiByte = SpiC.FastSpiByte[CLIENT_ID];
-    SpiPacket = SpiC.SpiPacket[CLIENT_ID];
-    HplSam3uSpiChipSelConfig = SpiC.HplSam3uSpiChipSelConfig[0];
-    
-    components new Sam3uSpiP(0);
-    ResourceConfigure = Sam3uSpiP.ResourceConfigure;
-    Sam3uSpiP.SubResourceConfigure <- SpiC.ResourceConfigure[CLIENT_ID];
-    Sam3uSpiP.HplSam3uSpiConfig -> SpiC.HplSam3uSpiConfig;
+    async command void disableAllSpiIrqs();
+
+    async command void enableRxFullIrq();
+    async command void disableRxFullIrq();
+    async command bool isEnabledRxFullIrq();
+
+    async command void enableTxDataEmptyIrq();
+    async command void disableTxDataEmptyIrq();
+    async command bool isEnabledTxDataEmptyIrq();
+
+    async command void enableModeFaultIrq();
+    async command void disableModeFaultIrq();
+    async command bool isEnabledModeFaultIrq();
+
+    async command void enableOverrunIrq();
+    async command void disableOverrunIrq();
+    async command bool isEnabledOverrunIrq();
+
+    async command void enableNssRisingIrq();
+    async command void disableNssRisingIrq();
+    async command bool isEnabledNssRisingIrq();
+
+    async command void enableTxEmptyIrq();
+    async command void disableTxEmptyIrq();
+    async command bool isEnabledTxEmptyIrq();
+
+    async command void enableUnderrunIrq();
+    async command void disableUnderrunIrq();
+    async command bool isEnabledUnderrunIrq();
 }
 

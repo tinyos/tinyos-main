@@ -30,43 +30,53 @@
  */
 
 /**
- * Interface to control and query the SAM3U SPI interrupts.
+ * The hardware presentation layer for the SAM3U SPI.
  *
  * @author Thomas Schmid
  */
 
-interface HplSam3uSpiInterrupts
+#include "sam3spihardware.h"
+
+configuration HplSam3SpiC
 {
-    async event void receivedData(uint16_t data);
+    provides
+    {
+       interface AsyncStdControl;
+       interface HplSam3SpiConfig; 
+       interface HplSam3SpiControl; 
+       interface HplSam3SpiInterrupts; 
+       interface HplSam3SpiStatus; 
+       interface HplSam3SpiChipSelConfig as HplSam3SpiChipSelConfig0;
+       interface HplSam3SpiChipSelConfig as HplSam3SpiChipSelConfig1;
+       interface HplSam3SpiChipSelConfig as HplSam3SpiChipSelConfig2;
+       interface HplSam3SpiChipSelConfig as HplSam3SpiChipSelConfig3;
+    }
+}
+implementation
+{
+    components HplSam3SpiP;
+    AsyncStdControl = HplSam3SpiP;
+    HplSam3SpiConfig = HplSam3SpiP;
+    HplSam3SpiControl = HplSam3SpiP;
+    HplSam3SpiInterrupts = HplSam3SpiP;
+    HplSam3SpiStatus = HplSam3SpiP;
+    
+    components
+        new HplSam3SpiChipSelP(0x40008030) as CS0,
+        new HplSam3SpiChipSelP(0x40008034) as CS1,
+        new HplSam3SpiChipSelP(0x40008038) as CS2,
+        new HplSam3SpiChipSelP(0x4000803C) as CS3;
 
-    async command void disableAllSpiIrqs();
+    HplSam3SpiChipSelConfig0 = CS0;
+    HplSam3SpiChipSelConfig1 = CS1;
+    HplSam3SpiChipSelConfig2 = CS2;
+    HplSam3SpiChipSelConfig3 = CS3;
 
-    async command void enableRxFullIrq();
-    async command void disableRxFullIrq();
-    async command bool isEnabledRxFullIrq();
+    components HplSam3uClockC;
+    HplSam3SpiP.SpiClockControl -> HplSam3uClockC.SPI0PPCntl;
+    HplSam3SpiP.ClockConfig -> HplSam3uClockC;
 
-    async command void enableTxDataEmptyIrq();
-    async command void disableTxDataEmptyIrq();
-    async command bool isEnabledTxDataEmptyIrq();
-
-    async command void enableModeFaultIrq();
-    async command void disableModeFaultIrq();
-    async command bool isEnabledModeFaultIrq();
-
-    async command void enableOverrunIrq();
-    async command void disableOverrunIrq();
-    async command bool isEnabledOverrunIrq();
-
-    async command void enableNssRisingIrq();
-    async command void disableNssRisingIrq();
-    async command bool isEnabledNssRisingIrq();
-
-    async command void enableTxEmptyIrq();
-    async command void disableTxEmptyIrq();
-    async command bool isEnabledTxEmptyIrq();
-
-    async command void enableUnderrunIrq();
-    async command void disableUnderrunIrq();
-    async command bool isEnabledUnderrunIrq();
+    components McuSleepC;
+    HplSam3SpiP.SpiInterruptWrapper -> McuSleepC;
 }
 

@@ -30,15 +30,43 @@
  */
 
 /**
- * Interface to control the SAM3U SPI.
- *
- * @author Thomas Schmid
+ * @author Kevin Klues
  */
 
-interface HplSam3uSpiControl
+#include <sam3spihardware.h>
+
+generic configuration Sam3Spi1C()
 {
-    async command void resetSpi();
-    async command void enableSpi();
-    async command void disableSpi();
-    async command void lastTransfer();
+    provides
+    {
+        interface Resource;
+        interface SpiByte;
+	interface FastSpiByte;
+        interface SpiPacket;
+	interface HplSam3SpiChipSelConfig;
+    }
+    uses {
+        interface Init as SpiInit;
+        interface ResourceConfigure;
+    }
 }
+implementation
+{
+    enum {
+      CLIENT_ID = unique(SAM3_SPI_BUS),
+    };
+
+    components HilSam3SpiC as SpiC;
+    SpiC.SpiChipInit = SpiInit;
+    Resource = SpiC.Resource[CLIENT_ID];
+    SpiByte = SpiC.SpiByte[CLIENT_ID];
+    FastSpiByte = SpiC.FastSpiByte[CLIENT_ID];
+    SpiPacket = SpiC.SpiPacket[CLIENT_ID];
+    HplSam3SpiChipSelConfig = SpiC.HplSam3SpiChipSelConfig[1];
+    
+    components new Sam3SpiP(1);
+    ResourceConfigure = Sam3SpiP.ResourceConfigure;
+    Sam3SpiP.SubResourceConfigure <- SpiC.ResourceConfigure[CLIENT_ID];
+    Sam3SpiP.HplSam3SpiConfig -> SpiC.HplSam3SpiConfig;
+}
+

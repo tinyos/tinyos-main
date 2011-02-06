@@ -30,53 +30,25 @@
  */
 
 /**
- * The hardware presentation layer for the SAM3U SPI.
+ * Interface to query the status of the SAM3 SPI.
  *
  * @author Thomas Schmid
  */
 
-#include "sam3uspihardware.h"
-
-configuration HplSam3uSpiC
+interface HplSam3SpiStatus
 {
-    provides
-    {
-       interface AsyncStdControl;
-       interface HplSam3uSpiConfig; 
-       interface HplSam3uSpiControl; 
-       interface HplSam3uSpiInterrupts; 
-       interface HplSam3uSpiStatus; 
-       interface HplSam3uSpiChipSelConfig as HplSam3uSpiChipSelConfig0;
-       interface HplSam3uSpiChipSelConfig as HplSam3uSpiChipSelConfig1;
-       interface HplSam3uSpiChipSelConfig as HplSam3uSpiChipSelConfig2;
-       interface HplSam3uSpiChipSelConfig as HplSam3uSpiChipSelConfig3;
-    }
+    async command uint16_t getReceivedData();
+    async command void setDataToTransmit(uint16_t txchr);
+    async command error_t setDataToTransmitCS(uint16_t txchr, uint8_t pcs, bool lastXfer);
+
+    async command bool isRxFull();
+    async command bool isTxDataEmpty();
+    async command bool isModeFault();
+    async command bool isOverrunError();
+    async command bool isNssRising();
+    async command bool isTxEmpty();
+    async command bool isUnderrunError();
+    async command bool isSpiEnabled();
 }
-implementation
-{
-    components HplSam3uSpiP;
-    AsyncStdControl = HplSam3uSpiP;
-    HplSam3uSpiConfig = HplSam3uSpiP;
-    HplSam3uSpiControl = HplSam3uSpiP;
-    HplSam3uSpiInterrupts = HplSam3uSpiP;
-    HplSam3uSpiStatus = HplSam3uSpiP;
-    
-    components
-        new HplSam3uSpiChipSelP(0x40008030) as CS0,
-        new HplSam3uSpiChipSelP(0x40008034) as CS1,
-        new HplSam3uSpiChipSelP(0x40008038) as CS2,
-        new HplSam3uSpiChipSelP(0x4000803C) as CS3;
 
-    HplSam3uSpiChipSelConfig0 = CS0;
-    HplSam3uSpiChipSelConfig1 = CS1;
-    HplSam3uSpiChipSelConfig2 = CS2;
-    HplSam3uSpiChipSelConfig3 = CS3;
-
-    components HplSam3uClockC;
-    HplSam3uSpiP.SpiClockControl -> HplSam3uClockC.SPI0PPCntl;
-    HplSam3uSpiP.ClockConfig -> HplSam3uClockC;
-
-    components McuSleepC;
-    HplSam3uSpiP.SpiInterruptWrapper -> McuSleepC;
-}
 

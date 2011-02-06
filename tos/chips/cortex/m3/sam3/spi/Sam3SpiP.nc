@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2009 The Regents of the University of California.
+/*
+ * Copyright (c) 2009 University of California, Los Angeles
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,44 +29,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @author Kevin Klues
- */
-
-#include <sam3uspihardware.h>
-
-generic configuration Sam3uSpi1C()
+generic module Sam3SpiP(uint8_t chip_id)
 {
-    provides
+    provides 
     {
-        interface Resource;
-        interface SpiByte;
-	interface FastSpiByte;
-        interface SpiPacket;
-	interface HplSam3uSpiChipSelConfig;
+        interface ResourceConfigure as SubResourceConfigure;
     }
     uses {
-        interface Init as SpiInit;
         interface ResourceConfigure;
+        interface HplSam3SpiConfig;
     }
 }
-implementation
-{
-    enum {
-      CLIENT_ID = unique(SAM3U_SPI_BUS),
-    };
+implementation {
 
-    components HilSam3uSpiC as SpiC;
-    SpiC.SpiChipInit = SpiInit;
-    Resource = SpiC.Resource[CLIENT_ID];
-    SpiByte = SpiC.SpiByte[CLIENT_ID];
-    FastSpiByte = SpiC.FastSpiByte[CLIENT_ID];
-    SpiPacket = SpiC.SpiPacket[CLIENT_ID];
-    HplSam3uSpiChipSelConfig = SpiC.HplSam3uSpiChipSelConfig[1];
+    async command void SubResourceConfigure.configure() {
+        call HplSam3SpiConfig.selectChip(chip_id);
+        call ResourceConfigure.configure();
+    }
     
-    components new Sam3uSpiP(1);
-    ResourceConfigure = Sam3uSpiP.ResourceConfigure;
-    Sam3uSpiP.SubResourceConfigure <- SpiC.ResourceConfigure[CLIENT_ID];
-    Sam3uSpiP.HplSam3uSpiConfig -> SpiC.HplSam3uSpiConfig;
+    async command void SubResourceConfigure.unconfigure() {
+        call ResourceConfigure.unconfigure();
+    }
 }
-

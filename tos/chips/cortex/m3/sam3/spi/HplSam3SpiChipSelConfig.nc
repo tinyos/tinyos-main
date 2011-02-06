@@ -30,150 +30,67 @@
  */
 
 /**
- * Interface to control the SAM3U SPI.
+ * Interface to configure the Chip Selects of the SAM3U SPI.
  *
  * @author Thomas Schmid
  */
 
-#include "sam3uspihardware.h"
-
-generic module HplSam3uSpiChipSelP(uint32_t csrp)
+interface HplSam3SpiChipSelConfig
 {
-    provides
-    {
-       interface HplSam3uSpiChipSelConfig;
-    }
-}
-implementation
-{
-    volatile spi_csr_t *csr = (volatile spi_csr_t*)csrp;
-
-    bool cs;
-
     /**
      * Set the Clock polarity
      * 0: inactive state is logic zero
      * 1: inactive state is logic one
      */
-    async command error_t HplSam3uSpiChipSelConfig.setClockPolarity(uint8_t p)
-    {
-        spi_csr_t reg = *csr;
-        if(p > 1)
-            return FAIL;
-        reg.bits.cpol = p;
-        *csr = reg;
-        return SUCCESS;
-    }
+    async command error_t setClockPolarity(uint8_t p);
 
     /**
      * Set the Clock Phase
      * 0: changed on leading edge, and captured on following edge
      * 1: captured on leading edge, and changed on following edge
      */
-    async command error_t HplSam3uSpiChipSelConfig.setClockPhase(uint8_t p)
-    {
-        spi_csr_t reg = *csr;
-        if(p > 1)
-            return FAIL;
-        reg.bits.ncpha = p;
-        *csr = reg;
-        return SUCCESS;
-    }
+    async command error_t setClockPhase(uint8_t p);
 
     /**
      * Disable automatic Chip Select rising between consecutive transmits
      * (default)
      */
-    async command error_t HplSam3uSpiChipSelConfig.disableAutoCS()
-    {
-        spi_csr_t reg = *csr;
-        reg.bits.csnaat = 0;
-        *csr = reg;
-        return SUCCESS;
-    }
+    async command error_t disableAutoCS();
 
     /**
      * enable automatic Chip Select rising between consecutive transmits.
      */
-    async command error_t HplSam3uSpiChipSelConfig.enableAutoCS()
-    {
-        spi_csr_t reg = *csr;
-        reg.bits.csnaat = 1;
-        *csr = reg;
-        return SUCCESS;
-    }
+    async command error_t enableAutoCS();
 
     /**
      * Enable Chip Select active after transfer (default).
      */
-    async command error_t HplSam3uSpiChipSelConfig.enableCSActive()
-    {
-        spi_csr_t reg = *csr;
-        reg.bits.csaat= 0;
-        *csr = reg;
-        return SUCCESS;
-    }
+    async command error_t enableCSActive();
 
     /**
      * Disable Chip Select active after transfer.
      */
-    async command error_t HplSam3uSpiChipSelConfig.disableCSActive()
-    {
-        spi_csr_t reg = *csr;
-        reg.bits.csaat= 1;
-        *csr = reg;
-        return SUCCESS;
-    }
+    async command error_t disableCSActive();
 
     /**
      * Set the total amount of bits per transfer. Range is from 8 to 16.
      */
-    async command error_t HplSam3uSpiChipSelConfig.setBitsPerTransfer(uint8_t b)
-    {
-        spi_csr_t reg = *csr;
-        if(b > 8)
-            return FAIL;
-        reg.bits.bits = b;
-        *csr = reg;
-        return SUCCESS;
-    }
+    async command error_t setBitsPerTransfer(uint8_t b);
 
     /**
      * Set the serial clock baud rate by defining the MCK devider, i.e., baud
      * rate = MCK/divider.
      * Acceptable values range from 1 to 255.
      */
-    async command error_t HplSam3uSpiChipSelConfig.setBaud(uint8_t divider)
-    {
-        spi_csr_t tcsr = *csr;
-        if(divider == 0)
-            return FAIL;
-        tcsr.bits.scbr = divider;
-        *csr = tcsr;
-        return SUCCESS;
-    }
+    async command error_t setBaud(uint8_t divider);
 
     /**
      * Set the delay between NPCS ready to first valid SPCK.
      */
-    async command error_t HplSam3uSpiChipSelConfig.setClkDelay(uint8_t delay)
-    {
-        spi_csr_t tcsr = *csr;
-        tcsr.bits.dlybs = delay;
-        *csr = tcsr;
-        return SUCCESS;
-    }
+    async command error_t setClkDelay(uint8_t delay);
 
     /**
      * Set the delay between consecutive transfers.
      */
-    async command error_t HplSam3uSpiChipSelConfig.setTxDelay(uint8_t delay)
-    {
-        spi_csr_t tcsr = *csr;
-        tcsr.bits.dlybct = delay;
-        *csr = tcsr;
-        return SUCCESS;
-    }
+    async command error_t setTxDelay(uint8_t delay);
 }
-
-

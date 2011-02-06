@@ -37,28 +37,28 @@
  * @author Kevin Klues
  */
 
-#include "sam3uspihardware.h"
+#include "sam3spihardware.h"
 
-module HilSam3uSpiP
+module HilSam3SpiP
 {
     provides
     {
         interface Init;
         interface SpiByte[uint8_t];
-        interface SpiPacket[uint8_t]; // not supported yet
+        interface SpiPacket[uint8_t];
     }
     uses
     {
         interface Init as SpiChipInit;
-	interface ArbiterInfo;
-        interface HplSam3uSpiConfig;
-        interface HplSam3uSpiControl;
-        interface HplSam3uSpiInterrupts;
-        interface HplSam3uSpiStatus;
+        interface ArbiterInfo;
+        interface HplSam3SpiConfig;
+        interface HplSam3SpiControl;
+        interface HplSam3SpiInterrupts;
+        interface HplSam3SpiStatus;
         interface HplNVICInterruptCntl as SpiIrqControl;
-        interface HplSam3uGeneralIOPin as SpiPinMiso;
-        interface HplSam3uGeneralIOPin as SpiPinMosi;
-        interface HplSam3uGeneralIOPin as SpiPinSpck;
+        interface HplSam3GeneralIOPin as SpiPinMiso;
+        interface HplSam3GeneralIOPin as SpiPinMosi;
+        interface HplSam3GeneralIOPin as SpiPinSpck;
     }
 }
 implementation
@@ -74,7 +74,7 @@ implementation
     command error_t Init.init()
     {
         // turn off all interrupts
-        call HplSam3uSpiInterrupts.disableAllSpiIrqs();
+        call HplSam3SpiInterrupts.disableAllSpiIrqs();
 
         // configure NVIC
         call SpiIrqControl.configure(IRQ_PRIO_SPI);
@@ -89,15 +89,15 @@ implementation
         call SpiPinSpck.selectPeripheralA();
 
         // reset the SPI configuration
-        call HplSam3uSpiControl.resetSpi();
+        call HplSam3SpiControl.resetSpi();
 
         // configure for master
-        call HplSam3uSpiConfig.setMaster();
+        call HplSam3SpiConfig.setMaster();
 
         // chip select options
-        call HplSam3uSpiConfig.setFixedCS(); // CS needs to be configured for each message sent!
-        //call HplSam3uSpiConfig.setVariableCS(); // CS needs to be configured for each message sent!
-        call HplSam3uSpiConfig.setDirectCS(); // CS pins are not multiplexed
+        call HplSam3SpiConfig.setFixedCS(); // CS needs to be configured for each message sent!
+        //call HplSam3SpiConfig.setVariableCS(); // CS needs to be configured for each message sent!
+        call HplSam3SpiConfig.setDirectCS(); // CS pins are not multiplexed
 
         call SpiChipInit.init();
         return SUCCESS;
@@ -109,10 +109,10 @@ implementation
         if(!(call ArbiterInfo.userId() == device))
             return -1;
         
-        //call HplSam3uSpiChipSelConfig.enableCSActive();
-        call HplSam3uSpiStatus.setDataToTransmit(tx);
-        while(!call HplSam3uSpiStatus.isRxFull());
-        byte = (uint8_t)call HplSam3uSpiStatus.getReceivedData();
+        //call HplSam3SpiChipSelConfig.enableCSActive();
+        call HplSam3SpiStatus.setDataToTransmit(tx);
+        while(!call HplSam3SpiStatus.isRxFull());
+        byte = (uint8_t)call HplSam3SpiStatus.getReceivedData();
 
         return byte;
     }
@@ -133,14 +133,17 @@ implementation
                  * FIXME: in order to be compatible with the general TinyOS
                  * Spi Interface, we can't do automatic CS control!!!
                 if(m_pos == len-1)
-                    call HplSam3uSpiStatus.setDataToTransmitCS(txBuf[m_pos], 3, TRUE);
+                    call HplSam3SpiStatus.setDataToTransmitCS(txBuf[m_pos], 3, TRUE);
                 else
-                    call HplSam3uSpiStatus.setDataToTransmitCS(txBuf[m_pos], 3, FALSE);
-                    */
-                call HplSam3uSpiStatus.setDataToTransmitCS(txBuf[m_pos], device, FALSE);
+                    call HplSam3SpiStatus.setDataToTransmitCS(txBuf[m_pos], 3, FALSE);
+                */
+                /*
+                call HplSam3SpiStatus.setDataToTransmitCS(txBuf[m_pos], device, FALSE);
 
-                while(!call HplSam3uSpiStatus.isRxFull());
-                rxBuf[m_pos] = (uint8_t)call HplSam3uSpiStatus.getReceivedData();
+                while(!call HplSam3SpiStatus.isRxFull());
+                rxBuf[m_pos] = (uint8_t)call HplSam3SpiStatus.getReceivedData();
+                */
+                rxBuf[m_pos] = (uint8_t)call SpiByte.write[device](txBuf[m_pos]);
                 m_pos += 1;
             }
         }
@@ -155,7 +158,7 @@ implementation
     }
 
     task void signalDone_task() {
-        atomic signalDone();
+      atomic signalDone();
     }
 
 
@@ -168,6 +171,6 @@ implementation
     default async event void SpiPacket.sendDone[uint8_t device](uint8_t* tx_buf, 
                                     uint8_t* rx_buf, uint16_t len, error_t error) {}
 
-    async event void HplSam3uSpiInterrupts.receivedData(uint16_t data) {};
+    async event void HplSam3SpiInterrupts.receivedData(uint16_t data) {};
 }
 

@@ -37,18 +37,18 @@
  * @author Kevin Klues
  */
 
-#include <sam3uspihardware.h>
+#include <sam3spihardware.h>
 
-configuration HilSam3uSpiC
+configuration HilSam3SpiC
 {
     provides
     {
         interface Resource[uint8_t];
         interface SpiByte[uint8_t];
-	interface FastSpiByte[uint8_t];
+        interface FastSpiByte[uint8_t];
         interface SpiPacket[uint8_t];
-	interface HplSam3uSpiChipSelConfig[uint8_t];
-	interface HplSam3uSpiConfig;
+        interface HplSam3SpiChipSelConfig[uint8_t];
+        interface HplSam3SpiConfig;
     }
     uses {
         interface Init as SpiChipInit;
@@ -58,43 +58,43 @@ configuration HilSam3uSpiC
 implementation
 {
     components RealMainP;
-    RealMainP.PlatformInit -> HilSam3uSpiP.Init;
+    RealMainP.PlatformInit -> HilSam3SpiP.Init;
 
-    components HplSam3uSpiC;
-    HplSam3uSpiConfig = HplSam3uSpiC;
-    HilSam3uSpiP.SpiChipInit = SpiChipInit;
-    HilSam3uSpiP.HplSam3uSpiConfig -> HplSam3uSpiC;
-    HilSam3uSpiP.HplSam3uSpiControl -> HplSam3uSpiC;
-    HilSam3uSpiP.HplSam3uSpiStatus -> HplSam3uSpiC;
-    HilSam3uSpiP.HplSam3uSpiInterrupts -> HplSam3uSpiC;
-    HplSam3uSpiChipSelConfig[0] =  HplSam3uSpiC.HplSam3uSpiChipSelConfig0;
-    HplSam3uSpiChipSelConfig[1] =  HplSam3uSpiC.HplSam3uSpiChipSelConfig1;
-    HplSam3uSpiChipSelConfig[2] =  HplSam3uSpiC.HplSam3uSpiChipSelConfig2;
-    HplSam3uSpiChipSelConfig[3] =  HplSam3uSpiC.HplSam3uSpiChipSelConfig3;
+    components HplSam3SpiC;
+    HplSam3SpiConfig = HplSam3SpiC;
+    HilSam3SpiP.SpiChipInit = SpiChipInit;
+    HilSam3SpiP.HplSam3SpiConfig  -> HplSam3SpiC;
+    HilSam3SpiP.HplSam3SpiControl -> HplSam3SpiC;
+    HilSam3SpiP.HplSam3SpiStatus  -> HplSam3SpiC;
+    HilSam3SpiP.HplSam3SpiInterrupts -> HplSam3SpiC;
+    HplSam3SpiChipSelConfig[0] =  HplSam3SpiC.HplSam3SpiChipSelConfig0;
+    HplSam3SpiChipSelConfig[1] =  HplSam3SpiC.HplSam3SpiChipSelConfig1;
+    HplSam3SpiChipSelConfig[2] =  HplSam3SpiC.HplSam3SpiChipSelConfig2;
+    HplSam3SpiChipSelConfig[3] =  HplSam3SpiC.HplSam3SpiChipSelConfig3;
 
-    components new FcfsArbiterC(SAM3U_SPI_BUS) as ArbiterC;
+    components new FcfsArbiterC(SAM3_SPI_BUS) as ArbiterC;
     Resource = ArbiterC;
     ResourceConfigure = ArbiterC;
-    HilSam3uSpiP.ArbiterInfo -> ArbiterC;
+    HilSam3SpiP.ArbiterInfo -> ArbiterC;
 
     components new AsyncStdControlPowerManagerC() as PM;
-    PM.AsyncStdControl -> HplSam3uSpiC;
+    PM.AsyncStdControl -> HplSam3SpiC;
     PM.ArbiterInfo -> ArbiterC.ArbiterInfo;
     PM.ResourceDefaultOwner -> ArbiterC.ResourceDefaultOwner;
 
-    components HilSam3uSpiP;
-    SpiByte = HilSam3uSpiP.SpiByte;
-    SpiPacket = HilSam3uSpiP.SpiPacket;
+    components HilSam3SpiP;
+    SpiByte = HilSam3SpiP.SpiByte;
+    SpiPacket = HilSam3SpiP.SpiPacket;
 
-    components new FastSpiSam3uC(SAM3U_SPI_BUS);
-    FastSpiSam3uC.SpiByte -> HilSam3uSpiP.SpiByte;
-    FastSpiByte = FastSpiSam3uC;
+    components new FastSpiSam3C(SAM3_SPI_BUS);
+    FastSpiSam3C.SpiByte -> HilSam3SpiP.SpiByte;
+    FastSpiByte = FastSpiSam3C;
 
-    components HplSam3uGeneralIOC;
-    HilSam3uSpiP.SpiPinMiso -> HplSam3uGeneralIOC.HplPioA13;
-    HilSam3uSpiP.SpiPinMosi -> HplSam3uGeneralIOC.HplPioA14;
-    HilSam3uSpiP.SpiPinSpck -> HplSam3uGeneralIOC.HplPioA15;
+    components HplSam3sGeneralIOC;
+    HilSam3SpiP.SpiPinMiso -> HplSam3sGeneralIOC.HplPioA12;
+    HilSam3SpiP.SpiPinMosi -> HplSam3sGeneralIOC.HplPioA13;
+    HilSam3SpiP.SpiPinSpck -> HplSam3sGeneralIOC.HplPioA14;
 
     components HplNVICC;
-    HilSam3uSpiP.SpiIrqControl -> HplNVICC.SPI0Interrupt;
+    HilSam3SpiP.SpiIrqControl -> HplNVICC.SPIInterrupt;
 }

@@ -41,19 +41,23 @@ configuration TestSpiAppC
 }
 implementation
 {
-	components MainC, TestSpiC, LedsC;
+  components MainC, TestSpiC, LedsC;
 
-	TestSpiC -> MainC.Boot;
-	TestSpiC.Leds -> LedsC;
+  TestSpiC -> MainC.Boot;
+  TestSpiC.Leds -> LedsC;
 
-	components HilSam3uSpiC;
-	TestSpiC.SpiControl -> HilSam3uSpiC;
-	TestSpiC.SpiByte -> HilSam3uSpiC;
-    TestSpiC.SpiPacket -> HilSam3uSpiC;
-    TestSpiC.CSN -> HilSam3uSpiC;
-    //components HplSam3uGeneralIOC;
-    //TestSpiC.CSN -> HplSam3uGeneralIOC.PioA16;
+  components new Sam3Spi0C() as SpiC;
+  TestSpiC.SpiByte -> SpiC;
+  TestSpiC.SpiPacket -> SpiC;
+  TestSpiC.SpiResource -> SpiC;
+  //components HplSam3uGeneralIOC;
+  //TestSpiC.CSN -> HplSam3uGeneralIOC.PioA16;
 
-    components HplSam3uSpiC;
-    TestSpiC.SpiConfig -> HplSam3uSpiC;
+  components SpiConfigC; 
+  SpiConfigC.Init <- SpiC;
+  SpiConfigC.ResourceConfigure <- SpiC;
+  SpiConfigC.HplSam3SpiChipSelConfig -> SpiC;
+
+  components HilSam3SpiC;
+  TestSpiC.SpiConfig -> HilSam3SpiC;
 }

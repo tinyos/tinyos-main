@@ -32,7 +32,7 @@
 /**
  * Emulate fast spi with SpiByte
  */
-generic module FastSpiSam3uC(char resourceName[])
+generic module FastSpiSam3C(char resourceName[])
 {
     provides
     {
