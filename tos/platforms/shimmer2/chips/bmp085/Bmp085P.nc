@@ -62,6 +62,7 @@ implementation {
 
   uint8_t readbuff[128], bytesToRead, regToRead, bytesRead, temp_run, cal_run;
   uint16_t sbuf0[64];
+  uint8_t packet[2];
 
   // sensing mode
   uint8_t oss;  // default is ultra high res
@@ -190,7 +191,6 @@ implementation {
   }
   
   error_t writeReg(uint8_t reg_addr, uint8_t val) {
-    uint8_t packet[2];
 
     // pack the packet with address of reg target, then register value
     packet[0] = reg_addr;
