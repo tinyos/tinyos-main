@@ -78,6 +78,8 @@ implementation {
     IDLE,
   };
 
+#warning "DO NOT CONTINUE TO USE THIS MODULE; IT HAS BEEN DEPRECATED.  USE SEPARATE GYROBOARD AND MAGNETOMETER INSTEAD."
+
   command error_t Init.init() {
     msp430_i2c_union_config_t msp430_i2c_my_config = { 
       {
