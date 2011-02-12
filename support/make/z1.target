@@ -1,0 +1,19 @@
+PLATFORM = z1
+
+MSP_BSL ?= z1-bsl
+MOTELIST ?= motelist-z1
+
+MSP_BSL_FLAGS = --z1
+MSP_MCU ?= msp430x261
+MSP_GCC ?= msp430-gcc
+MSP_NESC_TARGET ?= msp430
+PFLAGS += -mdisable-hwmul 
+PFLAGS += -mdata-64k
+
+VOLUME_FILE = volumes-stm25p.xml
+VOLUME_ALLOCATOR ?= tos-storage-stm25p
+
+$(call TOSMake_include_platform,msp)
+
+z1: $(BUILD_DEPS)
+	@:
