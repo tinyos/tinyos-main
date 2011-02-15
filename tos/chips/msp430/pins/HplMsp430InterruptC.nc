@@ -38,7 +38,7 @@
  */
 configuration HplMsp430InterruptC
 {
-#ifdef __msp430_have_port1
+#if defined(__msp430_have_port1) || defined(__MSP430_HAS_PORT1__) || defined(__MSP430_HAS_PORT1_R__)
   provides interface HplMsp430Interrupt as Port10;
   provides interface HplMsp430Interrupt as Port11;
   provides interface HplMsp430Interrupt as Port12;
@@ -48,7 +48,7 @@ configuration HplMsp430InterruptC
   provides interface HplMsp430Interrupt as Port16;
   provides interface HplMsp430Interrupt as Port17;
 #endif
-#ifdef __msp430_have_port2
+#if defined(__msp430_have_port2) || defined(__MSP430_HAS_PORT2__) || defined(__MSP430_HAS_PORT2_R__)
   provides interface HplMsp430Interrupt as Port20;
   provides interface HplMsp430Interrupt as Port21;
   provides interface HplMsp430Interrupt as Port22;
@@ -62,7 +62,7 @@ configuration HplMsp430InterruptC
 implementation
 {
   components HplMsp430InterruptP as HplInterruptP;
-#ifdef __msp430_have_port1
+#if defined(__msp430_have_port1) || defined(__MSP430_HAS_PORT1__) || defined(__MSP430_HAS_PORT1_R__)
   Port10 = HplInterruptP.Port10;
   Port11 = HplInterruptP.Port11;
   Port12 = HplInterruptP.Port12;
@@ -72,7 +72,7 @@ implementation
   Port16 = HplInterruptP.Port16;
   Port17 = HplInterruptP.Port17;
 #endif
-#ifdef __msp430_have_port2
+#if defined(__msp430_have_port2) || defined(__MSP430_HAS_PORT2__) || defined(__MSP430_HAS_PORT2_R__)
   Port20 = HplInterruptP.Port20;
   Port21 = HplInterruptP.Port21;
   Port22 = HplInterruptP.Port22;

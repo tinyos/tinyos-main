@@ -41,6 +41,173 @@
 #include <signal.h>
 #include "msp430regtypes.h"
 
+#ifdef __MSP430_TI_HEADERS__
+
+/* TI's msp430 headers define FAIL to be 0x80 in the flash module.
+ * I'd prefer that it match the value assigned to it in the
+ * TinyError.h. */
+#undef FAIL
+
+/* Accommodate old gcc alias */
+#define MC_STOP MC__STOP
+
+/* Port registers in MSP430 chips have two naming conventions: by
+ * number (e.g., P1IN), and by letter (e.g. PAIN).  The numeric-named
+ * registers provide 8-bit values, while the alpha-named registers
+ * provide 16-bit values.
+ *
+ * The headers for certain chips define numeric-named registers.
+ *
+ * In a very few cases, both numeric-named and alpha-named registers
+ * are defined.  By inspection, this occurs only for PAIN, which
+ * combines P7IN (at the address of PAIN) and P8IN (at 1+&PAIN); and
+ * for PBIN, which combines P9IN (at the address of PBIN) and P10IN
+ * (at 1+&PBIN).
+ *
+ * In more recent chips, only alpha-named registers are provided.
+ * Since the current TinyOS MSP430 port interface assumes 8-bit
+ * registers, by convention we map numeric-named registers to the
+ * alpha-named registers beginning with PAIN==P1IN. */
+
+#if defined(__MSP430_HAS_PORTA__) || defined(__MSP430_HAS_PORTA_R__)
+#if (! defined(P1IN_)) && (defined(__MSP430_HAS_PORT1__) || defined(__MSP430_HAS_PORT1_R__))
+#define P1IN_ (uint16_t)(PAIN_)
+#define P1OUT_ (uint16_t)(PAOUT_)
+#define P1DIR_ (uint16_t)(PADIR_)
+#define P1SEL_ (uint16_t)(PASEL_)
+#if defined(__MSP430_HAS_PORT1_R__)
+#define P1REN_ (uint16_t)(PAREN_)
+#endif /* __MSP430_HAS_PORT1_R__ */
+#endif /* __MSP430_HAS_PORT1__ */
+
+#if (! defined(P2IN_)) && (defined(__MSP430_HAS_PORT2__) || defined(__MSP430_HAS_PORT2_R__))
+#define P2IN_ (uint16_t)(PAIN_+1)
+#define P2OUT_ (uint16_t)(PAOUT_+1)
+#define P2DIR_ (uint16_t)(PADIR_+1)
+#define P2SEL_ (uint16_t)(PASEL_+1)
+#if defined(__MSP430_HAS_PORT2_R__)
+#define P2REN_ (uint16_t)(PAREN_+1)
+#endif /* __MSP430_HAS_PORT2_R__ */
+#endif /* __MSP430_HAS_PORT2__ */
+#endif /* __MSP430_HAS_PORTA__ */
+
+
+#if defined(__MSP430_HAS_PORTB__) || defined(__MSP430_HAS_PORTB_R__)
+#if (! defined(P3IN_)) && (defined(__MSP430_HAS_PORT3__) || defined(__MSP430_HAS_PORT3_R__))
+#define P3IN_ (uint16_t)(PBIN_)
+#define P3OUT_ (uint16_t)(PBOUT_)
+#define P3DIR_ (uint16_t)(PBDIR_)
+#define P3SEL_ (uint16_t)(PBSEL_)
+#if defined(__MSP430_HAS_PORT3_R__)
+#define P3REN_ (uint16_t)(PBREN_)
+#endif /* __MSP430_HAS_PORT3_R__ */
+#endif /* __MSP430_HAS_PORT3__ */
+
+#if (! defined(P4IN_)) && (defined(__MSP430_HAS_PORT4__) || defined(__MSP430_HAS_PORT4_R__))
+#define P4IN_ (uint16_t)(PBIN_+1)
+#define P4OUT_ (uint16_t)(PBOUT_+1)
+#define P4DIR_ (uint16_t)(PBDIR_+1)
+#define P4SEL_ (uint16_t)(PBSEL_+1)
+#if defined(__MSP430_HAS_PORT4_R__)
+#define P4REN_ (uint16_t)(PBREN_+1)
+#endif /* __MSP430_HAS_PORT4_R__ */
+#endif /* __MSP430_HAS_PORT4__ */
+#endif /* __MSP430_HAS_PORTB__ */
+
+
+#if defined(__MSP430_HAS_PORTC__) || defined(__MSP430_HAS_PORTC_R__)
+#if (! defined(P5IN_)) && (defined(__MSP430_HAS_PORT5__) || defined(__MSP430_HAS_PORT5_R__))
+#define P5IN_ (uint16_t)(PCIN_)
+#define P5OUT_ (uint16_t)(PCOUT_)
+#define P5DIR_ (uint16_t)(PCDIR_)
+#define P5SEL_ (uint16_t)(PCSEL_)
+#if defined(__MSP430_HAS_PORT5_R__)
+#define P5REN_ (uint16_t)(PCREN_)
+#endif /* __MSP430_HAS_PORT5_R__ */
+#endif /* __MSP430_HAS_PORT5__ */
+
+#if (! defined(P6IN_)) && (defined(__MSP430_HAS_PORT6__) || defined(__MSP430_HAS_PORT6_R__))
+#define P6IN_ (uint16_t)(PCIN_+1)
+#define P6OUT_ (uint16_t)(PCOUT_+1)
+#define P6DIR_ (uint16_t)(PCDIR_+1)
+#define P6SEL_ (uint16_t)(PCSEL_+1)
+#if defined(__MSP430_HAS_PORT6_R__)
+#define P6REN_ (uint16_t)(PCREN_+1)
+#endif /* __MSP430_HAS_PORT6_R__ */
+#endif /* __MSP430_HAS_PORT6__ */
+#endif /* __MSP430_HAS_PORTC__ */
+
+
+#if defined(__MSP430_HAS_PORTD__) || defined(__MSP430_HAS_PORTD_R__)
+#if (! defined(P7IN_)) && (defined(__MSP430_HAS_PORT7__) || defined(__MSP430_HAS_PORT7_R__))
+#define P7IN_ (uint16_t)(PDIN_)
+#define P7OUT_ (uint16_t)(PDOUT_)
+#define P7DIR_ (uint16_t)(PDDIR_)
+#define P7SEL_ (uint16_t)(PDSEL_)
+#if defined(__MSP430_HAS_PORT7_R__)
+#define P7REN_ (uint16_t)(PDREN_)
+#endif /* __MSP430_HAS_PORT7_R__ */
+#endif /* __MSP430_HAS_PORT7__ */
+
+#if (! defined(P8IN_)) && (defined(__MSP430_HAS_PORT8__) || defined(__MSP430_HAS_PORT8_R__))
+#define P8IN_ (uint16_t)(PDIN_+1)
+#define P8OUT_ (uint16_t)(PDOUT_+1)
+#define P8DIR_ (uint16_t)(PDDIR_+1)
+#define P8SEL_ (uint16_t)(PDSEL_+1)
+#if defined(__MSP430_HAS_PORT8_R__)
+#define P8REN_ (uint16_t)(PDREN_+1)
+#endif /* __MSP430_HAS_PORT8_R__ */
+#endif /* __MSP430_HAS_PORT8__ */
+#endif /* __MSP430_HAS_PORTD__ */
+
+
+#if defined(__MSP430_HAS_PORTE__) || defined(__MSP430_HAS_PORTE_R__)
+#if (! defined(P9IN_)) && (defined(__MSP430_HAS_PORT9__) || defined(__MSP430_HAS_PORT9_R__))
+#define P9IN_ (uint16_t)(PEIN_)
+#define P9OUT_ (uint16_t)(PEOUT_)
+#define P9DIR_ (uint16_t)(PEDIR_)
+#define P9SEL_ (uint16_t)(PESEL_)
+#if defined(__MSP430_HAS_PORT9_R__)
+#define P9REN_ (uint16_t)(PEREN_)
+#endif /* __MSP430_HAS_PORT9_R__ */
+#endif /* __MSP430_HAS_PORT9__ */
+
+#if (! defined(P10IN_)) && (defined(__MSP430_HAS_PORT10__) || defined(__MSP430_HAS_PORT10_R__))
+#define P10IN_ (uint16_t)(PEIN_+1)
+#define P10OUT_ (uint16_t)(PEOUT_+1)
+#define P10DIR_ (uint16_t)(PEDIR_+1)
+#define P10SEL_ (uint16_t)(PESEL_+1)
+#if defined(__MSP430_HAS_PORT10_R__)
+#define P10REN_ (uint16_t)(PEREN_+1)
+#endif /* __MSP430_HAS_PORT10_R__ */
+#endif /* __MSP430_HAS_PORT10__ */
+#endif /* __MSP430_HAS_PORTE__ */
+
+
+#if defined(__MSP430_HAS_PORTF__) || defined(__MSP430_HAS_PORTF_R__)
+#if (! defined(P11IN_)) && (defined(__MSP430_HAS_PORT11__) || defined(__MSP430_HAS_PORT11_R__))
+#define P11IN_ (uint16_t)(PFIN_)
+#define P11OUT_ (uint16_t)(PFOUT_)
+#define P11DIR_ (uint16_t)(PFDIR_)
+#define P11SEL_ (uint16_t)(PFSEL_)
+#if defined(__MSP430_HAS_PORT11_R__)
+#define P11REN_ (uint16_t)(PFREN_)
+#endif /* __MSP430_HAS_PORT11_R__ */
+#endif /* __MSP430_HAS_PORT11__ */
+
+#if (! defined(P12IN_)) && (defined(__MSP430_HAS_PORT12__) || defined(__MSP430_HAS_PORT12_R__))
+#define P12IN_ (uint16_t)(PFIN_+1)
+#define P12OUT_ (uint16_t)(PFOUT_+1)
+#define P12DIR_ (uint16_t)(PFDIR_+1)
+#define P12SEL_ (uint16_t)(PFSEL_+1)
+#if defined(__MSP430_HAS_PORT12_R__)
+#define P12REN_ (uint16_t)(PFREN_+1)
+#endif /* __MSP430_HAS_PORT12_R__ */
+#endif /* __MSP430_HAS_PORT12__ */
+#endif /* __MSP430_HAS_PORTF__ */
+
+
+#endif /* __MSP430_TI_HEADERS__ */
 
 // CPU memory-mapped register access will cause nesc to issue race condition
 // warnings.  Race conditions are a significant conern when accessing CPU
@@ -268,6 +435,16 @@ inline float __nesc_hton_afloat(void *COUNT(sizeof(float)) target, float value) 
   memcpy(target, &value, sizeof(float));
   return value;
 }
+
+/* Support for chips with configurable resistors on digital inputs.  These
+ * are denoted with __MSP430_HAS_PORT1_R__ and similar defines. */
+enum {
+  MSP430_PORT_RESISTOR_INVALID,    /**< Hardware does not support resistor control, or pin is output */
+  MSP430_PORT_RESISTOR_OFF,        /**< Resistor disabled */
+  MSP430_PORT_RESISTOR_PULLDOWN,   /**< Pulldown resistor enabled */
+  MSP430_PORT_RESISTOR_PULLUP,     /**< Pullup resistor enabled */
+};
+
 
 #endif//_H_msp430hardware_h
 

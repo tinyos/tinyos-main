@@ -206,6 +206,7 @@
 #define TYPE_PORT_IN uint8_t
 #define TYPE_PORT_DIR uint8_t
 #define TYPE_PORT_SEL uint8_t
+#define TYPE_PORT_REN uint8_t
 #define TYPE_P0DIR uint8_t
 #define TYPE_P0IE uint8_t
 #define TYPE_P0IES uint8_t

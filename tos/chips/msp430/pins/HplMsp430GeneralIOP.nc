@@ -37,10 +37,10 @@
 #include "msp430regtypes.h"
 
 generic module HplMsp430GeneralIOP(
-				uint8_t port_in_addr,
-				uint8_t port_out_addr,
-				uint8_t port_dir_addr,
-				uint8_t port_sel_addr,
+				unsigned int port_in_addr,
+				unsigned int port_out_addr,
+				unsigned int port_dir_addr,
+				unsigned int port_sel_addr,
 				uint8_t pin
 				) @safe()
 {
@@ -66,4 +66,6 @@ implementation
   async command bool IO.isModuleFunc() { return (PORTxSEL & (0x01<<pin)) != 0; }
   async command void IO.selectIOFunc() { atomic PORTxSEL &= ~(0x01 << pin); }
   async command bool IO.isIOFunc() { return (PORTxSEL & (0x01<<pin)) == 0; }
+  async command error_t IO.setResistor(uint8_t mode) { return EINVAL; }
+  async command uint8_t IO.getResistor() { return MSP430_PORT_RESISTOR_INVALID; }
 }
