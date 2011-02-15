@@ -1,0 +1,222 @@
+The TinyOS PPP daemon defines a custom protocol which enables applications
+to use printf(3c) with the messages carried over PPP and displayed in the
+host computer logs.  This patch adds support for that protocol to the
+standard Linux PPP daemon.
+
+The patch has been developed against the latest PPP source head.  Retrieve
+the source with:
+
+git clone git://ozlabs.org/~paulus/ppp.git
+
+Apply the patch with:
+
+cd ppp
+patch -p1 < ${TOSDIR}/lib/ppp/tos-pppd.patch
+
+Configure and install the updated daemon for local use:
+
+./configure
+make DESTDIR=/usr/local/tos-pppd all install
+
+You can then use this version to see messages from the application:
+
+sudo TOS_PPPD=/usr/local/tos-pppd/sbin/pppd ${TOSDIR}/lib/ppp/tospppd
+
+diff --git a/pppd/Makefile.linux b/pppd/Makefile.linux
+index 060db6a..db82a9c 100644
+--- a/pppd/Makefile.linux
++++ b/pppd/Makefile.linux
+@@ -60,9 +60,12 @@ HAVE_MULTILINK=y
+ # Linux distributions: Please leave TDB ENABLED in your builds.
+ USE_TDB=y
+ 
++# Uncomment to enable the TinyOS printf protocol
++HAVE_TINYOS=y
++
+ HAS_SHADOW=y
+-#USE_PAM=y
+-#HAVE_INET6=y
++USE_PAM=y
++HAVE_INET6=y
+ 
+ # Enable plugins
+ PLUGIN=y
+@@ -189,6 +192,13 @@ ifdef CBCP
+      HEADERS += cbcp.h
+ endif
+ 
++ifdef HAVE_TINYOS
++     PPPDSRCS += tinyos.c
++     HEADERS  += tinyos.h
++     PPPDOBJS += tinyos.o
++     CFLAGS   += -DTINYOS=1
++endif
++
+ ifdef MAXOCTETS
+      CFLAGS += -DMAXOCTETS
+ endif
+diff --git a/pppd/main.c b/pppd/main.c
+index 014d614..56887bb 100644
+--- a/pppd/main.c
++++ b/pppd/main.c
+@@ -105,6 +105,9 @@
+ #include "ccp.h"
+ #include "ecp.h"
+ #include "pathnames.h"
++#ifdef TINYOS
++#include "tinyos.h"
++#endif
+ 
+ #ifdef USE_TDB
+ #include "tdb.h"
+@@ -295,6 +298,9 @@ struct protent *protocols[] = {
+     &atcp_protent,
+ #endif
+     &eap_protent,
++#ifdef TINYOS
++    &tinyos_protent,
++#endif
+     NULL
+ };
+ 
+diff --git a/pppd/oshan.sh b/pppd/oshan.sh
+new file mode 100755
+index 0000000..a99baa7
+--- /dev/null
++++ b/pppd/oshan.sh
+@@ -0,0 +1,10 @@
++#!/bin/sh
++./pppd \
++    debug \
++    passive \
++    noauth \
++    nodetach \
++    noccp \
++    ipv6 ::ff41:4442:e88:2,::ff41:4442:e88:3 \
++    noip \
++    /dev/ttyUSB0
+diff --git a/pppd/tinyos.c b/pppd/tinyos.c
+new file mode 100644
+index 0000000..688c542
+--- /dev/null
++++ b/pppd/tinyos.c
+@@ -0,0 +1,97 @@
++#include "pppd.h"
++#include "tinyos.h"
++
++/*
++ * Protocol entry points.
++ */
++static void tinyos_init __P((int unit));
++static void tinyos_input __P((int unit, u_char *inp, int inlen));
++static void tinyos_protrej __P((int unit));
++static void tinyos_lowerup __P((int unit));
++static void tinyos_lowerdown __P((int unit));
++static int  tinyos_printpkt __P((u_char *inp, int inlen,
++    void (*)(void *arg, char *fmt, ...), void *arg));
++
++static option_t tinyos_option_list[] = {
++  { NULL }
++};
++
++struct protent tinyos_protent = {
++        PPP_TINYOS,                /* protocol number */
++        tinyos_init,               /* initialization procedure */
++        tinyos_input,              /* process a received packet */
++        tinyos_protrej,            /* process a received protocol-reject */
++        tinyos_lowerup,            /* lower layer has gone up */
++        tinyos_lowerdown,          /* lower layer has gone down */
++        NULL,                   /* open the protocol */
++        NULL,                   /* close the protocol */
++        tinyos_printpkt,           /* print a packet in readable form */
++        NULL,                   /* process a received data packet */
++        1,                      /* protocol enabled */
++        "TOS",                  /* text name of protocol */
++        NULL,                   /* text name of corresponding data protocol */
++        tinyos_option_list,        /* list of command-line options */
++        NULL,                   /* check requested options; assign defaults */
++        NULL,                   /* configure interface for demand-dial */
++        NULL                    /* say whether to bring up link for this pkt */
++};
++
++
++static void
++tinyos_init (unit)
++int unit;
++{ }
++
++static void
++tinyos_input (unit, inp, inlen)
++int unit;
++u_char *inp;
++int inlen;
++{
++#if 0
++  u_char nb;
++  u_char sv;
++  nb = *inp++;
++  sv = inp[nb];
++  inp[nb] = 0;
++  printf("TINYOS: %s", inp);
++  putchar(sv);
++#endif
++}
++
++static void
++tinyos_protrej (unit)
++int unit;
++{
++}
++
++static void
++tinyos_lowerup (unit)
++int unit;
++{
++}
++
++static void
++tinyos_lowerdown (unit)
++int unit;
++{
++}
++
++static int
++tinyos_printpkt (inp, inlen, printer, arg)
++u_char *inp;
++int inlen;
++void (*printer) __P((void *, char *, ...));
++void *arg;
++{
++  u_char nb;
++  u_char sv;
++  nb = *inp++;
++  sv = inp[nb-1];
++  inp[nb-1] = 0;
++  printer(arg, " %s", inp);
++  if ('\n' != sv) {
++    printer(arg, "%c", sv);
++  }
++  return nb + 1;
++}
+diff --git a/pppd/tinyos.h b/pppd/tinyos.h
+new file mode 100644
+index 0000000..9e99050
+--- /dev/null
++++ b/pppd/tinyos.h
+@@ -0,0 +1,16 @@
++#ifndef PPP_TINYOS_H
++#define PPP_TINYOS_H
++
++#ifdef  __cplusplus
++extern "C" {
++#endif
++
++#define PPP_TINYOS 0x404f
++
++extern struct protent tinyos_protent;
++
++#ifdef  __cplusplus
++}
++#endif
++
++#endif /* PPP_TINYOS_H */

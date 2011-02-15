@@ -1,0 +1,6 @@
+# Control the flag that requests the remote to inhibit adress/control
+# compression.
+ifeq ($(INHIBIT_ACCOMP),)
+INHIBIT_ACCOMP=1
+endif
+PFLAGS += -DINHIBIT_ACCOMP=$(INHIBIT_ACCOMP)

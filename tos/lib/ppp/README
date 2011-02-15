@@ -1,0 +1,82 @@
+This directory contains an implementation of the Point-to-Point Protocol
+(RFC 1661) in TinyOS.  It is suitable for sharing the serial port among
+multiple packet-oriented communications paths.  The goal is a system that
+allows a TinyOS application that is connected to a PC using a serial port to
+talk directly to a vendor-supplied PPP daemon and provide the standard IPCP
+or IPV6CP protocols to forward network packets to a wireless sensor network
+without any need to install support software on the PC.
+
+The architecture permits protocols to be independently developed and wired
+in, in classic TinyOS fashion.  Similarly, protocol options may be included
+or excluded, and for LCP-style protocols that use messages with codes,
+lengths, and data fields the set of recognized codes is determined by
+wiring.
+
+In its current form, the PppDaemonC component will successfully negotiate an
+open connection with the Linux PPP daemon.  By linking in the PppIpv6C
+component, and connecting its PppIpv6 interface to a component that supports
+some sort of IPv6 API, you can communicate with TinyOS applications over
+IPv6.  The tests/Ipv6 example shows the basic configuration required.
+
+Currently there is no IPv4 (RFC1332) module.
+
+----------------------------------------
+
+The tosppd script can be used to start the PPP daemon with the required
+arguments.  Use:
+
+sudo ${TOSDIR}/lib/ppp/tospppd
+
+See the script for arguments that select serial device, baud rate, and other
+parameters.
+
+----------------------------------------
+
+The PppPrintfC component can be linked to an application to allow printf(3c)
+messages to be carried over the PPP link and displayed by the PPP daemon.
+See the instructions at the top of tos-pppd.patch.  Invoke it thusly:
+
+sudo TOS_PPPD=/usr/local/tos-pppd/sbin/pppd ${TOSDIR}/lib/ppp/tospppd
+
+The Ipv6 demonstration prints the length of received packets, and produces
+messages like:
+
+rcvd [IPV6CP ConfReq id=0x6 <addr fe80::fd41:4242:0e88:0003>]
+sent [IPV6CP ConfAck id=0x6 <addr fe80::fd41:4242:0e88:0003>]
+local  LL address fe80::fd41:4242:0e88:0002
+remote LL address fe80::fd41:4242:0e88:0003
+Script /etc/ppp/ipv6-up started (pid 11337)
+rcvd [TOS RX 48 octets]
+Script /etc/ppp/ipv6-up finished (pid 11337), status = 0x1
+rcvd [TOS RX 48 octets]
+rcvd [TOS RX 48 octets]
+rcvd [TOS RX 104 octets]
+rcvd [TOS RX 104 octets]
+rcvd [TOS RX 104 octets]
+
+========================================
+
+Many of the tests require use of the PPP4Py package, which provides
+Point-to-Point Protocol support for Python.  This package is not necessary
+for using the daemon, only for running the tests.  Get a copy at:
+
+  git://ppp4py.git.sourceforge.net/gitroot/ppp4py/ppp4py
+
+Remember to add it to your PYTHONPATH:
+
+PPP4PY_ROOT=${PPP4PY_ROOT:-/home/pab/ppp4py/dev}
+PYTHONPATH=${PPP4PY_ROOT}:${PYTHONPATH:+:${PYTHONPATH}}
+PATH="${PPP4PY_ROOT}/scripts:${PPP4PY_ROOT}/bin:${PATH}"
+export PPP4PY_ROOT PYTHONPATH PATH
+
+Most tests have a test.sh script that builds the application, installs it on
+the default board, and runs the ppp4py test program.  Trusted tests, in
+order of complexity, are:
+
+  HdlcFraming -- a unit test for HdlcFramingC
+  HdlcRead -- verifies the application correctly decodes HDLC frames
+  HdlcEcho -- verifies HDLC transmission of received frames
+  HdlcSpeed -- round-trip full(half) duplex performance tests
+  Lcp -- Basic Link-Control-Protocol negotiation
+  Ipv6 -- Basic IPV6CP on top of LCP
+

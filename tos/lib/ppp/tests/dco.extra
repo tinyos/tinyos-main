@@ -1,0 +1,19 @@
+ifeq ($(DCO),)
+DCO=8
+endif
+ifeq (2,$(DCO))
+SEL=2MHz_RSEL2
+endif
+ifeq (4,$(DCO))
+SEL=4MHz_RSEL3
+endif
+ifeq (8,$(DCO))
+SEL=8MHz_RSEL3
+endif
+ifeq (16,$(DCO))
+SEL=16MHz_RSEL4
+endif
+ifeq (32,$(DCO))
+SEL=32MHz_RSEL6
+endif
+PFLAGS += -DMSP430XV2_DCO_CONFIG=MSP430XV2_DCO_$(SEL)

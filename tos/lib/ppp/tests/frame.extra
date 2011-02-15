@@ -1,0 +1,4 @@
+ifeq ($(FRAME),)
+FRAME=32
+endif
+PFLAGS+=-DFRAME_SIZE=$(FRAME)

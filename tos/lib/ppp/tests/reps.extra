@@ -1,0 +1,4 @@
+ifeq ($(REPS),)
+REPS=10
+endif
+PFLAGS+=-DREPETITIONS=$(REPS)
