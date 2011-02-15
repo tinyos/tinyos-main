@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Usage: runtests [root [platform]]
+#
+# Search all directories in root (default: ${TOSROOT}/apps) that use
+# the OSIAN unittest framework.  For each such test, build it for
+# platform (default ${PLATFORM} or tmote), and run it.
+#
+# This version does not automatically detect pass/fail; the green LED
+# will be lit on pass and the red LED on failure, and the screen will
+# print "FAIL:*" repeatedly when something goes wrong or "All tests
+# passed" once if everything was good.  In either situation, you have
+# to type control-c to move to the next test.
+
+ROOT=${1:-${TOSROOT}/apps}
+PLATFORM=${2:-${PLATFORM:-tmote}}
+
+MOTEDEV=${MOTEDEV:-/dev/ttyUSB0}
+MOTEBAUD=${MOTEBAUD:-115200}
+
+fail () {
+  case=${1} ; shift
+  echo 1>&2 "FAILED BUILD ${case}:"
+  cat utbuild.log
+  exit 1
+}
+
+trap true INT
+
+echo "Looking for unit tests in ${ROOT}"
+
+find ${ROOT} -name Makefile \
+| while read FOUND_MAKEFILE ; do
+  mf_dir=$(dirname ${FOUND_MAKEFILE})
+  component=$(grep '^COMPONENT *=' ${FOUND_MAKEFILE} | cut -d= -f2 | sed -e 's@ @@g')
+  if [ -z "${component}" ] ; then
+    continue
+  fi
+  test_source=${mf_dir}/${component}.nc
+  if [ ! -f "${test_source}" ] ; then
+    continue
+  fi
+  if grep -q "unittest/config_impl.h" ${test_source} ; then : ; else
+    continue
+  fi
+  t=$(echo ${mf_dir} | sed -e "s@^${ROOT}/@@")
+  ( cd ${mf_dir}
+    echo "Building for ${t}"
+    make ${PLATFORM} install > utbuild.log 2>&1 || fail ${t}
+    echo "Running ${t} (^C when finished)"
+    trap true INT
+    stty ${MOTEBAUD} min 1 time 5 -icrnl -parenb cs8 < ${MOTEDEV}
+    cat ${MOTEDEV}
+  )
+done
