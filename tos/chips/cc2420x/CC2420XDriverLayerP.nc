@@ -141,15 +141,6 @@ implementation
 
 	uint16_t capturedTime;	// time when the last SFD interrupt has occured
 
-
-	enum
-	{
-		// TODO: this value needs to be calibrated
-		TX_SFD_DELAY = 0,
-		// TODO: this value needs to be calibrated
-		RX_SFD_DELAY = 0,
-	};
-
 	inline cc2420X_status_t getStatus();
 
 /*----------------- ALARM -----------------*/
@@ -709,7 +700,7 @@ implementation
 		
 		
 		// compute timesync
-		sfdTime = time + TX_SFD_DELAY;
+		sfdTime = time;
 		
 		// read both clocks
 		// TODO: how can atomic be removed???
@@ -721,6 +712,9 @@ implementation
 		// adjust time32 with the time elapsed since the SFD event
 		time -= sfdTime;
 		time32 -= time;
+
+		// adjust for delay between the STXON strobe and the transmission of the SFD
+		time32 += TX_SFD_DELAY;
 
                 call PacketTimeStamp.set(msg, time32);
                 
