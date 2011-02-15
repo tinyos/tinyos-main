@@ -1,0 +1,7 @@
+ifeq ($(USEPREC),)
+USEPREC=Milli
+endif
+ifeq ($(USEPREC),Second)
+PFLAGS += -DBASE_SHIFT=0
+endif
+PFLAGS += -DTPrec=T$(USEPREC) -DAlarmPrecC=Alarm$(USEPREC)32C -DMuxAlarmPrecC=MuxAlarm$(USEPREC)32C -DTimerPrecC=Timer$(USEPREC)C

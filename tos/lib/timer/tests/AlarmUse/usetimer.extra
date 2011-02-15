@@ -1,0 +1,4 @@
+ifeq ($(USETIMER),)
+USETIMER=1
+endif
+PFLAGS += -DUSE_TIMER=$(USETIMER)

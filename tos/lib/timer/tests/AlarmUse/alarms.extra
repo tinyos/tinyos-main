@@ -1,0 +1,4 @@
+ifeq ($(ALARMS),)
+ALARMS=4
+endif
+PFLAGS += -DALARM_COUNT=$(ALARMS)
