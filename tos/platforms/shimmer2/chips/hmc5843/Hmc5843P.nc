@@ -92,7 +92,7 @@ implementation {
     // power, active low
     TOSH_MAKE_PROG_OUT_OUTPUT();   
     TOSH_SEL_PROG_OUT_IOFUNC();
-    TOSH_SET_PROG_OUT_PIN();    // off
+    TOSH_CLR_PROG_OUT_PIN();    // on
 
     TOSH_uwait(5000); // 5 ms for mag
 
