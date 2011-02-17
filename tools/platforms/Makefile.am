@@ -1,4 +1,4 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = mica msp430 sam3u
+SUBDIRS = mica msp430 sam3
 
