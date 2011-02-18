@@ -139,7 +139,7 @@ void RttIrqHandler() __attribute__((weak, alias("DefaultHandler")));
 void WdtIrqHandler() __attribute__((weak, alias("DefaultHandler")));
 void PmcIrqHandler() __attribute__((weak, alias("DefaultHandler")));
 void EefcIrqHandler() __attribute__((weak, alias("DefaultHandler")));
-void Uart0IrqHandler() __attribute__((weak, alias("DefaultHandler")));
+void UartIrqHandler() __attribute__((weak, alias("DefaultHandler"))); // Note: we removed the 0!
 void Uart1IrqHandler() __attribute__((weak, alias("DefaultHandler")));
 void SmcIrqHandler() __attribute__((weak, alias("DefaultHandler")));
 void PioAIrqHandler() __attribute__((weak, alias("DefaultHandler")));
@@ -203,7 +203,7 @@ __attribute__((section(".vectors"))) unsigned int *__vectors[] = {
 	(unsigned int *) PmcIrqHandler,      // 5
 	(unsigned int *) EefcIrqHandler,     // 6
 	(unsigned int *) 0,                  // 7 Reserved
-	(unsigned int *) Uart0IrqHandler,    // 8
+	(unsigned int *) UartIrqHandler,     // 8 We remove the 0 as the Sam3u only has one UART
 	(unsigned int *) Uart1IrqHandler,    // 9
 	(unsigned int *) SmcIrqHandler,      // 10
 	(unsigned int *) PioAIrqHandler,     // 11
