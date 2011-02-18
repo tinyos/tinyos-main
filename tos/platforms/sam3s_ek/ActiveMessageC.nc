@@ -1,78 +1,81 @@
 /*
- * Copyright (c) 2004-2005 The Regents of the University  of California.  
- * Copyright (c) 2004-2005 Intel Corporation
+ * Copyright (c) 2010, Vanderbilt University
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * - Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the
- *   distribution.
- * - Neither the name of the copyright holders nor the names of its
- *   contributors may be used to endorse or promote products derived
- *   from this software without specific prior written permission.
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without written agreement is
+ * hereby granted, provided that the above copyright notice, the following
+ * two paragraphs and the author appear in all copies of this software.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
- * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
-/*
+ * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+ * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
+ * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors:		Philip Levis
+ * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE VANDERBILT UNIVERSITY HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
+ * Author: Janos Sallai
+ * Author: Thomas Schmid (adapted to CC2520)
  */
 
-/**
- *
- * The Active Message layer on the SAM3U-EK platform. This is a naming wrapper
- * around the CC2420 Active Message layer.
- *
- * @author Philip Levis
- * @author Thomas Schmid (adapted to SAM3U EK)
- */
-#include "Timer.h"
+#include <RadioConfig.h>
 
-configuration ActiveMessageC {
-  provides {
+configuration ActiveMessageC
+{
+  provides
+  {
     interface SplitControl;
 
-    interface AMSend[am_id_t id];
-    interface Receive[am_id_t id];
-    interface Receive as Snoop[am_id_t id];
+    interface AMSend[uint8_t id];
+    interface Receive[uint8_t id];
+    interface Receive as Snoop[uint8_t id];
+    interface SendNotifier[am_id_t id];
 
     interface Packet;
     interface AMPacket;
+
     interface PacketAcknowledgements;
-    interface PacketTimeStamp<T32khz, uint32_t> as PacketTimeStamp32khz;
+    interface LowPowerListening;
+#ifdef PACKET_LINK
+    interface PacketLink;
+#endif
+    interface RadioChannel;
+
+    interface PacketTimeStamp<TMicro, uint32_t> as PacketTimeStampMicro;
     interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
   }
 }
-implementation {
-  components CC2420ActiveMessageC as AM;
 
-  SplitControl = AM;
-  
-  AMSend       = AM;
-  Receive      = AM.Receive;
-  Snoop        = AM.Snoop;
-  Packet       = AM;
-  AMPacket     = AM;
-  PacketAcknowledgements = AM;
+implementation
+{
+  components CC2520ActiveMessageC as MessageC;
 
-  components CC2420PacketC;
-  PacketTimeStamp32khz = CC2420PacketC;
-  PacketTimeStampMilli = CC2420PacketC;
+  components RadioControlP, HplSam3TCC;
+
+  //SplitControl = MessageC;
+  SplitControl = RadioControlP;
+  RadioControlP.LowRadioControl -> MessageC;
+  RadioControlP.TC -> HplSam3TCC.TC0; // We use TIOA1 which is channel 1 on TC0
+
+  AMSend = MessageC;
+  Receive = MessageC.Receive;
+  Snoop = MessageC.Snoop;
+  SendNotifier = MessageC;
+
+  Packet = MessageC;
+  AMPacket = MessageC;
+
+  PacketAcknowledgements = MessageC;
+  LowPowerListening = MessageC;
+#ifdef PACKET_LINK
+  PacketLink = MessageC;
+#endif
+  RadioChannel = MessageC;
+
+  PacketTimeStampMilli = MessageC;
+  PacketTimeStampMicro = MessageC;
 }

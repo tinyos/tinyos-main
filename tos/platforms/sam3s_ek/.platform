@@ -34,10 +34,16 @@ push ( @includes,
   "%T/chips/cortex/m3/sam3/s/adc",
   "%T/chips/cortex/m3/sam3/s/dacc",
   "%T/chips/cortex/m3/sam3/s/pwm",
+  "%T/chips/cc2520",
+  "%T/chips/cc2520/layers",
+  "%T/chips/cc2520/util",
   "%T/platforms/sam3s_ek/lcd",
+  "%T/platforms/sam3s_ek/chips/cc2520",
   "%T/lib/timer",
   "%T/lib/serial",
   "%T/lib/power",
+  "%T/lib/rfxlink/layers",
+  "%T/lib/rfxlink/util",
 );
 
 @opts = qw(
