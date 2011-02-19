@@ -137,7 +137,7 @@ implementation
 	components LedsC, NoLedsC;
 	DriverLayerP.Leds -> NoLedsC;
 
-#ifdef RADIO_DEBUG
+#ifdef RADIO_LCD_DEBUG
   components LcdC;
   DriverLayerP.Draw -> LcdC;
 #endif
