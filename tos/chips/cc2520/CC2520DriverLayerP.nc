@@ -1321,6 +1321,12 @@ implementation{
       // stop reading RXFIFO
 
       //
+#ifdef RADIO_DEBUG_MESSAGES
+      if( call DiagMsg.record() ){
+        call DiagMsg.str("rx 0 length");
+        call DiagMsg.send();
+      }
+#endif
       if(!first_packet){
         atomic recover_err();
         atomic flushRxFifo();
@@ -1503,6 +1509,12 @@ implementation{
 
     if (call FIFOP.get() == 1 || call FIFO.get() == 1) {
 
+#ifdef RADIO_DEBUG_MESSAGES
+      if( call DiagMsg.record() ){
+        call DiagMsg.str("FIFO or FIFOP = 1");
+        call DiagMsg.send();
+      }
+#endif
       atomic recover_err();
       atomic flushRxFifo();
 
@@ -1544,10 +1556,10 @@ implementation{
 
     // signal only if it has passed the CRC check
     if( crc == 0){
-      //uint32_t time32;
-      //time32 = call LocalTime.get();
-      //atomic time32 += (int16_t)(sfdTime - RX_SFD_DELAY) - (int16_t)(time32);
-      //call PacketTimeStamp.set(rxMsg, time32);
+      uint32_t time32;
+      time32 = call LocalTime.get();
+      atomic time32 += (int16_t)(sfdTime - RX_SFD_DELAY) - (int16_t)(time32);
+      call PacketTimeStamp.set(rxMsg, time32);
 
 #ifdef RADIO_DEBUG_MESSAGES
       if( call DiagMsg.record() ){
@@ -1709,7 +1721,7 @@ implementation{
     radioIrq = TRUE;
     capturedTime = time;
 
-#ifdef RADIO_DEBUG_MESSAGES________
+#ifdef RADIO_DEBUG_MESSAGES
     if( call DiagMsg.record() ){
       call DiagMsg.str("SFD");
       call DiagMsg.uint16(call RadioAlarm.getNow());

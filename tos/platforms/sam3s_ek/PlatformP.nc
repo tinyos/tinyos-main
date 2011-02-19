@@ -59,8 +59,8 @@ implementation
 		 * (see TEP 107)
 		 */
 		call IRQInit.init();
-        call MoteClockInit.init();
-        call MoteTimerInit.init();
+    call MoteClockInit.init();
+    call MoteTimerInit.init();
 		call LedsInit.init();
 
 		return SUCCESS;

@@ -57,7 +57,10 @@ implementation
     command error_t Init.init()
     {
         uint32_t mck;
+        uint8_t clockSource;
 
+        call TC0.setMode(TC_CMR_CAPTURE);
+        call TC1.setMode(TC_CMR_CAPTURE);
         call TC2.setMode(TC_CMR_CAPTURE);
 
         // check the speed of the master clock
@@ -66,15 +69,19 @@ implementation
         mck = mck / 1000;
 
         if(mck >= 128)
-            call TC2.setClockSource(TC_CMR_CLK_TC4);
+          clockSource = TC_CMR_CLK_TC4;
         else if (mck >= 32)
-            call TC2.setClockSource(TC_CMR_CLK_TC3);
+          clockSource = TC_CMR_CLK_TC3;
         else if (mck >= 8)
-            call TC2.setClockSource(TC_CMR_CLK_TC2);
+          clockSource = TC_CMR_CLK_TC2;
         else if (mck >= 2)
-            call TC2.setClockSource(TC_CMR_CLK_TC1);
+          clockSource = TC_CMR_CLK_TC1;
         else
-            call TC2.setClockSource(TC_CMR_CLK_SLOW);
+          clockSource = TC_CMR_CLK_SLOW;
+
+        call TC0.setClockSource(clockSource);
+        call TC1.setClockSource(clockSource);
+        call TC2.setClockSource(clockSource);
 
         call TC2.enableEvents();
 

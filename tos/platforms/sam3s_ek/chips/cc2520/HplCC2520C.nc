@@ -95,9 +95,9 @@ implementation
 
   components HplSam3sGeneralIOC as IO;
 
-  CCA    = IO.PioA23;
+  CCA    = IO.PioA25; // need to remove R26 & R36!
   CSN    = IO.PioB2;
-  FIFO   = IO.PioA21;
+  FIFO   = IO.PioA24; // need to remove R27 & R37!
   FIFOP  = IO.PioA16;
   RSTN   = IO.PioA18;
   SFD    = IO.PioA15;
