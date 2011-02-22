@@ -115,7 +115,7 @@ implementation
     TC2CompareB = TCCH2.CompareB;
     TC2CompareC = TCCH2.CompareC;
 
-    components new HplSam3TCP();
+    components new HplSam3TCP(TC_BASE);
     Init = HplSam3TCP;
     HplSam3TCP.ClockConfig -> HplSam3uClockC;
     HplSam3TCP.TC0 -> TCCH0;

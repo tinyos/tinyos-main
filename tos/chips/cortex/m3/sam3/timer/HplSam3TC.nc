@@ -43,4 +43,9 @@ interface HplSam3TC{
   command void disableTC0();
   command void disableTC1();
   command void disableTC2();
+
+  /**
+   * Synchronizes (resets) all thre timer channels at the same time.
+   */
+  command void sync();
 }

@@ -38,7 +38,7 @@
 
 #include "sam3tchardware.h"
 
-generic module HplSam3TCP() @safe()
+generic module HplSam3TCP(uint32_t tc_base) @safe()
 {
     provides {
         interface Init;
@@ -54,6 +54,8 @@ generic module HplSam3TCP() @safe()
 }
 implementation
 {
+  volatile tc_t *TC_P = (volatile tc_t*)tc_base;
+
     command error_t Init.init()
     {
         uint32_t mck;
@@ -135,10 +137,16 @@ implementation
      call TC2.disableEvents();
   }
 
-    async event void ClockConfig.mainClockChanged() {};
-    async event void TC0.overflow() {};
-    async event void TC1.overflow() {};
-    async event void TC2.overflow() {};
+  command void TC.sync(){
+    tc_bcr_t bcr = TC_P->bcr;
+    bcr.bits.sync = 1;
+    TC_P->bcr = bcr;
+  }
+
+  async event void ClockConfig.mainClockChanged() {};
+  async event void TC0.overflow() {};
+  async event void TC1.overflow() {};
+  async event void TC2.overflow() {};
 }
 
 

@@ -173,8 +173,8 @@ implementation
     TC5CompareB = TCCH5.CompareB;
     TC5CompareC = TCCH5.CompareC;
 
-    components new HplSam3TCP() as HplTC0;
-    components new HplSam3TCP() as HplTC1;
+    components new HplSam3TCP(TC_BASE) as HplTC0;
+    components new HplSam3TCP(TC1_BASE) as HplTC1;
     Init = HplTC0;
     Init = HplTC1;
 
