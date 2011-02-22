@@ -33,16 +33,18 @@
  * Date last modified: 3/17/03
  * Ported to T2: 3/17/08 by Brano Kusy (branislav.kusy@gmail.com)
  * Adapted for 32kHz and LPL: 6/16/09 by Thomas Schmid (thomas.schmid@ucla.edu)
+ * Adapted for TRadio: 2/21/11 by Thomas Schmid
  */
 
 #include "TimeSyncMsg.h"
+#include "RadioConfig.h"
 
-configuration TimeSync32kC
+configuration TimeSyncTRadioC
 {
   uses interface Boot;
   provides interface Init;
   provides interface StdControl;
-  provides interface GlobalTime<T32khz>;
+  provides interface GlobalTime<TRadio>;
 
   //interfaces for extra functionality: need not to be wired
   provides interface TimeSyncInfo;
@@ -52,7 +54,7 @@ configuration TimeSync32kC
 
 implementation
 {
-  components new TimeSyncP(T32khz) as TimeSyncP;
+  components new TimeSyncP(TRadio) as TimeSyncP;
 
   GlobalTime      =   TimeSyncP;
   StdControl      =   TimeSyncP;
@@ -64,13 +66,13 @@ implementation
 
   components TimeSyncMessageC as ActiveMessageC;
   TimeSyncP.RadioControl    ->  ActiveMessageC;
-  TimeSyncP.Send            ->  ActiveMessageC.TimeSyncAMSend32khz[TIMESYNC_AM_FTSP];
+  TimeSyncP.Send            ->  ActiveMessageC.TimeSyncAMSendRadio[TIMESYNC_AM_FTSP];
   TimeSyncP.Receive         ->  ActiveMessageC.Receive[TIMESYNC_AM_FTSP];
   TimeSyncP.TimeSyncPacket  ->  ActiveMessageC;
 
-  components Counter32khz32C, new CounterToLocalTimeC(T32khz) as LocalTime32khzC;
-  LocalTime32khzC.Counter -> Counter32khz32C;
-  TimeSyncP.LocalTime     -> LocalTime32khzC;
+  components CounterRadio32C, new CounterToLocalTimeC(TRadio) as LocalTimeC;
+  LocalTimeC.Counter -> CounterRadio32C;
+  TimeSyncP.LocalTime     -> LocalTimeC;
 
   components new TimerMilliC() as TimerC;
   TimeSyncP.Timer ->  TimerC;
@@ -88,6 +90,5 @@ implementation
 #ifdef LOW_POWER_LISTENING
   TimeSyncP.LowPowerListening -> ActiveMessageC;
 #endif
-
 
 }
