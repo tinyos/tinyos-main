@@ -7,9 +7,9 @@ if CYGWIN
 else
 # Linux support
 
-bin_SCRIPTS = sam3u-samba-program.py
+bin_SCRIPTS = samba-program.py
 
-sam3u:
+sam3:
 	
 
 

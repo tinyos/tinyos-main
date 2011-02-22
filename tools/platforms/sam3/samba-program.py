@@ -78,6 +78,7 @@ class samba:
         """%(cmdOptions.binfile,cmdOptions.start_addr))
             if cmdOptions.check:
                 # verify flash
+                print "Verify image"
                 self.f.write('compare_file {Flash} "%s" %s 0\n'%(cmdOptions.binfile,cmdOptions.start_addr))
             if cmdOptions.run:
                 # automatically run the code after writing
@@ -95,6 +96,7 @@ class samba:
         """%(flash_id,flash_id,cmdOptions.binfile,cmdOptions.start_addr))
             if cmdOptions.check:
                 # verify flash
+                print "Verify image"
                 self.f.write('compare_file {Flash %d} "%s" %s 0\n'%(flash_id, cmdOptions.binfile,cmdOptions.start_addr))
             if cmdOptions.run:
                 # automatically run the code after writing
@@ -115,7 +117,7 @@ class samba:
                 matches = r.findall(lsusb_proc.stdout.readline())
                 if len(matches) == 0:
                     print """\n Couldn't find SAM-BA bootloader device on the USB bus.
-     Please close JP1 on the development kit and reboot the system (hit NRSTB button)!\n"""
+     Please close the ERASE jumper on the development kit and reboot the system (hit NRSTB button)!\n"""
                     time.sleep(2)
                 else:
                     foundBootloader = True
@@ -123,7 +125,7 @@ class samba:
             print "Programmer Found!"
 
             print "Programming..."
-            #print "Remove JP1 and hit [Enter]"
+            #print "Remove ERASE and hit [Enter]"
             #a = raw_input()
 
             samba_cmd = "DISPLAY=:0 sam-ba %s %s %s"%(cmdOptions.port, cmdOptions.target,
