@@ -47,7 +47,7 @@
 #include <sys/types.h>
 
 #ifndef PLATFORM_BAUDRATE
-#define PLATFORM_BAUDRATE (9600)
+#define PLATFORM_BAUDRATE (57600)
 #endif
 
 #define IRQ_PRIO_UDPHS    (0x81)

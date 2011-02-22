@@ -1,4 +1,5 @@
 #-*-Makefile-*- vim:syntax=make
 
 OPTFLAGS = -g -fnesc-no-inline
+CFLAGS += -DDEBUG_CORE
 
