@@ -30,34 +30,45 @@
  */
 
 /**
- * Implementation of the user button for the telosb platform. Get
- * returns the current state of the button by reading the pin,
- * regardless of whether enable() or disable() has been called on the
- * Interface. Notify.enable() and Notify.disable() modify the
- * underlying interrupt state of the pin, and have the effect of
- * enabling or disabling notifications that the button has changed
- * state.
+ * Implementation of the user button for the telosb platform
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.2 $
- * port to shimmer2 tilt switch
+ * @version $Revision: 1.1 $
+ * port to shimmer-style
  * @author Steve Ayer
  * @date   February, 2010
  */
 
-configuration TiltDetectorC {
+#include <UserButton.h>
+
+module TiltDetectorP {
   provides interface Notify<button_state_t>;
+
+  uses interface Notify<bool> as NotifyLower;
+  uses interface Timer<TMilli> as debounceTimer;
 }
 implementation {
-  components HplTiltDetectorC;
-  components new SwitchToggleC();
-  SwitchToggleC.GpioInterrupt -> HplTiltDetectorC.GpioInterrupt;
-  SwitchToggleC.GeneralIO -> HplTiltDetectorC.GeneralIO;
+  command error_t Notify.enable() {
+    return call NotifyLower.enable();
+  }
 
-  components TiltDetectorP;
-  Notify = TiltDetectorP;
+  command error_t Notify.disable() {
+    return call NotifyLower.disable();
+  }
 
-  components new TimerMilliC() as debounceTimer;
-  TiltDetectorP.NotifyLower -> SwitchToggleC.Notify;
-  TiltDetectorP.debounceTimer -> debounceTimer;
+  event void debounceTimer.fired() {
+    call Notify.enable();    // re-enable interrupt
+    signal Notify.notify( BUTTON_PRESSED );
+  }
+
+  task void debounce() {
+    call debounceTimer.startOneShot(250);
+  }
+
+  event void NotifyLower.notify( bool val ) {
+    // we've only enabled interrupt from rising edge
+    post debounce();
+  }
+  
+  default event void Notify.notify( button_state_t val ) { }
 }

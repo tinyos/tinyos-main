@@ -39,7 +39,7 @@
  * state.
  *
  * @author Gilman Tolle <gtolle@archrock.com>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * port to shimmer-style
  * @author Steve Ayer
  * @date   February, 2010
@@ -56,10 +56,10 @@ implementation {
   SwitchToggleC.GpioInterrupt -> HplGyroButtonC.GpioInterrupt;
   SwitchToggleC.GeneralIO -> HplGyroButtonC.GeneralIO;
 
-  components UserButtonP;
-  Notify = UserButtonP;
+  components GyroButtonP;
+  Notify = GyroButtonP;
 
   components new TimerMilliC() as debounceTimer;
-  UserButtonP.NotifyLower -> SwitchToggleC.Notify;
-  UserButtonP.debounceTimer -> debounceTimer;
+  GyroButtonP.NotifyLower -> SwitchToggleC.Notify;
+  GyroButtonP.debounceTimer -> debounceTimer;
 }
