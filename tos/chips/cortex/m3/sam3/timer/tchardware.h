@@ -189,7 +189,7 @@ typedef union
         uint32_t burst     : 2; // burst signal selection
         uint32_t ldbstop   : 1; // counter clock stopped with rb loading
         uint32_t ldbdis    : 1; // counter clock disable with rb loading
-        uint32_t etrgedg   : 1; // external trigger edge selection
+        uint32_t etrgedg   : 2; // external trigger edge selection
         uint32_t abetrg    : 1; // tioa or tiob external trigger selection
         uint32_t reserved0 : 3;
         uint32_t cpctrg    : 1; // rc compare trigger enable
