@@ -80,11 +80,7 @@ implementation
 	TimeSyncMessageLayerC.PacketTimeStampRadio -> ActiveMessageC;
 	TimeSyncMessageLayerC.PacketTimeStampMilli -> ActiveMessageC;
 
-#ifdef RF230_HARDWARE_ACK
-	components CC2520DriverHwAckC as DriverLayerC;
-#else
 	components CC2520DriverLayerC as DriverLayerC;
-#endif
 	TimeSyncMessageLayerC.LocalTimeRadio -> DriverLayerC;
 	TimeSyncMessageLayerC.PacketTimeSyncOffset -> DriverLayerC.PacketTimeSyncOffset;
 }

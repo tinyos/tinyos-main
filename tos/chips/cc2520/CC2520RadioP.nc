@@ -4,7 +4,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:  
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -263,19 +263,31 @@ implementation
 
 #ifndef LOW_POWER_LISTENING
 
+#ifndef CC2520_BACKOFF_MIN
+#define CC2520_BACKOFF_MIN 320
+#endif
+
 	async command uint16_t RandomCollisionConfig.getMinimumBackoff()
 	{
-		return (uint16_t)(320 * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(CC2520_BACKOFF_MIN * RADIO_ALARM_MICROSEC);
 	}
+
+#ifndef CC2520_BACKOFF_INIT
+#define CC2520_BACKOFF_INIT 4960		// instead of 9920
+#endif
 
 	async command uint16_t RandomCollisionConfig.getInitialBackoff(message_t* msg)
 	{
-		return (uint16_t)(9920 * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(CC2520_BACKOFF_INIT * RADIO_ALARM_MICROSEC);
 	}
+
+#ifndef CC2520_BACKOFF_CONG
+#define CC2520_BACKOFF_CONG 2240
+#endif
 
 	async command uint16_t RandomCollisionConfig.getCongestionBackoff(message_t* msg)
 	{
-		return (uint16_t)(2240 * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(CC2520_BACKOFF_CONG * RADIO_ALARM_MICROSEC);
 	}
 
 #endif
