@@ -58,7 +58,7 @@ module CC2520DriverLayerP
     interface PacketField<uint8_t> as PacketRSSI;
     interface PacketField<uint8_t> as PacketTimeSyncOffset;
     interface PacketField<uint8_t> as PacketLinkQuality;
-    interface PacketField<uint8_t> as AckReceived;
+    //interface PacketField<uint8_t> as AckReceived;
     interface PacketAcknowledgements;
   }
 
@@ -84,7 +84,7 @@ module CC2520DriverLayerP
     interface PacketFlag as TransmitPowerFlag;
     interface PacketFlag as RSSIFlag;
     interface PacketFlag as TimeSyncFlag;
-    interface PacketFlag as AckFlag;
+    interface PacketFlag as AckReceivedFlag;
 
     interface PacketTimeStamp<TRadio, uint32_t>;
 
@@ -191,7 +191,7 @@ implementation{
   //#endif
   message_t rxMsgBuffer;
 
-  uint16_t capturedTime;  // the current time when the last interrupt has occured
+  uint32_t capturedTime;  // the current time when the last interrupt has occured
 
   tasklet_norace uint8_t rssiClear;
   tasklet_norace uint8_t rssiBusy;
@@ -655,6 +655,8 @@ implementation{
     call FifoInterrupt.enableRisingEdge();
 
     call SfdCapture.disable();
+    // rising edge just saves timestamp.
+    call SfdCapture.captureRisingEdge();
 
     // CSN is active low
     call CSN.set();
@@ -1097,16 +1099,25 @@ implementation{
     atomic writeTxFifo(data, header);
 
     atomic {
+      //call SfdCapture.captureRisingEdge();
       strobe(CC2520_CMD_STXON);
-      time = call RadioAlarm.getNow();
-      call SfdCapture.captureFallingEdge();
       state = STATE_TX_ON;
+      //*((volatile uint32_t * )0x40010054) |= (1 << 16);
     }
 
     //#ifdef RADIO_DEBUG_MESSAGES
     txMsg = msg;
     //#endif
 
+    // wait for SFD to rise
+    atomic {
+      while(call SFD.get() == 0){}
+      time = call RadioAlarm.getNow();
+    }
+
+    // prepare for end of TX on falling SFD
+    call SfdCapture.captureFallingEdge();
+    
     // do something useful, just to wait a little (12 symbol periods)
     time32 = call LocalTime.get();
     timesync = call PacketTimeSyncOffset.isSet(msg) ? ((void*)msg) + call PacketTimeSyncOffset.get(msg) : 0;
@@ -1138,13 +1149,23 @@ implementation{
 
 #ifdef RADIO_DEBUG_MESSAGES
     if( call DiagMsg.record() ){
+      uint16_t t = call RadioAlarm.getNow();
       length = getHeader(msg)->length;
 
       call DiagMsg.chr('t');
+      call DiagMsg.uint16(time);
+      call DiagMsg.uint16(t);
+      call DiagMsg.uint16(t-time);
       call DiagMsg.uint32(call PacketTimeStamp.isValid(msg) ? call PacketTimeStamp.timestamp(msg) : 0);
-      call DiagMsg.uint16(call RadioAlarm.getNow());
       call DiagMsg.int8(length);
       call DiagMsg.hex8s(getPayload(msg), length - 2);
+      if(length - 2 > 15) {
+        call DiagMsg.hex8s(&(((uint8_t *)getPayload(msg))[15]), length - 2 - 15);
+      }
+      if(ieee154header->fcf & (1 << IEEE154_FCF_ACK_REQ)){
+        call DiagMsg.str("w/ ack");
+      }
+
       call DiagMsg.send();
     }
 #endif
@@ -1193,7 +1214,7 @@ implementation{
     RADIO_ASSERT(0);
     resetRadio();
 
-    call SfdCapture.disable();
+    //call SfdCapture.disable();
 
     RADIO_ASSERT(state == STATE_PD);
 
@@ -1280,7 +1301,7 @@ implementation{
     uint8_t* data;
     uint8_t rssi;
     uint8_t crc_ok_lqi;
-    uint16_t sfdTime, decLimit;
+    uint32_t sfdTime, decLimit;
     cc2520_status_t status;
     security_header_t* secHdr;
     ieee154_header_t* ieee154header;
@@ -1299,12 +1320,12 @@ implementation{
     // read the length byte
     readLengthFromRxFifo(&length);
 
-#ifdef RADIO_DEBUG_MESSAGES
+#ifdef RADIO_DEBUG_MESSAGES_____
     if( call DiagMsg.record() ){
       call DiagMsg.str("rx");
-      call DiagMsg.uint16(call RadioAlarm.getNow() - (uint16_t)call PacketTimeStamp.timestamp(rxMsg) );
+      call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
+      call DiagMsg.uint16(sfdTime);
       call DiagMsg.uint16(call RadioAlarm.getNow());
-      call DiagMsg.uint16(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
       call DiagMsg.int8(length);
       call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
       call DiagMsg.send();
@@ -1556,19 +1577,22 @@ implementation{
 
     // signal only if it has passed the CRC check
     if( crc == 0){
-      uint32_t time32;
-      time32 = call LocalTime.get();
-      atomic time32 += (int16_t)(sfdTime - RX_SFD_DELAY) - (int16_t)(time32);
-      call PacketTimeStamp.set(rxMsg, time32);
+      call PacketTimeStamp.set(rxMsg, sfdTime);
 
 #ifdef RADIO_DEBUG_MESSAGES
       if( call DiagMsg.record() ){
-        call DiagMsg.str("r");
-        call DiagMsg.uint16(call RadioAlarm.getNow() - (uint16_t)call PacketTimeStamp.timestamp(rxMsg) );
-        call DiagMsg.uint16(call RadioAlarm.getNow());
-        call DiagMsg.uint16(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
+        uint16_t t = call RadioAlarm.getNow();
+        call DiagMsg.chr('r');
+        //call DiagMsg.uint16(call RadioAlarm.getNow() - (uint16_t)call PacketTimeStamp.timestamp(rxMsg) );
+        call DiagMsg.uint16(sfdTime);
+        call DiagMsg.uint16(t);
+        call DiagMsg.uint16(t-sfdTime);
+        call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
         call DiagMsg.int8(length);
         call DiagMsg.hex8s(getPayload(rxMsg), length);
+        if(length > 15) {
+          call DiagMsg.hex8s(&(((uint8_t*)getPayload(rxMsg))[15]), length - 15);
+        }
         call DiagMsg.send();
       }
 #endif
@@ -1652,7 +1676,9 @@ implementation{
           call Leds.led0Toggle();
           atomic waitAck = FALSE; // jk: maybe move this to top?
           // mark packet as acked
-          call AckFlag.setValue(txMsg, TRUE); // This is first to be tested
+#ifdef CC2520_HARDWARE_ACK
+          call AckReceivedFlag.setValue(txMsg, TRUE); // This is first to be tested
+#endif
         }
       }
 
@@ -1694,7 +1720,7 @@ implementation{
 
   /*----------------- IRQ -----------------*/
 
-  // RX SFD (rising edge), disabled for TX
+  // SFD (rising edge) for timestamps in RX & TX, falling for TX end
   async event void SfdCapture.captured( uint16_t time )  {
 
     /*
@@ -1710,7 +1736,7 @@ implementation{
 
 */
 
-    call SfdCapture.disable(); 
+    //call SfdCapture.disable(); 
     // if canceling the above takes care of the stopping issue, then
     //the state machine is getting stck at some point inthe disable
     //state
@@ -1718,12 +1744,10 @@ implementation{
     RADIO_ASSERT( ! radioIrq );
     RADIO_ASSERT( state == STATE_RX_ON || state == STATE_TX_ON || state == STATE_BUSY_TX_2_RX_ON );
 
-    radioIrq = TRUE;
-    capturedTime = time;
-
 #ifdef RADIO_DEBUG_MESSAGES
     if( call DiagMsg.record() ){
       call DiagMsg.str("SFD");
+      call DiagMsg.uint16(time);
       call DiagMsg.uint16(call RadioAlarm.getNow());
       call DiagMsg.str("s=");
       call DiagMsg.uint8(state);
@@ -1737,8 +1761,18 @@ implementation{
       call DiagMsg.send();
     }
 #endif
-    // do the rest of the processing
-    call Tasklet.schedule();
+
+    if(call SFD.get())
+    {
+      atomic {
+        // rising edge, safe time and mutex to 0
+        capturedTime = call LocalTime.get();
+        capturedTime += (int16_t)(time - RX_SFD_DELAY) - (int16_t)(capturedTime);
+      }
+    } else {
+      radioIrq = TRUE;
+      call Tasklet.schedule();
+    }
   }
 
   async event void FifoInterrupt.fired(){
@@ -1770,6 +1804,12 @@ implementation{
         call Leds.led2Toggle();
         if(!waitAck){
           atomic waitAck = FALSE;
+#ifdef RADIO_DEBUG_MESSAGES
+          if( call DiagMsg.record() ){
+            call DiagMsg.str("RadioSend.sendDone");
+            call DiagMsg.send();
+          }
+#endif
           signal RadioSend.sendDone(SUCCESS);
         }else{
           call AckWaitTimer.stop();
@@ -1968,7 +2008,7 @@ async command void PacketLinkQuality.set(message_t* msg, uint8_t value)
 }
 
 /**/
-
+/*
 async command bool AckReceived.isSet(message_t* msg)
 {
   return TRUE;
@@ -1987,6 +2027,7 @@ async command void AckReceived.set(message_t* msg, uint8_t value)
 {
   getMeta(msg)->ack = value;
 }
+*/
 
 /*****************/
 
@@ -2013,7 +2054,12 @@ async command error_t PacketAcknowledgements.noAck(message_t* msg)
 
 async command bool PacketAcknowledgements.wasAcked(message_t* msg)
 {
-  return call AckFlag.get(msg);
+#ifdef CC2520_HARDWARE_ACK
+  return call AckReceivedFlag.get(msg);
+#else
+  RADIO_ASSERT(1);
+  return FALSE;
+#endif
 }
 
 

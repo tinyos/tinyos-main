@@ -52,9 +52,11 @@ configuration CC2520DriverLayerC
 		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 		interface PacketField<uint8_t> as PacketLinkQuality;
-		interface PacketField<uint8_t> as AckReceived;
+    //interface PacketField<uint8_t> as AckReceived;
 
 		interface LocalTime<TRadio> as LocalTimeRadio;
+    interface Alarm<TRadio, tradio_size>;
+
 		interface PacketAcknowledgements;
 	}
 
@@ -62,6 +64,12 @@ configuration CC2520DriverLayerC
 	{
 		interface CC2520DriverConfig as Config;
 		interface PacketTimeStamp<TRadio, uint32_t>;
+
+    interface PacketFlag as TransmitPowerFlag;
+    interface PacketFlag as RSSIFlag;    
+    interface PacketFlag as TimeSyncFlag; 
+    interface PacketFlag as AckReceivedFlag;
+    interface RadioAlarm;     
 	}
 }
 
@@ -71,7 +79,6 @@ implementation
 		BusyWaitMicroC,
 		TaskletC,
 		MainC,
-		CC2520RadioAlarmC as RadioAlarmC,
 		HplCC2520C as HplC;
 
 	MainC.SoftwareInit -> DriverLayerP.SoftwareInit;
@@ -95,27 +102,27 @@ implementation
 	DriverLayerP.SFD -> HplC.SFD;
 
 	PacketTransmitPower = DriverLayerP.PacketTransmitPower;
-	components new CC2520MetadataFlagC() as TransmitPowerFlagC;
-	DriverLayerP.TransmitPowerFlag -> TransmitPowerFlagC;
+	DriverLayerP.TransmitPowerFlag = TransmitPowerFlag;
 
 	PacketRSSI = DriverLayerP.PacketRSSI;
-	components new CC2520MetadataFlagC() as RSSIFlagC;
-	DriverLayerP.RSSIFlag -> RSSIFlagC;
+	DriverLayerP.RSSIFlag = RSSIFlag;
 
 	PacketTimeSyncOffset = DriverLayerP.PacketTimeSyncOffset;
-	components new CC2520MetadataFlagC() as TimeSyncFlagC;
-	DriverLayerP.TimeSyncFlag -> TimeSyncFlagC;
+	DriverLayerP.TimeSyncFlag = TimeSyncFlag;
 
+  /*
   AckReceived = DriverLayerP.AckReceived;
   components new CC2520MetadataFlagC() as AckFlagC;
   DriverLayerP.AckFlag -> AckFlagC;
+*/
 
+  AckReceivedFlag = DriverLayerP.AckReceivedFlag;
 
 	PacketLinkQuality = DriverLayerP.PacketLinkQuality;
 	PacketTimeStamp = DriverLayerP.PacketTimeStamp;
 
-	DriverLayerP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique("RadioAlarm")];
-	RadioAlarmC.Alarm -> HplC.Alarm;
+	RadioAlarm = DriverLayerP.RadioAlarm;
+	Alarm = HplC.Alarm;
 
 	DriverLayerP.SpiResource -> HplC.SpiResource;
 	DriverLayerP.SpiByte -> HplC;
