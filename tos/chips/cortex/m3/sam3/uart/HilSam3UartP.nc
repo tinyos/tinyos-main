@@ -70,13 +70,6 @@ implementation
 	uint16_t transmitBufferLength; // length of the current transmit buffer
 	uint16_t transmitBufferPosition; // position of the next character to transmit from the buffer
 
-  uint8_t status;
-
-  enum {
-    STOP,
-    START,
-  };
-
 	void setClockDivisor()
 	{
 		uint32_t mck;
@@ -96,8 +89,6 @@ implementation
 
 	command error_t Init.init()
 	{
-    status = STOP;
-
 		// turn off all UART IRQs
 		call HplSam3UartInterrupts.disableAllUartIrqs();
 
@@ -143,8 +134,6 @@ implementation
 		// enable receive IRQ
 		call HplSam3UartInterrupts.enableRxrdyIrq();
 
-    atomic status = START;
-
 		return SUCCESS;
 	}
 
@@ -156,8 +145,6 @@ implementation
 
 		// disable peripheral clock
 		call UartClockControl.disable();
-
-    atomic status = STOP;
 
 		return SUCCESS;
 	}
@@ -231,22 +218,6 @@ implementation
 				transmitBufferLength = length;
 				transmitBuffer = buffer;
 				transmitBufferPosition = 0;
-
-        // check if we are actually running. If not, turn on
-        if(status == STOP)
-          atomic {
-            // enable peripheral clock
-            call UartClockControl.enable();
-
-            // enable receiver and transmitter
-            call HplSam3UartControl.enableReceiver();
-            call HplSam3UartControl.enableTransmitter();
-
-            // enable receive IRQ
-            call HplSam3UartInterrupts.enableRxrdyIrq();
-
-            status = START;
-          }
 
 				// enable ready-to-transmit IRQ
 				call HplSam3UartInterrupts.enableTxrdyIrq();
