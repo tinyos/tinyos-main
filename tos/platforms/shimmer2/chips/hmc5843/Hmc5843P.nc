@@ -275,7 +275,7 @@ implementation {
     return SUCCESS;
   }
   
-  uint16_t mag_to_heading(uint16_t x, uint16_t y, uint16_t z)
+  uint16_t mag_to_heading(int16_t x, int16_t y, int16_t z)
   {
     uint16_t heading;
 
@@ -286,10 +286,10 @@ implementation {
 	heading = 90;
     }
     else if(z < 0)
-      heading = (uint16_t)(180.0 - atanf((float)y/(float)-x));
+      heading = (uint16_t)(180.0 - atanf((float)y/(float)-x) * 57.3);
 
     else
-      heading = (uint16_t)(180.0 - atanf((float)y/(float)x));
+      heading = (uint16_t)(180.0 - atanf((float)y/(float)x) * 57.3);
     
     return heading;
   }
