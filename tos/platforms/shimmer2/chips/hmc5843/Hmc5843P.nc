@@ -286,10 +286,10 @@ implementation {
 	heading = 90;
     }
     else if(z < 0)
-      heading = (uint16_t)(180.0 - atanf((float)y/(float)-x) * 57.3);
+      heading = (uint16_t)(180.0 - atan2f((float)y, (float)-x) * 57.3);
 
     else
-      heading = (uint16_t)(180.0 - atanf((float)y/(float)x) * 57.3);
+      heading = (uint16_t)(180.0 - atan2f((float)y, (float)x) * 57.3);
     
     return heading;
   }
