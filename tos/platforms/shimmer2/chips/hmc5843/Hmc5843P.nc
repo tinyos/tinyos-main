@@ -182,20 +182,16 @@ implementation {
   command void Magnetometer.selfTest(){
     switch(testPhase++){
     case 0:
-      call testTimer.startPeriodic(5);
-      //      call Leds.led1On();
+      call testTimer.startPeriodic(8);
       writeRegValue(0, 0x11);
       break;
     case 1:
-      //      call Leds.led1Off();
       writeRegValue(2, 0x01);
       break;
     case 2:
-      //      call Leds.led1On();
       call Magnetometer.readData();
       break;
     case 3:
-      //      call Leds.led1Off();
       writeRegValue(0, 0x10);
       break;
     default:
