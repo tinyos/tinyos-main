@@ -202,9 +202,17 @@ implementation{
   norace bool waitAck = FALSE;
   norace uint8_t waitAckSeq = 0;
 
+  // used to continue tx after sfd
+  norace uint8_t* txData;
+  norace uint8_t header;
+  norace uint8_t prevdata9, prevdata10;
+  norace uint8_t secMode;
+  norace uint8_t txLength;
+  norace ieee154_header_t* txIeee154header;
+
   enum{ // FIXME: need to check these for CC2520
     TX_SFD_DELAY = (uint16_t)(0 * RADIO_ALARM_MICROSEC),
-    RX_SFD_DELAY = (uint16_t)(0 * RADIO_ALARM_MICROSEC),
+    RX_SFD_DELAY = (uint16_t)(7 * RADIO_ALARM_MICROSEC/2),
   };
 
 
@@ -943,16 +951,15 @@ implementation{
   /*----------------- TRANSMIT -----------------*/
 
   tasklet_async command error_t RadioSend.send(message_t* msg){
-    uint16_t time;
     uint8_t p;
-    uint8_t length, micLength = 0, secMode = 0, prevdata9 = 0, prevdata10 = 0;
-    uint8_t* data;
-    uint8_t header;
-    uint32_t time32, frameCounter;
-    void* timesync;
+    uint8_t micLength = 0;
+    uint32_t frameCounter;
     cc2520_status_t status;
     security_header_t* secHdr;
-    ieee154_header_t* ieee154header;
+
+    secMode = 0;
+    prevdata9 = 0;
+    prevdata10 = 0;
 
     if( cmd != CMD_NONE || (state != STATE_IDLE && state != STATE_RX_ON) || ! isSpiAcquired() || radioIrq )
       return EBUSY;
@@ -975,8 +982,6 @@ implementation{
       tmp1 = call Config.requiresRssiCca(msg);
       tmp2 = call CCA.get();
       if( call DiagMsg.record() ){
-        length = getHeader(msg)->length;
-
         call DiagMsg.str("cca");
         call DiagMsg.int8(tmp1);
         call DiagMsg.int8(tmp2);
@@ -1002,20 +1007,20 @@ implementation{
 
     RADIO_ASSERT( ! radioIrq );
 
-    data = getPayload(msg);
-    length = getHeader(msg)->length;
+    txData = getPayload(msg);
+    txLength = getHeader(msg)->length;
 
     secMode = call CC2520Security.getSecurityMode();
-    ieee154header = (ieee154_header_t*)data;
+    txIeee154header = (ieee154_header_t*)txData;
 
     if(secMode > 0){
 
-      // Note that the payload starts at data[9] when 16 bit addressing is used
+      // Note that the payload starts at txData[9] when 16 bit addressing is used
       frameCounter = call CC2520Security.getFrameCounter();
       frameCounter = 0;
       memcpy(&encNonce[3], &frameCounter, 4);
 
-      writeMemory(ADDR_DATA, &data[11], 2);
+      writeMemory(ADDR_DATA, &txData[11], 2);
 
       //JK: Set security related parameters
       writeMemory(ADDR_KEY, call CC2520Security.getKey(), 16);
@@ -1032,42 +1037,42 @@ implementation{
 
       if(secMode == CTR_MODE){
         micLength = 0;
-        CTR(HIGH_PRIORITY, ADDR_KEY/16, length - 11 - 2, ADDR_NONCE/16, ADDR_DATA, 0); //11 for data and 2 for fcs
+        CTR(HIGH_PRIORITY, ADDR_KEY/16, txLength - 11 - 2, ADDR_NONCE/16, ADDR_DATA, 0); //11 for txData and 2 for fcs
       }else if(secMode == CBC_MAC_4){
         micLength = 4;
-        CBCMAC(HIGH_PRIORITY, ADDR_KEY/16, length - 11 - 2, ADDR_DATA, 0, 1);
+        CBCMAC(HIGH_PRIORITY, ADDR_KEY/16, txLength - 11 - 2, ADDR_DATA, 0, 1);
       }else if(secMode == CBC_MAC_8){
         micLength = 8;
-        CBCMAC(HIGH_PRIORITY, ADDR_KEY/16, length - 11 - 2, ADDR_DATA, 0, 2);
+        CBCMAC(HIGH_PRIORITY, ADDR_KEY/16, txLength - 11 - 2, ADDR_DATA, 0, 2);
       }else if(secMode == CBC_MAC_16){
         micLength = 16;
-        CBCMAC(HIGH_PRIORITY, ADDR_KEY/16, length - 11 - 2, ADDR_DATA, 0, 3);
+        CBCMAC(HIGH_PRIORITY, ADDR_KEY/16, txLength - 11 - 2, ADDR_DATA, 0, 3);
       }else if(secMode == CCM_4){
         micLength = 4;
-        CCM(HIGH_PRIORITY, ADDR_KEY/16, length - 11 - 2, ADDR_NONCE/16, ADDR_DATA, 0, length - 11 - 2, 1);
+        CCM(HIGH_PRIORITY, ADDR_KEY/16, txLength - 11 - 2, ADDR_NONCE/16, ADDR_DATA, 0, txLength - 11 - 2, 1);
       }else if(secMode == CCM_8){
         micLength = 8;
-        CCM(HIGH_PRIORITY, ADDR_KEY/16, length - 11 - 2, ADDR_NONCE/16, ADDR_DATA, 0, length - 11 - 2, 2);
+        CCM(HIGH_PRIORITY, ADDR_KEY/16, txLength - 11 - 2, ADDR_NONCE/16, ADDR_DATA, 0, txLength - 11 - 2, 2);
       }else if(secMode == CCM_16){
         micLength = 16;
-        CCM(HIGH_PRIORITY, ADDR_KEY/16, length - 11 - 2, ADDR_NONCE/16, ADDR_DATA, 0, length - 11 - 2, 3);
+        CCM(HIGH_PRIORITY, ADDR_KEY/16, txLength - 11 - 2, ADDR_NONCE/16, ADDR_DATA, 0, txLength - 11 - 2, 3);
       }
 
       status = getStatus();
       while(status.dpu_h_active)
         status = getStatus();
 
-      readMemory(ADDR_DATA, &data[11+sizeof(security_header_t)], 2 + micLength);
+      readMemory(ADDR_DATA, &txData[11+sizeof(security_header_t)], 2 + micLength);
 
       security_processing = FALSE;
 
-      data[9+sizeof(security_header_t)] = data[9];
-      data[10+sizeof(security_header_t)] = data[10];
+      txData[9+sizeof(security_header_t)] = txData[9];
+      txData[10+sizeof(security_header_t)] = txData[10];
 
-      prevdata9 = data[9];
-      prevdata10 = data[10];
+      prevdata9 = txData[9];
+      prevdata10 = txData[10];
 
-      secHdr = (security_header_t*)&data[9]; // beginning of data section
+      secHdr = (security_header_t*)&txData[9]; // beginning of txData section
 
       secHdr->secLevel = secMode;
       secHdr->keyMode = 1; // Fixed to 1 for now
@@ -1075,64 +1080,73 @@ implementation{
       secHdr->frameCounter = frameCounter;
       secHdr->keyID[0] = 1; // Always first position for now due to fixed keyMode
 
-      ieee154header->fcf |= 1 << IEEE154_FCF_SECURITY_ENABLED;
+      txIeee154header->fcf |= 1 << IEEE154_FCF_SECURITY_ENABLED;
 
-      length += (sizeof(security_header_t) + micLength);
+      txLength += (sizeof(security_header_t) + micLength);
 
     }
 
-    // length | data[0] ... data[length-3] | automatically generated FCS
+    // txLength | txData[0] ... txData[txLength-3] | automatically generated FCS
 
-    atomic writeTxFifo(&length, 1);
+    atomic writeTxFifo(&txLength, 1);
 
     // FCS is automatically generated
-    length -= 2;
+    txLength -= 2;
 
     // preload fcf, dsn, destpan, and dest
     header = call Config.headerPreloadLength();
-    if( header > length )
-      header = length;
+    if( header > txLength )
+      header = txLength;
 
-    length -= header;
+    txLength -= header;
 
     // first upload the header to gain some time
-    atomic writeTxFifo(data, header);
+    atomic writeTxFifo(txData, header);
 
     atomic {
       //call SfdCapture.captureRisingEdge();
       strobe(CC2520_CMD_STXON);
       state = STATE_TX_ON;
       //*((volatile uint32_t * )0x40010054) |= (1 << 16);
+      call SfdCapture.captureRisingEdge();
     }
 
     //#ifdef RADIO_DEBUG_MESSAGES
     txMsg = msg;
     //#endif
 
-    // wait for SFD to rise
-    atomic {
-      while(call SFD.get() == 0){}
-      time = call RadioAlarm.getNow();
-    }
+    // wait for SFD rising edge.
+    return SUCCESS;
+  }
+
+  inline void continueTx()
+  {
+    void* timesync;
+    uint32_t time32;
+    cc2520_status_t status;
+
+
+    /*****************************************
+     * FIXME: We have to check for underrun here!
+     *****************************************/
 
     // prepare for end of TX on falling SFD
-    call SfdCapture.captureFallingEdge();
     
-    // do something useful, just to wait a little (12 symbol periods)
-    time32 = call LocalTime.get();
-    timesync = call PacketTimeSyncOffset.isSet(msg) ? ((void*)msg) + call PacketTimeSyncOffset.get(msg) : 0;
+    timesync = call PacketTimeSyncOffset.isSet(txMsg) ? ((void*)txMsg) + call PacketTimeSyncOffset.get(txMsg) : 0;
 
-    time32 += (int16_t)(time + TX_SFD_DELAY) - (int16_t)(time32);
+    time32 = capturedTime;
 
     if( timesync != 0 )
       *(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time32;
 
     // write the rest of the payload to the fifo
-    atomic writeTxFifo(data+header, length);
+    atomic writeTxFifo(txData+header, txLength);
+
+    call SfdCapture.captureFallingEdge();
 
     if(secMode > 0){
-      data[9] = prevdata9;
-      data[10] = prevdata10;
+      txData[9] = prevdata9;
+      txData[10] = prevdata10;
     }
 
     // get status
@@ -1145,24 +1159,24 @@ implementation{
     if( timesync != 0 )
       *(timesync_absolute_t*)timesync = (*(timesync_relative_t*)timesync) + time32;
 
-    call PacketTimeStamp.set(msg, time32);
+    call PacketTimeStamp.set(txMsg, time32);
 
 #ifdef RADIO_DEBUG_MESSAGES
     if( call DiagMsg.record() ){
       uint16_t t = call RadioAlarm.getNow();
-      length = getHeader(msg)->length;
+      txLength = getHeader(txMsg)->length;
 
       call DiagMsg.chr('t');
-      call DiagMsg.uint16(time);
+      call DiagMsg.uint16(time32);
       call DiagMsg.uint16(t);
-      call DiagMsg.uint16(t-time);
-      call DiagMsg.uint32(call PacketTimeStamp.isValid(msg) ? call PacketTimeStamp.timestamp(msg) : 0);
-      call DiagMsg.int8(length);
-      call DiagMsg.hex8s(getPayload(msg), length - 2);
-      if(length - 2 > 15) {
-        call DiagMsg.hex8s(&(((uint8_t *)getPayload(msg))[15]), length - 2 - 15);
+      call DiagMsg.uint16(t-time32);
+      call DiagMsg.uint32(call PacketTimeStamp.isValid(txMsg) ? call PacketTimeStamp.timestamp(txMsg) : 0);
+      call DiagMsg.int8(txLength);
+      call DiagMsg.hex8s(getPayload(txMsg), txLength - 2);
+      if(txLength - 2 > 15) {
+        call DiagMsg.hex8s(&(((uint8_t *)getPayload(txMsg))[15]), txLength - 2 - 15);
       }
-      if(ieee154header->fcf & (1 << IEEE154_FCF_ACK_REQ)){
+      if(txIeee154header->fcf & (1 << IEEE154_FCF_ACK_REQ)){
         call DiagMsg.str("w/ ack");
       }
 
@@ -1174,14 +1188,13 @@ implementation{
     state = STATE_BUSY_TX_2_RX_ON;
     cmd = CMD_TRANSMIT;
 
-    call SpiResource.release();
-    if(ieee154header->fcf & (1 << IEEE154_FCF_ACK_REQ)){
+    //call SpiResource.release();
+    if(txIeee154header->fcf & (1 << IEEE154_FCF_ACK_REQ)){
       //call Leds.led2Toggle();
-      atomic waitAckSeq = ieee154header->dsn;
+      atomic waitAckSeq = txIeee154header->dsn;
       atomic waitAck = TRUE;
     }
     atomic sending = TRUE;
-    return SUCCESS;
   }
 
   default tasklet_async event void RadioSend.sendDone(error_t error) { }
@@ -1723,19 +1736,6 @@ implementation{
   // SFD (rising edge) for timestamps in RX & TX, falling for TX end
   async event void SfdCapture.captured( uint16_t time )  {
 
-    /*
-
-       if(!sending){
-       if(call SpiResource.immediateRequest() == SUCCESS){
-    //call Leds.led1Toggle();
-    strobe(CC2520_CMD_SACK);
-    call SpiResource.release();
-    }
-    return;
-    }
-
-*/
-
     //call SfdCapture.disable(); 
     // if canceling the above takes care of the stopping issue, then
     //the state machine is getting stck at some point inthe disable
@@ -1767,12 +1767,25 @@ implementation{
       atomic {
         // rising edge, safe time and mutex to 0
         capturedTime = call LocalTime.get();
-        capturedTime += (int16_t)(time - RX_SFD_DELAY) - (int16_t)(capturedTime);
+        // FIXME: there is a small chance that between the SFD and read of
+        // LocalTime, the timer overflowed. This wil incurr an error of 65436.
+        // We have to check for this overflow! But how?
+        if(state == STATE_TX_ON)
+        {
+          if((uint16_t)(time + TX_SFD_DELAY) > (uint16_t)(capturedTime))
+            // we had an overflow between SFD capture and read of LocalTime
+            capturedTime -= 1<<16;
+          capturedTime += (uint16_t)(time + TX_SFD_DELAY) - (uint16_t)(capturedTime);
+        } else {
+          if((uint16_t)(time - RX_SFD_DELAY) > (uint16_t)(capturedTime))
+            // we had an overflow between SFD capture and read of LocalTime
+            capturedTime -= 1<<16;
+          capturedTime += (uint16_t)(time - RX_SFD_DELAY) - (uint16_t)(capturedTime);
+        }
       }
-    } else {
-      radioIrq = TRUE;
-      call Tasklet.schedule();
     }
+    radioIrq = TRUE;
+    call Tasklet.schedule();
   }
 
   async event void FifoInterrupt.fired(){
@@ -1794,29 +1807,40 @@ implementation{
   inline void serviceRadio(){
     atomic if( isSpiAcquired() ){
       radioIrq = FALSE;
-      state = STATE_RX_ON;
-      cmd = CMD_NONE;
-      if(sending){
-        atomic sending = FALSE;
-        call SfdCapture.captureRisingEdge(); // JK release this to enable rx side sfd.
-        // do not signal success if the packet requested for an ack
-        // In this case call a timer instead and signal success once the timer expires or an ack is received
-        call Leds.led2Toggle();
-        if(!waitAck){
-          atomic waitAck = FALSE;
-#ifdef RADIO_DEBUG_MESSAGES
-          if( call DiagMsg.record() ){
-            call DiagMsg.str("RadioSend.sendDone");
-            call DiagMsg.send();
-          }
-#endif
-          signal RadioSend.sendDone(SUCCESS);
-        }else{
-          call AckWaitTimer.stop();
-          call AckWaitTimer.startOneShot(1);
-        }
-      }
+      switch(state)
+      {
+        case STATE_TX_ON:
+          continueTx();
+          break;
 
+        case STATE_BUSY_TX_2_RX_ON:
+          state = STATE_RX_ON;
+          cmd = CMD_NONE;
+          if(sending){
+            atomic sending = FALSE;
+            call SfdCapture.captureRisingEdge(); // JK release this to enable rx side sfd.
+            // do not signal success if the packet requested for an ack
+            // In this case call a timer instead and signal success once the timer expires or an ack is received
+            call Leds.led2Toggle();
+            if(!waitAck){
+              atomic waitAck = FALSE;
+#ifdef RADIO_DEBUG_MESSAGES
+              if( call DiagMsg.record() ){
+                call DiagMsg.str("RadioSend.sendDone");
+                call DiagMsg.send();
+              }
+#endif
+              signal RadioSend.sendDone(SUCCESS);
+            }else{
+              call AckWaitTimer.stop();
+              call AckWaitTimer.startOneShot(1);
+            }
+
+          }
+
+        default:
+          RADIO_ASSERT(1);
+      }
     }
   }
 

@@ -56,12 +56,6 @@ typedef struct cc2520_metadata_t
 	};
 } cc2520_metadata_t;
 
-enum cc2520_timing_enums {
-	CC2520_SYMBOL_TIME = 16, // 16us
-	IDLE_2_RX_ON_TIME = 12 * CC2520_SYMBOL_TIME,
-	PD_2_IDLE_TIME = 860, // .86ms
-};
-
 enum cc2520_reg_access_enums {
     CC2520_FREG_MASK      = 0x3F,    // highest address in FREG
     CC2520_SREG_MASK      = 0x7F,    // highest address in SREG

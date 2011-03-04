@@ -38,7 +38,7 @@
 
 #include <Timer.h>
 #include <message.h>
-#include <CC2520DriverLayer.h>
+//#include <CC2520DriverLayer.h>
 
 /* This is the default value of the PA_POWER field of the TXCTL register. */
 #ifndef CC2520_DEF_RFPOWER
@@ -66,7 +66,14 @@ typedef uint16_t tradio_size;
  *
  * Removed three '0s because of overflow...
  */
-#define RADIO_ALARM_MICROSEC    48000 / 32 / 1000
+#define RADIO_ALARM_MICROSEC    48000 / 2 / 1000
+
+enum cc2520_timing_enums {
+  CC2520_SYMBOL_TIME = 16 * RADIO_ALARM_MICROSEC, // 16us
+  IDLE_2_RX_ON_TIME = 12 * CC2520_SYMBOL_TIME,
+  PD_2_IDLE_TIME = 860 * RADIO_ALARM_MICROSEC, // .86ms
+};
+
 
 /**
  * The base two logarithm of the number of radio alarm ticks per one millisecond
