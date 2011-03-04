@@ -93,13 +93,10 @@ static FILE atm128_stdout =
 
 module PrintfP @safe() {
   provides {
-    interface Boot;
+    interface Init;
   }
   uses {
-    interface Boot as MainBoot;
-    interface SplitControl as SerialControl;
     interface PrintfQueue<uint8_t> as Queue;
-
     interface AMSend;
     interface Packet;
     interface Leds;
@@ -108,32 +105,21 @@ module PrintfP @safe() {
 implementation {
   
   enum {
-    S_STOPPED,
     S_STARTED,
     S_FLUSHING,
   };
 
   message_t printfMsg;
-  uint8_t state = S_STOPPED;
+  uint8_t state = S_STARTED;
   
-  event void MainBoot.booted() {
-    call SerialControl.start();
-  }
-
-  event void SerialControl.startDone(error_t error) {
-    if (state == S_STOPPED) {
+  command error_t Init.init() {
 #ifdef _H_atmega128hardware_H
       stdout = &atm128_stdout;
 #endif
       atomic state = S_STARTED;
-      signal Boot.booted();
-    }
+      return SUCCESS;
   }
 
-  event void SerialControl.stopDone(error_t error) {
-    atomic state = S_STOPPED;
-  }
-  
   task void retrySend() {
     if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg_t)) != SUCCESS)
       post retrySend();
