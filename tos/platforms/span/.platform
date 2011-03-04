@@ -11,7 +11,7 @@ push( @includes, qw(
       .
   %T/platforms/span
   %T/platforms/span/chips/cc2420
-  %T/platforms/span/chips/msp430
+  %T/platforms/shimmer/chips/msp430
   %T/platforms/shimmer/chips/ds2411
   %T/chips/cc2420
   %T/chips/cc2420/alarm
