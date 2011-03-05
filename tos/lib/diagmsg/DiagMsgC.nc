@@ -60,6 +60,9 @@ components NoDiagMsgC;
 	components new AMSenderC(AM_DIAG_MSG);
 #else
 	components new SerialAMSenderC(AM_DIAG_MSG) as AMSenderC;
+#ifdef DIAGMSG_SERIAL_START
+	components SerialStartC;
+#endif
 #endif
 
 	DiagMsgP.AMSend -> AMSenderC;

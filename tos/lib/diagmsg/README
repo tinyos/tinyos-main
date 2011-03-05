@@ -61,12 +61,17 @@ the ASSERT macro you need to include only the Assert.h header file.
 TUNABLE PARAMETERS:
 
 The DiagMsg component can be configured by defining the following values in 
-your make file:
+your Makefile:
 
 DIAGMSG_NONE: Turns off sending diagmessage completely
 
 DIAGMSG_RADIO: By default all diag messages are sent over the serial line,
 this will reroute them to the radio
+
+DIAGMSG_SERIAL_START: By default the DiagMsgC component does not turn on the
+serial stack. Either you have to explicitely start the serial stack before
+diag messgaes can be sent, or you can define this value in your Makefile, 
+and the SerialStartC component will be automatically incuded.
 
 DIAGMSG_BASE_STATION: The node ID of the base station or 0xFFFF to broadcast
 the message. The default value is to broadcast the message.
