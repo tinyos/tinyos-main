@@ -84,7 +84,7 @@ implementation
 
 		if( state == STATE_SENDDONE )
 		{
-			if( call PacketAcknowledgements.wasAcked(currentMsg) )
+			if( retries == 0 || call PacketAcknowledgements.wasAcked(currentMsg) )
 				state = STATE_SIGNAL + SUCCESS;
 			else if( ++totalRetries < retries )
 			{
@@ -130,6 +130,9 @@ implementation
 	{
 		RADIO_ASSERT( state == STATE_SENDDONE || state == STATE_SIGNAL + ECANCEL );
 		RADIO_ASSERT( msg == currentMsg );
+
+		if( error != SUCCESS )
+			state = STATE_SIGNAL + error;
 
 		post send();
 	}
