@@ -49,18 +49,18 @@ module HplSam3uHsmciP {
     interface Leds;
     interface Init as PlatformHsmciConfig;
     interface BusyWait<TMicro, uint16_t>;
-    interface HplSam3uPeripheralClockCntl as HSMCIClockControl;
+    interface HplSam3PeripheralClockCntl as HSMCIClockControl;
     interface HplNVICInterruptCntl as HSMCIInterrupt;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCCDA;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCCK;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCDA0;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCDA1;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCDA2;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCDA3;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCDA4;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCDA5;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCDA6;
-    interface HplSam3uGeneralIOPin as HSMCIPinMCDA7;
+    interface HplSam3GeneralIOPin as HSMCIPinMCCDA;
+    interface HplSam3GeneralIOPin as HSMCIPinMCCK;
+    interface HplSam3GeneralIOPin as HSMCIPinMCDA0;
+    interface HplSam3GeneralIOPin as HSMCIPinMCDA1;
+    interface HplSam3GeneralIOPin as HSMCIPinMCDA2;
+    interface HplSam3GeneralIOPin as HSMCIPinMCDA3;
+    interface HplSam3GeneralIOPin as HSMCIPinMCDA4;
+    interface HplSam3GeneralIOPin as HSMCIPinMCDA5;
+    interface HplSam3GeneralIOPin as HSMCIPinMCDA6;
+    interface HplSam3GeneralIOPin as HSMCIPinMCDA7;
     interface FunctionWrapper as HsmciInterruptWrapper;
   }
 }
