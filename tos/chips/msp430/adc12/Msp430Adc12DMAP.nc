@@ -92,7 +92,7 @@ implementation
         DMA_REPEATED_SINGLE_TRANSFER, 
         DMA_TRIGGER_ADC12IFGx,
         DMA_EDGE_SENSITIVE,
-        ADC12MEM,
+        (void*) ADC12MEM_,
         buf,
         length,
         DMA_WORD,
@@ -127,7 +127,7 @@ implementation
   async command error_t SingleChannel.getData[uint8_t id]()
   {
     if (mode == MULTIPLE_SINGLE_AGAIN)
-      call DMAChannel.repeatTransfer(ADC12MEM, buffer, numSamples);
+      call DMAChannel.repeatTransfer((void*) ADC12MEM_, buffer, numSamples);
     return call SubSingleChannel.getData[id]();
   }
   
@@ -154,7 +154,7 @@ implementation
     next = signal SingleChannel.multipleDataReady[client](buffer, numSamples);
     if (oldMode == MULTIPLE_REPEAT)
       if (next){
-        call DMAChannel.repeatTransfer(ADC12MEM, next, numSamples);
+        call DMAChannel.repeatTransfer((void*) ADC12MEM_, next, numSamples);
         call AsyncAdcControl.start[client]();
       } else
         call AsyncAdcControl.stop[client]();
