@@ -36,13 +36,13 @@ module HplSam3uUsart2P{
   
   uses{
     interface HplNVICInterruptCntl as USARTInterrupt2;
-    interface HplSam3uGeneralIOPin as USART_CTS2;
-    interface HplSam3uGeneralIOPin as USART_RTS2;
-    interface HplSam3uGeneralIOPin as USART_RXD2;
-    interface HplSam3uGeneralIOPin as USART_SCK2;
-    interface HplSam3uGeneralIOPin as USART_TXD2;
-    interface HplSam3uPeripheralClockCntl as USARTClockControl2;
-    interface HplSam3uClock as ClockConfig;
+    interface HplSam3GeneralIOPin as USART_CTS2;
+    interface HplSam3GeneralIOPin as USART_RTS2;
+    interface HplSam3GeneralIOPin as USART_RXD2;
+    interface HplSam3GeneralIOPin as USART_SCK2;
+    interface HplSam3GeneralIOPin as USART_TXD2;
+    interface HplSam3PeripheralClockCntl as USARTClockControl2;
+    interface HplSam3Clock as ClockConfig;
     interface FunctionWrapper as Usart2InterruptWrapper;
     interface Leds;
   }

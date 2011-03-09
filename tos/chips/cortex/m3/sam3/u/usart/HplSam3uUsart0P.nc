@@ -36,12 +36,12 @@ module HplSam3uUsart0P{
   
   uses{
     interface HplNVICInterruptCntl as USARTInterrupt0;
-    interface HplSam3uGeneralIOPin as USART_CTS0;
-    interface HplSam3uGeneralIOPin as USART_RTS0;
-    interface HplSam3uGeneralIOPin as USART_RXD0;
-    interface HplSam3uGeneralIOPin as USART_SCK0;
-    interface HplSam3uGeneralIOPin as USART_TXD0;
-    interface HplSam3uPeripheralClockCntl as USARTClockControl0;
+    interface HplSam3GeneralIOPin as USART_CTS0;
+    interface HplSam3GeneralIOPin as USART_RTS0;
+    interface HplSam3GeneralIOPin as USART_RXD0;
+    interface HplSam3GeneralIOPin as USART_SCK0;
+    interface HplSam3GeneralIOPin as USART_TXD0;
+    interface HplSam3PeripheralClockCntl as USARTClockControl0;
     interface HplSam3uClock as ClockConfig;
     interface FunctionWrapper as Usart0InterruptWrapper;
     interface Leds;
