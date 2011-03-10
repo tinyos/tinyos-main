@@ -1,0 +1,29 @@
+This is a test application that shows how to use the ADE7753 power metering
+chip. We assume that you use a Sam3s-ek evaluation development kit. You have
+to make the following modifications to the kit:
+- remove resistors: R26, R27, R28, R31, R33, R34, R35, R36, R37 (all on the
+  top side near the serial DB9 USART connector)
+- remove capacitor C46 (on the bottom side, opposit of the Sam3s Chip
+  footprint).
+- solder a wire to pin 74 of the Sam3s chip. Note that numbered through
+  holes are provided for this!
+
+Connect the ADE775 chip as follows:
+- DVDD (5V) -> J12.1
+- \RESET    -> J12.2
+- DIN       -> PA13
+- DOUT      -> PA12
+- SCLK      -> PA14
+- \CS       -> PA22
+- \IRQ      -> PA21
+- ZX        -> PA0 (This is the wire you soldered to pin 74!)
+- GND       -> Any GND pin, e.g. J12.37
+
+Setup:
+
+Program one sam3s-ek board with the TestADE7753 application. Program a
+second node with a BaseStation. Run the logger script like this:
+
+python TestADE7753Logger.py sf@localhost:9002
+
+We assume you are running a serial forwarder for the BaseStation mote.
