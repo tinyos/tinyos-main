@@ -49,7 +49,7 @@ implementation{
     return call TwiResource.request[ id ]();
   }
 
-  async command uint8_t Resource.isOwner[ uint8_t id ]() {
+  async command bool Resource.isOwner[ uint8_t id ]() {
     return call TwiResource.isOwner[ id ]();
   }
 
