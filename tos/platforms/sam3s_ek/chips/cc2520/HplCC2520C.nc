@@ -110,7 +110,7 @@ implementation
   SfdCaptureC.GeneralIO -> IO.HplPioA15;
 
   FifopInterrupt = IO.InterruptPioA16;
-  FifoInterrupt = IO.InterruptPioA21;
+  FifoInterrupt = IO.InterruptPioA24;
 
   components new AlarmTMicro16C() as AlarmC;
   Alarm = AlarmC;
