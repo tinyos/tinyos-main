@@ -159,7 +159,7 @@ implementation {
   /**
    * Returns whether you are the current owner of the resource or not
    */      
-  async command uint8_t Resource.isOwner[uint8_t id]() {
+  async command bool Resource.isOwner[uint8_t id]() {
     atomic {
       if(resId == id && state == RES_BUSY) return TRUE;
       else return FALSE;
