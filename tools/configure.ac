@@ -132,7 +132,7 @@ AC_OUTPUT(
 	platforms/msp430/pybsl/Makefile
 	platforms/msp430/pybsl/tos-bsl.1
 	platforms/msp430/pybsl/serial/Makefile
-	platforms/sam3u/Makefile
+	platforms/sam3/Makefile
 	tinyos/Makefile
 	tinyos/java/Makefile
 	tinyos/java/env/Makefile
