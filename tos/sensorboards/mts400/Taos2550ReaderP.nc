@@ -33,20 +33,18 @@
 
 generic module Taos2550ReaderP()
 {
-	provides interface Read<uint16_t> as VisibleLight;
-	provides interface Read<uint16_t> as InfraredLight;
+	provides interface Read<uint8_t> as VisibleLight;
+	provides interface Read<uint8_t> as InfraredLight;
 
 	uses interface Resource as VLResource;
 	uses interface Resource as IRResource;
-	uses interface Read<uint16_t> as VLRead;
-	uses interface Read<uint16_t> as IRRead;
-	
-	uses interface DiagMsg;
+	uses interface Read<uint8_t> as VLRead;
+	uses interface Read<uint8_t> as IRRead;
 }
 implementation
 {
 	command error_t VisibleLight.read() {
-		return call VLResource.request();;
+		return call VLResource.request();
 	}
 
 	event void VLResource.granted() {
@@ -57,7 +55,7 @@ implementation
 		}
 	}
 
-	event void VLRead.readDone( error_t result, uint16_t val ) {
+	event void VLRead.readDone( error_t result, uint8_t val ) {
 		call VLResource.release();
 		signal VisibleLight.readDone( result, val );
 	}
@@ -74,11 +72,11 @@ implementation
 		}
 	}
 
-	event void IRRead.readDone( error_t result, uint16_t val ) {
+	event void IRRead.readDone( error_t result, uint8_t val ) {
 		call IRResource.release();
 		signal InfraredLight.readDone( result, val );
 	}
 	
-	default event void VisibleLight.readDone( error_t result, uint16_t val ) { }
-  	default event void InfraredLight.readDone( error_t result, uint16_t val ) { }
+	default event void VisibleLight.readDone( error_t result, uint8_t val ) { }
+  	default event void InfraredLight.readDone( error_t result, uint8_t val ) { }
 }

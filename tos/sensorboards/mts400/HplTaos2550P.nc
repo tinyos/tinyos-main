@@ -89,7 +89,7 @@ implementation {
 	
 	event void I2CResource.granted(){
 		error_t err;
-		if((err=call I2CPacket.write(0x03,TAOS_I2C_ADDR,1,&cmd))!=SUCCESS){
+		if((err=call I2CPacket.write((I2C_START|I2C_STOP|I2C_ACK_END),TAOS_I2C_ADDR,1,&cmd))!=SUCCESS){
 			state=IDLE;
 			call Resource.release();
 			call I2CResource.release();

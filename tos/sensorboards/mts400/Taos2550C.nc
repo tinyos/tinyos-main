@@ -34,8 +34,8 @@
 #include "Taos2550.h"
 
 generic configuration Taos2550C() {
-	provides interface Read<uint16_t> as VisibleLight;
-	provides interface Read<uint16_t> as InfraredLight;
+	provides interface Read<uint8_t> as VisibleLight;
+	provides interface Read<uint8_t> as InfraredLight;
 }
 implementation {
 	components new Taos2550ReaderP();

@@ -35,8 +35,8 @@
 
 generic module Taos2550LogicP()
 {
-	provides interface Read<uint16_t> as VLight;
-	provides interface Read<uint16_t> as IRLight;
+	provides interface Read<uint8_t> as VLight;
+	provides interface Read<uint8_t> as IRLight;
 	uses interface I2CPacket<TI2CBasicAddr>;
 	uses interface Resource as I2CResource;
 }
@@ -63,7 +63,7 @@ implementation
 	}
     
 	event void I2CResource.granted(){
-		if(call I2CPacket.write(0x03,TAOS_I2C_ADDR,1,&cmd)!=SUCCESS){
+		if(call I2CPacket.write((I2C_START|I2C_STOP|I2C_ACK_END),TAOS_I2C_ADDR,1,&cmd)!=SUCCESS){
 			call I2CResource.release();
 			post failTask();
 		}
@@ -79,7 +79,7 @@ implementation
 	}
 		
 	task void read(){
-		if(call I2CPacket.read(0x03,TAOS_I2C_ADDR,1,&readData)!=SUCCESS){
+		if(call I2CPacket.read((I2C_START|I2C_STOP|I2C_ACK_END),TAOS_I2C_ADDR,1,&readData)!=SUCCESS){
 			call I2CResource.release();
 			post failTask();
 		}
@@ -97,9 +97,9 @@ implementation
 	task void readDone(){
 		error_t res=(readData>>7==1)?SUCCESS:FAIL;
 		if(cmd==TAOS_I2C_ADC0){
-			signal VLight.readDone( res, readData );
+			signal VLight.readDone( res, (readData & 0x7F));
 		} else {
-			signal IRLight.readDone( res, readData );
+			signal IRLight.readDone( res, (readData & 0x7F) );
 		}
 	}
 	

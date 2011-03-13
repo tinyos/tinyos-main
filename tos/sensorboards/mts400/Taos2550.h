@@ -41,7 +41,7 @@ enum{
 	TAOS_I2C_ADC0 =0x43,
 	TAOS_I2C_ADC1 =0x83,
 	TAOS_START = 0x03,
-	WARM_UP_TIME = 900,
+	WARM_UP_TIME = 1000,
 };
 
 #endif

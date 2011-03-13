@@ -33,8 +33,8 @@
 
 configuration HalTaos2550C {
 	provides interface Resource[ uint8_t client ];
-  	provides interface Read<uint16_t> as VLight;
-  	provides interface Read<uint16_t> as IRLight;
+  	provides interface Read<uint8_t> as VLight;
+  	provides interface Read<uint8_t> as IRLight;
 }
 implementation {
 	components new Taos2550LogicP();
