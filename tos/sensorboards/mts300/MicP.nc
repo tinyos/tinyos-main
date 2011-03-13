@@ -31,7 +31,7 @@
  *
  *  @author Hu Siquan <husq@xbow.com> 
  *
- *  $Id: MicP.nc,v 1.6 2010-06-29 22:07:56 scipio Exp $
+ *  $Id: MicP.nc,v 1.4 2010-07-21 13:23:51 zkincses Exp $
  */
 
 #include "Timer.h"
@@ -51,14 +51,18 @@ module MicP
   uses interface Timer<TMilli>;
   uses interface GeneralIO as MicPower;
   uses interface GeneralIO as MicMuxSel;
+  uses interface GeneralIO as InterruptPin;
   uses interface MicaBusAdc as MicAdc;
   uses interface I2CPacket<TI2CBasicAddr>;
   uses interface Resource as I2CResource;
-  uses interface HplAtm128Interrupt as AlertInterrupt;
+  uses interface GpioInterrupt as AlertInterrupt;
+	
 }
 implementation 
 {
   uint8_t gainData[2];
+  uint8_t lastGain = 64;
+
   
   command error_t SplitControl.start()
   {
@@ -69,7 +73,7 @@ implementation
     call MicMuxSel.clr();
 		
     call MicSetting.muxSel(1);  // Set the mux so that raw microhpone output is selected
-    call MicSetting.gainAdjust(64);  // Set the gain of the microphone.
+    call MicSetting.gainAdjust(lastGain);  // Set the gain of the microphone.
 
     call Timer.startOneShot(1200); 
     return SUCCESS;
@@ -105,20 +109,33 @@ implementation
   command error_t MicSetting.muxSel(uint8_t sel)
   {
     if (sel == 0)
-      {
-	call MicMuxSel.clr();
-	return SUCCESS;
-      }
+    {
+      call MicMuxSel.clr();
+      return SUCCESS;
+    }
     else if (sel == 1)
-      {
-	call MicMuxSel.set();
-	return SUCCESS;
-      }
+    {
+      call MicMuxSel.set();
+      return SUCCESS;
+    }
     return FAIL;
+  }
+  
+  command error_t MicSetting.startMic(){
+    call MicPower.makeOutput();
+    call MicPower.set();
+	return SUCCESS;
+  }
+  
+  command error_t MicSetting.stopMic(){
+	call MicPower.makeOutput();
+    call MicPower.clr();
+	return SUCCESS;
   }
   
   command error_t MicSetting.gainAdjust(uint8_t val)
   {
+    lastGain = val;
     gainData[0] = 0;    // pot subaddr
     gainData[1] = val;  // value to write
     return call I2CResource.request();
@@ -126,17 +143,16 @@ implementation
   
   command uint8_t MicSetting.readToneDetector()
   {
-    bool bVal = call AlertInterrupt.getValue();
+    bool bVal = call InterruptPin.get();
     return bVal ? 1 : 0;
   }
   
   /**
    * mic interrupt control
-   * 
    */
   async command error_t MicSetting.enable()
   {
-    call AlertInterrupt.enable();
+    call AlertInterrupt.enableFallingEdge();
     return SUCCESS;
   }
   
@@ -156,11 +172,6 @@ implementation
     signal MicSetting.toneDetected();
   }
   
-  /**
-   *
-   *
-   */
-  
   async command uint8_t MicAtm128AdcConfig.getChannel() 
   {
     return call MicAdc.getChannel();
@@ -176,10 +187,6 @@ implementation
     return ATM128_ADC_PRESCALE;
   }
   
-  /**
-   * I2CPot2
-   * 
-   */
   async event void I2CPacket.readDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data)
   {
   }

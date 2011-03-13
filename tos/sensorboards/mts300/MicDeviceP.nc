@@ -31,7 +31,7 @@
  *
  *  @author Hu Siquan <husq@xbow.com>
  *
- *  $Id: MicDeviceP.nc,v 1.5 2010-06-29 22:07:56 scipio Exp $
+ *  $Id: MicDeviceP.nc,v 1.2 2010-07-21 13:23:50 zkincses Exp $
  */
 
 #include "mts300.h"
@@ -44,8 +44,7 @@ configuration MicDeviceP {
   }
 }
 implementation {
-  components MicP, MicaBusC, HplAtm128GeneralIOC as Pins,
-    HplAtm128InterruptC as IntPins,
+  components MicP, MicaBusC, 
     new Atm128I2CMasterC() as I2CPot,
     new TimerMilliC() as WarmupTimer,
     new RoundRobinArbiterC(UQ_MIC_RESOURCE) as Arbiter,
@@ -62,8 +61,9 @@ implementation {
   MicP.Timer -> WarmupTimer;
   MicP.MicPower  -> MicaBusC.PW3;
   MicP.MicMuxSel -> MicaBusC.PW6;
+  MicP.InterruptPin -> MicaBusC.Int3;
   MicP.MicAdc -> MicaBusC.Adc2;
   MicP.I2CPacket -> I2CPot;
   MicP.I2CResource -> I2CPot;
-  MicP.AlertInterrupt -> IntPins.Int7;
+  MicP.AlertInterrupt -> MicaBusC.Int3_Interrupt;
 }

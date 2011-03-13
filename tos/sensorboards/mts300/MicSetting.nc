@@ -1,4 +1,4 @@
-// $Id: MicSetting.nc,v 1.3 2010-06-29 22:07:56 scipio Exp $
+// $Id: MicSetting.nc,v 1.1 2010-07-21 13:23:51 zkincses Exp $
 
 /*
  * Copyright (c) 2000-2003 The Regents of the University  of California.  
@@ -59,7 +59,6 @@
  * If an audio signal at 4.3kHz is picked up by the microphone, the tone
  * detect will decode it and generate a binary ouput (0 meaning tone is detected, 1 meaning
  * tone is not detected).  Users can read this output simply by calling readToneDetector().
- *
  */
 
 /**
@@ -71,15 +70,27 @@ interface MicSetting {
    * Return:  returns SUCCESS or FAIL
    */
   command error_t muxSel(uint8_t sel);
+
   /* Effect:  Set the amplificatoin gain  on the microphone
    * Return:  returns SUCCESS or FAIL
    */
   command error_t gainAdjust(uint8_t val);
 
+   /* Effect:  Power on the microphone
+   * Return:  returns SUCCESS or FAIL
+   */
+  command error_t startMic();
+
+   /* Effect:  Power off the microphone
+   * Return:  returns SUCCESS or FAIL
+   */
+  command error_t stopMic();
+
   /* Effect:  returns the binary tone detector's output
    * Return:  0 meaning tone is detected, 1 meanning tone is not detected
    */
   command uint8_t readToneDetector();
+
   /* Effects: disable interrupts
      Returns: SUCCESS
   */
