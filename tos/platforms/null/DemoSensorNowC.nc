@@ -31,8 +31,8 @@ implementation
     return SUCCESS;
   }
 
-  async command uint8_t Resource.isOwner() {
-    return true;
+  async command bool Resource.isOwner() {
+    return TRUE;
   }
 
   async command error_t ReadNow.read() {

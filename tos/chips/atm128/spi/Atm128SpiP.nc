@@ -379,7 +379,7 @@ implementation {
    return error;
  }
 
- async command uint8_t Resource.isOwner[uint8_t id]() {
+ async command bool Resource.isOwner[uint8_t id]() {
    return call ResourceArbiter.isOwner[id]();
  }
  

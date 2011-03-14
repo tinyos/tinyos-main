@@ -57,7 +57,7 @@ implementation
     return FAIL;
   }
 
-  async command uint8_t Resource.isOwner() {
+  async command bool Resource.isOwner() {
     return call Resource1.isOwner();
   }
 }

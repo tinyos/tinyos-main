@@ -42,7 +42,7 @@ implementation {
     return SUCCESS;
   } 
 
-  async command uint8_t Resource.isOwner() {
+  async command bool Resource.isOwner() {
     return TRUE;
   }
 

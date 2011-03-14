@@ -146,7 +146,7 @@ implementation {
     signal ClientResource.granted[ m_client ]();
   }
   
-  async command uint8_t ClientResource.isOwner[ uint8_t id ]() {
+  async command bool ClientResource.isOwner[ uint8_t id ]() {
     return call Stm25pResource.isOwner[id]();
   }
   

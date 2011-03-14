@@ -130,7 +130,7 @@ implementation {
   }
   
   /************************* isOwner pass through *****************************/
-  command error_t BlockingResource.isOwner() {
+  command bool BlockingResource.isOwner() {
     return call Resource.isOwner();
   }
 }

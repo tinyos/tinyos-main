@@ -117,7 +117,7 @@ implementation {
     return call SpiResource.release();
   }
 
-  async command uint8_t ClientResource.isOwner() {
+  async command bool ClientResource.isOwner() {
     return call SpiResource.isOwner();
   }
 

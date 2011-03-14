@@ -175,7 +175,7 @@ implementation {
     return SUCCESS;
   }
   
-  async command uint8_t Resource.isOwner[ uint8_t id ]() {
+  async command bool Resource.isOwner[ uint8_t id ]() {
     atomic return (m_holder == id);
   }
 
