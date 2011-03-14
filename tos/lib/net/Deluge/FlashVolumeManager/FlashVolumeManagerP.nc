@@ -286,5 +286,5 @@ implementation
 
   default async command error_t Resource.immediateRequest() { return FAIL; }
   default async command error_t Resource.release() { return FAIL; }
-  default async command bool Resource.isOwner() { return FAIL; }
+  default async command bool Resource.isOwner() { return FALSE; }
 }
