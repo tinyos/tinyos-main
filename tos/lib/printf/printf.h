@@ -63,8 +63,8 @@
 #ifdef _H_atmega128hardware_H
   #include "avr_stdio.h"
 #else
-#ifdef __M16C62PHARDWARE_H__ 
-  #include "m16c62p_printf.h"
+#ifdef __M16C60HARDWARE_H__ 
+  #include "m16c60_printf.h"
 #else
   #include "generic_printf.h"
 #endif

@@ -62,7 +62,7 @@ implementation
   AdcReadP.ReadAdc -> AdcReadClientC;
   AdcReadP.AVccControl -> AVccClientC;
 
-  AdcReadClientC.M16c62pAdcConfig -> AdcReadP;
+  AdcReadClientC.M16c60AdcConfig -> AdcReadP;
 
   Read = AdcReadP;
 }

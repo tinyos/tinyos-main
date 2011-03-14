@@ -50,7 +50,7 @@ implementation
   components new SoftwareI2C2C() as I2C,
              new HplDS2782LogicP(0x34) as Logic,
              DS2782InternalP,
-             HplM16c62pGeneralIOC as IOs;
+             HplM16c60GeneralIOC as IOs;
 
   Logic.I2CPacket -> I2C;
   Logic.I2CResource -> I2C;

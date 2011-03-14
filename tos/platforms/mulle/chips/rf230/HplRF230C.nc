@@ -70,15 +70,15 @@ implementation
   SpiByte = Spi;
   FastSpiByte = HplRF230P.FastSpiByte;
 
-  components HplM16c62pGeneralIOC as IOs;
+  components HplM16c60GeneralIOC as IOs;
   HplRF230P.PortVCC -> IOs.PortP77;
   HplRF230P.PortIRQ -> IOs.PortP83;
   SLP_TR = IOs.PortP07;
   RSTN = IOs.PortP43;
   SELN = IOs.PortP35;
 
-  components  HplM16c62pInterruptC as Irqs,
-      new M16c62pInterruptC() as Irq;
+  components  HplM16c60InterruptC as Irqs,
+      new M16c60InterruptC() as Irq;
   HplRF230P.GIRQ -> Irq;
   Irq -> Irqs.Int1;
 

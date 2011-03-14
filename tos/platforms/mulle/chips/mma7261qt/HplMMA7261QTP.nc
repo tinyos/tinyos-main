@@ -45,9 +45,9 @@ module HplMMA7261QTP
   provides
   {
     interface Init;
-    interface M16c62pAdcConfig as AccelXConf;
-    interface M16c62pAdcConfig as AccelYConf;
-    interface M16c62pAdcConfig as AccelZConf;
+    interface M16c60AdcConfig as AccelXConf;
+    interface M16c60AdcConfig as AccelYConf;
+    interface M16c60AdcConfig as AccelZConf;
   }
   
   uses
@@ -81,12 +81,12 @@ implementation
     call AccelZPort.clr();
   }
   
-  inline uint8_t prescaler() { return M16c62p_ADC_PRESCALE_4; }
-  inline uint8_t precision() { return M16c62p_ADC_PRECISION_8BIT; }
+  inline uint8_t prescaler() { return M16c60_ADC_PRESCALE_4; }
+  inline uint8_t precision() { return M16c60_ADC_PRECISION_8BIT; }
   
   async command uint8_t AccelXConf.getChannel()
   {
-    return M16c62p_ADC_CHL_AN5;
+    return M16c60_ADC_CHL_AN5;
   }
 
   async command uint8_t AccelXConf.getPrecision()
@@ -101,7 +101,7 @@ implementation
   
     async command uint8_t AccelYConf.getChannel()
   {
-    return M16c62p_ADC_CHL_AN4;
+    return M16c60_ADC_CHL_AN4;
   }
 
   async command uint8_t AccelYConf.getPrecision()
@@ -116,7 +116,7 @@ implementation
   
   async command uint8_t AccelZConf.getChannel()
   {
-    return M16c62p_ADC_CHL_AN3;
+    return M16c60_ADC_CHL_AN3;
   }
 
   async command uint8_t AccelZConf.getPrecision()

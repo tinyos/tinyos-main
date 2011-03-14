@@ -80,9 +80,9 @@ THREADS_SHIMMER_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/shimmer
 #Epic specific include directories
 THREADS_EPIC_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/epic
 
-#M16c62p specific include directories on tested platforms
-THREADS_M16C62P_DIR = $(TOS_THREADS_DIR)/chips/m16c62p
-THREADS_M16C62P_INCLUDE_DIRS = -I$(THREADS_M16C62P_DIR)
+#M16c60 specific include directories on tested platforms
+THREADS_M16C60_DIR = $(TOS_THREADS_DIR)/chips/m16c60
+THREADS_M16C60_INCLUDE_DIRS = -I$(THREADS_M16C60_DIR)
 
 #Mulle specific include directories
 THREADS_MULLE_INCLUDE_DIRS = -I$(TOS_THREADS_DIR)/platforms/mulle
@@ -142,7 +142,7 @@ ifneq ($(filter shimmer,$(MAKECMDGOALS)),)
   CFLAGS += $(THREADS_SHIMMER_INCLUDE_DIRS)
 endif
 ifneq ($(filter mulle,$(MAKECMDGOALS)),)
-  CFLAGS += $(THREADS_M16C62P_INCLUDE_DIRS)
+  CFLAGS += $(THREADS_M16C60_INCLUDE_DIRS)
   CFLAGS += $(THREADS_RF230_INCLUDE_DIRS)
   CFLAGS += $(THREADS_MULLE_INCLUDE_DIRS)
 endif

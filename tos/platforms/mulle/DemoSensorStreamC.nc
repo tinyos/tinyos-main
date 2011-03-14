@@ -21,7 +21,7 @@ generic configuration DemoSensorStreamC()
 implementation {
   components new AdcReadStreamClientC(),
              DemoSensorP,
-             HplM16c62pGeneralIOC as IOs,
+             HplM16c60GeneralIOC as IOs,
              RealMainP;
 
   DemoSensorP.Pin -> IOs.PortP100;
@@ -29,7 +29,7 @@ implementation {
 
   ReadStream = AdcReadStreamClientC;
 
-  AdcReadStreamClientC.M16c62pAdcConfig -> DemoSensorP;
+  AdcReadStreamClientC.M16c60AdcConfig -> DemoSensorP;
 
   RealMainP.PlatformInit -> DemoSensorP;
 }

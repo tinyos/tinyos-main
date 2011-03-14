@@ -53,7 +53,7 @@ implementation
 {
   components new SoftSpiMasterP(UQ_MULLE_SOFTSPIRF230) as Spi,
       new SoftSpiBusP(),
-      HplM16c62pGeneralIOC as IOs;
+      HplM16c60GeneralIOC as IOs;
   
   // Init the software SPI bus
   SoftSpiBusP.SCLK -> IOs.PortP33;

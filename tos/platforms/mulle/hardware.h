@@ -42,7 +42,7 @@
 #define __HARDWARE_H__
 
 #define MAIN_CRYSTAL_SPEED 10 /*MHz*/
-#define PLL_MULTIPLIER M16C62P_PLL_2
+#define PLL_MULTIPLIER M16C60_PLL_2
 
 #define RF230_SLOW_SPI_MULLE
 
@@ -56,7 +56,7 @@ You should not remove this fix unless you are totaly sure of what you are doing!
 #include "pin_configuration.h"
 #endif
 
-#include "m16c62phardware.h" // Header file for the MCU
+#include "m16c60hardware.h" // Header file for the MCU
 
 #endif  // __HARDWARE_H__
 

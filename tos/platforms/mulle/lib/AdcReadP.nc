@@ -47,7 +47,7 @@
 
 generic module AdcReadP(uint8_t channel, uint8_t precision, uint8_t prescaler)
 {
-  provides interface M16c62pAdcConfig;
+  provides interface M16c60AdcConfig;
   provides interface Read<uint16_t>;
 
   uses interface GeneralIO as Pin;
@@ -56,17 +56,17 @@ generic module AdcReadP(uint8_t channel, uint8_t precision, uint8_t prescaler)
 }
 implementation
 {
-  async command uint8_t M16c62pAdcConfig.getChannel()
+  async command uint8_t M16c60AdcConfig.getChannel()
   {
     return channel;
   }
 
-  async command uint8_t M16c62pAdcConfig.getPrecision()
+  async command uint8_t M16c60AdcConfig.getPrecision()
   {
     return precision;
   }
 
-  async command uint8_t M16c62pAdcConfig.getPrescaler()
+  async command uint8_t M16c60AdcConfig.getPrescaler()
   {
     return prescaler;
   }

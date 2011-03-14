@@ -35,7 +35,7 @@
  */
 
 /**
- * The M16c/62p hardware timer configuration used by Mulle.
+ * The M16c/60 hardware timer configuration used by Mulle.
  * 
  * STOP MODE ENABLED:
  *   TB2 generates TMilli tics from the RV8564 chip.

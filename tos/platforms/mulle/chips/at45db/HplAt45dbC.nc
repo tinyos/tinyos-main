@@ -49,7 +49,7 @@ implementation
   components  new HplAt45dbByteC(10),
               new SoftSpiAt45dbC() as Spi,
               HplAt45dbP,
-              HplM16c62pGeneralIOC as IOs,
+              HplM16c60GeneralIOC as IOs,
               RealMainP,
               BusyWaitMicroC;
 

@@ -50,10 +50,10 @@ configuration CounterRF23016C
 }
 implementation
 {
-  components new M16c62pCounter16C(TRadio) as CounterFrom;
-  components new M16c62pTimerBInitC(TMR_TIMER_MODE, M16C_TMR_CS_F8, 0xFFFF, false, true, true) as CounterInit;
+  components new M16c60Counter16C(TRadio) as CounterFrom;
+  components new M16c60TimerBInitC(TMR_TIMER_MODE, M16C_TMR_CS_F8, 0xFFFF, false, true, true) as CounterInit;
 
-  components HplM16c62pTimerC as Timers,
+  components HplM16c60TimerC as Timers,
       RealMainP;
   
   CounterFrom.Timer -> Timers.COUNTER_RF23016;

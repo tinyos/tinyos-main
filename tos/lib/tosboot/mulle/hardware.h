@@ -41,7 +41,7 @@
 #ifndef __HARDWARE_H__
 #define __HARDWARE_H__
 
-#include <m16c62phardware.h>
+#include <m16c60hardware.h>
 #include <m16chardware.h>
 
 typedef uint32_t in_flash_addr_t;

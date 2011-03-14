@@ -47,7 +47,7 @@ module PlatformP
 {
   provides interface Init;
   uses interface Init as SubInit;
-  uses interface M16c62pControl;
+  uses interface M16c60Control;
   uses interface StopModeControl;
 #ifdef ENABLE_STOP_MODE
   provides interface Init as StopModeInit;
@@ -64,12 +64,12 @@ implementation
   {
     error_t ok = SUCCESS;
 
-    ok = call M16c62pControl.init();
+    ok = call M16c60Control.init();
 
     call StopModeControl.allowStopMode(false);
 
-    // Init the M16c/62p to run at 10MHz.
-    ok = ecombine (ok, call M16c62pControl.defaultSystemClock(MCU_SPEED_10MHz));
+    // Init the M16c/60 to run at 10MHz.
+    ok = ecombine (ok, call M16c60Control.defaultSystemClock(MCU_SPEED_10MHz));
 
     // Sub components initialization.
     ok = ecombine(ok, call SubInit.init());

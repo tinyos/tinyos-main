@@ -51,18 +51,18 @@ configuration AlarmCounterMilli32C
 }
 implementation
 {
-  components new M16c62pCounter16C(TMilli) as CounterFrom;
-  components new M16c62pTimerBInitC(TMR_COUNTER_MODE, M16C_TMRB_CTR_ES_TBj, 0xFFFF, true, true, false) as CounterInit;
-  components new M16c62pTimerBInitC(TMR_TIMER_MODE, M16C_TMR_CS_F1_2, (1000 * MAIN_CRYSTAL_SPEED) - 1, false, true, true) as CounterSourceInit;
+  components new M16c60Counter16C(TMilli) as CounterFrom;
+  components new M16c60TimerBInitC(TMR_COUNTER_MODE, M16C_TMRB_CTR_ES_TBj, 0xFFFF, true, true, false) as CounterInit;
+  components new M16c60TimerBInitC(TMR_TIMER_MODE, M16C_TMR_CS_F1_2, (1000 * MAIN_CRYSTAL_SPEED) - 1, false, true, true) as CounterSourceInit;
   components new TransformCounterC(TMilli,uint32_t, TMilli,uint16_t, 0,uint16_t) as TCounter;
   
-  components new M16c62pAlarm16C(TMilli) as AlarmFrom;
-  components new M16c62pTimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_PREV, 0, false, false, false) as AlarmInit;
-  components new M16c62pTimerAInitC(TMR_TIMER_MODE, M16C_TMR_CS_F1_2, (1000 * MAIN_CRYSTAL_SPEED) - 1, false, true, true) as AlarmSourceInit;
+  components new M16c60Alarm16C(TMilli) as AlarmFrom;
+  components new M16c60TimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_PREV, 0, false, false, false) as AlarmInit;
+  components new M16c60TimerAInitC(TMR_TIMER_MODE, M16C_TMR_CS_F1_2, (1000 * MAIN_CRYSTAL_SPEED) - 1, false, true, true) as AlarmSourceInit;
   components new TransformAlarmC(TMilli,uint32_t,TMilli,uint16_t,0) as TAlarm;
   
 
-  components HplM16c62pTimerC as Timers;
+  components HplM16c60TimerC as Timers;
 
   // Counter
   CounterFrom.Timer -> Timers.COUNTER_MILLI32;

@@ -35,7 +35,7 @@ ifeq ($(BOOTLOADER),tosboot)
   endif
 
   ifeq ($(TARGETS),mulle)
-    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/mulle -I$(DELUGE_EXTRA)/m16c62p
+    CFLAGS += -I$(DELUGE_EXTRA) -I$(DELUGE_EXTRA)/mulle -I$(DELUGE_EXTRA)/m16c60
     BOOTLOADER_IMG ?= $(TOSBOOT_DIR)/mulle/main.srec
   endif
 

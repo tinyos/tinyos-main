@@ -49,7 +49,7 @@ configuration PlatformSerialC {
 }
 implementation {
 
-  components M16c62pUartC as Uart,
+  components M16c60UartC as Uart,
       PlatformSerialP;
       
   StdControl = PlatformSerialP;

@@ -1,6 +1,6 @@
 module DemoSensorP
 {
-  provides interface M16c62pAdcConfig;
+  provides interface M16c60AdcConfig;
   provides interface Init;
 
   uses interface GeneralIO as Pin;
@@ -18,19 +18,19 @@ implementation
     call AVcc.set();
   }
 
-  async command uint8_t M16c62pAdcConfig.getChannel()
+  async command uint8_t M16c60AdcConfig.getChannel()
   {
     // select the AN0 = P10_0 to potentiometer on the expansion board.
-    return M16c62p_ADC_CHL_AN0;
+    return M16c60_ADC_CHL_AN0;
   }
 
-  async command uint8_t M16c62pAdcConfig.getPrecision()
+  async command uint8_t M16c60AdcConfig.getPrecision()
   {
-    return M16c62p_ADC_PRECISION_10BIT;
+    return M16c60_ADC_PRECISION_10BIT;
   }
 
-  async command uint8_t M16c62pAdcConfig.getPrescaler()
+  async command uint8_t M16c60AdcConfig.getPrescaler()
   {
-    return M16c62p_ADC_PRESCALE_4;
+    return M16c60_ADC_PRESCALE_4;
   }
 }

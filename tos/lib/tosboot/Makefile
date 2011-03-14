@@ -92,9 +92,9 @@ endif
 
 ifeq ($(MAKECMDGOALS),mulle)
   CFLAGS += -DTOSBOOT_START=0xe0000 -DTOSBOOT_END=0xeffff
-  CFLAGS += -Iat45db -Imulle -Im16c62p -Ilib
+  CFLAGS += -Iat45db -Imulle -Im16c60 -Ilib
   CFLAGS += -I../net/Deluge -I../net/Deluge/extra/mulle
-  CFLAGS += -I../net/Deluge/extra/m16c62p
+  CFLAGS += -I../net/Deluge/extra/m16c60
 endif
 
 ifeq ($(MAKECMDGOALS),tinynode)

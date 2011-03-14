@@ -46,7 +46,7 @@
 
 void netprog_reboot() {
   PRCR.BIT.PRC1 = 1; // Turn off protection on PM registers.
-  PM0.BIT.PM03 = 1;
+  PM0.BIT.PM0_3 = 1;
 }
 
 #endif  // __NETPROG_PLATFORM_H__

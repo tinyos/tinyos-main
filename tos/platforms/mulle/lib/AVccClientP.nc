@@ -49,7 +49,7 @@ configuration AVccClientP
 implementation
 {
   components new MultiUserStdControlC(AVCC_CLIENTS), AVccStdControlC,
-             HplM16c62pGeneralIOC as IOs;
+             HplM16c60GeneralIOC as IOs;
 
   AVccStdControlC.AVccPin -> IOs.PortP76;
   MultiUserStdControlC -> AVccStdControlC.StdControl;

@@ -54,12 +54,12 @@ implementation
   components
     PlatformP,
     LedsC,
-    M16c62pControlC,
+    M16c60ControlC,
     new StopModeControlC();
 
   Init = PlatformP.Init;
   SubInit = PlatformP.SubInit;
-  PlatformP.M16c62pControl -> M16c62pControlC;
+  PlatformP.M16c60Control -> M16c60ControlC;
 
   PlatformP.StopModeControl -> StopModeControlC;
 

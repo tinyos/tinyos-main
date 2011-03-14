@@ -51,10 +51,10 @@ configuration AlarmRF23016C
 }
 implementation
 {
-  components new M16c62pAlarm16C(TRadio) as AlarmFrom;
-  components new M16c62pTimerBInitC(TMR_TIMER_MODE, M16C_TMR_CS_F8, 0, false, false, false) as AlarmInit;
+  components new M16c60Alarm16C(TRadio) as AlarmFrom;
+  components new M16c60TimerBInitC(TMR_TIMER_MODE, M16C_TMR_CS_F8, 0, false, false, false) as AlarmInit;
 
-  components HplM16c62pTimerC as Timers,
+  components HplM16c60TimerC as Timers,
       CounterRF23016C,
       RealMainP;
 

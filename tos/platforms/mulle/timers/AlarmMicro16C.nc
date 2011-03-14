@@ -51,10 +51,10 @@ configuration AlarmMicro16C
 }
 implementation
 {
-  components new M16c62pAlarm16C(TMicro) as AlarmFrom;
-  components new M16c62pTimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_PREV, 0, false, false, false) as AlarmInit;
+  components new M16c60Alarm16C(TMicro) as AlarmFrom;
+  components new M16c60TimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_PREV, 0, false, false, false) as AlarmInit;
 
-  components HplM16c62pTimerC as Timers,
+  components HplM16c60TimerC as Timers,
       CounterMicro16C,
       RealMainP;
 

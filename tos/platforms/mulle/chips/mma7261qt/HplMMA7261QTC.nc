@@ -55,7 +55,7 @@ implementation
   components new AdcReadClientC() as _AccelX, 
              new AdcReadClientC() as _AccelY,
              new AdcReadClientC() as _AccelZ,
-             HplM16c62pGeneralIOC as IOs,
+             HplM16c60GeneralIOC as IOs,
              HplMMA7261QTP;
              
   HplMMA7261QTP.VCC -> IOs.PortP76;
@@ -70,9 +70,9 @@ implementation
   GSelect1 = IOs.PortP30;
   GSelect2 = IOs.PortP31;
   
-  _AccelX.M16c62pAdcConfig -> HplMMA7261QTP.AccelXConf;
-  _AccelY.M16c62pAdcConfig -> HplMMA7261QTP.AccelYConf;
-  _AccelZ.M16c62pAdcConfig -> HplMMA7261QTP.AccelZConf;
+  _AccelX.M16c60AdcConfig -> HplMMA7261QTP.AccelXConf;
+  _AccelY.M16c60AdcConfig -> HplMMA7261QTP.AccelYConf;
+  _AccelZ.M16c60AdcConfig -> HplMMA7261QTP.AccelZConf;
   
   AccelX = _AccelX;
   AccelY = _AccelY;

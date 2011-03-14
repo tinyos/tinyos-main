@@ -50,7 +50,7 @@ implementation
 {
   components new SoftSpiMasterP(UQ_MULLE_SOFTSPIAT45DB) as Spi,
       new SoftSpiBusP(),
-      HplM16c62pGeneralIOC as IOs;
+      HplM16c60GeneralIOC as IOs;
   
   // Init the software SPI bus
   SoftSpiBusP.MISO -> IOs.PortP40;

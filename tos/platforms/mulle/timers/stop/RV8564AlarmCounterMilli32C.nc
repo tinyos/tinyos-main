@@ -37,7 +37,7 @@
 /**
  * RV8564AlarmCounterMilli32C provides a 32-bit TMilli alarm and counter.
  * The counter and alarm is driven by the RV8564 chip on Mulle. This
- * allows the M16c/62p mcu to be put into stop mode even when the timers
+ * allows the M16c/60 mcu to be put into stop mode even when the timers
  * are running.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
@@ -54,20 +54,20 @@ configuration RV8564AlarmCounterMilli32C
 }
 implementation
 {
-  components new M16c62pCounter32C(TMilli) as CounterFrom;
-  components new M16c62pTimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TB2, 0xFFFF, false, true, true) as CounterInit1;
-  components new M16c62pTimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_PREV, 0xFFFF, true, true, true) as CounterInit2;
+  components new M16c60Counter32C(TMilli) as CounterFrom;
+  components new M16c60TimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TB2, 0xFFFF, false, true, true) as CounterInit1;
+  components new M16c60TimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_PREV, 0xFFFF, true, true, true) as CounterInit2;
   
-  components new M16c62pAlarm32C(TMilli) as AlarmFrom;
-  components new M16c62pTimerBInitC(TMR_COUNTER_MODE, M16C_TMRB_CTR_ES_TBj, 0, false, false, true) as AlarmInit1;
-  components new M16c62pTimerBInitC(TMR_COUNTER_MODE, M16C_TMRB_CTR_ES_TBj, 0, false, false, true) as AlarmInit2;
+  components new M16c60Alarm32C(TMilli) as AlarmFrom;
+  components new M16c60TimerBInitC(TMR_COUNTER_MODE, M16C_TMRB_CTR_ES_TBj, 0, false, false, true) as AlarmInit1;
+  components new M16c60TimerBInitC(TMR_COUNTER_MODE, M16C_TMRB_CTR_ES_TBj, 0, false, false, true) as AlarmInit2;
   
-  components new M16c62pTimerBInitC(TMR_COUNTER_MODE, M16C_TMRB_CTR_ES_TBiIN, 0, false, true, true) as TimerSourceInit;
+  components new M16c60TimerBInitC(TMR_COUNTER_MODE, M16C_TMRB_CTR_ES_TBiIN, 0, false, true, true) as TimerSourceInit;
 
-  components HplM16c62pTimerC as Timers,
+  components HplM16c60TimerC as Timers,
       RV8564AlarmCounterMilli32P,
-      HplM16c62pInterruptC as Irqs,
-      HplM16c62pGeneralIOC as IOs;
+      HplM16c60InterruptC as Irqs,
+      HplM16c60GeneralIOC as IOs;
 
   // Setup the IO pin that RV8564 generates the clock to.
   RV8564AlarmCounterMilli32P -> IOs.PortP92;

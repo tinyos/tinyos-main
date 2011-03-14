@@ -48,7 +48,7 @@ configuration PlatformLedsC
 }
 implementation
 {
-  components HplM16c62pGeneralIOC as IO;
+  components HplM16c60GeneralIOC as IO;
   components PlatformP;
 
   Init = PlatformP.SubInit;

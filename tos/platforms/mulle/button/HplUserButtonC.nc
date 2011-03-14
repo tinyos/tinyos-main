@@ -76,9 +76,9 @@ configuration HplUserButtonC {
   provides interface GpioInterrupt;
 }
 implementation {
-  components  HplM16c62pInterruptC as Irqs,
-              HplM16c62pGeneralIOC as IOs,
-           new M16c62pInterruptC() as Irq;
+  components  HplM16c60InterruptC as Irqs,
+              HplM16c60GeneralIOC as IOs,
+           new M16c60InterruptC() as Irq;
   
   Irq -> Irqs.Int4;
   GpioInterrupt = Irq;

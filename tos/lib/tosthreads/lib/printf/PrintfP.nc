@@ -122,7 +122,7 @@ implementation {
   #ifdef _H_atmega128hardware_H
   int uart_putchar(char c, FILE *stream) __attribute__((noinline)) @C() @spontaneous() {
   #endif
-#ifdef __M16C62PHARDWARE_H__
+#ifdef __M16C60HARDWARE_H__
   int lowlevel_putc(int c) __attribute__((noinline)) @C() @spontaneous() {
 #endif
     uint16_t q_size;

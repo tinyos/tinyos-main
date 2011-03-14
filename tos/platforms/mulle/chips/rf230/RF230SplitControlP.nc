@@ -52,7 +52,7 @@ implementation
   {
 #ifndef RF230_SLOW_SPI_MULLE
 #ifndef RF230_SLOW_SPI
-    call SystemClockControl.minSpeed(M16C62P_PLL_CLOCK);
+    call SystemClockControl.minSpeed(M16C60_PLL_CLOCK);
 #endif
 #endif
     return call SplitControlOrig.start();
@@ -64,7 +64,7 @@ implementation
 #ifndef RF230_SLOW_SPI
     if (error != SUCCESS)
     {
-      call SystemClockControl.minSpeed(M16C62P_DONT_CARE);
+      call SystemClockControl.minSpeed(M16C60_DONT_CARE);
     }
 #endif
 #endif
@@ -81,7 +81,7 @@ implementation
 #ifndef RF230_SLOW_SPI
     if (error == SUCCESS)
     {
-      call SystemClockControl.minSpeed(M16C62P_DONT_CARE);
+      call SystemClockControl.minSpeed(M16C60_DONT_CARE);
     }
 #endif
     signal SplitControl.stopDone(error);

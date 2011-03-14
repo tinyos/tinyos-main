@@ -52,7 +52,7 @@ configuration SoftwareI2C2P
 implementation
 {
   components new SoftwareI2CPacketC(10),
-             HplM16c62pGeneralIOC as IOs,
+             HplM16c60GeneralIOC as IOs,
              BusyWaitMicroC,
              new SharedI2CPacketC(UQ_MULLE_SOFTWAREI2C_2),
              SoftwareI2C2InitP,

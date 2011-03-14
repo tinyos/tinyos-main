@@ -52,13 +52,13 @@ configuration CounterMicro16C
 implementation
 {
   // Counter
-  components new M16c62pCounter16C(TMicro) as CounterFrom;
-  components new M16c62pTimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_NEXT, 0xFFFF, true, true, true) as CounterInit;
+  components new M16c60Counter16C(TMicro) as CounterFrom;
+  components new M16c60TimerAInitC(TMR_COUNTER_MODE, M16C_TMRA_TES_TA_NEXT, 0xFFFF, true, true, true) as CounterInit;
   
   // Source
-  components new M16c62pTimerAInitC(TMR_TIMER_MODE, M16C_TMR_CS_F1_2, (MAIN_CRYSTAL_SPEED - 1), false, true, true) as TimerSourceInit;
+  components new M16c60TimerAInitC(TMR_TIMER_MODE, M16C_TMR_CS_F1_2, (MAIN_CRYSTAL_SPEED - 1), false, true, true) as TimerSourceInit;
   
-  components HplM16c62pTimerC as Timers,
+  components HplM16c60TimerC as Timers,
       RealMainP, McuSleepC;
 
   // Counter
