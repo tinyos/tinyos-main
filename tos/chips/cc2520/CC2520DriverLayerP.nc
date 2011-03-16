@@ -1013,7 +1013,7 @@ implementation{
     secMode = call CC2520Security.getSecurityMode();
     txIeee154header = (ieee154_header_t*)txData;
 
-    if(secMode > 0){
+    if(secMode > 0 &&  (txIeee154header->fcf & (IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE))){
 
       // Note that the payload starts at txData[9] when 16 bit addressing is used
       frameCounter = call CC2520Security.getFrameCounter();
@@ -1610,7 +1610,8 @@ implementation{
       }
 #endif
 
-      if((ieee154header->fcf & (1 << IEEE154_FCF_SECURITY_ENABLED))){ // check fcf for security bit
+      // check fcf for security bit in data packets
+      if((ieee154header->fcf & (1 << IEEE154_FCF_SECURITY_ENABLED)) && (ieee154header->fcf & (IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE))  ){ 
 
         secHdr = (security_header_t*)&data[9];
         memcpy(&decNonce[3], &(secHdr->frameCounter), 4); // readout nonce from tinyos 15.4 security header
@@ -1653,8 +1654,11 @@ implementation{
         // Wait for security done interrupt (pp. 49)
         status = getStatus();
         decLimit = 0;
+
         while(status.dpu_h_active && decLimit++ < 0xFFFF)
-          status = getStatus();
+	  status = getStatus();
+	
+	call Leds.led0Toggle();
 
         // copy data from the memory to msg buffer and delete security header
         data[9] = data[9+sizeof(security_header_t)];
@@ -1678,7 +1682,6 @@ implementation{
       call CSN.set();
       //state = STATE_RX_ON;
       //cmd = CMD_NONE;
-
 
       if(length == 3 || ieee154header->fcf & (2 << IEEE154_FCF_FRAME_TYPE) ){
         // Ack received
@@ -1710,6 +1713,7 @@ implementation{
       //call Draw.drawInt(180,140,data[11],1,COLOR_BLUE);
       //call Draw.drawInt(230,140,data[12],1,COLOR_BLUE);
 
+      call Leds.led1Toggle();
       rxMsg = signal RadioReceive.receive(rxMsg);
       endRx();
 
@@ -1722,7 +1726,6 @@ implementation{
       //state = STATE_RX_ON;
       //cmd = CMD_NONE;
 
-      //call Leds.led1Toggle();
       //call Draw.drawInt(80,140,5,1,COLOR_BLUE);
       endRx();
       // ready to receive new message: enable SFD interrupts
@@ -1789,11 +1792,11 @@ implementation{
   }
 
   async event void FifoInterrupt.fired(){
-    if(call SpiResource.immediateRequest() == SUCCESS){
+    //if(call SpiResource.immediateRequest() == SUCCESS){
       //call Leds.led1Toggle();
-      strobe(CC2520_CMD_SACK);
-      call SpiResource.release();
-    }
+      //strobe(CC2520_CMD_SACK);
+      //call SpiResource.release();
+    //}
   }
 
   // FIFOP interrupt, last byte received
