@@ -226,14 +226,14 @@ public class DiagMsg implements PacketListenerIF {
         long a,b;
         check(8);
         
-        a = packet[head];             a &= 0x00000000000000FF;
-        b = packet[head+1]; b <<= 8;  b &= 0x000000000000FF00; a |= b;
-        b = packet[head+2]; b <<= 16; b &= 0x0000000000FF0000; a |= b;
-        b = packet[head+3]; b <<= 24; b &= 0x00000000FF000000; a |= b;
-        b = packet[head+4]; b &= 0x00000000000000FF; b <<= 32; a |= b;
-        b = packet[head+5]; b &= 0x00000000000000FF; b <<= 40; a |= b;
-        b = packet[head+6]; b &= 0x00000000000000FF; b <<= 48; a |= b;
-        b = packet[head+7]; b &= 0x00000000000000FF; b <<= 56; a |= b;
+        a = packet[head]; a &= 0xFF;
+        b = packet[head+1]; b &= 0xFF; b <<= 8;  a |= b;
+        b = packet[head+2]; b &= 0xFF; b <<= 16; a |= b;
+        b = packet[head+3]; b &= 0xFF; b <<= 24; a |= b;
+        b = packet[head+4]; b &= 0xFF; b <<= 32; a |= b;
+        b = packet[head+5]; b &= 0xFF; b <<= 40; a |= b;
+        b = packet[head+6]; b &= 0xFF; b <<= 48; a |= b;
+        b = packet[head+7]; b &= 0xFF; b <<= 56; a |= b;
         
         head += 8;
         return a;
@@ -285,7 +285,7 @@ public class DiagMsg implements PacketListenerIF {
     
     protected void addUint32() throws Exception 
     {
-        String value = Long.toString(getInt() & 0xFFFFFFFF);
+        String value = Long.toString(getInt() & 0xFFFFFFFFL);
         line.append(delimiter + value);
     }
     
@@ -313,6 +313,7 @@ public class DiagMsg implements PacketListenerIF {
     
     protected void addUint64() throws Exception 
     {
+		// TODO: make this an unsigned conversion
         String value = Long.toString(getLong());
         line.append(delimiter + value);
     }
