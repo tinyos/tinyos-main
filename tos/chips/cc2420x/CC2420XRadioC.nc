@@ -78,29 +78,29 @@ implementation
 	#define UQ_METADATA_FLAGS	"UQ_CC2420X_METADATA_FLAGS"
 	#define UQ_RADIO_ALARM		"UQ_CC2420X_RADIO_ALARM"
 
-// -------- CC2420X RadioP
+// -------- RadioP
 
-	components CC2420XRadioP;
+	components CC2420XRadioP as RadioP;
 
 #ifdef RADIO_DEBUG
 	components AssertC;
 #endif
 
-	CC2420XRadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
-	CC2420XRadioP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
-	CC2420XRadioP.PacketTimeStamp -> TimeStampingLayerC;
-	CC2420XRadioP.CC2420XPacket -> CC2420XDriverLayerC;
+	RadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
+	RadioP.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
+	RadioP.PacketTimeStamp -> TimeStampingLayerC;
+	RadioP.CC2420XPacket -> RadioDriverLayerC;
 
 // -------- RadioAlarm
 
 	components new RadioAlarmC();
-	RadioAlarmC.Alarm -> CC2420XDriverLayerC;
+	RadioAlarmC.Alarm -> RadioDriverLayerC;
 
 // -------- Active Message
 
 #ifndef IEEE154FRAMES_ENABLED
 	components new ActiveMessageLayerC();
-	ActiveMessageLayerC.Config -> CC2420XRadioP;
+	ActiveMessageLayerC.Config -> RadioP;
 	ActiveMessageLayerC.SubSend -> AutoResourceAcquireLayerC;
 	ActiveMessageLayerC.SubReceive -> TinyosNetworkLayerC.TinyosReceive;
 	ActiveMessageLayerC.SubPacket -> TinyosNetworkLayerC.TinyosPacket;
@@ -154,36 +154,19 @@ implementation
 	components new TinyosNetworkLayerC();
 
 	TinyosNetworkLayerC.SubSend -> UniqueLayerC;
-	TinyosNetworkLayerC.SubReceive -> LowPowerListeningLayerC;
+	TinyosNetworkLayerC.SubReceive -> PacketLinkLayerC;
 	TinyosNetworkLayerC.SubPacket -> Ieee154PacketLayerC;
 
 // -------- IEEE 802.15.4 Packet
 
 	components new Ieee154PacketLayerC();
-	Ieee154PacketLayerC.SubPacket -> LowPowerListeningLayerC;
+	Ieee154PacketLayerC.SubPacket -> PacketLinkLayerC;
 
 // -------- UniqueLayer Send part (wired twice)
 
 	components new UniqueLayerC();
-	UniqueLayerC.Config -> CC2420XRadioP;
-	UniqueLayerC.SubSend -> LowPowerListeningLayerC;
-
-// -------- Low Power Listening 
-
-#ifdef LOW_POWER_LISTENING
-	#warning "*** USING LOW POWER LISTENING LAYER"
-	components new LowPowerListeningLayerC();
-	LowPowerListeningLayerC.Config -> CC2420XRadioP;
-	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
-#else	
-	components new LowPowerListeningDummyC() as LowPowerListeningLayerC;
-#endif
-	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
-	LowPowerListeningLayerC.SubSend -> PacketLinkLayerC;
-	LowPowerListeningLayerC.SubReceive -> PacketLinkLayerC;
-	LowPowerListeningLayerC.SubPacket -> PacketLinkLayerC;
-	SplitControl = LowPowerListeningLayerC;
-	LowPowerListening = LowPowerListeningLayerC;
+	UniqueLayerC.Config -> RadioP;
+	UniqueLayerC.SubSend -> PacketLinkLayerC;
 
 // -------- Packet Link
 
@@ -194,9 +177,26 @@ implementation
 #else
 	components new DummyLayerC() as PacketLinkLayerC;
 #endif
-	PacketLinkLayerC -> MessageBufferLayerC.Send;
-	PacketLinkLayerC -> MessageBufferLayerC.Receive;
-	PacketLinkLayerC -> TimeStampingLayerC.RadioPacket;
+	PacketLinkLayerC -> LowPowerListeningLayerC.Send;
+	PacketLinkLayerC -> LowPowerListeningLayerC.Receive;
+	PacketLinkLayerC -> LowPowerListeningLayerC.RadioPacket;
+
+// -------- Low Power Listening
+
+#ifdef LOW_POWER_LISTENING
+	#warning "*** USING LOW POWER LISTENING LAYER"
+	components new LowPowerListeningLayerC();
+	LowPowerListeningLayerC.Config -> RadioP;
+	LowPowerListeningLayerC.PacketAcknowledgements -> SoftwareAckLayerC;
+#else	
+	components new LowPowerListeningDummyC() as LowPowerListeningLayerC;
+#endif
+	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
+	LowPowerListeningLayerC.SubPacket -> TimeStampingLayerC;
+	SplitControl = LowPowerListeningLayerC;
+	LowPowerListening = LowPowerListeningLayerC;
 
 // -------- MessageBuffer
 
@@ -217,10 +217,10 @@ implementation
 #else
 	components new DummyLayerC() as TrafficMonitorLayerC;
 #endif
-	TrafficMonitorLayerC.Config -> CC2420XRadioP;
+	TrafficMonitorLayerC.Config -> RadioP;
 	TrafficMonitorLayerC -> CollisionAvoidanceLayerC.RadioSend;
 	TrafficMonitorLayerC -> CollisionAvoidanceLayerC.RadioReceive;
-	TrafficMonitorLayerC -> CC2420XDriverLayerC.RadioState;
+	TrafficMonitorLayerC -> RadioDriverLayerC.RadioState;
 
 // -------- CollisionAvoidance
 
@@ -229,7 +229,7 @@ implementation
 #else
 	components new RandomCollisionLayerC() as CollisionAvoidanceLayerC;
 #endif
-	CollisionAvoidanceLayerC.Config -> CC2420XRadioP;
+	CollisionAvoidanceLayerC.Config -> RadioP;
 	CollisionAvoidanceLayerC.SubSend -> SoftwareAckLayerC;
 	CollisionAvoidanceLayerC.SubReceive -> SoftwareAckLayerC;
 	CollisionAvoidanceLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
@@ -240,22 +240,22 @@ implementation
 	SoftwareAckLayerC.AckReceivedFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	SoftwareAckLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 	PacketAcknowledgements = SoftwareAckLayerC;
-	SoftwareAckLayerC.Config -> CC2420XRadioP;
+	SoftwareAckLayerC.Config -> RadioP;
 	SoftwareAckLayerC.SubSend -> CsmaLayerC;
 	SoftwareAckLayerC.SubReceive -> CsmaLayerC;
 
 // -------- Carrier Sense
 
 	components new DummyLayerC() as CsmaLayerC;
-	CsmaLayerC.Config -> CC2420XRadioP;
-	CsmaLayerC -> CC2420XDriverLayerC.RadioSend;
-	CsmaLayerC -> CC2420XDriverLayerC.RadioReceive;
-	CsmaLayerC -> CC2420XDriverLayerC.RadioCCA;
+	CsmaLayerC.Config -> RadioP;
+	CsmaLayerC -> RadioDriverLayerC.RadioSend;
+	CsmaLayerC -> RadioDriverLayerC.RadioReceive;
+	CsmaLayerC -> RadioDriverLayerC.RadioCCA;
 
 // -------- TimeStamping
 
 	components new TimeStampingLayerC();
-	TimeStampingLayerC.LocalTimeRadio -> CC2420XDriverLayerC;
+	TimeStampingLayerC.LocalTimeRadio -> RadioDriverLayerC;
 	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
 	PacketTimeStampRadio = TimeStampingLayerC;
 	PacketTimeStampMilli = TimeStampingLayerC;
@@ -264,20 +264,20 @@ implementation
 // -------- MetadataFlags
 
 	components new MetadataFlagsLayerC();
-	MetadataFlagsLayerC.SubPacket -> CC2420XDriverLayerC;
+	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
 
-// -------- CC2420X Driver
+// -------- Driver
 
-	components CC2420XDriverLayerC;
-	CC2420XDriverLayerC.Config -> CC2420XRadioP;
-	CC2420XDriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
-	PacketTransmitPower = CC2420XDriverLayerC.PacketTransmitPower;
-	PacketLinkQuality = CC2420XDriverLayerC.PacketLinkQuality;
-	PacketRSSI = CC2420XDriverLayerC.PacketRSSI;
-	LocalTimeRadio = CC2420XDriverLayerC;
+	components CC2420XDriverLayerC as RadioDriverLayerC;
+	RadioDriverLayerC.Config -> RadioP;
+	RadioDriverLayerC.PacketTimeStamp -> TimeStampingLayerC;
+	PacketTransmitPower = RadioDriverLayerC.PacketTransmitPower;
+	PacketLinkQuality = RadioDriverLayerC.PacketLinkQuality;
+	PacketRSSI = RadioDriverLayerC.PacketRSSI;
+	LocalTimeRadio = RadioDriverLayerC;
 
-	CC2420XDriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
-	CC2420XDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
-	CC2420XDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
-	CC2420XDriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
+	RadioDriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RadioDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RadioDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+	RadioDriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
 }
