@@ -71,6 +71,9 @@ configuration RF212RadioC
 #ifdef PACKET_LINK
 		interface PacketLink;
 #endif
+#ifdef TRAFFIC_MONITOR
+		interface TrafficMonitor;
+#endif
 
 		interface RadioChannel;
 
@@ -212,26 +215,14 @@ implementation
 // -------- MessageBuffer
 
 	components new MessageBufferLayerC();
-	MessageBufferLayerC.RadioSend -> TrafficMonitorLayerC;
+	MessageBufferLayerC.RadioSend -> CollisionAvoidanceLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
 	RadioChannel = MessageBufferLayerC;
 
 // -------- UniqueLayer receive part (wired twice)
 
-	UniqueLayerC.SubReceive -> TrafficMonitorLayerC;
-
-// -------- Traffic Monitor
-
-#ifdef TRAFFIC_MONITOR
-	components new TrafficMonitorLayerC();
-#else
-	components new DummyLayerC() as TrafficMonitorLayerC;
-#endif
-	TrafficMonitorLayerC.Config -> RadioP;
-	TrafficMonitorLayerC -> CollisionAvoidanceLayerC.RadioSend;
-	TrafficMonitorLayerC -> CollisionAvoidanceLayerC.RadioReceive;
-	TrafficMonitorLayerC -> RadioDriverLayerC.RadioState;
+	UniqueLayerC.SubReceive -> CollisionAvoidanceLayerC;
 
 // -------- CollisionAvoidance
 
@@ -259,8 +250,8 @@ implementation
 
 	components new DummyLayerC() as CsmaLayerC;
 	CsmaLayerC.Config -> RadioP;
-	CsmaLayerC -> RadioDriverLayerC.RadioSend;
-	CsmaLayerC -> RadioDriverLayerC.RadioReceive;
+	CsmaLayerC -> TrafficMonitorLayerC.RadioSend;
+	CsmaLayerC -> TrafficMonitorLayerC.RadioReceive;
 	CsmaLayerC -> RadioDriverLayerC.RadioCCA;
 
 // -------- TimeStamping
@@ -276,6 +267,19 @@ implementation
 
 	components new MetadataFlagsLayerC();
 	MetadataFlagsLayerC.SubPacket -> RadioDriverLayerC;
+
+// -------- Traffic Monitor
+
+#ifdef TRAFFIC_MONITOR
+	components new TrafficMonitorLayerC();
+	TrafficMonitor = TrafficMonitorLayerC;
+#else
+	components new DummyLayerC() as TrafficMonitorLayerC;
+#endif
+	TrafficMonitorLayerC.Config -> RadioP;
+	TrafficMonitorLayerC -> RadioDriverLayerC.RadioSend;
+	TrafficMonitorLayerC -> RadioDriverLayerC.RadioReceive;
+	TrafficMonitorLayerC -> RadioDriverLayerC.RadioState;
 
 // -------- Driver
 

@@ -140,7 +140,7 @@ implementation
 	tasklet_async command void SoftwareAckConfig.reportChannelError()
 	{
 #ifdef TRAFFIC_MONITOR
-		signal TrafficMonitorConfig.channelError();
+//		signal TrafficMonitorConfig.channelError();
 #endif
 	}
 
@@ -164,7 +164,7 @@ implementation
 	tasklet_async command void UniqueConfig.reportChannelError()
 	{
 #ifdef TRAFFIC_MONITOR
-		signal TrafficMonitorConfig.channelError();
+//		signal TrafficMonitorConfig.channelError();
 #endif
 	}
 
@@ -217,33 +217,11 @@ implementation
 
 /*----------------- TrafficMonitorConfig -----------------*/
 
-	enum
+	async command uint16_t TrafficMonitorConfig.getBytes(message_t* msg)
 	{
-		TRAFFIC_UPDATE_PERIOD = 100,	// in milliseconds
-		TRAFFIC_MAX_BYTES = (uint16_t)(TRAFFIC_UPDATE_PERIOD * 1000UL / 32),	// 3125
-	};
+		// pure airtime: preable (4 bytes), SFD (1 byte), length (1 byte), payload + CRC (len bytes)
 
-	async command uint16_t TrafficMonitorConfig.getUpdatePeriod()
-	{
-		return TRAFFIC_UPDATE_PERIOD;
-	}
-
-	async command uint16_t TrafficMonitorConfig.getChannelTime(message_t* msg)
-	{
-		/* We count in bytes, one byte is 32 microsecond. We are conservative here.
-		 *
-		 * pure airtime: preable (4 bytes), SFD (1 byte), length (1 byte), payload + CRC (len bytes)
-		 * frame separation: 5-10 bytes
-		 * ack required: 8-16 byte separation, 11 bytes airtime, 5-10 bytes separation
-		 */
-
-		uint8_t len = call RF212Packet.payloadLength(msg);
-		return call Ieee154PacketLayer.getAckRequired(msg) ? len + 6 + 16 + 11 + 10 : len + 6 + 10;
-	}
-
-	async command am_addr_t TrafficMonitorConfig.getSender(message_t* msg)
-	{
-		return call Ieee154PacketLayer.getSrcAddr(msg);
+		return call RF212Packet.payloadLength(msg);
 	}
 
 /*----------------- RandomCollisionConfig -----------------*/

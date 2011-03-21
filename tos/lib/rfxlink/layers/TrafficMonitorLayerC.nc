@@ -39,6 +39,8 @@ generic configuration TrafficMonitorLayerC()
 		interface RadioSend;
 		interface RadioReceive;
 		interface RadioState;
+
+		interface TrafficMonitor;
 	}
 	uses
 	{
@@ -52,24 +54,23 @@ generic configuration TrafficMonitorLayerC()
 
 implementation
 {
-	components new TrafficMonitorLayerP(), new TimerMilliC() as UpdateTimerC; 
-	components NeighborhoodC, new NeighborhoodFlagC(), TaskletC;
+	components new TrafficMonitorLayerP(), LocalTimeMilliC;
 
 	RadioSend = TrafficMonitorLayerP;
 	RadioReceive = TrafficMonitorLayerP;
 	RadioState = TrafficMonitorLayerP;
+	TrafficMonitor = TrafficMonitorLayerP;
+	
 	SubSend = TrafficMonitorLayerP;
 	SubReceive = TrafficMonitorLayerP;
 	SubState = TrafficMonitorLayerP;
 	Config = TrafficMonitorLayerP;
-
-	TrafficMonitorLayerP.Timer -> UpdateTimerC;
-	TrafficMonitorLayerP.Neighborhood -> NeighborhoodC;
-	TrafficMonitorLayerP.NeighborhoodFlag -> NeighborhoodFlagC;
-	TrafficMonitorLayerP.Tasklet -> TaskletC;
+	TrafficMonitorLayerP.LocalTime -> LocalTimeMilliC;
 
 #ifdef RADIO_DEBUG
-	components DiagMsgC;
+	components DiagMsgC, new TimerMilliC(), MainC;
 	TrafficMonitorLayerP.DiagMsg -> DiagMsgC;
+	TrafficMonitorLayerP.Timer -> TimerMilliC;
+	TrafficMonitorLayerP.Boot -> MainC;
 #endif
 }
