@@ -21,6 +21,8 @@
  * Author: Janos Sallai
  */
 
+#include "RadioConfig.h"
+
 configuration HplCC2420XC {
 	provides {
 		interface Resource as SpiResource;
@@ -69,9 +71,8 @@ implementation {
   	FifopInterruptC.Atm128Interrupt -> Interrupts.Int6;
 
 	components LocalTimeMicroC;
-	LocalTimeRadio = LocalTimeMicroC.LocalTime; 			
+	LocalTimeRadio = LocalTimeMicroC.LocalTime;
 
-	components new AlarmOne16C() as AlarmC;
+	components new AlarmThree16C() as AlarmC;
 	Alarm = AlarmC;
-
 }
