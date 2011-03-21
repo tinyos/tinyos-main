@@ -99,7 +99,7 @@ implementation
    */  
   event void I2CResource.granted()
   {
-    call I2CPacket.write(0x3,TOS_MIC_POT_ADDR, 2, gainData);
+    call I2CPacket.write(I2C_START|I2C_STOP,TOS_MIC_POT_ADDR, 2, gainData);
   }
 
   /**

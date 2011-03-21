@@ -61,7 +61,7 @@ implementation
   */
   event void I2CResource.granted()
   {
-    if ( call I2CPacket.write(0x3,TOS_MAG_POT_ADDR, 2, gainData) == SUCCESS)
+    if ( call I2CPacket.write(I2C_START|I2C_STOP,TOS_MAG_POT_ADDR, 2, gainData) == SUCCESS)
     {
       return ;
     }
