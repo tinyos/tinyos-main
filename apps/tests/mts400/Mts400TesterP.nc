@@ -42,8 +42,8 @@ module Mts400TesterP {
 	uses interface Intersema;
 	uses interface Read<uint16_t> as Temperature;
 	uses interface Read<uint16_t> as Humidity;
-	uses interface Read<uint16_t> as VisibleLight;
-	uses interface Read<uint16_t> as InfraredLight;
+	uses interface Read<uint8_t> as VisibleLight;
+	uses interface Read<uint8_t> as InfraredLight;
 	uses interface AMSend;
 }
 implementation {
@@ -90,14 +90,14 @@ implementation {
 		call VisibleLight.read();
 	}
 	
-	event void VisibleLight.readDone(error_t err, uint16_t data){
+	event void VisibleLight.readDone(error_t err, uint8_t data){
 		VisLight_data=data;
 		call InfraredLight.read();
 	}
 	
 	message_t message;
 	
-	event void InfraredLight.readDone(error_t err, uint16_t data){
+	event void InfraredLight.readDone(error_t err, uint8_t data){
 		datamsg_t* packet = (datamsg_t*)(call AMSend.getPayload(&message, sizeof(datamsg_t)));
 		packet-> AccelX_data=AccelX_data;
 		packet-> AccelY_data = AccelY_data;
