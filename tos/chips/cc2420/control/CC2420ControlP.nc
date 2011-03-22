@@ -65,6 +65,7 @@ module CC2420ControlP @safe() {
   uses interface CC2420Register as MDMCTRL1;
   uses interface CC2420Register as RXCTRL1;
   uses interface CC2420Register as RSSI;
+  uses interface CC2420Register as TXCTRL;
   uses interface CC2420Strobe as SRXON;
   uses interface CC2420Strobe as SRFOFF;
   uses interface CC2420Strobe as SXOSCOFF;
@@ -119,6 +120,7 @@ implementation {
   void writeFsctrl();
   void writeMdmctrl0();
   void writeId();
+  void writeTxctrl();
 
   task void sync();
   task void syncDone();
@@ -237,6 +239,8 @@ implementation {
           ( 1 << CC2420_RXCTRL1_RXMIX_TAIL ) |
           ( 1 << CC2420_RXCTRL1_RXMIX_VCM ) |
           ( 2 << CC2420_RXCTRL1_RXMIX_CURRENT ) );
+
+      writeTxctrl();
     }
     return SUCCESS;
   }
@@ -512,8 +516,19 @@ implementation {
     call IEEEADR.write(0, (uint8_t *)&id, 12);
   }
 
+  /* Write the Transmit control register. This
+     is needed so acknowledgments are sent at the
+     correct transmit power even if a node has
+     not sent a packet (Google Code Issue #27) -pal */
 
-  
+  void writeTxctrl() {
+    atomic {
+      call TXCTRL.write( ( 2 << CC2420_TXCTRL_TXMIXBUF_CUR ) |
+			 ( 3 << CC2420_TXCTRL_PA_CURRENT ) |
+			 ( 1 << CC2420_TXCTRL_RESERVED ) |
+			 ( (CC2420_DEF_RFPOWER & 0x1F) << CC2420_TXCTRL_PA_LEVEL ) );
+    }
+  }
   /***************** Defaults ****************/
   default event void CC2420Config.syncDone( error_t error ) {
   }
