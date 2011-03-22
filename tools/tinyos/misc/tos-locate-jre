@@ -50,8 +50,22 @@ case `uname` in
     ;;
 
     Darwin)
-    #Just statically typed in, uses default location of installation for XTools.  May need to be fixed
-    jhome=/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK
+    ## This should work bu the symlinks are broken. Apple bug, I suppose :)
+    #jhome=/System/Library/Frameworks/JavaVM.framework/Versions/Current
+    ## The real location is under /Developer/SDKs/MacOSX*.sdk/
+    ## but now how do we determin the version correctly ?
+    ## I have 10.6.6 but we need to drop the last digit
+    ## `uname -r` returns 10.6.0 for some reason, and
+    ## it appears that `basename `uname -r` .0` works
+    ## it's not very certain if it will later.
+
+    pn=`sw_vers -productName | sed 's/ //g'`
+    pv=`sw_vers -productVersion | awk -F. '{ print $1 "." $2 }'`
+    ## Since we only want to modify this one script for now, stick the
+    ## extra subdir at the end, beceuase that's what the reset of scripts
+    ## presume. This is a work-around and should be eliminated eventually.
+    xcode_jdk=/Developer/SDKs/${pn}${pv}.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
+    jhome=/Library/Java/Home
     ;;
 
     Linux)
@@ -114,7 +128,7 @@ if [ "$jni" = "yes" ]; then
     # Windows, and IBM Java: in jre/bin
     # Sun Java on Linux: in jre/lib/i386
     if [ `uname` = "Darwin" ]; then 
-	jnilocate "/Library/java/Extensions"
+	jnilocate "/Library/Java/Extensions"
     elif "$jhome/bin/java" -version 2>&1 | grep -q IBM || cygpath -w / >/dev/null 2>/dev/null; then
 	jnilocate "$jhome/jre/bin" || jnilocate "$jhome/bin"
     else
@@ -127,17 +141,13 @@ if [ "$jni" = "yes" ]; then
 	    jnilocate "$jhome/lib/amd64"
     fi
 elif [ "$javac" = "yes" ]; then
- if [ `uname` = "Darwin" ]; then
-   dir="$jhome/Commands"
- else 
-   dir="$jhome/bin"
+ if [ `uname` = "Darwin" ];  then
+  dir="$xcode_jdk"
+ else
+  dir="$jhome/bin"
  fi
 elif [ "$java" = "yes" ]; then
- if [ `uname` = "Darwin" ]; then  
-   dir="$jhome/Commands"
- else 
-   dir="$jhome/bin"
- fi
+ dir="$jhome/bin"
 fi
 
 # Check that what we found actually exists
