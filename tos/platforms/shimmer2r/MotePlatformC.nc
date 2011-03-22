@@ -198,7 +198,8 @@ implementation {
 
     // this pin is now tied to the user button on the prog board
     TOSH_SEL_GIO0_IOFUNC();
-    TOSH_MAKE_GIO0_INPUT();
+    TOSH_MAKE_GIO0_OUTPUT();
+    TOSH_CLR_GIO0_PIN();
 
     TOSH_SEL_GIO1_IOFUNC();
     TOSH_MAKE_GIO1_OUTPUT();
