@@ -210,7 +210,7 @@ implementation
 	{
 		// pure airtime: preable (4 bytes), SFD (1 byte), length (1 byte), payload + CRC (len bytes)
 
-		return call CC2420XPacket.payloadLength(msg);
+		return call CC2420XPacket.payloadLength(msg) + 6;
 	}
 
 /*----------------- RandomCollisionConfig -----------------*/

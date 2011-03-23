@@ -220,8 +220,8 @@ implementation
 	async command uint16_t TrafficMonitorConfig.getBytes(message_t* msg)
 	{
 		// pure airtime: preable (4 bytes), SFD (1 byte), length (1 byte), payload + CRC (len bytes)
-
-		return call RF230Packet.payloadLength(msg);
+		
+		return call RF230Packet.payloadLength(msg) + 6;
 	}
 
 /*----------------- RandomCollisionConfig -----------------*/

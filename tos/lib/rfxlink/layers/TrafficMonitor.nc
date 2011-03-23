@@ -59,7 +59,7 @@ interface TrafficMonitor
 
 	/**
 	 * Returns the number of messages the radio driver has 
-	 * received.
+	 * received. 
 	 */
 	async command uint32_t getRxMessages();
 
@@ -67,12 +67,14 @@ interface TrafficMonitor
 	 * Returns the sum of the lengths of all transmitted 
 	 * messages (those for which send() returned with SUCCESS,
 	 * even though sendDone() might have returned with an error).
+	 * This count includes all preamble, STD and CRC bytes.
 	 */
 	async command uint32_t getTxBytes();
 
 	/**
 	 * Returns the sum of the lengths of all received 
-	 * messages.
+	 * messages. This count includes all preamble, STD 
+	 * and CRC bytes.
 	 */
 	async command uint32_t getRxBytes();
 

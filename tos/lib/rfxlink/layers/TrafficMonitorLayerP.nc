@@ -160,25 +160,24 @@ implementation
 		RADIO_ON_2_OFF = 2,
 	};
 
-	tasklet_norace uint8_t radioState;
-	tasklet_norace uint32_t radioStart;
+	uint8_t radioState;
+	uint32_t radioStart;
 
 	uint32_t activeTime;
 	uint32_t startCount;
 
 	tasklet_async command error_t RadioState.turnOn()
 	{
-		error_t error;
+		uint32_t localTime = call LocalTime.get();
+		error_t error = call SubState.turnOn();
 
-		if( radioState == RADIO_OFF )
-			radioStart = call LocalTime.get();
-
-		error = call SubState.turnOn();
-
-		if( radioState == RADIO_OFF && error == SUCCESS )
+		atomic
 		{
-			atomic startCount += 1;
-			radioState = RADIO_ON;
+			if( radioState == RADIO_OFF && error == SUCCESS )
+			{
+				radioStart = localTime;
+				radioState = RADIO_ON;
+			}
 		}
 
 		return error;
@@ -188,8 +187,11 @@ implementation
 	{
 		error_t error = call SubState.turnOff();
 
-		if( radioState == RADIO_ON && error == SUCCESS )
-			radioState = RADIO_ON_2_OFF;
+		atomic
+		{
+			if( radioState == RADIO_ON && error == SUCCESS )
+				radioState = RADIO_ON_2_OFF;
+		}
 
 		return error;
 	}
@@ -198,8 +200,11 @@ implementation
 	{
 		error_t error = call SubState.standby();
 
-		if( radioState == RADIO_ON && error == SUCCESS )
-			radioState = RADIO_ON_2_OFF;
+		atomic
+		{
+			if( radioState == RADIO_ON && error == SUCCESS )
+				radioState = RADIO_ON_2_OFF;
+		}
 
 		return error;
 	}
@@ -207,14 +212,15 @@ implementation
 
 	tasklet_async event void SubState.done()
 	{
-		if( radioState == RADIO_ON_2_OFF )
-		{
-			uint32_t elapsed;
-			
-			radioState = RADIO_OFF;
-			elapsed = call LocalTime.get() - radioStart;
+		uint32_t localTime = call LocalTime.get();
 
-			atomic activeTime += elapsed;
+		atomic
+		{
+			if( radioState == RADIO_ON_2_OFF )
+			{
+				activeTime += localTime - radioStart;
+				radioState = RADIO_OFF;
+			}
 		}
 
 		signal RadioState.done();
@@ -237,7 +243,18 @@ implementation
 
 	async command uint32_t TrafficMonitor.getActiveTime()
 	{
-		atomic return activeTime;
+		uint32_t time, localTime;
+		
+		localTime = call LocalTime.get();
+
+		atomic
+		{
+			time = activeTime;
+			if( radioState != RADIO_OFF )
+				time += localTime - radioStart;
+		}
+
+		return time;
 	}
 
 	async command uint32_t TrafficMonitor.getCurrentTime()
