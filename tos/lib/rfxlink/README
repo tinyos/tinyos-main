@@ -46,9 +46,14 @@ RF230Sniffer appliaction.
 TRAFFIC_MONITOR:
 
 If enabled, the TrafficMonitorLayer is included in the stack which keeps
-track of the average number of bytes sent, bytes received, the number of 
-transmission errors, and the number of neighboors. If RADIO_DEBUG is enabled
-then this information is also printed.
+track of the number of send end received bytes, the amount of time when
+the radio driver was turned on, and other statistics. If RADIO_DEBUG is 
+enabled then this information is also printed periodically with DisgMsg.
+
+PACKET_LINK:
+
+If defined, then the PacketLinkLayer is included in the stack. It provides
+standard functionality: retransmits messages when needed.
 
 typedef TRadio:
 
