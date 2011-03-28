@@ -67,7 +67,7 @@ implementation {
   }
 
   command error_t Init.init() {
-    TOSH_CLR_PROG_OUT_PIN();
+    TOSH_SET_PROG_OUT_PIN();
 
     TOSH_MAKE_ADC_6_INPUT();
 
@@ -84,11 +84,11 @@ implementation {
     scout = databuf0;
     current_buffer = 0;
 
-    TOSH_SET_PROG_OUT_PIN();
+    TOSH_CLR_PROG_OUT_PIN();
   }
 
   command void Gps.disable() {
-    TOSH_CLR_PROG_OUT_PIN();
+    TOSH_SET_PROG_OUT_PIN();
   }
 
   command void Gps.disableBus(){
