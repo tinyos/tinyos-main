@@ -253,8 +253,16 @@ implementation
 		call BusyWait.wait(510);
 
 		writeRegister(RF212_IRQ_MASK, RF212_IRQ_TRX_UR | RF212_IRQ_PLL_LOCK | RF212_IRQ_TRX_END | RF212_IRQ_RX_START);
-		writeRegister(RF212_CCA_THRES, RF212_CCA_THRES_VALUE);
-		writeRegister(RF212_PHY_TX_PWR, RF212_DEF_RFPOWER);
+
+		// update register values if different from default
+		if( RF212_CCA_THRES_VALUE != 0x77 )
+			writeRegister(RF212_CCA_THRES, RF212_CCA_THRES_VALUE);
+
+		if( RF212_DEF_RFPOWER != 0x60 )
+			writeRegister(RF212_PHY_TX_PWR, RF212_DEF_RFPOWER);
+
+		if( RF212_TRX_CTRL_2_VALUE != RF212_DATA_MODE_DEFAULT )
+			writeRegister(RF212_TRX_CTRL_2, RF212_TRX_CTRL_2_VALUE);
 
 		txPower = RF212_DEF_RFPOWER;
 		channel = RF212_DEF_CHANNEL & RF212_CHANNEL_MASK;
