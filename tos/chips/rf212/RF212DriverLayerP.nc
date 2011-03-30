@@ -118,7 +118,6 @@ implementation
 		STATE_TRX_OFF_2_RX_ON = 4,
 		STATE_RX_ON = 5,
 		STATE_BUSY_TX_2_RX_ON = 6,
-		STATE_PLL_ON_2_RX_ON = 7,
 	};
 
 	tasklet_norace uint8_t cmd;
@@ -469,7 +468,7 @@ implementation
 		{
 			RADIO_ASSERT( (readRegister(RF212_TRX_STATUS) & RF212_TRX_STATUS_MASK) == RF212_BUSY_RX );
 
-			state = STATE_PLL_ON_2_RX_ON;
+			writeRegister(RF212_TRX_STATE, RF212_RX_ON);
 			return EBUSY;
 		}
 
@@ -718,21 +717,19 @@ implementation
 			}
 #endif
 
-			if( irq & RF212_IRQ_PLL_LOCK )
+			// sometimes we miss a PLL lock interrupt after turn on
+			if( cmd == CMD_TURNON || cmd == CMD_CHANNEL )
 			{
-				if( cmd == CMD_TURNON || cmd == CMD_CHANNEL )
-				{
-					RADIO_ASSERT( state == STATE_TRX_OFF_2_RX_ON );
+				RADIO_ASSERT( irq & RF212_IRQ_PLL_LOCK );
+				RADIO_ASSERT( state == STATE_TRX_OFF_2_RX_ON );
 
-					state = STATE_RX_ON;
-					cmd = CMD_SIGNAL_DONE;
-				}
-				else if( cmd == CMD_TRANSMIT )
-				{
-					RADIO_ASSERT( state == STATE_BUSY_TX_2_RX_ON );
-				}
-				else
-					RADIO_ASSERT(FALSE);
+				state = STATE_RX_ON;
+				cmd = CMD_SIGNAL_DONE;
+			}
+			else if( irq & RF212_IRQ_PLL_LOCK )
+			{
+				RADIO_ASSERT( cmd == CMD_TRANSMIT );
+				RADIO_ASSERT( state == STATE_BUSY_TX_2_RX_ON );
 			}
 
 			if( irq & RF212_IRQ_RX_START )
@@ -745,7 +742,7 @@ implementation
 
 				if( cmd == CMD_NONE )
 				{
-					RADIO_ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
+					RADIO_ASSERT( state == STATE_RX_ON );
 
 					// the most likely place for busy channel, with no TRX_END interrupt
 					if( irq == RF212_IRQ_RX_START )
@@ -799,20 +796,10 @@ implementation
 				}
 				else if( cmd == CMD_RECEIVE )
 				{
-					RADIO_ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
+					RADIO_ASSERT( state == STATE_RX_ON );
 
-					if( state == STATE_PLL_ON_2_RX_ON )
-					{
-						RADIO_ASSERT( (readRegister(RF212_TRX_STATUS) & RF212_TRX_STATUS_MASK) == RF212_PLL_ON );
-
-						writeRegister(RF212_TRX_STATE, RF212_RX_ON);
-						state = STATE_RX_ON;
-					}
-					else
-					{
-						// the most likely place for clear channel (hope to avoid acks)
-						rssiClear += (readRegister(RF212_PHY_RSSI) & RF212_RSSI_MASK) - (rssiClear >> 2);
-					}
+					// the most likely place for clear channel (hope to avoid acks)
+					rssiClear += (readRegister(RF212_PHY_RSSI) & RF212_RSSI_MASK) - (rssiClear >> 2);
 
 					cmd = CMD_DOWNLOAD;
 				}
