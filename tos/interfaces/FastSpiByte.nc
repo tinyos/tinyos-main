@@ -37,12 +37,17 @@
  * data transfers comparable to the SpiStream interface. You may want to
  * use the following code sequence to write a buffer as fast as possible
  *
- *	call FastSpiByte.spiSplitWrite(data[0]); // start the first byte
+ *	uint8_t *data;
+ *	uint8_t *response;
+ *
+ *	// start the first byte
+ *	call FastSpiByte.splitWrite(data[0]);
  *	for(i = 1; i < length; ++i) {
  *	   // finish the previous one and write the next one
- *	  call FastSpiByte.spiSplitReadWrite(data[i]);
+ *	  response[i-1] = call FastSpiByte.splitReadWrite(data[i]);
  *	}
- *	call FastSpiByte.spiSlitRead(); // finish the last byte
+ *	// finish the last byte
+ *	response[length-1] = call FastSpiByte.splitRead();
  *
  * You can also do some useful computation (like calculate a CRC) while the
  * hardware is sending the byte.
