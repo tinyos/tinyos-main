@@ -33,12 +33,18 @@
  * ========================================================================
  */
 
+#define NEW_PRINTF_SEMANTICS
+#include "printf.h"
+
 configuration DebugC {
 }
 implementation {
   components DebugP, LedsC, MainC;
   DebugP.Boot -> MainC;
   DebugP.Leds -> LedsC;
+
+  components PrintfC;
+  components SerialStartC;
 
 #if defined(PLATFORM_TELOSB)
   components UserButtonC;
