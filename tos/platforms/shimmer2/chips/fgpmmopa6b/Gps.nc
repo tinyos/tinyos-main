@@ -40,6 +40,8 @@ interface Gps {
   
   command void setDatarate(uint16_t datarate);  
 
+  command void setHotStart();
+
   command void disableBus();
   command void enableBus();
 

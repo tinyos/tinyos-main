@@ -112,6 +112,13 @@ implementation {
     return sum;
   }
 
+  // tell it to come up in hot start mode
+  command void Gps.setHotStart() {
+    sprintf(cmdstring, "$PMTK101*32\r\n");
+
+    post send_command();
+  }
+
   // datarate in milliseconds, min 100
   command void Gps.setDatarate(uint16_t datarate) { 
     uint8_t crc;
