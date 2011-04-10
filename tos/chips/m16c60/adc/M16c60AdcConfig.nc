@@ -26,8 +26,7 @@ interface M16c60AdcConfig {
 
   /**
    * Obtain precision setting.
-   * @return The number of bits, valid values are 8 (M16c60_ADC_PRECISION_8BIT)
-   *   or 10 (M16c60_ADC_PRECISION_10BIT)
+   * @return The number of bits, valid values depend on mcu model.
    */
   async command uint8_t getPrecision();
 

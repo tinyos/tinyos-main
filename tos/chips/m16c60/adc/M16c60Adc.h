@@ -125,10 +125,7 @@ enum {
 };
 
 /* ADC Precision Settings */
-enum {
-    M16c60_ADC_PRECISION_10BIT = 10,
-    M16c60_ADC_PRECISION_8BIT = 8,
-};
+// See mcu model header file
 
 /* ADC operation mode select bit */
 enum {

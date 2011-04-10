@@ -90,12 +90,9 @@ implementation
   async command void HplM16c60Adc.setADCON2( M16c60ADCON2_t x ) { 
     ADCON2.BYTE = ADCON22int(x); 
   }
-  /* precision = 8 or 10, that means 8bit or 10bit */ 
+  /* write the precision bit in the ADCON1 register, not supported on all models */ 
   async command void HplM16c60Adc.setPrecision(uint8_t precision){
-    if(precision == M16c60_ADC_PRECISION_8BIT)
-      ADCON1.BIT.BITS = 0;    
-    else if(precision == M16c60_ADC_PRECISION_10BIT)
-      ADCON1.BIT.BITS = 1;
+    WRITE_BIT(ADCON1.BYTE, 3, precision);
   }
   /* Set ADC prescaler selection bits */
   async command void HplM16c60Adc.setPrescaler(uint8_t scale){
@@ -111,11 +108,11 @@ implementation
 
   // Individual bit manipulation. These all clear any pending A/D interrupt.
   async command void HplM16c60Adc.enableAdc() {
-    ADCON1.BIT.VCUT = 1; 
+    SET_BIT(ADCON1.BYTE, 5); 
     call McuPowerState.update();
   }
   async command void HplM16c60Adc.disableAdc() {
-    ADCON1.BIT.VCUT = 0; 
+    CLR_BIT(ADCON1.BYTE, 5); 
     call McuPowerState.update();
   }
   // A/D conversion interrupt control register is ADIC 2009-2-9 by Fan Zhang
@@ -134,8 +131,8 @@ implementation
   
   /* A/D status checks */
   async command bool HplM16c60Adc.isEnabled(){       
-    // ADCON1.VCUT control the Vref connection, 0 disable connection, 1 connection
-    return ADCON1.BIT.VCUT; 
+    // ADCON1 bit 5 controls the ADC, 0 disable connection, 1 connection
+    return READ_BIT(ADCON1.BYTE, 5); 
   }
 
   async command bool HplM16c60Adc.isStarted() {

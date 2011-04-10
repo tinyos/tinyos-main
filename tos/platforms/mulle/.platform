@@ -21,6 +21,7 @@ push( @includes, qw(
   %T/platforms/mulle/timers/wait
   %T/platforms/mulle/timers/rf230
   %T/chips/m16c60
+  %T/chips/m16c60/62p
   %T/chips/m16c60/control
   %T/chips/m16c60/adc
   %T/chips/m16c60/dac

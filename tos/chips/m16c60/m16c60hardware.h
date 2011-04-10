@@ -45,7 +45,7 @@
 #define __M16C60HARDWARE_H__
 
 #include "interrupts.h"
-#include "iom16c62p.h"
+#include "m16c60.h" // Include header for mcu model. 
 #include "bits.h"
 #include "uart/M16c60Uart.h"
 #include "pins/M16c60Pin.h"

@@ -1,11 +1,7 @@
 #-#-Makefile-#- vim:syntax=make
 
+ifeq ($(M16C60_MCU),62p)
 define M16C60_HELP
-
- M16C/60 extras:
-
-   debug    : compile with minimal optimization and debug symbols
-   debugopt : compile with debug symbols
 
  Programmer options:
 
@@ -13,6 +9,20 @@ define M16C60_HELP
    sm16cf,<dev> : use SM16CF programmer on port <dev>.
 
 endef
+DEFAULT_PROGRAM ?= sm16cf
+endif
+
+ifeq ($(M16C60_MCU),60)
+define M16C60_HELP
+ Programmer options:
+
+   sflash : use SFLASH programmer on port '/dev/ttyUSB0'.
+   sflash,<dev> : use SFLASH programmer on port <dev>.
+
+endef
+DEFAULT_PROGRAM ?= sflash
+endif
+
 HELP += $(M16C60_HELP)
 THIS_FOLDER = m16c60
 
@@ -49,19 +59,30 @@ PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
 endif
 
 # We need a different start address for the flash in the linker script when building TOSBoot.
-# Also program the boot_args address bytes with 0xFF so that we know if they are reprogrammable.
-ifeq ($(COMPONENT),TosBootC)
-$(shell sed -e "s/0x00a0000/0x00f8000/ig" $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c.x > $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader.x)
-LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c_bootloader.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt.S
-else
-LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/m16c.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt.S
+ifeq ($(M16C60_MCU),62p)
+  ifeq ($(COMPONENT),TosBootC)
+    $(shell sed -e "s/0x00a0000/0x00f8000/ig" $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/linker_62p.x > $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/linker_62p_bootloader.x)
+    LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/linker_62p_bootloader.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt_62p.S
+  else
+    LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/linker_62p.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt_62p.S
+  endif
 endif
+
+ifeq ($(M16C60_MCU),65)
+  ifeq ($(COMPONENT),TosBootC)
+    $(shell sed -e "s/0x80000/0xC0000/ig" $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/linker_65.x > $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/linker_65_bootloader.x)
+    LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/linker_65_bootloader.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt_65.S
+  else
+    LDFLAGS += -nostartfiles -T$(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/linker_65.x  $(TINYOS_MAKE_PATH)/$(THIS_FOLDER)/crt_65.S
+  endif
+endif
+
+
 
 # This is needed so that we know that the BusyWaitMicroC.BusyWait.wait()
 # function always gets aligned.
 CFLAGS += -falign-functions=2
 
-DEFAULT_PROGRAM ?= sm16cf
 
 # Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
 # out with call in there.  I don't know why.
@@ -113,7 +134,7 @@ exe: exe0 FORCE bytes
 	@:
 
 
-exe0: builddir $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
+exe0: builddir check_mcu $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
 	$(NCC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 ifdef WIRING_CHECK_FILE
@@ -126,4 +147,10 @@ builddir: FORCE
 # bug fix 2009-3-11 by ZHF, here display the ROM and RAM consumption information.
 bytes: FORCE
 	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
+
+check_mcu: FORCE
+ifndef M16C60_MCU
+	@echo "---Error, MCU not defined.---"
+	@exit 1
+endif
 
