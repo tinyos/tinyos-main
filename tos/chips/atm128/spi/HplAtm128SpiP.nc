@@ -97,6 +97,7 @@ implementation {
     call MOSI.makeOutput();
     call MISO.makeInput();
     call SCK.makeOutput();
+    call SS.makeOutput();	// otherwise the SPI can go slave mode
     call SPI.setMasterBit(TRUE);
   }
 
@@ -109,7 +110,6 @@ implementation {
   }
   
   async command void SPI.sleep() {
-//    call SS.set();	// why was this needed?
   }
   
   async command uint8_t SPI.read()        { return SPDR; }
