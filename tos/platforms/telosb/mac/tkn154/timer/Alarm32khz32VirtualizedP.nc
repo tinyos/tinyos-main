@@ -8,6 +8,7 @@ implementation
   components new Alarm32khz32C(), MainC;
   components new VirtualizeAlarmC(T32khz, uint32_t, uniqueCount(UQ_ALARM_32KHZ32));
 
+  MainC -> Alarm32khz32C.Init;
   Alarm = VirtualizeAlarmC;
   MainC -> VirtualizeAlarmC.Init;
   VirtualizeAlarmC.AlarmFrom -> Alarm32khz32C;
