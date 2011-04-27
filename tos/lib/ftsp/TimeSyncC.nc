@@ -67,8 +67,8 @@ implementation
   TimeSyncP.Receive         ->  ActiveMessageC.Receive[TIMESYNC_AM_FTSP];
   TimeSyncP.TimeSyncPacket  ->  ActiveMessageC;
 
-  components HilTimerMilliC;
-  TimeSyncP.LocalTime       ->  HilTimerMilliC;
+  components LocalTimeMilliC;
+  TimeSyncP.LocalTime       ->  LocalTimeMilliC;
 
   components new TimerMilliC() as TimerC;
   TimeSyncP.Timer ->  TimerC;
