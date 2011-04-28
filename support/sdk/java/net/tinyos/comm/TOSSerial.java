@@ -47,15 +47,12 @@ public class TOSSerial extends NativeSerial implements SerialPort {
   class EventDispatcher extends Thread {
     private boolean m_run;
 
-    private boolean busy;
-
     /**
      * Constructor
      * 
      */
     public EventDispatcher() {
-      busy = false;
-      m_run = true;
+      m_run = false;
     }
 
     /**
@@ -63,10 +60,9 @@ public class TOSSerial extends NativeSerial implements SerialPort {
      * 
      */
     public void open() {
-      synchronized (this) {
-        m_run = true;
-        this.notify();
-      }
+      m_run = true;
+      if( ! this.isAlive() )
+        this.start();
     }
 
     /**
@@ -102,17 +98,17 @@ public class TOSSerial extends NativeSerial implements SerialPort {
     public void close() {
       m_run = false;
       
-      synchronized (this) {
-        while (busy) {
-          write(0x7E);
-          cancelWait();
-          try {
+      while (this.isAlive()) {
+        write(0x7E);
+        cancelWait();
+        try {
+          synchronized(this) {
             // Wait for the waitForEvent() done event, if it doesn't work after
             // 500 ms, then we try generating that OUTPUT_EMPTY event again.
             wait(500);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
           }
+        } catch (InterruptedException e) {
+          e.printStackTrace();
         }
       }
     }
@@ -134,30 +130,18 @@ public class TOSSerial extends NativeSerial implements SerialPort {
     }
 
     public void run() {
-      while (true) {
-
-        synchronized (this) {
-          while (!m_run) {
-            try {
-              busy = false;
-              synchronized (this) {
-                this.notify();
-              }
-              this.wait();
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
-          }
-        }
-
-        busy = true;
+      while (m_run) {
         if (waitForEvent()) {
           dispatch_event(SerialPortEvent.DATA_AVAILABLE);
           dispatch_event(SerialPortEvent.OUTPUT_EMPTY);
         }
       }
-    }
 
+      // wake up the closing thread 
+      synchronized(this) {
+        this.notify();
+      }
+    }
   }
 
   /**
@@ -294,7 +278,7 @@ public class TOSSerial extends NativeSerial implements SerialPort {
     m_in = new SerialInputStream();
     m_out = new SerialOutputStream();
     m_dispatch = new EventDispatcher();
-    m_dispatch.start();
+    m_dispatch.open();
   }
 
   /**
