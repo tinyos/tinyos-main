@@ -74,7 +74,6 @@
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
 
-#include "MulleI2C.h"
 #include "I2C.h"
 generic configuration SharedI2CPacketC(char resourceName[])
 {

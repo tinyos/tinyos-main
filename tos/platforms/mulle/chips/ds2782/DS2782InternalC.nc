@@ -47,7 +47,7 @@ configuration DS2782InternalC
 
 implementation
 {
-  components new SoftwareI2C2C() as I2C,
+  components new MulleI2C2C() as I2C,
              new HplDS2782LogicP(0x34) as Logic,
              DS2782InternalP,
              HplM16c60GeneralIOC as IOs;

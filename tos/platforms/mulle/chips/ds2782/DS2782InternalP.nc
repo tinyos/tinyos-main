@@ -56,12 +56,10 @@ implementation
   async event void ResourceDefaultOwner.requested()
   {
     call Pullup.set(); 
-    call ResourceDefaultOwner.release();
   }
 
   async event void ResourceDefaultOwner.immediateRequested()
   {
     call Pullup.set();
-    call ResourceDefaultOwner.release();
   }
 }

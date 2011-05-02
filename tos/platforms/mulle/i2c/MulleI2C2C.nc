@@ -35,20 +35,32 @@
  */
 
 /**
- * Initilizes the pullups on the I2C bus marked as nr 2 on Mulle.
+ * The basic client abstraction of the I2C nr 2 on Mulle used
+ * by the RTC and battery monitor and possible to be connected
+ * from the external connector.
+ * The device drivers should instantiate this configuration to ensure
+ * exclusive access to the I2C bus.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
- module SoftwareI2C2InitP
- {
- 	provides interface Init;
- 	uses interface GeneralIO as Pullup;
- }
- implementation
- {
- 	command error_t Init.init()
- 	{
- 		call Pullup.makeOutput();
- 		call Pullup.set();
- 	}
- }
+
+#include "MulleI2C.h"
+#include "I2C.h"
+generic configuration MulleI2C2C()
+{
+  provides interface Resource;
+  provides interface I2CPacket<TI2CBasicAddr>;
+  provides interface ResourceDefaultOwner;
+}
+implementation
+{
+  enum
+  {
+    CLIENT_ID = unique(UQ_MULLE_I2C_2),
+  };
+  
+  components MulleI2C2P as I2C; 
+  Resource = I2C.Resource[CLIENT_ID];
+  I2CPacket = I2C.I2CPacket[CLIENT_ID];
+  ResourceDefaultOwner = I2C;
+}

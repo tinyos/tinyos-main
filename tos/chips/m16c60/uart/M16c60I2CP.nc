@@ -41,7 +41,7 @@
 generic module M16c60I2CP()
 {
   provides interface I2CPacket<TI2CBasicAddr>;
-  provides interface StdControl;
+  provides interface AsyncStdControl;
   uses interface HplM16c60Uart as HplUart;
 }
 implementation
@@ -73,7 +73,7 @@ implementation
     call HplUart.disableRxInterrupt();
   }
 
-  command error_t StdControl.start()
+  async command error_t AsyncStdControl.start()
   {
     if (m_state != S_OFF)
     {
@@ -88,7 +88,7 @@ implementation
     return SUCCESS;
   }
 
-  command error_t StdControl.stop()
+  async command error_t AsyncStdControl.stop()
   {
     if (m_state == S_OFF)
     {
@@ -131,7 +131,7 @@ implementation
       call HplUart.i2cStart();
       call HplUart.enableRxInterrupt();
       call HplUart.enableTxInterrupt();
-      call HplUart.i2cTx(addr+1);
+      call HplUart.i2cTx((addr<<1)+1);
     }
     else
     {
@@ -176,7 +176,6 @@ implementation
     {
       return EBUSY;
     }
-    printf("Start write\n");
     atomic
     {
       m_state = S_WRITE;
@@ -191,10 +190,8 @@ implementation
     
     if (m_flags & I2C_START)
     {
-      printf("do start\n");
       call HplUart.i2cStart();
-      printf("do addr\n");
-      call HplUart.i2cTx(addr);
+      call HplUart.i2cTx(addr << 1);
     }
     else
     {
@@ -258,13 +255,11 @@ implementation
 
   async event void HplUart.txDone()
   {
-    printf("tx\n");
     interrupt(false);
   }
 
   async event void HplUart.rxDone()
   {
-    printf("rx\n");
     interrupt(true);
   }
 

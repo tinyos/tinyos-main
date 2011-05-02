@@ -153,7 +153,7 @@ implementation
     {
       if (m_state == S_READING)
       {
-        call I2C.write(I2C_START | I2C_STOP, RV8564_ADDR, 1, m_buf);
+        call I2C.write(I2C_START, RV8564_ADDR, 1, m_buf);
       }
       else if (m_state == S_WRITING)
       {

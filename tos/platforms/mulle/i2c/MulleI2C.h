@@ -35,32 +35,11 @@
  */
 
 /**
- * The basic client abstraction of the I2C nr 2 on Mulle used
- * by the RTC and battery monitor and the possibilty to be connected
- * from the external connections.
- * The device drivers should instantiate this configuration to ensure
- * exclusive access to the I2C bus.
- *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
+#ifndef __MULLEI2C_H__
+#define __MULLEI2C_H__
 
-#include "MulleI2C.h"
-#include "I2C.h"
-generic configuration SoftwareI2C2C()
-{
-  provides interface Resource;
-  provides interface I2CPacket<TI2CBasicAddr>;
-  provides interface ResourceDefaultOwner;
-}
-implementation
-{
-  enum
-  {
-    CLIENT_ID = unique(UQ_MULLE_SOFTWAREI2C_2),
-  };
-  
-  components SoftwareI2C2P as I2C; 
-  Resource = I2C.Resource[CLIENT_ID];
-  I2CPacket = I2C.I2CPacket[CLIENT_ID];
-  ResourceDefaultOwner = I2C;
-}
+#define UQ_MULLE_I2C_2 "UQ_MULLE_I2C_2"
+
+#endif // __MULLEI2C_H__

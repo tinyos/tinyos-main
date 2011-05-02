@@ -43,11 +43,11 @@ configuration M16c60I2CC
   provides 
   {
     interface I2CPacket<TI2CBasicAddr> as I2CPacket0;
-    interface StdControl as I2CPacket0Control;
+    interface AsyncStdControl as I2CPacket0Control;
     interface I2CPacket<TI2CBasicAddr> as I2CPacket1;
-    interface StdControl as I2CPacket1Control;
+    interface AsyncStdControl as I2CPacket1Control;
     interface I2CPacket<TI2CBasicAddr> as I2CPacket2;
-    interface StdControl as I2CPacket2Control;
+    interface AsyncStdControl as I2CPacket2Control;
   }
 }
 implementation

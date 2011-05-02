@@ -35,15 +35,15 @@
  */
 
 /**
- * The wiring of the I2C bus nr 2 on Mulle and creation of it into a
- * shared abstraction.
+ * The wiring of the I2C bus nr 2 on Mulle and creation of it as a
+ * shared resource.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
 
 #include "MulleI2C.h"
 #include "I2C.h"
-configuration SoftwareI2C2P
+configuration MulleI2C2P
 {
   provides interface Resource[uint8_t client];
   provides interface I2CPacket<TI2CBasicAddr>[uint8_t client];
@@ -51,25 +51,22 @@ configuration SoftwareI2C2P
 }
 implementation
 {
-  components new SoftwareI2CPacketC(10),
-             HplM16c60GeneralIOC as IOs,
-             BusyWaitMicroC,
-             new SharedI2CPacketC(UQ_MULLE_SOFTWAREI2C_2),
-             SoftwareI2C2InitP,
-             PlatformP;
-
-  // Wire the software I2C bus
-  SoftwareI2CPacketC.SCL -> IOs.PortP71;
-  SoftwareI2CPacketC.SDA -> IOs.PortP70;
-  SoftwareI2CPacketC.BusyWait -> BusyWaitMicroC;
+  components HplM16c60GeneralIOC as IOs,
+             new SharedI2CPacketC(UQ_MULLE_I2C_2),
+             MulleI2C2ControlP,
+             PlatformP,
+             new AsyncStdControlPowerManagerC() as PowerManager,
+             M16c60I2CC as I2Cs;
 
   Resource  = SharedI2CPacketC;
   I2CPacket = SharedI2CPacketC.I2CPacket;
   ResourceDefaultOwner = SharedI2CPacketC;
-  SharedI2CPacketC -> SoftwareI2CPacketC.I2CPacket;
+  SharedI2CPacketC -> I2Cs.I2CPacket2;
 
   // Init the bus
-  SoftwareI2C2InitP.Pullup -> IOs.PortP75;
-  PlatformP.SubInit -> SoftwareI2C2InitP;
+  MulleI2C2ControlP.Pullup -> IOs.PortP75;
+  PowerManager.AsyncStdControl -> I2Cs.I2CPacket2Control;
+  PowerManager.ResourceDefaultOwner -> SharedI2CPacketC;
+  PlatformP.SubInit -> MulleI2C2ControlP;
 }
 

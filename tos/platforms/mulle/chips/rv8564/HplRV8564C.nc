@@ -47,7 +47,7 @@ configuration HplRV8564C
 implementation
 {
   components HplRV8564P as RTCP,
-             new SoftwareI2C2C() as I2C,
+             new MulleI2C2C() as I2C,
              HplM16c60GeneralIOC as IOs,
              HplM16c60InterruptC as Irqs,
              new M16c60InterruptC() as Irq,

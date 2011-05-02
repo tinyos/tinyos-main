@@ -35,11 +35,20 @@
  */
 
 /**
+ * Initilizes the pullups on the I2C bus marked as nr 2 on Mulle.
+ *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-#ifndef __MULLEI2C_H__
-#define __MULLEI2C_H__
-
-#define UQ_MULLE_SOFTWAREI2C_2 "UQ_MULLE_SOFTWAREI2C_2"
-
-#endif // __MULLEI2C_H__
+module MulleI2C2ControlP
+{
+  provides interface Init;
+  uses interface GeneralIO as Pullup;
+}
+implementation
+{
+  command error_t Init.init()
+  {
+    call Pullup.makeOutput();
+    call Pullup.set();
+  }
+}
