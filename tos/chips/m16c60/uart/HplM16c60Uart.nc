@@ -76,23 +76,41 @@
 #include "M16c60Uart.h"
  
 interface HplM16c60Uart {
-  async command void on();
-  async command void off();
-  async command error_t setSpeed(uart_speed_t speed);
-  async command uart_speed_t getSpeed();
+  async command void setMode(m16c60_uart_mode mode);
+  async command void setSpeed(uint8_t speed);
+  async command uint8_t getSpeed();
+  async command void setCountSource(m16c60_uart_count_source source);
   async command void setParity(uart_parity_t parity);
   async command uart_parity_t getParity();
   async command void setStopBits(uart_stop_bits_t stop_bits);
   async command uart_stop_bits_t getStopBits();
-  async command error_t enableTxInterrupt();
-  async command error_t disableTxInterrupt();
-  async command error_t enableRxInterrupt();
-  async command error_t disableRxInterrupt();
-  async command bool isTxEmpty();
-  async command bool isRxEmpty();
+
+  async command void enableCTSRTS();
+  async command void disableCTSRTS();
+  
+  async command void enableTx();
+  async command void disableTx();
+  async command bool isTxEnabled();
+  async command void enableRx();
+  async command void disableRx();
+  async command bool isRxEnabled();
+
+  async command void enableTxInterrupt();
+  async command void disableTxInterrupt();
+  async command void enableRxInterrupt();
+  async command void disableRxInterrupt();
+
   async command void tx( uint8_t data );
+  async command bool isTxEmpty();
   async event void txDone();
   async command uint8_t rx();
-  async event void rxDone( uint8_t data );
-
+  async command bool isRxEmpty();
+  async event void rxDone();
+  
+  async command void i2cStart();
+  async command void i2cStop();
+  async command void i2cTx(uint8_t byte);
+  async command bool i2cWaitTx();
+  async command void i2cStartRx(bool nack);
+  async command uint8_t i2cWaitRx();
 }

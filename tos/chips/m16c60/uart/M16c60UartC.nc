@@ -100,8 +100,6 @@ implementation
   Uart0Control = Uart0P;
   Uart0P.Counter -> Counter;
   
-  Uart0P.HplUartTxControl -> HplUartC.Uart0TxControl;
-  Uart0P.HplUartRxControl -> HplUartC.Uart0RxControl;
   Uart0P.HplUart -> HplUartC.HplUart0;
   
   components new M16c60UartP() as Uart1P;
@@ -110,8 +108,6 @@ implementation
   Uart1Control = Uart1P;
   Uart1P.Counter -> Counter;
   
-  Uart1P.HplUartTxControl -> HplUartC.Uart1TxControl;
-  Uart1P.HplUartRxControl -> HplUartC.Uart1RxControl;
   Uart1P.HplUart -> HplUartC.HplUart1;
 
   components new M16c60UartP() as Uart2P;
@@ -120,8 +116,6 @@ implementation
   Uart2Control = Uart2P;
   Uart2P.Counter -> Counter;
   
-  Uart2P.HplUartTxControl -> HplUartC.Uart2TxControl;
-  Uart2P.HplUartRxControl -> HplUartC.Uart2RxControl;
   Uart2P.HplUart -> HplUartC.HplUart2;
   
 }

@@ -43,6 +43,23 @@
 #ifndef __M16C60_UART_H__
 #define __M16C60_UART_H__
 
+typedef enum
+{
+  M16C60_UART_MODE_OFF,
+  M16C60_UART_MODE_UART_8BITS,
+  M16C60_UART_MODE_SPI0,
+  M16C60_UART_MODE_SPI1,
+  M16C60_UART_MODE_SPI2,
+  M16C60_UART_MODE_SPI3,
+  M16C60_UART_MODE_I2C,
+} m16c60_uart_mode;
+
+typedef enum
+{
+  M16C60_UART_COUNT_SOURCE_F1_2 = 0x0,
+  M16C60_UART_COUNT_SOURCE_F8 = 0x1,
+  M16C60_UART_COUNT_SOURCE_F32 = 0x2,
+} m16c60_uart_count_source;
 
 typedef enum {
   TOS_UART_300,
@@ -67,7 +84,7 @@ typedef enum {
   TOS_UART_PARITY_NONE,
   TOS_UART_PARITY_EVEN,
   TOS_UART_PARITY_ODD
-}uart_parity_t;
+} uart_parity_t;
 
 typedef enum {
   TOS_UART_STOP_BITS_1,

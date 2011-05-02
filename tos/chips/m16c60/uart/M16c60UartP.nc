@@ -84,14 +84,14 @@ generic module M16c60UartP()
   provides interface UartStream;
   provides interface UartControl;
   
-  uses interface AsyncStdControl as HplUartTxControl;
-  uses interface AsyncStdControl as HplUartRxControl;
   uses interface HplM16c60Uart as HplUart;
   uses interface Counter<TMicro, uint16_t>;
   
 }
 implementation
 { 
+#define SPEED_F1_2(baud) (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * (float)baud))+ 0.5) - 1.0)
+#define SPEED_F8(baud) (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * (float)baud))+ 0.5) - 1.0)
   norace uint16_t m_tx_len, m_rx_len;
   norace uint8_t *m_tx_buf, *m_rx_buf;
   norace uint16_t m_tx_pos, m_rx_pos;
@@ -99,6 +99,7 @@ implementation
   norace uint8_t m_rx_intr;
   norace uint8_t m_tx_intr;
   norace uart_duplex_t mode = TOS_UART_OFF;
+  norace uart_speed_t speed;
 
   async command error_t UartStream.enableReceiveInterrupt()
   {
@@ -157,11 +158,11 @@ implementation
     
   }
 
-  async event void HplUart.rxDone( uint8_t data ) 
+  async event void HplUart.rxDone() 
   {
     if ( m_rx_buf ) 
     {
-      m_rx_buf[ m_rx_pos++ ] = data;
+      m_rx_buf[ m_rx_pos++ ] = call HplUart.rx();
       if ( m_rx_pos >= m_rx_len ) 
       {
         uint8_t* buf = m_rx_buf;
@@ -179,7 +180,7 @@ implementation
     }
     else 
     {
-      signal UartStream.receivedByte( data );
+      signal UartStream.receivedByte( call HplUart.rx() );
     }    
   }
 
@@ -206,6 +207,10 @@ implementation
 
   async event void HplUart.txDone() 
   {
+    if (!m_tx_intr)
+    {
+      return;
+    }
     if ( m_tx_pos < m_tx_len ) 
     {
       call HplUart.tx( m_tx_buf[ m_tx_pos++ ] );
@@ -275,66 +280,86 @@ implementation
     
   }
   
-  async command error_t UartControl.setSpeed(uart_speed_t speed)
+  async command error_t UartControl.setSpeed(uart_speed_t s)
   {
     if (mode != TOS_UART_OFF)
     {
       return FAIL;
     }
+    speed = s;
     switch (speed)
     {
-      // TODO(henrik): This is not that good because we are repeating the
-      //               the switch statement over the baud rates here and in
-      //               two places in the HplM16c60UartP.nc file. Which means
-      //               that if adding a new baudrate changes needs to be done in 3
-      //               places.
       // 138us/byte @ 57600
       case TOS_UART_300:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F8);
+        call HplUart.setSpeed(SPEED_F8(300)); 
         m_byte_time = 138 * 192;
         break;
       case TOS_UART_600:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F8);
+        call HplUart.setSpeed(SPEED_F8(600)); 
         m_byte_time = 138 * 96;
         break;
       case TOS_UART_1200:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F8);
+        call HplUart.setSpeed(SPEED_F8(1200)); 
         m_byte_time = 138 * 48;
         break;
       case TOS_UART_2400:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F8);
+        call HplUart.setSpeed(SPEED_F8(2400)); 
         m_byte_time = 138 * 24;
         break;
       case TOS_UART_4800:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F8);
+        call HplUart.setSpeed(SPEED_F8(4800)); 
         m_byte_time = 138 * 12;
         break;
       case TOS_UART_9600:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F1_2);
+        call HplUart.setSpeed(SPEED_F1_2(9600)); 
         m_byte_time = 138 * 6;
         break;
       case TOS_UART_19200:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F1_2);
+        call HplUart.setSpeed(SPEED_F1_2(19200)); 
         m_byte_time = 138 * 3;
         break;
       case TOS_UART_38400:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F1_2);
+        call HplUart.setSpeed(SPEED_F1_2(38400u)); 
         m_byte_time = 138 * 1.5;
         break;
       case TOS_UART_57600:
+        call HplUart.setCountSource(M16C60_UART_COUNT_SOURCE_F1_2);
+        call HplUart.setSpeed(SPEED_F1_2(57600u)); 
         m_byte_time = 138;
         break;
       default:
         m_byte_time = 0xFFFF; // Set maximum value as default.
         break;
     }
-    return call HplUart.setSpeed(speed);
+    return SUCCESS;
   }
 
   async command uart_speed_t UartControl.speed()
   {
-    return call HplUart.getSpeed();
+    return speed;
   }
   
+  void uartOn()
+  {
+    call HplUart.setMode(M16C60_UART_MODE_UART_8BITS);
+    call HplUart.disableCTSRTS();
+  }
+
   async command error_t UartControl.setDuplexMode(uart_duplex_t duplex)
   {
     // Turn everything off
     call HplUart.disableTxInterrupt();
+    call HplUart.disableTx();
     call HplUart.disableRxInterrupt();
-    call HplUartTxControl.stop();
-    call HplUartRxControl.stop();
+    call HplUart.disableRx();
     m_rx_intr = 0;
     m_tx_intr = 0;
 
@@ -342,20 +367,20 @@ implementation
     switch (duplex)
     {
       case TOS_UART_OFF:
-        call HplUart.off();
+        call HplUart.setMode(M16C60_UART_MODE_OFF);
         break;
       case TOS_UART_RONLY:
-        call HplUart.on();
-        call HplUartRxControl.start();
+        uartOn();
+        call HplUart.enableRx();
         break;
       case TOS_UART_TONLY:
-        call HplUart.on();
-        call HplUartTxControl.start();
+        uartOn();
+        call HplUart.enableTx();
         break;
       case TOS_UART_DUPLEX:
-        call HplUart.on();
-        call HplUartTxControl.start();
-        call HplUartRxControl.start();
+        uartOn();
+        call HplUart.enableTx();
+        call HplUart.enableRx();
         break;
       default:
         break;

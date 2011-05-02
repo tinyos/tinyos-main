@@ -106,7 +106,9 @@
 
 
 /**
- * Generic HPL module for a Uart port on the M16c/60 MCU.
+ * Generic HPL module for a Uart(0-2) port on the M16c/60 MCU.
+ * When used in I2C mode the rx/tx interrupts are generated on
+ * acks and nacks.
  *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
@@ -114,17 +116,20 @@
 #include "M16c60Uart.h"
  
 generic module HplM16c60UartP(uint8_t uartNr,
-                               uint16_t tx_addr,
-                               uint16_t rx_addr,
-                               uint16_t brg_addr,
-                               uint16_t mode_addr,
-                               uint16_t ctrl0_addr,
-                               uint16_t ctrl1_addr,
-                               uint16_t txInterrupt_addr,
-                               uint16_t rxInterrupt_addr)
+                              uint16_t tx_addr,
+                              uint16_t rx_addr,
+                              uint16_t brg_addr,
+                              uint16_t mode_addr,
+                              uint16_t smode_addr,
+                              uint16_t smode2_addr,
+                              uint16_t smode3_addr,
+                              uint16_t smode4_addr,
+                              uint16_t ctrl0_addr,
+                              uint16_t ctrl1_addr,
+                              uint16_t txInterrupt_addr,
+                              uint16_t rxInterrupt_addr,
+                              uint16_t bcnic_addr)
 {
-  provides interface AsyncStdControl as UartTxControl;
-  provides interface AsyncStdControl as UartRxControl;
   provides interface HplM16c60Uart as HplUart;
   
   uses interface GeneralIO as TxIO;
@@ -135,116 +140,89 @@ generic module HplM16c60UartP(uint8_t uartNr,
 }
 implementation
 {
-#define txBuf (*TCAST(volatile uint8_t* ONE, tx_addr))
+#define txBuf (*TCAST(volatile uint16_t* ONE, tx_addr))
 #define rxBuf (*TCAST(volatile uint8_t* ONE, rx_addr))
 #define txInterrupt (*TCAST(volatile uint8_t* ONE, txInterrupt_addr))
 #define rxInterrupt (*TCAST(volatile uint8_t* ONE, rxInterrupt_addr))
+#define bcnic (*TCAST(volatile uint8_t* ONE, bcnic_addr))
 #define brg (*TCAST(volatile uint8_t* ONE, brg_addr))
 #define mode (*TCAST(volatile uint8_t* ONE, mode_addr))
+#define smode (*TCAST(volatile uint8_t* ONE, smode_addr))
+#define smode2 (*TCAST(volatile uint8_t* ONE, smode2_addr))
+#define smode3 (*TCAST(volatile uint8_t* ONE, smode3_addr))
+#define smode4 (*TCAST(volatile uint8_t* ONE, smode4_addr))
 #define ctrl0 (*TCAST(volatile uint8_t* ONE, ctrl0_addr))
 #define ctrl1 (*TCAST(volatile uint8_t* ONE, ctrl1_addr))
 
-  enum {
-    ON,
-    OFF
-  };
-
-  uint8_t state = OFF;
-  uart_speed_t current_speed = TOS_UART_57600;
-  
-  async command void HplUart.on()
+  async command void HplUart.setMode(m16c60_uart_mode set_mode)
   {
-    // Set 8 bit transfer
-    SET_BIT(mode, 0);
-    SET_BIT(mode, 2);
-    
-    //no cts/rts.
-    SET_BIT(ctrl0, 4);
-    atomic switch (current_speed)
+    mode &= ~(0x7);
+    smode = 0;
+    smode2 = 0;
+    smode3 = 0;
+    smode4 = 0;
+    switch(set_mode)
     {
-      case TOS_UART_300:
-      case TOS_UART_600:
-      case TOS_UART_1200:
-      case TOS_UART_2400:
-      case TOS_UART_4800:
-        SET_BIT(ctrl0, 0);
-        CLR_BIT(ctrl0, 1);
+      case M16C60_UART_MODE_UART_8BITS:
+        SET_BIT(mode, 0);
+        SET_BIT(mode, 2);
         break;
-      case TOS_UART_9600:
-      case TOS_UART_19200:
-      case TOS_UART_38400:
-      case TOS_UART_57600:
-        CLR_BIT(ctrl0, 0);
-        CLR_BIT(ctrl0, 1);
+      case M16C60_UART_MODE_SPI0:
+        SET_BIT(smode3, 1);
+        ctrl0 = 0x90;
+        SET_BIT(mode, 0);
         break;
-      default:
+      case M16C60_UART_MODE_SPI1:
+        ctrl0 = 0xD0;
+        SET_BIT(mode, 0); 
+        break;
+      case M16C60_UART_MODE_SPI2:
+        SET_BIT(smode3, 1);
+        ctrl0 = 0xD0;
+        SET_BIT(mode, 0); 
+        break;
+      case M16C60_UART_MODE_SPI3:
+        ctrl0 = 0x90;
+        SET_BIT(mode, 0); 
+        break;
+      case M16C60_UART_MODE_I2C:
+        call TxIO.makeInput();
+        call RxIO.makeInput();
+        bcnic = 0;
+        txInterrupt = 0;
+        rxInterrupt = 0;
+        call HplUart.disableCTSRTS();
+        SET_BIT(ctrl0, 5);
+        CLR_BIT(ctrl0, 6);
+        SET_BIT(ctrl0, 7);
+        SET_BIT(smode, 0);
+        SET_BIT(smode2, 1);
+        SET_BIT(smode4, 4);
+        SET_BIT(smode4, 5);
+        SET_BIT(mode, 1);
+        break;
+      case M16C60_UART_MODE_OFF:
+        call StopModeControl.allowStopMode(true);
+        return;
         break;
     }
     call StopModeControl.allowStopMode(false);
-    atomic state = ON;
+  }
+
+  async command void HplUart.setSpeed(uint8_t speed)
+  {
+    brg = speed;
   }
   
-  async command void HplUart.off()
+  async command uint8_t HplUart.getSpeed()
   {
-    CLR_BIT(mode, 0);
-    CLR_BIT(mode, 2);
-    call StopModeControl.allowStopMode(true);
-    atomic state = OFF;
+    return brg;
   }
 
-
-  async command error_t HplUart.setSpeed(uart_speed_t speed)
+  async command void HplUart.setCountSource(m16c60_uart_count_source source)
   {
-    atomic if (state != OFF)
-    {
-      return FAIL;
-    }
-    
-    switch (speed)
-    {
-      // TODO(henrik) These values are based on a mcu that runs on MAIN_CRYSTAL_SPEED and doesn't
-      //              consider if the PLL is on which they should.
-
-      // Use Main clock divided by 8 for these
-      case TOS_UART_300:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 300.0))+ 0.5) - 1.0);
-        break;
-      case TOS_UART_600:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 600.0))+ 0.5) - 1.0);
-        break;
-      case TOS_UART_1200:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 1200.0))+ 0.5) - 1.0);
-        break;
-      case TOS_UART_2400:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 2400.0))+ 0.5) - 1.0);
-        break;
-      case TOS_UART_4800:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (128.0 * 4800.0))+ 0.5) - 1.0);
-        break;
-
-      // Use Main clock without division for these
-      case TOS_UART_9600:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 9600.0))+ 0.5) - 1.0);
-        break;
-      case TOS_UART_19200:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 19200.0))+ 0.5) - 1.0);
-        break;
-      case TOS_UART_38400:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 38400.0))+ 0.5) - 1.0);
-        break;
-      case TOS_UART_57600:
-        brg = (uint8_t)(((MAIN_CRYSTAL_SPEED * 1000000.0 / (16.0 * 57600.0))+ 0.5) - 1.0);
-        break;
-      default:
-        break;
-    }
-    atomic current_speed = speed;
-    return SUCCESS;
-  }
-  
-  async command uart_speed_t HplUart.getSpeed()
-  {
-    atomic return current_speed;
+    ctrl0 &= (~0x3);
+    ctrl0 |= source;
   }
   
   async command void HplUart.setParity(uart_parity_t parity)
@@ -309,37 +287,52 @@ implementation
       return TOS_UART_STOP_BITS_1;
     }
   }
-    
 
-  async command error_t UartTxControl.start()
+  async command void HplUart.enableCTSRTS()
+  {
+    CLR_BIT(ctrl0, 4);
+  }
+
+  async command void HplUart.disableCTSRTS()
+  {
+    SET_BIT(ctrl0, 4);
+  }
+
+  async command void HplUart.enableTx()
   {
     call TxIO.makeOutput();
     SET_BIT(ctrl1, 0);
-    return SUCCESS;
   }
 
-  async command error_t UartTxControl.stop()
+  async command void HplUart.disableTx()
   {
     while (!READ_BIT(ctrl0, 3)); // If transmitting, wait for it to finish
     call TxIO.makeInput();
     CLR_BIT(ctrl1, 0);
-    return SUCCESS;
+  }
+  
+  async command bool HplUart.isTxEnabled()
+  {
+    return READ_BIT(ctrl1, 0);
   }
 
-  async command error_t UartRxControl.start()
+  async command void HplUart.enableRx()
   {
     call RxIO.makeInput();
     SET_BIT(ctrl1, 2);
-    return SUCCESS;
   }
 
-  async command error_t UartRxControl.stop()
+  async command void HplUart.disableRx()
   {
     CLR_BIT(ctrl1, 2);
-    return SUCCESS;
+  }
+
+  async command bool HplUart.isRxEnabled()
+  {
+    return READ_BIT(ctrl1, 2);
   }
   
-  async command error_t HplUart.enableTxInterrupt()
+  async command void HplUart.enableTxInterrupt()
   {
     atomic
     {
@@ -348,29 +341,25 @@ implementation
       CLR_BIT(UCON.BYTE, uartNr);
       SET_BIT(txInterrupt, 0);
     }
-    return SUCCESS;
   }
   
-  async command error_t HplUart.disableTxInterrupt()
+  async command void HplUart.disableTxInterrupt()
   {
     CLR_BIT(txInterrupt, 0);
-    return SUCCESS;
   }
   
-  async command error_t HplUart.enableRxInterrupt()
+  async command void HplUart.enableRxInterrupt()
   { 
     atomic
     {
       clear_interrupt(rxInterrupt_addr);
       SET_BIT(rxInterrupt, 0);
     }
-    return SUCCESS;
   }
 
-  async command error_t HplUart.disableRxInterrupt()
+  async command void HplUart.disableRxInterrupt()
   {
     CLR_BIT(rxInterrupt, 0);
-    return SUCCESS;
   }
   
   async command bool HplUart.isTxEmpty()
@@ -390,14 +379,12 @@ implementation
 
   async command void HplUart.tx(uint8_t data)
   {
-      txBuf = data;
+    txBuf = data;
   }
   
   async event void Irq.rx() 
   {
-    if (!call HplUart.isRxEmpty()) {
-      signal HplUart.rxDone(call HplUart.rx());
-    }
+    signal HplUart.rxDone();
   }
   
   async event void Irq.tx()
@@ -405,6 +392,74 @@ implementation
     signal HplUart.txDone();
   }
   
+  // TODO(henrik) Add a event for the BCNIC interrupt. This makes it
+  //              possible to generate start and stops async.
+  async command void HplUart.i2cStart()
+  {
+    smode4 = 0x09; // Generate start.
+    while (!READ_BIT(bcnic, 3));
+    clear_interrupt(bcnic_addr);
+    smode3 = 0x02; // Drive SCL low between byte transfers.
+    smode4 = 0x00; // Enable output on SDA pin.
+  }
+
+  async command void HplUart.i2cStop()
+  {
+    smode4 = 0x0C; // Generate stop.
+    while (!READ_BIT(bcnic, 3));
+    clear_interrupt(bcnic_addr);
+    smode3 = 0x00; // Let SCL float while bus is idle.
+    smode4 = 0x30; // Let SDA float while bus is idle.
+  }
+ 
+  void clearInterrupts()
+  {
+    clear_interrupt(txInterrupt_addr);
+    clear_interrupt(rxInterrupt_addr);
+  }
+
+  async command void HplUart.i2cTx(uint8_t byte)
+  {
+    clearInterrupts();
+    U2TB.WORD = 0x0100 | (uint16_t)byte; // Bit 8 must be high for the slave
+                           // to be able to ack.
+  }
+
+  async command bool HplUart.i2cWaitTx()
+  {
+    while(!READ_BIT(rxInterrupt, 3) && !READ_BIT(txInterrupt, 3));
+
+    if (READ_BIT(rxInterrupt, 3))
+    {
+      clearInterrupts();
+      return true;
+    }
+    else
+    {
+      clearInterrupts();
+      return false;
+    }
+  }
+
+  async command void HplUart.i2cStartRx(bool nack)
+  {
+    if (nack)
+    {
+      txBuf = 0x01FF;
+    }
+    else
+    {
+      txBuf = 0x00FF;
+    }
+  }
+
+  async command uint8_t HplUart.i2cWaitRx()
+  {
+    while(!READ_BIT(rxInterrupt, 3) && !READ_BIT(txInterrupt, 3));
+    clearInterrupts();
+    return rxBuf;
+  }
+
   default async event void HplUart.txDone() {} 
-  default async event void HplUart.rxDone(uint8_t data) {}
+  default async event void HplUart.rxDone() {}
 }

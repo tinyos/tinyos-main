@@ -77,16 +77,8 @@ configuration HplM16c60UartC
 {
   provides
   {
-    interface AsyncStdControl as Uart0TxControl;
-    interface AsyncStdControl as Uart0RxControl;
     interface HplM16c60Uart as HplUart0;
-    
-    interface AsyncStdControl as Uart1TxControl;
-    interface AsyncStdControl as Uart1RxControl;
     interface HplM16c60Uart as HplUart1;
-
-    interface AsyncStdControl as Uart2TxControl;
-    interface AsyncStdControl as Uart2RxControl;
     interface HplM16c60Uart as HplUart2;
   }
 }
@@ -96,55 +88,64 @@ implementation
       HplM16c60GeneralIOC as IOs,
       HplM16c60UartInterruptP as Irqs,
       new HplM16c60UartP(0,
-                          (uint16_t)&U0TB.BYTE.U0TBL,
+                          (uint16_t)&U0TB.WORD,
                           (uint16_t)&U0RB.BYTE.U0RBL,
                           (uint16_t)&U0BRG,
                           (uint16_t)&U0MR.BYTE,
+                          (uint16_t)&U0SMR.BYTE,
+                          (uint16_t)&U0SMR2.BYTE,
+                          (uint16_t)&U0SMR3.BYTE,
+                          (uint16_t)&U0SMR4.BYTE,
                           (uint16_t)&U0C0.BYTE,
                           (uint16_t)&U0C1.BYTE,
                           (uint16_t)&S0TIC.BYTE,
-                          (uint16_t)&S0RIC.BYTE) as HplUart0P,
+                          (uint16_t)&S0RIC.BYTE,
+                          (uint16_t)&U0BCNIC.BYTE) as HplUart0P,
       new HplM16c60UartP(1,
-                          (uint16_t)&U1TB.BYTE.U1TBL,
+                          (uint16_t)&U1TB.WORD,
                           (uint16_t)&U1RB.BYTE.U1RBL,
                           (uint16_t)&U1BRG,
                           (uint16_t)&U1MR.BYTE,
+                          (uint16_t)&U1SMR.BYTE,
+                          (uint16_t)&U1SMR2.BYTE,
+                          (uint16_t)&U1SMR3.BYTE,
+                          (uint16_t)&U1SMR4.BYTE,
                           (uint16_t)&U1C0.BYTE,
                           (uint16_t)&U1C1.BYTE,
                           (uint16_t)&S1TIC.BYTE,
-                          (uint16_t)&S1RIC.BYTE) as HplUart1P,
+                          (uint16_t)&S1RIC.BYTE,
+                          (uint16_t)&U1BCNIC.BYTE) as HplUart1P,
       new HplM16c60UartP(2,
-                          (uint16_t)&U2TB.BYTE.U2TBL,
+                          (uint16_t)&U2TB.WORD,
                           (uint16_t)&U2RB.BYTE.U2RBL,
                           (uint16_t)&U2BRG,
                           (uint16_t)&U2MR.BYTE,
+                          (uint16_t)&U2SMR.BYTE,
+                          (uint16_t)&U2SMR2.BYTE,
+                          (uint16_t)&U2SMR3.BYTE,
+                          (uint16_t)&U2SMR4.BYTE,
                           (uint16_t)&U2C0.BYTE,
                           (uint16_t)&U2C1.BYTE,
                           (uint16_t)&S2TIC.BYTE,
-                          (uint16_t)&S2RIC.BYTE) as HplUart2P;
+                          (uint16_t)&S2RIC.BYTE,
+                          (uint16_t)&BCNIC.BYTE) as HplUart2P;
 
   components new StopModeControlC() as Uart0StopModeControl,
              new StopModeControlC() as Uart1StopModeControl,
              new StopModeControlC() as Uart2StopModeControl;
   
-  Uart0TxControl = HplUart0P.UartTxControl;
-  Uart0RxControl = HplUart0P.UartRxControl;
   HplUart0 = HplUart0P.HplUart;
   HplUart0P.TxIO -> IOs.PortP63;
   HplUart0P.RxIO -> IOs.PortP62;
   HplUart0P.Irq -> Irqs.Uart0;
   HplUart0P.StopModeControl -> Uart0StopModeControl;
 
-  Uart1TxControl = HplUart1P.UartTxControl;
-  Uart1RxControl = HplUart1P.UartRxControl;
   HplUart1 = HplUart1P.HplUart;
   HplUart1P.TxIO -> IOs.PortP67;
   HplUart1P.RxIO -> IOs.PortP66;
   HplUart1P.Irq -> Irqs.Uart1;
   HplUart1P.StopModeControl -> Uart1StopModeControl;
   
-  Uart2TxControl = HplUart2P.UartTxControl;
-  Uart2RxControl = HplUart2P.UartRxControl;
   HplUart2 = HplUart2P.HplUart;
   HplUart2P.TxIO -> IOs.PortP70;
   HplUart2P.RxIO -> IOs.PortP71;
