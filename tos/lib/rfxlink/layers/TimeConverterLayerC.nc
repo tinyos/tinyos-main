@@ -70,9 +70,9 @@ implementation
 		elapsedTime = radioTime - localTimeRadio;
 
 		if( shift > 0 )
-			elapsedTime >> shift;
+			elapsedTime >>= shift;
 		else if( shift < 0 )
-			elapsedTime << -shift;
+			elapsedTime <<= -shift;
 
 		return elapsedTime + localTimeOther;
 	}
@@ -92,9 +92,9 @@ implementation
 		elapsedTime = otherTime - localTimeOther;
 
 		if( shift > 0 )
-			elapsedTime << shift;
+			elapsedTime <<= shift;
 		else if( shift < 0 )
-			elapsedTime >> -shift;
+			elapsedTime >>= -shift;
 
 		return elapsedTime + localTimeRadio;
 	}
@@ -108,7 +108,7 @@ implementation
 
 	async command uint32_t PacketTimeStampOther.timestamp(message_t* msg)
 	{
-		return convertRadioToOther(call PacketTimeStampOther.timestamp(msg));
+		return convertRadioToOther(call PacketTimeStampRadio.timestamp(msg));
 	}
 
 	async command void PacketTimeStampOther.clear(message_t* msg)
