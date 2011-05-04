@@ -31,20 +31,76 @@
  */
 
 /**
- * No extra plugins are required to be started for tosboot.
- * 
+ * Implementation of the ProgFlash interface for M16c/65.
+ * The interface is responsible of reprogramming of the mcus
+ * program flash.
+ *
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-module PluginC
+
+#include "M16c65Flash.h"
+
+module ProgFlashP
 {
-  provides
+  provides interface ProgFlash;
+  
+  uses interface HplM16c60Flash as Flash;
+}
+implementation
+{
+
+  command error_t ProgFlash.write(in_flash_addr_t addr, uint8_t* buf, in_flash_addr_t len)
   {
-    interface StdControl;
+    // We dont need to rewrite the hw interrupt vector
+    if (addr >= 0xFFE00L)
+    {
+      return SUCCESS;
+    }
+
+    if (addr + len >= TOSBOOT_START)
+    {
+      return FAIL;
+    }
+
+    if (addr == 0x80000L)
+    {
+      // Erase Block 7
+      if (call Flash.erase(M16C65_BLOCK_7) != SUCCESS )
+      {
+        return FAIL;
+      }
+    }
+    else if ( addr == 0x90000L )
+    {
+      // Erase Block 6
+      if (call Flash.erase(M16C65_BLOCK_6) != SUCCESS )
+      {
+        return FAIL;
+      }
+    }
+    else if ( addr == 0xA0000L )
+    {
+      // Erase Block 5
+      if (call Flash.erase(M16C65_BLOCK_5) != SUCCESS )
+      {
+        return FAIL;
+      }
+    }
+    else if ( addr == 0xB0000L )
+    {
+      // Erase Block 4
+      if (call Flash.erase(M16C65_BLOCK_4) != SUCCESS )
+      {
+        return FAIL;
+      }
+    }
+
+    if (call Flash.write(addr, (unsigned int*) buf, len) != SUCCESS)
+    {
+      return FAIL;
+    }
+    
+    return SUCCESS;
   }
 }
 
-implementation 
-{
-  command error_t StdControl.start() { return SUCCESS; }
-  command error_t StdControl.stop() { return SUCCESS; }
-}

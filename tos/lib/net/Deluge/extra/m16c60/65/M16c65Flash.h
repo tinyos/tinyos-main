@@ -31,20 +31,35 @@
  */
 
 /**
- * No extra plugins are required to be started for tosboot.
+ * Defines for the program flash blocks for M16c/65.
  * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
+ * @author Renesas
  */
-module PluginC
-{
-  provides
-  {
-    interface StdControl;
-  }
-}
+ 
+#ifndef __M16C65FLASH_H__
+#define __M16C65FLASH_H__
 
-implementation 
+// User Block Area
+typedef enum
 {
-  command error_t StdControl.start() { return SUCCESS; }
-  command error_t StdControl.stop() { return SUCCESS; }
-}
+M16C65_BLOCK_0 = 0,		// 64KB: 0xF0000 - 0xFFFFF
+M16C65_BLOCK_1 = 1,		// 64KB: 0xE0000 - 0xEFFFF
+M16C65_BLOCK_2 = 2,		// 64KB: 0xD0000 - 0xDFFFF
+M16C65_BLOCK_3 = 3,		// 64KB: 0xC0000 - 0xCFFFF
+M16C65_BLOCK_4 = 4,		// 64KB: 0xB0000 - 0xBFFFF
+M16C65_BLOCK_5 = 5,		// 64KB: 0xA0000 - 0xAFFFF
+M16C65_BLOCK_6 = 6,		// 64KB: 0x90000 - 0x9FFFF
+M16C65_BLOCK_7 = 7,		// 64KB: 0x80000 - 0x8FFFF
+
+// Data Block Area
+M16C65_BLOCK_A = 13		// 4KB: F000 - FFFF
+} M16C65_BLOCK;
+
+const unsigned long m16c65_block_start_addresses[8] =
+	{0xF0000,0xE0000,0xD0000,0xC0000,0xB0000,0xA0000,0x90000,0x80000 };
+		
+const unsigned long m16c65_block_end_addresses[8] =
+	{0xFFFFF,0xEFFFF,0xDFFFF,0xCFFFF,0xBFFFF,0xAFFFF,0x9FFFF,0x8FFFF };
+
+#endif  // __M16C65FLASH_H__

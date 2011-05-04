@@ -31,20 +31,21 @@
  */
 
 /**
- * No extra plugins are required to be started for tosboot.
+ * Wiring so that the M16c/62p InternalFlashP module gets access to the 
+ * HplM16c60FlashC module.
  * 
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
-module PluginC
-{
-  provides
-  {
-    interface StdControl;
-  }
-}
 
-implementation 
+#include "M16c62pFlash.h"
+
+configuration InternalFlashC
 {
-  command error_t StdControl.start() { return SUCCESS; }
-  command error_t StdControl.stop() { return SUCCESS; }
+  provides interface InternalFlash;
+}
+implementation
+{
+  components HplM16c60FlashC, new InternalFlashP(M16C62P_BLOCK_2, M16C62P_BLOCK_3);
+  InternalFlashP.Flash -> HplM16c60FlashC;
+  InternalFlash = InternalFlashP;
 }

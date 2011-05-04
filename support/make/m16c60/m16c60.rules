@@ -12,7 +12,7 @@ endef
 DEFAULT_PROGRAM ?= sm16cf
 endif
 
-ifeq ($(M16C60_MCU),60)
+ifeq ($(M16C60_MCU),65)
 define M16C60_HELP
  Programmer options:
 
