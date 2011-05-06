@@ -54,7 +54,7 @@ implementation
   enum
   {
     ACLK_CALIB_PERIOD = 8,
-    TARGET_DCO_DELTA = TARGET_DCO_HZ * ACLK_CALIB_PERIOD / ACLK_HZ,
+    TARGET_DCO_DELTA = TARGET_DCO_KHZ * ACLK_CALIB_PERIOD / ACLK_KHZ,
   };
 
   async command mcu_power_t McuPowerOverride.lowestState() {
