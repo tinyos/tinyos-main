@@ -287,8 +287,8 @@ implementation {
             m_state = S_ACK_WAIT;
             // we need to have *completely* received the ACK, 32+22 symbols
             // should theroretically be enough, but there can be delays in 
-            // servicing the FIFOP interrupt, so we use 100 symbols here
-            call BackoffAlarm.start( 100 ); 
+            // servicing the FIFOP interrupt, so we use 150 symbols here
+            call BackoffAlarm.start( 150 ); 
           } else {
             signalDone(FALSE, SUCCESS);
           }
@@ -401,13 +401,13 @@ implementation {
           break;
 
         case S_ACK_WAIT:
-          if (call FIFOP.get()) { 
-            // There's a packet in the Rx queue: it might be an ACK for our
-            // latest transmission, so we better wait a bit longer and let
-            // the Rx part of the driver get the packet first ...
-            call BackoffAlarm.start(100); 
-            return;
-          }
+/*          if (call FIFOP.get()) { */
+/*            // There's a packet in the Rx queue: it might be an ACK for our*/
+/*            // latest transmission, so we better wait a bit longer and let*/
+/*            // the Rx part of the driver get the packet first ...*/
+/*            call BackoffAlarm.start(100); */
+/*            return;*/
+/*          }*/
           signalDone( FALSE, ENOACK );
           break;
 
