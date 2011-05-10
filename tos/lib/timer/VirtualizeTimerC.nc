@@ -72,7 +72,7 @@ implementation
 
   void fireTimers(uint32_t now)
   {
-    uint8_t num;
+    uint16_t num;
 
     for (num=0; num<NUM_TIMERS; num++)
       {
@@ -106,7 +106,7 @@ implementation
     uint32_t now = call TimerFrom.getNow();
     int32_t min_remaining = (1UL << 31) - 1; /* max int32_t */
     bool min_remaining_isset = FALSE;
-    uint8_t num;
+    uint16_t num;
 
     call TimerFrom.stop();
 
