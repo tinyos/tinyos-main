@@ -1,3 +1,4 @@
+
 This directory contains "TKN15.4", a platform-independent IEEE 802.15.4-2006
 MAC implementation. The code is under active development and most of the
 functionality described in the standard is implemented and tested.  The MAC
@@ -7,10 +8,12 @@ itself is platform-independent, but it requires (1) a suitable radio driver,
 and micaZ (note: because they do not have a clock that satisfies the
 precision/accuracy requirements of the IEEE 802.15.4 standard -- 62.500 Hz,
 +-40 ppm in the 2.4 GHz band -- the timing in beacon-enabled mode is not
-standard compliant).
+standard compliant). The implementation also includes an AM layer, so it can be
+used underneath TinyOS routing protocols such as CTP (take a look at
+apps/tests/tkn154/README.txt).
 
-Status (last updated 9/14/09)
------------------------------
+Status (last updated May 10, 2011)
+----------------------------------
 
 Missing functionality:
 - GTS
@@ -20,25 +23,26 @@ Missing functionality:
   in case CSMA-CA algorithm fails
 
 Known Issues:
-- resetting the MAC during operation (via MLME_RESET) has not been tested
+- resetting the MAC during operation (via MLME_RESET) has not been sufficiently
+  tested
 - if initial beacon Tx timestamp is invalid, the coordinator will hang 
-- frame pending flags are (need to be) always set in the ACK headers
+- frame pending flags will (need to be) always set in the ACK headers
 - transmitting coordinator realignment frames has not been tested
-- using an incoming and outgoing superframe at the same time has not been tested
 - during an ongoing CSMA-CA transmission incoming frames are ignored
 - on a beacon-enabled PAN: if the device cannot find the beacon the DATA frame 
   is not transmitted (but it should be transmitted using unslotted CSMA-CA, see 
   Sect. 7.5.6.1 "Transmission")
+- ACK timestamps are invalid (relevant only in promiscuous mode)
 
 Implementation 
 --------------
 
-MAC implementation: tinyos-2.x/tos/lib/mac/tkn154
-MAC interfaces: tinyos-2.x/tos/lib/mac/tkn154/interfaces
-CC2420 driver: tinyos-2.x/tos/chips/cc2420_tkn154
-TelosB "platform glue" code: tinyos-2.x/tos/platforms/telosb/mac/tkn154
-micaZ "platform glue" code: tinyos-2.x/tos/platforms/micaz/mac/tkn154
-Example applications: tinyos-2.x/apps/tests/tkn154
+MAC implementation: tos/lib/mac/tkn154
+MAC interfaces: tos/lib/mac/tkn154/interfaces
+CC2420 driver: tos/chips/cc2420_tkn154
+TelosB "platform glue" code: tos/platforms/telosb/mac/tkn154
+micaZ "platform glue" code: tos/platforms/micaz/mac/tkn154
+Example applications: apps/tests/tkn154
 
 Note: TEP3 recommends that interface names "should be mixed case, starting
 upper case". To match the syntax used in the IEEE 802.15.4 standard the
@@ -52,7 +56,7 @@ A technical report on TKN15.4 is available here:
 http://www.tkn.tu-berlin.de/publications/papers/TKN154.pdf
 
 TKN15.4 is the basis for the implementation of the TinyOS 15.4 WG:
-http://tinyos.stanford.edu:8000/15.4_WG
+http://www.tinyos.net/scoop/special/working_group_tinyos_154
 
 Copyright
 ---------
@@ -91,4 +95,5 @@ Author: Jan-Hinrich Hauer <hauer@tkn.tu-berlin.de>
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 

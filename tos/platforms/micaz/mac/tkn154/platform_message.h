@@ -8,7 +8,11 @@
 #include <TKN154_MAC.h>
 
 /* TOSH_DATA_LENGTH should be the maximum length of the MAC payload */
-#define TOSH_DATA_LENGTH IEEE154_aMaxMACPayloadSize
+#ifndef TOSH_DATA_LENGTH
+#define TOSH_DATA_LENGTH 118
+#elif TOSH_DATA_LENGTH < 118
+#warning "MAC payload region is smaller than aMaxMACPayloadSize!"
+#endif
 
 typedef union message_header {
   ieee154_header_t ieee154;

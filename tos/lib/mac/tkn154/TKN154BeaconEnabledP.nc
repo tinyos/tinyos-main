@@ -114,8 +114,14 @@ implementation
   components DataP,
              PibP,
              RadioControlP,
+
+#ifndef IEEE154_INDIRECT_TX_DISABLED
              IndirectTxP,
              PollP,
+#else
+             NoIndirectTxP as IndirectTxP,
+             NoPollP as PollP,
+#endif
 
 #ifndef IEEE154_SCAN_DISABLED
              ScanP,

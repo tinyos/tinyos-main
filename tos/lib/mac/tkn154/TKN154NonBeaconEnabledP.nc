@@ -97,14 +97,27 @@ implementation
   components DataP,
              PibP,
              RadioControlP,
+             DispatchUnslottedCsmaP as DispatchP,
+#if CAP_TX_QUEUE_SIZE == 1
+             new NoDispatchQueueP() as DispatchQueueP,
+#else
+             new DispatchQueueP() as DispatchQueueP,
+#endif
+
+#ifndef IEEE154_INDIRECT_TX_DISABLED
              IndirectTxP,
              PollP,
-             BeaconRequestRxP,
+#else
+             NoIndirectTxP as IndirectTxP,
+             NoPollP as PollP,
+#endif
 
 #ifndef IEEE154_SCAN_DISABLED
              ScanP,
+             BeaconRequestRxP,
 #else
              NoScanP as ScanP,
+             NoBeaconRequestRxP as BeaconRequestRxP,
 #endif
 
 #ifndef IEEE154_ASSOCIATION_DISABLED
@@ -118,8 +131,6 @@ implementation
 #else
              NoDisassociateP as DisassociateP,
 #endif
-             new DispatchQueueP() as DispatchQueueP,
-             DispatchUnslottedCsmaP as DispatchP,
 
 #ifndef IEEE154_RXENABLE_DISABLED
              RxEnableP,

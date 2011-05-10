@@ -561,8 +561,7 @@ implementation
 
   command void Packet.clear(message_t* msg)
   {
-    memset(msg->header, 0, sizeof(message_header_t));
-    memset(msg->metadata, 0, sizeof(message_metadata_t));
+    memset(msg, 0, sizeof(message_t));
   }
 
   command uint8_t Packet.payloadLength(message_t* msg)
@@ -577,9 +576,6 @@ implementation
 
   command uint8_t Packet.maxPayloadLength()
   {
-#if TOSH_DATA_LENGTH < IEEE154_aMaxMACPayloadSize
-#warning Payload portion in message_t is smaller than required (TOSH_DATA_LENGTH < IEEE154_aMaxMACPayloadSize). This means that larger packets cannot be sent/received.
-#endif
     return TOSH_DATA_LENGTH;
   }
 
@@ -770,6 +766,12 @@ implementation
   {
     ieee154_metadata_t *metadata = (ieee154_metadata_t*) frame->metadata;
     return metadata->linkQuality;
+  }
+
+  command int8_t Frame.getRSSI(message_t* frame)
+  {
+    ieee154_metadata_t *metadata = (ieee154_metadata_t*) frame->metadata;
+    return metadata->rssi;
   }
 
   command uint8_t Frame.getSrcAddrMode(message_t* frame)

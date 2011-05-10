@@ -186,7 +186,7 @@ typedef struct {
 } ieee154_header_t;
 
 typedef struct {
-  uint8_t rssi;
+  int8_t rssi;
   uint8_t linkQuality;
   uint32_t timestamp;
 } ieee154_metadata_t;
