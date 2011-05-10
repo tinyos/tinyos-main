@@ -33,11 +33,16 @@
  * ========================================================================
  */
 
+#define NEW_PRINTF_SEMANTICS
+#include "printf.h"
+
 configuration TestPromiscuousAppC
 {
 } implementation {
  components MainC, TestPromiscuousC as App, LedsC, 
             Ieee802154NonBeaconEnabledC as MAC;
+  components PrintfC;
+  components SerialStartC;
 
   MainC.Boot <- App;
   App.Leds -> LedsC;

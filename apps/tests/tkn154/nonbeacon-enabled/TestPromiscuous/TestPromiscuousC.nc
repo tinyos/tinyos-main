@@ -32,7 +32,10 @@
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
+
+#include "printf.h"
 #include "TKN154.h"
+
 module TestPromiscuousC
 {
   uses {
