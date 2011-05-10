@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Technische Universitaet Berlin
+ * Copyright (c) 2009, Technische Universitaet Berlin
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -27,59 +27,50 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-05 10:07:14 $
- * @author Jan Hauer <hauer@tkn.tu-berlin.de>
+ * $Revision: 1.3 $
+ * $Date: 2009-05-28 09:52:54 $
+ * @author: Jasper Buesch <buesch@tkn.tu-berlin.de>
  * ========================================================================
  */
 
- /** Placeholder component for DispatchQueueP: frames are forwarded immediately
-  * without queuing, i.e. this component is not a "dead end" like most other
-  * placeholders.*/
+ /** Empty placeholder component for BeaconRequestRxP. */
 
 #include "TKN154_MAC.h"
-generic module NoDispatchQueueP() {
+#include "TKN154.h"
+module NoBeaconRequestRxP
+{
   provides
   {
     interface Init as Reset;
-    interface FrameTx[uint8_t client];
-    interface FrameRx as FrameExtracted[uint8_t client];
-    interface Purge;
-  } uses {
-    interface Queue<ieee154_txframe_t*>;
-    interface FrameTx as FrameTxCsma;
-    interface FrameRx as SubFrameExtracted;
+    interface IEEE154TxBeaconPayload;
+  }
+  uses
+  {
+    interface FrameRx as BeaconRequestRx;
+    interface FrameTx as BeaconRequestResponseTx;
+    interface MLME_GET;
+    interface FrameUtility;
+    interface IEEE154Frame as Frame;
+
   }
 }
 implementation
 {
-  uint8_t m_client;
 
   command error_t Reset.init() { return SUCCESS; }
 
-  command ieee154_status_t FrameTx.transmit[uint8_t client](ieee154_txframe_t *txFrame)
-  {
-    ieee154_status_t status;
-    txFrame->client = client;
-    status = call FrameTxCsma.transmit(txFrame);
-    if (status == IEEE154_SUCCESS)
-      m_client = client;
-    return status;
-  }
+  event message_t* BeaconRequestRx.received(message_t* frame) { return frame; }
+ 
+  event void BeaconRequestResponseTx.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status){ }
 
-  event void FrameTxCsma.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status) 
-  { 
-    signal FrameTx.transmitDone[txFrame->client](txFrame, status);
-  }
+  /* ----------------------- Beacon Payload ----------------------- */
 
-  event message_t* SubFrameExtracted.received(message_t* frame) 
-  { 
-    return signal FrameExtracted.received[m_client](frame);
-  }
+  command error_t IEEE154TxBeaconPayload.setBeaconPayload(void *beaconPayload, uint8_t length) { return EOFF; }
 
-  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status){}
+  command const void* IEEE154TxBeaconPayload.getBeaconPayload(){ return NULL; }
 
-  command ieee154_status_t Purge.purge(uint8_t msduHandle) { return IEEE154_INVALID_HANDLE; }
-  
-  default event void Purge.purgeDone(ieee154_txframe_t *txFrame, ieee154_status_t status){}
+  command uint8_t IEEE154TxBeaconPayload.getBeaconPayloadLength(){ return 0; }
+
+  command error_t IEEE154TxBeaconPayload.modifyBeaconPayload(uint8_t offset, void *buffer, uint8_t bufferLength){ return EOFF; }
 }
+

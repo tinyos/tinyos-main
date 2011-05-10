@@ -27,59 +27,61 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * - Revision -------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2009-03-05 10:07:14 $
+ * $Revision: 1.5 $
+ * $Date: 2010-01-05 16:41:16 $
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
 
- /** Placeholder component for DispatchQueueP: frames are forwarded immediately
-  * without queuing, i.e. this component is not a "dead end" like most other
-  * placeholders.*/
+ /** Empty placeholder component for PollP. */
 
 #include "TKN154_MAC.h"
-generic module NoDispatchQueueP() {
+
+module NoPollP
+{
   provides
   {
-    interface Init as Reset;
-    interface FrameTx[uint8_t client];
-    interface FrameRx as FrameExtracted[uint8_t client];
-    interface Purge;
-  } uses {
-    interface Queue<ieee154_txframe_t*>;
-    interface FrameTx as FrameTxCsma;
-    interface FrameRx as SubFrameExtracted;
+    interface Init;
+    interface MLME_POLL;
+    interface FrameRx as DataRx;
+    interface DataRequest as DataRequest[uint8_t client];
+  }
+  uses
+  {
+    interface FrameTx as PollTx;
+    interface FrameExtracted as DataExtracted;
+    interface FrameUtility;
+    interface Pool<ieee154_txframe_t> as TxFramePool;
+    interface Pool<ieee154_txcontrol_t> as TxControlPool;
+    interface MLME_GET;
+    interface Get<uint64_t> as LocalExtendedAddress;
   }
 }
 implementation
 {
-  uint8_t m_client;
+  command error_t Init.init() { return SUCCESS; }
 
-  command error_t Reset.init() { return SUCCESS; }
-
-  command ieee154_status_t FrameTx.transmit[uint8_t client](ieee154_txframe_t *txFrame)
+  command ieee154_status_t MLME_POLL.request  (
+                          uint8_t coordAddrMode,
+                          uint16_t coordPANID,
+                          ieee154_address_t coordAddress,
+                          ieee154_security_t *security)
   {
-    ieee154_status_t status;
-    txFrame->client = client;
-    status = call FrameTxCsma.transmit(txFrame);
-    if (status == IEEE154_SUCCESS)
-      m_client = client;
-    return status;
+    return IEEE154_TRANSACTION_OVERFLOW;
   }
 
-  event void FrameTxCsma.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status) 
-  { 
-    signal FrameTx.transmitDone[txFrame->client](txFrame, status);
+  command ieee154_status_t DataRequest.poll[uint8_t client](uint8_t CoordAddrMode, 
+      uint16_t CoordPANId, uint8_t *CoordAddressLE, uint8_t srcAddrMode)
+  {
+    return IEEE154_TRANSACTION_OVERFLOW;
   }
 
-  event message_t* SubFrameExtracted.received(message_t* frame) 
-  { 
-    return signal FrameExtracted.received[m_client](frame);
+  event message_t* DataExtracted.received(message_t* frame, ieee154_txframe_t *txFrame)
+  {
+    return frame;
   }
 
-  default event void FrameTx.transmitDone[uint8_t client](ieee154_txframe_t *txFrame, ieee154_status_t status){}
-
-  command ieee154_status_t Purge.purge(uint8_t msduHandle) { return IEEE154_INVALID_HANDLE; }
-  
-  default event void Purge.purgeDone(ieee154_txframe_t *txFrame, ieee154_status_t status){}
+  event void PollTx.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status)
+  {
+  }
 }
