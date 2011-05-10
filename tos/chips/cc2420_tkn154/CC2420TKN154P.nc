@@ -35,6 +35,7 @@
 
 #include "TKN154_MAC.h"
 #include "TKN154_PHY.h"
+#include "platform_message.h"
 #include <CC2420.h>
 #include "Timer62500hz.h"
 

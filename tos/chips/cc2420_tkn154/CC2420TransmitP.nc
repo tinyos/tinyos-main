@@ -401,7 +401,13 @@ implementation {
           break;
 
         case S_ACK_WAIT:
-          /*        signalDone( SUCCESS );*/
+          if (call FIFOP.get()) { 
+            // There's a packet in the Rx queue: it might be an ACK for our
+            // latest transmission, so we better wait a bit longer and let
+            // the Rx part of the driver get the packet first ...
+            call BackoffAlarm.start(100); 
+            return;
+          }
           signalDone( FALSE, ENOACK );
           break;
 
