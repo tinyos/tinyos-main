@@ -1,0 +1,62 @@
+# Make sure that TinyOS Makerules has been included *before* including
+# this Makefile, because it expands the PLATFORM variable, which we need
+
+TKN154_PLATFORM_INCLUDE ?= $(TOSDIR)/platforms/$(PLATFORM)/mac/tkn154/Makefile.include
+TKN154_EXTRAS += $(wildcard $(TOSDIR)/lib/mac/tkn154/extras/*.extra)
+CFLAGS += -I$(TOSDIR)/lib/mac/tkn154 \
+	-I$(TOSDIR)/lib/mac/tkn154/dummies \
+	-I$(TOSDIR)/lib/mac/tkn154/interfaces/MCPS \
+	-I$(TOSDIR)/lib/mac/tkn154/interfaces/MLME \
+	-I$(TOSDIR)/lib/mac/tkn154/interfaces/private \
+	-I$(TOSDIR)/lib/mac/tkn154/interfaces/public
+
+#################################### Extras ####################################
+
+# legacy
+ifdef IEEE154_EXTENDED_ADDRESS
+$(error To set the extended address of a device to X pass 'extaddr,X' to the make system (e.g. "make telosb extaddr,0x012345"))
+endif
+
+# legacy
+ifdef TKN154_DEBUG
+$(error To enable debug mode pass 'tkn154debug' to the make system (e.g. "make telosb tkn154debug"))
+endif
+
+# Pull in our extras (note we cannot use TOSMAKE_PATH, because it has already
+# been parsed), so we do it "manually" ourselves now
+$(foreach file,$(TKN154_EXTRAS),$(if $(filter $(call names,$(file)),$(GOALS)),$(eval include $(file))))
+
+
+############################### Platform include ###############################
+
+# 1. check whether target is "clean"
+ifneq ($(strip $(foreach g,$(GOALS),$(findstring $(g),clean))),)
+  # do nothing (Makerules' default clean branch will be executed)
+
+# 2. check whether the platform is supported, by testing if file
+# TKN154_PLATFORM_INCLUDE exists
+else ifeq ($(strip $(wildcard $(TKN154_PLATFORM_INCLUDE))),)
+  $(error The target platform is not supported by the TKN15.4 MAC)
+else
+
+# 3. platform is supported: now include the platform-specific
+# TKN15.4 Makefile
+  include $(TKN154_PLATFORM_INCLUDE)
+endif
+
+############################### BaseStation fix ###############################
+
+# apps/BaseStation assumes that the first byte at message_t->data is owned by
+# the layer on top of the active message abstraction, but actually
+# message_t->data points to the optional T2_6LOWPAN_NETWORK_ID and the Active
+# Message ID. The approach of TinyOS 2 is to simply assign these two bytes to
+# the MAC header (where according to the 802.15.4 frame format it clearly
+# doesn't belong, it's part of the MAC payload). Because we still want to
+# support apps/BaseStation we add a preprocessor flag that will result in an
+# (ugly) workaround in TKN154ActiveMessageP if BaseStationC is compiled ....
+
+ifeq ($(COMPONENT),BaseStationC)
+CFLAGS+=-DTKN154_BASESTATION_WORKAROUND
+endif
+
+

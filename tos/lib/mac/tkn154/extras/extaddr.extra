@@ -1,0 +1,4 @@
+ifeq ($(EXTADDR),)
+$(error To set an extended address X pass 'extaddr,X' to the make system (e.g. "make telosb extaddr,0x012345"))
+endif
+PFLAGS += -DIEEE154_EXTENDED_ADDRESS=$(EXTADDR)
