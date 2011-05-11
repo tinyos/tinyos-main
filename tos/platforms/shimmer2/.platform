@@ -21,6 +21,7 @@ push( @includes, qw(
   %T/platforms/shimmer2/chips/fgpmmopa6b
   %T/platforms/shimmer2/chips/bmp085
   %T/platforms/shimmer2/chips/hmc5843
+  %T/platforms/shimmer2/chips/straingauge
   %T/platforms/shimmer
   %T/platforms/shimmer/chips/msp430
   %T/platforms/shimmer/chips/mma7260
