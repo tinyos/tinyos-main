@@ -63,6 +63,9 @@ interface shimmerAnalogSetup {
   // either of two channels
   command void addAnExInput(uint8_t channel);
 
+  // identical to ecg
+  command void addStrainGaugeInputs();
+
   // sets number of channels back to zero
   command void reset();
 

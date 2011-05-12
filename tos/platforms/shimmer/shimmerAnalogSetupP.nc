@@ -91,6 +91,11 @@ implementation {
     TOSH_SEL_ADC_2_MODFUNC();
   }
 
+  // identical to ecg
+  command void shimmerAnalogSetup.addStrainGaugeInputs(){
+    call shimmerAnalogSetup.addECGInputs();
+  }
+
   command void shimmerAnalogSetup.addECGInputs() {
     uint8_t new_chans[] = { 1, 2 };  // ecg_lall, ecg_rall
     addNewChannels(new_chans, 2);
