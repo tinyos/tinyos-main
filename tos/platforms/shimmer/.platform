@@ -18,6 +18,7 @@ push( @includes, qw(
   %T/platforms/shimmer/chips/msp430
   %T/platforms/shimmer/chips/ds2411
   %T/platforms/shimmer/chips/gsr
+  %T/platforms/shimmer/chips/rmcm01
   %T/platforms/shimmer2/chips/gyro
   %T/chips/cc2420
   %T/chips/cc2420/alarm
