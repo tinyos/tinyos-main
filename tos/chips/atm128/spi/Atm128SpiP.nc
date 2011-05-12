@@ -151,7 +151,10 @@ implementation {
 #endif
 
     call Spi.write( tx );
-    while ( !( SPSR & 0x80 ) );
+
+    while( ! call Spi.isInterruptPending() )
+	    ;
+
     return call Spi.read();
   }
 
@@ -160,7 +163,7 @@ implementation {
   }
 
   inline async command uint8_t FastSpiByte.splitRead() {
-    while( !( SPSR & 0x80 ) )
+    while( ! call Spi.isInterruptPending() )
       ;
     return call Spi.read();
   }
@@ -168,8 +171,9 @@ implementation {
   inline async command uint8_t FastSpiByte.splitReadWrite(uint8_t data) {
     uint8_t b;
 
-    while( !( SPSR & 0x80 ) )
+    while( ! call Spi.isInterruptPending() )
 	;
+
     b = call Spi.read();
     call Spi.write(data);
 
@@ -178,8 +182,10 @@ implementation {
 
   inline async command uint8_t FastSpiByte.write(uint8_t data) {
     call Spi.write(data);
-    while( !( SPSR & 0x80 ) )
+
+    while( ! call Spi.isInterruptPending() )
       ;
+
     return call Spi.read();
   }
 

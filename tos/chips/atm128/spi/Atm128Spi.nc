@@ -132,7 +132,6 @@ interface Atm128Spi {
   async command uint8_t getClock();
   
   /* SPSR: SPI Status Register */
-  
   /* SPIF bit */
   async command bool isInterruptPending();
   /* WCOL bit */
