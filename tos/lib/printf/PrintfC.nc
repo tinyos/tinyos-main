@@ -66,5 +66,8 @@ implementation {
   PrintfP.Queue -> QueueC;
   PrintfP.AMSend -> SerialAMSenderC;
   PrintfP.Packet -> SerialAMSenderC;
+
+  components PutcharC;
+  PutcharC.Putchar -> PrintfP;
 }
 

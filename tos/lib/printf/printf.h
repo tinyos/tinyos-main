@@ -57,11 +57,8 @@
   #define PrintfQueue	Queue
 #endif
 
-#ifdef _H_msp430hardware_h
+#if defined (_H_msp430hardware_h) || defined (_H_atmega128hardware_H)
   #include <stdio.h>
-#else
-#ifdef _H_atmega128hardware_H
-  #include "avr_stdio.h"
 #else
 #ifdef __M16C60HARDWARE_H__ 
   #include "m16c60_printf.h"
@@ -69,7 +66,8 @@
   #include "generic_printf.h"
 #endif
 #endif
-#endif
+#undef putchar
+
 #include "message.h"
 int printfflush();
 

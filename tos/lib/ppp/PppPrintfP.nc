@@ -37,6 +37,7 @@
 module PppPrintfP {
   provides {
     interface PppProtocol;
+    interface Putchar;
   }
   uses {
     interface Ppp;
@@ -124,7 +125,8 @@ module PppPrintfP {
     }
   }
 
-  int (putchar) (int c) __attribute__((noinline)) @C() @spontaneous()
+#undef putchar
+  command int Putchar.putchar (int c)
   {
     atomic {
       if ((! disabled__) && (bufferIndex_ < sizeof(buffer_))) {

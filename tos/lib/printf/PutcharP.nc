@@ -29,7 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
  /*
  * Copyright (c) 2007 Stanford University.
  * All rights reserved.
@@ -62,103 +62,60 @@
  */
 
 /**
- * This is the PrintfP component.  It provides the printf service for printing
- * data over the serial interface using the standard c-style printf command.  
- * Data printed using printf are buffered and only sent over the serial line after
- * the buffer is half full or an explicit call to printfflush() is made.  This 
- * buffer has a maximum size of 250 bytes at present.  This component is wired
- * to a shadowed MainC component so that printf statements can be made anywhere 
- * throughout your code, so long as you include the "printf.h" header file in 
- * every file you wish to use it.  Take a look at the printf tutorial (lesson 15)
- * for more details.
+ * This component provides a TinyOS-compatible bridge to the
+ * system-specific mechanism of providing single-character output to
+ * the environment's printf(3c) infrastructure.  Components that
+ * provide a libc-based printf facility in TinyOS should implement the
+ * Putchar interface and connect it to this module.
  *
- * The printf service is currently only available for msp430 based motes 
- * (i.e. telos, eyes) and atmega128x based motes (i.e. mica2, micaz, iris).  On the
- * atmega platforms, avr-libc version 1.4 or above must be used.
- */
- 
-/**
  * @author Kevin Klues <klueska@cs.stanford.edu>
- * @date September 18, 2007
+ * @author Peter A. Bigot <pabigot@users.sourceforge.net>
  */
 
-#include "printf.h"
-
-module PrintfP @safe() {
-  provides {
-    interface Init;
-    interface Putchar;
-  }
-  uses {
-    interface PrintfQueue<uint8_t> as Queue;
-    interface AMSend;
-    interface Packet;
-    interface Leds;
-  }
-}
-implementation {
-  
-  enum {
-    S_STARTED,
-    S_FLUSHING,
-  };
-
-  message_t printfMsg;
-  uint8_t state = S_STARTED;
-  
-  command error_t Init.init() {
-      atomic state = S_STARTED;
-      return SUCCESS;
-  }
-
-  task void retrySend() {
-    if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg_t)) != SUCCESS)
-      post retrySend();
-  }
-  
-  void sendNext() {
-    int i;
-    printf_msg_t* m = (printf_msg_t*)call Packet.getPayload(&printfMsg, sizeof(printf_msg_t));
-    uint16_t length_to_send = (call Queue.size() < sizeof(printf_msg_t)) ? call Queue.size() : sizeof(printf_msg_t);
-    memset(m->buffer, 0, sizeof(printf_msg_t));
-    for(i=0; i<length_to_send; i++)
-      m->buffer[i] = call Queue.dequeue();
-    if(call AMSend.send(AM_BROADCAST_ADDR, &printfMsg, sizeof(printf_msg_t)) != SUCCESS)
-      post retrySend();  
-  }
-  
-  int printfflush() @C() @spontaneous() {
-    atomic {
-      if(state == S_FLUSHING)
-        return SUCCESS;
-      if(call Queue.empty())
-        return FAIL;
-      state = S_FLUSHING;
-    }
-    sendNext();
-    return SUCCESS;
-  }
-    
-  event void AMSend.sendDone(message_t* msg, error_t error) {    
-    if(error == SUCCESS) {
-      if(call Queue.size() > 0)
-        sendNext();
-      else state = S_STARTED;
-    }
-    else post retrySend();
-  }
-  
+#if defined (_H_msp430hardware_h) || defined (_H_atmega128hardware_H)
+  #include <stdio.h>
+#else
+#ifdef __M16C60HARDWARE_H__ 
+  #include "m16c60_printf.h"
+#else
+  #include "generic_printf.h"
+#endif
+#endif
 #undef putchar
-  command int Putchar.putchar (int c)
-  {
-    if((state == S_STARTED) && (call Queue.size() >= ((PRINTF_BUFFER_SIZE)/2))) {
-      state = S_FLUSHING;
-      sendNext();
-    }
-    atomic {
-      if(call Queue.enqueue(c) == SUCCESS)
-        return 0;
-      else return -1;
-    }
+
+#ifdef _H_atmega128hardware_H
+static int uart_putchar(char c, FILE *stream);
+static FILE atm128_stdout = 
+	FDEV_SETUP_STREAM(TCAST(int (*)(char c, FILE *stream), uart_putchar), 
+	NULL, _FDEV_SETUP_WRITE);
+#endif
+
+module PutcharP {
+  provides interface Init;
+  uses interface Putchar;
+} implementation {
+
+  command error_t Init.init() {
+      error_t rv = SUCCESS;
+#ifdef _H_atmega128hardware_H
+      stdout = &atm128_stdout;
+#endif
+      return rv;
+  }
+
+#ifdef _H_msp430hardware_h
+  int putchar(int c) __attribute__((noinline)) @C() @spontaneous() {
+#else
+#ifdef _H_atmega128hardware_H
+  int uart_putchar(char c, FILE *stream) __attribute__((noinline)) @C() @spontaneous() {
+#else
+#ifdef __M16C60HARDWARE_H__
+  int lowlevel_putc(int c) __attribute__((noinline)) @C() @spontaneous() {
+#else
+  int lowlevel_putc(int c) __attribute__((noinline)) @C() @spontaneous() {
+#endif
+#endif
+#endif
+    return call Putchar.putchar (c);
   }
 }

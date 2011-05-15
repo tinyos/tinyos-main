@@ -56,6 +56,10 @@
  * obtained by reading the instructions in the patch file in
  * ${TOSDIR}/lib/ppp/tos-pppd.patch.
  *
+ * @note For cross-platform compatibility, this module uses the PutcharP
+ * component from ${TOSDIR}/lib/printf.  That directory must be in
+ * your component search path.
+ *
  * @author Peter A. Bigot <pab@peoplepowerco.com>
  */
 configuration PppPrintfC {
@@ -73,4 +77,7 @@ configuration PppPrintfC {
 
   PppProtocol = PppPrintfP;
   Ppp = PppPrintfP;
+
+  components PutcharC;
+  PutcharC.Putchar -> PppPrintfP;
 }

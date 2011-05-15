@@ -47,5 +47,8 @@ configuration SerialPrintfC {
   components PlatformSerialC;
   SerialPrintfP.UartControl -> PlatformSerialC;
   SerialPrintfP.UartByte -> PlatformSerialC;
+
+  components PutcharC;
+  PutcharC.Putchar -> SerialPrintfP;
 }
 
