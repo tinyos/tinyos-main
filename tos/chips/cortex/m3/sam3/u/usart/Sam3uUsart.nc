@@ -30,7 +30,7 @@
  */
 
 interface Sam3uUsart{
-  command void start();
+  command void start(uint32_t baud);
   event void startDone(error_t err);
   command error_t stop();
   event void stopDone(error_t err);

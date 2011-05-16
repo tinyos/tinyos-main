@@ -44,14 +44,14 @@ module HplSam3uTwiImplP {
   uses {
     interface HplNVICInterruptCntl as Twi0Interrupt;
     interface HplNVICInterruptCntl as Twi1Interrupt;
-    interface HplSam3uGeneralIOPin as Twd0Pin;
-    interface HplSam3uGeneralIOPin as Twd1Pin;
-    interface HplSam3uGeneralIOPin as Twck0Pin;
-    interface HplSam3uGeneralIOPin as Twck1Pin;
-    interface HplSam3uPeripheralClockCntl as Twi0ClockControl;
-    interface HplSam3uPeripheralClockCntl as Twi1ClockControl;
-    interface HplSam3uClock as Twi0ClockConfig;
-    interface HplSam3uClock as Twi1ClockConfig;
+    interface HplSam3GeneralIOPin as Twd0Pin;
+    interface HplSam3GeneralIOPin as Twd1Pin;
+    interface HplSam3GeneralIOPin as Twck0Pin;
+    interface HplSam3GeneralIOPin as Twck1Pin;
+    interface HplSam3PeripheralClockCntl as Twi0ClockControl;
+    interface HplSam3PeripheralClockCntl as Twi1ClockControl;
+    interface HplSam3Clock as Twi0ClockConfig;
+    interface HplSam3Clock as Twi1ClockConfig;
     interface FunctionWrapper as Twi0InterruptWrapper;
     interface FunctionWrapper as Twi1InterruptWrapper;
     interface Leds;

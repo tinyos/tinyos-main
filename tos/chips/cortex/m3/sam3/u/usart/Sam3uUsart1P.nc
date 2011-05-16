@@ -51,9 +51,9 @@ implementation{
   uint8_t total_send_length, current_length_position;
   uint8_t *sending_data_ptr;
 
-  command void Sam3uUsart.start(){
+  command void Sam3uUsart.start(uint32_t baud){
     call HplUsart.init();
-    call HplUsart.configure(mode_register, 38400 /*9600*/);
+    call HplUsart.configure(mode_register, baud);
 
     call HplUsart.enableTx();
     call HplUsart.enableRx();
