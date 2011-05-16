@@ -34,12 +34,6 @@
  */
 
 #include "printf.h"
-#include <stdio.h>
-#ifdef __STDC__
-#include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
 #if defined(PLATFORM_TELOSB)
 #include <UserButton.h>
 #endif

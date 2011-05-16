@@ -254,7 +254,7 @@ implementation
       return IEEE154_TRANSACTION_OVERFLOW;
     } else {
       setCurrentFrame(frame);
-      dbg("DispatchSlottedCsmaP", "New frame to transmit, DSN: %lu\n", (uint32_t) MHR(frame)[MHR_INDEX_SEQNO]);
+      dbg_serial("DispatchSlottedCsmaP", "New frame to transmit, DSN: %lu\n", (uint32_t) MHR(frame)[MHR_INDEX_SEQNO]);
       // a beacon must be found before transmitting in a beacon-enabled PAN
       if (DEVICE_ROLE && !call IsTrackingBeacons.getNow()) {
         call TrackSingleBeacon.start();
@@ -495,7 +495,7 @@ implementation
         error_t res;
         res = call SlottedCsmaCa.transmit(m_currentFrame, &m_csma, 
                    call SuperframeStructure.sfStartTime(), dtMax, m_resume, m_remainingBackoff);
-        dbg("DispatchSlottedCsmaP", "SlottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
+        dbg_serial("DispatchSlottedCsmaP", "SlottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
         next = WAIT_FOR_TXDONE; // this will NOT clear the lock
       }
     }
@@ -569,7 +569,7 @@ implementation
       bool ackPendingFlag,  uint16_t remainingBackoff, error_t result)
   {
     bool done = TRUE;
-    dbg("DispatchSlottedCsmaP", "SlottedCsmaCa.transmitDone() -> %lu\n", (uint32_t) result);
+    dbg_serial("DispatchSlottedCsmaP", "SlottedCsmaCa.transmitDone() -> %lu\n", (uint32_t) result);
     m_resume = FALSE;
 
     switch (result)
@@ -655,7 +655,7 @@ implementation
     m_indirectTxPending = FALSE;
     m_lastFrame = NULL; // only now can the next transmission can begin 
     if (lastFrame) {
-      dbg("DispatchSlottedCsmaP", "Transmit done, DSN: %lu, result: 0x%lx\n", 
+      dbg_serial("DispatchSlottedCsmaP", "Transmit done, DSN: %lu, result: 0x%lx\n", 
           (uint32_t) MHR(lastFrame)[MHR_INDEX_SEQNO], (uint32_t) status);
       signal FrameTx.transmitDone(lastFrame, status);
     }
@@ -672,7 +672,7 @@ implementation
 
     if (frameType == FC1_FRAMETYPE_CMD)
       frameType += payload[0];
-    dbg("DispatchSlottedCsmaP", "Received frame, DSN: %lu, type: 0x%lu\n", 
+    dbg_serial("DispatchSlottedCsmaP", "Received frame, DSN: %lu, type: 0x%lu\n", 
         (uint32_t) mhr[MHR_INDEX_SEQNO], (uint32_t) frameType);
     atomic {
       if (DEVICE_ROLE && (m_indirectTxPending || m_broadcastRxPending)) {

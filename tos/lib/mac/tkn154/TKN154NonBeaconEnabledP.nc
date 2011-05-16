@@ -342,7 +342,6 @@ implementation
   PibP.MacReset -> RxEnableP;
   RxEnableP.TimeCalc -> PibP.TimeCalc;
   RxEnableP.WasRxEnabled -> DispatchP.WasRxEnabled;
-  RxEnableP.WasRxEnabled -> DispatchP.WasRxEnabled;
   RxEnableP.RxEnableTimer = Timer5;
 
   /* ------------------------------- PIB -------------------------------- */

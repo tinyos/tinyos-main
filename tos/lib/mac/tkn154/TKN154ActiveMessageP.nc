@@ -302,6 +302,7 @@ implementation {
     uint8_t *p = call Frame.getPayload(msg);
     ieee154_address_t destAddr;
     uint8_t txOptions = 0;
+    ieee154_status_t status;
 
     if (!call SplitControlState.isState(S_STARTED))
       return EOFF;
@@ -328,7 +329,10 @@ implementation {
     if (isAckRequested(msg) && addr != AM_BROADCAST_ADDR) 
       txOptions = TX_OPTIONS_ACK; 
 
-    return status2Error(call MCPS_DATA.request(msg, len + PAYLOAD_OFFSET, 0, txOptions));
+    status = call MCPS_DATA.request(msg, len + PAYLOAD_OFFSET, 0, txOptions);
+    dbg_serial("TKN154ActiveMessageP", "AMSend.send[%lu], status: %lx\n", (uint32_t) id, (uint32_t) status);
+    dbg_serial_flush();
+    return status2Error(status);
   }
 
   command error_t AMSend.cancel[am_id_t id](message_t* msg) 
@@ -534,7 +538,10 @@ implementation {
     else
       clearWasAcked(frame);
 
+    dbg_serial("TKN154ActiveMessageP", "AMSend.sendDone[%lu], status: %lu\n", (uint32_t) call AMPacket.type(frame), (uint32_t) status);
+    dbg_serial("TKN154ActiveMessageP", "... TxTime: %lu (valid: %lu)\n", Timestamp, (uint32_t) call Frame.isTimestampValid(frame));
     signal AMSend.sendDone[call AMPacket.type(frame)](frame, status2Error(status));
+    dbg_serial_flush();
   }
 
   event message_t* MCPS_DATA.indication ( message_t* frame )
@@ -545,6 +552,10 @@ implementation {
     // We have to be a bit careful here, because the MAC will accept frames that
     // in TinyOS a next higher layer will normally not expect -> filter those out
     
+    dbg_serial("TKN154ActiveMessageP", "MCPS_DATA.indication, AMtype: %lu, payloadlen: %lu\n", (uint32_t) call AMPacket.type(frame), (uint32_t) payloadLen);
+    dbg_serial("TKN154ActiveMessageP", "... RxTime: %lu (valid: %lu)\n", (uint32_t) call Frame.getTimestamp(frame), (uint32_t) call Frame.isTimestampValid(frame));
+    dbg_serial_flush();
+
     if (!call Frame.hasStandardCompliantHeader(frame) || 
         call Frame.getFrameType(frame) != 1) // must be a DATA frame
       return frame;
@@ -564,7 +575,7 @@ implementation {
 
     if (call AMPacket.isForMe(frame))
       return signal Receive.receive[call AMPacket.type(frame)](frame, payload, payloadLen);
-    else 
+    else
       return signal Snoop.receive[call AMPacket.type(frame)](frame, payload, payloadLen); 
   }
   

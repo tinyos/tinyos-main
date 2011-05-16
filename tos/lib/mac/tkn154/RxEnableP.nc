@@ -153,6 +153,7 @@ implementation
       }
     }
     signal RxEnableStateChange.notify(TRUE);
+    dbg_serial_flush();
   }
 
   async command bool IsRxEnableActive.getNow()
@@ -164,9 +165,10 @@ implementation
   {
     if (m_isRxEnabled && m_confirmPending) {
       m_confirmPending = FALSE;
-      dbg_serial("RxEnableP", "MLME_RX_ENABLE.confirm, radio is now in Rx mode\n");
       signal MLME_RX_ENABLE.confirm(IEEE154_SUCCESS);
     }
+    dbg_serial("RxEnableP", "Radio is now (%lu) in Rx\n", (uint32_t) call RxEnableTimer.getNow());
+    dbg_serial_flush();
   }
 
   command error_t RxEnableStateChange.enable() {return FAIL;}

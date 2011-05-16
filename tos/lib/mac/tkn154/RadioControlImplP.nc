@@ -79,7 +79,7 @@ implementation
   {
     uint8_t *mhr = MHR(msg);
 
-    dbg("RadioControlImplP", "Received frame, DSN: %lu, type: 0x%lu\n", 
+    dbg_serial("RadioControlImplP", "Received frame, DSN: %lu, type: 0x%lu\n", 
         (uint32_t) mhr[MHR_INDEX_SEQNO], (uint32_t) mhr[MHR_INDEX_FC1] & FC1_FRAMETYPE_MASK);
 
     if (((mhr[1] & FC2_FRAME_VERSION_MASK) > FC2_FRAME_VERSION_1)

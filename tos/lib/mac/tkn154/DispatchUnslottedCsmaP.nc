@@ -173,6 +173,7 @@ implementation
       status = IEEE154_SUCCESS;
     }      
     dbg_serial("DispatchUnslottedCsmaP", "MLME_START.request -> result: %lu\n", (uint32_t) status);
+    dbg_serial_flush();
     return status;
   }
 
@@ -331,7 +332,7 @@ implementation
     else {
       error_t res;
       res = call UnslottedCsmaCa.transmit(m_currentFrame, &m_csma);
-      dbg("DispatchUnslottedCsmaP", "UnslottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
+      dbg_serial("DispatchUnslottedCsmaP", "UnslottedCsmaCa.transmit() -> %lu\n", (uint32_t) res);
       next = WAIT_FOR_TXDONE; // this will NOT clear the lock
     }
     return next;
@@ -408,9 +409,8 @@ implementation
       ieee154_csma_t *csma, bool ackPendingFlag, error_t result)
   {
     bool done = TRUE;
-    dbg("DispatchUnslottedCsmaP", "UnslottedCsmaCa.transmitDone() -> %lu\n", (uint32_t) result);
+    dbg_serial("DispatchUnslottedCsmaP", "UnslottedCsmaCa.transmitDone() -> %lu\n", (uint32_t) result);
     m_resume = FALSE;
-
     switch (result)
     {
       case SUCCESS:
@@ -465,6 +465,7 @@ implementation
 
     m_lock = FALSE;
     updateState();
+    dbg_serial_flush();
   }
 
   task void signalTxDoneTask()
@@ -474,7 +475,7 @@ implementation
     m_indirectTxPending = FALSE;
     m_lastFrame = NULL; // only now the next transmission can begin 
     if (lastFrame) {
-      dbg("DispatchUnslottedCsmaP", "Transmit done, DSN: %lu, result: 0x%lx\n", 
+      dbg_serial("DispatchUnslottedCsmaP", "Transmit done, DSN: %lu, result: 0x%lx\n", 
           (uint32_t) MHR(lastFrame)[MHR_INDEX_SEQNO], (uint32_t) status);
       signal FrameTx.transmitDone(lastFrame, status);
     }
@@ -491,8 +492,6 @@ implementation
 
     if (frameType == FC1_FRAMETYPE_CMD)
       frameType += payload[0];
-    dbg("DispatchUnslottedCsmaP", "Received frame, DSN: %lu, type: 0x%lu\n", 
-        (uint32_t) mhr[MHR_INDEX_SEQNO], (uint32_t) frameType);
     atomic {
       if (m_indirectTxPending) {
         message_t* frameBuf;
