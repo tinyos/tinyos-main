@@ -64,7 +64,11 @@ enum {
 // -> we keep it conservative, otherwise we may lose beacons
 // NOTE: if this constant is not defined, the radio will never be powered down
 // during inactive period, but always stay in idle (which consumes more energy).
-#define IEEE154_RADIO_POWERUP_TIME 200
+#ifndef IEEE154_INACTIVE_PERIOD_POWERDOWN_DISABLED
+  #ifndef IEEE154_RADIO_POWERUP_TIME
+  #define IEEE154_RADIO_POWERUP_TIME 200
+  #endif
+#endif
 
 #endif
 

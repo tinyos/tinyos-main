@@ -56,5 +56,7 @@ enum {
   BEACON_PAYLOAD_UPDATE_INTERVAL = 2500, 
 };
 
+// TODO: add (and test) IEEE154_RADIO_POWERUP_TIME (see telos)
+
 #endif
 

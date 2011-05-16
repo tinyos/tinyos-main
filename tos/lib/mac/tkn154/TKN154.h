@@ -265,6 +265,10 @@ typedef bool                ieee154_macPanCoordinator_t;
 // and MLME_POLL will fail):
 // #define IEEE154_INDIRECT_TX_DISABLED
 
+// Disable powerdown of the radio during inactive period (only relevant in
+// beacon-enabled mode), i.e. radio will remain idle and use more energy. This
+// would make sense, e.g. if BO=SO, because then there is no inactive period.
+// #define IEEE154_INACTIVE_PERIOD_POWERDOWN_DISABLED
 
 /**************************************************** 
  * Static memory allocation for Queue/Pool
