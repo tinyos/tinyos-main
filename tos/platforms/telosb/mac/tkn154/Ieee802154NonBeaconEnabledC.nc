@@ -108,6 +108,7 @@ implementation
   PHY.LocalTime -> LocalTime62500hzC;
   PHY.ReliableWait -> TKN154TimingP;
   PHY.TimeCalc -> MAC;
+  PHY.CaptureTime -> TKN154TimingP;
   TKN154TimingP.TimeCalc -> MAC;
   TKN154TimingP.Leds -> LedsC;
   TKN154TimingP.CCA -> PHY;

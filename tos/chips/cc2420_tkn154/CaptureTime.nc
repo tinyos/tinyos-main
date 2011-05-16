@@ -30,28 +30,28 @@
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
  * ========================================================================
  */
-interface CaptureTime
-{
-  /**
-   * Convert a capture time (+ symbol offset) to local time.
-   *
-   * @param   time  capture time
-   * @param   localTime capture time converted to local time + offset symbols
-   * @param   offset time in symbols (16 us) to add to capture time
-   * @return  SUCCESS if conversion was made successfully, FAIL otherwise
-   */
-  async command error_t convert(uint16_t time, uint32_t *localTime, int16_t offset);
 
-  /**
-   * Tells whether the timestamp is valid. On the CC2420 an SFD transition
-   * does not necessarily mean that the packet is put in the RXFIFO.
-   * This command should return FALSE iff the time between the rising SFD
-   * and the falling SFD is too short for the smallest possible frame, i.e.
-   * ACK frame (see CC2420 datasheet for details on SFD timing).
+interface CaptureTime 
+{
+
+  /** 
+   * Converts a platform-specific SFD capture time value (16-bit) into a IEEE
+   * 802.15.4 timestamp. The timestamp is a 32-bit value that represents the
+   * local time when the *first bit* (chip) of the corresponding frame was
+   * transmitted / received (note that on the CC2420 the SFD capture happens 
+   * 5 byte (=10 symbols) after the transmission/reception of the first bit).
    *
-   * @param  risingSFDTime capture time of rising SFD
-   * @param  fallingSFDTime capture time of falling SFD
-   * @return FALSE if time offset is too small for a valid packet
+   * @param   time  capture time 
+   * @return  timestamp local time when the frame was transmitted/received
+   **/ 
+  async command uint32_t getTimestamp(uint16_t SFDCaptureTime); 
+
+  /** 
+   * Returns the time interval that the SFD pin was high during a packet
+   * transmission/reception. The time is expressed in 802.15.4 symbols.
+   *
+   * @param  SFDCaptureTime capture time of rising SFD
+   * @param  EFDCaptureTime capture time of falling SFD
    */
-  async command bool isValidTimestamp(uint16_t risingSFDTime, uint16_t fallingSFDTime);
+  async command uint16_t getSFDUptime(uint16_t SFDCaptureTime, uint16_t EFDCaptureTime);
 }

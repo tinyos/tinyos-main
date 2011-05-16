@@ -228,17 +228,7 @@ implementation {
       }
     }
   }
-    // this method converts a 16-bit timestamp into a 32-bit one
-  inline uint32_t getTime32(uint16_t captured_time)
-  {
-    uint32_t now = call BackoffAlarm.getNow();
 
-    // the captured_time is always in the past
-    // We assume that capture_time from the 32 KHz quartz, in
-    // order to transform it to symbols we multiply by 2
-    return now - (uint16_t)(now - captured_time * 2);
-  }
-  
   /**
    * The CaptureSFD event is actually an interrupt from the capture pin
    * which is connected to timing circuitry and timer modules.  This
@@ -256,9 +246,7 @@ implementation {
     uint32_t time32;
     uint8_t sfd_state = 0;
     atomic {
-      // Our timestamp represents time of first bit (chip) of PPDU on the channel
-      // (not SFD!), so we apply an offset: -10 for 5 bytes (preamble+SFD)
-      time32 = getTime32(time) - 10;
+      time32 = call CaptureTime.getTimestamp(time);
       switch( m_state ) {
 
         case S_SFD:
@@ -324,10 +312,11 @@ implementation {
              * is valid.
              * if the sfd_state is 0, then either we fell through and SFD
              * was low while we safed the time stamp, or we didn't fall through.
-             * Thus, we check for the time between the two interrupts.
-             * FIXME: Why 10 tics? Seems like some magic number...
+             * There is some time needed by the automatic address recognition,
+             * a value of 10 32khz ticks (20 symbols) has been proven a sufficient 
+             * threshold, so we use that (implies that ACKs cannot be timestamped).
               */
-            if ((sfd_state == 0) && (time - m_prev_time < 10) )
+            if ((sfd_state == 0) && call CaptureTime.getSFDUptime(m_prev_time, time) < 20)
               call CC2420Receive.sfd_dropped();
             break;
           }

@@ -57,6 +57,7 @@ configuration CC2420TKN154C
     interface ReliableWait;
     interface TimeCalc;
     interface Random;
+    interface CaptureTime;
   }
 } implementation {
 
@@ -85,6 +86,7 @@ configuration CC2420TKN154C
   PHY.CC2420Config -> CC2420ControlTransmitC;
   CC2420ControlTransmitC.StartupAlarm = Alarm2;
   FrameUtility = CC2420ControlTransmitC;
+  CaptureTime = CC2420ControlTransmitC;
 
   PHY.TxControl -> CC2420ControlTransmitC;
   PHY.CC2420Tx -> CC2420ControlTransmitC;

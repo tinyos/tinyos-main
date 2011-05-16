@@ -43,11 +43,15 @@
 #include "TKN154_platform.h"
 module TKN154TimingP
 {
-  provides interface ReliableWait;
-  uses interface TimeCalc;
-  uses interface GetNow<bool> as CCA;
-  uses interface Alarm<T62500hz,uint32_t> as SymbolAlarm;
-  uses interface Leds;
+  provides {
+    interface ReliableWait;
+    interface CaptureTime;
+  } uses {
+    interface TimeCalc;
+    interface GetNow<bool> as CCA;
+    interface Alarm<T62500hz,uint32_t> as SymbolAlarm;
+    interface Leds;
+  }
 }
 implementation
 {
@@ -58,6 +62,24 @@ implementation
     S_WAIT_BACKOFF,
   };
   uint8_t m_state = S_WAIT_OFF;
+
+
+  async command uint32_t CaptureTime.getTimestamp(uint16_t captured_time)
+  {
+    uint32_t now = call SymbolAlarm.getNow();
+
+    // On telos the capture_time is from the 32 KHz quartz, in
+    // order to transform it to symbols we multiply by 2
+    // We also subtract 10 because the returned value should represent
+    // the time of the first bit of the frame, not the SFD byte.
+    return now - (uint16_t)(now - captured_time * 2) - 10;
+  }
+
+  async command uint16_t CaptureTime.getSFDUptime(uint16_t SFDCaptureTime, uint16_t EFDCaptureTime)
+  {
+    // Return the time between two 32khz timestamps converted to symbols. 
+    return (EFDCaptureTime - SFDCaptureTime) * 2;
+  }
 
   async command bool ReliableWait.ccaOnBackoffBoundary(uint32_t slot0)
   {
