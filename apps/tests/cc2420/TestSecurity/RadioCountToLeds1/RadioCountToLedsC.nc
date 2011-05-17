@@ -40,6 +40,7 @@
 
 #include "Timer.h"
 #include "RadioCountToLeds.h"
+
 //#include "printf.h"
 /**
  * Implementation of the RadioCountToLeds application. RadioCountToLeds
@@ -117,10 +118,10 @@ implementation {
       }
 
       rcm->counter = counter;
-      //call CC2420Security.setCtr(&packet, 0, 0);
+      call CC2420Security.setCtr(&packet, 0, 0);
       //call CC2420Security.setCbcMac(&packet, 0, 0, 16);
-      call CC2420Security.setCcm(&packet, 1, 0, 16);
-      call PacketLink.setRetries(&packet, 3);
+      //call CC2420Security.setCcm(&packet, 1, 0, 16);
+      call PacketLink.setRetries(&packet, 1);
       if (call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(radio_count_msg_t)) == SUCCESS) {
 	dbg("RadioCountToLedsC", "RadioCountToLedsC: packet sent.\n", counter);
 	locked = TRUE;
