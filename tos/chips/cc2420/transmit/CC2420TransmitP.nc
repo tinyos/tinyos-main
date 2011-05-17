@@ -621,7 +621,7 @@ implementation {
     uint8_t key;
     uint8_t micLength;
 
-    msg_header = call CC2420PacketBody.getHeader( m_msg );
+    msg_header = (cc2420_header_t*)m_msg->header;
 
     if(!(msg_header->fcf & (1 << IEEE154_FCF_SECURITY_ENABLED))){
       // Security is not used for this packet
@@ -645,6 +645,10 @@ implementation {
       atomic SECURITYLOCK = 1;
 
       secHdr = (security_header_t*) &msg_header->secHdr;
+#if ! defined(TFRAMES_ENABLED)
+    (uint8_t*)secHdr += 1;
+#endif
+
       memcpy(&nonceValue[3], &(secHdr->frameCounter), 4);
 
       skip = secHdr->reserved;
@@ -654,6 +658,7 @@ implementation {
 	mode = CC2420_NO_SEC;
 	micLength = 4;
       }else if (secHdr->secLevel == CBC_MAC_4){
+	//	call Leds.led0Toggle();
 	mode = CC2420_CBC_MAC;
 	micLength = 4;
       }else if (secHdr->secLevel == CBC_MAC_8){
@@ -663,6 +668,7 @@ implementation {
 	mode = CC2420_CBC_MAC;
 	micLength = 16;
       }else if (secHdr->secLevel == CTR){
+	//	call Leds.led1Toggle();
 	mode = CC2420_CTR;
 	micLength = 4;
       }else if (secHdr->secLevel == CCM_4){
@@ -677,7 +683,7 @@ implementation {
       }else{
 	return;
       }
-
+      
       CTR_SECCTRL0 = ((mode << CC2420_SECCTRL0_SEC_MODE) |
 		      ((micLength-2)/2 << CC2420_SECCTRL0_SEC_M) |
 		      (key << CC2420_SECCTRL0_SEC_TXKEYSEL) |

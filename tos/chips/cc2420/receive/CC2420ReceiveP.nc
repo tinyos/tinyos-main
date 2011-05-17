@@ -316,7 +316,12 @@ implementation {
     uint8_t mode, key, temp, crc;
 
     atomic pos = (packetLength+pos)%RXFIFO_SIZE;
+
+#if ! defined(TFRAMES_ENABLED)
+    atomic secHdrPos = (pos+11)%RXFIFO_SIZE;
+#else
     atomic secHdrPos = (pos+10)%RXFIFO_SIZE;
+#endif
 
     if (pos + 3 > RXFIFO_SIZE){
       temp = RXFIFO_SIZE - pos;

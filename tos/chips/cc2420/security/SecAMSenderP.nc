@@ -65,6 +65,10 @@ implementation
     cc2420_header_t* hdr = (cc2420_header_t*)msg->header;
     security_header_t* secHdr = (security_header_t*)&hdr->secHdr;
 
+#if ! defined(TFRAMES_ENABLED)
+    (uint8_t*)secHdr += 1;
+#endif
+
     if(secHdr->secLevel == CBC_MAC_4 || secHdr->secLevel == CCM_4){
       micLength = 4;
     }else if(secHdr->secLevel == CBC_MAC_8 || secHdr->secLevel == CCM_8){
@@ -97,6 +101,10 @@ implementation
     cc2420_header_t* hdr = (cc2420_header_t*)msg->header;
     security_header_t* secHdr = (security_header_t*)&hdr->secHdr;
 
+#if ! defined(TFRAMES_ENABLED)
+    (uint8_t*)secHdr += 1;
+#endif
+
     if (setKey > 1 || setSkip > 7){
       return FAIL;
     }
@@ -121,6 +129,9 @@ implementation
   {
     cc2420_header_t* hdr = (cc2420_header_t*)msg->header;
     security_header_t* secHdr = (security_header_t*)&hdr->secHdr;
+#if ! defined(TFRAMES_ENABLED)
+    (uint8_t*)secHdr += 1;
+#endif
 
     if (setKey > 1 || (size != 4 && size != 8 && size != 16) || (setSkip > 7)){
       return FAIL;
@@ -154,6 +165,10 @@ implementation
   {
     cc2420_header_t* hdr = (cc2420_header_t*)msg->header;
     security_header_t* secHdr = (security_header_t*)&hdr->secHdr;
+
+#if ! defined(TFRAMES_ENABLED)
+    (uint8_t*)secHdr += 1;
+#endif
 
     if (setKey > 1 || (size != 4 && size != 8 && size != 16) || (setSkip > 7)){
       return FAIL;

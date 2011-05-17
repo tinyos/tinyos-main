@@ -65,5 +65,5 @@ implementation
 
   SecAMSenderP.SubAMSend -> AMSenderC;
   SecAMSenderP.SecurityPacket -> AMSenderC;
-  SecAMSenderP.Leds -> NoLedsC;
+  SecAMSenderP.Leds -> LedsC;
 }
