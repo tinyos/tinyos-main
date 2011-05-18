@@ -139,6 +139,9 @@ implementation {
   }
 
   async event void UARTData.rxDone(uint8_t data) {        
+    if(!call UARTControl.isUart())
+      return;
+
     *scout = data;
     scout++;
 
@@ -174,6 +177,9 @@ implementation {
   }
  
   async event void UARTData.txDone() {
+    if(!call UARTControl.isUart())
+      return;
+
     if(!transmissionComplete) {
       post sendOneChar();
     }
