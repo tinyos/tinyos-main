@@ -62,12 +62,12 @@ implementation {
 
   command void StrainGauge.powerOn(){
     call StrainGauge.ledOn();
-    TOSH_CLR_SER0_RTS_PIN();
+    TOSH_SET_SER0_RTS_PIN();
   }
 
   command void StrainGauge.powerOff(){
     call StrainGauge.ledOff();
-    TOSH_SET_SER0_RTS_PIN();
+    TOSH_CLR_SER0_RTS_PIN();
   }
 
   command void StrainGauge.ledOn() {
