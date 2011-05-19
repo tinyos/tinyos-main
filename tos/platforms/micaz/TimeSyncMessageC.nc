@@ -72,7 +72,11 @@ configuration TimeSyncMessageC {
   }
 }
 implementation {
+#ifdef RFXLINK
+  components CC2420XTimeSyncMessageC as AM;
+#else
   components CC2420TimeSyncMessageC as AM;
+#endif
 
   SplitControl = AM;
 

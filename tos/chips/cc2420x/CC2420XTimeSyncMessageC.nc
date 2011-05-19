@@ -33,6 +33,8 @@ configuration CC2420XTimeSyncMessageC
 		interface Receive as Snoop[am_id_t id];
 		interface Packet;
 		interface AMPacket;
+		interface PacketAcknowledgements;
+		interface LowPowerListening;
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
@@ -53,6 +55,8 @@ implementation
   	Receive		= TimeSyncMessageLayerC.Receive;
 	Snoop		= TimeSyncMessageLayerC.Snoop;
 	Packet		= TimeSyncMessageLayerC;
+	PacketAcknowledgements	= ActiveMessageC;
+	LowPowerListening	= ActiveMessageC;
 
 	PacketTimeStampRadio	= ActiveMessageC;
 	TimeSyncAMSendRadio	= TimeSyncMessageLayerC;
@@ -66,7 +70,6 @@ implementation
 	TimeSyncMessageLayerC.PacketTimeStampMilli -> ActiveMessageC;
 
 	components CC2420XDriverLayerC as DriverLayerC;
-
 	TimeSyncMessageLayerC.LocalTimeRadio -> DriverLayerC;
 	TimeSyncMessageLayerC.PacketTimeSyncOffset -> DriverLayerC.PacketTimeSyncOffset;
 }

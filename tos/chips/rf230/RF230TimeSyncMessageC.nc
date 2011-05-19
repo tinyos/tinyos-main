@@ -44,6 +44,8 @@ configuration RF230TimeSyncMessageC
 		interface Receive as Snoop[am_id_t id];
 		interface Packet;
 		interface AMPacket;
+		interface PacketAcknowledgements;
+		interface LowPowerListening;
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
@@ -57,30 +59,32 @@ configuration RF230TimeSyncMessageC
 
 implementation
 {
-	components RF230ActiveMessageC, new TimeSyncMessageLayerC();
+	components RF230ActiveMessageC as ActiveMessageC, new TimeSyncMessageLayerC();
   
-	SplitControl	= RF230ActiveMessageC;
+	SplitControl	= ActiveMessageC;
 	AMPacket	= TimeSyncMessageLayerC;
   	Receive		= TimeSyncMessageLayerC.Receive;
 	Snoop		= TimeSyncMessageLayerC.Snoop;
 	Packet		= TimeSyncMessageLayerC;
+	PacketAcknowledgements	= ActiveMessageC;
+	LowPowerListening	= ActiveMessageC;
 
-	PacketTimeStampRadio	= RF230ActiveMessageC;
+	PacketTimeStampRadio	= ActiveMessageC;
 	TimeSyncAMSendRadio	= TimeSyncMessageLayerC;
 	TimeSyncPacketRadio	= TimeSyncMessageLayerC;
 
-	PacketTimeStampMilli	= RF230ActiveMessageC;
+	PacketTimeStampMilli	= ActiveMessageC;
 	TimeSyncAMSendMilli	= TimeSyncMessageLayerC;
 	TimeSyncPacketMilli	= TimeSyncMessageLayerC;
 
-	TimeSyncMessageLayerC.PacketTimeStampRadio -> RF230ActiveMessageC;
-	TimeSyncMessageLayerC.PacketTimeStampMilli -> RF230ActiveMessageC;
+	TimeSyncMessageLayerC.PacketTimeStampRadio -> ActiveMessageC;
+	TimeSyncMessageLayerC.PacketTimeStampMilli -> ActiveMessageC;
 
 #ifdef RF230_HARDWARE_ACK
-	components RF230DriverHwAckC as RF230DriverLayerC;
+	components RF230DriverHwAckC as DriverLayerC;
 #else
-	components RF230DriverLayerC;
+	components RF230DriverLayerC as DriverLayerC;
 #endif
-	TimeSyncMessageLayerC.LocalTimeRadio -> RF230DriverLayerC;
-	TimeSyncMessageLayerC.PacketTimeSyncOffset -> RF230DriverLayerC.PacketTimeSyncOffset;
+	TimeSyncMessageLayerC.LocalTimeRadio -> DriverLayerC;
+	TimeSyncMessageLayerC.PacketTimeSyncOffset -> DriverLayerC.PacketTimeSyncOffset;
 }

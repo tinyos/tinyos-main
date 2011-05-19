@@ -44,6 +44,8 @@ configuration TimeSyncMessageC
 		interface Receive as Snoop[am_id_t id];
 		interface Packet;
 		interface AMPacket;
+		interface PacketAcknowledgements;
+		interface LowPowerListening;
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
@@ -64,6 +66,8 @@ implementation
 	Snoop		= MessageC.Snoop;
 	Packet		= MessageC;
 	AMPacket	= MessageC;
+	PacketAcknowledgements	= MessageC;
+	LowPowerListening	= MessageC;
 
 	PacketTimeStampRadio	= MessageC;
 	TimeSyncAMSendRadio	= MessageC;

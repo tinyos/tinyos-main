@@ -48,6 +48,8 @@ configuration CC2520TimeSyncMessageC
 		interface Receive as Snoop[am_id_t id];
 		interface Packet;
 		interface AMPacket;
+		interface PacketAcknowledgements;
+		interface LowPowerListening;
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface TimeSyncAMSend<TRadio, uint32_t> as TimeSyncAMSendRadio[am_id_t id];
@@ -68,6 +70,8 @@ implementation
 	Receive		= TimeSyncMessageLayerC.Receive;
 	Snoop		= TimeSyncMessageLayerC.Snoop;
 	Packet		= TimeSyncMessageLayerC;
+	PacketAcknowledgements	= ActiveMessageC;
+	LowPowerListening	= ActiveMessageC;
 
 	PacketTimeStampRadio	= ActiveMessageC;
 	TimeSyncAMSendRadio	= TimeSyncMessageLayerC;
