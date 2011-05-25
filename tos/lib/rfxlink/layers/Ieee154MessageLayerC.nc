@@ -110,7 +110,7 @@ implementation
 		if( len > call Packet.maxPayloadLength() )
 			return EINVAL;
 
-		// user forgot to call Packet.clear(), maybe we should return EFAIL
+		// user forgot to call Packet.clear(), maybe we should return FAIL
 		if( ! call Ieee154PacketLayer.isDataFrame(msg) )
 			call Ieee154PacketLayer.createDataFrame(msg);
 

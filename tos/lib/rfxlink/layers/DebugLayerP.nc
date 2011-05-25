@@ -94,7 +94,7 @@ implementation
 		if( call DiagMsg.record() )
 		{
 			call DiagMsg.str(prefix);
-			call DiagMsg.str("turnon");
+			call DiagMsg.str("turnOn");
 			call DiagMsg.uint8(error);
 			call DiagMsg.send();
 		}
@@ -109,7 +109,7 @@ implementation
 		if( call DiagMsg.record() )
 		{
 			call DiagMsg.str(prefix);
-			call DiagMsg.str("standby");
+			call DiagMsg.str("setChannel");
 			call DiagMsg.uint8(channel);
 			call DiagMsg.uint8(error);
 			call DiagMsg.send();
