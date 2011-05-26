@@ -245,7 +245,8 @@ implementation {
       }
       else if (len > 0) {
         state = I2C_DATA;
-        call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_WRITE);
+	call I2CWrite.(packetPtr[index]);
+	index++;
       }
       else if (flags & I2C_STOP) {
         state = I2C_STOPPING;
