@@ -77,11 +77,11 @@ implementation
 	message_t msgs[DIAGMSG_RECORDED_MSGS];	// circular buffer of messages
 
 	norace message_t *recording;	// the message that is beeing or going to be recorded
-	message_t *sending;	// the message that is beeing sent, or the null pointer
+	message_t *sending;		// the message that is beeing sent, or the null pointer
 
 	norace uint8_t nextData;	// points to the next unsued byte
 	norace uint8_t prevType;	// points to the type descriptor
-	norace uint8_t retries;	// number of remaining retries
+	norace uint8_t retries;		// number of remaining retries
 
 	command error_t Init.init()
 	{
@@ -255,8 +255,10 @@ implementation
 
 		atomic msg = sending;
 
+		// if the stack is not started, then drop the message 
+		// (cannot spin with tasks becasue we might be in software or hardware init)
 		if( call AMSend.send(DIAGMSG_BASE_STATION, msg, getPayloadLength(msg)) != SUCCESS )
-			post send();
+			atomic sending = 0;
 	}
 
 	// calculates the next message_t pointer in the <code>msgs</code> circular buffer
