@@ -697,7 +697,7 @@ implementation
 
   void backupCurrentFrame()
   {
-    ieee154_cap_frame_backup_t backup = {m_currentFrame, m_csma, m_transactionTime};
+    ieee154_cap_frame_backup_t backup = {m_transactionTime, m_currentFrame, m_csma};
     call FrameBackup.setNow(&backup);
   }
 
