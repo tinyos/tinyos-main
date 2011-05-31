@@ -44,19 +44,3 @@ else
   include $(TKN154_PLATFORM_INCLUDE)
 endif
 
-############################### BaseStation fix ###############################
-
-# apps/BaseStation assumes that the first byte at message_t->data is owned by
-# the layer on top of the active message abstraction, but actually
-# message_t->data points to the optional T2_6LOWPAN_NETWORK_ID and the Active
-# Message ID. The approach of TinyOS 2 is to simply assign these two bytes to
-# the MAC header (where according to the 802.15.4 frame format it clearly
-# doesn't belong, it's part of the MAC payload). Because we still want to
-# support apps/BaseStation we add a preprocessor flag that will result in an
-# (ugly) workaround in TKN154ActiveMessageP if BaseStationC is compiled ....
-
-ifeq ($(COMPONENT),BaseStationC)
-CFLAGS+=-DTKN154_BASESTATION_WORKAROUND
-endif
-
-

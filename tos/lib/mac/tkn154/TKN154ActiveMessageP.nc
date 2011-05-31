@@ -40,14 +40,17 @@
  * module is enabled (via SplitControl.start()) it makes sure that radio is
  * always in receive mode (unless we're transmitting), i.e. the
  * LowPowerListening interface is not yet implemented and the duty cycle is
- * 100%. Our frame format deviates from the default way of treating the AM Id
- * and optional 6LowPAN NALP ID as part of the MAC header. Instead they are the
- * first bytes of the MAC payload. This creates problems with applications that
- * assume message_t->data points to the first byte of the next higher layer
- * (with respect to active message), such as the BaseStation app. To still be
- * able to support BaseStation we add a workaround, which can enabled by
- * setting the TKN154_BASESTATION_WORKAROUND flag (which is done automatically
- * for the BaseStation app).
+ * 100%.
+ *
+ * The IEEE 802.15.4 frame format is different from the frame format used in
+ * TinyOS. This module transparently converts between the two, to make both
+ * sides happy: the upper layer in TinyOS will see the actual AM payload
+ * starting at message_t->data, which allows briding between interfaces (so
+ * apps like Oscilloscope are working). And before passing frames down to the
+ * 15.4 MAC we make sure the AM type (and network byte) are moved to the MAC
+ * payload portion (at message_t->data). This workaround and involves extra
+ * memmoves, and will disappear once TinyOS introduces a new message buffer
+ * abstraction.
  *
  * There are some TinyOS/CC2420 macros that are supported (e.g. set via CFLAGS
  * in the Makefile): TFRAMES_ENABLED, CC2420_DEF_CHANNEL
@@ -83,6 +86,13 @@ module TKN154ActiveMessageP {
   }
 }
 implementation {
+
+#ifdef TKN154_ACTIVE_MESSAGE_SUPPORT_DISABLED
+// When TKN154_ACTIVE_MESSAGE_SUPPORT_DISABLED is defined this component cannot
+// work, because it relies on some extra struct members which are disabled in 
+// that case -> Make sure TKN154_ACTIVE_MESSAGE_SUPPORT_DISABLED is not defined!
+#error "TKN154_ACTIVE_MESSAGE_SUPPORT_DISABLED must not be defined if AM is used!"
+#endif
 
   enum {
     S_IDLE,
@@ -121,6 +131,13 @@ implementation {
       case IEEE154_CHANNEL_ACCESS_FAILURE: // fall through
       default: return FAIL;
     }
+  }
+
+  ieee154_header_t *getIeee154Header(message_t* m)
+  {
+    uint8_t *p = call Frame.getHeader(m);
+    ieee154_header_t *header = (ieee154_header_t *) (p - offsetof(ieee154_header_t, mhr));
+    return header;
   }
 
   /**************** Functions dealing with ACKs ****************/
@@ -303,6 +320,7 @@ implementation {
     ieee154_address_t destAddr;
     uint8_t txOptions = 0;
     ieee154_status_t status;
+    ieee154_header_t *header = getIeee154Header(msg);
 
     if (!call SplitControlState.isState(S_STARTED))
       return EOFF;
@@ -310,15 +328,20 @@ implementation {
     if (len > call AMSend.maxPayloadLength[id]())
       return ESIZE;
 
-#ifndef TFRAMES_ENABLED
-    *p++ = T2_6LOWPAN_NETWORK_ID;
-#endif
-    *p = id;
+    // Shift the payload and add the AM type + network byte, because in the
+    // IEEE 802.15.4 these are part of the MAC payload, rather than MAC header
+    // (as which message_t treats them). We do this, because we want to
+    // support bridging between interfaces e.g. radio/serial.
 
-    destAddr.shortAddress = addr;
+    memmove(p + PAYLOAD_OFFSET, p, len);
+    header->type = id = p[PAYLOAD_OFFSET-1] = header->type;
+#ifndef TFRAMES_ENABLED
+    header->network = p[PAYLOAD_OFFSET-2] = T2_6LOWPAN_NETWORK_ID;
+#endif
 
     // We intentionally overwrite some previously set MAC header fields to
     // mimic the behavior of the standard CC2420 driver in TinyOS
+    destAddr.shortAddress = addr;
     call Frame.setAddressingFields(msg,
         ADDR_MODE_SHORT_ADDRESS,
         ADDR_MODE_SHORT_ADDRESS,
@@ -340,7 +363,7 @@ implementation {
     // We don't support cancel(). There is the MCPS_PURGE interface, but it
     // would require that the next higher layer keeps track of the 'msduHandle'
     // and there's no such concept in TinyOS ...
-    return FAIL; 
+    return FAIL;
   }
 
   command uint8_t AMSend.maxPayloadLength[am_id_t id]() 
@@ -367,13 +390,23 @@ implementation {
       address.shortAddress = ADDRESS_NOT_PRESENT; // not present
     return address.shortAddress;
   }
- 
+
+  command void AMPacket.setSource(message_t* msg, am_addr_t addr) 
+  {
+    // The 15.4 MAC doesn't allow to set the source address of a packet
+    // explicitly, instead it will automatically set it to 'macShortAddress'
+    // when the frame is passed down (Tx path) via MCPS_DATA.request().  
+    // The next higher layer may still want to use setSource() and source() 
+    // to store some temporary data. We use a fixed offset, because the
+    // TinyOS frame format is fixed...
+    nxle_uint16_t *src = (nxle_uint16_t*) &(((uint8_t*) call Frame.getHeader(msg))[MHR_INDEX_ADDRESS + 4]); 
+    *src = addr; 
+  }
+
   command am_addr_t AMPacket.source(message_t* msg) 
   {
-    ieee154_address_t address;
-    if (call Frame.getSrcAddr(msg, &address) != SUCCESS)
-      address.shortAddress = ADDRESS_NOT_PRESENT; // not present
-    return address.shortAddress;
+    // see comment for AMPacket.setSource()
+    return *((nxle_uint16_t*) &(((uint8_t*) call Frame.getHeader(msg))[MHR_INDEX_ADDRESS + 4]));
   }
 
   command void AMPacket.setDestination(message_t* msg, am_addr_t addr) 
@@ -391,19 +424,6 @@ implementation {
         NULL);
   }
 
-  command void AMPacket.setSource(message_t* msg, am_addr_t addr) 
-  {
-    // The 15.4 MAC doesn't allow to set the source address of a packet
-    // explicitly, instead it will automatically set it to 'macShortAddress'
-    // when the frame is passed via MCPS_DATA.request().  The next higher layer
-    // may still want to use setSource() and source() to store some temporary
-    // data. That's why we access the header directly here (we know the MAC
-    // header format, i.e. the position of the source address). This is yet
-    // another hack, but at the moment I don't see another way of doing it ...
-    nxle_uint16_t *src = (nxle_uint16_t*) &(((uint8_t*) call Frame.getHeader(msg))[MHR_INDEX_ADDRESS + 4]); 
-    *src = addr; 
-  }
-
   command bool AMPacket.isForMe(message_t* msg) 
   {
     return (call AMPacket.destination(msg) == call AMPacket.address() 
@@ -412,26 +432,14 @@ implementation {
 
   command am_id_t AMPacket.type(message_t* msg) 
   {
-    uint8_t *amid = call Frame.getPayload(msg);
-#ifndef TFRAMES_ENABLED
-    amid++;
-#endif
-#ifdef TKN154_BASESTATION_WORKAROUND 
-    amid -= 2;
-#endif
-    return *amid;
+    ieee154_header_t *header = getIeee154Header(msg);
+    return header->type;
   }
 
   command void AMPacket.setType(message_t* msg, am_id_t type) 
   {
-    am_id_t *amid = call Frame.getPayload(msg);
-#ifndef TFRAMES_ENABLED
-    amid++;
-#endif
-#ifdef TKN154_BASESTATION_WORKAROUND 
-    amid -= 2;
-#endif
-    *amid = type;
+    ieee154_header_t *header = getIeee154Header(msg);
+    header->type = type;
   }
   
   command am_group_t AMPacket.group(message_t* msg) 
@@ -477,10 +485,6 @@ implementation {
 
   /***************** Packet interface ****************/
 
-  // We cannot forward the Packet interface provided by the MAC, because
-  // AM-Type and T2_6LOWPAN_NETWORK_ID are not part of the header (like in
-  // standard TinyOS), but of the payload.  We have to substract PAYLOAD_OFFSET
-  // from the payload portion.
   command void Packet.clear(message_t* msg)
   {
     call SubPacket.clear(msg);
@@ -488,12 +492,12 @@ implementation {
 
   command void Packet.setPayloadLength(message_t* msg, uint8_t len) 
   {
-    call SubPacket.setPayloadLength(msg, len + PAYLOAD_OFFSET);
+    call SubPacket.setPayloadLength(msg, len);
   }
 
   command uint8_t Packet.payloadLength(message_t* msg)
   {
-    return call SubPacket.payloadLength(msg) - PAYLOAD_OFFSET;
+    return call SubPacket.payloadLength(msg);
   }
 
   command uint8_t Packet.maxPayloadLength()
@@ -503,7 +507,10 @@ implementation {
 
   command void* Packet.getPayload(message_t* msg, uint8_t len)
   {
-    return ((uint8_t*) call Frame.getPayload(msg) + PAYLOAD_OFFSET);
+    if (len > call Packet.maxPayloadLength())
+      return NULL;
+    else
+      return call Frame.getPayload(msg);
   }
 
   /***************** Timestamping ****************/
@@ -528,6 +535,9 @@ implementation {
                           ieee154_status_t status,
                           uint32_t Timestamp)
   {
+    void *payload = call Frame.getPayload(frame);
+    uint8_t payloadLength = call Frame.getPayloadLength(frame);
+
     // Remember if this packet was acked because we might need this info later
     // (PacketAcknowledgements.wasAcked()): it was acked if the ACK_REQUEST
     // flag was set and the MCPS_DATA.confirm eventpacket had a status code
@@ -538,6 +548,10 @@ implementation {
     else
       clearWasAcked(frame);
 
+    // revert the memmove we did in MCPS_DATA.request() above
+    memmove(payload, payload + PAYLOAD_OFFSET, payloadLength - PAYLOAD_OFFSET);
+    call Packet.setPayloadLength(frame, payloadLength - PAYLOAD_OFFSET);
+
     dbg_serial("TKN154ActiveMessageP", "AMSend.sendDone[%lu], status: %lu\n", (uint32_t) call AMPacket.type(frame), (uint32_t) status);
     dbg_serial("TKN154ActiveMessageP", "... TxTime: %lu (valid: %lu)\n", Timestamp, (uint32_t) call Frame.isTimestampValid(frame));
     signal AMSend.sendDone[call AMPacket.type(frame)](frame, status2Error(status));
@@ -546,37 +560,37 @@ implementation {
 
   event message_t* MCPS_DATA.indication ( message_t* frame )
   {
-    void *payload = call AMSend.getPayload[call AMPacket.type(frame)](frame,0);
-    uint8_t payloadLen = call SubPacket.payloadLength(frame) - PAYLOAD_OFFSET;
+    void *payload = call Frame.getPayload(frame);
+    uint8_t payloadLen = call Frame.getPayloadLength(frame);
+    ieee154_header_t *header = getIeee154Header(frame);
 
     // We have to be a bit careful here, because the MAC will accept frames that
-    // in TinyOS a next higher layer will normally not expect -> filter those out
-    
-    dbg_serial("TKN154ActiveMessageP", "MCPS_DATA.indication, AMtype: %lu, payloadlen: %lu\n", (uint32_t) call AMPacket.type(frame), (uint32_t) payloadLen);
-    dbg_serial("TKN154ActiveMessageP", "... RxTime: %lu (valid: %lu)\n", (uint32_t) call Frame.getTimestamp(frame), (uint32_t) call Frame.isTimestampValid(frame));
-    dbg_serial_flush();
-
+    // in TinyOS a next higher layer does not expect -> filter those out
     if (!call Frame.hasStandardCompliantHeader(frame) || 
         call Frame.getFrameType(frame) != 1) // must be a DATA frame
       return frame;
 
-#ifdef TKN154_BASESTATION_WORKAROUND 
-#warning "Applying a memmove to payload region for BaseStationC to work!"
-
-    // BaseStationC (apps/BaseStation) assumes that the first byte at
-    // message_t->data is owned by the layer on top of the active message
-    // abstraction, but in our world message_t->data points to the optional
-    // T2_6LOWPAN_NETWORK_ID and the Active Message ID. See also
-    // $TOSDIR/lib/mac/tkn154/Makefile.include for an explanation of this
-    // (ugly) workaround. 
-
-    memmove((uint8_t*)call Frame.getPayload(frame) - PAYLOAD_OFFSET, (uint8_t*) call Frame.getPayload(frame), payloadLen + PAYLOAD_OFFSET);
+    header->type = ((uint8_t*) payload)[PAYLOAD_OFFSET-1];
+#ifndef TFRAMES_ENABLED
+    header->network = ((uint8_t*) payload)[PAYLOAD_OFFSET-2];
 #endif
+    
+    // Shift the payload and add the AM type + network byte, because in the
+    // IEEE 802.15.4 these are part of the MAC payload, rather than MAC header
+    // (as which message_t treats them). We do this, because we want to
+    // support bridging between interfaces e.g. radio/serial.
+    payloadLen -= PAYLOAD_OFFSET;
+    memmove(payload, payload + PAYLOAD_OFFSET, payloadLen);
+    call Packet.setPayloadLength(frame, payloadLen);
+
+    dbg_serial("TKN154ActiveMessageP", "MCPS_DATA.indication, AMtype: %lu, payloadlen: %lu\n", (uint32_t) call AMPacket.type(frame), (uint32_t) payloadLen);
+    dbg_serial("TKN154ActiveMessageP", "... RxTime: %lu (valid: %lu)\n", (uint32_t) call Frame.getTimestamp(frame), (uint32_t) call Frame.isTimestampValid(frame));
+    dbg_serial_flush();
 
     if (call AMPacket.isForMe(frame))
-      return signal Receive.receive[call AMPacket.type(frame)](frame, payload, payloadLen);
+      return signal Receive.receive[call AMPacket.type(frame)](frame, call AMSend.getPayload[call AMPacket.type(frame)](frame,0), payloadLen);
     else
-      return signal Snoop.receive[call AMPacket.type(frame)](frame, payload, payloadLen); 
+      return signal Snoop.receive[call AMPacket.type(frame)](frame, call AMSend.getPayload[call AMPacket.type(frame)](frame,0), payloadLen); 
   }
   
   /***************** Misc. / defaults ****************/

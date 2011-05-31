@@ -181,8 +181,27 @@ enum {
 #endif
 
 typedef struct {
+
   uint8_t length;   // top bit denotes -> promiscuous mode
   uint8_t mhr[MHR_MAX_LEN];  
+
+#ifndef TKN154_ACTIVE_MESSAGE_SUPPORT_DISABLED
+  // This is a workaround: both, network and AM ID, are actually part of the
+  // MAC payload, but in the TinyOS world they are part of the header. To
+  // support bridging between between radio and serial stack above AM layer
+  // we will let it look like TinyOS expects it to look like, which involves
+  // some extra overhead in our AM layer (a memmove) as well as adding the
+  // one (or two) struct members below.
+
+  #ifndef TFRAMES_ENABLED
+    /** I-Frame 6LowPAN interoperability byte */
+    uint8_t network;
+  #endif
+
+  /** Active Message identifier */
+  uint8_t type;
+#endif
+
 } ieee154_header_t;
 
 typedef nx_struct {

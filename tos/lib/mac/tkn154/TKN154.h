@@ -265,6 +265,9 @@ typedef bool                ieee154_macPanCoordinator_t;
 // and MLME_POLL will fail):
 // #define IEEE154_INDIRECT_TX_DISABLED
 
+// Disables support for active message layer frame format (saves some RAM)
+// #define TKN154_ACTIVE_MESSAGE_SUPPORT_DISABLED
+
 // Disable powerdown of the radio during inactive period (only relevant in
 // beacon-enabled mode), i.e. radio will remain idle and use more energy. This
 // would make sense, e.g. if BO=SO, because then there is no inactive period.

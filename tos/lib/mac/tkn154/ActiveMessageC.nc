@@ -32,8 +32,7 @@
  */
 
 /* The Active Message abstraction on top of the TKN15.4 MAC. Take a look at the
- * explanation at the top of TKN154ActiveMessageP.nc to understand the approach
- * (and issues).
+ * top of TKN154ActiveMessageP.nc to understand the approach (and issues).
  **/
 
 // Disable scanning (MLME_SCAN will not work):
@@ -93,6 +92,8 @@ configuration ActiveMessageC {
   }
 }
 implementation {
+
+  
   components TKN154ActiveMessageP as AM;
 
   SplitControl = AM;

@@ -1,5 +1,5 @@
 COMPONENT=TestDataAppC
-CFLAGS += -DIEEE154_BEACON_SYNC_DISABLED 
+CFLAGS += -DIEEE154_BEACON_SYNC_DISABLED  -DTKN154_ACTIVE_MESSAGE_SUPPORT_DISABLED
 CFLAGS += -I$(shell pwd)/..
 
 # To use the TKN15.4 MAC instead of a platform's default MAC protocol first
