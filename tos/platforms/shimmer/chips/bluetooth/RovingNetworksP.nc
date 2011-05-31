@@ -147,6 +147,10 @@ implementation {
     call UARTControl.setUbr(0x08);
     call UARTControl.setUmctl(0xee);
 
+    /* 4mhz smclk
+    call UARTControl.setUbr(0x23);
+    call UARTControl.setUmctl(0xd6);
+    */
 #endif
 
     /*
