@@ -91,6 +91,7 @@
 #define DH6OPT_PREFERENCE 7
 
 #define HWTYPE_EUI64 27
+#define DH6_MAX_DUIDLEN 24
 
 struct dh6_header {
   uint32_t dh6_type_txid;

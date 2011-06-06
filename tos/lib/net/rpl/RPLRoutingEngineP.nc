@@ -66,6 +66,7 @@ generic module RPLRoutingEngineP(){
 implementation{
 
 #define RPL_GLOBALADDR
+
   //#undef printfUART
   //#define printfUART(X, args ...) ;
 
@@ -82,9 +83,9 @@ implementation{
   uint16_t LOWRANK = INFINITE_RANK;
   uint8_t GROUND_STATE = 1;
 
-  uint8_t RPLInstanceID = 1; 
+  uint8_t RPLInstanceID = 0;
   struct in6_addr DODAGID;
-  uint8_t DODAGVersionNumber = 1;
+  uint8_t DODAGVersionNumber = 0;
   uint8_t MOP = RPL_MOP_Storing_No_Multicast;
   uint8_t DAG_PREF = 7;
 
@@ -94,10 +95,10 @@ implementation{
   uint8_t DIOIntDouble = 11;
   uint8_t DIOIntMin = 8;
   uint8_t DIORedun = 0xFF;
-  uint8_t MaxRankInc = 3;
-  uint8_t MinHopRankInc = 1;
+  uint16_t MinHopRankInc = 1;
+  uint16_t MaxRankInc = 3;
 
-  uint8_t DTSN = 0;
+  uint8_t DTSN = 2;
 
   uint32_t countdio = 0;
   uint32_t countdis = 0;
@@ -136,6 +137,8 @@ implementation{
 #else
     call IPAddress.getLLAddr(&ADDR_MY_IP);
 #endif
+
+    ROOT_RANK = MinHopRankInc;
 
     /* SDH : FF02::2 -- link-local all-routers group? */
     memset(MULTICAST_ADDR.s6_addr, 0, 16);
@@ -192,13 +195,13 @@ implementation{
     call RPLDAORoutingEngine.startDAO();
     // call IPAddress.setSource(&pkt.ip6_hdr);
 
-
     msg.icmpv6.type = 155;//ICMP_TYPE_ROUTER_ADV; // Is this type correct?
     msg.icmpv6.code = ICMPV6_CODE_DIO;
     msg.icmpv6.checksum = 0;
-    msg.grounded = GROUND_STATE;
-    msg.mop = MOP;
-    msg.dag_preference = DAG_PREF;
+    msg.flags.flags_chunk = 0;
+    msg.flags.flags_chunk = GROUND_STATE << 7;
+    msg.flags.flags_chunk |= MOP << DIO_MOP_SHIFT;
+    msg.flags.flags_chunk |= DAG_PREF << 0;
     msg.version = DODAGVersionNumber;
     msg.instance_id.id = RPLInstanceID;
     msg.dtsn = DTSN;
@@ -218,6 +221,7 @@ implementation{
     if (!I_AM_LEAF) {
       dodag_config.type = RPL_DODAG_CONFIG_TYPE;
       dodag_config.length = 14;
+      dodag_config.flags = 0;
       dodag_config.A = 0; // no auth
       dodag_config.PCS = 0;
 #ifdef RPL_OF_MRHOF
@@ -225,13 +229,14 @@ implementation{
 #else
       dodag_config.ocp = 0; //OF0
 #endif
-      dodag_config.default_lifetime = 6;  // six
-      dodag_config.lifetime_unit = 3600; // hours
+      dodag_config.default_lifetime = 0xFF;//6;  // six
+      dodag_config.lifetime_unit = 0xFFFF;//3600; // hours
       dodag_config.DIOIntDoubl = DIOIntDouble;
       dodag_config.DIOIntMin = DIOIntMin;
       dodag_config.DIORedun = DIORedun;
       dodag_config.MaxRankInc = MaxRankInc;
       dodag_config.MinHopRankInc = MinHopRankInc;
+      dodag_config.reserved = 0;
 
       // For now just go with etx as the only metric
       etx_value.etx = call RPLRankInfo.getEtx();
@@ -240,13 +245,13 @@ implementation{
       metric_header.reserved = 0;
       metric_header.R_flag = 0;
       metric_header.G_flag = 1;
-      metric_header.A_flag = 0; // aggregate!
+      metric_header.A_flag = 0; // aggregate additive!
       metric_header.O_flag = 0;
       metric_header.C_flag = 0;
-      metric_header.object_len = 1;
+      metric_header.object_len = 2;
 
       body.type = RPL_DODAG_METRIC_CONTAINER_TYPE; // metric container
-      body.container_len = 5;
+      body.container_len = 6;
 
 #ifdef RPL_OF_MRHOF
       length = sizeof(struct dio_base_t) + sizeof(struct dio_body_t) + sizeof(struct dio_metric_header_t) + sizeof(struct dio_etx_t) + sizeof(struct dio_dodag_config_t);
@@ -288,8 +293,8 @@ implementation{
     printfUART("\n >>>>>> TxDIO etx %d %d %d %lu \n", call RPLRankInfo.getEtx(),  \
                ntohs(DODAGID.s6_addr16[7]), msg.dagRank, tricklePeriod);
     */
-    printfUART(">> sendDIO %d %lu \n", TOS_NODE_ID, ++countdio);
-    printfUART("RANK %d %d\n", TOS_NODE_ID, call RPLRankInfo.getRank(&ADDR_MY_IP));
+    printfUART("TXDIO %d %lu \n", TOS_NODE_ID, ++countdio);
+    //printfUART("RANK %d %d %d\n", call RPLRankInfo.getRank(&ADDR_MY_IP), call RPLRankInfo.getEtx(), call RPLRankInfo.hasParent());
 
     if (UNICAST_DIO) {
       UNICAST_DIO = FALSE;
@@ -332,7 +337,7 @@ implementation{
     //call IPAddress.getGlobalAddr(&pkt.ip6_hdr.ip6_src);
 
     //printfUART("\n >>>>>> TxDIS\n");
-    printfUART(">> sendDIS %d %lu \n", TOS_NODE_ID, ++countdis);
+    //printfUART(">> sendDIS %d %lu \n", TOS_NODE_ID, ++countdis);
 
     call IP_DIS.send(&pkt);
   }
@@ -344,7 +349,17 @@ implementation{
     INCONSISTENCY_COUNT ++;
     call RPLRankInfo.inconsistencyDetected(/*&ADDR_MY_IP*/); // inconsistency on my on node detected?
 
+    /* JK: This reaction is TinyRPL specific -- to reduce the amount of DIO traffic -- helps when minmal leaf nodes exist */
     call RPLRouteInfo.resetTrickle();
+    /* JK: Below is the Spec way of reacting to inconsistencies */
+    /*
+    if(call RPLRankInfo.hasParent())
+      call RPLRouteInfo.resetTrickle();
+    else{
+      call TrickleTimer.stop();
+      call InitDISTimer.startPeriodic(1024);
+    }
+    */
   }
 
   void poison(){
@@ -363,10 +378,10 @@ implementation{
     if(!running){
       return;
     }
+    call TrickleTimer.stop();
     randomTime = tricklePeriod;
     randomTime /= 2;
     randomTime += call Random.rand32() % randomTime;
-    call TrickleTimer.stop();
     call TrickleTimer.startOneShot(randomTime);
   }
 
@@ -490,7 +505,7 @@ implementation{
   }
 
   event void IncreaseVersionTimer.fired(){
-    printfUART(">>>> Version Increase!! \n");
+    //printfUART(">>>> Version Increase!! \n");
     DODAGVersionNumber++;
     call RPLRouteInfo.resetTrickle();
   }
@@ -524,7 +539,7 @@ implementation{
    */
   event void IP_DIS.recv(struct ip6_hdr *iph, void *payload, 
                          size_t len, struct ip6_metadata *meta) {
-    //printfUART("Receiving DIS\n");
+    //printfUART("Receiving DIS %d\n", TOS_NODE_ID);
     if (!running) return;
     // I received a DIS
     if (I_AM_LEAF) {
@@ -559,7 +574,16 @@ implementation{
     } else {
       redunCounter = 0xFF;
     }
-    
+
+    /* JK: The if() statement below is TinyRPL specific and ties up with the inconsistencyDectect case above */
+    if(dio->dagRank == INFINITE_RANK){
+      if(call RPLRankInfo.getRank(&ADDR_MY_IP) != INFINITE_RANK && (call InitDISTimer.getNow()%2) == 1){ // send DIO if I can help!
+	//printfUART("Infinite Rank RX %d\n", TOS_NODE_ID);
+	post sendDIOTask();
+      }
+      return;
+    }
+
     if (call RPLRankInfo.hasParent() && call InitDISTimer.isRunning()) {
       call InitDISTimer.stop(); // no need for DIS messages anymore
     }
@@ -623,7 +647,8 @@ implementation{
       /*  I have no parent at this point! */
       //printfUART("noparent %d %d\n", node_rank, call RPLRankInfo.hasParent());
       hasDODAG = FALSE;
-      GROUND_STATE = dio->grounded;
+      GROUND_STATE = dio->flags.flags_chunk & DIO_GROUNDED_MASK;
+      //GROUND_STATE = dio->flags.flags_element.grounded;
       call TrickleTimer.stop();
       // new add
       call RPLRouteInfo.resetTrickle();
@@ -634,12 +659,13 @@ implementation{
     // assume that this DIO is from the DODAG with the
     // highest preference and is the preferred parent's DIO packet?
     hasDODAG = TRUE;
-    MOP = dio->mop;
-    DAG_PREF = dio->dag_preference;
+    MOP = (dio->flags.flags_chunk & DIO_MOP_MASK) >> DIO_MOP_SHIFT;
+    DAG_PREF = dio->flags.flags_chunk & DIO_PREF_MASK;
     RPLInstanceID = dio->instance_id.id;
     memcpy(&DODAGID, &dio->dodagID, sizeof(struct in6_addr));
     DODAGVersionNumber = dio->version;
-    GROUND_STATE = dio->grounded;
+    GROUND_STATE = dio->flags.flags_chunk & DIO_GROUNDED_MASK;
+    //GROUND_STATE = dio->flags.flags_element.grounded;
     call RPLRouteInfo.resetTrickle();
     return;
   }

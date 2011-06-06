@@ -1,7 +1,7 @@
 /**
- * Neighbor Discover for blip
+ * Neighbor Discovery for blip
  *
- * In IPv6, neighbor discovery resolves IPv6 address which have been
+ * In IPv6, neighbor discovery resolves IPv6 addresses which have been
  * determined to be on-link to their associated link-layer addresses.
  * This simple component follows the advice of 6lowpan-nd, which
  * states that link-local addresses are derived from the associated
@@ -27,13 +27,19 @@ module IPNeighborDiscoveryP {
   }
 } implementation {
 
+#undef printfUART
+#undef printfUART_buf
+#undef printfUART_in6addr
+#define printfUART(FMT, args ...)
+#define printfUART_buf(buf, len)
+#define printfUART_in6addr(X)
+
+
   command int NeighborDiscovery.matchContext(struct in6_addr *addr, 
                                              uint8_t *ctx) {
-    if (addr->s6_addr[0] == 0xfe &&
-        addr->s6_addr[1] == 0xc0 &&
-        addr->s6_addr16[1] == 0 &&
-        addr->s6_addr16[2] == 0 &&
-        addr->s6_addr16[3] == 0) {
+    struct in6_addr me;
+    if (!(call IPAddress.getGlobalAddr(&me))) return 0;
+    if (memcmp(me.s6_addr, addr->s6_addr, 8) == 0) {
       *ctx = 0;
       return 64;
     } else {
@@ -43,9 +49,12 @@ module IPNeighborDiscoveryP {
 
   command int NeighborDiscovery.getContext(uint8_t context, 
                                            struct in6_addr *ctx) {
+    struct in6_addr me;
+    if (!(call IPAddress.getGlobalAddr(&me))) return 0;
     if (context == 0) {
-      memset(ctx->s6_addr, 0, 8);
-      ctx->s6_addr16[0] = htons(0xfec0);
+      // memset(ctx->s6_addr, 0, 8);
+      // ctx->s6_addr16[0] = htons(0xaaaa);
+      memcpy(ctx->s6_addr, me.s6_addr, 8);
       return 64;
     } else {
       return 0;
@@ -54,20 +63,24 @@ module IPNeighborDiscoveryP {
 
   command error_t NeighborDiscovery.resolveAddress(struct in6_addr *addr,
                                                    ieee154_addr_t *link_addr) {
-    ieee154_panid_t panid = call Ieee154Address.getPanId();
+    ieee154_panid_t panid = letohs(call Ieee154Address.getPanId());
 
     if (addr->s6_addr16[0] == htons(0xfe80)) {
       if (addr->s6_addr16[5] == htons(0x00FF) &&
           addr->s6_addr16[6] == htons(0xFE00)) {
-        if (ntohs(addr->s6_addr16[4]) == panid) {
+        /* U bit must not be set if a short address is in use */
+        if (ntohs(addr->s6_addr16[4]) == (panid & ~0x0200)) {
           link_addr->ieee_mode = IEEE154_ADDR_SHORT;
           link_addr->i_saddr = htole16(ntohs(addr->s6_addr16[7]));
         } else {
           return FAIL;
         }
       } else {
+        int i;
         link_addr->ieee_mode = IEEE154_ADDR_EXT;
-        memcpy(link_addr->i_laddr.data, &addr->s6_addr[8], 8);
+        for (i = 0; i < 8; i++)
+          link_addr->i_laddr.data[i] = addr->s6_addr[15 - i];
+        link_addr->i_laddr.data[7] ^= 0x2;    /* toggle U/L */
       }
       return SUCCESS;
     } else if (addr->s6_addr[0] == 0xff) {
@@ -93,6 +106,8 @@ module IPNeighborDiscoveryP {
 
     printfUART("IPNeighborDiscovery - send - next: ");
     printfUART_in6addr(next);
+    printfUART(" - ll source: ");
+    printfUART_in6addr(&local_addr);
     printfUART("\n");
     // iov_print(msg->ip6_data);
 
@@ -105,6 +120,9 @@ module IPNeighborDiscoveryP {
       printfUART("IPND - next-hop address resolution failed\n");
       return FAIL;
     }
+    printfUART("l2 source: "); printfUART_buf(fr_addr.ieee_src.i_laddr.data, 8);
+    printfUART("l2 dest: "); printfUART_buf(fr_addr.ieee_dst.i_laddr.data, 8);
+    printfUART("\n");
 
     return call IPLower.send(&fr_addr, msg, ptr);
   }

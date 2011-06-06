@@ -99,7 +99,7 @@ AC_ARG_ENABLE([lpl],
         AC_DEFINE([BLIP_L2_RETRIES], [1], [Number of link-layer retransmissions])
         [])
 
-dnl AC_LINK_FILES(interface/tun_dev_${arch}.c, interface/tun_dev.c)
+AC_LINK_FILES(linux/tun_dev_${arch}.c, linux/tun_dev.c)
 dnl AC_LINK_FILES(driver/routing-${arch}.c, driver/routing-platform.c)
 dnl AC_LINK_FILES(driver/netlink-${arch}.c, driver/netlink.c)
 dnl AC_CONFIG_SUBDIRS([driver/radvd-1.0])

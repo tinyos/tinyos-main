@@ -75,7 +75,7 @@ module Dhcp6ClientP {
 
   // DUID of the server we're talking and have obtained the binding from
   bool m_serverid_valid = FALSE;
-  char m_serverid[24];
+  char m_serverid[DH6_MAX_DUIDLEN];
 
   // weather to send unicast messages once we've picked a server from
   // ADVERTIZE messages
@@ -87,15 +87,16 @@ module Dhcp6ClientP {
     VALID_WAIT = 0xff,
     
     // how long to send requests before hopping back to SOLICIT
-    REQUEST_TIMEOUT = 60,
+    REQUEST_TIMEOUT = 120,
 
-    TIMER_PERIOD = 5,
+    TIMER_PERIOD = 15,
   };
   
   command error_t StdControl.start() {
     m_state = DH6_SOLICIT;
     call UDP.bind(DH6PORT_DOWNSTREAM);
-    call Timer.startPeriodic(1024 * TIMER_PERIOD);
+    // call Timer.startPeriodic(1024 * TIMER_PERIOD);
+    call Timer.startOneShot((1024L * TIMER_PERIOD) % (call Random.rand16()));
     return SUCCESS;
   }
   
@@ -151,6 +152,15 @@ module Dhcp6ClientP {
     memcpy(msg + sizeof(struct dh6_request), 
            m_serverid,
            sizeof(m_serverid));
+
+    if (!m_serverid_valid) {
+      return;
+    }
+    
+    if (ntohs(hdr->len) > sizeof(m_serverid)) {
+      return;
+    }
+
     len += ntohs(hdr->len) + sizeof(struct dh6_opt_header);
 
     call UDP.sendto(&m_srv_addr, msg, len);
@@ -190,6 +200,9 @@ module Dhcp6ClientP {
 
   event void Timer.fired() {
     // state machine transition timeouts
+    if (!call Timer.isRunning())
+      call Timer.startPeriodic(1024L * TIMER_PERIOD);
+
     switch (m_state) {
     case DH6_SOLICIT:
       sendSolicit();
@@ -268,15 +281,17 @@ module Dhcp6ClientP {
         if (id) {
           // save the server DUID for use in reply messages and start
           // requesting an address.
-          m_serverid_valid = TRUE;
-          memcpy(m_serverid, id, ntohs(opt->len) + 
-                 sizeof(struct dh6_opt_header));
-          // we can unicast to this guy now
-          // memcpy(&m_srv_addr, src, sizeof(struct sockaddr_in6));
-          m_time = 1;
-          m_state = DH6_REQUEST;
-          if (m_unicast) 
-            memcpy(&m_srv_addr, src, sizeof(struct sockaddr_in6));
+          if (ntohs(opt->len) + sizeof(struct dh6_opt_header) < sizeof(m_serverid)) {
+            m_serverid_valid = TRUE;
+            memcpy(m_serverid, id, ntohs(opt->len) + 
+                   sizeof(struct dh6_opt_header));
+            // we can unicast to this guy now
+            // memcpy(&m_srv_addr, src, sizeof(struct sockaddr_in6));
+            m_time = 1;
+            m_state = DH6_REQUEST;
+            if (m_unicast) 
+              memcpy(&m_srv_addr, src, sizeof(struct sockaddr_in6));
+          }
         }
       }
       break;

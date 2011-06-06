@@ -74,13 +74,25 @@
 
 #include <iprouting.h>
 
-#define ETX_THRESHOLD 200
-#define MAX_ETX 200
+#ifndef RPL_OF_MRHOF
+
+#define ETX_THRESHOLD 200 //25600
+#define minHopRankIncrease 1
+#define divideRank 10 //128
+#define INIT_ETX 35 //448
+
+#else
+
+#define ETX_THRESHOLD 25600
+#define minHopRankIncrease 128
+#define divideRank 128
+#define INIT_ETX 448
+
+#endif // MRHOF
+
 #define MAX_PARENT 20
 #define MAX_HOPCOUNT 30
 #define RPL_QUEUE_SIZE 5
-#define minHopRankIncrease 1
-#define INIT_ETX 20
 #define RPL_MAX_SOURCEROUTE 10
 
 enum {
@@ -103,7 +115,7 @@ enum {
 struct icmpv6_header_t {
   uint8_t	type;
   uint8_t	code;
-  uint16_t	checksum;
+  nx_uint16_t	checksum;
 };
 
 struct dis_base_t {
@@ -112,9 +124,11 @@ struct dis_base_t {
 };
 
 struct rpl_instance_id {
-  /* Global RPLInstance ID */
+  /* Global RPLInstance ID
   uint8_t reserved  : 1;
   uint8_t id        : 7;
+  */
+  uint8_t id;
 };
 
 struct transit_info_option_t {
@@ -149,12 +163,19 @@ struct dao_base_t {
 struct dio_base_t {
   struct icmpv6_header_t icmpv6;
   struct rpl_instance_id instance_id; // used to be instanceID
-  uint8_t version; //used to be sequence
-  uint16_t dagRank;
-  uint8_t grounded        :1;
-  uint8_t reserved        :1;
-  uint8_t mop             :3; // mode of operation // flag changes
-  uint8_t dag_preference  :3;
+  nx_uint8_t version; //used to be sequence
+  nx_uint16_t dagRank;
+  union{
+    /*
+    struct flags_t {
+      uint8_t grounded        :1;
+      uint8_t reserved        :1;
+      uint8_t mop             :3; // mode of operation // flag changes
+      uint8_t dag_preference  :3;
+    } __attribute__((packed)) flags_element;
+    */
+    uint8_t flags_chunk;
+  } flags;
   uint8_t dtsn;
   uint16_t reserved2;
   struct in6_addr dodagID; // was dagID
@@ -167,20 +188,20 @@ struct dio_body_t{ // type 2 ; contains metrics
 };
 
 struct dio_dodag_config_t{ // type 4 ; contains DODAG configuration
-  uint8_t type;
-  uint8_t length;
+  nx_uint8_t type;
+  nx_uint8_t length;
   uint8_t flags : 4;
   uint8_t A     : 1;
   uint8_t PCS   : 3;
-  uint8_t DIOIntDoubl;
-  uint8_t DIOIntMin;
-  uint8_t DIORedun;
-  uint8_t MaxRankInc;
-  uint8_t MinHopRankInc;
-  uint16_t ocp;
-  uint8_t reserved;
-  uint8_t default_lifetime;
-  uint16_t lifetime_unit;
+  nx_uint8_t DIOIntDoubl;
+  nx_uint8_t DIOIntMin;
+  nx_uint8_t DIORedun;
+  nx_uint16_t MaxRankInc;
+  nx_uint16_t MinHopRankInc;
+  nx_uint16_t ocp;
+  nx_uint8_t reserved;
+  nx_uint8_t default_lifetime;
+  nx_uint16_t lifetime_unit;
 };
 
 struct dio_metric_header_t{ 
@@ -191,25 +212,24 @@ struct dio_metric_header_t{
   uint8_t A_flag      :  2;
   uint8_t O_flag      :  1;
   uint8_t C_flag      :  1;
-  uint16_t object_len;
+  nx_uint16_t object_len;
 };
 
 struct dio_etx_t{
-  uint16_t etx;
+  nx_uint16_t etx;
 };
 
 struct dio_latency_t{
   float latency;
-  //uint8_t *data;
 };
 
 struct dio_prefix_t{
   uint8_t type;
-  uint16_t suboption_len;
+  nx_uint16_t suboption_len;
   uint8_t reserved : 3;
   uint8_t preference : 2;
   uint8_t reserved2 : 3;
-  uint32_t lifetime;
+  nx_uint32_t lifetime;
   uint8_t prefix_len;
   struct in6_addr prefix;
 };
@@ -227,8 +247,8 @@ struct rpl_route {
 };
 
 /* Necessary constants for RPL*/
+uint16_t ROOT_RANK = 1;
 enum {
-  ROOT_RANK = 1,
   BASE_RANK = 0,
   INFINITE_RANK = 0xFFFF,
   RPL_DEFAULT_INSTANCE = 0,
@@ -310,16 +330,27 @@ typedef struct {
 } downwards_table_t;
 
 
+/* draft-ietf-6man-rpl-option-01 */
 typedef struct {
   struct ip6_ext ip6_ext_outer;
   struct ip6_ext ip6_ext_inner;
+  /*
   uint8_t o_bit  : 1;
   uint8_t r_bit  : 1;
   uint8_t f_bit  : 1;
   uint8_t reserved : 5;
+  */
+  uint8_t bitflag;
   struct rpl_instance_id instance_id; // used to be instanceID 
-  uint16_t senderRank;
+  nx_uint16_t senderRank;
 } __attribute__((packed)) rpl_data_hdr_t ;
+
+#define RPL_DATA_O_BIT_MASK 0x80
+#define RPL_DATA_O_BIT_SHIFT 7
+#define RPL_DATA_R_BIT_MASK 0x40
+#define RPL_DATA_R_BIT_SHIFT 6
+#define RPL_DATA_F_BIT_MASK 0x20
+#define RPL_DATA_F_BIT_SHIFT 5
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -349,7 +380,14 @@ struct padN_t{
   uint8_t *padN_data;
 };
 */
-parent_t parentSet[MAX_PARENT];
 
+//parent_t parentSet[MAX_PARENT];
+//uint16_t desiredParent = MAX_PARENT;
+
+#define DIO_GROUNDED_MASK 0x80
+#define DIO_MOP_MASK 0x3c
+#define DIO_MOP_SHIFT 3
+#define DIO_PREF_MASK 0x07
+#define DIO_PREF_SHIFT 0
 
 #endif

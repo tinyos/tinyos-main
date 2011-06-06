@@ -5,13 +5,18 @@
 
 enum {
   ROUTE_INVAL_KEY = -1,
-  ROUTE_TABLE_SZ = 10,
+  ROUTE_TABLE_SZ = 35,
 };
 
 enum {
   ROUTE_IFACE_ALL = 0,
   ROUTE_IFACE_154 = 1,
   ROUTE_IFACE_PPP = 2,
+};
+
+enum {
+  ROUTE_DROP_NOROUTE,
+  ROUTE_DROP_HLIM,
 };
 
 typedef int route_key_t;

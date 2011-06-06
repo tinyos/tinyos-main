@@ -63,7 +63,8 @@ int inet_ntop6(struct in6_addr *addr, char *buf, int cnt) {
   int i, j, compressed = 0;
 
   for (j = 0; j < 8; j++) {
-    if (buf > end - 7) return -1;
+    if (buf > end - 8)
+      goto done;
 
     block = ntohs(addr->s6_addr16[j]);
     for (i = 4; i <= 16; i+=4) {
@@ -81,6 +82,7 @@ int inet_ntop6(struct in6_addr *addr, char *buf, int cnt) {
   }
   if (compressed == 1)
     *buf++ = ':';
+ done:
   *buf++ = '\0';
   return buf - (end - cnt);
 }
@@ -141,14 +143,14 @@ int ieee154_parse(char *in, ieee154_addr_t *out) {
   long val;
   char *endp = in;
   long saddr = strtol(in,  &endp, 16);
-  fprintf(stderr, "ieee154_parse: %s, %c\n", in, *endp);
+  // fprintf(stderr, "ieee154_parse: %s, %c\n", in, *endp);
 
   if (*endp == ':') {
     endp = in;
     // must be a long address
     for (i = 0; i < 8; i++) {
       val = strtol(endp, &endp, 16);
-      out->i_laddr.data[i] = val;
+      out->i_laddr.data[7-i] = val;
       endp++;
     }
     out->ieee_mode = IEEE154_ADDR_EXT;

@@ -1,7 +1,7 @@
 
-SUBDIRS = . trace
+SUBDIRS = . trace tests
 
-AM_CFLAGS = -DPC -I../../../../../tos/types
+AM_CFLAGS = -DPC -I../../../../../tos/types -DHAVE_LOWPAN_EXTERN_MATCH_CONTEXT
 noinst_LIBRARIES = lib6lowpan.a
 
 noinst_lib6lowpandir = $(includedir)/lib6lowpan-2.2.0

@@ -38,5 +38,4 @@ interface ForwardingEvents {
    */
   event void linkResult(struct in6_addr *dest, struct send_info *info);
 
-  event error_t deleteHeader(struct ip6_hdr *iph, void* payload);
 }

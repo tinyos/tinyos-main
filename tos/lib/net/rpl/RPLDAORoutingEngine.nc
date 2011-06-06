@@ -39,4 +39,5 @@
 interface RPLDAORoutingEngine{
   command error_t startDAO();
   command bool getStoreState();
+  command void newParent();
 }

@@ -47,7 +47,7 @@
 configuration Dhcp6RelayC {
 
 } implementation {
-  components Dhcp6RelayP;
+  components Dhcp6RelayP, Dhcp6ClientC;
   components IPAddressC, Ieee154AddressC;
   components new TimerMilliC(), new UdpSocketC();
   components RandomC;
@@ -59,5 +59,6 @@ configuration Dhcp6RelayC {
   Dhcp6RelayP.Random -> RandomC;
   Dhcp6RelayP.Boot -> MainC;
   Dhcp6RelayP.AdvTimer -> TimerMilliC;
+  Dhcp6RelayP.Dhcp6Info -> Dhcp6ClientC;
 
 }

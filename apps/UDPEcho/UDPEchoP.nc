@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 The Regents of the University  of California.
+ * Copyright (c) 2008-2010 The Regents of the University  of California.
  * All rights reserved."
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,15 +32,14 @@
  */
 
 #include <IPDispatch.h>
-#include <lib6lowpan.h>
-#include <ip.h>
-#include <lib6lowpan.h>
-#include <ip.h>
+#include <lib6lowpan/lib6lowpan.h>
+#include <lib6lowpan/ip.h>
+#include <lib6lowpan/ip.h>
 
 #include "UDPReport.h"
 #include "PrintfUART.h"
 
-#define REPORT_PERIOD 75L
+#define REPORT_PERIOD 10L
 
 module UDPEchoP {
   uses {
@@ -54,10 +53,8 @@ module UDPEchoP {
     
     interface Timer<TMilli> as StatusTimer;
    
-    interface Statistics<ip_statistics_t> as IPStats;
-    interface Statistics<udp_statistics_t> as UDPStats;
-    interface Statistics<route_statistics_t> as RouteStats;
-    interface Statistics<icmp_statistics_t> as ICMPStats;
+    interface BlipStatistics<ip_statistics_t> as IPStats;
+    interface BlipStatistics<udp_statistics_t> as UDPStats;
 
     interface Random;
   }
@@ -73,12 +70,10 @@ module UDPEchoP {
     timerStarted = FALSE;
 
     call IPStats.clear();
-    call RouteStats.clear();
-    call ICMPStats.clear();
     printfUART_init();
 
 #ifdef REPORT_DEST
-    route_dest.sin6_port = hton16(7000);
+    route_dest.sin6_port = htons(7000);
     inet_pton6(REPORT_DEST, &route_dest.sin6_addr);
     call StatusTimer.startOneShot(call Random.rand16() % (1024 * REPORT_PERIOD));
 #endif
@@ -86,10 +81,10 @@ module UDPEchoP {
     dbg("Boot", "booted: %i\n", TOS_NODE_ID);
     call Echo.bind(7);
     call Status.bind(7001);
+
   }
 
   event void RadioControl.startDone(error_t e) {
-
   }
 
   event void RadioControl.stopDone(error_t e) {
@@ -97,17 +92,26 @@ module UDPEchoP {
   }
 
   event void Status.recvfrom(struct sockaddr_in6 *from, void *data, 
-                             uint16_t len, struct ip_metadata *meta) {
+                             uint16_t len, struct ip6_metadata *meta) {
 
   }
 
   event void Echo.recvfrom(struct sockaddr_in6 *from, void *data, 
-                           uint16_t len, struct ip_metadata *meta) {
+                           uint16_t len, struct ip6_metadata *meta) {
+#ifdef PRINTFUART_ENABLED
+    int i;
+    uint8_t *cur = data;
+    call Leds.led0Toggle();
+    printfUART("Echo recv [%i]: ", len);
+    for (i = 0; i < len; i++) {
+      printfUART("%02x ", cur[i]);
+    }
+    printfUART("\n");
+#endif
     call Echo.sendto(from, data, len);
   }
 
   event void StatusTimer.fired() {
-
     if (!timerStarted) {
       call StatusTimer.startPeriodic(1024 * REPORT_PERIOD);
       timerStarted = TRUE;
@@ -118,9 +122,7 @@ module UDPEchoP {
 
     call IPStats.get(&stats.ip);
     call UDPStats.get(&stats.udp);
-    call ICMPStats.get(&stats.icmp);
-    call RouteStats.get(&stats.route);
-
+    call Leds.led1Toggle();
     call Status.sendto(&route_dest, &stats, sizeof(stats));
   }
 }

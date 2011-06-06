@@ -14,6 +14,10 @@ module UdpP {
 #undef dbg
 #define dbg(X,fmt, args...) printfUART(fmt, ##args)
 #endif
+#undef printfUART
+#undef printfUART_in6addr
+#define printfUART(X, fmt ...) ;
+#define printfUART_in6addr(X) ;
 
   enum {
     N_CLIENTS = uniqueCount("UDP_CLIENT"),
@@ -92,6 +96,7 @@ module UdpP {
     v.iov_next = NULL;
 
     my_cksum = msg_cksum(iph, &v, IANA_UDP);
+    printfUART("rx_cksum: 0x%x my_cksum: 0x%x\n", rx_cksum, my_cksum);
     if (rx_cksum != my_cksum) {
       BLIP_STATS_INCR(stats.cksum);
       printfUART("udp ckecksum computation failed: mine: 0x%x theirs: 0x%x [0x%x]\n", 

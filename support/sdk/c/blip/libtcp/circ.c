@@ -50,6 +50,11 @@ uint32_t circ_get_seqno(void *buf) {
   return b->head_seqno;
 }
 
+void circ_set_seqno(void *buf, uint32_t seqno) {
+  struct circ_buf *b = (struct circ_buf *)buf;
+  b->head_seqno = seqno;
+}
+
 static void get_ptr_off_1(struct circ_buf *b, uint32_t sseqno, int len,
                           uint8_t **writeptr, int *w_len) {
   uint8_t *endptr =  b->data_start + b->data_len;

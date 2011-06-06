@@ -33,6 +33,7 @@ void ip_malloc_init() {
 
 void *ip_malloc(uint16_t sz) {
   bndrt_t *cur = (bndrt_t *)heap;
+
   sz += sizeof(bndrt_t) * 2;
   sz += (sz % IP_MALLOC_ALIGN);
 
@@ -89,10 +90,11 @@ uint16_t ip_malloc_freespace() {
 }
 
 #ifdef PC
+#include <stdlib.h>
 void dump_heap() {
   int i;
   for (i = 0; i < IP_MALLOC_HEAP_SIZE; i++) {
-    printf("0x%x ", heap[i]);
+    printf("0x%hx ", heap[i]);
     if (i % 8 == 7) printf("  ");
     if (i % 16 == 15) printf ("\n");
     if (i > 64) break;

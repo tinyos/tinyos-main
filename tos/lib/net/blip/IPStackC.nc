@@ -82,11 +82,11 @@ configuration IPStackC {
   FwdP.PrintTimer -> TimerMilliC;
   FwdP.Leds -> LedsC;
 
-#ifdef IN6_PREFIX
+#if defined(IN6_PREFIX)
   components MainC, NoDhcpC;
   NoDhcpC.Boot -> MainC;
   NoDhcpC.IPAddress -> IPAddressC;
-#else
+#elif ! defined(IN6_NO_GLOBAL)
   components Dhcp6RelayC;
   components Dhcp6ClientC;
 #endif

@@ -43,6 +43,8 @@ uint16_t ip_malloc_freespace();
 #ifndef PC
 #define malloc(X) ip_malloc(X)
 #define free(X)   ip_free(X)
+#else
+void ip_print_heap();
 #endif
 
 #endif

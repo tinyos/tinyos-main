@@ -30,7 +30,7 @@
  */
 
 // #include <netinet/in.h>
-#include "ip.h"
+#include <lib6lowpan/ip.h>
 
 #define min(X,Y) (((X) > (Y)) ? (Y) : (X))
 #ifndef PC
@@ -56,6 +56,7 @@ enum {
   TCP_ACKPENDING  = 0x3,
   TCP_DUPACKS     = 0x3c,
   TCP_DUPACKS_OFF = 2,
+  TCP_CONNECTDONE = 0x40,
   TCP_ACKSENT     = 0x80,
 };
 
@@ -82,7 +83,7 @@ struct tcplib_sock {
   tcplib_sock_state_t state;
 
   void    *tx_buf;
-  uint16_t tx_buf_len;
+  int tx_buf_len;
 
   /* max segment size, or default if
      we didn't bother to pull it out
@@ -107,21 +108,6 @@ struct tcplib_sock {
 
   /* retransmission counter */
   uint16_t retxcnt;
-
-  /* callbacks for this connection */
-/*   struct { */
-/*     /\* a previous connection request has finished *\/ */
-/*     void (*connect_done)(struct tcplib_sock *sock, int error); */
-
-/*     /\* a callback to signal new data is ready *\/ */
-/*     void (*recvfrom)(struct tcplib_sock *sock, void *data, int len); */
-
-/*     /\* the connection was closed by the other party *\/ */
-/*     void (*closed)(struct tcplib_sock *sock); */
-
-/*     /\* you called close(); we've finished closing the socket. *\/ */
-/*     void (*close_done)(struct tcplib_sock *sock); */
-/*   } ops; */
 
   /* this needs to be at the end so
      we can call init() on a socket
@@ -149,7 +135,7 @@ struct tcplib_sock *tcplib_accept(struct tcplib_sock *conn,
                                   struct sockaddr_in6 *from);
 
 /* a call-out point for tcplib to send a message */
-void tcplib_send_out(struct split_ip_msg *msg, struct tcp_hdr *tcph);
+void tcplib_send_out(struct ip6_packet *pkt, struct tcp_hdr *tcph);
 
 /* upcall for new data; may be dispatched all the way out to a
  * handler. 

@@ -37,7 +37,6 @@
 #include <RPL.h>
 #include <lib6lowpan/in_cksum.h>
 #include <lib6lowpan/ip.h>
-#include <RPL.h>
 
 generic module RPLDAORoutingEngineP(){
   provides {
@@ -65,7 +64,10 @@ generic module RPLDAORoutingEngineP(){
   //#undef printfUART
   //#define printfUART(X, args ...) ;
 
-  uint32_t dao_rate = 20 * 1024U;
+#define INIT_DAO 1024;
+
+  uint8_t dao_double_count = 0;
+  uint32_t dao_rate = INIT_DAO;
   uint32_t delay_dao = 256; // dao batches will be fired 256 ms after the first dao message is scheduled
   // every 100 ms, check if elememts in the entry should be deleted --
   // only for storing nodes
@@ -118,8 +120,7 @@ generic module RPLDAORoutingEngineP(){
       call IPAddress.getLLAddr(&dao_msg->s_pkt.ip6_hdr.ip6_src);
       if (call RPLRouteInfo.getDefaultRoute(&next_hop) != SUCCESS)
         return;
-      memcpy(&dao_msg->s_pkt.ip6_hdr.ip6_dst, &next_hop, 
-             sizeof(struct in6_addr));
+      memcpy(&dao_msg->s_pkt.ip6_hdr.ip6_dst, &next_hop, sizeof(struct in6_addr));
 #else 
       /* in non-storing mode we must use global addresses */
       call IPAddress.getGlobalAddr(&dao_msg->s_pkt.ip6_hdr.ip6_src);
@@ -129,7 +130,7 @@ generic module RPLDAORoutingEngineP(){
       dao = (struct dao_base_t *) dao_msg->s_pkt.ip6_data->iov_base;
 
       //printfUART(">> sendDAO %d %lu \n", TOS_NODE_ID, ++count);
-      //call IP_DAO.send(&dao_msg->s_pkt);
+      call IP_DAO.send(&dao_msg->s_pkt);
       call SendPool.put(dao_msg);
 
       if (call SendQueue.size()) {
@@ -141,7 +142,6 @@ generic module RPLDAORoutingEngineP(){
   }
 
   command error_t RPLDAORouteInfo.startDAO() {
-    //printfUART("START DAO \n");
 
 #ifdef RPL_STORING_MODE
     call RemoveTimer.startPeriodic(remove_time);
@@ -156,8 +156,9 @@ generic module RPLDAORoutingEngineP(){
       call GenerateDAOTimer.startPeriodic(dao_rate);
     }
     */
+    //dao_rate *= 2;
     call GenerateDAOTimer.startPeriodic(dao_rate);
-    call DelayDAOTimer.startPeriodic(delay_dao);
+    call DelayDAOTimer.startOneShot(delay_dao + call Random.rand16()%100);
 
     if(call GenerateDAOTimer.isRunning()){
       return SUCCESS;
@@ -180,6 +181,12 @@ generic module RPLDAORoutingEngineP(){
 
   event void GenerateDAOTimer.fired() { // Initiate my own DAO messages
     post initDAO();
+    if(dao_double_count < 10){
+      dao_rate = dao_rate * 2 + call Random.rand16()%100;
+      dao_double_count ++;
+    }
+    call GenerateDAOTimer.stop();
+    call GenerateDAOTimer.startOneShot(dao_rate );
   }
 
   task void initDAO(){
@@ -246,6 +253,7 @@ generic module RPLDAORoutingEngineP(){
 
   event void DelayDAOTimer.fired() {
     post sendDAO();
+    call DelayDAOTimer.startOneShot(delay_dao + call Random.rand16()%100);
   }
 
   event void RemoveTimer.fired() {
@@ -275,7 +283,7 @@ generic module RPLDAORoutingEngineP(){
     // This is where the message is actually cast
     struct dao_base_t *dao = (struct dao_base_t *)payload; 
     struct route_entry *entry;
-    route_key_t new_key;
+    route_key_t new_key = ROUTE_INVAL_KEY;
 
     //printfUART("receive DAO: %i\n", call RPLDAORouteInfo.getStoreState());
     if (!m_running) return;
@@ -316,17 +324,21 @@ generic module RPLDAORoutingEngineP(){
 						dao->target_option.prefix_length,
 						&iph->ip6_src,
 						RPL_IFACE);
+	/*
 	if (new_key == ROUTE_INVAL_KEY) {
 	  call Leds.led1Toggle();
 	  return;
 	}
+	*/
       }
 
-      downwards_table[downwards_table_count].lifetime = 
-        dao->transit_info_option.path_lifetime;
-      downwards_table[downwards_table_count].key = new_key;
-      // for next element
-      downwards_table_count ++;
+      if(new_key != ROUTE_INVAL_KEY){
+	downwards_table[downwards_table_count].lifetime = dao->transit_info_option.path_lifetime;
+	downwards_table[downwards_table_count].key = new_key;
+	// for next element
+	downwards_table_count ++;
+      }
+
       /*
       printfUART("DAO RX-- new prefix %d %d %d \n",
                  downwards_table_count, 
@@ -343,7 +355,7 @@ generic module RPLDAORoutingEngineP(){
       return;
     }else{
       if(!call GenerateDAOTimer.isRunning())
-	call GenerateDAOTimer.startPeriodic(dao_rate);
+	call GenerateDAOTimer.startOneShot(dao_rate);
     }
     dao_msg = call SendPool.get();
     if (dao_msg == NULL) {
@@ -371,5 +383,13 @@ generic module RPLDAORoutingEngineP(){
     }
     */
   }
+
+  command void RPLDAORouteInfo.newParent(){
+    dao_rate = INIT_DAO;
+    dao_double_count = 0;
+    call GenerateDAOTimer.stop();
+    call GenerateDAOTimer.startOneShot(dao_rate);
+  }
+
   event void IPAddress.changed(bool global_valid) {}
 }

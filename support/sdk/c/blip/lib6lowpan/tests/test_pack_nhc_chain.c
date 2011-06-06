@@ -22,12 +22,13 @@ struct {
 struct udp_hdr udp = {0xabcd, 0x1234, 512, 0xdead};
 
 struct ip6_packet packet;
-struct iovec vec[3];
+struct ip_iovec vec[3];
 
 int main() {
   uint8_t nxt;
-  char buf[512], result[512];
+  uint8_t buf[512], result[512], *bufp;
   int i, len;
+  bufp = buf;
   packet.ip6_hdr.ip6_nxt = IPV6_HOP;
   
   iov_prefix(NULL, &vec[2], (uint8_t *)&udp, 8);
@@ -36,7 +37,7 @@ int main() {
 
   packet.ip6_data = vec;
 
-  len = pack_nhc_chain(buf, 512, &packet);
+  len = pack_nhc_chain(&bufp, 512, &packet);
   printf("[%i] ", len);
   for (i = 0; i < len; i++) {
     printf("0x%hhx ", buf[i]);

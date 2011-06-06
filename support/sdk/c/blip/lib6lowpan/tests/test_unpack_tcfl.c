@@ -45,7 +45,7 @@ int run_tests() {
     rb = unpack_tcfl(&hdr, test_cases[i].test_dispatch, test_cases[i].test);
     printf("result: 0x%x correct: 0x%x\n", ntohl(hdr.ip6_flow), test_cases[i].result);
 
-    printf("length: %i\n", rb - test_cases[i].test);
+    printf("length: %li\n", rb - test_cases[i].test);
 
     if (test_cases[i].test_len != rb - test_cases[i].test)
       continue;

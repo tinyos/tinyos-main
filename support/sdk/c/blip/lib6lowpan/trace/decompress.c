@@ -9,6 +9,16 @@
 
 uint8_t frame[1500];
 
+int lowpan_extern_read_context(struct in6_addr *addr, int context) {
+  memset(addr->s6_addr, 0, 0);
+  addr->s6_addr16[0] = 0xaaaa;
+  return 64;
+}
+
+int lowpan_extern_match_context(struct in6_addr *addr, UNUSED uint8_t *ctx_id) {
+  return 0;
+}
+
 int read_packet(char *buf, int len) {
   char c;
   char *start = buf;

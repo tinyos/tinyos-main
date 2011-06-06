@@ -98,13 +98,19 @@ implementation {
   RPLRankP.ForwardingEvents -> IPStackC.ForwardingEvents[RPL_IFACE];
 
 #ifdef RPL_OF_MRHOF
-  components RPLMRHOFP;
+  components RPLMRHOFP, RPLDAORoutingEngineC;
   RPLRankP.RPLOF -> RPLMRHOFP;
   RPLMRHOFP.ForwardingTable -> IPStackC;
+  RPLMRHOFP.RPLRoute -> RPLRoutingEngineC;
+  RPLMRHOFP.ParentTable -> RPLRankP;
+  RPLMRHOFP.RPLDAO -> RPLDAORoutingEngineC;
 #else
-  components RPLOF0P;
+  components RPLOF0P, RPLDAORoutingEngineC;
   RPLRankP.RPLOF -> RPLOF0P;
   RPLOF0P.ForwardingTable -> IPStackC;
+  RPLOF0P.RPLRoute -> RPLRoutingEngineC;
+  RPLOF0P.ParentTable -> RPLRankP;
+  RPLOF0P.RPLDAO -> RPLDAORoutingEngineC;
 #endif
 
 }

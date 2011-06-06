@@ -37,6 +37,7 @@
 module RouteCmdP {
   uses interface ShellCommand;
   uses interface ForwardingTable;
+  uses interface Timer<TMilli>;
 } implementation {
   
   char *header = "destination\t\tgateway\t\tiface\n";
@@ -54,37 +55,51 @@ module RouteCmdP {
     return NULL;
   }
 
-  event char *ShellCommand.eval(int argc, char **argv) {
+  int cur_entry;
+  event void Timer.fired() {
 #define LEN (MAX_REPLY_LEN - (cur - buf))
     struct route_entry *entry;
+    int n;
     char *cur, *buf = call ShellCommand.getBuffer(MAX_REPLY_LEN);
-    int i, n;
+    cur = buf;
 
     entry = call ForwardingTable.getTable(&n);
     if (!buf || !entry)
-      return NULL;
+      return;
+
+    for (;cur_entry < n; cur_entry++) {
+      if (entry[cur_entry].valid) {
+        cur += inet_ntop6(&entry[cur_entry].prefix, cur, LEN) - 1;
+        cur += snprintf(cur, LEN, "/%i\t\t", entry[cur_entry].prefixlen);
+        cur += inet_ntop6(&entry[cur_entry].next_hop, cur, LEN) - 1;
+        if (LEN < 6) continue;
+        *cur++ = '\t'; *cur++ = '\t';
+        strncpy(cur, ifnam(entry[cur_entry].ifindex), LEN);
+        cur += 3;
+        *cur++ = '\n';
+        if (LEN > (MAX_REPLY_LEN / 2)) {
+          call ShellCommand.write(buf, cur - buf);
+          call Timer.startOneShot(100);
+          cur_entry++;
+          return;
+        }
+      }
+    }
+    if (cur > buf)
+      call ShellCommand.write(buf, cur - buf);
+  }
+
+  event char *ShellCommand.eval(int argc, char **argv) {
+    char *cur, *buf = call ShellCommand.getBuffer(MAX_REPLY_LEN);
 
     cur = buf;
     memcpy(cur, header, strlen(header));
     cur += strlen(header);
-    for (i = 0; i < n; i++) {
-      if (entry[i].valid) {
-        cur += inet_ntop6(&entry[i].prefix, cur, LEN) - 1;
-        cur += snprintf(cur, LEN, "/%i\t\t", entry[i].prefixlen);
-        cur += inet_ntop6(&entry[i].next_hop, cur, LEN) - 1;
-        if (LEN < 6) continue;
-        *cur++ = '\t'; *cur++ = '\t';
-        strncpy(cur, ifnam(entry[i].ifindex), LEN);
-        cur += 3;
-        *cur++ = '\n';
-        if (LEN < MAX_REPLY_LEN / 2) {
-          call ShellCommand.write(buf, cur - buf);
-          cur = buf;
-        }
-      }
-    }
-    if (cur > buf) 
-      call ShellCommand.write(buf, cur - buf);
+    call ShellCommand.write(buf, cur - buf);
+    cur_entry = 0;
+
+    // post sendNextEntry();
+    call Timer.startOneShot(100);
     return NULL;
   }
 }

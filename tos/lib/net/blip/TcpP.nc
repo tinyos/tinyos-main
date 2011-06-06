@@ -1,6 +1,10 @@
 
+#ifdef PC
+#include <time.h>
+#endif
+
+#include <lib6lowpan/ip.h>
 #include <table.h>
-#include <ip.h>
 
 module TcpP {
   provides interface Tcp[uint8_t client];
@@ -8,7 +12,7 @@ module TcpP {
   uses {
     interface Boot;
 
-    interface IP;    
+    interface IP;
     interface Timer<TMilli>;
     interface IPAddress;
   }
@@ -18,7 +22,7 @@ module TcpP {
     N_CLIENTS = uniqueCount("TCP_CLIENT"),
   };
 
-#include <tcplib.h>
+#include <libtcp/tcplib.h>
   struct tcplib_sock socks[N_CLIENTS];
 
   int find_client(struct tcplib_sock *conn) {
@@ -32,7 +36,7 @@ module TcpP {
   void tcplib_extern_connectdone(struct tcplib_sock *sock, int error) {
     int cid = find_client(sock);
     if (cid < N_CLIENTS)
-      signal Tcp.connectDone[cid](error == 0);
+      signal Tcp.connectDone[cid](error ? FAIL : SUCCESS);
   }
 
   void tcplib_extern_recv(struct tcplib_sock *sock, void *data, int len) {
@@ -57,8 +61,8 @@ module TcpP {
     if (cid < N_CLIENTS)
       signal Tcp.acked[cid]();
   }
-#include "circ.c"
-#include "tcplib.c"
+#include "libtcp/circ.c"
+#include "libtcp/tcplib.c"
 
   struct tcplib_sock socks[uniqueCount("TCP_CLIENT")];
 
@@ -76,10 +80,10 @@ module TcpP {
     return NULL;
   }
 
-  void tcplib_send_out(struct split_ip_msg *msg, struct tcp_hdr *tcph) {
+  void tcplib_send_out(struct ip6_packet *msg, struct tcp_hdr *tcph) {
     printfUART("tcp output\n");
-    call IPAddress.setSource(&msg->hdr);
-    tcph->chksum = htons(msg_cksum(msg, IANA_TCP));
+    call IPAddress.setSource(&msg->ip6_hdr);
+    tcph->chksum = htons(msg_cksum(&msg->ip6_hdr, msg->ip6_data, IANA_TCP));
     call IP.send(msg);
   }
 
@@ -100,8 +104,8 @@ module TcpP {
   }
 
   event void IP.recv(struct ip6_hdr *iph, 
-                     void *payload, 
-                     struct ip_metadata *meta) {
+                     void *payload, size_t len,
+                     struct ip6_metadata *meta) {
     
     printfUART("tcp packet received\n");
     tcplib_process(iph, payload);
@@ -110,7 +114,7 @@ module TcpP {
 
   command error_t Tcp.bind[uint8_t client](uint16_t port) {
     struct sockaddr_in6 addr;
-    ip_memclr(addr.sin6_addr.s6_addr, 16);
+    memclr(addr.sin6_addr.s6_addr, 16);
     addr.sin6_port = htons(port);
     tcplib_bind(&socks[client], &addr);
     return SUCCESS;
@@ -118,9 +122,11 @@ module TcpP {
 
   command error_t Tcp.connect[uint8_t client](struct sockaddr_in6 *dest,
                                               void *tx_buf, int tx_buf_len) {
+    int rv;
     socks[client].tx_buf = tx_buf;
     socks[client].tx_buf_len = tx_buf_len;
-    tcplib_connect(&socks[client], dest);
+    rv = tcplib_connect(&socks[client], dest);
+    return rv ? FAIL : SUCCESS;
   }
 
   command error_t Tcp.send[uint8_t client](void *payload, uint16_t len) {
@@ -139,6 +145,8 @@ module TcpP {
     return SUCCESS;
   }
 
+  event void IPAddress.changed(bool valid) { }
+
   default event bool Tcp.accept[uint8_t cid](struct sockaddr_in6 *from, 
                                              void **tx_buf, int *tx_buf_len) {
     return FALSE;
@@ -148,5 +156,6 @@ module TcpP {
  default event void Tcp.recv[uint8_t cid](void *payload, uint16_t len) {  }
  default event void Tcp.closed[uint8_t cid](error_t e) { }
  default event void Tcp.acked[uint8_t cid]() { }
+
  
 }

@@ -396,7 +396,7 @@ uint8_t * lowpan_pack_headers(struct ip6_packet *packet,
 
   if (packet->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
     /* not multicast */
-    ctx_match_length = lowpan_extern_match_context(&packet->ip6_hdr.ip6_src, &temp_dispatch);
+    ctx_match_length = lowpan_extern_match_context(&packet->ip6_hdr.ip6_dst, &temp_dispatch);
     temp_dispatch = 0;
     buf = pack_address(buf, &packet->ip6_hdr.ip6_dst, ctx_match_length,
                        &frame->ieee_dst, frame->ieee_dstpan, &temp_dispatch);
@@ -510,7 +510,7 @@ uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
       // unspecified address ::
       return buf;
     } else {
-      lowpan_extern_read_context(addr, context);
+      int ctxlen = lowpan_extern_read_context(addr, context);
       switch (dispatch & LOWPAN_IPHC_AM_MASK) {
       case LOWPAN_IPHC_AM_64:
         memcpy(&addr->s6_addr[8], buf, 8);
@@ -521,12 +521,12 @@ uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
       case LOWPAN_IPHC_AM_0:
         // not clear how to use this:
         //  "and 'possibly' link-layer addresses"
-        if (frame->ieee_mode == IEEE154_ADDR_EXT) {
-          int i;
-          for (i = 0; i < 8; i++)
-            addr->s6_addr[i+8] = frame->i_laddr.data[7-i];
-          addr->s6_addr[8] ^= 0x2;
-        } else {
+        if (ctxlen <= 64 && frame->ieee_mode == IEEE154_ADDR_EXT) {
+            int i;
+            for (i = 0; i < 8; i++)
+              addr->s6_addr[i+8] = frame->i_laddr.data[7-i];
+            addr->s6_addr[8] ^= 0x2;
+        } else if (ctxlen <= 112) {
           memset(&addr->s6_addr[8], 0, 8);
           addr->s6_addr16[7] = leton16(frame->i_saddr);
         }
@@ -573,7 +573,7 @@ uint8_t *unpack_udp(uint8_t *dest, uint8_t *nxt_hdr, uint8_t *buf) {
   struct udp_hdr *udp = (struct udp_hdr *)dest;
   uint8_t dispatch = *buf++;
 
-  *nxt_hdr = IANA_ICMP;
+  *nxt_hdr = IANA_UDP;
 
   // MUST be elided  
   udp->len = 0;
@@ -701,7 +701,6 @@ uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
     } else if (((*dispatch) & LOWPAN_NHC_UDP_MASK) == LOWPAN_NHC_UDP_PATTERN) {
       struct udp_hdr *udp = (struct udp_hdr *)*dest;
       recon->r_app_len = &udp->len;
-      *nxt_hdr = IANA_UDP;
       has_nhc = 0;
       *dest += sizeof(struct udp_hdr);
     } else { has_nhc = 0; }

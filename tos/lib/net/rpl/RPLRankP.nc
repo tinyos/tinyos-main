@@ -77,6 +77,7 @@ module RPLRankP{
     interface RPLRank as RPLRankInfo;
     interface StdControl;
     interface IP as IP_DIO_Filter;
+    interface RPLParentTable;
   }
   uses {
     interface IP as IP_DIO;
@@ -98,11 +99,10 @@ implementation {
   struct in6_addr prevParent;
   uint32_t parentChanges = 0;
   uint8_t parentNum = 0;
-  uint16_t minMetric = MAX_ETX;
-  uint16_t desiredParent = MAX_PARENT;
   uint16_t VERSION = 0;
-  uint16_t nodeEtx = 10;
-  uint8_t MAX_RANK_INCREASE = 1;
+  uint16_t nodeEtx = divideRank;
+  uint16_t MAX_RANK_INCREASE = 1;
+  //uint16_t MIN_HOP_RANK_INCREASE = 1;
   
   uint8_t etxConstraint;
   uint32_t latencyConstraint;
@@ -118,15 +118,23 @@ implementation {
   uint8_t alpha; //configuration parameter
   uint8_t beta;
   bool ignore = FALSE;
+  bool ROOT = FALSE;
   bool m_running = FALSE;
-  uint8_t divideRank = 10;
+  //uint8_t divideRank = 128;
+  parent_t parentSet[MAX_PARENT];
 
   void resetValid();
   void getNewRank();
 
+
 #undef printfUART
+#undef printfUART_in6addr
 #define printfUART(X, fmt ...) ;
+#define printfUART_in6addr(X) ;
+
 #define compare_ipv6(node1, node2) (!memcmp((node1), (node2), sizeof(struct in6_addr)))
+
+#define RPL_GLOBALADDR
 
   command error_t StdControl.start() { //initialization
     uint8_t indexset;
@@ -148,10 +156,15 @@ implementation {
     return SUCCESS;
   }
 
+  command parent_t* RPLParentTable.get(uint8_t i){
+    return &parentSet[i];
+  }
+
   // declare the I am the root
   command void RPLRankInfo.declareRoot(){ //done
-    minMetric = 10;
-    nodeRank = 1;
+    ROOT = TRUE;
+    // minMetric = divideRank;
+    nodeRank = ROOT_RANK;
   }
 
   command bool RPLRankInfo.validInstance(uint8_t instanceID){ //done
@@ -168,20 +181,35 @@ implementation {
   command uint16_t RPLRankInfo.getRank(struct in6_addr *node){ //done
     uint8_t indexset;
     struct in6_addr my_addr;
+
+#ifdef RPL_GLOBALADDR
+    call IPAddress.getGlobalAddr(&my_addr);
+#else
     call IPAddress.getLLAddr(&my_addr);
+#endif
+
     if(compare_ipv6(&my_addr, node)){
+
+      if(ROOT){
+	nodeRank = ROOT_RANK;
+      }
       return nodeRank;
     }
+
     indexset = getParent(node);
+
     if (indexset != MAX_PARENT){
       return parentSet[indexset].rank;
     }
-    return nodeRank;
+
+    return 0x1234;
   }
 
   command error_t RPLRankInfo.getDefaultRoute(struct in6_addr *next) {
+    //printfUART_in6addr(&parentSet[desiredParent].parentIP);
+    //printfUART("\n");
     if (parentNum) {
-      memcpy(next, &parentSet[desiredParent].parentIP, sizeof(struct in6_addr));
+      memcpy(next, call RPLOF.getParent(), sizeof(struct in6_addr));
       return SUCCESS;
     }
     return FAIL;
@@ -202,6 +230,7 @@ implementation {
       return MAX_PARENT;
     }
     for (indexset = 0; indexset < MAX_PARENT; indexset++) {
+
       if (compare_ipv6(&(parentSet[indexset].parentIP),node) && 
           parentSet[indexset].valid) {
 	return indexset;
@@ -234,17 +263,12 @@ implementation {
   // record this as part of entry in table as well
   // Other layers will report this information
   command void RPLRankInfo.inconsistencyDetected(){ //done
-
-    printfUART("incons! \n");
     parentNum = 0;
     call RPLOF.resetRank();
     nodeRank = INFINITE_RANK;
-    minMetric = MAX_ETX;
-    desiredParent = MAX_PARENT;
     resetValid();
-
-    //parentNum = 0;
-    //resetValid();
+    //memcpy(&DODAGID, 0, 16);
+    //call RouteInfo.inconsistency();
   }
 
   // ping rank component if there are parents
@@ -273,36 +297,33 @@ implementation {
   }
 
   command uint16_t RPLRankInfo.getEtx(){ //done
-    uint8_t i;
-
-    if(nodeRank == 1){
-      return 10; // this is the min etx, reserved  only for the root
-    }
-
-    i = getParent(call RPLOF.getParent());
-
-    if(i != MAX_PARENT)
-      nodeEtx = parentSet[i].etx_hop + parentSet[i].etx;
-    else 
-      nodeEtx = nodeRank * divideRank;
-
-    return nodeEtx;
+    return call RPLOF.getObjectValue();
   }
 
   void insertParent(parent_t parent) {
-    uint8_t indexset = getPreExistingParent(&parent.parentIP);
+    uint8_t indexset;
+    uint16_t tempEtx_hop;
+
+    indexset = getPreExistingParent(&parent.parentIP);
+
+    //printfUART("Insert Node: %d \n", indexset);
 
     if(indexset != MAX_PARENT) // we have previous information
       {
-	parentSet[indexset].valid = TRUE;
-	if(parentSet[indexset].etx_hop > INIT_ETX && parentSet[indexset].etx_hop < BLIP_L2_RETRIES)
-	  parent.etx_hop = parentSet[indexset].etx_hop-10;
-	else
-	  parent.etx_hop = INIT_ETX;
-
+	tempEtx_hop = parentSet[indexset].etx_hop;
 	parentSet[indexset] = parent;
+
+	if(tempEtx_hop > INIT_ETX && tempEtx_hop < BLIP_L2_RETRIES){
+	  tempEtx_hop = tempEtx_hop-INIT_ETX;
+	  if(tempEtx_hop < divideRank)
+	    tempEtx_hop = INIT_ETX;
+	}else{
+	  tempEtx_hop = INIT_ETX;
+	}
+
+	parentSet[indexset].etx_hop = tempEtx_hop;
 	parentNum++;
-	printfUART("Parent Added %d \n",parentNum);
+	//printfUART("Parent Added %d \n",parentNum);
 	return;
       }
 
@@ -313,7 +334,7 @@ implementation {
 	break;
       }
     }
-    printfUART("Parent Added 2 %d \n",parentNum);
+    //printfUART("Parent Added 2 %d \n",parentNum);
   }
 
   void evictParent(uint8_t indexset) {//done
@@ -326,14 +347,28 @@ implementation {
     }
   }
 
+  task void newParentSearch(){
+    // only called when evictAll just cleared out my current desired parent
+    call RPLOF.recomputeRoutes();
+    getNewRank();
+  }
+
   /* check and remove parents on rank change */
   void evictAll() {//done
-    uint8_t indexset;
+    uint8_t indexset, myParent;
+
+    myParent = getParent(call RPLOF.getParent());
+
     for (indexset = 0; indexset < MAX_PARENT; indexset++) {
       if (parentSet[indexset].valid && parentSet[indexset].rank >= nodeRank) {
 	parentSet[indexset].valid = FALSE;
 	parentNum--;
-	printfUART("Evict all %d \n", parentNum);
+	printfUART("Evict all %d %d %d %d\n", parentNum, parentSet[indexset].rank, nodeRank, htons(parentSet[indexset].parentIP.s6_addr16[7]));
+	if(indexset == myParent){
+	  // i just cleared out my own parent...
+	  post newParentSearch();
+	  return;
+	}
       }
     }
   }
@@ -347,7 +382,7 @@ implementation {
     uint16_t len;
     /* Reconfigure length */
     len = ntohs(iph->ip6_plen);
-    printfUART("delete header %d \n",len);
+    //printfUART("delete header %d \n",len);
     len = len - sizeof(rpl_data_hdr_t);;
     iph->ip6_plen = htons(len);
 
@@ -369,6 +404,9 @@ implementation {
     uint16_t len; 
     rpl_data_hdr_t data_hdr;
 
+#ifndef RPL_OF_MRHOF
+    return TRUE;
+#endif
 
     if(pkt->ip6_hdr.ip6_nxt == IANA_ICMP)
       return TRUE;
@@ -377,19 +415,21 @@ implementation {
     data_hdr.ip6_ext_outer.ip6e_len = sizeof(rpl_data_hdr_t);
 
     data_hdr.ip6_ext_inner.ip6e_nxt = RPL_HBH_RANK_TYPE; /* well, this is actually the type */
-    data_hdr.ip6_ext_inner.ip6e_len = sizeof(rpl_data_hdr_t) - sizeof(struct ip6_ext);
-    data_hdr.o_bit = 0;
-    data_hdr.r_bit = 0;
-    data_hdr.f_bit = 0;
-    data_hdr.reserved = 0;
+    data_hdr.ip6_ext_inner.ip6e_len = sizeof(rpl_data_hdr_t) - 4;
+    data_hdr.bitflag = 0;
+    data_hdr.bitflag = 0 << RPL_DATA_O_BIT_SHIFT;
+    data_hdr.bitflag |= 0 << RPL_DATA_R_BIT_SHIFT;
+    data_hdr.bitflag |= 0 << RPL_DATA_F_BIT_SHIFT;
+    //data_hdr.o_bit = 0;
+    //data_hdr.r_bit = 0;
+    //data_hdr.f_bit = 0;
+    //data_hdr.reserved = 0;
     data_hdr.instance_id.id = call RouteInfo.getInstanceID();
     data_hdr.senderRank = nodeRank;
-
     pkt->ip6_hdr.ip6_nxt = IPV6_HOP;
 
     len = ntohs(pkt->ip6_hdr.ip6_plen);
 
-    printfUART("make header %d %d\n", pkt->ip6_hdr.ip6_nxt, len);
     /* add the header */
     v.iov_base = (uint8_t*) &data_hdr;
     v.iov_len = sizeof(rpl_data_hdr_t);
@@ -400,7 +440,8 @@ implementation {
     len = len + v.iov_len;
     pkt->ip6_hdr.ip6_plen = htons(len);
 
-    printfUART("set data header to %d %d %d\n", data_hdr.instance_id.id, data_hdr.senderRank, len);
+    //iov_print(&v);
+
     return TRUE;
 
   }
@@ -414,47 +455,53 @@ implementation {
    */
   event bool ForwardingEvents.approve(struct ip6_hdr *iph, struct ip6_route *route,
                                       struct in6_addr *next_hop) {
-    rpl_data_hdr_t* data_hdr;
+
+    rpl_data_hdr_t* data_hdr = (rpl_data_hdr_t*) route;
     bool inconsistent = FALSE;
+    uint8_t o_bit = (data_hdr->bitflag & RPL_DATA_O_BIT_MASK) >> RPL_DATA_O_BIT_SHIFT ;
 
-    data_hdr = (rpl_data_hdr_t*) route;
-
-    printfUART("approve test: %d %d %d %d %d \n", data_hdr->senderRank, data_hdr->instance_id.id, nodeRank, data_hdr->o_bit, call RPLRankInfo.getRank(next_hop));
+#ifndef RPL_OF_MRHOF
+    return TRUE;
+#endif
+    printfUART("approve test: %d %d %d %d %d \n", data_hdr->senderRank, data_hdr->instance_id.id, nodeRank, o_bit, call RPLRankInfo.getRank(next_hop));
 
     /* SDH : we'd want to dispatch on the instance id if there are
        multiple dags */
 
-    if (data_hdr->senderRank == 1){
-      data_hdr->o_bit = 1;
+    if (data_hdr->senderRank == ROOT_RANK){
+      o_bit = 1;
       goto approve;
     }
 
-    if (data_hdr->o_bit && data_hdr->senderRank > nodeRank) {
+    if (o_bit && data_hdr->senderRank > nodeRank) {
       /* loop */
       inconsistent = TRUE;
-    } else if (!data_hdr->o_bit && data_hdr->senderRank < nodeRank) {
+    } else if (!o_bit && data_hdr->senderRank < nodeRank) {
       inconsistent = TRUE;
     }
 
     if (call RPLRankInfo.getRank(next_hop) >= nodeRank){
       /* Packet is heading down if the next_hop rank is not smaller than the current one (not in the parent set) */
-      /* By the time I am here, it means that there is a next hop but if this is not in my parent set, then it should be downward*/
-      data_hdr->o_bit = 1;
+      /* By the time I am here, it means that there is a next hop but if this is not in my parent set, then it should be downward */
+      data_hdr->bitflag |= 1 << RPL_DATA_O_BIT_SHIFT;
+      //data_hdr->o_bit = 1;
     }
 
     if (inconsistent) {
-      if (data_hdr->r_bit) {
+      if ((data_hdr->bitflag & RPL_DATA_R_BIT_MASK) >> RPL_DATA_R_BIT_SHIFT) {
         /*  this is not the first time  */
         /*  ditch this packet! */
 	call RouteInfo.inconsistency();
+	printfUART("NOT Approving: %d %d %d\n", data_hdr->senderRank, data_hdr->instance_id.id, inconsistent);
         return FALSE;
       } else {
         /* just mark it */
-        data_hdr->r_bit = 1;
+	data_hdr->bitflag |= 1 << RPL_DATA_R_BIT_SHIFT;
+        //data_hdr->r_bit = 1;
 	//chooseDesired();
-	call RPLOF.recomputeRoutes();
+	//call RPLOF.recomputeRoutes();
 	//recaRank();
-	getNewRank();
+	//getNewRank();
 	//call RouteInfo.inconsistency();
 	goto approve;
       }
@@ -468,43 +515,44 @@ implementation {
 
   /*  Compute ETX! */
   event void ForwardingEvents.linkResult(struct in6_addr *node, struct send_info *info) {
-    uint8_t indexset;
-    uint8_t etx_now = info->link_transmissions;
+    uint8_t indexset, myParent;
+    uint16_t etx_now = info->link_transmissions;
 
-    printfUART("linkResult: ");
+    //printfUART("linkResult: ");
     //printfUART_in6addr(node);
-    printfUART(" [%i]\n", info->link_transmissions);
+    //printfUART(" %d [%i] %d \n", TOS_NODE_ID, info->link_transmissions, nodeRank);
 
-    if(nodeRank == 1) { //root
+    myParent = getParent(call RPLOF.getParent());
+
+    if(nodeRank == ROOT_RANK) { //root
       return;
     }
 
     for (indexset = 0; indexset < MAX_PARENT; indexset++) {
       if (parentSet[indexset].valid && 
-          compare_ipv6(&(parentSet[indexset].parentIP), node))
+          compare_ipv6(&(parentSet[indexset].parentIP), node)){
 	break;
+      }
     }
 
     if (indexset != MAX_PARENT) { // not empty...
-      parentSet[indexset].etx_hop = 
-        (parentSet[indexset].etx_hop * 5 + etx_now * 10 * 5) / 10;
+      parentSet[indexset].etx_hop = (parentSet[indexset].etx_hop * 6 + (etx_now * divideRank) * 4) / 10;
 
       if (exceedThreshold(indexset, METRICID)) {
 	evictParent(indexset);
-	if (indexset == desiredParent && parentNum > 0)
+	if (indexset == myParent && parentNum > 0)
 	  call RPLOF.recomputeRoutes();
-	//chooseDesired();
       }
 
+      /*
       else if(etx_now > 1 && parentNum > 1){ // if a packet is not transmitted on its first try... see if there is something better...
 	call RPLOF.recomputeRoutes();
       }
-
+      */
       getNewRank();
 
-      printfUART(">> P_ETX UPDATE %d %d %d %d %d \n", indexset, 
-                 parentSet[indexset].etx_hop, etx_now, 
-                 ntohs(parentSet[indexset].parentIP.s6_addr16[7]), nodeRank);
+      printfUART(">> P_ETX UPDATE %d %d %d %d %d %d\n", indexset, parentSet[indexset].etx_hop, etx_now, ntohs(parentSet[indexset].parentIP.s6_addr16[7]), nodeRank, parentNum);
+
       return;
     }
     // not contained in either parent set, do nothing
@@ -515,39 +563,37 @@ implementation {
     return (oldP.etx_hop + oldP.etx) <= (newP.etx_hop + newP.etx);
   }
 
-  /*
-  void performConsCheck() {
-    uint8_t indexset = 0;
-    for (indexset = 0; indexset < MAX_PARENT; indexset++) {
-      if (!checkConstraint(0, latencyConstraint, 
-                           parentSet[indexset].etx, etxConstraint, 
-                           METRICID, indexset)) {
-	parentSet[indexset].valid = FALSE;
-      }
-    }
-  }
-  */
-
   void getNewRank(){
+    uint16_t prevRank = nodeRank;//, myParent;
+    bool newParent = FALSE;
 
-    uint16_t prevRank = nodeRank;
-
-    call RPLOF.recalcualateRank();
+    newParent = call RPLOF.recalcualateRank();
     nodeRank = call RPLOF.getRank();
 
-    if(nodeRank < minRank)
-      minRank = nodeRank;
+    printfUART("GOT new rank %d %d %d\n", TOS_NODE_ID, call RPLOF.getRank(), newParent);
 
-    // did the node rank get worse than the limit? 
-    if (nodeRank > prevRank && 
-        nodeRank - minRank >= MAX_RANK_INCREASE && MAX_RANK_INCREASE != 0) {
-      // this is inconsistency!
-      printfUART("Inconsistent!\n");
-      nodeRank = 0xFFFF;
-      minRank = 0xFFFF;
-      call RouteInfo.inconsistency();
+    if(newParent){
+      minRank = nodeRank;
+      return;
     }
 
+    if(nodeRank < minRank){
+      minRank = nodeRank;
+      return;
+    }
+
+    // did the node rank get worse than the limit?
+    if (nodeRank > prevRank && 
+        nodeRank - minRank > MAX_RANK_INCREASE && MAX_RANK_INCREASE != 0) {
+      // this is inconsistency!
+      //call RPLOF.recomputeRoutes();
+      printfUART("Inconsistent %d\n", TOS_NODE_ID);
+      nodeRank = INFINITE_RANK;
+      minRank = INFINITE_RANK;
+      call RouteInfo.inconsistency();
+      return;
+    }
+    evictAll();
   }
 
   void parseDIO(struct ip6_hdr *iph, struct dio_base_t *dio) { 
@@ -555,7 +601,7 @@ implementation {
     struct in6_addr rDODAGID;
     uint16_t etx = 0xFFFF;
     parent_t tempParent;
-    uint8_t parentIndex;
+    uint8_t parentIndex, myParent;
     uint16_t preRank;
     uint8_t tempPrf;
     bool newDodag = FALSE;
@@ -569,42 +615,40 @@ implementation {
     uint16_t trackLength = ntohs(iph->ip6_plen);
 
     /* I am root */
-    if (nodeRank == 1) return; 
+    if (nodeRank == ROOT_RANK) return; 
 
     /* new iteration */
     if (dio->version != VERSION && compare_ipv6(&dio->dodagID, &DODAGID)) {
-      printfUART("new iteration!\n");
+      //printfUART("new iteration!\n");
       parentNum = 0;
       VERSION = dio->version;
       call RPLOF.resetRank();
       nodeRank = INFINITE_RANK;
       minRank = INFINITE_RANK;
-      minMetric = MAX_ETX;
-      desiredParent = MAX_PARENT;
       resetValid();
     }
 
-    if (dio->dagRank >= nodeRank && nodeRank != INFINITE_RANK /*&& getParent(iph->ip6_src) != MAX_PARENT*/) return;
+    //if (dio->dagRank >= nodeRank && nodeRank != INFINITE_RANK) return;
 
-    printfUART("DIO in Rank %d %d %d %d\n", ntohs(iph->ip6_src.s6_addr16[7]), dio->dagRank, nodeRank, parentNum);
+    //printfUART("DIO in Rank %d %d %d %d\n", ntohs(iph->ip6_src.s6_addr16[7]), dio->dagRank, nodeRank, parentNum);
     //printfUART_in6addr(&iph->ip6_src);
     //printfUART("\n");
     
     pParentRank = dio->dagRank;
     // DODAG ID in this DIO packet (received DODAGID)
 
-    memcpy(&rDODAGID, &dio->dodagID, sizeof(struct in6_addr)); 
-    tempPrf = dio->dag_preference;
+    memcpy(&rDODAGID, &dio->dodagID, sizeof(struct in6_addr));
+    tempPrf = dio->flags.flags_chunk & DIO_PREF_MASK;
 
     if (!compare_ipv6(&DODAGID, &DODAG_MAX) && 
         !compare_ipv6(&DODAGID, &rDODAGID)) { 
       // I have a DODAG but this packet is from a new DODAG
       if (Prf < tempPrf) { //ignore
-	printfUART("LESS PREFERENCE IGNORE \n");
+	//printfUART("LESS PREFERENCE IGNORE \n");
 	ignore = TRUE;
 	return;
       } else if (Prf > tempPrf) { //move
-        printfUART("MOVE TO NEW DODAG \n");
+        //printfUART("MOVE TO NEW DODAG \n");
 	Prf = tempPrf;
 	memcpy(&DODAGID, &rDODAGID, sizeof(struct in6_addr));
 	parentNum = 0;
@@ -612,15 +656,15 @@ implementation {
 	call RPLOF.resetRank();
 	nodeRank = INFINITE_RANK;
 	minRank = INFINITE_RANK;
-	minMetric = MAX_ETX;
-	desiredParent = MAX_PARENT;
+	//desiredParent = MAX_PARENT;
 	resetValid();
+	newDodag = TRUE;
       } else { // it depends
         //printfUART("MOVE TO NEW DODAG %d %d\n",compare_ipv6(&DODAGID, &DODAG_MAX), compare_ipv6(&DODAGID, &rDODAGID));
 	newDodag = TRUE;
       }
     } else if (compare_ipv6(&DODAGID, &DODAG_MAX)) { //not belong to a DODAG yet
-      printfUART("TOTALLY NEW DODAG \n");
+      //      printfUART("TOTALLY NEW DODAG \n");
       Prf = tempPrf;
       memcpy(&DODAGID, &rDODAGID, sizeof(struct in6_addr));
       parentNum = 0;
@@ -628,12 +672,12 @@ implementation {
       call RPLOF.resetRank();
       nodeRank = INFINITE_RANK;
       minRank = INFINITE_RANK;
-      minMetric = MAX_ETX;
-      desiredParent = MAX_PARENT;
+      //desiredParent = MAX_PARENT;
+      newDodag = TRUE;
       resetValid();
     } else { // same DODAG
-      printfUART("FROM SAME DODAG \n");
-      Prf = tempPrf; // update prf
+      //printfUART("FROM SAME DODAG \n");
+      //Prf = tempPrf; // update prf
     }
 
     /////////////////////////////Collect data from DIOs/////////////////////////////////
@@ -662,13 +706,13 @@ implementation {
 	dio_etx = (struct dio_etx_t*)newPoint;
 	trackLength -= sizeof(struct dio_etx_t);
 	etx = dio_etx->etx;
-	printfUART("ETX RECV %d \n", etx);
+	//printfUART("ETX RECV %d \n", etx);
 	METRICID = 7;
 	newPoint = (uint8_t*)(struct dio_etx_t*)(dio_etx + 1);
       }
     }else{
-      etx = pParentRank*10;
-      printfUART("No ETX %d \n", dio_body->type);
+      etx = pParentRank*divideRank;
+      //printfUART("No ETX %d \n", dio_body->type);
     }
 
     /* SDH : what is type 3? */
@@ -687,44 +731,43 @@ implementation {
     /* SDH : type 4 is a configuration header. */
     dio_dodag_config = (struct dio_dodag_config_t*) newPoint;
 
-    printfUART("%d %d %d %d %d \n", trackLength, METRICID, dio_body->type, dio_prefix->type, dio_dodag_config->type);
+    //printfUART("%d %d %d %d %d \n", trackLength, METRICID, dio_body->type, dio_prefix->type, dio_dodag_config->type);
 
     if (trackLength > 0 && dio_dodag_config->type == 4) {
       // this is configuration header
       trackLength -= sizeof(struct dio_dodag_config_t);
 
-      printfUART(" > %d %d %d %d %d \n", trackLength, METRICID, dio_dodag_config->type, ignore, dio_dodag_config->ocp);
+      //printfUART(" > %d %d %d %d %d \n", trackLength, METRICID, dio_dodag_config->type, ignore, dio_dodag_config->ocp);
 
       if (ignore == FALSE) {
 
 	OCP = dio_dodag_config->ocp;
 
-	printfUART("CONFIGURATION! %d %d %d \n", trackLength, ignore, dio_dodag_config->MaxRankInc);
 	MAX_RANK_INCREASE = dio_dodag_config->MaxRankInc;
+	//MIN_HOP_RANK_INCREASE = dio_dodag_config->MinHopRankInc;
+
 	call RouteInfo.setDODAGConfig(dio_dodag_config->DIOIntDoubl, 
                                       dio_dodag_config->DIOIntMin, 
 				      dio_dodag_config->DIORedun, 
                                       dio_dodag_config->MaxRankInc, 
                                       dio_dodag_config->MinHopRankInc);
-
+	call RPLOF.setMinHopRankIncrease(dio_dodag_config->MinHopRankInc);
+	/*
 	printfUART("Doub %d, min %d, redun %d, maxrank %d, minhop %d \n", 
 		   dio_dodag_config->DIOIntDoubl, 
 		   dio_dodag_config->DIOIntMin, 
 		   dio_dodag_config->DIORedun, 
 		   dio_dodag_config->MaxRankInc, 
 		   dio_dodag_config->MinHopRankInc);
+	*/
       }
-      printfUART("CONFIGURATION! %d %d %d %d %d\n", trackLength, ignore, dio_dodag_config->MaxRankInc, METRICID, OCP);
+    //printfUART("CONFIGURATION! %d %d %d %d %d\n", trackLength, ignore, dio_dodag_config->MaxRankInc, METRICID, OCP);
       //OCP = 0; // temp for interop -- I know that Contiki is using OF0
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
 
     printfUART("PR %d NR %d OCP %d MID %d \n", pParentRank, nodeRank, OCP, METRICID);
-
-    if(pParentRank >= nodeRank && nodeRank != 0xFFFF){
-      return;
-    }
 
     // temporaily keep the parent information first
     memcpy(&tempParent.parentIP, &iph->ip6_src, sizeof(struct in6_addr)); //may be not right!!!
@@ -733,23 +776,13 @@ implementation {
     tempParent.valid = TRUE;
     tempParent.etx = etx;
 
-
-    if(!call RPLOF.objectSupported(METRICID) || !call RPLOF.OCP(OCP)){
+    if((!call RPLOF.objectSupported(METRICID) || !call RPLOF.OCP(OCP)) && parentNum == 0){
       // either I dont know the metric object or I don't support the OF
-      printfUART("LEAF STATE! \n");
-      /*
-      Prf = tempPrf;
-      memcpy(&DODAGID, &rDODAGID, sizeof(struct in6_addr));
-      parentNum = 0;
-      VERSION = dio->version;
-      minMetric = MAX_ETX;
-      desiredParent = MAX_PARENT;
-      resetValid();
-      */
+      //printfUART("LEAF STATE! \n");
       insertParent(tempParent);
       call RPLOF.recomputeRoutes();
       //getNewRank(); no need to compute routes when I am going to stay as a leaf!
-      nodeRank = 0xFFFF;
+      nodeRank = INFINITE_RANK;
       leafState = TRUE;
       return;
     }
@@ -757,22 +790,22 @@ implementation {
     if ((parentIndex = getParent(&iph->ip6_src)) != MAX_PARENT) { 
       // parent already there and the rank is useful
 
-      printfUART("HOW many parents 1 ? %d %d \n", parentNum, newDodag);
+      //printfUART("HOW many parents 1 ? %d %d \n", parentNum, newDodag);
 
       if(newDodag){
 	// old parent has to move to a new DODAG now
 	if (parentNum != 0) {
 	  //chooseDesired();
 	  call RPLOF.recomputeRoutes(); // we do this to make sure that this parent is still the best and it is worth moving
-	  
-	  if (!compareParent(parentSet[desiredParent], tempParent)) {
+
+	  myParent = getParent(call RPLOF.getParent());
+
+	  if (!compareParent(parentSet[myParent], tempParent)) {
 	    // the new dodag is not from my desired parent node
 	    Prf = tempPrf;
 	    memcpy(&DODAGID, &rDODAGID, sizeof(struct in6_addr));
 	    parentNum = 0;
 	    VERSION = dio->version;
-	    minMetric = MAX_ETX;
-	    desiredParent = MAX_PARENT;
 	    resetValid();
 	    insertParent(tempParent);
 	    call RPLOF.recomputeRoutes();
@@ -781,7 +814,6 @@ implementation {
 	    // I have a better node in the current DODAG so I am not moving!
 	    call RPLOF.recomputeRoutes();
 	    getNewRank();
-	    evictAll();
 	    ignore = TRUE;
 	  }
 	} else {
@@ -790,8 +822,6 @@ implementation {
 	  memcpy(&DODAGID, &rDODAGID, sizeof(struct in6_addr));
 	  parentNum = 0;
 	  VERSION = dio->version;
-	  minMetric = MAX_ETX;
-	  desiredParent = MAX_PARENT;
 	  resetValid();
 	  insertParent(tempParent);
 	  call RPLOF.recomputeRoutes();
@@ -800,41 +830,39 @@ implementation {
 
       }else{
 	// this DIO is just from a parent that I know already, update and re-evaluate
-	printfUART("known parent -- update\n");
+	//	printfUART("known parent -- update\n");
 	parentSet[parentIndex].rank = pParentRank; //update rank
-	parentSet[parentIndex].etx = pParentRank*10;
+	parentSet[parentIndex].etx = etx;
 	call RPLOF.recomputeRoutes();
 	getNewRank();
-	evictAll();
 	ignore = TRUE;
       }
 
     }else{
       // this parent is not in my routing table
 
-      printfUART("HOW many parents? %d \n", parentNum);
+      //      printfUART("HOW many parents? %d \n", parentNum);
 
       if(parentNum > MAX_PARENT) // ><><><><><>< how do i share the parent count?
 	return;
 
       // at this point know that its a meaningful packet from a new node and we have space to store
       
-      printfUART("New parent %d %d %d\n", ntohs(iph->ip6_src.s6_addr16[7]), tempParent.etx_hop, parentNum);
+      //printfUART("New parent %d %d %d\n", ntohs(iph->ip6_src.s6_addr16[7]), tempParent.etx_hop, parentNum);
 
       if(newDodag){
 	// not only is this parent new but we have to move to a new DODAG now
-	printfUART("New DODAG \n");
+	//printfUART("New DODAG \n");
 	if (parentNum != 0) {
 	  call RPLOF.recomputeRoutes(); // make sure that I don't have an alternative path on this DODAG
-	  if (!compareParent(parentSet[desiredParent], tempParent)) {
+	  myParent = getParent(call RPLOF.getParent());
+	  if (!compareParent(parentSet[myParent], tempParent)) {
 	    // parentIndex == desiredParent, parentNum != 0, !compareParent
-	    printfUART("changing DODAG\n");
+	    //printfUART("changing DODAG\n");
 	    Prf = tempPrf;
 	    memcpy(&DODAGID, &rDODAGID, sizeof(struct in6_addr));
 	    parentNum = 0;
 	    VERSION = dio->version;
-	    minMetric = MAX_ETX;
-	    desiredParent = MAX_PARENT;
 	    resetValid();
 	    insertParent(tempParent);
 	    call RPLOF.recomputeRoutes();
@@ -845,13 +873,11 @@ implementation {
 	  }
 	} else {
 	  // This is the first DODAG I am registering ... or the once before are all goners already
-	  printfUART("First DODAG\n");
+	  //printfUART("First DODAG\n");
 	  Prf = tempPrf;
 	  memcpy(&DODAGID, &rDODAGID, sizeof(struct in6_addr));
 	  parentNum = 0;
 	  VERSION = dio->version;
-	  minMetric = MAX_ETX;
-	  desiredParent = MAX_PARENT;
 	  resetValid();
 	  insertParent(tempParent);
 	  call RPLOF.recomputeRoutes();
@@ -859,12 +885,11 @@ implementation {
 	}
       }else{
 	// its a new parent from the current DODAG .. so no need for DODAG configuarion just insert
-	printfUART("Same DODAG %d \n", parentNum);
+	//	printfUART("Same DODAG %d \n", parentNum);
 	insertParent(tempParent);
 	call RPLOF.recomputeRoutes();
 	preRank = nodeRank;
 	getNewRank();
-	evictAll();
       }
     }
   }
@@ -881,28 +906,22 @@ implementation {
   event void IP_DIO.recv(struct ip6_hdr *iph, void *payload, 
                          size_t len, struct ip6_metadata *meta){
     struct dio_base_t *dio;
-    int i;
-    uint8_t pay[100];
     dio = (struct dio_base_t *) payload;
 
     if (!m_running) return;
 
-    /*
-    memcpy(pay, payload, len);
-    printfUART("len: %d ",len);
-    for(i=0; i<len; i++)
-      printfUART("%.2x ",pay[i]);
-    printfUART("\n");
-    */
+    //printfUART_in6addr(&iph->ip6_src);
+    //printfUART(" >  I GOT %d %d %d %d %d!!\n", iph->ip6_nxt, dio->icmpv6.code, dio->dagRank, nodeRank, parentNum);
 
-    printfUART_in6addr(&iph->ip6_src);
-    printfUART(" >  I GOT %d %d %d %d %d!!\n", iph->ip6_nxt, dio->icmpv6.code, dio->dagRank, nodeRank, parentNum);
-
-    //leafState = FALSE;
-    if (nodeRank > dio->dagRank) {
-
+    if(nodeRank != ROOT_RANK && dio->dagRank != 0xFFFF)
       parseDIO(iph, dio);
 
+    // evict parent if the node is advertizing 0xFFFF;
+    if(dio->dagRank == 0xFFFF && getParent(&iph->ip6_src) != MAX_PARENT)
+      evictParent(getParent(&iph->ip6_src));
+
+    //leafState = FALSE;
+    if (nodeRank > dio->dagRank || dio->dagRank == INFINITE_RANK) {
       if (!ignore) {
         /* SDH : where did this go? */
         signal IP_DIO_Filter.recv(iph, payload, len, meta);

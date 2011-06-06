@@ -35,8 +35,8 @@ module IPAddressP {
   struct in6_addr m_addr;
 
   command bool IPAddress.getLLAddr(struct in6_addr *addr) {
-    ieee154_panid_t panid = call Ieee154Address.getPanId();
-    ieee154_saddr_t saddr = call Ieee154Address.getShortAddr();
+    ieee154_panid_t panid = letohs(call Ieee154Address.getPanId());
+    ieee154_saddr_t saddr = letohs(call Ieee154Address.getShortAddr());
     ieee154_laddr_t laddr = call Ieee154Address.getExtAddr();
 
     memclr(addr->s6_addr, 16);
@@ -46,8 +46,12 @@ module IPAddressP {
       addr->s6_addr16[5] = htons(0x00FF);
       addr->s6_addr16[6] = htons(0xFE00);
       addr->s6_addr16[7] = htons(saddr);
+      addr->s6_addr[8] &= ~0x2;  /* unset U bit  */
     } else {
-      memcpy(&addr->s6_addr[8], laddr.data, 8);
+      int i;
+      for (i = 0; i < 8; i++)
+        addr->s6_addr[8+i] = laddr.data[7-i];
+      addr->s6_addr[8] ^= 0x2;  /* toggle U/L bit */
     }
 
     return TRUE;
@@ -81,25 +85,32 @@ module IPAddressP {
   }
 
   command bool IPAddress.isLocalAddress(struct in6_addr *addr) {
-    ieee154_panid_t panid = call Ieee154Address.getPanId();
-    ieee154_saddr_t saddr = call Ieee154Address.getShortAddr();
+    ieee154_panid_t panid = letohs(call Ieee154Address.getPanId());
+    ieee154_saddr_t saddr = letohs(call Ieee154Address.getShortAddr());
     ieee154_laddr_t eui = call Ieee154Address.getExtAddr();
 
     if (addr->s6_addr16[0] == htons(0xfe80)) {
       // link-local
       if (m_short_addr && 
-          addr->s6_addr16[5] == ntohs(0x00FF) &&
-          addr->s6_addr16[6] == ntohs(0xFE00)) {
-        if (ntohs(addr->s6_addr16[4]) == panid && 
+          addr->s6_addr16[5] == htons(0x00FF) &&
+          addr->s6_addr16[6] == htons(0xFE00)) {
+        if (ntohs(addr->s6_addr16[4]) == (panid & ~0x200) && 
             ntohs(addr->s6_addr16[7]) == saddr) {
           return TRUE;
         } else {
           return FALSE;
         }
       } 
-      if (memcmp(&addr->s6_addr[8], eui.data, 8) == 0) {
-        return TRUE;
-      }
+
+      return (addr->s6_addr[8] == (eui.data[7] ^ 0x2) && /* invert U/L bit */
+              addr->s6_addr[9] == eui.data[6] &&
+              addr->s6_addr[10] == eui.data[5] &&
+              addr->s6_addr[11] == eui.data[4] &&
+              addr->s6_addr[12] == eui.data[3] &&
+              addr->s6_addr[13] == eui.data[2] &&
+              addr->s6_addr[14] == eui.data[1] &&
+              addr->s6_addr[15] == eui.data[0]);
+
     } else if (addr->s6_addr[0] == 0xff) {
       // multicast
       if ((addr->s6_addr[1] & 0x0f) <= 2) {
@@ -124,6 +135,7 @@ module IPAddressP {
 
   command error_t IPAddress.setAddress(struct in6_addr *addr) {
     m_addr = *addr;
+#ifdef BLIP_DERIVE_SHORTADDRS
     if (m_addr.s6_addr[8] == 0 &&
         m_addr.s6_addr[9] == 0 &&
         m_addr.s6_addr[10] == 0 &&
@@ -136,6 +148,7 @@ module IPAddressP {
       call Ieee154Address.setShortAddr(0);
       m_short_addr = FALSE;
     }
+#endif
 
     m_valid_addr = TRUE;
     signal IPAddress.changed(TRUE);
@@ -145,6 +158,7 @@ module IPAddressP {
   command error_t IPAddress.removeAddress() {
     m_valid_addr = FALSE;
     m_short_addr = FALSE;
+    call Ieee154Address.setShortAddr(0);
     signal IPAddress.changed(FALSE);
     return SUCCESS;
   }

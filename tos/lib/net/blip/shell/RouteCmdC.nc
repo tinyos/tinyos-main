@@ -40,4 +40,7 @@ configuration RouteCmdC {
 
   RouteCmdP.ShellCommand -> ShellCommandC;
   RouteCmdP.ForwardingTable -> IPStackC;
+
+  components new TimerMilliC();
+  RouteCmdP.Timer -> TimerMilliC;
 }

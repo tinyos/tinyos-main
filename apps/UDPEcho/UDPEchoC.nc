@@ -31,10 +31,7 @@
  *
  */
 
-#include <6lowpan.h>
-#ifdef DBG_TRACK_FLOWS
-#include "TestDriver.h"
-#endif
+#include <lib6lowpan/6lowpan.h>
 
 configuration UDPEchoC {
 
@@ -46,9 +43,9 @@ configuration UDPEchoC {
   UDPEchoP.Leds -> LedsC;
 
   components new TimerMilliC();
-  components IPDispatchC;
+  components IPStackC;
 
-  UDPEchoP.RadioControl -> IPDispatchC;
+  UDPEchoP.RadioControl ->  IPStackC;
   components new UdpSocketC() as Echo,
     new UdpSocketC() as Status;
   UDPEchoP.Echo -> Echo;
@@ -57,33 +54,23 @@ configuration UDPEchoC {
 
   UDPEchoP.StatusTimer -> TimerMilliC;
 
-  components UdpC;
-  UDPEchoP.IPStats -> IPDispatchC.IPStats;
+  components UdpC, IPDispatchC;
+  UDPEchoP.IPStats -> IPDispatchC;
   UDPEchoP.UDPStats -> UdpC;
-  UDPEchoP.RouteStats -> IPDispatchC.RouteStats;
-  UDPEchoP.ICMPStats -> IPDispatchC.ICMPStats;
+
+#ifdef RPL_ROUTING
+  components RPLRoutingC;
+#endif
 
   components RandomC;
   UDPEchoP.Random -> RandomC;
 
+  // UDP shell on port 2000
   components UDPShellC;
 
-#ifdef SIM
-  components BaseStationC;
-#endif
-#ifdef DBG_TRACK_FLOWS
-  components TestDriverP, SerialActiveMessageC as Serial;
-  components ICMPResponderC, IPRoutingP;
-  TestDriverP.Boot -> MainC;
-  TestDriverP.SerialControl -> Serial;
-  TestDriverP.ICMPPing -> ICMPResponderC.ICMPPing[unique("PING")];
-  TestDriverP.CmdReceive -> Serial.Receive[AM_TESTDRIVER_MSG];
-  TestDriverP.IPRouting -> IPRoutingP;
-  TestDriverP.DoneSend -> Serial.AMSend[AM_TESTDRIVER_MSG];
-  TestDriverP.AckSend -> Serial.AMSend[AM_TESTDRIVER_ACK];
-  TestDriverP.RadioControl -> IPDispatchC;
-#endif
-#ifdef DBG_FLOWS_REPORT
-  components TrackFlowsC;
+  // prints the routing table
+  components RouteCmdC;
+#ifndef  IN6_PREFIX
+  components DhcpCmdC;
 #endif
 }

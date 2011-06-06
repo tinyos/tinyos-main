@@ -44,7 +44,7 @@ int run_tests() {
   int i, j;
   int success = 0, total = 0;
   for (i = 0; i < (sizeof(test_cases) / sizeof(test_cases[0])); i++) {
-    uint8_t nxt_hdr;
+    uint8_t nxt_hdr = 0;
     uint8_t result[512];
     uint8_t *rv;
     struct udp_hdr *udp = (struct udp_hdr *)result;
@@ -77,6 +77,12 @@ int run_tests() {
       printf("ERROR: wrong chksum: 0x%x 0x%x\n", test_cases[i].result.chksum, udp->chksum);
       continue;
     }
+
+    if (nxt_hdr != IANA_UDP) {
+      printf("ERROR: nxt_hdr should be UDP! was 0x%02x\n", nxt_hdr);
+      continue;
+    }
+
     success++;
   }
   printf("%s: %i/%i tests succeeded\n", __FILE__, success, total);

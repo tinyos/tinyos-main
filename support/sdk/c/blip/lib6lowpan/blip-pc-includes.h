@@ -60,4 +60,6 @@ struct tun_pi {
 # error "no htons routines!"
 #endif
 
+#include <ctype.h>
+
 #endif

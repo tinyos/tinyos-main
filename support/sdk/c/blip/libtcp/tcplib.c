@@ -30,20 +30,27 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "ip_malloc.h"
-#include "in_cksum.h"
-#include "6lowpan.h"
-#include "ip.h"
-#include "tcplib.h"
-#include "circ.h"
+#include "lib6lowpan/ip_malloc.h"
+#include "lib6lowpan/in_cksum.h"
+#include "lib6lowpan/6lowpan.h"
+#include "lib6lowpan/ip.h"
+
+#include "libtcp/tcplib.h"
+#include "libtcp/circ.h"
 
 static struct tcplib_sock *conns = NULL;
 
 #define ONE_SEGMENT(X)  ((X)->mss)
 
+#ifdef PC
 uint16_t alloc_local_port() {
-  return 32012;
+  return (time(NULL) & 0xffff) | 0x8000;
 }
+#else
+uint16_t alloc_local_port() {
+  return 21310;
+}
+#endif
 
 static inline void conn_add_once(struct tcplib_sock *sock) {
   struct tcplib_sock *iter;
@@ -79,13 +86,16 @@ void print_conn(struct tcplib_sock *sock) {
 }
 void print_headers(struct ip6_hdr *iph, struct tcp_hdr *tcph) {
   char addr_buf[32];
-  printf("headers ip length: %i:\n", ntohs(iph->plen));
+  printf("headers ip length: %i:\n", ntohs(iph->ip6_plen));
   inet_ntop(AF_INET6, iph->ip6_src.s6_addr, addr_buf, 32);
   printf(" source: %s port: %u\n", addr_buf, ntohs(tcph->srcport));
   inet_ntop(AF_INET6, iph->ip6_dst.s6_addr, addr_buf, 32);
   printf(" remote ep: %s port: %u\n", addr_buf, ntohs(tcph->dstport));
   printf(" tcp seqno: %u ackno: %u\n", ntohl(tcph->seqno), ntohl(tcph->ackno));
 }
+#else 
+#undef printf
+#define printf(FMT, args ...) ;
 #endif
 
 static struct tcplib_sock *conn_lookup(struct ip6_hdr *iph, 
@@ -117,37 +127,44 @@ static int conn_checkport(uint16_t port) {
   return 0;
 }
 
-struct tcp_hdr *find_tcp_hdr(struct split_ip_msg *msg) {
-  if (msg->hdr.nxt_hdr == IANA_TCP) {
-    return (struct tcp_hdr *)((msg->headers == NULL) ? msg->data :
-                              msg->headers->hdr.data);
+struct tcp_hdr *find_tcp_hdr(struct ip6_packet *msg) {
+  if (msg->ip6_hdr.ip6_nxt == IANA_TCP) {
+    return (struct tcp_hdr *)msg->ip6_data->iov_base;
   }
   return NULL;
 }
 
-static struct split_ip_msg *get_ipmsg(int plen) {
-  struct split_ip_msg *msg = 
-    (struct split_ip_msg *)ip_malloc(sizeof(struct split_ip_msg) + sizeof(struct tcp_hdr) + plen);
-  if (msg == NULL) return NULL;
-  memset(msg, 0, sizeof(struct split_ip_msg) + sizeof(struct tcp_hdr));
-  msg->hdr.nxt_hdr = IANA_TCP;
-  msg->hdr.plen = htons(sizeof(struct tcp_hdr) + plen);
+static struct ip6_packet *get_ipmsg(int plen) {
+  int alen = sizeof(struct ip6_packet) + sizeof(struct tcp_hdr) + 
+    sizeof(struct ip_iovec) + plen;
+  char *buf = ip_malloc(alen);
+  struct ip6_packet *msg = (struct ip6_packet *)buf;
+  struct ip_iovec *iov = (struct ip_iovec *)(buf + alen - sizeof(struct ip_iovec));
 
-  msg->headers = NULL;
-  msg->data = (void *)(msg + 1);
-  msg->data_len = sizeof(struct tcp_hdr) + plen;
+  if (buf == NULL) return NULL;
+  memset(msg, 0, sizeof(struct ip6_packet) + sizeof(struct tcp_hdr));
+  msg->ip6_hdr.ip6_nxt = IANA_TCP;
+  msg->ip6_hdr.ip6_plen = htons(sizeof(struct tcp_hdr) + plen);
+
+  msg->ip6_data = iov;
+  iov->iov_next = NULL;
+  iov->iov_len = plen + sizeof(struct tcp_hdr);
+  iov->iov_base = (void *)(msg + 1);
 
   return msg;
 }
 
 static void __tcplib_send(struct tcplib_sock *sock,
-                          struct split_ip_msg *msg) {
+                          struct ip6_packet *msg) {
   struct tcp_hdr *tcph = find_tcp_hdr(msg);
   if (tcph == NULL) return;
-  memcpy(&msg->hdr.ip6_dst, &sock->r_ep.sin6_addr, 16);
+  memcpy(&msg->ip6_hdr.ip6_dst, &sock->r_ep.sin6_addr, 16);
 
   sock->flags &= ~TCP_ACKPENDING;
   // sock->ackno = ntohl(tcph->ackno);
+
+  printf("srcprt: %hu dstprt: %hu\n", ntohs(sock->l_ep.sin6_port), 
+         ntohs(sock->r_ep.sin6_port));
 
   tcph->srcport = sock->l_ep.sin6_port;
   tcph->dstport = sock->r_ep.sin6_port;
@@ -160,7 +177,8 @@ static void __tcplib_send(struct tcplib_sock *sock,
 }
 
 static void tcplib_send_ack(struct tcplib_sock *sock, int fin_seqno, uint8_t flags) {
-  struct split_ip_msg *msg = get_ipmsg(0);
+  struct ip6_packet *msg = get_ipmsg(0);
+  printf("sending ACK\n");
       
   if (msg != NULL) {
     struct tcp_hdr *tcp_rep = (struct tcp_hdr *)(msg + 1);
@@ -170,7 +188,7 @@ static void tcplib_send_ack(struct tcplib_sock *sock, int fin_seqno, uint8_t fla
     tcp_rep->seqno = htonl(sock->seqno);
     tcp_rep->ackno = htonl(sock->ackno +
                            (fin_seqno ? 1 : 0));
-    // printf("sending ACK seqno: %u ackno: %u\n", ntohl(tcp_rep->seqno), ntohl(tcp_rep->ackno));
+    printf("sending ACK seqno: %u ackno: %u\n", ntohl(tcp_rep->seqno), ntohl(tcp_rep->ackno));
     __tcplib_send(sock, msg);
     ip_free(msg);
   } else {
@@ -179,12 +197,12 @@ static void tcplib_send_ack(struct tcplib_sock *sock, int fin_seqno, uint8_t fla
 }
 
 static void tcplib_send_rst(struct ip6_hdr *iph, struct tcp_hdr *tcph) {
-  struct split_ip_msg *msg = get_ipmsg(0);
+  struct ip6_packet *msg = get_ipmsg(0);
       
   if (msg != NULL) {
     struct tcp_hdr *tcp_rep = (struct tcp_hdr *)(msg + 1);
 
-    memcpy(&msg->hdr.ip6_dst, &iph->ip6_src, 16);
+    memcpy(&msg->ip6_hdr.ip6_dst, &iph->ip6_src, 16);
 
     tcp_rep->flags = TCP_FLAG_RST | TCP_FLAG_ACK;
 
@@ -215,7 +233,7 @@ static int tcplib_output(struct tcplib_sock *sock, uint32_t sseqno) {
   seg_size = min(seg_size, sock->cwnd);
   while (seg_size > 0 && sock->seqno > sseqno) {
     // printf("sending seg_size: %i\n", seg_size);
-    struct split_ip_msg *msg = get_ipmsg(seg_size);
+    struct ip6_packet *msg = get_ipmsg(seg_size);
     struct tcp_hdr *tcph;
     uint8_t *data;
     if (msg == NULL) return -1;
@@ -256,7 +274,7 @@ int tcplib_init_sock(struct tcplib_sock *sock) {
 /* deliver as much data to the app as possible, and update the ack
  * number of the socket to reflect how much was delivered 
  */
-static void receive_data(struct tcplib_sock *sock, struct tcp_hdr *tcph, int len) {
+static int receive_data(struct tcplib_sock *sock, struct tcp_hdr *tcph, int len) {
   uint8_t *ptr;
   int payload_len;
 
@@ -267,6 +285,7 @@ static void receive_data(struct tcplib_sock *sock, struct tcp_hdr *tcph, int len
   if (payload_len > 0) {
     tcplib_extern_recv(sock, ptr, payload_len);
   }
+  return payload_len;
 }
 
 static void reset_ssthresh(struct tcplib_sock *conn) {
@@ -281,9 +300,10 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
   struct tcp_hdr *tcph;
   struct tcplib_sock *this_conn;
   //   uint8_t *ptr;
-  int len = ntohs(iph->plen) + sizeof(struct ip6_hdr);
+  int len = ntohs(iph->ip6_plen) + sizeof(struct ip6_hdr);
   int payload_len;
   uint32_t hdr_seqno, hdr_ackno;
+  int connect_done = 0;
 
   tcph = (struct tcp_hdr *)payload;
   payload_len = len - sizeof(struct ip6_hdr) - (tcph->offset / 4);
@@ -353,12 +373,14 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
         // send the ACK this_conn
         this_conn->state = TCP_ESTABLISHED;
         this_conn->ackno = hdr_seqno + 1;
+        connect_done = 1;
         // skip the LISTEN processing
         // this will also generate an ACK
         goto ESTABLISHED;
-      } else if (this_conn->flags & TCP_FLAG_SYN) {
+      } else if (tcph->flags & TCP_FLAG_SYN) {
         // otherwise the state machine says we're in a simultaneous open, so continue doen
         this_conn->state = TCP_SYN_RCVD;
+        connect_done = 1;
       } else {
         printf("sending RST on bad data in state SYN_SENT\n");
         // we'll just let the timeout eventually close the socket, though
@@ -434,6 +456,7 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
 
         // receive side sequence check and add data
         printf("seqno: %u ackno: %u\n", hdr_seqno, hdr_ackno);
+        printf("conn seqno: %u ackno: %u\n", this_conn->seqno, this_conn->ackno);
 
 
         // send side recieve sequence check and congestion window updates.
@@ -495,19 +518,25 @@ int tcplib_process(struct ip6_hdr *iph, void *payload) {
             this_conn->flags |= TCP_ACKSENT;
           }
         } else { // (hdr_seqno == this_conn->ackno) {
-          printf("receive data\n");
-          receive_data(this_conn, tcph, len - sizeof(struct ip6_hdr));
+          printf("receive data [%li]\n", len - sizeof(struct ip6_hdr));
 
-          if (this_conn->flags & TCP_ACKSENT) {
+          if (receive_data(this_conn, tcph, len - sizeof(struct ip6_hdr)) > 0 &&
+              this_conn->flags & TCP_ACKSENT) {
             this_conn->flags &= ~TCP_ACKSENT;
             tcplib_send_ack(this_conn, 0, TCP_FLAG_ACK);
           }
-        }          
+        }
 
         // reset the retransmission timer
         if (this_conn->timer.retx == 0)
           this_conn->timer.retx = 6;
       }
+
+      if (connect_done && !(this_conn->flags & TCP_CONNECTDONE)) {
+        this_conn->flags |= TCP_CONNECTDONE;
+        tcplib_extern_connectdone(this_conn, 0);
+      }
+
     case TCP_TIME_WAIT:
       if ((payload_len > 0 && (this_conn->flags & TCP_ACKPENDING) >= 1) 
           || tcph->flags & TCP_FLAG_FIN) {
@@ -596,11 +625,15 @@ int tcplib_send(struct tcplib_sock *sock, void *data, int len) {
 
   sock->seqno += len;
   // printf("tcplib_output from send\n");
-  tcplib_output(sock, sock->seqno - len);
+  // tcplib_output(sock, sock->seqno - len);
+
+  // this will let multiple calls to send() get combined into a single packet
+  // the data will be sent out next time the timer fires
+  sock->timer.retx = 1;
   
   // 3 seconds
-  if (sock->timer.retx == 0)
-    sock->timer.retx = 6;
+  //if (sock->timer.retx == 0)
+  //sock->timer.retx = 6;
 
   return 0;
 }

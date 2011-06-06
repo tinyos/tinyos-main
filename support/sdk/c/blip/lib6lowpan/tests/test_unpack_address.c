@@ -22,8 +22,12 @@ struct {
 
 int lowpan_extern_read_context(struct in6_addr *addr, int context) {
   struct in6_addr ctx;
+  printf("read context: %i (%i)\n", context,
+         prefix_options[context].pfx_len);
   inet_pton6(prefix_options[context].prefix, &ctx);
+  print_buffer(ctx.s6_addr, 16);
   memcpy(addr->s6_addr, ctx.s6_addr, prefix_options[context].pfx_len / 8);
+  return prefix_options[context].pfx_len;
 }
 int lowpan_extern_match_context(struct in6_addr *addr, UNUSED uint8_t *ctx_id) {
 }
@@ -47,7 +51,7 @@ struct {
    {0xfe, 0x80, 0x12, 0x34, 0x87, 0x65, 0xab, 0xde, 0x12, 0x34, 0x87, 0x65, 0xab, 0xde, 0xf0, 0x12}, "1", 1},
 
   // derived from the MAC address
-  {"fe80::1234:8765:abde:f012", LOWPAN_IPHC_AM_0, 0, 0, {}, "12:34:87:65:ab:de:f0:12", 1},
+  {"fe80::1234:8765:abde:f012", LOWPAN_IPHC_AM_0, 0, 0, {}, "10:34:87:65:ab:de:f0:12", 1},
 
   // RFC4944-style addresses
   {"fe80::1:00ff:fe00:25", LOWPAN_IPHC_AM_0, 0, 0, {}, "25", 1},
@@ -86,11 +90,18 @@ struct {
     inet_ntop6(&addr, buf, 512);
     printf("result: %s length: %li\n", buf, rv - test_cases[i].buf);
 
-    if (test_cases[i].len != rv - test_cases[i].buf)
+    if (test_cases[i].len != rv - test_cases[i].buf) {
+      printf("case %u: result len: %li expected: %i\n",
+             i, rv - test_cases[i].buf, test_cases[i].len);
       continue;
+    }
 
-    if (memcmp(&addr, &correct, 16) != 0)
+    if (memcmp(&addr, &correct, 16) != 0) {
+      printf("case %u: unexpected result\n", i);
+      print_buffer(correct.s6_addr, 16);
+      print_buffer(addr.s6_addr, 16);
       continue;
+    }
 
     success++;
   }
