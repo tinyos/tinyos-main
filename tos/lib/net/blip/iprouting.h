@@ -5,7 +5,7 @@
 
 enum {
   ROUTE_INVAL_KEY = -1,
-  ROUTE_TABLE_SZ = 35,
+  ROUTE_TABLE_SZ = 20,
 };
 
 enum {

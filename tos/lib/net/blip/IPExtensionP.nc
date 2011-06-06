@@ -8,6 +8,8 @@
 
 #include <ip_malloc.h>
 
+#include "blip_printf.h"
+
 module IPExtensionP {
   provides {
     // for inserting destination and hop-by-hop headers on outgoing packets.
@@ -59,13 +61,13 @@ module IPExtensionP {
     for (i = 0; i < n; i++) {
       struct tlv_hdr *this_hdr;
       if (which == 0) {
-        printfUART("adding destination idx %i\n", i);
+        printf("adding destination idx %i\n", i);
         this_hdr = signal DestinationExt.getHeader[i](0, nxt_hdr, &msg->hdr);
       } else {
         this_hdr = signal HopByHopExt.getHeader[i](0, nxt_hdr, &msg->hdr);
       }
 
-      printfUART("buildTLV: got %p\n", this_hdr);
+      printf("buildTLV: got %p\n", this_hdr);
       if (this_hdr == NULL) continue;
 
       real_hdr->len += this_hdr->len;
@@ -109,29 +111,29 @@ module IPExtensionP {
   void ip_dump_msg(struct split_ip_msg *msg) {
     struct generic_header *cur = msg->headers;
     int i;
-    printfUART("DUMPING IP PACKET\n ");
+    printf("DUMPING IP PACKET\n ");
     for (i = 0; i < sizeof(struct ip6_hdr); i++)
-      printfUART("0x%x ", ((uint8_t *)&msg->hdr)[i]);
-    printfUART("\n");
+      printf("0x%x ", ((uint8_t *)&msg->hdr)[i]);
+    printf("\n");
 
     while (cur != NULL) {
-      printfUART(" header [%i]: ", cur->len);
+      printf(" header [%i]: ", cur->len);
       for (i = 0; i < cur->len; i++) 
-        printfUART("0x%x ", cur->hdr.data[i]);
-      printfUART("\n");
+        printf("0x%x ", cur->hdr.data[i]);
+      printf("\n");
       cur = cur->next;
     }
 
-    printfUART("data [%i]: ", msg->data_len);
+    printf("data [%i]: ", msg->data_len);
     for (i = 0; i < msg->data_len; i++) 
-      printfUART("0x%x ", ((uint8_t *)msg->data)[i]);
-    printfUART("\n\n");
+      printf("0x%x ", ((uint8_t *)msg->data)[i]);
+    printf("\n\n");
   }
 #endif
 
   default event struct tlv_hdr *DestinationExt.getHeader[uint8_t i](int label,int nxt_hdr,
                                                                    struct ip6_hdr *msg) {
-    printfUART("default dest handler?\n");
+    printf("default dest handler?\n");
     return NULL;
   }
 

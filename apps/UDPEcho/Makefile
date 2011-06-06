@@ -12,7 +12,7 @@ PFLAGS += -DENABLE_SPI0_DMA
 
 # you can compile with or without a routing protocol... of course,
 # without it, you will only be able to use link-local communication.
-PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
+PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TOSDIR)/lib/net/rpl
 
 # tell the 6lowpan layer to not generate hc-compressed headers
 # PFLAGS += -DLIB6LOWPAN_HC_VERSION=-1
@@ -31,10 +31,10 @@ PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
 
 # this disables dhcp and statically chooses a prefix.  the motes form
 # their ipv6 address by combining this with TOS_NODE_ID
-# PFLAGS += -DIN6_PREFIX=\"fec0::\"
+PFLAGS += -DIN6_PREFIX=\"fec0::\"
 
-# printf debugs.  works only on telosb/tmote sky
-# PFLAGS += -DPRINTFUART_ENABLED
+PFLAGS += -I$(TOSDIR)/lib/printf
+# CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
 
 include $(MAKERULES)
 

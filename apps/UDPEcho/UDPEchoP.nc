@@ -37,7 +37,7 @@
 #include <lib6lowpan/ip.h>
 
 #include "UDPReport.h"
-#include "PrintfUART.h"
+#include "blip_printf.h"
 
 #define REPORT_PERIOD 10L
 
@@ -70,7 +70,6 @@ module UDPEchoP {
     timerStarted = FALSE;
 
     call IPStats.clear();
-    printfUART_init();
 
 #ifdef REPORT_DEST
     route_dest.sin6_port = htons(7000);
@@ -102,11 +101,11 @@ module UDPEchoP {
     int i;
     uint8_t *cur = data;
     call Leds.led0Toggle();
-    printfUART("Echo recv [%i]: ", len);
+    printf("Echo recv [%i]: ", len);
     for (i = 0; i < len; i++) {
-      printfUART("%02x ", cur[i]);
+      printf("%02x ", cur[i]);
     }
-    printfUART("\n");
+    printf("\n");
 #endif
     call Echo.sendto(from, data, len);
   }

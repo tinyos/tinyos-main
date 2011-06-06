@@ -69,9 +69,11 @@
  * @ author Yiwei Yao <yaoyiwei@stanford.edu>
  */
 
-#include <PrintfUART.h>
 #include <RPL.h>
 #include <lib6lowpan/ip_malloc.h>
+
+#include "blip_printf.h"
+
 module RPLRankP{
   provides{
     interface RPLRank as RPLRankInfo;

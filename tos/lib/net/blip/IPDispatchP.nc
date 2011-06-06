@@ -26,8 +26,8 @@
 #include <lib6lowpan/ip.h>
 #include <lib6lowpan/in_cksum.h>
 #include <lib6lowpan/ip_malloc.h>
-#include <PrintfUART.h>
 
+#include "blip_printf.h"
 #include "IPDispatch.h"
 #include "BlipStatistics.h"
 #include "table.h"
@@ -79,11 +79,6 @@ module IPDispatchP {
   }
 } implementation {
 
-/* #undef printfUART */
-/* #undef printfUART_buf */
-/* #define printfUART(FMT, args ...) */
-/* #define printfUART_buf(buf, len) */
-
 #ifndef BLIP_L2_RETRIES
 #define BLIP_L2_RETRIES 3
 #endif
@@ -101,7 +96,9 @@ int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id) {
   return call NeighborDiscovery.matchContext(addr, ctx_id);
 }
 
-
+  // generally including source files like this is a no-no.  I'm doing
+  // this in the hope that the optimizer will do a better job when
+  // they're part of a component.
 #include <lib6lowpan/ieee154_header.c>
 #include <lib6lowpan/lib6lowpan.c>
 #include <lib6lowpan/lib6lowpan_4944.c>
@@ -217,14 +214,14 @@ void SENDINFO_DECR(struct send_info *si) {
   void deliver(struct lowpan_reconstruct *recon) {
     struct ip6_hdr *iph = (struct ip6_hdr *)recon->r_buf;
 
-    printfUART("deliver [%i]: ", recon->r_bytes_rcvd);
-    printfUART_buf(recon->r_buf, recon->r_bytes_rcvd);
+    printf("deliver [%i]: ", recon->r_bytes_rcvd);
+    printf_buf(recon->r_buf, recon->r_bytes_rcvd);
 
     /* the payload length field is always compressed, have to put it back here */
     iph->ip6_plen = htons(recon->r_bytes_rcvd - sizeof(struct ip6_hdr));
     signal IPLower.recv(iph, (void *)(iph + 1), NULL);
 
-    // printfUART("free(%p)\n", recon->r_buf); 
+    // printf("free(%p)\n", recon->r_buf); 
     free(recon->r_buf);
     recon->r_timeout = T_UNUSED;
     recon->r_buf = NULL;
@@ -255,7 +252,7 @@ void SENDINFO_DECR(struct send_info *si) {
   void reconstruct_age(void *elt) {
     struct lowpan_reconstruct *recon = (struct lowpan_reconstruct *)elt;
     if (recon->r_timeout != T_UNUSED) 
-      printfUART("recon src: 0x%x tag: 0x%x buf: %p recvd: %i/%i\n", 
+      printf("recon src: 0x%x tag: 0x%x buf: %p recvd: %i/%i\n", 
                  recon->r_source_key, recon->r_tag, recon->r_buf, 
                  recon->r_bytes_rcvd, recon->r_size);
     switch (recon->r_timeout) {
@@ -266,9 +263,9 @@ void SENDINFO_DECR(struct send_info *si) {
     case T_ZOMBIE:
     case T_FAILED2:
       // deallocate the space for reconstruction
-      printfUART("timing out buffer: src: %i tag: %i\n", recon->r_source_key, recon->r_tag);
+      printf("timing out buffer: src: %i tag: %i\n", recon->r_source_key, recon->r_tag);
       if (recon->r_buf != NULL) {
-        printfUART("free(%p)\n", recon->r_buf); 
+        printf("free(%p)\n", recon->r_buf); 
         free(recon->r_buf);
       }
       recon->r_timeout = T_UNUSED;
@@ -281,7 +278,7 @@ void SENDINFO_DECR(struct send_info *si) {
 #ifdef PRINTFUART_ENABLED
     bndrt_t *cur = (bndrt_t *)heap;
     while (((uint8_t *)cur)  - heap < IP_MALLOC_HEAP_SIZE) {
-      printfUART ("heap region start: %p length: %u used: %u\n", 
+      printf ("heap region start: %p length: %u used: %u\n", 
                   cur, (*cur & IP_MALLOC_LEN), (*cur & IP_MALLOC_INUSE) >> 15);
       cur = (bndrt_t *)(((uint8_t *)cur) + ((*cur) & IP_MALLOC_LEN));
     }
@@ -292,11 +289,12 @@ void SENDINFO_DECR(struct send_info *si) {
     table_map(&recon_cache, reconstruct_age);
 
     
-    printfUART("Frag pool size: %i\n", call FragPool.size());
-    printfUART("SendInfo pool size: %i\n", call SendInfoPool.size());
-    printfUART("SendEntry pool size: %i\n", call SendEntryPool.size());
-    printfUART("Forward queue length: %i\n", call SendQueue.size());
+    printf("Frag pool size: %i\n", call FragPool.size());
+    printf("SendInfo pool size: %i\n", call SendInfoPool.size());
+    printf("SendEntry pool size: %i\n", call SendEntryPool.size());
+    printf("Forward queue length: %i\n", call SendQueue.size());
     ip_print_heap();
+    printfflush();
   }
 
   /*
@@ -307,7 +305,7 @@ void SENDINFO_DECR(struct send_info *si) {
     struct lowpan_reconstruct *ret = NULL;
     int i;
 
-    // printfUART("get_reconstruct: %x %i\n", key, tag);
+    // printf("get_reconstruct: %x %i\n", key, tag);
 
     for (i = 0; i < N_RECONSTRUCTIONS; i++) {
       struct lowpan_reconstruct *recon = (struct lowpan_reconstruct *)&recon_data[i];
@@ -331,7 +329,7 @@ void SENDINFO_DECR(struct send_info *si) {
         ret = recon;
     }
   done:
-    // printfUART("got%p\n", ret);
+    // printf("got%p\n", ret);
     return ret;
   }
 
@@ -340,7 +338,7 @@ void SENDINFO_DECR(struct send_info *si) {
     struct ieee154_frame_addr frame_address;
     uint8_t *buf = msg_payload;
 
-    printfUART(" -- RECEIVE -- len : %i\n", len);
+    printf(" -- RECEIVE -- len : %i\n", len);
 
     BLIP_STATS_INCR(stats.rx_total);
 
@@ -380,7 +378,7 @@ void SENDINFO_DECR(struct send_info *si) {
         recon->r_timeout = T_FAILED1;
         goto fail;
       } else {
-        // printfUART("start recon buf: %p\n", recon->r_buf);
+        // printf("start recon buf: %p\n", recon->r_buf);
         recon->r_timeout = T_ACTIVE;
         recon->r_source_key = source_key;
         recon->r_tag = tag;
@@ -403,7 +401,7 @@ void SENDINFO_DECR(struct send_info *si) {
       if (recon.r_size == recon.r_bytes_rcvd) {
         deliver(&recon);
       } else {
-        // printfUART("free(%p)\n", recon.r_buf); 
+        // printf("free(%p)\n", recon.r_buf); 
         free(recon.r_buf);
       }
     }
@@ -421,7 +419,7 @@ void SENDINFO_DECR(struct send_info *si) {
   task void sendTask() {
     struct send_entry *s_entry;
 
-    // printfUART("sendTask() - sending\n");
+    // printf("sendTask() - sending\n");
 
     if (radioBusy || state != S_RUNNING) return;
     if (call SendQueue.empty()) return;
@@ -448,7 +446,7 @@ void SENDINFO_DECR(struct send_info *si) {
 
     return;
   fail:
-    printfUART("SEND FAIL\n");
+    printf("SEND FAIL\n");
     post sendTask();
     BLIP_STATS_INCR(stats.tx_drop);
 
@@ -514,7 +512,7 @@ void SENDINFO_DECR(struct send_info *si) {
         // this will cause any fragments we have already enqueued to
         // be dropped by the send task.
         s_info->failed = TRUE;
-        printfUART("drops: IP send: no fragments\n");
+        printf("drops: IP send: no fragments\n");
         rc = ERETRY;
         goto done;
       }
@@ -526,10 +524,10 @@ void SENDINFO_DECR(struct send_info *si) {
                                  frame_addr,
                                  &ctx);
       if (frag_len < 0) {
-        printfUART(" get frag error: %i\n", frag_len);
+        printf(" get frag error: %i\n", frag_len);
       }
 
-      printfUART("fragment length: %i offset: %i\n", frag_len, ctx.offset);
+      printf("fragment length: %i offset: %i\n", frag_len, ctx.offset);
       call BarePacket.setPayloadLength(outgoing, frag_len);
 
       if (frag_len <= 0) {
@@ -541,7 +539,7 @@ void SENDINFO_DECR(struct send_info *si) {
       if (call SendQueue.enqueue(s_entry) != SUCCESS) {
         BLIP_STATS_INCR(stats.encfail);
         s_info->failed = TRUE;
-        printfUART("drops: IP send: enqueue failed\n");
+        printf("drops: IP send: enqueue failed\n");
         goto done;
       }
 
@@ -560,7 +558,7 @@ void SENDINFO_DECR(struct send_info *si) {
 
       SENDINFO_INCR(s_info);}
        
-    // printfUART("got %i frags\n", s_info->link_fragments);
+    // printf("got %i frags\n", s_info->link_fragments);
   done:
     BLIP_STATS_INCR(stats.sent);
     SENDINFO_DECR(s_info);
@@ -574,7 +572,7 @@ void SENDINFO_DECR(struct send_info *si) {
 
     radioBusy = FALSE;
 
-    // printfUART("sendDone: %p %i\n", msg, error);
+    // printf("sendDone: %p %i\n", msg, error);
 
     if (state == S_STOPPING) {
       call RadioControl.stop();
@@ -586,7 +584,7 @@ void SENDINFO_DECR(struct send_info *si) {
     signal IPLower.sendDone(s_entry->info);
 
     if (!call PacketLink.wasDelivered(msg)) {
-      printfUART("sendDone: was not delivered! (%i tries)\n", 
+      printf("sendDone: was not delivered! (%i tries)\n", 
                  call PacketLink.getRetries(msg));
       s_entry->info->failed = TRUE;
 /*       if (s_entry->info->policy.dest[0] != 0xffff) */
@@ -630,7 +628,7 @@ void SENDINFO_DECR(struct send_info *si) {
     stats.sendentry= call SendEntryPool.size();
     stats.sndqueue = call SendQueue.size();
     stats.heapfree = ip_malloc_freespace();
-    printfUART("frag: %i sendinfo: %i sendentry: %i sendqueue: %i heap: %i\n",
+    printf("frag: %i sendinfo: %i sendentry: %i sendqueue: %i heap: %i\n",
                stats.fragpool,
                stats.sendinfo,
                stats.sendentry,

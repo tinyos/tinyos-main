@@ -1,3 +1,6 @@
+
+#include "blip_printf.h"
+
 module RPLOF0P{
   provides interface RPLOF;
   uses interface ForwardingTable;
@@ -8,9 +11,6 @@ module RPLOF0P{
 implementation{
 
 #define STABILITY_BOUND 5 // this determines the stability bound for switching parents.
-  
-  //#undef printfUART
-  //#define printfUART(X, fmt ...) ;
 
   uint16_t nodeRank = INFINITE_RANK;
   uint16_t minMetric = 0xFFFF;
@@ -70,7 +70,7 @@ implementation{
     prevEtx = nodeEtx;
     prevRank = nodeRank;
 
-    //printfUART("OF0 PARENT rank %d \n", parentSet[desiredParent].rank);
+    //printf("OF0 PARENT rank %d \n", parentSet[desiredParent].rank);
     nodeEtx = parentNode->etx_hop;
     nodeRank = parentNode->rank + min_hop_rank_inc;
 
@@ -108,11 +108,11 @@ implementation{
       return FALSE;
     }
 
-    //printfUART("Start Compare %d %d: %d %d %d \n", htons(prevParent), htons(parentNode->parentIP.s6_addr16[7]), minDesired, parentNode->etx_hop, parentNode->rank);
+    //printf("Start Compare %d %d: %d %d %d \n", htons(prevParent), htons(parentNode->parentIP.s6_addr16[7]), minDesired, parentNode->etx_hop, parentNode->rank);
     parentNode = call ParentTable.get(desiredParent);
     if(htons(parentNode->parentIP.s6_addr16[7]) != 0){
       minMetric = parentNode->etx_hop + parentNode->rank*divideRank;
-      //printfUART("Compare %d: %d %d with %d %d\n", htons(parentNode->parentIP.s6_addr16[7]), parentNode->etx_hop, parentNode->rank, minDesired, minMetric);
+      //printf("Compare %d: %d %d with %d %d\n", htons(parentNode->parentIP.s6_addr16[7]), parentNode->etx_hop, parentNode->rank, minDesired, minMetric);
     }
 
     if(min == desiredParent)
@@ -123,15 +123,15 @@ implementation{
       parentNode = call ParentTable.get(indexset);
 
       //if(parentNode->valid)
-	//printfUART("Compare %d: %d %d with %d %d\n", htons(parentNode->parentIP.s6_addr16[7]), parentNode->etx_hop, parentNode->rank, minDesired, indexset);
+	//printf("Compare %d: %d %d with %d %d\n", htons(parentNode->parentIP.s6_addr16[7]), parentNode->etx_hop, parentNode->rank, minDesired, indexset);
       if(parentNode->valid && parentNode->etx_hop >= 0 &&
 	 (parentNode->etx_hop + parentNode->rank*divideRank < minDesired) && parentNode->rank < nodeRank && parentNode->rank != INFINITE_RANK){
 	count ++;
 	min = indexset;
 	minDesired = parentNode->etx_hop + parentNode->rank*divideRank;
-	//printfUART("Compare %d %d \n", minDesired, parentNode->etx_hop/divideRank + parentNode->rank);
+	//printf("Compare %d %d \n", minDesired, parentNode->etx_hop/divideRank + parentNode->rank);
 	if(min == desiredParent){
-	  //printfUART("current parent Checking...\n")
+	  //printf("current parent Checking...\n")
 	  minMetric = minDesired;
 	}
       }else if(min == desiredParent){
@@ -142,14 +142,14 @@ implementation{
     parentNode = call ParentTable.get(min);
 
     if(/*parentNode->rank > nodeRank || */parentNode->rank == INFINITE_RANK){
-      //printfUART("SELECTED PARENT is FFFF %d\n", TOS_NODE_ID);
+      //printf("SELECTED PARENT is FFFF %d\n", TOS_NODE_ID);
       desiredParent = MAX_PARENT;
       return FAIL;
     }
 
     if(minDesired*divideRank + STABILITY_BOUND >= minMetric*divideRank && minMetric != 0){
       // if the min measurement (minDesired) is not significantly better than the previous parent's (minMetric), stay with what we have...
-      //printfUART("SAFETYBOUND %d %d %d\n", minDesired*divideRank, STABILITY_BOUND, minMetric*divideRank);
+      //printf("SAFETYBOUND %d %d %d\n", minDesired*divideRank, STABILITY_BOUND, minMetric*divideRank);
       min = desiredParent;
       minDesired = minMetric;
     }
@@ -157,7 +157,7 @@ implementation{
     minMetric = minDesired;
     desiredParent = min;
     parentNode = call ParentTable.get(desiredParent);
-    //printfUART("OF0 %d %d %u %u %d\n", TOS_NODE_ID, htons(parentNode->parentIP.s6_addr16[7]), parentNode->etx_hop, parentNode->rank, count);
+    //printf("OF0 %d %d %u %u %d\n", TOS_NODE_ID, htons(parentNode->parentIP.s6_addr16[7]), parentNode->etx_hop, parentNode->rank, count);
 
     /* set the new default route */
     /* set one of the below of maybe set both? */
@@ -165,9 +165,9 @@ implementation{
     call ForwardingTable.addRoute(NULL, 0, &parentNode->parentIP, RPL_IFACE); // will this give me the default path?
 
     if(prevParent != parentNode->parentIP.s6_addr16[7]){
-      //printfUART(">> New Parent %d %x %lu \n", TOS_NODE_ID, htons(parentNode->parentIP.s6_addr16[7]), parentChanges++);
-      printfUART("#L %u 0\n", (uint8_t)htons(prevParent));
-      printfUART("#L %u 1 %d\n", (uint8_t)htons(parentNode->parentIP.s6_addr16[7]), TOS_NODE_ID);
+      //printf(">> New Parent %d %x %lu \n", TOS_NODE_ID, htons(parentNode->parentIP.s6_addr16[7]), parentChanges++);
+      printf("#L %u 0\n", (uint8_t)htons(prevParent));
+      printf("#L %u 1 %d\n", (uint8_t)htons(parentNode->parentIP.s6_addr16[7]), TOS_NODE_ID);
       newParent = TRUE;
       call RPLDAO.newParent();
     }

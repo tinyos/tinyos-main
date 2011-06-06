@@ -25,10 +25,11 @@ configuration PppRouterC {
   PppDaemonC.HdlcUart -> PlatformSerialHdlcUartC;
   PppDaemonC.UartControl -> PlatformSerialHdlcUartC;
 
-  components PppPrintfC, PppC;;
-  PppPrintfC.Ppp -> PppDaemonC;
-  PppDaemonC.PppProtocol[PppPrintfC.Protocol] -> PppPrintfC;
-  PppPrintfC.Ppp -> PppC;
+  // SDH : don't bother including the PppPrintfC by default
+  // components PppPrintfC, PppC;;
+  // PppPrintfC.Ppp -> PppDaemonC;
+  // PppDaemonC.PppProtocol[PppPrintfC.Protocol] -> PppPrintfC;
+  // PppPrintfC.Ppp -> PppC;
 
   components IPStackC, IPForwardingEngineP;
   IPForwardingEngineP.IPForward[ROUTE_IFACE_PPP] -> PppRouterP.IPForward;
@@ -41,7 +42,7 @@ configuration PppRouterC {
 #endif
 
   // UDP shell on port 2000
-  // components UDPShellC;
+  components UDPShellC;
 
   // prints the routing table
   // components RouteCmdC;

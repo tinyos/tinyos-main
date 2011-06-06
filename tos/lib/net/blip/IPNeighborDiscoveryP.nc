@@ -15,6 +15,8 @@
  */
 #include <lib6lowpan/ip.h>
 
+#include "blip_printf.h"
+
 module IPNeighborDiscoveryP {
   provides {
     interface IPForward;
@@ -26,14 +28,6 @@ module IPNeighborDiscoveryP {
     interface Ieee154Address;
   }
 } implementation {
-
-#undef printfUART
-#undef printfUART_buf
-#undef printfUART_in6addr
-#define printfUART(FMT, args ...)
-#define printfUART_buf(buf, len)
-#define printfUART_in6addr(X)
-
 
   command int NeighborDiscovery.matchContext(struct in6_addr *addr, 
                                              uint8_t *ctx) {
@@ -104,25 +98,25 @@ module IPNeighborDiscoveryP {
     fr_addr.ieee_dstpan = call Ieee154Address.getPanId();
     call IPAddress.getLLAddr(&local_addr);
 
-    printfUART("IPNeighborDiscovery - send - next: ");
-    printfUART_in6addr(next);
-    printfUART(" - ll source: ");
-    printfUART_in6addr(&local_addr);
-    printfUART("\n");
+    printf("IPNeighborDiscovery - send - next: ");
+    printf_in6addr(next);
+    printf(" - ll source: ");
+    printf_in6addr(&local_addr);
+    printf("\n");
     // iov_print(msg->ip6_data);
 
     if (call NeighborDiscovery.resolveAddress(&local_addr, &fr_addr.ieee_src) != SUCCESS) {
-      printfUART("IPND - local address resolution failed\n");
+      printf("IPND - local address resolution failed\n");
       return FAIL;
     }
 
     if (call NeighborDiscovery.resolveAddress(next, &fr_addr.ieee_dst) != SUCCESS) {
-      printfUART("IPND - next-hop address resolution failed\n");
+      printf("IPND - next-hop address resolution failed\n");
       return FAIL;
     }
-    printfUART("l2 source: "); printfUART_buf(fr_addr.ieee_src.i_laddr.data, 8);
-    printfUART("l2 dest: "); printfUART_buf(fr_addr.ieee_dst.i_laddr.data, 8);
-    printfUART("\n");
+    printf("l2 source: "); printf_buf(fr_addr.ieee_src.i_laddr.data, 8);
+    printf("l2 dest: "); printf_buf(fr_addr.ieee_dst.i_laddr.data, 8);
+    printf("\n");
 
     return call IPLower.send(&fr_addr, msg, ptr);
   }

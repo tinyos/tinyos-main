@@ -4,7 +4,8 @@
 #include <lib6lowpan/nwbyte.h>
 #include <lib6lowpan/ip_malloc.h>
 #include <dhcp6.h>
-#include <PrintfUART.h>
+
+#include "blip_printf.h"
 
 module PppRouterP {
   provides { 
@@ -55,8 +56,6 @@ module PppRouterP {
 #ifndef PRINTFUART_ENABLED
     rc = call Ipv6LcpAutomaton.open();
     rc = call Ppp.start();
-#else
-    printfUART_init();
 #endif
 #ifdef RPL_ROUTING
     call RootControl.setRoot();

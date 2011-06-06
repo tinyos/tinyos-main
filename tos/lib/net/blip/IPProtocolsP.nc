@@ -1,6 +1,7 @@
 
 #include <lib6lowpan/ip.h>
-#include <PrintfUART.h>
+
+#include "blip_printf.h"
 
 module IPProtocolsP {
   provides {
@@ -32,7 +33,7 @@ module IPProtocolsP {
   command error_t IP.send[uint8_t nxt_hdr](struct ip6_packet *msg) {
     msg->ip6_hdr.ip6_vfc = IPV6_VERSION;
     msg->ip6_hdr.ip6_hops = 16;
-    printfUART("IP Protocol send - nxt_hdr: %i iov_len: %i plen: %u\n", 
+    printf("IP Protocol send - nxt_hdr: %i iov_len: %i plen: %u\n", 
                nxt_hdr, iov_len(msg->ip6_data), ntohs(msg->ip6_hdr.ip6_plen));
     return call SubIP.send(msg);
   }

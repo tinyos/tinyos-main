@@ -6,6 +6,8 @@
 #include <lib6lowpan/ip.h>
 #include <table.h>
 
+#include "blip_printf.h"
+
 module TcpP {
   provides interface Tcp[uint8_t client];
   provides interface Init;
@@ -70,7 +72,7 @@ module TcpP {
                                     struct sockaddr_in6 *from) {
     int cid = find_client(conn);
 
-    printfUART("tcplib_accept: cid: %i\n", cid);
+    printf("tcplib_accept: cid: %i\n", cid);
 
     if (cid == N_CLIENTS) return NULL;
     if (signal Tcp.accept[cid](from, &conn->tx_buf, &conn->tx_buf_len)) {
@@ -81,7 +83,7 @@ module TcpP {
   }
 
   void tcplib_send_out(struct ip6_packet *msg, struct tcp_hdr *tcph) {
-    printfUART("tcp output\n");
+    printf("tcp output\n");
     call IPAddress.setSource(&msg->ip6_hdr);
     tcph->chksum = htons(msg_cksum(&msg->ip6_hdr, msg->ip6_data, IANA_TCP));
     call IP.send(msg);
@@ -107,7 +109,7 @@ module TcpP {
                      void *payload, size_t len,
                      struct ip6_metadata *meta) {
     
-    printfUART("tcp packet received\n");
+    printf("tcp packet received\n");
     tcplib_process(iph, payload);
   }
 

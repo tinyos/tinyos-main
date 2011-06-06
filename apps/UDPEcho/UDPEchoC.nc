@@ -73,4 +73,10 @@ configuration UDPEchoC {
 #ifndef  IN6_PREFIX
   components DhcpCmdC;
 #endif
+
+#ifdef PRINTFUART_ENABLED
+  components PrintfC;
+  components SerialStartC;
+#endif
+
 }

@@ -1,8 +1,6 @@
 
 #include <Ieee154.h>
 
-#include "PrintfUART.h"
-
 module ResourceSendP {
   provides interface Ieee154Send;
   uses interface Resource;
