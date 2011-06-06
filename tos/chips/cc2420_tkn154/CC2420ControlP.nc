@@ -114,9 +114,22 @@ implementation {
     call CSN.makeOutput();
     call RSTN.makeOutput();
     call VREN.makeOutput();
-    autoAckEnabled = TRUE;
-    hwAutoAckDefault = TRUE;
+
+#if defined(CC2420_NO_ADDRESS_RECOGNITION)
+#warning Address recognition disabled!
+    addressRecognition = FALSE;
+#else
     addressRecognition = TRUE;
+#endif
+    
+#if defined(CC2420_NO_ACKNOWLEDGEMENTS)
+#warning Acknowledgements disabled!
+    autoAckEnabled = FALSE;
+#else
+    autoAckEnabled = TRUE;
+#endif
+
+    hwAutoAckDefault = TRUE;
     acceptReservedFrames = FALSE;
     m_needsSync = FALSE;
     return SUCCESS;

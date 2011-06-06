@@ -561,7 +561,11 @@ implementation
 
   command void Packet.clear(message_t* msg)
   {
-    memset(msg, 0, sizeof(message_t));
+    message_header_t* header = (message_header_t*) msg->header;
+    message_metadata_t* metadata = (message_metadata_t*) msg->metadata;
+    header->ieee154.length = 0;
+    memset( header->ieee154.mhr, 0x0, MHR_MAX_LEN);
+    memset( &metadata->ieee154, 0x0, sizeof(ieee154_metadata_t));
   }
 
   command uint8_t Packet.payloadLength(message_t* msg)

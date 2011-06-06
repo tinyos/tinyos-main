@@ -53,7 +53,8 @@
  * abstraction.
  *
  * There are some TinyOS/CC2420 macros that are supported (e.g. set via CFLAGS
- * in the Makefile): TFRAMES_ENABLED, CC2420_DEF_CHANNEL
+ * in the Makefile): TFRAMES_ENABLED, CC2420_DEF_CHANNEL, 
+ * CC2420_NO_ADDRESS_RECOGNITION, CC2420_NO_ACKNOWLEDGEMENTS
  **/
 
 module TKN154ActiveMessageP {
