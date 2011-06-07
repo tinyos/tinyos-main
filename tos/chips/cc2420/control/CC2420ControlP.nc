@@ -127,6 +127,7 @@ implementation {
     
   /***************** Init Commands ****************/
   command error_t Init.init() {
+    int i, t;
     call CSN.makeOutput();
     call RSTN.makeOutput();
     call VREN.makeOutput();
@@ -137,7 +138,14 @@ implementation {
     m_tx_power = CC2420_DEF_RFPOWER;
     m_channel = CC2420_DEF_CHANNEL;
     
-    
+    m_ext_addr = call LocalIeeeEui64.getId();
+    for (i = 0; i < 4; i++) {
+      t = m_ext_addr.data[i];
+      m_ext_addr.data[i] = m_ext_addr.data[7-i];
+      m_ext_addr.data[7-i] = t;
+    }
+
+
 #if defined(CC2420_NO_ADDRESS_RECOGNITION)
     addressRecognition = FALSE;
 #else
@@ -288,7 +296,7 @@ implementation {
   }
 
   command ieee_eui64_t CC2420Config.getExtAddr() {
-    return call LocalIeeeEui64.getId();
+    return m_ext_addr;
   }
 
   async command uint16_t CC2420Config.getShortAddr() {
@@ -508,7 +516,8 @@ implementation {
     nxle_uint16_t id[ 6 ];
 
     atomic {
-      *((ieee_eui64_t *)&id[0]) = m_ext_addr;
+      /* Eui-64 is stored in big endian */
+      memcpy((uint8_t *)id, m_ext_addr.data, 8);
       id[ 4 ] = m_pan;
       id[ 5 ] = m_short_addr;
     }
