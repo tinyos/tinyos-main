@@ -28,12 +28,12 @@ module UdpP {
   uint16_t alloc_lport(uint8_t clnt) {
     int i, done = 0;
     uint16_t compare = htons(last_localport);
-    last_localport = (last_localport < LOCAL_PORT_START) ? last_localport + 1 : LOCAL_PORT_START;
+    last_localport = (last_localport < LOCAL_PORT_STOP) ? last_localport + 1 : LOCAL_PORT_START;
     while (!done) {
       done = 1;
       for (i = 0; i < N_CLIENTS; i++) {
         if (local_ports[i] == compare) {
-          last_localport = (last_localport < LOCAL_PORT_START) ? last_localport + 1 : LOCAL_PORT_START;
+          last_localport = (last_localport < LOCAL_PORT_STOP) ? last_localport + 1 : LOCAL_PORT_START;
           compare = htons(last_localport);
           done = 0;
           break;
