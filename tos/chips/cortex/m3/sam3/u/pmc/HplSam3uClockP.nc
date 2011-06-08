@@ -34,6 +34,7 @@
  * systems.
  *
  * @author Thomas Schmid
+ * @author Kevin Klues
  */
 
 #include "sam3upmchardware.h"
@@ -92,243 +93,139 @@ implementation
        return SUCCESS;
     }
 
-    async command error_t HplSam3Clock.mckInit48()
+    inline error_t mckInit(uint8_t speed)
     {
-        pmc_mor_t mor;
-        pmc_mckr_t mckr;
-        pmc_pllar_t pllar;
-        uint32_t timeout = 0;
-
-       // Check if MCK source is RC or XT
-        if(PMC->mor.bits.moscsel == 0)
-        {
-            // it is RC, turn on XT
-            mor.flat = 0; // make sure it is zreoed out
-            mor.bits.key = PMC_MOR_KEY;
-            mor.bits.moscxtst = 0x3F; // main oscillator startup time
-            mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
-            mor.bits.moscxten = 1;    // main crystal oscillator enable
-            PMC->mor = mor;
-
-            timeout = 0;
-            while (!(PMC->sr.bits.moscxts) && (timeout++ < CLOCK_TIMEOUT));
-        }
-
-        // Switch to XT
-        mor.flat = 0; // make sure it is zeroed
-        mor.bits.key = PMC_MOR_KEY;
-        mor.bits.moscxtst = 0x3F;
-        mor.bits.moscrcen = 1;
-        mor.bits.moscxten = 1;
-        mor.bits.moscsel = 1;
-        PMC->mor = mor;
-        timeout = 0;
-        while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
-        mckr = PMC->mckr;
-        mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        // Initialize PLLA
-        pllar.flat = 0; // make sure it is zeroed out
-        pllar.bits.bit29 = 1; // we always have to do this!
-        pllar.bits.mula = 0x3; // multiplication is MULA+1 => 12x4 = 48MHz
-        pllar.bits.pllacount = 0x3F;
-        pllar.bits.diva = 0x1; // divider is bypassed
-        //pllar.bits.stmode = PMC_PLLAR_STMODE_FAST_STARTUP; // no longer exists!
-        PMC->pllar = pllar;
-        timeout = 0;
-        while (!(PMC->sr.bits.locka) && (timeout++ < CLOCK_TIMEOUT));
-
-        // Switch to fast clock
-        mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        mckr.bits.pres = PMC_MCKR_PRES_DIV_1;
-        mckr.bits.css = PMC_MCKR_CSS_PLLA_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        signal HplSam3Clock.mainClockChanged();
-
-        return SUCCESS;
-    }
-
-    async command error_t HplSam3Clock.mckInit84()
-    {
-        pmc_mor_t mor;
-        pmc_mckr_t mckr;
-        pmc_pllar_t pllar;
-        uint32_t timeout = 0;
-
-       // Check if MCK source is RC or XT
-        if(PMC->mor.bits.moscsel == 0)
-        {
-            // it is RC, turn on XT
-            mor.flat = 0; // make sure it is zreoed out
-            mor.bits.key = PMC_MOR_KEY;
-            mor.bits.moscxtst = 0x3F; // main oscillator startup time
-            mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
-            mor.bits.moscxten = 1;    // main crystal oscillator enable
-            PMC->mor = mor;
-
-            timeout = 0;
-            while (!(PMC->sr.bits.moscxts) && (timeout++ < CLOCK_TIMEOUT));
-        }
-
-        // Switch to XT
-        mor.flat = 0; // make sure it is zeroed
-        mor.bits.key = PMC_MOR_KEY;
-        mor.bits.moscxtst = 0x3F;
-        mor.bits.moscrcen = 1;
-        mor.bits.moscxten = 1;
-        mor.bits.moscsel = 1;
-        PMC->mor = mor;
-        timeout = 0;
-        while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
-        mckr = PMC->mckr;
-        mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        // Initialize PLLA
-        pllar.flat = 0; // make sure it is zeroed out
-        pllar.bits.bit29 = 1; // we always have to do this!
-        pllar.bits.mula = 0x6; // multiplication is MULA+1 => 12x7 = 84MHz
-        pllar.bits.pllacount = 0x3F;
-        pllar.bits.diva = 0x1; // divider is bypassed
-        //pllar.bits.stmode = PMC_PLLAR_STMODE_FAST_STARTUP;
-        PMC->pllar = pllar;
-        timeout = 0;
-        while (!(PMC->sr.bits.locka) && (timeout++ < CLOCK_TIMEOUT));
-
-        // Switch to fast clock
-        mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        mckr.bits.pres = PMC_MCKR_PRES_DIV_1;
-        mckr.bits.css = PMC_MCKR_CSS_PLLA_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        signal HplSam3Clock.mainClockChanged();
-        return SUCCESS;
-    }
-
-    async command error_t HplSam3Clock.mckInit96()
-    {
-        pmc_mor_t mor;
-        pmc_mckr_t mckr;
-        pmc_pllar_t pllar;
-        uint32_t timeout = 0;
-
-       // Check if MCK source is RC or XT
-        if(PMC->mor.bits.moscsel == 0)
-        {
-            // it is RC, turn on XT
-            mor.flat = 0; // make sure it is zreoed out
-            mor.bits.key = PMC_MOR_KEY;
-            mor.bits.moscxtst = 0x3F; // main oscillator startup time
-            mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
-            mor.bits.moscxten = 1;    // main crystal oscillator enable
-            PMC->mor = mor;
-
-            timeout = 0;
-            while (!(PMC->sr.bits.moscxts) && (timeout++ < CLOCK_TIMEOUT));
-        }
-
-        // Switch to XT
-        mor.flat = 0; // make sure it is zeroed
-        mor.bits.key = PMC_MOR_KEY;
-        mor.bits.moscxtst = 0x3F;
-        mor.bits.moscrcen = 1;
-        mor.bits.moscxten = 1;
-        mor.bits.moscsel = 1;
-        PMC->mor = mor;
-        timeout = 0;
-        while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
-        mckr = PMC->mckr;
-        mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        // Initialize PLLA
-        pllar.flat = 0; // make sure it is zeroed out
-        pllar.bits.bit29 = 1; // we always have to do this!
-        pllar.bits.mula = 0x7; // multiplication is MULA+1 => 12x8 = 96MHz
-        pllar.bits.pllacount = 0x3F;
-        pllar.bits.diva = 0x1; // divider is bypassed
-        //pllar.bits.stmode = PMC_PLLAR_STMODE_FAST_STARTUP;
-        PMC->pllar = pllar;
-        timeout = 0;
-        while (!(PMC->sr.bits.locka) && (timeout++ < CLOCK_TIMEOUT));
-
-        // Switch to fast clock
-        mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        mckr.bits.pres = PMC_MCKR_PRES_DIV_1;
-        mckr.bits.css = PMC_MCKR_CSS_PLLA_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        signal HplSam3Clock.mainClockChanged();
-        return SUCCESS;
-    }
-
-
-    async command error_t HplSam3Clock.mckInit4RC(){
       pmc_mor_t mor;
       pmc_mckr_t mckr;
       pmc_pllar_t pllar;
       uint32_t timeout = 0;
 
+      if(speed == 48) speed = 3;
+      else if(speed == 84) speed = 6;
+      else if(speed == 96) speed = 7;
+      else return FAIL;
+
       // Check if MCK source is RC or XT
-      if(PMC->mor.bits.moscsel == 1){
-	// it is XT, turn on RC
-	mor.flat = 0; // make sure it is zreoed out
-	mor.bits.key = PMC_MOR_KEY;
-	mor.bits.moscrcf = 0;     // select 4 MHz RC 
-	mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
-	mor.bits.moscxten = 1;    // main crystal oscillator enable
-	PMC->mor = mor;
-	timeout = 0;
-	while (!(PMC->sr.bits.moscrcs) && (timeout++ < 0xFFFFFFFF));
+      if(PMC->mor.bits.moscsel == 0)
+      {
+        // it is RC, turn on XT
+        mor.flat = 0; // make sure it is zreoed out
+        mor.bits.key = PMC_MOR_KEY;
+        mor.bits.moscxtst = 0x3F; // main oscillator startup time
+        mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
+        mor.bits.moscxten = 1;    // main crystal oscillator enable
+        PMC->mor = mor;
+
+        timeout = 0;
+        while (!(PMC->sr.bits.moscxts) && (timeout++ < CLOCK_TIMEOUT));
       }
 
+      // Switch to XT
+      mor.flat = 0; // make sure it is zeroed
+      mor.bits.key = PMC_MOR_KEY;
+      mor.bits.moscxtst = 0x3F;
+      mor.bits.moscrcen = 1;
+      mor.bits.moscxten = 1;
+      mor.bits.moscsel = 1;
+      PMC->mor = mor;
+      timeout = 0;
+      while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
+      mckr = PMC->mckr;
+      mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
+      PMC->mckr = mckr;
+      timeout = 0;
+      while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
+
+      // Initialize PLLA
+      pllar.flat = 0; // make sure it is zeroed out
+      pllar.bits.bit29 = 1; // we always have to do this!
+      pllar.bits.mula = speed; // multiplication is MULA+1 => 12x(speed+1)
+      pllar.bits.pllacount = 0x3F;
+      pllar.bits.diva = 0x1; // divider is bypassed
+      //pllar.bits.stmode = PMC_PLLAR_STMODE_FAST_STARTUP;
+      PMC->pllar = pllar;
+      timeout = 0;
+      while (!(PMC->sr.bits.locka) && (timeout++ < CLOCK_TIMEOUT));
+
+      // Switch to fast clock
+      mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
+      PMC->mckr = mckr;
+      timeout = 0;
+      while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
+
+      mckr.bits.pres = PMC_MCKR_PRES_DIV_1;
+      mckr.bits.css = PMC_MCKR_CSS_PLLA_CLOCK;
+      PMC->mckr = mckr;
+      timeout = 0;
+      while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
+
+      signal HplSam3Clock.mainClockChanged();
+      return SUCCESS;
+    }
+
+    async command error_t HplSam3Clock.mckInit48()
+    {
+        return mckInit(48);
+    }
+
+    async command error_t HplSam3Clock.mckInit84()
+    {
+        return mckInit(84);
+    }
+
+    async command error_t HplSam3Clock.mckInit96()
+    {
+        return mckInit(96);
+    }
+
+    inline error_t mckInitRC(uint8_t speed)
+    {
+      pmc_mor_t mor;
+      pmc_mckr_t mckr;
+      pmc_pllar_t pllar;
+      uint32_t timeout = 0;
+
+      if(speed == 4) speed = 0;
+      else if(speed == 8) speed = 1;
+      else if(speed == 12) speed = 2;
+      else return FAIL;
+
+      // Check if MCK source is RC or XT
+      if(PMC->mor.bits.moscsel == 1)
+      {
+          // it is XT, turn on RC
+          mor.flat = 0; // make sure it is zreoed out
+          mor.bits.key = PMC_MOR_KEY;
+          mor.bits.moscrcf = speed; // select proper MHz RC 
+          mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
+          mor.bits.moscxten = 1;    // main crystal oscillator enable
+          PMC->mor = mor;
+ 
+          timeout = 0;
+          while (!(PMC->sr.bits.moscrcs) && (timeout++ < CLOCK_TIMEOUT));
+      }
+ 
       // Switch to RC
       mor.flat = 0; // make sure it is zeroed
       mor.bits.key = PMC_MOR_KEY;
-      mor.bits.moscrcf = 0;     // select 4 MHz RC 
+      mor.bits.moscrcf = 3;     // select 12 MHz RC 
       mor.bits.moscrcen = 1;
       mor.bits.moscxten = 1;
       mor.bits.moscsel = 0;
       PMC->mor = mor;
       timeout = 0;
-      while (!(PMC->sr.bits.moscsels) && (timeout++ < 0xFFFFFFFF));
+      while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
       mckr = PMC->mckr;
       mckr.bits.pres = PMC_MCKR_PRES_DIV_1;
       mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
       PMC->mckr = mckr;
       timeout = 0;
-      while (!(PMC->sr.bits.mckrdy) && (timeout++ < 0xFFFFFFFF));
-
+      while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
+ 
       // turn off external clock
       mor.bits.moscxten = 0;
       PMC->mor = mor;
-
+      
       // Turn off PLL
       pllar.flat = 0; // make sure it is zeroed out
       pllar.bits.bit29 = 1; // this always has to be written as 1!
@@ -336,60 +233,21 @@ implementation
 
       signal HplSam3Clock.mainClockChanged();
       return SUCCESS;
-
     }
 
+    async command error_t HplSam3Clock.mckInit4RC()
+    {
+      return mckInitRC(4);
+    }
+
+    async command error_t HplSam3Clock.mckInit8RC()
+    {
+      return mckInitRC(8);
+    }
 
     async command error_t HplSam3Clock.mckInit12RC()
     {
-        pmc_mor_t mor;
-        pmc_mckr_t mckr;
-        pmc_pllar_t pllar;
-        uint32_t timeout = 0;
-
-        // Check if MCK source is RC or XT
-        if(PMC->mor.bits.moscsel == 1)
-        {
-            // it is XT, turn on RC
-            mor.flat = 0; // make sure it is zreoed out
-            mor.bits.key = PMC_MOR_KEY;
-            mor.bits.moscrcf = 3;     // select 12 MHz RC 
-            mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
-            mor.bits.moscxten = 1;    // main crystal oscillator enable
-            PMC->mor = mor;
-
-            timeout = 0;
-            while (!(PMC->sr.bits.moscrcs) && (timeout++ < CLOCK_TIMEOUT));
-        }
-
-        // Switch to RC
-        mor.flat = 0; // make sure it is zeroed
-        mor.bits.key = PMC_MOR_KEY;
-        mor.bits.moscrcf = 3;     // select 12 MHz RC 
-        mor.bits.moscrcen = 1;
-        mor.bits.moscxten = 1;
-        mor.bits.moscsel = 0;
-        PMC->mor = mor;
-        timeout = 0;
-        while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
-        mckr = PMC->mckr;
-        mckr.bits.pres = PMC_MCKR_PRES_DIV_1;
-        mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
-        PMC->mckr = mckr;
-        timeout = 0;
-        while (!(PMC->sr.bits.mckrdy) && (timeout++ < CLOCK_TIMEOUT));
-
-        // turn off external clock
-        mor.bits.moscxten = 0;
-        PMC->mor = mor;
-        
-        // Turn off PLL
-        pllar.flat = 0; // make sure it is zeroed out
-        pllar.bits.bit29 = 1; // this always has to be written as 1!
-        PMC->pllar = pllar;
-
-        signal HplSam3Clock.mainClockChanged();
-        return SUCCESS;
+      return mckInitRC(12);
     }
 
     async command uint32_t HplSam3Clock.getMainClockSpeed()

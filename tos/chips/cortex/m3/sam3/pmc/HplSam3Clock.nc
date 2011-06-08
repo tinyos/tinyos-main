@@ -33,6 +33,7 @@
  * This is an interface to configure the master clock system
  *
  * @author Thomas Schmid
+ * @author Kevin Klues
  */
 
 interface HplSam3Clock
@@ -61,6 +62,12 @@ interface HplSam3Clock
      * Initialize the clock to MCK=96MHz sourced from external Oscillator
      */
     async command error_t mckInit96();
+
+    /**
+     * Initialize the clock to MCK=8MHz sourced from internal RC for fast
+     * startup
+     */
+    async command error_t mckInit8RC();
 
     /**
      * Initialize the clock to MCK=12MHz sourced from internal RC for fast
