@@ -45,7 +45,7 @@ configuration CoapBlipC {
   components CoapBlipP;
   components LibCoapAdapterC;
   components IPStackC;
-  
+
   CoapBlipP.Boot -> MainC;
   CoapBlipP.Leds -> LedsC;
   CoapBlipP.RadioControl ->  IPStackC;
@@ -134,5 +134,8 @@ configuration CoapBlipC {
   CoapUdpClientC.LibCoapClient -> LibCoapAdapterC.LibCoapClient;
   CoapUdpClientC.Init <- MainC.SoftwareInit;
   LibCoapAdapterC.UDPClient -> UdpClientSocket;
+
+  components new TimerMilliC() as CoAPClientStartTimer;
+  CoapBlipP.CoAPClientStartTimer -> CoAPClientStartTimer;
 #endif
   }

@@ -55,9 +55,10 @@ module CoapBlipP {
 #endif
 #ifdef COAP_CLIENT_ENABLED
     interface CoAPClient;
+    interface Timer<TMilli> as CoAPClientStartTimer;
+    //interface IPConnectivity;
 #endif
     interface Leds;
-    interface IPConnectivity;
   }
   provides interface Init;
 } implementation {
@@ -73,7 +74,9 @@ module CoapBlipP {
   }
 
   event void Boot.booted() {
+#ifdef COAP_SERVER_ENABLED
     uint8_t i;
+#endif
     call RadioControl.start();
 #ifdef PRINTFUART_ENABLED
     dbg("Boot", "booted %i start\n", TOS_NODE_ID);
@@ -81,7 +84,6 @@ module CoapBlipP {
 #ifdef COAP_SERVER_ENABLED
 #ifdef COAP_RESOURCE_KEY
     if (call Mount.mount() == SUCCESS) {
-
 #ifdef PRINTFUART_ENABLED
       dbg("Boot", "CoapBlipP.Mount successful\n");
 #endif
@@ -90,7 +92,7 @@ module CoapBlipP {
     // needs to be before registerResource to setup context:
     call CoAPServer.bind(COAP_SERVER_PORT);
 
-    for (i=0; i < NUM_URIS+1; i++) {
+    for (i=0; i < NUM_URIS; i++) {
       call CoAPServer.registerResource(uri_key_map[i].uri,
 				       uri_key_map[i].urilen - 1,
 				       uri_key_map[i].mediatype,
@@ -100,6 +102,9 @@ module CoapBlipP {
     }
 #endif
 
+#ifdef COAP_CLIENT_ENABLED
+    call CoAPClientStartTimer.startOneShot(1024 * 10);
+#endif
   }
 
 #if defined (COAP_SERVER_ENABLED) && defined (COAP_RESOURCE_KEY)
@@ -116,8 +121,9 @@ module CoapBlipP {
   event void RadioControl.stopDone(error_t e) {
   }
 
-  event void IPConnectivity.prefixAvailable() {
 #ifdef COAP_CLIENT_ENABLED
+  //event void IPConnectivity.prefixAvailable() {
+  event void CoAPClientStartTimer.fired() {
     struct sockaddr_in6 sa6;
     coap_list_t *optlist = NULL;
     uint8_t i;
@@ -139,10 +145,8 @@ module CoapBlipP {
 
       call CoAPClient.request(&sa6, COAP_REQUEST_GET, optlist);
     }
-#endif
   }
 
-#ifdef COAP_CLIENT_ENABLED
   event void CoAPClient.request_done() {
     //TODO: handle the request_done
   };
