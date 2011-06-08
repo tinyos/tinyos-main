@@ -1,0 +1,22 @@
+# -*- makefile -*-
+
+PFLAGS += -DBIG_ENDIAN=4321
+PFLAGS += -DLITTLE_ENDIAN=1234
+PFLAGS += -DBYTE_ORDER=LITTLE_ENDIAN
+#PFLAGS += -DBYTE_ORDER=BIG_ENDIAN
+PFLAGS += -DNDEBUG=1
+
+PFLAGS+=-I$(TOSROOT)/tos/lib/net/coap/
+PFLAGS+=-I$(TOSROOT)/tos/lib/app/coap/interfaces/
+
+PFLAGS+=-I$(TOSROOT)/support/sdk/c/coap
+PFLAGS+=$(TOSROOT)/tos/lib/net/coap/tinyos_net.c
+PFLAGS+=$(TOSROOT)/support/sdk/c/coap/encode.c
+PFLAGS+=$(TOSROOT)/support/sdk/c/coap/list.c
+PFLAGS+=$(TOSROOT)/support/sdk/c/coap/net.c
+PFLAGS+=$(TOSROOT)/support/sdk/c/coap/pdu.c
+PFLAGS+=$(TOSROOT)/support/sdk/c/coap/str.c
+PFLAGS+=$(TOSROOT)/support/sdk/c/coap/subscribe.c
+PFLAGS+=$(TOSROOT)/support/sdk/c/coap/uri.c
+
+

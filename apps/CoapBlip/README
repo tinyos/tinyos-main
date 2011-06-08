@@ -1,0 +1,15 @@
+A CoAP application based on the TinyOS blip stack and libcoap.
+
+Prepare libcoap:
+
+$ cd ../../support/sdk/c/coap
+$ autoconf
+$ ./configure
+$ make
+
+To build, use the 'blip' make target extra
+
+$ make <platform> blip coap ...
+
+See http://docs.tinyos.net/index.php/CoAP for further steps...
+

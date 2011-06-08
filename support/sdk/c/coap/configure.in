@@ -1,0 +1,55 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+#
+# Copyright (C) 2010 Olaf Bergmann <bergmann@tzi.org>
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+AC_PREREQ([2.65])
+AC_INIT([libcoap], [0.07])
+AC_CONFIG_SRCDIR([coap.h])
+
+# Checks for programs.
+AC_PROG_MAKE_SET
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_PATH_PROG(DOXYGEN, doxygen, [:])
+
+AC_C_BIGENDIAN
+
+# Checks for libraries.
+AC_CHECK_LIB([coap], [coap_new_pdu])
+
+AC_SEARCH_LIBS([gethostbyname], [nsl])
+AC_SEARCH_LIBS([socket], [socket])
+
+# Checks for header files.
+AC_CHECK_HEADERS([assert.h arpa/inet.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+
+# Checks for library functions.
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([memset select socket strcasecmp strrchr getaddrinfo strnlen])
+
+AC_CONFIG_HEADERS([config.h])
+
+AC_CONFIG_FILES([Makefile
+                 doc/Makefile
+                 doc/Doxyfile
+                 examples/Makefile])
+AC_OUTPUT

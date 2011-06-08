@@ -1,0 +1,49 @@
+==========================
+README.COAPBLIP
+==========================
+
+Please read the entire documentation how to set up CoAP on TinyOS
+first:
+http://docs.tinyos.net/index.php/CoAP
+
+==========================
+Example Client Usage
+==========================
+
+Starting the example client:
+
+GET:
+Request for temperature (/st) with token (3a) and binary representation
+./coap-client -m get coap://[fec0::3]:61616/st -T 3a -t binary
+
+PUT:
+Set the LED's to state 2:
+echo -e -n \\x02 | ./coap-client -m put coap://[fec0::3]:61616/l -T 3a -t binary -f -
+
+Set AES Key:
+echo -e -n \\xFF\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\x09\\x10\\x11\\x12\\x13\\x14\\x15\\x16 | ./coap-client -m put coap://[fec0::3]:61616/ck -T 3a -t binary -f -
+
+OR by creating HEX file:
+
+echo -e -n \\xFF\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\x09\\x10\\x11\\x12\\x13\\x14\\x15\\x16 >> file
+
+PUT key into storage:
+./coap-client -m put coap://[fec0::3]:61616/ck -T 3a -t binary -f file
+
+GET key for testing purpose:
+./coap-client -m get coap://[fec0::3]:61616/ck -T 3a -t binary
+
+==========================
+Troubleshooting
+==========================
+
+In case of having this problem:
+./coap-client: error while loading shared libraries: libcoap.so: cannot open shared object file: No such file or directory
+
+export LD_LIBRARY_PATH=..:$LD_LIBRARY_PATH
+
+OR
+
+add this line
+export LD_LIBRARY_PATH=$TOSROOT/support/sdk/c/coap/:$LD_LIBRARY_PATH
+to ~/.bashrc
