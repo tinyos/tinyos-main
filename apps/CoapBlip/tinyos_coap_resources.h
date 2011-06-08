@@ -54,7 +54,6 @@ typedef struct key_uri
 //user defined resources
 
 enum {
-    KEY_DUMMY,
 #if defined (COAP_RESOURCE_TEMP) || defined (COAP_RESOURCE_ALL)
     KEY_TEMP,
 #endif
@@ -96,9 +95,7 @@ typedef nx_struct config_t
   nx_uint8_t KEY128[16];
 } config_t;
 
-key_uri_t uri_key_map[NUM_URIS+1] = {
-    { KEY_DUMMY,  "_",  sizeof("_"),
-      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
+key_uri_t uri_key_map[NUM_URIS] = {
 #ifdef COAP_RESOURCE_TEMP
     { KEY_TEMP, "st", sizeof("st"),
       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
