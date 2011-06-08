@@ -8,7 +8,7 @@ COMPONENT=UDPEchoC
 # CFLAGS += -DCC2420_DEF_RFPOWER=4 -DENABLE_SPI0_DMA
 
 # enable dma on the radio
-PFLAGS += -DENABLE_SPI0_DMA
+# PFLAGS += -DENABLE_SPI0_DMA
 
 # you can compile with or without a routing protocol... of course,
 # without it, you will only be able to use link-local communication.
@@ -33,7 +33,6 @@ PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(TOSDIR)/lib/net/rpl
 # their ipv6 address by combining this with TOS_NODE_ID
 PFLAGS += -DIN6_PREFIX=\"fec0::\"
 
-PFLAGS += -I$(TOSDIR)/lib/printf
 # CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
 
 include $(MAKERULES)

@@ -17,7 +17,9 @@ check:
 	./run.sh
 
 clean:
-	rm $(TARGETS)
+	rm -f $(TARGETS) *.o
+
+distclean: clean
 
 test_bit_range_zero_p: test_bit_range_zero_p.c $(LIB_CONTEXT)
 	$(CC) -o $@ $(CFLAGS) $< $(LIB_CONTEXT) 

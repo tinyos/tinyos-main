@@ -20,7 +20,7 @@
  *
  */
 
-#include <ip.h>
+#include <lib6lowpan/ip.h>
 #include <IPDispatch.h>
 #include <icmp6.h>
 #include "Shell.h"
@@ -115,7 +115,7 @@ module BinaryShellP {
   }
 
   event void UDP.recvfrom(struct sockaddr_in6 *from, void *data, 
-                          uint16_t len, struct ip_metadata *meta) {
+                          uint16_t len, struct ip6_metadata *meta) {
     nx_struct cmd_payload *payload = (nx_struct cmd_payload *)data;
     memcpy(&session_endpoint, from, sizeof(struct sockaddr_in6));
     signal BinaryCommand.dispatch[payload->id](payload, len);

@@ -80,7 +80,7 @@ module NWProgP {
 
   event void Recv.recvfrom(struct sockaddr_in6 *from,
                            void *payload, uint16_t len,
-                           struct ip_metadata *meta) {
+                           struct ip6_metadata *meta) {
     prog_req_t *req = (prog_req_t *)payload;
     uint8_t imgNum = imgNum2volumeId(req->imgno);
     error_t error = FAIL;

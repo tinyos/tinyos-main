@@ -20,7 +20,7 @@
  *
  */
 
-#include <6lowpan.h>
+#include <lib6lowpan/6lowpan.h>
 
 configuration BinaryShellC {
   provides interface BinaryCommand[uint16_t];
@@ -34,8 +34,8 @@ configuration BinaryShellC {
 
   BinaryShellP.UDP -> UdpSocketC;
 
-  components ICMPResponderC;
-  BinaryShellP.ICMPPing -> ICMPResponderC.ICMPPing[unique("PING")];
+  components ICMPPingC;
+  BinaryShellP.ICMPPing -> ICMPPingC.ICMPPing[unique("PING")];
 
 #if defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
   components CounterMilli32C;

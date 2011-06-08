@@ -14,7 +14,8 @@ ifndef LOWPAN_ROOT
   LOWPAN_ROOT=$(TOSROOT)
 endif
 
-PFLAGS+=-I$(TOSROOT)/tos/lib/net/
+PFLAGS+=-I$(TOSDIR)/lib/net/
+PFLAGS+=-I$(TOSDIR)/lib/printf
 PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/interfaces/ 

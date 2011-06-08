@@ -42,6 +42,7 @@ enum  {
 
 nx_struct cmd_payload {
   nx_uint16_t id;
+  nx_uint8_t  forward;
   nx_uint8_t  data[0];
 };
 
