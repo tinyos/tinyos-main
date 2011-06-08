@@ -36,7 +36,7 @@
 // only needed for blip1.0 and ip-driver, because those were run on the
 // host computer
 
-// #if ! HAVE_NETINET_IN_H
+#if ! PC
 // update to use netinet/in definition of an IPv6 address; this is a
 //  lot more elegent.
 struct in6_addr
@@ -56,9 +56,9 @@ struct sockaddr_in6 {
   uint16_t       sin6_port;
   struct in6_addr sin6_addr;
 };
-// #else 
-// #include <netinet/in.h>
-// #endif
+#else
+#include <netinet/in.h>
+#endif
 
 /*
  * Definition for internet protocol version 6.
