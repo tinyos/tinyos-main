@@ -64,6 +64,7 @@ configuration IPDispatchC {
 #ifdef LOW_POWER_LISTENING
    IPDispatchP.LowPowerListening -> MessageC;
 #endif
+  MainC.SoftwareInit -> IPDispatchP.Init;
 
   IPDispatchP.PacketLink -> MessageC;
   IPDispatchP.ReadLqi -> ReadLqiC;
@@ -88,7 +89,7 @@ configuration IPDispatchC {
 /*   components MulticastP; */
 /*   components new TrickleTimerMilliC(2, 30, 2, 1); */
 /*   IP = MulticastP.IP; */
-  
+
 /*   MainC.SoftwareInit -> MulticastP.Init; */
 /*   MulticastP.MulticastRx -> IPDispatchP.Multicast; */
 /*   MulticastP.HopHeader -> IPExtensionP.HopByHopExt[0]; */

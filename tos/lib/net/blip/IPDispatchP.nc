@@ -77,6 +77,7 @@ module IPDispatchP {
     interface Leds;
 
   }
+  provides interface Init;
 } implementation {
 
 #ifndef BLIP_L2_RETRIES
@@ -196,10 +197,18 @@ void SENDINFO_DECR(struct send_info *si) {
     signal SplitControl.stopDone(error);
   }
 
+  command error_t Init.init() {
+    // ip_malloc_init needs to be in init, not booted, because
+    // context for coap is initialised in init
+    ip_malloc_init();
+    return SUCCESS;
+  }
+
   event void Boot.booted() {
     call BlipStatistics.clear();
 
-    ip_malloc_init();
+    //commented out since already done in Init.init()
+    //ip_malloc_init();
 
     /* set up our reconstruction cache */
     table_init(&recon_cache, recon_data, sizeof(struct lowpan_reconstruct), N_RECONSTRUCTIONS);
