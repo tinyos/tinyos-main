@@ -61,8 +61,8 @@ DELUGE_IDENT_SIZE   = 128
 
 NWPROG_PORT = 5213
 NWPROG_PKT_SIZE = 64
-NWPROG_REQ_FMT = "!BBL"
-NWPROG_REPLY_FMT = "!BBBBL"
+NWPROG_REQ_FMT = "!BBH"
+NWPROG_REPLY_FMT = "!BBBBH"
 
 ERROR_SUCCESS = 0
 nRetries = 3
@@ -73,14 +73,14 @@ class CommandFailedException:
 def send_command(cmd_str, retries):
     s.sendto(cmd_str, (remote, NWPROG_PORT))
     s.settimeout(3)
-    (real_cmd, real_imgno, real_offset) = struct.unpack(NWPROG_REQ_FMT, cmd_str[0:6])
+    (real_cmd, real_imgno, real_offset) = struct.unpack(NWPROG_REQ_FMT, cmd_str[0:4])
     try:
         data, addr = s.recvfrom(1024)
         # make sure this is the guy we're programming
         if (addr[0] == remote):
             (error, pack, cmd, imgno, offset) = struct.unpack(NWPROG_REPLY_FMT, data)
             if error != ERROR_SUCCESS or real_offset != offset or real_imgno != imgno:
-                print "WARNING: received error while sending block; retrying"
+                print "WARNING: received error while sending block; retrying (%i)" % error
                 raise socket.timeout
             else: return data
         else:
@@ -105,7 +105,7 @@ def read(imgNum, unused=None):
 
         data = send_command(sreqpkt, 5)
         if data != False:
-            (error, pack, cmd, imgno, offset) = struct.unpack(NWPROG_REPLY_FMT, data[0:8])
+            (error, pack, cmd, imgno, offset) = struct.unpack(NWPROG_REPLY_FMT, data[0:6])
             if offset == pkt_offset:
                 for c in data[6:]:
                     print >>sys.stderr, ord(c)
