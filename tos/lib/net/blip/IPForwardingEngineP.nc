@@ -18,6 +18,7 @@
 module IPForwardingEngineP {
   provides {
     interface ForwardingTable;
+    interface ForwardingTableEvents;
     interface ForwardingEvents[uint8_t ifindex];
     interface IP;
     interface IP as IPRaw;
@@ -28,7 +29,9 @@ module IPForwardingEngineP {
     interface IPAddress;
     interface IPPacket;
 
+#ifdef PRINTFUART_ENABLED
     interface Timer<TMilli> as PrintTimer;
+#endif
     interface Leds;
   }
 } implementation {
@@ -90,6 +93,11 @@ module IPForwardingEngineP {
          different prefix length, we allocate a new slot in the
          table. */
       entry = alloc_entry(prefix_len_bits);
+
+      /* got a default route and we didn't already have one */
+      if (prefix_len_bits == 0) {
+        signal ForwardingTableEvents.defaultRouteAdded();
+      }
     }
     if (entry == NULL) 
       return ROUTE_INVAL_KEY;
@@ -106,6 +114,11 @@ module IPForwardingEngineP {
     int i;
     for (i = 0; i < ROUTE_TABLE_SZ; i++) {
       if (routing_table[i].key == key) {
+        /* remove the default route? */
+        if (routing_table[i].prefixlen == 0) {
+          signal ForwardingTableEvents.defaultRouteRemoved();
+        }
+
         memmove((void *)&routing_table[i], (void *)&routing_table[i+1],
                 sizeof(struct route_entry) * (ROUTE_TABLE_SZ - i - 1));
         return SUCCESS;
@@ -154,9 +167,11 @@ module IPForwardingEngineP {
 
     struct route_entry *next_hop_entry = 
       call ForwardingTable.lookupRoute(pkt->ip6_hdr.ip6_dst.s6_addr, 128);
-
+    
+#ifdef PRINTFUART_ENABLED
     if (!call PrintTimer.isRunning())
       call PrintTimer.startPeriodic(10000);
+#endif
 
     if (call IPAddress.isLocalAddress(&pkt->ip6_hdr.ip6_dst) && 
         pkt->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
@@ -275,6 +290,7 @@ module IPForwardingEngineP {
     }
   }
 
+#ifdef PRINTFUART_ENABLED
   event void PrintTimer.fired() {
     int i;
     printf("\ndestination                 gateway            interface\n");
@@ -288,6 +304,7 @@ module IPForwardingEngineP {
     }
     printf("\n");
   }
+#endif
 
   default event bool ForwardingEvents.approve[uint8_t idx](struct ip6_hdr *iph,
                                                           struct ip6_route *rhdr,
@@ -318,6 +335,9 @@ module IPForwardingEngineP {
 
   default event void IPRaw.recv(struct ip6_hdr *iph, void *payload,
                                 size_t len, struct ip6_metadata *meta) {}
+
+  default event void ForwardingTableEvents.defaultRouteAdded() {}
+  default event void ForwardingTableEvents.defaultRouteRemoved() {}
 
   event void IPAddress.changed(bool global_valid) {}
 }

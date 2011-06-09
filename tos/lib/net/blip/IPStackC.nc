@@ -8,12 +8,9 @@
  * Protocol: dispatch based on the final next header value in an
  * ipv6_packet.
  *
- * Routing: determine the next-hop for a packet.  If it needs to be
- * reencapsulated in order to insert a routing header, it should do
- * this as well.  Currently, the routing protocol must also implement
- * a forwarding engine; since the lowest level already queues, this
- * isn't too onerous.  At the bottom, packets come out with a
- * link-local next hop address attached.
+ * Routing: determine the next-hop for a packet as a link-local
+ * address.  This is accomplished by looking up the destination
+ * address in the forwarding table.
  *
  * NeighborDiscovery: responsible for address resolution.  Very
  * simple, since only link-local addresses are considered to be
@@ -35,6 +32,7 @@ configuration IPStackC {
     interface IP[uint8_t nxt_hdr];
     interface IP as IPRaw;
     interface ForwardingTable;
+    interface ForwardingTableEvents;
     interface ForwardingEvents[uint8_t ifindex];
   }
   uses {
@@ -55,6 +53,7 @@ configuration IPStackC {
   IPStackControlP.SubSplitControl -> IPDispatchC;
   
   ForwardingTable = FwdP;
+  ForwardingTableEvents = FwdP;
   ForwardingEvents = FwdP;
 
   /* wiring up of the IP stack */
@@ -78,8 +77,6 @@ configuration IPStackC {
   FwdP.IPPacket -> IPPacketP;
   IPStackControlP.IPAddress -> IPAddressC;
 
-  components new TimerMilliC();
-  FwdP.PrintTimer -> TimerMilliC;
   FwdP.Leds -> LedsC;
 
 #if defined(IN6_PREFIX)
@@ -90,4 +87,10 @@ configuration IPStackC {
   components Dhcp6RelayC;
   components Dhcp6ClientC;
 #endif
+
+#ifdef PRINTFUART_ENABLED
+  components new TimerMilliC();
+  FwdP.PrintTimer -> TimerMilliC;
+#endif
+
 }
