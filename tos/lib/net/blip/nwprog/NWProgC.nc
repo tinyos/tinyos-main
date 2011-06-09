@@ -42,12 +42,8 @@ configuration NWProgC {
   NWProgP.RebootTimer -> TimerMilliC;
 
   // deluge metadata stuff 
-  components DelugeMetadataP;
-  NWProgP.DelugeMetadata -> DelugeMetadataP;
-
-  DelugeMetadataP.Boot -> MainC;
-  DelugeMetadataP.BlockRead[VOLUME_GOLDENIMAGE] -> BlockDeluge0;
-  DelugeMetadataP.BlockRead[VOLUME_DELUGE1] -> BlockDeluge1;
+  components new DelugeMetadataClientC();
+  NWProgP.DelugeMetadata -> DelugeMetadataClientC;
 
 #if defined(PLATFORM_TELOSB)
   NWProgP.StorageMap[VOLUME_GOLDENIMAGE] -> BlockDeluge0;
