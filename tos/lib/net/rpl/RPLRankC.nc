@@ -83,7 +83,7 @@ configuration RPLRankC{
 implementation {
   components RPLRankP, IPAddressC;
   components RPLRoutingEngineC;
-  components IPStackC;
+  components IPStackC, IPPacketC;
   components LedsC;
 
   RPLRank = RPLRankP;
@@ -96,6 +96,7 @@ implementation {
   RPLRankP.IPAddress -> IPAddressC;
   //RPLRankP.ForwardingTable -> IPStackC;
   RPLRankP.ForwardingEvents -> IPStackC.ForwardingEvents[RPL_IFACE];
+  RPLRankP.IPPacket -> IPPacketC;
 
 #ifdef RPL_OF_MRHOF
   components RPLMRHOFP, RPLDAORoutingEngineC;

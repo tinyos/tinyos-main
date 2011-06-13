@@ -109,7 +109,7 @@ enum {
 
 enum {
   RPL_IFACE = ROUTE_IFACE_154,
-  RPL_HBH_RANK_TYPE = 243,
+  RPL_HBH_RANK_TYPE = 0x6b,     /* per draft-ietf-6man-rpl-option-02 */
 };
 
 struct icmpv6_header_t {
@@ -330,18 +330,24 @@ typedef struct {
 } downwards_table_t;
 
 
+nx_struct nx_ip6_ext {
+  nx_uint8_t ip6e_nxt;
+  nx_uint8_t ip6e_len;
+};
+
 /* draft-ietf-6man-rpl-option-01 */
-typedef struct {
-  struct ip6_ext ip6_ext_outer;
-  struct ip6_ext ip6_ext_inner;
+typedef nx_struct {
+  nx_struct nx_ip6_ext ip6_ext_outer;
+  nx_struct nx_ip6_ext ip6_ext_inner;
   /*
   uint8_t o_bit  : 1;
   uint8_t r_bit  : 1;
   uint8_t f_bit  : 1;
   uint8_t reserved : 5;
   */
-  uint8_t bitflag;
-  struct rpl_instance_id instance_id; // used to be instanceID 
+  nx_uint8_t bitflag;
+  // nx_struct rpl_instance_id instance_id; // used to be instanceID 
+  nx_uint8_t instance_id;
   nx_uint16_t senderRank;
 } __attribute__((packed)) rpl_data_hdr_t ;
 

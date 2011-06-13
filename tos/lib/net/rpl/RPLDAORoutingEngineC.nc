@@ -77,8 +77,8 @@ configuration RPLDAORoutingEngineC{
   components new PoolC(dao_entry_t, RPL_QUEUE_SIZE) as SendPoolP;
   DAORouting.SendPool -> SendPoolP;
 
-  components IPPacketP;
-  DAORouting.IPPacket -> IPPacketP;
+  components IPPacketC;
+  DAORouting.IPPacket -> IPPacketC;
 
   components LedsC;
   DAORouting.Leds -> LedsC;
