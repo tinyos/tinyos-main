@@ -11,6 +11,14 @@ interface IPPacket {
    * start of a given header within the packet, or -1 if it was not
    * found.
    */
-  command int findHeader(void *payload, size_t len, 
-                         uint8_t first_type, uint8_t search_type);
+  command int findHeader(struct ip_iovec *payload,
+                         uint8_t first_type, uint8_t *search_type);
+  
+  command int findTLV(struct ip_iovec *header, 
+                      int ext_offset, 
+                      uint8_t type);
+  command void delTLV(struct ip_iovec *data, 
+                      int ext_offset, 
+                      uint8_t type);
+  
 }

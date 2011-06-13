@@ -68,13 +68,14 @@ configuration IPStackC {
   /* wire in core protocols -- this is only protocol included by default */
   /* it pretty much just replies to pings... */
   components ICMPCoreP, LedsC;
-  components IPAddressC, IPPacketP;
+  components IPAddressC, IPPacketC;
   ICMPCoreP.IP -> IPProtocolsP.IP[IANA_ICMP];
   ICMPCoreP.Leds -> LedsC;
   ICMPCoreP.IPAddress -> IPAddressC;
 
   FwdP.IPAddress -> IPAddressC;
-  FwdP.IPPacket -> IPPacketP;
+  FwdP.IPPacket -> IPPacketC;
+  IPProtocolsP.IPPacket -> IPPacketC;
   IPStackControlP.IPAddress -> IPAddressC;
 
   FwdP.Leds -> LedsC;

@@ -276,8 +276,55 @@ int pack_udp(uint8_t *buf, size_t cnt, struct ip6_packet *packet, int offset) {
   return 7;
 }
 
+
+/* @type the next header value of the header we are inspecting
+ * @pkt an iovec storing the packet being compressed
+ * @offset the offset to the start of the extension header we are interested in
+ *
+ * @return the length of the header, in octets, eliding any trailing
+ * padding options. on error, 0, since the shortest possible extension
+ * header is of length 2 and that would be in the case where it
+ * contains only padding. */
+uint8_t __ipnh_real_length(uint8_t type, struct ip_iovec *pkt, int offset) {
+  int start_offset = offset, end_offset = offset + 2;
+  struct ip6_ext ext;
+  struct tlv_hdr tlv;
+  if (iov_read(pkt, offset, 2, (void *)&ext) != 2)
+    return -1;
+
+  /* if it's neither of these two types, the header length is
+     contained in the header. */
+  if (type != IPV6_HOP && type != IPV6_DEST)
+    return (ext.ip6e_len + 1) * 8;
+
+  offset += 2;
+  for (;;) {
+    if (offset >= (ext.ip6e_len + 1) * 8) break;
+    if (iov_read(pkt, offset, 2, (void *)&tlv) != 2) 
+      return -1;
+
+    if (tlv.type == IPV6_TLV_PAD1) {
+      offset += 1;
+    } else {
+      offset += 2 + tlv.len;
+      if (tlv.type != IPV6_TLV_PADN) {
+        end_offset = offset;
+      }
+    }
+  }
+
+  /* the length of the TLVs didn't match the length in the enclosing header */
+  if (offset - start_offset != (ext.ip6e_len + 1) * 8)
+    return 0;
+
+  /* length up to the first padding option encountered which was not
+     followed by a non-padding option. */
+  return end_offset - start_offset;
+}
+
 int pack_ipnh(uint8_t *dest, size_t cnt, uint8_t *type, struct ip6_packet *packet, int offset) {
   struct ip6_ext ext;
+  uint8_t real_len;
 
   /* read the ipv6 extension header out for processing */
   if (iov_read(packet->ip6_data, offset, 2, (void *)&ext) != 2)
@@ -302,6 +349,10 @@ int pack_ipnh(uint8_t *dest, size_t cnt, uint8_t *type, struct ip6_packet *packe
     return -1;
   }
 
+  real_len = __ipnh_real_length(*type, packet->ip6_data, offset);
+  if (real_len == 0)
+    return -1;
+
   /* store the next header type */
   /*  if it's compressable, we will compress it */
   *type = ext.ip6e_nxt;
@@ -316,13 +367,14 @@ int pack_ipnh(uint8_t *dest, size_t cnt, uint8_t *type, struct ip6_packet *packe
   }
 
   dest ++;
-  *dest++ = ext.ip6e_len;
+  *dest++ = real_len;
 
   /* copy the payload */
-  if (iov_read(packet->ip6_data, offset + 2, ext.ip6e_len - 2, dest) != ext.ip6e_len - 2)
+  if (iov_read(packet->ip6_data, offset + 2, real_len - 2, dest) != real_len - 2)
     return -1;
 
-  return ext.ip6e_len;
+  /* continue processing at the next header; which will ignore any padding options */
+  return (ext.ip6e_len + 1) * 8;
 }
 
 int pack_nhc_chain(uint8_t **dest, size_t cnt, struct ip6_packet *packet) {
@@ -617,19 +669,11 @@ uint8_t *unpack_udp(uint8_t *dest, uint8_t *nxt_hdr, uint8_t *buf) {
  * Unpack a single header that has been encoded using LOWPAN_NHC
  *  compression 
  *
- * NOTE: in order simplify application support, this function does NOT
- *  convert the length field of ip extension headers to the form
- *  required by RFC2460: that is, the length value remains in units of
- *  octets.  It is expected that all software within a 6lowpan network
- *  will expect this to be the case; edge routers communicating with
- *  the outside world should take care to convert the length octet
- *  when such packets are received, including removing any necessary
- *  padding options.
  */
 uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf) {
   if (((*buf) & LOWPAN_NHC_IPV6_MASK) == LOWPAN_NHC_IPV6_PATTERN) {
     struct ip6_ext *ext = (struct ip6_ext *)dest;
-    uint8_t length;
+    uint8_t length, extra;
     // decompress an ipv6 extension header
 
     // fill in the next header field of the previous header
@@ -658,15 +702,27 @@ uint8_t *unpack_ipnh(uint8_t *dest, size_t cnt, uint8_t *nxt_hdr, uint8_t *buf) 
     }
     buf += 1;
     length = *buf++;
+    extra = (8 - (length % 8)) % 8;
 
-    if (cnt < length - 2)
+    if (cnt < length + extra - 2)
       return NULL;
 
     // buf now points at the start of the extension header data
     memcpy(dest + 2, buf, length - 2);
-    ext->ip6e_len = length;
 
-    return buf + length - 2;
+    /* pad out to units of 8 octets if necessary */
+    if (*nxt_hdr == IPV6_HOP || *nxt_hdr == IPV6_DEST) {
+      if (extra == 1) {
+        /* insert a Pad1 */
+        dest[length] = IPV6_TLV_PAD1;
+      } else if (extra > 1) {
+        dest[length] = IPV6_TLV_PADN;
+        dest[length+1] = extra - 2;
+      }
+    }
+    ext->ip6e_len = ((length + extra) / 8) - 1;
+
+    return buf + length + extra - 2;
   } else if (((*buf) & LOWPAN_NHC_UDP_MASK) == LOWPAN_NHC_UDP_PATTERN) {
     // packed UDP header
     return unpack_udp(dest, nxt_hdr, buf);
@@ -690,10 +746,10 @@ uint8_t *unpack_nhc_chain(struct lowpan_reconstruct *recon,
     if (((*dispatch & LOWPAN_NHC_IPV6_MASK) == LOWPAN_NHC_IPV6_PATTERN)) {
       struct ip6_ext *ext = (struct ip6_ext *)*dest;
       /* need to update dest */
-      *dest += ext->ip6e_len;
-      cnt  -= ext->ip6e_len;
+      *dest += (ext->ip6e_len+1)*8;
+      cnt  -= (ext->ip6e_len+1)*8;
 
-      if ((*dispatch & LOWPAN_NHC_NH) && ext->ip6e_len > 0) { 
+      if ((*dispatch & LOWPAN_NHC_NH)) { 
         nxt_hdr = &ext->ip6e_nxt;
       } else {
         has_nhc = 0; 

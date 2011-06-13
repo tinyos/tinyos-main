@@ -1,4 +1,5 @@
 
+#include <lib6lowpan/ip.h>
 #include <iprouting.h>
 #include <IPDispatch.h>
 
@@ -20,13 +21,11 @@ interface ForwardingEvents {
    * packet is dropped.  The routing protocol may change fields in the
    * packet header such as the flow label.
    *
-   * @iph the ipv6 header of the packet
-   * @rhdr a routing header in the packet, or NULL if not present
+   * @pkt the packet being forwarded
    * @next_hop the ipv6 address of the next hop, as determined by the 
          forwarding engine.
    */
-  event bool approve(struct ip6_hdr *iph, 
-                     struct ip6_route *rhdr,
+  event bool approve(struct ip6_packet *pkt,
                      struct in6_addr *next_hop);
 
   /**

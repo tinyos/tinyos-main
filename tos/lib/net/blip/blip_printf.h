@@ -49,6 +49,7 @@ void printf_in6addr(struct in6_addr *a) {
 #define printfflush() ;
 #define printf_in6addr(a) ;
 #define printf_buf(buf, len) ;
+#define iov_print(iov) ;
 
 #if defined (_H_msp430hardware_h) || defined (_H_atmega128hardware_H)
   #include <stdio.h>

@@ -18,11 +18,11 @@ struct {
   uint8_t pack[2];
   int data_length;
 } test_cases[] = {
-  {IPV6_HOP, 8, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_HOP | LOWPAN_NHC_NH}, 8},
-  {IPV6_MOBILITY, 13, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_MOBILE | LOWPAN_NHC_NH}, 13},
-  {IPV6_IPV6, 120, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_IPV6 | LOWPAN_NHC_NH}, 120},
+  {IPV6_HOP, 0, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_HOP | LOWPAN_NHC_NH}, 8},
+  {IPV6_MOBILITY, 1, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_MOBILE | LOWPAN_NHC_NH}, 13},
+  {IPV6_IPV6, 14, 1, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_IPV6 | LOWPAN_NHC_NH}, 120},
 
-  {IPV6_IPV6, 12, 2, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_IPV6, IANA_UDP}, 12},
+  {IPV6_IPV6, 1, 2, {LOWPAN_NHC_IPV6_PATTERN | LOWPAN_NHC_EID_IPV6, IANA_UDP}, 12},
 };
 
 
@@ -35,6 +35,7 @@ int run_tests() {
     uint8_t *rv, *pack;
     total++;
 
+    memset(buf, 0, 512);        /* this fills in pad1 options for any weird sized options */
     memcpy(buf, test_cases[i].pack, test_cases[i].pack_len);
     pack = buf + test_cases[i].pack_len;
 
@@ -50,14 +51,14 @@ int run_tests() {
     rv = unpack_ipnh(result, sizeof(result), &nxt_hdr, buf);
 
     printf("ip6_ext nxt: %i length: %i\n", nxt_hdr, result[1]);
-    for (j = 0; j < result[1] ; j++) {
+    for (j = 0; j < (result[1] +1)*8; j++) {
       printf("0x%x ", result[j]);
     }
     printf("\n");
 
     // printf("%i:\n", test_cases[i].unpacked_length);
     if (test_cases[i].unpacked_length != result[1]) {
-      printf("ERROR: wrong length\n");
+      printf("ERROR: wrong length: %i %i\n", test_cases[i].unpacked_length, result[1]);
       continue;
     }
 
@@ -71,14 +72,14 @@ int run_tests() {
       continue;
     }
 
-    for (j = 2; j < result[1]; j++) {
+    for (j = 2; j < test_cases[i].data_length; j++) {
       if (result[j] != j + 10) {
         printf("ERROR: wrong payload\n");
         break;
       }
     }
-    if (j == result[1])
-      success++;
+    success++;
+    printf("\n\n\n");
   }
   printf("%s: %i/%i tests succeeded\n", __FILE__, success, total);
   if (success == total) return 0;

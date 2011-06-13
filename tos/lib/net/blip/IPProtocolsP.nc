@@ -1,4 +1,5 @@
 
+#include <lib6lowpan/iovec.h>
 #include <lib6lowpan/ip.h>
 
 #include "blip_printf.h"
@@ -10,6 +11,7 @@ module IPProtocolsP {
   uses {
     interface IPAddress;
     interface IP as SubIP;
+    interface IPPacket;
   }
 } implementation {
 
@@ -17,17 +19,21 @@ module IPProtocolsP {
                         void *payload, 
                         size_t len, 
                         struct ip6_metadata *meta) {
-    struct ip6_ext *cur = (struct ip6_ext *)(iph + 1);
-    uint8_t nxt = iph->ip6_nxt;
+    int payload_off = 0;
+    uint8_t nxt_hdr =  IP6PKT_TRANSPORT;
+    struct ip_iovec v = {
+      .iov_base = payload,
+      .iov_len = len,
+      .iov_next = NULL,
+    };
 
-    while (nxt == IPV6_HOP  || nxt == IPV6_ROUTING  || nxt == IPV6_FRAG ||
-           nxt == IPV6_DEST || nxt == IPV6_MOBILITY || nxt == IPV6_IPV6) {
-      nxt = cur->ip6e_nxt;
-      cur = (struct ip6_ext *)((uint8_t *)cur + cur->ip6e_len);
+    // find the transport header and deliver -- nxt_hdr is updated by findHeader
+    payload_off = call IPPacket.findHeader(&v, iph->ip6_nxt, &nxt_hdr);
+    printf("IPProtocols - deliver -- off: %i\n", payload_off);
+    if (payload_off >= 0) {
+      signal IP.recv[nxt_hdr](iph, ((uint8_t *)payload) + payload_off, 
+                              len - payload_off, meta);
     }
-
-    len -= POINTER_DIFF(cur, payload);
-    signal IP.recv[nxt](iph, cur, len, meta);
   }
 
   command error_t IP.send[uint8_t nxt_hdr](struct ip6_packet *msg) {

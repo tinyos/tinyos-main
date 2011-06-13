@@ -121,6 +121,7 @@ module IPForwardingEngineP {
 
         memmove((void *)&routing_table[i], (void *)&routing_table[i+1],
                 sizeof(struct route_entry) * (ROUTE_TABLE_SZ - i - 1));
+        routing_table[ROUTE_TABLE_SZ-1].valid = 0;
         return SUCCESS;
       }
     }
@@ -217,9 +218,13 @@ module IPForwardingEngineP {
     struct ip6_packet pkt;
     struct in6_addr *next_hop;
     size_t len = ntohs(iph->ip6_plen);
-    struct ip_iovec v[1];
     route_key_t next_hop_key = ROUTE_INVAL_KEY;
     uint8_t next_hop_ifindex;
+    struct ip_iovec v = {
+      .iov_next = NULL,
+      .iov_base = payload,
+      .iov_len  = len,
+    };
 
     /* signaled before *any* processing  */
     signal IPRaw.recv(iph, payload, len, meta);
@@ -230,8 +235,8 @@ module IPForwardingEngineP {
       signal IP.recv(iph, payload, len, meta);
     } else {
       /* forwarding */
-      int header_off = call IPPacket.findHeader(payload, len,
-                                                iph->ip6_nxt, IPV6_ROUTING);
+      uint8_t nxt_hdr = IPV6_ROUTING;
+      int header_off = call IPPacket.findHeader(&v, iph->ip6_nxt, &nxt_hdr);
       if (!(--iph->ip6_hlim)) {
         /* ICMP may send time exceeded */
         // call ForwardingEvents.drop(iph, payload, len, ROUTE_DROP_HLIM);
@@ -261,18 +266,14 @@ module IPForwardingEngineP {
       }
 
       memcpy(&pkt.ip6_hdr, iph, sizeof(struct ip6_hdr));
-      pkt.ip6_data = &v[0];
-      v[0].iov_next = NULL;
-      v[0].iov_base = payload;
-      v[0].iov_len  = len;
+      pkt.ip6_data = &v;
 
       /* give the routing protocol a chance to do data-path validation
          on this packet. */
       /* RPL uses this to update the flow label fields */
-      if (!(signal ForwardingEvents.approve[next_hop_ifindex](iph, 
-                   (struct ip6_route*) payload, next_hop)))
+      if (!(signal ForwardingEvents.approve[next_hop_ifindex](&pkt, next_hop)))
         return;
-      printf("Recv: Forward Packet\n");
+
       call IPForward.send[next_hop_ifindex](next_hop, &pkt, (void *)next_hop_key);
     }
   }
@@ -306,9 +307,8 @@ module IPForwardingEngineP {
   }
 #endif
 
-  default event bool ForwardingEvents.approve[uint8_t idx](struct ip6_hdr *iph,
-                                                          struct ip6_route *rhdr,
-                                                          struct in6_addr *next_hop) {
+  default event bool ForwardingEvents.approve[uint8_t idx](struct ip6_packet *pkt,
+                                                           struct in6_addr *next_hop) {
     return TRUE;
   }
   default event bool ForwardingEvents.initiate[uint8_t idx](struct ip6_packet *pkt,

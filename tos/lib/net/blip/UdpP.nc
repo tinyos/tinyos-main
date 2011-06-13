@@ -68,7 +68,7 @@ module UdpP {
     uint16_t my_cksum, rx_cksum = ntohs(udph->chksum);
     struct ip_iovec v;
 
-    dbg("UDP", "UDP - IP.recv: len: %i (%i, %i) srcport: %i dstport: %i\n",
+    printf("UDP - IP.recv: len: %i (%i, %i) srcport: %u dstport: %u\n",
         ntohs(iph->ip6_plen), len, ntohs(udph->len),
         ntohs(udph->srcport), ntohs(udph->dstport));
 

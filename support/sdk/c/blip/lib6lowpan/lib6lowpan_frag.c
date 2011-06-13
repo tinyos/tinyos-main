@@ -12,9 +12,6 @@
 #include "iovec.h"
 #include "ieee154_header.h"
 
-int lowpan_recon_complete(struct lowpan_reconstruct *recon,
-                          struct ip6_packet_headers *hdrs);
-
 int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
                        struct lowpan_reconstruct *recon,
                        uint8_t *pkt, size_t len) {

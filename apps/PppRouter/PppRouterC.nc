@@ -31,10 +31,11 @@ configuration PppRouterC {
   // PppDaemonC.PppProtocol[PppPrintfC.Protocol] -> PppPrintfC;
   // PppPrintfC.Ppp -> PppC;
 
-  components IPStackC, IPForwardingEngineP;
+  components IPStackC, IPForwardingEngineP, IPPacketC;
   IPForwardingEngineP.IPForward[ROUTE_IFACE_PPP] -> PppRouterP.IPForward;
   PppRouterP.IPControl -> IPStackC;
   PppRouterP.ForwardingTable -> IPStackC;
+  PppRouterP.IPPacket -> IPPacketC;
 
 #ifdef RPL_ROUTING
   components RPLRoutingC;

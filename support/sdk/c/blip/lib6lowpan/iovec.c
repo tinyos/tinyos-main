@@ -5,7 +5,6 @@
 #include "iovec.h"
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
-
 /**
  * read len bytes starting at offset into the buffer pointed to by buf
  *
@@ -58,4 +57,24 @@ void iov_prefix(struct ip_iovec *iov, struct ip_iovec *new, uint8_t *buf, size_t
   new->iov_base = buf;
   new->iov_len = len;
   new->iov_next = iov;
+}
+
+int iov_update(struct ip_iovec *iov, int offset, int len, uint8_t *buf) {
+  int written = 0;
+
+  /* advance to the first block where we could write */
+  while (offset >= iov->iov_len) {
+    offset -= iov->iov_len;
+    iov = iov->iov_next;
+  }
+
+  while (iov != NULL && written < len) {
+    int writelen = MIN(iov->iov_len - offset, len);
+    memcpy(iov->iov_base + offset, buf, writelen);
+    buf += writelen;
+    len -= writelen;
+    offset = 0;
+    iov = iov->iov_next;
+  }
+  return written;
 }
