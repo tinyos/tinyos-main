@@ -1,0 +1,28 @@
+COMPONENT=TestRPLAppC
+#DEFAULT_LOCAL_GROUP=0xabcd
+CFLAGS+=-DCC2420_HW_ACKNOWLEDGEMENTS
+CFLAGS+=-DPACKET_LINK
+#CFLAGS+=-DIEEE154FRAMES_ENABLED
+#CFLAGS+=-I$(TOSDIR)/lib/printf
+#CFLAGS+=-DPRINTFUART_ENABLED
+#
+CFLAGS+=-DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
+CFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/lib6lowpan
+#CFLAGS+=-DRPL_OF_MRHOF
+CFLAGS+=-DBLIP_DERIVE_SHORTADDRS
+#
+# the sleep interval needs to be set the same for all participating devices
+#CFLAGS += -DLOW_POWER_LISTENING -DLPL_SLEEP_INTERVAL=200
+# also modifiy blip's L2 parameters to reduce media overload
+CFLAGS +=-DBLIP_L2_RETRIES=3 -DBLIP_L2_DELAY=10
+#
+#5 second packet generation interval
+CFLAGS+=-DPACKET_INTERVAL=512UL
+CFLAGS+=-DCC2420_DEF_CHANNEL=26
+CFLAGS+=-DCC2520_DEF_CHANNEL=26
+#
+CFLAGS+=-DRPL_ROOT_ADDR=11
+#USE_CPPOPT = -fno-rtti -fno-exceptions
+#PFLAGS+=-DIN6_PREFIX=\"fec0::\"
+PFLAGS+=-DIN6_PREFIX=\"aaaa::/64\"
+include $(MAKERULES)
