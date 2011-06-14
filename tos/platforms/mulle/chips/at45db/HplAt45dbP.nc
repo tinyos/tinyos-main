@@ -70,7 +70,6 @@
  * @author Henrik Makitaavola <henrik.makitaavola@gmail.com>
  */
  
-#include "m16c60_printf.h"
 module HplAt45dbP
 {
   provides
