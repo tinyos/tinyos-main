@@ -41,8 +41,6 @@
  * and interface for everything but magnetometer.
  */
 
-#include "Magnetometer.h"
-
 module Hmc5843P {
   provides {
     interface Init;

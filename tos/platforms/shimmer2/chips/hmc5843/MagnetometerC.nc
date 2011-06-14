@@ -41,6 +41,8 @@
  * using direct module because we don't need arbitration for this platform.
  */
 
+#include "msp430usart.h"
+
 configuration MagnetometerC {
   provides {
     interface Init;
