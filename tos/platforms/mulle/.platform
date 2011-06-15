@@ -9,7 +9,7 @@ push( @includes, qw(
   %T/platforms/mulle/button
   %T/platforms/mulle/lib
   %T/platforms/mulle/i2c
-  %T/platforms/mulle/softwarespi
+  %T/platforms/mulle/spi
   %T/platforms/mulle/chips/rv8564
   %T/platforms/mulle/chips/at45db
   %T/platforms/mulle/chips/m16c60
