@@ -30,6 +30,7 @@
  */
  
 #include "TestRPL.h"
+#include "printf.h"
 
 /**
  * Configuration for the RadioCountToLeds application. RadioCountToLeds 
@@ -73,6 +74,11 @@ implementation {
 
 #ifdef RPL_ROUTING
   components RPLRoutingC;
+#endif
+  
+#ifdef PRINTFUART_ENABLED
+  components PrintfC;
+  components SerialStartC;
 #endif
 
   //components LcdC;

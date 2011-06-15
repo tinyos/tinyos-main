@@ -31,9 +31,10 @@
  
 #include "Timer.h"
 #include "TestRPL.h"
-#include "ip.h"
+#include "lib6lowpan/ip.h"
 //#include "color.h"
-//#include <PrintfUART.h>
+
+#include "blip_printf.h"
 /**
  * Implementation of the RadioCountToLeds application. RadioCountToLeds 
  * maintains a 4Hz counter, broadcasting its value in an AM packet 
@@ -82,8 +83,6 @@ implementation {
   uint16_t counter = 0;
   
   event void Boot.booted() {
-    //printfUART_init();
-
     memset(MULTICAST_ADDR.s6_addr, 0, 16);
     MULTICAST_ADDR.s6_addr[0] = 0xFF;
     MULTICAST_ADDR.s6_addr[1] = 0x2;
@@ -128,9 +127,9 @@ implementation {
     nx_uint16_t temp[10];
     memcpy(temp, (uint8_t*)payload, len);
     call Leds.led2Toggle();
-
-    //printfUART(">>>> RX %d %d %d %lu \n", TOS_NODE_ID, temp[0], temp[9], ++countrx);
-
+    
+    printf(">>>> RX %d %d %d %lu \n", TOS_NODE_ID, temp[0], temp[9], ++countrx);
+    printfflush();
   }
   
   event void SplitControl.startDone(error_t err){
@@ -142,7 +141,7 @@ implementation {
   }
 
   event void Timer.fired(){
-    call MilliTimer.startOneShot(PACKET_INTERVAL + call Random.rand16() % 10);
+    call MilliTimer.startOneShot(PACKET_INTERVAL + (call Random.rand16() % 100));
   }
 
   task void sendTask(){
@@ -169,13 +168,13 @@ implementation {
 
     dest.sin6_port = htons(UDP_PORT);
 
-    //printfUART("Generate Packet at %d \n", TOS_NODE_ID);
+    printf("Generate Packet at %d \n", TOS_NODE_ID);
     call RPLUDP.sendto(&dest, temp, 20);
   }
 
   event void MilliTimer.fired(){
     //call Leds.led1Toggle();
-    call MilliTimer.startOneShot(PACKET_INTERVAL + call Random.rand16() % 10);
+    call MilliTimer.startOneShot(PACKET_INTERVAL + (call Random.rand16() % 100));
     post sendTask();
   }
 
