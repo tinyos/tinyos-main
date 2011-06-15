@@ -106,4 +106,5 @@ implementation
   }
 
   default async command void Pin.makeInput() {}
+  default event void Read.readDone(error_t e, uint16_t val) {}
 }
