@@ -97,8 +97,10 @@ implementation {
     {
       call HplM16c60Interrupt.disable();
       call HplM16c60Interrupt.edge(false);
-      call HplM16c60Interrupt.clear();
       call HplM16c60Interrupt.enable();
+      // For some reason we need to clear the interrupt after we enable it
+      // to prevent already pending interrupts.
+      call HplM16c60Interrupt.clear();
     }
     return SUCCESS;
   }
