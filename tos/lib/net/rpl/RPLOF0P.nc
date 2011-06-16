@@ -22,6 +22,7 @@ implementation{
   uint16_t nodeEtx = divideRank;
   bool newParent = FALSE;
   uint16_t min_hop_rank_inc = 1;
+  route_key_t route_key = ROUTE_INVAL_KEY;
 
   /* OCP for OF0 */
   command bool RPLOF.OCP(uint16_t ocp){
@@ -105,6 +106,8 @@ implementation{
     if (min == MAX_PARENT){ 
       call RPLOF.resetRank();
       call RPLRoute.inconsistency();
+      call ForwardingTable.delRoute(route_key);
+      route_key = ROUTE_INVAL_KEY;
       return FALSE;
     }
 
@@ -144,6 +147,8 @@ implementation{
     if(/*parentNode->rank > nodeRank || */parentNode->rank == INFINITE_RANK){
       //printf("SELECTED PARENT is FFFF %d\n", TOS_NODE_ID);
       desiredParent = MAX_PARENT;
+      call ForwardingTable.delRoute(route_key);
+      route_key = ROUTE_INVAL_KEY;
       return FAIL;
     }
 
@@ -162,7 +167,7 @@ implementation{
     /* set the new default route */
     /* set one of the below of maybe set both? */
     //call ForwardingTable.addRoute((const uint8_t*)&DODAGID, 128, &parentNode->parentIP, RPL_IFACE);
-    call ForwardingTable.addRoute(NULL, 0, &parentNode->parentIP, RPL_IFACE); // will this give me the default path?
+    route_key = call ForwardingTable.addRoute(NULL, 0, &parentNode->parentIP, RPL_IFACE); // will this give me the default path?
 
     if(prevParent != parentNode->parentIP.s6_addr16[7]){
       //printf(">> New Parent %d %x %lu \n", TOS_NODE_ID, htons(parentNode->parentIP.s6_addr16[7]), parentChanges++);
