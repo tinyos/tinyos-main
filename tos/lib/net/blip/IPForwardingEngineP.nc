@@ -80,6 +80,10 @@ module IPForwardingEngineP {
     return &routing_table[i];
   }
 
+  task void defaultRouteAddedTask() {
+    signal ForwardingTableEvents.defaultRouteAdded();
+  }
+
   command route_key_t ForwardingTable.addRoute(const uint8_t *prefix, 
                                                int prefix_len_bits,
                                                struct in6_addr *next_hop,
@@ -96,7 +100,7 @@ module IPForwardingEngineP {
 
       /* got a default route and we didn't already have one */
       if (prefix_len_bits == 0) {
-        signal ForwardingTableEvents.defaultRouteAdded();
+        post defaultRouteAddedTask();
       }
     }
     if (entry == NULL) 
@@ -231,7 +235,7 @@ module IPForwardingEngineP {
 
     if (call IPAddress.isLocalAddress(&iph->ip6_dst)) {
       /* local delivery */
-      printf("Local delivery\n");
+      // printf("Local delivery\n");
       signal IP.recv(iph, payload, len, meta);
     } else {
       /* forwarding */
@@ -304,6 +308,7 @@ module IPForwardingEngineP {
       }
     }
     printf("\n");
+    printfflush();
   }
 #endif
 
