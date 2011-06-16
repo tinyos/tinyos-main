@@ -151,8 +151,4 @@ implementation
 
   components CC2520SecurityP;
   DriverLayerP.CC2520Security -> CC2520SecurityP;
-
-  components new TimerMilliC() as AckWait;
-  DriverLayerP.AckWaitTimer -> AckWait;
-
 }

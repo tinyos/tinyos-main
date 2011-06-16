@@ -98,8 +98,6 @@ module CC2520DriverLayerP
     interface Draw;
 
     interface CC2520Security;
-    //interface Alarm<T32khz,uint32_t> as AckWaitTimer;
-    interface Timer<TMilli> as AckWaitTimer;
   }
 }
 
@@ -199,8 +197,6 @@ implementation{
   norace bool sending = FALSE;
   norace bool receiving = FALSE;
   norace bool security_processing = FALSE;
-  norace bool waitAck = FALSE;
-  norace uint8_t waitAckSeq = 0;
 
   // used to continue tx after sfd
   norace uint8_t* txData;
@@ -214,7 +210,6 @@ implementation{
     TX_SFD_DELAY = (uint16_t)(0 * RADIO_ALARM_MICROSEC),
     RX_SFD_DELAY = (uint16_t)(7 * RADIO_ALARM_MICROSEC/2),
   };
-
 
   inline cc2520_status_t getStatus();
   //inline void sendDoneSignal(error_t error, bool ack);
@@ -1189,11 +1184,6 @@ implementation{
     cmd = CMD_TRANSMIT;
 
     //call SpiResource.release();
-    if(txIeee154header->fcf & (1 << IEEE154_FCF_ACK_REQ)){
-      //call Leds.led2Toggle();
-      atomic waitAckSeq = txIeee154header->dsn;
-      atomic waitAck = TRUE;
-    }
     atomic sending = TRUE;
   }
 
@@ -1347,14 +1337,6 @@ implementation{
     // check for too short lengths
     if (length == 0) {
 
-      /************* JK: This gets stuck here! ****************/
-      // try flush / recover w/o the first attempt!
-      // Check all BusyWaits
-      /********************************************************/
-
-      // stop reading RXFIFO
-
-      //
 #ifdef RADIO_DEBUG_MESSAGES
       if( call DiagMsg.record() ){
         call DiagMsg.str("rx 0 length");
@@ -1375,12 +1357,6 @@ implementation{
 
       call SpiResource.release();
       call CSN.set();
-      //state = STATE_RX_ON;
-      //cmd = CMD_NONE;
-
-      //call SfdCapture.captureRisingEdge(); // JK
-      //call Draw.drawInt(80,140,0,1,COLOR_BLUE);
-      //call Leds.led1Toggle();
       endRx();
       return;
     }
@@ -1394,12 +1370,6 @@ implementation{
 
       call SpiResource.release();
       call CSN.set();
-      //state = STATE_RX_ON;
-      //cmd = CMD_NONE;
-
-      //call SfdCapture.captureRisingEdge(); // JK
-      //call Draw.drawInt(80,140,1,1,COLOR_BLUE);
-      //call Leds.led1Toggle();
       endRx();
       return;
     }
@@ -1414,20 +1384,12 @@ implementation{
 
       call SpiResource.release();
       call CSN.set();
-      //state = STATE_RX_ON;
-      //cmd = CMD_NONE;
-
-      //call SfdCapture.captureRisingEdge(); // JK
-      //call Draw.drawInt(80,140,2,1,COLOR_BLUE);
-      //call Leds.led1Toggle();
       endRx();
       return;
     }
 
     // check for too long lengths
     if( length > 127 ) {
-
-      //call Leds.led0Toggle();
 
 #ifdef RADIO_DEBUG_MESSAGES
       if( call DiagMsg.record() ){
@@ -1443,12 +1405,6 @@ implementation{
 
       call SpiResource.release();
       call CSN.set();
-      //state = STATE_RX_ON;
-      //cmd = CMD_NONE;
-
-      //call SfdCapture.captureRisingEdge(); //JK
-      //call Draw.drawInt(80,140,3,1,COLOR_BLUE);
-      //call Leds.led1Toggle();
       endRx();
       return;
     }
@@ -1475,23 +1431,9 @@ implementation{
 
       call SpiResource.release();
       call CSN.set();
-      //state = STATE_RX_ON;
-      //cmd = CMD_NONE;
-
-      //call SfdCapture.captureRisingEdge(); // JK
-      //call Draw.drawInt(80,140,4,1,COLOR_BLUE);
-      //call Leds.led1Toggle();
       endRx();
       return;
     }
-
-    /*******************************************/
-    //readLengthFromRxFifo(&temp);
-    //state = STATE_RX_ON;
-    //cmd = CMD_NONE;
-    //call SfdCapture.captureRisingEdge();
-    //return;
-    /*******************************************/
 
     // if we're here, length must be correct
     RADIO_ASSERT(length >= 3 && length <= call RadioPacket.maxPayloadLength() + 2);
@@ -1500,44 +1442,17 @@ implementation{
 
     // we'll read the FCS/CRC separately
     length -= 2;
-    //call Draw.drawInt(80,180,length,1,COLOR_YELLOW);
 
     // download the whole payload
     readPayloadFromRxFifo(data, length);
-    //call Draw.drawInt(100,180,length,1,COLOR_YELLOW);
 
     // the last two bytes are not the fsc, but RSSI(8), CRC_ON(1)+LQI(7)
     readRssiFromRxFifo(&rssi);
-    //call Draw.drawInt(120,180,length,1,COLOR_YELLOW);
 
     readCrcOkAndLqiFromRxFifo(&crc_ok_lqi);
 
     ieee154header = (ieee154_header_t*)data;
-    /*
-       if(length == 3 || ieee154header->fcf & (2 << IEEE154_FCF_FRAME_TYPE) ){
-    // Ack received
-    call SpiResource.release();
-    call CSN.set();
-    //state = STATE_RX_ON;
-    //cmd = CMD_NONE;
-    if(waitAck && waitAckSeq == ieee154header->dsn){
-    signal RadioSend.sendDone(SUCCESS);
-    waitAckSeq = waitAckSeq - 1;
-    call AckWaitTimer.stop();
-    call Leds.led0Toggle();
-    atomic waitAck = FALSE; // jk: maybe move this to top?
-    // mark packet as acked
-    call AckFlag.setValue(txMsg, TRUE); // This is first to be tested
-    rxMsg = signal RadioReceive.receive(rxMsg); // This seems to tbe the tricky call
-    }
-    endRx();
-    return;
-    } */
 
-    //call Draw.drawInt(140,180,length,1,COLOR_YELLOW);
-
-    // there are still bytes in the fifo or if there's an overflow,
-    // recover
     // TODO: actually, we can signal that a message was received, without
     // timestamp set
 
@@ -1552,32 +1467,11 @@ implementation{
       atomic recover_err();
       atomic flushRxFifo();
 
-      //state = STATE_RX_ON;
-      //cmd = CMD_NONE;
       call SpiResource.release();
       call CSN.set();
-      //call SfdCapture.captureRisingEdge(); // JK
-      //call Draw.drawInt(80,140,6,1,COLOR_BLUE);
-      //call Leds.led1Toggle();
       endRx();
       return;
     }
-
-    // JK: TEST 1
-    /*******************************************/
-    //readPayloadFromRxFifo(data, length );
-    //call SpiResource.release();
-    //call CSN.set();
-    //state = STATE_RX_ON;
-    //cmd = CMD_NONE;
-    //call SfdCapture.captureRisingEdge();
-    //return;
-    /*******************************************/
-
-    //state = STATE_RX_ON;
-    //cmd = CMD_NONE;
-    // ready to receive new message: enable SFD interrupts
-    //call SfdCapture.captureRisingEdge();
 
     if( signal RadioReceive.header(rxMsg) ){
       // set RSSI, CRC and LQI only if we're accepting the message
@@ -1586,7 +1480,16 @@ implementation{
       crc = (crc_ok_lqi > 0x7f) ? 0 : 1;
     }
 
-    //call Draw.drawInt(80,160,0,1,COLOR_GREEN);
+
+    if(length == 3 || ieee154header->fcf & (2 << IEEE154_FCF_FRAME_TYPE) ){
+      //call Leds.led2Toggle();
+      call SpiResource.release();
+      call CSN.set();
+      rxMsg = signal RadioReceive.receive(rxMsg);
+      endRx();
+      return;
+    }
+
 
     // signal only if it has passed the CRC check
     if( crc == 0){
@@ -1680,38 +1583,6 @@ implementation{
 
       call SpiResource.release();
       call CSN.set();
-      //state = STATE_RX_ON;
-      //cmd = CMD_NONE;
-
-      if(length == 3 || ieee154header->fcf & (2 << IEEE154_FCF_FRAME_TYPE) ){
-        // Ack received
-        if(waitAck && waitAckSeq == ieee154header->dsn){
-          signal RadioSend.sendDone(SUCCESS);
-          waitAckSeq = waitAckSeq - 1;
-          call AckWaitTimer.stop();
-          call Leds.led0Toggle();
-          atomic waitAck = FALSE; // jk: maybe move this to top?
-          // mark packet as acked
-#ifdef CC2520_HARDWARE_ACK
-          call AckReceivedFlag.setValue(txMsg, TRUE); // This is first to be tested
-#endif
-        }
-      }
-
-
-
-      //call Draw.drawInt(80,140,length,1,COLOR_BLUE);
-      /*
-         call Draw.drawInt(80,140,data[9+sizeof(security_header_t)],1,COLOR_BLUE);
-         call Draw.drawInt(130,140,data[10+sizeof(security_header_t)],1,COLOR_BLUE);
-         call Draw.drawInt(180,140,data[11+sizeof(security_header_t)],1,COLOR_BLUE);
-         call Draw.drawInt(230,140,data[12+sizeof(security_header_t)],1,COLOR_BLUE);
-         */
-
-      //call Draw.drawInt(80,140,data[9],1,COLOR_BLUE);
-      //call Draw.drawInt(130,140,data[10],1,COLOR_BLUE);
-      //call Draw.drawInt(180,140,data[11],1,COLOR_BLUE);
-      //call Draw.drawInt(230,140,data[12],1,COLOR_BLUE);
 
       call Leds.led1Toggle();
       rxMsg = signal RadioReceive.receive(rxMsg);
@@ -1792,11 +1663,6 @@ implementation{
   }
 
   async event void FifoInterrupt.fired(){
-    //if(call SpiResource.immediateRequest() == SUCCESS){
-      //call Leds.led1Toggle();
-      //strobe(CC2520_CMD_SACK);
-      //call SpiResource.release();
-    //}
   }
 
   // FIFOP interrupt, last byte received
@@ -1825,19 +1691,15 @@ implementation{
             // do not signal success if the packet requested for an ack
             // In this case call a timer instead and signal success once the timer expires or an ack is received
             call Leds.led2Toggle();
-            if(!waitAck){
-              atomic waitAck = FALSE;
+
 #ifdef RADIO_DEBUG_MESSAGES
-              if( call DiagMsg.record() ){
-                call DiagMsg.str("RadioSend.sendDone");
-                call DiagMsg.send();
-              }
+	    if( call DiagMsg.record() ){
+	      call DiagMsg.str("RadioSend.sendDone");
+	      call DiagMsg.send();
+	    }
 #endif
-              signal RadioSend.sendDone(SUCCESS);
-            }else{
-              call AckWaitTimer.stop();
-              call AckWaitTimer.startOneShot(1);
-            }
+	    signal RadioSend.sendDone(SUCCESS);
+
 
           }
 
@@ -1846,29 +1708,6 @@ implementation{
       }
     }
   }
-
-  /*
-
-     inline void sendDoneSignal(error_t error, bool ack){
-
-     atomic waitAck = FALSE;
-
-// TODO: mark packet as acked
-call Leds.led2Toggle();
-
-signal RadioSend.sendDone(error);
-return;
-}
-
-*/
-
-event void AckWaitTimer.fired(){
-  if(waitAck){
-    //call Leds.led1Toggle();
-    atomic waitAck = FALSE;
-    signal RadioSend.sendDone(SUCCESS);
-  }
-}
 
 
 default tasklet_async event bool RadioReceive.header(message_t* msg){
@@ -2034,30 +1873,6 @@ async command void PacketLinkQuality.set(message_t* msg, uint8_t value)
   getMeta(msg)->lqi = value;
 }
 
-/**/
-/*
-async command bool AckReceived.isSet(message_t* msg)
-{
-  return TRUE;
-}
-
-async command uint8_t AckReceived.get(message_t* msg)
-{
-  return getMeta(msg)->lqi;
-}
-
-async command void AckReceived.clear(message_t* msg)
-{
-}
-
-async command void AckReceived.set(message_t* msg, uint8_t value)
-{
-  getMeta(msg)->ack = value;
-}
-*/
-
-/*****************/
-
 ieee154_header_t* getIeeeHeader(message_t* msg)
 {
   return (ieee154_header_t*) (void*)msg;//getHeader(msg);//((void*)msg) + call SubPacket.headerLength(msg);
@@ -2066,7 +1881,6 @@ ieee154_header_t* getIeeeHeader(message_t* msg)
 async command error_t PacketAcknowledgements.requestAck(message_t* msg)
 {
   //call SoftwareAckConfig.setAckRequired(msg, TRUE);
-  //ieee154header->fcf & (1 << IEEE154_FCF_ACK_REQ)
   getIeeeHeader(msg)->fcf |= (1 << IEEE154_FCF_ACK_REQ);
 
   return SUCCESS;
@@ -2074,7 +1888,6 @@ async command error_t PacketAcknowledgements.requestAck(message_t* msg)
 
 async command error_t PacketAcknowledgements.noAck(message_t* msg)
 {
-  //call SoftwareAckConfig.setAckRequired(msg, FALSE);
   getIeeeHeader(msg)->fcf &= ~(uint16_t)(1 << IEEE154_FCF_ACK_REQ);
   return SUCCESS;
 }
