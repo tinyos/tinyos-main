@@ -29,7 +29,7 @@
  *
  */
 
-/** Whitebox unit test for the PlatformSerialHdlcUartP implementation.
+/** Whitebox unit test for the DefaultHdlcUartP implementation.
  *
  * This code has tricky buffer management which is a lot easier to
  * validate when it's not embedded deep inside an HDLC client.
@@ -42,13 +42,13 @@ configuration TestAppC {
 
   TestP.Boot -> MainC;
 
-  components PlatformSerialHdlcUartP;
-  TestP.HdlcUart -> PlatformSerialHdlcUartP;
-  TestP.UartControl -> PlatformSerialHdlcUartP;
-  TestP.DebugPlatformSerialHdlcUart -> PlatformSerialHdlcUartP;
+  components DefaultHdlcUartP;
+  TestP.HdlcUart -> DefaultHdlcUartP;
+  TestP.UartControl -> DefaultHdlcUartP;
+  TestP.DebugDefaultHdlcUart -> DefaultHdlcUartP;
 
-  PlatformSerialHdlcUartP.SerialControl -> TestP.StubSerialControl;
-  PlatformSerialHdlcUartP.UartStream -> TestP.StubUartStream;
+  DefaultHdlcUartP.SerialControl -> TestP.StubSerialControl;
+  DefaultHdlcUartP.UartStream -> TestP.StubUartStream;
   
 #include <unittest/config_impl.h>
 }

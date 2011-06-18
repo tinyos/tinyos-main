@@ -21,9 +21,9 @@ configuration PppRouterC {
   PppRouterP.Ipv6LcpAutomaton -> PppIpv6C;
   PppRouterP.PppIpv6 -> PppIpv6C;
 
-  components PlatformSerialHdlcUartC;
-  PppDaemonC.HdlcUart -> PlatformSerialHdlcUartC;
-  PppDaemonC.UartControl -> PlatformSerialHdlcUartC;
+  components DefaultHdlcUartC;
+  PppDaemonC.HdlcUart -> DefaultHdlcUartC;
+  PppDaemonC.UartControl -> DefaultHdlcUartC;
 
   // SDH : don't bother including the PppPrintfC by default
   // components PppPrintfC, PppC;;

@@ -56,15 +56,15 @@ configuration TestAppC {
 #endif /* WITH_DISPLAYCODE */
 
   components new HdlcFramingC(2400, 8);
-  HdlcFramingC.HdlcUart -> PlatformSerialHdlcUartC;
-  HdlcFramingC.UartControl -> PlatformSerialHdlcUartC;
+  HdlcFramingC.HdlcUart -> DefaultHdlcUartC;
+  HdlcFramingC.UartControl -> DefaultHdlcUartC;
 
   components CounterMicro32C;
   components new CounterToLocalTimeC(TMicro) as CounterToLocalTimeMicroC;
   CounterToLocalTimeMicroC.Counter -> CounterMicro32C;
   TestP.LocalTimeMicro -> CounterToLocalTimeMicroC;
 
-  components PlatformSerialHdlcUartC;
+  components DefaultHdlcUartC;
 
   components SerialPrintfC;
 }

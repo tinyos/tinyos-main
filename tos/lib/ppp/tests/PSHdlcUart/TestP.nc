@@ -36,7 +36,7 @@ module TestP {
     interface Boot;
     interface HdlcUart;
     interface StdControl as UartControl;
-    interface DebugPlatformSerialHdlcUart;
+    interface DebugDefaultHdlcUart;
   }
   provides {
     interface StdControl as StubSerialControl;
@@ -121,25 +121,25 @@ module TestP {
     error_t rc;
     uint8_t* ring_buffer;
     
-    ASSERT_EQUAL(RingBufferLength, call DebugPlatformSerialHdlcUart.ringBufferLength());
-    ring_buffer = call DebugPlatformSerialHdlcUart.ringBuffer();
+    ASSERT_EQUAL(RingBufferLength, call DebugDefaultHdlcUart.ringBufferLength());
+    ring_buffer = call DebugDefaultHdlcUart.ringBuffer();
     ASSERT_TRUE(!! ring_buffer);
-    ASSERT_EQUAL_PTR(0, call DebugPlatformSerialHdlcUart.rbStore());
-    ASSERT_EQUAL_PTR(0, call DebugPlatformSerialHdlcUart.rbLoad());
+    ASSERT_EQUAL_PTR(0, call DebugDefaultHdlcUart.rbStore());
+    ASSERT_EQUAL_PTR(0, call DebugDefaultHdlcUart.rbLoad());
 
     ASSERT_EQUAL(0, ssc_start_count);
     rc = call UartControl.start();
     ASSERT_EQUAL(1, ssc_start_count);
     ASSERT_EQUAL(SUCCESS, rc);
 
-    ASSERT_EQUAL_PTR(ring_buffer, call DebugPlatformSerialHdlcUart.rbStore());
-    ASSERT_EQUAL_PTR(ring_buffer, call DebugPlatformSerialHdlcUart.rbLoad());
+    ASSERT_EQUAL_PTR(ring_buffer, call DebugDefaultHdlcUart.rbStore());
+    ASSERT_EQUAL_PTR(ring_buffer, call DebugDefaultHdlcUart.rbLoad());
   }
 
   void testFillBuffer_pre (int size)
   {
-    uint8_t* ring_buffer = call DebugPlatformSerialHdlcUart.ringBuffer();
-    int ring_buffer_length = call DebugPlatformSerialHdlcUart.ringBufferLength();
+    uint8_t* ring_buffer = call DebugDefaultHdlcUart.ringBuffer();
+    int ring_buffer_length = call DebugDefaultHdlcUart.ringBufferLength();
     int ring_buffer_capacity = ring_buffer_length - 1;
     uint8_t* rb_start;
     uint8_t* rbs;
@@ -158,15 +158,15 @@ module TestP {
      * call. */
     postOnEvent = size;
 
-    rb_start = call DebugPlatformSerialHdlcUart.rbStore();
-    ASSERT_EQUAL_PTR(rb_start, call DebugPlatformSerialHdlcUart.rbLoad());
+    rb_start = call DebugDefaultHdlcUart.rbStore();
+    ASSERT_EQUAL_PTR(rb_start, call DebugDefaultHdlcUart.rbLoad());
 
     printf("Fill buffer with %d elements\n", size);
     for (i = 0; i < size; ++i) {
       signal StubUartStream.receivedByte('A' + i);
     }
 
-    rbs = call DebugPlatformSerialHdlcUart.rbStore();
+    rbs = call DebugDefaultHdlcUart.rbStore();
     ASSERT_TRUE(ring_buffer <= rbs);
     ASSERT_TRUE(rbs < ring_buffer + ring_buffer_length);
     if (rbs >= rb_start) {
@@ -177,14 +177,14 @@ module TestP {
 
     if (size <= ring_buffer_capacity) {
       ASSERT_EQUAL(0, hu_uartError_count);
-      ASSERT_EQUAL_PTR(rb_start, call DebugPlatformSerialHdlcUart.rbLoad());
+      ASSERT_EQUAL_PTR(rb_start, call DebugDefaultHdlcUart.rbLoad());
     } else {
       /* On error for each character over the capacity */
       ASSERT_EQUAL(size - ring_buffer_capacity, hu_uartError_count);
       /* Make sure those errors were counted as events */
       ASSERT_EQUAL(eventCount, hu_uartError_count);
       /* Make sure the system is in an error state */
-      ASSERT_EQUAL_PTR(0, call DebugPlatformSerialHdlcUart.rbLoad());
+      ASSERT_EQUAL_PTR(0, call DebugDefaultHdlcUart.rbLoad());
       /* Fake events for the data that got thrown away */
       eventCount += ring_buffer_capacity;
 
@@ -197,7 +197,7 @@ module TestP {
 
   void testFillBuffer_post (int size)
   {
-    int ring_buffer_length = call DebugPlatformSerialHdlcUart.ringBufferLength();
+    int ring_buffer_length = call DebugDefaultHdlcUart.ringBufferLength();
     int ring_buffer_capacity = ring_buffer_length - 1;
 
     printf("Validating fill %d\r\n", size);

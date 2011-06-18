@@ -29,22 +29,30 @@
  *
  */
 
-/** Whitebox interface for inspection of PlatformSerialHdlcUart in unit tests.
+/** Component that uses PlatformSerialC to provide an HdlcUart
+ * interface.
  *
- * Enable with _DDEBUG_PLATFORM_SERIAL_HDLC_UART.
- *
- * @author Peter A. Bigot <pab@peoplepowerco.com> */
-interface DebugPlatformSerialHdlcUart {
+ * @author Peter A. Bigot <pab@peoplepowerco.com>
+ */
+configuration DefaultHdlcUartC {
+  provides {
+    interface StdControl;
+    interface HdlcUart;
+#if DEBUG_PLATFORM_SERIAL_HDLC_UART
+    interface DebugDefaultHdlcUart;
+#endif /* DEBUG_PLATFORM_SERIAL_HDLC_UART */
+  }
+} implementation {
 
-  /** @return the length of the ring buffer in bytes */
-  async command unsigned int ringBufferLength ();
+  components PlatformSerialC;
 
-  /** @return the address of the ring buffer */
-  async command uint8_t* ringBuffer ();
-
-  /** @return the value of the ringbuffer store pointer */
-  async command uint8_t* rbStore ();
-
-  /** @return the value of the ringbuffer load pointer */
-  async command uint8_t* rbLoad ();
+  components DefaultHdlcUartP;
+  StdControl = DefaultHdlcUartP;
+  HdlcUart = DefaultHdlcUartP;
+#if DEBUG_PLATFORM_SERIAL_HDLC_UART
+  DebugDefaultHdlcUart = DefaultHdlcUartP;
+#endif /* DEBUG_PLATFORM_SERIAL_HDLC_UART */
+  
+  DefaultHdlcUartP.SerialControl -> PlatformSerialC;
+  DefaultHdlcUartP.UartStream -> PlatformSerialC;
 }

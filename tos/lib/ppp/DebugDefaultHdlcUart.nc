@@ -29,30 +29,22 @@
  *
  */
 
-/** Component that uses PlatformSerialC to provide an HdlcUart
- * interface.
+/** Whitebox interface for inspection of DefaultHdlcUart in unit tests.
  *
- * @author Peter A. Bigot <pab@peoplepowerco.com>
- */
-configuration PlatformSerialHdlcUartC {
-  provides {
-    interface StdControl;
-    interface HdlcUart;
-#if DEBUG_PLATFORM_SERIAL_HDLC_UART
-    interface DebugPlatformSerialHdlcUart;
-#endif /* DEBUG_PLATFORM_SERIAL_HDLC_UART */
-  }
-} implementation {
+ * Enable with _DDEBUG_PLATFORM_SERIAL_HDLC_UART.
+ *
+ * @author Peter A. Bigot <pab@peoplepowerco.com> */
+interface DebugDefaultHdlcUart {
 
-  components PlatformSerialC;
+  /** @return the length of the ring buffer in bytes */
+  async command unsigned int ringBufferLength ();
 
-  components PlatformSerialHdlcUartP;
-  StdControl = PlatformSerialHdlcUartP;
-  HdlcUart = PlatformSerialHdlcUartP;
-#if DEBUG_PLATFORM_SERIAL_HDLC_UART
-  DebugPlatformSerialHdlcUart = PlatformSerialHdlcUartP;
-#endif /* DEBUG_PLATFORM_SERIAL_HDLC_UART */
-  
-  PlatformSerialHdlcUartP.SerialControl -> PlatformSerialC;
-  PlatformSerialHdlcUartP.UartStream -> PlatformSerialC;
+  /** @return the address of the ring buffer */
+  async command uint8_t* ringBuffer ();
+
+  /** @return the value of the ringbuffer store pointer */
+  async command uint8_t* rbStore ();
+
+  /** @return the value of the ringbuffer load pointer */
+  async command uint8_t* rbLoad ();
 }

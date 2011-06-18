@@ -50,9 +50,9 @@ configuration TestAppC {
   TestP.Ppp -> PppDaemonC;
   TestP.LcpAutomaton -> PppDaemonC;
 
-  components PlatformSerialHdlcUartC;
-  PppDaemonC.HdlcUart -> PlatformSerialHdlcUartC;
-  PppDaemonC.UartControl -> PlatformSerialHdlcUartC;
+  components DefaultHdlcUartC;
+  PppDaemonC.HdlcUart -> DefaultHdlcUartC;
+  PppDaemonC.UartControl -> DefaultHdlcUartC;
 
 #if WITH_DISPLAYCODE
 #if PPP_DISPLAY_CODES

@@ -46,11 +46,11 @@ configuration TestAppC {
   TestP.MultiLed -> LedC;
 
   components new HdlcFramingC(256, 3);
-  HdlcFramingC.HdlcUart -> PlatformSerialHdlcUartC;
-  HdlcFramingC.UartControl -> PlatformSerialHdlcUartC;
+  HdlcFramingC.HdlcUart -> DefaultHdlcUartC;
+  HdlcFramingC.UartControl -> DefaultHdlcUartC;
   TestP.HdlcControl -> HdlcFramingC;
 
-  components PlatformSerialHdlcUartC;
+  components DefaultHdlcUartC;
 
   components SerialPrintfC;
 }

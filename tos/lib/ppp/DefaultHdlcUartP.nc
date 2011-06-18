@@ -29,12 +29,12 @@
  *
  */
 
-module PlatformSerialHdlcUartP {
+module DefaultHdlcUartP {
   provides {
     interface StdControl;
     interface HdlcUart;
 #if DEBUG_PLATFORM_SERIAL_HDLC_UART
-    interface DebugPlatformSerialHdlcUart;
+    interface DebugDefaultHdlcUart;
 #endif /* DEBUG_PLATFORM_SERIAL_HDLC_UART */
   }
   uses {
@@ -83,10 +83,10 @@ module PlatformSerialHdlcUartP {
   uint8_t *rbLoad_;
 
 #if DEBUG_PLATFORM_SERIAL_HDLC_UART
-  async command unsigned int DebugPlatformSerialHdlcUart.ringBufferLength () { return sizeof(ringBuffer); }
-  async command uint8_t* DebugPlatformSerialHdlcUart.ringBuffer () { return ringBuffer; }
-  async command uint8_t* DebugPlatformSerialHdlcUart.rbStore () { atomic return rbStore_; }
-  async command uint8_t* DebugPlatformSerialHdlcUart.rbLoad () { atomic return rbLoad_; }
+  async command unsigned int DebugDefaultHdlcUart.ringBufferLength () { return sizeof(ringBuffer); }
+  async command uint8_t* DebugDefaultHdlcUart.ringBuffer () { return ringBuffer; }
+  async command uint8_t* DebugDefaultHdlcUart.rbStore () { atomic return rbStore_; }
+  async command uint8_t* DebugDefaultHdlcUart.rbLoad () { atomic return rbLoad_; }
 #endif /* DEBUG_PLATFORM_SERIAL_HDLC_UART */
 
   command error_t StdControl.start ()
