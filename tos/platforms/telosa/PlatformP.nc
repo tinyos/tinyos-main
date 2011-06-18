@@ -8,6 +8,7 @@ module PlatformP @safe() {
 }
 implementation {
   command error_t Init.init() {
+    WDTCTL = WDTPW + WDTHOLD;
     call MoteClockInit.init();
     call MoteInit.init();
     call LedsInit.init();

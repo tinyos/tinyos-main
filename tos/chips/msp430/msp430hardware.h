@@ -37,8 +37,15 @@
 #ifndef _H_msp430hardware_h
 #define _H_msp430hardware_h
 
+#if defined(__MSPGCC__)
+/* mspgcc */
+#include <msp430.h>
+#include <legacymsp430.h>
+#else /* __MSPGCC__ */
+/* old mspgcc3, forked mspgcc4 */
 #include <io.h>
 #include <signal.h>
+#endif /* __MSPGCC__ */
 #include "msp430regtypes.h"
 
 #ifdef __MSP430_TI_HEADERS__

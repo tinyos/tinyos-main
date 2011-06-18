@@ -189,7 +189,7 @@ configuration HplMsp430GeneralIOC
   provides interface HplMsp430GeneralIO as SVSOUT;
 #endif
 
-#ifdef __msp430x261x
+#if defined(__msp430x261x) || defined(__msp430x26x)
   provides interface HplMsp430GeneralIO as UCA0CLK;
   provides interface HplMsp430GeneralIO as UCA0STE;
   provides interface HplMsp430GeneralIO as UCA0TXD;
@@ -473,7 +473,7 @@ implementation
   SVSOUT = P57;
 #endif
 
-#ifdef __msp430x261x
+#if defined(__msp430x261x) || defined(__msp430x26x)
   UCA0CLK = P30;
   UCA0STE = P33;
   UCA0TXD = P34;
