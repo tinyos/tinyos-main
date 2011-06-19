@@ -245,7 +245,7 @@ implementation {
       }
       else if (len > 0) {
         state = I2C_DATA;
-	call I2CWrite.(packetPtr[index]);
+	call I2C.write(packetPtr[index]);
 	index++;
       }
       else if (flags & I2C_STOP) {
