@@ -5,7 +5,9 @@
 #include <inttypes.h>
 #endif
 #else //cygwin
-#include <unistd.h>
+#define _HAVE_STDC	// hack to force the definition _EXFNPTR under cygwin
+#undef _ANSIDECL_H_	// which is used in reent.h
+#include <unistd.h>	// reload _ansi.h
 #include <stdio.h>
 #include <sys/types.h>
 #endif
