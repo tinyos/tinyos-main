@@ -104,8 +104,8 @@ public class TOSSerial extends NativeSerial implements SerialPort {
         try {
           synchronized(this) {
             // Wait for the waitForEvent() done event, if it doesn't work after
-            // 500 ms, then we try generating that OUTPUT_EMPTY event again.
-            wait(500);
+            // 100 ms, then we try generating that OUTPUT_EMPTY event again.
+            wait(100);
           }
         } catch (InterruptedException e) {
           e.printStackTrace();

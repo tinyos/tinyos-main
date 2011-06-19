@@ -95,6 +95,9 @@ public class SerialByteSource extends StreamByteSource implements
 
   public void closeStreams() throws IOException {
     serialPort.close();
+    synchronized (sync) {
+      sync.notify();
+    }
   }
 
   public String allPorts() {
@@ -119,7 +122,7 @@ public class SerialByteSource extends StreamByteSource implements
     // On Linux at least, javax.comm input streams are not interruptible.
     // Make them so, relying on the DATA_AVAILABLE serial event.
     synchronized (sync) {
-      while (is.available() == 0) {
+      while (opened && is.available() == 0) {
         try {
           sync.wait();
         } catch (InterruptedException e) {
@@ -129,7 +132,10 @@ public class SerialByteSource extends StreamByteSource implements
       }
     }
 
-    return super.readByte();
+    if( opened )
+    	return super.readByte();
+    else
+    	throw new IOException("closed");
   }
 
   public void serialEvent(SerialPortEvent ev) {
