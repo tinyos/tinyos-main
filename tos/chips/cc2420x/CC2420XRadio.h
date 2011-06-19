@@ -37,7 +37,7 @@
 typedef nx_struct cc2420xpacket_header_t
 {
 	cc2420x_header_t cc2420x;
-	ieee154_header_t ieee154;
+	ieee154_simple_header_t ieee154;
 #ifndef TFRAMES_ENABLED
 	network_header_t network;
 #endif

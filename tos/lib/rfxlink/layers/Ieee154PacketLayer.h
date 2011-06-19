@@ -35,46 +35,15 @@
 #ifndef __IEEE154PACKETLAYER_H__
 #define __IEEE154PACKETLAYER_H__
 
-typedef nx_struct ieee154_header_t
+#include "Ieee154.h"
+
+typedef nx_struct ieee154_simple_header_t
 {
 	nxle_uint16_t fcf;
 	nxle_uint8_t dsn;
 	nxle_uint16_t destpan;
 	nxle_uint16_t dest;
 	nxle_uint16_t src;
-} ieee154_header_t;
-
-// These ENUMS were moved to tos/types/Ieee154.h
-/* 
-enum ieee154_fcf_enums {
-	IEEE154_FCF_FRAME_TYPE = 0,
-	IEEE154_FCF_SECURITY_ENABLED = 3,
-	IEEE154_FCF_FRAME_PENDING = 4,
-	IEEE154_FCF_ACK_REQ = 5,
-	IEEE154_FCF_INTRAPAN = 6,
-	IEEE154_FCF_DEST_ADDR_MODE = 10,
-	IEEE154_FCF_SRC_ADDR_MODE = 14,
-};
-
-enum ieee154_fcf_type_enums {
-	IEEE154_TYPE_BEACON = 0,
-	IEEE154_TYPE_DATA = 1,
-	IEEE154_TYPE_ACK = 2,
-	IEEE154_TYPE_MAC_CMD = 3,
-	IEEE154_TYPE_MASK = 7,
-};
-
-enum iee154_fcf_addr_mode_enums {
-	IEEE154_ADDR_NONE = 0,
-	IEEE154_ADDR_SHORT = 2,
-	IEEE154_ADDR_EXT = 3,
-	IEEE154_ADDR_MASK = 3,
-};
-*/
-
-enum ieee154_fcf_mask_enums {
-	IEEE154_TYPE_MASK = 7,
-	IEEE154_ADDR_MASK = 3,
-};
+} ieee154_simple_header_t;
 
 #endif//__IEEE154PACKETLAYER_H__

@@ -74,7 +74,7 @@ implementation
 		IEEE154_ACK_FRAME_VALUE = (IEEE154_TYPE_ACK << IEEE154_FCF_FRAME_TYPE),
 	};
 
-	ieee154_header_t* getHeader(message_t* msg)
+	ieee154_simple_header_t* getHeader(message_t* msg)
 	{
 		return ((void*)msg) + call SubPacket.headerLength(msg);
 	}
@@ -119,7 +119,7 @@ implementation
 
 	async command void Ieee154PacketLayer.createAckReply(message_t* data, message_t* ack)
 	{
-		ieee154_header_t* header = getHeader(ack);
+		ieee154_simple_header_t* header = getHeader(ack);
 		call SubPacket.setPayloadLength(ack, IEEE154_ACK_FRAME_LENGTH);
 
 		header->fcf = IEEE154_ACK_FRAME_VALUE;
@@ -128,7 +128,7 @@ implementation
 
 	async command bool Ieee154PacketLayer.verifyAckReply(message_t* data, message_t* ack)
 	{
-		ieee154_header_t* header = getHeader(ack);
+		ieee154_simple_header_t* header = getHeader(ack);
 
 		return header->dsn == getHeader(data)->dsn
 			&& (header->fcf & IEEE154_ACK_FRAME_MASK) == IEEE154_ACK_FRAME_VALUE;
@@ -285,22 +285,22 @@ implementation
 
 	async command uint8_t RadioPacket.headerLength(message_t* msg)
 	{
-		return call SubPacket.headerLength(msg) + sizeof(ieee154_header_t);
+		return call SubPacket.headerLength(msg) + sizeof(ieee154_simple_header_t);
 	}
 
 	async command uint8_t RadioPacket.payloadLength(message_t* msg)
 	{
-		return call SubPacket.payloadLength(msg) - sizeof(ieee154_header_t);
+		return call SubPacket.payloadLength(msg) - sizeof(ieee154_simple_header_t);
 	}
 
 	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
 	{
-		call SubPacket.setPayloadLength(msg, length + sizeof(ieee154_header_t));
+		call SubPacket.setPayloadLength(msg, length + sizeof(ieee154_simple_header_t));
 	}
 
 	async command uint8_t RadioPacket.maxPayloadLength()
 	{
-		return call SubPacket.maxPayloadLength() - sizeof(ieee154_header_t);
+		return call SubPacket.maxPayloadLength() - sizeof(ieee154_simple_header_t);
 	}
 
 	async command uint8_t RadioPacket.metadataLength(message_t* msg)

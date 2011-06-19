@@ -86,12 +86,14 @@ enum ieee154_fcf_type_enums {
   IEEE154_TYPE_DATA = 1,
   IEEE154_TYPE_ACK = 2,
   IEEE154_TYPE_MAC_CMD = 3,
+  IEEE154_TYPE_MASK = 7,
 };
 
-enum iee154_fcf_addr_mode_enums {
+enum ieee154_fcf_addr_mode_enums {
   IEEE154_ADDR_NONE = 0,
   IEEE154_ADDR_SHORT = 2,
   IEEE154_ADDR_EXT = 3,
+  IEEE154_ADDR_MASK = 3,
 };
 
 #endif

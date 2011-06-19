@@ -204,7 +204,7 @@ implementation{
   norace uint8_t prevdata9, prevdata10;
   norace uint8_t secMode;
   norace uint8_t txLength;
-  norace ieee154_header_t* txIeee154header;
+  norace ieee154_simple_header_t* txIeee154header;
 
   enum{ // FIXME: need to check these for CC2520
     TX_SFD_DELAY = (uint16_t)(0 * RADIO_ALARM_MICROSEC),
@@ -1006,7 +1006,7 @@ implementation{
     txLength = getHeader(msg)->length;
 
     secMode = call CC2520Security.getSecurityMode();
-    txIeee154header = (ieee154_header_t*)txData;
+    txIeee154header = (ieee154_simple_header_t*)txData;
 
     if(secMode > 0 &&  (txIeee154header->fcf & (IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE))){
 
@@ -1307,7 +1307,7 @@ implementation{
     uint32_t sfdTime, decLimit;
     cc2520_status_t status;
     security_header_t* secHdr;
-    ieee154_header_t* ieee154header;
+    ieee154_simple_header_t* ieee154header;
 
     //call Draw.fill(COLOR_WHITE);
 
@@ -1451,7 +1451,7 @@ implementation{
 
     readCrcOkAndLqiFromRxFifo(&crc_ok_lqi);
 
-    ieee154header = (ieee154_header_t*)data;
+    ieee154header = (ieee154_simple_header_t*)data;
 
     // TODO: actually, we can signal that a message was received, without
     // timestamp set
@@ -1873,9 +1873,9 @@ async command void PacketLinkQuality.set(message_t* msg, uint8_t value)
   getMeta(msg)->lqi = value;
 }
 
-ieee154_header_t* getIeeeHeader(message_t* msg)
+ieee154_simple_header_t* getIeeeHeader(message_t* msg)
 {
-  return (ieee154_header_t*) (void*)msg;//getHeader(msg);//((void*)msg) + call SubPacket.headerLength(msg);
+  return (ieee154_simple_header_t*) (void*)msg;//getHeader(msg);//((void*)msg) + call SubPacket.headerLength(msg);
 }
 
 async command error_t PacketAcknowledgements.requestAck(message_t* msg)

@@ -65,7 +65,7 @@ typedef nx_struct security_header_t {
 typedef nx_struct cc2520packet_header_t
 {
   cc2520_header_t cc2520;
-  ieee154_header_t ieee154;
+  ieee154_simple_header_t ieee154;
 
 #ifdef CC2520_HW_SECURITY
   security_header_t secHdr;
