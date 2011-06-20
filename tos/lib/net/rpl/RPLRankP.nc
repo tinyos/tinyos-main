@@ -75,6 +75,7 @@
 #include <lib6lowpan/ip_malloc.h>
 
 #include "blip_printf.h"
+#include "IPDispatch.h"
 
 module RPLRankP{
   provides{

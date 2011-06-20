@@ -43,4 +43,12 @@ struct send_entry {
   message_t  *msg;
 };
 
+#ifndef BLIP_L2_RETRIES
+#define BLIP_L2_RETRIES 3
+#endif
+
+#ifndef BLIP_L2_DELAY
+#define BLIP_L2_DELAY 103
+#endif
+
 #endif

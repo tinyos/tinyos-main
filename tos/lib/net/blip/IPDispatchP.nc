@@ -80,14 +80,6 @@ module IPDispatchP {
   provides interface Init;
 } implementation {
 
-#ifndef BLIP_L2_RETRIES
-#define BLIP_L2_RETRIES 3
-#endif
-
-#ifndef BLIP_L2_DELAY
-#define BLIP_L2_DELAY 103
-#endif
-
 #define HAVE_LOWPAN_EXTERN_MATCH_CONTEXT
 int lowpan_extern_read_context(struct in6_addr *addr, int context) {
   return call NeighborDiscovery.getContext(context, addr);
@@ -223,8 +215,8 @@ void SENDINFO_DECR(struct send_info *si) {
   void deliver(struct lowpan_reconstruct *recon) {
     struct ip6_hdr *iph = (struct ip6_hdr *)recon->r_buf;
 
-    printf("deliver [%i]: ", recon->r_bytes_rcvd);
-    printf_buf(recon->r_buf, recon->r_bytes_rcvd);
+    // printf("deliver [%i]: ", recon->r_bytes_rcvd);
+    // printf_buf(recon->r_buf, recon->r_bytes_rcvd);
 
     /* the payload length field is always compressed, have to put it back here */
     iph->ip6_plen = htons(recon->r_bytes_rcvd - sizeof(struct ip6_hdr));
@@ -347,7 +339,7 @@ void SENDINFO_DECR(struct send_info *si) {
     struct ieee154_frame_addr frame_address;
     uint8_t *buf = msg_payload;
 
-    printf(" -- RECEIVE -- len : %i\n", len);
+    // printf(" -- RECEIVE -- len : %i\n", len);
 
     BLIP_STATS_INCR(stats.rx_total);
 

@@ -2,7 +2,7 @@
 
 PFLAGS += -DCC2420_HW_ACKNOWLEDGEMENTS 
 PFLAGS += -DCC2420_HW_ADDRESS_RECOGNITION
-PFLAGS += -DPACKET_LINK -DBLIP_L2_RETRIES=3
+PFLAGS += -DPACKET_LINK
 
 ifdef BLIP_L2_MTU
 	PFLAGS += -DTOSH_DATA_LENGTH=$(BLIP_L2_MTU)
@@ -15,7 +15,7 @@ ifndef LOWPAN_ROOT
 endif
 
 PFLAGS+=-I$(TOSDIR)/lib/net/
-PFLAGS+=-I$(TOSDIR)/lib/printf
+PFLAGS+=-I$(TOSDIR)/lib/printf/
 PFLAGS+=-I$(LOWPAN_ROOT)/support/sdk/c/blip/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/
 PFLAGS+=-I$(LOWPAN_ROOT)/tos/lib/net/blip/interfaces/ 

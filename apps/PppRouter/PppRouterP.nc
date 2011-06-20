@@ -4,7 +4,6 @@
 #include <lib6lowpan/nwbyte.h>
 #include <lib6lowpan/ip_malloc.h>
 #include <dhcp6.h>
-#include "RPL.h"
 
 #include "blip_printf.h"
 
@@ -84,8 +83,6 @@ module PppRouterP {
     unsigned char *buf;
     size_t len = iov_len(msg->ip6_data);
     error_t rv;
-    int off;
-    uint8_t nxt = IPV6_HOP;
 
     if (!call PppIpv6.linkIsUp()) 
       return EOFF;
@@ -94,13 +91,6 @@ module PppRouterP {
     if (!buf)
       return ENOMEM;
 
-    /* remove any RPL options in the hop-by-hop header by converting
-       them to a PadN option */
-    off = call IPPacket.findHeader(msg->ip6_data, msg->ip6_hdr.ip6_nxt, &nxt);
-    if (off < 0) goto done;
-    call IPPacket.delTLV(msg->ip6_data, off, RPL_HBH_RANK_TYPE);
-
-  done:
     memcpy(buf, &msg->ip6_hdr, sizeof(struct ip6_hdr));
     iov_read(msg->ip6_data, 0, len, buf + sizeof(struct ip6_hdr));
     call MultiLed.toggle(1);

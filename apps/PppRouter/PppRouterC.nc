@@ -1,3 +1,6 @@
+
+#include <iprouting.h>
+
 #include "ppp.h"
 
 configuration PppRouterC {
@@ -21,9 +24,13 @@ configuration PppRouterC {
   PppRouterP.Ipv6LcpAutomaton -> PppIpv6C;
   PppRouterP.PppIpv6 -> PppIpv6C;
 
-  components DefaultHdlcUartC;
-  PppDaemonC.HdlcUart -> DefaultHdlcUartC;
-  PppDaemonC.UartControl -> DefaultHdlcUartC;
+#if defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
+  components PlatformHdlcUartC as HdlcUartC;
+#else
+  components DefaultHdlcUartC as HdlcUartC;
+#endif
+  PppDaemonC.HdlcUart -> HdlcUartC;
+  PppDaemonC.UartControl -> HdlcUartC;
 
   // SDH : don't bother including the PppPrintfC by default
   // components PppPrintfC, PppC;;
@@ -38,8 +45,10 @@ configuration PppRouterC {
   PppRouterP.IPPacket -> IPPacketC;
 
 #ifdef RPL_ROUTING
-  components RPLRoutingC;
+  components RPLRoutingC, RplBorderRouterP;
   PppRouterP.RootControl -> RPLRoutingC;
+  RplBorderRouterP.ForwardingEvents -> IPStackC.ForwardingEvents[ROUTE_IFACE_PPP];
+  RplBorderRouterP.IPPacket -> IPPacketC;
 #endif
 
   // UDP shell on port 2000

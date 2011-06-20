@@ -17,6 +17,7 @@ if __name__ == '__main__':
 
             rpt = UdpReport.UdpReport(data=data, data_length=len(data))
 
-            print addr
-            print rpt
+            print addr[0],
+            print rpt.get_sender(),
+            print rpt.get_seqno()
 
