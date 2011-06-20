@@ -56,6 +56,9 @@
 // Disable indirect transmissions (MCPS_DATA.request with TX_OPTIONS_INDIRECT will not work):
 #define IEEE154_INDIRECT_TX_DISABLED
 
+// Disallow next higher layer to switch to receive mode (MLME_RX_ENABLE will fail):
+#define IEEE154_RXENABLE_DISABLED
+
 // Set the MAC Tx queue sizes to minimum (one DATA frame):
 #ifdef TXCONTROL_POOL_SIZE
 #undef TXCONTROL_POOL_SIZE
@@ -112,9 +115,6 @@ implementation {
   components ActiveMessageAddressC;
   AM.ActiveMessageAddress -> ActiveMessageAddressC;
 
-  components new Timer62500C() as  RxEnableTimer;
-  AM.RxEnableTimer -> RxEnableTimer;
-
   components new StateC();
   AM.SplitControlState -> StateC;
 
@@ -124,7 +124,6 @@ implementation {
   IEEE154Frame = MAC;
 
   AM.MLME_RESET -> MAC;
-  AM.MLME_RX_ENABLE -> MAC;
   AM.MCPS_DATA -> MAC;
   AM.MLME_SET -> MAC;
   AM.MLME_GET -> MAC;

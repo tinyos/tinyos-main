@@ -74,13 +74,11 @@ module TKN154ActiveMessageP {
   
   uses {
     interface MLME_RESET;
-    interface MLME_RX_ENABLE;
     interface MCPS_DATA;
     interface MLME_SET;
     interface MLME_GET;
     interface IEEE154Frame as Frame;
     interface ActiveMessageAddress;
-    interface Timer<TSymbolIEEE802154> as RxEnableTimer;
     interface Packet as SubPacket;
     interface State as SplitControlState;
     interface Leds;
@@ -221,9 +219,9 @@ implementation {
       call MLME_SET.phyCurrentChannel(26);
 #endif
       call MLME_SET.macAutoRequest(FALSE);
-
-      // ... and now switch the radio to receive mode
-      result = status2Error(call MLME_RX_ENABLE.request(0, 0, MAX_RX_ON_TIME));
+      call MLME_SET.macRxOnWhenIdle(TRUE);
+      call SplitControlState.forceState(S_STARTED);
+      signal SplitControl.startDone(SUCCESS);
     } 
     
     if (result != SUCCESS) {
@@ -236,59 +234,16 @@ implementation {
     }
   }
 
-  event void MLME_RX_ENABLE.confirm( ieee154_status_t status)
-  {
-    // This event is signaled in response to successful MLME_RX_ENABLE.request()
-    error_t result = status2Error(status);
-
-    if (call SplitControlState.isState(S_STARTING)) {
-      if (result == SUCCESS)
-        call SplitControlState.forceState(S_STARTED); // will set Timer below!
-      else
-        call SplitControlState.toIdle();
-      signal SplitControl.startDone(result);
-      
-    }
-    
-    else if (call SplitControlState.isState(S_STOPPING)) {
-      if (result == SUCCESS)
-        call SplitControlState.forceState(S_STOPPED);
-      else
-        call SplitControlState.forceState(S_STARTED);
-      signal SplitControl.stopDone(result);
-    } 
-    
-    if  (call SplitControlState.isState(S_STARTED)) {
-      // The 15.4 MAC allows to enable Rx mode only for a specific time
-      // interval of max. MAX_RX_ON_TIME symbols, so we use a Timer to 
-      // periodically make sure we're always in Rx (unless we're transmitting) 
-      if (result == SUCCESS)
-        call RxEnableTimer.startOneShot(MAX_RX_ON_TIME/2);
-      else
-        call RxEnableTimer.startOneShot(1000); // retry fast
-    }
-  }
-
-  event void RxEnableTimer.fired()
-  {
-    if (call MLME_RX_ENABLE.request(0, 0, MAX_RX_ON_TIME) != IEEE154_SUCCESS)
-      call RxEnableTimer.startOneShot(1000); // retry fast
-  }
-
   command error_t SplitControl.stop() 
   {
     // The 15.4 MAC doesn't provide a stop command - instead we disable Rx and 
     // switch state (MLME_RESET would be executed during next SplitControl.start())
     
     if (call SplitControlState.isState(S_STARTED)) {
-      error_t result;
-      call SplitControlState.forceState(S_STOPPING);
-      result = status2Error(call MLME_RX_ENABLE.request(0, 0, 0));
-      if (result == SUCCESS)
-        call RxEnableTimer.stop();
-      else
-        call SplitControlState.forceState(S_STARTED);
-      return result;
+      call SplitControlState.forceState(S_IDLE);
+      call MLME_SET.macRxOnWhenIdle(FALSE);
+      signal SplitControl.stopDone(SUCCESS);
+      return SUCCESS;
     } else if(call SplitControlState.isState(S_STOPPED)) {
       return EALREADY;
     } else if(call SplitControlState.isState(S_STOPPING)) {
