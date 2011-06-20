@@ -44,9 +44,7 @@
 package net.tinyos.packet;
 
 import java.io.*;
-import java.util.*;
 import net.tinyos.util.*;
-//import net.tinyos.message.*;
 
 /**
  * Provide a standard, generic implementation of PacketSource. Subclasses

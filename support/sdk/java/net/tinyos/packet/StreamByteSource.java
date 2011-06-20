@@ -43,7 +43,6 @@
 
 package net.tinyos.packet;
 
-import java.util.*;
 import java.io.*;
 
 abstract public class StreamByteSource implements ByteSource

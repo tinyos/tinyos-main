@@ -564,7 +564,6 @@ public class Message implements Cloneable {
 
     int byteOffset = offset >> 3;
     int bitOffset = offset & 7;
-    int shift = 0;
 
     // all in one byte case
     if (length + bitOffset <= 8) {

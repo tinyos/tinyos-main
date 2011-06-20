@@ -43,7 +43,6 @@
 
 package net.tinyos.packet;
 
-import java.util.*;
 import java.io.*;
 import java.net.*;
 

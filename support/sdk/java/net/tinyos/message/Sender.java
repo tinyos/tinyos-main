@@ -99,7 +99,7 @@ public class Sender {
 	packet.set_header_dest(moteId);
 	packet.set_header_type((short)amType);
 	packet.set_header_length((short)data.length);
-	packet.dataSet(data, 0, packet.offset_data(0), data.length);
+	packet.dataSet(data, 0, SerialPacket.offset_data(0), data.length);
 
 	byte[] packetData = packet.dataGet();
 	byte[] fullPacket = new byte[packetData.length + 1];

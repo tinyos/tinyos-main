@@ -45,7 +45,6 @@ import net.tinyos.util.*;
 
 import java.io.*;
 import java.util.*;
-import java.nio.*;
 
 /**
  * The Packetizer class implements the new mote-PC protocol, using a ByteSource

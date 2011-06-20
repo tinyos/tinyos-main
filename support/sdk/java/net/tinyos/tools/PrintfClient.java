@@ -38,10 +38,7 @@
 
 package net.tinyos.tools;
 
-import java.io.IOException;
-
 import net.tinyos.message.*;
-import net.tinyos.tools.*;
 import net.tinyos.packet.*;
 import net.tinyos.util.*;
 
@@ -56,7 +53,7 @@ public class PrintfClient implements MessageListener {
 
   public void messageReceived(int to, Message message) {
     PrintfMsg msg = (PrintfMsg)message;
-    for(int i=0; i<msg.totalSize_buffer(); i++) {
+    for(int i=0; i<PrintfMsg.totalSize_buffer(); i++) {
       char nextChar = (char)(msg.getElement_buffer(i));
       if(nextChar != 0)
         System.out.print(nextChar);

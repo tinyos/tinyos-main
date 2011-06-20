@@ -53,15 +53,12 @@
 
 package net.tinyos.tools;
 
-import java.util.*;
 import java.io.*;
 import net.tinyos.comm.*;
 
 import net.tinyos.util.*;
 
 public class ListenRaw {
-    private static String CLASS_NAME = "net.tinyos.tools.ListenRaw";
-    private static final int MAX_MSG_SIZE = 40;
     private static final int PORT_SPEED_TELOS = 115200;
     private static final int PORT_SPEED_MICAZ = 57600;
     private static final int PORT_SPEED_MICA2 = 57600;
@@ -70,8 +67,6 @@ public class ListenRaw {
     private static final int PORT_SPEED_RENE = 19200;
     private static final int PORT_SPEED_IRIS = 57600;
     private static final int PORT_SPEED_SHIMMER = 115200;
-    private static final int LENGTH_OFFSET = 4;
-    private int packetLength;
     private int portSpeed;
 
     private SerialPort port;
@@ -107,8 +102,6 @@ public class ListenRaw {
 
     public void read() throws IOException {
 	int i;
-	int count = 0;
-	byte[] packet = new byte[MAX_MSG_SIZE];
 
 	while ((i = in.read()) != -1) {
 	    if (i == 0x7e) {

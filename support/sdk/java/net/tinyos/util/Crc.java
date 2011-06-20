@@ -57,8 +57,7 @@ public class Crc {
 
     public static int calc(byte[] packet, int index, int count) {
 	int crc = 0;
-	int i;
-
+	
 	while (count > 0) {
 	    crc = calcByte(crc, packet[index++]);
 	    count--;
