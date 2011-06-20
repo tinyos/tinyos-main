@@ -54,10 +54,8 @@ implementation{
   command void Sam3uUsart.start(uint32_t baud){
     call HplUsart.init();
     call HplUsart.configure(mode_register, baud);
-
     call HplUsart.enableTx();
     call HplUsart.enableRx();
-
     signal Sam3uUsart.startDone(SUCCESS);
   }
 

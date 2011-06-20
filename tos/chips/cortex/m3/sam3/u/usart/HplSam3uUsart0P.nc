@@ -42,7 +42,7 @@ module HplSam3uUsart0P{
     interface HplSam3GeneralIOPin as USART_SCK0;
     interface HplSam3GeneralIOPin as USART_TXD0;
     interface HplSam3PeripheralClockCntl as USARTClockControl0;
-    interface HplSam3uClock as ClockConfig;
+    interface HplSam3Clock as ClockConfig;
     interface FunctionWrapper as Usart0InterruptWrapper;
     interface Leds;
   }
@@ -320,15 +320,11 @@ implementation{
       volatile usart_rhr_t *RHR = (volatile usart_rhr_t*) (USART0_BASE_ADDR + 0x18);
       usart_rhr_t rhr = *RHR;
 
-      call Leds.led1Toggle();
-
       recv_data = rhr.bits.rxchr;
       signal Usart.readDone((uint8_t) recv_data);
     }else if(STATE == S_WRITE){
       //}else if(csr.bits.endtx == 1){
       // tx is done
-      call Leds.led0Toggle();
-
       signal Usart.writeDone();
     }
     STATE = S_IDLE;
