@@ -33,14 +33,9 @@
 #include <IPDispatch.h>
 #include <lib6lowpan/lib6lowpan.h>
 #include <lib6lowpan/ip.h>
+#include "blip_printf.h"
 #ifdef COAP_CLIENT_ENABLED
 #include "tinyos_net.h"
-#endif
-
-#ifdef PRINTFUART_ENABLED
-#include "PrintfUART.h"
-#undef dbg
-#define dbg(X, fmt, args ...) printfUART(fmt, ## args)
 #endif
 
 module CoapBlipP {
@@ -55,8 +50,7 @@ module CoapBlipP {
 #endif
 #ifdef COAP_CLIENT_ENABLED
     interface CoAPClient;
-    interface Timer<TMilli> as CoAPClientStartTimer;
-    //interface IPConnectivity;
+    interface ForwardingTableEvents;
 #endif
     interface Leds;
   }
@@ -67,9 +61,6 @@ module CoapBlipP {
 #endif
 
   command error_t Init.init() {
-#ifdef PRINTFUART_ENABLED
-    printfUART_init();
-#endif
     return SUCCESS;
   }
 
@@ -78,15 +69,11 @@ module CoapBlipP {
     uint8_t i;
 #endif
     call RadioControl.start();
-#ifdef PRINTFUART_ENABLED
-    dbg("Boot", "booted %i start\n", TOS_NODE_ID);
-#endif
+    printf("booted %i start\n", TOS_NODE_ID);
 #ifdef COAP_SERVER_ENABLED
 #ifdef COAP_RESOURCE_KEY
     if (call Mount.mount() == SUCCESS) {
-#ifdef PRINTFUART_ENABLED
-      dbg("Boot", "CoapBlipP.Mount successful\n");
-#endif
+      printf("CoapBlipP.Mount successful\n");
     }
 #endif
     // needs to be before registerResource to setup context:
@@ -102,9 +89,6 @@ module CoapBlipP {
     }
 #endif
 
-#ifdef COAP_CLIENT_ENABLED
-    call CoAPClientStartTimer.startOneShot(1024 * 10);
-#endif
   }
 
 #if defined (COAP_SERVER_ENABLED) && defined (COAP_RESOURCE_KEY)
@@ -113,38 +97,30 @@ module CoapBlipP {
 #endif
 
   event void RadioControl.startDone(error_t e) {
-#ifdef PRINTFUART_ENABLED
-    dbg("Boot", "radio startDone: %i\n", TOS_NODE_ID);
-#endif
+    printf("radio startDone: %i\n", TOS_NODE_ID);
   }
 
   event void RadioControl.stopDone(error_t e) {
   }
 
 #ifdef COAP_CLIENT_ENABLED
-  //event void IPConnectivity.prefixAvailable() {
-  event void CoAPClientStartTimer.fired() {
+  event void ForwardingTableEvents.defaultRouteAdded() {
     struct sockaddr_in6 sa6;
     coap_list_t *optlist = NULL;
-    uint8_t i;
-    uint16_t dest[8] = COAP_CLIENT_DEST;
-    for (i = 0; i < 8; i++) {
-      dest[i] = htons(dest[i]);
-    }
 
     if (node_integrate_done == FALSE) {
       node_integrate_done = TRUE;
 
-      memset(&sa6, 0, sizeof(struct sockaddr_in6));
-      memcpy(sa6.sin6_addr.s6_addr16, dest, 8*sizeof(uint16_t));
+      inet_pton6(COAP_CLIENT_DEST, &sa6.sin6_addr);
       sa6.sin6_port = htons(COAP_CLIENT_PORT);
 
-      coap_insert( &optlist, new_option_node(COAP_OPTION_URI_PATH,
-					     sizeof("ni") - 1, "ni"),
-                                             order_opts);
+      coap_insert( &optlist, new_option_node(COAP_OPTION_URI_PATH, sizeof("ni") - 1, "ni"), order_opts);
 
-      call CoAPClient.request(&sa6, COAP_REQUEST_GET, optlist);
+      call CoAPClient.request(&sa6, COAP_REQUEST_PUT, optlist);
     }
+  }
+
+  event void ForwardingTableEvents.defaultRouteRemoved() {
   }
 
   event void CoAPClient.request_done() {

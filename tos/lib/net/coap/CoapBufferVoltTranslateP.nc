@@ -42,11 +42,8 @@ generic module CoapBufferVoltTranslateP() {
   }
 
   event void Read.readDone(error_t result, uint16_t val) {
-#ifdef PRINTFUART_ENABLED
-    dbg("Read", "CoapRead.readDoneVolt: %hu \n", val);
-#endif
     val =  (uint32_t)val*300/4096;
-
+    printf("CoapRead.readDoneVolt: %hu \n", val);
     signal ReadVolt.readDone(result, val);
   }
-  }
+}

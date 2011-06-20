@@ -39,9 +39,9 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
   coap_tid_t id_t;
 
   command error_t ReadResource.get(coap_tid_t id) {
-#ifdef PRINTFUART_ENABLED
-    // 	dbg("Read", "ReadResource.get: %hu\n", uri_key);
-#endif
+
+    // 	printf("ReadResource.get: %hu\n", uri_key);
+
     id_t = id;
     call Timer1.startOneShot(COAP_PREACK_TIMEOUT);
     call Read.read();
@@ -66,11 +66,9 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
 
     buf = (uint8_t*)coap_malloc(sizeof(val_t));
     memcpy(buf, &val, sizeof(val_t));
-#ifdef PRINTFUART_ENABLED
-    // 	dbg("Read","value in buf (len %hu)\n", sizeof(val_t));
+    // 	printf("value in buf (len %hu)\n", sizeof(val_t));
     // 	for (i=0; i<sizeof(val_t); i++)
-    // 	    dbg("Read", "%x:%x\n", i, buf[i]);
-#endif
+    // 	    printf("%x:%x\n", i, buf[i]);
     signal ReadResource.getDone(result, id_t, asyn_message, buf, sizeof(val_t));
   }
 

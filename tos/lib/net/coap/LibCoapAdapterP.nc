@@ -30,11 +30,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef PRINTFUART_ENABLED
-#include "PrintfUART.h"
-#undef dbg
-#define dbg(X, fmt, args ...) printfUART(fmt, ## args)
-#endif
 
 module LibCoapAdapterP {
   provides interface LibCoAP as LibCoapServer;
@@ -49,9 +44,7 @@ module LibCoapAdapterP {
 
   event void UDPServer.recvfrom(struct sockaddr_in6 *from, void *data,
 				uint16_t len, struct ip6_metadata *meta) {
-#ifdef PRINTFUART_ENABLED
-    dbg("UDP", "LibCoapAdapter UDPServer.recvfrom()\n");
-#endif
+    printf( "LibCoapAdapter UDPServer.recvfrom()\n");
     libcoap_server_read(from, data, len, meta);
   }
 
@@ -63,9 +56,7 @@ module LibCoapAdapterP {
 
   event void UDPClient.recvfrom(struct sockaddr_in6 *from, void *data,
 				uint16_t len, struct ip6_metadata *meta) {
-#ifdef PRINTFUART_ENABLED
-    dbg("UDP", "LibCoapAdapter UDPClient.recvfrom()\n");
-#endif
+    printf("LibCoapAdapter UDPClient.recvfrom()\n");
     libcoap_client_read(from, data, len, meta);
   }
 

@@ -134,8 +134,11 @@ configuration CoapBlipC {
   CoapUdpClientC.LibCoapClient -> LibCoapAdapterC.LibCoapClient;
   CoapUdpClientC.Init <- MainC.SoftwareInit;
   LibCoapAdapterC.UDPClient -> UdpClientSocket;
+    CoapBlipP.ForwardingTableEvents -> IPStackC.ForwardingTableEvents;
+#endif
 
-  components new TimerMilliC() as CoAPClientStartTimer;
-  CoapBlipP.CoAPClientStartTimer -> CoAPClientStartTimer;
+#ifdef PRINTFUART_ENABLED
+    components PrintfC;
+    components SerialStartC;
 #endif
   }

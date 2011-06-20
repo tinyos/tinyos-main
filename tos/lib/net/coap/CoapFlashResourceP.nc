@@ -52,9 +52,7 @@ generic module CoapFlashResourceP(uint8_t uri_key) {
       memcpy(&conf, buf, len);
     }
     else {
-#ifdef PRINTFUART_ENABLED
-      dbg("Read", "Read flash not successful \n"); // Handle failure.
-#endif
+      printf("Read flash not successful \n"); // Handle failure.
     }
 
     signal ReadResource.getDone(err, id_t, 0, buf, sizeof(conf));
@@ -82,12 +80,12 @@ generic module CoapFlashResourceP(uint8_t uri_key) {
 
     if (call ConfigStorage.valid() == TRUE) {
       if (call ConfigStorage.read(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
-	dbg("Read", "Config.read not successful \n");
+	printf("Config.read not successful \n");
 	return FAIL;
       }
     } else {
       // Invalid volume.  Commit to make valid.
-      dbg("Read", "invalid volume \n");
+      printf( "invalid volume \n");
       if (call ConfigStorage.commit() == SUCCESS) {
       }
       else {
@@ -107,13 +105,13 @@ generic module CoapFlashResourceP(uint8_t uri_key) {
 
     if (call ConfigStorage.valid() == TRUE) {
       if (call ConfigStorage.write(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
-	dbg("Read", "Config.write not s \n");
+	printf("Config.write not s \n");
 	return FAIL;
       }
     }
     else {
       // Invalid volume.  Commit to make valid.
-      dbg("Read", "invalid volume \n");
+      printf("invalid volume \n");
       if (call ConfigStorage.commit() == SUCCESS) {
       }
       else {

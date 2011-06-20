@@ -41,12 +41,8 @@ generic module CoapBufferTempTranslateP() {
   }
 
   event void Read.readDone(error_t result, uint16_t val) {
-
     val =  23355 + val -200; //Offset: 500 Deg for USB, 200 for Battery
-#ifdef PRINTFUART_ENABLED
-    dbg("Read", "CoapBufferTempTranslateP.readDone: %hu \n", val);
-#endif
+    printf( "CoapBufferTempTranslateP.readDone: %hu \n", val);
     signal ReadTemp.readDone(result, val);
   }
-
-  }
+}

@@ -40,13 +40,6 @@
 #include <encode.h>
 #include "tinyos_coap_resources.h"
 
-#ifdef PRINTFUART_ENABLED
-#undef dbg
-#define dbg(X, fmt, args ...) printfUART(fmt, ## args)
-#define debug(X, args...)  printfUART(X, ## args)
-#else
-
-#endif
 #define INDEX "CoAPUdpServer: It works!!"
 
 #define GENERATE_PDU(var,t,c,i) {		\
@@ -186,7 +179,7 @@ module CoapUdpServerP {
 
   ///////////////////
   // wellknown resources
-#warning "well-known/core is not implemented"
+#warning "FIXME: .well-known/core is not implemented"
   //     int resource_wellknown(coap_uri_t *uri,
   // 			   unsigned short *id,
   // 			   unsigned char *tok,
@@ -251,9 +244,7 @@ module CoapUdpServerP {
 
   event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
 				uint16_t len, struct ip6_metadata *meta) {
-#ifdef PRINTFUART_ENABLED
-    dbg("UDP", "CoapUdpServer: LibCoapServer.read()\n");
-#endif
+    //printf("CoapUdpServer: LibCoapServer.read()\n");
     coap_read(ctx_server, from, data, len, meta);
     coap_dispatch(ctx_server);
   }
@@ -262,9 +253,7 @@ module CoapUdpServerP {
   // some standard PDU's
   coap_pdu_t *new_ack( coap_context_t  *ctx, coap_queue_t *node ) {
     coap_pdu_t *pdu;
-#ifdef PRINTFUART_ENABLED
-    debug("** coap: new_ack\n");
-#endif
+    //printf("** coap: new_ack\n");
     GENERATE_PDU(pdu,COAP_MESSAGE_ACK,0,node->pdu->hdr->id);
 
     return pdu;
@@ -280,9 +269,7 @@ module CoapUdpServerP {
   coap_pdu_t *new_response( coap_context_t  *ctx, coap_queue_t *node,
 			    unsigned int code ) {
     coap_pdu_t *pdu;
-#ifdef PRINTFUART_ENABLED
-    debug("** coap: new_response %i\n", code);
-#endif
+    //printf("** coap: new_response %i\n", code);
     GENERATE_PDU(pdu,COAP_MESSAGE_ACK,code,node->pdu->hdr->id);
 
     return pdu;
@@ -290,9 +277,7 @@ module CoapUdpServerP {
 
   coap_pdu_t *new_asynresponse( coap_context_t  *ctx, coap_queue_t *node) {
     coap_pdu_t *pdu;
-#ifdef PRINTFUART_ENABLED
-    debug("** coap: new_asynresponse\n");
-#endif
+    //printf("** coap: new_asynresponse\n");
     GENERATE_PDU(pdu,COAP_MESSAGE_CON,COAP_RESPONSE_200,node->pdu->hdr->id);
 
     return pdu;
@@ -350,9 +335,7 @@ module CoapUdpServerP {
     if ( !coap_get_request_uri( node->pdu, &uri ) )
       return NULL;
 
-#ifdef PRINTFUART_ENABLED
-    debug("** coap: handle_get: uri %s \n", uri.path.s);
-#endif
+    //printf("** coap: handle_get: uri %s \n", uri.path.s);
     //send default test response if no URI is given
     if ( !uri.path.length ) {
       pdu = new_response(ctx, node, COAP_RESPONSE_200);
@@ -402,9 +385,7 @@ module CoapUdpServerP {
 
       if (resource->splitphase) {
 	if (code == SUCCESS) {
-#ifdef PRINTFUART_ENABLED
-	  debug("** coap: splitphase resource, save context and node details, send async response \n");
-#endif
+	  //printf("** coap: splitphase resource, save context and node details, send async response \n");
 	  /* handle subscription */
 #warning "subscriptions not supported"
 
@@ -424,9 +405,7 @@ module CoapUdpServerP {
   }
 
  default command error_t ReadResource.get[uint8_t uri_key](coap_tid_t id) {
-#ifdef PRINTFUART_ENABLED
-   debug("** coap: default (get not available for this resource)....... %i\n", uri_key);
-#endif
+   //printf("** coap: default (get not available for this resource)....... %i\n", uri_key);
    return FAIL;
  }
 
@@ -439,50 +418,36 @@ module CoapUdpServerP {
    coap_pdu_t *pdu;
    coap_opt_t *tok, *ct;
 
-#ifdef PRINTFUART_ENABLED
-   debug("** coap: getDone.... %i\n", uri_key);
-#endif
+   //printf("** coap: getDone.... %i\n", uri_key);
 
    // assuming more than one entry is in asynresqueue
    if (!(node = coap_find_transaction(ctx_server->asynresqueue, id))){
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: getDone: node in asynresqueue not found, quit\n");
-#endif
+     //printf("** coap: getDone: node in asynresqueue not found, quit\n");
      return;
    }
 
    if (result){
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: sensor retrival failed\n");
-#endif
+     //printf("** coap: sensor retrival failed\n");
 
      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) {
-#ifdef PRINTFUART_ENABLED
-       debug("** coap: return PDU Null for COAP_RESPONSE_500 \n");
-#endif
+	 //printf("** coap: return PDU Null for COAP_RESPONSE_500 \n");
      }
      //FIXME
      memcpy(val_buf, "Sensor not found", 16);
      buflen = 16;
    } else {
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: sensor retrival successful\n");
-#endif
+     //printf("** coap: sensor retrival successful\n");
      if (asyn_message){
        node->pdu->hdr->id = get_new_tid();
 
        if ( !(pdu = new_asynresponse(ctx_server, node)) ) {
-#ifdef PRINTFUART_ENABLED
-	 debug("** coap: return PDU Null for Asyn response\n");
-#endif
+	 //printf("** coap: return PDU Null for Asyn response\n");
        }
      } else {
 
        //normal response
        if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_200)) ) {
-#ifdef PRINTFUART_ENABLED
-	 //debug("** coap: return PDU Null for normal response\n");
-#endif
+	 //printf("** coap: return PDU Null for normal response\n");
        }
      }
    }
@@ -500,17 +465,13 @@ module CoapUdpServerP {
    // Add buffer value to the PDU
    if (!coap_add_data(pdu, buflen, val_buf)) {
      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) {
-#ifdef PRINTFUART_ENABLED
-       //debug("** coap: return PDU Null for 500 response\n");
-#endif
+       //printf("** coap: return PDU Null for 500 response\n");
      }
    }
 
    // sending pdu
    if (pdu && (call LibCoapServer.send(ctx_server, &node->remote, pdu, 1) == COAP_INVALID_TID )) {
-#ifdef PRINTFUART_ENABLED
-     //debug("** coap:error sending response\n");
-#endif
+     //printf("** coap:error sending response\n");
      coap_delete_pdu(pdu);
    }
 
@@ -518,9 +479,7 @@ module CoapUdpServerP {
    ctx_server->asynresqueue = ctx_server->asynresqueue->next;
    node->next = NULL;
    coap_delete_node( node );
-#ifdef PRINTFUART_ENABLED
-   debug("** coap: delete node details kept for Asyn response\n");
-#endif
+   //printf("** coap: delete node details kept for Asyn response\n");
  }
 
  event void ReadResource.getDoneDeferred[uint8_t uri_key](coap_tid_t id) {
@@ -530,40 +489,27 @@ module CoapUdpServerP {
 
    // assuming more than one entry is in asynresqueue
    if (!(node = coap_find_transaction(ctx_server->asynresqueue, id))){
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: getPreACK: node in asynresqueue not found, quit\n");
-#endif
+     //printf("** coap: getPreACK: node in asynresqueue not found, quit\n");
      return;
    }
 
    //check for token
    if (!coap_check_option(node->pdu, COAP_OPTION_TOKEN)) {
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: token required --> send COAP_RESPONSE_240\n");
-#endif
+     //printf("** coap: token required --> send COAP_RESPONSE_240\n");
      reqtoken = 1;
      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_X_240)) ) {
-
-#ifdef PRINTFUART_ENABLED
-       //debug("** coap: return PDU Null for COAP_RESPONSE_240 \n");
-#endif
+       //printf("** coap: return PDU Null for COAP_RESPONSE_240 \n");
      }
    } else {
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: send PreACK\n");
-#endif
+     //printf("** coap: send PreACK\n");
      if ( !(pdu = new_ack(ctx_server, node)) ) {
-#ifdef PRINTFUART_ENABLED
-       //debug("** coap: return PDU Null for PreACK response\n");
-#endif
+       //printf("** coap: return PDU Null for PreACK response\n");
      }
    }
 
    // sending pdu
    if (pdu && (call LibCoapServer.send(ctx_server, &node->remote, pdu, 1) == COAP_INVALID_TID )) {
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: error sending response\n");
-#endif
+     //printf("** coap: error sending response\n");
    }
 
    if (reqtoken) {
@@ -571,13 +517,9 @@ module CoapUdpServerP {
      ctx_server->asynresqueue = ctx_server->asynresqueue->next;
      node->next = NULL;
      coap_delete_node(node);
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: delete node details kept for Asyn response\n");
-#endif
+     //printf("** coap: delete node details kept for Asyn response\n");
    } else {
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: PreACK sent!\n");
-#endif
+     //printf("** coap: PreACK sent!\n");
    }
  }
 
@@ -596,9 +538,7 @@ module CoapUdpServerP {
    unsigned int len;
    unsigned char *databuf;
 
-#ifdef PRINTFUART_ENABLED
-   debug("** coap: handle put\n");
-#endif
+   //printf("** coap: handle put\n");
    if ( !coap_get_request_uri( node->pdu, &uri ) )
      return NULL;
 
@@ -657,9 +597,7 @@ module CoapUdpServerP {
 
      if (resource->splitphase) {
        if (code == SUCCESS) {
-#ifdef PRINTFUART_ENABLED
-	 debug("** coap: splitphase resource, save context and node details, send async response \n");
-#endif
+	 //printf("** coap: splitphase resource, save context and node details, send async response \n");
 	 coap_read_save(ctx, node);
 	 return NULL;
        } else {
@@ -676,9 +614,7 @@ module CoapUdpServerP {
  }
 
  default command error_t WriteResource.put[uint8_t uri_key](uint8_t* val, uint8_t buflen, coap_tid_t id) {
-#ifdef PRINTFUART_ENABLED
-   // 	debug("** coap: default (put not available for this resource)....... %i\n", uri_key);
-#endif
+   //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
    return FAIL;
  }
 
@@ -690,45 +626,31 @@ module CoapUdpServerP {
    coap_pdu_t *pdu;
    coap_opt_t *tok, *ct;
 
-#ifdef PRINTFUART_ENABLED
-   debug("** coap: putDone.... %i\n", uri_key);
-#endif
+   //printf("** coap: putDone.... %i\n", uri_key);
    // assuming more than one entry is in asynresqueue
    if (!(node = coap_find_transaction(ctx_server->asynresqueue, id))){
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: getDone: node in asynresqueue not found, quit\n");
-#endif
+     //printf("** coap: getDone: node in asynresqueue not found, quit\n");
      return;
    }
 
    if (result){
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: sensor retrival failed\n");
-#endif
+     //printf("** coap: sensor retrival failed\n");
      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) {
-#ifdef PRINTFUART_ENABLED
-       // debug("** coap: return PDU Null for COAP_RESPONSE_500 \n");
-#endif
+       // printf("** coap: return PDU Null for COAP_RESPONSE_500 \n");
      }
      //FIXME
      //memcpy(val_buf, "Sensor not found", 16);
      //buflen = 16;
    } else {
-#ifdef PRINTFUART_ENABLED
-     debug("** coap: sensor retrival successful\n");
-#endif
+     //printf("** coap: sensor retrival successful\n");
      if (asyn_message){
        node->pdu->hdr->id = get_new_tid();
        if ( !(pdu = new_asynresponse(ctx_server, node)) ) {
-#ifdef PRINTFUART_ENABLED
-	 // debug("** coap: return PDU Null for Asyn response\n");
-#endif
+	 //printf("** coap: return PDU Null for Asyn response\n");
        }
      } else {
        if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_200)) ) {
-#ifdef PRINTFUART_ENABLED
-	 // debug("** coap: return PDU Null for normal response\n");
-#endif
+	 //printf("** coap: return PDU Null for normal response\n");
        }
      }
    }
@@ -745,9 +667,7 @@ module CoapUdpServerP {
 
    // sending pdu
    if (pdu && (call LibCoapServer.send(ctx_server, &node->remote, pdu, 1) == COAP_INVALID_TID )) {
-#ifdef PRINTFUART_ENABLED
-     //debug("** coap:asyn Res: error sending response\n");
-#endif
+     //printf("** coap:asyn Res: error sending response\n");
      coap_delete_pdu(pdu);
    }
 
@@ -755,9 +675,7 @@ module CoapUdpServerP {
    ctx_server->asynresqueue = ctx_server->asynresqueue->next;
    node->next = NULL;
    coap_delete_node( node );
-#ifdef PRINTFUART_ENABLED
-   debug("** coap: delete node details kept for Asyn response\n");
-#endif
+   //printf("** coap: delete node details kept for Asyn response\n");
  }
 
  event void WriteResource.putDoneDeferred[uint8_t uri_key](coap_tid_t id) {
@@ -789,9 +707,7 @@ module CoapUdpServerP {
 #endif
 
    if ( node->pdu->hdr->version != COAP_DEFAULT_VERSION ) {
-#ifdef PRINTFUART_ENABLED
-     debug("dropped packet with unknown version %u\n", node->pdu->hdr->version);
-#endif
+     //printf("dropped packet with unknown version %u\n", node->pdu->hdr->version);
      return;
    }
 
@@ -842,9 +758,7 @@ module CoapUdpServerP {
    }
 
    if (pdu && (call LibCoapServer.send(ctx, &node->remote, pdu, 1) == COAP_INVALID_TID )) {
-#ifdef PRINTFUART_ENABLED
-     debug("message_handler: error sending response");
-#endif
+     //printf("message_handler: error sending response");
      coap_delete_pdu(pdu);
    }
  }
@@ -868,9 +782,7 @@ module CoapUdpServerP {
    }
 
    memcpy( &new_node->remote, &node->remote, sizeof( struct sockaddr_in6 ) );
-#ifdef PRINTFUART_ENABLED
-   debug("** coap: saving ctx and node details to send asynres later\n");
-#endif
+   //printf("** coap: saving ctx and node details to send asynres later\n");
    /* "parse" received PDU by filling pdu structure */
    memcpy(new_node->pdu->hdr, node->pdu->hdr, node->pdu->length );
    new_node->pdu->length = node->pdu->length;
@@ -886,9 +798,7 @@ module CoapUdpServerP {
 
    /* and add new node to asynresqueue */
    coap_insert_node( &ctx->asynresqueue, new_node, order_transaction_id );
-#ifdef PRINTFUART_ENABLED
-   debug("** coap: add new node to asynresqueue\n");
-#endif
+   //printf("** coap: add new node to asynresqueue\n");
 
 #ifndef NDEBUG
    coap_show_pdu( new_node->pdu );
@@ -896,5 +806,4 @@ module CoapUdpServerP {
 
    return 0;
  }
-
-  }
+}

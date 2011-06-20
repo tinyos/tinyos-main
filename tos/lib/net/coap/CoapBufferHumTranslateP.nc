@@ -41,10 +41,8 @@ generic module CoapBufferHumTranslateP() {
   }
 
   event void Read.readDone(error_t result, uint16_t val) {
-#ifdef PRINTFUART_ENABLED
-    dbg("Read", "CoapRead.readDone: %hu \n", val);
-#endif
     val =  (-400 + val*4 -((uint32_t)val*(uint32_t)val)*100/357143);
+    printf("CoapRead.readDone: %hu\n", val);
     signal ReadHum.readDone(result, val);
   }
-  }
+}

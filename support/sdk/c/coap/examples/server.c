@@ -1037,6 +1037,14 @@ resource_from_file(coap_uri_t *uri,
   return code;
 }
 
+int
+resource_ni(coap_uri_t *uri,
+	    unsigned char *mediatype, unsigned int offset,
+	    unsigned char *buf, unsigned int *buflen,
+	    int *finished) {
+  *finished = 1;
+  return COAP_RESPONSE_200;
+}
 #define RESOURCE_SET_URI(r,st) \
   (r)->uri = coap_new_uri((const unsigned char *)(st), strlen(st));
 
@@ -1057,6 +1065,8 @@ init_resources(coap_context_t *ctx) {
   static const char *d_file = "a single file, you can PUT things here";
   static const char *u_data = "/data-sink";
   static const char *d_data = "POSTed data is stored here";
+  static const char *u_ni = "/ni";
+  static const char *d_ni = "node integrate";
   coap_resource_t *r;
 
   if ( !(r = coap_malloc( sizeof(coap_resource_t) ))) 
@@ -1119,6 +1129,19 @@ init_resources(coap_context_t *ctx) {
   r->dirty = 0;
   r->writable = 0;
   r->data = resource_from_file;
+  r->maxage = 10;
+  coap_add_resource(ctx, r);
+
+  if ( !(r = coap_malloc( sizeof(coap_resource_t) )))
+    return;
+
+  memset(r, 0, sizeof(coap_resource_t));
+  RESOURCE_SET_URI(r,u_ni);
+  RESOURCE_SET_DESC(r,d_ni);
+  r->mediatype = COAP_MEDIATYPE_ANY;
+  r->dirty = 0;
+  r->writable = 1;
+  r->data = resource_ni;
   r->maxage = 10;
   coap_add_resource(ctx, r);
 }

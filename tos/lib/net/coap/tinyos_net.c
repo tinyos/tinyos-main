@@ -40,9 +40,6 @@ coap_read(coap_context_t *ctx,
   coap_opt_t *opt;
 
   if ( bytes_read < 0 ) {
-#ifdef PRINTFUART_ENABLED
-    //perror("coap_read: recvfrom");
-#endif
     return -1;
   }
 
@@ -62,7 +59,7 @@ coap_read(coap_context_t *ctx,
     return -1;
   }
 
-  /*debug("** coap: coap_read pointers %p %p, %p %p\n",
+  /*printf("** coap: coap_read pointers %p %p, %p %p\n",
     &node->remote,
     node->remote,
     src,
@@ -92,9 +89,7 @@ coap_read(coap_context_t *ctx,
   if ( inet_ntop(src.sin6_family, &src.sin6_addr, addr, INET6_ADDRSTRLEN) == 0 ) {
     //perror("coap_read: inet_ntop");
   } else {
-#ifdef PRINTFUART_ENABLED
-    dbg("", "** received from [%s]:%d:\n  ",addr,ntohs(src.sin6_port));
-#endif
+    printf( "** received from [%s]:%d:\n  ",addr,ntohs(src.sin6_port));
   }
   coap_show_pdu( node->pdu );
 #endif
