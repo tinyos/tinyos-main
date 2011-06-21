@@ -42,6 +42,8 @@ generic module CoapBufferVoltTranslateP() {
   }
 
   event void Read.readDone(error_t result, uint16_t val) {
+    /* The calculation of the voltage for TelosB nodes is done according to the formula given in $TOSROOT/tos/chips/msp430/sensors/Msp430InternalVoltageC.nc
+       To provide a precision of 0.01 Volt, the equation is multiplied by 100.*/
     val =  (uint32_t)val*300/4096;
     printf("CoapRead.readDoneVolt: %hu \n", val);
     signal ReadVolt.readDone(result, val);

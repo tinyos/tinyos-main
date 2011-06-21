@@ -26,7 +26,7 @@ PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
 PFLAGS += -DIN6_PREFIX=\"fec0::\"
 
 # printf debugs. works only on telosb/tmote sky.
-CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
+#CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
 # uncomment this line if you are having problems displaying the new printf semantics
 # CFLAGS += -DPRINTF_BUFFER_SIZE=1024
 

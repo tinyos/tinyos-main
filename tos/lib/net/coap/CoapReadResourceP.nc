@@ -56,7 +56,6 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
   }
 
   event void Read.readDone(error_t result, val_t val) {
-    uint8_t* buf;
     uint8_t asyn_message = 1;
 
     if (call Timer1.isRunning()){
@@ -64,12 +63,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
       asyn_message = 0;
     }
 
-    buf = (uint8_t*)coap_malloc(sizeof(val_t));
-    memcpy(buf, &val, sizeof(val_t));
-    // 	printf("value in buf (len %hu)\n", sizeof(val_t));
-    // 	for (i=0; i<sizeof(val_t); i++)
-    // 	    printf("%x:%x\n", i, buf[i]);
-    signal ReadResource.getDone(result, id_t, asyn_message, buf, sizeof(val_t));
+    signal ReadResource.getDone(result, id_t, asyn_message, (uint8_t*)&val, sizeof(val_t));
   }
 
   }

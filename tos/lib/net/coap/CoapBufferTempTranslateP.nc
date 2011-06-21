@@ -41,7 +41,11 @@ generic module CoapBufferTempTranslateP() {
   }
 
   event void Read.readDone(error_t result, uint16_t val) {
-    val =  23355 + val -200; //Offset: 500 Deg for USB, 200 for Battery
+    /*
+      The calculation of the temperature for TelosB nodes is done according to the datasheet SHT1x (www.sensirion.com/en/pdf/product_information/Datasheet-humidity-sensor-SHT1x.pdf).
+      T = d1 + d2 * val
+      All values are multiplied with 100 to get a fixed-point representation and the final result is in Kelvin (+ 273.15). In addition, an offset can be subtracted for battery or USB powered nodes */
+    val =  23355 + val -200; //Offset: 500 for USB, 200 for Battery
     printf( "CoapBufferTempTranslateP.readDone: %hu \n", val);
     signal ReadTemp.readDone(result, val);
   }

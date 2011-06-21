@@ -38,11 +38,8 @@ generic module CoapLedResourceP(uint8_t uri_key) {
   coap_tid_t id_t;
 
   void task getLed() {
-    uint8_t* buf;
     uint8_t val = call Leds.get();
-    buf = (uint8_t*)coap_malloc(sizeof(uint8_t));
-    memcpy(buf, &val, sizeof(uint8_t));
-    signal ReadResource.getDone(SUCCESS, id_t, 0, buf, sizeof(uint8_t));
+    signal ReadResource.getDone(SUCCESS, id_t, 0, (uint8_t*)&val, sizeof(uint8_t));
   };
 
   void task setLedDone() {
