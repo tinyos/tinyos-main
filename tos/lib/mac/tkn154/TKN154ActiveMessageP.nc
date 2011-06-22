@@ -290,7 +290,7 @@ implementation {
     // support bridging between interfaces e.g. radio/serial.
 
     memmove(p + PAYLOAD_OFFSET, p, len);
-    header->type = id = p[PAYLOAD_OFFSET-1] = header->type;
+    header->type = p[PAYLOAD_OFFSET-1] = header->type;
 #ifndef TFRAMES_ENABLED
     header->network = p[PAYLOAD_OFFSET-2] = T2_6LOWPAN_NETWORK_ID;
 #endif
@@ -458,7 +458,21 @@ implementation {
 
   command uint8_t Packet.maxPayloadLength()
   {
-    return call SubPacket.maxPayloadLength() - PAYLOAD_OFFSET;
+    uint8_t len = call SubPacket.maxPayloadLength();
+
+    // TinyOS uses a static header of 9 byte. The maximum allowed
+    // MAC payload is then 116. The MAC would signal an error later 
+    // (when you call MCPS_DATA.request()), which we must avoid...
+    if (len > 116)
+      len = 116;
+    else if (len < PAYLOAD_OFFSET)
+      return 0;
+
+    // Reserve one (or two) byte for the AM type and network ID
+    // (they are part of the IEEE 802.15.4 MAC payload, not header!)
+    len -= PAYLOAD_OFFSET;   
+
+    return len;
   }
 
   command void* Packet.getPayload(message_t* msg, uint8_t len)
