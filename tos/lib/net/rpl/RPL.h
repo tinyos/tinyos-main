@@ -116,11 +116,11 @@ struct icmpv6_header_t {
   uint8_t	type;
   uint8_t	code;
   nx_uint16_t	checksum;
-};
+}__attribute__((packed));
 
 struct dis_base_t {
   struct icmpv6_header_t icmpv6;
-  uint16_t reserved;
+  nx_uint16_t reserved;
 };
 
 struct rpl_instance_id {
@@ -129,7 +129,7 @@ struct rpl_instance_id {
   uint8_t id        : 7;
   */
   uint8_t id;
-};
+}__attribute__((packed));
 
 struct transit_info_option_t {
   uint8_t type;
@@ -153,19 +153,21 @@ struct dao_base_t {
   struct rpl_instance_id instance_id; // used to be RPLinstanceID
   uint16_t k_bit : 1;
   uint16_t d_bit : 1;
-  uint16_t reserved : 14;
+  uint16_t flags : 6;
+  uint16_t reserved : 8;
   uint8_t DAOsequence;
   struct in6_addr dodagID;
   struct target_option_t target_option;
   struct transit_info_option_t transit_info_option;
-};
+}__attribute__((packed));
 
 struct dio_base_t {
   struct icmpv6_header_t icmpv6;
   struct rpl_instance_id instance_id; // used to be instanceID
   nx_uint8_t version; //used to be sequence
   nx_uint16_t dagRank;
-  union{
+  uint8_t flags;
+  //union{
     /*
     struct flags_t {
       uint8_t grounded        :1;
@@ -174,12 +176,12 @@ struct dio_base_t {
       uint8_t dag_preference  :3;
     } __attribute__((packed)) flags_element;
     */
-    uint8_t flags_chunk;
-  } flags;
+    //uint8_t flags_chunk;
+    //  } flags;
   uint8_t dtsn;
-  uint16_t reserved2;
+  nx_uint16_t reserved;
   struct in6_addr dodagID; // was dagID
-};
+}__attribute__((packed));
 
 struct dio_body_t{ // type 2 ; contains metrics
   uint8_t type;

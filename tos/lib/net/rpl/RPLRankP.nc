@@ -672,7 +672,7 @@ implementation {
     // DODAG ID in this DIO packet (received DODAGID)
 
     memcpy_rpl((uint8_t*)&rDODAGID, (uint8_t*)&dio->dodagID, sizeof(struct in6_addr));
-    tempPrf = dio->flags.flags_chunk & DIO_PREF_MASK;
+    tempPrf = dio->flags & DIO_PREF_MASK;
 
     if (!compare_ipv6(&DODAGID, &DODAG_MAX) && 
         !compare_ipv6(&DODAGID, &rDODAGID)) { 
@@ -943,6 +943,9 @@ implementation {
     dio = (struct dio_base_t *) payload;
 
     if (!m_running) return;
+
+    if(TOS_NODE_ID == 2 && dio->dagRank == ROOT_RANK)
+      return;
 
     //printf_in6addr(&iph->ip6_src);
     //printf(" >  I GOT %d %d %d %d %d!!\n", iph->ip6_nxt, dio->icmpv6.code, dio->dagRank, nodeRank, parentNum);
