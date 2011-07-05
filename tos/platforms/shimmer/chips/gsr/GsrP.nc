@@ -53,7 +53,8 @@ implementation
 #define HW_RES_3M3_MAX_ADC_VAL    3930 //680k to 4M7
 #define HW_RES_3M3_MIN_ADC_VAL    1125 //680k to 4M7
 
-
+// These constants were calculated by measuring against precision resistors
+// and then using polynomial curve fitting 
 #define HW_RES_40K_CONSTANT_1      0.0000000065995
 #define HW_RES_40K_CONSTANT_2      (-0.000068950)
 #define HW_RES_40K_CONSTANT_3      0.2699
