@@ -46,7 +46,7 @@ module Sam3uUsbSerialP {
   } 
   uses {
     interface HplNVICInterruptCntl as UDPHSInterrupt;
-    interface HplSam3uPeripheralClockCntl as UDPHSClockControl;
+    interface HplSam3PeripheralClockCntl as UDPHSClockControl;
     interface FunctionWrapper as UdphsInterruptWrapper;
   }
 }
