@@ -206,9 +206,12 @@ implementation
     if(state != S_IDLE){
       return EBUSY;
     }else{
+      atomic {
+	state = S_ADC;
+      }
       cr.bits.start = 1; // enable software trigger
       *CR = cr;
-      atomic state = S_ADC;
+      call ADC12BInterrupt.enable();
       return SUCCESS;
     }
   }
@@ -232,21 +235,22 @@ implementation
     // Read LCDR
     volatile adc12b_lcdr_t *LCDR = (volatile adc12b_lcdr_t *) 0x400A8020;
     adc12b_lcdr_t lcdr = *LCDR;
-    
+    call Adc12bClockControl.disable();
     if(sr.bits.drdy){
-      data = lcdr.bits.ldata;
-      cr.bits.start = 0; // disable software trigger
-      *CR = cr;
-      //get data from register
-      atomic state = S_IDLE;
-      call Adc12bClockControl.disable();
+      atomic {
+	data = lcdr.bits.ldata;
+	cr.bits.start = 0; // disable software trigger
+	*CR = cr;
+	//get data from register
+	state = S_IDLE;
+      }
       signal Sam3uAdc12b.dataReady[clientID](data);
     }
 #else
     if(sr.bits.endrx){
       atomic state = S_IDLE;
       atomic cr.bits.start = 0; // enable software trigger
-      atomic *CR = cr;        
+      atomic *CR = cr;
       signal Sam3uAdc12b.dataReady[clientID](data);
     }else{
       call HplPdc.enablePdcRx();
@@ -257,6 +261,7 @@ implementation
   }
   void Adc12BIrqHandler() @C() @spontaneous() {
     call Adc12bInterruptWrapper.preamble();
+    call ADC12BInterrupt.disable();
     handler();
     call Adc12bInterruptWrapper.postamble();
   }
