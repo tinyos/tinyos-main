@@ -46,13 +46,10 @@ module HplSam3uUsart1P{
     interface FunctionWrapper as Usart1InterruptWrapper;
     interface Leds;
   }
-
 }
 implementation{
 
 #define USART1_BASE_ADDR 0x40094000
-
-  uint16_t recv_data;
 
   enum{
     S_READ,
@@ -66,9 +63,7 @@ implementation{
     // enables interrupt for read
     volatile usart_ier_t *IER = (volatile usart_ier_t*) (USART1_BASE_ADDR + 0x8);
     usart_ier_t ier = *IER;
-
     ier.bits.rxrdy = 1;
-
     *IER = ier;
   }
 
@@ -76,10 +71,8 @@ implementation{
     // enables interrupt for write    
     volatile usart_ier_t *IER = (volatile usart_ier_t*) (USART1_BASE_ADDR + 0x8);
     usart_ier_t ier = *IER;
-
     //ier.flat = 0xFFFFFFFF;
     ier.bits.txrdy = 1;
-
     *IER = ier;
   }
 
@@ -325,30 +318,37 @@ implementation{
     return SUCCESS;
   }
 
+
+  volatile usart_rhr_t *RHR = (volatile usart_rhr_t*) (USART1_BASE_ADDR + 0x18);
+  volatile usart_csr_t *CSR = (volatile usart_csr_t*) (USART1_BASE_ADDR + 0x14);
+
+
+  uint16_t recv_data;
+
+  task void readDoneTask(){
+    signal Usart.readDone((uint8_t)recv_data);
+  }
+
+
   __attribute__((interrupt)) void Usart1IrqHandler() @C() @spontaneous(){
 
-    volatile usart_csr_t *CSR = (volatile usart_csr_t*) (USART1_BASE_ADDR + 0x14);
-    usart_csr_t csr = *CSR;
-
-    call Usart1InterruptWrapper.preamble();
-    disableInterrupt();
-
-    if(/*STATE == S_READ || STATE == S_IDLE*/csr.bits.rxrdy){
-      // end reading
-      volatile usart_rhr_t *RHR = (volatile usart_rhr_t*) (USART1_BASE_ADDR + 0x18);
-      //usart_rhr_t rhr = *RHR;
-      //recv_data = rhr.bits.rxchr;
-      recv_data = RHR->bits.rxchr;
-
-      signal Usart.readDone((uint8_t) recv_data);
+    atomic {
+      call Usart1InterruptWrapper.preamble();
+      disableInterrupt();
     }
-    else if(STATE == S_WRITE && csr.bits.txrdy){
-      // tx is done
-      signal Usart.writeDone();
+
+    if(CSR->bits.rxrdy){
+      atomic recv_data = RHR->bits.rxchr;
+      signal Usart.readDone((uint8_t)recv_data);
+    }else if(STATE == S_WRITE && CSR->bits.txrdy){
+      signal Usart.writeDone(); // tx done
     }
-    STATE = S_IDLE;
-    enableInterruptRead();
-    call Usart1InterruptWrapper.postamble();
+
+    atomic {
+      STATE = S_IDLE;
+      enableInterruptRead();
+      call Usart1InterruptWrapper.postamble();
+    }
   }
 
   async event void ClockConfig.mainClockChanged() {};

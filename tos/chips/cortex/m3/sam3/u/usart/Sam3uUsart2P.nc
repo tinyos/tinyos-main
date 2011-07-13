@@ -103,11 +103,15 @@ implementation{
     }
   }
 
-  event void HplUsart.readDone(uint8_t data){
-    signal Sam3uUsart.receive(SUCCESS, data);
+  uint8_t rxdata;
+  task void signalReceive(){
+    signal Sam3uUsart.receive(SUCCESS, rxdata);
   }
 
-
+  event void HplUsart.readDone(uint8_t data){
+    rxdata = data;
+    post signalReceive();
+  }
 
  default event void Sam3uUsart.sendDone(error_t error){}
  default event void Sam3uUsart.receive(error_t error, uint8_t data){}

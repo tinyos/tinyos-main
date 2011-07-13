@@ -55,5 +55,4 @@ implementation{
 
   components LedsC;
   UsartP.Leds -> LedsC;
-
 }

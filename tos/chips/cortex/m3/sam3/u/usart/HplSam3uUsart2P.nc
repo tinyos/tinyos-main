@@ -52,8 +52,6 @@ implementation{
 
 #define USART2_BASE_ADDR 0x40098000
 
-  uint16_t recv_data;
-
   enum{
     S_READ,
     S_WRITE,
@@ -309,30 +307,27 @@ implementation{
   }
 
 
-  __attribute__((interrupt)) void Usart2IrqHandler() @C() @spontaneous(){
+  __attribute__((interrupt)) void Usart1IrqHandler() @C() @spontaneous(){
 
-    call Usart2InterruptWrapper.preamble();
-    //if(csr.bits.endrx == 1){
-    if(STATE == S_READ){
-      // end reading
-      volatile usart_rhr_t *RHR = (volatile usart_rhr_t*) (USART2_BASE_ADDR + 0x18);
-      usart_rhr_t rhr = *RHR;
+    uint8_t recv_data;
 
-      call Leds.led1Toggle();
+    atomic {
+      call Usart2InterruptWrapper.preamble();
       disableInterrupt();
-
-      recv_data = rhr.bits.rxchr;
-      signal Usart.readDone((uint8_t) recv_data);
-    }else if(STATE == S_WRITE){
-      //}else if(csr.bits.endtx == 1){
-      // tx is done
-      call Leds.led0Toggle();
-      disableInterrupt();
-
-      signal Usart.writeDone();
     }
-    STATE = S_IDLE;
-    call Usart2InterruptWrapper.postamble();
+
+      if(STATE == S_WRITE && CSR->bits.txrdy){
+	signal Usart.writeDone(); // tx done
+      }else if(CSR->bits.rxrdy){
+	atomic recv_data = (uint8_t) RHR->bits.rxchr;
+	signal Usart.readDone(recv_data);
+      }
+
+    atomic {
+      STATE = S_IDLE;
+      enableInterruptRead();
+      call Usart2InterruptWrapper.postamble();
+    }
   }
 
   async event void ClockConfig.mainClockChanged() {};
