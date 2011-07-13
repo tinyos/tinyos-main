@@ -75,6 +75,12 @@
 #endif
 #define CAP_TX_QUEUE_SIZE 1
 
+#if defined(LOW_POWER_LISTENING)
+// If LOW_POWER_LISTENING is defined, then AMSenderC() instantiates an LplAMSenderC 
+// instead of a DirectAMSenderC(). Currently we only support a DirectAMSenderC().
+#error "LOW_POWER_LISTENING must not be defined when TKN15.4 MAC is used!"
+#endif
+
 configuration ActiveMessageC {
   provides {
     interface SplitControl;

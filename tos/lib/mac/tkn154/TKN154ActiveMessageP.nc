@@ -128,7 +128,7 @@ implementation {
       case IEEE154_TRANSACTION_OVERFLOW: return EBUSY;
       case IEEE154_PURGED: return ECANCEL;
       case IEEE154_CHANNEL_ACCESS_FAILURE: // fall through
-      default: return FAIL;
+      default: return status;
     }
   }
 
@@ -277,6 +277,9 @@ implementation {
     uint8_t txOptions = 0;
     ieee154_status_t status;
     ieee154_header_t *header = getIeee154Header(msg);
+
+    dbg_serial("TKN154ActiveMessageP", "AMSend.send AM_ID = %lu, addr = %lu\n", (uint32_t) id, (uint32_t) addr);
+    dbg_serial_flush();
 
     if (!call SplitControlState.isState(S_STARTED))
       return EOFF;
