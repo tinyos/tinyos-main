@@ -26,11 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * - Revision -------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2009-03-04 18:39:38 $
  * @author: Jan Hauer <hauer@tkn.tu-berlin.de>
- * ========================================================================
  */
 #include "TKN154.h"
 configuration Ieee802154BeaconEnabledC
@@ -47,7 +43,7 @@ configuration Ieee802154BeaconEnabledC
     interface MLME_COMM_STATUS;
     interface MLME_DISASSOCIATE;
     interface MLME_GET;
-/*    interface MLME_GTS;*/
+    interface MLME_GTS;
     interface MLME_ORPHAN;
     interface MLME_POLL;
     interface MLME_RESET;
@@ -86,6 +82,7 @@ implementation
   MLME_RX_ENABLE = MAC;
   MLME_POLL = MAC;
   MLME_ORPHAN = MAC;
+  MLME_GTS=MAC;
   IEEE154Frame = MAC;
   IEEE154BeaconFrame = MAC;
   LocalExtendedAddress = MAC;

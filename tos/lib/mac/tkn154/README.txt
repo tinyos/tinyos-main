@@ -8,15 +8,16 @@ itself is platform-independent, but it requires (1) a suitable radio driver,
 and micaZ (note: because they do not have a clock that satisfies the
 precision/accuracy requirements of the IEEE 802.15.4 standard -- 62.500 Hz,
 +-40 ppm in the 2.4 GHz band -- the timing in beacon-enabled mode is not
-standard compliant). The implementation also includes an AM layer, so it can be
-used underneath TinyOS routing protocols such as CTP (take a look at
-apps/tests/tkn154/README.txt).
+standard compliant). The implementation covers an AM layer, so it can be used
+underneath TinyOS routing protocols such as CTP (take a look at
+apps/tests/tkn154/README.txt). As of July 13, 2011 the MAC also includes the
+IEEE 802.15.4-2006 GTS services; this part of the implementation was
+contributed by CISTER/ISEP, Polytechnic Institute of Porto.
 
-Status (last updated May 10, 2011)
+Status (last updated Jul 13, 2011)
 ----------------------------------
 
 Missing functionality:
-- GTS
 - security services
 - PAN ID conflict notification/resolution
 - indirect transmissions: frames are not kept in transaction queue 
@@ -26,7 +27,7 @@ Known Issues:
 - resetting the MAC during operation (via MLME_RESET) has not been sufficiently
   tested
 - if initial beacon Tx timestamp is invalid, the coordinator will hang 
-- frame pending flags will (need to be) always set in the ACK headers
+- frame pending flags are (need to be) set in the ACK headers
 - transmitting coordinator realignment frames has not been tested
 - during an ongoing CSMA-CA transmission incoming frames are ignored
 - on a beacon-enabled PAN: if the device cannot find the beacon the DATA frame 
