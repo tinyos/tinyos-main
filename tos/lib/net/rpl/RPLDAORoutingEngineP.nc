@@ -67,7 +67,7 @@ generic module RPLDAORoutingEngineP(){
 #define INIT_DAO 1024;
 
   uint8_t dao_double_count = 0;
-  uint8_t dao_double_limit = 8;
+  uint8_t dao_double_limit = 6;
   uint32_t dao_rate = INIT_DAO;
   uint32_t delay_dao = 256; // dao batches will be fired 256 ms after the first dao message is scheduled
   // every 100 ms, check if elememts in the entry should be deleted --
@@ -315,7 +315,7 @@ generic module RPLDAORoutingEngineP(){
 
     if (entry != NULL && entry->prefixlen == dao->target_option.prefix_length) {
       /* exact match in the forwarding table */
-      if (memcmp_rpl((uint8_t*)entry->next_hop.s6_addr, (uint8_t*)iph->ip6_src.s6_addr, 16) == 0) {
+      if (memcmp_rpl((uint8_t*)entry->next_hop.s6_addr, (uint8_t*)iph->ip6_src.s6_addr, 16) == TRUE) {
 	// same old destination with same DTSN
       } else {
         /* SDH : shouldn't we, like, save the new route? */
