@@ -58,19 +58,26 @@ implementation {
   };
 
   typedef enum {
-    S_READ = 0x3,
-    S_PAGE_PROGRAM = 0x2,
+    S_READ = 0x03,
+    S_PAGE_PROGRAM = 0x02,
     S_SECTOR_ERASE = 0xd8,
     S_BULK_ERASE = 0xc7,
-    S_WRITE_ENABLE = 0x6,
+    S_WRITE_ENABLE = 0x06,
     S_POWER_ON = 0xab,
     S_DEEP_SLEEP = 0xb9,
+    S_READ_STATUS = 0x05,
   } stm25p_cmd_t;
+
+  enum {
+    // this disables the Stm25pOff component
+    STM25PON = unique("Stm25pOn");
+  };
 
   norace uint8_t m_cmd[ 4 ];
 
   norace bool m_is_writing = FALSE;
   norace bool m_computing_crc = FALSE;
+  bool m_init=FALSE;
 
   norace stm25p_addr_t m_addr;
   norace uint8_t* m_buf;
@@ -102,6 +109,8 @@ implementation {
     call Hold.makeOutput();
     call CSN.set();
     call Hold.set();
+    if(call SpiResource.request()==SUCCESS)
+      m_init=TRUE; //otherwise we can't put the chip to deep sleep
     return SUCCESS;
   }
 
@@ -112,7 +121,7 @@ implementation {
   async command error_t ClientResource.immediateRequest() {
     return call SpiResource.immediateRequest();
   }
-  
+
   async command error_t ClientResource.release() {
     return call SpiResource.release();
   }
@@ -135,8 +144,7 @@ implementation {
     return SUCCESS;
   }
 
-  async command error_t Spi.read( stm25p_addr_t addr, uint8_t* buf, 
-				  stm25p_len_t len ) {
+  async command error_t Spi.read( stm25p_addr_t addr, uint8_t* buf, stm25p_len_t len ) {
     m_cmd[ 0 ] = S_READ;
     m_addr = addr;
     m_buf = buf;
@@ -144,17 +152,15 @@ implementation {
     return newRequest( FALSE, 4 );
   }
 
-  async command error_t Spi.computeCrc( uint16_t crc, stm25p_addr_t addr,
-					stm25p_len_t len ) {
+  async command error_t Spi.computeCrc( uint16_t crc, stm25p_addr_t addr, stm25p_len_t len ) {
     m_computing_crc = TRUE;
     m_crc = crc;
     m_addr = m_cur_addr = addr;
     m_len = m_cur_len = len;
     return call Spi.read( addr, m_crc_buf, calcReadLen() );
   }
-  
-  async command error_t Spi.pageProgram( stm25p_addr_t addr, uint8_t* buf, 
-					 stm25p_len_t len ) {
+
+  async command error_t Spi.pageProgram( stm25p_addr_t addr, uint8_t* buf, stm25p_len_t len ) {
     m_cmd[ 0 ] = S_PAGE_PROGRAM;
     m_addr = addr;
     m_buf = buf;
@@ -189,8 +195,7 @@ implementation {
     call SpiResource.request();
   }
 
-  async event void SpiPacket.sendDone( uint8_t* tx_buf, uint8_t* rx_buf,
-				       uint16_t len, error_t error ) {
+  async event void SpiPacket.sendDone( uint8_t* tx_buf, uint8_t* rx_buf,  uint16_t len, error_t error ) {
 
     int i;
 
@@ -198,18 +203,18 @@ implementation {
 
     case S_READ:
       if ( tx_buf == m_cmd ) {
-	call SpiPacket.send( NULL, m_buf, m_len );
-	break;
+        call SpiPacket.send( NULL, m_buf, m_len );
+        break;
       }
       else if ( m_computing_crc ) {
-	for ( i = 0; i < len; i++ )
-	  m_crc = crcByte( m_crc, m_crc_buf[ i ] );
-	m_cur_addr += len;
-	m_cur_len -= len;
-	if ( m_cur_len ) {
-	  call SpiPacket.send( NULL, m_crc_buf, calcReadLen() );
-	  break;
-	}
+        for ( i = 0; i < len; i++ )
+          m_crc = crcByte( m_crc, m_crc_buf[ i ] );
+        m_cur_addr += len;
+        m_cur_len -= len;
+        if ( m_cur_len ) {
+          call SpiPacket.send( NULL, m_crc_buf, calcReadLen() );
+          break;
+        }
       }
       call CSN.set();
       signalDone( SUCCESS );
@@ -217,11 +222,11 @@ implementation {
 
     case S_PAGE_PROGRAM:
       if ( tx_buf == m_cmd ) {
-	call SpiPacket.send( m_buf, NULL, m_len );
-	break;
+        call SpiPacket.send( m_buf, NULL, m_len );
+        break;
       }
       // fall through
-      
+
     case S_SECTOR_ERASE: case S_BULK_ERASE:
       call CSN.set();
       m_is_writing = TRUE;
@@ -236,10 +241,14 @@ implementation {
   }
 
   event void SpiResource.granted() {
-
-    if ( !m_is_writing )
+    if (m_init) {
+      m_init=FALSE;
+      call Spi.powerDown();
+      call SpiResource.release();
+    }
+    else if ( !m_is_writing )
       signal ClientResource.granted();
-    else if ( sendCmd( 0x5, 2 ) & 0x1 )
+    else if ( sendCmd( S_READ_STATUS, 2 ) & 0x1 )
       releaseAndRequest();
     else
       signalDone( SUCCESS );
@@ -251,11 +260,11 @@ implementation {
     switch( m_cmd[ 0 ] ) {
     case S_READ:
       if ( m_computing_crc ) {
-	m_computing_crc = FALSE;
-	signal Spi.computeCrcDone( m_crc, m_addr, m_len, error );
+        m_computing_crc = FALSE;
+        signal Spi.computeCrcDone( m_crc, m_addr, m_len, error );
       }
       else {
-	signal Spi.readDone( m_addr, m_buf, m_len, error );
+        signal Spi.readDone( m_addr, m_buf, m_len, error );
       }
       break;
     case S_PAGE_PROGRAM:
