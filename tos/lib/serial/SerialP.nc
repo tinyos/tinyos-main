@@ -195,7 +195,7 @@ implementation {
   inline void txInit(){
     uint8_t i;
     atomic for (i = 0; i < TX_BUFFER_COUNT; i++) txBuf[i].state = BUFFER_AVAILABLE;
-    txState = TXSTATE_IDLE;
+    txState = TXSTATE_INACTIVE;
     txByteCnt = 0;
     txProto = 0;
     txSeqno = 0;
@@ -206,7 +206,7 @@ implementation {
 
   inline void rxInit(){
     rxBuf.writePtr = rxBuf.readPtr = 0;
-    rxState = RXSTATE_NOSYNC;
+    rxState = RXSTATE_INACTIVE;
     rxByteCnt = 0;
     rxProto = 0;
     rxSeqno = 0;
@@ -321,6 +321,10 @@ implementation {
 
   task void startDoneTask() {
     call SerialControl.start();
+    atomic {
+      txState = TXSTATE_IDLE;
+      rxState = RXSTATE_NOSYNC;
+    }
     signal SplitControl.startDone(SUCCESS);
   }
 
@@ -342,6 +346,10 @@ implementation {
   }
 
   command error_t SplitControl.start() {
+    atomic {
+      if(txState != TXSTATE_INACTIVE && rxState != RXSTATE_INACTIVE )
+        return EALREADY;
+    }
     post startDoneTask();
     return SUCCESS;
   }
@@ -529,6 +537,10 @@ implementation {
 
   async command error_t SendBytePacket.startSend(uint8_t b){
     bool not_busy = FALSE;
+    atomic {
+      if(txState == TXSTATE_INACTIVE)
+        return EOFF;
+    }
     atomic {
       if (txBuf[TX_DATA_INDEX].state == BUFFER_AVAILABLE){
         txBuf[TX_DATA_INDEX].state = BUFFER_FILLING;
