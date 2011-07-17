@@ -86,7 +86,7 @@ implementation {
       return ATM128_POWER_IDLE;
     }
     // A UART is active
-    else if ((UCSR0B | UCSR1B) & (1 << TXCIE | 1 << RXCIE)) { // UART
+    else if ((UCSR0B | UCSR1B) & (1 << TXEN | 1 << RXEN)) { // UART
       return ATM128_POWER_IDLE;
     }
     // I2C (Two-wire) is active
