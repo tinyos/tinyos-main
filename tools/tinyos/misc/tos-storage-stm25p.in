@@ -56,10 +56,10 @@ import string
 import commands
 #New way of handling arguments........
 try:
-  opts, args = getopt(argv[1:], "t", [])
+  opts, args = getopt(argv[1:], "ts:", [])
 except GetoptError, err:
   print str(err) # will print something like "option -a not recognized"
-  stderr.write( "Usage: tos-storage-stm25p [-t] <platform directory>\n" )
+  stderr.write( "Usage: tos-storage-stm25p [-t] [-s number of sectors] <platform directory>\n" )
   
 if len( args ) == 1:
   platformdir = args[0]
@@ -69,12 +69,17 @@ elif len( args ) == 0:
   platformdir = ""
   platform = ""
 else:
-  stderr.write( "Usage: tos-storage-stm25p [-t] <platform directory>\n" )
+  stderr.write( "Usage: tos-storage-stm25p [-t] [-s number of sectors] <platform directory>\n" )
   
 cthreads = False
+NUM_SECTORS = 16
+SECTOR_SIZE = 65536
+
 for o, a in opts:
   if o == "-t":
     cthreads = True
+  elif o == "-s":
+    NUM_SECTORS = int(a)
   else:
     assert False, "unhandled option"
 
@@ -111,9 +116,6 @@ def expand_path( path ):
     i = i + 1
   return path
 
-
-NUM_SECTORS = 16
-SECTOR_SIZE = 65536
 
 volumes = {}
 
