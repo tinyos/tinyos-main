@@ -69,6 +69,7 @@
   * @author Thomas Fahrni, ETH Zurich, tfahrni@ee.ethz.ch
   * @author Richard Huber, ETH Zurich, rihuber@ee.ethz.ch
   * @author Lars Schor, ETH Zurich, lschor@ee.ethz.ch
+  * @author Andras Biro, University of Szeged
   *
   */
 
@@ -154,6 +155,56 @@ implementation {
       else {
         return FAIL;
       }
+    }
+  }
+
+  inline void readNextByte(bool startRead){
+    if(!startRead){
+      packetPtr[index] = call I2C.read();
+      index++;
+    }
+    if (index < packetLen) {
+      if (index == packetLen - 1 && !(packetFlags & I2C_ACK_END)) { 
+        call I2C.enableAck(FALSE);
+      }
+      call I2C.sendCommand();
+    } else {
+      call I2C.enableInterrupt(FALSE);
+      if (packetFlags & I2C_STOP) {
+        packetFlags &= ~I2C_STOP;
+        call I2C.setStop(TRUE);
+        call I2C.status();
+      }
+      else {
+        call I2C.setInterruptPending(FALSE);
+      }
+      call I2C.sendCommand();
+      state = I2C_IDLE;
+      signal I2CPacket.readDone(SUCCESS, packetAddr, packetLen, packetPtr);
+      return;
+    }
+  }
+
+  inline void writeNextByte(){
+    if (index < packetLen) {
+      call I2C.write(packetPtr[index]);
+      index++;
+      call I2C.sendCommand();
+    }
+    else {
+      call I2C.enableInterrupt(FALSE);
+      if (packetFlags & I2C_STOP) {
+        packetFlags &= ~I2C_STOP;
+        call I2C.setStop(TRUE);
+        call WriteDebugLeds.led1On();
+      }
+      else {
+        call I2C.setInterruptPending(FALSE);
+      }
+      call I2C.sendCommand();
+      state = I2C_IDLE;
+      call WriteDebugLeds.led2On();
+      signal I2CPacket.writeDone(SUCCESS, packetAddr, packetLen, packetPtr);
     }
   }
 
@@ -245,8 +296,8 @@ implementation {
       }
       else if (len > 0) {
         state = I2C_DATA;
-	call I2C.write(packetPtr[index]);
-	index++;
+        writeNextByte();
+        return SUCCESS;
       }
       else if (flags & I2C_STOP) {
         state = I2C_STOPPING;
@@ -290,88 +341,47 @@ implementation {
     call I2C.readCurrent();
     atomic {
       switch(state){
-        case I2C_SLAVE_ACK:        
+        case I2C_SLAVE_ACK: {  //check for slave addr ack     
+          uint8_t i2c_status=call I2C.status();
           if (reading == TRUE) {     
+              if(i2c_status==0x40){
+                state = I2C_DATA;
+                readNextByte(TRUE);
+              } else {
+                i2c_abort(EOFF);
+                return;
+              }
+          } else{
+            if(i2c_status==0x18){
               state = I2C_DATA;
-              call I2C.setInterruptPending(TRUE);
-              if (index == packetLen - 1 && !(packetFlags & I2C_ACK_END)) 
-                call I2C.enableAck(FALSE);
-              else
-                call I2C.enableAck(TRUE);
-              call I2C.sendCommand();
-          }                        	      	
-        break;
-
-	case I2C_DATA: 
-          if (reading == TRUE) {
-              packetPtr[index] = call I2C.read();
-              if (index < packetLen-1) {
-                  index++;
-                  if (index == packetLen - 1 && !(packetFlags & I2C_ACK_END)) { 
-                    call I2C.enableAck(FALSE);
-                  }
-                  //state = I2C_SLAVE_ACK;
-              }
-              else {
-                  call I2C.enableInterrupt(FALSE);
-                  if (packetFlags & I2C_STOP) {
-                      packetFlags &= ~I2C_STOP;
-                      call I2C.setStop(TRUE);
-                      call I2C.status();
-                  }
-                  else {
-                      call I2C.setInterruptPending(FALSE);
-                  }
-                  
-                  call I2C.sendCommand();
-                  state = I2C_IDLE;
-                  signal I2CPacket.readDone(SUCCESS, packetAddr, packetLen, packetPtr);
-                  return;
-              }
-              call I2C.sendCommand();
+              writeNextByte();
+            } else {
+              i2c_abort(EOFF);
               return;
-          } else { // Writing
-              if (index < packetLen) {
-                  call I2C.write(packetPtr[index]);
-                  index++;
-                  call I2C.sendCommand();
-              }
-              else {
-                  call I2C.enableInterrupt(FALSE);
-                  if (packetFlags & I2C_STOP) {
-                      packetFlags &= ~I2C_STOP;
-                      call I2C.setStop(TRUE);
-                      call WriteDebugLeds.led1On();
-                  }
-                  else {
-                      call I2C.setInterruptPending(FALSE);
-                  }
-                  call I2C.sendCommand();
-                  state = I2C_IDLE;
-                  call WriteDebugLeds.led2On();
-                  signal I2CPacket.writeDone(SUCCESS, packetAddr, packetLen, packetPtr);
-                  return;
-              }
+            }
           }
+        }
+	break;
+
+        case I2C_DATA: 
+          if (reading == TRUE)
+            readNextByte(FALSE);
+          else // Writing
+            writeNextByte();
         break;
 
-	case I2C_STARTING: 
+        case I2C_STARTING: 
           packetFlags &= ~I2C_START;
           call I2C.setStart(FALSE);
           if (call I2C.status() != ATM128_I2C_START && call I2C.status() != ATM128_I2C_RSTART) {
-              i2c_abort(FAIL);
-              return;
+            i2c_abort(FAIL);
+            return;
           }
-	  //after the START condition, we write the address
+          //after the START condition, we write the address
           call I2C.enableAck(TRUE);
-          if (reading == TRUE) {
-            call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_READ);
-            state = I2C_SLAVE_ACK;
-          }
-          else {
-            call I2C.write(((packetAddr & 0x7f) << 1) | ATM128_I2C_SLA_WRITE);
-            state = I2C_DATA;
-          }
+          call I2C.write(((packetAddr & 0x7f) << 1) | 
+            ((reading == TRUE) ? ATM128_I2C_SLA_READ : ATM128_I2C_SLA_WRITE));
+          state = I2C_SLAVE_ACK;
           call I2C.sendCommand();
         break;
       }
