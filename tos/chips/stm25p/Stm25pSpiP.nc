@@ -70,7 +70,7 @@ implementation {
 
   enum {
     // this disables the Stm25pOff component
-    STM25PON = unique("Stm25pOn");
+    STM25PON = unique("Stm25pOn")
   };
 
   norace uint8_t m_cmd[ 4 ];
