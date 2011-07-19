@@ -690,7 +690,8 @@ implementation
 
 		if( timesync == 0 ) {
 			// no timesync: write the entire payload to the fifo
-			spi_atomic writeTxFifo(data+header, length - 1);
+			if(length>0)
+				spi_atomic writeTxFifo(data+header, length - 1);
 			state = STATE_BUSY_TX_2_RX_ON;
 		} else {
 			// timesync required: write the payload before the timesync bytes to the fifo
