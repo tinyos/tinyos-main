@@ -62,6 +62,7 @@ implementation {
   }
 
   task void debounce() {
+    call Notify.disable();
     call debounceTimer.startOneShot(250);
   }
 
