@@ -1,0 +1,56 @@
+TestTimeStamping:
+
+Author/Contact: mmaroti@gmail.com	(Miklos Maroti)
+
+The TestTimeStamping component verifies the time stamping precision of 
+the radio stack. You need to program 3 motes with node ids: 0, 1 and 2.
+Start them. The yellow (LED1) is toggled if the mote is sending a message,
+the green (LED2) is toggled if the mote is receiving a message, and
+the red (LED0) is toggled if there is some error.
+
+Connect a BaseStation (with TOSH_DATA_LENGTH at least 39) to your PC, 
+then type
+
+	./run.sh -comm serial@com12:57600
+
+where you can specify your connection string (try the -help option for 
+help). This program will connect 100 synchronization data points, i.e. 
+timestamps from a sender node and the other two receiver nodes that 
+correspond to the same message. The output will be something like this:
+
+Collecting 100 synchronization points from 3 motes...
+sender 0 : 27623602 27792046 27871327
+sender 0 : 27656411 27824855 27904136
+sender 1 : 27618867 27787310 27866591
+sender 1 : 27651827 27820270 27899551
+sender 2 : 27605316 27773758 27853039
+sender 2 : 27638008 27806450 27885731
+sender 2 : 27670656 27839098 27918379
+sender 1 : 27684407 27852849 27932130
+sender 0 : 27689126 27857570 27936851
+...
+sender 2 : 28686477 28854919 28934197
+Analizing data...
+offset 0 = 0.0	skew 0 = 1.0
+offset 1 = -168468.7899618484	skew 1 = 1.000000925316579
+offset 2 = -247828.76012311116	skew 2 = 1.0000037553451404
+transmit delay = 0.5840716886662126
+maximum error = 1.2824957221746445
+average error = 0.4213230623113422
+
+The offset of mote 0 is always 0.0, and its skew is 1.0. The offset
+and skew of the other motes are relative to mote 0. The transmit delay
+is the amount of time that elapses between the sender timestamp and
+the receiver timestamp (this should be very close to 0). The maximum
+and minimum errors are calculated using a system of equations of the
+form:
+
+   sender_offset + sender_timestamp * sender_skew + transmit_delay
+       = receiver_offest + receiver_timestamp * receiver_skew
+
+The component uses these equations (2 for each time sync point) to
+get the offsets, skews and transmit delay using the least square method.
+
+This program uses ONLY the PacketTimeStamping interface. You can change 
+the type of test_precision_t from TMilli in TestTimeStamping.h if you want 
+to test the precision of another PacketTimeStamping interface.
