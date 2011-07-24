@@ -39,7 +39,6 @@ module DiagMsgP
 	provides 
 	{
 		interface DiagMsg;
-		interface Init;
 	}
 
 	uses 
@@ -72,25 +71,16 @@ implementation
 		STATE_BUFFER_FULL = 5,
 	};
 
-	norace volatile uint8_t state;	// the state of the recording
+	norace volatile uint8_t state = STATE_READY;	// the state of the recording
 
 	message_t msgs[DIAGMSG_RECORDED_MSGS];	// circular buffer of messages
 
-	norace message_t *recording;	// the message that is beeing or going to be recorded
-	message_t *sending;		// the message that is beeing sent, or the null pointer
+	norace message_t *recording = msgs;	// the message that is beeing or going to be recorded
+	message_t *sending = 0;			// the message that is beeing sent, or the null pointer
 
 	norace uint8_t nextData;	// points to the next unsued byte
 	norace uint8_t prevType;	// points to the type descriptor
 	norace uint8_t retries;		// number of remaining retries
-
-	command error_t Init.init()
-	{
-		state = STATE_READY;
-		recording = msgs;
-		sending = 0;
-
-		return SUCCESS;
-	}
 
 	// two type fields are stored in on byte
 	enum

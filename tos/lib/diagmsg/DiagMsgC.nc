@@ -51,10 +51,9 @@ components NoDiagMsgC;
 		AM_DIAG_MSG = 0xB1,
 	};
 	
-	components DiagMsgP, MainC;
+	components DiagMsgP;
 
 	DiagMsg = DiagMsgP.DiagMsg;
-	MainC.SoftwareInit -> DiagMsgP.Init;
 
 #ifdef DIAGMSG_RADIO
 	components new AMSenderC(AM_DIAG_MSG);
