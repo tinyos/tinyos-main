@@ -176,7 +176,7 @@ implementation
     {
       return EBUSY;
     }
-    m_buffer[0] = 0xa0 | a << 3 | b << 2 | c << 1 | d;
+    m_buffer[0] = 0xc0 | a << 3 | b << 2 | c << 1 | d;
     m_write_length = 1;
 
     return requestI2C(S_SET_GAIN); 
@@ -191,7 +191,7 @@ implementation
     {
       return EBUSY;
     }
-    m_buffer[0] = 0x90 | a << 2 | b;
+    m_buffer[0] = 0xa0 | a << 2 | b;
     m_buffer[1] =  c << 6 | d << 4;
     m_write_length = 2;
 
