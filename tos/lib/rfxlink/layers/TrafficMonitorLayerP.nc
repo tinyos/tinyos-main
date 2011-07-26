@@ -177,6 +177,7 @@ implementation
 			{
 				radioStart = localTime;
 				radioState = RADIO_ON;
+				startCount++;
 			}
 		}
 
