@@ -41,6 +41,14 @@
 			<arg path="${env.TOSDIR}/lib/printf/printf.h" />
 			<arg value="printf_msg" />
 		</exec>
+		<exec executable="ncg" failonerror="true">
+			<arg value="-o" />
+			<arg path="net/tinyos/packet/Serial.java" />
+			<arg value="-java-classname=net.tinyos.packet.Serial" />
+			<arg value="java" />
+			<arg path="${env.TOSDIR}/lib/serial/Serial.h" />
+			<arg value="Serial.h" />
+		</exec>
 	</target>
 	
 	<target name="compile" depends="init">
@@ -58,6 +66,7 @@
 		<echo message="Removing generated files" />
 		<delete file="net/tinyos/message/SerialPacket.java" />
 		<delete file="net/tinyos/tools/PrintfMsg.java" />
+		<delete file="net/tinyos/packet/Serial.java" />
 		<delete>
 			<fileset dir="." includes="**/*.class"/>
 		</delete>
