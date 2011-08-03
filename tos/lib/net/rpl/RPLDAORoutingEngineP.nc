@@ -87,9 +87,11 @@ generic module RPLDAORoutingEngineP(){
   bool m_running = FALSE;
 
   void memcpy_rpl(uint8_t* a, uint8_t* b, uint8_t len){
+    //memcpy(a, b, len);
     uint8_t i;
     for (i = 0 ; i < len ; i++)
       a[i] = b[i];
+
   }
 
   bool memcmp_rpl(uint8_t* a, uint8_t* b, uint8_t len){

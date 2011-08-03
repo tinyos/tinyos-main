@@ -89,7 +89,7 @@ implementation{
   uint8_t redunCounter = 0xFF;
   uint8_t doubleCounter = 0;
 
-  uint8_t DIOIntDouble = 11;
+  uint8_t DIOIntDouble = 10;
   uint8_t DIOIntMin = 8;
   uint8_t DIORedun = 0xFF;
   uint16_t MinHopRankInc = 1;
@@ -299,7 +299,9 @@ implementation{
     } else {
       memcpy(&pkt.ip6_hdr.ip6_dst, &MULTICAST_ADDR, 16);
     }
+
     call IPAddress.getLLAddr(&pkt.ip6_hdr.ip6_src);
+
     //call IPAddress.getGlobalAddr(&pkt.ip6_hdr.ip6_src);
     // memcpy(&pkt.ip6_hdr.ip6_src, &ADDR_MY_IP, 16);
 

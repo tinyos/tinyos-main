@@ -92,7 +92,7 @@ implementation{
     uint8_t indexset;
     uint8_t min = 0, count = 0;
     uint16_t minDesired;
-    parent_t* parentNode;
+    parent_t* parentNode, *previousParent;
 
     parentNode = call ParentTable.get(min);
 
@@ -107,12 +107,14 @@ implementation{
       call RPLOF.resetRank();
       call RPLRoute.inconsistency();
       call ForwardingTable.delRoute(route_key);
-      route_key = ROUTE_INVAL_KEY;
+     route_key = ROUTE_INVAL_KEY;
       return FALSE;
     }
 
     //printf("Start Compare %d %d: %d %d %d \n", htons(prevParent), htons(parentNode->parentIP.s6_addr16[7]), minDesired, parentNode->etx_hop, parentNode->rank);
+
     parentNode = call ParentTable.get(desiredParent);
+
     if(htons(parentNode->parentIP.s6_addr16[7]) != 0){
       minMetric = parentNode->etx_hop + parentNode->rank*divideRank;
       //printf("Compare %d: %d %d with %d %d\n", htons(parentNode->parentIP.s6_addr16[7]), parentNode->etx_hop, parentNode->rank, minDesired, minMetric);
@@ -127,6 +129,7 @@ implementation{
 
       //if(parentNode->valid)
 	//printf("Compare %d: %d %d with %d %d\n", htons(parentNode->parentIP.s6_addr16[7]), parentNode->etx_hop, parentNode->rank, minDesired, indexset);
+
       if(parentNode->valid && parentNode->etx_hop >= 0 &&
 	 (parentNode->etx_hop + parentNode->rank*divideRank < minDesired) && parentNode->rank < nodeRank && parentNode->rank != INFINITE_RANK){
 	count ++;
@@ -134,7 +137,7 @@ implementation{
 	minDesired = parentNode->etx_hop + parentNode->rank*divideRank;
 	//printf("Compare %d %d \n", minDesired, parentNode->etx_hop/divideRank + parentNode->rank);
 	if(min == desiredParent){
-	  //printf("current parent Checking...\n")
+	  //printf("current parent Checking...\n");
 	  minMetric = minDesired;
 	}
       }else if(min == desiredParent){
@@ -152,7 +155,9 @@ implementation{
       return FAIL;
     }
 
-    if(minDesired*divideRank + STABILITY_BOUND >= minMetric*divideRank && minMetric != 0){
+    previousParent = call ParentTable.get(desiredParent);
+
+    if(minDesired*divideRank + STABILITY_BOUND >= minMetric*divideRank && minMetric != 0 && previousParent->valid){
       // if the min measurement (minDesired) is not significantly better than the previous parent's (minMetric), stay with what we have...
       //printf("SAFETYBOUND %d %d %d\n", minDesired*divideRank, STABILITY_BOUND, minMetric*divideRank);
       min = desiredParent;
@@ -171,11 +176,12 @@ implementation{
 
     if(prevParent != parentNode->parentIP.s6_addr16[7]){
       //printf(">> New Parent %d %x %lu \n", TOS_NODE_ID, htons(parentNode->parentIP.s6_addr16[7]), parentChanges++);
-      printf("#L %u 0\n", (uint8_t)htons(prevParent));
-      printf("#L %u 1 %d\n", (uint8_t)htons(parentNode->parentIP.s6_addr16[7]), TOS_NODE_ID);
+      //printf("#L %u 0\n", (uint8_t)htons(prevParent));
+      //printf("#L %u 1 %d\n", (uint8_t)htons(parentNode->parentIP.s6_addr16[7]), TOS_NODE_ID);
       newParent = TRUE;
       call RPLDAO.newParent();
     }
+
     prevParent = parentNode->parentIP.s6_addr16[7];
 
     return TRUE;
