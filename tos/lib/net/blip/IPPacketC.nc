@@ -79,7 +79,11 @@ module IPPacketC {
     struct tlv_hdr tlv;
     // find the TLV option inside the header
     ext_offset = call IPPacket.findTLV(data, ext_offset, type); 
-    iov_read(data, ext_offset, sizeof(tlv), (void *)&tlv);
+    if (ext_offset < 0)
+      return;
+
+    if (iov_read(data, ext_offset, sizeof(tlv), (void *)&tlv) != sizeof(tlv))
+      return;
     
     buf[0] = IPV6_TLV_PADN;
     // change the search TLV to a PadN option

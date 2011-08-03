@@ -130,7 +130,7 @@ module UdpP {
     size_t len = iov_len(iov);
 
     // fill in all the packet fields
-    memclr((uint8_t *)&pkt.ip6_hdr, sizeof(pkt));
+    memclr((uint8_t *)&pkt.ip6_hdr, sizeof(pkt.ip6_hdr));
     memclr((uint8_t *)&udp, sizeof(udp));
     memcpy(&pkt.ip6_hdr.ip6_dst, dest->sin6_addr.s6_addr, 16);
     call IPAddress.setSource(&pkt.ip6_hdr);
