@@ -1,3 +1,6 @@
+#include "Msp430Adc12.h"
+
+
 configuration ReprogramGuardC
 {
   provides interface ReprogramGuard;
@@ -6,8 +9,11 @@ configuration ReprogramGuardC
 implementation
 {
   components ReprogramGuardP;
-  components new VoltageC();
-  
   ReprogramGuard = ReprogramGuardP;
-  ReprogramGuardP.Voltage -> VoltageC;
+
+  components new Msp430Adc12ClientAutoRVGC() as Adc;
+  Adc.AdcConfigure -> ReprogramGuardP.VoltageConfigure;
+
+  ReprogramGuardP.Resource -> Adc;
+  ReprogramGuardP.Sample -> Adc;
 }
