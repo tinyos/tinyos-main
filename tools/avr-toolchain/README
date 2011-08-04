@@ -1,0 +1,94 @@
+Readme for package builder makefiles
+
+DESCRIPTION:
+===========
+These Makefiles download, patch, compile the tinyos toolchain programs,
+and create rpm and deb packages, if dpkg-deb and rpmbuild is available.
+You can simply type "make" to start the building process.
+
+MAKEFILE BUILD STEPS:
+====================
+1. set up variables
+2. copy Generic.mk to the current directory
+3. download the source
+4. uncompress the source
+5. apply patches (optional)
+6. run "./configure"
+7. run "make"
+8. run "make DESTDIR=installdir install"
+9. edit rpm spec and dpkg control file (set up name, version, etc)
+10. create rpm and deb packages from installdir
+
+The last 2 steps will be executed only if rpmbuild and/or dpkg-deb is available
+
+CREATING NEW MAKEFILES:
+======================
+You have to include the following part in your Makefile:
+
+include Generic.mk
+
+Generic.mk:
+  cp ../Generic.mk .
+
+Of course you should use the valid path of Generic.mk
+
+Before this include, you must set up the following variables:
+
+SRCNAME: the name of the package (eg. binutils)
+VERSION: version of the package (eg 2.17)
+ARCHIVE_FORMAT: archive format of the package (eg tar.bz2. supported: tar.bz2, tar.gz, tar.xz, tar.Z)
+the downladed file should have the name $(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
+the uncompressed source should be in the subdirectory $(SRCNAME)-$(VERSION)
+DOWNLOAD_URL: the package will be downloaded from this url
+
+After the include, you must add the following targets:
+
+-check_spec_requirements: If there are additional requirements for the package building you should add commands which returns 0,
+  if they're available and not 0 if not.
+
+-cleanup: In this target, you can delete files from the compiled package to resolve file conflicts between packages 
+  (eg. man for gcc shouldn't be in package avr-gcc)
+  
+You can configure the build procedure with the following variables:
+PATCHDIR: the directory, where the patches are (all the patches (*.patch) from this directory will be applied with patch -p0; default: patch;
+	if there's no patch in the patch directory, or there's no patch directory, then the patching stage will be skipped)
+BOOTSTRAP_CMD: bootstrap command to run before configure (will be started from "$(SRCNAME)-$(VERSION)" directory with "./" prefix; default: no bootstraping)
+CONFIGURE_OPTS: options for ./configure
+INSTALL_OPTS: options for make install 
+HOST: the host cpu architecture to compile. (default: build machine architecture) You have to setup a cross-compile gcc before change this.
+PKG_NAME: the name of the deb/rpm package to create (default: $(SRCNAME))
+PKG_VERSION: the version of the deb/rpm package to create (default: $(VERSION))
+PKG_RELEASE: the release/minor version of the deb/rpm package to create (default: current date in "+%Y%m%d" format)
+PKG_HOST: the cpu architecture of the deb/rpm package to create (default: $(HOST))
+RPMBUILD: full path of the command 'rpmbuild' (default: search with whereis)
+DPKG: full path of the command 'dpkg-deb' (default: search with whereis)
+
+For deb package creation you will need a dpkg control file, called debcontrol. You can use the following variables here:
+PKG_VERSION=$(PKG_VERSION)_$(PKG_RELEASE)
+PKG_ARCHITECTURE=$(PKG_HOST)
+
+For rpm package creation you will need an rpm spec file, called rpm.spec. You can use the following variables here:
+PKG_VERSION=$(PKG_VERSION)
+PKG_RELEASE=$(PKG_RELEASE)
+You should only use %files and %description targets
+
+MAKEFILE SKELETON:
+=================
+
+SRCNAME=foobar
+VERSION=1.1.1
+ARCHIVE_FORMAT=tar.gz
+DOWNLOAD_URL=http://someurl.com/$(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
+
+include Generic.mk
+
+Generic.mk:
+	cp ../Generic.mk .
+
+-check_spec_requirements:
+
+cleanup:
+
+MAKEFILE TARGETS:
+================
+make help prints the targets with a short description

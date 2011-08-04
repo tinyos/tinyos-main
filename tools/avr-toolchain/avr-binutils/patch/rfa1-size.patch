@@ -1,0 +1,11 @@
+diff -rupN binutils-2.17orig/binutils/size.c binutils-2.17/binutils/size.c
+--- binutils/size.c	2011-05-30 15:19:37.000000000 +0200
++++ binutils/size.c	2011-05-30 15:28:14.461869141 +0200
+@@ -118,6 +118,7 @@ avr_device_t avr[] =
+ 	{"atmega128",   AVR128K, AVR4K,  AVR4K},
+ 	{"atmega1280",  AVR128K, AVR8K,  AVR4K},
+ 	{"atmega1281",  AVR128K, AVR8K,  AVR4K},
++	{"atmega128rfa1",  AVR128K, AVR16K,  AVR4K},        
+ 	{"atmega103",   AVR128K, 4000,   AVR4K},
+ 
+ 	{"at90can64",   AVR64K,  AVR4K,  AVR2K},

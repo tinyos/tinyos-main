@@ -1,0 +1,13 @@
+Package: nesc
+Version: PKG_VERSION
+Section: devel
+Priority: optional
+Architecture: PKG_ARCHITECTURE
+Depends: perl, libc6-dev|libc-dev
+Recommends: tinyos-base, graphviz, sun-java5-jre|sun-java6-jre|openjdk-6-jdk, sun-java5-bin|sun-java6-bin, sun-java5-jdk|sun-java6-jdk|openjdk-6-jdk
+Conflicts: gcj
+Replaces: nesc
+Maintainer: Andras Biro, Janos Sallai
+Description: This is the nesC compiler used to compile TinyOS applications
+
+

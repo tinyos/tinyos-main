@@ -1,0 +1,16 @@
+Package: avr-binutils-tinyos
+Version: PKG_VERSION
+Architecture: PKG_ARCHITECTURE
+Depends: avr-tinyos-base
+Provides: binutils-avr
+Conflicts: binutils-avr
+Recommends: avr-tinyos, avr-optional-tinyos
+Maintainer: Andras Biro, Janos Sallai
+Priority: optional
+Section: devel
+Description: Binary utilities supporting Atmel's AVR targets (TinyOS version)
+  The programs in this package are used to manipulate binary
+  and object files that may have been created for Atmel's AVR architecture.
+  This package is primarily for AVR developers and cross-compilers
+  and is not needed by normal users or developers.
+  This version is patched and tested with TinyOS.

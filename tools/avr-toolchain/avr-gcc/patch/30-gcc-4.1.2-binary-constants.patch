@@ -1,0 +1,144 @@
+--- ./gcc/doc/extend.texi.orig	Sat Aug  6 15:26:27 2005
++++ ./gcc/doc/extend.texi	Mon Aug 22 00:14:05 2005
+@@ -79,6 +79,7 @@
+ * Pragmas::             Pragmas accepted by GCC.
+ * Unnamed Fields::      Unnamed struct/union fields within structs/unions.
+ * Thread-Local::        Per-thread variables.
++* Binary constants::    Binary constants using the @samp{0b} prefix.
+ @end menu
+ 
+ @node Statement Exprs
+@@ -9742,6 +9743,28 @@
+ Non-@code{static} members shall not be @code{__thread}.
+ @end quotation
+ @end itemize
++
++@node Binary constants
++@section Binary constants using the @samp{0b} prefix
++@cindex Binary constants using the @samp{0b} prefix
++
++Integer constants can be written as binary constants, consisting of a
++sequence of @samp{0} and @samp{1} digits, prefixed by @samp{0b} or
++@samp{0B}.  This is particularly useful in environments that operate a
++lot on the bit-level (like microcontrollers).
++
++The following statements are identical:
++
++@smallexample
++i =       42;
++i =     0x2a;
++i =      052;
++i = 0b101010;
++@end smallexample
++
++The type of these constants follows the same rules as for octal or
++hexadecimal integer constants, so suffixes like @samp{L} or @samp{UL}
++can be applied.
+ 
+ @node C++ Extensions
+ @chapter Extensions to the C++ Language
+--- ./libcpp/include/cpplib.h.orig	Wed Jun 29 04:34:39 2005
++++ ./libcpp/include/cpplib.h	Mon Aug 22 00:14:05 2005
+@@ -729,6 +729,7 @@
+ #define CPP_N_DECIMAL	0x0100
+ #define CPP_N_HEX	0x0200
+ #define CPP_N_OCTAL	0x0400
++#define CPP_N_BINARY	0x0800
+ 
+ #define CPP_N_UNSIGNED	0x1000	/* Properties.  */
+ #define CPP_N_IMAGINARY	0x2000
+--- ./libcpp/expr.c.orig	Wed Jun 29 04:34:36 2005
++++ ./libcpp/expr.c	Mon Aug 22 12:02:28 2005
+@@ -171,6 +171,11 @@
+ 	  radix = 16;
+ 	  str++;
+ 	}
++      else if ((*str == 'b' || *str == 'B') && (str[1] == '0' || str[1] == '1'))
++	{
++	  radix = 2;
++	  str++;
++	}
+     }
+ 
+   /* Now scan for a well-formed integer or float.  */
+@@ -209,10 +214,22 @@
+     radix = 10;
+ 
+   if (max_digit >= radix)
+-    SYNTAX_ERROR2 ("invalid digit \"%c\" in octal constant", '0' + max_digit);
++    {
++      if (radix == 2)
++	SYNTAX_ERROR2 ("invalid digit \"%c\" in binary constant", '0' + max_digit);
++      else
++	SYNTAX_ERROR2 ("invalid digit \"%c\" in octal constant", '0' + max_digit);
++    }
+ 
+   if (float_flag != NOT_FLOAT)
+     {
++      if (radix == 2)
++	{
++	  cpp_error (pfile, CPP_DL_ERROR,
++		     "invalid prefix \"0b\" for floating constant");
++	  return CPP_N_INVALID;
++	}
++
+       if (radix == 16 && CPP_PEDANTIC (pfile) && !CPP_OPTION (pfile, c99))
+ 	cpp_error (pfile, CPP_DL_PEDWARN,
+ 		   "use of C99 hexadecimal floating constant");
+@@ -288,11 +305,16 @@
+   if ((result & CPP_N_IMAGINARY) && CPP_PEDANTIC (pfile))
+     cpp_error (pfile, CPP_DL_PEDWARN,
+ 	       "imaginary constants are a GCC extension");
++  if (radix == 2 && CPP_PEDANTIC (pfile))
++    cpp_error (pfile, CPP_DL_PEDWARN,
++	       "binary constants are a GCC extension");
+ 
+   if (radix == 10)
+     result |= CPP_N_DECIMAL;
+   else if (radix == 16)
+     result |= CPP_N_HEX;
++  else if (radix == 2)
++    result |= CPP_N_BINARY;
+   else
+     result |= CPP_N_OCTAL;
+ 
+@@ -343,6 +365,11 @@
+ 	  base = 16;
+ 	  p += 2;
+ 	}
++      else if ((type & CPP_N_RADIX) == CPP_N_BINARY)
++	{
++	  base = 2;
++	  p += 2;
++	}
+ 
+       /* We can add a digit to numbers strictly less than this without
+ 	 needing the precision and slowness of double integers.  */
+@@ -398,12 +425,25 @@
+ append_digit (cpp_num num, int digit, int base, size_t precision)
+ {
+   cpp_num result;
+-  unsigned int shift = 3 + (base == 16);
++  unsigned int shift;
+   bool overflow;
+   cpp_num_part add_high, add_low;
+ 
+-  /* Multiply by 8 or 16.  Catching this overflow here means we don't
++  /* Multiply by 2, 8 or 16.  Catching this overflow here means we don't
+      need to worry about add_high overflowing.  */
++  switch (base)
++    {
++    case 2:
++      shift = 1;
++      break;
++
++    case 16:
++      shift = 4;
++      break;
++
++    default:
++      shift = 3;
++    }
+   overflow = !!(num.high >> (PART_PRECISION - shift));
+   result.high = num.high << shift;
+   result.low = num.low << shift;

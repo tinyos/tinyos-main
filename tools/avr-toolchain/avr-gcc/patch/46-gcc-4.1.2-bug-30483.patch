@@ -1,0 +1,21 @@
+2007-04-14  Anatoly Sokolov <aesok@post.ru>
+
+	PR target/30483
+	* config/avr/avr.c (ptrreg_to_str): Replace gcc_unreachable() with
+	error().
+
+
+Index: gcc/config/avr/avr.c
+===================================================================
+--- gcc/config/avr/avr.c	(revision 123920)
++++ gcc/config/avr/avr.c	(working copy)
+@@ -1041,7 +1044,7 @@
+     case REG_Y: return "Y";
+     case REG_Z: return "Z";
+     default:
+-      gcc_unreachable ();
++      error ("address operand requires constraint for X, Y, or Z register");
+     }
+   return NULL;
+ }
+

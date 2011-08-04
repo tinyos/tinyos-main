@@ -1,0 +1,85 @@
+diff -Nbaur gcc-4.1.1/gcc/gcc.c gcc-4.1.1-arm/gcc/gcc.c
+--- gcc/gcc.c	Wed May 17 19:38:58 2006
++++ gcc/gcc.c	Mon Jun  5 06:58:56 2006
+@@ -3250,8 +3250,6 @@
+       gcc_libexec_prefix = make_relative_prefix (argv[0],
+ 						 standard_bindir_prefix,
+ 						 standard_libexec_prefix);
+-      if (gcc_exec_prefix)
+-	putenv (concat ("GCC_EXEC_PREFIX=", gcc_exec_prefix, NULL));
+     }
+   else
+     gcc_libexec_prefix = make_relative_prefix (gcc_exec_prefix,
+@@ -6148,10 +6146,21 @@
+
+   /* We need to check standard_exec_prefix/just_machine_suffix/specs
+      for any override of as, ld and libraries.  */
++  if ( gcc_exec_prefix )
++  {
++    specs_file = alloca (strlen (gcc_exec_prefix)
++		         + strlen (just_machine_suffix) + sizeof ("specs"));
++
++    strcpy (specs_file, gcc_exec_prefix);
++  } else {
++
+   specs_file = alloca (strlen (standard_exec_prefix)
+ 		       + strlen (just_machine_suffix) + sizeof ("specs"));
+
+   strcpy (specs_file, standard_exec_prefix);
++
++  }
++
+   strcat (specs_file, just_machine_suffix);
+   strcat (specs_file, "specs");
+   if (access (specs_file, R_OK) == 0)
+diff -Nbaur gcc-4.1.1/gcc/prefix.c gcc-4.1.1-arm/gcc/prefix.c
+--- gcc/prefix.c	Sat Jun 25 03:02:01 2005
++++ gcc/prefix.c	Mon Jun  5 06:58:56 2006
+@@ -246,13 +246,16 @@
+    The returned string is always malloc-ed, and the caller is
+    responsible for freeing it.  */
+
++
++static const char *old_prefix = PREFIX;
++
+ char *
+ update_path (const char *path, const char *key)
+ {
+   char *result, *p;
+-  const int len = strlen (std_prefix);
++  const int len = strlen (old_prefix);
+
+-  if (! strncmp (path, std_prefix, len)
++  if (! strncmp (path, old_prefix, len)
+       && (IS_DIR_SEPARATOR(path[len])
+           || path[len] == '\0')
+       && key != 0)
+@@ -354,4 +357,6 @@
+ set_std_prefix (const char *prefix, int len)
+ {
+   std_prefix = save_string (prefix, len);
++
++	putenv (concat ("GCC_EXEC_PREFIX=", std_prefix, NULL));
+ }
+diff -Nbaur gcc-4.1.1/gcc/toplev.c gcc-4.1.1-arm/gcc/toplev.c
+--- gcc/toplev.c	Sat Feb  4 22:13:20 2006
++++ gcc/toplev.c	Mon Jun  5 06:58:56 2006
+@@ -82,6 +82,7 @@
+ #include "value-prof.h"
+ #include "alloc-pool.h"
+ #include "tree-mudflap.h"
++#include "prefix.h"
+
+ #if defined (DWARF2_UNWIND_INFO) || defined (DWARF2_DEBUGGING_INFO)
+ #include "dwarf2out.h"
+@@ -1434,6 +1435,10 @@
+   progname = p;
+
+   xmalloc_set_program_name (progname);
++
++  p = getenv("GCC_EXEC_PREFIX");
++  if (p && strlen(p)) set_std_prefix (p, strlen(p));
++
+
+   hex_init ();
+

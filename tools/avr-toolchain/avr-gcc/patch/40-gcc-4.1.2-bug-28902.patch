@@ -1,0 +1,12 @@
+Index: gcc/config/avr/avr.h
+===================================================================
+--- gcc/config/avr/avr.h        (revision 116509)
++++ gcc/config/avr/avr.h        (working copy)
+@@ -94,6 +94,7 @@
+ /* No data type wants to be aligned rounder than this.  */
+ #define BIGGEST_ALIGNMENT 8
+
++#define TARGET_VTABLE_ENTRY_ALIGN 8
+
+ #define STRICT_ALIGNMENT 0
+

@@ -1,0 +1,18 @@
+--- gcc/config/avr/avr.c.old	2007-03-13 15:19:35.502842800 -0600
++++ gcc/config/avr/avr.c	2007-03-13 15:21:58.968920800 -0600
+@@ -5050,6 +5050,7 @@ avr_rtx_costs (rtx x, int code, int oute
+ 	    *total = COSTS_N_INSNS (AVR_MEGA ? 2 : 1);
+ 	  else
+ 	    return false;
++	  break;
+ 
+ 	case HImode:
+ 	  if (AVR_ENHANCED)
+@@ -5058,6 +5059,7 @@ avr_rtx_costs (rtx x, int code, int oute
+ 	    *total = COSTS_N_INSNS (AVR_MEGA ? 2 : 1);
+ 	  else
+ 	    return false;
++	  break;
+ 
+ 	default:
+ 	  return false;

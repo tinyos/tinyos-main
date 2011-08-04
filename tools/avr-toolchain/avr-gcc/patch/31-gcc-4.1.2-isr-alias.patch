@@ -1,0 +1,12 @@
+--- gcc/config/avr/avr.h.orig	Sat Jun 25 03:22:41 2005
++++ gcc/config/avr/avr.h	Tue Sep 26 23:07:01 2006
+@@ -631,6 +631,8 @@
+ /* Globalizing directive for a label.  */
+ #define GLOBAL_ASM_OP ".global\t"
+ 
++#define SET_ASM_OP    "\t.set\t"
++
+ #define ASM_WEAKEN_LABEL(FILE, NAME)	\
+   do					\
+     {					\
+
