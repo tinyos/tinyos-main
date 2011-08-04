@@ -87,7 +87,8 @@ implementation{
      // -1 because the ext computation will add at least 1
     nodeRank = (parentNode->etx_hop / divideRank * min_hop_rank_inc) + parentNode->rank;
 
-    //printf("%d %d %d %d %d %d %d\n", desiredParent, parentNode->etx_hop, divideRank, parentNode->rank, (min_hop_rank_inc - 1), nodeRank, prevRank);
+    printf(">>> %d %d %d %d %d %d %d\n", desiredParent, parentNode->etx_hop, divideRank, parentNode->rank, (min_hop_rank_inc - 1), nodeRank, prevRank);
+    printfflush();
 
     if (nodeRank <= ROOT_RANK && prevRank > 1) {
       nodeRank = prevRank;
@@ -108,7 +109,7 @@ implementation{
     uint8_t indexset;
     uint8_t min = 0;
     uint16_t minDesired;
-    parent_t* parentNode;
+    parent_t* parentNode, *previousParent;
     //choose the first valid
 
     parentNode = call ParentTable.get(min);
@@ -159,7 +160,9 @@ implementation{
 
     //printf("minD %d SB %d minM %d \n", minDesired, STABILITY_BOUND, minMetric);
 
-    if(minDesired + divideRank*STABILITY_BOUND/10 >= minMetric){ 
+    previousParent = call ParentTable.get(desiredParent);
+
+    if(minDesired + divideRank*STABILITY_BOUND/10 >= minMetric && minMetric !=0 && previousParent->valid){ 
       // if the min measurement (minDesired) is not significantly better than the previous parent's (minMetric), stay with what we have...
       min = desiredParent;
       minDesired = minMetric;
