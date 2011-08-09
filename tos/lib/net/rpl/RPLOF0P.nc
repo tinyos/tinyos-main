@@ -107,7 +107,7 @@ implementation{
       call RPLOF.resetRank();
       call RPLRoute.inconsistency();
       call ForwardingTable.delRoute(route_key);
-     route_key = ROUTE_INVAL_KEY;
+      route_key = ROUTE_INVAL_KEY;
       return FALSE;
     }
 

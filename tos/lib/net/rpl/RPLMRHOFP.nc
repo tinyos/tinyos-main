@@ -80,15 +80,20 @@ implementation{
     uint16_t prevEtx, prevRank;
     parent_t* parentNode = call ParentTable.get(desiredParent);
 
+    if(desiredParent == MAX_PARENT){
+      nodeRank = INFINITE_RANK;
+      return FALSE;
+    }
+
     prevEtx = nodeEtx;
     prevRank = nodeRank;
 
     nodeEtx = parentNode->etx_hop + parentNode -> etx;
-     // -1 because the ext computation will add at least 1
+    // -1 because the ext computation will add at least 1
     nodeRank = (parentNode->etx_hop / divideRank * min_hop_rank_inc) + parentNode->rank;
 
-    printf(">>> %d %d %d %d %d %d %d\n", desiredParent, parentNode->etx_hop, divideRank, parentNode->rank, (min_hop_rank_inc - 1), nodeRank, prevRank);
-    printfflush();
+    //printf(">>> %d %d %d %d %d %d %d\n", desiredParent, parentNode->etx_hop, divideRank, parentNode->rank, (min_hop_rank_inc - 1), nodeRank, prevRank);
+    //printfflush();
 
     if (nodeRank <= ROOT_RANK && prevRank > 1) {
       nodeRank = prevRank;
@@ -123,14 +128,16 @@ implementation{
     if (min == MAX_PARENT){ 
       call RPLOF.resetRank();
       call RPLRoute.inconsistency();
-      call ForwardingTable.delRoute(route_key);
+      //call ForwardingTable.delRoute(route_key);
       route_key = ROUTE_INVAL_KEY;
       return FALSE;
     }
 
     //printf("%d %d %d %d \n", parentNode->etx, parentNode->rank, parentNode->etx_hop, min);
 
-    parentNode = call ParentTable.get(minDesired);
+    //parentNode = call ParentTable.get(minDesired);
+    parentNode = call ParentTable.get(desiredParent);
+
     if(htons(parentNode->parentIP.s6_addr16[7]) != 0)
       minMetric = parentNode->etx_hop + parentNode->etx; // update to most recent etx
 
@@ -149,16 +156,12 @@ implementation{
 
     parentNode = call ParentTable.get(min);
 
-    //printf("%d %d %d %d \n", parentNode->etx, parentNode->rank, parentNode->etx_hop, min);
-    
     if(parentNode->rank > nodeRank || parentNode->rank == INFINITE_RANK){
       printf("SELECTED PARENT is FFFF %d\n", TOS_NODE_ID);
-      call ForwardingTable.delRoute(route_key);
+      //call ForwardingTable.delRoute(route_key);
       route_key = ROUTE_INVAL_KEY;
       return FAIL;
     }
-
-    //printf("minD %d SB %d minM %d \n", minDesired, STABILITY_BOUND, minMetric);
 
     previousParent = call ParentTable.get(desiredParent);
 
