@@ -1,3 +1,47 @@
+/*
+ * Copyright (c) 2009 DEXMA SENSORS SL
+ * Copyright (c) 20011 ZOLERTIA LABS
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ *
+ * - Neither the name of the copyright holders nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Implementation of ADXL345 accelerometer, as a part of Zolertia Z1 mote
+ *
+ * Credits goes to DEXMA SENSORS SL
+ * @author: Xavier Orduna <xorduna@dexmatech.com>
+ * @author: Jordi Soucheiron <jsoucheiron@dexmatech.com>
+ * @author: Antonio Linan <alinan@zolertia.com>
+ */
+
 #include "ADXL345.h"
 
 module ADXL345P {
@@ -15,6 +59,7 @@ module ADXL345P {
 	interface Read<uint16_t> as X;
 	interface Read<uint16_t> as Y;
 	interface Read<uint16_t> as Z;
+	interface Read<adxl345_readxyt_t> as XYZ;
 	interface ADXL345Control;
 	interface Notify<adxlint_state_t> as Int1;
 	interface Notify<adxlint_state_t> as Int2;
@@ -54,6 +99,7 @@ implementation {
   norace uint16_t x_axis;
   norace uint16_t y_axis;
   norace uint16_t z_axis;
+  norace adxl345_readxyt_t xyz_axis;
 
 
   task void sendEvent1();
@@ -108,6 +154,11 @@ implementation {
   task void calculateZ(){
 	lock = FALSE;
   	signal Z.readDone(error_return, z_axis);
+  }
+
+  task void calculateXYZ(){
+	lock = FALSE;
+  	signal XYZ.readDone(error_return, xyz_axis);
   }
 
   task void calculateRegister() {
@@ -165,6 +216,7 @@ implementation {
   }
 
   task void setReadAddressDone() {
+    lock = FALSE;
 	signal ADXL345Control.setReadAddressDone(SUCCESS);
   }
 
@@ -200,9 +252,9 @@ implementation {
     if(lock) return EBUSY;
     lock = TRUE;
     if( address >= 0x01 && address <= 0x1C) return EINVAL;		//reserved, do not access
-    if( address >= 0x3A) return EINVAL; 				//to big
+    if( address >= 0x3A) return EINVAL; 				        //too big
     readAddress = address;
-    lock=FALSE;
+    post setReadAddressDone();
     return SUCCESS;
   }
   
@@ -243,8 +295,8 @@ implementation {
 	adxlcmd = ADXLCMD_INT;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		int_enable = int_enable_par;
-		return SUCCESS;
+	  int_enable = int_enable_par;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -257,8 +309,8 @@ implementation {
 	adxlcmd = ADXLCMD_SET_DURATION;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		duration = duration_par;
-		return SUCCESS;
+	  duration = duration_par;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -271,8 +323,8 @@ implementation {
 	adxlcmd = ADXLCMD_SET_LATENT;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		latent = latent_par;
-		return SUCCESS;
+	  latent = latent_par;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -285,8 +337,8 @@ implementation {
 	adxlcmd = ADXLCMD_SET_WINDOW;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		window = window_par;
-		return SUCCESS;
+	  window = window_par;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -299,8 +351,8 @@ implementation {
 	adxlcmd = ADXLCMD_SET_INT_MAP;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		int_map = int_map_par;
-		return SUCCESS;
+	  int_map = int_map_par;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -313,7 +365,7 @@ implementation {
 	adxlcmd = ADXLCMD_READ_POWER_CTL;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		return SUCCESS;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -326,7 +378,7 @@ implementation {
 	adxlcmd = ADXLCMD_READ_BW_RATE;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		return SUCCESS;
+      return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -339,7 +391,7 @@ implementation {
 	adxlcmd = ADXLCMD_READ_INT_ENABLE;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		return SUCCESS;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -352,7 +404,7 @@ implementation {
 	adxlcmd = ADXLCMD_READ_INT_MAP;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		return SUCCESS;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -365,7 +417,7 @@ implementation {
 	adxlcmd = ADXLCMD_READ_INT_SOURCE;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		return SUCCESS;
+	  return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -424,13 +476,26 @@ implementation {
 	lock = TRUE;
 	adxlcmd = ADXLCMD_READ_Z;
 	if ((power_ctl & ADXL345_MEASURE_MODE) == 0) {
-		lock=FALSE;
-		return FAIL;
+	  lock=FALSE;
+	  return FAIL;
 	}
 	e = call Resource.request();
-	if (e==SUCCESS) {
-		return SUCCESS;
+	if (e==SUCCESS) return SUCCESS;
+	lock = FALSE;
+	return e;
+  }
+
+  command error_t XYZ.read(){
+	error_t e;
+	if(lock) return EBUSY;
+	lock = TRUE;
+	adxlcmd = ADXLCMD_READ_XYZ;
+	if ((power_ctl & ADXL345_MEASURE_MODE) == 0) {
+	  lock=FALSE;
+	  return FAIL;
 	}
+	e = call Resource.request();
+	if (e==SUCCESS) return SUCCESS;
 	lock = FALSE;
 	return e;
   }
@@ -468,7 +533,7 @@ implementation {
 	adxlcmd = ADXLCMD_READ_WINDOW;
 	e = call Resource.request();
 	if (e==SUCCESS) {
-		return SUCCESS;
+      return SUCCESS;
 	}
 	lock = FALSE;
 	return e;
@@ -477,6 +542,16 @@ implementation {
   event void Resource.granted(){
 	error_t e;
   	switch(adxlcmd){
+
+		case ADXLCMD_READ_XYZ: //NOTE moved to speedup
+		   	pointer = ADXL345_DATAX0;
+		   	e = call I2CBasicAddr.write((I2C_START | I2C_STOP), ADXL345_ADDRESS, 1, &pointer); 
+			if (e!= SUCCESS) {
+			  error_return = e;
+			  post calculateXYZ();
+			}
+  			break;
+
   		case ADXLCMD_START:
 			power_ctl = power_ctl | ADXL345_MEASURE_MODE;
 			databuf[0] = ADXL345_THRESH_TAP;
@@ -500,8 +575,8 @@ implementation {
 			databuf[18] = 0x0;			//ADXL345_INT_ENABLE (all disabled by default)
 			e = call I2CBasicAddr.write((I2C_START | I2C_STOP), ADXL345_ADDRESS, 19, databuf);
 			if (e!= SUCCESS) {
-				error_return = e;
-				post started();
+			  error_return = e;
+			  post started();
 			}
 			break;
 
@@ -718,6 +793,12 @@ implementation {
 		  tmp = tmp + data[0];
 		}
 		switch(adxlcmd){
+            case ADXLCMD_READ_XYZ: //NOTE moved to speedup
+				xyz_axis.x_axis = (data[1] << 8) + data[0];
+				xyz_axis.y_axis = (data[3] << 8) + data[2];
+                xyz_axis.z_axis = (data[5] << 8) + data[4];
+				post calculateXYZ();
+				break;
 			case ADXLCMD_READ_REGISTER:
 				regData=data[0];
 				post calculateRegister();
@@ -773,7 +854,8 @@ implementation {
   async event void I2CBasicAddr.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t *data){
 	if(call Resource.isOwner()) {
 		error_return=error;
-		if(	adxlcmd != ADXLCMD_READ_REGISTER
+		if(	adxlcmd != ADXLCMD_READ_XYZ //NOTE moved to speedup
+            && adxlcmd != ADXLCMD_READ_REGISTER
 			&& adxlcmd != ADXLCMD_READ_DURATION
 			&& adxlcmd != ADXLCMD_READ_LATENT
 			&& adxlcmd != ADXLCMD_READ_WINDOW
@@ -788,6 +870,12 @@ implementation {
 			call Resource.release();
 		}
 		switch(adxlcmd){
+			case ADXLCMD_READ_XYZ: //NOTE moved to speedup
+				if (error==SUCCESS)
+                  call I2CBasicAddr.read ((I2C_START | I2C_STOP),  ADXL345_ADDRESS, 6, databuf);	
+				else 
+				  post calculateXYZ();
+				break;
 			case ADXLCMD_START:
 				post started();
 				break;
@@ -939,6 +1027,10 @@ implementation {
   default event void Z.readDone(error_t error, uint16_t data){
   	return;
   }	  
+
+  default event void XYZ.readDone(error_t error, adxl345_readxyt_t data){
+  	return;
+  }
   
   default event void ADXL345Control.setRangeDone(error_t error){
   	return;
