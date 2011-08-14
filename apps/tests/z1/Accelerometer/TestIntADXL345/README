@@ -1,0 +1,22 @@
+README for ADXL35 interruptions test app
+Author/Contact: Antonio Linan <alinan@zolertia.com>
+
+Description:
+
+This application test the Accelerometer interruptions in the following
+manner:
+
+ * Single tap: toggle led red
+ * Double tap: toggle green led
+ * Free fall: toggle blue led
+
+The ADXL345 sensor is a temperature sensor and its already integrated as
+part of the Zolertia Z1 mote.
+
+Tools:
+
+None
+
+Known bugs/limitations:
+
+None.

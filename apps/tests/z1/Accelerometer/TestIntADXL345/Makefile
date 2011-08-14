@@ -1,0 +1,2 @@
+COMPONENT=TestIntADXLAppC
+include $(MAKERULES)

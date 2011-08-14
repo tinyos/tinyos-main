@@ -1,0 +1,28 @@
+README for SHT1X sensor test app
+Author/Contact: Antonio Linan <alinan@zolertia.com>
+
+Description:
+
+This application simple polls periodically the SHT1X sensor for data
+(temperature and humidity).
+
+The data is printed over the serial port, using a client like putty or
+picocom you can see the readings of the sensor adjusting the serial port
+to this configuration:
+
+bauds: 115200
+bits: 8
+parity: none
+
+The SHT1X sensor is a part of the ZIGTH11 board, which can be connected 
+to a Ziglet port (an I2C digital port of the Z1 mote), or to regular GPIO
+port (depending on how you connect it), if using as a Ziglet make sure
+IS_ZIGLET is uncommented in Makefile.
+
+Tools:
+
+None
+
+Known bugs/limitations:
+
+None.

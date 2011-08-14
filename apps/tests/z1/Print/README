@@ -1,0 +1,23 @@
+README for Printf Z1 app
+Author/Contact: Antonio Linan <alinan@zolertia.com>
+
+Description:
+
+This application simple increments a timer and prints its value over
+the serial port using a printf implementation for the Z1 mote.
+
+The data is printed over the serial port, using a client like putty or
+picocom you can see the readings of the sensor adjusting the serial port
+to this configuration:
+
+bauds: 115200
+bits: 8
+parity: none
+
+Tools:
+
+None
+
+Known bugs/limitations:
+
+None.

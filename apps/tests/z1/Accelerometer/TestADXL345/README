@@ -1,0 +1,30 @@
+README for ADXL35 sensor test app
+Author/Contact: Antonio Linan <alinan@zolertia.com>
+
+Description:
+
+This application simple polls periodically the ADXL345 sensor for data
+and toggles a led when a specific axis is read:
+
+ * X axis: red led.
+ * Y axis: green led.
+ * Z axis: blue led.
+
+The data is printed over the serial port, using a client like putty or
+picocom you can see the readings of the sensor adjusting the serial port
+to this configuration:
+
+bauds: 115200
+bits: 8
+parity: none
+
+The ADXL345 sensor is a temperature sensor and its already integrated as
+part of the Zolertia Z1 mote.
+
+Tools:
+
+None
+
+Known bugs/limitations:
+
+None.
