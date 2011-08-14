@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2006 Arch Rock Corporation
- * Copyright (c) 2000-2005 The Regents of the University of California.  
+ * Copyright (c) 2009 DEXMA SENSORS SL
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,11 +8,13 @@
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
+ *
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ *
+ * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -31,66 +32,37 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @author Ben Greenstein <ben@cs.ucla.edu>
- * @author Jonathan Hui <jhui@archrock.com>
- * @author Joe Polastre <info@moteiv.com>
- * @version $Revision: 1.8 $ $Date: 2010-06-29 22:07:45 $
+/*
+ * @author: Xavier Orduna <xorduna@dexmatech.com>
+ * @author: Jordi Soucheiron <jsoucheiron@dexmatech.com>
  */
 
-module HplMsp430DmaP {
-
-  provides interface HplMsp430DmaControl as DmaControl;
-  provides interface HplMsp430DmaInterrupt as Interrupt;
-
+module Z1SerialP {
+  provides interface StdControl;
+  provides interface Msp430UartConfigure;
+  uses interface Resource;
 }
-
 implementation {
+  
+  msp430_uart_union_config_t msp430_uart_z1_config = { {
+    ubr: UBR_8MHZ_115200,
+    umctl: UMCTL_8MHZ_115200,
+    ucssel: 2,
+  } };
 
-  MSP430REG_NORACE( DMACTL0 );
-  MSP430REG_NORACE( DMACTL1 );
+//, ssel: 0x02, pena: 0, pev: 0, spb: 0, clen: 1, listen: 0, mm: 0, ckpl: 0, urxse: 0, urxeie: 1, urxwie: 0, utxe : 1, urxe : 1
 
-  TOSH_SIGNAL( DACDMA_VECTOR ) {
-    signal Interrupt.fired();
+  command error_t StdControl.start(){
+    return call Resource.immediateRequest();
   }
-
-  async command void DmaControl.setOnFetch(){
-    DMACTL1 |= DMAONFETCH;
+  command error_t StdControl.stop(){
+    call Resource.release();
+    return SUCCESS;
   }
+  event void Resource.granted(){}
 
-  async command void DmaControl.clearOnFetch(){
-    DMACTL1 &= ~DMAONFETCH;
+  async command msp430_uart_union_config_t* Msp430UartConfigure.getConfig() {
+    return &msp430_uart_z1_config;
   }
-
-  async command void DmaControl.setRoundRobin(){
-    DMACTL1 |= ROUNDROBIN;
-  }
-  async command void DmaControl.clearRoundRobin(){
-    DMACTL1 &= ~ROUNDROBIN;
-  }
-
-  async command void DmaControl.setENNMI(){
-    DMACTL1 |= ENNMI;
-  }
-
-  async command void DmaControl.clearENNMI(){
-    DMACTL1 &= ~ENNMI;
-  }
-
-  async command void DmaControl.setState(dma_state_t s){
-    DMACTL1 = *(int*)&s;
-  }
-
-  async command dma_state_t DmaControl.getState(){
-    dma_state_t s;
-    s = *(dma_state_t*)&DMACTL1;
-    return s;
-  }
-
-  async command void DmaControl.reset(){
-    DMACTL0 = 0;
-    DMACTL1 = 0;
-  }
-
+  
 }
-

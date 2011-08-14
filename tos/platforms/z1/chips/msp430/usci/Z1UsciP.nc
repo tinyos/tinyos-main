@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2006 Arch Rock Corporation
- * Copyright (c) 2000-2005 The Regents of the University of California.  
+ * Copyright (c) 2009 DEXMA SENSORS SL
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,11 +8,13 @@
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
+ *
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ *
+ * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -31,66 +32,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @author Ben Greenstein <ben@cs.ucla.edu>
- * @author Jonathan Hui <jhui@archrock.com>
- * @author Joe Polastre <info@moteiv.com>
- * @version $Revision: 1.8 $ $Date: 2010-06-29 22:07:45 $
+/*
+ * @author: Xavier Orduna <xorduna@dexmatech.com>
+ * @author: Jordi Soucheiron <jsoucheiron@dexmatech.com>
  */
 
-module HplMsp430DmaP {
-
-  provides interface HplMsp430DmaControl as DmaControl;
-  provides interface HplMsp430DmaInterrupt as Interrupt;
-
+generic module Z1UsciP() {
+  provides interface Msp430SpiConfigure[ uint8_t id ];
+  provides interface Msp430I2CConfigure[ uint8_t id ];
 }
-
 implementation {
 
-  MSP430REG_NORACE( DMACTL0 );
-  MSP430REG_NORACE( DMACTL1 );
+  msp430_spi_union_config_t msp430_spi_z1_config = { {
+    ubr		: 2,			/* smclk/2   */
+    ucmode	: 0,			/* 3 pin master, no ste */
+    ucmst	: 1,
+    uc7bit	: 0,			/* 8 bit */
+    ucmsb	: 1,			/* msb first, compatible with msp430 usart */
+    ucckpl	: 1,			/* inactive state low */
+    ucckph	: 0,			/* data captured on rising, changed falling */
+    ucssel	: 2,			/* smclk */
+  } };
 
-  TOSH_SIGNAL( DACDMA_VECTOR ) {
-    signal Interrupt.fired();
+  async command msp430_spi_union_config_t* Msp430SpiConfigure.getConfig[uint8_t id]() {
+    return (msp430_spi_union_config_t*) &msp430_spi_z1_config;
   }
 
-  async command void DmaControl.setOnFetch(){
-    DMACTL1 |= DMAONFETCH;
-  }
+  msp430_i2c_union_config_t msp430_i2c_z1_config = { {
+    ucmode  : 3,			/* i2c mode */
+    ucmst   : 1,			/* master */
+    ucmm    : 0,			/* single master */
+    ucsla10 : 0,			/* 7 bit slave */
+    uca10   : 0,			/* 7 bit us */
+    uctr    : 0,			/* rx mode to start */
+    ucssel  : 2,			/* smclk */
+    i2coa   : 1,			/* our address is 1 */
+    ucgcen  : 1,			/* respond to general call */
+    ubr     : 800,			/* smclk/2 */
+  } };
 
-  async command void DmaControl.clearOnFetch(){
-    DMACTL1 &= ~DMAONFETCH;
-  }
-
-  async command void DmaControl.setRoundRobin(){
-    DMACTL1 |= ROUNDROBIN;
-  }
-  async command void DmaControl.clearRoundRobin(){
-    DMACTL1 &= ~ROUNDROBIN;
-  }
-
-  async command void DmaControl.setENNMI(){
-    DMACTL1 |= ENNMI;
-  }
-
-  async command void DmaControl.clearENNMI(){
-    DMACTL1 &= ~ENNMI;
-  }
-
-  async command void DmaControl.setState(dma_state_t s){
-    DMACTL1 = *(int*)&s;
-  }
-
-  async command dma_state_t DmaControl.getState(){
-    dma_state_t s;
-    s = *(dma_state_t*)&DMACTL1;
-    return s;
-  }
-
-  async command void DmaControl.reset(){
-    DMACTL0 = 0;
-    DMACTL1 = 0;
+  async command msp430_i2c_union_config_t* Msp430I2CConfigure.getConfig[uint8_t id]() {
+    return (msp430_i2c_union_config_t *) &msp430_i2c_z1_config;
   }
 
 }
-

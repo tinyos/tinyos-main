@@ -1,6 +1,6 @@
-/*
+/**
+ * Copyright (c) 2009-2010 DEXMA SENSORS SL
  * Copyright (c) 2005-2006 Arch Rock Corporation
- * Copyright (c) 2000-2005 The Regents of the University of California. 
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +12,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the Arch Rock Corporation nor the names of
+ * - Neither the name of the copyright holder nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -20,8 +20,8 @@
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
- * ARCHED ROCK OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * COPYRIGHT HOLDER OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
@@ -31,40 +31,41 @@
  */
 
 /**
- * @author Ben Greenstein <ben@cs.ucla.edu>
- * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.7 $ $Date: 2010-06-29 22:07:45 $
+ * An implementation of the UART on USCIA1 for the MSP430.
+ * @author Vlado Handziski <handzisk@tkn.tu-berlin.de>
+ * @author Jonathan Hui <jhui@archedrock.com>
+ * @author Eric B. Decker <cire831@gmail.com>
+ * @author Xavier Orduna <xorduna@dexmatech.com>
+ * @version $Revision: 1.5 $ $Date: 2008/05/21 22:11:57 $
  */
 
-configuration HplMsp430DmaC {
+#include "msp430usci.h"
 
-  provides interface HplMsp430DmaControl as Control;
-  provides interface HplMsp430DmaChannel as Channel0;
-  provides interface HplMsp430DmaChannel as Channel1;
-  provides interface HplMsp430DmaChannel as Channel2;
+generic configuration Msp430Uart1C() {
 
+  provides interface Resource;
+  provides interface ResourceRequested;
+  provides interface UartStream;
+  provides interface UartByte;
+
+  uses interface Msp430UartConfigure;
 }
 
 implementation {
 
-  components HplMsp430DmaP;
-  components new HplMsp430DmaXP( DMA0CTL_, DMA0SA_, DMA0DA_,
-				 DMA0SZ_, DMA0TSEL_MASK, 
-				 DMA0TSEL_SHIFT ) as Dma0;
-  components new HplMsp430DmaXP( DMA1CTL_, DMA1SA_, DMA1DA_,
-				 DMA1SZ_, DMA1TSEL_MASK, 
-				 DMA1TSEL_SHIFT ) as Dma1;
-  components new HplMsp430DmaXP( DMA2CTL_, DMA2SA_, DMA2DA_,
-				 DMA2SZ_, DMA2TSEL_MASK, 
-				 DMA2TSEL_SHIFT ) as Dma2;
+  enum {
+    CLIENT_ID = unique( MSP430_UART1_BUS ),
+  };
 
-  Control = HplMsp430DmaP;
-  Channel0 = Dma0;
-  Channel1 = Dma1;
-  Channel2 = Dma2;
-  Dma0.Interrupt -> HplMsp430DmaP;
-  Dma1.Interrupt -> HplMsp430DmaP;
-  Dma2.Interrupt -> HplMsp430DmaP;
+  components Msp430Uart1P as UartP;
+  Resource = UartP.Resource[ CLIENT_ID ];
+  UartStream = UartP.UartStream[ CLIENT_ID ];
+  UartByte = UartP.UartByte[ CLIENT_ID ];
+  Msp430UartConfigure = UartP.Msp430UartConfigure[ CLIENT_ID ];
 
+  components new Msp430UsciA1C() as UsciC;
+  ResourceRequested = UsciC;
+  UartP.ResourceConfigure[ CLIENT_ID ] <- UsciC.ResourceConfigure;
+  UartP.UsciResource[ CLIENT_ID ] -> UsciC.Resource;
+  UartP.UsciInterrupts[ CLIENT_ID ] -> UsciC.HplMsp430UsciInterrupts;
 }
-

@@ -1,5 +1,8 @@
 
-/* Copyright (c) 2000-2003 The Regents of the University of California.  
+/**
+ * Copyright (c) 2011 Eric B. Decker
+ * Copyright (c) 2009 DEXMA SENSORS SL
+ * Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//@author Cory Sharp <cssharp@eecs.berkeley.edu>
+/*
+ * @author Cory Sharp <cssharp@eecs.berkeley.edu>
+ * @author Xavier Orduna <xorduna@dexmatech.com>
+ * @author Eric B. Decker <cire831@gmail.com>
+ */
 
 #ifndef _H_msp430regtypes_h
 #define _H_msp430regtypes_h
@@ -100,11 +107,20 @@
 #define TYPE_AIN uint16_t
 #define TYPE_BCSCTL1 uint8_t
 #define TYPE_BCSCTL2 uint8_t
+#define TYPE_BCSCTL3 uint8_t
 #define TYPE_BTCNT1 uint8_t
 #define TYPE_BTCNT2 uint8_t
 #define TYPE_BTCTL uint8_t
 #define TYPE_CACTL1 uint8_t
 #define TYPE_CACTL2 uint8_t
+#define TYPE_CALBC1_1MHZ  uint8_t
+#define TYPE_CALBC1_8MHZ  uint8_t
+#define TYPE_CALBC1_12MHZ uint8_t
+#define TYPE_CALBC1_16MHZ uint8_t
+#define TYPE_CALDCO_1MHZ  uint8_t
+#define TYPE_CALDCO_8MHZ  uint8_t
+#define TYPE_CALDCO_12MHZ uint8_t
+#define TYPE_CALDCO_16MHZ uint8_t
 #define TYPE_CAPD uint8_t
 #define TYPE_CBCTL uint8_t
 #define TYPE_CCR0 uint16_t
@@ -121,15 +137,21 @@
 #define TYPE_DAC12_1DAT uint16_t
 #define TYPE_DCOCTL uint8_t
 #define TYPE_DMA0CTL uint16_t
+#define TYPE_DMA0DAL uint16_t
 #define TYPE_DMA0DA uint16_t
+#define TYPE_DMA0SAL uint16_t
 #define TYPE_DMA0SA uint16_t
 #define TYPE_DMA0SZ uint16_t
 #define TYPE_DMA1CTL uint16_t
+#define TYPE_DMA1DAL uint16_t
 #define TYPE_DMA1DA uint16_t
+#define TYPE_DMA1SAL uint16_t
 #define TYPE_DMA1SA uint16_t
 #define TYPE_DMA1SZ uint16_t
 #define TYPE_DMA2CTL uint16_t
+#define TYPE_DMA2DAL uint16_t
 #define TYPE_DMA2DA uint16_t
+#define TYPE_DMA2SAL uint16_t
 #define TYPE_DMA2SA uint16_t
 #define TYPE_DMA2SZ uint16_t
 #define TYPE_DMACTL0 uint16_t
@@ -143,6 +165,8 @@
 #define TYPE_FLL_CTL1 uint8_t
 #define TYPE_I2CDCTL uint8_t
 #define TYPE_I2CDR uint8_t
+#define TYPE_I2CDRB uint8_t
+#define TYPE_I2CDRW uint16_t
 #define TYPE_I2CIE uint8_t
 #define TYPE_I2CIFG uint8_t
 #define TYPE_I2CIV uint16_t
@@ -157,6 +181,11 @@
 #define TYPE_IE2 uint8_t
 #define TYPE_IFG1 uint8_t
 #define TYPE_IFG2 uint8_t
+#define TYPE_LCDACTL uint8_t
+#define TYPE_LCDAPCTL0 uint8_t
+#define TYPE_LCDAPCTL1 uint8_t
+#define TYPE_LCDAVCTL0 uint8_t
+#define TYPE_LCDAVCTL1 uint8_t
 #define TYPE_LCDCTL uint8_t
 #define TYPE_LCDM1 uint8_t
 #define TYPE_LCDM10 uint8_t
@@ -220,6 +249,7 @@
 #define TYPE_P1IN uint8_t
 #define TYPE_P1OUT uint8_t
 #define TYPE_P1SEL uint8_t
+#define TYPE_P1REN uint8_t
 #define TYPE_P2DIR uint8_t
 #define TYPE_P2IE uint8_t
 #define TYPE_P2IES uint8_t
@@ -227,22 +257,46 @@
 #define TYPE_P2IN uint8_t
 #define TYPE_P2OUT uint8_t
 #define TYPE_P2SEL uint8_t
+#define TYPE_P2REN uint8_t
 #define TYPE_P3DIR uint8_t
 #define TYPE_P3IN uint8_t
 #define TYPE_P3OUT uint8_t
 #define TYPE_P3SEL uint8_t
+#define TYPE_P3REN uint8_t
 #define TYPE_P4DIR uint8_t
 #define TYPE_P4IN uint8_t
 #define TYPE_P4OUT uint8_t
 #define TYPE_P4SEL uint8_t
+#define TYPE_P4REN uint8_t
 #define TYPE_P5DIR uint8_t
 #define TYPE_P5IN uint8_t
 #define TYPE_P5OUT uint8_t
 #define TYPE_P5SEL uint8_t
+#define TYPE_P5REN uint8_t
 #define TYPE_P6DIR uint8_t
 #define TYPE_P6IN uint8_t
 #define TYPE_P6OUT uint8_t
 #define TYPE_P6SEL uint8_t
+#define TYPE_P6REN uint8_t
+#define TYPE_P7DIR uint8_t
+#define TYPE_P7IN uint8_t
+#define TYPE_P7OUT uint8_t
+#define TYPE_P7SEL uint8_t
+#define TYPE_P8DIR uint8_t
+#define TYPE_P8IN uint8_t
+#define TYPE_P8OUT uint8_t
+#define TYPE_P8SEL uint8_t
+#define TYPE_P9DIR uint8_t
+#define TYPE_P9IN uint8_t
+#define TYPE_P9OUT uint8_t
+#define TYPE_P9SEL uint8_t
+
+/* PAIN differs from 2618 MCU and there's no PBIN */
+#ifdef notdef
+#define TYPE_PAIN uint8_t
+#define TYPE_PBIN uint8_t
+#endif
+
 #define TYPE_RESHI uint16_t
 #define TYPE_RESLO uint16_t
 #define TYPE_RET0 uint16_t
@@ -277,6 +331,20 @@
 #define TYPE_RET7 uint16_t
 #define TYPE_RET8 uint16_t
 #define TYPE_RET9 uint16_t
+#define TYPE_RTCCTL uint8_t
+#define TYPE_RTCDAY uint8_t
+#define TYPE_RTCDOW uint8_t
+#define TYPE_RTCHOUR uint8_t
+#define TYPE_RTCMIN uint8_t
+#define TYPE_RTCMON uint8_t
+#define TYPE_RTCNT1 uint8_t
+#define TYPE_RTCNT2 uint8_t
+#define TYPE_RTCNT3 uint8_t
+#define TYPE_RTCNT4 uint8_t
+#define TYPE_RTCSEC uint8_t
+#define TYPE_RTCTL uint8_t
+#define TYPE_RTCYEARH uint8_t
+#define TYPE_RTCYEARL uint8_t
 #define TYPE_RXBUF uint8_t
 #define TYPE_RXBUF0 uint8_t
 #define TYPE_RXBUF1 uint8_t
@@ -285,9 +353,12 @@
 #define TYPE_SCFI0 uint8_t
 #define TYPE_SCFI1 uint8_t
 #define TYPE_SCFQCTL uint8_t
+#define TYPE_SD16AE uint8_t
 #define TYPE_SD16CCTL0 uint16_t
 #define TYPE_SD16CCTL1 uint16_t
 #define TYPE_SD16CCTL2 uint16_t
+#define TYPE_SD16CONF0 uint8_t
+#define TYPE_SD16CONF1 uint8_t
 #define TYPE_SD16CTL uint16_t
 #define TYPE_SD16INCTL0 uint8_t
 #define TYPE_SD16INCTL1 uint8_t
@@ -341,6 +412,7 @@
 #define TYPE_SIFTSM9 uint16_t
 #define TYPE_SUMEXT uint16_t
 #define TYPE_SVSCTL uint8_t
+#define TYPE_SWCTL uint8_t
 #define TYPE_TA0CCR0 uint16_t
 #define TYPE_TA0CCR1 uint16_t
 #define TYPE_TA0CCR2 uint16_t
@@ -390,6 +462,11 @@
 #define TYPE_TBIV uint16_t
 #define TYPE_TBR uint16_t
 #define TYPE_TCCTL uint8_t
+#define TYPE_TLV_ADC12_1_LEN uint8_t
+#define TYPE_TLV_ADC12_1_TAG uint8_t
+#define TYPE_TLV_CHECKSUM uint16_t
+#define TYPE_TLV_DCO_30_LEN uint8_t
+#define TYPE_TLV_DCO_30_TAG uint8_t
 #define TYPE_TPCNT1 uint8_t
 #define TYPE_TPCNT2 uint8_t
 #define TYPE_TPCTL uint8_t
@@ -426,6 +503,53 @@
 #define TYPE_UBR11 uint8_t
 #define TYPE_UBR1_0 uint8_t
 #define TYPE_UBR1_1 uint8_t
+#define TYPE_UC0IE uint8_t
+#define TYPE_UC0IFG uint8_t
+#define TYPE_UC1IE uint8_t
+#define TYPE_UC1IFG uint8_t
+#define TYPE_UCA0ABCTL uint8_t
+#define TYPE_UCA0BR0 uint8_t
+#define TYPE_UCA0BR1 uint8_t
+#define TYPE_UCA0CTL0 uint8_t
+#define TYPE_UCA0CTL1 uint8_t
+#define TYPE_UCA0IRRCTL uint8_t
+#define TYPE_UCA0IRTCTL uint8_t
+#define TYPE_UCA0MCTL uint8_t
+#define TYPE_UCA0RXBUF uint8_t
+#define TYPE_UCA0STAT uint8_t
+#define TYPE_UCA0TXBUF uint8_t
+#define TYPE_UCA1ABCTL uint8_t
+#define TYPE_UCA1BR0 uint8_t
+#define TYPE_UCA1BR1 uint8_t
+#define TYPE_UCA1CTL0 uint8_t
+#define TYPE_UCA1CTL1 uint8_t
+#define TYPE_UCA1IRRCTL uint8_t
+#define TYPE_UCA1IRTCTL uint8_t
+#define TYPE_UCA1MCTL uint8_t
+#define TYPE_UCA1RXBUF uint8_t
+#define TYPE_UCA1STAT uint8_t
+#define TYPE_UCA1TXBUF uint8_t
+#define TYPE_UCB0BR0 uint8_t
+#define TYPE_UCB0BR1 uint8_t
+#define TYPE_UCB0CTL0 uint8_t
+#define TYPE_UCB0CTL1 uint8_t
+#define TYPE_UCB0I2CIE uint8_t
+#define TYPE_UCB0I2COA uint16_t
+#define TYPE_UCB0I2CSA uint16_t
+#define TYPE_UCB0RXBUF uint8_t
+#define TYPE_UCB0STAT uint8_t
+#define TYPE_UCB0TXBUF uint8_t
+#define TYPE_UCB1BR0 uint8_t
+#define TYPE_UCB1BR1 uint8_t
+#define TYPE_UCB1CTL0 uint8_t
+#define TYPE_UCB1CTL1 uint8_t
+#define TYPE_UCB1I2CIE uint8_t
+#define TYPE_UCB1I2COA uint16_t
+#define TYPE_UCB1I2CSA uint16_t
+#define TYPE_UCB1RXBUF uint8_t
+#define TYPE_UCB1STAT uint8_t
+#define TYPE_UCB1TXBUF uint8_t
+
 #define TYPE_UCTL uint8_t
 #define TYPE_UCTL0 uint8_t
 #define TYPE_UCTL1 uint8_t
@@ -441,6 +565,16 @@
 #define TYPE_URCTL1 uint8_t
 #define TYPE_URCTL_0 uint8_t
 #define TYPE_URCTL_1 uint8_t
+
+#define TYPE_USICKCTL uint8_t
+#define TYPE_USICNT uint8_t
+#define TYPE_USICTL0 uint8_t
+#define TYPE_USICTL1 uint8_t
+#define TYPE_USICTL uint16_t
+#define TYPE_USISRH uint8_t
+#define TYPE_USISRL uint8_t
+#define TYPE_USISR uint16_t
+
 #define TYPE_UTCTL uint8_t
 #define TYPE_UTCTL0 uint8_t
 #define TYPE_UTCTL1 uint8_t
@@ -448,5 +582,5 @@
 #define TYPE_UTCTL_1 uint8_t
 #define TYPE_WDTCTL uint16_t
 
-#endif//_H_msp430regtypes_h
+#endif  //_H_msp430regtypes_h
 

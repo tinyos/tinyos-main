@@ -1,6 +1,7 @@
 /*
+ * Copyright (c) 2010-2011 Eric B. Decker
+ * Copyright (c) 2009 DEXMA SENSORS SL
  * Copyright (c) 2005-2006 Arch Rock Corporation
- * Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,11 +10,13 @@
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
+ *
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ *
+ * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -31,66 +34,49 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @author Ben Greenstein <ben@cs.ucla.edu>
+/*
+ * SpiB0: SPI/USCI_B0.  Defaults to no DMA, sw SPI implementation.
+ * To utilize the DMA, via Msp430SpiB0DmaP define ENABLE_SPIB0_DMA.
+ *
  * @author Jonathan Hui <jhui@archrock.com>
- * @author Joe Polastre <info@moteiv.com>
- * @version $Revision: 1.8 $ $Date: 2010-06-29 22:07:45 $
+ * @author Mark Hays
+ * @author Xavier Orduna <xorduna@dexmatech.com>
+ * @author Eric B. Decker <cire831@gmail.com>
  */
 
-module HplMsp430DmaP {
+#include "msp430usci.h"
 
-  provides interface HplMsp430DmaControl as DmaControl;
-  provides interface HplMsp430DmaInterrupt as Interrupt;
-
+generic configuration Msp430SpiB0C() {
+  provides {
+    interface Resource;
+    interface ResourceRequested;
+    interface SpiByte;
+    interface SpiPacket;
+  }
+  uses interface Msp430SpiConfigure;
 }
 
 implementation {
 
-  MSP430REG_NORACE( DMACTL0 );
-  MSP430REG_NORACE( DMACTL1 );
+  enum {
+    CLIENT_ID = unique(MSP430_SPI0_BUS),
+  };
 
-  TOSH_SIGNAL( DACDMA_VECTOR ) {
-    signal Interrupt.fired();
-  }
+#ifdef ENABLE_SPIB0_DMA
+#warning "Enabling SPI DMA on USCIB0"
+  components Msp430SpiDmaB0P as SpiP;
+#else
+  components Msp430SpiNoDmaB0P as SpiP;
+#endif
 
-  async command void DmaControl.setOnFetch(){
-    DMACTL1 |= DMAONFETCH;
-  }
+  Resource = SpiP.Resource[CLIENT_ID];
+  SpiByte = SpiP.SpiByte;
+  SpiPacket = SpiP.SpiPacket[CLIENT_ID];
+  Msp430SpiConfigure = SpiP.Msp430SpiConfigure[CLIENT_ID];
 
-  async command void DmaControl.clearOnFetch(){
-    DMACTL1 &= ~DMAONFETCH;
-  }
-
-  async command void DmaControl.setRoundRobin(){
-    DMACTL1 |= ROUNDROBIN;
-  }
-  async command void DmaControl.clearRoundRobin(){
-    DMACTL1 &= ~ROUNDROBIN;
-  }
-
-  async command void DmaControl.setENNMI(){
-    DMACTL1 |= ENNMI;
-  }
-
-  async command void DmaControl.clearENNMI(){
-    DMACTL1 &= ~ENNMI;
-  }
-
-  async command void DmaControl.setState(dma_state_t s){
-    DMACTL1 = *(int*)&s;
-  }
-
-  async command dma_state_t DmaControl.getState(){
-    dma_state_t s;
-    s = *(dma_state_t*)&DMACTL1;
-    return s;
-  }
-
-  async command void DmaControl.reset(){
-    DMACTL0 = 0;
-    DMACTL1 = 0;
-  }
-
+  components new Msp430UsciB0C() as UsciC;
+  ResourceRequested = UsciC;
+  SpiP.ResourceConfigure[CLIENT_ID] <- UsciC.ResourceConfigure;
+  SpiP.UsciResource[CLIENT_ID] -> UsciC.Resource;
+  SpiP.UsciInterrupts -> UsciC.HplMsp430UsciInterrupts;
 }
-

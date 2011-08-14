@@ -1,5 +1,7 @@
-
-/* Copyright (c) 2000-2003 The Regents of the University of California.  
+/**
+ * Copyright (c) 2011 Eric B. Decker
+ * Copyright (c) 2009 DEXMA SENSORS SL
+ * Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +37,9 @@
  * abstraction for general-purpose I/O.
  *
  * @author Joe Polastre
+ * @author Xavier Orduna <xorduna@dexmatech.com>
  * @author Peter A. Bigot <pab@peoplepowerco.com>
+ * @author Eric B. Decker <cire831@gmail.com>
  */
 
 configuration HplMsp430GeneralIOC
@@ -163,6 +167,93 @@ configuration HplMsp430GeneralIOC
 
   provides interface HplMsp430GeneralIO as DAC0;
   provides interface HplMsp430GeneralIO as DAC1;
+
+  provides interface HplMsp430GeneralIO as SVSIN;
+  provides interface HplMsp430GeneralIO as SVSOUT;
+#endif
+
+#if defined(__msp430x261x) || defined(__msp430x26x)
+  provides interface HplMsp430GeneralIO as UCA0CLK;
+  provides interface HplMsp430GeneralIO as UCA0STE;
+  provides interface HplMsp430GeneralIO as UCA0TXD;
+  provides interface HplMsp430GeneralIO as UCA0RXD;
+  provides interface HplMsp430GeneralIO as UCA0SIMO;
+  provides interface HplMsp430GeneralIO as UCA0SOMI;
+
+  provides interface HplMsp430GeneralIO as UCB0CLK;  
+  provides interface HplMsp430GeneralIO as UCB0STE;
+  provides interface HplMsp430GeneralIO as UCB0SIMO;
+  provides interface HplMsp430GeneralIO as UCB0SOMI;
+  provides interface HplMsp430GeneralIO as UCB0SDA;
+  provides interface HplMsp430GeneralIO as UCB0SCL;
+
+  provides interface HplMsp430GeneralIO as UCA1CLK;
+  provides interface HplMsp430GeneralIO as UCA1STE;
+  provides interface HplMsp430GeneralIO as UCA1TXD;
+  provides interface HplMsp430GeneralIO as UCA1RXD;
+  provides interface HplMsp430GeneralIO as UCA1SIMO;
+  provides interface HplMsp430GeneralIO as UCA1SOMI;
+
+  provides interface HplMsp430GeneralIO as UCB1CLK;
+  provides interface HplMsp430GeneralIO as UCB1STE;
+  provides interface HplMsp430GeneralIO as UCB1SIMO;
+  provides interface HplMsp430GeneralIO as UCB1SOMI;
+  provides interface HplMsp430GeneralIO as UCB1SDA;
+  provides interface HplMsp430GeneralIO as UCB1SCL;
+
+  provides interface HplMsp430GeneralIO as ADC0;
+  provides interface HplMsp430GeneralIO as ADC1;
+  provides interface HplMsp430GeneralIO as ADC2;
+  provides interface HplMsp430GeneralIO as ADC3;
+  provides interface HplMsp430GeneralIO as ADC4;
+  provides interface HplMsp430GeneralIO as ADC5;
+  provides interface HplMsp430GeneralIO as ADC6;
+  provides interface HplMsp430GeneralIO as ADC7;
+
+  provides interface HplMsp430GeneralIO as DAC0;
+  provides interface HplMsp430GeneralIO as DAC1;
+
+  provides interface HplMsp430GeneralIO as SVSIN;
+  provides interface HplMsp430GeneralIO as SVSOUT;
+#endif
+
+#ifdef __msp430x241x
+  provides interface HplMsp430GeneralIO as UCA0CLK;
+  provides interface HplMsp430GeneralIO as UCA0STE;
+  provides interface HplMsp430GeneralIO as UCA0TXD;
+  provides interface HplMsp430GeneralIO as UCA0RXD;
+  provides interface HplMsp430GeneralIO as UCA0SIMO;
+  provides interface HplMsp430GeneralIO as UCA0SOMI;
+
+  provides interface HplMsp430GeneralIO as UCB0CLK;  
+  provides interface HplMsp430GeneralIO as UCB0STE;
+  provides interface HplMsp430GeneralIO as UCB0SIMO;
+  provides interface HplMsp430GeneralIO as UCB0SOMI;
+  provides interface HplMsp430GeneralIO as UCB0SDA;
+  provides interface HplMsp430GeneralIO as UCB0SCL;
+
+  provides interface HplMsp430GeneralIO as UCA1CLK;
+  provides interface HplMsp430GeneralIO as UCA1STE;
+  provides interface HplMsp430GeneralIO as UCA1TXD;
+  provides interface HplMsp430GeneralIO as UCA1RXD;
+  provides interface HplMsp430GeneralIO as UCA1SIMO;
+  provides interface HplMsp430GeneralIO as UCA1SOMI;
+
+  provides interface HplMsp430GeneralIO as UCB1CLK;
+  provides interface HplMsp430GeneralIO as UCB1STE;
+  provides interface HplMsp430GeneralIO as UCB1SIMO;
+  provides interface HplMsp430GeneralIO as UCB1SOMI;
+  provides interface HplMsp430GeneralIO as UCB1SDA;
+  provides interface HplMsp430GeneralIO as UCB1SCL;
+
+  provides interface HplMsp430GeneralIO as ADC0;
+  provides interface HplMsp430GeneralIO as ADC1;
+  provides interface HplMsp430GeneralIO as ADC2;
+  provides interface HplMsp430GeneralIO as ADC3;
+  provides interface HplMsp430GeneralIO as ADC4;
+  provides interface HplMsp430GeneralIO as ADC5;
+  provides interface HplMsp430GeneralIO as ADC6;
+  provides interface HplMsp430GeneralIO as ADC7;
 
   provides interface HplMsp430GeneralIO as SVSIN;
   provides interface HplMsp430GeneralIO as SVSOUT;
@@ -450,6 +541,51 @@ implementation
   UCLK1 = P53;
   UTXD1 = P36;
   URXD1 = P37;
+
+  ADC0 = P60;
+  ADC1 = P61;
+  ADC2 = P62;
+  ADC3 = P63;
+  ADC4 = P64;
+  ADC5 = P65;
+  ADC6 = P66;
+  ADC7 = P67;
+
+  DAC0 = P66;
+  DAC1 = P67;
+
+  SVSIN = P67;
+  SVSOUT = P57;
+#endif
+
+#if defined(__msp430x261x) || defined(__msp430x26x)
+  UCA0CLK = P30;
+  UCA0STE = P33;
+  UCA0TXD = P34;
+  UCA0RXD = P35;
+  UCA0SIMO = P34;
+  UCA0SOMI = P35;
+
+  UCB0CLK = P33;  
+  UCB0STE = P30;
+  UCB0SIMO = P31;
+  UCB0SOMI = P32;
+  UCB0SDA = P31;
+  UCB0SCL = P32;
+
+  UCA1CLK = P50;
+  UCA1STE = P53;
+  UCA1TXD = P36;
+  UCA1RXD = P37;
+  UCA1SIMO = P36;
+  UCA1SOMI = P37;
+
+  UCB1CLK = P53;
+  UCB1STE = P50;
+  UCB1SIMO = P51;
+  UCB1SOMI = P52;
+  UCB1SDA = P51;
+  UCB1SCL = P52;
 
   ADC0 = P60;
   ADC1 = P61;

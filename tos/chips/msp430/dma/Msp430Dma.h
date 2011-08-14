@@ -1,5 +1,7 @@
 /**
+ * Copyright (c) 2009 DEXMA SENSORS SL
  * Copyright (c) 2005-2006 Arch Rock Corporation
+ * Copyright (c) 2000-2005 The Regents of the University of California.  
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,7 +13,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the Arch Rock Corporation nor the names of
+ * - Neither the name of the COPYRIGHT HOLDERS nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -19,7 +21,7 @@
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
- * ARCHED ROCK OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * COPYRIGHT HOLDERS OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -30,41 +32,10 @@
  */
 
 /**
- * Copyright (c) 2000-2005 The Regents of the University of California.  
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * - Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the
- *   distribution.
- * - Neither the name of the copyright holder nor the names of
- *   its contributors may be used to endorse or promote products derived
- *   from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
  * @author Ben Greenstein <ben@cs.ucla.edu>
  * @author Jonathan Hui <jhui@archrock.com>
  * @author Mark Hays
+ * @author Xavier Orduna <xorduna@dexmatech.com>
  * $Revision: 1.6 $ $Date: 2010-06-29 22:07:45 $
  */
 
@@ -105,14 +76,25 @@ typedef enum {
   DMA_TRIGGER_DMAREQ =          0x0, // software trigger
   DMA_TRIGGER_TACCR2 =          0x1,            
   DMA_TRIGGER_TBCCR2 =          0x2,
+
+#if defined(__msp430x261x)
+  DMA_TRIGGER_UCA0RXIFG =       0x3, // RX on USCIA0 (UART/SPI)
+  DMA_TRIGGER_UCA0TXIFG =       0x4, // TX on USCIA0 (UART/SPI)
+#else
   DMA_TRIGGER_URXIFG0 =         0x3, // RX on USART0 (UART/SPI)
   DMA_TRIGGER_UTXIFG0 =         0x4, // TX on USART0 (UART/SPI)
+#endif
   DMA_TRIGGER_DAC12IFG =        0x5, // DAC12_0CTL DAC12IFG bit
   DMA_TRIGGER_ADC12IFGx =       0x6, 
   DMA_TRIGGER_TACCR0 =          0x7, // CCIFG bit
   DMA_TRIGGER_TBCCR0 =          0x8, // CCIFG bit
+#if defined(__msp430x261x)
+  DMA_TRIGGER_UCB0RXIFG =       0x9, // RX on USCIB0 (UART/SPI)
+  DMA_TRIGGER_UCB0TXIFG =       0xa, // TX on USCIB0 (UART/SPI)
+#else
   DMA_TRIGGER_URXIFG1 =         0x9, // RX on USART1 (UART/SPI)
   DMA_TRIGGER_UTXIFG1 =         0xa, // TX on USART1 (UART/SPI)
+#endif
   DMA_TRIGGER_MULT =            0xb, // Hardware Multiplier Ready
   DMA_TRIGGER_DMAxIFG =         0xe, // DMA0IFG triggers DMA channel 1
                                      // DMA1IFG triggers DMA channel 2

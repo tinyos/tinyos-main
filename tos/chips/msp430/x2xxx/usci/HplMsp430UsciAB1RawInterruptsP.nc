@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2005-2006 Arch Rock Corporation
- * Copyright (c) 2000-2005 The Regents of the University of California.  
+ * Copyright (c) 2010-2011 Eric B. Decker
+ * Copyright (c) 2009 DEXMA SENSORS SL
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,11 +9,13 @@
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
+ *
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ *
+ * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -31,66 +33,59 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @author Ben Greenstein <ben@cs.ucla.edu>
- * @author Jonathan Hui <jhui@archrock.com>
- * @author Joe Polastre <info@moteiv.com>
- * @version $Revision: 1.8 $ $Date: 2010-06-29 22:07:45 $
+/*
+ * An HPL abstraction for USCI A/B shared vector interrupt on the MSP430X.
+ *
+ * @author Xavier Orduna <xorduna@dexmatech.com>
+ * @author Eric B. Decker <cire831@gmail.com>
  */
 
-module HplMsp430DmaP {
+#include "msp430usci.h"
 
-  provides interface HplMsp430DmaControl as DmaControl;
-  provides interface HplMsp430DmaInterrupt as Interrupt;
-
+module HplMsp430UsciAB1RawInterruptsP @safe() {
+  provides interface HplMsp430UsciRawInterrupts as UsciA;
+  provides interface HplMsp430UsciRawInterrupts as UsciB;
 }
 
 implementation {
 
-  MSP430REG_NORACE( DMACTL0 );
-  MSP430REG_NORACE( DMACTL1 );
-
-  TOSH_SIGNAL( DACDMA_VECTOR ) {
-    signal Interrupt.fired();
+  TOSH_SIGNAL(USCIAB1RX_VECTOR) {
+    uint8_t temp;
+    if (UC1IFG & UCA1RXIFG){
+	    temp = UCA1RXBUF;
+    	signal UsciA.rxDone(temp);
+    }
+    if (UC1IFG & UCB1RXIFG){
+	    temp = UCB1RXBUF;
+    	signal UsciB.rxDone(temp);
+    }
+  }
+  
+  TOSH_SIGNAL(USCIAB1TX_VECTOR) {
+    if ((UC1IFG & UCA1TXIFG) | (UC1IFG & UCA1RXIFG)){
+    	signal UsciA.txDone();
+    }
+    if ((UC1IFG & UCB1TXIFG) | (UC1IFG & UCB1RXIFG)){
+    	signal UsciB.txDone();
+    }
   }
 
-  async command void DmaControl.setOnFetch(){
-    DMACTL1 |= DMAONFETCH;
+
+  /* default handlers */
+  default async event void UsciA.txDone(){
+  	return;
+  }
+  
+  default async event void UsciA.rxDone(uint8_t temp){
+  	return;
   }
 
-  async command void DmaControl.clearOnFetch(){
-    DMACTL1 &= ~DMAONFETCH;
+  default async event void UsciB.txDone(){
+  	return;
   }
-
-  async command void DmaControl.setRoundRobin(){
-    DMACTL1 |= ROUNDROBIN;
+  
+  default async event void UsciB.rxDone(uint8_t temp){
+  	return;
   }
-  async command void DmaControl.clearRoundRobin(){
-    DMACTL1 &= ~ROUNDROBIN;
-  }
-
-  async command void DmaControl.setENNMI(){
-    DMACTL1 |= ENNMI;
-  }
-
-  async command void DmaControl.clearENNMI(){
-    DMACTL1 &= ~ENNMI;
-  }
-
-  async command void DmaControl.setState(dma_state_t s){
-    DMACTL1 = *(int*)&s;
-  }
-
-  async command dma_state_t DmaControl.getState(){
-    dma_state_t s;
-    s = *(dma_state_t*)&DMACTL1;
-    return s;
-  }
-
-  async command void DmaControl.reset(){
-    DMACTL0 = 0;
-    DMACTL1 = 0;
-  }
-
+  
 }
-

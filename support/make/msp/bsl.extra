@@ -18,17 +18,18 @@ MSP_BSL ?= msp430-bsl
 # BSL is the comm port, can be specified as "bsl,2" when making
 BSL ?= auto
 MSP_BSL_FLAGS ?= --telos
+MOTELIST ?= motelist
 
 ifeq ($(BSL),auto)
-BSLTEST = $(shell motelist -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; print $$1;' )
+BSLTEST = $(shell $(MOTELIST) -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; print $$1;' )
 BSLTEST_COMMENT = "using bsl,auto"
-BSL = $(shell motelist -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; ($$s,$$n)=($$1,$$2); if($$s=~/^com/i) { print $$n-1 } else { print $$s; };' )
+BSL = $(shell $(MOTELIST) -c | perl -e '<> =~ /^[^,]+,(\S+?(\d+)[^,]*)/; ($$s,$$n)=($$1,$$2); if($$s=~/^com/i) { print $$n-1 } else { print $$s; };' )
 BSL_TARGETS += bsltest
 else
 ifeq ($(BSL:ref,%=ref),ref)
 BSLREF := $(BSL:ref,%=%)
 BSLTEST_COMMENT = "using bsl,ref,$(BSLREF)"
-BSLTEST := $(shell motelist -c | perl -e '$$r=shift; while(<>) { if(/^$$r,([^,]+)/) { print $$1; exit; } }' $(BSLREF))
+BSLTEST := $(shell $(MOTELIST) -c | perl -e '$$r=shift; while(<>) { if(/^$$r,([^,]+)/) { print $$1; exit; } }' $(BSLREF))
 BSL = $(BSLTEST)
 BSL_TARGETS += bsltest
 endif
