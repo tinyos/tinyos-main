@@ -336,6 +336,55 @@ implementation
 
     }
 
+    async command error_t HplSam3Clock.mckInit8RC(){
+      pmc_mor_t mor;
+      pmc_mckr_t mckr;
+      pmc_pllar_t pllar;
+      uint32_t timeout = 0;
+
+      // Check if MCK source is RC or XT
+      if(PMC->mor.bits.moscsel == 1){
+        // it is XT, turn on RC
+        mor.flat = 0; // make sure it is zreoed out
+        mor.bits.key = PMC_MOR_KEY;
+        mor.bits.moscrcf = 0;     // select 4 MHz RC 
+        mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
+        mor.bits.moscxten = 1;    // main crystal oscillator enable
+        PMC->mor = mor;
+        timeout = 0;
+        while (!(PMC->sr.bits.moscrcs) && (timeout++ < 0xFFFFFFFF));
+      }
+
+      // Switch to RC
+      mor.flat = 0; // make sure it is zeroed
+      mor.bits.key = PMC_MOR_KEY;
+      mor.bits.moscrcf = 1;     // select 8 MHz RC 
+      mor.bits.moscrcen = 1;
+      mor.bits.moscxten = 1;
+      mor.bits.moscsel = 0;
+      PMC->mor = mor;
+      timeout = 0;
+      while (!(PMC->sr.bits.moscsels) && (timeout++ < 0xFFFFFFFF));
+      mckr = PMC->mckr;
+      mckr.bits.pres = PMC_MCKR_PRES_DIV_1;
+      mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
+      PMC->mckr = mckr;
+      timeout = 0;
+      while (!(PMC->sr.bits.mckrdy) && (timeout++ < 0xFFFFFFFF));
+
+      // turn off external clock
+      mor.bits.moscxten = 0;
+      PMC->mor = mor;
+
+      // Turn off PLL
+      pllar.flat = 0; // make sure it is zeroed out
+      pllar.bits.bit29 = 1; // this always has to be written as 1!
+      PMC->pllar = pllar;
+
+      signal HplSam3Clock.mainClockChanged();
+      return SUCCESS;
+
+    }
 
     async command error_t HplSam3Clock.mckInit12RC()
     {
