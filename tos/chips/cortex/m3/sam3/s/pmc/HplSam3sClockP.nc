@@ -347,7 +347,7 @@ implementation
         // it is XT, turn on RC
         mor.flat = 0; // make sure it is zreoed out
         mor.bits.key = PMC_MOR_KEY;
-        mor.bits.moscrcf = 0;     // select 4 MHz RC 
+        mor.bits.moscrcf = 1;     // select 8 MHz RC 
         mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
         mor.bits.moscxten = 1;    // main crystal oscillator enable
         PMC->mor = mor;
