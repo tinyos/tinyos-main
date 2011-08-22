@@ -1,7 +1,8 @@
 PLATFORM = shimmer
 
-# Disable MSP430 hardware multiply because it makes MSPGCC die
-PFLAGS += -mdisable-hwmul
+# Remove MSP430 hardware multiply disable: new msp430-gcc fixes
+# PFLAGS += -mdisable-hwmul 
+
 OPTFLAGS += -O
 
 MSP_BSL ?= tos-bsl

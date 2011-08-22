@@ -7,7 +7,10 @@ MSP_BSL_FLAGS = --z1
 MSP_MCU ?= msp430x261
 MSP_GCC ?= msp430-gcc
 MSP_NESC_TARGET ?= msp430
-PFLAGS += -mdisable-hwmul 
+
+# Remove MSP430 hardware multiply disable: new msp430-gcc fixes
+# PFLAGS += -mdisable-hwmul 
+
 PFLAGS += -mdata-64k
 
 VOLUME_FILE = volumes-stm25p.xml
