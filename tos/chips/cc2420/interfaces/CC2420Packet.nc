@@ -72,8 +72,8 @@ interface CC2420Packet {
   async command uint8_t getLqi( message_t* p_msg );
 
 
-  async command uint8_t getNetwork( message_t* p_msg );
+  async command uint8_t getNetwork( message_t* ONE p_msg );
 
-  async command void setNetwork( message_t* p_msg, uint8_t networkId );
+  async command void setNetwork( message_t* ONE p_msg, uint8_t networkId );
   
 }

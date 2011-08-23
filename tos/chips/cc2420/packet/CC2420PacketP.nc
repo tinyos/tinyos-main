@@ -87,7 +87,7 @@ implementation {
     }
   }
   
-  uint8_t *getNetwork(message_t *msg) {
+  uint8_t * ONE getNetwork(message_t * ONE msg) {
     cc2420_header_t *hdr = (call CC2420PacketBody.getHeader( msg ));
     int offset;
     
@@ -116,7 +116,7 @@ implementation {
     return (call CC2420PacketBody.getMetadata( p_msg ))->lqi;
   }
 
-  async command uint8_t CC2420Packet.getNetwork( message_t* p_msg ) {
+  async command uint8_t CC2420Packet.getNetwork( message_t* ONE p_msg ) {
 #if defined(TFRAMES_ENABLED)
     return TINYOS_6LOWPAN_NETWORK_ID;
 #else
@@ -125,7 +125,7 @@ implementation {
 #endif
   }
 
-  async command void CC2420Packet.setNetwork( message_t* p_msg , uint8_t networkId ) {
+  async command void CC2420Packet.setNetwork( message_t* ONE p_msg , uint8_t networkId ) {
 #if ! defined(TFRAMES_ENABLED)
     atomic 
       *(getNetwork(p_msg)) = networkId;

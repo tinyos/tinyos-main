@@ -80,7 +80,7 @@ implementation {
   /***************** Prototypes Commands ***************/
   bool hasSeen(uint16_t msgSource, uint8_t msgDsn);
   void insert(uint16_t msgSource, uint8_t msgDsn);
-  uint16_t getSourceKey(message_t *msg);
+  uint16_t getSourceKey(message_t ONE *msg);
   
   /***************** SubReceive Events *****************/
   event message_t *SubReceive.receive(message_t* msg, void* payload, 
@@ -162,7 +162,7 @@ implementation {
    * address as a key in the table to avoid manipulating the full
    * address.
    */
-  uint16_t getSourceKey(message_t *msg) {
+  uint16_t getSourceKey(message_t * ONE msg) {
     cc2420_header_t *hdr = call CC2420PacketBody.getHeader(msg);
     int s_mode = (hdr->fcf >> IEEE154_FCF_SRC_ADDR_MODE) & 0x3;
     int d_mode = (hdr->fcf >> IEEE154_FCF_DEST_ADDR_MODE) & 0x3;

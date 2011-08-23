@@ -69,7 +69,7 @@ module CC2420ActiveMessageP @safe() {
 }
 implementation {
   uint16_t pending_length;
-  message_t *pending_message = NULL;
+  message_t * ONE_NOK pending_message = NULL;
   /***************** Resource event  ****************/
   event void RadioResource.granted() {
     uint8_t rc;

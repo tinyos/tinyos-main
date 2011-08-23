@@ -835,7 +835,7 @@ implementation {
               || header->dest == IEEE154_BROADCAST_ADDR);
     } else if (mode == IEEE154_ADDR_EXT) {
       ieee_eui64_t local_addr = (call CC2420Config.getExtAddr());
-      ext_addr = (ieee_eui64_t *)&header->dest;
+      ext_addr = TCAST(ieee_eui64_t* ONE, &header->dest);
       return (memcmp(ext_addr->data, local_addr.data, IEEE_EUI64_LENGTH) == 0);
     } else {
       /* reject frames with either no address or invalid type */
