@@ -59,9 +59,10 @@ print_motelist( sort { cmp_usbdev($a,$b) } @devs );
 #
 sub scan_sysfs {
 
-  #  Scan /sys/bus/usb/drivers/usb for FTDI devices
+  #  Scan /sys/bus/usb/drivers/usb for FTDI or CP210X devices 
   my @ftdidevs =
-    grep { ($_->{UsbVendor}||"") eq "0403" && ($_->{UsbProduct}||"") eq "6001" }
+    grep { (($_->{UsbVendor}||"") eq "0403" && ($_->{UsbProduct}||"") eq "6001") 
+       || (($_->{UsbVendor}||"") eq "10c4" && ($_->{UsbProduct}||"") eq "ea60")}
     map { {
       SysPath => $_,
       UsbVendor => snarf("$_/idVendor",1),
