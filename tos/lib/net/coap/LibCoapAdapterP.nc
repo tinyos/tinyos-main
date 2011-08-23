@@ -48,7 +48,6 @@ module LibCoapAdapterP {
     libcoap_server_read(from, data, len, meta);
   }
 
-
   void libcoap_client_read(struct sockaddr_in6 *from, void *data,
 			   uint16_t len, struct ip6_metadata *meta) {
     signal LibCoapClient.read(from, data, len, meta);
@@ -60,10 +59,12 @@ module LibCoapAdapterP {
     libcoap_client_read(from, data, len, meta);
   }
 
-  coap_tid_t coap_server_send_impl(coap_context_t *context,
-				   struct sockaddr_in6 *dst,
-				   coap_pdu_t *pdu,
-				   int free_pdu ) {
+  // might get called in error cases from libcoap's net.c -> spontaneous.
+  // assumption here is, that those error cases are for the server socket
+  coap_tid_t coap_send_impl(coap_context_t *context,
+			      struct sockaddr_in6 *dst,
+			      coap_pdu_t *pdu,
+			      int free_pdu ) @C() @spontaneous() {
     if ( !context || !dst || !pdu )
       return COAP_INVALID_TID;
 
@@ -78,7 +79,7 @@ module LibCoapAdapterP {
 					struct sockaddr_in6 *dst,
 					coap_pdu_t *pdu,
 					int free_pdu) {
-    return coap_server_send_impl(context, dst, pdu, free_pdu);
+    return coap_send_impl(context, dst, pdu, free_pdu);
   }
 
 

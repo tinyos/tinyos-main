@@ -332,12 +332,19 @@ coap_send_impl( coap_context_t *context, const struct sockaddr_in6 *dst, coap_pd
 
   return ntohs(pdu->hdr->id);
 }
+#else
+// this is defined in LibCoapAdapterP.nc for TinyOS
+coap_tid_t
+coap_send_impl( coap_context_t *context, const struct sockaddr_in6 *dst, coap_pdu_t *pdu,
+		int free_pdu );
+#endif
 
 coap_tid_t
 coap_send( coap_context_t *context, const struct sockaddr_in6 *dst, coap_pdu_t *pdu ) {
   return coap_send_impl( context, dst, pdu, 1 );
 }
 
+#ifndef IDENT_APPNAME
 int
 _order_timestamp( coap_queue_t *lhs, coap_queue_t *rhs ) {
   return lhs && rhs && ( lhs->t < rhs->t ) ? -1 : 1;
@@ -529,6 +536,14 @@ coap_find_transaction(coap_queue_t *queue, coap_tid_t id) {
   return NULL;
 }    
 
+#ifdef IDENT_APPNAME
+// since there are no sockets in tinyos
+coap_tid_t coap_send_tinyos(coap_context_t *context,
+			    struct sockaddr_in6 *dst,
+			    coap_pdu_t *pdu,
+			    int free_pdu);
+#endif
+
 void 
 coap_dispatch( coap_context_t *context ) {
   coap_queue_t *node, *sent;
@@ -564,7 +579,7 @@ coap_dispatch( coap_context_t *context ) {
       if (sent && coap_get_request_uri(sent->pdu, &uri)) { 
 	/* The easy way: we still have the transaction that has caused
 	* the trouble.*/
-	
+
 #ifndef IDENT_APPNAME
 	coap_delete_subscription(context, coap_uri_hash(&uri), &node->remote);
 #endif
@@ -585,25 +600,25 @@ coap_dispatch( coap_context_t *context ) {
 
       if ( type != 0 ) {	/* send error response if unknown */
 	response = coap_new_pdu();
-#ifndef IDENT_APPNAME
-	/* FIXME: mab */
+
 	if (response) {
 	  response->hdr->type = COAP_MESSAGE_RST;
 	  response->hdr->code = COAP_RESPONSE_X_242;
 	  response->hdr->id = node->pdu->hdr->id;
 
 	  /* add rejected option */
-	  coap_add_option(response, type, 
+	  coap_add_option(response, type,
 			  COAP_OPT_LENGTH(*opt),
 			  COAP_OPT_VALUE(*opt));
-	  
-	  if ( coap_send( context, &node->remote, response ) == 
+
+	  if ( coap_send( context, &node->remote, response ) ==
 	       COAP_INVALID_TID ) {
+#ifndef NDEBUG
 	    debug("coap_dispatch: error sending reponse");
+#endif
 	    coap_delete_pdu(response);
 	  }
-	}	  
-#endif
+	}
 
 	goto cleanup;
       }
