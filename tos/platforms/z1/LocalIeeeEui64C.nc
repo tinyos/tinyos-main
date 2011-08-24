@@ -1,0 +1,60 @@
+// $Id: LocalIeeeEui64C.nc,v 1.1 2010/02/23 06:45:38 sdhsdh Exp $
+/*
+ * Copyright (c) 2007, Vanderbilt University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ * - Neither the name of the copyright holders nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.* All rights reserved.
+ *
+ *  Stephen Dawson-Haggerty <stevedh@eecs.berkeley.edu>
+ *  Dummy Extended Address for micaz
+ */
+
+#include "IeeeEui64.h"
+
+module LocalIeeeEui64C {
+  provides interface LocalIeeeEui64;
+} implementation {
+  command ieee_eui64_t LocalIeeeEui64.getId() {
+    ieee_eui64_t id;
+    /* this is UCB's OUI */
+    id.data[0] = 0x00;
+    id.data[1] = 0x12;
+    id.data[2] = 0x6d;
+
+    /* UCB will let anyone use this OUI so long as these two octets
+       are 'LO' -- "local".  All other octets are reserved.  */
+    /* SDH -- 9/10/2010 */
+    id.data[3] = 'L';
+    id.data[4] = 'O';
+
+    id.data[5] = 0;
+    id.data[6] = TOS_NODE_ID >> 8;
+    id.data[7] = TOS_NODE_ID & 0xff;
+    return id;
+  }
+}
