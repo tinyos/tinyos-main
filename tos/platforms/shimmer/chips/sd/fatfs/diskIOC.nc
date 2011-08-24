@@ -47,18 +47,18 @@ configuration diskIOC {
 implementation {
   components 
     FatFsP, 
-    SDP, 
-    new Msp430Usart0C(), 
+    SDC, 
+    //    new Msp430Usart0C(), 
     new TimerMilliC(), 
-    HplMsp430InterruptP, 
+    //    HplMsp430InterruptP, 
     LedsC, 
     TimeP;  
   //, NTPClientM;
 
   FatFs = FatFsP;
-  diskIOStdControl = SDP;
+  diskIOStdControl = SDC;
   //  diskIOStdControl = TimeP;
-  diskIO = SDP;
+  diskIO = SDC;
 
   FatFsP.Leds        -> LedsC;
 
@@ -66,10 +66,11 @@ implementation {
   FatFsP.Time        -> TimeC;
   //  FatFsP.Time        -> TimeP;
 
+  /*
   SDP.Usart          -> Msp430Usart0C;
   SDP.DockInterrupt  -> HplMsp430InterruptP.Port23;
   SDP.Leds           -> LedsC;
-
+  */
 
   /*
   components Counter32khz64C as Counter;
