@@ -117,7 +117,7 @@ implementation
     
   async command bool HplAdc12.isBusy(){ return (ADC12CTL1 & ADC12BUSY); }
 
-  TOSH_SIGNAL(ADC_VECTOR) {
+  TOSH_SIGNAL(ADC12_VECTOR) {
     signal HplAdc12.conversionDone(ADC12IV);
   }
 }
