@@ -43,6 +43,7 @@ endif
 
 ifeq ($(TARGETS),span)
   PFLAGS+=-I$(TOSDIR)/platforms/span/chips/cc2420x/t32khz
+  PFLAGS+=-I$(TOSDIR)/platforms/span/chips/cc2420x
   PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz
   PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/t32khz/am
   PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x
