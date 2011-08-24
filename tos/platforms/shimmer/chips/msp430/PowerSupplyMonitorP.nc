@@ -76,7 +76,7 @@ implementation {
   }
 
   command error_t StdControl.start(){
-    CLR_FLAG(SVSCTL, VLD_EXT);
+    CLR_FLAG(SVSCTL, EXTERNAL);
     SET_FLAG(SVSCTL, threshold);
 
     started = TRUE;
@@ -97,7 +97,7 @@ implementation {
     started = FALSE;
 
     atomic{
-      CLR_FLAG(SVSCTL, VLD_EXT);  // set vld to zero to stop detection
+      CLR_FLAG(SVSCTL, EXTERNAL);  // set vld to zero to stop detection
       CLR_FLAG(SVSCTL, SVSFG);
     }
 
@@ -138,7 +138,7 @@ implementation {
   command void PowerSupplyMonitor.setVoltageThreshold(uint8_t t){
     threshold = t;
     if(started){
-      CLR_FLAG(SVSCTL, VLD_EXT);  
+      CLR_FLAG(SVSCTL, EXTERNAL);  
       SET_FLAG(SVSCTL, t);
     }
   }
