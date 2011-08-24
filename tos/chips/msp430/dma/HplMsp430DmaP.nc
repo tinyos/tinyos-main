@@ -50,9 +50,17 @@ implementation {
   MSP430REG_NORACE( DMACTL0 );
   MSP430REG_NORACE( DMACTL1 );
 
-  TOSH_SIGNAL( DACDMA_VECTOR ) {
-    signal Interrupt.fired();
-  }
+  // X1 family share the same interrupt vector with DAC, X2 family has its own
+
+  #if defined(__msp430x261x) || defined(__msp430x26x)
+    TOSH_SIGNAL( DMA_VECTOR ) {
+      signal Interrupt.fired();
+    }
+  #else
+    TOSH_SIGNAL( DACDMA_VECTOR ) {
+      signal Interrupt.fired();
+    }
+  #endif
 
   async command void DmaControl.setOnFetch(){
     DMACTL1 |= DMAONFETCH;
