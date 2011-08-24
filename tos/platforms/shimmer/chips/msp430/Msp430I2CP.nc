@@ -48,6 +48,10 @@ module Msp430I2CP {
 
 implementation {
   
+#ifndef I2CDR
+#define I2CDR I2CDRW
+#endif
+
   MSP430REG_NORACE(I2CIE);
   
   enum {
