@@ -228,9 +228,11 @@ implementation {
       call OnTimer.startOneShot(sleepInterval);
     }
   }
-  
+
   task void startRadio() {
-    if(call SubControl.start() != SUCCESS) {
+    error_t startResult = call SubControl.start();
+    // If the radio wasn't started successfully, or already on, try again
+    if ((startResult != SUCCESS && startResult != EALREADY)) {
       post startRadio();
     }
   }
