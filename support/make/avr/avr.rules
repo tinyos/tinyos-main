@@ -71,7 +71,11 @@ ifeq ($(PROGRAMMER),avrdude)
   ifeq ($(findstring Darwin, $(shell uname)), Darwin)
     AVRDUDE_CONF ?= /opt/local/etc/avrdude.conf
   endif
-  AVRDUDE_CONF ?= /etc/avrdude/avrdude.conf
+  ifeq ($(shell [ -f /etc/avrdude/avrdude.conf ] && echo subdir),subdir)
+    AVRDUDE_CONF ?= /etc/avrdude/avrdude.conf
+  else
+    AVRDUDE_CONF ?= /etc/avrdude.conf
+  endif
   ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
     AVRDUDE_CONF := $(shell cygpath -ms $(AVRDUDE_CONF))
   endif
