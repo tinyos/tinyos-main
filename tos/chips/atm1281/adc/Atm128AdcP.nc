@@ -106,8 +106,7 @@ implementation
      voltage or switching to/between a differential channel is imprecise)
   */
   inline bool isPrecise(Atm128Admux_t admux, uint8_t channel, uint8_t refVoltage) {
-    return refVoltage == admux.refs &&
-      (channel <= ATM128_ADC_SNGL_ADC7 || channel >= ATM128_ADC_SNGL_1_23 || channel == admux.mux);
+    return ((refVoltage == admux.refs) && (channel == admux.mux));
   }
 
   async event void HplAtm128Adc.dataReady(uint16_t data) {
