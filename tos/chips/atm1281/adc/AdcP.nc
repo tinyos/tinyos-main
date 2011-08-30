@@ -40,7 +40,6 @@
  * Convert ATmega128 HAL A/D interface to the HIL interfaces.
  * @author David Gay
  * @author Jan Hauer <hauer@tkn.tu-berlin.de>
- * @author Janos Sallai <janos.sallai@vanderbilt.edu>
  */
 #include "Timer.h"
 
@@ -111,8 +110,11 @@ implementation {
     switch (state)
       {
       case ACQUIRE_DATA:
-	if (!precise)
-	  sample();
+	if (!precise) {
+	    // the stage may take up to 125us to stabilize after channel change
+	    call BusyWait.wait(125);
+	    sample();
+	  } 
 	else
 	  {
 	    val = data;
@@ -122,7 +124,7 @@ implementation {
 
       case ACQUIRE_DATA_NOW:
 	if (!precise) {
-	    // the bandgap reference may take up to 125us to stabilize
+	    // the stage may take up to 125us to stabilize after channel change
 	    call BusyWait.wait(125);
 	    sample();
 	  } 
