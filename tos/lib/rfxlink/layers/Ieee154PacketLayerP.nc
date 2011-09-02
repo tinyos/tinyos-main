@@ -79,11 +79,6 @@ implementation
 		return ((void*)msg) + call SubPacket.headerLength(msg);
 	}
 
-	void* getPayload(message_t* msg)
-	{
-		return ((void*)msg) + call RadioPacket.headerLength(msg);
-	}
-
 	async command uint16_t Ieee154PacketLayer.getFCF(message_t* msg)
 	{
 		return getHeader(msg)->fcf;
@@ -227,7 +222,8 @@ implementation
 	async command bool Ieee154PacketLayer.isForMe(message_t* msg)
 	{
 		ieee154_saddr_t addr = call Ieee154PacketLayer.getDestAddr(msg);
-		return addr == call Ieee154PacketLayer.localAddr() || addr == IEEE154_BROADCAST_ADDR;
+		return (addr == call Ieee154PacketLayer.localAddr() || addr == IEEE154_BROADCAST_ADDR)
+			&& call Ieee154PacketLayer.getDestPan(msg) == call Ieee154PacketLayer.localPan();
 	}
 
 	async event void ActiveMessageAddress.changed()

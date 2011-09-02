@@ -179,7 +179,8 @@ interface Ieee154PacketLayer
 
 	/**
 	 * Returns TRUE if the destionation of this message is either 0xFFFF
-	 * or is the local address of the node.
+	 * or is the local address of the node, and the pan address is the
+	 * local one.
 	 */
 	async command bool isForMe(message_t* msg);
 }
