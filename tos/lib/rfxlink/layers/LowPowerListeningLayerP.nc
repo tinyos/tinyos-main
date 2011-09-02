@@ -89,7 +89,7 @@ implementation
 		LISTEN_SUBSTART = 10,			// must have consecutive indices
 		LISTEN_SUBSTART_DONE = 11,		// must have consecutive indices
 		LISTEN_TIMER = 12,			// must have consecutive indices
-		LISTEN_WAIT = 13,				// must have consecutive indices
+		LISTEN_WAIT = 13,			// must have consecutive indices
 
 		SLEEP_SUBSTOP = 20,			// must have consecutive indices
 		SLEEP_SUBSTOP_DONE = 21,		// must have consecutive indices

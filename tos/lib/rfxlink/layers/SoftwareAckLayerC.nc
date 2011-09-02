@@ -133,33 +133,36 @@ implementation
 
 	tasklet_async event bool SubReceive.header(message_t* msg)
 	{
+		// drop unexpected ACKs
 		if( call Config.isAckPacket(msg) )
-			return state == STATE_ACK_WAIT && call Config.verifyAckPacket(txMsg, msg);
-		else
-			return signal RadioReceive.header(msg);
+			return state == STATE_ACK_WAIT;
+
+		// drop packets that need ACKs while waiting for our ACK
+//		if( state == STATE_ACK_WAIT && call Config.requiresAckWait(msg) )
+//			return FALSE;
+
+		return signal RadioReceive.header(msg);
 	}
 
 	tasklet_async event message_t* SubReceive.receive(message_t* msg)
 	{
-		bool ack = call Config.isAckPacket(msg);
-
 		RADIO_ASSERT( state == STATE_ACK_WAIT || state == STATE_READY );
 
-		if( state == STATE_ACK_WAIT )
+		if( call Config.isAckPacket(msg) )
 		{
-			RADIO_ASSERT( !ack || call Config.verifyAckPacket(txMsg, msg) );
+			if( state == STATE_ACK_WAIT && call Config.verifyAckPacket(txMsg, msg) )
+			{
+				call RadioAlarm.cancel();
+				call AckReceivedFlag.set(txMsg);
 
-			call RadioAlarm.cancel();
-			call AckReceivedFlag.setValue(txMsg, ack);
+				state = STATE_READY;
+				signal RadioSend.sendDone(SUCCESS);
+			}
 
-			state = STATE_READY;
-			signal RadioSend.sendDone(SUCCESS);
+			return msg;
 		}
 
-		if( ack )
-			return msg;
-
-		if( call Config.requiresAckReply(msg) )
+		if( state == STATE_READY && call Config.requiresAckReply(msg) )
 		{
 			call Config.createAckPacket(msg, &ackMsg);
 
@@ -193,6 +196,4 @@ implementation
 	{
 		return call AckReceivedFlag.get(msg);
 	}
-
-
 }

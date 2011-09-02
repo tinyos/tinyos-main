@@ -32,6 +32,8 @@
  * Author: Miklos Maroti
  */
 
+#include "message.h"
+
 interface TimeSyncPacket<precision_tag, size_type>
 {
 	/**
