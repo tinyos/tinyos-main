@@ -55,6 +55,7 @@ module RF230DriverHwAckP
 		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 		interface PacketField<uint8_t> as PacketLinkQuality;
+		interface LinkPacketMetadata;
 
 		interface PacketAcknowledgements;
 	}
@@ -1020,5 +1021,12 @@ tasklet_async command uint8_t RadioState.getChannel()
 	async command bool PacketAcknowledgements.wasAcked(message_t* msg)
 	{
 		return call AckReceivedFlag.get(msg);
+	}
+
+/*----------------- LinkPacketMetadata -----------------*/
+
+	async command bool LinkPacketMetadata.highChannelQuality(message_t* msg)
+	{
+		return call PacketLinkQuality.get(msg) > 200;
 	}
 }

@@ -1,6 +1,8 @@
 #-*-Makefile-*- vim:syntax=make
 #$Id: cc2420x.extra,v 1.4 2009-11-10 07:03:34 rflury Exp $
 
+CFLAGS += -DCC2420X
+
 ifeq ($(TARGETS),micaz)
   PFLAGS+=-I$(TOSDIR)/platforms/micaz/chips/cc2420x
   PFLAGS+=-I$(TOSDIR)/chips/cc2420x

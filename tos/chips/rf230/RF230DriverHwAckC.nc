@@ -49,6 +49,7 @@ configuration RF230DriverHwAckC
 		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 		interface PacketField<uint8_t> as PacketLinkQuality;
+		interface LinkPacketMetadata;
 
 		interface LocalTime<TRadio> as LocalTimeRadio;
 		interface Alarm<TRadio, tradio_size>;
@@ -72,58 +73,60 @@ configuration RF230DriverHwAckC
 
 implementation
 {
-	components RF230DriverHwAckP, HplRF230C, BusyWaitMicroC, TaskletC, MainC, ActiveMessageAddressC;
+	components RF230DriverHwAckP as DriverLayerP, 
+		HplRF230C, BusyWaitMicroC, TaskletC, MainC, ActiveMessageAddressC;
 
-	RadioState = RF230DriverHwAckP;
-	RadioSend = RF230DriverHwAckP;
-	RadioReceive = RF230DriverHwAckP;
-	RadioCCA = RF230DriverHwAckP;
-	RadioPacket = RF230DriverHwAckP;
+	RadioState = DriverLayerP;
+	RadioSend = DriverLayerP;
+	RadioReceive = DriverLayerP;
+	RadioCCA = DriverLayerP;
+	RadioPacket = DriverLayerP;
 
 	LocalTimeRadio = HplRF230C;
 
-	Config = RF230DriverHwAckP;
+	Config = DriverLayerP;
 
-	PacketTransmitPower = RF230DriverHwAckP.PacketTransmitPower;
-	TransmitPowerFlag = RF230DriverHwAckP.TransmitPowerFlag;
+	PacketTransmitPower = DriverLayerP.PacketTransmitPower;
+	TransmitPowerFlag = DriverLayerP.TransmitPowerFlag;
 
-	PacketRSSI = RF230DriverHwAckP.PacketRSSI;
-	RSSIFlag = RF230DriverHwAckP.RSSIFlag;
+	PacketRSSI = DriverLayerP.PacketRSSI;
+	RSSIFlag = DriverLayerP.RSSIFlag;
 
-	PacketTimeSyncOffset = RF230DriverHwAckP.PacketTimeSyncOffset;
-	TimeSyncFlag = RF230DriverHwAckP.TimeSyncFlag;
+	PacketTimeSyncOffset = DriverLayerP.PacketTimeSyncOffset;
+	TimeSyncFlag = DriverLayerP.TimeSyncFlag;
 
-	PacketLinkQuality = RF230DriverHwAckP.PacketLinkQuality;
-	PacketTimeStamp = RF230DriverHwAckP.PacketTimeStamp;
+	PacketLinkQuality = DriverLayerP.PacketLinkQuality;
+	PacketTimeStamp = DriverLayerP.PacketTimeStamp;
+	LinkPacketMetadata = DriverLayerP;
 
-	RF230DriverHwAckP.LocalTime -> HplRF230C;
+	DriverLayerP.LocalTime -> HplRF230C;
 
 	Alarm = HplRF230C.Alarm;
-	RadioAlarm = RF230DriverHwAckP.RadioAlarm;
+	RadioAlarm = DriverLayerP.RadioAlarm;
 
-	RF230DriverHwAckP.SELN -> HplRF230C.SELN;
-	RF230DriverHwAckP.SpiResource -> HplRF230C.SpiResource;
-	RF230DriverHwAckP.FastSpiByte -> HplRF230C;
+	DriverLayerP.SELN -> HplRF230C.SELN;
+	DriverLayerP.SpiResource -> HplRF230C.SpiResource;
+	DriverLayerP.FastSpiByte -> HplRF230C;
 
-	RF230DriverHwAckP.SLP_TR -> HplRF230C.SLP_TR;
-	RF230DriverHwAckP.RSTN -> HplRF230C.RSTN;
+	DriverLayerP.SLP_TR -> HplRF230C.SLP_TR;
+	DriverLayerP.RSTN -> HplRF230C.RSTN;
 
-	RF230DriverHwAckP.IRQ -> HplRF230C.IRQ;
-	RF230DriverHwAckP.Tasklet -> TaskletC;
-	RF230DriverHwAckP.BusyWait -> BusyWaitMicroC;
+	DriverLayerP.IRQ -> HplRF230C.IRQ;
+	DriverLayerP.Tasklet -> TaskletC;
+	DriverLayerP.BusyWait -> BusyWaitMicroC;
 
 #ifdef RADIO_DEBUG
 	components DiagMsgC;
-	RF230DriverHwAckP.DiagMsg -> DiagMsgC;
+	DriverLayerP.DiagMsg -> DiagMsgC;
 #endif
 
-	MainC.SoftwareInit -> RF230DriverHwAckP.SoftwareInit;
+	MainC.SoftwareInit -> DriverLayerP.SoftwareInit;
 
 	components RealMainP;
-	RealMainP.PlatformInit -> RF230DriverHwAckP.PlatformInit;
+	RealMainP.PlatformInit -> DriverLayerP.PlatformInit;
 
-	AckReceivedFlag = RF230DriverHwAckP.AckReceivedFlag;
-	RF230DriverHwAckP.ActiveMessageAddress -> ActiveMessageAddressC;
-	PacketAcknowledgements = RF230DriverHwAckP;
-	Ieee154PacketLayer = RF230DriverHwAckP;
+	AckReceivedFlag = DriverLayerP.AckReceivedFlag;
+	DriverLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
+	PacketAcknowledgements = DriverLayerP;
+	Ieee154PacketLayer = DriverLayerP;
 }

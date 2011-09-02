@@ -196,7 +196,9 @@ implementation {
   Estimator.SubPacket -> SendControl;
   Estimator.SubAMPacket -> SendControl;
 
-#if defined(PLATFORM_TELOSB) || defined(PLATFORM_MICAZ)
+#if defined(CC2420X)
+  components CC2420XActiveMessageC as PlatformActiveMessageC;
+#elif defined(PLATFORM_TELOSB) || defined(PLATFORM_MICAZ)
 #ifndef TOSSIM
   components CC2420ActiveMessageC as PlatformActiveMessageC;
 #else
@@ -205,7 +207,13 @@ implementation {
 #elif defined (PLATFORM_MICA2) || defined (PLATFORM_MICA2DOT)
   components CC1000ActiveMessageC as PlatformActiveMessageC;
 #elif defined(PLATFORM_EYESIFXV1) || defined(PLATFORM_EYESIFXV2)
-  components WhiteBitAccessorC as PlatformActiveMessageC;    
+  components WhiteBitAccessorC as PlatformActiveMessageC;
+#elif defined(PLATFORM_IRIS) || defined(PLATFORM_MESHBEAN)
+  components RF230ActiveMessageC as PlatformActiveMessageC;
+#elif defined(PLATFORM_MESHBEAN900)
+  components RF212ActiveMessageC as PlatformActiveMessageC;
+#elif defined(PLATFORM_UCMINI)
+  components RFA1ActiveMessageC as PlatformActiveMessageC;
 #else
   components DummyActiveMessageP as PlatformActiveMessageC;
 #endif
