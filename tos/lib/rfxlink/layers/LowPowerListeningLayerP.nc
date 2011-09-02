@@ -89,7 +89,7 @@ implementation
 		LISTEN_SUBSTART = 10,			// must have consecutive indices
 		LISTEN_SUBSTART_DONE = 11,		// must have consecutive indices
 		LISTEN_TIMER = 12,			// must have consecutive indices
-		LISTEN = 13,				// must have consecutive indices
+		LISTEN_WAIT = 13,				// must have consecutive indices
 
 		SLEEP_SUBSTOP = 20,			// must have consecutive indices
 		SLEEP_SUBSTOP_DONE = 21,		// must have consecutive indices
@@ -153,7 +153,7 @@ implementation
 		}
 		else if( state == LISTEN_TIMER )
 		{
-			state = LISTEN;
+			state = LISTEN_WAIT;
 			if( sleepInterval > 0 )
 				call Timer.startOneShot(call Config.getListenLength());
 		}
@@ -195,7 +195,7 @@ implementation
 		}
 		else if( state == SEND_DONE )
 		{
-			state = LISTEN;
+			state = LISTEN_WAIT;
 			if( sleepInterval > 0 )
 				call Timer.startOneShot(call SystemLowPowerListening.getDelayAfterReceive());
 
@@ -231,13 +231,13 @@ implementation
 
 	command error_t SplitControl.stop()
 	{
-		if( state == SLEEP_WAIT || state == LISTEN )
+		if( state == SLEEP_WAIT || state == LISTEN_WAIT )
 		{
 			call Timer.stop();
 			post transition();
 		}
 
-		if( state == LISTEN_TIMER || state == LISTEN || state == SLEEP_SUBSTOP )
+		if( state == LISTEN_TIMER || state == LISTEN_WAIT || state == SLEEP_SUBSTOP )
 			state = OFF_SUBSTOP;
 		else if( state == SLEEP_SUBSTOP_DONE )
 			state = OFF_SUBSTOP_DONE;
@@ -268,7 +268,7 @@ implementation
 
 	event void Timer.fired()
 	{
-		if( state == LISTEN )
+		if( state == LISTEN_WAIT )
 			state = SLEEP_SUBSTOP;
 		else if( state == SLEEP_WAIT )
 			state = LISTEN_SUBSTART;
@@ -287,9 +287,9 @@ implementation
 		call Leds.led0Toggle();
 
 		if( state == SLEEP_SUBSTOP )
-			state = LISTEN;
+			state = LISTEN_WAIT;
 
-		if( state == LISTEN && sleepInterval > 0 )
+		if( state == LISTEN_WAIT && sleepInterval > 0 )
 			call Timer.startOneShot(call SystemLowPowerListening.getDelayAfterReceive());
 
 		return signal Receive.receive(msg);
@@ -297,7 +297,7 @@ implementation
 
 	command error_t Send.send(message_t* msg)
 	{
-		if( state == LISTEN || state == SLEEP_WAIT )
+		if( state == LISTEN_WAIT || state == SLEEP_WAIT )
 		{
 			call Timer.stop();
 			post transition();
@@ -307,7 +307,7 @@ implementation
 			state = SEND_SUBSTART;
 		else if( state == LISTEN_SUBSTART_DONE )
 			state = SEND_SUBSTART_DONE;
-		else if( state == LISTEN_TIMER || state == SLEEP_SUBSTOP || state == LISTEN )
+		else if( state == LISTEN_TIMER || state == SLEEP_SUBSTOP || state == LISTEN_WAIT )
 			state = SEND_TIMER;
 		else if( state == SLEEP_SUBSTOP_DONE )
 			state = SLEEP_SUBSTOP_DONE_TOSEND;
@@ -384,7 +384,7 @@ implementation
 
 		sleepInterval = interval;
 
-		if( state == LISTEN || state == SLEEP_WAIT )
+		if( state == LISTEN_WAIT || state == SLEEP_WAIT )
 		{
 			call Timer.stop();
 			--state;
@@ -409,6 +409,9 @@ implementation
 	{
 		return getMeta(msg)->sleepint;
 	}
+
+	default event void SplitControl.startDone(error_t error) { }
+	default event void SplitControl.stopDone(error_t error) { }
 
 /*----------------- RadioPacket -----------------*/
 	
