@@ -1,0 +1,50 @@
+
+  push( @includes, qw(
+
+  %T/platforms/ucmini
+  %T/platforms/ucmini/chips/cp2102    
+  %T/platforms/ucmini/chips/stm25p
+  %T/platforms/ucmini/chips/sht21
+  %T/platforms/ucmini/chips/bh1750fvi
+  %T/platforms/ucmini/chips/ms5607
+  %T/platforms/ucmini/chips/bma180
+  %T/chips/atm128rfa1
+  %T/chips/atm128rfa1/adc
+  %T/chips/atm128rfa1/pins
+  %T/chips/atm128rfa1/sensors
+  %T/chips/atm128rfa1/timer
+  %T/chips/atm128rfa1/radio
+  %T/chips/atm128rfa1/i2c  
+  %T/chips/atm128rfa1/spi
+  %T/chips/atm1281
+  %T/chips/atm1281/adc
+  %T/chips/atm128
+  %T/chips/atm128/adc
+  %T/chips/atm128/pins
+  %T/chips/atm128/spi
+  %T/chips/atm128/i2c
+  %T/chips/atm128/timer
+  %T/chips/cp2102
+  %T/chips/stm25p
+  %T/chips/sht21
+  %T/chips/bh1750fvi
+  %T/chips/ms5607
+  %T/chips/bma180
+  %T/lib/timer
+  %T/lib/serial
+  %T/lib/power
+  %T/lib/rfxlink/layers
+  %T/lib/rfxlink/util
+  %T/lib/diagmsg
+
+  ) );
+
+  @opts = qw(
+
+  -gcc=avr-gcc
+  -mmcu=atmega128rfa1
+  -fnesc-target=avr
+  -fnesc-no-debug
+  -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+
+  );

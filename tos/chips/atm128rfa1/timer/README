@@ -1,0 +1,26 @@
+This directory contains two types of files: the RFA1 microcontroller
+specific HplAtmRfa1* and TimerConfig.h files, and everything else which is 
+built on top of these and could support other microcontrollers in the 
+ATmega family.
+
+The HplAtmRfa1* files provides very basic access to the various timers and 
+handle power management. The TimerConfig.h file configures the rest of the
+system.
+
+We build two separate timers on top of the HPL layer: the TMcu timer from 
+which we derive all TMicro timers and alarms. The TMcu timer is built on
+top of one of the 16-bit hardware timer. This timer stops counting if the
+microcontroller is in one of the power save modes. However, if one of the
+alarms is set (or a capture is enabled), then this prevents the mcu to stop.
+Note, that depending on the clock frequency of the MCU the TMcu timer can run
+with any frequency between 1 and 16 MHz. 
+
+The other timer is the real time clock, which is derived from the 8-bit 32 
+KHz async timer/counter. You can set various prescale settings here, so the
+TRtc can run at 1 KHz, 4 KHz or 32 KHz. All TMilli timers and alarms are 
+derived from this.
+
+The RFA1 has a symbol counter also driven by the external 32 KHz crystal, but 
+it runs at 62.5 KHz. This is independent of the RTC clock, and in fact it is
+much more efficient than the 8-bit 32 KHz timer. You can select in TimerConfig.h
+to use this for the TRtc (and TMilli).

@@ -1,0 +1,16 @@
+The ucmini platform has the following configuration options:
+DISABLE_SERIAL_AUTO
+You can disable the automatic serial control by defining this
+DISABLE_SERIAL_RESET
+You can disable the automatic serial reset by defining this
+SERIAL_AUTO_VDD
+You can change the automatic serial control detection mode by defining this: If you define this, the serial control
+checks the usb power, otherwise it checks the usb suspend signal (if you define this, the serial stack turns on if
+you plug your mote to a usb charger)
+UCMINI_REV
+The ucmini revison you use, multiplied by 100. Known revisions (default is the highest):
+49: testboard
+52: new ldo, accelerometer, leds moved, usb detection and Vbatt measurment changed
+53: accelerometer connection changed
+100: usb detection changed, pull-up resistors on i2c bus
+101: switchable power for flash chip, user button

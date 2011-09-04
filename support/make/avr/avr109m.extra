@@ -1,0 +1,28 @@
+#-*-Makefile-*- vim:syntax=make
+
+ifeq ($(AVR109M),)
+$(error AVR109M must be defined, try "make $(TARGETS) help")
+endif
+
+PROGRAM = avr109
+AVR109_BAUDRATE ?= 115200
+
+ifeq ($(PROGRAMMER),avrdude)
+    ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+      AVR109 := '\\.\$(AVR109)'
+    endif
+    ifdef BOOTLOADER_IMG
+      ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+        BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
+      endif
+    endif
+    PROGRAMMER_FLAGS = -cavr109 -P$(AVR109M) -b$(AVR109_BAUDRATE) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)
+    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
+endif
+
+program: FORCE
+	@echo "Please reset the mote, then press enter" ;
+	@read
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
+

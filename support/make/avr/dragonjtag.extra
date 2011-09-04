@@ -1,0 +1,24 @@
+#-*-Makefile-*- vim:syntax=make
+
+DRAGONJTAG?=usb
+
+PROGRAM = dragonjtag
+
+ifeq ($(PROGRAMMER),avrdude)
+    ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+      DRAGONJTAG := '\\.\$(DRAGONJTAG)'
+    endif
+    ifdef BOOTLOADER_IMG
+      ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+        BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
+      endif
+    endif
+    PROGRAMMER_FLAGS = -cdragon_jtag -P$(DRAGONJTAG) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)
+    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
+endif
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using dragonjtag"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
+

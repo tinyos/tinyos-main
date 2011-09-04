@@ -1,0 +1,31 @@
+#-*-Makefile-*- vim:syntax=make
+
+ifeq ($(AVR109),)
+$(error AVR109 must be defined, try "make $(TARGETS) help")
+endif
+
+PROGRAM = avr109
+AVR109_BAUDRATE ?= 57600
+
+ifeq ($(PROGRAMMER),avrdude)
+    ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+      AVR109 := '\\.\$(AVR109)'
+    endif
+    ifdef BOOTLOADER_IMG
+      ifeq ($(shell [ -f /bin/cygwin1.dll ] && echo cygwin),cygwin)
+        BOOTLOADER_IMG := $(shell cygpath -m $(BOOTLOADER_IMG))
+      endif
+    endif
+    PROGRAMMER_FLAGS = -cavr109 -P$(AVR109) -b$(AVR109_BAUDRATE) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)
+    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
+endif
+
+program: FORCE
+	$(RESET_LINE)
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
+
+program_bl: FORCE
+	java org.szte.wsn.zigbit.Programmer -port $(AVR109) -baudrate $(BOOTLOADER_BAUDRATE) -reset -askforreset -sleep $(AVR109_SLEEP)
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS) 
+

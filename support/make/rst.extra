@@ -1,0 +1,4 @@
+BUILD_DEPS = res
+AVR109=$(RST)
+res:
+	$(RESET_LINE)

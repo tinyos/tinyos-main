@@ -1,0 +1,17 @@
+#$Id:
+
+PLATFORM = ucmini
+PROGRAMMER ?= avrdude
+
+PROGRAMMER_PART ?= -pm128rfa1
+
+VOLUMEFILE = volumes-stm25p.xml
+VOLUME_ALLOCATOR ?= tos-storage-stm25p -s32
+
+AVR109_SLEEP ?= 0
+RESET_LINE = java net.tinyos.util.ZigbitProgrammer -port $(AVR109) -reset -askforreset -sleep $(AVR109_SLEEP)
+
+$(call TOSMake_include_platform,avr)
+
+ucmini: $(BUILD_DEPS)
+	@:
