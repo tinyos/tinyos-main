@@ -29,7 +29,7 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 * OF THE POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: Miklos Maroti
+* Author: Zsolt Szabo
 */
 
 #include "Bma180.h"
@@ -47,7 +47,6 @@ module BmaStreamP
     interface FastSpiByte;
     interface GpioInterrupt as Interrupt;
     interface Resource;
-    interface DiagMsg;
     interface Leds;
     interface LocalTime<TMilli>;
     interface GeneralIO as CSN;
@@ -172,10 +171,6 @@ implementation
 
     bma180_data_t * reportStart = firstStart;
     uint16_t reportLength = firstLength;
-    if(call DiagMsg.record()) {
-      call DiagMsg.str("P_bufferdonetask");
-      call DiagMsg.send();
-    }
 
     firstStart = secondStart;
     firstLength = secondLength;
@@ -205,23 +200,12 @@ implementation
         reportLength = freeBuffers->count;
         freeBuffers = freeBuffers->next;
       }
-      if(call DiagMsg.record()) {
-        call DiagMsg.str("sig_buffdone");
-        call DiagMsg.str(s!=STATE_00?"SUCCESS":"FAIL");
-        call DiagMsg.str(freeBuffers!=NULL?"hasmore":"full");
-        
-        call DiagMsg.send();
-      }
+
       signal ReadStream.bufferDone(s != STATE_00 ? SUCCESS : FAIL, reportStart, reportLength);
     }
 
     if( freeBuffers == NULL && (s == STATE_00 || s == STATE_01) )
     {
-      if(call DiagMsg.record()) {
-        call DiagMsg.str("sig_readdone");
-        call DiagMsg.str(s==STATE_01?"SUCCESS":"FAIL");
-        call DiagMsg.send();
-      }
       signal ReadStream.readDone(s == STATE_01 ? SUCCESS : FAIL, actualPeriod); 
       state = STATE_READY;
     }
@@ -235,11 +219,6 @@ implementation
 
     if( count < (sizeof(free_buffer_t) + 1) >> 1 )
       return ESIZE;
-
-    if(call DiagMsg.record()) {
-      call DiagMsg.str("P_postbuff");
-      call DiagMsg.send();
-    }
 
     atomic
     {
@@ -277,10 +256,6 @@ implementation
     // do it early
     //call Interrupt.enable();
     if(call Resource.immediateRequest() == SUCCESS) {
-      if(call DiagMsg.record()) {
-        call DiagMsg.str("setInt");
-        call DiagMsg.send();
-      }
       temp = readRegister(0xD); //ctrl_reg0
       temp |= 0x10;                  // enable ee_w; needed for writing to addresses 0x20 .. 0x3B
       temp &=~(1<<1); //turn off sleep
@@ -330,10 +305,8 @@ implementation
     return SUCCESS;
   }
 
-event void Resource.granted() {
-}
+  event void Resource.granted() {}
 
-default event void ReadStream.bufferDone(error_t result, bma180_data_t* buf, uint16_t count) {}
-default event void ReadStream.readDone(error_t err, uint32_t usPeriod) {}
-
+  default event void ReadStream.bufferDone(error_t result, bma180_data_t* buf, uint16_t count) {}
+  default event void ReadStream.readDone(error_t err, uint32_t usPeriod) {}
 }

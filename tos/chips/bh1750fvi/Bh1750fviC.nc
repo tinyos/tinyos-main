@@ -32,7 +32,6 @@
 * Author: Zsolt Szabo
 */
 
-
 configuration Bh1750fviC {
   provides interface Read<uint16_t> as Light;
   provides interface SplitControl;

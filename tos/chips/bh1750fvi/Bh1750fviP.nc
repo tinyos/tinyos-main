@@ -32,7 +32,6 @@
 * Author: Zsolt Szabo
 */
 
-
 #include "Bh1750fvi.h" 
 
 module Bh1750fviP {
