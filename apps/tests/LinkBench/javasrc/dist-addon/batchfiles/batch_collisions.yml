@@ -1,0 +1,87 @@
+config: {bmark: 30, time: 1000}
+---
+config: {bmark: 30, time: 1000}
+forces: [ack]
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t2: [0, 50, 100]
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t2: [0, 50, 100]
+forces: [ack]
+---
+config: {bmark: 31, time: 1000}
+---
+config: {bmark: 31, time: 1000}
+timers:
+ - t2: [0, 50, 100]
+---
+config: {bmark: 32, time: 1000}
+---
+config: {bmark: 32, time: 1000}
+timers:
+ - t3: [0, 50, 100]
+---
+config: {bmark: 32, time: 1000}
+timers:
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+---
+config: {bmark: 33, time: 1000}
+---
+config: {bmark: 33, time: 1000}
+forces: [ack]
+---
+config: {bmark: 33, time: 1000}
+timers:
+ - t3: [0, 50, 100]
+---
+config: {bmark: 33, time: 1000}
+timers:
+ - t3: [0, 50, 100]
+forces: [ack]
+---
+config: {bmark: 33, time: 1000}
+timers:
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+---
+config: {bmark: 33, time: 1000}
+timers:
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+forces: [ack]
+---
+config: {bmark: 34, time: 1000}
+---
+config: {bmark: 34, time: 1000}
+forces: [ack]
+---
+config: {bmark: 34, time: 1000}
+timers:
+ - t3: [0, 50, 100]
+---
+config: {bmark: 34, time: 1000}
+timers:
+ - t3: [0, 50, 100]
+forces: [ack]
+---
+config: {bmark: 34, time: 1000}
+timers:
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+---
+config: {bmark: 34, time: 1000}
+timers:
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+forces: [ack]
+---
+config: {bmark: 35, time: 1000}
+---
+config: {bmark: 35, time: 1000}
+forces: [ack]
+---
+config: {bmark: 36, time: 1000}

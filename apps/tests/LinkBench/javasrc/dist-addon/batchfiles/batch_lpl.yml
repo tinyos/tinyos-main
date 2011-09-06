@@ -1,0 +1,159 @@
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 0, 100]
+wakeup: 0
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 0, 100]
+wakeup: 30
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 0, 100]
+wakeup: 70
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 0, 100]
+wakeup: 130
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 50, 100]
+wakeup: 0
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 50, 100]
+wakeup: 30
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 50, 100]
+wakeup: 70
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 50, 100]
+wakeup: 130
+---
+config: {bmark: 35, time: 1000}
+wakeup: 0
+---
+config: {bmark: 35, time: 1000}
+wakeup: 30
+---
+config: {bmark: 35, time: 1000}
+wakeup: 70
+---
+config: {bmark: 35, time: 1000}
+wakeup: 130
+---
+config: {bmark: 50, time: 1000}
+wakeup: 0
+---
+config: {bmark: 50, time: 1000}
+wakeup: 30
+---
+config: {bmark: 50, time: 1000}
+wakeup: 70
+---
+config: {bmark: 50, time: 1000}
+wakeup: 130
+---
+config: {bmark: 53, time: 1000}
+wakeup: 0
+---
+config: {bmark: 53, time: 1000}
+wakeup: 30
+---
+config: {bmark: 53, time: 1000}
+wakeup: 70
+---
+config: {bmark: 53, time: 1000}
+wakeup: 130
+---
+config: {bmark: 53, time: 1000}
+timers:
+ - t1: [0, 0, 20]
+wakeup: 0
+---
+config: {bmark: 53, time: 1000}
+timers:
+ - t1: [0, 0, 20]
+wakeup: 30
+---
+config: {bmark: 53, time: 1000}
+timers:
+ - t1: [0, 0, 20]
+wakeup: 70
+---
+config: {bmark: 53, time: 1000}
+timers:
+ - t1: [0, 0, 20]
+wakeup: 130
+---
+config: {bmark: 55, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+wakeup: 0
+---
+config: {bmark: 55, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+wakeup: 30
+---
+config: {bmark: 55, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+wakeup: 70
+---
+config: {bmark: 55, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+wakeup: 130
+---
+config: {bmark: 58, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+wakeup: 0
+---
+config: {bmark: 58, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+wakeup: 30
+---
+config: {bmark: 58, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+wakeup: 70
+---
+config: {bmark: 58, time: 1000}
+timers:
+ - t1: [0, 0, 100]
+ - t2: [0, 33, 100]
+ - t3: [0, 66, 100]
+wakeup: 130

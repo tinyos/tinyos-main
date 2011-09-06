@@ -1,0 +1,51 @@
+# microcontroller identification
+ATM128_PLATFORMS = iris mica mica2 mica2dot micaz btnode3 ucmini ucdual ucmote900
+MSP430_PLATFORMS = epic eyesIFX eyesIFXv1 eyesIFXv2 shimmer shimmer2 shimmer2r span telosa telosb tinynode z1
+PXA27X_PLATFORMS = intelmote2
+M16C62P_PLATFORMS= mulle
+CORTEX_PLATFORMS = sam3u_ek sam3s_ek
+
+ifneq ($(findstring $(PLATFORM),$(ATM128_PLATFORMS)),)
+	MCU ?= ATM128
+else ifneq ($(findstring $(PLATFORM),$(MSP430_PLATFORMS)),)
+	MCU ?= MSP430
+else ifneq ($(findstring $(PLATFORM),$(PXA27X_PLATFORMS)),)
+	MCU ?= PXA27X
+else ifneq ($(findstring $(PLATFORM),$(M16C62P_PLATFORMS)),)
+	MCU ?= M16C62P
+else ifneq ($(findstring $(PLATFORM),$(CORTEX_PLATFORMS)),)
+	MCU ?= CORTEX
+else
+	MCU ?= UNKNOWN
+endif
+CONTROLLER_$(MCU) = $(MCU)
+CFLAGS += -DCONTROLLER_$(MCU)
+
+# radio chip identification
+RFA1_PLATFORMS   = ucmini ucdual ucmote900
+RF230_PLATFORMS  = iris mulle
+CC1000_PLATFORMS = mica mica2 mica2dot btnode3
+CC2420_PLATFORMS = micaz telosa telosb shimmer shimmer2 shimmer2r epic span intelmote2 z1 sam3u_ek
+TDA5250_PLATFORMS= eyesIFX eyesIFXv1 eyesIFXv2
+XE1205_PLATFORMS = tinynode
+CC2520_PLATFORMS = sam3s_ek
+
+ifneq ($(findstring $(PLATFORM),$(RF230_PLATFORMS)),)
+	RCHIP ?= RF230
+else ifneq ($(findstring $(PLATFORM),$(CC1000_PLATFORMS)),)
+	RCHIP ?= CC1000
+else ifneq ($(findstring $(PLATFORM),$(CC2420_PLATFORMS)),)
+	RCHIP ?= CC2420
+else ifneq ($(findstring $(PLATFORM),$(TDA5250_PLATFORMS)),)
+	RCHIP ?= TDA5250
+else ifneq ($(findstring $(PLATFORM),$(XE1205_PLATFORMS)),)
+	RCHIP ?= XE1205
+else ifneq ($(findstring $(PLATFORM),$(CC2520_PLATFORMS)),)
+	RCHIP ?= CC2520
+else ifneq ($(findstring $(PLATFORM),$(RFA1_PLATFORMS)),)
+	RCHIP ?= RFA1
+else
+	RCHIP ?= UNKNOWN
+endif
+RADIO_$(RCHIP) = $(RCHIP)
+CFLAGS += -DRADIO_$(RCHIP)

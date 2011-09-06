@@ -1,0 +1,84 @@
+# Benchmark batch configuration sample file
+# -----------------------------------------
+#
+# This file describes multiple benchmarks to be run in sequence with the LinkBenchmark
+# TinyOS application along with its supporting PC-side Java application.
+#
+# The content of this file is YAML-formatted with a reduced key set and value sets.
+# Benchmark definitions must be separated with 3 dashes ('---') in a separate line.
+#
+# The example below demonstrates ALL options that can be specified in the correct
+# format:
+# ---
+# config: {bmark: 10, motes: 6, time: 1000, randstart: 30, lchance: 20}
+# timers:
+#  - t1: [1, 10, 100]
+#  - t2: [0, 20, 200]
+#  - t3: [1, 30, 300]
+#  - t4: [0, 30, 300]
+# forces: [ack, bcast]
+# mac:
+#  - lpl: [ 200 ]
+#  - plink: [ 200 100 ]
+# ---
+#
+# All values must be integers. The mandatory options are: config, config.bmark, 
+# and config.time, so the most simple description is:
+# config: {bmark: X, time: Y}
+#
+# If some options are not explicitly specified, but are required for the benchmarks,
+# the default values are used. Use the command line Java code's help to get these values.
+#
+#
+# See below some dummy examples for your pleasure!
+
+config: {bmark: 10, motes: 3, time: 1000, randstart: 30}
+---
+config: {bmark: 10, time: 20, lchance: 100}
+mac:
+  - lpl: [ 200 ]
+  - plink: [ 200 100 ]
+  
+---
+config: {bmark: 10, time: 200, motes: 5}
+forces: [ack]
+---
+config: {bmark: 10, motes: 3, time: 3000}
+forces: [bcast]
+---
+config: {bmark: 15, time: 1000, randstart: 30}
+---
+config: {bmark: 30, time: 322}
+timers:
+ - t1: [1,  50, 200]
+ - t2: [1, 500, 100]
+---
+config: {bmark: 30, time: 1000}
+timers:
+ - t1: [0, 0, 200]
+ - t2: [0, 0, 100]
+forces: [bcast]
+mac:
+  - plink: [ 200 100 ]
+---
+config: {bmark: 34, time: 1000}
+timers:
+ - t1: [0, 10, 100]
+ - t2: [0, 20, 200]
+ - t3: [0, 30, 300]
+forces: [ack]
+---
+config: {bmark: 50, time: 1000}
+timers:
+ - t1: [0, 10, 100]
+forces: [ack]
+---
+config: {bmark: 50, time: 1000}
+timers:
+ - t1: [0, 10, 100]
+forces: [bcast]
+---
+config: {bmark: 53, time: 1000}
+forces: [ack]
+---
+config: {bmark: 10, time: 1000}

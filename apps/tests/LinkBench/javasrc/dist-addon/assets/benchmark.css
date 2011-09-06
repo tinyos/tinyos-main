@@ -1,0 +1,141 @@
+body { 
+  font: 13px sans-serif;
+  background-color: #DDDDDD;
+  margin: 0px 5px 0px 5px;
+}
+
+div.title { 
+  font: 15px sans-serif;
+  font-weight: bold;
+  background-color: #798EF9; 
+  text-align: center;
+  margin-top: 0; margin-bottom: 0; 
+  padding: 1px 1px 1px 1px; 
+  color: #000000; 
+}
+
+div.title_light { 
+  font: 15px sans-serif;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 0; margin-bottom: 0; 
+  padding: 1px 1px 1px 1px; 
+  color: #000000; 
+}
+
+div.debuglist, div.error {
+  margin-top: 5px;
+  text-align: center;
+}
+
+table.testresult {
+  margin-bottom: 10px;
+  border: 0px;
+  border-spacing: 0px;
+  border-padding: 0px;
+  width: 100%;
+}
+
+table.summary, table.data {
+  margin: 2px 0px 0px 0px;
+  border: 1px solid #888888;
+  width: 100%;
+  border-spacing: 1px;
+  border-padding: 0px;
+}
+
+.rt {
+  background-color: white;
+  text-align: right;
+  font: 11px sans-serif;
+  padding-right: 5px;
+}
+
+.rt_data {
+  background-color: white;
+  text-align: center;
+  font: 13px sans-serif;
+  font-weight: bold;
+}
+
+.rcv {
+  color: #770202;
+}
+.snd {
+  color: #027702;
+}
+
+.cprofile {
+  color: #33469A;
+}
+
+.rprofile {
+  color: #554666;
+}
+
+.title_send {
+  background-color: #ACF979;
+  font: 13px sans-serif;
+  font-weight: bold;
+  text-align: center;
+  border-style: solid;
+  border-width: 0px 0px 1px 0px;
+}
+
+.title_rcv {
+  background-color: #FFA579;
+  font: 13px sans-serif;
+  font-weight: bold;
+  text-align: center; 
+  border-style: solid;
+  border-width: 0px 0px 1px 0px;
+}
+
+.title_cprofile {
+  background-color: #5579BC;
+  font: 13px sans-serif;
+  font-weight: bold;
+  text-align: center;
+  border-style: solid;
+  border-width: 0px 0px 1px 0px;
+}
+
+.title_rprofile {
+  background-color: #887999;
+  font: 13px sans-serif;
+  font-weight: bold;
+  text-align: center;
+  border-style: solid;
+  border-width: 0px 0px 1px 0px;
+}
+
+.sub {
+  background-color: #FFF3A0;
+  font: 11px sans-serif;
+  text-align: center;
+}
+
+div.top {
+  text-align : center;
+  font: 18px sans-serif;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+span.debug_ok {
+  color: #027702;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-weight: bold;
+}
+
+span.debug_fail, div.error {
+  color: #770202;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-weight: bold;
+}
+a { font: 11px verdana, arial, helvetica, sans-serif; }
+a:link    { color: #0011BB; text-decoration: none; }
+a:visited { color: #0011BB; text-decoration: none; }
+a:hover   { color: #605040; text-decoration: underline; }
