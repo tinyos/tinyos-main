@@ -169,16 +169,19 @@ enum sampcon_id_enum
 #ifdef __MSP430_TI_HEADERS__
 //#if __GNUC__ >= 4
   
-  // "The bitfield structures that overlay peripheral registers are not part of
-  // mspgcc in the future; the recommended way of accessing those fields is to
-  // use the masks defined in the TI headers."
-  // (https://www.millennium.berkeley.edu/pipermail/tinyos-devel/2011-March/004804.html)
-  //
-  // Until the ADC driver is updated our temporary workaround is to re-define
-  // the old structures -- this may may result in faulty ADC code and should be
-  // checked carefully for your specific device (note: msp430x1611 is safe)!
-
-#warning "Accessing Adc12 registers via bitfield structures: this is discouraged mspgcc version >= 4 as it may result in faulty code!" 
+// "The bitfield structures that overlay peripheral registers are not part of
+// mspgcc in the future; the recommended way of accessing those fields is to
+// use the masks defined in the TI headers."
+// (http://www.millennium.berkeley.edu/pipermail/tinyos-devel/2011-March/004804.html)
+//
+// Until the ADC driver is updated our temporary workaround is to re-define the
+// bitfield structures and continue using them when accessing peripheral
+// registers via the DEFINE_UNION_CAST (the same is done in the MSP430 Timer
+// and USART drivers). It has been verified that the definitions of the ADC12
+// flags has not changed over the different MSP430 chip variants that have an
+// ADC12, i.e. using common structs is safe (verified for the header files
+// installed via package msp430mcu-tinyos version 20110613-20110821).
+// (http://mail.millennium.berkeley.edu/pipermail/tinyos-2.0wg/2011-August/003861.html)
 
 typedef struct {
   volatile unsigned
@@ -192,6 +195,7 @@ typedef struct {
     msc:1,
     sht0:4,
     sht1:4;
+volatile unsigned int : 0; // align to word boundary (saves significant amount of code)
 } __attribute__ ((packed)) adc12ctl0_t;
 
 typedef struct {
@@ -204,6 +208,7 @@ typedef struct {
     shp:1,
     shs:2,
     cstartadd:4;
+volatile unsigned int : 0; // align to word boundary (saves significant amount of code)
 } __attribute__ ((packed)) adc12ctl1_t;
 
 #else
