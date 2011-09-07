@@ -55,6 +55,7 @@ push( @includes, qw(
   -fnesc-no-debug
 );
 
+push @opts, "-mdisable-hwmul" if `msp430-gcc --version | grep 3.2.3`;
 push @opts, "-fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask" if !$with_scheduler_flag;
 push @opts, "-mingw-gcc" if $cygwin;
 
