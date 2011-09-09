@@ -40,7 +40,13 @@ interface Gps {
   
   command void setDatarate(uint16_t datarate);  
 
+  command void setNavThreshold();
+  command void getNavThreshold();
+
   command void setHotStart();
+
+  command void restrictNMEASentences();
+  command void resetNMEASentences();
 
   command void disableBus();
   command void enableBus();

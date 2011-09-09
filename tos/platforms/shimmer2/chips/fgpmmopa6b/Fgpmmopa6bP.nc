@@ -67,6 +67,7 @@ implementation {
   }
 
   command error_t Init.init() {
+
     TOSH_SET_PROG_OUT_PIN();
 
     TOSH_MAKE_ADC_6_INPUT();
@@ -112,6 +113,58 @@ implementation {
     return sum;
   }
 
+  /*
+   * string of boolean on/off switches for sentences, in order
+   * 0 NMEA_SEN_GLL, // GPGLL interval - Geographic Position - Latitude longitude
+   * 1 NMEA_SEN_RMC, // GPRMC interval - Recomended Minimum Specific GNSS
+   *   Sentence
+   * 2 NMEA_SEN_VTG, // GPVTG interval - Course Over Ground and Ground Speed
+   * 3 NMEA_SEN_GGA, // GPGGA interval - GPS Fix Data
+   * 4 NMEA_SEN_GSA, // GPGSA interval - GNSS DOPS and Active Satellites
+   * 5 NMEA_SEN_GSV, // GPGSV interval - GNSS Satellites in View
+   * 18 NMEA_SEN_MCHN, // PMTKCHN interval \u2013 GPS channel status
+   */
+  command void Gps.restrictNMEASentences() {
+    uint8_t crc;
+    char cmd[128];
+
+    sprintf(cmd, "$PMTK314,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0");
+
+    crc = byteCRC(cmd + 1);
+    sprintf(cmdstring, "%s*%02X\r\n", cmd, crc);
+    
+    post send_command();
+  }
+
+  command void Gps.resetNMEASentences() {
+    sprintf(cmdstring, "$PMTK314,-1*04\r\n");
+
+    post send_command();
+  }
+
+  /*
+   * range is 0/ 0.2/ 0.4/ 0.6/ 0.8/ 1.0/1.5/2.0 (m/s) 
+   * e.g.
+   * $PMTK397,0.20*<checksum><CR><LF>
+   * $PMTK397,0*<checksum><CR><LF>
+   */
+  command void GPS.setNavThreshold() {
+    uint8_t crc;
+    char cmd[128];
+
+    sprintf(cmd, "$PMTK397,0");
+    crc = byteCRC(cmd + 1);
+    sprintf(cmdstring, "%s*%02X\r\n", cmd, crc);
+
+    post send_command();
+  }
+
+  command void GPS.getNavThreshold() {
+    sprintf(cmdstring, "$PMTK447*35\r\n");
+
+    post send_command();
+  }
+
   // tell it to come up in hot start mode
   command void Gps.setHotStart() {
     sprintf(cmdstring, "$PMTK101*32\r\n");
@@ -141,7 +194,6 @@ implementation {
   async event void UARTData.rxDone(uint8_t data) {        
     if(!call UARTControl.isUart())
       return;
-
     *scout = data;
     scout++;
 
@@ -179,7 +231,6 @@ implementation {
   async event void UARTData.txDone() {
     if(!call UARTControl.isUart())
       return;
-
     if(!transmissionComplete) {
       post sendOneChar();
     }
