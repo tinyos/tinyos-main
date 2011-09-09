@@ -128,7 +128,7 @@ implementation {
     uint8_t crc;
     char cmd[128];
 
-    sprintf(cmd, "$PMTK314,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0");
+    sprintf(cmd, "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0");
 
     crc = byteCRC(cmd + 1);
     sprintf(cmdstring, "%s*%02X\r\n", cmd, crc);
