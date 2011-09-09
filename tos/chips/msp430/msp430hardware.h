@@ -322,7 +322,7 @@ to_type func_name(from_type x) @safe() { union {from_type f; to_type t;} c = {f:
 // define platform constants that can be changed for different compilers
 // these are all msp430-gcc specific (add as necessary)
 
-#ifdef __msp430_headers_adc10_h || defined(__MSP430_HAS_ADC10__)
+#if defined(__msp430_headers_adc10_h) || defined(__MSP430_HAS_ADC10__)
 #define __msp430_have_adc10
 #endif
 
