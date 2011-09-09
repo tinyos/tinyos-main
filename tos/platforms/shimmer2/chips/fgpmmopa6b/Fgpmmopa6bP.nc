@@ -148,7 +148,7 @@ implementation {
    * $PMTK397,0.20*<checksum><CR><LF>
    * $PMTK397,0*<checksum><CR><LF>
    */
-  command void GPS.setNavThreshold() {
+  command void Gps.setNavThreshold() {
     uint8_t crc;
     char cmd[128];
 
@@ -159,7 +159,7 @@ implementation {
     post send_command();
   }
 
-  command void GPS.getNavThreshold() {
+  command void Gps.getNavThreshold() {
     sprintf(cmdstring, "$PMTK447*35\r\n");
 
     post send_command();
