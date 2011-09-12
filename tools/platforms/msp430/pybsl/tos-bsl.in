@@ -665,7 +665,7 @@ class LowLevel:
     	    self.SetRSTpin(0)
     	    self.SetTESTpin(1)
     
-            self.SetRSTpin(0)       #RST  pin: GND
+        self.SetRSTpin(0)       #RST  pin: GND
         if invokeBSL:
             self.SetTESTpin(1)  #TEST pin: GND
             self.SetTESTpin(0)  #TEST pin: Vcc
