@@ -244,18 +244,18 @@ implementation
 
 	async command uint32_t TrafficMonitor.getActiveTime()
 	{
-		uint32_t time, localTime;
+		uint32_t atime, localTime;
 		
 		localTime = call LocalTime.get();
 
 		atomic
 		{
-			time = activeTime;
+			atime = activeTime;
 			if( radioState != RADIO_OFF )
-				time += localTime - radioStart;
+				atime += localTime - radioStart;
 		}
 
-		return time;
+		return atime;
 	}
 
 	async command uint32_t TrafficMonitor.getCurrentTime()
