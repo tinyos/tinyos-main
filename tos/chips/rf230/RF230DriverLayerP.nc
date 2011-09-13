@@ -649,7 +649,10 @@ implementation
 				call PacketLinkQuality.set(rxMsg, call FastSpiByte.splitRead());
 			}
 			else
+			{
+				call FastSpiByte.splitRead(); // finish the SPI transfer
 				crc = 1;
+			}
 		}
 		else
 			crc = 1;

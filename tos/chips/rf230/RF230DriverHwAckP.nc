@@ -686,6 +686,8 @@ tasklet_async command uint8_t RadioState.getChannel()
 				// we should have no other incoming message or buffer underflow
 				crcValid = ! radioIrq;
 			}
+			else
+				call FastSpiByte.splitRead(); // finish the SPI transfer
 		}
 
 		call SELN.set();

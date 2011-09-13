@@ -633,6 +633,8 @@ implementation
 				call FastSpiByte.splitReadWrite(0);	// ED
 				crcValid = call FastSpiByte.splitRead() & RF212_RX_CRC_VALID;	// RX_STATUS
 			}
+			else
+				call FastSpiByte.splitRead(); // finish the SPI transfer
 		}
 
 		call SELN.set();
