@@ -37,19 +37,25 @@ configuration PlatformC
   provides
   {
     interface Init;
-    // TODO: this should be moved to McuInit, but HplAtm128UartC wants it here
-    interface Atm128Calibrate;
+    interface Atm128Calibrate; // TODO: should be moved to McuInitC
   }
 
-  uses
-  {
-    interface Init as LedsInit;
-  }
-
+  uses interface Init as LedsInit;
 }
 implementation
 {
-  components PlatformP, McuInitC, MeasureClockC, RFA1RadioOffP, Stm25pOffC, Atm128AdcP, HplAtm128AdcC;
+  //initialization
+  components PlatformP, McuInitC, MeasureClockC;
+  Init = PlatformP;
+  LedsInit = PlatformP.LedsInit;
+  PlatformP.McuInit -> McuInitC;
+  Atm128Calibrate = MeasureClockC;
+
+  //turning off unused components
+  components Stm25pOffC;
+  PlatformP.Stm25pInit -> Stm25pOffC;
+  
+  //voltage measuring circuit
   components HplAtm128GeneralIOC;
   #if UCMINI_REV==49
     PlatformP.Voltmeter -> HplAtm128GeneralIOC.PortF0;
@@ -60,17 +66,6 @@ implementation
     PlatformP.VBattADC -> HplAtm128GeneralIOC.PortF2;
     PlatformP.VMeasureBridge -> HplAtm128GeneralIOC.PortF0;
   #endif
-
-  Init = PlatformP;
-  Atm128Calibrate = MeasureClockC;
-
-  LedsInit = PlatformP.LedsInit;
-  PlatformP.McuInit -> McuInitC;
-  Atm128AdcP.HplAtm128Adc -> HplAtm128AdcC;
-  PlatformP.ADCInit -> Atm128AdcP.Init;
-
-   PlatformP.RadioInit -> RFA1RadioOffP.RFA1RadioOff;
-   PlatformP.Stm25pInit -> Stm25pOffC.Stm25pOff;
 
   #ifndef DISABLE_SERIAL_AUTO
     components SerialAutoControlC;

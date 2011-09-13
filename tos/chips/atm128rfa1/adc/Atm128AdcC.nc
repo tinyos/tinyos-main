@@ -1,6 +1,7 @@
+/// $Id: Atm128AdcC.nc,v 1.7 2010-06-29 22:07:43 scipio Exp $
+
 /*
- * Copyright (c) 2010, University of Szeged
- * All rights reserved.
+ * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,7 +13,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ * - Neither the name of Crossbow Technology nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -29,71 +30,49 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Miklos Maroti
+ * Copyright (c) 2005 Intel Corporation
+ * All rights reserved.
+ *
+ * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * file. If you do not find these files, copies can be found by writing to
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * 94704.  Attention:  Intel License Inquiry.
  */
 
-#include "TimerConfig.h"
-module McuInitP @safe()
+#include "Atm128Adc.h"
+
+/**
+ * HAL for the Atmega128 A/D conversion susbsystem.
+ *
+ * @author Hu Siquan <husq@xbow.com>
+ * @author David Gay
+ */
+
+configuration Atm128AdcC
 {
-	provides interface Init;
-
-	uses
-	{
-		interface Init as MeasureClock;
-		interface Init as TimerInit;
-		interface Init as AdcInit;
-		interface Init as RadioInit;
-	}
+  provides {
+    interface Resource[uint8_t client];
+    interface Atm128AdcSingle;
+    interface Atm128AdcMultiple;
+  }
+  uses interface ResourceConfigure[uint8_t client];
 }
-
 implementation
 {
-	error_t systemClockInit()
-	{
-		// set the clock prescaler
-		atomic
-		{
-			// enable changing the prescaler
-			CLKPR = 0x80;
+  components Atm128AdcP, HplAtm128AdcC, McuInitC, MainC,
+    new RoundRobinArbiterC(UQ_ATM128ADC_RESOURCE) as AdcArbiter,
+    new AsyncStdControlPowerManagerC() as PM;
 
-#if PLATFORM_MHZ == 16
-			CLKPR = 0x0F;	
-#elif PLATFORM_MHZ == 8
-			CLKPR = 0x00;
-#elif PLATFORM_MHZ == 4
-			CLKPR = 0x01;
-#elif PLATFORM_MHZ == 2
-			CLKPR = 0x02;
-#elif PLATFORM_MHZ == 1
-			CLKPR = 0x03;
-#else
-	#error "Unsupported MHZ"
-#endif
-		}
+  Resource = AdcArbiter;
+  ResourceConfigure = AdcArbiter;
+  Atm128AdcSingle = Atm128AdcP;
+  Atm128AdcMultiple = Atm128AdcP;
 
-		return SUCCESS;
-	}
+  McuInitC.AdcInit -> Atm128AdcP;
 
-	command error_t Init.init()
-	{
-		error_t ok;
-		// workaround for errata 38.5.1 in datasheet
-		if( VERSION_NUM==3 ){ //revision c (1.1)
-			DRTRAM0 |= 1<<ENDRT;
-			DRTRAM1 |= 1<<ENDRT;
-			DRTRAM2 |= 1<<ENDRT;
-			DRTRAM3 |= 1<<ENDRT;
-		}
-		
-		ok = systemClockInit();
-		ok = ecombine(ok, call MeasureClock.init());
-		ok = ecombine(ok, call TimerInit.init());
-		ok = ecombine(ok, call AdcInit.init());
-		ok = ecombine(ok, call RadioInit.init());
+  Atm128AdcP.HplAtm128Adc -> HplAtm128AdcC;
+  Atm128AdcP.Atm128Calibrate -> PlatformC;
 
-		return ok;
-	}
-
-	default command error_t TimerInit.init() { return SUCCESS; }
-	default command error_t AdcInit.init() { return SUCCESS; }
+  PM.AsyncStdControl -> Atm128AdcP;
+  PM.ResourceDefaultOwner -> AdcArbiter;
 }
