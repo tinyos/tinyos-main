@@ -113,6 +113,8 @@ implementation {
     // All of memory may change at this point...
     asm volatile ("sleep" : : : "memory");
     cli();
+
+    CLR_BIT(MCUCR, SE);
   }
 
   async command void McuPowerState.update() {

@@ -57,15 +57,6 @@ module PlatformP @safe()
 
 implementation
 {
-  error_t powerInit()
-  {
-    atomic
-    {
-      MCUCR = _BV(SE);	// Internal RAM, IDLE, rupt vector at 0x0002,
-    }
-    return SUCCESS;
-  }
-
   command error_t Init.init()
   {
     error_t ok;
@@ -85,7 +76,6 @@ implementation
 
     ok = call McuInit.init();
     ok = ecombine(ok, call LedsInit.init());
-    ok = ecombine(ok, powerInit());
     ok = ecombine(ok, call RadioInit.init());
     ok = ecombine(ok, call Stm25pInit.init());
     ok = ecombine(ok, call ADCInit.init());

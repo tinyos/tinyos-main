@@ -51,15 +51,15 @@ implementation
 
   components PlatformC;
   Init = PlatformC.LedsInit;
-	#if UCMINI_REV == 49
-  Led0 = IO.PortE5;  
-  Led1 = IO.PortE6; 
-  Led2 = IO.PortE7;  
+#if UCMINI_REV == 49
+  Led0 = IO.PortE5;
+  Led1 = IO.PortE6;
+  Led2 = IO.PortE7;
   Led3 = IO.PortE3;
-	#else 
-	Led0 = IO.PortE4;  
-  Led1 = IO.PortE5; 
-  Led2 = IO.PortE6;  
+#else 
+  Led0 = IO.PortE4;
+  Led1 = IO.PortE5;
+  Led2 = IO.PortE6;
   Led3 = IO.PortE7;
-	#endif
+#endif
 }
