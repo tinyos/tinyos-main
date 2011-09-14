@@ -111,7 +111,7 @@ implementation
         // it is RC, turn on XT
         mor.flat = 0; // make sure it is zreoed out
         mor.bits.key = PMC_MOR_KEY;
-        mor.bits.moscxtst = 0x3F; // main oscillator startup time
+        mor.bits.moscxtst = 0x07;//0x3F; // main oscillator startup time
         mor.bits.moscrcen = 1;    // enable the on-chip rc oscillator
         mor.bits.moscxten = 1;    // main crystal oscillator enable
         PMC->mor = mor;
@@ -123,13 +123,13 @@ implementation
       // Switch to XT
       mor.flat = 0; // make sure it is zeroed
       mor.bits.key = PMC_MOR_KEY;
-      mor.bits.moscxtst = 0x3F;
+      mor.bits.moscxtst = 0x07;//0x3F;
       mor.bits.moscrcen = 1;
       mor.bits.moscxten = 1;
       mor.bits.moscsel = 1;
       PMC->mor = mor;
-      timeout = 0;
-      while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
+      //timeout = 0;
+      //while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
       mckr = PMC->mckr;
       mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
       PMC->mckr = mckr;
@@ -213,8 +213,8 @@ implementation
       mor.bits.moscxten = 1;
       mor.bits.moscsel = 0;
       PMC->mor = mor;
-      timeout = 0;
-      while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
+      //timeout = 0;
+      //while (!(PMC->sr.bits.moscsels) && (timeout++ < CLOCK_TIMEOUT));
       mckr = PMC->mckr;
       mckr.bits.pres = PMC_MCKR_PRES_DIV_1;
       mckr.bits.css = PMC_MCKR_CSS_MAIN_CLOCK;
