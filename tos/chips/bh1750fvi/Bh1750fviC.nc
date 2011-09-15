@@ -43,9 +43,9 @@ implementation {
   Light = Bh1750fviP.Light;
   Bh1750fviP.Timer -> TimerMilliC;
 
-  components Hplbh1750C;
-  Bh1750fviP.I2CPacket -> Hplbh1750C;
-  Bh1750fviP.I2CResource -> Hplbh1750C.Resource;
+  components HplBh1750C;
+  Bh1750fviP.I2CPacket -> HplBh1750C;
+  Bh1750fviP.I2CResource -> HplBh1750C.Resource;
 
   SplitControl = Bh1750fviP;
 }

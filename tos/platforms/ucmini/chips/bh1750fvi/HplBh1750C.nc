@@ -1,4 +1,4 @@
-configuration Hplbh1750C {
+configuration HplBh1750C {
   provides interface I2CPacket<TI2CBasicAddr>;
   provides interface Resource;
 }
