@@ -84,8 +84,7 @@ implementation
   TimeSyncP.Leds  ->  LedsC;
 
 #ifdef LOW_POWER_LISTENING
-  components CC2420ActiveMessageC;
-  TimeSyncP.LowPowerListening -> CC2420ActiveMessageC;
+  TimeSyncP.LowPowerListening -> ActiveMessageC;
 #endif
 
 }
