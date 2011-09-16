@@ -56,7 +56,9 @@ struct {
   // RFC4944-style addresses
   {"fe80::1:00ff:fe00:25", LOWPAN_IPHC_AM_0, 0, 0, {}, "25", 1},
 
-  {"fe80::ffff:00ff:fe00:abcd", LOWPAN_IPHC_AM_0, 0, 0, {}, "abcd", 0xffff},
+  {"fe80::fdff:00ff:fe00:25", LOWPAN_IPHC_AM_0, 0, 0, {}, "25", 0xffff},
+
+  {"fe80::fdff:00ff:fe00:abcd", LOWPAN_IPHC_AM_0, 0, 0, {}, "abcd", 0xffff},
 
   // tests using context
   {"2002::12", LOWPAN_IPHC_AC_CONTEXT |  LOWPAN_IPHC_AM_16, 0, 2, {0, 0x12}, "1", 1},

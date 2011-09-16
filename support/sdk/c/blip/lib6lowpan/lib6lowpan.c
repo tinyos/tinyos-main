@@ -180,7 +180,7 @@ uint8_t *pack_address(uint8_t *buf, struct in6_addr *addr, int context_match_len
       memcpy(buf, &addr->s6_addr[14], 2);
       return buf += 2;
     } else if (/* maybe it's a 16-bit address with the IID derived from the PANID + address */
-               (addr->s6_addr16[4] == htons(letohs(pan)) &&
+               (addr->s6_addr16[4] == htons(letohs(pan) & ~0x0200) &&
                 addr->s6_addr16[5] == htons(0x00ff) &&
                 addr->s6_addr16[6] == htons(0xfe00) &&
                 (((l2addr->ieee_mode == IEEE154_ADDR_SHORT) && 
@@ -549,7 +549,8 @@ uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
           addr->s6_addr[i+8] = frame->i_laddr.data[7-i];
         addr->s6_addr[8] ^= 0x2;
       } else {
-        addr->s6_addr16[4] = leton16(pan);
+        printf("HERE\n");
+        addr->s6_addr16[4] = htons(letohs(pan) & ~0x0200);
         addr->s6_addr[11] = 0xff;
         addr->s6_addr[12] = 0xfe;
         addr->s6_addr16[7] = leton16(frame->i_saddr);

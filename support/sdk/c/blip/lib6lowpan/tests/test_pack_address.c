@@ -34,6 +34,9 @@ struct {
   // RFC4944 address, matching 16-bit id
   {"fe80::1:00ff:fe00:1", 0, "1", 1, 0, {0, 0}, LOWPAN_IPHC_AM_0},
 
+  // RFC4944 address, matching 16-bit id
+  {"fe80::fdff:00ff:fe00:1", 0, "1", 0xffff, 0, {0, 0}, LOWPAN_IPHC_AM_0},
+
   // RFC4944 address, different 16-bit ID
   {"fe80::1:00ff:fe00:2", 0, "1", 8, 8, {0, 1, 0, 0xff, 0xfe, 0x0, 0, 02}, LOWPAN_IPHC_AM_64},
 
