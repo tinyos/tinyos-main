@@ -32,28 +32,28 @@
  * Author: Miklos Maroti
  */
 
-module HplAtmegaExtInterrupt1C
+generic module HplAtmegaExtInterruptP(
+	uint8_t EIFR_ADDR, uint8_t EIFR_PIN,
+	uint8_t EIMSK_ADDR, uint8_t EIMSK_PIN,
+	uint8_t EICR_ADDR, uint8_t EICR_PIN)
 {
 	provides interface HplAtmegaExtInterrupt;
+	uses interface HplAtmegaExtInterruptSig;
 }
-
-#define INT_VECT	INT1_vect
-#define EIFR_REG	EIFR
-#define EIFR_PIN	INTF1
-#define EIMSK_REG	EIMSK
-#define EIMSK_PIN	INT1
-#define EICR_REG	EICRA
-#define EICR_PIN	ISC10
 
 implementation
 {
+#define EIFR_REG (*(volatile uint8_t*)(EIFR_ADDR))
+#define EIMSK_REG (*(volatile uint8_t*)(EIMSK_ADDR))
+#define EICR_REG (*(volatile uint8_t*)(EICR_ADDR))
+
 // ----- external interrupt flag register (EIFR)
 
-	AVR_ATOMIC_HANDLER( INT_VECT )	{
+	async event void HplAtmegaExtInterruptSig.fired() {
 		signal HplAtmegaExtInterrupt.fired();
 	}
 
-	default async event void HplAtmegaExtInterrupt.fired() {}
+	default async event void HplAtmegaExtInterrupt.fired() { }
 
 	async command bool HplAtmegaExtInterrupt.test() {
 		return (EIFR_REG & (1<<EIFR_PIN)) != 0;
@@ -67,10 +67,12 @@ implementation
 
 	async command void HplAtmegaExtInterrupt.enable() {
 		EIMSK_REG |= 1<<EIMSK_PIN;
+		call HplAtmegaExtInterruptSig.update();
 	}
 
 	async command void HplAtmegaExtInterrupt.disable() {
 		EIMSK_REG &= ~(1<<EIMSK_PIN);
+		call HplAtmegaExtInterruptSig.update();
 	}
 
 	async command bool HplAtmegaExtInterrupt.isEnabled() {

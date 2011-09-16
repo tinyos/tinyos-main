@@ -29,18 +29,68 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Andras Biro
+ * Author: Miklos Maroti
  */
 
-configuration AtmegaExtInterrupt0C
+module HplAtmegaExtInterruptSigP
 {
-  provides interface GpioInterrupt;
+	provides
+	{
+		interface HplAtmegaExtInterruptSig[uint8_t vector];
+		interface McuPowerOverride;
+	}
+
+	uses interface McuPowerState;
 }
 
 implementation
 {
-  components HplAtmegaExtInterrupt0C, new AtmegaExtInterruptP();
+	AVR_ATOMIC_HANDLER( INT0_vect )	{
+		signal HplAtmegaExtInterruptSig.fired[0]();
+	}
 
-  GpioInterrupt = AtmegaExtInterruptP;
-  AtmegaExtInterruptP.HplAtmegaExtInterrupt -> HplAtmegaExtInterrupt0C;
+	AVR_ATOMIC_HANDLER( INT1_vect )	{
+		signal HplAtmegaExtInterruptSig.fired[1]();
+	}
+
+	AVR_ATOMIC_HANDLER( INT2_vect )	{
+		signal HplAtmegaExtInterruptSig.fired[2]();
+	}
+
+	AVR_ATOMIC_HANDLER( INT3_vect )	{
+		signal HplAtmegaExtInterruptSig.fired[3]();
+	}
+
+	AVR_ATOMIC_HANDLER( INT4_vect )	{
+		signal HplAtmegaExtInterruptSig.fired[4]();
+	}
+
+	AVR_ATOMIC_HANDLER( INT5_vect )	{
+		signal HplAtmegaExtInterruptSig.fired[5]();
+	}
+
+	AVR_ATOMIC_HANDLER( INT6_vect )	{
+		signal HplAtmegaExtInterruptSig.fired[6]();
+	}
+
+	AVR_ATOMIC_HANDLER( INT7_vect )	{
+		signal HplAtmegaExtInterruptSig.fired[7]();
+	}
+
+	default async event void HplAtmegaExtInterruptSig.fired[uint8_t vector]() { }
+
+	async command void HplAtmegaExtInterruptSig.update[uint8_t vector]()
+	{
+		if( vector >= 4 )
+			call McuPowerState.update();
+	}
+
+	async command mcu_power_t McuPowerOverride.lowestState()
+	{
+		// we assume edge triggered interrupt mode (POWER_DOWN is fine for level triggered)
+		if( (EIMSK & 0xF0) != 0 )
+			return ATM128_POWER_IDLE;
+		else
+			return ATM128_POWER_DOWN;
+	}
 }

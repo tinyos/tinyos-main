@@ -36,7 +36,7 @@ interface HplAtmegaExtInterrupt
 {
 // ----- external interrupt flag register (EIFR)
 
-	/* Signalled when any of the enabled pins changed */
+	/* Signalled when the interrupt is executed */
 	async event void fired();
 
 	/* Tests if an interrupt is pending */
@@ -59,7 +59,7 @@ interface HplAtmegaExtInterrupt
 // ----- external interrupt control register (EICR)
 
 	/* Selects the operation mode. Must be called in atomic context
-	   and the interrupt flag should be cleared afterwards*/
+	   and the interrupt flag should be cleared afterwards */
 	async command void setMode(uint8_t mode);
 
 	/* Returns the operation mode */
