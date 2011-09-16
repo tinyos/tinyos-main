@@ -160,6 +160,8 @@ implementation {
 
   event void TimeoutTimer.fired(){
     printfUART("TSL: timeout\n");
+    call Resource.release();
+    signal Light.readDone(FAIL, 0);
   }
 
   default event void Light.readDone(error_t error, uint16_t data){
