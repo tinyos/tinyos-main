@@ -59,7 +59,7 @@ configuration Atm128AdcC
 }
 implementation
 {
-  components Atm128AdcP, HplAtm128AdcC, McuInitC, MainC,
+  components Atm128AdcP, HplAtm128AdcC, McuInitC, MainC, PlatformC,
     new RoundRobinArbiterC(UQ_ATM128ADC_RESOURCE) as AdcArbiter,
     new AsyncStdControlPowerManagerC() as PM;
 
