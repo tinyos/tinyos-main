@@ -549,7 +549,6 @@ uint8_t *unpack_address(struct in6_addr *addr, uint8_t dispatch,
           addr->s6_addr[i+8] = frame->i_laddr.data[7-i];
         addr->s6_addr[8] ^= 0x2;
       } else {
-        printf("HERE\n");
         addr->s6_addr16[4] = htons(letohs(pan) & ~0x0200);
         addr->s6_addr[11] = 0xff;
         addr->s6_addr[12] = 0xfe;
