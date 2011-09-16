@@ -318,17 +318,18 @@ module Dhcp6ClientP {
           return;
 
         // see if there's an error code
-        status = findOption(ia + 1, ntohs(ia->len) - sizeof(struct dh6_ia), 13);
+        status = findOption(ia + 1, ntohs(ia->len) + sizeof(struct dh6_opt_header) - sizeof(struct dh6_ia), 13);
         if (status) {
           if (status->code != htons(0)) {
-            m_state = DH6_SOLICIT;
+            m_state = (m_state == DH6_RENEW) ? DH6_REQUEST : DH6_SOLICIT;
             call IPAddress.removeAddress();
+            call Timer.startOneShot (0); // attempt immediate recovery
             return;
           }
         }
 
         // otherwise, hopefully there's an address
-        addr_opt = findOption(ia + 1, ntohs(ia->len) - sizeof(struct dh6_ia), 5);
+        addr_opt = findOption(ia + 1, ntohs(ia->len) + sizeof(struct dh6_opt_header) - sizeof(struct dh6_ia), 5);
         if (addr_opt) {
           struct dh6_iaaddr *addr = addr_opt;
           // got an address... save it and wait for it to expire
