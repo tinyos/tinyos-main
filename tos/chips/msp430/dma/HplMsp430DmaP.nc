@@ -52,15 +52,17 @@ implementation {
 
   // X1 family share the same interrupt vector with DAC, X2 family has its own
 
-  #if defined(__msp430x261x) || defined(__msp430x26x)
-    TOSH_SIGNAL( DMA_VECTOR ) {
-      signal Interrupt.fired();
-    }
+  #if defined(DACDMA_VECTOR)
+    #define XX_DMA_VECTOR_XX DACDMA_VECTOR
+  #elif defined(DMA_VECTOR)
+    #define XX_DMA_VECTOR_XX DMA_VECTOR
   #else
-    TOSH_SIGNAL( DACDMA_VECTOR ) {
-      signal Interrupt.fired();
-    }
+    #error "DMA VECTOR not defined for cpu selected"
   #endif
+
+  TOSH_SIGNAL( XX_DMA_VECTOR_XX ) {
+    signal Interrupt.fired();
+  }
 
   async command void DmaControl.setOnFetch(){
     DMACTL1 |= DMAONFETCH;
