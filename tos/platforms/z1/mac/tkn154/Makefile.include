@@ -1,0 +1,8 @@
+# We include several platform-glue components from telosb, because they are
+# identical on the z1 platform (e.g. Ieee802154BeaconEnabledC.nc,
+# Ieee802154NonBeaconEnabledC.nc,TKN154TimingP.nc, etc.)
+
+CFLAGS += -I$(TOSDIR)/platforms/z1/mac/tkn154 \
+	-I$(TOSDIR)/platforms/telosb/mac/tkn154 \
+	-I$(TOSDIR)/platforms/telosb/mac/tkn154/timer \
+	-I$(TOSDIR)/chips/cc2420_tkn154
