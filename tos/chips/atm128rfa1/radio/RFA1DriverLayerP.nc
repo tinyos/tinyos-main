@@ -177,13 +177,18 @@ implementation
   {
     CCA_THRES=RFA1_CCA_THRES_VALUE;
 
-    //TODO PA_EXT settings with defines
-    PHY_TX_PWR=RFA1_PA_BUF_LT | RFA1_PA_LT | (RFA1_DEF_RFPOWER&RFA1_TX_PWR_MASK)<<TX_PWR0;
+#ifdef RFA1_ENABLE_PA
+    SET_BIT(DDRG,0);	// DIG3
+    CLR_BIT(PORTG,0);
+    SET_BIT(DDRF, 3);	// DIG0
+    CLR_BIT(PORTF, 3);
+#endif
+    PHY_TX_PWR = RFA1_PA_BUF_LT | RFA1_PA_LT | (RFA1_DEF_RFPOWER&RFA1_TX_PWR_MASK)<<TX_PWR0;
 
     txPower = RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK;
     channel = RFA1_DEF_CHANNEL & RFA1_CHANNEL_MASK;
     TRX_CTRL_1 |= 1<<TX_AUTO_CRC_ON;
-    PHY_CC_CCA=RFA1_CCA_MODE_VALUE|channel;
+    PHY_CC_CCA = RFA1_CCA_MODE_VALUE | channel;
 
     SET_BIT(TRXPR,SLPTR);
 
@@ -253,14 +258,18 @@ implementation
       IRQ_MASK = 1<<PLL_LOCK_EN | 1<<TX_END_EN | 1<<RX_END_EN | 1<< RX_START_EN | 1<<CCA_ED_DONE_EN;
       call McuPowerState.update();
 
-      // setChannel was ignored in SLEEP because the SPI was not working, so do it here
-      PHY_CC_CCA = RFA1_CCA_MODE_VALUE | channel;
-
       TRX_STATE = CMD_RX_ON;
+#ifdef RFA1_ENABLE_PA
+      SET_BIT(TRX_CTRL_1, PA_EXT_EN);
+#endif
+
       state = STATE_TRX_OFF_2_RX_ON;
     }
     else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY) && state == STATE_RX_ON )
     {
+#ifdef RFA1_ENABLE_PA
+      CLR_BIT(TRX_CTRL_1, PA_EXT_EN);
+#endif
       TRX_STATE = CMD_FORCE_TRX_OFF;
 
       IRQ_MASK = 0;
