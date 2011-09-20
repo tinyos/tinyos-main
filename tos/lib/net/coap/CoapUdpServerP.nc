@@ -42,12 +42,17 @@
 
 #define INDEX "CoAPUdpServer: It works!!"
 
-#define GENERATE_PDU(var,t,c,i) {		\
+#define GENERATE_PDU(var,t,c,i,copy_token) {	\
     var = coap_new_pdu();			\
     if (var) {					\
+      coap_opt_t *tok;				\
       var->hdr->type = (t);			\
       var->hdr->code = (c);			\
       var->hdr->id = (i);			\
+      tok = coap_check_option(node->pdu, COAP_OPTION_TOKEN); \
+      if (tok && copy_token)			\
+        coap_add_option(			\
+          pdu, COAP_OPTION_TOKEN, COAP_OPT_LENGTH(*tok), COAP_OPT_VALUE(*tok));\
     }						\
   }
 
@@ -281,7 +286,7 @@ module CoapUdpServerP {
   coap_pdu_t *new_ack( coap_context_t  *ctx, coap_queue_t *node ) {
     coap_pdu_t *pdu;
     //printf("** coap: new_ack\n");
-    GENERATE_PDU(pdu,COAP_MESSAGE_ACK,0,node->pdu->hdr->id);
+    GENERATE_PDU(pdu,COAP_MESSAGE_ACK,0,node->pdu->hdr->id,0);
 
     return pdu;
   }
@@ -289,7 +294,7 @@ module CoapUdpServerP {
   coap_pdu_t *new_rst( coap_context_t  *ctx, coap_queue_t *node,
 		       unsigned int code ) {
     coap_pdu_t *pdu;
-    GENERATE_PDU(pdu,COAP_MESSAGE_RST,code,node->pdu->hdr->id);
+    GENERATE_PDU(pdu,COAP_MESSAGE_RST,code,node->pdu->hdr->id,1);
     return pdu;
   }
 
@@ -297,7 +302,7 @@ module CoapUdpServerP {
 			    unsigned int code ) {
     coap_pdu_t *pdu;
     //printf("** coap: new_response %i\n", code);
-    GENERATE_PDU(pdu,COAP_MESSAGE_ACK,code,node->pdu->hdr->id);
+    GENERATE_PDU(pdu,COAP_MESSAGE_ACK,code,node->pdu->hdr->id,1);
 
     return pdu;
   }
@@ -305,7 +310,7 @@ module CoapUdpServerP {
   coap_pdu_t *new_asynresponse( coap_context_t  *ctx, coap_queue_t *node) {
     coap_pdu_t *pdu;
     //printf("** coap: new_asynresponse\n");
-    GENERATE_PDU(pdu,COAP_MESSAGE_CON,COAP_RESPONSE_200,node->pdu->hdr->id);
+    GENERATE_PDU(pdu,COAP_MESSAGE_CON,COAP_RESPONSE_200,node->pdu->hdr->id,1);
 
     return pdu;
   }
@@ -443,7 +448,7 @@ module CoapUdpServerP {
 						  uint8_t buflen) {
    coap_queue_t *node;
    coap_pdu_t *pdu;
-   coap_opt_t *tok, *ct;
+   coap_opt_t *ct;
 
    //printf("** coap: getDone.... %i\n", uri_key);
 
@@ -484,11 +489,6 @@ module CoapUdpServerP {
    if ( ct ) {
      coap_add_option( pdu, COAP_OPTION_CONTENT_TYPE, COAP_OPT_LENGTH(*ct),COAP_OPT_VALUE(*ct) );
    }
-
-   // Add token option to PDU
-   tok = coap_check_option(node->pdu, COAP_OPTION_TOKEN);
-   if (tok)
-     coap_add_option(pdu, COAP_OPTION_TOKEN, COAP_OPT_LENGTH(*tok), COAP_OPT_VALUE(*tok));
 
    // Add buffer value to the PDU
    if (!coap_add_data(pdu, buflen, val_buf)) {
