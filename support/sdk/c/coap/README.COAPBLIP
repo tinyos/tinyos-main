@@ -4,7 +4,7 @@ README.COAPBLIP
 
 Please read the entire documentation how to set up CoAP on TinyOS
 first:
-http://docs.tinyos.net/index.php/CoAP
+http://docs.tinyos.net/tinywiki/index.php/CoAP
 
 ==========================
 Example Client Usage
