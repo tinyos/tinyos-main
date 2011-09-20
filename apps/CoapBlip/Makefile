@@ -3,7 +3,7 @@ COMPONENT=CoapBlipC
 # uncomment this for network programming support
 # BOOTLOADER=tosboot
 
-#CFLAGS += -DCC2420_DEF_CHANNEL=16
+#CFLAGS += -DCC2420_DEF_CHANNEL=21
 #CFLAGS += -DRF230_DEF_CHANNEL=16
 #CFLAGS += -DCC2420_DEF_RFPOWER=4
 
@@ -26,7 +26,7 @@ PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
 PFLAGS += -DIN6_PREFIX=\"fec0::\"
 
 # printf debugs. works only on telosb/tmote sky.
-#CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
+# CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
 # uncomment this line if you are having problems displaying the new printf semantics
 # CFLAGS += -DPRINTF_BUFFER_SIZE=1024
 
@@ -39,11 +39,11 @@ CFLAGS += -DMAX_URI_LENGTH=5
 # set available resources.
 # Don't forget to change CFLAG: NUM_URIS!!!!!
 CFLAGS += -DNUM_URIS=1
-CFLAGS += -DCOAP_RESOURCE_TEMP
+#CFLAGS += -DCOAP_RESOURCE_TEMP
 #CFLAGS += -DCOAP_RESOURCE_HUM
 #CFLAGS += -DCOAP_RESOURCE_VOLT
 #CFLAGS += -DCOAP_RESOURCE_KEY
-#CFLAGS += -DCOAP_RESOURCE_LED
+CFLAGS += -DCOAP_RESOURCE_LED
 #CFLAGS += -DCOAP_RESOURCE_ALL #TEMP + HUM + VOLT
 
 ################ CoAP Client ################################
