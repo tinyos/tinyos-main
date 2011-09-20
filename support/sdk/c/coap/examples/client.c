@@ -301,32 +301,36 @@ message_handler( coap_context_t  *ctx, coap_queue_t *node, void *data) {
     }
 
 #ifdef SHOWREALVALUES
-    if (strstr(uri.path.s, "st") ) {
+
+
+
+
+    if (strcmp(uri.path.s, "st") == 0 ) {
       printf("\n** Temperatur: %4.2f K\n\n", ((float)char_to_uint16(node->pdu->data))/100);
-    } else if (strstr(uri.path.s, "sh")) {
+    } else if (strcmp(uri.path.s, "sh") == 0) {
       printf("\n** Humidity: %4.2f %% \n\n",  ((float)char_to_uint16(node->pdu->data))/100);
-    } else if (strstr(uri.path.s, "sv")) {
+    } else if (strcmp(uri.path.s, "sv") == 0) {
       printf("** Voltage: %4.2f V\n\n",  ((float)char_to_uint16(node->pdu->data))/100);
-    } else if (strstr(uri.path.s, "ck")) {
+    } else if (strcmp(uri.path.s, "ck") == 0) {
       if (len != 0) {
 	printf("** AES Key received \n");
       } else {
 	printf("** AES Key set\n");
       }
-    } else if (strstr(uri.path.s, "tsr")) {
+    } else if (strcmp(uri.path.s, "tsr") == 0) {
       printf("** tsr\n");
-    } else if (strstr(uri.path.s, "par")) {
+    } else if (strcmp(uri.path.s, "par") == 0) {
       printf("** par\n");
-    } else if (strstr(uri.path.s, "l")) {
+    } else if (strcmp(uri.path.s, "l") == 0) {
       if (len != 0) {
 	printf("\n** led 0 (red)   %s\n** led 1 (green) %s\n** led 2 (blue)  %s\n\n",
 	       ( (char_to_uint16(node->pdu->data)    %2) == 0) ? "OFF": "ON",
 	       (((char_to_uint16(node->pdu->data)>>1)%2) == 0) ? "OFF": "ON",
 	       (((char_to_uint16(node->pdu->data)>>2)%2) == 0) ? "OFF": "ON");
       } else {
-	printf("** LED'S set\n");
+	printf("** LEDs set\n");
       }
-    } else if (strstr(uri.path.s, "r")) {
+    } else if (strcmp(uri.path.s, "r") == 0) {
       val_all val = char_to_val_all(node->pdu->data);
       printf("\n** All values: \n");
       if (val.temp != (0xFFFF | 0xFFFE))
@@ -341,7 +345,9 @@ message_handler( coap_context_t  *ctx, coap_queue_t *node, void *data) {
 	printf("** Voltage:     %4.2f V\n\n",  ((float) val.volt)/100);
       else
 	printf("** Voltage:     NaN\n\n");
-    }  else {
+    } else if (strcmp(uri.path.s, "lipsum") == 0) {
+    } else if (strcmp(uri.path.s, "time") == 0) {
+    } else {
       printf("** unknown URI\n");
     }
 #endif
@@ -793,9 +799,9 @@ main(int argc, char **argv) {
 	coap_dispatch( ctx );	/* and dispatch PDUs from receivequeue */
 
 	// koo second read is done to process the asyn response. TODO this has to be done properly by checking the type of message
-	coap_read( ctx );	/* read received data */
-	coap_dispatch( ctx );	/* and dispatch PDUs from receivequeue */
-	// koo
+// 	coap_read( ctx );	/* read received data */
+// 	coap_dispatch( ctx );	/* and dispatch PDUs from receivequeue */
+// 	// koo
       }
     }
   }
