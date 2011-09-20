@@ -63,6 +63,33 @@ module CoapUdpServerP {
   coap_context_t *ctx_server;
   unsigned short tid;
 
+  // unlink a given node from the queue
+  int
+  coap_extract_node(coap_queue_t **queue, coap_queue_t *node)
+  {
+    coap_queue_t *q;
+    if (!queue)
+      return 0;
+
+    q = *queue;
+    if (q == node)
+    {
+      *queue = node->next;
+      return 1;
+    }
+
+    for (;q; q = q->next)
+    {
+      if (q->next == node)
+      {
+        q->next = node->next;
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+
   //get uri (char) from key (int)
   //defined in tinyos_coap_ressources.h
   char* get_uri(uint8_t key) {
@@ -426,7 +453,7 @@ module CoapUdpServerP {
      return;
    }
 
-   if (result){
+   if (result != SUCCESS){
      //printf("** coap: sensor retrival failed\n");
 
      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) {
@@ -452,6 +479,7 @@ module CoapUdpServerP {
      }
    }
    // Add content-encoding
+   // TODO - this should come from the resource, not the request!
    ct = coap_check_option( node->pdu, COAP_OPTION_CONTENT_TYPE );
    if ( ct ) {
      coap_add_option( pdu, COAP_OPTION_CONTENT_TYPE, COAP_OPT_LENGTH(*ct),COAP_OPT_VALUE(*ct) );
@@ -476,7 +504,7 @@ module CoapUdpServerP {
    }
 
    /* remove node from asynresqueue */
-   ctx_server->asynresqueue = ctx_server->asynresqueue->next;
+   coap_extract_node (&ctx_server->asynresqueue, node);
    node->next = NULL;
    coap_delete_node( node );
    //printf("** coap: delete node details kept for Asyn response\n");
@@ -514,7 +542,7 @@ module CoapUdpServerP {
 
    if (reqtoken) {
      /* remove node from asynresqueue */
-     ctx_server->asynresqueue = ctx_server->asynresqueue->next;
+     coap_extract_node (&ctx_server->asynresqueue, node);
      node->next = NULL;
      coap_delete_node(node);
      //printf("** coap: delete node details kept for Asyn response\n");
@@ -672,7 +700,7 @@ module CoapUdpServerP {
    }
 
    /* remove node from asynresqueue */
-   ctx_server->asynresqueue = ctx_server->asynresqueue->next;
+   coap_extract_node (&ctx_server->asynresqueue, node);
    node->next = NULL;
    coap_delete_node( node );
    //printf("** coap: delete node details kept for Asyn response\n");
