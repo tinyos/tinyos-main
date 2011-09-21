@@ -41,7 +41,6 @@
 #include "Timer.h"
 #include "RadioCountToLeds.h"
 
-//#include "printf.h"
 /**
  * Implementation of the RadioCountToLeds application. RadioCountToLeds
  * maintains a 4Hz counter, broadcasting its value in an AM packet
@@ -136,8 +135,7 @@ implementation {
     if (len != sizeof(radio_count_msg_t)) {return bufPtr;}
     else {
       radio_count_msg_t* rcm = (radio_count_msg_t*)payload;
-      //printf("counter: %d len: %d\n",rcm->counter, len);
-      //printfflush();
+
       if (rcm->counter & 0x1) {
 	call Leds.led0On();
       }
