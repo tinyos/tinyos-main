@@ -31,6 +31,7 @@ uint8_t *pack_ieee154_header(uint8_t *buf, size_t cnt,
   fcf = (IEEE154_TYPE_DATA << IEEE154_FCF_FRAME_TYPE);
   fcf |= (frame->ieee_src.ieee_mode << IEEE154_FCF_SRC_ADDR_MODE);
   fcf |= (frame->ieee_dst.ieee_mode << IEEE154_FCF_DEST_ADDR_MODE);
+  fcf |= (1 << IEEE154_FCF_INTRAPAN);
 
   ieee_hdr[1] = (fcf & 0xff);
   ieee_hdr[2] = (fcf >> 8);
