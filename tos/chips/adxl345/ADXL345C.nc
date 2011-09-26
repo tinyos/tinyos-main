@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2009 DEXMA SENSORS SL
- * Copyright (c) 20011 ZOLERTIA LABS
+ * Copyright (c) 2011 ZOLERTIA LABS
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
