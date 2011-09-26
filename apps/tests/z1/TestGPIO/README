@@ -1,0 +1,23 @@
+README for the GPIO pin test of Zolertia Z1 mote
+Author/Contact: Antonio Linan <alinan@zolertia.com>
+
+Description:
+
+This application test configuring the pull-up resistors and the GPIO pins by
+starting a PWM signal.
+
+The data is printed over the serial port, using a client like putty or
+picocom you can see the readings of the sensor adjusting the serial port
+to this configuration:
+
+bauds: 115200
+bits: 8
+parity: none
+
+Tools:
+
+None
+
+Known bugs/limitations:
+
+None.
