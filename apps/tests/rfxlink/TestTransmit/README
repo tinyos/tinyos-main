@@ -3,6 +3,7 @@ TestTransmit:
 This application sends a very short message (2 bytes) every 2 millisec
 without checking for other traffic. We want to test if the radio driver
 locks up because we want to transmit while receiving another message.
+You can change the sending interval in the makefile.
 
 It blinks the 0th LED (red) when 256 times RadioSend.send() returns with
 an error. It blinks the 1st LED (green) when 256 times the RadioSend.send()

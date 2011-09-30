@@ -86,6 +86,9 @@ implementation
 #elif defined(PLATFORM_UCMINI)
 	components RFA1DriverLayerC as RadioDriverLayerC;
 	components RFA1RadioP as RadioP;
+#elif defined(PLATFORM_UCDUAL)
+	components Si443xDriverLayerC as RadioDriverLayerC;
+	components Si443xRadioP as RadioP;
 #endif
 
 	components RadioDriverConfigP;
@@ -95,5 +98,7 @@ implementation
 	RadioDriverLayerC.TransmitPowerFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
+#if !defined(PLATFORM_UCMINI)
 	RadioDriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
+#endif
 }

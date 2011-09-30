@@ -92,18 +92,23 @@ implementation
 		call RadioAlarm.wait(1);
 	}
 
-	tasklet_norace uint16_t next;
+	tasklet_norace tradio_size next;
 
 	tasklet_async event void RadioAlarm.fired()
 	{
 		uint8_t *payload;
 		error_t error;
+		int32_t delay;
 
-		next += 2000 * RADIO_ALARM_MICROSEC;
+		next += SEND_INTERVAL * RADIO_ALARM_MICROSEC;
 		atomic
 		{
-			call RadioAlarm.wait(next - call RadioAlarm.getNow());
+			delay = next - call RadioAlarm.getNow();
+			if( delay <= 0 )
+				delay = 1;
+			call RadioAlarm.wait(delay);
 		}
+		RADIO_ASSERT( delay > 1 );
 
 		payload = ((void*)&msgbuffer) + call RadioPacket.headerLength(&msgbuffer);
 

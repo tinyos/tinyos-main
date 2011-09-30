@@ -1,5 +1,8 @@
 COMPONENT=TestRadioDriverC
 
+# send every 2 milliseconds
+CFLAGS += -DSEND_INTERVAL=2000
+
 CFLAGS += -I$(TOSDIR)/lib/diagmsg
 CFLAGS += -DDIAGMSG_RECORDED_MSGS=60
 CFLAGS += -DRADIO_DEBUG 

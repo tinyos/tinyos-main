@@ -49,6 +49,8 @@ module RadioDriverConfigP
 		interface CC2420XDriverConfig as RadioDriverConfig;
 #elif defined(PLATFORM_UCMINI)
 		interface RFA1DriverConfig as RadioDriverConfig;
+#elif defined(PLATFORM_UCDUAL)
+		interface Si443xDriverConfig as RadioDriverConfig;
 #endif
 	}
 }
@@ -70,10 +72,12 @@ implementation
 		return 0;
 	}
 
+#if ! defined(PLATFORM_UCMINI)
 	async command uint8_t RadioDriverConfig.headerPreloadLength()
 	{
 		return 7;
 	}
+#endif
 
 	async command bool RadioDriverConfig.requiresRssiCca(message_t* msg)
 	{
