@@ -72,9 +72,8 @@ implementation{
     if(err==SUCCESS){
       call Power.clr();
       call Timer.startOneShot(10);
-      return SUCCESS;
-    } else
-      return err;
+    }
+    return err;
   }
   
   event void Timer.fired(){
@@ -89,8 +88,7 @@ implementation{
       if(powerOn)
         signal SplitControl.startDone(SUCCESS);
     } else {
-      if(!powerOn)
-        call Timer.stop();
+      call Timer.stop();
       call Power.set();
       signal SplitControl.startDone(err);
     }
@@ -113,10 +111,8 @@ implementation{
       spiOn=FALSE;
       call Power.set();
       powerOn=FALSE;
-      signal SplitControl.startDone(SUCCESS);
-    } else {
-      signal SplitControl.startDone(err);
     }
+    signal SplitControl.stopDone(err);
   }
 #endif
 }
