@@ -46,12 +46,9 @@ implementation {
   I2CBusP.Power -> IO.PortF1;
 #endif
 
-  components Sht21C, Bh1750fviC, new Ms5607C(FALSE);
+  components Sht21C, Bh1750fviC, new Ms5607C(FALSE), new TimerMilliC();
   I2CBusP.TemphumSplit -> Sht21C.SplitControl;
   I2CBusP.LightSplit   -> Bh1750fviC.SplitControl;
   I2CBusP.PressureSplit-> Ms5607C.SplitControl;
-
-  components DiagMsgC, LedsC;
-  I2CBusP.DiagMsg -> DiagMsgC;
-  I2CBusP.Leds -> LedsC;
+  I2CBusP.Timer->TimerMilliC;
 }
