@@ -212,12 +212,12 @@ implementation {
 
   
   async command uint8_t SPI.getClock () {                
-    return READ_FLAG(SPCR, ((1 << SPR1) | (1 <<SPR0)));
+    return READ_FLAG(SPCR, ((1 << SPR1) | (1 << SPR0)));
   }
   
   async command void SPI.setClock (uint8_t v) {
-    v &= (SPR1) | (SPR0);
-    SPCR = (SPCR & ~(SPR1 | SPR0)) | v;
+    v &= (1 << SPR1) | (1 << SPR0);
+    SPCR = (SPCR & ~((1 << SPR1) | (1 << SPR0))) | v;
   }
 
   async command bool SPI.hasWriteCollided() {
