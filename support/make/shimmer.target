@@ -1,7 +1,7 @@
 PLATFORM = shimmer
 
 # Remove MSP430 hardware multiply disable: new msp430-gcc fixes
-PFLAGS += -mdisable-hwmul 
+# PFLAGS += -mdisable-hwmul 
 
 OPTFLAGS += -O
 
