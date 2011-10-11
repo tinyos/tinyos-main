@@ -48,7 +48,7 @@ configuration HplStm25pPinsC {
 
 implementation {
 
-  components HplAtm128GeneralIOC as IO;
+  components AtmegaGeneralIOC as IO;
   components new NoPinC();
   #if (UCMINI_REV==49||UCMINI_REV==52||UCMINI_REV==53)
     CSN = IO.PortB4;

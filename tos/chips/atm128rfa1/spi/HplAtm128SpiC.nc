@@ -77,7 +77,7 @@ configuration HplAtm128SpiC {
 }
 implementation
 {
-  components HplAtm128GeneralIOC as IO, HplAtm128SpiP as HplSpi;
+  components AtmegaGeneralIOC as IO, HplAtm128SpiP as HplSpi;
   components McuSleepC;
   
   SpiBus = HplSpi;

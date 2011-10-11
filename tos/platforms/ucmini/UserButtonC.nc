@@ -39,9 +39,9 @@ configuration UserButtonC {
   provides interface Notify<button_state_t>;
 }
 implementation{
-  components UserButtonP, AtmegaPinChange0C, HplAtm128GeneralIOC, MainC;
+  components UserButtonP, AtmegaPinChange0C, AtmegaGeneralIOC as IO, MainC;
   UserButtonP->AtmegaPinChange0C.GpioInterrupt[4];
-  UserButtonP->HplAtm128GeneralIOC.PortB4;
+  UserButtonP->IO.PortB4;
   MainC.SoftwareInit->UserButtonP;
   Get=UserButtonP;
   Notify=UserButtonP;

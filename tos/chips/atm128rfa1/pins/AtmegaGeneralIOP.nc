@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2010, University of Szeged
- * All rights reserved.
+ * Copyright (c) 2004-2005 Crossbow Technology, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,7 +11,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ * - Neither the name of Crossbow Technology nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -29,46 +28,31 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Miklos Maroti
+ * @author Martin Turon <mturon@xbow.com>
+ * @author David Gay <dgay@intel-research.net>
+ * @author Miklos Maroti
  */
 
-interface AtmegaCapture<size_type>
+generic module AtmegaGeneralIOP(uint8_t port_addr, 
+				uint8_t ddr_addr, 
+				uint8_t pin_addr) @safe()
 {
-// ----- input capture register (ICR) 
+	provides interface GeneralIO as Pin[uint8_t bit];
+}
 
-	/* Returns the current captured value */
-	async command size_type get();
+implementation
+{
+#define pin (*TCAST(volatile uint8_t * ONE, pin_addr))
+#define port (*TCAST(volatile uint8_t * ONE, port_addr))
+#define ddr (*TCAST(volatile uint8_t * ONE, ddr_addr))
 
-	/* Sets the current captured value */
-	async command void set(size_type value);
+	inline async command bool Pin.get[uint8_t bit]() { return (pin & (1<<bit)) != 0; }
+	inline async command void Pin.set[uint8_t bit]() { port |= 1<<bit; }
+	inline async command void Pin.clr[uint8_t bit]() { port &= ~(1<<bit); }
+	inline async command void Pin.toggle[uint8_t bit]() { atomic port ^= 1 <<bit; }
 
-// ----- timer interrupt flag register (TIFR), input capture flag (ICF)
-
-	/* Signalled when the captured event has occured */
-	async event void fired();
-
-	/* Tests if there is a pending captured event */
-	async command bool test();
-
-	/* Resets a pending interrupt */
-	async command void reset();
-
-// ----- timer interrupt mask register (TIMSK), input capture interrupt enable (ICIE)
-
-	/* Enables the capture interrupt */
-	async command void start();
-
-	/* Disables the capture interrupt */
-	async command void stop();
-
-	/* Checks is the overflow interrupt is enabled */
-	async command bool isOn();
-
-// ----- timer control register (TCCR), input capture mode (ICNC and ICES)
-
-	/* Sets the input capture mode bits */
-	async command void setMode(uint8_t mode);
-
-	/* Returns the input capture mode bits */
-	async command uint8_t getMode();
+	inline async command void Pin.makeInput[uint8_t bit]() { ddr &= ~(1<<bit); }
+	inline async command bool Pin.isInput[uint8_t bit]() { return (ddr & (1<<bit)) == 0; }
+	inline async command void Pin.makeOutput[uint8_t bit]() { ddr |= 1<<bit; }
+	inline async command bool Pin.isOutput[uint8_t bit]() { return (ddr & (1<<bit)) != 0;}
 }

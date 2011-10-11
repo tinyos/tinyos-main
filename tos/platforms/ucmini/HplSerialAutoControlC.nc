@@ -36,12 +36,12 @@ configuration HplSerialAutoControlC {
   provides interface GeneralIO;
 }
 implementation {
-  components AtmegaPinChange0C, HplAtm128GeneralIOC;
+  components AtmegaPinChange0C, AtmegaGeneralIOC as IO;
   #if ( defined(SERIAL_AUTO_VDD) || UCMINI_REV==49 )
-    GpioInterrupt=AtmegaPinChange0C.GpioInterrupt[7];
-    GeneralIO=HplAtm128GeneralIOC.PortB7;
+    GpioInterrupt = AtmegaPinChange0C.GpioInterrupt[7];
+    GeneralIO = IO.PortB7;
   #else
-    GpioInterrupt=AtmegaPinChange0C.GpioInterrupt[5];
-    GeneralIO=HplAtm128GeneralIOC.PortB5;
+    GpioInterrupt = AtmegaPinChange0C.GpioInterrupt[5];
+    GeneralIO = IO.PortB5;
   #endif
 }

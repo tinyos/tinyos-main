@@ -35,8 +35,7 @@ configuration I2CBusC {
   provides interface SplitControl as BusControl;
 }
 implementation {
-  components HplAtm128GeneralIOC, I2CBusP;
-  components HplAtm128GeneralIOC as IO;
+  components I2CBusP, AtmegaGeneralIOC as IO;
 
   BusControl = I2CBusP.SplitControl;
 

@@ -48,13 +48,12 @@ configuration HplAtm128I2CBusC {
 }
 implementation {
 
-  components HplAtm128GeneralIOC as IO, HplAtm128I2CBusP as Bus;
-	components McuSleepC;
+  components AtmegaGeneralIOC as IO, HplAtm128I2CBusP as Bus, McuSleepC;
   
   I2C         = Bus.I2C;
   Bus.I2CClk  -> IO.PortD0;
   Bus.I2CData -> IO.PortD1;
 
-	Bus.McuPowerState -> McuSleepC;
-	Bus.McuPowerOverride <- McuSleepC;
+  Bus.McuPowerState -> McuSleepC;
+  Bus.McuPowerOverride <- McuSleepC;
 }

@@ -47,7 +47,7 @@ configuration PlatformLedsC
 
 implementation
 {
-  components HplAtm128GeneralIOC as IO;
+  components AtmegaGeneralIOC as IO;
 
   components PlatformC;
   Init = PlatformC.LedsInit;

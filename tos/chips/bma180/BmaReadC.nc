@@ -44,7 +44,7 @@ configuration BmaReadC
 
 implementation
 {
-  components BmaReadP, LedsC, new TimerMilliC(), HplBma180C, DiagMsgC, SerialActiveMessageC, SpiImpC, HplAtm128GeneralIOC, LocalTimeMilliC;
+  components BmaReadP, LedsC, new TimerMilliC(), HplBma180C, DiagMsgC, SerialActiveMessageC, SpiImpC, LocalTimeMilliC;
 
   StdControl = BmaReadP.BmaControl;
   Read       = BmaReadP;

@@ -37,7 +37,7 @@ configuration HplImpC {
   provides interface Atm128Spi as SpiBus;
 }
 implementation {
-  components HplAtm128GeneralIOC as IO, HplImpP, HplBma180C;
+  components AtmegaGeneralIOC as IO, HplImpP, HplBma180C;
   components McuSleepC;
 
   SpiBus = HplImpP;
