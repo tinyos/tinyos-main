@@ -58,16 +58,16 @@ implementation
 	PacketAcknowledgements	= ActiveMessageC;
 	LowPowerListening	= ActiveMessageC;
 
-	PacketTimeStampRadio	= ActiveMessageC;
+	PacketTimeStampRadio	= ActiveMessageC.PacketTimeStampRadio;
 	TimeSyncAMSendRadio	= TimeSyncMessageLayerC;
 	TimeSyncPacketRadio	= TimeSyncMessageLayerC;
 
-	PacketTimeStampMilli	= ActiveMessageC;
+	PacketTimeStampMilli	= ActiveMessageC.PacketTimeStampMilli;
 	TimeSyncAMSendMilli	= TimeSyncMessageLayerC;
 	TimeSyncPacketMilli	= TimeSyncMessageLayerC;
 
-	TimeSyncMessageLayerC.PacketTimeStampRadio -> ActiveMessageC;
-	TimeSyncMessageLayerC.PacketTimeStampMilli -> ActiveMessageC;
+	TimeSyncMessageLayerC.PacketTimeStampRadio -> ActiveMessageC.PacketTimeStampRadio;
+	TimeSyncMessageLayerC.PacketTimeStampMilli -> ActiveMessageC.PacketTimeStampMilli;
 
 	components CC2420XDriverLayerC as DriverLayerC;
 	TimeSyncMessageLayerC.LocalTimeRadio -> DriverLayerC;
