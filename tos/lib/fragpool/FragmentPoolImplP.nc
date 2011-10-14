@@ -132,7 +132,8 @@ generic module FragmentPoolImplP (unsigned int NUM_POOLS) {
   {
     FragmentPoolSlot_t* sp;
     FragmentPoolSlot_t* spe;
-    FragmentPoolSlot_t* bsp = 0;
+    FragmentPoolSlot_t* bsp;
+    unsigned int bsp_length;
 
     atomic {
       CHECK_INITIALIZED__();
@@ -140,16 +141,20 @@ generic module FragmentPoolImplP (unsigned int NUM_POOLS) {
       sp = pools__[pid].slots;
       spe = sp + pools__[pid].slot_count;
 
-      /* Find the longest open fragment in the pool */
+      /* Find the longest open fragment in the pool that's at least
+       * the requested size. */
+      bsp = 0;
+      bsp_length = minimum_size;
       while (sp < spe) {
-        if (((! bsp) && (0 < sp->length)) || (bsp->length < sp->length)) {
-          bsp = sp;
-        }
+	if ((0 < sp->length) && (bsp_length <= sp->length)) {
+	  bsp = sp;
+	  bsp_length = sp->length;
+	}
         ++sp;
       }
 
-      /* If no fragments available, return failure. */
-      if ((! bsp) || (bsp->length < minimum_size)) {
+      /* If no satisfactory fragment is available, return failure. */
+      if (! bsp) {
         return ENOMEM;
       }
 
