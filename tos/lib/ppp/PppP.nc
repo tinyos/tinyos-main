@@ -310,6 +310,7 @@ module PppP {
 
     if (! tfp) {
       // @INSTRUMENT@
+      return EINVAL;
     }
     if (TFS_fixed != (tfp->frame_state & TFS_STATE_MASK)) {
       // @INSTRUMENT@
