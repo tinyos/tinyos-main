@@ -207,7 +207,7 @@ module PppIpv6P {
 
     if ((! fp) || ((fpe - fp) < len)) {
       if (fp) {
-	call Ppp.releaseOutputFrame(fp);
+	call Ppp.releaseOutputFrame(key);
       }
       return ENOMEM;
     }
