@@ -29,25 +29,14 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 * OF THE POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: Zsolt Szabo
+* Author: Andras Biro
 */
 
-
-configuration HplImpC {
-  provides interface Atm128Spi as SpiBus;
+generic module DummyBusPowerManagerC(){
+	provides interface BusPowerManager;
 }
 implementation {
-  components AtmegaGeneralIOC as IO, HplImpP, HplBma180C;
-  components McuSleepC;
-
-  SpiBus = HplImpP;
-
-  HplImpP.Mcu  -> McuSleepC;
-  HplImpP.McuPowerOverride <- McuSleepC;
-  //HplImpP.SS   -> IO.PortB6;
-  //HplImpP.SCK  -> IO.PortE2;
-  HplImpP.SS   -> HplBma180C.CSN;
-  HplImpP.SCK  -> HplBma180C.SCK;
-  HplImpP.MOSI -> IO.PortE1;
-  HplImpP.MISO -> IO.PortE0;
+	command void BusPowerManager.configure(uint16_t startup, uint16_t keepalive) {}
+	command void BusPowerManager.requestPower() { signal BusPowerManager.powerOn(); }
+	command void BusPowerManager.releasePower() {}
 }

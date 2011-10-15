@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2010, University of Szeged
+* Copyright (c) 2011, University of Szeged
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -31,49 +31,21 @@
 *
 * Author: Zsolt Szabo
 */
-module I2CBusP {
-  provides interface SplitControl;
-  uses interface SplitControl as TemphumSplit;
-  uses interface SplitControl as LightSplit;
-  uses interface SplitControl as PressureSplit;
-  uses interface Timer<TMilli>;
-  uses interface GeneralIO as Power;
+
+
+configuration HplAtm128rfa1Usart0SpiC {
+  provides interface Atm128Spi as SpiBus;
 }
 implementation {
-  
-  command error_t SplitControl.start() {
-    call Power.makeOutput();
-    call Power.set();
+  components AtmegaGeneralIOC as IO, HplAtm128rfa1Usart0SpiP, HplBma180C, new NoPinC();
+  components McuSleepC;
 
-    call TemphumSplit.start(); 
-    call LightSplit.start();
-    call PressureSplit.start();
-    call Timer.startOneShot(15);//sht21 boot-up time is the slowest
-    return SUCCESS;
-  }
-  
-  event void Timer.fired(){
-    signal SplitControl.startDone(SUCCESS);
-  }
-  
-  task void stopDone(){
-    signal SplitControl.stopDone(SUCCESS);
-  }  
+  SpiBus = HplAtm128rfa1Usart0SpiP;
 
-  command error_t SplitControl.stop() {
-    call Timer.stop();
-    call Power.makeOutput();
-    call Power.clr();
-    post stopDone();
-    return SUCCESS;
-  }
-  
-  event void TemphumSplit.startDone(error_t error) {}  
-  event void LightSplit.startDone(error_t error) {}
-  event void PressureSplit.startDone(error_t error) {}
-  event void TemphumSplit.stopDone(error_t error) {}
-  event void LightSplit.stopDone(error_t error) {}
-  event void PressureSplit.stopDone(error_t error) {}  
-  default event void SplitControl.startDone(error_t error) { }
-  default event void SplitControl.stopDone(error_t error) { }
+  HplAtm128rfa1Usart0SpiP.Mcu  -> McuSleepC;
+  HplAtm128rfa1Usart0SpiP.McuPowerOverride <- McuSleepC;
+  HplAtm128rfa1Usart0SpiP.SS   -> NoPinC;
+  HplAtm128rfa1Usart0SpiP.SCK  -> IO.PortE2;
+  HplAtm128rfa1Usart0SpiP.MOSI -> IO.PortE1;
+  HplAtm128rfa1Usart0SpiP.MISO -> IO.PortE0;
 }

@@ -1,5 +1,3 @@
-/// $Id: HplAtm128I2CBusP.nc,v 1.2 2010-11-19 22:55:12 szabomeister Exp $
-
 /*
  *  Copyright (c) 2004-2005 Crossbow Technology, Inc.
  *  All rights reserved.
@@ -53,8 +51,6 @@
  *
  * @author Martin Turon <mturon@xbow.com>
  * @author Philip Levis
- *
- * @version $Id: HplAtm128I2CBusP.nc,v 1.2 2010-11-19 22:55:12 szabomeister Exp $
  */
 module HplAtm128I2CBusP {
   provides interface HplAtm128I2CBus as I2C;

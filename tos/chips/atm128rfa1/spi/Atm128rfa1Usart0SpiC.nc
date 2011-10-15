@@ -33,7 +33,7 @@
 */
 
 
-configuration SpiImpC {
+configuration Atm128rfa1Usart0SpiC {
   provides interface Init;
   provides interface SpiByte;
   provides interface FastSpiByte;
@@ -41,21 +41,19 @@ configuration SpiImpC {
   provides interface Resource[uint8_t id];
 }
 implementation {
-  components SpiImpM, HplImpC;
+  components new Atm128SpiP(), HplAtm128rfa1Usart0SpiC;
   components new SimpleFcfsArbiterC("Atm128SpiC.Resource") as Arbiter;
   components McuSleepC;
 
-  Init        = SpiImpM;
-  SpiByte     = SpiImpM;
-  FastSpiByte = SpiImpM;
-  SpiPacket   = SpiImpM;
-  Resource    = SpiImpM;
+  Init        = Atm128SpiP;
+  SpiByte     = Atm128SpiP;
+  FastSpiByte = Atm128SpiP;
+  SpiPacket   = Atm128SpiP;
+  Resource    = Atm128SpiP;
 
-  SpiImpM.ArbiterInfo -> Arbiter;
-  SpiImpM.ResArb -> Arbiter;
-  SpiImpM.Spi -> HplImpC;
-  SpiImpM.McuPowerState -> McuSleepC;
+  Atm128SpiP.ArbiterInfo -> Arbiter;
+  Atm128SpiP.ResourceArbiter -> Arbiter;
+  Atm128SpiP.Spi -> HplAtm128rfa1Usart0SpiC;
+  Atm128SpiP.McuPowerState -> McuSleepC;
 
-  components DiagMsgC;
-  SpiImpM.DiagMsg -> DiagMsgC;
 }

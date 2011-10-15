@@ -82,12 +82,7 @@ implementation
     state = S_STARTING;
     call PWR.makeOutput();
     call PWR.set();
-    if(call DiagMsg.record()) {
-        call DiagMsg.str("start");
-        call DiagMsg.uint8(state);
-        call DiagMsg.send();
-      }
-     state = S_CONFIG;
+    state = S_CONFIG;
     return SUCCESS;
   }
 
@@ -172,10 +167,6 @@ implementation
       writeRegister(0xD, temp);
 
       state = S_IDLE;
-      if(call DiagMsg.record()) {
-        call DiagMsg.str("CONFIG");
-        call DiagMsg.send();
-      }
       call Timer.startOneShot(1);
     }
 

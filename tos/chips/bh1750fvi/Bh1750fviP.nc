@@ -29,150 +29,124 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 * OF THE POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: Zsolt Szabo
+* Author: Zsolt Szabo, Andras Biro
 */
-
-#include "Bh1750fvi.h" 
 
 module Bh1750fviP {
   provides interface Read<uint16_t> as Light;
-  provides interface SplitControl;
   
   uses interface I2CPacket<TI2CBasicAddr>;
   uses interface Timer<TMilli>;
   uses interface Resource as I2CResource;
-
-  uses interface DiagMsg;
+  uses interface BusPowerManager;
+  provides interface Init;
 }
 implementation {
-  uint16_t mesrslt=0;
-  uint8_t  res[2];
-  uint8_t cmd;
-  error_t lastError;
+  enum {
+    BH1750FVI_POWER_DOWN  = 0x00,
+    BH1750FVI_POWER_ON  = 0x01,
+    BH1750FVI_RESET         =       0x07,
+    BH1750FVI_CONT_H_RES    =       0x10,
+    BH1750FVI_CONT_H2_RES   =       0x11,
+    BH1750FVI_CONT_L_RES    =       0x13,
+    BH1750FVI_ONE_SHOT_H_RES        =       0x20,
+    BH1750FVI_ONE_SHOT_H2_RES       =       0x21,
+    BH1750FVI_ONE_SHOT_L_RES        =       0x23,
+  } bh1750fviCommand;
+
+  enum {
+    BH1750FVI_TIMEOUT_H_RES =       180, // max 180
+    BH1750FVI_TIMEOUT_H2_RES=       180, // max 180
+    BH1750FVI_TIMEOUT_L_RES =        24, // max 24
+    BH1750FVI_TIMEOUT_BOOT = 11,
+  } bh1750fviTimeout;
+
+  enum {
+    BH1750FVI_ADDRESS =       0x23,//0x46/0x47,  //if addr== H then it would be 0xb8/0xb9   
+  } bh1750fviHeader;
+  
+  uint8_t  i2cBuffer[2];
+  norace error_t lastError;
 
   enum {
     S_OFF = 0,
-    S_STARTING,
-    S_STOPPING,
     S_IDLE,
-    S_BUSY,
-    S_RESET,
+    S_BUSY_CMD,
+    S_BUSY_MEAS,
   };
   
-  norace uint8_t state = S_OFF;
-  bool on=0;
-  bool stopRequested = FALSE;
-
-  task void failTask() {
-    signal Light.readDone(FAIL, 0);
-  }
-
-  command error_t SplitControl.start() {
-    if(state == S_STARTING) return EBUSY;
-    if(state != S_OFF) return EALREADY;
-      
-    call Timer.startOneShot(11);
-    
-    return SUCCESS;
-  }
-
-  task void signalStopDone() {
-    signal SplitControl.stopDone(SUCCESS);
-  }
+  uint8_t state = S_OFF;
   
-  command error_t SplitControl.stop() {
-    if(state == S_STOPPING) return EBUSY;
-    if(state == S_OFF) return EALREADY;
-    if(state == S_IDLE) {
-      atomic state = S_OFF;
-      post signalStopDone();
-    } else {
-      stopRequested = TRUE;
-    }
+  command error_t Init.init(){
+    call BusPowerManager.configure(BH1750FVI_TIMEOUT_BOOT,BH1750FVI_TIMEOUT_BOOT);
     return SUCCESS;
-  }  
+  }
 
   command error_t Light.read() {
-    if(state == S_OFF) return EOFF;
-    if(state != S_IDLE) return EBUSY;
-
-    atomic state = S_RESET;   
-    call I2CResource.request();
+    uint8_t prevState=state;
+    if(state == S_BUSY_MEAS || state == S_BUSY_CMD) return EBUSY;
+    state = S_BUSY_CMD;
+    call BusPowerManager.requestPower();
+    if(prevState == S_IDLE)
+      call I2CResource.request();
     return SUCCESS;
   }
-
-  event void Timer.fired() {
-    if(state == S_OFF) {
-      atomic state = S_IDLE;
-      signal SplitControl.startDone(SUCCESS);
-    } else if(state == S_BUSY) {
-        if(call I2CPacket.read(I2C_START | I2C_STOP, READ_ADDRESS, 2, res) != SUCCESS)
-        {
-          call I2CResource.release();
-          post failTask();
-        }
-
-        if(stopRequested) {
-          atomic state = S_IDLE;
-          call SplitControl.stop();
-        }
-    }
-    else if(state == S_IDLE) {
-         call I2CResource.release();
-    }
+  
+  event void BusPowerManager.powerOn(){
+    if(state == S_BUSY_CMD)
+      call I2CResource.request();
+    else
+      state = S_IDLE;
   }
- 
+  
   task void signalReadDone() {
-    atomic {state= S_IDLE;
-    signal Light.readDone(lastError, mesrslt);}
+    state= S_IDLE;
+    call BusPowerManager.releasePower();
+    signal Light.readDone(lastError, ((i2cBuffer[0]<<8) | i2cBuffer[1]) );
   }
-
-  async event void I2CPacket.readDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data) {
-    lastError = error;
-    mesrslt = data[0]<<8;
-    mesrslt |= data[1];
-    call I2CResource.release();
-   
-    post signalReadDone();
+  
+  event void I2CResource.granted() {
+    if(state == S_BUSY_CMD){
+      i2cBuffer[0]=BH1750FVI_ONE_SHOT_H_RES;
+      lastError = call I2CPacket.write(I2C_START | I2C_STOP, BH1750FVI_ADDRESS, 1, i2cBuffer);
+    } else {
+      lastError=call I2CPacket.read(I2C_START | I2C_STOP, BH1750FVI_ADDRESS, 2, i2cBuffer);
+    }
+    if(lastError!=SUCCESS){
+      call I2CResource.release();
+      post signalReadDone();
+    }
   }
   
   task void startTimeout() {
-    if(state == S_IDLE) call Timer.startOneShot(TIMEOUT_H_RES);
-    else if(state == S_BUSY) call Timer.startOneShot(TIMEOUT_H_RES);
+    state=S_BUSY_MEAS;
+    call Timer.startOneShot(BH1750FVI_TIMEOUT_H_RES);
   }
 
   async event void I2CPacket.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data) {
+    call I2CResource.release();
     if(error != SUCCESS) {
-      call I2CResource.release();
-      post failTask();
+      lastError = error;
+      post signalReadDone();
     }
     else {
-      if (state == S_RESET) {
-        state = S_BUSY;
-        call I2CResource.release();
-        return (void)call I2CResource.request();
-      }
       post startTimeout();
     }
   }
+  
+  event void Timer.fired() {
+    call I2CResource.request();
+  }
+  
+  async event void I2CPacket.readDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data) {
+    lastError = error;
+    call I2CResource.release();
+    post signalReadDone();
+  }
 
-  event void I2CResource.granted() {
-    if(state == S_STARTING || state == S_RESET) {
-      cmd=POWER_ON;
-      if(call I2CPacket.write(I2C_START | I2C_STOP, WRITE_ADDRESS, 1, &cmd) != SUCCESS) {
-        call I2CResource.release();
-        post failTask();
-      }
-    } else if(state == S_BUSY) {
-      cmd=ONE_SHOT_H_RES;
-      if(call I2CPacket.write(I2C_START | I2C_STOP, WRITE_ADDRESS, 1, &cmd) != SUCCESS) {
-        call I2CResource.release();
-        post failTask();
-      }
-    }
+  event void BusPowerManager.powerOff(){
+    state=S_OFF;
   }
 
   default event void Light.readDone(error_t error, uint16_t val) { }
-  default event void SplitControl.startDone(error_t error) { }
-  default event void SplitControl.stopDone(error_t error) { }
 }

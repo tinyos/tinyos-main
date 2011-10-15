@@ -29,189 +29,335 @@
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 * OF THE POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: Zsolt Szabo
+* Author: Zsolt Szabo, Andras Biro
 */
 
-#include "Ms5607.h" 
+#include "Ms5607.h"
 
-module Ms5607P  {
-  provides interface Read<uint32_t> as Pressure;
-  provides interface Read<int16_t> as Temperature;
-  provides interface SplitControl;
-  
+//TODO: norace or atomic (state, i2cBuffer)
+//TODO: testing: SetPrecision, otherSensorRequested
+module Ms5607P {
+  provides interface Read<uint32_t> as ReadTemperature;
+  provides interface Read<uint32_t> as ReadPressure;
+  provides interface ReadRef<calibration> as ReadCalibration;
+  provides interface Set<uint8_t> as SetPrecision;
+  provides interface Init;
   uses interface Timer<TMilli>;
-  uses interface Read<uint32_t> as RawTemp;
-  uses interface Read<uint32_t> as RawPress;
-  uses interface Calibration as Cal;
-
-  uses interface Leds;
+  uses interface I2CPacket<TI2CBasicAddr>;
+  uses interface Resource as I2CResource;
+  uses interface BusPowerManager;
 }
 implementation {
   enum {
-    S_OFF = 0,
-    S_STARTING,
-    S_STOPPING,
-    S_ON,
-    S_READ_TEMP,
-    S_READ_PRESS,
+    MS5607_ADDRESS = 0x77,
   };
 
-  uint8_t res[3];
-  uint32_t mesres;
-  uint8_t state = S_OFF;
-  uint16_t c1,c2,c3,c4,c5,c6,OFF,SENS;
-  int32_t dT,P, tmpt;
-  int16_t TEMP;
-
-  int64_t tmp, mul;
-  int64_t mul64, tmp64;
-
-  bool stopRequested = FALSE;
-  bool otherSensorRequested = FALSE;
-  bool setup = TRUE;
-
-
-  command error_t SplitControl.start() {
-    if(state == S_STARTING) return EBUSY;
-    if(state != S_OFF) return EALREADY;
-    
-    call Timer.startOneShot(3);
-
+  enum {
+    MS5607_ADC_READ = 0x00,
+    MS5607_CONVERT_TEMPERATURE = 0x58, //-0..8, depending on precision (OSR)
+    MS5607_CONVERT_PRESSURE = 0x48, //-0..8, depending on precision (OSR)
+    MS5607_PROM_READ = 0xA0, // +(address << 1)
+  } ms5607_command;
+  
+  enum  {
+    MS5607_TIMEOUT_4096=10,
+    MS5607_TIMEOUT_2048=5,
+    MS5607_TIMEOUT_1024=3,
+    MS5607_TIMEOUT_512=2,
+    MS5607_TIMEOUT_256=1,
+    MS5607_TIMEOUT_RESET=3,
+  } ms5607_timeout; //in ms
+  
+  enum {
+    S_OFF = 0,
+    S_IDLE = 1,
+    S_READ_TEMP_CMD = 2,
+    S_READ_TEMP,
+    S_READ_PRESSURE_CMD,
+    S_READ_PRESSURE,
+    S_READ_CALIB_CMD1,
+    S_READ_CALIB_CMD2,
+    S_READ_CALIB_CMD3,
+    S_READ_CALIB_CMD4,
+    S_READ_CALIB_CMD5,
+    S_READ_CALIB_CMD6,
+    S_READ_CALIB,
+  };
+  
+  norace uint8_t state=S_OFF;
+  norace uint8_t i2cBuffer[3];
+  norace calibration *calib;
+  norace error_t lastError;
+  
+  uint8_t precision=MS5607_PRECISION;
+  bool otherSensorRequested=FALSE;
+  
+  command error_t Init.init(){
+    call BusPowerManager.configure(MS5607_TIMEOUT_RESET, MS5607_TIMEOUT_RESET);
     return SUCCESS;
   }
   
-  task void signalStopDone() {
-    signal SplitControl.stopDone(SUCCESS);
+  command void SetPrecision.set(uint8_t newPrecision){
+    if(state<=S_IDLE)
+      precision=newPrecision;
   }
-
-  command error_t SplitControl.stop() {
-    if(state == S_STOPPING) return EBUSY;
-    if(state == S_OFF) return EALREADY;
-    if(state == S_ON) {
-      state = S_OFF;
-      post signalStopDone();
-    } else {
-      stopRequested = TRUE;
+  
+  task void signalReadDone(){
+    switch(state){
+      case S_READ_CALIB_CMD1:
+      case S_READ_CALIB_CMD2:
+      case S_READ_CALIB_CMD3:
+      case S_READ_CALIB_CMD4:
+      case S_READ_CALIB_CMD5:
+      case S_READ_CALIB_CMD6:
+      case S_READ_CALIB:{
+        state=S_IDLE;
+        call BusPowerManager.releasePower();
+        signal ReadCalibration.readDone(lastError, calib);
+      }break;
+      case S_READ_PRESSURE_CMD:
+      case S_READ_PRESSURE:{
+        uint32_t measurment=i2cBuffer[0];
+        measurment<<=8;
+        measurment|=i2cBuffer[1];
+        measurment<<=8;
+        measurment|=i2cBuffer[2];
+        if(otherSensorRequested){
+          state=S_READ_TEMP_CMD;
+          call I2CResource.request();
+        }else{
+          state=S_IDLE;
+          call BusPowerManager.releasePower();
+        }
+        signal ReadPressure.readDone(lastError, measurment);
+      }break;
+      case S_READ_TEMP_CMD:
+      case S_READ_TEMP:{
+        uint32_t measurment=i2cBuffer[0];
+        measurment<<=8;
+        measurment|=i2cBuffer[1];
+        measurment<<=8;
+        measurment|=i2cBuffer[2];
+        if(otherSensorRequested){
+          state=S_READ_PRESSURE_CMD;
+          call I2CResource.request();
+        }else{
+          state=S_IDLE;
+          call BusPowerManager.releasePower();
+        }
+        signal ReadTemperature.readDone(lastError, measurment);
+      }break;
     }
+  }
+  
+  command error_t ReadTemperature.read(){
+    uint8_t prevState=state;
+    if(!otherSensorRequested && (state==S_READ_PRESSURE || state==S_READ_PRESSURE_CMD)){
+      otherSensorRequested=TRUE;
+      return SUCCESS;    
+    } else if(state > S_IDLE)
+      return EBUSY;
+    
+    state=S_READ_TEMP_CMD;
+    call BusPowerManager.requestPower();
+    if(prevState==S_IDLE)
+      call I2CResource.request();
     return SUCCESS;
-  }  
-
-  event void Cal.dataReady(error_t error, uint16_t* calibration) {
-    c1 = calibration[1];
-    c2 = calibration[2];
-    c3 = calibration[3];
-    c4 = calibration[4];
-    c5 = calibration[5];
-    c6 = calibration[6];
-
-    signal SplitControl.startDone(error);
   }
-
-  command error_t Pressure.read() {
-    if(state == S_OFF) return EOFF;
-    if(state == S_READ_TEMP) {
-      otherSensorRequested = TRUE;
-      return SUCCESS;
-    }
-    if(state != S_ON) return EBUSY;
-/*i2c */
-    state = S_READ_PRESS;
-    call RawPress.read();
+  
+  command error_t ReadPressure.read(){
+    uint8_t prevState=state;
+    if(!otherSensorRequested && (state==S_READ_TEMP || state==S_READ_TEMP_CMD)){
+      otherSensorRequested=TRUE;
+      return SUCCESS;    
+    } else if(state > S_IDLE)
+      return EBUSY;
+    
+    state=S_READ_PRESSURE_CMD;
+    call BusPowerManager.requestPower();
+    if(prevState==S_IDLE)
+      call I2CResource.request();
     return SUCCESS;
   }
-
-  command error_t Temperature.read() {
-    if(state == S_OFF) return EOFF;
-    if(state == S_READ_PRESS) {
-      otherSensorRequested = TRUE;
-      return SUCCESS;
-    }
-    if(state != S_ON) return EBUSY;
-
-    state = S_READ_TEMP;
-
-    call RawTemp.read();
+  
+  command error_t ReadCalibration.read(calibration *cal){
+    uint8_t prevState=state;
+    if(state > S_IDLE)
+      return EBUSY;
+    state=S_READ_CALIB_CMD1;
+    calib=cal;
+    call BusPowerManager.requestPower();
+    if(prevState==S_IDLE)
+      call I2CResource.request();
     return SUCCESS;
   }
-
-  event void Timer.fired() {
-    if(state == S_OFF) {
-      state = S_ON;
-      if(setup)
-        call Cal.getData();
-      setup = FALSE;
-    }  
+  
+  event void BusPowerManager.powerOn(){
+    if(state==S_OFF)
+      state=S_IDLE;
+    else
+      call I2CResource.request();
   }
-
-  task void signalReadDone() {
-    signal Pressure.readDone(SUCCESS, mesres);
+  
+  event void BusPowerManager.powerOff(){
+    state=S_OFF;
   }
-
-  event void RawTemp.readDone(error_t error, uint32_t val) {
-    if(error == SUCCESS) {
-     /* dT = val - (c5 << 8);
-      TEMP = 2000 + (dT * (uint32_t)c6 >> 23);
-    */
-     tmpt= c5;
-     tmpt <<= 8;
-     dT = val - tmpt; 
-   
-      tmp= c6;
-      mul= dT;
-      mul *= tmp;
-      mul >>= 23;
-   
-   
-      TEMP = 2000;
-      TEMP += mul;
-    
-      if(TEMP<2000) {
-        int32_t T2 = ((int64_t)dT * dT) >> 31;
-        TEMP -= T2;
-      }
+  
+  event void I2CResource.granted(){
+    uint8_t i2cCond=0;
+    switch(state){
+      case S_READ_PRESSURE_CMD:{
+        i2cCond=I2C_START|I2C_STOP;
+        i2cBuffer[0]=MS5607_CONVERT_PRESSURE - (precision & MS5607_PRESSURE_MASK);
+      }break;
+      case S_READ_TEMP_CMD:{
+        i2cCond=I2C_START|I2C_STOP;
+        i2cBuffer[0]=MS5607_CONVERT_TEMPERATURE - (precision > 4);
+      }break;
+      case S_READ_PRESSURE:
+      case S_READ_TEMP:{
+        i2cCond=I2C_START;
+        i2cBuffer[0]=MS5607_ADC_READ;
+      }break;
+      case S_READ_CALIB_CMD1:{
+        i2cCond=I2C_START;
+        i2cBuffer[0]=MS5607_PROM_READ+(1<<1);
+      }break;
     }
-    state = S_ON;
-    signal Temperature.readDone(error, TEMP);
+    lastError = call I2CPacket.write(i2cCond, MS5607_ADDRESS, 1, i2cBuffer) ;
+    if( lastError != SUCCESS) {
+      call I2CResource.release();
+      post signalReadDone();
+    }
   }
-
-  event void RawPress.readDone(error_t error, uint32_t rawpress) {
-    int64_t offset, sensitivity;
-    /*offset = ((uint64_t)c2 << 17) + (((int64_t)c4 * dT) >> 6); // <<17     >>6
-    sensitivity = ((uint32_t)c1 << 16) + (( (int64_t)c3 * dT) >> 7);// <<16   >>7
-    P = ( (int64_t)val * (sensitivity >> 21) - offset) >> 15;// >>21    >>15
-    */
-    tmp64 = c2;
-   tmp64 <<= 17;
-   
-   mul64 = c4;
-   mul64 *= dT;
-   mul64 >>= 6;
-   
-   offset = mul64;
-    offset += tmp64;
-    tmp64 = c1;
-    tmp64 <<= 16;
-    
-    mul64 = c3;
-    mul64 *= dT;
-    mul64 >>= 7;
-    sensitivity = tmp64;
-    sensitivity += mul64;
-    //sensitivity = ((uint32_t)c1 << 16) + (((int64_t)c3 * dT) >> 7);
-    
-    tmp64 = sensitivity;
-    tmp64 >>= 21;
-    tmp64 *= rawpress;
-    tmp64 -= offset;
-    tmp64 >>= 15;
-    P = tmp64;
-    
-    state = S_ON;
-    signal Pressure.readDone(error, P);   
+  
+  task void startTimer(){
+    //the timeouts are the same for both sensor, so we convert temperature precision to pressure precision
+    uint8_t prec=precision;
+    if(state==S_READ_TEMP_CMD){
+      state=S_READ_TEMP;
+      prec=prec>>4;
+    }else{
+      state=S_READ_PRESSURE;
+      prec=prec&MS5607_PRESSURE_MASK;
+    }
+    switch(prec){
+      case MS5607_PRESSURE_4096: 
+        call Timer.startOneShot(MS5607_TIMEOUT_4096);
+        break;
+      case MS5607_PRESSURE_2048:
+        call Timer.startOneShot(MS5607_TIMEOUT_2048);
+        break;
+      case MS5607_PRESSURE_1024:
+        call Timer.startOneShot(MS5607_TIMEOUT_1024);
+        break;
+      case MS5607_PRESSURE_512:
+        call Timer.startOneShot(MS5607_TIMEOUT_512);
+        break;
+      case MS5607_PRESSURE_256:
+        call Timer.startOneShot(MS5607_TIMEOUT_256);
+        break;
+    }
   }
-
-  default event void Pressure.readDone(error_t error, uint32_t val) { }
-  default event void Temperature.readDone(error_t error, int16_t val) { }
-  default event void SplitControl.startDone(error_t error) { }
-  default event void SplitControl.stopDone(error_t error) { }
+  
+  event void Timer.fired(){
+    call I2CResource.request();
+  }
+  
+  async event void I2CPacket.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data) {
+    uint8_t readLength=0;
+    if(error!=SUCCESS){
+      lastError=error;
+      call I2CResource.release();
+      post signalReadDone();
+      return;
+    }
+    switch(state){
+      //timer starter states
+      case S_READ_PRESSURE_CMD:
+      case S_READ_TEMP_CMD:{
+        call I2CResource.release();
+        post startTimer();
+        return;
+      }break;
+      //read states
+      case S_READ_PRESSURE:
+      case S_READ_TEMP:{
+        readLength=3;
+      }break;
+      case S_READ_CALIB_CMD1:
+      case S_READ_CALIB_CMD2:
+      case S_READ_CALIB_CMD3:
+      case S_READ_CALIB_CMD4:
+      case S_READ_CALIB_CMD5:
+      case S_READ_CALIB_CMD6:{
+        readLength=2;
+      }break;
+    }
+    lastError = call I2CPacket.read(I2C_START|I2C_STOP, MS5607_ADDRESS, readLength, i2cBuffer);
+    if( lastError != SUCCESS) {
+      call I2CResource.release();
+      lastError=FAIL;
+      post signalReadDone();
+    }
+  }
+  
+  async event void I2CPacket.readDone(error_t error, uint16_t addr, uint8_t length, uint8_t* data) {
+    lastError=error;
+    if(error!=SUCCESS){
+      call I2CResource.release();
+      post signalReadDone();
+      return;
+    }
+    switch(state){
+      case S_READ_PRESSURE:
+      case S_READ_TEMP:{
+        call I2CResource.release();
+        post signalReadDone();
+        return;
+      }break;
+      case S_READ_CALIB_CMD6:{
+        call I2CResource.release();
+        calib->coefficient[5]=(*(data+0)<<8)+*(data+1);
+        post signalReadDone();
+        return;
+      }break;
+      
+      case S_READ_CALIB_CMD1:{
+        calib->coefficient[0]=(*(data+0)<<8)+*(data+1);
+        state=S_READ_CALIB_CMD2;
+        i2cBuffer[0]=MS5607_PROM_READ+(2<<1);
+      }break;
+      case S_READ_CALIB_CMD2:{
+        calib->coefficient[1]=(*(data+0)<<8)+*(data+1);
+        state=S_READ_CALIB_CMD3;
+        i2cBuffer[0]=MS5607_PROM_READ+(3<<1);
+      }break;
+      case S_READ_CALIB_CMD3:{
+        calib->coefficient[2]=(*(data+0)<<8)+*(data+1);
+        state=S_READ_CALIB_CMD4;
+        i2cBuffer[0]=MS5607_PROM_READ+(4<<1);
+      }break;
+      case S_READ_CALIB_CMD4:{
+        calib->coefficient[3]=(*(data+0)<<8)+*(data+1);
+        state=S_READ_CALIB_CMD5;
+        i2cBuffer[0]=MS5607_PROM_READ+(5<<1);
+      }break;        
+      case S_READ_CALIB_CMD5:{
+        calib->coefficient[4]=(*(data+0)<<8)+*(data+1);
+        state=S_READ_CALIB_CMD6;
+        i2cBuffer[0]=MS5607_PROM_READ+(6<<1);
+      }break;
+    }
+    //read the next calibration constant
+    lastError = call I2CPacket.write(I2C_START, MS5607_ADDRESS, 1, i2cBuffer);
+    if( lastError != SUCCESS) {
+      call I2CResource.release();
+      post signalReadDone();
+    }
+  }
+  
+  default event void ReadCalibration.readDone(error_t err, calibration *data){};
+  default event void ReadPressure.readDone(error_t err, uint32_t data){};
+  default event void ReadTemperature.readDone(error_t err, uint32_t data){};
 }

@@ -1,39 +1,92 @@
+/// $Id: Atm128SpiP.nc,v 1.12 2010-06-29 22:07:43 scipio Exp $
+
 /*
-* Copyright (c) 2011, University of Szeged
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-* - Redistributions of source code must retain the above copyright
-* notice, this list of conditions and the following disclaimer.
-* - Redistributions in binary form must reproduce the above
-* copyright notice, this list of conditions and the following
-* disclaimer in the documentation and/or other materials provided
-* with the distribution.
-* - Neither the name of University of Szeged nor the names of its
-* contributors may be used to endorse or promote products derived
-* from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-* COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-* ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-* OF THE POSSIBILITY OF SUCH DAMAGE.
-*
-* Author: Zsolt Szabo
-*/
+ * Copyright (c) 2005 Stanford University. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ * - Neither the name of the copyright holder nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *  Copyright (c) 2004-2005 Crossbow Technology, Inc.
+ *  Copyright (c) 2000-2005 The Regents of the University  of California.
+ *  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ * - Neither the name of the copyright holder nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ */
 
+/**
+ * Primitives for accessing the SPI module on ATmega128
+ * microcontroller.  This module assumes the bus has been reserved and
+ * checks that the bus owner is in fact the person using the bus.
+ * SpiPacket provides an asynchronous send interface where the
+ * transmit data length is equal to the receive data length, while
+ * SpiByte provides an interface for sending a single byte
+ * synchronously. SpiByte allows a component to send a few bytes
+ * in a simple fashion: if more than a handful need to be sent,
+ * SpiPacket should be used.
+ *
+ *
+ * <pre>
+ *  $Id: Atm128SpiP.nc,v 1.12 2010-06-29 22:07:43 scipio Exp $
+ * </pre>
+ *
+ * @author Philip Levis
+ * @author Joe Polastre
+ * @author Martin Turon <mturon@xbow.com>
+ *
+ */
 
-module SpiImpM {
+generic module Atm128SpiP() @safe() {
   provides {
     interface Init;
     interface SpiByte;
@@ -43,10 +96,9 @@ module SpiImpM {
   }
   uses {
     interface Atm128Spi as Spi;
-    interface Resource as ResArb[uint8_t id];
+    interface Resource as ResourceArbiter[uint8_t id];
     interface ArbiterInfo;
     interface McuPowerState;
-    interface DiagMsg;
   }
 }
 implementation {
@@ -64,48 +116,46 @@ implementation {
   command error_t Init.init() {
     return SUCCESS;
   }
-
-  void startSpi()
-	{
-		/*UBRR0 = 0;
-		DDRE |= (1 << PE2);
-		UCSR0C = (1 << UMSEL01) | (1 << UMSEL00) | (0 << UCPHA0) | (0 << UCPOL0);
-		UCSR0B = (1 << RXEN0) | (1 << TXEN0);
-		UBRR0 = ((PLATFORM_MHZ*1000000) / (2* 0xFFF))-1;//100;	// baudrate*/
+  
+  void startSpi() {
     call Spi.enableSpi(FALSE);
     atomic {
       call Spi.initMaster();
       call Spi.enableInterrupt(FALSE);
-      call Spi.setMasterDoubleSpeed(TRUE);  
+      call Spi.setMasterDoubleSpeed(TRUE);
       call Spi.setClockPolarity(FALSE);
       call Spi.setClockPhase(FALSE);
-      call Spi.setClock(0);      
+      call Spi.setClock(0);
       call Spi.enableSpi(TRUE);
     }
     call McuPowerState.update();
-	}
+  }
 
-  async command uint8_t SpiByte.write( uint8_t data ) {
-    uint8_t rcvd=0xFF;
-		//while ( !( UCSR0A & (1<<UDRE0)) )
-			;
-
-		//UDR0 = data;
-    call Spi.write(data);
-
-		while ( !(UCSR0A & (1<<RXC0)) )
-			;
-    //rcvd = UDR0;
-    rcvd = call Spi.read();
-    #ifdef DEBUG_BMA
-    if(call DiagMsg.record()) {
-      call DiagMsg.str("write");
-      call DiagMsg.hex8(data);
-      call DiagMsg.hex8(rcvd);
-      call DiagMsg.send();
+  void stopSpi() {
+    call Spi.enableSpi(FALSE);
+    atomic {
+      call Spi.sleep();
     }
-    #endif
-		return rcvd;
+    call McuPowerState.update();
+  }
+
+  async command uint8_t SpiByte.write( uint8_t tx ) {
+    /* There is no need to enable the SPI bus and update the power state
+       here since that must have been done when the resource was granted. 
+       However there seems to be a bug somewhere in the radio driver for 
+       the MicaZ platform so we cannot remove the following two lines 
+       before that problem is resolved. (Miklos Maroti) */
+#ifdef PLATFORM_MICAZ
+    call Spi.enableSpi(TRUE);
+    call McuPowerState.update();
+#endif
+
+    call Spi.write( tx );
+
+    while( ! call Spi.isInterruptPending() )
+	    ;
+
+    return call Spi.read();
   }
 
   inline async command void FastSpiByte.splitWrite(uint8_t data) {
@@ -135,49 +185,9 @@ implementation {
 
     while( ! call Spi.isInterruptPending() )
       ;
+
     return call Spi.read();
   }
-
-  async command error_t Resource.request[uint8_t id]() {
-    atomic{
-      if(!call ArbiterInfo.inUse()) {
-        startSpi();
-      }
-    }
-    
-    return call ResArb.request[ id ]();
-  }
-
-  async command error_t Resource.immediateRequest[uint8_t id]() {
-    error_t result = call ResArb.immediateRequest[ id ]();
-   if ( result == SUCCESS ) {
-     startSpi();
-   }
-   return result;
-  }
-
-  async command bool Resource.isOwner[uint8_t id]() {
-     return call ResArb.isOwner[id]();
-  }
-
-  async command error_t Resource.release[uint8_t id]() {
-    error_t error = call ResArb.release[ id ]();
-   atomic {
-     if (!call ArbiterInfo.inUse()) {
-       //stopSpi();
-     }
-   }
-   return error;
-  }
-
-  event void ResArb.granted[ uint8_t id ]() {
-   signal Resource.granted[ id ]();
- }
-
-//  async event void Spi.dataReady(uint8_t data) {
-//  }
-
-   default event void Resource.granted[ uint8_t id ]() {}
 
   /**
    * This component sends SPI packets in chunks of size SPI_ATOMIC_SIZE
@@ -348,4 +358,41 @@ implementation {
    }
  }
 
+ async command error_t Resource.immediateRequest[ uint8_t id ]() {
+   error_t result = call ResourceArbiter.immediateRequest[ id ]();
+   if ( result == SUCCESS ) {
+     startSpi();
+   }
+   return result;
+ }
+ 
+ async command error_t Resource.request[ uint8_t id ]() {
+   atomic {
+     if (!call ArbiterInfo.inUse()) {
+       startSpi();
+     }
+   }
+   return call ResourceArbiter.request[ id ]();
+ }
+
+ async command error_t Resource.release[ uint8_t id ]() {
+   error_t error = call ResourceArbiter.release[ id ]();
+   atomic {
+     if (!call ArbiterInfo.inUse()) {
+       stopSpi();
+     }
+   }
+   return error;
+ }
+
+ async command bool Resource.isOwner[uint8_t id]() {
+   return call ResourceArbiter.isOwner[id]();
+ }
+ 
+ event void ResourceArbiter.granted[ uint8_t id ]() {
+   signal Resource.granted[ id ]();
+ }
+ 
+ default event void Resource.granted[ uint8_t id ]() {}
+ 
 }

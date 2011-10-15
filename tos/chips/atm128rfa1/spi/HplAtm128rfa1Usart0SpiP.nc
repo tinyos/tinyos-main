@@ -33,7 +33,7 @@
 */
 
 
-module HplImpP {
+module HplAtm128rfa1Usart0SpiP {
   provides interface Atm128Spi as SPI;
   provides interface McuPowerOverride;
   uses {

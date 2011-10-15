@@ -44,7 +44,7 @@ configuration BmaReadC
 
 implementation
 {
-  components BmaReadP, LedsC, new TimerMilliC(), HplBma180C, DiagMsgC, SerialActiveMessageC, SpiImpC, LocalTimeMilliC;
+  components BmaReadP, LedsC, new TimerMilliC(), HplBma180C, DiagMsgC, SerialActiveMessageC, Atm128rfa1Usart0SpiC, LocalTimeMilliC;
 
   StdControl = BmaReadP.BmaControl;
   Read       = BmaReadP;
@@ -53,8 +53,8 @@ implementation
   BmaReadP.Timer -> TimerMilliC;
   BmaReadP.LocalTime -> LocalTimeMilliC;
   BmaReadP.DiagMsg -> DiagMsgC;
-  BmaReadP.FastSpiByte -> SpiImpC;
-  BmaReadP.Resource -> SpiImpC.Resource[unique("Atm128SpiC.Resource")];
+  BmaReadP.FastSpiByte -> HplBma180C;
+  BmaReadP.Resource -> HplBma180C;
   BmaReadP.CSN -> HplBma180C.CSN;
   BmaReadP.PWR -> HplBma180C.PWR;
 }

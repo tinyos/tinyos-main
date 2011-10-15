@@ -32,30 +32,27 @@
 * Author: Zsolt Szabo
 */
 
-
-generic configuration Ms5607C(bool isMostPrecise) {
-  provides interface Read<uint32_t> as Pressure;
-  provides interface Read<int16_t> as Temperature;
-  provides interface SplitControl;
+#include "Ms5607.h"
+configuration Ms5607C {
+  provides interface Read<uint32_t> as ReadPressure;
+  provides interface Read<uint32_t> as ReadTemperature;
+  //You can't use the following interfaces if you're waiting for any readDone
+  //the calibration data is always the same on the same chip, but this driver doesn't buffering it
+  provides interface ReadRef<calibration> as ReadCalibration;
+  provides interface Set<uint8_t> as SetPrecision;
 }
 implementation {
-  components Ms5607P, new RomReaderP(isMostPrecise);
-  components new TimerMilliC() as Timer0;
+  components Ms5607P;
 
-  Pressure = Ms5607P.Pressure;
-  Temperature = Ms5607P.Temperature;
-  Ms5607P.Timer -> Timer0;
-  RomReaderP.Timer -> Timer0;
-  Ms5607P.RawTemp -> RomReaderP.RawTemperature;
-  Ms5607P.RawPress -> RomReaderP.RawPressure;
-  Ms5607P.Cal -> RomReaderP;
+  ReadPressure = Ms5607P.ReadPressure;
+  ReadTemperature = Ms5607P.ReadTemperature;
+  ReadCalibration = Ms5607P.ReadCalibration;
+  SetPrecision = Ms5607P;
 
-  components HplMs5607C;
-  RomReaderP.I2CPacket -> HplMs5607C;
-  RomReaderP.I2CResource -> HplMs5607C.Resource;
-
-  SplitControl = Ms5607P;
-
-  components LedsC;
-  Ms5607P.Leds -> LedsC;
+  components HplMs5607C, new TimerMilliC(), MainC;
+  Ms5607P.I2CPacket -> HplMs5607C;
+  Ms5607P.I2CResource -> HplMs5607C.Resource;
+  Ms5607P.Timer -> TimerMilliC;
+  Ms5607P.BusPowerManager -> HplMs5607C;
+  Ms5607P.Init <- MainC.SoftwareInit;
 }

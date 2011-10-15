@@ -34,12 +34,8 @@
 
 generic configuration DemoSensorC() {
   provides interface Read<uint16_t>;
-  provides interface SplitControl;
 }
 implementation {
   components Sht21C as Sensor;
   Read = Sensor.Temperature;
-
-  components I2CBusC;
-  SplitControl = I2CBusC.BusControl;
 }

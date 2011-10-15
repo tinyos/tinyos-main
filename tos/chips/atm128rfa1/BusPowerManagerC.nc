@@ -29,20 +29,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Zsolt Szabo
+ * Author: Miklos Maroti
  */
 
-configuration HplMs5607C {
-  provides interface I2CPacket<TI2CBasicAddr> ;
-  provides interface Resource;
-  provides interface BusPowerManager;
+generic configuration BusPowerManagerC(bool highIsOn, bool initPin)
+{
+	provides interface BusPowerManager;
+	uses interface GeneralIO;
 }
-implementation {
-  
-  components new Atm128I2CMasterC() as I2CBus;
-  
-  I2CPacket = I2CBus.I2CPacket;
-  Resource  = I2CBus.Resource;
-  components I2CBusPowerManagerC; //new DummyBusPowerManagerC();
-  BusPowerManager = I2CBusPowerManagerC;
+
+implementation
+{
+ 	components new BusPowerManagerP(highIsOn, initPin), new TimerMilliC(), RealMainP, LedsC, DiagMsgC;
+
+	BusPowerManager = BusPowerManagerP;
+	GeneralIO = BusPowerManagerP;
+	BusPowerManagerP.Timer -> TimerMilliC;
+	BusPowerManagerP.Init <- RealMainP.PlatformInit;
+	BusPowerManagerP.Leds -> LedsC;
+	BusPowerManagerP.DiagMsg -> DiagMsgC;
 }
