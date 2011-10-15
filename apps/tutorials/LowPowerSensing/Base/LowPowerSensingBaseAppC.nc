@@ -75,7 +75,7 @@ implementation {
   App.LPL -> LPLProvider;
 #endif
 
-#if defined(PLATFORM_IRIS)
+#if defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   components ActiveMessageC as LPLProvider;
   App.LPL -> LPLProvider;
 #endif

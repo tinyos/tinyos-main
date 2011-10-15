@@ -68,7 +68,7 @@ module RssiBaseC {
     cc1000_metadata_t *md =(cc1000_metadata_t*) msg->metadata;
     return md->strength_or_preamble;
   }
-#elif defined(PLATFORM_IRIS)
+#elif defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   uint16_t getRssi(message_t *msg){
     if(call PacketRSSI.isSet(msg))
       return (uint16_t) call PacketRSSI.get(msg);
@@ -81,6 +81,6 @@ module RssiBaseC {
    }
 #else
   #error Radio chip not supported! This demo currently works only \
-         for motes with CC1000, CC2420, RF230 or TDA5250 radios.  
+         for motes with CC1000, CC2420, RF230, RFA1 or TDA5250 radios.  
 #endif
 }
