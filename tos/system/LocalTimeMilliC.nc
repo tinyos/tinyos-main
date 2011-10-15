@@ -21,7 +21,7 @@ configuration LocalTimeMilliC {
 }
 implementation
 {
-  components HilTimerMilliC;
+  components HilTimerMilliC, TimerMilliP;
 
   LocalTime = HilTimerMilliC;
 }
