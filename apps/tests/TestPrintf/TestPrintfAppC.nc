@@ -41,12 +41,13 @@
  * @date $Date: 2010-06-29 22:07:25 $
  */
 
+#define NEW_PRINTF_SEMANTICS
 #include "printf.h"
 
 configuration TestPrintfAppC{
 }
 implementation {
-  components MainC, TestPrintfC;
+  components MainC, PrintfC, TestPrintfC;
   components new TimerMilliC();
 
   TestPrintfC.Boot -> MainC;
