@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2011, University of Szeged
+/* Copyright (c) 2007 Johns Hopkins University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +11,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -29,24 +28,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Zsolt Szabo
+ * @author Razvan Musaloiu-E.
  */
 
-#include "Atm128Adc.h"
-
-module InternalTempP {
-  provides interface Atm128AdcConfig;
+generic configuration AtmegaTemperatureC() {
+  provides interface Read<uint16_t>;
 }
 implementation {
-  async command uint8_t Atm128AdcConfig.getChannel() {
-    return ATM128_ADC_INT_TEMP;
-  }
+  components new AdcReadClientC(), AtmegaTemperatureP;
 
-  async command uint8_t Atm128AdcConfig.getRefVoltage() {
-    return ATM128_ADC_VREF_1_6;
-  }
-
-  async command uint8_t Atm128AdcConfig.getPrescaler() {
-    return ATM128_ADC_PRESCALE_32;
-  }
+  Read = AdcReadClientC;
+  AdcReadClientC.Atm128AdcConfig -> AtmegaTemperatureP;
 }

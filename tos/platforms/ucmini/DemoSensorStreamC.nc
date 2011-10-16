@@ -32,11 +32,11 @@
  * Author: Zsolt Szabo
  */
 
-generic component DemoSensorStreamC() {
+generic configuration DemoSensorStreamC() {
   provides interface ReadStream<uint16_t>;
 }
 implementation {
-  components new InternalTempStreamC() as Stream;
+  components new AtmegaTemperatureStreamC() as DemoSensorC;
 
-  ReadSteam = Stream; 
+  ReadStream = DemoSensorC; 
 }

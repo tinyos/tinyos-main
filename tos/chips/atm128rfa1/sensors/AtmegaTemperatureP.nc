@@ -32,22 +32,23 @@
  * Author: Zsolt Szabo
  */
 
-configuration Atm128InternalTempDeviceC {
-  provides interface Read<uint16_t> as ReadTemp[uint8_t consumer];
-  provides interface Resource as ResourceTemp[uint8_t consumer];
+#include "Atm128Adc.h"
+
+module AtmegaTemperatureP
+{
+  provides interface Atm128AdcConfig;
 }
-implementation {
-  components InternalTempP;
-  components new InternalTempControlP();
-  components new AdcReadClientC() as Adc,
-  new RoundRobinArbiterC("InternalTemp.resourceArb") as TempArbiter;
-  
-  ResourceTemp = TempArbiter;
-  InternalTempControlP.TempResource -> TempArbiter.Resource[unique("InternalTemp.resourceArb")];
+implementation
+{
+  async command uint8_t Atm128AdcConfig.getChannel() {
+    return ATM128_ADC_INT_TEMP;
+  }
 
-  ReadTemp = InternalTempControlP;
-  InternalTempControlP.ActualRead -> Adc;
+  async command uint8_t Atm128AdcConfig.getRefVoltage() {
+    return ATM128_ADC_VREF_1_6;
+  }
 
-  Adc.Atm128AdcConfig -> InternalTempP;
+  async command uint8_t Atm128AdcConfig.getPrescaler() {
+    return ATM128_ADC_PRESCALE;
+  }
 }
-

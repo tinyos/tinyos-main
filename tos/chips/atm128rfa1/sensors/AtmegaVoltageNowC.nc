@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2011, University of Szeged
+/* Copyright (c) 2007 Johns Hopkins University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +11,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -29,36 +28,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Zsolt Szabo
+ * @author Razvan Musaloiu-E.
  */
 
-generic module InternalTempControlP() {
-  provides interface Read<uint16_t>[uint8_t consumer];
-  uses interface Read<uint16_t> as ActualRead;
-  uses interface Resource as TempResource;
+/**
+ * Battery Voltage. The returned value represents the difference
+ * between the battery voltage and V_BG (1.23V). The formula to convert
+ * it to mV is: 1223 * 1024 / value.
+ */
+
+generic configuration AtmegaVoltageNowC() {
+  provides interface Resource;
+  provides interface ReadNow<uint16_t>;
 }
 implementation {
-  uint8_t id;
+  components new AdcReadNowClientC(), AtmegaVoltageP;
 
-  task void TempRelease() {
-    call TempResource.release();
-  }
-
-  event void TempResource.granted() {
-    call Read.read[id]();
-  }
-
-  command error_t Read.read[uint8_t consumer]() {
-    id = consumer;
-    return call ActualRead.read();
-  }
-
-  event void ActualRead.readDone(error_t result, uint16_t val) {
-    if (call TempResource.isOwner()) {
-      signal Read.readDone[id](result, val);
-      post TempRelease();
-    }
-  }
-
-  default event void Read.readDone[uint8_t i](error_t result, uint16_t val) { };  
+  ReadNow = AdcReadNowClientC;
+  Resource = AdcReadNowClientC;
+  AdcReadNowClientC.Atm128AdcConfig -> AtmegaVoltageP;
 }
