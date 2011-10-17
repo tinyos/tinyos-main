@@ -46,14 +46,6 @@ configuration TestPeriodicAppC {
 
 implementation {
 
-#if defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT)
-  components CC1000ActiveMessageC as Lpl;
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2) || defined(PLATFORM_INTELMOTE2) || defined(PLATFORM_EPIC) || defined(PLATFORM_Z1)
-  components CC2420ActiveMessageC as Lpl;
-#else
-#error "LPL testing not supported on this platform"
-#endif
-
   components TestPeriodicC,
       MainC,
       ActiveMessageC,
@@ -61,7 +53,7 @@ implementation {
       new AMSenderC(AM_TESTPERIODICMSG),
       new AMReceiverC(AM_TESTPERIODICMSG),
       LedsC;
-      
+
   TestPeriodicC.Boot -> MainC;
   TestPeriodicC.SplitControl -> ActiveMessageC;
   TestPeriodicC.LowPowerListening -> Lpl;
@@ -71,6 +63,14 @@ implementation {
   TestPeriodicC.Packet -> ActiveMessageC;
   TestPeriodicC.Timer -> TimerMilliC;
   TestPeriodicC.Leds -> LedsC;
+
+#if defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT)
+  components CC1000ActiveMessageC as Lpl;
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2) || defined(PLATFORM_INTELMOTE2) || defined(PLATFORM_EPIC) || defined(PLATFORM_Z1)
+  components CC2420ActiveMessageC as Lpl;
+#else
+#error "LPL testing not supported on this platform"
+#endif      
 
 }
 

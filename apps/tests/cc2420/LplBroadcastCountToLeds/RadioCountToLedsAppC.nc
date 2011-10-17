@@ -58,15 +58,6 @@
 configuration RadioCountToLedsAppC {}
 implementation {
 
-#if defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT)
-  components CC1000ActiveMessageC as LplC;
-#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2) || defined(PLATFORM_INTELMOTE2) || defined(PLATFORM_EPIC) || defined(PLATFORM_Z1)
-  components CC2420ActiveMessageC as LplC;
-#else
-#error "LPL testing not supported on this platform"
-#endif
-
-
   components MainC, RadioCountToLedsC as App, LedsC;
   components new AMSenderC(AM_RADIO_COUNT_MSG);
   components new AMReceiverC(AM_RADIO_COUNT_MSG);
@@ -82,6 +73,15 @@ implementation {
   App.Leds -> LedsC;
   App.MilliTimer -> TimerMilliC;
   App.Packet -> AMSenderC;
+
+#if defined(PLATFORM_MICA2) || defined(PLATFORM_MICA2DOT)
+  components CC1000ActiveMessageC as LplC;
+#elif defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2) || defined(PLATFORM_INTELMOTE2) || defined(PLATFORM_EPIC) || defined(PLATFORM_Z1)
+  components CC2420ActiveMessageC as LplC;
+#else
+#error "LPL testing not supported on this platform"
+#endif
+
 }
 
 
