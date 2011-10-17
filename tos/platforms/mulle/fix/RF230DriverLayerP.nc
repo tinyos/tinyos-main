@@ -55,6 +55,7 @@ module RF230DriverLayerP
 		interface PacketField<uint8_t> as PacketRSSI;
 		interface PacketField<uint8_t> as PacketTimeSyncOffset;
 		interface PacketField<uint8_t> as PacketLinkQuality;
+    interface LinkPacketMetadata;
 	}
 
 	uses
@@ -1015,5 +1016,10 @@ implementation
 	async command void PacketLinkQuality.set(message_t* msg, uint8_t value)
 	{
 		getMeta(msg)->lqi = value;
+	}
+  /*----------------- LinkPacketMetadata -----------------*/
+	async command bool LinkPacketMetadata.highChannelQuality(message_t* msg)
+	{
+		return call PacketLinkQuality.get(msg) > 200;
 	}
 }
