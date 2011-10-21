@@ -1,0 +1,26 @@
+From 9425aab687ae71762a60f6b0b0274f07629c963b Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Mon, 22 Aug 2011 18:02:31 -0500
+Subject: [PATCH] SF 3396639 restore lost source listings (and perhaps
+ debugger support)
+
+Regeneration missed gcc/configure.
+---
+ gcc/configure |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/gcc/configure b/gcc/configure
+index 9799bab..fffa93d 100755
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -24300,6 +24300,7 @@ case "$target" in
+   i?86*-*-* | mips*-*-* | alpha*-*-* | powerpc*-*-* | sparc*-*-* | m68*-*-* \
+   | x86_64*-*-* | hppa*-*-* | arm*-*-* \
+   | xstormy16*-*-* | cris-*-* | crisv32-*-* | xtensa*-*-* | bfin-*-* | score*-*-* \
++  | msp430-*-* \
+   | spu-*-* | fido*-*-* | m32c-*-*)
+     insn="nop"
+     ;;
+-- 
+1.7.6
+

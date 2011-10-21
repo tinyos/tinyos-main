@@ -1,0 +1,63 @@
+From 64c0dc7528788d8b8896b93694884499914e6fee Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Thu, 4 Aug 2011 06:24:01 -0500
+Subject: [PATCH] SF 3386145 gc-sections broken in LTS 20110716
+
+---
+ ld/scripttempl/elf32msp430.sc |   40 ++++++++++++++++++++--------------------
+ 1 files changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/ld/scripttempl/elf32msp430.sc b/ld/scripttempl/elf32msp430.sc
+index 497e62e..3f0bff2 100644
+--- a/ld/scripttempl/elf32msp430.sc
++++ b/ld/scripttempl/elf32msp430.sc
+@@ -74,26 +74,26 @@ SECTIONS
+   {
+     ${RELOCATING+ . = ALIGN(2);}
+     KEEP(*(.init))
+-    *(.init0)  /* Start here after reset.               */
+-    *(.init1)  /* User definable.                       */
+-    *(.init2)  /* Initialize stack.                     */
+-    *(.init3)  /* Initialize hardware, user definable.  */
+-    *(.init4)  /* Copy data to .data, clear bss.        */
+-    *(.init5)  /* User definable.                       */
+-    *(.init6)  /* C++ constructors.                     */
+-    *(.init7)  /* User definable.                       */
+-    *(.init8)  /* User definable.                       */
+-    *(.init9)  /* Call main().                          */
+-    *(.fini9)  /* Falls into here after main(). User definable.  */
+-    *(.fini8)  /* User definable.                           */
+-    *(.fini7)  /* User definable.                           */
+-    *(.fini6)  /* C++ destructors.                          */
+-    *(.fini5)  /* User definable.                           */
+-    *(.fini4)  /* User definable.                           */
+-    *(.fini3)  /* User definable.                           */
+-    *(.fini2)  /* User definable.                           */
+-    *(.fini1)  /* User definable.                           */
+-    *(.fini0)  /* Infinite loop after program termination.  */
++    KEEP(*(.init0))  /* Start here after reset.               */
++    KEEP(*(.init1))  /* User definable.                       */
++    KEEP(*(.init2))  /* Initialize stack.                     */
++    KEEP(*(.init3))  /* Initialize hardware, user definable.  */
++    KEEP(*(.init4))  /* Copy data to .data, clear bss.        */
++    KEEP(*(.init5))  /* User definable.                       */
++    KEEP(*(.init6))  /* C++ constructors.                     */
++    KEEP(*(.init7))  /* User definable.                       */
++    KEEP(*(.init8))  /* User definable.                       */
++    KEEP(*(.init9))  /* Call main().                          */
++    KEEP(*(.fini9))  /* Falls into here after main(). User definable.  */
++    KEEP(*(.fini8))  /* User definable.                           */
++    KEEP(*(.fini7))  /* User definable.                           */
++    KEEP(*(.fini6))  /* C++ destructors.                          */
++    KEEP(*(.fini5))  /* User definable.                           */
++    KEEP(*(.fini4))  /* User definable.                           */
++    KEEP(*(.fini3))  /* User definable.                           */
++    KEEP(*(.fini2))  /* User definable.                           */
++    KEEP(*(.fini1))  /* User definable.                           */
++    KEEP(*(.fini0))  /* Infinite loop after program termination.  */
+     KEEP(*(.fini))
+ 
+     ${CONSTRUCTING+ . = ALIGN(2); }
+-- 
+1.7.6
+

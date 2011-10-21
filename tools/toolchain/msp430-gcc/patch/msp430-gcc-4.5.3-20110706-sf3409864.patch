@@ -1,0 +1,77 @@
+From 2477a212541ff2b9649e07fdb5ec89b9b4170d4f Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Wed, 21 Sep 2011 12:20:30 -0500
+Subject: [PATCH] SF 3409864 Args overwritten after call involving int64
+
+This is either a real bug in gcc's register allocator or msp430's back end
+is generating code that IRA isn't expected to handled. See discussion at
+http://gcc.gnu.org/ml/gcc/2011-09/msg00164.html and the upstream bug report
+http://gcc.gnu.org/bugzilla/show_bug.cgi?id=50427.
+---
+ gcc/ira-lives.c |   37 ++++++++++++++++++++++++++-----------
+ 1 files changed, 26 insertions(+), 11 deletions(-)
+
+diff --git a/gcc/ira-lives.c b/gcc/ira-lives.c
+index 2c06de4..f4247e9 100644
+--- a/gcc/ira-lives.c
++++ b/gcc/ira-lives.c
+@@ -835,16 +835,14 @@ process_single_reg_class_operands (bool in_p, int freq)
+       if (! in_p && recog_data.operand_type[i] != OP_OUT
+ 	  && recog_data.operand_type[i] != OP_INOUT)
+ 	continue;
+-      cl = single_reg_operand_class (i);
+-      if (cl == NO_REGS)
+-	continue;
+ 
+       operand_a = NULL;
+ 
+       if (GET_CODE (operand) == SUBREG)
+ 	operand = SUBREG_REG (operand);
+ 
+-      if (REG_P (operand)
++      cl = single_reg_operand_class (i);
++      if (cl == NO_REGS && REG_P (operand)
+ 	  && (regno = REGNO (operand)) >= FIRST_PSEUDO_REGISTER)
+ 	{
+ 	  enum reg_class cover_class;
+@@ -895,13 +893,30 @@ process_single_reg_class_operands (bool in_p, int freq)
+ 	  a = ira_allocnos[px];
+ 	  if (a != operand_a)
+ 	    {
+-	      /* We could increase costs of A instead of making it
+-		 conflicting with the hard register.  But it works worse
+-		 because it will be spilled in reload in anyway.  */
+-	      IOR_HARD_REG_SET (ALLOCNO_CONFLICT_HARD_REGS (a),
+-				reg_class_contents[cl]);
+-	      IOR_HARD_REG_SET (ALLOCNO_TOTAL_CONFLICT_HARD_REGS (a),
+-				reg_class_contents[cl]);
++	      if (cl != NO_REGS)
++		{
++		  /* We could increase costs of A instead of making it
++		     conflicting with the hard register.  But it works worse
++		     because it will be spilled in reload in anyway.  */
++		  IOR_HARD_REG_SET (ALLOCNO_CONFLICT_HARD_REGS (a),
++				    reg_class_contents[cl]);
++		  IOR_HARD_REG_SET (ALLOCNO_TOTAL_CONFLICT_HARD_REGS (a),
++				    reg_class_contents[cl]);
++		}
++	      else if (REG_P (operand)
++		       && (regno = REGNO (operand)) < FIRST_PSEUDO_REGISTER)
++		{
++                 int nregs = hard_regno_nregs[regno][GET_MODE (operand)];
++                 int r;
++
++                 for (r = 0; r < nregs; ++r)
++                   {
++                     SET_HARD_REG_BIT (ALLOCNO_CONFLICT_HARD_REGS (a),
++                                       regno+r);
++                     SET_HARD_REG_BIT (ALLOCNO_TOTAL_CONFLICT_HARD_REGS (a),
++                                       regno+r);
++                   }
++		}
+ 	    }
+ 	}
+     }
+-- 
+1.7.6
+

@@ -1,0 +1,25 @@
+From 92a98feae804025ad961e712f1d4473137c553de Mon Sep 17 00:00:00 2001
+From: Peter A. Bigot <pabigot@users.sourceforge.net>
+Date: Wed, 27 Jul 2011 09:54:27 -0500
+Subject: [PATCH] SF 3370978: ICE on shift with 32-bit count
+
+---
+ gcc/config/msp430/msp430.md |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/gcc/config/msp430/msp430.md b/gcc/config/msp430/msp430.md
+index a64cacb..a603b5b 100644
+--- a/gcc/config/msp430/msp430.md
++++ b/gcc/config/msp430/msp430.md
+@@ -1782,7 +1782,7 @@ push\t%D0\;push\t%C0\;push\t%B0\;push\t%A0"
+ (define_expand "lshrhi3"
+   [(set (match_operand:HI 0 "nonimmediate_operand"       "")
+         (lshiftrt:HI (match_operand:HI 1 "nonimmediate_operand" "")
+-                   (match_operand 2 "general_operand"  "")))]
++		     (match_operand:HI 2 "general_operand"  "")))]
+ ""
+ "{msp430_lshrhi3(operands); DONE; }")
+ 
+-- 
+1.7.2.3
+

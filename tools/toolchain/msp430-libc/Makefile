@@ -31,19 +31,19 @@
 # Author:Andras Biro <bbandi86@gmail.com>
 
 #download and patch options
-SRCNAME=nesc
-VERSION=1.3.1
-ARCHIVE_FORMAT=tar.gz
-DOWNLOAD_URL=http://sourceforge.net/projects/nescc/files/nescc/v$(VERSION)/$(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
-
+SRCNAME=msp430-libc
+VERSION=20110612
+ARCHIVE_FORMAT=tar.bz2
+DOWNLOAD_URL=http://sourceforge.net/projects/mspgcc/files/${SRCNAME}/${SRCNAME}-${VERSION}.$(ARCHIVE_FORMAT)
+#PATCHDIR=patch
+PATCHSTRIP=1
 #confiure and compile options
 PREFIX=/usr
-PREFIX=/usr
-CONFIGURE_OPTS=--prefix=$(PREFIX)
+CONFIGURE_OPTS=$(PREFIX)
 #INSTALL_OPTS=
 
 #package options
-PKG_NAME=$(SRCNAME)
+PKG_NAME=msp430-libc-tinyos
 #PKG_VERSION=$(VERSION)
 #PKG_RELEASE=$(shell date +%Y%m%d)
 #PKG_HOST=$(shell echo $(HOST)|sed 's/.*64/amd64/'|sed 's/.*86/i386/')
@@ -52,12 +52,39 @@ PKG_NAME=$(SRCNAME)
 #RPMBUILD?=$(shell whereis rpmbuild|sed 's/.*: //'|sed 's/ .*//'|sed 's/.*:.*//g')
 #DPKG?=$(shell whereis dpkg-deb|sed 's/.*: //'|sed 's/ .*//'|sed 's/.*:.*//g')
 
+default: check_requirements -userdeb1 -userrpm1
+
 include Generic.mk
 
 Generic.mk:
 	cp ../Generic.mk .
 
+ifeq ($(RPMBUILD),)
+ RPMTARGET=-dummyrpm
+else
+ RPMTARGET=-userrpm
+endif
+
+ifeq ($(DPKG),)
+ DEBTARGET=-dummydeb
+else
+ DEBTARGET=-userdeb
+endif
+
+usercompile: patch
+	cd $(SRC_DIRECTORY)/src&&make PREFIX=$(PREFIX)
+
+userinstall: usercompile
+	install -d $(ABS_PKG_DIR)
+	cd $(SRC_DIRECTORY)/src&&make PREFIX=$(ABS_PKG_DIR)/$(PREFIX) install
+
+-userdeb1: $(DEBTARGET)
+-userrpm1: $(RPMTARGET)
+
+-userdeb: userinstall $(PKG_DIR).deb
+-userrpm: userinstall make_pkg_rpmdone
+
 -check_spec_requirements:
-	which javac #jdk
 
 -cleanup:
+

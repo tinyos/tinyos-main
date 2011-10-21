@@ -31,22 +31,19 @@
 # Author:Andras Biro <bbandi86@gmail.com>
 
 #download and patch options
-SRCNAME=gcc
-VERSION=4.1.2
-ARCHIVE_FORMAT=tar.bz2
-DOWNLOAD_URL=ftp://ftp.gnu.org/gnu/$(SRCNAME)/$(SRCNAME)-$(VERSION)/$(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
-#PATCHDIR=patch
+SRCNAME=nesc
+VERSION=1.3.3
+ARCHIVE_FORMAT=tar.gz
+DOWNLOAD_URL=http://sourceforge.net/projects/nescc/files/nescc/v$(VERSION)/$(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
 
 #confiure and compile options
 PREFIX=/usr
-AS=/usr/bin/avr-as
-LD=/usr/bin/avr-ld
 PREFIX=/usr
-CONFIGURE_OPTS=--prefix=$(PREFIX) --disable-libssp --disable-nls --enable-languages=c,c++ --infodir=$(PREFIX)/share/info --libdir=$(PREFIX)/lib --libexecdir=$(PREFIX)/lib --mandir=$(PREFIX)/share/man --target=avr --with-ld=$(LD) --with-as=$(AS)
-INSTALL_OPTS=-j1
+CONFIGURE_OPTS=--prefix=$(PREFIX)
+#INSTALL_OPTS=
 
 #package options
-PKG_NAME=avr-gcc-tinyos
+PKG_NAME=$(SRCNAME)
 #PKG_VERSION=$(VERSION)
 #PKG_RELEASE=$(shell date +%Y%m%d)
 #PKG_HOST=$(shell echo $(HOST)|sed 's/.*64/amd64/'|sed 's/.*86/i386/')
@@ -61,10 +58,6 @@ Generic.mk:
 	cp ../Generic.mk .
 
 -check_spec_requirements:
+	which javac #jdk
 
 -cleanup:
-	rm -rf $(PKG_DIR)/usr/lib/libiberty.a \
-		$(PKG_DIR)/usr/share/man/man7 \
-		$(PKG_DIR)/usr/share/info	
-
-

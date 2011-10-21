@@ -1,0 +1,39 @@
+From 5ee7839ab08e74a7edc763792bfd833918cf4fc3 Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Thu, 18 Aug 2011 20:06:13 -0500
+Subject: [PATCH] SF 3394176 unrecognizable insn error subtracting addresses
+
+The RTL not operator is constrained to be unary, but expansion did not
+satisfy the constraint.
+---
+ gcc/config/msp430/msp430.md |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
+
+diff --git a/gcc/config/msp430/msp430.md b/gcc/config/msp430/msp430.md
+index 0154310..9417151 100644
+--- a/gcc/config/msp430/msp430.md
++++ b/gcc/config/msp430/msp430.md
+@@ -569,7 +569,19 @@ push\t%D0\;push\t%C0\;push\t%B0\;push\t%A0"
+ 
+ ;; one_cmplm2 (invert)
+ 
+-(define_insn "one_cmpl<mode>2"
++(define_expand "one_cmpl<mode>2"
++  [(set (match_operand:INTModes 0 "msp430_vwa_nonimmediate_operand" "")
++	(not:<MODE> (match_operand:<MODE> 1 "msp430_vwa_nonimmediate_operand" "")))]
++  ""
++  {
++    if (! rtx_equal_p (operands[0], operands[1]))
++      {
++	emit_move_insn (operands[0], operands[1]);
++	operands[1] = operands[0];
++      }
++  })
++
++(define_insn "*one_cmpl<mode>2_insn"
+   [(set (match_operand:INTModes 0 "msp430_vwa_nonimmediate_operand" "=rm")
+ 	(not:<MODE> (match_operand:<MODE> 1 "msp430_vwa_nonimmediate_operand" "0")))]
+   ""
+-- 
+1.7.6
+

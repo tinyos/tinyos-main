@@ -1,0 +1,32 @@
+From cd3abc05d98820fa87bdf47c2d0284d26f88dc6b Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Tue, 30 Aug 2011 08:48:49 -0500
+Subject: [PATCH] SF 3400750 infomemnobits missing from LTS 20110716
+
+Improperly removed in MCU cleanup under 5877af82.
+---
+ ld/scripttempl/elf32msp430.sc |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/ld/scripttempl/elf32msp430.sc b/ld/scripttempl/elf32msp430.sc
+index 4e91c05..05c87ee 100644
+--- a/ld/scripttempl/elf32msp430.sc
++++ b/ld/scripttempl/elf32msp430.sc
+@@ -161,6 +161,14 @@ SECTIONS
+     *(.infomem.*)
+   } ${RELOCATING+ > infomem}
+ 
++  .infomemnobits ${RELOCATING-0} :
++  {
++    ${RELOCATING+ . = ALIGN(2);}
++    *(.infomemnobits)
++    ${RELOCATING+ . = ALIGN(2);}
++    *(.infomemnobits.*)
++  } ${RELOCATING+ > infomem}
++
+   .vectors ${RELOCATING-0}:
+   {
+     ${RELOCATING+ PROVIDE (__vectors_start = .) ; }
+-- 
+1.7.6
+

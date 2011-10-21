@@ -1,0 +1,8 @@
+Package: msp430-binutils-tinyos
+Version: PKG_VERSION
+Architecture: PKG_ARCHITECTURE
+Depends: libc6
+Maintainer: Razvan Musaloiu-E. <razvanm@musaloiu.com>
+Priority: optional
+Section: devel
+Description: TinyOS-specific MSP430 binutils

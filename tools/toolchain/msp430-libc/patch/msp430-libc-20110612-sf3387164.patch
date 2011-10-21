@@ -1,0 +1,27 @@
+From 2bfa856ab667c24c5690049ea1c401b60d5cdf11 Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Sat, 6 Aug 2011 09:24:52 -0500
+Subject: [PATCH] SF 3387164 put BV macro back
+
+---
+ include/legacymsp430.h |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/include/legacymsp430.h b/include/legacymsp430.h
+index 36a5caa..865f260 100644
+--- a/include/legacymsp430.h
++++ b/include/legacymsp430.h
+@@ -36,6 +36,10 @@
+ 
+ #if !defined(__ASSEMBLER__)
+ 
++#ifndef BV
++#define BV(x) (1 << (x))
++#endif
++
+ #define Interrupt(x) void __attribute__((interrupt (x)))
+ #define INTERRUPT(x) void __attribute__((interrupt (x)))
+ #define interrupt(x) void __attribute__((interrupt (x)))
+-- 
+1.7.6
+

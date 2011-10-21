@@ -1,0 +1,123 @@
+From ba88b633f8fc8ba153299fd4441ea7735eea2e62 Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Tue, 2 Aug 2011 08:35:39 -0500
+Subject: [PATCH] SF 3384550 Missing __ASSEMBLER__ guard in msp430.h
+ (LTS/20110716)
+
+Add guard, also add constant values in assembler syntax.
+---
+ analysis/msp430.h   |   34 +++++++++++++++++++++++++++++-----
+ scripts/checkdev.py |   34 +++++++++++++++++++++++++++++-----
+ 2 files changed, 58 insertions(+), 10 deletions(-)
+
+diff --git a/analysis/msp430.h b/analysis/msp430.h
+index 2599631..d7b31ba 100644
+--- a/analysis/msp430.h
++++ b/analysis/msp430.h
+@@ -17,6 +17,8 @@
+ /** Date of msp430mcu package release */
+ #define __MSP430MCU__ 20110612
+ 
++#if !defined(__ASSEMBLER__)
++
+ /** Bit-markers for type of CPU present.
+  * Check equality against __MSP430_CPU__. */
+ typedef enum msp430_cpu_e
+@@ -32,13 +34,35 @@ typedef enum msp430_cpu_e
+ typedef enum msp430_mpy_e
+ {
+   MSP430_MPY_NONE = 0x0000,
+-  MSP430_MPY_16 = 0x0010,
+-  MSP430_MPY_16SE = 0x0011,
+-  MSP430_MPY_32 = 0x0020,
+-  MSP430_MPY_32DW = 0x0022,
+-  MSP430_MPY = 0x0030
++  MSP430_MPY_TYPE_16 = 0x0010,
++  MSP430_MPY_TYPE_32 = 0x0020,
++  MSP430_MPY_TYPE_ANY = 0x0030,
++  MSP430_MPY_HAS_SE = 0x0001,
++  MSP430_MPY_HAS_DW = 0x0002,
++  MSP430_MPY_16 = MSP430_MPY_TYPE_16,
++  MSP430_MPY_16SE = MSP430_MPY_16 | MSP430_MPY_HAS_SE,
++  MSP430_MPY_32 = MSP430_MPY_TYPE_32 | MSP430_MPY_HAS_SE,
++  MSP430_MPY_32DW = MSP430_MPY_32 | MSP430_MPY_HAS_DW,
+ } msp430_mpy_e;
+ 
++#else /* __ASSEMBLER__ */
++
++MSP430_CPU_MSP430 = 0x0000
++MSP430_CPU_MSP430X = 0x0002
++MSP430_CPU_MSP430XV2 = 0x0003
++MSP430_CPU = 0x0003
++MSP430_MPY_NONE = 0x0000
++MSP430_MPY_TYPE_16 = 0x0010
++MSP430_MPY_TYPE_32 = 0x0020
++MSP430_MPY_TYPE_ANY = 0x0030
++MSP430_MPY_HAS_SE = 0x0001
++MSP430_MPY_HAS_DW = 0x0002
++MSP430_MPY_16 = MSP430_MPY_TYPE_16
++MSP430_MPY_16SE = MSP430_MPY_16 | MSP430_MPY_HAS_SE
++MSP430_MPY_32 = MSP430_MPY_TYPE_32 | MSP430_MPY_HAS_SE
++MSP430_MPY_32DW = MSP430_MPY_32 | MSP430_MPY_HAS_DW
++
++#endif /* __ASSEMBLER__ */
+ 
+ #if defined(__CC430_5133__) || defined(__CC430X5133__) || defined(__CC430F5133__)
+ #include <cc430f5133.h>
+diff --git a/scripts/checkdev.py b/scripts/checkdev.py
+index 13c8db9..ad7a217 100644
+--- a/scripts/checkdev.py
++++ b/scripts/checkdev.py
+@@ -223,6 +223,8 @@ iof.write("""/* Map MCU preprocessor definitions to chip-specific include files.
+ /** Date of msp430mcu package release */
+ #define __MSP430MCU__ %(release_version)s
+ 
++#if !defined(__ASSEMBLER__)
++
+ /** Bit-markers for type of CPU present.
+  * Check equality against __MSP430_CPU__. */
+ typedef enum msp430_cpu_e
+@@ -238,13 +240,35 @@ typedef enum msp430_cpu_e
+ typedef enum msp430_mpy_e
+ {
+   MSP430_MPY_NONE = 0x0000,
+-  MSP430_MPY_16 = 0x0010,
+-  MSP430_MPY_16SE = 0x0011,
+-  MSP430_MPY_32 = 0x0020,
+-  MSP430_MPY_32DW = 0x0022,
+-  MSP430_MPY = 0x0030
++  MSP430_MPY_TYPE_16 = 0x0010,
++  MSP430_MPY_TYPE_32 = 0x0020,
++  MSP430_MPY_TYPE_ANY = 0x0030,
++  MSP430_MPY_HAS_SE = 0x0001,
++  MSP430_MPY_HAS_DW = 0x0002,
++  MSP430_MPY_16 = MSP430_MPY_TYPE_16,
++  MSP430_MPY_16SE = MSP430_MPY_16 | MSP430_MPY_HAS_SE,
++  MSP430_MPY_32 = MSP430_MPY_TYPE_32 | MSP430_MPY_HAS_SE,
++  MSP430_MPY_32DW = MSP430_MPY_32 | MSP430_MPY_HAS_DW,
+ } msp430_mpy_e;
+ 
++#else /* __ASSEMBLER__ */
++
++MSP430_CPU_MSP430 = 0x0000
++MSP430_CPU_MSP430X = 0x0002
++MSP430_CPU_MSP430XV2 = 0x0003
++MSP430_CPU = 0x0003
++MSP430_MPY_NONE = 0x0000
++MSP430_MPY_TYPE_16 = 0x0010
++MSP430_MPY_TYPE_32 = 0x0020
++MSP430_MPY_TYPE_ANY = 0x0030
++MSP430_MPY_HAS_SE = 0x0001
++MSP430_MPY_HAS_DW = 0x0002
++MSP430_MPY_16 = MSP430_MPY_TYPE_16
++MSP430_MPY_16SE = MSP430_MPY_16 | MSP430_MPY_HAS_SE
++MSP430_MPY_32 = MSP430_MPY_TYPE_32 | MSP430_MPY_HAS_SE
++MSP430_MPY_32DW = MSP430_MPY_32 | MSP430_MPY_HAS_DW
++
++#endif /* __ASSEMBLER__ */
+ """ % {
+         'upstream_version': file(os.path.join(upstream_dir, '.version')).readline().strip(),
+         'release_version': file(os.path.join(msp430mcu_root, '.version')).readline().strip() })
+-- 
+1.7.6
+

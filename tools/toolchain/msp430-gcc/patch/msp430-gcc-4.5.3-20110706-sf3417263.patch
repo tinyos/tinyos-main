@@ -1,0 +1,42 @@
+From a84f5981bdd2e6c6ad897bf45efe1f2e9556d3ce Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Fri, 7 Oct 2011 10:33:35 -0500
+Subject: [PATCH] SF 3417263 GDB wrong address for variables
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+At the time of 2d5b4cd we said:
+
+    See also http://gcc.gnu.org/bugzilla/show_bug.cgi?id=26504, which explains
+    why we have to define FRAME_POINTER_CFA_OFFSET.
+
+Without it, the following was generated during a bootstrap build (e.g.,
+using edbf2d4):
+
+In file included from /msp430/gcc/libgcc/../gcc/unwind-sjlj.c:324:0:
+/msp430/gcc/libgcc/../gcc/unwind.inc: In function ‘_Unwind_SjLj_RaiseException’:
+/msp430/gcc/libgcc/../gcc/unwind.inc:136:1: internal compiler error: in compute_frame_pointer_to_fb_displacement, at dwarf2out.c:16312
+
+The subsequent fix in c5b4fc79 for SF 3302511 makes this define unnecessary,
+and since its presence breaks debugging by resulting in the wrong address
+for FP-based values it's being removed.
+---
+ gcc/config/msp430/msp430.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/gcc/config/msp430/msp430.h b/gcc/config/msp430/msp430.h
+index d4073b8..33e956d 100644
+--- a/gcc/config/msp430/msp430.h
++++ b/gcc/config/msp430/msp430.h
+@@ -396,7 +396,6 @@ enum reg_class
+ #define STARTING_FRAME_OFFSET 0
+ #define FIRST_PARM_OFFSET(FUNDECL) 0
+ #define INCOMING_RETURN_ADDR_RTX gen_rtx_MEM (Pmode, stack_pointer_rtx)
+-#define FRAME_POINTER_CFA_OFFSET(FUNDECL) 0
+ #define INCOMING_FRAME_SP_OFFSET \
+   ((cfun && cfun->machine && cfun->machine->interrupt) ? 2*UNITS_PER_WORD : GET_MODE_SIZE (Pmode))
+ #define RETURN_ADDR_RTX(COUNT, FRAMEADDR) msp430_return_addr_rtx (COUNT, FRAMEADDR)
+-- 
+1.7.6
+

@@ -1,0 +1,24 @@
+From e462bd0ab062a96cc4cb1e8d8e5ca7f068b55188 Mon Sep 17 00:00:00 2001
+From: Peter A. Bigot <pabigot@users.sourceforge.net>
+Date: Wed, 27 Jul 2011 11:06:56 -0500
+Subject: [PATCH] SF 3379341: non-empty ARCH environment variable results unusable ld
+
+---
+ ld/emulparams/msp430uni.sh |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/ld/emulparams/msp430uni.sh b/ld/emulparams/msp430uni.sh
+index ac7473f..949fe85 100644
+--- a/ld/emulparams/msp430uni.sh
++++ b/ld/emulparams/msp430uni.sh
+@@ -3,6 +3,7 @@
+ # This called by genscripts_extra.sh
+ 
+ MSP430_NAME=${EMULATION_NAME}
++ARCH=msp430
+ SCRIPT_NAME=elf32msp430
+ TEMPLATE_NAME=generic
+ EXTRA_EM_FILE=msp430
+-- 
+1.7.2.3
+

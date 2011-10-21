@@ -1,0 +1,35 @@
+From edfc7b624ed65614fd02ee1c6fa097fd6aac8ea1 Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Tue, 30 Aug 2011 08:38:09 -0500
+Subject: [PATCH] SF 3400711 consts placed in RAM instead of ROM with
+ -fdata-sections
+
+.rodata section not previously supported in msp430 binutils.
+---
+ ld/scripttempl/elf32msp430.sc |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/ld/scripttempl/elf32msp430.sc b/ld/scripttempl/elf32msp430.sc
+index 3f0bff2..4e91c05 100644
+--- a/ld/scripttempl/elf32msp430.sc
++++ b/ld/scripttempl/elf32msp430.sc
+@@ -108,9 +108,15 @@ SECTIONS
+     *(.text)
+     ${RELOCATING+ . = ALIGN(2);}
+     *(.text.*)
++  } ${RELOCATING+ > REGION_TEXT}
+ 
+-    ${RELOCATING+ _etext = .;}
++  .rodata ${RELOCATING-0} :
++  {
++    ${RELOCATING+ . = ALIGN(2);}
++    *(.rodata${RELOCATING+ .rodata.* .gnu.linkonce.r.*})
++    ${RELOCATING+ . = ALIGN(2);}
+   } ${RELOCATING+ > REGION_TEXT}
++  ${RELOCATING+ _etext = .;} /* Past last read-only (loadable) segment */
+ 
+   .data ${RELOCATING-0} :
+   {  
+-- 
+1.7.6
+

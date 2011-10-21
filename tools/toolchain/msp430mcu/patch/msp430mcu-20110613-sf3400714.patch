@@ -1,0 +1,29 @@
+From fde2ae35441c3623a1e27b85a864223acf7db848 Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Tue, 30 Aug 2011 07:52:29 -0500
+Subject: [PATCH] SF 3400714 __delay_cycles missing from in430.h
+
+---
+ include/in430.h |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/include/in430.h b/include/in430.h
+index 7cd8a4a..0a417f2 100644
+--- a/include/in430.h
++++ b/include/in430.h
+@@ -84,6 +84,12 @@ void *__builtin_frame_address (int zero);
+  * depth; for non-zero values, null is returned */
+ void *__builtin_return_address (int zero);
+ 
++/* Generates code to spin in place for exactly the given number of
++ * machine cycles.  (Note: Prior to mspgcc 20110809, this was limited
++ * to roughly 198000 cycles.  Subsequent mspgcc releases support
++ * delays up to 2^31 cycles.) */
++void __delay_cycles (unsigned long int delay);
++
+ /* Legacy compatible names */
+ #define nop() __nop()
+ #define _NOP() __nop()
+-- 
+1.7.6
+

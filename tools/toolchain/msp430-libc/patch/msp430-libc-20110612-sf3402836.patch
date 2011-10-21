@@ -1,0 +1,234 @@
+From d7ceaf41049e1d68e62e343da87870236dde16ad Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Fri, 2 Sep 2011 11:01:40 -0500
+Subject: [PATCH] SF 3402836 new printf lacks precision support
+
+Supported for numbers and strings, as the old version did.  Unfortunately
+this increases the size of vuprintf.o by 338 bytes.  However, it's necessary
+for Contiki shells which use %.*s format specifications.
+---
+ src/stdlib/vuprintf.c |   93 ++++++++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 81 insertions(+), 12 deletions(-)
+
+diff --git a/src/stdlib/vuprintf.c b/src/stdlib/vuprintf.c
+index 27650d4..52d2167 100644
+--- a/src/stdlib/vuprintf.c
++++ b/src/stdlib/vuprintf.c
+@@ -43,7 +43,7 @@
+ #include <stdarg.h>
+ #include <string.h>
+ #include <stdint.h>
+-
++#include <limits.h>
+ 
+ /**
+  * Internal state tracking.
+@@ -58,7 +58,10 @@ typedef struct
+   unsigned emit_hex_prefix:1;	///< emit a prefix 0x
+   unsigned fill_zero:1;		///< pad left with zero instead of space
+   unsigned uppercase:1;		///< print hex digits in upper case
++  unsigned zero_pad_precision:1;	///< add precision zeros before text
++  unsigned truncate_precision:1;	///< limit text to precision characters
+   char sign_char;		///< character to emit as sign (NUL no emit)
++  uint8_t precision;		///< value related to format precision specifier
+ } flags_t;
+ 
+ /** Maximum number of characters in any (numeric) prefix */
+@@ -100,21 +103,39 @@ print_field (int (*write_char) (int), const char *char_p, unsigned int width,
+ 	     flags_t flags)
+ {
+   int character_count = 0;
++  unsigned int truncate_precision = flags.precision;
+   char prefix_buffer[MAX_PREFIX_CHARS];
+   int prefix_idx = 0;
+   int prefix_len = build_numeric_prefix (prefix_buffer, flags);
+ 
++  if (!flags.truncate_precision)
++    truncate_precision = UINT16_MAX;
++
+   // if right aligned, pad
+   if (!flags.left_align)
+     {
+       char leading_fill = ' ';
+       unsigned int len = strlen (char_p);
+ 
++      // Account for the prefix we'll write
+       if (prefix_len <= width)
+ 	width -= prefix_len;
+       else
+ 	width = 0;
+ 
++      // Account for leading zeros required by a numeric precision specifier
++      if (flags.zero_pad_precision)
++	{
++	  if (flags.precision <= width)
++	    width -= flags.precision;
++	  else
++	    width = 0;
++	}
++
++      // Account for short writes of strings due to precision specifier
++      if (truncate_precision < len)
++	len = truncate_precision;
++
+       // emit numeric prefix prior to padded zeros
+       if (flags.fill_zero)
+ 	{
+@@ -139,8 +160,18 @@ print_field (int (*write_char) (int), const char *char_p, unsigned int width,
+       write_char (prefix_buffer[prefix_idx++]);
+     }
+ 
+-  // output the buffer contents
+-  while (*char_p)
++  // emit zeros to meet precision requirements
++  if (flags.zero_pad_precision)
++    {
++      while (flags.precision--)
++	{
++	  write_char ('0');
++	  character_count++;
++	}
++    }
++
++  // output the buffer contents up to the maximum length
++  while (*char_p && truncate_precision--)
+     {
+       write_char (*char_p);
+       char_p++;
+@@ -199,15 +230,18 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+   int character_count = 0;
+   enum
+   { DIRECT, FORMATING } mode = DIRECT;
++  unsigned int wp_value = 0;
+   unsigned int width = 0;
+   flags_t flags;
+   char *char_p;
+   char character;
++  bool have_wp_value = false;
++  bool have_precision = false;
+   int radix;
+   long number;
+   char buffer[12];		// used to print numbers: long = 10 + sign + null
+ 
+-  while ((character = *format))
++  while ((character = *format++))
+     {				// test and save character
+       if (mode == DIRECT)
+ 	{
+@@ -215,7 +249,8 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+ 	  // '%' sign which changes the mode
+ 	  if (character == '%')
+ 	    {
+-	      width = 0;
++	      width = wp_value = 0;
++	      have_wp_value = have_precision = false;
+ 	      memset (&flags, 0, sizeof (flags));
+ 	      mode = FORMATING;
+ 	    }
+@@ -262,6 +297,17 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+ 		}
+ 	      break;
+ 
++	    case '.':
++	      // explicit precision is present
++	      if (have_wp_value)
++		{
++		  width = wp_value;
++		  have_wp_value = false;
++		  wp_value = 0;
++		}
++	      have_precision = true;
++	      break;
++
+ 	      // fetch length from argument list instead of the format
+ 	      // string itself
+ 	    case '*':
+@@ -269,14 +315,17 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+ 		int val = va_arg (args, int);
+ 
+ 		if (val >= 0)
+-		  width = val;
++		  wp_value = val;
++		else if (have_precision)
++		  wp_value = 0;
+ 		else
+ 		  {
+ 		    flags.left_align = true;
+-		    width = -val;
++		    wp_value = -val;
+ 		  }
+-		break;
+ 	      }
++	      have_wp_value = true;
++	      break;
+ 
+ 	      // format field width. zero needs special treatment
+ 	      // as when it occurs as first number it is the
+@@ -285,9 +334,10 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+ 	      // a leading zero means filling with zeros
+ 	      // it must be a leading zero if 'width' is zero
+ 	      // otherwise it is in a number as in "10"
+-	      if (width == 0)
++	      if (!have_wp_value && !have_precision)
+ 		{
+ 		  flags.fill_zero = !flags.left_align;
++		  break;
+ 		}
+ 	      /*@fallthrough@ */
+ 	    case '1':
+@@ -299,8 +349,9 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+ 	    case '7':
+ 	    case '8':
+ 	    case '9':
+-	      width *= 10;
+-	      width += *format - '0';
++	      wp_value *= 10;
++	      wp_value += character - '0';
++	      have_wp_value = true;
+ 	      break;
+ 
+ 	      // placeholder for one character
+@@ -314,6 +365,13 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+ 	      char_p = va_arg (args, char *);
+ 	      /* Note: Zero-padding on strings is undefined; it
+ 	       * is legitimate to zero-pad */
++	      if (have_precision)
++		{
++		  flags.truncate_precision = true;
++		  flags.precision = wp_value;
++		}
++	      else if (have_wp_value)
++		width = wp_value;
+ 	      character_count += print_field (write_char,
+ 					      (char_p !=
+ 					       NULL) ? char_p : "(null)",
+@@ -405,6 +463,18 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+ 		}
+ 
+ 	      // write padded result
++	      if (have_precision)
++		{
++		  unsigned int number_width =
++		    buffer + sizeof (buffer) - char_p - 2;
++		  if (number_width < wp_value)
++		    {
++		      flags.zero_pad_precision = true;
++		      flags.precision = wp_value - number_width;
++		    }
++		}
++	      else if (have_wp_value)
++		width = wp_value;
+ 	      character_count += print_field (write_char,
+ 					      1 + char_p, width, flags);
+ 	      mode = DIRECT;
+@@ -419,7 +489,6 @@ vuprintf (int (*write_char) (int), const char *format, va_list args)
+ 	      mode = DIRECT;
+ 	    }
+ 	}
+-      format++;
+     }
+   return character_count;
+ }
+-- 
+1.7.6
+

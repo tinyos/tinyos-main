@@ -1,0 +1,38 @@
+From 39f159ec20d942d9a1ca897adc6ace757ee95121 Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Wed, 27 Jul 2011 10:09:34 -0500
+Subject: [PATCH] SF 3379189: Wrong permission on installed files
+
+---
+ scripts/install.sh |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/scripts/install.sh b/scripts/install.sh
+index 3d71e63..dfce335 100755
+--- a/scripts/install.sh
++++ b/scripts/install.sh
+@@ -15,16 +15,17 @@ LIBPATH=${PREFIX}/msp430/lib
+ mkdir -p ${INCPATH} ${LIBPATH}
+ 
+ # Upstream headers
+-install -p ${UPSTREAM}/*.h ${INCPATH}
++install -p -m 0644 ${UPSTREAM}/*.h ${INCPATH}
+ 
+ # Local override headers
+-install -p ${MSP430MCU_ROOT}/include/*.h ${INCPATH}
++install -p -m 0644 ${MSP430MCU_ROOT}/include/*.h ${INCPATH}
+ 
+ # Override msp430.h to accommodate legacy MSPGCC MCU identifiers
+-install -p ${ANALYSIS}/msp430.h ${INCPATH}
++install -p -m 0644 ${ANALYSIS}/msp430.h ${INCPATH}
+ 
+ # MCU-specific data for GCC driver program
+-install -p ${ANALYSIS}/msp430mcu.spec ${LIBPATH}
++install -p -m 0644 ${ANALYSIS}/msp430mcu.spec ${LIBPATH}
+ 
+ # Install MCU-specific memory and periph maps
+ cp -pr ${ANALYSIS}/ldscripts ${LIBPATH}
++chmod -R og+rX ${LIBPATH}/ldscripts
+-- 
+1.7.6
+

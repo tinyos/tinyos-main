@@ -37,8 +37,10 @@ Before this include, you must set up the following variables:
 SRCNAME: the name of the package (eg. binutils)
 VERSION: version of the package (eg 2.17)
 ARCHIVE_FORMAT: archive format of the package (eg tar.bz2. supported: tar.bz2, tar.gz, tar.xz, tar.Z)
-the downladed file should have the name $(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
-the uncompressed source should be in the subdirectory $(SRCNAME)-$(VERSION)
+The downladed file should have the name $(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT), otherwise you should set the following variable
+SRC_ARCHIVE: the name of the downloaded archive without extension (default: $(SRCNAME)-$(VERSION))
+the uncompressed source should be in the subdirectory $(SRCNAME)-$(VERSION), otherwise you should set the following variable
+SRC_DIRECTORY: the subdirectory of the uncompressed code (default: $(SRCNAME)-$(VERSION))
 DOWNLOAD_URL: the package will be downloaded from this url
 
 After the include, you must add the following targets:
@@ -52,8 +54,12 @@ After the include, you must add the following targets:
 You can configure the build procedure with the following variables:
 PATCHDIR: the directory, where the patches are (all the patches (*.patch) from this directory will be applied with patch -p0; default: patch;
 	if there's no patch in the patch directory, or there's no patch directory, then the patching stage will be skipped)
+PATCHSTRIP: the strip number (the number after -p) for the patches (default: 0)
 BOOTSTRAP_CMD: bootstrap command to run before configure (will be started from "$(SRCNAME)-$(VERSION)" directory with "./" prefix; default: no bootstraping)
 CONFIGURE_OPTS: options for ./configure
+CONFIG_LINE: the command for configuring before make (default: ./configure $(CONFIGURE_OPTS))
+BUILD_SUBDIR: some prgrams doesn't support to compile in the source directory (like gcc). With this variable, 
+  you can create a subdirectory from where the ../configure/make/make install will be started (default: no subdirectory)
 INSTALL_OPTS: options for make install 
 HOST: the host cpu architecture to compile. (default: build machine architecture) You have to setup a cross-compile gcc before change this.
 PKG_NAME: the name of the deb/rpm package to create (default: $(SRCNAME))

@@ -1,0 +1,8 @@
+Package: msp430-libc-tinyos
+Version: PKG_VERSION
+Architecture: PKG_ARCHITECTURE
+Depends: msp430-binutils-tinyos, msp430-gcc-tinyos
+Maintainer: Razvan Musaloiu-E. <razvanm@musaloiu.com>
+Priority: optional
+Section: devel
+Description: TinyOS-specific MSP430 libc

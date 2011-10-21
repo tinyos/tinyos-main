@@ -1,0 +1,31 @@
+From 7e144e8efaa78433e2f9288c2ce8e0de40ce763c Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Thu, 4 Aug 2011 06:24:47 -0500
+Subject: [PATCH] SF 3143071 error in addend of relocation entry in output
+
+Update the addend of section-based relocations when doing relocatable links.
+---
+ bfd/elf32-msp430.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/bfd/elf32-msp430.c b/bfd/elf32-msp430.c
+index a2fc8c1..8a217fa 100644
+--- a/bfd/elf32-msp430.c
++++ b/bfd/elf32-msp430.c
+@@ -880,7 +880,12 @@ elf32_msp430_relocate_section (bfd * output_bfd ATTRIBUTE_UNUSED,
+ 					 rel, relend, howto, contents);
+ 
+       if (info->relocatable)
+-	continue;
++	{
++	  BFD_ASSERT (! howto->partial_inplace);
++	  if (sym != NULL && ELF_ST_TYPE (sym->st_info) == STT_SECTION)
++	    rel->r_addend += sec->output_offset;
++	  continue;
++	}
+ 
+       r = msp430_final_link_relocate (howto, input_bfd, input_section,
+ 				      contents, rel, relocation);
+-- 
+1.7.6
+

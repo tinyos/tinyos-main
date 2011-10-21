@@ -37,14 +37,24 @@
 PKG_NAME?=$(SRC_NAME)
 PKG_VERSION ?= $(VERSION)
 PKG_RELEASE ?= $(shell date +%Y%m%d)
+SRC_DIRECTORY?=$(SRCNAME)-$(VERSION)
+SRC_ARCHIVE?=$(SRCNAME)-$(VERSION)
 HOST ?= $(shell uname -m)
 PKG_HOST ?= $(shell echo $(HOST)|sed 's/.*64/amd64/'|sed 's/.*86/i386/')
 PKG_DIR = $(PKG_NAME)_$(PKG_VERSION)-$(PKG_RELEASE)_$(PKG_HOST)
 ABS_PKG_DIR=$(shell echo $(PWD)/$(PKG_DIR)|sed 's/\//\\\//g')
 PATCHDIR?=patch
+PATCHSTRIP?=0
 #check package builders: these variables are the absolute path to the packager, or empty if the packager is not present
 RPMBUILD?=$(shell whereis rpmbuild|sed 's/.*: //'|sed 's/ .*//'|sed 's/.*:.*//g')
 DPKG?=$(shell whereis dpkg-deb|sed 's/.*: //'|sed 's/ .*//'|sed 's/.*:.*//g')
+UNPACK_TARGET?=$(SRC_DIRECTORY)/configure
+CONFIG_LINE?=./configure $(CONFIGURE_OPTS)
+ifneq ($(BUILD_SUBDIR),)
+  REAL_CONFIG_LINE=install -d $(BUILD_SUBDIR)&&cd $(BUILD_SUBDIR)&&.$(CONFIG_LINE)
+else
+  REAL_CONFIG_LINE=$(CONFIG_LINE)
+endif
 
 ifeq ($(RPMBUILD),)
  RPMTARGET=-dummyrpm
@@ -89,7 +99,7 @@ else
 endif
 
 ifneq ($(BOOTSTRAP_CMD),)
-	REALBOOTSTRAP_CMD=cd $(SRCNAME)-$(VERSION)&&./$(BOOTSTRAP_CMD)
+	REALBOOTSTRAP_CMD=cd $(SRC_DIRECTORY)&&./$(BOOTSTRAP_CMD)
 endif
 
 all: check_requirements $(DEBTARGET) $(RPMTARGET)
@@ -133,28 +143,28 @@ help:
 rpm: $(RPMTARGET)
 deb: $(DEBTARGET)
 
-get: $(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
-$(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT):
+get: $(SRC_ARCHIVE).$(ARCHIVE_FORMAT)
+$(SRC_ARCHIVE).$(ARCHIVE_FORMAT):
 	wget $(DOWNLOAD_URL)	
 
-unpack: get $(SRCNAME)-$(VERSION)/configure
-$(SRCNAME)-$(VERSION)/configure:
-	$(DECOMPRESS_CMD) $(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
+unpack: get $(UNPACK_TARGET)
+$(SRC_DIRECTORY)/configure:
+	$(DECOMPRESS_CMD) $(SRC_ARCHIVE).$(ARCHIVE_FORMAT)
 
 patch: $(PATCHTARGET)
 -dummypatch: unpack
 -realpatch: unpack make_patchdone
 make_patchdone:
-	cd $(SRCNAME)-$(VERSION)&&cat ../$(PATCHDIR)/*.patch|patch -p0 && cd .. && touch make_patchdone #just for the makefile
+	cd $(SRC_DIRECTORY)&&cat ../$(PATCHDIR)/*.patch|patch -p$(PATCHSTRIP) && cd .. && touch make_patchdone #just for the makefile
 
-configure: patch $(SRCNAME)-$(VERSION)/Makefile
-$(SRCNAME)-$(VERSION)/Makefile:
+configure: patch $(SRC_DIRECTORY)/$(BUILD_SUBDIR)/Makefile
+$(SRC_DIRECTORY)/$(BUILD_SUBDIR)/Makefile:
 	$(REALBOOTSTRAP_CMD)
-	cd $(SRCNAME)-$(VERSION)&&./configure $(CONFIGURE_OPTS)
+	cd $(SRC_DIRECTORY)&&$(REAL_CONFIG_LINE)
 
 compile: configure make_compiledone
 make_compiledone:
-	cd $(SRCNAME)-$(VERSION)&&make&&cd ..&&touch make_compiledone #just for the makefile
+	cd $(SRC_DIRECTORY)/$(BUILD_SUBDIR)&&make&&cd ..&&touch make_compiledone #just for the makefile
 
 -realdeb: package $(PKG_DIR).deb
 $(PKG_DIR).deb:
@@ -180,17 +190,17 @@ cleanpackage:
 	rm -f Generic.mk
 
 cleanbuild: cleanpackage
-	rm -rf $(SRCNAME)-$(VERSION)
+	rm -rf $(SRC_DIRECTORY)
 	rm -f make_*
 
 clean: cleanbuild
-	rm -f $(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
+	rm -f $(SRC_ARCHIVE).$(ARCHIVE_FORMAT)
 
 package: compile -install -cleanup make_pkg_packagedone
 
 -install:
 	install -d $(PKG_DIR)
-	cd $(SRCNAME)-$(VERSION)&&make DESTDIR=$(ABS_PKG_DIR) $(INSTALL_OPTS) install
+	cd $(SRC_DIRECTORY)/$(BUILD_SUBDIR)&&make DESTDIR=$(ABS_PKG_DIR) $(INSTALL_OPTS) install
 
 make_pkg_packagedone:
 	touch make_pkg_packagedone

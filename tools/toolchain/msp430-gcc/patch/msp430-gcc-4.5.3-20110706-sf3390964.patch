@@ -1,0 +1,194 @@
+From ff0e8f4b39333130337417c042c43b39a8977903 Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Sat, 13 Aug 2011 11:17:45 -0500
+Subject: [PATCH] SF 3390964 broken optimization with emulated multiply
+ libcalls
+
+This also fixes: SF 3390827 mis-optimized emulated multiply results
+---
+ gcc/config/msp430/msp430.c  |   33 +++++----------
+ gcc/config/msp430/msp430.md |   92 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 103 insertions(+), 22 deletions(-)
+
+diff --git a/gcc/config/msp430/msp430.c b/gcc/config/msp430/msp430.c
+index 5f696d6..97fc80a 100644
+--- a/gcc/config/msp430/msp430.c
++++ b/gcc/config/msp430/msp430.c
+@@ -4109,6 +4109,8 @@ msp430_expand_mul (rtx operands[], int signed_mul)
+   if (!(msp430_mpy & required_mpy))
+     {
+       const char* libfn;
++      rtx r_libfn;
++      rtx (* gen_libcall)(rtx, rtx);
+       rtx r_op1 = gen_rtx_REG (op1mode, 10);
+       rtx r_op2 = gen_rtx_REG (op2mode, 12);
+       rtx r_res = gen_rtx_REG (op0mode, 14);
+@@ -4117,46 +4119,33 @@ msp430_expand_mul (rtx operands[], int signed_mul)
+ 	{
+ 	case QImode:
+ 	  libfn = "__mulqi3";
++	  gen_libcall = gen_libcall_mulqi3;
+ 	  break;
+ 	case HImode:
+ 	  libfn = widen ? (signed_mul ? "__mulqihi3" : "__umulqihi3") : "__mulhi3";
++	  gen_libcall = widen ? gen_libcall_mulqihi3 : gen_libcall_mulhi3;
+ 	  break;
+ 	case SImode:
+-	  libfn = widen ? (signed_mul ? "__mulhisi3" : "__umulhisi3") : "__mulsi3";
++ 	  libfn = widen ? (signed_mul ? "__mulhisi3" : "__umulhisi3") : "__mulsi3";
++	  gen_libcall = widen ? gen_libcall_mulhisi3 : gen_libcall_mulsi3;
+ 	  break;
+ 	case DImode:
+ 	  libfn = widen ? (signed_mul ? "__mulsidi3" : "__umulsidi3") : "__muldi3";
+ 	  r_op1 = gen_rtx_REG (op1mode, 8);
+ 	  r_op2 = gen_rtx_REG (op2mode, 4);
+ 	  r_res = gen_rtx_REG (op0mode, 12);
++	  gen_libcall = widen ? gen_libcall_mulsidi3 : gen_libcall_muldi3;
+ 	  break;
+ 	default:
+ 	  gcc_unreachable();
+ 	}
+ 
+-      /* Widening operations are done in the library routine prologues */
++      /* Widening operations are done in the library routine
++       * prologues.  The individual libcall insns handle the relevant
++       * clobbers. */
+       emit_move_insn (r_op1, operands[1]);
+       emit_move_insn (r_op2, operands[2]);
+-
+-      emit_use (r_op1);
+-      emit_use (r_op2);
+-      emit_call_insn (gen_call (gen_rtx_MEM (Pmode, gen_rtx_SYMBOL_REF (Pmode, libfn)), const0_rtx));
+-
+-      if (DImode == GET_MODE (operands[0]))
+-	{
+-	  int rn;
+-	  for (rn = 4; rn < 12; ++rn)
+-	    emit_clobber (gen_rtx_REG (HImode, rn));
+-	}
+-      else
+-	{
+-	  /* r12-r15 are call clobbered, but need to note that r10
+-	   * (and r11 if r10 was widened) are also clobbered. */
+-	  emit_clobber (r_op1);
+-	  if (widen && QImode != op1mode)
+-	    emit_clobber (gen_rtx_REG (op1mode, 1 + REGNO (r_op1)));
+-	}
+-      
++      emit_call_insn (gen_libcall (r_res, gen_rtx_SYMBOL_REF (Pmode, libfn)));
+       emit_move_insn (operands[0], r_res);
+       return 1;
+     }
+diff --git a/gcc/config/msp430/msp430.md b/gcc/config/msp430/msp430.md
+index a603b5b..0154310 100644
+--- a/gcc/config/msp430/msp430.md
++++ b/gcc/config/msp430/msp430.md
+@@ -54,6 +54,7 @@
+    (UNSPEC_ADDC_ANY		5)
+    (UNSPEC_BITTEST		6)
+    (UNSPEC_BITTEST_B		7)
++   (UNSPEC_MUL_CALL		10)
+    (UNSPEC_SUBC_ZERO		16)
+    (UNSPEC_CLRC			30)
+    (UNSPEC_ZERO_EXTEND          100)
+@@ -816,6 +817,97 @@ push\t%D0\;push\t%C0\;push\t%B0\;push\t%A0"
+   [(set_attr "length" "2")
+    (set_attr "cc" "clobber")])
+ 
++(define_insn "libcall_mulqi3"
++  [(set (match_operand:QI 0 "register_operand" "")
++	(call (mem:HI (unspec [(match_operand:HI 1 "general_operand" "X")] UNSPEC_MUL_CALL))
++	      (const_int 0)))
++   (use (reg:QI 10))
++   (use (reg:QI 12))
++   (clobber (reg:QI 10))
++   (clobber (reg:QI 12))]
++  ""
++  "call\t%S1"
++  [(set_attr "length" "2")
++   (set_attr "cc" "clobber")])
++
++(define_insn "libcall_mulqihi3"
++  [(set (match_operand:HI 0 "register_operand" "")
++	(call (mem:HI (unspec [(match_operand:HI 1 "general_operand" "X")] UNSPEC_MUL_CALL))
++	      (const_int 0)))
++   (use (reg:QI 10))
++   (use (reg:QI 12))
++   (clobber (reg:HI 10))
++   (clobber (reg:HI 12))]
++  ""
++  "call\t%S1"
++  [(set_attr "length" "2")
++   (set_attr "cc" "clobber")])
++
++(define_insn "libcall_mulhi3"
++  [(set (match_operand:HI 0 "register_operand" "")
++	(call (mem:HI (unspec [(match_operand:HI 1 "general_operand" "X")] UNSPEC_MUL_CALL))
++	      (const_int 0)))
++   (use (reg:HI 10))
++   (use (reg:HI 12))
++   (clobber (reg:HI 10))
++   (clobber (reg:HI 12))]
++  ""
++  "call\t%S1"
++  [(set_attr "length" "2")
++   (set_attr "cc" "clobber")])
++
++(define_insn "libcall_mulhisi3"
++  [(set (match_operand:SI 0 "register_operand" "")
++	(call (mem:HI (unspec [(match_operand:HI 1 "general_operand" "X")] UNSPEC_MUL_CALL))
++	      (const_int 0)))
++   (use (reg:HI 10))
++   (use (reg:HI 12))
++   (clobber (reg:SI 10))
++   (clobber (reg:SI 12))]
++  ""
++  "call\t%S1"
++  [(set_attr "length" "2")
++   (set_attr "cc" "clobber")])
++
++(define_insn "libcall_mulsi3"
++  [(set (match_operand:SI 0 "register_operand" "")
++	(call (mem:HI (unspec [(match_operand:HI 1 "general_operand" "X")] UNSPEC_MUL_CALL))
++	      (const_int 0)))
++   (use (reg:SI 10))
++   (use (reg:SI 12))
++   (clobber (reg:SI 10))
++   (clobber (reg:SI 12))]
++  ""
++  "call\t%S1"
++  [(set_attr "length" "2")
++   (set_attr "cc" "clobber")])
++
++(define_insn "libcall_mulsidi3"
++  [(set (match_operand:DI 0 "register_operand" "")
++	(call (mem:HI (unspec [(match_operand:HI 1 "general_operand" "X")] UNSPEC_MUL_CALL))
++	      (const_int 0)))
++   (use (reg:SI 8))
++   (use (reg:SI 4))
++   (clobber (reg:DI 8))
++   (clobber (reg:DI 4))]
++  ""
++  "call\t%S1"
++  [(set_attr "length" "2")
++   (set_attr "cc" "clobber")])
++
++(define_insn "libcall_muldi3"
++  [(set (match_operand:DI 0 "register_operand" "")
++	(call (mem:HI (unspec [(match_operand:HI 1 "general_operand" "X")] UNSPEC_MUL_CALL))
++	      (const_int 0)))
++   (use (reg:DI 8))
++   (use (reg:DI 4))
++   (clobber (reg:DI 8))
++   (clobber (reg:DI 4))]
++  ""
++  "call\t%S1"
++  [(set_attr "length" "2")
++   (set_attr "cc" "clobber")])
++
+ (define_insn "addc_zero"
+  [(set (match_operand:HI 0 "msp430_vwa_nonimmediate_operand" "=r,m")
+    (unspec_volatile:HI [(const_int 0 )] UNSPECV_ADDC_ZERO))]
+-- 
+1.7.6
+
