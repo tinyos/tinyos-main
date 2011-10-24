@@ -19,15 +19,24 @@ module IPProtocolsP {
                         void *payload, 
                         size_t len, 
                         struct ip6_metadata *meta) {
-    int payload_off = 0;
-    uint8_t nxt_hdr =  IP6PKT_TRANSPORT;
+    int payload_off;
+    uint8_t nxt_hdr;
     struct ip_iovec v = {
       .iov_base = payload,
       .iov_len = len,
       .iov_next = NULL,
     };
 
+    // Check whether the packet has a fragment extension header indicating
+    // actual fragmentation. If so, discard --- we don't handle fragmentation,
+    // and delivering fragments as complete packets is not really a good idea...
+    nxt_hdr=IPV6_FRAG;
+    payload_off = call IPPacket.findHeader(&v, iph->ip6_nxt, &nxt_hdr);
+    if (payload_off>=0 && ((uint16_t*)((uint8_t*)payload+payload_off))[1]!=0)
+      return;
+
     // find the transport header and deliver -- nxt_hdr is updated by findHeader
+    nxt_hdr=IP6PKT_TRANSPORT;
     payload_off = call IPPacket.findHeader(&v, iph->ip6_nxt, &nxt_hdr);
     printf("IPProtocols - deliver -- off: %i\n", payload_off);
     if (payload_off >= 0) {

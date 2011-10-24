@@ -40,10 +40,7 @@ void *ip_malloc(uint16_t sz);
 void ip_free(void *ptr);
 uint16_t ip_malloc_freespace();
 
-#ifndef PC
-#define malloc(X) ip_malloc(X)
-#define free(X)   ip_free(X)
-#else
+#ifdef PC
 void ip_print_heap();
 #endif
 

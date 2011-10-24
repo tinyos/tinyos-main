@@ -34,7 +34,7 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
   } else {
     recon->r_size = LIB6LOWPAN_MAX_LEN + LOWPAN_LINK_MTU;
   }
-  recon->r_buf = malloc(recon->r_size);
+  recon->r_buf = ip_malloc(recon->r_size);
   if (!recon->r_buf) return -2;
   memset(recon->r_buf, 0, recon->r_size);
   recon->r_app_len = NULL;
@@ -52,7 +52,7 @@ int lowpan_recon_start(struct ieee154_frame_addr *frame_addr,
   }
 
   if (!unpack_end) {
-    free(recon->r_buf);
+    ip_free(recon->r_buf);
     return -3;
   }
 

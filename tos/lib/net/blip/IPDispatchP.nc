@@ -222,8 +222,8 @@ void SENDINFO_DECR(struct send_info *si) {
     iph->ip6_plen = htons(recon->r_bytes_rcvd - sizeof(struct ip6_hdr));
     signal IPLower.recv(iph, (void *)(iph + 1), NULL);
 
-    // printf("free(%p)\n", recon->r_buf); 
-    free(recon->r_buf);
+    // printf("ip_free(%p)\n", recon->r_buf);
+    ip_free(recon->r_buf);
     recon->r_timeout = T_UNUSED;
     recon->r_buf = NULL;
   }
@@ -266,8 +266,8 @@ void SENDINFO_DECR(struct send_info *si) {
       // deallocate the space for reconstruction
       printf("timing out buffer: src: %i tag: %i\n", recon->r_source_key, recon->r_tag);
       if (recon->r_buf != NULL) {
-        printf("free(%p)\n", recon->r_buf); 
-        free(recon->r_buf);
+        printf("ip_free(%p)\n", recon->r_buf);
+        ip_free(recon->r_buf);
       }
       recon->r_timeout = T_UNUSED;
       recon->r_buf = NULL;
@@ -402,8 +402,8 @@ void SENDINFO_DECR(struct send_info *si) {
       if (recon.r_size == recon.r_bytes_rcvd) {
         deliver(&recon);
       } else {
-        // printf("free(%p)\n", recon.r_buf); 
-        free(recon.r_buf);
+        // printf("ip_free(%p)\n", recon.r_buf);
+        ip_free(recon.r_buf);
       }
     }
     goto done;
