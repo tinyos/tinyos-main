@@ -61,6 +61,10 @@ implementation {
     return call UartControl.stop();
   }
 
+  int printfflush() @C() @spontaneous() {
+    return SUCCESS;
+  }
+
 #undef putchar
   command int Putchar.putchar (int c)
   {
