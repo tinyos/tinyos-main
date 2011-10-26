@@ -38,7 +38,6 @@ DOWNLOAD_URL=http://sourceforge.net/projects/nescc/files/nescc/v$(VERSION)/$(SRC
 
 #confiure and compile options
 PREFIX=/usr
-PREFIX=/usr
 CONFIGURE_OPTS=--prefix=$(PREFIX)
 #INSTALL_OPTS=
 
