@@ -31,11 +31,9 @@
 
 /* utility macros */
 
-/* POSIX versions of these might not preserve alignments when casting
-   though a void* */
 #ifndef PC
 #define memclr(ptr, len) memset((ptr), 0, (len))
-#define memcpy(dst, src, len) ip_memcpy((uint8_t *)dst, (uint8_t *)src, len)
+// #define memcpy(dst, src, len) ip_memcpy((uint8_t *)dst, (uint8_t *)src, len)
 // #define memmove(dst, src, len) ip_memcpy(dst, src, len)
 uint8_t *ip_memcpy(uint8_t *dst0, const uint8_t *src0, uint16_t len) ;
 #endif

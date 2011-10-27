@@ -6,6 +6,7 @@
 #include "../lib6lowpan-includes.h"
 #include "../ieee154_header.h"
 #include "../lib6lowpan.h"
+#include "../ip_malloc.h"
 
 uint8_t frame[1500];
 
@@ -53,6 +54,7 @@ int main(int argc, char **argv) {
   uint8_t *cur;
   int idx = 0, rv;
 
+  ip_malloc_init();
   memset(&recon, 0, sizeof(recon));
   while ((rv = read_packet(frame, sizeof(frame))) > 0) {
     printf("packet [%i]\n", rv);
@@ -78,7 +80,7 @@ int main(int argc, char **argv) {
     if (recon.r_size == recon.r_bytes_rcvd) {
       printf("reconstruction complete [%i]\n", recon.r_bytes_rcvd);
       print_buffer(recon.r_buf, recon.r_size);
-      free(recon.r_buf);
+      ip_free(recon.r_buf);
     }
   }
   return 0;

@@ -6,6 +6,7 @@
 #include "../lib6lowpan-includes.h"
 #include "../ieee154_header.h"
 #include "../lib6lowpan.h"
+#include "../ip_malloc.h"
 
 uint8_t *cur;
 uint8_t fragment[100];
@@ -46,6 +47,8 @@ int main(int argc, char **argv) {
   char c, val;
   struct ip_iovec *v, *tail;
   //memset(frame, 0, sizeof(frame));
+
+  ip_malloc_init();
 
   /* read destination */
   cur = print_buf;
