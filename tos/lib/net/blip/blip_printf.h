@@ -14,7 +14,7 @@
 #include <lib6lowpan/iovec.h>
 #include <lib6lowpan/ip.h>
 
-void printf_buf(char *buf, int len) {
+void printf_buf(uint8_t *buf, int len) {
   int i;
   for (i = 0; i < len; i++) {
     printf("%02x ", buf[i]);
