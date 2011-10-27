@@ -14,15 +14,17 @@ configuration PppRouterC {
   PppRouterP.Leds -> LedsC;
 
   components PppDaemonC;
-  PppRouterP.Ppp -> PppDaemonC;
+  PppRouterP.PppControl -> PppDaemonC;
 
   components PppIpv6C;
   PppDaemonC.PppProtocol[PppIpv6C.ControlProtocol] -> PppIpv6C.PppControlProtocol;
   PppDaemonC.PppProtocol[PppIpv6C.Protocol] -> PppIpv6C.PppProtocol;
   PppIpv6C.Ppp -> PppDaemonC;
   PppIpv6C.LowerLcpAutomaton -> PppDaemonC;
+
   PppRouterP.Ipv6LcpAutomaton -> PppIpv6C;
   PppRouterP.PppIpv6 -> PppIpv6C;
+  PppRouterP.Ppp -> PppDaemonC;
 
 #if defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
   components PlatformHdlcUartC as HdlcUartC;

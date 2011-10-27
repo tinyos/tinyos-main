@@ -5,6 +5,7 @@
 #include <lib6lowpan/ip_malloc.h>
 #include <dhcp6.h>
 
+#include "pppipv6.h"
 #include "blip_printf.h"
 
 module PppRouterP {
@@ -15,9 +16,10 @@ module PppRouterP {
     interface Boot;
     interface Leds;
     interface SplitControl as IPControl;
-    interface SplitControl as Ppp;
+    interface SplitControl as PppControl;
     interface LcpAutomaton as Ipv6LcpAutomaton;
     interface PppIpv6;
+    interface Ppp;
 
     interface ForwardingTable;
     interface RootControl;
@@ -36,8 +38,8 @@ module PppRouterP {
   event void Ipv6LcpAutomaton.thisLayerStarted () { }
   event void Ipv6LcpAutomaton.thisLayerFinished () { }
 
-  event void Ppp.startDone (error_t error) {  }
-  event void Ppp.stopDone (error_t error) { }
+  event void PppControl.startDone (error_t error) {  }
+  event void PppControl.stopDone (error_t error) { }
 
   event void IPControl.startDone (error_t error) {
     struct in6_addr dhcp6_group;
@@ -56,7 +58,7 @@ module PppRouterP {
 
 #ifndef PRINTFUART_ENABLED
     rc = call Ipv6LcpAutomaton.open();
-    rc = call Ppp.start();
+    rc = call PppControl.start();
 #endif
 #ifdef RPL_ROUTING
     call RootControl.setRoot();
@@ -80,25 +82,39 @@ module PppRouterP {
   command error_t IPForward.send(struct in6_addr *next_hop,
                                  struct ip6_packet *msg,
                                  void *data) {
-    unsigned char *buf;
-    size_t len = iov_len(msg->ip6_data);
-    error_t rv;
+    size_t len = iov_len(msg->ip6_data) + sizeof(struct ip6_hdr);
+    error_t rc;
+    frame_key_t key;
+    const uint8_t* fpe;
+    uint8_t* fp;
     
     if (!call PppIpv6.linkIsUp()) 
       return EOFF;
 
-    buf = ip_malloc(len + sizeof(struct ip6_hdr));
-    if (!buf) {
+    // get an output frame
+    fp = call Ppp.getOutputFrame(PppProtocol_Ipv6, &fpe, FALSE, &key);
+    if ((! fp) || ((fpe - fp) < len)) {
+      if (fp) {
+	call Ppp.releaseOutputFrame(key);
+      }
       call Leds.led2Toggle();
       return ENOMEM;
     }
 
-    memcpy(buf, &msg->ip6_hdr, sizeof(struct ip6_hdr));
-    iov_read(msg->ip6_data, 0, len, buf + sizeof(struct ip6_hdr));
-    call Leds.led1Toggle();
-    rv = call PppIpv6.transmit(buf, len + sizeof(struct ip6_hdr));
-    ip_free(buf);
+    // copy the header and body into the frame
+    memcpy(fp, &msg->ip6_hdr, sizeof(struct ip6_hdr));
+    iov_read(msg->ip6_data, 0, len, fp + sizeof(struct ip6_hdr));
+    rc = call Ppp.fixOutputFrameLength(key, fp + len);
+    if (SUCCESS == rc) {
+      rc = call Ppp.sendOutputFrame(key);
+    }
 
-    return rv;
+    call Leds.led1Toggle();
+
+    return rc;
   }
+
+  event void Ppp.outputFrameTransmitted (frame_key_t key,
+                                         error_t err) { }
+
 }
