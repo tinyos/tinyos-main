@@ -17,7 +17,7 @@
 void printf_buf(char *buf, int len) {
   int i;
   for (i = 0; i < len; i++) {
-    printf("%02hhx ", buf[i]);
+    printf("%02x ", buf[i]);
   }
   printf("\n");
 }
@@ -29,7 +29,7 @@ void iov_print(struct ip_iovec *iov) {
     int i;
     printf("iovec (%p, %i) ", cur, cur->iov_len);
     for (i = 0; i < cur->iov_len; i++) {
-      printf("%02hhx ", (uint8_t)cur->iov_base[i]);
+      printf("%02x ", (uint8_t)cur->iov_base[i]);
     }
     printf("\n");
     cur = cur->iov_next;
