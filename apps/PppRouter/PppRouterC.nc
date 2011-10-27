@@ -10,8 +10,8 @@ configuration PppRouterC {
   components MainC;
   PppRouterP.Boot -> MainC;
 
-  components LedC;
-  PppRouterP.MultiLed -> LedC;
+  components LedsC as LedsC;
+  PppRouterP.Leds -> LedsC;
 
   components PppDaemonC;
   PppRouterP.Ppp -> PppDaemonC;
@@ -55,7 +55,7 @@ configuration PppRouterC {
   components UDPShellC;
 
   // prints the routing table
-  // components RouteCmdC;
+  components RouteCmdC;
 
 #ifndef IN6_PREFIX
   components Dhcp6ClientC;
