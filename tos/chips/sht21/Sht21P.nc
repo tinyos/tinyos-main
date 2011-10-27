@@ -32,6 +32,7 @@
 * Author: Zsolt Szabo, Andras Biro
 */
 
+#include "Sht21.h"
 module Sht21P {
   provides interface Read<uint16_t> as Temperature;
   provides interface Read<uint16_t> as Humidity;
@@ -52,13 +53,6 @@ implementation {
     SHT21_READ_USER_REGISTER      =       0xE7,
     SHT21_SOFT_RESET                            =       0xFE,
   } Sht21Command;
-
-  enum {
-    SHT21_RESOLUTION_12_14BIT = 0x00,   //humidity _ , temperature _
-    SHT21_RESOLUTION_8_12BIT  = 0x01,
-    SHT21_RESOLUTION_10_13BIT = 0x80,
-    SHT21_RESOLUTION_11_11BIT = 0x81,
-  } Sht21Resolution;
 
   enum {
     SHT21_HEATER_ON     =       0x04,

@@ -32,38 +32,20 @@
 * Author: Andras Biro
 */
 
-#ifndef MS5607_H
-#define MS5607_H
-typedef struct {
-  uint16_t coefficient[6];
-} calibration_t;
-/*
- * Precision dependent values: supply current/conversion time:
- * OSR=4096: 12.5uA/9.04ms 
- * OSR=2048: 6.3uA/4.54ms 
- * OSR=1024: 3.2uA/2.28ms 
- * OSR=512:  1.7uA/1.17ms 
- * OSR=256:  0.9uA/0.6ms 
- */
-enum {
-  MS5607_PRESSURE_256=8, //resolution RMS=0.13mbar
-  MS5607_PRESSURE_512=6, //resolution RMS=0.084mbar
-  MS5607_PRESSURE_1024=4, //resolution RMS=0.054mbar
-  MS5607_PRESSURE_2048=2, //resolution RMS=0.036mbar
-  MS5607_PRESSURE_4096=0, //resolution RMS=0.024mbar
-  MS5607_TEMPERATURE_256=8<<4, //resolution RMS=0.012 C
-  MS5607_TEMPERATURE_512=6<<4, //resolution RMS=0.008 C
-  MS5607_TEMPERATURE_1024=4<<4, //resolution RMS=0.005 C
-  MS5607_TEMPERATURE_2048=2<<4, //resolution RMS=0.003 C
-  MS5607_TEMPERATURE_4096=0<<4, //resolution RMS=0.002 C
-  MS5607_PRESSURE_MASK=0x0f,
-} ms5607_precision;
-
-#ifndef MS5607_PRECISION
-#define MS5607_PRECISION 0 //maximum precision with both sensors
-#endif
-
-#define UQ_MS5607PRESS_RESOURCE "Ms5607Pressure.ReadResource"
-#define UQ_MS5607TEMP_RESOURCE "Ms5607Temperature.ReadResource"
-
-#endif
+#include "Ms5607.h"
+generic configuration Ms5607RawTemperatureC()
+{
+  provides interface Read<uint32_t>;
+  //You can't use the following interfaces if you're waiting for any readDone
+  //the calibration data is always the same on the same chip, but this driver doesn't buffering it
+  provides interface ReadRef<calibration_t> as ReadCalibration;
+  provides interface Set<uint8_t> as SetPrecision;  
+}
+implementation
+{
+  components Ms5607ArbitratedC;
+  ReadCalibration=Ms5607ArbitratedC;
+  SetPrecision=Ms5607ArbitratedC;
+  
+  Read=Ms5607ArbitratedC.ReadTemperature[unique(UQ_MS5607TEMP_RESOURCE)];
+}

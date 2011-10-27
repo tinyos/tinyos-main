@@ -38,8 +38,6 @@ generic module BusPowerManagerP(bool highIsOn, bool initPin)
 	uses interface Timer<TMilli>;
 	uses interface GeneralIO;
 	provides interface Init;
-	uses interface Leds;
-	uses interface DiagMsg;
 }
 
 implementation
@@ -53,14 +51,6 @@ implementation
 		COUNTER_MASK = 0x7F,
 		COUNTER_TIMER = 0x80,	// timer is running
 	};
-	
-	inline void printCounter(char msg){
-		if(call DiagMsg.record()){
-			call DiagMsg.chr(msg);
-			call DiagMsg.uint8(counter);
-			call DiagMsg.send();
-		}
-	}
 	
 	command error_t Init.init(){
 		call GeneralIO.makeOutput();
@@ -130,11 +120,9 @@ implementation
 				call GeneralIO.clr();
 			else
 				call GeneralIO.set();
-			call Leds.led0Off();
 			signal BusPowerManager.powerOff();
 		}
 		else {
-			call Leds.led0On();
 			signal BusPowerManager.powerOn();
 		}
 	}

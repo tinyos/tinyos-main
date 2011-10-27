@@ -38,7 +38,7 @@ configuration Ms5607C {
   provides interface Read<uint32_t> as ReadTemperature;
   //You can't use the following interfaces if you're waiting for any readDone
   //the calibration data is always the same on the same chip, but this driver doesn't buffering it
-  provides interface ReadRef<calibration> as ReadCalibration;
+  provides interface ReadRef<calibration_t> as ReadCalibration;
   provides interface Set<uint8_t> as SetPrecision;
 }
 implementation {
