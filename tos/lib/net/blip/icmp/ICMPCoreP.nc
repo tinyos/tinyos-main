@@ -43,6 +43,7 @@
 #include <lib6lowpan/in_cksum.h>
 
 #include "icmp6.h"
+#include "blip_printf.h"
 
 module ICMPCoreP {
   provides {
@@ -63,11 +64,25 @@ module ICMPCoreP {
     struct ip6_packet reply;
     struct ip_iovec v;
     struct icmp6_hdr *req = (struct icmp6_hdr *)packet;
+    uint16_t my_cksum, rx_cksum = ntohs(req->cksum);
+
+    // SDH : we can compute the checksum for all ICMP messages here
+    // this, for instance, protects RPL and ND since they sits on top
+    // of ICMP.
+    req->cksum = 0;
+    v.iov_base = packet;
+    v.iov_len  = len;
+    v.iov_next = NULL;
+    my_cksum = msg_cksum(iph, &v, IANA_ICMP);
+    printf("ICMP: rx_cksum: 0x%x my_cksum: 0x%x\n", rx_cksum, my_cksum);
+    if (my_cksum != rx_cksum) {
+      printf("ICMP: invalid checksum\n");
+      return;
+    }
 
     switch (req->type) {
     case ICMP_TYPE_ECHO_REQUEST:
       req->type = ICMP_TYPE_ECHO_REPLY;
-      req->cksum = 0;
 
       memset(&reply, 0, sizeof(reply));
       memcpy(reply.ip6_hdr.ip6_dst.s6_addr, hdr->ip6_src.s6_addr, 16);
@@ -77,15 +92,8 @@ module ICMPCoreP {
       reply.ip6_hdr.ip6_nxt = IANA_ICMP;
       reply.ip6_data = &v;
 
-      v.iov_next = NULL;
-      v.iov_base = (void *)req;
-      v.iov_len  = len;
-
       reply.ip6_hdr.ip6_plen = htons(len);
-      req->cksum = htons(msg_cksum(&reply.ip6_hdr, reply.ip6_data, IANA_ICMP));
-      // iov_print(&v);
-
-      call IP.send(&reply);
+      call ICMP_IP.send[ICMP_TYPE_ECHO_REPLY](&reply);
       break;
 
     default:
