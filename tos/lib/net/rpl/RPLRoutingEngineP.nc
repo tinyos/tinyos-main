@@ -189,7 +189,7 @@ implementation{
       return; 
     }
 
-    call RPLDAORoutingEngine.startDAO();
+    //call RPLDAORoutingEngine.startDAO();
     // call IPAddress.setSource(&pkt.ip6_hdr);
 
     msg.icmpv6.type = 155;//ICMP_TYPE_ROUTER_ADV; // Is this type correct?
@@ -651,6 +651,7 @@ implementation{
       call TrickleTimer.stop();
       // new add
       call RPLRouteInfo.resetTrickle();
+      call RPLDAORoutingEngine.startDAO();
     }
     return;
   accept_dodag:
