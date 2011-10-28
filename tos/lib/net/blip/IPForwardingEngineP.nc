@@ -53,6 +53,18 @@ module IPForwardingEngineP {
     memset(routing_table, 0, sizeof(routing_table));
   }
 
+  int alloc_key() {
+    int i;
+    int key;
+  retry:
+    key = last_key++;
+    for (i = 0; i < ROUTE_TABLE_SZ; i++) {
+      if (routing_table[i].valid && routing_table[i].key == key)
+        goto retry;
+    }
+    return key;
+  }
+
   struct route_entry *alloc_entry(int pfxlen) {
     int i;
     /* full table */
@@ -76,7 +88,7 @@ module IPForwardingEngineP {
     return NULL;
   init_entry:
     routing_table[i].valid = 1;
-    routing_table[i].key = ++last_key;
+    routing_table[i].key = alloc_key();
     return &routing_table[i];
   }
 

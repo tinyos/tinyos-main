@@ -40,7 +40,7 @@ module RouteCmdP {
   uses interface Timer<TMilli>;
 } implementation {
   
-  char *header = "destination\t\tgateway\t\tiface\n";
+  char *header = "key\tdestination\t\tgateway\t\tiface\n";
   struct {
     int ifindex;
     char *name;
@@ -69,6 +69,7 @@ module RouteCmdP {
 
     for (;cur_entry < n; cur_entry++) {
       if (entry[cur_entry].valid) {
+        cur += snprintf(cur, LEN, "%2i\t", entry[cur_entry].key);
         cur += inet_ntop6(&entry[cur_entry].prefix, cur, LEN) - 1;
         cur += snprintf(cur, LEN, "/%i\t\t", entry[cur_entry].prefixlen);
         cur += inet_ntop6(&entry[cur_entry].next_hop, cur, LEN) - 1;
@@ -92,14 +93,37 @@ module RouteCmdP {
   event char *ShellCommand.eval(int argc, char **argv) {
     char *cur, *buf = call ShellCommand.getBuffer(MAX_REPLY_LEN);
 
-    cur = buf;
-    memcpy(cur, header, strlen(header));
-    cur += strlen(header);
-    call ShellCommand.write(buf, cur - buf);
-    cur_entry = 0;
-
-    // post sendNextEntry();
-    call Timer.startOneShot(100);
+    if (argc == 1) {
+      // send the routing table on a timer
+      cur = buf;
+      memcpy(cur, header, strlen(header));
+      cur += strlen(header);
+      call ShellCommand.write(buf, cur - buf);
+      cur_entry = 0;
+      call Timer.startOneShot(20);
+    } else if (strcmp(argv[1], "del") == 0 && argc == 3) {
+      // delete a route based on the route key
+      call ForwardingTable.delRoute(atoi(argv[2]));
+    } else if (strcmp(argv[1], "add") == 0 && argc == 4) {
+      // route add prefix[/len] nexthop
+      // parse a new route from the arguments and add it
+      // the forwarding table implementation currently only supports
+      // prefixes in increments of 8 bits.
+      struct in6_addr in_pfx, in_next;
+      char *prefix = argv[2];
+      char *prefix_len = argv[2];
+      char *next = argv[3];
+      while (*prefix_len != '/' && *prefix_len != '\0')
+        prefix_len++;
+      if (*prefix_len == '/')
+        *prefix_len++ = '\0';
+      else
+        prefix_len = "128";
+      inet_pton6(prefix, &in_pfx);
+      inet_pton6(next, &in_next);
+      call ForwardingTable.addRoute(in_pfx.s6_addr, atoi(prefix_len),
+                                    &in_next, ROUTE_IFACE_154);
+    }
     return NULL;
   }
 }
