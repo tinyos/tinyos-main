@@ -584,16 +584,19 @@ void SENDINFO_DECR(struct send_info *si) {
     
     s_entry->info->link_transmissions += (call PacketLink.getRetries(msg));
     s_entry->info->link_fragment_attempts++;
-    signal IPLower.sendDone(s_entry->info);
 
     if (!call PacketLink.wasDelivered(msg)) {
       printf("sendDone: was not delivered! (%i tries)\n", 
                  call PacketLink.getRetries(msg));
       s_entry->info->failed = TRUE;
+      signal IPLower.sendDone(s_entry->info);
 /*       if (s_entry->info->policy.dest[0] != 0xffff) */
 /*         dbg("Drops", "drops: sendDone: frag was not delivered\n"); */
       // need to check for broadcast frames
       // BLIP_STATS_INCR(stats.tx_drop);
+    } else if (s_entry->info->link_fragment_attempts == 
+               s_entry->info->link_fragments) {
+      signal IPLower.sendDone(s_entry->info);
     }
 
   done:
