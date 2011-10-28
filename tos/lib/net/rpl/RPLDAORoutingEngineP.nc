@@ -61,8 +61,6 @@ generic module RPLDAORoutingEngineP(){
 } implementation {
 
 #define RPL_GLOBALADDR
-  //#undef printfUART
-  //#define printfUART(X, args ...) ;
 
 #define INIT_DAO 5120;
 
@@ -85,14 +83,6 @@ generic module RPLDAORoutingEngineP(){
   downwards_table_t downwards_table[ROUTE_TABLE_SZ];
   uint8_t downwards_table_count = 0;
   bool m_running = FALSE;
-
-  void memcpy_rpl(uint8_t* a, uint8_t* b, uint8_t len){
-    //memcpy(a, b, len);
-    uint8_t i;
-    for (i = 0 ; i < len ; i++)
-      a[i] = b[i];
-
-  }
 
   bool memcmp_rpl(uint8_t* a, uint8_t* b, uint8_t len){
     uint8_t i;
@@ -135,9 +125,12 @@ generic module RPLDAORoutingEngineP(){
 #if RPL_STORING_MODE
       /* in storing mode we unicast using LL addresses (9.2) */
       call IPAddress.getLLAddr(&dao_msg->s_pkt.ip6_hdr.ip6_src);
-      if (call RPLRouteInfo.getDefaultRoute(&next_hop) != SUCCESS)
+      if (call RPLRouteInfo.getDefaultRoute(&next_hop) != SUCCESS) {
+        call SendPool.put(dao_msg);
         return;
-      memcpy_rpl((uint8_t*)&dao_msg->s_pkt.ip6_hdr.ip6_dst, (uint8_t*)&next_hop, sizeof(struct in6_addr));
+      }
+      ip_memcpy((uint8_t*)&dao_msg->s_pkt.ip6_hdr.ip6_dst, 
+                (uint8_t*)&next_hop, sizeof(struct in6_addr));
 #else 
       /* in non-storing mode we must use global addresses */
       call IPAddress.getGlobalAddr(&dao_msg->s_pkt.ip6_hdr.ip6_src);
@@ -183,8 +176,9 @@ generic module RPLDAORoutingEngineP(){
     }else if(call RPLRouteInfo.getRank() == ROOT_RANK){
       return SUCCESS;
     }else{
-      return call RPLDAORouteInfo.startDAO();
+      call GenerateDAOTimer.startOneShot(dao_rate);
     }
+    return SUCCESS;
   }
 
   command bool RPLDAORouteInfo.getStoreState() {
@@ -241,15 +235,18 @@ generic module RPLDAORoutingEngineP(){
 #else
     call IPAddress.getLLAddr(&MY_ADDR);
 #endif
-    memcpy_rpl((uint8_t*)&dao_msg->dao_base.target_option.target_prefix, (uint8_t*)&MY_ADDR, sizeof(struct in6_addr));
+    ip_memcpy((uint8_t*)&dao_msg->dao_base.target_option.target_prefix, 
+              (uint8_t*)&MY_ADDR, sizeof(struct in6_addr));
     
     dao_msg->dao_base.transit_info_option.type = RPL_TRANSIT_INFORMATION_TYPE;
     dao_msg->dao_base.transit_info_option.option_length = 22;
     dao_msg->dao_base.transit_info_option.path_sequence = PATH_SEQUENCE;
     dao_msg->dao_base.transit_info_option.path_control = PATH_CONTROL;
     dao_msg->dao_base.transit_info_option.path_lifetime = DEFAULT_LIFETIME;
-    if (call RPLRouteInfo.getDefaultRoute(&dao_msg->dao_base.transit_info_option.parent_address) != SUCCESS)
+    if (call RPLRouteInfo.getDefaultRoute(&dao_msg->dao_base.transit_info_option.parent_address) != SUCCESS) {
+      call SendPool.put(dao_msg);
       return;
+    }
 
     dao_msg->v[0].iov_base = (uint8_t *)&dao_msg->dao_base;
     dao_msg->v[0].iov_len  = length;
@@ -343,7 +340,7 @@ generic module RPLDAORoutingEngineP(){
         //printfUART("Downward table full -- not adding route\n");
         return;
       }
-      printf("Add new route\n");
+      printf("DAO: Add new route\n");
       printfflush();
       if(dao->target_option.prefix_length > 0){
 	new_key = call ForwardingTable.addRoute(dao->target_option.target_prefix.s6_addr,
@@ -388,10 +385,12 @@ generic module RPLDAORoutingEngineP(){
     }
 
     // NO MODIFICATION TO DAO's RR-LIST NEEDED! -- just make sure I keep what I have and the prefix
-    memcpy_rpl((uint8_t*)&dao_msg->s_pkt.ip6_hdr, (uint8_t*)iph, sizeof(struct ip6_hdr));
+    ip_memcpy((uint8_t*)&dao_msg->s_pkt.ip6_hdr, 
+              (uint8_t*)iph, sizeof(struct ip6_hdr));
 
     // copy new payload information
-    memcpy_rpl((uint8_t*)&dao_msg->dao_base, (uint8_t*)payload, sizeof(struct dao_base_t));
+    ip_memcpy((uint8_t*)&dao_msg->dao_base, 
+              (uint8_t*)payload, sizeof(struct dao_base_t));
     dao_msg->v[0].iov_base = (uint8_t *)&dao_msg->dao_base;
     dao_msg->v[0].iov_len = ntohs(iph->ip6_plen);
     dao_msg->v[0].iov_next = NULL;

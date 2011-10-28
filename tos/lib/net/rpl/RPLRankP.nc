@@ -551,11 +551,11 @@ implementation {
   /*  Compute ETX! */
   event void ForwardingEvents.linkResult(struct in6_addr *node, struct send_info *info) {
     uint8_t indexset, myParent;
-    uint16_t etx_now = info->link_transmissions;
+    uint16_t etx_now = info->link_transmissions / info->link_fragment_attempts;
 
     //printf("linkResult: ");
     //printf_in6addr(node);
-    //printf(" %d [%i] %d \n", TOS_NODE_ID, info->link_transmissions, nodeRank);
+    //printf(" %d [%i] %d \n", TOS_NODE_ID, etx_now, nodeRank);
 
     myParent = getParent(call RPLOF.getParent());
 
