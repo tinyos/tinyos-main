@@ -145,6 +145,7 @@ int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id) {
     ret->failed = FALSE;
     ret->link_transmissions = 0;
     ret->link_fragments = 0;
+    ret->link_fragment_attempts = 0;
     return ret;
   }
 #define SENDINFO_INCR(X) ((X)->_refcount)++
@@ -582,6 +583,7 @@ void SENDINFO_DECR(struct send_info *si) {
     }
     
     s_entry->info->link_transmissions += (call PacketLink.getRetries(msg));
+    s_entry->info->link_fragment_attempts++;
     signal IPLower.sendDone(s_entry->info);
 
     if (!call PacketLink.wasDelivered(msg)) {

@@ -34,6 +34,7 @@ struct send_info {
   void   *upper_data;           /* reference to the data field of IPLower.send */
   uint8_t link_fragments;       /* how many fragments the packet was split into */
   uint8_t link_transmissions;   /* how many total link transmissions were required */
+  uint8_t link_fragment_attempts; /* how many fragments we tried  */
   bool    failed;               /* weather the link reported that the transmission succeed*/
   uint8_t _refcount;
 };
