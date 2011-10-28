@@ -64,7 +64,7 @@ generic module RPLDAORoutingEngineP(){
   //#undef printfUART
   //#define printfUART(X, args ...) ;
 
-#define INIT_DAO 512;
+#define INIT_DAO 5120;
 
   uint8_t dao_double_count = 0;
   uint8_t dao_double_limit = 6;
@@ -170,13 +170,10 @@ generic module RPLDAORoutingEngineP(){
       call RemoveTimer.startPeriodic(remove_time);
     }
 #endif
-    /*
-    if (call RPLRouteInfo.getRank() != ROOT_RANK) {
+    if(!call GenerateDAOTimer.isRunning()){
       call GenerateDAOTimer.startPeriodic(dao_rate);
     }
-    */
-    //call GenerateDAOTimer.startPeriodic(dao_rate);
-    call GenerateDAOTimer.startOneShot(dao_rate);
+    //call GenerateDAOTimer.startOneShot(dao_rate);
     
     // do we need this?
     call DelayDAOTimer.startOneShot(delay_dao + call Random.rand16()%100);
@@ -201,8 +198,8 @@ generic module RPLDAORoutingEngineP(){
   task void initDAO();
 
   event void GenerateDAOTimer.fired() { // Initiate my own DAO messages
+    /*
     call GenerateDAOTimer.stop();
-
     printf("DAO TIMER %d %d %lu \n", dao_double_count, dao_double_limit, dao_rate);
     printfflush();
     if(dao_double_count < dao_double_limit){
@@ -210,7 +207,7 @@ generic module RPLDAORoutingEngineP(){
       dao_double_count ++;
     }
     call GenerateDAOTimer.startOneShot(dao_rate + call Random.rand16()%50);
-
+    */
     post initDAO();
   }
 
@@ -412,10 +409,13 @@ generic module RPLDAORoutingEngineP(){
   }
 
   command void RPLDAORouteInfo.newParent(){
+    /*
     dao_rate = INIT_DAO;
     dao_double_count = 0;
     call GenerateDAOTimer.stop();
     call GenerateDAOTimer.startOneShot(dao_rate);
+    */
+    post initDAO();
   }
 
   event void IPAddress.changed(bool global_valid) {}
