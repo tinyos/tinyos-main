@@ -1,0 +1,10 @@
+Package: tinyos-tools
+Version: PKG_VERSION
+Section: devel
+Priority: optional
+Architecture: PKG_ARCHITECTURE
+Depends: python, python-serial, perl, nesc, tinyos-base, sun-java5-jre|sun-java6-jre|oracle-java6-jre|sun-java7-jre|openjdk-6-jre|openjdk-7-jre
+Maintainer: Andras Biro
+Description: Development-tools for TinyOS
+
+

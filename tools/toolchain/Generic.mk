@@ -170,7 +170,8 @@ make_compiledone:
 $(PKG_DIR).deb:
 	which fakeroot
 	install -d $(PKG_DIR)/DEBIAN
-	cp debcontrol $(PKG_DIR)/DEBIAN/control
+	if [ -f debpostinst ]; then cp debpostinst $(PKG_DIR)/DEBIAN/postinst&&chmod 755 $(PKG_DIR)/DEBIAN/postinst; fi
+	if [ -f debprerm ]; then cp debpostinst $(PKG_DIR)/DEBIAN/prerm&&chmod 755 $(PKG_DIR)/DEBIAN/prerm; fi
 	sed 's/PKG_VERSION/$(PKG_VERSION)-$(PKG_RELEASE)/g' debcontrol | \
 		sed 's/PKG_ARCHITECTURE/$(PKG_HOST)/g' > $(PKG_DIR)/DEBIAN/control&& \
 		fakeroot $(DPKG) --build $(PKG_DIR)&& \

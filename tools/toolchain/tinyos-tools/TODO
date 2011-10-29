@@ -1,0 +1,11 @@
+-windows crosscompile
+-linux arm compile
+
+windows 64 crosscompile commands:
+ getenv:
+ x86_64-w64-mingw32-gcc -m64 -s -shared -ogetenv-64.dll -mno-cygwin "-I/cygdrive/c/Program Files/Java/jdk1.7.0_01/include" "-I/cygdrive/c/Program Files/Java/jdk1.7.0_01/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at net_tinyos_util_Env.c 
+ 
+ toscomm:
+x86_64-w64-mingw32-g++.exe -m64 -O2 -shared "-I/cygdrive/c/Program Files/Java/jdk1.7.0_01/include" "-I/cygdrive/c/Program Files/Java/jdk1.7.0_01/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at -s -static -o toscomm-64.dll NativeSerial_win32.cpp
+
+MSVCR71.dll (wiki?): http://docs.tinyos.net/tinywiki/index.php/Boomerang_Fixes#Install_application.2C_MSVCR71.dll_or_MFC71.dll_missing
