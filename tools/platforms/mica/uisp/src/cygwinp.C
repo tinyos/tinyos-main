@@ -34,6 +34,7 @@
 #include <w32api/windows.h>
 #include "cygwinp.h"
 #include "DAPA.h"
+#include <cygwin/version.h>
 
 unsigned char inb(unsigned short port)
 {
@@ -104,6 +105,8 @@ bool cygwinp_delay_usec(long t)
 }
 
 
+/* cfmakeraw() defined in Cygwin's libc for Cygwin >= 1.7.2 */
+# if CYGWIN_VERSION_DLL_COMBINED < CYGWIN_VERSION_DLL_MAKE_COMBINED (1007, 2)
 int cfmakeraw(struct termios *termios_p)
 {
     termios_p->c_iflag &=
@@ -114,5 +117,5 @@ int cfmakeraw(struct termios *termios_p)
     termios_p->c_cflag |= CS8;
     return 0;
 }
-
+#endif
 #endif

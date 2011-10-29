@@ -8,11 +8,14 @@ pushd ../../
 !^./doc
 !^./support
 !^./tools/release
+!^./tools/toolchain
 !^./tos
 !^./README|overall-todo.txt|release-notes.txt
 !/.cvsignore
 !/CVS/
 !/CVS$
+!/.svn/
+!/.svn$
 !~$
 !#
 EOF

@@ -31,5 +31,11 @@
 unsigned char inb(unsigned short port);
 void outb(unsigned char value, unsigned short port);
 int ioperm(unsigned short port, int num, int enable);
+/* cfmakeraw() is declared in termios.h in Cygwin >= 1.7.2 */
+#ifdef __CYGWIN__
+#include <cygwin/version.h>
+# if CYGWIN_VERSION_DLL_COMBINED < CYGWIN_VERSION_DLL_MAKE_COMBINED (1007, 2)
 int cfmakeraw(struct termios *termios_p);
+#endif
+#endif
 bool cygwinp_delay_usec(long t);

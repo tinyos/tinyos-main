@@ -38,11 +38,17 @@ pathlocate () {
 case `uname` in
     CYGWIN*)
     # Hopefully this will always work on cygwin with Sun's Java
-	jversion=`regtool -q -w get '\\HKLM\\SOFTWARE\\JavaSoft\\Java Development Kit\\CurrentVersion'`
-    if [ $? != 0 ]; then
-	exit 1
+    if [ "$javac" != "yes" ]; then #first try the public jre
+        jversion=`regtool -q get '\\HKLM\\SOFTWARE\\JavaSoft\\Java Runtime Environment\\CurrentVersion'`
+        jhome=`regtool -q get '\\HKLM\SOFTWARE\\JavaSoft\\Java Runtime Environment\\'$jversion'\\JavaHome'`
     fi
-    jhome=`regtool -q get '\\HKLM\SOFTWARE\\JavaSoft\\Java Development Kit\\'$jversion'\\JavaHome'`
+    if [ "$jhome" == "" ]; then
+        jversion=`regtool -q get '\\HKLM\\SOFTWARE\\JavaSoft\\Java Development Kit\\CurrentVersion'`
+        if [ $? != 0 ]; then
+            exit 1
+        fi
+        jhome=`regtool -q get '\\HKLM\SOFTWARE\\JavaSoft\\Java Development Kit\\'$jversion'\\JavaHome'`
+    fi
     if [ $? != 0 ]; then
 	exit 1
     fi

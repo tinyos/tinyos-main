@@ -11,7 +11,7 @@ if CYGWIN
 # (this code is not compatible with cygwin's python)
 
 install: tos-bsl-win.tar.gz
-	tar xzvf tos-bsl-win.tar.gz -C $(bindir) 
+	tar xzvf tos-bsl-win.tar.gz -C $(DESTDIR)$(bindir)
 
 else
 # Linux support

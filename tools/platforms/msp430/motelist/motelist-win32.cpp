@@ -97,7 +97,7 @@ struct RegValue
 
       case REG_DWORD:
 	data_int = *(DWORD*)_data;
-	nbuf = sprintf( buf, "%d", *(DWORD*)_data );
+	nbuf = sprintf( buf, "%ld", *(DWORD*)_data );
 	data = String( buf, buf+nbuf );
 	break;
 
