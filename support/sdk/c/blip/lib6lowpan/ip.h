@@ -143,6 +143,11 @@ enum {
 #define EXTENSION_HEADER(X) ((X) == IPV6_HOP || (X) == IPV6_ROUTING || (X) == IPV6_DEST)
 #define COMPRESSIBLE_TRANSPORT(X) ((X) == IANA_UDP)
 
+/* interface id */
+struct in6_iid {
+  uint8_t data[8];
+};
+
 /*
  * icmp
  */
