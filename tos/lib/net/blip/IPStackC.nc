@@ -80,6 +80,8 @@ configuration IPStackC {
 
   FwdP.Leds -> LedsC;
 
+  components new PoolC(struct in6_iid, N_CONCURRENT_SENDS) as FwdAddrPoolC;
+  FwdP.Pool -> FwdAddrPoolC;
 #if defined(IN6_PREFIX)
   components MainC, NoDhcpC;
   NoDhcpC.Boot -> MainC;

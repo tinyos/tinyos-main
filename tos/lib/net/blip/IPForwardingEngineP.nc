@@ -28,6 +28,7 @@ module IPForwardingEngineP {
     interface IPForward[uint8_t ifindex];
     interface IPAddress;
     interface IPPacket;
+    interface Pool<struct in6_iid>;
 
 #ifdef PRINTFUART_ENABLED
     interface Timer<TMilli> as PrintTimer;
@@ -180,8 +181,18 @@ module IPForwardingEngineP {
     return routing_table;
   }
 
-  command error_t IP.send(struct ip6_packet *pkt) {
+  error_t do_send(uint8_t ifindex, struct in6_addr *next, struct ip6_packet *pkt) {
+    error_t rc;
+    struct in6_iid *iid = call Pool.get();
+    if (iid != NULL)
+      memcpy(iid->data, &next->s6_addr[8], 8);
+    rc = call IPForward.send[ifindex](next, pkt, iid);
+    if (rc != SUCCESS && iid != NULL)
+      call Pool.put(iid);
+    return rc;
+  }
 
+  command error_t IP.send(struct ip6_packet *pkt) {
     struct route_entry *next_hop_entry = 
       call ForwardingTable.lookupRoute(pkt->ip6_hdr.ip6_dst.s6_addr, 128);
     
@@ -207,10 +218,16 @@ module IPForwardingEngineP {
          addressed don't work on other links...  we should probably do
          ND in this case, or at least keep a cache so we can reply to
          messages on the right interface. */
-      printf("Forwarding -- send to LL address\n");
+      printf("Forwarding -- send to LL address:");
+      printf_in6addr(&pkt->ip6_hdr.ip6_dst);
+      printf("\n");
       pkt->ip6_hdr.ip6_hlim = 1;
-      return call IPForward.send[ROUTE_IFACE_154](&pkt->ip6_hdr.ip6_dst, pkt, 
-                                                  (void *)ROUTE_INVAL_KEY);
+      // only do this for unicast packets
+      if (pkt->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
+        return do_send(ROUTE_IFACE_154, &pkt->ip6_hdr.ip6_dst, pkt);
+      } else {
+        return call IPForward.send[ROUTE_IFACE_154](&pkt->ip6_hdr.ip6_dst, pkt, NULL);
+      }
     } else if (next_hop_entry) {
       printf("Forwarding -- got from routing table\n");
 
@@ -219,8 +236,7 @@ module IPForwardingEngineP {
                                              &next_hop_entry->next_hop)))
         return FAIL;
 
-      return call IPForward.send[next_hop_entry->ifindex](&next_hop_entry->next_hop, pkt, 
-                                                          (void *)next_hop_entry->key);
+      return do_send(next_hop_entry->ifindex, &next_hop_entry->next_hop, pkt);
     } 
     return FAIL;
   }
@@ -290,20 +306,21 @@ module IPForwardingEngineP {
       if (!(signal ForwardingEvents.approve[next_hop_ifindex](&pkt, next_hop)))
         return;
 
-      call IPForward.send[next_hop_ifindex](next_hop, &pkt, (void *)next_hop_key);
+      do_send(next_hop_ifindex, next_hop, &pkt);
     }
   }
   
   event void IPForward.sendDone[uint8_t ifindex](struct send_info *status) {
-    struct route_entry *entry;
-    int key = (int)status->upper_data;
-    printf("sendDone: iface: %i key: %i\n", ifindex, key);
-    if (key != ROUTE_INVAL_KEY) {
-      entry = call ForwardingTable.lookupRouteKey(key);
-      if (entry) {
-        printf("got entry... signal %d\n", status->link_transmissions);
-        signal ForwardingEvents.linkResult[ifindex](&entry->next_hop, status);
-      }
+    struct in6_addr next;
+    struct in6_iid *iid = (struct in6_iid *)status->upper_data;
+    memset(next.s6_addr, 0, 16);
+    next.s6_addr16[0] = htons(0xfe80);
+    printf("sendDone: iface: %i key: %p\n", ifindex, iid);
+
+    if (iid != NULL) {
+      memcpy(&next.s6_addr[8], iid->data, 8);
+      signal ForwardingEvents.linkResult[ifindex](&next, status);
+      call Pool.put(iid);
     }
   }
 
