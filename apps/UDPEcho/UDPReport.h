@@ -38,10 +38,9 @@
 nx_struct udp_report {
   nx_uint16_t seqno;
   nx_uint16_t sender;
+  nx_uint16_t interval;
   ip_statistics_t    ip;
   udp_statistics_t   udp;
-  icmp_statistics_t  icmp;
-  route_statistics_t route;
 } ;
 
 #endif

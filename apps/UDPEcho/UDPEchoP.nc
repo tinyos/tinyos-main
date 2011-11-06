@@ -118,6 +118,7 @@ module UDPEchoP {
 
     stats.seqno++;
     stats.sender = TOS_NODE_ID;
+    stats.interval = REPORT_PERIOD;
 
     call IPStats.get(&stats.ip);
     call UDPStats.get(&stats.udp);
