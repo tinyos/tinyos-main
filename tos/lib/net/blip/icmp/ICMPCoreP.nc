@@ -74,7 +74,8 @@ module ICMPCoreP {
     v.iov_len  = len;
     v.iov_next = NULL;
     my_cksum = msg_cksum(iph, &v, IANA_ICMP);
-    printf("ICMP: rx_cksum: 0x%x my_cksum: 0x%x\n", rx_cksum, my_cksum);
+    printf("ICMP: type: %i rx_cksum: 0x%x my_cksum: 0x%x\n", 
+           req->type, rx_cksum, my_cksum);
     if (my_cksum != rx_cksum) {
       printf("ICMP: invalid checksum\n");
       return;

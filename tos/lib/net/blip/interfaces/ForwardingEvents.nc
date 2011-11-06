@@ -23,16 +23,17 @@ interface ForwardingEvents {
    *
    * @pkt the packet being forwarded
    * @next_hop the ipv6 address of the next hop, as determined by the 
-         forwarding engine.
+   *    forwarding engine.
    */
   event bool approve(struct ip6_packet *pkt,
                      struct in6_addr *next_hop);
 
   /**
-   * Signaled once per link frame sent to an address in the routing table.
+   * Signaled once per packet.  The send_info structure allows upper
+   * layers to see how many fragments were attempted, and how many
+   * transmissions were required.
    *
-   * (isn't signaled for packets which don't have an entry in the
-   * routing table.)  Allows a higher-level component to maintain
+   * Allows a higher-level component to maintain
    * statistics on the link behavior of their routes.
    */
   event void linkResult(struct in6_addr *dest, struct send_info *info);

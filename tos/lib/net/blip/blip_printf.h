@@ -43,14 +43,27 @@ void printf_in6addr(struct in6_addr *a) {
   printf(print_buf);
 }
 
+int printf_ieee154addr(ieee154_addr_t *in) {
+  int i;
+  switch (in->ieee_mode) {
+  case IEEE154_ADDR_SHORT:
+    printf("IEEE154_ADDR_SHORT: 0x%x", in->i_saddr);
+    break;
+  case IEEE154_ADDR_EXT:
+    printf("IEEE154_ADDR_EXT: ");
+
+    for (i = 7; i >= 0; i--) {
+      printf("%02x", in->i_laddr.data[i]);
+      if (i > 0)
+        printf(":");
+    }
+    break;
+  }
+  return 0;
+}
+
 
 #else  /* PRINTFUART_ENABLED */
-#define printf(fmt, args ...) ;
-#define printfflush() ;
-#define printf_in6addr(a) ;
-#define printf_buf(buf, len) ;
-#define iov_print(iov) ;
-
 #if defined (_H_msp430hardware_h) || defined (_H_atmega128hardware_H)
   #include <stdio.h>
 #else
@@ -61,6 +74,14 @@ void printf_in6addr(struct in6_addr *a) {
 #endif 
 #endif
 #undef putchar
+
+/* disable all printfs by removing them in the preprocessor */
+#define printf(fmt, args ...) ;
+#define printfflush() ;
+#define printf_in6addr(a) ;
+#define printf_buf(buf, len) ;
+#define iov_print(iov) ;
+
 #endif /* PRINTFUART_ENABLED */
 
 #endif

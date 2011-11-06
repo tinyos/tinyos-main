@@ -80,7 +80,7 @@ module RouteCmdP {
         *cur++ = '\n';
         if (LEN > (MAX_REPLY_LEN / 2)) {
           call ShellCommand.write(buf, cur - buf);
-          call Timer.startOneShot(100);
+          call Timer.startOneShot(20);
           cur_entry++;
           return;
         }

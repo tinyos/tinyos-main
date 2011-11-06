@@ -200,9 +200,6 @@ void SENDINFO_DECR(struct send_info *si) {
   event void Boot.booted() {
     call BlipStatistics.clear();
 
-    //commented out since already done in Init.init()
-    //ip_malloc_init();
-
     /* set up our reconstruction cache */
     table_init(&recon_cache, recon_data, sizeof(struct lowpan_reconstruct), N_RECONSTRUCTIONS);
     table_map(&recon_cache, reconstruct_clear);
@@ -221,7 +218,7 @@ void SENDINFO_DECR(struct send_info *si) {
 
     /* the payload length field is always compressed, have to put it back here */
     iph->ip6_plen = htons(recon->r_bytes_rcvd - sizeof(struct ip6_hdr));
-    signal IPLower.recv(iph, (void *)(iph + 1), NULL);
+    signal IPLower.recv(iph, (void *)(iph + 1), &recon->r_meta);
 
     // printf("ip_free(%p)\n", recon->r_buf);
     ip_free(recon->r_buf);
@@ -369,6 +366,13 @@ void SENDINFO_DECR(struct send_info *si) {
         goto fail;
       }
 
+      /* fill in metadata: on fragmented packets, it applies to the
+         first fragment only  */
+      memcpy(&recon->r_meta.sender, &frame_address.ieee_src,
+             sizeof(ieee154_addr_t));
+      recon->r_meta.lqi = call ReadLqi.readLqi(msg);
+      recon->r_meta.rssi = call ReadLqi.readRssi(msg);
+
       if (hasFrag1Header(&lowmsg)) {
         if (recon->r_buf != NULL) goto fail;
         rv = lowpan_recon_start(&frame_address, recon, buf, len);
@@ -394,6 +398,12 @@ void SENDINFO_DECR(struct send_info *si) {
       /* no fragmentation, just deliver it */
       int rv;
       struct lowpan_reconstruct recon;
+
+      /* fill in metadata */
+      memcpy(&recon.r_meta.sender, &frame_address.ieee_src, 
+             sizeof(ieee154_addr_t));
+      recon.r_meta.lqi = call ReadLqi.readLqi(msg);
+      recon.r_meta.rssi = call ReadLqi.readRssi(msg);
 
       buf = getLowpanPayload(&lowmsg);
       if ((rv = lowpan_recon_start(&frame_address, &recon, buf, len)) < 0) {
@@ -428,10 +438,10 @@ void SENDINFO_DECR(struct send_info *si) {
     // this does not dequeue
     s_entry = call SendQueue.head();
 
-/* #ifdef LPL_SLEEP_INTERVAL */
-/*     call LowPowerListening.setRemoteWakeupInterval(s_entry->msg,  */
-/*             call LowPowerListening.getLocalWakeupInterval()); */
-/* #endif */
+#ifdef LPL_SLEEP_INTERVAL
+    call LowPowerListening.setRemoteWakeupInterval(s_entry->msg,
+            call LowPowerListening.getLocalWakeupInterval());
+#endif
 
     if (s_entry->info->failed) {
       dbg("Drops", "drops: sendTask: dropping failed fragment\n");

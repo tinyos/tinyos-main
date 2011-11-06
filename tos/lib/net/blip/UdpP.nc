@@ -107,7 +107,7 @@ module UdpP {
   /**
    * Injection point of IP datagrams.  This is only called for packets
    * being sent from this mote; packets which are being forwarded
-   * never lave the stack and so never use this entry point.
+   * never leave the stack and so never use this entry point.
    *
    * @msg an IP datagram with header fields (except for length)
    * @plen the length of the data payload added after the headers.
@@ -173,14 +173,14 @@ module UdpP {
 
   command void BlipStatistics.get(udp_statistics_t *buf) {
 #ifdef BLIP_STATS
-    ip_memcpy(buf, &stats, sizeof(udp_statistics_t));
+    ip_memcpy((uint8_t *)buf, (uint8_t *)&stats, sizeof(udp_statistics_t));
 #endif
   }
 
-  default event void UDP.recvfrom[uint8_t clnt](struct sockaddr_in6 *from, void *payload,
-                                               uint16_t len, struct ip6_metadata *meta) {
-
- }
+  default event void UDP.recvfrom[uint8_t clnt](struct sockaddr_in6 *from, 
+                                                void *payload,
+                                                uint16_t len, 
+                                                struct ip6_metadata *meta) {}
 
   event void IPAddress.changed(bool global_valid) {}
 }

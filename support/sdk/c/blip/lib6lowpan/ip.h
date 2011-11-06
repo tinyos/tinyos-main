@@ -168,6 +168,7 @@ enum {
     ICMP_TYPE_ROUTER_ADV            = 134,
     ICMP_TYPE_NEIGHBOR_SOL          = 135,
     ICMP_TYPE_NEIGHBOR_ADV          = 136,
+    ICMP_TYPE_RPL_CONTROL           = 155,
     ICMP_NEIGHBOR_HOPLIMIT          = 255,
 
     ICMP_CODE_HOPLIMIT_EXCEEDED     = 0,
@@ -212,10 +213,15 @@ struct tcp_hdr {
 
 /*
  * IP metadata and routing structures
+ *
+ * The metadata contains L2 information that upper layers may be
+ * interested in for one reason or another.
  */
 struct ip6_metadata {
   ieee154_addr_t sender;
+  // platforms commonly provide one or both of these indicators
   uint8_t   lqi;
+  uint8_t   rssi;
 };
 
 

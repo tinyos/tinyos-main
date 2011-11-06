@@ -45,7 +45,7 @@ struct send_entry {
 };
 
 #ifndef BLIP_L2_RETRIES
-#define BLIP_L2_RETRIES 3
+#define BLIP_L2_RETRIES 5
 #endif
 
 #ifndef BLIP_L2_DELAY

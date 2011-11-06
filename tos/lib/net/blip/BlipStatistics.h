@@ -84,8 +84,4 @@ typedef nx_struct {
   nx_uint16_t cksum; // UDP datagrams dropped due to checksum error
 } udp_statistics_t;
 
-typedef nx_struct {
-  nx_uint16_t lsn;
-} mcast_statistics_t;
-
 #endif

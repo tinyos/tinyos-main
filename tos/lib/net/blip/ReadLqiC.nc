@@ -24,6 +24,7 @@ configuration ReadLqiC {
   components RF230ReadLqiC, RF230Ieee154MessageC;
   ReadLqi = RF230ReadLqiC;
   RF230ReadLqiC.SubLqi -> RF230Ieee154MessageC.PacketLinkQuality;
+  RF230ReadLqiC.SubRssi -> RF230Ieee154MessageC.PacketRSSI;
 #else
 #error "No radio support is available for your platform"
 #endif

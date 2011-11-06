@@ -352,11 +352,6 @@ module IPForwardingEngineP {
   default event void ForwardingEvents.linkResult[uint8_t idx](struct in6_addr *host,
                                                               struct send_info * info) {}
   
-/*   default event void ForwardingEvents.drop[uint8_t idx](struct ip6_hdr *iph, */
-/*                                                         void *payload, */
-/*                                                         size_t len, */
-/*                                                         int reason) {} */
-
   default command error_t IPForward.send[uint8_t ifindex](struct in6_addr *next_hop,
                                                           struct ip6_packet *pkt,
                                                           void *data) {

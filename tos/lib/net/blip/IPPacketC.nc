@@ -48,7 +48,7 @@ module IPPacketC {
   }
 
   /**
-   * Find a TLV-envoded suboption inside of an IPv6 extension header.
+   * Find a TLV-encoded suboption inside of an IPv6 extension header.
    *
    * @header iovec holding the packet data
    * @ext_offset the offset to the first byte of the extension header
