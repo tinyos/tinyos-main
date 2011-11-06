@@ -76,6 +76,9 @@ interface RPLRank {
   
   // I am no longer a root
   command void cancelRoot();
+
+  // I am the root?
+  command bool isRoot();
   
   // return the rank of the specified IP addr
   command uint16_t getRank(struct in6_addr *node);

@@ -36,6 +36,7 @@
  */
 
 /* Top-level component to wire together the RPL layers */
+#include <lib6lowpan/ip.h>
 
 configuration RPLRoutingC {
   provides {
@@ -50,7 +51,7 @@ configuration RPLRoutingC {
   /* we receive routing messages through the ICMP component, which
      recieves all packets with the ICMP  */
   components IPStackC;
-  components new ICMPCodeDispatchC(155) as ICMP_RA;
+  components new ICMPCodeDispatchC(ICMP_TYPE_RPL_CONTROL) as ICMP_RA;
 
   StdControl = RPLRoutingEngineC;
   StdControl = RPLRankC;

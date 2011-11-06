@@ -105,6 +105,7 @@ implementation {
   RPLMRHOFP.RPLRoute -> RPLRoutingEngineC;
   RPLMRHOFP.ParentTable -> RPLRankP;
   RPLMRHOFP.RPLDAO -> RPLDAORoutingEngineC;
+  RPLMRHOFP.RPLRankInfo -> RPLRankP;
 #else
   components RPLOF0P, RPLDAORoutingEngineC;
   RPLRankP.RPLOF -> RPLOF0P;
