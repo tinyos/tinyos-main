@@ -69,7 +69,8 @@ implementation {
   }
 
   async event void Atm128Capture.captured( uint16_t time ) {
-    call Atm128Capture.reset();
+    // The flag is automatically cleared, clearing it again can cause missed interrupts
+    // call Atm128Capture.reset();
     signal Capture.captured( time );
   }
 
