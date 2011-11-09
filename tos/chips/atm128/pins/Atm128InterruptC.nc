@@ -58,10 +58,7 @@ implementation {
    * disables Interrupt interrupts
    */
   async command error_t Interrupt.disable() {
-    atomic {
-      call HplAtm128Interrupt.disable();
-      call HplAtm128Interrupt.clear();
-    }
+    call HplAtm128Interrupt.disable();
     return SUCCESS;
   }
 
@@ -69,7 +66,8 @@ implementation {
    * Event fired by lower level interrupt dispatch for Interrupt
    */
   async event void HplAtm128Interrupt.fired() {
-    call HplAtm128Interrupt.clear();
+    // The flag is automatically cleared, clearing it again can cause missed interrupts
+    // call HplAtm128Interrupt.clear();
     signal Interrupt.fired();
   }
 
