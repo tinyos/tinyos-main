@@ -74,6 +74,19 @@
 #define M16C_INTERRUPT_HANDLER(id) \
   M16C_INTERRUPT(id) @atomic_hwevent() @C()
  
+typedef float nx_float __attribute__((nx_base_be(afloat)));
+
+inline float __nesc_ntoh_afloat(const void *COUNT(sizeof(float)) source) @safe() {
+  float f;
+  memcpy(&f, source, sizeof(float));
+  return f;
+}
+
+inline float __nesc_hton_afloat(void *COUNT(sizeof(float)) target, float value) @safe() {
+  memcpy(target, &value, sizeof(float));
+  return value;
+}
+
 // The mov instruction should be used when clearing the interrupt flag.
 // More information can be found in the manual for the MCU.
 inline void clear_interrupt(uint16_t interrupt_addr)
