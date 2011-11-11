@@ -63,7 +63,6 @@ configuration RF212DriverLayerC
 		interface PacketFlag as TransmitPowerFlag;
 		interface PacketFlag as RSSIFlag;
 		interface PacketFlag as TimeSyncFlag;
-		interface RadioAlarm;
 	}
 }
 
@@ -97,7 +96,6 @@ implementation
 	RF212DriverLayerP.LocalTime -> HplRF212C;
 
 	Alarm = HplRF212C.Alarm;
-	RadioAlarm = RF212DriverLayerP.RadioAlarm;
 
 	RF212DriverLayerP.SELN -> HplRF212C.SELN;
 	RF212DriverLayerP.SpiResource -> HplRF212C.SpiResource;

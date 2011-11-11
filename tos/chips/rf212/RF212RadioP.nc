@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007, Vanderbilt University
+ * Copyright (c) 2011, University of Szeged
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +31,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Author: Miklos Maroti
+ * Author: Andras Biro
  */
 
 #include <RF212Radio.h>
@@ -67,6 +69,46 @@ module RF212RadioP
 
 implementation
 {
+	inline uint8_t getSymbolTime()
+	{
+		switch( RF212_TRX_CTRL_2_VALUE )
+		{
+		case RF212_DATA_MODE_BPSK_20:
+			return 50;
+
+		case RF212_DATA_MODE_BPSK_40:
+			return 25;
+
+		case RF212_DATA_MODE_OQPSK_SIN_RC_100:
+		case RF212_DATA_MODE_OQPSK_SIN_RC_200:
+		case RF212_DATA_MODE_OQPSK_SIN_RC_400_SCR:
+		case RF212_DATA_MODE_OQPSK_SIN_RC_400:
+			return 40;
+
+		case RF212_DATA_MODE_OQPSK_SIN_250:
+		case RF212_DATA_MODE_OQPSK_RC_250:
+		case RF212_DATA_MODE_OQPSK_SIN_500:
+		case RF212_DATA_MODE_OQPSK_RC_500:
+		case RF212_DATA_MODE_OQPSK_SIN_1000_SCR:
+		case RF212_DATA_MODE_OQPSK_SIN_1000:
+		case RF212_DATA_MODE_OQPSK_RC_1000_SCR:
+		case RF212_DATA_MODE_OQPSK_RC_1000:
+			return 16;
+		}
+	}
+	
+	inline bool isBpsk()
+	{
+		switch( RF212_TRX_CTRL_2_VALUE )
+		{
+		case RF212_DATA_MODE_BPSK_20:
+		case RF212_DATA_MODE_BPSK_40:
+			return TRUE;
+
+		default:
+			return FALSE;
+		}
+	}
 
 /*----------------- RF212DriverConfig -----------------*/
 
@@ -128,13 +170,26 @@ implementation
 		call Ieee154PacketLayer.createAckReply(data, ack);
 	}
 
-#ifndef SOFTWAREACK_TIMEOUT
-#define SOFTWAREACK_TIMEOUT	20000
+// 802.15.4 standard:
+// =aTurnaroundTime+phySHRDuration+6*phySymbolsPerOctet
+// =12s + phySymbolsPerOctet + 6o * phySymbolsPerOctet
+// SHR:  BPSK: 40; OQPSK: 10
+// phySymbolsPerOctet: BPSK: 8; OQPSK: 2
+// plus we add a constant for safety
+#ifndef SOFTWAREACK_TIMEOUT_PLUS
+#define SOFTWAREACK_TIMEOUT_PLUS	1000
 #endif
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()
 	{
-		return (uint16_t)(SOFTWAREACK_TIMEOUT * RADIO_ALARM_MICROSEC);
+#ifndef SOFTWAREACK_TIMEOUT
+		if(isBpsk())
+			return ((12+40+6*8) * getSymbolTime() + SOFTWAREACK_TIMEOUT_PLUS) * RADIO_ALARM_MICROSEC;
+		else
+			return ((12+10+6*2) * getSymbolTime() + SOFTWAREACK_TIMEOUT_PLUS) * RADIO_ALARM_MICROSEC;
+#else
+			return (uint16_t)(SOFTWAREACK_TIMEOUT * RADIO_ALARM_MICROSEC);
+#endif
 	}
 
 	tasklet_async command void SoftwareAckConfig.reportChannelError()
@@ -226,34 +281,27 @@ implementation
 
 /*----------------- RandomCollisionConfig -----------------*/
 
-	/*
-	 * We try to use the same values as in CC2420
-	 *
-	 * CC2420_MIN_BACKOFF = 10 jiffies = 320 microsec
-	 * CC2420_BACKOFF_PERIOD = 10 jiffies
-	 * initial backoff = 0x1F * CC2420_BACKOFF_PERIOD = 310 jiffies = 9920 microsec
-	 * congestion backoff = 0x7 * CC2420_BACKOFF_PERIOD = 70 jiffies = 2240 microsec
-	 */
-
-#ifndef LOW_POWER_LISTENING
+// 802.15.4 constants:
+// aUnitBackoffPeriod: 20 symbol
+// macMinBE:0..5 (8), default 3
+// but we don't care about the standard yet, just converted the rf230 lpl timeouts to SymbolTime base
 
 	async command uint16_t RandomCollisionConfig.getMinimumBackoff()
 	{
-		return (uint16_t)(320 * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(10 * 8 * getSymbolTime() * RADIO_ALARM_MICROSEC);
 	}
 
 	async command uint16_t RandomCollisionConfig.getInitialBackoff(message_t* msg)
 	{
-		return (uint16_t)(9920 * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(50 * 8 * getSymbolTime() * RADIO_ALARM_MICROSEC);
 	}
 
 	async command uint16_t RandomCollisionConfig.getCongestionBackoff(message_t* msg)
 	{
-		return (uint16_t)(2240 * RADIO_ALARM_MICROSEC);
+		return (uint16_t)(100 * 8 * getSymbolTime() * RADIO_ALARM_MICROSEC);
 	}
 
-#endif
-
+// 802.15.4 standard: SIFS (no ack requested): 12 symbol; LIFS (ack requested): 40 symbol
 	async command uint16_t RandomCollisionConfig.getTransmitBarrier(message_t* msg)
 	{
 		uint16_t time;
@@ -263,9 +311,9 @@ implementation
 
 		// estimated response time (download the message, etc) is 5-8 bytes
 		if( call Ieee154PacketLayer.requiresAckReply(msg) )
-			time += (uint16_t)(32 * (-5 + 16 + 11 + 5) * RADIO_ALARM_MICROSEC);
+			time += (uint16_t)(40 * getSymbolTime() * RADIO_ALARM_MICROSEC);
 		else
-			time += (uint16_t)(32 * (-5 + 5) * RADIO_ALARM_MICROSEC);
+			time += (uint16_t)(12 * getSymbolTime() * RADIO_ALARM_MICROSEC);
 
 		return time;
 	}
@@ -325,24 +373,8 @@ implementation
 
 	command uint16_t LowPowerListeningConfig.getListenLength()
 	{
-		return 5;
+		return getSymbolTime();//TODO: fine-tune this value
 	}
-
-	async command uint16_t RandomCollisionConfig.getMinimumBackoff()
-	{
-		return (uint16_t)(320 * RADIO_ALARM_MICROSEC);
-	}
-
-	async command uint16_t RandomCollisionConfig.getInitialBackoff(message_t* msg)
-	{
-		return (uint16_t)(1600 * RADIO_ALARM_MICROSEC);
-	}
-
-	async command uint16_t RandomCollisionConfig.getCongestionBackoff(message_t* msg)
-	{
-		return (uint16_t)(3200 * RADIO_ALARM_MICROSEC);
-	}
-
 #endif
 
 }
