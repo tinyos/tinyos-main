@@ -53,7 +53,7 @@ implementation{
   uint16_t prevParent;
 
   uint32_t parentChanges = 0;
-  uint16_t desiredParent = MAX_PARENT;
+  uint16_t desiredParent = MAX_PARENT - 1;
   uint16_t nodeEtx = divideRank;
   bool newParent = FALSE;
   uint16_t min_hop_rank_inc = 1;
@@ -61,18 +61,18 @@ implementation{
 
   /* OCP for OF0 */
   command bool RPLOF.OCP(uint16_t ocp) {
-    if (ocp == 0)
+    if (ocp == RPLOF_OCP_OF0)
       return TRUE;
     return FALSE;
   }
 
   /* Which metrics does this implementation support */
   command bool RPLOF.objectSupported(uint16_t objectType) {
-    if (objectType == 7) {
+    if (objectType == RPLOF_OPTION_SOLICITATION) {
       return TRUE;
     }
 
-    return TRUE;
+    return FALSE;
   }
 
   command void RPLOF.setMinHopRankIncrease(uint16_t val) {
@@ -198,7 +198,7 @@ implementation{
       desiredParent = MAX_PARENT;
       call ForwardingTable.delRoute(route_key);
       route_key = ROUTE_INVAL_KEY;
-      return FAIL;
+      return FALSE;
     }
 
     previousParent = call ParentTable.get(desiredParent);

@@ -63,7 +63,7 @@ implementation{
   uint16_t nodeEtx = divideRank;
   uint16_t prevParent;
   bool newParent = FALSE;
-  uint16_t desiredParent = MAX_PARENT;
+  uint16_t desiredParent = MAX_PARENT - 1;
   uint16_t min_hop_rank_inc = 1;
   route_key_t route_key = ROUTE_INVAL_KEY;
 
@@ -74,14 +74,14 @@ implementation{
 
   /* OCP for MRHOF */
   command bool RPLOF.OCP(uint16_t ocp) {
-    if (ocp == 1)
+    if (ocp == RPLOF_OCP_MRHOF)
       return TRUE;
     return FALSE;
   }
 
   /* Which metrics does this implementation support */
   command bool RPLOF.objectSupported(uint16_t objectType) {
-    if (objectType == 7) {
+    if (objectType == RPLOF_OPTION_SOLICITATION) {
       return TRUE;
     }
 
@@ -209,7 +209,7 @@ implementation{
       printf("RPLOF: SELECTED PARENT is FFFF %d\n", TOS_NODE_ID);
       //call ForwardingTable.delRoute(route_key);
       route_key = ROUTE_INVAL_KEY;
-      return FAIL;
+      return FALSE;
     }
 
     previousParent = call ParentTable.get(desiredParent);
