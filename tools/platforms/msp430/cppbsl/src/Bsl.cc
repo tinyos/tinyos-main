@@ -32,6 +32,7 @@
  * @date 2007-04-16
  */
 
+#include <stdio.h>
 #include "Bsl.h"
 using namespace std;
 

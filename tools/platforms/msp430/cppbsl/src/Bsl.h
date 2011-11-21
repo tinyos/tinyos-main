@@ -35,7 +35,7 @@
 #ifndef BSL_BSL_H
 #define BSL_BSL_H
 
-#include <string>
+#include <string.h>
 #include <iostream>
 #include <list>
 #include "Parameters.h"

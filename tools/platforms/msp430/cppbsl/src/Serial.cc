@@ -33,6 +33,7 @@
  */
 #include <stdio.h>
 #include <iostream>
+#include <string.h>
 #include "../config.h"
 #ifdef HAVE_LINUX_VERSION_H
 #include <linux/version.h>
