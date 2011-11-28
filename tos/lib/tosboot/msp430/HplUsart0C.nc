@@ -63,7 +63,7 @@ implementation {
     U0CTL = SWRST | CHAR | SYNC | MM;
 
     // 3-pin + half-cycle delayed UCLK
-    U0TCTL |= STC + CKPH + SSEL_SMCLK; 
+    U0TCTL |= STC + CKPH + SSEL1; 
 
     // as fast as possible
     U0BR0 = 0x02;
