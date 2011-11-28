@@ -41,6 +41,8 @@
  * @version $Revision: 1.3 $ $Date: 2008/06/16 15:33:32 $
  */
 
+#include "IEEE802154.h"
+
 interface CC2420Config {
 
   /**
