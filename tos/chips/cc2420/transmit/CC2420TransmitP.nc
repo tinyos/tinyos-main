@@ -646,7 +646,7 @@ implementation {
 
       secHdr = (security_header_t*) &msg_header->secHdr;
 #if ! defined(TFRAMES_ENABLED)
-    (uint8_t*)secHdr += 1;
+    secHdr=(security_header_t*)((uint8_t*)secHdr+1);
 #endif
 
       memcpy(&nonceValue[3], &(secHdr->frameCounter), 4);
