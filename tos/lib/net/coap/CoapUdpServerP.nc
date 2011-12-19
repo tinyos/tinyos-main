@@ -491,6 +491,7 @@ module CoapUdpServerP {
 
    // Add buffer value to the PDU
    if (!coap_add_data(pdu, buflen, val_buf)) {
+     coap_delete_pdu(pdu);
      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) {
        //printf("** coap: return PDU Null for 500 response\n");
      }
