@@ -362,7 +362,6 @@ module CoapUdpServerP {
     unsigned int blklen, blk;
     int code, finished = 1;
     unsigned char mediatype = COAP_MEDIATYPE_ANY;
-    static unsigned char buf[COAP_MAX_PDU_SIZE];
 
     if ( !coap_get_request_uri( node->pdu, &uri ) )
       return NULL;
@@ -410,7 +409,7 @@ module CoapUdpServerP {
 			    &(node->pdu->hdr->id),
 			    &mediatype,
 			    (blk & ~0x0f) << (blk & 0x07),
-			    buf,
+			    NULL, // unused buffer
 			    &blklen,
 			    &finished,
 			    COAP_REQUEST_GET);
@@ -562,7 +561,6 @@ module CoapUdpServerP {
    coap_opt_t  *ct,*block;
    unsigned int blklen, blk;
    int code, finished = 1;
-   static unsigned char buf[COAP_MAX_PDU_SIZE];
    unsigned int len;
    unsigned char *databuf;
 
