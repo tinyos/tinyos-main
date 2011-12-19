@@ -106,7 +106,11 @@ module CoapUdpClientP {
     if (! (pdu = coap_new_request( method, optlist ) ) )
       return FALSE;
 
-    call LibCoapClient.send(ctx_client, dest, pdu, 1);
+    if (call LibCoapClient.send(ctx_client, dest, pdu, 1) == COAP_INVALID_TID)
+    {
+        coap_delete_pdu (pdu);
+        return FAIL;
+    }
     return SUCCESS;
   };
 
