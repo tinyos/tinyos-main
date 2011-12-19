@@ -799,8 +799,8 @@ main(int argc, char **argv) {
 	coap_dispatch( ctx );	/* and dispatch PDUs from receivequeue */
 
 	// koo second read is done to process the asyn response. TODO this has to be done properly by checking the type of message
-	coap_read( ctx );	/* read received data */
-	coap_dispatch( ctx );	/* and dispatch PDUs from receivequeue */
+	//coap_read( ctx );	/* read received data */
+	//coap_dispatch( ctx );	/* and dispatch PDUs from receivequeue */
 	// koo
       }
     }
