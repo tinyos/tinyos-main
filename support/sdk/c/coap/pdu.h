@@ -26,7 +26,6 @@
 
 /* pre-defined constants that reflect defaults for CoAP */
 
-#define COAP_PREACK_TIMEOUT          200 /* timeout in milliseconds for sending PreACK */
 #define COAP_DEFAULT_RESPONSE_TIMEOUT  1 /* response timeout in seconds */
 #define COAP_DEFAULT_MAX_RETRANSMIT    5 /* max number of retransmissions */
 #define COAP_DEFAULT_PORT          61616 /* CoAP default UDP port */
