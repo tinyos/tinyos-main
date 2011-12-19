@@ -31,6 +31,6 @@
  */
 interface ReadResource {
   command error_t get(coap_tid_t id);
-  event void getDone(error_t result, coap_tid_t id, uint8_t asyn_message, uint8_t* val, uint8_t buflen);
+  event void getDone(error_t result, coap_tid_t id, uint8_t asyn_message, uint8_t* val, size_t buflen);
   event void getDoneDeferred(coap_tid_t id);
 }

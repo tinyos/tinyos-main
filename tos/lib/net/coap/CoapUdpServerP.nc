@@ -444,7 +444,7 @@ module CoapUdpServerP {
 						  coap_tid_t id,
 						  uint8_t asyn_message,
 						  uint8_t* val_buf,
-						  uint8_t buflen) {
+						  size_t buflen) {
    coap_queue_t *node;
    coap_pdu_t *pdu;
    coap_opt_t *ct;
