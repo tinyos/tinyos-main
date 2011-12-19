@@ -39,6 +39,7 @@
 #include <subscribe.h>  // for resource_t
 #include <encode.h>
 #include "tinyos_coap_resources.h"
+#include "blip_printf.h"
 
 #define INDEX "CoAPUdpServer: It works!!"
 
@@ -124,6 +125,7 @@ module CoapUdpServerP {
     return ntohs(tid);
   }
 
+  //TODO: handle wellknown
   //     int resource_wellknown(coap_uri_t *uri,
   //                         unsigned short *id,
   //                         unsigned char *tok,
@@ -143,7 +145,7 @@ module CoapUdpServerP {
 			  int *finished,
 			  unsigned int method);
 
-  int	coap_read_save(coap_context_t *ctx, coap_queue_t *node);
+  int coap_save_splitphase(coap_context_t *ctx, coap_queue_t *node);
 
   void message_handler(coap_context_t *ctx, coap_queue_t *node, void *data);
 
@@ -259,24 +261,24 @@ module CoapUdpServerP {
 			  unsigned int method) {
 
     if ( method == COAP_REQUEST_GET) {
-      if (call ReadResource.get[get_key(uri->path.s, uri->path.length)](*id) == SUCCESS) {
-	return SUCCESS;
-      } else {
-	return FAIL;
-      }
+      return call ReadResource.get[get_key(uri->path.s, uri->path.length)](*id);
     } else if ( method == COAP_REQUEST_PUT) {
-      if (call WriteResource.put[get_key(uri->path.s, uri->path.length)](buf, *buflen, *id) == SUCCESS){
-	return SUCCESS;
-      } else {
-	return FAIL;
-      }
+      return call WriteResource.put[get_key(uri->path.s, uri->path.length)](buf, *buflen, *id);
+    } else {
+      return EINVAL;
     }
-    return FAIL;
+
+    //returns:
+    // SUCCESS: when the resource is serving the request, it will signal back
+    // EBUSY:   when the resource is already serving another request         -> 503
+    // FAIL:    when the resource is not present or cannot handle GET or PUT -> 404
+    // EINVAL:  when the method is neither GET nor PUT - POST & DELETE       -> 405
+    //          not supported ATM
   }
 
   event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
 				uint16_t len, struct ip6_metadata *meta) {
-    //printf("CoapUdpServer: LibCoapServer.read()\n");
+    printf("CoapUdpServer: LibCoapServer.read()\n");
     coap_read(ctx_server, from, data, len, meta);
     coap_dispatch(ctx_server);
   }
@@ -405,6 +407,12 @@ module CoapUdpServerP {
 	mediatype = *COAP_OPT_VALUE(*ct);
       }
 
+      /*if (resource->splitphase) {
+	printf("handle_get: save()\n");
+	coap_save_splitphase(ctx, node);
+	}*/
+
+      printf("handle_get: data()\n");
       code = resource->data(&uri,
 			    &(node->pdu->hdr->id),
 			    &mediatype,
@@ -413,20 +421,37 @@ module CoapUdpServerP {
 			    &blklen,
 			    &finished,
 			    COAP_REQUEST_GET);
+      printf("handle_get: data()~ %u %u\n", resource->splitphase, code);
 
       if (resource->splitphase) {
 	if (code == SUCCESS) {
-	  //printf("** coap: splitphase resource, save context and node details, send async response \n");
+	  printf("handle_get: save()\n");
 	  /* handle subscription */
 #warning "subscriptions not supported"
 
-	  coap_read_save(ctx, node);
+	  //FIXME: SAVE before calling data()????
+	  coap_save_splitphase(ctx, node);
+	  // this is a split-phase resource, no PDU ready yet, created in getDone
 	  return NULL;
+	} else if (code == EBUSY) {
+	  //FIXME: remove node from splitphasequeue?
+	  //TODO:  add error messages to payload
+	  //       (for all else cases)
+	  printf("handle_get EBUSY\n");
+	  return new_response(ctx, node, COAP_RESPONSE_503);
+	} else if (code == FAIL) {
+	  printf("handle_get FAIL\n");
+	  return new_response(ctx, node, COAP_RESPONSE_404);
+	} else if (code == EINVAL) {
+	  printf("handle_get EINVAL\n");
+	  return new_response(ctx, node, COAP_RESPONSE_405);
 	} else {
-	  return new_response(ctx, node, COAP_RESPONSE_404); //TODO add error message to payload
+	  printf("** coap: splitphase resource, save context and node details \n");
+	  return new_response(ctx, node, COAP_RESPONSE_404);
 	}
       } else {
-	//no splitphase, handle this case
+	//no splitphase
+	//TODO: handle this case
 	return new_response(ctx, node, COAP_RESPONSE_500);
       }
     } else {
@@ -449,11 +474,11 @@ module CoapUdpServerP {
    coap_pdu_t *pdu;
    coap_opt_t *ct;
 
-   //printf("** coap: getDone.... %i\n", uri_key);
+   //printf("** coap: getDone.... %i %u\n", uri_key, ntohs(id));
 
-   // assuming more than one entry is in asynresqueue
-   if (!(node = coap_find_transaction(ctx_server->asynresqueue, id))){
-     //printf("** coap: getDone: node in asynresqueue not found, quit\n");
+   // assuming more than one entry is in splitphasequeue
+   if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))){
+     printf("** coap: getDone: node in splitphasequeue not found, quit\n");
      return;
    }
 
@@ -475,15 +500,15 @@ module CoapUdpServerP {
 	 //printf("** coap: return PDU Null for Asyn response\n");
        }
      } else {
-
        //normal response
        if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_200)) ) {
 	 //printf("** coap: return PDU Null for normal response\n");
        }
      }
    }
+
    // Add content-encoding
-   // TODO - this should come from the resource, not the request!
+   // TODO: this should come from the resource, not the request!
    ct = coap_check_option( node->pdu, COAP_OPTION_CONTENT_TYPE );
    if ( ct ) {
      coap_add_option( pdu, COAP_OPTION_CONTENT_TYPE, COAP_OPT_LENGTH(*ct),COAP_OPT_VALUE(*ct) );
@@ -498,16 +523,20 @@ module CoapUdpServerP {
    }
 
    // sending pdu
+   printf("getDone(): send PDU %u\n", ntohs(node->pdu->hdr->id));
    if (pdu && (call LibCoapServer.send(ctx_server, &node->remote, pdu, 1) == COAP_INVALID_TID )) {
      //printf("** coap:error sending response\n");
      coap_delete_pdu(pdu);
    }
 
-   /* remove node from asynresqueue */
-   coap_extract_node (&ctx_server->asynresqueue, node);
+   /* remove node from splitphasequeue */
+   //printf("getDone(): remove %u\n", ntohs(id));
+   //coap_remove_transaction(&ctx_server->splitphasequeue, id);
+
+   coap_extract_node (&ctx_server->splitphasequeue, node);
    node->next = NULL;
    coap_delete_node( node );
-   //printf("** coap: delete node details kept for Asyn response\n");
+   //printf("getDone(): delete node details kept for splitphase response\n");
  }
 
  event void ReadResource.getDoneDeferred[uint8_t uri_key](coap_tid_t id) {
@@ -515,9 +544,11 @@ module CoapUdpServerP {
    coap_pdu_t *pdu;
    uint8_t reqtoken = 0;
 
-   // assuming more than one entry is in asynresqueue
-   if (!(node = coap_find_transaction(ctx_server->asynresqueue, id))){
-     //printf("** coap: getPreACK: node in asynresqueue not found, quit\n");
+   printf("getDoneDeferred ##\n");
+
+   // assuming more than one entry is in splitphasequeue
+   if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))){
+     //printf("** coap: getPreACK: node in splitphasequeue not found, quit\n");
      return;
    }
 
@@ -541,13 +572,13 @@ module CoapUdpServerP {
    }
 
    if (reqtoken) {
-     /* remove node from asynresqueue */
-     coap_extract_node (&ctx_server->asynresqueue, node);
+     /* remove node from splitphasequeue */
+     coap_extract_node (&ctx_server->splitphasequeue, node);
      node->next = NULL;
      coap_delete_node(node);
-     //printf("** coap: delete node details kept for Asyn response\n");
+     printf("** coap: delete node deferred\n");
    } else {
-     //printf("** coap: PreACK sent!\n");
+     printf("** coap: PreACK sent!\n");
    }
  }
 
@@ -625,7 +656,7 @@ module CoapUdpServerP {
      if (resource->splitphase) {
        if (code == SUCCESS) {
 	 //printf("** coap: splitphase resource, save context and node details, send async response \n");
-	 coap_read_save(ctx, node);
+	 coap_save_splitphase(ctx, node);
 	 return NULL;
        } else {
 	 return new_response(ctx, node, COAP_RESPONSE_400);
@@ -654,9 +685,9 @@ module CoapUdpServerP {
    coap_opt_t *tok, *ct;
 
    //printf("** coap: putDone.... %i\n", uri_key);
-   // assuming more than one entry is in asynresqueue
-   if (!(node = coap_find_transaction(ctx_server->asynresqueue, id))){
-     //printf("** coap: getDone: node in asynresqueue not found, quit\n");
+   // assuming more than one entry is in splitphasequeue
+   if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))){
+     //printf("** coap: getDone: node in splitphasequeue not found, quit\n");
      return;
    }
 
@@ -699,7 +730,7 @@ module CoapUdpServerP {
    }
 
    /* remove node from asynresqueue */
-   coap_extract_node (&ctx_server->asynresqueue, node);
+   coap_extract_node (&ctx_server->splitphasequeue, node);
    node->next = NULL;
    coap_delete_node( node );
    //printf("** coap: delete node details kept for Asyn response\n");
@@ -737,6 +768,7 @@ module CoapUdpServerP {
      //printf("dropped packet with unknown version %u\n", node->pdu->hdr->version);
      return;
    }
+   //printf("message handler\n");
 
    if ( !coap_get_request_uri( node->pdu, &uri ) )
      return;
@@ -748,7 +780,7 @@ module CoapUdpServerP {
      pdu = handle_get(ctx, node, data);
 
      if ( !pdu && node->pdu->hdr->type == COAP_MESSAGE_CON ){
-       if (resource && resource->splitphase){
+       if (resource && resource->splitphase) {
 	 break;
        }
        pdu = new_rst( ctx, node, COAP_RESPONSE_500 );
@@ -758,7 +790,7 @@ module CoapUdpServerP {
      pdu = handle_put(ctx, node, data);
 
      if ( !pdu && node->pdu->hdr->type == COAP_MESSAGE_CON ){
-       if (resource && resource->splitphase){
+       if (resource && resource->splitphase) {
 	 break;
        }
        pdu = new_rst( ctx, node, COAP_RESPONSE_500 );
@@ -791,25 +823,29 @@ module CoapUdpServerP {
  }
 
  //////////////
- // handle asynresqueue to save details of the node to send asyn res later
- int	coap_read_save(coap_context_t *ctx,
-		       coap_queue_t *node) {
+ // save details for splitphase operation for later
+ int coap_save_splitphase(coap_context_t *ctx,
+			  coap_queue_t *node) {
    coap_queue_t *new_node;
    coap_opt_t *opt;
 
+   printf("coap_save_split %u\n", ntohs(node->pdu->hdr->id));
+
    new_node = coap_new_node();
    if ( !new_node ) {
+     printf("coap_split ret 1\n");
      return -1;
    }
 
    new_node->pdu = coap_new_pdu();
    if ( !new_node->pdu ) {
+     printf("coap_split ret 2 del_node\n");
      coap_delete_node( new_node );
      return -1;
    }
 
    memcpy( &new_node->remote, &node->remote, sizeof( struct sockaddr_in6 ) );
-   //printf("** coap: saving ctx and node details to send asynres later\n");
+   printf("** coap: saving ctx and node details to send splitphase later\n");
    /* "parse" received PDU by filling pdu structure */
    memcpy(new_node->pdu->hdr, node->pdu->hdr, node->pdu->length );
    new_node->pdu->length = node->pdu->length;
@@ -823,9 +859,9 @@ module CoapUdpServerP {
    else
      new_node->pdu->data = (unsigned char *)opt;
 
-   /* and add new node to asynresqueue */
-   coap_insert_node( &ctx->asynresqueue, new_node, order_transaction_id );
-   //printf("** coap: add new node to asynresqueue\n");
+   /* and add new node to splitphasequeue */
+   //printf("coap_split ins id %u\n", ntohs(new_node->pdu->hdr->id));
+   coap_insert_node( &ctx->splitphasequeue, new_node, order_transaction_id );
 
 #ifndef NDEBUG
    coap_show_pdu( new_node->pdu );
