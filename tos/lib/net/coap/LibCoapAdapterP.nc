@@ -30,7 +30,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 module LibCoapAdapterP {
   provides interface LibCoAP as LibCoapServer;
   provides interface LibCoAP as LibCoapClient;
@@ -44,7 +43,7 @@ module LibCoapAdapterP {
 
   event void UDPServer.recvfrom(struct sockaddr_in6 *from, void *data,
 				uint16_t len, struct ip6_metadata *meta) {
-    printf( "LibCoapAdapter UDPServer.recvfrom()\n");
+    //printf( "LibCoapAdapter UDPServer.recvfrom()\n");
     libcoap_server_read(from, data, len, meta);
   }
 
@@ -55,24 +54,29 @@ module LibCoapAdapterP {
 
   event void UDPClient.recvfrom(struct sockaddr_in6 *from, void *data,
 				uint16_t len, struct ip6_metadata *meta) {
-    printf("LibCoapAdapter UDPClient.recvfrom()\n");
+    //printf("LibCoapAdapter UDPClient.recvfrom()\n");
     libcoap_client_read(from, data, len, meta);
   }
 
   // might get called in error cases from libcoap's net.c -> spontaneous.
   // assumption here is, that those error cases are for the server socket
   coap_tid_t coap_send_impl(coap_context_t *context,
-			      struct sockaddr_in6 *dst,
-			      coap_pdu_t *pdu,
-			      int free_pdu ) @C() @spontaneous() {
+			    struct sockaddr_in6 *dst,
+			    coap_pdu_t *pdu,
+			    int free_pdu ) @C() @spontaneous() {
+    coap_tid_t tid;
+
     if ( !context || !dst || !pdu )
       return COAP_INVALID_TID;
 
     call UDPServer.sendto(dst, pdu->hdr, pdu->length);
 
+    tid = pdu->hdr->id;
+
     if ( free_pdu )
       coap_delete_pdu( pdu );
-    return ntohs(pdu->hdr->id);
+
+    return ntohs(tid);
   }
 
   command coap_tid_t LibCoapServer.send(coap_context_t *context,
@@ -91,14 +95,18 @@ module LibCoapAdapterP {
 				   struct sockaddr_in6 *dst,
 				   coap_pdu_t *pdu,
 				   int free_pdu ) {
+    coap_tid_t tid;
     if ( !context || !dst || !pdu )
       return COAP_INVALID_TID;
 
     call UDPClient.sendto(dst, pdu->hdr, pdu->length);
 
+    tid = pdu->hdr->id;
+
     if ( free_pdu )
       coap_delete_pdu( pdu );
-    return ntohs(pdu->hdr->id);
+
+    return ntohs(tid);
   }
 
   command coap_tid_t LibCoapClient.send(coap_context_t *context,
@@ -111,5 +119,4 @@ module LibCoapAdapterP {
   command error_t LibCoapClient.bind(uint16_t port) {
     return call UDPClient.bind(port);
   }
-
-  }
+}
