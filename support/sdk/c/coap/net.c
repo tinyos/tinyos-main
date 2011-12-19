@@ -509,7 +509,7 @@ coap_remove_transaction( coap_queue_t **queue, coap_tid_t id ) {
   do {
     p = q;
     q = q->next;
-  } while ( q && id == q->pdu->hdr->id );
+  } while ( q && id != q->pdu->hdr->id );
   
   if ( q ) {			/* found transaction */
     p->next = q->next;
