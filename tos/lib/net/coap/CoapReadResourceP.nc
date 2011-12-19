@@ -33,37 +33,44 @@
 generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
   provides interface ReadResource;
   uses interface Leds;
-  uses interface Timer<TMilli> as Timer1;
+  uses interface Timer<TMilli> as PreAckTimer;
   uses interface Read<val_t>;
 } implementation {
-  coap_tid_t id_t;
+
+  bool lock = FALSE;
+  coap_tid_t temp_id;
 
   command error_t ReadResource.get(coap_tid_t id) {
 
     // 	printf("ReadResource.get: %hu\n", uri_key);
 
-    id_t = id;
-    call Timer1.startOneShot(COAP_PREACK_TIMEOUT);
-    call Read.read();
+    if (lock == FALSE) {
+      lock = TRUE;
 
-    return SUCCESS;
+      temp_id = id;
+      call PreAckTimer.startOneShot(COAP_PREACK_TIMEOUT);
+      call Read.read();
+      return SUCCESS;
+    } else {
+      return EBUSY;
+    }
   }
 
-  event void Timer1.fired() {
+  event void PreAckTimer.fired() {
     call Leds.led2Toggle();
-
-    signal ReadResource.getDoneDeferred(id_t);
+    signal ReadResource.getDoneDeferred(temp_id);
   }
 
   event void Read.readDone(error_t result, val_t val) {
     uint8_t asyn_message = 1;
 
-    if (call Timer1.isRunning()){
-      call Timer1.stop();
+    if (call PreAckTimer.isRunning()) {
+      call PreAckTimer.stop();
       asyn_message = 0;
     }
 
-    signal ReadResource.getDone(result, id_t, asyn_message, (uint8_t*)&val, sizeof(val_t));
+    //printf("ReadResource.readDone\n");
+    signal ReadResource.getDone(result, temp_id, asyn_message, (uint8_t*)&val, sizeof(val_t));
+    lock = FALSE;
   }
-
-  }
+}
