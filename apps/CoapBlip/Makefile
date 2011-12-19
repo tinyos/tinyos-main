@@ -47,7 +47,7 @@ CFLAGS += -DCOAP_RESOURCE_LED
 #CFLAGS += -DCOAP_RESOURCE_ALL #TEMP + HUM + VOLT
 
 # timeout in milliseconds for sending PreACK
-CFLAGS += -DCOAP_PREACK_TIMEOUT=200
+CFLAGS += -DCOAP_PREACK_TIMEOUT=500
 
 ################ CoAP Client ################################
 #CFLAGS += -DCOAP_CLIENT_ENABLED
