@@ -125,17 +125,6 @@ module CoapUdpServerP {
     return ntohs(tid);
   }
 
-  //TODO: handle wellknown
-  //     int resource_wellknown(coap_uri_t *uri,
-  //                         unsigned short *id,
-  //                         unsigned char *tok,
-  //                         unsigned char *mediatype,
-  //                         unsigned int offset,
-  //                         unsigned char *buf,
-  //                         unsigned int *buflen,
-  //                         int *finished,
-  //                         unsigned int method);
-
   int resource_splitphase(coap_uri_t *uri,
 			  coap_tid_t *id,
 			  unsigned char *mediatype,
@@ -150,7 +139,6 @@ module CoapUdpServerP {
   void message_handler(coap_context_t *ctx, coap_queue_t *node, void *data);
 
   command error_t Init.init() {
-    // resource_t *r;
 
     ctx_server = (coap_context_t*)coap_malloc( sizeof( coap_context_t ) );
     if ( !ctx_server ) {
@@ -159,27 +147,153 @@ module CoapUdpServerP {
     memset(ctx_server, 0, sizeof( coap_context_t ) );
     coap_register_message_handler( ctx_server, message_handler );
 
-    call Leds.led1Toggle();
-
-    //register wellknown resource
-    // 	if ( !(r = coap_malloc( sizeof(coap_resource_t) )))
-    // 	    return FAIL;
-    //
-    // 	r->uri = coap_new_uri((const unsigned char *)"/" COAP_DEFAULT_URI_WELLKNOWN,
-    // 			      sizeof(COAP_DEFAULT_URI_WELLKNOWN));
-    // 	r->mediatype = COAP_MEDIATYPE_APPLICATION_LINK_FORMAT;
-    // 	r->dirty = 0;
-    // 	r->writable = 0;
-    // 	r->splitphase = 0;
-    // 	r->immediately = 1;
-    //r->data = resource_wellknown;
-    // 	coap_add_resource( ctx_server, r );
-
     return SUCCESS;
   }
 
   command error_t CoAPServer.bind(uint16_t port) {
     return call LibCoapServer.bind(port);
+  }
+
+#ifdef INCLUDE_WELLKNOWN
+  ///////////////////
+  // wellknown resources
+  int print_link(coap_resource_t *resource, unsigned char *buf, size_t buflen) {
+      size_t n = 0;
+
+      //assert(resource);
+      //assert(buf);
+      if (resource == NULL || buf == NULL) {
+	  return -1;
+      }
+
+      if (buflen < resource->uri->path.length + 3)
+	  return -1;
+
+      /* FIXME: calculate maximum length and return if longer than buflen */
+      buf[n++] = '<'; buf[n++] = '/';
+
+      memcpy(buf + n, resource->uri->path.s, resource->uri->path.length);
+
+      n += resource->uri->path.length;
+      buf[n++] = '>';
+
+      if (resource->mediatype != COAP_MEDIATYPE_ANY) {
+	  if (buflen - n < 7) 	/* mediatype is at most 3 digits */
+	      return -1;
+	  n += snprintf((char *)(buf + n), buflen - n, ";ct=%d",
+			resource->mediatype);
+      }
+
+      if (resource->name) {
+	  if (buflen - n < resource->name->length + 5) /* include trailing quote */
+	      return -1;
+
+	  memcpy(buf + n, ";n=\"", 4);
+	  n += 4;
+	  memcpy(buf + n, resource->name->s, resource->name->length);
+	  n += resource->name->length;
+
+	  if (!resource->writable) {
+	      if (buflen - n < 12)
+		  return -1;
+
+	      n += snprintf((char *)(buf + n), buflen - n, " (read-only)");
+	  }
+
+	  buf[n++] = '"';
+      }
+
+      return  n;
+  }
+
+  int resource_wellknown(coap_uri_t *uri,
+			 coap_tid_t *id,
+			 unsigned char *mediatype,
+			 unsigned int offset,
+			 unsigned char *buf,
+			 unsigned int *buflen,
+			 int *finished,
+			 unsigned int method) {
+#define RESOURCE_BUFLEN 1000
+      static unsigned char resources[RESOURCE_BUFLEN];
+      size_t maxlen = 0;
+      int n;
+      coap_list_t *node;
+
+      //assert(ctx_server);
+      //assert(resource);
+      if (ctx_server == NULL) {
+	  return COAP_RESPONSE_500;
+      }
+
+      /* first, update the link-set */
+      for (node = ctx_server->resources; node; node = node->next) {
+	  n = print_link(COAP_RESOURCE(node), resources + maxlen,
+			 RESOURCE_BUFLEN - maxlen);
+	  if (n <= 0) { 			/* error */
+	      //debug("resource description too long, truncating\n");
+	      resources[maxlen] = '\0';
+	      break;
+	  }
+	  maxlen += n;
+
+	  if (node->next) 		/* check if another entry follows */
+	      resources[maxlen++] = ',';
+	  else 			/* no next, terminate string */
+	      resources[maxlen] = '\0';
+      }
+
+      *finished = 1;
+
+      switch (*mediatype) {
+      case COAP_MEDIATYPE_ANY :
+      case COAP_MEDIATYPE_APPLICATION_LINK_FORMAT :
+	  *mediatype = COAP_MEDIATYPE_APPLICATION_LINK_FORMAT;
+	  break;
+      default :
+	  *buflen = 0;
+	  return COAP_RESPONSE_415;
+      }
+
+      if ( offset > maxlen ) {
+	  *buflen = 0;
+	  return COAP_RESPONSE_400;
+      } else if ( offset + *buflen > maxlen )
+	  *buflen = maxlen - offset;
+
+      memcpy(buf, resources + offset, *buflen);
+
+      *finished = offset + *buflen == maxlen;
+      return COAP_RESPONSE_200;
+  }
+#endif
+
+  //register wellknown resource
+  command error_t CoAPServer.registerWellknownCore() {
+#ifdef INCLUDE_WELLKNOWN
+    coap_resource_t *r;
+
+    if ( !(r = coap_malloc( sizeof(coap_resource_t) ))) {
+	return FAIL;
+    }
+
+    r->uri = coap_new_uri((const unsigned char *) COAP_DEFAULT_URI_WELLKNOWN,
+			  sizeof(COAP_DEFAULT_URI_WELLKNOWN));
+    r->mediatype = COAP_MEDIATYPE_APPLICATION_LINK_FORMAT;
+    r->dirty = 0;
+    r->writable = 0;
+    r->splitphase = 0;
+    r->immediately = 1;
+    r->data = resource_wellknown;
+    coap_add_resource( ctx_server, r );
+    //call Leds.led2Toggle();
+    return SUCCESS;
+#else
+
+#warning "CoAP Resource .wellknown/core disabled. Add CFLAGS += -DINCLUDE_WELLKNOWN to Makefile, if you want it included."
+    return FAIL;
+
+#endif
   }
 
   ///////////////////
@@ -212,44 +326,6 @@ module CoapUdpServerP {
   }
 
   ///////////////////
-  // wellknown resources
-#warning "FIXME: .well-known/core is not implemented"
-  //     int resource_wellknown(coap_uri_t *uri,
-  // 			   unsigned short *id,
-  // 			   unsigned char *tok,
-  // 			   unsigned char *mediatype,
-  // 			   unsigned int offset,
-  // 			   unsigned char *buf,
-  // 			   unsigned int *buflen,
-  // 			   int *finished,
-  // 			   unsigned int method) {
-  // 	static unsigned char resources[] = "";
-  // // 	    "</test>;ct=1;n=\"test\"";
-  // 	size_t maxlen = sizeof(resources) - 1;
-  //
-  // 	*finished = 1;
-  //
-  // 	switch (*mediatype) {
-  // 	case COAP_MEDIATYPE_ANY :
-  // 	case COAP_MEDIATYPE_APPLICATION_LINK_FORMAT :
-  // 	    *mediatype = COAP_MEDIATYPE_APPLICATION_LINK_FORMAT;
-  // 	    break;
-  // 	default :
-  // 	    *buflen = 0;
-  // 	    return COAP_RESPONSE_415;
-  // 	}
-  //
-  // 	if ( offset > maxlen ) {
-  // 	    *buflen = 0;
-  // 	    return COAP_RESPONSE_400;
-  // 	} else if ( offset + *buflen > maxlen )
-  // 	    *buflen = maxlen - offset;
-  // 	memcpy(buf, resources + offset, *buflen);
-  // 	*finished = offset + *buflen == maxlen;
-  // 	return COAP_RESPONSE_200;
-  //     }
-
-  ///////////////////
   // splitphase resources
   int resource_splitphase(coap_uri_t *uri,
 			  coap_tid_t  *id,
@@ -265,15 +341,9 @@ module CoapUdpServerP {
     } else if ( method == COAP_REQUEST_PUT) {
       return call WriteResource.put[get_key(uri->path.s, uri->path.length)](buf, *buflen, *id);
     } else {
-      return EINVAL;
+      //when the method is neither GET nor PUT, i.e. POST & DELETE -> 405
+      return COAP_RESPONSE_405;
     }
-
-    //returns:
-    // SUCCESS: when the resource is serving the request, it will signal back
-    // EBUSY:   when the resource is already serving another request         -> 503
-    // FAIL:    when the resource is not present or cannot handle GET or PUT -> 404
-    // EINVAL:  when the method is neither GET nor PUT - POST & DELETE       -> 405
-    //          not supported ATM
   }
 
   event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
@@ -364,6 +434,7 @@ module CoapUdpServerP {
     unsigned int blklen, blk;
     int code, finished = 1;
     unsigned char mediatype = COAP_MEDIATYPE_ANY;
+    static unsigned char buf[COAP_MAX_PDU_SIZE];
 
     if ( !coap_get_request_uri( node->pdu, &uri ) )
       return NULL;
@@ -407,52 +478,50 @@ module CoapUdpServerP {
 	mediatype = *COAP_OPT_VALUE(*ct);
       }
 
-      /*if (resource->splitphase) {
-	printf("handle_get: save()\n");
-	coap_save_splitphase(ctx, node);
-	}*/
-
-      printf("handle_get: data()\n");
+      //printf("handle_get: data()\n");
       code = resource->data(&uri,
 			    &(node->pdu->hdr->id),
 			    &mediatype,
 			    (blk & ~0x0f) << (blk & 0x07),
-			    NULL, // unused buffer
+			    buf,
 			    &blklen,
 			    &finished,
 			    COAP_REQUEST_GET);
-      printf("handle_get: data()~ %u %u\n", resource->splitphase, code);
+      //printf("handle_get: data()~ %u %u\n", resource->splitphase, code);
 
       if (resource->splitphase) {
-	if (code == SUCCESS) {
+	if (code == COAP_SPLITPHASE) {
 	  printf("handle_get: save()\n");
 	  /* handle subscription */
-#warning "subscriptions not supported"
+#warning "FIXME: CoAP: subscriptions not supported"
 
-	  //FIXME: SAVE before calling data()????
+	  call Leds.led2Toggle();
+	  //FIXME: SAVE before calling data()?
 	  coap_save_splitphase(ctx, node);
 	  // this is a split-phase resource, no PDU ready yet, created in getDone
 	  return NULL;
-	} else if (code == EBUSY) {
-	  //FIXME: remove node from splitphasequeue?
-	  //TODO:  add error messages to payload
-	  //       (for all else cases)
-	  printf("handle_get EBUSY\n");
-	  return new_response(ctx, node, COAP_RESPONSE_503);
-	} else if (code == FAIL) {
-	  printf("handle_get FAIL\n");
-	  return new_response(ctx, node, COAP_RESPONSE_404);
-	} else if (code == EINVAL) {
-	  printf("handle_get EINVAL\n");
-	  return new_response(ctx, node, COAP_RESPONSE_405);
 	} else {
-	  printf("** coap: splitphase resource, save context and node details \n");
-	  return new_response(ctx, node, COAP_RESPONSE_404);
+	  printf("** handle_get: splitphase not successful\n");
+
+	  return new_response(ctx, node, code);
 	}
       } else {
-	//no splitphase
-	//TODO: handle this case
-	return new_response(ctx, node, COAP_RESPONSE_500);
+
+	  //not splitphase -> resource_wellknown
+	  pdu = new_response(ctx, node, code);
+
+	  if ( !pdu )
+	      return NULL;
+
+	  // Add buffer value to the PDU
+	  if (!coap_add_data(pdu, blklen, buf)) {
+	      coap_delete_pdu(pdu);
+	      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) {
+		  //printf("** coap: return PDU Null for 500 response\n");
+	      }
+	  }
+
+	  return pdu;
       }
     } else {
       // no callback available
@@ -460,7 +529,7 @@ module CoapUdpServerP {
     }
   }
 
- default command error_t ReadResource.get[uint8_t uri_key](coap_tid_t id) {
+ default command int ReadResource.get[uint8_t uri_key](coap_tid_t id) {
    //printf("** coap: default (get not available for this resource)....... %i\n", uri_key);
    return FAIL;
  }
@@ -477,12 +546,12 @@ module CoapUdpServerP {
    //printf("** coap: getDone.... %i %u\n", uri_key, ntohs(id));
 
    // assuming more than one entry is in splitphasequeue
-   if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))){
+   if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))) {
      printf("** coap: getDone: node in splitphasequeue not found, quit\n");
      return;
    }
 
-   if (result != SUCCESS){
+   if (result != SUCCESS) {
      //printf("** coap: sensor retrival failed\n");
 
      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) {
@@ -654,7 +723,7 @@ module CoapUdpServerP {
 			   COAP_REQUEST_PUT);
 
      if (resource->splitphase) {
-       if (code == SUCCESS) {
+       if (code == COAP_SPLITPHASE) {
 	 //printf("** coap: splitphase resource, save context and node details, send async response \n");
 	 coap_save_splitphase(ctx, node);
 	 return NULL;
@@ -671,7 +740,7 @@ module CoapUdpServerP {
    }
  }
 
- default command error_t WriteResource.put[uint8_t uri_key](uint8_t* val, uint8_t buflen, coap_tid_t id) {
+ default command int WriteResource.put[uint8_t uri_key](uint8_t* val, uint8_t buflen, coap_tid_t id) {
    //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
    return FAIL;
  }
@@ -687,7 +756,7 @@ module CoapUdpServerP {
    //printf("** coap: putDone.... %i\n", uri_key);
    // assuming more than one entry is in splitphasequeue
    if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))){
-     //printf("** coap: getDone: node in splitphasequeue not found, quit\n");
+     //printf("** coap: puttDone: node in splitphasequeue not found, quit\n");
      return;
    }
 
@@ -712,6 +781,7 @@ module CoapUdpServerP {
        }
      }
    }
+
    // Add content-encoding
    ct = coap_check_option( node->pdu, COAP_OPTION_CONTENT_TYPE );
    if ( ct ) {
@@ -737,20 +807,20 @@ module CoapUdpServerP {
  }
 
  event void WriteResource.putDoneDeferred[uint8_t uri_key](coap_tid_t id) {
-#warning implement putDoneDeferred
+#warning "FIXME: CoAP: putDoneDeferred not yet implemented"
  }
 
  ///////////////////
  // POST method
  coap_pdu_t *handle_post(coap_context_t  *ctx, coap_queue_t *node, void *data) {
-   //TODO
+#warning "FIXME: CoAP: POST method not yet implemented"
    return NULL;
  }
 
  ///////////////////
  // DELETE method
  coap_pdu_t *handle_delete(coap_context_t  *ctx, coap_queue_t *node, void *data) {
-   //TODO
+#warning "FIXME: CoAP: DELETE method not yet implemented"
    return NULL;
  }
 
@@ -846,6 +916,7 @@ module CoapUdpServerP {
 
    memcpy( &new_node->remote, &node->remote, sizeof( struct sockaddr_in6 ) );
    printf("** coap: saving ctx and node details to send splitphase later\n");
+
    /* "parse" received PDU by filling pdu structure */
    memcpy(new_node->pdu->hdr, node->pdu->hdr, node->pdu->length );
    new_node->pdu->length = node->pdu->length;
@@ -868,5 +939,5 @@ module CoapUdpServerP {
 #endif
 
    return 0;
- }
+  }
 }

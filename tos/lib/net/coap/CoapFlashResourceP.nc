@@ -37,88 +37,99 @@ generic module CoapFlashResourceP(uint8_t uri_key) {
   provides interface WriteResource;
   uses interface ConfigStorage;
 } implementation {
-  coap_tid_t id_t;
+
+  bool lock = FALSE;
+  coap_tid_t temp_id;
   config_t conf;
 
   enum {
     CONFIG_ADDR = 0
   };
 
+  /////////////
+  //GET
+  /////////////
+
   event void ConfigStorage.readDone(storage_addr_t addr, void* buf,
 				    storage_len_t len, error_t err)  {
-
-    //TODO: handle case where storage has NOT been written before -> 255
     if (err == SUCCESS) {
       memcpy(&conf, buf, len);
-    }
-    else {
-      printf("Read flash not successful \n"); // Handle failure.
+    } else {
+      //printf("Read flash not successful\n");
     }
 
-    signal ReadResource.getDone(err, id_t, 0, buf, sizeof(conf));
+    signal ReadResource.getDone(err, temp_id, 0, buf, sizeof(conf));
+    lock = FALSE;
+  }
+
+  command int ReadResource.get(coap_tid_t id) {
+    if (lock == FALSE) {
+      lock = TRUE;
+      temp_id = id;
+
+      if (call ConfigStorage.valid() == TRUE) {
+	if (call ConfigStorage.read(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
+	  //printf("Config.read not successful \n");
+	  lock = FALSE;
+	  return COAP_RESPONSE_500;
+	} else {
+	  return COAP_SPLITPHASE;
+	}
+      } else {
+	lock = FALSE;
+	return COAP_RESPONSE_500;
+      }
+    } else {
+      lock = FALSE;
+      return COAP_RESPONSE_503;
+    }
+  }
+
+  /////////////
+  //PUT
+  /////////////
+
+#warning "FIXME: CoAP: PreAck not implemented for put"
+
+  event void ConfigStorage.commitDone(error_t err) {
+    lock = FALSE;
+    signal WriteResource.putDone(err, temp_id, 0);
   }
 
   event void ConfigStorage.writeDone(storage_addr_t addr, void *buf,
 				     storage_len_t len, error_t err) {
     if (err == SUCCESS) {
       if (call ConfigStorage.commit() != SUCCESS) {
-	//         handle this case
-      }
-    }
-    else {
-      // Handle failure
-    }
-    signal WriteResource.putDone(err, id_t, 0);
-  }
-
-  event void ConfigStorage.commitDone(error_t err) {
-  }
-
-
-  command error_t ReadResource.get(coap_tid_t id) {
-    id_t = id;
-
-    if (call ConfigStorage.valid() == TRUE) {
-      if (call ConfigStorage.read(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
-	printf("Config.read not successful \n");
-	return FAIL;
+	signal WriteResource.putDone(err, temp_id, 0);
+	lock = FALSE;
       }
     } else {
-      // Invalid volume.  Commit to make valid.
-      printf( "invalid volume \n");
-      if (call ConfigStorage.commit() == SUCCESS) {
-      }
-      else {
-	// Handle failure
-      }
+      signal WriteResource.putDone(err, temp_id, 0);
+      lock = FALSE;
     }
-
-    return SUCCESS;
   }
 
-  command error_t WriteResource.put(uint8_t *val, uint8_t buflen, coap_tid_t id) {
-    id_t = id;
+  command int WriteResource.put(uint8_t *val, uint8_t buflen, coap_tid_t id) {
+    if (lock == FALSE) {
+      if (uri_key == KEY_KEY && buflen < sizeof(conf)) {
+	return COAP_RESPONSE_500;
+      }
 
-    if (uri_key == KEY_KEY && buflen < sizeof(conf))
-      return FAIL; //handle this case
-    memcpy(&conf, val, buflen);
+      lock = TRUE;
+      temp_id = id;
 
-    if (call ConfigStorage.valid() == TRUE) {
+      memcpy(&conf, val, buflen);
+
       if (call ConfigStorage.write(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
-	printf("Config.write not s \n");
-	return FAIL;
+	//printf("Config.write not successful\n");
+	lock = FALSE;
+	return COAP_RESPONSE_500;
+      } else {
+	return COAP_SPLITPHASE;
       }
+    } else {
+      lock = FALSE;
+      return COAP_RESPONSE_503;
     }
-    else {
-      // Invalid volume.  Commit to make valid.
-      printf("invalid volume \n");
-      if (call ConfigStorage.commit() == SUCCESS) {
-      }
-      else {
-	// Handle failure
-      }
-    }
-
-    return SUCCESS;
   }
-  }
+}

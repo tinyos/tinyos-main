@@ -79,6 +79,7 @@ module CoapBlipP {
     // needs to be before registerResource to setup context:
     call CoAPServer.bind(COAP_SERVER_PORT);
 
+    call CoAPServer.registerWellknownCore();
     for (i=0; i < NUM_URIS; i++) {
       call CoAPServer.registerResource(uri_key_map[i].uri,
 				       uri_key_map[i].urilen - 1,

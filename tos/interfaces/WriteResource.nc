@@ -31,7 +31,7 @@
  */
 
 interface WriteResource {
-  command error_t put(uint8_t *val, uint8_t buflen, coap_tid_t id);
+  command int put(uint8_t *val, uint8_t buflen, coap_tid_t id);
   event void putDone(error_t result, coap_tid_t id, uint8_t asyn_message);
   event void putDoneDeferred(coap_tid_t id);
 }

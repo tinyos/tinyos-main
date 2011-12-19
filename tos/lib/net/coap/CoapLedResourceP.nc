@@ -30,35 +30,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <pdu.h>
+
 generic module CoapLedResourceP(uint8_t uri_key) {
   provides interface ReadResource;
   provides interface WriteResource;
   uses interface Leds;
 } implementation {
-  coap_tid_t id_t;
+
+  bool lock = FALSE;
+  coap_tid_t temp_id;
 
   void task getLed() {
     uint8_t val = call Leds.get();
-    signal ReadResource.getDone(SUCCESS, id_t, 0, (uint8_t*)&val, sizeof(uint8_t));
+    lock = FALSE;
+    signal ReadResource.getDone(SUCCESS, temp_id, 0,
+				(uint8_t*)&val, sizeof(uint8_t));
   };
+
+  command int ReadResource.get(coap_tid_t id) {
+    if (lock == FALSE) {
+      lock = TRUE;
+
+      temp_id = id;
+      post getLed();
+      return COAP_SPLITPHASE;
+    } else {
+      return COAP_RESPONSE_503;
+    }
+  }
 
   void task setLedDone() {
-    signal WriteResource.putDone(SUCCESS, id_t, 0);
+    lock = FALSE;
+    signal WriteResource.putDone(SUCCESS, temp_id, 0);
   };
 
-  command error_t ReadResource.get(coap_tid_t id) {
-    id_t = id;
-    post getLed();
-    return SUCCESS;
-  }
-
-  command error_t WriteResource.put(uint8_t *val, uint8_t buflen, coap_tid_t id) {
-    id_t = id;
-    if ( *val < 8){
-      call Leds.set(*val);
-      post setLedDone();
-      return SUCCESS;
+  command int WriteResource.put(uint8_t *val, uint8_t buflen, coap_tid_t id) {
+    if (*val < 8) {
+      if (lock == FALSE) {
+	lock = TRUE;
+	temp_id = id;
+	call Leds.set(*val);
+	post setLedDone();
+	return COAP_SPLITPHASE;
+      } else {
+	return COAP_RESPONSE_503;
+      }
+    } else {
+      return COAP_RESPONSE_500;
     }
-    return FAIL;
   }
-  }
+}

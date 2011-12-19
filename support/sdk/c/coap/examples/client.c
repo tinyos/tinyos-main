@@ -302,9 +302,6 @@ message_handler( coap_context_t  *ctx, coap_queue_t *node, void *data) {
 
 #ifdef SHOWREALVALUES
 
-
-
-
     if (strcmp((const char *)uri.path.s, "st") == 0 ) {
       printf("\n** Temperatur: %4.2f K\n\n", ((float)char_to_uint16(node->pdu->data))/100);
     } else if (strcmp((const char *)uri.path.s, "sh") == 0) {
@@ -347,6 +344,8 @@ message_handler( coap_context_t  *ctx, coap_queue_t *node, void *data) {
 	printf("** Voltage:     NaN\n\n");
     } else if (strcmp((const char *)uri.path.s, "lipsum") == 0) {
     } else if (strcmp((const char *)uri.path.s, "time") == 0) {
+    } else if (strcmp((const char *)uri.path.s, COAP_DEFAULT_URI_WELLKNOWN) == 0) {
+      printf("** .well-known/core:\n");
     } else {
       printf("** unknown URI\n");
     }

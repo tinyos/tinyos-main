@@ -35,12 +35,12 @@ generic configuration CoapReadResourceC(typedef val_t, uint8_t uri_key) {
   uses interface Read<val_t>;
 } implementation {
   components LedsC;
-  components new TimerMilliC() as Timer1;
+  components new TimerMilliC() as PreAckTimer;
   components new CoapReadResourceP(val_t, uri_key) as CoapReadResourceP;
 
   ReadResource = CoapReadResourceP;
 
   CoapReadResourceP.Leds -> LedsC;
-  CoapReadResourceP.Timer1 -> Timer1;
+  CoapReadResourceP.PreAckTimer -> PreAckTimer;
   CoapReadResourceP.Read = Read;
-  }
+}

@@ -30,7 +30,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-generic configuration CoapFlashResourceC(uint8_t uri_key){
+generic configuration CoapFlashResourceC(uint8_t uri_key) {
   provides interface ReadResource;
   provides interface WriteResource;
   uses interface ConfigStorage;
@@ -41,5 +41,4 @@ implementation {
   ReadResource = CoapFlashResourceP;
   WriteResource = CoapFlashResourceP;
   ConfigStorage = CoapFlashResourceP;
-
 }

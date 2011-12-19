@@ -29,6 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <pdu.h>
 
 generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
   provides interface ReadResource;
@@ -40,19 +41,17 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
   bool lock = FALSE;
   coap_tid_t temp_id;
 
-  command error_t ReadResource.get(coap_tid_t id) {
-
+  command int ReadResource.get(coap_tid_t id) {
     // 	printf("ReadResource.get: %hu\n", uri_key);
-
     if (lock == FALSE) {
       lock = TRUE;
-
       temp_id = id;
+
       call PreAckTimer.startOneShot(COAP_PREACK_TIMEOUT);
       call Read.read();
-      return SUCCESS;
+      return COAP_SPLITPHASE;
     } else {
-      return EBUSY;
+      return COAP_RESPONSE_503;
     }
   }
 

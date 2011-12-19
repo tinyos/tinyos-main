@@ -89,6 +89,8 @@
 #define COAP_RESPONSE_X_241    241   /* Uri-Authority Option required by server */
 #define COAP_RESPONSE_X_242    242   /* Critical Option not supported */
 
+#define COAP_SPLITPHASE       300   /* Code for telling TinyOS that the splitphase resource has successfully started */
+
 /* CoAP media type encoding */
 
 #define COAP_MEDIATYPE_TEXT_PLAIN                     0 /* text/plain (UTF-8) */
