@@ -493,7 +493,7 @@ module CoapUdpServerP {
 	if (code == COAP_SPLITPHASE) {
 	  printf("handle_get: save()\n");
 	  /* handle subscription */
-#warning "FIXME: CoAP: subscriptions not supported"
+#warning "FIXME: CoAP: subscriptions not yet implemented"
 
 	  call Leds.led2Toggle();
 	  //FIXME: SAVE before calling data()?
