@@ -86,6 +86,7 @@ configuration CoapBlipC {
 #if defined (COAP_RESOURCE_VOLT)  || defined (COAP_RESOURCE_ALL)
   components new VoltageC() as VoltSensor;
 #endif
+
 #ifdef COAP_RESOURCE_VOLT
   components new CoapReadResourceC(uint16_t, KEY_VOLT) as CoapReadVoltResource;
   components new CoapBufferVoltTranslateC() as CoapBufferVoltTranslate;
@@ -117,6 +118,7 @@ configuration CoapBlipC {
   CoapBufferVoltTranslateAll.Read -> VoltSensor.Read;
   CoapUdpServerC.ReadResource[KEY_ALL] -> CoapReadAllResource.ReadResource;
 #endif
+
 #ifdef COAP_RESOURCE_KEY
   components new CoapFlashResourceC(KEY_KEY) as CoapFlashResource;
   components new ConfigStorageC(VOLUME_CONFIGKEY);
@@ -124,6 +126,12 @@ configuration CoapBlipC {
   CoapBlipP.Mount  -> ConfigStorageC.Mount;
   CoapUdpServerC.ReadResource[KEY_KEY]  -> CoapFlashResource.ReadResource;
   CoapUdpServerC.WriteResource[KEY_KEY] -> CoapFlashResource.WriteResource;
+#endif
+
+#ifdef COAP_RESOURCE_ROUTE
+  components new CoapRouteResourceC(uint16_t, KEY_ROUTE) as CoapReadRouteResource;
+  CoapReadRouteResource.ForwardingTable -> IPStackC;
+  CoapUdpServerC.ReadResource[KEY_ROUTE] -> CoapReadRouteResource.ReadResource;
 #endif
 #endif
 
@@ -134,7 +142,7 @@ configuration CoapBlipC {
   CoapUdpClientC.LibCoapClient -> LibCoapAdapterC.LibCoapClient;
   CoapUdpClientC.Init <- MainC.SoftwareInit;
   LibCoapAdapterC.UDPClient -> UdpClientSocket;
-    CoapBlipP.ForwardingTableEvents -> IPStackC.ForwardingTableEvents;
+  CoapBlipP.ForwardingTableEvents -> IPStackC.ForwardingTableEvents;
 #endif
 
 #ifdef PRINTFUART_ENABLED
