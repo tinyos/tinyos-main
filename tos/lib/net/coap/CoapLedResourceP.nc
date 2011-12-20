@@ -65,7 +65,7 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     signal WriteResource.putDone(SUCCESS, temp_id, 0);
   };
 
-  command int WriteResource.put(uint8_t *val, uint8_t buflen, coap_tid_t id) {
+  command int WriteResource.put(uint8_t *val, size_t buflen, coap_tid_t id) {
     if (*val < 8) {
       if (lock == FALSE) {
 	lock = TRUE;

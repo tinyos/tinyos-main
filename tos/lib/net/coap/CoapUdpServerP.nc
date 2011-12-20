@@ -740,7 +740,7 @@ module CoapUdpServerP {
    }
  }
 
- default command int WriteResource.put[uint8_t uri_key](uint8_t* val, uint8_t buflen, coap_tid_t id) {
+ default command int WriteResource.put[uint8_t uri_key](uint8_t* val, size_t buflen, coap_tid_t id) {
    //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
    return FAIL;
  }

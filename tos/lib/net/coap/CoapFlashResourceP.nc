@@ -109,7 +109,7 @@ generic module CoapFlashResourceP(uint8_t uri_key) {
     }
   }
 
-  command int WriteResource.put(uint8_t *val, uint8_t buflen, coap_tid_t id) {
+  command int WriteResource.put(uint8_t *val, size_t buflen, coap_tid_t id) {
     if (lock == FALSE) {
       if (uri_key == KEY_KEY && buflen < sizeof(conf)) {
 	return COAP_RESPONSE_500;
