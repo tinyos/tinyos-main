@@ -35,7 +35,7 @@
  */
 module HplMsp430InterruptP
 {
-#ifdef __msp430_have_port1
+#if defined(__msp430_have_port1) || defined(__MSP430_HAS_PORT1__) || defined(__MSP430_HAS_PORT1_R__)
   provides interface HplMsp430Interrupt as Port10;
   provides interface HplMsp430Interrupt as Port11;
   provides interface HplMsp430Interrupt as Port12;
@@ -45,7 +45,7 @@ module HplMsp430InterruptP
   provides interface HplMsp430Interrupt as Port16;
   provides interface HplMsp430Interrupt as Port17;
 #endif
-#ifdef __msp430_have_port2
+#if defined(__msp430_have_port2) || defined(__MSP430_HAS_PORT2__) || defined(__MSP430_HAS_PORT2_R__)
   provides interface HplMsp430Interrupt as Port20;
   provides interface HplMsp430Interrupt as Port21;
   provides interface HplMsp430Interrupt as Port22;
@@ -60,7 +60,7 @@ module HplMsp430InterruptP
 implementation
 {
 
-#ifdef __msp430_have_port1
+#if defined(__msp430_have_port1) || defined(__MSP430_HAS_PORT1__) || defined(__MSP430_HAS_PORT1_R__)
   TOSH_SIGNAL(PORT1_VECTOR)
   {
     volatile int n = P1IFG & P1IE;
@@ -166,7 +166,7 @@ implementation
   }
 #endif
 
-#ifdef __msp430_have_port2
+#if defined(__msp430_have_port2) || defined(__MSP430_HAS_PORT2__) || defined(__MSP430_HAS_PORT2_R__)
   TOSH_SIGNAL(PORT2_VECTOR)
   {
     volatile int n = P2IFG & P2IE;
