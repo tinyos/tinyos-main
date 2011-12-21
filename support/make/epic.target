@@ -3,10 +3,6 @@
 
 PLATFORM ?= epic
 
-# Remove MSP430 hardware multiply disable: new msp430-gcc fixes
-# PFLAGS += -mdisable-hwmul
-# OPTFLAGS += -O
-
 # Default BSL assumes telosb-like programming interface
 MSP_BSL ?= tos-bsl
 MSP_BSL_FLAGS = --telosb

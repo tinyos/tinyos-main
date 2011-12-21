@@ -3,13 +3,6 @@
 
 PLATFORM ?= telosb
 
-#MSP_MCU = msp430x1611
-
-# Remove MSP430 hardware multiply disable: new msp430-gcc fixes
-# PFLAGS += -mdisable-hwmul
-
-OPTFLAGS += -O
-
 MSP_BSL ?= tos-bsl
 MSP_BSL_FLAGS = --telosb
 

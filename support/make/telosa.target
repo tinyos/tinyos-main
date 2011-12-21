@@ -3,12 +3,7 @@
 
 PLATFORM ?= telosa
 
-MSP_MCU = msp430x149
-
-# Remove MSP430 hardware multiply disable: new msp430-gcc fixes
-# PFLAGS += -mdisable-hwmul
-
-OPTFLAGS += -O
+MSP_MCU = msp430f149
 
 MSP_BSL ?= tos-bsl
 

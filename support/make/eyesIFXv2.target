@@ -3,15 +3,11 @@
 
 PLATFORM = eyesIFXv2
 
-MSP_MCU = msp430x1611
+MSP_MCU = msp430f1611
 
 #Flash Config
 VOLUME_FILE = volumes-at45db.xml
 VOLUME_ALLOCATOR ?= tos-storage-at45db
-
-# Disable MSP430 hardware multiply because it makes MSPGCC die
-PFLAGS += -mdisable-hwmul
-OPTFLAGS += -O
 
 ifndef DEFAULT_PROGRAM
 DEFAULT_PROGRAM = bsl
@@ -24,8 +20,6 @@ ifeq (,$(findstring /dev/ttyUSB,$(BSL)))
     BSL:=/dev/tty$(BSL)
   endif
 endif
-
-NESC_FLAGS:=-Wnesc-all -mdisable-hwmul
 
 $(call TOSMake_include_platform,msp)
 

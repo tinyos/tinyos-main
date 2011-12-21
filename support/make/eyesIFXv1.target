@@ -3,11 +3,7 @@
 
 PLATFORM = eyesIFXv1
 
-MSP_MCU = msp430x149
-
-# Remove MSP430 hardware multiply disable: new msp430-gcc fixes
-# PFLAGS += -mdisable-hwmul
-OPTFLAGS += -O
+MSP_MCU = msp430f149
 
 ifndef DEFAULT_PROGRAM
 DEFAULT_PROGRAM = jtag
@@ -15,8 +11,6 @@ endif
 
 VOLUME_FILE = volumes-stm25p.xml
 VOLUME_ALLOCATOR ?= tos-storage-stm25p
-
-NESC_FLAGS:=-Wnesc-all
 
 $(call TOSMake_include_platform,msp)
 
