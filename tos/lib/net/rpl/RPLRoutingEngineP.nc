@@ -509,7 +509,7 @@ implementation{
 
   command error_t StdControl.stop() {
     running = FALSE;
-    call RankControl.start();
+    call RankControl.stop();
     call TrickleTimer.stop();
     return SUCCESS;
   }

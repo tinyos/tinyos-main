@@ -99,7 +99,7 @@ generic module RPLDAORoutingEngineP() {
 
   command error_t StdControl.stop() {
     m_running = FALSE;
-    return FAIL;
+    return SUCCESS;
   }
 
   uint32_t count = 0;
