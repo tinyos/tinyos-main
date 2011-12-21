@@ -14,7 +14,7 @@ CFLAGS += -I$(TOS_THREADS_DIR)/types
 CFLAGS += -I$(TOS_THREADS_DIR)/lib/serial
 
 #Setup the thread scheduler for use by redefining the name of the task scheduler to use
-PFLAGS += -tosscheduler=TinyTaskSchedulerC,TinyTaskSchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+PFLAGS += -tosscheduler=SchedulerBasicP,TinyTaskSchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
 
 #Msp430 specific include directories on tested platforms
 THREADS_MSP430_DIR = $(TOS_THREADS_DIR)/chips/msp430
