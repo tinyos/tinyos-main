@@ -24,6 +24,9 @@
 #ifdef IDENT_APPNAME
 #include <lib6lowpan/ip.h>
 typedef uint16_t ssize_t;
+#ifdef PLATFORM_MICAZ
+typedef uint16_t in_port_t;
+#endif
 #else
 #include <string.h>
 #include <time.h>

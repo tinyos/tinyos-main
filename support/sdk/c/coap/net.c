@@ -23,7 +23,9 @@
 #include <time.h>
 #include <unistd.h>
 #endif
+#ifndef PLATFORM_MICAZ
 #include <sys/types.h>
+#endif
 #ifndef IDENT_APPNAME
 #include <sys/socket.h>
 #include <netinet/in.h>
