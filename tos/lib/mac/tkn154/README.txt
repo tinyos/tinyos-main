@@ -1,26 +1,25 @@
 
 This directory contains "TKN15.4", a platform-independent IEEE 802.15.4-2006
-MAC implementation. The code is under active development and most of the
-functionality described in the standard is implemented and tested.  The MAC
-itself is platform-independent, but it requires (1) a suitable radio driver,
-(2) Alarms/Timers with symbol precision and (3) some "platform glue" code
-(defining guard times, etc.). Currently the only supported platforms are TelosB
-and micaZ (note: because they do not have a clock that satisfies the
-precision/accuracy requirements of the IEEE 802.15.4 standard -- 62.500 Hz,
-+-40 ppm in the 2.4 GHz band -- the timing in beacon-enabled mode is not
-standard compliant). The implementation covers an AM layer, so it can be used
-underneath TinyOS routing protocols such as CTP (take a look at
-apps/tests/tkn154/README.txt). As of July 13, 2011 the MAC also includes the
-IEEE 802.15.4-2006 GTS services; this part of the implementation was
-contributed by CISTER/ISEP, Polytechnic Institute of Porto.
+MAC implementation. The core implementation is platform-independent, but in
+order to use the code on a TinyOS 2 platform, the platform must provide (1) a
+suitable radio driver, (2) Alarms/Timers with symbol precision and (3) some
+"platform glue" code (defining guard times, etc.). Currently the supported
+platforms are: telosb, shimmer2(r) and micaz (note: because these platforms do
+not have a clock that satisfies the precision/accuracy requirements of the IEEE
+802.15.4 standard -- 62.500 Hz, +-40 ppm in the 2.4 GHz band -- the timing in
+beacon-enabled mode is not fully standard compliant). The implementation also
+includes an AM layer, so it can be used underneath TinyOS routing protocols
+such as CTP (take a look at apps/tests/tkn154/README.txt). As of July 13, 2011
+the MAC also includes the IEEE 802.15.4-2006 GTS services; this part of the
+implementation was contributed by CISTER/ISEP, Polytechnic Institute of Porto.
 
-Status (last updated Jul 13, 2011)
-----------------------------------
+Status (last updated Dec. 23, 2011)
+-----------------------------------
 
 Missing functionality:
 - security services
 - PAN ID conflict notification/resolution
-- indirect transmissions: frames are not kept in transaction queue 
+- indirect transmissions: frames are not kept in transaction queue
   in case CSMA-CA algorithm fails
 
 Known Issues:
@@ -43,6 +42,8 @@ MAC interfaces: tos/lib/mac/tkn154/interfaces
 CC2420 driver: tos/chips/cc2420_tkn154
 TelosB "platform glue" code: tos/platforms/telosb/mac/tkn154
 micaZ "platform glue" code: tos/platforms/micaz/mac/tkn154
+ (Shimmer2(r) platforms reuse the telosb configuration 
+  this is triggered via tos/lib/mac/tkn154/Makefile.include)
 Example applications: apps/tests/tkn154
 
 Note: TEP3 recommends that interface names "should be mixed case, starting

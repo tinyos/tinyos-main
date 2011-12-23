@@ -174,7 +174,7 @@ implementation
   {
     uint8_t *payload = (uint8_t *) &frame->data;
     ieee154_macShortAddress_t shortAddress = *((nxle_uint16_t*) (payload + 1));
-    ieee154_status_t assocRespStatus = *(payload + 3);
+    ieee154_association_status_t assocRespStatus = *(payload + 3);
 
     if (m_associationOngoing) {
       call ResponseTimeout.stop();

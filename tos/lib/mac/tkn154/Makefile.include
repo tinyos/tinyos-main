@@ -10,16 +10,31 @@ CFLAGS += -I$(TOSDIR)/lib/mac/tkn154 \
 	-I$(TOSDIR)/lib/mac/tkn154/interfaces/private \
 	-I$(TOSDIR)/lib/mac/tkn154/interfaces/public
 
+
+# Whenever platforms have identical configuration we don't need to put copies of
+# Makefile.include under "platforms/$(PLATFORM)/mac/tkn154/", intead we make a
+# redirect to the Makefile.include here:
+
+# The shimmer2 platform configuration is identical to telosb
+ifeq ($(findstring $(PLATFORM),shimmer2), shimmer2)
+  TKN154_PLATFORM_INCLUDE = $(TOSDIR)/platforms/telosb/mac/tkn154/Makefile.include
+endif
+
+# The shimmer2r platform configuration is identical to telosb
+ifeq ($(findstring $(PLATFORM),shimmer2r), shimmer2r)
+  TKN154_PLATFORM_INCLUDE = $(TOSDIR)/platforms/telosb/mac/tkn154/Makefile.include
+endif
+
 #################################### Extras ####################################
 
 # legacy
 ifdef IEEE154_EXTENDED_ADDRESS
-$(error To set the extended address of a device to X pass 'extaddr,X' to the make system (e.g. "make telosb extaddr,0x012345"))
+  $(error To set the extended address of a device to X pass 'extaddr,X' to the make system (e.g. "make telosb extaddr,0x012345"))
 endif
 
 # legacy
 ifdef TKN154_DEBUG
-$(error To enable debug mode pass 'tkn154debug' to the make system (e.g. "make telosb tkn154debug"))
+  $(error To enable debug mode pass 'tkn154debug' to the make system (e.g. "make telosb tkn154debug"))
 endif
 
 # Pull in our extras (note we cannot use TOSMAKE_PATH, because it has already
