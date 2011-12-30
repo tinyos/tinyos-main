@@ -42,8 +42,10 @@ push( @includes, qw(
 
 @opts = qw(
   -gcc=msp430-gcc
-  -mmcu=msp430x2617
+  -mmcu=msp430f2617
   -fnesc-target=msp430
   -fnesc-no-debug
   -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
 );
+
+push @opts, "-mdisable-hwmul" if `msp430-gcc --version | grep 3.2.3`; 
