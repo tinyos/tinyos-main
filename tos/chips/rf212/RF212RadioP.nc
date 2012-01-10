@@ -373,7 +373,23 @@ implementation
 
 	command uint16_t LowPowerListeningConfig.getListenLength()
 	{
-		return getSymbolTime();//TODO: fine-tune this value
+		switch(getSymbolTime()){
+			case 50: {
+				return 38;
+			};
+			case 40: {
+				return 24;
+			};
+			case 25:{
+				return 20;
+			};
+			case 16:{
+				return 12;
+			}
+			default:{
+				return getSymbolTime();
+			}
+		}
 	}
 #endif
 
