@@ -81,7 +81,7 @@ implementation{
 
   /* Which metrics does this implementation support */
   command bool RPLOF.objectSupported(uint16_t objectType) {
-    if (objectType == RPLOF_OPTION_SOLICITATION) {
+    if (objectType == RPL_ROUTE_METRIC_ETX) {
       return TRUE;
     }
 

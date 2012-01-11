@@ -120,7 +120,6 @@ enum {
 
   RPLOF_OCP_OF0 = 0,
   RPLOF_OCP_MRHOF = 1,
-  RPLOF_OPTION_SOLICITATION = 7,
 };
 
 enum {
