@@ -208,18 +208,22 @@ module Dhcp6ClientP {
       sendSolicit();
       break;
     case DH6_REQUEST:
-      sendRequest();
       if (m_time > REQUEST_TIMEOUT) {
         m_state = DH6_SOLICIT;
         m_time = 0;
+        sendSolicit();
+      } else {
+        sendRequest();
       }
       break;
     case DH6_RENEW:
-      sendRenew();
       if (m_time > 0 && m_time > ntohl(t2)) {
         // maybe pick a different server...
         m_state = DH6_SOLICIT;
         m_time = 0;
+        sendSolicit();
+      } else {
+        sendRenew();
       }
       break;
     case VALID_WAIT:
@@ -324,7 +328,13 @@ module Dhcp6ClientP {
         status = findOption(ia + 1, ntohs(ia->len) + sizeof(struct dh6_opt_header) - sizeof(struct dh6_ia), 13);
         if (status) {
           if (status->code != htons(0)) {
-            m_state = (m_state == DH6_RENEW) ? DH6_REQUEST : DH6_SOLICIT;
+            if (m_state == DH6_RENEW) {
+              m_state = DH6_REQUEST;
+              m_time  = 1;
+            } else {
+              m_state = DH6_SOLICIT;
+              m_time  = 0;
+            }
             call IPAddress.removeAddress();
             call Timer.startOneShot (0); // attempt immediate recovery
             return;
