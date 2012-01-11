@@ -5,8 +5,11 @@
 
 enum {
   ROUTE_INVAL_KEY = -1,
-  ROUTE_TABLE_SZ = 20,
 };
+
+#ifndef ROUTE_TABLE_SZ 
+#define ROUTE_TABLE_SZ 20
+#endif
 
 enum {
   ROUTE_IFACE_ALL = 0,
