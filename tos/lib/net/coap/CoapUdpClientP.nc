@@ -54,6 +54,21 @@ module CoapUdpClientP {
   }
 
   coap_pdu_t *
+  coap_new_ack(coap_pdu_t *pdu)
+  {
+    coap_pdu_t *ack = coap_new_pdu();
+
+    if (!ack)
+      return NULL;
+
+    ack->hdr->type = COAP_MESSAGE_ACK;
+    ack->hdr->id = pdu->hdr->id;
+    ack->hdr->code = 0;
+
+    return ack;
+  }
+
+  coap_pdu_t *
   coap_new_request(method_t m, coap_list_t *options, uint16_t len, void *data) {
     coap_pdu_t *pdu;
     coap_list_t *opt;
@@ -121,6 +136,20 @@ module CoapUdpClientP {
     bool more = FALSE;
     uint8_t mediatype = COAP_MEDIATYPE_TEXT_PLAIN;
 
+    if (node->pdu->hdr->version != COAP_DEFAULT_VERSION)
+      return;
+
+    if (node->pdu->hdr->type == COAP_MESSAGE_CON)
+    {
+      coap_pdu_t *ack = coap_new_ack(node->pdu);
+      // TODO: maybe move this to a separate task?
+      if (call LibCoapClient.send(ctx_client, &node->remote, ack, 1) ==
+          COAP_INVALID_TID)
+      {
+        coap_delete_pdu (ack);
+      }
+    }
+
     if (node->pdu->hdr->code == COAP_RESPONSE_200)
     {
       coap_opt_t *ct, *block;
@@ -141,7 +170,8 @@ module CoapUdpClientP {
         return;
       }
     }
-    signal CoAPClient.request_done (
+    if (node->pdu->hdr->code != 0)
+      signal CoAPClient.request_done (
         node->pdu->hdr->code, mediatype, (uint16_t)len, data, more);
   }
 
