@@ -74,6 +74,7 @@
 
 /* CoAP result codes (HTTP-Code / 100 * 40 + HTTP-Code % 100) */
 
+#define COAP_RESPONSE_CODE(N)  (((N)/100 << 5) | (N)%100)
 #define COAP_RESPONSE_100       40   /* 100 Continue */
 #define COAP_RESPONSE_200       80   /* 200 OK */
 #define COAP_RESPONSE_201       81   /* 201 Created */

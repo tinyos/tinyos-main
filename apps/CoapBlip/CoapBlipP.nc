@@ -121,14 +121,19 @@ module CoapBlipP {
 
       coap_insert( &optlist, new_option_node(COAP_OPTION_URI_PATH, sizeof("ni") - 1, "ni"), order_opts);
 
-      call CoAPClient.request(&sa6, COAP_REQUEST_PUT, optlist);
+      call CoAPClient.request(&sa6, COAP_REQUEST_PUT, optlist, 0, NULL);
     }
   }
 
   event void ForwardingTableEvents.defaultRouteRemoved() {
   }
 
-  event void CoAPClient.request_done() {
+  event error_t CoAPClient.streamed_next_block (uint16_t blockno, uint16_t *len, void **data)
+  {
+    return FAIL;
+  }
+
+  event void CoAPClient.request_done(uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more) {
     //TODO: handle the request_done
   };
 #endif

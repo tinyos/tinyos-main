@@ -29,16 +29,69 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <lib6lowpan/ip.h>
 typedef uint8_t method_t;
 
 interface CoAPClient {
-  /*
-   * bind a local address.
-   */
-  command error_t request(struct sockaddr_in6 *dest, method_t method, coap_list_t *optlist);
-
-  /*
+  /**
+   * Sends a new CoAP request.
    *
+   * The CoAP library handles PDU retransmissions automatically.
+   * If/when a response is received, @c request_done will be called.
+   * Only a single CoAP request can be handled at a time.
+   *
+   * @param dest Address of CoAP server to send the request to.
+   * @param method CoAP method type (COAP_REQUEST_GET, COAP_REQUEST_PUT).
+   * @param optlist All CoAP options to include, ordered correctly.
+   * @param len Payload length, if the request will have a payload.
+   * @param data Payload data. May be NULL if len is zero.
+   * @returns SUCCESS if the request is sent.
    */
-  event void request_done();
+  command error_t request(struct sockaddr_in6 *dest, method_t method, coap_list_t *optlist, uint16_t len, void *data);
+
+  /**
+   * Similar to @c request, but can handle large payloads in the request via
+   * the CoAP block mechanism.
+   *
+   * Payload data is requested as-needed via the @c streamed_next_block event.
+   *
+   * Not yet implemented.
+   *
+   * TODO: Implement!
+   *
+   * @param dest Address of CoAP server to send the request to.
+   * @param method CoAP method type (COAP_REQUEST_GET, COAP_REQUEST_PUT).
+   * @param optlist All CoAP options to include, ordered correctly.
+   * @returns SUCCESS if the request is sent.
+   */
+  command error_t streamed_request(struct sockaddr_in6 *dest, method_t method, coap_list_t *optlist);
+
+  /**
+   * Called in response to a @c streamed_request to obtain payload data.
+   *
+   * @param blockno The payload block number.
+   * @param len On entry set to the desired payload block length. When the end
+   *   of the payload data is reached, @c len must be set to the length of the
+   *   final block. Returning less payload data than requested is not permitted
+   *   except for the final block.
+   * @param data Receives the pointer to the next block of payload data.
+   * @returns SUCCESS if the payload data block could be provided.
+   */
+  event error_t streamed_next_block(uint16_t blockno, uint16_t *len, void **data);
+
+
+  /**
+   * Called when a response is received.
+   *
+   * TODO: Implement support for CoAP block responses.
+   *
+   * @param code The CoAP response code (in 3.5 packed format).
+   * @param mediatype Response payload media type, if applicable.
+   * @param len The length of any payload data, or zero if no response payload.
+   * @param data Response payload data, if any.
+   * @param more If set, the response is using block transfer and there are
+   *   further data blocks expected. The final block does not have this flag
+   *   set.
+   */
+  event void request_done(uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more);
 }

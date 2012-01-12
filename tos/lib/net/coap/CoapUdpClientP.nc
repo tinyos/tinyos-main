@@ -54,7 +54,7 @@ module CoapUdpClientP {
   }
 
   coap_pdu_t *
-    coap_new_request( method_t m, coap_list_t *options ) {
+  coap_new_request(method_t m, coap_list_t *options, uint16_t len, void *data) {
     coap_pdu_t *pdu;
     coap_list_t *opt;
 
@@ -71,19 +71,11 @@ module CoapUdpClientP {
 		       COAP_OPTION_DATA(*(coap_option *)opt->data) );
     }
 
-    //TODO: add payload
-    /*
-      if (payload.length) {
-      // TODO: must handle block
-
-      coap_add_data(pdu, payload.length, payload.s);
-      }
-    */
+    if (len && data)
+      coap_add_data( pdu, len, data);
 
     return pdu;
   }
-
-
 
   void message_handler(coap_context_t *ctx, coap_queue_t *node, void *data);
 
@@ -100,11 +92,13 @@ module CoapUdpClientP {
 
   command error_t CoAPClient.request(struct sockaddr_in6 *dest,
 				     method_t method,
-				     coap_list_t *optlist) {
+				     coap_list_t *optlist,
+				     uint16_t len,
+				     void * data) {
     coap_pdu_t *pdu;
 
-    if (! (pdu = coap_new_request( method, optlist ) ) )
-      return FALSE;
+    if (! (pdu = coap_new_request( method, optlist, len, data ) ) )
+      return FAIL;
 
     if (call LibCoapClient.send(ctx_client, dest, pdu, 1) == COAP_INVALID_TID)
     {
@@ -114,8 +108,41 @@ module CoapUdpClientP {
     return SUCCESS;
   };
 
+  command error_t CoAPClient.streamed_request(struct sockaddr_in6 *dest,
+					      method_t method,
+					      coap_list_t *optlist) {
+    // TODO: implement block'ed data transfer
+    return FAIL;
+  }
+
   void message_handler(coap_context_t *ctx, coap_queue_t *node, void *data) {
-    //TODO: copy stuff from client.c
+    unsigned int len = 0;
+    unsigned char *payload = NULL;
+    bool more = FALSE;
+    uint8_t mediatype = COAP_MEDIATYPE_TEXT_PLAIN;
+
+    if (node->pdu->hdr->code == COAP_RESPONSE_CODE(205))
+    {
+      coap_opt_t *ct, *block;
+
+      ct = coap_check_option (node->pdu, COAP_OPTION_CONTENT_TYPE);
+      if (ct)
+        mediatype = *COAP_OPT_VALUE(*ct);
+
+      block = coap_check_option (node->pdu, COAP_OPTION_BLOCK);
+      if (!block)
+      {
+        if (!coap_get_data (node->pdu, &len, &payload))
+          return;
+      }
+      else
+      {
+         // TODO: implement requesting of next response block
+        return;
+      }
+    }
+    signal CoAPClient.request_done (
+        node->pdu->hdr->code, mediatype, (uint16_t)len, data, more);
   }
 
   event void LibCoapClient.read(struct sockaddr_in6 *from, void *data,
@@ -123,4 +150,9 @@ module CoapUdpClientP {
     coap_read(ctx_client, from, data, len, meta);
     coap_dispatch(ctx_client);
   }
+
+  default event void CoAPClient.request_done (
+        uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more)
+  {
   }
+}
