@@ -121,7 +121,7 @@ module CoapUdpClientP {
     bool more = FALSE;
     uint8_t mediatype = COAP_MEDIATYPE_TEXT_PLAIN;
 
-    if (node->pdu->hdr->code == COAP_RESPONSE_CODE(205))
+    if (node->pdu->hdr->code == COAP_RESPONSE_200)
     {
       coap_opt_t *ct, *block;
 
