@@ -39,7 +39,7 @@ coap_read(coap_context_t *ctx,
   coap_queue_t *node;
   coap_opt_t *opt;
 
-  if ( bytes_read < 0 ) {
+  if ( bytes_read < 0 || bytes_read>=COAP_MAX_PDU_SIZE) {
     return -1;
   }
 
