@@ -788,11 +788,6 @@ module CoapUdpServerP {
      coap_add_option( pdu, COAP_OPTION_CONTENT_TYPE, COAP_OPT_LENGTH(*ct),COAP_OPT_VALUE(*ct) );
    }
 
-   // Add token option to PDU
-   tok = coap_check_option(node->pdu, COAP_OPTION_TOKEN);
-   if (tok)
-     coap_add_option(pdu, COAP_OPTION_TOKEN, COAP_OPT_LENGTH(*tok), COAP_OPT_VALUE(*tok));
-
    // sending pdu
    if (pdu && (call LibCoapServer.send(ctx_server, &node->remote, pdu, 1) == COAP_INVALID_TID )) {
      //printf("** coap:asyn Res: error sending response\n");
