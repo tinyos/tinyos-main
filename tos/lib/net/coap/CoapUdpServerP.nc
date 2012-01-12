@@ -751,7 +751,7 @@ module CoapUdpServerP {
 
    coap_queue_t *node;
    coap_pdu_t *pdu;
-   coap_opt_t *tok, *ct;
+   coap_opt_t *ct;
 
    //printf("** coap: putDone.... %i\n", uri_key);
    // assuming more than one entry is in splitphasequeue
