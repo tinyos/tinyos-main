@@ -101,6 +101,7 @@ module CoapUdpClientP {
       return FAIL;
     }
     memset(ctx_client, 0, sizeof( coap_context_t ) );
+    ctx_client->tinyos_port = COAP_CLIENT_PORT;
     coap_register_message_handler( ctx_client, message_handler );
     return SUCCESS;
   }

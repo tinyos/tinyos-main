@@ -69,6 +69,8 @@ typedef struct {
   coap_queue_t *sendqueue, *recvqueue; /* FIXME make these coap_list_t */
 #ifndef IDENT_APPNAME
   int sockfd;			/* send/receive socket */
+#else
+  int tinyos_port;
 #endif
   int reqtoken;
   void ( *msg_handler )( void *, coap_queue_t *, void *);

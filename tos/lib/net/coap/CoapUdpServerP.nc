@@ -67,7 +67,7 @@ module CoapUdpServerP {
   uses interface WriteResource[uint8_t uri];
 } implementation {
   coap_context_t *ctx_server;
-  unsigned short tid;
+  unsigned short tid; //has to be static to ensure continuous increase for asyn responses
 
   // unlink a given node from the queue
   int
@@ -94,7 +94,6 @@ module CoapUdpServerP {
     }
     return 0;
   }
-
 
   //get uri (char) from key (int)
   //defined in tinyos_coap_ressources.h
@@ -145,6 +144,8 @@ module CoapUdpServerP {
       return FAIL;
     }
     memset(ctx_server, 0, sizeof( coap_context_t ) );
+    ctx_server->tinyos_port = COAP_SERVER_PORT;
+    printf("init: port %u\n", ctx_server->tinyos_port);
     coap_register_message_handler( ctx_server, message_handler );
 
     return SUCCESS;
@@ -286,7 +287,6 @@ module CoapUdpServerP {
     r->immediately = 1;
     r->data = resource_wellknown;
     coap_add_resource( ctx_server, r );
-    //call Leds.led2Toggle();
     return SUCCESS;
 #else
 
@@ -491,17 +491,15 @@ module CoapUdpServerP {
 
       if (resource->splitphase) {
 	if (code == COAP_SPLITPHASE) {
-	  printf("handle_get: save()\n");
+	  //printf("handle_get: save()\n");
 	  /* handle subscription */
 #warning "FIXME: CoAP: subscriptions not yet implemented"
-
-	  call Leds.led2Toggle();
 	  //FIXME: SAVE before calling data()?
 	  coap_save_splitphase(ctx, node);
 	  // this is a split-phase resource, no PDU ready yet, created in getDone
 	  return NULL;
 	} else {
-	  printf("** handle_get: splitphase not successful\n");
+	  //printf("** handle_get: splitphase not successful\n");
 
 	  return new_response(ctx, node, code);
 	}
@@ -543,11 +541,11 @@ module CoapUdpServerP {
    coap_pdu_t *pdu;
    coap_opt_t *ct;
 
-   //printf("** coap: getDone.... %i %u\n", uri_key, ntohs(id));
+   //printf("** coap: getDone.... %i %u %u\n", uri_key, id, ntohs(id));
 
    // assuming more than one entry is in splitphasequeue
    if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))) {
-     printf("** coap: getDone: node in splitphasequeue not found, quit\n");
+     //printf("** coap: getDone: node in splitphasequeue not found %u\n", id);
      return;
    }
 

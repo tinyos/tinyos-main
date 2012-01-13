@@ -52,5 +52,4 @@ configuration LibCoapAdapterC {
   LibCoapClient = LibCoapAdapterP.LibCoapClient;
   UDPClient = LibCoapAdapterP.UDPClient;
 #endif
-
-  }
+}
