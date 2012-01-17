@@ -358,22 +358,24 @@ generic module RPLDAORoutingEngineP() {
 						dao->target_option.prefix_length,
 						&iph->ip6_src,
 						RPL_IFACE);
-	/*
-	if (new_key == ROUTE_INVAL_KEY) {
-	  call Leds.led1Toggle();
-	  return;
-	}
-	*/
       }
 
       if (new_key != ROUTE_INVAL_KEY) {
-	downwards_table[downwards_table_count].lifetime = 
-          dao->transit_info_option.path_lifetime;
+	//downwards_table[downwards_table_count].lifetime = dao->transit_info_option.path_lifetime;
 	downwards_table[downwards_table_count].key = new_key;
 	// for next element
 	downwards_table_count ++;
       }
 
+    }
+
+    if (new_key != ROUTE_INVAL_KEY) {
+      uint8_t i;
+      for (i=0;i<downwards_table_count;i++){
+        if (downwards_table[i].key == new_key){
+          downwards_table[i].lifetime = dao->transit_info_option.path_lifetime;
+	}
+      }
     }
 
     /***********************************************************************/
