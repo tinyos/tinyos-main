@@ -305,6 +305,7 @@ generic module RPLDAORoutingEngineP() {
                           size_t len, struct ip6_metadata *meta) {
     dao_entry_t* dao_msg;
     error_t error;
+    struct in6_addr MYADDR;
     // This is where the message is actually cast
     struct dao_base_t *dao = (struct dao_base_t *)payload; 
     struct route_entry *entry;
@@ -343,8 +344,11 @@ generic module RPLDAORoutingEngineP() {
       }
     } else {
       /* new prefix */
-      if (downwards_table_count == ROUTE_TABLE_SZ) {
+
+      call IPAddress.getGlobalAddr(&MYADDR);
+      if (downwards_table_count == ROUTE_TABLE_SZ || memcmp_rpl((void*)&MYADDR, dao->target_option.target_prefix.s6_addr, 16)) {
         // printf("RPL: Downward table full -- not adding route\n");
+	// or this is my own address for some wierd reason
         return;
       }
       printf("RPL: DAO: Add new route\n");

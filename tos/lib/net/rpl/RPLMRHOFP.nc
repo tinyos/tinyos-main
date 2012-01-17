@@ -51,7 +51,7 @@ module RPLMRHOFP{
 }
 implementation{
 
-#define STABILITY_BOUND 10
+#define STABILITY_BOUND 5
   // this determines the stability bound for switching parents.
   // 0 is the min value to have nodes aggressively seek new parents
   // 5 or 10 is suggested
