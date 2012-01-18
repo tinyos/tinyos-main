@@ -29,6 +29,8 @@ module RplBorderRouterP {
                                       struct in6_addr *next_hop) {
     int off;
     uint8_t nxt = IPV6_HOP;
+    if (pkt->ip6_inputif == ROUTE_IFACE_PPP)
+      return FALSE;
 
     /* remove any RPL options in the hop-by-hop header by converting
        them to a PadN option */

@@ -299,6 +299,7 @@ module IPForwardingEngineP {
 
       memcpy(&pkt.ip6_hdr, iph, sizeof(struct ip6_hdr));
       pkt.ip6_data = &v;
+      pkt.ip6_inputif = ifindex;
 
       /* give the routing protocol a chance to do data-path validation
          on this packet. */

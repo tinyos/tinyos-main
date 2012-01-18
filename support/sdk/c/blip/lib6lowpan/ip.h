@@ -242,6 +242,7 @@ struct ip6_metadata {
  */
 
 struct ip6_packet {
+  int ip6_inputif;
   struct ip_iovec  *ip6_data;
   struct ip6_hdr ip6_hdr;
 };
