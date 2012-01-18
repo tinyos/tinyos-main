@@ -69,8 +69,9 @@
 int
 in_cksum(const struct ip_iovec *vec) {
 #if 1
+  /* This will break horribly if the length of any but the last ip_iovec is odd! */
+
   uint32_t sum = 0;
-  uint16_t res = 0;
   uint16_t cur = 0;
   int i;
   uint8_t *w;
@@ -90,12 +91,14 @@ in_cksum(const struct ip_iovec *vec) {
         cur |= w[i];
       finish:
         sum += cur;
-        res = (sum & 0xffff) + (sum >> 16);
         cur = 0;
       }
     }
   }
-  return ~res ;
+  while (sum > 0xffff) {
+    sum = (sum & 0xffff) + (sum >> 16);
+  }
+  return ~((uint16_t)sum);
 #else
 	register const uint16_t *w;
 	register uint32_t sum = 0;
