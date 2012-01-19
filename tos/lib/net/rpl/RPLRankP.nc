@@ -574,7 +574,7 @@ implementation {
     uint16_t prevRank = nodeRank;//, myParent;
     bool newParent = FALSE;
 
-    newParent = call RPLOF.recalcualateRank();
+    newParent = call RPLOF.recalculateRank();
     nodeRank = call RPLOF.getRank();
 
 //     printf("GOT new rank %d %d %d\n", 

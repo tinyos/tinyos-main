@@ -94,7 +94,7 @@ implementation{
     return nodeRank;
   }
 
-  command bool RPLOF.recalcualateRank() {
+  command bool RPLOF.recalculateRank() {
     uint16_t prevEtx, prevRank;
     parent_t* parentNode = call ParentTable.get(desiredParent);
 

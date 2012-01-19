@@ -14,7 +14,7 @@ interface RPLOF {
   command uint16_t getRank();
   command void resetRank();
 
-  command bool recalcualateRank();
+  command bool recalculateRank();
 
   /* Recompute the routes, return TRUE if rank updated */
   command bool recomputeRoutes();

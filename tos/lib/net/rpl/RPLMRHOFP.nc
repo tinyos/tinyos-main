@@ -112,7 +112,7 @@ implementation{
     return nodeRank;
   }
 
-  command bool RPLOF.recalcualateRank() {
+  command bool RPLOF.recalculateRank() {
     // return TRUE if this is the first time that the rank is computed
     // for this parent.
 
