@@ -65,15 +65,22 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
 #endif
 
 #ifndef HOST_TIME
+  /*
+   * this array needs to be one longer than NUM_YEARS, because
+   * the code tests to see if current time in seconds is less than
+   * the start of next year...
+   */
 #define NUM_YEARS 4
-  const int16_t g_first_year = 2009;
+  const int16_t g_first_year = 2012;
   struct y_info year_info[NUM_YEARS] = {
     /* unix time start jan 1 1970 */
     // from 2007, dst begins 2nd sunday in march, ends first sunday in november
-    { 0x495c4dd0, 3, 0, 67, 305},
-    { 0x4B3D8150, 4, 0, 73, 311},
-    { 0x4D1EB4D0, 5, 0, 72, 310},
-    { 0x4EFFE850, 6, 1, 71, 309}
+    { 0x4EFFE850, 6, 1, 71, 309},
+    { 0x50e26d50, 1, 0, 69, 307},
+    { 0x52c3a0d0, 2, 0, 68, 306},
+    { 0x54a4d450, 3, 0, 67, 305},
+    { 0x568607d0, 4, 1, 73, 311}
+
   };
 
 #else
