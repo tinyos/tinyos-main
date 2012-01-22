@@ -83,7 +83,7 @@ extern int snprintf(char *str, size_t len, const char *format, ...) __attribute_
    */
 #define NUM_YEARS 4
   const int16_t g_first_year = 2012;
-  struct y_info year_info[NUM_YEARS] = {
+  struct y_info year_info[NUM_YEARS + 1] = {
     /* unix time start jan 1 1970 */
     // from 2007, dst begins 2nd sunday in march, ends first sunday in november
     { 0x4EFFE850, 6, 1, 71, 309},
