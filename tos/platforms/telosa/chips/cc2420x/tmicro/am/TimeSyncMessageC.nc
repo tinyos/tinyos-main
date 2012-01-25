@@ -42,6 +42,9 @@ configuration TimeSyncMessageC
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 		interface TimeSyncAMSend<TMilli, uint32_t> as TimeSyncAMSendMilli[am_id_t id];
 		interface TimeSyncPacket<TMilli, uint32_t> as TimeSyncPacketMilli;
+
+		interface LowPowerListening;
+
 	}
 }
 
@@ -62,4 +65,7 @@ implementation
 	PacketTimeStampMilli	= MessageC;
 	TimeSyncAMSendMilli	= MessageC;
 	TimeSyncPacketMilli	= MessageC;
+
+	LowPowerListening       = MessageC;
+
 }

@@ -19,6 +19,15 @@ ifeq ($(TARGETS),telosb)
   PFLAGS+=-I$(TOSDIR)/lib/rfxlink/util
 endif
 
+ifeq ($(TARGETS),epic)
+  PFLAGS+=-I$(TOSDIR)/platforms/telosa/chips/cc2420x/tmicro
+  PFLAGS+=-I$(TOSDIR)/platforms/telosa/chips/cc2420x/tmicro/am
+  PFLAGS+=-I$(TOSDIR)/platforms/telosa/chips/cc2420x
+  PFLAGS+=-I$(TOSDIR)/chips/cc2420x
+  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/layers
+  PFLAGS+=-I$(TOSDIR)/lib/rfxlink/util
+endif
+
 ifeq ($(TARGETS),shimmer)
   PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/tmicro
   PFLAGS+=-I$(TOSDIR)/platforms/shimmer/chips/cc2420x/tmicro/am
