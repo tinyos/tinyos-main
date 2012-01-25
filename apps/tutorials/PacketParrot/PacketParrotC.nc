@@ -45,6 +45,8 @@
  *
  * @author Prabal Dutta
  * @date   Apr 6, 2007
+ * @author Janos Sallai
+ * @date   Jan 25, 2012 
  */
 #include <Timer.h>
 #include "StorageVolumes.h"
@@ -56,16 +58,17 @@ implementation {
   components LedsC;
   components PacketParrotP as App;
   components ActiveMessageC;
-  components CC2420CsmaC;
   components new LogStorageC(VOLUME_LOGTEST, TRUE);
   components new TimerMilliC() as Timer0;
 
   App.Boot -> MainC;
   App.Leds -> LedsC;
   App.Packet -> ActiveMessageC;
+  App.AMPacket -> ActiveMessageC;
   App.AMControl -> ActiveMessageC;
-  App.Send -> CC2420CsmaC;
-  App.Receive -> CC2420CsmaC;
+  App.AMSend -> ActiveMessageC;
+  App.Receive -> ActiveMessageC.Receive;
+  App.Snoop -> ActiveMessageC.Snoop;
   App.LogRead -> LogStorageC;
   App.LogWrite -> LogStorageC;
   App.Timer0 -> Timer0;

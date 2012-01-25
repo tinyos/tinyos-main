@@ -37,14 +37,18 @@
  *
  * @author Prabal Dutta
  * @date   Apr 6, 2007
+ * @author Janos Sallai
+ * @date   Jan 25, 2012
  */
 module PacketParrotP {
   uses {
     interface Boot;
     interface Leds;
     interface Packet;
-    interface Send;
-    interface Receive;
+    interface AMPacket;
+    interface AMSend[uint8_t id];
+    interface Receive[uint8_t id];
+    interface Receive as Snoop[uint8_t id];
     interface SplitControl as AMControl;
     interface LogRead;
     interface LogWrite;
@@ -88,7 +92,7 @@ implementation {
 
   event void LogRead.readDone(void* buf, storage_len_t len, error_t err) {
     if ( (len == sizeof(logentry_t)) && (buf == &m_entry) ) {
-      call Send.send(&m_entry.msg, m_entry.len);
+      call AMSend.send[call AMPacket.type(&m_entry.msg)](call AMPacket.destination(&m_entry.msg), &m_entry.msg, m_entry.len);
       call Leds.led1On();
     }
     else {
@@ -100,7 +104,7 @@ implementation {
   }
 
 
-  event void Send.sendDone(message_t* msg, error_t err) {
+  event void AMSend.sendDone[uint8_t id](message_t* msg, error_t err) {
     call Leds.led1Off();
     if ( (err == SUCCESS) && (msg == &m_entry.msg) ) {
       call Packet.clear(&m_entry.msg);
@@ -115,7 +119,7 @@ implementation {
 
 
   event void Timer0.fired() {
-    call Send.send(&m_entry.msg, m_entry.len);
+    call AMSend.send[call AMPacket.type(&m_entry.msg)](call AMPacket.destination(&m_entry.msg), &m_entry.msg, m_entry.len);
   }
 
 
@@ -129,9 +133,8 @@ implementation {
     call Leds.led0Off();
   }
 
-
-  event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
-    call Leds.led2On();
+  event message_t* Receive.receive[uint8_t id](message_t* msg, void* payload, uint8_t len) {
+   call Leds.led2On();
     if (!m_busy) {
       m_busy = TRUE;
       m_entry.len = len;
@@ -143,6 +146,10 @@ implementation {
     return msg;
   }
 
+  event message_t* Snoop.receive[uint8_t id](message_t* msg, void* payload, uint8_t len) {
+    return signal Receive.receive[id](msg, payload, len);
+  }
+  
   event void LogWrite.appendDone(void* buf, storage_len_t len, 
                                  bool recordsLost, error_t err) {
     m_busy = FALSE;

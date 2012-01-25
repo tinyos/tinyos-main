@@ -54,5 +54,4 @@ Tools:
 
 Known bugs/limitations:
 
-  Only works on motes with the CC2420 radio.  Tested and verified with
-  TelosB, Tmote, and MicaZ nodes.
+  None
