@@ -47,8 +47,6 @@
 #define BMP085_MD_MSB   0xBE
 #define BMP085_MD_LSB   0xBF
 
-#define TSL256X_PTR_CONTROL	(0x0)
-
 // Ultra low power mode
 // Oversampling = 0, internal samples = 1, conversion press = 4.5ms
 // Current = 3uA/sample, RMS noise = 0.06hPa
@@ -63,13 +61,13 @@
 // Start -> Meas UT -> 4.5ms -> Read UT -> Meas UP -> 4.5ms -> Read UP
 
 enum {
-BMPCMD_IDLE = 0,
-BMPCMD_START,
-BMPCMD_READ_CALIB,
-BMPCMD_READ_UT,
-BMPCMD_READ_UP,
-BMPCMD_READ_TEMP,
-BMPCMD_READ_PRES,
+  BMPCMD_IDLE = 0,
+  BMPCMD_START,
+  BMPCMD_READ_CALIB,
+  BMPCMD_READ_UT,
+  BMPCMD_READ_UP,
+  BMPCMD_READ_TEMP,
+  BMPCMD_READ_PRES,
 } BMP085_CMD;
 
 

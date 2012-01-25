@@ -116,11 +116,10 @@ implementation {
   
   event void Resource.granted(){
     error_t error;
-    pointer = 0xAC;		
-    setreg = 0x3;		
+    setreg = TSL256X_CONTROL_POWER_ON;		
+    pointer = TSL256X_PTR_DATA0LOW | TSL256X_COMMAND_CMD | TSL256X_COMMAND_WORD;		
     error = call I2CBasicAddr.write((I2C_START | I2C_STOP), TSL2563_ADDRESS, 1, &setreg);
     if (error){
-      printfUART("Error write:RS\n");
       call Resource.release();
       signal Light.readDone(error, 0xFFFF);
     }
@@ -137,7 +136,6 @@ implementation {
         e = call I2CBasicAddr.read((I2C_START | I2C_STOP), TSL2563_ADDRESS, 4, &lightBuff);  
       }
       if (e){
-        printfUART("Error Read:RD\n");
         call Resource.release();
         signal Light.readDone(error, 0xFFFF);
       }
@@ -148,7 +146,7 @@ implementation {
     if (call Resource.isOwner()){
       uint16_t tmp;
       state = TSLCMD_IDLE;
-      for(tmp=0;tmp<0xffff;tmp++);	//delay
+      for(tmp=0;tmp<0xff;tmp++);	//delay
       call Resource.release();
       reading[0] = (data[1] << 8) + data[0];
       reading[1] = (data[3] << 8) + data[2];
@@ -159,7 +157,6 @@ implementation {
   }
 
   event void TimeoutTimer.fired(){
-    printfUART("TSL: timeout\n");
     call Resource.release();
     signal Light.readDone(FAIL, 0);
   }

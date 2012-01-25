@@ -69,7 +69,7 @@ implementation{
   norace uint8_t databuf[22];
   norace error_t error_return= FAIL;
   norace int32_t b5 = 0;
-  norace int16_t temp;  // before to uint
+  norace int16_t temp;  
   norace int32_t press = 0;
   norace int16_t pressure = 0;
   norace bool readPres = FALSE;
@@ -77,17 +77,8 @@ implementation{
 
   // Calibration registers
 
-  int16_t ac1 = 0;
-  int16_t ac2 = 0;
-  int16_t ac3 = 0;
-  uint16_t ac4 = 0;
-  uint16_t ac5 = 0;
-  uint16_t ac6 = 0;
-  int16_t b1 = 0;
-  int16_t b2 = 0;
-  int16_t mb = 0;
-  int16_t mc = 0;
-  int16_t md = 0;
+  int16_t ac1, ac2, ac3, b1, b2, mb, mc, md = 0;
+  uint16_t ac4, ac5, ac6 = 0;
 
   task void signalEvent(){
     if (error_return == SUCCESS){
@@ -96,7 +87,6 @@ implementation{
     if (call Resource.isOwner()) call Resource.release();
     switch(bmp085cmd){
       case BMPCMD_READ_CALIB:
-      case BMPCMD_START:
         if (error_return == SUCCESS) state = S_STARTED;
         signal BMPSwitch.startDone(error_return);
         break;
@@ -107,20 +97,17 @@ implementation{
     }
   }
 
-  task void clearBMP(){
-    post signalEvent();
-  }
-
   void calcTemp(uint32_t tmp){
     int32_t x1, x2 = 0;
     atomic{
       x1 = (((int32_t)tmp - (int32_t)ac6) * (int32_t)ac5) >> 15;
       x2 = ((int32_t)mc << 11) / (x1 + md);
       b5 = x1 + x2;
-      // printfUART("B5 [%d]\n", b5);
       temp = (b5 + 8) >> 4;
     }
-    // printfUART("Temp [%d.%d C]\n", temp/10, temp<<2);
+     #ifdef DEBUG_ZIGLET
+       printfUART("[BMP085] Temp [%d.%d C]\n", temp/10, temp<<2);
+     #endif
   }
 
   void calcPres(int32_t tmp){
@@ -156,16 +143,20 @@ implementation{
       press /= 10;
       pressure = press;
     }
-    // printfUART("Pressure [%u mbar]\n", pressure);
+    #ifdef DEBUG_ZIGLET
+      printfUART("[BMP085] Pressure [%u mbar]\n", pressure);
+    #endif
+
     readPres = FALSE;
     error_return = SUCCESS;
     post signalEvent();
   }
-
+      
   command error_t BMPSwitch.start(){
-    error_t e = FAIL;
+    error_t e;
     uint8_t i;
     error_return = FAIL;
+    atomic P5DIR |= 0x06;
     call TimeoutTimer.startOneShot(1024);
     if(state != S_STARTED){
       bmp085cmd = BMPCMD_START;
@@ -187,8 +178,9 @@ implementation{
   }
 
   command error_t Pressure.read(){
-    error_t e = FAIL;
+    error_t e;
     error_return = FAIL;
+    atomic P5DIR |= 0x06;
     call TimeoutTimer.startOneShot(1024);
     if (state == S_STARTED){
       bmp085cmd = BMPCMD_READ_UT;
@@ -206,38 +198,37 @@ implementation{
         bmp085cmd = BMPCMD_READ_CALIB;
         databuf[0] = BMP085_AC1_MSB; // 0xAA	
         e = call I2CBasicAddr.write((I2C_START | I2C_STOP), BMP085_ADDR, 1, databuf);
-        if (e != SUCCESS){
-          printfUART("Retry\n");
-         atomic P5OUT &= ~0x06;
-         atomic P5REN &= ~0x06;
-         post clearBMP();
-        }
+        #ifdef DEBUG_ZIGLET
+          if(e != SUCCESS) printfUART("[BMP085] Error at start (%d)\n", e);
+        #endif
         break;
 
       case BMPCMD_READ_UT:
         databuf[0] = BMP085_CTLREG;   // 0xF4
         databuf[1] = BMP085_UT_NOSRX; // 0x2E	
         e = call I2CBasicAddr.write((I2C_START | I2C_STOP), BMP085_ADDR, 2, databuf);
-        if (e != SUCCESS) printfUART("Error T:RG\n");
+        #ifdef DEBUG_ZIGLET
+          if (e != SUCCESS) printfUART("[BMP085] Error at UT (%d)\n", e);
+        #endif
         break;
 
       case BMPCMD_READ_UP:
         databuf[0] = BMP085_CTLREG;   // 0xF4
         databuf[1] = BMP085_UP_OSRS0; // 0x34
         e = call I2CBasicAddr.write((I2C_START | I2C_STOP), BMP085_ADDR, 2, databuf);
-        if (e != SUCCESS) printfUART("Error P:RG\n");
+        #ifdef DEBUG_ZIGLET
+          if (e != SUCCESS) printfUART("[BMP085] Error at UP (%d)\n", e);
+        #endif
         break;
     }
   }
 
   async event void I2CBasicAddr.writeDone(error_t error, uint16_t addr, uint8_t length, uint8_t *data){
     error_t e;
-    uint8_t i = 0;
     if(call Resource.isOwner()){
       switch(bmp085cmd){
         case BMPCMD_READ_UT:
         case BMPCMD_READ_UP:
-            for (;i<0xFF;i++){} // delay
             if (bmp085cmd == BMPCMD_READ_UT){
               bmp085cmd = BMPCMD_READ_TEMP;
             } else {
@@ -245,7 +236,6 @@ implementation{
             }
             databuf[0] = BMP085_DATA_MSB;   // 0xF6
             e = call I2CBasicAddr.write((I2C_START | I2C_STOP), BMP085_ADDR, 1, databuf);
-            if (e != SUCCESS) printfUART("Error WaitTimer [%d]\n", e);
           break;
 
         case BMPCMD_READ_CALIB:
@@ -264,7 +254,6 @@ implementation{
   async event void I2CBasicAddr.readDone(error_t error, uint16_t addr, uint8_t length, uint8_t *data){
     int16_t utemp = 0;
     int32_t upres = 0;
-    uint16_t i = 0;
     if (call Resource.isOwner()){
       switch(bmp085cmd){
         case BMPCMD_READ_CALIB:
@@ -281,10 +270,7 @@ implementation{
               mb = (data[16]<<8) + data[17];
               mc = (data[18]<<8) + data[19];
               md = (data[20]<<8) + data[21];
-              // printCAL();
               error_return = SUCCESS;
-              for (;i<0xFFFF;i++){}
-              for (;i<0xFFFF;i++){}
             }
           }
           post signalEvent(); 

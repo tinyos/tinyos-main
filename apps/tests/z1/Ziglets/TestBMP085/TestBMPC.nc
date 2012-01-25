@@ -72,11 +72,7 @@ implementation {
   }
 
   event void BMPSwitch.startDone(error_t err){
-    if (err != SUCCESS){
-      printfUART("failed XXX\n");
-      call BMPSwitch.stop();
-    } else {
-      call Leds.led0On();
+    if (err == SUCCESS){
       call TestTimer.startPeriodic(1024);
     }
   }
@@ -92,9 +88,7 @@ implementation {
   event void Pressure.readDone(error_t error, uint16_t data){
     if (error == SUCCESS){
       int16_t buff = (int16_t) data;
-      printfUART("Pressure: %d.%2d\n", data/10, data>>2);
-    } else {
-      call BMPSwitch.start();
+      printfUART("Pressure: %d.%2d\n", buff/10, buff>>2);
     }
   }
 }

@@ -5,6 +5,8 @@ Description:
 
 This application periodically polls the BMP085 sensor for data.  
 
+To get more output from the sensor, uncomment the ZIGLET_DEBUG flag in Makefile
+
 The data is printed over the serial port, using a client like putty or
 picocom you can see the readings of the sensor adjusting the serial port
 to this configuration:
