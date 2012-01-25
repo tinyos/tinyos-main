@@ -59,7 +59,7 @@ generic module Msp430I2CP() {
 
 implementation {
   enum {
-    TIMEOUT = 256,
+    TIMEOUT = 600, // 200
   };
 
   norace uint8_t* m_buf;
@@ -103,6 +103,7 @@ implementation {
   default async command error_t UsciResource.immediateRequest[ uint8_t id ]() { return FAIL; }
   default async command error_t UsciResource.release[ uint8_t id ]() {return FAIL;}
   default event void Resource.granted[ uint8_t id ]() {}
+
   default async command msp430_i2c_union_config_t* Msp430I2CConfigure.getConfig[uint8_t id]() {
     return (msp430_i2c_union_config_t *) &msp430_i2c_default_config;
   }
@@ -121,18 +122,16 @@ implementation {
     call UsciB.enableRxIntr();
 
     if ( flags & I2C_START ) {
-		while(call UsciB.getStopBit()){
-			if(i>=TIMEOUT) { 
-				return EBUSY;
-			}
-			i++;
-		}
-		call UsciB.setTXStart();
+      while(call UsciB.getStopBit()){
+        if(i>=TIMEOUT) { 
+          return EBUSY;
+        }
+        i++;
+      }
+      call UsciB.setTXStart();
+    } else {
+      nextRead();
     }
-    else {
-		nextRead();
-    }
-    
     return SUCCESS;
   }
 
@@ -144,12 +143,12 @@ implementation {
     m_len = len;
     m_flags = flags;
     m_pos = 0;
-	while((call UsciB.getUstat()) & UCBBUSY) {
-		if(i>=TIMEOUT) {
-			return FAIL;
-		}
-		i++;
-	}
+    while((call UsciB.getUstat()) & UCBBUSY) {
+      if(i>=TIMEOUT) {
+        return FAIL;
+      }
+      i++;
+    }
     
     call UsciB.setTransmitMode();
     call UsciB.setSlaveAddress(addr);
@@ -157,72 +156,68 @@ implementation {
     
     if ( flags & I2C_START ) {
       while(call UsciB.getStopBit()){
-		if(i>=TIMEOUT) {
-			return EBUSY;
-		}
-		i++;
+        if(i>=TIMEOUT) {
+          return EBUSY;
+        }
+        i++;
       }
-	i=0;
-	while((call UsciB.getUstat()) & UCBBUSY) {
-		if(i>=TIMEOUT) {
-			return FAIL;
-		}
-		i++;
-	}
+      i=0;
+      while((call UsciB.getUstat()) & UCBBUSY) {
+        if(i>=TIMEOUT) {
+          return FAIL;
+        }
+        i++;
+      }
       call UsciB.setTXStart();
-    }
-    else {
+    } else {
       nextWrite();
     }
-    
     return SUCCESS;
   }
 
   void nextRead() {
     uint16_t i=0;
-    for(i=0xffff;i!=0;i--);	//software delay (aprox 25msec on z1)
+    // for(i=0xffff;i!=0;i--);	//software delay (aprox 25msec on z1)
     if ( m_pos == m_len ) {
       if ( m_flags & I2C_STOP ) {
-		 call UsciB.setTXStop();
-		 while(!call UsciB.getStopBit()){
-			if(i>=TIMEOUT) { 
-				signalDone( EBUSY );
-				return;
-			}
-			i++;
-		 }
-		 signalDone( SUCCESS );
-	  }
-      else {
-		signalDone( SUCCESS );
-	}
+        call UsciB.setTXStop();
+        while(!call UsciB.getStopBit()){
+          if(i>=TIMEOUT) { 
+            signalDone( EBUSY );
+            return;
+          }
+          i++;
+        }
+        signalDone( SUCCESS );
+      } else {
+        signalDone( SUCCESS );
+      }
     } else {
-	    m_buf[ m_pos++ ] = call UsciB.rx();
+      m_buf[ m_pos++ ] = call UsciB.rx();
     }
   }
 
-void nextWrite() {
-	uint16_t i = 0;
-	for(i=0xffff;i!=0;i--);	//software delay (aprox 25msec on z1)
-	if ( ( m_pos == m_len) && ( m_flags & I2C_STOP ) ) {
-		call UsciB.setTXStop();
-		while(call UsciB.getStopBit()){
-			if(i>=TIMEOUT) {
-				signalDone( EBUSY );
-				return;
-			}
-			i++;
-		}
-		signalDone( SUCCESS );
-	} else { 
-		if((call UsciB.getUstat()) == ( UCBBUSY | UCNACKIFG | UCSCLLOW)) {
-			signal I2CBasicAddr.writeDone( FAIL, call UsciB.getSlaveAddress(), m_len, m_buf );
-			return;
-		}
-		call UsciB.tx( m_buf[ m_pos++ ] );
-	}
-}
-
+  void nextWrite() {
+    uint16_t i = 0;
+    // for(i=0xffff;i!=0;i--);	//software delay (aprox 25msec on z1)
+    if ( ( m_pos == m_len) && ( m_flags & I2C_STOP ) ) {
+      call UsciB.setTXStop();
+      while(call UsciB.getStopBit()){
+        if(i>=TIMEOUT) {
+          signalDone( EBUSY );
+          return;
+        }
+        i++;
+      }
+      signalDone( SUCCESS );
+    } else { 
+      if((call UsciB.getUstat()) == ( UCBBUSY | UCNACKIFG | UCSCLLOW)) {
+        signal I2CBasicAddr.writeDone( FAIL, call UsciB.getSlaveAddress(), m_len, m_buf );
+        return;
+      }
+      call UsciB.tx( m_buf[ m_pos++ ] );
+    }
+  }
 
   async event void Interrupts.txDone(){
     call UsciB.clrTxIntr();
