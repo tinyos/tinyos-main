@@ -21,7 +21,7 @@ DESCRIPTION:
 -------------------------------------------------------------------------------
 SUPPORTED PLATFORMS:
 --------------------------------------------
- The supported platforms are micaz, telosb and iris.
+ The supported platforms are micaz, mulle, telosb, z1 and iris.
 
 -------------------------------------------------------------------------------
 STEP BY STEP GUIDE TO RUN OUR TEST SCENARIO:
