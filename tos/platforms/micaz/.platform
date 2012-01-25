@@ -26,6 +26,7 @@ push( @includes, qw(
   %T/chips/cc2420/transmit
   %T/chips/cc2420/unique
   %T/chips/cc2420/security
+  %T/platforms/micaz/chips/at45db
   %T/platforms/mica2/chips/at45db
   %T/platforms/mica/chips/at45db
   %T/chips/at45db
