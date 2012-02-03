@@ -47,9 +47,7 @@ configuration CC2420XActiveMessageC
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
-#ifdef PACKET_LINK
 		interface PacketLink;
-#endif
 
 		interface RadioChannel;
 
@@ -90,10 +88,7 @@ implementation
 
 	PacketAcknowledgements = RadioC;
 	LowPowerListening = RadioC;
-#ifdef PACKET_LINK
 	PacketLink = RadioC;
-#endif
-
 	RadioChannel = RadioC;
 
 	PacketLinkQuality = RadioC.PacketLinkQuality;

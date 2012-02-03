@@ -58,10 +58,7 @@ configuration RF212ActiveMessageC
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
-#ifdef PACKET_LINK
 		interface PacketLink;
-#endif
-
 		interface RadioChannel;
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
@@ -94,10 +91,7 @@ implementation
 
 	PacketAcknowledgements = RadioC;
 	LowPowerListening = RadioC;
-#ifdef PACKET_LINK
 	PacketLink = RadioC;
-#endif
-
 	RadioChannel = RadioC;
 
 	PacketLinkQuality = RadioC.PacketLinkQuality;

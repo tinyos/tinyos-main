@@ -50,9 +50,7 @@ configuration ActiveMessageC
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
-#ifdef PACKET_LINK
 		interface PacketLink;
-#endif
 		interface RadioChannel;
 
 		interface PacketTimeStamp<TMicro, uint32_t> as PacketTimeStampMicro;
@@ -76,9 +74,7 @@ implementation
 
 	PacketAcknowledgements = MessageC;
 	LowPowerListening = MessageC;
-#ifdef PACKET_LINK
 	PacketLink = MessageC;
-#endif
 	RadioChannel = MessageC;
 
 	PacketTimeStampMilli = MessageC;
