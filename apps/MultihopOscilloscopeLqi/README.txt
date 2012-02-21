@@ -28,8 +28,8 @@ MultihopOscilloscope demo via a serial forwarder. To run it, change to the
 
   make
   java net.tinyos.sf.SerialForwarder -comm serial@<serial port>:<mote>
-  # e.g., java net.tinyps.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
-  # or java net.tinyps.sf.SerialForwarder -comm serial@COM2:telosb
+  # e.g., java net.tinyos.sf.SerialForwarder -comm serial@/dev/ttyUSB0:mica2
+  # or java net.tinyos.sf.SerialForwarder -comm serial@COM2:telosb
   ./run
 
 The controls at the bottom of the screen allow you to zoom in or out the X
