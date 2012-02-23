@@ -11,7 +11,7 @@ based application.
 You can install TestJoin on a mote via the following command:
   make <platform> threads install
   
-Valid platforms are currently: tmote, telosb, iris, mica2, micaz, and epic
+Valid platforms are currently: tmote, telosb, iris, shimmer*, span, mica2, micaz, and epic
 
 Upon a successful burn, you should see all LEDs toggle in the following pattern,
 repeating every 8 seconds:
