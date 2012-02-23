@@ -11,9 +11,9 @@ TimeSyncAMSend interface and setting an arbitrary event time. Thus, on
 reception, the TestFtsp code can account for this delayed send.
 
 To evaluate the synchronization precision, use the FtspDataLogger.py
-application. First, you will need a serial forwarder that connects to the
-BaseStation node. Then, run the python application like this:
-python FtspDataLogger.py sf@localhost:9002
+application.  Run the python application like this:
+
+python FtspDataLogger.py serial@/dev/ttyUSB<n>:BAUDRATE
 
 You should now see messages coming in, one per line. The first value is the
 current time as a unix timestamp. The last line is a binary value indicating
