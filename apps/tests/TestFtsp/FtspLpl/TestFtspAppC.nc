@@ -63,7 +63,8 @@ implementation {
 
   components LedsC;
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC) || \
+  defined(PLATFORM_SHIMMER) || defined(PLATFORM_SHIMMER2) || defined(PLATFORM_SHIMMER2R)
   components TimeSync32kC;
   MainC.SoftwareInit -> TimeSync32kC;
   TimeSync32kC.Boot -> MainC;
