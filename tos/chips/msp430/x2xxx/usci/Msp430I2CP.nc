@@ -59,7 +59,7 @@ generic module Msp430I2CP() {
 
 implementation {
   enum {
-    TIMEOUT = 600, // 200
+    TIMEOUT = 800, // 200
   };
 
   norace uint8_t* m_buf;
