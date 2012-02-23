@@ -63,30 +63,39 @@ implementation {
      * msp430 throughput 
      */
 
-    atomic CLR_FLAG(BCSCTL1, XT2OFF); // basic clock system control reg, turn off XT2 osc
-
-    call Leds.led0On();
-    do{
-      CLR_FLAG(IFG1, OFIFG);
-      for(i = 0; i < 0xff; i++);
-    }
-    while(READ_FLAG(IFG1, OFIFG));
-
-    call Leds.led0Off();
-
-    call Leds.led1On();
-    TOSH_uwait(50000UL);
-
-    atomic{ 
-      BCSCTL2 = 0; 
-      SET_FLAG(BCSCTL2, SELM_2); /* select master clock source, XT2CLK when XT2 oscillator present */
-    }                            /*on-chip. LFXT1CLK when XT2 oscillator not present on-chip. */
-
-   call Leds.led1Off();
-
     atomic{
+
+      CLR_FLAG(BCSCTL1, XT2OFF); // basic clock system control reg, turn off XT2 osc
+
+      call Leds.led0On();
+      do{
+	CLR_FLAG(IFG1, OFIFG);
+
+	/*
+	 * delay_cycles is a proper replacement for delay loop, which optimizers don't like
+	 * this is for msp430-gcc-4.5.x forward only though
+	 */
+	//__delay_cycles(50);  
+
+	// this is a stopgap included in shimmer* msp430hardware.h
+	TOSH_uwait(64);
+      }
+      while(READ_FLAG(IFG1, OFIFG));
+      call Leds.led0Off();
+
+      for(i = 0; i < 100; i++)
+	TOSH_uwait(500);
+
+      /* 
+       * select master clock source, XT2CLK when XT2 oscillator present
+       * on-chip. LFXT1CLK when XT2 oscillator not present on-chip. 
+       */
+      BCSCTL2 = 0; 
+      SET_FLAG(BCSCTL2, SELM_2); 
+
       SET_FLAG(BCSCTL2, SELS);  // smclk from xt2
       SET_FLAG(BCSCTL2, DIVS_1);  // divide it by 2
+ 
     }
 
     return SUCCESS;
