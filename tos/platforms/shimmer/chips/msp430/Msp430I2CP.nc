@@ -194,13 +194,11 @@ implementation {
     
     uint8_t _state;
 
-    atomic {
-      _state = stateI2C;
-      if (_state == IDLE) {
-	stateI2C = PACKET_WRITE;
-      }
+    _state = stateI2C;
+    if (_state == IDLE) {
+      stateI2C = PACKET_WRITE;
     }
-
+    
     if (_state == IDLE) {
       // perform register modifications with interrupts disabled
       atomic {
