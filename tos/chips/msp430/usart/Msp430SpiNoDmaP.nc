@@ -155,12 +155,11 @@ implementation {
   inline async command uint8_t FastSpiByte.splitReadWrite(uint8_t data) {
     uint8_t b;
 
+    while( !call Usart.isRxIntrPending() );
+    b = call Usart.rx();
+
     while( !call Usart.isTxIntrPending() );
-    atomic {
-      call Usart.tx( data );
-      while( !call Usart.isRxIntrPending() );
-      b = call Usart.rx();
-    }
+    call Usart.tx( data );     
 
     return b;
   }
