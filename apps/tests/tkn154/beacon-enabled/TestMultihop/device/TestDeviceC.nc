@@ -216,7 +216,7 @@ module TestDeviceC
         m_payloadLen,                        // payloadLength,
         0,                                   // msduHandle,
         TX_OPTIONS_ACK                       // TxOptions,
-        ) == SUCCESS)
+        ) == IEEE154_SUCCESS)
       m_dataConfirmPending = TRUE;
 
     call Leds.led1Toggle();

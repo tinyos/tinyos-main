@@ -136,7 +136,7 @@ module TestIndirectDataCoordC
       call Leds.led0On();
       call Led0Timer.startOneShot(125000U);
       sendIndirectData();
-    }else if(status == SUCCESS){
+    }else if (status == IEEE154_SUCCESS){
       call DataTimer.startOneShot(125000U);
     }
   }

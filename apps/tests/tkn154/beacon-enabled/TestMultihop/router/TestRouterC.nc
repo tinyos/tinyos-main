@@ -211,7 +211,7 @@ module TestRouterC
 
   event void MLME_START.confirm(ieee154_status_t status)
   {
-    if (status != SUCCESS)
+    if (status != IEEE154_SUCCESS)
       scanForPanCoord();
   }
 

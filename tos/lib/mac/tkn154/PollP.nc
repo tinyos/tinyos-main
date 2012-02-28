@@ -84,6 +84,7 @@ implementation
     uint8_t srcAddrMode = 2;
     ieee154_status_t status = IEEE154_SUCCESS;
     uint8_t coordAddressLE[8]; // little endian is what we want
+    nxle_uint16_t *shortAddress = (nxle_uint16_t*) coordAddressLE;
 
     if (security && security->SecurityLevel)
       status = IEEE154_UNSUPPORTED_SECURITY;
@@ -99,7 +100,7 @@ implementation
       txFrame->header = &txControl->header;
       txFrame->metadata = &txControl->metadata;
       if (coordAddrMode == ADDR_MODE_SHORT_ADDRESS)
-        *((nxle_uint16_t*) &coordAddressLE) = coordAddress.shortAddress;
+        *shortAddress = coordAddress.shortAddress;
       else 
         call FrameUtility.convertToLE(coordAddressLE, &coordAddress.extendedAddress);
       txFrame->handle = HANDLE_MLME_POLL_REQUEST;
