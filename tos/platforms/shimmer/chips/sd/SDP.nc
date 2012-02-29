@@ -120,6 +120,8 @@ implementation {
    * the device is docked.
    */
   void powerCycle() {
+    register uint8_t i;
+
     // wait until the tx buf is clear before killing the card
     CS_HIGH();
 
@@ -139,7 +141,8 @@ implementation {
     TOSH_CLR_SD_DO_PIN();
     TOSH_CLR_SD_CLK_PIN();
 
-    TOSH_uwait(60000);  
+    for(i = 0; i < 10; i++)
+      TOSH_uwait(6000);  
 
     TOSH_SET_SD_CS_N_PIN();             
     TOSH_CLR_SW_SD_PWR_N_PIN();    
