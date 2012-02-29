@@ -68,11 +68,14 @@ implementation{
 
   /* Which metrics does this implementation support */
   command bool RPLOF.objectSupported(uint16_t objectType) {
+    // OF0 does not care about the metric
+    return TRUE;
+    /*
     if (objectType == RPL_ROUTE_METRIC_ETX) {
       return TRUE;
     }
-
     return FALSE;
+    */
   }
 
   command void RPLOF.setMinHopRankIncrease(uint16_t val) {
