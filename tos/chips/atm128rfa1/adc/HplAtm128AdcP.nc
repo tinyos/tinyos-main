@@ -50,10 +50,39 @@ module HplAtm128AdcP @safe() {
   uses interface McuPowerState;
 }
 implementation {
-  //=== Direct read of HW registers. =================================
-  async command Atm128Admux_t HplAtm128Adc.getAdmux() {
-    return *(Atm128Admux_t*)&ADMUX;
+  async command void HplAtm128Adc.setChannel(uint8_t mux){
+    ADMUX = (ADMUX & 0xE0) | (mux & 0x1F); //upper 3 bits: unchanged; lower 5 bits: mux
+    if(mux & 0x20)
+      ADCSRB |= (1 << MUX5);
+    else
+      ADCSRB &= ~(1 << MUX5);    
   }
+  
+  async command uint8_t HplAtm128Adc.getChannel(){
+    return (ADMUX & 0x1F) | (((ADCSRB & MUX5) >> MUX5) << 5);
+  }
+  
+  async command void HplAtm128Adc.setAdlar(bool adlarOn){
+    if(adlarOn)
+      ADMUX |= 1<<ADLAR;
+    else
+      ADMUX &= ~(1<<ADLAR);
+  }
+  
+  async command bool HplAtm128Adc.isAdlarOn(){
+    return (ADMUX & (1 << ADLAR))?TRUE:FALSE;
+  }
+  
+  async command void HplAtm128Adc.setRef(uint8_t ref){
+    ADMUX = ((ref << REFS0) & 0xC0) | (ADMUX & 0x3F); //upper 2 bits: ref; lower 6 bits unchanged
+  }
+  
+  async command uint8_t HplAtm128Adc.getRef(){
+    return ((ADMUX & 0xC0) >> REFS0 );
+  }
+
+//TODO: this should be eliminated
+  //=== Direct read of HW registers. =================================
   async command Atm128Adcsra_t HplAtm128Adc.getAdcsra() {
     return *(Atm128Adcsra_t*)&ADCSRA;
   }
@@ -64,10 +93,8 @@ implementation {
   DEFINE_UNION_CAST(Admux2int, Atm128Admux_t, uint8_t);
   DEFINE_UNION_CAST(Adcsra2int, Atm128Adcsra_t, uint8_t);
 
+//TODO: this should be eliminated
   //=== Direct write of HW registers. ================================
-  async command void HplAtm128Adc.setAdmux( Atm128Admux_t x ) {
-    ADMUX = Admux2int(x);
-  }
   async command void HplAtm128Adc.setAdcsra( Atm128Adcsra_t x ) {
     ADCSRA = Adcsra2int(x);
   }
