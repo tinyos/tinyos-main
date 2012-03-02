@@ -84,6 +84,12 @@ implementation
 			DRTRAM2 |= 1<<ENDRT;
 			DRTRAM3 |= 1<<ENDRT;
 		}
+#ifndef ENABLE_JTAG_DEBUG
+		MCUCR |= 1<<JTD;
+		MCUCR |= 1<<JTD;
+#else
+		#warning "JTAG DEBUG ENABLED (ENABLE_JTAG_DEBUG)"
+#endif
 		
 		ok = systemClockInit();
 		ok = ecombine(ok, call MeasureClock.init());

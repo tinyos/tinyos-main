@@ -69,10 +69,6 @@ implementation
       call VBattADC.makeOutput();
     #endif
 
-    //disable jtag
-    MCUCR |= 1<<JTD;
-    MCUCR |= 1<<JTD; 
-
     ok = call McuInit.init();
     ok = ecombine(ok, call Stm25pInit.init());
     ok = ecombine(ok, call LedsInit.init());
