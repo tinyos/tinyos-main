@@ -50,6 +50,11 @@ implementation {
     HEADER_SIZE = sizeof(rf230packet_header_t),
     FOOTER_SIZE = sizeof(rf230packet_footer_t),
   };
+#elif defined(PLATFORM_UCMINI)
+  enum {
+    HEADER_SIZE = sizeof(rfa1packet_header_t),
+    FOOTER_SIZE = sizeof(rfa1packet_footer_t),
+  };
 #else
   enum {
     HEADER_SIZE = sizeof(cc2420_header_t),
