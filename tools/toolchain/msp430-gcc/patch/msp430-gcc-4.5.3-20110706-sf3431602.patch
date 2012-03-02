@@ -1,0 +1,71 @@
+From d30b1b20e23f099959ce763e7a0e8bf382db7fdd Mon Sep 17 00:00:00 2001
+From: "Peter A. Bigot" <pabigot@users.sourceforge.net>
+Date: Thu, 3 Nov 2011 11:10:21 -0500
+Subject: [PATCH] SF 3431602 Incorrect comparison to 32-bit literal
+
+Account for unsigned overflow when converting condition bounds to match
+MSP430 jump instructions.
+---
+ gcc/config/msp430/msp430-cbranch.c |   24 +++++++++++++++++-------
+ 1 files changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/gcc/config/msp430/msp430-cbranch.c b/gcc/config/msp430/msp430-cbranch.c
+index f2bcbb8..6ce983e 100644
+--- a/gcc/config/msp430/msp430-cbranch.c
++++ b/gcc/config/msp430/msp430-cbranch.c
+@@ -321,27 +321,35 @@ msp430_cbranch (rtx insn, rtx operands[])
+     }
+   gcc_assert (mode == QImode || mode == HImode);
+ 
+-  /* here check wiered conditions */
++  /* Correct for constant comparisons not directly supported by MSP430 */
+   if (ops[1] && GET_CODE (ops[1]) == CONST_INT
+       && (code == GT || code == LE || code == GTU || code == LEU))
+     {
+-      int x = INTVAL (ops[1]);
++      int new_bound = 1 + INTVAL (ops[1]);
++
++      if (0 == trunc_int_for_mode (new_bound, mode)
++	  && (code == GTU || code == LEU))
++	{
++	  if (code == LEU)
++	    if (distance > 500 || distance < -500)
++	      output_asm_insn ("jmp\t+4\n\tbr\t#%0", operands);
++	    else
++	      output_asm_insn ("jmp\t%0", operands);
++	  return "";
++	}
++      ops[1] = GEN_INT (new_bound);
+       switch (code)
+ 	{
+ 	case GT:
+-	  ops[1] = GEN_INT (x + 1);
+ 	  code = GE;
+ 	  break;
+ 	case LE:
+-	  ops[1] = GEN_INT (x + 1);
+ 	  code = LT;
+ 	  break;
+ 	case GTU:
+-	  ops[1] = GEN_INT (x + 1);
+ 	  code = GEU;
+ 	  break;
+ 	case LEU:
+-	  ops[1] = GEN_INT (x + 1);
+ 	  code = LTU;
+ 	  break;
+ 	default:
+@@ -351,7 +359,9 @@ msp430_cbranch (rtx insn, rtx operands[])
+   else if (ops[1] && CONSTANT_P (ops[1]) && GET_MODE (ops[1]) == HImode
+ 	   && (code == GT || code == LE || code == GTU || code == LEU))
+     {
+-      /* Handle pointers here */
++      /* Handle symbol references here.  Unsigned comparisons will be
++       * wrong if they wrap when the adjustment is made (viz., symbol
++       * value is 0xffff).  Need a special relocation for this? */
+       ops[1] =
+ 	gen_rtx_CONST (HImode, gen_rtx_PLUS (HImode, ops[1], GEN_INT (1)));
+ 
+-- 
+1.7.6.4
+
