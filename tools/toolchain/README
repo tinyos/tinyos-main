@@ -3,7 +3,7 @@ Readme for package builder makefiles
 DESCRIPTION:
 ===========
 These Makefiles download, patch, compile the tinyos toolchain programs,
-and create rpm and deb packages, if dpkg-deb and rpmbuild is available.
+and create rpm and deb packages, if dpkg-dev and rpmbuild is available.
 You can simply type "make" to start the building process.
 
 MAKEFILE BUILD STEPS:

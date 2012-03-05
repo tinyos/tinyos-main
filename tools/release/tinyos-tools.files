@@ -16,6 +16,8 @@ pushd ../../
 !/CVS$
 !/.svn/
 !/.svn$
+!/.git/
+!/.git$
 !~$
 !#
 EOF

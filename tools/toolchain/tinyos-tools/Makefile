@@ -1,10 +1,10 @@
 # Copyright (c) 2011, University of Szeged
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
 # are met:
-# 
+#
 # - Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
 # - Redistributions in binary form must reproduce the above
@@ -14,7 +14,7 @@
 # - Neither the name of University of Szeged nor the names of its
 # ontributors may be used to endorse or promote products derived
 # from this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
@@ -27,12 +27,12 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # Author:Andras Biro <bbandi86@gmail.com>
 
 #download and patch options
 SRCNAME=tinyos-tools
-VERSION=1.4.0
+VERSION=1.4.1
 ARCHIVE_FORMAT=tar.gz
 DOWNLOAD_URL=http://tinyos.stanford.edu/tinyos-rpms/$(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
 UNPACK_TARGET=-user_unpack
@@ -45,7 +45,7 @@ PATCHSTRIP=1
 #package options
 PKG_NAME=$(SRCNAME)
 #PKG_VERSION=$(VERSION)
-PKG_RELEASE=1
+#PKG_RELEASE=$(shell date +%Y%m%d)
 #PKG_HOST=$(shell echo $(HOST)|sed 's/.*64/amd64/'|sed 's/.*86/i386/')
 
 #packager options:
@@ -68,5 +68,5 @@ $(SRCNAME)-$(VERSION):
 	which perl
 	which python
 	which nescc
-	
+
 -cleanup:
