@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@pathperl@ -w
 #
 # $Id: tos-check-env,v 1.5 2008-02-14 20:31:21 regehr Exp $ 
 #

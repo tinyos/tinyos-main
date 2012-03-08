@@ -26,7 +26,7 @@ if test -z "$pathperl" ; then
   AC_MSG_ERROR(I can't find perl); 
 fi
 
-AC_PATH_PROG(pathpython, python)
+AC_PATH_PROGS(pathpython, [python2 python])
 if test -z "$pathpython" ; then
   AC_MSG_ERROR(I can't find python); 
 fi
@@ -128,11 +128,20 @@ AC_OUTPUT(
 	platforms/mica/Makefile
 	platforms/mica/cc1000-channelgen/Makefile
 	platforms/msp430/Makefile
+	platforms/msp430/motelist/motelist-linux
+	platforms/msp430/motelist/motelist-macos
 	platforms/msp430/motelist/Makefile
 	platforms/msp430/pybsl/Makefile
 	platforms/msp430/pybsl/tos-bsl.1
 	platforms/msp430/pybsl/serial/Makefile
+	platforms/msp430/pybsl/serial/serialposix.py
+	platforms/msp430/pybsl/serial/__init__.py
+	platforms/msp430/pybsl/serial/serialwin32.py
+	platforms/msp430/pybsl/elf.py
+	platforms/msp430/pybsl/tos-bsl
+	platforms/sam3/samba-program.py
 	platforms/sam3/Makefile
+	platforms/intelmote2/openocd/imote2-ocd-program.py
 	tinyos/Makefile
 	tinyos/java/Makefile
 	tinyos/java/env/Makefile
@@ -145,6 +154,12 @@ AC_OUTPUT(
 	tinyos/misc/tos-storage-at45db
 	tinyos/misc/tos-storage-stm25p
 	tinyos/misc/tos-storage-pxa27xp30
+	tinyos/misc/tos-dump.py
+	tinyos/misc/tos-nwprog
+	tinyos/misc/tos-deluge
+	tinyos/misc/tos-build-deluge-image
+	tinyos/misc/tos-mote-key
+	tinyos/misc/tos-check-env
 	tinyos/misc/Makefile
 	tinyos/ncc/Makefile
 	tinyos/ncc/mig
@@ -153,5 +168,8 @@ AC_OUTPUT(
 	tinyos/ncc/nesdoc
 	tinyos/ncc/nesdoc-py/Makefile
 	tinyos/tosthreads/Makefile
+	tinyos/tosthreads/tosthreads_standard_api.py
 	tinyos/safe/Makefile
+	tinyos/safe/tos-decode-flid
+	tinyos/safe/tos-ramsize
 )

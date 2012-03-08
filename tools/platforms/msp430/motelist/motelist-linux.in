@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!@pathperl@ -w
 use strict;
 # $Id: motelist-linux,v 1.4 2006-12-12 18:23:01 vlahan Exp $
 # @author Cory Sharp <cory@moteiv.com>

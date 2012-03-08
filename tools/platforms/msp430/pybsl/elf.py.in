@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!@pathpython@
 import struct
 
 # ELF object file reader
