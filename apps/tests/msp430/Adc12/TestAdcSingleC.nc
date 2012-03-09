@@ -123,7 +123,7 @@ implementation
                 call SingleChannel.getData();
               break;
       case MULTIPLE_DATA_REPEAT: 
-              if (call SingleChannel.configureMultipleRepeat(&config, buffer, 16, 10) == SUCCESS)
+              if (call SingleChannel.configureMultipleRepeat(&config, buffer, 16, 200) == SUCCESS)
                 call SingleChannel.getData();
               break;
       default: call Resource.release();

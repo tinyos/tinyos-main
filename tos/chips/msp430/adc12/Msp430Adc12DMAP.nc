@@ -146,16 +146,20 @@ implementation
   async event void DMAChannel.transferDone(error_t success)
   {
     uint8_t oldMode = mode;
+    uint16_t *new_buffer;
+
     if (oldMode != MULTIPLE_REPEAT){
       call AsyncAdcControl.stop[client]();
       mode = MULTIPLE_SINGLE_AGAIN;
     }
-    buffer = signal SingleChannel.multipleDataReady[client](buffer, numSamples);
-    if (oldMode == MULTIPLE_REPEAT)
-      if (buffer){
+    new_buffer = signal SingleChannel.multipleDataReady[client](buffer, numSamples);
+    if (oldMode == MULTIPLE_REPEAT) {
+      if (new_buffer) {
+        buffer = new_buffer;
         call DMAChannel.repeatTransfer((void*) ADC12MEM_, buffer, numSamples);
       } else
         call AsyncAdcControl.stop[client]();
+    }
   }
 
   default async command error_t SubSingleChannel.configureSingle[uint8_t id](
