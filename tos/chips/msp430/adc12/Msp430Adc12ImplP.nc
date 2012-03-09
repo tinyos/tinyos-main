@@ -560,6 +560,8 @@ implementation
       // only if the client didn't ask for data as fast as possible (jiffies was not zero)
       if (!(call HplAdc12.getCtl0()).msc)
         overflow = TRUE;
+      if (call HplAdc12.getIEFlags() == 0)
+        return; // DMA serves interrupts
     }
     switch (state & CONVERSION_MODE_MASK) 
     { 
