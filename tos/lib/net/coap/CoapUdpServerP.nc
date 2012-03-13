@@ -165,7 +165,8 @@ module CoapUdpServerP {
     coap_address_t listen_addr;
 
     coap_address_init(&listen_addr);
-    listen_addr.port = ntohs(COAP_SERVER_PORT); // mab: ntohs?
+    //listen_addr.port = ntohs(COAP_SERVER_PORT);
+    listen_addr.addr.sin6_port = COAP_SERVER_PORT;
     //TODO: address...
 
     ctx_server = coap_new_context(&listen_addr);
@@ -178,6 +179,7 @@ module CoapUdpServerP {
     return SUCCESS;
   }
 
+  //TODO: the bind should be on the same port as the context...
   command error_t CoAPServer.bind(uint16_t port) {
     return call LibCoapServer.bind(port);
   }
@@ -382,11 +384,19 @@ module CoapUdpServerP {
 				 coap_pdu_t *request,
 				 str *token,
 				 coap_pdu_t *response) {
+    unsigned char buf[2];
     /*
       call Leds.led0On();
     call Leds.led1On();
     call Leds.led2On();
     */
+    if (token->length)
+      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+
+    response->hdr->code = COAP_RESPONSE_CODE(205);
+    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+                    coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf);
+
     if (token->length)
       coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 
@@ -428,6 +438,7 @@ module CoapUdpServerP {
 
   event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
 				uint16_t len, struct ip6_metadata *meta) {
+
     printf("CoapUdpServer: LibCoapServer.read()\n");
     /*call Leds.led0On();
     call Leds.led1On();
@@ -437,6 +448,9 @@ module CoapUdpServerP {
     // copy data into ctx_server
     ctx_server->bytes_read = len;
     memcpy(ctx_server->buf, data, len);
+    // copy src into context
+    memcpy(&ctx_server->src.addr, from, sizeof (struct sockaddr_in6));
+
     coap_read(ctx_server);
     coap_dispatch(ctx_server);
     // TODO: is all TinyOS async???
