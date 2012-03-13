@@ -1,144 +1,85 @@
 /* net.c -- CoAP network interface
  *
- * Copyright (C) 2010 Olaf Bergmann <bergmann@tzi.org>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
+ *
+ * This file is part of the CoAP library libcoap. Please see
+ * README for terms of use.
  */
+
+#include "config.h"
 
 #include <ctype.h>
 #include <stdio.h>
-#ifndef IDENT_APPNAME
-#include <time.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#elif HAVE_SYS_UNISTD_H
+#include <sys/unistd.h>
 #endif
 #ifndef PLATFORM_MICAZ
 #include <sys/types.h>
 #endif
-#ifndef IDENT_APPNAME
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
 
 #include "debug.h"
 #include "mem.h"
 #include "str.h"
-#ifndef IDENT_APPNAME
-#include "subscribe.h"
-#endif
+#include "async.h"
+#include "resource.h"
+#include "option.h"
+#include "encode.h"
 #include "net.h"
 
-#define options_start(p) ((coap_opt_t *) ( (unsigned char *)p->hdr + sizeof ( coap_hdr_t ) ))
+#ifndef WITH_CONTIKI
+#ifndef WITH_TINYOS
+time_t clock_offset;
+#endif /* WITH_TINYOS */
+#endif /* WITH_CONTIKI */
 
-#define options_end(p, opt) {			\
-  unsigned char opt_code = 0, cnt;		\
-  *opt = options_start( node->pdu );            \
-  for ( cnt = (p)->hdr->optcnt; cnt; --cnt ) {  \
-    opt_code += COAP_OPT_DELTA(**opt);			\
-    *opt = (coap_opt_t *)( (unsigned char *)(*opt) + COAP_OPT_SIZE(**opt)); \
-  } \
-}
+#ifdef WITH_CONTIKI
+# ifndef DEBUG
+#  define DEBUG DEBUG_PRINT
+# endif /* DEBUG */
 
-/************************************************************************
- ** some functions for debugging
- ************************************************************************/
+#include "memb.h"
+#include "net/uip-debug.h"
 
-#ifndef IDENT_APPNAME
-void 
-for_each_option(coap_pdu_t *pdu, 
-		void (*f)(coap_opt_t *, unsigned char, unsigned int, const unsigned char *) ) {
-  unsigned char cnt;
-  coap_opt_t *opt;
-  unsigned char opt_code = 0;
-  
-  if (! pdu )
-    return;
+clock_time_t clock_offset;
 
-  opt = options_start( pdu );
-  for ( cnt = pdu->hdr->optcnt; cnt; --cnt ) {
-    opt_code += COAP_OPT_DELTA(*opt);
+#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+#define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[UIP_LLIPH_LEN])
 
-    f ( opt, opt_code, COAP_OPT_LENGTH(*opt), COAP_OPT_VALUE(*opt) );
-    opt = (coap_opt_t *)( (unsigned char *)opt + COAP_OPT_SIZE(*opt) );
-  }
-}
+void coap_resources_init();
+void coap_pdu_resources_init();
 
+unsigned char initialized = 0;
+coap_context_t the_coap_context;
 
-unsigned int
-print_readable( const unsigned char *data, unsigned int len, 
-		unsigned char *result, unsigned int buflen, int encode_always ) {
-  static unsigned char hex[] = "0123456789ABCDEF";
-  unsigned int cnt = 0;
-  while ( len && (cnt < buflen-1) ) {
-    if ( !encode_always && isprint( *data ) ) {
-      *result++ = *data;
-      ++cnt;
-    } else {
-      if ( cnt+4 < buflen-1 ) {
-	*result++ = '\\';
-	*result++ = 'x';
-	*result++ = hex[(*data & 0xf0) >> 4];
-	*result++ = hex[*data & 0x0f ];	
-	cnt += 4;
-      } else 
-	break;
-    }
+MEMB(node_storage, coap_queue_t, COAP_PDU_MAXCNT);
 
-    ++data; --len;
-  }
-  
-  *result = '\0';
-  return cnt;
-}
+PROCESS(coap_retransmit_process, "message retransmit process");
+#endif /* WITH_CONTIKI */
 
-void 
-show( coap_opt_t *opt, unsigned char type, unsigned int len, const unsigned char *data ) {
-  static unsigned char buf[COAP_MAX_PDU_SIZE];
-  print_readable( data, len, buf, COAP_MAX_PDU_SIZE, 0 );
-  printf(" %d:'%s'", type, buf );
-}
+#ifdef WITH_TINYOS
 
-void 
-show_data( coap_pdu_t *pdu ) {
-  static unsigned char buf[COAP_MAX_PDU_SIZE];
-  unsigned int len = (int)( (unsigned char *)pdu->hdr + pdu->length - pdu->data );
-  print_readable( pdu->data, len, buf, COAP_MAX_PDU_SIZE, 0 );
-  printf("'%s'", buf);
-}
+uint32_t clock_offset;
 
-void
-coap_show_pdu( coap_pdu_t *pdu ) {
+unsigned char initialized = 0;
+coap_context_t the_coap_context;
 
-  printf("pdu (%d bytes)", pdu->length);
-  printf(" v:%d t:%d oc:%d c:%d id:%u", pdu->hdr->version, pdu->hdr->type,
-	 pdu->hdr->optcnt, pdu->hdr->code, ntohs(pdu->hdr->id));
-  if ( pdu->hdr->optcnt ) {
-    printf(" o:");
-    for_each_option ( pdu, show );
-  }
+#endif /* WITH_TINYOS */
 
-  if ( pdu->data < (unsigned char *)pdu->hdr + pdu->length ) {
-    printf("\n  data:");
-    show_data ( pdu );
-  }
-  printf("\n");
-  fflush(stdout);
-}
-#endif
+int print_wellknown(coap_context_t *, unsigned char *, size_t *);
 
-/************************************************************************/
+void coap_handle_failed_notify(coap_context_t *, const coap_address_t *,
+			       const str *);
 
 int
 coap_insert_node(coap_queue_t **queue, coap_queue_t *node,
@@ -146,7 +87,7 @@ coap_insert_node(coap_queue_t **queue, coap_queue_t *node,
   coap_queue_t *p, *q;
   if ( !queue || !node )
     return 0;
-    
+
   /* set queue head if empty */
   if ( !*queue ) {
     *queue = node;
@@ -166,27 +107,31 @@ coap_insert_node(coap_queue_t **queue, coap_queue_t *node,
     p = q;
     q = q->next;
   } while ( q && order( node, q ) >= 0 );
-  
+
   /* insert new item */
   node->next = q;
   p->next = node;
   return 1;
 }
 
-int 
+int
 coap_delete_node(coap_queue_t *node) {
-  if ( !node ) 
+  if ( !node )
     return 0;
 
-  coap_free( node->pdu );
-  coap_free( node );  
+  coap_delete_pdu(node->pdu);
+#ifndef WITH_CONTIKI
+  coap_free( node );
+#else /* WITH_CONTIKI */
+  memb_free(&node_storage, node);
+#endif /* WITH_CONTIKI */
 
   return 1;
 }
 
 void
 coap_delete_all(coap_queue_t *queue) {
-  if ( !queue ) 
+  if ( !queue )
     return;
 
   coap_delete_all( queue->next );
@@ -196,10 +141,16 @@ coap_delete_all(coap_queue_t *queue) {
 
 coap_queue_t *
 coap_new_node() {
-  coap_queue_t *node = coap_malloc ( sizeof *node );
+  coap_queue_t *node;
+#ifndef WITH_CONTIKI
+  node = (coap_queue_t *)coap_malloc(sizeof(coap_queue_t));
+#else /* WITH_CONTIKI */
+  node = (coap_queue_t *)memb_alloc(&node_storage);
+#endif /* WITH_CONTIKI */
+
   if ( ! node ) {
-#ifndef IDENT_APPNAME
-    perror ("coap_new_node: malloc");
+#ifndef NDEBUG
+    coap_log(LOG_WARN, "coap_new_node: malloc");
 #endif
     return NULL;
   }
@@ -218,7 +169,7 @@ coap_peek_next( coap_context_t *context ) {
 
 coap_queue_t *
 coap_pop_next( coap_context_t *context ) {
-  coap_queue_t *next; 
+  coap_queue_t *next;
 
   if ( !context || !context->sendqueue )
     return NULL;
@@ -229,152 +180,417 @@ coap_pop_next( coap_context_t *context ) {
   return next;
 }
 
-#ifndef IDENT_APPNAME
+#ifdef COAP_DEFAULT_WKC_HASHKEY
+/** Checks if @p Key is equal to the pre-defined hash key for.well-known/core. */
+#define is_wkc(Key)							\
+  (memcmp((Key), COAP_DEFAULT_WKC_HASHKEY, sizeof(coap_key_t)) == 0)
+#else
+/* Implements a singleton to store a hash key for the .wellknown/core
+ * resources. */
+int
+is_wkc(coap_key_t k) {
+  static coap_key_t wkc;
+  static unsigned char _initialized = 0;
+  if (!_initialized) {
+    _initialized = coap_hash_path((unsigned char *)COAP_DEFAULT_URI_WELLKNOWN,
+				 sizeof(COAP_DEFAULT_URI_WELLKNOWN) - 1, wkc);
+  }
+  return memcmp(k, wkc, sizeof(coap_key_t)) == 0;
+}
+#endif
+
 coap_context_t *
-coap_new_context(in_port_t port) {
+coap_new_context(const coap_address_t *listen_addr) {
+#ifndef WITH_CONTIKI
   coap_context_t *c = coap_malloc( sizeof( coap_context_t ) );
-  struct sockaddr_in6 addr;
-  time_t now;
-  int reuse = 1, need_port = 1;
+#ifndef WITH_TINYOS
+  int reuse = 1;
+#endif
+#endif
 
-  srand( getpid() ^ time(&now) );
+#ifdef WITH_CONTIKI
+  coap_context_t *c;
 
-  if ( !c ) {
-    perror("coap_init: malloc:");
+  if (initialized)
+    return NULL;
+#endif /* WITH_CONTIKI */
+
+  if (!listen_addr) {
+    coap_log(LOG_EMERG, "no listen address specified\n");
     return NULL;
   }
 
+  coap_clock_init();
+  prng_init((unsigned long)listen_addr ^ clock_offset);
+
+#ifndef WITH_CONTIKI
+#ifndef WITH_TINYOS
+  if ( !c ) {
+#ifndef NDEBUG
+    coap_log(LOG_EMERG, "coap_init: malloc:");
+#endif
+    return NULL;
+  }
+#endif /* WITH_CONTIKI */
+#endif /* WITH_TINYOS */
+
+#ifdef WITH_CONTIKI
+  coap_resources_init();
+  coap_pdu_resources_init();
+
+  c = &the_coap_context;
+  initialized = 1;
+#endif /* WITH_CONTIKI */
+
+#ifdef WITH_TINYOS
+  c = &the_coap_context;
+  initialized = 1;
+#endif /* WITH_TINYOS */
+
   memset(c, 0, sizeof( coap_context_t ) );
 
-  c->sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
+  /* initialize message id */
+  prng((unsigned char *)&c->message_id, sizeof(unsigned short));
+
+  /* register the critical options that we know */
+  coap_register_option(c, COAP_OPTION_CONTENT_TYPE);
+  coap_register_option(c, COAP_OPTION_PROXY_URI);
+  coap_register_option(c, COAP_OPTION_URI_HOST);
+  coap_register_option(c, COAP_OPTION_URI_PORT);
+  coap_register_option(c, COAP_OPTION_URI_PATH);
+  coap_register_option(c, COAP_OPTION_TOKEN);
+  coap_register_option(c, COAP_OPTION_URI_QUERY);
+
+#ifndef WITH_CONTIKI
+#ifndef WITH_TINYOS
+  c->sockfd = socket(listen_addr->addr.sa.sa_family, SOCK_DGRAM, 0);
   if ( c->sockfd < 0 ) {
-    perror("coap_new_context: socket");
+#ifndef NDEBUG
+    coap_log(LOG_EMERG, "coap_new_context: socket");
+#endif
     goto onerror;
   }
-  
-  if ( setsockopt( c->sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse) ) < 0 )
-    perror("setsockopt SO_REUSEADDR");
 
-  if ( port == 0 ) {
-    port = COAP_DEFAULT_PORT;
-    need_port = 0;
+  if ( setsockopt( c->sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse) ) < 0 ) {
+#ifndef NDEBUG
+    coap_log(LOG_WARN, "setsockopt SO_REUSEADDR");
+#endif
   }
 
-  memset(&addr, 0, sizeof addr );
-  addr.sin6_family = AF_INET6;
-  addr.sin6_port = htons( port );
-  memcpy( &addr.sin6_addr, &in6addr_any, sizeof addr.sin6_addr );
-
-  if ( bind (c->sockfd, (struct sockaddr *)&addr, sizeof addr) < 0 ) {
-    if (need_port) {
-      perror("coap_new_context: bind");
+  if (bind(c->sockfd, &listen_addr->addr.sa, listen_addr->size) < 0) {
+#ifndef NDEBUG
+    coap_log(LOG_EMERG, "coap_new_context: bind");
+#endif
       goto onerror;
-    }
-    
-    do {
-      addr.sin6_port = htons( ++port );
-    } while (bind (c->sockfd, (struct sockaddr *)&addr, sizeof addr) < 0);
-  } 
-  
+  }
+
   return c;
 
  onerror:
-  if ( c->sockfd >= 0 ) 
+  if ( c->sockfd >= 0 )
     close ( c->sockfd );
   coap_free( c );
   return NULL;
+
+#endif /* WITH_CONTIKI */
+#endif /* WITH_TINYOS */
+
+#ifdef WITH_CONTIKI
+  c->conn = udp_new(NULL, 0, NULL);
+  udp_bind(c->conn, listen_addr->port);
+
+  process_start(&coap_retransmit_process, (char *)c);
+
+  PROCESS_CONTEXT_BEGIN(&coap_retransmit_process);
+  etimer_set(&c->notify_timer, COAP_RESOURCE_CHECK_TIME * COAP_TICKS_PER_SECOND);
+  /* the retransmit timer must be initialized to some large value */
+  etimer_set(&the_coap_context.retransmit_timer, 0xFFFF);
+  PROCESS_CONTEXT_END(&coap_retransmit_process);
+  return c;
+#endif /* WITH_CONTIKI */
+
+#ifdef WITH_TINYOS
+#warning "TinyOS: more setup on context needed?"
+  return c;
+#endif /* WITH_TINYOS */
 }
 
 void
 coap_free_context( coap_context_t *context ) {
+#ifndef WITH_CONTIKI
+  coap_resource_t *res, *rtmp;
+#endif /* WITH_CONTIKI */
   if ( !context )
     return;
 
   coap_delete_all(context->recvqueue);
   coap_delete_all(context->sendqueue);
-  coap_delete_list(context->resources);
-  coap_delete_list(context->subscriptions);
-  close( context->sockfd );
-  coap_free( context );
-}
-#endif
 
-#ifndef IDENT_APPNAME
+#ifndef WITH_CONTIKI
+  HASH_ITER(hh, context->resources, res, rtmp) {
+    free(res);
+  }
+
+  /* coap_delete_list(context->subscriptions); */
+#ifndef WITH_TINYOS
+  close( context->sockfd );
+#endif /* WITH_TINYOS */
+  coap_free( context );
+#endif /* WITH_CONTIKI */
+
+#ifdef WITH_CONTIKI
+  memset(&the_coap_context, 0, sizeof(coap_context_t));
+  initialized = 0;
+#endif /* WITH_CONTIKI */
+}
+
+int
+coap_option_check_critical(coap_context_t *ctx,
+			   coap_pdu_t *pdu,
+			   coap_opt_filter_t unknown) {
+
+  coap_opt_iterator_t opt_iter;
+  int ok = 1;
+
+  coap_option_iterator_init(pdu, &opt_iter, COAP_OPT_ALL);
+
+  while (coap_option_next(&opt_iter)) {
+
+    /* The following condition makes use of the fact that
+     * coap_option_getb() returns -1 if type exceeds the bit-vector
+     * filter. As the vector is supposed to be large enough to hold
+     * the largest known option, we know that everything beyond is
+     * bad.
+     */
+    if (opt_iter.type & 0x01 &&
+	coap_option_getb(ctx->known_options, opt_iter.type) < 1) {
+      debug("unknown critical option %d\n", opt_iter.type);
+
+      ok = 0;
+
+      /* When opt_iter.type is beyond our known option range,
+       * coap_option_setb() will return -1 and we are safe to leave
+       * this loop. */
+      if (coap_option_setb(unknown, opt_iter.type) == -1)
+	break;
+    }
+  }
+
+  return ok;
+}
+
+void
+coap_transaction_id(const coap_address_t *peer, const coap_pdu_t *pdu,
+		    coap_tid_t *id) {
+  coap_key_t h;
+
+  memset(h, 0, sizeof(coap_key_t));
+
+  /* Compare the complete address structure in case of IPv4. For IPv6,
+   * we need to look at the transport address only. */
+
+#ifndef WITH_CONTIKI
+#ifndef WITH_TINYOS
+  switch (peer->addr.sa.sa_family) {
+  case AF_INET:
+    coap_hash((const unsigned char *)&peer->addr.sa, peer->size, h);
+    break;
+  case AF_INET6:
+    coap_hash((const unsigned char *)&peer->addr.sin6.sin6_port,
+	      sizeof(peer->addr.sin6.sin6_port), h);
+    coap_hash((const unsigned char *)&peer->addr.sin6.sin6_addr,
+	      sizeof(peer->addr.sin6.sin6_addr), h);
+    break;
+  default:
+    return;
+  }
+#endif /* WITH_CONTIKI */
+#endif /* WITH_TINYOS */
+
+#ifdef WITH_CONTIKI
+    coap_hash((const unsigned char *)&peer->port, sizeof(peer->port), h);
+    coap_hash((const unsigned char *)&peer->addr, sizeof(peer->addr), h);
+#endif /* WITH_CONTIKI */
+
+#ifdef WITH_TINYOS
+#warning "TinyOS stuff in net.c"
+#endif /* WITH_TINYOS */
+
+  coap_hash((const unsigned char *)&pdu->hdr->id, sizeof(unsigned short), h);
+
+  *id = ((h[0] << 8) | h[1]) ^ ((h[2] << 8) | h[3]);
+}
+
+#ifndef WITH_CONTIKI
+#ifndef WITH_TINYOS
 /* releases space allocated by PDU if free_pdu is set */
 coap_tid_t
-coap_send_impl( coap_context_t *context, const struct sockaddr_in6 *dst, coap_pdu_t *pdu,
-		int free_pdu ) {
+coap_send_impl(coap_context_t *context,
+	       const coap_address_t *dst,
+	       coap_pdu_t *pdu, int free_pdu) {
   ssize_t bytes_written;
-#ifndef NDEBUG
-  char addr[INET6_ADDRSTRLEN];/* buffer space for textual represenation of destination address  */
-#endif
+  coap_tid_t id = COAP_INVALID_TID;
 
   if ( !context || !dst || !pdu )
-    return COAP_INVALID_TID;
+    return id;
 
-#ifndef NDEBUG
-  if ( inet_ntop(dst->sin6_family, &dst->sin6_addr, addr, INET6_ADDRSTRLEN) == 0 ) {
-    perror("coap_send_impl: inet_ntop");
+  bytes_written = sendto( context->sockfd, pdu->hdr, pdu->length, 0,
+			  &dst->addr.sa, dst->size);
+
+  if (bytes_written >= 0) {
+    coap_transaction_id(dst, pdu, &id);
   } else {
-    fprintf(stderr,"send to [%s]:%d:\n  ",addr,ntohs(dst->sin6_port));
+    coap_log(LOG_CRIT, "coap_send: sendto");
   }
-  coap_show_pdu( pdu );
-#endif
 
-  bytes_written = sendto( context->sockfd, pdu->hdr, pdu->length, 0, 
-			  (const struct sockaddr *)dst, sizeof( *dst ));
-  
   if ( free_pdu )
     coap_delete_pdu( pdu );
 
-  if ( bytes_written < 0 ) {
-    perror("coap_send: sendto");
-    return COAP_INVALID_TID;
+  return id;
   }
 
   return ntohs(pdu->hdr->id);
 }
-#else
-// this is defined in LibCoapAdapterP.nc for TinyOS
+#endif /* WITH_CONTIKI */
+#endif /* WITH_TINYOS */
+
+#ifdef WITH_CONTIKI
+/* releases space allocated by PDU if free_pdu is set */
 coap_tid_t
-coap_send_impl( coap_context_t *context, const struct sockaddr_in6 *dst, coap_pdu_t *pdu,
-		int free_pdu );
-#endif
+coap_send_impl(coap_context_t *context,
+	       const coap_address_t *dst,
+	       coap_pdu_t *pdu, int free_pdu) {
+  coap_tid_t id = COAP_INVALID_TID;
+
+  if ( !context || !dst || !pdu )
+    return id;
+
+  /* FIXME: is there a way to check if send was successful? */
+  uip_udp_packet_sendto(context->conn, pdu->hdr, pdu->length,
+			&dst->addr, dst->port);
+
+  coap_transaction_id(dst, pdu, &id);
+
+  if (free_pdu)
+    coap_delete_pdu(pdu);
+
+  return id;
+}
+#endif /* WITH_CONTIKI */
+
+#ifdef WITH_TINYOS
+/* this is defined in LibCoapAdapterP.nc for TinyOS */
+coap_tid_t
+coap_send_impl(coap_context_t *context,
+	       const coap_address_t *dst,
+	       coap_pdu_t *pdu, int free_pdu);
+
+#endif /* WITH_TINYOS */
 
 coap_tid_t
-coap_send( coap_context_t *context, const struct sockaddr_in6 *dst, coap_pdu_t *pdu ) {
+coap_send(coap_context_t *context,
+	  const coap_address_t *dst,
+	  coap_pdu_t *pdu) {
   return coap_send_impl( context, dst, pdu, 1 );
 }
 
-#ifndef IDENT_APPNAME
+coap_tid_t
+coap_send_error(coap_context_t *context,
+		coap_pdu_t *request,
+		const coap_address_t *dst,
+		unsigned char code,
+		coap_opt_filter_t opts) {
+  coap_pdu_t *response;
+  coap_tid_t result = COAP_INVALID_TID;
+
+  assert(request);
+  assert(dst);
+
+  response = coap_new_error_response(request, code, opts);
+  if (response) {
+    result = coap_send(context, dst, response);
+    if (result == COAP_INVALID_TID)
+      coap_delete_pdu(response);
+  }
+
+  return result;
+}
+
+coap_tid_t
+coap_send_message_type(coap_context_t *context,
+		       const coap_address_t *dst,
+		       coap_pdu_t *request,
+		       unsigned char type) {
+  coap_pdu_t *response;
+  coap_tid_t result = COAP_INVALID_TID;
+
+  if (request) {
+    response = coap_pdu_init(type, 0, request->hdr->id, sizeof(coap_pdu_t));
+    if (response) {
+      result = coap_send(context, dst, response);
+      if (result == COAP_INVALID_TID)
+	coap_delete_pdu(response);
+    }
+  }
+  return result;
+}
+
 int
 _order_timestamp( coap_queue_t *lhs, coap_queue_t *rhs ) {
   return lhs && rhs && ( lhs->t < rhs->t ) ? -1 : 1;
 }
-  
-coap_tid_t
-coap_send_confirmed( coap_context_t *context, const struct sockaddr_in6 *dst, coap_pdu_t *pdu ) {
-  coap_queue_t *node;
 
-  /* send once, and enter into message queue for retransmission unless
-   * retransmission counter is reached */
+coap_tid_t
+coap_send_confirmed(coap_context_t *context,
+		    const coap_address_t *dst,
+		    coap_pdu_t *pdu) {
+  coap_queue_t *node;
+  coap_tick_t now;
+  int r;
 
   node = coap_new_node();
-  time(&node->t);
-  node->t += 1;		      /* 1 == 1 << 0 == 1 << retransmit_cnt */
-
-  memcpy( &node->remote, dst, sizeof( struct sockaddr_in6 ) );
-  node->pdu = pdu;
-
-  if ( !coap_insert_node( &context->sendqueue, node, _order_timestamp ) ) {
-#ifndef NDEBUG
-    fprintf(stderr, "coap_send_confirmed: cannot insert node:into sendqueue\n");
-#endif
-    coap_delete_node ( node );
+  if (!node) {
+    debug("coap_send_confirmed: insufficient memory\n");
     return COAP_INVALID_TID;
   }
 
-  return coap_send_impl( context, dst, pdu, 0 );
+  prng((unsigned char *)&r,sizeof(r));
+  coap_ticks(&now);
+  node->t = now;
+
+  /* add randomized RESPONSE_TIMEOUT to determine retransmission timeout */
+  node->timeout = COAP_DEFAULT_RESPONSE_TIMEOUT * COAP_TICKS_PER_SECOND +
+    (COAP_DEFAULT_RESPONSE_TIMEOUT >> 1) *
+    ((COAP_TICKS_PER_SECOND * (r & 0xFF)) >> 8);
+  node->t += node->timeout;
+
+  memcpy(&node->remote, dst, sizeof(coap_address_t));
+  node->pdu = pdu;
+
+  assert(&context->sendqueue);
+  coap_insert_node(&context->sendqueue, node, _order_timestamp);
+
+#ifdef WITH_CONTIKI
+  {			    /* (re-)initialize retransmission timer */
+    coap_queue_t *nextpdu;
+
+    nextpdu = coap_peek_next(context);
+    assert(nextpdu);		/* we have just inserted a node */
+
+    /* must set timer within the context of the retransmit process */
+    PROCESS_CONTEXT_BEGIN(&coap_retransmit_process);
+    etimer_set(&context->retransmit_timer,
+	       now < nextpdu->t ? nextpdu->t - now : 0);
+    PROCESS_CONTEXT_END(&coap_retransmit_process);
+  }
+#endif /* WITH_CONTIKI */
+
+#ifdef WITH_TINYOS
+#warning "TinyOS stuff in net.c"
+#endif /* WITH_TINYOS */
+
+  node->id = coap_send_impl(context, dst, pdu, 0);
+  return node->id;
 }
 
 coap_tid_t
@@ -385,239 +601,532 @@ coap_retransmit( coap_context_t *context, coap_queue_t *node ) {
   /* re-initialize timeout when maximum number of retransmissions are not reached yet */
   if ( node->retransmit_cnt < COAP_DEFAULT_MAX_RETRANSMIT ) {
     node->retransmit_cnt++;
-    node->t += ( 1 << node->retransmit_cnt );
+    node->t += ( node->timeout << node->retransmit_cnt );
     coap_insert_node( &context->sendqueue, node, _order_timestamp );
 
+#ifndef WITH_CONTIKI
     debug("** retransmission #%d of transaction %d\n",
 	  node->retransmit_cnt, ntohs(node->pdu->hdr->id));
+#else /* WITH_CONTIKI */
+    debug("** retransmission #%u of transaction %u\n",
+	  node->retransmit_cnt, uip_ntohs(node->pdu->hdr->id));
+#endif /* WITH_CONTIKI */
 
-    return coap_send_impl( context, &node->remote, node->pdu, 0 );
-  } 
+    node->id = coap_send_impl(context, &node->remote, node->pdu, 0);
+    return node->id;
+  }
 
   /* no more retransmissions, remove node from system */
 
-  debug("** removed transaction %d\n", ntohs(node->pdu->hdr->id));
+  debug("** removed transaction %d\n", node->id);
 
+  /* Check if subscriptions exist that should be canceled after
+     COAP_MAX_NOTIFY_FAILURES */
+  if (node->pdu->hdr->code >= 64) {
+    coap_opt_iterator_t opt_iter;
+    str token = { 0, NULL };
+
+    if (coap_check_option(node->pdu, COAP_OPTION_TOKEN, &opt_iter)) {
+      token.length = COAP_OPT_LENGTH(opt_iter.option);
+      token.s = COAP_OPT_VALUE(opt_iter.option);
+    }
+
+    coap_handle_failed_notify(context, &node->remote, &token);
+  }
+
+  /* And finally delete the node */
   coap_delete_node( node );
   return COAP_INVALID_TID;
 }
-#endif
 
 int
-order_transaction_id( coap_queue_t *lhs, coap_queue_t *rhs ) {
+_order_transaction_id( coap_queue_t *lhs, coap_queue_t *rhs ) {
   return ( lhs && rhs && lhs->pdu && rhs->pdu &&
-	   ( lhs->pdu->hdr->id < lhs->pdu->hdr->id ) ) 
-    ? -1 
+	   ( lhs->id < lhs->id ) )
+    ? -1
     : 1;
-}  
+}
 
-#ifndef IDENT_APPNAME
 int
 coap_read( coap_context_t *ctx ) {
+#ifndef WITH_CONTIKI
   static char buf[COAP_MAX_PDU_SIZE];
-  ssize_t bytes_read;
-  static struct sockaddr_in6 src;
-  socklen_t addrsize = sizeof src;
+  coap_hdr_t *pdu = (coap_hdr_t *)buf;
+#else /* WITH_CONTIKI */
+  char *buf;
+  coap_hdr_t *pdu;
+#endif /* WITH_CONTIKI */
+  ssize_t bytes_read = -1;
+  coap_address_t src, dst;
   coap_queue_t *node;
-  coap_opt_t *opt;
 
-#ifndef NDEBUG
-  static char addr[INET6_ADDRSTRLEN];
-#endif
+#ifdef WITH_CONTIKI
+  buf = uip_appdata;
+  pdu = (coap_hdr_t *)buf;
+#endif /* WITH_CONTIKI */
 
-  bytes_read = recvfrom( ctx->sockfd, buf, COAP_MAX_PDU_SIZE, 0,
-			 (struct sockaddr *)&src, &addrsize );
+  coap_address_init(&src);
+
+#ifndef WITH_CONTIKI
+#ifndef WITH_TINYOS
+  bytes_read = recvfrom(ctx->sockfd, buf, sizeof(buf), 0,
+			&src.addr.sa, &src.size);
+  //TODO: set src, dst?
+#endif /* WITH_CONTIKI */
+#endif /* WITH_TINYOS */
+
+#ifdef WITH_CONTIKI
+  if(uip_newdata()) {
+    uip_ipaddr_copy(&src.addr, &UIP_IP_BUF->srcipaddr);
+    src.port = UIP_UDP_BUF->srcport;
+    uip_ipaddr_copy(&dst.addr, &UIP_IP_BUF->destipaddr);
+    dst.port = UIP_UDP_BUF->destport;
+
+    bytes_read = uip_datalen();
+    ((char *)uip_appdata)[bytes_read] = 0;
+    PRINTF("Server received %d bytes from [", (int)bytes_read);
+    PRINT6ADDR(&src.addr);
+    PRINTF("]:%d\n", uip_ntohs(src.port));
+  }
+#endif /* WITH_CONTIKI */
+
+#ifdef WITH_TINYOS
+#warning "TinyOS: set src, dst?"
+  bytes_read = ctx->bytes_read;
+  memcpy(buf, ctx->buf, bytes_read);
+#endif /* WITH_TINYOS */
 
   if ( bytes_read < 0 ) {
-    perror("coap_read: recvfrom");
+    warn("coap_read: recvfrom");
     return -1;
   }
 
-  if ( bytes_read < sizeof(coap_hdr_t)) {
-#ifndef NDEBUG
-    fprintf(stderr, "coap_read: discarded invalid frame (too small)\n" );
-#endif
+  if ( (size_t)bytes_read < sizeof(coap_hdr_t) ) {
+    debug("coap_read: discarded invalid frame\n" );
     return -1;
   }
 
-  if (((coap_hdr_t *)buf)->version != COAP_DEFAULT_VERSION ) {
-#ifndef NDEBUG
-    fprintf(stderr, "coap_read: discarded invalid frame (wrong version 0x%x)\n", ((coap_hdr_t *)buf)->version );
-#endif
+  if ( pdu->version != COAP_DEFAULT_VERSION ) {
+    debug("coap_read: unknown protocol version\n" );
     return -1;
   }
 
   node = coap_new_node();
-  if ( !node ) 
+  if ( !node )
     return -1;
 
-  node->pdu = coap_new_pdu();
+  node->pdu = coap_pdu_init(0, 0, 0, bytes_read);
   if ( !node->pdu ) {
     coap_delete_node( node );
     return -1;
   }
 
-  time( &node->t );
-  memcpy( &node->remote, &src, sizeof( src ) );
+  coap_ticks( &node->t );
+  memcpy(&node->local, &dst, sizeof(coap_address_t));
+  memcpy(&node->remote, &src, sizeof(coap_address_t));
 
   /* "parse" received PDU by filling pdu structure */
   memcpy( node->pdu->hdr, buf, bytes_read );
   node->pdu->length = bytes_read;
-  
-  /* finally calculate beginning of data block */
-  options_end( node->pdu, &opt );
 
-  if ( (unsigned char *)node->pdu->hdr + node->pdu->length < (unsigned char *)opt )
-    node->pdu->data = (unsigned char *)node->pdu->hdr + node->pdu->length;
-  else
+  /* finally calculate beginning of data block */
+  {
+    coap_opt_t *opt = options_start(node->pdu);
+    unsigned char cnt;
+
+    /* Note that we cannot use the official options iterator here as
+     * it eats up the fence posts. */
+    for (cnt = node->pdu->hdr->optcnt; cnt; --cnt)
+      opt = options_next(opt);
+
     node->pdu->data = (unsigned char *)opt;
+  }
 
   /* and add new node to receive queue */
-  coap_insert_node( &ctx->recvqueue, node, order_transaction_id );
-  
+  coap_transaction_id(&node->remote, node->pdu, &node->id);
+  coap_insert_node(&ctx->recvqueue, node, _order_timestamp);
+
 #ifndef NDEBUG
-  if ( inet_ntop(src.sin6_family, &src.sin6_addr, addr, INET6_ADDRSTRLEN) == 0 ) {
-    perror("coap_read: inet_ntop");
-  } else {
-    debug("** received from [%s]:%d:\n  ",addr,ntohs(src.sin6_port));
-  }
+  if (LOG_DEBUG <= coap_get_log_level()) {
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 40
+#endif
+    unsigned char addr[INET6_ADDRSTRLEN+8];
+
+    if (coap_print_addr(&src, addr, INET6_ADDRSTRLEN+8))
+      debug("** received %d bytes from %s:\n", (int)bytes_read, addr);
+
   coap_show_pdu( node->pdu );
+  }
 #endif
 
   return 0;
 }
-#endif
 
 int
-coap_remove_transaction( coap_queue_t **queue, coap_tid_t id ) {
+coap_remove_from_queue(coap_queue_t **queue, coap_tid_t id, coap_queue_t **node) {
   coap_queue_t *p, *q;
 
   if ( !queue || !*queue)
     return 0;
 
   /* replace queue head if PDU's time is less than head's time */
-    
-  q = *queue;
-  if ( id == q->pdu->hdr->id ) { /* found transaction */
-    *queue = q->next;
-    coap_delete_node( q );
-#ifndef NDEBUG
-    debug("*** removed transaction %u\n", ntohs(id));
-#endif
+
+  if ( id == (*queue)->id ) { /* found transaction */
+    *node = *queue;
+    *queue = (*queue)->next;
+    (*node)->next = NULL;
+    /* coap_delete_node( q ); */
+    debug("*** removed transaction %u\n", id);
     return 1;
   }
 
   /* search transaction to remove (only first occurence will be removed) */
+  q = *queue;
   do {
     p = q;
     q = q->next;
-  } while ( q && id != q->pdu->hdr->id );
-  
+  } while ( q && id != q->id );
+
   if ( q ) {			/* found transaction */
     p->next = q->next;
-    coap_delete_node( q );
-#ifndef NDEBUG
-    debug("*** removed transaction %u\n", ntohs(id));
-#endif
-    return 1;    
+    q->next = NULL;
+    *node = q;
+    /* coap_delete_node( q ); */
+    debug("*** removed transaction %u\n", id);
+    return 1;
   }
 
   return 0;
-  
+
 }
 
 coap_queue_t *
 coap_find_transaction(coap_queue_t *queue, coap_tid_t id) {
-  if ( !queue )
-    return 0;
+  while (queue && queue->id != id)
+    queue = queue->next;
 
-  for (; queue; queue = queue->next) {
-    if (queue->pdu && queue->pdu->hdr && queue->pdu->hdr->id == id)
       return queue;
-  }
-  return NULL;
-}    
+}
 
-#ifdef IDENT_APPNAME
-// since there are no sockets in tinyos
-coap_tid_t coap_send_tinyos(coap_context_t *context,
-			    struct sockaddr_in6 *dst,
-			    coap_pdu_t *pdu,
-			    int free_pdu);
+coap_pdu_t *
+coap_new_error_response(coap_pdu_t *request, unsigned char code,
+			coap_opt_filter_t opts) {
+  coap_opt_iterator_t opt_iter;
+  coap_pdu_t *response;
+  size_t size = sizeof(coap_hdr_t) + 4; /* some bytes for fence-post options */
+  unsigned char buf[2];
+  int type;
+
+#if COAP_ERROR_PHRASE_LENGTH > 0
+  char *phrase = coap_response_phrase(code);
+
+  /* Need some more space for the error phrase and the Content-Type option */
+  if (phrase)
+    size += strlen(phrase) + 2;
 #endif
 
-void 
-coap_dispatch( coap_context_t *context ) {
-  coap_queue_t *node, *sent;
-  coap_uri_t uri;
-  coap_opt_t *opt;
-  int type;
-  coap_pdu_t *response;
+  assert(request);
 
-  if ( !context ) 
+  /* cannot send ACK if original request was not confirmable */
+  type = request->hdr->type == COAP_MESSAGE_CON
+    ? COAP_MESSAGE_ACK
+    : COAP_MESSAGE_NON;
+
+  /* Estimate how much space we need for options to copy from
+   * request. We always need the Token, for 4.02 the unknown critical
+   * options must be included as well. */
+  coap_option_clrb(opts, COAP_OPTION_CONTENT_TYPE); /* we do not want this */
+  coap_option_setb(opts, COAP_OPTION_TOKEN);
+
+  coap_option_iterator_init(request, &opt_iter, opts);
+
+  while(coap_option_next(&opt_iter))
+    size += COAP_OPT_SIZE(opt_iter.option);
+
+  /* Now create the response and fill with options and payload data. */
+  response = coap_pdu_init(type, code, request->hdr->id, size);
+  if (response) {
+#if COAP_ERROR_PHRASE_LENGTH > 0
+    if (phrase)
+      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		      coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf);
+#endif
+
+    /* copy all options */
+    coap_option_iterator_init(request, &opt_iter, opts);
+    while(coap_option_next(&opt_iter))
+      coap_add_option(response, opt_iter.type,
+		      COAP_OPT_LENGTH(opt_iter.option),
+		      COAP_OPT_VALUE(opt_iter.option));
+
+#if COAP_ERROR_PHRASE_LENGTH > 0
+    if (phrase)
+      coap_add_data(response, strlen(phrase), (unsigned char *)phrase);
+#endif
+  }
+
+  return response;
+}
+
+coap_pdu_t *
+wellknown_response(coap_context_t *context, coap_pdu_t *request) {
+  coap_pdu_t *resp;
+  coap_opt_iterator_t opt_iter;
+  coap_opt_t *token;
+  size_t len;
+  unsigned char buf[2];
+
+  resp = coap_pdu_init(request->hdr->type == COAP_MESSAGE_CON
+		       ? COAP_MESSAGE_ACK
+		       : COAP_MESSAGE_NON,
+		       COAP_RESPONSE_CODE(205),
+		       request->hdr->id, COAP_MAX_PDU_SIZE);
+  if (!resp)
+    return NULL;
+
+  /* add Content-Type */
+  coap_add_option(resp, COAP_OPTION_CONTENT_TYPE,
+     coap_encode_var_bytes(buf, COAP_MEDIATYPE_APPLICATION_LINK_FORMAT), buf);
+
+  token = coap_check_option(request, COAP_OPTION_TOKEN, &opt_iter);
+  if (token)
+    coap_add_option(resp, COAP_OPTION_TOKEN,
+		    COAP_OPT_LENGTH(token), COAP_OPT_VALUE(token));
+
+  /* set payload of response */
+  len = resp->max_size - resp->length;
+
+  if (!print_wellknown(context, resp->data, &len)) {
+    debug("print_wellknown failed\n");
+    coap_delete_pdu(resp);
+    return NULL;
+  }
+
+  resp->length += len;
+  return resp;
+}
+
+#define WANT_WKC(Pdu,Key)					\
+  (((Pdu)->hdr->code == COAP_REQUEST_GET) && is_wkc(Key))
+
+void allLedsOn(); // LibCoapAdapterP.nc
+void led0On();
+void led1On();
+void led2On();
+
+void
+handle_request(coap_context_t *context, coap_queue_t *node) {
+  coap_method_handler_t h = NULL;
+  coap_pdu_t *response = NULL;
+  coap_opt_filter_t opt_filter;
+  coap_resource_t *resource;
+  coap_key_t key;
+
+  coap_option_filter_clear(opt_filter);
+  coap_option_setb(opt_filter, COAP_OPTION_TOKEN); /* we always need the token */
+
+  /* try to find the resource from the request URI */
+  coap_hash_request_uri(node->pdu, key);
+  resource = coap_get_resource_from_key(context, key);
+
+  led0On();
+
+  if (!resource) {
+    /* The resource was not found. Check if the request URI happens to
+     * be the well-known URI. In that case, we generate a default
+     * response, otherwise, we return 4.04 */
+
+    led1On();
+    led2On();
+
+    //allLedsOn();
+
+    switch(node->pdu->hdr->code) {
+
+    case COAP_REQUEST_GET:
+      if (is_wkc(key)) {	/* GET request for .well-known/core */
+	info("create default response for %s\n", COAP_DEFAULT_URI_WELLKNOWN);
+	response = wellknown_response(context, node->pdu);
+
+      } else { /* GET request for any another resource, return 4.04 */
+
+	debug("GET for unknown resource 0x%02x%02x%02x%02x, return 4.04\n",
+	      key[0], key[1], key[2], key[3]);
+	response =
+	  coap_new_error_response(node->pdu, COAP_RESPONSE_CODE(404),
+				  opt_filter);
+      }
+      break;
+
+    default: 			/* any other request type */
+
+      debug("unhandled request for unknown resource 0x%02x%02x%02x%02x\r\n",
+	    key[0], key[1], key[2], key[3]);
+      if (!coap_is_mcast(&node->local))
+	response = coap_new_error_response(node->pdu, COAP_RESPONSE_CODE(405),
+					   opt_filter);
+    }
+
+    if (response && coap_send(context, &node->remote, response) == COAP_INVALID_TID) {
+      warn("cannot send response for transaction %u\n", node->id);
+      coap_delete_pdu(response);
+    }
+
+    return;
+  }
+
+
+  /* the resource was found, check if there is a registered handler */
+  if (node->pdu->hdr->code < sizeof(resource->handler))
+    h = resource->handler[node->pdu->hdr->code - 1];
+
+  if (h) {
+    debug("call custom handler for resource 0x%02x%02x%02x%02x\n",
+	  key[0], key[1], key[2], key[3]);
+    response = coap_pdu_init(node->pdu->hdr->type == COAP_MESSAGE_CON
+			     ? COAP_MESSAGE_ACK
+			     : COAP_MESSAGE_NON,
+			     0, node->pdu->hdr->id, COAP_MAX_PDU_SIZE);
+    if (response) {
+      coap_opt_iterator_t opt_iter;
+      str token = { 0, NULL };
+
+      if (coap_check_option(node->pdu, COAP_OPTION_TOKEN, &opt_iter)) {
+	token.length = COAP_OPT_LENGTH(opt_iter.option);
+	token.s = COAP_OPT_VALUE(opt_iter.option);
+      }
+
+      h(context, resource, &node->remote, node->pdu, &token, response);
+      if (response->hdr->type != COAP_MESSAGE_NON ||
+	  (response->hdr->code >= 64
+	   && !coap_is_mcast(&node->local))) {
+	if (coap_send(context, &node->remote, response) == COAP_INVALID_TID) {
+	  debug("cannot send response for message %d\n", node->pdu->hdr->id);
+	  coap_delete_pdu(response);
+	}
+      } else
+	coap_delete_pdu(response);
+    } else {
+      warn("cannot generate response\r\n");
+    }
+  } else {
+    if (WANT_WKC(node->pdu, key)) {
+      debug("create default response for %s\n", COAP_DEFAULT_URI_WELLKNOWN);
+      response = wellknown_response(context, node->pdu);
+    } else
+      response = coap_new_error_response(node->pdu, COAP_RESPONSE_CODE(405),
+					 opt_filter);
+
+    if (!response || (coap_send(context, &node->remote, response)
+		      == COAP_INVALID_TID)) {
+      debug("cannot send response for transaction %u\n", node->id);
+      coap_delete_pdu(response);
+    }
+  }
+}
+
+static inline void
+handle_response(coap_context_t *context,
+		coap_queue_t *sent, coap_queue_t *rcvd) {
+
+  /* Call application-specific reponse handler when available.  If
+   * not, we must acknowledge confirmable messages. */
+  if (context->response_handler) {
+    context->response_handler(context,
+			      &rcvd->remote, sent ? sent->pdu : NULL,
+			      rcvd->pdu, rcvd->id);
+  } else {
+    /* send ACK if rcvd is confirmable (i.e. a separate response) */
+    coap_send_ack(context, &rcvd->remote, rcvd->pdu);
+  }
+}
+
+static inline int
+#ifdef __GNUC__
+handle_locally(coap_context_t *context __attribute__ ((unused)),
+	       coap_queue_t *node __attribute__ ((unused))) {
+#else /* not a GCC */
+handle_locally(coap_context_t *context, coap_queue_t *node) {
+#endif /* GCC */
+  /* this function can be used to check if node->pdu is really for us */
+  return 1;
+}
+
+void
+coap_dispatch( coap_context_t *context ) {
+  coap_queue_t *rcvd = NULL, *sent = NULL;
+  coap_pdu_t *response;
+  coap_opt_filter_t opt_filter;
+
+  if ( !context )
     return;
 
+  memset(opt_filter, 0, sizeof(coap_opt_filter_t));
+
   while ( context->recvqueue ) {
-    node = context->recvqueue;
+    rcvd = context->recvqueue;
 
     /* remove node from recvqueue */
     context->recvqueue = context->recvqueue->next;
-    node->next = NULL;
+    rcvd->next = NULL;
 
-    switch ( node->pdu->hdr->type ) {
+    if ( rcvd->pdu->hdr->version != COAP_DEFAULT_VERSION ) {
+      debug("dropped packet with unknown version %u\n", rcvd->pdu->hdr->version);
+      goto cleanup;
+    }
+
+    switch ( rcvd->pdu->hdr->type ) {
     case COAP_MESSAGE_ACK :
       /* find transaction in sendqueue to stop retransmission */
-      coap_remove_transaction( &context->sendqueue, node->pdu->hdr->id );
+      coap_remove_from_queue(&context->sendqueue, rcvd->id, &sent);
+
+      if (rcvd->pdu->hdr->code == 0)
+	goto cleanup;
+
+      /* FIXME: if sent code was >= 64 the message might have been a
+       * notification. Then, we must flag the observer to be alive
+       * by setting obs->fail_cnt = 0. */
       break;
+
     case COAP_MESSAGE_RST :
       /* We have sent something the receiver disliked, so we remove
        * not only the transaction but also the subscriptions we might
        * have. */
 
-#ifndef NDEBUG
-      fprintf(stderr, "* got RST for transaction %u\n", ntohs(node->pdu->hdr->id) );
-#endif
-      sent = coap_find_transaction(context->sendqueue, node->pdu->hdr->id);
-      if (sent && coap_get_request_uri(sent->pdu, &uri)) { 
-	/* The easy way: we still have the transaction that has caused
-	* the trouble.*/
-
-#ifndef IDENT_APPNAME
-	coap_delete_subscription(context, coap_uri_hash(&uri), &node->remote);
-#endif
-      } else {
-	/* ?? */
-      }
+#ifndef WITH_CONTIKI
+      coap_log(LOG_ALERT, "got RST for message %u\n", ntohs(rcvd->pdu->hdr->id));
+#else /* WITH_CONTIKI */
+      coap_log(LOG_ALERT, "got RST for message %u\n", uip_ntohs(rcvd->pdu->hdr->id));
+#endif /* WITH_CONTIKI */
 
       /* find transaction in sendqueue to stop retransmission */
-      coap_remove_transaction( &context->sendqueue, node->pdu->hdr->id );
+      coap_remove_from_queue(&context->sendqueue, rcvd->id, &sent);
+
+      /* @todo remove observer for this resource, if any
+       * get token from sent and try to find a matching resource. Uh!
+       */
       break;
+
     case COAP_MESSAGE_NON :	/* check for unknown critical options */
-      if ( coap_check_critical(node->pdu, &opt) != 0 ) 
+      if (coap_option_check_critical(context, rcvd->pdu, opt_filter) == 0)
 	goto cleanup;
       break;
+
     case COAP_MESSAGE_CON :	/* check for unknown critical options */
-      /* get type and option */
-      type = coap_check_critical(node->pdu, &opt);
+      if (coap_option_check_critical(context, rcvd->pdu, opt_filter) == 0) {
 
-      if ( type != 0 ) {	/* send error response if unknown */
-	response = coap_new_pdu();
+	/* FIXME: send response only if we have received a request. Otherwise,
+	 * send RST. */
+	response =
+	  coap_new_error_response(rcvd->pdu, COAP_RESPONSE_CODE(402), opt_filter);
 
-	if (response) {
-	  response->hdr->type = COAP_MESSAGE_RST;
-	  response->hdr->code = COAP_RESPONSE_X_242;
-	  response->hdr->id = node->pdu->hdr->id;
-
-	  /* add rejected option */
-	  coap_add_option(response, type,
-			  COAP_OPT_LENGTH(*opt),
-			  COAP_OPT_VALUE(*opt));
-
-	  if ( coap_send( context, &node->remote, response ) ==
-	       COAP_INVALID_TID ) {
-#ifndef NDEBUG
-	    debug("coap_dispatch: error sending reponse");
-#endif
+	if (!response)
+	  warn("coap_dispatch: cannot create error reponse\n");
+	else {
+	  if (coap_send(context, &rcvd->remote, response)
+	      == COAP_INVALID_TID) {
+	    warn("coap_dispatch: error sending reponse\n");
 	    coap_delete_pdu(response);
 	  }
 	}
@@ -626,23 +1135,73 @@ coap_dispatch( coap_context_t *context ) {
       }
       break;
     }
-    
-    /* pass message to upper layer if a specific handler was registered */
-    if ( context->msg_handler ) 
-      context->msg_handler( context, node, NULL );
-    
+
+    /* Pass message to upper layer if a specific handler was
+     * registered for a request that should be handled locally. */
+    if (handle_locally(context, rcvd)) {
+      if (COAP_MESSAGE_IS_REQUEST(rcvd->pdu->hdr)) {
+	handle_request(context, rcvd);
+      } else if (COAP_MESSAGE_IS_RESPONSE(rcvd->pdu->hdr))
+	handle_response(context, sent, rcvd);
+      else
+	debug("dropped message with invalid code\n");
+    }
+
   cleanup:
-    coap_delete_node( node );
-  } 
+    coap_delete_node(sent);
+    coap_delete_node(rcvd);
+  }
 }
 
-void 
-coap_register_message_handler( coap_context_t *context, coap_message_handler_t handler) {
-  context->msg_handler = (void (*)( void *, coap_queue_t *, void *)) handler;
-}
-
-int 
+int
 coap_can_exit( coap_context_t *context ) {
   return !context || (context->recvqueue == NULL && context->sendqueue == NULL);
 }
 
+#ifdef WITH_CONTIKI
+
+/*---------------------------------------------------------------------------*/
+/* CoAP message retransmission */
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(coap_retransmit_process, ev, data)
+{
+  coap_tick_t now;
+  coap_queue_t *nextpdu;
+
+  PROCESS_BEGIN();
+
+  debug("Started retransmit process\r\n");
+
+  while(1) {
+    PROCESS_YIELD();
+    if (ev == PROCESS_EVENT_TIMER) {
+      if (etimer_expired(&the_coap_context.retransmit_timer)) {
+
+	nextpdu = coap_peek_next(&the_coap_context);
+
+	coap_ticks(&now);
+	while (nextpdu && nextpdu->t <= now) {
+	  coap_retransmit(&the_coap_context, coap_pop_next(&the_coap_context));
+	  nextpdu = coap_peek_next(&the_coap_context);
+	}
+
+	/* need to set timer to some value even if no nextpdu is available */
+	etimer_set(&the_coap_context.retransmit_timer,
+		   nextpdu ? nextpdu->t - now : 0xFFFF);
+      }
+      if (etimer_expired(&the_coap_context.notify_timer)) {
+	coap_check_notify(&the_coap_context);
+	etimer_reset(&the_coap_context.notify_timer);
+      }
+    }
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+
+#endif /* WITH_CONTIKI */
+
+#ifdef WITH_TINYOS
+#warning "TODO: TinyOS retransmit"
+#endif /* WITH_TINYOS */

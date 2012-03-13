@@ -68,19 +68,19 @@ configuration CoapBlipC {
 #endif
 
 #ifdef COAP_RESOURCE_TEMP
-  components new CoapReadResourceC(uint16_t, KEY_TEMP) as CoapReadTempResource;
+  components new CoapReadResourceC(uint16_t, INDEX_TEMP) as CoapReadTempResource;
   components new CoapBufferTempTranslateC() as CoapBufferTempTranslate;
   CoapReadTempResource.Read -> CoapBufferTempTranslate.ReadTemp;
   CoapBufferTempTranslate.Read -> HumTempSensor.Temperature;
-  CoapUdpServerC.ReadResource[KEY_TEMP] -> CoapReadTempResource.ReadResource;
+  CoapUdpServerC.ReadResource[INDEX_TEMP] -> CoapReadTempResource.ReadResource;
 #endif
 
 #ifdef COAP_RESOURCE_HUM
-  components new CoapReadResourceC(uint16_t, KEY_HUM) as CoapReadHumResource;
+  components new CoapReadResourceC(uint16_t, INDEX_HUM) as CoapReadHumResource;
   components new CoapBufferHumTranslateC() as CoapBufferHumTranslate;
   CoapReadHumResource.Read -> CoapBufferHumTranslate.ReadHum;
   CoapBufferHumTranslate.Read -> HumTempSensor.Humidity;
-  CoapUdpServerC.ReadResource[KEY_HUM] -> CoapReadHumResource.ReadResource;
+  CoapUdpServerC.ReadResource[INDEX_HUM] -> CoapReadHumResource.ReadResource;
 #endif
 
 #if defined (COAP_RESOURCE_VOLT)  || defined (COAP_RESOURCE_ALL)
@@ -88,22 +88,22 @@ configuration CoapBlipC {
 #endif
 
 #ifdef COAP_RESOURCE_VOLT
-  components new CoapReadResourceC(uint16_t, KEY_VOLT) as CoapReadVoltResource;
+  components new CoapReadResourceC(uint16_t, INDEX_VOLT) as CoapReadVoltResource;
   components new CoapBufferVoltTranslateC() as CoapBufferVoltTranslate;
   CoapReadVoltResource.Read -> CoapBufferVoltTranslate.ReadVolt;
   CoapBufferVoltTranslate.Read -> VoltSensor.Read;
-  CoapUdpServerC.ReadResource[KEY_VOLT] -> CoapReadVoltResource.ReadResource;
+  CoapUdpServerC.ReadResource[INDEX_VOLT] -> CoapReadVoltResource.ReadResource;
 #endif
 
 #ifdef COAP_RESOURCE_LED
-  components new CoapLedResourceC(KEY_LED) as CoapLedResource;
+  components new CoapLedResourceC(INDEX_LED) as CoapLedResource;
   CoapLedResource.Leds -> LedsC;
-  CoapUdpServerC.ReadResource[KEY_LED]  -> CoapLedResource.ReadResource;
-  CoapUdpServerC.WriteResource[KEY_LED] -> CoapLedResource.WriteResource;
+  CoapUdpServerC.ReadResource[INDEX_LED]  -> CoapLedResource.ReadResource;
+  CoapUdpServerC.WriteResource[INDEX_LED] -> CoapLedResource.WriteResource;
 #endif
 
 #ifdef COAP_RESOURCE_ALL
-  components new CoapReadResourceC(val_all_t, KEY_ALL) as CoapReadAllResource;
+  components new CoapReadResourceC(val_all_t, INDEX_ALL) as CoapReadAllResource;
   components new SensirionSht11C() as HumTempSensorAll;
   components CoapResourceCollectorC;
   CoapReadAllResource.Read -> CoapResourceCollectorC.ReadAll;
@@ -116,7 +116,7 @@ configuration CoapBlipC {
   components new CoapBufferVoltTranslateC() as CoapBufferVoltTranslateAll;
   CoapResourceCollectorC.ReadVolt -> CoapBufferVoltTranslateAll.ReadVolt;
   CoapBufferVoltTranslateAll.Read -> VoltSensor.Read;
-  CoapUdpServerC.ReadResource[KEY_ALL] -> CoapReadAllResource.ReadResource;
+  CoapUdpServerC.ReadResource[INDEX_ALL] -> CoapReadAllResource.ReadResource;
 #endif
 
 #ifdef COAP_RESOURCE_KEY
@@ -124,14 +124,14 @@ configuration CoapBlipC {
   components new ConfigStorageC(VOLUME_CONFIGKEY);
   CoapFlashResource.ConfigStorage -> ConfigStorageC.ConfigStorage;
   CoapBlipP.Mount  -> ConfigStorageC.Mount;
-  CoapUdpServerC.ReadResource[KEY_KEY]  -> CoapFlashResource.ReadResource;
-  CoapUdpServerC.WriteResource[KEY_KEY] -> CoapFlashResource.WriteResource;
+  CoapUdpServerC.ReadResource[INDEX_KEY]  -> CoapFlashResource.ReadResource;
+  CoapUdpServerC.WriteResource[INDEX_KEY] -> CoapFlashResource.WriteResource;
 #endif
 
 #ifdef COAP_RESOURCE_ROUTE
-  components new CoapRouteResourceC(uint16_t, KEY_ROUTE) as CoapReadRouteResource;
+  components new CoapRouteResourceC(uint16_t, INDEX_ROUTE) as CoapReadRouteResource;
   CoapReadRouteResource.ForwardingTable -> IPStackC;
-  CoapUdpServerC.ReadResource[KEY_ROUTE] -> CoapReadRouteResource.ReadResource;
+  CoapUdpServerC.ReadResource[INDEX_ROUTE] -> CoapReadRouteResource.ReadResource;
 #endif
 #endif
 
@@ -146,7 +146,22 @@ configuration CoapBlipC {
 #endif
 
 #ifdef PRINTFUART_ENABLED
-    components PrintfC;
-    components SerialStartC;
+  /* This component wires printf directly to the serial port, and does
+   * not use any framing.  You can view the output simply by tailing
+   * the serial device.  Unlike the old printfUART, this allows us to
+   * use PlatformSerialC to provide the serial driver.
+   *
+   * For instance:
+   * $ stty -F /dev/ttyUSB0 115200
+   * $ tail -f /dev/ttyUSB0
+  */
+  components SerialPrintfC;
+
+  /* This is the alternative printf implementation which puts the
+   * output in framed tinyos serial messages.  This lets you operate
+   * alongside other users of the tinyos serial stack.
+   */
+  // components PrintfC;
+  // components SerialStartC;
 #endif
   }

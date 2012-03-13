@@ -37,7 +37,7 @@ interface LibCoAP {
      *
      */
     command coap_tid_t send(coap_context_t *ctx,
-			    struct sockaddr_in6 *dst,
+			    const coap_address_t *dst,
 			    coap_pdu_t *pdu,
 			    int free_pdu);
 

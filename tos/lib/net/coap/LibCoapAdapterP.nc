@@ -34,6 +34,7 @@
 
 #include <net.h>
 #include <pdu.h>
+#include <coap_time.h>
 
 module LibCoapAdapterP {
 #ifdef COAP_SERVER_ENABLED
@@ -45,11 +46,14 @@ module LibCoapAdapterP {
   provides interface LibCoAP as LibCoapClient;
   uses interface UDP as UDPClient;
 #endif
+
+  uses interface LocalTime<TSecond> as LocalTime;
+  uses interface Leds;
 } implementation {
 
   // might get called in error cases from libcoap's net.c -> spontaneous.
   coap_tid_t coap_send_impl(coap_context_t *context,
-			    struct sockaddr_in6 *dst,
+			    const coap_address_t *dst,
 			    coap_pdu_t *pdu,
 			    int free_pdu ) @C() @spontaneous() {
     coap_tid_t tid;
@@ -65,11 +69,11 @@ module LibCoapAdapterP {
 
 #ifdef COAP_CLIENT_ENABLED
     if (context->tinyos_port == (int) COAP_CLIENT_PORT)
-	call UDPClient.sendto(dst, pdu->hdr, pdu->length);
+      call UDPClient.sendto(&(dst->addr), pdu->hdr, pdu->length);
 #endif
 #ifdef COAP_SERVER_ENABLED
     if (context->tinyos_port == (int) COAP_SERVER_PORT)
-	call UDPServer.sendto(dst, pdu->hdr, pdu->length);
+      call UDPServer.sendto(&(dst->addr), pdu->hdr, pdu->length);
 #endif
 
     tid = pdu->hdr->id;
@@ -78,6 +82,35 @@ module LibCoapAdapterP {
       coap_delete_pdu( pdu );
 
     return ntohs(tid);
+  }
+
+  void allLedsOn() @C() @spontaneous() {
+    call Leds.led0On();
+    call Leds.led1On();
+    call Leds.led2On();
+  }
+
+  void led0On() @C() @spontaneous() {
+    call Leds.led0On();
+  }
+
+  void led1On() @C() @spontaneous() {
+    call Leds.led1On();
+  }
+
+  void led2On() @C() @spontaneous() {
+    call Leds.led2On();
+  }
+
+  inline void tinyos_clock_init_impl(void) @C() @spontaneous() {
+#warning "Implement TinyOS Clock handling"
+    //TODO: Do we need to do something here? If not, remove and have
+    // it in coap_time.h
+  }
+
+  inline void tinyos_ticks_impl(coap_tick_t *t) @C() @spontaneous() {
+    uint32_t time = call LocalTime.get();
+    *t = time;
   }
 
 #ifdef COAP_SERVER_ENABLED
@@ -93,7 +126,7 @@ module LibCoapAdapterP {
   }
 
   command coap_tid_t LibCoapServer.send(coap_context_t *context,
-					struct sockaddr_in6 *dst,
+					const coap_address_t *dst,
 					coap_pdu_t *pdu,
 					int free_pdu) {
     return coap_send_impl(context, dst, pdu, free_pdu);
@@ -117,7 +150,7 @@ module LibCoapAdapterP {
   }
 
   command coap_tid_t LibCoapClient.send(coap_context_t *context,
-					struct sockaddr_in6 *dst,
+					const coap_address_t *dst,
 					coap_pdu_t *pdu,
 					int free_pdu) {
     return coap_send_impl(context, dst, pdu, free_pdu);

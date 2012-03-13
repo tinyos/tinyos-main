@@ -3,7 +3,7 @@ COMPONENT=CoapBlipC
 # uncomment this for network programming support
 # BOOTLOADER=tosboot
 
-#CFLAGS += -DCC2420_DEF_CHANNEL=21
+CFLAGS += -DCC2420_DEF_CHANNEL=22
 #CFLAGS += -DRF230_DEF_CHANNEL=16
 #CFLAGS += -DCC2420_DEF_RFPOWER=4
 

@@ -39,22 +39,26 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 } implementation {
 
   bool lock = FALSE;
-  coap_tid_t temp_id;
+  //coap_tid_t temp_id;
 
   void task getLed() {
     uint8_t val = call Leds.get();
     lock = FALSE;
-    signal ReadResource.getDone(SUCCESS, temp_id, 0,
+    //signal ReadResource.getDone(SUCCESS, temp_id, 0,
+    //				(uint8_t*)&val, sizeof(uint8_t));
+    signal ReadResource.getDone(SUCCESS,
 				(uint8_t*)&val, sizeof(uint8_t));
   };
 
-  command int ReadResource.get(coap_tid_t id) {
+  //command int ReadResource.get(coap_tid_t id) {
+  command int ReadResource.get() {
     if (lock == FALSE) {
       lock = TRUE;
 
-      temp_id = id;
+      //temp_id = id;
       post getLed();
-      return COAP_SPLITPHASE;
+      //return COAP_SPLITPHASE;
+      return 0;
     } else {
       return COAP_RESPONSE_503;
     }
@@ -62,22 +66,25 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 
   void task setLedDone() {
     lock = FALSE;
-    signal WriteResource.putDone(SUCCESS, temp_id, 0);
+    //signal WriteResource.putDone(SUCCESS, temp_id, 0);
+    signal WriteResource.putDone(SUCCESS);
   };
 
-  command int WriteResource.put(uint8_t *val, size_t buflen, coap_tid_t id) {
-    if (*val < 8) {
+  //command int WriteResource.put(uint8_t *val, size_t buflen, coap_tid_t id) {
+  command int WriteResource.put() {
+    //if (*val < 8) {
       if (lock == FALSE) {
 	lock = TRUE;
-	temp_id = id;
-	call Leds.set(*val);
+	//temp_id = id;
+	//call Leds.set(*val);
 	post setLedDone();
-	return COAP_SPLITPHASE;
+	//return COAP_SPLITPHASE;
+	return 0;
       } else {
 	return COAP_RESPONSE_503;
       }
-    } else {
+      /*} else {
       return COAP_RESPONSE_500;
-    }
+      }*/
   }
 }

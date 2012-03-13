@@ -85,12 +85,19 @@ module CoapBlipP {
 
     call CoAPServer.registerWellknownCore();
     for (i=0; i < NUM_URIS; i++) {
-      call CoAPServer.registerResource(uri_key_map[i].uri,
-				       uri_key_map[i].urilen - 1,
-				       uri_key_map[i].mediatype,
-				       uri_key_map[i].writable,
-				       uri_key_map[i].splitphase,
-				       uri_key_map[i].immediately);
+      //TODO: check whether / should be included
+      // set the hash for the URI
+      coap_hash_path(uri_index_map[i].uri,
+		     uri_index_map[i].uri_len - 1,
+		     uri_index_map[i].uri_key);
+
+      //TODO: check needed, parameters?
+      call CoAPServer.registerResource(uri_index_map[i].uri,
+				       uri_index_map[i].uri_len - 1,
+				       uri_index_map[i].mediatype,
+				       uri_index_map[i].writable,
+				       uri_index_map[i].splitphase,
+				       uri_index_map[i].immediately);
     }
 #endif
 

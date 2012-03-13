@@ -38,42 +38,43 @@
 #define SENSOR_VALUE_INVALID 0xFFFE
 #define SENSOR_NOT_AVAILABLE 0xFFFF
 
-//uri properties for uri<->key conversion
-typedef struct key_uri
+//uri properties for index<->uri_key conversion
+typedef struct index_uri_key
 {
-    uint8_t key;
-    char uri[MAX_URI_LENGTH];
-    uint8_t urilen;
-    uint8_t mediatype;
-    uint8_t writable:1;
-    uint8_t splitphase:1;
-    uint8_t immediately:1;
-} key_uri_t;
+  uint8_t index;
+  const unsigned char uri[MAX_URI_LENGTH];
+  uint8_t uri_len;
+  coap_key_t uri_key;
+  uint8_t mediatype;
+  uint8_t writable:1;
+  uint8_t splitphase:1;
+  uint8_t immediately:1;
+} index_uri_key_t;
 
 
 //user defined resources
 
 enum {
 #if defined (COAP_RESOURCE_TEMP) || defined (COAP_RESOURCE_ALL)
-    KEY_TEMP,
+    INDEX_TEMP,
 #endif
 #if defined (COAP_RESOURCE_HUM) || defined (COAP_RESOURCE_ALL)
-    KEY_HUM,
+    INDEX_HUM,
 #endif
 #if defined (COAP_RESOURCE_VOLT) || defined (COAP_RESOURCE_ALL)
-    KEY_VOLT,
+    INDEX_VOLT,
 #endif
 #ifdef COAP_RESOURCE_KEY
-    KEY_KEY,
+    INDEX_KEY,
 #endif
 #ifdef COAP_RESOURCE_LED
-    KEY_LED,
+    INDEX_LED,
 #endif
 #ifdef COAP_RESOURCE_ALL
-    KEY_ALL,
+    INDEX_ALL,
 #endif
 #ifdef COAP_RESOURCE_ROUTE
-    KEY_ROUTE,
+    INDEX_ROUTE,
 #endif
     COAP_NO_SUCH_RESOURCE = 0xff
 };
@@ -98,34 +99,34 @@ typedef nx_struct config_t
   nx_uint8_t KEY128[16];
 } config_t;
 
-key_uri_t uri_key_map[NUM_URIS] = {
+index_uri_key_t uri_index_map[NUM_URIS] = {
 #ifdef COAP_RESOURCE_TEMP
-    { KEY_TEMP, "st", sizeof("st"),
-      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
+  { INDEX_TEMP, "st", sizeof("st"), 0,
+    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
 #endif
 #ifdef COAP_RESOURCE_HUM
-    { KEY_HUM,  "sh",  sizeof("sh") ,
-      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
+  { INDEX_HUM, "sh",  sizeof("sh"), 0,
+    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
 #endif
 #ifdef COAP_RESOURCE_VOLT
-    { KEY_VOLT,  "sv",  sizeof("sv") ,
-      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
+  { INDEX_VOLT, "sv",  sizeof("sv"), 0,
+    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
 #endif
 #ifdef COAP_RESOURCE_KEY
-    { KEY_KEY,  "ck",  sizeof("ck") ,
-      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 1, 1, 0},
+  { INDEX_KEY, "ck",  sizeof("ck"), 0,
+    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 1, 1, 0},
 #endif
 #ifdef COAP_RESOURCE_LED
-    { KEY_LED,  "l",  sizeof("l") ,
-      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 1, 1, 1},
+  { INDEX_LED, "l",  sizeof("l"), {0, 0, 0, 0},
+    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 1, 1, 1},
 #endif
 #ifdef COAP_RESOURCE_ALL
-    { KEY_ALL,  "r",  sizeof("r") ,
-      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
+  { INDEX_ALL, "r",  sizeof("r"), 0,
+    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
 #endif
 #ifdef COAP_RESOURCE_ROUTE
-    { KEY_ROUTE,  "rt",  sizeof("rt") ,
-      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
+  { INDEX_ROUTE, "rt",  sizeof("rt"), 0,
+    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, 0, 1, 0},
 #endif
 };
 

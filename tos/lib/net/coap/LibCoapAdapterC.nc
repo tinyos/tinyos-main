@@ -52,4 +52,11 @@ configuration LibCoapAdapterC {
   LibCoapClient = LibCoapAdapterP.LibCoapClient;
   UDPClient = LibCoapAdapterP.UDPClient;
 #endif
+
+  components LocalTimeSecondC;
+  LibCoapAdapterP.LocalTime -> LocalTimeSecondC;
+
+  components LedsC;
+  LibCoapAdapterP.Leds -> LedsC;
+
 }

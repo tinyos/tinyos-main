@@ -1,20 +1,9 @@
 # Makefile for libcoap
 #
-# Copyright (C) 2010 Olaf Bergmann <bergmann@tzi.org>
-# 
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+# Copyright (C) 2010,2011 Olaf Bergmann <bergmann@tzi.org>
+#
+# This file is part of the CoAP library libcoap. Please see
+# README for terms of use. 
 
 # the library's version
 VERSION:=@PACKAGE_VERSION@
@@ -23,17 +12,21 @@ VERSION:=@PACKAGE_VERSION@
 @SET_MAKE@
 SHELL = /bin/sh
 MKDIR = mkdir
+ETAGS = @ETAGS@
 
 abs_builddir = @abs_builddir@
 top_builddir = @top_builddir@
 package = @PACKAGE_TARNAME@-@PACKAGE_VERSION@
 
 # files and flags
-SOURCES:= pdu.c net.c debug.c encode.c uri.c list.c subscribe.c str.c
+SOURCES:= pdu.c net.c debug.c encode.c uri.c coap_list.c resource.c hashkey.c \
+	 str.c option.c async.c subscribe.c block.c
 OBJECTS:= $(patsubst %.c, %.o, $(SOURCES))
-HEADERS:=coap.h config.h debug.h pdu.h net.h encode.h uri.h list.h mem.h subscribe.h str.h 
-#CFLAGS:=-g -Wall -ansi -pedantic
-CFLAGS:=-Wall -ansi -pedantic @CFLAGS@
+HEADERS:=coap.h config.h debug.h pdu.h net.h encode.h uri.h coap_list.h mem.h \
+	str.h option.h bits.h uthash.h utlist.h resource.h hashkey.h async.h \
+	subscribe.h block.h
+CFLAGS:=-Wall -Wextra -std=c99 -pedantic @CFLAGS@
+CPPFLAGS:=@CPPFLAGS@
 DISTDIR=$(top_builddir)/$(package)
 SUBDIRS:=examples doc
 FILES:=Makefile.in configure configure.in config.h.in $(SOURCES) $(HEADERS)
@@ -44,7 +37,7 @@ examples:=examples
 doc:=doc
 
 
-.PHONY: all dirs clean distclean .gitignore doc
+.PHONY: all dirs clean distclean .gitignore doc TAGS
 
 .SUFFIXES:
 .SUFFIXES:      .c .o
@@ -85,6 +78,11 @@ dist:	$(FILES) $(SUBDIRS)
 		$(MAKE) -C $$dir dist; \
 	done
 	tar czf $(package).tar.gz $(DISTDIR)
+
+TAGS:	
+	$(ETAGS) -o $@.new $(SOURCES) 
+	$(ETAGS) -a -o $@.new $(HEADERS) 
+	mv $@.new $@
 
 .gitignore:
 	echo "core\n*~\n*.[oa]\n*.gz\n*.cap\n$(PROGRAM)\n$(DISTDIR)\n.gitignore" >$@
