@@ -310,7 +310,7 @@ coap_new_context(const coap_address_t *listen_addr) {
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
-#warning "TinyOS: more setup on context needed?"
+  c->tinyos_port = listen_addr->addr.sin6_port;
   return c;
 #endif /* WITH_TINYOS */
 }
@@ -318,7 +318,9 @@ coap_new_context(const coap_address_t *listen_addr) {
 void
 coap_free_context( coap_context_t *context ) {
 #ifndef WITH_CONTIKI
+#ifndef WITH_TINYOS
   coap_resource_t *res, *rtmp;
+#endif /* WITH_TINYOS */
 #endif /* WITH_CONTIKI */
   if ( !context )
     return;
@@ -327,14 +329,15 @@ coap_free_context( coap_context_t *context ) {
   coap_delete_all(context->sendqueue);
 
 #ifndef WITH_CONTIKI
+#ifndef WITH_TINYOS
   HASH_ITER(hh, context->resources, res, rtmp) {
     free(res);
   }
 
   /* coap_delete_list(context->subscriptions); */
-#ifndef WITH_TINYOS
   close( context->sockfd );
 #endif /* WITH_TINYOS */
+  //TODO: TinyOS: delete resources???
   coap_free( context );
 #endif /* WITH_CONTIKI */
 
@@ -694,6 +697,9 @@ coap_read( coap_context_t *ctx ) {
 #warning "TinyOS: set src, dst?"
   bytes_read = ctx->bytes_read;
   memcpy(buf, ctx->buf, bytes_read);
+
+  memcpy(&src, &(ctx->src), sizeof (coap_address_t));
+  // port included?
 #endif /* WITH_TINYOS */
 
   if ( bytes_read < 0 ) {
@@ -910,11 +916,12 @@ wellknown_response(coap_context_t *context, coap_pdu_t *request) {
 #define WANT_WKC(Pdu,Key)					\
   (((Pdu)->hdr->code == COAP_REQUEST_GET) && is_wkc(Key))
 
+/*
 void allLedsOn(); // LibCoapAdapterP.nc
 void led0On();
 void led1On();
 void led2On();
-
+*/
 void
 handle_request(coap_context_t *context, coap_queue_t *node) {
   coap_method_handler_t h = NULL;
@@ -930,17 +937,11 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
   coap_hash_request_uri(node->pdu, key);
   resource = coap_get_resource_from_key(context, key);
 
-  led0On();
 
   if (!resource) {
     /* The resource was not found. Check if the request URI happens to
      * be the well-known URI. In that case, we generate a default
      * response, otherwise, we return 4.04 */
-
-    led1On();
-    led2On();
-
-    //allLedsOn();
 
     switch(node->pdu->hdr->code) {
 
@@ -976,7 +977,6 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
     return;
   }
 
-
   /* the resource was found, check if there is a registered handler */
   if (node->pdu->hdr->code < sizeof(resource->handler))
     h = resource->handler[node->pdu->hdr->code - 1];
@@ -1001,16 +1001,20 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
       if (response->hdr->type != COAP_MESSAGE_NON ||
 	  (response->hdr->code >= 64
 	   && !coap_is_mcast(&node->local))) {
+	//led0On();
+
 	if (coap_send(context, &node->remote, response) == COAP_INVALID_TID) {
 	  debug("cannot send response for message %d\n", node->pdu->hdr->id);
 	  coap_delete_pdu(response);
 	}
-      } else
+      } else {
 	coap_delete_pdu(response);
+      }
     } else {
       warn("cannot generate response\r\n");
     }
   } else {
+
     if (WANT_WKC(node->pdu, key)) {
       debug("create default response for %s\n", COAP_DEFAULT_URI_WELLKNOWN);
       response = wellknown_response(context, node->pdu);
