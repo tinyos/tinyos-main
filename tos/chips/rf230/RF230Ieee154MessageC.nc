@@ -40,7 +40,7 @@
 
 configuration RF230Ieee154MessageC
 {
-	provides 
+	provides
 	{
 		interface SplitControl;
 
@@ -70,29 +70,29 @@ configuration RF230Ieee154MessageC
 
 implementation
 {
-	components RF230RadioC;
+	components RF230RadioC as RadioC;
 
-	SplitControl = RF230RadioC;
+	SplitControl = RadioC;
 
-	Ieee154Send = RF230RadioC.Ieee154Send;
-	Ieee154Receive = RF230RadioC.Ieee154Receive;
-	SendNotifier = RF230RadioC.Ieee154Notifier;
+	Ieee154Send = RadioC.Ieee154Send;
+	Ieee154Receive = RadioC.Ieee154Receive;
+	SendNotifier = RadioC.Ieee154Notifier;
 
-	Packet = RF230RadioC.PacketForIeee154Message;
-	Ieee154Packet = RF230RadioC;
-	SendResource = RF230RadioC;
+	Packet = RadioC.PacketForIeee154Message;
+	Ieee154Packet = RadioC;
+	SendResource = RadioC;
 
-	PacketAcknowledgements = RF230RadioC;
-	LowPowerListening = RF230RadioC;
-	PacketLink = RF230RadioC;
+	PacketAcknowledgements = RadioC;
+	LowPowerListening = RadioC;
+	PacketLink = RadioC;
 
-	RadioChannel = RF230RadioC;
+	RadioChannel = RadioC;
 
-	PacketLinkQuality = RF230RadioC.PacketLinkQuality;
-	PacketTransmitPower = RF230RadioC.PacketTransmitPower;
-	PacketRSSI = RF230RadioC.PacketRSSI;
+	PacketLinkQuality = RadioC.PacketLinkQuality;
+	PacketTransmitPower = RadioC.PacketTransmitPower;
+	PacketRSSI = RadioC.PacketRSSI;
 
-	LocalTimeRadio = RF230RadioC;
-	PacketTimeStampMilli = RF230RadioC;
-	PacketTimeStampRadio = RF230RadioC;
+	LocalTimeRadio = RadioC;
+	PacketTimeStampMilli = RadioC;
+	PacketTimeStampRadio = RadioC;
 }

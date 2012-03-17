@@ -40,7 +40,7 @@
 
 configuration RF212Ieee154MessageC
 {
-	provides 
+	provides
 	{
 		interface SplitControl;
 
@@ -70,29 +70,29 @@ configuration RF212Ieee154MessageC
 
 implementation
 {
-	components RF212RadioC;
+	components RF212RadioC as RadioC;
 
-	SplitControl = RF212RadioC;
+	SplitControl = RadioC;
 
-	Ieee154Send = RF212RadioC.Ieee154Send;
-	Ieee154Receive = RF212RadioC.Ieee154Receive;
-	SendNotifier = RF212RadioC.Ieee154Notifier;
+	Ieee154Send = RadioC.Ieee154Send;
+	Ieee154Receive = RadioC.Ieee154Receive;
+	SendNotifier = RadioC.Ieee154Notifier;
 
-	Packet = RF212RadioC.PacketForIeee154Message;
-	Ieee154Packet = RF212RadioC;
-	SendResource = RF212RadioC;
+	Packet = RadioC.PacketForIeee154Message;
+	Ieee154Packet = RadioC;
+	SendResource = RadioC;
 
-	PacketAcknowledgements = RF212RadioC;
-	LowPowerListening = RF212RadioC;
-	PacketLink = RF212RadioC;
+	PacketAcknowledgements = RadioC;
+	LowPowerListening = RadioC;
+	PacketLink = RadioC;
 
-	RadioChannel = RF212RadioC;
+	RadioChannel = RadioC;
 
-	PacketLinkQuality = RF212RadioC.PacketLinkQuality;
-	PacketTransmitPower = RF212RadioC.PacketTransmitPower;
-	PacketRSSI = RF212RadioC.PacketRSSI;
+	PacketLinkQuality = RadioC.PacketLinkQuality;
+	PacketTransmitPower = RadioC.PacketTransmitPower;
+	PacketRSSI = RadioC.PacketRSSI;
 
-	LocalTimeRadio = RF212RadioC;
-	PacketTimeStampMilli = RF212RadioC;
-	PacketTimeStampRadio = RF212RadioC;
+	LocalTimeRadio = RadioC;
+	PacketTimeStampMilli = RadioC;
+	PacketTimeStampRadio = RadioC;
 }

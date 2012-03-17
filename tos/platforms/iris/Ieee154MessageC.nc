@@ -51,6 +51,10 @@ configuration Ieee154MessageC
 		interface PacketLink;
 		interface RadioChannel;
 
+		interface PacketField<uint8_t> as PacketLinkQuality;
+		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
+
 		interface PacketTimeStamp<TMicro, uint32_t> as PacketTimeStampMicro;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
@@ -74,6 +78,10 @@ implementation
 	LowPowerListening = MessageC;
 	PacketLink = MessageC;
 	RadioChannel = MessageC;
+
+	PacketLinkQuality = MessageC.PacketLinkQuality;
+	PacketTransmitPower = MessageC.PacketTransmitPower;
+	PacketRSSI = MessageC.PacketRSSI;
 
 	PacketTimeStampMilli = MessageC;
 	PacketTimeStampMicro = MessageC;
