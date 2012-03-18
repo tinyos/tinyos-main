@@ -32,6 +32,8 @@
  * Author: Miklos Maroti
  */
 
+#include "message.h"
+
 generic module AutoResourceAcquireLayerC()
 {
 	provides
@@ -50,34 +52,50 @@ implementation
 {
 	message_t *pending;
 
+	enum
+	{
+		CLIENT_COUNT = uniqueCount(RADIO_SEND_RESOURCE),
+	};
+
 	command error_t BareSend.send(message_t* msg)
 	{
-		if( call Resource.immediateRequest() == SUCCESS )
+		if( CLIENT_COUNT >= 2 )
 		{
-			error_t result = call SubSend.send(msg);
-			if( result != SUCCESS )
-				call Resource.release();
+			if( call Resource.immediateRequest() == SUCCESS )
+			{
+				error_t result = call SubSend.send(msg);
+				if( result != SUCCESS )
+					call Resource.release();
 
-			return result;
+				return result;
+			}
+
+			pending = msg;
+			return call Resource.request();
 		}
+		else
+			return call SubSend.send(msg);
 
-		pending = msg;
-		return call Resource.request();
 	}
 
 	event void Resource.granted()
 	{
-		error_t result = call SubSend.send(pending);
-		if( result != SUCCESS )
+		if( CLIENT_COUNT >= 2 )
 		{
-			call Resource.release();
-			signal BareSend.sendDone(pending, result);
+			error_t result = call SubSend.send(pending);
+			if( result != SUCCESS )
+			{
+				call Resource.release();
+				signal BareSend.sendDone(pending, result);
+			}
 		}
 	}
 
 	event void SubSend.sendDone(message_t* msg, error_t result)
 	{
-		call Resource.release();
+		if( CLIENT_COUNT >= 2 )
+			call Resource.release();
+
 		signal BareSend.sendDone(msg, result);
 	}
 
