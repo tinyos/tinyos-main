@@ -41,30 +41,20 @@ configuration RF230RadioC
 		interface SplitControl;
 
 #ifndef IEEE154FRAMES_ENABLED
-		interface AMSend[am_id_t id];
-		interface Receive[am_id_t id];
-		interface Receive as Snoop[am_id_t id];
-		interface SendNotifier[am_id_t id];
-
-		// for TOSThreads
-		interface Receive as ReceiveDefault[am_id_t id];
-		interface Receive as SnoopDefault[am_id_t id];
-
-		interface AMPacket;
-		interface Packet as PacketForActiveMessage;
+		interface BareSend as TinyosSend;
+		interface BareReceive as TinyosReceive;
+		interface RadioPacket as TinyosPacket;
 #endif
 
 #ifndef TFRAMES_ENABLED
-		interface Ieee154Send;
-		interface Receive as Ieee154Receive;
-		interface SendNotifier as Ieee154Notifier;
-
 		interface Resource as SendResource[uint8_t clint];
 
-		interface Ieee154Packet;
-		interface Packet as PacketForIeee154Message;
+		interface BareSend as Ieee154Send;
+		interface BareReceive as Ieee154Receive;
+		interface RadioPacket as Ieee154Packet;
 #endif
 
+		interface Ieee154PacketLayer;
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
 		interface PacketLink;
@@ -109,57 +99,11 @@ implementation
 	components new RadioAlarmC();
 	RadioAlarmC.Alarm -> RadioDriverLayerC;
 
-// -------- Active Message
-
-#ifndef IEEE154FRAMES_ENABLED
-	components new ActiveMessageLayerC();
-	ActiveMessageLayerC.Config -> RadioP;
-	ActiveMessageLayerC.SubSend -> AutoResourceAcquireLayerC;
-	ActiveMessageLayerC.SubReceive -> TinyosNetworkLayerC.TinyosReceive;
-	ActiveMessageLayerC.SubPacket -> TinyosNetworkLayerC.TinyosPacket;
-
-	AMSend = ActiveMessageLayerC;
-	Receive = ActiveMessageLayerC.Receive;
-	Snoop = ActiveMessageLayerC.Snoop;
-	SendNotifier = ActiveMessageLayerC;
-	AMPacket = ActiveMessageLayerC;
-	PacketForActiveMessage = ActiveMessageLayerC;
-
-	ReceiveDefault = ActiveMessageLayerC.ReceiveDefault;
-	SnoopDefault = ActiveMessageLayerC.SnoopDefault;
-#endif
-
-// -------- Automatic RadioSend Resource
-
-#ifndef IEEE154FRAMES_ENABLED
-#ifndef TFRAMES_ENABLED
-	components new AutoResourceAcquireLayerC();
-	AutoResourceAcquireLayerC.Resource -> SendResourceC.Resource[unique(RADIO_SEND_RESOURCE)];
-#else
-	components new DummyLayerC() as AutoResourceAcquireLayerC;
-#endif
-	AutoResourceAcquireLayerC -> TinyosNetworkLayerC.TinyosSend;
-#endif
-
 // -------- RadioSend Resource
 
 #ifndef TFRAMES_ENABLED
 	components new SimpleFcfsArbiterC(RADIO_SEND_RESOURCE) as SendResourceC;
 	SendResource = SendResourceC;
-
-// -------- Ieee154 Message
-
-	components new Ieee154MessageLayerC();
-	Ieee154MessageLayerC.Ieee154PacketLayer -> Ieee154PacketLayerC;
-	Ieee154MessageLayerC.SubSend -> TinyosNetworkLayerC.Ieee154Send;
-	Ieee154MessageLayerC.SubReceive -> TinyosNetworkLayerC.Ieee154Receive;
-	Ieee154MessageLayerC.RadioPacket -> TinyosNetworkLayerC.Ieee154Packet;
-
-	Ieee154Send = Ieee154MessageLayerC;
-	Ieee154Receive = Ieee154MessageLayerC;
-	Ieee154Notifier = Ieee154MessageLayerC;
-	Ieee154Packet = Ieee154PacketLayerC;
-	PacketForIeee154Message = Ieee154MessageLayerC;
 #endif
 
 // -------- Tinyos Network
@@ -170,10 +114,24 @@ implementation
 	TinyosNetworkLayerC.SubReceive -> PacketLinkLayerC;
 	TinyosNetworkLayerC.SubPacket -> Ieee154PacketLayerC;
 
+#ifndef IEEE154FRAMES_ENABLED
+	TinyosSend = TinyosNetworkLayerC.TinyosSend;
+	TinyosReceive = TinyosNetworkLayerC.TinyosReceive;
+	TinyosPacket = TinyosNetworkLayerC.TinyosPacket;
+#endif
+
+#ifndef TFRAMES_ENABLED
+	Ieee154Send = TinyosNetworkLayerC.Ieee154Send;
+	Ieee154Receive = TinyosNetworkLayerC.Ieee154Receive;
+	Ieee154Packet = TinyosNetworkLayerC.Ieee154Packet;
+#endif
+
 // -------- IEEE 802.15.4 Packet
 
 	components new Ieee154PacketLayerC();
 	Ieee154PacketLayerC.SubPacket -> PacketLinkLayerC;
+
+	Ieee154PacketLayer = Ieee154PacketLayerC;
 
 // -------- UniqueLayer Send part (wired twice)
 

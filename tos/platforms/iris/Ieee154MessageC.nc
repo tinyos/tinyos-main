@@ -37,15 +37,18 @@ configuration Ieee154MessageC
 	provides
 	{
 		interface SplitControl;
+		interface Resource as SendResource[uint8_t clint];
 
 		interface Ieee154Send;
 		interface Receive as Ieee154Receive;
-		interface SendNotifier;
-
-		interface Packet;
 		interface Ieee154Packet;
-		interface Resource as SendResource[uint8_t clint];
+		interface Packet;
 
+		interface Send as BareSend;
+		interface Receive as BareReceive;
+		interface Packet as BarePacket;
+
+		interface SendNotifier;
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
 		interface PacketLink;
@@ -65,15 +68,18 @@ implementation
 	components RF230Ieee154MessageC as MessageC;
 
 	SplitControl = MessageC;
-
-	Ieee154Send = MessageC;
-	Ieee154Receive = MessageC;
-	SendNotifier = MessageC;
-
-	Packet = MessageC;
-	Ieee154Packet = MessageC;
 	SendResource = MessageC;
 
+	Ieee154Send = MessageC.Ieee154Send;
+	Ieee154Receive = MessageC.Ieee154Receive;
+	Ieee154Packet = MessageC.Ieee154Packet;
+	Packet = MessageC.Packet;
+
+	BareSend = MessageC.BareSend;
+	BareReceive = MessageC.BareReceive;
+	BarePacket = MessageC.BarePacket;
+
+	SendNotifier = MessageC;
 	PacketAcknowledgements = MessageC;
 	LowPowerListening = MessageC;
 	PacketLink = MessageC;
