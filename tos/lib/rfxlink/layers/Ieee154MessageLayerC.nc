@@ -32,14 +32,23 @@
  * Author: Miklos Maroti
  */
 
+#include <TinyosNetworkLayer.h>
+#include <Ieee154PacketLayer.h>
+
 generic module Ieee154MessageLayerC()
 {
 	provides 
 	{
 		interface Packet;
+		interface Ieee154Packet;
 		interface Ieee154Send;
 		interface Receive as Ieee154Receive;
+
 		interface SendNotifier;
+
+		interface Send as BareSend;
+		interface Receive as BareReceive;
+		interface Packet as BarePacket;
 	}
 
 	uses
@@ -88,6 +97,53 @@ implementation
 		return getPayload(msg);
 	}
 
+/*----------------- Ieee154Packet -----------------*/
+
+	command ieee154_saddr_t Ieee154Packet.address()
+	{
+		return call Ieee154PacketLayer.localAddr();
+	}
+ 
+	command ieee154_saddr_t Ieee154Packet.destination(message_t* msg)
+	{
+		return call Ieee154PacketLayer.getDestAddr(msg);
+	}
+ 
+	command ieee154_saddr_t Ieee154Packet.source(message_t* msg)
+	{
+		return call Ieee154PacketLayer.getSrcAddr(msg);
+	}
+
+	command void Ieee154Packet.setDestination(message_t* msg, ieee154_saddr_t addr)
+	{
+		call Ieee154PacketLayer.setDestAddr(msg, addr);
+	}
+
+	command void Ieee154Packet.setSource(message_t* msg, ieee154_saddr_t addr)
+	{
+		call Ieee154PacketLayer.setSrcAddr(msg, addr);
+	}
+
+	command bool Ieee154Packet.isForMe(message_t* msg)
+	{
+		return call Ieee154PacketLayer.isForMe(msg);
+	}
+
+	command ieee154_panid_t Ieee154Packet.pan(message_t* msg)
+	{
+		return call Ieee154PacketLayer.getDestPan(msg);
+	}
+
+	command void Ieee154Packet.setPan(message_t* msg, ieee154_panid_t grp)
+	{
+		call Ieee154PacketLayer.setDestPan(msg, grp);
+	}
+
+	command ieee154_panid_t Ieee154Packet.localPan()
+	{
+		return call Ieee154PacketLayer.localPan();
+	}
+
 /*----------------- Ieee154Send -----------------*/
 
 	command void * Ieee154Send.getPayload(message_t* msg, uint8_t len)
@@ -126,7 +182,9 @@ implementation
 
 	event void SubSend.sendDone(message_t* msg, error_t error)
 	{
+		// This is a hack to call both, but both should not be used simultaneously
 		signal Ieee154Send.sendDone(msg, error);
+		signal BareSend.sendDone(msg, error);
 	}
 
 	default event void Ieee154Send.sendDone(message_t* msg, error_t error)
@@ -148,7 +206,85 @@ implementation
 			return msg;
 	}
 
+/*----------------- BarePacket -----------------*/
+
+	typedef nx_struct ieee154_header_t
+	{
+		nx_uint8_t length;
+		ieee154_simple_header_t ieee154;
+#ifndef TFRAMES_ENABLED
+		network_header_t network;
+#endif
+	} ieee154_header_t;
+
+	command void BarePacket.clear(message_t* msg)
+	{
+		// to clear flags
+		call RadioPacket.clear(msg);
+	}
+
+	command uint8_t BarePacket.payloadLength(message_t* msg)
+	{
+		return call RadioPacket.payloadLength(msg)
+			+ sizeof(ieee154_header_t);
+	}
+
+	command void BarePacket.setPayloadLength(message_t* msg, uint8_t len)
+	{
+		call RadioPacket.setPayloadLength(msg, 
+			len - sizeof(ieee154_header_t));
+	}
+
+	command uint8_t BarePacket.maxPayloadLength()
+	{
+		return call RadioPacket.maxPayloadLength()
+			+ sizeof(ieee154_header_t);
+	}
+
+	command void* BarePacket.getPayload(message_t* msg, uint8_t len)
+	{
+		if( len > call RadioPacket.maxPayloadLength() )
+			return NULL;
+
+		return getPayload(msg) - sizeof(ieee154_header_t);
+	}
+
+/*----------------- BareSend -----------------*/
+
+	command error_t BareSend.send(message_t* msg, uint8_t len)
+	{
+		call BarePacket.setPayloadLength(msg, len);
+		return call SubSend.send(msg);
+	}
+
+	command error_t BareSend.cancel(message_t* msg)
+	{
+		return call SubSend.cancel(msg);
+	}
+
+	command uint8_t BareSend.maxPayloadLength()
+	{
+		return call BarePacket.maxPayloadLength();
+	}
+
+	command void* BareSend.getPayload(message_t* msg, uint8_t len)
+	{
+		return call BarePacket.getPayload(msg, len);
+	}
+
+	default event void BareSend.sendDone(message_t* msg, error_t error)
+	{
+	}
+
+/*----------------- BareReceive -----------------*/
+
 	default event message_t* Ieee154Receive.receive(message_t* msg, void* payload, uint8_t len)
+	{
+		return signal BareReceive.receive(msg, payload - sizeof(ieee154_header_t),
+			len + sizeof(ieee154_header_t));
+	}
+
+	default event message_t* BareReceive.receive(message_t *msg, void *payload, uint8_t len)
 	{
 		return msg;
 	}

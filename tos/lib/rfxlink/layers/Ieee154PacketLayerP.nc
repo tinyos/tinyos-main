@@ -39,7 +39,6 @@ generic module Ieee154PacketLayerP()
 	provides 
 	{
 		interface Ieee154PacketLayer;
-		interface Ieee154Packet;
 		interface RadioPacket;
 	}
 
@@ -228,53 +227,6 @@ implementation
 
 	async event void ActiveMessageAddress.changed()
 	{
-	}
-
-/*----------------- Ieee154Packet -----------------*/
-
-	command ieee154_saddr_t Ieee154Packet.address()
-	{
-		return call Ieee154PacketLayer.localAddr();
-	}
- 
-	command ieee154_saddr_t Ieee154Packet.destination(message_t* msg)
-	{
-		return call Ieee154PacketLayer.getDestAddr(msg);
-	}
- 
-	command ieee154_saddr_t Ieee154Packet.source(message_t* msg)
-	{
-		return call Ieee154PacketLayer.getSrcAddr(msg);
-	}
-
-	command void Ieee154Packet.setDestination(message_t* msg, ieee154_saddr_t addr)
-	{
-		call Ieee154PacketLayer.setDestAddr(msg, addr);
-	}
-
-	command void Ieee154Packet.setSource(message_t* msg, ieee154_saddr_t addr)
-	{
-		call Ieee154PacketLayer.setSrcAddr(msg, addr);
-	}
-
-	command bool Ieee154Packet.isForMe(message_t* msg)
-	{
-		return call Ieee154PacketLayer.isForMe(msg);
-	}
-
-	command ieee154_panid_t Ieee154Packet.pan(message_t* msg)
-	{
-		return call Ieee154PacketLayer.getDestPan(msg);
-	}
-
-	command void Ieee154Packet.setPan(message_t* msg, ieee154_panid_t grp)
-	{
-		call Ieee154PacketLayer.setDestPan(msg, grp);
-	}
-
-	command ieee154_panid_t Ieee154Packet.localPan()
-	{
-		return call Ieee154PacketLayer.localPan();
 	}
 
 /*----------------- RadioPacket -----------------*/

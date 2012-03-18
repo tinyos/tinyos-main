@@ -37,7 +37,6 @@ generic configuration Ieee154PacketLayerC()
 	provides
 	{
 		interface Ieee154PacketLayer;
-		interface Ieee154Packet;
 		interface RadioPacket;
 	}
 
@@ -53,7 +52,6 @@ implementation
 	Ieee154PacketLayerP.ActiveMessageAddress -> ActiveMessageAddressC;
 
 	Ieee154PacketLayer = Ieee154PacketLayerP;
-	Ieee154Packet = Ieee154PacketLayerP;
 	RadioPacket = Ieee154PacketLayerP;
 	SubPacket = Ieee154PacketLayerP;
 }

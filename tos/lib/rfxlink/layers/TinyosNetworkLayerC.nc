@@ -228,4 +228,32 @@ implementation
 	}
 
 #endif
+
+/*----------------- Default Events -----------------*/
+
+#ifndef IEEE154FRAMES_ENABLED
+
+	default event void TinyosSend.sendDone(message_t* msg, error_t result)
+	{
+	}
+
+	default event message_t* TinyosReceive.receive(message_t *msg)
+	{
+		return msg;
+	}
+
+#endif
+
+#ifndef TFRAMES_ENABLED
+
+	default event void Ieee154Send.sendDone(message_t* msg, error_t result)
+	{
+	}
+
+	default event message_t* Ieee154Receive.receive(message_t *msg)
+	{
+		return msg;
+	}
+
+#endif
 }
