@@ -29,11 +29,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <async.h>
+
 interface ReadResource {
-  //command int get(coap_tid_t id);
-  command int get();
-  event void getDone(error_t result, uint8_t* val, size_t buflen);
-  event void getDoneDeferred();
-  //event void getDone(error_t result, coap_tid_t id, uint8_t asyn_message, uint8_t* val, size_t buflen);
-  //event void getDoneDeferred(coap_tid_t id);
+    command int get(coap_async_state_t* async_state);
+    event void getDone(error_t result, coap_async_state_t* async_state,
+		       uint8_t* val, size_t buflen);
+    event void getDoneSeparate(coap_async_state_t* async_state);
 }

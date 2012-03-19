@@ -59,4 +59,7 @@ configuration LibCoapAdapterC {
   components LedsC;
   LibCoapAdapterP.Leds -> LedsC;
 
+  components RandomC;
+  LibCoapAdapterP.Random -> RandomC;
+
 }

@@ -407,8 +407,8 @@ coap_transaction_id(const coap_address_t *peer, const coap_pdu_t *pdu,
   default:
     return;
   }
-#endif /* WITH_CONTIKI */
 #endif /* WITH_TINYOS */
+#endif /* WITH_CONTIKI */
 
 #ifdef WITH_CONTIKI
     coap_hash((const unsigned char *)&peer->port, sizeof(peer->port), h);
@@ -416,7 +416,10 @@ coap_transaction_id(const coap_address_t *peer, const coap_pdu_t *pdu,
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
-#warning "TinyOS stuff in net.c"
+    coap_hash((const unsigned char *)&peer->addr.sin6_port,
+	      sizeof(peer->addr.sin6_port), h);
+    coap_hash((const unsigned char *)&peer->addr.sin6_addr,
+	      sizeof(peer->addr.sin6_addr), h);
 #endif /* WITH_TINYOS */
 
   coap_hash((const unsigned char *)&pdu->hdr->id, sizeof(unsigned short), h);
@@ -589,7 +592,7 @@ coap_send_confirmed(coap_context_t *context,
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
-#warning "TinyOS stuff in net.c"
+#warning "TODO: TinyOS: Timer for retransmission in net.c"
 #endif /* WITH_TINYOS */
 
   node->id = coap_send_impl(context, dst, pdu, 0);
@@ -694,7 +697,7 @@ coap_read( coap_context_t *ctx ) {
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
-#warning "TinyOS: set src, dst?"
+#warning "TODO: TinyOS: set src, dst?"
   bytes_read = ctx->bytes_read;
   memcpy(buf, ctx->buf, bytes_read);
 

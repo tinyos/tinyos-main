@@ -30,11 +30,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <async.h>
+
 interface WriteResource {
-  //command int put(uint8_t *val, size_t buflen, coap_tid_t id);
-  command int put();
-  //event void putDone(error_t result, coap_tid_t id, uint8_t asyn_message);
-  event void putDone(error_t result);
-  event void putDoneDeferred();
-  //event void putDoneDeferred(coap_tid_t id);
+    command int put(coap_async_state_t* async_state,
+		    uint8_t* val, size_t buflen);
+    event void putDone(error_t result, coap_async_state_t* async_stat);
+    event void putDoneSeparate(coap_async_state_t* async_state);
 }

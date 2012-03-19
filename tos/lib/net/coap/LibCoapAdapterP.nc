@@ -48,41 +48,12 @@ module LibCoapAdapterP {
 #endif
 
   uses interface LocalTime<TSecond> as LocalTime;
+  uses interface Random;
   uses interface Leds;
 } implementation {
 
-  // might get called in error cases from libcoap's net.c -> spontaneous.
-  coap_tid_t coap_send_impl(coap_context_t *context,
-			    const coap_address_t *dst,
-			    coap_pdu_t *pdu,
-			    int free_pdu ) @C() @spontaneous() {
-    coap_tid_t tid;
-
-#ifndef COAP_SERVER_ENABLED
-#ifndef COAP_CLIENT_ENABLED
-#error "CoAP without server and client?"
-#endif
-#endif
-
-    if ( !context || !dst || !pdu )
-      return COAP_INVALID_TID;
-
-#ifdef COAP_CLIENT_ENABLED
-    if (context->tinyos_port == (int) COAP_CLIENT_PORT)
-      call UDPClient.sendto(&(dst->addr), pdu->hdr, pdu->length);
-#endif
-#ifdef COAP_SERVER_ENABLED
-    if (context->tinyos_port == (int) COAP_SERVER_PORT)
-      call UDPServer.sendto(&(dst->addr), pdu->hdr, pdu->length);
-#endif
-
-    tid = pdu->hdr->id;
-
-    if ( free_pdu )
-      coap_delete_pdu( pdu );
-
-    return ntohs(tid);
-  }
+  /*
+    //debugging help for C code:
 
   void allLedsOn() @C() @spontaneous() {
     call Leds.led0On();
@@ -101,17 +72,68 @@ module LibCoapAdapterP {
   void led2On() @C() @spontaneous() {
     call Leds.led2On();
   }
+  */
+
+  // might get called in error cases from libcoap's net.c -> spontaneous.
+  coap_tid_t coap_send_impl(coap_context_t *context,
+			    const coap_address_t *dst,
+			    coap_pdu_t *pdu,
+			    int free_pdu ) @C() @spontaneous() {
+    coap_tid_t tid;
+
+#ifndef COAP_SERVER_ENABLED
+#ifndef COAP_CLIENT_ENABLED
+#error "CoAP without server and client?"
+#endif
+#endif
+
+    if ( !context || !dst || !pdu )
+      return COAP_INVALID_TID;
+
+#ifdef COAP_CLIENT_ENABLED
+    if (context->tinyos_port == (uint16_t)COAP_CLIENT_PORT) {
+      call UDPClient.sendto(&(dst->addr), pdu->hdr, pdu->length);
+    }
+#endif
+#ifdef COAP_SERVER_ENABLED
+    if (context->tinyos_port == (uint16_t)COAP_SERVER_PORT) {
+      call UDPServer.sendto(&(dst->addr), pdu->hdr, pdu->length);
+    }
+#endif
+    else {
+    }
+
+    tid = pdu->hdr->id;
+
+    if ( free_pdu )
+      coap_delete_pdu( pdu );
+
+    return ntohs(tid);
+  }
 
   inline void tinyos_clock_init_impl(void) @C() @spontaneous() {
-#warning "Implement TinyOS Clock handling"
     //TODO: Do we need to do something here? If not, remove and have
-    // it in coap_time.h
+    //      it in coap_time.h
   }
 
   inline void tinyos_ticks_impl(coap_tick_t *t) @C() @spontaneous() {
     uint32_t time = call LocalTime.get();
     *t = time;
   }
+
+  inline int tinyos_prng_impl(unsigned char *buf, size_t len) @C() @spontaneous() {
+    uint16_t v = call Random.rand16();
+
+    while (len > sizeof(v)) {
+	memcpy(buf, &v, sizeof(v));
+	len -= sizeof(v);
+	buf += sizeof(v);
+    }
+
+    memcpy(buf, &v, len);
+    return 1;
+  }
+
 
 #ifdef COAP_SERVER_ENABLED
   void libcoap_server_read(struct sockaddr_in6 *from, void *data,

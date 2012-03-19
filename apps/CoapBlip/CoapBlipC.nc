@@ -95,13 +95,6 @@ configuration CoapBlipC {
   CoapUdpServerC.ReadResource[INDEX_VOLT] -> CoapReadVoltResource.ReadResource;
 #endif
 
-#ifdef COAP_RESOURCE_LED
-  components new CoapLedResourceC(INDEX_LED) as CoapLedResource;
-  CoapLedResource.Leds -> LedsC;
-  CoapUdpServerC.ReadResource[INDEX_LED]  -> CoapLedResource.ReadResource;
-  CoapUdpServerC.WriteResource[INDEX_LED] -> CoapLedResource.WriteResource;
-#endif
-
 #ifdef COAP_RESOURCE_ALL
   components new CoapReadResourceC(val_all_t, INDEX_ALL) as CoapReadAllResource;
   components new SensirionSht11C() as HumTempSensorAll;
@@ -120,12 +113,19 @@ configuration CoapBlipC {
 #endif
 
 #ifdef COAP_RESOURCE_KEY
-  components new CoapFlashResourceC(KEY_KEY) as CoapFlashResource;
+  components new CoapFlashResourceC(INDEX_KEY) as CoapFlashResource;
   components new ConfigStorageC(VOLUME_CONFIGKEY);
   CoapFlashResource.ConfigStorage -> ConfigStorageC.ConfigStorage;
   CoapBlipP.Mount  -> ConfigStorageC.Mount;
   CoapUdpServerC.ReadResource[INDEX_KEY]  -> CoapFlashResource.ReadResource;
   CoapUdpServerC.WriteResource[INDEX_KEY] -> CoapFlashResource.WriteResource;
+#endif
+
+#ifdef COAP_RESOURCE_LED
+  components new CoapLedResourceC(INDEX_LED) as CoapLedResource;
+  CoapLedResource.Leds -> LedsC;
+  CoapUdpServerC.ReadResource[INDEX_LED]  -> CoapLedResource.ReadResource;
+  CoapUdpServerC.WriteResource[INDEX_LED] -> CoapLedResource.WriteResource;
 #endif
 
 #ifdef COAP_RESOURCE_ROUTE

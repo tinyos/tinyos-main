@@ -980,6 +980,7 @@ main(int argc, char **argv) {
   if (LOG_DEBUG <= coap_get_log_level()) {
     unsigned char buf[COAP_MAX_PDU_SIZE];
     debug("sending CoAP request: ");
+    coap_show_pdu(pdu);
     print_readable( (unsigned char *)pdu->hdr, pdu->length, buf, COAP_MAX_PDU_SIZE);
     printf("%s\n",buf);
   }

@@ -83,21 +83,20 @@ module CoapBlipP {
     // needs to be before registerResource to setup context:
     call CoAPServer.bind(COAP_SERVER_PORT);
 
-    call CoAPServer.registerWellknownCore();
+    //call CoAPServer.registerWellknownCore();
+
     for (i=0; i < NUM_URIS; i++) {
       //TODO: check whether / should be included
       // set the hash for the URI
       coap_hash_path(uri_index_map[i].uri,
-		     uri_index_map[i].uri_len - 1,
-		     uri_index_map[i].uri_key);
+    		     uri_index_map[i].uri_len - 1,
+    		     uri_index_map[i].uri_key);
 
-      //TODO: check needed, parameters?
       call CoAPServer.registerResource(uri_index_map[i].uri,
-				       uri_index_map[i].uri_len - 1,
-				       uri_index_map[i].mediatype,
-				       uri_index_map[i].writable,
-				       uri_index_map[i].splitphase,
-				       uri_index_map[i].immediately);
+    				       uri_index_map[i].uri_len - 1,
+    				       uri_index_map[i].contenttype,
+    				       uri_index_map[i].contenttype_len - 1,
+    				       uri_index_map[i].supported_methods);
     }
 #endif
 

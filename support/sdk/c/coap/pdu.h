@@ -133,6 +133,10 @@ char *coap_response_phrase(unsigned char code);
 #endif
 #define COAP_RESPONSE_X_242    COAP_RESPONSE_CODE(402)  /* Critical Option not supported */
 
+#ifdef WITH_TINYOS
+#define COAP_SPLITPHASE       300                       /* Code for telling TinyOS that the splitphase resource has successfully started */
+#endif
+
 /* CoAP media type encoding */
 
 #define COAP_MEDIATYPE_TEXT_PLAIN                     0 /* text/plain (UTF-8) */

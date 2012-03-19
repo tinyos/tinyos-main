@@ -33,8 +33,8 @@
 #include <lib6lowpan/lib6lowpan.h>
 
 #include <net.h>
-//#include <tinyos_net.h>
 
+#include <async.h>
 #include <resource.h>
 #include <uri.h>
 #include <debug.h>
@@ -72,47 +72,6 @@ module CoapUdpServerP {
   uses interface WriteResource[uint8_t uri];
 } implementation {
   coap_context_t *ctx_server;
-  //unsigned short tid; //has to be static to ensure continuous increase for asyn responses
-
-  //static coap_async_state_t *async = NULL;
-
-  // unlink a given node from the queue
-  /*
-  int
-  coap_extract_node(coap_queue_t **queue, coap_queue_t *node)
-  {
-    coap_queue_t *q;
-    if (!queue)
-      return 0;
-
-    q = *queue;
-    if (q == node)
-    {
-      *queue = node->next;
-      return 1;
-    }
-
-    for (;q; q = q->next)
-    {
-      if (q->next == node)
-      {
-        q->next = node->next;
-        return 1;
-      }
-    }
-    return 0;
-  }
-  */
-
-  //get uri_key (char[4]) from index (int)
-  //defined in tinyos_coap_resources.h
-  /*
-  coap_key_t get_uri_key(uint8_t index) {
-    if (index < NUM_URIS) {
-      return &uri_index_map[index].uri_key;
-    }
-    return {0x0, 0x0, 0x0, 0x0};
-    }*/
 
   //get index (int) from uri_key (char[4])
   //defined in tinyos_coap_resources.h
@@ -125,15 +84,6 @@ module CoapUdpServerP {
     return COAP_NO_SUCH_RESOURCE;
   }
 
-  //generate new transaction id for async response
-  /*
-  unsigned short get_new_tid(){
-    if (!tid)
-      tid = call Random.rand16();
-    tid++;
-    return ntohs(tid);
-  }
-  */
 
   void hnd_get_coap_async_tinyos(coap_context_t  *ctx,
 				 struct coap_resource_t *resource,
@@ -147,27 +97,17 @@ module CoapUdpServerP {
 				 coap_pdu_t *request,
 				 str *token,
 				 coap_pdu_t *response);
-  /* int resource_splitphase(coap_uri_t *uri, */
-  /* 			  coap_tid_t *id, */
-  /* 			  unsigned char *mediatype, */
-  /* 			  unsigned int offset, */
-  /* 			  unsigned char *buf, */
-  /* 			  unsigned int *buflen, */
-  /* 			  int *finished, */
-  /* 			  unsigned int method); */
-
   int coap_save_splitphase(coap_context_t *ctx, coap_queue_t *node);
 
-  //void message_handler(coap_context_t *ctx, coap_queue_t *node, void *data);
 
   command error_t Init.init() {
 
+    // Should this be moved to bind(), as the same port is required...
     coap_address_t listen_addr;
 
     coap_address_init(&listen_addr);
-    //listen_addr.port = ntohs(COAP_SERVER_PORT);
     listen_addr.addr.sin6_port = COAP_SERVER_PORT;
-    //TODO: address...
+    //TODO: address needed?
 
     ctx_server = coap_new_context(&listen_addr);
 
@@ -330,23 +270,29 @@ module CoapUdpServerP {
   // register resources
   command error_t CoAPServer.registerResource(const unsigned char uri[MAX_URI_LENGTH],
 					      unsigned int uri_length,
-					      unsigned char mediatype,
-					      unsigned int writable,
-					      unsigned int splitphase,
-					      unsigned int immediately) {
+					      const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH],
+					      unsigned int contenttype_length,
+					      unsigned int supported_methods) {
     coap_resource_t *r;
 
     if (ctx_server == NULL)
       return FAIL;
 
-    r = coap_resource_init((unsigned char *)"time", 4);
+    r = coap_resource_init((unsigned char *)uri, uri_length);
     if (r == NULL)
       return FAIL;
 
-    coap_register_handler(r, COAP_REQUEST_GET, hnd_get_coap_async_tinyos);
-    //coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_coap_async_tinyos);
+    if ((supported_methods & GET_SUPPORTED) == GET_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_GET, hnd_get_coap_async_tinyos);
+    //if ((supported_methods & POST_SUPPORTED) == POST_SUPPORTED)
+    //  coap_register_handler(r, COAP_REQUEST_POST, hnd_post_coap_async_tinyos); //TODO
+    if ((supported_methods & PUT_SUPPORTED) == PUT_SUPPORTED)
+      coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_coap_async_tinyos);
+    //if ((supported_methods & DELETE_SUPPORTED) == DELETE_SUPPORTED)
+    //  coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_coap_async_tinyos); //TODO
 
-    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)contenttype, contenttype_length);
+    //TODO:
     //coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16);
     //coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7);
     //coap_add_attr(r, (unsigned char *)"obs", 3, NULL, 0, 0);
@@ -354,143 +300,305 @@ module CoapUdpServerP {
 
     coap_add_resource(ctx_server, r);
 
-    /*
-    coap_resource_t *r;
-    coap_key_t k;
-    if ( !(r = ip_malloc( sizeof(coap_resource_t) )))
-      return FAIL;
-
-    r->uri = coap_new_uri((const unsigned char*) uri, uri_length);
-    r->mediatype = mediatype;
-    r->dirty = 0; // CHECK
-    r->writable = writable;
-    r->splitphase = splitphase;
-    r->immediately = immediately;
-    r->data = resource_splitphase;
-
-    k = coap_add_resource( ctx_server, r );
-
-    if (k == COAP_INVALID_HASHKEY) {
-      return FAIL;
-      }*/
     return SUCCESS;
   }
 
+
+  event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
+				uint16_t len, struct ip6_metadata *meta) {
+
+      printf("CoapUdpServer: LibCoapServer.read()\n");
+      /*call Leds.led0On();
+	call Leds.led1On();
+	call Leds.led2On();*/
+
+      // CHECK: lock access to context?
+      // copy data into ctx_server
+      ctx_server->bytes_read = len;
+      memcpy(ctx_server->buf, data, len);
+      // copy src into context
+      memcpy(&ctx_server->src.addr, from, sizeof (struct sockaddr_in6));
+
+      coap_read(ctx_server);
+      coap_dispatch(ctx_server);
+  }
+
   ///////////////////
-  // all TinyOS CoAP resources have to go through these
+  // all TinyOS CoAP GET have to go through this
   void hnd_get_coap_async_tinyos(coap_context_t  *ctx,
 				 struct coap_resource_t *resource,
 				 coap_address_t *peer,
 				 coap_pdu_t *request,
 				 str *token,
 				 coap_pdu_t *response) {
-    unsigned char buf[2];
-    /*
-      call Leds.led0On();
-    call Leds.led1On();
-    call Leds.led2On();
-    */
-    if (token->length)
-      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+      //unsigned char buf[2];
+      coap_async_state_t *async_state = NULL;
 
-    response->hdr->code = COAP_RESPONSE_CODE(205);
-    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-                    coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf);
+      /*
+	call Leds.led0On();
+	call Leds.led1On();
+	call Leds.led2On();
+      */
 
-    if (token->length)
-      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+      /* response->hdr->code = COAP_RESPONSE_CODE(205); */
+      /* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
+      /*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); */
 
-    response->length += snprintf((char *)response->data,
-				 response->max_size - response->length,
-				 "%u", 42);
-    //    call ReadResource.get[get_index_for_key(resource->key)]();
+      /* if (token->length) */
+      /*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+
+      /* response->length += snprintf((char *)response->data, */
+      /* 				 response->max_size - response->length, */
+      /* 				 "%u", 42); */
+
+      async_state = coap_register_async(ctx, peer, request,
+					COAP_ASYNC_CONFIRM,
+					(void *)NULL);
+
+      if (call ReadResource.get[get_index_for_key(resource->key)](async_state) == FAIL) {
+	  //if (call ReadResource.get[0](async_state) == FAIL) {
+	  /* default handler returns FAIL -> Resource not available -> Response: 404 */
+	  response->hdr->code = COAP_RESPONSE_CODE(404);
+
+	  //call Leds.led0Off();
+
+	  if (token->length)
+	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+
+      } // TODO: handle 503!
+
+      /* TinyOS is split-phase, only in error case an immediate response
+	 is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c
+	 is not sending it. */
+      response->hdr->type = COAP_MESSAGE_NON;
   }
 
+  default command int ReadResource.get[uint8_t uri_key](coap_async_state_t* async_state) {
+    //printf("** coap: default (get not available for this resource)....... %i\n", uri_key);
+    return FAIL;
+  }
+
+  event void ReadResource.getDone[uint8_t uri_key](error_t result,
+						   coap_async_state_t* async_state,
+						   uint8_t* val_buf,
+						   size_t buflen) {
+
+      unsigned char buf[2];
+      coap_pdu_t *response;
+      coap_async_state_t *tmp;
+
+      size_t size = sizeof(coap_hdr_t) + 8;
+
+      //if (!async || now < async->created + (unsigned long)async->appdata)
+      //  return;
+
+      size += async_state->tokenlen;
+
+      response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
+			       ? COAP_MESSAGE_ACK
+			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
+			       COAP_RESPONSE_CODE(205), 0, size);
+      if (!response) {
+	  debug("check_async: insufficient memory, we'll try later\n");
+	  //TODO: handle error...
+	  /*
+	    async->appdata =
+	    (void *)((unsigned long)async->appdata + 15 * COAP_TICKS_PER_SECOND);
+	    return;
+	  */
+      }
+
+      response->hdr->id = async_state->message_id;
+
+      //TODO: get content-type from resource
+      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		      coap_encode_var_bytes(buf, COAP_MEDIATYPE_APPLICATION_OCTET_STREAM), buf);
+
+      if (async_state->tokenlen)
+	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
+
+      coap_add_data(response, buflen, val_buf);
+
+      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
+	  debug("check_async: cannot send response for message %d\n",
+		response->hdr->id);
+	  coap_delete_pdu(response);
+      }
+
+      coap_remove_async(ctx_server, async_state->id, &tmp);
+      coap_free_async(async_state);
+  }
+
+  ///////////////////
+  // all TinyOS CoAP PUT have to go through this
   void hnd_put_coap_async_tinyos(coap_context_t  *ctx,
 				 struct coap_resource_t *resource,
 				 coap_address_t *peer,
 				 coap_pdu_t *request,
 				 str *token,
 				 coap_pdu_t *response) {
-    call WriteResource.put[get_index_for_key(resource->key)]();
-    //call WriteResource.put[get_key(uri->path.s, uri->path.length)](buf, *buflen, *id);
+      //unsigned char buf[2];
+      size_t size;
+      unsigned char *data;
+
+      coap_async_state_t *async_state = NULL;
+
+      /*
+      call Leds.led0On();
+      call Leds.led1On();
+      call Leds.led2On();
+      */
+
+      /* response->hdr->code = COAP_RESPONSE_CODE(205); */
+      /* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
+      /*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); */
+
+      /* if (token->length) */
+      /*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+
+      /* response->length += snprintf((char *)response->data, */
+      /* 				 response->max_size - response->length, */
+      /* 				 "%u", 42); */
+
+      async_state = coap_register_async(ctx, peer, request,
+					COAP_ASYNC_CONFIRM,
+					(void *)NULL);
+
+
+      coap_get_data(request, &size, &data);
+
+      if (call WriteResource.put[get_index_for_key(resource->key)](async_state,
+								   data,
+								   size) == FAIL) {
+	  /* default handler returns FAIL -> Resource not available -> Response: 404 */
+	  response->hdr->code = COAP_RESPONSE_CODE(404);
+
+	  //call Leds.led0Off();
+
+	  if (token->length)
+	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+
+      } // TODO: handle 503!
+
+      /* TinyOS is split-phase, only in error case an immediate response
+	 is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c
+	 is not sending it. */
+      response->hdr->type = COAP_MESSAGE_NON;
   }
 
-  /*
-  int hnd_coap_tinyos(coap_uri_t *uri,
-		      coap_tid_t  *id,
-		      unsigned char *mediatype,
-		      unsigned int offset,
-		      unsigned char *buf,
-		      unsigned int *buflen,
-		      int *finished,
-		      unsigned int method) {
-
-    if ( method == COAP_REQUEST_GET) {
-      return call ReadResource.get[get_key(uri->path.s, uri->path.length)](*id);
-    } else if ( method == COAP_REQUEST_PUT) {
-      return call WriteResource.put[get_key(uri->path.s, uri->path.length)](buf, *buflen, *id);
-    } else {
-      //when the method is neither GET nor PUT, i.e. POST & DELETE -> 405
-      return COAP_RESPONSE_405;
-    }
-    }*/
-
-  event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
-				uint16_t len, struct ip6_metadata *meta) {
-
-    printf("CoapUdpServer: LibCoapServer.read()\n");
-    /*call Leds.led0On();
-    call Leds.led1On();
-    call Leds.led2On();*/
-
-    // CHECK: lock access to context?
-    // copy data into ctx_server
-    ctx_server->bytes_read = len;
-    memcpy(ctx_server->buf, data, len);
-    // copy src into context
-    memcpy(&ctx_server->src.addr, from, sizeof (struct sockaddr_in6));
-
-    coap_read(ctx_server);
-    coap_dispatch(ctx_server);
-    // TODO: is all TinyOS async???
-    //check_async(ctx_server, now);
+  default command int WriteResource.put[uint8_t uri_key](coap_async_state_t* async_state,
+							 uint8_t* val, size_t buflen) {
+      //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
+      return FAIL;
   }
 
-  //////////////////////
-  // some standard PDU's
+  event void WriteResource.putDone[uint8_t uri_key](error_t result,
+						    coap_async_state_t* async_state) {
+      unsigned char buf[2];
+      coap_pdu_t *response;
+      coap_async_state_t *tmp;
 
-  /* coap_pdu_t *new_ack( coap_context_t  *ctx, coap_queue_t *node ) { */
-  /*   coap_pdu_t *pdu; */
-  /*   //printf("** coap: new_ack\n"); */
-  /*   GENERATE_PDU(pdu,COAP_MESSAGE_ACK,0,node->pdu->hdr->id,0); */
+      size_t size = sizeof(coap_hdr_t) + 8;
 
-  /*   return pdu; */
-  /* } */
+      //if (!async || now < async->created + (unsigned long)async->appdata)
+      //  return;
 
-  /* coap_pdu_t *new_rst( coap_context_t  *ctx, coap_queue_t *node, */
-  /* 		       unsigned int code ) { */
-  /*   coap_pdu_t *pdu; */
-  /*   GENERATE_PDU(pdu,COAP_MESSAGE_RST,code,node->pdu->hdr->id,1); */
-  /*   return pdu; */
-  /* } */
+      size += async_state->tokenlen;
 
-  /* coap_pdu_t *new_response( coap_context_t  *ctx, coap_queue_t *node, */
-  /* 			    unsigned int code ) { */
-  /*   coap_pdu_t *pdu; */
-  /*   //printf("** coap: new_response %i\n", code); */
-  /*   GENERATE_PDU(pdu,COAP_MESSAGE_ACK,code,node->pdu->hdr->id,1); */
+      //TODO: check for result == SUCCESS
+      response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
+			       ? COAP_MESSAGE_ACK
+			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
+			       COAP_RESPONSE_CODE(201), 0, size);
+      if (!response) {
+	  debug("check_async: insufficient memory, we'll try later\n");
+	  //TODO: handle error...
+	  /*
+	    async->appdata =
+	    (void *)((unsigned long)async->appdata + 15 * COAP_TICKS_PER_SECOND);
+	    return;
+	  */
+      }
 
-  /*   return pdu; */
-  /* } */
+      response->hdr->id = async_state->message_id;
 
-  /* coap_pdu_t *new_asynresponse( coap_context_t  *ctx, coap_queue_t *node) { */
-  /*   coap_pdu_t *pdu; */
-  /*   //printf("** coap: new_asynresponse\n"); */
-  /*   GENERATE_PDU(pdu,COAP_MESSAGE_CON,COAP_RESPONSE_200,node->pdu->hdr->id,1); */
+      //TODO: get content-type from resource
+      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		      coap_encode_var_bytes(buf, COAP_MEDIATYPE_APPLICATION_OCTET_STREAM), buf);
 
-  /*   return pdu; */
-  /* } */
+      if (async_state->tokenlen)
+	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
+
+      //coap_add_data(response, buflen, val_buf); // no data returned for PUT
+
+      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
+	  debug("check_async: cannot send response for message %d\n",
+		response->hdr->id);
+	  coap_delete_pdu(response);
+      }
+
+      coap_remove_async(ctx_server, async_state->id, &tmp);
+      coap_free_async(async_state);
+  }
+
+  // event void WriteResource.putDone[uint8_t uri_key](error_t result) {
+ /* event void WriteResource.putDone[uint8_t uri_key](error_t result, */
+ /* 						   coap_tid_t id, */
+ /* 						   uint8_t asyn_message) { */
+
+   /* coap_queue_t *node; */
+   /* coap_pdu_t *pdu; */
+   /* coap_opt_t *ct; */
+
+   /* //printf("** coap: putDone.... %i\n", uri_key); */
+   /* // assuming more than one entry is in splitphasequeue */
+   /* if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))){ */
+   /*   //printf("** coap: puttDone: node in splitphasequeue not found, quit\n"); */
+   /*   return; */
+   /* } */
+
+   /* if (result){ */
+   /*   //printf("** coap: sensor retrival failed\n"); */
+   /*   if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) { */
+   /*     // printf("** coap: return PDU Null for COAP_RESPONSE_500 \n"); */
+   /*   } */
+   /*   //FIXME */
+   /*   //memcpy(val_buf, "Sensor not found", 16); */
+   /*   //buflen = 16; */
+   /* } else { */
+   /*   //printf("** coap: sensor retrival successful\n"); */
+   /*   if (asyn_message){ */
+   /*     node->pdu->hdr->id = get_new_tid(); */
+   /*     if ( !(pdu = new_asynresponse(ctx_server, node)) ) { */
+   /* 	 //printf("** coap: return PDU Null for Asyn response\n"); */
+   /*     } */
+   /*   } else { */
+   /*     if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_200)) ) { */
+   /* 	 //printf("** coap: return PDU Null for normal response\n"); */
+   /*     } */
+   /*   } */
+   /* } */
+
+   /* // Add content-encoding */
+   /* ct = coap_check_option( node->pdu, COAP_OPTION_CONTENT_TYPE ); */
+   /* if ( ct ) { */
+   /*   coap_add_option( pdu, COAP_OPTION_CONTENT_TYPE, COAP_OPT_LENGTH(*ct),COAP_OPT_VALUE(*ct) ); */
+   /* } */
+
+   /* // sending pdu */
+   /* if (pdu && (call LibCoapServer.send(ctx_server, &node->remote, pdu, 1) == COAP_INVALID_TID )) { */
+   /*   //printf("** coap:asyn Res: error sending response\n"); */
+   /*   coap_delete_pdu(pdu); */
+   /* } */
+
+   /* /\* remove node from asynresqueue *\/ */
+   /* coap_extract_node (&ctx_server->splitphasequeue, node); */
+   /* node->next = NULL; */
+   /* coap_delete_node( node ); */
+   /* //printf("** coap: delete node details kept for Asyn response\n"); */
+  // }
+
+
 
   /* //add default data in case of empty uri path. (for testing purposes only) */
   /* void add_contents( coap_pdu_t *pdu, unsigned char mediatype, */
@@ -529,193 +637,59 @@ module CoapUdpServerP {
   /*   return 0; */
   /* } */
 
-  ///////////////////
-  // GET method
-/*   coap_pdu_t *handle_get(coap_context_t *ctx, coap_queue_t *node, void *data) { */
-/*     coap_pdu_t *pdu; */
-/*     coap_uri_t uri; */
-/*     coap_resource_t *resource; */
-/*     coap_opt_t *block, *ct; */
-/*     unsigned int blklen, blk; */
-/*     int code, finished = 1; */
-/*     unsigned char mediatype = COAP_MEDIATYPE_ANY; */
-/*     static unsigned char buf[COAP_MAX_PDU_SIZE]; */
+  event void ReadResource.getDoneSeparate[uint8_t uri_key](coap_async_state_t* async_state) {
+      coap_pdu_t *response;
 
-/*     if ( !coap_get_request_uri( node->pdu, &uri ) ) */
-/*       return NULL; */
+      size_t size = sizeof(coap_hdr_t) + 8;
 
-/*     //printf("** coap: handle_get: uri %s \n", uri.path.s); */
-/*     //send default test response if no URI is given */
-/*     if ( !uri.path.length ) { */
-/*       pdu = new_response(ctx, node, COAP_RESPONSE_200); */
+      //size += async_state->tokenlen; //CHECK: include token in preACK?
 
-/*       if ( !pdu ) */
-/* 	return NULL; */
+      response = coap_pdu_init(COAP_MESSAGE_ACK,
+			       COAP_RESPONSE_CODE(0), async_state->id, size);
 
-/*       add_contents( pdu, COAP_MEDIATYPE_TEXT_PLAIN, sizeof(INDEX) - 1, (unsigned char *)INDEX ); */
-/*       return pdu; */
-/*     } */
+      if (!response) {
+	  debug("check_async: insufficient memory, we'll try later\n");
+	  //TODO: handle error...
+      }
 
-/*     // any other resource */
-/*     if ( !(resource = coap_get_resource(ctx, &uri)) ) */
-/*       return new_response(ctx, node, COAP_RESPONSE_404); */
+      //CHECK: include token in preACK?
+      /*if (async_state->tokenlen)
+	coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);*/
 
-/*     /\* check if requested mediatypes match *\/ */
-/*     if ( coap_check_option(node->pdu, COAP_OPTION_CONTENT_TYPE) */
-/* 	 && !mediatype_matches(node->pdu, resource->mediatype) ) */
-/*       return new_response(ctx, node, COAP_RESPONSE_415); */
+      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
+	  debug("check_async: cannot send response for message %d\n",
+		response->hdr->id);
+	  coap_delete_pdu(response);
+      }
+  }
 
-/*     block = coap_check_option(node->pdu, COAP_OPTION_BLOCK); */
-/*     if ( block ) { */
-/*       blk = coap_decode_var_bytes(COAP_OPT_VALUE(*block), */
-/* 				  COAP_OPT_LENGTH(*block)); */
-/*       blklen = 16 << (blk & 0x07); */
-/*     } else { */
-/*       blklen = 512; // default block size */
-/*       blk = coap_fls(blklen >> 4) - 1; */
-/*     } */
+  event void WriteResource.putDoneSeparate[uint8_t uri_key](coap_async_state_t* async_state) {
+      coap_pdu_t *response;
 
-/*     /\* invoke callback function to get data representation of requested */
-/*        resource *\/ */
-/*     if ( resource->data ) { */
-/*       if ( resource->mediatype == COAP_MEDIATYPE_ANY */
-/* 	   && (ct = coap_check_option(node->pdu, COAP_OPTION_CONTENT_TYPE)) ) { */
-/* 	mediatype = *COAP_OPT_VALUE(*ct); */
-/*       } */
+      size_t size = sizeof(coap_hdr_t) + 8;
 
-/*       //printf("handle_get: data()\n"); */
-/*       code = resource->data(&uri, */
-/* 			    &(node->pdu->hdr->id), */
-/* 			    &mediatype, */
-/* 			    (blk & ~0x0f) << (blk & 0x07), */
-/* 			    buf, */
-/* 			    &blklen, */
-/* 			    &finished, */
-/* 			    COAP_REQUEST_GET); */
-/*       //printf("handle_get: data()~ %u %u\n", resource->splitphase, code); */
+      //size += async_state->tokenlen; //CHECK: include token in preACK?
 
-/*       if (resource->splitphase) { */
-/* 	if (code == COAP_SPLITPHASE) { */
-/* 	  //printf("handle_get: save()\n"); */
-/* 	  /\* handle subscription *\/ */
-/* #warning "FIXME: CoAP: subscriptions not yet implemented" */
-/* 	  //FIXME: SAVE before calling data()? */
-/* 	  coap_save_splitphase(ctx, node); */
-/* 	  // this is a split-phase resource, no PDU ready yet, created in getDone */
-/* 	  return NULL; */
-/* 	} else { */
-/* 	  //printf("** handle_get: splitphase not successful\n"); */
+      response = coap_pdu_init(COAP_MESSAGE_ACK,
+			       COAP_RESPONSE_CODE(0), async_state->id, size);
 
-/* 	  return new_response(ctx, node, code); */
-/* 	} */
-/*       } else { */
+      if (!response) {
+	  debug("check_async: insufficient memory, we'll try later\n");
+	  //TODO: handle error...
+      }
 
-/* 	  //not splitphase -> resource_wellknown */
-/* 	  pdu = new_response(ctx, node, code); */
+      //CHECK: include token in preACK?
+      /*if (async_state->tokenlen)
+	coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);*/
 
-/* 	  if ( !pdu ) */
-/* 	      return NULL; */
+      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
+	  debug("check_async: cannot send response for message %d\n",
+		response->hdr->id);
+	  coap_delete_pdu(response);
+      }
+  }
 
-/* 	  // Add buffer value to the PDU */
-/* 	  if (!coap_add_data(pdu, blklen, buf)) { */
-/* 	      coap_delete_pdu(pdu); */
-/* 	      if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) { */
-/* 		  //printf("** coap: return PDU Null for 500 response\n"); */
-/* 	      } */
-/* 	  } */
-
-/* 	  return pdu; */
-/*       } */
-/*     } else { */
-/*       // no callback available */
-/*       return new_response(ctx, node, COAP_RESPONSE_500); */
-/*     } */
-/*   } */
-
-  //default command int ReadResource.get[uint8_t uri_key](coap_tid_t id) {
- default command int ReadResource.get[uint8_t uri_key]() {
-   //printf("** coap: default (get not available for this resource)....... %i\n", uri_key);
-   return FAIL;
- }
-
- event void ReadResource.getDone[uint8_t uri_key](error_t result,
-						  uint8_t* val_buf,
-						  size_t buflen) {
- /* event void ReadResource.getDone[uint8_t uri_key](error_t result, */
- /* 						  coap_tid_t id, */
- /* 						  uint8_t asyn_message, */
- /* 						  uint8_t* val_buf, */
- /* 						  size_t buflen) { */
-   /* coap_queue_t *node; */
-   /* coap_pdu_t *pdu; */
-   /* coap_opt_t *ct; */
-
-   /* //printf("** coap: getDone.... %i %u %u\n", uri_key, id, ntohs(id)); */
-
-   /* // assuming more than one entry is in splitphasequeue */
-   /* if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))) { */
-   /*   //printf("** coap: getDone: node in splitphasequeue not found %u\n", id); */
-   /*   return; */
-   /* } */
-
-   /* if (result != SUCCESS) { */
-   /*   //printf("** coap: sensor retrival failed\n"); */
-
-   /*   if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) { */
-   /* 	 //printf("** coap: return PDU Null for COAP_RESPONSE_500 \n"); */
-   /*   } */
-   /*   //FIXME */
-   /*   memcpy(val_buf, "Sensor not found", 16); */
-   /*   buflen = 16; */
-   /* } else { */
-   /*   //printf("** coap: sensor retrival successful\n"); */
-   /*   if (asyn_message){ */
-   /*     node->pdu->hdr->id = get_new_tid(); */
-
-   /*     if ( !(pdu = new_asynresponse(ctx_server, node)) ) { */
-   /* 	 //printf("** coap: return PDU Null for Asyn response\n"); */
-   /*     } */
-   /*   } else { */
-   /*     //normal response */
-   /*     if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_200)) ) { */
-   /* 	 //printf("** coap: return PDU Null for normal response\n"); */
-   /*     } */
-   /*   } */
-   /* } */
-
-   /* // Add content-encoding */
-   /* // TODO: this should come from the resource, not the request! */
-   /* ct = coap_check_option( node->pdu, COAP_OPTION_CONTENT_TYPE ); */
-   /* if ( ct ) { */
-   /*   coap_add_option( pdu, COAP_OPTION_CONTENT_TYPE, COAP_OPT_LENGTH(*ct),COAP_OPT_VALUE(*ct) ); */
-   /* } */
-
-   /* // Add buffer value to the PDU */
-   /* if (!coap_add_data(pdu, buflen, val_buf)) { */
-   /*   coap_delete_pdu(pdu); */
-   /*   if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) { */
-   /*     //printf("** coap: return PDU Null for 500 response\n"); */
-   /*   } */
-   /* } */
-
-   /* // sending pdu */
-   /* printf("getDone(): send PDU %u\n", ntohs(node->pdu->hdr->id)); */
-   /* if (pdu && (call LibCoapServer.send(ctx_server, &node->remote, pdu, 1) == COAP_INVALID_TID )) { */
-   /*   //printf("** coap:error sending response\n"); */
-   /*   coap_delete_pdu(pdu); */
-   /* } */
-
-   /* /\* remove node from splitphasequeue *\/ */
-   /* //printf("getDone(): remove %u\n", ntohs(id)); */
-   /* //coap_remove_transaction(&ctx_server->splitphasequeue, id); */
-
-   /* coap_extract_node (&ctx_server->splitphasequeue, node); */
-   /* node->next = NULL; */
-   /* coap_delete_node( node ); */
-   /* //printf("getDone(): delete node details kept for splitphase response\n"); */
- }
-
- event void ReadResource.getDoneDeferred[uint8_t uri_key]() {
+ //event void ReadResource.getDoneDeferred[uint8_t uri_key]() {
    /* coap_queue_t *node; */
    /* coap_pdu_t *pdu; */
    /* uint8_t reqtoken = 0; */
@@ -758,7 +732,7 @@ module CoapUdpServerP {
      printf("** coap: PreACK sent!\n");
    }
    */
- }
+ // }
 
  ///////////////////
  // PUT method
@@ -851,72 +825,10 @@ module CoapUdpServerP {
 */
  }
 
- default command int WriteResource.put[uint8_t uri_key]() {
-   //default command int WriteResource.put[uint8_t uri_key](uint8_t* val, size_t buflen, coap_tid_t id) {
-   //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
-   return FAIL;
- }
 
- event void WriteResource.putDone[uint8_t uri_key](error_t result) {
- /* event void WriteResource.putDone[uint8_t uri_key](error_t result, */
- /* 						   coap_tid_t id, */
- /* 						   uint8_t asyn_message) { */
-
-   /* coap_queue_t *node; */
-   /* coap_pdu_t *pdu; */
-   /* coap_opt_t *ct; */
-
-   /* //printf("** coap: putDone.... %i\n", uri_key); */
-   /* // assuming more than one entry is in splitphasequeue */
-   /* if (!(node = coap_find_transaction(ctx_server->splitphasequeue, id))){ */
-   /*   //printf("** coap: puttDone: node in splitphasequeue not found, quit\n"); */
-   /*   return; */
-   /* } */
-
-   /* if (result){ */
-   /*   //printf("** coap: sensor retrival failed\n"); */
-   /*   if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_500)) ) { */
-   /*     // printf("** coap: return PDU Null for COAP_RESPONSE_500 \n"); */
-   /*   } */
-   /*   //FIXME */
-   /*   //memcpy(val_buf, "Sensor not found", 16); */
-   /*   //buflen = 16; */
-   /* } else { */
-   /*   //printf("** coap: sensor retrival successful\n"); */
-   /*   if (asyn_message){ */
-   /*     node->pdu->hdr->id = get_new_tid(); */
-   /*     if ( !(pdu = new_asynresponse(ctx_server, node)) ) { */
-   /* 	 //printf("** coap: return PDU Null for Asyn response\n"); */
-   /*     } */
-   /*   } else { */
-   /*     if ( !(pdu = new_response(ctx_server, node, COAP_RESPONSE_200)) ) { */
-   /* 	 //printf("** coap: return PDU Null for normal response\n"); */
-   /*     } */
-   /*   } */
-   /* } */
-
-   /* // Add content-encoding */
-   /* ct = coap_check_option( node->pdu, COAP_OPTION_CONTENT_TYPE ); */
-   /* if ( ct ) { */
-   /*   coap_add_option( pdu, COAP_OPTION_CONTENT_TYPE, COAP_OPT_LENGTH(*ct),COAP_OPT_VALUE(*ct) ); */
-   /* } */
-
-   /* // sending pdu */
-   /* if (pdu && (call LibCoapServer.send(ctx_server, &node->remote, pdu, 1) == COAP_INVALID_TID )) { */
-   /*   //printf("** coap:asyn Res: error sending response\n"); */
-   /*   coap_delete_pdu(pdu); */
-   /* } */
-
-   /* /\* remove node from asynresqueue *\/ */
-   /* coap_extract_node (&ctx_server->splitphasequeue, node); */
-   /* node->next = NULL; */
-   /* coap_delete_node( node ); */
-   /* //printf("** coap: delete node details kept for Asyn response\n"); */
- }
-
- event void WriteResource.putDoneDeferred[uint8_t uri_key]() {
+ /* event void WriteResource.putDoneDeferred[uint8_t uri_key]() {
 #warning "FIXME: CoAP: putDoneDeferred not yet implemented"
- }
+}*/
 
  /*
  ///////////////////

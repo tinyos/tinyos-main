@@ -31,105 +31,105 @@
  */
 
 #include "tinyos_coap_resources.h"
+#include <async.h>
 
 generic module CoapFlashResourceP(uint8_t uri_key) {
-  provides interface ReadResource;
-  provides interface WriteResource;
-  uses interface ConfigStorage;
+    provides interface ReadResource;
+    provides interface WriteResource;
+    uses interface ConfigStorage;
 } implementation {
 
-  bool lock = FALSE;
-  coap_tid_t temp_id;
-  config_t conf;
+    bool lock = FALSE;
+    coap_async_state_t *temp_async_state = NULL;
+    config_t conf;
 
-  enum {
-    CONFIG_ADDR = 0
-  };
+    enum {
+	CONFIG_ADDR = 0
+    };
 
-  /////////////
-  //GET
-  /////////////
-
-  event void ConfigStorage.readDone(storage_addr_t addr, void* buf,
-				    storage_len_t len, error_t err)  {
-    if (err == SUCCESS) {
-      memcpy(&conf, buf, len);
-    } else {
-      //printf("Read flash not successful\n");
-    }
-
-    signal ReadResource.getDone(err, temp_id, 0, buf, sizeof(conf));
-    lock = FALSE;
-  }
-
-  command int ReadResource.get(coap_tid_t id) {
-    if (lock == FALSE) {
-      lock = TRUE;
-      temp_id = id;
-
-      if (call ConfigStorage.valid() == TRUE) {
-	if (call ConfigStorage.read(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
-	  //printf("Config.read not successful \n");
-	  lock = FALSE;
-	  return COAP_RESPONSE_500;
+    /////////////
+    //GET
+    /////////////
+    event void ConfigStorage.readDone(storage_addr_t addr, void* buf,
+				      storage_len_t len, error_t err)  {
+	if (err == SUCCESS) {
+	    memcpy(&conf, buf, len);
 	} else {
-	  return COAP_SPLITPHASE;
+	    //printf("Read flash not successful\n");
 	}
-      } else {
-	lock = FALSE;
-	return COAP_RESPONSE_500;
-      }
-    } else {
-      lock = FALSE;
-      return COAP_RESPONSE_503;
-    }
-  }
 
-  /////////////
-  //PUT
-  /////////////
+	signal ReadResource.getDone(err, temp_async_state, buf, sizeof(conf));
+	lock = FALSE;
+    }
+
+    command int ReadResource.get(coap_async_state_t* async_state) {
+	if (lock == FALSE) {
+	    lock = TRUE;
+	    temp_async_state = async_state;
+
+	    if (call ConfigStorage.valid() == TRUE) {
+		if (call ConfigStorage.read(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
+		    //printf("Config.read not successful \n");
+		    lock = FALSE;
+		    return COAP_RESPONSE_500;
+		} else {
+		    return COAP_SPLITPHASE;
+		}
+	    } else {
+		lock = FALSE;
+		return COAP_RESPONSE_500;
+	    }
+	} else {
+	    lock = FALSE;
+	    return COAP_RESPONSE_503;
+	}
+    }
+
+    /////////////
+    //PUT
+    /////////////
 
 #warning "FIXME: CoAP: PreAck not implemented for put"
 
-  event void ConfigStorage.commitDone(error_t err) {
-    lock = FALSE;
-    signal WriteResource.putDone(err, temp_id, 0);
-  }
-
-  event void ConfigStorage.writeDone(storage_addr_t addr, void *buf,
-				     storage_len_t len, error_t err) {
-    if (err == SUCCESS) {
-      if (call ConfigStorage.commit() != SUCCESS) {
-	signal WriteResource.putDone(err, temp_id, 0);
+    event void ConfigStorage.commitDone(error_t err) {
 	lock = FALSE;
-      }
-    } else {
-      signal WriteResource.putDone(err, temp_id, 0);
-      lock = FALSE;
+	signal WriteResource.putDone(err, temp_async_state);
     }
-  }
 
-  command int WriteResource.put(uint8_t *val, size_t buflen, coap_tid_t id) {
-    if (lock == FALSE) {
-      if (uri_key == KEY_KEY && buflen < sizeof(conf)) {
-	return COAP_RESPONSE_500;
-      }
-
-      lock = TRUE;
-      temp_id = id;
-
-      memcpy(&conf, val, buflen);
-
-      if (call ConfigStorage.write(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
-	//printf("Config.write not successful\n");
-	lock = FALSE;
-	return COAP_RESPONSE_500;
-      } else {
-	return COAP_SPLITPHASE;
-      }
-    } else {
-      lock = FALSE;
-      return COAP_RESPONSE_503;
+    event void ConfigStorage.writeDone(storage_addr_t addr, void *buf,
+				       storage_len_t len, error_t err) {
+	if (err == SUCCESS) {
+	    if (call ConfigStorage.commit() != SUCCESS) {
+		signal WriteResource.putDone(err, temp_async_state);
+		lock = FALSE;
+	    }
+	} else {
+	    signal WriteResource.putDone(err, temp_async_state);
+	    lock = FALSE;
+	}
     }
-  }
+
+    command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+	if (lock == FALSE) {
+	    if (uri_key == INDEX_KEY && buflen < sizeof(conf)) {
+		return COAP_RESPONSE_500;
+	    }
+
+	    lock = TRUE;
+	    temp_async_state = async_state;
+
+	    memcpy(&conf, val, buflen);
+
+	    if (call ConfigStorage.write(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
+		//printf("Config.write not successful\n");
+		lock = FALSE;
+		return COAP_RESPONSE_500;
+	    } else {
+		return COAP_SPLITPHASE;
+	    }
+	} else {
+	    lock = FALSE;
+	    return COAP_RESPONSE_503;
+	}
+    }
 }

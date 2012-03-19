@@ -39,37 +39,39 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
 } implementation {
 
   bool lock = FALSE;
-  coap_tid_t temp_id;
+  coap_async_state_t *temp_async_state = NULL;
 
-  command int ReadResource.get(coap_tid_t id) {
-    // 	printf("ReadResource.get: %hu\n", uri_key);
-    if (lock == FALSE) {
-      lock = TRUE;
-      temp_id = id;
+  command int ReadResource.get(coap_async_state_t* async_state) {
+      //printf("ReadResource.get: %hu\n", uri_key);
+      if (lock == FALSE) {
+	  lock = TRUE;
+	  temp_async_state = async_state;
 
-      call PreAckTimer.startOneShot(COAP_PREACK_TIMEOUT);
-      call Read.read();
-      return COAP_SPLITPHASE;
-    } else {
-      return COAP_RESPONSE_503;
-    }
+	  call PreAckTimer.startOneShot(COAP_PREACK_TIMEOUT);
+	  call Read.read();
+	  return COAP_SPLITPHASE;
+      } else {
+	  return COAP_RESPONSE_503;
+      }
   }
 
   event void PreAckTimer.fired() {
-    call Leds.led2Toggle();
-    signal ReadResource.getDoneDeferred(temp_id);
+      call Leds.led2Toggle();
+      signal ReadResource.getDoneSeparate(temp_async_state);
   }
 
   event void Read.readDone(error_t result, val_t val) {
-    uint8_t asyn_message = 1;
+      //uint8_t asyn_message = 1;
 
-    if (call PreAckTimer.isRunning()) {
-      call PreAckTimer.stop();
-      asyn_message = 0;
-    }
+      if (call PreAckTimer.isRunning()) {
+	  call PreAckTimer.stop();
+	  //asyn_message = 0;
+      }
 
-    //printf("ReadResource.readDone\n");
-    signal ReadResource.getDone(result, temp_id, asyn_message, (uint8_t*)&val, sizeof(val_t));
-    lock = FALSE;
+      //printf("ReadResource.readDone\n");
+      signal ReadResource.getDone(result, temp_async_state,
+				  (uint8_t*)&val, sizeof(uint8_t));
+      //signal ReadResource.getDone(result, temp_id, asyn_message, (uint8_t*)&val, sizeof(val_t));
+      lock = FALSE;
   }
 }

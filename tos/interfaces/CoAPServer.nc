@@ -47,8 +47,7 @@ interface CoAPServer {
    */
   command error_t registerResource(const unsigned char uri[MAX_URI_LENGTH],
 				   unsigned int uri_length,
-				   unsigned char mediatype,
-				   unsigned int writable,
-				   unsigned int splitphase,
-				   unsigned int immediately);
+				   const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH],
+				   unsigned int contenttype_length,
+				   unsigned int supported_methods);
 }

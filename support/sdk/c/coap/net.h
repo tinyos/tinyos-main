@@ -94,9 +94,9 @@ typedef void (*coap_response_handler_t)(struct coap_context_t  *,
 typedef struct coap_context_t {
   coap_opt_filter_t known_options;
 #ifndef WITH_CONTIKI
-#ifndef WITH_TINYOS
+    //#ifndef WITH_TINYOS
   struct coap_resource_t *resources; /**< hash table of known resources */
-#endif /* WITH_TINYOS */
+    //#endif /* WITH_TINYOS */
 #endif /* WITH_CONTIKI */
 #ifndef WITHOUT_ASYNC
   /** list of asynchronous transactions */
@@ -114,7 +114,7 @@ typedef struct coap_context_t {
   uint16_t tinyos_port;
   uint16_t bytes_read;
   uint8_t buf[COAP_MAX_PDU_SIZE];
-  coap_list_t *resources;
+    //coap_list_t *resources;
   coap_address_t src;
 #endif
 

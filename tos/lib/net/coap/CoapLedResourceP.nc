@@ -31,60 +31,57 @@
  */
 
 #include <pdu.h>
+#include <async.h>
 
 generic module CoapLedResourceP(uint8_t uri_key) {
-  provides interface ReadResource;
-  provides interface WriteResource;
-  uses interface Leds;
+    provides interface ReadResource;
+    provides interface WriteResource;
+    uses interface Leds;
 } implementation {
 
-  bool lock = FALSE;
-  //coap_tid_t temp_id;
+    bool lock = FALSE;
+    coap_async_state_t *temp_async_state = NULL;
 
-  void task getLed() {
-    uint8_t val = call Leds.get();
-    lock = FALSE;
-    //signal ReadResource.getDone(SUCCESS, temp_id, 0,
-    //				(uint8_t*)&val, sizeof(uint8_t));
-    signal ReadResource.getDone(SUCCESS,
-				(uint8_t*)&val, sizeof(uint8_t));
-  };
+    /////////////////////
+    // GET:
+    void task getLed() {
+	uint8_t val = call Leds.get();
+	lock = FALSE;
+	signal ReadResource.getDone(SUCCESS, temp_async_state,
+				    (uint8_t*)&val, sizeof(uint8_t));
+    };
 
-  //command int ReadResource.get(coap_tid_t id) {
-  command int ReadResource.get() {
-    if (lock == FALSE) {
-      lock = TRUE;
-
-      //temp_id = id;
-      post getLed();
-      //return COAP_SPLITPHASE;
-      return 0;
-    } else {
-      return COAP_RESPONSE_503;
+    command int ReadResource.get(coap_async_state_t* async_state) {
+	if (lock == FALSE) {
+	    lock = TRUE;
+	    temp_async_state = async_state;
+	    post getLed();
+	    return COAP_SPLITPHASE;
+	} else {
+	    return COAP_RESPONSE_503;
+	}
     }
-  }
 
-  void task setLedDone() {
-    lock = FALSE;
-    //signal WriteResource.putDone(SUCCESS, temp_id, 0);
-    signal WriteResource.putDone(SUCCESS);
-  };
+    /////////////////////
+    // PUT:
+    void task setLedDone() {
+	lock = FALSE;
+	signal WriteResource.putDone(SUCCESS, temp_async_state);
+    };
 
-  //command int WriteResource.put(uint8_t *val, size_t buflen, coap_tid_t id) {
-  command int WriteResource.put() {
-    //if (*val < 8) {
-      if (lock == FALSE) {
-	lock = TRUE;
-	//temp_id = id;
-	//call Leds.set(*val);
-	post setLedDone();
-	//return COAP_SPLITPHASE;
-	return 0;
-      } else {
-	return COAP_RESPONSE_503;
-      }
-      /*} else {
-      return COAP_RESPONSE_500;
-      }*/
-  }
+    command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+	if (buflen == 1 && *val < 8) {
+	    if (lock == FALSE) {
+		lock = TRUE;
+		temp_async_state = async_state;
+		call Leds.set(*val);
+		post setLedDone();
+		return COAP_SPLITPHASE;
+	    } else {
+		return COAP_RESPONSE_503;
+	    }
+	} else {
+	    return COAP_RESPONSE_500;
+	}
+    }
 }

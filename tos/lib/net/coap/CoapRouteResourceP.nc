@@ -31,79 +31,80 @@
  */
 
 generic module CoapRouteResourceP(typedef val_t, uint8_t uri_key) {
-  provides interface ReadResource;
-  uses interface ForwardingTable;
+    provides interface ReadResource;
+    uses interface ForwardingTable;
 } implementation {
 
-  bool lock = FALSE;
-  coap_tid_t temp_id;
+    bool lock = FALSE;
+    coap_async_state_t *temp_async_state = NULL;
 
-  struct {
-    int ifindex;
-    char *name;
-  } ifaces[3] = {{0, "any"}, {1, "pan"}, {2, "ppp"}};
+    struct {
+	int ifindex;
+	char *name;
+    } ifaces[3] = {{0, "any"}, {1, "pan"}, {2, "ppp"}};
 
-  char *ifnam(int ifidx) {
-    int i;
-    for (i = 0; i < sizeof(ifaces) / sizeof(ifaces[0]); i++) {
-      if (ifaces[i].ifindex == ifidx)
-	return ifaces[i].name;
+    char *ifnam(int ifidx) {
+	int i;
+	for (i = 0; i < sizeof(ifaces) / sizeof(ifaces[0]); i++) {
+	    if (ifaces[i].ifindex == ifidx)
+		return ifaces[i].name;
+	}
+	return NULL;
     }
-    return NULL;
-  }
 
-  void task getRoute() {
+    void task getRoute() {
 #define LEN (COAP_MAX_PDU_SIZE - (cur - buf))
-    struct route_entry *entry;
-    int n;
-    int cur_entry;
-    char *buf;
-    char *cur;
-    char buf2[COAP_MAX_PDU_SIZE];
-    buf = buf2;
-    cur = buf;
+	struct route_entry *entry;
+	int n;
+	int cur_entry;
+	char *buf;
+	char *cur;
+	char buf2[COAP_MAX_PDU_SIZE];
+	buf = buf2;
+	cur = buf;
 
-    entry = call ForwardingTable.getTable(&n);
-    if (!buf || !entry) {
-      lock = FALSE;
-      signal ReadResource.getDone(FAIL, temp_id, 0, (uint8_t*)buf, cur - buf);
-      return;
+	entry = call ForwardingTable.getTable(&n);
+	if (!buf || !entry) {
+	    lock = FALSE;
+	    signal ReadResource.getDone(FAIL, temp_async_state,
+					(uint8_t*)buf, cur - buf);
+	    return;
+	}
+
+	for (;cur_entry < n; cur_entry++) {
+	    if (entry[cur_entry].valid) {
+		cur += inet_ntop6(&entry[cur_entry].prefix, cur, LEN) - 1;
+		cur += snprintf(cur, LEN, "/%i\t",entry[cur_entry].prefixlen);
+		cur += inet_ntop6(&entry[cur_entry].next_hop, cur, LEN) - 1;
+		if (LEN < 6) continue;
+		*cur++ = '\t';
+		strncpy(cur, ifnam(entry[cur_entry].ifindex),LEN);
+		cur += 3;
+		*cur++ = '\n';
+	    }
+	}
+
+	if (cur > buf) {
+	    lock = FALSE;
+	    signal ReadResource.getDone(SUCCESS, temp_async_state,
+					(uint8_t*)buf, cur - buf);
+	}
+	// } else {
+	//   // no route available? -> don't send a packet
+	//   signal ReadResource.getDone(SUCCESS, id_t, 0, (uint8_t*)"No Route", sizeof("No Route"));
+	// }
+
+    };
+
+    command int ReadResource.get(coap_async_state_t* async_state) {
+	if (lock == FALSE) {
+	    lock = TRUE;
+
+	    temp_async_state = async_state;
+	    post getRoute();
+	    return COAP_SPLITPHASE;
+	} else {
+	    return COAP_RESPONSE_503;
+	}
     }
-
-    for (;cur_entry < n; cur_entry++) {
-      if (entry[cur_entry].valid) {
-	cur += inet_ntop6(&entry[cur_entry].prefix, cur, LEN) - 1;
-	cur += snprintf(cur, LEN, "/%i\t",entry[cur_entry].prefixlen);
-	cur += inet_ntop6(&entry[cur_entry].next_hop, cur, LEN) - 1;
-	if (LEN < 6) continue;
-	*cur++ = '\t';
-	strncpy(cur, ifnam(entry[cur_entry].ifindex),LEN);
-	cur += 3;
-	*cur++ = '\n';
-      }
-    }
-
-    if (cur > buf) {
-      lock = FALSE;
-      signal ReadResource.getDone(SUCCESS, temp_id, 0,
-				  (uint8_t*)buf, cur - buf);
-    }
-    // } else {
-    //   // no route available? -> don't send a packet
-    //   signal ReadResource.getDone(SUCCESS, id_t, 0, (uint8_t*)"No Route", sizeof("No Route"));
-    // }
-
-  };
-
-  command int ReadResource.get(coap_tid_t id) {
-    if (lock == FALSE) {
-      lock = TRUE;
-
-      temp_id = id;
-      post getRoute();
-      return COAP_SPLITPHASE;
-    } else {
-      return COAP_RESPONSE_503;
-    }
-  }
 }
