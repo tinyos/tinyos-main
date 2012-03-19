@@ -152,8 +152,8 @@ char *coap_response_phrase(unsigned char code);
 #define COAP_MEDIATYPE_ANY                         0xff /* any media type */
 
 /* CoAP transaction id */
-typedef unsigned short coap_tid_t;
-/* typedef int coap_tid_t;*/
+/*typedef unsigned short coap_tid_t;*/
+typedef int coap_tid_t; // mab: i had this at some time
 #define COAP_INVALID_TID -1
 
 #ifdef WORDS_BIGENDIAN
@@ -239,7 +239,6 @@ void coap_pdu_clear(coap_pdu_t *pdu, size_t size);
  * @deprecated This function allocates the maximum storage for each
  * PDU. Use coap_pdu_init() instead. 
  */
-
 coap_pdu_t *coap_new_pdu();
 
 void coap_delete_pdu(coap_pdu_t *);

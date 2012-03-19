@@ -50,6 +50,7 @@ coap_register_async(coap_context_t *context, coap_address_t *peer,
     coap_log(LOG_CRIT, "coap_register_async: insufficient memory\n");
     return NULL;
   }
+
   memset(s, 0, sizeof(coap_async_state_t) + toklen);
 
   /* set COAP_ASYNC_CONFIRM according to request's type */

@@ -22,7 +22,6 @@
 
 #include <stdlib.h>
 #ifdef WITH_TINYOS
-#include <coap_list.h>
 #include <lib6lowpan/ip.h>
 #include <lib6lowpan/nwbyte.h> // for htons()
 typedef uint16_t ssize_t;
@@ -94,9 +93,7 @@ typedef void (*coap_response_handler_t)(struct coap_context_t  *,
 typedef struct coap_context_t {
   coap_opt_filter_t known_options;
 #ifndef WITH_CONTIKI
-    //#ifndef WITH_TINYOS
   struct coap_resource_t *resources; /**< hash table of known resources */
-    //#endif /* WITH_TINYOS */
 #endif /* WITH_CONTIKI */
 #ifndef WITHOUT_ASYNC
   /** list of asynchronous transactions */
@@ -145,20 +142,6 @@ typedef struct coap_context_t {
   coap_response_handler_t response_handler;
 } coap_context_t;
 
-/* mab: remove, when compilation is OK*/
-/* typedef struct { */
-/*   coap_list_t *resources, *subscriptions; /\* FIXME: make these hash tables *\/ */
-/*   coap_queue_t *sendqueue, *recvqueue; /\* FIXME make these coap_list_t *\/ */
-/* #ifndef IDENT_APPNAME */
-/*   int sockfd;			/\* send/receive socket *\/ */
-/* #else */
-/*   int tinyos_port; */
-/* #endif */
-/*   int reqtoken; */
-/*   void ( *msg_handler )( void *, coap_queue_t *, void *); */
-/*    coap_queue_t *splitphasequeue; /\* FIXME to keep the details of TinyOS splitphase responses *\/ */
-/* } coap_context_t; */
-
 /**
  * Registers a new message handler that is called whenever a response
  * was received that matches an ongoing transaction.
@@ -204,7 +187,7 @@ coap_context_t *coap_new_context(const coap_address_t *listen_addr);
 static inline unsigned short
 coap_new_message_id(coap_context_t *context) {
 #ifndef WITH_CONTIKI
-  return htons(++(context->message_id));
+  return htons(++context->message_id);
 #else /* WITH_CONTIKI */
   return uip_htons(++context->message_id);
 #endif

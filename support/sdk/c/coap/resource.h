@@ -75,6 +75,7 @@ typedef struct coap_resource_t {
   LIST_STRUCT(subscribers); /**< list of observers for this resource */
 #endif /* WITH_CONTIKI */
 
+
   /**
    * Request URI for this resource. This field will point into the
    * static memory. */

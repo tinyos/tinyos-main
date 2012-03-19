@@ -32,15 +32,17 @@ coap_decode_var_bytes(unsigned char *buf,unsigned int len) {
 
 unsigned int
 coap_encode_var_bytes(unsigned char *buf, unsigned int val) {
-  int n, i = val >> 1;
-  for (n = 0; i; n++)		/* FIXME: coap_fls() */
-    i >>= 1;
+  unsigned int n, i;
  
-  for (i = n / 8 + 1; i; --i) {
-    buf[i-1] = val & 0xff;
+  for (n = 0, i = val; i && n < sizeof(val); ++n)
+    i >>= 8;
+
+  i = n;
+  while (i--) {
+    buf[i] = val & 0xff;
     val >>= 8;
   }
 
-  return n / 8 + 1;
+  return n;
 }
 

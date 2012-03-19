@@ -33,16 +33,7 @@ coap_resources_init() {
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
-//#include <coap_list.h>
-//coap_list_t *resources;
-
-/*
-void
-coap_resources_init() {
-}
-*/
 #endif /* WITH_TINYOS */
-
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
@@ -65,11 +56,9 @@ print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen) {
   unsigned char *p = buf;
   size_t left, written = 0;
 #ifndef WITH_CONTIKI
-  //#ifndef WITH_TINYOS
   coap_resource_t *tmp;
 
   HASH_ITER(hh, context->resources, r, tmp) {
-      //#endif
 #endif
 
 #ifdef WITH_CONTIKI
@@ -80,14 +69,6 @@ print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen) {
     if (!resource_storage.count[i])
       continue;
 #endif /* WITH_CONTIKI */
-
-/* #ifdef WITH_TINYOS */
-/*   coap_list_t *r_node; */
-
-/*   for (r_node = context->resources; r_node; r_node = r_node->next ) { */
-/*     r = r_node->data; */
-/*     //r = (coap_resource_t*)r_node->data; */
-/* #endif /\* WITH_CONTIKI *\/ */
 
     left = *buflen - written;
 
@@ -148,7 +129,6 @@ coap_add_attr(coap_resource_t *resource,
 #ifndef WITH_CONTIKI
   attr = (coap_attr_t *)coap_malloc(sizeof(coap_attr_t));
 #endif /* WITH_CONTIKI */
-  // WITH_TINYOS: directly use ip_malloc of blip?
 
 #ifdef WITH_CONTIKI
   attr = (coap_attr_t *)memb_alloc(&attribute_storage);
@@ -165,7 +145,6 @@ coap_add_attr(coap_resource_t *resource,
 #ifndef WITH_CONTIKI
     LL_PREPEND(resource->link_attr, attr);
 #endif /* WITH_CONTIKI */
-  // WITH_TINYOS: directly use ip_malloc of blip?
 
 #ifdef WITH_CONTIKI
     list_add(resource->link_attr, attr);
@@ -193,39 +172,17 @@ coap_hash_request_uri(const coap_pdu_t *request, coap_key_t key) {
 	      COAP_OPT_LENGTH(opt_iter.option), key);
 }
 
-/*#ifdef WITH_TINYOS
-int
-order_resources(void *a, void *b) {
-  if (!a || !b)
-    return a < b ? -1 : 1;
-
-  return -1;
-#warning "correctly implement order_resources"
-}
-#endif*/
-
 void
 coap_add_resource(coap_context_t *context, coap_resource_t *resource) {
 #ifndef WITH_CONTIKI
-    //#ifndef WITH_TINYOS
   HASH_ADD(hh, context->resources, key, sizeof(coap_key_t), resource);
-  //#endif /* WITH_TINYOS */
 #endif /* WITH_CONTIKI */
-
-      /*#ifdef WITH_TINYOS
-  coap_list_t *r_node = coap_new_listnode(resource, NULL);
-  coap_insert(&context->resources, r_node, order_resources);
-  #endif*/
 }
 
 int
 coap_delete_resource(coap_context_t *context, coap_key_t key) {
   coap_resource_t *resource;
-#ifndef WITH_CONTIKI
-  //#ifndef WITH_TINYOS
   coap_attr_t *attr, *tmp;
-  //#endif
-#endif
 #ifdef WITH_CONTIKI
   coap_subscription_t *obs;
 #endif
@@ -239,14 +196,12 @@ coap_delete_resource(coap_context_t *context, coap_key_t key) {
     return 0;
 
 #ifndef WITH_CONTIKI
-  //#ifndef WITH_TINYOS
   HASH_DELETE(hh, context->resources, resource);
 
   /* delete registered attributes */
   LL_FOREACH_SAFE(resource->link_attr, attr, tmp) coap_free(attr);
 
   coap_free(resource);
-  //#endif
 #endif
 
 #ifdef WITH_CONTIKI
@@ -263,24 +218,16 @@ coap_delete_resource(coap_context_t *context, coap_key_t key) {
   memb_free(&resource_storage, resource);
 #endif /* WITH_CONTIKI */
 
-  /*#ifdef WITH_TINYOS
-#warning "implement delete resource"
-#endif*/ /* WITH_TINYOS */
-
   return 1;
 }
-
-void led1On();
 
 coap_resource_t *
 coap_get_resource_from_key(coap_context_t *context, coap_key_t key) {
 #ifndef WITH_CONTIKI
-    //#ifndef WITH_TINYOS
   coap_resource_t *resource;
   HASH_FIND(hh, context->resources, key, sizeof(coap_key_t), resource);
 
   return resource;
-  //#endif
 #endif
 
 #ifdef WITH_CONTIKI
@@ -298,23 +245,6 @@ coap_get_resource_from_key(coap_context_t *context, coap_key_t key) {
 
   return NULL;
 #endif /* WITH_CONTIKI */
-
-  /*
-#ifdef WITH_TINYOS
-  //TODO: go back to hashes? I was stupid!!!!!!!
-  coap_list_t *r_node;
-  coap_resource_t *r;
-
-
-  for (r_node = context->resources; r_node; r_node = r_node->next ) {
-    r = r_node->data;
-    //r = (coap_resource_t*)r_node->data;
-    if (memcmp(r->key, key, sizeof(coap_key_t)) == 0) {
-      return (coap_resource_t *)r;
-    }
-  }
-  return 0xff;
-  #endif*/ /* WITH_TINYOS */
 }
 
 int
@@ -382,7 +312,6 @@ coap_find_observer(coap_resource_t *resource, const coap_address_t *peer,
 #ifdef WITH_CONTIKI
   for (s = list_head(resource->subscribers); s; s = list_item_next(s)) {
 #endif /* WITH_CONTIKI */
-
     if (coap_address_equals(&s->subscriber, peer)
 	&& (!token || (token->length == s->token_length
 		       && memcmp(token->s, s->token, token->length) == 0)))
@@ -430,7 +359,6 @@ coap_add_observer(coap_resource_t *resource,
 #ifndef WITH_CONTIKI
   LL_PREPEND(resource->subscribers, s);
 #endif
-
 #ifdef WITH_CONTIKI
   list_add(resource->subscribers, s);
 #endif /* WITH_CONTIKI */
@@ -468,12 +396,10 @@ coap_check_notify(coap_context_t *context) {
   coap_resource_t *r;
   coap_pdu_t *response;
 #ifndef WITH_CONTIKI
-  //#ifndef WITH_TINYOS
   coap_resource_t *tmp;
 
   HASH_ITER(hh, context->resources, r, tmp) {
     if (r->observeable && r->dirty && r->subscribers) {
-	//#endif
 #endif
 
 #ifdef WITH_CONTIKI
@@ -486,18 +412,6 @@ coap_check_notify(coap_context_t *context) {
 
     if (r->observeable && r->dirty && list_head(r->subscribers)) {
 #endif /* WITH_CONTIKI */
-
-	/*
-#ifdef WITH_TINYOS
-  coap_list_t *r_node;
-
-  for (r_node = context->resources; r_node; r_node = r_node->next ) {
-    r = r_node->data;
-    //r = (coap_resource_t*)r_node->data;
-
-    if (r->observeable && r->dirty && r->subscribers) {
-    #endif*/ /* WITH_TINYOS */
-
       coap_method_handler_t h;
 
       /* retrieve GET handler, prepare response */
@@ -558,18 +472,9 @@ coap_handle_failed_notify(coap_context_t *context,
 			  const str *token) {
 #ifndef WITH_CONTIKI
   ;
-#endif
-
-  /*#ifdef WITH_TINYOS
-  ;
-  #endif*/
-
-#ifdef WITH_CONTIKI
-  //#ifndef WITH_TINYOS
-
+#else /* WITH_CONTIKI */
   coap_resource_t *r;
   coap_subscription_t *obs;
-
   int i;
 
   r = (coap_resource_t *)resource_storage.mem;
@@ -608,6 +513,5 @@ coap_handle_failed_notify(coap_context_t *context,
       }
     }
   }
-  //#endif /* WITH_TINYOS */
 #endif /* WITH_CONTIKI */
 }

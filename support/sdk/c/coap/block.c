@@ -23,37 +23,49 @@
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
 int
-coap_write_block_opt(coap_opt_t **block_req, unsigned short type,
+coap_get_block(coap_pdu_t *pdu, unsigned short type, coap_block_t *block) {
+  coap_opt_iterator_t opt_iter;
+
+  assert(block);
+  memset(block, 0, sizeof(coap_block_t));
+
+  if (pdu && coap_check_option(pdu, type, &opt_iter)) {
+    block->szx = COAP_OPT_BLOCK_SZX(opt_iter.option);
+    block->m = COAP_OPT_BLOCK_MORE(opt_iter.option);
+    block->num = COAP_OPT_BLOCK_NUM(opt_iter.option);
+
+    return 1;
+  }
+
+  return 0;
+}
+
+int
+coap_write_block_opt(coap_block_t *block, unsigned short type,
 		     coap_pdu_t *pdu, size_t data_length) {
-  coap_block_t block;
   size_t start, want, avail;
+  unsigned char buf[3];
 
-  assert(pdu); assert(block_req && *block_req);
+  assert(pdu);
 
+  /* Block2 */
   if (type != COAP_OPTION_BLOCK2) {
     warn("coap_write_block_opt: skipped unknown option\n");
     return -1;
   }
 
-  /* Block2 */
-  block.szx = COAP_OPT_BLOCK_SZX(*block_req);
-  block.m = COAP_OPT_BLOCK_MORE(*block_req);
-  block.num = COAP_OPT_BLOCK_NUM(*block_req);
-
-  start = block.num << (block.szx + 4);
+  start = block->num << (block->szx + 4);
   if (data_length <= start) {
     debug("illegal block requested\n");
     return -2;
   }
 
   avail = pdu->max_size - pdu->length - 4;
-  want = 1 << (block.szx + 4);
+  want = 1 << (block->szx + 4);
 
   /* check if entire block fits in message */
   if (want <= avail) {
-    coap_opt_block_set_m(*block_req, want <= data_length - start);
-    coap_add_option(pdu, type,
-		    COAP_OPT_LENGTH(*block_req), COAP_OPT_VALUE(*block_req));
+    block->m = want <= data_length - start;
   } else {
     /* Sender has requested a block that is larger than the remaining
      * space in pdu. This is ok if the remaining data fits into the pdu
@@ -63,11 +75,9 @@ coap_write_block_opt(coap_opt_t **block_req, unsigned short type,
     if (data_length - start <= avail) {
 
       /* it's the final block and everything fits in the message */
-      coap_opt_block_set_m(*block_req, 0);
-      coap_add_option(pdu, type,
-		      COAP_OPT_LENGTH(*block_req), COAP_OPT_VALUE(*block_req));
+      block->m = 0;
     } else {
-      unsigned char buf[3];
+      unsigned char szx;
 
       /* we need to decrease the block size */
       if (avail < 16) { 	/* bad luck, this is the smallest block size */
@@ -75,20 +85,18 @@ coap_write_block_opt(coap_opt_t **block_req, unsigned short type,
 	return -3;
       }
       debug("decrease block size for %d to %d\n", avail, coap_fls(avail) - 5);
-      block.szx = coap_fls(avail) - 5;
-      block.m = 1;
-      block.num <<= COAP_OPT_BLOCK_SZX(*block_req) - block.szx;
-
-      /* as the block number changes, we need to re-encode the block
-       * option */
-      coap_add_option(pdu, type, coap_encode_var_bytes(buf,
-            (block.num << 4) | (block.m << 3) | block.szx), buf);
-      {
-	coap_opt_iterator_t oi;
-	*block_req = coap_check_option(pdu, type, &oi);
+      szx = block->szx;
+      block->szx = coap_fls(avail) - 5;
+      block->m = 1;
+      block->num <<= szx - block->szx;
       }
     }
-  }
+
+  /* to re-encode the block option */
+  coap_add_option(pdu, type, coap_encode_var_bytes(buf, ((block->num << 4) | 
+							 (block->m << 3) | 
+							 block->szx)), 
+		  buf);
 
   return 1;
 }

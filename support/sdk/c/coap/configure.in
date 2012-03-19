@@ -19,7 +19,7 @@ AC_ARG_WITH(contiki,
    exit 0], 
   [])
 
-# First check for Contiki build to quit configure before any other test
+# And check for TinyOS build to quit configure before any further test
 AC_ARG_WITH(tinyos,
   [AS_HELP_STRING([--with-tinyos],[build libcoap for TinyOS])],
   [cp -p Makefile.tinyos Makefile

@@ -76,20 +76,34 @@ coap_opt_block_set_m(coap_opt_t *block_opt, int m) {
 }
 
 /**
+ * Initializes @p block from @p pdu. @p type must be either COAP_OPTION_BLOCK1
+ * or COAP_OPTION_BLOCK2. When option @p type was found in @p pdu, @p block
+ * is initialized with values from this option and the function returns the
+ * value @c 1. Otherwise, @c 0 is returned.
+ *
+ * @param pdu   The pdu to search for option @p type.
+ * @param type  The option to search for (must be COAP_OPTION_BLOCK1 or 
+ *              COAP_OPTION_BLOCK2)
+ * @param block The block structure to initilize.
+ * @return @c 1 on success, @c 0 otherwise.
+ */
+int coap_get_block(coap_pdu_t *pdu, unsigned short type, coap_block_t *block);
+
+/**
  * Writes a block option of type @p type to message @p pdu. If the
  * requested block size is too large to fit in @p pdu, it is reduced
  * accordingly. An exception is made for the final block when less
  * space is required. The actual length of the resource is specified
  * in @p data_length.
  *
- * This function may change **block_req and/or *block_req to reflect the
- * values written to @p pdu. As the function takes into consideration 
- * the remaining space @p pdu, no more options should be added after
- * coap_write_block_opt() has returned.
+ * This function may change *block to reflect the values written to 
+ * @p pdu. As the function takes into consideration the remaining space
+ * @p pdu, no more options should be added after coap_write_block_opt() 
+ * has returned.
  *
- * @param block_req  Points to a pointer to the requested block. On 
- *                   return, this object is updated to point to a
- *                   block option with the same content as in @p pdu
+ * @param block      The block structure to use. On return, this object
+ *                   is updated according to the values that have been
+ *                   written to @p pdu.
  * @param type       COAP_OPTION_BLOCK1 or COAP_OPTION_BLOCK2
  * @param pdu        The message where the block option should be
  *                   written.
@@ -97,7 +111,7 @@ coap_opt_block_set_m(coap_opt_t *block_opt, int m) {
  *                   the @p pdu by calling coap_add_block().
  * @return @c 1 on success, or a negative value on error.
  */
-int coap_write_block_opt(coap_opt_t **block_req, unsigned short type,
+int coap_write_block_opt(coap_block_t *block, unsigned short type,
 			 coap_pdu_t *pdu, size_t data_length);
 
 /** 

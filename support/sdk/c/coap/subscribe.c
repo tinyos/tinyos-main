@@ -15,7 +15,7 @@
 
 #include <stdio.h>
 #include <limits.h>
-#ifdef HAVE_ARPA_INET_H // IDENT_APPNAME
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
 
@@ -35,7 +35,6 @@ coap_subscription_init(coap_subscription_t *s) {
 #if 0
 #define HMASK (ULONG_MAX >> 1)
 
-//#ifndef IDENT_APPNAME
 void
 notify(coap_context_t *context, coap_resource_t *res, 
        coap_subscription_t *sub, unsigned int duration, int code) {
@@ -109,9 +108,6 @@ notify(coap_context_t *context, coap_resource_t *res,
 #endif
 }
 
-//#endif
-
-//#ifndef IDENT_APPNAME
 void 
 coap_check_resource_list(coap_context_t *context) {
   coap_resource_t *res, *tmp;
@@ -145,7 +141,6 @@ coap_check_resource_list(coap_context_t *context) {
     }
   }
 }
-//#endif
 
 #if 0
 coap_resource_t *
@@ -181,7 +176,6 @@ coap_get_resource(coap_context_t *ctx, coap_uri_t *uri) {
 }
 #endif
 
-//#ifndef IDENT_APPNAME
 void 
 coap_check_subscriptions(coap_context_t *context) {
   time_t now;
@@ -216,7 +210,6 @@ coap_check_subscriptions(coap_context_t *context) {
     node = context->subscriptions;
   }
 }
-//#endif
 
 void
 coap_free_resource(void *res) {
@@ -259,7 +252,6 @@ coap_delete_resource(coap_context_t *context, coap_key_t key) {
 }
 #endif
 
-//#ifndef IDENT_APPNAME
 coap_subscription_t *
 coap_new_subscription(coap_context_t *context, const coap_uri_t *resource,
 		      const struct sockaddr *addr, socklen_t addrlen, time_t expiry) {

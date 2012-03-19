@@ -201,14 +201,13 @@ hnd_get_async(coap_context_t  *ctx, struct coap_resource_t *resource,
 			      (void *)(COAP_TICKS_PER_SECOND * delay));
 }
 
-
-//CHECK: there is no preACK sent here, or?
+//CHECK: mab -> obgm: there is no preACK sent here, or?
 void
 check_async(coap_context_t  *ctx, coap_tick_t now) {
   coap_pdu_t *response;
   coap_async_state_t *tmp;
 
-  size_t size = sizeof(coap_hdr_t) + 8; // CHECK: magic 8 ???
+  size_t size = sizeof(coap_hdr_t) + 8; // CHECK: mab -> obgm: magic 8 ???
 
   if (!async || now < async->created + (unsigned long)async->appdata)
     return;

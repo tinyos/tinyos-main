@@ -15,9 +15,7 @@
 #elif HAVE_SYS_UNISTD_H
 #include <sys/unistd.h>
 #endif
-#ifndef PLATFORM_MICAZ
 #include <sys/types.h>
-#endif
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -453,9 +451,6 @@ coap_send_impl(coap_context_t *context,
     coap_delete_pdu( pdu );
 
   return id;
-  }
-
-  return ntohs(pdu->hdr->id);
 }
 #endif /* WITH_CONTIKI */
 #endif /* WITH_TINYOS */
@@ -677,7 +672,6 @@ coap_read( coap_context_t *ctx ) {
 #ifndef WITH_TINYOS
   bytes_read = recvfrom(ctx->sockfd, buf, sizeof(buf), 0,
 			&src.addr.sa, &src.size);
-  //TODO: set src, dst?
 #endif /* WITH_CONTIKI */
 #endif /* WITH_TINYOS */
 
@@ -919,12 +913,15 @@ wellknown_response(coap_context_t *context, coap_pdu_t *request) {
 #define WANT_WKC(Pdu,Key)					\
   (((Pdu)->hdr->code == COAP_REQUEST_GET) && is_wkc(Key))
 
+#ifdef WITH_TINYOS
 /*
 void allLedsOn(); // LibCoapAdapterP.nc
 void led0On();
 void led1On();
 void led2On();
 */
+#endif /* WITH_TINYOS */
+
 void
 handle_request(coap_context_t *context, coap_queue_t *node) {
   coap_method_handler_t h = NULL;
@@ -939,7 +936,6 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
   /* try to find the resource from the request URI */
   coap_hash_request_uri(node->pdu, key);
   resource = coap_get_resource_from_key(context, key);
-
 
   if (!resource) {
     /* The resource was not found. Check if the request URI happens to
@@ -979,6 +975,7 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
 
     return;
   }
+  
 
   /* the resource was found, check if there is a registered handler */
   if (node->pdu->hdr->code < sizeof(resource->handler))
@@ -1004,20 +1001,16 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
       if (response->hdr->type != COAP_MESSAGE_NON ||
 	  (response->hdr->code >= 64
 	   && !coap_is_mcast(&node->local))) {
-	//led0On();
-
 	if (coap_send(context, &node->remote, response) == COAP_INVALID_TID) {
 	  debug("cannot send response for message %d\n", node->pdu->hdr->id);
 	  coap_delete_pdu(response);
 	}
-      } else {
+      } else
 	coap_delete_pdu(response);
-      }
     } else {
       warn("cannot generate response\r\n");
     }
   } else {
-
     if (WANT_WKC(node->pdu, key)) {
       debug("create default response for %s\n", COAP_DEFAULT_URI_WELLKNOWN);
       response = wellknown_response(context, node->pdu);
@@ -1146,9 +1139,9 @@ coap_dispatch( coap_context_t *context ) {
     /* Pass message to upper layer if a specific handler was
      * registered for a request that should be handled locally. */
     if (handle_locally(context, rcvd)) {
-      if (COAP_MESSAGE_IS_REQUEST(rcvd->pdu->hdr)) {
+      if (COAP_MESSAGE_IS_REQUEST(rcvd->pdu->hdr))
 	handle_request(context, rcvd);
-      } else if (COAP_MESSAGE_IS_RESPONSE(rcvd->pdu->hdr))
+      else if (COAP_MESSAGE_IS_RESPONSE(rcvd->pdu->hdr))
 	handle_response(context, sent, rcvd);
       else
 	debug("dropped message with invalid code\n");

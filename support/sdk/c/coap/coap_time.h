@@ -48,7 +48,7 @@ contiki_ticks_impl(coap_tick_t *t) {
 
 #define coap_ticks contiki_ticks_impl
 
-#endif
+#endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
 //#include "clock.h"

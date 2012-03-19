@@ -38,7 +38,6 @@
 #include "net/uip-debug.h"
 #endif
 
-
 static coap_log_t maxlog = LOG_WARN;	/* default maximum log level */
 
 coap_log_t
@@ -257,8 +256,8 @@ coap_show_pdu(const coap_pdu_t *pdu) {
   fprintf(COAP_DEBUG_FD, "\n");
   fflush(COAP_DEBUG_FD);
 }
-#endif
-#endif
+#endif /* WITH_TINYOS */
+#endif /* WITH_CONTIKI */
 
 #ifdef WITH_CONTIKI
 void
