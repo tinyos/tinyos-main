@@ -30,12 +30,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <async.h>
+generic configuration CoapEtsiTestResourceC(uint8_t uri_key) {
+  provides interface ReadResource;
+  provides interface WriteResource;
+} implementation {
+  components new CoapEtsiTestResourceP(uri_key) as CoapResourceP;
 
-interface WriteResource {
-    command int put(coap_async_state_t* async_state,
-		    uint8_t* val, size_t buflen);
-    event void putDone(error_t result, coap_async_state_t* async_stat,
-		       uint8_t* val, size_t buflen, uint8_t contenttype);
-    event void putDoneSeparate(coap_async_state_t* async_state);
+  ReadResource = CoapResourceP;
+  WriteResource = CoapResourceP;
 }

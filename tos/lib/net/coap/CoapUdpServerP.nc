@@ -84,7 +84,6 @@ module CoapUdpServerP {
     return COAP_NO_SUCH_RESOURCE;
   }
 
-
   void hnd_get_coap_async_tinyos(coap_context_t  *ctx,
 				 struct coap_resource_t *resource,
 				 coap_address_t *peer,
@@ -97,8 +96,9 @@ module CoapUdpServerP {
 				 coap_pdu_t *request,
 				 str *token,
 				 coap_pdu_t *response);
-  int coap_save_splitphase(coap_context_t *ctx, coap_queue_t *node);
+  //TODO: hnd_post, hnd_delete
 
+  int coap_save_splitphase(coap_context_t *ctx, coap_queue_t *node);
 
   command error_t Init.init() {
 
@@ -303,7 +303,6 @@ module CoapUdpServerP {
     return SUCCESS;
   }
 
-
   event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
 				uint16_t len, struct ip6_metadata *meta) {
 
@@ -381,7 +380,8 @@ module CoapUdpServerP {
   event void ReadResource.getDone[uint8_t uri_key](error_t result,
 						   coap_async_state_t* async_state,
 						   uint8_t* val_buf,
-						   size_t buflen) {
+						   size_t buflen,
+						   uint8_t contenttype) {
 
       unsigned char buf[2];
       coap_pdu_t *response;
@@ -410,9 +410,9 @@ module CoapUdpServerP {
 
       response->hdr->id = async_state->message_id;
 
-      //TODO: get content-type from resource
-      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-		      coap_encode_var_bytes(buf, COAP_MEDIATYPE_APPLICATION_OCTET_STREAM), buf);
+      if (contenttype != COAP_MEDIATYPE_ANY)
+	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+			  coap_encode_var_bytes(buf, contenttype), buf);
 
       if (async_state->tokenlen)
 	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
@@ -493,7 +493,9 @@ module CoapUdpServerP {
   }
 
   event void WriteResource.putDone[uint8_t uri_key](error_t result,
-						    coap_async_state_t* async_state) {
+						    coap_async_state_t* async_state,
+						    uint8_t* val_buf, size_t buflen,
+						    uint8_t contenttype) {
       unsigned char buf[2];
       coap_pdu_t *response;
       coap_async_state_t *tmp;
@@ -509,7 +511,7 @@ module CoapUdpServerP {
       response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
 			       ? COAP_MESSAGE_ACK
 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
-			       COAP_RESPONSE_CODE(201), 0, size);
+			       COAP_RESPONSE_CODE(204), 0, size);
       if (!response) {
 	  debug("check_async: insufficient memory, we'll try later\n");
 	  //TODO: handle error...
@@ -522,14 +524,15 @@ module CoapUdpServerP {
 
       response->hdr->id = async_state->message_id;
 
-      //TODO: get content-type from resource
-      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-		      coap_encode_var_bytes(buf, COAP_MEDIATYPE_APPLICATION_OCTET_STREAM), buf);
+      if (contenttype != COAP_MEDIATYPE_ANY)
+	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+			  coap_encode_var_bytes(buf, contenttype), buf);
 
       if (async_state->tokenlen)
 	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
 
-      //coap_add_data(response, buflen, val_buf); // no data returned for PUT
+      if (buflen != 0)
+	  coap_add_data(response, buflen, val_buf);
 
       if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
 	  debug("check_async: cannot send response for message %d\n",

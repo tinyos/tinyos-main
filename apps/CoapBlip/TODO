@@ -1,0 +1,11 @@
+TODO for TinyOS port of libcoap
+
+* Port Client to libcoap -08
+* Check PUT and GET returned data
+* Implement ETSI IOT Plugtest resources
+  * /test DONE
+  * /separate
+  * /.well-known/core
+* handle content-types in the resources
+* adapt non-ETSI resources to changes in Read/WriteResource
+* ...

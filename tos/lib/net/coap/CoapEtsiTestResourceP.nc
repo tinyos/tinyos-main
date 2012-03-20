@@ -30,12 +30,58 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <pdu.h>
 #include <async.h>
 
-interface WriteResource {
-    command int put(coap_async_state_t* async_state,
-		    uint8_t* val, size_t buflen);
-    event void putDone(error_t result, coap_async_state_t* async_stat,
-		       uint8_t* val, size_t buflen, uint8_t contenttype);
-    event void putDoneSeparate(coap_async_state_t* async_state);
+generic module CoapEtsiTestResourceP(uint8_t uri_key) {
+    provides interface ReadResource;
+    provides interface WriteResource;
+} implementation {
+
+    bool lock = FALSE;
+    coap_async_state_t *temp_async_state = NULL;
+    uint8_t temp_val = 0;
+
+    /////////////////////
+    // GET:
+    void task get() {
+	lock = FALSE;
+	signal ReadResource.getDone(SUCCESS, temp_async_state,
+				    (uint8_t*)&temp_val, sizeof(uint8_t),
+				    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+    };
+
+    command int ReadResource.get(coap_async_state_t* async_state) {
+	if (lock == FALSE) {
+	    lock = TRUE;
+	    temp_async_state = async_state;
+	    post get();
+	    return COAP_SPLITPHASE;
+	} else {
+	    return COAP_RESPONSE_503;
+	}
+    }
+
+    /////////////////////
+    // PUT:
+    void task setLedDone() {
+	lock = FALSE;
+	signal WriteResource.putDone(SUCCESS, temp_async_state, NULL, 0, COAP_MEDIATYPE_ANY);
+    };
+
+    command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+	if (buflen == 1 && *val < 8) {
+	    if (lock == FALSE) {
+		lock = TRUE;
+		temp_async_state = async_state;
+		temp_val = *val;
+		post setLedDone();
+		return COAP_SPLITPHASE;
+	    } else {
+		return COAP_RESPONSE_503;
+	    }
+	} else {
+	    return COAP_RESPONSE_500;
+	}
+    }
 }

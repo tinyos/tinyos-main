@@ -38,9 +38,6 @@ configuration CoapBlipC {
 
 } implementation {
   components MainC;
-#ifdef SIM
-  components BaseStationC;
-#endif
   components LedsC;
   components CoapBlipP;
   components LibCoapAdapterC;
@@ -133,6 +130,19 @@ configuration CoapBlipC {
   CoapReadRouteResource.ForwardingTable -> IPStackC;
   CoapUdpServerC.ReadResource[INDEX_ROUTE] -> CoapReadRouteResource.ReadResource;
 #endif
+
+#ifdef COAP_RESOURCE_ETSI_IOT_TEST
+  components new CoapEtsiTestResourceC(INDEX_ETSI_TEST);
+  CoapUdpServerC.ReadResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.ReadResource;
+  CoapUdpServerC.WriteResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.WriteResource;
+#endif
+
+#ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
+  components new CoapEtsiSeparateResourceC(INDEX_ETSI_SEPARATE);
+  CoapUdpServerC.ReadResource[INDEX_ETSI_TEST] -> CoapEtsiSeparateResourceC.ReadResource;
+  CoapUdpServerC.WriteResource[INDEX_ETSI_TEST] -> CoapEtsiSeparateResourceC.WriteResource;
+#endif
+
 #endif
 
 #ifdef COAP_CLIENT_ENABLED
