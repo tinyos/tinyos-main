@@ -34,7 +34,12 @@
 
 interface ReadResource {
     command int get(coap_async_state_t* async_state);
+
     event void getDone(error_t result, coap_async_state_t* async_state,
 		       uint8_t* val, size_t buflen, uint8_t contenttype);
-    event void getDoneSeparate(coap_async_state_t* async_state);
+
+    event void getNotDone(coap_async_state_t* async_state);
+
+    event void getDoneSeparate(error_t result, coap_async_state_t* async_state,
+			       uint8_t* val, size_t buflen, uint8_t contenttype);
 }

@@ -137,8 +137,8 @@ configuration CoapBlipC {
 
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
   components new CoapEtsiSeparateResourceC(INDEX_ETSI_SEPARATE);
-  CoapUdpServerC.ReadResource[INDEX_ETSI_TEST] -> CoapEtsiSeparateResourceC.ReadResource;
-  CoapUdpServerC.WriteResource[INDEX_ETSI_TEST] -> CoapEtsiSeparateResourceC.WriteResource;
+  CoapUdpServerC.ReadResource[INDEX_ETSI_SEPARATE] -> CoapEtsiSeparateResourceC.ReadResource;
+  CoapUdpServerC.WriteResource[INDEX_ETSI_SEPARATE] -> CoapEtsiSeparateResourceC.WriteResource;
 #endif
 
 #endif

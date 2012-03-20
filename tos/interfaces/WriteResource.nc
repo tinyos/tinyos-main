@@ -35,7 +35,12 @@
 interface WriteResource {
     command int put(coap_async_state_t* async_state,
 		    uint8_t* val, size_t buflen);
+
     event void putDone(error_t result, coap_async_state_t* async_stat,
 		       uint8_t* val, size_t buflen, uint8_t contenttype);
-    event void putDoneSeparate(coap_async_state_t* async_state);
+
+    event void putNotDone(coap_async_state_t* async_state);
+
+    event void putDoneSeparate(error_t result, coap_async_state_t* async_state,
+			       uint8_t* val, size_t buflen, uint8_t contenttype);
 }
