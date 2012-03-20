@@ -209,29 +209,30 @@ module CoapUdpServerP {
 					COAP_ASYNC_CONFIRM,
 					(void *)NULL);
 
-      if ((rc = call ReadResource.get[get_index_for_key(resource->key)](async_state)) == FAIL) {
-	  //if (call ReadResource.get[0](async_state) == FAIL) {
+      rc = call ReadResource.get[get_index_for_key(resource->key)](async_state);
+      //rc = call ReadResource.get[INDEX_ETSI_SEGMENT](async_state);
+      if (rc == FAIL) {
 	  /* default handler returns FAIL -> Resource not available -> Response: 404 */
 	  response->hdr->code = COAP_RESPONSE_CODE(404);
 
-	  //call Leds.led0Off();
+	  //TODO: set hdr->type?
 
 	  if (token->length)
 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 
+      } else if (rc == COAP_SPLITPHASE) {
+	  /* TinyOS is split-phase, only in error case an immediate response
+	     is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c
+	     is not sending it. */
+	  response->hdr->type = COAP_MESSAGE_NON;
       } else {
-	  if (rc != COAP_SPLITPHASE) {
-	      response->hdr->code = COAP_RESPONSE_CODE(rc);
+	  response->hdr->code = rc;
 
-	      if (token->length)
-		  coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-	  }
+	  //TODO: set hdr->type?
+
+	  if (token->length)
+	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
       }
-
-      /* TinyOS is split-phase, only in error case an immediate response
-	 is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c
-	 is not sending it. */
-      response->hdr->type = COAP_MESSAGE_NON;
   }
 
   default command int ReadResource.get[uint8_t uri_key](coap_async_state_t* async_state) {

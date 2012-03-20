@@ -68,6 +68,9 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
     INDEX_ETSI_SEPARATE,
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
+    INDEX_ETSI_SEGMENT,
+#endif
     COAP_NO_SUCH_RESOURCE = 0xff
 };
 
@@ -195,6 +198,16 @@ index_uri_key_t uri_index_map[NUM_URIS] = {
       (GET_SUPPORTED | PUT_SUPPORTED)
   },
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
+  {
+      INDEX_ETSI_SEGMENT,
+      "seg1/seg2/seg3", sizeof("seg1/seg2/seg3"),
+      {0,0,0,0}, // uri_key will be set later
+      "42", sizeof("42"), // application/octet-stream
+      (GET_SUPPORTED | PUT_SUPPORTED)
+  },
+#endif
+
 
 };
 

@@ -141,6 +141,12 @@ configuration CoapBlipC {
   CoapUdpServerC.WriteResource[INDEX_ETSI_SEPARATE] -> CoapEtsiSeparateResourceC.WriteResource;
 #endif
 
+#ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
+  components new CoapEtsiSegmentResourceC(INDEX_ETSI_SEGMENT);
+  CoapUdpServerC.ReadResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.ReadResource;
+  CoapUdpServerC.WriteResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.WriteResource;
+#endif
+
 #endif
 
 #ifdef COAP_CLIENT_ENABLED

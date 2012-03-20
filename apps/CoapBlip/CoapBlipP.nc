@@ -78,7 +78,6 @@ module CoapBlipP {
     call CoAPServer.bind(COAP_SERVER_PORT);
 
     for (i=0; i < NUM_URIS; i++) {
-      //TODO: check whether / should be included
       // set the hash for the URI
       coap_hash_path(uri_index_map[i].uri,
     		     uri_index_map[i].uri_len - 1,
