@@ -3,9 +3,11 @@ COMPONENT=CoapBlipC
 # uncomment this for network programming support
 # BOOTLOADER=tosboot
 
-CFLAGS += -DCC2420_DEF_CHANNEL=22
+CFLAGS += -DCC2420_DEF_CHANNEL=21
 #CFLAGS += -DRF230_DEF_CHANNEL=16
 #CFLAGS += -DCC2420_DEF_RFPOWER=4
+
+DEFAULT_LOCAL_GROUP = 0xCA
 
 # Enable Low Power Listening
 #CFLAGS += -DLOW_POWER_LISTENING
@@ -28,7 +30,9 @@ PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
 
 # if you set this, the stack won't use dhcp to assign addresses -- it
 # will use this prefix combined with TOS_NODE_ID
-PFLAGS += -DIN6_PREFIX=\"fec0::\"
+#PFLAGS += -DIN6_PREFIX=\"fec0::\"
+PFLAGS += -DIN6_PREFIX=\"2a01:198:56c:1000::\"
+#PFLAGS += -DIN6_PREFIX=\"2a01:c911:0:2125::\"
 
 # printf debugs. works only on telosb/tmote sky.
 # CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
@@ -40,11 +44,11 @@ CFLAGS += -DCOAP_SERVER_ENABLED
 # port where server is listening
 CFLAGS += -DCOAP_SERVER_PORT=61616L
 #set max uri length
-CFLAGS += -DMAX_URI_LENGTH=8
+CFLAGS += -DMAX_URI_LENGTH=14
 
 # set available resources.
 # Don't forget to change CFLAG: NUM_URIS!!!!!
-CFLAGS += -DNUM_URIS=2
+CFLAGS += -DNUM_URIS=3
 
 #CFLAGS += -DCOAP_RESOURCE_TEMP
 #CFLAGS += -DCOAP_RESOURCE_HUM
@@ -59,6 +63,7 @@ CFLAGS += -DNUM_URIS=2
 
 CFLAGS += -DCOAP_RESOURCE_ETSI_IOT_TEST
 CFLAGS += -DCOAP_RESOURCE_ETSI_IOT_SEPARATE
+CFLAGS += -DCOAP_RESOURCE_ETSI_IOT_SEGMENT
 
 # timeout in milliseconds for sending PreACK
 CFLAGS += -DCOAP_PREACK_TIMEOUT=1000
