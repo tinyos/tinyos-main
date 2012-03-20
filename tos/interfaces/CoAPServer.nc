@@ -38,11 +38,6 @@ interface CoAPServer {
   command error_t bind(uint16_t port);
 
   /*
-   * register the .wellknown/core resource
-   */
-  command error_t registerWellknownCore();
-
-  /*
    * register a TinyOS resource with libcoap
    */
   command error_t registerResource(const unsigned char uri[MAX_URI_LENGTH],

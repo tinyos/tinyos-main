@@ -46,7 +46,6 @@ configuration CoapBlipC {
   CoapBlipP.Boot -> MainC;
   CoapBlipP.Leds -> LedsC;
   CoapBlipP.RadioControl ->  IPStackC;
-  CoapBlipP.Init <- MainC.SoftwareInit;
 
 #ifdef RPL_ROUTING
   components RPLRoutingC;
@@ -57,7 +56,6 @@ configuration CoapBlipC {
   components new UdpSocketC() as UdpServerSocket;
   CoapBlipP.CoAPServer -> CoapUdpServerC;
   CoapUdpServerC.LibCoapServer -> LibCoapAdapterC.LibCoapServer;
-  CoapUdpServerC.Init <- MainC.SoftwareInit;
   LibCoapAdapterC.UDPServer -> UdpServerSocket;
 
 #if defined (COAP_RESOURCE_TEMP)  || defined (COAP_RESOURCE_HUM) || defined (COAP_RESOURCE_ALL)
@@ -150,7 +148,7 @@ configuration CoapBlipC {
   components new UdpSocketC() as UdpClientSocket;
   CoapBlipP.CoAPClient -> CoapUdpClientC;
   CoapUdpClientC.LibCoapClient -> LibCoapAdapterC.LibCoapClient;
-  CoapUdpClientC.Init <- MainC.SoftwareInit;
+  CoapUdpClientC.Init <- MainC.SoftwareInit; // needed?
   LibCoapAdapterC.UDPClient -> UdpClientSocket;
   CoapBlipP.ForwardingTableEvents -> IPStackC.ForwardingTableEvents;
 #endif

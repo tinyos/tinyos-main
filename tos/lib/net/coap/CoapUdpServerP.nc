@@ -64,7 +64,6 @@
 
 module CoapUdpServerP {
   provides interface CoAPServer;
-  provides interface Init;
   uses interface LibCoAP as LibCoapServer;
   uses interface Random;
   uses interface Leds;
@@ -100,170 +99,21 @@ module CoapUdpServerP {
 
   int coap_save_splitphase(coap_context_t *ctx, coap_queue_t *node);
 
-  command error_t Init.init() {
-
-    // Should this be moved to bind(), as the same port is required...
-    coap_address_t listen_addr;
-
-    coap_address_init(&listen_addr);
-    listen_addr.addr.sin6_port = COAP_SERVER_PORT;
-    //TODO: address needed?
-
-    ctx_server = coap_new_context(&listen_addr);
-
-    if (!ctx_server) {
-      coap_log(LOG_CRIT, "cannot create CoAP context\r\n");
-      return FAIL;
-    }
-
-    return SUCCESS;
-  }
-
-  //TODO: the bind should be on the same port as the context...
   command error_t CoAPServer.bind(uint16_t port) {
-    return call LibCoapServer.bind(port);
-  }
+      coap_address_t listen_addr;
 
+      coap_address_init(&listen_addr);
+      listen_addr.addr.sin6_port = port;
+      //TODO: address needed?
 
-/* #ifdef INCLUDE_WELLKNOWN */
-/*   /////////////////// */
-/*   // wellknown resources */
-/*   int print_link(coap_resource_t *resource, unsigned char *buf, size_t buflen) { */
-/*       size_t n = 0; */
+      ctx_server = coap_new_context(&listen_addr);
 
-/*       //assert(resource); */
-/*       //assert(buf); */
-/*       if (resource == NULL || buf == NULL) { */
-/* 	  return -1; */
-/*       } */
+      if (!ctx_server) {
+	  coap_log(LOG_CRIT, "cannot create CoAP context\r\n");
+	  return FAIL;
+      }
 
-/*       if (buflen < resource->uri->path.length + 3) */
-/* 	  return -1; */
-
-/*       /\* FIXME: calculate maximum length and return if longer than buflen *\/ */
-/*       buf[n++] = '<'; buf[n++] = '/'; */
-
-/*       memcpy(buf + n, resource->uri->path.s, resource->uri->path.length); */
-
-/*       n += resource->uri->path.length; */
-/*       buf[n++] = '>'; */
-
-/*       if (resource->mediatype != COAP_MEDIATYPE_ANY) { */
-/* 	  if (buflen - n < 7) 	/\* mediatype is at most 3 digits *\/ */
-/* 	      return -1; */
-/* 	  n += snprintf((char *)(buf + n), buflen - n, ";ct=%d", */
-/* 			resource->mediatype); */
-/*       } */
-
-/*       if (resource->name) { */
-/* 	  if (buflen - n < resource->name->length + 5) /\* include trailing quote *\/ */
-/* 	      return -1; */
-
-/* 	  memcpy(buf + n, ";n=\"", 4); */
-/* 	  n += 4; */
-/* 	  memcpy(buf + n, resource->name->s, resource->name->length); */
-/* 	  n += resource->name->length; */
-
-/* 	  if (!resource->writable) { */
-/* 	      if (buflen - n < 12) */
-/* 		  return -1; */
-
-/* 	      n += snprintf((char *)(buf + n), buflen - n, " (read-only)"); */
-/* 	  } */
-
-/* 	  buf[n++] = '"'; */
-/*       } */
-
-/*       return  n; */
-/*   } */
-
-/*   int resource_wellknown(coap_uri_t *uri, */
-/* 			 coap_tid_t *id, */
-/* 			 unsigned char *mediatype, */
-/* 			 unsigned int offset, */
-/* 			 unsigned char *buf, */
-/* 			 unsigned int *buflen, */
-/* 			 int *finished, */
-/* 			 unsigned int method) { */
-/* #define RESOURCE_BUFLEN 1000 */
-/*       static unsigned char resources[RESOURCE_BUFLEN]; */
-/*       size_t maxlen = 0; */
-/*       int n; */
-/*       coap_list_t *node; */
-
-/*       //assert(ctx_server); */
-/*       //assert(resource); */
-/*       if (ctx_server == NULL) { */
-/* 	  return COAP_RESPONSE_500; */
-/*       } */
-
-/*       /\* first, update the link-set *\/ */
-/*       for (node = ctx_server->resources; node; node = node->next) { */
-/* 	  n = print_link(COAP_RESOURCE(node), resources + maxlen, */
-/* 			 RESOURCE_BUFLEN - maxlen); */
-/* 	  if (n <= 0) { 			/\* error *\/ */
-/* 	      //debug("resource description too long, truncating\n"); */
-/* 	      resources[maxlen] = '\0'; */
-/* 	      break; */
-/* 	  } */
-/* 	  maxlen += n; */
-
-/* 	  if (node->next) 		/\* check if another entry follows *\/ */
-/* 	      resources[maxlen++] = ','; */
-/* 	  else 			/\* no next, terminate string *\/ */
-/* 	      resources[maxlen] = '\0'; */
-/*       } */
-
-/*       *finished = 1; */
-
-/*       switch (*mediatype) { */
-/*       case COAP_MEDIATYPE_ANY : */
-/*       case COAP_MEDIATYPE_APPLICATION_LINK_FORMAT : */
-/* 	  *mediatype = COAP_MEDIATYPE_APPLICATION_LINK_FORMAT; */
-/* 	  break; */
-/*       default : */
-/* 	  *buflen = 0; */
-/* 	  return COAP_RESPONSE_415; */
-/*       } */
-
-/*       if ( offset > maxlen ) { */
-/* 	  *buflen = 0; */
-/* 	  return COAP_RESPONSE_400; */
-/*       } else if ( offset + *buflen > maxlen ) */
-/* 	  *buflen = maxlen - offset; */
-
-/*       memcpy(buf, resources + offset, *buflen); */
-
-/*       *finished = offset + *buflen == maxlen; */
-/*       return COAP_RESPONSE_200; */
-/*   } */
-/* #endif */
-
-  //register wellknown resource
-  command error_t CoAPServer.registerWellknownCore() {
-#ifdef INCLUDE_WELLKNOWN
-    coap_resource_t *r;
-
-    if ( !(r = ip_malloc( sizeof(coap_resource_t) ))) {
-	return FAIL;
-    }
-
-    r->uri = coap_new_uri((const unsigned char *) COAP_DEFAULT_URI_WELLKNOWN,
-			  sizeof(COAP_DEFAULT_URI_WELLKNOWN));
-    r->mediatype = COAP_MEDIATYPE_APPLICATION_LINK_FORMAT;
-    r->dirty = 0;
-    r->writable = 0;
-    r->splitphase = 0;
-    r->immediately = 1;
-    r->data = resource_wellknown;
-    coap_add_resource( ctx_server, r );
-    return SUCCESS;
-#else
-
-#warning "CoAP Resource .wellknown/core disabled. Add CFLAGS += -DINCLUDE_WELLKNOWN to Makefile, if you want it included."
-    return FAIL;
-
-#endif
+      return call LibCoapServer.bind(port);
   }
 
   ///////////////////

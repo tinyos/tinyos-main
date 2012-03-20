@@ -57,16 +57,10 @@ module CoapBlipP {
 #endif
   }
 
-  provides interface Init;
-
 } implementation {
 #ifdef COAP_CLIENT_ENABLED
   uint8_t node_integrate_done = FALSE;
 #endif
-
-  command error_t Init.init() {
-    return SUCCESS;
-  }
 
   event void Boot.booted() {
 #ifdef COAP_SERVER_ENABLED
@@ -82,8 +76,6 @@ module CoapBlipP {
 #endif
     // needs to be before registerResource to setup context:
     call CoAPServer.bind(COAP_SERVER_PORT);
-
-    //call CoAPServer.registerWellknownCore();
 
     for (i=0; i < NUM_URIS; i++) {
       //TODO: check whether / should be included
