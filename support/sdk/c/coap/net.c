@@ -602,7 +602,6 @@ coap_send_confirmed(coap_context_t *context,
 	tinyos_retransmission_impl(context, nextpdu->t - now);
     }
   }
-#warning "TODO: TinyOS: Timer for retransmission in net.c"
 #endif /* WITH_TINYOS */
 
   node->id = coap_send_impl(context, dst, pdu, 0);
