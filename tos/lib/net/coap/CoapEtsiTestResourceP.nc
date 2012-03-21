@@ -70,7 +70,8 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
     };
 
     command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
-	if (buflen == 1 && *val < 8) {
+	//if (buflen == 1 && *val < 8) {
+	// don't check for buflen, only store first byte
 	    if (lock == FALSE) {
 		lock = TRUE;
 		temp_async_state = async_state;
@@ -80,8 +81,8 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
 	    } else {
 		return COAP_RESPONSE_503;
 	    }
-	} else {
+	    /*} else {
 	    return COAP_RESPONSE_500;
-	}
+	    }*/
     }
 }

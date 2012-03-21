@@ -4,13 +4,14 @@ TODO for TinyOS port of libcoap:
 * Retransmission Timer!
 * Port Client to libcoap -08
 * Check PUT and GET returned data
-* Implement ETSI IOT Plugtest resources
-  * /test GET/PUT DONE
-  * /separate GET DONE
-  * /.well-known/core DONE
 * handle content-types in the resources
 * adapt non-ETSI resources to changes in Read/WriteResource
-
 * implement logging over serial
 * ...
 
+DONE:
+=====
+* Implement ETSI IOT Plugtest resources
+  * /test GET/PUT DONE
+  * /separate GET/PUT DONE
+  * /.well-known/core DONE

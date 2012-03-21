@@ -326,7 +326,7 @@ module CoapUdpServerP {
       size += async_state->tokenlen;
 
       response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			       ? COAP_MESSAGE_ACK
+			       ? COAP_MESSAGE_CON
 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
 			       COAP_RESPONSE_CODE(205), 0, size);
       if (!response) {
@@ -518,9 +518,9 @@ module CoapUdpServerP {
       size += async_state->tokenlen; //CHECK: include token in preACK?
 
       response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			       ? COAP_MESSAGE_ACK
+			       ? COAP_MESSAGE_CON
 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
-			       COAP_RESPONSE_CODE(205), 0, size);
+			       COAP_RESPONSE_CODE(204), 0, size); // 2.05???
       /*response = coap_pdu_init(COAP_MESSAGE_ACK,
 	COAP_RESPONSE_CODE(0), async_state->id, size);*/
 
