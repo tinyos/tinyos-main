@@ -48,6 +48,7 @@ module LibCoapAdapterP {
 #endif
 
   uses interface LocalTime<TSecond> as LocalTime;
+  uses interface Timer<TMilli> as RetransmissionTimerMilli;
   uses interface Random;
   uses interface Leds;
 } implementation {
@@ -73,6 +74,9 @@ module LibCoapAdapterP {
     call Leds.led2On();
   }
   */
+
+    coap_context_t *retransmit_ctx = NULL;
+
 
   // might get called in error cases from libcoap's net.c -> spontaneous.
   coap_tid_t coap_send_impl(coap_context_t *context,
@@ -111,6 +115,8 @@ module LibCoapAdapterP {
     return ntohs(tid);
   }
 
+  /////////////////////////////
+  // Provide timing for libcoap
   inline void tinyos_clock_init_impl(void) @C() @spontaneous() {
     //TODO: Do we need to do something here? If not, remove and have
     //      it in coap_time.h
@@ -121,6 +127,8 @@ module LibCoapAdapterP {
     *t = time;
   }
 
+  ///////////////////////////
+  // Provide PRNG for libcoap
   inline int tinyos_prng_impl(unsigned char *buf, size_t len) @C() @spontaneous() {
     uint16_t v = call Random.rand16();
 
@@ -134,7 +142,50 @@ module LibCoapAdapterP {
     return 1;
   }
 
+  ////////////////////////////////////////////
+  // Provide retransmission timing for libcoap
+  inline void tinyos_retransmission_impl(coap_context_t *ctx, coap_tick_t t) @C() @spontaneous() {
+      // TODO: for the moment there is just one context (the server context).
+      // adapt retransmission timer handling, if there are more contexts...
+      retransmit_ctx = ctx;
 
+      call RetransmissionTimerMilli.startOneShot(((uint32_t)t)<<10); //*1024
+  }
+
+  void retransmit(coap_context_t* ctx) {
+      coap_tick_t now;
+      coap_queue_t *nextpdu;
+
+      nextpdu = coap_peek_next(ctx);
+
+      coap_ticks(&now);
+      while (nextpdu && nextpdu->t <= now) {
+	  coap_retransmit(ctx, coap_pop_next(ctx));
+	  nextpdu = coap_peek_next(ctx);
+      }
+
+      /* need to set timer to some value even if no nextpdu is available */
+      if (nextpdu) {
+	  tinyos_retransmission_impl(ctx, nextpdu->t - now);
+      }
+
+      //TODO: notificiation
+      /*
+	if (etimer_expired(&the_coap_context.notify_timer)) {
+	coap_check_notify(&the_coap_context);
+	etimer_reset(&the_coap_context.notify_timer);
+	}
+	}*/
+  }
+
+  event void RetransmissionTimerMilli.fired() {
+      if (retransmit_ctx != NULL) {
+	  retransmit(retransmit_ctx);
+      }
+  }
+
+  /////////////////////////////////////////////////
+  // Provide sending/receiving interface to libcoap
 #ifdef COAP_SERVER_ENABLED
   void libcoap_server_read(struct sockaddr_in6 *from, void *data,
 			   uint16_t len, struct ip6_metadata *meta) {
@@ -159,6 +210,8 @@ module LibCoapAdapterP {
   }
 #endif
 
+  /////////////////////////////////////////////////
+  // Provide sending/receiving interface to libcoap
 #ifdef COAP_CLIENT_ENABLED
   void libcoap_client_read(struct sockaddr_in6 *from, void *data,
 			   uint16_t len, struct ip6_metadata *meta) {

@@ -33,22 +33,24 @@
 #include <pdu.h>
 #include <async.h>
 
-generic module CoapLedResourceP(uint8_t uri_key) {
-    provides interface ReadResource;
-    provides interface WriteResource;
-    uses interface Leds;
+generic module CoapEtsiTestResourceDynamicP(uint8_t uri_key) {
+    provides interface ReadResource; // rename?
+    provides interface WriteResource; // rename?
+    //provides interface GetResource;
+    //provides interface PutResource;
+    provides interface PostDeleteResource;
 } implementation {
 
     bool lock = FALSE;
     coap_async_state_t *temp_async_state = NULL;
+    uint8_t temp_val = 0;
 
     /////////////////////
     // GET:
     void task getMethod() {
-	uint8_t val = call Leds.get();
 	lock = FALSE;
 	signal ReadResource.getDone(SUCCESS, temp_async_state,
-				    (uint8_t*)&val, sizeof(uint8_t),
+				    (uint8_t*)&temp_val, sizeof(uint8_t),
 				    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
     };
 
@@ -71,18 +73,70 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     };
 
     command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
-	if (buflen == 1 && *val < 8) {
+	//if (buflen == 1 && *val < 8) {
+	// don't check for buflen, only store first byte
 	    if (lock == FALSE) {
 		lock = TRUE;
 		temp_async_state = async_state;
-		call Leds.set(*val);
+		temp_val = *val;
 		post putMethod();
 		return COAP_SPLITPHASE;
 	    } else {
 		return COAP_RESPONSE_503;
 	    }
-	} else {
+	    /*} else {
 	    return COAP_RESPONSE_500;
-	}
+	    }*/
     }
+
+    /////////////////////
+    // POST:
+    void task postMethod() {
+	lock = FALSE;
+	signal PostDeleteResource.postDone(SUCCESS, temp_async_state, NULL, 0, COAP_MEDIATYPE_ANY);
+    };
+
+    //TODO: actually create the resource
+    command int PostDeleteResource.postMethod(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+	//if (buflen == 1 && *val < 8) {
+	// don't check for buflen, only store first byte
+	    if (lock == FALSE) {
+		lock = TRUE;
+		temp_async_state = async_state;
+		temp_val = *val;
+		post postMethod();
+		return COAP_SPLITPHASE;
+	    } else {
+		return COAP_RESPONSE_503;
+	    }
+	    /*} else {
+	    return COAP_RESPONSE_500;
+	    }*/
+    }
+
+    /////////////////////
+    // DELETE:
+    void task deleteMethod() {
+	lock = FALSE;
+	signal PostDeleteResource.deleteDone(SUCCESS, temp_async_state, NULL, 0, COAP_MEDIATYPE_ANY);
+    };
+
+    //TODO: actually delete the resource
+    command int PostDeleteResource.deleteMethod(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+	//if (buflen == 1 && *val < 8) {
+	// don't check for buflen, only store first byte
+	    if (lock == FALSE) {
+		lock = TRUE;
+		temp_async_state = async_state;
+		temp_val = *val;
+		post deleteMethod();
+		return COAP_SPLITPHASE;
+	    } else {
+		return COAP_RESPONSE_503;
+	    }
+	    /*} else {
+	    return COAP_RESPONSE_500;
+	    }*/
+    }
+
 }

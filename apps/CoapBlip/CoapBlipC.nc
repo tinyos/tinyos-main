@@ -129,6 +129,13 @@ configuration CoapBlipC {
   CoapUdpServerC.ReadResource[INDEX_ROUTE] -> CoapReadRouteResource.ReadResource;
 #endif
 
+#ifdef COAP_RESOURCE_ETSI_IOT_TEST2
+  components new CoapEtsiTestResourceDynamicC(INDEX_ETSI_TEST2);
+  CoapUdpServerC.ReadResource[INDEX_ETSI_TEST2] -> CoapEtsiTestResourceDynamicC.ReadResource;
+  CoapUdpServerC.WriteResource[INDEX_ETSI_TEST2] -> CoapEtsiTestResourceDynamicC.WriteResource;
+  CoapUdpServerC.PostDeleteResource[INDEX_ETSI_TEST2] -> CoapEtsiTestResourceDynamicC.PostDeleteResource;
+#endif
+
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
   components new CoapEtsiTestResourceC(INDEX_ETSI_TEST);
   CoapUdpServerC.ReadResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.ReadResource;
@@ -146,6 +153,7 @@ configuration CoapBlipC {
   CoapUdpServerC.ReadResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.ReadResource;
   CoapUdpServerC.WriteResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.WriteResource;
 #endif
+
 
 #endif
 

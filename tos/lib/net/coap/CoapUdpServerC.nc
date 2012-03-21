@@ -35,6 +35,7 @@ configuration CoapUdpServerC {
   uses interface LibCoAP as LibCoapServer;
   uses interface ReadResource[uint8_t uri];
   uses interface WriteResource[uint8_t uri];
+  uses interface PostDeleteResource[uint8_t uri];
 }
 implementation {
   components CoapUdpServerP, LedsC, RandomC;
@@ -43,6 +44,7 @@ implementation {
   LibCoapServer = CoapUdpServerP.LibCoapServer;
   ReadResource  = CoapUdpServerP.ReadResource;
   WriteResource = CoapUdpServerP.WriteResource;
+  PostDeleteResource = CoapUdpServerP.PostDeleteResource;
 
   CoapUdpServerP.Random -> RandomC;
   CoapUdpServerP.Leds -> LedsC;

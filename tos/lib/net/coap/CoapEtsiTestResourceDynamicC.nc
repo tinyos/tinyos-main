@@ -30,39 +30,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-configuration LibCoapAdapterC {
-#ifdef COAP_SERVER_ENABLED
-  provides interface LibCoAP as LibCoapServer;
-  uses interface UDP as UDPServer;
-#endif
-
-#ifdef COAP_CLIENT_ENABLED
-  provides interface LibCoAP as LibCoapClient;
-  uses interface UDP as UDPClient;
-#endif
+generic configuration CoapEtsiTestResourceDynamicC(uint8_t uri_key) {
+    provides interface ReadResource;
+    provides interface WriteResource;
+    //provides interface GetResource;
+    //provides interface PutResource;
+    provides interface PostDeleteResource;
 } implementation {
-  components LibCoapAdapterP;
+    components new CoapEtsiTestResourceDynamicP(uri_key) as CoapResourceP;
 
-#ifdef COAP_SERVER_ENABLED
-  LibCoapServer = LibCoapAdapterP.LibCoapServer;
-  UDPServer = LibCoapAdapterP.UDPServer;
-#endif
-
-#ifdef COAP_CLIENT_ENABLED
-  LibCoapClient = LibCoapAdapterP.LibCoapClient;
-  UDPClient = LibCoapAdapterP.UDPClient;
-#endif
-
-  components LocalTimeSecondC;
-  LibCoapAdapterP.LocalTime -> LocalTimeSecondC;
-
-  components LedsC;
-  LibCoapAdapterP.Leds -> LedsC;
-
-  components RandomC;
-  LibCoapAdapterP.Random -> RandomC;
-
-  components new TimerMilliC();
-  LibCoapAdapterP.RetransmissionTimerMilli -> TimerMilliC;
-
+    ReadResource = CoapResourceP;
+    WriteResource = CoapResourceP;
+    PostDeleteResource = CoapResourceP;
 }

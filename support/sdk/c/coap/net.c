@@ -486,6 +486,10 @@ coap_send_impl(coap_context_t *context,
 	       const coap_address_t *dst,
 	       coap_pdu_t *pdu, int free_pdu);
 
+void
+tinyos_retransmission_impl(coap_context_t *context,
+			   coap_tick_t t);
+
 #endif /* WITH_TINYOS */
 
 coap_tid_t
@@ -587,6 +591,17 @@ coap_send_confirmed(coap_context_t *context,
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
+  {			    /* (re-)initialize retransmission timer */
+    coap_queue_t *nextpdu;
+
+    nextpdu = coap_peek_next(context);
+    assert(nextpdu);		/* we have just inserted a node */
+
+    /* must set retranmit timer */
+    if (now < nextpdu->t) {
+	tinyos_retransmission_impl(context, nextpdu->t - now);
+    }
+  }
 #warning "TODO: TinyOS: Timer for retransmission in net.c"
 #endif /* WITH_TINYOS */
 
@@ -1203,5 +1218,5 @@ PROCESS_THREAD(coap_retransmit_process, ev, data)
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
-#warning "TODO: TinyOS retransmit"
+//retransmission for TinyOS is in LibCoapAdapterP.nc
 #endif /* WITH_TINYOS */

@@ -30,39 +30,27 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-configuration LibCoapAdapterC {
-#ifdef COAP_SERVER_ENABLED
-  provides interface LibCoAP as LibCoapServer;
-  uses interface UDP as UDPServer;
-#endif
+#include <async.h>
 
-#ifdef COAP_CLIENT_ENABLED
-  provides interface LibCoAP as LibCoapClient;
-  uses interface UDP as UDPClient;
-#endif
-} implementation {
-  components LibCoapAdapterP;
+interface PostDeleteResource {
+    command int postMethod(coap_async_state_t* async_state,
+			   uint8_t* val, size_t buflen);
+    //post is reserved in Tinyos
 
-#ifdef COAP_SERVER_ENABLED
-  LibCoapServer = LibCoapAdapterP.LibCoapServer;
-  UDPServer = LibCoapAdapterP.UDPServer;
-#endif
+    event void postDone(error_t result, coap_async_state_t* async_state,
+			uint8_t* val, size_t buflen, uint8_t contenttype);
 
-#ifdef COAP_CLIENT_ENABLED
-  LibCoapClient = LibCoapAdapterP.LibCoapClient;
-  UDPClient = LibCoapAdapterP.UDPClient;
-#endif
+    command int deleteMethod(coap_async_state_t* async_state,
+			     uint8_t* val, size_t buflen);
 
-  components LocalTimeSecondC;
-  LibCoapAdapterP.LocalTime -> LocalTimeSecondC;
+    event void deleteDone(error_t result, coap_async_state_t* async_state,
+			  uint8_t* val, size_t buflen, uint8_t contenttype);
 
-  components LedsC;
-  LibCoapAdapterP.Leds -> LedsC;
+    /*
+      //TODO: post/delete separate
+    event void postNotDone(coap_async_state_t* async_state);
 
-  components RandomC;
-  LibCoapAdapterP.Random -> RandomC;
-
-  components new TimerMilliC();
-  LibCoapAdapterP.RetransmissionTimerMilli -> TimerMilliC;
-
+    event void postDoneSeparate(error_t result, coap_async_state_t* async_state,
+			       uint8_t* val, size_t buflen, uint8_t contenttype);
+    */
 }

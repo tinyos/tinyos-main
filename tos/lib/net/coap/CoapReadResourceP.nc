@@ -57,7 +57,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
 
   event void PreAckTimer.fired() {
       call Leds.led2Toggle();
-      signal ReadResource.getDoneSeparate(temp_async_state);
+      signal ReadResource.getNotDone(temp_async_state);
   }
 
   event void Read.readDone(error_t result, val_t val) {
@@ -66,12 +66,16 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
       if (call PreAckTimer.isRunning()) {
 	  call PreAckTimer.stop();
 	  //asyn_message = 0;
+	  signal ReadResource.getDone(result, temp_async_state,
+				      (uint8_t*)&val, sizeof(uint8_t),
+				      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+      } else {
+	  signal ReadResource.getDoneSeparate(result, temp_async_state,
+					      (uint8_t*)&val, sizeof(uint8_t),
+					      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
       }
 
       //printf("ReadResource.readDone\n");
-      signal ReadResource.getDone(result, temp_async_state,
-				  (uint8_t*)&val, sizeof(uint8_t));
-      //signal ReadResource.getDone(result, temp_id, asyn_message, (uint8_t*)&val, sizeof(val_t));
       lock = FALSE;
   }
 }

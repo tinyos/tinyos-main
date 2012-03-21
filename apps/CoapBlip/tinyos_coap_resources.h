@@ -65,6 +65,9 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
     INDEX_ETSI_TEST,
 #endif
+    /*#ifdef COAP_RESOURCE_ETSI_IOT_TEST2
+    INDEX_ETSI_TEST2,
+    #endif*/
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
     INDEX_ETSI_SEPARATE,
 #endif
@@ -186,9 +189,20 @@ index_uri_key_t uri_index_map[NUM_URIS] = {
       "test", sizeof("test"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
+      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED)
+  },
+#endif
+  /*
+#ifdef COAP_RESOURCE_ETSI_IOT_TEST2
+  {
+      INDEX_ETSI_TEST,
+      "test", sizeof("test"),
+      {0,0,0,0}, // uri_key will be set later
+      "42", sizeof("42"), // application/octet-stream
       (GET_SUPPORTED | PUT_SUPPORTED)
   },
 #endif
+  */
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
   {
       INDEX_ETSI_SEPARATE,
