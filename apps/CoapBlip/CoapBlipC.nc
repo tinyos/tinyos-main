@@ -67,7 +67,7 @@ configuration CoapBlipC {
   components new CoapBufferTempTranslateC() as CoapBufferTempTranslate;
   CoapReadTempResource.Read -> CoapBufferTempTranslate.ReadTemp;
   CoapBufferTempTranslate.Read -> HumTempSensor.Temperature;
-  CoapUdpServerC.ReadResource[INDEX_TEMP] -> CoapReadTempResource.ReadResource;
+  CoapUdpServerC.CoapResource[INDEX_TEMP] -> CoapReadTempResource.CoapResource;
 #endif
 
 #ifdef COAP_RESOURCE_HUM
@@ -75,7 +75,7 @@ configuration CoapBlipC {
   components new CoapBufferHumTranslateC() as CoapBufferHumTranslate;
   CoapReadHumResource.Read -> CoapBufferHumTranslate.ReadHum;
   CoapBufferHumTranslate.Read -> HumTempSensor.Humidity;
-  CoapUdpServerC.ReadResource[INDEX_HUM] -> CoapReadHumResource.ReadResource;
+  CoapUdpServerC.CoapResource[INDEX_HUM] -> CoapReadHumResource.CoapResource;
 #endif
 
 #if defined (COAP_RESOURCE_VOLT)  || defined (COAP_RESOURCE_ALL)
@@ -87,7 +87,7 @@ configuration CoapBlipC {
   components new CoapBufferVoltTranslateC() as CoapBufferVoltTranslate;
   CoapReadVoltResource.Read -> CoapBufferVoltTranslate.ReadVolt;
   CoapBufferVoltTranslate.Read -> VoltSensor.Read;
-  CoapUdpServerC.ReadResource[INDEX_VOLT] -> CoapReadVoltResource.ReadResource;
+  CoapUdpServerC.CoapResource[INDEX_VOLT] -> CoapReadVoltResource.CoapResource;
 #endif
 
 #ifdef COAP_RESOURCE_ALL
@@ -104,7 +104,7 @@ configuration CoapBlipC {
   components new CoapBufferVoltTranslateC() as CoapBufferVoltTranslateAll;
   CoapResourceCollectorC.ReadVolt -> CoapBufferVoltTranslateAll.ReadVolt;
   CoapBufferVoltTranslateAll.Read -> VoltSensor.Read;
-  CoapUdpServerC.ReadResource[INDEX_ALL] -> CoapReadAllResource.ReadResource;
+  CoapUdpServerC.CoapResource[INDEX_ALL] -> CoapReadAllResource.CoapResource;
 #endif
 
 #ifdef COAP_RESOURCE_KEY
@@ -112,46 +112,34 @@ configuration CoapBlipC {
   components new ConfigStorageC(VOLUME_CONFIGKEY);
   CoapFlashResource.ConfigStorage -> ConfigStorageC.ConfigStorage;
   CoapBlipP.Mount  -> ConfigStorageC.Mount;
-  CoapUdpServerC.ReadResource[INDEX_KEY]  -> CoapFlashResource.ReadResource;
-  CoapUdpServerC.WriteResource[INDEX_KEY] -> CoapFlashResource.WriteResource;
+  CoapUdpServerC.CoapResource[INDEX_KEY]  -> CoapFlashResource.CoapResource;
 #endif
 
 #ifdef COAP_RESOURCE_LED
   components new CoapLedResourceC(INDEX_LED) as CoapLedResource;
   CoapLedResource.Leds -> LedsC;
-  CoapUdpServerC.ReadResource[INDEX_LED]  -> CoapLedResource.ReadResource;
-  CoapUdpServerC.WriteResource[INDEX_LED] -> CoapLedResource.WriteResource;
+  CoapUdpServerC.CoapResource[INDEX_LED]  -> CoapLedResource.CoapResource;
 #endif
 
 #ifdef COAP_RESOURCE_ROUTE
   components new CoapRouteResourceC(uint16_t, INDEX_ROUTE) as CoapReadRouteResource;
   CoapReadRouteResource.ForwardingTable -> IPStackC;
-  CoapUdpServerC.ReadResource[INDEX_ROUTE] -> CoapReadRouteResource.ReadResource;
-#endif
-
-#ifdef COAP_RESOURCE_ETSI_IOT_TEST2
-  components new CoapEtsiTestResourceDynamicC(INDEX_ETSI_TEST2);
-  CoapUdpServerC.ReadResource[INDEX_ETSI_TEST2] -> CoapEtsiTestResourceDynamicC.ReadResource;
-  CoapUdpServerC.WriteResource[INDEX_ETSI_TEST2] -> CoapEtsiTestResourceDynamicC.WriteResource;
-  CoapUdpServerC.PostDeleteResource[INDEX_ETSI_TEST2] -> CoapEtsiTestResourceDynamicC.PostDeleteResource;
+  CoapUdpServerC.CoapResource[INDEX_ROUTE] -> CoapReadRouteResource.CoapResource;
 #endif
 
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
   components new CoapEtsiTestResourceC(INDEX_ETSI_TEST);
-  CoapUdpServerC.ReadResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.ReadResource;
-  CoapUdpServerC.WriteResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.WriteResource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.CoapResource;
 #endif
 
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
   components new CoapEtsiSeparateResourceC(INDEX_ETSI_SEPARATE);
-  CoapUdpServerC.ReadResource[INDEX_ETSI_SEPARATE] -> CoapEtsiSeparateResourceC.ReadResource;
-  CoapUdpServerC.WriteResource[INDEX_ETSI_SEPARATE] -> CoapEtsiSeparateResourceC.WriteResource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_SEPARATE] -> CoapEtsiSeparateResourceC.CoapResource;
 #endif
 
 #ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
   components new CoapEtsiSegmentResourceC(INDEX_ETSI_SEGMENT);
-  CoapUdpServerC.ReadResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.ReadResource;
-  CoapUdpServerC.WriteResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.WriteResource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.CoapResource;
 #endif
 
 

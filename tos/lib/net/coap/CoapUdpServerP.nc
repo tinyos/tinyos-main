@@ -67,9 +67,10 @@ module CoapUdpServerP {
   uses interface LibCoAP as LibCoapServer;
   uses interface Random;
   uses interface Leds;
-  uses interface ReadResource[uint8_t uri];
+  uses interface CoapResource[uint8_t uri];
+  /*  uses interface ReadResource[uint8_t uri];
   uses interface WriteResource[uint8_t uri];
-  uses interface PostDeleteResource[uint8_t uri];
+  uses interface PostDeleteResource[uint8_t uri];*/
 } implementation {
   coap_context_t *ctx_server;
 
@@ -77,14 +78,22 @@ module CoapUdpServerP {
   //defined in tinyos_coap_resources.h
   uint8_t get_index_for_key(coap_key_t uri_key) {
     uint8_t i = 0;
-    for (; i < NUM_URIS; i++) {
+    for (; i < COAP_LAST_RESOURCE; i++) {
       if (memcmp(uri_index_map[i].uri_key, uri_key, sizeof(coap_key_t)) == 0)
 	return uri_index_map[i].index;
     }
     return COAP_NO_SUCH_RESOURCE;
   }
 
+  void hnd_coap_async_tinyos(coap_context_t  *ctx,
+			     struct coap_resource_t *resource,
+			     coap_address_t *peer,
+			     coap_pdu_t *request,
+			     str *token,
+			     coap_pdu_t *response);
+
   //TODO: unify the handlers?
+  /*
   void hnd_get_coap_async_tinyos(coap_context_t  *ctx,
 				 struct coap_resource_t *resource,
 				 coap_address_t *peer,
@@ -109,7 +118,7 @@ module CoapUdpServerP {
 				 coap_pdu_t *request,
 				 str *token,
 				 coap_pdu_t *response);
-
+  */
   int coap_save_splitphase(coap_context_t *ctx, coap_queue_t *node);
 
   command error_t CoAPServer.bind(uint16_t port) {
@@ -147,13 +156,22 @@ module CoapUdpServerP {
 
     //TODO: check whether the handlers can be unified? code duplication...
     if ((supported_methods & GET_SUPPORTED) == GET_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_GET, hnd_coap_async_tinyos);
+    if ((supported_methods & POST_SUPPORTED) == POST_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_POST, hnd_coap_async_tinyos);
+    if ((supported_methods & PUT_SUPPORTED) == PUT_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_PUT, hnd_coap_async_tinyos);
+    if ((supported_methods & DELETE_SUPPORTED) == DELETE_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_DELETE, hnd_coap_async_tinyos);
+    /*
+    if ((supported_methods & GET_SUPPORTED) == GET_SUPPORTED)
 	coap_register_handler(r, COAP_REQUEST_GET, hnd_get_coap_async_tinyos);
     if ((supported_methods & POST_SUPPORTED) == POST_SUPPORTED)
 	coap_register_handler(r, COAP_REQUEST_POST, hnd_post_coap_async_tinyos);
     if ((supported_methods & PUT_SUPPORTED) == PUT_SUPPORTED)
 	coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_coap_async_tinyos);
     if ((supported_methods & DELETE_SUPPORTED) == DELETE_SUPPORTED)
-	coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_coap_async_tinyos);
+    coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_coap_async_tinyos);*/
 
     coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)contenttype, contenttype_length);
     //TODO:
@@ -187,15 +205,18 @@ module CoapUdpServerP {
   }
 
   ///////////////////
-  // all TinyOS CoAP GET have to go through this
-  void hnd_get_coap_async_tinyos(coap_context_t  *ctx,
-				 struct coap_resource_t *resource,
-				 coap_address_t *peer,
-				 coap_pdu_t *request,
-				 str *token,
-				 coap_pdu_t *response) {
+  // all TinyOS CoAP requests have to go through this
+  void hnd_coap_async_tinyos(coap_context_t  *ctx,
+			     struct coap_resource_t *resource,
+			     coap_address_t *peer,
+			     coap_pdu_t *request,
+			     str *token,
+			     coap_pdu_t *response) {
       //unsigned char buf[2];
       int rc;
+      size_t size;
+      unsigned char *data;
+
       coap_async_state_t *async_state = NULL;
 
       /*
@@ -219,8 +240,27 @@ module CoapUdpServerP {
 					COAP_ASYNC_CONFIRM,
 					(void *)NULL);
 
-      rc = call ReadResource.get[get_index_for_key(resource->key)](async_state);
-      //rc = call ReadResource.get[INDEX_ETSI_SEGMENT](async_state);
+      coap_get_data(request, &size, &data);
+
+      if (request->hdr->code == COAP_REQUEST_GET)
+	  rc = call CoapResource.getMethod[get_index_for_key(resource->key)](async_state,
+									     data,
+									     size);
+      else if (request->hdr->code == COAP_REQUEST_POST)
+	  rc = call CoapResource.postMethod[get_index_for_key(resource->key)](async_state,
+									      data,
+									      size);
+      else if (request->hdr->code == COAP_REQUEST_PUT)
+	  rc = call CoapResource.putMethod[get_index_for_key(resource->key)](async_state,
+									     data,
+									     size);
+      else if (request->hdr->code == COAP_REQUEST_DELETE)
+	  rc = call CoapResource.deleteMethod[get_index_for_key(resource->key)](async_state,
+										data,
+										size);
+      else
+	  rc = COAP_RESPONSE_405;
+
       if (rc == FAIL) {
 	  /* default handler returns FAIL -> Resource not available -> Response: 404 */
 	  response->hdr->code = COAP_RESPONSE_CODE(404);
@@ -245,17 +285,33 @@ module CoapUdpServerP {
       }
   }
 
-  default command int ReadResource.get[uint8_t uri_key](coap_async_state_t* async_state) {
+  default command int CoapResource.getMethod[uint8_t uri_key](coap_async_state_t* async_state,
+							      uint8_t* val, size_t vallen) {
     //printf("** coap: default (get not available for this resource)....... %i\n", uri_key);
     return FAIL;
   }
+  default command int CoapResource.putMethod[uint8_t uri_key](coap_async_state_t* async_state,
+							      uint8_t* val, size_t vallen) {
+    //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
+    return FAIL;
+  }
+  default command int CoapResource.postMethod[uint8_t uri_key](coap_async_state_t* async_state,
+							       uint8_t* val, size_t vallen) {
+    //printf("** coap: default (post not available for this resource)....... %i\n", uri_key);
+    return FAIL;
+  }
+  default command int CoapResource.deleteMethod[uint8_t uri_key](coap_async_state_t* async_state,
+								 uint8_t* val, size_t vallen) {
+    //printf("** coap: default (delete not available for this resource)....... %i\n", uri_key);
+    return FAIL;
+  }
 
-  event void ReadResource.getDone[uint8_t uri_key](error_t result,
-						   coap_async_state_t* async_state,
-						   uint8_t* val_buf,
-						   size_t buflen,
-						   uint8_t contenttype) {
-
+  event void CoapResource.methodDone[uint8_t uri_key](error_t result,
+						      uint8_t responsecode,
+						      coap_async_state_t* async_state,
+						      uint8_t* val,
+						      size_t vallen,
+						      uint8_t contenttype) {
       unsigned char buf[2];
       coap_pdu_t *response;
       coap_async_state_t *tmp;
@@ -263,547 +319,727 @@ module CoapUdpServerP {
       size_t size = sizeof(coap_hdr_t) + 8;
       size += async_state->tokenlen;
 
+
       response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			       ? COAP_MESSAGE_ACK
-			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
-			       COAP_RESPONSE_CODE(205), 0, size);
+  			       ? COAP_MESSAGE_ACK
+  			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
+  			       responsecode, 0, size);
       if (!response) {
-	  debug("check_async: insufficient memory, we'll try later\n");
-	  //TODO: handle error...
+  	  debug("check_async: insufficient memory, we'll try later\n");
+  	  //TODO: handle error...
       }
 
       response->hdr->id = async_state->message_id;
 
       if (contenttype != COAP_MEDIATYPE_ANY)
-	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			  coap_encode_var_bytes(buf, contenttype), buf);
+  	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+  			  coap_encode_var_bytes(buf, contenttype), buf);
 
       if (async_state->tokenlen)
-	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
+  	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
 
-      if (buflen != 0)
-	  coap_add_data(response, buflen, val_buf);
+      if (vallen != 0)
+  	  coap_add_data(response, vallen, val);
 
       if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	  debug("check_async: cannot send response for message %d\n",
-		response->hdr->id);
-	  coap_delete_pdu(response);
+  	  debug("check_async: cannot send response for message %d\n",
+  		response->hdr->id);
+  	  coap_delete_pdu(response);
       }
 
       coap_remove_async(ctx_server, async_state->id, &tmp);
       coap_free_async(async_state);
+
   }
 
-  event void ReadResource.getNotDone[uint8_t uri_key](coap_async_state_t* async_state) {
+  event void CoapResource.methodNotDone[uint8_t uri_key](coap_async_state_t* async_state,
+							 uint8_t responsecode) {
       coap_pdu_t *response;
-
       size_t size = sizeof(coap_hdr_t) + 8;
-
       //size += async_state->tokenlen; //CHECK: include token in preACK?
 
       response = coap_pdu_init(COAP_MESSAGE_ACK,
-			       COAP_RESPONSE_CODE(0), async_state->id, size);
+  			       responsecode, async_state->id, size);
 
       if (!response) {
-	  debug("check_async: insufficient memory, we'll try later\n");
-	  //TODO: handle error...
+  	  debug("check_async: insufficient memory, we'll try later\n");
+  	  //TODO: handle error...
       }
 
       response->hdr->id = async_state->message_id;
 
       //CHECK: include token in preACK?
       /*if (async_state->tokenlen)
-	coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);*/
+  	coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);*/
 
       if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	  debug("check_async: cannot send response for message %d\n",
-		response->hdr->id);
-	  coap_delete_pdu(response);
+  	  debug("check_async: cannot send response for message %d\n",
+  		response->hdr->id);
+  	  coap_delete_pdu(response);
       }
   }
 
-  event void ReadResource.getDoneSeparate[uint8_t uri_key](error_t result,
-							   coap_async_state_t* async_state,
-							   uint8_t* val_buf,
-							   size_t buflen,
-							   uint8_t contenttype) {
+  event void CoapResource.methodDoneSeparate[uint8_t uri_key](error_t result,
+							      uint8_t responsecode,
+							      coap_async_state_t* async_state,
+							      uint8_t* val, size_t vallen,
+							      uint8_t contenttype) {
       unsigned char buf[2];
       coap_pdu_t *response;
       coap_async_state_t *tmp;
 
       size_t size = sizeof(coap_hdr_t) + 8;
-
       size += async_state->tokenlen;
 
       response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			       ? COAP_MESSAGE_CON
-			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
-			       COAP_RESPONSE_CODE(205), 0, size);
+  			       ? COAP_MESSAGE_CON
+  			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
+  			       responsecode, 0, size);
       if (!response) {
-	  debug("check_async: insufficient memory, we'll try later\n");
-	  //TODO: handle error...
+  	  debug("check_async: insufficient memory, we'll try later\n");
+  	  //TODO: handle error...
       }
 
       response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id
 
       if (contenttype != COAP_MEDIATYPE_ANY)
-	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			  coap_encode_var_bytes(buf, contenttype), buf);
+  	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+  			  coap_encode_var_bytes(buf, contenttype), buf);
 
       if (async_state->tokenlen)
-	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
+  	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
 
-      coap_add_data(response, buflen, val_buf);
+      if (vallen != 0)
+	  coap_add_data(response, vallen, val);
 
       if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	  debug("check_async: cannot send response for message %d\n",
-		response->hdr->id);
-	  coap_delete_pdu(response);
+  	  debug("check_async: cannot send response for message %d\n",
+  		response->hdr->id);
+  	  coap_delete_pdu(response);
       }
 
       coap_remove_async(ctx_server, async_state->id, &tmp);
       coap_free_async(async_state);
   }
 
-  ///////////////////
-  // all TinyOS CoAP PUT have to go through this
-  void hnd_put_coap_async_tinyos(coap_context_t  *ctx,
-				 struct coap_resource_t *resource,
-				 coap_address_t *peer,
-				 coap_pdu_t *request,
-				 str *token,
-				 coap_pdu_t *response) {
-      //unsigned char buf[2];
-      size_t size;
-      unsigned char *data;
-      int rc;
-      coap_async_state_t *async_state = NULL;
-
-      call Leds.led0On();
-      call Leds.led1On();
-      call Leds.led2On();
-
-      /* response->hdr->code = COAP_RESPONSE_CODE(205); */
-      /* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
-      /*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); */
-
-      /* if (token->length) */
-      /*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
-
-      /* response->length += snprintf((char *)response->data, */
-      /* 				 response->max_size - response->length, */
-      /* 				 "%u", 42); */
-
-      async_state = coap_register_async(ctx, peer, request,
-					COAP_ASYNC_CONFIRM,
-					(void *)NULL);
-
-
-      coap_get_data(request, &size, &data);
-
-      rc = call WriteResource.put[get_index_for_key(resource->key)](async_state,
-									 data,
-								    size);
-      if (rc == FAIL) {
-	  /* default handler returns FAIL -> Resource not available -> Response: 404 */
-	  response->hdr->code = COAP_RESPONSE_CODE(404);
-
-	  //TODO: set hdr->type?
-
-	  if (token->length)
-	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-
-      } else if (rc == COAP_SPLITPHASE) {
-	  /* TinyOS is split-phase, only in error case an immediate response
-	     is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c
-	     is not sending it. */
-	  response->hdr->type = COAP_MESSAGE_NON;
-      } else {
-
-	  if (rc == COAP_RESPONSE_503) {
-	      call Leds.led0Off();
-	  } else if (rc == COAP_RESPONSE_500) {
-	      call Leds.led1Off();
-	  } else {
-	      call Leds.led2Off();
-	  }
-
-	  response->hdr->code = rc;
-
-	  //TODO: set hdr->type
-
-	  if (token->length)
-	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-      }
-  }
-
-  default command int WriteResource.put[uint8_t uri_key](coap_async_state_t* async_state,
-							 uint8_t* val, size_t buflen) {
-      //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
-      return FAIL;
-  }
-
-  event void WriteResource.putDone[uint8_t uri_key](error_t result,
-						    coap_async_state_t* async_state,
-						    uint8_t* val_buf, size_t buflen,
-						    uint8_t contenttype) {
-      unsigned char buf[2];
-      coap_pdu_t *response;
-      coap_async_state_t *tmp;
-
-      size_t size = sizeof(coap_hdr_t) + 8;
-      size += async_state->tokenlen;
-
-      //TODO: check for result == SUCCESS
-      response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			       ? COAP_MESSAGE_ACK
-			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
-			       COAP_RESPONSE_CODE(204), 0, size);
-      if (!response) {
-	  debug("check_async: insufficient memory, we'll try later\n");
-	  //TODO: handle error...
-      }
-
-      response->hdr->id = async_state->message_id;
-
-      if (contenttype != COAP_MEDIATYPE_ANY)
-	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			  coap_encode_var_bytes(buf, contenttype), buf);
-
-      if (async_state->tokenlen)
-	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
-
-      if (buflen != 0)
-	  coap_add_data(response, buflen, val_buf);
-
-      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	  debug("check_async: cannot send response for message %d\n",
-		response->hdr->id);
-	  coap_delete_pdu(response);
-      }
-
-      coap_remove_async(ctx_server, async_state->id, &tmp);
-      coap_free_async(async_state);
-  }
-
-  event void WriteResource.putNotDone[uint8_t uri_key](coap_async_state_t* async_state) {
-      coap_pdu_t *response;
-
-      size_t size = sizeof(coap_hdr_t) + 8;
-
-      //size += async_state->tokenlen; //CHECK: include token in preACK?
-
-      response = coap_pdu_init(COAP_MESSAGE_ACK,
-			       COAP_RESPONSE_CODE(0), async_state->id, size);
-
-      if (!response) {
-	  debug("check_async: insufficient memory, we'll try later\n");
-	  //TODO: handle error...
-      }
-
-      response->hdr->id = async_state->message_id;
-
-      //CHECK: include token in preACK?
-      /*if (async_state->tokenlen)
-	coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);*/
-
-      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	  debug("check_async: cannot send response for message %d\n",
-		response->hdr->id);
-	  coap_delete_pdu(response);
-      }
-  }
-
-  event void WriteResource.putDoneSeparate[uint8_t uri_key](error_t result,
-							    coap_async_state_t* async_state,
-							    uint8_t* val_buf,
-							    size_t buflen,
-							    uint8_t contenttype) {
-      unsigned char buf[2];
-      coap_pdu_t *response;
-      coap_async_state_t *tmp;
-
-      size_t size = sizeof(coap_hdr_t) + 8;
-
-      size += async_state->tokenlen; //CHECK: include token in preACK?
-
-      response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			       ? COAP_MESSAGE_CON
-			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
-			       COAP_RESPONSE_CODE(204), 0, size); // 2.05???
-      /*response = coap_pdu_init(COAP_MESSAGE_ACK,
-	COAP_RESPONSE_CODE(0), async_state->id, size);*/
-
-      if (!response) {
-	  debug("check_async: insufficient memory, we'll try later\n");
-	  //TODO: handle error...
-      }
-
-      response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id
-
-      // TODO: set code!!!!
-
-      if (contenttype != COAP_MEDIATYPE_ANY)
-	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			  coap_encode_var_bytes(buf, contenttype), buf);
-
-      if (async_state->tokenlen)
-	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
-
-      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	  debug("check_async: cannot send response for message %d\n",
-		response->hdr->id);
-	  coap_delete_pdu(response);
-      }
-
-      coap_remove_async(ctx_server, async_state->id, &tmp);
-      coap_free_async(async_state);
-  }
-
-  ///////////////////
-  // all TinyOS CoAP POST have to go through this
-  void hnd_post_coap_async_tinyos(coap_context_t  *ctx,
-				 struct coap_resource_t *resource,
-				 coap_address_t *peer,
-				 coap_pdu_t *request,
-				 str *token,
-				 coap_pdu_t *response) {
-      //unsigned char buf[2];
-      size_t size;
-      unsigned char *data;
-      int rc;
-      coap_async_state_t *async_state = NULL;
-
-      call Leds.led0On();
-      call Leds.led1On();
-      call Leds.led2On();
-
-      /* response->hdr->code = COAP_RESPONSE_CODE(205); */
-      /* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
-      /*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); */
-
-      /* if (token->length) */
-      /*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
-
-      /* response->length += snprintf((char *)response->data, */
-      /* 				 response->max_size - response->length, */
-      /* 				 "%u", 42); */
-
-      async_state = coap_register_async(ctx, peer, request,
-					COAP_ASYNC_CONFIRM,
-					(void *)NULL);
-
-
-      coap_get_data(request, &size, &data);
-
-      rc = call PostDeleteResource.postMethod[get_index_for_key(resource->key)](async_state,
-									  data,
-									  size);
-      if (rc == FAIL) {
-	  /* default handler returns FAIL -> Resource not available -> Response: 404 */
-	  response->hdr->code = COAP_RESPONSE_CODE(404);
-
-	  //TODO: set hdr->type?
-
-	  if (token->length)
-	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-
-      } else if (rc == COAP_SPLITPHASE) {
-	  /* TinyOS is split-phase, only in error case an immediate response
-	     is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c
-	     is not sending it. */
-	  response->hdr->type = COAP_MESSAGE_NON;
-      } else {
-
-	  if (rc == COAP_RESPONSE_503) {
-	      call Leds.led0Off();
-	  } else if (rc == COAP_RESPONSE_500) {
-	      call Leds.led1Off();
-	  } else {
-	      call Leds.led2Off();
-	  }
-
-	  response->hdr->code = rc;
-
-	  //TODO: set hdr->type
-
-	  if (token->length)
-	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-      }
-  }
-
-  default command int PostDeleteResource.postMethod[uint8_t uri_key](coap_async_state_t* async_state,
-								     uint8_t* val, size_t buflen) {
-      //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
-      return FAIL;
-  }
-
-  event void PostDeleteResource.postDone[uint8_t uri_key](error_t result,
-							  coap_async_state_t* async_state,
-							  uint8_t* val_buf, size_t buflen,
-							  uint8_t contenttype) {
-      unsigned char buf[2];
-      coap_pdu_t *response;
-      coap_async_state_t *tmp;
-
-      size_t size = sizeof(coap_hdr_t) + 8;
-      size += async_state->tokenlen;
-
-      //TODO: check for result == SUCCESS
-      response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			       ? COAP_MESSAGE_ACK
-			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
-       		       COAP_RESPONSE_CODE(201), 0, size);
-      // or 204 for already present resource
-
-      if (!response) {
-	  debug("check_async: insufficient memory, we'll try later\n");
-	  //TODO: handle error...
-      }
-
-      response->hdr->id = async_state->message_id;
-
-      if (contenttype != COAP_MEDIATYPE_ANY)
-	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			  coap_encode_var_bytes(buf, contenttype), buf);
-
-      if (async_state->tokenlen)
-	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
-
-      //TODO: add option Location-Path?
-
-      if (buflen != 0)
-	  coap_add_data(response, buflen, val_buf);
-
-      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	  debug("check_async: cannot send response for message %d\n",
-		response->hdr->id);
-	  coap_delete_pdu(response);
-      }
-
-      coap_remove_async(ctx_server, async_state->id, &tmp);
-      coap_free_async(async_state);
-  }
-
-  void hnd_delete_coap_async_tinyos(coap_context_t  *ctx,
-				    struct coap_resource_t *resource,
-				    coap_address_t *peer,
-				    coap_pdu_t *request,
-				    str *token,
-				    coap_pdu_t *response) {
-      //unsigned char buf[2];
-      size_t size;
-      unsigned char *data;
-      int rc;
-      coap_async_state_t *async_state = NULL;
-
-      call Leds.led0On();
-      call Leds.led1On();
-      call Leds.led2On();
-
-      /* response->hdr->code = COAP_RESPONSE_CODE(205); */
-      /* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
-      /*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); */
-
-      /* if (token->length) */
-      /*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
-
-      /* response->length += snprintf((char *)response->data, */
-      /* 				 response->max_size - response->length, */
-      /* 				 "%u", 42); */
-
-      async_state = coap_register_async(ctx, peer, request,
-					COAP_ASYNC_CONFIRM,
-					(void *)NULL);
-
-
-      coap_get_data(request, &size, &data);
-
-      rc = call PostDeleteResource.deleteMethod[get_index_for_key(resource->key)](async_state,
-										  data,
-										  size);
-      if (rc == FAIL) {
-	  /* default handler returns FAIL -> Resource not available -> Response: 404 */
-	  response->hdr->code = COAP_RESPONSE_CODE(404);
-
-	  //TODO: set hdr->type?
-
-	  if (token->length)
-	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-
-      } else if (rc == COAP_SPLITPHASE) {
-	  /* TinyOS is split-phase, only in error case an immediate response
-	     is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c
-	     is not sending it. */
-	  response->hdr->type = COAP_MESSAGE_NON;
-      } else {
-
-	  if (rc == COAP_RESPONSE_503) {
-	      call Leds.led0Off();
-	  } else if (rc == COAP_RESPONSE_500) {
-	      call Leds.led1Off();
-	  } else {
-	      call Leds.led2Off();
-	  }
-
-	  response->hdr->code = rc;
-
-	  //TODO: set hdr->type
-
-	  if (token->length)
-	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-      }
-  }
-
-  default command int PostDeleteResource.deleteMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							       uint8_t* val, size_t buflen) {
-      //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
-      return FAIL;
-  }
-
-  event void PostDeleteResource.deleteDone[uint8_t uri_key](error_t result,
-							  coap_async_state_t* async_state,
-							  uint8_t* val_buf, size_t buflen,
-							  uint8_t contenttype) {
-      unsigned char buf[2];
-      coap_pdu_t *response;
-      coap_async_state_t *tmp;
-
-      size_t size = sizeof(coap_hdr_t) + 8;
-      size += async_state->tokenlen;
-
-      //TODO: check for result == SUCCESS
-      response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			       ? COAP_MESSAGE_ACK
-			       : COAP_MESSAGE_NON, // CHECK answer NON with NON?
-       		       COAP_RESPONSE_CODE(202), 0, size);
-
-      if (!response) {
-	  debug("check_async: insufficient memory, we'll try later\n");
-	  //TODO: handle error...
-      }
-
-      response->hdr->id = async_state->message_id;
-
-      if (contenttype != COAP_MEDIATYPE_ANY)
-	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			  coap_encode_var_bytes(buf, contenttype), buf);
-
-      if (async_state->tokenlen)
-	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
-
-      if (buflen != 0)
-	  coap_add_data(response, buflen, val_buf);
-
-      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	  debug("check_async: cannot send response for message %d\n",
-		response->hdr->id);
-	  coap_delete_pdu(response);
-      }
-
-      coap_remove_async(ctx_server, async_state->id, &tmp);
-      coap_free_async(async_state);
-  }
+  /* /////////////////// */
+  /* // all TinyOS CoAP GET have to go through this */
+  /* void hnd_get_coap_async_tinyos(coap_context_t  *ctx, */
+  /* 				 struct coap_resource_t *resource, */
+  /* 				 coap_address_t *peer, */
+  /* 				 coap_pdu_t *request, */
+  /* 				 str *token, */
+  /* 				 coap_pdu_t *response) { */
+  /*     //unsigned char buf[2]; */
+  /*     int rc; */
+  /*     coap_async_state_t *async_state = NULL; */
+
+  /*     /\* */
+  /* 	call Leds.led0On(); */
+  /* 	call Leds.led1On(); */
+  /* 	call Leds.led2On(); */
+  /*     *\/ */
+
+  /*     /\* response->hdr->code = COAP_RESPONSE_CODE(205); *\/ */
+  /*     /\* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, *\/ */
+  /*     /\*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); *\/ */
+
+  /*     /\* if (token->length) *\/ */
+  /*     /\*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); *\/ */
+
+  /*     /\* response->length += snprintf((char *)response->data, *\/ */
+  /*     /\* 				 response->max_size - response->length, *\/ */
+  /*     /\* 				 "%u", 42); *\/ */
+
+  /*     async_state = coap_register_async(ctx, peer, request, */
+  /* 					COAP_ASYNC_CONFIRM, */
+  /* 					(void *)NULL); */
+
+  /*     rc = call ReadResource.get[get_index_for_key(resource->key)](async_state); */
+  /*     //rc = call ReadResource.get[INDEX_ETSI_SEGMENT](async_state); */
+  /*     if (rc == FAIL) { */
+  /* 	  /\* default handler returns FAIL -> Resource not available -> Response: 404 *\/ */
+  /* 	  response->hdr->code = COAP_RESPONSE_CODE(404); */
+
+  /* 	  //TODO: set hdr->type? */
+
+  /* 	  if (token->length) */
+  /* 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+
+  /*     } else if (rc == COAP_SPLITPHASE) { */
+  /* 	  /\* TinyOS is split-phase, only in error case an immediate response */
+  /* 	     is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c */
+  /* 	     is not sending it. *\/ */
+  /* 	  response->hdr->type = COAP_MESSAGE_NON; */
+  /*     } else { */
+  /* 	  response->hdr->code = rc; */
+
+  /* 	  //TODO: set hdr->type? */
+
+  /* 	  if (token->length) */
+  /* 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+  /*     } */
+  /* } */
+
+  /* default command int ReadResource.get[uint8_t uri_key](coap_async_state_t* async_state) { */
+  /*   //printf("** coap: default (get not available for this resource)....... %i\n", uri_key); */
+  /*   return FAIL; */
+  /* } */
+
+  /* event void ReadResource.getDone[uint8_t uri_key](error_t result, */
+  /* 						   coap_async_state_t* async_state, */
+  /* 						   uint8_t* val_buf, */
+  /* 						   size_t buflen, */
+  /* 						   uint8_t contenttype) { */
+
+  /*     unsigned char buf[2]; */
+  /*     coap_pdu_t *response; */
+  /*     coap_async_state_t *tmp; */
+
+  /*     size_t size = sizeof(coap_hdr_t) + 8; */
+  /*     size += async_state->tokenlen; */
+
+  /*     response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM */
+  /* 			       ? COAP_MESSAGE_ACK */
+  /* 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON? */
+  /* 			       COAP_RESPONSE_CODE(205), 0, size); */
+  /*     if (!response) { */
+  /* 	  debug("check_async: insufficient memory, we'll try later\n"); */
+  /* 	  //TODO: handle error... */
+  /*     } */
+
+  /*     response->hdr->id = async_state->message_id; */
+
+  /*     if (contenttype != COAP_MEDIATYPE_ANY) */
+  /* 	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
+  /* 			  coap_encode_var_bytes(buf, contenttype), buf); */
+
+  /*     if (async_state->tokenlen) */
+  /* 	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token); */
+
+  /*     if (buflen != 0) */
+  /* 	  coap_add_data(response, buflen, val_buf); */
+
+  /*     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) { */
+  /* 	  debug("check_async: cannot send response for message %d\n", */
+  /* 		response->hdr->id); */
+  /* 	  coap_delete_pdu(response); */
+  /*     } */
+
+  /*     coap_remove_async(ctx_server, async_state->id, &tmp); */
+  /*     coap_free_async(async_state); */
+  /* } */
+
+  /* event void ReadResource.getNotDone[uint8_t uri_key](coap_async_state_t* async_state) { */
+  /*     coap_pdu_t *response; */
+
+  /*     size_t size = sizeof(coap_hdr_t) + 8; */
+
+  /*     //size += async_state->tokenlen; //CHECK: include token in preACK? */
+
+  /*     response = coap_pdu_init(COAP_MESSAGE_ACK, */
+  /* 			       COAP_RESPONSE_CODE(0), async_state->id, size); */
+
+  /*     if (!response) { */
+  /* 	  debug("check_async: insufficient memory, we'll try later\n"); */
+  /* 	  //TODO: handle error... */
+  /*     } */
+
+  /*     response->hdr->id = async_state->message_id; */
+
+  /*     //CHECK: include token in preACK? */
+  /*     /\*if (async_state->tokenlen) */
+  /* 	coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);*\/ */
+
+  /*     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) { */
+  /* 	  debug("check_async: cannot send response for message %d\n", */
+  /* 		response->hdr->id); */
+  /* 	  coap_delete_pdu(response); */
+  /*     } */
+  /* } */
+
+  /* event void ReadResource.getDoneSeparate[uint8_t uri_key](error_t result, */
+  /* 							   coap_async_state_t* async_state, */
+  /* 							   uint8_t* val_buf, */
+  /* 							   size_t buflen, */
+  /* 							   uint8_t contenttype) { */
+  /*     unsigned char buf[2]; */
+  /*     coap_pdu_t *response; */
+  /*     coap_async_state_t *tmp; */
+
+  /*     size_t size = sizeof(coap_hdr_t) + 8; */
+
+  /*     size += async_state->tokenlen; */
+
+  /*     response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM */
+  /* 			       ? COAP_MESSAGE_CON */
+  /* 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON? */
+  /* 			       COAP_RESPONSE_CODE(205), 0, size); */
+  /*     if (!response) { */
+  /* 	  debug("check_async: insufficient memory, we'll try later\n"); */
+  /* 	  //TODO: handle error... */
+  /*     } */
+
+  /*     response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id */
+
+  /*     if (contenttype != COAP_MEDIATYPE_ANY) */
+  /* 	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
+  /* 			  coap_encode_var_bytes(buf, contenttype), buf); */
+
+  /*     if (async_state->tokenlen) */
+  /* 	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token); */
+
+  /*     coap_add_data(response, buflen, val_buf); */
+
+  /*     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) { */
+  /* 	  debug("check_async: cannot send response for message %d\n", */
+  /* 		response->hdr->id); */
+  /* 	  coap_delete_pdu(response); */
+  /*     } */
+
+  /*     coap_remove_async(ctx_server, async_state->id, &tmp); */
+  /*     coap_free_async(async_state); */
+  /* } */
+
+  /* /////////////////// */
+  /* // all TinyOS CoAP PUT have to go through this */
+  /* void hnd_put_coap_async_tinyos(coap_context_t  *ctx, */
+  /* 				 struct coap_resource_t *resource, */
+  /* 				 coap_address_t *peer, */
+  /* 				 coap_pdu_t *request, */
+  /* 				 str *token, */
+  /* 				 coap_pdu_t *response) { */
+  /*     //unsigned char buf[2]; */
+  /*     size_t size; */
+  /*     unsigned char *data; */
+  /*     int rc; */
+  /*     coap_async_state_t *async_state = NULL; */
+
+  /*     call Leds.led0On(); */
+  /*     call Leds.led1On(); */
+  /*     call Leds.led2On(); */
+
+  /*     /\* response->hdr->code = COAP_RESPONSE_CODE(205); *\/ */
+  /*     /\* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, *\/ */
+  /*     /\*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); *\/ */
+
+  /*     /\* if (token->length) *\/ */
+  /*     /\*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); *\/ */
+
+  /*     /\* response->length += snprintf((char *)response->data, *\/ */
+  /*     /\* 				 response->max_size - response->length, *\/ */
+  /*     /\* 				 "%u", 42); *\/ */
+
+  /*     async_state = coap_register_async(ctx, peer, request, */
+  /* 					COAP_ASYNC_CONFIRM, */
+  /* 					(void *)NULL); */
+
+
+  /*     coap_get_data(request, &size, &data); */
+
+  /*     rc = call WriteResource.put[get_index_for_key(resource->key)](async_state, */
+  /* 								    data, */
+  /* 								    size); */
+  /*     if (rc == FAIL) { */
+  /* 	  /\* default handler returns FAIL -> Resource not available -> Response: 404 *\/ */
+  /* 	  response->hdr->code = COAP_RESPONSE_CODE(404); */
+
+  /* 	  //TODO: set hdr->type? */
+
+  /* 	  if (token->length) */
+  /* 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+
+  /*     } else if (rc == COAP_SPLITPHASE) { */
+  /* 	  /\* TinyOS is split-phase, only in error case an immediate response */
+  /* 	     is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c */
+  /* 	     is not sending it. *\/ */
+  /* 	  response->hdr->type = COAP_MESSAGE_NON; */
+  /*     } else { */
+
+  /* 	  if (rc == COAP_RESPONSE_503) { */
+  /* 	      call Leds.led0Off(); */
+  /* 	  } else if (rc == COAP_RESPONSE_500) { */
+  /* 	      call Leds.led1Off(); */
+  /* 	  } else { */
+  /* 	      call Leds.led2Off(); */
+  /* 	  } */
+
+  /* 	  response->hdr->code = rc; */
+
+  /* 	  //TODO: set hdr->type */
+
+  /* 	  if (token->length) */
+  /* 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+  /*     } */
+  /* } */
+
+  /* default command int WriteResource.put[uint8_t uri_key](coap_async_state_t* async_state, */
+  /* 							 uint8_t* val, size_t buflen) { */
+  /*     //printf("** coap: default (put not available for this resource)....... %i\n", uri_key); */
+  /*     return FAIL; */
+  /* } */
+
+  /* event void WriteResource.putDone[uint8_t uri_key](error_t result, */
+  /* 						    coap_async_state_t* async_state, */
+  /* 						    uint8_t* val_buf, size_t buflen, */
+  /* 						    uint8_t contenttype) { */
+  /*     unsigned char buf[2]; */
+  /*     coap_pdu_t *response; */
+  /*     coap_async_state_t *tmp; */
+
+  /*     size_t size = sizeof(coap_hdr_t) + 8; */
+  /*     size += async_state->tokenlen; */
+
+  /*     //TODO: check for result == SUCCESS */
+  /*     response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM */
+  /* 			       ? COAP_MESSAGE_ACK */
+  /* 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON? */
+  /* 			       COAP_RESPONSE_CODE(204), 0, size); */
+  /*     if (!response) { */
+  /* 	  debug("check_async: insufficient memory, we'll try later\n"); */
+  /* 	  //TODO: handle error... */
+  /*     } */
+
+  /*     response->hdr->id = async_state->message_id; */
+
+  /*     if (contenttype != COAP_MEDIATYPE_ANY) */
+  /* 	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
+  /* 			  coap_encode_var_bytes(buf, contenttype), buf); */
+
+  /*     if (async_state->tokenlen) */
+  /* 	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token); */
+
+  /*     if (buflen != 0) */
+  /* 	  coap_add_data(response, buflen, val_buf); */
+
+  /*     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) { */
+  /* 	  debug("check_async: cannot send response for message %d\n", */
+  /* 		response->hdr->id); */
+  /* 	  coap_delete_pdu(response); */
+  /*     } */
+
+  /*     coap_remove_async(ctx_server, async_state->id, &tmp); */
+  /*     coap_free_async(async_state); */
+  /* } */
+
+  /* event void WriteResource.putNotDone[uint8_t uri_key](coap_async_state_t* async_state) { */
+  /*     coap_pdu_t *response; */
+
+  /*     size_t size = sizeof(coap_hdr_t) + 8; */
+
+  /*     //size += async_state->tokenlen; //CHECK: include token in preACK? */
+
+  /*     response = coap_pdu_init(COAP_MESSAGE_ACK, */
+  /* 			       COAP_RESPONSE_CODE(0), async_state->id, size); */
+
+  /*     if (!response) { */
+  /* 	  debug("check_async: insufficient memory, we'll try later\n"); */
+  /* 	  //TODO: handle error... */
+  /*     } */
+
+  /*     response->hdr->id = async_state->message_id; */
+
+  /*     //CHECK: include token in preACK? */
+  /*     /\*if (async_state->tokenlen) */
+  /* 	coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);*\/ */
+
+  /*     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) { */
+  /* 	  debug("check_async: cannot send response for message %d\n", */
+  /* 		response->hdr->id); */
+  /* 	  coap_delete_pdu(response); */
+  /*     } */
+  /* } */
+
+  /* event void WriteResource.putDoneSeparate[uint8_t uri_key](error_t result, */
+  /* 							    coap_async_state_t* async_state, */
+  /* 							    uint8_t* val_buf, */
+  /* 							    size_t buflen, */
+  /* 							    uint8_t contenttype) { */
+  /*     unsigned char buf[2]; */
+  /*     coap_pdu_t *response; */
+  /*     coap_async_state_t *tmp; */
+
+  /*     size_t size = sizeof(coap_hdr_t) + 8; */
+
+  /*     size += async_state->tokenlen; //CHECK: include token in preACK? */
+
+  /*     response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM */
+  /* 			       ? COAP_MESSAGE_CON */
+  /* 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON? */
+  /* 			       COAP_RESPONSE_CODE(204), 0, size); // 2.05??? */
+  /*     /\*response = coap_pdu_init(COAP_MESSAGE_ACK, */
+  /* 	COAP_RESPONSE_CODE(0), async_state->id, size);*\/ */
+
+  /*     if (!response) { */
+  /* 	  debug("check_async: insufficient memory, we'll try later\n"); */
+  /* 	  //TODO: handle error... */
+  /*     } */
+
+  /*     response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id */
+
+  /*     // TODO: set code!!!! */
+
+  /*     if (contenttype != COAP_MEDIATYPE_ANY) */
+  /* 	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
+  /* 			  coap_encode_var_bytes(buf, contenttype), buf); */
+
+  /*     if (async_state->tokenlen) */
+  /* 	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token); */
+
+  /*     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) { */
+  /* 	  debug("check_async: cannot send response for message %d\n", */
+  /* 		response->hdr->id); */
+  /* 	  coap_delete_pdu(response); */
+  /*     } */
+
+  /*     coap_remove_async(ctx_server, async_state->id, &tmp); */
+  /*     coap_free_async(async_state); */
+  /* } */
+
+  /* /////////////////// */
+  /* // all TinyOS CoAP POST have to go through this */
+  /* void hnd_post_coap_async_tinyos(coap_context_t  *ctx, */
+  /* 				 struct coap_resource_t *resource, */
+  /* 				 coap_address_t *peer, */
+  /* 				 coap_pdu_t *request, */
+  /* 				 str *token, */
+  /* 				 coap_pdu_t *response) { */
+  /*     //unsigned char buf[2]; */
+  /*     size_t size; */
+  /*     unsigned char *data; */
+  /*     int rc; */
+  /*     coap_async_state_t *async_state = NULL; */
+
+  /*     call Leds.led0On(); */
+  /*     call Leds.led1On(); */
+  /*     call Leds.led2On(); */
+
+  /*     /\* response->hdr->code = COAP_RESPONSE_CODE(205); *\/ */
+  /*     /\* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, *\/ */
+  /*     /\*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); *\/ */
+
+  /*     /\* if (token->length) *\/ */
+  /*     /\*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); *\/ */
+
+  /*     /\* response->length += snprintf((char *)response->data, *\/ */
+  /*     /\* 				 response->max_size - response->length, *\/ */
+  /*     /\* 				 "%u", 42); *\/ */
+
+  /*     async_state = coap_register_async(ctx, peer, request, */
+  /* 					COAP_ASYNC_CONFIRM, */
+  /* 					(void *)NULL); */
+
+
+  /*     coap_get_data(request, &size, &data); */
+
+  /*     rc = call PostDeleteResource.postMethod[get_index_for_key(resource->key)](async_state, */
+  /* 									  data, */
+  /* 									  size); */
+  /*     if (rc == FAIL) { */
+  /* 	  /\* default handler returns FAIL -> Resource not available -> Response: 404 *\/ */
+  /* 	  response->hdr->code = COAP_RESPONSE_CODE(404); */
+
+  /* 	  //TODO: set hdr->type? */
+
+  /* 	  if (token->length) */
+  /* 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+
+  /*     } else if (rc == COAP_SPLITPHASE) { */
+  /* 	  /\* TinyOS is split-phase, only in error case an immediate response */
+  /* 	     is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c */
+  /* 	     is not sending it. *\/ */
+  /* 	  response->hdr->type = COAP_MESSAGE_NON; */
+  /*     } else { */
+
+  /* 	  if (rc == COAP_RESPONSE_503) { */
+  /* 	      call Leds.led0Off(); */
+  /* 	  } else if (rc == COAP_RESPONSE_500) { */
+  /* 	      call Leds.led1Off(); */
+  /* 	  } else { */
+  /* 	      call Leds.led2Off(); */
+  /* 	  } */
+
+  /* 	  response->hdr->code = rc; */
+
+  /* 	  //TODO: set hdr->type */
+
+  /* 	  if (token->length) */
+  /* 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+  /*     } */
+  /* } */
+
+  /* default command int PostDeleteResource.postMethod[uint8_t uri_key](coap_async_state_t* async_state, */
+  /* 								     uint8_t* val, size_t buflen) { */
+  /*     //printf("** coap: default (put not available for this resource)....... %i\n", uri_key); */
+  /*     return FAIL; */
+  /* } */
+
+  /* event void PostDeleteResource.postDone[uint8_t uri_key](error_t result, */
+  /* 							  coap_async_state_t* async_state, */
+  /* 							  uint8_t* val_buf, size_t buflen, */
+  /* 							  uint8_t contenttype) { */
+  /*     unsigned char buf[2]; */
+  /*     coap_pdu_t *response; */
+  /*     coap_async_state_t *tmp; */
+
+  /*     size_t size = sizeof(coap_hdr_t) + 8; */
+  /*     size += async_state->tokenlen; */
+
+  /*     //TODO: check for result == SUCCESS */
+  /*     response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM */
+  /* 			       ? COAP_MESSAGE_ACK */
+  /* 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON? */
+  /*      		       COAP_RESPONSE_CODE(201), 0, size); */
+  /*     // or 204 for already present resource */
+
+  /*     if (!response) { */
+  /* 	  debug("check_async: insufficient memory, we'll try later\n"); */
+  /* 	  //TODO: handle error... */
+  /*     } */
+
+  /*     response->hdr->id = async_state->message_id; */
+
+  /*     if (contenttype != COAP_MEDIATYPE_ANY) */
+  /* 	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
+  /* 			  coap_encode_var_bytes(buf, contenttype), buf); */
+
+  /*     if (async_state->tokenlen) */
+  /* 	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token); */
+
+  /*     //TODO: add option Location-Path? */
+
+  /*     if (buflen != 0) */
+  /* 	  coap_add_data(response, buflen, val_buf); */
+
+  /*     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) { */
+  /* 	  debug("check_async: cannot send response for message %d\n", */
+  /* 		response->hdr->id); */
+  /* 	  coap_delete_pdu(response); */
+  /*     } */
+
+  /*     coap_remove_async(ctx_server, async_state->id, &tmp); */
+  /*     coap_free_async(async_state); */
+  /* } */
+
+  /* void hnd_delete_coap_async_tinyos(coap_context_t  *ctx, */
+  /* 				    struct coap_resource_t *resource, */
+  /* 				    coap_address_t *peer, */
+  /* 				    coap_pdu_t *request, */
+  /* 				    str *token, */
+  /* 				    coap_pdu_t *response) { */
+  /*     //unsigned char buf[2]; */
+  /*     size_t size; */
+  /*     unsigned char *data; */
+  /*     int rc; */
+  /*     coap_async_state_t *async_state = NULL; */
+
+  /*     call Leds.led0On(); */
+  /*     call Leds.led1On(); */
+  /*     call Leds.led2On(); */
+
+  /*     /\* response->hdr->code = COAP_RESPONSE_CODE(205); *\/ */
+  /*     /\* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, *\/ */
+  /*     /\*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); *\/ */
+
+  /*     /\* if (token->length) *\/ */
+  /*     /\*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); *\/ */
+
+  /*     /\* response->length += snprintf((char *)response->data, *\/ */
+  /*     /\* 				 response->max_size - response->length, *\/ */
+  /*     /\* 				 "%u", 42); *\/ */
+
+  /*     async_state = coap_register_async(ctx, peer, request, */
+  /* 					COAP_ASYNC_CONFIRM, */
+  /* 					(void *)NULL); */
+
+
+  /*     coap_get_data(request, &size, &data); */
+
+  /*     rc = call PostDeleteResource.deleteMethod[get_index_for_key(resource->key)](async_state, */
+  /* 										  data, */
+  /* 										  size); */
+  /*     if (rc == FAIL) { */
+  /* 	  /\* default handler returns FAIL -> Resource not available -> Response: 404 *\/ */
+  /* 	  response->hdr->code = COAP_RESPONSE_CODE(404); */
+
+  /* 	  //TODO: set hdr->type? */
+
+  /* 	  if (token->length) */
+  /* 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+
+  /*     } else if (rc == COAP_SPLITPHASE) { */
+  /* 	  /\* TinyOS is split-phase, only in error case an immediate response */
+  /* 	     is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c */
+  /* 	     is not sending it. *\/ */
+  /* 	  response->hdr->type = COAP_MESSAGE_NON; */
+  /*     } else { */
+
+  /* 	  if (rc == COAP_RESPONSE_503) { */
+  /* 	      call Leds.led0Off(); */
+  /* 	  } else if (rc == COAP_RESPONSE_500) { */
+  /* 	      call Leds.led1Off(); */
+  /* 	  } else { */
+  /* 	      call Leds.led2Off(); */
+  /* 	  } */
+
+  /* 	  response->hdr->code = rc; */
+
+  /* 	  //TODO: set hdr->type */
+
+  /* 	  if (token->length) */
+  /* 	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
+  /*     } */
+  /* } */
+
+  /* default command int PostDeleteResource.deleteMethod[uint8_t uri_key](coap_async_state_t* async_state, */
+  /* 							       uint8_t* val, size_t buflen) { */
+  /*     //printf("** coap: default (put not available for this resource)....... %i\n", uri_key); */
+  /*     return FAIL; */
+  /* } */
+
+  /* event void PostDeleteResource.deleteDone[uint8_t uri_key](error_t result, */
+  /* 							  coap_async_state_t* async_state, */
+  /* 							  uint8_t* val_buf, size_t buflen, */
+  /* 							  uint8_t contenttype) { */
+  /*     unsigned char buf[2]; */
+  /*     coap_pdu_t *response; */
+  /*     coap_async_state_t *tmp; */
+
+  /*     size_t size = sizeof(coap_hdr_t) + 8; */
+  /*     size += async_state->tokenlen; */
+
+  /*     //TODO: check for result == SUCCESS */
+  /*     response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM */
+  /* 			       ? COAP_MESSAGE_ACK */
+  /* 			       : COAP_MESSAGE_NON, // CHECK answer NON with NON? */
+  /*      		       COAP_RESPONSE_CODE(202), 0, size); */
+
+  /*     if (!response) { */
+  /* 	  debug("check_async: insufficient memory, we'll try later\n"); */
+  /* 	  //TODO: handle error... */
+  /*     } */
+
+  /*     response->hdr->id = async_state->message_id; */
+
+  /*     if (contenttype != COAP_MEDIATYPE_ANY) */
+  /* 	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
+  /* 			  coap_encode_var_bytes(buf, contenttype), buf); */
+
+  /*     if (async_state->tokenlen) */
+  /* 	  coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token); */
+
+  /*     if (buflen != 0) */
+  /* 	  coap_add_data(response, buflen, val_buf); */
+
+  /*     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) { */
+  /* 	  debug("check_async: cannot send response for message %d\n", */
+  /* 		response->hdr->id); */
+  /* 	  coap_delete_pdu(response); */
+  /*     } */
+
+  /*     coap_remove_async(ctx_server, async_state->id, &tmp); */
+  /*     coap_free_async(async_state); */
+  /* } */
 
   // event void WriteResource.putDone[uint8_t uri_key](error_t result) {
  /* event void WriteResource.putDone[uint8_t uri_key](error_t result, */
@@ -1176,5 +1412,4 @@ module CoapUdpServerP {
 
 /*    return 0; */
 /*   } */
-
 }

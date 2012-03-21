@@ -32,10 +32,42 @@
 
 #include <async.h>
 
-interface WriteResource {
-    command int put(coap_async_state_t* async_state,
-		    uint8_t* val, size_t buflen);
+interface CoapResource {
 
+    //TODO: insert URI or request into call?
+    command int getMethod(coap_async_state_t* async_state,
+			  uint8_t* val, size_t vallen);
+
+    command int putMethod(coap_async_state_t* async_state,
+			  uint8_t* val, size_t vallen);
+
+    command int postMethod(coap_async_state_t* async_state,
+			   uint8_t* val, size_t vallen);
+
+    command int deleteMethod(coap_async_state_t* async_state,
+			     uint8_t* val, size_t vallen);
+
+    event void methodDone(error_t result,
+			  uint8_t responsecode,
+			  coap_async_state_t* async_state,
+			  uint8_t* val, size_t vallen, uint8_t contenttype);
+
+    event void methodNotDone(coap_async_state_t* async_state,
+			     uint8_t responsecode);
+
+    event void methodDoneSeparate(error_t result,
+				  uint8_t responsecode,
+				  coap_async_state_t* async_state,
+				  uint8_t* val, size_t vallen, uint8_t contenttype);
+
+    /*
+    event void getDone(error_t result, coap_async_state_t* async_state,
+		       uint8_t* val, size_t buflen, uint8_t contenttype);
+
+    event void getNotDone(coap_async_state_t* async_state);
+
+    event void getDoneSeparate(error_t result, coap_async_state_t* async_state,
+			       uint8_t* val, size_t buflen, uint8_t contenttype);
     event void putDone(error_t result, coap_async_state_t* async_stat,
 		       uint8_t* val, size_t buflen, uint8_t contenttype);
 
@@ -43,4 +75,19 @@ interface WriteResource {
 
     event void putDoneSeparate(error_t result, coap_async_state_t* async_state,
 			       uint8_t* val, size_t buflen, uint8_t contenttype);
+
+    event void postDone(error_t result, coap_async_state_t* async_state,
+			uint8_t* val, size_t buflen, uint8_t contenttype);
+
+
+    event void deleteDone(error_t result, coap_async_state_t* async_state,
+			  uint8_t* val, size_t buflen, uint8_t contenttype);
+    */
+    /*
+      //TODO: post/delete separate
+    event void postNotDone(coap_async_state_t* async_state);
+
+    event void postDoneSeparate(error_t result, coap_async_state_t* async_state,
+			       uint8_t* val, size_t buflen, uint8_t contenttype);
+    */
 }

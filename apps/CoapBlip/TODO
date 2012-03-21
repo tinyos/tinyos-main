@@ -1,13 +1,13 @@
 TODO for TinyOS port of libcoap:
 ================================
 
-* do the right thing on POST/DELETE
 * URI-Query
 * port Client to libcoap -08
-* handle content-types in the resources
+* handle content-types in the resources correctly
 * implement logging over serial
-* optimize memory usage!
-  * e.g. unify the handlers (code mostly replicated)
+* optimize memory usage
+* add rt, obs, if, etc.
+* do the real thing on POST/DELETE
 * ...
 
 CHECK:
@@ -23,3 +23,5 @@ DONE:
   * /separate GET/PUT DONE
   * /.well-known/core DONE
 * adapt non-ETSI resources to changes in Read/WriteResource
+* unify the handlers (code mostly replicated)
+* derive last NUM_URIS in Makefile automatically

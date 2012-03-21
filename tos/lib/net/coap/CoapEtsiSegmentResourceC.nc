@@ -31,11 +31,8 @@
  */
 
 generic configuration CoapEtsiSegmentResourceC(uint8_t uri_key) {
-  provides interface ReadResource;
-  provides interface WriteResource;
+    provides interface CoapResource;
 } implementation {
-  components new CoapEtsiSegmentResourceP(uri_key) as CoapResourceP;
-
-  ReadResource = CoapResourceP;
-  WriteResource = CoapResourceP;
+    components new CoapEtsiSegmentResourceP(uri_key) as CoapResourceP;
+    CoapResource = CoapResourceP;
 }

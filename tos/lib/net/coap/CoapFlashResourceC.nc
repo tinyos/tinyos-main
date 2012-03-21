@@ -31,14 +31,10 @@
  */
 
 generic configuration CoapFlashResourceC(uint8_t uri_key) {
-  provides interface ReadResource;
-  provides interface WriteResource;
-  uses interface ConfigStorage;
-}
-implementation {
-  components new CoapFlashResourceP(uri_key) as CoapFlashResourceP;
-
-  ReadResource = CoapFlashResourceP;
-  WriteResource = CoapFlashResourceP;
-  ConfigStorage = CoapFlashResourceP;
+    provides interface CoapResource;
+    uses interface ConfigStorage;
+} implementation {
+    components new CoapFlashResourceP(uri_key) as CoapFlashResourceP;
+    CoapResource = CoapFlashResourceP;
+    ConfigStorage = CoapFlashResourceP;
 }

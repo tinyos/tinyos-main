@@ -34,8 +34,7 @@
 #include <async.h>
 
 generic module CoapFlashResourceP(uint8_t uri_key) {
-    provides interface ReadResource;
-    provides interface WriteResource;
+    provides interface CoapResource;
     uses interface ConfigStorage;
 } implementation {
 
@@ -58,18 +57,22 @@ generic module CoapFlashResourceP(uint8_t uri_key) {
 	    //printf("Read flash not successful\n");
 	}
 
-	signal ReadResource.getDone(err, temp_async_state, buf, sizeof(conf));
+	signal CoapResource.methodDone(err,  COAP_RESPONSE_CODE(205),
+				       temp_async_state,
+				       buf, sizeof(conf),
+				       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
 	lock = FALSE;
     }
 
-    command int ReadResource.get(coap_async_state_t* async_state) {
+    command int CoapResource.getMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	if (lock == FALSE) {
 	    lock = TRUE;
 	    temp_async_state = async_state;
 
 	    if (call ConfigStorage.valid() == TRUE) {
 		if (call ConfigStorage.read(CONFIG_ADDR, &conf, sizeof(conf)) != SUCCESS) {
-		    //printf("Config.read not successful \n");
+		    //printf("Config.read not successful\n");
 		    lock = FALSE;
 		    return COAP_RESPONSE_500;
 		} else {
@@ -93,23 +96,33 @@ generic module CoapFlashResourceP(uint8_t uri_key) {
 
     event void ConfigStorage.commitDone(error_t err) {
 	lock = FALSE;
-	signal WriteResource.putDone(err, temp_async_state);
+	signal CoapResource.methodDone(err, COAP_RESPONSE_CODE(204),
+				       temp_async_state,
+				       NULL, 0,
+				       COAP_MEDIATYPE_ANY);
     }
 
     event void ConfigStorage.writeDone(storage_addr_t addr, void *buf,
 				       storage_len_t len, error_t err) {
 	if (err == SUCCESS) {
 	    if (call ConfigStorage.commit() != SUCCESS) {
-		signal WriteResource.putDone(err, temp_async_state);
+		signal CoapResource.methodDone(err, COAP_RESPONSE_CODE(500), // TODO: correct code?
+					       temp_async_state,
+					       NULL, 0, //TODO: insert descriptive text
+					       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
 		lock = FALSE;
 	    }
 	} else {
-	    signal WriteResource.putDone(err, temp_async_state);
+	    signal CoapResource.methodDone(err, COAP_RESPONSE_CODE(500), // TODO: correct code?
+					   temp_async_state,
+					   NULL, 0, //TODO: insert descriptive text
+					   COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
 	    lock = FALSE;
 	}
     }
 
-    command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+    command int CoapResource.putMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	if (lock == FALSE) {
 	    if (uri_key == INDEX_KEY && buflen < sizeof(conf)) {
 		return COAP_RESPONSE_500;
@@ -131,5 +144,15 @@ generic module CoapFlashResourceP(uint8_t uri_key) {
 	    lock = FALSE;
 	    return COAP_RESPONSE_503;
 	}
+    }
+
+    command int CoapResource.postMethod(coap_async_state_t* async_state,
+					uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
+    }
+
+    command int CoapResource.deleteMethod(coap_async_state_t* async_state,
+					  uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
     }
 }

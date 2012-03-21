@@ -31,13 +31,10 @@
  */
 
 generic configuration CoapLedResourceC(uint8_t uri_key) {
-  provides interface ReadResource;
-  provides interface WriteResource;
-  uses interface Leds;
+    provides interface CoapResource;
+    uses interface Leds;
 } implementation {
-  components new CoapLedResourceP(uri_key) as CoapLedResourceP;
-
-  ReadResource = CoapLedResourceP;
-  WriteResource = CoapLedResourceP;
-  Leds = CoapLedResourceP;
-  }
+    components new CoapLedResourceP(uri_key) as CoapLedResourceP;
+    CoapResource = CoapLedResourceP;
+    Leds = CoapLedResourceP;
+}

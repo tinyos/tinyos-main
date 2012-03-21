@@ -77,7 +77,7 @@ module CoapBlipP {
     // needs to be before registerResource to setup context:
     call CoAPServer.bind(COAP_SERVER_PORT);
 
-    for (i=0; i < NUM_URIS; i++) {
+    for (i=0; i < COAP_LAST_RESOURCE; i++) {
       // set the hash for the URI
       coap_hash_path(uri_index_map[i].uri,
     		     uri_index_map[i].uri_len - 1,
@@ -90,7 +90,6 @@ module CoapBlipP {
     				       uri_index_map[i].supported_methods);
     }
 #endif
-
   }
 
 #if defined (COAP_SERVER_ENABLED) && defined (COAP_RESOURCE_KEY)

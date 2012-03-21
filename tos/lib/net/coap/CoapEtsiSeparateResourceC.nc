@@ -31,21 +31,18 @@
  */
 
 generic configuration CoapEtsiSeparateResourceC(uint8_t uri_key) {
-  provides interface ReadResource;
-  provides interface WriteResource;
+    provides interface CoapResource;
 } implementation {
-  components new CoapEtsiSeparateResourceP(uri_key) as CoapResourceP;
+    components new CoapEtsiSeparateResourceP(uri_key) as CoapResourceP;
+    CoapResource = CoapResourceP;
 
-  ReadResource = CoapResourceP;
-  WriteResource = CoapResourceP;
+    components new TimerMilliC() as PreAckGetTimer;
+    components new TimerMilliC() as FinishedGetTimer;
+    CoapResourceP.PreAckGetTimer -> PreAckGetTimer;
+    CoapResourceP.FinishedGetTimer -> FinishedGetTimer;
 
-  components new TimerMilliC() as PreAckGetTimer;
-  components new TimerMilliC() as FinishedGetTimer;
-  CoapResourceP.PreAckGetTimer -> PreAckGetTimer;
-  CoapResourceP.FinishedGetTimer -> FinishedGetTimer;
-
-  components new TimerMilliC() as PreAckPutTimer;
-  components new TimerMilliC() as FinishedPutTimer;
-  CoapResourceP.PreAckPutTimer -> PreAckPutTimer;
-  CoapResourceP.FinishedPutTimer -> FinishedPutTimer;
+    components new TimerMilliC() as PreAckPutTimer;
+    components new TimerMilliC() as FinishedPutTimer;
+    CoapResourceP.PreAckPutTimer -> PreAckPutTimer;
+    CoapResourceP.FinishedPutTimer -> FinishedPutTimer;
 }

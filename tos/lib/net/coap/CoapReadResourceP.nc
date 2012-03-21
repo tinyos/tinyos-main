@@ -32,50 +32,66 @@
 #include <pdu.h>
 
 generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
-  provides interface ReadResource;
-  uses interface Leds;
-  uses interface Timer<TMilli> as PreAckTimer;
-  uses interface Read<val_t>;
+    provides interface CoapResource;
+    uses interface Leds;
+    uses interface Timer<TMilli> as PreAckTimer;
+    uses interface Read<val_t>;
 } implementation {
 
-  bool lock = FALSE;
-  coap_async_state_t *temp_async_state = NULL;
+    bool lock = FALSE;
+    coap_async_state_t *temp_async_state = NULL;
 
-  command int ReadResource.get(coap_async_state_t* async_state) {
-      //printf("ReadResource.get: %hu\n", uri_key);
-      if (lock == FALSE) {
-	  lock = TRUE;
-	  temp_async_state = async_state;
+    command int CoapResource.getMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
+	//printf("ReadResource.get: %hu\n", uri_key);
+	if (lock == FALSE) {
+	    lock = TRUE;
+	    temp_async_state = async_state;
 
-	  call PreAckTimer.startOneShot(COAP_PREACK_TIMEOUT);
-	  call Read.read();
-	  return COAP_SPLITPHASE;
-      } else {
-	  return COAP_RESPONSE_503;
-      }
-  }
+	    call PreAckTimer.startOneShot(COAP_PREACK_TIMEOUT);
+	    call Read.read();
+	    return COAP_SPLITPHASE;
+	} else {
+	    return COAP_RESPONSE_503;
+	}
+    }
 
-  event void PreAckTimer.fired() {
-      call Leds.led2Toggle();
-      signal ReadResource.getNotDone(temp_async_state);
-  }
+    event void PreAckTimer.fired() {
+	call Leds.led2Toggle();
+	signal CoapResource.methodNotDone(temp_async_state,
+					  COAP_RESPONSE_CODE(0));
+    }
 
-  event void Read.readDone(error_t result, val_t val) {
-      //uint8_t asyn_message = 1;
+    event void Read.readDone(error_t result, val_t val) {
+	if (call PreAckTimer.isRunning()) {
+	    call PreAckTimer.stop();
+	    signal CoapResource.methodDone(result, COAP_RESPONSE_CODE(205),
+					   temp_async_state,
+					   (uint8_t*)&val, sizeof(uint8_t),
+					   COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+	} else {
+	    signal CoapResource.methodDoneSeparate(result, COAP_RESPONSE_CODE(205),
+						   temp_async_state,
+						   (uint8_t*)&val, sizeof(uint8_t),
+						   COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+	}
 
-      if (call PreAckTimer.isRunning()) {
-	  call PreAckTimer.stop();
-	  //asyn_message = 0;
-	  signal ReadResource.getDone(result, temp_async_state,
-				      (uint8_t*)&val, sizeof(uint8_t),
-				      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
-      } else {
-	  signal ReadResource.getDoneSeparate(result, temp_async_state,
-					      (uint8_t*)&val, sizeof(uint8_t),
-					      COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
-      }
+	//printf("ReadResource.readDone\n");
+	lock = FALSE;
+    }
 
-      //printf("ReadResource.readDone\n");
-      lock = FALSE;
-  }
+    command int CoapResource.putMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
+    }
+
+    command int CoapResource.postMethod(coap_async_state_t* async_state,
+					uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
+    }
+
+    command int CoapResource.deleteMethod(coap_async_state_t* async_state,
+					  uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
+    }
 }

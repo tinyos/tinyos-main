@@ -34,8 +34,9 @@
 #include <async.h>
 
 generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
-    provides interface ReadResource;
-    provides interface WriteResource;
+    provides interface CoapResource;
+    //provides interface ReadResource;
+    //provides interface WriteResource;
     uses interface Timer<TMilli> as PreAckGetTimer;
     uses interface Timer<TMilli> as FinishedGetTimer;
     uses interface Timer<TMilli> as PreAckPutTimer;
@@ -49,17 +50,20 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
     /////////////////////
     // GET:
     event void PreAckGetTimer.fired() {
-	signal ReadResource.getNotDone(temp_async_state);
+	signal CoapResource.methodNotDone(temp_async_state,
+					  COAP_RESPONSE_CODE(0));
     }
 
     event void FinishedGetTimer.fired() {
 	lock = FALSE;
-	signal ReadResource.getDoneSeparate(SUCCESS, temp_async_state,
-					    (uint8_t*)&temp_val, sizeof(uint8_t),
-					    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+	signal CoapResource.methodDoneSeparate(SUCCESS, COAP_RESPONSE_CODE(205),
+					       temp_async_state,
+					       (uint8_t*)&temp_val, sizeof(uint8_t),
+					       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
     }
 
-    command int ReadResource.get(coap_async_state_t* async_state) {
+    command int CoapResource.getMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	if (lock == FALSE) {
 	    lock = TRUE;
 	    temp_async_state = async_state;
@@ -76,17 +80,20 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
     // PUT:
 
     event void PreAckPutTimer.fired() {
-	signal WriteResource.putNotDone(temp_async_state);
+	signal CoapResource.methodNotDone(temp_async_state,
+					  COAP_RESPONSE_CODE(0));
     }
 
     event void FinishedPutTimer.fired() {
 	lock = FALSE;
-	signal WriteResource.putDoneSeparate(SUCCESS, temp_async_state,
-					     NULL, 0,
-					     COAP_MEDIATYPE_ANY);
+	signal CoapResource.methodDoneSeparate(SUCCESS, COAP_RESPONSE_CODE(204),
+					       temp_async_state,
+					       NULL, 0,
+					       COAP_MEDIATYPE_ANY);
     }
 
-    command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+    command int CoapResource.putMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	if ( /*1 == 1*/buflen == 1 && val[0] < 8) {
 	    if (lock == FALSE) {
 		lock = TRUE;
@@ -101,5 +108,15 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
 	} else {
 	    return COAP_RESPONSE_500;
 	}
+    }
+
+    command int CoapResource.postMethod(coap_async_state_t* async_state,
+					uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
+    }
+
+    command int CoapResource.deleteMethod(coap_async_state_t* async_state,
+					  uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
     }
 }

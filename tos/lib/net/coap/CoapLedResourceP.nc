@@ -34,8 +34,7 @@
 #include <async.h>
 
 generic module CoapLedResourceP(uint8_t uri_key) {
-    provides interface ReadResource;
-    provides interface WriteResource;
+    provides interface CoapResource;
     uses interface Leds;
 } implementation {
 
@@ -47,12 +46,14 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     void task getMethod() {
 	uint8_t val = call Leds.get();
 	lock = FALSE;
-	signal ReadResource.getDone(SUCCESS, temp_async_state,
-				    (uint8_t*)&val, sizeof(uint8_t),
-				    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(205),
+				       temp_async_state,
+				       (uint8_t*)&val, sizeof(uint8_t),
+				       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
     };
 
-    command int ReadResource.get(coap_async_state_t* async_state) {
+    command int CoapResource.getMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	if (lock == FALSE) {
 	    lock = TRUE;
 	    temp_async_state = async_state;
@@ -67,10 +68,14 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     // PUT:
     void task putMethod() {
 	lock = FALSE;
-	signal WriteResource.putDone(SUCCESS, temp_async_state, NULL, 0, COAP_MEDIATYPE_ANY);
+	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(204),
+				       temp_async_state,
+				       NULL, 0,
+				       COAP_MEDIATYPE_ANY);
     };
 
-    command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+    command int CoapResource.putMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	if (buflen == 1 && *val < 8) {
 	    if (lock == FALSE) {
 		lock = TRUE;
@@ -84,5 +89,15 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 	} else {
 	    return COAP_RESPONSE_500;
 	}
+    }
+
+    command int CoapResource.postMethod(coap_async_state_t* async_state,
+					uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
+    }
+
+    command int CoapResource.deleteMethod(coap_async_state_t* async_state,
+					  uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
     }
 }

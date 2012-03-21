@@ -31,7 +31,7 @@
  */
 
 generic module CoapRouteResourceP(typedef val_t, uint8_t uri_key) {
-    provides interface ReadResource;
+    provides interface CoapResource;
     uses interface ForwardingTable;
 } implementation {
 
@@ -66,8 +66,10 @@ generic module CoapRouteResourceP(typedef val_t, uint8_t uri_key) {
 	entry = call ForwardingTable.getTable(&n);
 	if (!buf || !entry) {
 	    lock = FALSE;
-	    signal ReadResource.getDone(FAIL, temp_async_state,
-					(uint8_t*)buf, cur - buf);
+	    signal CoapResource.methodDone(FAIL, COAP_RESPONSE_CODE(500),
+					   temp_async_state,
+					   (uint8_t*)buf, cur - buf,
+					   COAP_MEDIATYPE_TEXT_PLAIN);
 	    return;
 	}
 
@@ -86,8 +88,10 @@ generic module CoapRouteResourceP(typedef val_t, uint8_t uri_key) {
 
 	if (cur > buf) {
 	    lock = FALSE;
-	    signal ReadResource.getDone(SUCCESS, temp_async_state,
-					(uint8_t*)buf, cur - buf);
+	    signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(205),
+					   temp_async_state,
+					   (uint8_t*)buf, cur - buf,
+					   COAP_MEDIATYPE_TEXT_PLAIN);
 	}
 	// } else {
 	//   // no route available? -> don't send a packet
@@ -96,7 +100,8 @@ generic module CoapRouteResourceP(typedef val_t, uint8_t uri_key) {
 
     };
 
-    command int ReadResource.get(coap_async_state_t* async_state) {
+    command int CoapResource.getMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	if (lock == FALSE) {
 	    lock = TRUE;
 
@@ -106,5 +111,20 @@ generic module CoapRouteResourceP(typedef val_t, uint8_t uri_key) {
 	} else {
 	    return COAP_RESPONSE_503;
 	}
+    }
+
+    command int CoapResource.putMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
+    }
+
+    command int CoapResource.postMethod(coap_async_state_t* async_state,
+					uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
+    }
+
+    command int CoapResource.deleteMethod(coap_async_state_t* async_state,
+					  uint8_t *val, size_t buflen) {
+	return COAP_RESPONSE_405; // or _501?
     }
 }

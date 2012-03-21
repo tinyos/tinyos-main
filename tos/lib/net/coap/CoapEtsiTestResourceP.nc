@@ -34,8 +34,7 @@
 #include <async.h>
 
 generic module CoapEtsiTestResourceP(uint8_t uri_key) {
-    provides interface ReadResource;
-    provides interface WriteResource;
+    provides interface CoapResource;
 } implementation {
 
     bool lock = FALSE;
@@ -44,18 +43,20 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
 
     /////////////////////
     // GET:
-    void task get() {
+    void task getMethod() {
 	lock = FALSE;
-	signal ReadResource.getDone(SUCCESS, temp_async_state,
-				    (uint8_t*)&temp_val, sizeof(uint8_t),
-				    COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(205),
+				       temp_async_state,
+				       (uint8_t*)&temp_val, sizeof(uint8_t),
+				       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
     };
 
-    command int ReadResource.get(coap_async_state_t* async_state) {
+    command int CoapResource.getMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	if (lock == FALSE) {
 	    lock = TRUE;
 	    temp_async_state = async_state;
-	    post get();
+	    post getMethod();
 	    return COAP_SPLITPHASE;
 	} else {
 	    return COAP_RESPONSE_503;
@@ -64,19 +65,23 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
 
     /////////////////////
     // PUT:
-    void task setLedDone() {
+    void task putMethod() {
 	lock = FALSE;
-	signal WriteResource.putDone(SUCCESS, temp_async_state, NULL, 0, COAP_MEDIATYPE_ANY);
+	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(204),
+				       temp_async_state,
+				       NULL, 0,
+				       COAP_MEDIATYPE_ANY);
     };
 
-    command int WriteResource.put(coap_async_state_t* async_state, uint8_t *val, size_t buflen) {
+    command int CoapResource.putMethod(coap_async_state_t* async_state,
+				       uint8_t *val, size_t buflen) {
 	//if (buflen == 1 && *val < 8) {
 	// don't check for buflen, only store first byte
 	    if (lock == FALSE) {
 		lock = TRUE;
 		temp_async_state = async_state;
 		temp_val = *val;
-		post setLedDone();
+		post putMethod();
 		return COAP_SPLITPHASE;
 	    } else {
 		return COAP_RESPONSE_503;
@@ -85,4 +90,63 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
 	    return COAP_RESPONSE_500;
 	    }*/
     }
+
+    /////////////////////
+    // POST:
+    void task postMethod() {
+	lock = FALSE;
+	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(201),
+				       temp_async_state,
+				       NULL, 0,
+				       COAP_MEDIATYPE_ANY);
+    };
+
+    //TODO: actually create the resource
+    command int CoapResource.postMethod(coap_async_state_t* async_state,
+					uint8_t *val, size_t buflen) {
+	//if (buflen == 1 && *val < 8) {
+	// don't check for buflen, only store first byte
+	    if (lock == FALSE) {
+		lock = TRUE;
+		temp_async_state = async_state;
+		temp_val = *val;
+		post postMethod();
+		return COAP_SPLITPHASE;
+	    } else {
+		return COAP_RESPONSE_503;
+	    }
+	    /*} else {
+	    return COAP_RESPONSE_500;
+	    }*/
+    }
+
+    /////////////////////
+    // DELETE:
+    void task deleteMethod() {
+	lock = FALSE;
+	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(202),
+				       temp_async_state,
+				       NULL, 0,
+				       COAP_MEDIATYPE_ANY);
+    };
+
+    //TODO: actually delete the resource
+    command int CoapResource.deleteMethod(coap_async_state_t* async_state,
+					  uint8_t *val, size_t buflen) {
+	//if (buflen == 1 && *val < 8) {
+	// don't check for buflen, only store first byte
+	    if (lock == FALSE) {
+		lock = TRUE;
+		temp_async_state = async_state;
+		temp_val = *val;
+		post deleteMethod();
+		return COAP_SPLITPHASE;
+	    } else {
+		return COAP_RESPONSE_503;
+	    }
+	    /*} else {
+	    return COAP_RESPONSE_500;
+	    }*/
+    }
+
 }

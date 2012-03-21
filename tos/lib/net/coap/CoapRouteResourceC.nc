@@ -31,11 +31,10 @@
  */
 
 generic configuration CoapRouteResourceC(typedef val_t, uint8_t uri_key) {
-  provides interface ReadResource;
-  uses interface ForwardingTable;
+    provides interface CoapResource;
+    uses interface ForwardingTable;
 } implementation {
-  components new CoapRouteResourceP(val_t, uri_key) as CoapRouteResourceP;
-//   components IPStackC;
-  ReadResource = CoapRouteResourceP;
-  ForwardingTable = CoapRouteResourceP;
-  }
+    components new CoapRouteResourceP(val_t, uri_key) as CoapRouteResourceP;
+    CoapResource = CoapRouteResourceP;
+    ForwardingTable = CoapRouteResourceP;
+}
