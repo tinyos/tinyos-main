@@ -48,10 +48,10 @@ implementation
 	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF1, (uint8_t)&EIMSK, INT1, (uint8_t)&EICRA, ISC10) as Int1P;
 	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF2, (uint8_t)&EIMSK, INT2, (uint8_t)&EICRA, ISC20) as Int2P;
 	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF3, (uint8_t)&EIMSK, INT3, (uint8_t)&EICRA, ISC30) as Int3P;
-	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF4, (uint8_t)&EIMSK, INT4, (uint8_t)&EICRA, ISC40) as Int4P;
-	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF5, (uint8_t)&EIMSK, INT5, (uint8_t)&EICRA, ISC50) as Int5P;
-	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF6, (uint8_t)&EIMSK, INT6, (uint8_t)&EICRA, ISC60) as Int6P;
-	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF7, (uint8_t)&EIMSK, INT7, (uint8_t)&EICRA, ISC70) as Int7P;
+	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF4, (uint8_t)&EIMSK, INT4, (uint8_t)&EICRB, ISC40) as Int4P;
+	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF5, (uint8_t)&EIMSK, INT5, (uint8_t)&EICRB, ISC50) as Int5P;
+	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF6, (uint8_t)&EIMSK, INT6, (uint8_t)&EICRB, ISC60) as Int6P;
+	components new HplAtmegaExtInterruptP((uint8_t)&EIFR, INTF7, (uint8_t)&EIMSK, INT7, (uint8_t)&EICRB, ISC70) as Int7P;
 
 	HplAtmegaExtInterrupt[0] = Int0P;
 	HplAtmegaExtInterrupt[1] = Int1P;
