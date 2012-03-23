@@ -540,7 +540,7 @@ implementation
       radioIrq = IRQ_NONE;
     }
 
-    if( irq & IRQ_PLL_LOCK )
+    if( (irq & IRQ_PLL_LOCK) != 0 )
     {
       if( cmd == CMD_TURNON || cmd == CMD_CHANNEL )
       {
@@ -555,7 +555,19 @@ implementation
         RADIO_ASSERT(FALSE);
     }
 
-    if( irq & IRQ_RX_START )
+    if( cmd == CMD_TRANSMIT && (irq & IRQ_TX_END) != 0 )
+    {
+      RADIO_ASSERT( state == STATE_BUSY_TX_2_RX_ON );
+
+      state = STATE_RX_ON;
+      cmd = CMD_NONE;
+      signal RadioSend.sendDone(SUCCESS);
+
+      // TODO: we could have missed a received message
+      RADIO_ASSERT( ! (irq & IRQ_RX_START) );
+    }
+
+    if( (irq & IRQ_RX_START) != 0 )
     {
       if( cmd == CMD_CCA )
       {
@@ -592,19 +604,7 @@ implementation
         RADIO_ASSERT( cmd == CMD_TURNOFF );
     }
 
-    if( irq & IRQ_TX_END )
-    {
-      RADIO_ASSERT( state == STATE_BUSY_TX_2_RX_ON );
-
-      state = STATE_RX_ON;
-      cmd = CMD_NONE;
-      signal RadioSend.sendDone(SUCCESS);
-
-      // TODO: we could have missed a received message
-      RADIO_ASSERT( ! (irq & IRQ_RX_START) );
-    }
-
-    if( irq & IRQ_RX_END )
+    if( cmd == CMD_NONE && (irq & IRQ_RX_END) != 0 )
     {
 #ifdef RFA1_RSSI_ENERGY
       if( irq == IRQ_RX_END && cmd == CMD_NONE )
@@ -631,19 +631,18 @@ implementation
       cmd = CMD_DOWNLOAD;
     }
 
-    if( irq & IRQ_AWAKE ){
+    if( (irq & IRQ_AWAKE) != 0 ){
       if( state == STATE_SLEEP_2_TRX_OFF && (cmd==CMD_STANDBY || cmd==CMD_TURNON) )
         state = STATE_TRX_OFF;
       else
         RADIO_ASSERT(FALSE);
     }
 
-    if ( irq & IRQ_CCA_ED_DONE ){
+    if ( (irq & IRQ_CCA_ED_DONE) != 0 ){
       if( cmd == CMD_CCA )
       {
         // workaround, see Errata 38.5.5 datasheet
         CLR_BIT(RX_SYN,RX_PDT_DIS);
-
 
         cmd = CMD_NONE;
 
@@ -651,10 +650,10 @@ implementation
         RADIO_ASSERT( (TRX_STATUS & RFA1_TRX_STATUS_MASK) == RX_ON );
 
         signal RadioCCA.done( (TRX_STATUS & CCA_DONE) ? ((TRX_STATUS & CCA_STATUS) ? SUCCESS : EBUSY) : FAIL );
-      } else
+      }
+      else
         RADIO_ASSERT(FALSE);
     }
-
   }
 
   /**
