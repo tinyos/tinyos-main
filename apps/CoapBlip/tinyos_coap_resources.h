@@ -62,6 +62,23 @@ enum {
 #ifdef COAP_RESOURCE_ROUTE
     INDEX_ROUTE,
 #endif
+
+#ifdef COAP_RESOURCE_GIO_PINS
+    INDEX_GIO,
+#endif
+#ifdef COAP_RESOURCE_DEV_0
+    INDEX_DEV_0,
+#endif
+#ifdef COAP_RESOURCE_DEV_1
+    INDEX_DEV_1,
+#endif
+#ifdef COAP_RESOURCE_DEV_2
+    INDEX_DEV_2,
+#endif
+#ifdef COAP_RESOURCE_DEV_3
+    INDEX_DEV_3,
+#endif
+
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
     INDEX_ETSI_TEST,
 #endif
@@ -180,6 +197,55 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       GET_SUPPORTED
   },
 #endif
+
+  //GPIO resources:
+#ifdef COAP_RESOURCE_GIO_PINS
+  {
+    INDEX_GIO,
+    "gio",  sizeof("gio"),
+    {0,0,0,0}, // uri_key will be set later
+    "42", sizeof("42"), // application/octet-stream
+    (GET_SUPPORTED | PUT_SUPPORTED)
+  },
+#endif
+#ifdef COAP_RESOURCE_DEV_0
+  {
+    INDEX_DEV_0,
+    "dev0", sizeof("dev0"),
+    {0,0,0,0}, // uri_key will be set later
+    "42", sizeof("42"), // application/octet-stream
+    (GET_SUPPORTED | PUT_SUPPORTED)
+  },
+#endif
+#ifdef COAP_RESOURCE_DEV_1
+    {
+      INDEX_DEV_1,
+      "dev1",  sizeof("dev1"),
+      {0,0,0,0}, // uri_key will be set later
+      "42", sizeof("42"), // application/octet-stream
+      (GET_SUPPORTED | PUT_SUPPORTED)
+    },
+#endif
+#ifdef COAP_RESOURCE_DEV_2
+    {
+      INDEX_DEV_2,
+      "dev2",  sizeof("dev2"),
+      {0,0,0,0}, // uri_key will be set later
+      "42", sizeof("42"), // application/octet-stream
+      (GET_SUPPORTED | PUT_SUPPORTED)
+    },
+#endif
+#ifdef COAP_RESOURCE_DEV_3
+    {
+      INDEX_DEV_3,
+      "dev3",  sizeof("dev3"),
+      {0,0,0,0}, // uri_key will be set later
+      "42", sizeof("42"), // application/octet-stream
+      (GET_SUPPORTED | PUT_SUPPORTED)
+    },
+#endif
+
+  //ETSI plugtest resources:
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
   {
       INDEX_ETSI_TEST,
