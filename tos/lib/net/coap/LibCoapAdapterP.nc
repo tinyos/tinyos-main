@@ -142,6 +142,7 @@ module LibCoapAdapterP {
     return 1;
   }
 
+  //TODO: test retransmissions
   ////////////////////////////////////////////
   // Provide retransmission timing for libcoap
   inline void tinyos_retransmission_impl(coap_context_t *ctx, coap_tick_t t) @C() @spontaneous() {
@@ -169,7 +170,7 @@ module LibCoapAdapterP {
 	  tinyos_retransmission_impl(ctx, nextpdu->t - now);
       }
 
-      //TODO: notificiation
+      //TODO: notification
       /*
 	if (etimer_expired(&the_coap_context.notify_timer)) {
 	coap_check_notify(&the_coap_context);

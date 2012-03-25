@@ -35,8 +35,6 @@
 
 generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
     provides interface CoapResource;
-    //provides interface ReadResource;
-    //provides interface WriteResource;
     uses interface Timer<TMilli> as PreAckGetTimer;
     uses interface Timer<TMilli> as FinishedGetTimer;
     uses interface Timer<TMilli> as PreAckPutTimer;
