@@ -30,11 +30,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * @author: Markus Becker
+ */
+
 generic configuration CoapLedResourceC(uint8_t uri_key) {
     provides interface CoapResource;
     uses interface Leds;
 } implementation {
     components new CoapLedResourceP(uri_key) as CoapLedResourceP;
+
     CoapResource = CoapLedResourceP;
     Leds = CoapLedResourceP;
 }
