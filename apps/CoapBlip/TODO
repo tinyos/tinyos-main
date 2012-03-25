@@ -1,7 +1,7 @@
 TODO for TinyOS port of libcoap:
 ================================
 
-* URI-Query (see Google Issue)
+* URI-Query (see Google Issue #94)
 * handle content-types in the resources correctly
 * implement logging over serial
 * optimize memory usage
@@ -12,6 +12,7 @@ TODO for TinyOS port of libcoap:
 * compilation warning
    * message_id
    * multicast
+* add author information to CoapBlip files
 * ...
 
 CHECK:
@@ -30,4 +31,4 @@ DONE:
 * adapt non-ETSI resources to changes in Read/WriteResource
 * unify the handlers (code mostly replicated)
 * derive last NUM_URIS in Makefile automatically
-* integrate the GPIO resource (see Google Issue)
+* integrate the GPIO resource (see Google Issue #127/128)
