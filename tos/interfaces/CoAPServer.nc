@@ -32,17 +32,17 @@
 #include "tinyos_coap_resources.h"
 
 interface CoAPServer {
-  /*
-   * bind a local address.
-   */
-  command error_t bind(uint16_t port);
+    /*
+     * Set up the libcoap context for the server. Also binds to the port.
+     */
+    command error_t setupContext(uint16_t port);
 
-  /*
-   * register a TinyOS resource with libcoap
-   */
-  command error_t registerResource(const unsigned char uri[MAX_URI_LENGTH],
-				   unsigned int uri_length,
-				   const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH],
-				   unsigned int contenttype_length,
-				   unsigned int supported_methods);
+    /*
+     * register a TinyOS resource with libcoap
+     */
+    command error_t registerResource(const unsigned char uri[MAX_URI_LENGTH],
+				     unsigned int uri_length,
+				     const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH],
+				     unsigned int contenttype_length,
+				     unsigned int supported_methods);
 }

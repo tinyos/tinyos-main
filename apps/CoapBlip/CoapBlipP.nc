@@ -34,8 +34,11 @@
 #include <lib6lowpan/lib6lowpan.h>
 #include <lib6lowpan/ip.h>
 #include "blip_printf.h"
+
 #ifdef COAP_CLIENT_ENABLED
 #include "tinyos_net.h"
+#include "option.h"
+#include "address.h"
 #endif
 
 module CoapBlipP {
@@ -75,7 +78,7 @@ module CoapBlipP {
     }
 #endif
     // needs to be before registerResource to setup context:
-    call CoAPServer.bind(COAP_SERVER_PORT);
+    call CoAPServer.setupContext(COAP_SERVER_PORT);
 
     for (i=0; i < COAP_LAST_RESOURCE; i++) {
       // set the hash for the URI
@@ -90,6 +93,12 @@ module CoapBlipP {
     				       uri_index_map[i].supported_methods);
     }
 #endif
+
+#ifdef COAP_CLIENT_ENABLED
+    // needs to be before registerResource to setup context:
+    call CoAPClient.setupContext(COAP_CLIENT_PORT);
+#endif
+
   }
 
 #if defined (COAP_SERVER_ENABLED) && defined (COAP_RESOURCE_KEY)
@@ -106,19 +115,20 @@ module CoapBlipP {
 
 #ifdef COAP_CLIENT_ENABLED
   event void ForwardingTableEvents.defaultRouteAdded() {
-    struct sockaddr_in6 sa6;
-    coap_list_t *optlist = NULL;
+      //struct sockaddr_in6 sa6;
+      coap_address_t dest;
+      coap_list_t *optlist = NULL;
 
-    if (node_integrate_done == FALSE) {
-      node_integrate_done = TRUE;
+      if (node_integrate_done == FALSE) {
+	  node_integrate_done = TRUE;
 
-      inet_pton6(COAP_CLIENT_DEST, &sa6.sin6_addr);
-      sa6.sin6_port = htons(COAP_CLIENT_PORT);
+	  inet_pton6(COAP_CLIENT_DEST, &dest.addr.sin6_addr);
+	  dest.addr.sin6_port = htons(COAP_CLIENT_PORT);
 
-      coap_insert( &optlist, new_option_node(COAP_OPTION_URI_PATH, sizeof("ni") - 1, "ni"), order_opts);
+	  coap_insert( &optlist, new_option_node(COAP_OPTION_URI_PATH, sizeof("ni") - 1, "ni"), order_opts);
 
-      call CoAPClient.request(&sa6, COAP_REQUEST_PUT, optlist, 0, NULL);
-    }
+	  call CoAPClient.request(&dest, COAP_REQUEST_PUT, optlist, 0, NULL);
+      }
   }
 
   event void ForwardingTableEvents.defaultRouteRemoved() {
@@ -129,7 +139,8 @@ module CoapBlipP {
     return FAIL;
   }
 
-  event void CoAPClient.request_done(uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more) {
+  event void CoAPClient.request_done(uint8_t code, uint16_t len, void *data) {
+      //event void CoAPClient.request_done(uint8_t code, uint8_t mediatype, uint16_t len, void *data, bool more) {
     //TODO: handle the request_done
   };
 #endif

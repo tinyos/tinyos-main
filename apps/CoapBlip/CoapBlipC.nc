@@ -150,7 +150,6 @@ configuration CoapBlipC {
   components new UdpSocketC() as UdpClientSocket;
   CoapBlipP.CoAPClient -> CoapUdpClientC;
   CoapUdpClientC.LibCoapClient -> LibCoapAdapterC.LibCoapClient;
-  CoapUdpClientC.Init <- MainC.SoftwareInit; // needed?
   LibCoapAdapterC.UDPClient -> UdpClientSocket;
   CoapBlipP.ForwardingTableEvents -> IPStackC.ForwardingTableEvents;
 #endif

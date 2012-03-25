@@ -42,9 +42,10 @@ interface LibCoAP {
 			    int free_pdu);
 
     /*
-     *
+     * Set up the libcoap context for client and server. For the
+     * server a bind on the port is performed as well.
      */
-    command error_t bind(uint16_t port);
+    command error_t setupContext(uint16_t port);
 
     /*
      *

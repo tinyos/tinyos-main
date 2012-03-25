@@ -206,7 +206,7 @@ module LibCoapAdapterP {
     return coap_send_impl(context, dst, pdu, free_pdu);
   }
 
-  command error_t LibCoapServer.bind(uint16_t port) {
+  command error_t LibCoapServer.setupContext(uint16_t port) {
     return call UDPServer.bind(port);
   }
 #endif
@@ -232,7 +232,7 @@ module LibCoapAdapterP {
     return coap_send_impl(context, dst, pdu, free_pdu);
   }
 
-  command error_t LibCoapClient.bind(uint16_t port) {
+  command error_t LibCoapClient.setupContext(uint16_t port) {
     return call UDPClient.bind(port);
   }
 #endif

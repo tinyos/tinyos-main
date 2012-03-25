@@ -2,18 +2,21 @@ TODO for TinyOS port of libcoap:
 ================================
 
 * URI-Query
-* port Client to libcoap -08
 * handle content-types in the resources correctly
 * implement logging over serial
 * optimize memory usage
 * add rt, obs, if, etc.
-* do the real thing on POST/DELETE
+* do the real(TM) thing on POST/DELETE
+* listen on multiple ports (well-known on standard port, others on
+   compressed port)
+* integrate the GPIO resource
 * ...
 
 CHECK:
 =====
 * check PUT and GET returned data
 * retransmission timer
+* port Client to libcoap -08
 
 DONE:
 =====
