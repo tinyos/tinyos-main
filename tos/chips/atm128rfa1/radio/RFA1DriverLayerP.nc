@@ -114,7 +114,6 @@ implementation
     STATE_TRX_OFF_2_RX_ON = 4,
     STATE_RX_ON = 5,
     STATE_BUSY_TX_2_RX_ON = 6,
-    STATE_PLL_ON_2_RX_ON = 7,
   };
 
   tasklet_norace uint8_t cmd;
@@ -382,7 +381,7 @@ implementation
     {
       RADIO_ASSERT( (TRX_STATUS & RFA1_TRX_STATUS_MASK) == BUSY_RX );
 
-      state = STATE_PLL_ON_2_RX_ON;
+      TRX_STATE = CMD_RX_ON;
       return EBUSY;
     }
 
@@ -540,6 +539,14 @@ implementation
       radioIrq = IRQ_NONE;
     }
 
+#ifdef RFA1_RSSI_ENERGY
+    // check this early before the PHY_ED_LEVEL register is overwritten
+    if( irq == IRQ_RX_END )
+      call PacketRSSI.set(rxMsg, PHY_ED_LEVEL);
+    else
+      call PacketRSSI.clear(rxMsg);
+#endif
+
     if( (irq & IRQ_PLL_LOCK) != 0 )
     {
       if( cmd == CMD_TURNON || cmd == CMD_CHANNEL )
@@ -577,26 +584,28 @@ implementation
 
       if( cmd == CMD_NONE )
       {
-        RADIO_ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
+        RADIO_ASSERT( state == STATE_RX_ON );
 
-        // the most likely place for busy channel, with no TRX_END interrupt
+        // the most likely place for busy channel and good SFD, with no other interrupts
         if( irq == IRQ_RX_START )
         {
           temp = PHY_RSSI & RFA1_RSSI_MASK;
           rssiBusy += temp - (rssiBusy >> 2);
+
+          call PacketTimeStamp.set(rxMsg, time);
+
 #ifndef RFA1_RSSI_ENERGY
           call PacketRSSI.set(rxMsg, temp);
+#endif
         }
         else
         {
+          call PacketTimeStamp.clear(rxMsg);
+
+#ifndef RFA1_RSSI_ENERGY
           call PacketRSSI.clear(rxMsg);
 #endif
         }
-
-        if( irq == IRQ_RX_START ) // just to be cautious
-          call PacketTimeStamp.set(rxMsg, time);
-        else
-          call PacketTimeStamp.clear(rxMsg);
 
         cmd = CMD_RECEIVE;
       }
@@ -604,29 +613,12 @@ implementation
         RADIO_ASSERT( cmd == CMD_TURNOFF );
     }
 
-    if( cmd == CMD_NONE && (irq & IRQ_RX_END) != 0 )
+    if( cmd == CMD_RECEIVE && (irq & IRQ_RX_END) != 0 )
     {
-#ifdef RFA1_RSSI_ENERGY
-      if( irq == IRQ_RX_END && cmd == CMD_NONE )
-              call PacketRSSI.set(rxMsg, PHY_ED_LEVEL);
-            else
-              call PacketRSSI.clear(rxMsg);
-#endif
+      RADIO_ASSERT( state == STATE_RX_ON );
 
-      RADIO_ASSERT( state == STATE_RX_ON || state == STATE_PLL_ON_2_RX_ON );
-
-      if( state == STATE_PLL_ON_2_RX_ON )
-      {
-        RADIO_ASSERT( (TRX_STATUS & RFA1_TRX_STATUS_MASK) == PLL_ON );
-
-        TRX_STATE = CMD_RX_ON;
-        state = STATE_RX_ON;
-      }
-      else
-      {
-        // the most likely place for clear channel (hope to avoid acks)
-        rssiClear += (PHY_RSSI & RFA1_RSSI_MASK) - (rssiClear >> 2);
-      }
+      // the most likely place for clear channel (hope to avoid acks)
+      rssiClear += (PHY_RSSI & RFA1_RSSI_MASK) - (rssiClear >> 2);
 
       cmd = CMD_DOWNLOAD;
     }
@@ -638,7 +630,7 @@ implementation
         RADIO_ASSERT(FALSE);
     }
 
-    if ( (irq & IRQ_CCA_ED_DONE) != 0 ){
+    if( (irq & IRQ_CCA_ED_DONE) != 0 ){
       if( cmd == CMD_CCA )
       {
         // workaround, see Errata 38.5.5 datasheet
