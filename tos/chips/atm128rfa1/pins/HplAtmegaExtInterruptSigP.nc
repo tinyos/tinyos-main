@@ -87,10 +87,18 @@ implementation
 
 	async command mcu_power_t McuPowerOverride.lowestState()
 	{
-		// we assume edge triggered interrupt mode (POWER_DOWN is fine for level triggered)
-		if( (EIMSK & 0xF0) != 0 )
-			return ATM128_POWER_IDLE;
-		else
-			return ATM128_POWER_DOWN;
+		uint8_t eimsk = EIMSK;
+		uint8_t eicrb = EICRB;
+
+		if( (eimsk & (1<<INT4)) == 0 )
+			eicrb &= ~(3<<ISC40);
+		if( (eimsk & (1<<INT5)) == 0 )
+			eicrb &= ~(3<<ISC50);
+		if( (eimsk & (1<<INT6)) == 0 )
+			eicrb &= ~(3<<ISC60);
+		if( (eimsk & (1<<INT7)) == 0 )
+			eicrb &= ~(3<<ISC70);
+
+		return eicrb == 0 ? ATM128_POWER_DOWN : ATM128_POWER_IDLE;
 	}
 }
