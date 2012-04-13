@@ -256,9 +256,9 @@ implementation
       }
 
     addr = s[client].addr + currentOffset;
-    page = pageRemap(addr >> AT45_PAGE_SIZE_LOG2);
-    pageOffset = addr & ((1 << AT45_PAGE_SIZE_LOG2) - 1);
-    count = (1 << AT45_PAGE_SIZE_LOG2) - pageOffset;
+    page = pageRemap(addr / AT45_PAGE_SIZE);
+    pageOffset = addr % AT45_PAGE_SIZE;
+    count = AT45_PAGE_SIZE - pageOffset;   
     if (remaining < count)
       count = remaining;
 
@@ -357,7 +357,7 @@ implementation
     else
       vsize = call At45dbVolume.volumeSize[blockId]();
 
-    return vsize << AT45_PAGE_SIZE_LOG2;
+    return vsize * AT45_PAGE_SIZE;    
   }
 
   /* ------------------------------------------------------------------ */
