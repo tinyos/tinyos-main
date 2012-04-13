@@ -69,7 +69,7 @@
 #include "tmote_onboard_sensors.h"
 #include "StorageVolumes.h"
 
-#define NUM_SENSORS              4
+#define NUM_SENSORS              3
 #define SAMPLING_PERIOD       3000
 #define SENDING_PERIOD       10000
 #define AM_SENSOR_DATA_MSG    0x25   
@@ -80,14 +80,14 @@ typedef struct sensor_data {
   nx_uint16_t hum;
   nx_uint16_t temp;
   nx_uint16_t tsr;
-  nx_uint16_t par;
+//  nx_uint16_t par;
 } sensor_data_t;
 
 //Initialize variables associated with each thread
 tosthread_t humidity;
 tosthread_t temperature;
 tosthread_t total_solar;
-tosthread_t photo_active;
+//tosthread_t photo_active;
 tosthread_t store_handler;
 tosthread_t send_handler;
 
@@ -102,7 +102,7 @@ barrier_t sense_barrier;
 void humidity_thread(void* arg);
 void temperature_thread(void* arg);
 void total_solar_thread(void* arg);
-void photo_active_thread(void* arg);
+//void photo_active_thread(void* arg);
 void store_thread(void* arg);
 void send_thread(void* arg);
 
@@ -121,7 +121,7 @@ void tosthread_main(void* arg) {
   tosthread_create(&humidity, humidity_thread, NULL, 200);
   tosthread_create(&temperature, temperature_thread, NULL, 200);
   tosthread_create(&total_solar, total_solar_thread, NULL, 200);
-  tosthread_create(&photo_active, photo_active_thread, NULL, 200);
+//  tosthread_create(&photo_active, photo_active_thread, NULL, 200);
   tosthread_create(&store_handler, store_thread, NULL, 200);
   tosthread_create(&send_handler, send_thread, NULL, 200);
 }
@@ -147,9 +147,9 @@ void temperature_thread(void* arg) {
 void total_solar_thread(void* arg) {
   read_sensor(hamamatsuS10871_tsr_read, &(storing_sensor_data.tsr));
 }
-void photo_active_thread(void* arg) {
-  read_sensor(hamamatsuS1087_par_read, &(storing_sensor_data.par));
-}
+//void photo_active_thread(void* arg) {
+//  read_sensor(hamamatsuS1087_par_read, &(storing_sensor_data.par));
+//}
 void store_thread(void* arg) {
   storage_len_t sensor_data_len;
   bool sensor_records_lost;
