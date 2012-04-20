@@ -127,6 +127,7 @@ module CoapBlipP {
 
 	  coap_insert( &optlist, new_option_node(COAP_OPTION_URI_PATH, sizeof("ni") - 1, "ni"), order_opts);
 
+	  // this stuff should most likely be POST!
 	  call CoAPClient.request(&dest, COAP_REQUEST_PUT, optlist, 0, NULL);
       }
   }
