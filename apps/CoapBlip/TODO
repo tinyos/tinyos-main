@@ -1,7 +1,9 @@
 TODO for TinyOS port of libcoap:
 ================================
 
-* URI-Query (see Google Issue #94)
+* URI-Query (see Google Issue #94) IMPORTANT!
+* retransmission timer IMPORTANT!
+
 * handle content-types in the resources correctly
 * implement logging over serial
 * optimize memory usage
@@ -17,7 +19,6 @@ TODO for TinyOS port of libcoap:
 
 CHECK:
 =====
-* retransmission timer
 * port client to libcoap -08
 * ..
 
