@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 University of Patras and 
+ * Copyright (c) 2012 University of Patras and
  * Research Academic Computer Technology Institute & Press Diophantus (CTI)
  * All rights reserved.
  *

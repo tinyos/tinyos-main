@@ -81,27 +81,23 @@ generic module CoapDevResourceP(uint8_t uri_key) {
 
   command int CoapResource.putMethod(coap_async_state_t* async_state,
 				     uint8_t *val, size_t buflen) {
+    if (lock == FALSE) {
+      lock = TRUE;
+      temp_async_state = async_state;
 
-    return FAIL;
-
-      if (lock == FALSE) {
-	lock = TRUE;
-	temp_async_state = async_state;
-
-	if ( *val ){
-	  call Pin.set();
-	  post putMethod();
-	} else{
-	  call Pin.clr();
-	  post putMethod();
-	}
-	return COAP_SPLITPHASE;
-      } else {
-	return COAP_RESPONSE_503;
+      if ( *val ){
+	call Pin.set();
+	post putMethod();
+      } else{
+	call Pin.clr();
+	post putMethod();
       }
+      return COAP_SPLITPHASE;
     } else {
-      return COAP_RESPONSE_500;
+      return COAP_RESPONSE_503;
     }
+  } else {
+    return COAP_RESPONSE_500;
   }
 
   command int CoapResource.postMethod(coap_async_state_t* async_state,
