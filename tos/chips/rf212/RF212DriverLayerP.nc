@@ -360,8 +360,6 @@ implementation
 		if( (cmd == CMD_STANDBY || cmd == CMD_TURNON) && state == STATE_SLEEP && isSpiAcquired())
 		{
 			RADIO_ASSERT( ! radioIrq );
-
-			readRegister(RF212_IRQ_STATUS); // clear the interrupt register
 			call IRQ.captureRisingEdge();
 			state = STATE_SLEEP_2_TRX_OFF;
 			call SLP_TR.clr();
@@ -379,14 +377,12 @@ implementation
 		{
 			call IRQ.disable();
 			writeRegister(RF212_TRX_STATE, RF212_FORCE_TRX_OFF);
-
-			radioIrq = FALSE;
-
 			state = STATE_TRX_OFF;
 		}
 
 		if( cmd == CMD_TURNOFF && state == STATE_TRX_OFF )
 		{
+			readRegister(RF212_IRQ_STATUS); // clear the interrupt register
 			call SLP_TR.set();
 			state = STATE_SLEEP;
 			cmd = CMD_SIGNAL_DONE;
