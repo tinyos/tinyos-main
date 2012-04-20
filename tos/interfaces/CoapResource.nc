@@ -59,35 +59,4 @@ interface CoapResource {
 				  uint8_t responsecode,
 				  coap_async_state_t* async_state,
 				  uint8_t* val, size_t vallen, uint8_t contenttype);
-
-    /*
-    event void getDone(error_t result, coap_async_state_t* async_state,
-		       uint8_t* val, size_t buflen, uint8_t contenttype);
-
-    event void getNotDone(coap_async_state_t* async_state);
-
-    event void getDoneSeparate(error_t result, coap_async_state_t* async_state,
-			       uint8_t* val, size_t buflen, uint8_t contenttype);
-    event void putDone(error_t result, coap_async_state_t* async_stat,
-		       uint8_t* val, size_t buflen, uint8_t contenttype);
-
-    event void putNotDone(coap_async_state_t* async_state);
-
-    event void putDoneSeparate(error_t result, coap_async_state_t* async_state,
-			       uint8_t* val, size_t buflen, uint8_t contenttype);
-
-    event void postDone(error_t result, coap_async_state_t* async_state,
-			uint8_t* val, size_t buflen, uint8_t contenttype);
-
-
-    event void deleteDone(error_t result, coap_async_state_t* async_state,
-			  uint8_t* val, size_t buflen, uint8_t contenttype);
-    */
-    /*
-      //TODO: post/delete separate
-    event void postNotDone(coap_async_state_t* async_state);
-
-    event void postDoneSeparate(error_t result, coap_async_state_t* async_state,
-			       uint8_t* val, size_t buflen, uint8_t contenttype);
-    */
 }
