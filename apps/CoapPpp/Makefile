@@ -38,11 +38,12 @@ PFLAGS += -DIN6_PREFIX=\"fec0::\"
 # CFLAGS += -DPRINTF_BUFFER_SIZE=1024
 
 PFLAGS += -DBLIP_NO_RADIO
+#PFLAGS += -DROUTE_TABLE_SZ=1
 
 ################ CoAP Server ###############################
 CFLAGS += -DCOAP_SERVER_ENABLED
 # port where server is listening
-CFLAGS += -DCOAP_SERVER_PORT=61616L
+CFLAGS += -DCOAP_SERVER_PORT=5683L
 #set max uri length
 CFLAGS += -DMAX_URI_LENGTH=5
 # set available resources.

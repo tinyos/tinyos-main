@@ -82,7 +82,6 @@ module CoapPppP {
 #endif
 
   event void PppIpv6.linkUp() {
-      //call Leds.led1Toggle();
   }
   event void PppIpv6.linkDown() {}
 
@@ -113,9 +112,6 @@ module CoapPppP {
 	call ForwardingTable.addRoute(NULL, 0, NULL, ROUTE_IFACE_PPP);
     if (route == ROUTE_INVAL_KEY) {
     } else {
-	call Leds.led0On();
-	call Leds.led1On();
-	call Leds.led2On();
     }
   }
   event void IPControl.stopDone (error_t error) { }
@@ -169,8 +165,6 @@ module CoapPppP {
                                 unsigned int len) {
     struct ip6_hdr *iph = (struct ip6_hdr *)data;
     void *payload = (iph + 1);
-    //call Leds.led1Toggle();
-    //call Leds.led2Toggle();
     //printf("IP recv\n");
     signal IPForward.recv(iph, payload, NULL);
     return SUCCESS;
