@@ -14,7 +14,7 @@
  *
  * NeighborDiscovery: responsible for address resolution.  Very
  * simple, since only link-local addresses are considered to be
- * on-link.  
+ * on-link.
  *
  * Dispatch: okay, this one's badly named.  It's the 6lowpan engine
  * which talks to a packet radio on the bottom and presents fully
@@ -42,16 +42,21 @@ configuration IPStackC {
   }
 } implementation {
 
-  components IPProtocolsP, 
-    IPForwardingEngineP as FwdP, 
-    IPNeighborDiscoveryC as NdC, 
-    IPDispatchC;
+    components IPProtocolsP,
+	IPForwardingEngineP as FwdP,
+	IPNeighborDiscoveryC as NdC;
+#ifndef BLIP_NO_RADIO
+    components IPDispatchC;
+#endif
   components IPStackControlP;
+
   SplitControl = IPStackControlP;
   IPStackControlP.StdControl = StdControl;
   IPStackControlP.RoutingControl = RoutingControl;
+#ifndef BLIP_NO_RADIO
   IPStackControlP.SubSplitControl -> IPDispatchC;
-  
+#endif
+
   ForwardingTable = FwdP;
   ForwardingTableEvents = FwdP;
   ForwardingEvents = FwdP;
@@ -59,10 +64,11 @@ configuration IPStackC {
   /* wiring up of the IP stack */
   IP = IPProtocolsP;            /* top layer - dispatch protocols */
   IPProtocolsP.SubIP -> FwdP.IP; /* routing layer - provision next hops */
+#ifndef BLIP_NO_RADIO
   /* this wiring for an 802.15.4 stack */
   FwdP.IPForward[ROUTE_IFACE_154] -> NdC; /* this layer translates L3->L2 addresses */
   NdC.IPLower -> IPDispatchC.IPLower; /* wire to the 6lowpan engine */
-
+#endif
   IPRaw = FwdP.IPRaw;
 
   /* wire in core protocols -- this is only protocol included by default */
@@ -77,7 +83,6 @@ configuration IPStackC {
   FwdP.IPPacket -> IPPacketC;
   IPProtocolsP.IPPacket -> IPPacketC;
   IPStackControlP.IPAddress -> IPAddressC;
-
   FwdP.Leds -> LedsC;
 
   components new PoolC(struct in6_iid, N_CONCURRENT_SENDS) as FwdAddrPoolC;

@@ -12,6 +12,7 @@ module IPProtocolsP {
     interface IPAddress;
     interface IP as SubIP;
     interface IPPacket;
+    interface Leds;
   }
 } implementation {
 

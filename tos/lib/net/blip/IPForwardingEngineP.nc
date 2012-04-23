@@ -193,17 +193,18 @@ module IPForwardingEngineP {
   }
 
   command error_t IP.send(struct ip6_packet *pkt) {
-    struct route_entry *next_hop_entry = 
+    struct route_entry *next_hop_entry =
       call ForwardingTable.lookupRoute(pkt->ip6_hdr.ip6_dst.s6_addr, 128);
-    
+
 #ifdef PRINTFUART_ENABLED
     if (!call PrintTimer.isRunning())
       call PrintTimer.startPeriodic(10000);
 #endif
 
-    if (call IPAddress.isLocalAddress(&pkt->ip6_hdr.ip6_dst) && 
+    if (call IPAddress.isLocalAddress(&pkt->ip6_hdr.ip6_dst) &&
         pkt->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
       printf("Forwarding -- send with local unicast address!\n");
+
       return FAIL;
     } else if (call IPAddress.isLLAddress(&pkt->ip6_hdr.ip6_dst) &&
                (!next_hop_entry || next_hop_entry->prefixlen < 128)) {
@@ -237,7 +238,7 @@ module IPForwardingEngineP {
         return FAIL;
 
       return do_send(next_hop_entry->ifindex, &next_hop_entry->next_hop, pkt);
-    } 
+    }
     return FAIL;
   }
 
@@ -338,7 +339,7 @@ module IPForwardingEngineP {
       }
     }
     printf("\n");
-    printfflush();
+    //printfflush();
   }
 #endif
 
