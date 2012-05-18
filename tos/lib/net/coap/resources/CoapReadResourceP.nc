@@ -67,12 +67,12 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
 	    call PreAckTimer.stop();
 	    signal CoapResource.methodDone(result, COAP_RESPONSE_CODE(205),
 					   temp_async_state,
-					   (uint8_t*)&val, sizeof(uint8_t),
+					   (uint8_t*)&val, sizeof(val_t),
 					   COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
 	} else {
 	    signal CoapResource.methodDoneSeparate(result, COAP_RESPONSE_CODE(205),
 						   temp_async_state,
-						   (uint8_t*)&val, sizeof(uint8_t),
+						   (uint8_t*)&val, sizeof(val_t),
 						   COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
 	}
 
