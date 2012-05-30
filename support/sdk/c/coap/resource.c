@@ -13,7 +13,7 @@
 #include "subscribe.h"
 
 #ifndef WITH_CONTIKI
-#include "utlist.h" // for observe etc. this is also needed for TinyOS, possible to be replaced with coap_list???
+#include "utlist.h"
 #include "mem.h"
 #endif /* WITH_CONTIKI */
 
@@ -37,6 +37,17 @@ coap_resources_init() {
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
+int
+match(const str *text, const str *pattern, int match_substring) {
+  assert(text); assert(pattern);
+  
+  if (text->length < pattern->length)
+    return 0;
+
+  return (match_substring || pattern->length == text->length) &&
+    memcmp(text->s, pattern->s, pattern->length) == 0;
+}
+
 /**
  * Prints the names of all known resources to @p buf. This function
  * sets @p buflen to the number of bytes actually written and returns
@@ -47,28 +58,89 @@ coap_resources_init() {
  * @param buf     The buffer to write the result.
  * @param buflen  Must be initialized to the maximum length of @p buf and will be
  *                set to the number of bytes written on return.
+ * @param query_filter A filter query according to <a href="http://tools.ietf.org/html/draft-ietf-core-link-format-11#section-4.1">Link Format</a>
  *
  * @return @c 0 on error or @c 1 on success.
  */
+#if defined(__GNUC__) && defined(WITHOUT_QUERY_FILTER)
 int
-print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen) {
+print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen,
+		coap_opt_t *query_filter __attribute__ ((unused))) {
+#else /* not a GCC */
+int
+print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen,
+		coap_opt_t *query_filter) {
+#endif /* GCC */
   coap_resource_t *r;
   unsigned char *p = buf;
   size_t left, written = 0;
-#ifndef WITH_CONTIKI
   coap_resource_t *tmp;
-
-  HASH_ITER(hh, context->resources, r, tmp) {
-#endif
+#ifndef WITHOUT_QUERY_FILTER
+  str resource_param = { 0, NULL }, query_pattern = { 0, NULL };
+  int flags = 0; /* MATCH_SUBSTRING, MATCH_URI */
+#define MATCH_URI       0x01
+#define MATCH_SUBSTRING 0x02
+#endif /* WITHOUT_QUERY_FILTER */
 
 #ifdef WITH_CONTIKI
   int i;
+#endif /* WITH_CONTIKI */
 
+#ifndef WITHOUT_QUERY_FILTER
+  /* split query filter, if any */
+  if (query_filter) {
+    resource_param.s = COAP_OPT_VALUE(query_filter);
+    while (resource_param.length < COAP_OPT_LENGTH(query_filter)
+	   && resource_param.s[resource_param.length] != '=')
+      resource_param.length++;
+    
+    if (resource_param.length < COAP_OPT_LENGTH(query_filter)) {
+      if (resource_param.length == 4 && 
+	  memcmp(resource_param.s, "href", 4) == 0)
+	flags |= MATCH_URI;
+
+      /* rest is query-pattern */
+      query_pattern.s = 
+	COAP_OPT_VALUE(query_filter) + resource_param.length + 1;
+
+      assert((resource_param.length + 1) <= COAP_OPT_LENGTH(query_filter));
+      query_pattern.length = 
+	COAP_OPT_LENGTH(query_filter) - (resource_param.length + 1);
+
+      if (query_pattern.length && 
+	  query_pattern.s[query_pattern.length-1] == '*') {
+	query_pattern.length--;
+	flags |= MATCH_SUBSTRING;
+      }      
+    }
+  }
+#endif /* WITHOUT_QUERY_FILTER */
+
+#ifndef WITH_CONTIKI
+
+  HASH_ITER(hh, context->resources, r, tmp) {
+#else /* WITH_CONTIKI */
   r = (coap_resource_t *)resource_storage.mem;
   for (i = 0; i < resource_storage.num; ++i, ++r) {
     if (!resource_storage.count[i])
       continue;
 #endif /* WITH_CONTIKI */
+
+#ifndef WITHOUT_QUERY_FILTER
+    if (resource_param.length) { /* there is a query filter */
+      
+      if (flags & MATCH_URI) {	/* match resource URI */
+	if (!match(&r->uri, &query_pattern, (flags & MATCH_SUBSTRING) != 0))
+	  continue;
+      } else {			/* match attribute */
+	coap_attr_t *attr;
+	attr = coap_find_attr(r, resource_param.s, resource_param.length);
+	if (!(attr && match(&attr->value, &query_pattern, 
+			    (flags & MATCH_SUBSTRING) != 0)))
+	  continue;
+      }
+    }
+#endif /* WITHOUT_QUERY_FILTER */
 
     left = *buflen - written;
 
@@ -154,6 +226,28 @@ coap_add_attr(coap_resource_t *resource,
   }
 
   return attr;
+}
+
+coap_attr_t *
+coap_find_attr(coap_resource_t *resource, 
+	       const unsigned char *name, size_t nlen) {
+  coap_attr_t *attr;
+
+  if (!resource || !name)
+    return NULL;
+
+#ifndef WITH_CONTIKI
+  LL_FOREACH(resource->link_attr, attr) {
+#else /* WITH_CONTIKI */
+  for (attr = list_head(resource->link_attr); attr; 
+       attr = list_item_next(attr)) {
+#endif /* WITH_CONTIKI */    
+    if (attr->name.length == nlen &&
+	memcmp(attr->name.s, name, nlen) == 0)
+      return attr;
+  }
+
+  return NULL;
 }
 
 void
@@ -297,6 +391,7 @@ coap_print_link(const coap_resource_t *resource,
   return 1;
 }
 
+#ifndef WITHOUT_OBSERVE
 coap_subscription_t *
 coap_find_observer(coap_resource_t *resource, const coap_address_t *peer,
 		     const str *token) {
@@ -413,32 +508,30 @@ coap_check_notify(coap_context_t *context) {
     if (r->observeable && r->dirty && list_head(r->subscribers)) {
 #endif /* WITH_CONTIKI */
       coap_method_handler_t h;
+      coap_subscription_t *obs;
+      str token;
 
       /* retrieve GET handler, prepare response */
       h = r->handler[COAP_REQUEST_GET - 1];
       assert(h);		/* we do not allow subscriptions if no
 				 * GET handler is defined */
 
-      /* FIXME: provide CON/NON flag in coap_subscription_t */
-      response = coap_pdu_init(COAP_MESSAGE_CON, 0, 0, COAP_MAX_PDU_SIZE);
-      if (response) {
-	coap_subscription_t *obs;
-	str token;
-
 #ifndef WITH_CONTIKI
-      /* FIXME: */
 	LL_FOREACH(r->subscribers, obs) {
-#endif
-
-#ifdef WITH_CONTIKI
+#else /* WITH_CONTIKI */
       for (obs = list_head(r->subscribers); obs; obs = list_item_next(obs)) {
 #endif /* WITH_CONTIKI */
-	/* re-initialize response */
+        coap_tid_t tid = COAP_INVALID_TID;
+	/* initialize response */
+        response = coap_pdu_init(COAP_MESSAGE_CON, 0, 0, COAP_MAX_PDU_SIZE);
+        if (!response) {
+          debug("pdu init failed\n");
+          continue;
+        }
 
 	token.length = obs->token_length;
 	token.s = obs->token;
 
-	coap_pdu_clear(response, response->max_size);
 	response->hdr->id = coap_new_message_id(context);
 	if (obs->non && obs->non_cnt < COAP_OBS_MAX_NON)
 	  response->hdr->type = COAP_MESSAGE_NON;
@@ -449,18 +542,19 @@ coap_check_notify(coap_context_t *context) {
 	h(context, r, &obs->subscriber, NULL, &token, response);
 
 	if (response->hdr->type == COAP_MESSAGE_CON) {
-	  coap_send_confirmed(context, &obs->subscriber, response);
+	  tid = coap_send_confirmed(context, &obs->subscriber, response);
 	  obs->non_cnt = 0;
 	} else {
-	  coap_send(context, &obs->subscriber, response);
+	  tid = coap_send(context, &obs->subscriber, response);
 	  obs->non_cnt++;
 	}
+
+        if (COAP_INVALID_TID == tid || response->hdr->type != COAP_MESSAGE_CON)
+          coap_delete_pdu(response);
       }
-      coap_delete_pdu(response);
 
       /* Increment value for next Observe use. */
       context->observe++;
-      }
     }
     r->dirty = 0;
   }
@@ -515,3 +609,5 @@ coap_handle_failed_notify(coap_context_t *context,
   }
 #endif /* WITH_CONTIKI */
 }
+
+#endif /* WITHOUT_NOTIFY */

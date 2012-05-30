@@ -22,6 +22,7 @@
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
+#ifndef WITHOUT_BLOCK
 int
 coap_get_block(coap_pdu_t *pdu, unsigned short type, coap_block_t *block) {
   coap_opt_iterator_t opt_iter;
@@ -31,7 +32,8 @@ coap_get_block(coap_pdu_t *pdu, unsigned short type, coap_block_t *block) {
 
   if (pdu && coap_check_option(pdu, type, &opt_iter)) {
     block->szx = COAP_OPT_BLOCK_SZX(opt_iter.option);
-    block->m = COAP_OPT_BLOCK_MORE(opt_iter.option);
+    if (COAP_OPT_BLOCK_MORE(opt_iter.option))
+      block->m = 1;
     block->num = COAP_OPT_BLOCK_NUM(opt_iter.option);
 
     return 1;
@@ -114,3 +116,4 @@ coap_add_block(coap_pdu_t *pdu, unsigned int len, const unsigned char *data,
 		       min(len - start, (unsigned int)(1 << (block_szx + 4))),
 		       data + start);
 }
+#endif /* WITHOUT_BLOCK  */

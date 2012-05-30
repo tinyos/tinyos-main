@@ -116,20 +116,33 @@ coap_delete_pdu(coap_pdu_t *pdu) {
 }
 
 int
-coap_add_option(coap_pdu_t *pdu, unsigned char type, unsigned int len, const unsigned char *data) {
-  unsigned char cnt, optcnt;
+coap_add_option(coap_pdu_t *pdu, unsigned short type, unsigned int len, const unsigned char *data) {
+  size_t optsize, cnt, optcnt, opt_code = 0;
+  unsigned char fence;
   coap_opt_t *opt;
-  unsigned char opt_code = 0;
+  size_t old_optcnt;		/* for restoring old values */
+  coap_opt_t *old_opt;
 
   if (!pdu)
     return -1;
 
-  /* get last option from pdu to calculate the delta */
-
+  /* Get last option from pdu to calculate the delta. For optcnt ==
+   * 0x0F, opt will point at the end marker, so the new option will
+   * overwrite it.
+   */
   opt = options_start( pdu );
-  for ( cnt = pdu->hdr->optcnt; cnt; --cnt ) {
+  cnt = pdu->hdr->optcnt;
+  while ((pdu->hdr->optcnt == COAP_OPT_LONG && opt &&
+	  opt < ((unsigned char *)pdu->hdr + pdu->max_size) && 
+	  *opt != COAP_OPT_END)
+	 || cnt--) {
     opt_code += COAP_OPT_DELTA(opt);
     opt = options_next(opt);
+  }
+
+  if ((unsigned char *)opt > (unsigned char *)pdu->hdr + pdu->max_size) {
+    debug("illegal option list\n");
+    return -1;
   }
 
   if ( type < opt_code ) {
@@ -139,34 +152,33 @@ coap_add_option(coap_pdu_t *pdu, unsigned char type, unsigned int len, const uns
     return -1;
   }
 
-  optcnt = pdu->hdr->optcnt;
+  optcnt = old_optcnt = pdu->hdr->optcnt;
+  old_opt = opt;
+  optsize = len + (len > 14 ? 2 : 1);
   /* Create new option after last existing option: First check if we
    * need fence posts between type and last opt_code (i.e. delta >
    * 15), and then add actual option.
    */
 
-  while (type - opt_code > 15) {
-    cnt = opt_code / COAP_OPTION_NOOP;
+  /* add fence post */
+  fence = ((COAP_OPTION_NOOP * ((opt_code / COAP_OPTION_NOOP) + 1)) 
+	   - opt_code) << 4;
+  while (opt_code + 15 < type) {
+    if ((unsigned char *)opt + optsize + 1 > 
+	(unsigned char *)pdu->hdr + pdu->max_size)
+      goto error;
 
-    if ((unsigned char *)opt + 1 > (unsigned char *)pdu->hdr + pdu->max_size) {
-      debug("cannot add fencepost option\n");
-      return -1;
-    }
-
-    /* add fence post */
     optcnt += 1;
-    COAP_OPT_SETLENGTH( opt, 0 );
-    COAP_OPT_SETDELTA( opt, (COAP_OPTION_NOOP * (cnt+1)) - opt_code );
+    *opt = fence;
 
     opt_code += COAP_OPT_DELTA(opt);
     opt = options_next(opt);
+    fence = COAP_OPTION_NOOP << 4;
   }
 
-  if ((unsigned char *)opt + len + (len > 14 ? 2 : 1) >
-      (unsigned char *)pdu->hdr + pdu->max_size) {
-    debug("cannot add option\n");
-    return -1;
-  }
+  if ((unsigned char *)opt + optsize + 1 > 
+      (unsigned char *)pdu->hdr + pdu->max_size)
+    goto error;
 
   /* here, the actual option is added (delta <= 15) */
   optcnt += 1;
@@ -176,9 +188,28 @@ coap_add_option(coap_pdu_t *pdu, unsigned char type, unsigned int len, const uns
   memcpy(COAP_OPT_VALUE(opt), data, len);
   pdu->data = (unsigned char *)COAP_OPT_VALUE(opt) + len ;
 
+  if (optcnt < COAP_OPT_LONG) {
   pdu->hdr->optcnt = optcnt;
+  } else {
+    pdu->hdr->optcnt = COAP_OPT_LONG;
+    *pdu->data = COAP_OPT_END;
+    pdu->data++;
+  }
   pdu->length = pdu->data - (unsigned char *)pdu->hdr;
   return len;
+
+ error:
+  /* Restore state before we have tried to add fencepost options.
+   * Because pdu->data and pdu->length have not yet been updated,
+   * there is no need to touch them. Only the end marker must been
+   * written anew if optcnt == 15;
+   */
+  
+  pdu->hdr->optcnt = old_optcnt;
+  if (pdu->hdr->optcnt == COAP_OPT_LONG)
+    *old_opt = COAP_OPT_END;
+  
+  return -1;
 }
 
 int

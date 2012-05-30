@@ -181,8 +181,8 @@ hnd_put_resource(coap_context_t  *ctx, struct coap_resource_t *resource,
   if (coap_send(ctx, peer, response) == COAP_INVALID_TID) {
     debug("hnd_get_rd: cannot send response for message %d\n", 
 	  request->hdr->id);
-    coap_delete_pdu(response);
   }
+  coap_delete_pdu(response);
 #endif
 }
 
@@ -685,7 +685,7 @@ main(int argc, char **argv) {
 
     if ( nextpdu && nextpdu->t <= now + COAP_RESOURCE_CHECK_TIME ) {
       /* set timeout if there is a pdu to send before our automatic timeout occurs */
-      tv.tv_usec = ((nextpdu->t - now) % COAP_TICKS_PER_SECOND) << 10;
+      tv.tv_usec = ((nextpdu->t - now) % COAP_TICKS_PER_SECOND) * 1000000 / COAP_TICKS_PER_SECOND;
       tv.tv_sec = (nextpdu->t - now) / COAP_TICKS_PER_SECOND;
       timeout = &tv;
     } else {

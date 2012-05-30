@@ -169,7 +169,8 @@ PROCESS_THREAD(coap_server_process, ev, data)
     coap_add_option(request, COAP_OPTION_TOKEN, 2, buf);
   }
 
-  coap_send_confirmed(coap_context, &dst, request);
+  if (COAP_INVALID_TID == coap_send_confirmed(coap_context, &dst, request))
+    coap_delete_pdu(request);
 
   while(1) {
     PROCESS_YIELD();

@@ -134,6 +134,19 @@ coap_attr_t *coap_add_attr(coap_resource_t *resource,
 			   const unsigned char *val, size_t vlen);
 
 /**
+ * Returns @p resource's coap_attr_t object with given @p name if
+ * found, @c NULL otherwise.
+ *
+ * @param resource  The resource to search for attribute @p name.
+ * @param name      Name of the requested attribute.
+ * @param nlen      Actual length of @p name.
+ * @return The first attribute with specified @p name or @c NULL if
+ *         none was found.
+ */
+coap_attr_t *coap_find_attr(coap_resource_t *resource, 
+			    const unsigned char *name, size_t nlen);
+
+/** 
  * Writes a description of this resource in link-format to given text
  * buffer. @p len must be initialized to the maximum length of @p buf
  * and will be set to the number of characters actually written if

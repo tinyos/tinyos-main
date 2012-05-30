@@ -101,7 +101,7 @@ coap_ticks_impl(coap_tick_t *t) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   *t = (tv.tv_sec - clock_offset) * COAP_TICKS_PER_SECOND
-    + (tv.tv_usec >> 10) % COAP_TICKS_PER_SECOND;
+    + (tv.tv_usec * COAP_TICKS_PER_SECOND / 1000000);
 #else
 #error "clock not implemented"
 #endif

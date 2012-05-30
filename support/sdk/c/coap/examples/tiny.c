@@ -135,6 +135,7 @@ main(int argc, char **argv) {
       return -1;
 
     coap_send( ctx, (struct sockaddr *)&dst, sizeof(dst), pdu );
+    coap_delete_pdu(pdu);
 
     tv.tv_sec = 5; tv.tv_usec = 0;
 

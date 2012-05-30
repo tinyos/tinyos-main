@@ -60,6 +60,13 @@
 /* #define HASH_FUNCTION HASH_SFH */ /* compilation warnings */
 /* #define HASH_FUNCTION HASH_MUR_ALIGNED */ /* compilation error */
 
+#undef HAVE_ASSERT_H
+
+/* Define assert() as emtpy directive unless HAVE_ASSERT_H is given. */
+#ifndef HAVE_ASSERT_H
+# define assert(x)
+#endif
+
 #ifndef BYTE_ORDER
 #endif /* BYTE_ORDER */
 

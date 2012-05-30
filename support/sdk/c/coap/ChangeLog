@@ -1,3 +1,30 @@
+2012-03-23  Olaf Bergmann  <bergmann@tzi.org>
+
+	* examples/client.c (clear_obs): clear observation relationship after
+	user-specified duration
+
+2012-03-21  Olaf Bergmann  <bergmann@tzi.org>
+
+	* resource.c (print_wellknown): filtering by attributes
+
+2012-03-19  Olaf Bergmann  <bergmann@tzi.org>
+
+	* pdu.c (coap_add_option): allow more than 15 options.
+
+2012-03-15  Olaf Bergmann  <bergmann@tzi.org>
+
+	* examples/client.c (cmdline_uri): split path and query here to
+	make it easier to include these options in subsequent requests for
+	block transfer.
+
+2012-03-14  Olaf Bergmann  <bergmann@tzi.org>
+
+	* examples/etsi_iot_01.c: Support for POST, PUT, DELETE on /test
+
+2012-03-13  Olaf Bergmann  <bergmann@tzi.org>
+
+	* encode.c (coap_encode_var_bytes): more efficient coding for 0
+
 2012-03-11  Olaf Bergmann  <bergmann@tzi.org>
 
 	* examples/etsi_iot_01.c: Test cases for 1st ETSI CoAP Plugtest,

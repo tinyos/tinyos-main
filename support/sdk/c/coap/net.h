@@ -15,7 +15,7 @@
 #include <assert.h>
 #else
 #ifndef assert
-//#warning "assertions are disabled"
+#warning "assertions are disabled"
 #  define assert(x)
 #endif
 #endif
@@ -88,6 +88,12 @@ typedef void (*coap_response_handler_t)(struct coap_context_t  *,
 					coap_pdu_t *sent,
 					coap_pdu_t *received,
 					const coap_tid_t id);
+
+#define COAP_MID_CACHE_SIZE 3
+typedef struct {
+  unsigned char flags[COAP_MID_CACHE_SIZE];
+  coap_key_t item[COAP_MID_CACHE_SIZE];
+} coap_mid_cache_t; 
 
 /** The CoAP stack's global state is stored in a coap_context_t object */
 typedef struct coap_context_t {
@@ -187,7 +193,15 @@ coap_context_t *coap_new_context(const coap_address_t *listen_addr);
 static inline unsigned short
 coap_new_message_id(coap_context_t *context) {
 #ifndef WITH_CONTIKI
-  return htons(++context->message_id);
+#ifndef WITH_TINYOS
+  return htons(++(context->message_id));
+#else /* WITH_TINYOS */
+  // fix for "warning: operation on 'context->message_id' may be undefined"
+  // since htons is a macro in TinyOS
+  // #define htons(X)   (((((uint16_t)(X)) << 8) | ((uint16_t)(X) >> 8)) & 0xffff)
+  (context->message_id)++;
+  return htons(context->message_id);
+#endif /* WITH_TINYOS */
 #else /* WITH_CONTIKI */
   return uip_htons(++context->message_id);
 #endif
@@ -199,9 +213,8 @@ void coap_free_context( coap_context_t *context );
 
 /**
  * Sends a confirmed CoAP message to given destination. The memory
- * that is allocated by pdu will be released by
- * coap_send_confirmed(). The caller must not make any assumption on
- * the lifetime of pdu.
+ * that is allocated by pdu will not be released by
+ * coap_send_confirmed(). The caller must release the memory.
  *
  * @param context The CoAP context to use.
  * @param dst     The address to send to.
@@ -234,8 +247,8 @@ coap_pdu_t *coap_new_error_response(coap_pdu_t *request,
 				    coap_opt_filter_t opts);
 /**
  * Sends a non-confirmed CoAP message to given destination. The memory
- * that is allocated by pdu will be released by coap_send(). The
- * caller must not make any assumption on the lifetime of pdu.
+ * that is allocated by pdu will not be released by coap_send().
+ * The caller must release the memory.
  *
  * @param context The CoAP context to use.
  * @param dst     The address to send to.
@@ -297,15 +310,9 @@ coap_send_message_type(coap_context_t *context,
  * @return The transaction id if ACK was sent or @c COAP_INVALID_TID
  * on error.
  */
-static inline coap_tid_t
-coap_send_ack(coap_context_t *context,
+coap_tid_t coap_send_ack(coap_context_t *context, 
 	      const coap_address_t *dst,
-	      coap_pdu_t *request) {
-  if (request && request->hdr->type == COAP_MESSAGE_CON)
-    return coap_send_message_type(context, dst, request, COAP_MESSAGE_ACK);
-  else
-    return COAP_INVALID_TID;
-}
+			 coap_pdu_t *request);
 
 /**
  * Sends an RST message with code @c 0 for the specified @p request to

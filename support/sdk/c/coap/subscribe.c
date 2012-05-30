@@ -83,7 +83,7 @@ notify(coap_context_t *context, coap_resource_t *res,
   if (res->data) {
     length = (unsigned char *)pdu->hdr + COAP_MAX_PDU_SIZE - pdu->data;
     ct = res->mediatype;
-    res->data(res->uri, &pdu->hdr->id, &ct, 0, pdu->data, &length, &finished);
+    res->data(res->uri, &ct, 0, pdu->data, &length, &finished);
     pdu->length += length;
 
     /* TODO: add block option if not finished */

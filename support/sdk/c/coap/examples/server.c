@@ -4,7 +4,7 @@
  * Copyright (C) 2010,2011 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the CoAP library libcoap. Please see
- * README for terms of use.
+ * README for terms of use. 
  */
 
 #include <string.h>
@@ -54,8 +54,8 @@ handle_sigint(int signum) {
 #define INDEX "This is a test server made with libcoap (see http://libcoap.sf.net)\n" \
    	      "Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>\n\n"
 
-void
-hnd_get_index(coap_context_t  *ctx, struct coap_resource_t *resource,
+void 
+hnd_get_index(coap_context_t  *ctx, struct coap_resource_t *resource, 
 	      coap_address_t *peer, coap_pdu_t *request, str *token,
 	      coap_pdu_t *response) {
   unsigned char buf[3];
@@ -67,15 +67,15 @@ hnd_get_index(coap_context_t  *ctx, struct coap_resource_t *resource,
 
   coap_add_option(response, COAP_OPTION_MAXAGE,
 	  coap_encode_var_bytes(buf, 0x2ffff), buf);
-
+    
   if (token->length)
     coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 
   coap_add_data(response, strlen(INDEX), (unsigned char *)INDEX);
 }
 
-void
-hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource,
+void 
+hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource, 
 	     coap_address_t *peer, coap_pdu_t *request, str *token,
 	     coap_pdu_t *response) {
   coap_opt_iterator_t opt_iter;
@@ -87,7 +87,7 @@ hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource,
    * when query ?ticks is given. */
 
   /* if my_clock_base was deleted, we pretend to have no such resource */
-  response->hdr->code =
+  response->hdr->code = 
     my_clock_base ? COAP_RESPONSE_CODE(205) : COAP_RESPONSE_CODE(404);
 
   if (my_clock_base)
@@ -96,7 +96,7 @@ hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource,
 
   coap_add_option(response, COAP_OPTION_MAXAGE,
 	  coap_encode_var_bytes(buf, 0x01), buf);
-
+    
   if (token->length)
     coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 
@@ -105,27 +105,27 @@ hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource,
     /* calculate current time */
     coap_ticks(&t);
     now = my_clock_base + (t / COAP_TICKS_PER_SECOND);
-
+    
     if (coap_check_option(request, COAP_OPTION_URI_QUERY, &opt_iter)
 	&& memcmp(COAP_OPT_VALUE(opt_iter.option), "ticks",
 		  min(5, COAP_OPT_LENGTH(opt_iter.option))) == 0) {
       /* output ticks */
-      response->length += snprintf((char *)response->data,
+      response->length += snprintf((char *)response->data, 
 				   response->max_size - response->length,
 				   "%u", (unsigned int)now);
 
     } else {			/* output human-readable time */
       struct tm *tmp;
       tmp = gmtime(&now);
-      response->length += strftime((char *)response->data,
+      response->length += strftime((char *)response->data, 
 				   response->max_size - response->length,
 				   "%b %d %H:%M:%S", tmp);
     }
   }
 }
 
-void
-hnd_put_time(coap_context_t  *ctx, struct coap_resource_t *resource,
+void 
+hnd_put_time(coap_context_t  *ctx, struct coap_resource_t *resource, 
 	     coap_address_t *peer, coap_pdu_t *request, str *token,
 	     coap_pdu_t *response) {
   coap_tick_t t;
@@ -138,17 +138,17 @@ hnd_put_time(coap_context_t  *ctx, struct coap_resource_t *resource,
    */
 
   /* if my_clock_base was deleted, we pretend to have no such resource */
-  response->hdr->code =
+  response->hdr->code = 
     my_clock_base ? COAP_RESPONSE_CODE(204) : COAP_RESPONSE_CODE(201);
 
   coap_get_data(request, &size, &data);
-
+  
   if (size == 0)		/* re-init */
     my_clock_base = clock_offset;
   else {
     my_clock_base = 0;
     coap_ticks(&t);
-    while(size--)
+    while(size--) 
       my_clock_base = my_clock_base * 10 + *data++;
     my_clock_base -= t / COAP_TICKS_PER_SECOND;
   }
@@ -157,12 +157,12 @@ hnd_put_time(coap_context_t  *ctx, struct coap_resource_t *resource,
     coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 }
 
-void
-hnd_delete_time(coap_context_t  *ctx, struct coap_resource_t *resource,
+void 
+hnd_delete_time(coap_context_t  *ctx, struct coap_resource_t *resource, 
 	      coap_address_t *peer, coap_pdu_t *request, str *token,
 	      coap_pdu_t *response) {
   my_clock_base = 0;		/* mark clock as "deleted" */
-
+  
   /* type = request->hdr->type == COAP_MESSAGE_CON  */
   /*   ? COAP_MESSAGE_ACK : COAP_MESSAGE_NON; */
 
@@ -171,8 +171,8 @@ hnd_delete_time(coap_context_t  *ctx, struct coap_resource_t *resource,
 }
 
 #ifndef WITHOUT_ASYNC
-void
-hnd_get_async(coap_context_t  *ctx, struct coap_resource_t *resource,
+void 
+hnd_get_async(coap_context_t  *ctx, struct coap_resource_t *resource, 
 	      coap_address_t *peer, coap_pdu_t *request, str *token,
 	      coap_pdu_t *response) {
   coap_opt_iterator_t opt_iter;
@@ -196,35 +196,35 @@ hnd_get_async(coap_context_t  *ctx, struct coap_resource_t *resource,
       delay = delay * 10 + (*p - '0');
   }
 
-  async = coap_register_async(ctx, peer, request,
+  async = coap_register_async(ctx, peer, request, 
 			      COAP_ASYNC_SEPARATE | COAP_ASYNC_CONFIRM,
 			      (void *)(COAP_TICKS_PER_SECOND * delay));
 }
 
 //CHECK: mab -> obgm: there is no preACK sent here, or?
-void
+void 
 check_async(coap_context_t  *ctx, coap_tick_t now) {
   coap_pdu_t *response;
   coap_async_state_t *tmp;
 
   size_t size = sizeof(coap_hdr_t) + 8; // CHECK: mab -> obgm: magic 8 ???
 
-  if (!async || now < async->created + (unsigned long)async->appdata)
+  if (!async || now < async->created + (unsigned long)async->appdata) 
     return;
 
   size += async->tokenlen;
 
-  response = coap_pdu_init(async->flags & COAP_ASYNC_CONFIRM
+  response = coap_pdu_init(async->flags & COAP_ASYNC_CONFIRM 
 			   ? COAP_MESSAGE_CON
 			   : COAP_MESSAGE_NON,
 			   COAP_RESPONSE_CODE(205), 0, size);
   if (!response) {
     debug("check_async: insufficient memory, we'll try later\n");
-    async->appdata =
+    async->appdata = 
       (void *)((unsigned long)async->appdata + 15 * COAP_TICKS_PER_SECOND);
     return;
   }
-
+  
   response->hdr->id = coap_new_message_id(ctx);
 
   if (async->tokenlen)
@@ -233,11 +233,11 @@ check_async(coap_context_t  *ctx, coap_tick_t now) {
   coap_add_data(response, 4, (unsigned char *)"done");
 
   if (coap_send(ctx, &async->peer, response) == COAP_INVALID_TID) {
-    debug("check_async: cannot send response for message %d\n",
+    debug("check_async: cannot send response for message %d\n", 
 	  response->hdr->id);
-    coap_delete_pdu(response);
   }
-
+  coap_delete_pdu(response);
+  
   coap_remove_async(ctx, async->id, &tmp);
   coap_free_async(async);
   async = NULL;
@@ -299,7 +299,7 @@ usage( const char *program, const char *version) {
 
 coap_context_t *
 get_context(const char *node, const char *port) {
-  coap_context_t *ctx = NULL;
+  coap_context_t *ctx = NULL;  
   int s;
   struct addrinfo hints;
   struct addrinfo *result, *rp;
@@ -308,12 +308,12 @@ get_context(const char *node, const char *port) {
   hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
   hints.ai_socktype = SOCK_DGRAM; /* Coap uses UDP */
   hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
-
+  
   s = getaddrinfo(node, port, &hints, &result);
   if ( s != 0 ) {
     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
     return NULL;
-  }
+  } 
 
   /* iterate through results until success */
   for (rp = result; rp != NULL; rp = rp->ai_next) {
@@ -331,7 +331,7 @@ get_context(const char *node, const char *port) {
       }
     }
   }
-
+  
   fprintf(stderr, "no context available for interface '%s'\n", node);
 
  finish:
@@ -395,7 +395,7 @@ main(int argc, char **argv) {
 
     if ( nextpdu && nextpdu->t <= now + COAP_RESOURCE_CHECK_TIME ) {
       /* set timeout if there is a pdu to send before our automatic timeout occurs */
-      tv.tv_usec = ((nextpdu->t - now) % COAP_TICKS_PER_SECOND) << 10;
+      tv.tv_usec = ((nextpdu->t - now) % COAP_TICKS_PER_SECOND) * 1000000 / COAP_TICKS_PER_SECOND;
       tv.tv_sec = (nextpdu->t - now) / COAP_TICKS_PER_SECOND;
       timeout = &tv;
     } else {

@@ -34,9 +34,9 @@ typedef unsigned char coap_opt_t;
   (*PCHAR(opt) = (*PCHAR(opt) & 0x0f) | ((val) << 4))
 
 #define COAP_OPT_LENGTH(opt)			\
-  ( COAP_OPT_ISEXTENDED(opt)			\
+  ((unsigned int)(COAP_OPT_ISEXTENDED(opt)			\
     ? (*(PCHAR(opt) + 1) + 15)			\
-    : (*PCHAR(opt) & 0x0f))
+		  : (*PCHAR(opt) & 0x0f)))
 
 #define COAP_OPT_SETLENGTH(opt,val)					\
   if ( ((val) & 0xff) < 15 )						\

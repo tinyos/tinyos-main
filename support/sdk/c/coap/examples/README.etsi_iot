@@ -32,7 +32,7 @@ Optional Tests
 [ ] TD_COAP_LINK_01 Access to well-known interface for resource discovery
 [-] TD_COAP_LINK_02 Use filtered requests for limiting discovery results
 [+] TD_COAP_BLOCK_01 Handle GET blockwise transfer for large resource (early negotiation)
-[-] TD_COAP_BLOCK_02 Handle GET blockwise transfer for large resource (late negotiation)
+[+] TD_COAP_BLOCK_02 Handle GET blockwise transfer for large resource (late negotiation)
 [-] TD_COAP_BLOCK_03 Handle PUT blockwise transfer for large resource
 [-] TD_COAP_BLOCK_04 Handle POST blockwise transfer for large resource
 [-] TD_COAP_OBS_01 Handle resource observation

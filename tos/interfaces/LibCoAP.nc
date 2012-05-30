@@ -38,8 +38,7 @@ interface LibCoAP {
      */
     command coap_tid_t send(coap_context_t *ctx,
 			    const coap_address_t *dst,
-			    coap_pdu_t *pdu,
-			    int free_pdu);
+			    coap_pdu_t *pdu);
 
     /*
      * Set up the libcoap context for client and server. For the

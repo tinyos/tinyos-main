@@ -58,17 +58,23 @@
 
 #if defined(PLATFORM) && PLATFORM == PLATFORM_MC1322X
 /* Redbee econotags get a special treatment here: endianness is set
- * explicitly, and assert() is defined as emtpy directive unless
- * HAVE_ASSERT_H is given.
+ * explicitly, and 
  */ 
 
 #define BYTE_ORDER UIP_LITTLE_ENDIAN
 
-#ifndef HAVE_ASSERT_H
-# define assert(x)
-#endif
-
+#undef HAVE_ASSERT_H
+#define HAVE_UNISTD_H
 #endif /* defined(PLATFORM) && PLATFORM == PLATFORM_MC1322X */
+
+#if defined(TMOTE_SKY)
+/* Need to set the byte order for TMote Sky explicitely */
+
+#define BYTE_ORDER UIP_LITTLE_ENDIAN
+
+typedef int ssize_t;
+#undef HAVE_ASSERT_H
+#endif /* defined(TMOTE_SKY) */
 
 #ifndef BYTE_ORDER
 # ifdef UIP_CONF_BYTE_ORDER
@@ -77,6 +83,11 @@
 #  error "UIP_CONF_BYTE_ORDER not defined"
 # endif /* UIP_CONF_BYTE_ORDER */
 #endif /* BYTE_ORDER */
+
+/* Define assert() as emtpy directive unless HAVE_ASSERT_H is given. */
+#ifndef HAVE_ASSERT_H
+# define assert(x)
+#endif
 
 #endif /* _CONFIG_H_ */
 

@@ -20,7 +20,7 @@
 #include <assert.h>
 #else
 #ifndef assert
-//#warning "assertions are disabled"
+#warning "assertions are disabled"
 #  define assert(x)
 #endif
 #endif
@@ -64,6 +64,9 @@ typedef struct __coap_address_t {
 
 #define coap_address_t __coap_address_t
 
+// TinyOS does not have netinet/in.h
+#define IN6_IS_ADDR_MULTICAST(a) (((__const uint8_t *) (a))[0] == 0xff)
+
 static inline int
 _coap_address_equals_impl(const coap_address_t *a,
 			  const coap_address_t *b) {
@@ -81,9 +84,7 @@ _coap_is_mcast_impl(const coap_address_t *a) {
   if (!a)
     return 0;
 
-#warning "Multicast detection not properly implemented for TinyOS."
-  return 0;
-  //return IN6_IS_ADDR_MULTICAST(&a->addr.sin6_addr);
+  return IN6_IS_ADDR_MULTICAST(&a->addr.sin6_addr);
 }
 
 #endif /* WITH_TINYOS */
