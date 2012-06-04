@@ -12,6 +12,6 @@ push( @includes, qw(
 
 push ( @opts, qw(
 
-  -mmcu=msp430x149
+  -mmcu=msp430f149
 ) );
 
