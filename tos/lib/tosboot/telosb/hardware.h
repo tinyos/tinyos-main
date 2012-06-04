@@ -50,7 +50,9 @@ typedef uint16_t in_flash_addr_t;
 typedef uint32_t ex_flash_addr_t;
 
 void wait(uint16_t t) {
-  for ( ; t > 0; t-- );
+  for ( ; t > 0; t-- ) {
+    asm("nop");
+  }
 }
 
 // LEDs
