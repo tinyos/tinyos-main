@@ -96,6 +96,17 @@ hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource,
 
   coap_add_option(response, COAP_OPTION_MAXAGE,
 	  coap_encode_var_bytes(buf, 0x01), buf);
+
+  if (request != NULL &&
+      coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)) {
+    coap_add_observer(resource,
+		      peer,
+		      token);
+    coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
+  }
+  if (resource->dirty == 1)
+    coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
+
     
   if (token->length)
     coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
@@ -106,7 +117,8 @@ hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource,
     coap_ticks(&t);
     now = my_clock_base + (t / COAP_TICKS_PER_SECOND);
     
-    if (coap_check_option(request, COAP_OPTION_URI_QUERY, &opt_iter)
+    if (request != NULL
+	&& coap_check_option(request, COAP_OPTION_URI_QUERY, &opt_iter)
 	&& memcmp(COAP_OPT_VALUE(opt_iter.option), "ticks",
 		  min(5, COAP_OPT_LENGTH(opt_iter.option))) == 0) {
       /* output ticks */
@@ -140,6 +152,8 @@ hnd_put_time(coap_context_t  *ctx, struct coap_resource_t *resource,
   /* if my_clock_base was deleted, we pretend to have no such resource */
   response->hdr->code = 
     my_clock_base ? COAP_RESPONSE_CODE(204) : COAP_RESPONSE_CODE(201);
+
+  resource->dirty = 1;
 
   coap_get_data(request, &size, &data);
   
@@ -235,14 +249,21 @@ check_async(coap_context_t  *ctx, coap_tick_t now) {
   if (coap_send(ctx, &async->peer, response) == COAP_INVALID_TID) {
     debug("check_async: cannot send response for message %d\n", 
 	  response->hdr->id);
+    coap_delete_pdu(response);
   }
-  coap_delete_pdu(response);
   
   coap_remove_async(ctx, async->id, &tmp);
   coap_free_async(async);
   async = NULL;
 }
 #endif /* WITHOUT_ASYNC */
+
+#ifndef WITHOUT_OBSERVE
+void
+check_observe(coap_context_t  *ctx) {
+  coap_check_notify(ctx);
+}
+#endif /* WITHOUT_OBSERVE */
 
 void
 init_resources(coap_context_t *ctx) {
@@ -266,7 +287,8 @@ init_resources(coap_context_t *ctx) {
   coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
   coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16);
   coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7);
-  /* coap_add_attr(r, (unsigned char *)"obs", 3, NULL, 0, 0); */
+  coap_add_attr(r, (unsigned char *)"obs", 3, NULL, 0);
+  r->observeable = 1;
   coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7);
 
   coap_add_resource(ctx, r);
@@ -421,6 +443,11 @@ main(int argc, char **argv) {
     /* check if we have to send asynchronous responses */
     check_async(ctx, now);
 #endif /* WITHOUT_ASYNC */
+
+#ifndef WITHOUT_OBSERVE
+    /* check if we have to send observe notifications */
+    check_observe(ctx);
+#endif /* WITHOUT_OBSERVE */
   }
 
   coap_free_context( ctx );

@@ -508,53 +508,51 @@ coap_check_notify(coap_context_t *context) {
     if (r->observeable && r->dirty && list_head(r->subscribers)) {
 #endif /* WITH_CONTIKI */
       coap_method_handler_t h;
-      coap_subscription_t *obs;
-      str token;
 
       /* retrieve GET handler, prepare response */
       h = r->handler[COAP_REQUEST_GET - 1];
       assert(h);		/* we do not allow subscriptions if no
 				 * GET handler is defined */
 
+      /* FIXME: provide CON/NON flag in coap_subscription_t */
+      coap_subscription_t *obs;
+      str token;
+
 #ifndef WITH_CONTIKI
-	LL_FOREACH(r->subscribers, obs) {
+      /* FIXME: */
+      LL_FOREACH(r->subscribers, obs) {
 #else /* WITH_CONTIKI */
       for (obs = list_head(r->subscribers); obs; obs = list_item_next(obs)) {
 #endif /* WITH_CONTIKI */
-        coap_tid_t tid = COAP_INVALID_TID;
-	/* initialize response */
-        response = coap_pdu_init(COAP_MESSAGE_CON, 0, 0, COAP_MAX_PDU_SIZE);
-        if (!response) {
-          debug("pdu init failed\n");
-          continue;
+	/* re-initialize response */
+	response = coap_pdu_init(COAP_MESSAGE_CON, 0, 0, COAP_MAX_PDU_SIZE);
+
+	if (response) {
+	  token.length = obs->token_length;
+	  token.s = obs->token;
+
+	  coap_pdu_clear(response, response->max_size);
+	  response->hdr->id = coap_new_message_id(context);
+	  if (obs->non && obs->non_cnt < COAP_OBS_MAX_NON)
+	    response->hdr->type = COAP_MESSAGE_NON;
+	  else
+	    response->hdr->type = COAP_MESSAGE_CON;
+
+	  /* fill with observer-specific data */
+	  h(context, r, &obs->subscriber, NULL, &token, response);
+
+	  if (response->hdr->type == COAP_MESSAGE_CON) {
+	    coap_send_confirmed(context, &obs->subscriber, response);
+	    obs->non_cnt = 0;
+	  } else {
+	    coap_send(context, &obs->subscriber, response);
+	    obs->non_cnt++;
+	  }
         }
 
-	token.length = obs->token_length;
-	token.s = obs->token;
-
-	response->hdr->id = coap_new_message_id(context);
-	if (obs->non && obs->non_cnt < COAP_OBS_MAX_NON)
-	  response->hdr->type = COAP_MESSAGE_NON;
-	else
-	  response->hdr->type = COAP_MESSAGE_CON;
-
-	/* fill with observer-specific data */
-	h(context, r, &obs->subscriber, NULL, &token, response);
-
-	if (response->hdr->type == COAP_MESSAGE_CON) {
-	  tid = coap_send_confirmed(context, &obs->subscriber, response);
-	  obs->non_cnt = 0;
-	} else {
-	  tid = coap_send(context, &obs->subscriber, response);
-	  obs->non_cnt++;
-	}
-
-        if (COAP_INVALID_TID == tid || response->hdr->type != COAP_MESSAGE_CON)
-          coap_delete_pdu(response);
+	/* Increment value for next Observe use. */
+	context->observe++;
       }
-
-      /* Increment value for next Observe use. */
-      context->observe++;
     }
     r->dirty = 0;
   }
