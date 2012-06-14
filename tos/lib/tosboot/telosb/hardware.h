@@ -51,7 +51,7 @@ typedef uint32_t ex_flash_addr_t;
 
 void wait(uint16_t t) {
   for ( ; t > 0; t-- ) {
-    asm("nop");
+    __delay_cycles(0);
   }
 }
 
