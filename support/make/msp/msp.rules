@@ -27,10 +27,9 @@ else
         NCC_SAFE_TINYOS_FLAGS =
 endif
 
-#MSP_NESC_TARGET ?= msp430
-#MSP_GCC ?= msp430-gcc
-#MSP_MCU ?= msp430x149
-#PFLAGS += -fnesc-target=$(MSP_NESC_TARGET) -gcc=$(MSP_GCC) -mmcu=$(MSP_MCU)
+
+MSPGCC_MIN_VER := 4.6.3
+MSPGCC_VER_OK := $(shell expr `msp430-gcc -dumpversion` \>= '$(MSPGCC_MIN_VER)')
 
 OBJCOPY = msp430-objcopy
 OBJDUMP = msp430-objdump
@@ -106,6 +105,11 @@ exe: exe0 bytes FORCE
 
 exe0: builddir $(BUILD_EXTRA_DEPS) $(COMPONENT).nc FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
+ifeq ("$(MSPGCC_VER_OK)","0")
+	@echo
+	@echo "    WARNING: Minimum recommended msp430-gcc version for this TinyOS release is $(MSPGCC_MIN_VER)!!!"
+	@echo
+endif
 	$(NCC) -o $(MAIN_EXE) $(NCC_SAFE_TINYOS_FLAGS) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 ifdef WIRING_CHECK_FILE
 	@nescc-wiring $(WIRING_CHECK_FILE)
@@ -117,4 +121,3 @@ builddir: FORCE
 
 bytes: FORCE
 	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'
-
