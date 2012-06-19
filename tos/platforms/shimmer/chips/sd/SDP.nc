@@ -272,7 +272,7 @@ implementation {
     uint8_t response;
 
     for(i = 0; i < 65; i++){
-      if(((response = spiSendByte(0xff)) == 0x00) | 
+      if(((response = spiSendByte(0xff)) == 0x00) ||
 	 (response == 0x01))
 	break;
     }
