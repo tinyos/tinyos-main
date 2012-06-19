@@ -37,6 +37,7 @@ interface Time {
   command error_t localtime(const time_t *timer, struct tm *tm);
   command error_t asctime(const struct tm *tm, char *buf, int buflen);
   command error_t time(time_t *timer);
+  command error_t mktime(const struct tm *tm, time_t * t);
   command void setCurrentTime(time_t current_time);
   command void setZoneInfo(uint16_t g_year, 
 			   time_t g_year_time, 
