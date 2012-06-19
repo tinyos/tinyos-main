@@ -44,6 +44,8 @@ module Bmp085P {
   uses {
     interface I2CPacket<TI2CBasicAddr> as I2CPacket;
 
+    interface Init as I2CInit;
+
     interface HplMsp430I2C as HplI2C;
     //    interface HplMsp430Usart as Usart;
     interface HplMsp430UsartInterrupts as UsartInterrupts;
@@ -51,6 +53,7 @@ module Bmp085P {
 
     interface HplMsp430Interrupt as EOCInterrupt;
     interface HplMsp430GeneralIO as Msp430GeneralIO;
+
   }
 }
 
@@ -60,9 +63,10 @@ implementation {
 
   void readReg(uint8_t reg_addr, uint8_t size);
 
-  uint8_t readbuff[128], bytesToRead, regToRead, bytesRead, temp_run, cal_run;
+  uint8_t readbuff[128], bytesToRead, regToRead, bytesRead, cal_run;
   uint16_t sbuf0[64];
-  uint8_t packet[2];
+  uint8_t packet[4];
+
 
   // sensing mode
   uint8_t oss;  // default is ultra high res
@@ -78,6 +82,10 @@ implementation {
 
   bool operatingState;
 
+  /*
+   * these settings aren't used, as these bitfields
+   * cause trouble and are ignored in the hpl layer
+   */
   msp430_i2c_union_config_t msp430_i2c_my_config = { 
     {
       rxdmaen : 0, 
@@ -106,10 +114,10 @@ implementation {
     TOSH_SET_ADC_2_PIN();   // module clear pin, logical false (basically reset)
 
     call HplI2C.setModeI2C(&msp430_i2c_my_config);
+    call I2CInit.init();
 
     TOSH_MAKE_SER0_RTS_INPUT();  // this is the EOC (end o calculation) pin
 
-    temp_run = 0;
     oss = 3;
 
     operatingState = NORMAL;
@@ -187,17 +195,19 @@ implementation {
     operatingState = WAITING_ON_REG;
     bytesToRead = size;
 
+    call I2CInit.init();
     call I2CPacket.write(I2C_START | I2C_STOP, 0x77, 1, &ra);
   }
   
   error_t writeReg(uint8_t reg_addr, uint8_t val) {
-
     // pack the packet with address of reg target, then register value
-    packet[0] = reg_addr;
-    packet[1] = val;
+    *packet = reg_addr;
+    *(packet + 1) = val;
+    *(packet + 2) = *(packet + 3) = 0;
 
+    call I2CInit.init();
     // write addr is 0xee, so 7-bit addr should be 77
-    return call I2CPacket.write(I2C_START | I2C_STOP, 0x77, 2, packet);
+    return call I2CPacket.write(I2C_START | I2C_STOP, 0x77, 3, packet);
   }
 
   task void cleanup() {
@@ -249,8 +259,8 @@ implementation {
     x1 = (int32_t)AC3 * b6 >> 13;
     x2 = (int32_t)B1 * (b6 * b6 >> 12) >> 16;
     x3 = (x1 + x2 + 2) >> 2;
-    b4 = (uint32_t)AC4 * (uint32_t)(x3 + 32768) >> 15;
-    b7 = (uint32_t)(up - b3) * (50000 >> oss);
+    b4 = (uint32_t)AC4 * (uint32_t)(x3 + 32768L) >> 15;
+    b7 = (uint32_t)(up - b3) * (50000UL >> oss);
 
     if(b7  < 0x80000000UL)
       press = (b7 << 1) / b4;
@@ -286,7 +296,7 @@ implementation {
     register uint8_t i;
     uint16_t * src, * dest;
     uint8_t swapbuff[128];
-    uint8_t pressureData[3];
+    uint8_t pressureData[4];
 
     // temp
     if(bytesRead == 2){
