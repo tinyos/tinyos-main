@@ -214,57 +214,34 @@ implementation {
 
   void initADC12CTL0()
   {
-    adc12ctl0_t ctl0 = {
-      adc12sc: 0,                      // start conversion: 0 = no sample-and-conversion-start
-      enc: 0,                          // enable conversion: 0 = ADC12 disabled
-      adc12tovie: 0,                   // conversion-time-overflow-interrupt: 0 = interrupt dissabled
-      adc12ovie: 0,                    // ADC12MEMx overflow-interrupt: 0 = dissabled
-      adc12on: 1,                      // ADC12 on: 1 = on
-      refon: 0,                        // reference generator: 0 = off
-      r2_5v: 1,                        // reference generator voltage: 1 = 2.5V
-      msc: 1,                          // multiple sample and conversion: 1 = conversions performed ASAP
-      sht0: SAMPLE_HOLD_4_CYCLES,      // sample-and-hold-time for  ADC12MEM0 to ADC12MEM7  
-      sht1: SAMPLE_HOLD_4_CYCLES       // sample-and-hold-time for  ADC12MEM8 to ADC12MEM15  
-    };
 
-    call HplAdc12.setCtl0(ctl0);
+    ADC12CTL0 = 0;
+    SET_FLAG(ADC12CTL0, ADC12ON);
+    SET_FLAG(ADC12CTL0, REF2_5V);
+    SET_FLAG(ADC12CTL0, MSC);
+    SET_FLAG(ADC12CTL0, SHT0_0);
+    SET_FLAG(ADC12CTL0, SHT1_0); 
   }
 
   void initADC12CTL1()
   {
-    adc12ctl1_t ctl1 = {
-      adc12busy: 0,                    // no operation is active
-      conseq: 1,                       // conversion mode: sequence of chans
-      adc12ssel: SHT_SOURCE_SMCLK,     // SHT_SOURCE_SMCLK=3; ADC12 clocl source
-      adc12div: SHT_CLOCK_DIV_1,       // SHT_CLOCK_DIV_1=0; ADC12 clock div 1
-      issh: 0,                         // sample-input signal not inverted
-      shp: 1,                          // Sample-and-hold pulse-mode select: SAMPCON signal is sourced from the sampling timer
-      shs: 0,                          // Sample-and-hold source select= ADC12SC bit
-      cstartadd: 0                     // conversion start addres ADC12MEM0
-    }; 
-
-    call HplAdc12.setCtl1(ctl1);
+    ADC12CTL1 = 0;
+    SET_FLAG(ADC12CTL1, CONSEQ_1);
+    SET_FLAG(ADC12CTL1, ADC12SSEL_3);
+    SET_FLAG(ADC12CTL1, ADC12DIV_0);
+    SET_FLAG(ADC12CTL1, SHP);
   }
 
   void initADC12MEMCTLx()
   {
     uint8_t i;
-    adc12memctl_t memctl = {
-      inch: 0,
-      sref: REFERENCE_AVcc_AVss,      // reference voltage: 
-      eos: 1                          // end of sequence flag: 1 indicates last conversion
-    };
 
     for (i = 0; i < NUM_ADC_CHANS; ++i) {
-      memctl.inch = ADC_CHANS[i];
-
-      if (i < NUM_ADC_CHANS - 1)
-	memctl.eos = 0;
-      else 
-	memctl.eos = 1;                   // eos=1 indicates last conversion in sequence
-
-      call HplAdc12.setMCtl(i, memctl);
-    }
+      ADC12MCTL[i] = 0;
+      SET_FLAG(ADC12MCTL[i], ADC_CHANS[i]);  // inch is lower four bits
+      // don't have to do anything to set sref to AVcc_AVss, which is 0
+    }    
+    SET_FLAG(ADC12MCTL[i - 1], EOS);
   }
 
   void setupDMA(uint16_t * destAddr) {
