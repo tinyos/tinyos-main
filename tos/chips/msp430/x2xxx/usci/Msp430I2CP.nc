@@ -59,7 +59,11 @@ generic module Msp430I2CP() {
 
 implementation {
   enum {
-    TIMEOUT = 800, // 200
+    /* Due to different versions of msp430-gcc toolchain this value has 
+     * been incremented (200 in v.3.2.3, 800 in v.4.5.3), it is currently
+     * functional but this has to be addressed  */
+
+    TIMEOUT = 1200,
   };
 
   norace uint8_t* m_buf;
@@ -162,6 +166,7 @@ implementation {
         i++;
       }
       i=0;
+
       while((call UsciB.getUstat()) & UCBBUSY) {
         if(i>=TIMEOUT) {
           return FAIL;

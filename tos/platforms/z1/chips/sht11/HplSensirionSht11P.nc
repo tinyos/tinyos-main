@@ -54,12 +54,12 @@ implementation {
     call PWR.makeOutput();
     call PWR.set();
     call Timer.startOneShot( 11 );
-    return SUCCESS;
   #endif
 
   #ifdef IS_ZIGLET
     signal SplitControl.startDone( SUCCESS );
   #endif
+    return SUCCESS;
   }
 
   event void Timer.fired() {
