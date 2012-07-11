@@ -3,10 +3,10 @@
 RPMS="`rpm --eval=\"%_topdir\"`"
 
 TOS_NAME="tinyos"
-TOS_VERSION=2.1.1
+TOS_VERSION=2.1.2
 
 TOS_TOOLS_NAME="tinyos-tools"
-TOS_TOOLS_VERSION=1.4.0
+TOS_TOOLS_VERSION=1.4.1
 
 TOS_DEPUTY_NAME="tinyos-deputy"
 TOS_DEPUTY_VERSION=1.1-1
