@@ -182,6 +182,19 @@ implementation
     SET_BIT(DDRF, 3);	// DIG0
     CLR_BIT(PORTF, 3);
 #endif
+#ifdef RFA1_DATA_RATE
+    #if RFA1_DATA_RATE == 250
+      TRX_CTRL_2 = (TRX_CTRL_2 & 0xfc) | 0;
+    #elif RFA1_DATA_RATE == 500
+      TRX_CTRL_2 = (TRX_CTRL_2 & 0xfc) | 1;
+    #elif RFA1_DATA_RATE == 1000
+      TRX_CTRL_2 = (TRX_CTRL_2 & 0xfc) | 2;
+    #elif RFA1_DATA_RATE == 2000
+      TRX_CTRL_2 = (TRX_CTRL_2 & 0xfc) | 3;
+    #else
+      #error Unsupported RFA1_DATA_RATE (supported: 250, 500, 1000, 2000. default is 250)
+    #endif
+#endif
     PHY_TX_PWR = RFA1_PA_BUF_LT | RFA1_PA_LT | (RFA1_DEF_RFPOWER&RFA1_TX_PWR_MASK)<<TX_PWR0;
 
     txPower = RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK;
