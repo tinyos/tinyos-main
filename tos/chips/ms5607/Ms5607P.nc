@@ -214,7 +214,7 @@ implementation {
       }break;
       case S_READ_TEMP_CMD:{
         i2cCond=I2C_START|I2C_STOP;
-        i2cBuffer[0]=MS5607_CONVERT_TEMPERATURE - (precision > 4);
+        i2cBuffer[0]=MS5607_CONVERT_TEMPERATURE - (precision >> 4);
       }break;
       case S_READ_PRESSURE:
       case S_READ_TEMP:{
