@@ -55,18 +55,6 @@ implementation
   components Stm25pOffC;
   PlatformP.Stm25pInit -> Stm25pOffC;
   
-  //voltage measuring circuit
-  components AtmegaGeneralIOC as IO;
-  #if UCMINI_REV==49
-    PlatformP.Voltmeter -> IO.PortF0;
-  #elif (UCMINI_REV >=50) && (UCMINI_REV<=53)
-    PlatformP.VBattADC -> IO.PortF2;
-    PlatformP.VMeasureBridge -> IO.PortD6;
-  #else
-    PlatformP.VBattADC -> IO.PortF2;
-    PlatformP.VMeasureBridge -> IO.PortF0;
-  #endif
-
   #ifndef DISABLE_SERIAL_AUTO
     components SerialAutoControlC;
   #endif

@@ -43,13 +43,6 @@ module PlatformP @safe()
     interface Init as McuInit;
     interface Init as LedsInit;
     interface Init as Stm25pInit; 
-
-    #if UCMINI_REV==49
-      interface GeneralIO as Voltmeter;
-    #else
-      interface GeneralIO as VBattADC;
-      interface GeneralIO as VMeasureBridge;
-    #endif
   }
 }
 
@@ -58,16 +51,6 @@ implementation
   command error_t Init.init()
   {
     error_t ok;
-
-    //disable the voltage measuring circuit
-    #if UCMINI_REV==49
-      call Voltmeter.set();
-    #else
-      call VMeasureBridge.makeOutput();
-      call VMeasureBridge.set();
-      call VBattADC.set();
-      call VBattADC.makeOutput();
-    #endif
 
     ok = call McuInit.init();
     ok = ecombine(ok, call Stm25pInit.init());
