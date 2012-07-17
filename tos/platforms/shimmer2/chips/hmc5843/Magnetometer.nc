@@ -66,9 +66,9 @@ interface Magnetometer {
   command void convertRegistersToData(uint8_t * readBuf, int16_t * data);
 
   // this is where the app will find its mag readings
-  event void readDone(uint8_t * data, error_t success);
+  async event void readDone(uint8_t * data, error_t success);
   
-  event void writeDone(error_t success);
+  async event void writeDone(error_t success);
 }
 
 

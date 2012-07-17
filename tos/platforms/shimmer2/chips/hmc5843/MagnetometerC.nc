@@ -64,6 +64,7 @@ implementation {
 
   components Msp430I2CP;  // this is mine, ported from tos-1.x; find it in shimmer/chips/msp430
   Hmc5843P.I2CPacket -> Msp430I2CP.I2CBasicAddr;
+  Hmc5843P.I2CInit   -> Msp430I2CP.I2CInit;
 
   components HplMsp430I2C0C;
   Hmc5843P.HplI2C -> HplMsp430I2C0C;
