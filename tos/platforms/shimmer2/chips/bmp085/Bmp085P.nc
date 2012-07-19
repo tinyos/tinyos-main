@@ -66,7 +66,7 @@ implementation {
   uint8_t readbuff[128], bytesToRead, regToRead, bytesRead, cal_run;
   uint16_t sbuf0[64];
   uint8_t packet[4];
-
+  bool enabled;
 
   // sensing mode
   uint8_t oss;  // default is ultra high res
@@ -122,6 +122,8 @@ implementation {
 
     operatingState = NORMAL;
 
+    enabled = FALSE;
+
     return SUCCESS;
   }
 
@@ -145,6 +147,8 @@ implementation {
 
     TOSH_uwait(15000);  // power-on startup time
 
+    enabled = TRUE;
+
     post cal();
 
     return SUCCESS;
@@ -153,6 +157,7 @@ implementation {
   command error_t StdControl.stop(){
     call EOCInterrupt.disable();
 
+    enabled = FALSE;
     call PressureSensor.powerDown();
 
     call EOCInterrupt.clear();
@@ -164,6 +169,7 @@ implementation {
 
   command void PressureSensor.disableBus(){
     call HplI2C.disableI2C();
+    enabled = FALSE;
     call EOCInterrupt.disable();
 
     call EOCInterrupt.clear();
@@ -176,6 +182,7 @@ implementation {
 
     call HplI2C.setModeI2C(&msp430_i2c_my_config);
 
+    enabled = TRUE;
     call EOCInterrupt.clear();
     call EOCInterrupt.enable();
   }
@@ -340,15 +347,19 @@ implementation {
   }
 
   async event void I2CPacket.readDone(error_t _success, uint16_t _addr, uint8_t _length, uint8_t* _data) { 
-    bytesRead = _length;
-    memcpy(readbuff, _data, _length);
-    post collect_data();
+    if(enabled){
+      bytesRead = _length;
+      memcpy(readbuff, _data, _length);
+      post collect_data();
+    }
   }
 
   async event void I2CPacket.writeDone(error_t _success, uint16_t _addr, uint8_t _length, uint8_t* _data) { 
-    if(operatingState == WAITING_ON_REG){
-      call I2CPacket.read(I2C_START | I2C_STOP, 0x77, bytesToRead, readbuff);
-      operatingState = NORMAL;
+    if(enabled){
+      if(operatingState == WAITING_ON_REG){
+	call I2CPacket.read(I2C_START | I2C_STOP, 0x77, bytesToRead, readbuff);
+	operatingState = NORMAL;
+      }
     }
   }
 
