@@ -34,6 +34,7 @@
 
 #ifndef MS5607_H
 #define MS5607_H
+
 typedef struct {
   uint16_t coefficient[6];
 } calibration_t;
@@ -63,7 +64,7 @@ enum {
 #define MS5607_PRECISION 0 //maximum precision with both sensors
 #endif
 
-#define UQ_MS5607PRESS_RESOURCE "Ms5607Pressure.ReadResource"
-#define UQ_MS5607TEMP_RESOURCE "Ms5607Temperature.ReadResource"
+#define UQ_MS5607_RESOURCE "Ms5607.ReadResource"
 
 #endif
+

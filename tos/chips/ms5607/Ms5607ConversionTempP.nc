@@ -32,19 +32,21 @@
 * Author: Andras Biro
 */
 
-generic configuration PressureC()
-{
-  provides interface Read<uint32_t>;
-  //You can't use the following interfaces if you're waiting for any readDone
-  //the calibration data is always the same on the same chip, but this driver doesn't buffering it
-  provides interface ReadRef<calibration_t> as ReadCalibration;
-  provides interface Set<uint8_t> as SetPrecision;  
+generic module Ms5607ConversionTempP(){
+  provides interface Read<int16_t>;
+  uses interface Read<int32_t> as ReadDt;
+  uses interface Get<uint16_t>[uint8_t index];
 }
-implementation
-{
-  components new Ms5607RawPressureC();
-  ReadCalibration=Ms5607RawPressureC;
-  SetPrecision=Ms5607RawPressureC;
+implementation{
+  command error_t Read.read(){
+    return call ReadDt.read();
+  }
   
-  Read=Ms5607RawPressureC.Read;
+  event void ReadDt.readDone(error_t err, int32_t value){
+    if(err==SUCCESS)
+      signal Read.readDone(SUCCESS, 2000+(((int64_t)value*call Get.get[5]())>>23));
+    else
+      signal Read.readDone(err, 0);
+  }
 }
+

@@ -30,33 +30,38 @@
 * OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 * Author: Andras Biro
-*/ 
+*/
 
-#include "UcminiSensor.h"
-
-configuration UcminiSensorC { }
-implementation {
-  components UcminiSensorP, MainC, LedsC, new TimerMilliC();
-  components new AtmegaTemperatureC(), new AtmegaVoltageC(),
-             new LightC(),
-             new PressureC(), new Ms5607TemperatureC() as Temperature1C, new Ms5607CalibrationC(),
-             new TemperatureC(), new HumidityC();
-  components SerialStartC, new SerialAMSenderC(AM_MEASUREMENT) as MeasSend, new SerialAMSenderC(AM_CALIB) as CalibSend, new SerialAMReceiverC(AM_CALIB);
-
-  UcminiSensorP.Boot -> MainC;
-  UcminiSensorP.TempRead -> TemperatureC;
-  UcminiSensorP.HumiRead -> HumidityC;
-  UcminiSensorP.LightRead -> LightC;
-  UcminiSensorP.PressRead -> PressureC;
-  UcminiSensorP.Temp2Read -> Temperature1C;
-  UcminiSensorP.ReadRef -> Ms5607CalibrationC;
-  UcminiSensorP.Temp3Read -> AtmegaTemperatureC;
-  UcminiSensorP.VoltageRead -> AtmegaVoltageC;
-  UcminiSensorP.Timer->TimerMilliC;
-  UcminiSensorP.MeasSend->MeasSend;
-  UcminiSensorP.CalibSend->CalibSend;
-  UcminiSensorP.Receive->SerialAMReceiverC;
-  UcminiSensorP.Packet->MeasSend;
-  UcminiSensorP.Leds -> LedsC;
+generic module Ms5607ConversionPressP(){
+  provides interface Read<uint32_t>;
+  uses interface Read<int32_t> as ReadDt;
+  uses interface Read<uint32_t> as ReadRawPress;
+  uses interface Get<uint16_t>[uint8_t index];
+}
+implementation{
+  int32_t dT;
+  command error_t Read.read(){
+    return call ReadDt.read();
+  }
+  
+  event void ReadDt.readDone(error_t err, int32_t value){
+    if(err==SUCCESS){
+      dT=value;
+      err=call ReadRawPress.read();
+    }
+    if(err!=SUCCESS)
+      signal Read.readDone(err, 0);
+  }
+  
+  event void ReadRawPress.readDone(error_t err, uint32_t value){
+    if(err!=SUCCESS)
+      signal Read.readDone(err, 0);
+    else {
+      int64_t off=((uint64_t)call Get.get[1]()<<17)+(((int64_t)dT*call Get.get[3]())>>6);
+      int64_t sens=((uint32_t)call Get.get[0]()<<16)+(((int64_t)dT*call Get.get[2]())>>7);
+      uint32_t p=((((uint64_t)value*sens)>>21)-off)>>15;
+      signal Read.readDone(SUCCESS, p);
+    }
+  }
 }
 

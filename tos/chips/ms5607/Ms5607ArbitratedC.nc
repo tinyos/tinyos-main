@@ -33,12 +33,13 @@
 */
 
 #include "Ms5607.h"
+
 configuration Ms5607ArbitratedC
 {
   provides interface Read<uint32_t> as ReadTemperature[uint8_t client]; 
   provides interface Read<uint32_t> as ReadPressure[uint8_t client];
   //You can't use the following interfaces if you're waiting for any readDone
-  //the calibration data is always the same on the same chip, but this driver doesn't buffering it
+  //the calibration data stays the same for the same chip, but we do not cache it
   provides interface ReadRef<calibration_t> as ReadCalibration;
   provides interface Set<uint8_t> as SetPrecision;  
 }
@@ -71,3 +72,4 @@ implementation
   
   PressClient.ActualRead->Ms5607C.ReadPressure;
 }
+

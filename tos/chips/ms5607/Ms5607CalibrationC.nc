@@ -30,33 +30,28 @@
 * OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 * Author: Andras Biro
-*/ 
+*/
 
-#include "UcminiSensor.h"
+#include "Ms5607.h"
 
-configuration UcminiSensorC { }
-implementation {
-  components UcminiSensorP, MainC, LedsC, new TimerMilliC();
-  components new AtmegaTemperatureC(), new AtmegaVoltageC(),
-             new LightC(),
-             new PressureC(), new Ms5607TemperatureC() as Temperature1C, new Ms5607CalibrationC(),
-             new TemperatureC(), new HumidityC();
-  components SerialStartC, new SerialAMSenderC(AM_MEASUREMENT) as MeasSend, new SerialAMSenderC(AM_CALIB) as CalibSend, new SerialAMReceiverC(AM_CALIB);
-
-  UcminiSensorP.Boot -> MainC;
-  UcminiSensorP.TempRead -> TemperatureC;
-  UcminiSensorP.HumiRead -> HumidityC;
-  UcminiSensorP.LightRead -> LightC;
-  UcminiSensorP.PressRead -> PressureC;
-  UcminiSensorP.Temp2Read -> Temperature1C;
-  UcminiSensorP.ReadRef -> Ms5607CalibrationC;
-  UcminiSensorP.Temp3Read -> AtmegaTemperatureC;
-  UcminiSensorP.VoltageRead -> AtmegaVoltageC;
-  UcminiSensorP.Timer->TimerMilliC;
-  UcminiSensorP.MeasSend->MeasSend;
-  UcminiSensorP.CalibSend->CalibSend;
-  UcminiSensorP.Receive->SerialAMReceiverC;
-  UcminiSensorP.Packet->MeasSend;
-  UcminiSensorP.Leds -> LedsC;
+generic configuration Ms5607CalibrationC()
+{
+  //the calibration data stays the same for the same chip, but we do not cache it
+  provides interface ReadRef<calibration_t> as Read;
+  //You can't use the following interface if you're waiting for any readDone
+  provides interface Set<uint8_t> as SetPrecision;  
+}
+implementation
+{
+  enum {
+    clientid = unique(UQ_MS5607_RESOURCE),
+  };
+  
+  components Ms5607RawArbiterP, new ResourceReadRefC(calibration_t);
+  SetPrecision=Ms5607RawArbiterP;
+  
+  Read = ResourceReadRefC;
+  ResourceReadRefC.Resource -> Ms5607RawArbiterP.Resource[clientid];
+  ResourceReadRefC.Service -> Ms5607RawArbiterP.ReadCalibration[clientid];
 }
 

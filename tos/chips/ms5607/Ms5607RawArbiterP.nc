@@ -30,33 +30,37 @@
 * OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 * Author: Andras Biro
-*/ 
+*/
 
-#include "UcminiSensor.h"
+#include "Ms5607.h"
 
-configuration UcminiSensorC { }
-implementation {
-  components UcminiSensorP, MainC, LedsC, new TimerMilliC();
-  components new AtmegaTemperatureC(), new AtmegaVoltageC(),
-             new LightC(),
-             new PressureC(), new Ms5607TemperatureC() as Temperature1C, new Ms5607CalibrationC(),
-             new TemperatureC(), new HumidityC();
-  components SerialStartC, new SerialAMSenderC(AM_MEASUREMENT) as MeasSend, new SerialAMSenderC(AM_CALIB) as CalibSend, new SerialAMReceiverC(AM_CALIB);
-
-  UcminiSensorP.Boot -> MainC;
-  UcminiSensorP.TempRead -> TemperatureC;
-  UcminiSensorP.HumiRead -> HumidityC;
-  UcminiSensorP.LightRead -> LightC;
-  UcminiSensorP.PressRead -> PressureC;
-  UcminiSensorP.Temp2Read -> Temperature1C;
-  UcminiSensorP.ReadRef -> Ms5607CalibrationC;
-  UcminiSensorP.Temp3Read -> AtmegaTemperatureC;
-  UcminiSensorP.VoltageRead -> AtmegaVoltageC;
-  UcminiSensorP.Timer->TimerMilliC;
-  UcminiSensorP.MeasSend->MeasSend;
-  UcminiSensorP.CalibSend->CalibSend;
-  UcminiSensorP.Receive->SerialAMReceiverC;
-  UcminiSensorP.Packet->MeasSend;
-  UcminiSensorP.Leds -> LedsC;
+configuration Ms5607RawArbiterP
+{
+  provides interface Read<uint32_t> as ReadTemperature[uint8_t client]; 
+  provides interface Read<uint32_t> as ReadPressure[uint8_t client];
+  provides interface ReadRef<calibration_t> as ReadCalibration[uint8_t client];
+  
+  provides interface Resource[uint8_t client];
+  
+  provides interface Set<uint8_t> as SetPrecision;  
+}
+implementation
+{
+  components Ms5607C, new FcfsArbiterC(UQ_MS5607_RESOURCE);
+  SetPrecision=Ms5607C;
+  
+  Resource=FcfsArbiterC;
+  
+  components new ReadClientP(uint32_t) as ReadTempClient;  
+  ReadTemperature = ReadTempClient;
+  ReadTempClient.ActualRead -> Ms5607C.ReadTemperature;
+  
+  components new ReadClientP(uint32_t) as ReadPresClient;  
+  ReadPressure = ReadPresClient;
+  ReadPresClient.ActualRead -> Ms5607C.ReadPressure;
+  
+  components new ReadRefClientP(calibration_t) as ReadCalibClient;  
+  ReadCalibration = ReadCalibClient;
+  ReadCalibClient.ActualRead -> Ms5607C.ReadCalibration;
 }
 

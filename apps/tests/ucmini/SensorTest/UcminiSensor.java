@@ -31,6 +31,7 @@
 *
 * Author: Andras Biro
 */ 
+
 import java.io.IOException;
 
 import net.tinyos.message.*;
@@ -76,13 +77,8 @@ public class UcminiSensor implements MessageListener {
       System.out.format("Temperature (sht21):\t\t%8.3f \u00B0C \t(%d)\n",temp,msg.get_temp());
       double temp3=1.13*msg.get_temp3()-272.8;
       System.out.format("Temperature (atmega128rfa1):\t%8.3f \u00B0C \t(%d)\n", temp3, msg.get_temp3());
-      long dT=msg.get_temp2()-calibration[4]*256;
-      long temp2=2000+dT*calibration[5]/8388608;
-      System.out.format("Temperature (ms5607):\t\t%8.3f \u00B0C \t(%d)\n",(double)temp2/100,msg.get_temp2());
-      long off=calibration[1]*131072+(calibration[3]*dT)/64;
-      long sens=calibration[0]*65536+(calibration[2]*dT)/128;
-      long press=(msg.get_press()*sens/2097152-off)/32768;
-      System.out.format("Pressure (ms5607):\t\t%8.3f mbar \t(%d)\n",(double)press/100,msg.get_press());
+      System.out.format("Temperature (ms5607):\t\t%8.3f \u00B0C \t(%d)\n",(double)msg.get_temp2()/100,msg.get_temp2());
+      System.out.format("Pressure (ms5607):\t\t%8.3f mbar \t(%d)\n",(double)msg.get_press()/100,msg.get_press());
       System.out.format("Light (bh1750fvi):\t\t%8d lx\n",msg.get_light());
 //      System.out.println("Voltage (atmega128rfa1):\t"+msg.get_voltage());
       System.out.println();
@@ -116,6 +112,5 @@ public class UcminiSensor implements MessageListener {
     MoteIF mif = new MoteIF(phoenix);
     UcminiSensor serial = new UcminiSensor(mif);
   }
-
-
 }
+

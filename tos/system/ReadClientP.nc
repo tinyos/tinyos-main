@@ -47,4 +47,6 @@ implementation{
   event void ActualRead.readDone(error_t result, type value) {
     signal Read.readDone[client](result, value);
   }
+  
+  default event void Read.readDone[uint8_t cl](error_t result, type value){}
 }

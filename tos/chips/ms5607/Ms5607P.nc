@@ -90,7 +90,6 @@ implementation {
   norace error_t lastError;
   
   uint8_t precision=MS5607_PRECISION;
-  bool otherSensorRequested=FALSE;
   
   command error_t Init.init(){
     call BusPowerManager.configure(MS5607_TIMEOUT_RESET, MS5607_TIMEOUT_RESET);
@@ -117,36 +116,16 @@ implementation {
       }break;
       case S_READ_PRESSURE_CMD:
       case S_READ_PRESSURE:{
-        uint32_t measurment=i2cBuffer[0];
-        measurment<<=8;
-        measurment|=i2cBuffer[1];
-        measurment<<=8;
-        measurment|=i2cBuffer[2];
-        if(otherSensorRequested){
-          state=S_READ_TEMP_CMD;
-          otherSensorRequested=FALSE;
-          call I2CResource.request();
-        }else{
-          state=S_IDLE;
-          call BusPowerManager.releasePower();
-        }
+        uint32_t measurment=(*((nx_uint32_t*)i2cBuffer))>>8;//conversion from big-endian
+        state=S_IDLE;
+        call BusPowerManager.releasePower();
         signal ReadPressure.readDone(lastError, measurment);
       }break;
       case S_READ_TEMP_CMD:
       case S_READ_TEMP:{
-        uint32_t measurment=i2cBuffer[0];
-        measurment<<=8;
-        measurment|=i2cBuffer[1];
-        measurment<<=8;
-        measurment|=i2cBuffer[2];
-        if(otherSensorRequested){
-          state=S_READ_PRESSURE_CMD;
-          otherSensorRequested=FALSE;
-          call I2CResource.request();
-        }else{
-          state=S_IDLE;
-          call BusPowerManager.releasePower();
-        }
+	uint32_t measurment=(*((nx_uint32_t*)i2cBuffer))>>8;
+        state=S_IDLE;
+        call BusPowerManager.releasePower();
         signal ReadTemperature.readDone(lastError, measurment);
       }break;
     }
@@ -154,10 +133,7 @@ implementation {
   
   command error_t ReadTemperature.read(){
     uint8_t prevState=state;
-    if(!otherSensorRequested && (state==S_READ_PRESSURE || state==S_READ_PRESSURE_CMD)){
-      otherSensorRequested=TRUE;
-      return SUCCESS;    
-    } else if(state > S_IDLE)
+    if(state > S_IDLE)
       return EBUSY;
     
     state=S_READ_TEMP_CMD;
@@ -169,10 +145,7 @@ implementation {
   
   command error_t ReadPressure.read(){
     uint8_t prevState=state;
-    if(!otherSensorRequested && (state==S_READ_TEMP || state==S_READ_TEMP_CMD)){
-      otherSensorRequested=TRUE;
-      return SUCCESS;    
-    } else if(state > S_IDLE)
+    if(state > S_IDLE)
       return EBUSY;
     
     state=S_READ_PRESSURE_CMD;
@@ -186,6 +159,7 @@ implementation {
     uint8_t prevState=state;
     if(state > S_IDLE)
       return EBUSY;
+    
     state=S_READ_CALIB_CMD1;
     calib=cal;
     call BusPowerManager.requestPower();
@@ -320,33 +294,33 @@ implementation {
       }break;
       case S_READ_CALIB_CMD6:{
         call I2CResource.release();
-        calib->coefficient[5]=(*(data+0)<<8)+*(data+1);
+        calib->coefficient[5]=*((nx_uint16_t*)data);//data from the sensor is big endian
         post signalReadDone();
         return;
       }break;
       
       case S_READ_CALIB_CMD1:{
-        calib->coefficient[0]=(*(data+0)<<8)+*(data+1);
+        calib->coefficient[0]=*((nx_uint16_t*)data);//data from the sensor is big endian
         state=S_READ_CALIB_CMD2;
         i2cBuffer[0]=MS5607_PROM_READ+(2<<1);
       }break;
       case S_READ_CALIB_CMD2:{
-        calib->coefficient[1]=(*(data+0)<<8)+*(data+1);
+        calib->coefficient[1]=*((nx_uint16_t*)data);//data from the sensor is big endian
         state=S_READ_CALIB_CMD3;
         i2cBuffer[0]=MS5607_PROM_READ+(3<<1);
       }break;
       case S_READ_CALIB_CMD3:{
-        calib->coefficient[2]=(*(data+0)<<8)+*(data+1);
+        calib->coefficient[2]=*((nx_uint16_t*)data);//data from the sensor is big endian
         state=S_READ_CALIB_CMD4;
         i2cBuffer[0]=MS5607_PROM_READ+(4<<1);
       }break;
       case S_READ_CALIB_CMD4:{
-        calib->coefficient[3]=(*(data+0)<<8)+*(data+1);
+        calib->coefficient[3]=*((nx_uint16_t*)data);//data from the sensor is big endian
         state=S_READ_CALIB_CMD5;
         i2cBuffer[0]=MS5607_PROM_READ+(5<<1);
       }break;        
       case S_READ_CALIB_CMD5:{
-        calib->coefficient[4]=(*(data+0)<<8)+*(data+1);
+        calib->coefficient[4]=*((nx_uint16_t*)data);//data from the sensor is big endian
         state=S_READ_CALIB_CMD6;
         i2cBuffer[0]=MS5607_PROM_READ+(6<<1);
       }break;
@@ -363,3 +337,4 @@ implementation {
   default event void ReadPressure.readDone(error_t err, uint32_t data){};
   default event void ReadTemperature.readDone(error_t err, uint32_t data){};
 }
+
