@@ -182,7 +182,11 @@ implementation {
 
   void nextRead() {
     uint16_t i=0;
-    // for(i=0xffff;i!=0;i--);	//software delay (aprox 25msec on z1)
+
+    #ifdef USCI_X2XXX_DELAY
+      for(i=0xffff;i!=0;i--) asm("nop"); //software delay (aprox 25msec on z1)
+    #endif
+
     if ( m_pos == m_len ) {
       if ( m_flags & I2C_STOP ) {
         call UsciB.setTXStop();
@@ -204,7 +208,11 @@ implementation {
 
   void nextWrite() {
     uint16_t i = 0;
-    // for(i=0xffff;i!=0;i--);	//software delay (aprox 25msec on z1)
+
+    #ifdef USCI_X2XXX_DELAY
+      for(i=0xffff;i!=0;i--) asm("nop"); //software delay (aprox 25msec on z1)
+    #endif
+
     if ( ( m_pos == m_len) && ( m_flags & I2C_STOP ) ) {
       call UsciB.setTXStop();
       while(call UsciB.getStopBit()){
