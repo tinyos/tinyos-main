@@ -32,9 +32,9 @@
 
 #download and patch options
 SRCNAME=tinyos-tools
-VERSION=1.4.1
+VERSION=1.4.2
 ARCHIVE_FORMAT=tar.gz
-DOWNLOAD_URL=http://tinyos.stanford.edu/tinyos-rpms/$(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
+DOWNLOAD_URL=http://tinyos.stanford.edu/tinyos/$(SRCNAME)-$(VERSION).$(ARCHIVE_FORMAT)
 UNPACK_TARGET=-user_unpack
 #confiure and compile options
 BOOTSTRAP_CMD=./Bootstrap
