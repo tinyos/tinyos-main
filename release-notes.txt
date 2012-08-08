@@ -1,6 +1,11 @@
 These release notes are as of: $Date: 2010-01-20 20:00:48 $
 
-Current:
+2.1.2:
+  Suports updated msp430 and avr compilers
+  Added RPL stack
+  Fixed bugs in RFX2xx radio stack 
+
+2.1.1:
   Added support for automatic default LPL interval
   Added platform-indepdent TOS_SLEEP_NONE for McuPowerOverride
   Added support for mulle platform
