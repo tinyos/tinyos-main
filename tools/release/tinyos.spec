@@ -1,8 +1,8 @@
 Summary: An event-based operating environment designed for use with embedded networked sensors.
-Name: tinyos
+Name: tinyos-2.1.2
 BuildArchitectures: noarch
 Version: 2.1.2
-Release: 1
+Release: 20120807
 License: Please see source
 Packager: TinyOS Group, UC Berkeley
 Group: Development/System
@@ -10,7 +10,10 @@ URL: www.tinyos.net
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
 Prefix: /opt
-Requires: tinyos-tools >= 1.4, nesc >= 1.3
+Requires: tinyos-tools >= 1.4.1, nesc >= 1.3.4
+AutoReqProv: 0
+
+%global _binaries_in_noarch_packages_terminate_build 0
 
 %description
 TinyOS is an event based operating environment designed for use with 
@@ -25,7 +28,7 @@ Sensors" which can be found off of http://www.tinyos.net
 %setup -q
 
 %install
-rm -rf %{buildroot}/opt/tinyos-2.x
+rm -rf %{buildroot}/opt/tinyos-2.1.2
 mkdir -p %{buildroot}/opt
 export TOSROOT=$RPM_BUILD_DIR/%{name}-%{version}
 export TOSDIR=$TOSROOT/tos
@@ -38,12 +41,12 @@ cd support/sdk/java
 pwd
 ls
 make tinyos.jar; make clean
-cp -a $RPM_BUILD_DIR/%{name}-%{version} %{buildroot}/opt/tinyos-2.x
+cp -a $RPM_BUILD_DIR/%{name}-%{version} %{buildroot}/opt/tinyos-2.1.2
 
 %clean
 rm -rf %{buildroot}
 
 %files
 %defattr(-,root, root,-)
-/opt/tinyos-2.x/
+/opt/tinyos-2.1.2/
 

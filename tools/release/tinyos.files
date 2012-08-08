@@ -27,6 +27,8 @@ pushd ../../
 !/.cvsignore
 !/CVS/
 !/CVS$
+!/.svn/
+!/.svn$
 !~$
 !/build/
 !/build$

@@ -2,8 +2,8 @@
 
 Summary: TinyOS tools 
 Name: tinyos-tools
-Version: 1.4.1
-Release: 1
+Version: 1.4.2
+Release: 20120807
 License: Please see source
 Group: Development/System
 URL: http://www.tinyos.net/
@@ -11,7 +11,7 @@ BuildRoot: %{_tmppath}/%{name}-root
 Source0: %{name}-%{version}.tar.gz
 # This makes cygwin happy
 Provides: /bin/sh /bin/bash
-Requires: nesc >= 1.3
+Requires: nesc >= 1.3.4
 
 %description
 Tools for use with tinyos. Includes, for example: uisp, motelist, pybsl, mig,
