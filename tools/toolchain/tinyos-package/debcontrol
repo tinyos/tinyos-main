@@ -1,4 +1,4 @@
-Package: tinyos
+Package: PKG_NAME
 Version: PKG_VERSION
 Section: devel
 Priority: optional

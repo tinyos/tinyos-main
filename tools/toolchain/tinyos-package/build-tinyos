@@ -4,13 +4,13 @@
 # no build files. In particular, do NOT run the Bootstrap and configure
 # scripts in the tools directory
 
-PKG_NAME=tinyos
 PKG_VERSION=2.1.2
+PKG_NAME=tinyos-${PKG_VERSION}
 DOWNLOAD_URL=http://tinyos.stanford.edu/tinyos/
 
-PKG_TARBALL=${PKG_NAME}-${PKG_VERSION}.tar.gz
+PKG_TARBALL=${PKG_NAME}.tar.gz
 PKG_RELEASE=`date +%Y%m%d`
-PKG_DIR=${PKG_NAME}-${PKG_VERSION}-${PKG_RELEASE}_all
+PKG_DIR=${PKG_NAME}_${PKG_RELEASE}_all
 
 if [ ! -f ../../release/tinyos.files ]; then
 	echo "You working directory is incorrect"
@@ -24,7 +24,7 @@ if [ "$1" == "--tar" ]; then
 		rm $PKG_TARBALL
 	fi
 	cd ../../release
-	bash tinyos.files $PKG_NAME $PKG_VERSION ${HERE}/${PKG_TARBALL}
+	bash tinyos.files "tinyos" $PKG_VERSION ${HERE}/${PKG_TARBALL}
 	cd $HERE
 	exit 0
 elif [ "$1" == "--clean" ]; then
@@ -42,6 +42,9 @@ elif [ "$1" == "--deb" ]; then
 	if [ -d $PKG_DIR ]; then
 		rm -rf $PKG_DIR
 	fi
+	if [ -f ${PKG_DIR}.deb ]; then
+		rm ${PKG_DIR}.deb
+	fi
 	if [ ! -f $PKG_TARBALL ]; then
 		echo "*** Downloading tinyos tarball"
 		wget $DOWNLOAD_URL/$PKG_TARBALL
@@ -54,6 +57,7 @@ elif [ "$1" == "--deb" ]; then
 
 	echo "*** Createing debian package"
 	sed "s/PKG_VERSION/${PKG_VERSION}-${PKG_RELEASE}/g" debcontrol | \
+		sed "s/PKG_NAME/${PKG_NAME}/g" | \
 		sed "s/PKG_SIZE/${PKG_SIZE}/g" > ${PKG_DIR}/DEBIAN/control
 	fakeroot dpkg-deb --build $PKG_DIR
 
