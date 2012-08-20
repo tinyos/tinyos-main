@@ -1,9 +1,10 @@
 These release notes are as of: $Date: 2010-01-20 20:00:48 $
 
 2.1.2:
-  Suports updated msp430 and avr compilers
+  Suports updated msp430 (4.6.3) and avr (4.1.2) compilers
   Added RPL stack
-  Fixed bugs in RFX2xx radio stack 
+  Support for the ucmini platform and ATmega128RFA1 chip
+  Fixed bugs in RFX2xx radio stack
 
 2.1.1:
   Added support for automatic default LPL interval
@@ -22,7 +23,7 @@ These release notes are as of: $Date: 2010-01-20 20:00:48 $
   Refactored AM layer to better support 6lowpan
   Fixed TOSSIM bug where nodes could receive while transmitting
   Fixed TOSSIM ack bug for nodes that change their AM id at runtime
-  Fixed Trickle bugs that could cause timers to fire slightly off 
+  Fixed Trickle bugs that could cause timers to fire slightly off
   Fixed Pool bug that did not allow large (> 127 element) pools
 
 2.1:
