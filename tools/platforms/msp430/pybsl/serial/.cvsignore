@@ -1,6 +1,0 @@
-Makefile
-Makefile.in
-
-__init__.pyc
-serialutil.pyc
-serialposix.pyc

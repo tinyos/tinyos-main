@@ -1,6 +1,0 @@
-Makefile
-Makefile.in
-.deps
-getenv.dll
-libgetenv.so
-libgetenv-32.so
