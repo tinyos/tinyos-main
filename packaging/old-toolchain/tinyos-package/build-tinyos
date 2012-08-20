@@ -12,7 +12,7 @@ PKG_TARBALL=${PKG_NAME}.tar.gz
 PKG_RELEASE=`date +%Y%m%d`
 PKG_DIR=${PKG_NAME}_${PKG_RELEASE}_all
 
-if [ ! -f ../../release/tinyos.files ]; then
+if [ ! -f ../../old-release/tinyos.files ]; then
 	echo "You working directory is incorrect"
 	exit 2
 fi
@@ -23,7 +23,7 @@ if [ "$1" == "--tar" ]; then
 	if [ -f $PKG_TARBALL ]; then
 		rm $PKG_TARBALL
 	fi
-	cd ../../release
+	cd ../../old-release
 	bash tinyos.files "tinyos" $PKG_VERSION ${HERE}/${PKG_TARBALL}
 	cd $HERE
 	exit 0

@@ -1,8 +1,7 @@
 This directory contains the tinyos tools that are distributed in the
-tinyos-tools package, along with the spec files for all tinyos packages
-(the release directory). 
+tinyos-tools package.
 
-To install the tinyos tools from CVS, you must first prepare the
+To install the tinyos tools from SVN, you must first prepare the
 configure scripts here and in platforms/mica/uisp:
   ./Bootstrap
   (cd platforms/mica/uisp;./bootstrap)

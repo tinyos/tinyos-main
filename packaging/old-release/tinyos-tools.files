@@ -3,12 +3,11 @@ VERSION="$2"
 OUTPUT_FILE="$3"
 
 pushd ../../
-./tools/release/extractor $NAME-$VERSION $OUTPUT_FILE <<'EOF'
+./packaging/old-release/extractor $NAME-$VERSION $OUTPUT_FILE <<'EOF'
 !^./apps
 !^./doc
 !^./support
-!^./tools/release
-!^./tools/toolchain
+!^./packaging
 !^./tos
 !^./README|overall-todo.txt|release-notes.txt
 !/.cvsignore
