@@ -4,6 +4,7 @@ These release notes are as of: $Date: 2010-01-20 20:00:48 $
   Supports updated msp430 (4.6.3) and avr (4.1.2) compilers
   Added RPL stack
   Support for the ucmini platform and ATmega128RFA1 chip
+  Support for the Zolertia Z1 platform
   Fixed bugs in RFX2xx radio stack
   Added CoAP implementation
 
