@@ -1,10 +1,11 @@
 These release notes are as of: $Date: 2010-01-20 20:00:48 $
 
 2.1.2:
-  Suports updated msp430 (4.6.3) and avr (4.1.2) compilers
+  Supports updated msp430 (4.6.3) and avr (4.1.2) compilers
   Added RPL stack
   Support for the ucmini platform and ATmega128RFA1 chip
   Fixed bugs in RFX2xx radio stack
+  Added CoAP implementation
 
 2.1.1:
   Added support for automatic default LPL interval
