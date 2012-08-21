@@ -41,6 +41,10 @@
 #include "address.h"
 #endif
 
+#ifndef COAP_SERVER_PORT
+#define COAP_SERVER_PORT COAP_DEFAULT_PORT
+#endif
+
 module CoapBlipP {
   uses {
     interface Boot;
