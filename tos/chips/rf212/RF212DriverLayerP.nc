@@ -185,11 +185,11 @@ implementation
 		TX_SFD_DELAY = (uint16_t)(177 * RADIO_ALARM_MICROSEC),
 		RX_SFD_DELAY = (uint16_t)(8 * RADIO_ALARM_MICROSEC),
 	};
-	
+
 	tasklet_async event void RadioAlarm.fired()
 	{
 	}
-  
+
 /*----------------- INIT -----------------*/
 
 	command error_t PlatformInit.init()
@@ -215,7 +215,7 @@ implementation
 		// for powering up the radio
 		return call SpiResource.request();
 	}
-	
+
 	void resetRadio()
 	{
 		//TODO: all waiting should be optimized in this function
@@ -227,7 +227,7 @@ implementation
 
 		writeRegister(RF212_TRX_CTRL_0, RF212_TRX_CTRL_0_VALUE);
 		writeRegister(RF212_TRX_STATE, RF212_TRX_OFF);
-		
+
 		//this is way too much (should be done in around 200us), but 510 seemd too short, and it happens quite rarely
 		call BusyWait.wait(1000);
 
@@ -372,7 +372,7 @@ implementation
 			writeRegister(RF212_TRX_STATE, RF212_RX_ON);
 			state = STATE_TRX_OFF_2_RX_ON;
 		}
-		else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY) 
+		else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY)
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
 			call IRQ.disable();
@@ -403,7 +403,7 @@ implementation
 
 		return SUCCESS;
 	}
-	
+
 	tasklet_async command error_t RadioState.standby()
 	{
 		if( cmd != CMD_NONE )
@@ -455,7 +455,7 @@ implementation
 			writeRegister(RF212_PHY_TX_PWR, txPower);
 		}
 
-		if( call Config.requiresRssiCca(msg) 
+		if( call Config.requiresRssiCca(msg)
 				&& (readRegister(RF212_PHY_RSSI) & RF212_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
 			return EBUSY;
 
@@ -519,14 +519,14 @@ implementation
 		call SELN.set();
 
 		/*
-		 * There is a very small window (~1 microsecond) when the RF212 went 
-		 * into PLL_ON state but was somehow not properly initialized because 
+		 * There is a very small window (~1 microsecond) when the RF212 went
+		 * into PLL_ON state but was somehow not properly initialized because
 		 * of an incoming message and could not go into BUSY_TX. I think the
 		 * radio can even receive a message, and generate a TRX_UR interrupt
 		 * because of concurrent access, but that message probably cannot be
 		 * recovered.
 		 *
-		 * TODO: this needs to be verified, and make sure that the chip is 
+		 * TODO: this needs to be verified, and make sure that the chip is
 		 * not locked up in this case.
 		 */
 
@@ -544,7 +544,7 @@ implementation
 			length = getHeader(msg)->length;
 
 			call DiagMsg.chr('t');
-			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
+			call DiagMsg.uint32(call PacketTimeStamp.isValid(msg) ? call PacketTimeStamp.timestamp(msg) : 0);
 			call DiagMsg.uint16(call LocalTime.get());
 			call DiagMsg.int8(length);
 			call DiagMsg.hex8s(getPayload(msg), length-2);
@@ -571,7 +571,7 @@ implementation
 
 		cmd = CMD_CCA;
 		writeRegister(RF212_PHY_CC_CCA, RF212_CCA_REQUEST | RF212_CCA_MODE_VALUE | channel);
-		
+
 		return SUCCESS;
 	}
 
@@ -650,7 +650,7 @@ implementation
 			call DiagMsg.send();
 		}
 #endif
-		
+
 		cmd = CMD_NONE;
 
 		// signal only if it has passed the CRC check
@@ -681,7 +681,7 @@ implementation
 			uint32_t time32;
 			uint8_t irq;
 			uint8_t temp;
-			
+
 			atomic time = capturedTime;
 			radioIrq = FALSE;
 			irq = readRegister(RF212_IRQ_STATUS);
@@ -722,7 +722,7 @@ implementation
 #ifdef RF212_RSSI_ENERGY
 			if( irq & RF212_IRQ_TRX_END )
 			{
-				if( irq == RF212_IRQ_TRX_END || 
+				if( irq == RF212_IRQ_TRX_END ||
 					(irq == (RF212_IRQ_RX_START | RF212_IRQ_TRX_END) && cmd == CMD_NONE) )
 					call PacketRSSI.set(rxMsg, readRegister(RF212_PHY_ED_LEVEL));
 				else
@@ -743,23 +743,23 @@ implementation
 					cmd = CMD_NONE;
 					cca = readRegister(RF212_TRX_STATUS);
 
-					// sometimes we don't handle yet the RX_START interrupt, but we're already receiving. 
+					// sometimes we don't handle yet the RX_START interrupt, but we're already receiving.
 					// It's all right though, CCA reports busy as it should.
 					RADIO_ASSERT( (cca & RF212_TRX_STATUS_MASK) == RF212_RX_ON || (cca & RF212_TRX_STATUS_MASK) == RF212_BUSY_RX);
-					
+
 					signal RadioCCA.done( (cca & RF212_CCA_DONE) ? ((cca & RF212_CCA_STATUS) ? SUCCESS : EBUSY) : FAIL );
 				}
 				else if( state != STATE_RX_ON ) //if we receive a message during CCA, we will still get this interrupt, but we're already reported FAIL at RX_START
 					RADIO_ASSERT(FALSE);
 			}
-			
+
 //			This should be OK now, since we enable the interrupts in SLEEP state, before changing to TRX_OFF
 // 			// sometimes we miss a PLL lock interrupt after turn on
 // 			if( cmd == CMD_TURNON || cmd == CMD_CHANNEL )
 // 			{
 // 				RADIO_ASSERT( irq & RF212_IRQ_PLL_LOCK );
 // 				RADIO_ASSERT( state == STATE_TRX_OFF_2_RX_ON );
-// 
+//
 // 				state = STATE_RX_ON;
 // 				cmd = CMD_SIGNAL_DONE;
 // 			}	else
@@ -770,7 +770,7 @@ implementation
 				{
 					state = STATE_RX_ON;
 					cmd = CMD_SIGNAL_DONE;
-				} else 
+				} else
 					RADIO_ASSERT( FALSE );
 			}
 
@@ -803,9 +803,9 @@ implementation
 					/*
 					 * The timestamp corresponds to the first event which could not
 					 * have been a PLL_LOCK because then cmd != CMD_NONE, so we must
-					 * have received a message (and could also have received the 
+					 * have received a message (and could also have received the
 					 * TRX_END interrupt in the mean time, but that is fine. Also,
-					 * we could not be after a transmission, because then cmd = 
+					 * we could not be after a transmission, because then cmd =
 					 * CMD_TRANSMIT.
 					 */
 					if( irq == RF212_IRQ_RX_START ) // just to be cautious
@@ -881,7 +881,7 @@ implementation
 				changeState();
 			else if( cmd == CMD_CHANNEL )
 				changeChannel();
-			
+
 			if( cmd == CMD_SIGNAL_DONE )
 			{
 				cmd = CMD_NONE;
@@ -897,7 +897,7 @@ implementation
 	}
 
 /*----------------- RadioPacket -----------------*/
-	
+
 	async command uint8_t RadioPacket.headerLength(message_t* msg)
 	{
 		return call Config.headerLength(msg) + sizeof(rf212_header_t);

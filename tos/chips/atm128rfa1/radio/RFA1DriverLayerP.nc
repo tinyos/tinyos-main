@@ -429,7 +429,7 @@ implementation
       length = getHeader(msg)->length;
 
       call DiagMsg.chr('t');
-      call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
+      call DiagMsg.uint32(call PacketTimeStamp.isValid(msg) ? call PacketTimeStamp.timestamp(msg) : 0);
       call DiagMsg.uint16(call LocalTime.get());
       call DiagMsg.int8(length);
       call DiagMsg.hex8s(getPayload(msg), length - 2);
