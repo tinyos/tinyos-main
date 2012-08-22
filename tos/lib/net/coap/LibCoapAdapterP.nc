@@ -77,11 +77,12 @@ module LibCoapAdapterP {
 
     coap_context_t *retransmit_ctx = NULL;
 
-  // might get called in error cases from libcoap's net.c -> spontaneous.
+  // gets from libcoap's net.c -> spontaneous.
   coap_tid_t coap_send_impl(coap_context_t *context,
 			    const coap_address_t *dst,
 			    coap_pdu_t *pdu) @C() @spontaneous() {
-    coap_tid_t tid;
+
+    coap_tid_t id = COAP_INVALID_TID;
 
 #ifndef COAP_SERVER_ENABLED
 #ifndef COAP_CLIENT_ENABLED
@@ -105,7 +106,7 @@ module LibCoapAdapterP {
     else {
     }
 
-    tid = pdu->hdr->id;
+    coap_transaction_id(dst, pdu, &id);
 
 #warning "CHECK: delete_pdu?"
     /*
@@ -113,7 +114,7 @@ module LibCoapAdapterP {
       coap_delete_pdu( pdu );
     */
 
-    return ntohs(tid);
+    return id;
   }
 
   /////////////////////////////
