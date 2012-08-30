@@ -43,14 +43,17 @@ module NoBeaconRequestRxP
   {
     interface Init as Reset;
     interface IEEE154TxBeaconPayload;
+    interface MLME_START;
   }
   uses
   {
     interface FrameRx as BeaconRequestRx;
     interface FrameTx as BeaconRequestResponseTx;
     interface MLME_GET;
+    interface MLME_SET;
     interface FrameUtility;
     interface IEEE154Frame as Frame;
+    interface Set<ieee154_macPanCoordinator_t> as SetMacPanCoordinator;     
 
   }
 }
@@ -62,6 +65,22 @@ implementation
   event message_t* BeaconRequestRx.received(message_t* frame) { return frame; }
  
   event void BeaconRequestResponseTx.transmitDone(ieee154_txframe_t *txFrame, ieee154_status_t status){ }
+
+  command ieee154_status_t MLME_START.request  (
+                          uint16_t panID,
+                          uint8_t logicalChannel,
+                          uint8_t channelPage,
+                          uint32_t startTime,
+                          uint8_t beaconOrder,
+                          uint8_t superframeOrder,
+                          bool panCoordinator,
+                          bool batteryLifeExtension,
+                          bool coordRealignment,
+                          ieee154_security_t *coordRealignSecurity,
+                          ieee154_security_t *beaconSecurity)
+  {
+    return  IEEE154_TRANSACTION_OVERFLOW;
+  }
 
   /* ----------------------- Beacon Payload ----------------------- */
 

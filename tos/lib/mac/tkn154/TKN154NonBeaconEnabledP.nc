@@ -162,7 +162,7 @@ implementation
   MCPS_PURGE = DataP; 
 
   /* MLME */
-  MLME_START = DispatchP;
+  MLME_START = BeaconRequestRxP;
   MLME_ASSOCIATE = AssociateP;
   MLME_DISASSOCIATE = DisassociateP;
   MLME_BEACON_NOTIFY = ScanP;
@@ -209,8 +209,10 @@ implementation
   BeaconRequestRxP.BeaconRequestRx -> DispatchP.FrameRx[FC1_FRAMETYPE_CMD + CMD_FRAME_BEACON_REQUEST];
   BeaconRequestRxP.BeaconRequestResponseTx -> DispatchQueueP.FrameTx[unique(CAP_TX_CLIENT)];
   BeaconRequestRxP.MLME_GET -> PibP;
+  BeaconRequestRxP.MLME_SET -> PibP;
   BeaconRequestRxP.FrameUtility -> PibP;
   BeaconRequestRxP.Frame -> PibP;
+  BeaconRequestRxP.SetMacPanCoordinator -> PibP.SetMacPanCoordinator;
 
   /* -------------------- Association (MLME-ASSOCIATE) -------------------- */
 
@@ -310,7 +312,6 @@ implementation
   DispatchP.IndirectTxWaitTimer = Timer4;
   DispatchP.RadioToken -> DispatchRadioClient;
   DispatchP.SetMacSuperframeOrder -> PibP.SetMacSuperframeOrder;
-  DispatchP.SetMacPanCoordinator -> PibP.SetMacPanCoordinator;
   DispatchP.IsRxEnableActive -> RxEnableP.IsRxEnableActive;
   DispatchP.RadioTokenRequested -> DispatchRadioClient;
   DispatchP.IsRadioTokenRequested -> PibP.IsRadioTokenRequested; // fan out...
