@@ -44,5 +44,6 @@ interface CoAPServer {
 				     unsigned int uri_length,
 				     const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH],
 				     unsigned int contenttype_length,
-				     unsigned int supported_methods);
+				     unsigned int supported_methods,
+				     uint8_t observable);
 }

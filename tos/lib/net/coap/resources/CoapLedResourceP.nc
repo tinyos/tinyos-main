@@ -32,6 +32,7 @@
 
 #include <pdu.h>
 #include <async.h>
+#include <mem.h>
 
 generic module CoapLedResourceP(uint8_t uri_key) {
     provides interface CoapResource;
@@ -40,6 +41,7 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 
     bool lock = FALSE;
     coap_async_state_t *temp_async_state = NULL;
+    coap_resource_t *temp_resource = NULL;
 
     /////////////////////
     // GET:
@@ -49,7 +51,7 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(205),
 				       temp_async_state,
 				       (uint8_t*)&val, sizeof(uint8_t),
-				       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+				       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, NULL);
     };
 
     command int CoapResource.getMethod(coap_async_state_t* async_state,
@@ -71,16 +73,25 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(204),
 				       temp_async_state,
 				       NULL, 0,
-				       COAP_MEDIATYPE_ANY);
+				       COAP_MEDIATYPE_ANY,
+				       temp_resource);
     };
 
     command int CoapResource.putMethod(coap_async_state_t* async_state,
-				       uint8_t *val, size_t buflen) {
+				       uint8_t *val, size_t buflen, coap_resource_t *resource) {
 	if (buflen == 1 && *val < 8) {
 	    if (lock == FALSE) {
 		lock = TRUE;
 		temp_async_state = async_state;
+		temp_resource = resource;
 		call Leds.set(*val);
+		temp_resource->dirty = 1;
+		temp_resource->data_len = buflen;
+		if ((resource->data = (uint8_t *) coap_malloc(buflen)) != NULL) {
+		  memcpy(resource->data, val, buflen);
+		} else {
+		   return COAP_RESPONSE_500;
+		}
 		post putMethod();
 		return COAP_SPLITPHASE;
 	    } else {
@@ -92,7 +103,7 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     }
 
     command int CoapResource.postMethod(coap_async_state_t* async_state,
-					uint8_t *val, size_t buflen) {
+					uint8_t *val, size_t buflen, coap_resource_t *resource) {
 	return COAP_RESPONSE_405; // or _501?
     }
 

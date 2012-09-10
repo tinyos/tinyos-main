@@ -131,6 +131,7 @@ typedef struct index_uri_key
   const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH];
   uint8_t contenttype_len;
   uint8_t supported_methods:4;
+  uint8_t observable:1;
 } index_uri_key_t;
 
 index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
@@ -140,7 +141,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "st", sizeof("st"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 #if defined (COAP_RESOURCE_HUM) || defined (COAP_RESOURCE_ALL)
@@ -149,7 +151,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "sh", sizeof("sh"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 #if defined (COAP_RESOURCE_VOLT) || defined (COAP_RESOURCE_ALL)
@@ -158,7 +161,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "sv", sizeof("sv"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_ALL
@@ -167,7 +171,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "r", sizeof("r"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_KEY
@@ -176,7 +181,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "ck", sizeof("ck"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_LED
@@ -185,7 +191,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "l", sizeof("l"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      1
   },
 #endif
 #ifdef COAP_RESOURCE_ROUTE
@@ -194,7 +201,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "rt", sizeof("rt"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 
@@ -205,7 +213,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "gio",  sizeof("gio"),
     {0,0,0,0}, // uri_key will be set later
     "42", sizeof("42"), // application/octet-stream
-    (GET_SUPPORTED | PUT_SUPPORTED)
+    (GET_SUPPORTED | PUT_SUPPORTED),
+    0
   },
 #endif
 #ifdef COAP_RESOURCE_DEV_0
@@ -214,7 +223,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "dev0", sizeof("dev0"),
     {0,0,0,0}, // uri_key will be set later
     "42", sizeof("42"), // application/octet-stream
-    (GET_SUPPORTED | PUT_SUPPORTED)
+    (GET_SUPPORTED | PUT_SUPPORTED),
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_DEV_1
@@ -223,7 +233,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "dev1",  sizeof("dev1"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
     },
 #endif
 #ifdef COAP_RESOURCE_DEV_2
@@ -232,7 +243,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "dev2",  sizeof("dev2"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
     },
 #endif
 #ifdef COAP_RESOURCE_DEV_3
@@ -241,7 +253,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "dev3",  sizeof("dev3"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
     },
 #endif
 
@@ -252,7 +265,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "test", sizeof("test"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
@@ -261,7 +275,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "separate", sizeof("separate"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
@@ -270,7 +285,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "seg1/seg2/seg3", sizeof("seg1/seg2/seg3"),
       {0,0,0,0}, // uri_key will be set later
       "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
   },
 #endif
 

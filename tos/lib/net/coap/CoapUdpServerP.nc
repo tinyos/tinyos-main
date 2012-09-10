@@ -42,6 +42,7 @@
 #include <subscribe.h>  // for resource_t
 #include <encode.h>
 #include <debug.h>
+#include <mem.h>
 
 #include "tinyos_coap_resources.h"
 #include "blip_printf.h"
@@ -58,7 +59,7 @@
 	    tok = coap_check_option(node->pdu, COAP_OPTION_TOKEN);	\
 	    if (tok && copy_token)					\
 		coap_add_option(					\
-				pdu, COAP_OPTION_TOKEN, COAP_OPT_LENGTH(*tok), COAP_OPT_VALUE(*tok)); \
+		pdu, COAP_OPTION_TOKEN, COAP_OPT_LENGTH(*tok), COAP_OPT_VALUE(*tok)); \
 	}								\
     }
 
@@ -113,7 +114,8 @@ module CoapUdpServerP {
 						unsigned int uri_length,
 						const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH],
 						unsigned int contenttype_length,
-						unsigned int supported_methods) {
+						unsigned int supported_methods,
+						uint8_t observable) {
 	coap_resource_t *r;
 
 	if (ctx_server == NULL)
@@ -136,7 +138,9 @@ module CoapUdpServerP {
 	//TODO:
 	//coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16);
 	//coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7);
-	//coap_add_attr(r, (unsigned char *)"obs", 3, NULL, 0, 0);
+#ifndef WITHOUT_OBSERVE
+	r->observeable = observable;
+#endif
 	//coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7);
 
 	coap_add_resource(ctx_server, r);
@@ -171,17 +175,54 @@ module CoapUdpServerP {
 			       coap_pdu_t *request,
 			       str *token,
 			       coap_pdu_t *response) {
+
 	//unsigned char buf[2];
+	coap_opt_iterator_t opt_iter;
 	int rc;
 	size_t size;
 	unsigned char *data;
 
 	coap_async_state_t *async_state = NULL;
 
+#ifndef WITHOUT_OBSERVE
+	//handler has been called by check_notify()
+	if (request == NULL){
+
+	  //TODO: check options
+	  coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
+
+	  if (resource->data_len != 0) {
+	    coap_add_data(response, resource->data_len, resource->data);
+	    response->hdr->code = COAP_RESPONSE_CODE(205);
+	  } else
+	    response->hdr->code = COAP_RESPONSE_CODE(500);
+
+	  return;
+	} else {
+	  if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
+
+	    coap_add_observer(resource, peer, token);
+	    async_state = coap_register_async(ctx, peer, request,
+					  COAP_ASYNC_OBSERVED,
+					  (void *)NULL);
+	  } else {
+	    //remove client from observer list, if already registered
+	    if (coap_find_observer(resource, peer, token)) {
+	      coap_delete_observer(resource, peer, token);
+	    }
+#endif
+	    async_state = coap_register_async(ctx, peer, request,
+					  COAP_ASYNC_CONFIRM,
+					  (void *)NULL);
+#ifndef WITHOUT_OBSERVE
+	  }
+	}
+#endif
 	/*
 	  call Leds.led0On();
 	  call Leds.led1On();
 	  call Leds.led2On();
+
 	*/
 
 	/* response->hdr->code = COAP_RESPONSE_CODE(205); */
@@ -195,10 +236,6 @@ module CoapUdpServerP {
 	/* 				 response->max_size - response->length, */
 	/* 				 "%u", 42); */
 
-	async_state = coap_register_async(ctx, peer, request,
-					  COAP_ASYNC_CONFIRM,
-					  (void *)NULL);
-
 	coap_get_data(request, &size, &data);
 
 	if (request->hdr->code == COAP_REQUEST_GET)
@@ -208,17 +245,19 @@ module CoapUdpServerP {
 	else if (request->hdr->code == COAP_REQUEST_POST)
 	    rc = call CoapResource.postMethod[get_index_for_key(resource->key)](async_state,
 										data,
-										size);
+										size,
+										resource);
 	else if (request->hdr->code == COAP_REQUEST_PUT)
 	    rc = call CoapResource.putMethod[get_index_for_key(resource->key)](async_state,
 									       data,
-									       size);
+									       size,
+									       resource);
 	else if (request->hdr->code == COAP_REQUEST_DELETE)
 	    rc = call CoapResource.deleteMethod[get_index_for_key(resource->key)](async_state,
 										  data,
 										  size);
 	else
-	    rc = COAP_RESPONSE_405;
+	  rc = COAP_RESPONSE_405;
 
 	if (rc == FAIL) {
 	    /* default handler returns FAIL -> Resource not available -> Response: 404 */
@@ -254,12 +293,12 @@ module CoapUdpServerP {
      return FAIL;
  }
  default command int CoapResource.putMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							     uint8_t* val, size_t vallen) {
+							     uint8_t* val, size_t vallen, coap_resource_t *resource) {
      //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
      return FAIL;
  }
  default command int CoapResource.postMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							      uint8_t* val, size_t vallen) {
+							      uint8_t* val, size_t vallen, coap_resource_t *resource) {
      //printf("** coap: default (post not available for this resource)....... %i\n", uri_key);
      return FAIL;
  }
@@ -274,7 +313,8 @@ module CoapUdpServerP {
 						     coap_async_state_t* async_state,
 						     uint8_t* val,
 						     size_t vallen,
-						     uint8_t contenttype) {
+						     uint8_t contenttype,
+						     coap_resource_t *resource) {
      unsigned char buf[2];
      coap_pdu_t *response;
      coap_async_state_t *tmp;
@@ -282,13 +322,12 @@ module CoapUdpServerP {
      size_t size = sizeof(coap_hdr_t) + 8;
      size += async_state->tokenlen;
 
-
      response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
 			      ? COAP_MESSAGE_ACK
 			      : COAP_MESSAGE_NON,
 			      responsecode, 0, size);
      if (!response) {
-	 debug("check_async: insufficient memory, we'll try later\n");
+// 	 debug("check_async: insufficient memory, we'll try later\n");
 	 //TODO: handle error...
      }
 
@@ -301,6 +340,12 @@ module CoapUdpServerP {
      if (async_state->tokenlen)
 	 coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
 
+#ifndef WITHOUT_OBSERVE
+       if (async_state->flags & COAP_ASYNC_OBSERVED){
+	coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
+      }
+#endif
+
      if (vallen != 0)
 	 coap_add_data(response, vallen, val);
 
@@ -312,6 +357,13 @@ module CoapUdpServerP {
 
      coap_remove_async(ctx_server, async_state->id, &tmp);
      coap_free_async(async_state);
+
+#ifndef WITHOUT_OBSERVE
+     //resource dirty -> notify subscribers
+       if (resource->dirty == 1)
+	 coap_check_notify(ctx_server);
+#endif
+     coap_free(resource->data);
 
  }
 
@@ -382,5 +434,7 @@ module CoapUdpServerP {
 
      coap_remove_async(ctx_server, async_state->id, &tmp);
      coap_free_async(async_state);
+
+     //thp:TODO: observe??
  }
 }

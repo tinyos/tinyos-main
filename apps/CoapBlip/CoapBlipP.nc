@@ -94,7 +94,8 @@ module CoapBlipP {
     				       uri_index_map[i].uri_len - 1,
     				       uri_index_map[i].contenttype,
     				       uri_index_map[i].contenttype_len - 1,
-    				       uri_index_map[i].supported_methods);
+				       uri_index_map[i].supported_methods,
+				       uri_index_map[i].observable);
     }
 #endif
 

@@ -77,7 +77,7 @@ module LibCoapAdapterP {
 
     coap_context_t *retransmit_ctx = NULL;
 
-  // gets from libcoap's net.c -> spontaneous.
+  // gets called from libcoap's net.c in error cases or when sending confirmable messages -> spontaneous.
   coap_tid_t coap_send_impl(coap_context_t *context,
 			    const coap_address_t *dst,
 			    coap_pdu_t *pdu) @C() @spontaneous() {

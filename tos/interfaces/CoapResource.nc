@@ -39,10 +39,12 @@ interface CoapResource {
 			  uint8_t* val, size_t vallen);
 
     command int putMethod(coap_async_state_t* async_state,
-			  uint8_t* val, size_t vallen);
+			  uint8_t* val, size_t vallen, 
+			  struct coap_resource_t *resource);
 
     command int postMethod(coap_async_state_t* async_state,
-			   uint8_t* val, size_t vallen);
+			   uint8_t* val, size_t vallen,
+			   struct coap_resource_t *resource);
 
     command int deleteMethod(coap_async_state_t* async_state,
 			     uint8_t* val, size_t vallen);
@@ -50,7 +52,8 @@ interface CoapResource {
     event void methodDone(error_t result,
 			  uint8_t responsecode,
 			  coap_async_state_t* async_state,
-			  uint8_t* val, size_t vallen, uint8_t contenttype);
+			  uint8_t* val, size_t vallen, uint8_t contenttype,
+			  struct coap_resource_t* resource);
 
     event void methodNotDone(coap_async_state_t* async_state,
 			     uint8_t responsecode);
