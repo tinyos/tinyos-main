@@ -68,7 +68,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
 	    signal CoapResource.methodDone(result, COAP_RESPONSE_CODE(205),
 					   temp_async_state,
 					   (uint8_t*)&val, sizeof(val_t),
-					   COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+					   COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, NULL);
 	} else {
 	    signal CoapResource.methodDoneSeparate(result, COAP_RESPONSE_CODE(205),
 						   temp_async_state,
@@ -81,12 +81,12 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
     }
 
     command int CoapResource.putMethod(coap_async_state_t* async_state,
-				       uint8_t *val, size_t buflen) {
+				       uint8_t *val, size_t buflen, coap_resource_t *resource) {
 	return COAP_RESPONSE_405; // or _501?
     }
 
     command int CoapResource.postMethod(coap_async_state_t* async_state,
-					uint8_t *val, size_t buflen) {
+					uint8_t *val, size_t buflen, coap_resource_t *resource) {
 	return COAP_RESPONSE_405; // or _501?
     }
 
