@@ -3,10 +3,10 @@
  * Copyright (C) 2010,2011 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the CoAP library libcoap. Please see
- * README for terms of use.
+ * README for terms of use. 
  */
 
-/**
+/** 
  * @file address.h
  * @brief representation of network addresses
  */
@@ -103,22 +103,22 @@ typedef struct __coap_address_t {
 
 #define coap_address_t __coap_address_t
 
-static inline int
+static inline int 
 _coap_address_equals_impl(const coap_address_t *a,
 			  const coap_address_t *b) {
   if (a->size != b->size || a->addr.sa.sa_family != b->addr.sa.sa_family)
     return 0;
-
+  
   /* need to compare only relevant parts of sockaddr_in6 */
  switch (a->addr.sa.sa_family) {
  case AF_INET:
-   return
-     a->addr.sin.sin_port == b->addr.sin.sin_port &&
-     memcmp(&a->addr.sin.sin_addr, &b->addr.sin.sin_addr,
+   return 
+     a->addr.sin.sin_port == b->addr.sin.sin_port && 
+     memcmp(&a->addr.sin.sin_addr, &b->addr.sin.sin_addr, 
 	    sizeof(struct in_addr)) == 0;
  case AF_INET6:
-   return a->addr.sin6.sin6_port == b->addr.sin6.sin6_port &&
-     memcmp(&a->addr.sin6.sin6_addr, &b->addr.sin6.sin6_addr,
+   return a->addr.sin6.sin6_port == b->addr.sin6.sin6_port && 
+     memcmp(&a->addr.sin6.sin6_addr, &b->addr.sin6.sin6_addr, 
 	    sizeof(struct in6_addr)) == 0;
  default: /* fall through and signal error */
    ;
@@ -143,11 +143,11 @@ case  AF_INET6:
 }
 #endif /* coap_address_t */
 
-/**
+/** 
  * Resets the given coap_address_t object @p addr to its default
  * values.  In particular, the member size must be initialized to the
  * available size for storing addresses.
- *
+ * 
  * @param addr The coap_address_t object to initialize.
  */
 static inline void
@@ -172,9 +172,9 @@ coap_address_equals(const coap_address_t *a, const coap_address_t *b) {
  * Checks if given address @p a denotes a multicast address.  This
  * function returns @c 1 if @p a is multicast, @c 0 otherwise.
  */
-static inline int
+static inline int 
 coap_is_mcast(const coap_address_t *a) {
   return a && _coap_is_mcast_impl(a);
 }
-
+ 
 #endif /* _COAP_ADDRESS_H_ */

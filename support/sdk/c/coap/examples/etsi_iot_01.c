@@ -281,7 +281,7 @@ hnd_post_test(coap_context_t  *ctx, struct coap_resource_t *resource,
 
     memcpy(test_payload->data, data, len);
 
-    r = coap_resource_init(uri->data, uri->length);
+    r = coap_resource_init(uri->data, uri->length, 0);
     coap_register_handler(r, COAP_REQUEST_GET, hnd_get_resource);
     coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_resource);
 
@@ -558,17 +558,17 @@ init_resources(coap_context_t *ctx) {
     memcpy(test_payload->data, "put data here", test_payload->length);
     /* test_payload->media_type is 0 anyway */
 
-    r = coap_resource_init((unsigned char *)"test", 4);
+    r = coap_resource_init((unsigned char *)"test", 4, 0);
     coap_register_handler(r, COAP_REQUEST_GET, hnd_get_resource);
     coap_register_handler(r, COAP_REQUEST_POST, hnd_post_test);
     coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_test);
     coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_test);
 
-    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
-    coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"test", 4);
-    coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"core#b", 6);
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+    coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"test", 4, 0);
+    coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"core#b", 6, 0);
 #if 0
-    coap_add_attr(r, (unsigned char *)"obs", 3, NULL, 0);
+    coap_add_attr(r, (unsigned char *)"obs", 3, NULL, 0, 0);
 #endif
     coap_add_resource(ctx, r);
     coap_add_payload(r->key, test_payload, NULL);
@@ -580,11 +580,11 @@ init_resources(coap_context_t *ctx) {
   if (!test_payload)
     coap_log(LOG_CRIT, "cannot allocate resource /large\n");
   else {
-    r = coap_resource_init((unsigned char *)"large", 5);
+    r = coap_resource_init((unsigned char *)"large", 5, 0);
     coap_register_handler(r, COAP_REQUEST_GET, hnd_get_resource);
 
-    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"41", 2);
-    coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"large", 5);
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"41", 2, 0);
+    coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"large", 5, 0);
     coap_add_resource(ctx, r);
 
     test_payload->flags |= REQUIRE_ETAG;
@@ -601,28 +601,28 @@ init_resources(coap_context_t *ctx) {
     memcpy(test_payload->data, "segsegseg!", test_payload->length);
     /* test_payload->media_type is 0 anyway */
 
-    r = coap_resource_init((unsigned char *)"seg1/seg2/seg3", 14);
+    r = coap_resource_init((unsigned char *)"seg1/seg2/seg3", 14, 0);
     coap_register_handler(r, COAP_REQUEST_GET, hnd_get_resource);
 
-    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
     coap_add_resource(ctx, r);
 
     coap_add_payload(r->key, test_payload, NULL);
   }
 
   /* For TD_COAP_CORE_13 */
-  r = coap_resource_init((unsigned char *)"query", 5);
+  r = coap_resource_init((unsigned char *)"query", 5, 0);
   coap_register_handler(r, COAP_REQUEST_GET, hnd_get_query);
   
-  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
+  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
   coap_add_resource(ctx, r);
   
   /* For TD_COAP_CORE_16 */
-  r = coap_resource_init((unsigned char *)"separate", 8);
+  r = coap_resource_init((unsigned char *)"separate", 8, 0);
   coap_register_handler(r, COAP_REQUEST_GET, hnd_get_separate);
 
-  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
-  coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"separate", 8);
+  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+  coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"separate", 8, 0);
   coap_add_resource(ctx, r);
 }
 

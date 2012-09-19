@@ -32,6 +32,7 @@ static coap_list_t *optlist = NULL;
  * TODO: associate the resources with transaction id and make it expireable */
 static coap_uri_t uri;
 static str proxy = { 0, NULL };
+static unsigned short proxy_port = COAP_DEFAULT_PORT;
 
 /* reading is done when this flag is set */
 static int ready = 0;
@@ -55,10 +56,6 @@ unsigned int obs_seconds = 30;	/* default observe time */
 coap_tick_t obs_wait = 0;	/* timeout for current subscription */
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
-
-extern unsigned int
-print_readable( const unsigned char *data, unsigned int len,
-		unsigned char *result, unsigned int buflen );
 
 static inline void
 set_timeout(coap_tick_t *timer, const unsigned int seconds) {
@@ -202,7 +199,7 @@ resolve_address(const str *server, struct sockaddr *dst) {
   struct addrinfo *res, *ainfo;
   struct addrinfo hints;
   static char addrstr[256];
-  int error;
+  int error, len=-1;
 
   memset(addrstr, 0, sizeof(addrstr));
   if (server->length)
@@ -222,20 +219,20 @@ resolve_address(const str *server, struct sockaddr *dst) {
   }
 
   for (ainfo = res; ainfo != NULL; ainfo = ainfo->ai_next) {
-
     switch (ainfo->ai_family) {
     case AF_INET6:
     case AF_INET:
-
-      memcpy(dst, ainfo->ai_addr, ainfo->ai_addrlen);
-      return ainfo->ai_addrlen;
+      len = ainfo->ai_addrlen;
+      memcpy(dst, ainfo->ai_addr, len);
+      goto finish;
     default:
       ;
     }
   }
 
+ finish:
   freeaddrinfo(res);
-  return -1;
+  return len;
 }
 
 static inline coap_opt_t *
@@ -637,12 +634,20 @@ cmdline_uri(char *arg) {
   int res;
 
   if (proxy.length) {		/* create Proxy-Uri from argument */
+    size_t len = strlen(arg);
+    while (len > 270) {
+      coap_insert(&optlist, 
+		  new_option_node(COAP_OPTION_PROXY_URI,
+				  270, (unsigned char *)arg),
+		  order_opts);
+      len -= 270;
+      arg += 270;
+    }
 
-    coap_insert( &optlist, 
-		 new_option_node(COAP_OPTION_PROXY_URI,
-				 strlen(arg), (unsigned char *)arg),
-		 order_opts);
-
+    coap_insert(&optlist, 
+		new_option_node(COAP_OPTION_PROXY_URI,
+				len, (unsigned char *)arg),
+		order_opts);
   } else {			/* split arg into Uri-* options */
     coap_split_uri((unsigned char *)arg, strlen(arg), &uri );
 
@@ -730,15 +735,37 @@ cmdline_subscribe(char *arg) {
 	      order_opts);
 }
 
-void
+int
 cmdline_proxy(char *arg) {
+  char *proxy_port_str = strrchr((const char *)arg, ':'); /* explicit port ? */
+  if (proxy_port_str) {
+    char *ipv6_delimiter = strrchr((const char *)arg, ']');
+    if (!ipv6_delimiter) {
+      if (proxy_port_str == strchr((const char *)arg, ':')) {
+        /* host:port format - host not in ipv6 hexadecimal string format */
+        *proxy_port_str++ = '\0'; /* split */
+        proxy_port = atoi(proxy_port_str);
+      }
+    } else {
+      arg = strchr((const char *)arg, '[');
+      if (!arg) return 0;
+      arg++;
+      *ipv6_delimiter = '\0'; /* split */
+      if (ipv6_delimiter + 1 == proxy_port_str++) {
+        /* [ipv6 address]:port */
+        proxy_port = atoi(proxy_port_str);
+      }
+    }
+  }
+
   proxy.length = strlen(arg);
   if ( (proxy.s = coap_malloc(proxy.length + 1)) == NULL) {
     proxy.length = 0;
-    return;
+    return 0;
   }
 
   memcpy(proxy.s, arg, proxy.length+1);
+  return 1;
 }
 
 void
@@ -969,7 +996,10 @@ main(int argc, char **argv) {
       cmdline_option(optarg);
       break;
     case 'P' :
-      cmdline_proxy(optarg);
+      if (!cmdline_proxy(optarg)) {
+        fprintf(stderr, "error specifying proxy address\n");
+	exit(-1);
+      }
       break;
     case 'T' :
       cmdline_token(optarg);
@@ -994,6 +1024,7 @@ main(int argc, char **argv) {
 
   if (proxy.length) {
     server = proxy;
+    port = proxy_port;
   } else {
     server = uri.host;
     port = uri.port;
@@ -1043,7 +1074,7 @@ main(int argc, char **argv) {
 
   /* construct CoAP message */
 
-  if (addrptr
+  if (!proxy.length && addrptr
       && (inet_ntop(dst.addr.sa.sa_family, addrptr, addr, sizeof(addr)) != 0)
       && (strlen(addr) != uri.host.length 
 	  || memcmp(addr, uri.host.s, uri.host.length) != 0)) {
@@ -1063,11 +1094,8 @@ main(int argc, char **argv) {
 
 #ifndef NDEBUG
   if (LOG_DEBUG <= coap_get_log_level()) {
-    unsigned char buf[COAP_MAX_PDU_SIZE];
-    debug("sending CoAP request: ");
+    debug("sending CoAP request:\n");
     coap_show_pdu(pdu);
-    print_readable( (unsigned char *)pdu->hdr, pdu->length, buf, COAP_MAX_PDU_SIZE);
-    printf("%s\n",buf);
   }
 #endif
 

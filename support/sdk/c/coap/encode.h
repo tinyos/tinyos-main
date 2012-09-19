@@ -1,7 +1,7 @@
 /* encode.h -- encoding and decoding of CoAP data types
  *
  * Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
- * 
+ *
  * This file is part of the CoAP library libcoap. Please see
  * README for terms of use. 
  */
@@ -37,13 +37,13 @@ extern int coap_fls(unsigned int i);
 #define COAP_PSEUDOFP_ENCODE_8_4_DOWN(v,ls) (v < HIBIT ? v : (ls = coap_fls(v) - Nn, (v >> ls) & MMASK) + ls)
 #define COAP_PSEUDOFP_ENCODE_8_4_UP(v,ls,s) (v < HIBIT ? v : (ls = coap_fls(v) - Nn, (s = (((v + ((1<<E<<ls)-1)) >> ls) & MMASK)), s == 0 ? HIBIT + ls + 1 : s + ls))
 
-/** 
+/**
  * Decodes multiple-length byte sequences. buf points to an input byte
  * sequence of length len. Returns the decoded value.
  */
 unsigned int coap_decode_var_bytes(unsigned char *buf,unsigned int len);
 
-/** 
+/**
  * Encodes multiple-length byte sequences. buf points to an output
  * buffer of sufficient length to store the encoded bytes. val is
  * the value to encode. Returns the number of bytes used to encode

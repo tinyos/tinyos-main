@@ -3,10 +3,10 @@
  * Copyright (C) 2010,2011 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the CoAP library libcoap. Please see
- * README for terms of use.
+ * README for terms of use. 
  */
 
-/**
+/** 
  * @file coap_time.h
  * @brief Clock Handling
  */
@@ -100,7 +100,7 @@ coap_ticks_impl(coap_tick_t *t) {
 #ifdef HAVE_SYS_TIME_H
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  *t = (tv.tv_sec - clock_offset) * COAP_TICKS_PER_SECOND
+  *t = (tv.tv_sec - clock_offset) * COAP_TICKS_PER_SECOND 
     + (tv.tv_usec * COAP_TICKS_PER_SECOND / 1000000);
 #else
 #error "clock not implemented"

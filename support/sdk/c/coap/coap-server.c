@@ -143,39 +143,39 @@ void
 init_resources(coap_context_t *ctx) {
   coap_resource_t *r;
 #if 0
-  r = coap_resource_init(NULL, 0);
+  r = coap_resource_init(NULL, 0, 0);
   coap_register_handler(r, COAP_REQUEST_GET, hnd_get_index);
 
-  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
-  coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"General Info\"", 14);
+  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+  coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"General Info\"", 14, 0);
   coap_add_resource(ctx, r);
 #endif
   /* store clock base to use in /time */
   my_clock_base = clock_offset;
 
-  r = coap_resource_init((unsigned char *)"time", 4);
+  r = coap_resource_init((unsigned char *)"time", 4, 0);
   if (!r)
     goto error;
 
-  r->observeable = 1;
+  r->observable = 1;
   time_resource = r;
   coap_register_handler(r, COAP_REQUEST_GET, hnd_get_time);
 #if 0
   coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_time);
   coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_time);
 #endif
-  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
-  /* coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16); */
-  coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7);
-  coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7);
+  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+  /* coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16, 0); */
+  coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7, 0);
+  coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7, 0);
 
   coap_add_resource(ctx, r);
 #if 0
 #ifndef WITHOUT_ASYNC
-  r = coap_resource_init((unsigned char *)"async", 5);
+  r = coap_resource_init((unsigned char *)"async", 5, 0);
   coap_register_handler(r, COAP_REQUEST_GET, hnd_get_async);
 
-  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1);
+  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
   coap_add_resource(ctx, r);
 #endif /* WITHOUT_ASYNC */
 #endif

@@ -3,10 +3,10 @@
  * Copyright (C) 2010,2011 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the CoAP library libcoap. Please see
- * README for terms of use.
+ * README for terms of use. 
  */
 
-/**
+/** 
  * @file prng.h
  * @brief Pseudo Random Numbers
  */
@@ -80,16 +80,16 @@ tinyos_prng_init(unsigned short value) {
 #endif
 
 #ifndef prng
-/**
- * Fills \p Buf with \p Length bytes of random data.
- *
+/** 
+ * Fills \p Buf with \p Length bytes of random data. 
+ * 
  * @hideinitializer
  */
 #define prng(Buf,Length) coap_prng_impl((Buf), (Length))
 #endif
 
 #ifndef prng_init
-/**
+/** 
  * Called to set the PRNG seed. You may want to re-define this to
  * allow for a better PRNG.
  *

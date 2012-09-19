@@ -86,7 +86,7 @@
  * 32, i.e.  the three upper bits determine the response class while
  * the remaining five fine-grained information specific to that class.
  */
-#define COAP_RESPONSE_CODE(N)  (((N)/100 << 5) | (N)%100)
+#define COAP_RESPONSE_CODE(N) (((N)/100 << 5) | (N)%100)
 
 /* Determines the class of response code C */
 #define COAP_RESPONSE_CLASS(C) (((C) >> 5) & 0xFF)
@@ -114,7 +114,7 @@ char *coap_response_phrase(unsigned char code);
 
 /* The following definitions exist for backwards compatibility */
 #if 0 /* this does not exist any more */
-#define COAP_RESPONSE_100       40   /* 100 Continue */
+#define COAP_RESPONSE_100      40 /* 100 Continue */
 #endif
 #define COAP_RESPONSE_200      COAP_RESPONSE_CODE(200)  /* 2.00 OK */
 #define COAP_RESPONSE_201      COAP_RESPONSE_CODE(201)  /* 2.01 Created */
@@ -128,8 +128,8 @@ char *coap_response_phrase(unsigned char code);
 #define COAP_RESPONSE_503      COAP_RESPONSE_CODE(503)  /* 5.03 Service Unavailable */
 #define COAP_RESPONSE_504      COAP_RESPONSE_CODE(504)  /* 5.04 Gateway Timeout */
 #if 0  /* these response codes do not have a valid code any more */
-#define COAP_RESPONSE_X_240    240   /* Token Option required by server */
-#define COAP_RESPONSE_X_241    241   /* Uri-Authority Option required by server */
+#  define COAP_RESPONSE_X_240    240   /* Token Option required by server */
+#  define COAP_RESPONSE_X_241    241   /* Uri-Authority Option required by server */
 #endif
 #define COAP_RESPONSE_X_242    COAP_RESPONSE_CODE(402)  /* Critical Option not supported */
 
@@ -152,7 +152,7 @@ char *coap_response_phrase(unsigned char code);
 #define COAP_MEDIATYPE_ANY                         0xff /* any media type */
 
 /* CoAP transaction id */
-/*typedef unsigned short coap_tid_t;*/
+/*typedef unsigned short coap_tid_t; */
 typedef int coap_tid_t;
 #define COAP_INVALID_TID -1
 
@@ -186,7 +186,7 @@ typedef struct {
 
 /**
  * Structures for more convenient handling of options. (To be used with ordered
- * coap_list_t.) The option's data will be added to the end of the coap_option 
+ * coap_list_t.) The option's data will be added to the end of the coap_option
  * structure (see macro COAP_OPTION_DATA).
  */
 typedef struct {
@@ -248,15 +248,15 @@ coap_pdu_t *coap_new_pdu();
 
 void coap_delete_pdu(coap_pdu_t *);
 
-/** 
- * Adds option of given type to pdu that is passed as first parameter. coap_add_option() 
+/**
+ * Adds option of given type to pdu that is passed as first parameter. coap_add_option()
  * destroys the PDU's data, so coap_add_data must be called after all options have been
  * added.
  */
 int coap_add_option(coap_pdu_t *pdu, unsigned short type, unsigned int len, const unsigned char *data);
 
-/** 
- * Adds given data to the pdu that is passed as first parameter. Note that the PDU's 
+/**
+ * Adds given data to the pdu that is passed as first parameter. Note that the PDU's
  * data is destroyed by coap_add_option().
  */
 int coap_add_data(coap_pdu_t *pdu, unsigned int len, const unsigned char *data);
@@ -272,9 +272,9 @@ int coap_get_data(coap_pdu_t *pdu, size_t *len, unsigned char **data);
 /* I don't think this is needed */
 
 /**
- * Fills the given coap_uri_t object with the request URI components from 
+ * Fills the given coap_uri_t object with the request URI components from
  * the PDU.
- * @param pdu the PDU 
+ * @param pdu the PDU
  * @param result the URI object to update
  * @return 1 if result has been updated, 0 otherwise, i.e. in case of error
  */

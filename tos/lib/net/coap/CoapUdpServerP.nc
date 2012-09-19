@@ -121,7 +121,7 @@ module CoapUdpServerP {
 	if (ctx_server == NULL)
 	    return FAIL;
 
-	r = coap_resource_init((unsigned char *)uri, uri_length);
+	r = coap_resource_init((unsigned char *)uri, uri_length, 0);
 	if (r == NULL)
 	    return FAIL;
 
@@ -134,12 +134,12 @@ module CoapUdpServerP {
 	if ((supported_methods & DELETE_SUPPORTED) == DELETE_SUPPORTED)
 	    coap_register_handler(r, COAP_REQUEST_DELETE, hnd_coap_async_tinyos);
 
-	coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)contenttype, contenttype_length);
+	coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)contenttype, contenttype_length, 0);
 	//TODO:
 	//coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16);
 	//coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7);
 #ifndef WITHOUT_OBSERVE
-	r->observeable = observable;
+	r->observable = observable;
 #endif
 	//coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7);
 
@@ -360,11 +360,10 @@ module CoapUdpServerP {
 
 #ifndef WITHOUT_OBSERVE
      //resource dirty -> notify subscribers
-       if (resource->dirty == 1)
-	 coap_check_notify(ctx_server);
+     if (resource->dirty == 1)
+       coap_check_notify(ctx_server);
 #endif
      coap_free(resource->data);
-
  }
 
  event void CoapResource.methodNotDone[uint8_t uri_key](coap_async_state_t* async_state,

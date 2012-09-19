@@ -320,7 +320,7 @@ add_source_address(struct coap_resource_t *resource, coap_address_t *peer) {
   if (n < BUFSIZE)
     buf[n++] = '"';
 
-  coap_add_attr(resource, (unsigned char *)"A", 1, (unsigned char *)buf, n);
+  coap_add_attr(resource, (unsigned char *)"A", 1, (unsigned char *)buf, n, COAP_ATTR_FLAGS_RELEASE_VALUE);
 #undef BUFSIZE
 }
 
@@ -368,7 +368,7 @@ hnd_post_rd(coap_context_t  *ctx, struct coap_resource_t *resource,
 #define LOCSIZE 68
   unsigned char *loc;
   size_t loc_size;
-  str h, ins, rt, lt;		/* store query parameters */
+  str h = {0, NULL}, ins = {0, NULL}, rt = {0, NULL}, lt = {0, NULL};		/* store query parameters */
   unsigned char *buf;
 
   loc = (unsigned char *)coap_malloc(LOCSIZE);
@@ -431,7 +431,7 @@ hnd_post_rd(coap_context_t  *ctx, struct coap_resource_t *resource,
    *   - use lt to check expiration
    */
   
-  r = coap_resource_init(loc, loc_size);
+  r = coap_resource_init(loc, loc_size, COAP_RESOURCE_FLAGS_RELEASE_URI);
   coap_register_handler(r, COAP_REQUEST_GET, hnd_get_resource);
   coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_resource);
   coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_resource);
@@ -443,7 +443,7 @@ hnd_post_rd(coap_context_t  *ctx, struct coap_resource_t *resource,
       buf[0] = '"';
       memcpy(buf + 1, ins.s, ins.length);
       buf[ins.length + 1] = '"';
-      coap_add_attr(r, (unsigned char *)"ins", 3, buf, ins.length + 2);
+      coap_add_attr(r, (unsigned char *)"ins", 3, buf, ins.length + 2, COAP_ATTR_FLAGS_RELEASE_VALUE);
     }
   }
 
@@ -454,7 +454,7 @@ hnd_post_rd(coap_context_t  *ctx, struct coap_resource_t *resource,
       buf[0] = '"';
       memcpy(buf + 1, rt.s, rt.length);
       buf[rt.length + 1] = '"';
-      coap_add_attr(r, (unsigned char *)"rt", 2, buf, rt.length + 2);
+      coap_add_attr(r, (unsigned char *)"rt", 2, buf, rt.length + 2, COAP_ATTR_FLAGS_RELEASE_VALUE);
     }
   }
 
@@ -478,13 +478,20 @@ hnd_post_rd(coap_context_t  *ctx, struct coap_resource_t *resource,
 
   response->hdr->code = COAP_RESPONSE_CODE(201);
 
-  { /* FIXME: ugly hack to add the missing '/' */
-    unsigned char b[72];
-    b[0] = '/';
-    memcpy(b + 1, loc, loc_size);
-    coap_add_option(response, COAP_OPTION_LOCATION_PATH, loc_size + 1, b);
+  { /* split path into segments and add Location-Path options */
+    unsigned char _b[LOCSIZE];
+    unsigned char *b = _b;
+    size_t buflen = sizeof(_b);
+    int nseg;
+    
+    nseg = coap_split_path(loc, loc_size, b, &buflen);
+    while (nseg--) {
+      coap_add_option(response, COAP_OPTION_LOCATION_PATH,
+		      COAP_OPT_LENGTH(b), COAP_OPT_VALUE(b));
+      b += COAP_OPT_SIZE(b);
+    }
   }
-
+  
   if (token->length)
     coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 }
@@ -493,13 +500,13 @@ void
 init_resources(coap_context_t *ctx) {
   coap_resource_t *r;
 
-  r = coap_resource_init(RD_ROOT_STR, RD_ROOT_SIZE);
+  r = coap_resource_init(RD_ROOT_STR, RD_ROOT_SIZE, 0);
   coap_register_handler(r, COAP_REQUEST_GET, hnd_get_rd);
   coap_register_handler(r, COAP_REQUEST_POST, hnd_post_rd);
 
-  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"40", 2);
-  coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"core-rd\"", 9);
-  coap_add_attr(r, (unsigned char *)"ins", 2, (unsigned char *)"\"default\"", 9);
+  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"40", 2, 0);
+  coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"core-rd\"", 9, 0);
+  coap_add_attr(r, (unsigned char *)"ins", 2, (unsigned char *)"\"default\"", 9, 0);
 
   coap_add_resource(ctx, r);
 

@@ -3,7 +3,7 @@
  * Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the CoAP library libcoap. Please see
- * README for terms of use.
+ * README for terms of use. 
  */
 
 #include "config.h"
@@ -61,7 +61,7 @@ coap_write_block_opt(coap_block_t *block, unsigned short type,
     debug("illegal block requested\n");
     return -2;
   }
-
+  
   avail = pdu->max_size - pdu->length - 4;
   want = 1 << (block->szx + 4);
 
@@ -91,8 +91,8 @@ coap_write_block_opt(coap_block_t *block, unsigned short type,
       block->szx = coap_fls(avail) - 5;
       block->m = 1;
       block->num <<= szx - block->szx;
-      }
     }
+  }
 
   /* to re-encode the block option */
   coap_add_option(pdu, type, coap_encode_var_bytes(buf, ((block->num << 4) | 
@@ -103,7 +103,7 @@ coap_write_block_opt(coap_block_t *block, unsigned short type,
   return 1;
 }
 
-int
+int 
 coap_add_block(coap_pdu_t *pdu, unsigned int len, const unsigned char *data,
 	       unsigned int block_num, unsigned char block_szx) {
   size_t start;
@@ -111,8 +111,8 @@ coap_add_block(coap_pdu_t *pdu, unsigned int len, const unsigned char *data,
 
   if (len <= start)
     return 0;
-
-  return coap_add_data(pdu,
+  
+  return coap_add_data(pdu, 
 		       min(len - start, (unsigned int)(1 << (block_szx + 4))),
 		       data + start);
 }
