@@ -636,7 +636,6 @@ coap_send_confirmed(coap_context_t *context,
   }
 #endif /* WITH_TINYOS */
 
-  node->id = coap_send_impl(context, dst, pdu);
   return node->id;
 }
 
