@@ -439,7 +439,7 @@ module CoapUdpServerP {
 
      coap_remove_async(ctx_server, async_state->id, &tmp);
      coap_free_async(async_state);
-     async = NULL;
+     async_state = NULL;
 
      //thp:TODO: observe??
  }
