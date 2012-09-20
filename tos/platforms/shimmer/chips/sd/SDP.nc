@@ -189,6 +189,32 @@ implementation {
     return SUCCESS;
   }
 
+  /*
+   * this pair allows for temporary prevention of dock-related 
+   * events from interfering with normal startup and shutdown operations
+   * they restore any dock state changes during enable
+   */
+  command void SD.disableDock(){
+    atomic{
+      TOSH_MAKE_DOCK_N_OUTPUT();
+      TOSH_SET_DOCK_N_PIN();
+    }
+  }
+  
+  command void SD.enableDock(){
+    TOSH_MAKE_DOCK_N_INPUT();
+    if(!call DockInterrupt.getValue()){  // we're on the dock
+      call DockInterrupt.edge(TRUE);    
+      signal SD.unavailable();
+    }
+    else{                                
+      call DockInterrupt.edge(FALSE);   // we don't want to signal that it's ok to keep going
+      //      signal SD.available();
+    }
+    call DockInterrupt.enable();
+    call DockInterrupt.clear();
+  }
+  
   async event void DockInterrupt.fired() {
     if (call DockInterrupt.getValue() == TRUE){      // off the dock
       powerCycle();
@@ -272,7 +298,7 @@ implementation {
     uint8_t response;
 
     for(i = 0; i < 65; i++){
-      if(((response = spiSendByte(0xff)) == 0x00) ||
+      if(((response = spiSendByte(0xff)) == 0x00) || 
 	 (response == 0x01))
 	break;
     }

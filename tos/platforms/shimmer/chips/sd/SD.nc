@@ -73,4 +73,14 @@ interface SD {
    * attempts to talk to the card
    */
   async event void unavailable();
+  
+  /**
+   * this pair allows for temporary prevention of dock-related 
+   * events from interfering with normal startup and shutdown operations
+   * they restore any dock state changes during enable
+   */
+  command void disableDock();
+  
+  command void enableDock();
+
 }

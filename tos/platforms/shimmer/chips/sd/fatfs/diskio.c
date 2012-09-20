@@ -86,6 +86,16 @@ void dock_disk()
   call diskIOStdControl.start();
 }
 
+void disable_dock()
+{
+  call diskIO.disableDock();
+}
+
+void enable_dock()
+{
+  call diskIO.enableDock();
+}
+
 DSTATUS disk_status (BYTE drv)        // just one
 {
   atomic {
