@@ -95,7 +95,10 @@
 #define ETX_THRESHOLD (3 * divideRank)
 #endif // MRHOF
 
+#ifndef MAX_PARENT
 #define MAX_PARENT 20
+#endif
+
 #define MAX_HOPCOUNT 30
 #define RPL_QUEUE_SIZE 5
 #define RPL_MAX_SOURCEROUTE 10
