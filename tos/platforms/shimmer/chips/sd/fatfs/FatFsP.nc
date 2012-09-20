@@ -234,11 +234,19 @@ implementation {
    * which disables the card completely
    */
   command void FatFs.disable(){
-    f_mount(0, NULL);  // this is supposed to unmount
+    //    f_mount(0, NULL);  // this is supposed to unmount
     
     disable_disk();  
   }
   
+  command void FatFs.disableDock() {
+    disable_dock();
+  }
+
+  command void FatFs.enableDock() {
+    enable_dock();
+  }
+
   /*
    * mode flags:
    * FA_READ	Specifies read access to the object. Data can be read from the file.
@@ -492,8 +500,20 @@ implementation {
    *    bit4:0
    *     Second / 2 (0..29)
    */
-  command error_t FatFs.f_utime(const char * filename, FILINFO * timedate){
-    return f_utime(filename, timedate);
+  //  command error_t FatFs.f_utime(const char * filename, FILINFO * timedate){
+  /*
+   * passing fat time as above compressed into a word isn't useful.
+   * we change this command to the more sensible touch, which
+   * takes a unix-style filestamp and sets the directory time to that
+   */
+  command error_t FatFs.touch(const char * filename){
+    DWORD now;
+    FILINFO gfi;
+    
+    now = get_fattime();
+    gfi.fdate = now >> 16;
+    gfi.ftime = now;
+    return f_utime(filename, &gfi);
   }
 
   command error_t FatFs.rename(const char * oldname, const char * newname){
@@ -549,6 +569,8 @@ implementation {
 #define INITBUF(dj,sp,lp)	dj.fn = sp
 
 #endif
+
+#define LD_CLUST(dir)	(((DWORD)LD_WORD(dir+DIR_FstClusHI)<<16) | LD_WORD(dir+DIR_FstClusLO))
 
   event void Time.tick() {}
   /* return type bitmask:
@@ -1728,9 +1750,82 @@ implementation {
   /*-----------------------------------------------------------------------*/
   /* Follow a file path                                                    */
   /*-----------------------------------------------------------------------*/
+  /* FR_OK(0): successful, !=0: error code */
+  static FRESULT follow_path (DIR *dj, const char *path)	
+    /* Directory object to return last directory and found object, Full-path string to find a file or directory */
+    {
+      FRESULT res;
+      BYTE *dir, ns;
+
+
+#if _FS_RPATH
+      if (*path == '/' || *path == '\\'){  /* There is a heading separator */
+	path++;	
+	dj->sclust = 0;		/* Strip it and start from the root dir */
+      }
+      else 							/* No heading separator */
+	dj->sclust = dj->fs->cdir;	/* Start from the current dir */
+#else
+      if (*path == '/' || *path == '\\')	/* Strip heading separator if exist */
+	path++;
+      dj->sclust = 0;						/* Start from the root dir */
+#endif
+
+      if ((UINT)*path < ' ') {			/* Nul path means the start directory itself */
+	res = dir_seek(dj, 0);
+	dj->dir = 0;
+      } 
+      else {							/* Follow path */
+	for (;;) {
+      	  res = create_name(dj, &path);	/* Get a segment */
+
+	  if (res != FR_OK) 
+	    break;
+
+	  res = dir_find(dj);				/* Find it */
+	  ns = *(dj->fn+NS);
+
+	  if (res != FR_OK) {				/* Failed to find the object */
+	    if (res != FR_NO_FILE) 
+	      break;	/* Abort if any hard error occured */
+
+	    /* Object not found */
+	    if (_FS_RPATH && (ns & NS_DOT)) {	/* If dot entry is not exit */
+	      dj->sclust = 0; 
+	      dj->dir = 0;	/* It is the root dir */
+	      res = FR_OK;
+	      if (!(ns & NS_LAST)) 
+		continue;
+	    } 
+	    else {							/* Could not find the object */
+	      if (!(ns & NS_LAST)) 
+		res = FR_NO_PATH;
+	    }
+	    break;
+	  }
+
+	  if (ns & NS_LAST) {
+	    break;			/* Last segment match. Function completed. */
+	  }
+#if REALTIME
+	  dir = get_dir_ptr(dj->fs, dj->dir);
+#else
+	  dir = dj->dir;						/* There is next segment. Follow the sub directory */
+#endif
+	  if (!(dir[DIR_Attr] & AM_DIR)) {	/* Cannot follow because it is a file */
+	    res = FR_NO_PATH; 
+	    break;
+	  }
+	  dj->sclust = LD_CLUST(dir);
+	}
+      }
+
+      return res;
+    }
+
 
   /* FR_OK(0): successful, !=0: error code */
-  static FRESULT follow_path (DIR *dj, const char *path) 	
+  static FRESULT follow_gunk (DIR *dj, const char *path) 	
     /* Directory object to return last directory and found object, Full-path string to find a file or directory */
     {
       FRESULT res;
@@ -1982,7 +2077,8 @@ implementation {
 #endif
       
 #if REALTIME
-      init_fatfs(fs);
+      if(fs)
+	init_fatfs(fs);
 #endif
       
       fs->drive = (BYTE)LD2PD(vol);		/* Bind the logical drive and a physical drive */

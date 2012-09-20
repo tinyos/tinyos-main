@@ -48,6 +48,15 @@ interface FatFs {
 
   command error_t unmount();
 
+  /**
+   * this pair allows for temporary prevention of dock-related 
+   * events from interfering with normal startup and shutdown operations
+   * they restore any dock state changes during enable
+   */
+  command void disableDock();
+  
+  command void enableDock();
+
   /*
    * take the card down, "unmount" the fs
    */
@@ -154,7 +163,13 @@ interface FatFs {
    *    bit4:0
    *     Second / 2 (0..29)
    */
-  command error_t f_utime(const char * filename, FILINFO * timedate);
+  /*
+   * passing fat time compressed into a word isn't useful.
+   * we change this command to the more sensible touch, which
+   * sets time to now at call.
+   */
+  command error_t touch(const char * filename);
+  //  command error_t f_utime(const char * filename, FILINFO * timedate);
 
   command error_t rename(const char * oldname, const char * newname);
   
