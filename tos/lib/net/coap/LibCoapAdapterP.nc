@@ -108,12 +108,6 @@ module LibCoapAdapterP {
 
     coap_transaction_id(dst, pdu, &id);
 
-#warning "CHECK: delete_pdu?"
-    /*
-    if ( free_pdu )
-      coap_delete_pdu( pdu );
-    */
-
     return id;
   }
 

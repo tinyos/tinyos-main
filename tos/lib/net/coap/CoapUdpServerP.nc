@@ -122,6 +122,9 @@ module CoapUdpServerP {
 	    return FAIL;
 
 	r = coap_resource_init((unsigned char *)uri, uri_length, 0);
+
+	r->data = NULL;
+
 	if (r == NULL)
 	    return FAIL;
 
@@ -329,6 +332,7 @@ module CoapUdpServerP {
      if (!response) {
 // 	 debug("check_async: insufficient memory, we'll try later\n");
 	 //TODO: handle error...
+	 return;
      }
 
      response->hdr->id = async_state->message_id;
@@ -352,18 +356,19 @@ module CoapUdpServerP {
      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
 	 debug("check_async: cannot send response for message %d\n",
 	       response->hdr->id);
-	 coap_delete_pdu(response);
      }
-
+     coap_delete_pdu(response);
      coap_remove_async(ctx_server, async_state->id, &tmp);
      coap_free_async(async_state);
+     async_state = NULL;
 
 #ifndef WITHOUT_OBSERVE
      //resource dirty -> notify subscribers
      if (resource->dirty == 1)
        coap_check_notify(ctx_server);
 #endif
-     coap_free(resource->data);
+     if (resource->data)
+       coap_free(resource->data);
  }
 
  event void CoapResource.methodNotDone[uint8_t uri_key](coap_async_state_t* async_state,
@@ -380,6 +385,7 @@ module CoapUdpServerP {
 	 if (!response) {
 	     debug("check_async: insufficient memory, we'll try later\n");
 	     //TODO: handle error...
+	     return;
 	 }
 
 	 response->hdr->id = async_state->message_id;
@@ -433,6 +439,7 @@ module CoapUdpServerP {
 
      coap_remove_async(ctx_server, async_state->id, &tmp);
      coap_free_async(async_state);
+     async = NULL;
 
      //thp:TODO: observe??
  }
