@@ -12,3 +12,10 @@ To create a debian package for your system follow these steps:
    or create your own source tarball (steps 1-3)
 6) Run the "build-tinyos --deb" command, this will create your debian package
 7) Upload the debian package to a place where your users can download it
+
+To create an RPM package for your system follow these steps:
+
+5) Either use one of the official tinyos source tarballs from DOWNLOAD_URL
+   or create your own source tarball (steps 1-3)
+6) Run the "build-tinyos --rpm" command, this will create your debian package
+7) Upload the RPM package to a place where your users can download it
