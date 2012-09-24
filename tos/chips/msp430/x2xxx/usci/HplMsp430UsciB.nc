@@ -182,6 +182,7 @@ interface HplMsp430UsciB {
 
   /* get bits of uctl1 in i2c mode */
   async command bool getStopBit();
+  async command bool getStartBit();  
   async command bool getTransmitReceiveMode();
 
   /* when master the SLA (slave address register says who we
