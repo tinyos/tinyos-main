@@ -35,18 +35,18 @@
 generic module AtmegaTransformCounterP(typedef to_size_t @integer(),
 	typedef from_size_t @integer())
 {
-	provides interface AtmegaCounter<to_size_t>;
+	provides interface HplAtmegaCounter<to_size_t>;
 
 	uses
 	{
-		interface AtmegaCounter<from_size_t> as SubCounter;
+		interface HplAtmegaCounter<from_size_t> as SubCounter;
 		interface HighBits<to_size_t, from_size_t>;
 	}
 }
 
 implementation
 {
-	async command to_size_t AtmegaCounter.get()
+	async command to_size_t HplAtmegaCounter.get()
 	{
 		to_size_t value;
 		from_size_t counter;
@@ -84,7 +84,7 @@ implementation
 		return value;
 	}
 
-	async command void AtmegaCounter.set(to_size_t value)
+	async command void HplAtmegaCounter.set(to_size_t value)
 	{
 		from_size_t counter;
 
@@ -95,49 +95,49 @@ implementation
 		}
 	}
 
-	default async event void AtmegaCounter.overflow() { }
+	default async event void HplAtmegaCounter.overflow() { }
 
 	// WARNING: This event MUST be executed in atomic context, it 
 	// does not help if we put the body inside an atomic block
 	async event void SubCounter.overflow()
 	{
 		if( call HighBits.add(1) )
-			signal AtmegaCounter.overflow();
+			signal HplAtmegaCounter.overflow();
 	}
 
 	// WARNING: This event MUST be executed in atomic context, it 
 	// does not help if we put the body inside an atomic block
-	async command bool AtmegaCounter.test()
+	async command bool HplAtmegaCounter.test()
 	{
 		return call SubCounter.test() && call HighBits.equals(-1);
 	}
 
-	async command void AtmegaCounter.reset()
+	async command void HplAtmegaCounter.reset()
 	{
 		call SubCounter.reset();
 	}
 
-	async command void AtmegaCounter.start()
+	async command void HplAtmegaCounter.start()
 	{
 		call SubCounter.start();
 	}
 
-	async command void AtmegaCounter.stop()
+	async command void HplAtmegaCounter.stop()
 	{
 		call SubCounter.stop();
 	}
 
-	async command bool AtmegaCounter.isOn()
+	async command bool HplAtmegaCounter.isOn()
 	{
 		return call SubCounter.isOn();
 	}
 
-	async command void AtmegaCounter.setMode(uint8_t mode)
+	async command void HplAtmegaCounter.setMode(uint8_t mode)
 	{
 		call SubCounter.setMode(mode);
 	}
 
-	async command uint8_t AtmegaCounter.getMode()
+	async command uint8_t HplAtmegaCounter.getMode()
 	{
 		return call SubCounter.getMode();
 	}

@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-interface AtmegaCompare<size_type>
+interface HplAtmegaCompare<size_type>
 {
 // ----- output compare register (OCR) 
 

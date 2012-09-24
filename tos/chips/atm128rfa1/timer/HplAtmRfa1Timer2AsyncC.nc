@@ -36,8 +36,8 @@ configuration HplAtmRfa1Timer2AsyncC
 {
 	provides
 	{
-		interface AtmegaCounter<uint8_t> as Counter;
-		interface AtmegaCompare<uint8_t> as Compare[uint8_t id];
+		interface HplAtmegaCounter<uint8_t> as Counter;
+		interface HplAtmegaCompare<uint8_t> as Compare[uint8_t id];
 	}
 }
 

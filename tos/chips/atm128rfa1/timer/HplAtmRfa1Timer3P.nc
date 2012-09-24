@@ -38,11 +38,11 @@ module HplAtmRfa1Timer3P @safe()
 {
 	provides
 	{
-		interface AtmegaCounter<uint16_t> as Timer;
-		interface AtmegaCompare<uint16_t> as CompareA;
-		interface AtmegaCompare<uint16_t> as CompareB;
-		interface AtmegaCompare<uint16_t> as CompareC;
-		interface AtmegaCapture<uint16_t> as Capture;
+		interface HplAtmegaCounter<uint16_t> as Timer;
+		interface HplAtmegaCompare<uint16_t> as CompareA;
+		interface HplAtmegaCompare<uint16_t> as CompareB;
+		interface HplAtmegaCompare<uint16_t> as CompareC;
+		interface HplAtmegaCapture<uint16_t> as Capture;
 		interface McuPowerOverride;
 	}
 

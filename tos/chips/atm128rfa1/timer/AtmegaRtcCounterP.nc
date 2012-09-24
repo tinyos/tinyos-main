@@ -45,7 +45,7 @@ generic module AtmegaRtcCounterP(typedef precision, uint8_t mode)
 
 	uses
 	{
-		interface AtmegaCounter<uint8_t>;
+		interface HplAtmegaCounter<uint8_t>;
 	}
 }
 
@@ -53,8 +53,8 @@ implementation
 {
 	command error_t Init.init()
 	{
-		call AtmegaCounter.setMode(mode);
-		call AtmegaCounter.start();
+		call HplAtmegaCounter.setMode(mode);
+		call HplAtmegaCounter.start();
 
 		return SUCCESS;
 	}
@@ -81,8 +81,8 @@ implementation
 
 		atomic
 		{
-			b = call AtmegaCounter.get();
-			c = call AtmegaCounter.test();
+			b = call HplAtmegaCounter.get();
+			c = call HplAtmegaCounter.test();
 			a = high;
 		}
 
@@ -97,18 +97,18 @@ implementation
 
 	async command bool Counter.isOverflowPending()
 	{
-		atomic return high == 0xFF && call AtmegaCounter.test();
+		atomic return high == 0xFF && call HplAtmegaCounter.test();
 	}
 
 	async command void Counter.clearOverflow()
 	{
-		call AtmegaCounter.reset();
+		call HplAtmegaCounter.reset();
 	}
 
 	default async event void Counter.overflow() { }
 
 	// called in atomic context
-	async event void AtmegaCounter.overflow()
+	async event void HplAtmegaCounter.overflow()
 	{
 		++high;
 
@@ -120,7 +120,7 @@ implementation
 	async command uint8_t getCounterHigh()
 	{
 		uint8_t h = high;
-		if( call AtmegaCounter.test() )
+		if( call HplAtmegaCounter.test() )
 			h += 1;
 
 		return h;

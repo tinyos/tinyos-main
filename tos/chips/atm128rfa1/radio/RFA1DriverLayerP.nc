@@ -66,7 +66,7 @@ module RFA1DriverLayerP
   {
     interface BusyWait<TMicro, uint16_t>;
     interface LocalTime<TRadio>;
-    interface AtmegaCapture<uint32_t> as SfdCapture;
+    interface HplAtmegaCapture<uint32_t> as SfdCapture;
 
     interface RFA1DriverConfig as Config;
 

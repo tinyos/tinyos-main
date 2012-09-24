@@ -42,7 +42,7 @@ generic module AtmegaCounterP(typedef precision_tag, typedef size_type @integer(
 
 	uses
 	{
-		interface AtmegaCounter<size_type>;
+		interface HplAtmegaCounter<size_type>;
 	}
 }
 
@@ -50,31 +50,31 @@ implementation
 {
 	command error_t Init.init()
 	{
-		call AtmegaCounter.setMode(mode);
-		call AtmegaCounter.start();
+		call HplAtmegaCounter.setMode(mode);
+		call HplAtmegaCounter.start();
 
 		return SUCCESS;
 	}
 
 	async command size_type Counter.get()
 	{
-		return call AtmegaCounter.get();
+		return call HplAtmegaCounter.get();
 	}
 
 	default async event void Counter.overflow() { }
 
-	async event void AtmegaCounter.overflow()
+	async event void HplAtmegaCounter.overflow()
 	{
 		signal Counter.overflow();
 	}
 
 	async command bool Counter.isOverflowPending()
 	{
-		atomic return call AtmegaCounter.test();
+		atomic return call HplAtmegaCounter.test();
 	}
 
 	async command void Counter.clearOverflow()
 	{
-		call AtmegaCounter.reset();
+		call HplAtmegaCounter.reset();
 	}
 }

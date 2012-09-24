@@ -42,8 +42,8 @@ generic module AtmegaRtcCompareP(typedef precision, uint8_t mode, uint16_t mindt
 
 	uses
 	{
-		interface AtmegaCounter<uint8_t>;
-		interface AtmegaCompare<uint8_t>;
+		interface HplAtmegaCounter<uint8_t>;
+		interface HplAtmegaCompare<uint8_t>;
 		interface Counter<precision, uint16_t> as Counter;
 
 		async command uint8_t getCounterHigh();
@@ -54,8 +54,8 @@ implementation
 {
 	command error_t Init.init()
 	{
-		call AtmegaCompare.stop();
-		call AtmegaCompare.setMode(mode);
+		call HplAtmegaCompare.stop();
+		call HplAtmegaCompare.setMode(mode);
 
 		return SUCCESS;
 	}
@@ -65,41 +65,41 @@ implementation
 	default async event void Alarm.fired() { }
 
 	// called in atomic context
-	async event void AtmegaCompare.fired()
+	async event void HplAtmegaCompare.fired()
 	{
 		uint8_t h = call getCounterHigh();
 
 		if( h == (alarm >> 8) )
 		{
-			call AtmegaCompare.stop();
+			call HplAtmegaCompare.stop();
 			signal Alarm.fired();
 		}
 	}
 
 	async command void Alarm.stop()
 	{
-		call AtmegaCompare.stop();
+		call HplAtmegaCompare.stop();
 	}
 
 	async command bool Alarm.isRunning()
 	{
-		return call AtmegaCompare.isOn();
+		return call HplAtmegaCompare.isOn();
 	}
 
 	// callers make sure that time is always in the future
 	void setAlarm(uint16_t time)
 	{
-		call AtmegaCompare.set((uint8_t)time);
+		call HplAtmegaCompare.set((uint8_t)time);
 
 		alarm = time;
 
 //		if( high == (time >> 8) )
 //		{
-			call AtmegaCompare.reset();
-			call AtmegaCompare.start();
+			call HplAtmegaCompare.reset();
+			call HplAtmegaCompare.start();
 //		}
 //		else
-//			call AtmegaCompare.stop();
+//			call HplAtmegaCompare.stop();
 	}
 
 	async command void Alarm.startAt(uint16_t nt0, uint16_t ndt)
@@ -143,5 +143,5 @@ implementation
 	async event void Counter.overflow() { }
 
 	// TODO: enable the alarm just when high = (alarm>>8)-1;
-	async event void AtmegaCounter.overflow() { }
+	async event void HplAtmegaCounter.overflow() { }
 }

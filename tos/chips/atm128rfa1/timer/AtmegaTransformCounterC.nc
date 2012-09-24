@@ -35,14 +35,14 @@
 generic configuration AtmegaTransformCounterC(typedef to_size_t @integer(),
 	typedef from_size_t @integer(), int8_t bitshift)
 {
-	provides interface AtmegaCounter<to_size_t>;
-	uses interface AtmegaCounter<from_size_t> as SubCounter;
+	provides interface HplAtmegaCounter<to_size_t>;
+	uses interface HplAtmegaCounter<from_size_t> as SubCounter;
 }
 
 implementation
 {
 	components new AtmegaTransformCounterP(to_size_t, from_size_t);
-	AtmegaCounter = AtmegaTransformCounterP.AtmegaCounter;
+	HplAtmegaCounter = AtmegaTransformCounterP.HplAtmegaCounter;
 	SubCounter = AtmegaTransformCounterP.SubCounter;
 
 	components new HighBitsC(to_size_t, from_size_t, bitshift);

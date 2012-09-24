@@ -53,5 +53,5 @@ implementation
 	components HplAtmRfa1Timer3C as HplAtmRfa1TimerC;
 #endif
 
-	AtmegaCounterP.AtmegaCounter -> HplAtmRfa1TimerC;
+	AtmegaCounterP.HplAtmegaCounter -> HplAtmRfa1TimerC;
 }

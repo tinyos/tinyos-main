@@ -48,5 +48,5 @@ implementation
 	McuInitC.TimerInit -> AtmegaCounterP.Init;
 
 	components HplAtmRfa1TimerMacC;
-	AtmegaCounterP.AtmegaCounter -> HplAtmRfa1TimerMacC;
+	AtmegaCounterP.HplAtmegaCounter -> HplAtmRfa1TimerMacC;
 }

@@ -36,9 +36,9 @@ configuration HplAtmRfa1Timer3C
 {
 	provides
 	{
-		interface AtmegaCounter<uint16_t> as Counter;
-		interface AtmegaCompare<uint16_t> as Compare[uint8_t id];
-		interface AtmegaCapture<uint16_t> as Capture;
+		interface HplAtmegaCounter<uint16_t> as Counter;
+		interface HplAtmegaCompare<uint16_t> as Compare[uint8_t id];
+		interface HplAtmegaCapture<uint16_t> as Capture;
 	}
 }
 

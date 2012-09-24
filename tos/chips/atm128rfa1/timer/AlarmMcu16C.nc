@@ -53,8 +53,8 @@ implementation
 	components HplAtmRfa1Timer3C as HplAtmRfa1TimerC;
 #endif
 
-	AtmegaCompareP.AtmegaCounter -> HplAtmRfa1TimerC;
-	AtmegaCompareP.AtmegaCompare -> HplAtmRfa1TimerC.Compare[unique(UQ_MCU_ALARM)];
+	AtmegaCompareP.HplAtmegaCounter -> HplAtmRfa1TimerC;
+	AtmegaCompareP.HplAtmegaCompare -> HplAtmRfa1TimerC.Compare[unique(UQ_MCU_ALARM)];
 
 	// just to start the timer
 	components CounterMcu16C;

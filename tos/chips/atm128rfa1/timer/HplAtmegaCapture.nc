@@ -32,45 +32,43 @@
  * Author: Miklos Maroti
  */
 
-interface AtmegaCounter<size_type>
+interface HplAtmegaCapture<size_type>
 {
-// ----- timer counter register (TCNT) 
+// ----- input capture register (ICR) 
 
-	/* Returns the current counter value */
+	/* Returns the current captured value */
 	async command size_type get();
 
-	/* Sets the current counter value */
+	/* Sets the current captured value */
 	async command void set(size_type value);
 
-// ----- timer interrupt flag register (TIFR), timer overflow flag (TOV)
+// ----- timer interrupt flag register (TIFR), input capture flag (ICF)
 
-	/* Signalled when the counter is going from 0xFF to 0x00.
-	   WARNING: This event MUST be executed in atomic context */
-	async event void overflow();
+	/* Signalled when the captured event has occured */
+	async event void fired();
 
-	/* Tests if there is a pending overflow interrupt
-	   WARNING: This command MUST be executed in atomic context */
+	/* Tests if there is a pending captured event */
 	async command bool test();
 
 	/* Resets a pending interrupt */
 	async command void reset();
 
-// ----- timer interrupt mask register (TIMSK), timer overflow interrupt enable (TOIE)
+// ----- timer interrupt mask register (TIMSK), input capture interrupt enable (ICIE)
 
-	/* Enables the overflow interrupt */
+	/* Enables the capture interrupt */
 	async command void start();
 
-	/* Disables the overflow interrupt */
+	/* Disables the capture interrupt */
 	async command void stop();
 
 	/* Checks is the overflow interrupt is enabled */
 	async command bool isOn();
 
-// ----- timer control registers (TCCR), clock select bits (CS) and waveform generation mode (WGM)
+// ----- timer control register (TCCR), input capture mode (ICNC and ICES)
 
-	/* Sets the clock select and waveform generation mode bits */
+	/* Sets the input capture mode bits */
 	async command void setMode(uint8_t mode);
 
-	/* Returns the clock select andwaveform generation mode bits */
+	/* Returns the input capture mode bits */
 	async command uint8_t getMode();
 }

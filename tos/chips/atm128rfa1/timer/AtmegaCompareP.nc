@@ -42,8 +42,8 @@ generic module AtmegaCompareP(typedef precision_tag, typedef size_type @integer(
 
 	uses
 	{
-		interface AtmegaCounter<size_type>;
-		interface AtmegaCompare<size_type>;
+		interface HplAtmegaCounter<size_type>;
+		interface HplAtmegaCompare<size_type>;
 	}
 }
 
@@ -51,8 +51,8 @@ implementation
 {
 	command error_t Init.init()
 	{
-		call AtmegaCompare.stop();
-		call AtmegaCompare.setMode(mode);
+		call HplAtmegaCompare.stop();
+		call HplAtmegaCompare.setMode(mode);
 
 		return SUCCESS;
 	}
@@ -60,28 +60,28 @@ implementation
 	default async event void Alarm.fired() { }
 
 	// called in atomic context
-	async event void AtmegaCompare.fired()
+	async event void HplAtmegaCompare.fired()
 	{
-		call AtmegaCompare.stop();
+		call HplAtmegaCompare.stop();
 		signal Alarm.fired();
 	}
 
 	async command void Alarm.stop()
 	{
-		call AtmegaCompare.stop();
+		call HplAtmegaCompare.stop();
 	}
 
 	async command bool Alarm.isRunning()
 	{
-		return call AtmegaCompare.isOn();
+		return call HplAtmegaCompare.isOn();
 	}
 
 	// callers make sure that time is always in the future
 	void setAlarm(size_type time)
 	{
-		call AtmegaCompare.set(time);
-		call AtmegaCompare.reset();
-		call AtmegaCompare.start();
+		call HplAtmegaCompare.set(time);
+		call HplAtmegaCompare.reset();
+		call HplAtmegaCompare.start();
 	}
 
 	async command void Alarm.startAt(size_type nt0, size_type ndt)
@@ -89,7 +89,7 @@ implementation
 		atomic
 		{
 			// current time + time needed to set alarm
-			size_type n = call AtmegaCounter.get() + mindt;
+			size_type n = call HplAtmegaCounter.get() + mindt;
 
 			// if alarm is set in the future, where n-nt0 is the time passed since nt0
 			if( (size_type)(n - nt0) < ndt )
@@ -103,7 +103,7 @@ implementation
 	{
 		atomic
 		{
-			size_type n = call AtmegaCounter.get();
+			size_type n = call HplAtmegaCounter.get();
 
 			// calculate the next alarm
 			n += (mindt > ndt) ? mindt : ndt;
@@ -114,13 +114,13 @@ implementation
 
 	async command size_type Alarm.getNow()
 	{
-		return call AtmegaCounter.get();
+		return call HplAtmegaCounter.get();
 	}
 
 	async command size_type Alarm.getAlarm()
 	{
-		return call AtmegaCompare.get();
+		return call HplAtmegaCompare.get();
 	}
 
-	async event void AtmegaCounter.overflow() { }
+	async event void HplAtmegaCounter.overflow() { }
 }
