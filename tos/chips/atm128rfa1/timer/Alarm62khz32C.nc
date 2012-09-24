@@ -41,15 +41,12 @@ generic configuration Alarm62khz32C()
 
 implementation
 {
-	components new AtmegaCompareP(T62khz, uint32_t, 0, SYM_ALARM_MINDT);
-	Alarm = AtmegaCompareP;
-
-	components McuInitC;
-	McuInitC.TimerInit -> AtmegaCompareP;
+	components new AtmegaAlarmC(T62khz, uint32_t, 0, SYM_ALARM_MINDT);
+	Alarm = AtmegaAlarmC;
 
 	components HplAtmRfa1TimerMacC;
-	AtmegaCompareP.HplAtmegaCounter -> HplAtmRfa1TimerMacC;
-	AtmegaCompareP.HplAtmegaCompare -> HplAtmRfa1TimerMacC.Compare[unique(UQ_T62KHZ_ALARM)];
+	AtmegaAlarmC.HplAtmegaCounter -> HplAtmRfa1TimerMacC;
+	AtmegaAlarmC.HplAtmegaCompare -> HplAtmRfa1TimerMacC.Compare[unique(UQ_T62KHZ_ALARM)];
 
 	// just to start the timer
 	components Counter62khz32C;

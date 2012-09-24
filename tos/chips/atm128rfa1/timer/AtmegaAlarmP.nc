@@ -32,7 +32,7 @@
  * Author: Miklos Maroti
  */
 
-generic module AtmegaCompareP(typedef precision_tag, typedef size_type @integer(), uint8_t mode, uint16_t mindt)
+generic module AtmegaAlarmP(typedef precision_tag, typedef size_type @integer(), uint8_t mode, uint16_t mindt)
 {
 	provides
 	{

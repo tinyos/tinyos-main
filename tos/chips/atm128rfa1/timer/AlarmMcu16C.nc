@@ -41,20 +41,17 @@ generic configuration AlarmMcu16C()
 
 implementation
 {
-	components new AtmegaCompareP(TMcu, uint16_t, 0, MCU_ALARM_MINDT);
-	Alarm = AtmegaCompareP;
-
-	components McuInitC;
-	McuInitC.TimerInit -> AtmegaCompareP;
+	components new AtmegaAlarmC(TMcu, uint16_t, 0, MCU_ALARM_MINDT);
+	Alarm = AtmegaAlarmC;
 
 #if MCU_TIMER_NO == 1
-	components HplAtmRfa1Timer1C as HplAtmRfa1TimerC;
+	components HplAtmRfa1Timer1C as HplAtmegaTimerC;
 #elif MCU_TIMER_NO == 3
-	components HplAtmRfa1Timer3C as HplAtmRfa1TimerC;
+	components HplAtmRfa1Timer3C as HplAtmegaTimerC;
 #endif
 
-	AtmegaCompareP.HplAtmegaCounter -> HplAtmRfa1TimerC;
-	AtmegaCompareP.HplAtmegaCompare -> HplAtmRfa1TimerC.Compare[unique(UQ_MCU_ALARM)];
+	AtmegaAlarmC.HplAtmegaCounter -> HplAtmegaTimerC;
+	AtmegaAlarmC.HplAtmegaCompare -> HplAtmegaTimerC.Compare[unique(UQ_MCU_ALARM)];
 
 	// just to start the timer
 	components CounterMcu16C;

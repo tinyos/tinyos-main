@@ -41,12 +41,9 @@ configuration Counter62khz32C
 
 implementation
 {
-	components new AtmegaCounterP(T62khz, uint32_t, SYM_TIMER_MODE);
-	Counter = AtmegaCounterP;
-
-	components McuInitC;
-	McuInitC.TimerInit -> AtmegaCounterP.Init;
+	components new AtmegaCounterC(T62khz, uint32_t, SYM_TIMER_MODE);
+	Counter = AtmegaCounterC;
 
 	components HplAtmRfa1TimerMacC;
-	AtmegaCounterP.HplAtmegaCounter -> HplAtmRfa1TimerMacC;
+	AtmegaCounterC.HplAtmegaCounter -> HplAtmRfa1TimerMacC;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, University of Szeged
+ * Copyright (c) 2011, University of Szeged
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,23 +32,28 @@
  * Author: Miklos Maroti
  */
 
-#include "TimerConfig.h"
-
-configuration CounterMcu16C
+generic configuration AtmegaAlarmC(typedef precision_tag, typedef size_type @integer(), uint8_t mode, uint16_t mindt)
 {
-	provides interface Counter<TMcu, uint16_t>;
+	provides
+	{
+		interface Alarm<precision_tag, size_type>;
+	}
+
+	uses
+	{
+		interface HplAtmegaCounter<size_type>;
+		interface HplAtmegaCompare<size_type>;
+	}
 }
 
 implementation
 {
-	components new AtmegaCounterC(TMcu, uint16_t, MCU_TIMER_MODE);
-	Counter = AtmegaCounterC;
+	components new AtmegaAlarmP(precision_tag, size_type, mode, mindt);
 
-#if MCU_TIMER_NO == 1
-	components HplAtmRfa1Timer1C as HplAtmegaTimerC;
-#elif MCU_TIMER_NO == 3
-	components HplAtmRfa1Timer3C as HplAtmegaTimerC;
-#endif
+	Alarm = AtmegaAlarmP;
+	HplAtmegaCounter = AtmegaAlarmP;
+	HplAtmegaCompare = AtmegaAlarmP;
 
-	AtmegaCounterC.HplAtmegaCounter -> HplAtmegaTimerC;
+	components McuInitC;
+	McuInitC.TimerInit -> AtmegaAlarmP;
 }
