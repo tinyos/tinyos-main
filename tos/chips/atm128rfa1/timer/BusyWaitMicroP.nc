@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, University of Szeged
+ * Copyright (c) 2012, University of Szeged
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,21 +34,27 @@
 
 #include "TimerConfig.h"
 
-configuration CounterMcu16C
+module BusyWaitMicroP
 {
-	provides interface Counter<TMcu, uint16_t>;
+	provides interface BusyWait<TMicro, uint16_t>;
+	uses interface Counter<TMcu, uint32_t>;
 }
 
 implementation
 {
-	components new AtmegaCounterC(TMcu, uint16_t, MCU_TIMER_MODE);
-	Counter = AtmegaCounterC;
+	// no need to make this atomic
+	async command void BusyWait.wait(uint16_t dt)
+	{
+		uint32_t end;
 
-#if MCU_TIMER_NO == 1
-	components HplAtmRfa1Timer1C as HplAtmegaTimerC;
-#elif MCU_TIMER_NO == 3
-	components HplAtmRfa1Timer3C as HplAtmegaTimerC;
-#endif
+		end = call Counter.get() 
+			+ (((uint32_t)dt) << MCU_TIMER_MHZ_LOG2);
 
-	AtmegaCounterC.HplAtmegaCounter -> HplAtmegaTimerC;
+		while( (int32_t)(end - call Counter.get()) > 0 )
+			;
+	}
+
+	async event void Counter.overflow()
+	{
+	}
 }

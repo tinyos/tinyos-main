@@ -40,7 +40,7 @@ module HplAtmRfa1Timer2AsyncP @safe()
 	{
 		interface HplAtmegaCounter<uint8_t> as Counter;
 		interface HplAtmegaCompare<uint8_t> as CompareA;
-//		interface HplAtmegaCompare<uint8_t> as CompareB;
+		interface HplAtmegaCompare<uint8_t> as CompareB;
 		interface McuPowerOverride;
 	}
 
@@ -236,6 +236,99 @@ implementation
 				;
 
 			SET_BIT(TCCR2B, FOC2A);
+		}
+
+		call McuPowerState.update();
+	}
+
+
+
+
+
+
+
+
+// ----- COMPARE B: output compare register (OCR)
+
+	async command uint8_t CompareB.get() { return OCR2B; }
+
+	async command void CompareB.set(uint8_t value)
+	{
+		atomic
+		{
+			while( ASSR & (1 << OCR2BUB) )
+				;
+
+			OCR2B = value;
+		}
+
+		call McuPowerState.update();
+	}
+
+// ----- COMPARE B: timer interrupt flag register (TIFR), output comare match flag (OCF)
+
+	default async event void CompareB.fired() { }
+
+	AVR_ATOMIC_HANDLER(TIMER2_COMPB_vect)
+	{ 
+		// to keep the MCU from going to sleep too early
+		TCCR2A = TCCR2A;
+		call McuPowerState.update();
+
+		signal CompareB.fired();
+	}
+
+	async command bool CompareB.test() { return TIFR2 & (1 << OCF2B); }
+
+	async command void CompareB.reset() { TIFR2 = 1 << OCF2B; }
+
+// ----- COMPARE B: timer interrupt mask register (TIMSK), output compare interrupt enable (OCIE)
+
+	async command void CompareB.start()
+	{
+		SET_BIT(TIMSK2, OCIE2B);
+		call McuPowerState.update();
+	}
+
+	async command void CompareB.stop()
+	{
+		CLR_BIT(TIMSK2, OCIE2B);
+		call McuPowerState.update();
+	}
+
+	async command bool CompareB.isOn() { return TIMSK2 & (1 << OCIE2B); }
+
+// ----- COMPARE B: timer control register (TCCR), compare output mode (COM)
+
+	async command void CompareB.setMode(uint8_t mode)
+	{
+		atomic
+		{
+			while( ASSR & (1 << TCR2AUB) )
+				;
+
+			TCCR2A = (TCCR2A & ~(0x3 << COM2B0))
+				| (mode & 0x3) << COM2B0;
+		}
+
+		call McuPowerState.update();
+	}
+
+	async command uint8_t CompareA.getMode()
+	{
+		return (TCCR2A >> COM2B0) & 0x3;
+	}
+
+// ----- COMPARE B: timer control register (TCCR), force output compare (FOC)
+
+	async command void CompareB.force()
+	{
+		atomic
+		{
+			while( ASSR & (1 << TCR2BUB) )
+				;
+
+			SET_BIT(TCCR2B, FOC2B);
 		}
 
 		call McuPowerState.update();

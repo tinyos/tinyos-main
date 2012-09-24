@@ -41,10 +41,20 @@ generic configuration AlarmMcu32C()
 
 implementation
 {
+#if MCU_TIMER_NO == 1
+	components HplAtmRfa1Timer1C as HplAtmegaTimerC;
+#elif MCU_TIMER_NO == 3
+	components HplAtmRfa1Timer3C as HplAtmegaTimerC;
+#endif
+
+	components new AtmegaAlarmC(TMcu, uint16_t, 0, MCU_ALARM_MINDT);
+	AtmegaAlarmC.HplAtmegaCounter -> HplAtmegaTimerC;
+	AtmegaAlarmC.HplAtmegaCompare -> HplAtmegaTimerC.Compare[unique(UQ_MCU_ALARM)];
+
 	components new TransformAlarmC(TMcu, uint32_t, TMcu, uint16_t, 0);
 	Alarm = TransformAlarmC;
 	TransformAlarmC.Counter -> CounterMcu32C;
-	TransformAlarmC.AlarmFrom -> AlarmMcu16C;
+	TransformAlarmC.AlarmFrom -> AtmegaAlarmC;
 	
-	components CounterMcu32C, new AlarmMcu16C();
+	components CounterMcu32C;
 }
