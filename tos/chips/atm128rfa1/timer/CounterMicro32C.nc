@@ -36,10 +36,7 @@
 
 configuration CounterMicro32C
 {
-	provides
-	{
-		interface Counter<TMicro, uint32_t>;
-	}
+	provides interface Counter<TMicro, uint32_t>;
 }
 
 implementation
