@@ -56,7 +56,7 @@
 #define COAP_OPTION_ETAG          4 /* E, opaque, 0-8 B, (none) */
 #define COAP_OPTION_URI_HOST      5 /* C, String, 1-270 B, destination address */
 #define COAP_OPTION_LOCATION_PATH 6 /* E, String, 1-270 B, - */
-#define COAP_OPTION_URI_PORT      7 /* C, String, 1-270 B, destination port */
+#define COAP_OPTION_URI_PORT      7 /* C, 16-bit uint, 1-2 B, destination port */
 #define COAP_OPTION_LOCATION_QUERY 8 /*  */
 #define COAP_OPTION_URI_PATH      9 /* C, String, 1-270 B, - (may occur multiple times) */
 #define COAP_OPTION_TOKEN        11 /* C, Sequence of Bytes, 1-8 B, empty */
