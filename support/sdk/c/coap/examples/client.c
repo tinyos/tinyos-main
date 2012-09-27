@@ -432,13 +432,13 @@ usage( const char *program, const char *version) {
 
   fprintf( stderr, "%s v%s -- a small CoAP implementation\n"
 	   "(c) 2010-2012 Olaf Bergmann <bergmann@tzi.org>\n\n"
-	   "usage: %s [-A type...] [-b [num,]size] [-B seconds] [-e text]\n"
+	   "usage: %s [-A type...] [-t type] [-b [num,]size] [-B seconds] [-e text]\n"
 	   "\t\t[-g group] [-m method] [-N] [-o file] [-P addr[:port]] [-p port]\n"
-	   "\t\t[-s duration] [-t type...] [-O num,text]\n"
-	   "\t\t[-T string] [-v num] URI\n\n"
+	   "\t\t[-s duration] [-O num,text] [-T string] [-v num] URI\n\n"
 	   "\tURI can be an absolute or relative coap URI,\n"
 	   "\t-A type...\taccepted media types as comma-separated list of\n"
 	   "\t\t\tsymbolic or numeric values\n"
+	   "\t-t type\t\tcontent type for given resource for PUT/POST\n"
 	   "\t-b [num,]size\tblock size to be used in GET/PUT/POST requests\n"
 	   "\t       \t\t(value must be a multiple of 16 not larger than 1024)\n"
 	   "\t       \t\tIf num is present, the request chain will start at\n"
@@ -455,13 +455,17 @@ usage( const char *program, const char *version) {
 	   "\t-p port\t\tlisten on specified port\n"
 	   "\t-s duration\tsubscribe for given duration [s]\n"
 	   "\t-v num\t\tverbosity level (default: 3)\n"
-	   "\t-A types\taccepted content for GET (comma-separated list)\n"
-	   "\t-t type\t\tcontent type for given resource for PUT/POST\n"
 	   "\t-O num,text\tadd option num with contents text to request\n"
 	   "\t-P addr[:port]\tuse proxy (automatically adds Proxy-Uri option to\n"
 	   "\t\t\trequest)\n"
-	   "\t-T token\tinclude specified token\n",
-	   program, version, program, wait_seconds);
+	   "\t-T token\tinclude specified token\n"
+	   "\n"
+	   "examples:\n"
+	   "\tcoap-client -m get coap://[::1]/\n"
+	   "\tcoap-client -m get coap://[::1]/.well-known/core\n"
+	   "\tcoap-client -m get -T cafe coap://[::1]/time\n"
+	   "\techo 1000 | coap-client -m put -T cafe coap://[::1]/time -f -\n"
+	   ,program, version, program, wait_seconds);
 }
 
 int
