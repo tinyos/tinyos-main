@@ -108,6 +108,15 @@ print_readable( const unsigned char *data, unsigned int len,
 		unsigned char *result, unsigned int buflen, int encode_always ) {
   const unsigned char hex[] = "0123456789ABCDEF";
   unsigned int cnt = 0;
+
+  if (len == 0) {
+    *result++ = '\\';
+    *result++ = 'x';
+    *result++ = hex[0];
+    cnt += 3;
+    goto finish;
+  }
+
   while ( len && (cnt < buflen-1) ) {
     if ( !encode_always && isprint( *data ) ) {
       *result++ = *data;
@@ -125,6 +134,8 @@ print_readable( const unsigned char *data, unsigned int len,
 
     ++data; --len;
   }
+
+ finish:
 
   *result = '\0';
   return cnt;
@@ -227,6 +238,7 @@ coap_print_addr(const struct __coap_address_t *addr, unsigned char *buf, size_t 
 void
 coap_show_pdu(const coap_pdu_t *pdu) {
   unsigned char buf[COAP_MAX_PDU_SIZE]; /* need some space for output creation */
+  int encode = 0;
 
   fprintf(COAP_DEBUG_FD, "v:%d t:%d oc:%d c:%d id:%u", 
 	  pdu->hdr->version, pdu->hdr->type,
@@ -237,14 +249,29 @@ coap_show_pdu(const coap_pdu_t *pdu) {
     coap_opt_iterator_t opt_iter;
     coap_option_iterator_init((coap_pdu_t *)pdu, &opt_iter, COAP_OPT_ALL);
 
-    fprintf(COAP_DEBUG_FD, " o:");
+    fprintf(COAP_DEBUG_FD, " o: [");
     while (coap_option_next(&opt_iter)) {
+
+
+      if (opt_iter.type == COAP_OPTION_URI_PATH ||
+	  opt_iter.type == COAP_OPTION_PROXY_URI ||
+	  opt_iter.type == COAP_OPTION_URI_HOST ||
+	  opt_iter.type == COAP_OPTION_LOCATION_PATH ||
+	  opt_iter.type == COAP_OPTION_LOCATION_QUERY ||
+	  opt_iter.type == COAP_OPTION_URI_PATH ||
+	  opt_iter.type == COAP_OPTION_URI_QUERY) {
+	encode = 0;
+      } else {
+	encode = 1;
+      }
 
       if (print_readable(COAP_OPT_VALUE(opt_iter.option), 
 			 COAP_OPT_LENGTH(opt_iter.option), 
-			 buf, sizeof(buf), 0 ))
-	fprintf(COAP_DEBUG_FD, " %d:%s", opt_iter.type, buf);
+			 buf, sizeof(buf), encode ))
+	fprintf(COAP_DEBUG_FD, " %d:'%s',", opt_iter.type, buf);
     }
+
+    fprintf(COAP_DEBUG_FD, " ]");
   }
   
   if (pdu->data < (unsigned char *)pdu->hdr + pdu->length) {
