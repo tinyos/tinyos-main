@@ -75,20 +75,40 @@ configuration RFA1ActiveMessageC
 
 implementation
 {
+// -------- Active Message
+
+	components new ActiveMessageLayerC();
+	ActiveMessageLayerC.Config -> RadioP;
+	ActiveMessageLayerC.SubSend -> AutoResourceAcquireLayerC;
+	ActiveMessageLayerC.SubReceive -> RadioC.TinyosReceive;
+	ActiveMessageLayerC.SubPacket -> RadioC.TinyosPacket;
+
+	AMSend = ActiveMessageLayerC;
+	Receive = ActiveMessageLayerC.Receive;
+	Snoop = ActiveMessageLayerC.Snoop;
+	SendNotifier = ActiveMessageLayerC;
+	AMPacket = ActiveMessageLayerC;
+	Packet = ActiveMessageLayerC;
+
+	ReceiveDefault = ActiveMessageLayerC.ReceiveDefault;
+	SnoopDefault = ActiveMessageLayerC.SnoopDefault;
+
+// -------- Automatic RadioSend Resource
+
+#ifndef TFRAMES_ENABLED
+	components new AutoResourceAcquireLayerC();
+	AutoResourceAcquireLayerC.Resource -> RadioC.SendResource[unique(RADIO_SEND_RESOURCE)];
+#else
+	components new DummyLayerC() as AutoResourceAcquireLayerC;
+#endif
+	AutoResourceAcquireLayerC -> RadioC.TinyosSend;
+
+// -------- Radio
+	
 	components RFA1RadioC as RadioC;
+	components RFA1RadioP as RadioP;
 
 	SplitControl = RadioC;
-
-	AMSend = RadioC;
-	Receive = RadioC.Receive;
-	Snoop = RadioC.Snoop;
-	SendNotifier = RadioC;
-
-	ReceiveDefault = RadioC.ReceiveDefault;
-	SnoopDefault = RadioC.SnoopDefault;
-
-	Packet = RadioC.PacketForActiveMessage;
-	AMPacket = RadioC;
 
 	PacketAcknowledgements = RadioC;
 	LowPowerListening = RadioC;

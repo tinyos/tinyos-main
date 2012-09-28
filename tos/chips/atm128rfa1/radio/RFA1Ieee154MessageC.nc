@@ -43,19 +43,21 @@ configuration RFA1Ieee154MessageC
 	provides
 	{
 		interface SplitControl;
+		interface Resource as SendResource[uint8_t clint];
 
 		interface Ieee154Send;
 		interface Receive as Ieee154Receive;
-		interface SendNotifier;
-
 		interface Ieee154Packet;
 		interface Packet;
-		interface Resource as SendResource[uint8_t clint];
 
+		interface Send as BareSend;
+		interface Receive as BareReceive;
+		interface Packet as BarePacket;
+
+		interface SendNotifier;
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
 		interface PacketLink;
-
 		interface RadioChannel;
 
 		interface PacketField<uint8_t> as PacketLinkQuality;
@@ -70,22 +72,35 @@ configuration RFA1Ieee154MessageC
 
 implementation
 {
+// -------- Ieee154 Message
+
+	components new Ieee154MessageLayerC();
+	Ieee154MessageLayerC.Ieee154PacketLayer -> RadioC;
+	Ieee154MessageLayerC.SubSend -> RadioC.Ieee154Send;
+	Ieee154MessageLayerC.SubReceive -> RadioC.Ieee154Receive;
+	Ieee154MessageLayerC.RadioPacket -> RadioC.Ieee154Packet;
+
+	Ieee154Send = Ieee154MessageLayerC.Ieee154Send;
+	Ieee154Receive = Ieee154MessageLayerC.Ieee154Receive;
+	Ieee154Packet = Ieee154MessageLayerC.Ieee154Packet;
+	Packet = Ieee154MessageLayerC.Packet;
+
+	BareSend = Ieee154MessageLayerC.BareSend;
+	BareReceive = Ieee154MessageLayerC.BareReceive;
+	BarePacket = Ieee154MessageLayerC.BarePacket;
+
+	SendNotifier = Ieee154MessageLayerC;
+
+// -------- Radio
+
 	components RFA1RadioC as RadioC;
 
 	SplitControl = RadioC;
-
-	Ieee154Send = RadioC.Ieee154Send;
-	Ieee154Receive = RadioC.Ieee154Receive;
-	SendNotifier = RadioC.Ieee154Notifier;
-
-	Packet = RadioC.PacketForIeee154Message;
-	Ieee154Packet = RadioC;
 	SendResource = RadioC;
 
 	PacketAcknowledgements = RadioC;
 	LowPowerListening = RadioC;
 	PacketLink = RadioC;
-
 	RadioChannel = RadioC;
 
 	PacketLinkQuality = RadioC.PacketLinkQuality;
