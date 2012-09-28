@@ -492,15 +492,15 @@ implementation
 			writeRegister(RF212_TRX_STATE, RF212_RX_ON);
 			return EBUSY;
 		}
-		
-		#ifndef RF212_SLOW_SPI
+
+#ifndef RF212_SLOW_SPI
 		atomic
 		{
 			call SLP_TR.set();
 			time = call RadioAlarm.getNow();
 		}
 		call SLP_TR.clr();
-		#endif
+#endif
 
 		RADIO_ASSERT( ! radioIrq );
 
@@ -514,15 +514,15 @@ implementation
 			call FastSpiByte.splitReadWrite(*(data++));
 		}
 		while( --upload1 != 0 );
-		
-		#ifdef RF212_SLOW_SPI
+
+#ifdef RF212_SLOW_SPI
 		atomic
 		{
 			call SLP_TR.set();
 			time = call RadioAlarm.getNow();
 		}
 		call SLP_TR.clr();
-		#endif
+#endif
 
 		time32 += (int16_t)(time + TX_SFD_DELAY) - (int16_t)(time32);
 
@@ -544,7 +544,7 @@ implementation
 		// wait for the SPI transfer to finish
 		call FastSpiByte.splitRead();
 		call SELN.set();
-		
+
 		/*
 		 * There is a very small window (~1 microsecond) when the RF212 went
 		 * into PLL_ON state but was somehow not properly initialized because
@@ -569,9 +569,9 @@ implementation
 
 			call DiagMsg.chr('t');
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(msg) ? call PacketTimeStamp.timestamp(msg) : 0);
-			call DiagMsg.uint16(call LocalTime.get());
+			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.int8(length);
-			call DiagMsg.hex8s(getPayload(msg), length-2);
+			call DiagMsg.hex8s(getPayload(msg), length - 2);
 			call DiagMsg.send();
 		}
 #endif
@@ -666,7 +666,7 @@ implementation
 
 			call DiagMsg.chr('r');
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
-			call DiagMsg.uint16(call LocalTime.get());
+			call DiagMsg.uint16(call RadioAlarm.getNow());
 			call DiagMsg.int8(crcValid ? length : -length);
 			call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
 			call DiagMsg.int8(call PacketRSSI.isSet(rxMsg) ? call PacketRSSI.get(rxMsg) : -1);
@@ -732,7 +732,7 @@ implementation
 				if( call DiagMsg.record() )
 				{
 					call DiagMsg.str("assert ur");
-					call DiagMsg.uint16(call LocalTime.get());
+					call DiagMsg.uint16(call RadioAlarm.getNow());
 					call DiagMsg.hex8(readRegister(RF212_TRX_STATUS));
 					call DiagMsg.hex8(readRegister(RF212_TRX_STATE));
 					call DiagMsg.hex8(irq);
