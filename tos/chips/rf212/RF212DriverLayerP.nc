@@ -437,11 +437,11 @@ implementation
 	tasklet_async command error_t RadioSend.send(message_t* msg)
 	{
 		uint16_t time;
-		uint8_t length;
-		uint8_t* data;
-		uint8_t header;
 		uint32_t time32;
-		void* timesync;
+		uint8_t* data;
+		uint8_t length;
+		uint8_t upload1;
+		uint8_t upload2;
 
 		if( cmd != CMD_NONE || state != STATE_RX_ON || ! isSpiAcquired() || radioIrq )
 			return EBUSY;
@@ -462,8 +462,27 @@ implementation
 		writeRegister(RF212_TRX_STATE, RF212_PLL_ON);
 
 		// do something useful, just to wait a little
-		timesync = call PacketTimeSyncOffset.isSet(msg) ? ((void*)msg) + call PacketTimeSyncOffset.get(msg) : 0;
 		time32 = call LocalTime.get();
+		data = getPayload(msg);
+		length = getHeader(msg)->length;
+
+		if( call PacketTimeSyncOffset.isSet(msg) )
+		{
+			// the number of bytes before the embedded timestamp
+			upload1 = (((void*)msg) + call PacketTimeSyncOffset.get(msg)) - (void*)data;
+
+			// the FCS is automatically generated (2 bytes)
+			upload2 = length - 2 - upload1;
+
+			// make sure that we have enough space for the timestamp
+			RADIO_ASSERT( upload2 >= 4 && upload2 <= 127 );
+		}
+		else
+		{
+			upload1 = length - 2;
+			upload2 = 0;
+		}
+		RADIO_ASSERT( upload1 >= 1 && upload1 <= 127 );
 
 		// we have missed an incoming message in this short amount of time
 		if( (readRegister(RF212_TRX_STATUS) & RF212_TRX_STATUS_MASK) != RF212_PLL_ON )
@@ -473,51 +492,59 @@ implementation
 			writeRegister(RF212_TRX_STATE, RF212_RX_ON);
 			return EBUSY;
 		}
+		
+		#ifndef RF212_SLOW_SPI
 		atomic
 		{
 			call SLP_TR.set();
 			time = call RadioAlarm.getNow();
 		}
 		call SLP_TR.clr();
+		#endif
 
 		RADIO_ASSERT( ! radioIrq );
 
 		call SELN.clr();
 		call FastSpiByte.splitWrite(RF212_CMD_FRAME_WRITE);
 
-		data = getPayload(msg);
-		length = getHeader(msg)->length;
-
 		// length | data[0] ... data[length-3] | automatically generated FCS
 		call FastSpiByte.splitReadWrite(length);
 
-		// the FCS is atomatically generated (2 bytes), but the rf212 needs two dummy bytes, otherwise it will generate a TRX_UR interrupt
-		// length -= 2;
-
-		header = call Config.headerPreloadLength();
-		if( header > length )
-			header = length;
-
-		length -= header;
-
-		// first upload the header to gain some time
 		do {
 			call FastSpiByte.splitReadWrite(*(data++));
 		}
-		while( --header != 0 );
+		while( --upload1 != 0 );
+		
+		#ifdef RF212_SLOW_SPI
+		atomic
+		{
+			call SLP_TR.set();
+			time = call RadioAlarm.getNow();
+		}
+		call SLP_TR.clr();
+		#endif
 
 		time32 += (int16_t)(time + TX_SFD_DELAY) - (int16_t)(time32);
 
-		if( timesync != 0 )
-			*(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time32;
+		if( upload2 != 0 )
+		{
+			uint32_t absolute = *(timesync_absolute_t*)data;
+			*(timesync_relative_t*)data = absolute - time32;
 
-		while( length-- != 0 )
-			call FastSpiByte.splitReadWrite(*(data++));
+			// do not modify the data pointer so we can reset the timestamp
+			RADIO_ASSERT( upload1 == 0 );
+			do {
+				call FastSpiByte.splitReadWrite(data[upload1]);
+			}
+			while( ++upload1 != upload2 );
+
+			*(timesync_absolute_t*)data = absolute;
+		}
 
 		// wait for the SPI transfer to finish
 		call FastSpiByte.splitRead();
 		call SELN.set();
-
+		
 		/*
 		 * There is a very small window (~1 microsecond) when the RF212 went
 		 * into PLL_ON state but was somehow not properly initialized because
@@ -532,9 +559,6 @@ implementation
 
 		// go back to RX_ON state when finished
 		writeRegister(RF212_TRX_STATE, RF212_RX_ON);
-
-		if( timesync != 0 )
-			*(timesync_absolute_t*)timesync = (*(timesync_relative_t*)timesync) + time32;
 
 		call PacketTimeStamp.set(msg, time32);
 
