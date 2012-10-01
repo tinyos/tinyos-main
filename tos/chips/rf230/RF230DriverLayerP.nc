@@ -473,7 +473,7 @@ implementation
 		if( call PacketTimeSyncOffset.isSet(msg) )
 		{
 			// the number of bytes before the embedded timestamp
-			upload1 = (((void*)msg) + call PacketTimeSyncOffset.get(msg)) - (void*)data;
+			upload1 = (((void*)msg) - (void*)data + call PacketTimeSyncOffset.get(msg));
 
 			// the FCS is automatically generated (2 bytes)
 			upload2 = length - 2 - upload1;
@@ -569,8 +569,6 @@ implementation
 #ifdef RADIO_DEBUG_MESSAGES
 		if( call DiagMsg.record() )
 		{
-			length = getHeader(msg)->length;
-
 			call DiagMsg.chr('t');
 			call DiagMsg.uint32(call PacketTimeStamp.isValid(msg) ? call PacketTimeStamp.timestamp(msg) : 0);
 			call DiagMsg.uint16(call RadioAlarm.getNow());
