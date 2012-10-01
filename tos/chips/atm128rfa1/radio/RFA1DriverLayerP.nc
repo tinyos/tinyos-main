@@ -78,6 +78,7 @@ module RFA1DriverLayerP
 
     interface Tasklet;
     interface McuPowerState;
+    interface AsyncStdControl as ExtAmpControl;
 
 #ifdef RADIO_DEBUG
     interface DiagMsg;
@@ -182,6 +183,12 @@ implementation
     SET_BIT(DDRF, 3);	// DIG0
     CLR_BIT(PORTF, 3);
 #endif
+#ifdef RFA1_ENABLE_EXT_ANT_SW
+    SET_BIT(DDRG, 1);// DIG1
+    CLR_BIT(PORTG,1);
+    SET_BIT(DDRF, 2); // DIG2
+    CLR_BIT(PORTF, 2);
+#endif
 #ifdef RFA1_DATA_RATE
     #if RFA1_DATA_RATE == 250
       TRX_CTRL_2 = (TRX_CTRL_2 & 0xfc) | 0;
@@ -274,13 +281,27 @@ implementation
 #ifdef RFA1_ENABLE_PA
       SET_BIT(TRX_CTRL_1, PA_EXT_EN);
 #endif
-
+#ifdef RFA1_ENABLE_EXT_ANT_SW
+      #ifdef RFA1_ANT_DIV_EN
+      ANT_DIV = 0x7f & (1<<ANT_DIV_EN | 1<<ANT_EXT_SW_EN);
+      #elif defined(RFA1_ANT_SEL1)
+      ANT_DIV = 0x7f & (1<<ANT_EXT_SW_EN | 1<<ANT_CTRL0);
+      #elif defined(RFA1_ANT_SEL0)
+      ANT_DIV = 0x7f & (1<<ANT_EXT_SW_EN | 2<<ANT_CTRL0);
+      #else
+      #error Neighter antenna is selected with ANT_EXT_SW_EN. You can choose between RFA1_ANT_DIV_EN, RFA1_ANT_SEL0, RFA1_ANT_SEL1
+      #endif
+#endif
       state = STATE_TRX_OFF_2_RX_ON;
+      call ExtAmpControl.start();
     }
     else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY) && state == STATE_RX_ON )
     {
 #ifdef RFA1_ENABLE_PA
       CLR_BIT(TRX_CTRL_1, PA_EXT_EN);
+#endif
+#ifdef RFA1_ENABLE_EXT_ANT_SW
+      ANT_DIV=3; //default value
 #endif
       TRX_STATE = CMD_FORCE_TRX_OFF;
 
@@ -288,6 +309,7 @@ implementation
       call McuPowerState.update();
 
       state = STATE_TRX_OFF;
+      call ExtAmpControl.stop();
     }
 
     if( cmd == CMD_TURNOFF && state == STATE_TRX_OFF )
@@ -901,5 +923,15 @@ implementation
   async command bool LinkPacketMetadata.highChannelQuality(message_t* msg)
   {
     return call PacketLinkQuality.get(msg) > 200;
+  }
+
+/*----------------- ExtAmpControl -----------------*/
+
+  default async command error_t ExtAmpControl.start(){
+    return SUCCESS;
+  }
+
+  default async command error_t ExtAmpControl.stop(){
+    return SUCCESS;
   }
 }
