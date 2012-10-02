@@ -184,7 +184,7 @@ module CoapUdpServerP {
 	int rc;
 	size_t size;
 	unsigned char *data;
-
+	coap_async_state_t *tmp;
 	coap_async_state_t *async_state = NULL;
 
 #ifndef WITHOUT_OBSERVE
@@ -281,6 +281,7 @@ module CoapUdpServerP {
 	       is set. Otherwise set type to COAP_MESSAGE_NON, so that net.c
 	       is not sending it. */
 	    response->hdr->type = COAP_MESSAGE_NON;
+	    return;
 	} else {
 	    response->hdr->code = rc;
 	    //CHECK: set hdr->type?
@@ -288,6 +289,11 @@ module CoapUdpServerP {
 	    if (token->length)
 		coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 	}
+
+	//we don't have split-phase -> do some cleanup
+	coap_remove_async(ctx, async_state->id, &tmp);
+	coap_free_async(async_state);
+	async_state = NULL;
     }
 
  default command int CoapResource.getMethod[uint8_t uri_key](coap_async_state_t* async_state,
