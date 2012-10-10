@@ -1,0 +1,20 @@
+--- sfr_defs.h.orig	2008-06-02 21:53:03.000000000 -0600
++++ sfr_defs.h	2008-06-02 21:54:49.000000000 -0600
+@@ -125,10 +125,16 @@
+ /* These only work in C programs.  */
+ #include <inttypes.h>
+ 
++#ifdef SAFE_TINYOS
++#define _MMIO_BYTE(mem_addr)  (*TCAST(volatile uint8_t * ONE, mem_addr))
++#define _MMIO_WORD(mem_addr)  (*TCAST(volatile uint16_t * ONE, mem_addr))
++#define _MMIO_DWORD(mem_addr) (*TCAST(volatile uint32_t * ONE, mem_addr))
++#else
+ #define _MMIO_BYTE(mem_addr) (*(volatile uint8_t *)(mem_addr))
+ #define _MMIO_WORD(mem_addr) (*(volatile uint16_t *)(mem_addr))
+ #define _MMIO_DWORD(mem_addr) (*(volatile uint32_t *)(mem_addr))
+ #endif
++#endif
+ 
+ #if _SFR_ASM_COMPAT
+ 
+

@@ -1,0 +1,49 @@
+diff -ruN binutils-2.17-orig/gas/config/tc-avr.h binutils-2.17/gas/config/tc-avr.h
+--- gas/config/tc-avr.h	2008-01-24 14:41:48.000000000 -0800
++++ gas/config/tc-avr.h	2008-01-24 14:43:07.000000000 -0800
+@@ -109,8 +109,12 @@
+    would print `12 34 56 78'.  The default value is 4.  */
+ #define LISTING_WORD_SIZE 2
+ 
+-/* AVR port uses `$' as a logical line separator */
+-#define LEX_DOLLAR 0
++/* AVR port uses `$' as a logical line separator and doesn't 
++   allow it in symbols. We allow it in the middle of symbols. 
++   We also hack get_symbol_end to disallow it at the end of a symbol. */
++#define LEX_DOLLAR 1
++#define TC_EOL_IN_INSN(PTR)	(*(PTR) == '$' && is_part_of_name((PTR)[-1]) && is_part_of_name((PTR)[1]))
++#define TC_FORBID_DOLLAR_AT_END
+ 
+ /* An `.lcomm' directive with no explicit alignment parameter will
+    use this macro to set P2VAR to the alignment that a request for
+diff -ruN binutils-2.17-orig/gas/config/tc-msp430.h binutils-2.17/gas/config/tc-msp430.h
+--- gas/config/tc-msp430.h	2008-01-24 14:41:48.000000000 -0800
++++ gas/config/tc-msp430.h	2008-01-24 14:44:27.000000000 -0800
+@@ -97,7 +97,7 @@
+      example, a value of 2 might print `1234 5678' where a value of 1
+      would print `12 34 56 78'.  The default value is 4.  */
+ 
+-#define LEX_DOLLAR 0
++#undef LEX_DOLLAR
+ /* MSP430 port does not use `$' as a logical line separator */
+ 
+ #define TC_IMPLICIT_LCOMM_ALIGNMENT(SIZE, P2VAR) (P2VAR) = 0
+diff -ruN binutils-2.17-orig/gas/expr.c binutils-2.17/gas/expr.c
+--- gas/expr.c	2008-01-24 14:41:48.000000000 -0800
++++ gas/expr.c	2008-01-24 14:45:37.000000000 -0800
+@@ -2174,6 +2174,15 @@
+ 	;
+       if (is_name_ender (c))
+ 	c = *input_line_pointer++;
++#ifdef TC_FORBID_DOLLAR_AT_END
++      /* This is for the Atmel AVR platforms. We want to allow $ in symbols
++	 but also as a line separator. Yucky. */
++       if (input_line_pointer[-2] == '$')
++	{
++	  input_line_pointer--;
++	  c = '$';
++	}
++#endif
+     }
+   *--input_line_pointer = 0;
+   return (c);

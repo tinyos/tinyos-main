@@ -1,0 +1,8 @@
+Package: avr-gcc-tinyos
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, avr-binutils-tinyos
+Maintainer: Razvan Musaloiu-E. <razvanm@musaloiu.com>
+Priority: optional
+Section: devel
+Description: TinyOS-specific AVR gcc

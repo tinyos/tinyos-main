@@ -1,0 +1,10 @@
+--- gcc/config/avr/avr.h.old	2006-08-30 10:30:17.756953100 -0600
++++ gcc/config/avr/avr.h	2006-08-30 15:35:25.810505300 -0600
+@@ -71,6 +71,7 @@ extern int avr_asm_only_p;
+ 
+ #define POINTER_SIZE 16
+ 
++#define DWARF2_ADDR_SIZE 4
+ 
+ /* Maximum sized of reasonable data type
+    DImode or Dfmode ...  */

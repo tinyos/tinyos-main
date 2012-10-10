@@ -1,0 +1,8 @@
+Package: avrdude-tinyos
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, libncurses5, libusb-0.1-4, libreadline6
+Maintainer: Razvan Musaloiu-E. <razvanm@musaloiu.com>
+Priority: optional
+Section: devel
+Description: TinyOS-specific AVRDUDE

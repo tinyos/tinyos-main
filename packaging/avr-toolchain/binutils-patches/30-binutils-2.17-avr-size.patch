@@ -1,0 +1,404 @@
+--- binutils/size.c	2005-10-03 13:37:44.000000000 -0600
++++ binutils/size.c	2007-03-30 17:15:44.135375000 -0600
+@@ -33,10 +33,31 @@
+ #include "libiberty.h"
+ #include "getopt.h"
+ 
+-#ifndef BSD_DEFAULT
+-#define BSD_DEFAULT 1
++typedef enum
++{
++    format_sysv = 0,
++    format_bsd = 1,
++    format_avr = 2,
++} format_type_t;
++
++
++/* Set the default format. */
++#define FORMAT_DEFAULT_SYSV 0
++#define FORMAT_DEFAULT_BSD 1
++#define FORMAT_DEFAULT_AVR 0
++
++#if FORMAT_DEFAULT_SYSV
++    #define FORMAT_DEFAULT format_sysv
++    #define FORMAT_NAME "sysv"
++#elif FORMAT_DEFAULT_BSD
++    #define FORMAT_DEFAULT format_bsd
++    #define FORMAT_NAME "berkeley"
++#elif FORMAT_DEFAULT_AVR
++    #define FORMAT_DEFAULT format_avr
++    #define FORMAT_NAME "avr"
+ #endif
+ 
++
+ /* Program options.  */
+ 
+ enum
+@@ -45,9 +66,8 @@ enum
+   }
+ radix = decimal;
+ 
+-/* 0 means use AT&T-style output.  */
+-static int berkeley_format = BSD_DEFAULT;
+ 
++format_type_t format = FORMAT_DEFAULT;
+ int show_version = 0;
+ int show_help = 0;
+ int show_totals = 0;
+@@ -59,6 +79,141 @@ static bfd_size_type total_textsize;
+ /* Program exit status.  */
+ int return_code = 0;
+ 
++
++/* AVR Size specific stuff */
++
++#define AVR64 64UL
++#define AVR128 128UL
++#define AVR256 256UL
++#define AVR512 512UL
++#define AVR1K 1024UL
++#define AVR2K 2048UL
++#define AVR4K 4096UL
++#define AVR8K 8192UL
++#define AVR16K 16384UL
++#define AVR24K 24576UL
++#define AVR32K 32768UL
++#define AVR40K 40960UL
++#define AVR64K 65536UL
++#define AVR128K 131072UL
++#define AVR256K 262144UL
++
++typedef struct
++{
++    char *name;
++	long flash;
++	long ram;
++	long eeprom;
++} avr_device_t;
++
++avr_device_t avr[] =
++{
++	{"atmega2560",  AVR256K, AVR8K,  AVR4K},
++	{"atmega2561",  AVR256K, AVR8K,  AVR4K},
++
++	{"at43usb320",  AVR128K, 608,    0},
++	{"at90can128",  AVR128K, AVR4K,  AVR4K},
++	{"at90usb1286", AVR128K, AVR8K,  AVR4K},
++	{"at90usb1287", AVR128K, AVR8K,  AVR4K},
++	{"atmega128",   AVR128K, AVR4K,  AVR4K},
++	{"atmega1280",  AVR128K, AVR8K,  AVR4K},
++	{"atmega1281",  AVR128K, AVR8K,  AVR4K},
++	{"atmega103",   AVR128K, 4000,   AVR4K},
++
++	{"at90can64",   AVR64K,  AVR4K,  AVR2K},
++	{"at90usb646",  AVR64K,  AVR4K,  AVR2K},
++	{"at90usb647",  AVR64K,  AVR4K,  AVR2K},
++	{"atmega603",   AVR64K,  AVR4K,  AVR2K},
++	{"atmega64",    AVR64K,  AVR4K,  AVR2K},
++	{"atmega640",   AVR64K,  AVR8K,  AVR4K},
++	{"atmega644",   AVR64K,  AVR4K,  AVR2K},
++	{"atmega644p",  AVR64K,  AVR4K,  AVR2K},
++	{"atmega645",   AVR64K,  AVR4K,  AVR2K},
++	{"atmega6450",  AVR64K,  AVR4K,  AVR2K},
++	{"atmega649",   AVR64K,  AVR4K,  AVR2K},
++	{"atmega6490",  AVR64K,  AVR4K,  AVR2K},
++
++	{"atmega406",   AVR40K,  AVR512, AVR2K},
++
++	{"at90can32",   AVR32K,  AVR2K,  AVR1K},
++	{"at94k",       AVR32K,  AVR4K,  0},
++	{"atmega32",    AVR32K,  AVR2K,  AVR1K},
++	{"atmega323",   AVR32K,  AVR2K,  AVR1K},
++	{"atmega324p",  AVR32K,  AVR2K,  AVR1K},
++	{"atmega325",   AVR32K,  AVR2K,  AVR1K},
++	{"atmega325p",  AVR32K,  AVR2K,  AVR1K},
++	{"atmega3250",  AVR32K,  AVR2K,  AVR1K},
++	{"atmega3250p", AVR32K,  AVR2K,  AVR1K},
++	{"atmega329",   AVR32K,  AVR2K,  AVR1K},
++	{"atmega329p",  AVR32K,  AVR2K,  AVR1K},
++	{"atmega3290",  AVR32K,  AVR2K,  AVR1K},
++	{"atmega3290p", AVR32K,  AVR2K,  AVR1K},
++
++	{"at43usb355",  AVR24K,  1120,   0},
++
++	{"at76c711",    AVR16K,  AVR2K,  0},
++	{"at90usb162",  AVR16K,  AVR512, AVR512},
++	{"atmega16",    AVR16K,  AVR1K,  AVR512},
++	{"atmega161",   AVR16K,  AVR1K,  AVR512},
++	{"atmega162",   AVR16K,  AVR1K,  AVR512},
++	{"atmega163",   AVR16K,  AVR1K,  AVR512},
++	{"atmega164",   AVR16K,  AVR1K,  AVR512},
++	{"atmega164p",  AVR16K,  AVR1K,  AVR512},
++	{"atmega165",   AVR16K,  AVR1K,  AVR512},
++	{"atmega165p",  AVR16K,  AVR1K,  AVR512},
++	{"atmega168",   AVR16K,  AVR1K,  AVR512},
++	{"atmega169",   AVR16K,  AVR1K,  AVR512},
++	{"atmega169p",  AVR16K,  AVR1K,  AVR512},
++
++	{"at90c8534",   AVR8K,   352,    AVR512},
++	{"at90pwm1",    AVR8K,   AVR512, AVR512},
++	{"at90pwm2",    AVR8K,   AVR512, AVR512},
++	{"at90pwm3",    AVR8K,   AVR512, AVR512},
++	{"at90s8515",   AVR8K,   AVR512, AVR512},
++	{"at90s8535",   AVR8K,   AVR512, AVR512},
++	{"at90usb82",   AVR8K,   AVR512, AVR512},
++	{"atmega8",     AVR8K,   AVR1K,  AVR512},
++	{"atmega83",    AVR8K,   AVR1K,  AVR512},
++	{"atmega85",    AVR8K,   AVR1K,  AVR512},
++	{"atmega8515",  AVR8K,   AVR512, AVR512},
++	{"atmega8535",  AVR8K,   AVR512, AVR512},
++	{"atmega88",    AVR8K,   AVR1K,  AVR512},
++	{"attiny84",    AVR8K,   AVR512, AVR512},
++	{"attiny85",    AVR8K,   AVR512, AVR512},
++	{"attiny861",   AVR8K,   AVR512, AVR512},
++
++	{"at90s4414",   AVR4K,   352,    AVR256},
++	{"at90s4433",   AVR4K,   AVR128, AVR256},
++	{"at90s4434",   AVR4K,   352,    AVR256},
++	{"atmega48",    AVR4K,   AVR512, AVR256},
++	{"attiny44",    AVR4K,   AVR256, AVR256},
++	{"attiny45",    AVR4K,   AVR256, AVR256},
++	{"attiny461",   AVR4K,   AVR256, AVR256},
++
++	{"at86rf401",   AVR2K,   224,    AVR128},
++	{"at90s2313",   AVR2K,   AVR128, AVR128},
++	{"at90s2323",   AVR2K,   AVR128, AVR128},
++	{"at90s2333",   AVR2K,   224,    AVR128},
++	{"at90s2343",   AVR2K,   AVR128, AVR128},
++	{"attiny22",    AVR2K,   224,    AVR128},
++	{"attiny2313",  AVR2K,   AVR128, AVR128},
++	{"attiny24",    AVR2K,   AVR128, AVR128},
++	{"attiny25",    AVR2K,   AVR128, AVR128},
++	{"attiny26",    AVR2K,   AVR128, AVR128},
++	{"attiny261",   AVR2K,   AVR128, AVR128},
++	{"attiny28",    AVR2K,   0,      0},
++
++	{"at90s1200",   AVR1K,   0,      AVR64},
++	{"attiny10",    AVR1K,   0,      AVR64},
++	{"attiny11",    AVR1K,   0,      AVR64},
++	{"attiny12",    AVR1K,   0,      AVR64},
++	{"attiny13",    AVR1K,   AVR64,  AVR64},
++	{"attiny15",    AVR1K,   0,      AVR64},
++};
++
++static char *avrmcu = NULL;
++
++
+ static char *target = NULL;
+ 
+ /* Static declarations.  */
+@@ -83,7 +238,8 @@ usage (FILE *stream, int status)
+   fprintf (stream, _(" Displays the sizes of sections inside binary files\n"));
+   fprintf (stream, _(" If no input file(s) are specified, a.out is assumed\n"));
+   fprintf (stream, _(" The options are:\n\
+-  -A|-B     --format={sysv|berkeley}  Select output style (default is %s)\n\
++  -A|-B|-C  --format={sysv|berkeley|avr}  Select output style (default is %s)\n\
++            --mcu=<avrmcu>            MCU name for AVR format only\n\
+   -o|-d|-x  --radix={8|10|16}         Display numbers in octal, decimal or hex\n\
+   -t        --totals                  Display the total sizes (Berkeley only)\n\
+             --target=<bfdname>        Set the binary file format\n\
+@@ -91,11 +247,7 @@ usage (FILE *stream, int status)
+   -h        --help                    Display this information\n\
+   -v        --version                 Display the program's version\n\
+ \n"),
+-#if BSD_DEFAULT
+-  "berkeley"
+-#else
+-  "sysv"
+-#endif
++FORMAT_NAME
+ );
+   list_supported_targets (program_name, stream);
+   if (status == 0)
+@@ -108,6 +260,7 @@ static struct option long_options[] =
+   {"format", required_argument, 0, 200},
+   {"radix", required_argument, 0, 201},
+   {"target", required_argument, 0, 202},
++  {"mcu", required_argument, 0, 203},
+   {"totals", no_argument, &show_totals, 1},
+   {"version", no_argument, &show_version, 1},
+   {"help", no_argument, &show_help, 1},
+@@ -139,7 +292,7 @@ main (int argc, char **argv)
+   bfd_init ();
+   set_default_bfd_target ();
+ 
+-  while ((c = getopt_long (argc, argv, "ABHhVvdfotx", long_options,
++  while ((c = getopt_long (argc, argv, "ABCHhVvdfotx", long_options,
+ 			   (int *) 0)) != EOF)
+     switch (c)
+       {
+@@ -148,11 +301,15 @@ main (int argc, char **argv)
+ 	  {
+ 	  case 'B':
+ 	  case 'b':
+-	    berkeley_format = 1;
++	    format = format_bsd;
+ 	    break;
+ 	  case 'S':
+ 	  case 's':
+-	    berkeley_format = 0;
++	    format = format_sysv;
++	    break;
++	  case 'A':
++	  case 'a':
++	    format = format_avr;
+ 	    break;
+ 	  default:
+ 	    non_fatal (_("invalid argument to --format: %s"), optarg);
+@@ -160,6 +317,10 @@ main (int argc, char **argv)
+ 	  }
+ 	break;
+ 
++      case 203:		/* --mcu */
++	avrmcu = optarg;
++	break;
++
+       case 202:		/* --target */
+ 	target = optarg;
+ 	break;
+@@ -188,11 +349,14 @@ main (int argc, char **argv)
+ 	break;
+ 
+       case 'A':
+-	berkeley_format = 0;
++	format = format_sysv;
+ 	break;
+       case 'B':
+-	berkeley_format = 1;
++	format = format_bsd;
+ 	break;
++      case 'C':
++    format = format_avr;
++    break;
+       case 'v':
+       case 'V':
+ 	show_version = 1;
+@@ -238,7 +402,7 @@ main (int argc, char **argv)
+     for (; optind < argc;)
+       display_file (argv[optind++]);
+ 
+-  if (show_totals && berkeley_format)
++  if (show_totals && format == format_bsd)
+     {
+       bfd_size_type total = total_textsize + total_datasize + total_bsssize;
+ 
+@@ -542,11 +706,115 @@ print_sysv_format (bfd *file)
+   printf ("\n\n");
+ }
+ 
++
++static avr_device_t *
++avr_find_device (void)
++{
++  unsigned int i;
++  if (avrmcu != NULL)
++  {
++    for (i = 0; i < sizeof(avr) / sizeof(avr[0]); i++)
++    {
++      if (strcmp(avr[i].name, avrmcu) == 0)
++      {
++        /* Match found */
++        return (&avr[i]);
++      }
++    }
++  }
++  return (NULL);
++}
++
++
++
++static void
++print_avr_format (bfd *file)
++{
++  char *avr_name = "Unknown";
++  int flashmax = 0;
++  int rammax = 0;
++  int eeprommax = 0;
++  asection *section; 
++  bfd_size_type datasize = 0;
++  bfd_size_type textsize = 0;
++  bfd_size_type bsssize = 0;
++  bfd_size_type bootloadersize = 0;
++  bfd_size_type noinitsize = 0;
++  bfd_size_type eepromsize = 0;
++
++  avr_device_t *avrdevice = avr_find_device();
++  if (avrdevice != NULL)
++  {
++    avr_name = avrdevice->name;
++    flashmax = avrdevice->flash;
++    rammax = avrdevice->ram;
++    eeprommax = avrdevice->eeprom;
++  }
++
++  if ((section = bfd_get_section_by_name (file, ".data")) != NULL)
++    datasize = bfd_section_size (file, section);
++  if ((section = bfd_get_section_by_name (file, ".text")) != NULL)
++    textsize = bfd_section_size (file, section);
++  if ((section = bfd_get_section_by_name (file, ".bss")) != NULL)
++    bsssize = bfd_section_size (file, section);
++  if ((section = bfd_get_section_by_name (file, ".bootloader")) != NULL)
++    bootloadersize = bfd_section_size (file, section);
++  if ((section = bfd_get_section_by_name (file, ".noinit")) != NULL)
++    noinitsize = bfd_section_size (file, section);
++  if ((section = bfd_get_section_by_name (file, ".eeprom")) != NULL)
++    eepromsize = bfd_section_size (file, section);
++  
++  bfd_size_type text = textsize + datasize + bootloadersize;
++  bfd_size_type data = datasize + bsssize + noinitsize;
++  bfd_size_type eeprom = eepromsize;
++  
++  printf ("AVR Memory Usage\n"
++          "----------------\n"
++          "Device: %s\n\n", avr_name);
++  
++  /* Text size */
++  printf ("Program:%8ld bytes", text);
++  if (flashmax > 0)
++  {
++    printf (" (%2.1f%% Full)", ((float)text / flashmax) * 100);
++  }
++  printf ("\n(.text + .data + .bootloader)\n\n");
++  
++  /* Data size */
++  printf ("Data:   %8ld bytes", data);
++  if (rammax > 0)
++  {
++    printf (" (%2.1f%% Full)", ((float)data / rammax) * 100);
++  }
++  printf ("\n(.data + .bss + .noinit)\n\n");
++  
++  /* EEPROM size */
++  if (eeprom > 0) 
++  { 
++    printf ("EEPROM: %8ld bytes", eeprom);
++    if (eeprommax > 0)
++    {
++      printf (" (%2.1f%% Full)", ((float)eeprom / eeprommax) * 100);
++    }
++    printf ("\n(.eeprom)\n\n");
++  }
++}
++
++
+ static void
+ print_sizes (bfd *file)
+ {
+-  if (berkeley_format)
+-    print_berkeley_format (file);
+-  else
+-    print_sysv_format (file);
++  switch (format)
++  {
++    case format_sysv:
++      print_sysv_format (file);
++      break;
++    case format_bsd:
++      print_berkeley_format (file);
++      break;
++    case format_avr:
++    default:
++      print_avr_format (file);
++      break;
++  }
+ }

@@ -1,0 +1,175 @@
+diff -BrauEb avrdude-5.4-orig/avrdude.conf.in avrdude-5.4/avrdude.conf.in
+--- avrdude-5.4-orig/avrdude.conf.in	2007-05-16 16:29:36.000000000 -0500
++++ avrdude-5.4/avrdude.conf.in	2007-07-05 10:59:13.351090300 -0500
+@@ -348,6 +348,12 @@
+ ;
+ 
+ programmer
++  id    = "mib510";
++  desc  = "Crossbow MIB510 programming board";
++  type  = stk500;
++;
++
++programmer
+   id    = "stk500v2";
+   desc  = "Atmel STK500 Version 2.x firmware";
+   type  = stk500v2;
+diff -BrauEb avrdude-5.4-orig/stk500.c avrdude-5.4/stk500.c
+--- avrdude-5.4-orig/stk500.c	2007-03-26 00:14:36.000000000 -0500
++++ avrdude-5.4/stk500.c	2007-07-05 14:11:33.592356200 -0500
+@@ -330,6 +330,77 @@
+   return -1;
+ }
+ 
++// MIB510 initialization (use cmd=1 to initialize, cmd=0 to close)
++static int mib510_isp(PROGRAMMER * pgm, unsigned char cmd)
++{
++  int i = 9;
++  unsigned char buf[10];
++  int tries=0;
++
++  buf[0] = 0xaa;
++  buf[1] = 0x55;
++  buf[2] = 0x55;
++  buf[3] = 0xaa;
++  buf[4] = 0x17;
++  buf[5] = 0x51;
++  buf[6] = 0x31;
++  buf[7] = 0x13;
++  buf[8] = cmd;
++
++
++ retry:
++
++  tries++;
++
++  buf[i] = Sync_CRC_EOP;
++
++  stk500_send(pgm, buf, i);
++  if (stk500_recv(pgm, buf, 1) < 0)
++    exit(1);
++  if (buf[0] == Resp_STK_NOSYNC) {
++    if (tries > 33) {
++      fprintf(stderr, "%s: mib510_isp(): can't get into sync\n",
++              progname);
++      return -1;
++    }
++    if (stk500_getsync(pgm) < 0)
++      return -1;
++    goto retry;
++  }
++  else if (buf[0] != Resp_STK_INSYNC) {
++    fprintf(stderr,
++            "%s: mib510_isp(): protocol error, "
++            "expect=0x%02x, resp=0x%02x\n",
++            progname, Resp_STK_INSYNC, buf[0]);
++    return -1;
++  }
++
++  if (stk500_recv(pgm, buf, 1) < 0)
++    exit(1);
++  if (buf[0] == Resp_STK_OK) {
++    return 0;
++  }
++  else if (buf[0] == Resp_STK_NODEVICE) {
++    fprintf(stderr, "%s: mib510_isp(): no device\n",
++            progname);
++    return -1;
++  }
++
++  if(buf[0] == Resp_STK_FAILED)
++  {
++      fprintf(stderr,
++          "%s: mib510_isp(): command %d failed\n",
++              progname, cmd);
++      return -1;
++  }
++
++
++  fprintf(stderr, "%s: mib510_isp(): unknown response=0x%02x\n",
++          progname, buf[0]);
++
++  return -1;
++}
++
+ 
+ /*
+  * initialize the AVR device and prepare it to accept commands
+@@ -482,6 +553,10 @@
+     return -1;
+   }
+ 
++  // MIB510 does not need extparams
++  if(strcmp(ldata(lfirst(pgm->id)), "mib510") == 0)
++    n_extparms = 0;
++
+   if (n_extparms) {
+     if ((p->pagel == 0) || (p->bs2 == 0)) {
+       fprintf(stderr, 
+@@ -588,6 +663,10 @@
+    */
+   stk500_drain(pgm, 0);
+ 
++  // MIB510 init
++  if(strcmp(ldata(lfirst(pgm->id)), "mib510") == 0)
++    mib510_isp(pgm, 1);
++
+   if (stk500_getsync(pgm) < 0)
+     return -1;
+ 
+@@ -597,6 +676,10 @@
+ 
+ static void stk500_close(PROGRAMMER * pgm)
+ {
++  // MIB510 close
++  if(strcmp(ldata(lfirst(pgm->id)), "mib510") == 0)
++    mib510_isp(pgm, 0);
++
+   serial_close(&pgm->fd);
+   pgm->fd.ifd = -1;
+ }
+@@ -666,8 +749,14 @@
+   int flash;
+ 
+   if (page_size == 0) {
++    // MIB510 uses page size of 256 bytes
++    if(strcmp(ldata(lfirst(pgm->id)), "mib510") == 0) {
++      page_size = 256;
++    }
++    else {
+     page_size = 128;
+   }
++  }
+ 
+   if (strcmp(m->desc, "flash") == 0) {
+     memtype = 'F';
+@@ -711,7 +800,8 @@
+   for (addr = 0; addr < n; addr += page_size) {
+     report_progress (addr, n_bytes, NULL);
+     
+-	if (addr + page_size > n_bytes) {
++    // MIB510 uses fixed blocks size of 256 bytes
++    if( (strcmp(ldata(lfirst(pgm->id)), "mib510") != 0) && (addr + page_size > n_bytes)) {
+ 	   block_size = n_bytes % page_size;
+ 	}
+ 	else {
+@@ -832,7 +925,8 @@
+   for (addr = 0; addr < n; addr += page_size) {
+     report_progress (addr, n_bytes, NULL);
+ 
+-	if (addr + page_size > n_bytes) {
++    // MIB510 uses fixed blocks size of 256 bytes
++    if( (strcmp(ldata(lfirst(pgm->id)), "mib510") != 0) && (addr + page_size > n_bytes)) {
+ 	   block_size = n_bytes % page_size;
+ 	}
+ 	else {
+@@ -875,7 +970,8 @@
+ 
+     if (stk500_recv(pgm, buf, 1) < 0)
+       exit(1);
+-    if (buf[0] != Resp_STK_OK) {
++
++    if (buf[0] != Resp_STK_INSYNC) {
+       fprintf(stderr,
+               "\n%s: stk500_paged_load(): (a) protocol error, "
+               "expect=0x%02x, resp=0x%02x\n", 
