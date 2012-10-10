@@ -328,19 +328,16 @@ module CoapUdpServerP {
      coap_pdu_t *response;
      coap_async_state_t *tmp;
 
-     size_t size = sizeof(coap_hdr_t) + 8;
-     size += async_state->tokenlen;
+     response = coap_new_pdu();
 
-     response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			      ? COAP_MESSAGE_ACK
-			      : COAP_MESSAGE_NON,
-			      responsecode, 0, size);
      if (!response) {
 // 	 debug("check_async: insufficient memory, we'll try later\n");
 	 //TODO: handle error...
 	 return;
      }
 
+     response->hdr->type = COAP_MESSAGE_ACK;
+     response->hdr->code = responsecode;
      response->hdr->id = async_state->message_id;
 
      if (contenttype != COAP_MEDIATYPE_ANY)
