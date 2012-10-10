@@ -1,0 +1,8 @@
+Package: msp430-binutils-47
+Version: @version@
+Architecture: @architecture@
+Depends: libc6
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: Experimental MSP430 binutils 4.7

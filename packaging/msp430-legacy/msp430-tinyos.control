@@ -1,0 +1,8 @@
+Package: msp430-tinyos-legacy
+Version: @version@
+Architecture: all
+Depends: msp430-binutils-tinyos-legacy, msp430-gcc-tinyos-legacy, msp430-libc-tinyos-legacy
+Maintainer: Razvan Musaloiu-E. <razvanm@musaloiu.com>
+Priority: optional
+Section: devel
+Description: Dummy package to pull in all the MSP430 packages

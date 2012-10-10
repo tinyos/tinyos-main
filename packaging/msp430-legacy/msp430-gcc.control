@@ -1,0 +1,8 @@
+Package: msp430-gcc-tinyos-legacy
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, msp430-binutils-tinyos-legacy
+Maintainer: Razvan Musaloiu-E. <razvanm@musaloiu.com>
+Priority: optional
+Section: devel
+Description: TinyOS-specific MSP430 gcc

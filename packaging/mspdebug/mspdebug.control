@@ -1,0 +1,8 @@
+Package: mspdebug
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, libncurses5, libusb-0.1-4, libreadline6
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: MSPDebug - msp430 FET debugging tool

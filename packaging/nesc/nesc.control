@@ -1,0 +1,10 @@
+Package: nesc
+Version: @version@
+Section: devel
+Priority: optional
+Architecture: @architecture@
+Depends: perl, libc6-dev|libc-dev
+Recommends: graphviz, java-sdk
+Maintainer: Razvan Musaloiu-E. <razvan@musaloiu.com>, Eric B. Decker <cire831@gmail.com>
+Description: This is the nesC compiler used to compile TinyOS applications, includes support
+  for gcc 4.7 (ver > 1.3.3).

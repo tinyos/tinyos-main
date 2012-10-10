@@ -1,0 +1,8 @@
+Package: msp430mcu-46
+Version: @version@
+Architecture: @architecture@
+Depends: msp430-binutils-46, msp430-gcc-46
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: MSP430 (gcc 4.6) headers and linker scripts

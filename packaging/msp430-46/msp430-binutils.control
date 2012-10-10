@@ -1,0 +1,8 @@
+Package: msp430-binutils-46
+Version: @version@
+Architecture: @architecture@
+Depends: libc6
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: MSP430-46 (gcc 4.6 based) binutils

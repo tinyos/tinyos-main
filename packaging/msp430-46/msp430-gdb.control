@@ -1,0 +1,8 @@
+Package: msp430-gdb-46
+Version: @version@
+Architecture: @architecture@
+Depends: libc6, libncurses5
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: MSP430 (4.6 based) gdb

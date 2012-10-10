@@ -1,0 +1,8 @@
+Package: msp430mcu-45
+Version: @version@
+Architecture: @architecture@
+Depends: msp430-binutils-45, msp430-gcc-45
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: MSP430 (gcc 4.5) headers and linker scripts

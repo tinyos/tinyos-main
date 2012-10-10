@@ -1,0 +1,29 @@
+--- adc12_orig.h	2008-05-05 03:49:59.000000000 -0700
++++ adc12.h	2008-05-04 23:09:54.000000000 -0700
+@@ -94,8 +94,12 @@ struct adc12_t adc12 asm("0x01A0");
+ #ifdef _GNU_ASSEMBLER_
+ #define ADC12MEM            ADC12MEM_ /* ADC12 Conversion Memory (for assembler) */
+ #else
++#ifdef SAFE_TINYOS
++#define ADC12MEM            TCAST(int* ONE, ADC12MEM_) /* ADC12 Conversion Memory (for C) */
++#else
+ #define ADC12MEM            ((int*) ADC12MEM_) /* ADC12 Conversion Memory (for C) */
+ #endif
++#endif
+ #define ADC12MEM0_          ADC12MEM_ /* ADC12 Conversion Memory 0 */
+ sfrw(ADC12MEM0,ADC12MEM0_);
+ #define ADC12MEM1_          0x0142  /* ADC12 Conversion Memory 1 */
+@@ -133,8 +137,12 @@ sfrw(ADC12MEM15,ADC12MEM15_);
+ #ifdef _GNU_ASSEMBLER_
+ #define ADC12MCTL           ADC12MCTL_ /* ADC12 Memory Control (for assembler) */
+ #else
++#ifdef SAFE_TINYOS
++#define ADC12MCTL	    TCAST(char * ONE, ADC12MCTL_)
++#else
+ #define ADC12MCTL           ((char*) ADC12MCTL_) /* ADC12 Memory Control (for C) */
+ #endif
++#endif
+ #define ADC12MCTL0_         ADC12MCTL_ /* ADC12 Memory Control 0 */
+ sfrb(ADC12MCTL0,ADC12MCTL0_);
+ #define ADC12MCTL1_         0x0081  /* ADC12 Memory Control 1 */
+

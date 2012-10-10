@@ -1,0 +1,8 @@
+Package: msp430-binutils-45
+Version: @version@
+Architecture: @architecture@
+Depends: libc6
+Maintainer: Eric B. Decker <cire831@gmail.com>
+Priority: optional
+Section: devel
+Description: MSP430-45 (gcc 4.5 based) DEPRECATED binutils
