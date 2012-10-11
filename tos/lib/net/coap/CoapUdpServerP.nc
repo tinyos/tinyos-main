@@ -48,6 +48,7 @@
 #include "blip_printf.h"
 
 #define INDEX "CoAPUdpServer: It works!!"
+#define COAP_MEDIATYPE_NOT_SUPPORTED 0xfe
 
 #define GENERATE_PDU(var,t,c,i,copy_token) {				\
 	var = coap_new_pdu();						\
@@ -70,7 +71,7 @@ module CoapUdpServerP {
     uses interface CoapResource[uint8_t uri];
 } implementation {
     coap_context_t *ctx_server;
-
+    coap_resource_t *r;
     //get index (int) from uri_key (char[4])
     //defined in tinyos_coap_resources.h
     uint8_t get_index_for_key(coap_key_t uri_key) {
@@ -110,45 +111,44 @@ module CoapUdpServerP {
 
     ///////////////////
     // register resources
-    command error_t CoAPServer.registerResource(const unsigned char uri[MAX_URI_LENGTH],
-						unsigned int uri_length,
-						const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH],
-						unsigned int contenttype_length,
-						unsigned int supported_methods,
-						uint8_t observable) {
-	coap_resource_t *r;
+    command error_t CoAPServer.registerResources() {
+      int i;
+      unsigned int supported_methods;
 
-	if (ctx_server == NULL)
-	    return FAIL;
+      if (ctx_server == NULL)
+	return FAIL;
 
-	r = coap_resource_init((unsigned char *)uri, uri_length, 0);
+      for (i=0; i < COAP_LAST_RESOURCE; i++) {
+	// set the hash for the URI
+	coap_hash_path(uri_index_map[i].uri,
+		       uri_index_map[i].uri_len - 1,
+		       uri_index_map[i].uri_key);
+
+	r = coap_resource_init((unsigned char *)uri_index_map[i].uri, uri_index_map[i].uri_len-1, 0);
+	supported_methods = uri_index_map[i].supported_methods;
 
 	r->data = NULL;
 
 	if (r == NULL)
-	    return FAIL;
+	  return FAIL;
 
 	if ((supported_methods & GET_SUPPORTED) == GET_SUPPORTED)
-	    coap_register_handler(r, COAP_REQUEST_GET, hnd_coap_async_tinyos);
+	  coap_register_handler(r, COAP_REQUEST_GET, hnd_coap_async_tinyos);
 	if ((supported_methods & POST_SUPPORTED) == POST_SUPPORTED)
-	    coap_register_handler(r, COAP_REQUEST_POST, hnd_coap_async_tinyos);
+	  coap_register_handler(r, COAP_REQUEST_POST, hnd_coap_async_tinyos);
 	if ((supported_methods & PUT_SUPPORTED) == PUT_SUPPORTED)
-	    coap_register_handler(r, COAP_REQUEST_PUT, hnd_coap_async_tinyos);
+	  coap_register_handler(r, COAP_REQUEST_PUT, hnd_coap_async_tinyos);
 	if ((supported_methods & DELETE_SUPPORTED) == DELETE_SUPPORTED)
-	    coap_register_handler(r, COAP_REQUEST_DELETE, hnd_coap_async_tinyos);
+	  coap_register_handler(r, COAP_REQUEST_DELETE, hnd_coap_async_tinyos);
 
-	coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)contenttype, contenttype_length, 0);
-	//TODO:
-	//coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16);
-	//coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7);
 #ifndef WITHOUT_OBSERVE
-	r->observable = observable;
+	r->observable = uri_index_map[i].observable;
 #endif
-	//coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7);
+	call CoapResource.initResourceAttributes[i](r);
 
 	coap_add_resource(ctx_server, r);
-
-	return SUCCESS;
+      }
+      return SUCCESS;
     }
 
     event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
@@ -179,13 +179,37 @@ module CoapUdpServerP {
 			       str *token,
 			       coap_pdu_t *response) {
 
-	//unsigned char buf[2];
 	coap_opt_iterator_t opt_iter;
 	int rc;
 	size_t size;
 	unsigned char *data;
 	coap_async_state_t *tmp;
 	coap_async_state_t *async_state = NULL;
+
+	unsigned int content_type = COAP_MEDIATYPE_NOT_SUPPORTED;
+	coap_attr_t *attr = NULL;
+	coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
+
+	/* set media_type if available */
+	if (coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter)) {
+	  do {
+	    while ((attr = coap_find_attr(resource, attr, (unsigned char*)"ct", 2))){
+	      if (atoi((const char *)attr->value.s) == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
+									     COAP_OPT_LENGTH(opt_iter.option))) {
+		content_type = coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
+						     COAP_OPT_LENGTH(opt_iter.option));
+		break;
+	      }
+	    }
+	  } while (coap_option_next(&opt_iter) && (attr == NULL));
+	} else {
+	  content_type = COAP_MEDIATYPE_ANY;
+	}
+
+	if (content_type == COAP_MEDIATYPE_NOT_SUPPORTED) {
+	  response->hdr->code = COAP_RESPONSE_CODE(415);
+	  goto cleanup;
+	}
 
 #ifndef WITHOUT_OBSERVE
 	//handler has been called by check_notify()
@@ -244,17 +268,20 @@ module CoapUdpServerP {
 	if (request->hdr->code == COAP_REQUEST_GET)
 	    rc = call CoapResource.getMethod[get_index_for_key(resource->key)](async_state,
 									       data,
-									       size);
+									       size,
+									       content_type);
 	else if (request->hdr->code == COAP_REQUEST_POST)
 	    rc = call CoapResource.postMethod[get_index_for_key(resource->key)](async_state,
 										data,
 										size,
-										resource);
+										resource,
+										content_type);
 	else if (request->hdr->code == COAP_REQUEST_PUT)
 	    rc = call CoapResource.putMethod[get_index_for_key(resource->key)](async_state,
 									       data,
 									       size,
-									       resource);
+									       resource,
+									       content_type);
 	else if (request->hdr->code == COAP_REQUEST_DELETE)
 	    rc = call CoapResource.deleteMethod[get_index_for_key(resource->key)](async_state,
 										  data,
@@ -291,23 +318,31 @@ module CoapUdpServerP {
 	}
 
 	//we don't have split-phase -> do some cleanup
+	cleanup:
 	coap_remove_async(ctx, async_state->id, &tmp);
 	coap_free_async(async_state);
 	async_state = NULL;
     }
 
+    default command error_t CoapResource.initResourceAttributes[uint8_t uri_key](coap_resource_t *resource) {
+	    return FAIL;
+ }
+
  default command int CoapResource.getMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							     uint8_t* val, size_t vallen) {
+							     uint8_t* val, size_t vallen,
+							     unsigned int content_type) {
      //printf("** coap: default (get not available for this resource)....... %i\n", uri_key);
      return FAIL;
  }
  default command int CoapResource.putMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							     uint8_t* val, size_t vallen, coap_resource_t *resource) {
+							     uint8_t* val, size_t vallen, coap_resource_t *resource,
+							     unsigned int content_type) {
      //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
      return FAIL;
  }
  default command int CoapResource.postMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							      uint8_t* val, size_t vallen, coap_resource_t *resource) {
+							      uint8_t* val, size_t vallen, coap_resource_t *resource,
+							      unsigned int content_type) {
      //printf("** coap: default (post not available for this resource)....... %i\n", uri_key);
      return FAIL;
  }

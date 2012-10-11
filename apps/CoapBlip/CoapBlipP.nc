@@ -35,6 +35,9 @@
 #include <lib6lowpan/ip.h>
 #include "blip_printf.h"
 
+#include "net.h"
+#include "resource.h"
+
 #ifdef COAP_CLIENT_ENABLED
 #include "tinyos_net.h"
 #include "option.h"
@@ -70,9 +73,7 @@ module CoapBlipP {
 #endif
 
   event void Boot.booted() {
-#ifdef COAP_SERVER_ENABLED
-    uint8_t i;
-#endif
+
     call RadioControl.start();
     printf("booted %i start\n", TOS_NODE_ID);
 #ifdef COAP_SERVER_ENABLED
@@ -81,22 +82,11 @@ module CoapBlipP {
       printf("CoapBlipP.Mount successful\n");
     }
 #endif
+
     // needs to be before registerResource to setup context:
     call CoAPServer.setupContext(COAP_SERVER_PORT);
+    call CoAPServer.registerResources();
 
-    for (i=0; i < COAP_LAST_RESOURCE; i++) {
-      // set the hash for the URI
-      coap_hash_path(uri_index_map[i].uri,
-    		     uri_index_map[i].uri_len - 1,
-    		     uri_index_map[i].uri_key);
-
-      call CoAPServer.registerResource(uri_index_map[i].uri,
-    				       uri_index_map[i].uri_len - 1,
-    				       uri_index_map[i].contenttype,
-    				       uri_index_map[i].contenttype_len - 1,
-				       uri_index_map[i].supported_methods,
-				       uri_index_map[i].observable);
-    }
 #endif
 
 #ifdef COAP_CLIENT_ENABLED

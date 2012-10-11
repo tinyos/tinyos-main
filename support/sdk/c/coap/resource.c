@@ -171,7 +171,7 @@ print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen,
       } else {			/* match attribute */
 	coap_attr_t *attr;
         str unquoted_val;
-	attr = coap_find_attr(r, resource_param.s, resource_param.length);
+	attr = coap_find_attr(r, NULL, resource_param.s, resource_param.length);
         if (!attr) continue;
         if (attr->value.s[0] == '"') {          /* if attribute has a quoted value, remove double quotes */
           unquoted_val.length = attr->value.length - 2;
@@ -274,19 +274,25 @@ coap_add_attr(coap_resource_t *resource,
 }
 
 coap_attr_t *
-coap_find_attr(coap_resource_t *resource, 
+coap_find_attr(coap_resource_t *resource, coap_attr_t * start_attr,
 	       const unsigned char *name, size_t nlen) {
   coap_attr_t *attr;
+  coap_attr_t *internal_start_attr;
 
   if (!resource || !name)
     return NULL;
 
+  if (start_attr == NULL)
+    internal_start_attr = resource->link_attr;
+  else
+    internal_start_attr = start_attr->next;
+
 #ifndef WITH_CONTIKI
-  LL_FOREACH(resource->link_attr, attr) {
+  LL_FOREACH(internal_start_attr, attr) {
 #else /* WITH_CONTIKI */
-  for (attr = list_head(resource->link_attr); attr; 
+  for (attr = list_head(internal_start_attr); attr;
        attr = list_item_next(attr)) {
-#endif /* WITH_CONTIKI */    
+#endif /* WITH_CONTIKI */
     if (attr->name.length == nlen &&
 	memcmp(attr->name.s, name, nlen) == 0)
       return attr;

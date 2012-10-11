@@ -40,10 +40,6 @@ interface CoAPServer {
     /*
      * register a TinyOS resource with libcoap
      */
-    command error_t registerResource(const unsigned char uri[MAX_URI_LENGTH],
-				     unsigned int uri_length,
-				     const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH],
-				     unsigned int contenttype_length,
-				     unsigned int supported_methods,
-				     uint8_t observable);
+    command error_t registerResources();
+
 }

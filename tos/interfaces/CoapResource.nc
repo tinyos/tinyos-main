@@ -34,17 +34,22 @@
 
 interface CoapResource {
 
+    command error_t initResourceAttributes(coap_resource_t *r);
+
     //TODO: insert URI or request into call?
     command int getMethod(coap_async_state_t* async_state,
-			  uint8_t* val, size_t vallen);
+			  uint8_t* val, size_t vallen,
+			  unsigned int content_type);
 
     command int putMethod(coap_async_state_t* async_state,
-			  uint8_t* val, size_t vallen, 
-			  struct coap_resource_t *resource);
+			  uint8_t* val, size_t vallen,
+			  struct coap_resource_t *resource,
+			  unsigned int content_type);
 
     command int postMethod(coap_async_state_t* async_state,
 			   uint8_t* val, size_t vallen,
-			   struct coap_resource_t *resource);
+			   struct coap_resource_t *resource,
+			   unsigned int content_type);
 
     command int deleteMethod(coap_async_state_t* async_state,
 			     uint8_t* val, size_t vallen);

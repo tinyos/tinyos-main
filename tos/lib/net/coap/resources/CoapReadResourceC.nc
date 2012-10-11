@@ -33,6 +33,9 @@
 generic configuration CoapReadResourceC(typedef val_t, uint8_t uri_key) {
     provides interface CoapResource;
     uses interface Read<val_t>;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    uses interface LocalIeeeEui64;
+#endif
 } implementation {
     components LedsC;
     components new TimerMilliC() as PreAckTimer;
@@ -43,4 +46,7 @@ generic configuration CoapReadResourceC(typedef val_t, uint8_t uri_key) {
     CoapReadResourceP.Leds -> LedsC;
     CoapReadResourceP.PreAckTimer -> PreAckTimer;
     CoapReadResourceP.Read = Read;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    CoapReadResourceP.LocalIeeeEui64 = LocalIeeeEui64;
+#endif
 }

@@ -58,6 +58,10 @@ configuration CoapBlipC {
   CoapUdpServerC.LibCoapServer -> LibCoapAdapterC.LibCoapServer;
   LibCoapAdapterC.UDPServer -> UdpServerSocket;
 
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  components LocalIeeeEui64C;
+#endif
+
 #if defined (COAP_RESOURCE_TEMP)  || defined (COAP_RESOURCE_HUM) || defined (COAP_RESOURCE_ALL)
   components new SensirionSht11C() as HumTempSensor;
 #endif
@@ -68,6 +72,9 @@ configuration CoapBlipC {
   CoapReadTempResource.Read -> CoapBufferTempTranslate.ReadTemp;
   CoapBufferTempTranslate.Read -> HumTempSensor.Temperature;
   CoapUdpServerC.CoapResource[INDEX_TEMP] -> CoapReadTempResource.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapReadTempResource.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
 #endif
 
 #ifdef COAP_RESOURCE_HUM
