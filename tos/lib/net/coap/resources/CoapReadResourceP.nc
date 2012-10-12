@@ -129,6 +129,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
 #ifdef COAP_CONTENT_TYPE_PLAIN
     case COAP_MEDIATYPE_TEXT_PLAIN:
 #endif
+    case COAP_MEDIATYPE_ANY:
     default:
       cur += snprintf(cur, sizeof(buf2), "%d", val);
       buflen = cur - (char *)buf;
@@ -144,7 +145,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
       signal CoapResource.methodDoneSeparate(result, COAP_RESPONSE_CODE(205),
 					     temp_async_state,
 					     (uint8_t*)&val, sizeof(val_t),
-					     COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+					     temp_content_type);
     }
     lock = FALSE;
   }
