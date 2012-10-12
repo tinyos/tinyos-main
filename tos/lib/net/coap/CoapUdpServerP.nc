@@ -49,20 +49,6 @@
 
 #define INDEX "CoAPUdpServer: It works!!"
 
-#define GENERATE_PDU(var,t,c,i,copy_token) {				\
-	var = coap_new_pdu();						\
-	if (var) {							\
-	    coap_opt_t *tok;						\
-	    var->hdr->type = (t);					\
-	    var->hdr->code = (c);					\
-	    var->hdr->id = (i);						\
-	    tok = coap_check_option(node->pdu, COAP_OPTION_TOKEN);	\
-	    if (tok && copy_token)					\
-		coap_add_option(					\
-		pdu, COAP_OPTION_TOKEN, COAP_OPT_LENGTH(*tok), COAP_OPT_VALUE(*tok)); \
-	}								\
-    }
-
 module CoapUdpServerP {
     provides interface CoAPServer;
     uses interface LibCoAP as LibCoapServer;
