@@ -111,34 +111,49 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(204),
 				   temp_async_state,
 				   NULL, 0,
-				   COAP_MEDIATYPE_ANY,
+				   temp_media_type,
 				   temp_resource);
   };
 
   command int CoapResource.putMethod(coap_async_state_t* async_state,
 				     uint8_t *val, size_t buflen, coap_resource_t *resource,
 				     unsigned int media_type) {
+
+    switch(media_type) {
+#ifdef COAP_CONTENT_TYPE_BINARY
+    case COAP_MEDIATYPE_APPLICATION_OCTET_STREAM:
+      break;
+#endif
+#ifdef COAP_CONTENT_TYPE_PLAIN
+    case COAP_MEDIATYPE_TEXT_PLAIN:
+#endif
+    case COAP_MEDIATYPE_ANY:
+    default:
+      *val = *val - *(uint8_t *)"0";
+    }
+
     if (buflen == 1 && *val < 8) {
       if (lock == FALSE) {
 	lock = TRUE;
 	temp_async_state = async_state;
 	temp_resource = resource;
 	temp_media_type = media_type;
+
 	call Leds.set(*val);
 	temp_resource->dirty = 1;
 	temp_resource->data_len = buflen;
 	if ((resource->data = (uint8_t *) coap_malloc(buflen)) != NULL) {
 	  memcpy(resource->data, val, buflen);
 	} else {
-	  return COAP_RESPONSE_500;
+	  return COAP_RESPONSE_CODE(500);
 	}
 	post putMethod();
 	return COAP_SPLITPHASE;
       } else {
-	return COAP_RESPONSE_503;
+	return COAP_RESPONSE_CODE(503);
       }
     } else {
-      return COAP_RESPONSE_500;
+      return COAP_RESPONSE_CODE(413);
     }
   }
 

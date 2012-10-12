@@ -191,7 +191,8 @@ module CoapUdpServerP {
 	coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
 
 	/* set media_type if available */
-	if (coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter)) {
+	if ((coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) ||
+	    (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter) && (request->hdr->code & (COAP_REQUEST_PUT & COAP_REQUEST_POST)))) {
 	  do {
 	    while ((attr = coap_find_attr(resource, attr, (unsigned char*)"ct", 2))){
 	      if (atoi((const char *)attr->value.s) == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
@@ -207,7 +208,9 @@ module CoapUdpServerP {
 	}
 
 	if (media_type == COAP_MEDIATYPE_NOT_SUPPORTED) {
-	  response->hdr->code = COAP_RESPONSE_CODE(406);
+	  response->hdr->code = (request->hdr->code == COAP_REQUEST_GET
+				 ? COAP_RESPONSE_CODE(406)
+				 : COAP_RESPONSE_CODE(415));
 	  goto cleanup;
 	}
 
@@ -287,7 +290,7 @@ module CoapUdpServerP {
 										  data,
 										  size);
 	else
-	  rc = COAP_RESPONSE_405;
+	  rc = COAP_RESPONSE_CODE(405);
 
 	if (rc == FAIL) {
 	    /* default handler returns FAIL -> Resource not available -> Response: 404 */
@@ -357,7 +360,7 @@ module CoapUdpServerP {
 						     coap_async_state_t* async_state,
 						     uint8_t* val,
 						     size_t vallen,
-						     uint8_t mediatype,
+						     uint8_t media_type,
 						     coap_resource_t *resource) {
      unsigned char buf[2];
      coap_pdu_t *response;
@@ -375,9 +378,9 @@ module CoapUdpServerP {
      response->hdr->code = responsecode;
      response->hdr->id = async_state->message_id;
 
-     if (mediatype != COAP_MEDIATYPE_ANY)
+     if (media_type != COAP_MEDIATYPE_ANY)
 	 coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			 coap_encode_var_bytes(buf, mediatype), buf);
+			 coap_encode_var_bytes(buf, media_type), buf);
 
      if (async_state->tokenlen)
 	 coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
