@@ -225,7 +225,9 @@ coap_new_context(const coap_address_t *listen_addr) {
 #endif /* WITH_CONTIKI */
 
   if (!listen_addr) {
+#ifndef NDEBUG
     coap_log(LOG_EMERG, "no listen address specified\n");
+#endif
     return NULL;
   }
 
@@ -1184,7 +1186,9 @@ coap_dispatch( coap_context_t *context ) {
        * have. */
 
 #ifndef WITH_CONTIKI
+#ifndef NDEBUG
       coap_log(LOG_ALERT, "got RST for message %u\n", ntohs(rcvd->pdu->hdr->id));
+#endif
 #else /* WITH_CONTIKI */
       coap_log(LOG_ALERT, "got RST for message %u\n", uip_ntohs(rcvd->pdu->hdr->id));
 #endif /* WITH_CONTIKI */

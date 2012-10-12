@@ -101,7 +101,6 @@ module CoapUdpServerP {
 	ctx_server = coap_new_context(&listen_addr);
 
 	if (!ctx_server) {
-	    coap_log(LOG_CRIT, "cannot create CoAP context\r\n");
 	    return FAIL;
 	}
 
