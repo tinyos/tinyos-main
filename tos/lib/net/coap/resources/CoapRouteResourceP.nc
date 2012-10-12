@@ -121,24 +121,24 @@ generic module CoapRouteResourceP(typedef val_t, uint8_t uri_key) {
       post getRoute();
       return COAP_SPLITPHASE;
     } else {
-      return COAP_RESPONSE_503;
+      return COAP_RESPONSE_CODE(503);
     }
   }
 
   command int CoapResource.putMethod(coap_async_state_t* async_state,
 				     uint8_t *val, size_t buflen, coap_resource_t *resource,
 				     unsigned int media_type) {
-    return COAP_RESPONSE_405;
+    return COAP_RESPONSE_CODE(405);
   }
 
   command int CoapResource.postMethod(coap_async_state_t* async_state,
 				      uint8_t *val, size_t buflen, coap_resource_t *resource,
 				      unsigned int media_type) {
-    return COAP_RESPONSE_405;
+    return COAP_RESPONSE_CODE(405);
   }
 
   command int CoapResource.deleteMethod(coap_async_state_t* async_state,
 					uint8_t *val, size_t buflen) {
-    return COAP_RESPONSE_405;
+    return COAP_RESPONSE_CODE(405);
   }
   }

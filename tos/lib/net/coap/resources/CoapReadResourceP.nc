@@ -74,7 +74,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
       call Read.read();
       return COAP_SPLITPHASE;
     } else {
-      return COAP_RESPONSE_503;
+      return COAP_RESPONSE_CODE(503);
     }
   }
 
