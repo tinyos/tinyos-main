@@ -35,80 +35,121 @@
 #include <mem.h>
 
 generic module CoapLedResourceP(uint8_t uri_key) {
-    provides interface CoapResource;
-    uses interface Leds;
+  provides interface CoapResource;
+  uses interface Leds;
 } implementation {
 
-    bool lock = FALSE;
-    coap_async_state_t *temp_async_state = NULL;
-    coap_resource_t *temp_resource = NULL;
+  bool lock = FALSE;
+  coap_async_state_t *temp_async_state = NULL;
+  coap_resource_t *temp_resource = NULL;
+  unsigned int temp_media_type;
 
-    /////////////////////
-    // GET:
-    void task getMethod() {
-	uint8_t val = call Leds.get();
-	lock = FALSE;
-	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(205),
-				       temp_async_state,
-				       (uint8_t*)&val, sizeof(uint8_t),
-				       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM, NULL);
-    };
+  command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
 
-    command int CoapResource.getMethod(coap_async_state_t* async_state,
-				       uint8_t *val, size_t buflen) {
-	if (lock == FALSE) {
-	    lock = TRUE;
-	    temp_async_state = async_state;
-	    post getMethod();
-	    return COAP_SPLITPHASE;
+#ifdef COAP_CONTENT_TYPE_PLAIN
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+#endif
+#ifdef COAP_CONTENT_TYPE_BINARY
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"42", 2, 0);
+#endif
+
+    return SUCCESS;
+  }
+
+  /////////////////////
+  // GET:
+  void task getMethod() {
+    void *buf;
+    int buflen = 0;
+    char *cur;
+    char buf2[4];
+    uint8_t val = call Leds.get();
+    buf = buf2;
+    cur = buf;
+
+    switch(temp_media_type) {
+#ifdef COAP_CONTENT_TYPE_BINARY
+    case COAP_MEDIATYPE_APPLICATION_OCTET_STREAM:
+      buf = (uint8_t *)&val;
+      buflen = sizeof(uint8_t);
+      break;
+#endif
+#ifdef COAP_CONTENT_TYPE_PLAIN
+    case COAP_MEDIATYPE_TEXT_PLAIN:
+#endif
+    case COAP_MEDIATYPE_ANY:
+    default:
+      cur += snprintf(cur, sizeof(buf2), "%i", val);
+      buflen = cur - (char *)buf;
+    }
+
+    signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(205),
+				   temp_async_state,
+				   (uint8_t*)buf, buflen,
+				   temp_media_type, NULL);
+    lock = FALSE;
+  };
+
+  command int CoapResource.getMethod(coap_async_state_t* async_state,
+				     uint8_t *val, size_t buflen,
+				     unsigned int media_type) {
+    if (lock == FALSE) {
+      lock = TRUE;
+      temp_async_state = async_state;
+      temp_media_type = media_type;
+      post getMethod();
+      return COAP_SPLITPHASE;
+    } else {
+      return COAP_RESPONSE_503;
+    }
+  }
+
+  /////////////////////
+  // PUT:
+  void task putMethod() {
+    lock = FALSE;
+    signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(204),
+				   temp_async_state,
+				   NULL, 0,
+				   COAP_MEDIATYPE_ANY,
+				   temp_resource);
+  };
+
+  command int CoapResource.putMethod(coap_async_state_t* async_state,
+				     uint8_t *val, size_t buflen, coap_resource_t *resource,
+				     unsigned int media_type) {
+    if (buflen == 1 && *val < 8) {
+      if (lock == FALSE) {
+	lock = TRUE;
+	temp_async_state = async_state;
+	temp_resource = resource;
+	temp_media_type = media_type;
+	call Leds.set(*val);
+	temp_resource->dirty = 1;
+	temp_resource->data_len = buflen;
+	if ((resource->data = (uint8_t *) coap_malloc(buflen)) != NULL) {
+	  memcpy(resource->data, val, buflen);
 	} else {
-	    return COAP_RESPONSE_503;
+	  return COAP_RESPONSE_500;
 	}
+	post putMethod();
+	return COAP_SPLITPHASE;
+      } else {
+	return COAP_RESPONSE_503;
+      }
+    } else {
+      return COAP_RESPONSE_500;
     }
+  }
 
-    /////////////////////
-    // PUT:
-    void task putMethod() {
-	lock = FALSE;
-	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(204),
-				       temp_async_state,
-				       NULL, 0,
-				       COAP_MEDIATYPE_ANY,
-				       temp_resource);
-    };
+  command int CoapResource.postMethod(coap_async_state_t* async_state,
+				      uint8_t *val, size_t buflen, coap_resource_t *resource,
+				      unsigned int media_type) {
+    return COAP_RESPONSE_405;
+  }
 
-    command int CoapResource.putMethod(coap_async_state_t* async_state,
-				       uint8_t *val, size_t buflen, coap_resource_t *resource) {
-	if (buflen == 1 && *val < 8) {
-	    if (lock == FALSE) {
-		lock = TRUE;
-		temp_async_state = async_state;
-		temp_resource = resource;
-		call Leds.set(*val);
-		temp_resource->dirty = 1;
-		temp_resource->data_len = buflen;
-		if ((resource->data = (uint8_t *) coap_malloc(buflen)) != NULL) {
-		  memcpy(resource->data, val, buflen);
-		} else {
-		   return COAP_RESPONSE_500;
-		}
-		post putMethod();
-		return COAP_SPLITPHASE;
-	    } else {
-		return COAP_RESPONSE_503;
-	    }
-	} else {
-	    return COAP_RESPONSE_500;
-	}
-    }
-
-    command int CoapResource.postMethod(coap_async_state_t* async_state,
-					uint8_t *val, size_t buflen, coap_resource_t *resource) {
-	return COAP_RESPONSE_405; // or _501?
-    }
-
-    command int CoapResource.deleteMethod(coap_async_state_t* async_state,
-					  uint8_t *val, size_t buflen) {
-	return COAP_RESPONSE_405; // or _501?
-    }
-}
+  command int CoapResource.deleteMethod(coap_async_state_t* async_state,
+					uint8_t *val, size_t buflen) {
+    return COAP_RESPONSE_405;
+  }
+  }
