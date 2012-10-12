@@ -74,6 +74,9 @@ CFLAGS += -DCOAP_PREACK_TIMEOUT=1000
 
 #CFLAGS += -DWITHOUT_OBSERVE
 
+# disables .well-known/core resource
+CFLAGS += -DWITHOUT_WELLKNOWN
+
 # don't include textual representation of error code in payload
 CFLAGS += -DSHORT_ERROR_RESPONSE
 
