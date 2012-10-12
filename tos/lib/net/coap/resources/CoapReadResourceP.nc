@@ -41,7 +41,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
   uses interface LocalIeeeEui64;
 #endif
 } implementation {
-  unsigned int temp_content_type;
+  unsigned int temp_media_type;
   bool lock = FALSE;
   coap_async_state_t *temp_async_state = NULL;
 
@@ -65,11 +65,11 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
 
   command int CoapResource.getMethod(coap_async_state_t* async_state,
 				     uint8_t *val, size_t buflen,
-				     unsigned int content_type) {
+				     unsigned int media_type) {
     if (lock == FALSE) {
       lock = TRUE;
       temp_async_state = async_state;
-      temp_content_type = content_type;
+      temp_media_type = media_type;
       call PreAckTimer.startOneShot(COAP_PREACK_TIMEOUT);
       call Read.read();
       return COAP_SPLITPHASE;
@@ -98,7 +98,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
     buf = buf2;
     cur = buf;
 
-    switch(temp_content_type) {
+    switch(temp_media_type) {
 #ifdef COAP_CONTENT_TYPE_XML
     case COAP_MEDIATYPE_APPLICATION_XML:
       cur += snprintf(cur, LEN, "%s%s", XML_PRE, "bn=\"urn:dev:mac:");
@@ -140,25 +140,25 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
       signal CoapResource.methodDone(result, COAP_RESPONSE_CODE(205),
 				     temp_async_state,
 				     (uint8_t*)buf, buflen,
-				     temp_content_type, NULL);
+				     temp_media_type, NULL);
     } else {
       signal CoapResource.methodDoneSeparate(result, COAP_RESPONSE_CODE(205),
 					     temp_async_state,
 					     (uint8_t*)&val, sizeof(val_t),
-					     temp_content_type);
+					     temp_media_type);
     }
     lock = FALSE;
   }
 
   command int CoapResource.putMethod(coap_async_state_t* async_state,
 				     uint8_t *val, size_t buflen, coap_resource_t *resource,
-				     unsigned int content_type) {
+				     unsigned int media_type) {
     return COAP_RESPONSE_405;
   }
 
   command int CoapResource.postMethod(coap_async_state_t* async_state,
 				      uint8_t *val, size_t buflen, coap_resource_t *resource,
-				      unsigned int content_type) {
+				      unsigned int media_type) {
     return COAP_RESPONSE_405;
   }
 
