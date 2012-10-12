@@ -127,6 +127,10 @@ typedef struct index_uri_key
   uint8_t index;
   const unsigned char uri[MAX_URI_LENGTH];
   uint8_t uri_len;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  const unsigned char name[MAX_SENSOR_NAME_LENGTH];
+  const unsigned char unit[2];
+#endif
   coap_key_t uri_key;
   uint8_t supported_methods:4;
   uint8_t observable:1;
@@ -137,6 +141,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_TEMP,
       "st", sizeof("st"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "temperature", "K",
+#endif
       {0,0,0,0}, // uri_key will be set later
       GET_SUPPORTED,
       0
@@ -146,6 +153,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_HUM,
       "sh", sizeof("sh"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "humidity", "%",
+#endif
       {0,0,0,0}, // uri_key will be set later
       GET_SUPPORTED,
       0
@@ -155,6 +165,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_VOLT,
       "sv", sizeof("sv"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "voltage", "V",
+#endif
       {0,0,0,0}, // uri_key will be set later
       GET_SUPPORTED,
       0
@@ -164,6 +177,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_ALL,
       "r", sizeof("r"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       GET_SUPPORTED,
       0
@@ -173,6 +189,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_KEY,
       "ck", sizeof("ck"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
@@ -182,6 +201,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_LED,
       "l", sizeof("l"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       (GET_SUPPORTED | PUT_SUPPORTED),
       1
@@ -191,6 +213,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_ROUTE,
       "rt", sizeof("rt"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       GET_SUPPORTED,
       0
@@ -202,6 +227,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
     INDEX_GIO,
     "gio",  sizeof("gio"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
     {0,0,0,0}, // uri_key will be set later
     (GET_SUPPORTED | PUT_SUPPORTED),
     0
@@ -211,6 +239,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
     INDEX_DEV_0,
     "dev0", sizeof("dev0"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
     {0,0,0,0}, // uri_key will be set later
     (GET_SUPPORTED | PUT_SUPPORTED),
       0
@@ -220,6 +251,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     {
       INDEX_DEV_1,
       "dev1",  sizeof("dev1"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
@@ -229,6 +263,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     {
       INDEX_DEV_2,
       "dev2",  sizeof("dev2"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
@@ -238,6 +275,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     {
       INDEX_DEV_3,
       "dev3",  sizeof("dev3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
@@ -249,6 +289,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_ETSI_TEST,
       "test", sizeof("test"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
       0
@@ -258,6 +301,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_ETSI_SEPARATE,
       "separate", sizeof("separate"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
@@ -267,6 +313,9 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_ETSI_SEGMENT,
       "seg1/seg2/seg3", sizeof("seg1/seg2/seg3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
       (GET_SUPPORTED | PUT_SUPPORTED),
       0

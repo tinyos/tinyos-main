@@ -105,7 +105,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
       for (i=0; i<8; i++) {
 	cur += snprintf(cur, LEN, "%x", id.data[i]);
       }
-      cur += snprintf(cur, LEN, "%s%d%s%s", "\"><e n=\"temperature\" u=\"K\" v=\"", val, "\"/>", XML_POST);
+      cur += snprintf(cur, LEN, "%s%s%s%s%s%d%s%s", "\"><e n=\"", uri_index_map[uri_key].name, "\" u=\"", uri_index_map[uri_key].unit, "\" v=\"", val, "\"/>", XML_POST);
       buflen = cur - (char *)buf;
       break;
 #endif
@@ -117,8 +117,8 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
 #endif
 #ifdef COAP_CONTENT_TYPE_JSON
     case COAP_MEDIATYPE_APPLICATION_JSON:
-      cur += snprintf(cur, LEN, "%s%s%d%s", JSON_PRE,
-					"{\"n\":\"temperature\",\"u\":\"K\",\"v\":", val, "}],\"bn\":\"urn:dev:mac:");
+      cur += snprintf(cur, LEN, "%s%s%s%s%s%s%d%s", JSON_PRE,
+		      "{\"n\":\"", uri_index_map[uri_key].name, "\",\"u\":\"", uri_index_map[uri_key].unit, "\",\"v\":", val, "}],\"bn\":\"urn:dev:mac:");
       for (i=0; i<8; i++) {
 	cur += snprintf(cur, LEN, "%x", id.data[i]);
       }
