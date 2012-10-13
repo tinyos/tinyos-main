@@ -3,11 +3,11 @@ COMPONENT=CoapBlipC
 # uncomment this for network programming support
 # BOOTLOADER=tosboot
 
-CFLAGS += -DCC2420_DEF_CHANNEL=24
+CFLAGS += -DCC2420_DEF_CHANNEL=17
 #CFLAGS += -DRF230_DEF_CHANNEL=16
 #CFLAGS += -DCC2420_DEF_RFPOWER=4
 
-#DEFAULT_LOCAL_GROUP = 0xCA
+DEFAULT_LOCAL_GROUP = 0x1A
 
 # Enable Low Power Listening
 #CFLAGS += -DLOW_POWER_LISTENING
@@ -30,7 +30,8 @@ PFLAGS += -DRPL_ROUTING -DRPL_STORING_MODE -I$(LOWPAN_ROOT)/tos/lib/net/rpl
 
 # if you set this, the stack won't use dhcp to assign addresses -- it
 # will use this prefix combined with TOS_NODE_ID
-PFLAGS += -DIN6_PREFIX=\"fec0::\"
+PFLAGS += -DIN6_PREFIX=\"2001:638:708:1156::\"
+#PFLAGS += -DIN6_PREFIX=\"fec0::\"
 #PFLAGS += -DIN6_PREFIX=\"2a01:198:56c:1000::\"
 #PFLAGS += -DIN6_PREFIX=\"2a01:c911:0:212d::\"
 
@@ -77,16 +78,16 @@ CFLAGS += -DCOAP_CONTENT_TYPE_XML
 CFLAGS += -DCOAP_CONTENT_TYPE_BINARY
 CFLAGS += -DCOAP_CONTENT_TYPE_JSON
 
-# timeout in milliseconds for sending PreACK
-CFLAGS += -DCOAP_PREACK_TIMEOUT=1000
-
-CFLAGS += -DWITHOUT_OBSERVE
+#CFLAGS += -DWITHOUT_OBSERVE
 
 # disables .well-known/core resource
 CFLAGS += -DWITHOUT_WELLKNOWN
 
 # don't include textual representation of error code in payload
 CFLAGS += -DSHORT_ERROR_RESPONSE
+
+# timeout in milliseconds for sending PreACK
+CFLAGS += -DCOAP_PREACK_TIMEOUT=1000
 
 ################ CoAP Client ################################
 #CFLAGS += -DCOAP_CLIENT_ENABLED
