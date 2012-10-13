@@ -34,17 +34,22 @@
 
 interface CoapResource {
 
+    command error_t initResourceAttributes(coap_resource_t *r);
+
     //TODO: insert URI or request into call?
     command int getMethod(coap_async_state_t* async_state,
-			  uint8_t* val, size_t vallen);
+			  uint8_t* val, size_t vallen,
+			  unsigned int media_type);
 
     command int putMethod(coap_async_state_t* async_state,
-			  uint8_t* val, size_t vallen, 
-			  struct coap_resource_t *resource);
+			  uint8_t* val, size_t vallen,
+			  struct coap_resource_t *resource,
+			  unsigned int media_type);
 
     command int postMethod(coap_async_state_t* async_state,
 			   uint8_t* val, size_t vallen,
-			   struct coap_resource_t *resource);
+			   struct coap_resource_t *resource,
+			   unsigned int media_type);
 
     command int deleteMethod(coap_async_state_t* async_state,
 			     uint8_t* val, size_t vallen);
@@ -52,7 +57,7 @@ interface CoapResource {
     event void methodDone(error_t result,
 			  uint8_t responsecode,
 			  coap_async_state_t* async_state,
-			  uint8_t* val, size_t vallen, uint8_t contenttype,
+			  uint8_t* val, size_t vallen, uint8_t mediatype,
 			  struct coap_resource_t* resource);
 
     event void methodNotDone(coap_async_state_t* async_state,
@@ -61,5 +66,5 @@ interface CoapResource {
     event void methodDoneSeparate(error_t result,
 				  uint8_t responsecode,
 				  coap_async_state_t* async_state,
-				  uint8_t* val, size_t vallen, uint8_t contenttype);
+				  uint8_t* val, size_t vallen, uint8_t mediatype);
 }

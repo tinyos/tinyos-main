@@ -90,7 +90,6 @@ coap_free_node(coap_queue_t *node) {
 uint32_t clock_offset;
 
 unsigned char initialized = 0;
-coap_context_t the_coap_context;
 
 #endif /* WITH_TINYOS */
 
@@ -254,7 +253,6 @@ coap_new_context(const coap_address_t *listen_addr) {
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
-  c = &the_coap_context;
   initialized = 1;
 #endif /* WITH_TINYOS */
 

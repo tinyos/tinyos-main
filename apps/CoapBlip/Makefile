@@ -45,6 +45,8 @@ CFLAGS += -DCOAP_SERVER_ENABLED
 #CFLAGS += -DCOAP_SERVER_PORT=61616L
 # set max uri length
 CFLAGS += -DMAX_URI_LENGTH=14
+# set max sensor name length for JSON and XML representation
+CFLAGS += -DMAX_SENSOR_NAME_LENGTH=12
 
 # set available resources:
 
@@ -69,10 +71,16 @@ CFLAGS += -DCOAP_RESOURCE_LED
 #CFLAGS += -DCOAP_RESOURCE_ETSI_IOT_SEPARATE
 #CFLAGS += -DCOAP_RESOURCE_ETSI_IOT_SEGMENT
 
+# set supported content types
+CFLAGS += -DCOAP_CONTENT_TYPE_PLAIN
+CFLAGS += -DCOAP_CONTENT_TYPE_XML
+CFLAGS += -DCOAP_CONTENT_TYPE_BINARY
+CFLAGS += -DCOAP_CONTENT_TYPE_JSON
+
 # timeout in milliseconds for sending PreACK
 CFLAGS += -DCOAP_PREACK_TIMEOUT=1000
 
-#CFLAGS += -DWITHOUT_OBSERVE
+CFLAGS += -DWITHOUT_OBSERVE
 
 ################ CoAP Client ################################
 #CFLAGS += -DCOAP_CLIENT_ENABLED

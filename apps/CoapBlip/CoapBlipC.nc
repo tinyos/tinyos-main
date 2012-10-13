@@ -58,6 +58,10 @@ configuration CoapBlipC {
   CoapUdpServerC.LibCoapServer -> LibCoapAdapterC.LibCoapServer;
   LibCoapAdapterC.UDPServer -> UdpServerSocket;
 
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  components LocalIeeeEui64C;
+#endif
+
 #if defined (COAP_RESOURCE_TEMP)  || defined (COAP_RESOURCE_HUM) || defined (COAP_RESOURCE_ALL)
   components new SensirionSht11C() as HumTempSensor;
 #endif
@@ -68,6 +72,9 @@ configuration CoapBlipC {
   CoapReadTempResource.Read -> CoapBufferTempTranslate.ReadTemp;
   CoapBufferTempTranslate.Read -> HumTempSensor.Temperature;
   CoapUdpServerC.CoapResource[INDEX_TEMP] -> CoapReadTempResource.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapReadTempResource.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
 #endif
 
 #ifdef COAP_RESOURCE_HUM
@@ -76,6 +83,9 @@ configuration CoapBlipC {
   CoapReadHumResource.Read -> CoapBufferHumTranslate.ReadHum;
   CoapBufferHumTranslate.Read -> HumTempSensor.Humidity;
   CoapUdpServerC.CoapResource[INDEX_HUM] -> CoapReadHumResource.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapReadHumResource.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
 #endif
 
 #if defined (COAP_RESOURCE_VOLT)  || defined (COAP_RESOURCE_ALL)
@@ -88,6 +98,9 @@ configuration CoapBlipC {
   CoapReadVoltResource.Read -> CoapBufferVoltTranslate.ReadVolt;
   CoapBufferVoltTranslate.Read -> VoltSensor.Read;
   CoapUdpServerC.CoapResource[INDEX_VOLT] -> CoapReadVoltResource.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapReadVoltResource.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
 #endif
 
 #ifdef COAP_RESOURCE_ALL
