@@ -47,7 +47,9 @@ coap_register_async(coap_context_t *context, coap_address_t *peer,
   /* store information for handling the asynchronous task */
   s = (coap_async_state_t *)coap_malloc(sizeof(coap_async_state_t) + toklen);
   if (!s) {
+#ifndef NDEBUG
     coap_log(LOG_CRIT, "coap_register_async: insufficient memory\n");
+#endif
     return NULL;
   }
 

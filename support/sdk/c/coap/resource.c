@@ -83,6 +83,7 @@ match(const str *text, const str *pattern, int match_prefix, int match_substring
  * 
  * @return @c 0 on error or @c 1 on success.
  */
+#ifndef WITHOUT_WELLKNOWN
 #if defined(__GNUC__) && defined(WITHOUT_QUERY_FILTER)
 int
 print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen,
@@ -179,8 +180,8 @@ print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen,
         } else {
           unquoted_val = attr->value;
         }
-	if (!(match(&unquoted_val, &query_pattern, 
-                    (flags & MATCH_PREFIX) != 0,
+	if (!(match(&unquoted_val, &query_pattern,
+		    (flags & MATCH_PREFIX) != 0,
                     (flags & MATCH_SUBSTRING) != 0)))
 	  continue;
       }
@@ -203,6 +204,7 @@ print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen,
   *buflen = p - buf;
   return 1;
 }
+#endif /* WITHOUT_WELLKNOWN */
 
 coap_resource_t *
 coap_resource_init(const unsigned char *uri, size_t len, int flags) {

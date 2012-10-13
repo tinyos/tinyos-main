@@ -188,6 +188,7 @@ coap_pop_next( coap_context_t *context ) {
   return next;
 }
 
+#ifndef WITHOUT_WELLKNOWN
 #ifdef COAP_DEFAULT_WKC_HASHKEY
 /** Checks if @p Key is equal to the pre-defined hash key for.well-known/core. */
 #define is_wkc(Key)							\
@@ -206,6 +207,12 @@ is_wkc(coap_key_t k) {
   return memcmp(k, wkc, sizeof(coap_key_t)) == 0;
 }
 #endif
+#else /* WITHOUT_WELLKNOWN */
+int
+is_wkc(coap_key_t k) {
+  return 0;
+}
+#endif /* WITHOUT_WELLKNOWN */
 
 coap_context_t *
 coap_new_context(const coap_address_t *listen_addr) {
@@ -224,7 +231,9 @@ coap_new_context(const coap_address_t *listen_addr) {
 #endif /* WITH_CONTIKI */
 
   if (!listen_addr) {
+#ifndef NDEBUG
     coap_log(LOG_EMERG, "no listen address specified\n");
+#endif
     return NULL;
   }
 
@@ -961,6 +970,7 @@ coap_new_error_response(coap_pdu_t *request, unsigned char code,
 
 coap_pdu_t *
 wellknown_response(coap_context_t *context, coap_pdu_t *request) {
+#ifndef WITHOUT_WELLKNOWN
   coap_pdu_t *resp;
   coap_opt_iterator_t opt_iter;
   coap_opt_t *token;
@@ -996,6 +1006,9 @@ wellknown_response(coap_context_t *context, coap_pdu_t *request) {
   
   resp->length += len;
   return resp;
+#else /* WITHOUT_WELLKNOWN */
+  return NULL;
+#endif /* WITHOUT_WELLKNOWN */
 }
 
 #define WANT_WKC(Pdu,Key)					\
@@ -1182,7 +1195,9 @@ coap_dispatch( coap_context_t *context ) {
        * have. */
 
 #ifndef WITH_CONTIKI
+#ifndef NDEBUG
       coap_log(LOG_ALERT, "got RST for message %u\n", ntohs(rcvd->pdu->hdr->id));
+#endif
 #else /* WITH_CONTIKI */
       coap_log(LOG_ALERT, "got RST for message %u\n", uip_ntohs(rcvd->pdu->hdr->id));
 #endif /* WITH_CONTIKI */
