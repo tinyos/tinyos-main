@@ -48,7 +48,7 @@ implementation {
   
   MSP430REG_NORACE(U0CTL);
   MSP430REG_NORACE(I2CTCTL);
-  MSP430REG_NORACE(I2CDR);
+  MSP430REG_NORACE(I2CDRB);
   MSP430REG_NORACE(I2CSA);
   MSP430REG_NORACE(I2CIE);
 
@@ -146,9 +146,9 @@ implementation {
   async command bool HplI2C.getStartBit() { return (I2CTCTL & I2CSTT) != 0; }
   async command void HplI2C.setStartBit() { I2CTCTL |= I2CSTT; }
   
-  // I2CDR
-  async command uint8_t HplI2C.getData() { return I2CDR; }
-  async command void HplI2C.setData( uint8_t v ) { I2CDR = v; }
+  // I2CDRB
+  async command uint8_t HplI2C.getData() { return I2CDRB; }
+  async command void HplI2C.setData( uint8_t v ) { I2CDRB = v; }
   
   // I2CNDAT
   async command uint8_t HplI2C.getTransferByteCount() { return I2CNDAT; }
