@@ -37,7 +37,7 @@
 #
 
 BUILD_ROOT=$(pwd)
-: ${POST_VER:=}
+: ${POST_VER:=-tinyos}
 
 #DEB_DEST=opt/msp430-46
 DEB_DEST=usr

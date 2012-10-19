@@ -21,6 +21,7 @@
 #
 
 BUILD_ROOT=$(pwd)
+: ${POST_VER:=-tinyos}
 
 DEB_DEST=usr
 CODENAME=squeeze
@@ -34,7 +35,6 @@ echo      "*** Destination: ${DEB_DEST}"
 
 NESC_VER=1.3.4
 NESC=nesc-${NESC_VER}
-POST_VER=-tinyprod2
 
 setup_deb()
 {

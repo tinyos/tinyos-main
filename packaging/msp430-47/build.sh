@@ -31,6 +31,7 @@
 #
 
 BUILD_ROOT=$(pwd)
+: ${POST_VER:=-tinyos}
 
 DEB_DEST=opt/msp430-47
 CODENAME=msp430-47
@@ -262,7 +263,7 @@ package_binutils_deb()
     set -e
     VER=${BINUTILS_VER}
     LAST_PATCH=$(last_patch msp430-binutils-*.patch)
-    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     echo -e "\n***" debian archive: ${BINUTILS}
     (
 	cd ${BINUTILS}
@@ -321,7 +322,7 @@ package_gcc_deb()
     set -e
     VER=${GCC_VER}
     LAST_PATCH=$(last_patch msp430-gcc-*.patch)
-    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     echo -e "\n***" debian archive: ${GCC}
     (
 	cd ${GCC}
@@ -378,9 +379,9 @@ package_mcu_deb()
     VER=${MSP430MCU_VER}
     LAST_PATCH="$(last_patch msp430mcu-*.patch)"
     if [[ -z "${REL}" ]]; then
-	DEB_VER=${VER}
+	DEB_VER=${VER}${POST_VER}
     else
-	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     fi
     echo -e "\n***" debian archive: ${MSP430MCU}
     (
@@ -441,9 +442,9 @@ package_libc_deb()
     VER=${MSP430LIBC_VER}
     LAST_PATCH="$(last_patch msp430-libc-*.patch)"
     if [[ -z "${REL}" ]]; then
-	DEB_VER=${VER}
+	DEB_VER=${VER}${POST_VER}
     else
-	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     fi
     echo -e "\n***" debian archive: ${MSP430LIBC}
     (
@@ -502,7 +503,7 @@ package_gdb_deb()
     if [[ -z "${LAST_PATCH}" ]]; then
 	LAST_PATCH=$(last_patch gdb-*.patch)
     fi
-    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     echo -e "\n***" debian archive: ${GDB}
     (
 	cd ${GDB}

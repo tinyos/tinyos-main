@@ -16,6 +16,7 @@
 #
 
 BUILD_ROOT=$(pwd)
+: ${POST_VER:=-tinyos}
 
 DEB_DEST=usr
 CODENAME=squeeze
@@ -29,7 +30,6 @@ echo "*** Destination: ${DEB_DEST}"
 
 MSPDEBUG_VER=0.20
 MSPDEBUG=mspdebug-${MSPDEBUG_VER}
-POST_VER=-tinyprod1
 
 setup_deb()
 {
