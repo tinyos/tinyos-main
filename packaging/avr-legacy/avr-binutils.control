@@ -1,8 +1,0 @@
-Package: avr-binutils-tinyos-legacy
-Version: @version@
-Architecture: @architecture@
-Depends: libc6
-Maintainer: Razvan Musaloiu-E. <razvanm@musaloiu.com>
-Priority: optional
-Section: devel
-Description: TinyOS-specific AVR binutils

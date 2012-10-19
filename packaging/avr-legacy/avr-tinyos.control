@@ -1,8 +1,0 @@
-Package: avr-tinyos-legacy
-Version: @version@
-Architecture: all
-Depends: avr-binutils-tinyos-legacy, avr-gcc-tinyos-legacy, avr-libc-tinyos-legacy
-Maintainer: Razvan Musaloiu-E. <razvanm@musaloiu.com>
-Priority: optional
-Section: devel
-Description: Dummy package to pull in all the avr packages
