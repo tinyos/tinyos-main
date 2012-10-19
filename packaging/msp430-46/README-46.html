@@ -18,7 +18,7 @@ for the TinyOS development trunk.
 normal distribution channels for your distribution.</b></p>
 
 
-<p>Last update: 20120716, cire</p>
+<p>Last update: 20121019, cire</p>
 <p>(Changelog at end)</p>
 
 
@@ -26,12 +26,12 @@ normal distribution channels for your distribution.</b></p>
 (32 bit) and <i>amd64</i> (64 bit) architectures:</p>
 
 <ul>
-<li>msp430-46: 20120715
-<li>msp430-binutils-46: 2.21.1-LTS20120406
-<li>msp430-gcc-46: 4.6.3-LTS20120406
-<li>msp430-gdb-46: 7.2-LTS20120406
-<li>msp430-libc-46: 20120224-LTS20120406+20120502
-<li>msp430mcu-46: 20120406-LTS20120406+20120502
+<li>msp430-46: 20121019
+<li>msp430-binutils-46: 2.21.1-LTS20120406-tinyprod
+<li>msp430-gcc-46: 4.6.3-LTS20120406+20120911-tinyprod
+<li>msp430-gdb-46: 7.2-LTS20120406-tinyprod
+<li>msp430-libc-46: 20120224-LTS20120406+20120502-tinyprod
+<li>msp430mcu-46: 20120406-LTS20120406+20120502-tinyprod
 
 </ul>
 
@@ -77,10 +77,8 @@ Other packages from the main tinyprod debian repository (<b>squeeze</b>) are nee
 development sytem.  In particular, you will need <b>nesc</b> and <b>tinyos-tools</b>.  These have been included
 in the instructions above.
 <br><br>
-<li>The msp430-46  tools install into /opt/msp430-46.   This allows the default and experimental mspgcc compilers to be
-installed side by side on the same system.   Selection of the operational toolchain is done via the <b>PATH</b> environment variable.
-This allows for easy comparisons between current and experimental toolchains.   This also avoids collisions with
-tools from the main distribution.
+<li>Experimental msp430 toolchains install into /opt/msp430-<ver>.  4.6.3 is the released default toolchain for
+the msp430 cpus for tinyos 2.1.2.  It installs into the /usr heirarchy.
 </ol>
 </p>
 <pre>
@@ -111,7 +109,7 @@ tools from the main distribution.
 
 </div>
 
-<p>-- cire (July 16, 2012)</p>
+<p>-- cire (October 19, 2012)</p>
 
 
 <pre>
@@ -121,6 +119,7 @@ tools from the main distribution.
 
 <p><b>Changelog:</b></p>
 <pre>
+  20121019, cire: move 4.6.3 toolchain to /usr
   20120716, cire: rebuild tinyprod repository
 </pre>
 

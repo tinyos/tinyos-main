@@ -21,4 +21,4 @@ rsync -a %{prefix} %{buildroot}
 %define __strip /bin/true
 
 %files
-/opt/msp430-46
+/usr

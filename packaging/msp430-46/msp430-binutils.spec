@@ -12,4 +12,4 @@ Group: Development/Tools
 rsync -a %{prefix} %{buildroot}
 
 %files
-/opt/msp430-46
+/usr

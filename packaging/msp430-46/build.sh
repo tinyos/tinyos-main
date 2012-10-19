@@ -26,13 +26,21 @@
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
 #		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
 #
-# we use opt for these tools to avoid conflicting with placement from normal
-# distribution paths (debian or ubuntu repositories).
+# Experimental tools go in /opt/msp430-<ver> to avoid conflicting with tools
+# distributed with the major distibutions.
+#
+# 4.6.3 is the msp430 toolchain released with tinyos-2.1.2.   It goes in the
+# /usr heirarchy and is the default toolchain.
+#
+# If you don't want any potential problems with the main distibutions, put
+# this toolchain in /opt/msp430-46 and then users need to tweak their PATHS.
 #
 
 BUILD_ROOT=$(pwd)
+: ${POST_VER:=}
 
-DEB_DEST=opt/msp430-46
+#DEB_DEST=opt/msp430-46
+DEB_DEST=usr
 CODENAME=msp430-46
 REL=LTS
 MAKE_J=-j8
@@ -64,7 +72,10 @@ MSPGCC_VER=20120406
 MSPGCC=mspgcc-${MSPGCC_VER}
 MSPGCC_DIR=
 
-PATCHES="  msp430-libc-20120224-sf3522752.patch
+PATCHES="
+  msp430-gcc-4.6.3-20120406-sf3540953.patch
+  msp430-gcc-4.6.3-20120406-sf3559978.patch
+  msp430-libc-20120224-sf3522752.patch
   msp430mcu-20120406-sf3522088.patch
 "
 
@@ -260,7 +271,7 @@ package_binutils_deb()
     set -e
     VER=${BINUTILS_VER}
     LAST_PATCH=$(last_patch msp430-binutils-*.patch)
-    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     echo -e "\n***" debian archive: ${BINUTILS}
     (
 	cd ${BINUTILS}
@@ -319,7 +330,7 @@ package_gcc_deb()
     set -e
     VER=${GCC_VER}
     LAST_PATCH=$(last_patch msp430-gcc-*.patch)
-    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     echo -e "\n***" debian archive: ${GCC}
     (
 	cd ${GCC}
@@ -376,9 +387,9 @@ package_mcu_deb()
     VER=${MSP430MCU_VER}
     LAST_PATCH="$(last_patch msp430mcu-*.patch)"
     if [[ -z "${REL}" ]]; then
-	DEB_VER=${VER}
+	DEB_VER=${VER}${POST_VER}
     else
-	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     fi
     echo -e "\n***" debian archive: ${MSP430MCU}
     (
@@ -439,9 +450,9 @@ package_libc_deb()
     VER=${MSP430LIBC_VER}
     LAST_PATCH="$(last_patch msp430-libc-*.patch)"
     if [[ -z "${REL}" ]]; then
-	DEB_VER=${VER}
+	DEB_VER=${VER}${POST_VER}
     else
-	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     fi
     echo -e "\n***" debian archive: ${MSP430LIBC}
     (
@@ -500,7 +511,7 @@ package_gdb_deb()
     if [[ -z "${LAST_PATCH}" ]]; then
 	LAST_PATCH=$(last_patch gdb-*.patch)
     fi
-    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}
+    DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     echo -e "\n***" debian archive: ${GDB}
     (
 	cd ${GDB}
