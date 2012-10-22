@@ -437,18 +437,16 @@ module CoapUdpServerP {
      coap_pdu_t *response;
      coap_async_state_t *tmp;
 
-     size_t size = sizeof(coap_hdr_t) + 8;
-     size += async_state->tokenlen;
+     response = coap_new_pdu();
 
-     response = coap_pdu_init(async_state->flags & COAP_ASYNC_CONFIRM
-			      ? COAP_MESSAGE_CON
-			      : COAP_MESSAGE_NON,
-			      responsecode, 0, size);
      if (!response) {
 	 debug("check_async: insufficient memory, we'll try later\n");
 	 //TODO: handle error...
      }
-
+     response->hdr->type = async_state->flags & COAP_ASYNC_CONFIRM
+					  ? COAP_MESSAGE_CON
+					  : COAP_MESSAGE_NON;
+     response->hdr->code = responsecode;
      response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id
 
      if (mediatype != COAP_MEDIATYPE_ANY)
@@ -467,6 +465,7 @@ module CoapUdpServerP {
 	 coap_delete_pdu(response);
      }
 
+     coap_delete_pdu(response);
      coap_remove_async(ctx_server, async_state->id, &tmp);
      coap_free_async(async_state);
      async_state = NULL;

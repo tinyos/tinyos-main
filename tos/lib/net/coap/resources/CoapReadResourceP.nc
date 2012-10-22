@@ -79,7 +79,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
   }
 
   event void PreAckTimer.fired() {
-    call Leds.led2Toggle();
+    //call Leds.led2Toggle();
     signal CoapResource.methodNotDone(temp_async_state,
 				      COAP_RESPONSE_CODE(0));
   }
@@ -144,7 +144,7 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
     } else {
       signal CoapResource.methodDoneSeparate(result, COAP_RESPONSE_CODE(205),
 					     temp_async_state,
-					     (uint8_t*)&val, sizeof(val_t),
+					     (uint8_t*)buf, buflen,
 					     temp_media_type);
     }
     lock = FALSE;
