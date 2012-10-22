@@ -359,9 +359,13 @@ module CoapUdpServerP {
 	 return;
      }
 
-     response->hdr->type = COAP_MESSAGE_ACK;
+     response->hdr->type = async_state->flags & COAP_ASYNC_CONFIRM
+     			      ? COAP_MESSAGE_ACK
+     			      : COAP_MESSAGE_NON;
      response->hdr->code = responsecode;
-     response->hdr->id = async_state->message_id;
+     response->hdr->id = async_state->flags & COAP_ASYNC_CONFIRM
+			      ? async_state->message_id
+			      : coap_new_message_id(ctx_server);
 
      if (media_type != COAP_MEDIATYPE_ANY)
 	 coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
