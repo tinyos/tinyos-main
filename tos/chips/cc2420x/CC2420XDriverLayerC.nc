@@ -116,6 +116,29 @@ implementation
 	DriverLayerP.DiagMsg -> DiagMsgC;
 #endif
 
+#ifdef PPPSNIFFER
+	/* Serial stack */
+	components PppDaemonC;
+	DriverLayerP.PppSplitControl -> PppDaemonC;
+
+#if defined(PLATFORM_TELOSB) || defined(PLATFORM_EPIC)
+	components PlatformHdlcUartC as HdlcUartC;
+#else
+	components DefaultHdlcUartC as HdlcUartC;
+#endif
+	PppDaemonC.HdlcUart -> HdlcUartC;
+	PppDaemonC.UartControl -> HdlcUartC;
+
+	/* Link in RFC5072 support for both the control and network protocols */
+	components PppIpv6C;
+	PppDaemonC.PppProtocol[PppIpv6C.ControlProtocol] -> PppIpv6C.PppControlProtocol;
+	PppDaemonC.PppProtocol[PppIpv6C.Protocol] -> PppIpv6C.PppProtocol;
+	PppIpv6C.Ppp -> PppDaemonC;
+	PppIpv6C.LowerLcpAutomaton -> PppDaemonC;
+	DriverLayerP.Ipv6LcpAutomaton -> PppIpv6C;
+	DriverLayerP.PppIpv6 -> PppIpv6C;
+#endif
+
 	components LedsC;
 	DriverLayerP.Leds -> LedsC;
 }
