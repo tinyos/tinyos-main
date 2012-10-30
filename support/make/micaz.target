@@ -8,10 +8,6 @@ ifeq ($(PROGRAMMER),avrdude)
   PROGRAMMER_PART ?= -pm128  -U efuse:w:0xff:m
 endif
 
-ifeq ($(PROGRAMMER),uisp)
-  PROGRAMMER_PART ?= -dpart=ATmega128  --wr_fuse_e=ff
-endif
-
 AVR_FUSE_H ?= 0xd9
 
 ifdef CC2420_CHANNEL

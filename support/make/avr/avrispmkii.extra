@@ -18,10 +18,6 @@ ifeq ($(PROGRAMMER),avrdude)
     PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -V -D -U flash:w:$(BOOTLOADER_IMG):a
 endif
 
-ifeq ($(PROGRAMMER),uisp)
-    $(error uisp is not supported, please use avrdude")
-endif
-
 program: FORCE
 	@echo "    installing $(PLATFORM) binary using avrispmkii"
 	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_SREC_FLAGS)
