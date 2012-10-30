@@ -3,7 +3,7 @@
 
 PLATFORM = mica2dot
 
-PROGRAMMER ?= uisp
+PROGRAMMER ?= avrdude
 ifeq ($(PROGRAMMER),avrdude)
   PROGRAMMER_PART ?= -pm128  -U efuse:w:0xff:m
 endif
