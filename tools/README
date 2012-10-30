@@ -2,9 +2,8 @@ This directory contains the tinyos tools that are distributed in the
 tinyos-tools package.
 
 To install the tinyos tools from SVN, you must first prepare the
-configure scripts here and in platforms/mica/uisp:
+configure scripts here:
   ./Bootstrap
-  (cd platforms/mica/uisp;./bootstrap)
 
 Then you can configure, make and install as usual:
   ./configure
