@@ -39,10 +39,17 @@
 #include "pppipv6.h"
 #include "blip_printf.h"
 
+#include "net.h"
+#include "resource.h"
+
 #ifdef COAP_CLIENT_ENABLED
 #include "tinyos_net.h"
 #include "option.h"
 #include "address.h"
+#endif
+
+#ifndef COAP_SERVER_PORT
+#define COAP_SERVER_PORT COAP_DEFAULT_PORT
 #endif
 
 module CoapPppP {
@@ -119,10 +126,6 @@ module CoapPppP {
   event void Boot.booted() {
     error_t rc;
 
-#ifdef COAP_SERVER_ENABLED
-    uint8_t i;
-#endif
-
     rc = call Ipv6LcpAutomaton.open();
     rc = call PppControl.start();
 
@@ -140,19 +143,8 @@ module CoapPppP {
 #endif
     // needs to be before registerResource to setup context:
     call CoAPServer.setupContext(COAP_SERVER_PORT);
+    call CoAPServer.registerResources();
 
-    for (i=0; i < COAP_LAST_RESOURCE; i++) {
-      // set the hash for the URI
-      coap_hash_path(uri_index_map[i].uri,
-    		     uri_index_map[i].uri_len - 1,
-    		     uri_index_map[i].uri_key);
-
-      call CoAPServer.registerResource(uri_index_map[i].uri,
-    				       uri_index_map[i].uri_len - 1,
-    				       uri_index_map[i].contenttype,
-    				       uri_index_map[i].contenttype_len - 1,
-    				       uri_index_map[i].supported_methods);
-    }
 #endif
 
 #ifdef COAP_CLIENT_ENABLED

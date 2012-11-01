@@ -127,10 +127,13 @@ typedef struct index_uri_key
   uint8_t index;
   const unsigned char uri[MAX_URI_LENGTH];
   uint8_t uri_len;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  const unsigned char name[MAX_SENSOR_NAME_LENGTH];
+  const unsigned char unit[2];
+#endif
   coap_key_t uri_key;
-  const unsigned char contenttype[MAX_CONTENT_TYPE_LENGTH];
-  uint8_t contenttype_len;
   uint8_t supported_methods:4;
+  uint8_t observable:1;
 } index_uri_key_t;
 
 index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
@@ -138,63 +141,84 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_TEMP,
       "st", sizeof("st"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "temperature", "K",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 #if defined (COAP_RESOURCE_HUM) || defined (COAP_RESOURCE_ALL)
   {
       INDEX_HUM,
       "sh", sizeof("sh"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "humidity", "%",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 #if defined (COAP_RESOURCE_VOLT) || defined (COAP_RESOURCE_ALL)
   {
       INDEX_VOLT,
       "sv", sizeof("sv"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "voltage", "V",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_ALL
   {
       INDEX_ALL,
       "r", sizeof("r"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_KEY
   {
       INDEX_KEY,
       "ck", sizeof("ck"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_LED
   {
       INDEX_LED,
       "l", sizeof("l"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      1
   },
 #endif
 #ifdef COAP_RESOURCE_ROUTE
   {
       INDEX_ROUTE,
       "rt", sizeof("rt"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      GET_SUPPORTED
+      GET_SUPPORTED,
+      0
   },
 #endif
 
@@ -203,45 +227,60 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
     INDEX_GIO,
     "gio",  sizeof("gio"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
     {0,0,0,0}, // uri_key will be set later
-    "42", sizeof("42"), // application/octet-stream
-    (GET_SUPPORTED | PUT_SUPPORTED)
+    (GET_SUPPORTED | PUT_SUPPORTED),
+    0
   },
 #endif
 #ifdef COAP_RESOURCE_DEV_0
   {
     INDEX_DEV_0,
     "dev0", sizeof("dev0"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
     {0,0,0,0}, // uri_key will be set later
-    "42", sizeof("42"), // application/octet-stream
-    (GET_SUPPORTED | PUT_SUPPORTED)
+    (GET_SUPPORTED | PUT_SUPPORTED),
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_DEV_1
     {
       INDEX_DEV_1,
       "dev1",  sizeof("dev1"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
     },
 #endif
 #ifdef COAP_RESOURCE_DEV_2
     {
       INDEX_DEV_2,
       "dev2",  sizeof("dev2"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
     },
 #endif
 #ifdef COAP_RESOURCE_DEV_3
     {
       INDEX_DEV_3,
       "dev3",  sizeof("dev3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
     },
 #endif
 
@@ -250,31 +289,56 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_ETSI_TEST,
       "test", sizeof("test"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
   {
       INDEX_ETSI_SEPARATE,
       "separate", sizeof("separate"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
   },
 #endif
 #ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
   {
       INDEX_ETSI_SEGMENT,
       "seg1/seg2/seg3", sizeof("seg1/seg2/seg3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
       {0,0,0,0}, // uri_key will be set later
-      "42", sizeof("42"), // application/octet-stream
-      (GET_SUPPORTED | PUT_SUPPORTED)
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
   },
 #endif
 
 
 };
+
+//predefined strings for markup-languages
+
+//JSON (SenML-formatted)
+#ifdef COAP_CONTENT_TYPE_JSON
+#define JSON_PRE " {\"e\":["
+#endif
+
+//XML (SenML-formatted)
+#ifdef COAP_CONTENT_TYPE_XML
+#if (COAP_MAX_PDU_SIZE < 165)
+#warning "*** XML requires COAP_MAX_PDU_SIZE > 165. Make sure you change the COAP_MAX_PDU_SIZE in /support/sdk/c/coap/config.h.tinyos to get XML working properly ***"
+#endif
+#define XML_PRE "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <senml xmlns=\"urn:ietf:params:xml:ns:senml\""
+#define XML_POST "</senml>"
+#endif
 
 #endif

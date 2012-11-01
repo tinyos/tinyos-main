@@ -7,6 +7,8 @@ COMPONENT=CoapPppC
 #CFLAGS += -DRF230_DEF_CHANNEL=16
 #CFLAGS += -DCC2420_DEF_RFPOWER=4
 
+DEFAULT_LOCAL_GROUP = 0x1A
+
 # Enable Low Power Listening
 #CFLAGS += -DLOW_POWER_LISTENING
 #CFLAGS += -DLPL_SLEEP_INTERVAL=512
@@ -30,7 +32,10 @@ PFLAGS += -DPPP_HDLC_RX_FRAME_LIMIT=1 -DPPP_HDLC_TX_FRAME_LIMIT=8
 
 # if you set this, the stack won't use dhcp to assign addresses -- it
 # will use this prefix combined with TOS_NODE_ID
-PFLAGS += -DIN6_PREFIX=\"fec0::\"
+PFLAGS += -DIN6_PREFIX=\"2001:638:708:1156::\"
+#PFLAGS += -DIN6_PREFIX=\"fec0::\"
+#PFLAGS += -DIN6_PREFIX=\"2a01:198:56c:1000::\"
+#PFLAGS += -DIN6_PREFIX=\"2a01:c911:0:212d::\"
 
 # printf debugs. works only on telosb/tmote sky.
 # CFLAGS += -DNEW_PRINTF_SEMANTICS -DPRINTFUART_ENABLED
@@ -43,17 +48,18 @@ PFLAGS += -DBLIP_NO_RADIO
 ################ CoAP Server ###############################
 CFLAGS += -DCOAP_SERVER_ENABLED
 # port where server is listening
-CFLAGS += -DCOAP_SERVER_PORT=5683L
+#CFLAGS += -DCOAP_SERVER_PORT=5683L
 #set max uri length
-CFLAGS += -DMAX_URI_LENGTH=5
-# set available resources.
-# Don't forget to change CFLAG: NUM_URIS!!!!!
-CFLAGS += -DNUM_URIS=1
+CFLAGS += -DMAX_URI_LENGTH=14
+# set max sensor name length for JSON and XML representation
+CFLAGS += -DMAX_SENSOR_NAME_LENGTH=12
+
+# set available resources:
 
 #CFLAGS += -DCOAP_RESOURCE_TEMP
 #CFLAGS += -DCOAP_RESOURCE_HUM
 #CFLAGS += -DCOAP_RESOURCE_VOLT
-#CFLAGS += -DCOAP_RESOURCE_ALL #TEMP + HUM + VOLT
+#CFLAGS += -DCOAP_RESOURCE_ALL #TEMP + HUM + VOLT # enable the 3 above as well!!
 
 #CFLAGS += -DCOAP_RESOURCE_KEY
 
@@ -71,8 +77,22 @@ CFLAGS += -DCOAP_RESOURCE_LED
 #CFLAGS += -DCOAP_RESOURCE_ETSI_IOT_SEPARATE
 #CFLAGS += -DCOAP_RESOURCE_ETSI_IOT_SEGMENT
 
+# set supported content types
+CFLAGS += -DCOAP_CONTENT_TYPE_PLAIN
+CFLAGS += -DCOAP_CONTENT_TYPE_XML
+CFLAGS += -DCOAP_CONTENT_TYPE_BINARY
+CFLAGS += -DCOAP_CONTENT_TYPE_JSON
+
+#CFLAGS += -DWITHOUT_OBSERVE
+
+# disables .well-known/core resource
+CFLAGS += -DWITHOUT_WELLKNOWN
+
+# don't include textual representation of error code in payload
+CFLAGS += -DSHORT_ERROR_RESPONSE
+
 # timeout in milliseconds for sending PreACK
-CFLAGS += -DCOAP_PREACK_TIMEOUT=500
+CFLAGS += -DCOAP_PREACK_TIMEOUT=1000
 
 ################ CoAP Client ################################
 #CFLAGS += -DCOAP_CLIENT_ENABLED
@@ -80,6 +100,8 @@ CFLAGS += -DCOAP_PREACK_TIMEOUT=500
 CFLAGS += -DCOAP_CLIENT_PORT=61617L
 # client IPv6 destination address
 CFLAGS += -DCOAP_CLIENT_DEST=\"fec0::100\"
+#CFLAGS += -DCOAP_CLIENT_DEST=\"2a01:c911:0:212d::100\"
+#CFLAGS += -DCOAP_CLIENT_DEST=\"2a01:c911:0:2120:215:58ff:fe0b:8bb8\"
 
 CFLAGS += -I.
 include $(MAKERULES)
