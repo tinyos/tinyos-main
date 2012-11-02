@@ -90,6 +90,7 @@ typedef struct coap_resource_t {
   size_t data_len;
   uint8_t *data;
 #endif /* WITH_TINYOS */
+
 } coap_resource_t;
 
 /** 

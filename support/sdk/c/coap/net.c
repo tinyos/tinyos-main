@@ -759,7 +759,6 @@ coap_read( coap_context_t *ctx ) {
 #endif /* WITH_CONTIKI */
 
 #ifdef WITH_TINYOS
-#warning "TODO: TinyOS: set src, dst?"
   bytes_read = ctx->bytes_read;
   memcpy(buf, ctx->buf, bytes_read);
 
@@ -914,7 +913,9 @@ coap_new_error_response(coap_pdu_t *request, unsigned char code,
   coap_opt_iterator_t opt_iter;
   coap_pdu_t *response;
   size_t size = sizeof(coap_hdr_t) + 4; /* some bytes for fence-post options */
+#if COAP_ERROR_PHRASE_LENGTH > 0
   unsigned char buf[2];
+#endif
   int type; 
 
 #if COAP_ERROR_PHRASE_LENGTH > 0
