@@ -42,4 +42,16 @@ interface CoAPServer {
      */
     command error_t registerResources();
 
+
+    /*
+     * register one resource dynamically (on POST)
+     */
+    command coap_resource_t* registerDynamicResource(unsigned char* uri, unsigned int uri_len,
+						     unsigned int supported_methods);
+
+    /*
+     * deregister one resource dynamically (on DELETE)
+     */
+    command error_t deregisterDynamicResource(coap_resource_t* r);
+
 }

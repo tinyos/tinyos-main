@@ -71,10 +71,10 @@ configuration CoapPppC {
   PppDaemonC.UartControl -> HdlcUartC;
 
   // SDH : don't bother including the PppPrintfC by default
-  /* components PppPrintfC, PppC; */
-  /* PppPrintfC.Ppp -> PppDaemonC; */
-  /* PppDaemonC.PppProtocol[PppPrintfC.Protocol] -> PppPrintfC; */
-  /* PppPrintfC.Ppp -> PppC; */
+  /*  components PppPrintfC, PppC;
+  PppPrintfC.Ppp -> PppDaemonC;
+  PppDaemonC.PppProtocol[PppPrintfC.Protocol] -> PppPrintfC;
+  PppPrintfC.Ppp -> PppC;*/
 
   components IPStackC, IPForwardingEngineP, IPPacketC;
   IPForwardingEngineP.IPForward[ROUTE_IFACE_PPP] -> CoapPppP.IPForward;
@@ -105,6 +105,14 @@ configuration CoapPppC {
 
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
   components LocalIeeeEui64C;
+#endif
+
+#ifdef COAP_RESOURCE_DEFAULT
+  components new CoapDefaultResourceC(INDEX_DEFAULT);
+  CoapUdpServerC.CoapResource[INDEX_DEFAULT] -> CoapDefaultResourceC.CoapResource;
+  CoapDefaultResourceC.Leds -> LedsC;
+  CoapUdpServerC.DynamicDefaultResource -> CoapDefaultResourceC.CoapResource;
+  CoapDefaultResourceC.CoAPServer ->  CoapUdpServerC;//for POST/DELETE
 #endif
 
 #if defined (COAP_RESOURCE_TEMP)  || defined (COAP_RESOURCE_HUM) || defined (COAP_RESOURCE_ALL)
@@ -188,6 +196,8 @@ configuration CoapPppC {
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
   components new CoapEtsiTestResourceC(INDEX_ETSI_TEST);
   CoapUdpServerC.CoapResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.CoapResource;
+  CoapEtsiTestResourceC.Leds -> LedsC;
+  CoapEtsiTestResourceC.CoAPServer ->  CoapUdpServerC;//for POST/DELETE
 #endif
 
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
@@ -197,6 +207,7 @@ configuration CoapPppC {
 
 #ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
   components new CoapEtsiSegmentResourceC(INDEX_ETSI_SEGMENT);
+  CoapEtsiSegmentResourceC.Leds -> LedsC;
   CoapUdpServerC.CoapResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.CoapResource;
 #endif
 

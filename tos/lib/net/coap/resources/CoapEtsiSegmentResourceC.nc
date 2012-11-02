@@ -32,7 +32,9 @@
 
 generic configuration CoapEtsiSegmentResourceC(uint8_t uri_key) {
     provides interface CoapResource;
+    uses interface Leds;
 } implementation {
     components new CoapEtsiSegmentResourceP(uri_key) as CoapResourceP;
     CoapResource = CoapResourceP;
+    Leds = CoapResourceP;
 }

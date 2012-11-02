@@ -32,17 +32,16 @@
 
 #include <pdu.h>
 #include <async.h>
+#include <mem.h>
 #include <resource.h>
 
-generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
+generic module CoapDefaultResourceP(uint8_t uri_key) {
   provides interface CoapResource;
-  uses interface Timer<TMilli> as PreAckGetTimer;
-  uses interface Timer<TMilli> as FinishedGetTimer;
-  uses interface Timer<TMilli> as PreAckPutTimer;
-  uses interface Timer<TMilli> as FinishedPutTimer;
+  uses interface CoAPServer;
+  uses interface Leds;
 } implementation {
 
-#define INITIAL_DEFAULT_DATA_SEPARATE "separate"
+#define INITIAL_DEFAULT_DATA_DEFAULT "index"
 
   unsigned char buf[2];
   coap_pdu_t *response;
@@ -56,9 +55,9 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
     coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
 #endif
 
-    if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_SEPARATE))) != NULL) {
-      memcpy(r->data, INITIAL_DEFAULT_DATA_SEPARATE, sizeof(INITIAL_DEFAULT_DATA_SEPARATE));
-      r->data_len = sizeof(INITIAL_DEFAULT_DATA_SEPARATE);
+    if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_DEFAULT))) != NULL) {
+      memcpy(r->data, INITIAL_DEFAULT_DATA_DEFAULT, sizeof(INITIAL_DEFAULT_DATA_DEFAULT));
+      r->data_len = sizeof(INITIAL_DEFAULT_DATA_DEFAULT);
     }
 
     return SUCCESS;
@@ -66,22 +65,17 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
 
   /////////////////////
   // GET:
-  event void PreAckGetTimer.fired() {
-    signal CoapResource.methodNotDone(temp_async_state,
-				      COAP_RESPONSE_CODE(0));
-  }
-
-  event void FinishedGetTimer.fired() {
+  task void getMethod() {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(205);
 
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
 
-    signal CoapResource.methodDoneSeparate(SUCCESS,
-					   temp_async_state,
-					   response,
-					   temp_resource);
+    signal CoapResource.methodDone(SUCCESS,
+				   temp_async_state,
+				   response,
+				   temp_resource);
     lock = FALSE;
   }
 
@@ -91,13 +85,12 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
 				     unsigned int content_format) {
     if (lock == FALSE) {
       lock = TRUE;
+
       temp_async_state = async_state;
       temp_resource = resource;
       temp_content_format = COAP_CONTENT_TYPE_PLAIN;
 
-      call PreAckGetTimer.startOneShot(256);
-      call FinishedGetTimer.startOneShot(2048);
-
+      post getMethod();
       return COAP_SPLITPHASE;
     } else {
       return COAP_RESPONSE_503;
@@ -106,23 +99,17 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
 
   /////////////////////
   // PUT:
-
-  event void PreAckPutTimer.fired() {
-    signal CoapResource.methodNotDone(temp_async_state,
-				      COAP_RESPONSE_CODE(0));
-  }
-
-  event void FinishedPutTimer.fired() {
+  task void putMethod() {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(204);
 
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
 
-    signal CoapResource.methodDoneSeparate(SUCCESS,
-					   temp_async_state,
-					   response,
-					   temp_resource);
+    signal CoapResource.methodDone(SUCCESS,
+				   temp_async_state,
+				   response,
+				   temp_resource);
     lock = FALSE;
   }
 
@@ -152,25 +139,100 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
 	return COAP_RESPONSE_CODE(500);
 	//return COAP_RESPONSE_CODE(413); or: too large?
       }
-
-      call PreAckPutTimer.startOneShot(256);
-      call FinishedPutTimer.startOneShot(2048);
+      post putMethod();
       return COAP_SPLITPHASE;
     } else {
       return COAP_RESPONSE_CODE(503);
     }
   }
 
+  /////////////////////
+  // POST:
+  task void postMethod() {
+    response = coap_new_pdu();
+    response->hdr->code = COAP_RESPONSE_CODE(201);
+
+    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		    coap_encode_var_bytes(buf, temp_content_format), buf);
+
+    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
+		    sizeof("location1")-1, (unsigned char *)"location1");
+    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
+		    sizeof("location2")-1, (unsigned char *)"location2");
+    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
+		    sizeof("location3")-1, (unsigned char *)"location3");
+
+    signal CoapResource.methodDone(SUCCESS,
+				   temp_async_state,
+				   response,
+				   temp_resource);
+    lock = FALSE;
+  }
+
   command int CoapResource.postMethod(coap_async_state_t* async_state,
 				      uint8_t* val, size_t vallen,
 				      struct coap_resource_t *resource,
 				      unsigned int content_format) {
-    return COAP_RESPONSE_405;
+
+    coap_resource_t* r;
+
+    if (lock == FALSE) {
+      lock = TRUE;
+
+      r = call CoAPServer.registerDynamicResource((unsigned char*)"location1/location2/location3",
+						  sizeof("location1/location2/location3"),
+						  GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+
+      if ((r->data = (uint8_t *) coap_malloc(vallen)) != NULL) {
+	memcpy(r->data, val, vallen);
+	r->data_len = vallen;
+      } else {
+	return COAP_RESPONSE_CODE(500);
+	//return COAP_RESPONSE_CODE(413); or: too large?
+      }
+
+      temp_async_state = async_state;
+      temp_resource = r;
+      temp_content_format = content_format;
+
+      post postMethod();
+      return COAP_SPLITPHASE;
+    } else {
+      return COAP_RESPONSE_503;
+    }
+  }
+
+  /////////////////////
+  // DELETE:
+  task void deleteMethod() {
+
+    error_t rc = call CoAPServer.deregisterDynamicResource(temp_resource);
+
+    response = coap_new_pdu();
+
+    if (rc == SUCCESS)
+      response->hdr->code = COAP_RESPONSE_CODE(202);
+    else
+      response->hdr->code = COAP_RESPONSE_CODE(500);
+
+    signal CoapResource.methodDone(SUCCESS,
+				   temp_async_state,
+				   response,
+				   NULL);
+    lock = FALSE;
   }
 
   command int CoapResource.deleteMethod(coap_async_state_t* async_state,
 					uint8_t *val, size_t vallen,
 					struct coap_resource_t *resource) {
-    return COAP_RESPONSE_405;
+    if (lock == FALSE) {
+      lock = TRUE;
+      temp_async_state = async_state;
+      temp_resource = resource;
+      post deleteMethod();
+      return COAP_SPLITPHASE;
+    } else {
+      return COAP_RESPONSE_503;
+    }
   }
 }

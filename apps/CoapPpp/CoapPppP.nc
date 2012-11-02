@@ -37,7 +37,7 @@
 //#include <dhcp6.h>
 
 #include "pppipv6.h"
-#include "blip_printf.h"
+//#include "blip_printf.h"
 
 #include "net.h"
 #include "resource.h"
@@ -88,7 +88,16 @@ module CoapPppP {
   uint8_t node_integrate_done = FALSE;
 #endif
 
+  task void inform(){
+    //printf("PPP IP link up\n");
+  }
+
+
   event void PppIpv6.linkUp() {
+    call Leds.led0On();
+    call Leds.led1On();
+    call Leds.led2On();
+    post inform();
   }
   event void PppIpv6.linkDown() {}
 
@@ -99,9 +108,6 @@ module CoapPppP {
   event void Ipv6LcpAutomaton.thisLayerFinished () { }
 
   event void PppControl.startDone (error_t error) {
-      //call Leds.led0On();
-      //call Leds.led1On();
-      //call Leds.led2On();
   }
 
   event void PppControl.stopDone (error_t error) { }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 University of Bremen, TZI
+ * Copyright (c) 2011-2012 University of Bremen, TZI
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,72 +32,94 @@
 
 #include <pdu.h>
 #include <async.h>
+#include <resource.h>
 
 generic module CoapEtsiSegmentResourceP(uint8_t uri_key) {
-    provides interface CoapResource;
+  provides interface CoapResource;
+  uses interface Leds;
 } implementation {
 
-    bool lock = FALSE;
-    coap_async_state_t *temp_async_state = NULL;
-    uint8_t temp_val = 0;
+#define INITIAL_DEFAULT_DATA_SEGMENT "segment"
 
-    /////////////////////
-    // GET:
-    task void get() {
-	lock = FALSE;
-	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(205),
-				       temp_async_state,
-				       (uint8_t*)&temp_val, sizeof(uint8_t),
-				       COAP_MEDIATYPE_APPLICATION_OCTET_STREAM);
+  unsigned char buf[2];
+  coap_pdu_t *response;
+  bool lock = FALSE; //TODO: atomic
+  coap_async_state_t *temp_async_state = NULL;
+  coap_resource_t *temp_resource = NULL;
+  unsigned int temp_content_format;
+
+  command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
+#ifdef COAP_CONTENT_TYPE_PLAIN
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+#endif
+
+    if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_SEGMENT))) != NULL) {
+      memcpy(r->data, INITIAL_DEFAULT_DATA_SEGMENT, sizeof(INITIAL_DEFAULT_DATA_SEGMENT));
+      r->data_len = sizeof(INITIAL_DEFAULT_DATA_SEGMENT);
     }
 
-    command int CoapResource.getMethod(coap_async_state_t* async_state,
-				       uint8_t *val, size_t buflen) {
-	if (lock == FALSE) {
-	    lock = TRUE;
-	    temp_async_state = async_state;
-	    post get();
+    return SUCCESS;
+  }
 
-	    return COAP_SPLITPHASE;
-	} else {
-	    return COAP_RESPONSE_503;
-	}
-    }
+  /////////////////////
+  // GET:
+  task void getMethod() {
+    response = coap_new_pdu();
+    response->hdr->code = COAP_RESPONSE_CODE(205);
 
-    /////////////////////
-    // PUT:
-    void task put() {
-	lock = FALSE;
-	signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(204),
-				       temp_async_state,
-				       NULL, 0,
-				       COAP_MEDIATYPE_ANY);
-    }
+    call Leds.led0Toggle();
 
-    command int CoapResource.putMethod(coap_async_state_t* async_state,
-				       uint8_t *val, size_t buflen) {
-	if ( /*1 == 1*/buflen == 1 && val[0] < 8) {
-	    if (lock == FALSE) {
-		lock = TRUE;
-		temp_async_state = async_state;
-		temp_val = *val;
-		post put();
-		return COAP_SPLITPHASE;
-	    } else {
-		return COAP_RESPONSE_503;
-	    }
-	} else {
-	    return COAP_RESPONSE_500;
-	}
-    }
+    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		    coap_encode_var_bytes(buf, temp_content_format), buf);
 
-    command int CoapResource.postMethod(coap_async_state_t* async_state,
-					uint8_t *val, size_t buflen) {
-	return COAP_RESPONSE_405; // or _501?
-    }
+    signal CoapResource.methodDone(SUCCESS,
+				   temp_async_state,
+				   response,
+				   temp_resource);
+    lock = FALSE;
+  }
 
-    command int CoapResource.deleteMethod(coap_async_state_t* async_state,
-					  uint8_t *val, size_t buflen) {
-	return COAP_RESPONSE_405; // or _501?
+  command int CoapResource.getMethod(coap_async_state_t* async_state,
+				     uint8_t *val, size_t vallen,
+				     struct coap_resource_t *resource,
+				     unsigned int content_format) {
+    if (lock == FALSE) {
+      lock = TRUE;
+
+      temp_async_state = async_state;
+      temp_resource = resource;
+      temp_content_format = COAP_CONTENT_TYPE_PLAIN;
+
+      post getMethod();
+      return COAP_SPLITPHASE;
+    } else {
+      return COAP_RESPONSE_503;
     }
+  }
+
+  /////////////////////
+  // PUT:
+  command int CoapResource.putMethod(coap_async_state_t* async_state,
+				     uint8_t *val, size_t vallen,
+				     coap_resource_t *resource,
+				     unsigned int content_format) {
+    return COAP_RESPONSE_405;
+  }
+
+  /////////////////////
+  // POST:
+  command int CoapResource.postMethod(coap_async_state_t* async_state,
+				      uint8_t *val, size_t buflen,
+				      struct coap_resource_t *resource,
+				      unsigned int content_format) {
+    return COAP_RESPONSE_405;
+  }
+
+  /////////////////////
+  // DELETE:
+  command int CoapResource.deleteMethod(coap_async_state_t* async_state,
+					uint8_t *val, size_t buflen,
+					struct coap_resource_t *resource) {
+    return COAP_RESPONSE_405;
+  }
 }

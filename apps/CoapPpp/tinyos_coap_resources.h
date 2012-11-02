@@ -41,6 +41,9 @@
 //user defined resources
 
 enum {
+#ifdef COAP_RESOURCE_DEFAULT
+    INDEX_DEFAULT,
+#endif
 #if defined (COAP_RESOURCE_TEMP) || defined (COAP_RESOURCE_ALL)
     INDEX_TEMP,
 #endif
@@ -88,6 +91,7 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
     INDEX_ETSI_SEGMENT,
 #endif
+
     COAP_LAST_RESOURCE,
     COAP_NO_SUCH_RESOURCE = 0xff
 };
@@ -137,6 +141,18 @@ typedef struct index_uri_key
 } index_uri_key_t;
 
 index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
+#ifdef COAP_RESOURCE_DEFAULT
+  {
+      INDEX_DEFAULT,
+      "", sizeof(""),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
+      0
+  },
+#endif
 #if defined (COAP_RESOURCE_TEMP) || defined (COAP_RESOURCE_ALL)
   {
       INDEX_TEMP,
@@ -285,6 +301,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 #endif
 
   //ETSI plugtest resources:
+  //is used as dynamicresource
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
   {
       INDEX_ETSI_TEST,
@@ -317,12 +334,10 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
-      (GET_SUPPORTED | PUT_SUPPORTED),
+      (GET_SUPPORTED),
       0
   },
 #endif
-
-
 };
 
 //predefined strings for markup-languages

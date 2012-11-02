@@ -55,9 +55,11 @@ module CoapUdpServerP {
     uses interface LibCoAP as LibCoapServer;
     uses interface Leds;
     uses interface CoapResource[uint8_t uri];
+    uses interface CoapResource as DynamicDefaultResource;
 } implementation {
     coap_context_t *ctx_server;
     coap_resource_t *r;
+
     //get index (int) from uri_key (char[4])
     //defined in tinyos_coap_resources.h
     uint8_t get_index_for_key(coap_key_t uri_key) {
@@ -98,7 +100,6 @@ module CoapUdpServerP {
     // register resources
     command error_t CoAPServer.registerResources() {
       int i;
-      unsigned int supported_methods;
 
       if (ctx_server == NULL)
 	return FAIL;
@@ -109,21 +110,20 @@ module CoapUdpServerP {
 		       uri_index_map[i].uri_len - 1,
 		       uri_index_map[i].uri_key);
 
-	r = coap_resource_init((unsigned char *)uri_index_map[i].uri, uri_index_map[i].uri_len-1, 0);
-	supported_methods = uri_index_map[i].supported_methods;
-
-	r->data = NULL;
-
+	r = coap_resource_init((unsigned char *)uri_index_map[i].uri,
+			       uri_index_map[i].uri_len-1, 0);
 	if (r == NULL)
 	  return FAIL;
 
-	if ((supported_methods & GET_SUPPORTED) == GET_SUPPORTED)
+	r->data = NULL;
+
+	if ((uri_index_map[i].supported_methods & GET_SUPPORTED) == GET_SUPPORTED)
 	  coap_register_handler(r, COAP_REQUEST_GET, hnd_coap_async_tinyos);
-	if ((supported_methods & POST_SUPPORTED) == POST_SUPPORTED)
+	if ((uri_index_map[i].supported_methods & POST_SUPPORTED) == POST_SUPPORTED)
 	  coap_register_handler(r, COAP_REQUEST_POST, hnd_coap_async_tinyos);
-	if ((supported_methods & PUT_SUPPORTED) == PUT_SUPPORTED)
+	if ((uri_index_map[i].supported_methods & PUT_SUPPORTED) == PUT_SUPPORTED)
 	  coap_register_handler(r, COAP_REQUEST_PUT, hnd_coap_async_tinyos);
-	if ((supported_methods & DELETE_SUPPORTED) == DELETE_SUPPORTED)
+	if ((uri_index_map[i].supported_methods & DELETE_SUPPORTED) == DELETE_SUPPORTED)
 	  coap_register_handler(r, COAP_REQUEST_DELETE, hnd_coap_async_tinyos);
 
 #ifndef WITHOUT_OBSERVE
@@ -133,7 +133,51 @@ module CoapUdpServerP {
 
 	coap_add_resource(ctx_server, r);
       }
+
       return SUCCESS;
+    }
+
+    command coap_resource_t* CoAPServer.registerDynamicResource(unsigned char* uri, unsigned int uri_len,
+						       unsigned int supported_methods) {
+      if (ctx_server == NULL)
+	return NULL;
+
+      /*coap_hash_path(uri,
+		     uri_len - 1,
+		     uri_key);*/ // will be handled by default dynamic resource anyway
+
+      r = coap_resource_init(uri, uri_len-1, 0);
+      if (r == NULL)
+	return NULL;
+
+      r->data = NULL;
+
+      if ((supported_methods & GET_SUPPORTED) == GET_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_GET, hnd_coap_async_tinyos);
+      if ((supported_methods & POST_SUPPORTED) == POST_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_POST, hnd_coap_async_tinyos);
+      if ((supported_methods & PUT_SUPPORTED) == PUT_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_PUT, hnd_coap_async_tinyos);
+      if ((supported_methods & DELETE_SUPPORTED) == DELETE_SUPPORTED)
+	coap_register_handler(r, COAP_REQUEST_DELETE, hnd_coap_async_tinyos);
+
+#ifndef WITHOUT_OBSERVE
+      //r->observable = uri_index_map[i].observable; //TODO
+#endif
+      //call CoapResource.initResourceAttributes[i](r);//TODO
+
+      coap_add_resource(ctx_server, r);
+      return r;
+    }
+
+    command error_t CoAPServer.deregisterDynamicResource(coap_resource_t* resource) {
+      if (ctx_server == NULL || resource == NULL)
+	return FAIL;
+
+      if (coap_delete_resource(ctx_server, resource->key))
+	return SUCCESS;
+      else
+	return FAIL;
     }
 
     event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
@@ -257,6 +301,7 @@ module CoapUdpServerP {
 	    rc = call CoapResource.getMethod[get_index_for_key(resource->key)](async_state,
 									       data,
 									       size,
+									       resource,
 									       media_type);
 	else if (request->hdr->code == COAP_REQUEST_POST)
 	    rc = call CoapResource.postMethod[get_index_for_key(resource->key)](async_state,
@@ -273,9 +318,12 @@ module CoapUdpServerP {
 	else if (request->hdr->code == COAP_REQUEST_DELETE)
 	    rc = call CoapResource.deleteMethod[get_index_for_key(resource->key)](async_state,
 										  data,
-										  size);
-	else
+										  size,
+										  resource);
+	else {
+	  call Leds.led0Toggle();
 	  rc = COAP_RESPONSE_CODE(405);
+	}
 
 	if (rc == FAIL) {
 	    /* default handler returns FAIL -> Resource not available -> Response: 404 */
@@ -318,40 +366,89 @@ module CoapUdpServerP {
 
  default command int CoapResource.getMethod[uint8_t uri_key](coap_async_state_t* async_state,
 							     uint8_t* val, size_t vallen,
+							     coap_resource_t *resource,
 							     unsigned int media_type) {
-     //printf("** coap: default (get not available for this resource)....... %i\n", uri_key);
-     return FAIL;
+#ifdef COAP_RESOURCE_DEFAULT
+   return call DynamicDefaultResource.getMethod(async_state,
+						val,
+						vallen,
+						resource,
+						media_type);
+#else
+   return FAIL;
+#endif
  }
  default command int CoapResource.putMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							     uint8_t* val, size_t vallen, coap_resource_t *resource,
+							     uint8_t* val, size_t vallen,
+							     coap_resource_t *resource,
 							     unsigned int media_type) {
-     //printf("** coap: default (put not available for this resource)....... %i\n", uri_key);
-     return FAIL;
+#ifdef COAP_RESOURCE_DEFAULT
+   return call DynamicDefaultResource.putMethod(async_state,
+						val,
+						vallen,
+						resource,
+						media_type);
+#else
+   return FAIL;
+#endif
  }
  default command int CoapResource.postMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							      uint8_t* val, size_t vallen, coap_resource_t *resource,
+							      uint8_t* val, size_t vallen,
+							      coap_resource_t *resource,
 							      unsigned int media_type) {
-     //printf("** coap: default (post not available for this resource)....... %i\n", uri_key);
-     return FAIL;
+#ifdef COAP_RESOURCE_DEFAULT
+   return call DynamicDefaultResource.postMethod(async_state,
+						 val,
+						 vallen,
+						 resource,
+						 media_type);
+#else
+   return FAIL;
+#endif
  }
  default command int CoapResource.deleteMethod[uint8_t uri_key](coap_async_state_t* async_state,
-								uint8_t* val, size_t vallen) {
-     //printf("** coap: default (delete not available for this resource)....... %i\n", uri_key);
-     return FAIL;
+								uint8_t* val, size_t vallen,
+								coap_resource_t *resource) {
+#ifdef COAP_RESOURCE_DEFAULT
+   return call DynamicDefaultResource.deleteMethod(async_state,
+						   val,
+						   vallen,
+						   resource);
+#else
+   return FAIL;
+#endif
+ }
+
+ //re-feed the signals into CoapResource with 0xff to save code space
+ event void DynamicDefaultResource.methodDone(error_t result,
+					      coap_async_state_t* async_state,
+					      coap_pdu_t* response,
+					      coap_resource_t *resource) {
+   signal CoapResource.methodDone[0xff](result,
+					async_state,
+					response,
+					resource);
+ }
+ event void DynamicDefaultResource.methodDoneSeparate(error_t result,
+						      coap_async_state_t* async_state,
+						      coap_pdu_t* response,
+						      coap_resource_t *resource) {
+   signal CoapResource.methodDoneSeparate[0xff](result,
+						async_state,
+						response,
+						resource);
+ }
+ event void DynamicDefaultResource.methodNotDone(coap_async_state_t* async_state,
+						 uint8_t responsecode) {
+   signal CoapResource.methodNotDone[0xff](async_state,
+					   responsecode);
  }
 
  event void CoapResource.methodDone[uint8_t uri_key](error_t result,
-						     uint8_t responsecode,
 						     coap_async_state_t* async_state,
-						     uint8_t* val,
-						     size_t vallen,
-						     uint8_t media_type,
+						     coap_pdu_t* response,
 						     coap_resource_t *resource) {
-     unsigned char buf[2];
-     coap_pdu_t *response;
      coap_async_state_t *tmp;
-
-     response = coap_new_pdu();
 
      if (!response) {
 // 	 debug("check_async: insufficient memory, we'll try later\n");
@@ -362,26 +459,23 @@ module CoapUdpServerP {
      response->hdr->type = async_state->flags & COAP_ASYNC_CONFIRM
      			      ? COAP_MESSAGE_ACK
      			      : COAP_MESSAGE_NON;
-     response->hdr->code = responsecode;
      response->hdr->id = async_state->flags & COAP_ASYNC_CONFIRM
 			      ? async_state->message_id
 			      : coap_new_message_id(ctx_server);
 
-     if (media_type != COAP_MEDIATYPE_ANY)
-	 coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			 coap_encode_var_bytes(buf, media_type), buf);
-
      if (async_state->tokenlen)
-	 coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
+	 coap_add_option(response, COAP_OPTION_TOKEN,
+			 async_state->tokenlen, async_state->token);
 
 #ifndef WITHOUT_OBSERVE
-       if (async_state->flags & COAP_ASYNC_OBSERVED){
-	coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
-      }
+     if (async_state->flags & COAP_ASYNC_OBSERVED){
+       coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
+     }
 #endif
 
-     if (vallen != 0)
-	 coap_add_data(response, vallen, val);
+     if (resource != NULL && resource->data_len != 0) {
+       coap_add_data(response, resource->data_len, resource->data);
+     }
 
      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
 	 debug("check_async: cannot send response for message %d\n",
@@ -394,11 +488,11 @@ module CoapUdpServerP {
 
 #ifndef WITHOUT_OBSERVE
      //resource dirty -> notify subscribers
-     if (resource->dirty == 1)
+     if (resource != NULL && resource->dirty == 1)
        coap_check_notify(ctx_server);
 #endif
-     if (resource->data)
-       coap_free(resource->data);
+     //if (resource != NULL && resource->data != NULL)
+     //  coap_free(resource->data);// mab: really free it????
  }
 
  event void CoapResource.methodNotDone[uint8_t uri_key](coap_async_state_t* async_state,
@@ -429,35 +523,41 @@ module CoapUdpServerP {
  }
 
  event void CoapResource.methodDoneSeparate[uint8_t uri_key](error_t result,
-							     uint8_t responsecode,
 							     coap_async_state_t* async_state,
-							     uint8_t* val, size_t vallen,
-							     uint8_t mediatype) {
-     unsigned char buf[2];
-     coap_pdu_t *response;
+							     coap_pdu_t* response,
+							     struct coap_resource_t* resource) {
+     //unsigned char buf[2];
+     //coap_pdu_t *response;
      coap_async_state_t *tmp;
 
-     response = coap_new_pdu();
+     //response = coap_new_pdu();
 
      if (!response) {
-	 debug("check_async: insufficient memory, we'll try later\n");
+         //debug("check_async: insufficient memory, we'll try later\n");
 	 //TODO: handle error...
+       return;
      }
      response->hdr->type = async_state->flags & COAP_ASYNC_CONFIRM
 					  ? COAP_MESSAGE_CON
 					  : COAP_MESSAGE_NON;
-     response->hdr->code = responsecode;
+     //response->hdr->code = responsecode;
      response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id
 
-     if (mediatype != COAP_MEDIATYPE_ANY)
+     /*if (mediatype != COAP_MEDIATYPE_ANY)
 	 coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-			 coap_encode_var_bytes(buf, mediatype), buf);
+	 coap_encode_var_bytes(buf, mediatype), buf);*/
 
      if (async_state->tokenlen)
 	 coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
 
-     if (vallen != 0)
-	 coap_add_data(response, vallen, val);
+     //if (vallen != 0)
+     //coap_add_data(response, vallen, val);
+
+     //TODO: observe on separate?
+
+     if (resource != NULL && resource->data_len != 0) {
+       coap_add_data(response, resource->data_len, resource->data);
+     }
 
      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
 	 debug("check_async: cannot send response for message %d\n",

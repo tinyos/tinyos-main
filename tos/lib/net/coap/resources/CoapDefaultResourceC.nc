@@ -30,12 +30,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-generic configuration CoapEtsiTestResourceC(uint8_t uri_key) {
+generic configuration CoapDefaultResourceC(uint8_t uri_key) {
     provides interface CoapResource;
     uses interface CoAPServer;
     uses interface Leds;
 } implementation {
-    components new CoapEtsiTestResourceP(uri_key) as CoapResourceP;
+    components new CoapDefaultResourceP(uri_key) as CoapResourceP;
     CoapResource = CoapResourceP;
     CoAPServer = CoapResourceP;
     Leds = CoapResourceP;
