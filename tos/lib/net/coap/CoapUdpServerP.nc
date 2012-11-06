@@ -262,7 +262,6 @@ module CoapUdpServerP {
 	  return;
 	} else { //TODO: thp: do we really need the else{}?
 	  if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
-
 	    coap_add_observer(resource, peer, token);
 	    async_state = coap_register_async(ctx, peer, request,
 					  COAP_ASYNC_OBSERVED,
@@ -318,7 +317,6 @@ module CoapUdpServerP {
 										  temp_request,
 										  resource);
 	else {
-	  // call Leds.led0Toggle();
 	  rc = COAP_RESPONSE_CODE(405);
 	}
 
@@ -440,6 +438,14 @@ module CoapUdpServerP {
    signal CoapResource.methodNotDone[0xff](async_state,
 					   responsecode);
  }
+ event void DynamicDefaultResource.notifyObservers(//error_t result,
+							  //coap_async_state_t* async_state,
+							  // coap_pdu_t* request,
+							  // coap_pdu_t* response,
+							  //struct coap_resource_t* resource
+							  ) {
+   signal CoapResource.notifyObservers[0xff]();
+ }
 
  event void CoapResource.methodDone[uint8_t uri_key](error_t result,
 						     coap_async_state_t* async_state,
@@ -451,10 +457,6 @@ module CoapUdpServerP {
      int res;
      coap_block_t block;
 #endif
-
-     //     if (((coap_pdu_t*)async_state->appdata)->hdr->code == COAP_REQUEST_GET)
-       //       call Leds.led2On();
-
 
      if (!response) {
        //debug("check_async: insufficient memory, we'll try later\n");
@@ -531,11 +533,6 @@ module CoapUdpServerP {
      coap_free_async(async_state);
      async_state = NULL;
 
-#ifndef WITHOUT_OBSERVE
-     //resource dirty -> notify subscribers
-     if (resource != NULL && resource->dirty == 1)
-       coap_check_notify(ctx_server);
-#endif
      //if (resource != NULL && resource->data != NULL)
      //  coap_free(resource->data);// mab: really free it????
  }
@@ -604,4 +601,11 @@ module CoapUdpServerP {
      coap_free_async(async_state);
      async_state = NULL;
  }
+
+ event void CoapResource.notifyObservers[uint8_t uri_key]() {
+#ifndef WITHOUT_OBSERVE
+   coap_check_notify(ctx_server);
+#endif
+ }
+
 }
