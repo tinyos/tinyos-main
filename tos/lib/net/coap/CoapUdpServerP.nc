@@ -43,6 +43,7 @@
 #include <encode.h>
 #include <debug.h>
 #include <mem.h>
+#include <block.h>
 
 #include "tinyos_coap_resources.h"
 #include "blip_printf.h"
@@ -92,6 +93,10 @@ module CoapUdpServerP {
 	if (!ctx_server) {
 	    return FAIL;
 	}
+
+#ifndef WITHOUT_BLOCK
+	coap_register_option(ctx_server, COAP_OPTION_BLOCK2);
+#endif
 
 	return call LibCoapServer.setupContext(port);
     }
@@ -210,11 +215,9 @@ module CoapUdpServerP {
 
 	coap_opt_iterator_t opt_iter;
 	int rc;
-	size_t size;
-	unsigned char *data;
 	coap_async_state_t *tmp;
 	coap_async_state_t *async_state = NULL;
-
+	coap_pdu_t *temp_request;
 	unsigned int media_type = COAP_MEDIATYPE_NOT_SUPPORTED;
 	coap_attr_t *attr = NULL;
 	coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
@@ -257,7 +260,7 @@ module CoapUdpServerP {
 	    response->hdr->code = COAP_RESPONSE_CODE(500);
 
 	  return;
-	} else {
+	} else { //TODO: thp: do we really need the else{}?
 	  if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
 
 	    coap_add_observer(resource, peer, token);
@@ -271,22 +274,20 @@ module CoapUdpServerP {
 	    }
 #endif
 	    async_state = coap_register_async(ctx, peer, request,
-					  COAP_ASYNC_CONFIRM,
-					  (void *)NULL);
+	    				      COAP_ASYNC_CONFIRM,
+					      (void *)NULL);
+
 #ifndef WITHOUT_OBSERVE
 	  }
 	}
 #endif
+	temp_request =  coap_clone_pdu(request);
+
 	/*
 	  call Leds.led0On();
 	  call Leds.led1On();
 	  call Leds.led2On();
-
 	*/
-
-	/* response->hdr->code = COAP_RESPONSE_CODE(205); */
-	/* coap_add_option(response, COAP_OPTION_CONTENT_TYPE, */
-	/*                 coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf); */
 
 	/* if (token->length) */
 	/*   coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s); */
@@ -295,33 +296,29 @@ module CoapUdpServerP {
 	/* 				 response->max_size - response->length, */
 	/* 				 "%u", 42); */
 
-	coap_get_data(request, &size, &data);
+	// coap_get_data(request, &size, &data);
 
 	if (request->hdr->code == COAP_REQUEST_GET)
 	    rc = call CoapResource.getMethod[get_index_for_key(resource->key)](async_state,
-									       data,
-									       size,
+									       temp_request,
 									       resource,
 									       media_type);
 	else if (request->hdr->code == COAP_REQUEST_POST)
 	    rc = call CoapResource.postMethod[get_index_for_key(resource->key)](async_state,
-										data,
-										size,
+										temp_request,
 										resource,
 										media_type);
 	else if (request->hdr->code == COAP_REQUEST_PUT)
 	    rc = call CoapResource.putMethod[get_index_for_key(resource->key)](async_state,
-									       data,
-									       size,
+									       temp_request,
 									       resource,
 									       media_type);
 	else if (request->hdr->code == COAP_REQUEST_DELETE)
 	    rc = call CoapResource.deleteMethod[get_index_for_key(resource->key)](async_state,
-										  data,
-										  size,
+										  temp_request,
 										  resource);
 	else {
-	  call Leds.led0Toggle();
+	  // call Leds.led0Toggle();
 	  rc = COAP_RESPONSE_CODE(405);
 	}
 
@@ -360,18 +357,17 @@ module CoapUdpServerP {
 	async_state = NULL;
     }
 
-    default command error_t CoapResource.initResourceAttributes[uint8_t uri_key](coap_resource_t *resource) {
-	    return FAIL;
+ default command error_t CoapResource.initResourceAttributes[uint8_t uri_key](coap_resource_t *resource) {
+   return FAIL;
  }
 
  default command int CoapResource.getMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							     uint8_t* val, size_t vallen,
+							     coap_pdu_t* request,
 							     coap_resource_t *resource,
 							     unsigned int media_type) {
 #ifdef COAP_RESOURCE_DEFAULT
    return call DynamicDefaultResource.getMethod(async_state,
-						val,
-						vallen,
+						request,
 						resource,
 						media_type);
 #else
@@ -379,13 +375,12 @@ module CoapUdpServerP {
 #endif
  }
  default command int CoapResource.putMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							     uint8_t* val, size_t vallen,
+							     coap_pdu_t* request,
 							     coap_resource_t *resource,
 							     unsigned int media_type) {
 #ifdef COAP_RESOURCE_DEFAULT
    return call DynamicDefaultResource.putMethod(async_state,
-						val,
-						vallen,
+						request,
 						resource,
 						media_type);
 #else
@@ -393,13 +388,12 @@ module CoapUdpServerP {
 #endif
  }
  default command int CoapResource.postMethod[uint8_t uri_key](coap_async_state_t* async_state,
-							      uint8_t* val, size_t vallen,
+							      coap_pdu_t* request,
 							      coap_resource_t *resource,
 							      unsigned int media_type) {
 #ifdef COAP_RESOURCE_DEFAULT
    return call DynamicDefaultResource.postMethod(async_state,
-						 val,
-						 vallen,
+						 request,
 						 resource,
 						 media_type);
 #else
@@ -407,12 +401,11 @@ module CoapUdpServerP {
 #endif
  }
  default command int CoapResource.deleteMethod[uint8_t uri_key](coap_async_state_t* async_state,
-								uint8_t* val, size_t vallen,
+								coap_pdu_t* request,
 								coap_resource_t *resource) {
 #ifdef COAP_RESOURCE_DEFAULT
    return call DynamicDefaultResource.deleteMethod(async_state,
-						   val,
-						   vallen,
+						   request,
 						   resource);
 #else
    return FAIL;
@@ -422,19 +415,23 @@ module CoapUdpServerP {
  //re-feed the signals into CoapResource with 0xff to save code space
  event void DynamicDefaultResource.methodDone(error_t result,
 					      coap_async_state_t* async_state,
+					      coap_pdu_t* request,
 					      coap_pdu_t* response,
 					      coap_resource_t *resource) {
    signal CoapResource.methodDone[0xff](result,
 					async_state,
+					request,
 					response,
 					resource);
  }
  event void DynamicDefaultResource.methodDoneSeparate(error_t result,
 						      coap_async_state_t* async_state,
+						      coap_pdu_t* request,
 						      coap_pdu_t* response,
 						      coap_resource_t *resource) {
    signal CoapResource.methodDoneSeparate[0xff](result,
 						async_state,
+						request,
 						response,
 						resource);
  }
@@ -446,14 +443,23 @@ module CoapUdpServerP {
 
  event void CoapResource.methodDone[uint8_t uri_key](error_t result,
 						     coap_async_state_t* async_state,
+						     coap_pdu_t* request,
 						     coap_pdu_t* response,
 						     coap_resource_t *resource) {
      coap_async_state_t *tmp;
+#ifndef WITHOUT_BLOCK
+     int res;
+     coap_block_t block;
+#endif
+
+     //     if (((coap_pdu_t*)async_state->appdata)->hdr->code == COAP_REQUEST_GET)
+       //       call Leds.led2On();
+
 
      if (!response) {
-// 	 debug("check_async: insufficient memory, we'll try later\n");
-	 //TODO: handle error...
-	 return;
+       //debug("check_async: insufficient memory, we'll try later\n");
+       //TODO: handle error...
+       return;
      }
 
      response->hdr->type = async_state->flags & COAP_ASYNC_CONFIRM
@@ -473,14 +479,53 @@ module CoapUdpServerP {
      }
 #endif
 
-     if (resource != NULL && resource->data_len != 0) {
-       coap_add_data(response, resource->data_len, resource->data);
+#ifndef WITHOUT_BLOCK
+     if (coap_get_block(request, COAP_OPTION_BLOCK2, &block)) {
+       res = coap_write_block_opt(&block, COAP_OPTION_BLOCK2,
+				  response, resource->data_len);
+
+       switch (res) {
+       case -2:			/* illegal block */
+	 response->hdr->code = COAP_RESPONSE_CODE(400);
+	 break;
+       case -1:			/* should really not happen */
+	 assert(0);
+	 /* fall through if assert is a no-op */
+       case -3:			/* cannot handle request */
+	 response->hdr->code = COAP_RESPONSE_CODE(500);
+	 break;
+       default:			/* everything is good */
+	 coap_add_block(response, resource->data_len, resource->data, block.num, block.szx);
+       }
+     } else {
+#endif
+       if (resource != NULL && resource->data_len != 0) {
+	 if (!coap_add_data(response, resource->data_len, resource->data)) {
+#ifndef WITHOUT_BLOCK
+	   //payload is to large, so lets try to do block spontaneously
+
+	   /* set default block size */
+	   block.szx = 0;
+	   coap_write_block_opt(&block, COAP_OPTION_BLOCK2,
+				response, resource->data_len);
+
+	   coap_add_block(response, resource->data_len, resource->data,
+			  block.num, block.szx);
+#else
+	   response->hdr->code = COAP_RESPONSE_CODE(500); // or RESPONSE_ENTITY_TOO_LARGE?
+#endif
+	 }
+       }
+#ifndef WITHOUT_BLOCK
      }
+#endif
 
      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
 	 debug("check_async: cannot send response for message %d\n",
 	       response->hdr->id);
      }
+
+     coap_delete_pdu(request);
      coap_delete_pdu(response);
      coap_remove_async(ctx_server, async_state->id, &tmp);
      coap_free_async(async_state);
@@ -524,34 +569,23 @@ module CoapUdpServerP {
 
  event void CoapResource.methodDoneSeparate[uint8_t uri_key](error_t result,
 							     coap_async_state_t* async_state,
+							     coap_pdu_t* request,
 							     coap_pdu_t* response,
 							     struct coap_resource_t* resource) {
-     //unsigned char buf[2];
-     //coap_pdu_t *response;
      coap_async_state_t *tmp;
 
-     //response = coap_new_pdu();
-
      if (!response) {
-         //debug("check_async: insufficient memory, we'll try later\n");
-	 //TODO: handle error...
+       //debug("check_async: insufficient memory, we'll try later\n");
+       //TODO: handle error...
        return;
      }
      response->hdr->type = async_state->flags & COAP_ASYNC_CONFIRM
 					  ? COAP_MESSAGE_CON
 					  : COAP_MESSAGE_NON;
-     //response->hdr->code = responsecode;
      response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id
-
-     /*if (mediatype != COAP_MEDIATYPE_ANY)
-	 coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-	 coap_encode_var_bytes(buf, mediatype), buf);*/
 
      if (async_state->tokenlen)
 	 coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
-
-     //if (vallen != 0)
-     //coap_add_data(response, vallen, val);
 
      //TODO: observe on separate?
 
@@ -562,14 +596,12 @@ module CoapUdpServerP {
      if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
 	 debug("check_async: cannot send response for message %d\n",
 	       response->hdr->id);
-	 coap_delete_pdu(response);
      }
 
+     coap_delete_pdu(request);
      coap_delete_pdu(response);
      coap_remove_async(ctx_server, async_state->id, &tmp);
      coap_free_async(async_state);
      async_state = NULL;
-
-     //thp:TODO: observe??
  }
 }

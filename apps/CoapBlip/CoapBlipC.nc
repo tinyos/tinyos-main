@@ -155,6 +155,10 @@ configuration CoapBlipC {
   CoapUdpServerC.CoapResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.CoapResource;
 #endif
 
+#ifdef COAP_RESOURCE_ETSI_IOT_BLOCK
+  components new CoapEtsiBlockResourceC(INDEX_ETSI_BLOCK);
+  CoapUdpServerC.CoapResource[INDEX_ETSI_BLOCK] -> CoapEtsiBlockResourceC.CoapResource;
+#endif
 
 #endif
 

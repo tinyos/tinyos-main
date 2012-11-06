@@ -91,6 +91,9 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
     INDEX_ETSI_SEGMENT,
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LARGE
+    INDEX_ETSI_LARGE,
+#endif
 
     COAP_LAST_RESOURCE,
     COAP_NO_SUCH_RESOURCE = 0xff
@@ -330,6 +333,18 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
       INDEX_ETSI_SEGMENT,
       "seg1/seg2/seg3", sizeof("seg1/seg2/seg3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      (GET_SUPPORTED),
+      0
+  },
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LARGE
+  {
+      INDEX_ETSI_LARGE,
+      "large", sizeof("large"),
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
       "", "",
 #endif

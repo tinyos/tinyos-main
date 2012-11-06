@@ -42,6 +42,9 @@ generic module CoapEtsiSegmentResourceP(uint8_t uri_key) {
 #define INITIAL_DEFAULT_DATA_SEGMENT "segment"
 
   unsigned char buf[2];
+  size_t size;
+  unsigned char *data;
+  coap_pdu_t *temp_request;
   coap_pdu_t *response;
   bool lock = FALSE; //TODO: atomic
   coap_async_state_t *temp_async_state = NULL;
@@ -67,26 +70,26 @@ generic module CoapEtsiSegmentResourceP(uint8_t uri_key) {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(205);
 
-    call Leds.led0Toggle();
-
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
 
     signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,
+				   temp_request,
 				   response,
 				   temp_resource);
     lock = FALSE;
   }
 
   command int CoapResource.getMethod(coap_async_state_t* async_state,
-				     uint8_t *val, size_t vallen,
+				     coap_pdu_t* request,
 				     struct coap_resource_t *resource,
 				     unsigned int content_format) {
     if (lock == FALSE) {
       lock = TRUE;
 
       temp_async_state = async_state;
+      temp_request = request;
       temp_resource = resource;
       temp_content_format = COAP_CONTENT_TYPE_PLAIN;
 
@@ -100,7 +103,7 @@ generic module CoapEtsiSegmentResourceP(uint8_t uri_key) {
   /////////////////////
   // PUT:
   command int CoapResource.putMethod(coap_async_state_t* async_state,
-				     uint8_t *val, size_t vallen,
+				     coap_pdu_t* request,
 				     coap_resource_t *resource,
 				     unsigned int content_format) {
     return COAP_RESPONSE_405;
@@ -109,7 +112,7 @@ generic module CoapEtsiSegmentResourceP(uint8_t uri_key) {
   /////////////////////
   // POST:
   command int CoapResource.postMethod(coap_async_state_t* async_state,
-				      uint8_t *val, size_t buflen,
+				      coap_pdu_t* request,
 				      struct coap_resource_t *resource,
 				      unsigned int content_format) {
     return COAP_RESPONSE_405;
@@ -118,7 +121,7 @@ generic module CoapEtsiSegmentResourceP(uint8_t uri_key) {
   /////////////////////
   // DELETE:
   command int CoapResource.deleteMethod(coap_async_state_t* async_state,
-					uint8_t *val, size_t buflen,
+					coap_pdu_t* request,
 					struct coap_resource_t *resource) {
     return COAP_RESPONSE_405;
   }

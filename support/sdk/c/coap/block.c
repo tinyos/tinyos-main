@@ -22,6 +22,7 @@
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
+
 #ifndef WITHOUT_BLOCK
 int
 coap_get_block(coap_pdu_t *pdu, unsigned short type, coap_block_t *block) {
@@ -31,11 +32,20 @@ coap_get_block(coap_pdu_t *pdu, unsigned short type, coap_block_t *block) {
   memset(block, 0, sizeof(coap_block_t));
 
   if (pdu && coap_check_option(pdu, type, &opt_iter)) {
-    block->szx = COAP_OPT_BLOCK_SZX(opt_iter.option);
-    if (COAP_OPT_BLOCK_MORE(opt_iter.option))
-      block->m = 1;
-    block->num = COAP_OPT_BLOCK_NUM(opt_iter.option);
 
+    /* if client uses zero-length default value (can happen for coap-client ... -b 16)
+       accessing *COAP_OPT_BLOCK_LAST would segfault */
+    if (COAP_OPT_LENGTH(opt_iter.option) == 0) {
+      block->szx = 0;
+      block->m = 1;
+      block->num = 0;
+    } else {
+      block->szx = COAP_OPT_BLOCK_SZX(opt_iter.option);
+
+      if (COAP_OPT_BLOCK_MORE(opt_iter.option))
+	block->m = 1;
+      block->num = COAP_OPT_BLOCK_NUM(opt_iter.option);
+    }
     return 1;
   }
 

@@ -30,46 +30,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <async.h>
-#include <resource.h>
-#include <pdu.h>
-
-interface CoapResource {
-
-    command error_t initResourceAttributes(coap_resource_t *r);
-
-    //TODO: insert URI or request into call?
-    command int getMethod(coap_async_state_t* async_state,
-			  coap_pdu_t* request,
-			  struct coap_resource_t *resource,
-			  unsigned int content_format);
-
-    command int putMethod(coap_async_state_t* async_state,
-			  coap_pdu_t* request,
-			  struct coap_resource_t *resource,
-			  unsigned int content_format);
-
-    command int postMethod(coap_async_state_t* async_state,
-			   coap_pdu_t* request,
-			   struct coap_resource_t *resource,
-			   unsigned int content_format);
-
-    command int deleteMethod(coap_async_state_t* async_state,
-			     coap_pdu_t* request,
-			     struct coap_resource_t *resource);
-
-    event void methodDone(error_t result,
-			  coap_async_state_t* async_state,
-			  coap_pdu_t* request,
-			  coap_pdu_t* response,
-			  struct coap_resource_t* resource);
-
-    event void methodNotDone(coap_async_state_t* async_state,
-			     uint8_t responsecode);
-
-    event void methodDoneSeparate(error_t result,
-				  coap_async_state_t* async_state,
-				  coap_pdu_t* request,
-				  coap_pdu_t* response,
-				  struct coap_resource_t* resource);
+generic configuration CoapEtsiLargeResourceC(uint8_t uri_key) {
+    provides interface CoapResource;
+    uses interface Leds;
+} implementation {
+    components new CoapEtsiLargeResourceP(uri_key) as CoapResourceP;
+    CoapResource = CoapResourceP;
+    Leds = CoapResourceP;
 }

@@ -98,7 +98,11 @@ CFLAGS += -DCOAP_CONTENT_TYPE_PLAIN
 #CFLAGS += -DCOAP_CONTENT_TYPE_BINARY
 #CFLAGS += -DCOAP_CONTENT_TYPE_JSON
 
+# disables observe
 #CFLAGS += -DWITHOUT_OBSERVE
+
+# disables block-wise transfer
+#CFLAGS += -DWITHOUT_BLOCK
 
 # disables .well-known/core resource
 #CFLAGS += -DWITHOUT_WELLKNOWN

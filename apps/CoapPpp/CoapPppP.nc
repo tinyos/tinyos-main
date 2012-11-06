@@ -94,9 +94,9 @@ module CoapPppP {
 
 
   event void PppIpv6.linkUp() {
-    call Leds.led0On();
-    call Leds.led1On();
-    call Leds.led2On();
+    //call Leds.led0On();
+    //call Leds.led1On();
+    //call Leds.led2On();
     post inform();
   }
   event void PppIpv6.linkDown() {}

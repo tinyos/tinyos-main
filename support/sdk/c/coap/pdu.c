@@ -115,6 +115,36 @@ coap_delete_pdu(coap_pdu_t *pdu) {
 #endif /* WITH_CONTIKI */
 }
 
+coap_pdu_t *
+coap_clone_pdu(coap_pdu_t *pdu) {
+  coap_pdu_t *cloned_pdu;
+  size_t data_len;
+  unsigned char *data;
+
+  cloned_pdu = coap_pdu_init(0, 0, ntohs(COAP_INVALID_TID), COAP_MAX_PDU_SIZE);
+
+  if (!pdu)
+    return NULL;
+
+  memcpy(cloned_pdu->hdr, pdu->hdr, sizeof(coap_hdr_t));
+
+  if (pdu->hdr->optcnt) {
+    coap_opt_iterator_t opt_iter;
+    coap_option_iterator_init((coap_pdu_t *)pdu, &opt_iter, COAP_OPT_ALL);
+
+    while (coap_option_next(&opt_iter)) {
+      coap_add_option(cloned_pdu, opt_iter.type,
+		      COAP_OPT_LENGTH(opt_iter.option),
+		      COAP_OPT_VALUE(opt_iter.option));
+    }
+  }
+
+  if(coap_get_data(pdu, &data_len, &data))
+    coap_add_data(cloned_pdu, data_len, data);
+
+  return cloned_pdu;
+}
+
 int
 coap_add_option(coap_pdu_t *pdu, unsigned short type, unsigned int len, const unsigned char *data) {
   size_t optsize, cnt, optcnt, opt_code = 0;

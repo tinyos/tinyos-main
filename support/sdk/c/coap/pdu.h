@@ -249,6 +249,16 @@ coap_pdu_t *coap_new_pdu();
 void coap_delete_pdu(coap_pdu_t *);
 
 /**
+ * Duplicates a CoAP PDU.
+ *
+ * @param pdu The source PDU to copy
+ *
+ * return A pointer to the new PDU object or @c NULL on error. 
+ */
+coap_pdu_t *
+coap_clone_pdu(coap_pdu_t *pdu);
+
+/**
  * Adds option of given type to pdu that is passed as first parameter. coap_add_option()
  * destroys the PDU's data, so coap_add_data must be called after all options have been
  * added.
