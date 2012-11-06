@@ -43,7 +43,8 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
 #define INITIAL_DEFAULT_DATA_OBS "obs"
 
   unsigned char buf[2];
-  unsigned char *data;
+  uint8_t i = 1;
+  char data[5];
   coap_pdu_t *temp_request;
   coap_pdu_t *response;
   bool lock = FALSE; //TODO: atomic
@@ -82,16 +83,18 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
   }
 
   event void UpdateTimer.fired() {
+
     temp_resource->dirty = 1;
-    call Leds.led2Toggle();
+
     if (temp_resource->data != NULL) {
 	coap_free(temp_resource->data);
     }
-    if ((temp_resource->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_OBS))) != NULL) {
-      memcpy(temp_resource->data, INITIAL_DEFAULT_DATA_OBS, sizeof(INITIAL_DEFAULT_DATA_OBS));
-      temp_resource->data_len = sizeof(INITIAL_DEFAULT_DATA_OBS);
+    if ((temp_resource->data = (uint8_t *) coap_malloc(sizeof(data))) != NULL) {
+      sprintf(data, "%s%02u", (char *)INITIAL_DEFAULT_DATA_OBS, i);
+      memcpy(temp_resource->data, data, sizeof(data));
+      temp_resource->data_len = sizeof(data);
     }
-
+    i++;
     signal CoapResource.notifyObservers();
   }
 
@@ -106,8 +109,9 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
       temp_resource = resource;
       temp_content_format = COAP_CONTENT_TYPE_PLAIN;
 
-      //check if running
-      call UpdateTimer.startPeriodic(5120);
+      if (!call UpdateTimer.isRunning()) {
+	call UpdateTimer.startPeriodic(5120);
+      }
       post getMethod();
 
       return COAP_SPLITPHASE;
