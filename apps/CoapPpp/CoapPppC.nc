@@ -221,7 +221,16 @@ configuration CoapPppC {
   CoapEtsiObserveResourceC.Leds -> LedsC;
   CoapUdpServerC.CoapResource[INDEX_ETSI_OBSERVE] -> CoapEtsiObserveResourceC.CoapResource;
 #endif
-  
+#ifdef COAP_RESOURCE_ETSI_IOT_LINK
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK1) as Link1Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK1] -> Link1Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK2) as Link2Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK2] -> Link2Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK3) as Link3Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK3] -> Link3Resource.CoapResource;
+#endif
+
+
 #endif
 
 #ifdef COAP_CLIENT_ENABLED

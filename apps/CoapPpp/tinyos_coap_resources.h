@@ -97,6 +97,11 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_OBSERVE
     INDEX_ETSI_OBSERVE,
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LINK
+    INDEX_ETSI_LINK1,
+    INDEX_ETSI_LINK2,
+    INDEX_ETSI_LINK3,
+#endif
 
     COAP_LAST_RESOURCE,
     COAP_NO_SUCH_RESOURCE = 0xff
@@ -366,6 +371,38 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     {0,0,0,0}, // uri_key will be set later
     (GET_SUPPORTED),
     1
+  },
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LINK
+  {
+    INDEX_ETSI_LINK1,
+    "link1", sizeof("link1"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK2,
+    "link2", sizeof("link2"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK3,
+    "link3", sizeof("link3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
   },
 #endif
 };
