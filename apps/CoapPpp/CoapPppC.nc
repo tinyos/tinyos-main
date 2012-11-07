@@ -221,7 +221,15 @@ configuration CoapPppC {
   CoapEtsiObserveResourceC.Leds -> LedsC;
   CoapUdpServerC.CoapResource[INDEX_ETSI_OBSERVE] -> CoapEtsiObserveResourceC.CoapResource;
 #endif
-  
+#ifdef COAP_RESOURCE_ETSI_IOT_MULTI_FORMAT
+  components new CoapEtsiMultiFormatResourceC(INDEX_ETSI_MULTI_FORMAT);
+  CoapEtsiMultiFormatResourceC.Leds -> LedsC;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_MULTI_FORMAT] -> CoapEtsiMultiFormatResourceC.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapEtsiMultiFormatResourceC.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
+#endif
+
 #endif
 
 #ifdef COAP_CLIENT_ENABLED

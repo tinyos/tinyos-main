@@ -97,6 +97,9 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_OBSERVE
     INDEX_ETSI_OBSERVE,
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_MULTI_FORMAT
+    INDEX_ETSI_MULTI_FORMAT,
+#endif
 
     COAP_LAST_RESOURCE,
     COAP_NO_SUCH_RESOURCE = 0xff
@@ -368,6 +371,18 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     1
   },
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_MULTI_FORMAT
+  {
+    INDEX_ETSI_MULTI_FORMAT,
+    "multi-format", sizeof("multi-format"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "text", "t",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
+  },
+#endif
 };
 
 //predefined strings for markup-languages
@@ -379,9 +394,8 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 
 //XML (SenML-formatted)
 #ifdef COAP_CONTENT_TYPE_XML
-#if (COAP_MAX_PDU_SIZE < 165)
-#warning "*** XML requires COAP_MAX_PDU_SIZE > 165. Make sure you change the COAP_MAX_PDU_SIZE in /support/sdk/c/coap/config.h.tinyos to get XML working properly ***"
-#endif
+#define COAP_MAX_PDU_SIZE 165
+#warning "*** Content-Format XML: COAP_MAX_PDU_SIZE redefined to 165 ***"
 #define XML_PRE "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <senml xmlns=\"urn:ietf:params:xml:ns:senml\""
 #define XML_POST "</senml>"
 #endif

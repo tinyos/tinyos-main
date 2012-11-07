@@ -3,7 +3,9 @@
 
 #define WITH_TINYOS 1
 
+#ifndef
 #define COAP_MAX_PDU_SIZE 127
+#endif
 
 /** Number of resources that can be handled by a CoAP server in addition to
  * @c /.well-known/core */
