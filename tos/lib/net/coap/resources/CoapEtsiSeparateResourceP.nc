@@ -54,14 +54,19 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
   coap_resource_t *temp_resource = NULL;
   unsigned int temp_content_format;
 
+  unsigned char attr_name_ct[]  = "ct";
+  unsigned char attr_value_ct[] = "0";
+
   command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
 #ifdef COAP_CONTENT_TYPE_PLAIN
-    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+    coap_add_attr(r,
+		  attr_name_ct, sizeof(attr_name_ct)-1,
+		  attr_value_ct, sizeof(attr_value_ct)-1, 0);
 #endif
 
     if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_SEPARATE))) != NULL) {
       memcpy(r->data, INITIAL_DEFAULT_DATA_SEPARATE, sizeof(INITIAL_DEFAULT_DATA_SEPARATE));
-      r->data_len = sizeof(INITIAL_DEFAULT_DATA_SEPARATE);
+      r->data_len = sizeof(INITIAL_DEFAULT_DATA_SEPARATE)-1;
     }
 
     return SUCCESS;
@@ -98,7 +103,7 @@ generic module CoapEtsiSeparateResourceP(uint8_t uri_key) {
       temp_async_state = async_state;
       temp_request = request;
       temp_resource = resource;
-      temp_content_format = COAP_CONTENT_TYPE_PLAIN;
+      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
 
       call PreAckGetTimer.startOneShot(256);
       call FinishedGetTimer.startOneShot(2048);

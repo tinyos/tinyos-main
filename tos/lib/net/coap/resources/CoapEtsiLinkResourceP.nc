@@ -114,7 +114,7 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
       temp_async_state = async_state;
       temp_request = request;
       temp_resource = resource;
-      temp_content_format = COAP_CONTENT_TYPE_PLAIN;
+      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
 
       post getMethod();
       return COAP_SPLITPHASE;
