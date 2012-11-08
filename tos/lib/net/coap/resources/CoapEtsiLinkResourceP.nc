@@ -50,12 +50,22 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
   unsigned char attr_name_ct[]  = "ct";
   unsigned char attr_value_ct[] = "0";
 
-  unsigned char attr_name_href[]   = "href";
-  unsigned char attr_value_href1[] = "/link1";
-  unsigned char attr_value_href2[] = "/link2";
-  unsigned char attr_value_href3[] = "/link3";
+  unsigned char attr_name_rt[]   = "rt";
+  unsigned char attr_value_rt1[] = "\"tc tf\"";
+  unsigned char attr_value_rt2[] = "\"tf tk\"";
+  unsigned char attr_value_rt3[] = "\"tc tk\"";
+  unsigned char attr_value_rt4[] = "";
 
-#define INITIAL_DEFAULT_DATA_LINK "link"
+  unsigned char attr_name_if[]   = "if";
+  unsigned char attr_value_if1[] = "If1";
+  unsigned char attr_value_if2[] = "If2";
+  unsigned char attr_value_if3[] = "foo";
+  unsigned char attr_value_if4[] = "";
+
+  unsigned char attr_name_title[]   = "title";
+  unsigned char attr_value_title[] = "t";
+
+#define INITIAL_DEFAULT_DATA_LINK "l"
 
   command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
 
@@ -67,17 +77,38 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
 
     if (uri_key == INDEX_ETSI_LINK1) {
       coap_add_attr(r,
-		    attr_name_href, sizeof(attr_name_href)-1,
-		    attr_value_href1, sizeof(attr_value_href1)-1, 0);
+		    attr_name_rt, sizeof(attr_name_rt)-1,
+		    attr_value_rt1, sizeof(attr_value_rt1)-1, 0);
+      coap_add_attr(r,
+		    attr_name_if, sizeof(attr_name_if)-1,
+		    attr_value_if1, sizeof(attr_value_if1)-1, 0);
     } else if (uri_key == INDEX_ETSI_LINK2) {
       coap_add_attr(r,
-		    attr_name_href, sizeof(attr_name_href)-1,
-		    attr_value_href2, sizeof(attr_value_href1)-1, 0);
+		    attr_name_rt, sizeof(attr_name_rt)-1,
+		    attr_value_rt2, sizeof(attr_value_rt2)-1, 0);
+      coap_add_attr(r,
+		    attr_name_if, sizeof(attr_name_if)-1,
+		    attr_value_if2, sizeof(attr_value_if2)-1, 0);
     } else if (uri_key == INDEX_ETSI_LINK3) {
       coap_add_attr(r,
-		    attr_name_href, sizeof(attr_name_href)-1,
-		    attr_value_href3, sizeof(attr_value_href1)-1, 0);
+		    attr_name_rt, sizeof(attr_name_rt)-1,
+		    attr_value_rt3, sizeof(attr_value_rt3)-1, 0);
+      coap_add_attr(r,
+		    attr_name_if, sizeof(attr_name_if)-1,
+		    attr_value_if3, sizeof(attr_value_if3)-1, 0);
+    } else if (uri_key == INDEX_ETSI_LINK4) {
+      coap_add_attr(r,
+		    attr_name_rt, sizeof(attr_name_rt)-1,
+		    attr_value_rt4, sizeof(attr_value_rt4)-1, 0);
+      coap_add_attr(r,
+		    attr_name_if, sizeof(attr_name_if)-1,
+		    attr_value_if4, sizeof(attr_value_if4)-1, 0);
     }
+    // link5 is without "rt=" and "if="
+
+    coap_add_attr(r,
+		  attr_name_title, sizeof(attr_name_title)-1,
+		  attr_value_title, sizeof(attr_value_title)-1, 0);
 
     if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_LINK))) != NULL) {
       memcpy(r->data, INITIAL_DEFAULT_DATA_LINK, sizeof(INITIAL_DEFAULT_DATA_LINK));
@@ -148,4 +179,4 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
 					coap_resource_t *resource) {
     return COAP_RESPONSE_405;
   }
-  }
+}

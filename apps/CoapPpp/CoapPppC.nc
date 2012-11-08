@@ -228,6 +228,10 @@ configuration CoapPppC {
   CoapUdpServerC.CoapResource[INDEX_ETSI_LINK2] -> Link2Resource.CoapResource;
   components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK3) as Link3Resource;
   CoapUdpServerC.CoapResource[INDEX_ETSI_LINK3] -> Link3Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK4) as Link4Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK4] -> Link4Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK5) as Link5Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK5] -> Link5Resource.CoapResource;
 #endif
 
 
