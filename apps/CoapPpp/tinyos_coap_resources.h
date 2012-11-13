@@ -100,6 +100,13 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_MULTI_FORMAT
     INDEX_ETSI_MULTI_FORMAT,
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LINK
+    INDEX_ETSI_LINK1,
+    INDEX_ETSI_LINK2,
+    INDEX_ETSI_LINK3,
+    INDEX_ETSI_LINK4,
+    INDEX_ETSI_LINK5,
+#endif
 
     COAP_LAST_RESOURCE,
     COAP_NO_SUCH_RESOURCE = 0xff
@@ -310,7 +317,6 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 #endif
 
   //ETSI plugtest resources:
-  //is used as dynamicresource
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
   {
       INDEX_ETSI_TEST,
@@ -383,6 +389,58 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     0
   },
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LINK
+  {
+    INDEX_ETSI_LINK1,
+    "link1", sizeof("link1"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK2,
+    "link2", sizeof("link2"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK3,
+    "link3", sizeof("link3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK4,
+    "link4", sizeof("link4"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK5,
+    "lnk5", sizeof("lnk5"),  // NOTE: lnk5 not link5 !! for TD_COAP_LINK_08
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    (GET_SUPPORTED),
+    0
+  },
+#endif
 };
 
 //predefined strings for markup-languages
@@ -394,6 +452,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 
 //XML (SenML-formatted)
 #ifdef COAP_CONTENT_TYPE_XML
+#undef COAP_MAX_PDU_SIZE
 #define COAP_MAX_PDU_SIZE 165
 #warning "*** Content-Format XML: COAP_MAX_PDU_SIZE redefined to 165 ***"
 #define XML_PRE "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <senml xmlns=\"urn:ietf:params:xml:ns:senml\""
