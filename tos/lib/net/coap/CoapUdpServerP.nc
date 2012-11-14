@@ -475,12 +475,6 @@ module CoapUdpServerP {
 	 coap_add_option(response, COAP_OPTION_TOKEN,
 			 async_state->tokenlen, async_state->token);
 
-#ifndef WITHOUT_OBSERVE
-     if (async_state->flags & COAP_ASYNC_OBSERVED){
-       coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
-     }
-#endif
-
 #ifndef WITHOUT_BLOCK
      if (coap_get_block(request, COAP_OPTION_BLOCK2, &block)) {
        res = coap_write_block_opt(&block, COAP_OPTION_BLOCK2,

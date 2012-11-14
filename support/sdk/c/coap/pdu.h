@@ -76,9 +76,9 @@
 
 /* selected option types from draft-bormann-coap-misc-04 */
 
-#define COAP_OPTION_NOOP         63 /* no-op for fenceposting */
+#define COAP_OPTION_NOOP         36 /* no-op for fenceposting */
 
-#define COAP_MAX_OPT             21 /**< the highest option number we know */
+#define COAP_MAX_OPT             36 /**< the highest option number we know */
 
 /* CoAP result codes (HTTP-Code / 100 * 40 + HTTP-Code % 100) */
 

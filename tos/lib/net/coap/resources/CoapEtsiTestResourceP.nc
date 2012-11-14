@@ -165,16 +165,16 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(201);
 
-    if (temp_resource->data_len != 0)
-      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-		      coap_encode_var_bytes(buf, temp_content_format), buf);
-
     coap_add_option(response, COAP_OPTION_LOCATION_PATH,
 		    sizeof("location1")-1, (unsigned char *)"location1");
     coap_add_option(response, COAP_OPTION_LOCATION_PATH,
 		    sizeof("location2")-1, (unsigned char *)"location2");
     coap_add_option(response, COAP_OPTION_LOCATION_PATH,
 		    sizeof("location3")-1, (unsigned char *)"location3");
+
+    if (temp_resource->data_len != 0)
+      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		      coap_encode_var_bytes(buf, temp_content_format), buf);
 
     signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,

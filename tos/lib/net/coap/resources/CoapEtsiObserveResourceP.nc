@@ -76,6 +76,12 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(205);
 
+#ifndef WITHOUT_OBSERVE
+     if (temp_async_state->flags & COAP_ASYNC_OBSERVED){
+       coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
+     }
+#endif
+
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
 

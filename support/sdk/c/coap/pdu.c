@@ -197,7 +197,9 @@ coap_add_option(coap_pdu_t *pdu, unsigned short type, unsigned int len, const un
     if ((unsigned char *)opt + optsize + 1 > 
 	(unsigned char *)pdu->hdr + pdu->max_size)
       goto error;
-
+#ifndef NDEBUG
+    coap_log(LOG_CRIT, "coap-08 fence post\n");
+#endif
     optcnt += 1;
     *opt = fence;
 
