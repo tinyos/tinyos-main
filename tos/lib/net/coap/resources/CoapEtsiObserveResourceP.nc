@@ -114,7 +114,7 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
       temp_resource = resource;
       temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
 
-      if (!call UpdateTimer.isRunning()) {
+      if (!call UpdateTimer.isRunning() && async_state->flags & COAP_ASYNC_OBSERVED) {
 	call UpdateTimer.startPeriodic(5120);
       }
       post getMethod();
