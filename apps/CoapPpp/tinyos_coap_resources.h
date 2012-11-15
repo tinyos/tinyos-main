@@ -152,6 +152,7 @@ typedef struct index_uri_key
   const unsigned char unit[2];
 #endif
   coap_key_t uri_key;
+  uint8_t max_age;
   uint8_t supported_methods:4;
   uint8_t observable:1;
 } index_uri_key_t;
@@ -165,6 +166,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
       0
   },
@@ -177,6 +179,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "temperature", "K",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -189,6 +192,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "humidity", "%",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -201,6 +205,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "voltage", "V",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -213,6 +218,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -225,6 +231,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
   },
@@ -237,6 +244,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       1
   },
@@ -249,6 +257,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -263,6 +272,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED | PUT_SUPPORTED),
     0
   },
@@ -275,6 +285,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED | PUT_SUPPORTED),
       0
   },
@@ -287,6 +298,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
     },
@@ -299,6 +311,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
     },
@@ -311,6 +324,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
     },
@@ -325,6 +339,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
       0
   },
@@ -337,6 +352,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
   },
@@ -349,6 +365,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED),
       0
   },
@@ -361,6 +378,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED),
       0
   },
@@ -373,6 +391,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    5,
     (GET_SUPPORTED),
     1
   },
@@ -385,6 +404,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "text", "t",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED),
     0
   },
@@ -397,6 +417,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED),
     0
   },
@@ -407,6 +428,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED),
     0
   },
@@ -417,6 +439,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED),
     0
   },
@@ -427,6 +450,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED),
     0
   },
@@ -437,6 +461,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED),
     0
   },

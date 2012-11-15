@@ -82,8 +82,12 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
      }
 #endif
 
-    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-		    coap_encode_var_bytes(buf, temp_content_format), buf);
+     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		     coap_encode_var_bytes(buf, temp_content_format), buf);
+
+     if (temp_resource->max_age != COAP_DEFAULT_MAX_AGE)
+       coap_add_option(response, COAP_OPTION_MAXAGE,
+      	      coap_encode_var_bytes(buf, temp_resource->max_age), buf);
 
     signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,
@@ -95,10 +99,6 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
 
   event void UpdateTimer.fired() {
     i++;
-    if(i > 10){
-      i = 1;
-      call UpdateTimer.stop();
-    }
 
     temp_resource->dirty = 1;
 
@@ -112,11 +112,12 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
       sprintf(data, "%s%02u", (char *)INITIAL_DEFAULT_DATA_OBS, i);
       memcpy(temp_resource->data, data, sizeof(data));
       temp_resource->data_len = sizeof(data);
+      temp_resource->data_ct = temp_content_format;
     }
- 
 
-    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-		    coap_encode_var_bytes(buf, temp_content_format), buf);
+    if(i >= 5){
+      call UpdateTimer.stop();
+    }
 
     signal CoapResource.notifyObservers();
   }
@@ -134,6 +135,7 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
 
       if (!call UpdateTimer.isRunning() && async_state->flags & COAP_ASYNC_OBSERVED) {
 	call UpdateTimer.startPeriodic(5120);
+	i = 0;
       }
       post getMethod();
 

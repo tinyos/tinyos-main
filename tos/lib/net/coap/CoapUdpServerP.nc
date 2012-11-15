@@ -48,7 +48,7 @@
 #include "tinyos_coap_resources.h"
 #include "blip_printf.h"
 
-#define INDEX "CoAPUdpServer: It works!!"
+//#define INDEX "CoAPUdpServer: It works!!"
 #define COAP_MEDIATYPE_NOT_SUPPORTED 0xfe
 
 module CoapUdpServerP {
@@ -60,6 +60,7 @@ module CoapUdpServerP {
 } implementation {
     coap_context_t *ctx_server;
     coap_resource_t *r;
+    unsigned char buf[2]; //used for coap_encode_var_bytes()
 
     //get index (int) from uri_key (char[4])
     //defined in tinyos_coap_resources.h
@@ -134,6 +135,9 @@ module CoapUdpServerP {
 #ifndef WITHOUT_OBSERVE
 	r->observable = uri_index_map[i].observable;
 #endif
+
+	r->max_age = uri_index_map[i].max_age;
+
 	call CoapResource.initResourceAttributes[i](r);
 
 	coap_add_resource(ctx_server, r);
@@ -247,11 +251,19 @@ module CoapUdpServerP {
 	}
 
 #ifndef WITHOUT_OBSERVE
-	//handler has been called by check_notify()
+	//handler has been called by check_notify() //thp: move above media type stuff
 	if (request == NULL){
 
 	  //TODO: check options
-	  coap_add_option(response, COAP_OPTION_SUBSCRIPTION, resource->seq_num.length, resource->seq_num.s);
+	  coap_add_option(response, COAP_OPTION_SUBSCRIPTION,
+			  resource->seq_num.length, resource->seq_num.s);
+
+	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+			  coap_encode_var_bytes(buf, resource->data_ct), buf);
+
+	  if (resource->max_age != COAP_DEFAULT_MAX_AGE)
+	    coap_add_option(response, COAP_OPTION_MAXAGE,
+			    coap_encode_var_bytes(buf, resource->max_age), buf);
 
 	  if (token->length)
 	    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
