@@ -251,7 +251,10 @@ module CoapUdpServerP {
 	if (request == NULL){
 
 	  //TODO: check options
-	  coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
+	  coap_add_option(response, COAP_OPTION_SUBSCRIPTION, resource->seq_num.length, resource->seq_num.s);
+
+	  if (token->length)
+	    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 
 	  if (resource->data_len != 0) {
 	    coap_add_data(response, resource->data_len, resource->data);

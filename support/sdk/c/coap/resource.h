@@ -89,6 +89,7 @@ typedef struct coap_resource_t {
 #ifdef WITH_TINYOS
   size_t data_len;
   uint8_t *data;
+  str seq_num;
 #endif /* WITH_TINYOS */
 
 } coap_resource_t;

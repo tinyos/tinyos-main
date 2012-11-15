@@ -43,7 +43,7 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
 #define INITIAL_DEFAULT_DATA_OBS "obs"
 
   unsigned char buf[2];
-  uint8_t i = 1;
+  uint8_t i = 0;
   char data[5];
   coap_pdu_t *temp_request;
   coap_pdu_t *response;
@@ -94,8 +94,16 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
   }
 
   event void UpdateTimer.fired() {
+    i++;
+    if(i > 10){
+      i = 1;
+      call UpdateTimer.stop();
+    }
 
     temp_resource->dirty = 1;
+
+    temp_resource->seq_num.length = sizeof(i);
+    temp_resource->seq_num.s = &i;
 
     if (temp_resource->data != NULL) {
 	coap_free(temp_resource->data);
@@ -105,7 +113,11 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
       memcpy(temp_resource->data, data, sizeof(data));
       temp_resource->data_len = sizeof(data);
     }
-    i++;
+ 
+
+    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		    coap_encode_var_bytes(buf, temp_content_format), buf);
+
     signal CoapResource.notifyObservers();
   }
 
