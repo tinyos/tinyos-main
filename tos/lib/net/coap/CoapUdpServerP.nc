@@ -48,7 +48,7 @@
 #include "tinyos_coap_resources.h"
 #include "blip_printf.h"
 
-#define INDEX "CoAPUdpServer: It works!!"
+//#define INDEX "CoAPUdpServer: It works!!"
 #define COAP_MEDIATYPE_NOT_SUPPORTED 0xfe
 
 module CoapUdpServerP {
@@ -60,6 +60,7 @@ module CoapUdpServerP {
 } implementation {
     coap_context_t *ctx_server;
     coap_resource_t *r;
+    unsigned char buf[2]; //used for coap_encode_var_bytes()
 
     //get index (int) from uri_key (char[4])
     //defined in tinyos_coap_resources.h
@@ -134,6 +135,9 @@ module CoapUdpServerP {
 #ifndef WITHOUT_OBSERVE
 	r->observable = uri_index_map[i].observable;
 #endif
+
+	r->max_age = uri_index_map[i].max_age;
+
 	call CoapResource.initResourceAttributes[i](r);
 
 	coap_add_resource(ctx_server, r);
@@ -222,6 +226,34 @@ module CoapUdpServerP {
 	coap_attr_t *attr = NULL;
 	coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
 
+#ifndef WITHOUT_OBSERVE
+	//handler has been called by check_notify() //thp: move above media type stuff
+	if (request == NULL){
+
+	  //TODO: check options
+	  coap_add_option(response, COAP_OPTION_SUBSCRIPTION,
+			  resource->seq_num.length, resource->seq_num.s);
+
+	  coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+			  coap_encode_var_bytes(buf, resource->data_ct), buf);
+
+	  if (resource->max_age != COAP_DEFAULT_MAX_AGE)
+	    coap_add_option(response, COAP_OPTION_MAXAGE,
+			    coap_encode_var_bytes(buf, resource->max_age), buf);
+
+	  if (token->length)
+	    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+
+	  if (resource->data_len != 0) {
+	    coap_add_data(response, resource->data_len, resource->data);
+	    response->hdr->code = COAP_RESPONSE_CODE(205);
+	  } else
+	    response->hdr->code = COAP_RESPONSE_CODE(500);
+
+	  return;
+	}
+#endif
+
 	/* set media_type if available */
 	if ((coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) ||
 	    (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter) && (request->hdr->code & (COAP_REQUEST_PUT & COAP_REQUEST_POST)))) {
@@ -246,38 +278,33 @@ module CoapUdpServerP {
 	  goto cleanup;
 	}
 
-#ifndef WITHOUT_OBSERVE
-	//handler has been called by check_notify()
-	if (request == NULL){
-
-	  //TODO: check options
-	  coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
-
-	  if (resource->data_len != 0) {
-	    coap_add_data(response, resource->data_len, resource->data);
-	    response->hdr->code = COAP_RESPONSE_CODE(205);
-	  } else
-	    response->hdr->code = COAP_RESPONSE_CODE(500);
-
-	  return;
-	} else { //TODO: thp: do we really need the else{}?
-	  if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
-	    coap_add_observer(resource, peer, token);
-	    async_state = coap_register_async(ctx, peer, request,
-					  COAP_ASYNC_OBSERVED,
-					  (void *)NULL);
-	  } else {
-	    //remove client from observer list, if already registered
-	    if (coap_find_observer(resource, peer, token)) {
-	      coap_delete_observer(resource, peer, token);
-	    }
-#endif
-	    async_state = coap_register_async(ctx, peer, request,
-	    				      COAP_ASYNC_CONFIRM,
-					      (void *)NULL);
-
-#ifndef WITHOUT_OBSERVE
+	if (coap_check_option(request, COAP_OPTION_ETAG, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) {
+	  if (resource->etag == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),COAP_OPT_LENGTH(opt_iter.option))) {
+	    coap_add_option(response, COAP_OPTION_ETAG,
+			    coap_encode_var_bytes(buf, resource->etag), buf);
+	    response->hdr->code = COAP_RESPONSE_CODE(203);
+	    return;
 	  }
+	}
+
+
+#ifndef WITHOUT_OBSERVE
+	if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
+	  coap_add_observer(resource, peer, token);
+	  async_state = coap_register_async(ctx, peer, request,
+					    COAP_ASYNC_OBSERVED,
+					    (void *)NULL);
+	} else {
+	  //remove client from observer list, if already registered
+	  if (coap_find_observer(resource, peer, token)) {
+	    coap_delete_observer(resource, peer, token);
+	  }
+#endif
+	  async_state = coap_register_async(ctx, peer, request,
+					    COAP_ASYNC_CONFIRM,
+					    (void *)NULL);
+
+#ifndef WITHOUT_OBSERVE
 	}
 #endif
 	temp_request =  coap_clone_pdu(request);
@@ -474,12 +501,6 @@ module CoapUdpServerP {
      if (async_state->tokenlen)
 	 coap_add_option(response, COAP_OPTION_TOKEN,
 			 async_state->tokenlen, async_state->token);
-
-#ifndef WITHOUT_OBSERVE
-     if (async_state->flags & COAP_ASYNC_OBSERVED){
-       coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
-     }
-#endif
 
 #ifndef WITHOUT_BLOCK
      if (coap_get_block(request, COAP_OPTION_BLOCK2, &block)) {

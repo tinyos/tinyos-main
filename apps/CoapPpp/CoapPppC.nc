@@ -216,11 +216,22 @@ configuration CoapPppC {
   CoapEtsiLargeResourceC.Leds -> LedsC;
   CoapUdpServerC.CoapResource[INDEX_ETSI_LARGE] -> CoapEtsiLargeResourceC.CoapResource;
 #endif
+
 #ifdef COAP_RESOURCE_ETSI_IOT_OBSERVE
   components new CoapEtsiObserveResourceC(INDEX_ETSI_OBSERVE);
   CoapEtsiObserveResourceC.Leds -> LedsC;
   CoapUdpServerC.CoapResource[INDEX_ETSI_OBSERVE] -> CoapEtsiObserveResourceC.CoapResource;
 #endif
+
+#ifdef COAP_RESOURCE_ETSI_IOT_MULTI_FORMAT
+  components new CoapEtsiMultiFormatResourceC(INDEX_ETSI_MULTI_FORMAT);
+  CoapEtsiMultiFormatResourceC.Leds -> LedsC;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_MULTI_FORMAT] -> CoapEtsiMultiFormatResourceC.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapEtsiMultiFormatResourceC.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
+#endif
+
 #ifdef COAP_RESOURCE_ETSI_IOT_LINK
   components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK1) as Link1Resource;
   CoapUdpServerC.CoapResource[INDEX_ETSI_LINK1] -> Link1Resource.CoapResource;
@@ -233,7 +244,6 @@ configuration CoapPppC {
   components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK5) as Link5Resource;
   CoapUdpServerC.CoapResource[INDEX_ETSI_LINK5] -> Link5Resource.CoapResource;
 #endif
-
 
 #endif
 

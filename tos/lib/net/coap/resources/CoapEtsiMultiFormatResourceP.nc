@@ -32,19 +32,20 @@
 
 #include <pdu.h>
 #include <async.h>
+#include <mem.h>
 #include <resource.h>
 
-generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
+generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
   provides interface CoapResource;
+  uses interface CoAPServer;
   uses interface Leds;
-  uses interface Timer<TMilli> as UpdateTimer;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  uses interface LocalIeeeEui64;
+#endif
 } implementation {
 
-#define INITIAL_DEFAULT_DATA_OBS "obs"
-
+  unsigned char INITIAL_DEFAULT_DATA_MULTI_FORMAT[] = "Gr\xC3""\xBC""\xC3""\x9F""e";
   unsigned char buf[2];
-  uint8_t i = 0;
-  char data[5];
   coap_pdu_t *temp_request;
   coap_pdu_t *response;
   bool lock = FALSE; //TODO: atomic
@@ -52,19 +53,21 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
   coap_resource_t *temp_resource = NULL;
   unsigned int temp_content_format;
 
-  unsigned char attr_name_ct[]  = "ct";
-  unsigned char attr_value_ct[] = "0";
-
   command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
+
 #ifdef COAP_CONTENT_TYPE_PLAIN
-    coap_add_attr(r,
-		  attr_name_ct, sizeof(attr_name_ct)-1,
-		  attr_value_ct, sizeof(attr_value_ct)-1, 0);
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+#endif
+#ifdef COAP_CONTENT_TYPE_XML
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"41", 2, 0);
+#endif
+#ifdef COAP_CONTENT_TYPE_JSON
+    coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"50", 2, 0);
 #endif
 
-    if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_OBS))) != NULL) {
-      memcpy(r->data, INITIAL_DEFAULT_DATA_OBS, sizeof(INITIAL_DEFAULT_DATA_OBS));
-      r->data_len = sizeof(INITIAL_DEFAULT_DATA_OBS)-1;
+    if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_MULTI_FORMAT))) != NULL) {
+      memcpy(r->data, INITIAL_DEFAULT_DATA_MULTI_FORMAT, sizeof(INITIAL_DEFAULT_DATA_MULTI_FORMAT));
+      r->data_len = sizeof(INITIAL_DEFAULT_DATA_MULTI_FORMAT);
     }
 
     return SUCCESS;
@@ -73,21 +76,64 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
   /////////////////////
   // GET:
   task void getMethod() {
+    void *data;
+    int buflen = 0;
+    char *cur;
+    char buf2[COAP_MAX_PDU_SIZE];
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+#define LEN (COAP_MAX_PDU_SIZE - (cur - (char *) data))
+    int i;
+    ieee_eui64_t id;
+    id = call LocalIeeeEui64.getId();
+#endif
+    data = buf2;
+    cur = data;
+
+    switch(temp_content_format) {
+#ifdef COAP_CONTENT_TYPE_XML
+    case COAP_MEDIATYPE_APPLICATION_XML:
+      cur += snprintf(cur, LEN, "%s%s", XML_PRE, "bn=\"urn:dev:mac:");
+      for (i=0; i<8; i++) {
+	cur += snprintf(cur, LEN, "%x", id.data[i]);
+      }
+      cur += snprintf(cur, LEN, "%s%s%s%s%s%s%s%s", "\"><e n=\"", uri_index_map[uri_key].name, "\" u=\"", uri_index_map[uri_key].unit, "\" v=\"", INITIAL_DEFAULT_DATA_MULTI_FORMAT, "\"/>", XML_POST);
+      buflen = cur - (char *)data;
+      break;
+#endif
+#ifdef COAP_CONTENT_TYPE_JSON
+    case COAP_MEDIATYPE_APPLICATION_JSON:
+      cur += snprintf(cur, LEN, "%s%s%s%s%s%s%s%s", JSON_PRE,
+		      "{\"n\":\"", uri_index_map[uri_key].name, "\",\"u\":\"", uri_index_map[uri_key].unit, "\",\"v\":", INITIAL_DEFAULT_DATA_MULTI_FORMAT, "}],\"bn\":\"urn:dev:mac:");
+      for (i=0; i<8; i++) {
+	cur += snprintf(cur, LEN, "%x", id.data[i]);
+      }
+      cur += snprintf(cur, LEN, "%s", "\"}");
+      buflen = cur - (char *)data;
+      break;
+#endif
+#ifdef COAP_CONTENT_TYPE_PLAIN
+    case COAP_MEDIATYPE_TEXT_PLAIN:
+#endif
+    case COAP_MEDIATYPE_ANY:
+    default:
+      cur += snprintf(cur, sizeof(buf2), "%s", INITIAL_DEFAULT_DATA_MULTI_FORMAT);
+      buflen = cur - (char *)data;
+    }
+
+    if (temp_resource->data != NULL) {
+      coap_free(temp_resource->data);
+    }
+    if ((temp_resource->data = (uint8_t *) coap_malloc(buflen)) != NULL) {
+      memcpy(temp_resource->data, data, buflen);
+      temp_resource->data_len = buflen;
+    }
+
+
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(205);
 
-#ifndef WITHOUT_OBSERVE
-     if (temp_async_state->flags & COAP_ASYNC_OBSERVED){
-       coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
-     }
-#endif
-
-     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-		     coap_encode_var_bytes(buf, temp_content_format), buf);
-
-     if (temp_resource->max_age != COAP_DEFAULT_MAX_AGE)
-       coap_add_option(response, COAP_OPTION_MAXAGE,
-      	      coap_encode_var_bytes(buf, temp_resource->max_age), buf);
+    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		    coap_encode_var_bytes(buf, temp_content_format), buf);
 
     signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,
@@ -97,60 +143,30 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
     lock = FALSE;
   }
 
-  event void UpdateTimer.fired() {
-    i++;
-
-    temp_resource->dirty = 1;
-
-    temp_resource->seq_num.length = sizeof(i);
-    temp_resource->seq_num.s = &i;
-
-    if (temp_resource->data != NULL) {
-	coap_free(temp_resource->data);
-    }
-    if ((temp_resource->data = (uint8_t *) coap_malloc(sizeof(data))) != NULL) {
-      sprintf(data, "%s%02u", (char *)INITIAL_DEFAULT_DATA_OBS, i);
-      memcpy(temp_resource->data, data, sizeof(data));
-      temp_resource->data_len = sizeof(data);
-      temp_resource->data_ct = temp_content_format;
-    }
-
-    if(i >= 5){
-      call UpdateTimer.stop();
-    }
-
-    signal CoapResource.notifyObservers();
-  }
-
   command int CoapResource.getMethod(coap_async_state_t* async_state,
 				     coap_pdu_t* request,
 				     struct coap_resource_t *resource,
 				     unsigned int content_format) {
     if (lock == FALSE) {
       lock = TRUE;
+
       temp_async_state = async_state;
       temp_request = request;
       temp_resource = resource;
-      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
+      temp_content_format = content_format;
 
-      if (!call UpdateTimer.isRunning() && async_state->flags & COAP_ASYNC_OBSERVED) {
-	call UpdateTimer.startPeriodic(5120);
-	i = 0;
-      }
       post getMethod();
-
       return COAP_SPLITPHASE;
     } else {
       return COAP_RESPONSE_503;
     }
   }
 
-  /////////////////////
-  // PUT:
   command int CoapResource.putMethod(coap_async_state_t* async_state,
 				     coap_pdu_t* request,
 				     coap_resource_t *resource,
 				     unsigned int content_format) {
+
     return COAP_RESPONSE_405;
   }
 
