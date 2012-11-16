@@ -278,6 +278,16 @@ module CoapUdpServerP {
 	  goto cleanup;
 	}
 
+	if (coap_check_option(request, COAP_OPTION_ETAG, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) {
+	  if (resource->etag == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),COAP_OPT_LENGTH(opt_iter.option))) {
+	    coap_add_option(response, COAP_OPTION_ETAG,
+			    coap_encode_var_bytes(buf, resource->etag), buf);
+	    response->hdr->code = COAP_RESPONSE_CODE(203);
+	    return;
+	  }
+	}
+
+
 #ifndef WITHOUT_OBSERVE
 	if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
 	  coap_add_observer(resource, peer, token);

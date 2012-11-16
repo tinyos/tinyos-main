@@ -68,6 +68,9 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
       r->data_len = sizeof(INITIAL_DEFAULT_DATA_TEST)-1;
     }
 
+    // default ETAG (ASCII characters)
+    r->etag = 0x61;
+
     return SUCCESS;
   }
 
@@ -76,6 +79,9 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
   task void getMethod() {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(205);
+
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
 
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
@@ -113,6 +119,9 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(204);
 
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
+
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
 
@@ -140,6 +149,8 @@ generic module CoapEtsiTestResourceP(uint8_t uri_key) {
       coap_get_data(request, &size, &data);
 
       temp_resource->dirty = 1;
+      temp_resource->etag++; //ASCII chars
+      //temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
 
       if (resource->data != NULL) {
 	coap_free(resource->data);
