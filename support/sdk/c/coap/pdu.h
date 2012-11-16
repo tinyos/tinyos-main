@@ -71,8 +71,8 @@
 
 /* selected option types from draft-core-block-04 */
 
-#define COAP_OPTION_BLOCK1       23 /* C, unsigned integer, 1--3 B, 0 */
-#define COAP_OPTION_BLOCK2       27 /* C, unsigned integer, 1--3 B, 0 */
+#define COAP_OPTION_BLOCK1       27 /* C, unsigned integer, 1--3 B, 0 */
+#define COAP_OPTION_BLOCK2       23 /* C, unsigned integer, 1--3 B, 0 */
 
 /* selected option types from draft-bormann-coap-misc-04 */
 
