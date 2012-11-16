@@ -88,6 +88,7 @@ typedef struct coap_resource_t {
 
 #ifdef WITH_TINYOS
   uint8_t max_age;
+  uint8_t etag;
 
   uint8_t *data;
   size_t data_len;
