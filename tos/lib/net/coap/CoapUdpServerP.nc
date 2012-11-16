@@ -226,30 +226,6 @@ module CoapUdpServerP {
 	coap_attr_t *attr = NULL;
 	coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
 
-	/* set media_type if available */
-	if ((coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) ||
-	    (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter) && (request->hdr->code & (COAP_REQUEST_PUT & COAP_REQUEST_POST)))) {
-	  do {
-	    while ((attr = coap_find_attr(resource, attr, (unsigned char*)"ct", 2))){
-	      if (atoi((const char *)attr->value.s) == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
-									     COAP_OPT_LENGTH(opt_iter.option))) {
-		media_type = coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
-						     COAP_OPT_LENGTH(opt_iter.option));
-		break;
-	      }
-	    }
-	  } while (coap_option_next(&opt_iter) && (attr == NULL));
-	} else {
-	  media_type = COAP_MEDIATYPE_ANY;
-	}
-
-	if (media_type == COAP_MEDIATYPE_NOT_SUPPORTED) {
-	  response->hdr->code = (request->hdr->code == COAP_REQUEST_GET
-				 ? COAP_RESPONSE_CODE(406)
-				 : COAP_RESPONSE_CODE(415));
-	  goto cleanup;
-	}
-
 #ifndef WITHOUT_OBSERVE
 	//handler has been called by check_notify() //thp: move above media type stuff
 	if (request == NULL){
@@ -275,24 +251,50 @@ module CoapUdpServerP {
 	    response->hdr->code = COAP_RESPONSE_CODE(500);
 
 	  return;
-	} else { //TODO: thp: do we really need the else{}?
-	  if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
-	    coap_add_observer(resource, peer, token);
-	    async_state = coap_register_async(ctx, peer, request,
-					  COAP_ASYNC_OBSERVED,
-					  (void *)NULL);
-	  } else {
-	    //remove client from observer list, if already registered
-	    if (coap_find_observer(resource, peer, token)) {
-	      coap_delete_observer(resource, peer, token);
-	    }
+	}
 #endif
-	    async_state = coap_register_async(ctx, peer, request,
-	    				      COAP_ASYNC_CONFIRM,
-					      (void *)NULL);
+
+	/* set media_type if available */
+	if ((coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) ||
+	    (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter) && (request->hdr->code & (COAP_REQUEST_PUT & COAP_REQUEST_POST)))) {
+	  do {
+	    while ((attr = coap_find_attr(resource, attr, (unsigned char*)"ct", 2))){
+	      if (atoi((const char *)attr->value.s) == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
+									     COAP_OPT_LENGTH(opt_iter.option))) {
+		media_type = coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
+						     COAP_OPT_LENGTH(opt_iter.option));
+		break;
+	      }
+	    }
+	  } while (coap_option_next(&opt_iter) && (attr == NULL));
+	} else {
+	  media_type = COAP_MEDIATYPE_ANY;
+	}
+
+	if (media_type == COAP_MEDIATYPE_NOT_SUPPORTED) {
+	  response->hdr->code = (request->hdr->code == COAP_REQUEST_GET
+				 ? COAP_RESPONSE_CODE(406)
+				 : COAP_RESPONSE_CODE(415));
+	  goto cleanup;
+	}
 
 #ifndef WITHOUT_OBSERVE
+	if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
+	  coap_add_observer(resource, peer, token);
+	  async_state = coap_register_async(ctx, peer, request,
+					    COAP_ASYNC_OBSERVED,
+					    (void *)NULL);
+	} else {
+	  //remove client from observer list, if already registered
+	  if (coap_find_observer(resource, peer, token)) {
+	    coap_delete_observer(resource, peer, token);
 	  }
+#endif
+	  async_state = coap_register_async(ctx, peer, request,
+					    COAP_ASYNC_CONFIRM,
+					    (void *)NULL);
+
+#ifndef WITHOUT_OBSERVE
 	}
 #endif
 	temp_request =  coap_clone_pdu(request);
