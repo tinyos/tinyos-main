@@ -616,14 +616,18 @@ coap_check_notify(coap_context_t *context) {
   }
 }
 
+
+#ifndef WITH_CONTIKI
+void
+coap_handle_failed_notify(coap_context_t *context __attribute__((__unused__)),
+			  const coap_address_t *peer __attribute__((__unused__)),
+			  const str *token __attribute__((__unused__))) {
+}
+#else /* WITH_CONTIKI */
 void
 coap_handle_failed_notify(coap_context_t *context, 
 			  const coap_address_t *peer, 
 			  const str *token) {
-
-#ifndef WITH_CONTIKI
-  ;
-#else /* WITH_CONTIKI */
   coap_resource_t *r;
   coap_subscription_t *obs;
   int i;
@@ -664,7 +668,7 @@ coap_handle_failed_notify(coap_context_t *context,
       }
     }
   }
-#endif /* WITH_CONTIKI */
 }
+#endif /* WITH_CONTIKI */
 
 #endif /* WITHOUT_NOTIFY */
