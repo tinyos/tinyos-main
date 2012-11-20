@@ -58,10 +58,10 @@ typedef unsigned char coap_opt_t;
   ( ( ( (*(PCHAR(opt)+1)<<8) + (*(PCHAR(opt)+2)) ) + 258)<<3) ))
 
 #define COAP_OPT_JUMP_SET_VALUE_1_BYTE(opt,val)	\
-  *(PCHAR(opt)+1)  = (val>>3) -2;
+  *(PCHAR(opt)+1)  = ((val)>>3) -2;
 #define COAP_OPT_JUMP_SET_VALUE_2_BYTE(opt,val) \
-  *(PCHAR(opt)+1) = (((val>>3) -258) && 0xff00)>>8; \
-  *(PCHAR(opt)+2) = (((val>>3) -258) &&   0xff);
+  *(PCHAR(opt)+1) = ((((val)>>3) -258) && 0xff00)>>8;	\
+  *(PCHAR(opt)+2) = ((((val)>>3) -258) &&   0xff);
 
 /* Do not forget to adjust this when coap_opt_t is changed! */
 #define COAP_OPT_SIZE(opt) (				\
