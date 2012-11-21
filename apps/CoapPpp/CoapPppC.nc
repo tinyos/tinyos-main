@@ -111,7 +111,6 @@ configuration CoapPppC {
   components new CoapDefaultResourceC(INDEX_DEFAULT);
   CoapUdpServerC.CoapResource[INDEX_DEFAULT] -> CoapDefaultResourceC.CoapResource;
   CoapDefaultResourceC.Leds -> LedsC;
-  CoapUdpServerC.DynamicDefaultResource -> CoapDefaultResourceC.CoapResource;
   CoapDefaultResourceC.CoAPServer ->  CoapUdpServerC;//for POST/DELETE
 #endif
 

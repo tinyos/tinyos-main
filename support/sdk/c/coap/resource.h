@@ -38,6 +38,15 @@
 #include "net.h"
 #include "subscribe.h"
 
+#ifdef WITH_TINYOS
+extern void hnd_coap_default_tinyos(coap_context_t  *ctx,
+				    struct coap_resource_t *resource,
+				    coap_address_t *peer,
+				    coap_pdu_t *request,
+				    str *token,
+				    coap_pdu_t *response);
+#endif
+
 /** Definition of message handler function (@sa coap_resource_t). */
 typedef void (*coap_method_handler_t)
   (coap_context_t  *, struct coap_resource_t *, coap_address_t *, coap_pdu_t *,

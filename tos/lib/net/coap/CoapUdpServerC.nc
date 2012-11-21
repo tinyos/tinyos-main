@@ -34,7 +34,6 @@ configuration CoapUdpServerC {
   provides interface CoAPServer;
   uses interface LibCoAP as LibCoapServer;
   uses interface CoapResource[uint8_t uri];
-  uses interface CoapResource as DynamicDefaultResource;
 }
 implementation {
   components CoapUdpServerP, LedsC;
@@ -43,7 +42,6 @@ implementation {
   LibCoapServer = CoapUdpServerP.LibCoapServer;
 
   CoapResource  = CoapUdpServerP.CoapResource;
-  DynamicDefaultResource = CoapUdpServerP.DynamicDefaultResource;
 
   CoapUdpServerP.Leds -> LedsC;
 }

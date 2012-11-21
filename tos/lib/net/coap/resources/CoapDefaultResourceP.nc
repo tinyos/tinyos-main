@@ -52,6 +52,7 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
   coap_async_state_t *temp_async_state = NULL;
   coap_resource_t *temp_resource = NULL;
   unsigned int temp_content_format;
+  int temp_rc;
 
   command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
 #ifdef COAP_CONTENT_TYPE_PLAIN
@@ -158,17 +159,11 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
   // POST:
   task void postMethod() {
     response = coap_new_pdu();
-    response->hdr->code = COAP_RESPONSE_CODE(201);
+    response->hdr->code = temp_rc;
 
-    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
-		    coap_encode_var_bytes(buf, temp_content_format), buf);
-
-    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
-		    sizeof("location1")-1, (unsigned char *)"location1");
-    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
-		    sizeof("location2")-1, (unsigned char *)"location2");
-    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
-		    sizeof("location3")-1, (unsigned char *)"location3");
+    if (temp_resource->data_len != 0)
+      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		      coap_encode_var_bytes(buf, temp_content_format), buf);
 
     signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,
@@ -184,16 +179,21 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
 				      unsigned int content_format) {
 
     coap_resource_t* r;
+    coap_opt_iterator_t opt_iter;
+    coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
 
     if (lock == FALSE) {
       lock = TRUE;
 
-      r = call CoAPServer.registerDynamicResource((unsigned char*)"location1/location2/location3",
-						  sizeof("location1/location2/location3"),
-						  GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+      if (resource == NULL) {
+       if (coap_check_option(request, COAP_OPTION_URI_PATH, &opt_iter))
+	 r = call CoAPServer.registerDynamicResource((unsigned char*)"test123", sizeof("test123"),						  GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+       temp_rc = COAP_RESPONSE_CODE(201);
+      } else {
+	temp_rc = COAP_RESPONSE_CODE(204);
+      }
 
       coap_get_data(request, &size, &data);
-
       if ((r->data = (uint8_t *) coap_malloc(size)) != NULL) {
 	memcpy(r->data, data, size);
 	r->data_len = size;
