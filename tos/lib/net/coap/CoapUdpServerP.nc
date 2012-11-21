@@ -56,7 +56,6 @@ module CoapUdpServerP {
     uses interface LibCoAP as LibCoapServer;
     uses interface Leds;
     uses interface CoapResource[uint8_t uri];
-    uses interface CoapResource as DynamicDefaultResource;
 } implementation {
     coap_context_t *ctx_server;
     coap_resource_t *r;
@@ -98,6 +97,7 @@ module CoapUdpServerP {
 #ifndef WITHOUT_BLOCK
 	coap_register_option(ctx_server, COAP_OPTION_BLOCK2);
 #endif
+	coap_register_option(ctx_server, COAP_OPTION_IF_MATCH);
 
 	return call LibCoapServer.setupContext(port);
     }
@@ -173,7 +173,7 @@ module CoapUdpServerP {
 #ifndef WITHOUT_OBSERVE
       //r->observable = uri_index_map[i].observable; //TODO
 #endif
-      //call CoapResource.initResourceAttributes[i](r);//TODO
+      call CoapResource.initResourceAttributes[INDEX_DEFAULT](r);//TODO
 
       coap_add_resource(ctx_server, r);
       return r;
@@ -187,6 +187,13 @@ module CoapUdpServerP {
 	return SUCCESS;
       else
 	return FAIL;
+    }
+
+    command error_t CoAPServer.findResource(coap_key_t key) {
+      if (coap_get_resource_from_key(ctx_server, key))
+	return SUCCESS;
+
+      return FAIL;
     }
 
     event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
@@ -207,6 +214,32 @@ module CoapUdpServerP {
 	coap_read(ctx_server);
 	coap_dispatch(ctx_server);
     }
+    ///////////////////
+    // PUT/POST default handler for TinyOS fo non-existing resources
+    void hnd_coap_default_tinyos(coap_context_t  *ctx,
+			       struct coap_resource_t *resource,
+			       coap_address_t *peer,
+			       coap_pdu_t *request,
+			       str *token,
+			       coap_pdu_t *response) @C() @spontaneous() {
+      coap_async_state_t *async_state = NULL;
+      int rc;
+      coap_pdu_t *temp_request;
+      unsigned int media_type = COAP_MEDIATYPE_TEXT_PLAIN;
+
+      async_state = coap_register_async(ctx, peer, request,
+					COAP_ASYNC_CONFIRM,
+					(void *)NULL);
+
+      temp_request =  coap_clone_pdu(request);
+
+      response->hdr->type = COAP_MESSAGE_NON;
+      rc = call CoapResource.postMethod[INDEX_DEFAULT](async_state,
+					     temp_request,
+					     resource,
+					     media_type);
+
+    }
 
     ///////////////////
     // all TinyOS CoAP requests have to go through this
@@ -219,6 +252,7 @@ module CoapUdpServerP {
 
 	coap_opt_iterator_t opt_iter;
 	int rc;
+	uint8_t rk;
 	coap_async_state_t *tmp;
 	coap_async_state_t *async_state = NULL;
 	coap_pdu_t *temp_request;
@@ -254,7 +288,7 @@ module CoapUdpServerP {
 	}
 #endif
 
-	/* set media_type if available */
+	/* set content_format if available */
 	if ((coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) ||
 	    (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter) && (request->hdr->code & (COAP_REQUEST_PUT & COAP_REQUEST_POST)))) {
 	  do {
@@ -278,6 +312,7 @@ module CoapUdpServerP {
 	  goto cleanup;
 	}
 
+	//ETAG
 	if (coap_check_option(request, COAP_OPTION_ETAG, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) {
 	  if (resource->etag == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),COAP_OPT_LENGTH(opt_iter.option))) {
 	    coap_add_option(response, COAP_OPTION_ETAG,
@@ -287,6 +322,13 @@ module CoapUdpServerP {
 	  }
 	}
 
+	//If-Match
+	if (coap_check_option(request, COAP_OPTION_IF_MATCH, &opt_iter) && request->hdr->code == COAP_REQUEST_PUT) {
+	  if (resource->etag != coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),COAP_OPT_LENGTH(opt_iter.option))) {
+	    response->hdr->code = COAP_RESPONSE_CODE(412);
+	    return;
+	  }
+	}
 
 #ifndef WITHOUT_OBSERVE
 	if (coap_check_option(request, COAP_OPTION_SUBSCRIPTION, &opt_iter)){
@@ -324,25 +366,32 @@ module CoapUdpServerP {
 
 	// coap_get_data(request, &size, &data);
 
+	rk = get_index_for_key(resource->key);
+
+#ifdef COAP_RESOURCE_DEFAULT
+	if (rk == COAP_NO_SUCH_RESOURCE)
+	  rk = INDEX_DEFAULT;
+#endif
+
 	if (request->hdr->code == COAP_REQUEST_GET)
-	    rc = call CoapResource.getMethod[get_index_for_key(resource->key)](async_state,
-									       temp_request,
-									       resource,
-									       media_type);
+	    rc = call CoapResource.getMethod[rk](async_state,
+						 temp_request,
+						 resource,
+						 media_type);
 	else if (request->hdr->code == COAP_REQUEST_POST)
-	    rc = call CoapResource.postMethod[get_index_for_key(resource->key)](async_state,
-										temp_request,
-										resource,
-										media_type);
+	    rc = call CoapResource.postMethod[rk](async_state,
+						  temp_request,
+						  resource,
+						  media_type);
 	else if (request->hdr->code == COAP_REQUEST_PUT)
-	    rc = call CoapResource.putMethod[get_index_for_key(resource->key)](async_state,
-									       temp_request,
-									       resource,
-									       media_type);
+	    rc = call CoapResource.putMethod[rk](async_state,
+						 temp_request,
+						 resource,
+						 media_type);
 	else if (request->hdr->code == COAP_REQUEST_DELETE)
-	    rc = call CoapResource.deleteMethod[get_index_for_key(resource->key)](async_state,
-										  temp_request,
-										  resource);
+	    rc = call CoapResource.deleteMethod[rk](async_state,
+						    temp_request,
+						    resource);
 	else {
 	  rc = COAP_RESPONSE_CODE(405);
 	}
@@ -390,88 +439,24 @@ module CoapUdpServerP {
 							     coap_pdu_t* request,
 							     coap_resource_t *resource,
 							     unsigned int media_type) {
-#ifdef COAP_RESOURCE_DEFAULT
-   return call DynamicDefaultResource.getMethod(async_state,
-						request,
-						resource,
-						media_type);
-#else
    return FAIL;
-#endif
  }
  default command int CoapResource.putMethod[uint8_t uri_key](coap_async_state_t* async_state,
 							     coap_pdu_t* request,
 							     coap_resource_t *resource,
 							     unsigned int media_type) {
-#ifdef COAP_RESOURCE_DEFAULT
-   return call DynamicDefaultResource.putMethod(async_state,
-						request,
-						resource,
-						media_type);
-#else
    return FAIL;
-#endif
  }
  default command int CoapResource.postMethod[uint8_t uri_key](coap_async_state_t* async_state,
 							      coap_pdu_t* request,
 							      coap_resource_t *resource,
 							      unsigned int media_type) {
-#ifdef COAP_RESOURCE_DEFAULT
-   return call DynamicDefaultResource.postMethod(async_state,
-						 request,
-						 resource,
-						 media_type);
-#else
    return FAIL;
-#endif
  }
  default command int CoapResource.deleteMethod[uint8_t uri_key](coap_async_state_t* async_state,
 								coap_pdu_t* request,
 								coap_resource_t *resource) {
-#ifdef COAP_RESOURCE_DEFAULT
-   return call DynamicDefaultResource.deleteMethod(async_state,
-						   request,
-						   resource);
-#else
    return FAIL;
-#endif
- }
-
- //re-feed the signals into CoapResource with 0xff to save code space
- event void DynamicDefaultResource.methodDone(error_t result,
-					      coap_async_state_t* async_state,
-					      coap_pdu_t* request,
-					      coap_pdu_t* response,
-					      coap_resource_t *resource) {
-   signal CoapResource.methodDone[0xff](result,
-					async_state,
-					request,
-					response,
-					resource);
- }
- event void DynamicDefaultResource.methodDoneSeparate(error_t result,
-						      coap_async_state_t* async_state,
-						      coap_pdu_t* request,
-						      coap_pdu_t* response,
-						      coap_resource_t *resource) {
-   signal CoapResource.methodDoneSeparate[0xff](result,
-						async_state,
-						request,
-						response,
-						resource);
- }
- event void DynamicDefaultResource.methodNotDone(coap_async_state_t* async_state,
-						 uint8_t responsecode) {
-   signal CoapResource.methodNotDone[0xff](async_state,
-					   responsecode);
- }
- event void DynamicDefaultResource.notifyObservers(//error_t result,
-							  //coap_async_state_t* async_state,
-							  // coap_pdu_t* request,
-							  // coap_pdu_t* response,
-							  //struct coap_resource_t* resource
-							  ) {
-   signal CoapResource.notifyObservers[0xff]();
  }
 
  event void CoapResource.methodDone[uint8_t uri_key](error_t result,

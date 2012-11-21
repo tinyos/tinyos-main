@@ -38,6 +38,14 @@
 #ifndef WITH_CONTIKI
 #ifndef WITH_TINYOS
 time_t clock_offset;
+
+void hnd_coap_default_tinyos(coap_context_t  *ctx,
+			     struct coap_resource_t *resource,
+			     coap_address_t *peer,
+			     coap_pdu_t *request,
+			     str *token,
+			     coap_pdu_t *response);
+
 #endif /* WITH_TINYOS */
 
 static inline coap_queue_t *
@@ -1136,16 +1144,23 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
 				  opt_filter);
       }
       break;
+#ifdef WITH_TINYOS
+    case COAP_REQUEST_PUT:
+    case COAP_REQUEST_POST:
 
+      h = hnd_coap_default_tinyos;
+      goto default_handler;
+      break;
+#endif
     default: 			/* any other request type */
 
       debug("unhandled request for unknown resource 0x%02x%02x%02x%02x\r\n",
 	    key[0], key[1], key[2], key[3]);
       if (!coap_is_mcast(&node->local))
-	response = coap_new_error_response(node->pdu, COAP_RESPONSE_CODE(405), 
+      	response = coap_new_error_response(node->pdu, COAP_RESPONSE_CODE(405), 
 					   opt_filter);
-    }
-      
+    }  
+
     if (response && coap_send(context, &node->remote, response) == COAP_INVALID_TID) {
       warn("cannot send response for transaction %u\n", node->id);
     }
@@ -1153,12 +1168,16 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
 
     return;
   }
-  
+
   /* the resource was found, check if there is a registered handler */
   if ((size_t)node->pdu->hdr->code - 1 <
       sizeof(resource->handler)/sizeof(coap_method_handler_t))
     h = resource->handler[node->pdu->hdr->code - 1];
-  
+
+#ifdef WITH_TINYOS
+ default_handler:
+#endif
+
   if (h) {
     debug("call custom handler for resource 0x%02x%02x%02x%02x\n", 
 	  key[0], key[1], key[2], key[3]);

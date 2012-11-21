@@ -275,7 +275,7 @@ int coap_add_data(coap_pdu_t *pdu, unsigned int len, const unsigned char *data);
  */
 int coap_get_data(coap_pdu_t *pdu, size_t *len, unsigned char **data);
 
-#if 0
+//#if 0
 /* I don't think this is needed */
 
 /**
@@ -286,6 +286,6 @@ int coap_get_data(coap_pdu_t *pdu, size_t *len, unsigned char **data);
  * @return 1 if result has been updated, 0 otherwise, i.e. in case of error
  */
 int coap_get_request_uri(coap_pdu_t *pdu, coap_uri_t *result);
-#endif
+//#endif
 
 #endif /* _PDU_H_ */
