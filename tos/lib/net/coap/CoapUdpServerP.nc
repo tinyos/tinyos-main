@@ -159,7 +159,7 @@ module CoapUdpServerP {
       if (r == NULL)
 	return NULL;
 
-      //r->data = NULL;
+      r->data = NULL;
 
       if ((supported_methods & GET_SUPPORTED) == GET_SUPPORTED)
 	coap_register_handler(r, COAP_REQUEST_GET, hnd_coap_async_tinyos);
@@ -173,7 +173,7 @@ module CoapUdpServerP {
 #ifndef WITHOUT_OBSERVE
       //r->observable = uri_index_map[i].observable; //TODO
 #endif
-      //call CoapResource.initResourceAttributes[i](r);//TODO
+      call CoapResource.initResourceAttributes[INDEX_DEFAULT](r);//TODO
 
       coap_add_resource(ctx_server, r);
       return r;
@@ -187,6 +187,13 @@ module CoapUdpServerP {
 	return SUCCESS;
       else
 	return FAIL;
+    }
+
+    command error_t CoAPServer.findResource(coap_key_t key) {
+      if (coap_get_resource_from_key(ctx_server, key))
+	return SUCCESS;
+
+      return FAIL;
     }
 
     event void LibCoapServer.read(struct sockaddr_in6 *from, void *data,
@@ -208,7 +215,7 @@ module CoapUdpServerP {
 	coap_dispatch(ctx_server);
     }
     ///////////////////
-    // all TinyOS CoAP requests have to go through this
+    // PUT/POST default handler for TinyOS fo non-existing resources
     void hnd_coap_default_tinyos(coap_context_t  *ctx,
 			       struct coap_resource_t *resource,
 			       coap_address_t *peer,
@@ -225,7 +232,7 @@ module CoapUdpServerP {
 					(void *)NULL);
 
       temp_request =  coap_clone_pdu(request);
-      //call Leds.led0On();
+
       response->hdr->type = COAP_MESSAGE_NON;
       rc = call CoapResource.postMethod[INDEX_DEFAULT](async_state,
 					     temp_request,

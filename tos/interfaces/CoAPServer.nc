@@ -54,4 +54,10 @@ interface CoAPServer {
      */
     command error_t deregisterDynamicResource(coap_resource_t* r);
 
+    /*
+     * check if resource already exists
+     */
+    command error_t findResource(coap_key_t key);
+    
+    
 }

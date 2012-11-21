@@ -34,14 +34,13 @@
 #include <async.h>
 #include <mem.h>
 #include <resource.h>
+#include <uri.h>
 
 generic module CoapDefaultResourceP(uint8_t uri_key) {
   provides interface CoapResource;
   uses interface CoAPServer;
   uses interface Leds;
 } implementation {
-
-#define INITIAL_DEFAULT_DATA_DEFAULT "index"
 
   unsigned char buf[2];
   size_t size;
@@ -59,10 +58,8 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
     coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
 #endif
 
-    if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_DEFAULT))) != NULL) {
-      memcpy(r->data, INITIAL_DEFAULT_DATA_DEFAULT, sizeof(INITIAL_DEFAULT_DATA_DEFAULT));
-      r->data_len = sizeof(INITIAL_DEFAULT_DATA_DEFAULT);
-    }
+    // default ETAG (ASCII characters)
+    r->etag = 0x61;
 
     return SUCCESS;
   }
@@ -72,6 +69,9 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
   task void getMethod() {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(205);
+
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
 
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
@@ -92,9 +92,9 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
       lock = TRUE;
 
       temp_async_state = async_state;
-      temp_resource = resource;
       temp_request = request;
-      temp_content_format = COAP_CONTENT_TYPE_PLAIN;
+      temp_resource = resource;
+      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
 
       post getMethod();
       return COAP_SPLITPHASE;
@@ -108,6 +108,9 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
   task void putMethod() {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(204);
+
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
 
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
@@ -129,13 +132,15 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
       lock = TRUE;
 
       temp_async_state = async_state;
-      temp_resource = resource;
       temp_request = request;
-      temp_content_format = COAP_CONTENT_TYPE_PLAIN;
+      temp_resource = resource;
+      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
 
       coap_get_data(request, &size, &data);
 
       temp_resource->dirty = 1;
+      temp_resource->etag++; //ASCII chars
+      //temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
 
       if (resource->data != NULL) {
 	coap_free(resource->data);
@@ -161,6 +166,9 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
     response = coap_new_pdu();
     response->hdr->code = temp_rc;
 
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
+
     if (temp_resource->data_len != 0)
       coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		      coap_encode_var_bytes(buf, temp_content_format), buf);
@@ -178,22 +186,64 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
 				      struct coap_resource_t *resource,
 				      unsigned int content_format) {
 
-    coap_resource_t* r;
+    coap_resource_t *r = NULL;
     coap_opt_iterator_t opt_iter;
+    coap_uri_t *uri;
+    coap_key_t key;
+
     coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
 
     if (lock == FALSE) {
       lock = TRUE;
 
       if (resource == NULL) {
-       if (coap_check_option(request, COAP_OPTION_URI_PATH, &opt_iter))
-	 r = call CoAPServer.registerDynamicResource((unsigned char*)"test123", sizeof("test123"),						  GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+	if (coap_check_option(request, COAP_OPTION_URI_PATH, &opt_iter)) {
+
+	  uri = coap_malloc(sizeof(coap_uri_t));
+
+	  if (coap_get_request_uri(request, uri)) {
+	    r = call CoAPServer.registerDynamicResource(uri->path.s, uri->path.length+1,
+							GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+	  } else {
+	    return COAP_RESPONSE_CODE(500);
+	  }
+	  coap_free(uri);
+	}
        temp_rc = COAP_RESPONSE_CODE(201);
       } else {
-	temp_rc = COAP_RESPONSE_CODE(204);
+
+	memset(key, 0, 4);
+	coap_hash((unsigned char*)"location1",
+		  sizeof("location1")-1, key);
+	coap_hash((unsigned char*)"location2",
+		  sizeof("location2")-1, key);
+	coap_hash((unsigned char*)"location3",
+		  sizeof("location2")-1, key);
+
+	if (call CoAPServer.findResource(key) == SUCCESS) {
+	  // resource does exist -> update
+
+	  temp_rc = COAP_RESPONSE_CODE(204);
+	} else {
+	  // resource does not exist -> create
+	  r = call CoAPServer.registerDynamicResource((unsigned char*)"location1/location2/location3",
+						      sizeof("location1/location2/location3"),
+						      GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+
+	  temp_rc = COAP_RESPONSE_CODE(201);
+	}
       }
 
       coap_get_data(request, &size, &data);
+
+      temp_resource->dirty = 1;
+      temp_resource->etag++; //ASCII chars
+      //temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
+
+      if (resource->data != NULL) {
+	coap_free(resource->data);
+      }
+
       if ((r->data = (uint8_t *) coap_malloc(size)) != NULL) {
 	memcpy(r->data, data, size);
 	r->data_len = size;

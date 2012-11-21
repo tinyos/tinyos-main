@@ -291,7 +291,7 @@ coap_response_phrase(unsigned char code) {
 }
 #endif
 
-#if 0
+//#if 0
 int
 coap_get_request_uri(coap_pdu_t *pdu, coap_uri_t *result) {
   coap_opt_t *opt;
@@ -303,30 +303,30 @@ coap_get_request_uri(coap_pdu_t *pdu, coap_uri_t *result) {
   memset(result, 0, sizeof(*result));
     
   if ((opt = coap_check_option(pdu, COAP_OPTION_URI_HOST, &opt_iter)))
-    COAP_SET_STR(&result->host, COAP_OPT_LENGTH(*opt), COAP_OPT_VALUE(*opt));
+    COAP_SET_STR(&result->host, COAP_OPT_LENGTH(opt), COAP_OPT_VALUE(opt));
 
   if ((opt = coap_check_option(pdu, COAP_OPTION_URI_PORT, &opt_iter)))
     result->port = 
-      coap_decode_var_bytes(COAP_OPT_VALUE(*opt), COAP_OPT_LENGTH(*opt));
+      coap_decode_var_bytes(COAP_OPT_VALUE(opt), COAP_OPT_LENGTH(opt));
   else
     result->port = COAP_DEFAULT_PORT;
 
   if ((opt = coap_check_option(pdu, COAP_OPTION_URI_PATH, &opt_iter))) {
-    result->path.s = COAP_OPT_VALUE(*opt);
-    result->path.length = COAP_OPT_LENGTH(*opt);
+    result->path.s = COAP_OPT_VALUE(opt);
+    result->path.length = COAP_OPT_LENGTH(opt);
 
     while (coap_option_next(&opt_iter) && opt_iter.type == COAP_OPTION_URI_PATH) 
-      result->path.length += COAP_OPT_SIZE(*opt_iter.option);
+      result->path.length += COAP_OPT_SIZE(opt_iter.option);
   }
 
   if ((opt = coap_check_option(pdu, COAP_OPTION_URI_QUERY, &opt_iter))) {
-    result->query.s = COAP_OPT_VALUE(*opt);
-    result->query.length = COAP_OPT_LENGTH(*opt);
+    result->query.s = COAP_OPT_VALUE(opt);
+    result->query.length = COAP_OPT_LENGTH(opt);
 
     while (coap_option_next(&opt_iter) && opt_iter.type == COAP_OPTION_URI_QUERY) 
-      result->query.length += COAP_OPT_SIZE(*opt_iter.option);
+      result->query.length += COAP_OPT_SIZE(opt_iter.option);
   }
 
   return 1;
 }
-#endif
+//#endif
