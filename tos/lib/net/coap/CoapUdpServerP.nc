@@ -285,7 +285,7 @@ module CoapUdpServerP {
 	if ((coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) ||
 	    (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter) && (request->hdr->code & (COAP_REQUEST_PUT & COAP_REQUEST_POST)))) {
 	  do {
-	    while ((attr = coap_find_attr(resource, attr, (unsigned char*)"ct", 2))){
+	    while ((attr = coap_find_attr(resource, (unsigned char*)"ct", 2))){
 	      if (atoi((const char *)attr->value.s) == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
 									     COAP_OPT_LENGTH(opt_iter.option))) {
 		media_type = coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),

@@ -243,6 +243,7 @@ configuration CoapPppC {
   components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK5) as Link5Resource;
   CoapUdpServerC.CoapResource[INDEX_ETSI_LINK5] -> Link5Resource.CoapResource;
 #endif
+
 #endif
 
 #ifdef COAP_CLIENT_ENABLED

@@ -68,10 +68,7 @@ coap_register_async(coap_context_t *context, coap_address_t *peer,
     s->tokenlen = toklen;
     memcpy(s->token, COAP_OPT_VALUE(token), toklen);
   }
-
-  // REMOVE?
-  s->message_id = request->hdr->id;
-
+    
   memcpy(&s->id, &id, sizeof(coap_tid_t));
 
   coap_touch_async(s);
