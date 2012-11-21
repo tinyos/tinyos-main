@@ -296,7 +296,7 @@ unsigned short coap_opt_length(const coap_opt_t *opt);
  * @param opt  The option whose value should be returned.
  * @return A pointer to the option value or @c NULL on error.
  */
-unsigned char *coap_opt_value(coap_opt_t *opt);
+unsigned char *coap_opt_value(const coap_opt_t *opt);
 
 /** @deprecated { Use coap_opt_value() instead. } */
 #define COAP_OPT_VALUE(opt) coap_opt_value(opt)

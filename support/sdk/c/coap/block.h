@@ -34,7 +34,7 @@ typedef struct {
 } coap_block_t;
 
 /** Returns the value of the least significant byte of a Block option @p opt. */
-#define COAP_OPT_BLOCK_LAST(opt) ( COAP_OPT_VALUE(opt) + (COAP_OPT_LENGTH(opt) - 1) )
+#define COAP_OPT_BLOCK_LAST(opt) ( coap_opt_value(opt) + (coap_opt_length(opt) - 1) )
 
 /** Returns the value of the More-bit of a Block option @p opt. */
 #define COAP_OPT_BLOCK_MORE(opt) ( *COAP_OPT_BLOCK_LAST(opt) & 0x08 )
@@ -48,8 +48,8 @@ _coap_block_num_impl(const coap_opt_t *block_opt) {
   unsigned int num = 0;
 
   if (COAP_OPT_LENGTH(block_opt) > 1)
-    num = coap_decode_var_bytes(COAP_OPT_VALUE(block_opt), 
-				COAP_OPT_LENGTH(block_opt) - 1);
+    num = coap_decode_var_bytes(coap_opt_value(block_opt), 
+				coap_opt_length(block_opt) - 1);
 
   return (num << 4) | ((*COAP_OPT_BLOCK_LAST(block_opt) & 0xF0) >> 4);
 }

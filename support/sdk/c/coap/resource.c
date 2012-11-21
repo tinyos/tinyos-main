@@ -611,7 +611,6 @@ coap_check_notify(coap_context_t *context) {
   }
 }
 
-
 #ifndef WITH_CONTIKI
 void
 coap_handle_failed_notify(coap_context_t *context __attribute__((__unused__)),
@@ -620,13 +619,13 @@ coap_handle_failed_notify(coap_context_t *context __attribute__((__unused__)),
 }
 #else /* WITH_CONTIKI */
 void
-coap_handle_failed_notify(coap_context_t *context, 
-			  const coap_address_t *peer, 
+coap_handle_failed_notify(coap_context_t *context,
+			  const coap_address_t *peer,
 			  const str *token) {
   coap_resource_t *r;
   coap_subscription_t *obs;
   int i;
-  
+
   r = (coap_resource_t *)resource_storage.mem;
   for (i = 0; i < resource_storage.num; ++i, ++r) {
     if (!resource_storage.count[i] )
@@ -647,14 +646,14 @@ coap_handle_failed_notify(coap_context_t *context,
 	  obs->fail_cnt = 0;
 
 	  debug("removed observer [%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]:%d\r\n",
-	      obs->subscriber.addr.u8[0], obs->subscriber.addr.u8[1], 
-	      obs->subscriber.addr.u8[2], obs->subscriber.addr.u8[3], 
-	      obs->subscriber.addr.u8[4], obs->subscriber.addr.u8[5], 
-	      obs->subscriber.addr.u8[6], obs->subscriber.addr.u8[7], 
-	      obs->subscriber.addr.u8[8], obs->subscriber.addr.u8[9], 
-	      obs->subscriber.addr.u8[10], obs->subscriber.addr.u8[11], 
-	      obs->subscriber.addr.u8[12], obs->subscriber.addr.u8[13], 
-	      obs->subscriber.addr.u8[14], obs->subscriber.addr.u8[15] ,
+	      obs->subscriber.addr.u8[0], obs->subscriber.addr.u8[1],
+	      obs->subscriber.addr.u8[2], obs->subscriber.addr.u8[3],
+	      obs->subscriber.addr.u8[4], obs->subscriber.addr.u8[5],
+	      obs->subscriber.addr.u8[6], obs->subscriber.addr.u8[7],
+	      obs->subscriber.addr.u8[8], obs->subscriber.addr.u8[9],
+	      obs->subscriber.addr.u8[10], obs->subscriber.addr.u8[11],
+	      obs->subscriber.addr.u8[12], obs->subscriber.addr.u8[13],
+	      obs->subscriber.addr.u8[14], obs->subscriber.addr.u8[15],
 	      uip_ntohs(obs->subscriber.port));
 
 	  memb_free(&subscription_storage, obs);
