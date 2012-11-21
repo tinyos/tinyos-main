@@ -82,9 +82,6 @@ enum {
     INDEX_DEV_3,
 #endif
 
-#ifdef COAP_RESOURCE_ETSI_IOT_TEST
-    INDEX_ETSI_TEST,
-#endif
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
     INDEX_ETSI_SEPARATE,
 #endif
@@ -332,17 +329,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 
   //ETSI plugtest resources:
 #ifdef COAP_RESOURCE_ETSI_IOT_TEST
-  {
-      INDEX_ETSI_TEST,
-      "test", sizeof("test"),
-#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
-      "", "",
-#endif
-      {0,0,0,0}, // uri_key will be set later
-      COAP_DEFAULT_MAX_AGE,
-      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
-      0
-  },
+#warning "COAP_RESOURCE_ETSI_IOT_TEST replaced by COAP_RESOURCE_DEFAULT"
 #endif
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
   {

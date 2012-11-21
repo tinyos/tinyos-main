@@ -52,6 +52,7 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
   coap_resource_t *temp_resource = NULL;
   unsigned int temp_content_format;
   int temp_rc;
+  bool temp_created;
 
   command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
 #ifdef COAP_CONTENT_TYPE_PLAIN
@@ -169,9 +170,19 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
     coap_add_option(response, COAP_OPTION_ETAG,
 		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
 
+    if (temp_created) {
+	coap_add_option(response, COAP_OPTION_LOCATION_PATH,
+			sizeof("location1")-1, (unsigned char *)"location1");
+	coap_add_option(response, COAP_OPTION_LOCATION_PATH,
+			sizeof("location2")-1, (unsigned char *)"location2");
+	coap_add_option(response, COAP_OPTION_LOCATION_PATH,
+			sizeof("location3")-1, (unsigned char *)"location3");
+    }
+
     if (temp_resource->data_len != 0)
       coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		      coap_encode_var_bytes(buf, temp_content_format), buf);
+
 
     signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,
@@ -222,14 +233,15 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
 
 	if (call CoAPServer.findResource(key) == SUCCESS) {
 	  // resource does exist -> update
-
-	  temp_rc = COAP_RESPONSE_CODE(204);
+	  temp_created = TRUE;//FALSE
+	  temp_rc = COAP_RESPONSE_CODE(201);//204
 	} else {
 	  // resource does not exist -> create
 	  r = call CoAPServer.registerDynamicResource((unsigned char*)"location1/location2/location3",
 						      sizeof("location1/location2/location3"),
 						      GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
 
+	  temp_created = TRUE;
 	  temp_rc = COAP_RESPONSE_CODE(201);
 	}
       }
@@ -255,7 +267,7 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
       temp_async_state = async_state;
       temp_resource = r;
       temp_request = request;
-      temp_content_format = content_format;
+      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
 
       post postMethod();
       return COAP_SPLITPHASE;
