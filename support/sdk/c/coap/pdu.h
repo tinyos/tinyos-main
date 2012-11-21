@@ -50,35 +50,32 @@
 
 /* CoAP option types (be sure to update check_critical when adding options */
 
-#define COAP_OPTION_CONTENT_TYPE  12 /* C, 8-bit uint, 1-2 B, - */
-#define COAP_OPTION_MAXAGE        14 /* E, variable length, 1--4 B, 60 Seconds */
-#define COAP_OPTION_PROXY_URI     35 /* C, String, 1-270 B, may occur more than once */
-#define COAP_OPTION_ETAG          4 /* E, opaque, 0-8 B, (none) */
-#define COAP_OPTION_URI_HOST      3 /* C, String, 1-270 B, destination address */
-#define COAP_OPTION_LOCATION_PATH 8 /* E, String, 1-270 B, - */
-#define COAP_OPTION_URI_PORT      7 /* C, 16-bit uint, 1-2 B, destination port */
-#define COAP_OPTION_LOCATION_QUERY 20 /*  */
-#define COAP_OPTION_URI_PATH      11 /* C, String, 1-270 B, - (may occur multiple times) */
-#define COAP_OPTION_TOKEN        19 /* C, Sequence of Bytes, 1-8 B, empty */
+#define COAP_OPTION_IF_MATCH      1 /* C, opaque, 0-8 B, (none) */
+#define COAP_OPTION_URI_HOST      3 /* C, String, 1-255 B, destination address */
+#define COAP_OPTION_ETAG          4 /* E, opaque, 1-8 B, (none) */
+#define COAP_OPTION_IF_NONE_MATCH 5 /* empty, 0 B, (none) */
+#define COAP_OPTION_URI_PORT      7 /* C, uint, 0-2 B, destination port */
+#define COAP_OPTION_LOCATION_PATH 8 /* E, String, 0-255 B, - */
+#define COAP_OPTION_URI_PATH     11 /* C, String, 0-255 B, (none) */
+#define COAP_OPTION_CONTENT_FORMAT 12 /* E, uint, 0-2 B, (none) */
+#define COAP_OPTION_CONTENT_TYPE COAP_OPTION_CONTENT_FORMAT
+#define COAP_OPTION_MAXAGE       14 /* E, uint, 0--4 B, 60 Seconds */
+#define COAP_OPTION_URI_QUERY    15 /* C, String, 1-255 B, (none) */
 #define COAP_OPTION_ACCEPT       16 /* E, uint,   0-2 B, (none) */
-#define COAP_OPTION_IF_MATCH     1 /* C, opaque, 0-8 B, (none) */
-#define COAP_OPTION_URI_QUERY    15 /* C, String, 1-270 B, "" */
-#define COAP_OPTION_IF_NONE_MATCH 5 /* C, (none), 0 B, (none) */
+#define COAP_OPTION_TOKEN        19 /* C, opaque, 1-8 B, empty */
+#define COAP_OPTION_LOCATION_QUERY 20 /* E, String,   0-255 B, (none) */
+#define COAP_OPTION_PROXY_URI    35 /* C, String, 1-1034 B, (none) */
 
-/* option types from draft-hartke-coap-observe-01 */
+/* option types from draft-hartke-coap-observe-07 */
 
-#define COAP_OPTION_SUBSCRIPTION 6 /* E, uint, 0-2 B, - */
+#define COAP_OPTION_SUBSCRIPTION  6 /* E, empty/uint, 0 B/0-2 B, (none) */
 
 /* selected option types from draft-core-block-04 */
 
-#define COAP_OPTION_BLOCK1       27 /* C, unsigned integer, 1--3 B, 0 */
-#define COAP_OPTION_BLOCK2       23 /* C, unsigned integer, 1--3 B, 0 */
+#define COAP_OPTION_BLOCK2       23 /* C, uint, 0--3 B, (none) */
+#define COAP_OPTION_BLOCK1       27 /* C, uint, 0--3 B, (none) */
 
-/* selected option types from draft-bormann-coap-misc-04 */
-
-#define COAP_OPTION_NOOP         36 /* no-op for fenceposting */
-
-#define COAP_MAX_OPT             36 /**< the highest option number we know */
+#define COAP_MAX_OPT             35 /**< the highest option number we know */
 
 /* CoAP result codes (HTTP-Code / 100 * 40 + HTTP-Code % 100) */
 
