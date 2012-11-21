@@ -49,25 +49,8 @@ typedef unsigned char coap_opt_t;
 #define COAP_OPT_VALUE(opt)				\
   (PCHAR(opt) + (COAP_OPT_ISEXTENDED(opt) ? 2 : 1))
 
-#define COAP_OPT_ISJUMP(opt) ((*PCHAR(opt) & 0xf0) == 0xf0)
-#define COAP_OPT_JUMP_LENGTH(opt) (*PCHAR(opt) & 0xf)
-#define COAP_OPT_JUMP_VALUE(opt) ( \
-  (COAP_OPT_JUMP_LENGTH(opt) == COAP_OPTION_JUMP_1_BYTE) ? 15 : (\
-  (COAP_OPT_JUMP_LENGTH(opt) == COAP_OPTION_JUMP_2_BYTE) ?       \
-  (*(PCHAR(opt)+1)+2)<<3 : \
-  ( ( ( (*(PCHAR(opt)+1)<<8) + (*(PCHAR(opt)+2)) ) + 258)<<3) ))
-
-#define COAP_OPT_JUMP_SET_VALUE_1_BYTE(opt,val)	\
-  *(PCHAR(opt)+1)  = (val>>3) -2;
-#define COAP_OPT_JUMP_SET_VALUE_2_BYTE(opt,val) \
-  *(PCHAR(opt)+1) = (((val>>3) -258) && 0xff00)>>8; \
-  *(PCHAR(opt)+2) = (((val>>3) -258) &&   0xff);
-
 /* Do not forget to adjust this when coap_opt_t is changed! */
-#define COAP_OPT_SIZE(opt) (				\
-			    COAP_OPT_ISJUMP(opt) ?	\
-			    COAP_OPT_JUMP_LENGTH(opt) :	\
-			    (COAP_OPT_LENGTH(opt) + ( COAP_OPT_ISEXTENDED(opt) ? 2: 1 ) ))
+#define COAP_OPT_SIZE(opt) ( COAP_OPT_LENGTH(opt) + ( COAP_OPT_ISEXTENDED(opt) ? 2: 1 ) )
 
 /**
  * Calculates the beginning of the PDU's option section.
