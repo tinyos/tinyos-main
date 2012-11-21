@@ -272,22 +272,36 @@ int
 make_decoded_option(const unsigned char *s, size_t length, 
 		    unsigned char *buf, size_t buflen) {
   int res;
+  size_t written;
+
+  if (!buflen) {
+    debug("make_decoded_option(): buflen is 0!\n");
+    return -1;
+  }
 
   res = check_segment(s, length);
   if (res < 0)
     return -1;
 
-  if (buflen < sizeof(coap_opt_t) + res) {
+  buf[0] = 0;			/* COAP_OPT_SETDELTA(buf, 0) */
+  written = coap_opt_setlength(buf, buflen, res);
+  
+  assert(written <= buflen);
+
+  if (!written)			/* encoding error */
+    return -1;
+
+  buf += written;		/* advance past option type/length */
+  buflen -= written;
+
+  if (buflen < (size_t)res) {
     debug("buffer too small for option\n");
     return -1;
   }
-  
-  COAP_OPT_SETDELTA(buf, 0);
-  COAP_OPT_SETLENGTH(buf, res);
 
-  decode_segment(s, length, COAP_OPT_VALUE(buf));
+  decode_segment(s, length, buf);
 
-  return COAP_OPT_SIZE(buf);
+  return written + length;
 }
 
 

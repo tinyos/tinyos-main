@@ -134,8 +134,8 @@ coap_clone_pdu(coap_pdu_t *pdu) {
 
     while (coap_option_next(&opt_iter)) {
       coap_add_option(cloned_pdu, opt_iter.type,
-		      COAP_OPT_LENGTH(opt_iter.option),
-		      COAP_OPT_VALUE(opt_iter.option));
+                     COAP_OPT_LENGTH(opt_iter.option),
+                     COAP_OPT_VALUE(opt_iter.option));
     }
   }
 
@@ -147,15 +147,14 @@ coap_clone_pdu(coap_pdu_t *pdu) {
 
 int
 coap_add_option(coap_pdu_t *pdu, unsigned short type, unsigned int len, const unsigned char *data) {
-  size_t optsize, cnt, optcnt, opt_code = 0;
-  unsigned char fence;
+  size_t optsize, cnt;
+  unsigned short opt_code = 0;
   coap_opt_t *opt;
-  size_t old_optcnt;		/* for restoring old values */
-  coap_opt_t *old_opt;
   
   if (!pdu)
     return -1;
 
+  debug("add option %d (%d bytes)\n", type, len);
   /* Get last option from pdu to calculate the delta. For optcnt ==
    * 0x0F, opt will point at the end marker, so the new option will
    * overwrite it.
@@ -170,10 +169,17 @@ coap_add_option(coap_pdu_t *pdu, unsigned short type, unsigned int len, const un
     opt = options_next(opt);
   }
 
-  if ((unsigned char *)opt > (unsigned char *)pdu->hdr + pdu->max_size) {
+  if ((unsigned char *)pdu->hdr + pdu->max_size <= (unsigned char *)opt) {
     debug("illegal option list\n");
     return -1;
   }
+
+  optsize = (unsigned char *)pdu->hdr + pdu->max_size - opt;
+  if (pdu->hdr->optcnt + 1 >= COAP_OPT_LONG) {
+    /* need an additional byte to store the end marker */
+    optsize--;
+  }
+  /* at this point optsize might be zero */
   
   if ( type < opt_code ) {
 #ifndef NDEBUG
@@ -182,66 +188,29 @@ coap_add_option(coap_pdu_t *pdu, unsigned short type, unsigned int len, const un
     return -1;
   }
 
-  optcnt = old_optcnt = pdu->hdr->optcnt;
-  old_opt = opt;
-  optsize = len + (len > 14 ? 2 : 1);
-  /* Create new option after last existing option: First check if we
-   * need fence posts between type and last opt_code (i.e. delta >
-   * 15), and then add actual option.
-   */
+  cnt = coap_opt_encode(opt, optsize, type - opt_code, data, len);
 
-  /* add fence post */
-  fence = ((COAP_OPTION_NOOP * ((opt_code / COAP_OPTION_NOOP) + 1)) 
-	   - opt_code) << 4;
-  while (opt_code + 15 < type) {
-    if ((unsigned char *)opt + optsize + 1 > 
-	(unsigned char *)pdu->hdr + pdu->max_size)
-      goto error;
-#ifndef NDEBUG
-    coap_log(LOG_CRIT, "coap-08 fence post\n");
-#endif
-    optcnt += 1;
-    *opt = fence;
-
-    opt_code += COAP_OPT_DELTA(opt);
-    opt = options_next(opt);
-    fence = COAP_OPTION_NOOP << 4;
+  if (!cnt) {
+    warn("cannot add option %u\n", type);
+    /* nothing has changed in opt, therefore we do not have to restore
+     * optcnt, data, or end-of-options marker */
+    return -1;
   }
 
-  if ((unsigned char *)opt + optsize + 1 > 
-      (unsigned char *)pdu->hdr + pdu->max_size)
-    goto error;
+  opt += cnt;			/* advance opt behind the option */
+  pdu->hdr->optcnt++;		/* can we rely on the compiler to trim
+				 * this down to 4 bits? */
+  assert(pdu->hdr->optcnt <= 15);
 
-  /* here, the actual option is added (delta <= 15) */
-  optcnt += 1;
-  COAP_OPT_SETDELTA( opt, type - opt_code );
-
-  COAP_OPT_SETLENGTH( opt, len );
-  memcpy(COAP_OPT_VALUE(opt), data, len);
-  pdu->data = (unsigned char *)COAP_OPT_VALUE(opt) + len ;
-
-  if (optcnt < COAP_OPT_LONG) {
-    pdu->hdr->optcnt = optcnt;
-  } else {
-    pdu->hdr->optcnt = COAP_OPT_LONG;
-    *pdu->data = COAP_OPT_END;
-    pdu->data++;
+  if (pdu->hdr->optcnt == COAP_OPT_LONG) {
+    /* Before calling coap_opt_encode(), we have made sure that the
+     * end-of-options marker fits in, so no new check is required. */
+    *opt++ = COAP_OPT_END;
   }
+
+  pdu->data = (unsigned char *)opt;
   pdu->length = pdu->data - (unsigned char *)pdu->hdr;
   return len;
-
- error:
-  /* Restore state before we have tried to add fencepost options.
-   * Because pdu->data and pdu->length have not yet been updated,
-   * there is no need to touch them. Only the end marker must been
-   * written anew if optcnt == 15;
-   */
-  
-  pdu->hdr->optcnt = old_optcnt;
-  if (pdu->hdr->optcnt == COAP_OPT_LONG)
-    *old_opt = COAP_OPT_END;
-  
-  return -1;
 }
 
 int
