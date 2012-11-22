@@ -383,7 +383,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 #endif
     {0,0,0,0}, // uri_key will be set later
     5,
-    (GET_SUPPORTED),
+    (GET_SUPPORTED | PUT_SUPPORTED),
     1
   },
 #endif

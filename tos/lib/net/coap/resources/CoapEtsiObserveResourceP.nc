@@ -43,7 +43,9 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
 #define INITIAL_DEFAULT_DATA_OBS "obs"
 
   unsigned char buf[2];
+  size_t size;
   uint8_t i = 0;
+  unsigned char *payload;
   char data[5];
   coap_pdu_t *temp_request;
   coap_pdu_t *response;
@@ -67,6 +69,9 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
       r->data_len = sizeof(INITIAL_DEFAULT_DATA_OBS)-1;
     }
 
+    // default ETAG (ASCII characters)
+    r->etag = 0x61;
+
     return SUCCESS;
   }
 
@@ -81,6 +86,9 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
        coap_add_option(response, COAP_OPTION_SUBSCRIPTION, 0, NULL);
      }
 #endif
+
+     coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
 
      coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		     coap_encode_var_bytes(buf, temp_content_format), buf);
@@ -101,6 +109,8 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
     i++;
 
     temp_resource->dirty = 1;
+    temp_resource->etag++; //ASCII chars
+    //temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
 
     temp_resource->seq_num.length = sizeof(i);
     temp_resource->seq_num.s = &i;
@@ -147,11 +157,68 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
 
   /////////////////////
   // PUT:
+  task void putMethod() {
+    response = coap_new_pdu();
+    response->hdr->code = COAP_RESPONSE_CODE(204);
+
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
+
+    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		    coap_encode_var_bytes(buf, temp_content_format), buf);
+
+    signal CoapResource.methodDone(SUCCESS,
+				   temp_async_state,
+				   temp_request,
+				   response,
+				   temp_resource);
+
+    signal CoapResource.notifyObservers();
+
+    lock = FALSE;
+  }
+
   command int CoapResource.putMethod(coap_async_state_t* async_state,
 				     coap_pdu_t* request,
 				     coap_resource_t *resource,
 				     unsigned int content_format) {
-    return COAP_RESPONSE_405;
+
+    if (lock == FALSE) {
+      lock = TRUE;
+
+      i++;
+
+      temp_async_state = async_state;
+      temp_request = request;
+      temp_resource = resource;
+      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
+
+      coap_get_data(request, &size, &payload);
+
+      temp_resource->dirty = 1;
+      temp_resource->etag++; //ASCII chars
+      //temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
+
+      temp_resource->seq_num.length = sizeof(i);
+      temp_resource->seq_num.s = &i;
+
+      if (resource->data != NULL) {
+	coap_free(resource->data);
+      }
+
+      if ((resource->data = (uint8_t *) coap_malloc(size)) != NULL) {
+	memcpy(resource->data, payload, size);
+	resource->data_len = size;
+      } else {
+	return COAP_RESPONSE_CODE(500);
+	//return COAP_RESPONSE_CODE(413); or: too large?
+      }
+      post putMethod();
+      return COAP_SPLITPHASE;
+    } else {
+      return COAP_RESPONSE_CODE(503);
+    }
+    //    return COAP_RESPONSE_405;
   }
 
   command int CoapResource.postMethod(coap_async_state_t* async_state,
