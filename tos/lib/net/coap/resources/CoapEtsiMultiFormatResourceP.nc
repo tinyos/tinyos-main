@@ -76,18 +76,20 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
   /////////////////////
   // GET:
   task void getMethod() {
-    void *data;
-    int buflen = 0;
+    void *datap;
+    int datalen = 0;
     char *cur;
     char buf2[COAP_MAX_PDU_SIZE];
+
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
-#define LEN (COAP_MAX_PDU_SIZE - (cur - (char *) data))
+#define LEN (COAP_MAX_PDU_SIZE - (cur - (char *) datap))
     int i;
     ieee_eui64_t id;
     id = call LocalIeeeEui64.getId();
 #endif
-    data = buf2;
-    cur = data;
+
+    datap = buf2;
+    cur = datap;
 
     switch(temp_content_format) {
 #ifdef COAP_CONTENT_TYPE_XML
@@ -97,7 +99,7 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
 	cur += snprintf(cur, LEN, "%x", id.data[i]);
       }
       cur += snprintf(cur, LEN, "%s%s%s%s%s%s%s%s", "\"><e n=\"", uri_index_map[uri_key].name, "\" u=\"", uri_index_map[uri_key].unit, "\" v=\"", INITIAL_DEFAULT_DATA_MULTI_FORMAT, "\"/>", XML_POST);
-      buflen = cur - (char *)data;
+      datalen = cur - (char *)datap;
       break;
 #endif
 #ifdef COAP_CONTENT_TYPE_JSON
@@ -108,7 +110,7 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
 	cur += snprintf(cur, LEN, "%x", id.data[i]);
       }
       cur += snprintf(cur, LEN, "%s", "\"}");
-      buflen = cur - (char *)data;
+      datalen = cur - (char *)datap;
       break;
 #endif
 #ifdef COAP_CONTENT_TYPE_PLAIN
@@ -116,18 +118,20 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
 #endif
     case COAP_MEDIATYPE_ANY:
     default:
+      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
       cur += snprintf(cur, sizeof(buf2), "%s", INITIAL_DEFAULT_DATA_MULTI_FORMAT);
-      buflen = cur - (char *)data;
+      datalen = cur - (char *)datap;
     }
 
     if (temp_resource->data != NULL) {
       coap_free(temp_resource->data);
     }
-    if ((temp_resource->data = (uint8_t *) coap_malloc(buflen)) != NULL) {
-      memcpy(temp_resource->data, data, buflen);
-      temp_resource->data_len = buflen;
+    if ((temp_resource->data = (uint8_t *) coap_malloc(datalen)) != NULL) {
+      memcpy(temp_resource->data, datap, datalen);
+      temp_resource->data_len = datalen;
+    } else {
+      response->hdr->code = COAP_RESPONSE_CODE(500);
     }
-
 
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(205);
@@ -145,7 +149,7 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
 
   command int CoapResource.getMethod(coap_async_state_t* async_state,
 				     coap_pdu_t* request,
-				     struct coap_resource_t *resource,
+				     coap_resource_t *resource,
 				     unsigned int content_format) {
     if (lock == FALSE) {
       lock = TRUE;
@@ -172,14 +176,14 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
 
   command int CoapResource.postMethod(coap_async_state_t* async_state,
 				      coap_pdu_t* request,
-				      struct coap_resource_t *resource,
+				      coap_resource_t *resource,
 				      unsigned int content_format) {
     return COAP_RESPONSE_405;
   }
 
   command int CoapResource.deleteMethod(coap_async_state_t* async_state,
 					coap_pdu_t* request,
-					struct coap_resource_t *resource) {
+					coap_resource_t *resource) {
     return COAP_RESPONSE_405;
   }
 }
