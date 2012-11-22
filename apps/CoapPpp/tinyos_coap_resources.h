@@ -103,6 +103,10 @@ enum {
     INDEX_ETSI_LINK3,
     INDEX_ETSI_LINK4,
     INDEX_ETSI_LINK5,
+    INDEX_ETSI_PATH,
+    INDEX_ETSI_PATH1,
+    INDEX_ETSI_PATH2,
+    INDEX_ETSI_PATH3,
 #endif
 
     COAP_LAST_RESOURCE,
@@ -444,6 +448,50 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
   {
     INDEX_ETSI_LINK5,
     "lnk5", sizeof("lnk5"),  // NOTE: lnk5 not link5 !! for TD_COAP_LINK_08
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_PATH,
+    "path", sizeof("path"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_PATH1,
+    "path/sub1", sizeof("path/sub1"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_PATH2,
+    "path/sub2", sizeof("path/sub3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_PATH3,
+    "path/sub3", sizeof("path/sub3"),
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
     "", "",
 #endif

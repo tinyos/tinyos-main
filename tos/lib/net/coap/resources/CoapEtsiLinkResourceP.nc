@@ -48,31 +48,47 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
   unsigned int temp_content_format;
 
   unsigned char attr_name_ct[]  = "ct";
-  unsigned char attr_value_ct[] = "0";
+  unsigned char attr_value_ct_0[] = "0";
+  unsigned char attr_value_ct_40[] = "40";
 
   unsigned char attr_name_rt[]   = "rt";
   unsigned char attr_value_rt1[] = "\"tc tf\"";
   unsigned char attr_value_rt2[] = "\"tf tk\"";
   unsigned char attr_value_rt3[] = "\"tc tk\"";
-  unsigned char attr_value_rt4[] = "";
+  unsigned char attr_value_rt4[] = "\"\"";
 
   unsigned char attr_name_if[]   = "if";
-  unsigned char attr_value_if1[] = "If1";
-  unsigned char attr_value_if2[] = "If2";
+  unsigned char attr_value_if1[] = "\"If1\"";
+  unsigned char attr_value_if2[] = "\"If2\"";
   unsigned char attr_value_if3[] = "foo";
-  unsigned char attr_value_if4[] = "";
+  unsigned char attr_value_if4[] = "\"\"";
 
   unsigned char attr_name_title[]   = "title";
-  unsigned char attr_value_title[] = "t";
+  unsigned char attr_value_title[] = "\"t\"";
+
+  unsigned char attr_name_size[]   = "sz";
+  unsigned char attr_value_size[] = "128";
 
 #define INITIAL_DEFAULT_DATA_LINK "l"
+#define INITIAL_DEFAULT_DATA_LINK_PATH "</path/sub1>;ct=0,</path/sub2>;ct=0,</path/sub3>;ct=0"
 
   command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
+
+    if (uri_key == INDEX_ETSI_PATH) {
+      coap_add_attr(r,
+		    attr_name_ct, sizeof(attr_name_ct)-1,
+		    attr_value_ct_40, sizeof(attr_value_ct_40)-1, 0);
+      if ((r->data = (uint8_t *) coap_malloc(sizeof(INITIAL_DEFAULT_DATA_LINK_PATH))) != NULL) {
+	memcpy(r->data, INITIAL_DEFAULT_DATA_LINK_PATH, sizeof(INITIAL_DEFAULT_DATA_LINK_PATH));
+	r->data_len = sizeof(INITIAL_DEFAULT_DATA_LINK_PATH)-1;
+      }
+      return SUCCESS;
+    }
 
 #ifdef COAP_CONTENT_TYPE_PLAIN
     coap_add_attr(r,
 		  attr_name_ct, sizeof(attr_name_ct)-1,
-		  attr_value_ct, sizeof(attr_value_ct)-1, 0);
+		  attr_value_ct_0, sizeof(attr_value_ct_0)-1, 0);
 #endif
 
     if (uri_key == INDEX_ETSI_LINK1) {
@@ -103,6 +119,10 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
       coap_add_attr(r,
 		    attr_name_if, sizeof(attr_name_if)-1,
 		    attr_value_if4, sizeof(attr_value_if4)-1, 0);
+    } else if (uri_key == INDEX_ETSI_LINK5) {
+      coap_add_attr(r,
+		    attr_name_size, sizeof(attr_name_size)-1,
+		    attr_value_size, sizeof(attr_value_size)-1, 0);
     }
     // link5 is without "rt=" and "if="
 
@@ -145,7 +165,10 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
       temp_async_state = async_state;
       temp_request = request;
       temp_resource = resource;
-      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
+      if (uri_key == INDEX_ETSI_PATH)
+	temp_content_format = COAP_MEDIATYPE_APPLICATION_LINK_FORMAT;
+      else
+	temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
 
       post getMethod();
       return COAP_SPLITPHASE;
