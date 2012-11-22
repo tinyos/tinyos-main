@@ -33,6 +33,7 @@
 #include <pdu.h>
 #include <async.h>
 #include <mem.h>
+#include <resource.h>
 
 generic module CoapLedResourceP(uint8_t uri_key) {
   provides interface CoapResource;
@@ -40,8 +41,6 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 } implementation {
 
   unsigned char buf[2];
-  size_t size;
-  unsigned char *data;
   coap_pdu_t *temp_request;
   coap_pdu_t *response;
   bool lock = FALSE; //TODO: atomic
@@ -68,25 +67,21 @@ generic module CoapLedResourceP(uint8_t uri_key) {
   // GET:
   task void getMethod() {
 
-    void *bufp;
-    int buflen = 0;
+    void *datap;
+    int datalen = 0;
     char *cur;
-    char buf2[4];
+    char databuf[4]; //ASCII of uint8_t -> max 3 chars + \0
+
     uint8_t val = call Leds.get();
-    bufp = buf2;
-    cur = bufp;
 
-    response = coap_new_pdu();
-    response->hdr->code = COAP_RESPONSE_CODE(205);
-
-    coap_add_option(response, COAP_OPTION_ETAG,
-		    coap_encode_var_bytes(bufp, temp_resource->etag), bufp);
+    datap = databuf;
+    cur = datap;
 
     switch(temp_content_format) {
 #ifdef COAP_CONTENT_TYPE_BINARY
     case COAP_MEDIATYPE_APPLICATION_OCTET_STREAM:
-      bufp = (uint8_t *)&val;
-      buflen = sizeof(uint8_t);
+      datap = (uint8_t *)&val;
+      datalen = sizeof(uint8_t);
       break;
 #endif
 #ifdef COAP_CONTENT_TYPE_PLAIN
@@ -95,20 +90,29 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     case COAP_MEDIATYPE_ANY:
     default:
       temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
-      cur += snprintf(cur, sizeof(buf2), "%i", val);
-      buflen = cur - (char *)bufp;
+      cur += snprintf(cur, sizeof(databuf), "%i", val);
+      datalen = cur - (char *)datap;
     }
+
+    if (temp_resource->data != NULL) {
+      coap_free(temp_resource->data);
+    }
+    if ((temp_resource->data = (uint8_t *) coap_malloc(datalen)) != NULL) {
+      memcpy(temp_resource->data, datap, datalen);
+      temp_resource->data_len = datalen;
+    } else {
+      response->hdr->code = COAP_RESPONSE_CODE(500);
+    }
+
+    response = coap_new_pdu();
+    response->hdr->code = COAP_RESPONSE_CODE(205);
+
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
 
     coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
 
-
-    if ((temp_resource->data = (uint8_t *) coap_malloc(buflen)) != NULL) {
-      memcpy(temp_resource->data, bufp, buflen);
-      temp_resource->data_len = buflen;
-    } else {
-      response->hdr->code = COAP_RESPONSE_CODE(500);
-    }
 
     signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,
@@ -120,7 +124,7 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 
   command int CoapResource.getMethod(coap_async_state_t* async_state,
 				     coap_pdu_t* request,
-				     struct coap_resource_t *resource,
+				     coap_resource_t *resource,
 				     unsigned int content_format) {
     if (lock == FALSE) {
       lock = TRUE;
@@ -161,6 +165,8 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 				     coap_pdu_t* request,
 				     coap_resource_t *resource,
 				     unsigned int content_format) {
+    size_t size;
+    unsigned char *data;
 
     if (lock == FALSE) {
       lock = TRUE;
@@ -211,14 +217,14 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 
   command int CoapResource.postMethod(coap_async_state_t* async_state,
 				      coap_pdu_t* request,
-				      struct coap_resource_t *resource,
+				      coap_resource_t *resource,
 				      unsigned int content_format) {
     return COAP_RESPONSE_405;
   }
 
   command int CoapResource.deleteMethod(coap_async_state_t* async_state,
 					coap_pdu_t* request,
-					struct coap_resource_t *resource) {
+					coap_resource_t *resource) {
     return COAP_RESPONSE_405;
   }
 }
