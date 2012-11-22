@@ -467,7 +467,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 //#undef COAP_MAX_PDU_SIZE
 //#define COAP_MAX_PDU_SIZE 165
 //#warning "*** Content-Format XML: COAP_MAX_PDU_SIZE redefined to 165 ***"
-#define XML_PRE "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <senml xmlns=\"urn:ietf:params:xml:ns:senml\""
+#define XML_PRE "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <senml xmlns=\"urn:ietf:params:xml:ns:senml\" "
 #define XML_POST "</senml>"
 #endif
 
