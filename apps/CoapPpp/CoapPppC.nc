@@ -170,6 +170,9 @@ configuration CoapPppC {
   CoapResourceCollectorC.ReadVolt -> CoapBufferVoltTranslateAll.ReadVolt;
   CoapBufferVoltTranslateAll.Read -> VoltSensor.Read;
   CoapUdpServerC.CoapResource[INDEX_ALL] -> CoapReadAllResource.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapReadAllResource.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
 #endif
 
 #ifdef COAP_RESOURCE_KEY
