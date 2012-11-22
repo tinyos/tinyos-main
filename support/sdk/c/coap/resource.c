@@ -144,11 +144,16 @@ print_wellknown(coap_context_t *context, unsigned char *buf, size_t *buflen,
       query_pattern.length = 
 	COAP_OPT_LENGTH(query_filter) - (resource_param.length + 1);
 
+     if ((query_pattern.s[0] == '/') && ((flags & MATCH_URI) == MATCH_URI)) {
+       query_pattern.s++;
+       query_pattern.length--;
+      }
+
       if (query_pattern.length && 
 	  query_pattern.s[query_pattern.length-1] == '*') {
 	query_pattern.length--;
 	flags |= MATCH_PREFIX;
-      }      
+      }
     }
   }
 #endif /* WITHOUT_QUERY_FILTER */
