@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 University of Bremen, TZI
+ * Copyright (c) 2011-2012 University of Bremen, TZI
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,16 +33,20 @@
 #include <pdu.h>
 #include <async.h>
 #include <mem.h>
+#include <resource.h>
 
 generic module CoapLedResourceP(uint8_t uri_key) {
   provides interface CoapResource;
   uses interface Leds;
 } implementation {
 
-  bool lock = FALSE;
+  unsigned char buf[2];
+  coap_pdu_t *temp_request;
+  coap_pdu_t *response;
+  bool lock = FALSE; //TODO: atomic
   coap_async_state_t *temp_async_state = NULL;
   coap_resource_t *temp_resource = NULL;
-  unsigned int temp_media_type;
+  unsigned int temp_content_format;
 
   command error_t CoapResource.initResourceAttributes(coap_resource_t *r) {
 
@@ -53,25 +57,31 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"42", 2, 0);
 #endif
 
+    // default ETAG (ASCII characters)
+    r->etag = 0x61;
+
     return SUCCESS;
   }
 
   /////////////////////
   // GET:
-  void task getMethod() {
-    void *buf;
-    int buflen = 0;
-    char *cur;
-    char buf2[4];
-    uint8_t val = call Leds.get();
-    buf = buf2;
-    cur = buf;
+  task void getMethod() {
 
-    switch(temp_media_type) {
+    void *datap;
+    int datalen = 0;
+    char *cur;
+    char databuf[4]; //ASCII of uint8_t -> max 3 chars + \0
+
+    uint8_t val = call Leds.get();
+
+    datap = databuf;
+    cur = datap;
+
+    switch(temp_content_format) {
 #ifdef COAP_CONTENT_TYPE_BINARY
     case COAP_MEDIATYPE_APPLICATION_OCTET_STREAM:
-      buf = (uint8_t *)&val;
-      buflen = sizeof(uint8_t);
+      datap = (uint8_t *)&val;
+      datalen = sizeof(uint8_t);
       break;
 #endif
 #ifdef COAP_CONTENT_TYPE_PLAIN
@@ -79,24 +89,51 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 #endif
     case COAP_MEDIATYPE_ANY:
     default:
-      cur += snprintf(cur, sizeof(buf2), "%i", val);
-      buflen = cur - (char *)buf;
+      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
+      cur += snprintf(cur, sizeof(databuf), "%i", val);
+      datalen = cur - (char *)datap;
     }
 
-    signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(205),
+    response = coap_new_pdu();
+    response->hdr->code = COAP_RESPONSE_CODE(205);
+
+    if (temp_resource->data != NULL) {
+      coap_free(temp_resource->data);
+    }
+    if ((temp_resource->data = (uint8_t *) coap_malloc(datalen)) != NULL) {
+      memcpy(temp_resource->data, datap, datalen);
+      temp_resource->data_len = datalen;
+    } else {
+      response->hdr->code = COAP_RESPONSE_CODE(500);
+    }
+
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
+
+    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		    coap_encode_var_bytes(buf, temp_content_format), buf);
+
+
+    signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,
-				   (uint8_t*)buf, buflen,
-				   temp_media_type, NULL);
+				   temp_request,
+				   response,
+				   temp_resource);
     lock = FALSE;
-  };
+  }
 
   command int CoapResource.getMethod(coap_async_state_t* async_state,
-				     uint8_t *val, size_t buflen,
-				     unsigned int media_type) {
+				     coap_pdu_t* request,
+				     coap_resource_t *resource,
+				     unsigned int content_format) {
     if (lock == FALSE) {
       lock = TRUE;
+
       temp_async_state = async_state;
-      temp_media_type = media_type;
+      temp_request = request;
+      temp_resource = resource;
+      temp_content_format = content_format;
+
       post getMethod();
       return COAP_SPLITPHASE;
     } else {
@@ -106,65 +143,88 @@ generic module CoapLedResourceP(uint8_t uri_key) {
 
   /////////////////////
   // PUT:
-  void task putMethod() {
-    lock = FALSE;
-    signal CoapResource.methodDone(SUCCESS, COAP_RESPONSE_CODE(204),
+  task void putMethod() {
+    response = coap_new_pdu();
+    response->hdr->code = COAP_RESPONSE_CODE(204);
+
+    coap_add_option(response, COAP_OPTION_ETAG,
+		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
+
+    coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
+		    coap_encode_var_bytes(buf, temp_content_format), buf);
+
+    signal CoapResource.methodDone(SUCCESS,
 				   temp_async_state,
-				   NULL, 0,
-				   temp_media_type,
+				   temp_request,
+				   response,
 				   temp_resource);
-  };
+    lock = FALSE;
+  }
 
   command int CoapResource.putMethod(coap_async_state_t* async_state,
-				     uint8_t *val, size_t buflen, coap_resource_t *resource,
-				     unsigned int media_type) {
+				     coap_pdu_t* request,
+				     coap_resource_t *resource,
+				     unsigned int content_format) {
+    size_t size;
+    unsigned char *data;
 
-    switch(media_type) {
+    if (lock == FALSE) {
+      lock = TRUE;
+
+      temp_async_state = async_state;
+      temp_request = request;
+      temp_resource = resource;
+      temp_content_format = content_format;
+
+      coap_get_data(request, &size, &data);
+
+      if (resource->data != NULL) {
+        coap_free(resource->data);
+      }
+
+      switch(content_format) {
 #ifdef COAP_CONTENT_TYPE_BINARY
-    case COAP_MEDIATYPE_APPLICATION_OCTET_STREAM:
-      break;
+      case COAP_MEDIATYPE_APPLICATION_OCTET_STREAM:
+        break;
 #endif
 #ifdef COAP_CONTENT_TYPE_PLAIN
-    case COAP_MEDIATYPE_TEXT_PLAIN:
+      case COAP_MEDIATYPE_TEXT_PLAIN:
 #endif
-    case COAP_MEDIATYPE_ANY:
-    default:
-      *val = *val - *(uint8_t *)"0";
-    }
-
-    if (buflen == 1 && *val < 8) {
-      if (lock == FALSE) {
-	lock = TRUE;
-	temp_async_state = async_state;
-	temp_resource = resource;
-	temp_media_type = media_type;
-
-	call Leds.set(*val);
-	temp_resource->dirty = 1;
-	temp_resource->data_len = buflen;
-	if ((resource->data = (uint8_t *) coap_malloc(buflen)) != NULL) {
-	  memcpy(resource->data, val, buflen);
-	} else {
-	  return COAP_RESPONSE_CODE(500);
-	}
-	post putMethod();
-	return COAP_SPLITPHASE;
-      } else {
-	return COAP_RESPONSE_CODE(503);
+      case COAP_MEDIATYPE_ANY:
+      default:
+        *data = *data - *(uint8_t *)"0";
       }
+
+      if ((resource->data = (uint8_t *) coap_malloc(size)) != NULL) {
+        memcpy(resource->data, data, size);
+        resource->data_len = size;
+        temp_resource->dirty = 1;
+        temp_resource->etag++; //ASCII chars
+
+        call Leds.set(*data);
+
+      } else {
+        return COAP_RESPONSE_CODE(500);
+        //return COAP_RESPONSE_CODE(413); or: too large?
+      }
+
+      post putMethod();
+      return COAP_SPLITPHASE;
     } else {
-      return COAP_RESPONSE_CODE(413);
+      return COAP_RESPONSE_CODE(503);
     }
   }
 
   command int CoapResource.postMethod(coap_async_state_t* async_state,
-				      uint8_t *val, size_t buflen, coap_resource_t *resource,
-				      unsigned int media_type) {
+				      coap_pdu_t* request,
+				      coap_resource_t *resource,
+				      unsigned int content_format) {
     return COAP_RESPONSE_405;
   }
 
   command int CoapResource.deleteMethod(coap_async_state_t* async_state,
-					uint8_t *val, size_t buflen) {
+					coap_pdu_t* request,
+					coap_resource_t *resource) {
     return COAP_RESPONSE_405;
   }
-  }
+}

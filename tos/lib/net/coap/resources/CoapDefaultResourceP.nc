@@ -139,10 +139,6 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
 
       coap_get_data(request, &size, &data);
 
-      temp_resource->dirty = 1;
-      temp_resource->etag++; //ASCII chars
-      //temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
-
       if (resource->data != NULL) {
 	coap_free(resource->data);
       }
@@ -150,6 +146,9 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
       if ((resource->data = (uint8_t *) coap_malloc(size)) != NULL) {
 	memcpy(resource->data, data, size);
 	resource->data_len = size;
+      temp_resource->dirty = 1;
+      temp_resource->etag++; //ASCII chars
+      //temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
       } else {
 	return COAP_RESPONSE_CODE(500);
 	//return COAP_RESPONSE_CODE(413); or: too large?
