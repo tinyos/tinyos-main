@@ -173,7 +173,9 @@ module CoapUdpServerP {
 #ifndef WITHOUT_OBSERVE
       //r->observable = uri_index_map[i].observable; //TODO
 #endif
+#ifdef COAP_RESOURCE_DEFAULT
       call CoapResource.initResourceAttributes[INDEX_DEFAULT](r);//TODO
+#endif
 
       coap_add_resource(ctx_server, r);
       return r;
@@ -214,14 +216,16 @@ module CoapUdpServerP {
 	coap_read(ctx_server);
 	coap_dispatch(ctx_server);
     }
+
+#ifdef COAP_RESOURCE_DEFAULT
     ///////////////////
     // PUT/POST default handler for TinyOS fo non-existing resources
     void hnd_coap_default_tinyos(coap_context_t  *ctx,
-			       struct coap_resource_t *resource,
-			       coap_address_t *peer,
-			       coap_pdu_t *request,
-			       str *token,
-			       coap_pdu_t *response) @C() @spontaneous() {
+				 struct coap_resource_t *resource,
+				 coap_address_t *peer,
+				 coap_pdu_t *request,
+				 str *token,
+				 coap_pdu_t *response) @C() @spontaneous() {
       coap_async_state_t *async_state = NULL;
       int rc;
       coap_pdu_t *temp_request;
@@ -238,8 +242,8 @@ module CoapUdpServerP {
 					     temp_request,
 					     resource,
 					     media_type);
-
     }
+#endif
 
     ///////////////////
     // all TinyOS CoAP requests have to go through this
