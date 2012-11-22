@@ -135,6 +135,9 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
       datalen = cur - (char *)datap;
     }
 
+    response = coap_new_pdu();
+    response->hdr->code = COAP_RESPONSE_CODE(205);
+
     if (temp_resource->data != NULL) {
       coap_free(temp_resource->data);
     }
@@ -144,9 +147,6 @@ generic module CoapReadResourceP(typedef val_t, uint8_t uri_key) {
     } else {
       response->hdr->code = COAP_RESPONSE_CODE(500);
     }
-
-    response = coap_new_pdu();
-    response->hdr->code = COAP_RESPONSE_CODE(205);
 
     coap_add_option(response, COAP_OPTION_ETAG,
 		    coap_encode_var_bytes(buf, temp_resource->etag), buf);
