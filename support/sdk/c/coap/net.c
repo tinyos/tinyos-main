@@ -1145,6 +1145,7 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
       }
       break;
 #ifdef WITH_TINYOS
+#ifdef COAP_RESOURCE_DEFAULT
     case COAP_REQUEST_PUT:
     case COAP_REQUEST_POST:
 
@@ -1152,14 +1153,15 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
       goto default_handler;
       break;
 #endif
+#endif
     default: 			/* any other request type */
 
       debug("unhandled request for unknown resource 0x%02x%02x%02x%02x\r\n",
 	    key[0], key[1], key[2], key[3]);
       if (!coap_is_mcast(&node->local))
-      	response = coap_new_error_response(node->pdu, COAP_RESPONSE_CODE(405), 
-					   opt_filter);
-    }  
+	  response = coap_new_error_response(node->pdu, COAP_RESPONSE_CODE(405),
+					     opt_filter);
+    }
 
     if (response && coap_send(context, &node->remote, response) == COAP_INVALID_TID) {
       warn("cannot send response for transaction %u\n", node->id);
@@ -1175,7 +1177,9 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
     h = resource->handler[node->pdu->hdr->code - 1];
 
 #ifdef WITH_TINYOS
+#ifdef COAP_RESOURCE_DEFAULT
  default_handler:
+#endif
 #endif
 
   if (h) {
