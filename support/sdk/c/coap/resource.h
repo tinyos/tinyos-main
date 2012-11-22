@@ -172,7 +172,7 @@ coap_attr_t *coap_add_attr(coap_resource_t *resource,
  * @return The first attribute with specified @p name or @c NULL if
  *         none was found.
  */
-coap_attr_t *coap_find_attr(coap_resource_t *resource, 
+coap_attr_t *coap_find_attr(coap_resource_t *resource, coap_attr_t * start_attr,
 			    const unsigned char *name, size_t nlen);
 
 /** 
