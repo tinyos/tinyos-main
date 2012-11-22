@@ -79,7 +79,7 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
     void *datap;
     int datalen = 0;
     char *cur;
-    char buf2[COAP_MAX_PDU_SIZE];
+    char databuf[COAP_MAX_PDU_SIZE];
 
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
 #define LEN (COAP_MAX_PDU_SIZE - (cur - (char *) datap))
@@ -88,7 +88,7 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
     id = call LocalIeeeEui64.getId();
 #endif
 
-    datap = buf2;
+    datap = databuf;
     cur = datap;
 
     switch(temp_content_format) {
@@ -119,7 +119,7 @@ generic module CoapEtsiMultiFormatResourceP(uint8_t uri_key) {
     case COAP_MEDIATYPE_ANY:
     default:
       temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
-      cur += snprintf(cur, sizeof(buf2), "%s", INITIAL_DEFAULT_DATA_MULTI_FORMAT);
+      cur += snprintf(cur, sizeof(databuf), "%s", INITIAL_DEFAULT_DATA_MULTI_FORMAT);
       datalen = cur - (char *)datap;
     }
 
