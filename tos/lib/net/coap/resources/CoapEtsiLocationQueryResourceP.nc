@@ -158,7 +158,6 @@ generic module CoapEtsiLocationQueryResourceP(uint8_t uri_key) {
 				      struct coap_resource_t *resource,
 				      unsigned int content_format) {
 
-    coap_resource_t *r = NULL;
     coap_opt_iterator_t opt_iter;
 
     coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
