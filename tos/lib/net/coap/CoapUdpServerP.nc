@@ -594,9 +594,6 @@ module CoapUdpServerP {
        //TODO: handle error...
        return;
      }
-     response->hdr->type = async_state->flags & COAP_ASYNC_CONFIRM
-					  ? COAP_MESSAGE_CON
-					  : COAP_MESSAGE_NON;
      response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id
 
      if (async_state->tokenlen)
@@ -608,9 +605,12 @@ module CoapUdpServerP {
        coap_add_data(response, resource->data_len, resource->data);
      }
 
-     if (!coap_send_confirmed(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-       debug("check_async: cannot send response for message %d\n",
-	     response->hdr->id);
+     if (async_state->flags & COAP_ASYNC_CONFIRM ) {
+       response->hdr->type = COAP_MESSAGE_CON;
+       coap_send_confirmed(ctx_server, &async_state->peer, response);
+     } else {
+       response->hdr->type = COAP_MESSAGE_NON;
+       coap_send(ctx_server, &async_state->peer, response);
      }
 
      coap_delete_pdu(request);
