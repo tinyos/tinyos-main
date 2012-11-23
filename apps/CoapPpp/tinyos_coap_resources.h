@@ -112,6 +112,22 @@ enum {
     INDEX_ETSI_LOCATION_QUERY,
 #endif
 
+#ifdef COAP_RESOURCE_IPSO_DEV_MFG
+    INDEX_IPSO_DEV_MFG,
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_MDL
+    INDEX_IPSO_DEV_MDL,
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_SER
+    INDEX_IPSO_DEV_SER,
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_N
+    INDEX_IPSO_DEV_N,
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_BAT
+    INDEX_IPSO_DEV_BAT,
+#endif
+
     COAP_LAST_RESOURCE,
     COAP_NO_SUCH_RESOURCE = 0xff
 };
@@ -515,6 +531,68 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED | POST_SUPPORTED),
     0
+  },
+#endif
+
+
+#ifdef COAP_RESOURCE_IPSO_DEV_MFG
+  {
+      INDEX_IPSO_DEV_MFG,
+      "dev/mfg", sizeof("dev/mfg"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED )
+  },
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_MDL
+  {
+      INDEX_IPSO_DEV_MDL,
+      "dev/mdl", sizeof("dev/mdl"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED)
+  },
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_SER
+  {
+      INDEX_IPSO_DEV_SER,
+      "dev/ser", sizeof("dev/ser"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED)
+  },
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_N
+  {
+      INDEX_IPSO_DEV_N,
+      "dev/n", sizeof("dev/n"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED)
+  },
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_BAT
+  {
+      INDEX_IPSO_DEV_BAT,
+      "dev/bat", sizeof("dev/bat"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED)
   },
 #endif
 };

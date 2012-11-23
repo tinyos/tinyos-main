@@ -9,6 +9,7 @@ PFLAGS += -DNDEBUG=1
 #CoapBlip
 PFLAGS+=-I$(TOSROOT)/tos/lib/net/coap/
 PFLAGS+=-I$(TOSROOT)/tos/lib/net/coap/resources/
+PFLAGS+=-I$(TOSROOT)/tos/lib/net/coap/resources/IPSO/
 PFLAGS+=-I$(TOSROOT)/tos/lib/net/coap/translate/
 PFLAGS+=-I$(TOSROOT)/tos/lib/app/coap/interfaces/
 

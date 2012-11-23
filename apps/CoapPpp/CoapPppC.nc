@@ -140,7 +140,7 @@ configuration CoapPppC {
 #endif
 #endif
 
-#if defined (COAP_RESOURCE_VOLT)  || defined (COAP_RESOURCE_ALL)
+#if defined (COAP_RESOURCE_VOLT)  || defined (COAP_RESOURCE_ALL) || defined (COAP_RESOURCE_IPSO_DEV_BAT)
   components new VoltageC() as VoltSensor;
 #endif
 
@@ -257,6 +257,32 @@ configuration CoapPppC {
 #ifdef COAP_RESOURCE_ETSI_IOT_LOCATION_QUERY
   components new CoapEtsiLocationQueryResourceC(INDEX_ETSI_LOCATION_QUERY) as LocationQueryResource;
   CoapUdpServerC.CoapResource[INDEX_ETSI_LOCATION_QUERY] -> LocationQueryResource.CoapResource;
+#endif
+
+
+//IPSO
+#ifdef COAP_RESOURCE_IPSO_DEV_MFG
+  components new CoapIpsoDevMfgResourceC(INDEX_IPSO_DEV_MFG) as DevMfgResource;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_MFG] -> DevMfgResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_MDL
+  components new CoapIpsoDevMdlResourceC(INDEX_IPSO_DEV_MDL) as DevMdlResource;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_MDL] -> DevMdlResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_SER
+  components new CoapIpsoDevSerialResourceC(INDEX_IPSO_DEV_SER) as DevSerialResource;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_SER] -> DevSerialResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_N
+  components new CoapIpsoDevNameResourceC(INDEX_IPSO_DEV_N) as DevNameResource;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_N] -> DevNameResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_BAT
+  components new CoapIpsoDevBatteryResourceC(uint16_t, INDEX_IPSO_DEV_BAT) as DevBatteryResource;
+  components new CoapBufferVoltTranslateC() as CoapBufferVoltTranslate;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_BAT] -> DevBatteryResource.CoapResource;
+  DevBatteryResource.Read -> CoapBufferVoltTranslate.ReadVolt;
+  CoapBufferVoltTranslate.Read -> VoltSensor.Read;
 #endif
 
 #endif
