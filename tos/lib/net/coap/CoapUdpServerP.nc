@@ -608,9 +608,9 @@ module CoapUdpServerP {
        coap_add_data(response, resource->data_len, resource->data);
      }
 
-     if (coap_send(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
-	 debug("check_async: cannot send response for message %d\n",
-	       response->hdr->id);
+     if (!coap_send_confirmed(ctx_server, &async_state->peer, response) == COAP_INVALID_TID) {
+       debug("check_async: cannot send response for message %d\n",
+	     response->hdr->id);
      }
 
      coap_delete_pdu(request);
