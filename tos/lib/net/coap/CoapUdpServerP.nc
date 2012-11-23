@@ -98,6 +98,7 @@ module CoapUdpServerP {
 	coap_register_option(ctx_server, COAP_OPTION_BLOCK2);
 #endif
 	coap_register_option(ctx_server, COAP_OPTION_IF_MATCH);
+	coap_register_option(ctx_server, COAP_OPTION_IF_NONE_MATCH);
 
 	return call LibCoapServer.setupContext(port);
     }
@@ -324,6 +325,13 @@ module CoapUdpServerP {
 	    response->hdr->code = COAP_RESPONSE_CODE(203);
 	    return;
 	  }
+	}
+
+	//If-None-Match
+	//
+	if (coap_check_option(request, COAP_OPTION_IF_NONE_MATCH, &opt_iter) && request->hdr->code == COAP_REQUEST_PUT) {
+	    response->hdr->code = COAP_RESPONSE_CODE(412);
+	    return;
 	}
 
 	//If-Match
