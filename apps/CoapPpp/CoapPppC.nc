@@ -254,6 +254,10 @@ configuration CoapPppC {
   components new CoapEtsiLinkResourceC(INDEX_ETSI_PATH3) as Path3Resource;
   CoapUdpServerC.CoapResource[INDEX_ETSI_PATH3] -> Path3Resource.CoapResource;
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LOCATION_QUERY
+  components new CoapEtsiLocationQueryResourceC(INDEX_ETSI_LOCATION_QUERY) as LocationQueryResource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LOCATION_QUERY] -> LocationQueryResource.CoapResource;
+#endif
 
 #endif
 
