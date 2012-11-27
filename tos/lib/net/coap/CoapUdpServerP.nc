@@ -111,6 +111,9 @@ module CoapUdpServerP {
       if (ctx_server == NULL)
 	return FAIL;
 
+      r = call CoAPServer.registerDynamicResource((unsigned char*)"test", sizeof("test"),
+						  GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+
       for (i=0; i < COAP_LAST_RESOURCE; i++) {
 	// set the hash for the URI
 	coap_hash_path(uri_index_map[i].uri,
