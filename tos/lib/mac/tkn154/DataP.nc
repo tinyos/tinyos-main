@@ -273,4 +273,6 @@ implementation
   default command ieee154_status_t DeviceCfpTx.transmit(ieee154_txframe_t *data) {return IEEE154_INVALID_GTS;}
   default command ieee154_status_t BroadcastTx.transmit(ieee154_txframe_t *data) {return IEEE154_INVALID_PARAMETER;}
   default command ieee154_status_t CoordCfpTx.transmit(ieee154_txframe_t *data) {return IEEE154_INVALID_GTS;}
+  default command ieee154_status_t PurgeGtsDevice.purge(uint8_t msduHandle){return IEEE154_INVALID_HANDLE;}
+  default command ieee154_status_t PurgeGtsCoord.purge(uint8_t msduHandle){return IEEE154_INVALID_HANDLE;}
 }
