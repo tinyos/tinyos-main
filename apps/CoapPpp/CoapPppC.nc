@@ -195,11 +195,11 @@ configuration CoapPppC {
   CoapUdpServerC.CoapResource[INDEX_ROUTE] -> CoapReadRouteResource.CoapResource;
 #endif
 
-#ifdef COAP_RESOURCE_ETSI_IOT_TEST
-  components new CoapEtsiTestResourceC(INDEX_ETSI_TEST);
-  CoapUdpServerC.CoapResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.CoapResource;
-  CoapEtsiTestResourceC.Leds -> LedsC;
-  CoapEtsiTestResourceC.CoAPServer ->  CoapUdpServerC;//for POST/DELETE
+#ifdef COAP_RESOURCE_ETSI_IOT_VALIDATE
+  components new CoapEtsiValidateResourceC(INDEX_ETSI_VALIDATE);
+  CoapUdpServerC.CoapResource[INDEX_ETSI_VALIDATE] -> CoapEtsiValidateResourceC.CoapResource;
+  CoapEtsiValidateResourceC.Leds -> LedsC;
+  CoapEtsiValidateResourceC.CoAPServer ->  CoapUdpServerC;
 #endif
 
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
