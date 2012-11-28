@@ -317,6 +317,8 @@ module CoapUdpServerP {
 	  response->hdr->code = (request->hdr->code == COAP_REQUEST_GET
 				 ? COAP_RESPONSE_CODE(406)
 				 : COAP_RESPONSE_CODE(415));
+	  if (token->length)
+	    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 	  goto cleanup;
 	}
 
@@ -325,6 +327,8 @@ module CoapUdpServerP {
 	  if (resource->etag == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),COAP_OPT_LENGTH(opt_iter.option))) {
 	    coap_add_option(response, COAP_OPTION_ETAG,
 			    coap_encode_var_bytes(buf, resource->etag), buf);
+	    if (token->length)
+		coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 	    response->hdr->code = COAP_RESPONSE_CODE(203);
 	    return;
 	  }
@@ -333,13 +337,17 @@ module CoapUdpServerP {
 	//If-None-Match
 	//
 	if (coap_check_option(request, COAP_OPTION_IF_NONE_MATCH, &opt_iter) && request->hdr->code == COAP_REQUEST_PUT) {
-	    response->hdr->code = COAP_RESPONSE_CODE(412);
-	    return;
+	  if (token->length)
+	    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+	  response->hdr->code = COAP_RESPONSE_CODE(412);
+	  return;
 	}
 
 	//If-Match
 	if (coap_check_option(request, COAP_OPTION_IF_MATCH, &opt_iter) && request->hdr->code == COAP_REQUEST_PUT) {
 	  if (resource->etag != coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),COAP_OPT_LENGTH(opt_iter.option))) {
+	    if (token->length)
+	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 	    response->hdr->code = COAP_RESPONSE_CODE(412);
 	    return;
 	  }
