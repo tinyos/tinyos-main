@@ -355,11 +355,22 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 
   //ETSI plugtest resources:
 #ifdef COAP_RESOURCE_ETSI_IOT_VALIDATE
-#endif
-#ifdef COAP_RESOURCE_ETSI_IOT_VALIDATE
   {
       INDEX_ETSI_VALIDATE,
       "validate", sizeof("validate"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED | PUT_SUPPORTED),
+      0
+  },
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
+  {
+      INDEX_ETSI_SEPARATE,
+      "separate", sizeof("separate"),
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
       "", "",
 #endif
