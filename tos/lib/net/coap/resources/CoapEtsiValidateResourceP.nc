@@ -176,13 +176,6 @@ generic module CoapEtsiValidateResourceP(uint8_t uri_key) {
     response = coap_new_pdu();
     response->hdr->code = COAP_RESPONSE_CODE(201);
 
-    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
-		    sizeof("location1")-1, (unsigned char *)"location1");
-    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
-		    sizeof("location2")-1, (unsigned char *)"location2");
-    coap_add_option(response, COAP_OPTION_LOCATION_PATH,
-		    sizeof("location3")-1, (unsigned char *)"location3");
-
     if (temp_resource->data_len != 0)
       coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		      coap_encode_var_bytes(buf, temp_content_format), buf);
@@ -199,71 +192,12 @@ generic module CoapEtsiValidateResourceP(uint8_t uri_key) {
 				      coap_pdu_t* request,
 				      struct coap_resource_t *resource,
 				      unsigned int content_format) {
-
-    coap_resource_t* r;
-
-    if (lock == FALSE) {
-      lock = TRUE;
-
-      r = call CoAPServer.registerDynamicResource((unsigned char*)"location1/location2/location3",
-						  sizeof("location1/location2/location3"),
-						  GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
-
-      coap_get_data(request, &size, &data);
-
-      if ((r->data = (uint8_t *) coap_malloc(size)) != NULL) {
-	memcpy(r->data, data, size);
-	r->data_len = size;
-      } else {
-	return COAP_RESPONSE_CODE(500);
-	//return COAP_RESPONSE_CODE(413); or: too large?
-      }
-
-      temp_async_state = async_state;
-      temp_request = request;
-      temp_resource = r;
-      temp_content_format = content_format;
-
-      post postMethod();
-      return COAP_SPLITPHASE;
-    } else {
-      return COAP_RESPONSE_503;
-    }
-  }
-
-  /////////////////////
-  // DELETE:
-  task void deleteMethod() {
-
-    error_t rc = call CoAPServer.deregisterDynamicResource(temp_resource);
-
-    response = coap_new_pdu();
-
-    if (rc == SUCCESS)
-      response->hdr->code = COAP_RESPONSE_CODE(202);
-    else
-      response->hdr->code = COAP_RESPONSE_CODE(500);
-
-    signal CoapResource.methodDone(SUCCESS,
-				   temp_async_state,
-				   temp_request,
-				   response,
-				   NULL);
-    lock = FALSE;
+    return COAP_RESPONSE_CODE(405);
   }
 
   command int CoapResource.deleteMethod(coap_async_state_t* async_state,
 					coap_pdu_t* request,
 					struct coap_resource_t *resource) {
-    if (lock == FALSE) {
-      lock = TRUE;
-      temp_async_state = async_state;
-      temp_request = request;
-      temp_resource = resource;
-      post deleteMethod();
-      return COAP_SPLITPHASE;
-    } else {
-      return COAP_RESPONSE_503;
-    }
+    return COAP_RESPONSE_CODE(405);
   }
 }
