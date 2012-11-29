@@ -1148,6 +1148,12 @@ handle_request(coap_context_t *context, coap_queue_t *node) {
 #ifdef COAP_RESOURCE_DEFAULT
     case COAP_REQUEST_PUT:
     case COAP_REQUEST_POST:
+      if (is_wkc(key)) {	/* GET request for .well-known/core */
+	response =
+	  coap_new_error_response(node->pdu, COAP_RESPONSE_CODE(405),
+				  opt_filter);
+	break;
+      }
 
       h = hnd_coap_default_tinyos;
       goto default_handler;
