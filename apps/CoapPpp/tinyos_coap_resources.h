@@ -114,6 +114,9 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_LOCATION_QUERY
     INDEX_ETSI_LOCATION_QUERY,
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_QUERY
+    INDEX_ETSI_QUERY,
+#endif
 
 #ifdef COAP_RESOURCE_IPSO_DEV_MFG
     INDEX_IPSO_DEV_MFG,
@@ -546,7 +549,19 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     0
   },
 #endif
-
+#ifdef COAP_RESOURCE_ETSI_IOT_QUERY
+  {
+    INDEX_ETSI_LOCATION_QUERY,
+    "query", sizeof("query"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+#endif
 
 #ifdef COAP_RESOURCE_IPSO_DEV_MFG
   {

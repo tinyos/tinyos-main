@@ -258,6 +258,10 @@ configuration CoapPppC {
   components new CoapEtsiLocationQueryResourceC(INDEX_ETSI_LOCATION_QUERY) as LocationQueryResource;
   CoapUdpServerC.CoapResource[INDEX_ETSI_LOCATION_QUERY] -> LocationQueryResource.CoapResource;
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_QUERY
+  components new CoapEtsiLocationQueryResourceC(INDEX_ETSI_QUERY) as QueryResource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_QUERY] -> QueryResource.CoapResource;
+#endif
 
 
 //IPSO
