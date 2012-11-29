@@ -361,8 +361,8 @@ module CoapUdpServerP {
 					    (void *)NULL);
 	} else {
 	  //remove client from observer list, if already registered
-	  if (coap_find_observer(resource, peer, token)) {
-	    coap_delete_observer(resource, peer, token);
+	  if (coap_find_observer(resource, peer, NULL)) {
+	    coap_delete_observer(resource, peer, NULL);
 	  }
 #endif
 	  async_state = coap_register_async(ctx, peer, request,

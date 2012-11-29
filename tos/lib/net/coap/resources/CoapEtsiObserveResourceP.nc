@@ -125,9 +125,9 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
       temp_resource->data_ct = temp_content_format;
     }
 
-    if(i >= 5){
-      call UpdateTimer.stop();
-    }
+    //   if(i >= 5){
+    //call UpdateTimer.stop();
+    //
 
     signal CoapResource.notifyObservers();
   }
@@ -146,7 +146,10 @@ generic module CoapEtsiObserveResourceP(uint8_t uri_key) {
       if (!call UpdateTimer.isRunning() && async_state->flags & COAP_ASYNC_OBSERVED) {
 	call UpdateTimer.startPeriodic(5120);
 	i = 0;
+      } else {
+	call UpdateTimer.stop();
       }
+
       post getMethod();
 
       return COAP_SPLITPHASE;
