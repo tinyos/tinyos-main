@@ -361,7 +361,7 @@ module CoapUdpServerP {
 					    (void *)NULL);
 	} else {
 	  //remove client from observer list, if already registered
-	  if (coap_find_observer(resource, peer, NULL)) {
+	  if (coap_find_observer(resource, peer, NULL) && request->hdr->code == COAP_REQUEST_GET) {
 	    coap_delete_observer(resource, peer, NULL);
 	  }
 #endif
