@@ -55,7 +55,7 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
   unsigned char attr_value_rt1[] = "\"tc tf\"";
   unsigned char attr_value_rt2[] = "\"tf tk\"";
   unsigned char attr_value_rt3[] = "\"tc tk\"";
-  unsigned char attr_value_rt4[] = "\"\"";
+  //  unsigned char attr_value_rt4[] = "\"\"";
 
   unsigned char attr_name_if[]   = "if";
   unsigned char attr_value_if1[] = "\"If1\"";
@@ -111,10 +111,10 @@ generic module CoapEtsiLinkResourceP(uint8_t uri_key) {
       coap_add_attr(r,
 		    attr_name_if, sizeof(attr_name_if)-1,
 		    attr_value_if3, sizeof(attr_value_if3)-1, 0);
-    } else if (uri_key == INDEX_ETSI_LINK4) {
-      coap_add_attr(r,
-		    attr_name_rt, sizeof(attr_name_rt)-1,
-		    attr_value_rt4, sizeof(attr_value_rt4)-1, 0);
+      //    } else if (uri_key == INDEX_ETSI_LINK4) {
+      //coap_add_attr(r,
+      //	    attr_name_rt, sizeof(attr_name_rt)-1,
+      //	    attr_value_rt4, sizeof(attr_value_rt4)-1, 0);
     } else if (uri_key == INDEX_ETSI_LINK5) {
       coap_add_attr(r,
 		    attr_name_size, sizeof(attr_name_size)-1,
