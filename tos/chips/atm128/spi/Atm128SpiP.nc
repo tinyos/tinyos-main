@@ -92,12 +92,10 @@ module Atm128SpiP @safe() {
     interface SpiByte;
     interface FastSpiByte;
     interface SpiPacket;
-    interface Resource[uint8_t id];
+    interface ResourceConfigure[uint8_t id];
   }
   uses {
     interface Atm128Spi as Spi;
-    interface Resource as ResourceArbiter[uint8_t id];
-    interface ArbiterInfo;
     interface McuPowerState;
   }
 }
@@ -106,7 +104,7 @@ implementation {
   uint8_t* COUNT_NOK(len) txBuffer;
   uint8_t* COUNT_NOK(len) rxBuffer;
   uint16_t pos;
-  
+
   enum {
     SPI_IDLE,
     SPI_BUSY,
@@ -116,7 +114,7 @@ implementation {
   command error_t Init.init() {
     return SUCCESS;
   }
-  
+
 //default clockrate: 4000 kHz
 #ifndef SPI_CLOCKRATE
 #define SPI_CLOCKRATE 4000
@@ -174,9 +172,9 @@ enum {
 
   async command uint8_t SpiByte.write( uint8_t tx ) {
     /* There is no need to enable the SPI bus and update the power state
-       here since that must have been done when the resource was granted. 
-       However there seems to be a bug somewhere in the radio driver for 
-       the MicaZ platform so we cannot remove the following two lines 
+       here since that must have been done when the resource was granted.
+       However there seems to be a bug somewhere in the radio driver for
+       the MicaZ platform so we cannot remove the following two lines
        before that problem is resolved. (Miklos Maroti) */
 #ifdef PLATFORM_MICAZ
     call Spi.enableSpi(TRUE);
@@ -247,14 +245,14 @@ enum {
    * not disable interrupts, this allows processing in the rest of the
    * system to continue.
    */
-   
+
   error_t sendNextPart() {
     uint16_t end;
     uint16_t tmpPos;
     uint16_t myLen;
     uint8_t* COUNT_NOK(myLen) tx;
     uint8_t* COUNT_NOK(myLen) rx;
-    
+
     atomic {
       myLen = len;
       tx = txBuffer;
@@ -266,11 +264,11 @@ enum {
 
     for (;tmpPos < (end - 1) ; tmpPos++) {
       uint8_t val;
-      if (tx != NULL) 
+      if (tx != NULL)
 	val = call SpiByte.write( tx[tmpPos] );
       else
 	val = call SpiByte.write( 0 );
-    
+
       if (rx != NULL) {
 	rx[tmpPos] = val;
       }
@@ -284,7 +282,7 @@ enum {
        call Spi.write(tx[tmpPos]);
      else
        call Spi.write(0);
-     
+
      pos = tmpPos;
       // The final increment will be in the interrupt
       // handler.
@@ -319,16 +317,16 @@ enum {
    *
    * This command only sets up the state variables and clears the SPI:
    * <tt>sendNextPart()</tt> does the real work.
-   * 
+   *
    * If there's a send of zero bytes, short-circuit and just post
    * a task to signal the sendDone. This generally occurs due to an
    * error in the caler, but signaling an event will hopefully let
    * it recover better than returning FAIL.
    */
 
-  
-  async command error_t SpiPacket.send(uint8_t* writeBuf, 
-				       uint8_t* readBuf, 
+
+  async command error_t SpiPacket.send(uint8_t* writeBuf,
+				       uint8_t* readBuf,
 				       uint16_t  bufLen) {
     uint8_t discard;
     atomic {
@@ -348,12 +346,12 @@ enum {
   }
 
  default async event void SpiPacket.sendDone
-      (uint8_t* _txbuffer, uint8_t* _rxbuffer, 
+      (uint8_t* _txbuffer, uint8_t* _rxbuffer,
        uint16_t _length, error_t _success) { }
 
  async event void Spi.dataReady(uint8_t data) {
    bool again;
-   
+
    atomic {
      if (rxBuffer != NULL) {
        rxBuffer[pos] = data;
@@ -362,11 +360,11 @@ enum {
      pos++;
    }
    call Spi.enableInterrupt(FALSE);
-   
+
    atomic {
      again = (pos < len);
    }
-   
+
    if (again) {
      sendNextPart();
    }
@@ -375,7 +373,7 @@ enum {
      uint16_t  myLen;
      uint8_t* COUNT_NOK(myLen) rx;
      uint8_t* COUNT_NOK(myLen) tx;
-     
+
      atomic {
        myLen = len;
        rx = rxBuffer;
@@ -391,41 +389,11 @@ enum {
    }
  }
 
- async command error_t Resource.immediateRequest[ uint8_t id ]() {
-   error_t result = call ResourceArbiter.immediateRequest[ id ]();
-   if ( result == SUCCESS ) {
-     startSpi();
-   }
-   return result;
- }
- 
- async command error_t Resource.request[ uint8_t id ]() {
-   atomic {
-     if (!call ArbiterInfo.inUse()) {
-       startSpi();
-     }
-   }
-   return call ResourceArbiter.request[ id ]();
+ async command void ResourceConfigure.configure[ uint8_t id ]() {
+   startSpi();
  }
 
- async command error_t Resource.release[ uint8_t id ]() {
-   error_t error = call ResourceArbiter.release[ id ]();
-   atomic {
-     if (!call ArbiterInfo.inUse()) {
-       stopSpi();
-     }
-   }
-   return error;
+ async command void ResourceConfigure.unconfigure[ uint8_t id ]() {
+   stopSpi();
  }
-
- async command bool Resource.isOwner[uint8_t id]() {
-   return call ResourceArbiter.isOwner[id]();
- }
- 
- event void ResourceArbiter.granted[ uint8_t id ]() {
-   signal Resource.granted[ id ]();
- }
- 
- default event void Resource.granted[ uint8_t id ]() {}
- 
 }
