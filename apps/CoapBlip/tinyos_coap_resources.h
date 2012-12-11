@@ -41,6 +41,9 @@
 //user defined resources
 
 enum {
+#ifdef COAP_RESOURCE_DEFAULT
+    INDEX_DEFAULT,
+#endif
 #if defined (COAP_RESOURCE_TEMP) || defined (COAP_RESOURCE_ALL)
     INDEX_TEMP,
 #endif
@@ -79,8 +82,8 @@ enum {
     INDEX_DEV_3,
 #endif
 
-#ifdef COAP_RESOURCE_ETSI_IOT_TEST
-    INDEX_ETSI_TEST,
+#ifdef COAP_RESOURCE_ETSI_IOT_VALIDATE
+    INDEX_ETSI_VALIDATE,
 #endif
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
     INDEX_ETSI_SEPARATE,
@@ -88,9 +91,49 @@ enum {
 #ifdef COAP_RESOURCE_ETSI_IOT_SEGMENT
     INDEX_ETSI_SEGMENT,
 #endif
-#ifdef COAP_RESOURCE_ETSI_IOT_BLOCK
-    INDEX_ETSI_BLOCK,
+#ifdef COAP_RESOURCE_ETSI_IOT_LARGE
+    INDEX_ETSI_LARGE,
 #endif
+#ifdef COAP_RESOURCE_ETSI_IOT_OBSERVE
+    INDEX_ETSI_OBSERVE,
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_MULTI_FORMAT
+    INDEX_ETSI_MULTI_FORMAT,
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LINK
+    INDEX_ETSI_LINK1,
+    INDEX_ETSI_LINK2,
+    INDEX_ETSI_LINK3,
+    INDEX_ETSI_LINK4,
+    INDEX_ETSI_LINK5,
+    INDEX_ETSI_PATH,
+    INDEX_ETSI_PATH1,
+    INDEX_ETSI_PATH2,
+    INDEX_ETSI_PATH3,
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LOCATION_QUERY
+    INDEX_ETSI_LOCATION_QUERY,
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_QUERY
+    INDEX_ETSI_QUERY,
+#endif
+
+#ifdef COAP_RESOURCE_IPSO_DEV_MFG
+    INDEX_IPSO_DEV_MFG,
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_MDL
+    INDEX_IPSO_DEV_MDL,
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_SER
+    INDEX_IPSO_DEV_SER,
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_N
+    INDEX_IPSO_DEV_N,
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_BAT
+    INDEX_IPSO_DEV_BAT,
+#endif
+
     COAP_LAST_RESOURCE,
     COAP_NO_SUCH_RESOURCE = 0xff
 };
@@ -135,11 +178,25 @@ typedef struct index_uri_key
   const unsigned char unit[2];
 #endif
   coap_key_t uri_key;
+  uint8_t max_age;
   uint8_t supported_methods:4;
   uint8_t observable:1;
 } index_uri_key_t;
 
 index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
+#ifdef COAP_RESOURCE_DEFAULT
+  {
+      INDEX_DEFAULT,
+      "", sizeof(""),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+      "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
+      0
+  },
+#endif
 #if defined (COAP_RESOURCE_TEMP) || defined (COAP_RESOURCE_ALL)
   {
       INDEX_TEMP,
@@ -148,6 +205,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "temperature", "K",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -160,6 +218,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "humidity", "%",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -172,6 +231,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "voltage", "V",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -184,6 +244,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -196,6 +257,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
   },
@@ -208,6 +270,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       1
   },
@@ -220,6 +283,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       GET_SUPPORTED,
       0
   },
@@ -234,6 +298,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED | PUT_SUPPORTED),
     0
   },
@@ -246,6 +311,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
     "", "",
 #endif
     {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
     (GET_SUPPORTED | PUT_SUPPORTED),
       0
   },
@@ -258,6 +324,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
     },
@@ -270,6 +337,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
     },
@@ -282,21 +350,23 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
     },
 #endif
 
   //ETSI plugtest resources:
-#ifdef COAP_RESOURCE_ETSI_IOT_TEST
+#ifdef COAP_RESOURCE_ETSI_IOT_VALIDATE
   {
-      INDEX_ETSI_TEST,
-      "test", sizeof("test"),
+      INDEX_ETSI_VALIDATE,
+      "validate", sizeof("validate"),
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
-      (GET_SUPPORTED | PUT_SUPPORTED | POST_SUPPORTED | DELETE_SUPPORTED),
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED | PUT_SUPPORTED),
       0
   },
 #endif
@@ -308,6 +378,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED | PUT_SUPPORTED),
       0
   },
@@ -320,20 +391,236 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
-      (GET_SUPPORTED | PUT_SUPPORTED),
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED),
       0
   },
 #endif
-#ifdef COAP_RESOURCE_ETSI_IOT_BLOCK
+#ifdef COAP_RESOURCE_ETSI_IOT_LARGE
   {
-      INDEX_ETSI_BLOCK,
+      INDEX_ETSI_LARGE,
       "large", sizeof("large"),
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
       "", "",
 #endif
       {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
       (GET_SUPPORTED),
       0
+  },
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_OBSERVE
+  {
+    INDEX_ETSI_OBSERVE,
+    "obs", sizeof("obs"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    5,
+    (GET_SUPPORTED | PUT_SUPPORTED),
+    1
+  },
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_MULTI_FORMAT
+  {
+    INDEX_ETSI_MULTI_FORMAT,
+    "multi-format", sizeof("multi-format"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "text", "t",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LINK
+  {
+    INDEX_ETSI_LINK1,
+    "link1", sizeof("link1"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK2,
+    "link2", sizeof("link2"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK3,
+    "link3", sizeof("link3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK4,
+    "link4", sizeof("link4"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_LINK5,
+    "lnk5", sizeof("lnk5"),  // NOTE: lnk5 not link5 !! for TD_COAP_LINK_08
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_PATH,
+    "path", sizeof("path"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_PATH1,
+    "path/sub1", sizeof("path/sub1"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_PATH2,
+    "path/sub2", sizeof("path/sub3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+  {
+    INDEX_ETSI_PATH3,
+    "path/sub3", sizeof("path/sub3"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LOCATION_QUERY
+  {
+    INDEX_ETSI_LOCATION_QUERY,
+    "location-query", sizeof("location-query"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED | POST_SUPPORTED),
+    0
+  },
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_QUERY
+  {
+    INDEX_ETSI_QUERY,
+    "query", sizeof("query"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+    {0,0,0,0}, // uri_key will be set later
+    COAP_DEFAULT_MAX_AGE,
+    (GET_SUPPORTED),
+    0
+  },
+#endif
+
+#ifdef COAP_RESOURCE_IPSO_DEV_MFG
+  {
+      INDEX_IPSO_DEV_MFG,
+      "dev/mfg", sizeof("dev/mfg"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED )
+  },
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_MDL
+  {
+      INDEX_IPSO_DEV_MDL,
+      "dev/mdl", sizeof("dev/mdl"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED)
+  },
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_SER
+  {
+      INDEX_IPSO_DEV_SER,
+      "dev/ser", sizeof("dev/ser"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED)
+  },
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_N
+  {
+      INDEX_IPSO_DEV_N,
+      "dev/n", sizeof("dev/n"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED)
+  },
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_BAT
+  {
+      INDEX_IPSO_DEV_BAT,
+      "dev/bat", sizeof("dev/bat"),
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+    "", "",
+#endif
+      {0,0,0,0}, // uri_key will be set later
+      COAP_DEFAULT_MAX_AGE,
+      (GET_SUPPORTED)
   },
 #endif
 };
@@ -347,10 +634,10 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 
 //XML (SenML-formatted)
 #ifdef COAP_CONTENT_TYPE_XML
-#if (COAP_MAX_PDU_SIZE < 165)
-#warning "*** XML requires COAP_MAX_PDU_SIZE > 165. Make sure you change the COAP_MAX_PDU_SIZE in /support/sdk/c/coap/config.h.tinyos to get XML working properly ***"
-#endif
-#define XML_PRE "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <senml xmlns=\"urn:ietf:params:xml:ns:senml\""
+//#undef COAP_MAX_PDU_SIZE
+//#define COAP_MAX_PDU_SIZE 165
+//#warning "*** Content-Format XML: COAP_MAX_PDU_SIZE redefined to 165 ***"
+#define XML_PRE "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <senml xmlns=\"urn:ietf:params:xml:ns:senml\" "
 #define XML_POST "</senml>"
 #endif
 

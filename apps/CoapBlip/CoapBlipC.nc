@@ -30,8 +30,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef COAP_RESOURCE_KEY
 #include "StorageVolumes.h"
-#include <lib6lowpan/6lowpan.h>
+#endif
+
+#include <iprouting.h>
+
 #include "tinyos_coap_resources.h"
 
 configuration CoapBlipC {
@@ -62,6 +66,13 @@ configuration CoapBlipC {
   components LocalIeeeEui64C;
 #endif
 
+#ifdef COAP_RESOURCE_DEFAULT
+  components new CoapDefaultResourceC(INDEX_DEFAULT);
+  CoapUdpServerC.CoapResource[INDEX_DEFAULT] -> CoapDefaultResourceC.CoapResource;
+  CoapDefaultResourceC.Leds -> LedsC;
+  CoapDefaultResourceC.CoAPServer ->  CoapUdpServerC;//for POST/DELETE
+#endif
+
 #if defined (COAP_RESOURCE_TEMP)  || defined (COAP_RESOURCE_HUM) || defined (COAP_RESOURCE_ALL)
   components new SensirionSht11C() as HumTempSensor;
 #endif
@@ -88,7 +99,7 @@ configuration CoapBlipC {
 #endif
 #endif
 
-#if defined (COAP_RESOURCE_VOLT)  || defined (COAP_RESOURCE_ALL)
+#if defined (COAP_RESOURCE_VOLT)  || defined (COAP_RESOURCE_ALL) || defined (COAP_RESOURCE_IPSO_DEV_BAT)
   components new VoltageC() as VoltSensor;
 #endif
 
@@ -118,6 +129,9 @@ configuration CoapBlipC {
   CoapResourceCollectorC.ReadVolt -> CoapBufferVoltTranslateAll.ReadVolt;
   CoapBufferVoltTranslateAll.Read -> VoltSensor.Read;
   CoapUdpServerC.CoapResource[INDEX_ALL] -> CoapReadAllResource.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapReadAllResource.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
 #endif
 
 #ifdef COAP_RESOURCE_KEY
@@ -140,9 +154,11 @@ configuration CoapBlipC {
   CoapUdpServerC.CoapResource[INDEX_ROUTE] -> CoapReadRouteResource.CoapResource;
 #endif
 
-#ifdef COAP_RESOURCE_ETSI_IOT_TEST
-  components new CoapEtsiTestResourceC(INDEX_ETSI_TEST);
-  CoapUdpServerC.CoapResource[INDEX_ETSI_TEST] -> CoapEtsiTestResourceC.CoapResource;
+#ifdef COAP_RESOURCE_ETSI_IOT_VALIDATE
+  components new CoapEtsiValidateResourceC(INDEX_ETSI_VALIDATE);
+  CoapUdpServerC.CoapResource[INDEX_ETSI_VALIDATE] -> CoapEtsiValidateResourceC.CoapResource;
+  CoapEtsiValidateResourceC.Leds -> LedsC;
+  CoapEtsiValidateResourceC.CoAPServer ->  CoapUdpServerC;
 #endif
 
 #ifdef COAP_RESOURCE_ETSI_IOT_SEPARATE
@@ -155,9 +171,80 @@ configuration CoapBlipC {
   CoapUdpServerC.CoapResource[INDEX_ETSI_SEGMENT] -> CoapEtsiSegmentResourceC.CoapResource;
 #endif
 
-#ifdef COAP_RESOURCE_ETSI_IOT_BLOCK
-  components new CoapEtsiBlockResourceC(INDEX_ETSI_BLOCK);
-  CoapUdpServerC.CoapResource[INDEX_ETSI_BLOCK] -> CoapEtsiBlockResourceC.CoapResource;
+#ifdef COAP_RESOURCE_ETSI_IOT_LARGE
+  components new CoapEtsiLargeResourceC(INDEX_ETSI_LARGE);
+  CoapEtsiLargeResourceC.Leds -> LedsC;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LARGE] -> CoapEtsiLargeResourceC.CoapResource;
+#endif
+
+#ifdef COAP_RESOURCE_ETSI_IOT_OBSERVE
+  components new CoapEtsiObserveResourceC(INDEX_ETSI_OBSERVE);
+  CoapEtsiObserveResourceC.Leds -> LedsC;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_OBSERVE] -> CoapEtsiObserveResourceC.CoapResource;
+#endif
+
+#ifdef COAP_RESOURCE_ETSI_IOT_MULTI_FORMAT
+  components new CoapEtsiMultiFormatResourceC(INDEX_ETSI_MULTI_FORMAT);
+  CoapEtsiMultiFormatResourceC.Leds -> LedsC;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_MULTI_FORMAT] -> CoapEtsiMultiFormatResourceC.CoapResource;
+#if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
+  CoapEtsiMultiFormatResourceC.LocalIeeeEui64 -> LocalIeeeEui64C;
+#endif
+#endif
+
+#ifdef COAP_RESOURCE_ETSI_IOT_LINK
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK1) as Link1Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK1] -> Link1Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK2) as Link2Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK2] -> Link2Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK3) as Link3Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK3] -> Link3Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK4) as Link4Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK4] -> Link4Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_LINK5) as Link5Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LINK5] -> Link5Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_PATH) as PathResource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_PATH] -> PathResource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_PATH1) as Path1Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_PATH1] -> Path1Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_PATH2) as Path2Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_PATH2] -> Path2Resource.CoapResource;
+  components new CoapEtsiLinkResourceC(INDEX_ETSI_PATH3) as Path3Resource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_PATH3] -> Path3Resource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_LOCATION_QUERY
+  components new CoapEtsiLocationQueryResourceC(INDEX_ETSI_LOCATION_QUERY) as LocationQueryResource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_LOCATION_QUERY] -> LocationQueryResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_ETSI_IOT_QUERY
+  components new CoapEtsiLocationQueryResourceC(INDEX_ETSI_QUERY) as QueryResource;
+  CoapUdpServerC.CoapResource[INDEX_ETSI_QUERY] -> QueryResource.CoapResource;
+#endif
+
+
+//IPSO
+#ifdef COAP_RESOURCE_IPSO_DEV_MFG
+  components new CoapIpsoDevMfgResourceC(INDEX_IPSO_DEV_MFG) as DevMfgResource;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_MFG] -> DevMfgResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_MDL
+  components new CoapIpsoDevMdlResourceC(INDEX_IPSO_DEV_MDL) as DevMdlResource;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_MDL] -> DevMdlResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_SER
+  components new CoapIpsoDevSerialResourceC(INDEX_IPSO_DEV_SER) as DevSerialResource;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_SER] -> DevSerialResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_N
+  components new CoapIpsoDevNameResourceC(INDEX_IPSO_DEV_N) as DevNameResource;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_N] -> DevNameResource.CoapResource;
+#endif
+#ifdef COAP_RESOURCE_IPSO_DEV_BAT
+  components new CoapIpsoDevBatteryResourceC(uint16_t, INDEX_IPSO_DEV_BAT) as DevBatteryResource;
+  components new CoapBufferVoltTranslateC() as CoapBufferVoltTranslate;
+  CoapUdpServerC.CoapResource[INDEX_IPSO_DEV_BAT] -> DevBatteryResource.CoapResource;
+  DevBatteryResource.Read -> CoapBufferVoltTranslate.ReadVolt;
+  CoapBufferVoltTranslate.Read -> VoltSensor.Read;
 #endif
 
 #endif
