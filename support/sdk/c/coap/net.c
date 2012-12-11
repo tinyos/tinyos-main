@@ -1314,6 +1314,8 @@ coap_dispatch( coap_context_t *context ) {
       /* @todo remove observer for this resource, if any 
        * get token from sent and try to find a matching resource. Uh!
        */
+
+      goto cleanup;
       break;
 
     case COAP_MESSAGE_NON :	/* check for unknown critical options */
