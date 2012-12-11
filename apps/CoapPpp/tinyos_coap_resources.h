@@ -551,7 +551,7 @@ index_uri_key_t uri_index_map[COAP_LAST_RESOURCE] = {
 #endif
 #ifdef COAP_RESOURCE_ETSI_IOT_QUERY
   {
-    INDEX_ETSI_LOCATION_QUERY,
+    INDEX_ETSI_QUERY,
     "query", sizeof("query"),
 #if defined (COAP_CONTENT_TYPE_JSON) || defined (COAP_CONTENT_TYPE_XML)
     "", "",
