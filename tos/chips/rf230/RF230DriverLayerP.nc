@@ -710,7 +710,7 @@ implementation
 
 	void serviceRadio()
 	{
-		if( isSpiAcquired() )
+		if( state != STATE_SLEEP && isSpiAcquired() )
 		{
 			uint16_t time;
 			uint32_t time32;
