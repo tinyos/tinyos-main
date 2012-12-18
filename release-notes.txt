@@ -1,6 +1,70 @@
-These release notes are as of: $Date: 2010-01-20 20:00:48 $
+These release notes are as of: 2012-12-17
 
-2.1.2:
+2.1.2.1: 1st post T2.1.2 release patches.
+
+(same as development tree, not cherry picked).
+DOES THIS NEED TO BE PRUNED?
+
+Summary:
+
+  o updated release notes for T2.1.2 -> T2.1.2.1
+  o revised build scripts for various toolchains.
+  o Misc buf fixes.
+  o PPPSniffer
+  o fix I2CDR in msp430 USART code.
+  o rf230 bug fixes
+  o rfa1: fixes.
+  o msp430 x2/usci: i2c uctxstt fix.
+  o update Python Serial Stack
+  o add support for the MDA300 sensorboard (new implementation)
+
+
+4449bba MDA300 support from Franco Di Persio.
+d89fe5e Last commit for serial patch that resolves Google Code issue 152.
+c40067f Patch serial stack.   (Python Serial Stack fix)
+c70c461 rf212/rf230: Check that radio chip is not in sleep mode while reading the IRQ status register.
+        There is a small chance that an interrupt fires just before the radio is put into sleep mode.
+        Accessing the status register while the radio is sleeping will result in a wrong reading
+        (all status bits read as high due to the pull-up resistor on the SPI data line).
+0e4829e Added two default command handlers, otherwise MCPS_PURGE will not work in
+        nonbeacon-enabled mode. This problem was discovered by David Rodenas.
+26823b5 removed uisp references from Makefiles (but kept the definable PROGRAMMER)
+1c888f0 Removed uisp from tinyos-tools
+ee1b931 Use avrdude as default programmer on all platforms (instead of uisp)
+50be665 Bug fix from a Michiel Konstapel <m.konstapel@sownet.nl> to fix buffer locking bug.
+cf0731b  disable route command so application fits with the release version of msp430-gcc
+23591e0 Adding new application PPPSniffer.
+e4e7402 Various: add overrideable POST_VER to DEB_VER, default to -tinyos
+7cf3de8 msp430-46: add 2 patches and move install to /usr
+160c035 packaging: removed old avr packaging scripts
+36e7f7b Renamed register in I2C driver. The old I2CDR name is no longer defined in the TI headers.
+d303730 msp430 packaging: move to packaging directory
+60836ab avr packaging: move to packaging location
+411b1d3 rf230: for the hardware ack driver also rework the upload logic to make it faster.
+04eb28c rfa1: add capabilities for external amplifier switching and antenna switching/diversity
+b12646f rf212: update readme file for the new option
+faec7cf rf212: rework the upload logic to make it faster and to make it work with slow SPI (based on rf230)
+3862465 rf230: rework the upload logic to make it faster and to make it work with slow SPI
+11833b0 Forgot to add the  UCTXSTT check in USCI B0
+da9e0be rfa1: reworked the timer transformation
+e93b9ed rfa1: reimplement busy wait (reduce code size).
+f505c3d rename timer components (AtmegaCompare to AtmegaAlarm)
+58ab4ed rfa1: renamed hpl timer interfaces
+5e1ead9 Fix: UCTXSTT is now checked, fixes I2C_ACK_END implementation
+ea9f7d5 packaging: updated the tinyos packaging script to generate rpms
+703d9e1 updates to support new commands that enable and disable the dock interrupt
+b3a02d7 updates to support new commands that enable and disable the dock interrupt
+42bdfb7 Add #def for MAX_PARENT
+d5f968b In nonbeacon-enabled mode a device should not answer to an active scan.
+5751707 rfxlink: fixed timestamps in the debug message
+34ca30a Add note on Z1 support in release notes for 2.1.2
+b1b027d Add note on CoAP implementation to release notes for 2.1.2
+b1a4d30 packaging: moved everything related to packaging out of the tools directory
+84e83a2 updated the release-notes.txt
+6ccf23b removed all .cvsignore files
+
+
+2.1.2:   (2.1.2.0)
   Supports updated msp430 (4.6.3) and avr (4.1.2) compilers
   Added RPL stack
   Support for the ucmini platform and ATmega128RFA1 chip
