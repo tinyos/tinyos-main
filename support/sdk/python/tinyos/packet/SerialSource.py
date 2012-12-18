@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005
+# Copyright (c) 2005-2006
 #      The President and Fellows of Harvard College.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,53 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["PacketDispatcher", "PacketSource", "Packetizer",
-           "SFProtocol", "SFSource", "ThreadTask",
-           "avrmote", "micaz", "telos", "SerialSource", "SerialProtocol", "SerialIO"]
+import re
+import socket
+import sys
+
+from PacketSource import *
+from Platform import *
+from SerialProtocol import *
+if sys.platform != 'cygwin':
+    from SerialIO import *
+
+class SerialSource(PacketSource):
+    def __init__(self, dispatcher, args):
+        PacketSource.__init__(self, dispatcher)
+
+        m = re.match(r'(.*):(.*)', args)
+        if m == None:
+            raise PacketSourceException("bad arguments")
+
+        (device, name) = m.groups()
+        if re.match(r'^\d+$', name):
+            baud = int(name)
+            self.factory = default_factory()
+        else:
+            try:
+                baud = baud_from_name(name)
+                self.factory = factory_from_name(name)
+            except:
+                raise PacketSourceException("bad source: %s" % name)
+
+        self.io = SerialIO(device, baud)
+        self.prot = SerialProtocol(self.io, self.io)
+
+    def cancel(self):
+        self.done = True
+        self.io.cancel()
+
+    def open(self):
+        self.io.open()
+        self.prot.open()
+        PacketSource.open(self)
+
+    def close(self):
+        self.io.close()
+
+    def readPacket(self):
+        return self.prot.readPacket()
+
+    def writePacket(self, packet):
+        self.prot.writePacket(packet)
+

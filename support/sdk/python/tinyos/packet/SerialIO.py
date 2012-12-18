@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005
+# Copyright (c) 2005-2006
 #      The President and Fellows of Harvard College.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,34 @@
 #
 # Author: Geoffrey Mainland <mainland@eecs.harvard.edu>
 #
-__all__ = ["PacketDispatcher", "PacketSource", "Packetizer",
-           "SFProtocol", "SFSource", "ThreadTask",
-           "avrmote", "micaz", "telos", "SerialSource", "SerialProtocol", "SerialIO"]
+import serial
+
+from IO import *
+
+class SerialIO(IO):
+	def __init__(self, device, baud):
+		IO.__init__(self)
+		
+		self.device = device
+		self.baud = baud
+	
+	def open(self):
+		self.serial = serial.Serial(port=self.device,
+	                                baudrate=self.baud)
+	
+	def close(self):
+		self.serial.close()
+	
+	def read(self, count):
+		while self.serial.inWaiting() < count:
+			if self.isDone():
+				raise IODone()
+		
+		return self.serial.read(count)
+	
+	def write(self, data):
+		return self.serial.write(data)
+	
+	def flush(self):
+		self.serial.flushOutput()
+
