@@ -1,4 +1,3 @@
-
 Getting Started.
 
 Contents:
@@ -252,6 +251,9 @@ redacted)...
 * coding style.   These are suggestions.   There isn't a style nazi.
 
   o First, don't change the style to just change the style.
+
+  o Follow the coding standard conventions documented in TEP3. A copy can be 
+    found in $(TOSROOT)/doc/txt/tep3.txt.
 
   o When working in a section of code, try to adapt to the existing style.
 
