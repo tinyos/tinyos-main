@@ -40,10 +40,8 @@ these changes can then be brought in to the central development repository
 The mechanism that makes all this work is git and its core concept of SHAs
 that reflect the objects that are being managed by the DVCS.
 
-Bottom line is that if one is going to contribute back to the TinyOS effort,
-one needs to be involved in the github community (since that is where the
-main tinyos repositories are hosted).
-
+Contributing back to the TinyOS effort can be streamlined by joining the 
+github community (since that is where the main tinyos repositories are hosted).
 
 * GitHub
 
