@@ -443,7 +443,7 @@ implementation
 		uint8_t upload1;
 		uint8_t upload2;
 
-		if( cmd != CMD_NONE || state != STATE_RX_ON || radioIrq || ! isSpiAcquired())
+		if( cmd != CMD_NONE || state != STATE_RX_ON || radioIrq || ! isSpiAcquired() )
 			return EBUSY;
 
 		length = call PacketTransmitPower.isSet(msg) ?
@@ -456,7 +456,8 @@ implementation
 		}
 
 		if( call Config.requiresRssiCca(msg)
-			&& (readRegister(RF212_PHY_RSSI) & RF212_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) ) {
+			&& (readRegister(RF212_PHY_RSSI) & RF212_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
+		{
 			call SpiResource.release();
 			return EBUSY;
 		}

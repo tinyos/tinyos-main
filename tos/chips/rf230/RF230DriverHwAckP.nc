@@ -529,7 +529,7 @@ tasklet_async command uint8_t RadioState.getChannel()
 			RADIO_ASSERT( (readRegister(RF230_TRX_STATUS) & RF230_TRX_STATUS_MASK) == RF230_BUSY_RX_AACK );
 
 			writeRegister(RF230_TRX_STATE, RF230_RX_AACK_ON);
-            call SpiResource.release();
+			call SpiResource.release();
 			return EBUSY;
 		}
 

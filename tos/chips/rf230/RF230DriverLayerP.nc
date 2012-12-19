@@ -460,7 +460,8 @@ implementation
 		}
 
 		if( call Config.requiresRssiCca(msg)
-				&& (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) ) {
+			&& (readRegister(RF230_PHY_RSSI) & RF230_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
+		{
 			call SpiResource.release();
 			return EBUSY;
 		}
