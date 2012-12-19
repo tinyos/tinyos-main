@@ -336,4 +336,8 @@ zot (25): git log -1 --oneline --decorate master
     git merge rh
     git push tos master
 
+Under no circumstances should you perform a non-fast-forward push. See
+https://help.github.com/articles/dealing-with-non-fast-forward-errors
+for information on this.
+
 That's it.
