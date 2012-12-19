@@ -2,10 +2,29 @@ Owners by directory
 ===================
 [For stuff which cleanly fits in a directory]
 
+
+() means no long active...
+
+No longer active:
+
+(David Gay)
+(Kevin Klues)
+(Arched Rock)
+(Xbow)
+(Jonathon Hui)
+(Phil Buonadonna)
+
+
+Tools:
+
+nesc: David Gay
+msp430 packaging (debian): Eric B. Decker
+
+
 tos/chips
 ---------
-ad5200: Kevin Klues  [eyes?]
-at45db: David Gay [mica family storage]
+ad5200: (Kevin Klues  [eyes?])
+at45db: (David Gay [mica family storage]
 atm128: Martin Turon (Xbow), David Gay [mica family microcontroller]
 cc1000: David Gay [mica2 radio]
 cc2420: Phil Levis, Jonathan Hui [802.15.4 radio]
@@ -27,17 +46,27 @@ tos/oski [is it tos/oski or tos/lib/oski??]
 
 tos/platforms
 -------------
-eyesIFX: TU Berlin
-intelmote2: Phil Buonadonna
-mica: Martin Turon, David Gay [mica family support]
-mica2: Martin Turon, David Gay
-micaz: Martin Turon, Phil Levis
-telosa: Arched Rock
-telosb: Arched Rock
+Platforms: Eric B. Decker
+
+eyesIFX:    TU Berlin
+intelmote2: (Phil Buonadonna)
+mica{,2,z}: (Martin Turon, David Gay)
+telos{a,b}: (Arched Rock)
 
 tos/sensorboards
 ----------------
 mts300: Martin Turon [mica family sensor board]
+
+
+System Services:
+
+
+Network:
+
+BLIP/6lowpan:
+Active Messaging:
+
+
 
 Owners by subsystem
 ===================
@@ -49,3 +78,21 @@ Power management: Phil Levis, Vlado Handziski, Kevin Klues
 Security: Phil Levis, David Gay
 Scheduler, booting: Phil Levis
 Random numbers: Phil Levis
+
+
+
+New:   needs work.   above needs to be culled.
+
+ - Lead Developers
+    - Janos Sallai (platforms/iris, chips/at45db, chips/atm1281, chips/cc2420x, chips/ds2401, lib/ftsp)
+    - Antonio Linan (platforms/z1)
+    - Eric Decker (tos/chips/msp430, packaging)
+    - Vlado Handziski (tos/chips/msp430, tos/platforms/telos*, support/make, support/sdk/python)
+    - Markus Becker (tos/lib/net/coap)
+    - Mike Healy (tos/platforms/span, tos/platforms/shimmer, tos/platforms/shimmer2, tos/platforms/shimmer2r)
+    - Miklos Maroti (tos/lib/rfxlink, tos/chips/rf230, tos/chips/rf212, tos/chips/cc2420x, tos/chips/cc2520, tos/chips/atm128*)
+    - Andros Biro (/tos/platforms/ucmini, /tos/chips/sht21, /tos/chips/ms5607, /tos/chips/bma180, /tos/chips/bh1750fvi, /tos/chips/atm128rfa1)
+    - Steve Ayer (tos/platforms/span, tos/platforms/shimmer, tos/platforms/shimmer2, tos/platforms/shimmer2r)
+    - Philip Levis (tos/lib/tossim, tos/lib/net/ctp, tos/lib/net/drip, tos/lib/net/dip)
+    - Thanh Dang (tos/lib/net/dip, tos/lib/net/dhv, tos/lib/net/drip)
+
