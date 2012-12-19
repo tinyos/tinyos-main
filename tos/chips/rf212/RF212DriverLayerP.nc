@@ -443,7 +443,7 @@ implementation
 		uint8_t upload1;
 		uint8_t upload2;
 
-		if( cmd != CMD_NONE || state != STATE_RX_ON || ! isSpiAcquired() || radioIrq )
+		if( cmd != CMD_NONE || state != STATE_RX_ON || radioIrq || ! isSpiAcquired())
 			return EBUSY;
 
 		length = call PacketTransmitPower.isSet(msg) ?
@@ -456,8 +456,10 @@ implementation
 		}
 
 		if( call Config.requiresRssiCca(msg)
-				&& (readRegister(RF212_PHY_RSSI) & RF212_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
+			&& (readRegister(RF212_PHY_RSSI) & RF212_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) ) {
+			call SpiResource.release();
 			return EBUSY;
+		}
 
 		writeRegister(RF212_TRX_STATE, RF212_PLL_ON);
 
@@ -490,6 +492,7 @@ implementation
 			RADIO_ASSERT( (readRegister(RF212_TRX_STATUS) & RF212_TRX_STATUS_MASK) == RF212_BUSY_RX );
 
 			writeRegister(RF212_TRX_STATE, RF212_RX_ON);
+			call SpiResource.release();
 			return EBUSY;
 		}
 
