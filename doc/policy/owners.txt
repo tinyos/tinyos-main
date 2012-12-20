@@ -93,6 +93,7 @@ New:   needs work.   above needs to be culled.
     - Miklos Maroti (tos/lib/rfxlink, tos/chips/rf230, tos/chips/rf212, tos/chips/cc2420x, tos/chips/cc2520, tos/chips/atm128*)
     - Andros Biro (/tos/platforms/ucmini, /tos/chips/sht21, /tos/chips/ms5607, /tos/chips/bma180, /tos/chips/bh1750fvi, /tos/chips/atm128rfa1)
     - Steve Ayer (tos/platforms/span, tos/platforms/shimmer, tos/platforms/shimmer2, tos/platforms/shimmer2r)
-    - Philip Levis (tos/lib/tossim, tos/lib/net/ctp, tos/lib/net/drip, tos/lib/net/dip)
+    - Philip Levis (tos/lib/tossim, tos/lib/net/drip, tos/lib/net/dip)
     - Thanh Dang (tos/lib/net/dip, tos/lib/net/dhv, tos/lib/net/drip)
+    - Omprakash Gnawali (tos/lib/net/ctp, tos/lib/net/le, tos/lib/net/4bitle, tos/lib/net/lqi)
 
