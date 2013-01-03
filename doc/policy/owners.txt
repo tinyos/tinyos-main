@@ -28,7 +28,7 @@ at45db: (David Gay [mica family storage]
 atm128: Martin Turon (Xbow), David Gay [mica family microcontroller]
 cc1000: David Gay [mica2 radio]
 cc2420: Phil Levis, Jonathan Hui [802.15.4 radio]
-msp430: Arched Rock, TU Berlin [microcontroller]
+msp430: Eric B. Decker, Vlado H., TU Berlin [microcontroller]
 pxa27x: Phil Buonadonna [imote2 microcontroller]
 stm25p: Jonathan Hui [telosb storage]
 tda5250: TU Berlin (who?) [eyes radio]
@@ -52,6 +52,7 @@ eyesIFX:    TU Berlin
 intelmote2: (Phil Buonadonna)
 mica{,2,z}: (Martin Turon, David Gay)
 telos{a,b}: (Arched Rock)
+mm5s:       Eric B. Decker (msp430f5438a eval, simple)
 
 tos/sensorboards
 ----------------
