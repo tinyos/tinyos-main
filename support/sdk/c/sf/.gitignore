@@ -1,7 +1,0 @@
-Makefile.in
-aclocal.m4
-autoconf.h.in
-config-aux/
-configure
-serialpacket.c
-

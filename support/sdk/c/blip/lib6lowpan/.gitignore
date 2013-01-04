@@ -1,5 +1,0 @@
-*.o
-*.a
-Makefile
-Makefile.in
-.deps/
