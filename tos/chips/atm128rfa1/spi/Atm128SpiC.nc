@@ -88,16 +88,15 @@ implementation {
   components new Atm128SpiP() as SpiMaster, HplAtm128SpiC as HplSpi;
   components new SimpleFcfsArbiterC("Atm128SpiC.Resource") as Arbiter;
   components McuSleepC;
-  
+
   Init         = SpiMaster;
-  
+
   SpiByte      = SpiMaster;
   FastSpiByte  = SpiMaster;
   SpiPacket    = SpiMaster;
-  Resource     = SpiMaster;
+  Resource     = Arbiter;
 
-  SpiMaster.ResourceArbiter -> Arbiter;
-  SpiMaster.ArbiterInfo     -> Arbiter;
-  SpiMaster.Spi             -> HplSpi;
-  SpiMaster.McuPowerState   -> McuSleepC;
+  SpiMaster.ResourceConfigure <- Arbiter;
+  SpiMaster.Spi               -> HplSpi;
+  SpiMaster.McuPowerState     -> McuSleepC;
 }
