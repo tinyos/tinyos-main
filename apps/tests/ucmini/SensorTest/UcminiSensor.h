@@ -41,7 +41,7 @@ typedef nx_struct measurement {
   nx_int16_t temp;
   nx_int16_t humi;
   nx_uint16_t light;
-  nx_uint16_t temp3;
+  nx_int16_t temp3;
   nx_uint16_t voltage;
 } measurement_t;
 

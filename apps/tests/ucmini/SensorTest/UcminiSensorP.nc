@@ -42,7 +42,7 @@ module UcminiSensorP {
     interface Read<uint16_t> as LightRead;
     interface Read<uint32_t> as PressRead;
     interface Read<int16_t> as Temp2Read;
-    interface Read<uint16_t> as Temp3Read;
+    interface Read<int16_t> as Temp3Read;
     interface Read<uint16_t> as VoltageRead;
     interface ReadRef<calibration_t>;
     interface DiagMsg;
@@ -139,7 +139,7 @@ implementation {
       call Leds.led3Toggle();
   }
   
-  event void Temp3Read.readDone(error_t error, uint16_t data) { 
+  event void Temp3Read.readDone(error_t error, int16_t data) { 
     if(error==SUCCESS){
       meas->temp3=data;
     } else
