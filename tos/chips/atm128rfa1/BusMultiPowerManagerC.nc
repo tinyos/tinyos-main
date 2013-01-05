@@ -32,18 +32,19 @@
  * Author: Miklos Maroti
  */
 
-generic configuration BusPowerManagerC(bool highIsOn, bool initPin)
+generic configuration BusMultiPowerManagerC(uint8_t pinNum, bool highIsOn, bool initPin)
 {
 	provides interface BusPowerManager;
-	uses interface GeneralIO;
+	uses interface GeneralIO as PowerPin[uint8_t id];
 }
 
 implementation
 {
- 	components new BusPowerManagerP(1, highIsOn, initPin), new TimerMilliC(), RealMainP;
+ 	components new BusPowerManagerP(pinNum, highIsOn, initPin), new TimerMilliC(), RealMainP;
 
-	BusPowerManager = BusPowerManagerP;
-	GeneralIO = BusPowerManagerP.PowerPin[0];
 	BusPowerManagerP.Timer -> TimerMilliC;
 	BusPowerManagerP.Init <- RealMainP.PlatformInit;
+	
+	BusPowerManager = BusPowerManagerP;
+	PowerPin = BusPowerManagerP;
 }

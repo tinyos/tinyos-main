@@ -54,6 +54,15 @@ interface BusPowerManager
 	 * progress), then powerOff will not be called.
 	 */
 	command void releasePower();
+	
+	/**
+	 * Returns TRUE, if the bus is powered, FALSE otherwise.
+	 * Return TRUE, if nobody requesed power, but the keepalive timer
+	 * is running, and returns FALSE, if power was requested, but the
+	 * startup timer is still running
+	 */
+	
+	command bool isPowerOn();
 
 	/**
 	 * This event is called when the bus is powered on and the maximum 
