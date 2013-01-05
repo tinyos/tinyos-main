@@ -6,7 +6,7 @@ tinyoslibdir=$(libdir)/tinyos
 
 tinyoslib_PROGRAMS = @TOSCOMMLIB@
 
-EXTRA_PROGRAMS = libtoscomm-32.so libtoscomm-64.so toscomm.dll libtoscomm.jnilib
+EXTRA_PROGRAMS = libtoscomm.so toscomm.dll libtoscomm.jnilib
 
 #TODO: check if -O2 works on all platforms, but I don't think we should care with a gcc 4.1 bug anymore
 
@@ -38,13 +38,8 @@ libtoscomm_jnilib_SOURCES = \
 libtoscomm.jnilib: $(libtoscomm_jnilib_SOURCES)
 $(CXX) $(JNILIBFLAGS) $< -o $@
 
-libtoscomm-32.so: $(libtoscomm_so_SOURCES)
-$(CXX) -m32 $(SOFLAGS) $< -o $@|| \
-(echo 32-bit libtoscomm.so NOT GENERATED; rm -f $@)
-
-libtoscomm-64.so: $(libtoscomm_so_SOURCES)
-$(CXX) -m64 $(SOFLAGS) $< -o $@|| \
-(echo 64-bit libtoscomm.so NOT GENERATED; rm -f $@)
+libtoscomm.so: $(libtoscomm_so_SOURCES)
+$(CXX) $(SOFLAGS) $< -o $@
 
 toscomm.dll: $(toscomm_dll_SOURCES)
 $(CXX) $(DLLFLAGS) $< -o $@
