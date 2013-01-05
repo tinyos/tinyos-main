@@ -8,23 +8,24 @@ tinyoslib_PROGRAMS = @GETENVLIB@
 
 EXTRA_PROGRAMS = libgetenv-32.so libgetenv-64.so getenv.dll libgetenv.jnilib
 
-SOFLAGS = "-I$(JDK)/include/linux" "-I$(JDK)/include" -shared -fpic
+LIBFLAGS = "-I$(JDK)/include" -s -shared -O2
+SOFLAGS = $(LIBFLAGS) "-I$(JDK)/include/linux" -fpic
+DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at -mno-cygwin
+JNILABFLAGS = $(LIBFLAGS) "-I$(JDK)/Headers" -bundle -fPIC
 
-libgetenv_32_so_SOURCES = net_tinyos_util_Env.h net_tinyos_util_Env.c
-libgetenv_64_so_SOURCES = $(libgetenv_32_so_SOURCES)
+#first file should be the main c/cpp file
+libgetenv_SOURCES = net_tinyos_util_Env.c net_tinyos_util_Env.h
 
-libgetenv-32.so : net_tinyos_util_Env.h net_tinyos_util_Env.c
-	$(CC) $(SOFLAGS) -m32 net_tinyos_util_Env.c -o$@ || \
-	(echo 32-bit libgetenv.so NOT GENERATED - DO NOT USE THIS RUN TO BUILD AN RPM; echo Press return to continue; read; rm -f $@)
+libgetenv-32.so : $(libgetenv_SOURCES)
+$(CC) -m32 $(SOFLAGS) $< -o $@|| \
+(echo 32-bit libgetenv.so NOT GENERATED; rm -f $@)
 
-libgetenv-64.so : net_tinyos_util_Env.h net_tinyos_util_Env.c
-	@echo $(CC) $(SOFLAGS) -m64 net_tinyos_util_Env.c -o$@
-	@$(CC) $(SOFLAGS) -m64 net_tinyos_util_Env.c -o$@ || \
-	(echo 64-bit libgetenv.so NOT GENERATED - DO NOT USE THIS RUN TO BUILD AN RPM; echo Press return to continue; read; rm -f $@)
+libgetenv-64.so : $(libgetenv_SOURCES)
+$(CC) -m64 $(SOFLAGS) $< -o $@|| \
+(echo 64-bit libgetenv.so NOT GENERATED; rm -f $@)
 
-getenv.dll: net_tinyos_util_Env.h net_tinyos_util_Env.c
-	gcc -shared -o$@ -mno-cygwin "-I$(JDK)/include" "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at net_tinyos_util_Env.c
+getenv.dll: $(libgetenv_SOURCES)
+$(CC) $(DLLFLAGS) $< -o $@
 
-libgetenv.jnilib : net_tinyos_util_Env.h net_tinyos_util_Env.c
-	gcc "-I$(JDK)/Headers" -bundle -fPIC net_tinyos_util_Env.c -o $@
-
+libgetenv.jnilib : $(libgetenv_SOURCES)
+$(CC) $(JNILIBFLAGS) $< -o $@
