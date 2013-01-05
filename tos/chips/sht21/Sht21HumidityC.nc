@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2011, University of Szeged
+* Copyright (c) 2012, Unicomp Ltd.
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -32,13 +32,11 @@
 * Author: Andras Biro
 */
 
-generic configuration HumidityC()
-{
-  provides interface Read<int16_t>;
+generic configuration Sht21HumidityC(){
+	provides interface Read<int16_t>;
 }
-implementation
-{
-  components new Sht21HumidityC();
-  
-  Read=Sht21HumidityC;
+implementation{
+	components new Sht21RawHumidityC(), new Sht21ConvertHumidityC();
+	Read = Sht21ConvertHumidityC.Read;
+	Sht21ConvertHumidityC.ReadRaw -> Sht21RawHumidityC;
 }

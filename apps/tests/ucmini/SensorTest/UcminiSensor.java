@@ -71,10 +71,8 @@ public class UcminiSensor implements MessageListener {
     					   "; c5="+calibration[4]+"; c6="+calibration[5]);
     } else if(message instanceof UcminiSensorMeas){
       UcminiSensorMeas msg = (UcminiSensorMeas)message;
-      double rh=-6+125*((double)msg.get_humi()/65536);
-      System.out.format("Humidity (sht21):\t\t%8.3f %% \t(%d)\n",rh, msg.get_humi());
-      double temp=-46.85+175.72*((double)msg.get_temp()/65536);
-      System.out.format("Temperature (sht21):\t\t%8.3f \u00B0C \t(%d)\n",temp,msg.get_temp());
+      System.out.format("Humidity (sht21):\t\t%8.3f %% \t(%d)\n", (double)msg.get_humi()/100, msg.get_humi());
+      System.out.format("Temperature (sht21):\t\t%8.3f \u00B0C \t(%d)\n", (double)msg.get_temp()/100, msg.get_temp());
       double temp3=1.13*msg.get_temp3()-272.8;
       System.out.format("Temperature (atmega128rfa1):\t%8.3f \u00B0C \t(%d)\n", temp3, msg.get_temp3());
       System.out.format("Temperature (ms5607):\t\t%8.3f \u00B0C \t(%d)\n",(double)msg.get_temp2()/100,msg.get_temp2());

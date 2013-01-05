@@ -34,11 +34,11 @@
 
 generic configuration TemperatureC()
 {
-  provides interface Read<uint16_t>;
+  provides interface Read<int16_t>;
 }
 implementation
 {
-  components new Sht21RawTemperatureC();
+  components new Sht21TemperatureC();
   
-  Read=Sht21RawTemperatureC;
+  Read=Sht21TemperatureC;
 }

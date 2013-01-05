@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2011, University of Szeged
+* Copyright (c) 2012, Unicomp Ltd.
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -32,13 +32,23 @@
 * Author: Andras Biro
 */
 
-generic configuration HumidityC()
-{
-  provides interface Read<int16_t>;
+generic module Sht21ConvertTemperatureC(){
+	provides interface Read<int16_t>;
+	uses interface Read<uint16_t> as ReadRaw;
 }
-implementation
-{
-  components new Sht21HumidityC();
-  
-  Read=Sht21HumidityC;
+implementation{
+	command error_t Read.read(){
+		return call ReadRaw.read();
+	}
+	
+	event void ReadRaw.readDone(error_t err, uint16_t tempRead){
+		if(err==SUCCESS){
+			uint32_t temp = 17572;
+			temp *= (uint32_t)(tempRead & 0xFFFC);
+			temp >>= 16;
+			
+			signal Read.readDone(SUCCESS, (int16_t)(temp - 4685) );
+		} else
+			signal Read.readDone(err, 0);
+	}
 }

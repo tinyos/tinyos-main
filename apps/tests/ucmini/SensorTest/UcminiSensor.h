@@ -38,8 +38,8 @@
 typedef nx_struct measurement {
   nx_uint32_t press;
   nx_int16_t temp2;
-  nx_uint16_t temp;
-  nx_uint16_t humi;
+  nx_int16_t temp;
+  nx_int16_t humi;
   nx_uint16_t light;
   nx_uint16_t temp3;
   nx_uint16_t voltage;
