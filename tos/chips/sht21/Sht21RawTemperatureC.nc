@@ -36,11 +36,17 @@
 #include "Sht21.h"
 generic configuration Sht21RawTemperatureC()
 {
-  provides interface Read<uint16_t>;
+	provides interface Read<uint16_t>;
 }
 implementation
 {
-  components Sht21ArbitratedC;
-  
-  Read=Sht21ArbitratedC.ReadTemperature[unique(UQ_SHT21TEMP_RESOURCE)];
+	enum {
+		clientid = unique(UQ_SHT21_RESOURCE),
+	};
+	
+	components Sht21RawArbiterP, new ArbitratedReadC(uint16_t);
+	
+	Read = ArbitratedReadC.Read[0];
+	ArbitratedReadC.Resource[0] -> Sht21RawArbiterP.Resource[clientid];
+	ArbitratedReadC.Service[0] -> Sht21RawArbiterP.Temperature[clientid];
 }

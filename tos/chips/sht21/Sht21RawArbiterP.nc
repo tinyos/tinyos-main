@@ -33,35 +33,23 @@
 */
 
 #include "Sht21.h"
-configuration Sht21ArbitratedC
+configuration Sht21RawArbiterP
 {
-  provides interface Read<uint16_t> as ReadTemperature[uint8_t client]; 
-  provides interface Read<uint16_t> as ReadHumidity[uint8_t client];
+	provides interface Read<uint16_t> as Temperature[uint8_t client]; 
+	provides interface Read<uint16_t> as Humidity[uint8_t client];
+	provides interface Resource[uint8_t client];
 }
 implementation
 {
-  components Sht21C;
-  
-  components new ArbitratedReadC(uint16_t) as ArbitratedTemp,
-             new FcfsArbiterC(UQ_SHT21TEMP_RESOURCE) as TempArbiter,
-             new ReadClientP(uint16_t) as TempClient;
-  
-  ReadTemperature=ArbitratedTemp.Read;
-  
-  ArbitratedTemp.Resource->TempArbiter;
-  ArbitratedTemp.Service->TempClient;
-  
-  TempClient.ActualRead->Sht21C.Temperature;
-  
-  
-  components new ArbitratedReadC(uint16_t) as ArbitratedHumi,
-             new FcfsArbiterC(UQ_SHT21HUMI_RESOURCE) as HumiArbiter,
-             new ReadClientP(uint16_t) as HumiClient;
-  
-  ReadHumidity=ArbitratedHumi.Read;
-  
-  ArbitratedHumi.Resource->HumiArbiter;
-  ArbitratedHumi.Service->HumiClient;
-  
-  HumiClient.ActualRead->Sht21C.Humidity;
+	components Sht21C, new FcfsArbiterC(UQ_SHT21_RESOURCE);
+	
+	Resource=FcfsArbiterC;
+	
+	components new ReadClientP(uint16_t) as ReadTempClient;  
+	Temperature = ReadTempClient;
+	ReadTempClient.ActualRead -> Sht21C.Temperature;
+	
+	components new ReadClientP(uint16_t) as ReadHumiClient;  
+	Humidity = ReadHumiClient;
+	ReadHumiClient.ActualRead -> Sht21C.Humidity;
 }

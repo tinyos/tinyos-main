@@ -35,11 +35,17 @@
 #include "Sht21.h"
 generic configuration Sht21RawHumidityC()
 {
-  provides interface Read<uint16_t>;
+	provides interface Read<uint16_t>;
 }
 implementation
 {
-  components Sht21ArbitratedC;
-  
-  Read=Sht21ArbitratedC.ReadHumidity[unique(UQ_SHT21HUMI_RESOURCE)];
+	enum {
+		clientid = unique(UQ_SHT21_RESOURCE),
+	};
+	
+	components Sht21RawArbiterP, new ArbitratedReadC(uint16_t);
+	
+	Read = ArbitratedReadC.Read[0];
+	ArbitratedReadC.Resource[0] -> Sht21RawArbiterP.Resource[clientid];
+	ArbitratedReadC.Service[0] -> Sht21RawArbiterP.Humidity[clientid];
 }

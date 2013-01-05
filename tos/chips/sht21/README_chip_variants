@@ -1,0 +1,7 @@
+SHT20/SHT25: 
+These chips are less (SHT20) or more (SHT25) accurate then SHT21, but on the software side, they're completly identical,
+so the driver is usable for them as well.
+
+STS21:
+This is basicly the same as the SHT21, but it has no humidity sensor, and it has a different i2c address. To use the
+driver for STS21, define the const STS21_MODE.
