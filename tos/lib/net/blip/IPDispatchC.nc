@@ -40,7 +40,16 @@ configuration IPDispatchC {
 
   /* IPDispatchP wiring -- fragment rassembly and lib6lowpan bindings */
   components IPDispatchP;
+  
+
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+  components BareMessageC as MessageC;
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
   components CC2420RadioC as MessageC;
+#else
+  components CC2420RadioC as MessageC;
+#endif
+
   components ReadLqiC;
   components new TimerMilliC();
 
@@ -58,8 +67,17 @@ configuration IPDispatchC {
   IPDispatchP.RadioControl -> MessageC;
 
   IPDispatchP.BarePacket -> MessageC.BarePacket;
+
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+  IPDispatchP.BareSend -> MessageC;
+  IPDispatchP.BareReceive -> MessageC;
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
   IPDispatchP.Ieee154Send -> MessageC.BareSend;
   IPDispatchP.Ieee154Receive -> MessageC.BareReceive;
+#else
+  IPDispatchP.Ieee154Send -> MessageC.BareSend;
+  IPDispatchP.Ieee154Receive -> MessageC.BareReceive;
+#endif
 
 #ifdef LOW_POWER_LISTENING
    IPDispatchP.LowPowerListening -> MessageC;

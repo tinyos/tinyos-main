@@ -67,12 +67,12 @@ enum
 
 /* This is the default value of the CHANNEL field of the PHY_CC_CCA register. */
 #ifndef RF230_DEF_CHANNEL
-#define RF230_DEF_CHANNEL	11
+#define RF230_DEF_CHANNEL	13
 #endif
 
 /* The number of microseconds a sending IRIS mote will wait for an acknowledgement */
 #ifndef SOFTWAREACK_TIMEOUT
-#define SOFTWAREACK_TIMEOUT	1000
+#define SOFTWAREACK_TIMEOUT	5000
 #endif
 
 /*

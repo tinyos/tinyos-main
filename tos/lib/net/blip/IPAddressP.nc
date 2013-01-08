@@ -31,7 +31,15 @@ module IPAddressP {
     interface Ieee154Address;
   }
 } implementation {
+
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+  bool m_valid_addr = FALSE, m_short_addr = TRUE;
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
   bool m_valid_addr = FALSE, m_short_addr = FALSE;
+#else
+  bool m_valid_addr = FALSE, m_short_addr = FALSE;
+#endif
+
   struct in6_addr m_addr;
 
   command bool IPAddress.getLLAddr(struct in6_addr *addr) {

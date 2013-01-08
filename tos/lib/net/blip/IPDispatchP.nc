@@ -55,8 +55,17 @@ module IPDispatchP {
     interface SplitControl as RadioControl;
 
     interface Packet as BarePacket;
+
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+    interface BareSend;
+    interface BareReceive;
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
     interface Send as Ieee154Send;
     interface Receive as Ieee154Receive;
+#else
+    interface Send as Ieee154Send;
+    interface Receive as Ieee154Receive;
+#endif
 
     /* context lookup */
     interface NeighborDiscovery;
@@ -332,6 +341,102 @@ void SENDINFO_DECR(struct send_info *si) {
     return ret;
   }
 
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+  event message_t *BareReceive.receive(message_t *msg) {
+    struct packed_lowmsg lowmsg;
+    struct ieee154_frame_addr frame_address;
+    uint8_t len = call BarePacket.payloadLength(msg);
+    void *msg_payload = call BarePacket.getPayload(msg, len);
+    uint8_t *buf = msg_payload;
+
+    // printf(" -- RECEIVE -- len : %i\n", len);
+
+    BLIP_STATS_INCR(stats.rx_total);
+
+    /* unpack the 802.15.4 address fields */
+    buf  = unpack_ieee154_hdr(msg_payload, &frame_address);
+    len -= buf - (uint8_t *)msg_payload;
+
+    /* unpack and 6lowpan headers */
+    lowmsg.data = buf;
+    lowmsg.len  = len;
+    lowmsg.headers = getHeaderBitmap(&lowmsg);
+    if (lowmsg.headers == LOWMSG_NALP) {
+      goto fail;
+    }
+
+    if (hasFrag1Header(&lowmsg) || hasFragNHeader(&lowmsg)) {
+      // start reassembly
+      int rv;
+      struct lowpan_reconstruct *recon;
+      uint16_t tag, source_key;
+
+      source_key = ieee154_hashaddr(&frame_address.ieee_src);
+      getFragDgramTag(&lowmsg, &tag);
+      recon = get_reconstruct(source_key, tag);
+      if (!recon) {
+        goto fail;
+      }
+
+      /* fill in metadata: on fragmented packets, it applies to the
+         first fragment only  */
+      memcpy(&recon->r_meta.sender, &frame_address.ieee_src,
+             sizeof(ieee154_addr_t));
+      recon->r_meta.lqi = call ReadLqi.readLqi(msg);
+      recon->r_meta.rssi = call ReadLqi.readRssi(msg);
+
+      if (hasFrag1Header(&lowmsg)) {
+        if (recon->r_buf != NULL) goto fail;
+        rv = lowpan_recon_start(&frame_address, recon, buf, len);
+      } else {
+        rv = lowpan_recon_add(recon, buf, len);
+      }
+        
+      if (rv < 0) {
+        recon->r_timeout = T_FAILED1;
+        goto fail;
+      } else {
+        // printf("start recon buf: %p\n", recon->r_buf);
+        recon->r_timeout = T_ACTIVE;
+        recon->r_source_key = source_key;
+        recon->r_tag = tag;
+      }
+
+      if (recon->r_size == recon->r_bytes_rcvd) {
+        deliver(recon);
+      }
+
+    } else {
+      /* no fragmentation, just deliver it */
+      int rv;
+      struct lowpan_reconstruct recon;
+
+      /* fill in metadata */
+      memcpy(&recon.r_meta.sender, &frame_address.ieee_src, 
+             sizeof(ieee154_addr_t));
+      recon.r_meta.lqi = call ReadLqi.readLqi(msg);
+      recon.r_meta.rssi = call ReadLqi.readRssi(msg);
+
+      buf = getLowpanPayload(&lowmsg);
+      if ((rv = lowpan_recon_start(&frame_address, &recon, buf, len)) < 0) {
+        goto fail;
+      }
+
+      if (recon.r_size == recon.r_bytes_rcvd) {
+        deliver(&recon);
+      } else {
+        // printf("ip_free(%p)\n", recon.r_buf);
+        ip_free(recon.r_buf);
+      }
+    }
+    goto done;
+  fail:
+    BLIP_STATS_INCR(stats.rx_drop);
+  done:
+    return msg;
+  }
+
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
   event message_t *Ieee154Receive.receive(message_t *msg, void *msg_payload, uint8_t len) {
     struct packed_lowmsg lowmsg;
     struct ieee154_frame_addr frame_address;
@@ -423,8 +528,99 @@ void SENDINFO_DECR(struct send_info *si) {
   done:
     return msg;
   }
+#else
+  event message_t *Ieee154Receive.receive(message_t *msg, void *msg_payload, uint8_t len) {
+    struct packed_lowmsg lowmsg;
+    struct ieee154_frame_addr frame_address;
+    uint8_t *buf = msg_payload;
 
+    // printf(" -- RECEIVE -- len : %i\n", len);
 
+    BLIP_STATS_INCR(stats.rx_total);
+
+    /* unpack the 802.15.4 address fields */
+    buf  = unpack_ieee154_hdr(msg_payload, &frame_address);
+    len -= buf - (uint8_t *)msg_payload;
+
+    /* unpack and 6lowpan headers */
+    lowmsg.data = buf;
+    lowmsg.len  = len;
+    lowmsg.headers = getHeaderBitmap(&lowmsg);
+    if (lowmsg.headers == LOWMSG_NALP) {
+      goto fail;
+    }
+
+    if (hasFrag1Header(&lowmsg) || hasFragNHeader(&lowmsg)) {
+      // start reassembly
+      int rv;
+      struct lowpan_reconstruct *recon;
+      uint16_t tag, source_key;
+
+      source_key = ieee154_hashaddr(&frame_address.ieee_src);
+      getFragDgramTag(&lowmsg, &tag);
+      recon = get_reconstruct(source_key, tag);
+      if (!recon) {
+        goto fail;
+      }
+
+      /* fill in metadata: on fragmented packets, it applies to the
+         first fragment only  */
+      memcpy(&recon->r_meta.sender, &frame_address.ieee_src,
+             sizeof(ieee154_addr_t));
+      recon->r_meta.lqi = call ReadLqi.readLqi(msg);
+      recon->r_meta.rssi = call ReadLqi.readRssi(msg);
+
+      if (hasFrag1Header(&lowmsg)) {
+        if (recon->r_buf != NULL) goto fail;
+        rv = lowpan_recon_start(&frame_address, recon, buf, len);
+      } else {
+        rv = lowpan_recon_add(recon, buf, len);
+      }
+        
+      if (rv < 0) {
+        recon->r_timeout = T_FAILED1;
+        goto fail;
+      } else {
+        // printf("start recon buf: %p\n", recon->r_buf);
+        recon->r_timeout = T_ACTIVE;
+        recon->r_source_key = source_key;
+        recon->r_tag = tag;
+      }
+
+      if (recon->r_size == recon->r_bytes_rcvd) {
+        deliver(recon);
+      }
+
+    } else {
+      /* no fragmentation, just deliver it */
+      int rv;
+      struct lowpan_reconstruct recon;
+
+      /* fill in metadata */
+      memcpy(&recon.r_meta.sender, &frame_address.ieee_src, 
+             sizeof(ieee154_addr_t));
+      recon.r_meta.lqi = call ReadLqi.readLqi(msg);
+      recon.r_meta.rssi = call ReadLqi.readRssi(msg);
+
+      buf = getLowpanPayload(&lowmsg);
+      if ((rv = lowpan_recon_start(&frame_address, &recon, buf, len)) < 0) {
+        goto fail;
+      }
+
+      if (recon.r_size == recon.r_bytes_rcvd) {
+        deliver(&recon);
+      } else {
+        // printf("ip_free(%p)\n", recon.r_buf);
+        ip_free(recon.r_buf);
+      }
+    }
+    goto done;
+  fail:
+    BLIP_STATS_INCR(stats.rx_drop);
+  done:
+    return msg;
+  }
+#endif
   /*
    * Send-side functionality
    */
@@ -448,6 +644,15 @@ void SENDINFO_DECR(struct send_info *si) {
       goto fail;
     }
 
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+  if (call BareSend.send(s_entry->msg) != SUCCESS) {
+      dbg("Drops", "drops: sendTask: send failed\n");
+      goto fail;
+    } else {
+      radioBusy = TRUE;
+    }
+
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
     if ((call Ieee154Send.send(s_entry->msg,
                                call BarePacket.payloadLength(s_entry->msg))) != SUCCESS) {
       dbg("Drops", "drops: sendTask: send failed\n");
@@ -455,6 +660,17 @@ void SENDINFO_DECR(struct send_info *si) {
     } else {
       radioBusy = TRUE;
     }
+
+#else
+    if ((call Ieee154Send.send(s_entry->msg,
+                               call BarePacket.payloadLength(s_entry->msg))) != SUCCESS) {
+      dbg("Drops", "drops: sendTask: send failed\n");
+      goto fail;
+    } else {
+      radioBusy = TRUE;
+    }
+
+#endif
 
     return;
   fail:
@@ -491,6 +707,9 @@ void SENDINFO_DECR(struct send_info *si) {
     struct send_entry *s_entry;
     message_t *outgoing;
 
+//#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+    uint8_t max_len;
+//#endif
     int frag_len = 1;
     error_t rc = SUCCESS;
 
@@ -530,11 +749,28 @@ void SENDINFO_DECR(struct send_info *si) {
       }
 
       call BarePacket.clear(outgoing);
-      frag_len = lowpan_frag_get(call Ieee154Send.getPayload(outgoing, 0),
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+      max_len = call BarePacket.maxPayloadLength()-1;
+      frag_len = lowpan_frag_get(call BarePacket.getPayload(outgoing, max_len),
+                                 max_len,
+                                 msg,
+                                 frame_addr,
+                                 &ctx);
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
+      	max_len = call BarePacket.maxPayloadLength();//TEST############
+	frag_len = lowpan_frag_get(call Ieee154Send.getPayload(outgoing, max_len),//max_len statt 0##################
+                                 call BarePacket.maxPayloadLength(), //TEST################
+                                 msg,
+                                 frame_addr,
+                                 &ctx);
+#else
+frag_len = lowpan_frag_get(call Ieee154Send.getPayload(outgoing, 0),
                                  call BarePacket.maxPayloadLength(),
                                  msg,
                                  frame_addr,
                                  &ctx);
+#endif
+
       if (frag_len < 0) {
         printf(" get frag error: %i\n", frag_len);
       }
@@ -578,7 +814,47 @@ void SENDINFO_DECR(struct send_info *si) {
   cleanup_outer:
     return rc;
   }
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+  event void BareSend.sendDone(message_t *msg, error_t error) {
+    struct send_entry *s_entry = call SendQueue.head();
 
+    radioBusy = FALSE;
+
+    // printf("sendDone: %p %i\n", msg, error);
+
+    if (state == S_STOPPING) {
+      call RadioControl.stop();
+      state = S_STOPPED;
+      goto done;
+    }
+    
+    s_entry->info->link_transmissions += (call PacketLink.getRetries(msg));
+    s_entry->info->link_fragment_attempts++;
+
+    if (!call PacketLink.wasDelivered(msg)) {
+      printf("sendDone: was not delivered! (%i tries)\n", 
+                 call PacketLink.getRetries(msg));
+      s_entry->info->failed = TRUE;
+      signal IPLower.sendDone(s_entry->info);
+/*       if (s_entry->info->policy.dest[0] != 0xffff) */
+/*         dbg("Drops", "drops: sendDone: frag was not delivered\n"); */
+      // need to check for broadcast frames
+      // BLIP_STATS_INCR(stats.tx_drop);
+    } else if (s_entry->info->link_fragment_attempts == 
+               s_entry->info->link_fragments) {
+      signal IPLower.sendDone(s_entry->info);
+    }
+
+  done:
+    // kill off any pending fragments
+    SENDINFO_DECR(s_entry->info);
+    call FragPool.put(s_entry->msg);
+    call SendEntryPool.put(s_entry);
+    call SendQueue.dequeue();
+
+    post sendTask();
+  }
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
   event void Ieee154Send.sendDone(message_t *msg, error_t error) {
     struct send_entry *s_entry = call SendQueue.head();
 
@@ -619,6 +895,47 @@ void SENDINFO_DECR(struct send_info *si) {
     post sendTask();
   }
 
+#else 
+   event void Ieee154Send.sendDone(message_t *msg, error_t error) {
+    struct send_entry *s_entry = call SendQueue.head();
+
+    radioBusy = FALSE;
+
+    // printf("sendDone: %p %i\n", msg, error);
+
+    if (state == S_STOPPING) {
+      call RadioControl.stop();
+      state = S_STOPPED;
+      goto done;
+    }
+    
+    s_entry->info->link_transmissions += (call PacketLink.getRetries(msg));
+    s_entry->info->link_fragment_attempts++;
+
+    if (!call PacketLink.wasDelivered(msg)) {
+      printf("sendDone: was not delivered! (%i tries)\n", 
+                 call PacketLink.getRetries(msg));
+      s_entry->info->failed = TRUE;
+      signal IPLower.sendDone(s_entry->info);
+/*       if (s_entry->info->policy.dest[0] != 0xffff) */
+/*         dbg("Drops", "drops: sendDone: frag was not delivered\n"); */
+      // need to check for broadcast frames
+      // BLIP_STATS_INCR(stats.tx_drop);
+    } else if (s_entry->info->link_fragment_attempts == 
+               s_entry->info->link_fragments) {
+      signal IPLower.sendDone(s_entry->info);
+    }
+
+  done:
+    // kill off any pending fragments
+    SENDINFO_DECR(s_entry->info);
+    call FragPool.put(s_entry->msg);
+    call SendEntryPool.put(s_entry);
+    call SendQueue.dequeue();
+
+    post sendTask();
+  }
+#endif
 #if 0
   command struct tlv_hdr *IPExtensions.findTlv(struct ip6_ext *ext, uint8_t tlv_val) {
     int len = ext->len - sizeof(struct ip6_ext);
@@ -669,3 +986,4 @@ void SENDINFO_DECR(struct send_info *si) {
 /*                                                    struct ip_metadata *meta) { */
 /*   } */
 }
+

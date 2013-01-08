@@ -50,6 +50,8 @@ module RF230RadioP
 		interface ActiveMessageConfig;
 		interface DummyConfig;
 
+		interface ShortAddressConfig;
+
 #ifdef LOW_POWER_LISTENING
 		interface LowPowerListeningConfig;
 #endif
@@ -78,6 +80,7 @@ implementation
 	async command uint8_t RF230DriverConfig.maxPayloadLength()
 	{
 		return sizeof(rf230packet_header_t) + TOSH_DATA_LENGTH;
+		
 	}
 
 	async command uint8_t RF230DriverConfig.metadataLength(message_t* msg)
@@ -129,7 +132,7 @@ implementation
 	}
 
 #ifndef SOFTWAREACK_TIMEOUT
-#define SOFTWAREACK_TIMEOUT	1000
+#define SOFTWAREACK_TIMEOUT	3000//1000
 #endif
 
 	async command uint16_t SoftwareAckConfig.getAckTimeout()
@@ -235,6 +238,20 @@ implementation
 	 * congestion backoff = 0x7 * CC2420_BACKOFF_PERIOD = 70 jiffies = 2240 microsec
 	 */
 
+/*----------------- ShortAddressConfig-----------------*/
+
+    command void ShortAddressConfig.setShortAddr(uint16_t address)
+    {
+        // TODO: actually write the new ID
+        signal ShortAddressConfig.setShortAddrDone(FAIL);
+    }
+
+    default event void ShortAddressConfig.setShortAddrDone(error_t error)
+    {
+    }
+
+ /*----------------- LowPowerListening -----------------*/
+
 #ifndef LOW_POWER_LISTENING
 
 #ifndef RF230_BACKOFF_MIN
@@ -337,7 +354,7 @@ implementation
 
 	command uint16_t LowPowerListeningConfig.getListenLength()
 	{
-		return 5;
+		return 12;//5
 	}
 
 	async command uint16_t RandomCollisionConfig.getMinimumBackoff()

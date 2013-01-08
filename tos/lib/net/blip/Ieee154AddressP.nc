@@ -6,7 +6,14 @@ module Ieee154AddressP {
   }
   uses {
     interface LocalIeeeEui64;
+
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+    interface ShortAddressConfig;
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
     interface CC2420Config;
+#else
+    interface CC2420Config;
+#endif
   }
 } implementation {
   ieee154_saddr_t m_saddr;
@@ -40,11 +47,29 @@ module Ieee154AddressP {
 
   command error_t Ieee154Address.setShortAddr(ieee154_saddr_t addr) {
     m_saddr = addr;
+
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+    call ShortAddressConfig.setShortAddr(addr);
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
     call CC2420Config.setShortAddr(addr);
     call CC2420Config.sync();
+#else
+    call CC2420Config.setShortAddr(addr);
+    call CC2420Config.sync();
+#endif
+
+
     signal Ieee154Address.changed();
     return SUCCESS;
   }
 
-  event void CC2420Config.syncDone(error_t err) {}
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+   event void ShortAddressConfig.setShortAddrDone(error_t error){}
+#elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
+   event void CC2420Config.syncDone(error_t err) {}
+#else
+   event void CC2420Config.syncDone(error_t err) {}
+#endif
+
+
 }
