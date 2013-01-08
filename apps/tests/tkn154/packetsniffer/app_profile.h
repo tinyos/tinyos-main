@@ -37,7 +37,7 @@
 #define __APP_PROFILE_H
 
 enum {
-  INITAL_RADIO_CHANNEL = 26, // may be changed later via command over serial line
+  INITAL_RADIO_CHANNEL = 13, // may be changed later via command over serial line
   RX_QUEUE_SIZE = 10,        // max. packets queued after received over radio
 };
 
