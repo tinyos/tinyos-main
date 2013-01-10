@@ -100,6 +100,7 @@ implementation
 
   uint8_t client = NO_CLIENT;
   storage_addr_t currentOffset;
+  at45page_t erasePage;
 
   struct {
     /* The latest request made for this client, and it's arguments */
@@ -113,6 +114,10 @@ implementation
   /* ------------------------------------------------------------------ */
   /* Interface with ConfigStorageP (see also writeHook call below)	*/
   /* ------------------------------------------------------------------ */
+
+  at45page_t npages() {
+    return signal BConfig.npages[client]();
+  }
 
   at45page_t pageRemap(at45page_t p) {
     return signal BConfig.remap[client](p);
@@ -298,11 +303,15 @@ implementation
   }
 
   void eraseStart() {
-    call At45db.erase(pageRemap(0), AT45_ERASE);
+    erasePage = 0;
+    call At45db.erase(pageRemap(erasePage++), AT45_ERASE);
   }
 
   void eraseEraseDone(error_t error) {
-    endRequest(error, 0);
+      if (error != SUCCESS || erasePage == npages())
+        endRequest(error, 0);
+      else
+        call At45db.erase(pageRemap(erasePage++), AT45_ERASE);
   }
 
   /* ------------------------------------------------------------------ */
