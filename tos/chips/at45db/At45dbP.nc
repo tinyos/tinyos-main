@@ -244,7 +244,7 @@ implementation
     // The buffer contains garbage, but we don't care about the state
     // of bits on this page anyway (if we do, we'll perform a 
     // subsequent write)
-    buffer[selected].page = reqPage;
+    buffer[selected].page = AT45_MAX_PAGES;
     buffer[selected].clean = TRUE;
     buffer[selected].erased = TRUE;
     requestDone(SUCCESS, 0, IDLE);
