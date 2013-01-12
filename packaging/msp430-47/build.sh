@@ -9,7 +9,7 @@
 # binutils	2.22
 # gcc		4.7.0
 # gdb		7.2a - disabled
-# mspgcc	20120716
+# mspgcc	20120911
 # msp430-libc	20120716
 # msp430mcu	20120716
 #
@@ -31,10 +31,11 @@
 #
 
 BUILD_ROOT=$(pwd)
+POST_VER=-expr
 : ${POST_VER:=-tinyos}
 
-DEB_DEST=opt/msp430-47
-CODENAME=msp430-47
+DEB_DEST=opt/msp430-47-expr
+CODENAME=msp430-47-expr
 REL=EXP
 MAKE_J=-j8
 
@@ -61,7 +62,7 @@ GMP=gmp-${GMP_VER}
 MPFR=mpfr-${MPFR_VER}
 MPC=mpc-${MPC_VER}
 
-MSPGCC_VER=20120716
+MSPGCC_VER=20120911
 MSPGCC=mspgcc-${MSPGCC_VER}
 MSPGCC_DIR=DEVEL-4.7.x/
 
@@ -568,7 +569,7 @@ case $1 in
     test)
 	setup_deb
 	download
-#	patch_dirs
+	patch_dirs
 #	build_binutils
 #	package_binutils_deb
 #	build_gcc
@@ -579,7 +580,7 @@ case $1 in
 #	package_libc_deb
 #	build_gdb
 #	package_gdb_deb
-	package_dummy_deb
+#	package_dummy_deb
 	;;
 
     download)
