@@ -143,7 +143,6 @@ redacted)...
 	default = current
 [github]
 	user = cire831
-	token = xxxxxxxxxx
 
 
 * Set up your working repository
