@@ -110,10 +110,10 @@ implementation {
         }
         released = TRUE;
       }
-    }
-    if(released == TRUE) {
-	    call ResourceConfigure.unconfigure[id]();
-      return SUCCESS;
+      if(released == TRUE) {
+        call ResourceConfigure.unconfigure[id]();
+        return SUCCESS;
+      }
     }
     return FAIL;
   }
@@ -156,8 +156,8 @@ implementation {
     atomic {
       resId = reqResId;
       state = RES_BUSY;
+      call ResourceConfigure.configure[resId]();
     }
-    call ResourceConfigure.configure[resId]();
     signal Resource.granted[resId]();
   }
   
