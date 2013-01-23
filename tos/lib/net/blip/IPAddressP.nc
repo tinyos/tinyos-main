@@ -32,7 +32,7 @@ module IPAddressP {
   }
 } implementation {
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   bool m_valid_addr = FALSE, m_short_addr = TRUE;
 #elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
   bool m_valid_addr = FALSE, m_short_addr = FALSE;

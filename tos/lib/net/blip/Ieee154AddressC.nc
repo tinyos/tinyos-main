@@ -6,7 +6,7 @@ configuration Ieee154AddressC {
   components Ieee154AddressP;
   components LocalIeeeEui64C;
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   components BareMessageC;
 #endif
 
@@ -16,7 +16,7 @@ configuration Ieee154AddressC {
   MainC.SoftwareInit -> Ieee154AddressP;
   Ieee154AddressP.LocalIeeeEui64 -> LocalIeeeEui64C;
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   Ieee154AddressP.ShortAddressConfig -> BareMessageC;
 
 #elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)

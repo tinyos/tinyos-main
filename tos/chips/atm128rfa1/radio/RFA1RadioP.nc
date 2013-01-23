@@ -51,6 +51,8 @@ module RFA1RadioP
 		interface ActiveMessageConfig;
 		interface DummyConfig;
 
+		interface ShortAddressConfig;
+
 #ifdef LOW_POWER_LISTENING
 		interface LowPowerListeningConfig;
 #endif
@@ -229,6 +231,20 @@ implementation
 	 * initial backoff = 0x1F * CC2420_BACKOFF_PERIOD = 310 jiffies = 9920 microsec
 	 * congestion backoff = 0x7 * CC2420_BACKOFF_PERIOD = 70 jiffies = 2240 microsec
 	 */
+
+/*----------------- ShortAddressConfig-----------------*/
+
+    command void ShortAddressConfig.setShortAddr(uint16_t address)
+    {
+        // TODO: actually write the new ID
+        signal ShortAddressConfig.setShortAddrDone(FAIL);
+    }
+
+    default event void ShortAddressConfig.setShortAddrDone(error_t error)
+    {
+    }
+
+ /*----------------- LowPowerListening -----------------*/
 
 #ifndef LOW_POWER_LISTENING
 

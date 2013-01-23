@@ -7,7 +7,7 @@ module Ieee154AddressP {
   uses {
     interface LocalIeeeEui64;
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
     interface ShortAddressConfig;
 #elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
     interface CC2420Config;
@@ -48,7 +48,7 @@ module Ieee154AddressP {
   command error_t Ieee154Address.setShortAddr(ieee154_saddr_t addr) {
     m_saddr = addr;
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
     call ShortAddressConfig.setShortAddr(addr);
 #elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
     call CC2420Config.setShortAddr(addr);
@@ -63,7 +63,7 @@ module Ieee154AddressP {
     return SUCCESS;
   }
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
    event void ShortAddressConfig.setShortAddrDone(error_t error){}
 #elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
    event void CC2420Config.syncDone(error_t err) {}

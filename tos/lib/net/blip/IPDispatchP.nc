@@ -56,7 +56,7 @@ module IPDispatchP {
 
     interface Packet as BarePacket;
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
     interface BareSend;
     interface BareReceive;
 #elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
@@ -341,7 +341,7 @@ void SENDINFO_DECR(struct send_info *si) {
     return ret;
   }
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   event message_t *BareReceive.receive(message_t *msg) {
     struct packed_lowmsg lowmsg;
     struct ieee154_frame_addr frame_address;
@@ -644,7 +644,7 @@ void SENDINFO_DECR(struct send_info *si) {
       goto fail;
     }
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   if (call BareSend.send(s_entry->msg) != SUCCESS) {
       dbg("Drops", "drops: sendTask: send failed\n");
       goto fail;
@@ -749,7 +749,7 @@ void SENDINFO_DECR(struct send_info *si) {
       }
 
       call BarePacket.clear(outgoing);
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
       max_len = call BarePacket.maxPayloadLength()-1;
       frag_len = lowpan_frag_get(call BarePacket.getPayload(outgoing, max_len),
                                  max_len,
@@ -814,7 +814,7 @@ frag_len = lowpan_frag_get(call Ieee154Send.getPayload(outgoing, 0),
   cleanup_outer:
     return rc;
   }
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   event void BareSend.sendDone(message_t *msg, error_t error) {
     struct send_entry *s_entry = call SendQueue.head();
 

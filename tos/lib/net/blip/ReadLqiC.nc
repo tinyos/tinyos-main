@@ -20,11 +20,16 @@ configuration ReadLqiC {
   components CC2420ReadLqiC, CC2420PacketC;
   ReadLqi = CC2420ReadLqiC;
   CC2420ReadLqiC.CC2420Packet -> CC2420PacketC;
-#elif defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE) 
+#elif defined(PLATFORM_IRIS) || defined(PLATFORM_MULLE)
   components RF230ReadLqiC, RF230Ieee154MessageC;
   ReadLqi = RF230ReadLqiC;
   RF230ReadLqiC.SubLqi -> RF230Ieee154MessageC.PacketLinkQuality;
   RF230ReadLqiC.SubRssi -> RF230Ieee154MessageC.PacketRSSI;
+#elif defined(PLATFORM_UCMINI)
+	components RF230ReadLqiC, RFA1Ieee154MessageC;
+	ReadLqi = RF230ReadLqiC;
+	RF230ReadLqiC.SubLqi -> RFA1Ieee154MessageC.PacketLinkQuality;
+	RF230ReadLqiC.SubRssi -> RFA1Ieee154MessageC.PacketRSSI;
 #else
 #error "No radio support is available for your platform"
 #endif

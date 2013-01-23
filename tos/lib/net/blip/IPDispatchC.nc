@@ -42,7 +42,7 @@ configuration IPDispatchC {
   components IPDispatchP;
   
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   components BareMessageC as MessageC;
 #elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)
   components CC2420RadioC as MessageC;
@@ -68,7 +68,7 @@ configuration IPDispatchC {
 
   IPDispatchP.BarePacket -> MessageC.BarePacket;
 
-#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS)
+#if defined(PLATFORM_MICAZ) || defined(PLATFORM_IRIS) || defined(PLATFORM_UCMINI)
   IPDispatchP.BareSend -> MessageC;
   IPDispatchP.BareReceive -> MessageC;
 #elif defined(PLATFORM_TELOSB) || defined (PLATFORM_EPIC) || defined (PLATFORM_TINYNODE)

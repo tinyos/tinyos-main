@@ -57,13 +57,17 @@ configuration RFA1RadioC
 
 #ifndef TFRAMES_ENABLED
 		interface Ieee154Send;
+		interface BareSend;
 		interface Receive as Ieee154Receive;
+		interface BareReceive;
 		interface SendNotifier as Ieee154Notifier;
 
 		interface Resource as SendResource[uint8_t clint];
 
 		interface Ieee154Packet;
 		interface Packet as PacketForIeee154Message;
+		interface Packet as BarePacket;
+		interface ShortAddressConfig;
 #endif
 
 		interface PacketAcknowledgements;
@@ -95,6 +99,15 @@ implementation
 // -------- RadioP
 
 	components RFA1RadioP as RadioP;
+	
+	BareSend = TinyosNetworkLayerC.Ieee154Send;
+	BareReceive = TinyosNetworkLayerC.Ieee154Receive;
+	ShortAddressConfig = RadioP;
+	
+	components RFA1BarePacketP as BarePacketP;
+	BarePacket = BarePacketP;
+	BarePacketP.RadioPacket -> RadioDriverLayerC;
+
 
 #ifdef RADIO_DEBUG
 	components AssertC;
