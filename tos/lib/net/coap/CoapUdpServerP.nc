@@ -259,6 +259,7 @@ module CoapUdpServerP {
 			       coap_pdu_t *response) {
 
 	coap_opt_iterator_t opt_iter;
+	coap_opt_t *option;
 	int rc;
 	uint8_t rk;
 	coap_async_state_t *tmp;
@@ -283,8 +284,9 @@ module CoapUdpServerP {
 	    coap_add_option(response, COAP_OPTION_MAXAGE,
 			    coap_encode_var_bytes(buf, resource->max_age), buf);
 
+
 	  if (token->length)
-	    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+	    coap_add_token(response, token->length, token->s);
 
 	  if (resource->data_len != 0) {
 	    coap_add_data(response, resource->data_len, resource->data);
@@ -297,14 +299,14 @@ module CoapUdpServerP {
 #endif
 
 	/* set content_format if available */
-	if ((coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) ||
-	    (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter) && (request->hdr->code & (COAP_REQUEST_PUT & COAP_REQUEST_POST)))) {
+	if (((option = coap_check_option(request, COAP_OPTION_ACCEPT, &opt_iter)) && request->hdr->code == COAP_REQUEST_GET) ||
+	    ((option = coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter)) && (request->hdr->code & (COAP_REQUEST_PUT & COAP_REQUEST_POST)))) {
 	  do {
 	    while ((attr = coap_find_attr(resource, attr, (unsigned char*)"ct", 2))){
-	      if (atoi((const char *)attr->value.s) == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
-									     COAP_OPT_LENGTH(opt_iter.option))) {
-		media_type = coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
-						     COAP_OPT_LENGTH(opt_iter.option));
+	      if (atoi((const char *)attr->value.s) == coap_decode_var_bytes(COAP_OPT_VALUE(option),
+									     COAP_OPT_LENGTH(option))) {
+		media_type = coap_decode_var_bytes(COAP_OPT_VALUE(option),
+						   COAP_OPT_LENGTH(option));
 		break;
 	      }
 	    }
@@ -318,17 +320,17 @@ module CoapUdpServerP {
 				 ? COAP_RESPONSE_CODE(406)
 				 : COAP_RESPONSE_CODE(415));
 	  if (token->length)
-	    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+	    coap_add_token(response, token->length, token->s);
 	  goto cleanup;
 	}
 
 	//ETAG
-	if (coap_check_option(request, COAP_OPTION_ETAG, &opt_iter) && request->hdr->code == COAP_REQUEST_GET) {
-	  if (resource->etag == coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),COAP_OPT_LENGTH(opt_iter.option))) {
+	if ((option = coap_check_option(request, COAP_OPTION_ETAG, &opt_iter)) && request->hdr->code == COAP_REQUEST_GET) {
+	  if (resource->etag == coap_decode_var_bytes(COAP_OPT_VALUE(option), COAP_OPT_LENGTH(option))) {
 	    coap_add_option(response, COAP_OPTION_ETAG,
 			    coap_encode_var_bytes(buf, resource->etag), buf);
 	    if (token->length)
-		coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+		coap_add_token(response, token->length, token->s);
 	    response->hdr->code = COAP_RESPONSE_CODE(203);
 	    return;
 	  }
@@ -336,18 +338,18 @@ module CoapUdpServerP {
 
 	//If-None-Match
 	//
-	if (coap_check_option(request, COAP_OPTION_IF_NONE_MATCH, &opt_iter) && request->hdr->code == COAP_REQUEST_PUT) {
+	if ((option = coap_check_option(request, COAP_OPTION_IF_NONE_MATCH, &opt_iter)) && request->hdr->code == COAP_REQUEST_PUT) {
 	  if (token->length)
-	    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+	    coap_add_token(response, token->length, token->s);
 	  response->hdr->code = COAP_RESPONSE_CODE(412);
 	  return;
 	}
 
 	//If-Match
-	if (coap_check_option(request, COAP_OPTION_IF_MATCH, &opt_iter) && request->hdr->code == COAP_REQUEST_PUT) {
-	  if (resource->etag != coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),COAP_OPT_LENGTH(opt_iter.option))) {
+	if ((option = coap_check_option(request, COAP_OPTION_IF_MATCH, &opt_iter)) && request->hdr->code == COAP_REQUEST_PUT) {
+	  if (resource->etag != coap_decode_var_bytes(COAP_OPT_VALUE(option),COAP_OPT_LENGTH(option))) {
 	    if (token->length)
-	      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+	      coap_add_token(response, token->length, token->s);
 	    response->hdr->code = COAP_RESPONSE_CODE(412);
 	    return;
 	  }
@@ -426,7 +428,7 @@ module CoapUdpServerP {
 	    //TODO: set hdr->type?
 
 	    if (token->length)
-		coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+		coap_add_token(response, token->length, token->s);
 
 	} else if (request->hdr->type == COAP_MESSAGE_NON) {
 	    /* don't reply with ACK to NON's. Set response type to
@@ -444,7 +446,7 @@ module CoapUdpServerP {
 	    //CHECK: set hdr->type?
 
 	    if (token->length)
-		coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
+		coap_add_token(response, token->length, token->s);
 	}
 
 	//we don't have split-phase -> do some cleanup
@@ -507,8 +509,7 @@ module CoapUdpServerP {
 			      : coap_new_message_id(ctx_server);
 
      if (async_state->tokenlen)
-	 coap_add_option(response, COAP_OPTION_TOKEN,
-			 async_state->tokenlen, async_state->token);
+       coap_add_token(response, async_state->tokenlen, async_state->token);
 
 #ifndef WITHOUT_BLOCK
      if (coap_get_block(request, COAP_OPTION_BLOCK2, &block)) {
@@ -608,7 +609,7 @@ module CoapUdpServerP {
      response->hdr->id = coap_new_message_id(ctx_server); // SEPARATE requires new message id
 
      if (async_state->tokenlen)
-	 coap_add_option(response, COAP_OPTION_TOKEN, async_state->tokenlen, async_state->token);
+       coap_add_token(response, async_state->tokenlen, async_state->token);
 
      //TODO: observe on separate?
 

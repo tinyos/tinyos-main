@@ -139,8 +139,7 @@ generic module CoapEtsiLocationQueryResourceP(uint8_t uri_key) {
 		    coap_encode_var_bytes(buf, temp_content_format), buf);
 
     if (temp_async_state->tokenlen)
-      coap_add_option(response, COAP_OPTION_TOKEN,
-		      temp_async_state->tokenlen, temp_async_state->token);
+      coap_add_token(response, temp_async_state->tokenlen, temp_async_state->token);
 
     coap_add_option(response, COAP_OPTION_LOCATION_QUERY,
 		    sizeof("first=1")-1, (unsigned char *)"first=1");

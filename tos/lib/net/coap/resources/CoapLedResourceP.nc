@@ -88,7 +88,7 @@ generic module CoapLedResourceP(uint8_t uri_key) {
     case COAP_MEDIATYPE_TEXT_PLAIN:
 #endif
     case COAP_MEDIATYPE_ANY:
-    default:
+    default: //FIXME: default should return error, or not?
       temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
       cur += snprintf(cur, sizeof(databuf), "%i", val);
       datalen = cur - (char *)datap;

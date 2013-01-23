@@ -198,80 +198,100 @@ generic module CoapDefaultResourceP(uint8_t uri_key) {
 
     coap_resource_t *r = NULL;
     coap_opt_iterator_t opt_iter;
-    coap_uri_t *uri;
+    coap_opt_filter_t filter;
+    coap_opt_t *option;
+    //coap_uri_t *uri;
+    //coap_dynamic_uri_t *uri;
+    size_t pathlen;
+    str path;
     coap_key_t key;
 
-    coap_option_iterator_init(request, &opt_iter, COAP_OPT_ALL);
-
     if (lock == FALSE) {
-      lock = TRUE;
+	lock = TRUE;
 
-      if (resource == NULL) {
-	if (coap_check_option(request, COAP_OPTION_URI_PATH, &opt_iter)) {
+	if (resource == NULL) {
 
-	  uri = coap_malloc(sizeof(coap_uri_t));
+	    coap_option_filter_clear(filter);
+	    coap_option_setb(filter, COAP_OPTION_URI_PATH);
 
-	  if (coap_get_request_uri(request, uri)) {
-	    r = call CoAPServer.registerDynamicResource(uri->path.s, uri->path.length+1,
-							GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
-	  } else {
-	    return COAP_RESPONSE_CODE(500);
-	  }
-	  coap_free(uri);
-	}
-       temp_rc = COAP_RESPONSE_CODE(201);
-      } else {
+	    coap_option_iterator_init((coap_pdu_t *)request, &opt_iter, filter);
 
-	memset(key, 0, 4);
-	coap_hash((unsigned char*)"location1",
-		  sizeof("location1")-1, key);
-	coap_hash((unsigned char*)"location2",
-		  sizeof("location2")-1, key);
-	coap_hash((unsigned char*)"location3",
-		  sizeof("location2")-1, key);
+	    pathlen = 0;
+	    if ((option = coap_option_next(&opt_iter))) {
+		pathlen = COAP_OPT_LENGTH(option);
 
-	if (call CoAPServer.findResource(key) == SUCCESS) {
-	  // resource does exist -> update
-	  temp_created = TRUE;//FALSE
-	  temp_rc = COAP_RESPONSE_CODE(201);//204
+		while ((option = coap_option_next(&opt_iter))) {
+		    pathlen += COAP_OPT_SIZE(option);
+		}
+	    }
+
+	    if (pathlen > 0) {
+		//path.s = coap_new_string(pathlen);
+
+		coap_option_iterator_init((coap_pdu_t *)request, &opt_iter, filter);
+
+		option = coap_option_next(&opt_iter);
+		path.s = COAP_OPT_VALUE(option); //CHECK: does this include /'s?
+		path.length = pathlen;
+
+		r = call CoAPServer.registerDynamicResource(path.s, path.length+1, //+1??
+							    GET_SUPPORTED|PUT_SUPPORTED|
+							    POST_SUPPORTED|DELETE_SUPPORTED);
+	    } else {
+		return COAP_RESPONSE_CODE(500);
+	    }
+	    temp_rc = COAP_RESPONSE_CODE(201);
 	} else {
-	  // resource does not exist -> create
-	  r = call CoAPServer.registerDynamicResource((unsigned char*)"location1/location2/location3",
-						      sizeof("location1/location2/location3"),
-						      GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+	    memset(key, 0, 4);
+	    coap_hash((unsigned char*)"location1",
+		      sizeof("location1")-1, key);
+	    coap_hash((unsigned char*)"location2",
+		      sizeof("location2")-1, key);
+	    coap_hash((unsigned char*)"location3",
+		      sizeof("location2")-1, key);
 
-	  temp_created = TRUE;
-	  temp_rc = COAP_RESPONSE_CODE(201);
+	    if (call CoAPServer.findResource(key) == SUCCESS) {
+		// resource does exist -> update
+		temp_created = TRUE;//FALSE
+		temp_rc = COAP_RESPONSE_CODE(201);//204
+	    } else {
+		// resource does not exist -> create
+		r = call CoAPServer.registerDynamicResource((unsigned char*)"location1/location2/location3",
+							    sizeof("location1/location2/location3"),
+							    GET_SUPPORTED|PUT_SUPPORTED|POST_SUPPORTED|DELETE_SUPPORTED);
+
+		temp_created = TRUE;
+		temp_rc = COAP_RESPONSE_CODE(201);
+	    }
 	}
-      }
 
-      coap_get_data(request, &size, &data);
+	coap_get_data(request, &size, &data);
 
-      temp_resource->dirty = 1;
-      temp_resource->etag++; //ASCII chars
-      //temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
+	temp_resource->dirty = 1;
+	temp_resource->etag++; //ASCII chars
+	//temp_resource->etag = (temp_resource->etag + 1) << 2; //non-ASCII chars
 
-      if (resource->data != NULL) {
-	coap_free(resource->data);
-      }
+	if (resource->data != NULL) {
+	    coap_free(resource->data);
+	}
 
-      if ((r->data = (uint8_t *) coap_malloc(size)) != NULL) {
-	memcpy(r->data, data, size);
-	r->data_len = size;
-      } else {
-	return COAP_RESPONSE_CODE(500);
-	//return COAP_RESPONSE_CODE(413); or: too large?
-      }
+	if ((r->data = (uint8_t *) coap_malloc(size)) != NULL) {
+	    memcpy(r->data, data, size);
+	    r->data_len = size;
+	} else {
+	    return COAP_RESPONSE_CODE(500);
+	    //return COAP_RESPONSE_CODE(413); or: too large?
+	}
 
-      temp_async_state = async_state;
-      temp_resource = r;
-      temp_request = request;
-      temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
+	temp_async_state = async_state;
+	temp_resource = r;
+	temp_request = request;
+	temp_content_format = COAP_MEDIATYPE_TEXT_PLAIN;
 
-      post postMethod();
-      return COAP_SPLITPHASE;
+	post postMethod();
+	return COAP_SPLITPHASE;
     } else {
-      return COAP_RESPONSE_503;
+	return COAP_RESPONSE_503;
     }
   }
 

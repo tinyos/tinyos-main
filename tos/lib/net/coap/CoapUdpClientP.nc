@@ -33,6 +33,7 @@
 #include <net.h>
 #include <pdu.h>
 #include <mem.h>
+#include <debug.h>
 
 module CoapUdpClientP {
     provides interface CoAPClient;
@@ -124,7 +125,7 @@ module CoapUdpClientP {
 	if (! (pdu = coap_new_request( ctx_client, method, optlist, len, data ) ) )
 	    return FAIL;
 
-	if (call LibCoapClient.send(ctx_client, dest, pdu, 1) == COAP_INVALID_TID) {
+	if (call LibCoapClient.send(ctx_client, dest, pdu) == COAP_INVALID_TID) {
 	    coap_delete_pdu (pdu);
 	    return FAIL;
 	}
