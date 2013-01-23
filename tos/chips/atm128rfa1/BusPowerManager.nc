@@ -61,7 +61,6 @@ interface BusPowerManager
 	 * is running, and returns FALSE, if power was requested, but the
 	 * startup timer is still running
 	 */
-	
 	command bool isPowerOn();
 
 	/**
