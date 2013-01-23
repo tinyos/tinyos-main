@@ -135,7 +135,9 @@ int
 coap_split_uri(unsigned char *str_var, size_t len, coap_uri_t *uri);
 
 /** 
- * Splits the given URI path into segments.
+ * Splits the given URI path into segments. Each segment is preceded
+ * by an option pseudo-header with delta-value 0 and the actual length
+ * of the respective segment after percent-decoding.
  * 
  * @param s      The path string to split. 
  * @param length The actual length of @p s.
@@ -149,7 +151,9 @@ int coap_split_path(const unsigned char *s, size_t length,
 		    unsigned char *buf, size_t *buflen);
 
 /** 
- * Splits the given URI query into segments.
+ * Splits the given URI query into segments. Each segment is preceded
+ * by an option pseudo-header with delta-value 0 and the actual length
+ * of the respective query term.
  * 
  * @param s      The query string to split. 
  * @param length The actual length of @p s.
@@ -158,6 +162,8 @@ int coap_split_path(const unsigned char *s, size_t length,
  * of bytes written into buf on success.
  * 
  * @return The number of segments created or @c -1 on error.
+ *
+ * @bug This function does not reserve additional space for delta > 12.
  */
 int coap_split_query(const unsigned char *s, size_t length, 
 		     unsigned char *buf, size_t *buflen);

@@ -30,7 +30,6 @@
 #else /* WITH_CONTIKI */
 #include "list.h"
 #endif /* WITH_CONTIKI */
-
 #include "hashkey.h"
 #include "async.h"
 #include "str.h"

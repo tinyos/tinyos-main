@@ -1,6 +1,6 @@
 /* CoAP server for first ETSI CoAP plugtest, March 2012
  *
- * Copyright (C) 2012 Olaf Bergmann <bergmann@tzi.org>
+ * Copyright (C) 2012--2013 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the CoAP library libcoap. Please see
  * README for terms of use. 
@@ -139,9 +139,6 @@ hnd_get_index(coap_context_t  *ctx, struct coap_resource_t *resource,
   coap_add_option(response, COAP_OPTION_MAXAGE,
 	  coap_encode_var_bytes(buf, 0x2ffff), buf);
     
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-
   coap_add_data(response, strlen(INDEX), (unsigned char *)INDEX);
 }
 
@@ -159,8 +156,6 @@ hnd_get_resource(coap_context_t  *ctx, struct coap_resource_t *resource,
   if (!test_payload) {
     response->hdr->code = COAP_RESPONSE_CODE(500);
     
-    if (token->length)
-      coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
     return;
   }
 
@@ -176,9 +171,6 @@ hnd_get_resource(coap_context_t  *ctx, struct coap_resource_t *resource,
     coap_add_option(response, COAP_OPTION_ETAG, sizeof(etag), etag);
   }
       
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-
   if (request) {
     int res;
 
@@ -241,8 +233,6 @@ hnd_delete_resource(coap_context_t  *ctx, struct coap_resource_t *resource,
   coap_delete_resource(ctx, resource->key);
 
   response->hdr->code = COAP_RESPONSE_CODE(202);
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);    
 }
 
 void 
@@ -250,6 +240,7 @@ hnd_post_test(coap_context_t  *ctx, struct coap_resource_t *resource,
 	      coap_address_t *peer, coap_pdu_t *request, str *token,
 	      coap_pdu_t *response) {
   coap_opt_iterator_t opt_iter;
+  coap_opt_t *option;
   coap_payload_t *test_payload;
   size_t len;
   size_t l = 6 + sizeof(void *);
@@ -286,10 +277,10 @@ hnd_post_test(coap_context_t  *ctx, struct coap_resource_t *resource,
     coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_resource);
 
     /* set media_type if available */
-    if (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter)) {
+    option = coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter);
+    if (option) {
       test_payload->media_type = 
-	coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
-			      COAP_OPT_LENGTH(opt_iter.option));
+	coap_decode_var_bytes(COAP_OPT_VALUE(option), COAP_OPT_LENGTH(option));
     }
 
     coap_add_resource(ctx, r);
@@ -308,8 +299,6 @@ hnd_post_test(coap_context_t  *ctx, struct coap_resource_t *resource,
     response->hdr->code = COAP_RESPONSE_CODE(201);
   }
 
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);  
 }
 
 void 
@@ -317,13 +306,12 @@ hnd_put_test(coap_context_t  *ctx, struct coap_resource_t *resource,
 	      coap_address_t *peer, coap_pdu_t *request, str *token,
 	      coap_pdu_t *response) {
   coap_opt_iterator_t opt_iter;
+  coap_opt_t *option;
   coap_payload_t *payload;
   size_t len;
   unsigned char *data;
 
   response->hdr->code = COAP_RESPONSE_CODE(204);
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 
   coap_get_data(request, &len, &data);
 
@@ -345,11 +333,11 @@ hnd_put_test(coap_context_t  *ctx, struct coap_resource_t *resource,
   payload->length = len;
   memcpy(payload->data, data, len);
 
-  if (coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter)) {
+  option = coap_check_option(request, COAP_OPTION_CONTENT_TYPE, &opt_iter);
+  if (option) {
     /* set media type given in request */
     payload->media_type = 
-      coap_decode_var_bytes(COAP_OPT_VALUE(opt_iter.option),
-			    COAP_OPT_LENGTH(opt_iter.option));
+      coap_decode_var_bytes(COAP_OPT_VALUE(option), COAP_OPT_LENGTH(option));
   } else {
     /* set default value */
     payload->media_type = COAP_MEDIATYPE_TEXT_PLAIN;
@@ -378,8 +366,6 @@ hnd_delete_test(coap_context_t  *ctx, struct coap_resource_t *resource,
 #endif
 
   response->hdr->code = COAP_RESPONSE_CODE(202);
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);  
 }
 
 void 
@@ -396,9 +382,6 @@ hnd_get_query(coap_context_t  *ctx, struct coap_resource_t *resource,
 
   coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 	  coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf);
-
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 
   coap_option_filter_clear(f);
   coap_option_setb(f, COAP_OPTION_URI_QUERY);
@@ -428,6 +411,7 @@ hnd_get_separate(coap_context_t  *ctx, struct coap_resource_t *resource,
 		 coap_address_t *peer, coap_pdu_t *request, str *token,
 		 coap_pdu_t *response) {
   coap_opt_iterator_t opt_iter;
+  coap_opt_t *option;
   coap_opt_filter_t f;
   unsigned long delay = 5;
 
@@ -446,13 +430,13 @@ hnd_get_separate(coap_context_t  *ctx, struct coap_resource_t *resource,
   
   coap_option_iterator_init(request, &opt_iter, f);
   
-  while (coap_option_next(&opt_iter)) {
-    if (strncmp("delay=", (char *)COAP_OPT_VALUE(opt_iter.option), 6) == 0) {
+  while ((option = coap_option_next(&opt_iter))) {
+    if (strncmp("delay=", (char *)COAP_OPT_VALUE(option), 6) == 0) {
       int i;
       unsigned long d = 0;
       
-      for (i = 6; i < COAP_OPT_LENGTH(opt_iter.option); ++i)
-	d = d * 10 + COAP_OPT_VALUE(opt_iter.option)[i] - '0';
+      for (i = 6; i < COAP_OPT_LENGTH(option); ++i)
+	d = d * 10 + COAP_OPT_VALUE(option)[i] - '0';
 
       /* don't allow delay to be less than COAP_RESOURCE_CHECK_TIME*/
       delay = d < COAP_RESOURCE_CHECK_TIME_SEC 
@@ -492,11 +476,11 @@ check_async(coap_context_t  *ctx, coap_tick_t now) {
   
   response->hdr->id = coap_new_message_id(ctx);
 
+  if (async->tokenlen)
+    coap_add_token(response, async->tokenlen, async->token);
+
   coap_add_option(response, COAP_OPTION_CONTENT_TYPE,
 		  coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf);
-
-  if (async->tokenlen)
-    coap_add_option(response, COAP_OPTION_TOKEN, async->tokenlen, async->token);
 
   coap_add_data(response, 4, (unsigned char *)"done");
 

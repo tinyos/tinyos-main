@@ -25,10 +25,7 @@ coap_async_state_t *
 coap_register_async(coap_context_t *context, coap_address_t *peer,
 		    coap_pdu_t *request, unsigned char flags, void *data) {
   coap_async_state_t *s;
-  coap_opt_iterator_t opt_iter;
-  coap_opt_t *token;
   coap_tid_t id;
-  size_t toklen = 0;
 
   coap_transaction_id(peer, request, &id);
   LL_SEARCH_SCALAR(context->async_state,s,id,id);
@@ -40,12 +37,9 @@ coap_register_async(coap_context_t *context, coap_address_t *peer,
     return NULL;
   }
 
-  token = coap_check_option(request, COAP_OPTION_TOKEN, &opt_iter);
-  if (token)
-    toklen = COAP_OPT_LENGTH(token);
-
   /* store information for handling the asynchronous task */
-  s = (coap_async_state_t *)coap_malloc(sizeof(coap_async_state_t) + toklen);
+  s = (coap_async_state_t *)coap_malloc(sizeof(coap_async_state_t) + 
+					request->hdr->token_length);
   if (!s) {
 #ifndef NDEBUG
     coap_log(LOG_CRIT, "coap_register_async: insufficient memory\n");
@@ -53,7 +47,7 @@ coap_register_async(coap_context_t *context, coap_address_t *peer,
     return NULL;
   }
 
-  memset(s, 0, sizeof(coap_async_state_t) + toklen);
+  memset(s, 0, sizeof(coap_async_state_t) + request->hdr->token_length);
 
   /* set COAP_ASYNC_CONFIRM according to request's type */
   s->flags = flags & ~COAP_ASYNC_CONFIRM;
@@ -64,9 +58,9 @@ coap_register_async(coap_context_t *context, coap_address_t *peer,
 
   memcpy(&s->peer, peer, sizeof(coap_address_t));
 
-  if (toklen) {
-    s->tokenlen = toklen;
-    memcpy(s->token, COAP_OPT_VALUE(token), toklen);
+  if (request->hdr->token_length) {
+    s->tokenlen = request->hdr->token_length;
+    memcpy(s->token, request->hdr->token, request->hdr->token_length);
   }
 
   //TODO: #ifdef TINYOS ?

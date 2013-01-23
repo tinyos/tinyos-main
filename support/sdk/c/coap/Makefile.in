@@ -1,6 +1,6 @@
 # Makefile for libcoap
 #
-# Copyright (C) 2010,2011 Olaf Bergmann <bergmann@tzi.org>
+# Copyright (C) 2010--2013 Olaf Bergmann <bergmann@tzi.org>
 #
 # This file is part of the CoAP library libcoap. Please see
 # README for terms of use. 
@@ -28,8 +28,8 @@ HEADERS:=coap.h config.h debug.h pdu.h net.h encode.h uri.h coap_list.h mem.h \
 CFLAGS:=-Wall -Wextra -std=c99 -pedantic @CFLAGS@
 CPPFLAGS:=@CPPFLAGS@
 DISTDIR=$(top_builddir)/$(package)
-SUBDIRS:=examples doc
-FILES:=Makefile.in configure configure.in config.h.in $(SOURCES) $(HEADERS)
+SUBDIRS:=examples doc @TESTS@
+FILES:=ChangeLog Makefile.in configure configure.in config.h.in $(SOURCES) $(HEADERS)
 LIB:=libcoap.a
 LDFLAGS:=@LIBS@
 ARFLAGS:=cru

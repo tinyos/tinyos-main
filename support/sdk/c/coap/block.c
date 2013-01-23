@@ -26,15 +26,16 @@
 int
 coap_get_block(coap_pdu_t *pdu, unsigned short type, coap_block_t *block) {
   coap_opt_iterator_t opt_iter;
+  coap_opt_t *option;
 
   assert(block);
   memset(block, 0, sizeof(coap_block_t));
 
-  if (pdu && coap_check_option(pdu, type, &opt_iter)) {
-    block->szx = COAP_OPT_BLOCK_SZX(opt_iter.option);
-    if (COAP_OPT_BLOCK_MORE(opt_iter.option))
+  if (pdu && (option = coap_check_option(pdu, type, &opt_iter))) {
+    block->szx = COAP_OPT_BLOCK_SZX(option);
+    if (COAP_OPT_BLOCK_MORE(option))
       block->m = 1;
-    block->num = COAP_OPT_BLOCK_NUM(opt_iter.option);
+    block->num = COAP_OPT_BLOCK_NUM(option);
 
     return 1;
   }

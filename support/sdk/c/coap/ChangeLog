@@ -1,3 +1,22 @@
+2013-01-21  Olaf Bergmann  <bergmann@tzi.org>
+
+	* option.h: renamed option field in coap_opt_iterator_t to
+	next_option to detect erroneous use in old code
+
+2013-01-18  Olaf Bergmann  <bergmann@tzi.org>
+
+	* configure.in: new option --with-tests to enable unit tests
+
+	* tests/testdriver.c: unit tests for parser functions
+
+	* pdu.c (coap_pdu_parse): new PDU parser for Klaus-encoding
+	according to coap-13
+
+	* net.c (coap_read): call coap_pdu_parse() to check PDU integrity
+
+	* option.c: Klaus-encoding for coap-13, including new option
+	iterator interface
+
 2012-11-20  Olaf Bergmann  <bergmann@tzi.org>
 
 	* net.c (next_option_safe): made option parsing more robust in
@@ -10,7 +29,7 @@
 	* uri.c (make_decoded_option): use coap_opt_setlength() instead of
 	obsolete macro COAP_OPT_SETLENGTH.
 
-w2012-11-19  Olaf Bergmann  <bergmann@tzi.org>
+2012-11-19  Olaf Bergmann  <bergmann@tzi.org>
 
 	* uri.c (make_decoded_option): use coap_opt_encode() instead of writing
 

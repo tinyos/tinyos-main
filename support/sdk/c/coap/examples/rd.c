@@ -1,7 +1,7 @@
 /* coap -- simple implementation of the Constrained Application Protocol (CoAP)
  *         as defined in draft-ietf-core-coap
  *
- * Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
+ * Copyright (C) 2010--2013 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the CoAP library libcoap. Please see
  * README for terms of use. 
@@ -101,9 +101,6 @@ hnd_get_resource(coap_context_t  *ctx, struct coap_resource_t *resource,
   if (rd && rd->etag_len)
     coap_add_option(response, COAP_OPTION_ETAG, rd->etag_len, rd->etag);
 
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
-
   if (rd && rd->data.s)
     coap_add_data(response, rd->data.length, rd->data.s);
 }
@@ -163,10 +160,7 @@ hnd_put_resource(coap_context_t  *ctx, struct coap_resource_t *resource,
   }
 
   finish:
-  token = coap_check_option(request, COAP_OPTION_TOKEN, &opt_iter);
-  if (token)
-    size += COAP_OPT_SIZE(token);
-
+  /* FIXME: do not create a new response but use the old one instead */
   response = coap_pdu_init(type, code, request->hdr->id, size);
 
   if (!response) {
@@ -174,9 +168,8 @@ hnd_put_resource(coap_context_t  *ctx, struct coap_resource_t *resource,
     return;
   }
 
-  if (token)
-    coap_add_option(response, COAP_OPTION_TOKEN,
-		    COAP_OPT_LENGTH(token), COAP_OPT_VALUE(token));
+  if (request->hdr->token_length)
+    coap_add_token(response, request->hdr->token_length, request->hdr->token);
 
   if (coap_send(ctx, peer, response) == COAP_INVALID_TID) {
     debug("hnd_get_rd: cannot send response for message %d\n", 
@@ -202,9 +195,6 @@ hnd_delete_resource(coap_context_t  *ctx, struct coap_resource_t *resource,
   coap_delete_resource(ctx, resource->key);
 
   response->hdr->code = COAP_RESPONSE_CODE(202);
-
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 }
 
 void 
@@ -220,9 +210,6 @@ hnd_get_rd(coap_context_t  *ctx, struct coap_resource_t *resource,
 
   coap_add_option(response, COAP_OPTION_MAXAGE,
 	  coap_encode_var_bytes(buf, 0x2ffff), buf);
-    
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 }
 
 int
@@ -491,9 +478,6 @@ hnd_post_rd(coap_context_t  *ctx, struct coap_resource_t *resource,
       b += COAP_OPT_SIZE(b);
     }
   }
-  
-  if (token->length)
-    coap_add_option(response, COAP_OPTION_TOKEN, token->length, token->s);
 }
 
 void

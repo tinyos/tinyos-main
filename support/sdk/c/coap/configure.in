@@ -7,7 +7,7 @@
 # README for terms of use. 
 
 AC_PREREQ([2.65])
-AC_INIT([libcoap], [3.0.0])
+AC_INIT([libcoap], [4.0.0])
 AC_CONFIG_SRCDIR([coap.h])
 
 # First check for Contiki build to quit configure before any other test
@@ -69,6 +69,11 @@ AC_ARG_WITH(query-filter,
   [CPPFLAGS="${CPPFLAGS} -DWITHOUT_QUERY_FILTER"], 
   [])
 
+AC_ARG_WITH(tests,
+  [AS_HELP_STRING([--with-tests],[enable unit tests (requires cunit)])],	
+  [TESTS="tests"],
+  [])
+
 # Checks for header files.
 AC_CHECK_HEADERS([assert.h arpa/inet.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/socket.h sys/time.h time.h unistd.h sys/unistd.h])
 
@@ -80,10 +85,13 @@ AC_TYPE_SSIZE_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset select socket strcasecmp strrchr getaddrinfo strnlen])
 
+AC_SUBST(TESTS)
+
 AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  doc/Doxyfile
-                 examples/Makefile])
+                 examples/Makefile
+                 tests/Makefile])
 AC_OUTPUT

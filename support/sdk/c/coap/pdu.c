@@ -58,10 +58,8 @@ coap_pdu_clear(coap_pdu_t *pdu, size_t size) {
   pdu->hdr = (coap_hdr_t *)((unsigned char *)pdu + sizeof(coap_pdu_t));
   pdu->hdr->version = COAP_DEFAULT_VERSION;
 
-  /* data points after the header; when options are added, the data
-     pointer is moved to the back */
+  /* data is NULL unless explicitly set by coap_add_data() */
   pdu->length = sizeof(coap_hdr_t);
-  pdu->data = (unsigned char *)pdu->hdr + pdu->length;
 }
 
 coap_pdu_t *
@@ -120,23 +118,23 @@ coap_clone_pdu(coap_pdu_t *pdu) {
   coap_pdu_t *cloned_pdu;
   size_t data_len;
   unsigned char *data;
+  coap_opt_iterator_t opt_iter;
+  coap_opt_t *option;
 
   cloned_pdu = coap_pdu_init(0, 0, ntohs(COAP_INVALID_TID), COAP_MAX_PDU_SIZE);
 
+  // mab: CHECK: assert?
   if (!pdu)
     return NULL;
 
   memcpy(cloned_pdu->hdr, pdu->hdr, sizeof(coap_hdr_t));
 
-  if (pdu->hdr->optcnt) {
-    coap_opt_iterator_t opt_iter;
-    coap_option_iterator_init((coap_pdu_t *)pdu, &opt_iter, COAP_OPT_ALL);
+  coap_option_iterator_init((coap_pdu_t *)pdu, &opt_iter, COAP_OPT_ALL);
 
-    while (coap_option_next(&opt_iter)) {
-      coap_add_option(cloned_pdu, opt_iter.type,
-                     COAP_OPT_LENGTH(opt_iter.option),
-                     COAP_OPT_VALUE(opt_iter.option));
-    }
+  while ((option = coap_option_next(&opt_iter))) {
+    coap_add_option(cloned_pdu, opt_iter.type,
+		    COAP_OPT_LENGTH(option),
+		    COAP_OPT_VALUE(option));
   }
 
   if(coap_get_data(pdu, &data_len, &data))
@@ -146,98 +144,83 @@ coap_clone_pdu(coap_pdu_t *pdu) {
 }
 
 int
+coap_add_token(coap_pdu_t *pdu, size_t len, const unsigned char *data) {
+  const size_t HEADERLENGTH = len + 4;
+  /* must allow for pdu == NULL as callers may rely on this */
+  if (!pdu || len > 8 || pdu->max_size < HEADERLENGTH)
+    return 0;
+
+  pdu->hdr->token_length = len;
+  if (len)
+    memcpy(pdu->hdr->token, data, len);
+  pdu->max_delta = 0;
+  pdu->length = HEADERLENGTH;
+  pdu->data = NULL;
+
+  return 1;
+}
+
+size_t
 coap_add_option(coap_pdu_t *pdu, unsigned short type, unsigned int len, const unsigned char *data) {
-  size_t optsize, cnt;
-  unsigned short opt_code = 0;
+  size_t optsize;
   coap_opt_t *opt;
   
-  if (!pdu)
-    return -1;
+  assert(pdu);
+  pdu->data = NULL;
 
-  debug("add option %d (%d bytes)\n", type, len);
-  /* Get last option from pdu to calculate the delta. For optcnt ==
-   * 0x0F, opt will point at the end marker, so the new option will
-   * overwrite it.
-   */
-  opt = options_start(pdu);
-  cnt = pdu->hdr->optcnt;
-  while ((pdu->hdr->optcnt == COAP_OPT_LONG && opt &&
-	  opt < ((unsigned char *)pdu->hdr + pdu->max_size) && 
-	  *opt != COAP_OPT_END)
-	 || cnt--) {
-    opt_code += COAP_OPT_DELTA(opt);
-    opt = options_next(opt);
+  if (type < pdu->max_delta) {
+    warn("coap_add_option: options are not in correct order\n");
+    return 0;
   }
 
-  if ((unsigned char *)pdu->hdr + pdu->max_size <= (unsigned char *)opt) {
-    debug("illegal option list\n");
-    return -1;
+  opt = (unsigned char *)pdu->hdr + pdu->length;
+
+  /* encode option and check length */
+  optsize = coap_opt_encode(opt, pdu->max_size - pdu->length, 
+			    type - pdu->max_delta, data, len);
+
+  if (!optsize) {
+    warn("coap_add_option: cannot add option\n");
+    /* error */
+    return 0;
+  } else {
+    pdu->max_delta = type;
+    pdu->length += optsize;
   }
 
-  optsize = (unsigned char *)pdu->hdr + pdu->max_size - opt;
-  if (pdu->hdr->optcnt + 1 >= COAP_OPT_LONG) {
-    /* need an additional byte to store the end marker */
-    optsize--;
-  }
-  /* at this point optsize might be zero */
-  
-  if ( type < opt_code ) {
-#ifndef NDEBUG
-    coap_log(LOG_WARN, "options not added in correct order\n");
-#endif
-    return -1;
-  }
-
-  cnt = coap_opt_encode(opt, optsize, type - opt_code, data, len);
-
-  if (!cnt) {
-    warn("cannot add option %u\n", type);
-    /* nothing has changed in opt, therefore we do not have to restore
-     * optcnt, data, or end-of-options marker */
-    return -1;
-  }
-
-  opt += cnt;			/* advance opt behind the option */
-  pdu->hdr->optcnt++;		/* can we rely on the compiler to trim
-				 * this down to 4 bits? */
-  assert(pdu->hdr->optcnt <= 15);
-
-  if (pdu->hdr->optcnt == COAP_OPT_LONG) {
-    /* Before calling coap_opt_encode(), we have made sure that the
-     * end-of-options marker fits in, so no new check is required. */
-    *opt++ = COAP_OPT_END;
-  }
-
-  pdu->data = (unsigned char *)opt;
-  pdu->length = pdu->data - (unsigned char *)pdu->hdr;
-  return len;
+  return optsize;
 }
 
 int
 coap_add_data(coap_pdu_t *pdu, unsigned int len, const unsigned char *data) {
-  if ( !pdu )
-    return 0;
+  assert(pdu);
+  assert(pdu->data == NULL);
 
-  if ( pdu->length + len > pdu->max_size ) {
-#ifndef NDEBUG
- coap_log(LOG_WARN, "coap_add_data: cannot add: data too large for PDU\n");
-#endif
+  if (len == 0)
+    return 1;
+
+  if (pdu->length + len + 1 > pdu->max_size) {
+    warn("coap_add_data: cannot add: data too large for PDU\n");
+    assert(pdu->data == NULL);
     return 0;
   }
 
-  memcpy( (unsigned char *)pdu->hdr + pdu->length, data, len );
-  pdu->length += len;
+  pdu->data = (unsigned char *)pdu->hdr + pdu->length;
+  *pdu->data = COAP_PAYLOAD_START;
+  pdu->data++;
+
+  memcpy(pdu->data, data, len);
+  pdu->length += len + 1;
   return 1;
 }
 
 int
 coap_get_data(coap_pdu_t *pdu, size_t *len, unsigned char **data) {
-  if ( !pdu )
-    return 0;
+  assert(pdu);
+  assert(len);
+  assert(data);
 
-  if ( pdu->data < (unsigned char *)pdu->hdr + pdu->length ) {
-    /* pdu contains data */
-
+  if (pdu->data) {
     *len = (unsigned char *)pdu->hdr + pdu->length - pdu->data;
     *data = pdu->data;
   } else {			/* no data, clear everything */
@@ -245,7 +228,7 @@ coap_get_data(coap_pdu_t *pdu, size_t *len, unsigned char **data) {
     *data = NULL;
   }
 
-  return 1;
+  return *data != NULL;
 }
 
 #ifndef SHORT_ERROR_RESPONSE
@@ -291,42 +274,106 @@ coap_response_phrase(unsigned char code) {
 }
 #endif
 
-//#if 0
-int
-coap_get_request_uri(coap_pdu_t *pdu, coap_uri_t *result) {
-  coap_opt_t *opt;
-  coap_opt_iterator_t opt_iter;
-  
-  if (!pdu || !result)
-    return 0;
+/**
+ * Advances *optp to next option if still in PDU. This function 
+ * returns the number of bytes opt has been advanced or @c 0
+ * on error.
+ */
+static size_t
+next_option_safe(coap_opt_t **optp, size_t *length) {
+  coap_option_t option;
+  size_t optsize;
 
-  memset(result, 0, sizeof(*result));
-    
-  if ((opt = coap_check_option(pdu, COAP_OPTION_URI_HOST, &opt_iter)))
-    COAP_SET_STR(&result->host, COAP_OPT_LENGTH(opt), COAP_OPT_VALUE(opt));
+  assert(optp); assert(*optp); 
+  assert(length);
 
-  if ((opt = coap_check_option(pdu, COAP_OPTION_URI_PORT, &opt_iter)))
-    result->port = 
-      coap_decode_var_bytes(COAP_OPT_VALUE(opt), COAP_OPT_LENGTH(opt));
-  else
-    result->port = COAP_DEFAULT_PORT;
+  optsize = coap_opt_parse(*optp, *length, &option);
+  if (optsize) {
+    assert(optsize <= *length);
 
-  if ((opt = coap_check_option(pdu, COAP_OPTION_URI_PATH, &opt_iter))) {
-    result->path.s = COAP_OPT_VALUE(opt);
-    result->path.length = COAP_OPT_LENGTH(opt);
-
-    while (coap_option_next(&opt_iter) && opt_iter.type == COAP_OPTION_URI_PATH) 
-      result->path.length += COAP_OPT_SIZE(opt_iter.option);
+    *optp += optsize;
+    *length -= optsize;
   }
 
-  if ((opt = coap_check_option(pdu, COAP_OPTION_URI_QUERY, &opt_iter))) {
-    result->query.s = COAP_OPT_VALUE(opt);
-    result->query.length = COAP_OPT_LENGTH(opt);
+  return optsize;
+}
 
-    while (coap_option_next(&opt_iter) && opt_iter.type == COAP_OPTION_URI_QUERY) 
-      result->query.length += COAP_OPT_SIZE(opt_iter.option);
+int
+coap_pdu_parse(unsigned char *data, size_t length, coap_pdu_t *pdu) {
+  coap_opt_t *opt;
+
+  assert(data);
+  assert(pdu);
+
+  if (pdu->max_size < length) {
+    debug("insufficient space to store parsed PDU\n");
+    return 0;
+  }
+
+  if (length < sizeof(coap_hdr_t)) {
+    debug("discarded invalid PDU\n");
+  }
+
+  pdu->hdr->version = data[0] >> 6;
+  pdu->hdr->type = (data[0] >> 4) & 0x03;
+  pdu->hdr->token_length = data[0] & 0x0f;
+  pdu->hdr->code = data[1];
+  pdu->data = NULL;
+
+  /* sanity checks */
+  if (pdu->hdr->code == 0) {
+    if (length != sizeof(coap_hdr_t) || pdu->hdr->token_length) {
+      debug("coap_pdu_parse: empty message is not empty\n");
+      goto discard;
+    }
+  }
+
+  if (length < sizeof(coap_hdr_t) + pdu->hdr->token_length
+      || pdu->hdr->token_length > 8) {
+    debug("coap_pdu_parse: invalid Token\n");
+    goto discard;
+  }
+
+  /* Copy message id in network byte order, so we can easily write the
+   * response back to the network. */
+  memcpy(&pdu->hdr->id, data + 2, 2);
+
+  /* append data (including the Token) to pdu structure */
+  memcpy(pdu->hdr + 1, data + sizeof(coap_hdr_t), length - sizeof(coap_hdr_t));
+  pdu->length = length;
+  
+  /* Finally calculate beginning of data block and thereby check integrity
+   * of the PDU structure. */
+
+  /* skip header + token */
+  length -= (pdu->hdr->token_length + sizeof(coap_hdr_t));
+  opt = (unsigned char *)(pdu->hdr + 1) + pdu->hdr->token_length;
+
+  while (length && *opt != COAP_PAYLOAD_START) {
+
+    if (!next_option_safe(&opt, (size_t *)&length)) {
+      debug("coap_pdu_parse: drop\n");
+      goto discard;
+    }
+  }
+
+  /* end of packet or start marker */
+  if (length) {
+    assert(*opt == COAP_PAYLOAD_START);
+    opt++; length--;
+
+    if (!length) {
+      debug("coap_pdu_parse: message ending in payload start marker\n");
+      goto discard;
+    }
+
+    debug("set data to %p (pdu ends at %p)\n", (unsigned char *)opt, 
+	  (unsigned char *)pdu->hdr + pdu->length);
+    pdu->data = (unsigned char *)opt;
   }
 
   return 1;
+
+ discard:
+  return 0;
 }
-//#endif

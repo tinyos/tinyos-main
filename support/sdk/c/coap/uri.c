@@ -163,15 +163,6 @@ coap_split_uri(unsigned char *str_var, size_t len, coap_uri_t *uri) {
   }
 
   /* Uri_Query */
-  /* FIXME: split at & sign, parse:
-        query-pattern = search-token [ "*" ]
-        search-token = *search-char
-        search-char = unreserved / pct-encoded
-                    / ":" / "@"   ; from pchar
-                    / "/" / "?"   ; from query
-                    / "!" / "$" / "'" / "(" / ")"
-                    / "+" / "," / ";" / "="  ; from sub-delims
-   */
   if (len && *p == '?') {
     ++p;
     --len;
@@ -283,9 +274,9 @@ make_decoded_option(const unsigned char *s, size_t length,
   if (res < 0)
     return -1;
 
-  buf[0] = 0;			/* COAP_OPT_SETDELTA(buf, 0) */
-  written = coap_opt_setlength(buf, buflen, res);
-  
+  /* write option header using delta 0 and length res */
+  written = coap_opt_setheader(buf, buflen, 0, res);
+
   assert(written <= buflen);
 
   if (!written)			/* encoding error */
@@ -301,7 +292,7 @@ make_decoded_option(const unsigned char *s, size_t length,
 
   decode_segment(s, length, buf);
 
-  return written + length;
+  return written + res;
 }
 
 
@@ -374,7 +365,7 @@ coap_split_path(const unsigned char *s, size_t length,
 			   '/', (unsigned char *)"?#", 2, &pi);
   coap_split_path_impl(&pi, write_option, &tmp);
 
-  *buflen = tmp.buf.length;
+  *buflen = *buflen - tmp.buf.length;
   return tmp.n;
 }
 
@@ -392,60 +383,6 @@ coap_split_query(const unsigned char *s, size_t length,
   *buflen = tmp.buf.length;
   return tmp.n;
 }
-
-#if 0
-int
-coap_split_path_impl(unsigned char *s, size_t length, int is_path,
-		     unsigned char *buf, size_t buflen) {
-  unsigned char *p = s;
-  int n = 0, dots = 0;
-  int res;
-
-  if (!length)
-    return 0;
-
-  while (1) {
-    
-    if ((is_path && *p == '/') || *p == '&') {
-      if (!dots || dots > 2 || dots != (p - s)) {
-
-	res = make_decoded_option(s, p - s, buf, buflen);
-	if (res < 0)
-	  goto error;
-	
-	++n;
-	
-	buf += res;
-	buflen -= res;
-      }
-      
-      s = p + 1;
-      dots = 0;
-    } else if (is_path && *p == '.') {
-      ++dots;
-    }
-    
-    ++p;
-    --length;
-    if (!length) {
-      if (!dots || dots > 2 || dots != (p - s)) {
-	if (make_decoded_option(s, p - s, buf, buflen) < 0)
-	  goto error;
-
-	return ++n;
-      } else
-	return n;
-    }
-  }
-  
-  /* never reached */
-
- error:
-
-  debug("invalid segment in URI\n");
-  return -1;
-}
-#endif
 
 #define URI_DATA(uriobj) ((unsigned char *)(uriobj) + sizeof(coap_uri_t))
 

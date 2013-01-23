@@ -1,6 +1,6 @@
 /* coap-client -- simple CoAP client
  *
- * Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
+ * Copyright (C) 2010--2013 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the CoAP library libcoap. Please see
  * README for terms of use. 
@@ -24,6 +24,9 @@
 #include "coap.h"
 
 int flags = 0;
+
+static unsigned char _token_data[8];
+str the_token = { 0, _token_data };
 
 #define FLAGS_BLOCK 0x01
 
@@ -162,13 +165,13 @@ clear_obs(coap_context_t *ctx, const coap_address_t *remote) {
   pdu = coap_new_request(ctx, COAP_REQUEST_GET, NULL);
   
   if (pdu) {
+    /* FIXME: add token */
     /* add URI components from optlist */
     for (option = optlist; option; option = option->next ) {
       switch (COAP_OPTION_KEY(*(coap_option *)option->data)) {
       case COAP_OPTION_URI_HOST :
       case COAP_OPTION_URI_PORT :
       case COAP_OPTION_URI_PATH :
-      case COAP_OPTION_TOKEN :
       case COAP_OPTION_URI_QUERY :
 	coap_add_option ( pdu, COAP_OPTION_KEY(*(coap_option *)option->data),
 			  COAP_OPTION_LENGTH(*(coap_option *)option->data),
@@ -255,27 +258,10 @@ get_block(coap_pdu_t *pdu, coap_opt_iterator_t *opt_iter) {
    ((Pdu)->hdr->code == COAP_RESPONSE_CODE(201) ||			\
     (Pdu)->hdr->code == COAP_RESPONSE_CODE(204)))
 
-int
+inline int
 check_token(coap_pdu_t *received) {
-  coap_opt_iterator_t opt_iter;
-  coap_list_t *option;
-  str token1 = { 0, NULL }, token2 = { 0, NULL };
-
-  if (coap_check_option(received, COAP_OPTION_TOKEN, &opt_iter)) {
-    token1.s = COAP_OPT_VALUE(opt_iter.option);
-    token1.length = COAP_OPT_LENGTH(opt_iter.option);
-  }
-  
-  for (option = optlist; option; option = option->next) {
-    if (COAP_OPTION_KEY(*(coap_option *)option->data) == COAP_OPTION_TOKEN) {
-      token2.s = COAP_OPTION_DATA(*(coap_option *)option->data);
-      token2.length = COAP_OPTION_LENGTH(*(coap_option *)option->data);
-      break;
-    }
-  }
-
-  return token1.length == token2.length &&
-    memcmp(token1.s, token2.s, token1.length) == 0;
+  return received->hdr->token_length == the_token.length &&
+    memcmp(received->hdr->token, the_token.s, the_token.length) == 0;
 }
 
 void
@@ -360,7 +346,6 @@ message_handler(struct coap_context_t  *ctx,
 	    case COAP_OPTION_URI_HOST :
 	    case COAP_OPTION_URI_PORT :
 	    case COAP_OPTION_URI_PATH :
-	    case COAP_OPTION_TOKEN :
 	    case COAP_OPTION_URI_QUERY :
 	      coap_add_option ( pdu, COAP_OPTION_KEY(*(coap_option *)option->data),
 				COAP_OPTION_LENGTH(*(coap_option *)option->data),
@@ -431,7 +416,7 @@ usage( const char *program, const char *version) {
     program = ++p;
 
   fprintf( stderr, "%s v%s -- a small CoAP implementation\n"
-	   "(c) 2010-2012 Olaf Bergmann <bergmann@tzi.org>\n\n"
+	   "(c) 2010-2013 Olaf Bergmann <bergmann@tzi.org>\n\n"
 	   "usage: %s [-A type...] [-t type] [-b [num,]size] [-B seconds] [-e text]\n"
 	   "\t\t[-g group] [-m method] [-N] [-o file] [-P addr[:port]] [-p port]\n"
 	   "\t\t[-s duration] [-O num,text] [-T string] [-v num] URI\n\n"
@@ -772,11 +757,10 @@ cmdline_proxy(char *arg) {
   return 1;
 }
 
-void
+inline void
 cmdline_token(char *arg) {
-  coap_insert( &optlist, new_option_node(COAP_OPTION_TOKEN,
-					 strlen(arg),
-					 (unsigned char *)arg), order_opts);
+
+  strncpy((char *)the_token.s, arg, min(sizeof(_token_data), strlen(arg)));
 }
 
 void

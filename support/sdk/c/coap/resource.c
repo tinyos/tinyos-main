@@ -323,6 +323,7 @@ void
 coap_hash_request_uri(const coap_pdu_t *request, coap_key_t key) {
   coap_opt_iterator_t opt_iter;
   coap_opt_filter_t filter;
+  coap_opt_t *option;
 
   memset(key, 0, sizeof(coap_key_t));
 
@@ -330,9 +331,8 @@ coap_hash_request_uri(const coap_pdu_t *request, coap_key_t key) {
   coap_option_setb(filter, COAP_OPTION_URI_PATH);
 
   coap_option_iterator_init((coap_pdu_t *)request, &opt_iter, filter);
-  while (coap_option_next(&opt_iter))
-    coap_hash(COAP_OPT_VALUE(opt_iter.option), 
-	      COAP_OPT_LENGTH(opt_iter.option), key);
+  while ((option = coap_option_next(&opt_iter)))
+    coap_hash(COAP_OPT_VALUE(option), COAP_OPT_LENGTH(option), key);
 }
 
 void
@@ -526,8 +526,8 @@ coap_add_observer(coap_resource_t *resource,
 }
 
 void
-  coap_delete_observer(coap_resource_t *resource, coap_address_t *observer,
-		       const str *token) {
+coap_delete_observer(coap_resource_t *resource, coap_address_t *observer,
+		     const str *token) {
   coap_subscription_t *s;
 
   s = coap_find_observer(resource, observer, token);
@@ -587,9 +587,14 @@ coap_check_notify(coap_context_t *context) {
 	/* initialize response */
         response = coap_pdu_init(COAP_MESSAGE_CON, 0, 0, COAP_MAX_PDU_SIZE);
         if (!response) {
-          debug("pdu init failed\n");
+          debug("coap_check_notify: pdu init failed\n");
           continue;
         }
+	if (!coap_add_token(response, obs->token_length, obs->token)) {
+	  debug("coap_check_notify: cannot add token\n");
+	  coap_delete_pdu(response);
+	  continue;
+	}
 
 	token.length = obs->token_length;
 	token.s = obs->token;
