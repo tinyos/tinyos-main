@@ -32,11 +32,11 @@
 * Author: Andras Biro
 */
 
-generic module DummyBusPowerManagerC(){
+generic configuration DummyBusPowerManagerC(){
 	provides interface BusPowerManager;
 }
 implementation {
-	command void BusPowerManager.configure(uint16_t startup, uint16_t keepalive) {}
-	command void BusPowerManager.requestPower() { signal BusPowerManager.powerOn(); }
-	command void BusPowerManager.releasePower() {}
+	components MainC, new DummyBusPowerManagerP();
+	BusPowerManager = DummyBusPowerManagerP;
+	DummyBusPowerManagerP.Boot -> MainC;
 }

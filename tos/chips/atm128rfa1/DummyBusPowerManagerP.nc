@@ -32,36 +32,22 @@
 * Author: Andras Biro
 */
 
-#include "Sht21.h"
-configuration Sht21ArbitratedC
-{
-  provides interface Read<uint16_t> as ReadTemperature[uint8_t client]; 
-  provides interface Read<uint16_t> as ReadHumidity[uint8_t client];
+generic module DummyBusPowerManagerP(){
+	provides interface BusPowerManager;
+	uses interface Boot;
 }
-implementation
-{
-  components Sht21C;
-  
-  components new ArbitratedReadC(uint16_t) as ArbitratedTemp,
-             new FcfsArbiterC(UQ_SHT21TEMP_RESOURCE) as TempArbiter,
-             new ReadClientP(uint16_t) as TempClient;
-  
-  ReadTemperature=ArbitratedTemp.Read;
-  
-  ArbitratedTemp.Resource->TempArbiter;
-  ArbitratedTemp.Service->TempClient;
-  
-  TempClient.ActualRead->Sht21C.Temperature;
-  
-  
-  components new ArbitratedReadC(uint16_t) as ArbitratedHumi,
-             new FcfsArbiterC(UQ_SHT21HUMI_RESOURCE) as HumiArbiter,
-             new ReadClientP(uint16_t) as HumiClient;
-  
-  ReadHumidity=ArbitratedHumi.Read;
-  
-  ArbitratedHumi.Resource->HumiArbiter;
-  ArbitratedHumi.Service->HumiClient;
-  
-  HumiClient.ActualRead->Sht21C.Humidity;
+implementation {
+	event void Boot.booted(){
+		signal BusPowerManager.powerOn();
+	}
+	
+	command bool BusPowerManager.isPowerOn(){
+		return TRUE;
+	}
+	
+	command void BusPowerManager.configure(uint16_t startup, uint16_t keepalive) {}
+	command void BusPowerManager.requestPower() {}
+	command void BusPowerManager.releasePower() {}
+	
+	default event void BusPowerManager.powerOn(){}
 }

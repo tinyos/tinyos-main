@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2013 Unicomp Ltd.
- * Copiright (c) 2013 University of Szeged
+/* Copyright (c) 2007 Johns Hopkins University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9,12 +7,10 @@
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
- *
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- *
  * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
@@ -31,26 +27,16 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @author Razvan Musaloiu-E.
  */
 
-/*
- * Author: Andras Biro <bbandi86@gmail.com>
- */
-
-#include "Sht21.h"
-generic configuration Sht21RawTemperatureC()
-{
-	provides interface Read<uint16_t>;
+generic configuration AtmegaTemperatureRawC() {
+  provides interface Read<uint16_t>;
 }
-implementation
-{
-	enum {
-		clientid = unique(UQ_SHT21_RESOURCE),
-	};
-	
-	components Sht21RawArbiterP, new ArbitratedReadC(uint16_t);
-	
-	Read = ArbitratedReadC.Read[0];
-	ArbitratedReadC.Resource[0] -> Sht21RawArbiterP.Resource[clientid];
-	ArbitratedReadC.Service[0] -> Sht21RawArbiterP.Temperature[clientid];
+implementation {
+  components new AdcReadClientC(), AtmegaTemperatureP;
+
+  Read = AdcReadClientC;
+  AdcReadClientC.Atm128AdcConfig -> AtmegaTemperatureP;
 }

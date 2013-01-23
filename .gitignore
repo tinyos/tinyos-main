@@ -1,6 +1,7 @@
 *.[oa]
 *~
 *.pyc
+*.class
 build
 #*#
 .#*
