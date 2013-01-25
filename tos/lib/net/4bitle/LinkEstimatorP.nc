@@ -572,7 +572,7 @@ implementation {
   }
 
   // cascade the calls down
-  command uint8_t Send.cancel(message_t* msg) {
+  command error_t Send.cancel(message_t* msg) {
     return call AMSend.cancel(msg);
   }
 
