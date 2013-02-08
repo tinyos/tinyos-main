@@ -21,7 +21,7 @@
  */
 
 /**
- * 
+ *
  *
  */
 #include "IPDispatch.h"
@@ -34,13 +34,13 @@ configuration IPDispatchC {
     interface BlipStatistics<ip_statistics_t>;
   }
 } implementation {
-  
+
   components MainC;
   components NoLedsC as LedsC;
 
   /* IPDispatchP wiring -- fragment rassembly and lib6lowpan bindings */
   components IPDispatchP;
-  components CC2420RadioC as MessageC;
+  components Ieee154BareC as MessageC;
   components ReadLqiC;
   components new TimerMilliC();
 
@@ -75,7 +75,7 @@ configuration IPDispatchC {
   components new PoolC(struct send_entry, N_FRAGMENTS) as SendEntryPool;
   components new QueueC(struct send_entry *, N_FRAGMENTS);
   components new PoolC(struct send_info, N_CONCURRENT_SENDS) as SendInfoPool;
-  
+
   IPDispatchP.FragPool -> FragPool;
   IPDispatchP.SendEntryPool -> SendEntryPool;
   IPDispatchP.SendInfoPool  -> SendInfoPool;
