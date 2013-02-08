@@ -116,7 +116,7 @@ implementation
   /* ------------------------------------------------------------------ */
 
   at45page_t npages() {
-    return signal BConfig.npages[client]();
+    return call At45dbVolume.volumeSize[client]();
   }
 
   at45page_t pageRemap(at45page_t p) {
