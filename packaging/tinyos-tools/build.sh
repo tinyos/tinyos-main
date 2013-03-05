@@ -100,7 +100,7 @@ case $1 in
     ;;
 
   deb)
-		setup_package_target ${SOURCENAME}-tinyos ${SOURCEVERSION} ${PACKAGE_RELEASE}
+		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
 		cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
@@ -114,7 +114,7 @@ case $1 in
     ;;
 
   rpm)
-		setup_package_target ${SOURCENAME}-tinyos ${SOURCEVERSION} ${PACKAGE_RELEASE}
+		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
 		cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
