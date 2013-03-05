@@ -20,7 +20,7 @@
 #		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
 #
 
-COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
+COMMON_FUNCTIONS_SCRIPT=../../functions-build.sh
 source ${COMMON_FUNCTIONS_SCRIPT}
 
 
