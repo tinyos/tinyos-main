@@ -53,35 +53,35 @@ implementation {
   }
 
   command error_t HplTSL256x.measureCh0[uint8_t id]() {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.measureCh0();
   }
   command error_t HplTSL256x.measureCh1[uint8_t id]() {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.measureCh1();
   }
   command error_t HplTSL256x.setCONTROL[uint8_t id](uint8_t val) {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.setCONTROL(val);
   }
   command error_t HplTSL256x.setTIMING[uint8_t id](uint8_t val) {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.setTIMING(val);
   }
   command error_t HplTSL256x.setTHRESHLOW[uint8_t id](uint16_t val) {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.setTHRESHLOW(val);
   }
   command error_t HplTSL256x.setTHRESHHIGH[uint8_t id](uint16_t val) {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.setTHRESHHIGH(val);
   }
   command error_t HplTSL256x.setINTERRUPT[uint8_t id](uint8_t val) {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.setINTERRUPT(val);
   }
   command error_t HplTSL256x.getID[uint8_t id]() {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.getID();
   }
   

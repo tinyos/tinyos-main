@@ -44,10 +44,14 @@ implementation
   components HplPXA27xDMAM;
   components HplPXA27xInterruptM;
   components PlatformP;
+  components LedsC;
+  
+  HplPXA27xDMAM.Leds -> LedsC;
   
   HplPXA27xDMACntl = HplPXA27xDMAM;
-
-  HplPXA27xDMAChnl[0] = HplPXA27xDMAM.HplPXA27xDMAChnl[0];
+	HplPXA27xDMAChnl = HplPXA27xDMAM.HplPXA27xDMAChnl;
+	
+/*  HplPXA27xDMAChnl[0] = HplPXA27xDMAM.HplPXA27xDMAChnl[0];
   HplPXA27xDMAChnl[1] = HplPXA27xDMAM.HplPXA27xDMAChnl[1];
   HplPXA27xDMAChnl[2] = HplPXA27xDMAM.HplPXA27xDMAChnl[2];
   HplPXA27xDMAChnl[3] = HplPXA27xDMAM.HplPXA27xDMAChnl[3];
@@ -79,7 +83,7 @@ implementation
   HplPXA27xDMAChnl[29] = HplPXA27xDMAM.HplPXA27xDMAChnl[29];
   HplPXA27xDMAChnl[30] = HplPXA27xDMAM.HplPXA27xDMAChnl[30];
   HplPXA27xDMAChnl[31] = HplPXA27xDMAM.HplPXA27xDMAChnl[31];
-
+*/
   HplPXA27xDMAM.Init <- PlatformP.InitL1;
 
   HplPXA27xDMAM.DMAIrq -> HplPXA27xInterruptM.PXA27xIrq[PPID_DMAC];

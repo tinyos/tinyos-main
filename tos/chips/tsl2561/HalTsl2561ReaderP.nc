@@ -58,16 +58,24 @@ implementation {
   uint16_t m_val;
 
   task void signalDone_task() {
+  	error_t loc_m_error;
+  	uint16_t loc_m_val;
+  	
+  	atomic {
+  		loc_m_error = m_error;
+  		loc_m_val = m_val;
+  	}
+  	
     switch(m_state) {
     case S_READ_BB:
       m_state = S_READY;
       call BroadbandResource.release();
-      signal BroadbandPhoto.readDone(m_error, m_val);
+      signal BroadbandPhoto.readDone(loc_m_error, loc_m_val);
       break;
     case S_READ_IR:
       m_state = S_READY;
       call IRResource.release();
-      signal IRPhoto.readDone(m_error, m_val);
+      signal IRPhoto.readDone(loc_m_error, loc_m_val);
       break;
     default:
       m_state = S_READY;

@@ -50,7 +50,7 @@
 #define GPIO_PWR_ADC_NSHDWN		(93)
 
 #define TSL2561_SLAVE_ADDR (0x49)
-#define TMP175_SLAVE_ADDR (0x48)
+#define TMP175_SLAVE_ADDR (0x4A) //(0x48)
 #define MAX136_SLAVE_ADDR (0x34)
 
 #endif /* _IM2SB_H */

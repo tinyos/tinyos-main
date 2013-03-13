@@ -41,10 +41,12 @@ module HalPXA27xDMAChannelM {
 
   uses interface HplPXA27xDMACntl;
   uses interface HplPXA27xDMAChnl[uint8_t chnl];
+  
+  uses interface Leds;
 }
 
 implementation {
-  uint8_t requestedChannel;
+	uint8_t requestedChannel;
   task void reqCompleteTask() {
     signal HalPXA27xDMAChannel.requestChannelDone[requestedChannel]();
   }
@@ -53,12 +55,17 @@ implementation {
     // priority is decided based on which channel you pick (PXADEV 5-4)
     // permanent? nothing lasts forever my friend
 
-    uint32_t valDRCMR;
+    uint32_t valDRCMR, valDCSR;
     valDRCMR = call HplPXA27xDMACntl.getDRCMR(peripheralID) | DRCMR_MAPVLD;
     valDRCMR = valDRCMR & ~DRCMR_CHLNUM(0x1F);
     valDRCMR |= DRCMR_CHLNUM(chnl);
     call HplPXA27xDMACntl.setDRCMR(peripheralID, valDRCMR);
     requestedChannel = chnl;
+    
+    valDCSR = call HplPXA27xDMAChnl.getDCSR[chnl]();
+    valDCSR &= ~(DCSR_RUN);
+    call HplPXA27xDMAChnl.setDCSR[chnl](valDCSR | DCSR_NODESCFETCH);
+    
     post reqCompleteTask();
     return SUCCESS;
   }
@@ -184,13 +191,33 @@ implementation {
   command error_t HalPXA27xDMAChannel.run[uint8_t chnl](bool InterruptEn) {
     uint32_t valDCSR;
     uint32_t valDCMD;
-    valDCSR = call HplPXA27xDMAChnl.getDCSR[chnl]();
-    valDCMD = call HplPXA27xDMAChnl.getDCMD[chnl]();
-
-    valDCMD = (InterruptEn) ? valDCMD | DCMD_ENDIRQEN : valDCSR & ~DCMD_ENDIRQEN;
     
-    call HplPXA27xDMAChnl.setDCMD[chnl](valDCMD);
-    call HplPXA27xDMAChnl.setDCSR[chnl](valDCSR | DCSR_RUN | DCSR_NODESCFETCH);
+    //atomic as in TOS1 & CIF code
+    atomic {
+    	valDCSR = call HplPXA27xDMAChnl.getDCSR[chnl]();
+    	valDCMD = call HplPXA27xDMAChnl.getDCMD[chnl]();
+    	/*
+    	// DALGN setting from TOS1 code
+			if ((valDCMD >> 14) & 0x3)
+			{
+				call HplPXA27xDMAChnl.setDALGNbit[chnl](TRUE);
+			}
+			else
+			{
+				call HplPXA27xDMAChnl.setDALGNbit[chnl](FALSE);
+			}
+			*/
+			
+			call HplPXA27xDMAChnl.setDALGNbit[chnl](TRUE);  // test force
+			
+			valDCMD = valDCMD & ~DCMD_STARTIRQEN;
+			valDCSR = valDCSR & ~(DCSR_STOPIRQEN);// | DCSR_EORIRQEN);
+			
+    	valDCMD = (InterruptEn) ? valDCMD | DCMD_ENDIRQEN : valDCMD & ~DCMD_ENDIRQEN ; //was valDCSR & ~DCMD_ENDIRQEN
+    }
+    	call HplPXA27xDMAChnl.setDCMD[chnl](valDCMD);
+    	call HplPXA27xDMAChnl.setDCSR[chnl](valDCSR | DCSR_RUN | DCSR_NODESCFETCH | DCSR_EORIRQEN);
+    
     return SUCCESS;
   }
 
@@ -205,7 +232,8 @@ implementation {
   async event void HplPXA27xDMAChnl.interruptDMA[uint8_t chnl]() {
     // might want to clear interrupt first
     // ...
-
+		uint32_t status = call HplPXA27xDMAChnl.getDCSR[chnl]();
+    call HplPXA27xDMAChnl.setDCSR[chnl](status | DCSR_EORINT | DCSR_ENDINTR | DCSR_STARTINTR | DCSR_BUSERRINTR);
     signal HalPXA27xDMAChannel.Interrupt[chnl]();
   }
 
