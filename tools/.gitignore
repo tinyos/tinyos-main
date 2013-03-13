@@ -44,3 +44,10 @@ tinyos/safe/tos-decode-flid
 tinyos/safe/tos-ramsize
 tinyos/tosthreads/tosthreads_standard_api.py
 
+# Make
+*.so
+platforms/mica/cc1000-channelgen/tos-channelgen
+platforms/msp430/motelist/motelist
+tinyos/misc/tos-serial-debug
+tinyos/tosthreads/tosthreads-dynamic-app
+
