@@ -121,7 +121,7 @@ implementation
   }
 
   default async event void HplPXA27xDMAChnl.interruptDMA[uint8_t chnl]() {
-    call HplPXA27xDMAChnl.setDCMD[chnl](0);
+    //call HplPXA27xDMAChnl.setDCMD[chnl](0);
     call HplPXA27xDMAChnl.setDCSR[chnl](DCSR_EORINT | DCSR_ENDINTR
 					| DCSR_STARTINTR | DCSR_BUSERRINTR);
   }

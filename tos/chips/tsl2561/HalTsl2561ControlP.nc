@@ -64,36 +64,40 @@ implementation {
   }
 
   task void complete_Task() {
+  	error_t loc_clientResult;
+  	
+  	atomic loc_clientResult = clientResult;
+  
     switch(state) {
     case S_GAIN:
       state = S_IDLE;
       call Resource.release();
-      signal HalTsl2561Advanced.setGainDone(clientResult);
+      signal HalTsl2561Advanced.setGainDone(loc_clientResult);
       break;
     case S_INTEG:
       state = S_IDLE;
       call Resource.release();
-      signal HalTsl2561Advanced.setIntegrationDone(clientResult);
+      signal HalTsl2561Advanced.setIntegrationDone(loc_clientResult);
       break;
     case S_PERSIST:
       state = S_IDLE;
       call Resource.release();
-      signal HalTsl2561Advanced.setPersistenceDone(clientResult);
+      signal HalTsl2561Advanced.setPersistenceDone(loc_clientResult);
       break;
     case S_TLOW:
       state = S_IDLE;
       call Resource.release();
-      signal HalTsl2561Advanced.setTLowDone(clientResult);
+      signal HalTsl2561Advanced.setTLowDone(loc_clientResult);
       break;
     case S_THIGH:
       state = S_IDLE;
       call Resource.release();
-      signal HalTsl2561Advanced.setTHighDone(clientResult);
+      signal HalTsl2561Advanced.setTHighDone(loc_clientResult);
       break;
     case S_ENALERT:
       state = S_IDLE;
       call Resource.release();
-      signal HalTsl2561Advanced.enableAlertDone(clientResult);
+      signal HalTsl2561Advanced.enableAlertDone(loc_clientResult);
       break;
     default:
       break;

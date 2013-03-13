@@ -80,11 +80,11 @@ implementation {
   }
 
   command error_t HplLIS3L02DQ.getReg[uint8_t id](uint8_t regAddr) {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.getReg(regAddr);
   }
   command error_t HplLIS3L02DQ.setReg[uint8_t id](uint8_t regAddr, uint8_t val) {
-    currentId = id;
+    atomic currentId = id;
     return call ToHPLC.setReg(regAddr, val);
   }
 

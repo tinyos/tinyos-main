@@ -35,7 +35,7 @@
 
 #include "SSP.h"
 
-module HalPXA27xSSPControlP {
+generic module HalPXA27xSSPControlP() {
   provides interface HalPXA27xSSPCntl;
 
   uses interface HplPXA27xSSP as SSP;

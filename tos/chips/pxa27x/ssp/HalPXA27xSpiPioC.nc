@@ -48,7 +48,7 @@ generic configuration HalPXA27xSpiPioC(uint8_t valSCR,
 
 implementation {
   components new HalPXA27xSpiPioM(0, valSCR, valDSS, enableRWOT);
-  components HalPXA27xSSPControlP;
+  components new HalPXA27xSSPControlP();
 
   Init = HalPXA27xSpiPioM;
   SpiByte = HalPXA27xSpiPioM;
