@@ -44,7 +44,7 @@ implementation
   components HplPXA27xDMAM;
   components HplPXA27xInterruptM;
   components PlatformP;
-  
+
   HplPXA27xDMAM.Leds -> LedsC;
   
   HplPXA27xDMACntl = HplPXA27xDMAM;

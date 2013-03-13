@@ -41,6 +41,8 @@ module HalPXA27xDMAChannelM {
 
   uses interface HplPXA27xDMACntl;
   uses interface HplPXA27xDMAChnl[uint8_t chnl];
+  
+  uses interface Leds;
 }
 
 implementation {
@@ -189,7 +191,7 @@ implementation {
   command error_t HalPXA27xDMAChannel.run[uint8_t chnl](bool InterruptEn) {
     uint32_t valDCSR;
     uint32_t valDCMD;
-    
+ 
     valDCSR = call HplPXA27xDMAChnl.getDCSR[chnl]();
     valDCMD = call HplPXA27xDMAChnl.getDCMD[chnl]();
 			
@@ -210,10 +212,9 @@ implementation {
   }
 
   async event void HplPXA27xDMAChnl.interruptDMA[uint8_t chnl]() {
-    uint32_t status = call HplPXA27xDMAChnl.getDCSR[chnl]();
-    call HplPXA27xDMAChnl.setDCSR[chnl](status | DCSR_ENDINTR);
-    
-    signal HalPXA27xDMAChannel.Interrupt[chnl]();
+	// might want to clear interrupt first
+    // ...
+	signal HalPXA27xDMAChannel.Interrupt[chnl]();
   }
 
   default async event void HalPXA27xDMAChannel.Interrupt[uint8_t chnl]() { }
