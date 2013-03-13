@@ -41,8 +41,6 @@ module HalPXA27xDMAChannelM {
 
   uses interface HplPXA27xDMACntl;
   uses interface HplPXA27xDMAChnl[uint8_t chnl];
-  
-  uses interface Leds;
 }
 
 implementation {
@@ -191,7 +189,7 @@ implementation {
   command error_t HalPXA27xDMAChannel.run[uint8_t chnl](bool InterruptEn) {
     uint32_t valDCSR;
     uint32_t valDCMD;
- 
+
     valDCSR = call HplPXA27xDMAChnl.getDCSR[chnl]();
     valDCMD = call HplPXA27xDMAChnl.getDCMD[chnl]();
 			

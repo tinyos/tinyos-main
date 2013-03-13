@@ -45,11 +45,9 @@ implementation
   components HplPXA27xInterruptM;
   components PlatformP;
 
-  HplPXA27xDMAM.Leds -> LedsC;
-  
   HplPXA27xDMACntl = HplPXA27xDMAM;
 	HplPXA27xDMAChnl = HplPXA27xDMAM.HplPXA27xDMAChnl;
-	
+
   HplPXA27xDMAM.Init <- PlatformP.InitL1;
 
   HplPXA27xDMAM.DMAIrq -> HplPXA27xInterruptM.PXA27xIrq[PPID_DMAC];
