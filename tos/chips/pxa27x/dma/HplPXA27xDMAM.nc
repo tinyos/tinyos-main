@@ -41,8 +41,6 @@ module HplPXA27xDMAM
   }
   uses {
     interface HplPXA27xInterrupt as DMAIrq;
-    
-    interface Leds;
   }
 }
 
@@ -100,21 +98,13 @@ implementation
     //_pxa27x_perf_get(cycles);
   }
   async command uint32_t HplPXA27xDMAChnl.getDCSR[uint8_t chnl]() {return DCSR(chnl); }
-  
   async command void HplPXA27xDMAChnl.setDCMD[uint8_t chnl](uint32_t val) {DCMD(chnl) = val; }
-  
   async command uint32_t HplPXA27xDMAChnl.getDCMD[uint8_t chnl]() {return DCMD(chnl); }
-  
   async command void HplPXA27xDMAChnl.setDDADR[uint8_t chnl](uint32_t val) {DDADR(chnl) = val; }
-  
   async command uint32_t HplPXA27xDMAChnl.getDDADR[uint8_t chnl]() {return DDADR(chnl); }
-  
   async command void HplPXA27xDMAChnl.setDSADR[uint8_t chnl](uint32_t val) {DSADR(chnl) = val; }
-  
   async command uint32_t HplPXA27xDMAChnl.getDSADR[uint8_t chnl]() {return DSADR(chnl); }
-  
   async command void HplPXA27xDMAChnl.setDTADR[uint8_t chnl](uint32_t val) {DTADR(chnl) = val; }
-  
   async command uint32_t HplPXA27xDMAChnl.getDTADR[uint8_t chnl]() {return DTADR(chnl); }
 
   async event void DMAIrq.fired() {
