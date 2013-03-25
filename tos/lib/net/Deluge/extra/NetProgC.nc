@@ -65,7 +65,7 @@ implementation {
   NetProgM.Leds -> LedsC;
   
   components ActiveMessageAddressC;
-  NetProgM.setAmAddress -> ActiveMessageAddressC;
+  NetProgM.initAmAddress -> ActiveMessageAddressC;
 
 #if !defined(PLATFORM_TINYNODE) && !defined(PLATFORM_MULLE)
   components CC2420ControlP;

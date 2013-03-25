@@ -59,6 +59,7 @@ module ActiveMessageAddressC  {
     interface ActiveMessageAddress;
     async command am_addr_t amAddress();
     async command void setAmAddress(am_addr_t a);
+    async command void initAmAddress(am_group_t myGroup, am_addr_t myAddr);
   }
 }
 implementation {
@@ -87,6 +88,12 @@ implementation {
 
   async command am_addr_t amAddress() {
     return call ActiveMessageAddress.amAddress();
+  }
+
+  async command void initAmAddress(am_group_t myGroup, am_addr_t myAddr) {
+    addr = myAddr;
+    group = myGroup;
+    set = TRUE;
   }
 
   async command void setAmAddress(am_addr_t a) {
