@@ -141,10 +141,11 @@ all = []
 section = []
 end_addr = None
 offset = 0
+addr_high = 0
 for line in image.split():
     #print "DEBUG:", line
     length = int(line[1:3], 16)
-    addr = int(line[3:7], 16) + offset
+    addr = int(line[3:7], 16) + offset + addr_high
     rectype = int(line[7:9], 16)
     data = []
     if len(line) > 11:
@@ -172,6 +173,8 @@ for line in image.split():
         all.append((start_addr, section))
         section = []
         start_addr = addr
+    elif rectype == 0x04:
+        addr_high = int(line[9:9+4], 16) << 16
 
 sys.stderr.write('Ihex read complete:\n')
 sys.stderr.write('  ' + '\n  '.join(["%5d bytes starting at 0x%X" % (len(l), a) for (a, l) in all]))
