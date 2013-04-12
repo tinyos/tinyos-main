@@ -34,7 +34,7 @@
  * Generic table reader.
  *
  * @author Martin Cerveny
- */ 
+ */
 
 interface TableReader {
 

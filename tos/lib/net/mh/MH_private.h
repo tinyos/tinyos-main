@@ -34,7 +34,7 @@
  * Private headers.
  * 
  * @author Martin Cerveny
- */ 
+ */
 
 #ifndef MH_PRIVATE_H
 #define MH_PRIVATE_H

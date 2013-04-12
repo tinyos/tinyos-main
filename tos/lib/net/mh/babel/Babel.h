@@ -34,12 +34,12 @@
  * Public headers.
  * 
  * @author Martin Cerveny
- */ 
+ */
 
 #ifndef BABEL_H
 #define BABEL_H
 
-// ------------------------------- IMPLEMENTATION CONSTANTS         
+// ------------------------------- IMPLEMENTATION CONSTANTS
 
 #ifndef BABEL_LINK_COST
 #define BABEL_LINK_COST 1 // basic link cost
@@ -102,7 +102,7 @@
 #define BABEL_RT_COST (1<<BABEL_RT_MINOR_BITS) // basic route cost 
 #endif
 
-// ------------------------------- Table sizes   
+// ------------------------------- Table sizes
 
 #ifndef BABEL_NEIGHDB_SIZE
 #define BABEL_NEIGHDB_SIZE 16
@@ -119,6 +119,8 @@
 // NeighborTable
 #define BABEL_NB_NODEID 0 // am_addr_t, index
 #define BABEL_NB_COST 1 // uint16_t
+#define BABEL_NB_LQI 2 // uint8_t
+#define BABEL_NB_RSSI 3 // uint8_t
 
 // RoutingTable
 #define BABEL_RT_NODEID 0 // am_addr_t, index

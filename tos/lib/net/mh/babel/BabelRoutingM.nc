@@ -36,7 +36,7 @@
  * Implements "am_address" collision detection and renumbering.
  *
  * @author Martin Cerveny
- */ 
+ */
 
 #include "Timer.h"
 #include "MH.h"
@@ -84,7 +84,7 @@ module BabelRoutingM {
 	uses interface Leds;
 }
 implementation {
-	// global state and tables                                                                                                                                                      
+	// global state and tables
 
 	NetDB ndb[BABEL_NDB_SIZE]; // sorted by dest_nodeid
 	uint8_t cnt_ndb = 0;
@@ -94,7 +94,7 @@ implementation {
 	AckDB ackdb[BABEL_ACKDB_SIZE]; // FIFO
 	uint8_t cnt_ackdb = 0;
 
-	// local state	                                                                                                                                                                                                     
+	// local state	
 
 	uint16_t hello_seqno = 0;
 	uint16_t hello_interval = BABEL_HELLO_INTERVAL / 8;
@@ -106,14 +106,14 @@ implementation {
 
 	uint8_t wait_cnt = 0;
 
-	//                                                                                                                                                      
+	//
 
 	bool busy = FALSE;
 	message_t pkt;
 
-	//                          
+	//
 
-	am_addr_t block = 0;
+	//am_addr_t block = 0;
 
 	event void Boot.booted() {
 
@@ -128,18 +128,18 @@ implementation {
 		call AMControl.start();
 	}
 
-	uint16_t getLqi(message_t * msg) {
+	uint8_t getLqi(message_t * msg) {
 		if(call PacketLinkQuality.isSet(msg)) 
-			return(uint16_t) call PacketLinkQuality.get(msg);
+			return call PacketLinkQuality.get(msg);
 		else 
 			return 0;
 	}
 
-	uint16_t getRssi(message_t * msg) {
+	uint8_t getRssi(message_t * msg) {
 		if(call PacketRSSI.isSet(msg)) 
-			return(uint16_t) call PacketRSSI.get(msg);
+			return call PacketRSSI.get(msg);
 		else 
-			return 0xFFFF;
+			return 0;
 	}
 
 	void send();
@@ -490,6 +490,16 @@ implementation {
 			ieee_eui64_t last_eui;
 			uint16_t last_nodeid = msg_nodeid;
 
+			uint8_t msg_idx = search_neighdb(msg_nodeid);
+			if(msg_idx != BABEL_NOT_FOUND) {
+				// do some average smoothing
+				//TODO: recompute by http://www.hindawi.com/journals/jcnc/2012/790374/
+				neighdb[msg_idx].lqi /= 2;
+				neighdb[msg_idx].lqi += getLqi(msg) / 2;
+				neighdb[msg_idx].rssi /= 2;
+				neighdb[msg_idx].rssi += getRssi(msg) / 2;
+			}
+
 			while(( ! err)&&( ! BABEL_READ_MSG_END(bptr, aptr, len))) {
 				switch(*(nx_uint8_t * ) aptr) {
 					case BABEL_PAD1 : // 4.4.1.  Pad1
@@ -565,10 +575,9 @@ implementation {
 							xdbg(BABEL, "rx HELLO error\n");
 						}
 						else {
-							uint8_t idx = search_neighdb(msg_nodeid);
 							xdbg_inline(BABEL, "hello: seq=%04X - ", _seqno);
-							if(idx != BABEL_NOT_FOUND) {
-								uint16_t hello_history = neighdb[idx].hello_history;
+							if(msg_idx != BABEL_NOT_FOUND) {
+								uint16_t hello_history = neighdb[msg_idx].hello_history;
 								uint8_t hello_timer_lost = 0, i;
 								uint16_t hello_seqno_lost;
 
@@ -582,24 +591,24 @@ implementation {
 								}
 
 								// eval seqno
-								hello_seqno_lost = seqnodiff(_seqno, neighdb[idx].hello_seqno);
+								hello_seqno_lost = seqnodiff(_seqno, neighdb[msg_idx].hello_seqno);
 
 								if(hello_seqno_lost > 16){ // large lost
-									neighdb[idx].hello_history = 0;
+									neighdb[msg_idx].hello_history = 0;
 								}
 								else {
 									if(hello_timer_lost < hello_seqno_lost) {
-										neighdb[idx].hello_history >>= hello_seqno_lost - hello_timer_lost;
+										neighdb[msg_idx].hello_history >>= hello_seqno_lost - hello_timer_lost;
 									}
 									else {
-										neighdb[idx].hello_history <<= hello_timer_lost - hello_seqno_lost;
+										neighdb[msg_idx].hello_history <<= hello_timer_lost - hello_seqno_lost;
 									}
 								}
 
-								neighdb[idx].hello_history |= 0x8000;
-								neighdb[idx].hello_seqno = _seqno;
-								neighdb[idx].hello_timer = 2 * _interval;
-								xdbg_inline(BABEL, "hello: history=%04X - ", neighdb[idx].hello_history);
+								neighdb[msg_idx].hello_history |= 0x8000;
+								neighdb[msg_idx].hello_seqno = _seqno;
+								neighdb[msg_idx].hello_timer = 2 * _interval;
+								xdbg_inline(BABEL, "hello: history=%04X - ", neighdb[msg_idx].hello_history);
 							}
 							else {
 								NeighborDB data;
@@ -611,6 +620,8 @@ implementation {
 								data.hello_interval = _interval;
 								data.ihu_tx_cost = BABEL_INFINITY;
 								data.ihu_timer = 0;
+								data.lqi = getLqi(msg);
+								data.rssi = getRssi(msg);
 
 								if(insert_neighdb(&data)) {
 									uint8_t i;
@@ -619,6 +630,7 @@ implementation {
 										ndb[i].flags |= BABEL_FLAG_UPDATE;
 									pending |= BABEL_PENDING_HELLO | BABEL_PENDING_UPDATE;
 									hello_interval = BABEL_HELLO_INTERVAL / 8;
+									msg_idx = search_neighdb(msg_nodeid);
 								}
 								else {
 									err = TRUE;
@@ -639,11 +651,10 @@ implementation {
 						}
 						else {
 							if(_nodeid == ndb[self].dest_nodeid){	// process only our IHU message data
-								uint8_t idx = search_neighdb(msg_nodeid);
 								xdbg_inline(BABEL, "ihu: my txcost %d - ", _cost);
-								if(idx != BABEL_NOT_FOUND) {
-									neighdb[idx].ihu_tx_cost = _cost;
-									neighdb[idx].ihu_timer = _interval * BABEL_IHU_THRESHOLD;
+								if(msg_idx != BABEL_NOT_FOUND) {
+									neighdb[msg_idx].ihu_tx_cost = _cost;
+									neighdb[msg_idx].ihu_timer = _interval * BABEL_IHU_THRESHOLD;
 								}
 								else {
 									NeighborDB data;
@@ -655,6 +666,8 @@ implementation {
 									data.hello_interval = 0;
 									data.ihu_tx_cost = _cost;
 									data.ihu_timer = _interval * BABEL_IHU_THRESHOLD;
+									data.lqi = getLqi(msg);
+									data.rssi = getRssi(msg);
 
 									if(insert_neighdb(&data)) {
 										uint8_t i;
@@ -663,6 +676,7 @@ implementation {
 											ndb[i].flags |= BABEL_FLAG_UPDATE;
 										pending |= BABEL_PENDING_HELLO | BABEL_PENDING_UPDATE;
 										hello_interval = BABEL_HELLO_INTERVAL / 8;
+										msg_idx = search_neighdb(msg_nodeid);
 									}
 									else {
 										err = TRUE;
@@ -936,7 +950,7 @@ implementation {
 		xdbg_flush(BABEL);
 
 		if(send_immediate) 
-			send(); // or post ?                                         
+			send(); // or post ?
 
 		//call Leds.led1Off(); 
 
@@ -946,7 +960,7 @@ implementation {
 	event void Timer.fired() {
 		uint8_t i;
 
-		// process neighdb timers                                                                                   
+		// process neighdb timers
 
 		for(i = 0; i < cnt_neighdb; i++) {
 			if(neighdb[i].hello_timer) 
@@ -983,17 +997,17 @@ implementation {
 			}
 		}
 
-		// process ndb timers                                                                                   
+		// process ndb timers
 
 		for(i = 0; i < cnt_ndb; i++) {
 			if(ndb[i].timer) {
 				ndb[i].timer--;
 				if(ndb[i].nexthop_nodeid != BABEL_NODEID_UNDEF) {
 
-					if( ! ndb[i].timer){ // route update timeout            
+					if( ! ndb[i].timer){ // route update timeout
 
 						// PHASE 1: try to change to other feasible route (next_node switch) 
-						// BABEL_FLAG_RT_SWITCH           
+						// BABEL_FLAG_RT_SWITCH
 
 						if( ! (ndb[i].flags & BABEL_FLAG_RT_SWITCH)) {
 							// try to switch route to the next on fly
@@ -1016,7 +1030,7 @@ implementation {
 				else {
 
 					// PHASE 2: try to find other route with "Request Route"
-					// BABEL_NODEID_UNDEF        
+					// BABEL_NODEID_UNDEF
 
 					if( ! (ndb[i].flags & BABEL_FLAG_RETRACTION)) {
 						// RT request processing (BABEL_RT_REQUEST_HOLD)
@@ -1049,7 +1063,7 @@ implementation {
 					else {
 
 						// PHASE 3: push retract and wait for "Seqno Request" response
-						// BABEL_NODEID_UNDEF && BABEL_FLAG_RETRACTION        
+						// BABEL_NODEID_UNDEF && BABEL_FLAG_RETRACTION
 
 						if(ndb[i].timer) {
 							if((ndb[i].timer % BABEL_RT_RETRACTION_RETRY_INTERVAL) == 0) {
@@ -1061,7 +1075,7 @@ implementation {
 						else {
 
 							// PHASE 4: delete
-							// last hold timeout, delete from route table (BABEL_RT_REQUEST_HOLD+BABEL_RT_REQUEST_HOLD), 3.5.5. Hold Time        
+							// last hold timeout, delete from route table (BABEL_RT_REQUEST_HOLD+BABEL_RT_REQUEST_HOLD), 3.5.5. Hold Time
 
 							xdbg(BABEL, "route delete %04X\n", ndb[i].dest_nodeid);
 							remove_ndb(i);
@@ -1080,7 +1094,7 @@ implementation {
 			}
 		}
 
-		// process global timer for hello, ihu and periodic update                                                                                  
+		// process global timer for hello, ihu and periodic update
 
 		if( ! (--hello_timer)) {
 			hello_timer = hello_interval;
@@ -1149,7 +1163,7 @@ implementation {
 		post addrchanged();
 	}
 
-	// TABLE searching                    
+	// TABLE searching
 
 	command error_t NeighborTable.rowFirst(void * row, uint8_t rowptrsize) {
 		if(rowptrsize < sizeof(am_addr_t)) 
@@ -1194,6 +1208,18 @@ implementation {
 				if(colptrsize < sizeof(uint16_t)) 
 					return ESIZE;
 				*(uint16_t * ) col = metric(0, idx);
+				return SUCCESS;
+			}
+			case BABEL_NB_LQI : {
+				if(colptrsize < sizeof(uint8_t)) 
+					return ESIZE;
+				*(uint8_t * ) col = neighdb[idx].lqi;
+				return SUCCESS;
+			}
+			case BABEL_NB_RSSI : {
+				if(colptrsize < sizeof(uint8_t)) 
+					return ESIZE;
+				*(uint8_t * ) col = neighdb[idx].rssi;
 				return SUCCESS;
 			}
 			default : return FAIL;

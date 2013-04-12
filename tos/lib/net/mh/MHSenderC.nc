@@ -41,7 +41,7 @@
  * @author Philip Levis
  * @author Martin Cerveny
  * @see    TEP 116: Packet Protocols
- */ 
+ */
 
 #include "AM.h"
 

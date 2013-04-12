@@ -36,7 +36,7 @@
  * 
  * @author Philip Levis
  * @author Martin Cerveny
- */ 
+ */
 
 #include "MH_private.h"
 

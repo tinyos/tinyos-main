@@ -37,7 +37,7 @@
  * Interface to a route selection for the Multihop Active Message layer (packet forwarding) engine.
  *
  * @author Martin Cerveny
- */ 
+ */
 
 interface RouteSelect {
 

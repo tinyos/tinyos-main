@@ -50,8 +50,8 @@
 #define xdbg_inline_MH(s, args...) printf(args)
 #define xdbg_flush_MH(s) printfflush()
 #else
-#define xdbg_MH(s,args...) 
-#define xdbg_inline_MH(s, args...) 
+#define xdbg_MH(s,args...)
+#define xdbg_inline_MH(s, args...)
 #define xdbg_flush_MH(s)
 #endif
 
@@ -91,17 +91,17 @@ implementation {
 	} mh_fwd_t;
 
 	message_t fwd_msgs[MH_FORWARDING_BUFERS]; // initial free buffers (exchanged with L2)
-	mh_fwd_t fwd[MH_FORWARDING_BUFERS]; // free buffers management for message forwarding  
+	mh_fwd_t fwd[MH_FORWARDING_BUFERS]; // free buffers management for message forwarding
 
 	message_t * send_msg = NULL; // actual L4 message
 	uint8_t send_msg_wait = 0; // timer for L4 message retry
-	bool send_canceled = FALSE; // L4 message send was cancelled  
+	bool send_canceled = FALSE; // L4 message send was cancelled
 
 	message_t * subsend_msg = NULL; // subsending message
-	bool subsend_fwd_sent = FALSE; // alternate (1:1) sending of local and forward messages   
+	bool subsend_fwd_sent = FALSE; // alternate (1:1) sending of local and forward messages
 
 	// SoftwareInit 
-	// setup free buffers for forwarding                      
+	// setup free buffers for forwarding
 
 	command error_t SoftwareInit.init() {
 		int i;
@@ -113,12 +113,12 @@ implementation {
 		return SUCCESS;
 	}
 
-	// try to send messages (L4 and fwd), called from expired timer, SubSend.sendDone, received new messge for fwd             
+	// try to send messages (L4 and fwd), called from expired timer, SubSend.sendDone, received new messge for fwd
 
 	void send(bool from_timer) {
 		uint8_t i;
 
-		// try to send "forward message"  
+		// try to send "forward message"
 
 		for(i = 0; i < MH_FORWARDING_BUFERS; i++) {
 			if( ! (from_timer || (subsend_msg == NULL))) 
@@ -177,7 +177,7 @@ implementation {
 			}
 		}
 
-		// try to send "L4 message"                       
+		// try to send "L4 message"
 
 		if((send_msg != NULL)&&( ! send_canceled)&&(send_msg_wait % MH_WAIT_BEFORE_RETRY == 0)&&(send_msg != subsend_msg)&&(from_timer || (subsend_msg == NULL))) {
 			switch(call RouteSelect.selectRoute(send_msg)) {
@@ -226,7 +226,7 @@ implementation {
 			}
 		}
 
-		// stop timer if not needed                       
+		// stop timer if not needed
 
 		if(send_msg_wait == 0) {
 			for(i = 0; i < MH_FORWARDING_BUFERS; i++) {
@@ -239,7 +239,7 @@ implementation {
 		xdbg_flush(MH);
 	}
 
-	// AMSend (L4)                                      
+	// AMSend (L4)
 
 	command error_t AMSend.send[am_id_t am](am_addr_t destination, message_t * msg, uint8_t len) {
 		if(send_msg) 
@@ -319,7 +319,7 @@ implementation {
 		return call Packet.maxPayloadLength();
 	}
 
-	// SubSend                                       
+	// SubSend
 
 	event void SubSend.sendDone(message_t * msg, error_t e) {
 		xdbg(MH, "subsend done\n");
@@ -354,9 +354,9 @@ implementation {
 		send(FALSE);
 	}
 
-	// SubReceive                                       
+	// SubReceive
 
-	uint8_t fwd_getfree(){ // find first free 
+	uint8_t fwd_getfree(){ // find first free
 		uint8_t i, candidate = MH_FORWARDING_BUFERS, candidate_min_wait = ~0;
 		for(i = 0; i < MH_FORWARDING_BUFERS; i++) {
 			if(fwd[i].free) 
@@ -453,7 +453,7 @@ implementation {
 		}
 	}
 
-	// Timer                                       
+	// Timer
 
 	event void Timer.fired() {
 		uint8_t i;
@@ -467,7 +467,7 @@ implementation {
 		send(TRUE);
 	}
 
-	// Packet                                             
+	// Packet
 
 	command void Packet.clear(message_t * msg) {
 		void * p = call SubPacket.getPayload(msg, sizeof(mhpacket_header_t));
@@ -487,7 +487,7 @@ implementation {
 	command uint8_t Packet.maxPayloadLength() {
 		uint8_t len = call SubPacket.maxPayloadLength();
 		if(len < sizeof(mhpacket_header_t)) 
-			return 0; // packet size not for header maybe static check ? 
+			return 0; // packet size not for header maybe static check ?
 		return len - sizeof(mhpacket_header_t);
 	}
 
@@ -502,7 +502,7 @@ implementation {
 		call SubPacket.setPayloadLength(amsg, len + sizeof(mhpacket_header_t));
 	}
 
-	// AMPacket                                             
+	// AMPacket
 
 	command am_addr_t AMPacket.address() {
 		return call SubAMPacket.address();
@@ -570,7 +570,7 @@ implementation {
 		return call SubAMPacket.localGroup();
 	}
 
-	// default event handling                                          
+	// default event handling
 
 	default event message_t * Receive.receive[am_id_t am](message_t * msg, void * payload, uint8_t len) {
 		return msg;
@@ -583,7 +583,7 @@ implementation {
 		return TRUE;
 	}
 
-	// TODO: L3 ACKS not implemented                                          
+	// TODO: L3 ACKS not implemented
 
 	async command error_t Acks.requestAck(message_t * msg) {
 		return FAIL;

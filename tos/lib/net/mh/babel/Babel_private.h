@@ -45,7 +45,7 @@ enum {
 	AM_BABEL = (0x80 + 80)
 };
 
-// ------------------------------- PROTOCOL CONSTANTS         
+// ------------------------------- PROTOCOL CONSTANTS
 
 #define BABEL_PAD1 0 // 4.4.1.  Pad1
 #define BABEL_PADN 1 // 4.4.2.  PadN
@@ -95,7 +95,7 @@ enum {
 #define BABEL_PENDING_RT_REQUEST_WILD 0x20 // pending request for wild update
 #define BABEL_ADDR_CHANGED 0x40 // address change, drop all routing table and inform all
 
-// ------------------------------- STRUCTS         
+// ------------------------------- STRUCTS
 
 typedef struct NetDB {
 	// 3.2.4.  The Source Table 	
@@ -125,6 +125,8 @@ typedef struct NeighborDB {
 	uint16_t hello_interval; // advertised hello interval received from remote node
 	uint16_t ihu_tx_cost; // forward tx cost learned from ihu received from remote node
 	uint16_t ihu_timer; // local decrementing timer of expiration of ihu data (BABEL_IHU_THRESHOLD*received ihu_interval)
+	uint8_t lqi; // receiving lqi
+	uint8_t rssi; // receiving rssi
 } NeighborDB;
 
 typedef struct AckDB {
@@ -133,11 +135,11 @@ typedef struct AckDB {
 	uint16_t nonce; // ack nonce
 } AckDB;
 
-// ------------------------------- READ          
+// ------------------------------- READ
 
 // b - pointer to begin of message
 // a - actual processing pointer
-// len - received message length                     
+// len - received message length
 
 #define BABEL_COMPARE(a,t,v) (a+=sizeof(t), (*((t *)(a-sizeof(t))) == (v)))
 #define BABEL_CHECKLEN(b,a,len) ((*(nx_uint8_t *)a<=len-(a-b)-1 ))
@@ -264,17 +266,17 @@ BABEL_CHECKLEN(b,a,len) && \
 (a+=*(nx_uint8_t * )a, \
 TRUE))
 
-// ------------------------------- WRITE          
+// ------------------------------- WRITE
 
 // b - pointer to begin of message
-// a - actual processing pointer       
+// a - actual processing pointer
 
 #define BABEL_SET(a,t,v) (*((t *)a) = (v), a+=sizeof(t))
 
 #define BABEL_WRITE_MSG_BEGIN(b,a) \
 ( BABEL_SET(a, nx_uint8_t, 42), \
 BABEL_SET(a, nx_uint8_t, 2), \
-BABEL_SET(a, nx_uint16_t, BABEL_UNDEF)) 
+BABEL_SET(a, nx_uint16_t, BABEL_UNDEF))
 
 #define BABEL_WRITE_MSG_END(b,a) \
 ((a - b < BABEL_WRITE_MSG_MAX) ? \
