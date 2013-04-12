@@ -32,12 +32,22 @@
  * Author: Andras Biro
  */
 
-generic configuration AtmegaTemperatureC() {
-  provides interface Read<int16_t>;
+generic module AtmegaTemperatureConvertP(){
+	provides interface Read<int16_t>;
+	uses interface Read<uint16_t> as ReadRaw;
 }
-implementation {
-  components new AtmegaTemperatureRawC(), new AtmegaTemperatureConvertP();
-
-  Read = AtmegaTemperatureConvertP;
-  AtmegaTemperatureConvertP.ReadRaw -> AtmegaTemperatureRawC;
+implementation{
+	command error_t Read.read(){
+		return call ReadRaw.read();
+	}
+	
+	event void ReadRaw.readDone(error_t err, uint16_t value){
+		if(err!=SUCCESS){
+			signal Read.readDone(err, value);
+		} else {
+			int32_t temp = (int32_t)value * 113;
+			temp -= 27280;
+			signal Read.readDone(err, (int16_t)temp);
+		}
+	}
 }

@@ -37,20 +37,11 @@
  * Author: Andras Biro <bbandi86@gmail.com>
  */
 
-#include "Sht21.h"
-generic configuration Sht21RawTemperatureC()
-{
-	provides interface Read<uint16_t>;
+generic configuration Sht21TemperatureC(){
+	provides interface Read<int16_t>;
 }
-implementation
-{
-	enum {
-		clientid = unique(UQ_SHT21_RESOURCE),
-	};
-	
-	components Sht21RawArbiterP, new ArbitratedReadC(uint16_t);
-	
-	Read = ArbitratedReadC.Read[0];
-	ArbitratedReadC.Resource[0] -> Sht21RawArbiterP.Resource[clientid];
-	ArbitratedReadC.Service[0] -> Sht21RawArbiterP.Temperature[clientid];
+implementation{
+	components new Sht21RawTemperatureC(), new Sht21ConvertTemperatureC();
+	Read = Sht21ConvertTemperatureC.Read;
+	Sht21ConvertTemperatureC.ReadRaw -> Sht21RawTemperatureC;
 }

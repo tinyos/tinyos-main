@@ -32,11 +32,11 @@
  * Author: Miklos Maroti
  */
 
-generic module BusPowerManagerP(bool highIsOn, bool initPin)
+generic module BusPowerManagerP(uint8_t pinNum, bool highIsOn, bool initPin)
 {
 	provides interface BusPowerManager;
 	uses interface Timer<TMilli>;
-	uses interface GeneralIO;
+	uses interface GeneralIO as PowerPin[uint8_t id];
 	provides interface Init;
 }
 
@@ -46,19 +46,39 @@ implementation
 	uint16_t maxKeepAlive;
 
 	uint8_t counter;
+	
+	void setPins(bool value);
+	
 	enum
 	{
 		COUNTER_MASK = 0x7F,
 		COUNTER_TIMER = 0x80,	// timer is running
 	};
 	
-	command error_t Init.init(){
-		call GeneralIO.makeOutput();
-		if(initPin){
-			if( highIsOn )
-				call GeneralIO.clr();
+	void setPins(bool value)
+	{
+		uint8_t i;
+		
+		for(i = 0; i < pinNum; i++)
+		{
+			call PowerPin.makeOutput[i]();
+			if(!(highIsOn^value))
+				call PowerPin.set[i]();
 			else
-				call GeneralIO.set();
+				call PowerPin.clr[i]();
+		}
+	}
+	
+	command error_t Init.init()
+	{
+		uint8_t i;
+		for(i = 0; i < pinNum; i++)
+		{
+			call PowerPin.makeOutput[i]();
+			if(initPin)
+			{
+				(highIsOn) ? call PowerPin.clr[i]() : call PowerPin.set[i](); 
+			}
 		}
 		return SUCCESS;
 	}
@@ -77,10 +97,8 @@ implementation
 		++counter;
 		if( counter == 1 )	// bus is off
 		{
-			if( highIsOn )
-				call GeneralIO.set();
-			else
-				call GeneralIO.clr();
+			setPins(TRUE);
+			
 			call Timer.startOneShot(maxStartup);
 			counter = 1 | COUNTER_TIMER;
 		}
@@ -101,29 +119,48 @@ implementation
 		}
 		else if( counter == 0 + COUNTER_TIMER) // during startup
 		{
-			if( highIsOn )
-				call GeneralIO.clr();
-			else
-				call GeneralIO.set();
+			setPins(FALSE);
 
 			call Timer.stop();
 			counter = 0;
 		}
 	}
+	
+	command bool BusPowerManager.isPowerOn()
+	{
+		//pin is on and (clients need it or keepalive timer)
+		return (( counter > 0 ) && ( counter <= COUNTER_TIMER ));
+	}
 
 	event void Timer.fired()
 	{
 		counter &= COUNTER_MASK;
+		
 		if( counter == 0 )
 		{
-			if( highIsOn )
-				call GeneralIO.clr();
-			else
-				call GeneralIO.set();
+			setPins(FALSE);
 			signal BusPowerManager.powerOff();
 		}
-		else {
+		else 
+		{
 			signal BusPowerManager.powerOn();
 		}
+	}
+	
+	default async command void PowerPin.makeOutput[uint8_t id]()
+	{
+	}
+	
+	default async command void PowerPin.clr[uint8_t id]()
+	{
+	}
+	
+	default async command void PowerPin.set[uint8_t id]()
+	{
+	}
+	
+	default async command bool PowerPin.get[uint8_t id]()
+	{
+		return highIsOn;
 	}
 }

@@ -35,22 +35,26 @@
 
 /*
  * Author: Andras Biro <bbandi86@gmail.com>
+ * Author: Gabor Salamon <gabor.salamon@unicomp.hu>
  */
 
-#include "Sht21.h"
-generic configuration Sht21RawTemperatureC()
-{
-	provides interface Read<uint16_t>;
+generic module Sht21ConvertHumidityC(){
+	provides interface Read<int16_t>;
+	uses interface Read<uint16_t> as ReadRaw;
 }
-implementation
-{
-	enum {
-		clientid = unique(UQ_SHT21_RESOURCE),
-	};
+implementation{
+	command error_t Read.read(){
+		return call ReadRaw.read();
+	}
 	
-	components Sht21RawArbiterP, new ArbitratedReadC(uint16_t);
-	
-	Read = ArbitratedReadC.Read[0];
-	ArbitratedReadC.Resource[0] -> Sht21RawArbiterP.Resource[clientid];
-	ArbitratedReadC.Service[0] -> Sht21RawArbiterP.Temperature[clientid];
+	event void ReadRaw.readDone(error_t err, uint16_t humidRead){
+		if(err==SUCCESS){
+			uint32_t temp = (uint32_t)12500;
+			temp *= (humidRead & 0xFFFC);
+			temp >>= 16;
+			
+			signal Read.readDone(SUCCESS, (int16_t)(temp - 600) );
+		} else
+			signal Read.readDone(err, 0);
+	}
 }

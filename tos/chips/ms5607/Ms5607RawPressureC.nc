@@ -46,11 +46,11 @@ implementation
     clientid = unique(UQ_MS5607_RESOURCE),
   };
   
-  components Ms5607RawArbiterP, new ResourceReadC(uint32_t);
+  components Ms5607RawArbiterP, new ArbitratedReadC(uint32_t);
   SetPrecision=Ms5607RawArbiterP;
   
-  Read = ResourceReadC;
-  ResourceReadC.Resource -> Ms5607RawArbiterP.Resource[clientid];
-  ResourceReadC.Service -> Ms5607RawArbiterP.ReadPressure[clientid];
+	Read = ArbitratedReadC.Read[0];
+	ArbitratedReadC.Resource[0] -> Ms5607RawArbiterP.Resource[clientid];
+	ArbitratedReadC.Service[0] -> Ms5607RawArbiterP.ReadPressure[clientid];
 }
 

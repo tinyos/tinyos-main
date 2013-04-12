@@ -47,6 +47,11 @@ P_PACKET_NO_ACK = Serial.SERIAL_PROTO_PACKET_NOACK
 P_UNKNOWN = Serial.SERIAL_PROTO_PACKET_UNKNOWN
 
 DEBUG = False
+TX_ATTEMPT_LIMIT = 1
+
+
+class NoAckException(Exception):
+    pass
 
 def hex(x):
     return "0x%02X" % (ord(x))
@@ -202,9 +207,16 @@ class SerialProtocol:
         if DEBUG:
             print "Writing packet:"
             print " ".join(map(hex, data))
-
-        self.writeFramedPacket(P_PACKET_ACK, self.seqNo, data)
+        attemptsLeft = TX_ATTEMPT_LIMIT
         self.seqNo = (self.seqNo + 1) %256
+        while attemptsLeft:
+            attemptsLeft -= 1
+            try:
+                self.writeFramedPacket(P_PACKET_ACK, self.seqNo, data)
+                break
+            except NoAckException:
+                if DEBUG:
+                    print "NO ACK:", self.seqNo
 
     def writeFramedPacket(self, frameType, sn, data):
         crc = 0
@@ -222,17 +234,17 @@ class SerialProtocol:
             crc = crcByte(crc, ord(c))
             frame += self.escape(c)
 
-        frame += chr(crc & 0xff)
-        frame += chr(crc >> 8)
+        frame += self.escape(chr(crc & 0xff))
+        frame += self.escape(chr(crc >> 8))
 
         frame += chr(SYNC_BYTE)
         if DEBUG:
-            print "Framed Write: "+" ".join(map(hex, frame))
+            print "Framed Write: (%x) "%sn+" ".join(map(hex, frame))
         self.outs.write(frame)
         with self.ackCV:
             self.ackCV.wait(0.25)
             if not self.lastAck or ord(self.lastAck[0]) != sn:
-                raise IOError("No serial ACK received")
+                raise NoAckException("No serial ACK received")
             self.lastAck = None
 
 

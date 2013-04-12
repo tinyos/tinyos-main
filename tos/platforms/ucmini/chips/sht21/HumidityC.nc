@@ -34,11 +34,11 @@
 
 generic configuration HumidityC()
 {
-  provides interface Read<uint16_t>;
+  provides interface Read<int16_t>;
 }
 implementation
 {
-  components new Sht21RawHumidityC();
+  components new Sht21HumidityC();
   
-  Read=Sht21RawHumidityC;
+  Read=Sht21HumidityC;
 }

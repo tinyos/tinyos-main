@@ -38,19 +38,23 @@
  */
 
 #include "Sht21.h"
-generic configuration Sht21RawTemperatureC()
+configuration Sht21RawArbiterP
 {
-	provides interface Read<uint16_t>;
+	provides interface Read<uint16_t> as Temperature[uint8_t client]; 
+	provides interface Read<uint16_t> as Humidity[uint8_t client];
+	provides interface Resource[uint8_t client];
 }
 implementation
 {
-	enum {
-		clientid = unique(UQ_SHT21_RESOURCE),
-	};
+	components Sht21C, new FcfsArbiterC(UQ_SHT21_RESOURCE);
 	
-	components Sht21RawArbiterP, new ArbitratedReadC(uint16_t);
+	Resource=FcfsArbiterC;
 	
-	Read = ArbitratedReadC.Read[0];
-	ArbitratedReadC.Resource[0] -> Sht21RawArbiterP.Resource[clientid];
-	ArbitratedReadC.Service[0] -> Sht21RawArbiterP.Temperature[clientid];
+	components new ReadClientP(uint16_t) as ReadTempClient;  
+	Temperature = ReadTempClient;
+	ReadTempClient.ActualRead -> Sht21C.Temperature;
+	
+	components new ReadClientP(uint16_t) as ReadHumiClient;  
+	Humidity = ReadHumiClient;
+	ReadHumiClient.ActualRead -> Sht21C.Humidity;
 }
