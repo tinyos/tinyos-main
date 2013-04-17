@@ -784,7 +784,7 @@ implementation {
 	uint16_t tmp=0;
 	if(call Resource.isOwner()) {
 		error_return=error;
-		for(tmp=0;tmp<0x8fff;tmp++);		//delay
+		//for(tmp=0;tmp<0x8fff;tmp++);		//delay
 		tmp= call Resource.release();
 		if(adxlcmd == ADXLCMD_READ_X || adxlcmd == ADXLCMD_READ_Y || adxlcmd == ADXLCMD_READ_Z)
 		{
