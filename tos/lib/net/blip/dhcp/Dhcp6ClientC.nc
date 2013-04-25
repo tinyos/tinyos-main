@@ -56,13 +56,13 @@ configuration Dhcp6ClientC {
   Dhcp6Info = Dhcp6ClientP;
 
   IPStackControlP.StdControl -> Dhcp6ClientP;
-  
+
   Dhcp6ClientP.UDP -> UdpSocketC;
   Dhcp6ClientP.Timer -> TimerMilliC;
   Dhcp6ClientP.Ieee154Address -> Ieee154AddressC;
   Dhcp6ClientP.IPAddress -> IPAddressC;
   Dhcp6ClientP.Random -> RandomC;
 
-  components LedsC;
+  components NoLedsC as LedsC;
   Dhcp6ClientP.Leds -> LedsC;
 }
