@@ -73,7 +73,7 @@ case $host in
     AC_MSG_RESULT(yes)
     JNIPREFIX=
     JNISUFFIX=dll
-    JNIVERSIONS=.
+    JNIVERSIONS="-32. -64."
     INSTALLJNI="install --group=SYSTEM"
     CYGWIN=yes
     ;;

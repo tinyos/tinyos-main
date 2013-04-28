@@ -15,7 +15,7 @@ EXTRA_PROGRAMS = libtoscomm.so toscomm.dll libtoscomm.jnilib
 
 LIBFLAGS = "-I$(JDK)/include" -s -shared -O2
 SOFLAGS = $(LIBFLAGS) "-I$(JDK)/include/linux" -fPIC
-DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at -mno-cygwin
+DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill-at
 JNILIBFLAGS = $(LIBFLAGS) "-I$(JDK)/Headers" -bundle
 
 libtoscomm_common_SOURCES = \
@@ -34,11 +34,14 @@ libtoscomm_jnilib_SOURCES = \
   NativeSerial_darwin.cpp \
   $(libtoscomm_common_SOURCES)
 
-libtoscomm.jnilib: $(libtoscomm_jnilib_SOURCES)
+libtoscomm.jnilib$(EXEEXT): $(libtoscomm_jnilib_SOURCES)
 	$(CXX) $(JNILIBFLAGS) $< -o $@
 
-libtoscomm.so: $(libtoscomm_so_SOURCES)
+libtoscomm.so$(EXEEXT): $(libtoscomm_so_SOURCES)
 	$(CXX) $(SOFLAGS) $< -o $@
 
-toscomm.dll: $(toscomm_dll_SOURCES)
-	$(CXX) $(DLLFLAGS) $< -o $@
+toscomm-64.dll$(EXEEXT): $(toscomm_dll_SOURCES)
+	x86_64-w64-mingw32-g++ $(DLLFLAGS) $< -o $@
+
+toscomm-32.dll$(EXEEXT): $(toscomm_dll_SOURCES)
+	i686-w64-mingw32-g++ $(DLLFLAGS) $< -o $@
