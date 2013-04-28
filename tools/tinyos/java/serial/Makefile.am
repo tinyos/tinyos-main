@@ -36,10 +36,10 @@ libtoscomm_jnilib_SOURCES = \
   $(libtoscomm_common_SOURCES)
 
 libtoscomm.jnilib: $(libtoscomm_jnilib_SOURCES)
-$(CXX) $(JNILIBFLAGS) $< -o $@
+	$(CXX) $(JNILIBFLAGS) $< -o $@
 
 libtoscomm.so: $(libtoscomm_so_SOURCES)
-$(CXX) $(SOFLAGS) $< -o $@
+	$(CXX) $(SOFLAGS) $< -o $@
 
 toscomm.dll: $(toscomm_dll_SOURCES)
-$(CXX) $(DLLFLAGS) $< -o $@
+	$(CXX) $(DLLFLAGS) $< -o $@

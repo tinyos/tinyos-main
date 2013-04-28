@@ -17,10 +17,10 @@ JNILABFLAGS = $(LIBFLAGS) "-I$(JDK)/Headers" -bundle -fPIC
 libgetenv_so_SOURCES = net_tinyos_util_Env.c net_tinyos_util_Env.h
 
 libgetenv.so : $(libgetenv_so_SOURCES)
-$(CC) $(SOFLAGS) $< -o $@
+	$(CC) $(SOFLAGS) $< -o $@
 
 getenv.dll: $(libgetenv_so_SOURCES)
-$(CC) $(DLLFLAGS) $< -o $@
+	$(CC) $(DLLFLAGS) $< -o $@
 
 libgetenv.jnilib : $(libgetenv_so_SOURCES)
-$(CC) $(JNILIBFLAGS) $< -o $@
+	$(CC) $(JNILIBFLAGS) $< -o $@
