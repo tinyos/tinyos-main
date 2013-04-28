@@ -19,8 +19,7 @@ DLLFLAGS = $(LIBFLAGS) "-I$(JDK)/include/win32" -D_JNI_IMPLEMENTATION -Wl,--kill
 JNILIBFLAGS = $(LIBFLAGS) "-I$(JDK)/Headers" -bundle
 
 libtoscomm_common_SOURCES = \
-  NativeSerialEnums.h \
-  TOSComm_wrap.cxx
+  NativeSerialEnums.h
 
 #first file should be the main c/cpp file
 libtoscomm_so_SOURCES = \
