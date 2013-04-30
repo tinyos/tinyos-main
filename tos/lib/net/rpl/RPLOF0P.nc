@@ -98,16 +98,12 @@ implementation{
   }
 
   command bool RPLOF.recalculateRank() {
-    uint16_t prevEtx, prevRank;
     parent_t* parentNode = call ParentTable.get(desiredParent);
 
     if (desiredParent == MAX_PARENT) {
       nodeRank = INFINITE_RANK;
       return FALSE;
     }
-
-    prevEtx = nodeEtx;
-    prevRank = nodeRank;
 
     // printf("RPLOF: OF0 PARENT rank %d \n", parentSet[desiredParent].rank);
     nodeEtx = parentNode->etx_hop;

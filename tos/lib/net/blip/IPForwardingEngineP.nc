@@ -250,7 +250,6 @@ module IPForwardingEngineP {
     struct ip6_packet pkt;
     struct in6_addr *next_hop;
     size_t len = ntohs(iph->ip6_plen);
-    route_key_t next_hop_key = ROUTE_INVAL_KEY;
     uint8_t next_hop_ifindex;
     struct ip_iovec v = {
       .iov_next = NULL,
@@ -293,7 +292,6 @@ module IPForwardingEngineP {
           return; 
         }
         next_hop = &next_hop_entry->next_hop;
-        next_hop_key = next_hop_entry->key;
         next_hop_ifindex = next_hop_entry->ifindex;
       }
 

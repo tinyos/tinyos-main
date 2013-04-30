@@ -615,7 +615,6 @@ implementation {
     uint16_t etx = 0xFFFF;
     parent_t tempParent;
     uint8_t parentIndex, myParent;
-    uint16_t preRank;
     uint8_t tempPrf;
     bool newDodag = FALSE;
 
@@ -917,7 +916,6 @@ implementation {
 	//	printf("Same DODAG %d \n", parentNum);
 	insertParent(tempParent);
 	call RPLOF.recomputeRoutes();
-	preRank = nodeRank;
 	getNewRank();
       }
     }

@@ -173,12 +173,14 @@ implementation{
     struct ip_iovec   v[1];
     uint8_t data[60];
     struct dio_base_t msg;
-    struct dio_body_t body;
     struct dio_metric_header_t metric_header;
     struct dio_etx_t etx_value;
     struct dio_dodag_config_t dodag_config;
     uint16_t length;
 
+#ifdef RPL_OF_MRHOF
+    struct dio_body_t body;
+#endif
 /*     struct in6_addr next_hop; */
 
 /*     if ((call RPLRankInfo.nextHop(&DEF_PREFIX, &next_hop)) != SUCCESS) */
@@ -247,8 +249,10 @@ implementation{
       metric_header.C_flag = 0;
       metric_header.object_len = 2;
 
+#ifdef RPL_OF_MRHOF
       body.type = RPL_DODAG_METRIC_CONTAINER_TYPE; // metric container
       body.container_len = 6;
+#endif
 
       { 
         uint8_t *cur = (uint8_t *)&data;
