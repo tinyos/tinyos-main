@@ -49,7 +49,7 @@ if test -z "$DEFAULT_TARGET"; then
 fi
 default_target=$DEFAULT_TARGET
 AC_MSG_NOTICE(Default ncc build target is $default_target)
-AC_MSG_NOTICE(...but using a tos/.default-platform file is a better choice)
+AC_MSG_NOTICE(...but using a tos/default-platform file is a better choice)
 AC_SUBST(default_target)
 
 if test -z "$TOSDIR"; then
