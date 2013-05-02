@@ -125,7 +125,7 @@ if ($tossim) {
 }
 
 if (!defined $target) {
-    if (open DEFTARGET, "$TOSDIR/.default-platform") {
+    if (open DEFTARGET, "$TOSDIR/default-platform") {
 	$target = <DEFTARGET>;
 	chomp $target;
     }
@@ -145,25 +145,25 @@ if ($print_target) {
 
 # First see if the directory for this platform was explicitly specified
 foreach $dir (@includes) {
-    if ($dir =~ m!/$target/?$! && -f "$dir/.platform") {
-	$platform_def = "$dir/.platform";
+    if ($dir =~ m!/$target/?$! && -f "$dir/platform") {
+	$platform_def = "$dir/platform";
 	last;
     }
 }
 
 if (!-f $platform_def) {
     # Next, check if it's a "plain" platform
-    if (-f "$TOSDIR/$platform/$target/.platform") {
-	$platform_def = "$TOSDIR/$platform/$target/.platform";
+    if (-f "$TOSDIR/$platform/$target/platform") {
+	$platform_def = "$TOSDIR/$platform/$target/platform";
     }
     else {
 	# Finally, see if it's in a platform family
 	opendir PLATFORMS, "$TOSDIR/$platform";
 	foreach $dir (readdir PLATFORMS) {
-	    if (-f "$TOSDIR/$platform/$dir/.family") {
-		if (-f "$TOSDIR/$platform/$dir/$target/.platform") {
-		    $platform_def = "$TOSDIR/$platform/$dir/$target/.platform";
-		    $family_def = "$TOSDIR/$platform/$dir/.family";
+	    if (-f "$TOSDIR/$platform/$dir/family") {
+		if (-f "$TOSDIR/$platform/$dir/$target/platform") {
+		    $platform_def = "$TOSDIR/$platform/$dir/$target/platform";
+		    $family_def = "$TOSDIR/$platform/$dir/family";
 		    last;
 		}
 	    }
@@ -173,17 +173,17 @@ if (!-f $platform_def) {
 }
 
 # Use sim directory with tossim
-$platform_def =~ s!\.platform$!sim/.platform! if $tossim;
-$family_def =~ s!\.family$!sim/.family! if $tossim && $family_def;
+$platform_def =~ s!platform$!sim/platform! if $tossim;
+$family_def =~ s!family$!sim/family! if $tossim && $family_def;
 
 if (!-f $platform_def) {
-    print STDERR "Unknown target $target\n";
-    print STDERR "Known targets for TinyOS directory $TOSDIR\n";
-    print STDERR "and the specified include directories are:\n";
+    print STDERR "Missing platform file for target $target\n";
+    print STDERR "For the TinyOS directory $TOSDIR\n";
+    print STDERR "the following targets have valid platform files:\n";
 
     @platforms = all_platforms();
     if (@platforms) {
-	print STDERR "  ", join(" ", @platforms);
+	print STDERR "  ", join(" ", sort(@platforms));
     }
     else {
 	print STDERR "none.";
@@ -195,24 +195,24 @@ if (!-f $platform_def) {
 # Setup sensor boards
 push @includes, map "%T/sensorboards/$_", @boards unless $nostdinc;
 unshift @new_args, map "-DBOARD_\U$_", @boards;
-# Execute .sensor file in selected sensor board directories if it exists
+# Execute sensor file in selected sensor board directories if it exists
 $i = 0;
 BOARD: while ($i <= $#boards) {
     $board = $boards[$i];
 
-    # First check include path for a .sensor file for this board
+    # First check include path for a sensor file for this board
     foreach $dir (@includes) {
-	if ($dir =~ m!/$board/?$! && -f "$dir/.sensor") {
+	if ($dir =~ m!/$board/?$! && -f "$dir/sensor") {
 	    # Remove from @boards so that we don't add sensorboards/$board
 	    # to the search path
 	    splice @boards, $i, 1;
-	    do "$dir/.sensor";
+	    do "$dir/sensor";
 	    next BOARD;
 	}
     }
 
     # If none found, check the standard sensorboards directory
-    $bspec = &idir_subst("%T/sensorboards/$board/.sensor");
+    $bspec = &idir_subst("%T/sensorboards/$board/sensor");
     do $bspec if -f $bspec;
 
     $i++;
@@ -220,7 +220,7 @@ BOARD: while ($i <= $#boards) {
 
 # Setup platform
 $platform_dir = $platform_def;
-$platform_dir =~ s!/\.platform$!!;
+$platform_dir =~ s!/platform$!!;
 push @includes, $platform_dir unless $nostdinc;
 do $platform_def;
 do $family_def if -f $family_def;
@@ -312,16 +312,16 @@ sub all_platforms() {
   local(@platforms);
 
   foreach $dir (@includes) {
-    push_platform($1) if -f "$dir/.platform" && $dir =~ m!/([^/]*)/?$!;
+    push_platform($1) if -f "$dir/platform" && $dir =~ m!/([^/]*)/?$!;
   }
 
   if (opendir PLATFORMS, "$TOSDIR/$platform") {
       foreach $d (readdir PLATFORMS) {
-	  push_platform($d) if (-f "$TOSDIR/$platform/$d/.platform");
-	  if (-f "$TOSDIR/$platform/$d/.family") {
+	  push_platform($d) if (-f "$TOSDIR/$platform/$d/platform");
+	  if (-f "$TOSDIR/$platform/$d/family") {
 	      if (opendir SUBPLATFORMS, "$TOSDIR/$platform/$d") {
 		  foreach $subdir (readdir SUBPLATFORMS) {
-		      push_platform($subdir) if (-f "$TOSDIR/$platform/$d/$subdir/.platform");
+		      push_platform($subdir) if (-f "$TOSDIR/$platform/$d/$subdir/platform");
 		  }
 	      }
 	      closedir SUBPLATFORMS;
