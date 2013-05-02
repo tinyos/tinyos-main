@@ -125,7 +125,7 @@ if ($tossim) {
 }
 
 if (!defined $target) {
-    if (open DEFTARGET, "$TOSDIR/.default-platform") {
+    if (open DEFTARGET, "$TOSDIR/default-platform") {
 	$target = <DEFTARGET>;
 	chomp $target;
     }
